@@ -712,6 +712,23 @@ pub async fn set_monitored_skills(
     Ok(())
 }
 
+#[tauri::command]
+#[specta::specta]
+pub async fn set_monitor_all_buff(
+        monitor_all_buff: bool,
+        state_manager: tauri::State<'_, AppStateManager>,) -> Result<(), String>
+{
+    info!(
+        "[monitor-buff] set monitorAllBuff: {:?}",
+        monitor_all_buff
+    );
+    state_manager
+        .with_state_mut(|state| {
+            state.monitor_all_buff = monitor_all_buff;
+        })
+        .await;
+    Ok(())
+}
 
 /// Enables/disables shadow on the buff monitor window.
 #[tauri::command]
