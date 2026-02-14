@@ -69,6 +69,8 @@ pub fn run() {
             live::commands::set_monitored_skills,
             live::commands::set_monitored_buffs,
             live::commands::get_available_buffs,
+            live::commands::toggle_buff_monitor_shadow,
+            live::commands::set_monitor_all_buff,
             database::commands::get_recent_encounters,
             database::commands::get_unique_scene_names,
             database::commands::get_unique_boss_names,

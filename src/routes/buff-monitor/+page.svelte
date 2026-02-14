@@ -5,7 +5,6 @@
   import { SETTINGS } from "$lib/settings-store";
   import { findSpecialBuffDisplays } from "$lib/skill-mappings";
   import { getCurrentWindow, PhysicalSize } from "@tauri-apps/api/window";
-
   type BuffDisplay = {
     baseId: number;
     name: string;
@@ -139,12 +138,26 @@
       if (rafId) cancelAnimationFrame(rafId);
     };
   });
+
+
+  const win = getCurrentWindow();
+
+  function onPointerDown(e: PointerEvent) {
+    if (e.button !== 0) return;
+
+    const el = e.target as HTMLElement | null;
+    if (el?.closest("button,a,input,textarea,select,[data-no-drag]")) return;
+
+    e.preventDefault();
+    void win.startDragging();
+  }
+
 </script>
 
 <div
   class="buff-monitor-root"
   class:has-special={activeSpecialBuffs.length > 0}
-  data-tauri-drag-region
+  on:pointerdown={onPointerDown}
 >
   <div class="buff-main-section">
     {#if displayBuffs.length > 0}
@@ -316,6 +329,7 @@
     line-height: 1;
     pointer-events: none;
   }
+  
 
   :global(html),
   :global(body) {

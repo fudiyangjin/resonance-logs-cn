@@ -56,7 +56,8 @@
                 "skipTaskbar": true,
                 "width": 300,
                 "height": 160,
-                "visible": false
+                "visible": false,
+                "shadow": true
             }
         ],
         "security": {

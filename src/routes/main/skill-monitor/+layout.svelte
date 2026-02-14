@@ -8,6 +8,7 @@
   import ExternalLinkIcon from "virtual:icons/lucide/external-link";
   import PlayIcon from "virtual:icons/lucide/play";
   import LayersIcon from "virtual:icons/lucide/layers";
+  import { invoke } from "@tauri-apps/api/core";
 
   let { children } = $props();
 
@@ -52,6 +53,15 @@
       console.error("Failed to toggle buff monitor window:", err);
     }
   }
+let shadowEnabled = $state(false);
+ async function toggleBuffShadow() {
+    shadowEnabled = !shadowEnabled;
+    await invoke("toggle_buff_monitor_shadow", {
+      label: "buff-monitor",
+      enabled: shadowEnabled
+    });
+  }
+
 </script>
 
 <div class="space-y-6">
@@ -88,6 +98,15 @@
       </button>
     </div>
   </div>
+
+ <button
+  type="button"
+  class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border/60 bg-muted/30 text-foreground font-medium text-sm hover:bg-muted/50 transition-colors shadow-sm"
+  onclick={toggleBuffShadow}
+>
+  <LayersIcon class="w-4 h-4" />
+  <span>Buff 阴影: {shadowEnabled ? "ON" : "OFF"}</span>
+</button>
 
   <div class="min-h-0">
     {@render children()}

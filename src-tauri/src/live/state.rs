@@ -264,6 +264,8 @@ pub struct AppState {
     pub attr_cd_accelerate_pct: i32,
     /// Cached snapshot built from the last emitted live encounter frame.
     pub last_encounter_snapshot: Option<EncounterAggData>,
+    /// Monitor All buff?
+    pub monitor_all_buff: bool
 }
 
 #[derive(Debug, Clone)]
@@ -290,6 +292,7 @@ impl AppState {
             skill_cd_map: HashMap::new(),
             monitored_skill_ids: Vec::new(),
             monitored_buff_ids: Vec::new(),
+            monitor_all_buff: false,
             active_buffs: HashMap::new(),
             app_handle,
             boss_only_dps: false,
@@ -1140,7 +1143,7 @@ impl AppStateManager {
 
         if let Some(raw_bytes) = buff_effect_bytes {
             if let Some(payload) =
-                process_buff_effect_bytes(&mut state.active_buffs, &raw_bytes, &state.monitored_buff_ids)
+                process_buff_effect_bytes(&mut state.active_buffs, &raw_bytes, &state.monitored_buff_ids, state.monitor_all_buff)
             {
                 if let Some(app_handle) = state.event_manager.get_app_handle() {
                     safe_emit(
@@ -1411,8 +1414,9 @@ fn process_buff_effect_bytes(
     active_buffs: &mut HashMap<i32, ActiveBuff>,
     raw_bytes: &[u8],
     monitored_base_ids: &[i32],
+    monitor_all_buff:bool,
 ) -> Option<Vec<BuffUpdateState>> {
-    if monitored_base_ids.is_empty() {
+    if monitored_base_ids.is_empty() && !monitor_all_buff {
         return None;
     }
 
@@ -1482,7 +1486,7 @@ fn process_buff_effect_bytes(
 
     let mut payload: Vec<BuffUpdateState> = active_buffs
         .values()
-        .filter(|buff| {
+        .filter(|buff| { monitor_all_buff ||
             monitored_base_ids.contains(&buff.base_id)
                 || (buff.source_config_id != 0
                     && crate::live::buff_names::get_related_base_ids(buff.source_config_id)
