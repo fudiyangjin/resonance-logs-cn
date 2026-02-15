@@ -1,7 +1,7 @@
 {
   "1": {
     "Id": 1,
-    "RecountName": "Red light counter",
+    "RecountName": "红光反制攻击",
     "DamageId": []
   },
   "2": {
@@ -14,7 +14,7 @@
   },
   "3": {
     "Id": 3,
-    "RecountName": "Windborne Grace",
+    "RecountName": "风华翔舞",
     "DamageId": [
       114010101,
       114010104,
@@ -29,7 +29,7 @@
   },
   "4": {
     "Id": 4,
-    "RecountName": "Gale Thrust",
+    "RecountName": "疾风刺",
     "DamageId": [
       114180101,
       114180102,
@@ -65,7 +65,7 @@
   },
   "8": {
     "Id": 8,
-    "RecountName": "Spiral Thrust",
+    "RecountName": "螺旋击刺",
     "DamageId": [
       114210102,
       114210103
@@ -73,7 +73,7 @@
   },
   "9": {
     "Id": 9,
-    "RecountName": "Breach Pursuit",
+    "RecountName": "破追",
     "DamageId": [
       114220103,
       114270104
@@ -98,7 +98,7 @@
   },
   "12": {
     "Id": 12,
-    "RecountName": "Valor Cyclone",
+    "RecountName": "勇气风环",
     "DamageId": [
       114320101,
       23190103,
@@ -117,7 +117,7 @@
   },
   "14": {
     "Id": 14,
-    "RecountName": "Aegis Gale",
+    "RecountName": "护佑之风",
     "DamageId": [
       114230101,
       114370101
@@ -125,7 +125,7 @@
   },
   "15": {
     "Id": 15,
-    "RecountName": "Drake Cannon",
+    "RecountName": "龙击炮",
     "DamageId": [
       114350101,
       314040100
@@ -133,7 +133,7 @@
   },
   "16": {
     "Id": 16,
-    "RecountName": "Vortex Strike",
+    "RecountName": "神影螺旋",
     "DamageId": [
       114340102,
       314030100
@@ -149,7 +149,7 @@
   },
   "18": {
     "Id": 18,
-    "RecountName": "Swift Blade",
+    "RecountName": "疾驰锋刃",
     "DamageId": [
       114110101,
       114110102
@@ -157,7 +157,7 @@
   },
   "19": {
     "Id": 19,
-    "RecountName": "Spear Thrust",
+    "RecountName": "长矛贯穿",
     "DamageId": [
       11499020101
     ]
@@ -172,28 +172,28 @@
   },
   "21": {
     "Id": 21,
-    "RecountName": "Wind Spiral",
+    "RecountName": "风螺旋",
     "DamageId": [
       11499010101
     ]
   },
   "22": {
     "Id": 22,
-    "RecountName": "Rend",
+    "RecountName": "撕裂",
     "DamageId": [
       2220507103
     ]
   },
   "23": {
     "Id": 23,
-    "RecountName": "Wind Rift Diffusion",
+    "RecountName": "风裂扩散",
     "DamageId": [
       2220506003
     ]
   },
   "24": {
     "Id": 24,
-    "RecountName": "Red light counter",
+    "RecountName": "红光反制攻击",
     "DamageId": [
       112940102
     ]
@@ -208,7 +208,7 @@
   },
   "26": {
     "Id": 26,
-    "RecountName": "Raincall Surge",
+    "RecountName": "雨打潮生",
     "DamageId": [
       312040100,
       112030101,
@@ -226,7 +226,7 @@
   },
   "28": {
     "Id": 28,
-    "RecountName": "Frostbeam",
+    "RecountName": "寒冰射线",
     "DamageId": [
       112410104
     ]
@@ -270,7 +270,7 @@
   },
   "33": {
     "Id": 33,
-    "RecountName": "Maelstrom",
+    "RecountName": "水之涡流",
     "DamageId": [
       112500101,
       112500104
@@ -278,7 +278,7 @@
   },
   "34": {
     "Id": 34,
-    "RecountName": "Frozen Gale",
+    "RecountName": "冻结寒风",
     "DamageId": [
       112400101,
       112400102
@@ -286,12 +286,12 @@
   },
   "35": {
     "Id": 35,
-    "RecountName": "Permafrost",
+    "RecountName": "冰之灌注",
     "DamageId": []
   },
   "36": {
     "Id": 36,
-    "RecountName": "Tidepool",
+    "RecountName": "浪潮汇聚",
     "DamageId": [
       112560101,
       112560102
@@ -299,7 +299,7 @@
   },
   "37": {
     "Id": 37,
-    "RecountName": "Frost Shelter",
+    "RecountName": "寒冰庇护",
     "DamageId": [
       112450105,
       22700903
@@ -307,7 +307,7 @@
   },
   "38": {
     "Id": 38,
-    "RecountName": "Icy Bolt",
+    "RecountName": "冰晶坠落",
     "DamageId": [
       112580101
     ]
@@ -328,14 +328,14 @@
   },
   "41": {
     "Id": 41,
-    "RecountName": "Frost Shock",
+    "RecountName": "冰霜冲击",
     "DamageId": [
       2220424101
     ]
   },
   "42": {
     "Id": 42,
-    "RecountName": "Cold Pulse",
+    "RecountName": "冰冷脉冲",
     "DamageId": [
       2220432004
     ]
@@ -358,14 +358,14 @@
   },
   "45": {
     "Id": 45,
-    "RecountName": "Frost Mage G11 - Blizzard",
+    "RecountName": "冰魔G11-寒冰风暴",
     "DamageId": [
       2305211201
     ]
   },
   "46": {
     "Id": 46,
-    "RecountName": "Red light counter",
+    "RecountName": "红光反制攻击",
     "DamageId": [
       117950102
     ]
@@ -380,7 +380,7 @@
   },
   "48": {
     "Id": 48,
-    "RecountName": "Judgment Cut",
+    "RecountName": "我流刀法·诛恶",
     "DamageId": [
       117010101,
       117020101,
@@ -393,7 +393,7 @@
   },
   "49": {
     "Id": 49,
-    "RecountName": "Iaido Slash",
+    "RecountName": "居合斩",
     "DamageId": [
       117140101,
       117140102,
@@ -405,7 +405,7 @@
   },
   "50": {
     "Id": 50,
-    "RecountName": "Moonstrike",
+    "RecountName": "月影",
     "DamageId": [
       117150102,
       117150103,
@@ -419,7 +419,7 @@
   },
   "51": {
     "Id": 51,
-    "RecountName": "Oblivion Combo",
+    "RecountName": "极诣·大破灭连斩",
     "DamageId": [
       117130102,
       117130108,
@@ -429,7 +429,7 @@
   },
   "52": {
     "Id": 52,
-    "RecountName": "Overdrive",
+    "RecountName": "超高出力",
     "DamageId": [
       117050101,
       117050103,
@@ -441,21 +441,21 @@
   },
   "53": {
     "Id": 53,
-    "RecountName": "Flash strike",
+    "RecountName": "一闪",
     "DamageId": [
       117170101
     ]
   },
   "54": {
     "Id": 54,
-    "RecountName": "Raijin Dash",
+    "RecountName": "飞雷神",
     "DamageId": [
       117180102
     ]
   },
   "55": {
     "Id": 55,
-    "RecountName": "Scythe Wheel",
+    "RecountName": "镰车",
     "DamageId": [
       117190104,
       117190105
@@ -463,7 +463,7 @@
   },
   "56": {
     "Id": 56,
-    "RecountName": "Moonstrike",
+    "RecountName": "月影",
     "DamageId": [
       24460103,
       24470103
@@ -471,14 +471,14 @@
   },
   "57": {
     "Id": 57,
-    "RecountName": "Moonstrike Whirl",
+    "RecountName": "月刃回旋",
     "DamageId": [
       11799060101
     ]
   },
   "58": {
     "Id": 58,
-    "RecountName": "Thundercut",
+    "RecountName": "霹雳连斩",
     "DamageId": [
       117240103,
       117240104,
@@ -509,19 +509,19 @@
   },
   "59": {
     "Id": 59,
-    "RecountName": "Volt Surge",
+    "RecountName": "无穷雷霆之力",
     "DamageId": []
   },
   "60": {
     "Id": 60,
-    "RecountName": "Stormflash",
+    "RecountName": "千雷闪影之意",
     "DamageId": [
       117320101
     ]
   },
   "61": {
     "Id": 61,
-    "RecountName": "True Sight",
+    "RecountName": "心眼",
     "DamageId": [
       117200103,
       117200105,
@@ -531,7 +531,7 @@
   },
   "62": {
     "Id": 62,
-    "RecountName": "Thunder Cut",
+    "RecountName": "雷切",
     "DamageId": [
       315510100,
       315510200
@@ -539,7 +539,7 @@
   },
   "63": {
     "Id": 63,
-    "RecountName": "Dracoflash",
+    "RecountName": "坠龙闪",
     "DamageId": [
       117350103,
       117350105,
@@ -548,7 +548,7 @@
   },
   "64": {
     "Id": 64,
-    "RecountName": "Phantom Slash",
+    "RecountName": "神影斩",
     "DamageId": [
       117360102,
       11799040101
@@ -556,7 +556,7 @@
   },
   "65": {
     "Id": 65,
-    "RecountName": "Divine Sickle",
+    "RecountName": "神罚之镰",
     "DamageId": [
       117370101,
       117370112,
@@ -566,7 +566,7 @@
   },
   "66": {
     "Id": 66,
-    "RecountName": "Storm Scythe",
+    "RecountName": "雷霆之镰",
     "DamageId": [
       117330104,
       117330106,
@@ -576,7 +576,7 @@
   },
   "67": {
     "Id": 67,
-    "RecountName": "Thundercleave",
+    "RecountName": "霹雳升龙斩",
     "DamageId": [
       117420101,
       117420102,
@@ -586,7 +586,7 @@
   },
   "68": {
     "Id": 68,
-    "RecountName": "Chaos Breaker",
+    "RecountName": "缭乱兜割",
     "DamageId": [
       117380101,
       117380105
@@ -594,7 +594,7 @@
   },
   "69": {
     "Id": 69,
-    "RecountName": "Piercing Slash",
+    "RecountName": "看破斩",
     "DamageId": [
       11799020101,
       117390101
@@ -602,7 +602,7 @@
   },
   "70": {
     "Id": 70,
-    "RecountName": "Bladewind Domain",
+    "RecountName": "刃风界域",
     "DamageId": [
       11799070101,
       11799070102,
@@ -612,28 +612,28 @@
   },
   "71": {
     "Id": 71,
-    "RecountName": "Thunderstrike",
+    "RecountName": "雷击",
     "DamageId": [
       11799080101
     ]
   },
   "72": {
     "Id": 72,
-    "RecountName": "Thunderburst",
+    "RecountName": "雷爆",
     "DamageId": [
       11799100101
     ]
   },
   "73": {
     "Id": 73,
-    "RecountName": "Red light counter",
+    "RecountName": "红光反制攻击",
     "DamageId": [
       122110102
     ]
   },
   "74": {
     "Id": 74,
-    "RecountName": "Lucky Hit",
+    "RecountName": "幸运一击(弓箭）",
     "DamageId": [
       2203110903,
       2203110904
@@ -641,7 +641,7 @@
   },
   "75": {
     "Id": 75,
-    "RecountName": "Bullseye",
+    "RecountName": "弹无虚发",
     "DamageId": [
       322010100,
       322010300
@@ -649,21 +649,21 @@
   },
   "76": {
     "Id": 76,
-    "RecountName": "Storm Arrow",
+    "RecountName": "暴风箭矢",
     "DamageId": [
       322010400
     ]
   },
   "77": {
     "Id": 77,
-    "RecountName": "Double Arrow",
+    "RecountName": "二连矢",
     "DamageId": [
       322010600
     ]
   },
   "78": {
     "Id": 78,
-    "RecountName": "​Quadraflare​",
+    "RecountName": "​光意·四连矢​",
     "DamageId": [
       322011100,
       322020300,
@@ -673,7 +673,7 @@
   },
   "79": {
     "Id": 79,
-    "RecountName": "Luminary Bolt",
+    "RecountName": "锐眼·光能巨箭",
     "DamageId": [
       322030100,
       322030200,
@@ -682,42 +682,42 @@
   },
   "80": {
     "Id": 80,
-    "RecountName": "Photon Explosion",
+    "RecountName": "光能爆炸",
     "DamageId": [
       122910101
     ]
   },
   "81": {
     "Id": 81,
-    "RecountName": "Torrent Volley",
+    "RecountName": "怒涛射击",
     "DamageId": [
       322010200
     ]
   },
   "82": {
     "Id": 82,
-    "RecountName": "Lumi Torrent",
+    "RecountName": "光意·怒涛射击",
     "DamageId": [
       122400103
     ]
   },
   "83": {
     "Id": 83,
-    "RecountName": "Arrow Rain",
+    "RecountName": "箭雨",
     "DamageId": [
       122890101
     ]
   },
   "84": {
     "Id": 84,
-    "RecountName": "Powerdraw",
+    "RecountName": "聚能射击",
     "DamageId": [
       122330103
     ]
   },
   "85": {
     "Id": 85,
-    "RecountName": "Radiance Barrage",
+    "RecountName": "光能轰炸",
     "DamageId": [
       25524003,
       25524004
@@ -725,12 +725,12 @@
   },
   "86": {
     "Id": 86,
-    "RecountName": "Focus",
+    "RecountName": "精神凝聚",
     "DamageId": []
   },
   "87": {
     "Id": 87,
-    "RecountName": "Blast Shot",
+    "RecountName": "爆炸射击",
     "DamageId": [
       322011000,
       25523102
@@ -738,35 +738,35 @@
   },
   "88": {
     "Id": 88,
-    "RecountName": "Deter Shot",
+    "RecountName": "威慑射击",
     "DamageId": [
       322010900
     ]
   },
   "89": {
     "Id": 89,
-    "RecountName": "Wild Wolf - Basic Attack",
+    "RecountName": "野狼普通攻击",
     "DamageId": [
       117008270101
     ]
   },
   "90": {
     "Id": 90,
-    "RecountName": "Wild Wolf - Coordinated Attack",
+    "RecountName": "野狼协同攻击",
     "DamageId": [
       117008200102
     ]
   },
   "91": {
     "Id": 91,
-    "RecountName": "Wild Wolf - Tail Sweep",
+    "RecountName": "野狼扫尾",
     "DamageId": [
       117008240102
     ]
   },
   "92": {
     "Id": 92,
-    "RecountName": "Wild Wolf - Pounce",
+    "RecountName": "野狼飞扑",
     "DamageId": [
       117008250102,
       117008260102
@@ -774,28 +774,28 @@
   },
   "93": {
     "Id": 93,
-    "RecountName": "Falcon Dive",
+    "RecountName": "猎鹰俯冲攻击",
     "DamageId": [
       11011120101
     ]
   },
   "94": {
     "Id": 94,
-    "RecountName": "Falcon Strike",
+    "RecountName": "猎鹰出击",
     "DamageId": [
       2220329107
     ]
   },
   "95": {
     "Id": 95,
-    "RecountName": "Falcon Lightning Strike",
+    "RecountName": "猎鹰闪电冲击",
     "DamageId": [
       2220329109
     ]
   },
   "96": {
     "Id": 96,
-    "RecountName": "Phantom Falcon",
+    "RecountName": "幻影猎鹰",
     "DamageId": [
       122960102,
       322011300
@@ -803,7 +803,7 @@
   },
   "97": {
     "Id": 97,
-    "RecountName": "Celestial Eagle",
+    "RecountName": "天界雄鹰",
     "DamageId": [
       123520101,
       123520103
@@ -811,14 +811,14 @@
   },
   "98": {
     "Id": 98,
-    "RecountName": "Phantom Direwolves",
+    "RecountName": "幻影魔狼",
     "DamageId": [
       122920102
     ]
   },
   "99": {
     "Id": 99,
-    "RecountName": "Bleed",
+    "RecountName": "生命流失",
     "DamageId": [
       2220309102,
       2220310102,
@@ -829,21 +829,21 @@
   },
   "100": {
     "Id": 100,
-    "RecountName": "Stomp",
+    "RecountName": "践踏",
     "DamageId": [
       2220351201
     ]
   },
   "101": {
     "Id": 101,
-    "RecountName": "Implosion",
+    "RecountName": "内爆",
     "DamageId": [
       2220352105
     ]
   },
   "102": {
     "Id": 102,
-    "RecountName": "Light Prism",
+    "RecountName": "光棱",
     "DamageId": [
       2220362101,
       2220362105,
@@ -853,28 +853,28 @@
   },
   "103": {
     "Id": 103,
-    "RecountName": "Lightseeker Arrow",
+    "RecountName": "光追箭矢",
     "DamageId": [
       322010500
     ]
   },
   "104": {
     "Id": 104,
-    "RecountName": "Photon Arrow",
+    "RecountName": "光能箭矢",
     "DamageId": [
       322011200
     ]
   },
   "105": {
     "Id": 105,
-    "RecountName": "Magic Arrow",
+    "RecountName": "魔法箭矢",
     "DamageId": [
       322010700
     ]
   },
   "106": {
     "Id": 106,
-    "RecountName": "Explosive Arrow",
+    "RecountName": "爆炸箭矢",
     "DamageId": [
       322010800,
       2220331101
@@ -882,14 +882,14 @@
   },
   "107": {
     "Id": 107,
-    "RecountName": "Red light counter",
+    "RecountName": "红光反制攻击",
     "DamageId": [
       119120102
     ]
   },
   "108": {
     "Id": 108,
-    "RecountName": "Lucky Hit",
+    "RecountName": "幸运一击(巨刃)",
     "DamageId": [
       2203110703,
       2203110704
@@ -897,7 +897,7 @@
   },
   "109": {
     "Id": 109,
-    "RecountName": "Halberd's Edge",
+    "RecountName": "止战之锋",
     "DamageId": [
       119010102,
       119020102,
@@ -909,14 +909,14 @@
   },
   "110": {
     "Id": 110,
-    "RecountName": "Shield Bash",
+    "RecountName": "护盾猛击",
     "DamageId": [
       119220102
     ]
   },
   "111": {
     "Id": 111,
-    "RecountName": "Shield Combo",
+    "RecountName": "护盾连击",
     "DamageId": [
       119320102,
       119320103
@@ -924,7 +924,7 @@
   },
   "112": {
     "Id": 112,
-    "RecountName": "Countercrush",
+    "RecountName": "格挡反击",
     "DamageId": [
       119300101,
       119300104,
@@ -936,21 +936,21 @@
   },
   "113": {
     "Id": 113,
-    "RecountName": "Tectonic Ring",
+    "RecountName": "岩御·崩裂回环",
     "DamageId": [
       119070103
     ]
   },
   "114": {
     "Id": 114,
-    "RecountName": "Star Shatter",
+    "RecountName": "碎星冲",
     "DamageId": [
       119240102
     ]
   },
   "115": {
     "Id": 115,
-    "RecountName": "Sandshroud",
+    "RecountName": "砂石斗篷",
     "DamageId": [
       119270102,
       25004904
@@ -958,19 +958,19 @@
   },
   "116": {
     "Id": 116,
-    "RecountName": "Stoneform",
+    "RecountName": "巨岩躯体",
     "DamageId": []
   },
   "117": {
     "Id": 117,
-    "RecountName": "Sandgrip",
+    "RecountName": "砂岩之握",
     "DamageId": [
       25003301
     ]
   },
   "118": {
     "Id": 118,
-    "RecountName": "Granite Fury",
+    "RecountName": "岩怒之击",
     "DamageId": [
       119370102,
       119390102
@@ -978,7 +978,7 @@
   },
   "119": {
     "Id": 119,
-    "RecountName": "Rage Burst",
+    "RecountName": "怒爆",
     "DamageId": [
       119250101,
       119400101
@@ -986,12 +986,12 @@
   },
   "120": {
     "Id": 120,
-    "RecountName": "Brave Bastion",
+    "RecountName": "勇者壁垒",
     "DamageId": []
   },
   "121": {
     "Id": 121,
-    "RecountName": "Sandward",
+    "RecountName": "砂岩守护",
     "DamageId": [
       119230112,
       119230113
@@ -999,28 +999,28 @@
   },
   "122": {
     "Id": 122,
-    "RecountName": "Rageblow",
+    "RecountName": "怒击",
     "DamageId": [
       119350101
     ]
   },
   "123": {
     "Id": 123,
-    "RecountName": "Starfall",
+    "RecountName": "碎星崩裂",
     "DamageId": [
       119410102
     ]
   },
   "124": {
     "Id": 124,
-    "RecountName": "Rupture",
+    "RecountName": "崩裂",
     "DamageId": [
       119420102
     ]
   },
   "125": {
     "Id": 125,
-    "RecountName": "Terra Sunder",
+    "RecountName": "地崩山摧",
     "DamageId": [
       11999020101,
       11999020102,
@@ -1029,28 +1029,28 @@
   },
   "126": {
     "Id": 126,
-    "RecountName": "Stone Fist",
+    "RecountName": "巨岩轰击",
     "DamageId": [
       11999030101
     ]
   },
   "127": {
     "Id": 127,
-    "RecountName": "Weak Point Strike",
+    "RecountName": "弱点打击",
     "DamageId": [
       25003601
     ]
   },
   "128": {
     "Id": 128,
-    "RecountName": "Block Recovery",
+    "RecountName": "格挡回复",
     "DamageId": [
       2220108003
     ]
   },
   "129": {
     "Id": 129,
-    "RecountName": "Countercrush",
+    "RecountName": "格挡反击",
     "DamageId": [
       25003703,
       25006703,
@@ -1062,7 +1062,7 @@
   },
   "130": {
     "Id": 130,
-    "RecountName": "Shield Echo",
+    "RecountName": "护盾回声",
     "DamageId": [
       2220124003,
       2220124004,
@@ -1071,21 +1071,21 @@
   },
   "131": {
     "Id": 131,
-    "RecountName": "Sandstone Revival",
+    "RecountName": "砂石复苏",
     "DamageId": [
       2220141005
     ]
   },
   "132": {
     "Id": 132,
-    "RecountName": "Recovery",
+    "RecountName": "回复",
     "DamageId": [
       2220149103
     ]
   },
   "133": {
     "Id": 133,
-    "RecountName": "Rock Heal",
+    "RecountName": "岩拳回复",
     "DamageId": [
       2220164103,
       2220164104
@@ -1093,14 +1093,14 @@
   },
   "134": {
     "Id": 134,
-    "RecountName": "Sand Crystal Shock",
+    "RecountName": "砂晶石震荡",
     "DamageId": [
       2220136203
     ]
   },
   "135": {
     "Id": 135,
-    "RecountName": "Granite",
+    "RecountName": "岩弹",
     "DamageId": [
       3190100,
       3190200
@@ -1108,7 +1108,7 @@
   },
   "136": {
     "Id": 136,
-    "RecountName": "Resolute Breath",
+    "RecountName": "坚毅之息",
     "DamageId": [
       119090102,
       2220117203
@@ -1116,7 +1116,7 @@
   },
   "137": {
     "Id": 137,
-    "RecountName": "Red light counter",
+    "RecountName": "红光反制攻击",
     "DamageId": [
       124240102
     ]
@@ -1131,7 +1131,7 @@
   },
   "139": {
     "Id": 139,
-    "RecountName": "Blade of Justice",
+    "RecountName": "公正之剑",
     "DamageId": [
       124010102,
       124020102,
@@ -1141,7 +1141,7 @@
   },
   "140": {
     "Id": 140,
-    "RecountName": "Valor Bash",
+    "RecountName": "英勇盾击",
     "DamageId": [
       124050104,
       124050107,
@@ -1150,14 +1150,14 @@
   },
   "141": {
     "Id": 141,
-    "RecountName": "Vanguard Strike",
+    "RecountName": "先锋打击",
     "DamageId": [
       124060101
     ]
   },
   "142": {
     "Id": 142,
-    "RecountName": "Vanguard Hunt",
+    "RecountName": "先锋追击",
     "DamageId": [
       124060104,
       124060105,
@@ -1168,14 +1168,14 @@
   },
   "143": {
     "Id": 143,
-    "RecountName": "Radiant Infusion",
+    "RecountName": "凛威·圣光灌注",
     "DamageId": [
       124070103
     ]
   },
   "144": {
     "Id": 144,
-    "RecountName": "Judgment",
+    "RecountName": "裁决",
     "DamageId": [
       124100101,
       124100104,
@@ -1184,7 +1184,7 @@
   },
   "145": {
     "Id": 145,
-    "RecountName": "Scorching Judgment",
+    "RecountName": "灼热裁决",
     "DamageId": [
       124520101,
       124520102,
@@ -1193,14 +1193,14 @@
   },
   "146": {
     "Id": 146,
-    "RecountName": "Auto Judgment",
+    "RecountName": "自动裁决",
     "DamageId": [
       124510101
     ]
   },
   "147": {
     "Id": 147,
-    "RecountName": "Reckoning",
+    "RecountName": "清算",
     "DamageId": [
       124120102,
       124120103,
@@ -1209,28 +1209,28 @@
   },
   "148": {
     "Id": 148,
-    "RecountName": "Shield Toss",
+    "RecountName": "投掷盾牌",
     "DamageId": [
       324010100
     ]
   },
   "149": {
     "Id": 149,
-    "RecountName": "Sacred Blade",
+    "RecountName": "圣剑",
     "DamageId": [
       124210101
     ]
   },
   "150": {
     "Id": 150,
-    "RecountName": "Radiance",
+    "RecountName": "光明决心",
     "DamageId": [
       324010200
     ]
   },
   "151": {
     "Id": 151,
-    "RecountName": "Aegis Ward",
+    "RecountName": "圣光守卫",
     "DamageId": [
       25540502,
       25540504
@@ -1238,7 +1238,7 @@
   },
   "152": {
     "Id": 152,
-    "RecountName": "Zeal Crusade",
+    "RecountName": "冷酷征伐",
     "DamageId": [
       25541203,
       25541205,
@@ -1254,7 +1254,7 @@
   },
   "153": {
     "Id": 153,
-    "RecountName": "Divine Circle",
+    "RecountName": "圣环",
     "DamageId": [
       25540404,
       25540403
@@ -1262,21 +1262,21 @@
   },
   "154": {
     "Id": 154,
-    "RecountName": "Condemn",
+    "RecountName": "断罪",
     "DamageId": [
       124160102
     ]
   },
   "155": {
     "Id": 155,
-    "RecountName": "Enhanced Condemn",
+    "RecountName": "强化断罪",
     "DamageId": [
       124170102
     ]
   },
   "156": {
     "Id": 156,
-    "RecountName": "Inferno Reckon",
+    "RecountName": "炽热清算",
     "DamageId": [
       124130102,
       124130103,
@@ -1286,14 +1286,14 @@
   },
   "157": {
     "Id": 157,
-    "RecountName": "Radiant Impact",
+    "RecountName": "光明冲击",
     "DamageId": [
       124500101
     ]
   },
   "158": {
     "Id": 158,
-    "RecountName": "Holy Mark",
+    "RecountName": "神圣印记",
     "DamageId": [
       2220624103,
       2220624105,
@@ -1303,21 +1303,21 @@
   },
   "159": {
     "Id": 159,
-    "RecountName": "Divine Strike",
+    "RecountName": "神圣之击",
     "DamageId": [
       2220640103
     ]
   },
   "160": {
     "Id": 160,
-    "RecountName": "Shield Guard",
+    "RecountName": "盾击守护",
     "DamageId": [
       2220646003
     ]
   },
   "161": {
     "Id": 161,
-    "RecountName": "Radiant Core",
+    "RecountName": "光芒核心",
     "DamageId": [
       2220655203,
       2220655204
@@ -1325,21 +1325,21 @@
   },
   "162": {
     "Id": 162,
-    "RecountName": "Recovery",
+    "RecountName": "回复",
     "DamageId": [
       2220149303
     ]
   },
   "163": {
     "Id": 163,
-    "RecountName": "Holy Radiance",
+    "RecountName": "神圣光辉",
     "DamageId": [
       2220624004
     ]
   },
   "164": {
     "Id": 164,
-    "RecountName": "Red light counter",
+    "RecountName": "红光反制攻击",
     "DamageId": [
       115170102
     ]
@@ -1354,7 +1354,7 @@
   },
   "166": {
     "Id": 166,
-    "RecountName": "Vines' Embrace",
+    "RecountName": "掌控藤蔓",
     "DamageId": [
       115010102,
       115020102,
@@ -1368,7 +1368,7 @@
   },
   "167": {
     "Id": 167,
-    "RecountName": "Wild Bloom",
+    "RecountName": "狂野绽放",
     "DamageId": [
       115180102,
       115410102,
@@ -1379,7 +1379,7 @@
   },
   "168": {
     "Id": 168,
-    "RecountName": "Life Bloom",
+    "RecountName": "生命绽放",
     "DamageId": [
       22030104,
       22110101
@@ -1387,7 +1387,7 @@
   },
   "169": {
     "Id": 169,
-    "RecountName": "Divine Circle Bloom",
+    "RecountName": "繁盛·希望结界",
     "DamageId": [
       115090101,
       22141404,
@@ -1396,7 +1396,7 @@
   },
   "170": {
     "Id": 170,
-    "RecountName": "Bloomheal",
+    "RecountName": "花语回升",
     "DamageId": [
       115270106,
       115270108,
@@ -1405,12 +1405,12 @@
   },
   "171": {
     "Id": 171,
-    "RecountName": "Vital Surge",
+    "RecountName": "花语回升",
     "DamageId": []
   },
   "172": {
     "Id": 172,
-    "RecountName": "Feral Seed",
+    "RecountName": "不羁之种",
     "DamageId": [
       315010300,
       315010400,
@@ -1419,14 +1419,14 @@
   },
   "173": {
     "Id": 173,
-    "RecountName": "Nourish",
+    "RecountName": "滋养",
     "DamageId": [
       22140403
     ]
   },
   "174": {
     "Id": 174,
-    "RecountName": "Regen Pulse",
+    "RecountName": "再生脉冲",
     "DamageId": [
       22142501,
       115600101,
@@ -1449,7 +1449,7 @@
   },
   "175": {
     "Id": 175,
-    "RecountName": "Infusion",
+    "RecountName": "灌注",
     "DamageId": [
       315010500,
       315010600,
@@ -1459,26 +1459,26 @@
   },
   "176": {
     "Id": 176,
-    "RecountName": "Grove Wish",
+    "RecountName": "森语G10-森之祈愿",
     "DamageId": [
       22140601
     ]
   },
   "177": {
     "Id": 177,
-    "RecountName": "Verdant Oracle G10 - Grove Wish",
+    "RecountName": "森语G10-森之祈愿",
     "DamageId": [
       22140604
     ]
   },
   "178": {
     "Id": 178,
-    "RecountName": "Nature Ward",
+    "RecountName": "自然庇护",
     "DamageId": []
   },
   "179": {
     "Id": 179,
-    "RecountName": "Blossom Charge",
+    "RecountName": "盛放注能",
     "DamageId": [
       115290101,
       115290102,
@@ -1490,12 +1490,12 @@
   },
   "180": {
     "Id": 180,
-    "RecountName": "Fast Growth",
+    "RecountName": "加速生长",
     "DamageId": []
   },
   "181": {
     "Id": 181,
-    "RecountName": "Stag Charge",
+    "RecountName": "鹿之奔袭",
     "DamageId": [
       315010100,
       22141804
@@ -1503,21 +1503,21 @@
   },
   "182": {
     "Id": 182,
-    "RecountName": "Wild Seed",
+    "RecountName": "狂野之种",
     "DamageId": [
       115510101
     ]
   },
   "183": {
     "Id": 183,
-    "RecountName": "Symbiotic Mark",
+    "RecountName": "共生印记",
     "DamageId": [
       22142303
     ]
   },
   "184": {
     "Id": 184,
-    "RecountName": "Nourishing Seed",
+    "RecountName": "滋养之种",
     "DamageId": [
       2220231103,
       2220231104
@@ -1525,35 +1525,35 @@
   },
   "185": {
     "Id": 185,
-    "RecountName": "Nature Shield",
+    "RecountName": "自然护盾",
     "DamageId": [
       2220212004
     ]
   },
   "186": {
     "Id": 186,
-    "RecountName": "Healing Chain",
+    "RecountName": "治疗链接",
     "DamageId": [
       2220209101
     ]
   },
   "187": {
     "Id": 187,
-    "RecountName": "Resurrect",
+    "RecountName": "复苏",
     "DamageId": [
       2220226203
     ]
   },
   "188": {
     "Id": 188,
-    "RecountName": "Natural Bloom",
+    "RecountName": "自然绽放",
     "DamageId": [
       2220227101
     ]
   },
   "189": {
     "Id": 189,
-    "RecountName": "Healing Pulse",
+    "RecountName": "治疗脉冲",
     "DamageId": [
       315010200,
       315010201
@@ -1561,21 +1561,21 @@
   },
   "190": {
     "Id": 190,
-    "RecountName": "Healing Orb",
+    "RecountName": "治疗球",
     "DamageId": [
       2220229101
     ]
   },
   "191": {
     "Id": 191,
-    "RecountName": "Thorn",
+    "RecountName": "荆棘",
     "DamageId": [
       22142403
     ]
   },
   "192": {
     "Id": 192,
-    "RecountName": "Healing of Stillness",
+    "RecountName": "休止的治愈",
     "DamageId": [
       25535501,
       25535601,
@@ -1584,7 +1584,7 @@
   },
   "193": {
     "Id": 193,
-    "RecountName": "Red light counter",
+    "RecountName": "红光反制攻击",
     "DamageId": [
       116240101,
       123370101
@@ -1592,7 +1592,7 @@
   },
   "194": {
     "Id": 194,
-    "RecountName": "Lucky Hit",
+    "RecountName": "幸运一击(吉他）",
     "DamageId": [
       2203111103,
       2203111104
@@ -1600,7 +1600,7 @@
   },
   "195": {
     "Id": 195,
-    "RecountName": "String Strike",
+    "RecountName": "琴弦叩击",
     "DamageId": [
       123210102,
       123210103,
@@ -1614,7 +1614,7 @@
   },
   "196": {
     "Id": 196,
-    "RecountName": "Resonant Strings",
+    "RecountName": "琴弦撩拨",
     "DamageId": [
       123010102,
       123020102,
@@ -1624,7 +1624,7 @@
   },
   "197": {
     "Id": 197,
-    "RecountName": "Amplified Beat",
+    "RecountName": "增幅节拍",
     "DamageId": [
       123060101,
       123060103,
@@ -1633,7 +1633,7 @@
   },
   "198": {
     "Id": 198,
-    "RecountName": "Healing Beat",
+    "RecountName": "愈合节拍",
     "DamageId": [
       25530201,
       25530203,
@@ -1642,7 +1642,7 @@
   },
   "199": {
     "Id": 199,
-    "RecountName": "Rock the Stage/Infinite Rhapsody",
+    "RecountName": "升格·劲爆全场/升格·无限狂想",
     "DamageId": [
       123140106,
       123140107,
@@ -1658,7 +1658,7 @@
   },
   "200": {
     "Id": 200,
-    "RecountName": "Concert Circuit",
+    "RecountName": "升格·巡演曲",
     "DamageId": [
       123360101,
       25533901,
@@ -1667,7 +1667,7 @@
   },
   "201": {
     "Id": 201,
-    "RecountName": "Harmonic Anthem",
+    "RecountName": "聚合乐章",
     "DamageId": [
       12301010101,
       12301020101,
@@ -1684,7 +1684,7 @@
   },
   "202": {
     "Id": 202,
-    "RecountName": "Rhapsody of Flame",
+    "RecountName": "烈焰狂想",
     "DamageId": [
       323080100,
       323090100,
@@ -1695,7 +1695,7 @@
   },
   "203": {
     "Id": 203,
-    "RecountName": "Flame's Rampage",
+    "RecountName": "炎律狂踏",
     "DamageId": [
       12301050101,
       2220743103
@@ -1703,35 +1703,35 @@
   },
   "204": {
     "Id": 204,
-    "RecountName": "Flame Note",
+    "RecountName": "烈焰音符",
     "DamageId": [
       12301060101
     ]
   },
   "205": {
     "Id": 205,
-    "RecountName": "Heroic Melody",
+    "RecountName": "鸣奏·英勇乐章",
     "DamageId": [
       25534101
     ]
   },
   "206": {
     "Id": 206,
-    "RecountName": "Fierce Strike",
+    "RecountName": "猛烈挥击",
     "DamageId": [
       123170104
     ]
   },
   "207": {
     "Id": 207,
-    "RecountName": "Healing Melody",
+    "RecountName": "鸣奏·愈合乐章",
     "DamageId": [
       25534201
     ]
   },
   "208": {
     "Id": 208,
-    "RecountName": "Fivefold Crescendo",
+    "RecountName": "激涌五重奏",
     "DamageId": [
       123120123,
       123120124,
@@ -1749,7 +1749,7 @@
   },
   "209": {
     "Id": 209,
-    "RecountName": "Passion Burst",
+    "RecountName": "热情挥洒",
     "DamageId": [
       123130106,
       123130107,
@@ -1758,7 +1758,7 @@
   },
   "210": {
     "Id": 210,
-    "RecountName": "Passion Fury",
+    "RecountName": "激昂·热情挥洒",
     "DamageId": [
       123320102,
       123320103
@@ -1766,7 +1766,7 @@
   },
   "211": {
     "Id": 211,
-    "RecountName": "Encore",
+    "RecountName": "安可",
     "DamageId": [
       323040100,
       323050100,
@@ -1776,19 +1776,19 @@
   },
   "212": {
     "Id": 212,
-    "RecountName": "Center Stage",
+    "RecountName": "万众瞩目",
     "DamageId": []
   },
   "213": {
     "Id": 213,
-    "RecountName": "Peaceful Tune",
+    "RecountName": "安和曲",
     "DamageId": [
       25531105
     ]
   },
   "214": {
     "Id": 214,
-    "RecountName": "Vitality Unleash",
+    "RecountName": "活力解放",
     "DamageId": [
       2220762007,
       2220762008
@@ -1796,14 +1796,14 @@
   },
   "215": {
     "Id": 215,
-    "RecountName": "Blazing Heal",
+    "RecountName": "炽焰治愈",
     "DamageId": [
       2220715103
     ]
   },
   "216": {
     "Id": 216,
-    "RecountName": "Flame Pillar Blash",
+    "RecountName": "火柱冲击",
     "DamageId": [
       123290101,
       123300101,
@@ -1812,14 +1812,14 @@
   },
   "217": {
     "Id": 217,
-    "RecountName": "Scorching Impact",
+    "RecountName": "烈火冲击",
     "DamageId": [
       123310102
     ]
   },
   "218": {
     "Id": 218,
-    "RecountName": "Note",
+    "RecountName": "音符",
     "DamageId": [
       2220741101,
       2220714102,
@@ -1828,21 +1828,21 @@
   },
   "219": {
     "Id": 219,
-    "RecountName": "Flame Shock",
+    "RecountName": "火焰震击",
     "DamageId": [
       123200101
     ]
   },
   "220": {
     "Id": 220,
-    "RecountName": "Sonic Surge",
+    "RecountName": "音符热浪",
     "DamageId": [
       2220768103
     ]
   },
   "221": {
     "Id": 221,
-    "RecountName": "Healing of Stillness",
+    "RecountName": "休止的治愈",
     "DamageId": [
       22142701,
       22142801,
@@ -1852,21 +1852,21 @@
   },
   "222": {
     "Id": 222,
-    "RecountName": "绝技! 咆哮指挥",
+    "RecountName": "绝技！怒吼指令",
     "DamageId": [
       2211006203
     ]
   },
   "223": {
     "Id": 223,
-    "RecountName": "Stunt! Falling Star",
+    "RecountName": "绝技！碎星坠落",
     "DamageId": [
       120028530101
     ]
   },
   "224": {
     "Id": 224,
-    "RecountName": "Stunt! Blink Ambush",
+    "RecountName": "绝技！瞬步奇袭",
     "DamageId": [
       120017400103,
       120017400104,
@@ -1875,7 +1875,7 @@
   },
   "225": {
     "Id": 225,
-    "RecountName": "Stunt! Predator Slash",
+    "RecountName": "绝技！追猎猛斩",
     "DamageId": [
       110052400101,
       110052400102,
@@ -1885,14 +1885,14 @@
   },
   "226": {
     "Id": 226,
-    "RecountName": "Arcane! Blazing Axe",
+    "RecountName": "奥义！炽炎战斧",
     "DamageId": [
       2321005102
     ]
   },
   "227": {
     "Id": 227,
-    "RecountName": "Arcane! Poison Explosion",
+    "RecountName": "奥义！毒爆",
     "DamageId": [
       110077410101,
       2211009903
@@ -1900,7 +1900,7 @@
   },
   "228": {
     "Id": 228,
-    "RecountName": "Stunt! Super Critical",
+    "RecountName": "绝技！超会心",
     "DamageId": [
       110024400103,
       2321006101
@@ -1908,7 +1908,7 @@
   },
   "229": {
     "Id": 229,
-    "RecountName": "绝技! 怒吼指挥",
+    "RecountName": "绝技! 乱射",
     "DamageId": [
       11007300102,
       11007300104,
@@ -1918,7 +1918,7 @@
   },
   "230": {
     "Id": 230,
-    "RecountName": "Stunt! Thunder Suppress",
+    "RecountName": "绝技！强压之雷",
     "DamageId": [
       110104400101,
       110104400102,
@@ -1945,28 +1945,28 @@
   },
   "233": {
     "Id": 233,
-    "RecountName": "Arcane! Ocean Howl",
+    "RecountName": "奥义！沧澜风啸",
     "DamageId": [
       110084400101
     ]
   },
   "234": {
     "Id": 234,
-    "RecountName": "Arcane! Cocoon Technique",
+    "RecountName": "奥义！茧房术",
     "DamageId": [
       110069400101
     ]
   },
   "235": {
     "Id": 235,
-    "RecountName": "Stunt! Water of Silence",
+    "RecountName": "绝技！静默之水",
     "DamageId": [
       139360010101
     ]
   },
   "236": {
     "Id": 236,
-    "RecountName": "Stunt! Lightning Orb",
+    "RecountName": "绝技！雷光球",
     "DamageId": [
       31000200,
       31000201
@@ -1981,14 +1981,14 @@
   },
   "238": {
     "Id": 238,
-    "RecountName": "Stunt! Spiral Fracture",
+    "RecountName": "绝技！螺旋断界",
     "DamageId": [
       110059400101
     ]
   },
   "239": {
     "Id": 239,
-    "RecountName": "Stunt! Boar Rush",
+    "RecountName": "绝技！猪突猛进",
     "DamageId": [
       11026400101,
       11026400108
@@ -1996,7 +1996,7 @@
   },
   "240": {
     "Id": 240,
-    "RecountName": "Stunt! Electro Bomb",
+    "RecountName": "绝技！电磁爆弹",
     "DamageId": [
       139130010101,
       339130100
@@ -2004,7 +2004,7 @@
   },
   "241": {
     "Id": 241,
-    "RecountName": "Stunt! Chaotic Barrage",
+    "RecountName": "绝技！缭乱飞弹",
     "DamageId": [
       339100100,
       339100200,
@@ -2018,7 +2018,7 @@
   },
   "242": {
     "Id": 242,
-    "RecountName": "绝技! 剑刃风暴",
+    "RecountName": "绝技！剑刃横扫",
     "DamageId": [
       139140102,
       139140103,
@@ -2027,19 +2027,19 @@
   },
   "243": {
     "Id": 243,
-    "RecountName": "Stunt! Shell Defense",
+    "RecountName": "绝技！缩壳防御",
     "DamageId": []
   },
   "244": {
     "Id": 244,
-    "RecountName": "Stunt! Earth Shield",
+    "RecountName": "绝技！大地之盾",
     "DamageId": [
       2211006603
     ]
   },
   "245": {
     "Id": 245,
-    "RecountName": "Arcane! Thunder Roar",
+    "RecountName": "奥义！雷霆咆哮",
     "DamageId": [
       2211009601,
       2211009604
@@ -2047,7 +2047,7 @@
   },
   "246": {
     "Id": 246,
-    "RecountName": "Arcane! Pulse Benediction",
+    "RecountName": "奥义！脉冲祝祷",
     "DamageId": [
       2211001203,
       2321010102
@@ -2055,7 +2055,7 @@
   },
   "247": {
     "Id": 247,
-    "RecountName": "Arcane! Thunderfall Grasp",
+    "RecountName": "奥义！雷霆天引",
     "DamageId": [
       120024400102,
       2321003101
@@ -2063,14 +2063,14 @@
   },
   "248": {
     "Id": 248,
-    "RecountName": "Arcane! Infernal Thrust",
+    "RecountName": "奥义！地狱突刺",
     "DamageId": [
       110081400101
     ]
   },
   "249": {
     "Id": 249,
-    "RecountName": "Arcane! Flame Roar",
+    "RecountName": "奥义！琉火咆哮",
     "DamageId": [
       139010101,
       2211008304
@@ -2078,7 +2078,7 @@
   },
   "250": {
     "Id": 250,
-    "RecountName": "Stunt! Heavy Slash",
+    "RecountName": "绝技！超重斩",
     "DamageId": [
       130810230101,
       130810230102,
@@ -2087,14 +2087,14 @@
   },
   "251": {
     "Id": 251,
-    "RecountName": "Stunt! Invisible Impact",
+    "RecountName": "绝技！无形冲击",
     "DamageId": [
       139250102
     ]
   },
   "252": {
     "Id": 252,
-    "RecountName": "Stunt! Transform into Bee",
+    "RecountName": "绝技！变身蜜蜂",
     "DamageId": [
       11411040101,
       339100800,
@@ -2104,7 +2104,7 @@
   },
   "253": {
     "Id": 253,
-    "RecountName": "Arcane! Silent Tide",
+    "RecountName": "奥义！静默潮汐",
     "DamageId": [
       110085400101,
       2321009201
@@ -2112,7 +2112,7 @@
   },
   "254": {
     "Id": 254,
-    "RecountName": "Arcane! Frostquake",
+    "RecountName": "奥义！冰霜震荡",
     "DamageId": [
       110028300103,
       110028300104
@@ -2120,7 +2120,7 @@
   },
   "255": {
     "Id": 255,
-    "RecountName": "Arcane! Flash Execution",
+    "RecountName": "奥义！瞬即斩",
     "DamageId": [
       129005400101,
       129005400102,
@@ -2133,27 +2133,27 @@
   },
   "256": {
     "Id": 256,
-    "RecountName": "Arcane! Heart of Flames",
+    "RecountName": "奥义！烈焰之心",
     "DamageId": []
   },
   "257": {
     "Id": 257,
-    "RecountName": "Arcane! Blessing of Life",
+    "RecountName": "奥义！生命祈愿",
     "DamageId": []
   },
   "258": {
     "Id": 258,
-    "RecountName": "Arcane! Time Decree",
+    "RecountName": "奥义！时间法令",
     "DamageId": []
   },
   "259": {
     "Id": 259,
-    "RecountName": "Arcane! Goblin Grand March",
+    "RecountName": "奥义！哥布林大行军",
     "DamageId": []
   },
   "260": {
     "Id": 260,
-    "RecountName": "Arcane! Divine Reliance",
+    "RecountName": "奥义！神灵凭依",
     "DamageId": [
       129008400103,
       129008400105,
@@ -2165,21 +2165,21 @@
   },
   "261": {
     "Id": 261,
-    "RecountName": "Arcane! Allscape Sublimation",
+    "RecountName": "奥义！万象升华",
     "DamageId": [
       129007400101
     ]
   },
   "262": {
     "Id": 262,
-    "RecountName": "Arcane! Guardian's Boundary",
+    "RecountName": "奥义！佑世边界",
     "DamageId": [
       2211011803
     ]
   },
   "263": {
     "Id": 263,
-    "RecountName": "Arcane! Illusion Resonance",
+    "RecountName": "奥义！幻象共鸣",
     "DamageId": [
       24530001,
       24530005,
@@ -2198,35 +2198,35 @@
   },
   "264": {
     "Id": 264,
-    "RecountName": "Arcane! Blazing Flames",
+    "RecountName": "奥义！熊熊烈焰",
     "DamageId": [
       110119060102
     ]
   },
   "265": {
     "Id": 265,
-    "RecountName": "Arcane! Peerless Thrust",
+    "RecountName": "奥义！无双突刺",
     "DamageId": [
       111014400101
     ]
   },
   "266": {
     "Id": 266,
-    "RecountName": "Arcane! Phantom Ambush",
+    "RecountName": "奥义！魅影奇袭",
     "DamageId": [
       117008290102
     ]
   },
   "267": {
     "Id": 267,
-    "RecountName": "Arcane! Cabbage Hammer",
+    "RecountName": "奥义！卷心菜重锤",
     "DamageId": [
       110118060101
     ]
   },
   "268": {
     "Id": 268,
-    "RecountName": "Arcane! Flame Spirit's Fortune",
+    "RecountName": "奥义！炎灵之幸",
     "DamageId": [
       111023060101,
       111023060102,
@@ -2235,21 +2235,21 @@
   },
   "269": {
     "Id": 269,
-    "RecountName": "Arcane! Fatal Spiral",
+    "RecountName": "奥义！绝命螺旋",
     "DamageId": [
       111007400103
     ]
   },
   "270": {
     "Id": 270,
-    "RecountName": "Stunt! Frost Breath",
+    "RecountName": "绝技！寒霜喷吐",
     "DamageId": [
       111005040101
     ]
   },
   "271": {
     "Id": 271,
-    "RecountName": "Stunt! Lightning Smite",
+    "RecountName": "绝技！落雷惩戒",
     "DamageId": [
       110110110101,
       2211013003
@@ -2257,14 +2257,14 @@
   },
   "272": {
     "Id": 272,
-    "RecountName": "Stunt! Blade Storm",
+    "RecountName": "绝技! 剑刃风暴",
     "DamageId": [
       139600101
     ]
   },
   "273": {
     "Id": 273,
-    "RecountName": "Stunt! Healing Bomb",
+    "RecountName": "绝技！治疗爆弹",
     "DamageId": [
       111013040101,
       111013040102,
@@ -2274,7 +2274,7 @@
   },
   "274": {
     "Id": 274,
-    "RecountName": "Stunt! Carpet Bombing",
+    "RecountName": "绝技！全场轰炸",
     "DamageId": [
       111012040101,
       111012040102,
@@ -2283,7 +2283,7 @@
   },
   "275": {
     "Id": 275,
-    "RecountName": "Stunt! Kinetic Strike",
+    "RecountName": "绝技！灵动出击",
     "DamageId": [
       117007180101,
       117007180102
@@ -2291,14 +2291,14 @@
   },
   "276": {
     "Id": 276,
-    "RecountName": "Stunt! Cabbage Boomerang",
+    "RecountName": "绝技！卷心菜回旋刃",
     "DamageId": [
       110113120103
     ]
   },
   "277": {
     "Id": 277,
-    "RecountName": "Stunt! Cabbage Blitz",
+    "RecountName": "绝技！卷心菜霹雳闪",
     "DamageId": [
       110112150101,
       110112150102,
@@ -2311,42 +2311,42 @@
   },
   "278": {
     "Id": 278,
-    "RecountName": "Stunt! Twin Fangs",
+    "RecountName": "绝技！双重牙",
     "DamageId": [
       111022050102
     ]
   },
   "279": {
     "Id": 279,
-    "RecountName": "EXT - First Aid",
+    "RecountName": "极·急救措施",
     "DamageId": [
       2230232103
     ]
   },
   "280": {
     "Id": 280,
-    "RecountName": "EXT - Life Drain",
+    "RecountName": "极·生命吸取",
     "DamageId": [
       2230008003
     ]
   },
   "281": {
     "Id": 281,
-    "RecountName": "Void Corruption Frenzy Burst",
+    "RecountName": "虚蚀爆裂",
     "DamageId": [
       17010010101
     ]
   },
   "282": {
     "Id": 282,
-    "RecountName": "Void Corruption Frenzy Pulse (formerly Void Corruption Frenzy Focus)",
+    "RecountName": "虚蚀脉冲（原虚蚀凝神）",
     "DamageId": [
       339140100
     ]
   },
   "283": {
     "Id": 283,
-    "RecountName": "Void Corruption Frenzy Wave",
+    "RecountName": "虚蚀波动",
     "DamageId": [
       17010020101,
       2300117006
@@ -2354,7 +2354,7 @@
   },
   "284": {
     "Id": 284,
-    "RecountName": "Void Aura",
+    "RecountName": "虚蚀光环",
     "DamageId": [
       2300103103,
       2300103104
@@ -2362,7 +2362,7 @@
   },
   "285": {
     "Id": 285,
-    "RecountName": "Phantom Execution",
+    "RecountName": "幻梦处决",
     "DamageId": [
       2300221501,
       2300221503
@@ -2370,14 +2370,14 @@
   },
   "286": {
     "Id": 286,
-    "RecountName": "Mirage Dream - Immortal Stance",
+    "RecountName": "迷幻梦境-不灭战姿",
     "DamageId": [
       2300267103
     ]
   },
   "287": {
     "Id": 287,
-    "RecountName": "Oblivion Dream - Bloodbound Surge",
+    "RecountName": "寂灭之梦-血限冲域",
     "DamageId": [
       2300302301,
       2300302501
@@ -2385,14 +2385,14 @@
   },
   "288": {
     "Id": 288,
-    "RecountName": "Shattered Illusion",
+    "RecountName": "虚妄裁定",
     "DamageId": [
       2300325003
     ]
   },
   "289": {
     "Id": 289,
-    "RecountName": "Shattered Illusion - Judgment - Heal",
+    "RecountName": "虚妄裁定-裁定·愈",
     "DamageId": [
       2300326003
     ]
@@ -2415,28 +2415,28 @@
   },
   "291": {
     "Id": 291,
-    "RecountName": "Stasis G8",
+    "RecountName": "稳态G8",
     "DamageId": [
       2305908003
     ]
   },
   "292": {
     "Id": 292,
-    "RecountName": "Stormblade Stasis G1",
+    "RecountName": "雷影稳态G1",
     "DamageId": [
       2305910103
     ]
   },
   "293": {
     "Id": 293,
-    "RecountName": "Heavy Guardian Stasis G2",
+    "RecountName": "巨刃稳态G2",
     "DamageId": [
       2305921003
     ]
   },
   "294": {
     "Id": 294,
-    "RecountName": "Others",
+    "RecountName": "其他",
     "DamageId": [
       2450103,
       2460103,
@@ -3291,7 +3291,6 @@
       2300121103,
       2300122003,
       2300123101,
-      2300321301,
       2300326004,
       2305311004,
       2305711104,
@@ -5285,6 +5284,20 @@
       120016260107,
       120016260108,
       1200
+    ]
+  },
+  "295": {
+    "Id": 295,
+    "RecountName": "虚妄裁定",
+    "DamageId": [
+      2300321301
+    ]
+  },
+  "296": {
+    "Id": 296,
+    "RecountName": "幻想冲击",
+    "DamageId": [
+      179980101
     ]
   }
 }
