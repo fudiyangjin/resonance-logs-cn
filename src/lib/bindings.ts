@@ -291,6 +291,14 @@ async setMonitorAllBuff(monitorAllBuff: boolean) : Promise<Result<null, string>>
     else return { status: "error", error: e  as any };
 }
 },
+async setBuffPriority(priorityBuffIds: number[]) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_buff_priority", { priorityBuffIds }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 /**
  * Gets a list of recent encounters.
  * 

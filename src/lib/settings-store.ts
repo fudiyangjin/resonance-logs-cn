@@ -103,11 +103,33 @@ export type OverlayVisibility = {
   showResourceGroup: boolean;
 };
 
+export type BuffDisplayMode = "individual" | "grouped";
+
+export type BuffGroup = {
+  id: string;
+  name: string;
+  buffIds: number[];
+  priorityBuffIds: number[];
+  monitorAll: boolean;
+  position: Point;
+  iconSize: number;
+  columns: number;
+  rows: number;
+  gap: number;
+  showName: boolean;
+  showTime: boolean;
+  showLayer: boolean;
+};
+
 export type SkillMonitorProfile = {
   name: string;
   selectedClass: string;
   monitoredSkillIds: number[];
   monitoredBuffIds: number[];
+  buffPriorityIds: number[];
+  buffDisplayMode: BuffDisplayMode;
+  buffGroups: BuffGroup[];
+  textBuffMaxVisible: number;
   overlayPositions: OverlayPositions;
   overlaySizes: OverlaySizes;
   overlayVisibility: OverlayVisibility;
@@ -139,6 +161,27 @@ function createDefaultOverlayVisibility(): OverlayVisibility {
   };
 }
 
+export function createDefaultBuffGroup(
+  name = "新分组",
+  index = 1,
+): BuffGroup {
+  return {
+    id: `group_${Date.now()}_${index}`,
+    name,
+    buffIds: [],
+    priorityBuffIds: [],
+    monitorAll: false,
+    position: { x: 40 + (index - 1) * 40, y: 310 + (index - 1) * 40 },
+    iconSize: 44,
+    columns: 6,
+    rows: 3,
+    gap: 6,
+    showName: true,
+    showTime: true,
+    showLayer: true,
+  };
+}
+
 export function createDefaultSkillMonitorProfile(
   name = "默认方案",
 ): SkillMonitorProfile {
@@ -147,6 +190,10 @@ export function createDefaultSkillMonitorProfile(
     selectedClass: "wind_knight",
     monitoredSkillIds: [],
     monitoredBuffIds: [],
+    buffPriorityIds: [],
+    buffDisplayMode: "individual",
+    buffGroups: [],
+    textBuffMaxVisible: 10,
     overlayPositions: createDefaultOverlayPositions(),
     overlaySizes: createDefaultOverlaySizes(),
     overlayVisibility: createDefaultOverlayVisibility(),

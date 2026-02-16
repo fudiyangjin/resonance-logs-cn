@@ -788,3 +788,19 @@ pub async fn set_monitor_all_buff(
         .await;
     Ok(())
 }
+
+#[tauri::command]
+#[specta::specta]
+pub async fn set_buff_priority(
+    priority_buff_ids: Vec<i32>,
+    state_manager: tauri::State<'_, AppStateManager>,
+) -> Result<(), String> {
+    info!("[monitor-buff] set buff priority: {:?}", priority_buff_ids);
+    state_manager
+        .with_state_mut(|state| {
+            state.priority_buff_ids = priority_buff_ids;
+            state.buff_order_dirty = true;
+        })
+        .await;
+    Ok(())
+}

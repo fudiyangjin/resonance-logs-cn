@@ -234,8 +234,14 @@ pub struct AppState {
     pub monitored_skill_ids: Vec<i32>,
     /// Ordered list of monitored buff base IDs.
     pub monitored_buff_ids: Vec<i32>,
+    /// User configured buff priority order by base ID.
+    pub priority_buff_ids: Vec<i32>,
     /// Active buffs keyed by buff UUID.
     pub active_buffs: HashMap<i32, ActiveBuff>,
+    /// Cached ordered buff UUID list to avoid sorting every packet.
+    pub ordered_buff_uuids: Vec<i32>,
+    /// Whether ordered_buff_uuids needs recomputing.
+    pub buff_order_dirty: bool,
     /// A handle to the Tauri application instance.
     pub app_handle: AppHandle,
     /// Whether to only show boss DPS.
@@ -295,8 +301,11 @@ impl AppState {
             skill_cd_map: HashMap::new(),
             monitored_skill_ids: Vec::new(),
             monitored_buff_ids: Vec::new(),
+            priority_buff_ids: Vec::new(),
             monitor_all_buff: false,
             active_buffs: HashMap::new(),
+            ordered_buff_uuids: Vec::new(),
+            buff_order_dirty: true,
             app_handle,
             boss_only_dps: false,
             low_hp_bosses: HashMap::new(),
@@ -1151,6 +1160,9 @@ impl AppStateManager {
                 &raw_bytes,
                 &state.monitored_buff_ids,
                 state.monitor_all_buff,
+                &state.priority_buff_ids,
+                &mut state.ordered_buff_uuids,
+                &mut state.buff_order_dirty,
                 &mut state.server_clock_offset,
             )
             {
@@ -1264,6 +1276,8 @@ impl AppStateManager {
         state.last_encounter_snapshot = None;
         state.skill_subscriptions.clear();
         state.active_buffs.clear();
+        state.ordered_buff_uuids.clear();
+        state.buff_order_dirty = true;
 
         if state.event_manager.should_emit_events() {
             state.event_manager.emit_encounter_reset();
@@ -1424,6 +1438,9 @@ fn process_buff_effect_bytes(
     raw_bytes: &[u8],
     monitored_base_ids: &[i32],
     monitor_all_buff: bool,
+    priority_buff_ids: &[i32],
+    ordered_buff_uuids: &mut Vec<i32>,
+    buff_order_dirty: &mut bool,
     server_clock_offset: &mut i64,
 ) -> Option<Vec<BuffUpdateState>> {
     if monitored_base_ids.is_empty() && !monitor_all_buff {
@@ -1474,6 +1491,7 @@ fn process_buff_effect_bytes(
                             source_config_id,
                         },
                     );
+                    *buff_order_dirty = true;
                 }
             } else if effect_type == EBuffEffectLogicPbType::BuffEffectBuffChange as i32 {
                 if let Ok(change_info) = BuffChange::decode(raw.as_slice()) {
@@ -1493,12 +1511,38 @@ fn process_buff_effect_bytes(
         }
 
         if buff_effect.r#type == Some(EBuffEventType::BuffEventRemove as i32) {
-            active_buffs.remove(&buff_uuid);
+            if active_buffs.remove(&buff_uuid).is_some() {
+                *buff_order_dirty = true;
+            }
         }
     }
 
-    let mut payload: Vec<BuffUpdateState> = active_buffs
-        .values()
+    if *buff_order_dirty {
+        let priority_index: HashMap<i32, usize> = priority_buff_ids
+            .iter()
+            .enumerate()
+            .map(|(idx, &base_id)| (base_id, idx))
+            .collect();
+        ordered_buff_uuids.clear();
+        ordered_buff_uuids.extend(active_buffs.keys().copied());
+        ordered_buff_uuids.sort_by_key(|uuid| {
+            let (base_id, create_time, buff_uuid) = active_buffs
+                .get(uuid)
+                .map(|buff| (buff.base_id, buff.create_time, buff.buff_uuid))
+                .unwrap_or((i32::MAX, i64::MAX, i32::MAX));
+            (
+                priority_index.get(&base_id).copied().unwrap_or(usize::MAX),
+                base_id,
+                create_time,
+                buff_uuid,
+            )
+        });
+        *buff_order_dirty = false;
+    }
+
+    let payload: Vec<BuffUpdateState> = ordered_buff_uuids
+        .iter()
+        .filter_map(|uuid| active_buffs.get(uuid))
         .filter(|buff| { monitor_all_buff ||
             monitored_base_ids.contains(&buff.base_id)
                 || (buff.source_config_id != 0
@@ -1515,8 +1559,6 @@ fn process_buff_effect_bytes(
             source_config_id: buff.source_config_id,
         })
         .collect();
-
-    payload.sort_by_key(|entry| (entry.base_id, entry.create_time_ms, entry.buff_uuid));
     Some(payload)
 }
 

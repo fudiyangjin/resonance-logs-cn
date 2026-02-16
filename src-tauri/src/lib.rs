@@ -70,6 +70,7 @@ pub fn run() {
             live::commands::get_buff_names,
             live::commands::search_buffs_by_name,
             live::commands::set_monitor_all_buff,
+            live::commands::set_buff_priority,
             database::commands::get_recent_encounters,
             database::commands::get_unique_scene_names,
             database::commands::get_unique_boss_names,

@@ -41,13 +41,34 @@
     const selectedClass = activeProfile?.selectedClass ?? "wind_knight";
     const monitoredSkillIds = activeProfile?.monitoredSkillIds ?? [];
     const monitoredBuffIds = activeProfile?.monitoredBuffIds ?? [];
+    const buffPriorityIds = activeProfile?.buffPriorityIds ?? [];
+    const buffDisplayMode = activeProfile?.buffDisplayMode ?? "individual";
+    const buffGroups = activeProfile?.buffGroups ?? [];
+    const anyGroupMonitorAll =
+      buffDisplayMode === "grouped" && buffGroups.some((group) => group.monitorAll);
+    const groupBuffIds =
+      buffDisplayMode === "grouped"
+        ? buffGroups.flatMap((group) => (group.monitorAll ? [] : group.buffIds))
+        : [];
     const mergedBuffIds = Array.from(
-      new Set([...monitoredBuffIds, ...getDefaultMonitoredBuffIds(selectedClass)]),
+      new Set([
+        ...monitoredBuffIds,
+        ...groupBuffIds,
+        ...getDefaultMonitoredBuffIds(selectedClass),
+      ]),
+    );
+    const mergedPriorityIds = Array.from(
+      new Set([
+        ...buffPriorityIds,
+        ...buffGroups.flatMap((group) => group.priorityBuffIds ?? []),
+      ]),
     );
     const monitorSyncKey = JSON.stringify({
       enabled,
       monitoredSkillIds,
       mergedBuffIds,
+      mergedPriorityIds,
+      anyGroupMonitorAll,
     });
 
     void (async () => {
@@ -56,11 +77,15 @@
         if (monitorSyncKey !== lastMonitorSyncKey) {
           lastMonitorSyncKey = monitorSyncKey;
           if (enabled) {
+            await commands.setMonitorAllBuff(anyGroupMonitorAll);
             await commands.setMonitoredSkills(monitoredSkillIds);
             await commands.setMonitoredBuffs(mergedBuffIds);
+            await commands.setBuffPriority(mergedPriorityIds);
           } else {
+            await commands.setMonitorAllBuff(false);
             await commands.setMonitoredSkills([]);
             await commands.setMonitoredBuffs([]);
+            await commands.setBuffPriority([]);
           }
         }
 
