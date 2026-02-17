@@ -20,9 +20,7 @@
   } from "$lib/column-data";
   import { settings, SETTINGS, DEFAULT_HISTORY_STATS } from "$lib/settings-store";
   import getDisplayName from "$lib/name-display";
-  import { getModuleApiBaseUrl } from "$lib/stores/uploading";
   import { openUrl } from "@tauri-apps/plugin-opener";
-  import { getEncounterSegments, type Segment } from "$lib/api";
 
   // Get encounter ID from URL params
   let encounterId = $derived(
@@ -73,9 +71,6 @@
     );
     return Math.floor(durationSeconds / 60);
   });
-
-  // Segment state - read-only in the UI
-  let segments = $state<Segment[]>([]);
 
   // Skills view state
   let skillsWindow = $state<SkillsWindow | null>(null);
@@ -183,7 +178,7 @@
   });
 
   const websiteBaseUrl = $derived.by(() => {
-    const apiBase = getModuleApiBaseUrl();
+    const apiBase = (SETTINGS.moduleSync.state.baseUrl || "").trim() || null;
     if (!apiBase) {
       return "https://bpsr.app";
     }
@@ -216,14 +211,6 @@
     } else {
       error = String(encounterRes.error);
       return;
-    }
-
-    // Load dungeon segments
-    try {
-      segments = await getEncounterSegments(encounterId);
-    } catch (e) {
-      console.error("Failed to load segments:", e);
-      segments = [];
     }
 
     const displayActors = actors;
@@ -428,8 +415,6 @@
     goto(`/main/dps/history${qs ? `?${qs}` : ""}`);
   }
 
-  // Segments are now read-only in the UI; selection is disabled
-
   async function handleToggleFavorite() {
     if (!encounter) return;
     try {
@@ -567,39 +552,6 @@
                 <span class="text-muted-foreground">•</span>
                 <span class="text-[11px] text-muted-foreground">#{encounter.id}</span>
               </div>
-              {#if segments.length > 0}
-                <div class="space-y-1">
-                  <div class="text-[11px] font-semibold text-foreground">
-                    地下城分段（{segments.length}）
-                  </div>
-                  <div class="flex flex-wrap gap-1.5">
-                    {#each segments as segment}
-                      <span
-                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px]
-                          {segment.segmentType === 'boss'
-                          ? 'border-orange-500/30 bg-orange-500/10 text-orange-400'
-                          : 'border-slate-500/30 bg-slate-500/10 text-slate-400'}"
-                      >
-                        <span class="font-semibold"
-                          >{segment.segmentType === "boss"
-                            ? segment.bossName || "首领"
-                            : "小怪"}</span
-                        >
-                        <span class="text-muted-foreground">•</span>
-                        <span
-                          >{Math.floor(
-                            ((segment.endedAtMs ?? Date.now()) -
-                              segment.startedAtMs) /
-                              1000,
-                          )}s</span
-                        >
-                        <span class="text-muted-foreground">•</span>
-                        <AbbreviatedNumber num={segment.totalDamage} />
-                      </span>
-                    {/each}
-                  </div>
-                </div>
-              {/if}
             </div>
           </div>
 

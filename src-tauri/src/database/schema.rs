@@ -25,11 +25,25 @@ diesel::table! {
     }
 }
 
+// Represents the `detailed_playerdata` table.
 diesel::table! {
     detailed_playerdata (player_id) {
+        // The unique ID of the player.
         player_id -> BigInt,
+        // The timestamp of when the player data was last seen.
         last_seen_ms -> BigInt,
+        // The raw binary data of the `CharSerialize` payload.
         vdata_bytes -> Nullable<Binary>,
+    }
+}
+
+// Represents the `encounter_data` table.
+diesel::table! {
+    encounter_data (encounter_id) {
+        // The encounter ID that owns this encoded payload.
+        encounter_id -> Integer,
+        // The compressed MessagePack payload for this encounter.
+        data -> Binary,
     }
 }
 
@@ -62,280 +76,28 @@ diesel::table! {
         is_favorite -> Integer,
         // Whether this encounter was manually reset by the user (should not be uploaded).
         is_manually_reset -> Integer,
-    }
-}
-
-// Represents the `damage_events` table.
-// Raw per-event tables `damage_events` and `heal_events` have been removed.
-// The codebase now stores only aggregated `_stats` tables (damage_skill_stats, heal_skill_stats,
-// actor_encounter_stats, encounter_bosses, etc.). The Diesel table macros for raw event
-// tables were intentionally removed as part of the irreversible schema change.
-
-// Represents the `actor_encounter_stats` table.
-diesel::table! {
-    actor_encounter_stats (encounter_id, actor_id) {
-        // The ID of the encounter.
-        encounter_id -> Integer,
-        // The ID of the actor.
-        actor_id -> BigInt,
-        // The name of the actor.
-        name -> Nullable<Text>,
-        // The class ID of the actor.
-        class_id -> Nullable<Integer>,
-        // The class spec of the actor.
-        class_spec -> Nullable<Integer>,
-        // The ability score of the actor.
-        ability_score -> Nullable<Integer>,
-        // The level of the actor.
-        level -> Nullable<Integer>,
-        // The total damage dealt by the actor.
-        damage_dealt -> BigInt,
-        // The total healing done by the actor.
-        heal_dealt -> BigInt,
-        // The total damage taken by the actor.
-        damage_taken -> BigInt,
-        // The number of hits dealt by the actor.
-        hits_dealt -> BigInt,
-        // The number of hits healed by the actor.
-        hits_heal -> BigInt,
-        // The number of hits taken by the actor.
-        hits_taken -> BigInt,
-        // The number of critical hits dealt by the actor.
-        crit_hits_dealt -> BigInt,
-        // The number of critical hits healed by the actor.
-        crit_hits_heal -> BigInt,
-        // The number of critical hits taken by the actor.
-        crit_hits_taken -> BigInt,
-        // The number of lucky hits dealt by the actor.
-        lucky_hits_dealt -> BigInt,
-        // The number of lucky hits healed by the actor.
-        lucky_hits_heal -> BigInt,
-        // The number of lucky hits taken by the actor.
-        lucky_hits_taken -> BigInt,
-        // The total critical damage dealt by the actor.
-        crit_total_dealt -> BigInt,
-        // The total critical healing done by the actor.
-        crit_total_heal -> BigInt,
-        // The total critical damage taken by the actor.
-        crit_total_taken -> BigInt,
-        // The total lucky damage dealt by the actor.
-        lucky_total_dealt -> BigInt,
-        // The total lucky healing done by the actor.
-        lucky_total_heal -> BigInt,
-        // The total lucky damage taken by the actor.
-        lucky_total_taken -> BigInt,
-        // The total damage dealt to bosses by the actor.
-        boss_damage_dealt -> BigInt,
-        // The number of hits dealt to bosses by the actor.
-        boss_hits_dealt -> BigInt,
-        // The number of critical hits dealt to bosses by the actor.
-        boss_crit_hits_dealt -> BigInt,
-        // The number of lucky hits dealt to bosses by the actor.
-        boss_lucky_hits_dealt -> BigInt,
-        // The total critical damage dealt to bosses by the actor.
-        boss_crit_total_dealt -> BigInt,
-        // The total lucky damage dealt to bosses by the actor.
-        boss_lucky_total_dealt -> BigInt,
-        // The number of revives for the actor during the encounter.
-        revives -> BigInt,
-        // The average DPS snapshot for the actor during the encounter.
-        dps -> Double,
-        // The accumulated active damage time (ms) used for True DPS.
-        active_dmg_time_ms -> BigInt,
-        // The True DPS snapshot for the actor during the encounter.
-        tdps -> Double,
-        // The encounter duration in seconds used for the DPS snapshot.
-        duration -> Double,
-        // Whether the actor is a player.
-        is_player -> Integer,
-        // Whether the actor is the local player.
-        is_local_player -> Integer,
-        // The attributes of the actor.
-        attributes -> Nullable<Text>,
-    }
-}
-
-// Represents the `damage_skill_stats` table.
-diesel::table! {
-    damage_skill_stats (encounter_id, attacker_id, defender_id, skill_id) {
-        // The ID of the encounter.
-        encounter_id -> Integer,
-        // The ID of the attacker.
-        attacker_id -> BigInt,
-        // The ID of the defender.
-        defender_id -> Nullable<BigInt>,
-        // The ID of the skill used.
-        skill_id -> BigInt,
-        // The number of hits.
-        hits -> Integer,
-        // The total value of the damage.
-        total_value -> BigInt,
-        // The number of critical hits.
-        crit_hits -> Integer,
-        // The number of lucky hits.
-        lucky_hits -> Integer,
-        // The total critical damage.
-        crit_total -> BigInt,
-        // The total lucky damage.
-        lucky_total -> BigInt,
-        // The total HP lost.
-        hp_loss_total -> BigInt,
-        // The total shield lost.
-        shield_loss_total -> BigInt,
-        // The details of the hits.
-        hit_details -> Text,
-        // The name of the monster.
-        monster_name -> Nullable<Text>,
-    }
-}
-
-// Represents the `heal_skill_stats` table.
-diesel::table! {
-    heal_skill_stats (encounter_id, healer_id, target_id, skill_id) {
-        // The ID of the encounter.
-        encounter_id -> Integer,
-        // The ID of the healer.
-        healer_id -> BigInt,
-        // The ID of the target.
-        target_id -> Nullable<BigInt>,
-        // The ID of the skill used.
-        skill_id -> BigInt,
-        // The number of hits.
-        hits -> Integer,
-        // The total value of the heal.
-        total_value -> BigInt,
-        // The number of critical hits.
-        crit_hits -> Integer,
-        // The number of lucky hits.
-        lucky_hits -> Integer,
-        // The total critical heal.
-        crit_total -> BigInt,
-        // The total lucky heal.
-        lucky_total -> BigInt,
-        // The details of the heals.
-        heal_details -> Text,
-        // The name of the monster.
-        monster_name -> Nullable<Text>,
-    }
-}
-
-// Represents the `encounter_bosses` table.
-diesel::table! {
-    encounter_bosses (encounter_id, monster_name) {
-        // The ID of the encounter.
-        encounter_id -> Integer,
-        // The name of the monster.
-        monster_name -> Text,
-        // The number of hits.
-        hits -> Integer,
-        // The total damage dealt to the boss.
-        total_damage -> BigInt,
-        // The maximum HP of the boss.
-        max_hp -> Nullable<BigInt>,
-        // Whether the boss was defeated.
-        is_defeated -> Integer,
-    }
-}
-
-// Represents the `death_events` table.
-diesel::table! {
-    death_events (id) {
-        // The unique ID of the death event.
-        id -> Integer,
-        // The ID of the encounter this event belongs to.
-        encounter_id -> Integer,
-        // The timestamp of the event, in milliseconds since the Unix epoch.
-        timestamp_ms -> BigInt,
-        // The ID of the actor who died.
-        actor_id -> BigInt,
-        // The ID of the killer (if known).
-        killer_id -> Nullable<BigInt>,
-        // The skill ID that caused the death (if known).
-        skill_id -> Nullable<Integer>,
-        // Whether the actor was the local player.
-        is_local_player -> Integer,
-        // The attempt index this death occurred in.
-        attempt_index -> Nullable<Integer>,
-    }
-}
-
-// Represents the `attempts` table.
-diesel::table! {
-    attempts (id) {
-        // The unique ID of the attempt.
-        id -> Integer,
-        // The ID of the encounter this attempt belongs to.
-        encounter_id -> Integer,
-        // The attempt index (1-based).
-        attempt_index -> Integer,
-        // The timestamp of when the attempt started, in milliseconds since the Unix epoch.
-        started_at_ms -> BigInt,
-        // The timestamp of when the attempt ended, in milliseconds since the Unix epoch.
-        ended_at_ms -> Nullable<BigInt>,
-        // The reason for the attempt split ('wipe', 'hp_rollback', 'manual').
-        reason -> Text,
-        // The boss HP at the start of the attempt.
-        boss_hp_start -> Nullable<BigInt>,
-        // The boss HP at the end of the attempt.
-        boss_hp_end -> Nullable<BigInt>,
-        // The total number of deaths in this attempt.
-        total_deaths -> Integer,
-    }
-}
-
-// Represents the `dungeon_segments` table.
-diesel::table! {
-    dungeon_segments (id) {
-        // The unique ID of the segment.
-        id -> Integer,
-        // The ID of the encounter this segment belongs to.
-        encounter_id -> Integer,
-        // The type of segment ('boss' or 'trash').
-        segment_type -> Text,
-        // The entity ID of the boss (if boss segment).
-        boss_entity_id -> Nullable<BigInt>,
-        // The monster type ID of the boss (if boss segment).
-        boss_monster_type_id -> Nullable<BigInt>,
-        // The name of the boss (if boss segment).
-        boss_name -> Nullable<Text>,
-        // The timestamp of when the segment started, in milliseconds since the Unix epoch.
-        started_at_ms -> BigInt,
-        // The timestamp of when the segment ended, in milliseconds since the Unix epoch.
-        ended_at_ms -> Nullable<BigInt>,
-        // The total damage dealt during this segment.
-        total_damage -> BigInt,
-        // The number of hits during this segment.
-        hit_count -> BigInt,
+        // JSON-encoded array of boss names for fast list/filter queries.
+        boss_names -> Nullable<Text>,
+        // JSON-encoded array of player names for fast list/filter queries.
+        player_names -> Nullable<Text>,
     }
 }
 
 // Simple key-value config table for app settings.
 diesel::table! {
     app_config (key) {
+        // The config key.
         key -> Text,
+        // The config value.
         value -> Text,
     }
 }
 
-// Joins
-
-// joinable entries for raw event tables removed
-diesel::joinable!(damage_skill_stats -> encounters (encounter_id));
-diesel::joinable!(heal_skill_stats -> encounters (encounter_id));
-diesel::joinable!(encounter_bosses -> encounters (encounter_id));
-diesel::joinable!(death_events -> encounters (encounter_id));
-diesel::joinable!(attempts -> encounters (encounter_id));
-diesel::joinable!(dungeon_segments -> encounters (encounter_id));
+diesel::joinable!(encounter_data -> encounters (encounter_id));
 diesel::allow_tables_to_appear_in_same_query!(
     entities,
     encounters,
-    actor_encounter_stats,
+    encounter_data,
     detailed_playerdata,
-    damage_skill_stats,
-    heal_skill_stats,
-    encounter_bosses,
-    death_events,
-    attempts,
-    dungeon_segments,
     app_config,
 );

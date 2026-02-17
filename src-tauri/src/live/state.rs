@@ -1,7 +1,7 @@
 use crate::database::{
-    ActorAggData, BossAggData, DbTask, EncounterAggData, SkillAggData, enqueue, now_ms,
+    CachedEntity, CachedPlayerData, EncounterMetadata, flush_entity_cache, flush_playerdata,
+    now_ms, save_encounter,
 };
-use crate::live::attempt_detector::AttemptConfig;
 use crate::live::commands_models::{
     BuffUpdatePayload, BuffUpdateState, FightResourceState, FightResourceUpdatePayload,
     SkillCdState, SkillCdUpdatePayload,
@@ -10,7 +10,6 @@ use crate::live::cd_calc::calculate_skill_cd;
 use crate::live::dungeon_log::{self, DungeonLogRuntime, SegmentType, SharedDungeonLog};
 use crate::live::event_manager::{EventManager, MetricType};
 use crate::live::opcodes_models::Encounter;
-use crate::live::player_names::PlayerNames;
 use blueprotobuf_lib::blueprotobuf;
 use blueprotobuf_lib::blueprotobuf::{
     BuffChange, BuffEffectSync, BuffInfo, EBuffEffectLogicPbType, EBuffEventType, EEntityType,
@@ -18,10 +17,13 @@ use blueprotobuf_lib::blueprotobuf::{
 use log::{info, trace, warn};
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tauri::{AppHandle, Emitter, Manager};
-use tokio::sync::RwLock;
+use tokio::sync::{
+    mpsc::{UnboundedReceiver, UnboundedSender, error::TryRecvError, unbounded_channel},
+    watch,
+};
 use prost::Message;
 
 /// Safely emits an event to the frontend, handling WebView2 state errors gracefully.
@@ -56,132 +58,6 @@ fn safe_emit<S: Serialize + Clone>(app_handle: &AppHandle, event: &str, payload:
             }
             false
         }
-    }
-}
-
-pub(crate) fn build_encounter_snapshot(
-    encounter: &Encounter,
-    local_player_id: i64,
-) -> EncounterAggData {
-    let mut actors = Vec::new();
-    let mut damage_skills = Vec::new();
-    let mut heal_skills = Vec::new();
-    let mut bosses_map: HashMap<String, BossAggData> = HashMap::new();
-
-    for (uid, entity) in &encounter.entity_uid_to_entity {
-        let is_player = entity.entity_type == EEntityType::EntChar;
-        if !is_player {
-            continue;
-        }
-
-        // Serialize attributes to JSON string for storage
-        let attributes_json = crate::live::opcodes_process::serialize_attributes(entity);
-
-        actors.push(ActorAggData {
-            actor_id: *uid,
-            name: if entity.name.is_empty() {
-                None
-            } else {
-                Some(entity.name.clone())
-            },
-            class_id: Some(entity.class_id),
-            class_spec: Some(entity.class_spec as i32),
-            ability_score: Some(entity.ability_score),
-            level: Some(entity.level),
-            is_player: true,
-            is_local_player: *uid == local_player_id,
-            attributes: attributes_json,
-            damage_dealt: entity.total_dmg.min(i64::MAX as u128) as i64,
-            hits_dealt: entity.hits_dmg.min(i64::MAX as u128) as i64,
-            crit_hits_dealt: entity.crit_hits_dmg.min(i64::MAX as u128) as i64,
-            lucky_hits_dealt: entity.lucky_hits_dmg.min(i64::MAX as u128) as i64,
-            crit_total_dealt: entity.crit_total_dmg.min(i64::MAX as u128) as i64,
-            lucky_total_dealt: entity.lucky_total_dmg.min(i64::MAX as u128) as i64,
-            boss_damage_dealt: entity.total_dmg_boss_only.min(i64::MAX as u128) as i64,
-            boss_hits_dealt: entity.hits_dmg_boss_only.min(i64::MAX as u128) as i64,
-            boss_crit_hits_dealt: entity.crit_hits_dmg_boss_only.min(i64::MAX as u128) as i64,
-            boss_lucky_hits_dealt: entity.lucky_hits_dmg_boss_only.min(i64::MAX as u128) as i64,
-            boss_crit_total_dealt: entity.crit_total_dmg_boss_only.min(i64::MAX as u128) as i64,
-            boss_lucky_total_dealt: entity.lucky_total_dmg_boss_only.min(i64::MAX as u128) as i64,
-            heal_dealt: entity.total_heal.min(i64::MAX as u128) as i64,
-            hits_heal: entity.hits_heal.min(i64::MAX as u128) as i64,
-            crit_hits_heal: entity.crit_hits_heal.min(i64::MAX as u128) as i64,
-            lucky_hits_heal: entity.lucky_hits_heal.min(i64::MAX as u128) as i64,
-            crit_total_heal: entity.crit_total_heal.min(i64::MAX as u128) as i64,
-            lucky_total_heal: entity.lucky_total_heal.min(i64::MAX as u128) as i64,
-            damage_taken: entity.total_taken.min(i64::MAX as u128) as i64,
-            hits_taken: entity.hits_taken.min(i64::MAX as u128) as i64,
-            crit_hits_taken: entity.crit_hits_taken.min(i64::MAX as u128) as i64,
-            lucky_hits_taken: entity.lucky_hits_taken.min(i64::MAX as u128) as i64,
-            crit_total_taken: entity.crit_total_taken.min(i64::MAX as u128) as i64,
-            lucky_total_taken: entity.lucky_total_taken.min(i64::MAX as u128) as i64,
-            active_dmg_time_ms: entity.active_dmg_time_ms.min(i64::MAX as u128) as i64,
-            revives: 0, // Revives are tracked separately via upsert_stats_add_revive
-        });
-
-        // Collect damage skills (grouped by target)
-        for ((skill_id, target_id), stats) in &entity.skill_dmg_to_target {
-            damage_skills.push(SkillAggData {
-                actor_id: *uid,
-                target_id: Some(*target_id),
-                skill_id: *skill_id,
-                monster_name: stats.monster_name.clone(),
-                hits: stats.hits.min(i32::MAX as u128) as i32,
-                total_value: stats.total_value.min(i64::MAX as u128) as i64,
-                crit_hits: stats.crit_hits.min(i32::MAX as u128) as i32,
-                lucky_hits: stats.lucky_hits.min(i32::MAX as u128) as i32,
-                crit_total: stats.crit_total.min(i64::MAX as u128) as i64,
-                lucky_total: stats.lucky_total.min(i64::MAX as u128) as i64,
-                hp_loss_total: stats.hp_loss_total.min(i64::MAX as u128) as i64,
-                shield_loss_total: stats.shield_loss_total.min(i64::MAX as u128) as i64,
-            });
-
-            // Accumulate boss stats if this target has a monster name
-            if let Some(ref name) = stats.monster_name {
-                let boss = bosses_map.entry(name.clone()).or_insert_with(|| BossAggData {
-                    monster_name: name.clone(),
-                    hits: 0,
-                    total_damage: 0,
-                    max_hp: None,
-                    is_defeated: false,
-                });
-                boss.hits = boss.hits.saturating_add(stats.hits.min(i32::MAX as u128) as i32);
-                boss.total_damage = boss
-                    .total_damage
-                    .saturating_add(stats.total_value.min(i64::MAX as u128) as i64);
-            }
-        }
-
-        // Collect heal skills (grouped by target)
-        for ((skill_id, target_id), stats) in &entity.skill_heal_to_target {
-            heal_skills.push(SkillAggData {
-                actor_id: *uid,
-                target_id: Some(*target_id),
-                skill_id: *skill_id,
-                monster_name: None,
-                hits: stats.hits.min(i32::MAX as u128) as i32,
-                total_value: stats.total_value.min(i64::MAX as u128) as i64,
-                crit_hits: stats.crit_hits.min(i32::MAX as u128) as i32,
-                lucky_hits: stats.lucky_hits.min(i32::MAX as u128) as i32,
-                crit_total: stats.crit_total.min(i64::MAX as u128) as i64,
-                lucky_total: stats.lucky_total.min(i64::MAX as u128) as i64,
-                hp_loss_total: 0,
-                shield_loss_total: 0,
-            });
-        }
-    }
-
-    EncounterAggData {
-        total_dmg: encounter.total_dmg.min(i64::MAX as u128) as i64,
-        total_heal: encounter.total_heal.min(i64::MAX as u128) as i64,
-        combat_duration_ms: encounter
-            .time_last_combat_packet_ms
-            .saturating_sub(encounter.time_fight_start_ms)
-            .min(i64::MAX as u128) as i64,
-        actors,
-        damage_skills,
-        heal_skills,
-        bosses: bosses_map.into_values().collect(),
     }
 }
 
@@ -254,8 +130,6 @@ pub struct AppState {
     pub dungeon_log: SharedDungeonLog,
     /// Feature flag for dungeon segment tracking.
     pub dungeon_segments_enabled: bool,
-    /// Configuration for attempt detection.
-    pub attempt_config: AttemptConfig,
     /// Event update rate in milliseconds (default: 200ms). Controls how often events are emitted to frontend.
     pub event_update_rate_ms: u64,
     /// Current fight resource state.
@@ -268,13 +142,15 @@ pub struct AppState {
     pub attr_skill_cd_pct: i32,
     /// AttrCdAcceleratePct (11960) skill acceleration in per-10k units.
     pub attr_cd_accelerate_pct: i32,
-    /// Cached snapshot built from the last emitted live encounter frame.
-    pub last_encounter_snapshot: Option<EncounterAggData>,
     /// Estimated offset: local_ms - server_ms. Used to convert server buff
     /// timestamps into local time domain for clock-skew-safe rendering.
     pub server_clock_offset: i64,
     /// Monitor All buff?
     pub monitor_all_buff: bool,
+    /// In-memory entity cache (single-threaded in live loop).
+    pub entity_cache: HashMap<i64, CachedEntity>,
+    /// Latest captured detailed player data.
+    pub playerdata_cache: Option<CachedPlayerData>,
 }
 
 #[derive(Debug, Clone)]
@@ -285,6 +161,34 @@ pub struct ActiveBuff {
     pub duration: i32,
     pub create_time: i64,
     pub source_config_id: i32,
+}
+
+#[derive(Debug, Clone)]
+pub struct LiveStateSnapshot {
+    pub encounter: Encounter,
+    pub dungeon_log: Option<crate::live::dungeon_log::DungeonLog>,
+    pub boss_only_dps: bool,
+    pub event_update_rate_ms: u64,
+    pub active_segment_elapsed_ms: Option<u128>,
+}
+
+#[derive(Debug, Clone)]
+pub enum LiveControlCommand {
+    StateEvent(StateEvent),
+    SubscribePlayerSkill { uid: i64, skill_type: String },
+    UnsubscribePlayerSkill { uid: i64, skill_type: String },
+    SetBossOnlyDps(bool),
+    SetDungeonSegmentsEnabled(bool),
+    ResetPlayerMetricsForSegment,
+    SetEventUpdateRateMs(u64),
+    SetMonitoredBuffs(Vec<i32>),
+    SetMonitoredSkills(Vec<i32>),
+    SetMonitorAllBuff(bool),
+    SetBuffPriority(Vec<i32>),
+    ApplySkillMonitorStartup {
+        monitored_skill_ids: Vec<i32>,
+        monitored_buff_ids: Vec<i32>,
+    },
 }
 
 impl AppState {
@@ -312,15 +216,15 @@ impl AppState {
             initial_scene_change_handled: false,
             dungeon_log: dungeon_log::create_shared_log(),
             dungeon_segments_enabled: false,
-            attempt_config: AttemptConfig::default(),
             event_update_rate_ms: 200,
             fight_res_state: None,
             temp_attr_values: HashMap::new(),
             attr_skill_cd: 0,
             attr_skill_cd_pct: 0,
             attr_cd_accelerate_pct: 0,
-            last_encounter_snapshot: None,
             server_clock_offset: 0,
+            entity_cache: crate::database::load_initial_entity_cache(),
+            playerdata_cache: None,
         }
     }
 
@@ -337,6 +241,29 @@ impl AppState {
     pub fn set_encounter_paused(&mut self, paused: bool) {
         self.encounter.is_encounter_paused = paused;
         self.event_manager.emit_encounter_pause(paused);
+    }
+
+    fn collect_dirty_entity_cache(&mut self) -> Vec<CachedEntity> {
+        let mut dirty_entries = Vec::new();
+        for entry in self.entity_cache.values_mut() {
+            if entry.dirty {
+                entry.dirty = false;
+                dirty_entries.push(entry.clone());
+            }
+        }
+        dirty_entries
+    }
+
+    fn take_dirty_playerdata(&mut self) -> Option<CachedPlayerData> {
+        let mut cloned = self.playerdata_cache.clone()?;
+        if !cloned.dirty {
+            return None;
+        }
+        cloned.dirty = false;
+        if let Some(existing) = self.playerdata_cache.as_mut() {
+            existing.dirty = false;
+        }
+        Some(cloned)
     }
 }
 
@@ -533,8 +460,10 @@ fn extract_scene_id_from_attr_collection(attrs: &blueprotobuf::AttrCollection) -
 /// Manages the state of the application.
 #[derive(Clone)]
 pub struct AppStateManager {
-    /// The state of the application.
-    pub state: Arc<RwLock<AppState>>,
+    snapshot_tx: watch::Sender<Arc<LiveStateSnapshot>>,
+    snapshot_rx: watch::Receiver<Arc<LiveStateSnapshot>>,
+    control_tx: UnboundedSender<LiveControlCommand>,
+    control_rx: Arc<Mutex<Option<UnboundedReceiver<LiveControlCommand>>>>,
 }
 
 impl AppStateManager {
@@ -544,20 +473,71 @@ impl AppStateManager {
     ///
     /// * `app_handle` - A handle to the Tauri application instance.
     pub fn new(app_handle: AppHandle) -> Self {
-        let state = AppState::new(app_handle);
+        let initial_state = AppState::new(app_handle);
+        let initial_snapshot = Arc::new(build_live_state_snapshot(&initial_state));
+        let (snapshot_tx, snapshot_rx) = watch::channel(initial_snapshot);
+        let (control_tx, control_rx) = unbounded_channel();
         Self {
-            state: Arc::new(RwLock::new(state)),
+            snapshot_tx,
+            snapshot_rx,
+            control_tx,
+            control_rx: Arc::new(Mutex::new(Some(control_rx))),
         }
     }
 
-    /// Handles a state event.
-    ///
-    /// # Arguments
-    ///
-    /// * `event` - The event to handle.
-    pub async fn handle_event(&self, event: StateEvent) {
-        let mut state = self.state.write().await;
+    pub fn latest_snapshot(&self) -> Arc<LiveStateSnapshot> {
+        self.snapshot_rx.borrow().clone()
+    }
 
+    pub fn publish_snapshot_from_state(&self, state: &AppState) {
+        let snapshot = Arc::new(build_live_state_snapshot(state));
+        let _ = self.snapshot_tx.send(snapshot);
+    }
+
+    fn send_control(&self, command: LiveControlCommand) -> Result<(), String> {
+        self.control_tx
+            .send(command)
+            .map_err(|_| "live runtime channel is unavailable".to_string())
+    }
+
+    pub async fn handle_events_batch_with_state(&self, state: &mut AppState, events: Vec<StateEvent>) {
+        if events.is_empty() {
+            return;
+        }
+        for event in events {
+            self.apply_event(state, event).await;
+        }
+        self.publish_snapshot_from_state(state);
+    }
+
+    pub async fn apply_pending_control_commands(&self, state: &mut AppState) {
+        loop {
+            let command = {
+                let mut guard = match self.control_rx.lock() {
+                    Ok(guard) => guard,
+                    Err(_) => return,
+                };
+                match guard.as_mut() {
+                    Some(rx) => match rx.try_recv() {
+                        Ok(cmd) => Some(cmd),
+                        Err(TryRecvError::Empty) | Err(TryRecvError::Disconnected) => None,
+                    },
+                    None => None,
+                }
+            };
+
+            let Some(command) = command else {
+                break;
+            };
+            self.apply_control_command(state, command).await;
+        }
+    }
+
+    pub async fn send_state_event(&self, event: StateEvent) -> Result<(), String> {
+        self.send_control(LiveControlCommand::StateEvent(event))
+    }
+
+    async fn apply_event(&self, state: &mut AppState, event: StateEvent) {
         // Check if encounter is paused for events that should be dropped
         if state.is_encounter_paused()
             && matches!(
@@ -575,13 +555,13 @@ impl AppStateManager {
 
         match event {
             StateEvent::ServerChange => {
-                self.on_server_change(&mut state).await;
+                self.on_server_change(state).await;
             }
             StateEvent::EnterScene(data) => {
-                self.process_enter_scene(&mut state, data).await;
+                self.process_enter_scene(state, data).await;
             }
             StateEvent::SyncNearEntities(data) => {
-                self.process_sync_near_entities(&mut state, data).await;
+                self.process_sync_near_entities(state, data).await;
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
@@ -589,29 +569,29 @@ impl AppStateManager {
                 // store local_player copy
                 state.encounter.local_player = data.clone();
 
-                self.process_sync_container_data(&mut state, data).await;
+                self.process_sync_container_data(state, data).await;
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
             StateEvent::SyncContainerDirtyData(data) => {
-                self.process_sync_container_dirty_data(&mut state, data)
+                self.process_sync_container_dirty_data(state, data)
                     .await;
             }
             StateEvent::SyncServerTime(_data) => {
                 // todo: this is skipped, not sure what info it has
             }
             StateEvent::SyncToMeDeltaInfo(data) => {
-                self.process_sync_to_me_delta_info(&mut state, data).await;
+                self.process_sync_to_me_delta_info(state, data).await;
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
             StateEvent::SyncNearDeltaInfo(data) => {
-                self.process_sync_near_delta_info(&mut state, data).await;
+                self.process_sync_near_delta_info(state, data).await;
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
             StateEvent::NotifyReviveUser(data) => {
-                self.process_notify_revive_user(&mut state, data).await;
+                self.process_notify_revive_user(state, data).await;
             }
             StateEvent::SyncSceneAttrs(_) => {
                 // SyncSceneAttrs handling is disabled to possibly remedy crashing bug.
@@ -620,9 +600,101 @@ impl AppStateManager {
                 state.set_encounter_paused(paused);
             }
             StateEvent::ResetEncounter { is_manual } => {
-                self.reset_encounter(&mut state, is_manual).await;
+                self.reset_encounter(state, is_manual).await;
             }
         }
+    }
+
+    async fn apply_control_command(&self, state: &mut AppState, command: LiveControlCommand) {
+        match command {
+            LiveControlCommand::StateEvent(event) => {
+                self.apply_event(state, event).await;
+            }
+            LiveControlCommand::SubscribePlayerSkill { uid, skill_type } => {
+                state.skill_subscriptions.insert((uid, skill_type));
+            }
+            LiveControlCommand::UnsubscribePlayerSkill { uid, skill_type } => {
+                state.skill_subscriptions.remove(&(uid, skill_type));
+            }
+            LiveControlCommand::SetBossOnlyDps(enabled) => {
+                state.boss_only_dps = enabled;
+                self.update_and_emit_events_with_state(state).await;
+            }
+            LiveControlCommand::SetDungeonSegmentsEnabled(enabled) => {
+                state.dungeon_segments_enabled = enabled;
+                let runtime = DungeonLogRuntime::new(state.dungeon_log.clone(), state.app_handle.clone());
+                let snapshot = runtime.snapshot();
+                dungeon_log::emit_if_changed(&runtime.app_handle, snapshot);
+            }
+            LiveControlCommand::ResetPlayerMetricsForSegment => {
+                let original_fight_start_ms = state.encounter.time_fight_start_ms;
+                let active_segment_name = dungeon_log::snapshot(&state.dungeon_log).and_then(|log| {
+                    log.segments
+                        .iter()
+                        .rev()
+                        .find(|s| s.ended_at_ms.is_none())
+                        .and_then(|s| s.boss_name.clone())
+                });
+
+                state.encounter.reset_combat_state();
+                state.skill_subscriptions.clear();
+                state.encounter.time_fight_start_ms = original_fight_start_ms;
+
+                if state.event_manager.should_emit_events() {
+                    if let Some(app_handle) = state.event_manager.get_app_handle() {
+                        let payload = crate::live::event_manager::PlayerMetricsResetPayload {
+                            segment_name: active_segment_name,
+                        };
+                        safe_emit(&app_handle, "reset-player-metrics", payload);
+
+                        let payload = crate::live::event_manager::EncounterUpdatePayload {
+                            header_info: crate::live::commands_models::HeaderInfo {
+                                total_dps: 0.0,
+                                total_dmg: 0,
+                                elapsed_ms: 0,
+                                fight_start_timestamp_ms: state.encounter.time_fight_start_ms,
+                                bosses: vec![],
+                                scene_id: state.encounter.current_scene_id,
+                                scene_name: state.encounter.current_scene_name.clone(),
+                                current_segment_type: None,
+                                current_segment_name: None,
+                            },
+                            is_paused: state.encounter.is_encounter_paused,
+                        };
+                        safe_emit(&app_handle, "encounter-update", payload);
+                    }
+                }
+            }
+            LiveControlCommand::SetEventUpdateRateMs(rate_ms) => {
+                state.event_update_rate_ms = rate_ms;
+            }
+            LiveControlCommand::SetMonitoredBuffs(buff_base_ids) => {
+                state.monitored_buff_ids = buff_base_ids;
+            }
+            LiveControlCommand::SetMonitoredSkills(skill_level_ids) => {
+                state.monitored_skill_ids = skill_level_ids;
+                let monitored_skill_ids = state.monitored_skill_ids.clone();
+                state.skill_cd_map.retain(|skill_level_id, _| {
+                    monitored_skill_ids.contains(&(skill_level_id / 100))
+                });
+            }
+            LiveControlCommand::SetMonitorAllBuff(monitor_all_buff) => {
+                state.monitor_all_buff = monitor_all_buff;
+            }
+            LiveControlCommand::SetBuffPriority(priority_buff_ids) => {
+                state.priority_buff_ids = priority_buff_ids;
+                state.buff_order_dirty = true;
+            }
+            LiveControlCommand::ApplySkillMonitorStartup {
+                monitored_skill_ids,
+                monitored_buff_ids,
+            } => {
+                state.monitored_skill_ids = monitored_skill_ids;
+                state.monitored_buff_ids = monitored_buff_ids;
+            }
+        }
+
+        self.publish_snapshot_from_state(state);
     }
 
     async fn on_server_change(&self, state: &mut AppState) {
@@ -633,20 +705,86 @@ impl AppStateManager {
             dungeon_log::persist_segments(&state.dungeon_log, true);
         }
 
-        // End any active encounter in DB. Drain any detected dead boss names for persistence.
+        // Persist encounter directly on server change.
         let defeated = state.event_manager.take_dead_bosses();
-        let encounter_data = state.last_encounter_snapshot.take();
-        
-        enqueue(DbTask::EndEncounter {
-            ended_at_ms: now_ms(),
-            defeated_bosses: if defeated.is_empty() {
-                None
-            } else {
-                Some(defeated)
-            },
+        let mut player_names: Vec<String> = state
+            .encounter
+            .entity_uid_to_entity
+            .values()
+            .filter(|e| {
+                e.entity_type == EEntityType::EntChar
+                    && !e.name.is_empty()
+                    && (e.damage.hits > 0 || e.healing.hits > 0 || e.taken.hits > 0)
+            })
+            .map(|e| e.name.clone())
+            .collect();
+        player_names.sort();
+        player_names.dedup();
+        let metadata = EncounterMetadata {
+            started_at_ms: state.encounter.time_fight_start_ms as i64,
+            ended_at_ms: Some(now_ms()),
+            local_player_id: Some(state.encounter.local_player_uid),
+            total_dmg: state.encounter.total_dmg.min(i64::MAX as u128) as i64,
+            total_heal: state.encounter.total_heal.min(i64::MAX as u128) as i64,
+            scene_id: state.encounter.current_scene_id,
+            scene_name: state.encounter.current_scene_name.clone(),
+            duration: ((state
+                .encounter
+                .time_last_combat_packet_ms
+                .saturating_sub(state.encounter.time_fight_start_ms)) as f64)
+                / 1000.0,
             is_manually_reset: false,
-            encounter_data,
-        });
+            boss_names: defeated,
+            player_names,
+        };
+        if metadata.started_at_ms > 0 {
+            info!(
+                target: "app::live",
+                "persist_encounter_on_server_change started_at_ms={} ended_at_ms={:?} total_dmg={} total_heal={} scene_id={:?} players={} bosses={}",
+                metadata.started_at_ms,
+                metadata.ended_at_ms,
+                metadata.total_dmg,
+                metadata.total_heal,
+                metadata.scene_id,
+                metadata.player_names.len(),
+                metadata.boss_names.len()
+            );
+            match save_encounter(&state.encounter, &metadata) {
+                Ok(encounter_id) => {
+                    info!(
+                        target: "app::live",
+                        "persist_encounter_on_server_change_ok encounter_id={}",
+                        encounter_id
+                    );
+                }
+                Err(e) => {
+                    warn!(
+                        target: "app::live",
+                        "persist_encounter_on_server_change_failed error={}",
+                        e
+                    );
+                }
+            }
+            let dirty_entities = state.collect_dirty_entity_cache();
+            if !dirty_entities.is_empty() {
+                if let Err(e) = flush_entity_cache(dirty_entities) {
+                    warn!(target: "app::live", "flush_entity_cache_failed error={}", e);
+                }
+            }
+            if let Some(playerdata) = state.take_dirty_playerdata() {
+                if let Err(e) = flush_playerdata(playerdata) {
+                    warn!(target: "app::live", "flush_playerdata_failed error={}", e);
+                }
+            }
+        } else {
+            warn!(
+                target: "app::live",
+                "persist_encounter_on_server_change_skipped reason=time_fight_start_ms_zero total_dmg={} total_heal={} scene_id={:?}",
+                metadata.total_dmg,
+                metadata.total_heal,
+                metadata.scene_id
+            );
+        }
         on_server_change(&mut state.encounter);
 
         // Emit encounter reset event
@@ -670,7 +808,6 @@ impl AppStateManager {
 
         // Reset combat state (live meter)
         state.encounter.reset_combat_state();
-        state.last_encounter_snapshot = None;
         state.skill_subscriptions.clear();
 
         // Restore the original fight start time to preserve total encounter duration
@@ -714,10 +851,7 @@ impl AppStateManager {
         let dungeon_runtime = dungeon_runtime_if_enabled(state);
 
         if !state.initial_scene_change_handled {
-            info!("Initial scene detected; finalizing any dangling encounters");
-            enqueue(DbTask::EndAllActiveEncounters {
-                ended_at_ms: now_ms(),
-            });
+            info!("Initial scene detected");
             state.initial_scene_change_handled = true;
         }
 
@@ -934,7 +1068,13 @@ impl AppStateManager {
         sync_near_entities: blueprotobuf::SyncNearEntities,
     ) {
         use crate::live::opcodes_process::process_sync_near_entities;
-        if process_sync_near_entities(&mut state.encounter, sync_near_entities).is_none() {
+        if process_sync_near_entities(
+            &mut state.encounter,
+            &mut state.entity_cache,
+            sync_near_entities,
+        )
+        .is_none()
+        {
             warn!("Error processing SyncNearEntities.. ignoring.");
         }
     }
@@ -1019,7 +1159,14 @@ impl AppStateManager {
     ) {
         use crate::live::opcodes_process::process_sync_container_data;
 
-        if process_sync_container_data(&mut state.encounter, sync_container_data).is_none() {
+        if process_sync_container_data(
+            &mut state.encounter,
+            &mut state.entity_cache,
+            &mut state.playerdata_cache,
+            sync_container_data,
+        )
+        .is_none()
+        {
             warn!("Error processing SyncContainerData.. ignoring.");
         }
     }
@@ -1149,9 +1296,9 @@ impl AppStateManager {
         let dungeon_ctx = dungeon_runtime_if_enabled(state);
         let _ = process_sync_to_me_delta_info(
             &mut state.encounter,
+            &mut state.entity_cache,
             sync_to_me_delta_info,
             dungeon_ctx.as_ref(),
-            &state.attempt_config,
         );
 
         if let Some(raw_bytes) = buff_effect_bytes {
@@ -1234,9 +1381,9 @@ impl AppStateManager {
             // Missing fields are normal, no need to log
             let _ = process_aoi_sync_delta(
                 &mut state.encounter,
+                &mut state.entity_cache,
                 aoi_sync_delta,
                 dungeon_ctx.as_ref(),
-                &state.attempt_config,
             );
         }
     }
@@ -1258,22 +1405,88 @@ impl AppStateManager {
             dungeon_log::persist_segments(&state.dungeon_log, true);
         }
 
-        // End any active encounter in DB. Drain any detected dead boss names for persistence.
+        // Persist encounter directly on reset.
         let defeated = state.event_manager.take_dead_bosses();
-        let encounter_data = state.last_encounter_snapshot.take();
-
-        enqueue(DbTask::EndEncounter {
-            ended_at_ms: now_ms(),
-            defeated_bosses: if defeated.is_empty() {
-                None
-            } else {
-                Some(defeated)
-            },
+        let mut player_names: Vec<String> = state
+            .encounter
+            .entity_uid_to_entity
+            .values()
+            .filter(|e| {
+                e.entity_type == EEntityType::EntChar
+                    && !e.name.is_empty()
+                    && (e.damage.hits > 0 || e.healing.hits > 0 || e.taken.hits > 0)
+            })
+            .map(|e| e.name.clone())
+            .collect();
+        player_names.sort();
+        player_names.dedup();
+        let metadata = EncounterMetadata {
+            started_at_ms: state.encounter.time_fight_start_ms as i64,
+            ended_at_ms: Some(now_ms()),
+            local_player_id: Some(state.encounter.local_player_uid),
+            total_dmg: state.encounter.total_dmg.min(i64::MAX as u128) as i64,
+            total_heal: state.encounter.total_heal.min(i64::MAX as u128) as i64,
+            scene_id: state.encounter.current_scene_id,
+            scene_name: state.encounter.current_scene_name.clone(),
+            duration: ((state
+                .encounter
+                .time_last_combat_packet_ms
+                .saturating_sub(state.encounter.time_fight_start_ms)) as f64)
+                / 1000.0,
             is_manually_reset: is_manual,
-            encounter_data,
-        });
+            boss_names: defeated,
+            player_names,
+        };
+        if metadata.started_at_ms > 0 {
+            info!(
+                target: "app::live",
+                "persist_encounter_on_reset started_at_ms={} ended_at_ms={:?} total_dmg={} total_heal={} scene_id={:?} players={} bosses={} is_manual={}",
+                metadata.started_at_ms,
+                metadata.ended_at_ms,
+                metadata.total_dmg,
+                metadata.total_heal,
+                metadata.scene_id,
+                metadata.player_names.len(),
+                metadata.boss_names.len(),
+                metadata.is_manually_reset
+            );
+            match save_encounter(&state.encounter, &metadata) {
+                Ok(encounter_id) => {
+                    info!(
+                        target: "app::live",
+                        "persist_encounter_on_reset_ok encounter_id={}",
+                        encounter_id
+                    );
+                }
+                Err(e) => {
+                    warn!(
+                        target: "app::live",
+                        "persist_encounter_on_reset_failed error={}",
+                        e
+                    );
+                }
+            }
+            let dirty_entities = state.collect_dirty_entity_cache();
+            if !dirty_entities.is_empty() {
+                if let Err(e) = flush_entity_cache(dirty_entities) {
+                    warn!(target: "app::live", "flush_entity_cache_failed error={}", e);
+                }
+            }
+            if let Some(playerdata) = state.take_dirty_playerdata() {
+                if let Err(e) = flush_playerdata(playerdata) {
+                    warn!(target: "app::live", "flush_playerdata_failed error={}", e);
+                }
+            }
+        } else {
+            warn!(
+                target: "app::live",
+                "persist_encounter_on_reset_skipped reason=time_fight_start_ms_zero total_dmg={} total_heal={} scene_id={:?}",
+                metadata.total_dmg,
+                metadata.total_heal,
+                metadata.scene_id
+            );
+        }
         state.encounter.reset_combat_state();
-        state.last_encounter_snapshot = None;
         state.skill_subscriptions.clear();
         state.active_buffs.clear();
         state.ordered_buff_uuids.clear();
@@ -1312,22 +1525,16 @@ impl AppStateManager {
         state.skill_subscriptions.clear();
     }
 
-    /// Gets a clone of the current encounter.
-    pub async fn get_encounter(&self) -> Encounter {
-        self.state.read().await.encounter.clone()
+    pub async fn subscribe_player_skill(&self, uid: i64, skill_type: String) -> Result<(), String> {
+        self.send_control(LiveControlCommand::SubscribePlayerSkill { uid, skill_type })
     }
 
-    /// Updates the skill subscriptions.
-    ///
-    /// # Arguments
-    ///
-    /// * `update_fn` - A function that takes a mutable reference to the skill subscriptions and modifies it.
-    pub async fn update_skill_subscriptions<F>(&self, update_fn: F)
-    where
-        F: FnOnce(&mut HashSet<(i64, String)>),
-    {
-        let mut state = self.state.write().await;
-        update_fn(&mut state.skill_subscriptions);
+    pub async fn unsubscribe_player_skill(
+        &self,
+        uid: i64,
+        skill_type: String,
+    ) -> Result<(), String> {
+        self.send_control(LiveControlCommand::UnsubscribePlayerSkill { uid, skill_type })
     }
 
     /// Get player name by UID from database
@@ -1341,7 +1548,7 @@ impl AppStateManager {
     /// * `Option<String>` - The name of the player, or `None` if not found.
     #[allow(dead_code)]
     pub async fn get_player_name(&self, uid: i64) -> Option<String> {
-        PlayerNames::get_name_by_uid(uid)
+        crate::database::commands::get_name_by_uid(uid).ok().flatten()
     }
 
     /// Get recent players ordered by last seen (most recent first)
@@ -1355,7 +1562,7 @@ impl AppStateManager {
     /// * `Vec<(i64, String)>` - A list of recent players.
     #[allow(dead_code)]
     pub async fn get_recent_players(&self, limit: usize) -> Vec<(i64, String)> {
-        PlayerNames::get_recent_players(limit)
+        crate::database::commands::get_recent_players(limit as i64).unwrap_or_default()
     }
 
     /// Get multiple names by UIDs (batch query for performance)
@@ -1369,7 +1576,13 @@ impl AppStateManager {
     /// * `std::collections::HashMap<i64, String>` - A map of UIDs to names.
     #[allow(dead_code)]
     pub async fn get_player_names(&self, uids: &[i64]) -> std::collections::HashMap<i64, String> {
-        PlayerNames::get_names_by_uids(uids)
+        let mut result = std::collections::HashMap::new();
+        for &uid in uids {
+            if let Ok(Some(name)) = crate::database::commands::get_name_by_uid(uid) {
+                result.insert(uid, name);
+            }
+        }
+        result
     }
 
     /// Check if a player exists in the database
@@ -1383,53 +1596,57 @@ impl AppStateManager {
     /// * `bool` - Whether the player exists.
     #[allow(dead_code)]
     pub async fn contains_player(&self, uid: i64) -> bool {
-        PlayerNames::contains_player(uid)
+        crate::database::commands::get_name_by_uid(uid)
+            .ok()
+            .flatten()
+            .is_some()
     }
 
-    /// Updates the encounter.
-    ///
-    /// # Arguments
-    ///
-    /// * `update_fn` - A function that takes a mutable reference to the encounter and modifies it.
-    #[allow(dead_code)]
-    pub async fn update_encounter<F>(&self, update_fn: F)
-    where
-        F: FnOnce(&mut Encounter),
-    {
-        let mut state = self.state.write().await;
-        update_fn(&mut state.encounter);
+    pub async fn set_boss_only_dps(&self, enabled: bool) -> Result<(), String> {
+        self.send_control(LiveControlCommand::SetBossOnlyDps(enabled))
     }
 
-    /// Gets a read guard for the application state.
-    #[allow(dead_code)]
-    pub async fn get_encounter_ref(&self) -> tokio::sync::RwLockReadGuard<'_, AppState> {
-        self.state.read().await
+    pub async fn set_dungeon_segments_enabled(&self, enabled: bool) -> Result<(), String> {
+        self.send_control(LiveControlCommand::SetDungeonSegmentsEnabled(enabled))
     }
 
-    /// Executes a function with a read-only reference to the application state.
-    ///
-    /// # Arguments
-    ///
-    /// * `f` - The function to execute.
-    pub async fn with_state<F, R>(&self, f: F) -> R
-    where
-        F: FnOnce(&AppState) -> R,
-    {
-        let state = self.state.read().await;
-        f(&*state)
+    pub async fn reset_player_metrics_for_segment(&self) -> Result<(), String> {
+        self.send_control(LiveControlCommand::ResetPlayerMetricsForSegment)
     }
 
-    /// Executes a function with a mutable reference to the application state.
-    ///
-    /// # Arguments
-    ///
-    /// * `f` - The function to execute.
-    pub async fn with_state_mut<F, R>(&self, f: F) -> R
-    where
-        F: FnOnce(&mut AppState) -> R,
-    {
-        let mut state = self.state.write().await;
-        f(&mut *state)
+    pub async fn set_event_update_rate_ms(&self, rate_ms: u64) -> Result<(), String> {
+        self.send_control(LiveControlCommand::SetEventUpdateRateMs(rate_ms))
+    }
+
+    pub async fn set_monitored_buffs(&self, buff_base_ids: Vec<i32>) -> Result<(), String> {
+        self.send_control(LiveControlCommand::SetMonitoredBuffs(buff_base_ids))
+    }
+
+    pub async fn set_monitored_skills(&self, skill_level_ids: Vec<i32>) -> Result<(), String> {
+        self.send_control(LiveControlCommand::SetMonitoredSkills(skill_level_ids))
+    }
+
+    pub async fn set_monitor_all_buff(&self, monitor_all_buff: bool) -> Result<(), String> {
+        self.send_control(LiveControlCommand::SetMonitorAllBuff(monitor_all_buff))
+    }
+
+    pub async fn set_buff_priority(&self, priority_buff_ids: Vec<i32>) -> Result<(), String> {
+        self.send_control(LiveControlCommand::SetBuffPriority(priority_buff_ids))
+    }
+
+    pub async fn apply_skill_monitor_startup(
+        &self,
+        monitored_skill_ids: Vec<i32>,
+        monitored_buff_ids: Vec<i32>,
+    ) -> Result<(), String> {
+        self.send_control(LiveControlCommand::ApplySkillMonitorStartup {
+            monitored_skill_ids,
+            monitored_buff_ids,
+        })
+    }
+
+    pub fn current_event_update_rate_ms(&self) -> u64 {
+        self.snapshot_rx.borrow().event_update_rate_ms
     }
 }
 
@@ -1573,19 +1790,42 @@ fn dungeon_runtime_if_enabled(state: &AppState) -> Option<DungeonLogRuntime> {
     }
 }
 
+fn build_live_state_snapshot(state: &AppState) -> LiveStateSnapshot {
+    let active_segment_elapsed_ms = if state.dungeon_segments_enabled {
+        dungeon_log::snapshot(&state.dungeon_log).and_then(|log| {
+            log.segments
+                .iter()
+                .rev()
+                .find(|s| s.ended_at_ms.is_none())
+                .map(|segment| {
+                    let start_ms = segment.started_at_ms.max(0) as u128;
+                    let end_ms = segment
+                        .ended_at_ms
+                        .map(|t| t.max(0) as u128)
+                        .unwrap_or(state.encounter.time_last_combat_packet_ms);
+                    end_ms.saturating_sub(start_ms)
+                })
+        })
+    } else {
+        None
+    };
+
+    LiveStateSnapshot {
+        encounter: state.encounter.clone(),
+        dungeon_log: dungeon_log::snapshot(&state.dungeon_log),
+        boss_only_dps: state.boss_only_dps,
+        event_update_rate_ms: state.event_update_rate_ms,
+        active_segment_elapsed_ms,
+    }
+}
+
 impl AppStateManager {
     /// Updates and emits events.
-    pub async fn update_and_emit_events(&self) {
-        // First, read the encounter data to generate all the necessary information
-        let (encounter, should_emit, boss_only, dungeon_ctx) = {
-            let state = self.state.read().await;
-            (
-                state.encounter.clone(),
-                state.event_manager.should_emit_events(),
-                false, // Always emit full damage totals; boss damage is exposed as a separate column.
-                dungeon_runtime_if_enabled(&state),
-            )
-        };
+    pub async fn update_and_emit_events_with_state(&self, state: &mut AppState) {
+        let encounter = state.encounter.clone();
+        let should_emit = state.event_manager.should_emit_events();
+        let boss_only = false; // Always emit full damage totals; boss damage is exposed separately.
+        let dungeon_ctx = dungeon_runtime_if_enabled(state);
 
         if !should_emit {
             return;
@@ -1625,24 +1865,24 @@ impl AppStateManager {
 
         let segment_elapsed_ms = segment_timing.map(|(_, elapsed)| elapsed);
 
-        // Generate all the data we need without holding the lock
         let header_info_with_deaths =
             crate::live::event_manager::generate_header_info(&encounter, boss_only, segment_timing);
         let dps_players = crate::live::event_manager::generate_players_window_dps(
             &encounter,
+            &state.entity_cache,
             boss_only,
             segment_elapsed_ms,
         );
         let heal_players = crate::live::event_manager::generate_players_window_heal(
             &encounter,
+            &state.entity_cache,
             segment_elapsed_ms,
         );
         let tanked_players = crate::live::event_manager::generate_players_window_tanked(
             &encounter,
+            &state.entity_cache,
             segment_elapsed_ms,
         );
-        let snapshot = build_encounter_snapshot(&encounter, encounter.local_player_uid);
-
         // Generate skill windows for all players
         let mut dps_skill_windows = Vec::new();
         let mut heal_skill_windows = Vec::new();
@@ -1658,6 +1898,7 @@ impl AppStateManager {
             if is_player && has_dmg_skills {
                 if let Some(skills_window) = crate::live::event_manager::generate_skills_window_dps(
                     &encounter,
+                    &state.entity_cache,
                     entity_uid,
                     boss_only,
                     segment_elapsed_ms,
@@ -1669,6 +1910,7 @@ impl AppStateManager {
             if is_player && has_heal_skills {
                 if let Some(skills_window) = crate::live::event_manager::generate_skills_window_heal(
                     &encounter,
+                    &state.entity_cache,
                     entity_uid,
                     segment_elapsed_ms,
                 ) {
@@ -1680,6 +1922,7 @@ impl AppStateManager {
                 if let Some(skills_window) =
                     crate::live::event_manager::generate_skills_window_tanked(
                         &encounter,
+                        &state.entity_cache,
                         entity_uid,
                         segment_elapsed_ms,
                     )
@@ -1691,78 +1934,61 @@ impl AppStateManager {
             // Collect subscribed players for later emission
             subscribed_players.push(entity_uid);
         }
-        // Process boss death detection and collect ALL data needed for emission
-        // We'll do ALL emissions without holding any locks to prevent deadlock
-        let (final_header_info, boss_deaths, skill_subscriptions_clone, app_handle_opt) = {
-            let mut state = self.state.write().await;
-            state.last_encounter_snapshot = Some(snapshot);
+        let (final_header_info, boss_deaths) = if let Some((mut header_info, mut dead_bosses)) =
+            header_info_with_deaths
+        {
+            use std::collections::HashSet;
 
-            let (final_header, final_deaths) = if let Some((mut header_info, mut dead_bosses)) =
-                header_info_with_deaths
-            {
-                use std::collections::HashSet;
+            if let Some((segment_type, segment_name)) = &active_segment {
+                header_info.current_segment_type = Some(segment_type.clone());
+                header_info.current_segment_name = segment_name.clone();
+            } else {
+                header_info.current_segment_type = None;
+                header_info.current_segment_name = None;
+            }
 
-                if let Some((segment_type, segment_name)) = &active_segment {
-                    header_info.current_segment_type = Some(segment_type.clone());
-                    header_info.current_segment_name = segment_name.clone();
-                } else {
-                    header_info.current_segment_type = None;
-                    header_info.current_segment_name = None;
-                }
+            let mut dead_ids: HashSet<i64> = dead_bosses.iter().map(|(uid, _)| *uid).collect();
+            let current_time_ms = now_ms() as u128;
 
-                let mut dead_ids: HashSet<i64> = dead_bosses.iter().map(|(uid, _)| *uid).collect();
-                let current_time_ms = now_ms() as u128;
-
-                for boss in &mut header_info.bosses {
-                    let hp_percent =
-                        if let (Some(curr_hp), Some(max_hp)) = (boss.current_hp, boss.max_hp) {
-                            if max_hp > 0 {
-                                curr_hp as f64 / max_hp as f64 * 100.0
-                            } else {
-                                0.0
-                            }
+            for boss in &mut header_info.bosses {
+                let hp_percent =
+                    if let (Some(curr_hp), Some(max_hp)) = (boss.current_hp, boss.max_hp) {
+                        if max_hp > 0 {
+                            curr_hp as f64 / max_hp as f64 * 100.0
                         } else {
-                            100.0
-                        };
-
-                    if hp_percent < 5.0 {
-                        let entry = state
-                            .low_hp_bosses
-                            .entry(boss.uid)
-                            .or_insert(current_time_ms);
-                        if current_time_ms.saturating_sub(*entry) >= 5_000 {
-                            if dead_ids.insert(boss.uid) {
-                                dead_bosses.push((boss.uid, boss.name.clone()));
-                            }
+                            0.0
                         }
                     } else {
-                        state.low_hp_bosses.remove(&boss.uid);
-                    }
+                        100.0
+                    };
 
-                    if dead_ids.contains(&boss.uid) {
-                        boss.current_hp = Some(0);
-                        state.low_hp_bosses.remove(&boss.uid);
+                if hp_percent < 5.0 {
+                    let entry = state.low_hp_bosses.entry(boss.uid).or_insert(current_time_ms);
+                    if current_time_ms.saturating_sub(*entry) >= 5_000 {
+                        if dead_ids.insert(boss.uid) {
+                            dead_bosses.push((boss.uid, boss.name.clone()));
+                        }
                     }
+                } else {
+                    state.low_hp_bosses.remove(&boss.uid);
                 }
 
-                (Some(header_info), dead_bosses)
-            } else {
-                (None, Vec::new())
-            };
+                if dead_ids.contains(&boss.uid) {
+                    boss.current_hp = Some(0);
+                    state.low_hp_bosses.remove(&boss.uid);
+                }
+            }
 
-            // Clone app_handle and skill_subscriptions to use outside the lock
-            (
-                final_header,
-                final_deaths,
-                state.skill_subscriptions.clone(),
-                state.event_manager.get_app_handle(),
-            )
-        }; // Write lock is FULLY released here - CRITICAL for preventing deadlock!
+            (Some(header_info), dead_bosses)
+        } else {
+            (None, Vec::new())
+        };
 
-        // ALL emissions happen here WITHOUT holding ANY locks
-        // This completely prevents deadlock scenarios
+        let skill_subscriptions_clone = state.skill_subscriptions.clone();
+        let app_handle_opt = state.event_manager.get_app_handle();
+        self.publish_snapshot_from_state(state);
+
         if let Some(app_handle) = app_handle_opt {
-            // Emit encounter update
             if let Some(header_info) = final_header_info {
                 let payload = crate::live::event_manager::EncounterUpdatePayload {
                     header_info,
@@ -1771,9 +1997,7 @@ impl AppStateManager {
                 safe_emit(&app_handle, "encounter-update", payload);
             }
 
-            // Emit boss death events using EventManager for deduplication
             if !boss_deaths.is_empty() {
-                let mut state = self.state.write().await;
                 let mut any_new_death = false;
                 for (boss_uid, boss_name) in boss_deaths {
                     let first_time = state.event_manager.emit_boss_death(boss_name, boss_uid);
@@ -1786,9 +2010,9 @@ impl AppStateManager {
                 if any_new_death && state.dungeon_segments_enabled {
                     dungeon_log::persist_segments(&state.dungeon_log, true);
                 }
+                self.publish_snapshot_from_state(state);
             }
 
-            // Emit DPS players update
             if !dps_players.player_rows.is_empty() {
                 let payload = crate::live::event_manager::PlayersUpdatePayload {
                     metric_type: MetricType::Dps,
@@ -1797,7 +2021,6 @@ impl AppStateManager {
                 safe_emit(&app_handle, "players-update", payload);
             }
 
-            // Emit heal players update
             if !heal_players.player_rows.is_empty() {
                 let payload = crate::live::event_manager::PlayersUpdatePayload {
                     metric_type: MetricType::Heal,
@@ -1806,7 +2029,6 @@ impl AppStateManager {
                 safe_emit(&app_handle, "players-update", payload);
             }
 
-            // Emit tanked players update
             if !tanked_players.player_rows.is_empty() {
                 let payload = crate::live::event_manager::PlayersUpdatePayload {
                     metric_type: MetricType::Tanked,
@@ -1815,7 +2037,6 @@ impl AppStateManager {
                 safe_emit(&app_handle, "players-update", payload);
             }
 
-            // Emit skills updates only for subscribed players
             for (entity_uid, skills_window) in &dps_skill_windows {
                 if skill_subscriptions_clone.contains(&(*entity_uid, "dps".to_string())) {
                     let payload = crate::live::event_manager::SkillsUpdatePayload {

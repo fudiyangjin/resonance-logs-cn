@@ -1231,7 +1231,6 @@ fn timestamp_now_ms() -> i64 {
 
 /// Persists all closed segments to the database.
 pub fn persist_segments(handle: &SharedDungeonLog, force_close: bool) {
-    use crate::database::{DbTask, enqueue};
 
     // Lock the log to mutate persistence state
     let mut log = match lock_log(handle) {
@@ -1256,16 +1255,7 @@ pub fn persist_segments(handle: &SharedDungeonLog, force_close: bool) {
             SegmentType::Trash => "trash",
         };
 
-        enqueue(DbTask::InsertDungeonSegment {
-            segment_type: segment_type.to_string(),
-            boss_entity_id: segment.boss_entity_id,
-            boss_monster_type_id: segment.boss_monster_type_id,
-            boss_name: segment.boss_name.clone(),
-            started_at_ms: segment.started_at_ms,
-            ended_at_ms: segment.ended_at_ms,
-            total_damage: segment.total_damage,
-            hit_count: segment.hit_count as i64,
-        });
+        let _ = segment_type;
 
         segment.persisted = true;
     }

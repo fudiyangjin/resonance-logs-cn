@@ -1,4 +1,4 @@
-use crate::live::state::{AppStateManager, StateEvent};
+use crate::live::state::{AppState, AppStateManager, StateEvent};
 use crate::packets;
 use blueprotobuf_lib::blueprotobuf;
 use bytes::Bytes;
@@ -74,13 +74,9 @@ pub async fn start(app_handle: AppHandle) {
 
     // Get the state manager from app state
     let state_manager = app_handle.state::<AppStateManager>().inner().clone();
-
-    // Initialize event manager - this should be done through the state manager now
-    {
-        // Initialize the event manager through the state manager
-        let mut state = state_manager.state.write().await;
-        state.event_manager.initialize(app_handle.clone());
-    }
+    let mut state = AppState::new(app_handle.clone());
+    state.event_manager.initialize(app_handle.clone());
+    state_manager.publish_snapshot_from_state(&state);
 
     // Throttling for events - rate is read dynamically from state each iteration
     let mut last_emit_time = Instant::now();
@@ -102,6 +98,7 @@ pub async fn start(app_handle: AppHandle) {
             &mut queue_depth_warn_counter,
             &mut queue_depth_last_log_at,
         );
+        state_manager.apply_pending_control_commands(&mut state).await;
 
         // Use tokio::time::timeout to ensure we emit periodically even if no packets arrive
         let packet_result = tokio::time::timeout(heartbeat_duration, rx.recv()).await;
@@ -218,8 +215,9 @@ pub async fn start(app_handle: AppHandle) {
             Ok(Some((op, data))) => {
                 queue_depth.fetch_sub(1, Ordering::Relaxed);
                 // Process the first packet immediately (low-latency path)
+                let mut batch_events = Vec::new();
                 if let Some(event) = decode_event(op, data) {
-                    state_manager.handle_event(event).await;
+                    batch_events.push(event);
                 }
 
                 // Drain additional queued packets quickly but with a strict time budget
@@ -241,7 +239,7 @@ pub async fn start(app_handle: AppHandle) {
                             queue_depth.fetch_sub(1, Ordering::Relaxed);
                             if let Some(event) = decode_event(op, data) {
                                 let is_server_change = matches!(event, StateEvent::ServerChange);
-                                state_manager.handle_event(event).await;
+                                batch_events.push(event);
                                 drained += 1;
                                 if is_server_change {
                                     break;
@@ -261,17 +259,21 @@ pub async fn start(app_handle: AppHandle) {
                     }
                 }
 
+                state_manager
+                    .handle_events_batch_with_state(&mut state, batch_events)
+                    .await;
+                state_manager.apply_pending_control_commands(&mut state).await;
+
                 // Check if we should emit events (throttling)
                 // Read current event update rate from state dynamically
-                let emit_rate_ms = {
-                    let state = state_manager.state.read().await;
-                    state.event_update_rate_ms
-                };
+                let emit_rate_ms = state_manager.current_event_update_rate_ms();
                 let emit_throttle_duration = Duration::from_millis(emit_rate_ms);
                 let now = Instant::now();
                 if now.duration_since(last_emit_time) >= emit_throttle_duration {
                     last_emit_time = now;
-                    state_manager.update_and_emit_events().await;
+                    state_manager
+                        .update_and_emit_events_with_state(&mut state)
+                        .await;
                 }
             }
             Ok(None) => {
@@ -283,15 +285,14 @@ pub async fn start(app_handle: AppHandle) {
             }
             Err(_) => {
                 // Timeout occurred - read rate dynamically
-                let emit_rate_ms = {
-                    let state = state_manager.state.read().await;
-                    state.event_update_rate_ms
-                };
+                let emit_rate_ms = state_manager.current_event_update_rate_ms();
                 let emit_throttle_duration = Duration::from_millis(emit_rate_ms);
                 let now = Instant::now();
                 if now.duration_since(last_emit_time) >= emit_throttle_duration {
                     last_emit_time = now;
-                    state_manager.update_and_emit_events().await;
+                    state_manager
+                        .update_and_emit_events_with_state(&mut state)
+                        .await;
                 }
             }
         }

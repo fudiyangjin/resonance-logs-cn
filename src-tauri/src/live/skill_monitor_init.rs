@@ -128,10 +128,9 @@ pub fn init_skill_monitor_from_settings(app: &AppHandle, state_manager: &AppStat
     let skills_count = monitored_skill_ids.len();
     let buffs_count = merged_buff_ids.len();
 
-    tauri::async_runtime::block_on(state_manager.with_state_mut(move |state| {
-        state.monitored_skill_ids = monitored_skill_ids;
-        state.monitored_buff_ids = merged_buff_ids;
-    }));
+    let _ = tauri::async_runtime::block_on(
+        state_manager.apply_skill_monitor_startup(monitored_skill_ids, merged_buff_ids),
+    );
 
     info!(
         "[skill-monitor] startup init applied: class={}, skills={}, buffs={}",

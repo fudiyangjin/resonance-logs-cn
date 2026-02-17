@@ -4,7 +4,6 @@
 import ActivityIcon from "virtual:icons/lucide/activity";
 import CalculatorIcon from "virtual:icons/lucide/calculator";
 import HourglassIcon from "virtual:icons/lucide/hourglass";
-import UploadIcon from "virtual:icons/lucide/upload-cloud";
 import PaletteIcon from "virtual:icons/lucide/palette";
 import SettingsIcon from "virtual:icons/lucide/settings";
 import SwordsIcon from "virtual:icons/lucide/swords";
@@ -19,7 +18,6 @@ export const TOOL_ROUTES = {
 // Sub-routes for DPS tool (tabs in the right panel)
 export const DPS_SUB_ROUTES = {
   "/main/dps/history": { label: "历史", icon: HourglassIcon },
-  // "/main/dps/uploading": { label: "Uploading", icon: UploadIcon },
   "/main/dps/themes": { label: "主题", icon: PaletteIcon },
   "/main/dps/settings": { label: "设置", icon: SettingsIcon },
 };

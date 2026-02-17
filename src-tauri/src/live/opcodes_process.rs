@@ -1,9 +1,5 @@
 // NOTE: opcodes_process works on Encounter directly; avoid importing opcodes_models at top-level.
-use crate::database::{DbTask, enqueue, now_ms};
-use crate::live::attempt_detector::{
-    AttemptConfig, check_hp_rollback_condition, check_wipe_condition, get_boss_hp_percentage,
-    split_attempt, track_party_member, update_boss_hp_tracking,
-};
+use crate::database::{CachedEntity, CachedPlayerData, now_ms};
 use crate::live::dungeon_log::{self, DungeonLogRuntime};
 use crate::live::opcodes_models::class::{
     ClassSpec, get_class_id_from_spec, get_class_spec_from_skill_id,
@@ -13,7 +9,7 @@ use crate::live::recount_names;
 use blueprotobuf_lib::blueprotobuf;
 use blueprotobuf_lib::blueprotobuf::{Attr, EDamageType, EEntityType};
 use log::info;
-// use std::collections::HashMap;
+use std::collections::HashMap;
 use bytes::Buf;
 use std::default::Default;
 
@@ -87,14 +83,7 @@ fn record_death(
 
     // Enqueue DB task; mark as local player when matching tracked local UID
     let is_local = encounter.local_player_uid == actor_id;
-    enqueue(DbTask::InsertDeathEvent {
-        timestamp_ms,
-        actor_id,
-        killer_id,
-        skill_id,
-        is_local_player: is_local,
-        attempt_index: Some(encounter.current_attempt_index),
-    });
+    let _ = (timestamp_ms, actor_id, killer_id, skill_id, is_local);
 }
 
 /// Record a revive event into the encounter for UI emission.
@@ -212,6 +201,42 @@ pub(crate) fn serialize_attributes(entity: &Entity) -> Option<String> {
     serde_json::to_string(&string_map).ok()
 }
 
+fn upsert_entity_cache_entry(
+    cache: &mut HashMap<i64, CachedEntity>,
+    entity_id: i64,
+    entity: &Entity,
+    name_opt: Option<String>,
+    seen_at_ms: i64,
+) {
+    let attributes = serialize_attributes(entity);
+    let mut first_seen = Some(seen_at_ms);
+    cache
+        .entry(entity_id)
+        .and_modify(|entry| {
+            first_seen = entry.first_seen_ms;
+            entry.name = name_opt.clone();
+            entry.class_id = Some(entity.class_id);
+            entry.class_spec = Some(entity.class_spec as i32);
+            entry.ability_score = Some(entity.ability_score);
+            entry.level = Some(entity.level);
+            entry.last_seen_ms = Some(seen_at_ms);
+            entry.attributes = attributes.clone();
+            entry.dirty = true;
+        })
+        .or_insert_with(|| CachedEntity {
+            entity_id,
+            name: name_opt,
+            class_id: Some(entity.class_id),
+            class_spec: Some(entity.class_spec as i32),
+            ability_score: Some(entity.ability_score),
+            level: Some(entity.level),
+            first_seen_ms: first_seen,
+            last_seen_ms: Some(seen_at_ms),
+            attributes,
+            dirty: true,
+        });
+}
+
 pub fn on_server_change(encounter: &mut Encounter) {
     info!("on server change");
     // Preserve entity identity and local player info; only reset combat state
@@ -237,12 +262,7 @@ pub fn process_notify_revive_user(
     record_revive(encounter, uid, ts);
     // Persist revive to DB (increment per-actor revive counter)
     let is_local = encounter.local_player_uid == uid;
-    enqueue(DbTask::InsertReviveEvent {
-        timestamp_ms: ts,
-        actor_id: uid,
-        is_local_player: is_local,
-        attempt_index: Some(encounter.current_attempt_index),
-    });
+    let _ = is_local;
     info!(
         "Processed NotifyReviveUser: recorded revive for UID {}",
         uid
@@ -252,6 +272,7 @@ pub fn process_notify_revive_user(
 
 pub fn process_sync_near_entities(
     encounter: &mut Encounter,
+    entity_cache: &mut HashMap<i64, CachedEntity>,
     sync_near_entities: blueprotobuf::SyncNearEntities,
 ) -> Option<()> {
     for pkt_entity in sync_near_entities.appear {
@@ -267,7 +288,12 @@ pub fn process_sync_near_entities(
 
         match target_entity_type {
             EEntityType::EntChar => {
-                process_player_attrs(target_entity, target_uid, pkt_entity.attrs?.attrs);
+                process_player_attrs(
+                    target_entity,
+                    target_uid,
+                    pkt_entity.attrs?.attrs,
+                    entity_cache,
+                );
             }
             EEntityType::EntMonster => {
                 process_monster_attrs(target_entity, pkt_entity.attrs?.attrs);
@@ -282,41 +308,18 @@ pub fn process_sync_near_entities(
             } else {
                 Some(target_entity.name.clone())
             };
-            enqueue(DbTask::UpsertEntity {
-                entity_id: target_uid,
-                name: name_opt,
-                class_id: Some(target_entity.class_id),
-                class_spec: Some(target_entity.class_spec as i32),
-                ability_score: Some(target_entity.ability_score),
-                level: Some(target_entity.level),
-                seen_at_ms: now_ms(),
-                attributes: serialize_attributes(target_entity),
-            });
+            upsert_entity_cache_entry(entity_cache, target_uid, target_entity, name_opt, now_ms());
         }
     }
 
     // Track party members for wipe detection (collect data first to avoid borrow issues)
-    let player_data: Vec<(i64, EEntityType, Option<i64>)> = encounter
-        .entity_uid_to_entity
-        .iter()
-        .filter_map(|(uid, entity)| {
-            if entity.entity_type == EEntityType::EntChar {
-                Some((*uid, entity.entity_type, entity.team_id()))
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    for (uid, entity_type, team_id) in player_data {
-        track_party_member(encounter, uid, entity_type, team_id);
-    }
-
     Some(())
 }
 
 pub fn process_sync_container_data(
     encounter: &mut Encounter,
+    entity_cache: &mut HashMap<i64, CachedEntity>,
+    playerdata_cache: &mut Option<CachedPlayerData>,
     sync_container_data: blueprotobuf::SyncContainerData,
 ) -> Option<()> {
     use crate::live::opcodes_models::{AttrType, AttrValue};
@@ -368,16 +371,7 @@ pub fn process_sync_container_data(
     };
     // Only store players in the database
     if matches!(target_entity.entity_type, EEntityType::EntChar) {
-        enqueue(DbTask::UpsertEntity {
-            entity_id: player_uid,
-            name: name_opt,
-            class_id: Some(target_entity.class_id),
-            class_spec: Some(target_entity.class_spec as i32),
-            ability_score: Some(target_entity.ability_score),
-            level: Some(target_entity.level),
-            seen_at_ms: now_ms(),
-            attributes: serialize_attributes(target_entity),
-        });
+        upsert_entity_cache_entry(entity_cache, player_uid, target_entity, name_opt, now_ms());
 
         // Persist detailed player data for the local player.
         let now = now_ms();
@@ -385,10 +379,11 @@ pub fn process_sync_container_data(
         // Serialize v_data to protobuf bytes
         let vdata_bytes = <blueprotobuf::CharSerialize as prost::Message>::encode_to_vec(&v_data);
 
-        enqueue(DbTask::UpsertDetailedPlayerData {
+        *playerdata_cache = Some(CachedPlayerData {
             player_id: player_uid,
             last_seen_ms: now,
-            vdata_bytes: Some(vdata_bytes),
+            vdata_bytes,
+            dirty: true,
         });
     }
 
@@ -407,9 +402,9 @@ pub fn process_sync_container_dirty_data(
 
 pub fn process_sync_to_me_delta_info(
     encounter: &mut Encounter,
+    entity_cache: &mut HashMap<i64, CachedEntity>,
     sync_to_me_delta_info: blueprotobuf::SyncToMeDeltaInfo,
     dungeon_runtime: Option<&DungeonLogRuntime>,
-    config: &AttemptConfig,
 ) -> Option<()> {
     let delta_info = match sync_to_me_delta_info.delta_info {
         Some(info) => info,
@@ -424,7 +419,7 @@ pub fn process_sync_to_me_delta_info(
     }
 
     if let Some(base_delta) = delta_info.base_delta {
-        process_aoi_sync_delta(encounter, base_delta, dungeon_runtime, config);
+        process_aoi_sync_delta(encounter, entity_cache, base_delta, dungeon_runtime);
     }
 
     Some(())
@@ -432,9 +427,9 @@ pub fn process_sync_to_me_delta_info(
 
 pub fn process_aoi_sync_delta(
     encounter: &mut Encounter,
+    entity_cache: &mut HashMap<i64, CachedEntity>,
     aoi_sync_delta: blueprotobuf::AoiSyncDelta,
     dungeon_runtime: Option<&DungeonLogRuntime>,
-    config: &AttemptConfig,
 ) -> Option<()> {
     let target_uuid = aoi_sync_delta.uuid?; // UUID =/= uid (have to >> 16)
     let target_uid = target_uuid >> 16;
@@ -452,7 +447,12 @@ pub fn process_aoi_sync_delta(
     if let Some(attrs_collection) = aoi_sync_delta.attrs {
         match target_entity_type {
             EEntityType::EntChar => {
-                process_player_attrs(&mut target_entity, target_uid, attrs_collection.attrs);
+                process_player_attrs(
+                    &mut target_entity,
+                    target_uid,
+                    attrs_collection.attrs,
+                    entity_cache,
+                );
             }
             EEntityType::EntMonster => {
                 process_monster_attrs(&mut target_entity, attrs_collection.attrs);
@@ -468,16 +468,7 @@ pub fn process_aoi_sync_delta(
         };
         // Only store players in the database
         if matches!(target_entity_type, EEntityType::EntChar) {
-            enqueue(DbTask::UpsertEntity {
-                entity_id: target_uid,
-                name: name_opt,
-                class_id: Some(target_entity.class_id),
-                class_spec: Some(target_entity.class_spec as i32),
-                ability_score: Some(target_entity.ability_score),
-                level: Some(target_entity.level),
-                seen_at_ms: now_ms(),
-                attributes: serialize_attributes(target_entity),
-            });
+            upsert_entity_cache_entry(entity_cache, target_uid, target_entity, name_opt, now_ms());
         }
     }
 
@@ -578,20 +569,20 @@ pub fn process_aoi_sync_delta(
                     .entry(skill_key)
                     .or_insert_with(|| Skill::default());
                 if is_crit_local {
-                    attacker_entity.crit_hits_heal += 1;
-                    attacker_entity.crit_total_heal += actual_value;
+                    attacker_entity.healing.crit_hits += 1;
+                    attacker_entity.healing.crit_total += actual_value;
                     skill.crit_hits += 1;
                     skill.crit_total_value += actual_value;
                 }
                 if is_lucky_local {
-                    attacker_entity.lucky_hits_heal += 1;
-                    attacker_entity.lucky_total_heal += actual_value;
+                    attacker_entity.healing.lucky_hits += 1;
+                    attacker_entity.healing.lucky_total += actual_value;
                     skill.lucky_hits += 1;
                     skill.lucky_total_value += actual_value;
                 }
                 encounter.total_heal += actual_value;
-                attacker_entity.hits_heal += 1;
-                attacker_entity.total_heal += actual_value;
+                attacker_entity.healing.hits += 1;
+                attacker_entity.healing.total += actual_value;
                 skill.hits += 1;
                 skill.total_value += actual_value;
 
@@ -624,44 +615,44 @@ pub fn process_aoi_sync_delta(
                     .entry(skill_key)
                     .or_insert_with(|| Skill::default());
                 if is_crit_local {
-                    attacker_entity.crit_hits_dmg += 1;
-                    attacker_entity.crit_total_dmg += actual_value;
+                    attacker_entity.damage.crit_hits += 1;
+                    attacker_entity.damage.crit_total += actual_value;
                     skill.crit_hits += 1;
                     skill.crit_total_value += actual_value;
                 }
                 if is_lucky_local {
-                    attacker_entity.lucky_hits_dmg += 1;
-                    attacker_entity.lucky_total_dmg += actual_value;
+                    attacker_entity.damage.lucky_hits += 1;
+                    attacker_entity.damage.lucky_total += actual_value;
                     skill.lucky_hits += 1;
                     skill.lucky_total_value += actual_value;
                 }
                 encounter.total_dmg += actual_value;
-                attacker_entity.hits_dmg += 1;
-                attacker_entity.total_dmg += actual_value;
+                attacker_entity.damage.hits += 1;
+                attacker_entity.damage.total += actual_value;
                 skill.hits += 1;
                 skill.total_value += actual_value;
                 update_active_damage_time(attacker_entity, timestamp_ms);
 
                 if is_boss_target {
                     let skill_boss_only = attacker_entity
-                        .skill_uid_to_dmg_skill_boss_only
+                        .skill_uid_to_dmg_skill
                         .entry(skill_key)
                         .or_insert_with(|| Skill::default());
                     if is_crit_local {
-                        attacker_entity.crit_hits_dmg_boss_only += 1;
-                        attacker_entity.crit_total_dmg_boss_only += actual_value;
+                        attacker_entity.damage_boss_only.crit_hits += 1;
+                        attacker_entity.damage_boss_only.crit_total += actual_value;
                         skill_boss_only.crit_hits += 1;
                         skill_boss_only.crit_total_value += actual_value;
                     }
                     if is_lucky_local {
-                        attacker_entity.lucky_hits_dmg_boss_only += 1;
-                        attacker_entity.lucky_total_dmg_boss_only += actual_value;
+                        attacker_entity.damage_boss_only.lucky_hits += 1;
+                        attacker_entity.damage_boss_only.lucky_total += actual_value;
                         skill_boss_only.lucky_hits += 1;
                         skill_boss_only.lucky_total_value += actual_value;
                     }
                     encounter.total_dmg_boss_only += actual_value;
-                    attacker_entity.hits_dmg_boss_only += 1;
-                    attacker_entity.total_dmg_boss_only += actual_value;
+                    attacker_entity.damage_boss_only.hits += 1;
+                    attacker_entity.damage_boss_only.total += actual_value;
                     skill_boss_only.hits += 1;
                     skill_boss_only.total_value += actual_value;
                 }
@@ -759,19 +750,19 @@ pub fn process_aoi_sync_delta(
                         .entry(skill_key)
                         .or_insert_with(|| Skill::default());
                     if is_crit {
-                        defender_entity.crit_hits_taken += 1;
-                        defender_entity.crit_total_taken += effective_value;
+                        defender_entity.taken.crit_hits += 1;
+                        defender_entity.taken.crit_total += effective_value;
                         taken_skill.crit_hits += 1;
                         taken_skill.crit_total_value += effective_value;
                     }
                     if is_lucky {
-                        defender_entity.lucky_hits_taken += 1;
-                        defender_entity.lucky_total_taken += effective_value;
+                        defender_entity.taken.lucky_hits += 1;
+                        defender_entity.taken.lucky_total += effective_value;
                         taken_skill.lucky_hits += 1;
                         taken_skill.lucky_total_value += effective_value;
                     }
-                    defender_entity.hits_taken += 1;
-                    defender_entity.total_taken += effective_value;
+                    defender_entity.taken.hits += 1;
+                    defender_entity.taken.total += effective_value;
                     taken_skill.hits += 1;
                     taken_skill.total_value += effective_value;
                 }
@@ -876,109 +867,26 @@ pub fn process_aoi_sync_delta(
         }
     }
 
-    // Figure out timestamps (moved earlier for use in attempt detection)
+    // Figure out timestamps.
     let timestamp_ms = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
         .as_millis();
 
-    // Check for wipe condition after recording deaths
-    if check_wipe_condition(encounter, config) {
-        let boss_hp = encounter
-            .entity_uid_to_entity
-            .values()
-            .find(|e| e.is_boss())
-            .and_then(|e| e.hp());
-        split_attempt(encounter, "wipe", timestamp_ms, boss_hp);
-    }
-
-    // Check for HP rollback after processing damage events
-    if let Some(boss_hp_pct) = get_boss_hp_percentage(encounter) {
-        // Update boss HP tracking - find boss HP first
-        let boss_hp_opt = encounter
-            .entity_uid_to_entity
-            .values()
-            .find(|e| e.is_boss())
-            .and_then(|e| e.hp());
-
-        if let Some(boss_hp) = boss_hp_opt {
-            update_boss_hp_tracking(encounter, boss_hp);
-        }
-
-        // Check for HP rollback
-        if check_hp_rollback_condition(encounter, Some(boss_hp_pct), config) {
-            let boss_hp = encounter
-                .entity_uid_to_entity
-                .values()
-                .find(|e| e.is_boss())
-                .and_then(|e| e.hp());
-            split_attempt(encounter, "hp_rollback", timestamp_ms, boss_hp);
-        }
-    }
-
     if encounter.time_fight_start_ms == Default::default() {
         encounter.time_fight_start_ms = timestamp_ms;
-        let fight_start_i64 = timestamp_ms.min(i64::MAX as u128) as i64;
-
-        // Only persist encounters to the database for non-overworld scenes.
-        // Scene ID 5000 is the overworld; we still track and display the encounter
-        // in-memory, but avoid creating DB rows for overworld so the DB stays
-        // free of non-dungeon activity.
-        let persist_to_db = match encounter.current_scene_id {
-            Some(id) if id == 5000 => false,
-            _ => true,
-        };
-
-        if persist_to_db {
-            enqueue(DbTask::BeginEncounter {
-                started_at_ms: timestamp_ms as i64,
-                local_player_id: Some(encounter.local_player_uid),
-                scene_id: encounter.current_scene_id,
-                scene_name: encounter.current_scene_name.clone(),
-            });
-
-            // Determine current boss HP (if a boss entity is present) and begin first attempt
-            let initial_boss_hp = encounter
-                .entity_uid_to_entity
-                .values()
-                .find(|e| e.is_boss())
-                .and_then(|e| e.hp());
-
-            // Begin first attempt with boss HP if available
-            enqueue(DbTask::BeginAttempt {
-                attempt_index: 1,
-                started_at_ms: timestamp_ms as i64,
-                reason: "initial".to_string(),
-                boss_hp_start: initial_boss_hp,
-            });
-
-            // Initialize encounter tracking for attempts
-            encounter.boss_hp_at_attempt_start = initial_boss_hp;
-            if let Some(bhp) = initial_boss_hp {
-                // Initialize lowest boss HP percentage tracking
-                update_boss_hp_tracking(encounter, bhp);
-            }
-        } else {
-            // When not persisting to DB (overworld), still initialize attempt tracking
-            // in-memory so the live meter shows correct data. We do NOT enqueue any
-            // DB tasks in this branch.
-            let initial_boss_hp = encounter
-                .entity_uid_to_entity
-                .values()
-                .find(|e| e.is_boss())
-                .and_then(|e| e.hp());
-            encounter.boss_hp_at_attempt_start = initial_boss_hp;
-            if let Some(bhp) = initial_boss_hp {
-                update_boss_hp_tracking(encounter, bhp);
-            }
-        }
     }
 
     encounter.time_last_combat_packet_ms = timestamp_ms;
     Some(())
 }
 
-fn process_player_attrs(player_entity: &mut Entity, target_uid: i64, attrs: Vec<Attr>) {
+fn process_player_attrs(
+    player_entity: &mut Entity,
+    target_uid: i64,
+    attrs: Vec<Attr>,
+    entity_cache: &mut HashMap<i64, CachedEntity>,
+) {
     use crate::live::opcodes_models::{AttrType, AttrValue};
     use bytes::Buf;
 
@@ -1010,16 +918,13 @@ fn process_player_attrs(player_entity: &mut Entity, target_uid: i64, attrs: Vec<
 
                                     // Store player in database
                                     if matches!(player_entity.entity_type, EEntityType::EntChar) {
-                                        enqueue(DbTask::UpsertEntity {
-                                            entity_id: target_uid,
-                                            name: Some(player_name),
-                                            class_id: Some(player_entity.class_id),
-                                            class_spec: Some(player_entity.class_spec as i32),
-                                            ability_score: Some(player_entity.ability_score),
-                                            level: Some(player_entity.level),
-                                            seen_at_ms: now_ms(),
-                                            attributes: serialize_attributes(player_entity),
-                                        });
+                                        upsert_entity_cache_entry(
+                                            entity_cache,
+                                            target_uid,
+                                            player_entity,
+                                            Some(player_name),
+                                            now_ms(),
+                                        );
                                     }
                                 }
                                 Err(e) => log::warn!(

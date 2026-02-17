@@ -178,26 +178,6 @@ async setDungeonSegmentsEnabled(enabled: boolean) : Promise<Result<null, string>
 }
 },
 /**
- * Sets whether wipe detection is enabled.
- * 
- * # Arguments
- * 
- * * `enabled` - Whether to enable wipe detection.
- * * `state_manager` - The state manager.
- * 
- * # Returns
- * 
- * * `Result<(), String>` - An empty result.
- */
-async setWipeDetectionEnabled(enabled: boolean) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("set_wipe_detection_enabled", { enabled }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
  * Sets the event update rate in milliseconds.
  * 
  * # Arguments
@@ -451,25 +431,6 @@ async getEncounterPlayerSkills(encounterId: number, actorId: number, skillType: 
 }
 },
 /**
- * Gets dungeon segments for an encounter.
- * 
- * # Arguments
- * 
- * * `encounter_id` - The ID of the encounter.
- * 
- * # Returns
- * 
- * * `Result<Vec<m::DungeonSegmentRow>, String>` - A list of dungeon segments.
- */
-async getEncounterSegments(encounterId: number) : Promise<Result<DungeonSegmentRow[], string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("get_encounter_segments", { encounterId }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
  * Deletes an encounter by its ID.
  * 
  * # Arguments
@@ -560,72 +521,6 @@ async getRecentPlayersCommand(limit: number) : Promise<Result<([number, string])
 async getPlayerNameCommand(uid: number) : Promise<Result<string | null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_player_name_command", { uid }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async startUpload(apiKey: string, baseUrl: string | null) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("start_upload", { apiKey, baseUrl }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async cancelUploadCmd() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("cancel_upload_cmd") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Check if an API key is valid by calling the server's /auth/check endpoint.
- * Returns Ok(true) if valid, Ok(false) if the server returns 401, or Err on network error.
- */
-async checkApiKey(apiKey: string, baseUrl: string | null) : Promise<Result<boolean, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("check_api_key", { apiKey, baseUrl }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Check if an API key is valid and return status/body details for logs.
- * 
- * - Returns `valid=true` on 2xx.
- * - Returns `valid=false` on 401 (and includes server message when available).
- * - For other non-2xx responses, tries the next base URL and returns an error
- * only if no base URL yields a definitive result.
- */
-async checkApiKeyVerbose(apiKey: string, baseUrl: string | null) : Promise<Result<CheckApiKeyVerboseResponse, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("check_api_key_verbose", { apiKey, baseUrl }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Manual trigger for player data sync (can be called from Tauri command)
- */
-async syncPlayerData(apiKey: string, baseUrl: string | null) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("sync_player_data", { apiKey, baseUrl }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Get the most recent player data detection and sync times
- */
-async getPlayerDataTimes() : Promise<Result<PlayerDataTimesResponse, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("get_player_data_times") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -877,25 +772,6 @@ maxHp: number | null;
 isDefeated: boolean }
 export type BuffDefinition = { baseId: number; name: string; spriteFile: string; talentName: string | null; talentSpriteFile: string | null; searchKeywords: string[] }
 export type BuffNameInfo = { baseId: number; name: string; hasSpriteFile: boolean }
-/**
- * Detailed API-key check response for UI logging.
- * 
- * This is intentionally separate from `check_api_key` to preserve the existing
- * boolean-only behavior used elsewhere.
- */
-export type CheckApiKeyVerboseResponse = { valid: boolean; status: number | null; 
-/**
- * Best-effort extracted server message (usually from JSON `{message}` or similar).
- */
-message: string | null; 
-/**
- * Best-effort bounded body snippet for troubleshooting.
- */
-bodySnippet: string | null; 
-/**
- * The base URL that produced the result, when available.
- */
-via: string | null }
 export type CombatState = "idle" | "inCombat"
 /**
  * Discrete damage occurrence stored on a segment.
@@ -906,50 +782,6 @@ export type Device = { name: string; description: string | null }
  * Master container for dungeon segments within a scene.
  */
 export type DungeonLog = { sceneId: number | null; sceneName: string | null; combatState: CombatState; segments: Segment[] }
-/**
- * Represents a row in the `dungeon_segments` table.
- */
-export type DungeonSegmentRow = { 
-/**
- * The unique ID of the segment.
- */
-id: number; 
-/**
- * The ID of the encounter this segment belongs to.
- */
-encounterId: number; 
-/**
- * The type of segment ('boss' or 'trash').
- */
-segmentType: string; 
-/**
- * The entity ID of the boss (if boss segment).
- */
-bossEntityId: number | null; 
-/**
- * The monster type ID of the boss (if boss segment).
- */
-bossMonsterTypeId: number | null; 
-/**
- * The name of the boss (if boss segment).
- */
-bossName: string | null; 
-/**
- * The timestamp of when the segment started, in milliseconds since the Unix epoch.
- */
-startedAtMs: number; 
-/**
- * The timestamp of when the segment ended, in milliseconds since the Unix epoch.
- */
-endedAtMs: number | null; 
-/**
- * The total damage dealt during this segment.
- */
-totalDamage: number; 
-/**
- * The number of hits during this segment.
- */
-hitCount: number }
 /**
  * Filters for querying encounters.
  */
@@ -1046,10 +878,6 @@ export type GpuSupport = { cuda_available: boolean; opencl_available: boolean }
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
-/**
- * Response for player data times query
- */
-export type PlayerDataTimesResponse = { lastDetectedMs: number | null; lastSyncMs: number | null }
 /**
  * Information about a player.
  */

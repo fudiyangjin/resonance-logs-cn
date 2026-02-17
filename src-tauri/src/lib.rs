@@ -21,8 +21,6 @@ use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 // the updater plugin.
 use tauri_specta::{Builder, collect_commands};
 mod database;
-mod tracking;
-mod uploader; // stage 4 upload logic
 use serde_json::json;
 
 /// The label for the live window.
@@ -61,7 +59,6 @@ pub fn run() {
             live::commands::unsubscribe_player_skills,
             live::commands::set_boss_only_dps,
             live::commands::set_dungeon_segments_enabled,
-            live::commands::set_wipe_detection_enabled,
             live::commands::set_event_update_rate_ms,
             live::commands::get_dungeon_log,
             live::commands::set_monitored_skills,
@@ -79,18 +76,11 @@ pub fn run() {
             database::commands::get_encounter_actor_stats,
             database::commands::get_encounter_by_id,
             database::commands::get_encounter_player_skills,
-            database::commands::get_encounter_segments,
             database::commands::delete_encounter,
             database::commands::delete_encounters,
             database::commands::toggle_favorite_encounter,
             database::commands::get_recent_players_command,
             database::commands::get_player_name_command,
-            uploader::start_upload,
-            uploader::cancel_upload_cmd,
-            uploader::check_api_key,
-            uploader::check_api_key_verbose,
-            uploader::player_data_sync::sync_player_data,
-            uploader::player_data_sync::get_player_data_times,
             packet_settings_commands::save_packet_capture_settings,
             packets::npcap::get_network_devices,
             packets::npcap::check_npcap_status,
@@ -141,7 +131,7 @@ pub fn run() {
 
             // Initialize database and background writer early to avoid startup races where
             // multiple background tasks/commands trigger migrations concurrently.
-            if let Err(e) = crate::database::init_and_spawn_writer() {
+            if let Err(e) = crate::database::init_db() {
                 warn!(target: "app::db", "Failed to initialize database: {}", e);
             }
 
@@ -160,14 +150,6 @@ pub fn run() {
                 //     }
                 // });
             }
-
-            // Track application update (anonymous telemetry)
-            // {
-            //     let handle = app.handle().clone();
-            //     tauri::async_runtime::spawn(async move {
-            //         crate::tracking::track_update(handle).await;
-            //     });
-            // }
 
             // Install panic hook to create a crash dump file when the app panics.
             // This is installed after logs so we can use the configured logger.
@@ -225,23 +207,10 @@ pub fn run() {
             let state_manager = crate::live::state::AppStateManager::new(app_handle.clone());
             app.manage(state_manager.clone());
 
-            // Auto-upload state (combat log uploader)
-            let auto_upload_state = crate::uploader::AutoUploadState::default();
-            app.manage(auto_upload_state.clone());
-
-            // Player data sync state (separate from encounter uploads)
-            let player_data_sync_state =
-                crate::uploader::player_data_sync::PlayerDataSyncState::default();
-            app.manage(player_data_sync_state.clone());
-
             crate::live::skill_monitor_init::init_skill_monitor_from_settings(
                 &app_handle,
                 &state_manager,
             );
-
-            // crate::uploader::start_auto_upload_task(app_handle.clone(), auto_upload_state.clone());
-            // Start player data sync background task (runs every 15 minutes)
-            // crate::uploader::player_data_sync::start_player_data_sync_task(app_handle.clone(), player_data_sync_state.clone());
 
             // Live Meter
             // https://v2.tauri.app/learn/splashscreen/#start-some-setup-tasks
@@ -530,7 +499,7 @@ fn init_logging(app: &tauri::AppHandle) -> Result<(), String> {
         "info"
     } else {
         // Release: warn+error globally, but keep key lifecycle info for diagnostics.
-        "warn,app::startup=info,app::logging=info,app::db=info,app::capture=info,app::live=info,app::uploader=info,app::sync=info"
+        "warn,app::startup=info,app::logging=info,app::db=info,app::capture=info,app::live=info,app::sync=info"
     };
 
     let filter = tracing_subscriber::EnvFilter::try_from_env("RES_LOG")

@@ -4,7 +4,7 @@ use super::{
     strategy_enumeration_cpu, strategy_enumeration_gpu,
 };
 use crate::database::schema::detailed_playerdata::dsl as dpd;
-use crate::database::{ensure_migrations_on_conn, establish_connection};
+use crate::database::db_exec;
 use blueprotobuf_lib::blueprotobuf::CharSerialize;
 use diesel::prelude::*;
 use prost::Message;
@@ -19,14 +19,13 @@ pub fn check_gpu_support() -> GpuSupport {
 }
 
 fn load_latest_char_serialize() -> Result<CharSerialize, String> {
-    let mut conn = establish_connection().map_err(|e| e.to_string())?;
-    ensure_migrations_on_conn(&mut conn).map_err(|e| e.to_string())?;
-
-    let vdata_bytes: Option<Vec<u8>> = dpd::detailed_playerdata
-        .select(dpd::vdata_bytes)
-        .order(dpd::last_seen_ms.desc())
-        .first(&mut conn)
-        .map_err(|e| e.to_string())?;
+    let vdata_bytes: Option<Vec<u8>> = db_exec(|conn| {
+        dpd::detailed_playerdata
+            .select(dpd::vdata_bytes)
+            .order(dpd::last_seen_ms.desc())
+            .first(conn)
+            .map_err(|e| e.to_string())
+    })?;
 
     log::info!(
         "加载最新玩家数据: vdata_bytes_len={:?}",

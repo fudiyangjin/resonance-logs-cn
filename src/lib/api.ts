@@ -246,9 +246,6 @@ export const setEventUpdateRateMs = (rateMs: number): Promise<void> =>
 
 export const getDungeonLog = (): Promise<DungeonLog> => invoke("get_dungeon_log");
 
-export const getEncounterSegments = (encounterId: number): Promise<Segment[]> =>
-  invoke("get_encounter_segments", { encounterId });
-
 // =========================
 // 模组计算器相关 API
 // =========================

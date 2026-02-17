@@ -7,7 +7,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
 use tokio::sync::RwLock;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Encounter {
     pub is_encounter_paused: bool,
     pub time_last_combat_packet_ms: u128, // in ms
@@ -30,12 +30,6 @@ pub struct Encounter {
     // DB death inserts. We no longer use death tracking for wipe detection; revives
     // are tracked for UI purposes while death DB inserts are still written.
     pub last_death_db_ms: HashMap<i64, u128>,
-    // Attempt tracking for boss splitting
-    pub current_attempt_index: i32,
-    pub boss_hp_at_attempt_start: Option<i64>,
-    pub lowest_boss_hp: Option<f64>,
-    pub party_member_uids: HashSet<i64>, // Track party members for wipe detection
-    pub last_attempt_split_ms: u128,     // Cooldown to avoid rapid splits
     // Dungeon segment tracking: set to true when a boss dies, cleared when next boss is hit
     pub waiting_for_next_boss: bool,
     // Track the last active segment type to detect transitions for meter resets
@@ -314,7 +308,17 @@ impl AttrValue {
     }
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct CombatStats {
+    pub total: u128,
+    pub crit_total: u128,
+    pub crit_hits: u128,
+    pub lucky_total: u128,
+    pub lucky_hits: u128,
+    pub hits: u128,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Entity {
     pub name: String,
     pub entity_type: EEntityType,
@@ -327,40 +331,19 @@ pub struct Entity {
     // Extended attribute storage (HP, stats, flags, etc.)
     pub attributes: HashMap<AttrType, AttrValue>,
     // Damage
-    pub total_dmg: u128,
-    pub crit_total_dmg: u128,
-    pub crit_hits_dmg: u128,
-    pub lucky_total_dmg: u128,
-    pub lucky_hits_dmg: u128,
-    pub hits_dmg: u128,
+    pub damage: CombatStats,
     pub skill_uid_to_dmg_skill: HashMap<i64, Skill>,
     // Boss-only damage
-    pub total_dmg_boss_only: u128,
-    pub crit_total_dmg_boss_only: u128,
-    pub crit_hits_dmg_boss_only: u128,
-    pub lucky_total_dmg_boss_only: u128,
-    pub lucky_hits_dmg_boss_only: u128,
-    pub hits_dmg_boss_only: u128,
-    pub skill_uid_to_dmg_skill_boss_only: HashMap<i64, Skill>,
+    pub damage_boss_only: CombatStats,
     /// Accumulated active damage time in milliseconds for True DPS.
     pub active_dmg_time_ms: u128,
     /// Timestamp of the last damage event used to compute active time.
     pub last_dmg_timestamp_ms: Option<u128>,
     // Healing
-    pub total_heal: u128,
-    pub crit_total_heal: u128,
-    pub crit_hits_heal: u128,
-    pub lucky_total_heal: u128,
-    pub lucky_hits_heal: u128,
-    pub hits_heal: u128,
+    pub healing: CombatStats,
     pub skill_uid_to_heal_skill: HashMap<i64, Skill>,
     // Tanked/Taken (damage received)
-    pub total_taken: u128,
-    pub crit_total_taken: u128,
-    pub crit_hits_taken: u128,
-    pub lucky_total_taken: u128,
-    pub lucky_hits_taken: u128,
-    pub hits_taken: u128,
+    pub taken: CombatStats,
     pub skill_uid_to_taken_skill: HashMap<i64, Skill>,
 
     // Monster metadata and per-target aggregates (for boss-only filtering)
@@ -370,7 +353,7 @@ pub struct Entity {
     pub skill_heal_to_target: HashMap<(i64, i64), SkillTargetStats>,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct SkillTargetStats {
     pub hits: u128,
     pub total_value: u128,
@@ -383,7 +366,7 @@ pub struct SkillTargetStats {
     pub monster_name: Option<String>,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Skill {
     pub total_value: u128,
     pub crit_total_value: u128,
@@ -448,12 +431,7 @@ impl Encounter {
         // Reset per-entity combat stats while preserving identity
         for entity in self.entity_uid_to_entity.values_mut() {
             // Damage
-            entity.total_dmg = 0;
-            entity.crit_total_dmg = 0;
-            entity.crit_hits_dmg = 0;
-            entity.lucky_total_dmg = 0;
-            entity.lucky_hits_dmg = 0;
-            entity.hits_dmg = 0;
+            entity.damage = CombatStats::default();
             entity.skill_uid_to_dmg_skill.clear();
             entity.dmg_to_target.clear();
             entity.skill_dmg_to_target.clear();
@@ -465,22 +443,12 @@ impl Encounter {
             entity.attributes.remove(&AttrType::MaxHp);
 
             // Healing
-            entity.total_heal = 0;
-            entity.crit_total_heal = 0;
-            entity.crit_hits_heal = 0;
-            entity.lucky_total_heal = 0;
-            entity.lucky_hits_heal = 0;
-            entity.hits_heal = 0;
+            entity.healing = CombatStats::default();
             entity.skill_uid_to_heal_skill.clear();
             entity.skill_heal_to_target.clear();
 
             // Taken
-            entity.total_taken = 0;
-            entity.crit_total_taken = 0;
-            entity.crit_hits_taken = 0;
-            entity.lucky_total_taken = 0;
-            entity.lucky_hits_taken = 0;
-            entity.hits_taken = 0;
+            entity.taken = CombatStats::default();
             entity.skill_uid_to_taken_skill.clear();
         }
         // Clear any pending player death tracking for a fresh encounter
@@ -488,12 +456,6 @@ impl Encounter {
         self.last_revive_ms.clear();
         self.last_death_db_ms.clear();
 
-        // Reset attempt tracking
-        self.current_attempt_index = 1;
-        self.boss_hp_at_attempt_start = None;
-        self.lowest_boss_hp = None;
-        self.party_member_uids.clear();
-        self.last_attempt_split_ms = 0;
         self.waiting_for_next_boss = false;
         self.last_active_segment_type = None;
 
@@ -506,12 +468,7 @@ impl Encounter {
         // Reset per-entity combat stats while preserving identity AND HP attributes
         for entity in self.entity_uid_to_entity.values_mut() {
             // Damage
-            entity.total_dmg = 0;
-            entity.crit_total_dmg = 0;
-            entity.crit_hits_dmg = 0;
-            entity.lucky_total_dmg = 0;
-            entity.lucky_hits_dmg = 0;
-            entity.hits_dmg = 0;
+            entity.damage = CombatStats::default();
             entity.skill_uid_to_dmg_skill.clear();
             entity.dmg_to_target.clear();
             entity.skill_dmg_to_target.clear();
@@ -522,22 +479,12 @@ impl Encounter {
             // for display when switching segments within the same encounter
 
             // Healing
-            entity.total_heal = 0;
-            entity.crit_total_heal = 0;
-            entity.crit_hits_heal = 0;
-            entity.lucky_total_heal = 0;
-            entity.lucky_hits_heal = 0;
-            entity.hits_heal = 0;
+            entity.healing = CombatStats::default();
             entity.skill_uid_to_heal_skill.clear();
             entity.skill_heal_to_target.clear();
 
             // Taken
-            entity.total_taken = 0;
-            entity.crit_total_taken = 0;
-            entity.crit_hits_taken = 0;
-            entity.lucky_total_taken = 0;
-            entity.lucky_hits_taken = 0;
-            entity.hits_taken = 0;
+            entity.taken = CombatStats::default();
             entity.skill_uid_to_taken_skill.clear();
         }
 
@@ -639,7 +586,16 @@ pub mod class {
         })
     }
 
-    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+    #[derive(
+        Debug,
+        Default,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum ClassSpec {
         #[default]
         Unknown,

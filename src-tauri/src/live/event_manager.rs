@@ -2,6 +2,7 @@ use crate::live::commands_models::{
     BossHealth, HeaderInfo, PlayerRow, PlayersWindow, SkillRow, SkillsWindow,
 };
 use crate::live::opcodes_models::{Encounter, Entity, Skill, class};
+use crate::database::CachedEntity;
 use blueprotobuf_lib::blueprotobuf::EEntityType;
 use log::{info, trace, warn};
 use serde::{Deserialize, Serialize};
@@ -101,47 +102,6 @@ impl EventManager {
         }
     }
 
-    /// Emits a players update event.
-    ///
-    /// # Arguments
-    ///
-    /// * `metric_type` - The type of metric being displayed.
-    /// * `players_window` - The players window data.
-    #[allow(dead_code)]
-    pub fn emit_players_update(&self, metric_type: MetricType, players_window: PlayersWindow) {
-        if let Some(app_handle) = &self.app_handle {
-            let payload = PlayersUpdatePayload {
-                metric_type,
-                players_window,
-            };
-            safe_emit(app_handle, "players-update", payload);
-        }
-    }
-
-    /// Emits a skills update event.
-    ///
-    /// # Arguments
-    ///
-    /// * `metric_type` - The type of metric being displayed.
-    /// * `player_uid` - The UID of the player.
-    /// * `skills_window` - The skills window data.
-    #[allow(dead_code)]
-    pub fn emit_skills_update(
-        &self,
-        metric_type: MetricType,
-        player_uid: i64,
-        skills_window: SkillsWindow,
-    ) {
-        if let Some(app_handle) = &self.app_handle {
-            let payload = SkillsUpdatePayload {
-                metric_type,
-                player_uid,
-                skills_window,
-            };
-            safe_emit(app_handle, "skills-update", payload);
-        }
-    }
-
     /// Emits an encounter reset event.
     pub fn emit_encounter_reset(&self) {
         if let Some(app_handle) = &self.app_handle {
@@ -156,15 +116,6 @@ impl EventManager {
     /// clear only player metrics without clearing the entire dungeon log.
     /// Emits a reset event specifically for player metrics when a new segment begins.
     /// Optionally include a segment name for displaying in UI toasts.
-    #[allow(dead_code)]
-    pub fn emit_player_metrics_reset(&self, segment_name: Option<String>) {
-        if let Some(app_handle) = &self.app_handle {
-            let payload = PlayerMetricsResetPayload { segment_name };
-            if safe_emit(app_handle, "reset-player-metrics", payload) {
-                trace!("Emitted reset-player-metrics event");
-            }
-        }
-    }
 
     /// Emits an encounter pause event.
     ///
@@ -217,12 +168,6 @@ impl EventManager {
         false
     }
 
-    /// Peek at dead boss names without consuming them.
-    #[allow(dead_code)]
-    pub fn peek_dead_bosses(&self) -> Vec<String> {
-        self.dead_boss_names.values().cloned().collect()
-    }
-
     /// Drain and return any dead boss names that have been recorded by the event manager.
     /// This consumes the stored names and uids so they won't be double-persisted.
     pub fn take_dead_bosses(&mut self) -> Vec<String> {
@@ -248,13 +193,6 @@ impl EventManager {
     /// Returns a clone of the app handle for lock-free event emission.
     pub fn get_app_handle(&self) -> Option<AppHandle> {
         self.app_handle.clone()
-    }
-
-    /// Marks a boss as dead (used for deduplication).
-    /// Returns true if this is a new death, false if already recorded.
-    #[allow(dead_code)]
-    pub fn mark_boss_dead(&mut self, boss_uid: i64) -> bool {
-        self.dead_bosses.insert(boss_uid)
     }
 }
 
@@ -336,6 +274,7 @@ fn is_boss_target(encounter: &Encounter, target_uid: &i64) -> bool {
 // Helper functions for generating data structures
 pub fn generate_players_window_dps(
     encounter: &Encounter,
+    entity_cache: &HashMap<i64, CachedEntity>,
     _boss_only: bool,
     segment_elapsed_ms: Option<u128>,
 ) -> PlayersWindow {
@@ -368,6 +307,7 @@ pub fn generate_players_window_dps(
             entity_uid,
             entity,
             encounter,
+            entity_cache,
             total_scope_dmg,
             total_boss_dmg,
             time_elapsed_secs,
@@ -389,6 +329,7 @@ pub fn generate_players_window_dps(
 
 pub fn generate_players_window_heal(
     encounter: &Encounter,
+    entity_cache: &HashMap<i64, CachedEntity>,
     segment_elapsed_ms: Option<u128>,
 ) -> PlayersWindow {
     let (_, time_elapsed_secs) = resolve_elapsed(encounter, segment_elapsed_ms);
@@ -409,31 +350,31 @@ pub fn generate_players_window_heal(
             #[allow(clippy::cast_precision_loss)]
             let heal_row = PlayerRow {
                 uid: entity_uid as u128,
-                name: prettify_name(entity_uid, encounter.local_player_uid, &entity.name),
+                name: prettify_name(entity_uid, encounter.local_player_uid, &entity.name, entity_cache),
                 class_name: class::get_class_name(entity.class_id),
                 class_spec_name: class::get_class_spec(entity.class_spec),
                 ability_score: entity.ability_score as u128,
-                total_dmg: entity.total_heal,
-                dps: nan_is_zero(entity.total_heal as f64 / time_elapsed_secs),
+                total_dmg: entity.healing.total,
+                dps: nan_is_zero(entity.healing.total as f64 / time_elapsed_secs),
                 tdps: 0.0,
                 active_time_ms: 0,
                 dmg_pct: nan_is_zero(
-                    entity.total_heal as f64 / encounter.total_heal as f64 * 100.0,
+                    entity.healing.total as f64 / encounter.total_heal as f64 * 100.0,
                 ),
                 crit_rate: nan_is_zero(
-                    entity.crit_hits_heal as f64 / entity.hits_heal as f64 * 100.0,
+                    entity.healing.crit_hits as f64 / entity.healing.hits as f64 * 100.0,
                 ),
                 crit_dmg_rate: nan_is_zero(
-                    entity.crit_total_heal as f64 / entity.total_heal as f64 * 100.0,
+                    entity.healing.crit_total as f64 / entity.healing.total as f64 * 100.0,
                 ),
                 lucky_rate: nan_is_zero(
-                    entity.lucky_hits_heal as f64 / entity.hits_heal as f64 * 100.0,
+                    entity.healing.lucky_hits as f64 / entity.healing.hits as f64 * 100.0,
                 ),
                 lucky_dmg_rate: nan_is_zero(
-                    entity.lucky_total_heal as f64 / entity.total_heal as f64 * 100.0,
+                    entity.healing.lucky_total as f64 / entity.healing.total as f64 * 100.0,
                 ),
-                hits: entity.hits_heal,
-                hits_per_minute: nan_is_zero(entity.hits_heal as f64 / time_elapsed_secs * 60.0),
+                hits: entity.healing.hits,
+                hits_per_minute: nan_is_zero(entity.healing.hits as f64 / time_elapsed_secs * 60.0),
                 boss_dmg: 0,
                 boss_dps: 0.0,
                 boss_dmg_pct: 0.0,
@@ -470,6 +411,7 @@ pub fn generate_players_window_heal(
 
 pub fn generate_players_window_tanked(
     encounter: &Encounter,
+    entity_cache: &HashMap<i64, CachedEntity>,
     segment_elapsed_ms: Option<u128>,
 ) -> PlayersWindow {
     let (_, time_elapsed_secs) = resolve_elapsed(encounter, segment_elapsed_ms);
@@ -482,7 +424,7 @@ pub fn generate_players_window_tanked(
     let mut total_taken_all: u128 = 0;
     for entity in encounter.entity_uid_to_entity.values() {
         if entity.entity_type == EEntityType::EntChar {
-            total_taken_all += entity.total_taken;
+            total_taken_all += entity.taken.total;
         }
     }
 
@@ -498,29 +440,29 @@ pub fn generate_players_window_tanked(
             #[allow(clippy::cast_precision_loss)]
             let tanked_row = PlayerRow {
                 uid: entity_uid as u128,
-                name: prettify_name(entity_uid, encounter.local_player_uid, &entity.name),
+                name: prettify_name(entity_uid, encounter.local_player_uid, &entity.name, entity_cache),
                 class_name: class::get_class_name(entity.class_id),
                 class_spec_name: class::get_class_spec(entity.class_spec),
                 ability_score: entity.ability_score as u128,
-                total_dmg: entity.total_taken,
-                dps: nan_is_zero(entity.total_taken as f64 / time_elapsed_secs),
+                total_dmg: entity.taken.total,
+                dps: nan_is_zero(entity.taken.total as f64 / time_elapsed_secs),
                 tdps: 0.0,
                 active_time_ms: 0,
-                dmg_pct: nan_is_zero(entity.total_taken as f64 / total_taken_all as f64 * 100.0),
+                dmg_pct: nan_is_zero(entity.taken.total as f64 / total_taken_all as f64 * 100.0),
                 crit_rate: nan_is_zero(
-                    entity.crit_hits_taken as f64 / entity.hits_taken as f64 * 100.0,
+                    entity.taken.crit_hits as f64 / entity.taken.hits as f64 * 100.0,
                 ),
                 crit_dmg_rate: nan_is_zero(
-                    entity.crit_total_taken as f64 / entity.total_taken as f64 * 100.0,
+                    entity.taken.crit_total as f64 / entity.taken.total as f64 * 100.0,
                 ),
                 lucky_rate: nan_is_zero(
-                    entity.lucky_hits_taken as f64 / entity.hits_taken as f64 * 100.0,
+                    entity.taken.lucky_hits as f64 / entity.taken.hits as f64 * 100.0,
                 ),
                 lucky_dmg_rate: nan_is_zero(
-                    entity.lucky_total_taken as f64 / entity.total_taken as f64 * 100.0,
+                    entity.taken.lucky_total as f64 / entity.taken.total as f64 * 100.0,
                 ),
-                hits: entity.hits_taken,
-                hits_per_minute: nan_is_zero(entity.hits_taken as f64 / time_elapsed_secs * 60.0),
+                hits: entity.taken.hits,
+                hits_per_minute: nan_is_zero(entity.taken.hits as f64 / time_elapsed_secs * 60.0),
                 boss_dmg: 0,
                 boss_dps: 0.0,
                 boss_dmg_pct: 0.0,
@@ -557,6 +499,7 @@ pub fn generate_players_window_tanked(
 
 pub fn generate_skills_window_dps(
     encounter: &Encounter,
+    entity_cache: &HashMap<i64, CachedEntity>,
     player_uid: i64,
     boss_only: bool,
     segment_elapsed_ms: Option<u128>,
@@ -591,7 +534,7 @@ pub fn generate_skills_window_dps(
         encounter.total_dmg
     };
 
-    let player_total: u128 = if boss_only { player_boss_total } else { entity.total_dmg };
+    let player_total: u128 = if boss_only { player_boss_total } else { entity.damage.total };
     let active_time_ms = entity.active_dmg_time_ms;
     #[allow(clippy::cast_precision_loss)]
     let active_time_secs = if active_time_ms > 0 {
@@ -605,7 +548,7 @@ pub fn generate_skills_window_dps(
     let mut skills_window = SkillsWindow {
         curr_player: vec![PlayerRow {
             uid: player_uid as u128,
-            name: prettify_name(player_uid, encounter.local_player_uid, &entity.name),
+            name: prettify_name(player_uid, encounter.local_player_uid, &entity.name, entity_cache),
             class_name: class::get_class_name(entity.class_id),
             class_spec_name: class::get_class_spec(entity.class_spec),
             ability_score: entity.ability_score as u128,
@@ -625,16 +568,16 @@ pub fn generate_skills_window_dps(
             } else {
                 nan_is_zero(player_boss_total as f64 / total_boss_dmg as f64 * 100.0)
             },
-            crit_rate: nan_is_zero(entity.crit_hits_dmg as f64 / entity.hits_dmg as f64 * 100.0),
+            crit_rate: nan_is_zero(entity.damage.crit_hits as f64 / entity.damage.hits as f64 * 100.0),
             crit_dmg_rate: nan_is_zero(
-                entity.crit_total_dmg as f64 / entity.total_dmg as f64 * 100.0,
+                entity.damage.crit_total as f64 / entity.damage.total as f64 * 100.0,
             ),
-            lucky_rate: nan_is_zero(entity.lucky_hits_dmg as f64 / entity.hits_dmg as f64 * 100.0),
+            lucky_rate: nan_is_zero(entity.damage.lucky_hits as f64 / entity.damage.hits as f64 * 100.0),
             lucky_dmg_rate: nan_is_zero(
-                entity.lucky_total_dmg as f64 / entity.total_dmg as f64 * 100.0,
+                entity.damage.lucky_total as f64 / entity.damage.total as f64 * 100.0,
             ),
-            hits: entity.hits_dmg,
-            hits_per_minute: nan_is_zero(entity.hits_dmg as f64 / time_elapsed_secs * 60.0),
+            hits: entity.damage.hits,
+            hits_per_minute: nan_is_zero(entity.damage.hits as f64 / time_elapsed_secs * 60.0),
             // Extended attributes from Stage 4
             rank_level: entity.rank_level(),
             current_hp: entity.hp(),
@@ -706,6 +649,7 @@ pub fn generate_skills_window_dps(
 
 pub fn generate_skills_window_heal(
     encounter: &Encounter,
+    entity_cache: &HashMap<i64, CachedEntity>,
     player_uid: i64,
     segment_elapsed_ms: Option<u128>,
 ) -> Option<SkillsWindow> {
@@ -717,27 +661,27 @@ pub fn generate_skills_window_heal(
     let mut skills_window = SkillsWindow {
         curr_player: vec![PlayerRow {
             uid: player_uid as u128,
-            name: prettify_name(player_uid, encounter.local_player_uid, &entity.name),
+            name: prettify_name(player_uid, encounter.local_player_uid, &entity.name, entity_cache),
             class_name: class::get_class_name(entity.class_id),
             class_spec_name: class::get_class_spec(entity.class_spec),
             ability_score: entity.ability_score as u128,
-            total_dmg: entity.total_heal,
-            dps: nan_is_zero(entity.total_heal as f64 / time_elapsed_secs),
+            total_dmg: entity.healing.total,
+            dps: nan_is_zero(entity.healing.total as f64 / time_elapsed_secs),
             tdps: 0.0,
             active_time_ms: 0,
-            dmg_pct: nan_is_zero(entity.total_heal as f64 / encounter.total_heal as f64 * 100.0),
-            crit_rate: nan_is_zero(entity.crit_hits_heal as f64 / entity.hits_heal as f64 * 100.0),
+            dmg_pct: nan_is_zero(entity.healing.total as f64 / encounter.total_heal as f64 * 100.0),
+            crit_rate: nan_is_zero(entity.healing.crit_hits as f64 / entity.healing.hits as f64 * 100.0),
             crit_dmg_rate: nan_is_zero(
-                entity.crit_total_heal as f64 / entity.total_heal as f64 * 100.0,
+                entity.healing.crit_total as f64 / entity.healing.total as f64 * 100.0,
             ),
             lucky_rate: nan_is_zero(
-                entity.lucky_hits_heal as f64 / entity.hits_heal as f64 * 100.0,
+                entity.healing.lucky_hits as f64 / entity.healing.hits as f64 * 100.0,
             ),
             lucky_dmg_rate: nan_is_zero(
-                entity.lucky_total_heal as f64 / entity.total_heal as f64 * 100.0,
+                entity.healing.lucky_total as f64 / entity.healing.total as f64 * 100.0,
             ),
-            hits: entity.hits_heal,
-            hits_per_minute: nan_is_zero(entity.hits_heal as f64 / time_elapsed_secs * 60.0),
+            hits: entity.healing.hits,
+            hits_per_minute: nan_is_zero(entity.healing.hits as f64 / time_elapsed_secs * 60.0),
             boss_dmg: 0,
             boss_dps: 0.0,
             boss_dmg_pct: 0.0,
@@ -768,7 +712,7 @@ pub fn generate_skills_window_heal(
             name: Skill::get_skill_name(skill_uid),
             total_dmg: skill.total_value,
             dps: nan_is_zero(skill.total_value as f64 / time_elapsed_secs),
-            dmg_pct: nan_is_zero(skill.total_value as f64 / entity.total_heal as f64 * 100.0),
+            dmg_pct: nan_is_zero(skill.total_value as f64 / entity.healing.total as f64 * 100.0),
             crit_rate: nan_is_zero(skill.crit_hits as f64 / skill.hits as f64 * 100.0),
             crit_dmg_rate: nan_is_zero(
                 skill.crit_total_value as f64 / skill.total_value as f64 * 100.0,
@@ -796,6 +740,7 @@ pub fn generate_skills_window_heal(
 
 pub fn generate_skills_window_tanked(
     encounter: &Encounter,
+    entity_cache: &HashMap<i64, CachedEntity>,
     player_uid: i64,
     segment_elapsed_ms: Option<u128>,
 ) -> Option<SkillsWindow> {
@@ -807,29 +752,29 @@ pub fn generate_skills_window_tanked(
     let mut skills_window = SkillsWindow {
         curr_player: vec![PlayerRow {
             uid: player_uid as u128,
-            name: prettify_name(player_uid, encounter.local_player_uid, &entity.name),
+            name: prettify_name(player_uid, encounter.local_player_uid, &entity.name, entity_cache),
             class_name: class::get_class_name(entity.class_id),
             class_spec_name: class::get_class_spec(entity.class_spec),
             ability_score: entity.ability_score as u128,
-            total_dmg: entity.total_taken,
-            dps: nan_is_zero(entity.total_taken as f64 / time_elapsed_secs),
+            total_dmg: entity.taken.total,
+            dps: nan_is_zero(entity.taken.total as f64 / time_elapsed_secs),
             tdps: 0.0,
             active_time_ms: 0,
             dmg_pct: 100.0, // Always 100% for the current player view
             crit_rate: nan_is_zero(
-                entity.crit_hits_taken as f64 / entity.hits_taken as f64 * 100.0,
+                entity.taken.crit_hits as f64 / entity.taken.hits as f64 * 100.0,
             ),
             crit_dmg_rate: nan_is_zero(
-                entity.crit_total_taken as f64 / entity.total_taken as f64 * 100.0,
+                entity.taken.crit_total as f64 / entity.taken.total as f64 * 100.0,
             ),
             lucky_rate: nan_is_zero(
-                entity.lucky_hits_taken as f64 / entity.hits_taken as f64 * 100.0,
+                entity.taken.lucky_hits as f64 / entity.taken.hits as f64 * 100.0,
             ),
             lucky_dmg_rate: nan_is_zero(
-                entity.lucky_total_taken as f64 / entity.total_taken as f64 * 100.0,
+                entity.taken.lucky_total as f64 / entity.taken.total as f64 * 100.0,
             ),
-            hits: entity.hits_taken,
-            hits_per_minute: nan_is_zero(entity.hits_taken as f64 / time_elapsed_secs * 60.0),
+            hits: entity.taken.hits,
+            hits_per_minute: nan_is_zero(entity.taken.hits as f64 / time_elapsed_secs * 60.0),
             boss_dmg: 0,
             boss_dps: 0.0,
             boss_dmg_pct: 0.0,
@@ -860,7 +805,7 @@ pub fn generate_skills_window_tanked(
             name: Skill::get_skill_name(skill_uid),
             total_dmg: skill.total_value,
             dps: nan_is_zero(skill.total_value as f64 / time_elapsed_secs),
-            dmg_pct: nan_is_zero(skill.total_value as f64 / entity.total_taken as f64 * 100.0),
+            dmg_pct: nan_is_zero(skill.total_value as f64 / entity.taken.total as f64 * 100.0),
             crit_rate: nan_is_zero(skill.crit_hits as f64 / skill.hits as f64 * 100.0),
             crit_dmg_rate: nan_is_zero(
                 skill.crit_total_value as f64 / skill.total_value as f64 * 100.0,
@@ -886,13 +831,20 @@ pub fn generate_skills_window_tanked(
     Some(skills_window)
 }
 
-fn prettify_name(player_uid: i64, local_player_uid: i64, player_name: &String) -> String {
-    // If entity name is empty, try to get it from the database
+fn prettify_name(
+    player_uid: i64,
+    local_player_uid: i64,
+    player_name: &str,
+    entity_cache: &HashMap<i64, CachedEntity>,
+) -> String {
+    // If entity name is empty, try in-memory entity cache first.
     let effective_name = if player_name.is_empty() {
-        crate::live::player_names::PlayerNames::get_name_by_uid(player_uid)
-            .unwrap_or_else(|| String::new())
+        entity_cache
+            .get(&player_uid)
+            .and_then(|cached| cached.name.clone())
+            .unwrap_or_default()
     } else {
-        player_name.clone()
+        player_name.to_string()
     };
 
     if player_uid == local_player_uid && effective_name.is_empty() {
@@ -931,6 +883,7 @@ pub fn generate_player_row_filtered(
     entity_uid: i64,
     entity: &Entity,
     encounter: &Encounter,
+    entity_cache: &HashMap<i64, CachedEntity>,
     total_scope_dmg: u128,
     total_boss_dmg: u128,
     time_elapsed_secs: f64,
@@ -942,7 +895,7 @@ pub fn generate_player_row_filtered(
         return None;
     }
 
-    let entity_total: u128 = entity.total_dmg;
+    let entity_total: u128 = entity.damage.total;
     let boss_total: u128 = entity
         .dmg_to_target
         .iter()
@@ -964,7 +917,7 @@ pub fn generate_player_row_filtered(
     #[allow(clippy::cast_precision_loss)]
     Some(PlayerRow {
         uid: entity_uid as u128,
-        name: prettify_name(entity_uid, encounter.local_player_uid, &entity.name),
+        name: prettify_name(entity_uid, encounter.local_player_uid, &entity.name, entity_cache),
         class_name: class::get_class_name(entity.class_id),
         class_spec_name: class::get_class_spec(entity.class_spec),
         ability_score: entity.ability_score as u128,
@@ -984,14 +937,14 @@ pub fn generate_player_row_filtered(
         } else {
             nan_is_zero(boss_total as f64 / total_boss_dmg as f64 * 100.0)
         },
-        crit_rate: nan_is_zero(entity.crit_hits_dmg as f64 / entity.hits_dmg as f64 * 100.0),
-        crit_dmg_rate: nan_is_zero(entity.crit_total_dmg as f64 / entity.total_dmg as f64 * 100.0),
-        lucky_rate: nan_is_zero(entity.lucky_hits_dmg as f64 / entity.hits_dmg as f64 * 100.0),
+        crit_rate: nan_is_zero(entity.damage.crit_hits as f64 / entity.damage.hits as f64 * 100.0),
+        crit_dmg_rate: nan_is_zero(entity.damage.crit_total as f64 / entity.damage.total as f64 * 100.0),
+        lucky_rate: nan_is_zero(entity.damage.lucky_hits as f64 / entity.damage.hits as f64 * 100.0),
         lucky_dmg_rate: nan_is_zero(
-            entity.lucky_total_dmg as f64 / entity.total_dmg as f64 * 100.0,
+            entity.damage.lucky_total as f64 / entity.damage.total as f64 * 100.0,
         ),
-        hits: entity.hits_dmg,
-        hits_per_minute: nan_is_zero(entity.hits_dmg as f64 / time_elapsed_secs * 60.0),
+        hits: entity.damage.hits,
+        hits_per_minute: nan_is_zero(entity.damage.hits as f64 / time_elapsed_secs * 60.0),
         // Extended attributes from Stage 4
         rank_level: entity.rank_level(),
         current_hp: entity.hp(),
@@ -1008,43 +961,6 @@ pub fn generate_player_row_filtered(
             .and_then(|v| v.as_int()),
         reduction_level: entity.reduction_level(),
     })
-}
-
-#[allow(dead_code)]
-pub fn generate_skill_rows(entity: &Entity, time_elapsed_secs: f64) -> Vec<SkillRow> {
-    let mut skill_rows = Vec::new();
-
-    for (&skill_uid, skill) in &entity.skill_uid_to_dmg_skill {
-        #[allow(clippy::cast_precision_loss)]
-        let skill_row = SkillRow {
-            skill_id: skill_uid,
-            name: Skill::get_skill_name(skill_uid),
-            total_dmg: skill.total_value,
-            dps: nan_is_zero(skill.total_value as f64 / time_elapsed_secs),
-            dmg_pct: nan_is_zero(skill.total_value as f64 / entity.total_dmg as f64 * 100.0),
-            crit_rate: nan_is_zero(skill.crit_hits as f64 / skill.hits as f64 * 100.0),
-            crit_dmg_rate: nan_is_zero(
-                skill.crit_total_value as f64 / skill.total_value as f64 * 100.0,
-            ),
-            lucky_rate: nan_is_zero(skill.lucky_hits as f64 / skill.hits as f64 * 100.0),
-            lucky_dmg_rate: nan_is_zero(
-                skill.lucky_total_value as f64 / skill.total_value as f64 * 100.0,
-            ),
-            hits: skill.hits,
-            hits_per_minute: nan_is_zero(skill.hits as f64 / time_elapsed_secs * 60.0),
-        };
-        skill_rows.push(skill_row);
-    }
-
-    // Sort skills descending by damage dealt
-    skill_rows.sort_by(|this_row, other_row| {
-        other_row
-            .total_dmg
-            .partial_cmp(&this_row.total_dmg)
-            .unwrap_or(std::cmp::Ordering::Equal)
-    });
-
-    skill_rows
 }
 
 pub fn generate_header_info(
