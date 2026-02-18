@@ -422,12 +422,14 @@ impl Encounter {
         self.time_last_combat_packet_ms = 0;
         self.time_fight_start_ms = 0;
         self.total_dmg = 0;
+        self.total_dmg_boss_only = 0;
         self.total_heal = 0;
 
         // Reset per-entity combat stats while preserving identity
         for entity in self.entity_uid_to_entity.values_mut() {
             // Damage
             entity.damage = CombatStats::default();
+            entity.damage_boss_only = CombatStats::default();
             entity.skill_uid_to_dmg_skill.clear();
             entity.dmg_to_target.clear();
             entity.skill_dmg_to_target.clear();

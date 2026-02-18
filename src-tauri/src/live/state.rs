@@ -1578,24 +1578,11 @@ impl AppStateManager {
         }
         state.encounter.reset_combat_state();
         state.skill_subscriptions.clear();
-        state.active_buffs.clear();
-        state.ordered_buff_uuids.clear();
-        state.buff_order_dirty = true;
 
         if state.event_manager.should_emit_events() {
             state.event_manager.emit_encounter_reset();
             // Clear dead bosses tracking on reset
             state.event_manager.clear_dead_bosses();
-
-            if !state.monitored_buff_ids.is_empty() {
-                if let Some(app_handle) = state.event_manager.get_app_handle() {
-                    safe_emit(
-                        &app_handle,
-                        "buff-update",
-                        BuffUpdatePayload { buffs: Vec::new() },
-                    );
-                }
-            }
 
             // Emit an encounter update with cleared state so frontend updates immediately
             use crate::live::commands_models::HeaderInfo;
@@ -1616,7 +1603,6 @@ impl AppStateManager {
         }
 
         state.low_hp_bosses.clear();
-        state.skill_subscriptions.clear();
         if is_manual {
             state.battle_state = BattleStateMachine::default();
         }
