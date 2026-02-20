@@ -310,7 +310,7 @@ async getEncounterById(encounterId: number) : Promise<Result<EncounterSummaryDto
 /**
  * Gets raw actor entities for a historical encounter.
  */
-async getEncounterEntitiesRaw(encounterId: number) : Promise<Result<RawEntityData[], string>> {
+async getEncounterEntitiesRaw(encounterId: number) : Promise<Result<HistoryEntityData[], string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_encounter_entities_raw", { encounterId }) };
 } catch (e) {
@@ -615,9 +615,11 @@ remoteEncounterId: number | null;
  */
 isFavorite: boolean }
 export type GpuSupport = { cuda_available: boolean; opencl_available: boolean }
+export type HistoryEntityData = { uid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; activeDmgTimeMs: number; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }>; dmgPerTarget: PerTargetStats[]; healPerTarget: PerTargetStats[] }
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
+export type PerTargetStats = { targetUid: number; targetName: string; totalValue: number; damage: RawCombatStats; skills: Partial<{ [key in number]: RawSkillStats }> }
 /**
  * The result of a query for player names.
  */
@@ -627,7 +629,6 @@ export type PlayerNamesResult = {
  */
 names: string[] }
 export type RawCombatStats = { total: number; hits: number; critHits: number; critTotal: number; luckyHits: number; luckyTotal: number }
-export type RawEntityData = { uid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; activeDmgTimeMs: number; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }> }
 export type RawSkillStats = { totalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number }
 /**
  * The result of a query for recent encounters.

@@ -1,3 +1,4 @@
+use crate::live::opcodes_models::SkillTargetStats;
 use crate::live::opcodes_models::{CombatStats, Skill};
 use std::collections::HashMap;
 
@@ -80,6 +81,28 @@ pub struct RawEntityData {
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct HistoryEntityData {
+    pub uid: i64,
+    pub name: String,
+    pub class_id: i32,
+    pub class_spec: i32,
+    pub class_name: String,
+    pub class_spec_name: String,
+    pub ability_score: i32,
+    pub damage: RawCombatStats,
+    pub damage_boss_only: RawCombatStats,
+    pub healing: RawCombatStats,
+    pub taken: RawCombatStats,
+    pub active_dmg_time_ms: u128,
+    pub dmg_skills: HashMap<i64, RawSkillStats>,
+    pub heal_skills: HashMap<i64, RawSkillStats>,
+    pub taken_skills: HashMap<i64, RawSkillStats>,
+    pub dmg_per_target: Vec<PerTargetStats>,
+    pub heal_per_target: Vec<PerTargetStats>,
+}
+
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct RawCombatStats {
     pub total: u128,
     pub hits: u128,
@@ -98,6 +121,16 @@ pub struct RawSkillStats {
     pub crit_total_value: u128,
     pub lucky_hits: u128,
     pub lucky_total_value: u128,
+}
+
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PerTargetStats {
+    pub target_uid: i64,
+    pub target_name: String,
+    pub total_value: u128,
+    pub damage: RawCombatStats,
+    pub skills: HashMap<i64, RawSkillStats>,
 }
 
 pub fn to_raw_combat_stats(stats: &CombatStats) -> RawCombatStats {
@@ -120,6 +153,61 @@ pub fn to_raw_skill_stats(skill: &Skill) -> RawSkillStats {
         lucky_hits: skill.lucky_hits,
         lucky_total_value: skill.lucky_total_value,
     }
+}
+
+pub fn build_per_target_stats(
+    stats_by_skill_target: &HashMap<(i64, i64), SkillTargetStats>,
+    totals_by_target: Option<&HashMap<i64, u128>>,
+) -> Vec<PerTargetStats> {
+    let mut grouped = HashMap::<i64, PerTargetStats>::new();
+
+    for (&(skill_id, target_uid), stats) in stats_by_skill_target {
+        let entry = grouped.entry(target_uid).or_insert_with(|| PerTargetStats {
+            target_uid,
+            target_name: stats
+                .monster_name
+                .clone()
+                .unwrap_or_else(|| format!("#{}", target_uid)),
+            total_value: 0,
+            damage: RawCombatStats::default(),
+            skills: HashMap::new(),
+        });
+
+        if entry.target_name.starts_with('#') && stats.monster_name.is_some() {
+            entry.target_name = stats.monster_name.clone().unwrap_or_default();
+        }
+
+        entry.skills.insert(
+            skill_id,
+            RawSkillStats {
+                total_value: stats.total_value,
+                hits: stats.hits,
+                crit_hits: stats.crit_hits,
+                crit_total_value: stats.crit_total,
+                lucky_hits: stats.lucky_hits,
+                lucky_total_value: stats.lucky_total,
+            },
+        );
+        entry.total_value += stats.total_value;
+        entry.damage.total += stats.total_value;
+        entry.damage.hits += stats.hits;
+        entry.damage.crit_hits += stats.crit_hits;
+        entry.damage.crit_total += stats.crit_total;
+        entry.damage.lucky_hits += stats.lucky_hits;
+        entry.damage.lucky_total += stats.lucky_total;
+    }
+
+    if let Some(totals) = totals_by_target {
+        for (target_uid, target_total) in totals {
+            if let Some(entry) = grouped.get_mut(target_uid) {
+                entry.total_value = *target_total;
+            }
+        }
+    }
+
+    let mut rows: Vec<PerTargetStats> = grouped.into_values().collect();
+    rows.sort_by(|a, b| b.total_value.cmp(&a.total_value));
+    rows
 }
 
 /// Represents a skill cooldown state.

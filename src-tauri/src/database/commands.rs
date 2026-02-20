@@ -543,7 +543,7 @@ pub fn get_encounter_by_id(encounter_id: i32) -> Result<EncounterSummaryDto, Str
 /// Gets raw actor entities for a historical encounter.
 #[tauri::command]
 #[specta::specta]
-pub fn get_encounter_entities_raw(encounter_id: i32) -> Result<Vec<lc::RawEntityData>, String> {
+pub fn get_encounter_entities_raw(encounter_id: i32) -> Result<Vec<lc::HistoryEntityData>, String> {
     let entities = crate::database::load_encounter_data(encounter_id)?;
     let mut rows = Vec::new();
     for (&uid, entity) in &entities {
@@ -554,7 +554,7 @@ pub fn get_encounter_entities_raw(encounter_id: i32) -> Result<Vec<lc::RawEntity
         if !has_combat {
             continue;
         }
-        rows.push(lc::RawEntityData {
+        rows.push(lc::HistoryEntityData {
             uid,
             name: entity.name.clone(),
             class_id: entity.class_id,
@@ -582,6 +582,11 @@ pub fn get_encounter_entities_raw(encounter_id: i32) -> Result<Vec<lc::RawEntity
                 .iter()
                 .map(|(skill_id, stats)| (*skill_id, lc::to_raw_skill_stats(stats)))
                 .collect(),
+            dmg_per_target: lc::build_per_target_stats(
+                &entity.skill_dmg_to_target,
+                Some(&entity.dmg_to_target),
+            ),
+            heal_per_target: lc::build_per_target_stats(&entity.skill_heal_to_target, None),
         });
     }
     rows.sort_by_key(|row| row.uid);

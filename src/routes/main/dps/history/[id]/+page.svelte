@@ -2,8 +2,8 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { commands } from "$lib/bindings";
-  import type { EncounterSummaryDto } from "$lib/bindings";
-  import type { RawEntityData } from "$lib/api";
+  import type { EncounterSummaryDto, HistoryEntityData } from "$lib/bindings";
+  import type { RawCombatStats, RawSkillStats } from "$lib/api";
   import { getClassIcon, tooltip } from "$lib/utils.svelte";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
@@ -66,6 +66,26 @@
     | { kind: "group"; key: string; depth: 0; row: RecountGroup }
     | { kind: "skill"; key: string; depth: 0 | 1; row: SkillDisplayRow };
 
+  type PerTargetStats = {
+    targetUid: number;
+    targetName: string;
+    totalValue: number;
+    damage: RawCombatStats;
+    skills: Partial<Record<number, RawSkillStats>>;
+  };
+
+  type EntityPerTargetData = {
+    uid: number;
+    dmgTargets: PerTargetStats[];
+    healTargets: PerTargetStats[];
+  };
+
+  type OverviewTargetOption = {
+    targetUid: number;
+    targetName: string;
+    totalValue: number;
+  };
+
   // Get encounter ID from URL params
   let encounterId = $derived($page.params.id ? parseInt($page.params.id) : null);
   let charId = $derived($page.url.searchParams.get("charId"));
@@ -73,12 +93,13 @@
 
   let encounter = $state<EncounterSummaryDto | null>(null);
   let localPlayerUid = $state<number | null>(null);
-  let rawEntities = $state<RawEntityData[]>([]);
+  let rawEntities = $state<HistoryEntityData[]>([]);
   let players = $state<HistoryPlayerRow[]>([]);
   let error = $state<string | null>(null);
   let isDeleting = $state(false);
   let showDeleteModal = $state(false);
   let expandedGroups = $state<Set<number>>(new Set<number>());
+  let overviewTargetUid = $state<number | null>(null);
 
   // Tab state for encounter view
   let activeTab = $state<"damage" | "tanked" | "healing">("damage");
@@ -100,7 +121,7 @@
   let encounterDurationMinutes = $derived.by(() => Math.floor(encounterDurationSeconds / 60));
 
   function buildHistoryPlayers(
-    entities: RawEntityData[],
+    entities: HistoryEntityData[],
     durationSeconds: number,
     localUid: number | null,
   ): HistoryPlayerRow[] {
@@ -165,9 +186,95 @@
   }
 
   // Filtered and sorted players based on active tab
+  function zeroCombatStats(): RawCombatStats {
+    return {
+      total: 0,
+      hits: 0,
+      critHits: 0,
+      critTotal: 0,
+      luckyHits: 0,
+      luckyTotal: 0,
+    };
+  }
+
+  let perTargetByUid = $derived.by(() =>
+    new Map(
+      rawEntities.map((row) => [
+        row.uid,
+        {
+          uid: row.uid,
+          dmgTargets: row.dmgPerTarget ?? [],
+          healTargets: row.healPerTarget ?? [],
+        } satisfies EntityPerTargetData,
+      ]),
+    ),
+  );
+
+  let entityNameByUid = $derived.by(() => {
+    const mapping = new Map<number, string>();
+    for (const entity of rawEntities) {
+      if (entity.name && entity.name.trim().length > 0) {
+        mapping.set(entity.uid, entity.name);
+      }
+    }
+    return mapping;
+  });
+
+  let pushedUidSet = $derived.by(() => new Set(rawEntities.map((row) => row.uid)));
+
+  function isNumericLikeName(name: string): boolean {
+    return /^#?\d+$/.test(name.trim());
+  }
+
+  let overviewTargets = $derived.by(() => {
+    const merged = new Map<number, OverviewTargetOption>();
+    for (const row of rawEntities) {
+      for (const target of row.dmgPerTarget ?? []) {
+        const existing = merged.get(target.targetUid);
+        if (existing) {
+          existing.totalValue += target.totalValue;
+          if (existing.targetName.startsWith("#") && target.targetName) {
+            existing.targetName = target.targetName;
+          }
+        } else {
+          merged.set(target.targetUid, {
+            targetUid: target.targetUid,
+            targetName: target.targetName,
+            totalValue: target.totalValue,
+          });
+        }
+      }
+    }
+    return [...merged.values()]
+      .filter(
+        (target) =>
+          target.targetName.trim().length > 0 &&
+          !isNumericLikeName(target.targetName),
+      )
+      .sort((a, b) => b.totalValue - a.totalValue);
+  });
+
   let displayedPlayers = $derived.by(() => {
     if (activeTab === "damage") {
-      return [...players].sort((a, b) => b.totalDmg - a.totalDmg);
+      if (overviewTargetUid === null) {
+        return [...players].sort((a, b) => b.totalDmg - a.totalDmg);
+      }
+
+      const targetEntities = rawEntities.map((entity) => {
+        const perTarget = perTargetByUid
+          .get(entity.uid)
+          ?.dmgTargets.find((target) => target.targetUid === overviewTargetUid);
+        const damage = perTarget?.damage ?? zeroCombatStats();
+        return {
+          ...entity,
+          damage,
+          damageBossOnly: damage,
+          healing: zeroCombatStats(),
+          taken: zeroCombatStats(),
+        };
+      });
+      return buildHistoryPlayers(targetEntities, encounterDurationSeconds, localPlayerUid)
+        .sort((a, b) => b.totalDmg - a.totalDmg);
     } else if (activeTab === "tanked") {
       return [...players]
         .filter((p) => p.damageTaken > 0)
@@ -194,27 +301,19 @@
     return rawEntities.find((entity) => entity.uid === playerUid) ?? null;
   });
 
-  let skillGrouping = $derived.by(() => {
-    if (!selectedEntity) return { groups: [], ungrouped: [] };
-    const durationSecs = Math.max(1, encounterDurationSeconds);
-    const skills =
-      skillType === "heal"
-        ? selectedEntity.healSkills
-        : skillType === "tanked"
-          ? selectedEntity.takenSkills
-          : selectedEntity.dmgSkills;
-    const parentTotal =
-      skillType === "heal"
-        ? selectedEntity.healing.total
-        : skillType === "tanked"
-          ? selectedEntity.taken.total
-          : selectedEntity.damage.total;
-    return groupSkillsByRecount(skills, durationSecs, parentTotal);
+  let selectedSkillTargetUid = $derived.by(() => {
+    const raw = $page.url.searchParams.get("targetUid");
+    if (!raw) return null;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : null;
   });
 
-  let flatSkillRows = $derived.by(() => {
+  function flattenGrouping(grouping: {
+    groups: RecountGroup[];
+    ungrouped: SkillDisplayRow[];
+  }): FlatSkillRow[] {
     const rows: FlatSkillRow[] = [];
-    for (const group of skillGrouping.groups) {
+    for (const group of grouping.groups) {
       rows.push({
         kind: "group",
         key: `g-${group.recountId}`,
@@ -231,7 +330,7 @@
         });
       }
     }
-    for (const skill of skillGrouping.ungrouped) {
+    for (const skill of grouping.ungrouped) {
       rows.push({
         kind: "skill",
         key: `u-${skill.skillId}`,
@@ -240,6 +339,58 @@
       });
     }
     return rows;
+  }
+
+  let skillGrouping = $derived.by(() => {
+    if (!selectedEntity) return { groups: [], ungrouped: [] };
+    const durationSecs = Math.max(1, encounterDurationSeconds);
+    if (skillType === "dps" && selectedSkillTargetUid !== null && selectedPlayer) {
+      const targetStats = perTargetByUid
+        .get(selectedPlayer.uid)
+        ?.dmgTargets.find((target) => target.targetUid === selectedSkillTargetUid);
+      if (!targetStats) return { groups: [], ungrouped: [] };
+      return groupSkillsByRecount(
+        targetStats.skills,
+        durationSecs,
+        targetStats.totalValue,
+      );
+    }
+    const skills =
+      skillType === "heal"
+        ? selectedEntity.healSkills
+        : skillType === "tanked"
+          ? selectedEntity.takenSkills
+          : selectedEntity.dmgSkills;
+    const parentTotal =
+      skillType === "heal"
+        ? selectedEntity.healing.total
+        : skillType === "tanked"
+          ? selectedEntity.taken.total
+          : selectedEntity.damage.total;
+    return groupSkillsByRecount(skills, durationSecs, parentTotal);
+  });
+
+  let flatSkillRows = $derived.by(() => flattenGrouping(skillGrouping));
+
+  let healTargetSummary = $derived.by(() => {
+    if (!selectedPlayer || skillType !== "heal") return [] as PerTargetStats[];
+    return [...(perTargetByUid.get(selectedPlayer.uid)?.healTargets ?? [])]
+      .map((target) => {
+        const resolvedName = entityNameByUid.get(target.targetUid);
+        return resolvedName
+          ? { ...target, targetName: resolvedName }
+          : target;
+      })
+      .filter(
+        (target) =>
+          target.totalValue > 0 &&
+          (!isNumericLikeName(target.targetName) || pushedUidSet.has(target.targetUid)),
+      )
+      .sort((a, b) => b.totalValue - a.totalValue);
+  });
+
+  let healTargetTotal = $derived.by(() => {
+    return healTargetSummary.reduce((sum, target) => sum + target.totalValue, 0);
   });
 
   function rowTotalDmg(row: FlatSkillRow): number {
@@ -330,7 +481,6 @@
         error = String(entitiesRes.error);
         return;
       }
-
       encounter = encounterRes.data;
       localPlayerUid =
         (encounterRes.data as { localPlayerId?: number | null }).localPlayerId ??
@@ -351,11 +501,16 @@
     }
   }
 
-  function viewPlayerSkills(playerUid: number, type = "dps") {
+  function viewPlayerSkills(playerUid: number, type = "dps", targetUid?: number | null) {
 
     const sp = new URLSearchParams($page.url.searchParams);
     sp.set("charId", String(playerUid));
     sp.set("skillType", type);
+    if (type === "dps" && targetUid != null) {
+      sp.set("targetUid", String(targetUid));
+    } else {
+      sp.delete("targetUid");
+    }
     goto(`/main/dps/history/${encounterId}?${sp.toString()}`);
   }
 
@@ -364,6 +519,7 @@
     const sp = new URLSearchParams($page.url.searchParams);
     sp.delete("charId");
     sp.delete("skillType");
+    sp.delete("targetUid");
     const qs = sp.toString();
     goto(`/main/dps/history/${encounterId}${qs ? `?${qs}` : ""}`);
   }
@@ -430,6 +586,18 @@
 
   $effect(() => {
     loadEncounter();
+  });
+
+  $effect(() => {
+    charId;
+    expandedGroups = new Set<number>();
+  });
+
+  $effect(() => {
+    activeTab;
+    if (activeTab !== "damage") {
+      overviewTargetUid = null;
+    }
   });
 
 </script>
@@ -587,6 +755,30 @@
       </div>
     </div>
 
+    {#if activeTab === "damage" && overviewTargets.length > 0}
+      <div class="mb-3 flex flex-wrap gap-1.5">
+        <button
+          class="px-3 py-1 text-xs rounded border border-border transition-colors {overviewTargetUid === null
+            ? 'bg-muted/40 text-foreground'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}"
+          onclick={() => (overviewTargetUid = null)}
+        >
+          总计
+        </button>
+        {#each overviewTargets as target (target.targetUid)}
+          <button
+            class="px-3 py-1 text-xs rounded border border-border transition-colors {overviewTargetUid === target.targetUid
+              ? 'bg-muted/40 text-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}"
+            onclick={() => (overviewTargetUid = target.targetUid)}
+            title={`目标 #${target.targetUid}`}
+          >
+            {target.targetName}
+          </button>
+        {/each}
+      </div>
+    {/if}
+
     <div class="overflow-x-auto rounded border border-border/60 bg-card/30">
         <table class="w-full border-collapse">
           <thead>
@@ -615,6 +807,7 @@
                       : activeTab === "tanked"
                         ? "tanked"
                         : "dps",
+                    activeTab === "damage" ? overviewTargetUid : null,
                   )}
               >
                 <td
@@ -747,6 +940,34 @@
         </div>
       </div>
     </div>
+
+    {#if skillType === "heal"}
+      <div class="mb-3 rounded border border-border/60 bg-card/30 p-3">
+        <div class="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+          治疗目标分布
+        </div>
+        {#if healTargetSummary.length === 0}
+          <div class="text-sm text-muted-foreground">暂无目标治疗数据</div>
+        {:else}
+          <div class="space-y-1.5">
+            {#each healTargetSummary as target (target.targetUid)}
+              {@const pct = healTargetTotal > 0 ? (target.totalValue / healTargetTotal) * 100 : 0}
+              <div class="text-sm">
+                <div class="flex items-center justify-between gap-2 text-muted-foreground">
+                  <span class="truncate">{target.targetName}</span>
+                  <span class="shrink-0">
+                    {target.totalValue.toLocaleString()} ({pct.toFixed(1)}%)
+                  </span>
+                </div>
+                <div class="mt-1 h-1.5 rounded bg-muted/40 overflow-hidden">
+                  <div class="h-full bg-primary/70" style="width: {pct}%;"></div>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
 
     <div class="overflow-x-auto rounded border border-border/60 bg-card/30">
       <table class="w-full border-collapse">
