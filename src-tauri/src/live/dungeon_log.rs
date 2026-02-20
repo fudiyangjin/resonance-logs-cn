@@ -432,20 +432,16 @@ impl BattleStateMachine {
 
         self.previous_dungeon_target = Some(new_entry);
         if complete == 0 && nums == 0 {
-            let trigger_at = Instant::now() + Duration::from_secs(1);
             info!(
                 target: "app::live",
-                "Reset rule armed: target_new_objective target_id={} complete={} nums={} trigger_in_ms={} reason={:?}",
+                "Reset rule matched: target_new_objective target_id={} complete={} nums={} => {:?}",
                 target_id,
                 complete,
                 nums,
-                1000,
                 EncounterResetReason::NewObjective
             );
-            self.deferred_reset = Some((
-                trigger_at,
-                EncounterResetReason::NewObjective,
-            ));
+            self.deferred_reset = None;
+            return Some(EncounterResetReason::NewObjective);
         } else if complete == 1 && nums > 0 {
             info!(
                 target: "app::live",

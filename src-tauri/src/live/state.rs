@@ -158,6 +158,8 @@ pub struct AppState {
     pub playerdata_cache: Option<CachedPlayerData>,
     /// battle state machine for objective/state driven resets.
     pub battle_state: BattleStateMachine,
+    /// Whether an automatic reset is armed and waiting for the next damage packet.
+    pub pending_auto_reset: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -229,6 +231,7 @@ impl AppState {
             entity_cache: crate::database::load_initial_entity_cache(),
             playerdata_cache: None,
             battle_state: BattleStateMachine::default(),
+            pending_auto_reset: false,
         }
     }
 
@@ -616,6 +619,7 @@ impl AppStateManager {
                 state.set_encounter_paused(paused);
             }
             StateEvent::ResetEncounter { is_manual } => {
+                state.pending_auto_reset = false;
                 self.reset_encounter(state, is_manual).await;
             }
         }
@@ -671,6 +675,7 @@ impl AppStateManager {
 
     async fn on_server_change(&self, state: &mut AppState) {
         use crate::live::opcodes_process::on_server_change;
+        state.pending_auto_reset = false;
 
         // Persist dungeon segments if enabled
         if state.dungeon_segments_enabled {
@@ -896,6 +901,7 @@ impl AppStateManager {
                     "Scene changed from {:?} to {}; checking segment logic",
                     prev_scene, scene_id
                 );
+                state.pending_auto_reset = false;
 
                 if state.dungeon_segments_enabled {
                     info!(
@@ -1218,6 +1224,7 @@ impl AppStateManager {
         state: &mut AppState,
         sync_to_me_delta_info: blueprotobuf::SyncToMeDeltaInfo,
     ) {
+        use blueprotobuf_lib::blueprotobuf::EDamageType;
         use crate::live::opcodes_models::attr_type::{
             ATTR_CD_ACCELERATE_PCT, ATTR_FIGHT_RESOURCES, ATTR_SKILL_CD, ATTR_SKILL_CD_PCT,
         };
@@ -1324,6 +1331,29 @@ impl AppStateManager {
             }
         }
 
+        if state.pending_auto_reset {
+            let has_damage = sync_to_me_delta_info
+                .delta_info
+                .as_ref()
+                .and_then(|d| d.base_delta.as_ref())
+                .and_then(|b| b.skill_effects.as_ref())
+                .is_some_and(|effects| {
+                    effects
+                        .damages
+                        .iter()
+                        .any(|dmg| dmg.r#type.unwrap_or(0) != EDamageType::Heal as i32)
+                });
+
+            if has_damage {
+                info!(
+                    target: "app::live",
+                    "Deferred reset executing: damage in SyncToMeDeltaInfo"
+                );
+                self.reset_encounter(state, false).await;
+                state.pending_auto_reset = false;
+            }
+        }
+
         // Missing fields are normal, no need to log
         let dungeon_ctx = dungeon_runtime_if_enabled(state);
         let _ = process_sync_to_me_delta_info(
@@ -1406,7 +1436,28 @@ impl AppStateManager {
         state: &mut AppState,
         sync_near_delta_info: blueprotobuf::SyncNearDeltaInfo,
     ) {
+        use blueprotobuf_lib::blueprotobuf::EDamageType;
         use crate::live::opcodes_process::process_aoi_sync_delta;
+        if state.pending_auto_reset {
+            let has_damage = sync_near_delta_info.delta_infos.iter().any(|d| {
+                d.skill_effects.as_ref().is_some_and(|effects| {
+                    effects
+                        .damages
+                        .iter()
+                        .any(|dmg| dmg.r#type.unwrap_or(0) != EDamageType::Heal as i32)
+                })
+            });
+
+            if has_damage {
+                info!(
+                    target: "app::live",
+                    "Deferred reset executing: damage in SyncNearDeltaInfo"
+                );
+                self.reset_encounter(state, false).await;
+                state.pending_auto_reset = false;
+            }
+        }
+
         let dungeon_ctx = dungeon_runtime_if_enabled(state);
         for aoi_sync_delta in sync_near_delta_info.delta_infos {
             // Missing fields are normal, no need to log
@@ -1451,7 +1502,8 @@ impl AppStateManager {
             | EncounterResetReason::Force
             | EncounterResetReason::Restart
             | EncounterResetReason::DungeonStateEnd => {
-                self.reset_encounter(state, false).await;
+                state.pending_auto_reset = true;
+                info!(target: "app::live", "Deferred auto-reset armed: {:?}", reason);
             }
         }
     }
