@@ -14,7 +14,7 @@ use std::sync::OnceLock;
 
 use tauri::menu::MenuBuilder;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{LogicalPosition, LogicalSize, Manager, Position, Size, Window, WindowEvent};
+use tauri::{Emitter, LogicalPosition, LogicalSize, Manager, Position, Size, Window, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 // NOTE: the updater extension trait is imported next to the helper that uses it
 // and is cfg-gated to avoid unused-import warnings on builds that don't enable
@@ -132,18 +132,15 @@ pub fn run() {
 
             // Check app updates
             // https://v2.tauri.app/plugin/updater/#checking-for-updates
-            // Only run updater checks on Windows builds (automatic apply)
+            // Only run updater checks on Windows builds.
             #[cfg(windows)]
             {
-                // Unload driver to avoid file handle conflicts during update
-                unload_and_remove_windivert();
-
-                // let handle = app.handle().clone();
-                // tauri::async_runtime::spawn(async move {
-                //     if let Err(e) = crate::check_for_updates(handle).await {
-                //         warn!("Updater error: {}", e);
-                //     }
-                // });
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Err(e) = crate::check_for_updates(handle).await {
+                        warn!("Updater check failed: {}", e);
+                    }
+                });
             }
 
             // Install panic hook to create a crash dump file when the app panics.
@@ -415,35 +412,24 @@ fn run_command_silently(cmd: &mut Command) -> std::io::Result<std::process::Exit
     }
 }
 
-// Updater helper: checks for updates and downloads+installs them automatically.
+// Updater helper: checks for updates and emits an event for frontend reminder.
 // This runs only on Windows builds (guarded where it is invoked).
 #[cfg(windows)]
 use tauri_plugin_updater::UpdaterExt;
 
 #[cfg(windows)]
-#[allow(dead_code)]
 async fn check_for_updates(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
-    // If an update is available, download and install it, then restart the app.
+    // Check only: frontend is responsible for reminding users to download manually.
     if let Some(update) = app.updater()?.check().await? {
-        info!("Update available, starting download and install...");
-        // Provide a simple logging progress callback. Use the provided
-        // download_and_install helper from the updater plugin which applies the update.
-        update
-            .download_and_install::<_, _>(
-                |chunk_length: usize, content_length: Option<u64>| {
-                    info!(
-                        "downloaded {} bytes (total: {:?})",
-                        chunk_length, content_length
-                    );
-                },
-                || {
-                    info!("download finished");
-                },
-            )
-            .await?;
-
-        info!("Update installed successfully, restarting application...");
-        app.restart();
+        info!("Update available: {}", update.version);
+        let payload = json!({
+            "version": update.version.to_string(),
+            "body": update.body.unwrap_or_default(),
+            "downloadUrl": update.download_url.to_string(),
+        });
+        if let Err(e) = app.emit("update-available", payload) {
+            warn!("Failed to emit update-available event: {}", e);
+        }
     } else {
         info!("No update available");
     }

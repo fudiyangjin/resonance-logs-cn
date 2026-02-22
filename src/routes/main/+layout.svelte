@@ -5,6 +5,7 @@
    */
   import { setupShortcuts } from "./dps/settings/shortcuts";
   import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
+  import { listen, type UnlistenFn } from "@tauri-apps/api/event";
   import { goto } from "$app/navigation";
   import { SETTINGS } from '$lib/settings-store';
   import { commands } from "$lib/bindings";
@@ -13,6 +14,7 @@
   import { onMount } from 'svelte';
   import ToolSidebar from "./tool-sidebar.svelte";
   import ChangelogModal from '$lib/components/ChangelogModal.svelte';
+  import UpdateModal from '$lib/components/UpdateModal.svelte';
   import { getVersion } from "@tauri-apps/api/app";
 
   let { children } = $props();
@@ -127,6 +129,13 @@
 
   let showChangelog = $state(false);
   let currentVersion = $state('');
+  type UpdateInfo = {
+    version: string;
+    body: string;
+    downloadUrl: string;
+  };
+  let updateInfo = $state<UpdateInfo | null>(null);
+  let updateUnlisten: UnlistenFn | null = null;
 
   onMount(() => {
     // Set up navigation listener
@@ -136,6 +145,14 @@
       goto(route);
     }).then((unlisten) => {
       navigateUnlisten = unlisten;
+    });
+
+    listen<UpdateInfo>("update-available", (event) => {
+      updateInfo = event.payload;
+    }).then((unlisten) => {
+      updateUnlisten = unlisten;
+    }).catch((err) => {
+      console.error("Failed to subscribe update-available event", err);
     });
 
     // Get app version and check changelog
@@ -185,6 +202,10 @@
         navigateUnlisten();
         navigateUnlisten = null;
       }
+      if (updateUnlisten) {
+        updateUnlisten();
+        updateUnlisten = null;
+      }
       clearInterval(bgAndFontInterval);
     };
   });
@@ -213,6 +234,16 @@
 
   {#if showChangelog}
     <ChangelogModal onclose={handleClose} />
+  {/if}
+
+  {#if !showChangelog && updateInfo}
+    <UpdateModal
+      info={updateInfo}
+      {currentVersion}
+      onclose={() => {
+        updateInfo = null;
+      }}
+    />
   {/if}
 </div>
 
