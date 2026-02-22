@@ -42,3 +42,4 @@ openspec/
 specs/
 src-tauri/build_errors.log
 src-tauri/npcap_sdk/
+latest.json
