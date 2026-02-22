@@ -55,7 +55,8 @@
   type DragTarget =
     | { kind: "group"; key: keyof Omit<OverlayPositions, "iconBuffPositions"> }
     | { kind: "iconBuff"; baseId: number }
-    | { kind: "buffGroup"; groupId: string };
+    | { kind: "buffGroup"; groupId: string }
+    | { kind: "individualAllGroup" };
 
   type DragState = {
     target: DragTarget;
@@ -67,7 +68,8 @@
   type ResizeTarget =
     | { kind: "group"; key: keyof Omit<OverlaySizes, "iconBuffSizes"> }
     | { kind: "iconBuff"; baseId: number }
-    | { kind: "buffGroup"; groupId: string };
+    | { kind: "buffGroup"; groupId: string }
+    | { kind: "individualAllGroup" };
 
   type ResizeState = {
     target: ResizeTarget;
@@ -143,6 +145,10 @@
     if (!activeProfile) return [];
     return ensureBuffGroups(activeProfile);
   });
+  const individualMonitorAllGroup = $derived.by(() => {
+    if (!activeProfile) return null;
+    return ensureIndividualMonitorAllGroup(activeProfile);
+  });
   const overlayVisibility = $derived(
     activeProfile?.overlayVisibility ?? DEFAULT_OVERLAY_VISIBILITY,
   );
@@ -205,6 +211,27 @@
       showTime: group.showTime ?? true,
       showLayer: group.showLayer ?? true,
     }));
+  }
+
+  function ensureIndividualMonitorAllGroup(profile: SkillMonitorProfile): BuffGroup | null {
+    const group = profile.individualMonitorAllGroup;
+    if (!group) return null;
+    const fallbackPosition = { x: 40, y: 310 };
+    return {
+      id: group.id ?? "individual_all_group",
+      name: group.name ?? "全部 Buff",
+      buffIds: [],
+      priorityBuffIds: group.priorityBuffIds ?? [],
+      monitorAll: true,
+      position: group.position ?? fallbackPosition,
+      iconSize: Math.max(24, Math.min(120, group.iconSize ?? 44)),
+      columns: Math.max(1, Math.min(12, group.columns ?? 6)),
+      rows: Math.max(1, Math.min(12, group.rows ?? 3)),
+      gap: Math.max(0, Math.min(16, group.gap ?? 6)),
+      showName: group.showName ?? true,
+      showTime: group.showTime ?? true,
+      showLayer: group.showLayer ?? true,
+    };
   }
 
   function updateActiveProfile(
@@ -336,6 +363,35 @@
     }));
   }
 
+  function setIndividualAllGroupPosition(nextPos: { x: number; y: number }) {
+    updateActiveProfile((profile) => {
+      const group = ensureIndividualMonitorAllGroup(profile);
+      if (!group) return profile;
+      return {
+        ...profile,
+        individualMonitorAllGroup: {
+          ...group,
+          position: nextPos,
+        },
+      };
+    });
+  }
+
+  function setIndividualAllGroupIconSize(value: number) {
+    const nextValue = Math.max(24, Math.min(120, Math.round(value)));
+    updateActiveProfile((profile) => {
+      const group = ensureIndividualMonitorAllGroup(profile);
+      if (!group) return profile;
+      return {
+        ...profile,
+        individualMonitorAllGroup: {
+          ...group,
+          iconSize: nextValue,
+        },
+      };
+    });
+  }
+
   function startDrag(e: PointerEvent, target: DragTarget, startPos: { x: number; y: number }) {
     if (!isEditing || e.button !== 0) return;
     e.preventDefault();
@@ -370,6 +426,9 @@
       if (resizeState.target.kind === "group") {
         const nextScale = resizeState.startValue + delta / 300;
         setGroupScale(resizeState.target.key, nextScale);
+      } else if (resizeState.target.kind === "individualAllGroup") {
+        const nextSize = resizeState.startValue + delta / 2;
+        setIndividualAllGroupIconSize(nextSize);
       } else if (resizeState.target.kind === "buffGroup") {
         const nextSize = resizeState.startValue + delta / 2;
         setBuffGroupIconSize(resizeState.target.groupId, nextSize);
@@ -387,6 +446,8 @@
     };
     if (dragState.target.kind === "group") {
       setGroupPosition(dragState.target.key, nextPos);
+    } else if (dragState.target.kind === "individualAllGroup") {
+      setIndividualAllGroupPosition(nextPos);
     } else if (dragState.target.kind === "buffGroup") {
       setBuffGroupPosition(dragState.target.groupId, nextPos);
     } else {
@@ -517,15 +578,39 @@
     const iconBuffs = iconDisplayBuffs.filter(
       (buff) => !(buff.specialImages && buff.specialImages.length > 0),
     );
+    const selectedBySpecificGroups = new Set<number>();
+    for (const group of groups) {
+      if (group.monitorAll) continue;
+      for (const buffId of group.buffIds) {
+        selectedBySpecificGroups.add(buffId);
+      }
+    }
     const result = new Map<string, IconBuffDisplay[]>();
     for (const group of groups) {
       const maxVisible = Math.max(1, group.columns * group.rows);
       const entries = group.monitorAll
-        ? [...iconBuffs]
+        ? iconBuffs.filter((buff) => !selectedBySpecificGroups.has(buff.baseId))
         : iconBuffs.filter((buff) => group.buffIds.includes(buff.baseId));
       result.set(group.id, entries.slice(0, maxVisible));
     }
     return result;
+  });
+
+  const individualModeIconBuffs = $derived.by(() => {
+    if (buffDisplayMode !== "individual") return [];
+    if (!individualMonitorAllGroup) return iconDisplayBuffs;
+    const selected = new Set(monitoredBuffIds);
+    return iconDisplayBuffs.filter(
+      (buff) => selected.has(buff.baseId) || !!(buff.specialImages && buff.specialImages.length > 0),
+    );
+  });
+
+  const individualAllGroupBuffs = $derived.by(() => {
+    if (buffDisplayMode !== "individual" || !individualMonitorAllGroup) return [];
+    const selected = new Set(monitoredBuffIds);
+    return iconDisplayBuffs.filter(
+      (buff) => !selected.has(buff.baseId) && !(buff.specialImages && buff.specialImages.length > 0),
+    );
   });
 
   const specialStandaloneBuffs = $derived.by(() =>
@@ -670,6 +755,7 @@
         overlayVisibility: ensureOverlayVisibility(profile),
         buffDisplayMode: profile.buffDisplayMode ?? "individual",
         buffGroups: ensureBuffGroups(profile),
+        individualMonitorAllGroup: ensureIndividualMonitorAllGroup(profile),
         textBuffMaxVisible: Math.max(1, Math.min(20, profile.textBuffMaxVisible ?? 10)),
       }));
     }
@@ -1001,7 +1087,7 @@
       </div>
     {/each}
   {:else}
-    {#each iconDisplayBuffs as buff (buff.baseId)}
+    {#each individualModeIconBuffs as buff (buff.baseId)}
       {@const iconPos = getIconBuffPosition(buff.baseId)}
       {@const iconSize = getIconBuffSize(buff.baseId)}
       <div
@@ -1043,6 +1129,59 @@
         {/if}
       </div>
     {/each}
+    {#if individualMonitorAllGroup && (individualAllGroupBuffs.length > 0 || isEditing)}
+      {@const maxVisible = Math.max(1, individualMonitorAllGroup.columns * individualMonitorAllGroup.rows)}
+      <div
+        class="overlay-group buff-group-container"
+        class:editable={isEditing}
+        style:left={`${individualMonitorAllGroup.position.x}px`}
+        style:top={`${individualMonitorAllGroup.position.y}px`}
+        onpointerdown={(e) =>
+          startDrag(
+            e,
+            { kind: "individualAllGroup" },
+            individualMonitorAllGroup.position,
+          )}
+      >
+        {#if isEditing}
+          <div class="group-tag">{individualMonitorAllGroup.name}（全部）</div>
+        {/if}
+        <div
+          class="buff-group-grid"
+          style:grid-template-columns={`repeat(${Math.max(1, individualMonitorAllGroup.columns)}, ${individualMonitorAllGroup.iconSize + 8}px)`}
+          style:grid-template-rows={`repeat(${Math.max(1, individualMonitorAllGroup.rows)}, auto)`}
+          style:gap={`${Math.max(0, individualMonitorAllGroup.gap)}px`}
+        >
+          {#each individualAllGroupBuffs.slice(0, maxVisible) as buff (buff.baseId)}
+            <div class="icon-buff-cell" class:placeholder={buff.isPlaceholder} style:width={`${individualMonitorAllGroup.iconSize + 8}px`}>
+              {#if individualMonitorAllGroup.showName && !(buff.specialImages && buff.specialImages.length > 0)}
+                <div class="buff-name-label" style:max-width={`${individualMonitorAllGroup.iconSize + 8}px`}>{buff.name.slice(0, 6)}</div>
+              {/if}
+              <div class="buff-icon-wrap" style:width={`${individualMonitorAllGroup.iconSize}px`} style:height={`${individualMonitorAllGroup.iconSize}px`}>
+                <img
+                  src={`/images/buff/${buff.spriteFile}`}
+                  alt={buff.name}
+                  class="buff-icon"
+                />
+                {#if individualMonitorAllGroup.showLayer && buff.layer > 1}
+                  <div class="layer-badge">{buff.layer}</div>
+                {/if}
+              </div>
+              {#if individualMonitorAllGroup.showTime}
+                <div class="buff-time" style:font-size={`${Math.max(10, Math.round(individualMonitorAllGroup.iconSize * 0.26))}px`}>{buff.text}</div>
+              {/if}
+            </div>
+          {/each}
+        </div>
+        {#if isEditing}
+          <div
+            class="resize-handle icon"
+            onpointerdown={(e) =>
+              startResize(e, { kind: "individualAllGroup" }, individualMonitorAllGroup.iconSize)}
+          ></div>
+        {/if}
+      </div>
+    {/if}
   {/if}
 </div>
 

@@ -129,6 +129,7 @@ export type SkillMonitorProfile = {
   buffPriorityIds: number[];
   buffDisplayMode: BuffDisplayMode;
   buffGroups: BuffGroup[];
+  individualMonitorAllGroup?: BuffGroup | null;
   textBuffMaxVisible: number;
   overlayPositions: OverlayPositions;
   overlaySizes: OverlaySizes;
@@ -194,6 +195,7 @@ export function createDefaultSkillMonitorProfile(
     buffPriorityIds: [],
     buffDisplayMode: "individual",
     buffGroups: [],
+    individualMonitorAllGroup: null,
     textBuffMaxVisible: 10,
     overlayPositions: createDefaultOverlayPositions(),
     overlaySizes: createDefaultOverlaySizes(),

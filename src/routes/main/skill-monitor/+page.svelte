@@ -63,6 +63,7 @@
     activeProfile.buffDisplayMode ?? "individual",
   );
   const buffGroups = $derived.by(() => ensureBuffGroups(activeProfile));
+  const individualMonitorAllGroup = $derived.by(() => ensureIndividualMonitorAllGroup(activeProfile));
   const buffPriorityIds = $derived.by(() => {
     const selected = new Set(monitoredBuffIds);
     return uniqueIds((activeProfile.buffPriorityIds ?? []).filter((id) => selected.has(id)));
@@ -117,6 +118,17 @@
 
   function ensureBuffGroups(profile: SkillMonitorProfile): BuffGroup[] {
     return (profile.buffGroups ?? []).map((group, idx) => ensureBuffGroup(group, idx));
+  }
+
+  function ensureIndividualMonitorAllGroup(profile: SkillMonitorProfile): BuffGroup | null {
+    const group = profile.individualMonitorAllGroup;
+    if (!group) return null;
+    const normalized = ensureBuffGroup(group, 0);
+    return {
+      ...normalized,
+      monitorAll: true,
+      name: normalized.name || "全部 Buff",
+    };
   }
 
   function updateActiveProfile(
@@ -411,6 +423,42 @@
     const nextPriorityResults = { ...groupPrioritySearchResults };
     delete nextPriorityResults[groupId];
     groupPrioritySearchResults = nextPriorityResults;
+  }
+
+  function addIndividualMonitorAll() {
+    updateActiveProfile((profile) => {
+      const existing = ensureIndividualMonitorAllGroup(profile);
+      if (existing) return profile;
+      return {
+        ...profile,
+        individualMonitorAllGroup: {
+          ...createDefaultBuffGroup("全部 Buff", 1),
+          monitorAll: true,
+        },
+      };
+    });
+  }
+
+  function removeIndividualMonitorAll() {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      individualMonitorAllGroup: null,
+    }));
+  }
+
+  function updateIndividualMonitorAllGroup(updater: (group: BuffGroup) => BuffGroup) {
+    updateActiveProfile((profile) => {
+      const current = ensureIndividualMonitorAllGroup(profile);
+      if (!current) return profile;
+      const updated = ensureBuffGroup(updater(current), 0);
+      return {
+        ...profile,
+        individualMonitorAllGroup: {
+          ...updated,
+          monitorAll: true,
+        },
+      };
+    });
   }
 
   function setGroupSearchKeyword(groupId: string, value: string) {
@@ -730,6 +778,159 @@
       </div>
     </div>
   </div>
+
+  {#if buffDisplayMode === "individual"}
+    <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-semibold text-foreground">监控全部 Buff </h2>
+          <p class="text-xs text-muted-foreground">
+            新增一个网格区域显示全部 Buff（自动排除已在独立模式中选中的 Buff）
+          </p>
+        </div>
+        {#if !individualMonitorAllGroup}
+          <button
+            type="button"
+            class="text-xs px-3 py-2 rounded border border-border/60 text-foreground hover:bg-muted/40 transition-colors"
+            onclick={addIndividualMonitorAll}
+          >
+            监控全部 Buff
+          </button>
+        {:else}
+          <button
+            type="button"
+            class="text-xs px-3 py-2 rounded border border-border/60 text-destructive hover:bg-destructive/10 transition-colors"
+            onclick={removeIndividualMonitorAll}
+          >
+            移除全部 Buff 分组
+          </button>
+        {/if}
+      </div>
+
+      {#if individualMonitorAllGroup}
+        <div class="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <input
+              class="w-52 rounded border border-border/60 bg-muted/30 px-2 py-1.5 text-sm text-foreground"
+              value={individualMonitorAllGroup.name}
+              oninput={(event) =>
+                updateIndividualMonitorAllGroup((curr) => ({
+                  ...curr,
+                  name: (event.currentTarget as HTMLInputElement).value || curr.name,
+                }))}
+            />
+            <span class="text-xs text-muted-foreground">固定为监控全部 Buff</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label class="text-xs text-muted-foreground">
+              图标大小: {individualMonitorAllGroup.iconSize}px
+              <input
+                class="w-full mt-1"
+                type="range"
+                min="24"
+                max="120"
+                step="1"
+                value={individualMonitorAllGroup.iconSize}
+                oninput={(event) =>
+                  updateIndividualMonitorAllGroup((curr) => ({
+                    ...curr,
+                    iconSize: Number((event.currentTarget as HTMLInputElement).value),
+                  }))}
+              />
+            </label>
+            <label class="text-xs text-muted-foreground">
+              列数: {individualMonitorAllGroup.columns}
+              <input
+                class="w-full mt-1"
+                type="range"
+                min="1"
+                max="12"
+                step="1"
+                value={individualMonitorAllGroup.columns}
+                oninput={(event) =>
+                  updateIndividualMonitorAllGroup((curr) => ({
+                    ...curr,
+                    columns: Number((event.currentTarget as HTMLInputElement).value),
+                  }))}
+              />
+            </label>
+            <label class="text-xs text-muted-foreground">
+              行数: {individualMonitorAllGroup.rows}
+              <input
+                class="w-full mt-1"
+                type="range"
+                min="1"
+                max="12"
+                step="1"
+                value={individualMonitorAllGroup.rows}
+                oninput={(event) =>
+                  updateIndividualMonitorAllGroup((curr) => ({
+                    ...curr,
+                    rows: Number((event.currentTarget as HTMLInputElement).value),
+                  }))}
+              />
+            </label>
+            <label class="text-xs text-muted-foreground">
+              间距: {individualMonitorAllGroup.gap}px
+              <input
+                class="w-full mt-1"
+                type="range"
+                min="0"
+                max="16"
+                step="1"
+                value={individualMonitorAllGroup.gap}
+                oninput={(event) =>
+                  updateIndividualMonitorAllGroup((curr) => ({
+                    ...curr,
+                    gap: Number((event.currentTarget as HTMLInputElement).value),
+                  }))}
+              />
+            </label>
+          </div>
+
+          <div class="flex flex-wrap gap-3 text-xs">
+            <label class="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={individualMonitorAllGroup.showName}
+                onchange={(event) =>
+                  updateIndividualMonitorAllGroup((curr) => ({
+                    ...curr,
+                    showName: (event.currentTarget as HTMLInputElement).checked,
+                  }))}
+              />
+              显示名称
+            </label>
+            <label class="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={individualMonitorAllGroup.showTime}
+                onchange={(event) =>
+                  updateIndividualMonitorAllGroup((curr) => ({
+                    ...curr,
+                    showTime: (event.currentTarget as HTMLInputElement).checked,
+                  }))}
+              />
+              显示时间
+            </label>
+            <label class="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={individualMonitorAllGroup.showLayer}
+                onchange={(event) =>
+                  updateIndividualMonitorAllGroup((curr) => ({
+                    ...curr,
+                    showLayer: (event.currentTarget as HTMLInputElement).checked,
+                  }))}
+              />
+              显示层数
+            </label>
+          </div>
+        </div>
+      {/if}
+    </div>
+  {/if}
 
   {#if buffDisplayMode === "grouped"}
     <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">

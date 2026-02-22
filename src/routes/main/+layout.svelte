@@ -45,8 +45,10 @@
     const buffPriorityIds = activeProfile?.buffPriorityIds ?? [];
     const buffDisplayMode = activeProfile?.buffDisplayMode ?? "individual";
     const buffGroups = activeProfile?.buffGroups ?? [];
+    const individualAllGroup = activeProfile?.individualMonitorAllGroup ?? null;
     const anyGroupMonitorAll =
-      buffDisplayMode === "grouped" && buffGroups.some((group) => group.monitorAll);
+      (buffDisplayMode === "grouped" && buffGroups.some((group) => group.monitorAll))
+      || (buffDisplayMode === "individual" && !!individualAllGroup);
     const groupBuffIds =
       buffDisplayMode === "grouped"
         ? buffGroups.flatMap((group) => (group.monitorAll ? [] : group.buffIds))
