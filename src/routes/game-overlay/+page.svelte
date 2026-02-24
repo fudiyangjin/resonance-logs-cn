@@ -598,10 +598,9 @@
 
   const individualModeIconBuffs = $derived.by(() => {
     if (buffDisplayMode !== "individual") return [];
-    if (!individualMonitorAllGroup) return iconDisplayBuffs;
     const selected = new Set(monitoredBuffIds);
     return iconDisplayBuffs.filter(
-      (buff) => selected.has(buff.baseId) || !!(buff.specialImages && buff.specialImages.length > 0),
+      (buff) => selected.has(buff.baseId),
     );
   });
 
@@ -613,9 +612,19 @@
     );
   });
 
-  const specialStandaloneBuffs = $derived.by(() =>
-    iconDisplayBuffs.filter((buff) => buff.specialImages && buff.specialImages.length > 0),
-  );
+  const specialStandaloneBuffs = $derived.by(() => {
+    if (buffDisplayMode !== "grouped") return [];
+    const specials = iconDisplayBuffs.filter(
+      (buff) => buff.specialImages && buff.specialImages.length > 0,
+    );
+    const groups = normalizedBuffGroups;
+    if (groups.some((g) => g.monitorAll)) return specials;
+    const selectedIds = new Set<number>();
+    for (const group of groups) {
+      for (const buffId of group.buffIds) selectedIds.add(buffId);
+    }
+    return specials.filter((buff) => selectedIds.has(buff.baseId));
+  });
   const limitedTextBuffs = $derived.by(() => textBuffs.slice(0, textBuffMaxVisible));
 
   function updateDisplay() {
