@@ -415,7 +415,6 @@ pub fn process_sync_dungeon_data(
         if let Some(flow_info) = v_data.flow_info {
             if let Some(state) = flow_info.state {
                 info!(target: "app::live", "SyncDungeonData flow_info.state={}", state);
-                reset_reason = battle_state.record_dungeon_state(state, encounter_has_stats);
             }
         }
 
@@ -487,7 +486,6 @@ pub fn process_sync_dungeon_dirty_data(
             "SyncDungeonDirtyData flow_info.state={}",
             state
         );
-        reset_reason = battle_state.record_dungeon_state(state, encounter_has_stats);
     }
 
     for target_data in dirty_sync.targets {
@@ -742,7 +740,9 @@ pub fn process_aoi_sync_delta(
                     skill.lucky_hits += 1;
                     skill.lucky_total_value += actual_value;
                 }
-                encounter.total_dmg += actual_value;
+                if attacker_entity.entity_type == EEntityType::EntChar {
+                    encounter.total_dmg += actual_value;
+                }
                 attacker_entity.damage.hits += 1;
                 attacker_entity.damage.total += actual_value;
                 skill.hits += 1;
@@ -766,7 +766,9 @@ pub fn process_aoi_sync_delta(
                         skill_boss_only.lucky_hits += 1;
                         skill_boss_only.lucky_total_value += actual_value;
                     }
-                    encounter.total_dmg_boss_only += actual_value;
+                    if attacker_entity.entity_type == EEntityType::EntChar {
+                        encounter.total_dmg_boss_only += actual_value;
+                    }
                     attacker_entity.damage_boss_only.hits += 1;
                     attacker_entity.damage_boss_only.total += actual_value;
                     skill_boss_only.hits += 1;

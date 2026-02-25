@@ -22,7 +22,7 @@ use prost::Message;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender, error::TryRecvError, unbounded_channel},
@@ -62,6 +62,28 @@ fn safe_emit<S: Serialize + Clone>(app_handle: &AppHandle, event: &str, payload:
             false
         }
     }
+}
+
+/// Returns true only for damage entries that are meaningful for encounter segmentation.
+/// restricts trigger to player attackers.
+fn is_valid_player_damage(dmg: &blueprotobuf::SyncDamageInfo) -> bool {
+    use blueprotobuf_lib::blueprotobuf::{EDamageType, EEntityType};
+
+    if dmg.r#type.unwrap_or(0) == EDamageType::Heal as i32 {
+        return false;
+    }
+    if dmg.value.is_none() && dmg.lucky_value.is_none() {
+        return false;
+    }
+    let attacker_uuid = match dmg.top_summoner_id.or(dmg.attacker_uuid) {
+        Some(uuid) => uuid,
+        None => return false,
+    };
+    if dmg.owner_id.is_none() {
+        return false;
+    }
+
+    EEntityType::from(attacker_uuid) == EEntityType::EntChar
 }
 
 /// Represents the possible events that can be handled by the state manager.
@@ -158,8 +180,8 @@ pub struct AppState {
     pub playerdata_cache: Option<CachedPlayerData>,
     /// battle state machine for objective/state driven resets.
     pub battle_state: BattleStateMachine,
-    /// Whether an automatic reset is armed and waiting for the next damage packet.
-    pub pending_auto_reset: bool,
+    /// If set, automatic reset can execute only after this timestamp.
+    pub pending_auto_reset: Option<Instant>,
 }
 
 #[derive(Debug, Clone)]
@@ -231,7 +253,7 @@ impl AppState {
             entity_cache: crate::database::load_initial_entity_cache(),
             playerdata_cache: None,
             battle_state: BattleStateMachine::default(),
-            pending_auto_reset: false,
+            pending_auto_reset: None,
         }
     }
 
@@ -619,7 +641,7 @@ impl AppStateManager {
                 state.set_encounter_paused(paused);
             }
             StateEvent::ResetEncounter { is_manual } => {
-                state.pending_auto_reset = false;
+                state.pending_auto_reset = None;
                 self.reset_encounter(state, is_manual).await;
             }
         }
@@ -675,7 +697,7 @@ impl AppStateManager {
 
     async fn on_server_change(&self, state: &mut AppState) {
         use crate::live::opcodes_process::on_server_change;
-        state.pending_auto_reset = false;
+        state.pending_auto_reset = None;
 
         // Persist dungeon segments if enabled
         if state.dungeon_segments_enabled {
@@ -901,7 +923,7 @@ impl AppStateManager {
                     "Scene changed from {:?} to {}; checking segment logic",
                     prev_scene, scene_id
                 );
-                state.pending_auto_reset = false;
+                state.pending_auto_reset = None;
 
                 if state.dungeon_segments_enabled {
                     info!(
@@ -1224,7 +1246,6 @@ impl AppStateManager {
         state: &mut AppState,
         sync_to_me_delta_info: blueprotobuf::SyncToMeDeltaInfo,
     ) {
-        use blueprotobuf_lib::blueprotobuf::EDamageType;
         use crate::live::opcodes_models::attr_type::{
             ATTR_CD_ACCELERATE_PCT, ATTR_FIGHT_RESOURCES, ATTR_SKILL_CD, ATTR_SKILL_CD_PCT,
         };
@@ -1331,26 +1352,34 @@ impl AppStateManager {
             }
         }
 
-        if state.pending_auto_reset {
+        if state
+            .pending_auto_reset
+            .is_some_and(|trigger_at| Instant::now() >= trigger_at)
+        {
             let has_damage = sync_to_me_delta_info
                 .delta_info
                 .as_ref()
                 .and_then(|d| d.base_delta.as_ref())
                 .and_then(|b| b.skill_effects.as_ref())
                 .is_some_and(|effects| {
-                    effects
-                        .damages
-                        .iter()
-                        .any(|dmg| dmg.r#type.unwrap_or(0) != EDamageType::Heal as i32)
+                    effects.damages.iter().any(is_valid_player_damage)
                 });
 
             if has_damage {
-                info!(
-                    target: "app::live",
-                    "Deferred reset executing: damage in SyncToMeDeltaInfo"
-                );
-                self.reset_encounter(state, false).await;
-                state.pending_auto_reset = false;
+                if state.encounter.total_dmg > 0 {
+                    info!(
+                        target: "app::live",
+                        "Deferred reset executing: damage in SyncToMeDeltaInfo"
+                    );
+                    self.reset_encounter(state, false).await;
+                } else {
+                    info!(
+                        target: "app::live",
+                        "Deferred reset skipped: zero total_dmg in SyncToMeDeltaInfo (total_heal={})",
+                        state.encounter.total_heal
+                    );
+                }
+                state.pending_auto_reset = None;
             }
         }
 
@@ -1436,25 +1465,32 @@ impl AppStateManager {
         state: &mut AppState,
         sync_near_delta_info: blueprotobuf::SyncNearDeltaInfo,
     ) {
-        use blueprotobuf_lib::blueprotobuf::EDamageType;
         use crate::live::opcodes_process::process_aoi_sync_delta;
-        if state.pending_auto_reset {
+        if state
+            .pending_auto_reset
+            .is_some_and(|trigger_at| Instant::now() >= trigger_at)
+        {
             let has_damage = sync_near_delta_info.delta_infos.iter().any(|d| {
                 d.skill_effects.as_ref().is_some_and(|effects| {
-                    effects
-                        .damages
-                        .iter()
-                        .any(|dmg| dmg.r#type.unwrap_or(0) != EDamageType::Heal as i32)
+                    effects.damages.iter().any(is_valid_player_damage)
                 })
             });
 
             if has_damage {
-                info!(
-                    target: "app::live",
-                    "Deferred reset executing: damage in SyncNearDeltaInfo"
-                );
-                self.reset_encounter(state, false).await;
-                state.pending_auto_reset = false;
+                if state.encounter.total_dmg > 0 {
+                    info!(
+                        target: "app::live",
+                        "Deferred reset executing: damage in SyncNearDeltaInfo"
+                    );
+                    self.reset_encounter(state, false).await;
+                } else {
+                    info!(
+                        target: "app::live",
+                        "Deferred reset skipped: zero total_dmg in SyncNearDeltaInfo (total_heal={})",
+                        state.encounter.total_heal
+                    );
+                }
+                state.pending_auto_reset = None;
             }
         }
 
@@ -1499,11 +1535,14 @@ impl AppStateManager {
         match reason {
             EncounterResetReason::NewObjective
             | EncounterResetReason::Wipe
-            | EncounterResetReason::Force
-            | EncounterResetReason::Restart
-            | EncounterResetReason::DungeonStateEnd => {
-                state.pending_auto_reset = true;
-                info!(target: "app::live", "Deferred auto-reset armed: {:?}", reason);
+            => {
+                let trigger_at = Instant::now() + Duration::from_secs(3);
+                state.pending_auto_reset = Some(trigger_at);
+                info!(
+                    target: "app::live",
+                    "Deferred auto-reset armed (3s): {:?}",
+                    reason
+                );
             }
         }
     }
