@@ -27,6 +27,15 @@ pub fn lookup(scene_id: i32) -> String {
         .unwrap_or_else(|| format!("Unknown Scene {}", scene_id))
 }
 
+/// Returns the scene name with optional dungeon difficulty suffix.
+pub fn lookup_with_difficulty(scene_id: i32, difficulty: Option<i32>) -> String {
+    let base_name = lookup(scene_id);
+    match difficulty {
+        Some(v) => format!("{}-{}", base_name, v),
+        None => base_name,
+    }
+}
+
 /// Returns true if a scene id exists in the loaded scene map.
 pub fn contains(scene_id: i32) -> bool {
     let cache = SCENE_NAME_CACHE.read();

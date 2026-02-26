@@ -19,6 +19,7 @@ pub struct Encounter {
     pub local_player: SyncContainerData,
     pub current_scene_id: Option<i32>,
     pub current_scene_name: Option<String>,
+    pub current_dungeon_difficulty: Option<i32>,
     // Pending player death events detected during packet processing. Each tuple is
     // Pending player revive events detected during packet processing. Each tuple is
     // (actor_uid, helper_uid_opt, skill_id_opt, timestamp_ms)
@@ -456,6 +457,7 @@ pub mod attr_type {
     // TOOD: rename some of these to actual attribute names for now, idk.
     pub const ATTR_NAME: i32 = 0x01;
     pub const ATTR_ID: i32 = 0x0a;
+    pub const ATTR_SCENE_BASIC_ID: i32 = 0x155; // Scene basic ID (341)
     pub const ATTR_TEAM_ID: i32 = 0x0b; // Party/raid group number
     pub const ATTR_GUILD_ID: i32 = 0x1e; // Guild/clan ID
     pub const ATTR_ATTACK_POWER: i32 = 0x32; // Attack stat

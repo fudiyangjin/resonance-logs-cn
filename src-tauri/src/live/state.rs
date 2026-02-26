@@ -111,9 +111,6 @@ pub enum StateEvent {
     SyncNearDeltaInfo(blueprotobuf::SyncNearDeltaInfo),
     /// A notify revive user event.
     NotifyReviveUser(blueprotobuf::NotifyReviveUser),
-    /// A sync scene attrs event.
-    #[allow(dead_code)]
-    SyncSceneAttrs(blueprotobuf::SyncSceneAttrs),
     /// A pause encounter event.
     PauseEncounter(bool),
     /// A reset encounter event. Contains whether this was a manual reset by the user.
@@ -368,116 +365,24 @@ fn emit_skill_cd_update_if_needed(state: &AppState, payload: Vec<SkillCdState>) 
     }
 }
 
-/// Helper: try to find a known scene id by scanning varints at every offset in binary data
-fn find_scene_id_in_bytes(data: &[u8]) -> Option<i32> {
-    use crate::live::scene_names;
-
-    // 1) Try protobuf varint decoding at every offset
-    for offset in 0..data.len() {
-        let mut slice = &data[offset..];
-        if let Ok(v) = prost::encoding::decode_varint(&mut slice) {
-            if v <= i32::MAX as u64 {
-                let cand = v as i32;
-                if scene_names::contains(cand) {
-                    return Some(cand);
-                }
-            }
-        }
-    }
-
-    // 2) Try 4-byte little-endian and big-endian ints
-    if data.len() >= 4 {
-        for i in 0..=data.len() - 4 {
-            let le = i32::from_le_bytes([data[i], data[i + 1], data[i + 2], data[i + 3]]);
-            if le > 0 && scene_names::contains(le) {
-                return Some(le);
-            }
-            let be = i32::from_be_bytes([data[i], data[i + 1], data[i + 2], data[i + 3]]);
-            if be > 0 && scene_names::contains(be) {
-                return Some(be);
-            }
-        }
-    }
-
-    // 3) Try ASCII decimal substrings of length 2..6
-    let mut i = 0;
-    while i < data.len() {
-        if data[i].is_ascii_digit() {
-            let start = i;
-            i += 1;
-            while i < data.len() && data[i].is_ascii_digit() {
-                i += 1;
-            }
-            let len_digits = i - start;
-            if len_digits >= 2 && len_digits <= 6 {
-                if let Ok(s) = std::str::from_utf8(&data[start..i]) {
-                    if let Ok(v) = s.parse::<i32>() {
-                        if scene_names::contains(v) {
-                            return Some(v);
-                        }
-                    }
-                }
-            }
-        } else {
-            i += 1;
-        }
-    }
-
-    None
-}
-
-/// Extracts scene ID from an AttrCollection by scanning attrs and map_attrs
+/// Extracts scene ID from scene attrs by reading AttrSceneBasicId (id=341).
 fn extract_scene_id_from_attr_collection(attrs: &blueprotobuf::AttrCollection) -> Option<i32> {
-    use crate::live::scene_names;
+    use crate::live::opcodes_models::attr_type;
 
-    // Check simple attrs (varint or length-prefixed)
     for attr in &attrs.attrs {
-        if let Some(raw) = &attr.raw_data {
-            // If attr id suggests a scene id, prefer that first
-            if let Some(attr_id) = attr.id {
-                // Prefer ATTR_ID (0x0a) which contains numeric identifiers.
-                // Do NOT treat ATTR_NAME (0x01) as a varint: its raw_data is a
-                // length-prefixed string and decoding it as a varint can yield
-                // the string length (false positive scene id).
-                if attr_id == crate::live::opcodes_models::attr_type::ATTR_ID {
-                    let mut buf = raw.as_slice();
-                    if let Ok(v) = prost::encoding::decode_varint(&mut buf) {
-                        let cand = v as i32;
-                        if scene_names::contains(cand) {
-                            info!("Found scene_id {} in attr {}", cand, attr_id);
-                            return Some(cand);
-                        }
+        if attr.id == Some(attr_type::ATTR_SCENE_BASIC_ID) {
+            if let Some(raw) = &attr.raw_data {
+                let mut buf = raw.as_slice();
+                if let Ok(v) = prost::encoding::decode_varint(&mut buf) {
+                    if v <= i32::MAX as u64 {
+                        let scene_id = v as i32;
+                        info!(
+                            "Found scene_id {} from AttrSceneBasicId({})",
+                            scene_id,
+                            attr_type::ATTR_SCENE_BASIC_ID
+                        );
+                        return Some(scene_id);
                     }
-                }
-            }
-
-            // Fallback: scan all varints in the raw bytes for a known scene id
-            if let Some(cand) = find_scene_id_in_bytes(raw) {
-                info!("Found scene_id {} by scanning attr raw bytes", cand);
-                return Some(cand);
-            }
-        }
-    }
-
-    // Check map_attrs entries (keys/values may contain the id)
-    for map_attr in &attrs.map_attrs {
-        for kv in &map_attr.attrs {
-            if let Some(val) = &kv.value {
-                if let Some(cand) = find_scene_id_in_bytes(val) {
-                    info!(
-                        "Found scene_id {} in map_attr value (map id {:?})",
-                        cand, map_attr.id
-                    );
-                    return Some(cand);
-                }
-            }
-            if let Some(key) = &kv.key {
-                if let Some(cand) = find_scene_id_in_bytes(key) {
-                    info!(
-                        "Found scene_id {} in map_attr key (map id {:?})",
-                        cand, map_attr.id
-                    );
-                    return Some(cand);
                 }
             }
         }
@@ -633,9 +538,6 @@ impl AppStateManager {
             }
             StateEvent::NotifyReviveUser(data) => {
                 self.process_notify_revive_user(state, data).await;
-            }
-            StateEvent::SyncSceneAttrs(_) => {
-                // SyncSceneAttrs handling is disabled to possibly remedy crashing bug.
             }
             StateEvent::PauseEncounter(paused) => {
                 state.set_encounter_paused(paused);
@@ -853,61 +755,11 @@ impl AppStateManager {
             state.initial_scene_change_handled = true;
         }
 
-        // Quick check: if a scene_guid string is present, try to parse digits from it
-        if let Some(info) = enter_scene.enter_scene_info.as_ref() {
-            if let Some(guid) = &info.scene_guid {
-                info!("EnterScene.scene_guid present: {}", guid);
-                // Try to extract numeric part of the guid
-                let digits: String = guid.chars().filter(|c| c.is_ascii_digit()).collect();
-                if !digits.is_empty() {
-                    if let Ok(v) = digits.parse::<i32>() {
-                        if scene_names::contains(v) {
-                            info!("Parsed scene id {} from scene_guid", v);
-                            // Directly use this id
-                            let name = scene_names::lookup(v);
-                            state.encounter.current_scene_id = Some(v);
-                            state.encounter.current_scene_name = Some(name.clone());
-                            if state.event_manager.should_emit_events() {
-                                state.event_manager.emit_scene_change(name);
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-            if let Some(connect) = &info.connect_guid {
-                info!("EnterScene.connect_guid present: {}", connect);
-            }
-        }
-
-        // Try several likely locations in the EnterSceneInfo where a scene id might be present
+        // Find scene id from scene attrs using AttrSceneBasicId(341).
         let mut found_scene: Option<i32> = None;
         if let Some(info) = enter_scene.enter_scene_info.as_ref() {
-            // 1) Inspect explicit attr collections (subscene_attrs then scene_attrs)
-            for maybe_attrs in [info.subscene_attrs.as_ref(), info.scene_attrs.as_ref()] {
-                if let Some(attrs) = maybe_attrs {
-                    if let Some(scene_id) = extract_scene_id_from_attr_collection(attrs) {
-                        found_scene = Some(scene_id);
-                        break;
-                    }
-                }
-            }
-
-            // 2) As a fallback, inspect player_ent.attrs if present
-            if found_scene.is_none() {
-                if let Some(player_ent) = &info.player_ent {
-                    if let Some(player_attrs) = &player_ent.attrs {
-                        for attr in &player_attrs.attrs {
-                            if let Some(raw) = &attr.raw_data {
-                                if let Some(cand) = find_scene_id_in_bytes(raw) {
-                                    info!("Found scene_id {} in player_ent attrs", cand);
-                                    found_scene = Some(cand);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
+            if let Some(attrs) = info.scene_attrs.as_ref() {
+                found_scene = extract_scene_id_from_attr_collection(attrs);
             }
         }
 
@@ -939,6 +791,7 @@ impl AppStateManager {
             // Update encounter with scene info
             state.encounter.current_scene_id = Some(scene_id);
             state.encounter.current_scene_name = Some(scene_name.clone());
+            state.encounter.current_dungeon_difficulty = None;
 
             info!("Scene changed to: {} (ID: {})", scene_name, scene_id);
 
@@ -1041,6 +894,7 @@ impl AppStateManager {
             // Explicitly set scene_id to None for fallback scene change
             state.encounter.current_scene_id = None;
             state.encounter.current_scene_name = Some(fallback_name.clone());
+            state.encounter.current_dungeon_difficulty = None;
             if state.event_manager.should_emit_events() {
                 info!("Emitting fallback scene change event: {}", fallback_name);
                 state.event_manager.emit_scene_change(fallback_name);
@@ -1075,79 +929,6 @@ impl AppStateManager {
         .is_none()
         {
             warn!("Error processing SyncNearEntities.. ignoring.");
-        }
-    }
-
-    #[allow(dead_code)]
-    async fn process_sync_scene_attrs(
-        &self,
-        state: &mut AppState,
-        sync_scene_attrs: blueprotobuf::SyncSceneAttrs,
-    ) {
-        use crate::live::scene_names;
-
-        // Only act as fallback if current scene is unknown/unset
-        let should_process = state.encounter.current_scene_id.is_none()
-            || state
-                .encounter
-                .current_scene_name
-                .as_ref()
-                .map(|name| name.starts_with("Unknown") || name.starts_with("Scene GUID:"))
-                .unwrap_or(false);
-
-        if !should_process {
-            // Scene already detected, no need to process as fallback
-            return;
-        }
-
-        let Some(attrs) = sync_scene_attrs.attrs else {
-            return;
-        };
-
-        let Some(scene_id) = extract_scene_id_from_attr_collection(&attrs) else {
-            return;
-        };
-
-        // Deduplicate: only update if different from current scene
-        if state.encounter.current_scene_id == Some(scene_id) {
-            return;
-        }
-
-        let scene_name = scene_names::lookup(scene_id);
-        info!(
-            "[SyncSceneAttrs fallback] Detected scene: {} (ID: {})",
-            scene_name, scene_id
-        );
-
-        // Update scene info (but don't reset encounter - only update metadata)
-        state.encounter.current_scene_id = Some(scene_id);
-        state.encounter.current_scene_name = Some(scene_name.clone());
-
-        // Emit scene change event
-        if state.event_manager.should_emit_events() {
-            info!(
-                "[SyncSceneAttrs] Emitting scene change event for: {}",
-                scene_name
-            );
-            state.event_manager.emit_scene_change(scene_name.clone());
-        }
-
-        // Update dungeon log scene context if enabled
-        let dungeon_runtime = dungeon_runtime_if_enabled(state);
-        match dungeon_runtime.as_ref() {
-            Some(runtime) => {
-                runtime.reset_for_scene(
-                    state.encounter.current_scene_id,
-                    state.encounter.current_scene_name.clone(),
-                );
-            }
-            None => {
-                let _ = dungeon_log::reset_for_scene(
-                    &state.dungeon_log,
-                    state.encounter.current_scene_id,
-                    state.encounter.current_scene_name.clone(),
-                );
-            }
         }
     }
 
@@ -1189,6 +970,50 @@ impl AppStateManager {
         sync_dungeon_data: blueprotobuf::SyncDungeonData,
     ) {
         use crate::live::opcodes_process::process_sync_dungeon_data;
+        use crate::live::scene_names;
+
+        let difficulty = sync_dungeon_data
+            .v_data
+            .as_ref()
+            .and_then(|v| v.dungeon_scene_info.as_ref())
+            .and_then(|info| info.difficulty);
+
+        if let Some(difficulty) = difficulty {
+            state.encounter.current_dungeon_difficulty = Some(difficulty);
+
+            if let Some(scene_id) = state.encounter.current_scene_id {
+                let scene_name = scene_names::lookup_with_difficulty(scene_id, Some(difficulty));
+                let should_emit = state
+                    .encounter
+                    .current_scene_name
+                    .as_ref()
+                    .map(|name| name != &scene_name)
+                    .unwrap_or(true);
+
+                state.encounter.current_scene_name = Some(scene_name.clone());
+
+                if should_emit && state.event_manager.should_emit_events() {
+                    state.event_manager.emit_scene_change(scene_name.clone());
+                }
+
+                let dungeon_runtime = dungeon_runtime_if_enabled(state);
+                match dungeon_runtime.as_ref() {
+                    Some(runtime) => {
+                        runtime.reset_for_scene(
+                            state.encounter.current_scene_id,
+                            state.encounter.current_scene_name.clone(),
+                        );
+                    }
+                    None => {
+                        let _ = dungeon_log::reset_for_scene(
+                            &state.dungeon_log,
+                            state.encounter.current_scene_id,
+                            state.encounter.current_scene_name.clone(),
+                        );
+                    }
+                }
+            }
+        }
 
         let encounter_has_stats = state.encounter.total_dmg > 0
             || state.encounter.total_heal > 0
