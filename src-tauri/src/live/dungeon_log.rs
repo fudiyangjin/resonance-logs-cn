@@ -28,6 +28,15 @@ pub static GLOBAL_BOSS_LIST: LazyLock<HashSet<i64>> = LazyLock::new(|| {
         .unwrap_or_default()
 });
 
+/// Dungeon target IDs that should not trigger objective-based resets.
+pub static RESET_IGNORE_TARGETS: LazyLock<HashSet<i32>> = LazyLock::new(|| {
+    let data = include_str!("../../meter-data/ResetIgnoreTargets.json");
+    serde_json::from_str::<Vec<i32>>(data)
+        .unwrap_or_default()
+        .into_iter()
+        .collect()
+});
+
 /// Runtime helper that bundles the shared log handle with an app handle for emissions.
 #[derive(Clone)]
 pub struct DungeonLogRuntime {
@@ -302,18 +311,10 @@ pub enum EncounterResetReason {
     Wipe,
 }
 
-#[derive(Debug, Clone)]
-pub struct DungeonTargetEntry {
-    pub target_id: i32,
-    pub nums: i32,
-    pub complete: i32,
-    pub received_at: Instant,
-}
-
 #[derive(Debug, Default, Clone)]
 pub struct BattleStateMachine {
-    pub previous_dungeon_target: Option<DungeonTargetEntry>,
     pub deferred_reset: Option<(Instant, EncounterResetReason)>,
+    pub active_target_id: Option<i32>,
 }
 
 impl BattleStateMachine {
@@ -323,22 +324,18 @@ impl BattleStateMachine {
         nums: i32,
         complete: i32,
     ) -> Option<EncounterResetReason> {
-        let new_entry = DungeonTargetEntry {
-            target_id,
-            nums,
-            complete,
-            received_at: Instant::now(),
-        };
-
-        if let Some(previous) = self.previous_dungeon_target.as_ref() {
-            if previous.complete == 0 && complete == 0 && previous.target_id == target_id {
-                self.previous_dungeon_target = Some(new_entry);
+        if complete == 0 && nums == 0 {
+            self.active_target_id = Some(target_id);
+            if RESET_IGNORE_TARGETS.contains(&target_id) {
+                info!(
+                    target: "app::live",
+                    "Reset suppressed: target_new_objective ignored target_id={} complete={} nums={}",
+                    target_id,
+                    complete,
+                    nums
+                );
                 return None;
             }
-        }
-
-        self.previous_dungeon_target = Some(new_entry);
-        if complete == 0 && nums == 0 {
             info!(
                 target: "app::live",
                 "Reset rule matched: target_new_objective target_id={} complete={} nums={} => {:?}",
@@ -350,14 +347,35 @@ impl BattleStateMachine {
             self.deferred_reset = None;
             return Some(EncounterResetReason::NewObjective);
         } else if complete == 1 && nums > 0 {
+            let effective_target_id = if target_id == 0 {
+                self.active_target_id.unwrap_or(target_id)
+            } else {
+                target_id
+            };
+
+            if RESET_IGNORE_TARGETS.contains(&effective_target_id) {
+                info!(
+                    target: "app::live",
+                    "Target completed ignored: raw_target_id={} effective_target_id={} complete={} nums={}",
+                    target_id,
+                    effective_target_id,
+                    complete,
+                    nums
+                );
+                return None;
+            }
+
             info!(
                 target: "app::live",
-                "Reset deferred cleared: target_completed target_id={} complete={} nums={}",
+                "Reset rule matched: target_completed raw_target_id={} effective_target_id={} complete={} nums={} => {:?}",
                 target_id,
+                effective_target_id,
                 complete,
-                nums
+                nums,
+                EncounterResetReason::NewObjective
             );
             self.deferred_reset = None;
+            return Some(EncounterResetReason::NewObjective);
         }
         None
     }
