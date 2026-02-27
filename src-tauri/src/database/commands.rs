@@ -3,9 +3,20 @@ use serde::{Deserialize, Serialize};
 
 use crate::database::schema as sch;
 use crate::database::db_exec;
+use crate::database::PlayerNameEntry;
 use crate::live::commands_models as lc;
 use crate::live::opcodes_models::class;
 use blueprotobuf_lib::blueprotobuf::EEntityType;
+
+/// A summary of a player in an encounter.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerSummaryDto {
+    /// The player name.
+    pub name: String,
+    /// The class ID of the player.
+    pub class_id: i32,
+}
 
 /// A summary of an encounter.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
@@ -31,6 +42,8 @@ pub struct EncounterSummaryDto {
     pub local_player_id: Option<i64>,
     /// A list of bosses in the encounter.
     pub bosses: Vec<BossSummaryDto>,
+    /// A list of players in the encounter.
+    pub players: Vec<PlayerSummaryDto>,
     /// The encounter ID on the remote website/server after successful upload.
     pub remote_encounter_id: Option<i64>,
     /// Whether the encounter is favorited.
@@ -109,6 +122,35 @@ where
     F: FnOnce(&mut diesel::sqlite::SqliteConnection) -> Result<T, String> + Send + 'static,
 {
     db_exec(f)
+}
+
+fn parse_player_entries(json: &Option<String>) -> Vec<PlayerSummaryDto> {
+    let Some(j) = json else {
+        return vec![];
+    };
+
+    if let Ok(entries) = serde_json::from_str::<Vec<PlayerNameEntry>>(j) {
+        return entries
+            .into_iter()
+            .map(|entry| PlayerSummaryDto {
+                name: entry.name,
+                class_id: entry.class_id,
+            })
+            .collect();
+    }
+
+    serde_json::from_str::<Vec<String>>(j)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|name| PlayerSummaryDto { name, class_id: 0 })
+        .collect()
+}
+
+fn extract_player_names_from_json(json: &Option<String>) -> Vec<String> {
+    parse_player_entries(json)
+        .into_iter()
+        .map(|player| player.name)
+        .collect()
 }
 
 /// Gets a list of unique boss names.
@@ -298,10 +340,7 @@ pub fn get_recent_encounters_filtered(
             }
             if let Some(ref player_names) = filter.player_names {
                 if !player_names.is_empty() {
-                    let stored: Vec<String> = player_names_json
-                        .as_ref()
-                        .and_then(|j| serde_json::from_str(j).ok())
-                        .unwrap_or_default();
+                    let stored = extract_player_names_from_json(player_names_json);
                     if !player_names.iter().any(|p| stored.contains(p)) {
                         return false;
                     }
@@ -310,10 +349,7 @@ pub fn get_recent_encounters_filtered(
             if let Some(ref player_name) = filter.player_name {
                 let trimmed = player_name.trim();
                 if !trimmed.is_empty() {
-                    let stored: Vec<String> = player_names_json
-                        .as_ref()
-                        .and_then(|j| serde_json::from_str(j).ok())
-                        .unwrap_or_default();
+                    let stored = extract_player_names_from_json(player_names_json);
                     if !stored.iter().any(|p| p.contains(trimmed)) {
                         return false;
                     }
@@ -331,7 +367,7 @@ pub fn get_recent_encounters_filtered(
     // Collect boss and player data for each encounter
     let mut mapped: Vec<EncounterSummaryDto> = Vec::new();
 
-    for (id, started, ended, td, th, scene_id, scene_name, duration, remote_id, is_fav, boss_json, _) in paged_rows {
+    for (id, started, ended, td, th, scene_id, scene_name, duration, remote_id, is_fav, boss_json, player_json) in paged_rows {
         let boss_entries: Vec<BossSummaryDto> = boss_json
             .as_ref()
             .and_then(|j| serde_json::from_str::<Vec<String>>(j).ok())
@@ -343,6 +379,7 @@ pub fn get_recent_encounters_filtered(
                 is_defeated: true,
             })
             .collect();
+        let player_entries = parse_player_entries(&player_json);
 
         mapped.push(EncounterSummaryDto {
             id,
@@ -355,6 +392,7 @@ pub fn get_recent_encounters_filtered(
             duration,
             local_player_id: None,
             bosses: boss_entries,
+            players: player_entries,
             remote_encounter_id: remote_id,
             is_favorite: is_fav != 0,
         });
@@ -491,6 +529,7 @@ pub fn get_encounter_by_id(encounter_id: i32) -> Result<EncounterSummaryDto, Str
         Option<i64>,
         i32,
         Option<String>,
+        Option<String>,
     ) = with_db(move |conn| {
         e::encounters
             .filter(e::id.eq(encounter_id))
@@ -507,6 +546,7 @@ pub fn get_encounter_by_id(encounter_id: i32) -> Result<EncounterSummaryDto, Str
                 e::remote_encounter_id,
                 e::is_favorite,
                 e::boss_names,
+                e::player_names,
             ))
             .first(conn)
             .map_err(|er| er.to_string())
@@ -523,6 +563,7 @@ pub fn get_encounter_by_id(encounter_id: i32) -> Result<EncounterSummaryDto, Str
             is_defeated: true,
         })
         .collect();
+    let player_entries = parse_player_entries(&row.12);
 
     Ok(EncounterSummaryDto {
         id: row.0,
@@ -535,6 +576,7 @@ pub fn get_encounter_by_id(encounter_id: i32) -> Result<EncounterSummaryDto, Str
         duration: row.7,
         local_player_id: row.8,
         bosses: boss_names,
+        players: player_entries,
         remote_encounter_id: row.9,
         is_favorite: row.10 != 0,
     })

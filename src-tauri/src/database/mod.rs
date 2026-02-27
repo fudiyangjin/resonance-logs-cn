@@ -10,6 +10,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness};
+use serde::{Deserialize, Serialize};
 
 use crate::database::models as m;
 use crate::database::schema as sch;
@@ -30,6 +31,12 @@ pub enum DbInitError {
     Migration(String),
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct PlayerNameEntry {
+    pub name: String,
+    pub class_id: i32,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct EncounterMetadata {
     pub started_at_ms: i64,
@@ -42,7 +49,7 @@ pub struct EncounterMetadata {
     pub duration: f64,
     pub is_manually_reset: bool,
     pub boss_names: Vec<String>,
-    pub player_names: Vec<String>,
+    pub player_names: Vec<PlayerNameEntry>,
 }
 
 #[derive(Debug, Clone, Default)]

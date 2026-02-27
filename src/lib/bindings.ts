@@ -607,6 +607,10 @@ localPlayerId: number | null;
  */
 bosses: BossSummaryDto[]; 
 /**
+ * A list of players in the encounter.
+ */
+players: PlayerSummaryDto[]; 
+/**
  * The encounter ID on the remote website/server after successful upload.
  */
 remoteEncounterId: number | null; 
@@ -628,6 +632,18 @@ export type PlayerNamesResult = {
  * A list of player names.
  */
 names: string[] }
+/**
+ * A summary of a player in an encounter.
+ */
+export type PlayerSummaryDto = { 
+/**
+ * The player name.
+ */
+name: string; 
+/**
+ * The class ID of the player.
+ */
+classId: number }
 export type RawCombatStats = { total: number; hits: number; critHits: number; critTotal: number; luckyHits: number; luckyTotal: number }
 export type RawSkillStats = { totalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number }
 /**

@@ -1,6 +1,6 @@
 use crate::database::{
-    CachedEntity, CachedPlayerData, EncounterMetadata, flush_entity_cache, flush_playerdata,
-    now_ms, save_encounter,
+    CachedEntity, CachedPlayerData, EncounterMetadata, PlayerNameEntry, flush_entity_cache,
+    flush_playerdata, now_ms, save_encounter,
 };
 use crate::live::cd_calc::calculate_skill_cd;
 use crate::live::commands_models::{
@@ -608,7 +608,7 @@ impl AppStateManager {
 
         // Persist encounter directly on server change.
         let defeated = state.event_manager.take_dead_bosses();
-        let mut player_names: Vec<String> = state
+        let mut player_names: Vec<PlayerNameEntry> = state
             .encounter
             .entity_uid_to_entity
             .values()
@@ -617,10 +617,13 @@ impl AppStateManager {
                     && !e.name.is_empty()
                     && (e.damage.hits > 0 || e.healing.hits > 0 || e.taken.hits > 0)
             })
-            .map(|e| e.name.clone())
+            .map(|e| PlayerNameEntry {
+                name: e.name.clone(),
+                class_id: e.class_id,
+            })
             .collect();
-        player_names.sort();
-        player_names.dedup();
+        player_names.sort_by(|a, b| a.name.cmp(&b.name));
+        player_names.dedup_by(|a, b| a.name == b.name);
         let metadata = EncounterMetadata {
             started_at_ms: state.encounter.time_fight_start_ms as i64,
             ended_at_ms: Some(now_ms()),
@@ -1392,7 +1395,7 @@ impl AppStateManager {
 
         // Persist encounter directly on reset.
         let defeated = state.event_manager.take_dead_bosses();
-        let mut player_names: Vec<String> = state
+        let mut player_names: Vec<PlayerNameEntry> = state
             .encounter
             .entity_uid_to_entity
             .values()
@@ -1401,10 +1404,13 @@ impl AppStateManager {
                     && !e.name.is_empty()
                     && (e.damage.hits > 0 || e.healing.hits > 0 || e.taken.hits > 0)
             })
-            .map(|e| e.name.clone())
+            .map(|e| PlayerNameEntry {
+                name: e.name.clone(),
+                class_id: e.class_id,
+            })
             .collect();
-        player_names.sort();
-        player_names.dedup();
+        player_names.sort_by(|a, b| a.name.cmp(&b.name));
+        player_names.dedup_by(|a, b| a.name == b.name);
         let metadata = EncounterMetadata {
             started_at_ms: state.encounter.time_fight_start_ms as i64,
             ended_at_ms: Some(now_ms()),

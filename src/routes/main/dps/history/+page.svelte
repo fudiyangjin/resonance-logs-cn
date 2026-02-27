@@ -8,6 +8,7 @@
 		EncounterFiltersDto,
 	} from "$lib/bindings";
 	import UnifiedSearch from "$lib/components/unified-search.svelte";
+	import { CLASS_MAP, getClassIcon, tooltip } from "$lib/utils.svelte";
 
 	let encounters = $state<EncounterSummaryDto[]>([]);
 	let errorMsg = $state<string | null>(null);
@@ -526,6 +527,10 @@
 						>战斗</th
 					>
 					<th
+						class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-[400px]"
+						>玩家</th
+					>
+					<th
 						class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-12"
 						>时长</th
 					>
@@ -609,6 +614,36 @@
 									{/if}
 								</div>
 							</div>
+						</td>
+						<td class="px-3 py-2 text-sm text-muted-foreground">
+							{#if enc.players.length > 0}
+								{@const sortedPlayers = [...enc.players].sort(
+									(a, b) => {
+										const aHasClass = a.classId !== 0;
+										const bHasClass = b.classId !== 0;
+										if (aHasClass && !bHasClass) return -1;
+										if (!aHasClass && bHasClass) return 1;
+										return 0;
+									},
+								)}
+								<div class="flex gap-1 items-center">
+									{#each sortedPlayers.slice(0, 8) as player}
+										<img
+											class="size-5 object-contain flex-shrink-0"
+											src={getClassIcon(
+												CLASS_MAP[player.classId] ?? "",
+											)}
+											alt="Class icon"
+											{@attach tooltip(() => player.name)}
+										/>
+									{/each}
+									{#if enc.players.length > 8}
+										<span class="text-xs text-muted-foreground"
+											>+{enc.players.length - 8}</span
+										>
+									{/if}
+								</div>
+							{/if}
 						</td>
 						<td class="px-3 py-2 text-sm text-muted-foreground"
 							>{fmtDuration(enc.startedAtMs, enc.endedAtMs)}</td
