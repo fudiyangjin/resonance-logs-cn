@@ -654,32 +654,13 @@ impl AppStateManager {
                 metadata.player_names.len(),
                 metadata.boss_names.len()
             );
-            match save_encounter(&state.encounter, &metadata) {
-                Ok(encounter_id) => {
-                    info!(
-                        target: "app::live",
-                        "persist_encounter_on_server_change_ok encounter_id={}",
-                        encounter_id
-                    );
-                }
-                Err(e) => {
-                    warn!(
-                        target: "app::live",
-                        "persist_encounter_on_server_change_failed error={}",
-                        e
-                    );
-                }
-            }
+            save_encounter(&state.encounter, &metadata);
             let dirty_entities = state.collect_dirty_entity_cache();
             if !dirty_entities.is_empty() {
-                if let Err(e) = flush_entity_cache(dirty_entities) {
-                    warn!(target: "app::live", "flush_entity_cache_failed error={}", e);
-                }
+                flush_entity_cache(dirty_entities);
             }
             if let Some(playerdata) = state.take_dirty_playerdata() {
-                if let Err(e) = flush_playerdata(playerdata) {
-                    warn!(target: "app::live", "flush_playerdata_failed error={}", e);
-                }
+                flush_playerdata(playerdata);
             }
         } else {
             warn!(
@@ -954,9 +935,7 @@ impl AppStateManager {
         }
 
         if let Some(playerdata) = state.take_dirty_playerdata() {
-            if let Err(e) = flush_playerdata(playerdata) {
-                warn!(target: "app::live", "flush_playerdata_failed error={}", e);
-            }
+            flush_playerdata(playerdata);
         }
     }
 
@@ -1448,32 +1427,13 @@ impl AppStateManager {
                 metadata.boss_names.len(),
                 metadata.is_manually_reset
             );
-            match save_encounter(&state.encounter, &metadata) {
-                Ok(encounter_id) => {
-                    info!(
-                        target: "app::live",
-                        "persist_encounter_on_reset_ok encounter_id={}",
-                        encounter_id
-                    );
-                }
-                Err(e) => {
-                    warn!(
-                        target: "app::live",
-                        "persist_encounter_on_reset_failed error={}",
-                        e
-                    );
-                }
-            }
+            save_encounter(&state.encounter, &metadata);
             let dirty_entities = state.collect_dirty_entity_cache();
             if !dirty_entities.is_empty() {
-                if let Err(e) = flush_entity_cache(dirty_entities) {
-                    warn!(target: "app::live", "flush_entity_cache_failed error={}", e);
-                }
+                flush_entity_cache(dirty_entities);
             }
             if let Some(playerdata) = state.take_dirty_playerdata() {
-                if let Err(e) = flush_playerdata(playerdata) {
-                    warn!(target: "app::live", "flush_playerdata_failed error={}", e);
-                }
+                flush_playerdata(playerdata);
             }
         } else {
             warn!(

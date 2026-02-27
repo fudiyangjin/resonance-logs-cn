@@ -167,6 +167,20 @@ where
         .map_err(|_| "failed to receive DB task result".to_string())?
 }
 
+pub fn db_send<F>(f: F)
+where
+    F: FnOnce(&mut SqliteConnection) + Send + 'static,
+{
+    let Some(sender) = DB_SENDER.get() else {
+        log::error!(target: "app::db", "db_send_failed reason=not_initialized");
+        return;
+    };
+
+    if sender.send(Box::new(f)).is_err() {
+        log::error!(target: "app::db", "db_send_failed reason=channel_closed");
+    }
+}
+
 pub fn init_db() -> Result<(), DbInitError> {
     if DB_SENDER.get().is_some() {
         return Ok(());
@@ -202,12 +216,12 @@ pub fn init_db() -> Result<(), DbInitError> {
     Ok(())
 }
 
-pub fn flush_entity_cache(entries: Vec<CachedEntity>) -> Result<(), String> {
+pub fn flush_entity_cache(entries: Vec<CachedEntity>) {
     if entries.is_empty() {
-        return Ok(());
+        return;
     }
 
-    db_exec(move |conn| {
+    db_send(move |conn| {
         use sch::entities::dsl as en;
 
         for entry in &entries {
@@ -234,20 +248,21 @@ pub fn flush_entity_cache(entries: Vec<CachedEntity>) -> Result<(), String> {
                 attributes: entry.attributes.as_deref(),
             };
 
-            diesel::insert_into(en::entities)
+            let result = diesel::insert_into(en::entities)
                 .values(&insert)
                 .on_conflict(en::entity_id)
                 .do_update()
                 .set(&update)
-                .execute(conn)
-                .map_err(|e| e.to_string())?;
+                .execute(conn);
+            if let Err(e) = result {
+                log::warn!(target: "app::db", "flush_entity_cache_failed error={}", e);
+            }
         }
-        Ok(())
     })
 }
 
-pub fn flush_playerdata(data: CachedPlayerData) -> Result<(), String> {
-    db_exec(move |conn| {
+pub fn flush_playerdata(data: CachedPlayerData) {
+    db_send(move |conn| {
         use sch::detailed_playerdata::dsl as dp;
 
         let insert = m::NewDetailedPlayerData {
@@ -260,39 +275,64 @@ pub fn flush_playerdata(data: CachedPlayerData) -> Result<(), String> {
             vdata_bytes: Some(data.vdata_bytes.as_slice()),
         };
 
-        diesel::insert_into(dp::detailed_playerdata)
+        let result = diesel::insert_into(dp::detailed_playerdata)
             .values(&insert)
             .on_conflict(dp::player_id)
             .do_update()
             .set(&update)
-            .execute(conn)
-            .map_err(|e| e.to_string())?;
-        Ok(())
+            .execute(conn);
+        if let Err(e) = result {
+            log::warn!(target: "app::db", "flush_playerdata_failed error={}", e);
+        }
     })
 }
 
-pub fn save_encounter(encounter: &Encounter, metadata: &EncounterMetadata) -> Result<i32, String> {
+pub fn save_encounter(encounter: &Encounter, metadata: &EncounterMetadata) {
     use sch::encounter_data::dsl as ed;
     use sch::encounters::dsl as e;
 
-    let combat_entities: HashMap<i64, Entity> = encounter
-        .entity_uid_to_entity
-        .iter()
-        .filter_map(|(uid, entity)| {
-            let has_combat =
-                entity.damage.hits > 0 || entity.healing.hits > 0 || entity.taken.hits > 0;
-            has_combat.then_some((*uid, entity.clone()))
-        })
-        .collect();
-
-    let entities_bin = rmp_serde::to_vec(&combat_entities).map_err(|e| e.to_string())?;
-    let compressed = zstd::encode_all(&entities_bin[..], 3).map_err(|e| e.to_string())?;
-    let boss_names_json = serde_json::to_string(&metadata.boss_names).map_err(|e| e.to_string())?;
-    let player_names_json =
-        serde_json::to_string(&metadata.player_names).map_err(|e| e.to_string())?;
-
+    let encounter = encounter.clone();
     let metadata = metadata.clone();
-    db_exec(move |conn| {
+    db_send(move |conn| {
+        let combat_entities: HashMap<i64, Entity> = encounter
+            .entity_uid_to_entity
+            .iter()
+            .filter_map(|(uid, entity)| {
+                let has_combat =
+                    entity.damage.hits > 0 || entity.healing.hits > 0 || entity.taken.hits > 0;
+                has_combat.then_some((*uid, entity.clone()))
+            })
+            .collect();
+
+        let entities_bin = match rmp_serde::to_vec(&combat_entities) {
+            Ok(v) => v,
+            Err(e) => {
+                log::warn!(target: "app::db", "save_encounter_serialize_failed error={}", e);
+                return;
+            }
+        };
+        let compressed = match zstd::encode_all(&entities_bin[..], 3) {
+            Ok(v) => v,
+            Err(e) => {
+                log::warn!(target: "app::db", "save_encounter_compress_failed error={}", e);
+                return;
+            }
+        };
+        let boss_names_json = match serde_json::to_string(&metadata.boss_names) {
+            Ok(v) => v,
+            Err(e) => {
+                log::warn!(target: "app::db", "save_encounter_boss_json_failed error={}", e);
+                return;
+            }
+        };
+        let player_names_json = match serde_json::to_string(&metadata.player_names) {
+            Ok(v) => v,
+            Err(e) => {
+                log::warn!(target: "app::db", "save_encounter_player_json_failed error={}", e);
+                return;
+            }
+        };
+
         let result = conn.transaction::<i32, diesel::result::Error, _>(|tx| {
             let new_enc = m::NewEncounter {
                 started_at_ms: metadata.started_at_ms,
@@ -326,7 +366,9 @@ pub fn save_encounter(encounter: &Encounter, metadata: &EncounterMetadata) -> Re
             Ok(encounter_id)
         });
 
-        result.map_err(|e| e.to_string())
+        if let Err(e) = result {
+            log::warn!(target: "app::db", "save_encounter_tx_failed error={}", e);
+        }
     })
 }
 
