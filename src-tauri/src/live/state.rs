@@ -952,6 +952,12 @@ impl AppStateManager {
         {
             warn!("Error processing SyncContainerData.. ignoring.");
         }
+
+        if let Some(playerdata) = state.take_dirty_playerdata() {
+            if let Err(e) = flush_playerdata(playerdata) {
+                warn!(target: "app::live", "flush_playerdata_failed error={}", e);
+            }
+        }
     }
 
     async fn process_sync_container_dirty_data(
