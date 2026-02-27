@@ -3,11 +3,13 @@
   import { commands, type BuffDefinition, type BuffNameInfo } from "$lib/bindings";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import {
+    AVAILABLE_PANEL_ATTRS,
     createDefaultBuffGroup,
     createDefaultSkillMonitorProfile,
     SETTINGS,
     type BuffDisplayMode,
     type BuffGroup,
+    type PanelAttrConfig,
     type SkillMonitorProfile,
   } from "$lib/settings-store";
   import {
@@ -53,11 +55,15 @@
   const classSkills = $derived(getSkillsByClass(selectedClassKey));
   const monitoredSkillIds = $derived(activeProfile.monitoredSkillIds);
   const monitoredBuffIds = $derived(activeProfile.monitoredBuffIds);
+  const monitoredPanelAttrs = $derived.by(() => ensurePanelAttrs(activeProfile));
   const showSkillCdGroup = $derived(
     activeProfile.overlayVisibility?.showSkillCdGroup ?? true,
   );
   const showResourceGroup = $derived(
     activeProfile.overlayVisibility?.showResourceGroup ?? true,
+  );
+  const showPanelAttrGroup = $derived(
+    activeProfile.overlayVisibility?.showPanelAttrGroup ?? true,
   );
   const buffDisplayMode = $derived(
     activeProfile.buffDisplayMode ?? "individual",
@@ -129,6 +135,20 @@
       monitorAll: true,
       name: normalized.name || "全部 Buff",
     };
+  }
+
+  function ensurePanelAttrs(profile: SkillMonitorProfile): PanelAttrConfig[] {
+    const current = profile.monitoredPanelAttrs ?? [];
+    const currentMap = new Map(current.map((item) => [item.attrId, item]));
+    return AVAILABLE_PANEL_ATTRS.map((item) => {
+      const existing = currentMap.get(item.attrId);
+      return {
+        attrId: item.attrId,
+        label: existing?.label ?? item.label,
+        color: existing?.color ?? item.color,
+        enabled: existing?.enabled ?? item.enabled,
+      };
+    });
   }
 
   function updateActiveProfile(
@@ -340,7 +360,7 @@
   });
 
   function setOverlaySectionVisibility(
-    key: "showSkillCdGroup" | "showResourceGroup",
+    key: "showSkillCdGroup" | "showResourceGroup" | "showPanelAttrGroup",
     checked: boolean,
   ) {
     updateActiveProfile((profile) => ({
@@ -348,17 +368,39 @@
       overlayVisibility: {
         showSkillCdGroup: profile.overlayVisibility?.showSkillCdGroup ?? true,
         showResourceGroup: profile.overlayVisibility?.showResourceGroup ?? true,
+        showPanelAttrGroup: profile.overlayVisibility?.showPanelAttrGroup ?? true,
         [key]: checked,
       },
     }));
   }
 
   function toggleOverlaySectionVisibility(
-    key: "showSkillCdGroup" | "showResourceGroup",
+    key: "showSkillCdGroup" | "showResourceGroup" | "showPanelAttrGroup",
   ) {
-    const current =
-      key === "showSkillCdGroup" ? showSkillCdGroup : showResourceGroup;
+    const current = key === "showSkillCdGroup"
+      ? showSkillCdGroup
+      : key === "showResourceGroup"
+      ? showResourceGroup
+      : showPanelAttrGroup;
     setOverlaySectionVisibility(key, !current);
+  }
+
+  function setPanelAttrEnabled(attrId: number, enabled: boolean) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      monitoredPanelAttrs: ensurePanelAttrs(profile).map((item) =>
+        item.attrId === attrId ? { ...item, enabled } : item
+      ),
+    }));
+  }
+
+  function setPanelAttrColor(attrId: number, color: string) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      monitoredPanelAttrs: ensurePanelAttrs(profile).map((item) =>
+        item.attrId === attrId ? { ...item, color } : item
+      ),
+    }));
   }
 
   function setBuffDisplayMode(mode: BuffDisplayMode) {
@@ -647,10 +689,53 @@
         >
           资源监控区：{showResourceGroup ? "显示" : "隐藏"}
         </button>
+        <button
+          type="button"
+          class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {showPanelAttrGroup
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+          onclick={() => toggleOverlaySectionVisibility("showPanelAttrGroup")}
+        >
+          角色属性区：{showPanelAttrGroup ? "显示" : "隐藏"}
+        </button>
       </div>
       <p class="text-xs text-muted-foreground">
         点击按钮切换显示状态（按方案保存）
       </p>
+    </div>
+  </div>
+
+  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
+    <div>
+      <h2 class="text-base font-semibold text-foreground">角色面板属性监控</h2>
+    </div>
+    <div class="text-xs text-muted-foreground">
+      已启用 {monitoredPanelAttrs.filter((item) => item.enabled).length}/{monitoredPanelAttrs.length}
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {#each monitoredPanelAttrs as attr (attr.attrId)}
+        <div class="rounded-lg border border-border/60 bg-muted/20 px-3 py-2 space-y-2">
+          <label class="flex items-center justify-between gap-3 text-sm text-foreground">
+            <span>{attr.label}</span>
+            <input
+              type="checkbox"
+              checked={attr.enabled}
+              onchange={(event) =>
+                setPanelAttrEnabled(attr.attrId, (event.currentTarget as HTMLInputElement).checked)}
+            />
+          </label>
+          <label class="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span>显示颜色</span>
+            <input
+              type="color"
+              value={attr.color}
+              class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
+              onchange={(event) =>
+                setPanelAttrColor(attr.attrId, (event.currentTarget as HTMLInputElement).value)}
+            />
+          </label>
+        </div>
+      {/each}
     </div>
   </div>
 

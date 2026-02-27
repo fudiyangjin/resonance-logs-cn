@@ -83,11 +83,28 @@ export type Point = {
   y: number;
 };
 
+export type PanelAttrConfig = {
+  attrId: number;
+  label: string;
+  color: string;
+  enabled: boolean;
+};
+
+export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
+  { attrId: 11720, label: "攻速", color: "#6ee7ff", enabled: false },
+  { attrId: 11710, label: "暴击率", color: "#ff7a7a", enabled: false },
+  { attrId: 11930, label: "急速", color: "#facc15", enabled: false },
+  { attrId: 11780, label: "幸运", color: "#a78bfa", enabled: false },
+  { attrId: 11940, label: "精通", color: "#60a5fa", enabled: false },
+  { attrId: 11950, label: "全能", color: "#34d399", enabled: false },
+];
+
 export type OverlayPositions = {
   skillCdGroup: Point;
   resourceGroup: Point;
   textBuffPanel: Point;
   specialBuffGroup: Point;
+  panelAttrGroup: Point;
   iconBuffPositions: Record<number, Point>;
 };
 
@@ -95,12 +112,14 @@ export type OverlaySizes = {
   skillCdGroupScale: number;
   resourceGroupScale: number;
   textBuffPanelScale: number;
+  panelAttrGroupScale: number;
   iconBuffSizes: Record<number, number>;
 };
 
 export type OverlayVisibility = {
   showSkillCdGroup: boolean;
   showResourceGroup: boolean;
+  showPanelAttrGroup: boolean;
 };
 
 export type BuffDisplayMode = "individual" | "grouped";
@@ -126,6 +145,7 @@ export type SkillMonitorProfile = {
   selectedClass: string;
   monitoredSkillIds: number[];
   monitoredBuffIds: number[];
+  monitoredPanelAttrs: PanelAttrConfig[];
   buffPriorityIds: number[];
   buffDisplayMode: BuffDisplayMode;
   buffGroups: BuffGroup[];
@@ -142,6 +162,7 @@ function createDefaultOverlayPositions(): OverlayPositions {
     resourceGroup: { x: 40, y: 170 },
     textBuffPanel: { x: 360, y: 40 },
     specialBuffGroup: { x: 360, y: 220 },
+    panelAttrGroup: { x: 700, y: 40 },
     iconBuffPositions: {},
   };
 }
@@ -151,6 +172,7 @@ function createDefaultOverlaySizes(): OverlaySizes {
     skillCdGroupScale: 1,
     resourceGroupScale: 1,
     textBuffPanelScale: 1,
+    panelAttrGroupScale: 1,
     iconBuffSizes: {},
   };
 }
@@ -159,6 +181,7 @@ function createDefaultOverlayVisibility(): OverlayVisibility {
   return {
     showSkillCdGroup: true,
     showResourceGroup: true,
+    showPanelAttrGroup: true,
   };
 }
 
@@ -192,6 +215,7 @@ export function createDefaultSkillMonitorProfile(
     selectedClass: classKey,
     monitoredSkillIds: [],
     monitoredBuffIds: [],
+    monitoredPanelAttrs: AVAILABLE_PANEL_ATTRS.map((item) => ({ ...item })),
     buffPriorityIds: [],
     buffDisplayMode: "individual",
     buffGroups: [],

@@ -9,6 +9,7 @@
   import { goto } from "$app/navigation";
   import { SETTINGS } from '$lib/settings-store';
   import { commands } from "$lib/bindings";
+  import { setMonitoredPanelAttrs } from "$lib/api";
   import { applyCustomFonts } from "$lib/font-loader";
   import { getDefaultMonitoredBuffIds } from "$lib/skill-mappings";
   import { onMount } from 'svelte';
@@ -44,6 +45,7 @@
     const selectedClass = activeProfile?.selectedClass ?? "wind_knight";
     const monitoredSkillIds = activeProfile?.monitoredSkillIds ?? [];
     const monitoredBuffIds = activeProfile?.monitoredBuffIds ?? [];
+    const monitoredPanelAttrs = activeProfile?.monitoredPanelAttrs ?? [];
     const buffPriorityIds = activeProfile?.buffPriorityIds ?? [];
     const buffDisplayMode = activeProfile?.buffDisplayMode ?? "individual";
     const buffGroups = activeProfile?.buffGroups ?? [];
@@ -69,11 +71,15 @@
         ...buffGroups.flatMap((group) => group.priorityBuffIds ?? []),
       ]),
     );
+    const monitoredPanelAttrIds = monitoredPanelAttrs
+      .filter((item) => item.enabled)
+      .map((item) => item.attrId);
     const monitorSyncKey = JSON.stringify({
       enabled,
       monitoredSkillIds,
       mergedBuffIds,
       mergedPriorityIds,
+      monitoredPanelAttrIds,
       anyGroupMonitorAll,
     });
 
@@ -87,11 +93,13 @@
             await commands.setMonitoredSkills(monitoredSkillIds);
             await commands.setMonitoredBuffs(mergedBuffIds);
             await commands.setBuffPriority(mergedPriorityIds);
+            await setMonitoredPanelAttrs(monitoredPanelAttrIds);
           } else {
             await commands.setMonitorAllBuff(false);
             await commands.setMonitoredSkills([]);
             await commands.setMonitoredBuffs([]);
             await commands.setBuffPriority([]);
+            await setMonitoredPanelAttrs([]);
           }
         }
 

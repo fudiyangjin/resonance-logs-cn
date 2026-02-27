@@ -5,14 +5,17 @@
   import {
     onBuffUpdate,
     onFightResUpdate,
+    onPanelAttrUpdate,
     onSkillCdUpdate,
     type BuffUpdateState,
     type SkillCdState,
   } from "$lib/api";
   import { commands, type BuffDefinition } from "$lib/bindings";
   import {
+    AVAILABLE_PANEL_ATTRS,
     SETTINGS,
     type BuffGroup,
+    type PanelAttrConfig,
     type OverlayPositions,
     type OverlaySizes,
     type OverlayVisibility,
@@ -91,17 +94,20 @@
     resourceGroup: { x: 40, y: 170 },
     textBuffPanel: { x: 360, y: 40 },
     specialBuffGroup: { x: 360, y: 220 },
+    panelAttrGroup: { x: 700, y: 40 },
     iconBuffPositions: {},
   };
   const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
     skillCdGroupScale: 1,
     resourceGroupScale: 1,
     textBuffPanelScale: 1,
+    panelAttrGroupScale: 1,
     iconBuffSizes: {},
   };
   const DEFAULT_OVERLAY_VISIBILITY: OverlayVisibility = {
     showSkillCdGroup: true,
     showResourceGroup: true,
+    showPanelAttrGroup: true,
   };
 
   let cdMap = $state(new Map<number, SkillCdState>());
@@ -110,6 +116,7 @@
   let buffMap = $state(new Map<number, BuffUpdateState>());
   let activeBuffIds = $state(new Set<number>());
   let buffDurationPercents = $state(new Map<number, number>());
+  let panelAttrMap = $state(new Map<number, number>());
   let buffDefinitions = $state(new Map<number, BuffDefinition>());
   let buffNameMap = $state(new Map<number, string>());
   let iconDisplayBuffs = $state<IconBuffDisplay[]>([]);
@@ -152,6 +159,22 @@
   const overlayVisibility = $derived(
     activeProfile?.overlayVisibility ?? DEFAULT_OVERLAY_VISIBILITY,
   );
+  const monitoredPanelAttrs = $derived.by(() => {
+    const current = activeProfile?.monitoredPanelAttrs ?? [];
+    const currentMap = new Map(current.map((item) => [item.attrId, item]));
+    return AVAILABLE_PANEL_ATTRS.map((item) => {
+      const existing = currentMap.get(item.attrId);
+      return {
+        attrId: item.attrId,
+        label: existing?.label ?? item.label,
+        color: existing?.color ?? item.color,
+        enabled: existing?.enabled ?? item.enabled,
+      } satisfies PanelAttrConfig;
+    });
+  });
+  const enabledPanelAttrs = $derived(
+    monitoredPanelAttrs.filter((item) => item.enabled),
+  );
   const specialBuffConfigMap = $derived.by(() => {
     const map = new Map<number, SpecialBuffDisplay>();
     for (const config of findSpecialBuffDisplays(selectedClassKey)) {
@@ -167,6 +190,7 @@
       resourceGroup: current?.resourceGroup ?? DEFAULT_OVERLAY_POSITIONS.resourceGroup,
       textBuffPanel: current?.textBuffPanel ?? DEFAULT_OVERLAY_POSITIONS.textBuffPanel,
       specialBuffGroup: current?.specialBuffGroup ?? DEFAULT_OVERLAY_POSITIONS.specialBuffGroup,
+      panelAttrGroup: current?.panelAttrGroup ?? DEFAULT_OVERLAY_POSITIONS.panelAttrGroup,
       iconBuffPositions: current?.iconBuffPositions ?? {},
     };
   }
@@ -180,6 +204,8 @@
         current?.resourceGroupScale ?? DEFAULT_OVERLAY_SIZES.resourceGroupScale,
       textBuffPanelScale:
         current?.textBuffPanelScale ?? DEFAULT_OVERLAY_SIZES.textBuffPanelScale,
+      panelAttrGroupScale:
+        current?.panelAttrGroupScale ?? DEFAULT_OVERLAY_SIZES.panelAttrGroupScale,
       iconBuffSizes: current?.iconBuffSizes ?? {},
     };
   }
@@ -191,7 +217,13 @@
         current?.showSkillCdGroup ?? DEFAULT_OVERLAY_VISIBILITY.showSkillCdGroup,
       showResourceGroup:
         current?.showResourceGroup ?? DEFAULT_OVERLAY_VISIBILITY.showResourceGroup,
+      showPanelAttrGroup:
+        current?.showPanelAttrGroup ?? DEFAULT_OVERLAY_VISIBILITY.showPanelAttrGroup,
     };
+  }
+
+  function formatAttrPercent(value: number): string {
+    return `${(value / 100).toFixed(2)}%`;
   }
 
   function ensureBuffGroups(profile: SkillMonitorProfile): BuffGroup[] {
@@ -811,6 +843,14 @@
       fightResValues = event.payload.fightRes.values;
     });
 
+    const unlistenPanelAttr = onPanelAttrUpdate((event) => {
+      const next = new Map(panelAttrMap);
+      for (const attr of event.payload.attrs) {
+        next.set(attr.attrId, attr.value);
+      }
+      panelAttrMap = next;
+    });
+
     // Preload names for monitored ids so edit mode can show non-active buffs.
     void loadBuffNames(monitoredBuffIds);
 
@@ -823,6 +863,7 @@
       unlistenBuff.then((fn) => fn());
       unlisten.then((fn) => fn());
       unlistenRes.then((fn) => fn());
+      unlistenPanelAttr.then((fn) => fn());
       window.removeEventListener("pointermove", onGlobalPointerMove);
       window.removeEventListener("pointerup", onGlobalPointerUp);
       if (rafId) cancelAnimationFrame(rafId);
@@ -970,6 +1011,39 @@
           startResize(e, { kind: "group", key: "resourceGroupScale" }, getGroupScale("resourceGroupScale"))}
       ></div>
     {/if}
+    </div>
+  {/if}
+
+  {#if overlayVisibility.showPanelAttrGroup && enabledPanelAttrs.length > 0}
+    <div
+      class="overlay-group panel-attr-group"
+      class:editable={isEditing}
+      style:left={`${getGroupPosition("panelAttrGroup").x}px`}
+      style:top={`${getGroupPosition("panelAttrGroup").y}px`}
+      style:transform={`scale(${getGroupScale("panelAttrGroupScale")})`}
+      style:transform-origin="top left"
+      onpointerdown={(e) => startDrag(e, { kind: "group", key: "panelAttrGroup" }, getGroupPosition("panelAttrGroup"))}
+    >
+      {#if isEditing}
+        <div class="group-tag">角色属性区</div>
+      {/if}
+      <div class="panel-attr-list">
+        {#each enabledPanelAttrs as attr (attr.attrId)}
+          <div class="panel-attr-row">
+            <span class="panel-attr-label" style:color={attr.color}>{attr.label}</span>
+            <span class="panel-attr-value" style:color={attr.color}>
+              {formatAttrPercent(panelAttrMap.get(attr.attrId) ?? 0)}
+            </span>
+          </div>
+        {/each}
+      </div>
+      {#if isEditing}
+        <div
+          class="resize-handle"
+          onpointerdown={(e) =>
+            startResize(e, { kind: "group", key: "panelAttrGroupScale" }, getGroupScale("panelAttrGroupScale"))}
+        ></div>
+      {/if}
     </div>
   {/if}
 
@@ -1525,6 +1599,33 @@
   .res-charge-icon {
     height: 24px;
     width: auto;
+  }
+
+  .panel-attr-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 150px;
+  }
+
+  .panel-attr-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 2px 0;
+  }
+
+  .panel-attr-label {
+    font-size: 14px;
+    font-weight: 600;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+  }
+
+  .panel-attr-value {
+    font-size: 16px;
+    font-weight: 700;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
   }
 
   .icon-buff-cell {

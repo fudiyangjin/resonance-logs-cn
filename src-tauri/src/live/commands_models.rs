@@ -276,6 +276,19 @@ pub struct SkillCdUpdatePayload {
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct PanelAttrState {
+    pub attr_id: i32,
+    pub value: i32,
+}
+
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PanelAttrUpdatePayload {
+    pub attrs: Vec<PanelAttrState>,
+}
+
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct FightResourceState {
     /// The full list of resource values
     pub values: Vec<i64>,

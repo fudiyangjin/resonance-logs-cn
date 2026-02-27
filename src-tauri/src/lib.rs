@@ -59,6 +59,7 @@ pub fn run() {
             live::commands::get_dungeon_log,
             live::commands::set_monitored_skills,
             live::commands::set_monitored_buffs,
+            live::commands::set_monitored_panel_attrs,
             live::commands::get_available_buffs,
             live::commands::get_buff_names,
             live::commands::search_buffs_by_name,

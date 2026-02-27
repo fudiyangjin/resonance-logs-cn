@@ -189,6 +189,18 @@ pub async fn set_monitored_buffs(
     Ok(())
 }
 
+/// Sets the monitored panel attribute list for panel attribute updates.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_monitored_panel_attrs(
+    attr_ids: Vec<i32>,
+    state_manager: tauri::State<'_, AppStateManager>,
+) -> Result<(), String> {
+    info!("[panel-attr] set monitored attrs: {:?}", attr_ids);
+    state_manager.set_monitored_panel_attrs(attr_ids).await?;
+    Ok(())
+}
+
 /// Returns all buffs that have a sprite image available.
 #[tauri::command]
 #[specta::specta]

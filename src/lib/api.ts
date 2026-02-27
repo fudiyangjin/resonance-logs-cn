@@ -10,7 +10,7 @@ import type {
   Result,
   RawCombatStats as BindingRawCombatStats,
   RawSkillStats as BindingRawSkillStats,
-  RawEntityData as BindingRawEntityData,
+  HistoryEntityData as BindingRawEntityData,
 } from "./bindings";
 
 // Type definitions for event payloads
@@ -108,6 +108,15 @@ export type BuffUpdateState = {
 
 export type BuffUpdatePayload = {
   buffs: BuffUpdateState[];
+};
+
+export type PanelAttrState = {
+  attrId: number;
+  value: number;
+};
+
+export type PanelAttrUpdatePayload = {
+  attrs: PanelAttrState[];
 };
 
 export type EncounterUpdatePayload = {
@@ -210,6 +219,11 @@ export const onBuffUpdate = (
   handler: (event: Event<BuffUpdatePayload>) => void
 ): Promise<UnlistenFn> => listen<BuffUpdatePayload>("buff-update", handler);
 
+export const onPanelAttrUpdate = (
+  handler: (event: Event<PanelAttrUpdatePayload>) => void
+): Promise<UnlistenFn> =>
+  listen<PanelAttrUpdatePayload>("panel-attr-update", handler);
+
 // Command wrappers (still using generated bindings)
 
 export const resetEncounter = (): Promise<Result<null, string>> => commands.resetEncounter();
@@ -229,6 +243,9 @@ export const setBossOnlyDps = (enabled: boolean): Promise<void> => invoke("set_b
 
 export const setEventUpdateRateMs = (rateMs: number): Promise<void> =>
   invoke("set_event_update_rate_ms", { rateMs });
+
+export const setMonitoredPanelAttrs = (attrIds: number[]): Promise<void> =>
+  invoke("set_monitored_panel_attrs", { attrIds });
 
 export const getDungeonLog = (): Promise<DungeonLog> => invoke("get_dungeon_log");
 

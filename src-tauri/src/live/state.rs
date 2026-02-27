@@ -5,7 +5,7 @@ use crate::database::{
 use crate::live::cd_calc::calculate_skill_cd;
 use crate::live::commands_models::{
     BuffUpdatePayload, BuffUpdateState, FightResourceState, FightResourceUpdatePayload,
-    SkillCdState, SkillCdUpdatePayload,
+    PanelAttrState, PanelAttrUpdatePayload, SkillCdState, SkillCdUpdatePayload,
 };
 use crate::live::dungeon_log::{
     self, BattleStateMachine, DungeonLogRuntime, EncounterResetReason, SegmentType,
@@ -20,7 +20,7 @@ use blueprotobuf_lib::blueprotobuf::{
 use log::{info, trace, warn};
 use prost::Message;
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager};
@@ -134,6 +134,10 @@ pub struct AppState {
     pub monitored_skill_ids: Vec<i32>,
     /// Ordered list of monitored buff base IDs.
     pub monitored_buff_ids: Vec<i32>,
+    /// Ordered list of monitored panel attribute IDs.
+    pub monitored_panel_attr_ids: Vec<i32>,
+    /// Latest panel attribute values keyed by Attr id (from base attrs).
+    pub panel_attr_values: HashMap<i32, i32>,
     /// User configured buff priority order by base ID.
     pub priority_buff_ids: Vec<i32>,
     /// Active buffs keyed by buff UUID.
@@ -207,6 +211,7 @@ pub enum LiveControlCommand {
     SetDungeonSegmentsEnabled(bool),
     SetEventUpdateRateMs(u64),
     SetMonitoredBuffs(Vec<i32>),
+    SetMonitoredPanelAttrs(Vec<i32>),
     SetMonitoredSkills(Vec<i32>),
     SetMonitorAllBuff(bool),
     SetBuffPriority(Vec<i32>),
@@ -229,6 +234,8 @@ impl AppState {
             skill_cd_map: HashMap::new(),
             monitored_skill_ids: Vec::new(),
             monitored_buff_ids: Vec::new(),
+            monitored_panel_attr_ids: Vec::new(),
+            panel_attr_values: HashMap::new(),
             priority_buff_ids: Vec::new(),
             monitor_all_buff: false,
             active_buffs: HashMap::new(),
@@ -293,10 +300,8 @@ impl AppState {
     }
 }
 
-fn decode_attr_i32(attrs: &blueprotobuf::AttrCollection, attr_id: i32) -> Option<i32> {
-    let attr = attrs.attrs.iter().find(|a| a.id == Some(attr_id))?;
+fn decode_single_attr_i32(attr: &blueprotobuf::Attr) -> Option<i32> {
     match attr.raw_data.as_ref() {
-        // Server may send "key exists, value absent" as an explicit clear signal.
         None => Some(0),
         Some(raw) if raw.is_empty() => Some(0),
         Some(raw) => {
@@ -361,6 +366,19 @@ fn emit_skill_cd_update_if_needed(state: &AppState, payload: Vec<SkillCdState>) 
             &app_handle,
             "skill-cd-update",
             SkillCdUpdatePayload { skill_cds: payload },
+        );
+    }
+}
+
+fn emit_panel_attr_update_if_needed(state: &AppState, payload: Vec<PanelAttrState>) {
+    if payload.is_empty() {
+        return;
+    }
+    if let Some(app_handle) = state.event_manager.get_app_handle() {
+        safe_emit(
+            &app_handle,
+            "panel-attr-update",
+            PanelAttrUpdatePayload { attrs: payload },
         );
     }
 }
@@ -571,6 +589,20 @@ impl AppStateManager {
             LiveControlCommand::SetMonitoredBuffs(buff_base_ids) => {
                 state.monitored_buff_ids = buff_base_ids;
             }
+            LiveControlCommand::SetMonitoredPanelAttrs(attr_ids) => {
+                state.monitored_panel_attr_ids = attr_ids;
+                let payload: Vec<PanelAttrState> = state
+                    .monitored_panel_attr_ids
+                    .iter()
+                    .filter_map(|attr_id| {
+                        state.panel_attr_values.get(attr_id).map(|value| PanelAttrState {
+                            attr_id: *attr_id,
+                            value: *value,
+                        })
+                    })
+                    .collect();
+                emit_panel_attr_update_if_needed(state, payload);
+            }
             LiveControlCommand::SetMonitoredSkills(skill_level_ids) => {
                 state.monitored_skill_ids = skill_level_ids;
                 let monitored_skill_ids = state.monitored_skill_ids.clone();
@@ -731,6 +763,30 @@ impl AppStateManager {
         use crate::live::scene_names;
 
         info!("EnterScene packet received");
+
+        if let Some(info) = enter_scene.enter_scene_info.as_ref() {
+            if let Some(player_ent) = info.player_ent.as_ref() {
+                if let Some(attrs) = player_ent.attrs.as_ref() {
+                    let mut changed_panel_attrs: Vec<PanelAttrState> = Vec::new();
+                    for attr in &attrs.attrs {
+                        let Some(attr_id) = attr.id else {
+                            continue;
+                        };
+                        if !state.monitored_panel_attr_ids.contains(&attr_id) {
+                            continue;
+                        }
+                        let Some(value) = decode_single_attr_i32(attr) else {
+                            continue;
+                        };
+                        let prev = state.panel_attr_values.insert(attr_id, value);
+                        if prev != Some(value) {
+                            changed_panel_attrs.push(PanelAttrState { attr_id, value });
+                        }
+                    }
+                    emit_panel_attr_update_if_needed(state, changed_panel_attrs);
+                }
+            }
+        }
 
         let dungeon_runtime = dungeon_runtime_if_enabled(state);
 
@@ -1130,24 +1186,59 @@ impl AppStateManager {
         if let Some(delta) = sync_to_me_delta_info.delta_info.as_ref() {
             if let Some(base) = delta.base_delta.as_ref() {
                 if let Some(col) = base.attrs.as_ref() {
-                    if let Some(value) = decode_attr_i32(col, ATTR_SKILL_CD) {
-                        if value != state.attr_skill_cd {
-                            state.attr_skill_cd = value;
-                            should_recalculate = true;
+                    let mut changed_panel_attrs: Vec<PanelAttrState> = Vec::new();
+                    let monitored_panel_attr_ids: HashSet<i32> = state
+                        .monitored_panel_attr_ids
+                        .iter()
+                        .copied()
+                        .collect();
+                    for attr in &col.attrs {
+                        let Some(attr_id) = attr.id else {
+                            continue;
+                        };
+                        let is_cd_attr = matches!(
+                            attr_id,
+                            ATTR_SKILL_CD | ATTR_SKILL_CD_PCT | ATTR_CD_ACCELERATE_PCT
+                        );
+                        let is_monitored_panel_attr = monitored_panel_attr_ids.contains(&attr_id);
+                        if !is_cd_attr && !is_monitored_panel_attr {
+                            continue;
+                        }
+
+                        let Some(value) = decode_single_attr_i32(attr) else {
+                            continue;
+                        };
+
+                        match attr_id {
+                            ATTR_SKILL_CD => {
+                                if value != state.attr_skill_cd {
+                                    state.attr_skill_cd = value;
+                                    should_recalculate = true;
+                                }
+                            }
+                            ATTR_SKILL_CD_PCT => {
+                                if value != state.attr_skill_cd_pct {
+                                    state.attr_skill_cd_pct = value;
+                                    should_recalculate = true;
+                                }
+                            }
+                            ATTR_CD_ACCELERATE_PCT => {
+                                if value != state.attr_cd_accelerate_pct {
+                                    state.attr_cd_accelerate_pct = value;
+                                    should_recalculate = true;
+                                }
+                            }
+                            _ => {}
+                        }
+
+                        if is_monitored_panel_attr {
+                            let prev = state.panel_attr_values.insert(attr_id, value);
+                            if prev != Some(value) {
+                                changed_panel_attrs.push(PanelAttrState { attr_id, value });
+                            }
                         }
                     }
-                    if let Some(value) = decode_attr_i32(col, ATTR_SKILL_CD_PCT) {
-                        if value != state.attr_skill_cd_pct {
-                            state.attr_skill_cd_pct = value;
-                            should_recalculate = true;
-                        }
-                    }
-                    if let Some(value) = decode_attr_i32(col, ATTR_CD_ACCELERATE_PCT) {
-                        if value != state.attr_cd_accelerate_pct {
-                            state.attr_cd_accelerate_pct = value;
-                            should_recalculate = true;
-                        }
-                    }
+                    emit_panel_attr_update_if_needed(state, changed_panel_attrs);
                 }
 
                 if let Some(temp_attr_collection) = base.temp_attrs.as_ref() {
@@ -1556,6 +1647,10 @@ impl AppStateManager {
 
     pub async fn set_monitored_buffs(&self, buff_base_ids: Vec<i32>) -> Result<(), String> {
         self.send_control(LiveControlCommand::SetMonitoredBuffs(buff_base_ids))
+    }
+
+    pub async fn set_monitored_panel_attrs(&self, attr_ids: Vec<i32>) -> Result<(), String> {
+        self.send_control(LiveControlCommand::SetMonitoredPanelAttrs(attr_ids))
     }
 
     pub async fn set_monitored_skills(&self, skill_level_ids: Vec<i32>) -> Result<(), String> {

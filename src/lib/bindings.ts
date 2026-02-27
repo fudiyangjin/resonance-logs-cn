@@ -148,6 +148,17 @@ async setMonitoredBuffs(buffBaseIds: number[]) : Promise<Result<null, string>> {
 }
 },
 /**
+ * Sets the monitored panel attribute list for panel attribute updates.
+ */
+async setMonitoredPanelAttrs(attrIds: number[]) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_monitored_panel_attrs", { attrIds }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Returns all buffs that have a sprite image available.
  */
 async getAvailableBuffs() : Promise<Result<BuffDefinition[], string>> {
