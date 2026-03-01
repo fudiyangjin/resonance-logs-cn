@@ -104,6 +104,16 @@
             description="显示他人的能力评分"
           />
           <SettingsSwitch
+            bind:checked={SETTINGS.live.general.state.showYourSeasonStrength}
+            label="你的赛季强度"
+            description="显示你的赛季强度"
+          />
+          <SettingsSwitch
+            bind:checked={SETTINGS.live.general.state.showOthersSeasonStrength}
+            label="他人赛季强度"
+            description="显示他人的赛季强度"
+          />
+          <SettingsSwitch
             bind:checked={SETTINGS.live.general.state.relativeToTopDPSPlayer}
             label="以最高 DPS 为基准（玩家）"
             description="颜色条按最高 DPS 玩家进行相对缩放，而不是按所有玩家。适用于 20 人或世界 Boss。"

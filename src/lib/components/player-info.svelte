@@ -12,12 +12,14 @@
     className = "",
     classSpecName = "",
     abilityScore = 0,
+    seasonStrength = 0,
     name = "",
     uid = 0,
   }: {
     className: string;
     classSpecName: string;
     abilityScore: number;
+    seasonStrength: number;
     name: string;
     uid: number;
   } = $props();
@@ -92,6 +94,9 @@
       {/if}
     {:else}
       ??
+    {/if}
+    {#if seasonStrength > 0 && (isYou ? SETTINGS.live.general.state.showYourSeasonStrength : SETTINGS.live.general.state.showOthersSeasonStrength)}
+      <span class="-ml-0.5 text-muted-foreground tabular-nums">({seasonStrength})</span>
     {/if}
     {nameDisplay()}
   </span>

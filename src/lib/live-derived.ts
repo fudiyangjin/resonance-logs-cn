@@ -61,6 +61,7 @@ export function computePlayerRowsFromEntities(
         className: entity.className,
         classSpecName: entity.classSpecName,
         abilityScore: entity.abilityScore,
+        seasonStrength: entity.seasonStrength ?? 0,
         totalDmg: total,
         dps: elapsedSecs > 0 ? total / elapsedSecs : 0,
         tdps: metric === "dps" && activeSecs > 0 ? total / activeSecs : 0,

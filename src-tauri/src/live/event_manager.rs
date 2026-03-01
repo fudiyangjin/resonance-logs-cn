@@ -246,6 +246,7 @@ pub fn generate_live_data_payload(
             class_name: class::get_class_name(entity.class_id),
             class_spec_name: class::get_class_spec(entity.class_spec),
             ability_score: entity.ability_score,
+            season_strength: entity.season_strength().unwrap_or(0) as i32,
             damage: to_raw_combat_stats(&entity.damage),
             damage_boss_only: to_raw_combat_stats(&entity.damage_boss_only),
             healing: to_raw_combat_stats(&entity.healing),

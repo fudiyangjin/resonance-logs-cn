@@ -232,6 +232,8 @@ const DEFAULT_GENERAL_SETTINGS = {
   showOthersName: "Show Others' Name",
   showYourAbilityScore: true,
   showOthersAbilityScore: true,
+  showYourSeasonStrength: false,
+  showOthersSeasonStrength: false,
   relativeToTopDPSPlayer: true,
   relativeToTopDPSSkill: true,
   relativeToTopHealPlayer: true,

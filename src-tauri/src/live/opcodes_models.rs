@@ -85,6 +85,7 @@ pub enum AttrType {
     MountSpeed,
     MountDuration,
     FightPoint,
+    SeasonStrength,
     Level,
     RankLevel,
     Crit,
@@ -153,6 +154,7 @@ impl AttrType {
             attr_type::ATTR_MOUNT_SPEED => Some(AttrType::MountSpeed),
             attr_type::ATTR_MOUNT_DURATION => Some(AttrType::MountDuration),
             attr_type::ATTR_FIGHT_POINT => Some(AttrType::FightPoint),
+            attr_type::ATTR_SEASON_STRENGTH => Some(AttrType::SeasonStrength),
             attr_type::ATTR_LEVEL => Some(AttrType::Level),
             attr_type::ATTR_RANK_LEVEL => Some(AttrType::RankLevel),
             attr_type::ATTR_CRIT => Some(AttrType::Crit),
@@ -220,6 +222,7 @@ impl AttrType {
             AttrType::MountSpeed => attr_type::ATTR_MOUNT_SPEED,
             AttrType::MountDuration => attr_type::ATTR_MOUNT_DURATION,
             AttrType::FightPoint => attr_type::ATTR_FIGHT_POINT,
+            AttrType::SeasonStrength => attr_type::ATTR_SEASON_STRENGTH,
             AttrType::Level => attr_type::ATTR_LEVEL,
             AttrType::RankLevel => attr_type::ATTR_RANK_LEVEL,
             AttrType::Crit => attr_type::ATTR_CRIT,
@@ -505,6 +508,7 @@ pub mod attr_type {
     pub const ATTR_MAX_ENERGY: i32 = 0x2c43; // Maximum energy value
     pub const ATTR_ENERGY_REGEN: i32 = 0x2c46; // Energy regeneration rate
     pub const ATTR_HASTE: i32 = 0x2b84;
+    pub const ATTR_SEASON_STRENGTH: i32 = 0x2cb0; // 11440, AttrSeasonStrength (season strength)
     pub const ATTR_SKILL_CD: i32 = 0x2de6; // 11750, AttrSkillCD
     pub const ATTR_SKILL_CD_PCT: i32 = 0x2df0; // 11760, AttrSkillCDPCT
     pub const ATTR_CD_ACCELERATE_PCT: i32 = 0x2eb8; // 11960, AttrCdAcceleratePct
@@ -697,6 +701,12 @@ impl Entity {
     /// Get mastery stat as i64.
     pub fn mastery(&self) -> Option<i64> {
         self.get_attr(AttrType::Mastery).and_then(|v| v.as_int())
+    }
+
+    /// Get season strength as i64.
+    pub fn season_strength(&self) -> Option<i64> {
+        self.get_attr(AttrType::SeasonStrength)
+            .and_then(|v| v.as_int())
     }
 
     /// Get element flag as string.

@@ -1056,6 +1056,13 @@ fn process_player_attrs(
                 }
                 Err(e) => log::warn!("Failed to decode ATTR_LUCKY: {:?}", e),
             },
+            attr_type::ATTR_SEASON_STRENGTH => match prost::encoding::decode_varint(&mut buf) {
+                Ok(value) => {
+                    player_entity
+                        .set_attr(AttrType::SeasonStrength, AttrValue::Int(value as i64));
+                }
+                Err(e) => log::warn!("Failed to decode ATTR_SEASON_STRENGTH: {:?}", e),
+            },
             attr_type::ATTR_CURRENT_HP => match prost::encoding::decode_varint(&mut buf) {
                 Ok(value) => {
                     player_entity.set_attr(AttrType::CurrentHp, AttrValue::Int(value as i64));

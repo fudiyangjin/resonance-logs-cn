@@ -39,6 +39,7 @@ export type PlayerRow = {
   className: string;
   classSpecName: string;
   abilityScore: number;
+  seasonStrength: number;
   totalDmg: number;
   dps: number;
   tdps: number;

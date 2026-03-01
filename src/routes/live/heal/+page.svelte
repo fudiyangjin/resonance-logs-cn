@@ -179,6 +179,13 @@
                   >
                 {/if}
               {/if}
+              {#if player.seasonStrength > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourSeasonStrength : SETTINGS.live.general.state.showOthersSeasonStrength)}
+                <span
+                  class="-ml-0.5 tabular-nums text-muted-foreground"
+                  style="color: {customThemeColors.tableTextColor};"
+                  >({player.seasonStrength})</span
+                >
+              {/if}
               <span
                 class="truncate font-medium"
                 style="color: {customThemeColors.tableTextColor};"

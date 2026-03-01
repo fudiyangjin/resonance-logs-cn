@@ -170,24 +170,26 @@
                     "未知职业",
                 )}
               />
-              {#if player.abilityScore > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourAbilityScore : SETTINGS.live.general.state.showOthersAbilityScore)}
-                {#if SETTINGS.live.general.state.shortenAbilityScore}
-                  <span
-                    class="tabular-nums"
-                    style="color: {customThemeColors.tableTextColor};"
-                    ><AbbreviatedNumber
-                      num={player.abilityScore}
-                      suffixFontSize={tableSettings.abbreviatedFontSize}
-                      suffixColor={customThemeColors.tableAbbreviatedColor}
-                    /></span
-                  >
-                {:else}
-                  <span
-                    class="tabular-nums"
-                    style="color: {customThemeColors.tableTextColor};"
-                    >{player.abilityScore}</span
-                  >
-                {/if}
+              {#if (player.abilityScore > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourAbilityScore : SETTINGS.live.general.state.showOthersAbilityScore)) || (player.seasonStrength > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourSeasonStrength : SETTINGS.live.general.state.showOthersSeasonStrength))}
+                <span
+                  class="inline-flex items-center gap-0 tabular-nums"
+                  style="color: {customThemeColors.tableTextColor};"
+                >
+                  {#if player.abilityScore > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourAbilityScore : SETTINGS.live.general.state.showOthersAbilityScore)}
+                    {#if SETTINGS.live.general.state.shortenAbilityScore}
+                      <AbbreviatedNumber
+                        num={player.abilityScore}
+                        suffixFontSize={tableSettings.abbreviatedFontSize}
+                        suffixColor={customThemeColors.tableAbbreviatedColor}
+                      />
+                    {:else}
+                      <span>{player.abilityScore}</span>
+                    {/if}
+                  {/if}
+                  {#if player.seasonStrength > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourSeasonStrength : SETTINGS.live.general.state.showOthersSeasonStrength)}
+                    <span class="text-muted-foreground">({player.seasonStrength})</span>
+                  {/if}
+                </span>
               {/if}
               <span
                 class="truncate font-medium"

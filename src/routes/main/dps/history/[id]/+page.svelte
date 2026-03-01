@@ -36,6 +36,7 @@
     classSpecName: string;
     classDisplay: string;
     abilityScore: number;
+    seasonStrength: number;
     totalDmg: number;
     dps: number;
     tdps: number;
@@ -156,6 +157,7 @@
           classSpecName,
           classDisplay: formatClassSpecLabel(className, classSpecName) || "未知职业",
           abilityScore: entity.abilityScore || 0,
+          seasonStrength: entity.seasonStrength || 0,
           totalDmg: dps?.totalDmg ?? 0,
           dps: dps?.dps ?? 0,
           tdps: dps?.tdps ?? 0,
@@ -824,20 +826,27 @@
                       class="truncate"
                       {@attach tooltip(() => `UID: #${p.uid}`)}
                     >
-                      {#if p.abilityScore > 0}
-                        {#if p.isLocalPlayer
-                          ? SETTINGS.history.general.state.showYourAbilityScore
-                          : SETTINGS.history.general.state.showOthersAbilityScore}
-                          {#if SETTINGS.history.general.state.shortenAbilityScore}
-                            <span class="text-muted-foreground"
-                              ><AbbreviatedNumber num={p.abilityScore} /></span
-                            >
-                          {:else}
-                            <span class="text-muted-foreground"
-                              >{p.abilityScore}</span
-                            >
+                      {#if (p.abilityScore > 0 && (p.isLocalPlayer
+                        ? SETTINGS.history.general.state.showYourAbilityScore
+                        : SETTINGS.history.general.state.showOthersAbilityScore)) || (p.seasonStrength > 0 && (p.isLocalPlayer
+                        ? SETTINGS.history.general.state.showYourSeasonStrength
+                        : SETTINGS.history.general.state.showOthersSeasonStrength))}
+                        <span class="inline-flex items-center gap-0 text-muted-foreground tabular-nums">
+                          {#if p.abilityScore > 0 && (p.isLocalPlayer
+                            ? SETTINGS.history.general.state.showYourAbilityScore
+                            : SETTINGS.history.general.state.showOthersAbilityScore)}
+                            {#if SETTINGS.history.general.state.shortenAbilityScore}
+                              <AbbreviatedNumber num={p.abilityScore} />
+                            {:else}
+                              <span>{p.abilityScore}</span>
+                            {/if}
                           {/if}
-                        {/if}
+                          {#if p.seasonStrength > 0 && (p.isLocalPlayer
+                            ? SETTINGS.history.general.state.showYourSeasonStrength
+                            : SETTINGS.history.general.state.showOthersSeasonStrength)}
+                            <span>({p.seasonStrength})</span>
+                          {/if}
+                        </span>
                       {/if}
                       {getDisplayName({
                         player: {
