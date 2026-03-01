@@ -495,8 +495,14 @@
 
     if (!dragState) return;
     const nextPos = {
-      x: dragState.startPos.x + (e.clientX - dragState.startX),
-      y: dragState.startPos.y + (e.clientY - dragState.startY),
+      x: Math.max(
+        0,
+        Math.min(window.innerWidth - 20, dragState.startPos.x + (e.clientX - dragState.startX)),
+      ),
+      y: Math.max(
+        0,
+        Math.min(window.innerHeight - 20, dragState.startPos.y + (e.clientY - dragState.startY)),
+      ),
     };
     if (dragState.target.kind === "group") {
       setGroupPosition(dragState.target.key, nextPos);
@@ -531,6 +537,20 @@
     updateActiveProfile((profile) => ({
       ...profile,
       overlaySizes: { ...DEFAULT_OVERLAY_SIZES },
+    }));
+  }
+
+  function resetOverlayPositions() {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlayPositions: { ...DEFAULT_OVERLAY_POSITIONS },
+      buffGroups: ensureBuffGroups(profile).map((group) => ({
+        ...group,
+        position: { x: 40, y: 40 },
+      })),
+      individualMonitorAllGroup: profile.individualMonitorAllGroup
+        ? { ...profile.individualMonitorAllGroup, position: { x: 40, y: 40 } }
+        : null,
     }));
   }
 
@@ -897,6 +917,7 @@
   {#if isEditing}
     <div class="edit-banner">
       <div class="edit-title">编辑模式 - 可拖拽调整位置</div>
+      <button type="button" class="done-btn secondary" onclick={resetOverlayPositions}>重置位置</button>
       <button type="button" class="done-btn secondary" onclick={resetOverlaySizes}>重置尺寸</button>
       <button type="button" class="done-btn" onclick={() => setEditMode(false)}>完成编辑</button>
     </div>
