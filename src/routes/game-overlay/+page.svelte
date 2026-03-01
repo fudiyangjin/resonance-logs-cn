@@ -102,6 +102,9 @@
     resourceGroupScale: 1,
     textBuffPanelScale: 1,
     panelAttrGroupScale: 1,
+    panelAttrGap: 4,
+    panelAttrFontSize: 14,
+    panelAttrColumnGap: 12,
     iconBuffSizes: {},
   };
   const DEFAULT_OVERLAY_VISIBILITY: OverlayVisibility = {
@@ -169,6 +172,7 @@
         label: existing?.label ?? item.label,
         color: existing?.color ?? item.color,
         enabled: existing?.enabled ?? item.enabled,
+        format: existing?.format ?? item.format,
       } satisfies PanelAttrConfig;
     });
   });
@@ -206,6 +210,18 @@
         current?.textBuffPanelScale ?? DEFAULT_OVERLAY_SIZES.textBuffPanelScale,
       panelAttrGroupScale:
         current?.panelAttrGroupScale ?? DEFAULT_OVERLAY_SIZES.panelAttrGroupScale,
+      panelAttrGap:
+        Math.max(0, Math.min(24, Math.round(current?.panelAttrGap ?? DEFAULT_OVERLAY_SIZES.panelAttrGap))),
+      panelAttrFontSize:
+        Math.max(
+          10,
+          Math.min(28, Math.round(current?.panelAttrFontSize ?? DEFAULT_OVERLAY_SIZES.panelAttrFontSize)),
+        ),
+      panelAttrColumnGap:
+        Math.max(
+          0,
+          Math.min(240, Math.round(current?.panelAttrColumnGap ?? DEFAULT_OVERLAY_SIZES.panelAttrColumnGap)),
+        ),
       iconBuffSizes: current?.iconBuffSizes ?? {},
     };
   }
@@ -222,7 +238,13 @@
     };
   }
 
-  function formatAttrPercent(value: number): string {
+  function formatAttrValue(
+    value: number,
+    format: PanelAttrConfig["format"],
+  ): string {
+    if (format === "integer") {
+      return value.toLocaleString();
+    }
     return `${(value / 100).toFixed(2)}%`;
   }
 
@@ -1027,12 +1049,28 @@
       {#if isEditing}
         <div class="group-tag">角色属性区</div>
       {/if}
-      <div class="panel-attr-list">
+      <div
+        class="panel-attr-list"
+        style:gap={`${getOverlaySizes().panelAttrGap}px`}
+      >
         {#each enabledPanelAttrs as attr (attr.attrId)}
-          <div class="panel-attr-row">
-            <span class="panel-attr-label" style:color={attr.color}>{attr.label}</span>
-            <span class="panel-attr-value" style:color={attr.color}>
-              {formatAttrPercent(panelAttrMap.get(attr.attrId) ?? 0)}
+          <div
+            class="panel-attr-row"
+            style:gap={`${getOverlaySizes().panelAttrColumnGap}px`}
+          >
+            <span
+              class="panel-attr-label"
+              style:color={attr.color}
+              style:font-size={`${getOverlaySizes().panelAttrFontSize}px`}
+            >
+              {attr.label}
+            </span>
+            <span
+              class="panel-attr-value"
+              style:color={attr.color}
+              style:font-size={`${Math.max(10, getOverlaySizes().panelAttrFontSize + 2)}px`}
+            >
+              {formatAttrValue(panelAttrMap.get(attr.attrId) ?? 0, attr.format)}
             </span>
           </div>
         {/each}
@@ -1604,7 +1642,6 @@
   .panel-attr-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
     min-width: 150px;
   }
 
@@ -1612,19 +1649,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 2px 0;
+    padding: 0;
+    line-height: 1;
   }
 
   .panel-attr-label {
-    font-size: 14px;
     font-weight: 600;
+    line-height: 1;
     text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
   }
 
   .panel-attr-value {
-    font-size: 16px;
     font-weight: 700;
+    line-height: 1;
     text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
   }
 

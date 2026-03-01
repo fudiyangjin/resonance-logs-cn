@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import ChevronDown from "virtual:icons/lucide/chevron-down";
   import { commands, type BuffDefinition, type BuffNameInfo } from "$lib/bindings";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import {
@@ -31,6 +32,7 @@
   let groupPrioritySearchKeyword = $state<Record<string, string>>({});
   let groupPrioritySearchResults = $state<Record<string, BuffNameInfo[]>>({});
   let resonanceSearch = $state("");
+  let attrSectionExpanded = $state(false);
   onMount(() => {
     void (async () => {
       const res = await commands.getAvailableBuffs();
@@ -56,6 +58,21 @@
   const monitoredSkillIds = $derived(activeProfile.monitoredSkillIds);
   const monitoredBuffIds = $derived(activeProfile.monitoredBuffIds);
   const monitoredPanelAttrs = $derived.by(() => ensurePanelAttrs(activeProfile));
+  const panelAttrGap = $derived(
+    Math.max(0, Math.min(24, Math.round(activeProfile.overlaySizes?.panelAttrGap ?? 4))),
+  );
+  const panelAttrFontSize = $derived(
+    Math.max(
+      10,
+      Math.min(28, Math.round(activeProfile.overlaySizes?.panelAttrFontSize ?? 14)),
+    ),
+  );
+  const panelAttrColumnGap = $derived(
+    Math.max(
+      0,
+      Math.min(240, Math.round(activeProfile.overlaySizes?.panelAttrColumnGap ?? 12)),
+    ),
+  );
   const showSkillCdGroup = $derived(
     activeProfile.overlayVisibility?.showSkillCdGroup ?? true,
   );
@@ -147,8 +164,29 @@
         label: existing?.label ?? item.label,
         color: existing?.color ?? item.color,
         enabled: existing?.enabled ?? item.enabled,
+        format: existing?.format ?? item.format,
       };
     });
+  }
+
+  function ensureOverlaySizes(profile: SkillMonitorProfile) {
+    const current = profile.overlaySizes;
+    return {
+      skillCdGroupScale: current?.skillCdGroupScale ?? 1,
+      resourceGroupScale: current?.resourceGroupScale ?? 1,
+      textBuffPanelScale: current?.textBuffPanelScale ?? 1,
+      panelAttrGroupScale: current?.panelAttrGroupScale ?? 1,
+      panelAttrGap: Math.max(0, Math.min(24, Math.round(current?.panelAttrGap ?? 4))),
+      panelAttrFontSize: Math.max(
+        10,
+        Math.min(28, Math.round(current?.panelAttrFontSize ?? 14)),
+      ),
+      panelAttrColumnGap: Math.max(
+        0,
+        Math.min(240, Math.round(current?.panelAttrColumnGap ?? 12)),
+      ),
+      iconBuffSizes: current?.iconBuffSizes ?? {},
+    };
   }
 
   function updateActiveProfile(
@@ -400,6 +438,39 @@
       monitoredPanelAttrs: ensurePanelAttrs(profile).map((item) =>
         item.attrId === attrId ? { ...item, color } : item
       ),
+    }));
+  }
+
+  function setPanelAttrGap(value: number) {
+    const nextValue = Math.max(0, Math.min(24, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        panelAttrGap: nextValue,
+      },
+    }));
+  }
+
+  function setPanelAttrFontSize(value: number) {
+    const nextValue = Math.max(10, Math.min(28, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        panelAttrFontSize: nextValue,
+      },
+    }));
+  }
+
+  function setPanelAttrColumnGap(value: number) {
+    const nextValue = Math.max(0, Math.min(240, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        panelAttrColumnGap: nextValue,
+      },
     }));
   }
 
@@ -705,38 +776,95 @@
     </div>
   </div>
 
-  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
-    <div>
-      <h2 class="text-base font-semibold text-foreground">角色面板属性监控</h2>
-    </div>
-    <div class="text-xs text-muted-foreground">
-      已启用 {monitoredPanelAttrs.filter((item) => item.enabled).length}/{monitoredPanelAttrs.length}
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {#each monitoredPanelAttrs as attr (attr.attrId)}
-        <div class="rounded-lg border border-border/60 bg-muted/20 px-3 py-2 space-y-2">
-          <label class="flex items-center justify-between gap-3 text-sm text-foreground">
-            <span>{attr.label}</span>
+  <div class="rounded-lg border border-border/60 bg-card/40 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
+    <button
+      type="button"
+      class="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+      onclick={() => (attrSectionExpanded = !attrSectionExpanded)}
+    >
+      <div class="text-left">
+        <h2 class="text-base font-semibold text-foreground">角色面板属性监控</h2>
+        <p class="text-xs text-muted-foreground mt-1">
+          已启用 {monitoredPanelAttrs.filter((item) => item.enabled).length}/{monitoredPanelAttrs.length}
+        </p>
+      </div>
+      <ChevronDown
+        class="w-5 h-5 text-muted-foreground transition-transform duration-200 {attrSectionExpanded
+          ? 'rotate-180'
+          : ''}"
+      />
+    </button>
+    {#if attrSectionExpanded}
+      <div class="px-4 pb-4 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {#each monitoredPanelAttrs as attr (attr.attrId)}
+            <div class="rounded-lg border border-border/60 bg-muted/20 px-3 py-2 space-y-2">
+              <label class="flex items-center justify-between gap-3 text-sm text-foreground">
+                <span>{attr.label}</span>
+                <input
+                  type="checkbox"
+                  checked={attr.enabled}
+                  onchange={(event) =>
+                    setPanelAttrEnabled(attr.attrId, (event.currentTarget as HTMLInputElement).checked)}
+                />
+              </label>
+              <label class="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                <span>显示颜色</span>
+                <input
+                  type="color"
+                  value={attr.color}
+                  class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
+                  onchange={(event) =>
+                    setPanelAttrColor(attr.attrId, (event.currentTarget as HTMLInputElement).value)}
+                />
+              </label>
+            </div>
+          {/each}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <label class="text-xs text-muted-foreground">
+            行间距: {panelAttrGap}px
             <input
-              type="checkbox"
-              checked={attr.enabled}
-              onchange={(event) =>
-                setPanelAttrEnabled(attr.attrId, (event.currentTarget as HTMLInputElement).checked)}
+              class="w-full mt-1"
+              type="range"
+              min="0"
+              max="24"
+              step="1"
+              value={panelAttrGap}
+              oninput={(event) =>
+                setPanelAttrGap(Number((event.currentTarget as HTMLInputElement).value))}
             />
           </label>
-          <label class="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>显示颜色</span>
+          <label class="text-xs text-muted-foreground">
+            字体大小: {panelAttrFontSize}px
             <input
-              type="color"
-              value={attr.color}
-              class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-              onchange={(event) =>
-                setPanelAttrColor(attr.attrId, (event.currentTarget as HTMLInputElement).value)}
+              class="w-full mt-1"
+              type="range"
+              min="10"
+              max="28"
+              step="1"
+              value={panelAttrFontSize}
+              oninput={(event) =>
+                setPanelAttrFontSize(Number((event.currentTarget as HTMLInputElement).value))}
+            />
+          </label>
+          <label class="text-xs text-muted-foreground">
+            名称-数值间距: {panelAttrColumnGap}px
+            <input
+              class="w-full mt-1"
+              type="range"
+              min="0"
+              max="240"
+              step="1"
+              value={panelAttrColumnGap}
+              oninput={(event) =>
+                setPanelAttrColumnGap(Number((event.currentTarget as HTMLInputElement).value))}
             />
           </label>
         </div>
-      {/each}
-    </div>
+      </div>
+    {/if}
   </div>
 
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">

@@ -88,15 +88,26 @@ export type PanelAttrConfig = {
   label: string;
   color: string;
   enabled: boolean;
+  format: "percent" | "integer";
 };
 
 export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
-  { attrId: 11720, label: "攻速", color: "#6ee7ff", enabled: false },
-  { attrId: 11710, label: "暴击率", color: "#ff7a7a", enabled: false },
-  { attrId: 11930, label: "急速", color: "#facc15", enabled: false },
-  { attrId: 11780, label: "幸运", color: "#a78bfa", enabled: false },
-  { attrId: 11940, label: "精通", color: "#60a5fa", enabled: false },
-  { attrId: 11950, label: "全能", color: "#34d399", enabled: false },
+  { attrId: 11720, label: "攻速", color: "#6ee7ff", enabled: false, format: "percent" },
+  { attrId: 11710, label: "暴击率", color: "#ff7a7a", enabled: false, format: "percent" },
+  { attrId: 11930, label: "急速", color: "#facc15", enabled: false, format: "percent" },
+  { attrId: 11780, label: "幸运", color: "#a78bfa", enabled: false, format: "percent" },
+  { attrId: 11940, label: "精通", color: "#60a5fa", enabled: false, format: "percent" },
+  { attrId: 11950, label: "全能", color: "#34d399", enabled: false, format: "percent" },
+  { attrId: 11010, label: "力量", color: "#f87171", enabled: false, format: "integer" },
+  { attrId: 11020, label: "智力", color: "#818cf8", enabled: false, format: "integer" },
+  { attrId: 11030, label: "敏捷", color: "#4ade80", enabled: false, format: "integer" },
+  { attrId: 11330, label: "物理攻击", color: "#fb923c", enabled: false, format: "integer" },
+  { attrId: 11340, label: "魔法攻击", color: "#c084fc", enabled: false, format: "integer" },
+  { attrId: 11730, label: "施法速度", color: "#22d3ee", enabled: false, format: "percent" },
+  { attrId: 12510, label: "暴击伤害", color: "#f472b6", enabled: false, format: "percent" },
+  { attrId: 12530, label: "幸运伤害倍率", color: "#d8b4fe", enabled: false, format: "percent" },
+  { attrId: 12540, label: "格挡伤害减免", color: "#86efac", enabled: false, format: "percent" },
+  { attrId: 11970, label: "格挡", color: "#fbbf24", enabled: false, format: "percent" },
 ];
 
 export type OverlayPositions = {
@@ -113,6 +124,9 @@ export type OverlaySizes = {
   resourceGroupScale: number;
   textBuffPanelScale: number;
   panelAttrGroupScale: number;
+  panelAttrGap: number;
+  panelAttrFontSize: number;
+  panelAttrColumnGap: number;
   iconBuffSizes: Record<number, number>;
 };
 
@@ -173,6 +187,9 @@ function createDefaultOverlaySizes(): OverlaySizes {
     resourceGroupScale: 1,
     textBuffPanelScale: 1,
     panelAttrGroupScale: 1,
+    panelAttrGap: 4,
+    panelAttrFontSize: 14,
+    panelAttrColumnGap: 12,
     iconBuffSizes: {},
   };
 }
