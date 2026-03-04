@@ -197,15 +197,6 @@ pub fn run() {
             let (state_manager, control_rx) = crate::live::state::AppStateManager::new();
             app.manage(state_manager.clone());
 
-            crate::live::skill_monitor_init::init_skill_monitor_from_settings(
-                app_handle
-                    .path()
-                    .app_config_dir()
-                    .ok()
-                    .map(|dir| dir.join("tauri-plugin-svelte").join("skillMonitor.json")),
-                &state_manager,
-            );
-
             // Live Meter
             // https://v2.tauri.app/learn/splashscreen/#start-some-setup-tasks
             tauri::async_runtime::spawn(async move {

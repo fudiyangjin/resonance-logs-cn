@@ -163,10 +163,6 @@ pub enum LiveControlCommand {
     SetMonitoredSkills(Vec<i32>),
     SetMonitorAllBuff(bool),
     SetBuffPriority(Vec<i32>),
-    ApplySkillMonitorStartup {
-        monitored_skill_ids: Vec<i32>,
-        monitored_buff_ids: Vec<i32>,
-    },
 }
 
 impl AppState {
@@ -518,7 +514,7 @@ impl AppStateManager {
         self.apply_attr_store_changes(state);
     }
 
-    fn apply_control_command(&self, state: &mut AppState, command: LiveControlCommand) {
+    pub(crate) fn apply_control_command(&self, state: &mut AppState, command: LiveControlCommand) {
         match command {
             LiveControlCommand::StateEvent(event) => {
                 self.apply_event(state, event);
@@ -569,13 +565,6 @@ impl AppStateManager {
             LiveControlCommand::SetBuffPriority(priority_buff_ids) => {
                 state.local_monitor.buff_monitor.priority_buff_ids = priority_buff_ids;
                 state.local_monitor.buff_monitor.buff_order_dirty = true;
-            }
-            LiveControlCommand::ApplySkillMonitorStartup {
-                monitored_skill_ids,
-                monitored_buff_ids,
-            } => {
-                state.local_monitor.skill_cd_monitor.monitored_skill_ids = monitored_skill_ids;
-                state.local_monitor.buff_monitor.monitored_buff_ids = monitored_buff_ids;
             }
         }
     }
@@ -1098,17 +1087,6 @@ impl AppStateManager {
 
     pub fn set_buff_priority(&self, priority_buff_ids: Vec<i32>) -> Result<(), String> {
         self.send_control(LiveControlCommand::SetBuffPriority(priority_buff_ids))
-    }
-
-    pub fn apply_skill_monitor_startup(
-        &self,
-        monitored_skill_ids: Vec<i32>,
-        monitored_buff_ids: Vec<i32>,
-    ) -> Result<(), String> {
-        self.send_control(LiveControlCommand::ApplySkillMonitorStartup {
-            monitored_skill_ids,
-            monitored_buff_ids,
-        })
     }
 }
 

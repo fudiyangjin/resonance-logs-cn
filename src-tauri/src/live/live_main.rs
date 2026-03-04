@@ -64,6 +64,162 @@ fn log_queue_depth_if_needed(
     }
 }
 
+/// Decodes packet payload into a state event.
+fn decode_state_event(op: packets::opcodes::Pkt, data: Bytes) -> Option<StateEvent> {
+    match op {
+        packets::opcodes::Pkt::ServerChangeInfo => Some(StateEvent::ServerChange),
+        packets::opcodes::Pkt::EnterScene => {
+            info!(target: "app::live", "Received EnterScene packet");
+            match blueprotobuf::EnterScene::decode(data) {
+                Ok(v) => Some(StateEvent::EnterScene(v)),
+                Err(e) => {
+                    warn!("Error decoding EnterScene.. ignoring: {e}");
+                    None
+                }
+            }
+        }
+        packets::opcodes::Pkt::SyncNearEntities => {
+            match blueprotobuf::SyncNearEntities::decode(data) {
+                Ok(v) => Some(StateEvent::SyncNearEntities(v)),
+                Err(e) => {
+                    warn!("Error decoding SyncNearEntities.. ignoring: {e}");
+                    None
+                }
+            }
+        }
+        packets::opcodes::Pkt::SyncContainerData => {
+            match blueprotobuf::SyncContainerData::decode(data) {
+                Ok(v) => Some(StateEvent::SyncContainerData(v)),
+                Err(e) => {
+                    warn!("Error decoding SyncContainerData.. ignoring: {e}");
+                    None
+                }
+            }
+        }
+        packets::opcodes::Pkt::SyncContainerDirtyData => {
+            match blueprotobuf::SyncContainerDirtyData::decode(data) {
+                Ok(v) => Some(StateEvent::SyncContainerDirtyData(v)),
+                Err(e) => {
+                    warn!("Error decoding SyncContainerDirtyData.. ignoring: {e}");
+                    None
+                }
+            }
+        }
+        packets::opcodes::Pkt::SyncServerTime => match blueprotobuf::SyncServerTime::decode(data) {
+            Ok(v) => Some(StateEvent::SyncServerTime(v)),
+            Err(e) => {
+                warn!("Error decoding SyncServerTime.. ignoring: {e}");
+                None
+            }
+        },
+        packets::opcodes::Pkt::SyncDungeonData => {
+            info!(target: "app::live", "Received SyncDungeonData packet");
+            match blueprotobuf::SyncDungeonData::decode(data) {
+                Ok(v) => {
+                    let has_flow = v
+                        .v_data
+                        .as_ref()
+                        .and_then(|d| d.flow_info.as_ref())
+                        .is_some();
+                    let target_count = v
+                        .v_data
+                        .as_ref()
+                        .and_then(|d| d.target.as_ref())
+                        .map(|t| t.target_data.len())
+                        .unwrap_or(0);
+                    info!(
+                        target: "app::live",
+                        "Decoded SyncDungeonData (has_flow_info={}, target_entries={})",
+                        has_flow,
+                        target_count
+                    );
+                    Some(StateEvent::SyncDungeonData(v))
+                }
+                Err(e) => {
+                    warn!("Error decoding SyncDungeonData.. ignoring: {e}");
+                    None
+                }
+            }
+        }
+        packets::opcodes::Pkt::SyncDungeonDirtyData => {
+            info!(target: "app::live", "Received SyncDungeonDirtyData packet");
+            match blueprotobuf::SyncDungeonDirtyData::decode(data) {
+                Ok(v) => {
+                    let buffer_len = v
+                        .v_data
+                        .as_ref()
+                        .and_then(|s| s.buffer.as_ref())
+                        .map(|b| b.len())
+                        .unwrap_or(0);
+                    info!(
+                        target: "app::live",
+                        "Decoded SyncDungeonDirtyData (buffer_len={})",
+                        buffer_len
+                    );
+                    Some(StateEvent::SyncDungeonDirtyData(v))
+                }
+                Err(e) => {
+                    warn!("Error decoding SyncDungeonDirtyData.. ignoring: {e}");
+                    None
+                }
+            }
+        }
+        packets::opcodes::Pkt::SyncToMeDeltaInfo => {
+            match blueprotobuf::SyncToMeDeltaInfo::decode(data) {
+                Ok(v) => Some(StateEvent::SyncToMeDeltaInfo(v)),
+                Err(e) => {
+                    warn!("Error decoding SyncToMeDeltaInfo.. ignoring: {e}");
+                    None
+                }
+            }
+        }
+        packets::opcodes::Pkt::SyncNearDeltaInfo => {
+            match blueprotobuf::SyncNearDeltaInfo::decode(data) {
+                Ok(v) => Some(StateEvent::SyncNearDeltaInfo(v)),
+                Err(e) => {
+                    warn!("Error decoding SyncNearDeltaInfo.. ignoring: {e}");
+                    None
+                }
+            }
+        }
+        packets::opcodes::Pkt::NotifyReviveUser => {
+            match blueprotobuf::NotifyReviveUser::decode(data) {
+                Ok(v) => Some(StateEvent::NotifyReviveUser(v)),
+                Err(e) => {
+                    warn!("Error decoding NotifyReviveUser.. ignoring: {e}");
+                    None
+                }
+            }
+        }
+        packets::opcodes::Pkt::BuffInfoSync => match blueprotobuf::BuffInfoSync::decode(data) {
+            Ok(v) => {
+                // Dump the packet as JSON for debugging
+                match serde_json::to_string_pretty(&v) {
+                    Ok(json) => {
+                        debug!(target: "app::live", "BuffInfoSync packet received:\n{}", json);
+                    }
+                    Err(e) => {
+                        debug!(
+                            target: "app::live",
+                            "BuffInfoSync packet received (JSON serialization failed: {}): {:?}",
+                            e, v
+                        );
+                    }
+                }
+                None // Not processed further for now
+            }
+            Err(e) => {
+                warn!("Error decoding BuffInfoSync.. ignoring: {e}");
+                None
+            }
+        },
+        _ => {
+            trace!("Unhandled packet opcode: {op:?}");
+            None
+        }
+    }
+}
+
 /// Starts the live meter.
 ///
 /// This function captures packets, processes them, and emits events to the frontend.
@@ -100,184 +256,27 @@ pub async fn start(
     let mut queue_depth_warn_counter = 0usize;
     let mut queue_depth_last_log_at = Instant::now();
 
-    // 2. Use the channel to receive packets back and process them
+    // 2. Use channels to receive packets and control commands, and process whichever arrives first
     loop {
         log_queue_depth_if_needed(
             queue_depth.as_ref(),
             &mut queue_depth_warn_counter,
             &mut queue_depth_last_log_at,
         );
-        state_manager.drain_control_commands(&mut state, &mut control_rx);
+        tokio::select! {
+            biased;
 
-        // Use tokio::time::timeout to ensure we emit periodically even if no packets arrive
-        let packet_result = tokio::time::timeout(heartbeat_duration, rx.recv()).await;
-
-        // Helper to decode op/data into a StateEvent; returns None if decoding failed
-        let decode_event = |op: packets::opcodes::Pkt, data: Bytes| -> Option<StateEvent> {
-            match op {
-                packets::opcodes::Pkt::ServerChangeInfo => Some(StateEvent::ServerChange),
-                packets::opcodes::Pkt::EnterScene => {
-                    info!(target: "app::live", "Received EnterScene packet");
-                    match blueprotobuf::EnterScene::decode(data) {
-                        Ok(v) => Some(StateEvent::EnterScene(v)),
-                        Err(e) => {
-                            warn!("Error decoding EnterScene.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                packets::opcodes::Pkt::SyncNearEntities => {
-                    match blueprotobuf::SyncNearEntities::decode(data) {
-                        Ok(v) => Some(StateEvent::SyncNearEntities(v)),
-                        Err(e) => {
-                            warn!("Error decoding SyncNearEntities.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                packets::opcodes::Pkt::SyncContainerData => {
-                    match blueprotobuf::SyncContainerData::decode(data) {
-                        Ok(v) => Some(StateEvent::SyncContainerData(v)),
-                        Err(e) => {
-                            warn!("Error decoding SyncContainerData.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                packets::opcodes::Pkt::SyncContainerDirtyData => {
-                    match blueprotobuf::SyncContainerDirtyData::decode(data) {
-                        Ok(v) => Some(StateEvent::SyncContainerDirtyData(v)),
-                        Err(e) => {
-                            warn!("Error decoding SyncContainerDirtyData.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                packets::opcodes::Pkt::SyncServerTime => {
-                    match blueprotobuf::SyncServerTime::decode(data) {
-                        Ok(v) => Some(StateEvent::SyncServerTime(v)),
-                        Err(e) => {
-                            warn!("Error decoding SyncServerTime.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                packets::opcodes::Pkt::SyncDungeonData => {
-                    info!(target: "app::live", "Received SyncDungeonData packet");
-                    match blueprotobuf::SyncDungeonData::decode(data) {
-                        Ok(v) => {
-                            let has_flow = v
-                                .v_data
-                                .as_ref()
-                                .and_then(|d| d.flow_info.as_ref())
-                                .is_some();
-                            let target_count = v
-                                .v_data
-                                .as_ref()
-                                .and_then(|d| d.target.as_ref())
-                                .map(|t| t.target_data.len())
-                                .unwrap_or(0);
-                            info!(
-                                target: "app::live",
-                                "Decoded SyncDungeonData (has_flow_info={}, target_entries={})",
-                                has_flow,
-                                target_count
-                            );
-                            Some(StateEvent::SyncDungeonData(v))
-                        }
-                        Err(e) => {
-                            warn!("Error decoding SyncDungeonData.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                packets::opcodes::Pkt::SyncDungeonDirtyData => {
-                    info!(target: "app::live", "Received SyncDungeonDirtyData packet");
-                    match blueprotobuf::SyncDungeonDirtyData::decode(data) {
-                        Ok(v) => {
-                            let buffer_len = v
-                                .v_data
-                                .as_ref()
-                                .and_then(|s| s.buffer.as_ref())
-                                .map(|b| b.len())
-                                .unwrap_or(0);
-                            info!(
-                                target: "app::live",
-                                "Decoded SyncDungeonDirtyData (buffer_len={})",
-                                buffer_len
-                            );
-                            Some(StateEvent::SyncDungeonDirtyData(v))
-                        }
-                        Err(e) => {
-                            warn!("Error decoding SyncDungeonDirtyData.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                packets::opcodes::Pkt::SyncToMeDeltaInfo => {
-                    match blueprotobuf::SyncToMeDeltaInfo::decode(data) {
-                        Ok(v) => Some(StateEvent::SyncToMeDeltaInfo(v)),
-                        Err(e) => {
-                            warn!("Error decoding SyncToMeDeltaInfo.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                packets::opcodes::Pkt::SyncNearDeltaInfo => {
-                    match blueprotobuf::SyncNearDeltaInfo::decode(data) {
-                        Ok(v) => Some(StateEvent::SyncNearDeltaInfo(v)),
-                        Err(e) => {
-                            warn!("Error decoding SyncNearDeltaInfo.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                packets::opcodes::Pkt::NotifyReviveUser => {
-                    match blueprotobuf::NotifyReviveUser::decode(data) {
-                        Ok(v) => Some(StateEvent::NotifyReviveUser(v)),
-                        Err(e) => {
-                            warn!("Error decoding NotifyReviveUser.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                packets::opcodes::Pkt::BuffInfoSync => {
-                    match blueprotobuf::BuffInfoSync::decode(data) {
-                        Ok(v) => {
-                            // Dump the packet as JSON for debugging
-                            match serde_json::to_string_pretty(&v) {
-                                Ok(json) => {
-                                    debug!(target: "app::live", "BuffInfoSync packet received:\n{}", json);
-                                }
-                                Err(e) => {
-                                    debug!(
-                                        target: "app::live",
-                                        "BuffInfoSync packet received (JSON serialization failed: {}): {:?}",
-                                        e, v
-                                    );
-                                }
-                            }
-                            None // Not processed further for now
-                        }
-                        Err(e) => {
-                            warn!("Error decoding BuffInfoSync.. ignoring: {e}");
-                            None
-                        }
-                    }
-                }
-                _ => {
-                    trace!("Unhandled packet opcode: {op:?}");
-                    None
-                }
+            Some(command) = control_rx.recv() => {
+                state_manager.apply_control_command(&mut state, command);
+                state_manager.drain_control_commands(&mut state, &mut control_rx);
+                flush_outbound_events(&app_handle, &mut state);
             }
-        };
-
-        match packet_result {
-            Ok(Some((op, data))) => {
+            packet = rx.recv() => match packet {
+            Some((op, data)) => {
                 queue_depth.fetch_sub(1, Ordering::Relaxed);
                 // Process the first packet immediately (low-latency path)
                 let mut batch_events = Vec::new();
-                if let Some(event) = decode_event(op, data) {
+                if let Some(event) = decode_state_event(op, data) {
                     batch_events.push(event);
                 }
 
@@ -298,7 +297,7 @@ pub async fn start(
                     match rx.try_recv() {
                         Ok((op, data)) => {
                             queue_depth.fetch_sub(1, Ordering::Relaxed);
-                            if let Some(event) = decode_event(op, data) {
+                            if let Some(event) = decode_state_event(op, data) {
                                 let is_server_change = matches!(event, StateEvent::ServerChange);
                                 batch_events.push(event);
                                 drained += 1;
@@ -335,14 +334,15 @@ pub async fn start(
                 }
                 flush_outbound_events(&app_handle, &mut state);
             }
-            Ok(None) => {
+            None => {
                 warn!(
                     target: "app::live",
                     "Packet capture channel closed, exiting live meter loop"
                 );
                 break;
             }
-            Err(_) => {
+            },
+            _ = tokio::time::sleep(heartbeat_duration) => {
                 // Timeout occurred - read rate dynamically
                 let emit_rate_ms = state.event_update_rate_ms;
                 let emit_throttle_duration = Duration::from_millis(emit_rate_ms);
