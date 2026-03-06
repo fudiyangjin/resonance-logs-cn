@@ -7,6 +7,7 @@ import {
   computeDisplay,
   ensureBuffGroups,
   ensureIndividualMonitorAllGroup,
+  formatTimerText,
   getCustomPanelDisplayRow,
   getResourcePreciseValue as getResourcePreciseValueValue,
   getResourceValue as getResourceValueValue,
@@ -218,7 +219,7 @@ export function updateDisplay() {
 
     const definition = buffDefinitionsMap.get(baseId);
     const name = resolveBuffDisplayName(baseId, currentBuffAliases);
-    const timeText = buff.durationMs > 0 ? (remaining / 1000).toFixed(1) : "∞";
+    const timeText = formatTimerText(remaining);
     const specialConfig = _specialBuffConfigMap.get(baseId);
     const specialImages = specialConfig
       ? (() => {

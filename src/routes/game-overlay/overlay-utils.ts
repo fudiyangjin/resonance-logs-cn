@@ -161,7 +161,13 @@ export function isBuffActive(
 export function formatTimerText(remainingMs: number): string {
   if (!Number.isFinite(remainingMs)) return "∞";
   if (remainingMs <= 0) return "--";
-  return `${(remainingMs / 1000).toFixed(1)}s`;
+  if (remainingMs <= 60_000) {
+    return `${(remainingMs / 1000).toFixed(1)}s`;
+  }
+  if (remainingMs <= 3_600_000) {
+    return `${(remainingMs / 60_000).toFixed(1)}m`;
+  }
+  return `${(remainingMs / 3_600_000).toFixed(1)}h`;
 }
 
 export function getBuffRemainPercent(
