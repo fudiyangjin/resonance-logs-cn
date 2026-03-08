@@ -10,6 +10,7 @@
   import type {
     BuffDisplayMode,
     BuffGroup,
+    TextBuffPanelDisplayMode,
     TextBuffPanelStyle,
   } from "$lib/settings-store";
 
@@ -49,6 +50,10 @@
     textBuffMaxVisible: number;
     setTextBuffMaxVisible: (value: number) => void;
     textBuffPanelStyle: TextBuffPanelStyle;
+    setTextBuffPanelDisplayMode: (value: TextBuffPanelDisplayMode) => void;
+    setTextBuffPanelGap: (value: number) => void;
+    setTextBuffPanelFontSize: (value: number) => void;
+    setTextBuffPanelColumnGap: (value: number) => void;
     setTextBuffPanelNameColor: (value: string) => void;
     setTextBuffPanelValueColor: (value: string) => void;
     setTextBuffPanelProgressColor: (value: string) => void;
@@ -118,6 +123,10 @@
     textBuffMaxVisible,
     setTextBuffMaxVisible,
     textBuffPanelStyle,
+    setTextBuffPanelDisplayMode,
+    setTextBuffPanelGap,
+    setTextBuffPanelFontSize,
+    setTextBuffPanelColumnGap,
     setTextBuffPanelNameColor,
     setTextBuffPanelValueColor,
     setTextBuffPanelProgressColor,
@@ -375,6 +384,26 @@
         分组模式
       </button>
     </div>
+    <div class="flex flex-wrap gap-2">
+      <button
+        type="button"
+        class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {textBuffPanelStyle.displayMode === 'modern'
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => setTextBuffPanelDisplayMode("modern")}
+      >
+        无图标新样式
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {textBuffPanelStyle.displayMode === 'classic'
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => setTextBuffPanelDisplayMode("classic")}
+      >
+        无图标老样式
+      </button>
+    </div>
     <label class="block text-xs text-muted-foreground max-w-md">
       无图标 Buff 最大显示数: {textBuffMaxVisible}
       <input
@@ -387,6 +416,47 @@
         oninput={(event) => setTextBuffMaxVisible(Number((event.currentTarget as HTMLInputElement).value))}
       />
     </label>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl">
+      <label class="text-xs text-muted-foreground">
+        行间距: {textBuffPanelStyle.gap}px
+        <input
+          class="w-full mt-1"
+          type="range"
+          min="0"
+          max="24"
+          step="1"
+          value={textBuffPanelStyle.gap}
+          oninput={(event) => setTextBuffPanelGap(Number((event.currentTarget as HTMLInputElement).value))}
+        />
+      </label>
+      <label class="text-xs text-muted-foreground">
+        字体大小: {textBuffPanelStyle.fontSize}px
+        <input
+          class="w-full mt-1"
+          type="range"
+          min="10"
+          max="28"
+          step="1"
+          value={textBuffPanelStyle.fontSize}
+          oninput={(event) => setTextBuffPanelFontSize(Number((event.currentTarget as HTMLInputElement).value))}
+        />
+      </label>
+      {#if textBuffPanelStyle.displayMode === "modern"}
+        <label class="text-xs text-muted-foreground">
+          名称-数值间距: {textBuffPanelStyle.columnGap}px
+          <input
+            class="w-full mt-1"
+            type="range"
+            min="0"
+            max="240"
+            step="1"
+            value={textBuffPanelStyle.columnGap}
+            oninput={(event) =>
+              setTextBuffPanelColumnGap(Number((event.currentTarget as HTMLInputElement).value))}
+          />
+        </label>
+      {/if}
+    </div>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl">
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
         名称颜色

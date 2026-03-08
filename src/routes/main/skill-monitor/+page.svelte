@@ -32,6 +32,7 @@
     type PanelAttrConfig,
     type PanelAreaRowRef,
     type SkillMonitorProfile,
+    type TextBuffPanelDisplayMode,
     type TextBuffPanelStyle,
   } from "$lib/settings-store";
   import {
@@ -301,6 +302,10 @@
   function ensureTextBuffPanelStyle(profile: SkillMonitorProfile): TextBuffPanelStyle {
     const current = profile.textBuffPanelStyle;
     return {
+      displayMode: current?.displayMode === "classic" ? "classic" : "modern",
+      gap: Math.max(0, Math.min(24, Math.round(current?.gap ?? 6))),
+      columnGap: Math.max(0, Math.min(240, Math.round(current?.columnGap ?? 8))),
+      fontSize: Math.max(10, Math.min(28, Math.round(current?.fontSize ?? 12))),
       nameColor: current?.nameColor ?? "#ffffff",
       valueColor: current?.valueColor ?? "#ffffff",
       progressColor: current?.progressColor ?? "#ffffff",
@@ -697,6 +702,25 @@
       ...profile,
       textBuffPanelStyle: updater(ensureTextBuffPanelStyle(profile)),
     }));
+  }
+
+  function setTextBuffPanelDisplayMode(value: TextBuffPanelDisplayMode) {
+    updateTextBuffPanelStyle((style) => ({ ...style, displayMode: value }));
+  }
+
+  function setTextBuffPanelGap(value: number) {
+    const nextValue = Math.max(0, Math.min(24, Math.round(value)));
+    updateTextBuffPanelStyle((style) => ({ ...style, gap: nextValue }));
+  }
+
+  function setTextBuffPanelFontSize(value: number) {
+    const nextValue = Math.max(10, Math.min(28, Math.round(value)));
+    updateTextBuffPanelStyle((style) => ({ ...style, fontSize: nextValue }));
+  }
+
+  function setTextBuffPanelColumnGap(value: number) {
+    const nextValue = Math.max(0, Math.min(240, Math.round(value)));
+    updateTextBuffPanelStyle((style) => ({ ...style, columnGap: nextValue }));
   }
 
   function setTextBuffPanelNameColor(value: string) {
@@ -1145,6 +1169,10 @@
       {textBuffMaxVisible}
       {setTextBuffMaxVisible}
       {textBuffPanelStyle}
+      {setTextBuffPanelDisplayMode}
+      {setTextBuffPanelGap}
+      {setTextBuffPanelFontSize}
+      {setTextBuffPanelColumnGap}
       {setTextBuffPanelNameColor}
       {setTextBuffPanelValueColor}
       {setTextBuffPanelProgressColor}

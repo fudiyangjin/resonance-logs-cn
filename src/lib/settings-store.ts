@@ -151,7 +151,13 @@ export type CustomPanelStyle = {
   progressColor: string;
 };
 
+export type TextBuffPanelDisplayMode = "modern" | "classic";
+
 export type TextBuffPanelStyle = {
+  displayMode: TextBuffPanelDisplayMode;
+  gap: number;
+  columnGap: number;
+  fontSize: number;
   nameColor: string;
   valueColor: string;
   progressColor: string;
@@ -272,6 +278,10 @@ function createDefaultCustomPanelStyle(): CustomPanelStyle {
 
 function createDefaultTextBuffPanelStyle(): TextBuffPanelStyle {
   return {
+    displayMode: "modern",
+    gap: 6,
+    columnGap: 8,
+    fontSize: 12,
     nameColor: "#ffffff",
     valueColor: "#ffffff",
     progressColor: "#ffffff",

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ClassicTextBuffRow from "./ClassicTextBuffRow.svelte";
   import TextBuffRow from "./TextBuffRow.svelte";
   import {
     getGroupPosition,
@@ -23,6 +24,7 @@
     class:editable={editing}
     style:left={`${groupPos.x}px`}
     style:top={`${groupPos.y}px`}
+    style:gap={`${styleConfig.gap}px`}
     style:transform={`scale(${groupScale})`}
     style:transform-origin="top left"
     onpointerdown={(e) => startDrag(e, { kind: "group", key: "textBuffPanel" }, groupPos)}
@@ -32,19 +34,34 @@
     {/if}
 
     {#each buffs as buff (buff.key)}
-      <TextBuffRow
-        label={buff.label}
-        valueText={buff.valueText}
-        metaText={buff.metaText}
-        progressPercent={buff.progressPercent}
-        showProgress={buff.showProgress}
-        nameColor={styleConfig.nameColor}
-        valueColor={styleConfig.valueColor}
-        progressColor={styleConfig.progressColor}
-        fontSize={12}
-        columnGap={8}
-        placeholder={buff.isPlaceholder}
-      />
+      {#if styleConfig.displayMode === "classic"}
+        <ClassicTextBuffRow
+          label={buff.label}
+          valueText={buff.valueText}
+          metaText={buff.metaText}
+          progressPercent={buff.progressPercent}
+          showProgress={buff.showProgress}
+          nameColor={styleConfig.nameColor}
+          valueColor={styleConfig.valueColor}
+          progressColor={styleConfig.progressColor}
+          fontSize={styleConfig.fontSize}
+          placeholder={buff.isPlaceholder}
+        />
+      {:else}
+        <TextBuffRow
+          label={buff.label}
+          valueText={buff.valueText}
+          metaText={buff.metaText}
+          progressPercent={buff.progressPercent}
+          showProgress={buff.showProgress}
+          nameColor={styleConfig.nameColor}
+          valueColor={styleConfig.valueColor}
+          progressColor={styleConfig.progressColor}
+          fontSize={styleConfig.fontSize}
+          columnGap={styleConfig.columnGap}
+          placeholder={buff.isPlaceholder}
+        />
+      {/if}
     {/each}
 
     {#if editing}
@@ -71,7 +88,6 @@
     border: none;
     display: flex;
     flex-direction: column;
-    gap: 6px;
   }
 
   .text-buff-panel.editable {

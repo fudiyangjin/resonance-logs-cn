@@ -125,6 +125,10 @@ export function ensureTextBuffPanelStyle(
 ): TextBuffPanelStyle {
   const current = profile?.textBuffPanelStyle;
   return {
+    displayMode: current?.displayMode === "classic" ? "classic" : "modern",
+    gap: clampRounded(current?.gap ?? 6, 0, 24),
+    columnGap: clampRounded(current?.columnGap ?? 8, 0, 240),
+    fontSize: clampRounded(current?.fontSize ?? 12, 10, 28),
     nameColor: current?.nameColor ?? "#ffffff",
     valueColor: current?.valueColor ?? "#ffffff",
     progressColor: current?.progressColor ?? "#ffffff",
