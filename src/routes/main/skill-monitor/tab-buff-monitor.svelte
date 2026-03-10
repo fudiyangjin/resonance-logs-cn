@@ -159,6 +159,113 @@
   }: Props = $props();
 </script>
 
+{#snippet buffGroupLayoutControls(group, onUpdate)}
+  <div class="grid grid-cols-2 gap-3">
+    <label class="text-xs text-muted-foreground">
+      图标大小: {group.iconSize}px
+      <input
+        class="w-full mt-1"
+        type="range"
+        min="24"
+        max="120"
+        step="1"
+        value={group.iconSize}
+        oninput={(event) =>
+          onUpdate((curr) => ({
+            ...curr,
+            iconSize: Number((event.currentTarget as HTMLInputElement).value),
+          }))}
+      />
+    </label>
+    <label class="text-xs text-muted-foreground">
+      列数: {group.columns}
+      <input
+        class="w-full mt-1"
+        type="range"
+        min="1"
+        max="12"
+        step="1"
+        value={group.columns}
+        oninput={(event) =>
+          onUpdate((curr) => ({
+            ...curr,
+            columns: Number((event.currentTarget as HTMLInputElement).value),
+          }))}
+      />
+    </label>
+    <label class="text-xs text-muted-foreground">
+      行数: {group.rows}
+      <input
+        class="w-full mt-1"
+        type="range"
+        min="1"
+        max="12"
+        step="1"
+        value={group.rows}
+        oninput={(event) =>
+          onUpdate((curr) => ({
+            ...curr,
+            rows: Number((event.currentTarget as HTMLInputElement).value),
+          }))}
+      />
+    </label>
+    <label class="text-xs text-muted-foreground">
+      间距: {group.gap}px
+      <input
+        class="w-full mt-1"
+        type="range"
+        min="0"
+        max="16"
+        step="1"
+        value={group.gap}
+        oninput={(event) =>
+          onUpdate((curr) => ({
+            ...curr,
+            gap: Number((event.currentTarget as HTMLInputElement).value),
+          }))}
+      />
+    </label>
+  </div>
+  <div class="flex flex-wrap gap-3">
+    <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-foreground">
+      <input
+        type="checkbox"
+        checked={group.showName}
+        onchange={(event) =>
+          onUpdate((curr) => ({
+            ...curr,
+            showName: (event.currentTarget as HTMLInputElement).checked,
+          }))}
+      />
+      显示名称
+    </label>
+    <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-foreground">
+      <input
+        type="checkbox"
+        checked={group.showTime}
+        onchange={(event) =>
+          onUpdate((curr) => ({
+            ...curr,
+            showTime: (event.currentTarget as HTMLInputElement).checked,
+          }))}
+      />
+      显示时间
+    </label>
+    <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-foreground">
+      <input
+        type="checkbox"
+        checked={group.showLayer}
+        onchange={(event) =>
+          onUpdate((curr) => ({
+            ...curr,
+            showLayer: (event.currentTarget as HTMLInputElement).checked,
+          }))}
+      />
+      显示层数
+    </label>
+  </div>
+{/snippet}
+
 <div class="space-y-6">
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <div class="flex items-center justify-between gap-3">
@@ -602,6 +709,7 @@
             />
             <span class="text-xs text-muted-foreground">固定为监控全部 Buff</span>
           </div>
+          {@render buffGroupLayoutControls(individualMonitorAllGroup, updateIndividualMonitorAllGroup)}
         </div>
       {/if}
     </div>
@@ -760,6 +868,10 @@
                     <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveGroupPriority(group.id, buffId, "down")} disabled={idx === getGroupPriorityIds(group).length - 1}>下移</button>
                   </div>
                 {/each}
+              </div>
+              <div class="space-y-2">
+                <div class="text-xs text-muted-foreground">分组布局</div>
+                {@render buffGroupLayoutControls(group, (updater) => updateBuffGroup(group.id, updater))}
               </div>
             </div>
           </div>
