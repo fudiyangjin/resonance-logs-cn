@@ -62,9 +62,9 @@
     onclick={() => setAttrSectionExpanded(!attrSectionExpanded)}
   >
     <div class="text-left">
-      <h2 class="text-base font-semibold text-foreground">角色面板</h2>
+      <h2 class="text-base font-semibold text-foreground">Character Panel</h2>
       <p class="text-xs text-muted-foreground mt-1">
-        已启用属性 {enabledPanelAttrs.length}/{monitoredPanelAttrs.length}
+        Enabled attributes {enabledPanelAttrs.length}/{monitoredPanelAttrs.length}
       </p>
     </div>
     <ChevronDown
@@ -88,7 +88,7 @@
               />
             </label>
             <label class="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-              <span>显示颜色</span>
+              <span>Display Color</span>
               <input
                 type="color"
                 value={attr.color}
@@ -103,7 +103,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <label class="text-xs text-muted-foreground">
-          行间距: {panelAttrGap}px
+          Row spacing: {panelAttrGap}px
           <input
             class="w-full mt-1"
             type="range"
@@ -116,7 +116,7 @@
           />
         </label>
         <label class="text-xs text-muted-foreground">
-          字体大小: {panelAttrFontSize}px
+          Font size: {panelAttrFontSize}px
           <input
             class="w-full mt-1"
             type="range"
@@ -129,7 +129,7 @@
           />
         </label>
         <label class="text-xs text-muted-foreground">
-          名称-数值间距: {panelAttrColumnGap}px
+          Label-value spacing: {panelAttrColumnGap}px
           <input
             class="w-full mt-1"
             type="range"
@@ -144,9 +144,9 @@
       </div>
 
       <div class="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
-        <div class="text-sm font-medium text-foreground">行顺序</div>
+        <div class="text-sm font-medium text-foreground">Row Order</div>
         {#if rowList.length === 0}
-          <div class="text-xs text-muted-foreground">暂无可排序项</div>
+          <div class="text-xs text-muted-foreground">No sortable items</div>
         {/if}
         {#each rowList as row, idx}
           <div class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-2 py-1">
@@ -158,7 +158,7 @@
               onclick={() => movePanelAreaRow(row.ref, "up")}
               disabled={idx === 0}
             >
-              上移
+              Move Up
             </button>
             <button
               type="button"
@@ -166,7 +166,7 @@
               onclick={() => movePanelAreaRow(row.ref, "down")}
               disabled={idx === rowList.length - 1}
             >
-              下移
+              Move Down
             </button>
           </div>
         {/each}
