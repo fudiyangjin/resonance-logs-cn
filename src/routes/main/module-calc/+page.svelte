@@ -26,27 +26,27 @@
   } from "$lib/stores/module-calc-store.svelte";
 
   const ATTR_OPTIONS = [
-    { id: 1110, label: "力量加持" },
-    { id: 1111, label: "敏捷加持" },
-    { id: 1112, label: "智力加持" },
-    { id: 1113, label: "特攻伤害" },
-    { id: 1114, label: "精英打击" },
-    { id: 1205, label: "特攻治疗加持" },
-    { id: 1206, label: "专精治疗加持" },
-    { id: 1407, label: "施法专注" },
-    { id: 1408, label: "攻速专注" },
-    { id: 1409, label: "暴击专注" },
-    { id: 1410, label: "幸运专注" },
-    { id: 1307, label: "抵御魔法" },
-    { id: 1308, label: "抵御物理" },
-    { id: 2104, label: "极-伤害叠加" },
-    { id: 2105, label: "极-灵活身法" },
-    { id: 2204, label: "极-生命凝聚" },
-    { id: 2205, label: "极-急救措施" },
-    { id: 2404, label: "极-生命波动" },
-    { id: 2405, label: "极-生命汲取" },
-    { id: 2406, label: "极-全队幸暴" },
-    { id: 2304, label: "极-绝境守护" },
+    { id: 1110, label: "STR Boost" },
+    { id: 1111, label: "AGI Boost" },
+    { id: 1112, label: "INT Boost" },
+    { id: 1113, label: "Special ATK DMG" },
+    { id: 1114, label: "Elite Strike" },
+    { id: 1205, label: "Special ATK Heal Boost" },
+    { id: 1206, label: "Mastery Heal Boost" },
+    { id: 1407, label: "Cast Focus" },
+    { id: 1408, label: "ATK Speed Focus" },
+    { id: 1409, label: "Crit Focus" },
+    { id: 1410, label: "Luck Focus" },
+    { id: 1307, label: "Magic Resist" },
+    { id: 1308, label: "Physical Resist" },
+    { id: 2104, label: "EX – DMG Stack" },
+    { id: 2105, label: "EX – Agile Body" },
+    { id: 2204, label: "EX – HP Condensation" },
+    { id: 2205, label: "EX – First Aid" },
+    { id: 2404, label: "EX – HP Wave" },
+    { id: 2405, label: "EX – Life Drain" },
+    { id: 2406, label: "EX – Team Luck/Crit" },
+    { id: 2304, label: "EX – Last Stand" },
   ];
 
   async function refreshModules() {
@@ -57,7 +57,7 @@
       MODULE_CALC.modules = await getLatestModules();
       MODULE_CALC.moduleCount = MODULE_CALC.modules.length;
     } catch (e) {
-      MODULE_CALC.error = (e as Error)?.message ?? "拉取模组失败";
+      MODULE_CALC.error = (e as Error)?.message ?? "Failed to fetch modules";
     } finally {
       MODULE_CALC.loading = false;
     }
@@ -83,7 +83,6 @@
           .map((m) => [m.attrId as number, m.value as number])
       );
 
-      // Deep clone/snapshot to ensure no Proxy issues passed to invoke
       const payload = {
         targetAttributes: [...MODULE_CALC.targetAttributes],
         excludeAttributes: [...MODULE_CALC.excludeAttributes],
@@ -95,7 +94,7 @@
 
       MODULE_CALC.solutions = await optimizeLatestModules(payload);
       if (MODULE_CALC.solutions.length === 0) {
-        MODULE_CALC.error = "无可用方案，请调整筛选条件";
+        MODULE_CALC.error = "No solutions found. Please adjust your filter settings.";
       }
     } catch (e) {
       console.error("Optimize error:", e);
@@ -104,7 +103,7 @@
       } else if (e instanceof Error) {
         MODULE_CALC.error = e.message;
       } else {
-        MODULE_CALC.error = "计算失败: " + JSON.stringify(e);
+        MODULE_CALC.error = "Calculation failed: " + JSON.stringify(e);
       }
     } finally {
       MODULE_CALC.loading = false;
@@ -133,8 +132,8 @@
         <CalculatorIcon class="w-5 h-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">模组计算</h1>
-        <p class="text-sm text-muted-foreground">计算和优化模组配置</p>
+        <h1 class="text-xl font-bold text-foreground">Module Calculator</h1>
+        <p class="text-sm text-muted-foreground">Calculate and optimize module configurations</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -148,7 +147,7 @@
         {:else}
           <RefreshCw class="w-4 h-4 mr-2" />
         {/if}
-        刷新数据
+        Refresh Data
       </Button>
       <Button
         onclick={runOptimize}
@@ -159,7 +158,7 @@
         {:else}
           <PlayIcon class="w-4 h-4 mr-2" />
         {/if}
-        开始计算
+        Run Optimizer
       </Button>
     </div>
   </div>
@@ -191,7 +190,7 @@
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3">
     <div class="flex items-center justify-between">
       <div class="text-base font-semibold text-foreground">
-        计算结果 (Top 10)
+        Results (Top 10)
       </div>
       {#if MODULE_CALC.loading}
         <div class="flex flex-col gap-1 w-64">
@@ -200,7 +199,7 @@
           >
             <Loader2 class="w-3 h-3 mr-1 animate-spin" />
             <span>
-              计算中... {MODULE_CALC.progress.max > 0
+              Calculating... {MODULE_CALC.progress.max > 0
                 ? `${Math.round((MODULE_CALC.progress.value / MODULE_CALC.progress.max) * 100)}%`
                 : ""}
             </span>

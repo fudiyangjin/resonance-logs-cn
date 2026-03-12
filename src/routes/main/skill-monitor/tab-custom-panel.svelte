@@ -50,13 +50,13 @@
 <div class="space-y-6">
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-4">
     <div>
-      <h2 class="text-base font-semibold text-foreground">自定义面板</h2>
-      <p class="text-xs text-muted-foreground">用于展示计数器和 Buff 文本行（无图标）</p>
+      <h2 class="text-base font-semibold text-foreground">Custom Panel</h2>
+      <p class="text-xs text-muted-foreground">Display counters and buff text rows (no icons)</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
       <label class="text-xs text-muted-foreground">
-        行间距: {customPanelStyle.gap}px
+        Row spacing: {customPanelStyle.gap}px
         <input
           class="w-full mt-1"
           type="range"
@@ -68,7 +68,7 @@
         />
       </label>
       <label class="text-xs text-muted-foreground">
-        字体大小: {customPanelStyle.fontSize}px
+        Font size: {customPanelStyle.fontSize}px
         <input
           class="w-full mt-1"
           type="range"
@@ -80,7 +80,7 @@
         />
       </label>
       <label class="text-xs text-muted-foreground">
-        名称-数值间距: {customPanelStyle.columnGap}px
+        Label-value spacing: {customPanelStyle.columnGap}px
         <input
           class="w-full mt-1"
           type="range"
@@ -95,7 +95,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        名称颜色
+        Name color
         <input
           type="color"
           value={customPanelStyle.nameColor}
@@ -104,7 +104,7 @@
         />
       </label>
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        数值颜色
+        Value color
         <input
           type="color"
           value={customPanelStyle.valueColor}
@@ -113,7 +113,7 @@
         />
       </label>
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        进度条颜色
+        Progress bar color
         <input
           type="color"
           value={customPanelStyle.progressColor}
@@ -126,12 +126,12 @@
 
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-3">
     <div class="space-y-1">
-      <div class="text-sm font-medium text-foreground">添加 Buff</div>
-      <p class="text-xs text-muted-foreground">仅添加到自定义面板文本区域</p>
+      <div class="text-sm font-medium text-foreground">Add Buff</div>
+      <p class="text-xs text-muted-foreground">Only added to the custom panel text area</p>
     </div>
     <input
       class="w-full sm:w-72 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-      placeholder="搜索并添加 Buff"
+      placeholder="Search and add buff"
       value={inlineBuffSearch}
       oninput={(event) => setInlineBuffSearch((event.currentTarget as HTMLInputElement).value)}
     />
@@ -160,7 +160,7 @@
 
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-3">
     <div class="space-y-1">
-      <div class="text-sm font-medium text-foreground">添加计数器</div>
+      <div class="text-sm font-medium text-foreground">Add Counter</div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
       {#each counterRules as rule (rule.ruleId)}
@@ -176,7 +176,7 @@
           <div class="flex items-center justify-between gap-2">
             <div class="text-sm font-medium text-foreground">{rule.name}</div>
             <div class="text-xs {exists ? 'text-primary' : 'text-muted-foreground'}">
-              {exists ? "已添加" : "点击添加"}
+              {exists ? "Added" : "Click to add"}
             </div>
           </div>
         </button>
@@ -185,9 +185,9 @@
   </div>
 
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-3">
-    <div class="text-sm font-medium text-foreground">已添加条目</div>
+    <div class="text-sm font-medium text-foreground">Added Entries</div>
     {#if inlineBuffEntries.length === 0}
-      <div class="text-xs text-muted-foreground">暂无条目</div>
+      <div class="text-xs text-muted-foreground">No entries yet</div>
     {/if}
     {#each inlineBuffEntries as entry, idx (entry.id)}
       {@const counterRule = entry.sourceType === "counter"
@@ -196,13 +196,13 @@
       {@const buffName = entry.sourceType === "buff" ? getBuffDisplayName(entry.sourceId) : null}
       <div class="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
         <div class="text-xs text-muted-foreground">
-          来源：{entry.sourceType === "counter" ? `计数器 - ${counterRule?.name ?? `#${entry.sourceId}`}` : `Buff - ${buffName}`}
+          Source: {entry.sourceType === "counter" ? `Counter - ${counterRule?.name ?? `#${entry.sourceId}`}` : `Buff - ${buffName}`}
         </div>
         {#if entry.sourceType === "counter"}
           <input
             class="w-full rounded border border-border/60 bg-muted/30 px-2 py-1.5 text-sm text-foreground"
             value={entry.label}
-            placeholder="显示名称"
+            placeholder="Display name"
             oninput={(event) => setInlineBuffLabel(entry.id, (event.currentTarget as HTMLInputElement).value)}
           />
         {:else}
@@ -217,7 +217,7 @@
             onclick={() => moveCustomPanelEntry(entry.id, "up")}
             disabled={idx === 0}
           >
-            上移
+            Move Up
           </button>
           <button
             type="button"
@@ -225,14 +225,14 @@
             onclick={() => moveCustomPanelEntry(entry.id, "down")}
             disabled={idx === inlineBuffEntries.length - 1}
           >
-            下移
+            Move Down
           </button>
           <button
             type="button"
             class="text-xs px-2 py-1 rounded border border-border/60 text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
             onclick={() => removeInlineBuffEntry(entry.id)}
           >
-            删除
+            Delete
           </button>
         </div>
       </div>

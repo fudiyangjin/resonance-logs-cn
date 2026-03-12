@@ -18,12 +18,12 @@
   <!-- Header with logo -->
   <div class="px-4 py-4 border-b border-border/50">
     <h1 class="text-lg font-bold text-foreground tracking-tight">Resonance Logs</h1>
-    <p class="text-xs text-muted-foreground mt-0.5">工具箱</p>
+    <p class="text-xs text-muted-foreground mt-0.5">Toolbox</p>
   </div>
 
   <!-- Tool list -->
   <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
-    <p class="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">工具</p>
+    <p class="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Tools</p>
     {#each Object.entries(TOOL_ROUTES) as [href, route] (route.label)}
       <a
         {href}

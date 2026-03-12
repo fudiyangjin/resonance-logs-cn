@@ -51,8 +51,8 @@
         <SwordsIcon class="w-5 h-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">实时监控</h1>
-        <p class="text-sm text-muted-foreground">自定义监控技能CD, 战斗资源等</p>
+        <h1 class="text-xl font-bold text-foreground">Live Monitor</h1>
+        <p class="text-sm text-muted-foreground">Monitor skill cooldowns, combat resources, and more</p>
       </div>
     </div>
 
@@ -63,7 +63,7 @@
         onclick={toggleOverlayWindow}
       >
         <PlayIcon class="w-4 h-4" />
-        <span>切换遮罩窗口</span>
+        <span>Toggle Overlay Window</span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
 
@@ -73,7 +73,7 @@
         onclick={toggleOverlayEditMode}
       >
         <PenSquareIcon class="w-4 h-4" />
-        <span>编辑遮罩布局</span>
+        <span>Edit Overlay Layout</span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
     </div>

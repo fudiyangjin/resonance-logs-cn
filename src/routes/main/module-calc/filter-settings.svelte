@@ -49,10 +49,10 @@
 </script>
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4">
-  <div class="text-base font-semibold text-foreground">筛选设置</div>
+  <div class="text-base font-semibold text-foreground">Filter Settings</div>
 
   <div class="space-y-2">
-    <div class="text-sm text-muted-foreground">目标属性, 选中后只会计算携带该属性的模组(模组数超过1000时可利用该设置先进行筛选)</div>
+    <div class="text-sm text-muted-foreground">Target attributes — when selected, only modules carrying these attributes are included (useful to pre-filter when module count exceeds 1000)</div>
     <div class="flex flex-wrap gap-2">
       {#each attributeOptions as opt}
         <Button
@@ -67,7 +67,7 @@
   </div>
 
   <div class="space-y-2">
-    <div class="text-sm text-muted-foreground">排除属性</div>
+    <div class="text-sm text-muted-foreground">Exclude Attributes</div>
     <div class="flex flex-wrap gap-2">
       {#each attributeOptions as opt}
         <Button
@@ -82,7 +82,7 @@
   </div>
 
   <div class="space-y-3">
-    <div class="text-sm text-muted-foreground">最小属性要求</div>
+    <div class="text-sm text-muted-foreground">Minimum Attribute Requirements</div>
     <div class="space-y-2">
       {#each minRequirements as req, idx}
         <div class="flex items-center gap-2">
@@ -92,7 +92,7 @@
             onchange={(e) =>
               updateMin(idx, "attrId", parseNullableNumber((e.target as HTMLSelectElement).value))}
           >
-            <option value="">选择属性</option>
+            <option value="">Select attribute</option>
             {#each attributeOptions as opt}
               <option value={opt.id}>{opt.label}</option>
             {/each}
@@ -105,11 +105,10 @@
             onchange={(e) =>
               updateMin(idx, "value", parseNullableNumber((e.target as HTMLInputElement).value))}
           />
-          <Button size="sm" variant="ghost" onclick={() => removeMin(idx)}>移除</Button>
+          <Button size="sm" variant="ghost" onclick={() => removeMin(idx)}>Remove</Button>
         </div>
       {/each}
     </div>
-    <Button size="sm" variant="outline" onclick={addMin}>+ 添加</Button>
+    <Button size="sm" variant="outline" onclick={addMin}>+ Add</Button>
   </div>
 </div>
-

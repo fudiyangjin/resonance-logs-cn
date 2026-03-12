@@ -16,7 +16,7 @@
     availableBuffMap,
     onSelect,
     isSelected = () => false,
-    emptyMessage = "没有匹配的 Buff",
+    emptyMessage = "No matching buffs",
     limit = 999,
     minColumnWidth = 56,
   }: Props = $props();

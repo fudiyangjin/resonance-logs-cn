@@ -20,9 +20,9 @@
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
   <div>
-    <h2 class="text-base font-semibold text-foreground">Overlay 区域显示</h2>
+    <h2 class="text-base font-semibold text-foreground">Overlay Section Visibility</h2>
     <p class="text-xs text-muted-foreground">
-      可分别控制技能区和资源区是否显示（按方案保存）
+      Control whether the skill and resource sections are shown (saved per profile)
     </p>
   </div>
   <div class="space-y-2">
@@ -34,7 +34,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showSkillCdGroup")}
       >
-        技能CD区：{showSkillCdGroup ? "显示" : "隐藏"}
+        Skill CD: {showSkillCdGroup ? "Visible" : "Hidden"}
       </button>
       <button
         type="button"
@@ -43,7 +43,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showResourceGroup")}
       >
-        资源监控区：{showResourceGroup ? "显示" : "隐藏"}
+        Resource Monitor: {showResourceGroup ? "Visible" : "Hidden"}
       </button>
       <button
         type="button"
@@ -52,7 +52,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showPanelAttrGroup")}
       >
-        角色属性区：{showPanelAttrGroup ? "显示" : "隐藏"}
+        Character Attributes: {showPanelAttrGroup ? "Visible" : "Hidden"}
       </button>
       <button
         type="button"
@@ -61,11 +61,11 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showCustomPanelGroup")}
       >
-        自定义面板区：{showCustomPanelGroup ? "显示" : "隐藏"}
+        Custom Panel: {showCustomPanelGroup ? "Visible" : "Hidden"}
       </button>
     </div>
     <p class="text-xs text-muted-foreground">
-      点击按钮切换显示状态（按方案保存）
+      Click a button to toggle visibility (saved per profile)
     </p>
   </div>
 </div>

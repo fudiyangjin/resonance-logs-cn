@@ -8,13 +8,13 @@
 </script>
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3">
-  <div class="text-base font-semibold text-foreground">计算设置</div>
+  <div class="text-base font-semibold text-foreground">Calculation Settings</div>
   <div class="flex items-center gap-3">
     <Switch bind:checked={useGpu} />
-    <div class="text-sm text-foreground">GPU 加速</div>
+    <div class="text-sm text-foreground">GPU Acceleration</div>
     {#if gpuSupport}
       <div class="text-xs text-muted-foreground">
-        CUDA: {gpuSupport.cuda_available ? "可用" : "不可用"} · OpenCL: {gpuSupport.opencl_available ? "可用" : "不可用"}
+        CUDA: {gpuSupport.cuda_available ? "Available" : "Unavailable"} · OpenCL: {gpuSupport.opencl_available ? "Available" : "Unavailable"}
       </div>
     {/if}
   </div>

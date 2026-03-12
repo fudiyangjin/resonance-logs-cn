@@ -15,13 +15,11 @@
 
   let editingId: string | null = $state(null);
 
-  // Track modifiers separately from the single main key
   const modifierOrder = ["ctrl", "shift", "alt", "meta"];
   const MODIFIERS = new SvelteSet(modifierOrder);
   const activeMods = new SvelteSet<string>();
   let mainKey: string | null = $state(null);
 
-  /** Normalize modifier key names */
   const normalizeModifier = (key: string): string =>
     (
       ({
@@ -32,21 +30,14 @@
       }) as Record<string, string>
     )[key.toLowerCase()] ?? key.toLowerCase();
 
-  /** Get the proper key name, handling numpad keys via e.code */
   function getKeyName(e: KeyboardEvent): string {
     const code = e.code;
-    
-    // Handle numpad keys - use code directly as it matches the Tauri shortcut format
-    // e.g., "Numpad0", "Numpad1", "NumpadAdd", "NumpadSubtract", etc.
     if (code.startsWith("Numpad")) {
       return code;
     }
-    
-    // For regular keys, use the key value (normalized to lowercase)
     return e.key.toLowerCase();
   }
 
-  /** Build the display string of the in-progress shortcut */
   function currentShortcutString(): string {
     const mods = modifierOrder.filter((m) => activeMods.has(m));
     return mainKey ? [...mods, mainKey].join("+") : mods.join("+");
@@ -79,7 +70,6 @@
       return;
     }
 
-    // Non-modifier key: set/replace the main key (using code for numpad detection)
     mainKey = getKeyName(e);
   }
 
@@ -87,18 +77,15 @@
     e.preventDefault();
     const modKey = normalizeModifier(e.key);
 
-    // If a modifier was released, just reflect that (remove it) but don't finalize yet
     if (MODIFIERS.has(modKey)) {
       activeMods.delete(modKey);
       stopEdit();
       return;
     }
 
-    // Only finalize when the non-modifier (main) key is released
     if (mainKey) {
       const shortcutKey = currentShortcutString();
 
-      // Ensure we actually have a main key (defensive)
       const hasMain = !!mainKey;
       if (!hasMain) return;
 
@@ -126,60 +113,27 @@
   const SETTINGS_CATEGORY = "shortcuts";
 
   let inputs: BaseInputs = [
-    {
-      id: "showLiveMeter",
-      label: "显示实时窗口",
-    },
-    {
-      id: "hideLiveMeter",
-      label: "隐藏实时窗口",
-    },
-    {
-      id: "toggleLiveMeter",
-      label: "切换实时窗口",
-    },
-    {
-      id: "enableClickthrough",
-      label: "启用点击穿透",
-    },
-    {
-      id: "disableClickthrough",
-      label: "禁用点击穿透",
-    },
-    {
-      id: "toggleClickthrough",
-      label: "切换点击穿透",
-    },
-    {
-      id: "resetEncounter",
-      label: "重置战斗",
-    },
-    {
-      id: "togglePauseEncounter",
-      label: "切换暂停战斗",
-    },
-    {
-      id: "toggleBossHp",
-      label: "切换 Boss 血量显示",
-    },
-    {
-      id: "toggleOverlayEdit",
-      label: "切换遮罩编辑模式",
-    },
-    {
-      id: "toggleOverlayWindow",
-      label: "切换遮罩窗口",
-    },
+    { id: "showLiveMeter", label: "Show Live Window" },
+    { id: "hideLiveMeter", label: "Hide Live Window" },
+    { id: "toggleLiveMeter", label: "Toggle Live Window" },
+    { id: "enableClickthrough", label: "Enable Click-through" },
+    { id: "disableClickthrough", label: "Disable Click-through" },
+    { id: "toggleClickthrough", label: "Toggle Click-through" },
+    { id: "resetEncounter", label: "Reset Encounter" },
+    { id: "togglePauseEncounter", label: "Toggle Pause Encounter" },
+    { id: "toggleBossHp", label: "Toggle Boss HP Display" },
+    { id: "toggleOverlayEdit", label: "Toggle Overlay Edit Mode" },
+    { id: "toggleOverlayWindow", label: "Toggle Overlay Window" },
   ];
 </script>
 
 <Tabs.Content value={SETTINGS_CATEGORY}>
   <div class="space-y-3">
     <Alert.Root class="shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-    <AlertCircleIcon />
-      <Alert.Title>右键可清除快捷键</Alert.Title>
+      <AlertCircleIcon />
+      <Alert.Title>Right-click to clear a shortcut</Alert.Title>
     </Alert.Root>
-  <div class="rounded-lg border bg-card/40 border-border/60 p-4 space-y-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
+    <div class="rounded-lg border bg-card/40 border-border/60 p-4 space-y-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
       {#each inputs as input (input.id)}
         <Item.Root>
           <Item.Content>
@@ -188,9 +142,9 @@
           <Item.Actions>
             <Button variant="outline" class="uppercase" onclick={() => startEdit(input)} oncontextmenu={(e: MouseEvent) => clearShortcut(input, e)}>
               {#if editingId === input.id}
-                {currentShortcutString() || "请按键"}...
+                {currentShortcutString() || "Press a key"}...
               {:else}
-                {SETTINGS.shortcuts.state[input.id] || "未绑定"}
+                {SETTINGS.shortcuts.state[input.id] || "Unbound"}
               {/if}
             </Button>
           </Item.Actions>

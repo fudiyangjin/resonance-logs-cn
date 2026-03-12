@@ -11,11 +11,11 @@
   import DebugSettings from "./debug.svelte";
 
   const settingsTabs = [
-    { id: "live", label: "实时" },
-    { id: "network", label: "网络" },
-    { id: "shortcuts", label: "快捷键" },
-    { id: "history", label: "历史" },
-    { id: "debug", label: "调试" },
+    { id: "live", label: "Live" },
+    { id: "network", label: "Network" },
+    { id: "shortcuts", label: "Shortcuts" },
+    { id: "history", label: "History" },
+    { id: "debug", label: "Debug" },
   ];
 
   let activeTab = $state("live");

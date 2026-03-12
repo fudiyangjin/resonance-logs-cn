@@ -35,9 +35,9 @@
 <div class="space-y-6">
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <div>
-      <h2 class="text-base font-semibold text-foreground">职业选择</h2>
+      <h2 class="text-base font-semibold text-foreground">Class Selection</h2>
       <p class="text-xs text-muted-foreground">
-        支持青岚骑士、冰法职业
+        Supports Blademaster and Ice Mage classes
       </p>
     </div>
     <div class="flex flex-wrap gap-2">
@@ -58,21 +58,21 @@
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-base font-semibold text-foreground">技能选择</h2>
+        <h2 class="text-base font-semibold text-foreground">Skill Selection</h2>
         <p class="text-xs text-muted-foreground">
-          最多监控 10 个技能（2行 x 5列）
+          Monitor up to 10 skills (2 rows x 5 columns)
         </p>
       </div>
       <div class="flex items-center gap-3">
         <div class="text-xs text-muted-foreground">
-          已选 {monitoredSkillIds.length}/10
+          Selected {monitoredSkillIds.length}/10
         </div>
         <button
           type="button"
           class="text-xs px-2 py-1 rounded border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
           onclick={clearSkills}
         >
-          清空
+          Clear
         </button>
       </div>
     </div>
@@ -94,7 +94,7 @@
             />
           {:else}
             <div class="w-full h-full aspect-square flex items-center justify-center bg-muted/30 text-xs text-muted-foreground">
-              未配置
+              Not configured
             </div>
           {/if}
           <div class="absolute inset-x-0 bottom-0 bg-black/50 text-[10px] text-white px-1 py-0.5 truncate">
@@ -108,19 +108,19 @@
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <div class="flex items-center justify-between gap-3">
       <div>
-        <h2 class="text-base font-semibold text-foreground">共鸣技能</h2>
+        <h2 class="text-base font-semibold text-foreground">Resonance Skills</h2>
         <p class="text-xs text-muted-foreground">
-          通过搜索选择共鸣技能，与普通技能共享 10 个监控格
+          Search and select resonance skills, sharing the 10 monitor slots with regular skills
         </p>
       </div>
       <div class="text-xs text-muted-foreground">
-        已选 {selectedResonanceSkills.length}
+        Selected {selectedResonanceSkills.length}
       </div>
     </div>
 
     <input
       class="w-full sm:w-64 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-      placeholder="搜索共鸣技能名称"
+      placeholder="Search resonance skill name"
       value={resonanceSearch}
       oninput={(event) => setResonanceSearch((event.currentTarget as HTMLInputElement).value)}
     />
@@ -148,11 +148,11 @@
         {/each}
       </div>
     {:else}
-      <div class="text-xs text-muted-foreground">请输入关键词搜索共鸣技能</div>
+      <div class="text-xs text-muted-foreground">Enter a keyword to search for resonance skills</div>
     {/if}
 
     <div class="space-y-2">
-      <div class="text-xs text-muted-foreground">已选共鸣技能</div>
+      <div class="text-xs text-muted-foreground">Selected resonance skills</div>
       <div class="flex flex-wrap gap-2">
         {#each selectedResonanceSkills as skill (skill.skillId)}
           <button
@@ -172,7 +172,7 @@
           </button>
         {/each}
         {#if selectedResonanceSkills.length === 0}
-          <div class="text-xs text-muted-foreground">未选择共鸣技能</div>
+          <div class="text-xs text-muted-foreground">No resonance skills selected</div>
         {/if}
       </div>
     </div>
@@ -180,8 +180,8 @@
 
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <div>
-      <h2 class="text-base font-semibold text-foreground">监控预览</h2>
-      <p class="text-xs text-muted-foreground">按选择顺序排列</p>
+      <h2 class="text-base font-semibold text-foreground">Monitor Preview</h2>
+      <p class="text-xs text-muted-foreground">Arranged in selection order</p>
     </div>
     <div class="grid grid-cols-5 gap-2">
       {#each Array(10) as _, idx (idx)}
@@ -208,7 +208,7 @@
             </div>
           {:else}
             <div class="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">
-              空
+              Empty
             </div>
           {/if}
         </button>

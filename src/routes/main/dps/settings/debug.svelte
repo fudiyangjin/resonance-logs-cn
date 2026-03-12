@@ -9,7 +9,7 @@
             await invoke("open_log_dir");
         } catch (e) {
             console.error(e);
-            toast.error("打开日志目录失败：" + e);
+            toast.error("Failed to open log directory: " + e);
         }
     }
 
@@ -20,7 +20,7 @@
             const defaultName = `debug_${ts.getFullYear()}-${pad(ts.getMonth() + 1)}-${pad(ts.getDate())}_${pad(ts.getHours())}-${pad(ts.getMinutes())}-${pad(ts.getSeconds())}.zip`;
 
             const destinationPath = await save({
-                title: "保存调试压缩包",
+                title: "Save Debug Bundle",
                 defaultPath: defaultName,
                 filters: [{ name: "Zip", extensions: ["zip"] }],
             });
@@ -34,13 +34,13 @@
             });
             try {
                 await navigator.clipboard.writeText(path);
-                toast.success("已创建调试压缩包（路径已复制）：" + path);
+                toast.success("Debug bundle created (path copied): " + path);
             } catch {
-                toast.success("已创建调试压缩包：" + path);
+                toast.success("Debug bundle created: " + path);
             }
         } catch (e) {
             console.error(e);
-            toast.error("创建调试压缩包失败：" + e);
+            toast.error("Failed to create debug bundle: " + e);
         }
     }
 </script>
@@ -51,26 +51,26 @@
     >
         <div class="px-4 py-3">
             <h2 class="mb-4 text-base font-semibold text-foreground">
-                调试
+                Debug
             </h2>
 
             <div class="flex items-center justify-between">
                 <div class="text-sm text-muted-foreground">
-                    <div class="font-medium text-foreground">日志文件</div>
-                    打开应用日志所在文件夹
+                    <div class="font-medium text-foreground">Log Files</div>
+                    Open the folder containing application logs
                 </div>
                 <Button variant="outline" onclick={openLogDir}>
-                    打开日志
+                    Open Logs
                 </Button>
             </div>
 
             <div class="mt-4 flex items-center justify-between">
                 <div class="text-sm text-muted-foreground">
-                    <div class="font-medium text-foreground">调试压缩包</div>
-                    生成包含最近日志的 ZIP，便于支持与排查
+                    <div class="font-medium text-foreground">Debug Bundle</div>
+                    Generate a ZIP of recent logs for support and troubleshooting
                 </div>
                 <Button variant="outline" onclick={createDiagnosticsBundle}>
-                    创建调试压缩包
+                    Create Debug Bundle
                 </Button>
             </div>
         </div>
