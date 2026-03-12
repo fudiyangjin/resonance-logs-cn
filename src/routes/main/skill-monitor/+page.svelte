@@ -184,7 +184,7 @@
   function ensureBuffGroup(group: BuffGroup, index: number): BuffGroup {
     return {
       id: group.id ?? `group_${index + 1}`,
-      name: group.name ?? `分组 ${index + 1}`,
+      name: group.name ?? `Group ${index + 1}`,
       buffIds: group.buffIds ?? [],
       priorityBuffIds: group.priorityBuffIds ?? [],
       monitorAll: group.monitorAll ?? false,
@@ -210,7 +210,7 @@
     return {
       ...normalized,
       monitorAll: true,
-      name: normalized.name || "全部 Buff",
+      name: normalized.name || "All Buffs",
     };
   }
 
@@ -235,7 +235,7 @@
       sourceType: entry.sourceType ?? "buff",
       sourceId: entry.sourceId,
       label: entry.sourceType === "counter"
-        ? (entry.label ?? `计数器 ${entry.sourceId}`)
+        ? (entry.label ?? `Counter ${entry.sourceId}`)
         : (entry.label ?? ""),
       format: entry.format ?? "timer",
     }));
@@ -742,7 +742,7 @@
         return profile;
       }
       const label = sourceType === "counter"
-        ? (counterRules.find((rule) => rule.ruleId === sourceId)?.name ?? `计数器 ${sourceId}`)
+        ? (counterRules.find((rule) => rule.ruleId === sourceId)?.name ?? `Counter ${sourceId}`)
         : "";
       const nextEntry: InlineBuffEntry = {
         id: `inline_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
@@ -861,7 +861,7 @@
       const groups = ensureBuffGroups(profile);
       return {
         ...profile,
-        buffGroups: [...groups, createDefaultBuffGroup(`分组 ${groups.length + 1}`, groups.length + 1)],
+        buffGroups: [...groups, createDefaultBuffGroup(`Group ${groups.length + 1}`, groups.length + 1)],
       };
     });
   }
@@ -892,7 +892,7 @@
       return {
         ...profile,
         individualMonitorAllGroup: {
-          ...createDefaultBuffGroup("全部 Buff", 1),
+          ...createDefaultBuffGroup("All Buffs", 1),
           monitorAll: true,
         },
       };
@@ -1063,8 +1063,8 @@
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-2">
     <SettingsSwitch
       bind:checked={SETTINGS.skillMonitor.state.enabled}
-      label="启用实时监控"
-      description="开启后将实时推送监控数据到悬浮窗口"
+      label="Enable Real-Time Monitor"
+      description="When enabled, monitoring data is pushed to the overlay window in real time"
     />
   </div>
 
@@ -1077,7 +1077,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "skill-cd")}
       >
-        技能CD
+        Skill CD
       </button>
       <button
         type="button"
@@ -1086,7 +1086,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "buff")}
       >
-        Buff监控
+        Buff Monitor
       </button>
       <button
         type="button"
@@ -1095,7 +1095,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "panel-attr")}
       >
-        角色面板
+        Character Panel
       </button>
       <button
         type="button"
@@ -1104,7 +1104,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "custom-panel")}
       >
-        自定义面板
+        Custom Panel
       </button>
       <button
         type="button"
@@ -1113,7 +1113,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "overlay")}
       >
-        启用窗口
+        Overlay Window
       </button>
     </div>
   </div>
