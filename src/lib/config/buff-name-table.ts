@@ -47,8 +47,8 @@ const BUFF_CATEGORY_CATALOG: Record<
   BuffCategoryKey,
   { label: string; buffIds: number[] }
 > = {
-  food: { label: "食物", buffIds: [] },
-  alchemy: { label: "炼金", buffIds: [] },
+  food: { label: "Food", buffIds: [] },
+  alchemy: { label: "Alchemy", buffIds: [] },
 };
 
 function resolveBuffCategories(
