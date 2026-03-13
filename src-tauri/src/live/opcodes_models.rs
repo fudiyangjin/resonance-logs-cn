@@ -1,8 +1,8 @@
 use crate::live::opcodes_models::class::ClassSpec;
+use crate::live::monster_registry::{self, MonsterType};
 use blueprotobuf_lib::blueprotobuf::{EEntityType, SyncContainerData};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
-use std::sync::LazyLock;
+use std::collections::HashMap;
 use tokio::sync::RwLock;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -375,25 +375,6 @@ pub struct Skill {
     pub hits: u128,
 }
 
-// Monster names mapping (id -> name)
-static MONSTER_NAMES: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
-    let data = include_str!("../../meter-data/MonsterName.json");
-    serde_json::from_str(data).expect("invalid MonsterName.json")
-});
-
-// Boss monster IDs (from game data main_category == "boss")
-static MONSTER_NAMES_BOSS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
-    let data = include_str!("../../meter-data/MonsterNameBoss.json");
-    serde_json::from_str(data).expect("invalid MonsterNameBoss.json")
-});
-
-// Boss exclusion list (names that should NEVER be treated as bosses)
-static BOSS_EXCLUSION_NAMES: LazyLock<HashSet<String>> = LazyLock::new(|| {
-    let mut s = HashSet::new();
-    s.insert("divine defense tower".to_string());
-    s
-});
-
 impl Encounter {
     /// Reset only combat-specific state while preserving player identity fields and cache.
     ///
@@ -633,62 +614,27 @@ impl Entity {
     /// Assign monster type id and update display name from mapping if available.
     pub fn set_monster_type(&mut self, monster_id: i32) {
         self.monster_type_id = Some(monster_id);
-        if let Some(name) = MONSTER_NAMES.get(&monster_id.to_string()) {
-            self.name = name.clone();
+        if let Some(name) = monster_registry::monster_name(monster_id) {
+            self.name = name.to_string();
         }
     }
 
     /// Determine whether this entity is a boss based on game data categorization.
-    /// Uses MONSTER_NAMES_BOSS which contains IDs marked as main_category == "boss"
-    /// in the game's quest log data.
     pub fn is_boss(&self) -> bool {
         if self.entity_type != EEntityType::EntMonster {
             return false;
         }
 
-        // Check exclusion list first
-        if BOSS_EXCLUSION_NAMES.contains(&self.name.to_lowercase()) {
-            return false;
-        }
-        if let Some(packet_name) = &self.monster_name_packet {
-            if BOSS_EXCLUSION_NAMES.contains(&packet_name.to_lowercase()) {
-                return false;
-            }
-        }
-
-        // Check if monster_type_id exists in the boss list
-        if self
-            .monster_type_id
-            .map(|id| MONSTER_NAMES_BOSS.contains_key(&id.to_string()))
+        self.monster_type_id
+            .and_then(monster_registry::monster_type)
+            .map(|monster_type| monster_type == MonsterType::Boss)
             .unwrap_or(false)
-        {
-            return true;
-        }
-
-        // If not identified by ID, check for 'Boss' text in the raw packet name
-        if let Some(packet_name) = &self.monster_name_packet {
-            if packet_name.to_lowercase().contains("boss") {
-                return true;
-            }
-        }
-
-        false
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn excluded_boss_is_not_boss() {
-        let mut e = Entity::default();
-        e.entity_type = EEntityType::EntMonster;
-        e.name = "Divine Defense Tower".to_string();
-        // Even if it has boss attributes or name, it should be excluded
-        e.monster_name_packet = Some("Boss - Divine Defense Tower".to_string());
-        assert!(!e.is_boss());
-    }
 
     #[test]
     fn attr_value_float_conversion() {

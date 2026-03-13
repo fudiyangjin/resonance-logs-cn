@@ -8,6 +8,7 @@ pub mod dungeon_log;
 pub mod entity_attr_store;
 pub mod event_manager;
 pub mod live_main;
+pub mod monster_registry;
 pub mod opcodes_models;
 pub mod opcodes_process;
 pub mod scene_names;
