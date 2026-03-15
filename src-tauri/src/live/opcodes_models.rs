@@ -44,6 +44,7 @@ pub enum AttrValue {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AttrType {
     Name,
+    MonsterId,
     ActorState,
     GuildId,
     AttackPower,
@@ -116,6 +117,7 @@ impl AttrType {
     pub fn from_id(id: i32) -> Option<Self> {
         match id {
             attr_type::ATTR_NAME => Some(AttrType::Name),
+            attr_type::ATTR_ID => Some(AttrType::MonsterId),
             attr_type::ATTR_ACTOR_STATE => Some(AttrType::ActorState),
             attr_type::ATTR_GUILD_ID => Some(AttrType::GuildId),
             attr_type::ATTR_ATTACK_POWER => Some(AttrType::AttackPower),
@@ -187,6 +189,7 @@ impl AttrType {
     pub fn to_id(self) -> i32 {
         match self {
             AttrType::Name => attr_type::ATTR_NAME,
+            AttrType::MonsterId => attr_type::ATTR_ID,
             AttrType::ActorState => attr_type::ATTR_ACTOR_STATE,
             AttrType::GuildId => attr_type::ATTR_GUILD_ID,
             AttrType::AttackPower => attr_type::ATTR_ATTACK_POWER,

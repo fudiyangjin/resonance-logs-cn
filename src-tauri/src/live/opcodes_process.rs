@@ -963,6 +963,11 @@ fn process_monster_attrs(
             {
                 if monster_id > 0 {
                     monster_entity.set_monster_type(monster_id);
+                    let _ = attr_store.set_attr(
+                        target_uid,
+                        AttrType::MonsterId,
+                        AttrValue::Int(i64::from(monster_id)),
+                    );
                 }
             }
             continue;

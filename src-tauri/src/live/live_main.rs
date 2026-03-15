@@ -5,7 +5,7 @@ use crate::live::{
         FightResourceUpdatePayload, PanelAttrUpdatePayload, SkillCdUpdatePayload,
         HateListUpdatePayload,
     },
-    event_manager::{BossDeathPayload, EncounterUpdatePayload, SceneChangePayload},
+    event_manager::{EncounterUpdatePayload, SceneChangePayload},
     event_manager::{OutboundEvent, safe_emit_to},
 };
 use crate::packets;
@@ -266,7 +266,11 @@ pub async fn start(
             }
             packet = rx.recv() => match packet {
             Some((op, data)) => {
-                queue_depth.fetch_sub(1, Ordering::Relaxed);
+                queue_depth
+                    .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |depth| {
+                        Some(depth.saturating_sub(1))
+                    })
+                    .ok();
                 // Process the first packet immediately (low-latency path)
                 let mut batch_events = Vec::new();
                 if let Some(event) = decode_state_event(op, data) {
@@ -289,7 +293,11 @@ pub async fn start(
 
                     match rx.try_recv() {
                         Ok((op, data)) => {
-                            queue_depth.fetch_sub(1, Ordering::Relaxed);
+                            queue_depth
+                                .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |depth| {
+                                    Some(depth.saturating_sub(1))
+                                })
+                                .ok();
                             if let Some(event) = decode_state_event(op, data) {
                                 let is_server_change = matches!(event, StateEvent::ServerChange);
                                 batch_events.push(event);
@@ -384,14 +392,6 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     crate::WINDOW_LIVE_LABEL,
                     "scene-change",
                     SceneChangePayload { scene_name },
-                );
-            }
-            OutboundEvent::BossDeath { boss_name } => {
-                safe_emit_to(
-                    app_handle,
-                    crate::WINDOW_LIVE_LABEL,
-                    "boss-death",
-                    BossDeathPayload { boss_name },
                 );
             }
             OutboundEvent::LiveData(payload) => {

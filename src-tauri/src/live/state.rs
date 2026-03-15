@@ -235,7 +235,19 @@ fn build_encounter_metadata(
 
 fn persist_and_save_encounter(state: &mut AppState, is_manual: bool, source: &str) {
     hydrate_entities_from_attr_store(state);
-    let defeated = state.event_manager.take_dead_bosses();
+    let defeated: Vec<String> = state
+        .encounter
+        .entity_uid_to_entity
+        .values()
+        .filter(|entity| entity.is_boss())
+        .filter_map(|entity| {
+            if entity.name.is_empty() {
+                None
+            } else {
+                Some(entity.name.clone())
+            }
+        })
+        .collect();
     let player_names = collect_player_names(&state.encounter);
     let metadata = build_encounter_metadata(&state.encounter, defeated, player_names, is_manual);
 
@@ -457,8 +469,6 @@ impl AppStateManager {
         // Emit encounter reset event
         if state.event_manager.should_emit_events() {
             state.event_manager.emit_encounter_reset();
-            // Clear dead bosses tracking on server change
-            state.event_manager.clear_dead_bosses();
         }
         state.battle_state = BattleStateMachine::default();
     }
@@ -483,20 +493,6 @@ impl AppStateManager {
 
         if let Some(scene_id) = parsed.scene_id {
             let scene_name = scene_names::lookup(scene_id);
-            let prev_scene = state.encounter.current_scene_id;
-
-            // If we have an active encounter and the scene actually changed, end it so we don't leave zombie rows
-            if prev_scene.map(|id| id != scene_id).unwrap_or(false)
-                && state.encounter.time_fight_start_ms != 0
-            {
-                info!(
-                    "Scene changed from {:?} to {}; checking segment logic",
-                    prev_scene, scene_id
-                );
-                state.pending_auto_reset = None;
-                info!("Scene changed: ending active encounter");
-                self.reset_encounter(state, false);
-            }
 
             // Update encounter with scene info
             state.encounter.current_scene_id = Some(scene_id);
@@ -541,9 +537,14 @@ impl AppStateManager {
     ) {
         use crate::live::opcodes_process::process_sync_container_data;
 
+        persist_and_save_encounter(state, false, "container_data_resync");
+        state.encounter.entity_uid_to_entity.clear();
         state.attr_store.clear_all_entities();
+        state.encounter.reset_combat_state();
         state.local_monitor.clear_runtime_state();
         state.boss_buff_monitors.clear();
+        state.battle_state = BattleStateMachine::default();
+        state.pending_auto_reset = None;
 
         if process_sync_container_data(
             &mut state.encounter,
@@ -906,8 +907,6 @@ impl AppStateManager {
 
         if state.event_manager.should_emit_events() {
             state.event_manager.emit_encounter_reset();
-            // Clear dead bosses tracking on reset
-            state.event_manager.clear_dead_bosses();
 
             // Emit an encounter update with cleared state so frontend updates immediately
             use crate::live::commands_models::HeaderInfo;
@@ -1045,13 +1044,6 @@ impl AppStateManager {
             &state.attr_store,
         );
 
-        let boss_deaths: Vec<(i64, String)> = payload
-            .bosses
-            .iter()
-            .filter(|boss| boss.is_dead)
-            .map(|boss| (boss.uid, boss.name.clone()))
-            .collect();
-
         state.event_manager.emit_live_data(payload);
 
         for (&boss_uid, entity) in &state.encounter.entity_uid_to_entity {
@@ -1066,15 +1058,6 @@ impl AppStateManager {
                 .cloned()
                 .unwrap_or_default();
             state.event_manager.emit_hate_list_update(boss_uid, entries);
-        }
-
-        if !boss_deaths.is_empty() {
-            for (boss_uid, boss_name) in boss_deaths {
-                let first_time = state.event_manager.emit_boss_death(boss_name, boss_uid);
-                if !first_time {
-                    continue;
-                }
-            }
         }
     }
 }
