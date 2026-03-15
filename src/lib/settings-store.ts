@@ -151,6 +151,7 @@ export type CustomPanelStyle = {
   nameColor: string;
   valueColor: string;
   progressColor: string;
+  progressOpacity: number;
 };
 
 export type MonsterOverlayPositions = {
@@ -185,6 +186,7 @@ export type TextBuffPanelStyle = {
   nameColor: string;
   valueColor: string;
   progressColor: string;
+  progressOpacity: number;
 };
 
 export type BuffDisplayMode = "individual" | "grouped";
@@ -297,6 +299,7 @@ function createDefaultCustomPanelStyle(): CustomPanelStyle {
     nameColor: "#ffffff",
     valueColor: "#ffffff",
     progressColor: "#ffffff",
+    progressOpacity: 0.4,
   };
 }
 
@@ -323,6 +326,7 @@ function createDefaultTextBuffPanelStyle(): TextBuffPanelStyle {
     nameColor: "#ffffff",
     valueColor: "#ffffff",
     progressColor: "#ffffff",
+    progressOpacity: 0.4,
   };
 }
 

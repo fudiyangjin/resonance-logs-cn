@@ -293,6 +293,7 @@
       nameColor: current?.nameColor ?? "#ffffff",
       valueColor: current?.valueColor ?? "#ffffff",
       progressColor: current?.progressColor ?? "#ffffff",
+      progressOpacity: Math.max(0, Math.min(1, current?.progressOpacity ?? 0.4)),
     };
   }
 
@@ -306,6 +307,7 @@
       nameColor: current?.nameColor ?? "#ffffff",
       valueColor: current?.valueColor ?? "#ffffff",
       progressColor: current?.progressColor ?? "#ffffff",
+      progressOpacity: Math.max(0, Math.min(1, current?.progressOpacity ?? 0.4)),
     };
   }
 
@@ -680,6 +682,13 @@
     updateCustomPanelStyle((style) => ({ ...style, progressColor: value }));
   }
 
+  function setCustomPanelProgressOpacity(value: number) {
+    updateCustomPanelStyle((style) => ({
+      ...style,
+      progressOpacity: Math.max(0, Math.min(1, value)),
+    }));
+  }
+
   function updateTextBuffPanelStyle(
     updater: (style: TextBuffPanelStyle) => TextBuffPanelStyle,
   ) {
@@ -718,6 +727,13 @@
 
   function setTextBuffPanelProgressColor(value: string) {
     updateTextBuffPanelStyle((style) => ({ ...style, progressColor: value }));
+  }
+
+  function setTextBuffPanelProgressOpacity(value: number) {
+    updateTextBuffPanelStyle((style) => ({
+      ...style,
+      progressOpacity: Math.max(0, Math.min(1, value)),
+    }));
   }
 
   function addInlineBuffEntry(sourceType: "buff" | "counter", sourceId: number) {
@@ -1161,6 +1177,7 @@
       {setTextBuffPanelNameColor}
       {setTextBuffPanelValueColor}
       {setTextBuffPanelProgressColor}
+      {setTextBuffPanelProgressOpacity}
       {globalPrioritySearch}
       {globalPrioritySearchResults}
       {setGlobalPrioritySearch}
@@ -1224,6 +1241,7 @@
       {setCustomPanelNameColor}
       {setCustomPanelValueColor}
       {setCustomPanelProgressColor}
+      {setCustomPanelProgressOpacity}
     />
   {:else}
     <TabOverlay

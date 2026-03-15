@@ -23,6 +23,7 @@
     setCustomPanelNameColor: (value: string) => void;
     setCustomPanelValueColor: (value: string) => void;
     setCustomPanelProgressColor: (value: string) => void;
+    setCustomPanelProgressOpacity: (value: number) => void;
   }
 
   let {
@@ -44,6 +45,7 @@
     setCustomPanelNameColor,
     setCustomPanelValueColor,
     setCustomPanelProgressColor,
+    setCustomPanelProgressOpacity,
   }: Props = $props();
 
   function hasInlineBuffEntry(buffId: number) {
@@ -103,7 +105,7 @@
       </label>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
         名称颜色
         <input
@@ -129,6 +131,19 @@
           value={customPanelStyle.progressColor}
           class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
           onchange={(event) => setCustomPanelProgressColor((event.currentTarget as HTMLInputElement).value)}
+        />
+      </label>
+      <label class="rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        <div>进度条透明度: {Math.round(customPanelStyle.progressOpacity * 100)}%</div>
+        <input
+          class="mt-2 w-full"
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          value={customPanelStyle.progressOpacity}
+          oninput={(event) =>
+            setCustomPanelProgressOpacity(Number((event.currentTarget as HTMLInputElement).value))}
         />
       </label>
     </div>

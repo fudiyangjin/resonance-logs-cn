@@ -117,6 +117,7 @@ export function ensureCustomPanelStyle(
     nameColor: current?.nameColor ?? "#ffffff",
     valueColor: current?.valueColor ?? "#ffffff",
     progressColor: current?.progressColor ?? "#ffffff",
+    progressOpacity: clampDecimal(current?.progressOpacity ?? 0.4, 0, 1),
   };
 }
 
@@ -132,6 +133,7 @@ export function ensureTextBuffPanelStyle(
     nameColor: current?.nameColor ?? "#ffffff",
     valueColor: current?.valueColor ?? "#ffffff",
     progressColor: current?.progressColor ?? "#ffffff",
+    progressOpacity: clampDecimal(current?.progressOpacity ?? 0.4, 0, 1),
   };
 }
 
@@ -470,4 +472,8 @@ export function getResourcePreciseValue(
 
 function clampRounded(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function clampDecimal(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }

@@ -46,6 +46,7 @@
                 nameColor={styleConfig.nameColor}
                 valueColor={styleConfig.valueColor}
                 progressColor={styleConfig.progressColor}
+                progressOpacity={styleConfig.progressOpacity ?? 0.4}
                 fontSize={styleConfig.fontSize}
                 columnGap={styleConfig.columnGap}
                 placeholder={row.isPlaceholder}

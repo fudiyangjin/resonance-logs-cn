@@ -389,7 +389,7 @@
       </label>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-3">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <label class="color-field">
         <span>名称颜色</span>
         <input
@@ -427,6 +427,23 @@
               (event.currentTarget as HTMLInputElement).value,
             )}
         />
+      </label>
+
+      <label class="color-field">
+        <span>进度条透明度</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          value={monsterMonitor.panelStyle.progressOpacity ?? 0.4}
+          oninput={(event) =>
+            updatePanelStyle(
+              "progressOpacity",
+              Number((event.currentTarget as HTMLInputElement).value),
+            )}
+        />
+        <strong>{Math.round((monsterMonitor.panelStyle.progressOpacity ?? 0.4) * 100)}%</strong>
       </label>
     </div>
     </section>
@@ -502,7 +519,7 @@
         </label>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <label class="color-field">
           <span>名称颜色</span>
           <input
@@ -540,6 +557,23 @@
                 (event.currentTarget as HTMLInputElement).value,
               )}
           />
+        </label>
+
+        <label class="color-field">
+          <span>进度条透明度</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={hatePanelStyle.progressOpacity ?? 0.4}
+            oninput={(event) =>
+              updateHatePanelStyle(
+                "progressOpacity",
+                Number((event.currentTarget as HTMLInputElement).value),
+              )}
+          />
+          <strong>{Math.round((hatePanelStyle.progressOpacity ?? 0.4) * 100)}%</strong>
         </label>
       </div>
     </section>

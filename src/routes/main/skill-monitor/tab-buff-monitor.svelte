@@ -59,6 +59,7 @@
     setTextBuffPanelNameColor: (value: string) => void;
     setTextBuffPanelValueColor: (value: string) => void;
     setTextBuffPanelProgressColor: (value: string) => void;
+    setTextBuffPanelProgressOpacity: (value: number) => void;
 
     globalPrioritySearch: string;
     globalPrioritySearchResults: BuffNameInfo[];
@@ -132,6 +133,7 @@
     setTextBuffPanelNameColor,
     setTextBuffPanelValueColor,
     setTextBuffPanelProgressColor,
+    setTextBuffPanelProgressOpacity,
     globalPrioritySearch,
     globalPrioritySearchResults,
     setGlobalPrioritySearch,
@@ -587,7 +589,7 @@
         </label>
       {/if}
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl">
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
         名称颜色
         <input
@@ -613,6 +615,19 @@
           value={textBuffPanelStyle.progressColor}
           class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
           onchange={(event) => setTextBuffPanelProgressColor((event.currentTarget as HTMLInputElement).value)}
+        />
+      </label>
+      <label class="rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        <div>进度条透明度: {Math.round(textBuffPanelStyle.progressOpacity * 100)}%</div>
+        <input
+          class="mt-2 w-full"
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          value={textBuffPanelStyle.progressOpacity}
+          oninput={(event) =>
+            setTextBuffPanelProgressOpacity(Number((event.currentTarget as HTMLInputElement).value))}
         />
       </label>
     </div>

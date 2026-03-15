@@ -8,6 +8,7 @@
     nameColor: string;
     valueColor: string;
     progressColor: string;
+    progressOpacity?: number | undefined;
     fontSize: number;
     columnGap?: number | undefined;
     placeholder?: boolean | undefined;
@@ -22,6 +23,7 @@
     nameColor,
     valueColor,
     progressColor,
+    progressOpacity = 0.4,
     fontSize,
     columnGap = 8,
     placeholder = false,
@@ -35,6 +37,7 @@
         class="text-buff-progress-fill"
         style:width={`${progressPercent}%`}
         style:background={progressColor}
+        style:opacity={progressOpacity}
       ></div>
     </div>
   {/if}
@@ -101,7 +104,10 @@
     justify-content: space-between;
     min-width: 0;
     padding: 2px 6px;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+    text-shadow:
+      0 0 3px rgba(0, 0, 0, 1),
+      0 0 6px rgba(0, 0, 0, 0.7),
+      0 1px 2px rgba(0, 0, 0, 0.9);
   }
 
   .text-buff-name {
