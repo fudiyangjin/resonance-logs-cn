@@ -229,7 +229,7 @@ export function resolveBuffNameInfo(
 export function searchBuffsByName(
   keyword: string,
   aliases?: BuffAliasMap,
-  limit = 120,
+  limit?: number | null,
 ): BuffNameInfo[] {
   const normalizedKeyword = normalizeText(keyword);
   if (!normalizedKeyword) return [];
@@ -248,7 +248,8 @@ export function searchBuffsByName(
 
   matches.sort((a, b) => a.rank - b.rank || a.baseId - b.baseId);
 
-  return matches.slice(0, Math.max(1, limit)).map((match) =>
-    resolveBuffNameInfo(match.baseId, normalizedAliases)
-  );
+  const normalizedLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit ?? 0)) : null;
+  const visibleMatches = normalizedLimit === null ? matches : matches.slice(0, normalizedLimit);
+
+  return visibleMatches.map((match) => resolveBuffNameInfo(match.baseId, normalizedAliases));
 }

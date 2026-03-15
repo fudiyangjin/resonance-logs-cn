@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BuffSearchResultGrid from "$lib/components/BuffSearchResultGrid.svelte";
   import type { BuffDefinition, BuffNameInfo } from "$lib/config/buff-name-table";
   import type { CustomPanelStyle, InlineBuffEntry } from "$lib/settings-store";
   import type { CounterRulePreset } from "$lib/skill-mappings";
@@ -45,6 +46,15 @@
     setCustomPanelProgressColor,
   }: Props = $props();
 
+  function hasInlineBuffEntry(buffId: number) {
+    return inlineBuffEntries.some(
+      (entry) => entry.sourceType === "buff" && entry.sourceId === buffId,
+    );
+  }
+
+  function inlineBuffStatusLabel(buffId: number): string | null {
+    return hasInlineBuffEntry(buffId) ? "已添加" : null;
+  }
 </script>
 
 <div class="space-y-6">
@@ -136,25 +146,14 @@
       oninput={(event) => setInlineBuffSearch((event.currentTarget as HTMLInputElement).value)}
     />
     {#if inlineBuffSearch.trim().length > 0 && filteredInlineBuffSearchResults.length > 0}
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(64px,1fr))] gap-2">
-        {#each filteredInlineBuffSearchResults.slice(0, 30) as item (item.baseId)}
-          {@const iconBuff = availableBuffMap.get(item.baseId)}
-          <button
-            type="button"
-            class="rounded border border-border/60 bg-muted/20 hover:bg-muted/40 transition-colors p-1 cursor-pointer"
-            title={item.name}
-            onclick={() => addInlineBuffEntry("buff", item.baseId)}
-          >
-            {#if iconBuff}
-              <img src={`/images/buff/${iconBuff.spriteFile}`} alt={item.name} class="w-full h-10 object-contain" />
-            {:else}
-              <div class="h-10 flex items-center justify-center text-[11px] text-foreground text-center">
-                {item.name.slice(0, 8)}
-              </div>
-            {/if}
-          </button>
-        {/each}
-      </div>
+      <BuffSearchResultGrid
+        items={filteredInlineBuffSearchResults}
+        {availableBuffMap}
+        onSelect={(buffId) => addInlineBuffEntry("buff", buffId)}
+        isDisabled={hasInlineBuffEntry}
+        getStatusLabel={inlineBuffStatusLabel}
+        emptyMessage="没有匹配的 Buff"
+      />
     {/if}
   </div>
 

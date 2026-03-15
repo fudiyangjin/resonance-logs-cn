@@ -37,7 +37,7 @@
   );
   const searchResults = $derived.by(() =>
     searchKeyword.trim().length > 0
-      ? searchBuffsByName(searchKeyword, buffAliases, 80)
+      ? searchBuffsByName(searchKeyword, buffAliases)
       : ([] as BuffNameInfo[]),
   );
 
@@ -126,6 +126,17 @@
     return searchTarget === "global"
       ? globalBuffIds.includes(buffId)
       : selfAppliedBuffIds.includes(buffId);
+  }
+
+  function searchStatusLabel(buffId: number): string | null {
+    if (searchTarget === "global") {
+      if (globalBuffIds.includes(buffId)) return "已加全局";
+      if (selfAppliedBuffIds.includes(buffId)) return "当前在仅自身";
+      return null;
+    }
+    if (selfAppliedBuffIds.includes(buffId)) return "已加仅自身";
+    if (globalBuffIds.includes(buffId)) return "当前在全局";
+    return null;
   }
 
   function buffName(buffId: number) {
@@ -223,6 +234,7 @@
           {availableBuffMap}
           onSelect={toggleSelectedBuff}
           isSelected={isSelectedInCurrentTarget}
+          getStatusLabel={searchStatusLabel}
           emptyMessage="没有匹配的 Boss Buff"
         />
       {/if}

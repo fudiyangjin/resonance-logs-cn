@@ -159,6 +159,26 @@
     togglePriorityInGroup,
     moveGroupPriority,
   }: Props = $props();
+
+  function buffSearchStatusLabel(buffId: number): string | null {
+    return isBuffSelected(buffId) ? "已选择" : null;
+  }
+
+  function buffAliasStatusLabel(buffId: number): string | null {
+    if (buffAliasEditingBuffId === buffId) return "编辑中";
+    return configuredBuffAliasIds.includes(buffId) ? "已设别名" : null;
+  }
+
+  function getFilteredGlobalPrioritySearchResults(): BuffNameInfo[] {
+    const ids = new Set<number>();
+    return globalPrioritySearchResults.filter((item) => {
+      if (ids.has(item.baseId)) return false;
+      if (!expandedSelectedBuffIds.includes(item.baseId)) return false;
+      if (buffPriorityIds.includes(item.baseId)) return false;
+      ids.add(item.baseId);
+      return true;
+    });
+  }
 </script>
 
 {#snippet buffGroupLayoutControls(group: BuffGroup, onUpdate: BuffGroupUpdateHandler)}
@@ -302,6 +322,7 @@
         {availableBuffMap}
         onSelect={toggleBuff}
         isSelected={isBuffSelected}
+        getStatusLabel={buffSearchStatusLabel}
         emptyMessage="没有匹配的 Buff"
       />
     {:else}
@@ -381,8 +402,8 @@
               {availableBuffMap}
               onSelect={(buffId) => setBuffAliasEditingBuffId(buffId)}
               isSelected={(buffId) => buffAliasEditingBuffId === buffId}
+              getStatusLabel={buffAliasStatusLabel}
               emptyMessage="没有匹配的 Buff"
-              limit={20}
             />
 
             {#if buffAliasEditingBuffId !== null}
@@ -606,24 +627,14 @@
         value={globalPrioritySearch}
         oninput={(event) => setGlobalPrioritySearch((event.currentTarget as HTMLInputElement).value)}
       />
-      {#if globalPrioritySearch.trim().length > 0 && globalPrioritySearchResults.length > 0}
-        <div class="grid grid-cols-[repeat(auto-fill,minmax(50px,1fr))] gap-2">
-          {#each globalPrioritySearchResults as item (item.baseId)}
-            {@const iconBuff = availableBuffMap.get(item.baseId)}
-            {#if expandedSelectedBuffIds.includes(item.baseId) && !buffPriorityIds.includes(item.baseId)}
-              <button
-                type="button"
-                class="rounded border border-border/60 bg-muted/20 hover:bg-muted/40 transition-colors p-1"
-                title={item.name}
-                onclick={() => toggleGlobalPriority(item.baseId)}
-              >
-                {#if iconBuff}
-                  <img src={`/images/buff/${iconBuff.spriteFile}`} alt={item.name} class="w-full h-10 object-contain" />
-                {/if}
-              </button>
-            {/if}
-          {/each}
-        </div>
+      {#if globalPrioritySearch.trim().length > 0}
+        <BuffSearchResultGrid
+          items={getFilteredGlobalPrioritySearchResults()}
+          {availableBuffMap}
+          onSelect={toggleGlobalPriority}
+          emptyMessage="没有可添加到全局优先级的 Buff"
+          minColumnWidth={180}
+        />
       {/if}
       <div class="space-y-1">
         {#each buffPriorityIds as buffId, idx (buffId)}
@@ -797,8 +808,7 @@
                   {availableBuffMap}
                   onSelect={(buffId) => toggleBuffInGroup(group.id, buffId)}
                   emptyMessage="没有可添加的 Buff"
-                  limit={40}
-                  minColumnWidth={50}
+                  minColumnWidth={180}
                 />
               {/if}
 
@@ -855,8 +865,7 @@
                     {availableBuffMap}
                     onSelect={(buffId) => togglePriorityInGroup(group.id, buffId)}
                     emptyMessage="没有可添加到优先级的 Buff"
-                    limit={40}
-                    minColumnWidth={50}
+                    minColumnWidth={180}
                   />
                 {/if}
                 {#each getGroupPriorityIds(group) as buffId, idx (buffId)}

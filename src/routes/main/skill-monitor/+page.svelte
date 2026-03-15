@@ -147,9 +147,6 @@
     const ids = new Set<number>();
     return inlineBuffSearchResults.filter((item) => {
       if (ids.has(item.baseId)) return false;
-      if (inlineBuffEntries.some((entry) => entry.sourceType === "buff" && entry.sourceId === item.baseId)) {
-        return false;
-      }
       ids.add(item.baseId);
       return true;
     });
@@ -531,31 +528,19 @@
   );
 
   $effect(() => {
-    buffSearchResults = searchBuffsByName(buffSearch, buffAliases, 120);
+    buffSearchResults = searchBuffsByName(buffSearch, buffAliases);
   });
 
   $effect(() => {
-    globalPrioritySearchResults = searchBuffsByName(
-      globalPrioritySearch,
-      buffAliases,
-      120,
-    );
+    globalPrioritySearchResults = searchBuffsByName(globalPrioritySearch, buffAliases);
   });
 
   $effect(() => {
-    inlineBuffSearchResults = searchBuffsByName(
-      inlineBuffSearch,
-      buffAliases,
-      120,
-    );
+    inlineBuffSearchResults = searchBuffsByName(inlineBuffSearch, buffAliases);
   });
 
   $effect(() => {
-    buffAliasSearchResults = searchBuffsByName(
-      buffAliasSearch,
-      buffAliases,
-      120,
-    );
+    buffAliasSearchResults = searchBuffsByName(buffAliasSearch, buffAliases);
   });
 
   function setBuffAliasSearch(value: string) {
@@ -930,7 +915,7 @@
     }
     groupSearchResults = {
       ...groupSearchResults,
-      [groupId]: searchBuffsByName(keyword, buffAliases, 120),
+      [groupId]: searchBuffsByName(keyword, buffAliases),
     };
   }
 
@@ -947,7 +932,7 @@
     }
     groupPrioritySearchResults = {
       ...groupPrioritySearchResults,
-      [groupId]: searchBuffsByName(keyword, buffAliases, 120),
+      [groupId]: searchBuffsByName(keyword, buffAliases),
     };
   }
 
