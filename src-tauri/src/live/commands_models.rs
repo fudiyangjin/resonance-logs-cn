@@ -269,6 +269,12 @@ pub struct HateListUpdatePayload {
     pub entries: Vec<HateEntry>,
 }
 
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct EntityNameMapPayload {
+    pub names: HashMap<i64, String>,
+}
+
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CounterUpdateState {

@@ -8,6 +8,7 @@ use crate::live::opcodes_models::{AttrType, Encounter, class};
 use blueprotobuf_lib::blueprotobuf::EEntityType;
 use log::{trace, warn};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::RwLock;
 
@@ -109,6 +110,9 @@ pub enum OutboundEvent {
         boss_uid: i64,
         entries: Vec<HateEntry>,
     },
+    EntityNameMap {
+        names: HashMap<i64, String>,
+    },
     BuffCounterUpdate(Vec<CounterUpdateState>),
     SkillCdUpdate(Vec<SkillCdState>),
     PanelAttrUpdate(Vec<PanelAttrState>),
@@ -188,6 +192,11 @@ impl EventManager {
     pub fn emit_hate_list_update(&mut self, boss_uid: i64, entries: Vec<HateEntry>) {
         self.outbound_events
             .push(OutboundEvent::HateListUpdate { boss_uid, entries });
+    }
+
+    pub fn emit_entity_name_map(&mut self, names: HashMap<i64, String>) {
+        self.outbound_events
+            .push(OutboundEvent::EntityNameMap { names });
     }
 
     pub fn emit_buff_counter_update(&mut self, counters: Vec<CounterUpdateState>) {

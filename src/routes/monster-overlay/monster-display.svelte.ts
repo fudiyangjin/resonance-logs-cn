@@ -89,7 +89,7 @@ function buildHateRows(entries: HateEntry[]): TextBuffDisplay[] {
 
   return sortedEntries.map((entry, index) => ({
     key: `hate_${entry.uid}`,
-    label: `${index + 1}. UID ${entry.uid}`,
+    label: `${index + 1}. ${monsterRuntime.nameCache.get(entry.uid) ?? `UID ${entry.uid}`}`,
     valueText: topHate > 0
       ? `${Math.round((entry.hateVal / topHate) * 100)}%`
       : "0%",
@@ -129,7 +129,7 @@ export function updateMonsterDisplay() {
     if (buffRows.length === 0) continue;
     nextSections.push({
       bossUid,
-      title: `目标 ${bossUid}`,
+      title: monsterRuntime.nameCache.get(bossUid) ?? `目标 ${bossUid}`,
       rows: buffRows,
     });
   }
@@ -143,7 +143,7 @@ export function updateMonsterDisplay() {
       if (hateRows.length === 0) continue;
       nextHateSections.push({
         bossUid,
-        title: `目标 ${bossUid}`,
+        title: monsterRuntime.nameCache.get(bossUid) ?? `目标 ${bossUid}`,
         rows: hateRows,
       });
     }

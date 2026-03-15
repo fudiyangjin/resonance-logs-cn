@@ -13,6 +13,7 @@ export const monsterRuntime = $state({
   isInitialized: false,
   isMounted: false,
   rafId: null as number | null,
+  nameCache: new Map<number, string>(),
   bossBuffMap: new Map<number, Map<number, BuffUpdateState>>(),
   bossHateMap: new Map<number, HateEntry[]>(),
   bossSections: [] as MonsterBossBuffSection[],

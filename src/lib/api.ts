@@ -123,6 +123,10 @@ export type HateListUpdatePayload = {
   entries: HateEntry[];
 };
 
+export type EntityNameMapPayload = {
+  names: Record<string, string>;
+};
+
 export type CounterUpdateState = {
   ruleId: number;
   linkedBuffId: number;
@@ -228,6 +232,11 @@ export const onHateListUpdate = (
   handler: (event: Event<HateListUpdatePayload>) => void
 ): Promise<UnlistenFn> =>
   listen<HateListUpdatePayload>("hate-list-update", handler);
+
+export const onEntityNames = (
+  handler: (event: Event<EntityNameMapPayload>) => void
+): Promise<UnlistenFn> =>
+  listen<EntityNameMapPayload>("entity-names", handler);
 
 export const onBuffCounterUpdate = (
   handler: (event: Event<BuffCounterUpdatePayload>) => void

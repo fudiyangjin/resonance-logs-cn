@@ -7,11 +7,12 @@ use crate::live::counter_tracker::{BuffCounterTracker, CounterRule};
 use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::event_manager::EventManager;
-use crate::live::opcodes_models::Encounter;
+use crate::live::opcodes_models::{AttrType, Encounter, Entity};
 use crate::live::skill_cd_monitor::SkillCdMonitor;
 use blueprotobuf_lib::blueprotobuf;
 use blueprotobuf_lib::blueprotobuf::EEntityType;
 use log::{info, warn};
+use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 
@@ -70,6 +71,8 @@ pub struct AppState {
     pub battle_state: BattleStateMachine,
     /// If set, automatic reset can execute only after this timestamp.
     pub pending_auto_reset: Option<Instant>,
+    /// UIDs whose display names have already been pushed to the monster overlay.
+    pub sent_overlay_uids: HashSet<i64>,
 }
 
 #[derive(Debug)]
@@ -135,6 +138,7 @@ impl AppState {
             server_clock_offset: 0,
             battle_state: BattleStateMachine::default(),
             pending_auto_reset: None,
+            sent_overlay_uids: HashSet::new(),
         }
     }
 
@@ -182,6 +186,19 @@ fn hydrate_entities_from_attr_store(state: &mut AppState) {
     for (&uid, entity) in &mut state.encounter.entity_uid_to_entity {
         state.attr_store.hydrate_entity(uid, entity);
     }
+}
+
+fn resolve_entity_display_name(uid: i64, entity: &Entity, attr_store: &EntityAttrStore) -> String {
+    if let Some(name) = attr_store
+        .attr(uid, AttrType::Name)
+        .and_then(|value| value.as_string())
+    {
+        return name.to_string();
+    }
+    if !entity.name.is_empty() {
+        return entity.name.clone();
+    }
+    format!("Boss {uid}")
 }
 
 fn collect_player_names(encounter: &Encounter) -> Vec<PlayerNameEntry> {
@@ -543,6 +560,7 @@ impl AppStateManager {
         state.encounter.reset_combat_state();
         state.local_monitor.clear_runtime_state();
         state.boss_buff_monitors.clear();
+        state.sent_overlay_uids.clear();
         state.battle_state = BattleStateMachine::default();
         state.pending_auto_reset = None;
 
@@ -1046,9 +1064,18 @@ impl AppStateManager {
 
         state.event_manager.emit_live_data(payload);
 
+        let mut new_names = HashMap::new();
+
         for (&boss_uid, entity) in &state.encounter.entity_uid_to_entity {
             if !entity.is_boss() {
                 continue;
+            }
+
+            if state.sent_overlay_uids.insert(boss_uid) {
+                new_names.insert(
+                    boss_uid,
+                    resolve_entity_display_name(boss_uid, entity, &state.attr_store),
+                );
             }
 
             let entries = state
@@ -1057,7 +1084,24 @@ impl AppStateManager {
                 .get(&boss_uid)
                 .cloned()
                 .unwrap_or_default();
+
+            for entry in &entries {
+                if state.sent_overlay_uids.insert(entry.uid) {
+                    let name = state
+                        .attr_store
+                        .attr(entry.uid, AttrType::Name)
+                        .and_then(|value| value.as_string())
+                        .map(ToString::to_string)
+                        .unwrap_or_else(|| format!("UID {}", entry.uid));
+                    new_names.insert(entry.uid, name);
+                }
+            }
+
             state.event_manager.emit_hate_list_update(boss_uid, entries);
+        }
+
+        if !new_names.is_empty() {
+            state.event_manager.emit_entity_name_map(new_names);
         }
     }
 }

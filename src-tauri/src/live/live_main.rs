@@ -2,8 +2,8 @@ use crate::live::state::{AppState, AppStateManager, StateEvent};
 use crate::live::{
     commands_models::{
         BossBuffUpdatePayload, BuffCounterUpdatePayload, BuffUpdatePayload,
-        FightResourceUpdatePayload, PanelAttrUpdatePayload, SkillCdUpdatePayload,
-        HateListUpdatePayload,
+        EntityNameMapPayload, FightResourceUpdatePayload, HateListUpdatePayload,
+        PanelAttrUpdatePayload, SkillCdUpdatePayload,
     },
     event_manager::{EncounterUpdatePayload, SceneChangePayload},
     event_manager::{OutboundEvent, safe_emit_to},
@@ -419,6 +419,14 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     crate::WINDOW_MONSTER_OVERLAY_LABEL,
                     "hate-list-update",
                     HateListUpdatePayload { boss_uid, entries },
+                );
+            }
+            OutboundEvent::EntityNameMap { names } => {
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_MONSTER_OVERLAY_LABEL,
+                    "entity-names",
+                    EntityNameMapPayload { names },
                 );
             }
             OutboundEvent::BuffCounterUpdate(counters) => {
