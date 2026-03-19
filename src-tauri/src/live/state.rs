@@ -1113,6 +1113,8 @@ impl AppStateManager {
         let boss_buff_snapshot = state
             .boss_buff_monitors
             .build_all_buff_snapshots(state.server_clock_offset);
-        state.event_manager.emit_boss_buff_update(boss_buff_snapshot);
+        state
+            .event_manager
+            .emit_boss_buff_update(boss_buff_snapshot);
     }
 }

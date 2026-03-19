@@ -295,6 +295,7 @@ export type OptimizeLatestPayload = {
   excludeAttributes: number[];
   minAttrRequirements?: Record<number, number>;
   useGpu?: boolean;
+  combinationSize?: 4 | 5;
 };
 
 export type ModuleCalcProgressPayload = [number, number]; // [processed, total]

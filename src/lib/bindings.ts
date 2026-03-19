@@ -410,17 +410,9 @@ async getLatestModules() : Promise<Result<ModuleInfo[], string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async optimizeLatestModules(targetAttributes: number[], excludeAttributes: number[], minAttrRequirements: Partial<{ [key in number]: number }> | null, useGpu: boolean | null) : Promise<Result<ModuleSolution[], string>> {
+async optimizeLatestModules(targetAttributes: number[], excludeAttributes: number[], minAttrRequirements: Partial<{ [key in number]: number }> | null, useGpu: boolean | null, combinationSize: number | null) : Promise<Result<ModuleSolution[], string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("optimize_latest_modules", { targetAttributes, excludeAttributes, minAttrRequirements, useGpu }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async greedyOptimizeModules(modules: ModuleInfo[], targetAttributes: number[], excludeAttributes: number[], maxSolutions: number | null, maxAttemptsMultiplier: number | null, localSearchIterations: number | null) : Promise<Result<ModuleSolution[], string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("greedy_optimize_modules", { modules, targetAttributes, excludeAttributes, maxSolutions, maxAttemptsMultiplier, localSearchIterations }) };
+    return { status: "ok", data: await TAURI_INVOKE("optimize_latest_modules", { targetAttributes, excludeAttributes, minAttrRequirements, useGpu, combinationSize }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

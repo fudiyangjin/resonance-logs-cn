@@ -14,6 +14,7 @@ export interface ModuleCalcState {
 
   useGpu: boolean;
   gpuSupport: GpuSupport | null;
+  combinationSize: 4 | 5;
 
   targetAttributes: number[];
   excludeAttributes: number[];
@@ -35,6 +36,7 @@ export const MODULE_CALC = $state<ModuleCalcState>({
 
   useGpu: true,
   gpuSupport: null,
+  combinationSize: 4,
 
   targetAttributes: [],
   excludeAttributes: [],

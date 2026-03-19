@@ -9,7 +9,40 @@ pub use bridge::ffi::{
 use blueprotobuf_lib::blueprotobuf;
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+
+#[derive(Debug, Clone, Copy)]
+pub struct ProgressHandleSnapshot {
+    pub processed: u64,
+    pub total: u64,
+}
+
+#[derive(Debug)]
+pub struct ProgressHandleOwner {
+    handles: Vec<u64>,
+}
+
+impl ProgressHandleOwner {
+    pub fn new(count: usize) -> Self {
+        let mut handles = Vec::with_capacity(count);
+        for _ in 0..count {
+            handles.push(bridge::ffi::create_progress_context_ffi());
+        }
+        Self { handles }
+    }
+
+    pub fn handles(&self) -> &[u64] {
+        &self.handles
+    }
+}
+
+impl Drop for ProgressHandleOwner {
+    fn drop(&mut self) {
+        for handle in self.handles.drain(..) {
+            bridge::ffi::destroy_progress_context_ffi(handle);
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ModulePart {
@@ -46,6 +79,8 @@ pub struct OptimizeOptions {
     pub max_workers: i32,
     #[serde(default = "default_use_gpu")]
     pub use_gpu: bool,
+    #[serde(default = "default_combination_size")]
+    pub combination_size: i32,
 }
 
 fn default_max_solutions() -> i32 {
@@ -60,6 +95,10 @@ fn default_use_gpu() -> bool {
     true
 }
 
+fn default_combination_size() -> i32 {
+    4
+}
+
 impl Default for OptimizeOptions {
     fn default() -> Self {
         Self {
@@ -69,6 +108,7 @@ impl Default for OptimizeOptions {
             max_solutions: default_max_solutions(),
             max_workers: default_max_workers(),
             use_gpu: default_use_gpu(),
+            combination_size: default_combination_size(),
         }
     }
 }
@@ -278,6 +318,14 @@ pub fn reset_progress() {
     bridge::ffi::reset_progress_ffi();
 }
 
+pub fn get_progress_context(handle: u64) -> ProgressHandleSnapshot {
+    let info = bridge::ffi::get_progress_context_ffi(handle);
+    ProgressHandleSnapshot {
+        processed: info.processed,
+        total: info.total,
+    }
+}
+
 fn prefilter_modules_by_total_scores(
     modules: &[ModuleInfo],
     target_attributes: &[i32],
@@ -318,15 +366,29 @@ fn prefilter_modules_by_total_scores(
 pub fn strategy_enumeration_gpu(
     modules: &[ModuleInfo],
     options: &OptimizeOptions,
+    progress_handle: Option<u64>,
 ) -> Vec<ModuleSolution> {
+    const GPU_ENUM_INPUT_LIMIT_FOUR: usize = 1000;
+    const GPU_ENUM_INPUT_LIMIT_FIVE: usize = 500;
+
     let min_attr_ids: Vec<i32> = options.min_attr_requirements.keys().copied().collect();
     let min_attr_values: Vec<i32> = min_attr_ids
         .iter()
         .map(|k| options.min_attr_requirements.get(k).copied().unwrap_or(0))
         .collect();
 
-    let modules_to_use: Vec<ModuleInfo> = if modules.len() > 1000 {
-        prefilter_modules_by_total_scores(modules, &options.target_attributes, &min_attr_ids, 1000)
+    let max_input_modules = match options.combination_size {
+        5 => GPU_ENUM_INPUT_LIMIT_FIVE,
+        _ => GPU_ENUM_INPUT_LIMIT_FOUR,
+    };
+
+    let modules_to_use: Vec<ModuleInfo> = if modules.len() > max_input_modules {
+        prefilter_modules_by_total_scores(
+            modules,
+            &options.target_attributes,
+            &min_attr_ids,
+            max_input_modules,
+        )
     } else {
         modules.to_vec()
     };
@@ -340,6 +402,8 @@ pub fn strategy_enumeration_gpu(
         &min_attr_values,
         options.max_solutions,
         options.max_workers,
+        options.combination_size,
+        progress_handle.unwrap_or(0),
     );
 
     from_ffi_solutions(result)
@@ -348,6 +412,7 @@ pub fn strategy_enumeration_gpu(
 pub fn strategy_enumeration_cpu(
     modules: &[ModuleInfo],
     options: &OptimizeOptions,
+    progress_handle: Option<u64>,
 ) -> Vec<ModuleSolution> {
     let min_attr_ids: Vec<i32> = options.min_attr_requirements.keys().copied().collect();
     let min_attr_values: Vec<i32> = min_attr_ids
@@ -370,31 +435,98 @@ pub fn strategy_enumeration_cpu(
         &min_attr_values,
         options.max_solutions,
         options.max_workers,
+        options.combination_size,
+        progress_handle.unwrap_or(0),
     );
 
     from_ffi_solutions(result)
 }
 
-pub fn optimize_modules(
+pub(super) const BEAM_INTERNAL_MAX_SOLUTIONS: i32 = 100;
+
+pub fn strategy_beam_search(
     modules: &[ModuleInfo],
-    target_attributes: &[i32],
-    exclude_attributes: &[i32],
-    max_solutions: i32,
-    max_attempts_multiplier: i32,
-    local_search_iterations: i32,
+    options: &OptimizeOptions,
+    progress_handle: Option<u64>,
 ) -> Vec<ModuleSolution> {
+    const DEFAULT_BEAM_WIDTH: i32 = 5096;
+    const DEFAULT_EXPAND_PER_STATE: i32 = 0;
+    const DEFAULT_BEAM_WORKERS: i32 = 3;
+
+    let min_attr_ids: Vec<i32> = options.min_attr_requirements.keys().copied().collect();
+    let min_attr_values: Vec<i32> = min_attr_ids
+        .iter()
+        .map(|k| options.min_attr_requirements.get(k).copied().unwrap_or(0))
+        .collect();
     let ffi_modules = to_ffi_modules(modules);
 
-    let result = bridge::ffi::optimize_modules_ffi(
+    let result = bridge::ffi::strategy_beam_search_ffi(
         &ffi_modules,
-        &target_attributes.to_vec(),
-        &exclude_attributes.to_vec(),
-        max_solutions,
-        max_attempts_multiplier,
-        local_search_iterations,
+        &options.target_attributes,
+        &options.exclude_attributes,
+        &min_attr_ids,
+        &min_attr_values,
+        options.max_solutions,
+        DEFAULT_BEAM_WIDTH,
+        DEFAULT_EXPAND_PER_STATE,
+        options.combination_size,
+        options.max_workers.min(DEFAULT_BEAM_WORKERS),
+        progress_handle.unwrap_or(0),
     );
 
     from_ffi_solutions(result)
+}
+
+pub fn strategy_five_module_cuda(
+    modules: &[ModuleInfo],
+    options: &OptimizeOptions,
+    enumeration_progress_handle: u64,
+    beam_progress_handle: u64,
+) -> Result<Vec<ModuleSolution>, String> {
+    let mut enumeration_options = options.clone();
+    enumeration_options.combination_size = 5;
+
+    let mut beam_options = options.clone();
+    beam_options.combination_size = 5;
+    beam_options.max_solutions = BEAM_INTERNAL_MAX_SOLUTIONS;
+
+    let enumeration_modules = modules.to_vec();
+    let beam_modules = modules.to_vec();
+    let enumeration_handle = std::thread::spawn(move || {
+        strategy_enumeration_gpu(
+            &enumeration_modules,
+            &enumeration_options,
+            Some(enumeration_progress_handle),
+        )
+    });
+    let beam_handle = std::thread::spawn(move || {
+        strategy_beam_search(&beam_modules, &beam_options, Some(beam_progress_handle))
+    });
+
+    let enumeration_results = enumeration_handle
+        .join()
+        .map_err(|_| "CUDA 枚举线程执行失败".to_string())?;
+    let beam_results = beam_handle
+        .join()
+        .map_err(|_| "Beam Search 线程执行失败".to_string())?;
+
+    let mut seen = HashSet::new();
+    let mut merged = Vec::with_capacity(enumeration_results.len() + beam_results.len());
+
+    for solution in enumeration_results
+        .into_iter()
+        .chain(beam_results.into_iter())
+    {
+        let mut key: Vec<i32> = solution.modules.iter().map(|module| module.uuid).collect();
+        key.sort_unstable();
+        if seen.insert(key) {
+            merged.push(solution);
+        }
+    }
+
+    merged.sort_by(|left, right| right.score.cmp(&left.score));
+    merged.truncate(options.max_solutions.max(1) as usize);
+    Ok(merged)
 }
 
 pub fn calculate_combat_power(modules: &[ModuleInfo]) -> i32 {

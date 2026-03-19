@@ -1,5 +1,6 @@
 #include "resonance-logs-cn/src/module_optimizer/bridge.rs.h"
 #include "module_optimizer.h"
+#include <mutex>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -12,6 +13,27 @@ extern "C" int TestOpenCL();
 #endif
 
 namespace module_optimizer_ffi {
+
+namespace {
+
+std::mutex g_progress_contexts_mutex;
+std::unordered_map<std::uint64_t, std::shared_ptr<ProgressContext>> g_progress_contexts;
+std::atomic<std::uint64_t> g_next_progress_handle{1};
+
+std::shared_ptr<ProgressContext> get_progress_context(::std::uint64_t handle) {
+    if (handle == 0) {
+        return nullptr;
+    }
+
+    std::lock_guard<std::mutex> lock(g_progress_contexts_mutex);
+    const auto it = g_progress_contexts.find(handle);
+    if (it == g_progress_contexts.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+
+} // namespace
 
 static std::vector<ModuleInfo> convert_modules(::rust::Vec<ModuleInfoFfi> const& ffi_modules) {
     std::vector<ModuleInfo> modules;
@@ -116,6 +138,39 @@ GpuSupportInfo check_gpu_support_ffi() {
     return info;
 }
 
+::std::uint64_t create_progress_context_ffi() {
+    const auto handle = g_next_progress_handle.fetch_add(1, std::memory_order_relaxed);
+    auto progress = std::make_shared<ProgressContext>();
+    progress->reset();
+
+    std::lock_guard<std::mutex> lock(g_progress_contexts_mutex);
+    g_progress_contexts.emplace(handle, std::move(progress));
+    return handle;
+}
+
+void destroy_progress_context_ffi(::std::uint64_t handle) {
+    if (handle == 0) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(g_progress_contexts_mutex);
+    g_progress_contexts.erase(handle);
+}
+
+ProgressInfoFfi get_progress_context_ffi(::std::uint64_t handle) {
+    ProgressInfoFfi info;
+    const auto progress = get_progress_context(handle);
+    if (progress != nullptr) {
+        const auto snapshot = progress->snapshot();
+        info.processed = snapshot.first;
+        info.total = snapshot.second;
+    } else {
+        info.processed = 0;
+        info.total = 0;
+    }
+    return info;
+}
+
 ::rust::Vec<ModuleSolutionFfi> strategy_enumeration_cpu_ffi(
     ::rust::Vec<ModuleInfoFfi> const& modules,
     ::rust::Vec<::std::int32_t> const& target_attributes,
@@ -123,16 +178,21 @@ GpuSupportInfo check_gpu_support_ffi() {
     ::rust::Vec<::std::int32_t> const& min_attr_ids,
     ::rust::Vec<::std::int32_t> const& min_attr_values,
     ::std::int32_t max_solutions,
-    ::std::int32_t max_workers) {
+    ::std::int32_t max_workers,
+    ::std::int32_t combination_size,
+    ::std::uint64_t progress_handle) {
     
     auto cpp_modules = convert_modules(modules);
+    auto progress = get_progress_context(progress_handle);
     auto result = ModuleOptimizerCpp::StrategyEnumeration(
         cpp_modules,
         to_set(target_attributes),
         to_set(exclude_attributes),
         to_map(min_attr_ids, min_attr_values),
         max_solutions,
-        max_workers
+        max_workers,
+        combination_size,
+        progress
     );
     
     return convert_solutions(result);
@@ -145,37 +205,52 @@ GpuSupportInfo check_gpu_support_ffi() {
     ::rust::Vec<::std::int32_t> const& min_attr_ids,
     ::rust::Vec<::std::int32_t> const& min_attr_values,
     ::std::int32_t max_solutions,
-    ::std::int32_t max_workers) {
+    ::std::int32_t max_workers,
+    ::std::int32_t combination_size,
+    ::std::uint64_t progress_handle) {
     
     auto cpp_modules = convert_modules(modules);
+    auto progress = get_progress_context(progress_handle);
     auto result = ModuleOptimizerCpp::StrategyEnumerationGPU(
         cpp_modules,
         to_set(target_attributes),
         to_set(exclude_attributes),
         to_map(min_attr_ids, min_attr_values),
         max_solutions,
-        max_workers
+        max_workers,
+        combination_size,
+        progress
     );
     
     return convert_solutions(result);
 }
 
-::rust::Vec<ModuleSolutionFfi> optimize_modules_ffi(
+::rust::Vec<ModuleSolutionFfi> strategy_beam_search_ffi(
     ::rust::Vec<ModuleInfoFfi> const& modules,
     ::rust::Vec<::std::int32_t> const& target_attributes,
     ::rust::Vec<::std::int32_t> const& exclude_attributes,
+    ::rust::Vec<::std::int32_t> const& min_attr_ids,
+    ::rust::Vec<::std::int32_t> const& min_attr_values,
     ::std::int32_t max_solutions,
-    ::std::int32_t max_attempts_multiplier,
-    ::std::int32_t local_search_iterations) {
+    ::std::int32_t beam_width,
+    ::std::int32_t expand_per_state,
+    ::std::int32_t combination_size,
+    ::std::int32_t max_workers,
+    ::std::uint64_t progress_handle) {
     
     auto cpp_modules = convert_modules(modules);
-    auto result = ModuleOptimizerCpp::OptimizeModules(
+    auto progress = get_progress_context(progress_handle);
+    auto result = ModuleOptimizerCpp::StrategyBeamSearch(
         cpp_modules,
         to_set(target_attributes),
         to_set(exclude_attributes),
+        to_map(min_attr_ids, min_attr_values),
         max_solutions,
-        max_attempts_multiplier,
-        local_search_iterations
+        beam_width,
+        expand_per_state,
+        combination_size,
+        max_workers,
+        progress
     );
     
     return convert_solutions(result);

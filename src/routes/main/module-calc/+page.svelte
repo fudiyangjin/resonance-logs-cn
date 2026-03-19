@@ -89,6 +89,7 @@
         excludeAttributes: [...MODULE_CALC.excludeAttributes],
         minAttrRequirements: minMap,
         useGpu: MODULE_CALC.useGpu,
+        combinationSize: MODULE_CALC.combinationSize,
       };
 
       console.log("Calling optimize_latest_modules with:", payload);
@@ -152,7 +153,7 @@
       </Button>
       <Button
         onclick={runOptimize}
-        disabled={MODULE_CALC.loading || (MODULE_CALC.moduleCount || 0) < 4}
+        disabled={MODULE_CALC.loading || (MODULE_CALC.moduleCount || 0) < MODULE_CALC.combinationSize}
       >
         {#if MODULE_CALC.loading}
           <Loader2 class="w-4 h-4 mr-2 animate-spin" />
@@ -178,6 +179,7 @@
     <CalcSettings
       bind:useGpu={MODULE_CALC.useGpu}
       bind:gpuSupport={MODULE_CALC.gpuSupport}
+      bind:combinationSize={MODULE_CALC.combinationSize}
     />
   </div>
 
@@ -200,7 +202,7 @@
           >
             <Loader2 class="w-3 h-3 mr-1 animate-spin" />
             <span>
-              计算中... {MODULE_CALC.progress.max > 0
+              {MODULE_CALC.combinationSize === 5 ? "多策略计算中..." : "计算中..."} {MODULE_CALC.progress.max > 0
                 ? `${Math.round((MODULE_CALC.progress.value / MODULE_CALC.progress.max) * 100)}%`
                 : ""}
             </span>

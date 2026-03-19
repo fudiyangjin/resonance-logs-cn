@@ -54,6 +54,12 @@ pub mod ffi {
 
         fn reset_progress_ffi();
 
+        fn create_progress_context_ffi() -> u64;
+
+        fn destroy_progress_context_ffi(handle: u64);
+
+        fn get_progress_context_ffi(handle: u64) -> ProgressInfoFfi;
+
         fn strategy_enumeration_cpu_ffi(
             modules: &Vec<ModuleInfoFfi>,
             target_attributes: &Vec<i32>,
@@ -62,6 +68,8 @@ pub mod ffi {
             min_attr_values: &Vec<i32>,
             max_solutions: i32,
             max_workers: i32,
+            combination_size: i32,
+            progress_handle: u64,
         ) -> Vec<ModuleSolutionFfi>;
 
         fn strategy_enumeration_gpu_ffi(
@@ -72,15 +80,22 @@ pub mod ffi {
             min_attr_values: &Vec<i32>,
             max_solutions: i32,
             max_workers: i32,
+            combination_size: i32,
+            progress_handle: u64,
         ) -> Vec<ModuleSolutionFfi>;
 
-        fn optimize_modules_ffi(
+        fn strategy_beam_search_ffi(
             modules: &Vec<ModuleInfoFfi>,
             target_attributes: &Vec<i32>,
             exclude_attributes: &Vec<i32>,
+            min_attr_ids: &Vec<i32>,
+            min_attr_values: &Vec<i32>,
             max_solutions: i32,
-            max_attempts_multiplier: i32,
-            local_search_iterations: i32,
+            beam_width: i32,
+            expand_per_state: i32,
+            combination_size: i32,
+            max_workers: i32,
+            progress_handle: u64,
         ) -> Vec<ModuleSolutionFfi>;
     }
 }

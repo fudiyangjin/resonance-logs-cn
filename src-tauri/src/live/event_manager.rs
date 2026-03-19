@@ -1,7 +1,7 @@
 use crate::live::commands_models::{
-    BossHealth, BuffUpdateState, CounterUpdateState, FightResourceState, HeaderInfo,
-    HateEntry, LiveDataPayload, PanelAttrState, RawEntityData, SkillCdState,
-    to_raw_combat_stats, to_raw_skill_stats,
+    BossHealth, BuffUpdateState, CounterUpdateState, FightResourceState, HateEntry, HeaderInfo,
+    LiveDataPayload, PanelAttrState, RawEntityData, SkillCdState, to_raw_combat_stats,
+    to_raw_skill_stats,
 };
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::opcodes_models::{AttrType, Encounter, class};

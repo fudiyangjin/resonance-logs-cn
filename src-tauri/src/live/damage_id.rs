@@ -65,19 +65,13 @@ fn load_skill_level_to_effect_map() -> Result<HashMap<i32, i32>, Box<dyn std::er
 }
 
 fn decimal_digits(value: i32) -> u32 {
-    if value < 10 {
-        1
-    } else {
-        value.ilog10() + 1
-    }
+    if value < 10 { 1 } else { value.ilog10() + 1 }
 }
 
 fn append_decimal_i64(prefix: i64, suffix: i32, min_width: u32) -> Option<i64> {
     let width = decimal_digits(suffix).max(min_width);
     let factor = 10_i64.checked_pow(width)?;
-    prefix
-        .checked_mul(factor)?
-        .checked_add(i64::from(suffix))
+    prefix.checked_mul(factor)?.checked_add(i64::from(suffix))
 }
 
 pub fn compute_damage_id(

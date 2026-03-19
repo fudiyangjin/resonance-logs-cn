@@ -14,16 +14,19 @@
 #include <limits>
 
 struct GpuConfigOpenCL {
-    size_t max_work_group_size;
-    cl_uint compute_units;
-    cl_ulong global_memory;
-    size_t max_work_item_sizes[3];
-    size_t optimal_local_size;
-    size_t optimal_global_size;
-    unsigned long long optimal_batch_size;
+    size_t max_work_group_size;        // 最大工作组大小
+    cl_uint compute_units;              // 计算单元数量
+    cl_ulong global_memory;             // 全局内存大小
+    size_t max_work_item_sizes[3];     // 最大工作项大小
+    
+    // 计算得出的优化参数
+    size_t optimal_local_size;         // 优化的本地大小（block_size）
+    size_t optimal_global_size;        // 优化的全局大小（grid_size * block_size）
+    unsigned long long optimal_batch_size;  // 优化的批处理大小
 };
 
-static bool SelectDiscreteGpu(cl_platform_id &out_platform, cl_device_id &out_device) {
+static bool SelectDiscreteGpu(cl_platform_id &out_platform,
+                              cl_device_id &out_device) {
     cl_uint num_platforms = 0;
     if (clGetPlatformIDs(0, nullptr, &num_platforms) != CL_SUCCESS || num_platforms == 0) {
         return false;
@@ -45,6 +48,7 @@ static bool SelectDiscreteGpu(cl_platform_id &out_platform, cl_device_id &out_de
         for (auto dev : devices) {
             cl_bool unified = CL_FALSE;
             clGetDeviceInfo(dev, CL_DEVICE_HOST_UNIFIED_MEMORY, sizeof(unified), &unified, nullptr);
+            // 仅选择独显
             if (unified == CL_FALSE) {
                 out_platform = platform;
                 out_device = dev;
@@ -65,13 +69,25 @@ static bool GetGpuConfigOpenCL(cl_device_id device, GpuConfigOpenCL* config) {
     if (!device || !config) return false;
     
     cl_int err = CL_SUCCESS;
-    err = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &config->max_work_group_size, nullptr);
+    
+    // 查询最大工作组大小
+    err = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, 
+                          sizeof(size_t), &config->max_work_group_size, nullptr);
     if (err != CL_SUCCESS) return false;
-    err = clGetDeviceInfo(device, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_uint), &config->compute_units, nullptr);
+    
+    // 查询计算单元数量
+    err = clGetDeviceInfo(device, CL_DEVICE_MAX_COMPUTE_UNITS, 
+                          sizeof(cl_uint), &config->compute_units, nullptr);
     if (err != CL_SUCCESS) return false;
-    err = clGetDeviceInfo(device, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &config->global_memory, nullptr);
+    
+    // 查询全局内存大小
+    err = clGetDeviceInfo(device, CL_DEVICE_GLOBAL_MEM_SIZE, 
+                          sizeof(cl_ulong), &config->global_memory, nullptr);
     if (err != CL_SUCCESS) return false;
-    err = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t) * 3, config->max_work_item_sizes, nullptr);
+    
+    // 查询最大工作项大小
+    err = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_ITEM_SIZES, 
+                          sizeof(size_t) * 3, config->max_work_item_sizes, nullptr);
     if (err != CL_SUCCESS) return false;
     
     return true;
@@ -80,14 +96,19 @@ static bool GetGpuConfigOpenCL(cl_device_id device, GpuConfigOpenCL* config) {
 static void CalculateOptimalParamsOpenCL(GpuConfigOpenCL* config, unsigned long long total_combinations) {
     if (!config) return;
     
+    // 设置优化的本地工作组大小
     config->optimal_local_size = 512;
+    
+    // 确保不超过硬件限制
     if (config->optimal_local_size > config->max_work_group_size) {
         config->optimal_local_size = config->max_work_group_size;
     }
     
+    // 计算优化的全局工作大小
     size_t estimated_max_work_groups = config->compute_units * 16;
     size_t max_global_threads = estimated_max_work_groups * 2 * config->optimal_local_size;
     
+    // 基于实际工作负载调整
     if (total_combinations < max_global_threads) {
         config->optimal_global_size = ((total_combinations + config->optimal_local_size - 1) 
                                        / config->optimal_local_size) * config->optimal_local_size;
@@ -95,10 +116,14 @@ static void CalculateOptimalParamsOpenCL(GpuConfigOpenCL* config, unsigned long 
         config->optimal_global_size = max_global_threads;
     }
     
+    // 计算优化的批处理大小
     size_t available_memory = (size_t)(config->global_memory * 0.5);
     unsigned long long memory_limited_batch = available_memory / (sizeof(int) + sizeof(unsigned long long));
+    
+    // 基于计算能力的批处理大小
     unsigned long long compute_limited_batch = max_global_threads * 3000ULL;
     
+    // 取较小值，但至少 10 万，最大 2250 万
     config->optimal_batch_size = memory_limited_batch < compute_limited_batch ? 
                                   memory_limited_batch : compute_limited_batch;
     if (config->optimal_batch_size < 100000ULL) {
@@ -125,7 +150,8 @@ extern "C" int GpuStrategyEnumerationOpenCL(
     int min_attr_count,
     int max_solutions,
     int *result_scores,
-    long long *result_indices) {
+    long long *result_indices,
+    ProgressContext *progress) {
     cl_platform_id platform = nullptr;
     cl_device_id device = nullptr;
     if (!SelectDiscreteGpu(platform, device)) {
@@ -138,6 +164,7 @@ extern "C" int GpuStrategyEnumerationOpenCL(
     cl_command_queue q = clCreateCommandQueueWithProperties(ctx, device, nullptr, &err);
     if (!q || err != CL_SUCCESS) { clReleaseContext(ctx); return 0; }
 
+    // 获取 GPU 配置
     GpuConfigOpenCL gpu_config;
     if (!GetGpuConfigOpenCL(device, &gpu_config)) {
         clReleaseCommandQueue(q);
@@ -156,6 +183,7 @@ extern "C" int GpuStrategyEnumerationOpenCL(
     unsigned long long total_combinations = comb_count((unsigned long long)module_count, 4ULL);
     CalculateOptimalParamsOpenCL(&gpu_config, total_combinations);
 
+    // 打印配置信息
     printf("OpenCL GPU Configuration:\n");
     printf("  Compute Units: %u\n", gpu_config.compute_units);
     printf("  Max Work Group Size: %zu\n", gpu_config.max_work_group_size);
@@ -406,23 +434,55 @@ __kernel void compact_selected(
     const char *srcs[] = { kernel_src };
     size_t lens[] = { std::strlen(kernel_src) };
     cl_program prog = clCreateProgramWithSource(ctx, 1, srcs, lens, &err);
-    if (!prog || err != CL_SUCCESS) { clReleaseCommandQueue(q); clReleaseContext(ctx); return 0; }
+    if (!prog || err != CL_SUCCESS) { 
+        clReleaseCommandQueue(q); 
+        clReleaseContext(ctx); 
+        return 0; 
+    }
     err = clBuildProgram(prog, 1, &device, "-cl-std=CL3.0 -cl-mad-enable -cl-fast-relaxed-math -cl-finite-math-only", nullptr, nullptr);
     if (err != CL_SUCCESS) {
         size_t log_size = 0; clGetProgramBuildInfo(prog, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &log_size);
         std::vector<char> log(log_size + 1, 0);
         clGetProgramBuildInfo(prog, device, CL_PROGRAM_BUILD_LOG, log_size, log.data(), nullptr);
-        clReleaseProgram(prog); clReleaseCommandQueue(q); clReleaseContext(ctx);
+        clReleaseProgram(prog); 
+        clReleaseCommandQueue(q); 
+        clReleaseContext(ctx);
         return 0;
     }
     cl_kernel kernel = clCreateKernel(prog, "score_range", &err);
-    if (!kernel || err != CL_SUCCESS) { clReleaseProgram(prog); clReleaseCommandQueue(q); clReleaseContext(ctx); return 0; }
+    if (!kernel || err != CL_SUCCESS) { 
+        clReleaseProgram(prog); 
+        clReleaseCommandQueue(q); 
+        clReleaseContext(ctx); 
+        return 0; 
+    }
     cl_kernel k_hist_radix = clCreateKernel(prog, "histogram_byte_radix", &err);
-    if (!k_hist_radix || err != CL_SUCCESS) { clReleaseKernel(kernel); clReleaseProgram(prog); clReleaseCommandQueue(q); clReleaseContext(ctx); return 0; }
+    if (!k_hist_radix || err != CL_SUCCESS) { 
+        clReleaseKernel(kernel); 
+        clReleaseProgram(prog); 
+        clReleaseCommandQueue(q); 
+        clReleaseContext(ctx); 
+        return 0; 
+    }
     cl_kernel k_flag = clCreateKernel(prog, "flag_scores_by_threshold", &err);
-    if (!k_flag || err != CL_SUCCESS) { clReleaseKernel(k_hist_radix); clReleaseKernel(kernel); clReleaseProgram(prog); clReleaseCommandQueue(q); clReleaseContext(ctx); return 0; }
+    if (!k_flag || err != CL_SUCCESS) { 
+        clReleaseKernel(k_hist_radix); 
+        clReleaseKernel(kernel); 
+        clReleaseProgram(prog); 
+        clReleaseCommandQueue(q); 
+        clReleaseContext(ctx); 
+        return 0; 
+    }
     cl_kernel k_compact = clCreateKernel(prog, "compact_selected", &err);
-    if (!k_compact || err != CL_SUCCESS) { clReleaseKernel(k_flag); clReleaseKernel(k_hist_radix); clReleaseKernel(kernel); clReleaseProgram(prog); clReleaseCommandQueue(q); clReleaseContext(ctx); return 0; }
+    if (!k_compact || err != CL_SUCCESS) { 
+        clReleaseKernel(k_flag); 
+        clReleaseKernel(k_hist_radix); 
+        clReleaseKernel(kernel); 
+        clReleaseProgram(prog); 
+        clReleaseCommandQueue(q); 
+        clReleaseContext(ctx); 
+        return 0; 
+    }
 
     cl_mem d_attr_ids = clCreateBuffer(ctx, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * total_attrs, (void*)module_attr_ids, &err);
     cl_mem d_attr_vals = clCreateBuffer(ctx, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * total_attrs, (void*)module_attr_values, &err);
@@ -438,15 +498,24 @@ __kernel void compact_selected(
         if (d_min_ids) clReleaseMemObject(d_min_ids);
         if (d_excludes) clReleaseMemObject(d_excludes);
         if (d_targets) clReleaseMemObject(d_targets);
-        clReleaseMemObject(d_offsets); clReleaseMemObject(d_attr_counts);
-        clReleaseMemObject(d_attr_vals); clReleaseMemObject(d_attr_ids);
-        clReleaseKernel(kernel); clReleaseProgram(prog); clReleaseCommandQueue(q); clReleaseContext(ctx);
+        clReleaseMemObject(d_offsets); 
+        clReleaseMemObject(d_attr_counts);
+        clReleaseMemObject(d_attr_vals); 
+        clReleaseMemObject(d_attr_ids);
+        clReleaseKernel(kernel); 
+        clReleaseProgram(prog); 
+        clReleaseCommandQueue(q); 
+        clReleaseContext(ctx);
         return 0;
     }
 
     struct Item { int score; unsigned long long idx; bool operator<(const Item& o) const { return score > o.score; } };
     std::priority_queue<Item> topk;
 
+    if (progress != nullptr) {
+        progress->set_processed(0);
+        progress->set_total(static_cast<std::uint64_t>(total_combinations));
+    }
     unsigned long long processed = 0ULL;
     while (processed < total_combinations) {
         unsigned long long batch = std::min(gpu_config.optimal_batch_size, total_combinations - processed);
@@ -484,12 +553,20 @@ __kernel void compact_selected(
         size_t gsz = target_threads;
         
         err = clEnqueueNDRangeKernel(q, kernel, 1, nullptr, &gsz, &lsz, 0, nullptr, nullptr);
-        if (err != CL_SUCCESS) { clReleaseMemObject(d_indices); clReleaseMemObject(d_scores); break; }
+        if (err != CL_SUCCESS) { 
+            clReleaseMemObject(d_indices); 
+            clReleaseMemObject(d_scores); 
+            break; 
+        }
         clFinish(q);
 
         cl_ulong n64 = (cl_ulong)outN;
         cl_mem d_hist = clCreateBuffer(ctx, CL_MEM_READ_WRITE, sizeof(cl_uint) * 256, nullptr, &err);
-        if (!d_hist || err != CL_SUCCESS) { clReleaseMemObject(d_indices); clReleaseMemObject(d_scores); break; }
+        if (!d_hist || err != CL_SUCCESS) { 
+            clReleaseMemObject(d_indices); 
+            clReleaseMemObject(d_scores); 
+            break; 
+        }
         
         cl_uint prefix_mask = 0U;
         cl_uint prefix_value = 0U;
@@ -509,7 +586,12 @@ __kernel void compact_selected(
             clSetKernelArg(k_hist_radix, harg++, sizeof(cl_uint) * 256, nullptr);
             
             err = clEnqueueNDRangeKernel(q, k_hist_radix, 1, nullptr, &gsz, &lsz, 0, nullptr, nullptr);
-            if (err != CL_SUCCESS) { clReleaseMemObject(d_hist); clReleaseMemObject(d_indices); clReleaseMemObject(d_scores); break; }
+            if (err != CL_SUCCESS) { 
+                clReleaseMemObject(d_hist); 
+                clReleaseMemObject(d_indices); 
+                clReleaseMemObject(d_scores); 
+                break; 
+            }
             clFinish(q);
             
             cl_uint h_hist[256];
@@ -538,14 +620,23 @@ __kernel void compact_selected(
         clReleaseMemObject(d_hist);
 
         cl_mem d_flags = clCreateBuffer(ctx, CL_MEM_READ_WRITE, sizeof(unsigned char) * outN, nullptr, &err);
-        if (!d_flags || err != CL_SUCCESS) { clReleaseMemObject(d_indices); clReleaseMemObject(d_scores); break; }
+        if (!d_flags || err != CL_SUCCESS) { 
+            clReleaseMemObject(d_indices); 
+            clReleaseMemObject(d_scores);
+            break; 
+        }
         int farg = 0;
         clSetKernelArg(k_flag, farg++, sizeof(cl_mem), &d_scores);
         clSetKernelArg(k_flag, farg++, sizeof(cl_ulong), &n64);
         clSetKernelArg(k_flag, farg++, sizeof(int), &threshold_value);
         clSetKernelArg(k_flag, farg++, sizeof(cl_mem), &d_flags);
         err = clEnqueueNDRangeKernel(q, k_flag, 1, nullptr, &gsz, &lsz, 0, nullptr, nullptr);
-        if (err != CL_SUCCESS) { clReleaseMemObject(d_flags); clReleaseMemObject(d_indices); clReleaseMemObject(d_scores); break; }
+        if (err != CL_SUCCESS) { 
+            clReleaseMemObject(d_flags); 
+            clReleaseMemObject(d_indices); 
+            clReleaseMemObject(d_scores); 
+            break; 
+        }
         clFinish(q);
 
         cl_mem d_selected_count = clCreateBuffer(ctx, CL_MEM_READ_WRITE, sizeof(cl_uint), nullptr, &err);
@@ -597,8 +688,13 @@ __kernel void compact_selected(
             for (size_t i = 0; i < selN; ++i) {
                 int sc = h_scores_sel[i];
                 if (sc < 0) continue;
-                if (topk.size() < (size_t)max_solutions) { topk.push(Item{sc, h_indices_sel[i]}); }
-                else if (sc > topk.top().score) { topk.pop(); topk.push(Item{sc, h_indices_sel[i]}); }
+                if (topk.size() < (size_t)max_solutions) { 
+                    topk.push(Item{sc, h_indices_sel[i]}); 
+                }
+                else if (sc > topk.top().score) { 
+                    topk.pop(); 
+                    topk.push(Item{sc, h_indices_sel[i]});
+                }
             }
         }
 
@@ -610,22 +706,35 @@ __kernel void compact_selected(
         clReleaseMemObject(d_scores);
 
         processed += batch;
+        if (progress != nullptr) {
+            progress->set_processed(static_cast<std::uint64_t>(processed));
+        }
     }
 
     std::vector<Item> items; items.reserve(topk.size());
     while (!topk.empty()) { items.push_back(topk.top()); topk.pop(); }
     std::sort(items.begin(), items.end(), [](const Item& a, const Item& b){ return a.score > b.score; });
     int out_count = (int)std::min(items.size(), (size_t)max_solutions);
-    for (int i = 0; i < out_count; ++i) { result_scores[i] = items[i].score; result_indices[i] = (long long)items[i].idx; }
+    for (int i = 0; i < out_count; ++i) { 
+        result_scores[i] = items[i].score; 
+        result_indices[i] = (long long)items[i].idx; 
+    }
 
     if (d_min_vals) clReleaseMemObject(d_min_vals);
     if (d_min_ids) clReleaseMemObject(d_min_ids);
     if (d_excludes) clReleaseMemObject(d_excludes);
     if (d_targets) clReleaseMemObject(d_targets);
-    clReleaseMemObject(d_offsets); clReleaseMemObject(d_attr_counts);
-    clReleaseMemObject(d_attr_vals); clReleaseMemObject(d_attr_ids);
-    clReleaseKernel(k_compact); clReleaseKernel(k_flag); clReleaseKernel(k_hist_radix); clReleaseKernel(kernel);
-    clReleaseProgram(prog); clReleaseCommandQueue(q); clReleaseContext(ctx);
+    clReleaseMemObject(d_offsets); 
+    clReleaseMemObject(d_attr_counts);
+    clReleaseMemObject(d_attr_vals); 
+    clReleaseMemObject(d_attr_ids);
+    clReleaseKernel(k_compact); 
+    clReleaseKernel(k_flag); 
+    clReleaseKernel(k_hist_radix); 
+    clReleaseKernel(kernel);
+    clReleaseProgram(prog); 
+    clReleaseCommandQueue(q); 
+    clReleaseContext(ctx);
     return out_count;
 }
 
@@ -637,12 +746,19 @@ std::vector<ModuleSolution> ModuleOptimizerCpp::StrategyEnumerationOpenCL(
     const std::unordered_set<int>& exclude_attributes,
     const std::unordered_map<int, int>& min_attr_sum_requirements,
     int max_solutions,
-    int max_workers) {
+    int max_workers,
+    int combination_size,
+    std::shared_ptr<ProgressContext> progress) {
 #ifdef USE_OPENCL
+    if (combination_size > 4) {
+        return StrategyEnumeration(modules, target_attributes, exclude_attributes,
+                                   min_attr_sum_requirements, max_solutions, max_workers, combination_size, progress);
+    }
+
     if (!TestOpenCL()) {
         printf("OpenCL not available, using CPU optimized version\n");
         return StrategyEnumeration(modules, target_attributes, exclude_attributes,
-                                   min_attr_sum_requirements, max_solutions, max_workers);
+                                   min_attr_sum_requirements, max_solutions, max_workers, combination_size, progress);
     }
 
     printf("OpenCL GPU acceleration enabled - all calculations performed on GPU\n");
@@ -693,7 +809,8 @@ std::vector<ModuleSolution> ModuleOptimizerCpp::StrategyEnumerationOpenCL(
         static_cast<int>(min_attr_ids.size()),
         max_solutions,
         gpu_scores.data(),
-        gpu_indices.data());
+        gpu_indices.data(),
+        progress.get());
 #endif
 
     std::vector<ModuleSolution> final_solutions;
@@ -713,9 +830,10 @@ std::vector<ModuleSolution> ModuleOptimizerCpp::StrategyEnumerationOpenCL(
     }
     return final_solutions;
 #else
-    (void)modules; (void)target_attributes; (void)exclude_attributes; (void)min_attr_sum_requirements; (void)max_solutions; (void)max_workers;
+    (void)modules; (void)target_attributes; (void)exclude_attributes; (void)min_attr_sum_requirements; (void)max_solutions; (void)max_workers; (void)combination_size;
     return StrategyEnumeration(modules, target_attributes, exclude_attributes,
-                               min_attr_sum_requirements, max_solutions, max_workers);
+                               min_attr_sum_requirements, max_solutions, max_workers, combination_size, progress);
 #endif
 }
+
 

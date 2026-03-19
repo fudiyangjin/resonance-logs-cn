@@ -82,7 +82,6 @@ pub fn run() {
             module_optimizer::commands::check_gpu_support,
             module_optimizer::commands::get_latest_modules,
             module_optimizer::commands::optimize_latest_modules,
-            module_optimizer::commands::greedy_optimize_modules,
         ]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds

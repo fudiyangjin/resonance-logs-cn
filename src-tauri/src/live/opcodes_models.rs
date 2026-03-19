@@ -1,5 +1,5 @@
-use crate::live::opcodes_models::class::ClassSpec;
 use crate::live::monster_registry::{self, MonsterType};
+use crate::live::opcodes_models::class::ClassSpec;
 use blueprotobuf_lib::blueprotobuf::{EEntityType, SyncContainerData};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
