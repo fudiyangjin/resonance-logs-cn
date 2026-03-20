@@ -78,7 +78,7 @@ function buildHatePlaceholderRows(): TextBuffDisplay[] {
   ];
 }
 
-function buildHateRows(entries: HateEntry[]): TextBuffDisplay[] {
+function buildHateRows(entries: HateEntry[], maxDisplay: number): TextBuffDisplay[] {
   const sortedEntries = [...entries].sort((left, right) => {
     if (right.hateVal !== left.hateVal) {
       return right.hateVal - left.hateVal;
@@ -120,13 +120,15 @@ function buildHateRows(entries: HateEntry[]): TextBuffDisplay[] {
       .map((part) => part.basePercent);
   }
 
-  return sortedEntries.map((entry, index) => ({
-    key: `hate_${entry.uid}`,
-    label: `${index + 1}. ${monsterRuntime.nameCache.get(entry.uid) ?? `UID ${entry.uid}`}`,
-    valueText: `${displayPercents[index] ?? 0}%`,
-    progressPercent: 0,
-    showProgress: false,
-  }));
+  return sortedEntries
+    .map((entry, index) => ({
+      key: `hate_${entry.uid}`,
+      label: `${index + 1}. ${monsterRuntime.nameCache.get(entry.uid) ?? `UID ${entry.uid}`}`,
+      valueText: `${displayPercents[index] ?? 0}%`,
+      progressPercent: 0,
+      showProgress: false,
+    }))
+    .slice(0, maxDisplay);
 }
 
 export function updateMonsterDisplay() {
@@ -168,9 +170,13 @@ export function updateMonsterDisplay() {
   if (SETTINGS.monsterMonitor.state.hateListEnabled) {
     const sortedHateBossUids = Array.from(monsterRuntime.bossHateMap.keys())
       .sort((leftUid, rightUid) => leftUid - rightUid);
+    const maxDisplay = SETTINGS.monsterMonitor.state.hateListMaxDisplay ?? 5;
 
     for (const bossUid of sortedHateBossUids) {
-      const hateRows = buildHateRows(monsterRuntime.bossHateMap.get(bossUid) ?? []);
+      const hateRows = buildHateRows(
+        monsterRuntime.bossHateMap.get(bossUid) ?? [],
+        maxDisplay,
+      );
       if (hateRows.length === 0) continue;
       nextHateSections.push({
         bossUid,

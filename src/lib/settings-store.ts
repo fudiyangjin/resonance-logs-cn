@@ -167,6 +167,7 @@ export type MonsterOverlaySizes = {
 export type MonsterMonitorConfig = {
   enabled: boolean;
   hateListEnabled: boolean;
+  hateListMaxDisplay: number;
   monitoredBuffIds: number[];
   selfAppliedBuffIds: number[];
   buffAliases: BuffAliasMap;
@@ -381,6 +382,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
   return {
     enabled: false,
     hateListEnabled: false,
+    hateListMaxDisplay: 5,
     monitoredBuffIds: [],
     selfAppliedBuffIds: [],
     buffAliases: {},

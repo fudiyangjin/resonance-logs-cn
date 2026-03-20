@@ -462,6 +462,28 @@
           />
         </div>
       </div>
+
+      <div class="grid gap-4 lg:grid-cols-3">
+        <label class="style-field">
+          <span>最多显示角色数</span>
+          <input
+            type="range"
+            min="5"
+            max="20"
+            step="1"
+            value={monsterMonitor.hateListMaxDisplay ?? 5}
+            oninput={(event) =>
+              updateMonsterMonitor((state) => ({
+                ...state,
+                hateListMaxDisplay: Number.parseInt(
+                  (event.currentTarget as HTMLInputElement).value,
+                  10,
+                ),
+              }))}
+          />
+          <strong>{monsterMonitor.hateListMaxDisplay ?? 5}</strong>
+        </label>
+      </div>
     </section>
 
     <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-5">
