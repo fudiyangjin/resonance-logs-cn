@@ -6,6 +6,7 @@
 
 #ifdef USE_CUDA
 extern "C" int TestCuda();
+extern "C" void ResetCudaDevice();
 #endif
 
 #ifdef USE_OPENCL
@@ -132,10 +133,18 @@ static std::unordered_map<int, int> to_map(
 }
 
 GpuSupportInfo check_gpu_support_ffi() {
-    GpuSupportInfo info;
-    info.cuda_available = test_cuda_ffi() == 1;
-    info.opencl_available = test_opencl_ffi() == 1;
-    return info;
+    static GpuSupportInfo cached_info{};
+    static std::once_flag flag;
+
+    std::call_once(flag, [] {
+        cached_info.cuda_available = test_cuda_ffi() == 1;
+#ifdef USE_CUDA
+        ResetCudaDevice();
+#endif
+        cached_info.opencl_available = test_opencl_ffi() == 1;
+    });
+
+    return cached_info;
 }
 
 ::std::uint64_t create_progress_context_ffi() {

@@ -845,3 +845,8 @@ extern "C" int GpuStrategyEnumeration(
 
     return max_solutions;
 }
+
+extern "C" void ResetCudaDevice()
+{
+    cudaDeviceReset();
+}

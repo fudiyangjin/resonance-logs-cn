@@ -5,6 +5,7 @@
 #ifdef USE_CUDA
 // 外部CUDA函数声明
 extern "C" int TestCuda();
+extern "C" void ResetCudaDevice();
 extern "C" int GpuStrategyEnumeration(
     const int* module_matrix,
     int module_count,
@@ -1186,6 +1187,7 @@ std::vector<ModuleSolution> ModuleOptimizerCpp::StrategyEnumerationCUDA(
             combination_size,
             ResolveProgressContext(progress));
 
+        ResetCudaDevice();
         return BuildGpuSolutions(modules, gpu_result_count, gpu_scores, gpu_indices, combination_size);
     }
 
@@ -1219,6 +1221,7 @@ std::vector<ModuleSolution> ModuleOptimizerCpp::StrategyEnumerationGPU(
             modules, target_attributes, exclude_attributes,
             min_attr_sum_requirements, max_solutions, max_workers, combination_size, progress);
     }
+    ResetCudaDevice();
 #endif
 
 #ifdef USE_OPENCL
