@@ -127,9 +127,11 @@
 	function selectSearchType(type: 'boss' | 'player' | 'encounter') {
 		searchType = type;
 		showTypeDropdown = false;
-		value = '';
 		filteredNames = [];
 		showDropdown = false;
+		if (value.trim().length >= 1) {
+			handleInput();
+		}
 	}
 
 	// Close dropdown when clicking outside
