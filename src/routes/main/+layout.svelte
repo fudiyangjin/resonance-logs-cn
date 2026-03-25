@@ -125,7 +125,7 @@
   let updateUnlisten: UnlistenFn | null = null;
 
   async function releaseTransparentWindowInteractivity() {
-    for (const label of ["live", "game-overlay", "monster-overlay"] as const) {
+    for (const label of ["game-overlay", "monster-overlay"] as const) {
       try {
         const windowRef = await WebviewWindow.getByLabel(label);
         await windowRef?.setIgnoreCursorEvents(true);

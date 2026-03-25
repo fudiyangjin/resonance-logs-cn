@@ -36,7 +36,6 @@
         if (isVisible) {
           await liveWindow.hide();
         } else {
-          await liveWindow.setIgnoreCursorEvents(true);
           await liveWindow.show();
           await liveWindow.unminimize();
         }
