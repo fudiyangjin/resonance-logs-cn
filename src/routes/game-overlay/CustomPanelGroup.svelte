@@ -1,5 +1,6 @@
 <script lang="ts">
   import TextBuffRow from "$lib/components/TextBuffRow.svelte";
+  import { tl } from "$lib/i18n/index.svelte";
   import {
     customPanelGroups,
     customPanelRowsByGroup,
@@ -34,7 +35,7 @@
 
       <div class="custom-panel-list" style:gap={`${styleConfig.gap}px`}>
         {#if rows.length === 0}
-          <div class="empty-tip">暂无条目</div>
+          <div class="empty-tip">{tl("No entries yet")}</div>
         {/if}
         {#each rows as row (row.key)}
           <TextBuffRow

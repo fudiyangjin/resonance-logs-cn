@@ -4,6 +4,8 @@
  */
 import { RuneStore } from '@tauri-store/svelte';
 import type { BuffCategoryKey } from "./config/buff-name-table";
+import { bootstrapLiteral, bootstrapMessage, tl } from "./i18n/index.svelte";
+import type { AppLanguage } from "./i18n/types";
 
 export const DEFAULT_STATS = {
   totalDmg: true,
@@ -92,25 +94,43 @@ export type PanelAttrConfig = {
   format: "percent" | "integer";
 };
 
+function createPanelAttr(
+  attrId: number,
+  labelKey: string,
+  color: string,
+  enabled: boolean,
+  format: PanelAttrConfig["format"],
+): PanelAttrConfig {
+  return {
+    attrId,
+    get label() {
+      return tl(labelKey);
+    },
+    color,
+    enabled,
+    format,
+  };
+}
+
 export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
-  { attrId: 11720, label: "攻速", color: "#6ee7ff", enabled: false, format: "percent" },
-  { attrId: 11710, label: "暴击率", color: "#ff7a7a", enabled: false, format: "percent" },
-  { attrId: 11930, label: "急速", color: "#facc15", enabled: false, format: "percent" },
-  { attrId: 11780, label: "幸运", color: "#a78bfa", enabled: false, format: "percent" },
-  { attrId: 11940, label: "精通", color: "#60a5fa", enabled: false, format: "percent" },
-  { attrId: 11950, label: "全能", color: "#34d399", enabled: false, format: "percent" },
-  { attrId: 11760, label: "冷却缩减", color: "#f97316", enabled: false, format: "percent" },
-  { attrId: 11960, label: "冷却加速", color: "#38bdf8", enabled: false, format: "percent" },
-  { attrId: 11010, label: "力量", color: "#f87171", enabled: false, format: "integer" },
-  { attrId: 11020, label: "智力", color: "#818cf8", enabled: false, format: "integer" },
-  { attrId: 11030, label: "敏捷", color: "#4ade80", enabled: false, format: "integer" },
-  { attrId: 11330, label: "物理攻击", color: "#fb923c", enabled: false, format: "integer" },
-  { attrId: 11340, label: "魔法攻击", color: "#c084fc", enabled: false, format: "integer" },
-  { attrId: 11730, label: "施法速度", color: "#22d3ee", enabled: false, format: "percent" },
-  { attrId: 12510, label: "暴击伤害", color: "#f472b6", enabled: false, format: "percent" },
-  { attrId: 12530, label: "幸运伤害倍率", color: "#d8b4fe", enabled: false, format: "percent" },
-  { attrId: 12540, label: "格挡伤害减免", color: "#86efac", enabled: false, format: "percent" },
-  { attrId: 11970, label: "格挡", color: "#fbbf24", enabled: false, format: "percent" },
+  createPanelAttr(11720, "Attack Speed", "#6ee7ff", false, "percent"),
+  createPanelAttr(11710, "Crit Rate", "#ff7a7a", false, "percent"),
+  createPanelAttr(11930, "Haste", "#facc15", false, "percent"),
+  createPanelAttr(11780, "Luck", "#a78bfa", false, "percent"),
+  createPanelAttr(11940, "Mastery", "#60a5fa", false, "percent"),
+  createPanelAttr(11950, "Versatility", "#34d399", false, "percent"),
+  createPanelAttr(11760, "Cooldown Reduction", "#f97316", false, "percent"),
+  createPanelAttr(11960, "Cooldown Acceleration", "#38bdf8", false, "percent"),
+  createPanelAttr(11010, "Strength", "#f87171", false, "integer"),
+  createPanelAttr(11020, "Intelligence", "#818cf8", false, "integer"),
+  createPanelAttr(11030, "Agility", "#4ade80", false, "integer"),
+  createPanelAttr(11330, "Physical Attack", "#fb923c", false, "integer"),
+  createPanelAttr(11340, "Magic Attack", "#c084fc", false, "integer"),
+  createPanelAttr(11730, "Cast Speed", "#22d3ee", false, "percent"),
+  createPanelAttr(12510, "Crit Damage", "#f472b6", false, "percent"),
+  createPanelAttr(12530, "Lucky Damage Multiplier", "#d8b4fe", false, "percent"),
+  createPanelAttr(12540, "Block Damage Reduction", "#86efac", false, "percent"),
+  createPanelAttr(11970, "Block", "#fbbf24", false, "percent"),
 ];
 
 export type OverlayPositions = {
@@ -348,7 +368,7 @@ function createDefaultTextBuffPanelStyle(): TextBuffPanelStyle {
 }
 
 export function createDefaultBuffGroup(
-  name = "新分组",
+  name = bootstrapLiteral("New Group"),
   index = 1,
 ): BuffGroup {
   return {
@@ -369,7 +389,7 @@ export function createDefaultBuffGroup(
 }
 
 export function createDefaultCustomPanelGroup(
-  name = "监控区 1",
+  name = bootstrapMessage("Monitor Area {{index}}", { index: 1 }),
   index = 1,
 ): CustomPanelGroup {
   return {
@@ -382,7 +402,7 @@ export function createDefaultCustomPanelGroup(
 }
 
 export function createDefaultSkillMonitorProfile(
-  name = "默认方案",
+  name = bootstrapLiteral("Default Profile"),
   classKey = "wind_knight",
 ): SkillMonitorProfile {
   return {
@@ -546,11 +566,11 @@ export const DEFAULT_LIVE_TABLE_SETTINGS = {
 // (Header preset constants removed - header defaults inlined into DEFAULT_SETTINGS)
 
 export const FONT_SIZE_LABELS: Record<string, string> = {
-  xs: '超小',
-  sm: '小',
-  base: '标准',
-  lg: '大',
-  xl: '超大',
+  get xs() { return tl("XS"); },
+  get sm() { return tl("Small"); },
+  get base() { return tl("Base"); },
+  get lg() { return tl("Large"); },
+  get xl() { return tl("XL"); },
 };
 
 // Default custom theme colors (based on dark theme)
@@ -605,32 +625,49 @@ export const DEFAULT_CUSTOM_THEME_COLORS: CustomThemeColors = {
 };
 
 // Labels for custom theme color variables
+function createThemeLabel(labelKey: string, descriptionKey: string, categoryKey: string) {
+  return {
+    get label() {
+      return tl(labelKey);
+    },
+    get description() {
+      return tl(descriptionKey);
+    },
+    get category() {
+      return tl(categoryKey);
+    },
+  };
+}
+
 export const CUSTOM_THEME_COLOR_LABELS: Record<string, { label: string; description: string; category: string }> = {
-  backgroundMain: { label: '背景（主窗口）', description: '主窗口背景颜色', category: 'Base' },
-  backgroundLive: { label: '背景（实时）', description: '实时统计窗口背景颜色', category: 'Base' },
-  foreground: { label: '前景', description: '主要文本颜色', category: 'Base' },
-  surface: { label: '表面', description: '卡片、弹窗和面板的背景颜色', category: 'Surfaces' },
-  surfaceForeground: { label: '表面文本', description: '表面上的文本颜色', category: 'Surfaces' },
-  primary: { label: '主色', description: '主要强调色', category: 'Accents' },
-  primaryForeground: { label: '主色文本', description: '主色元素上的文本颜色', category: 'Accents' },
-  secondary: { label: '次色', description: '次要强调色', category: 'Accents' },
-  secondaryForeground: { label: '次色文本', description: '次色元素上的文本颜色', category: 'Accents' },
-  muted: { label: '柔和', description: '柔和/低调的背景颜色', category: 'Utility' },
-  mutedForeground: { label: '柔和文本', description: '低调的文本颜色', category: 'Utility' },
-  accent: { label: '强调', description: '高亮强调色', category: 'Accents' },
-  accentForeground: { label: '强调文本', description: '强调色元素上的文本颜色', category: 'Accents' },
-  destructive: { label: '破坏性', description: '错误/危险颜色', category: 'Utility' },
-  destructiveForeground: { label: '破坏性文本', description: '破坏性元素上的文本颜色', category: 'Utility' },
-  border: { label: '边框', description: '边框颜色', category: 'Utility' },
-  input: { label: '输入框', description: '输入框背景颜色', category: 'Utility' },
-  tableTextColor: { label: '表格文本', description: '实时表格中的文本颜色', category: 'Tables' },
-  tableAbbreviatedColor: { label: '后缀颜色', description: '表格中 K、M、% 后缀的颜色', category: 'Tables' },
-  tooltipBg: { label: '提示背景', description: '提示框背景颜色', category: 'Tooltip' },
-  tooltipBorder: { label: '提示边框', description: '提示框边框颜色', category: 'Tooltip' },
-  tooltipFg: { label: '提示文本', description: '提示框文本颜色', category: 'Tooltip' },
+  backgroundMain: createThemeLabel('Background (Main Window)', 'Main window background color', 'Base'),
+  backgroundLive: createThemeLabel('Background (Live Window)', 'Live meter window background color', 'Base'),
+  foreground: createThemeLabel('Foreground', 'Primary text color', 'Base'),
+  surface: createThemeLabel('Surface', 'Background color for cards, dialogs, and panels', 'Surfaces'),
+  surfaceForeground: createThemeLabel('Surface Text', 'Text color on surfaces', 'Surfaces'),
+  primary: createThemeLabel('Primary', 'Primary accent color', 'Accents'),
+  primaryForeground: createThemeLabel('Primary Text', 'Text color on primary elements', 'Accents'),
+  secondary: createThemeLabel('Secondary', 'Secondary accent color', 'Accents'),
+  secondaryForeground: createThemeLabel('Secondary Text', 'Text color on secondary elements', 'Accents'),
+  muted: createThemeLabel('Muted', 'Muted / subdued background color', 'Utility'),
+  mutedForeground: createThemeLabel('Subtle Text', 'Subtle text color', 'Utility'),
+  accent: createThemeLabel('Accent', 'Highlight accent color', 'Accents'),
+  accentForeground: createThemeLabel('Accent Text', 'Text color on accent elements', 'Accents'),
+  destructive: createThemeLabel('Destructive', 'Error / danger color', 'Utility'),
+  destructiveForeground: createThemeLabel('Destructive Text', 'Text color on destructive elements', 'Utility'),
+  border: createThemeLabel('Border', 'Border color', 'Utility'),
+  input: createThemeLabel('Input', 'Input background color', 'Utility'),
+  tableTextColor: createThemeLabel('Table Text', 'Text color in live tables', 'Tables'),
+  tableAbbreviatedColor: createThemeLabel('Suffix Color', 'Color of K, M, and % suffixes in tables', 'Tables'),
+  tooltipBg: createThemeLabel('Tooltip Background', 'Tooltip background color', 'Tooltip'),
+  tooltipBorder: createThemeLabel('Tooltip Border', 'Tooltip border color', 'Tooltip'),
+  tooltipFg: createThemeLabel('Tooltip Text', 'Tooltip text color', 'Tooltip'),
 };
 
 const DEFAULT_SETTINGS = {
+  app: {
+    language: "system" as AppLanguage,
+  },
   accessibility: {
     blur: false,
     clickthrough: false,
@@ -750,6 +787,11 @@ const DEFAULT_SETTINGS = {
 // We need flattened settings for every update to be able to auto-detect new changes
 const RUNE_STORE_OPTIONS = { autoStart: true, saveOnChange: true };
 export const SETTINGS = {
+  app: new RuneStore(
+    'app',
+    DEFAULT_SETTINGS.app,
+    RUNE_STORE_OPTIONS
+  ),
   accessibility: new RuneStore(
     'accessibility',
     DEFAULT_SETTINGS.accessibility,
@@ -906,6 +948,7 @@ export const SETTINGS = {
 // Create flattened settings object for backwards compatibility
 export const settings = {
   state: {
+    app: SETTINGS.app.state,
     accessibility: SETTINGS.accessibility.state,
     shortcuts: SETTINGS.shortcuts.state,
     moduleSync: SETTINGS.moduleSync.state,

@@ -1,4 +1,5 @@
 import buffNameRaw from "./BuffName.json";
+import zhBuffData from "$lib/i18n/locales/zh-CN/buff-data";
 
 export type BuffAliasMap = Record<string, string>;
 export type BuffCategoryKey = "food" | "alchemy";
@@ -47,11 +48,9 @@ const BUFF_CATEGORY_CATALOG: Record<
   BuffCategoryKey,
   { label: string; buffIds: number[] }
 > = {
-  food: { label: "食物", buffIds: [] },
-  alchemy: { label: "炼金", buffIds: [] },
+  food: { label: zhBuffData.categories.food.label, buffIds: [] },
+  alchemy: { label: zhBuffData.categories.alchemy.label, buffIds: [] },
 };
-
-const FOOD_NAME_KEYWORDS = ["物攻", "魔攻", "护甲", "耐力", "生命恢复"];
 
 function resolveBuffCategories(
   defaultName: string,
@@ -60,13 +59,15 @@ function resolveBuffCategories(
   const categories: BuffCategoryKey[] = [];
   if (
     iconKey?.startsWith("buff_food_up") &&
-    FOOD_NAME_KEYWORDS.some((keyword) => defaultName.includes(keyword))
+    zhBuffData.categories.food.keywords.some((keyword) => defaultName.includes(keyword))
   ) {
     categories.push("food");
   }
   if (
     iconKey?.startsWith("buff_agentia_up") &&
-    defaultName.includes("元素强度")
+    zhBuffData.categories.alchemy.keywords.some((keyword) =>
+      defaultName.includes(keyword),
+    )
   ) {
     categories.push("alchemy");
   }

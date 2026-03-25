@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tl } from "$lib/i18n/index.svelte";
   import {
     onWindowDragPointerDown,
     resetOverlayPositions,
@@ -8,20 +9,20 @@
 </script>
 
 <div class="edit-banner">
-  <div class="edit-title">编辑模式 - 可拖拽调整位置</div>
+  <div class="edit-title">{tl("Edit Mode - Drag to adjust positions")}</div>
   <button type="button" class="done-btn secondary" onclick={resetOverlayPositions}>
-    重置位置
+    {tl("Reset Positions")}
   </button>
   <button type="button" class="done-btn secondary" onclick={resetOverlaySizes}>
-    重置尺寸
+    {tl("Reset Sizes")}
   </button>
   <button type="button" class="done-btn" onclick={() => setEditMode(false)}>
-    完成编辑
+    {tl("Finish Editing")}
   </button>
 </div>
 
 <div class="window-drag-bar" onpointerdown={onWindowDragPointerDown}>
-  拖动此处移动 Game Overlay 窗口
+  {tl("Drag here to move the Game Overlay window")}
 </div>
 
 <style>

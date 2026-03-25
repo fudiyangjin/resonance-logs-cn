@@ -4,6 +4,7 @@
    */
   import { onMount } from "svelte";
   import { onEncounterUpdate, onResetEncounter, type HeaderInfo } from "$lib/api";
+  import { tl } from "$lib/i18n/index.svelte";
   import { tooltip } from "$lib/utils.svelte";
 
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
@@ -64,5 +65,5 @@
     {/each}
   </div>
 {:else}
-  <span class="text-base text-neutral-500 font-medium italic">No Boss</span>
+  <span class="text-base text-neutral-500 font-medium italic">{tl("No Boss")}</span>
 {/if}

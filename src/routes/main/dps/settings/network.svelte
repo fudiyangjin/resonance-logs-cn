@@ -1,7 +1,9 @@
 <script lang="ts">
+    import * as Tabs from "$lib/components/ui/tabs/index.js";
     import SettingsSelect from "./settings-select.svelte";
     import SettingsDropdown from "./settings-dropdown.svelte";
     import { SETTINGS } from "$lib/settings-store";
+    import { tl } from "$lib/i18n/index.svelte";
     import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
     import { untrack } from "svelte";
@@ -71,19 +73,20 @@
     );
 </script>
 
+<Tabs.Content value="network">
 <div class="space-y-3">
     <div
         class="rounded-lg border bg-card/40 border-border/60 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
     >
         <div class="px-4 py-3">
             <h2 class="text-base font-semibold text-foreground mb-2">
-                抓包
+                {tl("Packet Capture")}
             </h2>
 
             <SettingsSelect
                 bind:selected={SETTINGS.packetCapture.state.method}
-                label="捕获方式"
-                description="选择用于捕获网络数据包的方法（需要重启应用）。"
+                label={tl("Capture Method")}
+                description={tl("Choose the method used to capture network packets (requires app restart).")}
                 values={["WinDivert", "Npcap"]}
             />
 
@@ -92,25 +95,24 @@
                     <div
                         class="mt-2 p-3 bg-destructive/10 text-destructive rounded-md text-sm"
                     >
-                        未检测到 Npcap。请从 <a
+                        {tl("Npcap was not detected. Please install it from ")}<a
                             href="https://npcap.com/"
                             target="_blank"
                             class="underline">npcap.com</a
-                        > 安装 Npcap 以使用该功能。
+                        >{tl(" to use this feature.")}
                     </div>
                 {:else}
                     <SettingsDropdown
                         bind:selected={SETTINGS.packetCapture.state.npcapDevice}
-                        label="网络设备"
-                        description="选择用于捕获流量的网卡。"
+                        label={tl("Network Device")}
+                        description={tl("Choose the network interface used to capture traffic.")}
                         options={deviceOptions}
                         placeholder={loading
-                            ? "正在加载设备..."
-                            : "选择设备"}
+                            ? tl("Loading devices...")
+                            : tl("Select Device")}
                     />
                 {/if}
             {/if}
-        </div>
     </div>
-
 </div>
+</Tabs.Content>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tl } from "$lib/i18n/index.svelte";
   import type { BuffDefinition, BuffNameInfo } from "$lib/config/buff-name-table";
 
   interface Props {
@@ -19,7 +20,7 @@
     isSelected = () => false,
     isDisabled = () => false,
     getStatusLabel = () => null,
-    emptyMessage = "没有匹配的 Buff",
+    emptyMessage = tl("No matching Buffs"),
     minColumnWidth = 180,
   }: Props = $props();
 </script>

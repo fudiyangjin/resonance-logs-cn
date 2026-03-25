@@ -1,6 +1,7 @@
 <script lang="ts">
   import BuffGroupGrid from "./BuffGroupGrid.svelte";
   import IconBuffCell from "./IconBuffCell.svelte";
+  import { tl } from "$lib/i18n/index.svelte";
   import {
     getDisplayIconPosition,
     getDisplayIconSize,
@@ -54,7 +55,7 @@
     {group}
     buffs={allGroupBuffs.slice(0, maxVisible)}
     editable={editing}
-    tagText={`${group.name}（全部）`}
+    tagText={`${group.name}${tl(" (All)")}`}
     onPointerDown={(e) => startDrag(e, { kind: "individualAllGroup" }, group.position)}
     onResizePointerDown={(e) =>
       startResize(e, { kind: "individualAllGroup" }, group.iconSize)}

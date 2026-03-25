@@ -31,7 +31,7 @@ impl MonitorRuntimeSnapshot {
 
         dedup_and_sort_i32(&mut self.skill.monitored_skill_ids);
         if self.skill.monitored_skill_ids.len() > 10 {
-            return Err("最多监控10个技能".to_string());
+            return Err("You can monitor up to 10 skills".to_string());
         }
         dedup_and_sort_i32(&mut self.skill.monitored_buff_ids);
         dedup_and_sort_i32(&mut self.skill.monitored_panel_attr_ids);

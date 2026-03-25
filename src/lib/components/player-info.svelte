@@ -3,6 +3,7 @@
    * @file This component displays information about a player, including their class, name, and ability score.
    */
   import { SETTINGS } from "$lib/settings-store";
+  import { tl } from "$lib/i18n/index.svelte";
   import { copyToClipboard, getClassIcon, tooltip } from "$lib/utils.svelte";
   import AbbreviatedNumber from "./abbreviated-number.svelte";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
@@ -31,7 +32,7 @@
   // Derived helpers
   const isYou = $derived(name?.includes("You") ?? false);
   const classDisplay = $derived(
-    formatClassSpecLabel(className, classSpecName) || "未知职业",
+    formatClassSpecLabel(className, classSpecName) || tl("Unknown Class"),
   );
 
   const nameDisplay = $derived(() => {
@@ -39,9 +40,9 @@
     if (isYou) {
       const yourSetting = normalizeNameDisplaySetting(SETTINGS_YOUR_NAME);
       if (yourSetting === "Show Your Class") {
-        return `${toClassLabel(className)} (You)`;
+        return `${toClassLabel(className)}${tl(" (You)")}`;
       } else if (yourSetting === "Hide Your Name") {
-        return "Hidden Name (You)";
+        return `${tl("Hidden Name")}${tl(" (You)")}`;
       }
       return base;
     } else {
@@ -49,7 +50,7 @@
       if (othersSetting === "Show Others' Class") {
         return toClassLabel(className);
       } else if (othersSetting === "Hide Others' Name") {
-        return "Hidden Name";
+        return tl("Hidden Name");
       }
       return base;
     }

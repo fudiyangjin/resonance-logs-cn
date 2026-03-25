@@ -5,6 +5,7 @@
   import PenSquareIcon from "virtual:icons/lucide/pen-square";
   import PlayIcon from "virtual:icons/lucide/play";
   import ShieldAlertIcon from "virtual:icons/lucide/shield-alert";
+  import { tl } from "$lib/i18n/index.svelte";
 
   let { children } = $props();
 
@@ -17,9 +18,9 @@
         if (isVisible) {
           await overlayWindow.hide();
         } else {
+          await overlayWindow.setIgnoreCursorEvents(true);
           await overlayWindow.show();
           await overlayWindow.unminimize();
-          await overlayWindow.setFocus();
         }
       } else {
         console.warn("Monster overlay window not found");
@@ -33,6 +34,10 @@
     try {
       const overlayWindow = await WebviewWindow.getByLabel("monster-overlay");
       if (overlayWindow !== null) {
+        await overlayWindow.setIgnoreCursorEvents(false);
+        await overlayWindow.show();
+        await overlayWindow.unminimize();
+        await overlayWindow.setFocus();
         await emit("monster-overlay-edit-toggle");
       } else {
         console.warn("Monster overlay window not found");
@@ -50,8 +55,8 @@
         <ShieldAlertIcon class="w-5 h-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">怪物监控</h1>
-        <p class="text-sm text-muted-foreground">监控 Boss buff 等数据</p>
+        <h1 class="text-xl font-bold text-foreground">{tl("Monster Monitor")}</h1>
+        <p class="text-sm text-muted-foreground">{tl("Monitor boss buffs and related data")}</p>
       </div>
     </div>
 
@@ -62,7 +67,7 @@
         onclick={toggleMonsterOverlayWindow}
       >
         <PlayIcon class="w-4 h-4" />
-        <span>切换怪物遮罩</span>
+        <span>{tl("Toggle Monster Overlay")}</span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
 
@@ -72,7 +77,7 @@
         onclick={toggleMonsterOverlayEditMode}
       >
         <PenSquareIcon class="w-4 h-4" />
-        <span>编辑怪物布局</span>
+        <span>{tl("Edit Monster Layout")}</span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
     </div>

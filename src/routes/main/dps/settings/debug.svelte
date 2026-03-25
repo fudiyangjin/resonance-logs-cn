@@ -1,7 +1,9 @@
 <script lang="ts">
+    import * as Tabs from "$lib/components/ui/tabs/index.js";
     import { invoke } from "@tauri-apps/api/core";
     import { Button } from "$lib/components/ui/button";
     import { save } from "@tauri-apps/plugin-dialog";
+    import { tl } from "$lib/i18n/index.svelte";
     import { toast } from "svelte-sonner";
 
     async function openLogDir() {
@@ -9,7 +11,7 @@
             await invoke("open_log_dir");
         } catch (e) {
             console.error(e);
-            toast.error("打开日志目录失败：" + e);
+            toast.error(tl("Failed to open log directory: ") + e);
         }
     }
 
@@ -20,7 +22,7 @@
             const defaultName = `debug_${ts.getFullYear()}-${pad(ts.getMonth() + 1)}-${pad(ts.getDate())}_${pad(ts.getHours())}-${pad(ts.getMinutes())}-${pad(ts.getSeconds())}.zip`;
 
             const destinationPath = await save({
-                title: "保存调试压缩包",
+                title: tl("Create Debug Archive"),
                 defaultPath: defaultName,
                 filters: [{ name: "Zip", extensions: ["zip"] }],
             });
@@ -34,45 +36,47 @@
             });
             try {
                 await navigator.clipboard.writeText(path);
-                toast.success("已创建调试压缩包（路径已复制）：" + path);
+                toast.success(tl("Created debug archive (path copied): ") + path);
             } catch {
-                toast.success("已创建调试压缩包：" + path);
+                toast.success(tl("Created debug archive: ") + path);
             }
         } catch (e) {
             console.error(e);
-            toast.error("创建调试压缩包失败：" + e);
+            toast.error(tl("Failed to create debug archive: ") + e);
         }
     }
 </script>
 
+<Tabs.Content value="debug">
 <div class="space-y-3">
     <div
         class="overflow-hidden rounded-lg border border-border/60 bg-card/40 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
     >
         <div class="px-4 py-3">
             <h2 class="mb-4 text-base font-semibold text-foreground">
-                调试
+                {tl("Debug")}
             </h2>
 
             <div class="flex items-center justify-between">
                 <div class="text-sm text-muted-foreground">
-                    <div class="font-medium text-foreground">日志文件</div>
-                    打开应用日志所在文件夹
+                    <div class="font-medium text-foreground">{tl("Log Files")}</div>
+                    {tl("Open the application log folder")}
                 </div>
                 <Button variant="outline" onclick={openLogDir}>
-                    打开日志
+                    {tl("Open Logs")}
                 </Button>
             </div>
 
             <div class="mt-4 flex items-center justify-between">
                 <div class="text-sm text-muted-foreground">
-                    <div class="font-medium text-foreground">调试压缩包</div>
-                    生成包含最近日志的 ZIP，便于支持与排查
+                    <div class="font-medium text-foreground">{tl("Debug Archive")}</div>
+                    {tl("Create a ZIP with recent logs for support and troubleshooting")}
                 </div>
                 <Button variant="outline" onclick={createDiagnosticsBundle}>
-                    创建调试压缩包
+                    {tl("Create Debug Archive")}
                 </Button>
             </div>
         </div>
     </div>
 </div>
+</Tabs.Content>

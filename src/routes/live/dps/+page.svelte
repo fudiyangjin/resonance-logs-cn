@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getClassIcon, tooltip } from "$lib/utils.svelte";
   import { goto } from "$app/navigation";
+  import { tl } from "$lib/i18n/index.svelte";
   import { settings, SETTINGS, DEFAULT_STATS } from "$lib/settings-store";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
   import { computePlayerRows } from "$lib/live-derived";
@@ -110,7 +111,7 @@
             data-tauri-drag-region
             class="px-3 py-1 text-left font-medium uppercase tracking-wide"
             style="font-size: {tableSettings.tableHeaderFontSize}px; color: {tableSettings.tableHeaderTextColor};"
-            >Player</th
+            >{tl("Player")}</th
           >
           {#each visiblePlayerColumns as col (col.key)}
             <th
@@ -167,7 +168,7 @@
                 {@attach tooltip(
                   () =>
                     formatClassSpecLabel(player.className, player.classSpecName) ||
-                    "未知职业",
+                    tl("Unknown Class"),
                 )}
               />
               {#if (player.abilityScore > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourAbilityScore : SETTINGS.live.general.state.showOthersAbilityScore)) || (player.seasonStrength > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourSeasonStrength : SETTINGS.live.general.state.showOthersSeasonStrength))}

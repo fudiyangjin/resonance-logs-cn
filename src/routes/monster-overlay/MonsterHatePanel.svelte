@@ -1,5 +1,6 @@
 <script lang="ts">
   import TextBuffRow from "$lib/components/TextBuffRow.svelte";
+  import { tl } from "$lib/i18n/index.svelte";
   import {
     getHatePanelPosition,
     getHatePanelScale,
@@ -28,13 +29,13 @@
     onpointerdown={(event) => startMonsterDrag(event, { kind: "hatePanel" }, panelPos)}
   >
     {#if editing}
-      <div class="group-tag">仇恨区</div>
+      <div class="group-tag">{tl("Threat Area")}</div>
     {/if}
 
     <div class="section-list">
       {#each sections as section (section.bossUid)}
         <section class="boss-section" class:placeholder={section.isPlaceholder}>
-          <div class="boss-title">{section.title} - 仇恨</div>
+          <div class="boss-title">{`${section.title} - ${tl("Threat")}`}</div>
           <div class="boss-rows" style:gap={`${styleConfig.gap}px`}>
             {#each section.rows as row (row.key)}
               <TextBuffRow

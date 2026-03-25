@@ -3,7 +3,14 @@
    * @file This is the root layout for the application.
    * It imports the global stylesheet and disables the context menu.
    */
+  import { browser } from "$app/environment";
   import "../app.css";
+  import {
+    initI18n,
+    resolvedLanguage,
+    setLanguage,
+    tw,
+  } from "$lib/i18n/index.svelte";
   import { SETTINGS } from "$lib/settings-store";
   // Only allow warnings and errors to be printed to console in production builds
   if (typeof window !== "undefined" && import.meta.env.PROD) {
@@ -14,6 +21,7 @@
   }
 
   let { children } = $props();
+  let i18nReady = $state(false);
 
   const customThemeKeyToCssVar: Record<string, string | string[]> = {
     backgroundMain: "--background-main",
@@ -67,10 +75,63 @@
     }
   }
 
+  function titleKeyForPath(pathname: string) {
+    if (pathname.startsWith("/live")) return "window.live";
+    if (pathname.startsWith("/game-overlay")) return "window.gameOverlay";
+    if (pathname.startsWith("/monster-overlay")) return "window.monsterOverlay";
+    if (pathname.startsWith("/main/dps/settings")) return "window.settings";
+    if (pathname.startsWith("/main/dps/history")) return "window.history";
+    if (pathname.startsWith("/main/dps/themes")) return "window.themes";
+    if (pathname.startsWith("/main/skill-monitor")) return "window.skillMonitor";
+    if (pathname.startsWith("/main/monster-monitor")) return "window.monsterMonitor";
+    if (pathname.startsWith("/main/module-calc")) return "window.moduleCalc";
+    return "window.main";
+  }
+
+  function syncLanguageDocumentState() {
+    document.documentElement.lang = resolvedLanguage();
+    document.title = tw(titleKeyForPath(window.location.pathname));
+  }
+
+  $effect(() => {
+    if (!browser) return;
+    let disposed = false;
+
+    void (async () => {
+      try {
+        await initI18n(SETTINGS.app.state.language);
+        if (disposed) return;
+        syncLanguageDocumentState();
+      } catch (error) {
+        console.error("Failed to initialize i18n:", error);
+      } finally {
+        if (!disposed) {
+          i18nReady = true;
+        }
+      }
+    })();
+
+    return () => {
+      disposed = true;
+    };
+  });
+
+  $effect(() => {
+    if (!browser || !i18nReady) return;
+    const selectedLanguage = SETTINGS.app.state.language;
+    void setLanguage(selectedLanguage)
+      .then(() => {
+        syncLanguageDocumentState();
+      })
+      .catch((error) => {
+        console.error("Failed to switch language:", error);
+      });
+  });
+
 
 </script>
 
-<svelte:window oncontextmenu={(e) => e.preventDefault()} />
+<svelte:window oncontextmenu={(e) => e.preventDefault()} onpopstate={() => browser && i18nReady && syncLanguageDocumentState()} />
 
 <!-- Apply theme on the document element -->
 {(() => {
@@ -88,9 +149,6 @@
       }
     }
   });
-})()}
-
-{(() => {
 })()}
 
 {@render children()}

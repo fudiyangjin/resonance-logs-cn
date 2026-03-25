@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tl } from "$lib/i18n/index.svelte";
   import { Switch } from "$lib/components/ui/switch";
   import { Button } from "$lib/components/ui/button";
 
@@ -10,9 +11,9 @@
 </script>
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3">
-  <div class="text-base font-semibold text-foreground">计算设置</div>
+  <div class="text-base font-semibold text-foreground">{tl("Calculation Settings")}</div>
   <div class="space-y-2">
-    <div class="text-sm text-foreground">模组数量</div>
+    <div class="text-sm text-foreground">{tl("Module Count")}</div>
     <div class="flex items-center gap-2">
       <Button
         type="button"
@@ -20,7 +21,7 @@
         size="sm"
         onclick={() => (combinationSize = 4)}
       >
-        4 模组
+        {tl("4 Modules")}
       </Button>
       <Button
         type="button"
@@ -28,16 +29,16 @@
         size="sm"
         onclick={() => (combinationSize = 5)}
       >
-        5 模组
+        {tl("5 Modules")}
       </Button>
     </div>
   </div>
   <div class="flex items-center gap-3">
     <Switch bind:checked={useGpu} />
-    <div class="text-sm text-foreground">GPU 加速</div>
+    <div class="text-sm text-foreground">{tl("GPU Acceleration")}</div>
     {#if gpuSupport}
       <div class="text-xs text-muted-foreground">
-        CUDA: {gpuSupport.cuda_available ? "可用" : "不可用"} · OpenCL: {gpuSupport.opencl_available ? "可用" : "不可用"}
+        CUDA: {gpuSupport.cuda_available ? tl("Available") : tl("Unavailable")} · OpenCL: {gpuSupport.opencl_available ? tl("Available") : tl("Unavailable")}
       </div>
     {/if}
   </div>

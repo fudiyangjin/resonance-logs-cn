@@ -44,7 +44,7 @@ fn load_latest_char_serialize() -> Result<CharSerialize, String> {
     })?;
 
     log::info!(
-        "加载最新玩家数据: vdata_bytes_len={:?}",
+        "Loading latest player data: vdata_bytes_len={:?}",
         vdata_bytes.as_ref().map(|b| b.len())
     );
 
@@ -116,7 +116,7 @@ pub async fn optimize_latest_modules(
     combination_size: Option<i32>,
 ) -> Result<Vec<ModuleSolution>, String> {
     log::info!(
-        "收到优化请求: target={:?}, exclude={:?}, min_total={:?}, min_req={:?}, gpu={:?}",
+        "Received optimize request: target={:?}, exclude={:?}, min_total={:?}, min_req={:?}, gpu={:?}",
         target_attributes,
         exclude_attributes,
         min_total_value,
@@ -126,7 +126,7 @@ pub async fn optimize_latest_modules(
 
     let combination_size = combination_size.unwrap_or(4);
     if !matches!(combination_size, 4 | 5) {
-        return Err("combination_size 必须为 4 或 5".to_string());
+        return Err("combination_size must be 4 or 5".to_string());
     }
 
     let vdata = load_latest_char_serialize()?;
@@ -159,7 +159,7 @@ pub async fn optimize_latest_modules(
     };
 
     log::info!(
-        "模组预筛: 原始={} 单属性过滤后={} 总值过滤后={} 目标属性过滤后={} (min_total={:?}, target_attrs={:?})",
+        "Module prefilter: original={} after_part_filter={} after_total_value_filter={} after_target_attr_filter={} (min_total={:?}, target_attrs={:?})",
         original_count,
         after_part_count,
         after_total_value_count,
@@ -169,7 +169,7 @@ pub async fn optimize_latest_modules(
     );
 
     if modules.len() < combination_size as usize {
-        return Err(format!("需要至少 {} 个模组", combination_size));
+        return Err(format!("Need at least {} modules", combination_size));
     }
 
     let max_workers = std::thread::available_parallelism()

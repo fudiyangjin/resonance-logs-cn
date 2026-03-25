@@ -24,6 +24,7 @@ import {
   DEFAULT_RESOURCE_VALUES_BY_CLASS,
   RESOURCE_SCALES_BY_CLASS,
 } from "./overlay-constants";
+import { bootstrapMessage, bootstrapLiteral, tl } from "$lib/i18n/index.svelte";
 import type {
   CustomPanelDisplayRow,
   PanelAreaDisplayRow,
@@ -270,7 +271,7 @@ export function getCustomPanelDisplayRow(
     key: `inline_counter_${entry.id}`,
     label: entry.label,
     valueText: active ? formatTimerText(remainingMs) : "--",
-    metaText: active ? "冷却中" : "冷却中",
+    metaText: tl("On Cooldown"),
     progressPercent: getBuffRemainPercent(linkedBuff, now),
     showProgress: active && Boolean(linkedBuff && linkedBuff.durationMs > 0),
   };
@@ -280,7 +281,7 @@ export function ensureBuffGroups(profile: SkillMonitorProfile): BuffGroup[] {
   const groups = profile.buffGroups ?? [];
   return groups.map((group, index) => ({
     id: group.id ?? `group_${index + 1}`,
-    name: group.name ?? `分组 ${index + 1}`,
+    name: group.name ?? bootstrapMessage("Group {{index}}", { index: index + 1 }),
     buffIds: group.buffIds ?? [],
     priorityBuffIds: group.priorityBuffIds ?? [],
     monitorAll: group.monitorAll ?? false,
@@ -302,7 +303,7 @@ export function ensureIndividualMonitorAllGroup(
   if (!group) return null;
   return {
     id: group.id ?? "individual_all_group",
-    name: group.name ?? "全部 Buff",
+    name: group.name ?? bootstrapLiteral("All Buffs"),
     buffIds: [],
     priorityBuffIds: group.priorityBuffIds ?? [],
     monitorAll: true,
@@ -326,7 +327,7 @@ export function ensureInlineBuffEntries(
     sourceId: entry.sourceId,
     label:
       entry.sourceType === "counter"
-        ? (entry.label ?? `计数器 ${entry.sourceId}`)
+        ? (entry.label ?? bootstrapMessage("Counter {{id}}", { id: entry.sourceId }))
         : (entry.label ?? ""),
     format: entry.format ?? "timer",
   }));
@@ -339,7 +340,7 @@ function ensureCustomPanelEntries(entries: InlineBuffEntry[] | undefined): Inlin
     sourceId: entry.sourceId,
     label:
       entry.sourceType === "counter"
-        ? (entry.label ?? `计数器 ${entry.sourceId}`)
+        ? (entry.label ?? bootstrapMessage("Counter {{id}}", { id: entry.sourceId }))
         : (entry.label ?? ""),
     format: entry.format ?? "timer",
   }));
@@ -360,7 +361,7 @@ export function ensureCustomPanelGroups(
   if (groups.length > 0) {
     return groups.map((group, index) => ({
       id: group.id ?? `custom_panel_group_${index + 1}`,
-      name: group.name ?? `监控区 ${index + 1}`,
+      name: group.name ?? bootstrapMessage("Monitor Area {{index}}", { index: index + 1 }),
       entries: ensureCustomPanelEntries(group.entries),
       position: group.position ?? {
         x: legacyPosition.x + index * 40,
@@ -375,7 +376,7 @@ export function ensureCustomPanelGroups(
   return [
     {
       id: "custom_panel_group_1",
-      name: "监控区 1",
+      name: bootstrapMessage("Monitor Area {{index}}", { index: 1 }),
       entries: legacyEntries,
       position: legacyPosition,
       scale: legacyScale,

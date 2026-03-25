@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
+  import { tl } from "$lib/i18n/index.svelte";
   import { commands } from "$lib/bindings";
   import type { EncounterSummaryDto, HistoryEntityData } from "$lib/bindings";
   import type { RawCombatStats, RawSkillStats } from "$lib/api";
@@ -105,9 +106,9 @@
   // Tab state for encounter view
   let activeTab = $state<"damage" | "tanked" | "healing">("damage");
   const tabs: { key: "damage" | "tanked" | "healing"; label: string }[] = [
-    { key: "damage", label: "伤害" },
-    { key: "tanked", label: "承伤" },
-    { key: "healing", label: "治疗" },
+    { key: "damage", label: "Damage" },
+    { key: "tanked", label: "Damage Taken" },
+    { key: "healing", label: "Healing" },
   ];
 
   let encounterDurationSeconds = $derived.by(() => {
@@ -166,7 +167,7 @@
           isLocalPlayer: localUid !== null && entity.uid === localUid,
           className,
           classSpecName,
-          classDisplay: formatClassSpecLabel(className, classSpecName) || "未知职业",
+          classDisplay: formatClassSpecLabel(className, classSpecName) || tl("Unknown Class"),
           abilityScore: entity.abilityScore || 0,
           seasonStrength: entity.seasonStrength || 0,
           totalDmg: dps?.totalDmg ?? 0,
@@ -601,7 +602,7 @@
       backToHistory();
     } catch (e) {
       console.error("Failed to delete encounter", e);
-      alert("删除战斗记录失败：" + e);
+      alert(tl("Delete failed: ") + e);
       isDeleting = false;
       showDeleteModal = false;
     }
@@ -652,8 +653,8 @@
                 <button
                   onclick={backToHistory}
                   class="p-0.5 text-muted-foreground/70 hover:text-foreground transition-colors rounded shrink-0"
-                  title="返回历史"
-                  aria-label="返回历史"
+                  title={tl("Back to History")}
+                  aria-label={tl("Back to History")}
                 >
                   <svg
                     class="w-4 h-4"
@@ -671,7 +672,7 @@
                   </svg>
                 </button>
                 <h2 class="text-lg font-semibold text-foreground leading-tight">
-                  {encounter.sceneName ?? "未知场景"}
+                  {encounter.sceneName ?? tl("Unknown Scene")}
                 </h2>
               </div>
               {#if encounter.bosses.length > 0}
@@ -691,7 +692,7 @@
               <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                 <span>{new Date(encounter.startedAtMs).toLocaleString()}</span>
                 <span class="text-muted-foreground">•</span>
-                <span>时长：{formatEncounterDuration(encounterDurationSeconds)}</span>
+                <span>{tl("Duration: ")}{formatEncounterDuration(encounterDurationSeconds)}</span>
                 <span class="text-muted-foreground">•</span>
                 <span class="text-[11px] text-muted-foreground">#{encounter.id}</span>
               </div>
@@ -704,8 +705,8 @@
                 <button
                   onclick={openEncounterOnWebsite}
                   class="inline-flex items-center justify-center rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors p-2"
-                  title="在 resonance-logs.com 打开该战斗记录"
-                  aria-label="在网站打开"
+                  title={tl("Open this encounter on resonance-logs.com")}
+                  aria-label={tl("Open on Website")}
                 >
                   <svg
                     class="w-4 h-4"
@@ -729,11 +730,11 @@
                   ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20'
                   : 'bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground'}"
                 title={encounter.isFavorite
-                  ? "取消收藏"
-                  : "加入收藏"}
+                  ? tl("Remove Favorite")
+                  : tl("Add Favorite")}
                 aria-label={encounter.isFavorite
-                  ? "取消收藏"
-                  : "加入收藏"}
+                  ? tl("Remove Favorite")
+                  : tl("Add Favorite")}
               >
                 <svg
                   class="w-4 h-4"
@@ -753,8 +754,8 @@
               <button
                 onclick={openDeleteModal}
                 class="inline-flex items-center justify-center rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors p-2"
-                title="删除该战斗记录"
-                aria-label="删除战斗记录"
+                title={tl("Delete this encounter")}
+                aria-label={tl("Delete Encounter")}
               >
                 <svg
                   class="w-4 h-4"
@@ -797,7 +798,7 @@
             : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}"
           onclick={() => (overviewTargetUid = null)}
         >
-          总计
+          {tl("Total")}
         </button>
         {#each overviewTargets as target (target.targetUid)}
           <button
@@ -805,7 +806,7 @@
               ? 'bg-muted/40 text-foreground'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}"
             onclick={() => (overviewTargetUid = target.targetUid)}
-            title={`目标 #${target.targetUid}`}
+            title={`${tl("Target ")}#${target.targetUid}`}
           >
             {target.targetName}
           </button>
@@ -819,7 +820,7 @@
             <tr class="bg-popover/60">
               <th
                 class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >玩家</th
+                >{tl("Player")}</th
               >
               {#each visiblePlayerColumns as col (col.key)}
                 <th
@@ -851,8 +852,8 @@
                     <img
                       class="size-5 object-contain"
                       src={getClassIcon(p.className)}
-                      alt="职业图标"
-                      {@attach tooltip(() => p.classDisplay || "未知职业")}
+                      alt={tl("Class Icon")}
+                      {@attach tooltip(() => p.classDisplay || tl("Unknown Class"))}
                     />
                     <span
                       class="truncate"
@@ -895,7 +896,7 @@
                       })}
                       {#if p.isLocalPlayer}
                         <span class="ml-1 text-[oklch(0.65_0.1_250)]"
-                          >（你）</span
+                          >{tl(" (You)")}</span
                         >
                       {/if}
                     </span>
@@ -945,7 +946,7 @@
         <button
           onclick={backToEncounter}
           class="p-1.5 text-neutral-400 hover:text-neutral-200 transition-colors rounded hover:bg-neutral-800"
-          aria-label="返回战斗概览"
+          aria-label={tl("Back to Encounter Overview")}
         >
           <svg
             class="w-5 h-5"
@@ -963,9 +964,9 @@
           </svg>
         </button>
         <div>
-          <h2 class="text-xl font-semibold text-foreground">技能明细</h2>
+          <h2 class="text-xl font-semibold text-foreground">{tl("Skill Breakdown")}</h2>
           <div class="text-sm text-neutral-400">
-            Player: {getDisplayName({
+            {tl("Player")}: {getDisplayName({
               player: {
                 uid: selectedPlayer.uid,
                 name: selectedPlayer.name,
@@ -985,10 +986,10 @@
     {#if skillType === "heal"}
       <div class="mb-3 rounded border border-border/60 bg-card/30 p-3">
         <div class="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-          治疗目标分布
+          {tl("Healing Target Distribution")}
         </div>
         {#if healTargetSummary.length === 0}
-          <div class="text-sm text-muted-foreground">暂无目标治疗数据</div>
+          <div class="text-sm text-muted-foreground">{tl("No healing target data")}</div>
         {:else}
           <div class="space-y-1.5">
             {#each healTargetSummary as target (target.targetUid)}
@@ -1016,7 +1017,7 @@
           <tr class="bg-popover/60">
             <th
               class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
-              >技能</th
+              >{tl("Skill")}</th
             >
             {#each visibleSkillColumns as col (col.key)}
               <th
@@ -1113,7 +1114,7 @@
       </table>
     </div>
   {:else}
-    <div class="text-neutral-400">加载中...</div>
+    <div class="text-neutral-400">{tl("Loading...")}</div>
   {/if}
 </div>
 
@@ -1129,7 +1130,7 @@
     <button
       class="absolute inset-0 bg-black/60 backdrop-blur-sm"
       onclick={closeDeleteModal}
-      aria-label="关闭弹窗"
+      aria-label={tl("Close Dialog")}
     ></button>
 
     <!-- Modal Content -->
@@ -1161,11 +1162,10 @@
             id="delete-modal-title"
             class="text-lg font-semibold text-foreground"
           >
-            Delete Encounter
+            {tl("Delete Encounter")}
           </h3>
           <p class="mt-2 text-sm text-muted-foreground">
-            Are you sure you want to delete this encounter? This action cannot
-            be undone and all associated data will be permanently removed.
+            {tl("Are you sure you want to delete this encounter? This action cannot be undone and all associated data will be permanently removed.")}
           </p>
         </div>
       </div>
@@ -1177,7 +1177,7 @@
           disabled={isDeleting}
           class="px-4 py-2 text-sm rounded-md border border-border bg-popover text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Cancel
+          {tl("Cancel")}
         </button>
         <button
           onclick={confirmDeleteEncounter}
@@ -1200,9 +1200,9 @@
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            Deleting...
+            {tl("Deleting...")}
           {:else}
-            Delete
+            {tl("Delete")}
           {/if}
         </button>
       </div>

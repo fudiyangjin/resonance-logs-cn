@@ -1,4 +1,5 @@
 import { resolveBuffDisplayName } from "$lib/config/buff-name-table";
+import { tl, tm } from "$lib/i18n/index.svelte";
 import { SETTINGS, ensureBuffAliases } from "$lib/settings-store";
 import type { HateEntry } from "$lib/api";
 import { buildBuffTextRow } from "../game-overlay/overlay-utils";
@@ -40,7 +41,7 @@ function buildPlaceholderRows(now: number): TextBuffDisplay[] {
   return [
     {
       key: "monster_preview_empty",
-      label: "在怪物监控页选择 Buff",
+      label: tl("Select buffs on the monster monitor page"),
       valueText: "--",
       progressPercent: 0,
       showProgress: false,
@@ -162,7 +163,7 @@ export function updateMonsterDisplay() {
     if (buffRows.length === 0) continue;
     nextSections.push({
       bossUid,
-      title: monsterRuntime.nameCache.get(bossUid) ?? `目标 ${bossUid}`,
+      title: monsterRuntime.nameCache.get(bossUid) ?? tm("Target {{id}}", { id: bossUid }),
       rows: buffRows,
     });
   }
@@ -180,7 +181,7 @@ export function updateMonsterDisplay() {
       if (hateRows.length === 0) continue;
       nextHateSections.push({
         bossUid,
-        title: monsterRuntime.nameCache.get(bossUid) ?? `目标 ${bossUid}`,
+        title: monsterRuntime.nameCache.get(bossUid) ?? tm("Target {{id}}", { id: bossUid }),
         rows: hateRows,
       });
     }
@@ -189,7 +190,7 @@ export function updateMonsterDisplay() {
   if (nextSections.length === 0 && monsterRuntime.isEditing) {
     nextSections.push({
       bossUid: 0,
-      title: "预览",
+      title: tl("Preview"),
       rows: buildPlaceholderRows(now),
       isPlaceholder: true,
     });
@@ -202,7 +203,7 @@ export function updateMonsterDisplay() {
   ) {
     nextHateSections.push({
       bossUid: 0,
-      title: "目标 0",
+      title: tm("Target {{id}}", { id: 0 }),
       rows: buildHatePlaceholderRows(),
       isPlaceholder: true,
     });

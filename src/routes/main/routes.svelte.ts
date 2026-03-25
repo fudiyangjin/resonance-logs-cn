@@ -9,19 +9,24 @@ import SettingsIcon from "virtual:icons/lucide/settings";
 import ShieldAlertIcon from "virtual:icons/lucide/shield-alert";
 import SwordsIcon from "virtual:icons/lucide/swords";
 
+export type SidebarRoute = {
+  labelKey: string;
+  icon: typeof ActivityIcon;
+};
+
 // Tool-level routes for the left sidebar
-export const TOOL_ROUTES = {
-  "/main/dps": { label: "DPS检测", icon: ActivityIcon },
-  "/main/module-calc": { label: "模组计算", icon: CalculatorIcon },
-  "/main/skill-monitor": { label: "实时监控", icon: SwordsIcon },
-  "/main/monster-monitor": { label: "怪物监控", icon: ShieldAlertIcon },
+export const TOOL_ROUTES: Record<string, SidebarRoute> = {
+  "/main/dps": { labelKey: "DPS Meter", icon: ActivityIcon },
+  "/main/module-calc": { labelKey: "Module Calculator", icon: CalculatorIcon },
+  "/main/skill-monitor": { labelKey: "Skill Monitor", icon: SwordsIcon },
+  "/main/monster-monitor": { labelKey: "Monster Monitor", icon: ShieldAlertIcon },
 };
 
 // Sub-routes for DPS tool (tabs in the right panel)
-export const DPS_SUB_ROUTES = {
-  "/main/dps/history": { label: "历史", icon: HourglassIcon },
-  "/main/dps/themes": { label: "主题", icon: PaletteIcon },
-  "/main/dps/settings": { label: "设置", icon: SettingsIcon },
+export const DPS_SUB_ROUTES: Record<string, SidebarRoute> = {
+  "/main/dps/history": { labelKey: "History", icon: HourglassIcon },
+  "/main/dps/themes": { labelKey: "Themes", icon: PaletteIcon },
+  "/main/dps/settings": { labelKey: "Settings", icon: SettingsIcon },
 };
 
 // Legacy export for backward compatibility (if needed)

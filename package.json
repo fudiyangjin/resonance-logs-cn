@@ -29,6 +29,7 @@
     "@tauri-store/svelte": "^3.1.0",
     "colorjs.io": "^0.5.2",
     "html2canvas-pro": "^1.5.11",
+    "i18next": "^25.10.9",
     "marked": "^17.0.0",
     "svelte-sonner": "^1.0.5",
     "tailwindcss": "^4.1.13",

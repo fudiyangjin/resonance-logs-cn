@@ -1,4 +1,6 @@
 <script lang="ts" module>
+  import { resolvedLanguage } from "$lib/i18n/index.svelte";
+
   export function getAttrLevel(value: number): 0 | 1 | 2 | 3 | 4 | 5 | 6 {
     if (value >= 20) return 6;
     if (value >= 16) return 5;
@@ -14,12 +16,13 @@
       (a, b) =>
         getAttrLevel(b[1]) - getAttrLevel(a[1]) ||
         b[1] - a[1] ||
-        a[0].localeCompare(b[0], "zh-CN")
+        a[0].localeCompare(b[0], resolvedLanguage())
     );
   }
 </script>
 
 <script lang="ts">
+  import { tl, tm } from "$lib/i18n/index.svelte";
   let {
     name,
     value,
@@ -37,13 +40,13 @@
 
 <div
   class={`attr-badge ${compact ? "attr-badge--compact" : ""} ${tierClass}`}
-  aria-label={`${name} +${value}，${level}级`}
+  aria-label={tm("{{name}} +{{value}}, Lv{{level}}", { name: tl(name), value, level })}
 >
-  <div class="attr-badge__name">{name}</div>
+  <div class="attr-badge__name">{tl(name)}</div>
   <div class="attr-badge__meta">
     <span class="attr-badge__value">+{value}</span>
     {#if isHighlighted}
-      <span class="attr-badge__level">{level}级</span>
+      <span class="attr-badge__level">{tm("Lv{{level}}", { level })}</span>
     {/if}
   </div>
 </div>

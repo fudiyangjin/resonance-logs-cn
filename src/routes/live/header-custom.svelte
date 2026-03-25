@@ -30,6 +30,7 @@
   import { tooltip } from "$lib/utils.svelte";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import { emitTo } from "@tauri-apps/api/event";
+  import { tl } from "$lib/i18n/index.svelte";
   import { SETTINGS } from "$lib/settings-store";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
 
@@ -145,11 +146,11 @@
   function formatTrainingDummyLabel(state: TrainingDummyState) {
     switch (state.phase) {
       case "armed":
-        return "打桩待命";
+        return tl("Training Dummy Ready");
       case "running":
-        return "打桩中";
+        return tl("Training Dummy Active");
       case "pendingRollover":
-        return "待切段";
+        return tl("Awaiting Split");
       default:
         return "";
     }
@@ -215,20 +216,20 @@
             {#if h.timerLabelFontSize > 0}
               <span
                 class="font-medium text-muted-foreground uppercase tracking-wider leading-none"
-                style="font-size: {h.timerLabelFontSize}px">Timer</span
+                style="font-size: {h.timerLabelFontSize}px">{tl("Timer")}</span
               >
             {/if}
             <span
               class="font-bold text-foreground tabular-nums tracking-tight leading-none"
               style="font-size: {h.timerFontSize}px"
-              {@attach tooltip(() => "Time Elapsed")}
+              {@attach tooltip(() => tl("Time Elapsed"))}
               >{formatElapsed(displayElapsedMs)}</span
             >
             {#if h.showActiveTimer}
               <span
                 class="font-bold text-foreground tabular-nums tracking-tight leading-none"
                 style="font-size: {h.activeTimerFontSize}px"
-                {@attach tooltip(() => "Active Combat Time")}
+                {@attach tooltip(() => tl("Active Combat Time"))}
               >
                 / {formatElapsed(displayHeaderInfo.activeCombatTimeMs)}
               </span>
@@ -279,12 +280,14 @@
             style="padding: {h.pauseButtonPadding}px"
             aria-pressed={isTrainingDummyActive}
             aria-label={isTrainingDummyActive
-              ? "关闭打桩模式"
-              : "开启打桩模式"}
+              ? tl("Disable Training Dummy Mode")
+              : tl("Enable Training Dummy Mode")}
             disabled={trainingDummyBusy}
             onclick={toggleTrainingDummyMode}
             {@attach tooltip(() =>
-              isTrainingDummyActive ? "关闭打桩模式" : "开启打桩模式")}
+              isTrainingDummyActive
+                ? tl("Disable Training Dummy Mode")
+                : tl("Enable Training Dummy Mode"))}
           >
             <CrosshairIcon
               style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
@@ -297,7 +300,7 @@
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.resetButtonPadding}px"
             onclick={handleResetEncounter}
-            {@attach tooltip(() => "Reset Encounter")}
+            {@attach tooltip(() => tl("Reset Encounter"))}
           >
             <RefreshCwIcon
               style="width: {h.resetButtonSize}px; height: {h.resetButtonSize}px"
@@ -315,12 +318,12 @@
           >
             {#if isEncounterPaused}
               <PlayIcon
-                {@attach tooltip(() => "Resume Encounter")}
+                {@attach tooltip(() => tl("Resume Encounter"))}
                 style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
               />
             {:else}
               <PauseIcon
-                {@attach tooltip(() => "Pause Encounter")}
+                {@attach tooltip(() => tl("Pause Encounter"))}
                 style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
               />
             {/if}
@@ -332,7 +335,7 @@
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.settingsButtonPadding}px"
             onclick={() => openSettings()}
-            {@attach tooltip(() => "Settings")}
+            {@attach tooltip(() => tl("Settings"))}
           >
             <SettingsIcon
               style="width: {h.settingsButtonSize}px; height: {h.settingsButtonSize}px"
@@ -345,7 +348,7 @@
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.minimizeButtonPadding}px"
             onclick={() => appWindow.hide()}
-            {@attach tooltip(() => "Minimize")}
+            {@attach tooltip(() => tl("Minimize"))}
           >
             <MinusIcon
               style="width: {h.minimizeButtonSize}px; height: {h.minimizeButtonSize}px"
@@ -366,7 +369,7 @@
               <span
                 class="font-bold text-muted-foreground uppercase tracking-wider"
                 style="font-size: {h.totalDamageLabelFontSize}px"
-                {@attach tooltip(() => "Total Damage Dealt")}>T.DMG</span
+                {@attach tooltip(() => tl("Total Damage Dealt"))}>T.DMG</span
               >
               <span
                 class="font-bold text-foreground"
@@ -386,7 +389,7 @@
               <span
                 class="font-bold text-muted-foreground uppercase tracking-wider"
                 style="font-size: {h.totalDpsLabelFontSize}px"
-                {@attach tooltip(() => "Total Damage per Second")}>T.DPS</span
+                {@attach tooltip(() => tl("Total Damage per Second"))}>T.DPS</span
               >
               <span
                 class="font-bold text-foreground"
@@ -404,7 +407,7 @@
             <span
               class="font-bold text-muted-foreground uppercase tracking-wider"
               style="font-size: {h.bossHealthLabelFontSize}px"
-              {@attach tooltip(() => "Boss Health")}>BOSS</span
+              {@attach tooltip(() => tl("Boss Health"))}>BOSS</span
             >
             <!-- Inline Boss Health Display -->
             {#if displayBosses.length > 0}
@@ -445,7 +448,7 @@
             {:else}
               <span
                 class="text-neutral-500 font-medium italic"
-                style="font-size: {h.bossHealthNameFontSize}px">No Boss</span
+                style="font-size: {h.bossHealthNameFontSize}px">{tl("No Boss")}</span
               >
             {/if}
           </div>
@@ -466,7 +469,7 @@
             : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
           style="font-size: {h.navTabFontSize}px; padding: {h.navTabPaddingY}px {h.navTabPaddingX}px"
           aria-current={$page.url.pathname.includes("dps") ? "page" : undefined}
-          onclick={() => goto(resolve("/live/dps"))}>DPS</button
+          onclick={() => goto(resolve("/live/dps"))}>{tl("DPS")}</button
         >
         <button
           class="transition-all duration-200 font-bold tracking-wider uppercase border-r border-border whitespace-nowrap h-full flex items-center {$page.url.pathname.includes(
@@ -478,7 +481,7 @@
           aria-current={$page.url.pathname.includes("heal")
             ? "page"
             : undefined}
-          onclick={() => goto(resolve("/live/heal"))}>HEAL</button
+          onclick={() => goto(resolve("/live/heal"))}>{tl("HEAL")}</button
         >
         <button
           class="transition-all duration-200 font-bold tracking-wider uppercase border-r border-border whitespace-nowrap h-full flex items-center {$page.url.pathname.includes(
@@ -490,7 +493,7 @@
           aria-current={$page.url.pathname.includes("tanked")
             ? "page"
             : undefined}
-          onclick={() => goto(resolve("/live/tanked"))}>TANKED</button
+          onclick={() => goto(resolve("/live/tanked"))}>{tl("TANKED")}</button
         >
       </div>
     {/if}

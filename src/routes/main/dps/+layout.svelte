@@ -5,6 +5,7 @@
    */
   import { page } from "$app/state";
   import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+  import { tl } from "$lib/i18n/index.svelte";
   import { DPS_SUB_ROUTES } from "../routes.svelte";
   import ActivityIcon from "virtual:icons/lucide/activity";
   import ExternalLinkIcon from "virtual:icons/lucide/external-link";
@@ -35,10 +36,9 @@
         if (isVisible) {
           await liveWindow.hide();
         } else {
-          // Show first, then unminimize and focus
+          await liveWindow.setIgnoreCursorEvents(true);
           await liveWindow.show();
           await liveWindow.unminimize();
-          await liveWindow.setFocus();
         }
       } else {
         console.warn("Live window not found");
@@ -57,8 +57,8 @@
         <ActivityIcon class="w-5 h-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">DPS检测</h1>
-        <p class="text-sm text-muted-foreground">实时监测战斗数据和DPS统计</p>
+        <h1 class="text-xl font-bold text-foreground">{tl("DPS Meter")}</h1>
+        <p class="text-sm text-muted-foreground">{tl("Monitor combat data and DPS statistics in real time")}</p>
       </div>
     </div>
     
@@ -69,7 +69,7 @@
       onclick={toggleLiveWindow}
     >
       <PlayIcon class="w-4 h-4" />
-      <span>切换 DPS 窗口</span>
+      <span>{tl("Toggle DPS Window")}</span>
       <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
     </button>
   </div>
@@ -77,7 +77,7 @@
   <!-- Tabs Navigation -->
   <div class="border-b border-border/60">
     <nav class="flex gap-1 -mb-px">
-      {#each Object.entries(DPS_SUB_ROUTES) as [href, route] (route.label)}
+      {#each Object.entries(DPS_SUB_ROUTES) as [href, route] (route.labelKey)}
         <a
           {href}
           class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors {isActiveTab(href)
@@ -85,7 +85,7 @@
             : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}"
         >
           <route.icon class="w-4 h-4" />
-          <span>{route.label}</span>
+          <span>{tl(route.labelKey)}</span>
         </a>
       {/each}
     </nav>
@@ -96,12 +96,12 @@
     {#if isBasePath}
       <!-- Default content when on base path - prompt to select a tab -->
       <div class="flex flex-col items-center justify-center py-12 text-center">
-        <p class="text-muted-foreground mb-4">请选择上方的选项卡查看详细设置</p>
+        <p class="text-muted-foreground mb-4">{tl("Select a tab above to view detailed settings")}</p>
         <a
           href={getDefaultTabPath()}
           class="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-sm font-medium transition-colors"
         >
-          查看历史记录
+          {tl("View encounter history")}
         </a>
       </div>
     {:else}

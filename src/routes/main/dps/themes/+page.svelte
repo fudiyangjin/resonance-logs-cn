@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tl } from "$lib/i18n/index.svelte";
   import * as Tabs from "$lib/components/ui/tabs/index.js";
   import SettingsSelect from "../settings/settings-select.svelte";
   import SettingsSlider from "../settings/settings-slider.svelte";
@@ -22,9 +23,9 @@
   import ChevronDown from "virtual:icons/lucide/chevron-down";
 
   const themesTabs = [
-    { id: "general", label: "通用" },
-    { id: "live", label: "实时" },
-    { id: "presets", label: "预设" },
+    { id: "general", label: "General" },
+    { id: "live", label: "Live" },
+    { id: "presets", label: "Presets" },
   ];
 
   // === COLOR THEME PRESETS (matching CSS data-theme selectors) ===
@@ -40,8 +41,8 @@
     }
   > = {
     dark: {
-      name: "暗色",
-      description: "干净的暗色主题，使用中性灰",
+      name: "Dark",
+      description: "A clean dark theme built with neutral grays",
       theme: "dark",
       preview: {
         bg: "#212121",
@@ -75,8 +76,8 @@
       },
     },
     light: {
-      name: "亮色",
-      description: "适合白天使用的明亮主题",
+      name: "Light",
+      description: "A bright theme suited for daytime use",
       theme: "light",
       preview: {
         bg: "#fbfbf9",
@@ -110,8 +111,8 @@
       },
     },
     pink: {
-      name: "粉色 UwU",
-      description: "可爱的粉色柔和风格",
+      name: "Pink UwU",
+      description: "A cute soft pink muted style",
       theme: "pink",
       preview: {
         bg: "#F8E8EE",
@@ -145,8 +146,8 @@
       },
     },
     green: {
-      name: "柔和绿色",
-      description: "柔和的自然绿调",
+      name: "Muted Green",
+      description: "A muted natural green palette",
       theme: "green",
       preview: {
         bg: "#e0f0e0",
@@ -180,8 +181,8 @@
       },
     },
     matcha: {
-      name: "抹茶",
-      description: "大地绿/抹茶氛围",
+      name: "Matcha",
+      description: "An earthy green / matcha atmosphere",
       theme: "matcha",
       preview: {
         bg: "#d8e8d0",
@@ -215,8 +216,8 @@
       },
     },
     rainbow: {
-      name: "彩虹渐变",
-      description: "彩色渐变背景",
+      name: "Rainbow Gradient",
+      description: "Colorful gradient background",
       theme: "rainbow",
       preview: {
         bg: "linear-gradient(120deg,#ffe5ec,#e0f7fa,#f3e8ff,#e9fbd5)",
@@ -264,8 +265,8 @@
     }
   > = {
     compact: {
-      name: "极简",
-      description: "极简：无内边距、无标题栏",
+      name: "Minimal",
+      description: "Minimal: no inner padding, no header bar",
       table: {
         playerRowHeight: 20,
         playerFontSize: 10,
@@ -331,8 +332,8 @@
       },
     },
     small: {
-      name: "小号",
-      description: "紧凑布局，显示更多行",
+      name: "Small",
+      description: "Compact layout that shows more rows",
       table: {
         playerRowHeight: 22,
         playerFontSize: 11,
@@ -400,8 +401,8 @@
       },
     },
     medium: {
-      name: "中号",
-      description: "适合大多数屏幕的均衡尺寸",
+      name: "Medium",
+      description: "Balanced sizing suitable for most displays",
       table: {
         playerRowHeight: 28,
         playerFontSize: 13,
@@ -468,8 +469,8 @@
       },
     },
     large: {
-      name: "大号",
-      description: "适合高分辨率屏幕的更大 UI",
+      name: "Large",
+      description: "A larger UI suited for high-resolution displays",
       table: {
         playerRowHeight: 36,
         playerFontSize: 16,
@@ -618,12 +619,12 @@
   ];
 
   const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
-    Base: "基础",
-    Surfaces: "表面",
-    Tooltip: "提示",
-    Accents: "强调色",
-    Tables: "表格",
-    Utility: "工具",
+    Base: "Base",
+    Surfaces: "Surfaces",
+    Tooltip: "Tooltip",
+    Accents: "Accents",
+    Tables: "Tables",
+    Utility: "Utility",
   };
 
   $effect(() => {
@@ -678,7 +679,7 @@
 <Tabs.Root bind:value={activeTab}>
   <Tabs.List>
     {#each themesTabs as themesTab (themesTab.id)}
-      <Tabs.Trigger value={themesTab.id}>{themesTab.label}</Tabs.Trigger>
+      <Tabs.Trigger value={themesTab.id}>{tl(themesTab.label)}</Tabs.Trigger>
     {/each}
   </Tabs.List>
 
@@ -695,7 +696,7 @@
             onclick={() => toggleSection("colorThemes")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              主题颜色
+              {tl("Theme Colors")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.colorThemes
@@ -709,16 +710,16 @@
                 <div class="flex items-center justify-between mb-3">
                   <div>
                     <h3 class="text-sm font-semibold text-foreground">
-                      自定义颜色主题
+                      {tl("Custom Theme Colors")}
                     </h3>
                     <p class="text-xs text-muted-foreground mt-0.5">
-                      自定义每个颜色变量（支持设置透明度）
+                      {tl("Customize every color variable, including alpha.")}
                     </p>
                   </div>
                   <button
                     onclick={resetCustomThemeColors}
                     class="px-3 py-1.5 text-xs font-medium rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                    >重置</button
+                    >{tl("Reset")}</button
                   >
                 </div>
 
@@ -728,7 +729,7 @@
                       <h4
                         class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1"
                       >
-                        {CATEGORY_DISPLAY_NAMES[category] ?? category}
+                        {tl(CATEGORY_DISPLAY_NAMES[category] ?? category)}
                       </h4>
                       <div class="space-y-1">
                         {#each colorCategories[category] ?? [] as colorKey}
@@ -766,7 +767,7 @@
             onclick={() => toggleSection("classSpecColors")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              职业与专精颜色
+              {tl("Class and Spec Colors")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.classSpecColors
@@ -777,7 +778,9 @@
           {#if expandedSections.classSpecColors}
             <div class="px-4 pb-4 space-y-3">
               <p class="text-xs text-muted-foreground">
-                自定义职业或专精的颜色。选择“专精颜色”可在检测到专精时显示特定颜色。
+                {tl(
+                  'Customize class or spec colors. Choose "Spec Colors" to show a specific color when the spec is detected.',
+                )}
               </p>
 
               <!-- Tab buttons for Class/Spec -->
@@ -792,7 +795,7 @@
                     : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
                   onclick={() => (colorMode = "class")}
                 >
-                  职业颜色
+                  {tl("Class Colors")}
                 </button>
                 <button
                   type="button"
@@ -802,19 +805,19 @@
                     : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
                   onclick={() => (colorMode = "spec")}
                 >
-                  专精颜色
+                  {tl("Spec Colors")}
                 </button>
               </div>
 
               {#if colorMode === "class"}
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-muted-foreground">
-                    自定义实时统计中各职业的颜色。
+                    {tl("Customize class colors used in the live meter.")}
                   </p>
                   <button
                     onclick={resetClassColors}
                     class="px-3 py-1.5 text-xs font-medium rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                    >重置</button
+                    >{tl("Reset")}</button
                   >
                 </div>
                 <div class="grid grid-cols-2 gap-2 mt-2">
@@ -838,12 +841,12 @@
               {:else}
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-muted-foreground">
-                    自定义各专精的颜色。
+                    {tl("Customize colors for each spec.")}
                   </p>
                   <button
                     onclick={resetClassSpecColors}
                     class="px-3 py-1.5 text-xs font-medium rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                    >重置</button
+                    >{tl("Reset")}</button
                   >
                 </div>
                 <div class="grid grid-cols-2 gap-2 mt-2">
@@ -880,7 +883,7 @@
             onclick={() => toggleSection("tableRowSettings")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              玩家表格设置
+              {tl("Player Table Settings")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.tableRowSettings
@@ -891,10 +894,14 @@
           {#if expandedSections.tableRowSettings}
             <div class="px-4 pb-4 space-y-3">
               <p class="text-xs text-muted-foreground">
-                控制表格行的外观和高亮模式。这些设置适用于所有实时统计表格。
+                {tl(
+                  "Control row appearance and highlight mode. These settings apply to all live meter tables.",
+                )}
               </p>
               <div class="mt-2 space-y-2">
-                <h4 class="text-sm font-medium text-foreground">玩家行</h4>
+                <h4 class="text-sm font-medium text-foreground">
+                  {tl("Player Rows")}
+                </h4>
                 <SettingsSlider
                   bind:value={
                     SETTINGS.live.tableCustomization.state.playerRowHeight
@@ -902,8 +909,8 @@
                   min={0}
                   max={100}
                   step={1}
-                  label="行高"
-                  description="每个玩家行的高度（像素）"
+                  label={tl("Row Height")}
+                  description={tl("Height of each player row in pixels")}
                   unit="px"
                 />
                 <SettingsSlider
@@ -913,8 +920,8 @@
                   min={0}
                   max={100}
                   step={1}
-                  label="字体大小"
-                  description="玩家名称与统计的字体大小"
+                  label={tl("Font Size")}
+                  description={tl("Font size for player names and stats")}
                   unit="px"
                 />
                 <SettingsSlider
@@ -924,13 +931,13 @@
                   min={0}
                   max={100}
                   step={1}
-                  label="图标大小"
-                  description="职业/专精图标大小"
+                  label={tl("Icon Size")}
+                  description={tl("Class/spec icon size")}
                   unit="px"
                 />
 
                 <div class="flex items-center gap-2">
-                  <span class="text-sm text-muted-foreground">模式</span>
+                  <span class="text-sm text-muted-foreground">{tl("Mode")}</span>
                   <div class="flex items-center gap-1">
                     <button
                       type="button"
@@ -941,7 +948,7 @@
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (SETTINGS.live.tableCustomization.state.rowGlowMode =
-                          "gradient-underline")}>渐变（带下划线）</button
+                          "gradient-underline")}>{tl("Gradient (Underline)")}</button
                     >
                     <button
                       type="button"
@@ -951,7 +958,7 @@
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (SETTINGS.live.tableCustomization.state.rowGlowMode =
-                          "gradient")}>渐变</button
+                          "gradient")}>{tl("Gradient")}</button
                     >
                     <button
                       type="button"
@@ -961,7 +968,7 @@
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (SETTINGS.live.tableCustomization.state.rowGlowMode =
-                          "solid")}>纯色</button
+                          "solid")}>{tl("Solid")}</button
                     >
                   </div>
                 </div>
@@ -973,8 +980,10 @@
                   min={0}
                   max={1}
                   step={0.01}
-                  label="行高亮透明度"
-                  description="行高亮填充透明度（0=透明，1=不透明）"
+                  label={tl("Row Highlight Opacity")}
+                  description={tl(
+                    "Row highlight fill opacity (0 = transparent, 1 = opaque)",
+                  )}
                 />
 
                 <SettingsSlider
@@ -984,8 +993,8 @@
                   min={0}
                   max={24}
                   step={1}
-                  label="行圆角"
-                  description="行高亮的圆角半径"
+                  label={tl("Row Border Radius")}
+                  description={tl("Border radius of the row highlight")}
                   unit="px"
                 />
               </div>
@@ -994,14 +1003,14 @@
                 <!-- Table Header Customization -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
                   <h3 class="text-sm font-semibold text-foreground">
-                    表头设置
+                    {tl("Header Settings")}
                   </h3>
                   <SettingsSwitch
                     bind:checked={
                       SETTINGS.live.tableCustomization.state.showTableHeader
                     }
-                    label="显示表头"
-                    description="切换列标题显示/隐藏"
+                    label={tl("Show Header")}
+                    description={tl("Toggle column title visibility")}
                   />
                   {#if SETTINGS.live.tableCustomization.state.showTableHeader}
                     <SettingsSlider
@@ -1011,8 +1020,8 @@
                       min={0}
                       max={100}
                       step={1}
-                      label="表头高度"
-                      description="表头行高度"
+                      label={tl("Header Height")}
+                      description={tl("Height of the header row")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1023,8 +1032,8 @@
                       min={0}
                       max={100}
                       step={1}
-                      label="表头字体大小"
-                      description="列标题字体大小"
+                      label={tl("Header Font Size")}
+                      description={tl("Column title font size")}
                       unit="px"
                     />
                     <SettingsColor
@@ -1032,8 +1041,8 @@
                         SETTINGS.live.tableCustomization.state
                           .tableHeaderTextColor
                       }
-                      label="表头文字颜色"
-                      description="列标题文字颜色"
+                      label={tl("Column Title Text Color")}
+                      description={tl("Color of column title text")}
                     />
                   {/if}
                 </div>
@@ -1041,7 +1050,7 @@
                 <!-- Abbreviated Numbers -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
                   <h3 class="text-sm font-semibold text-foreground">
-                    缩写数字 (K, M, %)
+                    {tl("Abbreviated Numbers (K, M, %)")}
                   </h3>
                   <SettingsSlider
                     bind:value={
@@ -1050,8 +1059,8 @@
                     min={0}
                     max={100}
                     step={1}
-                    label="后缀字体大小"
-                    description="K/M/% 等后缀的字体大小"
+                    label={tl("Suffix Font Size")}
+                    description={tl("Font size for K/M/% suffixes")}
                     unit="px"
                   />
                 </div>
@@ -1069,7 +1078,7 @@
             onclick={() => toggleSection("skillTableSettings")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              技能表格设置
+              {tl("Skill Table Settings")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.skillTableSettings
@@ -1080,11 +1089,15 @@
           {#if expandedSections.skillTableSettings}
             <div class="px-4 pb-4 space-y-4">
               <p class="text-xs text-muted-foreground">
-                自定义技能表格的大小、表头和缩写数字样式。
+                {tl(
+                  "Customize skill table sizing, headers, and abbreviated number styles.",
+                )}
               </p>
 
               <div class="space-y-2 pt-3 border-t border-border/30">
-                <h3 class="text-sm font-semibold text-foreground">技能行</h3>
+                <h3 class="text-sm font-semibold text-foreground">
+                  {tl("Skill Rows")}
+                </h3>
                 <SettingsSlider
                   bind:value={
                     SETTINGS.live.tableCustomization.state.skillRowHeight
@@ -1092,8 +1105,8 @@
                   min={0}
                   max={100}
                   step={1}
-                  label="技能行高"
-                  description="每个技能行的高度（像素）"
+                  label={tl("Skill Row Height")}
+                  description={tl("Height of each skill row in pixels")}
                   unit="px"
                 />
                 <SettingsSlider
@@ -1103,8 +1116,8 @@
                   min={0}
                   max={100}
                   step={1}
-                  label="技能字体大小"
-                  description="技能名称与统计的字体大小"
+                  label={tl("Skill Font Size")}
+                  description={tl("Font size for skill names and stats")}
                   unit="px"
                 />
                 <SettingsSlider
@@ -1114,12 +1127,12 @@
                   min={0}
                   max={100}
                   step={1}
-                  label="技能图标大小"
-                  description="技能图标大小"
+                  label={tl("Skill Icon Size")}
+                  description={tl("Skill icon size")}
                   unit="px"
                 />
                 <div class="flex items-center gap-2 mt-2">
-                  <span class="text-sm text-muted-foreground">模式</span>
+                  <span class="text-sm text-muted-foreground">{tl("Mode")}</span>
                   <div class="flex items-center gap-1">
                     <button
                       type="button"
@@ -1129,7 +1142,7 @@
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (tableCustomizationState.skillRowGlowMode =
-                          "gradient-underline")}>渐变（带下划线）</button
+                          "gradient-underline")}>{tl("Gradient (Underline)")}</button
                     >
                     <button
                       type="button"
@@ -1139,7 +1152,7 @@
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (tableCustomizationState.skillRowGlowMode = "gradient")}
-                      >渐变</button
+                      >{tl("Gradient")}</button
                     >
                     <button
                       type="button"
@@ -1149,7 +1162,7 @@
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (tableCustomizationState.skillRowGlowMode = "solid")}
-                      >纯色</button
+                      >{tl("Solid")}</button
                     >
                   </div>
                 </div>
@@ -1159,8 +1172,10 @@
                   min={0}
                   max={1}
                   step={0.01}
-                  label="技能行高亮透明度"
-                  description="技能行高亮填充透明度（0=透明，1=不透明）"
+                  label={tl("Skill Row Highlight Opacity")}
+                  description={tl(
+                    "Skill row highlight fill opacity (0 = transparent, 1 = opaque)",
+                  )}
                 />
 
                 <SettingsSlider
@@ -1168,22 +1183,22 @@
                   min={0}
                   max={24}
                   step={1}
-                  label="技能行圆角"
-                  description="技能行高亮的圆角半径"
+                  label={tl("Skill Row Border Radius")}
+                  description={tl("Border radius of the skill row highlight")}
                   unit="px"
                 />
               </div>
 
               <div class="space-y-2 pt-3 border-t border-border/30">
                 <h3 class="text-sm font-semibold text-foreground">
-                  技能表头
+                  {tl("Skill Headers")}
                 </h3>
                 <SettingsSwitch
                   bind:checked={
                     SETTINGS.live.tableCustomization.state.skillShowHeader
                   }
-                  label="显示技能表头"
-                  description="切换技能表列标题显示/隐藏"
+                  label={tl("Show Skill Headers")}
+                  description={tl("Toggle skill table column title visibility")}
                 />
                 {#if SETTINGS.live.tableCustomization.state.skillShowHeader}
                   <SettingsSlider
@@ -1193,8 +1208,8 @@
                     min={0}
                     max={100}
                     step={1}
-                    label="技能表头高度"
-                    description="技能表头行高度"
+                    label={tl("Skill Header Height")}
+                    description={tl("Height of the skill header row")}
                     unit="px"
                   />
                   <SettingsSlider
@@ -1204,8 +1219,8 @@
                     min={0}
                     max={100}
                     step={1}
-                    label="技能表头字体大小"
-                    description="技能表列标题字体大小"
+                    label={tl("Skill Header Font Size")}
+                    description={tl("Font size of skill table column titles")}
                     unit="px"
                   />
                   <SettingsColor
@@ -1213,15 +1228,15 @@
                       SETTINGS.live.tableCustomization.state
                         .skillHeaderTextColor
                     }
-                    label="技能表头文字颜色"
-                    description="技能表列标题文字颜色"
+                    label={tl("Skill Header Text Color")}
+                    description={tl("Color of skill table column title text")}
                   />
                 {/if}
               </div>
 
               <div class="space-y-2 pt-3 border-t border-border/30">
                 <h3 class="text-sm font-semibold text-foreground">
-                  技能缩写数字
+                  {tl("Skill Abbreviated Numbers")}
                 </h3>
                 <SettingsSlider
                   bind:value={
@@ -1231,8 +1246,8 @@
                   min={0}
                   max={100}
                   step={1}
-                  label="技能后缀字体大小"
-                  description="技能行中 K/M/% 等后缀的字体大小"
+                  label={tl("Skill Suffix Font Size")}
+                  description={tl("Font size for K/M/% suffixes in skill rows")}
                   unit="px"
                 />
               </div>
@@ -1248,7 +1263,7 @@
             onclick={() => toggleSection("backgroundImage")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              背景图片
+              {tl("Background Image")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.backgroundImage
@@ -1259,20 +1274,22 @@
           {#if expandedSections.backgroundImage}
             <div class="px-4 pb-4 space-y-2">
               <p class="text-xs text-muted-foreground">
-                为所有窗口使用自定义背景图片。注意：需要将背景颜色设置为半透明，图片才能显示出来。
+                {tl(
+                  "Use a custom background image for all windows. Note: the background color must be semi-transparent for the image to be visible.",
+                )}
               </p>
               <SettingsSwitch
                 bind:checked={
                   SETTINGS.accessibility.state.backgroundImageEnabled
                 }
-                label="启用背景图片"
-                description="使用图片作为背景"
+                label={tl("Enable Background Image")}
+                description={tl("Use image as the background")}
               />
               {#if SETTINGS.accessibility.state.backgroundImageEnabled}
                 <div class="mt-2 space-y-2">
                   <SettingsFilePicker
-                    label="选择图片"
-                    description="选择图片文件（PNG/JPG/WebP）"
+                    label={tl("Choose Image")}
+                    description={tl("Choose an image file (PNG/JPG/WebP)")}
                     accept="image/*"
                     value={SETTINGS.accessibility.state.backgroundImage}
                     onchange={(dataUrl, _fileName) => {
@@ -1283,8 +1300,8 @@
                     }}
                   />
                   <SettingsSelect
-                    label="图片模式"
-                    description="图片如何适配窗口"
+                    label={tl("Image Mode")}
+                    description={tl("How the image should fit the window")}
                     bind:selected={
                       SETTINGS.accessibility.state.backgroundImageMode
                     }
@@ -1292,8 +1309,10 @@
                   />
                   {#if SETTINGS.accessibility.state.backgroundImageMode === "contain"}
                     <SettingsColorAlpha
-                      label="留白填充颜色"
-                      description="当图片以“包含”方式适配时，周围留白的背景色"
+                      label={tl("Contain Fill Color")}
+                      description={tl(
+                        "Background color used for letterboxing when the image is fit using contain mode",
+                      )}
                       value={SETTINGS.accessibility.state
                         .backgroundImageContainColor}
                       oninput={(value: string) => {
@@ -1316,7 +1335,7 @@
             onclick={() => toggleSection("customFonts")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              自定义字体
+              {tl("Custom Fonts")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.customFonts
@@ -1327,28 +1346,30 @@
           {#if expandedSections.customFonts}
             <div class="px-4 pb-4 space-y-4">
               <p class="text-xs text-muted-foreground">
-                导入自定义字体以替换默认字体。字体文件格式应为 .woff2, .woff, .ttf, 或 .otf。
+                {tl(
+                  "Import custom fonts to replace the defaults. Supported formats: .woff2, .woff, .ttf, and .otf.",
+                )}
               </p>
 
               <!-- Sans-serif Font -->
               <div class="space-y-2 pt-2 border-t border-border/30">
                 <h3 class="text-sm font-semibold text-foreground">
-                  无衬线字体（UI 文本）
+                  {tl("Sans Serif Font (UI Text)")}
                 </h3>
                 <p class="text-xs text-muted-foreground">
-                  默认：Inter Variable
+                  {tl("Default: Inter Variable")}
                 </p>
                 <SettingsSwitch
                   bind:checked={
                     SETTINGS.accessibility.state.customFontSansEnabled
                   }
-                  label="启用自定义无衬线字体"
-                  description="UI 文本使用自定义字体"
+                  label={tl("Enable Custom Sans Serif Font")}
+                  description={tl("Use the custom font for UI text")}
                 />
                 {#if SETTINGS.accessibility.state.customFontSansEnabled}
                   <SettingsFilePicker
-                    label="选择字体文件"
-                    description="选择字体文件（.woff2/.woff/.ttf/.otf）"
+                    label={tl("Choose font file")}
+                    description={tl("Choose a font file (.woff2/.woff/.ttf/.otf)")}
                     accept=".woff2,.woff,.ttf,.otf"
                     value={SETTINGS.accessibility.state.customFontSansUrl}
                     onchange={(dataUrl, fileName) => {
@@ -1388,22 +1409,22 @@
               <!-- Monospace Font -->
               <div class="space-y-2 pt-3 border-t border-border/30">
                 <h3 class="text-sm font-semibold text-foreground">
-                  等宽字体（数字、代码）
+                  {tl("Monospace Font (Numbers, Code)")}
                 </h3>
                 <p class="text-xs text-muted-foreground">
-                  默认：Geist Mono Variable
+                  {tl("Default: Geist Mono Variable")}
                 </p>
                 <SettingsSwitch
                   bind:checked={
                     SETTINGS.accessibility.state.customFontMonoEnabled
                   }
-                  label="启用自定义等宽字体"
-                  description="数字/代码使用自定义等宽字体"
+                  label={tl("Enable Custom Monospace Font")}
+                  description={tl("Use the custom monospace font for numbers and code")}
                 />
                 {#if SETTINGS.accessibility.state.customFontMonoEnabled}
                   <SettingsFilePicker
-                    label="选择字体文件"
-                    description="选择字体文件（.woff2/.woff/.ttf/.otf）"
+                    label={tl("Choose font file")}
+                    description={tl("Choose a font file (.woff2/.woff/.ttf/.otf)")}
                     accept=".woff2,.woff,.ttf,.otf"
                     value={SETTINGS.accessibility.state.customFontMonoUrl}
                     onchange={(dataUrl, fileName) => {
@@ -1457,7 +1478,7 @@
             onclick={() => toggleSection("liveDisplay")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              实时窗口显示设置
+              {tl("Live Window Display Settings")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.liveDisplay
@@ -1469,10 +1490,10 @@
             <div class="px-4 pb-4 space-y-2">
               <SettingsSwitch
                 bind:checked={SETTINGS.accessibility.state.clickthrough}
-                label="点击穿透模式"
+                label={tl("Clickthrough Mode")}
                 description={SETTINGS.accessibility.state.clickthrough
-                  ? "Clickthrough Enabled - Mouse clicks pass through window"
-                  : "Enable Clickthrough Mode"}
+                  ? tl("Clickthrough Enabled - Mouse clicks pass through window")
+                  : tl("Enable Clickthrough Mode")}
               />
             </div>
           {/if}
@@ -1488,7 +1509,7 @@
             onclick={() => toggleSection("headerSettings")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              标题栏设置
+              {tl("Header Bar Settings")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.headerSettings
@@ -1504,7 +1525,7 @@
                 <div class="space-y-2">
                   <div class="flex items-center justify-between">
                     <h3 class="text-sm font-semibold text-foreground">
-                      布局与内边距
+                      {tl("Layout and Padding")}
                     </h3>
                   </div>
                   <SettingsSlider
@@ -1514,8 +1535,8 @@
                     min={0}
                     max={24}
                     step={1}
-                    label="窗口内边距"
-                    description="实时窗口整体内边距"
+                    label={tl("Window Padding")}
+                    description={tl("Overall padding of the live window")}
                     unit="px"
                   />
                   <SettingsSlider
@@ -1525,29 +1546,33 @@
                     min={0}
                     max={16}
                     step={1}
-                    label="标题栏内边距"
-                    description="标题栏区域内部留白"
+                    label={tl("Header Padding")}
+                    description={tl("Inner padding of the header bar area")}
                     unit="px"
                   />
                 </div>
 
                 <!-- Timer Settings -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
-                  <h3 class="text-sm font-semibold text-foreground">计时器</h3>
+                  <h3 class="text-sm font-semibold text-foreground">
+                    {tl("Timer")}
+                  </h3>
                   <SettingsSwitch
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showTimer
                     }
-                    label="显示计时器"
-                    description="显示战斗计时"
+                    label={tl("Show Timer")}
+                    description={tl("Show encounter timer")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showTimer}
                     <SettingsSwitch
                       bind:checked={
                         SETTINGS.live.headerCustomization.state.showActiveTimer
                       }
-                      label="显示活跃战斗时间"
-                      description="在主计时器旁显示用于真秒伤的全局活跃时间"
+                      label={tl("Show Active Combat Time")}
+                      description={tl(
+                        "Show the global active time used for True DPS next to the main timer",
+                      )}
                     />
                     <SettingsSlider
                       bind:value={
@@ -1557,8 +1582,8 @@
                       min={0}
                       max={20}
                       step={1}
-                      label="标签字体大小"
-                      description="“计时”标签字体大小（0=隐藏）"
+                      label={tl("Label Font Size")}
+                      description={tl('Font size for the "Timer" label (0 = hide)')}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1568,8 +1593,8 @@
                       min={10}
                       max={32}
                       step={1}
-                      label="计时字体大小"
-                      description="计时数值字体大小"
+                      label={tl("Timer Font Size")}
+                      description={tl("Font size of the timer value")}
                       unit="px"
                     />
                     {#if SETTINGS.live.headerCustomization.state.showActiveTimer}
@@ -1581,8 +1606,8 @@
                         min={10}
                         max={32}
                         step={1}
-                        label="活跃时间字体大小"
-                        description="活跃战斗时间数值字体大小"
+                        label={tl("Active Time Font Size")}
+                        description={tl("Font size of the active combat time value")}
                         unit="px"
                       />
                     {/if}
@@ -1592,14 +1617,14 @@
                 <!-- Scene Name -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
                   <h3 class="text-sm font-semibold text-foreground">
-                    场景名称
+                    {tl("Scene Name")}
                   </h3>
                   <SettingsSwitch
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showSceneName
                     }
-                    label="显示场景名称"
-                    description="显示当前地下城/场景名"
+                    label={tl("Show Scene Name")}
+                    description={tl("Show the current dungeon / scene name")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showSceneName}
                     <SettingsSlider
@@ -1610,8 +1635,8 @@
                       min={10}
                       max={24}
                       step={1}
-                      label="场景名称字体大小"
-                      description="场景名称字体大小"
+                      label={tl("Scene Name Font Size")}
+                      description={tl("Font size of the scene name")}
                       unit="px"
                     />
                   {/if}
@@ -1620,7 +1645,7 @@
                 <!-- Control Buttons -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
                   <h3 class="text-sm font-semibold text-foreground">
-                    控制按钮
+                    {tl("Control Buttons")}
                   </h3>
 
                   <!-- Reset Button -->
@@ -1628,8 +1653,8 @@
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showResetButton
                     }
-                    label="显示重置按钮"
-                    description="用于重置战斗的按钮"
+                    label={tl("Show Reset Button")}
+                    description={tl("Button used to reset the encounter")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showResetButton}
                     <div class="grid grid-cols-2 gap-2 pl-4">
@@ -1641,7 +1666,7 @@
                         min={12}
                         max={32}
                         step={1}
-                        label="图标大小"
+                        label={tl("Icon Size")}
                         unit="px"
                       />
                       <SettingsSlider
@@ -1652,7 +1677,7 @@
                         min={2}
                         max={16}
                         step={1}
-                        label="内边距"
+                        label={tl("Padding")}
                         unit="px"
                       />
                     </div>
@@ -1663,8 +1688,8 @@
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showPauseButton
                     }
-                    label="显示暂停按钮"
-                    description="用于暂停/继续战斗的按钮"
+                    label={tl("Show Pause Button")}
+                    description={tl("Button used to pause or resume the encounter")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showPauseButton}
                     <div class="grid grid-cols-2 gap-2 pl-4">
@@ -1676,7 +1701,7 @@
                         min={12}
                         max={32}
                         step={1}
-                        label="图标大小"
+                        label={tl("Icon Size")}
                         unit="px"
                       />
                       <SettingsSlider
@@ -1687,7 +1712,7 @@
                         min={2}
                         max={16}
                         step={1}
-                        label="内边距"
+                        label={tl("Padding")}
                         unit="px"
                       />
                     </div>
@@ -1698,8 +1723,8 @@
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showSettingsButton
                     }
-                    label="显示设置按钮"
-                    description="打开设置窗口按钮"
+                    label={tl("Show Settings Button")}
+                    description={tl("Button that opens the settings window")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showSettingsButton}
                     <div class="grid grid-cols-2 gap-2 pl-4">
@@ -1711,7 +1736,7 @@
                         min={12}
                         max={32}
                         step={1}
-                        label="图标大小"
+                        label={tl("Icon Size")}
                         unit="px"
                       />
                       <SettingsSlider
@@ -1722,7 +1747,7 @@
                         min={2}
                         max={16}
                         step={1}
-                        label="内边距"
+                        label={tl("Padding")}
                         unit="px"
                       />
                     </div>
@@ -1733,8 +1758,8 @@
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showMinimizeButton
                     }
-                    label="显示最小化按钮"
-                    description="最小化实时窗口按钮"
+                    label={tl("Show Minimize Button")}
+                    description={tl("Button that minimizes the live window")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showMinimizeButton}
                     <div class="grid grid-cols-2 gap-2 pl-4">
@@ -1746,7 +1771,7 @@
                         min={12}
                         max={32}
                         step={1}
-                        label="图标大小"
+                        label={tl("Icon Size")}
                         unit="px"
                       />
                       <SettingsSlider
@@ -1757,7 +1782,7 @@
                         min={2}
                         max={16}
                         step={1}
-                        label="内边距"
+                        label={tl("Padding")}
                         unit="px"
                       />
                     </div>
@@ -1767,14 +1792,14 @@
                 <!-- Total Damage -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
                   <h3 class="text-sm font-semibold text-foreground">
-                    总伤害
+                    {tl("Total Damage")}
                   </h3>
                   <SettingsSwitch
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showTotalDamage
                     }
-                    label="显示总伤害"
-                    description="显示造成的总伤害"
+                    label={tl("Show Total Damage")}
+                    description={tl("Show total damage dealt")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showTotalDamage}
                     <SettingsSlider
@@ -1785,8 +1810,8 @@
                       min={8}
                       max={20}
                       step={1}
-                      label="标签字体大小"
-                      description="“T.DMG”标签字体大小"
+                      label={tl("Label Font Size")}
+                      description={tl('Font size of the "T.DMG" label')}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1797,8 +1822,8 @@
                       min={10}
                       max={32}
                       step={1}
-                      label="数值字体大小"
-                      description="伤害数值字体大小"
+                      label={tl("Value Font Size")}
+                      description={tl("Font size of the damage value")}
                       unit="px"
                     />
                   {/if}
@@ -1807,14 +1832,14 @@
                 <!-- Total DPS -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
                   <h3 class="text-sm font-semibold text-foreground">
-                    总秒伤
+                    {tl("Total DPS")}
                   </h3>
                   <SettingsSwitch
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showTotalDps
                     }
-                    label="显示总 DPS"
-                    description="显示每秒伤害总量"
+                    label={tl("Show Total DPS")}
+                    description={tl("Show total damage per second")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showTotalDps}
                     <SettingsSlider
@@ -1825,8 +1850,8 @@
                       min={8}
                       max={20}
                       step={1}
-                      label="标签字体大小"
-                      description="“T.DPS”标签字体大小"
+                      label={tl("Label Font Size")}
+                      description={tl('Font size of the "T.DPS" label')}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1837,8 +1862,8 @@
                       min={10}
                       max={32}
                       step={1}
-                      label="数值字体大小"
-                      description="DPS 数值字体大小"
+                      label={tl("Value Font Size")}
+                      description={tl("Font size of the DPS value")}
                       unit="px"
                     />
                   {/if}
@@ -1847,14 +1872,14 @@
                 <!-- Boss Health -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
                   <h3 class="text-sm font-semibold text-foreground">
-                    首领血量
+                    {tl("Boss Health")}
                   </h3>
                   <SettingsSwitch
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showBossHealth
                     }
-                    label="显示 Boss 血量"
-                    description="显示当前 Boss 血条"
+                    label={tl("Show Boss Health")}
+                    description={tl("Show the current boss health bar")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showBossHealth}
                     <SettingsSlider
@@ -1865,8 +1890,8 @@
                       min={0}
                       max={20}
                       step={1}
-                      label="标签字体大小"
-                      description="“BOSS”标签字体大小"
+                      label={tl("Label Font Size")}
+                      description={tl('Font size of the "BOSS" label')}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1877,8 +1902,8 @@
                       min={0}
                       max={24}
                       step={1}
-                      label="Boss 名称字体大小"
-                      description="Boss 名称字体大小"
+                      label={tl("Boss Name Font Size")}
+                      description={tl("Font size of the boss name")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1889,8 +1914,8 @@
                       min={0}
                       max={24}
                       step={1}
-                      label="血量数值字体大小"
-                      description="血量数值（1.5M / 3M）字体大小"
+                      label={tl("Health Value Font Size")}
+                      description={tl("Font size of the health values (1.5M / 3M)")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1901,8 +1926,8 @@
                       min={0}
                       max={24}
                       step={1}
-                      label="百分比字体大小"
-                      description="血量百分比字体大小"
+                      label={tl("Percent Font Size")}
+                      description={tl("Font size of the health percentage")}
                       unit="px"
                     />
                   {/if}
@@ -1911,14 +1936,16 @@
                 <!-- Navigation Tabs -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
                   <h3 class="text-sm font-semibold text-foreground">
-                    导航标签 (DPS/治疗/承伤)
+                    {tl("Navigation Tabs (DPS / Healing / Damage Taken)")}
                   </h3>
                   <SettingsSwitch
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showNavigationTabs
                     }
-                    label="显示导航标签"
-                    description="显示 DPS/治疗/承伤 切换按钮"
+                    label={tl("Show Navigation Tabs")}
+                    description={tl(
+                      "Show the DPS / Healing / Damage Taken switch buttons",
+                    )}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showNavigationTabs}
                     <SettingsSlider
@@ -1928,8 +1955,8 @@
                       min={8}
                       max={18}
                       step={1}
-                      label="标签字体大小"
-                      description="标签文字字体大小"
+                      label={tl("Label Font Size")}
+                      description={tl("Font size of the tab label text")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1939,8 +1966,8 @@
                       min={4}
                       max={24}
                       step={1}
-                      label="水平内边距"
-                      description="标签左右内边距"
+                      label={tl("Horizontal Padding")}
+                      description={tl("Horizontal padding for tabs")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1950,8 +1977,8 @@
                       min={2}
                       max={16}
                       step={1}
-                      label="垂直内边距"
-                      description="标签上下内边距"
+                      label={tl("Vertical Padding")}
+                      description={tl("Vertical padding for tabs")}
                       unit="px"
                     />
                   {/if}
@@ -1969,10 +1996,10 @@
         <div class="space-y-3">
           <div>
             <h2 class="text-base font-semibold text-foreground">
-              颜色主题
+              {tl("Color Themes")}
             </h2>
             <p class="text-xs text-muted-foreground mt-0.5">
-              选择一个预设颜色主题
+              {tl("Choose a preset color theme")}
             </p>
           </div>
           <div class="grid grid-cols-2 gap-3">
@@ -2002,10 +2029,10 @@
                   ></span>
                 </div>
                 <span class="text-sm font-medium text-foreground"
-                  >{preset.name}</span
+                  >{tl(preset.name)}</span
                 >
                 <span class="text-xs text-muted-foreground mt-0.5"
-                  >{preset.description}</span
+                  >{tl(preset.description)}</span
                 >
               </button>
             {/each}
@@ -2016,10 +2043,10 @@
         <div class="space-y-3 pt-4 border-t border-border/50">
           <div>
             <h2 class="text-base font-semibold text-foreground">
-              尺寸预设
+              {tl("Size Presets")}
             </h2>
             <p class="text-xs text-muted-foreground mt-0.5">
-              根据显示器调整表格和标题的大小
+              {tl("Adjust table and header sizing to match your display")}
             </p>
           </div>
           <div class="grid grid-cols-4 gap-3">
@@ -2054,10 +2081,10 @@
                   {/if}
                 </div>
                 <span class="text-sm font-medium text-foreground"
-                  >{preset.name}</span
+                  >{tl(preset.name)}</span
                 >
                 <span class="text-xs text-muted-foreground mt-0.5 text-center"
-                  >{preset.description}</span
+                  >{tl(preset.description)}</span
                 >
               </button>
             {/each}

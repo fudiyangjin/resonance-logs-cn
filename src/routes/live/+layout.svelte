@@ -9,6 +9,7 @@
    * @packageDocumentation
    */
   import { onMount } from "svelte";
+  import { tl } from "$lib/i18n/index.svelte";
   import { SETTINGS } from "$lib/settings-store";
   import {
     onLiveData,
@@ -91,7 +92,7 @@
         clearMeterData();
         notificationToast?.showToast(
           "notice",
-          "战斗记录已重置",
+          tl("Encounter has been reset"),
         );
       });
 
@@ -121,9 +122,9 @@
           lastPauseState !== newPaused
         ) {
           if (newPaused) {
-            notificationToast?.showToast("notice", "Encounter paused");
+            notificationToast?.showToast("notice", tl("Encounter paused"));
           } else {
-            notificationToast?.showToast("notice", "Encounter resumed");
+            notificationToast?.showToast("notice", tl("Encounter resumed"));
           }
         }
         lastPauseState = newPaused;

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tl } from "$lib/i18n/index.svelte";
   import {
     onWindowDragPointerDown,
     resetMonsterOverlayPositions,
@@ -8,28 +9,28 @@
 </script>
 
 <div class="edit-banner">
-  <div class="edit-title">编辑模式 - 可拖拽调整怪物监控位置</div>
+  <div class="edit-title">{tl("Edit Mode - Drag to adjust monster monitor positions")}</div>
   <button
     type="button"
     class="done-btn secondary"
     onclick={resetMonsterOverlayPositions}
   >
-    重置位置
+    {tl("Reset Positions")}
   </button>
   <button
     type="button"
     class="done-btn secondary"
     onclick={resetMonsterOverlaySizes}
   >
-    重置尺寸
+    {tl("Reset Sizes")}
   </button>
   <button type="button" class="done-btn" onclick={() => setMonsterEditMode(false)}>
-    完成编辑
+    {tl("Finish Editing")}
   </button>
 </div>
 
 <div class="window-drag-bar" onpointerdown={onWindowDragPointerDown}>
-  拖动此处移动 Monster Overlay 窗口
+  {tl("Drag here to move the Monster Overlay window")}
 </div>
 
 <style>

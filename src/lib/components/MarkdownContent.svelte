@@ -1,10 +1,11 @@
 <script lang="ts">
   import { marked } from 'marked';
+  import { tl } from '$lib/i18n/index.svelte';
 
   let {
     source,
-    loadingText = 'Loading content...',
-    emptyText = '暂无内容。',
+    loadingText = tl('Loading content...'),
+    emptyText = tl('No content.'),
     contentClass = '',
   }: {
     source: string;

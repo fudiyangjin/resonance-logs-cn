@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tl } from "$lib/i18n/index.svelte";
   import {
     buffDurationPercents,
     getGroupPosition,
@@ -34,7 +35,7 @@
   onpointerdown={(e) => startDrag(e, { kind: "group", key: "resourceGroup" }, groupPos)}
 >
   {#if editing}
-    <div class="group-tag">资源区</div>
+    <div class="group-tag">{tl("Resource Area")}</div>
   {/if}
 
   <div class="resources-panel" data-class={classKey}>

@@ -3,6 +3,7 @@
  * based on user preferences for showing/hiding names and classes.
  */
 import { toClassLabel, toSpecLabel } from "$lib/class-labels";
+import legacy from "$lib/i18n/locales/zh-CN/legacy";
 
 /**
  * Player object containing basic player information
@@ -33,18 +34,7 @@ export type NameDisplaySetting =
   | "Show Others' Name - Spec"
   | "Hide Others' Name";
 
-const CN_TO_EN_SETTING: Record<string, NameDisplaySetting> = {
-  "显示你的名称": "Show Your Name",
-  "显示你的职业": "Show Your Class",
-  "显示你的名称 - 职业": "Show Your Name - Class",
-  "显示你的名称 - 专精": "Show Your Name - Spec",
-  "隐藏你的名称": "Hide Your Name",
-  "显示他人名称": "Show Others' Name",
-  "显示他人职业": "Show Others' Class",
-  "显示他人名称 - 职业": "Show Others' Name - Class",
-  "显示他人名称 - 专精": "Show Others' Name - Spec",
-  "隐藏他人名称": "Hide Others' Name",
-};
+const CN_TO_EN_SETTING = legacy.nameDisplay as Record<string, NameDisplaySetting>;
 
 export function normalizeNameDisplaySetting(
   setting: string,

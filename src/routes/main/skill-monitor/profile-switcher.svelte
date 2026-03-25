@@ -3,6 +3,7 @@
     SETTINGS,
     createDefaultSkillMonitorProfile,
   } from "$lib/settings-store";
+  import { tl, tm } from "$lib/i18n/index.svelte";
 
   const profiles = $derived(SETTINGS.skillMonitor.state.profiles);
   const activeProfileIndex = $derived(
@@ -36,7 +37,9 @@
 
   function addProfile() {
     const nextIndex = SETTINGS.skillMonitor.state.profiles.length + 1;
-    const nextProfile = createDefaultSkillMonitorProfile(`方案 ${nextIndex}`);
+    const nextProfile = createDefaultSkillMonitorProfile(
+      tm("Profile {{index}}", { index: nextIndex }),
+    );
     SETTINGS.skillMonitor.state.profiles = [
       ...SETTINGS.skillMonitor.state.profiles,
       nextProfile,
@@ -46,7 +49,7 @@
   }
 
   function renameActiveProfile() {
-    const nextName = window.prompt("请输入新的方案名称", activeProfile.name);
+    const nextName = window.prompt(tl("Enter a new profile name"), activeProfile.name);
     if (!nextName) return;
     const trimmedName = nextName.trim();
     if (!trimmedName) return;
@@ -67,8 +70,8 @@
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
   <div>
-    <h2 class="text-base font-semibold text-foreground">配置方案</h2>
-    <p class="text-xs text-muted-foreground">可创建多个角色监控方案并快速切换</p>
+    <h2 class="text-base font-semibold text-foreground">{tl("Profile Settings")}</h2>
+    <p class="text-xs text-muted-foreground">{tl("Create multiple monitoring profiles and switch between them quickly")}</p>
   </div>
   <div class="flex flex-wrap items-center gap-2">
     <select
@@ -86,14 +89,14 @@
       class="text-xs px-3 py-2 rounded border border-border/60 text-foreground hover:bg-muted/40 transition-colors"
       onclick={addProfile}
     >
-      新建方案
+      {tl("New Profile")}
     </button>
     <button
       type="button"
       class="text-xs px-3 py-2 rounded border border-border/60 text-foreground hover:bg-muted/40 transition-colors"
       onclick={renameActiveProfile}
     >
-      重命名
+      {tl("Rename")}
     </button>
     <button
       type="button"
@@ -101,7 +104,7 @@
       onclick={removeActiveProfile}
       disabled={profiles.length <= 1}
     >
-      删除方案
+      {tl("Delete Profile")}
     </button>
   </div>
 </div>

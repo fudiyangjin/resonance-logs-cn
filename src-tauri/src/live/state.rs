@@ -212,7 +212,7 @@ fn resolve_entity_display_name(uid: i64, entity: &Entity, attr_store: &EntityAtt
     if !entity.name.is_empty() {
         return entity.name.clone();
     }
-    format!("目标 {uid}")
+    format!("Target {uid}")
 }
 
 fn collect_player_names(encounter: &Encounter) -> Vec<PlayerNameEntry> {

@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { tl } from "$lib/i18n/index.svelte";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Slider } from "$lib/components/ui/slider";
 
-  type AttrOption = { id: number; label: string };
+  type AttrOption = { id: number; labelKey: string };
   type MinReq = { attrId: number | null; value: number | null };
 
   let {
@@ -52,10 +53,10 @@
 </script>
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4">
-  <div class="text-base font-semibold text-foreground">筛选设置</div>
+  <div class="text-base font-semibold text-foreground">{tl("Filter Settings")}</div>
 
   <div class="space-y-2">
-    <div class="text-sm text-foreground">排除总值低于多少的模组:</div>
+    <div class="text-sm text-foreground">{tl("Exclude modules below this total value:")}</div>
     <div class="flex items-center gap-4">
       <Slider
         type="single"
@@ -65,12 +66,12 @@
         step={1}
         class="max-w-[70%]"
       />
-      <div class="min-w-12 text-sm text-foreground">{minTotalValue}级</div>
+      <div class="min-w-12 text-sm text-foreground">{minTotalValue}{tl(" Lv")}</div>
     </div>
   </div>
 
   <div class="space-y-2">
-    <div class="text-sm text-muted-foreground">目标属性, 选中后只会计算携带该属性的模组(模组数超过1000时可利用该设置先进行筛选)</div>
+    <div class="text-sm text-muted-foreground">{tl("Target attributes. Only modules with selected attributes are considered. Use this first if the module count exceeds 1000.")}</div>
     <div class="flex flex-wrap gap-2">
       {#each attributeOptions as opt}
         <Button
@@ -78,14 +79,14 @@
           variant={targetAttributes.includes(opt.id) ? "default" : "outline"}
           onclick={() => (targetAttributes = toggle(targetAttributes, opt.id))}
         >
-          {opt.label}
+          {tl(opt.labelKey)}
         </Button>
       {/each}
     </div>
   </div>
 
   <div class="space-y-2">
-    <div class="text-sm text-muted-foreground">排除属性</div>
+    <div class="text-sm text-muted-foreground">{tl("Excluded Attributes")}</div>
     <div class="flex flex-wrap gap-2">
       {#each attributeOptions as opt}
         <Button
@@ -93,14 +94,14 @@
           variant={excludeAttributes.includes(opt.id) ? "default" : "outline"}
           onclick={() => (excludeAttributes = toggle(excludeAttributes, opt.id))}
         >
-          {opt.label}
+          {tl(opt.labelKey)}
         </Button>
       {/each}
     </div>
   </div>
 
   <div class="space-y-3">
-    <div class="text-sm text-muted-foreground">最小属性要求</div>
+    <div class="text-sm text-muted-foreground">{tl("Minimum Attribute Requirements")}</div>
     <div class="space-y-2">
       {#each minRequirements as req, idx}
         <div class="flex items-center gap-2">
@@ -110,9 +111,9 @@
             onchange={(e) =>
               updateMin(idx, "attrId", parseNullableNumber((e.target as HTMLSelectElement).value))}
           >
-            <option value="">选择属性</option>
+            <option value="">{tl("Select Attribute")}</option>
             {#each attributeOptions as opt}
-              <option value={opt.id}>{opt.label}</option>
+              <option value={opt.id}>{tl(opt.labelKey)}</option>
             {/each}
           </select>
           <Input
@@ -123,11 +124,11 @@
             onchange={(e) =>
               updateMin(idx, "value", parseNullableNumber((e.target as HTMLInputElement).value))}
           />
-          <Button size="sm" variant="ghost" onclick={() => removeMin(idx)}>移除</Button>
+          <Button size="sm" variant="ghost" onclick={() => removeMin(idx)}>{tl("Remove")}</Button>
         </div>
       {/each}
     </div>
-    <Button size="sm" variant="outline" onclick={addMin}>+ 添加</Button>
+    <Button size="sm" variant="outline" onclick={addMin}>{tl("+ Add")}</Button>
   </div>
 </div>
 

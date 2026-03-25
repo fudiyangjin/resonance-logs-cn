@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tl } from "$lib/i18n/index.svelte";
   import { formatAttrValue } from "./overlay-utils";
   import {
     getGroupPosition,
@@ -30,7 +31,7 @@
     onpointerdown={(e) => startDrag(e, { kind: "group", key: "panelAttrGroup" }, groupPos)}
   >
     {#if editing}
-      <div class="group-tag">角色属性区</div>
+      <div class="group-tag">{tl("Character Stats Area")}</div>
     {/if}
 
     <div class="panel-attr-list" style:gap={`${sizes.panelAttrGap}px`}>

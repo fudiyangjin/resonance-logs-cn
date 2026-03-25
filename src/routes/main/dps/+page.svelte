@@ -4,10 +4,11 @@
    */
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import { tl } from "$lib/i18n/index.svelte";
 
   onMount(() => {
     goto("/main/dps/history");
   });
 </script>
 
-<p class="text-muted-foreground">正在跳转...</p>
+<p class="text-muted-foreground">{tl("Redirecting...")}</p>

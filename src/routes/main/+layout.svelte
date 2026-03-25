@@ -124,6 +124,17 @@
   let updateInfo = $state<UpdateInfo | null>(null);
   let updateUnlisten: UnlistenFn | null = null;
 
+  async function releaseTransparentWindowInteractivity() {
+    for (const label of ["live", "game-overlay", "monster-overlay"] as const) {
+      try {
+        const windowRef = await WebviewWindow.getByLabel(label);
+        await windowRef?.setIgnoreCursorEvents(true);
+      } catch (error) {
+        console.error(`[main] failed to release ${label} window interactivity`, error);
+      }
+    }
+  }
+
   onMount(() => {
     // Set up navigation listener
     const appWebview = getCurrentWebviewWindow();
@@ -183,6 +194,12 @@
       }
     }, 200);
 
+    void releaseTransparentWindowInteractivity();
+    const handleWindowFocus = () => {
+      void releaseTransparentWindowInteractivity();
+    };
+    window.addEventListener("focus", handleWindowFocus);
+
     // Cleanup on unmount
     return () => {
       if (runtimeSyncTimer) {
@@ -197,6 +214,7 @@
         updateUnlisten();
         updateUnlisten = null;
       }
+      window.removeEventListener("focus", handleWindowFocus);
       clearInterval(bgAndFontInterval);
     };
   });

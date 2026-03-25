@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tl, tm } from "$lib/i18n/index.svelte";
   import { SETTINGS, type SkillMonitorProfile } from "$lib/settings-store";
   import { ensureCustomPanelGroups } from "../game-overlay/overlay-utils";
   import {
@@ -46,13 +47,13 @@
     };
 
     if (overlayVisibility.showSkillCdGroup) {
-      pushArea("skillCdGroup", "技能CD区", overlayPositions.skillCdGroup.x, overlayPositions.skillCdGroup.y, 280, 118, overlaySizes.skillCdGroupScale);
+      pushArea("skillCdGroup", tl("Skill CD Area"), overlayPositions.skillCdGroup.x, overlayPositions.skillCdGroup.y, 280, 118, overlaySizes.skillCdGroupScale);
     }
     if (overlayVisibility.showResourceGroup) {
-      pushArea("resourceGroup", "资源区", overlayPositions.resourceGroup.x, overlayPositions.resourceGroup.y, 250, 90, overlaySizes.resourceGroupScale);
+      pushArea("resourceGroup", tl("Resource Area"), overlayPositions.resourceGroup.x, overlayPositions.resourceGroup.y, 250, 90, overlaySizes.resourceGroupScale);
     }
     if (overlayVisibility.showPanelAttrGroup) {
-      pushArea("panelAttrGroup", "角色属性区", overlayPositions.panelAttrGroup.x, overlayPositions.panelAttrGroup.y, 220, 130, overlaySizes.panelAttrGroupScale);
+      pushArea("panelAttrGroup", tl("Character Stats Area"), overlayPositions.panelAttrGroup.x, overlayPositions.panelAttrGroup.y, 220, 130, overlaySizes.panelAttrGroupScale);
     }
     if (overlayVisibility.showCustomPanelGroup) {
       for (const group of ensureCustomPanelGroups(profile)) {
@@ -69,12 +70,12 @@
       }
     }
 
-    pushArea("textBuffPanel", "无图标Buff区", overlayPositions.textBuffPanel.x, overlayPositions.textBuffPanel.y, 240, 130, overlaySizes.textBuffPanelScale);
+    pushArea("textBuffPanel", tl("Text Buff Area"), overlayPositions.textBuffPanel.x, overlayPositions.textBuffPanel.y, 240, 130, overlaySizes.textBuffPanelScale);
 
     if (monsterMonitor.hateListEnabled) {
       pushArea(
         "monsterHatePanel",
-        "仇恨区",
+        tl("Threat Area"),
         monsterOverlayPositions.hatePanel.x,
         monsterOverlayPositions.hatePanel.y,
         240,
@@ -87,23 +88,23 @@
       for (const group of profile.buffGroups) {
         const width = Math.max(120, group.columns * (group.iconSize + group.gap));
         const height = Math.max(90, group.rows * (group.iconSize + group.gap) + 26);
-        pushArea(`buffGroup:${group.id}`, `${group.name}${group.monitorAll ? "（全部）" : ""}`, group.position.x, group.position.y, width, height);
+        pushArea(`buffGroup:${group.id}`, `${group.name}${group.monitorAll ? tl(" (All)") : ""}`, group.position.x, group.position.y, width, height);
       }
     } else if (profile.individualMonitorAllGroup) {
       const group = profile.individualMonitorAllGroup;
       const width = Math.max(120, group.columns * (group.iconSize + group.gap));
       const height = Math.max(90, group.rows * (group.iconSize + group.gap) + 26);
-      pushArea(`individualAllGroup:${group.id}`, `${group.name}（全部）`, group.position.x, group.position.y, width, height);
+      pushArea(`individualAllGroup:${group.id}`, `${group.name}${tl(" (All)")}`, group.position.x, group.position.y, width, height);
     }
 
     for (const [baseId, point] of Object.entries(overlayPositions.iconBuffPositions)) {
       const size = overlaySizes.iconBuffSizes[Number(baseId)] ?? 44;
-      pushArea(`icon:${baseId}`, `Buff ${baseId}`, point.x, point.y, size, size);
+      pushArea(`icon:${baseId}`, tm("Buff {{id}}", { id: baseId }), point.x, point.y, size, size);
     }
 
     for (const [categoryKey, point] of Object.entries(overlayPositions.categoryIconPositions ?? {})) {
       const size = overlaySizes.categoryIconSizes?.[categoryKey as keyof typeof overlaySizes.categoryIconSizes] ?? 44;
-      pushArea(`category:${categoryKey}`, `分类 ${categoryKey}`, point.x, point.y, size, size);
+      pushArea(`category:${categoryKey}`, `${tl("Category ")}${categoryKey}`, point.x, point.y, size, size);
     }
 
     return next;

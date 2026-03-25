@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { tl } from "$lib/i18n/index.svelte";
   import { Button } from "$lib/components/ui/button";
   import CalculatorIcon from "virtual:icons/lucide/calculator";
   import RefreshCw from "virtual:icons/lucide/refresh-cw";
@@ -26,27 +27,27 @@
   } from "$lib/stores/module-calc-store.svelte";
 
   const ATTR_OPTIONS = [
-    { id: 1110, label: "力量加持" },
-    { id: 1111, label: "敏捷加持" },
-    { id: 1112, label: "智力加持" },
-    { id: 1113, label: "特攻伤害" },
-    { id: 1114, label: "精英打击" },
-    { id: 1205, label: "特攻治疗加持" },
-    { id: 1206, label: "专精治疗加持" },
-    { id: 1407, label: "施法专注" },
-    { id: 1408, label: "攻速专注" },
-    { id: 1409, label: "暴击专注" },
-    { id: 1410, label: "幸运专注" },
-    { id: 1307, label: "抵御魔法" },
-    { id: 1308, label: "抵御物理" },
-    { id: 2104, label: "极-伤害叠加" },
-    { id: 2105, label: "极-灵活身法" },
-    { id: 2204, label: "极-生命凝聚" },
-    { id: 2205, label: "极-急救措施" },
-    { id: 2404, label: "极-生命波动" },
-    { id: 2405, label: "极-生命汲取" },
-    { id: 2406, label: "极-全队幸暴" },
-    { id: 2304, label: "极-绝境守护" },
+    { id: 1110, labelKey: "Strength Blessing" },
+    { id: 1111, labelKey: "Agility Blessing" },
+    { id: 1112, labelKey: "Intelligence Blessing" },
+    { id: 1113, labelKey: "Special Attack Damage" },
+    { id: 1114, labelKey: "Elite Strike" },
+    { id: 1205, labelKey: "Special Attack Healing Blessing" },
+    { id: 1206, labelKey: "Specialization Healing Blessing" },
+    { id: 1407, labelKey: "Casting Focus" },
+    { id: 1408, labelKey: "Attack Speed Focus" },
+    { id: 1409, labelKey: "Crit Focus" },
+    { id: 1410, labelKey: "Luck Focus" },
+    { id: 1307, labelKey: "Magic Resistance" },
+    { id: 1308, labelKey: "Physical Resistance" },
+    { id: 2104, labelKey: "Ultimate - Damage Stacking" },
+    { id: 2105, labelKey: "Ultimate - Agile Footwork" },
+    { id: 2204, labelKey: "Ultimate - Life Condensation" },
+    { id: 2205, labelKey: "Ultimate - Emergency Measures" },
+    { id: 2404, labelKey: "Ultimate - Life Fluctuation" },
+    { id: 2405, labelKey: "Ultimate - Life Drain" },
+    { id: 2406, labelKey: "Ultimate - Team Lucky Crit" },
+    { id: 2304, labelKey: "Ultimate - Last Stand Guard" },
   ];
 
   async function refreshModules() {
@@ -57,7 +58,7 @@
       MODULE_CALC.modules = await getLatestModules();
       MODULE_CALC.moduleCount = MODULE_CALC.modules.length;
     } catch (e) {
-      MODULE_CALC.error = (e as Error)?.message ?? "拉取模组失败";
+      MODULE_CALC.error = (e as Error)?.message ?? tl("Failed to load modules");
     } finally {
       MODULE_CALC.loading = false;
     }
@@ -97,7 +98,7 @@
 
       MODULE_CALC.solutions = await optimizeLatestModules(payload);
       if (MODULE_CALC.solutions.length === 0) {
-        MODULE_CALC.error = "无可用方案，请调整筛选条件";
+        MODULE_CALC.error = tl("No valid solutions were found. Adjust the filters and try again.");
       }
     } catch (e) {
       console.error("Optimize error:", e);
@@ -106,7 +107,7 @@
       } else if (e instanceof Error) {
         MODULE_CALC.error = e.message;
       } else {
-        MODULE_CALC.error = "计算失败: " + JSON.stringify(e);
+        MODULE_CALC.error = `${tl("Calculation failed: ")}${JSON.stringify(e)}`;
       }
     } finally {
       MODULE_CALC.loading = false;
@@ -135,8 +136,8 @@
         <CalculatorIcon class="w-5 h-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">模组计算</h1>
-        <p class="text-sm text-muted-foreground">计算和优化模组配置</p>
+        <h1 class="text-xl font-bold text-foreground">{tl("Module Calculator")}</h1>
+        <p class="text-sm text-muted-foreground">{tl("Calculate and optimize module setups")}</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -150,7 +151,7 @@
         {:else}
           <RefreshCw class="w-4 h-4 mr-2" />
         {/if}
-        刷新数据
+        {tl("Refresh Data")}
       </Button>
       <Button
         onclick={runOptimize}
@@ -161,7 +162,7 @@
         {:else}
           <PlayIcon class="w-4 h-4 mr-2" />
         {/if}
-        开始计算
+        {tl("Start Calculation")}
       </Button>
     </div>
   </div>
@@ -199,7 +200,7 @@
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3">
     <div class="flex items-center justify-between">
       <div class="text-base font-semibold text-foreground">
-        计算结果 (Top 10)
+        {tl("Results (Top 10)")}
       </div>
       {#if MODULE_CALC.loading}
         <div class="flex flex-col gap-1 w-64">
@@ -208,7 +209,9 @@
           >
             <Loader2 class="w-3 h-3 mr-1 animate-spin" />
             <span>
-              {MODULE_CALC.combinationSize === 5 ? "多策略计算中..." : "计算中..."} {MODULE_CALC.progress.max > 0
+              {MODULE_CALC.combinationSize === 5
+                ? tl("Running multi-strategy calculation...")
+                : tl("Calculating...")} {MODULE_CALC.progress.max > 0
                 ? `${Math.round((MODULE_CALC.progress.value / MODULE_CALC.progress.max) * 100)}%`
                 : ""}
             </span>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import BuffGroupGrid from "./BuffGroupGrid.svelte";
   import IconBuffCell from "./IconBuffCell.svelte";
+  import { tl } from "$lib/i18n/index.svelte";
   import {
     getIconBuffPosition,
     getIconBuffSize,
@@ -20,7 +21,7 @@
 
 {#if groups.length === 0 && editing}
   <div class="overlay-group grouped-empty-tip" style:left="40px" style:top="310px">
-    请先在技能监控页创建 Buff 分组
+    {tl("Create buff groups on the skill monitor page first")}
   </div>
 {/if}
 
@@ -31,7 +32,7 @@
       {group}
       buffs={groupBuffs}
       editable={editing}
-      tagText={`${group.name}${group.monitorAll ? "（全部）" : ""}`}
+      tagText={`${group.name}${group.monitorAll ? tl(" (All)") : ""}`}
       onPointerDown={(e) => startDrag(e, { kind: "buffGroup", groupId: group.id }, group.position)}
       onResizePointerDown={(e) =>
         startResize(e, { kind: "buffGroup", groupId: group.id }, group.iconSize)}

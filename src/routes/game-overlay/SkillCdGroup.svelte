@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tl } from "$lib/i18n/index.svelte";
   import {
     activeBuffIds,
     displayMap,
@@ -35,7 +36,7 @@
   onpointerdown={(e) => startDrag(e, { kind: "group", key: "skillCdGroup" }, groupPos)}
 >
   {#if editing}
-    <div class="group-tag">技能CD区</div>
+    <div class="group-tag">{tl("Skill CD Area")}</div>
   {/if}
 
   <div class="skill-cd-grid">

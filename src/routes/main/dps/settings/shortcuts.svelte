@@ -8,6 +8,7 @@
   import * as Item from "$lib/components/ui/item/index.js";
   import * as Alert from "$lib/components/ui/alert/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
+  import { tl } from "$lib/i18n/index.svelte";
 
   import { SETTINGS } from "$lib/settings-store";
   import { registerShortcut } from "./shortcuts.js";
@@ -128,47 +129,47 @@
   let inputs: BaseInputs = [
     {
       id: "showLiveMeter",
-      label: "显示实时窗口",
+      label: "Show Live Window",
     },
     {
       id: "hideLiveMeter",
-      label: "隐藏实时窗口",
+      label: "Hide Live Window",
     },
     {
       id: "toggleLiveMeter",
-      label: "切换实时窗口",
+      label: "Toggle Live Window",
     },
     {
       id: "enableClickthrough",
-      label: "启用点击穿透",
+      label: "Enable Clickthrough",
     },
     {
       id: "disableClickthrough",
-      label: "禁用点击穿透",
+      label: "Disable Clickthrough",
     },
     {
       id: "toggleClickthrough",
-      label: "切换点击穿透",
+      label: "Toggle Clickthrough",
     },
     {
       id: "resetEncounter",
-      label: "重置战斗",
+      label: "Reset Encounter",
     },
     {
       id: "togglePauseEncounter",
-      label: "切换暂停战斗",
+      label: "Toggle Pause Encounter",
     },
     {
       id: "toggleBossHp",
-      label: "切换 Boss 血量显示",
+      label: "Toggle Boss HP Display",
     },
     {
       id: "toggleOverlayEdit",
-      label: "切换遮罩编辑模式",
+      label: "Toggle Overlay Edit Mode",
     },
     {
       id: "toggleOverlayWindow",
-      label: "切换遮罩窗口",
+      label: "Toggle Overlay Window",
     },
   ];
 </script>
@@ -177,20 +178,20 @@
   <div class="space-y-3">
     <Alert.Root class="shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
     <AlertCircleIcon />
-      <Alert.Title>右键可清除快捷键</Alert.Title>
+      <Alert.Title>{tl("Right-click to clear shortcuts")}</Alert.Title>
     </Alert.Root>
   <div class="rounded-lg border bg-card/40 border-border/60 p-4 space-y-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
       {#each inputs as input (input.id)}
         <Item.Root>
           <Item.Content>
-            <Item.Title>{input.label}</Item.Title>
+            <Item.Title>{tl(input.label)}</Item.Title>
           </Item.Content>
           <Item.Actions>
             <Button variant="outline" class="uppercase" onclick={() => startEdit(input)} oncontextmenu={(e: MouseEvent) => clearShortcut(input, e)}>
               {#if editingId === input.id}
-                {currentShortcutString() || "请按键"}...
+                {currentShortcutString() || tl("Press a key")}...
               {:else}
-                {SETTINGS.shortcuts.state[input.id] || "未绑定"}
+                {SETTINGS.shortcuts.state[input.id] || tl("Not Bound")}
               {/if}
             </Button>
           </Item.Actions>

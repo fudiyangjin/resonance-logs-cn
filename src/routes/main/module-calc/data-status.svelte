@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tl } from "$lib/i18n/index.svelte";
   import type { ModuleInfo } from "$lib/api";
 
   let {
@@ -20,12 +21,12 @@
 </script>
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-1">
-  <div class="text-base font-semibold text-foreground">数据状态</div>
+  <div class="text-base font-semibold text-foreground">{tl("Data Status")}</div>
   <div class="text-sm text-muted-foreground">
-    模组数量：{moduleCount ?? "未同步"}
+    {tl("Module Count")}：{moduleCount ?? tl("Not Synced")}
   </div>
   <div class="text-sm text-muted-foreground">
-    总值筛选后：{moduleCount === null ? "未同步" : filteredModuleCount}
+    {tl("Filtered Total Value")}: {moduleCount === null ? tl("Not Synced") : filteredModuleCount}
   </div>
 </div>
 
