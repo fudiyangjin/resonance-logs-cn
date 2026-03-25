@@ -5,7 +5,7 @@
    */
   import { setupShortcuts } from "./dps/settings/shortcuts";
   import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
-  import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+  import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event";
   import { goto } from "$app/navigation";
   import { SETTINGS } from '$lib/settings-store';
   import { applyCustomFonts } from "$lib/font-loader";
@@ -68,6 +68,8 @@
               await overlayWindow.show();
               await overlayWindow.unminimize();
             } else {
+              await emit("overlay-edit-set", { editing: false });
+              await overlayWindow.setIgnoreCursorEvents(true);
               await overlayWindow.hide();
             }
           }
@@ -90,6 +92,8 @@
               await monsterOverlayWindow.show();
               await monsterOverlayWindow.unminimize();
             } else {
+              await emit("monster-overlay-edit-set", { editing: false });
+              await monsterOverlayWindow.setIgnoreCursorEvents(true);
               await monsterOverlayWindow.hide();
             }
           }

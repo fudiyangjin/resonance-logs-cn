@@ -49,6 +49,12 @@ export function initMonsterOverlay() {
   const unlistenEditToggle = listen("monster-overlay-edit-toggle", () => {
     void setMonsterEditMode(!monsterRuntime.isEditing);
   });
+  const unlistenEditSet = listen<{ editing: boolean }>(
+    "monster-overlay-edit-set",
+    (event) => {
+      void setMonsterEditMode(Boolean(event.payload?.editing));
+    },
+  );
   const unlistenBossBuff = onBossBuffUpdate((event) => {
     const next = new Map<number, Map<number, BuffUpdateState>>();
     for (const [uid, buffs] of Object.entries(event.payload.bossBuffs)) {
@@ -86,6 +92,7 @@ export function initMonsterOverlay() {
     monsterRuntime.bossSections = [];
     monsterRuntime.hateSections = [];
     unlistenEditToggle.then((fn) => fn());
+    unlistenEditSet.then((fn) => fn());
     unlistenBossBuff.then((fn) => fn());
     unlistenHateList.then((fn) => fn());
     unlistenNames.then((fn) => fn());

@@ -1,6 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { resolvedLanguage } from "$lib/i18n/index.svelte";
 import { findAnySkillByBaseId } from "$lib/skill-mappings";
 import {
   onBuffCounterUpdate,
@@ -63,6 +62,9 @@ export function initOverlay() {
 
   const unlistenEditToggle = listen("overlay-edit-toggle", () => {
     void setEditMode(!overlayRuntime.isEditing);
+  });
+  const unlistenEditSet = listen<{ editing: boolean }>("overlay-edit-set", (event) => {
+    void setEditMode(Boolean(event.payload?.editing));
   });
   const unlistenBuff = onBuffUpdate((event) => {
     const next = new Map<number, BuffUpdateState>();
@@ -131,6 +133,7 @@ export function initOverlay() {
     overlayRuntime.dragState = null;
     overlayRuntime.resizeState = null;
     unlistenEditToggle.then((fn) => fn());
+    unlistenEditSet.then((fn) => fn());
     unlistenBuff.then((fn) => fn());
     unlistenCounter.then((fn) => fn());
     unlistenCd.then((fn) => fn());
@@ -145,12 +148,6 @@ export function initOverlay() {
 
   return overlayRuntime.cleanup;
 }
-
-$effect(() => {
-  resolvedLanguage();
-  if (!overlayRuntime.isInitialized) return;
-  loadAvailableBuffs();
-});
 
 function loadAvailableBuffs() {
   const next = new Map<number, BuffDefinition>();

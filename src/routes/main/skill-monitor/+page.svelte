@@ -397,6 +397,13 @@
     }));
   }
 
+  function withinCombinedSkillLimit(
+    nextSkillIds: number[],
+    nextDurationIds: number[],
+  ) {
+    return new Set([...nextSkillIds, ...nextDurationIds]).size <= 10;
+  }
+
   function toggleSkill(skillId: number) {
     const current = monitoredSkillIds;
     const exists = current.includes(skillId);
@@ -407,10 +414,11 @@
       }));
       return;
     }
-    if (current.length >= 10) return;
+    const nextSkillIds = [...current, skillId];
+    if (!withinCombinedSkillLimit(nextSkillIds, monitoredSkillDurationIds)) return;
     updateActiveProfile((profile) => ({
       ...profile,
-      monitoredSkillIds: [...current, skillId],
+      monitoredSkillIds: nextSkillIds,
     }));
   }
 
@@ -421,11 +429,13 @@
   function toggleSkillDuration(skillId: number) {
     const current = monitoredSkillDurationIds;
     const exists = current.includes(skillId);
+    const nextDurationIds = exists
+      ? current.filter((id) => id !== skillId)
+      : [...current, skillId];
+    if (!exists && !withinCombinedSkillLimit(monitoredSkillIds, nextDurationIds)) return;
     updateActiveProfile((profile) => ({
       ...profile,
-      monitoredSkillDurationIds: exists
-        ? current.filter((id) => id !== skillId)
-        : [...current, skillId],
+      monitoredSkillDurationIds: nextDurationIds,
     }));
   }
 

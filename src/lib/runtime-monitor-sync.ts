@@ -37,6 +37,12 @@ function uniqueSortedNumbers(values: number[]): number[] {
   return Array.from(new Set(values)).sort((a, b) => a - b);
 }
 
+function uniqueSortedNumbersLimited(values: number[], limit: number): number[] {
+  return Array.from(new Set(values))
+    .slice(0, limit)
+    .sort((a, b) => a - b);
+}
+
 function normalizeCounterRules(rules: CounterRule[]): CounterRule[] {
   const deduped = new Map<number, CounterRule>();
   for (const rule of rules) {
@@ -51,10 +57,10 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
   const selectedClass = activeProfile?.selectedClass ?? "wind_knight";
   const monitoredSkillIds = activeProfile?.monitoredSkillIds ?? [];
   const monitoredSkillDurationIds = activeProfile?.monitoredSkillDurationIds ?? [];
-  const mergedSkillIds = uniqueSortedNumbers([
+  const mergedSkillIds = uniqueSortedNumbersLimited([
     ...monitoredSkillIds,
     ...monitoredSkillDurationIds,
-  ]);
+  ], 10);
   const monitoredBuffIds = expandBuffSelection(
     activeProfile?.monitoredBuffIds ?? [],
     activeProfile?.monitoredBuffCategories,

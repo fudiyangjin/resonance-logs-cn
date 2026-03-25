@@ -17,6 +17,8 @@
         const isVisible = await overlayWindow.isVisible();
 
         if (isVisible) {
+          await emit("overlay-edit-set", { editing: false });
+          await overlayWindow.setIgnoreCursorEvents(true);
           await overlayWindow.hide();
         } else {
           await overlayWindow.setIgnoreCursorEvents(true);
