@@ -4,9 +4,9 @@ const messages = {
   "Monitor Area {{index}}": "监控区 {{index}}",
   "Target {{id}}": "目标 {{id}}",
   "Need at least {{count}} modules": "至少需要 {{count}} 个模组",
-  "Buff {{id}}": "Buff {{id}}",
+  "Buff {{id}}": "增益 {{id}}",
   "Counter {{id}}": "计数器 {{id}}",
-  "Boss {{id}}": "目标 {{id}}",
+  "Boss {{id}}": "首领 {{id}}",
   "Current version v{{currentVersion}}, latest version v{{version}}":
     "当前版本 v{{currentVersion}}，最新版本 v{{version}}",
   "{{count}} modules": "{{count}} 个模组",

@@ -1,8 +1,8 @@
 const windows = {
-  "window.main": "Resonance Logs",
+  "window.main": "共鸣日志",
   "window.live": "实时统计",
-  "window.gameOverlay": "Game Overlay",
-  "window.monsterOverlay": "Monster Overlay",
+  "window.gameOverlay": "游戏悬浮窗",
+  "window.monsterOverlay": "怪物悬浮窗",
   "window.settings": "设置",
   "window.history": "历史记录",
   "window.themes": "主题",
