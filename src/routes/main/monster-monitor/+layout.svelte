@@ -5,6 +5,8 @@
   import PenSquareIcon from "virtual:icons/lucide/pen-square";
   import PlayIcon from "virtual:icons/lucide/play";
   import ShieldAlertIcon from "virtual:icons/lucide/shield-alert";
+  import { SETTINGS } from "$lib/settings-store";
+  import { resolveMonsterMonitorTranslation } from "$lib/i18n";
 
   let { children } = $props();
 
@@ -50,8 +52,20 @@
         <ShieldAlertIcon class="w-5 h-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">怪物监控</h1>
-        <p class="text-sm text-muted-foreground">监控 Boss buff 等数据</p>
+        <h1 class="text-xl font-bold text-foreground">
+          {resolveMonsterMonitorTranslation(
+            "monsterMonitor.title",
+            SETTINGS.live.general.state.language,
+            "怪物监控",
+          )}
+        </h1>
+        <p class="text-sm text-muted-foreground">
+          {resolveMonsterMonitorTranslation(
+            "monsterMonitor.subtitle",
+            SETTINGS.live.general.state.language,
+            "监控 Boss buff 等数据",
+          )}
+        </p>
       </div>
     </div>
 
@@ -62,7 +76,13 @@
         onclick={toggleMonsterOverlayWindow}
       >
         <PlayIcon class="w-4 h-4" />
-        <span>切换怪物遮罩</span>
+        <span>
+          {resolveMonsterMonitorTranslation(
+            "monsterMonitor.toggleOverlay",
+            SETTINGS.live.general.state.language,
+            "切换怪物遮罩",
+          )}
+        </span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
 
@@ -72,7 +92,13 @@
         onclick={toggleMonsterOverlayEditMode}
       >
         <PenSquareIcon class="w-4 h-4" />
-        <span>编辑怪物布局</span>
+        <span>
+          {resolveMonsterMonitorTranslation(
+            "monsterMonitor.editLayout",
+            SETTINGS.live.general.state.language,
+            "编辑怪物布局",
+          )}
+        </span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
     </div>

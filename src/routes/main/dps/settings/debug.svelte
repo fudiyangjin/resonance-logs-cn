@@ -1,78 +1,186 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/core";
-    import { Button } from "$lib/components/ui/button";
-    import { save } from "@tauri-apps/plugin-dialog";
-    import { toast } from "svelte-sonner";
+  import { invoke } from "@tauri-apps/api/core";
+  import { Button } from "$lib/components/ui/button";
+  import { save } from "@tauri-apps/plugin-dialog";
+  import { toast } from "svelte-sonner";
+  import SettingsSelect from "./settings-select.svelte";
+  import { SETTINGS } from "$lib/settings-store";
+  import { resolveNavigationTranslation } from "$lib/i18n";
 
-    async function openLogDir() {
-        try {
-            await invoke("open_log_dir");
-        } catch (e) {
-            console.error(e);
-            toast.error("打开日志目录失败：" + e);
-        }
+  async function openLogDir() {
+    try {
+      await invoke("open_log_dir");
+    } catch (e) {
+      console.error(e);
+      toast.error("打开日志目录失败：" + e);
     }
+  }
 
-    async function createDiagnosticsBundle() {
-        try {
-            const ts = new Date();
-            const pad = (n: number) => n.toString().padStart(2, "0");
-            const defaultName = `debug_${ts.getFullYear()}-${pad(ts.getMonth() + 1)}-${pad(ts.getDate())}_${pad(ts.getHours())}-${pad(ts.getMinutes())}-${pad(ts.getSeconds())}.zip`;
+  async function createDiagnosticsBundle() {
+    try {
+      const ts = new Date();
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      const defaultName = `debug_${ts.getFullYear()}-${pad(ts.getMonth() + 1)}-${pad(ts.getDate())}_${pad(ts.getHours())}-${pad(ts.getMinutes())}-${pad(ts.getSeconds())}.zip`;
 
-            const destinationPath = await save({
-                title: "保存调试压缩包",
-                defaultPath: defaultName,
-                filters: [{ name: "Zip", extensions: ["zip"] }],
-            });
+      const destinationPath = await save({
+        title: "保存调试压缩包",
+        defaultPath: defaultName,
+        filters: [{ name: "Zip", extensions: ["zip"] }],
+      });
 
-            if (!destinationPath) {
-                return;
-            }
+      if (!destinationPath) {
+        return;
+      }
 
-            const path = await invoke<string>("create_diagnostics_bundle", {
-                destination_path: destinationPath,
-            });
-            try {
-                await navigator.clipboard.writeText(path);
-                toast.success("已创建调试压缩包（路径已复制）：" + path);
-            } catch {
-                toast.success("已创建调试压缩包：" + path);
-            }
-        } catch (e) {
-            console.error(e);
-            toast.error("创建调试压缩包失败：" + e);
-        }
+      const path = await invoke<string>("create_diagnostics_bundle", {
+        destination_path: destinationPath,
+      });
+      try {
+        await navigator.clipboard.writeText(path);
+        toast.success("已创建调试压缩包（路径已复制）：" + path);
+      } catch {
+        toast.success("已创建调试压缩包：" + path);
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("创建调试压缩包失败：" + e);
     }
+  }
 </script>
 
 <div class="space-y-3">
-    <div
-        class="overflow-hidden rounded-lg border border-border/60 bg-card/40 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
-    >
-        <div class="px-4 py-3">
-            <h2 class="mb-4 text-base font-semibold text-foreground">
-                调试
-            </h2>
+  <div
+    class="overflow-hidden rounded-lg border border-border/60 bg-card/40 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+  >
+    <div class="px-4 py-3">
+      <h2 class="mb-4 text-base font-semibold text-foreground">
+        {resolveNavigationTranslation(
+          "debug.title",
+          SETTINGS.live.general.state.language,
+          "调试",
+        )}
+      </h2>
 
-            <div class="flex items-center justify-between">
-                <div class="text-sm text-muted-foreground">
-                    <div class="font-medium text-foreground">日志文件</div>
-                    打开应用日志所在文件夹
-                </div>
-                <Button variant="outline" onclick={openLogDir}>
-                    打开日志
-                </Button>
-            </div>
-
-            <div class="mt-4 flex items-center justify-between">
-                <div class="text-sm text-muted-foreground">
-                    <div class="font-medium text-foreground">调试压缩包</div>
-                    生成包含最近日志的 ZIP，便于支持与排查
-                </div>
-                <Button variant="outline" onclick={createDiagnosticsBundle}>
-                    创建调试压缩包
-                </Button>
-            </div>
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-muted-foreground">
+          <div class="font-medium text-foreground">
+            {resolveNavigationTranslation(
+              "debug.logFiles",
+              SETTINGS.live.general.state.language,
+              "日志文件",
+            )}
+          </div>
+          {resolveNavigationTranslation(
+            "debug.openLogDir",
+            SETTINGS.live.general.state.language,
+            "打开应用日志所在文件夹",
+          )}
         </div>
+        <Button variant="outline" onclick={openLogDir}>
+          {resolveNavigationTranslation(
+            "debug.openLogsButton",
+            SETTINGS.live.general.state.language,
+            "打开日志",
+          )}
+        </Button>
+      </div>
+
+      <div class="mt-4 flex items-center justify-between">
+        <div class="text-sm text-muted-foreground">
+          <div class="font-medium text-foreground">
+            {resolveNavigationTranslation(
+              "debug.bundleTitle",
+              SETTINGS.live.general.state.language,
+              "调试压缩包",
+            )}
+          </div>
+          {resolveNavigationTranslation(
+            "debug.bundleDescription",
+            SETTINGS.live.general.state.language,
+            "生成包含最近日志的 ZIP，便于支持与排查",
+          )}
+        </div>
+        <Button variant="outline" onclick={createDiagnosticsBundle}>
+          {resolveNavigationTranslation(
+            "debug.bundleButton",
+            SETTINGS.live.general.state.language,
+            "创建调试压缩包",
+          )}
+        </Button>
+      </div>
     </div>
+  </div>
+
+  <div
+    class="overflow-hidden rounded-lg border border-border/60 bg-card/40 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+  >
+    <div class="px-4 py-3 space-y-4">
+      <h2 class="text-base font-semibold text-foreground">
+        {resolveNavigationTranslation(
+          "debug.translationTools",
+          SETTINGS.live.general.state.language,
+          "翻译调试",
+        )}
+      </h2>
+
+      <SettingsSelect
+        bind:selected={SETTINGS.live.general.state.language}
+        label={resolveNavigationTranslation(
+          "debug.language",
+          SETTINGS.live.general.state.language,
+          "语言",
+        )}
+        description={resolveNavigationTranslation(
+          "debug.languageDescription",
+          SETTINGS.live.general.state.language,
+          "选择翻译语言。缺失时回退到 zh-CN。",
+        )}
+        values={[
+          { label: "zh-CN", value: "zh-CN" },
+          { label: "EN", value: "en" },
+          { label: "JP", value: "ja" },
+        ]}
+      />
+
+      <SettingsSelect
+        bind:selected={SETTINGS.live.general.state.skillIdDisplayMode}
+        label={resolveNavigationTranslation(
+          "debug.skillIdDisplay",
+          SETTINGS.live.general.state.language,
+          "技能 ID 显示",
+        )}
+        description={resolveNavigationTranslation(
+          "debug.skillIdDisplayDescription",
+          SETTINGS.live.general.state.language,
+          "控制技能表中的 ID 显示方式。",
+        )}
+        values={[
+          {
+            label: resolveNavigationTranslation(
+              "debug.skillIdDisplay.off",
+              SETTINGS.live.general.state.language,
+              "仅名称",
+            ),
+            value: "off",
+          },
+          {
+            label: resolveNavigationTranslation(
+              "debug.skillIdDisplay.hover",
+              SETTINGS.live.general.state.language,
+              "悬停显示 ID",
+            ),
+            value: "hover",
+          },
+          {
+            label: resolveNavigationTranslation(
+              "debug.skillIdDisplay.column",
+              SETTINGS.live.general.state.language,
+              "始终显示 ID 列",
+            ),
+            value: "column",
+          },
+        ]}
+      />
+    </div>
+  </div>
 </div>

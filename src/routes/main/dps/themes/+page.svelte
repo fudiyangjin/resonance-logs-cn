@@ -20,12 +20,56 @@
     getClassColorRaw,
   } from "$lib/utils.svelte";
   import ChevronDown from "virtual:icons/lucide/chevron-down";
+import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$lib/i18n";
 
   const themesTabs = [
-    { id: "general", label: "通用" },
-    { id: "live", label: "实时" },
-    { id: "presets", label: "预设" },
+    { id: "general", key: "themes.tab.general", label: "通用" },
+    { id: "live", key: "themes.tab.live", label: "实时" },
+    { id: "presets", key: "themes.tab.presets", label: "预设" },
   ];
+
+  function t(key: string, fallback: string): string {
+    return resolveNavigationTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
+  function ts(key: string, fallback: string): string {
+    return resolveSettingsStoreTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
+  function themeLabel(colorKey: keyof typeof DEFAULT_CUSTOM_THEME_COLORS, fallback: string): string {
+    return ts(`settingsStore.themeLabel.${String(colorKey)}.label`, fallback);
+  }
+
+  function themeDescription(colorKey: keyof typeof DEFAULT_CUSTOM_THEME_COLORS, fallback: string): string {
+    return ts(`settingsStore.themeLabel.${String(colorKey)}.description`, fallback);
+  }
+
+  function themeCategoryName(category: string): string {
+    switch (category) {
+      case "Base":
+        return ts("settingsStore.themeCategory.base", "Base");
+      case "Surfaces":
+        return ts("settingsStore.themeCategory.surfaces", "Surfaces");
+      case "Tooltip":
+        return ts("settingsStore.themeCategory.tooltip", "Tooltip");
+      case "Accents":
+        return ts("settingsStore.themeCategory.accents", "Accents");
+      case "Tables":
+        return ts("settingsStore.themeCategory.tables", "Tables");
+      case "Utility":
+        return ts("settingsStore.themeCategory.utility", "Utility");
+      default:
+        return category;
+    }
+  }
 
   // === COLOR THEME PRESETS (matching CSS data-theme selectors) ===
   // Color presets now include full variable mappings (from CSS data-theme blocks)
@@ -299,7 +343,6 @@
         showBossOnlyButton: false,
         showSettingsButton: false,
         showMinimizeButton: false,
-        showHeaderControl: false,
         showTotalDamage: false,
         showTotalDps: false,
         showBossHealth: false,
@@ -369,7 +412,6 @@
         showBossOnlyButton: false,
         showSettingsButton: false,
         showMinimizeButton: false,
-        showHeaderControl: false,
         showTotalDamage: false,
         showTotalDps: false,
         showBossHealth: false,
@@ -438,7 +480,6 @@
         showBossOnlyButton: true,
         showSettingsButton: true,
         showMinimizeButton: true,
-        showHeaderControl: true,
         showTotalDamage: true,
         showTotalDps: true,
         showBossHealth: true,
@@ -507,7 +548,6 @@
         showBossOnlyButton: true,
         showSettingsButton: true,
         showMinimizeButton: true,
-        showHeaderControl: true,
         showTotalDamage: true,
         showTotalDps: true,
         showBossHealth: true,
@@ -621,14 +661,6 @@
     "Utility",
   ];
 
-  const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
-    Base: "基础",
-    Surfaces: "表面",
-    Tooltip: "提示",
-    Accents: "强调色",
-    Tables: "表格",
-    Utility: "工具",
-  };
 
   $effect(() => {
     setClickthrough(SETTINGS.accessibility.state.clickthrough);
@@ -682,7 +714,7 @@
 <Tabs.Root bind:value={activeTab}>
   <Tabs.List>
     {#each themesTabs as themesTab (themesTab.id)}
-      <Tabs.Trigger value={themesTab.id}>{themesTab.label}</Tabs.Trigger>
+      <Tabs.Trigger value={themesTab.id}>{t(themesTab.key, themesTab.label)}</Tabs.Trigger>
     {/each}
   </Tabs.List>
 
@@ -699,7 +731,7 @@
             onclick={() => toggleSection("colorThemes")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              主题颜色
+              {t("themes.general.colorThemes", "主题颜色")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.colorThemes
@@ -713,16 +745,16 @@
                 <div class="flex items-center justify-between mb-3">
                   <div>
                     <h3 class="text-sm font-semibold text-foreground">
-                      自定义颜色主题
+                      {t("themes.general.customColorThemeTitle", "自定义颜色主题")}
                     </h3>
                     <p class="text-xs text-muted-foreground mt-0.5">
-                      自定义每个颜色变量（支持设置透明度）
+                      {t("themes.general.customColorThemeDescription", "自定义每个颜色变量（支持设置透明度）")}
                     </p>
                   </div>
                   <button
                     onclick={resetCustomThemeColors}
                     class="px-3 py-1.5 text-xs font-medium rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                    >重置</button
+                    >{t("common.reset", "重置")}</button
                   >
                 </div>
 
@@ -732,7 +764,7 @@
                       <h4
                         class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1"
                       >
-                        {CATEGORY_DISPLAY_NAMES[category] ?? category}
+                        {themeCategoryName(category)}
                       </h4>
                       <div class="space-y-1">
                         {#each colorCategories[category] ?? [] as colorKey}
@@ -740,8 +772,8 @@
                             CUSTOM_THEME_COLOR_LABELS[colorKey]}
                           {#if colorInfo}
                             <SettingsColorAlpha
-                              label={colorInfo.label}
-                              description={colorInfo.description}
+                              label={themeLabel(colorKey, colorInfo.label)}
+                              description={themeDescription(colorKey, colorInfo.description)}
                               value={SETTINGS.accessibility.state
                                 .customThemeColors?.[colorKey] ??
                                 DEFAULT_CUSTOM_THEME_COLORS[colorKey] ??
@@ -770,7 +802,7 @@
             onclick={() => toggleSection("classSpecColors")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              职业与专精颜色
+              {t("themes.general.classSpecColors", "职业与专精颜色")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.classSpecColors
@@ -781,7 +813,7 @@
           {#if expandedSections.classSpecColors}
             <div class="px-4 pb-4 space-y-3">
               <p class="text-xs text-muted-foreground">
-                自定义职业或专精的颜色。选择“专精颜色”可在检测到专精时显示特定颜色。
+                {t("themes.general.classSpecIntro", "自定义职业或专精的颜色。选择“专精颜色”可在检测到专精时显示特定颜色。")}
               </p>
 
               <!-- Tab buttons for Class/Spec -->
@@ -796,7 +828,7 @@
                     : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
                   onclick={() => (colorMode = "class")}
                 >
-                  职业颜色
+                  {t("themes.general.classColorsTab", "职业颜色")}
                 </button>
                 <button
                   type="button"
@@ -806,19 +838,19 @@
                     : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
                   onclick={() => (colorMode = "spec")}
                 >
-                  专精颜色
+                  {t("themes.general.specColorsTab", "专精颜色")}
                 </button>
               </div>
 
               {#if colorMode === "class"}
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-muted-foreground">
-                    自定义实时统计中各职业的颜色。
+                    {t("themes.general.classColorsDescription", "自定义实时统计中各职业的颜色。")}
                   </p>
                   <button
                     onclick={resetClassColors}
                     class="px-3 py-1.5 text-xs font-medium rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                    >重置</button
+                    >{t("common.reset", "重置")}</button
                   >
                 </div>
                 <div class="grid grid-cols-2 gap-2 mt-2">
@@ -842,12 +874,12 @@
               {:else}
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-muted-foreground">
-                    自定义各专精的颜色。
+                    {t("themes.general.specColorsDescription", "自定义各专精的颜色。")}
                   </p>
                   <button
                     onclick={resetClassSpecColors}
                     class="px-3 py-1.5 text-xs font-medium rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                    >重置</button
+                    >{t("common.reset", "重置")}</button
                   >
                 </div>
                 <div class="grid grid-cols-2 gap-2 mt-2">
@@ -884,7 +916,7 @@
             onclick={() => toggleSection("tableRowSettings")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              玩家表格设置
+              {t("themes.general.playerTableSettings", "玩家表格设置")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.tableRowSettings
@@ -1252,7 +1284,7 @@
             onclick={() => toggleSection("backgroundImage")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              背景图片
+              {t("themes.general.backgroundImage", "背景图片")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.backgroundImage
@@ -1263,20 +1295,20 @@
           {#if expandedSections.backgroundImage}
             <div class="px-4 pb-4 space-y-2">
               <p class="text-xs text-muted-foreground">
-                为所有窗口使用自定义背景图片。注意：需要将背景颜色设置为半透明，图片才能显示出来。
+                {t("themes.general.backgroundImageDescription", "为所有窗口使用自定义背景图片。注意：需要将背景颜色设置为半透明，图片才能显示出来。")}
               </p>
               <SettingsSwitch
                 bind:checked={
                   SETTINGS.accessibility.state.backgroundImageEnabled
                 }
-                label="启用背景图片"
-                description="使用图片作为背景"
+                label={t("themes.general.enableBackgroundImage", "启用背景图片")}
+                description={t("themes.general.enableBackgroundImageDescription", "使用图片作为背景")}
               />
               {#if SETTINGS.accessibility.state.backgroundImageEnabled}
                 <div class="mt-2 space-y-2">
                   <SettingsFilePicker
-                    label="选择图片"
-                    description="选择图片文件（PNG/JPG/WebP）"
+                    label={t("themes.general.selectImage", "选择图片")}
+                    description={t("themes.general.selectImageDescription", "选择图片文件（PNG/JPG/WebP）")}
                     accept="image/*"
                     value={SETTINGS.accessibility.state.backgroundImage}
                     onchange={(dataUrl, _fileName) => {
@@ -1287,8 +1319,8 @@
                     }}
                   />
                   <SettingsSelect
-                    label="图片模式"
-                    description="图片如何适配窗口"
+                    label={t("themes.general.imageMode", "图片模式")}
+                    description={t("themes.general.imageModeDescription", "图片如何适配窗口")}
                     bind:selected={
                       SETTINGS.accessibility.state.backgroundImageMode
                     }
@@ -1296,8 +1328,8 @@
                   />
                   {#if SETTINGS.accessibility.state.backgroundImageMode === "contain"}
                     <SettingsColorAlpha
-                      label="留白填充颜色"
-                      description="当图片以“包含”方式适配时，周围留白的背景色"
+                      label={t("themes.general.containFillColor", "留白填充颜色")}
+                      description={t("themes.general.containFillColorDescription", "当图片以“包含”方式适配时，周围留白的背景色")}
                       value={SETTINGS.accessibility.state
                         .backgroundImageContainColor}
                       oninput={(value: string) => {
@@ -1320,7 +1352,7 @@
             onclick={() => toggleSection("customFonts")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              自定义字体
+              {t("themes.general.customFonts", "自定义字体")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.customFonts
@@ -1331,28 +1363,28 @@
           {#if expandedSections.customFonts}
             <div class="px-4 pb-4 space-y-4">
               <p class="text-xs text-muted-foreground">
-                导入自定义字体以替换默认字体。字体文件格式应为 .woff2, .woff, .ttf, 或 .otf。
+                导入{t("themes.general.customFonts", "自定义字体")}以替换默认字体。字体文件格式应为 .woff2, .woff, .ttf, 或 .otf。
               </p>
 
               <!-- Sans-serif Font -->
               <div class="space-y-2 pt-2 border-t border-border/30">
                 <h3 class="text-sm font-semibold text-foreground">
-                  无衬线字体（UI 文本）
+                  {t("themes.general.sansFont", "无衬线字体（UI 文本）")}
                 </h3>
                 <p class="text-xs text-muted-foreground">
-                  默认：Inter Variable
+                  {t("themes.general.sansFontDefault", "默认：Inter Variable")}
                 </p>
                 <SettingsSwitch
                   bind:checked={
                     SETTINGS.accessibility.state.customFontSansEnabled
                   }
-                  label="启用自定义无衬线字体"
-                  description="UI 文本使用自定义字体"
+                  label={t("themes.general.enableCustomSans", "启用自定义无衬线字体")}
+                  description="UI 文本使用{t("themes.general.customFonts", "自定义字体")}"
                 />
                 {#if SETTINGS.accessibility.state.customFontSansEnabled}
                   <SettingsFilePicker
-                    label="选择字体文件"
-                    description="选择字体文件（.woff2/.woff/.ttf/.otf）"
+                    label={t("themes.general.pickFontFile", "选择字体文件")}
+                    description={t("themes.general.pickFontFileDescription", "选择字体文件（.woff2/.woff/.ttf/.otf）")}
                     accept=".woff2,.woff,.ttf,.otf"
                     value={SETTINGS.accessibility.state.customFontSansUrl}
                     onchange={(dataUrl, fileName) => {
@@ -1392,22 +1424,22 @@
               <!-- Monospace Font -->
               <div class="space-y-2 pt-3 border-t border-border/30">
                 <h3 class="text-sm font-semibold text-foreground">
-                  等宽字体（数字、代码）
+                  {t("themes.general.monoFont", "等宽字体（数字、代码）")}
                 </h3>
                 <p class="text-xs text-muted-foreground">
-                  默认：Geist Mono Variable
+                  {t("themes.general.monoFontDefault", "默认：Geist Mono Variable")}
                 </p>
                 <SettingsSwitch
                   bind:checked={
                     SETTINGS.accessibility.state.customFontMonoEnabled
                   }
-                  label="启用自定义等宽字体"
-                  description="数字/代码使用自定义等宽字体"
+                  label={t("themes.general.enableCustomMono", "启用自定义等宽字体")}
+                  description={t("themes.general.enableCustomMonoDescription", "数字/代码使用自定义等宽字体")}
                 />
                 {#if SETTINGS.accessibility.state.customFontMonoEnabled}
                   <SettingsFilePicker
-                    label="选择字体文件"
-                    description="选择字体文件（.woff2/.woff/.ttf/.otf）"
+                    label={t("themes.general.pickFontFile", "选择字体文件")}
+                    description={t("themes.general.pickFontFileDescription", "选择字体文件（.woff2/.woff/.ttf/.otf）")}
                     accept=".woff2,.woff,.ttf,.otf"
                     value={SETTINGS.accessibility.state.customFontMonoUrl}
                     onchange={(dataUrl, fileName) => {
@@ -1696,14 +1728,6 @@
                       />
                     </div>
                   {/if}
-
-                  <SettingsSwitch
-                    bind:checked={
-                      SETTINGS.live.headerCustomization.state.showHeaderControl
-                    }
-                    label="显示打桩按钮"
-                    description="在实时窗口头部显示打桩模式按钮"
-                  />
 
                   <!-- Settings Button -->
                   <SettingsSwitch

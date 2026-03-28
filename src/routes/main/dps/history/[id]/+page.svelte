@@ -25,6 +25,7 @@
     type SkillDisplayRow,
   } from "$lib/config/recount-table";
   import { formatClassSpecLabel } from "$lib/class-labels";
+  import { resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
 
   type HistorySkillType = "dps" | "heal" | "tanked";
 
@@ -485,9 +486,6 @@
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.history.general.state.abbreviatedDecimalPlaces ?? 1,
   );
-  let abbreviationStyle = $derived(
-    SETTINGS.history.general.state.abbreviationStyle,
-  );
 
   function toggleGroup(id: number) {
     const next = new Set(expandedGroups);
@@ -596,6 +594,18 @@
 
   function closeDeleteModal() {
     showDeleteModal = false;
+  }
+
+  function buildHistoryGroupHoverText(recountId: string | number, language: LocaleCode) {
+    const note = resolveSkillNote(recountId, language).trim();
+
+    return `ID: #${recountId}\nSources:\n- RecountTable.json${note ? `\n\nNote:\n${note}` : ""}`;
+  }
+
+  function buildHistorySkillHoverText(skillId: string | number, language: LocaleCode) {
+    const note = resolveSkillNote(skillId, language).trim();
+
+    return `ID: #${skillId}\nSources:\n- RecountTable.json\n- DamageAttrIdName.json${note ? `\n\nNote:\n${note}` : ""}`;
   }
 
   async function confirmDeleteEncounter() {
@@ -916,7 +926,6 @@
                         <AbbreviatedNumber
                           num={p[col.key] ?? 0}
                           decimalPlaces={abbreviatedDecimalPlaces}
-                          {abbreviationStyle}
                         />
                       {:else}
                         {col.format(p[col.key] ?? 0)}
@@ -1065,7 +1074,19 @@
                         d="M9 5l7 7-7 7"
                       />
                     </svg>
-                    <span>{item.row.recountName}</span>
+                    <span
+                      class="truncate"
+                      title={SETTINGS.live.general.state.skillIdDisplayMode === 'hover'
+                        ? buildHistoryGroupHoverText(item.row.recountId, SETTINGS.live.general.state.language as LocaleCode)
+                        : undefined}
+                    >
+                      {resolveSkillTranslation(item.row.recountId, SETTINGS.live.general.state.language, item.row.recountName)}
+                    </span>
+                    {#if SETTINGS.live.general.state.skillIdDisplayMode === 'column'}
+                      <span class="text-[10px] text-muted-foreground/50 shrink-0">
+                        #{item.row.recountId}
+                      </span>
+                    {/if}
                   </button>
                 {:else}
                   <div
@@ -1079,8 +1100,15 @@
                     {:else}
                       <span class="w-3 shrink-0"></span>
                     {/if}
-                    <span class="truncate">{item.row.name}</span>
-                    {#if item.row.showSkillId}
+                    <span
+                      class="truncate"
+                      title={SETTINGS.live.general.state.skillIdDisplayMode === 'hover'
+                        ? buildHistorySkillHoverText(item.row.skillId, SETTINGS.live.general.state.language as LocaleCode)
+                        : undefined}
+                    >
+                      {resolveSkillTranslation(item.row.skillId, SETTINGS.live.general.state.language, item.row.name)}
+                    </span>
+                    {#if SETTINGS.live.general.state.skillIdDisplayMode === 'column'}
                       <span class="text-[10px] text-muted-foreground/50 shrink-0">
                         #{item.row.skillId}
                       </span>
@@ -1097,7 +1125,6 @@
                     <AbbreviatedNumber
                       num={skillCellValue(item, col.key)}
                       decimalPlaces={abbreviatedDecimalPlaces}
-                      {abbreviationStyle}
                     />
                   {:else}
                     {col.format(skillCellValue(item, col.key))}

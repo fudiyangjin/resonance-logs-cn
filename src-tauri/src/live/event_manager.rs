@@ -322,10 +322,6 @@ pub fn generate_live_data_payload(
                 return None;
             }
 
-            if attr_store.is_dead(uid) {
-                return None;
-            }
-
             let current_hp = attr_store
                 .attr(uid, AttrType::CurrentHp)
                 .and_then(|value| value.as_int());

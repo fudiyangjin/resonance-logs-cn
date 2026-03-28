@@ -42,13 +42,13 @@
       const attr = enabledPanelAttrs.find((item) => item.attrId === row.attrId);
       if (!attr || seen.has(attr.attrId)) continue;
       seen.add(attr.attrId);
-      rows.push({ ref: row, label: attr.label });
+      rows.push({ ref: row, label: attrLabel(attr) });
     }
     for (const attr of enabledPanelAttrs) {
       if (seen.has(attr.attrId)) continue;
       rows.push({
         ref: { type: "attr", attrId: attr.attrId },
-        label: attr.label,
+        label: attrLabel(attr),
       });
     }
     return rows;
@@ -79,7 +79,7 @@
         {#each monitoredPanelAttrs as attr (attr.attrId)}
           <div class="rounded-lg border border-border/60 bg-muted/20 px-3 py-2 space-y-2">
             <label class="flex items-center justify-between gap-3 text-sm text-foreground">
-              <span>{attr.label}</span>
+              <span>{attrLabel(attr)}</span>
               <input
                 type="checkbox"
                 checked={attr.enabled}

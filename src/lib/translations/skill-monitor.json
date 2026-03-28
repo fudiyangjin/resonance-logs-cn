@@ -1,0 +1,797 @@
+{
+    "skillMonitor.title": {
+        "zh-CN": "实时监控",
+        "en": "Skill Monitor",
+        "ja": ""
+    },
+    "skillMonitor.subtitle": {
+        "zh-CN": "自定义监控技能CD, 战斗资源等",
+        "en": "Customize skill cooldowns, combat resources, and more",
+        "ja": ""
+    },
+    "skillMonitor.toggleOverlayWindow": {
+        "zh-CN": "切换遮罩窗口",
+        "en": "Toggle Overlay Window",
+        "ja": ""
+    },
+    "skillMonitor.editOverlayLayout": {
+        "zh-CN": "编辑遮罩布局",
+        "en": "Edit Overlay Layout",
+        "ja": ""
+    },
+    "skillMonitor.enableMonitoring": {
+        "zh-CN": "启用实时监控",
+        "en": "Enable Skill Monitor",
+        "ja": ""
+    },
+    "skillMonitor.enableMonitoringDescription": {
+        "zh-CN": "开启后将实时推送监控数据到悬浮窗口",
+        "en": "Push monitoring data to the overlay window in real time when enabled",
+        "ja": ""
+    },
+    "skillMonitor.tab.skillCd": {
+        "zh-CN": "技能CD",
+        "en": "Skill CD",
+        "ja": ""
+    },
+    "skillMonitor.tab.buffMonitor": {
+        "zh-CN": "Buff监控",
+        "en": "Buff Monitor",
+        "ja": ""
+    },
+    "skillMonitor.tab.panelAttr": {
+        "zh-CN": "角色面板",
+        "en": "Character Panel",
+        "ja": ""
+    },
+    "skillMonitor.tab.customPanel": {
+        "zh-CN": "自定义监控",
+        "en": "Custom Monitor",
+        "ja": ""
+    },
+    "skillMonitor.tab.overlay": {
+        "zh-CN": "启用窗口",
+        "en": "Overlay",
+        "ja": ""
+    },
+    "skillMonitor.buffGroupDefault": {
+        "zh-CN": "分组",
+        "en": "Group",
+        "ja": ""
+    },
+    "skillMonitor.allBuffs": {
+        "zh-CN": "全部 Buff",
+        "en": "All Buffs",
+        "ja": ""
+    },
+    "skillMonitor.counterDefault": {
+        "zh-CN": "计数器",
+        "en": "Counter",
+        "ja": ""
+    },
+    "skillMonitor.monitorAreaDefault": {
+        "zh-CN": "监控区",
+        "en": "Monitor Area",
+        "ja": ""
+    },
+    "skillMonitor.profile.defaultName": {
+        "zh-CN": "方案",
+        "en": "Profile",
+        "ja": ""
+    },
+    "skillMonitor.profile.renamePrompt": {
+        "zh-CN": "请输入新的方案名称",
+        "en": "Enter a new profile name",
+        "ja": ""
+    },
+    "skillMonitor.profile.title": {
+        "zh-CN": "配置方案",
+        "en": "Profiles",
+        "ja": ""
+    },
+    "skillMonitor.profile.subtitle": {
+        "zh-CN": "可创建多个角色监控方案并快速切换",
+        "en": "Create multiple monitoring profiles and switch quickly",
+        "ja": ""
+    },
+    "skillMonitor.profile.new": {
+        "zh-CN": "新建方案",
+        "en": "New Profile",
+        "ja": ""
+    },
+    "skillMonitor.profile.rename": {
+        "zh-CN": "重命名",
+        "en": "Rename",
+        "ja": ""
+    },
+    "skillMonitor.profile.delete": {
+        "zh-CN": "删除方案",
+        "en": "Delete Profile",
+        "ja": ""
+    },
+    "skillMonitor.selected": {
+        "zh-CN": "已选择",
+        "en": "Selected",
+        "ja": ""
+    },
+    "skillMonitor.editing": {
+        "zh-CN": "编辑中",
+        "en": "Editing",
+        "ja": ""
+    },
+    "skillMonitor.aliasSet": {
+        "zh-CN": "已设别名",
+        "en": "Alias Set",
+        "ja": ""
+    },
+    "skillMonitor.buff.iconSize": {
+        "zh-CN": "图标大小",
+        "en": "Icon Size",
+        "ja": ""
+    },
+    "skillMonitor.buff.columns": {
+        "zh-CN": "列数",
+        "en": "Columns",
+        "ja": ""
+    },
+    "skillMonitor.buff.rows": {
+        "zh-CN": "行数",
+        "en": "Rows",
+        "ja": ""
+    },
+    "skillMonitor.buff.gap": {
+        "zh-CN": "间距",
+        "en": "Gap",
+        "ja": ""
+    },
+    "skillMonitor.buff.showName": {
+        "zh-CN": "显示名称",
+        "en": "Show Name",
+        "ja": ""
+    },
+    "skillMonitor.buff.showTime": {
+        "zh-CN": "显示时间",
+        "en": "Show Time",
+        "ja": ""
+    },
+    "skillMonitor.buff.showStacks": {
+        "zh-CN": "显示层数",
+        "en": "Show Stacks",
+        "ja": ""
+    },
+    "skillMonitor.buffMonitor.title": {
+        "zh-CN": "Buff 监控",
+        "en": "Buff Monitor",
+        "ja": ""
+    },
+    "skillMonitor.buffMonitor.subtitle": {
+        "zh-CN": "统一通过 Buff 名称搜索（含有图标/无图标 Buff）",
+        "en": "Search buffs by name across both icon and text-only buffs",
+        "ja": ""
+    },
+    "skillMonitor.buffMonitor.selectedCounts": {
+        "zh-CN": "已选 Buff",
+        "en": "Selected Buffs",
+        "ja": ""
+    },
+    "skillMonitor.buffMonitor.categories": {
+        "zh-CN": "分类",
+        "en": "Categories",
+        "ja": ""
+    },
+    "skillMonitor.clear": {
+        "zh-CN": "清空",
+        "en": "Clear",
+        "ja": ""
+    },
+    "skillMonitor.searchBuffName": {
+        "zh-CN": "搜索 Buff 名称",
+        "en": "Search Buff Name",
+        "ja": ""
+    },
+    "skillMonitor.noMatchingBuff": {
+        "zh-CN": "没有匹配的 Buff",
+        "en": "No matching buffs",
+        "ja": ""
+    },
+    "skillMonitor.searchKeywordBuffPrompt": {
+        "zh-CN": "请输入关键词搜索 Buff",
+        "en": "Enter keywords to search buffs",
+        "ja": ""
+    },
+    "skillMonitor.selectedBuffs": {
+        "zh-CN": "已选 Buff",
+        "en": "Selected Buffs",
+        "ja": ""
+    },
+    "skillMonitor.buffAlias.title": {
+        "zh-CN": "Buff 别名设置",
+        "en": "Buff Alias Settings",
+        "ja": ""
+    },
+    "skillMonitor.buffAlias.configuredCount": {
+        "zh-CN": "已设置别名",
+        "en": "Aliases Set",
+        "ja": ""
+    },
+    "skillMonitor.buffAlias.searchPlaceholder": {
+        "zh-CN": "搜索任意 Buff 后设置别名",
+        "en": "Search any buff to set an alias",
+        "ja": ""
+    },
+    "skillMonitor.searchResults": {
+        "zh-CN": "搜索结果",
+        "en": "Search Results",
+        "ja": ""
+    },
+    "skillMonitor.defaultName": {
+        "zh-CN": "默认名",
+        "en": "Default Name",
+        "ja": ""
+    },
+    "skillMonitor.restoreDefault": {
+        "zh-CN": "恢复默认",
+        "en": "Restore Default",
+        "ja": ""
+    },
+    "skillMonitor.buffAlias.none": {
+        "zh-CN": "暂未设置任何别名，输入上方搜索词后可对任意 Buff 设置别名。",
+        "en": "No aliases have been set yet. Search above to set an alias for any buff.",
+        "ja": ""
+    },
+    "skillMonitor.buffDisplayMode.title": {
+        "zh-CN": "Buff 显示模式",
+        "en": "Buff Display Mode",
+        "ja": ""
+    },
+    "skillMonitor.buffDisplayMode.subtitle": {
+        "zh-CN": "可在独立定位和分组布局间切换，配置会按方案保存",
+        "en": "Switch between individual and grouped layouts. Settings are saved per profile.",
+        "ja": ""
+    },
+    "skillMonitor.buffDisplayMode.individual": {
+        "zh-CN": "独立模式",
+        "en": "Individual Mode",
+        "ja": ""
+    },
+    "skillMonitor.buffDisplayMode.grouped": {
+        "zh-CN": "分组模式",
+        "en": "Grouped Mode",
+        "ja": ""
+    },
+    "skillMonitor.textBuff.newStyle": {
+        "zh-CN": "无图标新样式",
+        "en": "Text Buff New Style",
+        "ja": ""
+    },
+    "skillMonitor.textBuff.oldStyle": {
+        "zh-CN": "无图标老样式",
+        "en": "Text Buff Old Style",
+        "ja": ""
+    },
+    "skillMonitor.textBuff.maxVisible": {
+        "zh-CN": "无图标 Buff 最大显示数",
+        "en": "Max Visible Text Buffs",
+        "ja": ""
+    },
+    "skillMonitor.textBuff.nameValueGap": {
+        "zh-CN": "名称-数值间距",
+        "en": "Name-Value Gap",
+        "ja": ""
+    },
+    "skillMonitor.nameColor": {
+        "zh-CN": "名称颜色",
+        "en": "Name Color",
+        "ja": ""
+    },
+    "skillMonitor.valueColor": {
+        "zh-CN": "数值颜色",
+        "en": "Value Color",
+        "ja": ""
+    },
+    "skillMonitor.progressColor": {
+        "zh-CN": "进度条颜色",
+        "en": "Progress Bar Color",
+        "ja": ""
+    },
+    "skillMonitor.progressOpacity": {
+        "zh-CN": "进度条透明度",
+        "en": "Progress Bar Opacity",
+        "ja": ""
+    },
+    "skillMonitor.buff.globalPriority": {
+        "zh-CN": "全局 Buff 优先级",
+        "en": "Global Buff Priority",
+        "ja": ""
+    },
+    "skillMonitor.addGlobalPriorityPlaceholder": {
+        "zh-CN": "搜索并添加到全局优先级",
+        "en": "Search and add to global priority",
+        "ja": ""
+    },
+    "skillMonitor.noAvailableForGlobalPriority": {
+        "zh-CN": "没有可添加到全局优先级的 Buff",
+        "en": "No buffs available to add to global priority",
+        "ja": ""
+    },
+    "skillMonitor.remove": {
+        "zh-CN": "移除",
+        "en": "Remove",
+        "ja": ""
+    },
+    "skillMonitor.moveUp": {
+        "zh-CN": "上移",
+        "en": "Move Up",
+        "ja": ""
+    },
+    "skillMonitor.moveDown": {
+        "zh-CN": "下移",
+        "en": "Move Down",
+        "ja": ""
+    },
+    "skillMonitor.categoryQuickListen": {
+        "zh-CN": "分类快捷监听",
+        "en": "Category Quick Listen",
+        "ja": ""
+    },
+    "skillMonitor.selectedCategories": {
+        "zh-CN": "已选分类",
+        "en": "Selected Categories",
+        "ja": ""
+    },
+    "skillMonitor.noCategoriesSelected": {
+        "zh-CN": "尚未选择任何分类监听",
+        "en": "No categories selected yet",
+        "ja": ""
+    },
+    "skillMonitor.monitorAllBuffs.title": {
+        "zh-CN": "监控全部 Buff",
+        "en": "Monitor All Buffs",
+        "ja": ""
+    },
+    "skillMonitor.monitorAllBuffs.subtitle": {
+        "zh-CN": "新增一个网格区域显示全部 Buff（自动排除已在独立模式中选中的 Buff）",
+        "en": "Add a grid area that shows all buffs, automatically excluding buffs already selected in individual mode",
+        "ja": ""
+    },
+    "skillMonitor.monitorAllBuffs.action": {
+        "zh-CN": "监控全部 Buff",
+        "en": "Monitor All Buffs",
+        "ja": ""
+    },
+    "skillMonitor.monitorAllBuffs.removeGroup": {
+        "zh-CN": "移除全部 Buff 分组",
+        "en": "Remove All Buffs Group",
+        "ja": ""
+    },
+    "skillMonitor.monitorAllBuffs.fixed": {
+        "zh-CN": "固定为监控全部 Buff",
+        "en": "Fixed to monitor all buffs",
+        "ja": ""
+    },
+    "skillMonitor.buffGroupManagement.title": {
+        "zh-CN": "Buff 分组管理",
+        "en": "Buff Group Management",
+        "ja": ""
+    },
+    "skillMonitor.buffGroupManagement.subtitle": {
+        "zh-CN": "通过分组管理 Buff 展示，组内自动网格对齐",
+        "en": "Manage buff display through groups with automatic grid alignment",
+        "ja": ""
+    },
+    "skillMonitor.createGroup": {
+        "zh-CN": "新建分组",
+        "en": "New Group",
+        "ja": ""
+    },
+    "skillMonitor.deleteGroup": {
+        "zh-CN": "删除分组",
+        "en": "Delete Group",
+        "ja": ""
+    },
+    "skillMonitor.monitorAllBuffs.short": {
+        "zh-CN": "监控全部 Buff",
+        "en": "Monitor All Buffs",
+        "ja": ""
+    },
+    "skillMonitor.addThisCategory": {
+        "zh-CN": "添加",
+        "en": "Add",
+        "ja": ""
+    },
+    "skillMonitor.removeThisCategory": {
+        "zh-CN": "移除",
+        "en": "Remove",
+        "ja": ""
+    },
+    "skillMonitor.addToThisGroupPlaceholder": {
+        "zh-CN": "搜索并添加到此分组",
+        "en": "Search and add to this group",
+        "ja": ""
+    },
+    "skillMonitor.noAvailableToAdd": {
+        "zh-CN": "没有可添加的 Buff",
+        "en": "No buffs available to add",
+        "ja": ""
+    },
+    "skillMonitor.inGroupCount": {
+        "zh-CN": "已加入分组",
+        "en": "Added to Group",
+        "ja": ""
+    },
+    "skillMonitor.noBuffsInGroup": {
+        "zh-CN": "尚未添加 Buff 到此分组",
+        "en": "No buffs added to this group yet",
+        "ja": ""
+    },
+    "skillMonitor.groupPriority": {
+        "zh-CN": "分组内优先级",
+        "en": "Priority Within Group",
+        "ja": ""
+    },
+    "skillMonitor.addPriorityPlaceholder": {
+        "zh-CN": "搜索并添加到优先级列表",
+        "en": "Search and add to priority list",
+        "ja": ""
+    },
+    "skillMonitor.noAvailablePriority": {
+        "zh-CN": "没有可添加到优先级的 Buff",
+        "en": "No buffs available to add to priority",
+        "ja": ""
+    },
+    "skillMonitor.groupLayout": {
+        "zh-CN": "分组布局",
+        "en": "Group Layout",
+        "ja": ""
+    },
+    "skillMonitor.groupLayoutPreview": {
+        "zh-CN": "分组布局预览",
+        "en": "Group Layout Preview",
+        "ja": ""
+    },
+    "skillMonitor.allSuffix": {
+        "zh-CN": "（全部）",
+        "en": "(All)",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.title": {
+        "zh-CN": "自定义监控区",
+        "en": "Custom Monitor Areas",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.subtitle": {
+        "zh-CN": "可创建多个文本监控区；同一个 Buff 或计数器在所有监控区内全局唯一。",
+        "en": "Create multiple text monitor areas. The same buff or counter is globally unique across all areas.",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.newGroup": {
+        "zh-CN": "新建监控区",
+        "en": "New Monitor Area",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.editing": {
+        "zh-CN": "当前编辑：",
+        "en": "Currently Editing: ",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.selectOrCreate": {
+        "zh-CN": "请选择或新建一个监控区",
+        "en": "Please select or create a monitor area",
+        "ja": ""
+    },
+    "skillMonitor.entries": {
+        "zh-CN": "条目",
+        "en": "Entries",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.currentGroup": {
+        "zh-CN": "当前监控区",
+        "en": "Current Monitor Area",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.currentGroupDescription": {
+        "zh-CN": "该监控区中的条目会在 overlay 中作为独立文本区域显示，并可单独拖拽和缩放。",
+        "en": "Entries in this area are shown in the overlay as an independent text block and can be dragged and resized separately.",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.groupName": {
+        "zh-CN": "监控区名称",
+        "en": "Monitor Area Name",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.addBuff": {
+        "zh-CN": "添加 Buff",
+        "en": "Add Buff",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.addBuffDescription": {
+        "zh-CN": "仅添加到当前监控区的文本区域",
+        "en": "Add only to the current monitor area text block",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.searchAddBuff": {
+        "zh-CN": "搜索并添加 Buff",
+        "en": "Search and add buff",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.addCounter": {
+        "zh-CN": "添加计数器",
+        "en": "Add Counter",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.addCounterDescription": {
+        "zh-CN": "计数器同样全局唯一，只能属于一个监控区。",
+        "en": "Counters are also globally unique and can only belong to one monitor area.",
+        "ja": ""
+    },
+    "skillMonitor.clickToAdd": {
+        "zh-CN": "点击添加",
+        "en": "Click to Add",
+        "ja": ""
+    },
+    "skillMonitor.currentGroupAdded": {
+        "zh-CN": "当前组已添加",
+        "en": "Already in Current Group",
+        "ja": ""
+    },
+    "skillMonitor.alreadyInGroup": {
+        "zh-CN": "已在",
+        "en": "Already in ",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.currentGroupEntries": {
+        "zh-CN": "当前组条目",
+        "en": "Current Group Entries",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.noEntries": {
+        "zh-CN": "当前监控区暂无条目",
+        "en": "No entries in the current monitor area",
+        "ja": ""
+    },
+    "skillMonitor.source": {
+        "zh-CN": "来源",
+        "en": "Source",
+        "ja": ""
+    },
+    "skillMonitor.counter": {
+        "zh-CN": "计数器",
+        "en": "Counter",
+        "ja": ""
+    },
+    "skillMonitor.displayName": {
+        "zh-CN": "显示名称",
+        "en": "Display Name",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.emptyState": {
+        "zh-CN": "还没有任何自定义监控区。先点击上方“新建监控区”，再向其中添加 Buff 或计数器。",
+        "en": "There are no custom monitor areas yet. Click “New Monitor Area” above first, then add buffs or counters.",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.sharedStyleTitle": {
+        "zh-CN": "共享样式",
+        "en": "Shared Style",
+        "ja": ""
+    },
+    "skillMonitor.customPanel.sharedStyleDescription": {
+        "zh-CN": "所有自定义监控区共用以下文字与进度条样式。",
+        "en": "All custom monitor areas share the following text and progress bar styles.",
+        "ja": ""
+    },
+    "skillMonitor.overlay.title": {
+        "zh-CN": "Overlay 区域显示",
+        "en": "Overlay Section Visibility",
+        "ja": ""
+    },
+    "skillMonitor.overlay.subtitle": {
+        "zh-CN": "可分别控制技能区、持续时间技能区和资源区是否显示（按方案保存）",
+        "en": "Control whether the skill, duration skill, and resource areas are shown (saved per profile)",
+        "ja": ""
+    },
+    "skillMonitor.overlay.skillCd": {
+        "zh-CN": "技能CD区",
+        "en": "Skill CD Area",
+        "ja": ""
+    },
+    "skillMonitor.overlay.skillDuration": {
+        "zh-CN": "技能持续区",
+        "en": "Duration Skill Area",
+        "ja": ""
+    },
+    "skillMonitor.overlay.resource": {
+        "zh-CN": "资源监控区",
+        "en": "Resource Area",
+        "ja": ""
+    },
+    "skillMonitor.overlay.panelAttr": {
+        "zh-CN": "角色属性区",
+        "en": "Character Panel Area",
+        "ja": ""
+    },
+    "skillMonitor.overlay.customPanel": {
+        "zh-CN": "自定义监控区",
+        "en": "Custom Monitor Area",
+        "ja": ""
+    },
+    "skillMonitor.show": {
+        "zh-CN": "显示",
+        "en": "Show",
+        "ja": ""
+    },
+    "skillMonitor.hide": {
+        "zh-CN": "隐藏",
+        "en": "Hide",
+        "ja": ""
+    },
+    "skillMonitor.overlay.footer": {
+        "zh-CN": "点击按钮切换显示状态（按方案保存）",
+        "en": "Click the buttons to toggle visibility (saved per profile)",
+        "ja": ""
+    },
+    "skillMonitor.panelAttr.title": {
+        "zh-CN": "角色面板",
+        "en": "Character Panel",
+        "ja": ""
+    },
+    "skillMonitor.panelAttr.enabledCount": {
+        "zh-CN": "已启用属性",
+        "en": "Enabled Attributes",
+        "ja": ""
+    },
+    "skillMonitor.showColor": {
+        "zh-CN": "显示颜色",
+        "en": "Show Color",
+        "ja": ""
+    },
+    "skillMonitor.rowOrder": {
+        "zh-CN": "行顺序",
+        "en": "Row Order",
+        "ja": ""
+    },
+    "skillMonitor.noSortableItems": {
+        "zh-CN": "暂无可排序项",
+        "en": "No sortable items",
+        "ja": ""
+    },
+    "skillMonitor.classSelection": {
+        "zh-CN": "职业选择",
+        "en": "Class Selection",
+        "ja": ""
+    },
+    "skillMonitor.classSelectionDescription": {
+        "zh-CN": "支持当前已配置的职业技能方案",
+        "en": "Supports currently configured class skill setups",
+        "ja": ""
+    },
+    "skillMonitor.skillSelection": {
+        "zh-CN": "技能选择",
+        "en": "Skill Selection",
+        "ja": ""
+    },
+    "skillMonitor.skillSelectionDescription": {
+        "zh-CN": "最多监控 10 个技能（2行 x 5列）",
+        "en": "Monitor up to 10 skills (2 rows × 5 columns)",
+        "ja": ""
+    },
+    "skillMonitor.selectedCount": {
+        "zh-CN": "已选",
+        "en": "Selected",
+        "ja": ""
+    },
+    "skillMonitor.notConfigured": {
+        "zh-CN": "未配置",
+        "en": "Not Configured",
+        "ja": ""
+    },
+    "skillMonitor.durationSkills": {
+        "zh-CN": "持续时间技能",
+        "en": "Duration Skills",
+        "ja": ""
+    },
+    "skillMonitor.durationSkillsDescription": {
+        "zh-CN": "选中的技能会在 overlay 中按单独图标显示，并在技能触发后开始前端倒计时",
+        "en": "Selected skills are shown in the overlay as separate icons and start a front-end countdown when triggered",
+        "ja": ""
+    },
+    "skillMonitor.noDurationSkillsConfigured": {
+        "zh-CN": "当前职业还没有配置持续时间技能",
+        "en": "No duration skills are configured for the current class yet",
+        "ja": ""
+    },
+    "skillMonitor.resonanceSkills": {
+        "zh-CN": "共鸣技能",
+        "en": "Resonance Skills",
+        "ja": ""
+    },
+    "skillMonitor.resonanceSkillsDescription": {
+        "zh-CN": "通过搜索选择共鸣技能，与普通技能共享 10 个监控格",
+        "en": "Search and select resonance skills; they share the same 10 monitoring slots as normal skills",
+        "ja": ""
+    },
+    "skillMonitor.searchResonanceSkills": {
+        "zh-CN": "搜索共鸣技能名称",
+        "en": "Search resonance skill name",
+        "ja": ""
+    },
+    "skillMonitor.searchResonancePrompt": {
+        "zh-CN": "请输入关键词搜索共鸣技能",
+        "en": "Enter keywords to search resonance skills",
+        "ja": ""
+    },
+    "skillMonitor.selectedResonanceSkills": {
+        "zh-CN": "已选共鸣技能",
+        "en": "Selected Resonance Skills",
+        "ja": ""
+    },
+    "skillMonitor.noResonanceSkillsSelected": {
+        "zh-CN": "未选择共鸣技能",
+        "en": "No resonance skills selected",
+        "ja": ""
+    },
+    "skillMonitor.monitorPreview": {
+        "zh-CN": "监控预览",
+        "en": "Monitor Preview",
+        "ja": ""
+    },
+    "skillMonitor.monitorPreviewDescription": {
+        "zh-CN": "按选择顺序排列",
+        "en": "Ordered by selection",
+        "ja": ""
+    },
+    "skillMonitor.empty": {
+        "zh-CN": "空",
+        "en": "Empty",
+        "ja": ""
+    },
+    "skillMonitor.profile.defaultStoredName": {
+        "zh-CN": "默认方案",
+        "en": "Default Profile",
+        "ja": ""
+    },
+    "skillMonitor.classLabel.windKnight": {
+        "zh-CN": "青岚骑士",
+        "en": "Wind Knight",
+        "ja": ""
+    },
+    "skillMonitor.classLabel.frostMage": {
+        "zh-CN": "冰法",
+        "en": "Frost Mage",
+        "ja": ""
+    },
+    "skillMonitor.classLabel.stormblade": {
+        "zh-CN": "雷影剑士",
+        "en": "Stormblade",
+        "ja": ""
+    },
+    "skillMonitor.classLabel.heavyGuardian": {
+        "zh-CN": "巨刃守护者",
+        "en": "Heavy Guardian",
+        "ja": ""
+    },
+    "skillMonitor.classLabel.shieldKnight": {
+        "zh-CN": "神盾骑士",
+        "en": "Shield Knight",
+        "ja": ""
+    },
+    "skillMonitor.classLabel.marksman": {
+        "zh-CN": "神射手",
+        "en": "Marksman",
+        "ja": ""
+    },
+    "skillMonitor.classLabel.flameBerserker": {
+        "zh-CN": "赤炎狂战士",
+        "en": "Flame Berserker",
+        "ja": ""
+    },
+    "skillMonitor.classLabel.verdantOracle": {
+        "zh-CN": "森语者",
+        "en": "Verdant Oracle",
+        "ja": ""
+    },
+    "skillMonitor.classLabel.beatPerformer": {
+        "zh-CN": "灵魂乐手",
+        "en": "Beat Performer",
+        "ja": ""
+    }
+}

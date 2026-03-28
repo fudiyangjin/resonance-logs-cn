@@ -9,13 +9,15 @@
   import ShortcutsSettings from "./shortcuts.svelte";
   import HistorySettings from "./history.svelte";
   import DebugSettings from "./debug.svelte";
+  import { resolveNavigationTranslation } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
 
   const settingsTabs = [
-    { id: "live", label: "实时" },
-    { id: "network", label: "网络" },
-    { id: "shortcuts", label: "快捷键" },
-    { id: "history", label: "历史" },
-    { id: "debug", label: "调试" },
+    { id: "live", key: "dps.settings.live", label: "实时" },
+    { id: "network", key: "dps.settings.network", label: "网络" },
+    { id: "shortcuts", key: "dps.settings.shortcuts", label: "快捷键" },
+    { id: "history", key: "dps.settings.history", label: "历史" },
+    { id: "debug", key: "dps.settings.debug", label: "调试" },
   ];
 
   let activeTab = $state("live");
@@ -25,7 +27,12 @@
   <Tabs.Root bind:value={activeTab}>
     <Tabs.List>
       {#each settingsTabs as tab (tab.id)}
-        <Tabs.Trigger value={tab.id}>{tab.label}</Tabs.Trigger>
+        <Tabs.Trigger value={tab.id}>{resolveNavigationTranslation(
+          tab.key,
+          SETTINGS.live.general.state.language,
+          tab.label,
+          )}
+        </Tabs.Trigger>
       {/each}
     </Tabs.List>
 

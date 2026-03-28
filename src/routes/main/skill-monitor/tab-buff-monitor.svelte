@@ -1,6 +1,8 @@
 <script lang="ts">
   import ChevronDown from "virtual:icons/lucide/chevron-down";
   import BuffSearchResultGrid from "$lib/components/BuffSearchResultGrid.svelte";
+  import { SETTINGS } from "$lib/settings-store";
+  import { resolveSkillMonitorTranslation } from "$lib/i18n";
   import type {
     BuffCategoryDefinition,
     BuffCategoryKey,
@@ -91,6 +93,14 @@
     moveGroupPriority: (groupId: string, buffId: number, direction: "up" | "down") => void;
   }
 
+  function t(key: string, fallback: string): string {
+    return resolveSkillMonitorTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
   let {
     buffSearch,
     filteredBuffs,
@@ -163,12 +173,12 @@
   }: Props = $props();
 
   function buffSearchStatusLabel(buffId: number): string | null {
-    return isBuffSelected(buffId) ? "已选择" : null;
+    return isBuffSelected(buffId) ? t("skillMonitor.selected", "已选择") : null;
   }
 
   function buffAliasStatusLabel(buffId: number): string | null {
-    if (buffAliasEditingBuffId === buffId) return "编辑中";
-    return configuredBuffAliasIds.includes(buffId) ? "已设别名" : null;
+    if (buffAliasEditingBuffId === buffId) return t("skillMonitor.editing", "编辑中");
+    return configuredBuffAliasIds.includes(buffId) ? t("skillMonitor.aliasSet", "已设别名") : null;
   }
 
   function getFilteredGlobalPrioritySearchResults(): BuffNameInfo[] {
@@ -186,7 +196,7 @@
 {#snippet buffGroupLayoutControls(group: BuffGroup, onUpdate: BuffGroupUpdateHandler)}
   <div class="grid grid-cols-2 gap-3">
     <label class="text-xs text-muted-foreground">
-      图标大小: {group.iconSize}px
+      {t("skillMonitor.buff.iconSize", "图标大小")}: {group.iconSize}px
       <input
         class="w-full mt-1"
         type="range"
@@ -202,7 +212,7 @@
       />
     </label>
     <label class="text-xs text-muted-foreground">
-      列数: {group.columns}
+      {t("skillMonitor.buff.columns", "列数")}: {group.columns}
       <input
         class="w-full mt-1"
         type="range"
@@ -218,7 +228,7 @@
       />
     </label>
     <label class="text-xs text-muted-foreground">
-      行数: {group.rows}
+      {t("skillMonitor.buff.rows", "行数")}: {group.rows}
       <input
         class="w-full mt-1"
         type="range"
@@ -234,7 +244,7 @@
       />
     </label>
     <label class="text-xs text-muted-foreground">
-      间距: {group.gap}px
+      {t("skillMonitor.buff.gap", "间距")}: {group.gap}px
       <input
         class="w-full mt-1"
         type="range"
@@ -261,7 +271,7 @@
             showName: (event.currentTarget as HTMLInputElement).checked,
           }))}
       />
-      显示名称
+      {t("skillMonitor.buff.showName", "显示名称")}
     </label>
     <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-foreground">
       <input
@@ -273,7 +283,7 @@
             showTime: (event.currentTarget as HTMLInputElement).checked,
           }))}
       />
-      显示时间
+      {t("skillMonitor.buff.showTime", "显示时间")}
     </label>
     <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-foreground">
       <input
@@ -285,7 +295,7 @@
             showLayer: (event.currentTarget as HTMLInputElement).checked,
           }))}
       />
-      显示层数
+      {t("skillMonitor.buff.showStacks", "显示层数")}
     </label>
   </div>
 {/snippet}
@@ -294,26 +304,26 @@
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <div class="flex items-center justify-between gap-3">
       <div>
-        <h2 class="text-base font-semibold text-foreground">Buff 监控</h2>
-        <p class="text-xs text-muted-foreground">统一通过 Buff 名称搜索（含有图标/无图标 Buff）</p>
+        <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.buffMonitor.title", "Buff 监控")}</h2>
+        <p class="text-xs text-muted-foreground">{t("skillMonitor.buffMonitor.subtitle", "统一通过 Buff 名称搜索（含有图标/无图标 Buff）")}</p>
       </div>
       <div class="flex items-center gap-3">
         <div class="text-xs text-muted-foreground">
-          已选 Buff {monitoredBuffIds.length} / 分类 {monitoredBuffCategories.length}
+          {t("skillMonitor.buffMonitor.selectedCounts", "已选 Buff")} {monitoredBuffIds.length} / {t("skillMonitor.buffMonitor.categories", "分类")} {monitoredBuffCategories.length}
         </div>
         <button
           type="button"
           class="text-xs px-2 py-1 rounded border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
           onclick={clearBuffs}
         >
-          清空
+          {t("skillMonitor.clear", "清空")}
         </button>
       </div>
     </div>
 
     <input
       class="w-full sm:w-64 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-      placeholder="搜索 Buff 名称"
+      placeholder={t("skillMonitor.searchBuffName", "搜索 Buff 名称")}
       value={buffSearch}
       oninput={(event) => setBuffSearch((event.currentTarget as HTMLInputElement).value)}
     />
@@ -325,14 +335,14 @@
         onSelect={toggleBuff}
         isSelected={isBuffSelected}
         getStatusLabel={buffSearchStatusLabel}
-        emptyMessage="没有匹配的 Buff"
+        emptyMessage={t("skillMonitor.noMatchingBuff", "没有匹配的 Buff")}
       />
     {:else}
-      <div class="text-xs text-muted-foreground">请输入关键词搜索 Buff</div>
+      <div class="text-xs text-muted-foreground">{t("skillMonitor.searchKeywordBuffPrompt", "请输入关键词搜索 Buff")}</div>
     {/if}
 
     <div class="space-y-2">
-      <div class="text-xs text-muted-foreground">已选 Buff</div>
+      <div class="text-xs text-muted-foreground">{t("skillMonitor.selectedBuffs", "已选 Buff")}</div>
       <div class="flex flex-wrap gap-2">
         {#each monitoredBuffIds as buffId (buffId)}
           {@const iconBuff = selectedBuffs.find((buff) => buff.baseId === buffId)}
@@ -372,7 +382,7 @@
       onclick={() => setBuffAliasSectionExpanded(!buffAliasSectionExpanded)}
     >
       <div class="text-left">
-        <h2 class="text-base font-semibold text-foreground">Buff 别名设置</h2>
+        <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.buffAlias.title", "Buff 别名设置")}</h2>
       </div>
       <ChevronDown
         class="w-5 h-5 text-muted-foreground transition-transform duration-200 {buffAliasSectionExpanded
@@ -385,11 +395,11 @@
       <div class="px-4 pb-4 space-y-4">
         <div class="space-y-2">
           <div class="text-xs text-muted-foreground">
-            已设置别名 {configuredBuffAliasIds.length}
+            {t("skillMonitor.buffAlias.configuredCount", "已设置别名")} {configuredBuffAliasIds.length}
           </div>
           <input
             class="w-full sm:w-80 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            placeholder="搜索任意 Buff 后设置别名"
+            placeholder={t("skillMonitor.buffAlias.searchPlaceholder", "搜索任意 Buff 后设置别名")}
             value={buffAliasSearch}
             oninput={(event) =>
               setBuffAliasSearch((event.currentTarget as HTMLInputElement).value)}
@@ -398,14 +408,14 @@
 
         {#if buffAliasSearch.trim().length > 0}
           <div class="space-y-2">
-            <div class="text-xs text-muted-foreground">搜索结果</div>
+            <div class="text-xs text-muted-foreground">{t("skillMonitor.searchResults", "搜索结果")}</div>
             <BuffSearchResultGrid
               items={buffAliasSearchResults}
               {availableBuffMap}
               onSelect={(buffId) => setBuffAliasEditingBuffId(buffId)}
               isSelected={(buffId) => buffAliasEditingBuffId === buffId}
               getStatusLabel={buffAliasStatusLabel}
-              emptyMessage="没有匹配的 Buff"
+              emptyMessage={t("skillMonitor.noMatchingBuff", "没有匹配的 Buff")}
             />
 
             {#if buffAliasEditingBuffId !== null}
@@ -416,7 +426,7 @@
                       {getBuffDisplayName(buffAliasEditingBuffId)}
                     </div>
                     <div class="text-xs text-muted-foreground truncate">
-                      默认名：{getBuffDefaultName(buffAliasEditingBuffId)} | ID: {buffAliasEditingBuffId}
+                      {t("skillMonitor.defaultName", "默认名")}：{getBuffDefaultName(buffAliasEditingBuffId)} | ID: {buffAliasEditingBuffId}
                     </div>
                   </div>
                   <button
@@ -425,7 +435,7 @@
                     onclick={() => resetBuffAlias(buffAliasEditingBuffId)}
                     disabled={!getBuffAlias(buffAliasEditingBuffId)}
                   >
-                    恢复默认
+                    {t("skillMonitor.restoreDefault", "恢复默认")}
                   </button>
                 </div>
                 <input
@@ -440,7 +450,7 @@
           </div>
         {:else if configuredBuffAliasIds.length > 0}
           <div class="space-y-2">
-            <div class="text-xs text-muted-foreground">已设置的别名</div>
+            <div class="text-xs text-muted-foreground">{t("skillMonitor.buffAlias.configuredCount", "已设置的别名")}</div>
             <div class="space-y-2">
               {#each configuredBuffAliasIds as buffId (buffId)}
                 {@const iconBuff = availableBuffMap.get(buffId)}
@@ -460,7 +470,7 @@
                     <div class="min-w-0 flex-1">
                       <div class="text-sm text-foreground truncate">{getBuffDisplayName(buffId)}</div>
                       <div class="text-xs text-muted-foreground truncate">
-                        默认名：{getBuffDefaultName(buffId)} | ID: {buffId}
+                        {t("skillMonitor.defaultName", "默认名")}：{getBuffDefaultName(buffId)} | ID: {buffId}
                       </div>
                     </div>
                     <button
@@ -468,7 +478,7 @@
                       class="text-xs px-2 py-1 rounded border border-border/60 hover:bg-muted/40"
                       onclick={() => resetBuffAlias(buffId)}
                     >
-                      恢复默认
+                      {t("skillMonitor.restoreDefault", "恢复默认")}
                     </button>
                   </div>
                   <input
@@ -484,7 +494,7 @@
           </div>
         {:else}
           <div class="text-xs text-muted-foreground">
-            暂未设置任何别名，输入上方搜索词后可对任意 Buff 设置别名。
+            {t("skillMonitor.buffAlias.none", "暂未设置任何别名，输入上方搜索词后可对任意 Buff 设置别名。")}
           </div>
         {/if}
       </div>
@@ -493,8 +503,8 @@
 
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <div>
-      <h2 class="text-base font-semibold text-foreground">Buff 显示模式</h2>
-      <p class="text-xs text-muted-foreground">可在独立定位和分组布局间切换，配置会按方案保存</p>
+      <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.buffDisplayMode.title", "Buff 显示模式")}</h2>
+      <p class="text-xs text-muted-foreground">{t("skillMonitor.buffDisplayMode.subtitle", "可在独立定位和分组布局间切换，配置会按方案保存")}</p>
     </div>
     <div class="flex flex-wrap gap-2">
       <button
@@ -504,7 +514,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => setBuffDisplayMode("individual")}
       >
-        独立模式
+        {t("skillMonitor.buffDisplayMode.individual", "独立模式")}
       </button>
       <button
         type="button"
@@ -513,7 +523,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => setBuffDisplayMode("grouped")}
       >
-        分组模式
+        {t("skillMonitor.buffDisplayMode.grouped", "分组模式")}
       </button>
     </div>
     <div class="flex flex-wrap gap-2">
@@ -524,7 +534,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => setTextBuffPanelDisplayMode("modern")}
       >
-        无图标新样式
+        {t("skillMonitor.textBuff.newStyle", "无图标新样式")}
       </button>
       <button
         type="button"
@@ -533,11 +543,11 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => setTextBuffPanelDisplayMode("classic")}
       >
-        无图标老样式
+        {t("skillMonitor.textBuff.oldStyle", "无图标老样式")}
       </button>
     </div>
     <label class="block text-xs text-muted-foreground max-w-md">
-      无图标 Buff 最大显示数: {textBuffMaxVisible}
+      {t("skillMonitor.textBuff.maxVisible", "无图标 Buff 最大显示数")}: {textBuffMaxVisible}
       <input
         class="w-full mt-1"
         type="range"
@@ -550,7 +560,7 @@
     </label>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl">
       <label class="text-xs text-muted-foreground">
-        行间距: {textBuffPanelStyle.gap}px
+        {t("skillMonitor.buff.gap", "行间距")}: {textBuffPanelStyle.gap}px
         <input
           class="w-full mt-1"
           type="range"
@@ -562,7 +572,7 @@
         />
       </label>
       <label class="text-xs text-muted-foreground">
-        字体大小: {textBuffPanelStyle.fontSize}px
+        {t("skillMonitor.textBuff.fontSize", "字体大小")}: {textBuffPanelStyle.fontSize}px
         <input
           class="w-full mt-1"
           type="range"
@@ -575,7 +585,7 @@
       </label>
       {#if textBuffPanelStyle.displayMode === "modern"}
         <label class="text-xs text-muted-foreground">
-          名称-数值间距: {textBuffPanelStyle.columnGap}px
+          {t("skillMonitor.textBuff.nameValueGap", "名称-数值间距")}: {textBuffPanelStyle.columnGap}px
           <input
             class="w-full mt-1"
             type="range"
@@ -591,7 +601,7 @@
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl">
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        名称颜色
+        {t("skillMonitor.nameColor", "名称颜色")}
         <input
           type="color"
           value={textBuffPanelStyle.nameColor}
@@ -600,7 +610,7 @@
         />
       </label>
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        数值颜色
+        {t("skillMonitor.valueColor", "数值颜色")}
         <input
           type="color"
           value={textBuffPanelStyle.valueColor}
@@ -609,7 +619,7 @@
         />
       </label>
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        进度条颜色
+        {t("skillMonitor.progressColor", "进度条颜色")}
         <input
           type="color"
           value={textBuffPanelStyle.progressColor}
@@ -618,7 +628,7 @@
         />
       </label>
       <label class="rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        <div>进度条透明度: {Math.round(textBuffPanelStyle.progressOpacity * 100)}%</div>
+        <div>{t("skillMonitor.progressOpacity", "进度条透明度")}: {Math.round(textBuffPanelStyle.progressOpacity * 100)}%</div>
         <input
           class="mt-2 w-full"
           type="range"
@@ -635,10 +645,10 @@
 
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <div class="space-y-2">
-      <div class="text-xs font-medium text-foreground">全局 Buff 优先级</div>
+      <div class="text-xs font-medium text-foreground">{t("skillMonitor.buff.globalPriority", "全局 Buff 优先级")}</div>
       <input
         class="w-full sm:w-72 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-        placeholder="搜索并添加到全局优先级"
+        placeholder={t("skillMonitor.addGlobalPriorityPlaceholder", "搜索并添加到全局优先级")}
         value={globalPrioritySearch}
         oninput={(event) => setGlobalPrioritySearch((event.currentTarget as HTMLInputElement).value)}
       />
@@ -647,7 +657,7 @@
           items={getFilteredGlobalPrioritySearchResults()}
           {availableBuffMap}
           onSelect={toggleGlobalPriority}
-          emptyMessage="没有可添加到全局优先级的 Buff"
+          emptyMessage={t("skillMonitor.noAvailableForGlobalPriority", "没有可添加到全局优先级的 Buff")}
           minColumnWidth={180}
         />
       {/if}
@@ -658,9 +668,9 @@
             <span class="flex-1 text-xs text-foreground truncate">
               {getBuffDisplayName(buffId)}
             </span>
-            <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40" onclick={() => toggleGlobalPriority(buffId)}>移除</button>
-            <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveGlobalPriority(buffId, "up")} disabled={idx === 0}>上移</button>
-            <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveGlobalPriority(buffId, "down")} disabled={idx === buffPriorityIds.length - 1}>下移</button>
+            <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40" onclick={() => toggleGlobalPriority(buffId)}>{t("skillMonitor.remove", "移除")}</button>
+            <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveGlobalPriority(buffId, "up")} disabled={idx === 0}>{t("skillMonitor.moveUp", "上移")}</button>
+            <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveGlobalPriority(buffId, "down")} disabled={idx === buffPriorityIds.length - 1}>{t("skillMonitor.moveDown", "下移")}</button>
           </div>
         {/each}
       </div>
@@ -670,7 +680,7 @@
   {#if buffDisplayMode === "individual"}
     <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
       <div>
-        <h2 class="text-base font-semibold text-foreground">分类快捷监听</h2>
+        <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.categoryQuickListen", "分类快捷监听")}</h2>
       </div>
       <div class="flex flex-wrap gap-2">
         {#each buffCategoryDefinitions as category (category.key)}
@@ -686,7 +696,7 @@
         {/each}
       </div>
       <div class="space-y-2">
-        <div class="text-xs text-muted-foreground">已选分类</div>
+        <div class="text-xs text-muted-foreground">{t("skillMonitor.selectedCategories", "已选分类")}</div>
         <div class="flex flex-wrap gap-2">
           {#if selectedBuffCategories.length > 0}
             {#each selectedBuffCategories as category (category.key)}
@@ -699,7 +709,7 @@
               </button>
             {/each}
           {:else}
-            <div class="text-xs text-muted-foreground">尚未选择任何分类监听</div>
+            <div class="text-xs text-muted-foreground">{t("skillMonitor.noCategoriesSelected", "尚未选择任何分类监听")}</div>
           {/if}
         </div>
       </div>
@@ -708,18 +718,18 @@
     <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <h2 class="text-base font-semibold text-foreground">监控全部 Buff </h2>
+          <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.monitorAllBuffs.title", "监控全部 Buff")}</h2>
           <p class="text-xs text-muted-foreground">
-            新增一个网格区域显示全部 Buff（自动排除已在独立模式中选中的 Buff）
+            {t("skillMonitor.monitorAllBuffs.subtitle", "新增一个网格区域显示全部 Buff（自动排除已在独立模式中选中的 Buff）")}
           </p>
         </div>
         {#if !individualMonitorAllGroup}
           <button type="button" class="text-xs px-3 py-2 rounded border border-border/60 text-foreground hover:bg-muted/40 transition-colors" onclick={addIndividualMonitorAll}>
-            监控全部 Buff
+            {t("skillMonitor.monitorAllBuffs.action", "监控全部 Buff")}
           </button>
         {:else}
           <button type="button" class="text-xs px-3 py-2 rounded border border-border/60 text-destructive hover:bg-destructive/10 transition-colors" onclick={removeIndividualMonitorAll}>
-            移除全部 Buff 分组
+            {t("skillMonitor.monitorAllBuffs.removeGroup", "移除全部 Buff 分组")}
           </button>
         {/if}
       </div>
@@ -735,7 +745,7 @@
                   name: (event.currentTarget as HTMLInputElement).value || curr.name,
                 }))}
             />
-            <span class="text-xs text-muted-foreground">固定为监控全部 Buff</span>
+            <span class="text-xs text-muted-foreground">{t("skillMonitor.monitorAllBuffs.fixed", "固定为监控全部 Buff")}</span>
           </div>
           {@render buffGroupLayoutControls(individualMonitorAllGroup, updateIndividualMonitorAllGroup)}
         </div>
@@ -747,9 +757,9 @@
     <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <h2 class="text-base font-semibold text-foreground">Buff 分组管理</h2>
+          <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.buffGroupManagement.title", "Buff 分组管理")}</h2>
           <p class="text-xs text-muted-foreground">
-            通过分组管理 Buff 展示，组内自动网格对齐
+            {t("skillMonitor.buffGroupManagement.subtitle", "通过分组管理 Buff 展示，组内自动网格对齐")}
           </p>
         </div>
         <button
@@ -757,7 +767,7 @@
           class="text-xs px-3 py-2 rounded border border-border/60 text-foreground hover:bg-muted/40 transition-colors"
           onclick={addBuffGroup}
         >
-          新建分组
+          {t("skillMonitor.createGroup", "新建分组")}
         </button>
       </div>
 
@@ -779,7 +789,7 @@
                 class="text-xs px-2 py-1 rounded border border-border/60 text-destructive hover:bg-destructive/10 transition-colors"
                 onclick={() => removeBuffGroup(group.id)}
               >
-                删除分组
+                {t("skillMonitor.deleteGroup", "删除分组")}
               </button>
               <label class="ml-auto flex items-center gap-2 text-xs text-foreground">
                 <input
@@ -791,7 +801,7 @@
                       monitorAll: (event.currentTarget as HTMLInputElement).checked,
                     }))}
                 />
-                监控全部 Buff
+                {t("skillMonitor.monitorAllBuffs.short", "监控全部 Buff")}
               </label>
             </div>
 
@@ -806,13 +816,13 @@
                     onclick={() => toggleBuffCategoryInGroup(group.id, category.key)}
                     disabled={group.monitorAll}
                   >
-                    {hasCompleteBuffCategoryInGroup(group, category.key) ? "移除" : "添加"}{category.label} ({category.count})
+                    {hasCompleteBuffCategoryInGroup(group, category.key) ? t("skillMonitor.removeThisCategory", "移除") : t("skillMonitor.addThisCategory", "添加")}{category.label} ({category.count})
                   </button>
                 {/each}
               </div>
               <input
                 class="w-full sm:w-72 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                placeholder="搜索并添加到此分组"
+                placeholder={t("skillMonitor.addToThisGroupPlaceholder", "搜索并添加到此分组")}
                 value={getGroupSearchKeyword(group.id)}
                 oninput={(event) =>
                   setGroupSearchKeyword(group.id, (event.currentTarget as HTMLInputElement).value)}
@@ -822,14 +832,14 @@
                   items={getGroupSearchResults(group)}
                   {availableBuffMap}
                   onSelect={(buffId) => toggleBuffInGroup(group.id, buffId)}
-                  emptyMessage="没有可添加的 Buff"
+                  emptyMessage={t("skillMonitor.noAvailableToAdd", "没有可添加的 Buff")}
                   minColumnWidth={180}
                 />
               {/if}
 
               {#if !group.monitorAll}
                 <div class="space-y-2">
-                  <div class="text-xs text-muted-foreground">已加入分组 {group.buffIds.length}</div>
+                  <div class="text-xs text-muted-foreground">{t("skillMonitor.inGroupCount", "已加入分组")} {group.buffIds.length}</div>
                   <div class="flex flex-wrap gap-2">
                     {#if group.buffIds.length > 0}
                       {#each group.buffIds as buffId (buffId)}
@@ -859,17 +869,17 @@
                         {/if}
                       {/each}
                     {:else}
-                      <div class="text-xs text-muted-foreground">尚未添加 Buff 到此分组</div>
+                      <div class="text-xs text-muted-foreground">{t("skillMonitor.noBuffsInGroup", "尚未添加 Buff 到此分组")}</div>
                     {/if}
                   </div>
                 </div>
               {/if}
 
               <div class="space-y-1">
-                <div class="text-xs text-muted-foreground">分组内优先级</div>
+                <div class="text-xs text-muted-foreground">{t("skillMonitor.groupPriority", "分组内优先级")}</div>
                 <input
                   class="w-full sm:w-72 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  placeholder="搜索并添加到优先级列表"
+                  placeholder={t("skillMonitor.addPriorityPlaceholder", "搜索并添加到优先级列表")}
                   value={getGroupPrioritySearchKeyword(group.id)}
                   oninput={(event) =>
                     setGroupPrioritySearchKeyword(group.id, (event.currentTarget as HTMLInputElement).value)}
@@ -879,7 +889,7 @@
                     items={getGroupPrioritySearchResults(group)}
                     {availableBuffMap}
                     onSelect={(buffId) => togglePriorityInGroup(group.id, buffId)}
-                    emptyMessage="没有可添加到优先级的 Buff"
+                    emptyMessage={t("skillMonitor.noAvailablePriority", "没有可添加到优先级的 Buff")}
                     minColumnWidth={180}
                   />
                 {/if}
@@ -889,14 +899,14 @@
                     <span class="flex-1 text-xs text-foreground truncate">
                       {getBuffDisplayName(buffId)}
                     </span>
-                    <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40" onclick={() => togglePriorityInGroup(group.id, buffId)}>移除</button>
-                    <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveGroupPriority(group.id, buffId, "up")} disabled={idx === 0}>上移</button>
-                    <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveGroupPriority(group.id, buffId, "down")} disabled={idx === getGroupPriorityIds(group).length - 1}>下移</button>
+                    <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40" onclick={() => togglePriorityInGroup(group.id, buffId)}>{t("skillMonitor.remove", "移除")}</button>
+                    <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveGroupPriority(group.id, buffId, "up")} disabled={idx === 0}>{t("skillMonitor.moveUp", "上移")}</button>
+                    <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveGroupPriority(group.id, buffId, "down")} disabled={idx === getGroupPriorityIds(group).length - 1}>{t("skillMonitor.moveDown", "下移")}</button>
                   </div>
                 {/each}
               </div>
               <div class="space-y-2">
-                <div class="text-xs text-muted-foreground">分组布局</div>
+                <div class="text-xs text-muted-foreground">{t("skillMonitor.groupLayout", "分组布局")}</div>
                 {@render buffGroupLayoutControls(group, (updater: (curr: BuffGroup) => BuffGroup) => updateBuffGroup(group.id, updater))}
               </div>
             </div>
@@ -905,11 +915,11 @@
       </div>
 
       <div class="rounded-md border border-border/60 bg-muted/20 p-3 space-y-2">
-        <div class="text-xs text-muted-foreground">分组布局预览</div>
+        <div class="text-xs text-muted-foreground">{t("skillMonitor.groupLayoutPreview", "分组布局预览")}</div>
         <div class="space-y-2">
           {#each buffGroups as group (group.id)}
             <div class="rounded border border-border/50 p-2">
-              <div class="text-xs mb-2 text-foreground">{group.name}{group.monitorAll ? "（全部）" : ""}</div>
+              <div class="text-xs mb-2 text-foreground">{group.name}{group.monitorAll ? t("skillMonitor.allSuffix", "（全部）") : ""}</div>
               <div
                 class="grid"
                 style:grid-template-columns={`repeat(${Math.max(1, group.columns)}, minmax(0, ${group.iconSize / 2}px))`}

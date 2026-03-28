@@ -62,7 +62,6 @@
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.live.general.state.abbreviatedDecimalPlaces ?? 1,
   );
-  let abbreviationStyle = $derived(SETTINGS.live.general.state.abbreviationStyle);
   let customThemeColors = $derived(
     SETTINGS.accessibility.state.customThemeColors,
   );
@@ -212,7 +211,6 @@
                   <AbbreviatedNumber
                     num={player.totalDmg}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
@@ -224,7 +222,6 @@
                   <AbbreviatedNumber
                     num={player.dps}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />

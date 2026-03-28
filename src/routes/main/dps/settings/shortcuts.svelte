@@ -10,18 +10,17 @@
   import { Button } from "$lib/components/ui/button/index.js";
 
   import { SETTINGS } from "$lib/settings-store";
+  import { resolveNavigationTranslation } from "$lib/i18n";
   import { registerShortcut } from "./shortcuts.js";
   import type { BaseInput, BaseInputs } from "./settings.js";
 
   let editingId: string | null = $state(null);
 
-  // Track modifiers separately from the single main key
   const modifierOrder = ["ctrl", "shift", "alt", "meta"];
   const MODIFIERS = new SvelteSet(modifierOrder);
   const activeMods = new SvelteSet<string>();
   let mainKey: string | null = $state(null);
 
-  /** Normalize modifier key names */
   const normalizeModifier = (key: string): string =>
     (
       ({
@@ -32,21 +31,16 @@
       }) as Record<string, string>
     )[key.toLowerCase()] ?? key.toLowerCase();
 
-  /** Get the proper key name, handling numpad keys via e.code */
   function getKeyName(e: KeyboardEvent): string {
     const code = e.code;
-    
-    // Handle numpad keys - use code directly as it matches the Tauri shortcut format
-    // e.g., "Numpad0", "Numpad1", "NumpadAdd", "NumpadSubtract", etc.
+
     if (code.startsWith("Numpad")) {
       return code;
     }
-    
-    // For regular keys, use the key value (normalized to lowercase)
+
     return e.key.toLowerCase();
   }
 
-  /** Build the display string of the in-progress shortcut */
   function currentShortcutString(): string {
     const mods = modifierOrder.filter((m) => activeMods.has(m));
     return mainKey ? [...mods, mainKey].join("+") : mods.join("+");
@@ -79,7 +73,6 @@
       return;
     }
 
-    // Non-modifier key: set/replace the main key (using code for numpad detection)
     mainKey = getKeyName(e);
   }
 
@@ -87,18 +80,14 @@
     e.preventDefault();
     const modKey = normalizeModifier(e.key);
 
-    // If a modifier was released, just reflect that (remove it) but don't finalize yet
     if (MODIFIERS.has(modKey)) {
       activeMods.delete(modKey);
       stopEdit();
       return;
     }
 
-    // Only finalize when the non-modifier (main) key is released
     if (mainKey) {
       const shortcutKey = currentShortcutString();
-
-      // Ensure we actually have a main key (defensive)
       const hasMain = !!mainKey;
       if (!hasMain) return;
 
@@ -119,6 +108,14 @@
       SETTINGS.shortcuts.state[shortcut.id] = "";
       await unregister(existing);
     }
+  }
+
+  function t(key: string, fallback: string): string {
+    return resolveNavigationTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
   }
 
   onDestroy(stopEdit);
@@ -176,21 +173,21 @@
 <Tabs.Content value={SETTINGS_CATEGORY}>
   <div class="space-y-3">
     <Alert.Root class="shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-    <AlertCircleIcon />
-      <Alert.Title>右键可清除快捷键</Alert.Title>
+      <AlertCircleIcon />
+      <Alert.Title>{t("dps.shortcuts.clearHint", "右键可清除快捷键")}</Alert.Title>
     </Alert.Root>
-  <div class="rounded-lg border bg-card/40 border-border/60 p-4 space-y-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
+    <div class="rounded-lg border bg-card/40 border-border/60 p-4 space-y-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
       {#each inputs as input (input.id)}
         <Item.Root>
           <Item.Content>
-            <Item.Title>{input.label}</Item.Title>
+            <Item.Title>{t(`dps.shortcuts.${input.id}`, input.label)}</Item.Title>
           </Item.Content>
           <Item.Actions>
             <Button variant="outline" class="uppercase" onclick={() => startEdit(input)} oncontextmenu={(e: MouseEvent) => clearShortcut(input, e)}>
               {#if editingId === input.id}
-                {currentShortcutString() || "请按键"}...
+                {currentShortcutString() || t("dps.shortcuts.pressKey", "请按键")}...
               {:else}
-                {SETTINGS.shortcuts.state[input.id] || "未绑定"}
+                {SETTINGS.shortcuts.state[input.id] || t("dps.shortcuts.unbound", "未绑定")}
               {/if}
             </Button>
           </Item.Actions>

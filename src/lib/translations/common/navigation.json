@@ -1,0 +1,1977 @@
+{
+  "tool.dps": {
+    "zh-CN": "DPS检测",
+    "en": "DPS Meter",
+    "ja": ""
+  },
+  "tool.moduleOptimizer": {
+    "zh-CN": "模组计算",
+    "en": "Module Calculator",
+    "ja": ""
+  },
+  "tool.skillMonitor": {
+    "zh-CN": "实时监控",
+    "en": "Skill Monitor",
+    "ja": ""
+  },
+  "tool.monsterTracker": {
+    "zh-CN": "怪物监控",
+    "en": "Monster Monitor",
+    "ja": ""
+  },
+  "sidebar.toolbox": {
+    "zh-CN": "工具箱",
+    "en": "Toolbox",
+    "ja": ""
+  },
+  "sidebar.tools": {
+    "zh-CN": "工具",
+    "en": "Tools",
+    "ja": ""
+  },
+  "dps.history": {
+    "zh-CN": "历史",
+    "en": "History",
+    "ja": ""
+  },
+  "dps.themes": {
+    "zh-CN": "主题",
+    "en": "Themes",
+    "ja": ""
+  },
+  "dps.settings": {
+    "zh-CN": "设置",
+    "en": "Settings",
+    "ja": ""
+  },
+  "dps.title": {
+    "zh-CN": "DPS检测",
+    "en": "DPS Meter",
+    "ja": ""
+  },
+  "dps.subtitle": {
+    "zh-CN": "实时监测战斗数据和DPS统计",
+    "en": "Monitor combat data and DPS statistics in real time",
+    "ja": ""
+  },
+  "dps.toggleWindow": {
+    "zh-CN": "切换 DPS 窗口",
+    "en": "Toggle DPS Window",
+    "ja": ""
+  },
+  "dps.selectTabPrompt": {
+    "zh-CN": "请选择上方的选项卡查看详细设置",
+    "en": "Please select a tab above to view detailed settings",
+    "ja": ""
+  },
+  "dps.viewHistory": {
+    "zh-CN": "查看历史记录",
+    "en": "View History",
+    "ja": ""
+  },
+  "debug.title": {
+    "zh-CN": "调试",
+    "en": "Debug",
+    "ja": ""
+  },
+  "debug.logFiles": {
+    "zh-CN": "日志文件",
+    "en": "Log Files",
+    "ja": ""
+  },
+  "debug.openLogDir": {
+    "zh-CN": "打开应用日志所在文件夹",
+    "en": "Open the folder containing the application logs",
+    "ja": ""
+  },
+  "debug.openLogsButton": {
+    "zh-CN": "打开日志",
+    "en": "Open Logs",
+    "ja": ""
+  },
+  "debug.bundleTitle": {
+    "zh-CN": "调试压缩包",
+    "en": "Diagnostics Bundle",
+    "ja": ""
+  },
+  "debug.bundleDescription": {
+    "zh-CN": "生成包含最近日志的 ZIP，便于支持与排查",
+    "en": "Generate a ZIP containing recent logs for support and troubleshooting",
+    "ja": ""
+  },
+  "debug.bundleButton": {
+    "zh-CN": "创建调试压缩包",
+    "en": "Create Diagnostics Bundle",
+    "ja": ""
+  },
+  "debug.translationTools": {
+    "zh-CN": "翻译调试",
+    "en": "Translation Debug",
+    "ja": ""
+  },
+  "debug.language": {
+    "zh-CN": "语言",
+    "en": "Language",
+    "ja": ""
+  },
+  "debug.languageDescription": {
+    "zh-CN": "选择翻译语言。缺失时回退到 zh-CN。",
+    "en": "Choose the translation language. Missing entries fall back to zh-CN.",
+    "ja": ""
+  },
+  "debug.skillIdDisplay": {
+    "zh-CN": "技能 ID 显示",
+    "en": "Skill ID Display",
+    "ja": ""
+  },
+  "debug.skillIdDisplayDescription": {
+    "zh-CN": "控制技能表中的 ID 显示方式。",
+    "en": "Control how IDs are shown in skill tables.",
+    "ja": ""
+  },
+  "debug.skillIdDisplay.off": {
+    "zh-CN": "仅名称",
+    "en": "Name Only",
+    "ja": ""
+  },
+  "debug.skillIdDisplay.hover": {
+    "zh-CN": "悬停显示 ID",
+    "en": "Show ID on Hover",
+    "ja": ""
+  },
+  "debug.skillIdDisplay.column": {
+    "zh-CN": "始终显示 ID 列",
+    "en": "Always Show ID",
+    "ja": ""
+  },
+  "dps.settings.live": {
+    "zh-CN": "实时",
+    "en": "Live",
+    "ja": ""
+  },
+  "dps.settings.network": {
+    "zh-CN": "网络",
+    "en": "Network",
+    "ja": ""
+  },
+  "dps.settings.shortcuts": {
+    "zh-CN": "快捷键",
+    "en": "Hotkeys",
+    "ja": ""
+  },
+  "dps.settings.history": {
+    "zh-CN": "历史",
+    "en": "History",
+    "ja": ""
+  },
+  "dps.settings.debug": {
+    "zh-CN": "调试",
+    "en": "Debug",
+    "ja": ""
+  },
+  "dps.live.title": {
+    "zh-CN": "实时",
+    "en": "Live",
+    "ja": ""
+  },
+  "dps.live.generalSettings": {
+    "zh-CN": "通用设置",
+    "en": "General Settings",
+    "ja": ""
+  },
+  "dps.live.targetDummyMode": {
+    "zh-CN": "打桩模式",
+    "en": "Target Dummy Mode",
+    "ja": ""
+  },
+  "dps.live.playerColumns": {
+    "zh-CN": "DPS（玩家）列",
+    "en": "DPS (Players) Columns",
+    "ja": ""
+  },
+  "dps.live.skillColumns": {
+    "zh-CN": "DPS（技能明细）列",
+    "en": "DPS (Skill Details) Columns",
+    "ja": ""
+  },
+  "dps.live.healPlayerColumns": {
+    "zh-CN": "治疗（玩家）列",
+    "en": "Heal (Players) Columns",
+    "ja": ""
+  },
+  "dps.live.healSkillColumns": {
+    "zh-CN": "治疗（技能明细）列",
+    "en": "Heal (Skill Details) Columns",
+    "ja": ""
+  },
+  "dps.live.tankedPlayerColumns": {
+    "zh-CN": "承伤（玩家）列",
+    "en": "Tanked (Players) Columns",
+    "ja": ""
+  },
+  "dps.live.tankedSkillColumns": {
+    "zh-CN": "承伤（技能明细）列",
+    "en": "Tanked (Skill Details) Columns",
+    "ja": ""
+  },
+  "dps.live.showYourName": {
+    "zh-CN": "显示你的名称",
+    "en": "Show Your Name",
+    "ja": ""
+  },
+  "dps.live.showYourNameDescription": {
+    "zh-CN": "“显示你的职业”会用职业替代你的名称；“名称 - 职业/专精”会同时显示两者。",
+    "en": "\"Show Your Class\" replaces your name with your class; \"Name - Class/Spec\" shows both.",
+    "ja": ""
+  },
+  "dps.live.showOthersName": {
+    "zh-CN": "显示他人名称",
+    "en": "Show Others' Name",
+    "ja": ""
+  },
+  "dps.live.showOthersNameDescription": {
+    "zh-CN": "“显示他人职业”会用职业替代他人名称；“名称 - 职业/专精”会同时显示两者。",
+    "en": "\"Show Others' Class\" replaces others' names with their class; \"Name - Class/Spec\" shows both.",
+    "ja": ""
+  },
+  "dps.live.showYourAbilityScore": {
+    "zh-CN": "你的能力评分",
+    "en": "Your Ability Score",
+    "ja": ""
+  },
+  "dps.live.showYourAbilityScoreDescription": {
+    "zh-CN": "显示你的能力评分",
+    "en": "Show your ability score",
+    "ja": ""
+  },
+  "dps.live.showOthersAbilityScore": {
+    "zh-CN": "他人能力评分",
+    "en": "Others' Ability Score",
+    "ja": ""
+  },
+  "dps.live.showOthersAbilityScoreDescription": {
+    "zh-CN": "显示他人的能力评分",
+    "en": "Show others' ability score",
+    "ja": ""
+  },
+  "dps.live.showYourName.option.name": {
+    "zh-CN": "显示你的名称",
+    "en": "Show Your Name",
+    "ja": ""
+  },
+  "dps.live.showYourName.option.class": {
+    "zh-CN": "显示你的职业",
+    "en": "Show Your Class",
+    "ja": ""
+  },
+  "dps.live.showYourName.option.nameClass": {
+    "zh-CN": "显示你的名称 - 职业",
+    "en": "Show Your Name - Class",
+    "ja": ""
+  },
+  "dps.live.showYourName.option.nameSpec": {
+    "zh-CN": "显示你的名称 - 专精",
+    "en": "Show Your Name - Spec",
+    "ja": ""
+  },
+  "dps.live.showYourName.option.hide": {
+    "zh-CN": "隐藏你的名称",
+    "en": "Hide Your Name",
+    "ja": ""
+  },
+  "dps.live.showOthersName.option.name": {
+    "zh-CN": "显示他人名称",
+    "en": "Show Others' Name",
+    "ja": ""
+  },
+  "dps.live.showOthersName.option.class": {
+    "zh-CN": "显示他人职业",
+    "en": "Show Others' Class",
+    "ja": ""
+  },
+  "dps.live.showOthersName.option.nameClass": {
+    "zh-CN": "显示他人名称 - 职业",
+    "en": "Show Others' Name - Class",
+    "ja": ""
+  },
+  "dps.live.showOthersName.option.nameSpec": {
+    "zh-CN": "显示他人名称 - 专精",
+    "en": "Show Others' Name - Spec",
+    "ja": ""
+  },
+  "dps.live.showOthersName.option.hide": {
+    "zh-CN": "隐藏他人名称",
+    "en": "Hide Others' Name",
+    "ja": ""
+  },
+  "dps.live.showYourSeasonStrength": {
+    "zh-CN": "你的赛季强度",
+    "en": "Your Season Strength",
+    "ja": ""
+  },
+  "dps.live.showYourSeasonStrengthDescription": {
+    "zh-CN": "显示你的赛季强度",
+    "en": "Show your season strength",
+    "ja": ""
+  },
+  "dps.live.showOthersSeasonStrength": {
+    "zh-CN": "他人赛季强度",
+    "en": "Others' Season Strength",
+    "ja": ""
+  },
+  "dps.live.showOthersSeasonStrengthDescription": {
+    "zh-CN": "显示他人的赛季强度",
+    "en": "Show others' season strength",
+    "ja": ""
+  },
+  "dps.live.relativeToTopDPSPlayer": {
+    "zh-CN": "以最高 DPS 为基准（玩家）",
+    "en": "Relative to Top DPS (Players)",
+    "ja": ""
+  },
+  "dps.live.relativeToTopDPSPlayerDescription": {
+    "zh-CN": "颜色条按最高 DPS 玩家进行相对缩放，而不是按所有玩家。适用于 20 人或世界 Boss。",
+    "en": "Scale color bars relative to the top DPS player instead of all players. Useful for 20-player groups or world bosses.",
+    "ja": ""
+  },
+  "dps.live.relativeToTopDPSSkill": {
+    "zh-CN": "以最高 DPS 为基准（技能）",
+    "en": "Relative to Top DPS (Skills)",
+    "ja": ""
+  },
+  "dps.live.relativeToTopDPSSkillDescription": {
+    "zh-CN": "颜色条按最高 DPS 技能进行相对缩放，而不是按所有技能。适用于 20 人或世界 Boss。",
+    "en": "Scale color bars relative to the top DPS skill instead of all skills. Useful for 20-player groups or world bosses.",
+    "ja": ""
+  },
+  "dps.live.relativeToTopHealPlayer": {
+    "zh-CN": "以最高治疗为基准（玩家）",
+    "en": "Relative to Top Heal (Players)",
+    "ja": ""
+  },
+  "dps.live.relativeToTopHealPlayerDescription": {
+    "zh-CN": "颜色条按最高治疗玩家进行相对缩放，而不是按所有玩家。适用于 20 人或世界 Boss。",
+    "en": "Scale color bars relative to the top heal player instead of all players. Useful for 20-player groups or world bosses.",
+    "ja": ""
+  },
+  "dps.live.relativeToTopHealSkill": {
+    "zh-CN": "以最高治疗为基准（技能）",
+    "en": "Relative to Top Heal (Skills)",
+    "ja": ""
+  },
+  "dps.live.relativeToTopHealSkillDescription": {
+    "zh-CN": "颜色条按最高治疗技能进行相对缩放，而不是按所有技能。适用于 20 人或世界 Boss。",
+    "en": "Scale color bars relative to the top heal skill instead of all skills. Useful for 20-player groups or world bosses.",
+    "ja": ""
+  },
+  "dps.live.relativeToTopTankedPlayer": {
+    "zh-CN": "以最高承伤为基准（玩家）",
+    "en": "Relative to Top Tanked (Players)",
+    "ja": ""
+  },
+  "dps.live.relativeToTopTankedPlayerDescription": {
+    "zh-CN": "颜色条按最高承伤玩家进行相对缩放，而不是按所有玩家。适用于 20 人或世界 Boss。",
+    "en": "Scale color bars relative to the top tanked player instead of all players. Useful for 20-player groups or world bosses.",
+    "ja": ""
+  },
+  "dps.live.relativeToTopTankedSkill": {
+    "zh-CN": "以最高承伤为基准（技能）",
+    "en": "Relative to Top Tanked (Skills)",
+    "ja": ""
+  },
+  "dps.live.relativeToTopTankedSkillDescription": {
+    "zh-CN": "颜色条按最高承伤技能进行相对缩放，而不是按所有技能。适用于 20 人或世界 Boss。",
+    "en": "Scale color bars relative to the top tanked skill instead of all skills. Useful for 20-player groups or world bosses.",
+    "ja": ""
+  },
+  "dps.live.shortenTps": {
+    "zh-CN": "缩写 TPS 数值",
+    "en": "Abbreviate TPS Values",
+    "ja": ""
+  },
+  "dps.live.shortenTpsDescription": {
+    "zh-CN": "将 TPS 显示为 5k、50k 等",
+    "en": "Display TPS as 5k, 50k, etc.",
+    "ja": ""
+  },
+  "dps.live.shortenAbilityScore": {
+    "zh-CN": "缩写能力评分",
+    "en": "Abbreviate Ability Score",
+    "ja": ""
+  },
+  "dps.live.shortenAbilityScoreDescription": {
+    "zh-CN": "将能力评分显示为缩写形式",
+    "en": "Display ability score in abbreviated form",
+    "ja": ""
+  },
+  "dps.live.shortenDps": {
+    "zh-CN": "缩写 DPS 数值",
+    "en": "Abbreviate DPS Values",
+    "ja": ""
+  },
+  "dps.live.shortenDpsDescription": {
+    "zh-CN": "将 DPS 显示为 5k、50k 等",
+    "en": "Display DPS as 5k, 50k, etc.",
+    "ja": ""
+  },
+  "dps.live.abbreviatedDecimalPlaces": {
+    "zh-CN": "缩写小数位数",
+    "en": "Abbreviated Decimal Places",
+    "ja": ""
+  },
+  "dps.live.abbreviatedDecimalPlacesDescription": {
+    "zh-CN": "设置玩家表与技能明细中的 DPS/HPS/TPS 等缩写数值保留的小数位数",
+    "en": "Set how many decimal places abbreviated DPS/HPS/TPS values keep in player and skill tables",
+    "ja": ""
+  },
+  "dps.live.abbreviatedDecimalPlaces.option1": {
+    "zh-CN": "1位 (1.2m)",
+    "en": "1 digit (1.2m)",
+    "ja": ""
+  },
+  "dps.live.abbreviatedDecimalPlaces.option2": {
+    "zh-CN": "2位 (1.23m)",
+    "en": "2 digits (1.23m)",
+    "ja": ""
+  },
+  "dps.live.abbreviatedDecimalPlaces.option3": {
+    "zh-CN": "3位 (1.234m)",
+    "en": "3 digits (1.234m)",
+    "ja": ""
+  },
+  "dps.live.abbreviatedDecimalPlaces.option4": {
+    "zh-CN": "4位 (1.2345m)",
+    "en": "4 digits (1.2345m)",
+    "ja": ""
+  },
+  "dps.live.refreshRate": {
+    "zh-CN": "刷新频率",
+    "en": "Refresh Rate",
+    "ja": ""
+  },
+  "dps.live.refreshRateDescription": {
+    "zh-CN": "实时统计刷新间隔（50-2000ms）。越低越流畅，但更耗 CPU。",
+    "en": "Refresh interval for live statistics (50–2000ms). Lower is smoother, but uses more CPU.",
+    "ja": ""
+  },
+  "dps.live.defaultTargetDummy": {
+    "zh-CN": "默认木桩目标",
+    "en": "Default Dummy Target",
+    "ja": ""
+  },
+  "dps.live.defaultTargetDummyDescription": {
+    "zh-CN": "头部打桩按钮会直接使用这里的默认目标",
+    "en": "The header target-dummy button will use this default target directly",
+    "ja": ""
+  },
+  "dps.live.targetDummy.enemyElite": {
+    "zh-CN": "精英敌方木桩",
+    "en": "Elite Enemy Dummy",
+    "ja": ""
+  },
+  "dps.live.targetDummy.guardianElite": {
+    "zh-CN": "精英守护木桩",
+    "en": "Elite Guardian Dummy",
+    "ja": ""
+  },
+  "dps.live.showHeaderTargetDummyButton": {
+    "zh-CN": "显示头部打桩按钮",
+    "en": "Show Header Target Dummy Button",
+    "ja": ""
+  },
+  "dps.live.showHeaderTargetDummyButtonDescription": {
+    "zh-CN": "在实时窗口头部显示“打桩模式”开关和状态提示。",
+    "en": "Show the Target Dummy Mode toggle and status in the live window header.",
+    "ja": ""
+  },
+  "dps.live.reorderColumnsHint": {
+    "zh-CN": "使用箭头调整顺序；用开关控制显示/隐藏。",
+    "en": "Use the arrows to reorder; use the switches to show or hide columns.",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.totalDmg.label": {
+    "zh-CN": "伤害",
+    "en": "Damage",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.totalDmg.description": {
+    "zh-CN": "显示玩家造成的总伤害",
+    "en": "Show the total damage dealt by the player",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.dps.label": {
+    "zh-CN": "秒伤",
+    "en": "DPS",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.dps.description": {
+    "zh-CN": "显示玩家每秒造成的伤害 (DPS)",
+    "en": "Show the player's damage per second (DPS)",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.tdps.label": {
+    "zh-CN": "真秒伤",
+    "en": "True DPS",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.tdps.description": {
+    "zh-CN": "显示玩家的真实 DPS（基于全局活跃战斗时间）",
+    "en": "Show the player's true DPS based on global active combat time",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.bossDmg.label": {
+    "zh-CN": "首领伤害",
+    "en": "Boss Damage",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.bossDmg.description": {
+    "zh-CN": "显示玩家对首领造成的伤害",
+    "en": "Show the damage dealt by the player to the boss",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.bossDps.label": {
+    "zh-CN": "首领秒伤",
+    "en": "Boss DPS",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.bossDps.description": {
+    "zh-CN": "显示玩家对首领的秒伤 (Boss DPS)",
+    "en": "Show the player's DPS against the boss",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.dmgPct.label": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.dmgPct.description": {
+    "zh-CN": "显示玩家伤害占比",
+    "en": "Show the player's damage share",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.critRate.label": {
+    "zh-CN": "暴击%",
+    "en": "Crit %",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.critRate.description": {
+    "zh-CN": "显示玩家的暴击率",
+    "en": "Show the player's critical hit rate",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.critDmgRate.label": {
+    "zh-CN": "暴击伤%",
+    "en": "Crit Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.critDmgRate.description": {
+    "zh-CN": "显示玩家造成的暴击伤害比例",
+    "en": "Show the proportion of damage dealt as critical damage",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.luckyRate.label": {
+    "zh-CN": "幸运%",
+    "en": "Lucky %",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.luckyRate.description": {
+    "zh-CN": "显示玩家的幸运一击率",
+    "en": "Show the player's lucky hit rate",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.luckyDmgRate.label": {
+    "zh-CN": "幸运伤%",
+    "en": "Lucky Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.luckyDmgRate.description": {
+    "zh-CN": "显示玩家造成的幸运一击伤害比例",
+    "en": "Show the proportion of damage dealt as lucky-hit damage",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.hits.label": {
+    "zh-CN": "命中数",
+    "en": "Hits",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.hits.description": {
+    "zh-CN": "显示玩家的总命中次数",
+    "en": "Show the player's total number of hits",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.hitsPerMinute.label": {
+    "zh-CN": "分均命中",
+    "en": "Hits/Min",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.hitsPerMinute.description": {
+    "zh-CN": "显示玩家每分钟的命中次数",
+    "en": "Show the player's hits per minute",
+    "ja": ""
+  },
+  "dps.historyPage.skillColumns": {
+    "zh-CN": "DPS（技能明细）列",
+    "en": "DPS (Skill Details) Columns",
+    "ja": ""
+  },
+  "dps.historyPage.healPlayerColumns": {
+    "zh-CN": "治疗（玩家）列",
+    "en": "Heal (Players) Columns",
+    "ja": ""
+  },
+  "dps.historyPage.healSkillColumns": {
+    "zh-CN": "治疗（技能明细）列",
+    "en": "Heal (Skill Details) Columns",
+    "ja": ""
+  },
+  "dps.historyPage.tankedPlayerColumns": {
+    "zh-CN": "承伤（玩家）列",
+    "en": "Tanked (Players) Columns",
+    "ja": ""
+  },
+  "dps.historyPage.tankedSkillColumns": {
+    "zh-CN": "承伤（技能明细）列",
+    "en": "Tanked (Skill Details) Columns",
+    "ja": ""
+  },
+  "dps.historyPage.generalSettings": {
+    "zh-CN": "通用设置",
+    "en": "General Settings",
+    "ja": ""
+  },
+  "dps.historyPage.playerColumns": {
+    "zh-CN": "DPS（玩家）列",
+    "en": "DPS (Players) Columns",
+    "ja": ""
+  },
+  "dps.columns.historySkills.totalDmg.header": {
+    "zh-CN": "伤害",
+    "en": "Damage",
+    "ja": ""
+  },
+  "dps.columns.historySkills.totalDmg.label": {
+    "zh-CN": "伤害",
+    "en": "Damage",
+    "ja": ""
+  },
+  "dps.columns.historySkills.totalDmg.description": {
+    "zh-CN": "显示技能造成的总伤害",
+    "en": "Show the total damage dealt by the skill",
+    "ja": ""
+  },
+  "dps.columns.historySkills.dps.header": {
+    "zh-CN": "秒伤",
+    "en": "DPS",
+    "ja": ""
+  },
+  "dps.columns.historySkills.dps.label": {
+    "zh-CN": "秒伤",
+    "en": "DPS",
+    "ja": ""
+  },
+  "dps.columns.historySkills.dps.description": {
+    "zh-CN": "显示技能的每秒伤害 (DPS)",
+    "en": "Show the skill's damage per second (DPS)",
+    "ja": ""
+  },
+  "dps.columns.historySkills.dmgPct.header": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historySkills.dmgPct.label": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historySkills.dmgPct.description": {
+    "zh-CN": "显示技能伤害占比",
+    "en": "Show the skill's damage share",
+    "ja": ""
+  },
+  "dps.columns.historySkills.critRate.header": {
+    "zh-CN": "暴击%",
+    "en": "Crit %",
+    "ja": ""
+  },
+  "dps.columns.historySkills.critRate.label": {
+    "zh-CN": "暴击%",
+    "en": "Crit %",
+    "ja": ""
+  },
+  "dps.columns.historySkills.critRate.description": {
+    "zh-CN": "显示技能的暴击率",
+    "en": "Show the skill's critical hit rate",
+    "ja": ""
+  },
+  "dps.columns.historySkills.critDmgRate.header": {
+    "zh-CN": "暴击伤%",
+    "en": "Crit Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historySkills.critDmgRate.label": {
+    "zh-CN": "暴击伤%",
+    "en": "Crit Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historySkills.critDmgRate.description": {
+    "zh-CN": "显示技能造成的暴击伤害比例",
+    "en": "Show the proportion of damage dealt as critical damage",
+    "ja": ""
+  },
+  "dps.columns.historySkills.luckyRate.header": {
+    "zh-CN": "幸运%",
+    "en": "Lucky %",
+    "ja": ""
+  },
+  "dps.columns.historySkills.luckyRate.label": {
+    "zh-CN": "幸运%",
+    "en": "Lucky %",
+    "ja": ""
+  },
+  "dps.columns.historySkills.luckyRate.description": {
+    "zh-CN": "显示技能的幸运一击率",
+    "en": "Show the skill's lucky hit rate",
+    "ja": ""
+  },
+  "dps.columns.historySkills.luckyDmgRate.header": {
+    "zh-CN": "幸运伤%",
+    "en": "Lucky Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historySkills.luckyDmgRate.label": {
+    "zh-CN": "幸运伤%",
+    "en": "Lucky Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historySkills.luckyDmgRate.description": {
+    "zh-CN": "显示技能造成的幸运一击伤害比例",
+    "en": "Show the proportion of damage dealt as lucky-hit damage",
+    "ja": ""
+  },
+  "dps.columns.historySkills.hits.header": {
+    "zh-CN": "命中数",
+    "en": "Hits",
+    "ja": ""
+  },
+  "dps.columns.historySkills.hits.label": {
+    "zh-CN": "命中数",
+    "en": "Hits",
+    "ja": ""
+  },
+  "dps.columns.historySkills.hits.description": {
+    "zh-CN": "显示技能的总命中次数",
+    "en": "Show the skill's total number of hits",
+    "ja": ""
+  },
+  "dps.columns.historySkills.hitsPerMinute.header": {
+    "zh-CN": "分均命中",
+    "en": "Hits/Min",
+    "ja": ""
+  },
+  "dps.columns.historySkills.hitsPerMinute.label": {
+    "zh-CN": "分均命中",
+    "en": "Hits/Min",
+    "ja": ""
+  },
+  "dps.columns.historySkills.hitsPerMinute.description": {
+    "zh-CN": "显示技能每分钟的命中次数",
+    "en": "Show the skill's hits per minute",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.healDealt.header": {
+    "zh-CN": "治疗",
+    "en": "Healing",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.healDealt.label": {
+    "zh-CN": "治疗",
+    "en": "Healing",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.healDealt.description": {
+    "zh-CN": "显示玩家造成的总治疗量",
+    "en": "Show the total healing done by the player",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.hps.header": {
+    "zh-CN": "秒疗",
+    "en": "HPS",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.hps.label": {
+    "zh-CN": "秒疗",
+    "en": "HPS",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.hps.description": {
+    "zh-CN": "显示玩家每秒造成的治疗量 (HPS)",
+    "en": "Show the player's healing per second (HPS)",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.healPct.header": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.healPct.label": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.healPct.description": {
+    "zh-CN": "显示玩家治疗占比",
+    "en": "Show the player's healing share",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.critHealRate.header": {
+    "zh-CN": "暴击%",
+    "en": "Crit %",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.critHealRate.label": {
+    "zh-CN": "暴击%",
+    "en": "Crit %",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.critHealRate.description": {
+    "zh-CN": "显示玩家的治疗暴击率",
+    "en": "Show the player's healing critical hit rate",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.critDmgRate.header": {
+    "zh-CN": "暴击疗%",
+    "en": "Crit Heal %",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.critDmgRate.label": {
+    "zh-CN": "暴击疗%",
+    "en": "Crit Heal %",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.critDmgRate.description": {
+    "zh-CN": "显示玩家造成的暴击治疗比例",
+    "en": "Show the proportion of healing done as critical healing",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.luckyRate.header": {
+    "zh-CN": "幸运%",
+    "en": "Lucky %",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.luckyRate.label": {
+    "zh-CN": "幸运%",
+    "en": "Lucky %",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.luckyRate.description": {
+    "zh-CN": "显示玩家的幸运一击率",
+    "en": "Show the player's lucky hit rate",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.luckyDmgRate.header": {
+    "zh-CN": "幸运疗%",
+    "en": "Lucky Heal %",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.luckyDmgRate.label": {
+    "zh-CN": "幸运疗%",
+    "en": "Lucky Heal %",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.luckyDmgRate.description": {
+    "zh-CN": "显示玩家造成的幸运一击治疗比例",
+    "en": "Show the proportion of healing done as lucky-hit healing",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.hitsHeal.header": {
+    "zh-CN": "次数",
+    "en": "Count",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.hitsHeal.label": {
+    "zh-CN": "次数",
+    "en": "Count",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.hitsHeal.description": {
+    "zh-CN": "显示玩家的总治疗次数",
+    "en": "Show the player's total number of healing events",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.hitsPerMinute.header": {
+    "zh-CN": "分均次数",
+    "en": "Count/Min",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.hitsPerMinute.label": {
+    "zh-CN": "分均次数",
+    "en": "Count/Min",
+    "ja": ""
+  },
+  "dps.columns.historyHealPlayers.hitsPerMinute.description": {
+    "zh-CN": "显示玩家每分钟的治疗次数",
+    "en": "Show the player's healing events per minute",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.totalDmg.header": {
+    "zh-CN": "治疗",
+    "en": "Healing",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.totalDmg.label": {
+    "zh-CN": "治疗",
+    "en": "Healing",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.totalDmg.description": {
+    "zh-CN": "显示技能造成的总治疗量",
+    "en": "Show the total healing done by the skill",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.dps.header": {
+    "zh-CN": "秒疗",
+    "en": "HPS",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.dps.label": {
+    "zh-CN": "秒疗",
+    "en": "HPS",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.dps.description": {
+    "zh-CN": "显示技能每秒造成的治疗量 (HPS)",
+    "en": "Show the skill's healing per second (HPS)",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.dmgPct.header": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.dmgPct.label": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.dmgPct.description": {
+    "zh-CN": "显示技能治疗占比",
+    "en": "Show the skill's healing share",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.critRate.header": {
+    "zh-CN": "暴击%",
+    "en": "Crit %",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.critRate.label": {
+    "zh-CN": "暴击%",
+    "en": "Crit %",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.critRate.description": {
+    "zh-CN": "显示技能的暴击率",
+    "en": "Show the skill's critical hit rate",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.critDmgRate.header": {
+    "zh-CN": "暴击疗%",
+    "en": "Crit Heal %",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.critDmgRate.label": {
+    "zh-CN": "暴击疗%",
+    "en": "Crit Heal %",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.critDmgRate.description": {
+    "zh-CN": "显示技能造成的暴击治疗比例",
+    "en": "Show the proportion of healing done as critical healing",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.luckyRate.header": {
+    "zh-CN": "幸运%",
+    "en": "Lucky %",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.luckyRate.label": {
+    "zh-CN": "幸运%",
+    "en": "Lucky %",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.luckyRate.description": {
+    "zh-CN": "显示技能的幸运一击率",
+    "en": "Show the skill's lucky hit rate",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.luckyDmgRate.header": {
+    "zh-CN": "幸运疗%",
+    "en": "Lucky Heal %",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.luckyDmgRate.label": {
+    "zh-CN": "幸运疗%",
+    "en": "Lucky Heal %",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.luckyDmgRate.description": {
+    "zh-CN": "显示技能造成的幸运一击治疗比例",
+    "en": "Show the proportion of healing done as lucky-hit healing",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.hits.header": {
+    "zh-CN": "次数",
+    "en": "Count",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.hits.label": {
+    "zh-CN": "次数",
+    "en": "Count",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.hits.description": {
+    "zh-CN": "显示技能的总治疗次数",
+    "en": "Show the skill's total number of healing events",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.hitsPerMinute.header": {
+    "zh-CN": "分均次数",
+    "en": "Count/Min",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.hitsPerMinute.label": {
+    "zh-CN": "分均次数",
+    "en": "Count/Min",
+    "ja": ""
+  },
+  "dps.columns.historyHealSkills.hitsPerMinute.description": {
+    "zh-CN": "显示技能每分钟的治疗次数",
+    "en": "Show the skill's healing events per minute",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.damageTaken.header": {
+    "zh-CN": "承伤",
+    "en": "Damage Taken",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.damageTaken.label": {
+    "zh-CN": "承伤",
+    "en": "Damage Taken",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.damageTaken.description": {
+    "zh-CN": "显示玩家承受的总伤害",
+    "en": "Show the total damage taken by the player",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.tankedPS.header": {
+    "zh-CN": "秒承伤",
+    "en": "DTPS",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.tankedPS.label": {
+    "zh-CN": "秒承伤",
+    "en": "DTPS",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.tankedPS.description": {
+    "zh-CN": "显示玩家每秒承受的伤害 (TPS)",
+    "en": "Show the player's damage taken per second (DTPS)",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.tankedPct.header": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.tankedPct.label": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.tankedPct.description": {
+    "zh-CN": "显示玩家承伤占比",
+    "en": "Show the player's damage-taken share",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.critTakenRate.header": {
+    "zh-CN": "被暴击%",
+    "en": "Crit Taken %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.critTakenRate.label": {
+    "zh-CN": "被暴击%",
+    "en": "Crit Taken %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.critTakenRate.description": {
+    "zh-CN": "显示玩家被暴击的几率",
+    "en": "Show the player's chance to be critically hit",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.critDmgRate.header": {
+    "zh-CN": "暴击承伤%",
+    "en": "Crit Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.critDmgRate.label": {
+    "zh-CN": "暴击承伤%",
+    "en": "Crit Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.critDmgRate.description": {
+    "zh-CN": "显示玩家承受的暴击伤害比例",
+    "en": "Show the proportion of taken damage received as critical damage",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.luckyRate.header": {
+    "zh-CN": "被幸运%",
+    "en": "Lucky Taken %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.luckyRate.label": {
+    "zh-CN": "被幸运%",
+    "en": "Lucky Taken %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.luckyRate.description": {
+    "zh-CN": "显示玩家被幸运一击的几率",
+    "en": "Show the player's chance to be hit by lucky attacks",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.luckyDmgRate.header": {
+    "zh-CN": "幸运承伤%",
+    "en": "Lucky Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.luckyDmgRate.label": {
+    "zh-CN": "幸运承伤%",
+    "en": "Lucky Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.luckyDmgRate.description": {
+    "zh-CN": "显示玩家承受的幸运一击伤害比例",
+    "en": "Show the proportion of taken damage received as lucky-hit damage",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.hitsTaken.header": {
+    "zh-CN": "受击数",
+    "en": "Hits Taken",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.hitsTaken.label": {
+    "zh-CN": "受击数",
+    "en": "Hits Taken",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.hitsTaken.description": {
+    "zh-CN": "显示玩家的总受击次数",
+    "en": "Show the player's total number of hits taken",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.hitsPerMinute.header": {
+    "zh-CN": "分均受击",
+    "en": "Hits Taken/Min",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.hitsPerMinute.label": {
+    "zh-CN": "分均受击",
+    "en": "Hits Taken/Min",
+    "ja": ""
+  },
+  "dps.columns.historyTankedPlayers.hitsPerMinute.description": {
+    "zh-CN": "显示玩家每分钟的受击次数",
+    "en": "Show the player's hits taken per minute",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.totalDmg.header": {
+    "zh-CN": "承伤",
+    "en": "Damage Taken",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.totalDmg.label": {
+    "zh-CN": "承伤",
+    "en": "Damage Taken",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.totalDmg.description": {
+    "zh-CN": "显示技能造成的总承伤",
+    "en": "Show the total damage taken for this skill",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.dps.header": {
+    "zh-CN": "秒承伤",
+    "en": "DTPS",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.dps.label": {
+    "zh-CN": "秒承伤",
+    "en": "DTPS",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.dps.description": {
+    "zh-CN": "显示技能每秒造成的承伤 (DTPS)",
+    "en": "Show the skill's damage taken per second (DTPS)",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.dmgPct.header": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.dmgPct.label": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.dmgPct.description": {
+    "zh-CN": "显示技能承伤占比",
+    "en": "Show the skill's damage-taken share",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.critRate.header": {
+    "zh-CN": "被暴击%",
+    "en": "Crit Taken %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.critRate.label": {
+    "zh-CN": "被暴击%",
+    "en": "Crit Taken %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.critRate.description": {
+    "zh-CN": "显示该技能被暴击的几率",
+    "en": "Show the chance for this skill to be critically hit",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.critDmgRate.header": {
+    "zh-CN": "暴击承伤%",
+    "en": "Crit Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.critDmgRate.label": {
+    "zh-CN": "暴击承伤%",
+    "en": "Crit Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.critDmgRate.description": {
+    "zh-CN": "显示该技能承受的暴击伤害比例",
+    "en": "Show the proportion of taken damage received as critical damage for this skill",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.luckyRate.header": {
+    "zh-CN": "被幸运%",
+    "en": "Lucky Taken %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.luckyRate.label": {
+    "zh-CN": "被幸运%",
+    "en": "Lucky Taken %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.luckyRate.description": {
+    "zh-CN": "显示该技能被幸运一击的几率",
+    "en": "Show the chance for this skill to be hit by lucky attacks",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.luckyDmgRate.header": {
+    "zh-CN": "幸运承伤%",
+    "en": "Lucky Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.luckyDmgRate.label": {
+    "zh-CN": "幸运承伤%",
+    "en": "Lucky Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.luckyDmgRate.description": {
+    "zh-CN": "显示该技能承受的幸运一击伤害比例",
+    "en": "Show the proportion of taken damage received as lucky-hit damage for this skill",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.hits.header": {
+    "zh-CN": "受击数",
+    "en": "Hits Taken",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.hits.label": {
+    "zh-CN": "受击数",
+    "en": "Hits Taken",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.hits.description": {
+    "zh-CN": "显示该技能造成的总受击次数",
+    "en": "Show the total number of hits taken for this skill",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.hitsPerMinute.header": {
+    "zh-CN": "分均受击",
+    "en": "Hits Taken/Min",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.hitsPerMinute.label": {
+    "zh-CN": "分均受击",
+    "en": "Hits Taken/Min",
+    "ja": ""
+  },
+  "dps.columns.historyTankedSkills.hitsPerMinute.description": {
+    "zh-CN": "显示该技能每分钟造成的受击次数",
+    "en": "Show the skill's hits taken per minute",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.totalDmg.header": {
+    "zh-CN": "伤害",
+    "en": "Damage",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.dps.header": {
+    "zh-CN": "秒伤",
+    "en": "DPS",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.tdps.header": {
+    "zh-CN": "真秒伤",
+    "en": "True DPS",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.bossDmg.header": {
+    "zh-CN": "首领伤害",
+    "en": "Boss Damage",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.bossDps.header": {
+    "zh-CN": "首领秒伤",
+    "en": "Boss DPS",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.dmgPct.header": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.critRate.header": {
+    "zh-CN": "暴击%",
+    "en": "Crit %",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.critDmgRate.header": {
+    "zh-CN": "暴击伤%",
+    "en": "Crit Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.luckyRate.header": {
+    "zh-CN": "幸运%",
+    "en": "Lucky %",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.luckyDmgRate.header": {
+    "zh-CN": "幸运伤%",
+    "en": "Lucky Dmg %",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.hits.header": {
+    "zh-CN": "命中数",
+    "en": "Hits",
+    "ja": ""
+  },
+  "dps.columns.historyPlayers.hitsPerMinute.header": {
+    "zh-CN": "分均命中",
+    "en": "Hits/Min",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.totalDmg.label": {
+    "zh-CN": "治疗",
+    "en": "Healing",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.totalDmg.description": {
+    "zh-CN": "显示玩家造成的总治疗量",
+    "en": "Show the total healing done by the player",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.dps.label": {
+    "zh-CN": "秒疗",
+    "en": "HPS",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.dps.description": {
+    "zh-CN": "显示玩家每秒造成的治疗量 (HPS)",
+    "en": "Show the player's healing per second (HPS)",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.dmgPct.label": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.dmgPct.description": {
+    "zh-CN": "显示玩家治疗占比",
+    "en": "Show the player's healing share",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.critRate.label": {
+    "zh-CN": "暴击%",
+    "en": "Crit %",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.critRate.description": {
+    "zh-CN": "显示玩家的暴击率",
+    "en": "Show the player's crit rate",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.critDmgRate.label": {
+    "zh-CN": "暴击疗%",
+    "en": "Crit Heal %",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.critDmgRate.description": {
+    "zh-CN": "显示玩家造成的暴击治疗比例",
+    "en": "Show the proportion of healing done as critical healing",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.luckyRate.label": {
+    "zh-CN": "幸运%",
+    "en": "Lucky %",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.luckyRate.description": {
+    "zh-CN": "显示玩家的幸运一击率",
+    "en": "Show the player's lucky hit rate",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.luckyDmgRate.label": {
+    "zh-CN": "幸运疗%",
+    "en": "Lucky Heal %",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.luckyDmgRate.description": {
+    "zh-CN": "显示玩家造成的幸运一击治疗比例",
+    "en": "Show the proportion of healing done as lucky-hit healing",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.hits.label": {
+    "zh-CN": "次数",
+    "en": "Count",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.hits.description": {
+    "zh-CN": "显示玩家的总治疗次数",
+    "en": "Show the player's total healing count",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.hitsPerMinute.label": {
+    "zh-CN": "分均次数",
+    "en": "Count/Min",
+    "ja": ""
+  },
+  "dps.columns.liveHealPlayers.hitsPerMinute.description": {
+    "zh-CN": "显示玩家每分钟的治疗次数",
+    "en": "Show the player's healing count per minute",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.totalDmg.label": {
+    "zh-CN": "承伤",
+    "en": "Damage Taken",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.totalDmg.description": {
+    "zh-CN": "显示玩家承受的总伤害",
+    "en": "Show the total damage taken by the player",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.dps.label": {
+    "zh-CN": "秒承伤",
+    "en": "TPS",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.dps.description": {
+    "zh-CN": "显示玩家每秒承受的伤害 (TPS)",
+    "en": "Show the player's damage taken per second (TPS)",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.dmgPct.label": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.dmgPct.description": {
+    "zh-CN": "显示玩家承伤占比",
+    "en": "Show the player's damage taken share",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.critRate.label": {
+    "zh-CN": "被暴击%",
+    "en": "Crit Taken %",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.critRate.description": {
+    "zh-CN": "显示玩家被暴击的几率",
+    "en": "Show the player's chance to be critically hit",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.critDmgRate.label": {
+    "zh-CN": "暴击承伤%",
+    "en": "Crit Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.critDmgRate.description": {
+    "zh-CN": "显示玩家承受的暴击伤害比例",
+    "en": "Show the proportion of taken damage received as critical damage",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.luckyRate.label": {
+    "zh-CN": "被幸运%",
+    "en": "Lucky Taken %",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.luckyRate.description": {
+    "zh-CN": "显示玩家被幸运一击的几率",
+    "en": "Show the player's chance to be hit by lucky attacks",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.luckyDmgRate.label": {
+    "zh-CN": "幸运承伤%",
+    "en": "Lucky Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.luckyDmgRate.description": {
+    "zh-CN": "显示玩家承受的幸运一击伤害比例",
+    "en": "Show the proportion of taken damage received as lucky-hit damage",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.hits.label": {
+    "zh-CN": "受击数",
+    "en": "Hits Taken",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.hits.description": {
+    "zh-CN": "显示玩家的总受击次数",
+    "en": "Show the player's total number of hits taken",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.hitsPerMinute.label": {
+    "zh-CN": "分均受击",
+    "en": "Hits Taken/Min",
+    "ja": ""
+  },
+  "dps.columns.liveTankedPlayers.hitsPerMinute.description": {
+    "zh-CN": "显示玩家每分钟的受击次数",
+    "en": "Show the player's hits taken per minute",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.totalDmg.label": {
+    "zh-CN": "承伤",
+    "en": "Damage Taken",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.totalDmg.description": {
+    "zh-CN": "显示技能造成的总承伤",
+    "en": "Show the total damage taken by the skill entry",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.dps.label": {
+    "zh-CN": "秒承伤",
+    "en": "DTPS",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.dps.description": {
+    "zh-CN": "显示技能每秒造成的承伤 (DTPS)",
+    "en": "Show the damage taken per second for the skill entry (DTPS)",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.dmgPct.label": {
+    "zh-CN": "占比%",
+    "en": "Share %",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.dmgPct.description": {
+    "zh-CN": "显示技能承伤占比",
+    "en": "Show the skill entry's damage taken share",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.critRate.label": {
+    "zh-CN": "被暴击%",
+    "en": "Crit Taken %",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.critRate.description": {
+    "zh-CN": "显示该技能被暴击的几率",
+    "en": "Show the chance for this skill entry to be critically hit",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.critDmgRate.label": {
+    "zh-CN": "暴击承伤%",
+    "en": "Crit Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.critDmgRate.description": {
+    "zh-CN": "显示该技能承受的暴击伤害比例",
+    "en": "Show the proportion of damage taken as critical damage for this skill entry",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.luckyRate.label": {
+    "zh-CN": "被幸运%",
+    "en": "Lucky Taken %",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.luckyRate.description": {
+    "zh-CN": "显示该技能被幸运一击的几率",
+    "en": "Show the chance for this skill entry to be hit by lucky attacks",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.luckyDmgRate.label": {
+    "zh-CN": "幸运承伤%",
+    "en": "Lucky Taken Dmg %",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.luckyDmgRate.description": {
+    "zh-CN": "显示该技能承受的幸运一击伤害比例",
+    "en": "Show the proportion of damage taken as lucky-hit damage for this skill entry",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.hits.label": {
+    "zh-CN": "受击数",
+    "en": "Hits Taken",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.hits.description": {
+    "zh-CN": "显示该技能造成的总受击次数",
+    "en": "Show the total hits taken for this skill entry",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.hitsPerMinute.label": {
+    "zh-CN": "分均受击",
+    "en": "Hits Taken/Min",
+    "ja": ""
+  },
+  "dps.columns.liveTankedSkills.hitsPerMinute.description": {
+    "zh-CN": "显示该技能每分钟造成的受击次数",
+    "en": "Show the hits taken per minute for this skill entry",
+    "ja": ""
+  },
+  "dps.network.title": {
+    "zh-CN": "抓包",
+    "en": "Packet Capture",
+    "ja": ""
+  },
+  "dps.network.captureMethod": {
+    "zh-CN": "捕获方式",
+    "en": "Capture Method",
+    "ja": ""
+  },
+  "dps.network.captureMethodDescription": {
+    "zh-CN": "选择用于捕获网络数据包的方法（需要重启应用）。",
+    "en": "Choose the method used to capture network packets. (Requires app restart.)",
+    "ja": ""
+  },
+  "dps.network.networkDevice": {
+    "zh-CN": "网络设备",
+    "en": "Network Device",
+    "ja": ""
+  },
+  "dps.network.networkDeviceDescription": {
+    "zh-CN": "选择用于捕获流量的网卡。",
+    "en": "Choose the network adapter used to capture traffic.",
+    "ja": ""
+  },
+  "dps.network.loadingDevices": {
+    "zh-CN": "正在加载网络设备...",
+    "en": "Loading network devices...",
+    "ja": ""
+  },
+  "dps.network.selectDevice": {
+    "zh-CN": "选择网络设备",
+    "en": "Select Network Device",
+    "ja": ""
+  },
+  "dps.network.npcapMissing": {
+    "zh-CN": "未检测到 Npcap。",
+    "en": "Npcap was not detected.",
+    "ja": ""
+  },
+  "dps.network.npcapMissingSuffix": {
+    "zh-CN": "请安装 Npcap 后再使用该方式。",
+    "en": "Please install Npcap before using this method.",
+    "ja": ""
+  },
+  "dps.shortcuts.clearHint": {
+    "zh-CN": "右键可清除快捷键",
+    "en": "Right-click to clear hotkeys",
+    "ja": ""
+  },
+  "dps.shortcuts.showLiveMeter": {
+    "zh-CN": "显示实时窗口",
+    "en": "Show Live Window",
+    "ja": ""
+  },
+  "dps.shortcuts.hideLiveMeter": {
+    "zh-CN": "隐藏实时窗口",
+    "en": "Hide Live Window",
+    "ja": ""
+  },
+  "dps.shortcuts.toggleLiveMeter": {
+    "zh-CN": "切换实时窗口",
+    "en": "Toggle Live Window",
+    "ja": ""
+  },
+  "dps.shortcuts.enableClickthrough": {
+    "zh-CN": "启用点击穿透",
+    "en": "Enable Clickthrough",
+    "ja": ""
+  },
+  "dps.shortcuts.disableClickthrough": {
+    "zh-CN": "禁用点击穿透",
+    "en": "Disable Clickthrough",
+    "ja": ""
+  },
+  "dps.shortcuts.toggleClickthrough": {
+    "zh-CN": "切换点击穿透",
+    "en": "Toggle Clickthrough",
+    "ja": ""
+  },
+  "dps.shortcuts.resetEncounter": {
+    "zh-CN": "重置战斗",
+    "en": "Reset Encounter",
+    "ja": ""
+  },
+  "dps.shortcuts.togglePauseEncounter": {
+    "zh-CN": "切换暂停战斗",
+    "en": "Toggle Pause Encounter",
+    "ja": ""
+  },
+  "dps.shortcuts.toggleBossHp": {
+    "zh-CN": "切换 Boss 血量显示",
+    "en": "Toggle Boss HP Display",
+    "ja": ""
+  },
+  "dps.shortcuts.toggleOverlayEdit": {
+    "zh-CN": "切换遮罩编辑模式",
+    "en": "Toggle Overlay Edit Mode",
+    "ja": ""
+  },
+  "dps.shortcuts.toggleOverlayWindow": {
+    "zh-CN": "切换遮罩窗口",
+    "en": "Toggle Overlay Window",
+    "ja": ""
+  },
+  "dps.shortcuts.unbound": {
+    "zh-CN": "未绑定",
+    "en": "Unbound",
+    "ja": ""
+  },
+  "themes.tab.general": {
+    "zh-CN": "通用",
+    "en": "General",
+    "ja": ""
+  },
+  "themes.tab.live": {
+    "zh-CN": "实时",
+    "en": "Live",
+    "ja": ""
+  },
+  "themes.tab.presets": {
+    "zh-CN": "预设",
+    "en": "Presets",
+    "ja": ""
+  },
+  "themes.general.colorThemes": {
+    "zh-CN": "主题颜色",
+    "en": "Theme Colors",
+    "ja": ""
+  },
+  "themes.general.classSpecColors": {
+    "zh-CN": "职业与专精颜色",
+    "en": "Class & Spec Colors",
+    "ja": ""
+  },
+  "themes.general.playerTableSettings": {
+    "zh-CN": "玩家表格设置",
+    "en": "Player Table Settings",
+    "ja": ""
+  },
+  "themes.general.skillTableSettings": {
+    "zh-CN": "技能表格设置",
+    "en": "Skill Table Settings",
+    "ja": ""
+  },
+  "themes.general.backgroundImage": {
+    "zh-CN": "背景图片",
+    "en": "Background Image",
+    "ja": ""
+  },
+  "themes.general.customFonts": {
+    "zh-CN": "自定义字体",
+    "en": "Custom Fonts",
+    "ja": ""
+  },
+  "themes.general.customFontsDescription": {
+    "zh-CN": "导入自定义字体以替换默认字体。字体文件格式应为 .woff2, .woff, .ttf, 或 .otf。",
+    "en": "Import custom fonts to replace the defaults. Supported font formats are .woff2, .woff, .ttf, and .otf.",
+    "ja": ""
+  },
+  "themes.general.sansFont": {
+    "zh-CN": "无衬线字体（UI 文本）",
+    "en": "Sans-Serif Font (UI Text)",
+    "ja": ""
+  },
+  "themes.general.sansFontDefault": {
+    "zh-CN": "默认：Inter Variable",
+    "en": "Default: Inter Variable",
+    "ja": ""
+  },
+  "themes.general.enableCustomSans": {
+    "zh-CN": "启用自定义无衬线字体",
+    "en": "Enable Custom Sans-Serif Font",
+    "ja": ""
+  },
+  "themes.general.enableCustomSansDescription": {
+    "zh-CN": "UI 文本使用自定义字体",
+    "en": "Use the custom font for UI text.",
+    "ja": ""
+  },
+  "themes.general.monoFont": {
+    "zh-CN": "等宽字体（数字、代码）",
+    "en": "Monospace Font (Numbers, Code)",
+    "ja": ""
+  },
+  "themes.general.monoFontDefault": {
+    "zh-CN": "默认：Geist Mono Variable",
+    "en": "Default: Geist Mono Variable",
+    "ja": ""
+  },
+  "themes.general.enableCustomMono": {
+    "zh-CN": "启用自定义等宽字体",
+    "en": "Enable Custom Monospace Font",
+    "ja": ""
+  },
+  "themes.general.enableCustomMonoDescription": {
+    "zh-CN": "数字/代码使用自定义等宽字体",
+    "en": "Use the custom font for numbers and code.",
+    "ja": ""
+  },
+  "themes.general.pickFontFile": {
+    "zh-CN": "选择字体文件",
+    "en": "Choose Font File",
+    "ja": ""
+  },
+  "themes.general.pickFontFileDescription": {
+    "zh-CN": "选择字体文件（.woff2/.woff/.ttf/.otf）",
+    "en": "Choose a font file (.woff2/.woff/.ttf/.otf).",
+    "ja": ""
+  },
+  "themes.common.gradient": {
+    "zh-CN": "渐变",
+    "en": "Gradient",
+    "ja": ""
+  },
+  "themes.common.solid": {
+    "zh-CN": "纯色",
+    "en": "Solid",
+    "ja": ""
+  },
+  "themes.common.padding": {
+    "zh-CN": "内边距",
+    "en": "Padding",
+    "ja": ""
+  },
+  "themes.common.valueFontSize": {
+    "zh-CN": "数值字体大小",
+    "en": "Value Font Size",
+    "ja": ""
+  },
+  "themes.general.showSkillTableHeader": {
+    "zh-CN": "显示技能表头",
+    "en": "Show Skill Table Header",
+    "ja": ""
+  },
+  "themes.general.showSkillTableHeaderDescription": {
+    "zh-CN": "切换技能表列标题显示/隐藏",
+    "en": "Show or hide the skill table column headers.",
+    "ja": ""
+  },
+  "themes.general.customColorThemeTitle": {
+    "zh-CN": "自定义颜色主题",
+    "en": "Custom Color Theme",
+    "ja": ""
+  },
+  "themes.general.customColorThemeDescription": {
+    "zh-CN": "自定义每个颜色变量（支持设置透明度）",
+    "en": "Customize each color variable, including transparency.",
+    "ja": ""
+  },
+  "common.reset": {
+    "zh-CN": "重置",
+    "en": "Reset",
+    "ja": ""
+  },
+  "themes.general.classSpecIntro": {
+    "zh-CN": "自定义职业或专精的颜色。选择“专精颜色”可在检测到专精时显示特定颜色。",
+    "en": "Customize class or spec colors. Choose \"Spec Colors\" to show a specific color when a spec is detected.",
+    "ja": ""
+  },
+  "themes.general.classColorsTab": {
+    "zh-CN": "职业颜色",
+    "en": "Class Colors",
+    "ja": ""
+  },
+  "themes.general.specColorsTab": {
+    "zh-CN": "专精颜色",
+    "en": "Spec Colors",
+    "ja": ""
+  },
+  "themes.general.classColorsDescription": {
+    "zh-CN": "自定义实时统计中各职业的颜色。",
+    "en": "Customize the colors used for each class in the live meter.",
+    "ja": ""
+  },
+  "themes.general.specColorsDescription": {
+    "zh-CN": "自定义各专精的颜色。",
+    "en": "Customize the colors used for each spec.",
+    "ja": ""
+  },
+  "themes.general.backgroundImageDescription": {
+    "zh-CN": "为所有窗口使用自定义背景图片。注意：需要将背景颜色设置为半透明，图片才能显示出来。",
+    "en": "Use a custom background image for all windows. Note: the background color must be semi-transparent for the image to show.",
+    "ja": ""
+  },
+  "themes.general.enableBackgroundImage": {
+    "zh-CN": "启用背景图片",
+    "en": "Enable Background Image",
+    "ja": ""
+  },
+  "themes.general.enableBackgroundImageDescription": {
+    "zh-CN": "使用图片作为背景",
+    "en": "Use an image as the background.",
+    "ja": ""
+  },
+  "themes.general.selectImage": {
+    "zh-CN": "选择图片",
+    "en": "Choose Image",
+    "ja": ""
+  },
+  "themes.general.selectImageDescription": {
+    "zh-CN": "选择图片文件（PNG/JPG/WebP）",
+    "en": "Choose an image file (PNG/JPG/WebP).",
+    "ja": ""
+  },
+  "themes.general.imageMode": {
+    "zh-CN": "图片模式",
+    "en": "Image Mode",
+    "ja": ""
+  },
+  "themes.general.imageModeDescription": {
+    "zh-CN": "图片如何适配窗口",
+    "en": "How the image should fit the window.",
+    "ja": ""
+  },
+  "themes.general.containFillColor": {
+    "zh-CN": "留白填充颜色",
+    "en": "Letterbox Fill Color",
+    "ja": ""
+  },
+  "themes.general.containFillColorDescription": {
+    "zh-CN": "当图片以“包含”方式适配时，周围留白的背景色",
+    "en": "Background color used for the empty area when the image is fit using \"Contain\".",
+    "ja": ""
+  }
+}

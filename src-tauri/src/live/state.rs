@@ -1189,10 +1189,9 @@ impl AppStateManager {
         );
 
         state.event_manager.emit_live_data(payload);
-        let mut boss_buff_snapshot = state
+        let boss_buff_snapshot = state
             .boss_buff_monitors
             .build_all_buff_snapshots(state.server_clock_offset);
-        boss_buff_snapshot.retain(|&uid, _| !state.attr_store.is_dead(uid));
 
         let boss_count = state
             .encounter
@@ -1206,9 +1205,6 @@ impl AppStateManager {
 
         for (&boss_uid, entity) in &state.encounter.entity_uid_to_entity {
             if !entity.is_boss() {
-                continue;
-            }
-            if state.attr_store.is_dead(boss_uid) {
                 continue;
             }
 

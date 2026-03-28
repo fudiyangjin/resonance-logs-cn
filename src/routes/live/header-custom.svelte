@@ -36,7 +36,6 @@
   // Get header settings
   const h = $derived(SETTINGS.live.headerCustomization.state);
   const trainingDummySettings = $derived(SETTINGS.trainingDummy.state);
-  const abbreviationStyle = $derived(SETTINGS.live.general.state.abbreviationStyle);
 
   const liveData = $derived(getLiveData());
 
@@ -177,7 +176,7 @@
 
   // Check if we have any row 1 right content (buttons)
   const hasRow1Right = $derived(
-    h.showHeaderControl ||
+    trainingDummySettings.showHeaderControl ||
     h.showResetButton ||
       h.showPauseButton ||
       h.showSettingsButton ||
@@ -272,7 +271,7 @@
       <div
         class="col-start-2 row-start-1 flex items-center justify-self-end gap-2 shrink-0"
       >
-        {#if h.showHeaderControl}
+        {#if trainingDummySettings.showHeaderControl}
           <button
             class="{isTrainingDummyActive
               ? 'bg-muted text-foreground border-border shadow-sm'
@@ -377,7 +376,6 @@
                 )}
                 ><AbbreviatedNumber
                   num={Number(displayHeaderInfo.totalDmg)}
-                  {abbreviationStyle}
                 /></span
               >
             </div>
@@ -395,10 +393,7 @@
                 style="font-size: {h.totalDpsValueFontSize}px"
                 {@attach tooltip(() =>
                   displayHeaderInfo.totalDps.toLocaleString(),
-                )}><AbbreviatedNumber
-                  num={displayHeaderInfo.totalDps}
-                  {abbreviationStyle}
-                /></span
+                )}><AbbreviatedNumber num={displayHeaderInfo.totalDps} /></span
               >
             </div>
           {/if}
@@ -434,12 +429,9 @@
                     >
                       <AbbreviatedNumber
                         num={boss.currentHp !== null ? boss.currentHp : 0}
-                        {abbreviationStyle}
                       />
                       {#if boss.maxHp}
-                        <span
-                          > / <AbbreviatedNumber num={boss.maxHp} {abbreviationStyle} /></span
-                        >
+                        <span> / <AbbreviatedNumber num={boss.maxHp} /></span>
                         <span
                           class="text-destructive ml-1"
                           style="font-size: {h.bossHealthPercentFontSize}px"

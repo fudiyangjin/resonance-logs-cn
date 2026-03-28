@@ -1,0 +1,382 @@
+{
+    "settingsStore.panelAttr.11720": {
+        "zh-CN": "攻速",
+        "en": "Attack Speed",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11710": {
+        "zh-CN": "暴击率",
+        "en": "Crit Rate",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11930": {
+        "zh-CN": "急速",
+        "en": "Haste",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11780": {
+        "zh-CN": "幸运",
+        "en": "Lucky",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11940": {
+        "zh-CN": "精通",
+        "en": "Mastery",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11950": {
+        "zh-CN": "全能",
+        "en": "Versatility",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11760": {
+        "zh-CN": "冷却缩减",
+        "en": "Cooldown Reduction",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11960": {
+        "zh-CN": "冷却加速",
+        "en": "Cooldown Acceleration",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11010": {
+        "zh-CN": "力量",
+        "en": "Strength",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11020": {
+        "zh-CN": "智力",
+        "en": "Intelligence",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11030": {
+        "zh-CN": "敏捷",
+        "en": "Agility",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11330": {
+        "zh-CN": "物理攻击",
+        "en": "Physical Attack",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11340": {
+        "zh-CN": "魔法攻击",
+        "en": "Magic Attack",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11730": {
+        "zh-CN": "施法速度",
+        "en": "Cast Speed",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.12510": {
+        "zh-CN": "暴击伤害",
+        "en": "Crit Damage",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.12530": {
+        "zh-CN": "幸运伤害倍率",
+        "en": "Lucky Damage Multiplier",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.12540": {
+        "zh-CN": "格挡伤害减免",
+        "en": "Block Damage Reduction",
+        "ja": ""
+    },
+    "settingsStore.panelAttr.11970": {
+        "zh-CN": "格挡",
+        "en": "Block",
+        "ja": ""
+    },
+    "settingsStore.skillMonitor.defaultProfileName": {
+        "zh-CN": "默认方案",
+        "en": "Default Profile",
+        "ja": ""
+    },
+    "settingsStore.skillMonitor.defaultBuffGroupName": {
+        "zh-CN": "新分组",
+        "en": "New Group",
+        "ja": ""
+    },
+    "settingsStore.skillMonitor.defaultCustomPanelGroupName": {
+        "zh-CN": "监控区 1",
+        "en": "Monitor Area 1",
+        "ja": ""
+    },
+    "settingsStore.fontSize.xs": {
+        "zh-CN": "超小",
+        "en": "Extra Small",
+        "ja": ""
+    },
+    "settingsStore.fontSize.sm": {
+        "zh-CN": "小",
+        "en": "Small",
+        "ja": ""
+    },
+    "settingsStore.fontSize.base": {
+        "zh-CN": "标准",
+        "en": "Standard",
+        "ja": ""
+    },
+    "settingsStore.fontSize.lg": {
+        "zh-CN": "大",
+        "en": "Large",
+        "ja": ""
+    },
+    "settingsStore.fontSize.xl": {
+        "zh-CN": "超大",
+        "en": "Extra Large",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.base": {
+        "zh-CN": "基础",
+        "en": "Base",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.surfaces": {
+        "zh-CN": "表面",
+        "en": "Surfaces",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.accents": {
+        "zh-CN": "强调",
+        "en": "Accents",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.utility": {
+        "zh-CN": "实用",
+        "en": "Utility",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.tables": {
+        "zh-CN": "表格",
+        "en": "Tables",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.tooltip": {
+        "zh-CN": "提示",
+        "en": "Tooltip",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.backgroundMain.label": {
+        "zh-CN": "背景（主窗口）",
+        "en": "Background (Main Window)",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.backgroundMain.description": {
+        "zh-CN": "主窗口背景颜色",
+        "en": "Main window background color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.backgroundLive.label": {
+        "zh-CN": "背景（实时）",
+        "en": "Background (Live)",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.backgroundLive.description": {
+        "zh-CN": "实时统计窗口背景颜色",
+        "en": "Live meter window background color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.foreground.label": {
+        "zh-CN": "前景",
+        "en": "Foreground",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.foreground.description": {
+        "zh-CN": "主要文本颜色",
+        "en": "Primary text color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.surface.label": {
+        "zh-CN": "表面",
+        "en": "Surface",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.surface.description": {
+        "zh-CN": "卡片、弹窗和面板的背景颜色",
+        "en": "Background color for cards, dialogs, and panels",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.surfaceForeground.label": {
+        "zh-CN": "表面文本",
+        "en": "Surface Text",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.surfaceForeground.description": {
+        "zh-CN": "表面上的文本颜色",
+        "en": "Text color shown on surfaces",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.primary.label": {
+        "zh-CN": "主色",
+        "en": "Primary",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.primary.description": {
+        "zh-CN": "主要强调色",
+        "en": "Primary accent color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.primaryForeground.label": {
+        "zh-CN": "主色文本",
+        "en": "Primary Text",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.primaryForeground.description": {
+        "zh-CN": "主色元素上的文本颜色",
+        "en": "Text color shown on primary elements",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.secondary.label": {
+        "zh-CN": "次色",
+        "en": "Secondary",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.secondary.description": {
+        "zh-CN": "次要强调色",
+        "en": "Secondary accent color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.secondaryForeground.label": {
+        "zh-CN": "次色文本",
+        "en": "Secondary Text",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.secondaryForeground.description": {
+        "zh-CN": "次色元素上的文本颜色",
+        "en": "Text color shown on secondary elements",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.muted.label": {
+        "zh-CN": "柔和",
+        "en": "Muted",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.muted.description": {
+        "zh-CN": "柔和/低调的背景颜色",
+        "en": "Muted or low-emphasis background color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.mutedForeground.label": {
+        "zh-CN": "柔和文本",
+        "en": "Muted Text",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.mutedForeground.description": {
+        "zh-CN": "低调的文本颜色",
+        "en": "Low-emphasis text color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.accent.label": {
+        "zh-CN": "强调",
+        "en": "Accent",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.accent.description": {
+        "zh-CN": "高亮强调色",
+        "en": "Highlight accent color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.accentForeground.label": {
+        "zh-CN": "强调文本",
+        "en": "Accent Text",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.accentForeground.description": {
+        "zh-CN": "强调色元素上的文本颜色",
+        "en": "Text color shown on accent elements",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.destructive.label": {
+        "zh-CN": "破坏性",
+        "en": "Destructive",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.destructive.description": {
+        "zh-CN": "错误/危险颜色",
+        "en": "Error or danger color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.destructiveForeground.label": {
+        "zh-CN": "破坏性文本",
+        "en": "Destructive Text",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.destructiveForeground.description": {
+        "zh-CN": "破坏性元素上的文本颜色",
+        "en": "Text color shown on destructive elements",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.border.label": {
+        "zh-CN": "边框",
+        "en": "Border",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.border.description": {
+        "zh-CN": "边框颜色",
+        "en": "Border color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.input.label": {
+        "zh-CN": "输入框",
+        "en": "Input",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.input.description": {
+        "zh-CN": "输入框背景颜色",
+        "en": "Input background color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.tableTextColor.label": {
+        "zh-CN": "表格文本",
+        "en": "Table Text",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.tableTextColor.description": {
+        "zh-CN": "实时表格中的文本颜色",
+        "en": "Text color used in live tables",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.tableAbbreviatedColor.label": {
+        "zh-CN": "后缀颜色",
+        "en": "Suffix Color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.tableAbbreviatedColor.description": {
+        "zh-CN": "表格中 K、M、% 后缀的颜色",
+        "en": "Color for K, M, and % suffixes in tables",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.tooltipBg.label": {
+        "zh-CN": "提示背景",
+        "en": "Tooltip Background",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.tooltipBg.description": {
+        "zh-CN": "提示框背景颜色",
+        "en": "Tooltip background color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.tooltipBorder.label": {
+        "zh-CN": "提示边框",
+        "en": "Tooltip Border",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.tooltipBorder.description": {
+        "zh-CN": "提示框边框颜色",
+        "en": "Tooltip border color",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.tooltipFg.label": {
+        "zh-CN": "提示文本",
+        "en": "Tooltip Text",
+        "ja": ""
+    },
+    "settingsStore.themeLabel.tooltipFg.description": {
+        "zh-CN": "提示框文本颜色",
+        "en": "Tooltip text color",
+        "ja": ""
+    }
+}

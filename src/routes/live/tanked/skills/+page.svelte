@@ -12,6 +12,7 @@
   import getDisplayName from "$lib/name-display";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { toSpecLabel } from "$lib/class-labels";
+  import { resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
 
   const playerUid = Number(page.url.searchParams.get("playerUid") ?? "-1");
 
@@ -49,7 +50,6 @@
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.live.general.state.abbreviatedDecimalPlaces ?? 1,
   );
-  let abbreviationStyle = $derived(SETTINGS.live.general.state.abbreviationStyle);
   let customThemeColors = $derived(
     SETTINGS.accessibility.state.customThemeColors,
   );
@@ -68,6 +68,12 @@
       SETTINGS.live.sorting.tankedSkills.state.sortKey = key;
       SETTINGS.live.sorting.tankedSkills.state.sortDesc = true;
     }
+  }
+
+  function buildSkillHoverText(skillId: string | number, language: LocaleCode) {
+  const note = resolveSkillNote(skillId, language).trim();
+
+  return `ID: #${skillId}\nSources:\n- RecountTable.json\n- DamageAttrIdName.json${note ? `\n\nNote:\n${note}` : ""}`;
   }
 
   let sortedSkillRows = $derived.by(() => {
@@ -151,7 +157,6 @@
         <AbbreviatedNumber
           num={currentPlayer.totalDmg}
           decimalPlaces={abbreviatedDecimalPlaces}
-          {abbreviationStyle}
           suffixFontSize={tableSettings.skillAbbreviatedFontSize}
           suffixColor={customThemeColors.tableAbbreviatedColor}
         />
@@ -214,7 +219,19 @@
             style="color: {customThemeColors.tableTextColor};"
           >
             <div class="flex items-center gap-1 h-full">
-              <span class="truncate">{skill.name}</span>
+              <span
+                class="truncate"
+                title={SETTINGS.live.general.state.skillIdDisplayMode === 'hover'
+                  ? buildSkillHoverText(skill.skillId, SETTINGS.live.general.state.language as LocaleCode)
+                  : undefined}
+              >
+                {resolveSkillTranslation(skill.skillId, SETTINGS.live.general.state.language, skill.name)}
+              </span>
+              {#if SETTINGS.live.general.state.skillIdDisplayMode === 'column'}
+                <span class="text-[10px] text-muted-foreground/50 shrink-0">
+                  #{skill.skillId}
+                </span>
+              {/if}
             </div>
           </td>
           {#each visibleSkillColumns as col (col.key)}
@@ -227,7 +244,6 @@
                   <AbbreviatedNumber
                     num={skill.totalDmg}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.skillAbbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
@@ -239,7 +255,6 @@
                   <AbbreviatedNumber
                     num={skill.dps}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.skillAbbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />

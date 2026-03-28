@@ -1,0 +1,377 @@
+{
+  "moduleCalc.attr.1110": {
+    "zh-CN": "力量加持",
+    "en": "Strength Boost",
+    "ja": ""
+  },
+  "moduleCalc.attr.1111": {
+    "zh-CN": "敏捷加持",
+    "en": "Agility Boost",
+    "ja": ""
+  },
+  "moduleCalc.attr.1112": {
+    "zh-CN": "智力加持",
+    "en": "Intelligence Boost",
+    "ja": ""
+  },
+  "moduleCalc.attr.1113": {
+    "zh-CN": "特攻伤害",
+    "en": "Special Attack",
+    "ja": ""
+  },
+  "moduleCalc.attr.1114": {
+    "zh-CN": "精英打击",
+    "en": "Elite Strike",
+    "ja": ""
+  },
+  "moduleCalc.attr.1205": {
+    "zh-CN": "特攻治疗加持",
+    "en": "Healing Boost",
+    "ja": ""
+  },
+  "moduleCalc.attr.1206": {
+    "zh-CN": "专精治疗加持",
+    "en": "Healing Enhance",
+    "ja": ""
+  },
+  "moduleCalc.attr.1407": {
+    "zh-CN": "施法专注",
+    "en": "Cast Focus",
+    "ja": ""
+  },
+  "moduleCalc.attr.1408": {
+    "zh-CN": "攻速专注",
+    "en": "Attack SPD",
+    "ja": ""
+  },
+  "moduleCalc.attr.1409": {
+    "zh-CN": "暴击专注",
+    "en": "Crit Focus",
+    "ja": ""
+  },
+  "moduleCalc.attr.1410": {
+    "zh-CN": "幸运专注",
+    "en": "Luck Focus",
+    "ja": ""
+  },
+  "moduleCalc.attr.1307": {
+    "zh-CN": "抵御魔法",
+    "en": "Resistance (Magic)",
+    "ja": ""
+  },
+  "moduleCalc.attr.1308": {
+    "zh-CN": "抵御物理",
+    "en": "Armor (Physical)",
+    "ja": ""
+  },
+  "moduleCalc.attr.2104": {
+    "zh-CN": "极-伤害叠加",
+    "en": "Damage Stack",
+    "ja": ""
+  },
+  "moduleCalc.attr.2105": {
+    "zh-CN": "极-灵活身法",
+    "en": "Agile",
+    "ja": ""
+  },
+  "moduleCalc.attr.2204": {
+    "zh-CN": "极-生命凝聚",
+    "en": "Life Condense",
+    "ja": ""
+  },
+  "moduleCalc.attr.2205": {
+    "zh-CN": "极-急救措施",
+    "en": "First Aid",
+    "ja": ""
+  },
+  "moduleCalc.attr.2404": {
+    "zh-CN": "极-生命波动",
+    "en": "Life Wave",
+    "ja": ""
+  },
+  "moduleCalc.attr.2405": {
+    "zh-CN": "极-生命汲取",
+    "en": "Life Drain",
+    "ja": ""
+  },
+  "moduleCalc.attr.2406": {
+    "zh-CN": "极-全队幸暴",
+    "en": "Team Luck & Crit",
+    "ja": ""
+  },
+  "moduleCalc.attr.2304": {
+    "zh-CN": "极-绝境守护",
+    "en": "Final Protection",
+    "ja": ""
+  },
+  "moduleCalc.module.5500101": {
+    "zh-CN": "基础攻击",
+    "en": "Basic Attack",
+    "ja": ""
+  },
+  "moduleCalc.module.5500102": {
+    "zh-CN": "高性能攻击",
+    "en": "High-Performance Attack",
+    "ja": ""
+  },
+  "moduleCalc.module.5500103": {
+    "zh-CN": "卓越攻击",
+    "en": "Superior Attack",
+    "ja": ""
+  },
+  "moduleCalc.module.5500104": {
+    "zh-CN": "卓越攻击-优选",
+    "en": "Superior Attack - Preferred",
+    "ja": ""
+  },
+  "moduleCalc.module.5500201": {
+    "zh-CN": "基础治疗",
+    "en": "Basic Healing",
+    "ja": ""
+  },
+  "moduleCalc.module.5500202": {
+    "zh-CN": "高性能治疗",
+    "en": "High-Performance Healing",
+    "ja": ""
+  },
+  "moduleCalc.module.5500203": {
+    "zh-CN": "卓越辅助",
+    "en": "Superior Support",
+    "ja": ""
+  },
+  "moduleCalc.module.5500204": {
+    "zh-CN": "卓越辅助-优选",
+    "en": "Superior Support - Preferred",
+    "ja": ""
+  },
+  "moduleCalc.module.5500301": {
+    "zh-CN": "基础防护",
+    "en": "Basic Defense",
+    "ja": ""
+  },
+  "moduleCalc.module.5500302": {
+    "zh-CN": "高性能守护",
+    "en": "High-Performance Guard",
+    "ja": ""
+  },
+  "moduleCalc.module.5500303": {
+    "zh-CN": "卓越守护",
+    "en": "Superior Guard",
+    "ja": ""
+  },
+  "moduleCalc.module.5500304": {
+    "zh-CN": "卓越守护-优选",
+    "en": "Superior Guard - Preferred",
+    "ja": ""
+  },
+  "moduleCalc.title": {
+    "zh-CN": "模组计算",
+    "en": "Module Calculator",
+    "ja": ""
+  },
+  "moduleCalc.subtitle": {
+    "zh-CN": "计算和优化模组配置",
+    "en": "Calculate and optimize module setups",
+    "ja": ""
+  },
+  "moduleCalc.refreshData": {
+    "zh-CN": "刷新数据",
+    "en": "Refresh Data",
+    "ja": ""
+  },
+  "moduleCalc.startCalculation": {
+    "zh-CN": "开始计算",
+    "en": "Start Calculation",
+    "ja": ""
+  },
+  "moduleCalc.fetchModulesFailed": {
+    "zh-CN": "拉取模组失败",
+    "en": "Failed to fetch modules",
+    "ja": ""
+  },
+  "moduleCalc.noSolutions": {
+    "zh-CN": "无可用方案，请调整筛选条件",
+    "en": "No valid solutions found. Please adjust the filters.",
+    "ja": ""
+  },
+  "moduleCalc.calculationFailed": {
+    "zh-CN": "计算失败",
+    "en": "Calculation failed",
+    "ja": ""
+  },
+  "moduleCalc.resultsTop10": {
+    "zh-CN": "计算结果 (Top 10)",
+    "en": "Results (Top 10)",
+    "ja": ""
+  },
+  "moduleCalc.loadingMultiStrategy": {
+    "zh-CN": "多策略计算中...",
+    "en": "Running multi-strategy calculation...",
+    "ja": ""
+  },
+  "moduleCalc.loadingCalculating": {
+    "zh-CN": "计算中...",
+    "en": "Calculating...",
+    "ja": ""
+  },
+  "moduleCalc.calcSettings": {
+    "zh-CN": "计算设置",
+    "en": "Calculation Settings",
+    "ja": ""
+  },
+  "moduleCalc.moduleCount": {
+    "zh-CN": "模组数量",
+    "en": "Module Count",
+    "ja": ""
+  },
+  "moduleCalc.modules4": {
+    "zh-CN": "4 模组",
+    "en": "4 Modules",
+    "ja": ""
+  },
+  "moduleCalc.modules5": {
+    "zh-CN": "5 模组",
+    "en": "5 Modules",
+    "ja": ""
+  },
+  "moduleCalc.gpuAcceleration": {
+    "zh-CN": "GPU 加速",
+    "en": "GPU Acceleration",
+    "ja": ""
+  },
+  "moduleCalc.available": {
+    "zh-CN": "可用",
+    "en": "Available",
+    "ja": ""
+  },
+  "moduleCalc.unavailable": {
+    "zh-CN": "不可用",
+    "en": "Unavailable",
+    "ja": ""
+  },
+  "moduleCalc.dataStatus": {
+    "zh-CN": "数据状态",
+    "en": "Data Status",
+    "ja": ""
+  },
+  "moduleCalc.moduleCountStatus": {
+    "zh-CN": "模组数量：",
+    "en": "Module Count: ",
+    "ja": ""
+  },
+  "moduleCalc.filteredTotalValue": {
+    "zh-CN": "总值筛选后：",
+    "en": "After Total Value Filter: ",
+    "ja": ""
+  },
+  "moduleCalc.notSynced": {
+    "zh-CN": "未同步",
+    "en": "Not Synced",
+    "ja": ""
+  },
+  "moduleCalc.filterSettings": {
+    "zh-CN": "筛选设置",
+    "en": "Filter Settings",
+    "ja": ""
+  },
+  "moduleCalc.excludeLowTotalValue": {
+    "zh-CN": "排除总值低于多少的模组:",
+    "en": "Exclude modules with total value below:",
+    "ja": ""
+  },
+  "moduleCalc.levelSuffix": {
+    "zh-CN": "级",
+    "en": "",
+    "ja": ""
+  },
+  "moduleCalc.targetAttributesDescription": {
+    "zh-CN": "目标属性, 选中后只会计算携带该属性的模组(模组数超过1000时可利用该设置先进行筛选)",
+    "en": "Target attributes. When selected, only modules carrying those attributes will be calculated. This is useful for pre-filtering when there are more than 1000 modules.",
+    "ja": ""
+  },
+  "moduleCalc.excludeAttributes": {
+    "zh-CN": "排除属性",
+    "en": "Exclude Attributes",
+    "ja": ""
+  },
+  "moduleCalc.minAttributeRequirements": {
+    "zh-CN": "最小属性要求",
+    "en": "Minimum Attribute Requirements",
+    "ja": ""
+  },
+  "moduleCalc.selectAttribute": {
+    "zh-CN": "选择属性",
+    "en": "Select Attribute",
+    "ja": ""
+  },
+  "moduleCalc.remove": {
+    "zh-CN": "移除",
+    "en": "Remove",
+    "ja": ""
+  },
+  "moduleCalc.add": {
+    "zh-CN": "+ 添加",
+    "en": "+ Add",
+    "ja": ""
+  },
+  "moduleCalc.attrLevelPrefix": {
+    "zh-CN": "",
+    "en": "Lv.",
+    "ja": ""
+  },
+  "moduleCalc.attrLevelSuffix": {
+    "zh-CN": "级",
+    "en": "",
+    "ja": ""
+  },
+  "moduleCalc.noResultsYet": {
+    "zh-CN": "暂无结果",
+    "en": "No results yet",
+    "ja": ""
+  },
+  "moduleCalc.solutionScore": {
+    "zh-CN": "方案得分",
+    "en": "Build Score",
+    "ja": ""
+  },
+  "moduleCalc.viewDetails": {
+    "zh-CN": "查看详情",
+    "en": "View Details",
+    "ja": ""
+  },
+  "moduleCalc.detailDialogLabel": {
+    "zh-CN": "模组方案详情",
+    "en": "Module Build Details",
+    "ja": ""
+  },
+  "moduleCalc.detailTitle": {
+    "zh-CN": "方案详情",
+    "en": "Build Details",
+    "ja": ""
+  },
+  "moduleCalc.totalScore": {
+    "zh-CN": "总分",
+    "en": "Total Score",
+    "ja": ""
+  },
+  "moduleCalc.moduleCountSuffix": {
+    "zh-CN": "个模组",
+    "en": "Modules",
+    "ja": ""
+  },
+  "moduleCalc.close": {
+    "zh-CN": "关闭",
+    "en": "Close",
+    "ja": ""
+  },
+  "moduleCalc.quality": {
+    "zh-CN": "品质",
+    "en": "Quality",
+    "ja": ""
+  },
+  "moduleCalc.totalAttributesValue": {
+    "zh-CN": "属性总值",
+    "en": "Total Attribute Value",
+    "ja": ""
+  }
+}

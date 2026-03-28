@@ -1,0 +1,147 @@
+{
+    "class.Heavy Guardian": {
+        "zh-CN": "巨刃守护者",
+        "en": "Heavy Guardian",
+        "ja": ""
+    },
+    "class.Shield Knight": {
+        "zh-CN": "神盾骑士",
+        "en": "Shield Knight",
+        "ja": ""
+    },
+    "class.Stormblade": {
+        "zh-CN": "雷影剑士",
+        "en": "Stormblade",
+        "ja": ""
+    },
+    "class.Wind Knight": {
+        "zh-CN": "青岚骑士",
+        "en": "Wind Knight",
+        "ja": ""
+    },
+    "class.Marksman": {
+        "zh-CN": "神射手",
+        "en": "Marksman",
+        "ja": ""
+    },
+    "class.Frost Mage": {
+        "zh-CN": "冰魔导师",
+        "en": "Frost Mage",
+        "ja": ""
+    },
+    "class.Flame Berserker": {
+        "zh-CN": "赤炎狂战士",
+        "en": "Flame Berserker",
+        "ja": ""
+    },
+    "class.Verdant Oracle": {
+        "zh-CN": "森语者",
+        "en": "Verdant Oracle",
+        "ja": ""
+    },
+    "class.Beat Performer": {
+        "zh-CN": "灵魂乐手",
+        "en": "Beat Performer",
+        "ja": ""
+    },
+    "spec.Earthfort": {
+        "zh-CN": "岩盾",
+        "en": "Earthfort",
+        "ja": ""
+    },
+    "spec.Block": {
+        "zh-CN": "格挡",
+        "en": "Block",
+        "ja": ""
+    },
+    "spec.Iaido": {
+        "zh-CN": "太刀",
+        "en": "Iaido",
+        "ja": ""
+    },
+    "spec.Iaido Slash": {
+        "zh-CN": "太刀",
+        "en": "Iaido Slash",
+        "ja": ""
+    },
+    "spec.Moonstrike": {
+        "zh-CN": "月刃",
+        "en": "Moonstrike",
+        "ja": ""
+    },
+    "spec.Vanguard": {
+        "zh-CN": "重装",
+        "en": "Vanguard",
+        "ja": ""
+    },
+    "spec.Skyward": {
+        "zh-CN": "空枪",
+        "en": "Skyward",
+        "ja": ""
+    },
+    "spec.Wildpack": {
+        "zh-CN": "狼弓",
+        "en": "Wildpack",
+        "ja": ""
+    },
+    "spec.Falconry": {
+        "zh-CN": "鹰弓",
+        "en": "Falconry",
+        "ja": ""
+    },
+    "spec.Icicle": {
+        "zh-CN": "冰矛",
+        "en": "Icicle",
+        "ja": ""
+    },
+    "spec.Frostbeam": {
+        "zh-CN": "射线",
+        "en": "Frostbeam",
+        "ja": ""
+    },
+    "spec.Voidflame": {
+        "zh-CN": "无相流",
+        "en": "Voidflame",
+        "ja": ""
+    },
+    "spec.Blazecrimson": {
+        "zh-CN": "赤红流",
+        "en": "Blazecrimson",
+        "ja": ""
+    },
+    "spec.Smite": {
+        "zh-CN": "惩击",
+        "en": "Smite",
+        "ja": ""
+    },
+    "spec.Lifebind": {
+        "zh-CN": "愈合",
+        "en": "Lifebind",
+        "ja": ""
+    },
+    "spec.Recovery": {
+        "zh-CN": "防盾",
+        "en": "Recovery",
+        "ja": ""
+    },
+    "spec.Shield": {
+        "zh-CN": "光盾",
+        "en": "Shield",
+        "ja": ""
+    },
+    "spec.Light Shield": {
+        "zh-CN": "光盾",
+        "en": "Light Shield",
+        "ja": ""
+    },
+    "spec.Concerto": {
+        "zh-CN": "协奏",
+        "en": "Concerto",
+        "ja": ""
+    },
+    "spec.Dissonance": {
+        "zh-CN": "狂音",
+        "en": "Dissonance",
+        "ja": ""
+    }
+}
