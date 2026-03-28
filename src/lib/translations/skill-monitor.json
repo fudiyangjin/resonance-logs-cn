@@ -1058,5 +1058,10 @@
         "zh-CN": "炼金",
         "en": "Alchemy",
         "ja": ""
+    },
+    "skillMonitor.panelAttr.fontSize": {
+        "zh-CN": "字体大小",
+        "en": "Font Size",
+        "ja": ""
     }
 }
