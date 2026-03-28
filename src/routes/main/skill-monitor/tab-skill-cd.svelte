@@ -123,13 +123,14 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-3">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-3">
       {#each classSkills as skill (skill.skillId)}
         <button
           type="button"
-          class="relative min-h-11 cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
+          class="relative min-h-[78px] cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
             ? 'border-primary ring-1 ring-primary'
             : 'border-border/60 hover:border-border'}"
+          title={displaySkillName(skill)}
           onclick={() => toggleSkill(skill.skillId)}
         >
           {#if skill.imagePath}
@@ -143,8 +144,15 @@
               {t("skillMonitor.notConfigured", "未配置")}
             </div>
           {/if}
-          <div class="absolute inset-x-0 bottom-0 bg-black/50 text-[10px] text-white px-1 py-0.5 truncate">
-            {displaySkillName(skill)}
+          <div
+            class="absolute inset-0 bg-black/42 px-2 py-1.5 text-center text-[9px] leading-tight font-bold text-white flex items-center justify-center"
+          >
+            <span
+              class="whitespace-normal break-words"
+              style="display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;text-shadow:-1px -1px 0 rgba(0,0,0,0.95), 1px -1px 0 rgba(0,0,0,0.95), -1px 1px 0 rgba(0,0,0,0.95), 1px 1px 0 rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.85);"
+            >
+              {displaySkillName(skill)}
+            </span>
           </div>
         </button>
       {/each}
@@ -174,11 +182,11 @@
     </div>
 
     {#if durationSkills.length > 0}
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-3">
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-3">
         {#each durationSkills as skill (skill.skillId)}
           <button
             type="button"
-            class="relative min-h-11 cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isDurationSelected(skill.skillId)
+            class="relative min-h-[78px] cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isDurationSelected(skill.skillId)
               ? 'border-primary ring-1 ring-primary'
               : 'border-border/60 hover:border-border'}"
             title={`${displaySkillName(skill)} ${formatEffectDuration(skill.effectDurationMs)}`}
@@ -199,7 +207,9 @@
             <div class="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
               {formatEffectDuration(skill.effectDurationMs)}
             </div>
-            <div class="absolute inset-x-0 bottom-0 bg-black/55 text-[10px] text-white px-1 py-0.5 truncate">
+            <div
+              class="absolute inset-x-0 bottom-0 bg-black/55 text-[10px] leading-tight text-white/90 px-1 py-0.5 text-center whitespace-nowrap overflow-hidden text-ellipsis"
+            >
               {displaySkillName(skill)}
             </div>
           </button>
@@ -233,11 +243,11 @@
     />
 
     {#if resonanceSearch.trim().length > 0}
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-3">
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-3">
         {#each filteredResonanceSkills as skill (skill.skillId)}
           <button
             type="button"
-            class="relative min-h-11 cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
+            class="relative min-h-[78px] cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
               ? 'border-primary ring-1 ring-primary'
               : 'border-border/60 hover:border-border'}"
             title={skill.name}
@@ -248,7 +258,10 @@
               alt={displaySkillName(skill)}
               class="w-full h-full object-contain aspect-square bg-muted/20"
             />
-            <div class="absolute inset-x-0 bottom-0 bg-black/50 text-[10px] text-white px-1 py-0.5 truncate">
+            <div
+              class="absolute inset-x-0 bottom-0 bg-black/60 text-[10px] leading-tight text-white px-1 py-1 text-center whitespace-normal break-words min-h-[2.45rem] flex items-end justify-center"
+              style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;"
+            >
               {skill.name}
             </div>
           </button>
@@ -264,7 +277,7 @@
         {#each selectedResonanceSkills as skill (skill.skillId)}
           <button
             type="button"
-            class="relative min-h-11 cursor-pointer rounded-md border border-border/60 overflow-hidden bg-muted/20 size-12 hover:border-border hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            class="relative cursor-pointer rounded-md border border-border/60 overflow-hidden bg-muted/20 w-[72px] h-[78px] hover:border-border hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
             title={skill.name}
             onclick={() => toggleSkill(skill.skillId)}
           >
@@ -273,7 +286,10 @@
               alt={displaySkillName(skill)}
               class="w-full h-full object-contain"
             />
-            <div class="absolute inset-x-0 bottom-0 bg-black/60 text-[9px] text-white px-1 py-0.5 truncate">
+            <div
+              class="absolute inset-x-0 bottom-0 bg-black/60 text-[9px] leading-tight text-white px-1 py-1 text-center whitespace-normal break-words min-h-[2.35rem] flex items-end justify-center"
+              style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;"
+            >
               {skill.name}
             </div>
           </button>
