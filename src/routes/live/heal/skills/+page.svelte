@@ -2,15 +2,21 @@
   import { page } from "$app/state";
   import { settings, SETTINGS } from "$lib/settings-store";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
-  import { computePlayerRows, computeSkillRows } from "$lib/live-derived";
-  import { lookupDamageIdName } from "$lib/config/recount-table";
-  import TableRowGlow from "$lib/components/table-row-glow.svelte";
-  import { historyDpsSkillColumns } from "$lib/column-data";
-  import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
-  import PercentFormat from "$lib/components/percent-format.svelte";
+  import { computePlayerRows } from "$lib/live-derived";
+  import {
+    groupSkillsByRecount,
+    type RecountGroup,
+    type SkillDisplayRow,
+  } from "$lib/config/recount-table";
+  import LiveGroupedSkillTable from "$lib/components/live-grouped-skill-table.svelte";
+  import { liveHealSkillColumns } from "$lib/column-data";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
 
   const playerUid = Number(page.url.searchParams.get("playerUid") ?? "-1");
+  const emptyGroupedSkills = {
+    groups: [] as RecountGroup[],
+    ungrouped: [] as SkillDisplayRow[],
+  };
 
   let liveData = $derived(getLiveData());
   let healPlayers = $derived(
@@ -20,22 +26,20 @@
   let currEntity = $derived(
     liveData?.entities.find((entity) => entity.uid === playerUid) ?? null,
   );
+  let elapsedSecs = $derived((liveData?.elapsedMs ?? 0) / 1000);
 
-  let healSkillRows = $derived(
-    currEntity && liveData
-      ? computeSkillRows(
+  let groupedSkills = $derived(
+    currEntity
+      ? groupSkillsByRecount(
           currEntity.healSkills,
-          liveData.elapsedMs,
+          elapsedSecs,
           currEntity.healing.total,
-          lookupDamageIdName,
         )
-      : [],
+      : emptyGroupedSkills,
   );
 
-  let maxSkillValue = $state(0);
-  let SETTINGS_YOUR_NAME = $state(settings.state.live.general.showYourName);
-  let SETTINGS_OTHERS_NAME = $state(settings.state.live.general.showOthersName);
-  let SETTINGS_SHORTEN_DPS = $state(settings.state.live.general.shortenDps);
+  let SETTINGS_YOUR_NAME = $derived(settings.state.live.general.showYourName);
+  let SETTINGS_OTHERS_NAME = $derived(settings.state.live.general.showOthersName);
 
   let tableSettings = $derived(SETTINGS.live.tableCustomization.state);
   let abbreviatedDecimalPlaces = $derived(
@@ -60,34 +64,8 @@
     }
   }
 
-  let sortedSkillRows = $derived.by(() => {
-    const data = [...healSkillRows];
-    data.sort((a, b) => {
-      const aVal = (a as Record<string, unknown>)[sortKey] ?? 0;
-      const bVal = (b as Record<string, unknown>)[sortKey] ?? 0;
-      if (typeof aVal === "number" && typeof bVal === "number") {
-        return sortDesc ? bVal - aVal : aVal - bVal;
-      }
-      return 0;
-    });
-    return data;
-  });
-
-  $effect(() => {
-    maxSkillValue = sortedSkillRows.reduce(
-      (max, p) => (p.totalDmg > max ? p.totalDmg : max),
-      0,
-    );
-  });
-
-  $effect(() => {
-    SETTINGS_YOUR_NAME = settings.state.live.general.showYourName;
-    SETTINGS_OTHERS_NAME = settings.state.live.general.showOthersName;
-    SETTINGS_SHORTEN_DPS = settings.state.live.general.shortenDps;
-  });
-
   let visibleSkillColumns = $derived.by(() => {
-    const visible = historyDpsSkillColumns.filter(
+    const visible = liveHealSkillColumns.filter(
       (col) => settings.state.live.heal.skillBreakdown[col.key],
     );
     return visible.sort((a, b) => {
@@ -96,125 +74,40 @@
       return aIdx - bIdx;
     });
   });
+
+  const glowClassName = $derived.by(() => {
+    if (!currPlayer) return "";
+    const isLocalPlayer =
+      liveData?.localPlayerUid != null && currPlayer.uid === liveData.localPlayerUid;
+    return isLocalPlayer
+      ? normalizeNameDisplaySetting(SETTINGS_YOUR_NAME) !== "Hide Your Name"
+        ? currPlayer.className
+        : ""
+      : normalizeNameDisplaySetting(SETTINGS_OTHERS_NAME) !== "Hide Others' Name"
+        ? currPlayer.className
+        : "";
+  });
+
+  function formatRateValue(value: number) {
+    return value.toFixed(1);
+  }
 </script>
 
 <svelte:window oncontextmenu={() => window.history.back()} />
 
-<div class="relative flex flex-col">
-  <table class="w-full border-collapse">
-    {#if tableSettings.skillShowHeader}
-      <thead class="z-1 sticky top-0">
-        <tr
-          class="bg-popover/60"
-          style="height: {tableSettings.skillHeaderHeight}px;"
-        >
-          <th
-            class="px-2 py-1 text-left font-medium uppercase tracking-wider"
-            style="font-size: {tableSettings.skillHeaderFontSize}px; color: {tableSettings.skillHeaderTextColor};"
-            >Skill</th
-          >
-          {#each visibleSkillColumns as col (col.key)}
-            <th
-              class="px-2 py-1 text-right font-medium uppercase tracking-wider cursor-pointer select-none hover:bg-muted/40 transition-colors"
-              style="font-size: {tableSettings.skillHeaderFontSize}px; color: {tableSettings.skillHeaderTextColor};"
-              onclick={() => handleSort(col.key)}
-            >
-              <span class="inline-flex items-center gap-1 justify-end">
-                {col.header}
-                {#if sortKey === col.key}
-                  <span class="text-primary">{sortDesc ? "▼" : "▲"}</span>
-                {/if}
-              </span>
-            </th>
-          {/each}
-        </tr>
-      </thead>
-    {/if}
-    <tbody>
-      {#each sortedSkillRows as skill (skill.skillId)}
-        {#if currPlayer}
-          {@const isLocalPlayer = liveData?.localPlayerUid != null &&
-            currPlayer.uid === liveData.localPlayerUid}
-          {@const className = isLocalPlayer
-            ? normalizeNameDisplaySetting(SETTINGS_YOUR_NAME) !== "Hide Your Name"
-              ? currPlayer.className
-              : ""
-            : normalizeNameDisplaySetting(SETTINGS_OTHERS_NAME) !==
-                "Hide Others' Name"
-              ? currPlayer.className
-              : ""}
-          <tr
-            class="relative hover:bg-muted/60 transition-colors bg-background/40"
-            style="height: {tableSettings.skillRowHeight}px; font-size: {tableSettings.skillFontSize}px;"
-          >
-            <td
-              class="px-2 py-1 relative z-10"
-              style="color: {customThemeColors.tableTextColor};"
-            >
-              <div class="flex items-center gap-1 h-full">
-                <span class="truncate">{skill.name}</span>
-              </div>
-            </td>
-            {#each visibleSkillColumns as col (col.key)}
-              <td
-                class="px-2 py-1 text-right relative z-10"
-                style="color: {customThemeColors.tableTextColor};"
-              >
-                {#if col.key === "totalDmg"}
-                  {#if SETTINGS_SHORTEN_DPS}
-                    <AbbreviatedNumber
-                      num={skill.totalDmg}
-                      decimalPlaces={abbreviatedDecimalPlaces}
-                      {abbreviationStyle}
-                      suffixFontSize={tableSettings.skillAbbreviatedFontSize}
-                      suffixColor={customThemeColors.tableAbbreviatedColor}
-                    />
-                  {:else}
-                    {col.format(skill[col.key] ?? 0)}
-                  {/if}
-                {:else if col.key === "dps"}
-                  {#if SETTINGS_SHORTEN_DPS}
-                    <AbbreviatedNumber
-                      num={skill.dps}
-                      decimalPlaces={abbreviatedDecimalPlaces}
-                      {abbreviationStyle}
-                      suffixFontSize={tableSettings.skillAbbreviatedFontSize}
-                      suffixColor={customThemeColors.tableAbbreviatedColor}
-                    />
-                  {:else}
-                    {col.format(skill[col.key] ?? 0)}
-                  {/if}
-                {:else if col.key === "dmgPct"}
-                  <PercentFormat
-                    val={skill.dmgPct}
-                    fractionDigits={0}
-                    suffixFontSize={tableSettings.skillAbbreviatedFontSize}
-                    suffixColor={customThemeColors.tableAbbreviatedColor}
-                  />
-                {:else if col.key === "critRate" || col.key === "critDmgRate" || col.key === "luckyRate" || col.key === "luckyDmgRate"}
-                  <PercentFormat
-                    val={skill[col.key]}
-                    suffixFontSize={tableSettings.skillAbbreviatedFontSize}
-                    suffixColor={customThemeColors.tableAbbreviatedColor}
-                  />
-                {:else}
-                  {col.format(skill[col.key] ?? 0)}
-                {/if}
-              </td>
-            {/each}
-            <TableRowGlow
-              isSkill={true}
-              {className}
-              classSpecName={currPlayer.classSpecName}
-              percentage={SETTINGS.live.general.state.relativeToTopHealSkill
-                ? maxSkillValue > 0
-                  ? (skill.totalDmg / maxSkillValue) * 100
-                  : 0
-                : skill.dmgPct}
-            />
-          </tr>
-        {/if}
-      {/each}
-    </tbody>
-  </table>
-</div>
+<LiveGroupedSkillTable
+  {groupedSkills}
+  visibleColumns={visibleSkillColumns}
+  {sortKey}
+  {sortDesc}
+  onSort={handleSort}
+  {tableSettings}
+  {customThemeColors}
+  {abbreviatedDecimalPlaces}
+  {abbreviationStyle}
+  glowClassName={glowClassName}
+  classSpecName={currPlayer?.classSpecName ?? ""}
+  relativeToTop={SETTINGS.live.general.state.relativeToTopHealSkill}
+  shortenValues={SETTINGS.live.general.state.shortenDps}
+  {formatRateValue}
+/>

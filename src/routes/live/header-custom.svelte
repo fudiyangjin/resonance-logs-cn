@@ -61,6 +61,12 @@
   }
 
   onMount(() => {
+    try {
+      appWindow = getCurrentWebviewWindow();
+    } catch (error) {
+      console.error("Failed to get current live webview window", error);
+    }
+
     animationFrameId = requestAnimationFrame(updateClientTimer);
     return () => {
       if (animationFrameId !== null) {
@@ -126,7 +132,7 @@
   const displayBosses = $derived(headerInfo.bosses);
   const isTrainingDummyActive = $derived(trainingDummyState.phase !== "idle");
 
-  const appWindow = getCurrentWebviewWindow();
+  let appWindow = $state<ReturnType<typeof getCurrentWebviewWindow> | null>(null);
 
   async function openSettings() {
     const mainWindow = await WebviewWindow.getByLabel("main");
@@ -345,7 +351,7 @@
           <button
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.minimizeButtonPadding}px"
-            onclick={() => appWindow.hide()}
+            onclick={() => appWindow?.hide()}
             {@attach tooltip(() => "Minimize")}
           >
             <MinusIcon

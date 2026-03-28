@@ -4,8 +4,6 @@ import type {
   PlayerRow,
   RawCombatStats,
   RawEntityData,
-  RawSkillStats,
-  SkillRow,
 } from "$lib/api";
 
 type Metric = "dps" | "heal" | "tanked";
@@ -98,41 +96,6 @@ export function computePlayerRows(data: LiveDataPayload, metric: Metric): Player
     },
     metric,
   );
-}
-
-export function computeSkillRows(
-  skills: Partial<Record<number, RawSkillStats>>,
-  elapsedMs: number,
-  parentTotal: number,
-  nameResolver: (skillId: number) => string,
-): SkillRow[] {
-  const elapsedSecs = elapsedMs > 0 ? elapsedMs / 1000 : 0;
-
-  return Object.entries(skills)
-    .map(([skillIdText, stats]) => {
-      if (!stats) return null;
-      const skillId = Number(skillIdText);
-      const total = Number(stats.totalValue || 0);
-      const hits = Number(stats.hits || 0);
-
-      const row: SkillRow = {
-        skillId,
-        name: nameResolver(skillId),
-        totalDmg: total,
-        dps: elapsedSecs > 0 ? total / elapsedSecs : 0,
-        dmgPct: percent(total, parentTotal),
-        critRate: rate(Number(stats.critHits || 0), hits),
-        critDmgRate: percent(Number(stats.critTotalValue || 0), total),
-        luckyRate: rate(Number(stats.luckyHits || 0), hits),
-        luckyDmgRate: percent(Number(stats.luckyTotalValue || 0), total),
-        hits,
-        hitsPerMinute: elapsedSecs > 0 ? (hits / elapsedSecs) * 60 : 0,
-      };
-      return row;
-    })
-    .filter((row): row is SkillRow =>
-      !!row && Number.isFinite(row.skillId) && row.totalDmg > 0,
-    );
 }
 
 export function computeHeaderInfo(data: LiveDataPayload): HeaderInfo {
