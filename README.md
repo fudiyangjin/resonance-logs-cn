@@ -1,4 +1,14 @@
-# Resonance Logs CN
+This is a fork of Resonance Logs CN. I have no idea what I'm doing, so I added a translation layer to it lol. 
+
+Don't expect patchnotes for this until it's nearly done.
+Also some minor UI adjustments were done. 
+
+
+-Donne
+
+
+
+# Resonance Logs GLOBAL
 
 [Blue Protocol: Star Resonance](https://www.starresonance.com/) 战斗数据分析桌面应用，支持实时 DPS 统计、Buff 监控、技能 CD 展示等功能。
 
