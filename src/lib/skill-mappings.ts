@@ -100,8 +100,13 @@ function collectKeywordTexts(value: MultiLangKeywords | undefined): string[] {
 }
 
 function getCurrentLocale(): LocaleCode {
-  const locale = settings.state.live.general.language;
-  return locale === "en" || locale === "ja" || locale === "zh-CN" ? locale : "zh-CN";
+  const locale = String(settings.state.live.general.language);
+
+  if (locale === "en" || locale === "ja" || locale === "zh-CN") {
+    return locale;
+  }
+
+  return "zh-CN";
 }
 
 function resolveMultiLangName(value: MultiLangValue | undefined, fallback: string): string {
