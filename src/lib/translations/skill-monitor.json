@@ -793,5 +793,260 @@
         "zh-CN": "灵魂乐手",
         "en": "Beat Performer",
         "ja": ""
+    },
+    "className.wind_knight": {
+        "zh-CN": "青岚骑士",
+        "en": "Wind Knight",
+        "ja": ""
+    },
+    "className.frost_mage": {
+        "zh-CN": "冰法",
+        "en": "Frost Mage",
+        "ja": ""
+    },
+    "className.stormblade": {
+        "zh-CN": "雷影剑士",
+        "en": "Stormblade",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1420": {
+        "zh-CN": "风姿卓绝",
+        "en": "Peerless Bearing",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1426": {
+        "zh-CN": "非举旗大招",
+        "en": "Unbannered Ultimate",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1410": {
+        "zh-CN": "举旗大招",
+        "en": "Banner Ultimate",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1419": {
+        "zh-CN": "翔返",
+        "en": "Soaring Return",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1421": {
+        "zh-CN": "螺旋击刺",
+        "en": "Spiral Thrust",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1422": {
+        "zh-CN": "破追",
+        "en": "Pursuit Break",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1425": {
+        "zh-CN": "飞鸟投",
+        "en": "Flying Bird Toss",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1424": {
+        "zh-CN": "刹那",
+        "en": "Instant",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1401": {
+        "zh-CN": "普攻",
+        "en": "Basic Attack",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1418": {
+        "zh-CN": "疾风刺",
+        "en": "Gale Thrust",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1423": {
+        "zh-CN": "护佑之风",
+        "en": "Protective Wind",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1430": {
+        "zh-CN": "勇气风环",
+        "en": "Courage Wind Ring",
+        "ja": ""
+    },
+    "classSkill.wind_knight.1431": {
+        "zh-CN": "锐利冲击",
+        "en": "Sharp Impact",
+        "ja": ""
+    },
+    "classSkillDerived.wind_knight.1425.2205561": {
+        "zh-CN": "极·岚切",
+        "en": "Ultimate Gale Cut",
+        "ja": ""
+    },
+    "classSkillDerived.wind_knight.1418.2205401": {
+        "zh-CN": "免费的疾空刺",
+        "en": "Free Sky-Piercing Thrust",
+        "ja": ""
+    },
+    "classSkillDerived.wind_knight.1421.2205134": {
+        "zh-CN": "神影螺旋",
+        "en": "Divine Shadow Spiral",
+        "ja": ""
+    },
+    "classSkillDerived.wind_knight.1401.2205521": {
+        "zh-CN": "龙击炮",
+        "en": "Dragon Strike Cannon",
+        "ja": ""
+    },
+    "classSkillDerived.wind_knight.1430.31901": {
+        "zh-CN": "风环持续",
+        "en": "Wind Ring Duration",
+        "ja": ""
+    },
+    "classSkill.frost_mage.1239": {
+        "zh-CN": "陨星风暴",
+        "en": "Meteor Storm",
+        "ja": ""
+    },
+    "classSkill.frost_mage.1211": {
+        "zh-CN": "清滝绕珠",
+        "en": "Clear Falls Orbiting Pearl",
+        "ja": ""
+    },
+    "classSkill.frost_mage.1242": {
+        "zh-CN": "冰霜之矛",
+        "en": "Frost Spear",
+        "ja": ""
+    },
+    "classSkill.frost_mage.1210": {
+        "zh-CN": "水之涡流",
+        "en": "Water Vortex",
+        "ja": ""
+    },
+    "classSkill.frost_mage.1246": {
+        "zh-CN": "浪潮汇聚",
+        "en": "Tides Converge",
+        "ja": ""
+    },
+    "classSkill.frost_mage.1245": {
+        "zh-CN": "寒冰庇护",
+        "en": "Frost Shelter",
+        "ja": ""
+    },
+    "classSkill.frost_mage.1243": {
+        "zh-CN": "冰之灌注",
+        "en": "Ice Infusion",
+        "ja": ""
+    },
+    "classSkill.frost_mage.1244": {
+        "zh-CN": "寒冰风暴",
+        "en": "Frost Storm",
+        "ja": ""
+    },
+    "classSkill.frost_mage.1240": {
+        "zh-CN": "冻结寒风",
+        "en": "Freezing Wind",
+        "ja": ""
+    },
+    "classSkill.frost_mage.1248": {
+        "zh-CN": "极寒·冰雪颂歌",
+        "en": "Extreme Cold: Hymn of Ice and Snow",
+        "ja": ""
+    },
+    "classSkillDerived.frost_mage.1244.2204191": {
+        "zh-CN": "免读条的寒冰风暴",
+        "en": "Instant Frost Storm",
+        "ja": ""
+    },
+    "classSkill.stormblade.1730": {
+        "zh-CN": "无穷雷霆之力",
+        "en": "Endless Power of Thunder",
+        "ja": ""
+    },
+    "classSkill.stormblade.1731": {
+        "zh-CN": "千雷闪影之意",
+        "en": "Intent of Thousand Lightning Shadows",
+        "ja": ""
+    },
+    "classSkill.stormblade.1713": {
+        "zh-CN": "极诣·大破灭连斩",
+        "en": "Supreme Art: Great Cataclysm Combo Slash",
+        "ja": ""
+    },
+    "classSkill.stormblade.1720": {
+        "zh-CN": "心眼",
+        "en": "Mind's Eye",
+        "ja": ""
+    },
+    "classSkill.stormblade.1701": {
+        "zh-CN": "我流刀法·诸恶",
+        "en": "My School Sword Art: All Evils",
+        "ja": ""
+    },
+    "classSkill.stormblade.1718": {
+        "zh-CN": "飞雷神",
+        "en": "Flying Thunder God",
+        "ja": ""
+    },
+    "classSkill.stormblade.1719": {
+        "zh-CN": "镰车",
+        "en": "Scythe Wheel",
+        "ja": ""
+    },
+    "classSkill.stormblade.1717": {
+        "zh-CN": "一闪",
+        "en": "Flash Strike",
+        "ja": ""
+    },
+    "classSkill.stormblade.1715": {
+        "zh-CN": "月影",
+        "en": "Moon Shadow",
+        "ja": ""
+    },
+    "classSkill.stormblade.1714": {
+        "zh-CN": "居合斩",
+        "en": "Iaijutsu Slash",
+        "ja": ""
+    },
+    "classSkill.stormblade.1705": {
+        "zh-CN": "超高出力",
+        "en": "Ultra High Output",
+        "ja": ""
+    },
+    "classSkill.stormblade.1724": {
+        "zh-CN": "霹雳连斩",
+        "en": "Thunderclap Combo Slash",
+        "ja": ""
+    },
+    "classSkillDerived.stormblade.1701.2200601": {
+        "zh-CN": "神罚之镰",
+        "en": "Scythe of Divine Punishment",
+        "ja": ""
+    },
+    "classSkillDerived.stormblade.1718.2200431": {
+        "zh-CN": "神影斩",
+        "en": "Divine Shadow Slash",
+        "ja": ""
+    },
+    "classSkillDerived.stormblade.1717.2200431": {
+        "zh-CN": "坠龙闪",
+        "en": "Falling Dragon Flash",
+        "ja": ""
+    },
+    "classSkillDerived.stormblade.1715.2200641": {
+        "zh-CN": "缭乱兜割",
+        "en": "Chaotic Helm Splitter",
+        "ja": ""
+    },
+    "classSkillDerived.stormblade.1714.2200121": {
+        "zh-CN": "雷切",
+        "en": "Thunder Cutter",
+        "ja": ""
+    },
+    "classSkillDerived.stormblade.1705.2200051": {
+        "zh-CN": "看破斩",
+        "en": "Insight Slash",
+        "ja": ""
+    },
+    "classSkillDerived.stormblade.1724.2200231": {
+        "zh-CN": "霹雳升龙斩",
+        "en": "Rising Dragon Thunder Slash",
+        "ja": ""
     }
 }

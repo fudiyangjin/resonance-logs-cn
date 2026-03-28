@@ -114,6 +114,64 @@ export function resolveSettingsStoreTranslation(
   return resolveTranslation(SETTINGS_STORE_TRANSLATIONS, key, locale, fallback);
 }
 
+export function buildSkillMonitorClassNameKey(classKey: string): string {
+  return `className.${classKey}`;
+}
+
+export function buildSkillMonitorClassSkillKey(
+  classKey: string,
+  skillId: string | number,
+): string {
+  return `classSkill.${classKey}.${String(skillId)}`;
+}
+
+export function buildSkillMonitorDerivedSkillKey(
+  classKey: string,
+  sourceSkillId: string | number,
+  triggerBuffBaseId: string | number,
+): string {
+  return `classSkillDerived.${classKey}.${String(sourceSkillId)}.${String(triggerBuffBaseId)}`;
+}
+
+export function resolveSkillMonitorClassName(
+  classKey: string,
+  locale: LocaleCode,
+  fallback: string,
+): string {
+  return resolveSkillMonitorTranslation(
+    buildSkillMonitorClassNameKey(classKey),
+    locale,
+    fallback,
+  );
+}
+
+export function resolveSkillMonitorClassSkillName(
+  classKey: string,
+  skillId: string | number,
+  locale: LocaleCode,
+  fallback: string,
+): string {
+  return resolveSkillMonitorTranslation(
+    buildSkillMonitorClassSkillKey(classKey, skillId),
+    locale,
+    fallback,
+  );
+}
+
+export function resolveSkillMonitorDerivedSkillName(
+  classKey: string,
+  sourceSkillId: string | number,
+  triggerBuffBaseId: string | number,
+  locale: LocaleCode,
+  fallback: string,
+): string {
+  return resolveSkillMonitorTranslation(
+    buildSkillMonitorDerivedSkillKey(classKey, sourceSkillId, triggerBuffBaseId),
+    locale,
+    fallback,
+  );
+}
+
 export function resolveSkillTranslation(
   id: string | number,
   locale: LocaleCode,

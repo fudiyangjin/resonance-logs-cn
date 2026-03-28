@@ -1,7 +1,11 @@
 <script lang="ts">
   import { findAnySkillByBaseId, type ClassSkillConfig, type ResonanceSkillDefinition, type SkillDefinition } from "$lib/skill-mappings";
   import { SETTINGS } from "$lib/settings-store";
-  import { resolveSkillMonitorTranslation } from "$lib/i18n";
+  import {
+    resolveSkillMonitorTranslation,
+    resolveSkillMonitorClassName,
+    resolveSkillMonitorClassSkillName,
+  } from "$lib/i18n";
 
   interface Props {
     classConfigs: ClassSkillConfig[];
@@ -50,42 +54,23 @@
     clearSkillDurations,
     setResonanceSearch,
   }: Props = $props();
-
-
   function displayClassName(config: ClassSkillConfig): string {
-    const classKey = String(config.classKey ?? "").toLowerCase();
-    const className = String(config.className ?? "");
-
-    if (classKey === "wind_knight" || className === "Wind Knight" || className === "青岚骑士") {
-      return t("skillMonitor.classLabel.windKnight", "Wind Knight");
-    }
-    if (classKey === "frost_mage" || className === "Frost Mage" || className === "冰法" || className === "冰魔导师") {
-      return t("skillMonitor.classLabel.frostMage", "Frost Mage");
-    }
-    if (classKey === "stormblade" || className === "Stormblade" || className === "雷影剑士") {
-      return t("skillMonitor.classLabel.stormblade", "Stormblade");
-    }
-    if (classKey === "heavy_guardian" || className === "Heavy Guardian" || className === "巨刃守护者") {
-      return t("skillMonitor.classLabel.heavyGuardian", "Heavy Guardian");
-    }
-    if (classKey === "shield_knight" || className === "Shield Knight" || className === "神盾骑士") {
-      return t("skillMonitor.classLabel.shieldKnight", "Shield Knight");
-    }
-    if (classKey === "marksman" || className === "Marksman" || className === "神射手") {
-      return t("skillMonitor.classLabel.marksman", "Marksman");
-    }
-    if (classKey === "flame_berserker" || className === "Flame Berserker" || className === "赤炎狂战士") {
-      return t("skillMonitor.classLabel.flameBerserker", "Flame Berserker");
-    }
-    if (classKey === "verdant_oracle" || className === "Verdant Oracle" || className === "森语者") {
-      return t("skillMonitor.classLabel.verdantOracle", "Verdant Oracle");
-    }
-    if (classKey === "beat_performer" || className === "Beat Performer" || className === "灵魂乐手") {
-      return t("skillMonitor.classLabel.beatPerformer", "Beat Performer");
-    }
-
-    return className || classKey;
+    return resolveSkillMonitorClassName(
+      config.classKey,
+      SETTINGS.live.general.state.language,
+      String(config.className ?? config.classKey ?? ""),
+    );
   }
+
+  function displaySkillName(skill: SkillDefinition): string {
+    return resolveSkillMonitorClassSkillName(
+      selectedClassKey,
+      skill.skillId,
+      SETTINGS.live.general.state.language,
+      skill.name || `#${skill.skillId}`,
+    );
+  }
+
 
   function formatEffectDuration(durationMs: number | undefined): string {
     if (!durationMs || durationMs <= 0) return "--";
@@ -150,7 +135,7 @@
           {#if skill.imagePath}
             <img
               src={skill.imagePath}
-              alt={skill.name}
+              alt={displaySkillName(skill)}
               class="w-full h-full object-cover aspect-square"
             />
           {:else}
@@ -159,7 +144,7 @@
             </div>
           {/if}
           <div class="absolute inset-x-0 bottom-0 bg-black/50 text-[10px] text-white px-1 py-0.5 truncate">
-            {skill.name || `#${skill.skillId}`}
+            {displaySkillName(skill)}
           </div>
         </button>
       {/each}
@@ -196,13 +181,13 @@
             class="relative min-h-11 cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isDurationSelected(skill.skillId)
               ? 'border-primary ring-1 ring-primary'
               : 'border-border/60 hover:border-border'}"
-            title={`${skill.name} ${formatEffectDuration(skill.effectDurationMs)}`}
+            title={`${displaySkillName(skill)} ${formatEffectDuration(skill.effectDurationMs)}`}
             onclick={() => toggleSkillDuration(skill.skillId)}
           >
             {#if skill.imagePath}
               <img
                 src={skill.imagePath}
-                alt={skill.name}
+                alt={displaySkillName(skill)}
                 class="w-full h-full object-cover aspect-square"
               />
             {:else}
@@ -215,7 +200,7 @@
               {formatEffectDuration(skill.effectDurationMs)}
             </div>
             <div class="absolute inset-x-0 bottom-0 bg-black/55 text-[10px] text-white px-1 py-0.5 truncate">
-              {skill.name || `#${skill.skillId}`}
+              {displaySkillName(skill)}
             </div>
           </button>
         {/each}
@@ -260,7 +245,7 @@
           >
             <img
               src={skill.imagePath}
-              alt={skill.name}
+              alt={displaySkillName(skill)}
               class="w-full h-full object-contain aspect-square bg-muted/20"
             />
             <div class="absolute inset-x-0 bottom-0 bg-black/50 text-[10px] text-white px-1 py-0.5 truncate">
@@ -285,7 +270,7 @@
           >
             <img
               src={skill.imagePath}
-              alt={skill.name}
+              alt={displaySkillName(skill)}
               class="w-full h-full object-contain"
             />
             <div class="absolute inset-x-0 bottom-0 bg-black/60 text-[9px] text-white px-1 py-0.5 truncate">
@@ -321,7 +306,7 @@
           {#if skill?.imagePath}
             <img
               src={skill.imagePath}
-              alt={skill.name}
+              alt={displaySkillName(skill)}
               class="w-full h-full object-cover"
             />
           {:else if skillId}
