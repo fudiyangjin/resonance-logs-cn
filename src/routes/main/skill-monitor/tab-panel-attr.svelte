@@ -34,11 +34,16 @@
     movePanelAreaRow,
   }: Props = $props();
 
+  function attrLabel(attr: PanelAttrConfig): string {
+    const label = (attr as PanelAttrConfig & { label?: string }).label;
+    return typeof label === "string" && label.trim() ? label : `Attr ${attr.attrId}`;
+  }
+
   const enabledPanelAttrs = $derived(monitoredPanelAttrs.filter((item) => item.enabled));
   const rowList = $derived.by(() => {
     const rows: Array<{ ref: PanelAreaRowRef; label: string }> = [];
     const seen = new Set<number>();
-    for (const row of panelAreaRowOrder) {
+    for (const row of panelAreaRowOrder ?? []) {
       const attr = enabledPanelAttrs.find((item) => item.attrId === row.attrId);
       if (!attr || seen.has(attr.attrId)) continue;
       seen.add(attr.attrId);
