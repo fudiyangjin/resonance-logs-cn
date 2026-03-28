@@ -129,36 +129,6 @@
         "en": "Extra Large",
         "ja": ""
     },
-    "settingsStore.themeCategory.base": {
-        "zh-CN": "基础",
-        "en": "Base",
-        "ja": ""
-    },
-    "settingsStore.themeCategory.surfaces": {
-        "zh-CN": "表面",
-        "en": "Surfaces",
-        "ja": ""
-    },
-    "settingsStore.themeCategory.accents": {
-        "zh-CN": "强调",
-        "en": "Accents",
-        "ja": ""
-    },
-    "settingsStore.themeCategory.utility": {
-        "zh-CN": "实用",
-        "en": "Utility",
-        "ja": ""
-    },
-    "settingsStore.themeCategory.tables": {
-        "zh-CN": "表格",
-        "en": "Tables",
-        "ja": ""
-    },
-    "settingsStore.themeCategory.tooltip": {
-        "zh-CN": "提示",
-        "en": "Tooltip",
-        "ja": ""
-    },
     "settingsStore.themeLabel.backgroundMain.label": {
         "zh-CN": "背景（主窗口）",
         "en": "Background (Main Window)",
@@ -377,6 +347,701 @@
     "settingsStore.themeLabel.tooltipFg.description": {
         "zh-CN": "提示框文本颜色",
         "en": "Tooltip text color",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.base": {
+        "zh-CN": "Base",
+        "en": "Base",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.surfaces": {
+        "zh-CN": "Surfaces",
+        "en": "Surfaces",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.tooltip": {
+        "zh-CN": "Tooltip",
+        "en": "Tooltip",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.accents": {
+        "zh-CN": "Accents",
+        "en": "Accents",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.tables": {
+        "zh-CN": "Tables",
+        "en": "Tables",
+        "ja": ""
+    },
+    "settingsStore.themeCategory.utility": {
+        "zh-CN": "Utility",
+        "en": "Utility",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.description": {
+        "zh-CN": "控制行外观与高亮模式。这些设置适用于所有实时表格。",
+        "en": "Control row appearance and highlight mode. These settings apply to all live tables.",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.playerRows": {
+        "zh-CN": "玩家行",
+        "en": "Player Rows",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.rowHeight": {
+        "zh-CN": "行高",
+        "en": "Row Height",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.rowHeight.description": {
+        "zh-CN": "Height of each player row (pixels)",
+        "en": "Height of each player row (pixels)",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.fontSize": {
+        "zh-CN": "字体大小",
+        "en": "Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.fontSize.description": {
+        "zh-CN": "Font size for player names and stats",
+        "en": "Font size for player names and stats",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.iconSize": {
+        "zh-CN": "图标大小",
+        "en": "Icon Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.iconSize.description": {
+        "zh-CN": "Class/spec icon size",
+        "en": "Class/spec icon size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.mode": {
+        "zh-CN": "模式",
+        "en": "Mode",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.gradientUnderline": {
+        "zh-CN": "渐变（下划线）",
+        "en": "Gradient (Underline)",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.gradient": {
+        "zh-CN": "渐变",
+        "en": "Gradient",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.solid": {
+        "zh-CN": "纯色",
+        "en": "Solid",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.rowHighlightOpacity": {
+        "zh-CN": "行高亮透明度",
+        "en": "Row Highlight Opacity",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.rowHighlightOpacity.description": {
+        "zh-CN": "Row highlight fill opacity (0 = transparent, 1 = opaque)",
+        "en": "Row highlight fill opacity (0 = transparent, 1 = opaque)",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.rowCornerRadius": {
+        "zh-CN": "行圆角",
+        "en": "Row Corner Radius",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.rowCornerRadius.description": {
+        "zh-CN": "Corner radius for row highlight",
+        "en": "Corner radius for row highlight",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.showHeader": {
+        "zh-CN": "显示表头",
+        "en": "Show Header",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.showHeader.description": {
+        "zh-CN": "Toggle column title visibility",
+        "en": "Toggle column title visibility",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.headerHeight": {
+        "zh-CN": "表头高度",
+        "en": "Header Height",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.headerHeight.description": {
+        "zh-CN": "Header row height",
+        "en": "Header row height",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.headerFontSize": {
+        "zh-CN": "表头字体大小",
+        "en": "Header Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.headerFontSize.description": {
+        "zh-CN": "Column title font size",
+        "en": "Column title font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.headerTextColor": {
+        "zh-CN": "表头文字颜色",
+        "en": "Header Text Color",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.headerTextColor.description": {
+        "zh-CN": "Column title text color",
+        "en": "Column title text color",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.suffixFontSize": {
+        "zh-CN": "后缀字体大小",
+        "en": "Suffix Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.suffixFontSize.description": {
+        "zh-CN": "Font size for K/M/% suffixes",
+        "en": "Font size for K/M/% suffixes",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.description": {
+        "zh-CN": "自定义技能表格的尺寸、表头与缩写数字样式。",
+        "en": "Customize size, headers, and abbreviated-number styling for the skill table.",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillRows": {
+        "zh-CN": "技能行",
+        "en": "Skill Rows",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillRowHeight": {
+        "zh-CN": "Skill Row Height",
+        "en": "Skill Row Height",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillRowHeight.description": {
+        "zh-CN": "Height of each skill row (pixels)",
+        "en": "Height of each skill row (pixels)",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillFontSize": {
+        "zh-CN": "Skill Font Size",
+        "en": "Skill Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillFontSize.description": {
+        "zh-CN": "Font size for skill names and stats",
+        "en": "Font size for skill names and stats",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillIconSize": {
+        "zh-CN": "Skill Icon Size",
+        "en": "Skill Icon Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillIconSize.description": {
+        "zh-CN": "Skill icon size",
+        "en": "Skill icon size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillRowHighlightOpacity": {
+        "zh-CN": "Skill Row Highlight Opacity",
+        "en": "Skill Row Highlight Opacity",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillRowHighlightOpacity.description": {
+        "zh-CN": "Skill row highlight fill opacity (0 = transparent, 1 = opaque)",
+        "en": "Skill row highlight fill opacity (0 = transparent, 1 = opaque)",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillRowCornerRadius": {
+        "zh-CN": "Skill Row Corner Radius",
+        "en": "Skill Row Corner Radius",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillRowCornerRadius.description": {
+        "zh-CN": "Corner radius for skill row highlight",
+        "en": "Corner radius for skill row highlight",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.showSkillHeader": {
+        "zh-CN": "Show Skill Header",
+        "en": "Show Skill Header",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.showSkillHeader.description": {
+        "zh-CN": "Toggle skill table column title visibility",
+        "en": "Toggle skill table column title visibility",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillHeaderHeight": {
+        "zh-CN": "Skill Header Height",
+        "en": "Skill Header Height",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillHeaderHeight.description": {
+        "zh-CN": "Skill header row height",
+        "en": "Skill header row height",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillHeaderFontSize": {
+        "zh-CN": "Skill Header Font Size",
+        "en": "Skill Header Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillHeaderFontSize.description": {
+        "zh-CN": "Skill table column title font size",
+        "en": "Skill table column title font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillHeaderTextColor": {
+        "zh-CN": "Skill Header Text Color",
+        "en": "Skill Header Text Color",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillHeaderTextColor.description": {
+        "zh-CN": "Skill table column title text color",
+        "en": "Skill table column title text color",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillSuffixFontSize": {
+        "zh-CN": "Skill Suffix Font Size",
+        "en": "Skill Suffix Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.skillSuffixFontSize.description": {
+        "zh-CN": "Font size for K/M/% suffixes in skill rows",
+        "en": "Font size for K/M/% suffixes in skill rows",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveWindowDisplay.clickthroughMode": {
+        "zh-CN": "穿透模式",
+        "en": "Clickthrough Mode",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveWindowDisplay.clickthroughEnabledDescription": {
+        "zh-CN": "Clickthrough Enabled - Mouse clicks pass through window",
+        "en": "Clickthrough Enabled - Mouse clicks pass through window",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveWindowDisplay.clickthroughMode.description": {
+        "zh-CN": "Enable Clickthrough Mode",
+        "en": "Enable Clickthrough Mode",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.windowPadding": {
+        "zh-CN": "Window Padding",
+        "en": "Window Padding",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.windowPadding.description": {
+        "zh-CN": "Overall live window padding",
+        "en": "Overall live window padding",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.headerPadding": {
+        "zh-CN": "Header Padding",
+        "en": "Header Padding",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.headerPadding.description": {
+        "zh-CN": "Inner spacing inside the header area",
+        "en": "Inner spacing inside the header area",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.timer": {
+        "zh-CN": "计时器",
+        "en": "Timer",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showTimer": {
+        "zh-CN": "Show Timer",
+        "en": "Show Timer",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showTimer.description": {
+        "zh-CN": "Show encounter timer",
+        "en": "Show encounter timer",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showActiveCombatTime": {
+        "zh-CN": "Show Active Combat Time",
+        "en": "Show Active Combat Time",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showActiveCombatTime.description": {
+        "zh-CN": "Show global active combat time next to the main timer for true DPS",
+        "en": "Show global active combat time next to the main timer for true DPS",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.labelFontSize": {
+        "zh-CN": "标签字体大小",
+        "en": "Label Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.timerLabelFontSize.description": {
+        "zh-CN": "“Timer” label font size (0 = hidden)",
+        "en": "“Timer” label font size (0 = hidden)",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.timerFontSize": {
+        "zh-CN": "Timer Font Size",
+        "en": "Timer Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.timerFontSize.description": {
+        "zh-CN": "Timer value font size",
+        "en": "Timer value font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.activeTimeFontSize": {
+        "zh-CN": "Active Time Font Size",
+        "en": "Active Time Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.activeTimeFontSize.description": {
+        "zh-CN": "Active combat time value font size",
+        "en": "Active combat time value font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showSceneName": {
+        "zh-CN": "Show Scene Name",
+        "en": "Show Scene Name",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showSceneName.description": {
+        "zh-CN": "Show current dungeon / scene name",
+        "en": "Show current dungeon / scene name",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.sceneNameFontSize": {
+        "zh-CN": "Scene Name Font Size",
+        "en": "Scene Name Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.sceneNameFontSize.description": {
+        "zh-CN": "Scene name font size",
+        "en": "Scene name font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showResetButton": {
+        "zh-CN": "Show Reset Button",
+        "en": "Show Reset Button",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showResetButton.description": {
+        "zh-CN": "Button used to reset the encounter",
+        "en": "Button used to reset the encounter",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.padding": {
+        "zh-CN": "内边距",
+        "en": "Padding",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showPauseButton": {
+        "zh-CN": "Show Pause Button",
+        "en": "Show Pause Button",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showPauseButton.description": {
+        "zh-CN": "Button used to pause / resume the encounter",
+        "en": "Button used to pause / resume the encounter",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showSettingsButton": {
+        "zh-CN": "Show Settings Button",
+        "en": "Show Settings Button",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showSettingsButton.description": {
+        "zh-CN": "Button used to open the settings window",
+        "en": "Button used to open the settings window",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showMinimizeButton": {
+        "zh-CN": "Show Minimize Button",
+        "en": "Show Minimize Button",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showMinimizeButton.description": {
+        "zh-CN": "Button used to minimize the live window",
+        "en": "Button used to minimize the live window",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showTotalDamage": {
+        "zh-CN": "Show Total Damage",
+        "en": "Show Total Damage",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showTotalDamage.description": {
+        "zh-CN": "Show total damage dealt",
+        "en": "Show total damage dealt",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.totalDamageLabelFontSize.description": {
+        "zh-CN": "“T.DMG” label font size",
+        "en": "“T.DMG” label font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.valueFontSize": {
+        "zh-CN": "数值字体大小",
+        "en": "Value Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.totalDamageValueFontSize.description": {
+        "zh-CN": "Damage value font size",
+        "en": "Damage value font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showTotalDps": {
+        "zh-CN": "Show Total DPS",
+        "en": "Show Total DPS",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showTotalDps.description": {
+        "zh-CN": "Show total damage per second",
+        "en": "Show total damage per second",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.totalDpsLabelFontSize.description": {
+        "zh-CN": "“T.DPS” label font size",
+        "en": "“T.DPS” label font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.totalDpsValueFontSize.description": {
+        "zh-CN": "DPS value font size",
+        "en": "DPS value font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showBossHealth": {
+        "zh-CN": "Show Boss Health",
+        "en": "Show Boss Health",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showBossHealth.description": {
+        "zh-CN": "Show current boss health bar",
+        "en": "Show current boss health bar",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.bossHealthLabelFontSize.description": {
+        "zh-CN": "“BOSS” label font size",
+        "en": "“BOSS” label font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.bossNameFontSize": {
+        "zh-CN": "Boss Name Font Size",
+        "en": "Boss Name Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.bossNameFontSize.description": {
+        "zh-CN": "Boss name font size",
+        "en": "Boss name font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.healthValueFontSize": {
+        "zh-CN": "Health Value Font Size",
+        "en": "Health Value Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.healthValueFontSize.description": {
+        "zh-CN": "Health value font size (1.5M / 3M)",
+        "en": "Health value font size (1.5M / 3M)",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.percentageFontSize": {
+        "zh-CN": "Percentage Font Size",
+        "en": "Percentage Font Size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.percentageFontSize.description": {
+        "zh-CN": "Health percentage font size",
+        "en": "Health percentage font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showNavigationTabs": {
+        "zh-CN": "Show Navigation Tabs",
+        "en": "Show Navigation Tabs",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.showNavigationTabs.description": {
+        "zh-CN": "Show DPS / Heal / Tanked switch buttons",
+        "en": "Show DPS / Heal / Tanked switch buttons",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.navigationTabLabelFontSize.description": {
+        "zh-CN": "Tab label font size",
+        "en": "Tab label font size",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.horizontalPadding": {
+        "zh-CN": "Horizontal Padding",
+        "en": "Horizontal Padding",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.horizontalPadding.description": {
+        "zh-CN": "Left and right padding for tabs",
+        "en": "Left and right padding for tabs",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.verticalPadding": {
+        "zh-CN": "Vertical Padding",
+        "en": "Vertical Padding",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.verticalPadding.description": {
+        "zh-CN": "Top and bottom padding for tabs",
+        "en": "Top and bottom padding for tabs",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorThemes.description": {
+        "zh-CN": "选择一个预设颜色主题",
+        "en": "Choose a preset color theme",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.sizePresets.description": {
+        "zh-CN": "根据你的显示器调整表格和表头尺寸",
+        "en": "Adjust table and header sizes based on your display",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.dark.name": {
+        "zh-CN": "Dark",
+        "en": "Dark",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.dark.description": {
+        "zh-CN": "Clean dark theme with neutral grays",
+        "en": "Clean dark theme with neutral grays",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.light.name": {
+        "zh-CN": "Light",
+        "en": "Light",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.light.description": {
+        "zh-CN": "Bright theme suitable for daytime use",
+        "en": "Bright theme suitable for daytime use",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.pink.name": {
+        "zh-CN": "Pink UwU",
+        "en": "Pink UwU",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.pink.description": {
+        "zh-CN": "Cute soft pink theme",
+        "en": "Cute soft pink theme",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.green.name": {
+        "zh-CN": "Soft Green",
+        "en": "Soft Green",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.green.description": {
+        "zh-CN": "Soft natural green palette",
+        "en": "Soft natural green palette",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.matcha.name": {
+        "zh-CN": "Matcha",
+        "en": "Matcha",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.matcha.description": {
+        "zh-CN": "Earthy green / matcha mood",
+        "en": "Earthy green / matcha mood",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.rainbow.name": {
+        "zh-CN": "Rainbow Gradient",
+        "en": "Rainbow Gradient",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorPreset.rainbow.description": {
+        "zh-CN": "Colorful gradient background",
+        "en": "Colorful gradient background",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.sizePreset.compact.name": {
+        "zh-CN": "Minimal",
+        "en": "Minimal",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.sizePreset.compact.description": {
+        "zh-CN": "Minimal: no padding, no header",
+        "en": "Minimal: no padding, no header",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.sizePreset.small.name": {
+        "zh-CN": "Small",
+        "en": "Small",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.sizePreset.small.description": {
+        "zh-CN": "Compact layout that shows more rows",
+        "en": "Compact layout that shows more rows",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.sizePreset.medium.name": {
+        "zh-CN": "Medium",
+        "en": "Medium",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.sizePreset.medium.description": {
+        "zh-CN": "Balanced size for most screens",
+        "en": "Balanced size for most screens",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.sizePreset.large.name": {
+        "zh-CN": "Large",
+        "en": "Large",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.sizePreset.large.description": {
+        "zh-CN": "Larger UI for high-resolution screens",
+        "en": "Larger UI for high-resolution screens",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.playerTableSettings.title": {
+        "zh-CN": "玩家表格设置",
+        "en": "Player Table Settings",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.skillTableSettings.title": {
+        "zh-CN": "技能表格设置",
+        "en": "Skill Table Settings",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveWindowDisplay.title": {
+        "zh-CN": "实时窗口显示设置",
+        "en": "Live Window Display Settings",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.common.headerSettings": {
+        "zh-CN": "表头设置",
+        "en": "Header Settings",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.liveHeader.layoutPadding": {
+        "zh-CN": "布局与边距",
+        "en": "Layout & Padding",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.colorThemes": {
+        "zh-CN": "颜色主题",
+        "en": "Color Themes",
+        "ja": ""
+    },
+    "settingsStore.dpsThemes.presets.sizePresets": {
+        "zh-CN": "尺寸预设",
+        "en": "Size Presets",
         "ja": ""
     }
 }

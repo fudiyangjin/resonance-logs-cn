@@ -40,7 +40,7 @@ export const CLASS_LABEL_TRANSLATIONS: TranslationTable =
   classLabelTranslations as TranslationTable;
 
 export const SETTINGS_STORE_TRANSLATIONS: TranslationTable =
-  settingsStoreTranslations as TranslationTable;
+  settingsStoreTranslations as unknown as TranslationTable;;
 
 export function resolveMultiLangValue(
   value: MultiLangValue | undefined,
