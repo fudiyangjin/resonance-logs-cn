@@ -3,8 +3,25 @@ This is a fork of Resonance Logs CN. I have no idea what I'm doing, so I added a
 Don't expect patchnotes for this until it's nearly done.
 Also some minor UI adjustments were done. 
 
+For anyone that wants to support translataions to other languages or fix wrong translations due to the starresonancetool giving the wrong name or a bad name (such as the Imagines not having their actual name; i.e. Rorola is not called Rorola), then please reach out to me and I can show you how it works. For any other issues; I will address later as this is still a WIP
+
 
 -Donne
+
+These are the biggest changes:
+
+<img width="2149" height="2044" alt="image" src="https://github.com/user-attachments/assets/77c78af9-8ac6-4813-ac2e-6d1763c3f3d7" />
+<img width="2147" height="1874" alt="image" src="https://github.com/user-attachments/assets/4d8999dc-2f37-4f50-b077-b03de81f113a" />
+
+
+
+
+
+
+
+
+
+
 
 
 
