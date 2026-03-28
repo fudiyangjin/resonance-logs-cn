@@ -1048,5 +1048,15 @@
         "zh-CN": "霹雳升龙斩",
         "en": "Rising Dragon Thunder Slash",
         "ja": ""
+    },
+    "skillMonitor.buffCategory.food": {
+        "zh-CN": "食物",
+        "en": "Food",
+        "ja": ""
+    },
+    "skillMonitor.buffCategory.alchemy": {
+        "zh-CN": "炼金",
+        "en": "Alchemy",
+        "ja": ""
     }
 }

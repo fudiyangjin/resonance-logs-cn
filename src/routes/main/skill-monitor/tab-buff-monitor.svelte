@@ -101,6 +101,11 @@
     );
   }
 
+  function buffCategoryLabel(category: { key: BuffCategoryKey; label: string }): string {
+    return t(`skillMonitor.buffCategory.${category.key}`, category.label);
+  }
+
+
   let {
     buffSearch,
     filteredBuffs,
@@ -691,7 +696,7 @@
               : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
             onclick={() => toggleBuffCategory(category.key)}
           >
-            {category.label} ({category.count})
+            {buffCategoryLabel(category)} ({category.count})
           </button>
         {/each}
       </div>
@@ -705,7 +710,7 @@
                 class="rounded-md border border-primary/60 bg-primary/10 px-3 py-1.5 text-xs text-foreground hover:bg-primary/15"
                 onclick={() => toggleBuffCategory(category.key)}
               >
-                {category.label} ({category.count})
+                {buffCategoryLabel(category)} ({category.count})
               </button>
             {/each}
           {:else}
@@ -816,7 +821,7 @@
                     onclick={() => toggleBuffCategoryInGroup(group.id, category.key)}
                     disabled={group.monitorAll}
                   >
-                    {hasCompleteBuffCategoryInGroup(group, category.key) ? t("skillMonitor.removeThisCategory", "移除") : t("skillMonitor.addThisCategory", "添加")}{category.label} ({category.count})
+                    {hasCompleteBuffCategoryInGroup(group, category.key) ? t("skillMonitor.removeThisCategory", "移除") : t("skillMonitor.addThisCategory", "添加")}{buffCategoryLabel(category)} ({category.count})
                   </button>
                 {/each}
               </div>
