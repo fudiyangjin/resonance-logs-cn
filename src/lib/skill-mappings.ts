@@ -3,6 +3,8 @@ import classSkillConfigsRaw from "$lib/config/class_skill_configs.json";
 import classResourcesRaw from "$lib/config/class_resources.json";
 import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays.json";
 import counterRulesRaw from "$lib/config/counter_rules.json";
+import resonanceSkillSearchTranslations from "$lib/translations/resonance-skill-search.json";
+import { settings } from "$lib/settings-store";
 import type { CounterAction, CounterTrigger } from "$lib/bindings";
 
 export type SkillDisplayInfo = {
@@ -55,7 +57,93 @@ type ResonanceSkillIconRaw = {
   maxValidCdTime?: number;
 };
 
+type LocaleCode = "zh-CN" | "en" | "ja";
+type MultiLangValue = Partial<Record<LocaleCode, string>>;
+type MultiLangKeywords = Partial<Record<LocaleCode, string[]>>;
+
+type ResonanceSkillSearchEntry = {
+  name?: MultiLangValue;
+  keywords?: MultiLangKeywords;
+};
+
+const RESONANCE_SKILL_SEARCH_TRANSLATIONS =
+  resonanceSkillSearchTranslations as unknown as Record<string, ResonanceSkillSearchEntry>;
+
+function normalizeSearchText(value: string | null | undefined): string {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+function collectMultiLangTexts(value: MultiLangValue | undefined): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const locale of ["zh-CN", "en", "ja"] as const) {
+    const text = normalizeSearchText(value?.[locale]);
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    out.push(text);
+  }
+  return out;
+}
+
+function collectKeywordTexts(value: MultiLangKeywords | undefined): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const locale of ["zh-CN", "en", "ja"] as const) {
+    for (const keyword of value?.[locale] ?? []) {
+      const text = normalizeSearchText(keyword);
+      if (!text || seen.has(text)) continue;
+      seen.add(text);
+      out.push(text);
+    }
+  }
+  return out;
+}
+
+function getCurrentLocale(): LocaleCode {
+  const locale = settings.state.live.general.language;
+  return locale === "en" || locale === "ja" || locale === "zh-CN" ? locale : "zh-CN";
+}
+
+function resolveMultiLangName(value: MultiLangValue | undefined, fallback: string): string {
+  const locale = getCurrentLocale();
+  const selected = value?.[locale]?.trim();
+  if (selected) return selected;
+
+  const zh = value?.["zh-CN"]?.trim();
+  if (zh) return zh;
+
+  return fallback;
+}
+
+function localizeResonanceSkill(skill: ResonanceSkillDefinition): ResonanceSkillDefinition {
+  const entry = RESONANCE_SKILL_SEARCH_TRANSLATIONS[String(skill.skillId)];
+  const displayName = resolveMultiLangName(entry?.name, skill.name);
+  if (displayName === skill.name) return skill;
+  return {
+    ...skill,
+    name: displayName,
+  };
+}
+
 export type ResonanceSkillDefinition = SkillDisplayInfo;
+
+function collectResonanceSearchTexts(skill: ResonanceSkillDefinition): string[] {
+  const texts = new Set<string>();
+  const entry = RESONANCE_SKILL_SEARCH_TRANSLATIONS[String(skill.skillId)];
+
+  const rawName = normalizeSearchText(skill.name);
+  if (rawName) texts.add(rawName);
+
+  for (const text of collectMultiLangTexts(entry?.name)) {
+    texts.add(text);
+  }
+
+  for (const text of collectKeywordTexts(entry?.keywords)) {
+    texts.add(text);
+  }
+
+  return Array.from(texts);
+}
 
 export type CounterRulePreset = {
   ruleId: number;
@@ -148,17 +236,20 @@ export function findSkillDerivationBySource(
 export function findResonanceSkill(
   skillId: number,
 ): ResonanceSkillDefinition | undefined {
-  return RESONANCE_SKILLS.find((skill) => skill.skillId === skillId);
+  const skill = RESONANCE_SKILLS.find((item) => item.skillId === skillId);
+  return skill ? localizeResonanceSkill(skill) : undefined;
 }
 
 export function searchResonanceSkills(
   keyword: string,
 ): ResonanceSkillDefinition[] {
-  const normalized = keyword.trim().toLowerCase();
+  const normalized = normalizeSearchText(keyword);
   if (!normalized) return [];
-  return RESONANCE_SKILLS.filter((skill) =>
-    skill.name.toLowerCase().includes(normalized),
-  );
+  return RESONANCE_SKILLS
+    .filter((skill) =>
+      collectResonanceSearchTexts(skill).some((text) => text.includes(normalized)),
+    )
+    .map((skill) => localizeResonanceSkill(skill));
 }
 
 export function findAnySkillByBaseId(

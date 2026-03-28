@@ -1,0 +1,986 @@
+{
+    "2350": {
+        "name": {
+            "zh-CN": "传奇野猪-嚎叫",
+            "en": "Legendary Boar - Howl",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "2351": {
+        "name": {
+            "zh-CN": "传奇雄鹰-嚎叫",
+            "en": "Legendary Eagle - Howl",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3901": {
+        "name": {
+            "zh-CN": "奥义！琉火咆哮",
+            "en": "Ultimate! Blazing Roar",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3902": {
+        "name": {
+            "zh-CN": "奥义！雷霆天引",
+            "en": "Ultimate! Heavenly Thunder Pull",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3903": {
+        "name": {
+            "zh-CN": "奥义！炽炎战斧",
+            "en": "Ultimate! Blazing Battle Axe",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3904": {
+        "name": {
+            "zh-CN": "绝技！超会心",
+            "en": "Technique! Super Critical",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3905": {
+        "name": {
+            "zh-CN": "绝技！猪突猛进",
+            "en": "Technique! Boar Rush",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3906": {
+        "name": {
+            "zh-CN": "奥义！冰霜震荡",
+            "en": "Ultimate! Frost Shockwave",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3907": {
+        "name": {
+            "zh-CN": "绝技！碎星陨落",
+            "en": "Technique! Starshatter Fall",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3908": {
+        "name": {
+            "zh-CN": "奥义！脉冲祝祷",
+            "en": "Ultimate! Pulse Benediction",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3909": {
+        "name": {
+            "zh-CN": "绝技！灵狐突袭",
+            "en": "Technique! Spirit Fox Assault",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3910": {
+        "name": {
+            "zh-CN": "绝技！缭乱飞弹",
+            "en": "Technique! Chaotic Barrage",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3911": {
+        "name": {
+            "zh-CN": "奥义！烈焰之心",
+            "en": "Ultimate! Heart of Flames",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3913": {
+        "name": {
+            "zh-CN": "绝技！电磁爆弹",
+            "en": "Technique! Electromagnetic Bomb",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3914": {
+        "name": {
+            "zh-CN": "绝技！剑刃横扫",
+            "en": "Technique! Blade Sweep",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3915": {
+        "name": {
+            "zh-CN": "绝技！乱射",
+            "en": "Technique! Volley Fire",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3916": {
+        "name": {
+            "zh-CN": "绝技！贯穿矢",
+            "en": "Technique! Piercing Arrow",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3917": {
+        "name": {
+            "zh-CN": "绝技！超重斩",
+            "en": "Technique! Heavy Cleave",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3918": {
+        "name": {
+            "zh-CN": "奥义！狐影破袭",
+            "en": "Ultimate! Fox Shadow Ambush",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3919": {
+        "name": {
+            "zh-CN": "奥义！强袭炮台",
+            "en": "Ultimate! Assault Turret",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3920": {
+        "name": {
+            "zh-CN": "奥义！生命祈愿",
+            "en": "Ultimate! Life Prayer",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3921": {
+        "name": {
+            "zh-CN": "奥义！时间法令",
+            "en": "Ultimate! Time Decree",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3922": {
+        "name": {
+            "zh-CN": "奥义！瞬即斩",
+            "en": "Ultimate! Instant Slash",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3923": {
+        "name": {
+            "zh-CN": "奥义！重锤狂袭",
+            "en": "Ultimate! Hammer Rampage",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3924": {
+        "name": {
+            "zh-CN": "绝技！风影缄默",
+            "en": "Technique! Windshadow Silence",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3925": {
+        "name": {
+            "zh-CN": "绝技！无形冲击",
+            "en": "Technique! Formless Impact",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3926": {
+        "name": {
+            "zh-CN": "奥义！流星陨落",
+            "en": "Ultimate! Meteor Fall",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3927": {
+        "name": {
+            "zh-CN": "绝技！怒吼指令",
+            "en": "Technique! Roar Command",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3928": {
+        "name": {
+            "zh-CN": "绝技！追猎猛斩",
+            "en": "Technique! Pursuit Cleave",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3929": {
+        "name": {
+            "zh-CN": "绝技！缩壳防御",
+            "en": "Technique! Shell Defense",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3930": {
+        "name": {
+            "zh-CN": "绝技！大地之盾",
+            "en": "Technique! Earth's Shield",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3931": {
+        "name": {
+            "zh-CN": "奥义！护佑领域",
+            "en": "Ultimate! Protective Domain",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3932": {
+        "name": {
+            "zh-CN": "绝技！飞轮火舞",
+            "en": "Technique! Firewheel Dance",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3933": {
+        "name": {
+            "zh-CN": "绝技！挫志咆哮",
+            "en": "Technique! Demoralizing Roar",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3934": {
+        "name": {
+            "zh-CN": "绝技！瞬步奇袭",
+            "en": "Technique! Flashstep Ambush",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3935": {
+        "name": {
+            "zh-CN": "奥义！雷霆咆哮",
+            "en": "Ultimate! Thunder Roar",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3936": {
+        "name": {
+            "zh-CN": "绝技！静默之水",
+            "en": "Technique! Silent Waters",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3937": {
+        "name": {
+            "zh-CN": "绝技！强压之雷",
+            "en": "Technique! Oppressive Thunder",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3938": {
+        "name": {
+            "zh-CN": "奥义！茧房术",
+            "en": "Ultimate! Cocoon Art",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3939": {
+        "name": {
+            "zh-CN": "绝技！雷光球",
+            "en": "Technique! Lightning Orb",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3940": {
+        "name": {
+            "zh-CN": "绝技！旋风打击",
+            "en": "Technique! Whirlwind Strike",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3941": {
+        "name": {
+            "zh-CN": "绝技！变身蜜蜂",
+            "en": "Technique! Transform: Bee",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3942": {
+        "name": {
+            "zh-CN": "奥义！毒爆",
+            "en": "Ultimate! Poison Burst",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3943": {
+        "name": {
+            "zh-CN": "奥义！地狱突刺",
+            "en": "Ultimate! Infernal Thrust",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3944": {
+        "name": {
+            "zh-CN": "奥义！沧澜风啸",
+            "en": "Ultimate! Azure Gale Howl",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3945": {
+        "name": {
+            "zh-CN": "奥义！静默潮汐",
+            "en": "Ultimate! Silent Tide",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3946": {
+        "name": {
+            "zh-CN": "奥义！哥布林大行军",
+            "en": "Ultimate! Goblin Grand March",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3947": {
+        "name": {
+            "zh-CN": "绝技！螺旋断界",
+            "en": "Technique! Spiral Riftbreaker",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3948": {
+        "name": {
+            "zh-CN": "奥义！神灵依凭",
+            "en": "Ultimate! Divine Possession",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3949": {
+        "name": {
+            "zh-CN": "奥义！幻象共鸣",
+            "en": "Ultimate! Illusion Resonance",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3950": {
+        "name": {
+            "zh-CN": "奥义！万象升华",
+            "en": "Ultimate! Ascension of All Things",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3951": {
+        "name": {
+            "zh-CN": "奥义！佑世边界",
+            "en": "Ultimate! Worldguard Boundary",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3952": {
+        "name": {
+            "zh-CN": "奥义！熊熊烈焰",
+            "en": "Ultimate! Blazing Inferno",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3953": {
+        "name": {
+            "zh-CN": "奥义！无双突刺",
+            "en": "Ultimate! Peerless Thrust",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3954": {
+        "name": {
+            "zh-CN": "奥义！魅影奇袭",
+            "en": "Ultimate! Phantom Ambush",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3955": {
+        "name": {
+            "zh-CN": "奥义！卷心菜重锤",
+            "en": "Ultimate! Cabbage Warhammer",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3956": {
+        "name": {
+            "zh-CN": "奥义！炎灵之幸",
+            "en": "Ultimate! Flame Spirit's Blessing",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3957": {
+        "name": {
+            "zh-CN": "奥义！绝命螺旋",
+            "en": "Ultimate! Fatal Spiral",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3958": {
+        "name": {
+            "zh-CN": "绝技！寒霜喷吐",
+            "en": "Technique! Frost Breath",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3959": {
+        "name": {
+            "zh-CN": "绝技！落雷惩戒",
+            "en": "Technique! Thunderbolt Punishment",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3960": {
+        "name": {
+            "zh-CN": "绝技！剑刃风暴",
+            "en": "Technique! Blade Storm",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3961": {
+        "name": {
+            "zh-CN": "绝技！全场轰炸",
+            "en": "Technique! Full-Field Bombardment",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3962": {
+        "name": {
+            "zh-CN": "绝技！治疗爆弹",
+            "en": "Technique! Healing Bomb",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3963": {
+        "name": {
+            "zh-CN": "绝技！灵动出击",
+            "en": "Technique! Agile Strike",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3964": {
+        "name": {
+            "zh-CN": "绝技！卷心菜回旋刃",
+            "en": "Technique! Cabbage Spinning Blade",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3965": {
+        "name": {
+            "zh-CN": "绝技！卷心菜霹雳闪",
+            "en": "Technique! Cabbage Thunder Flash",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3966": {
+        "name": {
+            "zh-CN": "绝技！双重牙",
+            "en": "Technique! Twin Fangs",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3967": {
+        "name": {
+            "zh-CN": "退出陶洛斯变身",
+            "en": "Exit Taurus Transformation",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3968": {
+        "name": {
+            "zh-CN": "奥义！虚蚀劫刄",
+            "en": "Ultimate! Voidblight Calamity Blade",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3969": {
+        "name": {
+            "zh-CN": "奥义！裂爪反冲",
+            "en": "Ultimate! Rending Claw Recoil",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3970": {
+        "name": {
+            "zh-CN": "奥义！指令象限",
+            "en": "Ultimate! Command Quadrant",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3971": {
+        "name": {
+            "zh-CN": "奥义！超导波动",
+            "en": "Ultimate! Superconductive Wave",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3972": {
+        "name": {
+            "zh-CN": "奥义！梭行毒牙",
+            "en": "Ultimate! Darting Venom Fang",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3973": {
+        "name": {
+            "zh-CN": "奥义！瞬空践踏",
+            "en": "Ultimate! Skyflash Stomp",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3974": {
+        "name": {
+            "zh-CN": "奥义！精准点射",
+            "en": "Ultimate! Precision Burst Fire",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3975": {
+        "name": {
+            "zh-CN": "奥义！穿透怒吼",
+            "en": "Ultimate! Piercing Roar",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3976": {
+        "name": {
+            "zh-CN": "奥义！疾风连喰",
+            "en": "Ultimate! Gale Chain Bite",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3977": {
+        "name": {
+            "zh-CN": "绝技！隐匿藏击",
+            "en": "Technique! Hidden Strike",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3978": {
+        "name": {
+            "zh-CN": "绝技！绝对零度",
+            "en": "Technique! Absolute Zero",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3979": {
+        "name": {
+            "zh-CN": "绝技！深渊吐息",
+            "en": "Technique! Abyssal Breath",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3980": {
+        "name": {
+            "zh-CN": "绝技！捶地猛击",
+            "en": "Technique! Ground Pound",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    },
+    "3981": {
+        "name": {
+            "zh-CN": "绝技！锁定射击",
+            "en": "Technique! Lock-on Shot",
+            "ja": ""
+        },
+        "keywords": {
+            "zh-CN": [],
+            "en": [],
+            "ja": []
+        }
+    }
+}
