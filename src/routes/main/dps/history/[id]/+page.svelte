@@ -16,6 +16,8 @@
     historyTankedSkillColumns,
   } from "$lib/column-data";
   import { settings, SETTINGS, DEFAULT_HISTORY_STATS } from "$lib/settings-store";
+  import { localizeSceneName } from "$lib/scene-mappings";
+  import { localizeRawMonsterName } from "$lib/monster-mappings";
   import getDisplayName from "$lib/name-display";
   import { openUrl } from "@tauri-apps/plugin-opener";
   import { computePlayerRowsFromEntities } from "$lib/live-derived";
@@ -26,8 +28,6 @@
   } from "$lib/config/recount-table";
   import { formatClassSpecLabel } from "$lib/class-labels";
   import { resolveNavigationTranslation, resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
-  import { localizeRawSceneName } from "$lib/scene-mappings";
-  import { localizeRawMonsterName } from "$lib/monster-mappings";
 
   type HistorySkillType = "dps" | "heal" | "tanked";
 
@@ -123,11 +123,21 @@
     );
   }
 
-  let tabs = $derived.by((): { key: "damage" | "tanked" | "healing"; label: string }[] => [
+  function thLabel(col: { header?: string; headerKey?: string }): string {
+    return col.headerKey
+      ? resolveNavigationTranslation(
+          col.headerKey,
+          SETTINGS.live.general.state.language,
+          col.header ?? "",
+        )
+      : (col.header ?? "");
+  }
+
+  const tabs: { key: "damage" | "tanked" | "healing"; label: string }[] = [
     { key: "damage", label: t("dps.historyDetail.tab.damage", "伤害", "Damage", "ダメージ") },
     { key: "tanked", label: t("dps.historyDetail.tab.tanked", "承伤", "Tanked", "被ダメージ") },
     { key: "healing", label: t("dps.historyDetail.tab.healing", "治疗", "Healing", "回復") },
-  ]);
+  ];
 
   let encounterDurationSeconds = $derived.by(() => {
     if (!encounter) return 1;
@@ -185,7 +195,7 @@
           isLocalPlayer: localUid !== null && entity.uid === localUid,
           className,
           classSpecName,
-          classDisplay: formatClassSpecLabel(className, classSpecName) || "",
+          classDisplay: formatClassSpecLabel(className, classSpecName) || "未知职业",
           abilityScore: entity.abilityScore || 0,
           seasonStrength: entity.seasonStrength || 0,
           totalDmg: dps?.totalDmg ?? 0,
@@ -617,24 +627,13 @@
   function buildHistoryGroupHoverText(recountId: string | number, language: LocaleCode) {
     const note = resolveSkillNote(recountId, language).trim();
 
-    return `${ui("ID", "ID", "ID")}: #${recountId}
-${ui("来源", "Sources", "ソース")}:
-- RecountTable.json${note ? `
-
-${ui("备注", "Note", "メモ")}:
-${note}` : ""}`;
+    return `ID: #${recountId}\nSources:\n- RecountTable.json${note ? `\n\nNote:\n${note}` : ""}`;
   }
 
   function buildHistorySkillHoverText(skillId: string | number, language: LocaleCode) {
     const note = resolveSkillNote(skillId, language).trim();
 
-    return `${ui("ID", "ID", "ID")}: #${skillId}
-${ui("来源", "Sources", "ソース")}:
-- RecountTable.json
-- DamageAttrIdName.json${note ? `
-
-${ui("备注", "Note", "メモ")}:
-${note}` : ""}`;
+    return `ID: #${skillId}\nSources:\n- RecountTable.json\n- DamageAttrIdName.json${note ? `\n\nNote:\n${note}` : ""}`;
   }
 
   async function confirmDeleteEncounter() {
@@ -646,7 +645,7 @@ ${note}` : ""}`;
       backToHistory();
     } catch (e) {
       console.error("Failed to delete encounter", e);
-      alert(`${t("dps.historyDetail.deleteFailed", "删除战斗记录失败", "Failed to delete encounter", "戦闘履歴の削除に失敗しました")}: ${e}`);
+      alert("删除战斗记录失败：" + e);
       isDeleting = false;
       showDeleteModal = false;
     }
@@ -697,8 +696,8 @@ ${note}` : ""}`;
                 <button
                   onclick={backToHistory}
                   class="p-0.5 text-muted-foreground/70 hover:text-foreground transition-colors rounded shrink-0"
-                  title={t("dps.historyDetail.backToHistory", "返回历史", "Back to History", "履歴に戻る")}
-                  aria-label={t("dps.historyDetail.backToHistory", "返回历史", "Back to History", "履歴に戻る")}
+                  title="返回历史"
+                  aria-label="返回历史"
                 >
                   <svg
                     class="w-4 h-4"
@@ -716,10 +715,7 @@ ${note}` : ""}`;
                   </svg>
                 </button>
                 <h2 class="text-lg font-semibold text-foreground leading-tight">
-                  {localizeRawSceneName(
-                    encounter.sceneName,
-                    t("dps.historyDetail.unknownScene", "未知场景", "Unknown Scene", "不明なシーン"),
-                  )}
+                  {localizeSceneName((encounter as { sceneId?: number | string | null }).sceneId ?? null, encounter.sceneName || t("dps.historyDetail.unknownScene", "未知场景", "Unknown Scene", "不明なシーン"))}
                 </h2>
               </div>
               {#if encounter.bosses.length > 0}
@@ -730,7 +726,7 @@ ${note}` : ""}`;
                         class={b.isDefeated
                           ? "text-destructive line-through"
                           : "text-primary"}
-                        >{localizeRawMonsterName(b.monsterName, b.monsterName)}{i < encounter.bosses.length - 1 ? "," : ""}</span
+                        >{localizeRawMonsterName(b.monsterName, t("dps.historyDetail.unknownBoss", "未知首领", "Unknown Boss", "不明なボス"))}{i < encounter.bosses.length - 1 ? "," : ""}</span
                       >
                     {/each}
                   </div>
@@ -739,7 +735,7 @@ ${note}` : ""}`;
               <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                 <span>{new Date(encounter.startedAtMs).toLocaleString()}</span>
                 <span class="text-muted-foreground">•</span>
-                <span>{t("dps.historyDetail.duration", "时长", "Duration", "戦闘時間")}: {formatEncounterDuration(encounterDurationSeconds)}</span>
+                <span>{t("dps.historyDetail.duration", "时长", "Duration", "時間")}: {formatEncounterDuration(encounterDurationSeconds)}</span>
                 <span class="text-muted-foreground">•</span>
                 <span class="text-[11px] text-muted-foreground">#{encounter.id}</span>
               </div>
@@ -752,8 +748,8 @@ ${note}` : ""}`;
                 <button
                   onclick={openEncounterOnWebsite}
                   class="inline-flex items-center justify-center rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors p-2"
-                  title={t("dps.historyDetail.openOnWebsite", "在 resonance-logs.com 打开该战斗记录", "Open this encounter on resonance-logs.com", "resonance-logs.com でこの戦闘記録を開く")}
-                  aria-label={t("dps.historyDetail.openOnWebsiteShort", "在网站打开", "Open on Website", "サイトで開く")}
+                  title="在 resonance-logs.com 打开该战斗记录"
+                  aria-label="在网站打开"
                 >
                   <svg
                     class="w-4 h-4"
@@ -777,11 +773,11 @@ ${note}` : ""}`;
                   ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20'
                   : 'bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground'}"
                 title={encounter.isFavorite
-                  ? t("dps.historyDetail.removeFavorite", "取消收藏", "Remove Favorite", "お気に入り解除")
-                  : t("dps.historyDetail.addFavorite", "加入收藏", "Add Favorite", "お気に入りに追加")}
+                  ? "取消收藏"
+                  : "加入收藏"}
                 aria-label={encounter.isFavorite
-                  ? t("dps.historyDetail.removeFavorite", "取消收藏", "Remove Favorite", "お気に入り解除")
-                  : t("dps.historyDetail.addFavorite", "加入收藏", "Add Favorite", "お気に入りに追加")}
+                  ? "取消收藏"
+                  : "加入收藏"}
               >
                 <svg
                   class="w-4 h-4"
@@ -801,8 +797,8 @@ ${note}` : ""}`;
               <button
                 onclick={openDeleteModal}
                 class="inline-flex items-center justify-center rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors p-2"
-                title={t("dps.historyDetail.deleteEncounter", "删除该战斗记录", "Delete Encounter", "この戦闘記録を削除")}
-                aria-label={t("dps.historyDetail.deleteEncounter", "删除该战斗记录", "Delete Encounter", "この戦闘記録を削除")}
+                title="删除该战斗记录"
+                aria-label="删除战斗记录"
               >
                 <svg
                   class="w-4 h-4"
@@ -855,7 +851,7 @@ ${note}` : ""}`;
             onclick={() => (overviewTargetUid = target.targetUid)}
             title={`${t("dps.historyDetail.target", "目标", "Target", "ターゲット")} #${target.targetUid}`}
           >
-            {target.targetName}
+            {localizeRawMonsterName(target.targetName, target.targetName)}
           </button>
         {/each}
       </div>
@@ -872,7 +868,7 @@ ${note}` : ""}`;
               {#each visiblePlayerColumns as col (col.key)}
                 <th
                   class="px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                  >{col.header}</th
+                  >{thLabel(col)}</th
                 >
               {/each}
             </tr>
@@ -899,8 +895,8 @@ ${note}` : ""}`;
                     <img
                       class="size-5 object-contain"
                       src={getClassIcon(p.className)}
-                      alt={t("dps.historyDetail.classIcon", "职业图标", "Class Icon", "クラスアイコン")}
-                      {@attach tooltip(() => p.classDisplay || t("dps.historyDetail.unknownClass", "未知职业", "Unknown Class", "不明なクラス"))}
+                      alt="职业图标"
+                      {@attach tooltip(() => p.classDisplay || "未知职业")}
                     />
                     <span
                       class="truncate"
@@ -911,7 +907,7 @@ ${note}` : ""}`;
                         : SETTINGS.history.general.state.showOthersAbilityScore)) || (p.seasonStrength > 0 && (p.isLocalPlayer
                         ? SETTINGS.history.general.state.showYourSeasonStrength
                         : SETTINGS.history.general.state.showOthersSeasonStrength))}
-                        <span class="inline-flex items-center gap-0 text-muted-foreground tabular-nums">
+                        <span class="inline-flex items-center gap-1 text-muted-foreground tabular-nums">
                           {#if p.abilityScore > 0 && (p.isLocalPlayer
                             ? SETTINGS.history.general.state.showYourAbilityScore
                             : SETTINGS.history.general.state.showOthersAbilityScore)}
@@ -924,6 +920,7 @@ ${note}` : ""}`;
                           {#if p.seasonStrength > 0 && (p.isLocalPlayer
                             ? SETTINGS.history.general.state.showYourSeasonStrength
                             : SETTINGS.history.general.state.showOthersSeasonStrength)}
+                            <span>·</span>
                             <span>({p.seasonStrength})</span>
                           {/if}
                         </span>
@@ -996,7 +993,7 @@ ${note}` : ""}`;
         <button
           onclick={backToEncounter}
           class="p-1.5 text-neutral-400 hover:text-neutral-200 transition-colors rounded hover:bg-neutral-800"
-          aria-label={t("dps.historyDetail.backToOverview", "返回战斗概览", "Back to Encounter Overview", "戦闘概要に戻る")}
+          aria-label="返回战斗概览"
         >
           <svg
             class="w-5 h-5"
@@ -1014,9 +1011,9 @@ ${note}` : ""}`;
           </svg>
         </button>
         <div>
-          <h2 class="text-xl font-semibold text-foreground">{t("dps.historyDetail.skillDetails", "技能明细", "Skill Details", "スキル詳細")}</h2>
+          <h2 class="text-xl font-semibold text-foreground">技能明细</h2>
           <div class="text-sm text-neutral-400">
-            {t("dps.historyDetail.playerLabel", "玩家", "Player", "プレイヤー")}: {getDisplayName({
+            Player: {getDisplayName({
               player: {
                 uid: selectedPlayer.uid,
                 name: selectedPlayer.name,
@@ -1036,10 +1033,10 @@ ${note}` : ""}`;
     {#if skillType === "heal"}
       <div class="mb-3 rounded border border-border/60 bg-card/30 p-3">
         <div class="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-          {t("dps.historyDetail.healTargetDistribution", "治疗目标分布", "Heal Target Distribution", "回復対象の内訳")}
+          治疗目标分布
         </div>
         {#if healTargetSummary.length === 0}
-          <div class="text-sm text-muted-foreground">{t("dps.historyDetail.noHealTargetData", "暂无目标治疗数据", "No heal target data", "回復対象データがありません")}</div>
+          <div class="text-sm text-muted-foreground">暂无目标治疗数据</div>
         {:else}
           <div class="space-y-1.5">
             {#each healTargetSummary as target (target.targetUid)}
@@ -1067,12 +1064,12 @@ ${note}` : ""}`;
           <tr class="bg-popover/60">
             <th
               class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
-              >{t("dps.historyDetail.skill", "技能", "Skill", "スキル")}</th
+              >技能</th
             >
             {#each visibleSkillColumns as col (col.key)}
               <th
                 class="px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >{col.header}</th
+                >{thLabel(col)}</th
               >
             {/each}
           </tr>
@@ -1186,7 +1183,7 @@ ${note}` : ""}`;
       </table>
     </div>
   {:else}
-    <div class="text-neutral-400">{t("dps.historyDetail.loading", "加载中...", "Loading...", "読み込み中...")}</div>
+    <div class="text-neutral-400">加载中...</div>
   {/if}
 </div>
 
@@ -1202,7 +1199,7 @@ ${note}` : ""}`;
     <button
       class="absolute inset-0 bg-black/60 backdrop-blur-sm"
       onclick={closeDeleteModal}
-      aria-label={t("common.closeModal", "关闭弹窗", "Close Modal", "モーダルを閉じる")}
+      aria-label="关闭弹窗"
     ></button>
 
     <!-- Modal Content -->
@@ -1234,10 +1231,11 @@ ${note}` : ""}`;
             id="delete-modal-title"
             class="text-lg font-semibold text-foreground"
           >
-            {t("dps.historyDetail.deleteModal.title", "删除战斗记录", "Delete Encounter", "戦闘記録を削除")}
+            Delete Encounter
           </h3>
           <p class="mt-2 text-sm text-muted-foreground">
-            {t("dps.historyDetail.deleteModal.body", "确定要删除这条战斗记录吗？此操作无法撤销，所有相关数据都将被永久移除。", "Are you sure you want to delete this encounter? This action cannot be undone and all associated data will be permanently removed.", "この戦闘記録を削除してもよろしいですか？この操作は元に戻せず、関連データはすべて完全に削除されます。")}
+            Are you sure you want to delete this encounter? This action cannot
+            be undone and all associated data will be permanently removed.
           </p>
         </div>
       </div>
@@ -1249,7 +1247,7 @@ ${note}` : ""}`;
           disabled={isDeleting}
           class="px-4 py-2 text-sm rounded-md border border-border bg-popover text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {t("common.cancel", "取消", "Cancel", "キャンセル")}
+          Cancel
         </button>
         <button
           onclick={confirmDeleteEncounter}
@@ -1272,9 +1270,9 @@ ${note}` : ""}`;
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            {t("dps.historyDetail.deleting", "删除中...", "Deleting...", "削除中...")}
+            Deleting...
           {:else}
-            {t("common.delete", "删除", "Delete", "削除")}
+            Delete
           {/if}
         </button>
       </div>
