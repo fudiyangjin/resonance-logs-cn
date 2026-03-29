@@ -1,4 +1,4 @@
-This is a fork of Resonance Logs CN. I have no idea what I'm doing, so I added a translation layer to it lol. 
+This is a fork of Resonance Logs CN. I have no idea what I'm doing, so I added a translation layer to it lol. I will eventually do a PR. This is based off of version 0.0.8
 
 Don't expect patchnotes for this until it's nearly done.
 Also some minor UI adjustments were done. 

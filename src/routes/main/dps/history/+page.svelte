@@ -11,6 +11,7 @@
 	import { resolveNavigationTranslation } from "$lib/i18n";
 	import { SETTINGS } from "$lib/settings-store";
 	import { localizeRawSceneName } from "$lib/scene-mappings";
+  import { localizeRawMonsterName } from "$lib/monster-mappings";
 
 	let encounters = $state<EncounterSummaryDto[]>([]);
 	let errorMsg = $state<string | null>(null);
@@ -560,11 +561,11 @@
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-popover text-muted-foreground leading-tight border border-border/60"
 					>
 						<span class="text-muted-foreground/70">{t("dps.historyPage.bossPrefix", "Boss: ")}</span>
-						{boss}
+						{localizeRawMonsterName(boss, boss)}
 						<button
 							onclick={() => removeBossFilter(boss)}
 							class="text-muted-foreground/70 hover:text-destructive transition-colors"
-							aria-label={`${t("dps.historyPage.clearAll", "Clear")} ${boss}`}
+							aria-label={`${t("dps.historyPage.clearAll", "Clear")} ${localizeRawMonsterName(boss, boss)}`}
 						>
 							✕
 						</button>
@@ -705,7 +706,7 @@
 								<div>
 									{#if enc.bosses.length > 0}
 										<div class="flex flex-wrap gap-1">
-											<span class="text-xs py-0.5 rounded px-1.5">{enc.bosses[0]?.monsterName}</span>
+											<span class="text-xs py-0.5 rounded px-1.5">{localizeRawMonsterName(enc.bosses[0]?.monsterName, enc.bosses[0]?.monsterName)}</span>
 										</div>
 									{:else}
 										<span class="inline-block text-muted-foreground text-xs opacity-70 py-0.5 px-1.5">{t("dps.historyPage.noBoss", "No Boss")}</span>

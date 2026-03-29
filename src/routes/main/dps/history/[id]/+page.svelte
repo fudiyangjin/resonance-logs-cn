@@ -27,6 +27,7 @@
   import { formatClassSpecLabel } from "$lib/class-labels";
   import { resolveNavigationTranslation, resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
   import { localizeRawSceneName } from "$lib/scene-mappings";
+  import { localizeRawMonsterName } from "$lib/monster-mappings";
 
   type HistorySkillType = "dps" | "heal" | "tanked";
 
@@ -729,7 +730,7 @@ ${note}` : ""}`;
                         class={b.isDefeated
                           ? "text-destructive line-through"
                           : "text-primary"}
-                        >{b.monsterName}{i < encounter.bosses.length - 1 ? "," : ""}</span
+                        >{localizeRawMonsterName(b.monsterName, b.monsterName)}{i < encounter.bosses.length - 1 ? "," : ""}</span
                       >
                     {/each}
                   </div>
