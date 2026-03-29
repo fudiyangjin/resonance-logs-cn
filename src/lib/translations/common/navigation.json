@@ -160,9 +160,9 @@
     "ja": "BuffNameSearch スキャフォールドを生成"
   },
   "debug.generateBuffNameSearchDescription": {
-    "zh-CN": "根据内置 BuffName.json 非破坏性生成或更新运行时 BuffNameSearch.json。",
-    "en": "Non-destructively generate or update runtime BuffNameSearch.json from the built-in BuffName.json.",
-    "ja": "内蔵の BuffName.json から実行時 BuffNameSearch.json を非破壊で生成または更新します。"
+    "zh-CN": "根据 src/lib/config/BuffName.json 非破坏性生成或更新运行时 BuffNameSearch.json。",
+    "en": "Non-destructively generate or update runtime BuffNameSearch.json from src/lib/config/BuffName.json.",
+    "ja": "src/lib/config/BuffName.json から実行時 BuffNameSearch.json を非破壊で生成または更新します。"
   },
   "debug.generateBuffNameSearchButton": {
     "zh-CN": "生成 BuffNameSearch",
@@ -2060,9 +2060,9 @@
     "ja": "BuffName 翻訳スキャフォールドを生成"
   },
   "debug.generateBuffNameDescription": {
-    "zh-CN": "根据内置 BuffName.json 和 BuffNameSearch.json 非破坏性生成或更新运行时 BuffName.json。",
-    "en": "Non-destructively generate or update runtime BuffName.json from the built-in BuffName.json.",
-    "ja": "内蔵の BuffName.json から実行時 BuffName.json を非破壊で生成または更新します。"
+    "zh-CN": "根据 src/lib/config/BuffName.json 非破坏性生成或更新运行时 BuffName.json。",
+    "en": "Non-destructively generate or update runtime BuffName.json from src/lib/config/BuffName.json.",
+    "ja": "src/lib/config/BuffName.json から実行時 BuffName.json を非破壊で生成または更新します。"
   },
   "debug.generateBuffNameButton": {
     "zh-CN": "生成 BuffName",
@@ -2558,5 +2558,50 @@
     "zh-CN": "搜索场景...",
     "en": "Search scenes...",
     "ja": "シーンを検索..."
+  },
+  "debug.generateSceneNameTitle": {
+    "zh-CN": "生成 SceneName 翻译脚手架",
+    "en": "Generate SceneName Translation Scaffold",
+    "ja": "SceneName 翻訳スキャフォールドを生成"
+  },
+  "debug.generateSceneNameDescription": {
+    "zh-CN": "根据 src-tauri/meter-data/SceneName.json 非破坏性生成或更新运行时 SceneName.json。",
+    "en": "Non-destructively generate or update runtime SceneName.json from src-tauri/meter-data/SceneName.json.",
+    "ja": "src-tauri/meter-data/SceneName.json から実行時 SceneName.json を非破壊で生成または更新します。"
+  },
+  "debug.generateSceneNameButton": {
+    "zh-CN": "生成 SceneName",
+    "en": "Generate SceneName",
+    "ja": "SceneName を生成"
+  },
+  "debug.generateMonsterNameTitle": {
+    "zh-CN": "生成 MonsterName 翻译脚手架",
+    "en": "Generate MonsterName Translation Scaffold",
+    "ja": "MonsterName 翻訳スキャフォールドを生成"
+  },
+  "debug.generateMonsterNameDescription": {
+    "zh-CN": "根据 src-tauri/meter-data/MonsterIdNameType.json 非破坏性生成或更新运行时 MonsterName.json。",
+    "en": "Non-destructively generate or update runtime MonsterName.json from src-tauri/meter-data/MonsterIdNameType.json.",
+    "ja": "src-tauri/meter-data/MonsterIdNameType.json から実行時 MonsterName.json を非破壊で生成または更新します。"
+  },
+  "debug.generateMonsterNameButton": {
+    "zh-CN": "生成 MonsterName",
+    "en": "Generate MonsterName",
+    "ja": "MonsterName を生成"
+  },
+  "debug.generateSkillNamesTitle": {
+    "zh-CN": "生成技能翻译脚手架",
+    "en": "Generate Skill Translation Scaffold",
+    "ja": "スキル翻訳スキャフォールドを生成"
+  },
+  "debug.generateSkillNamesDescription": {
+    "zh-CN": "根据 RecountTable.json、DamageAttrIdName.json、SkillEffectTable.json、SkillFightLevelTable.json 与 TempAttrTable.json 非破坏性生成或更新运行时 common/skillnames.json。",
+    "en": "Non-destructively generate or update runtime common/skillnames.json from RecountTable.json, DamageAttrIdName.json, SkillEffectTable.json, SkillFightLevelTable.json, and TempAttrTable.json.",
+    "ja": "RecountTable.json、DamageAttrIdName.json、SkillEffectTable.json、SkillFightLevelTable.json、TempAttrTable.json から実行時 common/skillnames.json を非破壊で生成または更新します。"
+  },
+  "debug.generateSkillNamesButton": {
+    "zh-CN": "生成技能翻译",
+    "en": "Generate Skill Translations",
+    "ja": "スキル翻訳を生成"
   }
 }

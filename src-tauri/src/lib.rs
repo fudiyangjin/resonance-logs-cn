@@ -11,6 +11,7 @@ use std::process::{Command, Stdio};
 
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
+use std::collections::BTreeMap;
 
 use tauri::menu::MenuBuilder;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -82,6 +83,9 @@ pub fn run() {
             debug_commands::read_translation_runtime_file,
             debug_commands::generate_buff_name_search_scaffold,
             debug_commands::generate_buff_name_translation_scaffold,
+            debug_commands::generate_scene_name_translation_scaffold,
+            debug_commands::generate_monster_name_translation_scaffold,
+            debug_commands::generate_skill_name_translation_scaffold,
             module_optimizer::commands::check_gpu_support,
             module_optimizer::commands::get_latest_modules,
             module_optimizer::commands::optimize_latest_modules,
@@ -219,6 +223,16 @@ struct EmbeddedTranslationFile {
 const BUFF_NAME_SOURCE_JSON: &str = include_str!("../../src/lib/config/BuffName.json");
 const BUFF_NAME_RUNTIME_RELATIVE_PATH: &str = "BuffName.json";
 const BUFF_NAME_SEARCH_RUNTIME_RELATIVE_PATH: &str = "BuffNameSearch.json";
+const SCENE_NAME_SOURCE_JSON: &str = include_str!("../meter-data/SceneName.json");
+const SCENE_NAME_RUNTIME_RELATIVE_PATH: &str = "SceneName.json";
+const MONSTER_NAME_SOURCE_JSON: &str = include_str!("../meter-data/MonsterIdNameType.json");
+const MONSTER_NAME_RUNTIME_RELATIVE_PATH: &str = "MonsterName.json";
+const RECOUNT_TABLE_SOURCE_JSON: &str = include_str!("../../src/lib/config/RecountTable.json");
+const DAMAGE_ATTR_ID_NAME_SOURCE_JSON: &str = include_str!("../../src/lib/config/DamageAttrIdName.json");
+const SKILL_EFFECT_TABLE_SOURCE_JSON: &str = include_str!("../meter-data/SkillEffectTable.json");
+const SKILL_FIGHT_LEVEL_TABLE_SOURCE_JSON: &str = include_str!("../meter-data/SkillFightLevelTable.json");
+const TEMP_ATTR_TABLE_SOURCE_JSON: &str = include_str!("../meter-data/TempAttrTable.json");
+const SKILL_NAMES_RUNTIME_RELATIVE_PATH: &str = "common/skillnames.json";
 
 #[derive(Deserialize)]
 struct RawBuffSourceEntry {
@@ -230,6 +244,22 @@ struct RawBuffSourceEntry {
     name_design: Option<String>,
     #[serde(rename = "SpriteFile")]
     sprite_file: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct RawMonsterSourceEntry {
+    #[serde(rename = "Name")]
+    name: Option<String>,
+    #[serde(rename = "MonsterType")]
+    _monster_type: Option<i64>,
+}
+
+#[derive(Deserialize)]
+struct RawRecountSourceEntry {
+    #[serde(rename = "RecountName")]
+    recount_name: Option<String>,
+    #[serde(rename = "DamageId")]
+    _damage_id: Option<Vec<u64>>,
 }
 
 const EMBEDDED_TRANSLATION_FILES: &[EmbeddedTranslationFile] = &[
@@ -272,6 +302,14 @@ const EMBEDDED_TRANSLATION_FILES: &[EmbeddedTranslationFile] = &[
     EmbeddedTranslationFile {
         relative_path: "BuffName.json",
         contents: include_str!("../../src/lib/translations/BuffName.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "SceneName.json",
+        contents: include_str!("../../src/lib/translations/SceneName.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "MonsterName.json",
+        contents: include_str!("../../src/lib/translations/MonsterName.json"),
     },
 ];
 
@@ -717,6 +755,328 @@ fn generate_buff_name_translation_file(
 }
 
 
+fn generate_scene_name_translation_file(
+    app_handle: &tauri::AppHandle,
+) -> Result<(PathBuf, usize, usize, usize), String> {
+    let source_root: Map<String, Value> = serde_json::from_str(SCENE_NAME_SOURCE_JSON)
+        .map_err(|e| format!("Failed to parse bundled SceneName source JSON: {e}"))?;
+
+    let mut existing_root =
+        read_optional_translation_runtime_json_object(app_handle, SCENE_NAME_RUNTIME_RELATIVE_PATH)?;
+    let mut next_root = Map::new();
+
+    let mut processed_count = 0usize;
+    let mut created_count = 0usize;
+
+    for (entry_key, source_value) in source_root {
+        let default_name = source_value.as_str().map(str::trim).unwrap_or("");
+        if default_name.is_empty() {
+            continue;
+        }
+
+        processed_count += 1;
+
+        let existing_entry = existing_root.remove(&entry_key);
+        if existing_entry.is_none() {
+            created_count += 1;
+        }
+
+        let merged_entry = ensure_multilang_string_object(existing_entry.as_ref(), Some(default_name));
+        next_root.insert(entry_key, merged_entry);
+    }
+
+    let preserved_existing_only_count = existing_root.len();
+    for (key, value) in existing_root {
+        next_root.entry(key).or_insert(value);
+    }
+
+    let file_path = write_translation_runtime_json_value(
+        app_handle,
+        SCENE_NAME_RUNTIME_RELATIVE_PATH,
+        &Value::Object(next_root),
+    )?;
+
+    Ok((
+        file_path,
+        processed_count,
+        created_count,
+        preserved_existing_only_count,
+    ))
+}
+
+fn generate_monster_name_translation_file(
+    app_handle: &tauri::AppHandle,
+) -> Result<(PathBuf, usize, usize, usize), String> {
+    let source_root: BTreeMap<String, RawMonsterSourceEntry> = serde_json::from_str(MONSTER_NAME_SOURCE_JSON)
+        .map_err(|e| format!("Failed to parse bundled MonsterIdNameType source JSON: {e}"))?;
+
+    let mut existing_root =
+        read_optional_translation_runtime_json_object(app_handle, MONSTER_NAME_RUNTIME_RELATIVE_PATH)?;
+    let mut next_root = Map::new();
+
+    let mut processed_count = 0usize;
+    let mut created_count = 0usize;
+
+    for (entry_key, source_value) in source_root {
+        let default_name = source_value.name.as_deref().map(str::trim).unwrap_or("");
+        if default_name.is_empty() {
+            continue;
+        }
+
+        processed_count += 1;
+
+        let existing_entry = existing_root.remove(&entry_key);
+        if existing_entry.is_none() {
+            created_count += 1;
+        }
+
+        let merged_entry = ensure_multilang_string_object(existing_entry.as_ref(), Some(default_name));
+        next_root.insert(entry_key, merged_entry);
+    }
+
+    let preserved_existing_only_count = existing_root.len();
+    for (key, value) in existing_root {
+        next_root.entry(key).or_insert(value);
+    }
+
+    let file_path = write_translation_runtime_json_value(
+        app_handle,
+        MONSTER_NAME_RUNTIME_RELATIVE_PATH,
+        &Value::Object(next_root),
+    )?;
+
+    Ok((
+        file_path,
+        processed_count,
+        created_count,
+        preserved_existing_only_count,
+    ))
+}
+
+
+fn extract_non_empty_string_field(value: &Value, field_name: &str) -> Option<String> {
+    value.as_object()
+        .and_then(|object| object.get(field_name))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(|value| value.to_string())
+}
+
+fn upsert_skill_name_translation_entry(
+    next_root: &mut Map<String, Value>,
+    existing_root: &mut Map<String, Value>,
+    entry_key: &str,
+    zh_name: Option<&str>,
+    zh_note: Option<&str>,
+    created_count: &mut usize,
+) {
+    let has_name = zh_name.map(str::trim).filter(|value| !value.is_empty()).is_some();
+    let has_note = zh_note.map(str::trim).filter(|value| !value.is_empty()).is_some();
+
+    if !has_name && !has_note {
+        return;
+    }
+
+    if let Some(existing_value) = next_root.get_mut(entry_key) {
+        if let Some(existing_object) = existing_value.as_object_mut() {
+            if let Some(note_text) = zh_note.map(str::trim).filter(|value| !value.is_empty()) {
+                let updated_note =
+                    ensure_multilang_string_object(existing_object.get("note"), Some(note_text));
+                existing_object.insert("note".to_string(), updated_note);
+            }
+        }
+        return;
+    }
+
+    let existing_entry = existing_root.remove(entry_key);
+    if existing_entry.is_none() {
+        *created_count += 1;
+    }
+
+    let mut entry_object = existing_entry
+        .and_then(|value| value.as_object().cloned())
+        .unwrap_or_default();
+
+    entry_object.insert(
+        "name".to_string(),
+        ensure_multilang_string_object(entry_object.get("name"), zh_name),
+    );
+    entry_object.insert(
+        "note".to_string(),
+        ensure_multilang_string_object(entry_object.get("note"), zh_note),
+    );
+
+    next_root.insert(entry_key.to_string(), Value::Object(entry_object));
+}
+
+fn generate_skill_name_translation_file(
+    app_handle: &tauri::AppHandle,
+) -> Result<(PathBuf, usize, usize, usize), String> {
+    let recount_root: BTreeMap<String, RawRecountSourceEntry> = serde_json::from_str(RECOUNT_TABLE_SOURCE_JSON)
+        .map_err(|e| format!("Failed to parse bundled RecountTable source JSON: {e}"))?;
+    let damage_attr_root: Map<String, Value> = serde_json::from_str(DAMAGE_ATTR_ID_NAME_SOURCE_JSON)
+        .map_err(|e| format!("Failed to parse bundled DamageAttrIdName source JSON: {e}"))?;
+    let skill_effect_root: Map<String, Value> = serde_json::from_str(SKILL_EFFECT_TABLE_SOURCE_JSON)
+        .map_err(|e| format!("Failed to parse bundled SkillEffectTable source JSON: {e}"))?;
+    let skill_fight_level_root: Map<String, Value> = serde_json::from_str(SKILL_FIGHT_LEVEL_TABLE_SOURCE_JSON)
+        .map_err(|e| format!("Failed to parse bundled SkillFightLevelTable source JSON: {e}"))?;
+    let temp_attr_root: Map<String, Value> = serde_json::from_str(TEMP_ATTR_TABLE_SOURCE_JSON)
+        .map_err(|e| format!("Failed to parse bundled TempAttrTable source JSON: {e}"))?;
+
+    let mut existing_root =
+        read_optional_translation_runtime_json_object(app_handle, SKILL_NAMES_RUNTIME_RELATIVE_PATH)?;
+    let mut next_root = Map::new();
+
+    let mut processed_count = 0usize;
+    let mut created_count = 0usize;
+
+    // Priority 1: recount/group IDs (what the UI groups by first)
+    for (entry_key, source_value) in recount_root {
+        let default_name = source_value.recount_name.as_deref().map(str::trim).unwrap_or("");
+        if default_name.is_empty() {
+            continue;
+        }
+
+        processed_count += 1;
+        upsert_skill_name_translation_entry(
+            &mut next_root,
+            &mut existing_root,
+            &entry_key,
+            Some(default_name),
+            None,
+            &mut created_count,
+        );
+    }
+
+    // Priority 2: raw damage/skill IDs that appear in encounter logs
+    for (entry_key, source_value) in damage_attr_root {
+        let default_name = source_value.as_str().map(str::trim).unwrap_or("");
+        if default_name.is_empty() {
+            continue;
+        }
+
+        processed_count += 1;
+        upsert_skill_name_translation_entry(
+            &mut next_root,
+            &mut existing_root,
+            &entry_key,
+            Some(default_name),
+            None,
+            &mut created_count,
+        );
+    }
+
+    // Priority 3: skill effect table gap-fill
+    for (entry_key, source_value) in skill_effect_root {
+        let default_name = extract_non_empty_string_field(&source_value, "Name");
+        if default_name.is_none() {
+            continue;
+        }
+
+        processed_count += 1;
+        upsert_skill_name_translation_entry(
+            &mut next_root,
+            &mut existing_root,
+            &entry_key,
+            default_name.as_deref(),
+            None,
+            &mut created_count,
+        );
+    }
+
+    // Priority 4: skill fight level table gap-fill by row id, effect id, and skill id
+    for (entry_key, source_value) in skill_fight_level_root {
+        let default_name = extract_non_empty_string_field(&source_value, "Name");
+        let Some(default_name_ref) = default_name.as_deref() else {
+            continue;
+        };
+
+        processed_count += 1;
+
+        upsert_skill_name_translation_entry(
+            &mut next_root,
+            &mut existing_root,
+            &entry_key,
+            Some(default_name_ref),
+            None,
+            &mut created_count,
+        );
+
+        if let Some(skill_effect_id) = source_value
+            .as_object()
+            .and_then(|object| object.get("SkillEffectId"))
+            .and_then(Value::as_i64)
+        {
+            let skill_effect_key = skill_effect_id.to_string();
+            upsert_skill_name_translation_entry(
+                &mut next_root,
+                &mut existing_root,
+                &skill_effect_key,
+                Some(default_name_ref),
+                None,
+                &mut created_count,
+            );
+        }
+
+        if let Some(skill_id) = source_value
+            .as_object()
+            .and_then(|object| object.get("SkillId"))
+            .and_then(Value::as_i64)
+        {
+            let skill_id_key = skill_id.to_string();
+            upsert_skill_name_translation_entry(
+                &mut next_root,
+                &mut existing_root,
+                &skill_id_key,
+                Some(default_name_ref),
+                None,
+                &mut created_count,
+            );
+        }
+    }
+
+    // Priority 5: temp attrs / effect-like names and optional notes
+    for (entry_key, source_value) in temp_attr_root {
+        let default_name = extract_non_empty_string_field(&source_value, "Name");
+        let default_note = extract_non_empty_string_field(&source_value, "Desc")
+            .or_else(|| extract_non_empty_string_field(&source_value, "AttrDesc"));
+
+        if default_name.is_none() && default_note.is_none() {
+            continue;
+        }
+
+        processed_count += 1;
+        upsert_skill_name_translation_entry(
+            &mut next_root,
+            &mut existing_root,
+            &entry_key,
+            default_name.as_deref(),
+            default_note.as_deref(),
+            &mut created_count,
+        );
+    }
+
+    let preserved_existing_only_count = existing_root.len();
+    for (key, value) in existing_root {
+        next_root.entry(key).or_insert(value);
+    }
+
+    let file_path = write_translation_runtime_json_value(
+        app_handle,
+        SKILL_NAMES_RUNTIME_RELATIVE_PATH,
+        &Value::Object(next_root),
+    )?;
+
+    Ok((
+        file_path,
+        processed_count,
+        created_count,
+        preserved_existing_only_count,
+    ))
+}
+
+
 mod packet_settings_commands {
     use super::*;
 
@@ -945,6 +1305,117 @@ mod debug_commands {
 
         Ok(format!(
             "Generated BuffName translation scaffold at {} (processed {} buffs, created {} new entries, preserved {} existing-only entries)",
+            file_path.display(),
+            processed_count,
+            created_count,
+            preserved_existing_only_count,
+        ))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn generate_scene_name_translation_scaffold(
+        app_handle: tauri::AppHandle,
+    ) -> Result<String, String> {
+        let (
+            file_path,
+            processed_count,
+            created_count,
+            preserved_existing_only_count,
+        ) = crate::generate_scene_name_translation_file(&app_handle)?;
+
+        let payload = json!({
+            "dir": file_path
+                .parent()
+                .map(|path| path.display().to_string())
+                .unwrap_or_default(),
+            "generatedFile": SCENE_NAME_RUNTIME_RELATIVE_PATH,
+            "processedCount": processed_count,
+            "createdCount": created_count,
+            "preservedExistingOnlyCount": preserved_existing_only_count,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+        });
+
+        app_handle
+            .emit("translation-data-refreshed", payload)
+            .map_err(|e| format!("Failed to emit translation refresh event: {e}"))?;
+
+        Ok(format!(
+            "Generated SceneName translation scaffold at {} (processed {} scenes, created {} new entries, preserved {} existing-only entries)",
+            file_path.display(),
+            processed_count,
+            created_count,
+            preserved_existing_only_count,
+        ))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn generate_monster_name_translation_scaffold(
+        app_handle: tauri::AppHandle,
+    ) -> Result<String, String> {
+        let (
+            file_path,
+            processed_count,
+            created_count,
+            preserved_existing_only_count,
+        ) = crate::generate_monster_name_translation_file(&app_handle)?;
+
+        let payload = json!({
+            "dir": file_path
+                .parent()
+                .map(|path| path.display().to_string())
+                .unwrap_or_default(),
+            "generatedFile": MONSTER_NAME_RUNTIME_RELATIVE_PATH,
+            "processedCount": processed_count,
+            "createdCount": created_count,
+            "preservedExistingOnlyCount": preserved_existing_only_count,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+        });
+
+        app_handle
+            .emit("translation-data-refreshed", payload)
+            .map_err(|e| format!("Failed to emit translation refresh event: {e}"))?;
+
+        Ok(format!(
+            "Generated MonsterName translation scaffold at {} (processed {} monsters, created {} new entries, preserved {} existing-only entries)",
+            file_path.display(),
+            processed_count,
+            created_count,
+            preserved_existing_only_count,
+        ))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn generate_skill_name_translation_scaffold(
+        app_handle: tauri::AppHandle,
+    ) -> Result<String, String> {
+        let (
+            file_path,
+            processed_count,
+            created_count,
+            preserved_existing_only_count,
+        ) = crate::generate_skill_name_translation_file(&app_handle)?;
+
+        let payload = json!({
+            "dir": file_path
+                .parent()
+                .map(|path| path.display().to_string())
+                .unwrap_or_default(),
+            "generatedFile": SKILL_NAMES_RUNTIME_RELATIVE_PATH,
+            "processedCount": processed_count,
+            "createdCount": created_count,
+            "preservedExistingOnlyCount": preserved_existing_only_count,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+        });
+
+        app_handle
+            .emit("translation-data-refreshed", payload)
+            .map_err(|e| format!("Failed to emit translation refresh event: {e}"))?;
+
+        Ok(format!(
+            "Generated skillnames translation scaffold at {} (processed {} source entries, created {} new entries, preserved {} existing-only entries)",
             file_path.display(),
             processed_count,
             created_count,

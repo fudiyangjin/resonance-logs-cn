@@ -394,6 +394,30 @@ async generateBuffNameTranslationScaffold() : Promise<Result<string, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+async generateSceneNameTranslationScaffold() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("generate_scene_name_translation_scaffold") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async generateMonsterNameTranslationScaffold() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("generate_monster_name_translation_scaffold") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async generateSkillNameTranslationScaffold() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("generate_skill_name_translation_scaffold") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async checkGpuSupport() : Promise<GpuSupport> {
     return await TAURI_INVOKE("check_gpu_support");
 },

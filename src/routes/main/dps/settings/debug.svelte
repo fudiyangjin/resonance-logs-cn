@@ -18,6 +18,9 @@
   let isSwitchingTranslationSource = $state(false);
   let isGeneratingBuffNameSearch = $state(false);
   let isGeneratingBuffNameTranslation = $state(false);
+  let isGeneratingSceneNameTranslation = $state(false);
+  let isGeneratingMonsterNameTranslation = $state(false);
+  let isGeneratingSkillNameTranslation = $state(false);
 
   const unsubscribeTranslationSourceMode = TRANSLATION_SOURCE_MODE.subscribe((value) => {
     translationSourceMode = value;
@@ -132,6 +135,63 @@
       toast.error("生成 BuffName 翻译脚手架失败：" + e);
     } finally {
       isGeneratingBuffNameTranslation = false;
+    }
+  }
+
+  async function generateSceneNameTranslationScaffold() {
+    if (isGeneratingSceneNameTranslation) {
+      return;
+    }
+
+    isGeneratingSceneNameTranslation = true;
+
+    try {
+      const message = await invoke<string>("generate_scene_name_translation_scaffold");
+      await invoke<string>("refresh_translation_runtime_data");
+      toast.success(message);
+    } catch (e) {
+      console.error(e);
+      toast.error("生成 SceneName 翻译脚手架失败：" + e);
+    } finally {
+      isGeneratingSceneNameTranslation = false;
+    }
+  }
+
+  async function generateMonsterNameTranslationScaffold() {
+    if (isGeneratingMonsterNameTranslation) {
+      return;
+    }
+
+    isGeneratingMonsterNameTranslation = true;
+
+    try {
+      const message = await invoke<string>("generate_monster_name_translation_scaffold");
+      await invoke<string>("refresh_translation_runtime_data");
+      toast.success(message);
+    } catch (e) {
+      console.error(e);
+      toast.error("生成 MonsterName 翻译脚手架失败：" + e);
+    } finally {
+      isGeneratingMonsterNameTranslation = false;
+    }
+  }
+
+  async function generateSkillNameTranslationScaffold() {
+    if (isGeneratingSkillNameTranslation) {
+      return;
+    }
+
+    isGeneratingSkillNameTranslation = true;
+
+    try {
+      const message = await invoke<string>("generate_skill_name_translation_scaffold");
+      await invoke<string>("refresh_translation_runtime_data");
+      toast.success(message);
+    } catch (e) {
+      console.error(e);
+      toast.error("生成技能翻译脚手架失败：" + e);
+    } finally {
+      isGeneratingSkillNameTranslation = false;
     }
   }
 
@@ -361,6 +421,90 @@
               "debug.generateBuffNameButton",
               SETTINGS.live.general.state.language,
               "生成 BuffName",
+            )}
+          </Button>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-muted-foreground">
+            <div class="font-medium text-foreground">
+              {resolveNavigationTranslation(
+                "debug.generateSceneNameTitle",
+                SETTINGS.live.general.state.language,
+                "生成 SceneName 翻译脚手架",
+              )}
+            </div>
+            {resolveNavigationTranslation(
+              "debug.generateSceneNameDescription",
+              SETTINGS.live.general.state.language,
+              "根据 src-tauri/meter-data/SceneName.json 非破坏性生成或更新运行时 SceneName.json。",
+            )}
+          </div>
+          <Button
+            variant="outline"
+            disabled={isGeneratingSceneNameTranslation}
+            onclick={generateSceneNameTranslationScaffold}
+          >
+            {resolveNavigationTranslation(
+              "debug.generateSceneNameButton",
+              SETTINGS.live.general.state.language,
+              "生成 SceneName",
+            )}
+          </Button>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-muted-foreground">
+            <div class="font-medium text-foreground">
+              {resolveNavigationTranslation(
+                "debug.generateMonsterNameTitle",
+                SETTINGS.live.general.state.language,
+                "生成 MonsterName 翻译脚手架",
+              )}
+            </div>
+            {resolveNavigationTranslation(
+              "debug.generateMonsterNameDescription",
+              SETTINGS.live.general.state.language,
+              "根据 src-tauri/meter-data/MonsterIdNameType.json 非破坏性生成或更新运行时 MonsterName.json。",
+            )}
+          </div>
+          <Button
+            variant="outline"
+            disabled={isGeneratingMonsterNameTranslation}
+            onclick={generateMonsterNameTranslationScaffold}
+          >
+            {resolveNavigationTranslation(
+              "debug.generateMonsterNameButton",
+              SETTINGS.live.general.state.language,
+              "生成 MonsterName",
+            )}
+          </Button>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-muted-foreground">
+            <div class="font-medium text-foreground">
+              {resolveNavigationTranslation(
+                "debug.generateSkillNamesTitle",
+                SETTINGS.live.general.state.language,
+                "生成技能翻译脚手架",
+              )}
+            </div>
+            {resolveNavigationTranslation(
+              "debug.generateSkillNamesDescription",
+              SETTINGS.live.general.state.language,
+              "根据 RecountTable.json、DamageAttrIdName.json、SkillEffectTable.json、SkillFightLevelTable.json 与 TempAttrTable.json 非破坏性生成或更新运行时 common/skillnames.json。",
+            )}
+          </div>
+          <Button
+            variant="outline"
+            disabled={isGeneratingSkillNameTranslation}
+            onclick={generateSkillNameTranslationScaffold}
+          >
+            {resolveNavigationTranslation(
+              "debug.generateSkillNamesButton",
+              SETTINGS.live.general.state.language,
+              "生成技能翻译",
             )}
           </Button>
         </div>
