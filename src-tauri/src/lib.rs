@@ -1109,7 +1109,7 @@ fn init_logging(app: &tauri::AppHandle) -> Result<(), String> {
 
     let version = app.package_info().version.to_string();
     let timestamp = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
-    let file_name = format!("resonance-logs-cn_v{version}_{timestamp}.log");
+    let file_name = format!("resonance-logs-global_v{version}_{timestamp}.log");
 
     let file_appender = tracing_appender::rolling::never(&log_dir, &file_name);
     let (file_writer, guard) = tracing_appender::non_blocking(file_appender);
@@ -1175,7 +1175,7 @@ fn cleanup_old_logs(log_dir: &Path, keep: usize) -> Result<(), String> {
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
 
         // Only prune our own log files. Keep crash dumps.
-        if !file_name.starts_with("resonance-logs-cn_v") || file_name.contains("crash_dump") {
+        if !file_name.starts_with("resonance-logs-global_v") || file_name.contains("crash_dump") {
             continue;
         }
 
@@ -1238,7 +1238,7 @@ fn create_diagnostics_bundle(
             continue;
         }
         let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-        if !name.starts_with("resonance-logs-cn_v") || !name.ends_with(".log") {
+        if !name.starts_with("resonance-logs-global_v") || !name.ends_with(".log") {
             continue;
         }
         let meta =
@@ -1255,7 +1255,7 @@ fn create_diagnostics_bundle(
     let name = path
         .file_name()
         .and_then(|s| s.to_str())
-        .unwrap_or("resonance-logs-cn.log");
+        .unwrap_or("resonance-logs-global.log");
 
     // Avoid zipping extremely large files.
     let meta = std::fs::metadata(&path).map_err(|e| format!("metadata {}: {e}", path.display()))?;

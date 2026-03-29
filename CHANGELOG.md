@@ -1,63 +1,11 @@
-# Changelog v0.0.8
+# Changelog v0.0.1
 
-## 更新内容
+Officially, I have added client-side translation generation for anyone to edit and do their own translations to fix things as they want. They will be in your appdata folder and you can open via the debug menu.
 
-### DPS 相关
+I've added many other things, which I've included descritions for in the debug menu.
 
-- 在 YozoraHoshi 数据基础上补充 s3 数据
-- 补充双斧职业图标和专精名的显示
-- 修复 boss 多目标技能占比有误的问题
-- 修复历史记录切换检索列时会重置搜索栏内容的问题
-- 历史记录搜索条件持久化
-- 修复历史记录场景查询，并统一命名为“场景”
-- 历史记录总览页增加已收藏展示
-- 重建历史记录时排除已收藏记录
-- 修复机化处理所 boss 阶段的异常重置
-- 新增打桩模式, 具体操作流程见使用说明中的 dps 相关部分
-  - 可在实时页面为打桩模式选择具体木桩 (DPS检测-实时-打桩模式)
-  - 点击开始后会进入打桩待命状态
-  - 自身首次造成伤害后会正式开始打桩
-  - 只记录该木桩受到的伤害，即使记录了队友对该木桩的伤害也无所谓
-  - 到时间后会自动重置，并可在历史记录中查看具体占比
-  - 手动重置后会重新进入打桩待命状态，等待下一轮触发
-  - 出协会、切图等场景会自动取消打桩模式
+Nearly everything is translated now, being housed in a translation layer. If it's not translated, it will automatically fall back to CN. 
 
-### 实时监控相关
+Right now I am working on finishing up the history menu for the dps meter. After, I will start translating all skills. 
 
-- 使用更稳定的初始化监听列表方式
-- 自定义监控支持增加分组并分别展示
-- 增加雷影剑士技能与资源
-- 支持技能持续时间的设置与展示，默认增加镰车
-- 优化实时监控界面的渲染逻辑，不再每帧重算整个遮罩视图
-
-### 怪物监控相关
-
-- 仇恨列表增加可控显示人数
-- 增加 `ExtraBuffMonitoredMonsters.json` 配置项，用于扩展非 boss 的 buff 监听，默认设置 2 个精英木桩
-
-### 模组相关
-
-- 重构枚举等算法
-  - 4 模组场景下，800 模组枚举 CPU 时间从 87s 降到 43s
-  - CUDA 下 1000 模组枚举时间从 23s 降到 3s
-- 支持 5 模组筛选
-- 优化模组结果展示
-- 修复 CUDA context 未释放导致显存占用不释放的问题
-- 增加模组总和过滤，并直接过滤只有 1 条属性的模组
-
-## 注意事项
-
-### 兼容性提醒
-
-- 如果之前使用过 0.0.2 或 0.0.3，第一次使用 0.0.8 需要清理 `%LOCALAPPDATA%\resonance-logs-cn` 目录下的 `resonance-logs-cn.db`，再重新启动应用
-- 由于已经优化了 npcap 的处理逻辑，请优先使用 npcap 进行抓包，避免因 WinDivert 驱动签名过期引发杀毒软件误报、误隔离，导致应用无法正常运行
-- 对于模组筛选，非 NVIDIA 显卡暂时不能使用枚举策略补充解的质量
-- 首次使用 0.0.8 时需要双击实时监控的"启用实时监控"和怪物监控的"启用怪物监控", 即取消后重新启用, 用于持久化聚合后的监听列表, 解决应用启动时监听列表发送不稳定的问题
-
-### 特别注意
-
-- 如果你自己修改了代码又不想提交 PR，在分享给其他人的时候请把应用名、版本号等原版相关信息都改掉，不要带着原仓库的信息，尤其是应用名和版本号
-
-### 群号
-
-- `1084866292`
+After that, I'm going to add a tool to edit your jsons without having to convert them to a spreadsheet. That was the easiest method I have come up with prior to starting this but it will be much easier doing it within the app.
