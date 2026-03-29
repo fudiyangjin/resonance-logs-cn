@@ -372,6 +372,7 @@ pub fn generate_live_data_payload(
         total_dmg: encounter.total_dmg,
         total_dmg_boss_only: encounter.total_dmg_boss_only,
         total_heal: encounter.total_heal,
+        total_effective_heal: encounter.total_effective_heal,
         local_player_uid: encounter.local_player_uid,
         scene_id: encounter.current_scene_id,
         scene_name: encounter.current_scene_name.clone(),

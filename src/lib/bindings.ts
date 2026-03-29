@@ -526,8 +526,8 @@ name: string;
  * The class ID of the player.
  */
 classId: number }
-export type RawCombatStats = { total: number; hits: number; critHits: number; critTotal: number; luckyHits: number; luckyTotal: number }
-export type RawSkillStats = { totalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number }
+export type RawCombatStats = { total: number; effectiveTotal: number; hits: number; critHits: number; critTotal: number; luckyHits: number; luckyTotal: number }
+export type RawSkillStats = { totalValue: number; effectiveTotalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number }
 /**
  * The result of a query for recent encounters.
  */

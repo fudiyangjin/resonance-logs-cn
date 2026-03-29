@@ -97,6 +97,7 @@
   function buildGroupRaw(group: RecountGroup): RawSkillStatsLike {
     return {
       totalValue: group.totalDmg,
+      effectiveTotalValue: group.effectiveTotal,
       hits: group.hits,
       critHits: group.skills.reduce(
         (sum, skill) => sum + Number(skill.raw.critHits || 0),
@@ -163,7 +164,9 @@
         skillId: group.recountId,
         name: group.recountName,
         totalDmg: group.totalDmg,
+        effectiveTotal: group.effectiveTotal,
         dps: group.dps,
+        effectiveDps: group.effectiveDps,
         dmgPct: group.dmgPct,
         critRate: group.critRate,
         critDmgRate: group.critDmgRate,
@@ -285,29 +288,29 @@
               class="px-2 py-1 text-right relative z-10"
               style="color: {customThemeColors.tableTextColor};"
             >
-              {#if col.key === "totalDmg"}
+              {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
                 {#if shortenValues}
                   <AbbreviatedNumber
-                    num={skill.totalDmg}
+                    num={col.key === "totalDmg" ? skill.totalDmg : skill.effectiveTotal}
                     decimalPlaces={abbreviatedDecimalPlaces}
                     {abbreviationStyle}
                     suffixFontSize={tableSettings.skillAbbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
-                  {col.format(skill.totalDmg)}
+                  {col.format(columnValue(skill, col.key))}
                 {/if}
-              {:else if col.key === "dps"}
+              {:else if col.key === "dps" || col.key === "effectiveDps"}
                 {#if shortenValues}
                   <AbbreviatedNumber
-                    num={skill.dps}
+                    num={columnValue(skill, col.key)}
                     decimalPlaces={abbreviatedDecimalPlaces}
                     {abbreviationStyle}
                     suffixFontSize={tableSettings.skillAbbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
-                  {formatRateValue(skill.dps)}
+                  {formatRateValue(columnValue(skill, col.key))}
                 {/if}
               {:else if col.key === "dmgPct"}
                 <PercentFormat

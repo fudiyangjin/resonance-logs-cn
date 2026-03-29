@@ -60,6 +60,8 @@ export type PlayerRow = {
   hitsPerMinute: number;
   bossDmg: number;
   bossDmgPct: number;
+  effectiveTotal: number;
+  effectiveDps: number;
 };
 
 export type PlayersWindow = {
@@ -70,7 +72,9 @@ export type SkillRow = {
   skillId: number;
   name: string;
   totalDmg: number;
+  effectiveTotal: number;
   dps: number;
+  effectiveDps: number;
   dmgPct: number;
   critRate: number;
   critDmgRate: number;
@@ -186,6 +190,7 @@ export type LiveDataPayload = {
   totalDmg: number;
   totalDmgBossOnly: number;
   totalHeal: number;
+  totalEffectiveHeal: number;
   localPlayerUid: number;
   sceneId: number | null;
   sceneName: string | null;

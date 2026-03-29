@@ -202,22 +202,24 @@
               class="px-3 py-1 text-right relative z-10 tabular-nums font-medium"
               style="color: {customThemeColors.tableTextColor};"
             >
-              {#if col.key === "totalDmg"}
+              {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
                 {#if SETTINGS_SHORTEN_DPS}
                   <AbbreviatedNumber
-                    num={player.totalDmg}
+                    num={col.key === "totalDmg"
+                      ? player.totalDmg
+                      : player.effectiveTotal}
                     decimalPlaces={abbreviatedDecimalPlaces}
                     {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
-                  {player.totalDmg.toLocaleString()}
+                  {col.format(player[col.key] ?? 0)}
                 {/if}
-              {:else if col.key === "dps"}
+              {:else if col.key === "dps" || col.key === "effectiveDps"}
                 {#if SETTINGS_SHORTEN_DPS}
                   <AbbreviatedNumber
-                    num={player.dps}
+                    num={player[col.key] ?? 0}
                     decimalPlaces={abbreviatedDecimalPlaces}
                     {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
