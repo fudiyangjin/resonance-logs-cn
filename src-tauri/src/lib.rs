@@ -21,7 +21,8 @@ use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 // the updater plugin.
 use tauri_specta::{Builder, collect_commands};
 mod database;
-use serde_json::json;
+use serde::Deserialize;
+use serde_json::{json, Map, Value};
 
 /// The label for the live window.
 pub const WINDOW_LIVE_LABEL: &str = "live";
@@ -75,6 +76,12 @@ pub fn run() {
             packets::npcap::check_npcap_status,
             debug_commands::open_log_dir,
             debug_commands::create_diagnostics_bundle,
+            debug_commands::open_translation_data_dir,
+            debug_commands::initialize_translation_runtime_files,
+            debug_commands::refresh_translation_runtime_data,
+            debug_commands::read_translation_runtime_file,
+            debug_commands::generate_buff_name_search_scaffold,
+            debug_commands::generate_buff_name_translation_scaffold,
             module_optimizer::commands::check_gpu_support,
             module_optimizer::commands::get_latest_modules,
             module_optimizer::commands::optimize_latest_modules,
@@ -208,6 +215,512 @@ pub fn run() {
     build_and_run(tauri_builder);
 }
 
+struct EmbeddedTranslationFile {
+    relative_path: &'static str,
+    contents: &'static str,
+}
+
+const BUFF_NAME_SOURCE_JSON: &str = include_str!("../../src/lib/config/BuffName.json");
+const BUFF_NAME_RUNTIME_RELATIVE_PATH: &str = "BuffName.json";
+const BUFF_NAME_SEARCH_RUNTIME_RELATIVE_PATH: &str = "BuffNameSearch.json";
+
+#[derive(Deserialize)]
+struct RawBuffSourceEntry {
+    #[serde(rename = "Id")]
+    id: u64,
+    #[serde(rename = "Icon")]
+    icon: Option<String>,
+    #[serde(rename = "NameDesign")]
+    name_design: Option<String>,
+    #[serde(rename = "SpriteFile")]
+    sprite_file: Option<String>,
+}
+
+const EMBEDDED_TRANSLATION_FILES: &[EmbeddedTranslationFile] = &[
+    EmbeddedTranslationFile {
+        relative_path: "common/navigation.json",
+        contents: include_str!("../../src/lib/translations/common/navigation.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "common/skillnames.json",
+        contents: include_str!("../../src/lib/translations/common/skillnames.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "module-calc.json",
+        contents: include_str!("../../src/lib/translations/module-calc.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "monster-monitor.json",
+        contents: include_str!("../../src/lib/translations/monster-monitor.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "skill-monitor.json",
+        contents: include_str!("../../src/lib/translations/skill-monitor.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "class-labels.json",
+        contents: include_str!("../../src/lib/translations/class-labels.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "settings-store.json",
+        contents: include_str!("../../src/lib/translations/settings-store.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "resonance-skill-search.json",
+        contents: include_str!("../../src/lib/translations/resonance-skill-search.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "BuffNameSearch.json",
+        contents: include_str!("../../src/lib/translations/BuffNameSearch.json"),
+    },
+    EmbeddedTranslationFile {
+        relative_path: "BuffName.json",
+        contents: include_str!("../../src/lib/translations/BuffName.json"),
+    },
+];
+
+fn translation_runtime_dir(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let base_dir = app_handle
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to resolve app data dir: {e}"))?;
+    Ok(base_dir.join("translations"))
+}
+
+fn ensure_translation_runtime_files(
+    app_handle: &tauri::AppHandle,
+) -> Result<(PathBuf, usize), String> {
+    let runtime_dir = translation_runtime_dir(app_handle)?;
+    std::fs::create_dir_all(&runtime_dir)
+        .map_err(|e| format!("Failed to create {}: {e}", runtime_dir.display()))?;
+
+    let mut created_count = 0usize;
+
+    for file in EMBEDDED_TRANSLATION_FILES {
+        let destination = runtime_dir.join(file.relative_path);
+        if destination.exists() {
+            continue;
+        }
+
+        if let Some(parent) = destination.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|e| format!("Failed to create {}: {e}", parent.display()))?;
+        }
+
+        std::fs::write(&destination, file.contents)
+            .map_err(|e| format!("Failed to write {}: {e}", destination.display()))?;
+        created_count += 1;
+    }
+
+    Ok((runtime_dir, created_count))
+}
+
+fn validate_translation_relative_path(relative_path: &str) -> Result<PathBuf, String> {
+    let path = PathBuf::from(relative_path);
+
+    if path.as_os_str().is_empty() {
+        return Err("Translation path cannot be empty".to_string());
+    }
+
+    for component in path.components() {
+        match component {
+            std::path::Component::Normal(_) => {}
+            _ => {
+                return Err(format!("Invalid translation path: {}", relative_path))
+            }
+        }
+    }
+
+    Ok(path)
+}
+
+fn read_translation_runtime_file_contents(
+    app_handle: &tauri::AppHandle,
+    relative_path: &str,
+) -> Result<String, String> {
+    let validated_relative_path = validate_translation_relative_path(relative_path)?;
+    let (runtime_dir, _) = ensure_translation_runtime_files(app_handle)?;
+    let file_path = runtime_dir.join(validated_relative_path);
+
+    std::fs::read_to_string(&file_path)
+        .map_err(|e| format!("Failed to read {}: {e}", file_path.display()))
+}
+
+fn translation_runtime_file_path(
+    app_handle: &tauri::AppHandle,
+    relative_path: &str,
+) -> Result<PathBuf, String> {
+    let validated_relative_path = validate_translation_relative_path(relative_path)?;
+    let (runtime_dir, _) = ensure_translation_runtime_files(app_handle)?;
+    Ok(runtime_dir.join(validated_relative_path))
+}
+
+fn read_optional_translation_runtime_json_object(
+    app_handle: &tauri::AppHandle,
+    relative_path: &str,
+) -> Result<Map<String, Value>, String> {
+    let file_path = translation_runtime_file_path(app_handle, relative_path)?;
+    if !file_path.exists() {
+        return Ok(Map::new());
+    }
+
+    let raw = std::fs::read_to_string(&file_path)
+        .map_err(|e| format!("Failed to read {}: {e}", file_path.display()))?;
+    if raw.trim().is_empty() {
+        return Ok(Map::new());
+    }
+
+    let parsed: Value = serde_json::from_str(&raw)
+        .map_err(|e| format!("Failed to parse {} as JSON: {e}", file_path.display()))?;
+
+    match parsed {
+        Value::Object(map) => Ok(map),
+        Value::Null => Ok(Map::new()),
+        _ => Err(format!(
+            "Expected {} to contain a JSON object at the top level",
+            file_path.display()
+        )),
+    }
+}
+
+fn write_translation_runtime_json_value(
+    app_handle: &tauri::AppHandle,
+    relative_path: &str,
+    value: &Value,
+) -> Result<PathBuf, String> {
+    let file_path = translation_runtime_file_path(app_handle, relative_path)?;
+    if let Some(parent) = file_path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create {}: {e}", parent.display()))?;
+    }
+
+    let raw = serde_json::to_string_pretty(value)
+        .map_err(|e| format!("Failed to serialize JSON for {}: {e}", file_path.display()))?;
+    std::fs::write(&file_path, raw)
+        .map_err(|e| format!("Failed to write {}: {e}", file_path.display()))?;
+
+    Ok(file_path)
+}
+
+fn resolve_generated_buff_categories(
+    _default_name: &str,
+    icon_key: Option<&str>,
+) -> Vec<&'static str> {
+    let mut categories = Vec::new();
+
+    if icon_key
+        .map(|value| value.starts_with("buff_food_up"))
+        .unwrap_or(false)
+    {
+        categories.push("food");
+    }
+
+    if icon_key
+        .map(|value| value.starts_with("buff_agentia_up"))
+        .unwrap_or(false)
+    {
+        categories.push("alchemy");
+    }
+
+    categories
+}
+
+fn build_generated_buff_keywords(
+    default_name: &str,
+    existing_keywords_value: Option<&Value>,
+) -> Vec<Value> {
+    let mut keywords = Vec::<String>::new();
+    keywords.push(default_name.to_string());
+
+    if let Some(existing_keywords) = existing_keywords_value.and_then(Value::as_array) {
+        for keyword in existing_keywords {
+            let Some(keyword_str) = keyword.as_str() else {
+                continue;
+            };
+            let trimmed = keyword_str.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+            if keywords.iter().any(|existing| existing == trimmed) {
+                continue;
+            }
+            keywords.push(trimmed.to_string());
+        }
+    }
+
+    keywords.into_iter().map(Value::String).collect()
+}
+
+fn ensure_multilang_string_object(
+    existing_value: Option<&Value>,
+    derived_zh_cn: Option<&str>,
+) -> Value {
+    let mut object = existing_value
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+
+    if let Some(zh_cn) = derived_zh_cn {
+        object.insert("zh-CN".to_string(), Value::String(zh_cn.to_string()));
+    } else if !object.get("zh-CN").and_then(Value::as_str).is_some() {
+        object.insert("zh-CN".to_string(), Value::String(String::new()));
+    }
+
+    if !object.get("en").and_then(Value::as_str).is_some() {
+        object.insert("en".to_string(), Value::String(String::new()));
+    }
+
+    if !object.get("ja").and_then(Value::as_str).is_some() {
+        object.insert("ja".to_string(), Value::String(String::new()));
+    }
+
+    Value::Object(object)
+}
+
+fn ensure_multilang_keyword_object(
+    existing_value: Option<&Value>,
+    derived_zh_cn_keywords: Vec<Value>,
+) -> Value {
+    let mut object = existing_value
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+
+    object.insert("zh-CN".to_string(), Value::Array(derived_zh_cn_keywords));
+
+    if !object.get("en").map(Value::is_array).unwrap_or(false) {
+        object.insert("en".to_string(), Value::Array(Vec::new()));
+    }
+
+    if !object.get("ja").map(Value::is_array).unwrap_or(false) {
+        object.insert("ja".to_string(), Value::Array(Vec::new()));
+    }
+
+    Value::Object(object)
+}
+
+fn ensure_multilang_name_design_object(
+    existing_value: Option<&Value>,
+    derived_zh_cn: &str,
+) -> Value {
+    let mut object = existing_value
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+
+    object.insert(
+        "zh-CN".to_string(),
+        Value::String(derived_zh_cn.to_string()),
+    );
+
+    if !object.get("en").and_then(Value::as_str).is_some() {
+        object.insert("en".to_string(), Value::String(String::new()));
+    }
+
+    if !object.get("ja").and_then(Value::as_str).is_some() {
+        object.insert("ja".to_string(), Value::String(String::new()));
+    }
+
+    Value::Object(object)
+}
+
+fn generate_buff_name_search_scaffold_file(
+    app_handle: &tauri::AppHandle,
+) -> Result<(PathBuf, usize, usize, usize), String> {
+    let source_entries: Vec<RawBuffSourceEntry> = serde_json::from_str(BUFF_NAME_SOURCE_JSON)
+        .map_err(|e| format!("Failed to parse bundled BuffName.json: {e}"))?;
+
+    let mut existing_root = read_optional_translation_runtime_json_object(
+        app_handle,
+        BUFF_NAME_SEARCH_RUNTIME_RELATIVE_PATH,
+    )?;
+    let mut next_root = Map::new();
+
+    let mut processed_count = 0usize;
+    let mut created_count = 0usize;
+
+    for entry in source_entries {
+        let default_name = entry.name_design.as_deref().map(str::trim).unwrap_or("");
+        if default_name.is_empty() {
+            continue;
+        }
+
+        processed_count += 1;
+
+        let entry_key = entry.id.to_string();
+        let existing_entry = existing_root
+            .remove(&entry_key)
+            .and_then(|value| value.as_object().cloned())
+            .unwrap_or_default();
+
+        if existing_entry.is_empty() {
+            created_count += 1;
+        }
+
+        let mut merged_entry = existing_entry;
+
+        let derived_keywords = build_generated_buff_keywords(
+            default_name,
+            merged_entry
+                .get("keywords")
+                .and_then(Value::as_object)
+                .and_then(|object| object.get("zh-CN")),
+        );
+
+        let icon_key = entry.icon.as_deref().map(str::trim).filter(|value| !value.is_empty());
+        let sprite_file = entry
+            .sprite_file
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty());
+        let categories = resolve_generated_buff_categories(default_name, icon_key);
+
+        merged_entry.insert(
+            "name".to_string(),
+            ensure_multilang_string_object(merged_entry.get("name"), Some(default_name)),
+        );
+        merged_entry.insert(
+            "keywords".to_string(),
+            ensure_multilang_keyword_object(merged_entry.get("keywords"), derived_keywords),
+        );
+        merged_entry.insert(
+            "notes".to_string(),
+            ensure_multilang_string_object(merged_entry.get("notes"), None),
+        );
+        merged_entry.insert(
+            "categories".to_string(),
+            Value::Array(
+                categories
+                    .into_iter()
+                    .map(|category| Value::String(category.to_string()))
+                    .collect(),
+            ),
+        );
+        merged_entry.insert(
+            "iconKey".to_string(),
+            icon_key
+                .map(|value| Value::String(value.to_string()))
+                .unwrap_or(Value::Null),
+        );
+        merged_entry.insert(
+            "spriteFile".to_string(),
+            sprite_file
+                .map(|value| Value::String(value.to_string()))
+                .unwrap_or(Value::Null),
+        );
+        merged_entry.insert(
+            "hasSpriteFile".to_string(),
+            Value::Bool(sprite_file.is_some()),
+        );
+
+        next_root.insert(entry_key, Value::Object(merged_entry));
+    }
+
+    let preserved_existing_only_count = existing_root.len();
+    for (key, value) in existing_root {
+        next_root.entry(key).or_insert(value);
+    }
+
+    let file_path = write_translation_runtime_json_value(
+        app_handle,
+        BUFF_NAME_SEARCH_RUNTIME_RELATIVE_PATH,
+        &Value::Object(next_root),
+    )?;
+
+    Ok((
+        file_path,
+        processed_count,
+        created_count,
+        preserved_existing_only_count,
+    ))
+}
+
+fn generate_buff_name_translation_file(
+    app_handle: &tauri::AppHandle,
+) -> Result<(PathBuf, usize, usize, usize), String> {
+    let source_entries: Vec<RawBuffSourceEntry> = serde_json::from_str(BUFF_NAME_SOURCE_JSON)
+        .map_err(|e| format!("Failed to parse bundled BuffName.json: {e}"))?;
+
+    let mut existing_root =
+        read_optional_translation_runtime_json_object(app_handle, BUFF_NAME_RUNTIME_RELATIVE_PATH)?;
+    let mut next_root = Map::new();
+
+    let mut processed_count = 0usize;
+    let mut created_count = 0usize;
+
+    for entry in source_entries {
+        let default_name = entry.name_design.as_deref().map(str::trim).unwrap_or("");
+        if default_name.is_empty() {
+            continue;
+        }
+
+        processed_count += 1;
+
+        let entry_key = entry.id.to_string();
+        let existing_entry = existing_root
+            .remove(&entry_key)
+            .and_then(|value| value.as_object().cloned())
+            .unwrap_or_default();
+
+        if existing_entry.is_empty() {
+            created_count += 1;
+        }
+
+        let mut merged_entry = existing_entry;
+
+        merged_entry.insert(
+            "Id".to_string(),
+            Value::Number(serde_json::Number::from(entry.id)),
+        );
+        merged_entry.insert(
+            "Icon".to_string(),
+            entry.icon
+                .as_deref()
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(|value| Value::String(value.to_string()))
+                .unwrap_or_else(|| Value::String(String::new())),
+        );
+        merged_entry.insert(
+            "NameDesign".to_string(),
+            ensure_multilang_name_design_object(
+                merged_entry.get("NameDesign"),
+                default_name,
+            ),
+        );
+        merged_entry.insert(
+            "SpriteFile".to_string(),
+            entry.sprite_file
+                .as_deref()
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(|value| Value::String(value.to_string()))
+                .unwrap_or(Value::Null),
+        );
+
+        next_root.insert(entry_key, Value::Object(merged_entry));
+    }
+
+    let preserved_existing_only_count = existing_root.len();
+    for (key, value) in existing_root {
+        next_root.entry(key).or_insert(value);
+    }
+
+    let file_path = write_translation_runtime_json_value(
+        app_handle,
+        BUFF_NAME_RUNTIME_RELATIVE_PATH,
+        &Value::Object(next_root),
+    )?;
+
+    Ok((
+        file_path,
+        processed_count,
+        created_count,
+        preserved_existing_only_count,
+    ))
+}
+
+
 mod packet_settings_commands {
     use super::*;
 
@@ -301,6 +814,146 @@ mod debug_commands {
         destination_path: Option<String>,
     ) -> Result<String, String> {
         crate::create_diagnostics_bundle(&app_handle, destination_path)
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn open_translation_data_dir(app_handle: tauri::AppHandle) -> Result<(), String> {
+        let (runtime_dir, _) = crate::ensure_translation_runtime_files(&app_handle)?;
+
+        #[cfg(target_os = "windows")]
+        {
+            Command::new("explorer")
+                .arg(&runtime_dir)
+                .spawn()
+                .map_err(|e| format!("Failed to open translation dir: {}", e))?;
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            Command::new("xdg-open")
+                .arg(&runtime_dir)
+                .spawn()
+                .map_err(|e| format!("Failed to open translation dir: {}", e))?;
+        }
+
+        Ok(())
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn initialize_translation_runtime_files(
+        app_handle: tauri::AppHandle,
+    ) -> Result<String, String> {
+        let (runtime_dir, created_count) = crate::ensure_translation_runtime_files(&app_handle)?;
+        Ok(format!(
+            "Initialized translation runtime files in {} (created {} missing files)",
+            runtime_dir.display(),
+            created_count
+        ))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn refresh_translation_runtime_data(
+        app_handle: tauri::AppHandle,
+    ) -> Result<String, String> {
+        let (runtime_dir, created_count) = crate::ensure_translation_runtime_files(&app_handle)?;
+        let payload = json!({
+            "dir": runtime_dir.display().to_string(),
+            "createdCount": created_count,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+        });
+        app_handle
+            .emit("translation-data-refreshed", payload)
+            .map_err(|e| format!("Failed to emit translation refresh event: {e}"))?;
+        Ok(format!(
+            "Refreshed translation runtime data from {}",
+            runtime_dir.display()
+        ))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn read_translation_runtime_file(
+        app_handle: tauri::AppHandle,
+        relative_path: String,
+    ) -> Result<String, String> {
+        crate::read_translation_runtime_file_contents(&app_handle, &relative_path)
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn generate_buff_name_search_scaffold(
+        app_handle: tauri::AppHandle,
+    ) -> Result<String, String> {
+        let (
+            file_path,
+            processed_count,
+            created_count,
+            preserved_existing_only_count,
+        ) = crate::generate_buff_name_search_scaffold_file(&app_handle)?;
+
+        let payload = json!({
+            "dir": file_path
+                .parent()
+                .map(|path| path.display().to_string())
+                .unwrap_or_default(),
+            "generatedFile": BUFF_NAME_SEARCH_RUNTIME_RELATIVE_PATH,
+            "processedCount": processed_count,
+            "createdCount": created_count,
+            "preservedExistingOnlyCount": preserved_existing_only_count,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+        });
+
+        app_handle
+            .emit("translation-data-refreshed", payload)
+            .map_err(|e| format!("Failed to emit translation refresh event: {e}"))?;
+
+        Ok(format!(
+            "Generated BuffNameSearch scaffold at {} (processed {} buffs, created {} new entries, preserved {} existing-only entries)",
+            file_path.display(),
+            processed_count,
+            created_count,
+            preserved_existing_only_count,
+        ))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn generate_buff_name_translation_scaffold(
+        app_handle: tauri::AppHandle,
+    ) -> Result<String, String> {
+        let (
+            file_path,
+            processed_count,
+            created_count,
+            preserved_existing_only_count,
+        ) = crate::generate_buff_name_translation_file(&app_handle)?;
+
+        let payload = json!({
+            "dir": file_path
+                .parent()
+                .map(|path| path.display().to_string())
+                .unwrap_or_default(),
+            "generatedFile": BUFF_NAME_RUNTIME_RELATIVE_PATH,
+            "processedCount": processed_count,
+            "createdCount": created_count,
+            "preservedExistingOnlyCount": preserved_existing_only_count,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+        });
+
+        app_handle
+            .emit("translation-data-refreshed", payload)
+            .map_err(|e| format!("Failed to emit translation refresh event: {e}"))?;
+
+        Ok(format!(
+            "Generated BuffName translation scaffold at {} (processed {} buffs, created {} new entries, preserved {} existing-only entries)",
+            file_path.display(),
+            processed_count,
+            created_count,
+            preserved_existing_only_count,
+        ))
     }
 }
 

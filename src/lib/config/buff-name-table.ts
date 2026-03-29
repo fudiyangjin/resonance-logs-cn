@@ -1,4 +1,14 @@
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+
 import buffNameRaw from "./BuffName.json";
+import buffNameTranslations from "$lib/translations/BuffName.json";
+import buffNameSearchTranslations from "$lib/translations/BuffNameSearch.json";
+import {
+  TRANSLATION_SOURCE_MODE_EVENT,
+  getCurrentTranslationSourceMode,
+} from "$lib/i18n";
+import { settings } from "$lib/settings-store";
 
 export type BuffAliasMap = Record<string, string>;
 export type BuffCategoryKey = "food" | "alchemy";
@@ -39,10 +49,210 @@ type RawBuffEntry = {
   SpriteFile?: string | null;
 };
 
+type LocaleCode = "zh-CN" | "en" | "ja";
+type MultiLangValue = Partial<Record<LocaleCode, string>>;
+type MultiLangKeywords = Partial<Record<LocaleCode, string[]>>;
+
+type BuffNameTranslationEntry = {
+  Id?: number;
+  Icon?: string | null;
+  NameDesign?: MultiLangValue;
+  SpriteFile?: string | null;
+};
+
+type BuffSearchTranslationEntry = {
+  name?: MultiLangValue;
+  keywords?: MultiLangKeywords;
+  notes?: MultiLangValue;
+  categories?: BuffCategoryKey[];
+  iconKey?: string | null;
+  spriteFile?: string | null;
+  hasSpriteFile?: boolean;
+};
+
+type BuffSearchIndexEntry = {
+  baseId: number;
+  texts: string[];
+};
+
+const DEFAULT_SEARCH_RESULT_LIMIT = 50;
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function replaceRecordContents<T extends Record<string, any>>(target: T, source: T): void {
+  for (const key of Object.keys(target)) {
+    delete target[key as keyof T];
+  }
+  Object.assign(target, source);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+const BUFF_NAME_RUNTIME_RELATIVE_PATH = "BuffName.json";
+const BUFF_SEARCH_RUNTIME_RELATIVE_PATH = "BuffNameSearch.json";
+
+const BUFF_NAME_TRANSLATIONS: Record<string, BuffNameTranslationEntry> = cloneJson(
+  buffNameTranslations as unknown as Record<string, BuffNameTranslationEntry>,
+);
+
+const BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = cloneJson(
+  buffNameSearchTranslations as unknown as Record<string, BuffSearchTranslationEntry>,
+);
+
+const BUNDLED_BUFF_NAME_TRANSLATIONS = cloneJson(BUFF_NAME_TRANSLATIONS);
+const BUNDLED_BUFF_SEARCH_TRANSLATIONS = cloneJson(BUFF_SEARCH_TRANSLATIONS);
+
+const BUFF_SEARCH_INDEX: BuffSearchIndexEntry[] = [];
+const BUFF_SEARCH_INDEX_MAP = new Map<number, string[]>();
+
+let buffTranslationRuntimeInitPromise: Promise<void> | null = null;
+let buffTranslationRuntimeListenerPromise: Promise<void> | null = null;
+let buffTranslationSourceModeListenerRegistered = false;
+
+async function ensureBuffTranslationRuntimeFiles(): Promise<void> {
+  try {
+    await invoke<string>("initialize_translation_runtime_files");
+  } catch (error) {
+    console.warn(
+      "[buff-name-table] Failed to initialize runtime translation files:",
+      error,
+    );
+  }
+}
+
+async function readRuntimeBuffNameTranslations(): Promise<
+  Record<string, BuffNameTranslationEntry> | null
+> {
+  try {
+    const raw = await invoke<string>("read_translation_runtime_file", {
+      relativePath: BUFF_NAME_RUNTIME_RELATIVE_PATH,
+    });
+    const parsed: unknown = JSON.parse(raw);
+
+    if (!isRecord(parsed)) {
+      console.warn(
+        `[buff-name-table] Runtime buff translation file is not an object: ${BUFF_NAME_RUNTIME_RELATIVE_PATH}`,
+      );
+      return null;
+    }
+
+    return parsed as Record<string, BuffNameTranslationEntry>;
+  } catch (error) {
+    console.warn(
+      `[buff-name-table] Failed to read runtime buff translation file: ${BUFF_NAME_RUNTIME_RELATIVE_PATH}`,
+      error,
+    );
+    return null;
+  }
+}
+
+async function readRuntimeBuffSearchTranslations(): Promise<
+  Record<string, BuffSearchTranslationEntry> | null
+> {
+  try {
+    const raw = await invoke<string>("read_translation_runtime_file", {
+      relativePath: BUFF_SEARCH_RUNTIME_RELATIVE_PATH,
+    });
+    const parsed: unknown = JSON.parse(raw);
+
+    if (!isRecord(parsed)) {
+      console.warn(
+        `[buff-name-table] Runtime buff search translation file is not an object: ${BUFF_SEARCH_RUNTIME_RELATIVE_PATH}`,
+      );
+      return null;
+    }
+
+    return parsed as Record<string, BuffSearchTranslationEntry>;
+  } catch (error) {
+    console.warn(
+      `[buff-name-table] Failed to read runtime buff search translation file: ${BUFF_SEARCH_RUNTIME_RELATIVE_PATH}`,
+      error,
+    );
+    return null;
+  }
+}
+
+async function loadBuffTranslationRuntimeData(): Promise<void> {
+  if (getCurrentTranslationSourceMode() === "bundled") {
+    replaceRecordContents(
+      BUFF_NAME_TRANSLATIONS,
+      cloneJson(BUNDLED_BUFF_NAME_TRANSLATIONS),
+    );
+    replaceRecordContents(
+      BUFF_SEARCH_TRANSLATIONS,
+      cloneJson(BUNDLED_BUFF_SEARCH_TRANSLATIONS),
+    );
+    rebuildBuffSearchIndex();
+    return;
+  }
+
+  await ensureBuffTranslationRuntimeFiles();
+
+  const [runtimeBuffNameValue, runtimeBuffSearchValue] = await Promise.all([
+    readRuntimeBuffNameTranslations(),
+    readRuntimeBuffSearchTranslations(),
+  ]);
+
+  const nextBuffNameValue = runtimeBuffNameValue ?? BUNDLED_BUFF_NAME_TRANSLATIONS;
+  const nextBuffSearchValue =
+    runtimeBuffSearchValue ?? BUNDLED_BUFF_SEARCH_TRANSLATIONS;
+
+  replaceRecordContents(BUFF_NAME_TRANSLATIONS, cloneJson(nextBuffNameValue));
+  replaceRecordContents(BUFF_SEARCH_TRANSLATIONS, cloneJson(nextBuffSearchValue));
+  rebuildBuffSearchIndex();
+}
+
+async function registerBuffTranslationRuntimeListener(): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (!buffTranslationRuntimeListenerPromise) {
+    buffTranslationRuntimeListenerPromise = listen("translation-data-refreshed", async () => {
+      await loadBuffTranslationRuntimeData();
+    })
+      .then(() => undefined)
+      .catch((error) => {
+        console.warn(
+          "[buff-name-table] Failed to register translation refresh listener:",
+          error,
+        );
+      });
+  }
+
+  if (!buffTranslationSourceModeListenerRegistered) {
+    window.addEventListener(TRANSLATION_SOURCE_MODE_EVENT, async () => {
+      await loadBuffTranslationRuntimeData();
+    });
+    buffTranslationSourceModeListenerRegistered = true;
+  }
+
+  await buffTranslationRuntimeListenerPromise;
+}
+
+export async function initializeBuffSearchRuntimeData(): Promise<void> {
+  if (!buffTranslationRuntimeInitPromise) {
+    buffTranslationRuntimeInitPromise = (async () => {
+      await registerBuffTranslationRuntimeListener();
+      await loadBuffTranslationRuntimeData();
+    })();
+  }
+
+  await buffTranslationRuntimeInitPromise;
+}
+
+export async function reloadBuffSearchRuntimeData(): Promise<void> {
+  await loadBuffTranslationRuntimeData();
+}
+
 const rawBuffEntries = buffNameRaw as RawBuffEntry[];
 
 const BUFF_META_MAP = new Map<number, BuffMeta>();
-const AVAILABLE_BUFF_DEFINITIONS: BuffDefinition[] = [];
+const AVAILABLE_BUFF_IDS_WITH_SPRITE: number[] = [];
 const BUFF_CATEGORY_CATALOG: Record<
   BuffCategoryKey,
   { label: string; buffIds: number[] }
@@ -51,25 +261,20 @@ const BUFF_CATEGORY_CATALOG: Record<
   alchemy: { label: "炼金", buffIds: [] },
 };
 
-const FOOD_NAME_KEYWORDS = ["物攻", "魔攻", "护甲", "耐力", "生命恢复"];
-
 function resolveBuffCategories(
-  defaultName: string,
+  _defaultName: string,
   iconKey: string | null,
 ): BuffCategoryKey[] {
   const categories: BuffCategoryKey[] = [];
-  if (
-    iconKey?.startsWith("buff_food_up") &&
-    FOOD_NAME_KEYWORDS.some((keyword) => defaultName.includes(keyword))
-  ) {
+
+  if (iconKey?.startsWith("buff_food_up")) {
     categories.push("food");
   }
-  if (
-    iconKey?.startsWith("buff_agentia_up") &&
-    defaultName.includes("元素强度")
-  ) {
+
+  if (iconKey?.startsWith("buff_agentia_up")) {
     categories.push("alchemy");
   }
+
   return categories;
 }
 
@@ -91,27 +296,176 @@ for (const entry of rawBuffEntries) {
     searchKeywords,
   };
   BUFF_META_MAP.set(entry.Id, meta);
+
   for (const category of categories) {
     BUFF_CATEGORY_CATALOG[category].buffIds.push(entry.Id);
   }
 
   if (spriteFile) {
-    AVAILABLE_BUFF_DEFINITIONS.push({
-      baseId: entry.Id,
-      name: defaultName,
-      spriteFile,
-      searchKeywords,
-    });
+    AVAILABLE_BUFF_IDS_WITH_SPRITE.push(entry.Id);
   }
 }
 
-AVAILABLE_BUFF_DEFINITIONS.sort((a, b) => a.baseId - b.baseId);
+AVAILABLE_BUFF_IDS_WITH_SPRITE.sort((a, b) => a - b);
 for (const category of Object.values(BUFF_CATEGORY_CATALOG)) {
   category.buffIds.sort((a, b) => a - b);
 }
 
 function normalizeText(value: string): string {
   return value.trim().toLowerCase();
+}
+
+function getCurrentLocale(): LocaleCode {
+  const locale = String(settings.state.live.general.language);
+
+  if (locale === "en" || locale === "ja" || locale === "zh-CN") {
+    return locale;
+  }
+
+  return "zh-CN";
+}
+
+function resolveMultiLangValue(
+  value: MultiLangValue | undefined,
+  fallback: string,
+): string {
+  const locale = getCurrentLocale();
+  const selected = value?.[locale]?.trim();
+  if (selected) return selected;
+
+  const zh = value?.["zh-CN"]?.trim();
+  if (zh) return zh;
+
+  return fallback;
+}
+
+function collectMultiLangTexts(value: MultiLangValue | undefined): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+
+  for (const locale of ["zh-CN", "en", "ja"] as const) {
+    const text = value?.[locale]?.trim();
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    out.push(text);
+  }
+
+  return out;
+}
+
+function collectKeywordTexts(value: MultiLangKeywords | undefined): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+
+  for (const locale of ["zh-CN", "en", "ja"] as const) {
+    for (const keyword of value?.[locale] ?? []) {
+      const trimmed = keyword.trim();
+      if (!trimmed || seen.has(trimmed)) continue;
+      seen.add(trimmed);
+      out.push(trimmed);
+    }
+  }
+
+  return out;
+}
+
+function lookupBuffNameEntry(baseId: number): BuffNameTranslationEntry | undefined {
+  return BUFF_NAME_TRANSLATIONS[String(baseId)];
+}
+
+function lookupBuffSearchEntry(baseId: number): BuffSearchTranslationEntry | undefined {
+  return BUFF_SEARCH_TRANSLATIONS[String(baseId)];
+}
+
+function resolveEffectiveBuffCategories(meta: BuffMeta): BuffCategoryKey[] {
+  const entryCategories = normalizeBuffCategoryKeys(
+    lookupBuffSearchEntry(meta.baseId)?.categories,
+  );
+
+  if (entryCategories.length > 0) {
+    return entryCategories;
+  }
+
+  return normalizeBuffCategoryKeys(meta.categories);
+}
+
+function resolveEffectiveHasSpriteFile(meta: BuffMeta): boolean {
+  const entry = lookupBuffSearchEntry(meta.baseId);
+
+  if (typeof entry?.hasSpriteFile === "boolean") {
+    return entry.hasSpriteFile;
+  }
+
+  if (typeof entry?.spriteFile === "string") {
+    return entry.spriteFile.trim().length > 0;
+  }
+
+  return meta.hasSpriteFile;
+}
+
+function isBuffSearchable(meta: BuffMeta): boolean {
+  return (
+    resolveEffectiveHasSpriteFile(meta) ||
+    resolveEffectiveBuffCategories(meta).length > 0
+  );
+}
+
+function rebuildBuffSearchIndex(): void {
+  BUFF_SEARCH_INDEX.length = 0;
+  BUFF_SEARCH_INDEX_MAP.clear();
+
+  for (const meta of BUFF_META_MAP.values()) {
+    if (!isBuffSearchable(meta)) {
+      continue;
+    }
+
+    const texts = collectBuffSearchTexts(meta);
+    if (texts.length === 0) {
+      continue;
+    }
+
+    BUFF_SEARCH_INDEX.push({
+      baseId: meta.baseId,
+      texts,
+    });
+    BUFF_SEARCH_INDEX_MAP.set(meta.baseId, texts);
+  }
+}
+
+function resolveBuffTranslatedName(baseId: number, fallback: string): string {
+  return resolveMultiLangValue(lookupBuffNameEntry(baseId)?.NameDesign, fallback);
+}
+
+function collectBuffSearchTexts(meta: BuffMeta): string[] {
+  const searchEntry = lookupBuffSearchEntry(meta.baseId);
+  const buffNameEntry = lookupBuffNameEntry(meta.baseId);
+  const texts = new Set<string>();
+
+  const normalizedDefaultName = normalizeText(meta.defaultName);
+  if (normalizedDefaultName) texts.add(normalizedDefaultName);
+
+  for (const text of meta.searchKeywords) {
+    const normalized = normalizeText(text);
+    if (normalized) texts.add(normalized);
+  }
+
+  for (const text of collectMultiLangTexts(buffNameEntry?.NameDesign)) {
+    const normalized = normalizeText(text);
+    if (normalized) texts.add(normalized);
+  }
+
+  for (const text of collectKeywordTexts(searchEntry?.keywords)) {
+    const normalized = normalizeText(text);
+    if (normalized) texts.add(normalized);
+  }
+
+  return Array.from(texts);
+}
+
+rebuildBuffSearchIndex();
+
+function getIndexedSearchTexts(baseId: number): string[] {
+  return BUFF_SEARCH_INDEX_MAP.get(baseId) ?? [];
 }
 
 export function normalizeBuffCategoryKeys(
@@ -166,21 +520,58 @@ export function lookupDefaultBuffName(baseId: number): string | undefined {
 }
 
 export function getAvailableBuffDefinitions(): BuffDefinition[] {
-  return AVAILABLE_BUFF_DEFINITIONS;
+  return AVAILABLE_BUFF_IDS_WITH_SPRITE.map((baseId) => {
+    const meta = lookupBuffMeta(baseId);
+    if (!meta?.spriteFile) {
+      return {
+        baseId,
+        name: resolveBuffDisplayName(baseId),
+        spriteFile: "",
+        searchKeywords: [],
+      };
+    }
+
+    return {
+      baseId,
+      name: resolveBuffDisplayName(baseId),
+      spriteFile: meta.spriteFile,
+      searchKeywords: getIndexedSearchTexts(baseId),
+    };
+  }).filter((definition) => Boolean(definition.spriteFile));
 }
 
 export function getBuffCategoryDefinitions(): BuffCategoryDefinition[] {
+  const counts: Record<BuffCategoryKey, number> = {
+    food: 0,
+    alchemy: 0,
+  };
+
+  for (const meta of BUFF_META_MAP.values()) {
+    for (const category of resolveEffectiveBuffCategories(meta)) {
+      counts[category] += 1;
+    }
+  }
+
   return (Object.entries(BUFF_CATEGORY_CATALOG) as Array<
     [BuffCategoryKey, { label: string; buffIds: number[] }]
   >).map(([key, category]) => ({
     key,
     label: category.label,
-    count: category.buffIds.length,
+    count: counts[key],
   }));
 }
 
 export function getBuffIdsByCategory(category: BuffCategoryKey): number[] {
-  return [...(BUFF_CATEGORY_CATALOG[category]?.buffIds ?? [])];
+  const buffIds: number[] = [];
+
+  for (const meta of BUFF_META_MAP.values()) {
+    if (resolveEffectiveBuffCategories(meta).includes(category)) {
+      buffIds.push(meta.baseId);
+    }
+  }
+
+  buffIds.sort((a, b) => a - b);
+  return buffIds;
 }
 
 export function getBuffCategoryLabel(category: BuffCategoryKey): string {
@@ -190,7 +581,9 @@ export function getBuffCategoryLabel(category: BuffCategoryKey): string {
 export function resolveBuffCategoryKey(
   baseId: number,
 ): BuffCategoryKey | undefined {
-  return lookupBuffMeta(baseId)?.categories[0];
+  const meta = lookupBuffMeta(baseId);
+  if (!meta) return undefined;
+  return resolveEffectiveBuffCategories(meta)[0];
 }
 
 export function expandBuffSelection(
@@ -213,7 +606,9 @@ export function resolveBuffDisplayName(
 ): string {
   const alias = getAlias(baseId, aliases);
   if (alias) return alias;
-  return lookupDefaultBuffName(baseId) ?? `#${baseId}`;
+
+  const defaultName = lookupDefaultBuffName(baseId) ?? `#${baseId}`;
+  return resolveBuffTranslatedName(baseId, defaultName);
 }
 
 export function resolveBuffNameInfo(
@@ -239,19 +634,36 @@ export function searchBuffsByName(
   const normalizedAliases = normalizeAliasMap(aliases);
   const matches: Array<{ baseId: number; rank: number }> = [];
 
-  for (const meta of BUFF_META_MAP.values()) {
-    const alias = normalizedAliases[String(meta.baseId)] ?? null;
+  for (const entry of BUFF_SEARCH_INDEX) {
+    const alias = normalizedAliases[String(entry.baseId)] ?? null;
     const aliasRank = getMatchRank(alias, normalizedKeyword, 1, 2);
-    const defaultRank = getMatchRank(meta.defaultName, normalizedKeyword, 3, 4);
-    const rank = Math.min(aliasRank ?? Number.POSITIVE_INFINITY, defaultRank ?? Number.POSITIVE_INFINITY);
+
+    let searchRank: number | null = null;
+    for (const text of entry.texts) {
+      const textRank = getMatchRank(text, normalizedKeyword, 3, 4);
+      if (textRank === null) continue;
+      searchRank = searchRank === null ? textRank : Math.min(searchRank, textRank);
+    }
+
+    const rank = Math.min(
+      aliasRank ?? Number.POSITIVE_INFINITY,
+      searchRank ?? Number.POSITIVE_INFINITY,
+    );
+
     if (!Number.isFinite(rank)) continue;
-    matches.push({ baseId: meta.baseId, rank });
+    matches.push({ baseId: entry.baseId, rank });
   }
 
   matches.sort((a, b) => a.rank - b.rank || a.baseId - b.baseId);
 
-  const normalizedLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit ?? 0)) : null;
-  const visibleMatches = normalizedLimit === null ? matches : matches.slice(0, normalizedLimit);
+  const normalizedLimit = Number.isFinite(limit)
+    ? Math.max(1, Math.floor(limit ?? 0))
+    : DEFAULT_SEARCH_RESULT_LIMIT;
+  const visibleMatches = matches.slice(0, normalizedLimit);
 
-  return visibleMatches.map((match) => resolveBuffNameInfo(match.baseId, normalizedAliases));
+  return visibleMatches.map((match) =>
+    resolveBuffNameInfo(match.baseId, normalizedAliases),
+  );
 }
+
+void initializeBuffSearchRuntimeData();

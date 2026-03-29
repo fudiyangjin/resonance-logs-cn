@@ -1,9 +1,16 @@
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+
 import resonanceSkillIcons from "$lib/config/skill_aoyi_icons.json";
 import classSkillConfigsRaw from "$lib/config/class_skill_configs.json";
 import classResourcesRaw from "$lib/config/class_resources.json";
 import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays.json";
 import counterRulesRaw from "$lib/config/counter_rules.json";
 import resonanceSkillSearchTranslations from "$lib/translations/resonance-skill-search.json";
+import {
+  TRANSLATION_SOURCE_MODE_EVENT,
+  getCurrentTranslationSourceMode,
+} from "$lib/i18n";
 import { settings } from "$lib/settings-store";
 import type { CounterAction, CounterTrigger } from "$lib/bindings";
 
@@ -66,8 +73,131 @@ type ResonanceSkillSearchEntry = {
   keywords?: MultiLangKeywords;
 };
 
-const RESONANCE_SKILL_SEARCH_TRANSLATIONS =
-  resonanceSkillSearchTranslations as unknown as Record<string, ResonanceSkillSearchEntry>;
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function replaceRecordContents<T extends Record<string, any>>(target: T, source: T): void {
+  for (const key of Object.keys(target)) {
+    delete target[key as keyof T];
+  }
+  Object.assign(target, source);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+const RESONANCE_RUNTIME_RELATIVE_PATH = "resonance-skill-search.json";
+
+const RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = cloneJson(
+  resonanceSkillSearchTranslations as unknown as Record<string, ResonanceSkillSearchEntry>,
+);
+
+const BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS = cloneJson(
+  RESONANCE_SKILL_SEARCH_TRANSLATIONS,
+);
+
+let resonanceRuntimeInitPromise: Promise<void> | null = null;
+let resonanceRuntimeListenerPromise: Promise<void> | null = null;
+let resonanceSourceModeListenerRegistered = false;
+
+async function ensureResonanceTranslationRuntimeFiles(): Promise<void> {
+  try {
+    await invoke<string>("initialize_translation_runtime_files");
+  } catch (error) {
+    console.warn(
+      "[skill-mappings] Failed to initialize runtime translation files:",
+      error,
+    );
+  }
+}
+
+async function readRuntimeResonanceTranslations(): Promise<
+  Record<string, ResonanceSkillSearchEntry> | null
+> {
+  try {
+    const raw = await invoke<string>("read_translation_runtime_file", {
+      relativePath: RESONANCE_RUNTIME_RELATIVE_PATH,
+    });
+    const parsed: unknown = JSON.parse(raw);
+
+    if (!isRecord(parsed)) {
+      console.warn(
+        `[skill-mappings] Runtime resonance translation file is not an object: ${RESONANCE_RUNTIME_RELATIVE_PATH}`,
+      );
+      return null;
+    }
+
+    return parsed as Record<string, ResonanceSkillSearchEntry>;
+  } catch (error) {
+    console.warn(
+      `[skill-mappings] Failed to read runtime resonance translation file: ${RESONANCE_RUNTIME_RELATIVE_PATH}`,
+      error,
+    );
+    return null;
+  }
+}
+
+async function loadResonanceSkillSearchRuntimeData(): Promise<void> {
+  if (getCurrentTranslationSourceMode() === "bundled") {
+    replaceRecordContents(
+      RESONANCE_SKILL_SEARCH_TRANSLATIONS,
+      cloneJson(BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS),
+    );
+    return;
+  }
+
+  await ensureResonanceTranslationRuntimeFiles();
+
+  const runtimeValue = await readRuntimeResonanceTranslations();
+  const nextValue = runtimeValue ?? BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS;
+
+  replaceRecordContents(RESONANCE_SKILL_SEARCH_TRANSLATIONS, cloneJson(nextValue));
+}
+
+async function registerResonanceRuntimeListener(): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (!resonanceRuntimeListenerPromise) {
+    resonanceRuntimeListenerPromise = listen("translation-data-refreshed", async () => {
+      await loadResonanceSkillSearchRuntimeData();
+    })
+      .then(() => undefined)
+      .catch((error) => {
+        console.warn(
+          "[skill-mappings] Failed to register translation refresh listener:",
+          error,
+        );
+      });
+  }
+
+  if (!resonanceSourceModeListenerRegistered) {
+    window.addEventListener(TRANSLATION_SOURCE_MODE_EVENT, async () => {
+      await loadResonanceSkillSearchRuntimeData();
+    });
+    resonanceSourceModeListenerRegistered = true;
+  }
+
+  await resonanceRuntimeListenerPromise;
+}
+
+export async function initializeResonanceSkillSearchRuntimeData(): Promise<void> {
+  if (!resonanceRuntimeInitPromise) {
+    resonanceRuntimeInitPromise = (async () => {
+      await registerResonanceRuntimeListener();
+      await loadResonanceSkillSearchRuntimeData();
+    })();
+  }
+
+  await resonanceRuntimeInitPromise;
+}
+
+export async function reloadResonanceSkillSearchRuntimeData(): Promise<void> {
+  await loadResonanceSkillSearchRuntimeData();
+}
 
 function normalizeSearchText(value: string | null | undefined): string {
   return value?.trim().toLowerCase() ?? "";
@@ -263,3 +393,5 @@ export function findAnySkillByBaseId(
 ): SkillDisplayInfo | undefined {
   return findSkillById(classKey, skillId) ?? findResonanceSkill(skillId);
 }
+
+void initializeResonanceSkillSearchRuntimeData();

@@ -1,3 +1,7 @@
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { writable } from "svelte/store";
+
 import skillNameTranslations from "$lib/translations/common/skillnames.json";
 import navigationTranslations from "$lib/translations/common/navigation.json";
 import moduleCalcTranslations from "$lib/translations/module-calc.json";
@@ -8,6 +12,7 @@ import settingsStoreTranslations from "$lib/translations/settings-store.json";
 
 export type LocaleCode = "zh-CN" | "en" | "ja";
 export type SkillIdDisplayMode = "off" | "hover" | "column";
+export type TranslationSourceMode = "runtime" | "bundled";
 
 export type MultiLangValue = Partial<Record<LocaleCode, string>>;
 export type TranslationTable = Record<string, MultiLangValue>;
@@ -21,26 +26,277 @@ export type SkillTranslationTable = Record<string, SkillTranslationEntry>;
 
 export const DEFAULT_LOCALE: LocaleCode = "zh-CN";
 
-export const SKILL_NAME_TRANSLATIONS: SkillTranslationTable =
-  skillNameTranslations as SkillTranslationTable;
+export const DEFAULT_TRANSLATION_SOURCE_MODE: TranslationSourceMode = "bundled";
+export const TRANSLATION_SOURCE_MODE_STORAGE_KEY = "resonance.translationSourceMode";
+export const TRANSLATION_SOURCE_MODE_EVENT = "translation-source-mode-changed";
 
-export const NAVIGATION_TRANSLATIONS: TranslationTable =
-  navigationTranslations as TranslationTable;
+function isTranslationSourceMode(value: unknown): value is TranslationSourceMode {
+  return value === "runtime" || value === "bundled";
+}
 
-export const MODULE_CALC_TRANSLATIONS: TranslationTable =
-  moduleCalcTranslations as TranslationTable;
+function readStoredTranslationSourceMode(): TranslationSourceMode {
+  if (typeof window === "undefined") {
+    return DEFAULT_TRANSLATION_SOURCE_MODE;
+  }
 
-export const MONSTER_MONITOR_TRANSLATIONS: TranslationTable =
-  monsterMonitorTranslations as TranslationTable;
+  try {
+    const storedValue = window.localStorage.getItem(
+      TRANSLATION_SOURCE_MODE_STORAGE_KEY,
+    );
 
-export const SKILL_MONITOR_TRANSLATIONS: TranslationTable =
-  skillMonitorTranslations as TranslationTable;
+    if (isTranslationSourceMode(storedValue)) {
+      return storedValue;
+    }
+  } catch (error) {
+    console.warn("[i18n] Failed to read translation source mode:", error);
+  }
 
-export const CLASS_LABEL_TRANSLATIONS: TranslationTable =
-  classLabelTranslations as TranslationTable;
+  return DEFAULT_TRANSLATION_SOURCE_MODE;
+}
 
-export const SETTINGS_STORE_TRANSLATIONS: TranslationTable =
-  settingsStoreTranslations as unknown as TranslationTable;;
+let currentTranslationSourceMode: TranslationSourceMode = readStoredTranslationSourceMode();
+
+export const TRANSLATION_SOURCE_MODE = writable<TranslationSourceMode>(
+  currentTranslationSourceMode,
+);
+
+function persistTranslationSourceMode(mode: TranslationSourceMode): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(TRANSLATION_SOURCE_MODE_STORAGE_KEY, mode);
+}
+
+function emitTranslationSourceModeChanged(mode: TranslationSourceMode): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent(TRANSLATION_SOURCE_MODE_EVENT, {
+      detail: { mode },
+    }),
+  );
+}
+
+export function getCurrentTranslationSourceMode(): TranslationSourceMode {
+  return currentTranslationSourceMode;
+}
+
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function replaceRecordContents<T extends Record<string, unknown>>(target: T, source: T): void {
+  for (const key of Object.keys(target)) {
+    delete target[key as keyof T];
+  }
+  Object.assign(target, source);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeRuntimePath(relativePath: string): string {
+  return `translations/${relativePath}`;
+}
+
+async function ensureTranslationRuntimeFiles(): Promise<void> {
+  try {
+    await invoke<string>("initialize_translation_runtime_files");
+  } catch (error) {
+    console.warn("[i18n] Failed to initialize runtime translation files:", error);
+  }
+}
+
+async function readRuntimeJson<T extends Record<string, unknown>>(
+  relativePath: string,
+): Promise<T | null> {
+  const runtimePath = normalizeRuntimePath(relativePath);
+
+  try {
+    const raw = await invoke<string>("read_translation_runtime_file", {
+      relativePath,
+    });
+    const parsed: unknown = JSON.parse(raw);
+
+    if (!isRecord(parsed)) {
+      console.warn(`[i18n] Runtime translation file is not an object: ${runtimePath}`);
+      return null;
+    }
+
+    return parsed as T;
+  } catch (error) {
+    console.warn(`[i18n] Failed to read runtime translation file: ${runtimePath}`, error);
+    return null;
+  }
+}
+
+export const SKILL_NAME_TRANSLATIONS: SkillTranslationTable = cloneJson(
+  skillNameTranslations as SkillTranslationTable,
+);
+
+export const NAVIGATION_TRANSLATIONS: TranslationTable = cloneJson(
+  navigationTranslations as TranslationTable,
+);
+
+export const MODULE_CALC_TRANSLATIONS: TranslationTable = cloneJson(
+  moduleCalcTranslations as TranslationTable,
+);
+
+export const MONSTER_MONITOR_TRANSLATIONS: TranslationTable = cloneJson(
+  monsterMonitorTranslations as TranslationTable,
+);
+
+export const SKILL_MONITOR_TRANSLATIONS: TranslationTable = cloneJson(
+  skillMonitorTranslations as TranslationTable,
+);
+
+export const CLASS_LABEL_TRANSLATIONS: TranslationTable = cloneJson(
+  classLabelTranslations as TranslationTable,
+);
+
+export const SETTINGS_STORE_TRANSLATIONS: TranslationTable = cloneJson(
+  settingsStoreTranslations as unknown as TranslationTable,
+);
+
+const BUNDLED_SKILL_NAME_TRANSLATIONS = cloneJson(SKILL_NAME_TRANSLATIONS);
+const BUNDLED_NAVIGATION_TRANSLATIONS = cloneJson(NAVIGATION_TRANSLATIONS);
+const BUNDLED_MODULE_CALC_TRANSLATIONS = cloneJson(MODULE_CALC_TRANSLATIONS);
+const BUNDLED_MONSTER_MONITOR_TRANSLATIONS = cloneJson(MONSTER_MONITOR_TRANSLATIONS);
+const BUNDLED_SKILL_MONITOR_TRANSLATIONS = cloneJson(SKILL_MONITOR_TRANSLATIONS);
+const BUNDLED_CLASS_LABEL_TRANSLATIONS = cloneJson(CLASS_LABEL_TRANSLATIONS);
+const BUNDLED_SETTINGS_STORE_TRANSLATIONS = cloneJson(SETTINGS_STORE_TRANSLATIONS);
+
+const RUNTIME_TRANSLATION_DESCRIPTORS = [
+  {
+    relativePath: "common/skillnames.json",
+    target: SKILL_NAME_TRANSLATIONS,
+    fallback: BUNDLED_SKILL_NAME_TRANSLATIONS,
+  },
+  {
+    relativePath: "common/navigation.json",
+    target: NAVIGATION_TRANSLATIONS,
+    fallback: BUNDLED_NAVIGATION_TRANSLATIONS,
+  },
+  {
+    relativePath: "module-calc.json",
+    target: MODULE_CALC_TRANSLATIONS,
+    fallback: BUNDLED_MODULE_CALC_TRANSLATIONS,
+  },
+  {
+    relativePath: "monster-monitor.json",
+    target: MONSTER_MONITOR_TRANSLATIONS,
+    fallback: BUNDLED_MONSTER_MONITOR_TRANSLATIONS,
+  },
+  {
+    relativePath: "skill-monitor.json",
+    target: SKILL_MONITOR_TRANSLATIONS,
+    fallback: BUNDLED_SKILL_MONITOR_TRANSLATIONS,
+  },
+  {
+    relativePath: "class-labels.json",
+    target: CLASS_LABEL_TRANSLATIONS,
+    fallback: BUNDLED_CLASS_LABEL_TRANSLATIONS,
+  },
+  {
+    relativePath: "settings-store.json",
+    target: SETTINGS_STORE_TRANSLATIONS,
+    fallback: BUNDLED_SETTINGS_STORE_TRANSLATIONS,
+  },
+] as const;
+
+type TranslationRefreshPayload = {
+  dir?: string;
+  createdCount?: number;
+  timestamp?: string;
+};
+
+export const TRANSLATION_RUNTIME_REVISION = writable(0);
+
+let translationRuntimeInitPromise: Promise<void> | null = null;
+let translationRuntimeListenerPromise: Promise<void> | null = null;
+
+async function loadRuntimeTranslationTables(): Promise<void> {
+  if (getCurrentTranslationSourceMode() === "bundled") {
+    for (const descriptor of RUNTIME_TRANSLATION_DESCRIPTORS) {
+      replaceRecordContents(descriptor.target, cloneJson(descriptor.fallback));
+    }
+
+    TRANSLATION_RUNTIME_REVISION.update((value) => value + 1);
+    return;
+  }
+
+  await ensureTranslationRuntimeFiles();
+
+  await Promise.all(
+    RUNTIME_TRANSLATION_DESCRIPTORS.map(async (descriptor) => {
+      const runtimeValue = await readRuntimeJson(descriptor.relativePath);
+      const nextValue = runtimeValue ?? descriptor.fallback;
+      replaceRecordContents(descriptor.target, cloneJson(nextValue));
+    }),
+  );
+
+  TRANSLATION_RUNTIME_REVISION.update((value) => value + 1);
+}
+
+export async function setTranslationSourceMode(
+  mode: TranslationSourceMode,
+): Promise<void> {
+  if (!isTranslationSourceMode(mode)) {
+    throw new Error(`Invalid translation source mode: ${String(mode)}`);
+  }
+
+  if (currentTranslationSourceMode === mode) {
+    return;
+  }
+
+  currentTranslationSourceMode = mode;
+  persistTranslationSourceMode(mode);
+  TRANSLATION_SOURCE_MODE.set(mode);
+
+  await loadRuntimeTranslationTables();
+  emitTranslationSourceModeChanged(mode);
+}
+
+async function registerTranslationRuntimeListener(): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (!translationRuntimeListenerPromise) {
+    translationRuntimeListenerPromise = listen<TranslationRefreshPayload>(
+      "translation-data-refreshed",
+      async () => {
+        await loadRuntimeTranslationTables();
+      },
+    )
+      .then(() => undefined)
+      .catch((error) => {
+        console.warn("[i18n] Failed to register translation refresh listener:", error);
+      });
+  }
+
+  await translationRuntimeListenerPromise;
+}
+
+export async function initializeTranslationRuntimeData(): Promise<void> {
+  if (!translationRuntimeInitPromise) {
+    translationRuntimeInitPromise = (async () => {
+      await registerTranslationRuntimeListener();
+      await loadRuntimeTranslationTables();
+    })();
+  }
+
+  await translationRuntimeInitPromise;
+}
+
+export async function reloadTranslationRuntimeData(): Promise<void> {
+  await loadRuntimeTranslationTables();
+}
 
 export function resolveMultiLangValue(
   value: MultiLangValue | undefined,
@@ -192,3 +448,5 @@ export function resolveSkillNote(
 export function fallbackIdLabel(id: string | number): string {
   return String(id);
 }
+
+void initializeTranslationRuntimeData();

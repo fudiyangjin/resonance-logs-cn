@@ -3,9 +3,30 @@
   import { Button } from "$lib/components/ui/button";
   import { save } from "@tauri-apps/plugin-dialog";
   import { toast } from "svelte-sonner";
+  import { onDestroy } from "svelte";
   import SettingsSelect from "./settings-select.svelte";
   import { SETTINGS } from "$lib/settings-store";
-  import { resolveNavigationTranslation } from "$lib/i18n";
+  import {
+    TRANSLATION_SOURCE_MODE,
+    getCurrentTranslationSourceMode,
+    resolveNavigationTranslation,
+    setTranslationSourceMode,
+    type TranslationSourceMode,
+  } from "$lib/i18n";
+
+  let translationSourceMode = $state(getCurrentTranslationSourceMode() as TranslationSourceMode);
+  let isSwitchingTranslationSource = $state(false);
+  let isGeneratingBuffNameSearch = $state(false);
+  let isGeneratingBuffNameTranslation = $state(false);
+
+  const unsubscribeTranslationSourceMode = TRANSLATION_SOURCE_MODE.subscribe((value) => {
+    translationSourceMode = value;
+    isSwitchingTranslationSource = false;
+  });
+
+  onDestroy(() => {
+    unsubscribeTranslationSourceMode();
+  });
 
   async function openLogDir() {
     try {
@@ -44,6 +65,98 @@
     } catch (e) {
       console.error(e);
       toast.error("创建调试压缩包失败：" + e);
+    }
+  }
+
+  async function openTranslationDataDir() {
+    try {
+      await invoke("open_translation_data_dir");
+    } catch (e) {
+      console.error(e);
+      toast.error("打开翻译数据目录失败：" + e);
+    }
+  }
+
+  async function initializeTranslationRuntimeFiles() {
+    try {
+      const message = await invoke<string>("initialize_translation_runtime_files");
+      toast.success(message);
+    } catch (e) {
+      console.error(e);
+      toast.error("初始化翻译运行时文件失败：" + e);
+    }
+  }
+
+  async function refreshTranslationRuntimeData() {
+    try {
+      const message = await invoke<string>("refresh_translation_runtime_data");
+      toast.success(message);
+    } catch (e) {
+      console.error(e);
+      toast.error("刷新翻译运行时数据失败：" + e);
+    }
+  }
+
+  async function generateBuffNameSearchScaffold() {
+    if (isGeneratingBuffNameSearch) {
+      return;
+    }
+
+    isGeneratingBuffNameSearch = true;
+
+    try {
+      const message = await invoke<string>("generate_buff_name_search_scaffold");
+      await invoke<string>("refresh_translation_runtime_data");
+      toast.success(message);
+    } catch (e) {
+      console.error(e);
+      toast.error("生成 BuffNameSearch 脚手架失败：" + e);
+    } finally {
+      isGeneratingBuffNameSearch = false;
+    }
+  }
+
+  async function generateBuffNameTranslationScaffold() {
+    if (isGeneratingBuffNameTranslation) {
+      return;
+    }
+
+    isGeneratingBuffNameTranslation = true;
+
+    try {
+      const message = await invoke<string>("generate_buff_name_translation_scaffold");
+      await invoke<string>("refresh_translation_runtime_data");
+      toast.success(message);
+    } catch (e) {
+      console.error(e);
+      toast.error("生成 BuffName 翻译脚手架失败：" + e);
+    } finally {
+      isGeneratingBuffNameTranslation = false;
+    }
+  }
+
+  async function changeTranslationSourceMode(mode: TranslationSourceMode) {
+    if (isSwitchingTranslationSource || translationSourceMode === mode) {
+      return;
+    }
+
+    const previousMode = translationSourceMode;
+    isSwitchingTranslationSource = true;
+    translationSourceMode = mode;
+
+    try {
+      await setTranslationSourceMode(mode);
+      toast.success(
+        mode === "runtime"
+          ? "Translation source switched to runtime files."
+          : "Translation source switched to bundled source files.",
+      );
+    } catch (e) {
+      console.error(e);
+      translationSourceMode = previousMode;
+      toast.error("切换翻译数据源失败：" + e);
+    } finally {
+      isSwitchingTranslationSource = false;
     }
   }
 </script>
@@ -122,6 +235,200 @@
           "翻译调试",
         )}
       </h2>
+
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-muted-foreground">
+            <div class="font-medium text-foreground">
+              {resolveNavigationTranslation(
+                "debug.translationInitTitle",
+                SETTINGS.live.general.state.language,
+                "初始化翻译文件",
+              )}
+            </div>
+            {resolveNavigationTranslation(
+              "debug.translationInitDescription",
+              SETTINGS.live.general.state.language,
+              "在应用数据目录中创建缺失的运行时翻译文件。",
+            )}
+          </div>
+          <Button variant="outline" onclick={initializeTranslationRuntimeFiles}>
+            {resolveNavigationTranslation(
+              "debug.translationInitButton",
+              SETTINGS.live.general.state.language,
+              "初始化翻译文件",
+            )}
+          </Button>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-muted-foreground">
+            <div class="font-medium text-foreground">
+              {resolveNavigationTranslation(
+                "debug.translationOpenTitle",
+                SETTINGS.live.general.state.language,
+                "打开翻译文件夹",
+              )}
+            </div>
+            {resolveNavigationTranslation(
+              "debug.translationOpenDescription",
+              SETTINGS.live.general.state.language,
+              "打开应用数据中的运行时翻译目录。",
+            )}
+          </div>
+          <Button variant="outline" onclick={openTranslationDataDir}>
+            {resolveNavigationTranslation(
+              "debug.translationOpenButton",
+              SETTINGS.live.general.state.language,
+              "打开翻译文件夹",
+            )}
+          </Button>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-muted-foreground">
+            <div class="font-medium text-foreground">
+              {resolveNavigationTranslation(
+                "debug.translationRefreshTitle",
+                SETTINGS.live.general.state.language,
+                "刷新翻译数据",
+              )}
+            </div>
+            {resolveNavigationTranslation(
+              "debug.translationRefreshDescription",
+              SETTINGS.live.general.state.language,
+              "重新加载运行时翻译数据并通知前端。",
+            )}
+          </div>
+          <Button variant="outline" onclick={refreshTranslationRuntimeData}>
+            {resolveNavigationTranslation(
+              "debug.translationRefreshButton",
+              SETTINGS.live.general.state.language,
+              "刷新翻译数据",
+            )}
+          </Button>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-muted-foreground">
+            <div class="font-medium text-foreground">
+              {resolveNavigationTranslation(
+                "debug.generateBuffNameSearchTitle",
+                SETTINGS.live.general.state.language,
+                "生成 BuffNameSearch 脚手架",
+              )}
+            </div>
+            {resolveNavigationTranslation(
+              "debug.generateBuffNameSearchDescription",
+              SETTINGS.live.general.state.language,
+              "根据 bundled BuffName.json 非破坏性生成或更新运行时 BuffNameSearch.json。",
+            )}
+          </div>
+          <Button
+            variant="outline"
+            disabled={isGeneratingBuffNameSearch}
+            onclick={generateBuffNameSearchScaffold}
+          >
+            {resolveNavigationTranslation(
+              "debug.generateBuffNameSearchButton",
+              SETTINGS.live.general.state.language,
+              "生成 BuffNameSearch",
+            )}
+          </Button>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-muted-foreground">
+            <div class="font-medium text-foreground">
+              {resolveNavigationTranslation(
+                "debug.generateBuffNameTitle",
+                SETTINGS.live.general.state.language,
+                "生成 BuffName 翻译脚手架",
+              )}
+            </div>
+            {resolveNavigationTranslation(
+              "debug.generateBuffNameDescription",
+              SETTINGS.live.general.state.language,
+              "根据 bundled BuffName.json 和 BuffNameSearch.json 非破坏性生成或更新运行时 BuffName.json。",
+            )}
+          </div>
+          <Button
+            variant="outline"
+            disabled={isGeneratingBuffNameTranslation}
+            onclick={generateBuffNameTranslationScaffold}
+          >
+            {resolveNavigationTranslation(
+              "debug.generateBuffNameButton",
+              SETTINGS.live.general.state.language,
+              "生成 BuffName",
+            )}
+          </Button>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="text-sm text-muted-foreground">
+          <div class="font-medium text-foreground">
+            {resolveNavigationTranslation(
+              "debug.translationSourceMode",
+              SETTINGS.live.general.state.language,
+              "Translation Source",
+            )}
+          </div>
+          {resolveNavigationTranslation(
+            "debug.translationSourceModeDescription",
+            SETTINGS.live.general.state.language,
+            "Switch between bundled source translations and runtime app-data translations.",
+          )}
+        </div>
+
+        <div class="text-xs text-muted-foreground">
+          {resolveNavigationTranslation(
+            "debug.translationSourceModeCurrent",
+            SETTINGS.live.general.state.language,
+            "Current source:",
+          )}
+          <span class="ml-1 font-medium text-foreground">
+            {translationSourceMode === "bundled"
+              ? resolveNavigationTranslation(
+                  "debug.translationSourceMode.bundled",
+                  SETTINGS.live.general.state.language,
+                  "Bundled Source",
+                )
+              : resolveNavigationTranslation(
+                  "debug.translationSourceMode.runtime",
+                  SETTINGS.live.general.state.language,
+                  "Runtime Files",
+                )}
+          </span>
+        </div>
+
+        <div class="flex gap-2">
+          <Button
+            variant={translationSourceMode === "bundled" ? "default" : "outline"}
+            disabled={isSwitchingTranslationSource}
+            onclick={() => changeTranslationSourceMode("bundled")}
+          >
+            {resolveNavigationTranslation(
+              "debug.translationSourceMode.bundled",
+              SETTINGS.live.general.state.language,
+              "Bundled Source",
+            )}
+          </Button>
+
+          <Button
+            variant={translationSourceMode === "runtime" ? "default" : "outline"}
+            disabled={isSwitchingTranslationSource}
+            onclick={() => changeTranslationSourceMode("runtime")}
+          >
+            {resolveNavigationTranslation(
+              "debug.translationSourceMode.runtime",
+              SETTINGS.live.general.state.language,
+              "Runtime Files",
+            )}
+          </Button>
+        </div>
+      </div>
 
       <SettingsSelect
         bind:selected={SETTINGS.live.general.state.language}

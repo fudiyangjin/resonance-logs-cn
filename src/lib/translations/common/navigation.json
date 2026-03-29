@@ -109,6 +109,86 @@
     "en": "Translation Debug",
     "ja": ""
   },
+  "debug.translationInitTitle": {
+    "zh-CN": "初始化翻译文件",
+    "en": "Initialize Translation Files",
+    "ja": ""
+  },
+  "debug.translationInitDescription": {
+    "zh-CN": "在应用数据目录中创建缺失的运行时翻译文件。",
+    "en": "Create any missing runtime translation files in the app data directory.",
+    "ja": ""
+  },
+  "debug.translationInitButton": {
+    "zh-CN": "初始化翻译文件",
+    "en": "Initialize Translation Files",
+    "ja": ""
+  },
+  "debug.translationOpenTitle": {
+    "zh-CN": "打开翻译文件夹",
+    "en": "Open Translation Folder",
+    "ja": ""
+  },
+  "debug.translationOpenDescription": {
+    "zh-CN": "打开应用数据中的运行时翻译目录。",
+    "en": "Open the runtime translation directory in app data.",
+    "ja": ""
+  },
+  "debug.translationOpenButton": {
+    "zh-CN": "打开翻译文件夹",
+    "en": "Open Translation Folder",
+    "ja": ""
+  },
+  "debug.translationRefreshTitle": {
+    "zh-CN": "刷新翻译数据",
+    "en": "Refresh Translation Data",
+    "ja": ""
+  },
+  "debug.translationRefreshDescription": {
+    "zh-CN": "重新加载运行时翻译数据并通知前端。",
+    "en": "Reload runtime translation data and notify the frontend.",
+    "ja": ""
+  },
+  "debug.translationRefreshButton": {
+    "zh-CN": "刷新翻译数据",
+    "en": "Refresh Translation Data",
+    "ja": ""
+  },
+  "debug.generateBuffNameSearchTitle": {
+    "zh-CN": "生成 BuffNameSearch 脚手架",
+    "en": "Generate BuffNameSearch Scaffold",
+    "ja": ""
+  },
+  "debug.generateBuffNameSearchDescription": {
+    "zh-CN": "根据内置 BuffName.json 非破坏性生成或更新运行时 BuffNameSearch.json。",
+    "en": "Non-destructively generate or update runtime BuffNameSearch.json from the built-in BuffName.json.",
+    "ja": ""
+  },
+  "debug.generateBuffNameSearchButton": {
+    "zh-CN": "生成 BuffNameSearch",
+    "en": "Generate BuffNameSearch",
+    "ja": ""
+  },
+  "debug.translationSourceMode": {
+    "zh-CN": "翻译来源",
+    "en": "Translation Source",
+    "ja": ""
+  },
+  "debug.translationSourceModeDescription": {
+    "zh-CN": "在应用内置翻译与可编辑的 AppData 翻译文件之间切换。",
+    "en": "Switch between the app's built-in translations and the editable translation files stored in AppData.",
+    "ja": ""
+  },
+  "debug.translationSourceMode.bundled": {
+    "zh-CN": "应用内置翻译",
+    "en": "Built-in Translations",
+    "ja": ""
+  },
+  "debug.translationSourceMode.runtime": {
+    "zh-CN": "AppData 翻译文件",
+    "en": "AppData Translation Files",
+    "ja": ""
+  },
   "debug.language": {
     "zh-CN": "语言",
     "en": "Language",
@@ -1972,6 +2052,26 @@
   "themes.general.containFillColorDescription": {
     "zh-CN": "当图片以“包含”方式适配时，周围留白的背景色",
     "en": "Background color used for the empty area when the image is fit using \"Contain\".",
+    "ja": ""
+  },
+  "debug.generateBuffNameTitle": {
+    "zh-CN": "生成 BuffName 翻译脚手架",
+    "en": "Generate BuffName Translation Scaffold",
+    "ja": ""
+  },
+  "debug.generateBuffNameDescription": {
+    "zh-CN": "根据内置 BuffName.json 和 BuffNameSearch.json 非破坏性生成或更新运行时 BuffName.json。",
+    "en": "Non-destructively generate or update runtime BuffName.json from the built-in BuffName.json.",
+    "ja": ""
+  },
+  "debug.generateBuffNameButton": {
+    "zh-CN": "生成 BuffName",
+    "en": "Generate BuffName",
+    "ja": ""
+  },
+  "debug.translationSourceModeCurrent": {
+    "zh-CN": "当前来源：",
+    "en": "Current source:",
     "ja": ""
   }
 }
