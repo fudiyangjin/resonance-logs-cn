@@ -26,6 +26,7 @@
   } from "$lib/config/recount-table";
   import { formatClassSpecLabel } from "$lib/class-labels";
   import { resolveNavigationTranslation, resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
+  import { localizeRawSceneName } from "$lib/scene-mappings";
 
   type HistorySkillType = "dps" | "heal" | "tanked";
 
@@ -714,7 +715,10 @@ ${note}` : ""}`;
                   </svg>
                 </button>
                 <h2 class="text-lg font-semibold text-foreground leading-tight">
-                  {encounter.sceneName ?? t("dps.historyDetail.unknownScene", "未知场景", "Unknown Scene", "不明なシーン")}
+                  {localizeRawSceneName(
+                    encounter.sceneName,
+                    t("dps.historyDetail.unknownScene", "未知场景", "Unknown Scene", "不明なシーン"),
+                  )}
                 </h2>
               </div>
               {#if encounter.bosses.length > 0}

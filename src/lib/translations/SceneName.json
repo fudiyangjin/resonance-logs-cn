@@ -1,0 +1,2912 @@
+{
+    "1": {
+        "zh-CN": "login",
+        "en": "login",
+        "ja": ""
+    },
+    "7": {
+        "zh-CN": "阿斯特里亚平原",
+        "en": "Asteria Plains",
+        "ja": ""
+    },
+    "8": {
+        "zh-CN": "阿斯特里斯",
+        "en": "Asterleeds",
+        "ja": ""
+    },
+    "9": {
+        "zh-CN": "巴哈马尔高原",
+        "en": "Bahamar Highlands",
+        "ja": ""
+    },
+    "10": {
+        "zh-CN": "溪谷",
+        "en": "Bahamar Highlands (Lower) (Unavailable)",
+        "ja": ""
+    },
+    "11": {
+        "zh-CN": "游星岛",
+        "en": "Starland",
+        "ja": ""
+    },
+    "71": {
+        "zh-CN": "花明的森林",
+        "en": "Duskdye Woods",
+        "ja": ""
+    },
+    "72": {
+        "zh-CN": "溺光的森林",
+        "en": "Everfall Forest",
+        "ja": ""
+    },
+    "73": {
+        "zh-CN": "风啸的峡谷",
+        "en": "Windhowl Canyon",
+        "ja": ""
+    },
+    "74": {
+        "zh-CN": "地下街区",
+        "en": "Underground District",
+        "ja": ""
+    },
+    "75": {
+        "zh-CN": "黯蓝深窟",
+        "en": "Skimmer's Lair",
+        "ja": ""
+    },
+    "76": {
+        "zh-CN": "幻花弥漫之地",
+        "en": "Land of Crimson Illusion",
+        "ja": ""
+    },
+    "91": {
+        "zh-CN": "陷落回廊",
+        "en": "Highland Cave 1 (Unavailable)",
+        "ja": ""
+    },
+    "92": {
+        "zh-CN": "晦暗之底",
+        "en": "Highland Cave 2 (Unavailable)",
+        "ja": ""
+    },
+    "93": {
+        "zh-CN": "月影之野",
+        "en": "Moonshadow Wilds",
+        "ja": ""
+    },
+    "94": {
+        "zh-CN": "迷星之径",
+        "en": "Stray Starway",
+        "ja": ""
+    },
+    "95": {
+        "zh-CN": "夕照的林野",
+        "en": "Sunset Wilds",
+        "ja": ""
+    },
+    "1001": {
+        "zh-CN": "蒂娜·精神之界",
+        "en": "Tina's Mindrealm",
+        "ja": ""
+    },
+    "1002": {
+        "zh-CN": "蒂娜·精神之界",
+        "en": "Tina's Mindrealm",
+        "ja": ""
+    },
+    "1011": {
+        "zh-CN": "不稳定空间·蒂娜·精神之界",
+        "en": "Unstable - Tina's Mindrealm",
+        "ja": ""
+    },
+    "1021": {
+        "zh-CN": "不稳定空间·蒂娜·精神之界",
+        "en": "Unstable - Tina's Mindrealm",
+        "ja": ""
+    },
+    "1031": {
+        "zh-CN": "普通-蒂娜精神之界",
+        "en": "Chaotic - Tina's Mindrealm",
+        "ja": ""
+    },
+    "1032": {
+        "zh-CN": "困难-蒂娜精神之界",
+        "en": "Chaotic - Tina's Mindrealm",
+        "ja": ""
+    },
+    "1033": {
+        "zh-CN": "大师-蒂娜精神之界",
+        "en": "Chaotic - Tina's Mindrealm",
+        "ja": ""
+    },
+    "1101": {
+        "zh-CN": "巨塔遗迹",
+        "en": "Towering Ruin",
+        "ja": ""
+    },
+    "1102": {
+        "zh-CN": "巨塔遗迹",
+        "en": "Towering Ruin",
+        "ja": ""
+    },
+    "1111": {
+        "zh-CN": "不稳定空间·巨塔遗迹",
+        "en": "Unstable - Towering Ruin",
+        "ja": ""
+    },
+    "1112": {
+        "zh-CN": "不稳定空间·巨塔遗迹",
+        "en": "Unstable - Towering Ruin",
+        "ja": ""
+    },
+    "1121": {
+        "zh-CN": "普通-巨塔遗迹",
+        "en": "Chaotic - Towering Ruin",
+        "ja": ""
+    },
+    "1122": {
+        "zh-CN": "困难-巨塔遗迹",
+        "en": "Chaotic - Towering Ruin",
+        "ja": ""
+    },
+    "1123": {
+        "zh-CN": "大师-巨塔遗迹",
+        "en": "Chaotic - Towering Ruin",
+        "ja": ""
+    },
+    "1150": {
+        "zh-CN": "不稳定空间 - 蚀·巨塔遗迹",
+        "en": "Unstable - Eclipsed Towering Ruin",
+        "ja": ""
+    },
+    "1151": {
+        "zh-CN": "不稳定空间 - 蚀·巨塔遗迹",
+        "en": "Unstable - Eclipsed Towering Ruin",
+        "ja": ""
+    },
+    "1152": {
+        "zh-CN": "普通-蚀·巨塔遗迹",
+        "en": "Normal - Eclipsed Towering Ruin",
+        "ja": ""
+    },
+    "1153": {
+        "zh-CN": "困难-蚀·巨塔遗迹",
+        "en": "Hard - Eclipsed Towering Ruin",
+        "ja": ""
+    },
+    "1154": {
+        "zh-CN": "大师-蚀·巨塔遗迹",
+        "en": "Master - Eclipsed Towering Ruin",
+        "ja": ""
+    },
+    "1201": {
+        "zh-CN": "巨龙爪痕",
+        "en": "Dragon Claw Valley",
+        "ja": ""
+    },
+    "1202": {
+        "zh-CN": "巨龙爪痕",
+        "en": "Dragon Claw Valley",
+        "ja": ""
+    },
+    "1211": {
+        "zh-CN": "不稳定空间·巨龙爪痕",
+        "en": "Unstable - Dragon Claw Valley",
+        "ja": ""
+    },
+    "1212": {
+        "zh-CN": "不稳定空间·巨龙爪痕",
+        "en": "Unstable - Dragon Claw Valley",
+        "ja": ""
+    },
+    "1221": {
+        "zh-CN": "普通-巨龙爪痕",
+        "en": "Chaotic - Dragon Claw Valley",
+        "ja": ""
+    },
+    "1222": {
+        "zh-CN": "困难-巨龙爪痕",
+        "en": "Chaotic - Dragon Claw Valley",
+        "ja": ""
+    },
+    "1223": {
+        "zh-CN": "大师-巨龙爪痕",
+        "en": "Chaotic - Dragon Claw Valley",
+        "ja": ""
+    },
+    "1301": {
+        "zh-CN": "黯影堡垒",
+        "en": "Dark Mist Fortress",
+        "ja": ""
+    },
+    "1302": {
+        "zh-CN": "黯影堡垒",
+        "en": "Dark Mist Fortress",
+        "ja": ""
+    },
+    "1311": {
+        "zh-CN": "不稳定空间-黯影堡垒",
+        "en": "Unstable - Dark Mist Fortress",
+        "ja": ""
+    },
+    "1321": {
+        "zh-CN": "不稳定空间-黯影堡垒",
+        "en": "Unstable - Dark Mist Fortress",
+        "ja": ""
+    },
+    "1331": {
+        "zh-CN": "普通-黯影堡垒",
+        "en": "Chaotic - Dark Mist Fortress",
+        "ja": ""
+    },
+    "1332": {
+        "zh-CN": "困难-黯影堡垒",
+        "en": "Chaotic - Dark Mist Fortress",
+        "ja": ""
+    },
+    "1333": {
+        "zh-CN": "大师-黯影堡垒",
+        "en": "Chaotic - Dark Mist Fortress",
+        "ja": ""
+    },
+    "1399": {
+        "zh-CN": "关卡任务测试",
+        "en": "Level quest test",
+        "ja": ""
+    },
+    "1401": {
+        "zh-CN": "幻华流月之野",
+        "en": "Illusory Moonveil Wilds",
+        "ja": ""
+    },
+    "1402": {
+        "zh-CN": "幻华流月之野",
+        "en": "Illusory Moonveil Wilds",
+        "ja": ""
+    },
+    "1403": {
+        "zh-CN": "幻华流月之野",
+        "en": "Illusory Moonveil Wilds",
+        "ja": ""
+    },
+    "1411": {
+        "zh-CN": "不稳定空间-幻华流月之野",
+        "en": "Unstable - Illusory Moonveil Wilds",
+        "ja": ""
+    },
+    "1412": {
+        "zh-CN": "不稳定空间-幻华流月之野",
+        "en": "Unstable - Illusory Moonveil Wilds",
+        "ja": ""
+    },
+    "1421": {
+        "zh-CN": "幻华流月之野-普通",
+        "en": "Chaotic - Illusory Moonveil Wilds",
+        "ja": ""
+    },
+    "1422": {
+        "zh-CN": "幻华流月之野-困难",
+        "en": "Chaotic - Illusory Moonveil Wilds",
+        "ja": ""
+    },
+    "1423": {
+        "zh-CN": "幻华流月之野-大师",
+        "en": "Chaotic - Illusory Moonveil Wilds",
+        "ja": ""
+    },
+    "1501": {
+        "zh-CN": "岩蛇巢穴",
+        "en": "Rock Serpent Lair",
+        "ja": ""
+    },
+    "1502": {
+        "zh-CN": "岩蛇巢穴",
+        "en": "Rock Serpent Lair",
+        "ja": ""
+    },
+    "1511": {
+        "zh-CN": "不稳定空间-岩蛇巢穴",
+        "en": "Unstable - Rock Serpent Lair",
+        "ja": ""
+    },
+    "1521": {
+        "zh-CN": "不稳定空间-岩蛇巢穴",
+        "en": "Unstable - Rock Serpent Lair",
+        "ja": ""
+    },
+    "1531": {
+        "zh-CN": "岩蛇巢穴-普通",
+        "en": "Chaotic - Rock Serpent Lair",
+        "ja": ""
+    },
+    "1532": {
+        "zh-CN": "岩蛇巢穴-困难",
+        "en": "Chaotic - Rock Serpent Lair",
+        "ja": ""
+    },
+    "1533": {
+        "zh-CN": "岩蛇巢穴-大师",
+        "en": "Chaotic - Rock Serpent Lair",
+        "ja": ""
+    },
+    "1611": {
+        "zh-CN": "不稳定空间-蚀·蒂娜精神之界",
+        "en": "Unstable - Eclipsed Tina's Mindrealm",
+        "ja": ""
+    },
+    "1621": {
+        "zh-CN": "不稳定空间-蚀·蒂娜精神之界",
+        "en": "Unstable - Eclipsed Tina's Mindrealm",
+        "ja": ""
+    },
+    "1631": {
+        "zh-CN": "普通-蚀·蒂娜精神之界",
+        "en": "Normal - Eclipsed Tina's Mindrealm",
+        "ja": ""
+    },
+    "1632": {
+        "zh-CN": "困难-蚀·蒂娜精神之界",
+        "en": "Hard - Eclipsed Tina's Mindrealm",
+        "ja": ""
+    },
+    "1633": {
+        "zh-CN": "大师-蚀·蒂娜精神之界",
+        "en": "Master - Eclipsed Tina's Mindrealm",
+        "ja": ""
+    },
+    "5000": {
+        "zh-CN": "内容机制测试场景",
+        "en": "Content mechanism test scene",
+        "ja": ""
+    },
+    "5002": {
+        "zh-CN": "源之海",
+        "en": "Sea of Origin",
+        "ja": ""
+    },
+    "5033": {
+        "zh-CN": "塔之遗迹",
+        "en": "Tower Ruins",
+        "ja": ""
+    },
+    "5200": {
+        "zh-CN": "拉蒙德办公室",
+        "en": "Lamond's Office",
+        "ja": ""
+    },
+    "5206": {
+        "zh-CN": "阿斯特里斯",
+        "en": "Asterleeds",
+        "ja": ""
+    },
+    "5211": {
+        "zh-CN": "拉蒙德办公室",
+        "en": "Lamond's Office",
+        "ja": ""
+    },
+    "5220": {
+        "zh-CN": "海上游轮",
+        "en": "Sea Cruise",
+        "ja": ""
+    },
+    "5401": {
+        "zh-CN": "卡尼曼森林",
+        "en": "Kanamia Forest",
+        "ja": ""
+    },
+    "5403": {
+        "zh-CN": "第一勇士试炼",
+        "en": "Kanamia Brave Trial",
+        "ja": ""
+    },
+    "5501": {
+        "zh-CN": "巨龙爪痕",
+        "en": "Dragon Claw Valley",
+        "ja": ""
+    },
+    "5602": {
+        "zh-CN": "法法菈家",
+        "en": "Fafala's Home",
+        "ja": ""
+    },
+    "5603": {
+        "zh-CN": "法法菈家",
+        "en": "Fafala's Home",
+        "ja": ""
+    },
+    "5604": {
+        "zh-CN": "法法菈家",
+        "en": "Fafara's House",
+        "ja": ""
+    },
+    "5811": {
+        "zh-CN": "冶炼炉管道",
+        "en": "Smelting Furnace Pipes",
+        "ja": ""
+    },
+    "5812": {
+        "zh-CN": "冰之玉响",
+        "en": "Ice Reverberation",
+        "ja": ""
+    },
+    "6001": {
+        "zh-CN": "英雄本测试场景",
+        "en": "Hero Instance Test Scenario",
+        "ja": ""
+    },
+    "6005": {
+        "zh-CN": "不稳定空间-哥布林巢穴",
+        "en": "Unstable - Goblin Lair",
+        "ja": ""
+    },
+    "6006": {
+        "zh-CN": "不稳定空间-哥布林巢穴",
+        "en": "Unstable - Goblin Lair",
+        "ja": ""
+    },
+    "6007": {
+        "zh-CN": "普通-哥布林巢穴",
+        "en": "Chaotic - Goblin Lair",
+        "ja": ""
+    },
+    "6008": {
+        "zh-CN": "困难-哥布林巢穴",
+        "en": "Chaotic - Goblin Lair",
+        "ja": ""
+    },
+    "6009": {
+        "zh-CN": "大师-哥布林巢穴",
+        "en": "Chaotic - Goblin Lair",
+        "ja": ""
+    },
+    "6011": {
+        "zh-CN": "不稳定空间-卡尼曼试炼",
+        "en": "Unstable - Kanamia Trial",
+        "ja": ""
+    },
+    "6012": {
+        "zh-CN": "不稳定空间-卡尼曼试炼",
+        "en": "Unstable - Kanamia Trial",
+        "ja": ""
+    },
+    "6021": {
+        "zh-CN": "普通-卡尼曼试炼",
+        "en": "Chaotic - Kanamia Trial",
+        "ja": ""
+    },
+    "6022": {
+        "zh-CN": "困难-卡尼曼试炼",
+        "en": "Chaotic - Kanamia Trial",
+        "ja": ""
+    },
+    "6023": {
+        "zh-CN": "大师-卡尼曼试炼",
+        "en": "Chaotic - Kanamia Trial",
+        "ja": ""
+    },
+    "6031": {
+        "zh-CN": "不稳定空间-卡尼曼试炼",
+        "en": "Unstable - Kanamia Trial",
+        "ja": ""
+    },
+    "6032": {
+        "zh-CN": "不稳定空间-卡尼曼试炼",
+        "en": "Unstable - Kanamia Trial",
+        "ja": ""
+    },
+    "6040": {
+        "zh-CN": "群青环抱无音之都",
+        "en": "Verdant Embrace of Soundless City",
+        "ja": ""
+    },
+    "6041": {
+        "zh-CN": "不稳定空间-无音之都",
+        "en": "Unstable - Soundless City",
+        "ja": ""
+    },
+    "6042": {
+        "zh-CN": "不稳定空间-无音之都",
+        "en": "Unstable - Soundless City",
+        "ja": ""
+    },
+    "6043": {
+        "zh-CN": "无音之都-普通",
+        "en": "Chaotic - Soundless City",
+        "ja": ""
+    },
+    "6044": {
+        "zh-CN": "无音之都-困难",
+        "en": "Chaotic - Soundless City",
+        "ja": ""
+    },
+    "6045": {
+        "zh-CN": "无音之都-大师",
+        "en": "Chaotic - Soundless City",
+        "ja": ""
+    },
+    "6111": {
+        "zh-CN": "不稳定空间-荒灵祭所",
+        "en": "Unstable - Wraith Shrine",
+        "ja": ""
+    },
+    "6112": {
+        "zh-CN": "不稳定空间-荒灵祭所",
+        "en": "Unstable - Wraith Shrine",
+        "ja": ""
+    },
+    "6121": {
+        "zh-CN": "荒灵祭所-普通",
+        "en": "Chaotic - Wraith Shrine",
+        "ja": ""
+    },
+    "6122": {
+        "zh-CN": "荒灵祭所-困难",
+        "en": "Chaotic - Wraith Shrine",
+        "ja": ""
+    },
+    "6123": {
+        "zh-CN": "荒灵祭所-大师",
+        "en": "Chaotic - Wraith Shrine",
+        "ja": ""
+    },
+    "6211": {
+        "zh-CN": "不稳定空间-衰败深处",
+        "en": "Unstable - Depths of Decay",
+        "ja": ""
+    },
+    "6212": {
+        "zh-CN": "不稳定空间-衰败深处",
+        "en": "Unstable - Depths of Decay",
+        "ja": ""
+    },
+    "6221": {
+        "zh-CN": "衰败深处-普通",
+        "en": "Chaotic - Depths of Decay",
+        "ja": ""
+    },
+    "6222": {
+        "zh-CN": "衰败深处-困难",
+        "en": "Chaotic - Depths of Decay",
+        "ja": ""
+    },
+    "6223": {
+        "zh-CN": "衰败深处-大师",
+        "en": "Chaotic - Depths of Decay",
+        "ja": ""
+    },
+    "6311": {
+        "zh-CN": "不稳定空间-噬光牢笼",
+        "en": "Unstable - Devourer Cage",
+        "ja": ""
+    },
+    "6321": {
+        "zh-CN": "不稳定空间-噬光牢笼",
+        "en": "Unstable - Devourer Cage",
+        "ja": ""
+    },
+    "6331": {
+        "zh-CN": "噬光牢笼-普通",
+        "en": "Chaotic - Devourer Cage",
+        "ja": ""
+    },
+    "6332": {
+        "zh-CN": "噬光牢笼-困难",
+        "en": "Chaotic - Devourer Cage",
+        "ja": ""
+    },
+    "6333": {
+        "zh-CN": "噬光牢笼-大师",
+        "en": "Chaotic - Devourer Cage",
+        "ja": ""
+    },
+    "6411": {
+        "zh-CN": "不稳定空间-无音之都",
+        "en": "Unstable - Soundless City",
+        "ja": ""
+    },
+    "6412": {
+        "zh-CN": "不稳定空间-无音之都",
+        "en": "Unstable - Soundless City",
+        "ja": ""
+    },
+    "6421": {
+        "zh-CN": "无音之都-普通",
+        "en": "Chaotic - Soundless City",
+        "ja": ""
+    },
+    "6422": {
+        "zh-CN": "无音之都-困难",
+        "en": "Chaotic - Soundless City",
+        "ja": ""
+    },
+    "6423": {
+        "zh-CN": "无音之都-大师",
+        "en": "Chaotic - Soundless City",
+        "ja": ""
+    },
+    "6521": {
+        "zh-CN": "极限·机化处理所",
+        "en": "Extreme - Mechanization Processing Facility",
+        "ja": ""
+    },
+    "6522": {
+        "zh-CN": "极限·机化处理所",
+        "en": "Extreme - Mechanization Processing Facility",
+        "ja": ""
+    },
+    "6523": {
+        "zh-CN": "极限·机化处理所",
+        "en": "Extreme - Mechanization Processing Facility",
+        "ja": ""
+    },
+    "6524": {
+        "zh-CN": "极限·机化处理所",
+        "en": "Extreme - Mechanization Processing Facility",
+        "ja": ""
+    },
+    "6525": {
+        "zh-CN": "极限·机化处理所",
+        "en": "Extreme - Mechanization Processing Facility",
+        "ja": ""
+    },
+    "6511": {
+        "zh-CN": "不稳定空间·诅咒的煌墓",
+        "en": "Unstable - Cursed Radiant Tomb",
+        "ja": ""
+    },
+    "6512": {
+        "zh-CN": "不稳定空间·诅咒的煌墓",
+        "en": "Unstable - Cursed Radiant Tomb",
+        "ja": ""
+    },
+    "6513": {
+        "zh-CN": "诅咒煌墓-普通",
+        "en": "Normal - Cursed Radiant Tomb",
+        "ja": ""
+    },
+    "6541": {
+        "zh-CN": "不稳定空间·隐雾猎场",
+        "en": "Unstable - Mist-Hidden Hunting Grounds",
+        "ja": ""
+    },
+    "6514": {
+        "zh-CN": "诅咒煌墓-困难",
+        "en": "Hard - Cursed Radiant Tomb",
+        "ja": ""
+    },
+    "6542": {
+        "zh-CN": "不稳定空间·隐雾猎场",
+        "en": "Unstable - Mist-Hidden Hunting Grounds",
+        "ja": ""
+    },
+    "6515": {
+        "zh-CN": "诅咒煌墓-大师",
+        "en": "Master - Cursed Radiant Tomb",
+        "ja": ""
+    },
+    "6543": {
+        "zh-CN": "极限·隐雾猎场",
+        "en": "Extreme - Mist-Hidden Hunting Grounds",
+        "ja": ""
+    },
+    "6544": {
+        "zh-CN": "极限·隐雾猎场",
+        "en": "Extreme - Mist-Hidden Hunting Grounds",
+        "ja": ""
+    },
+    "6545": {
+        "zh-CN": "极限·隐雾猎场",
+        "en": "Extreme - Mist-Hidden Hunting Grounds",
+        "ja": ""
+    },
+    "6561": {
+        "zh-CN": "不稳定空间·环海石礁",
+        "en": "Unstable - Ringsea Reef",
+        "ja": ""
+    },
+    "6562": {
+        "zh-CN": "不稳定空间·环海石礁",
+        "en": "Unstable - Ringsea Reef",
+        "ja": ""
+    },
+    "6563": {
+        "zh-CN": "普通-环海石礁",
+        "en": "Normal - Ringsea Reef",
+        "ja": ""
+    },
+    "6564": {
+        "zh-CN": "困难-环海石礁",
+        "en": "Hard - Ringsea Reef",
+        "ja": ""
+    },
+    "6565": {
+        "zh-CN": "大师-环海石礁",
+        "en": "Master - Ringsea Reef",
+        "ja": ""
+    },
+    "7001": {
+        "zh-CN": "多人跑酷",
+        "en": "Parkour",
+        "ja": ""
+    },
+    "7002": {
+        "zh-CN": "多人跑酷",
+        "en": "Parkour",
+        "ja": ""
+    },
+    "7003": {
+        "zh-CN": "废都障碍赛",
+        "en": "Wasteland Race",
+        "ja": ""
+    },
+    "7004": {
+        "zh-CN": "环城坐骑赛",
+        "en": "City Rally",
+        "ja": ""
+    },
+    "7050": {
+        "zh-CN": "哥布林大暴走",
+        "en": "Goblin Rampage",
+        "ja": ""
+    },
+    "7051": {
+        "zh-CN": "哥布林大暴走",
+        "en": "Goblin Rampage",
+        "ja": ""
+    },
+    "7052": {
+        "zh-CN": "哥布林大暴走",
+        "en": "Goblin Rampage",
+        "ja": ""
+    },
+    "7053": {
+        "zh-CN": "哥布林大暴走",
+        "en": "Goblin Rampage",
+        "ja": ""
+    },
+    "7054": {
+        "zh-CN": "哥布林大暴走",
+        "en": "Goblin Rampage",
+        "ja": ""
+    },
+    "7055": {
+        "zh-CN": "讨伐哥布林巫师",
+        "en": "Defeat the Goblin Mage",
+        "ja": ""
+    },
+    "7056": {
+        "zh-CN": "讨伐哥布林巫师",
+        "en": "Defeat the Goblin Mage",
+        "ja": ""
+    },
+    "7057": {
+        "zh-CN": "讨伐哥布林巫师",
+        "en": "Defeat the Goblin Mage",
+        "ja": ""
+    },
+    "7058": {
+        "zh-CN": "讨伐哥布林巫师",
+        "en": "Defeat the Goblin Mage",
+        "ja": ""
+    },
+    "7060": {
+        "zh-CN": "安德拉峡谷保卫战",
+        "en": "Canyon Battle",
+        "ja": ""
+    },
+    "7061": {
+        "zh-CN": "安德拉峡谷保卫战",
+        "en": "Canyon Battle",
+        "ja": ""
+    },
+    "7065": {
+        "zh-CN": "快递紧急运输",
+        "en": "Urgent Delivery",
+        "ja": ""
+    },
+    "7070": {
+        "zh-CN": "调查光桥平台",
+        "en": "Light Bridge",
+        "ja": ""
+    },
+    "7071": {
+        "zh-CN": "调查光桥平台",
+        "en": "Light Bridge",
+        "ja": ""
+    },
+    "7072": {
+        "zh-CN": "调查光桥平台",
+        "en": "Light Bridge",
+        "ja": ""
+    },
+    "7073": {
+        "zh-CN": "调查光桥平台",
+        "en": "Light Bridge",
+        "ja": ""
+    },
+    "7075": {
+        "zh-CN": "亚人生态问答",
+        "en": "Demi-Human Q&A",
+        "ja": ""
+    },
+    "7076": {
+        "zh-CN": "亚人生态问答",
+        "en": "Demi-Human Q&A",
+        "ja": ""
+    },
+    "7077": {
+        "zh-CN": "亚人生态问答",
+        "en": "Demi-Human Q&A",
+        "ja": ""
+    },
+    "7080": {
+        "zh-CN": "风元素乱流",
+        "en": "Wind Turbulence",
+        "ja": ""
+    },
+    "7085": {
+        "zh-CN": "小猪快跑",
+        "en": "Boars Run",
+        "ja": ""
+    },
+    "7090": {
+        "zh-CN": "抑制虚蚀喷涌",
+        "en": "Suppress the Eruption",
+        "ja": ""
+    },
+    "7095": {
+        "zh-CN": "躲避蜘蛛雷挑战",
+        "en": "Spider Mine",
+        "ja": ""
+    },
+    "7101": {
+        "zh-CN": "空中巡航",
+        "en": "Aerial Patrol",
+        "ja": ""
+    },
+    "7102": {
+        "zh-CN": "空中巡航",
+        "en": "Aerial Patrol",
+        "ja": ""
+    },
+    "7103": {
+        "zh-CN": "空中巡航",
+        "en": "Aerial Patrol",
+        "ja": ""
+    },
+    "7150": {
+        "zh-CN": "世界主宰",
+        "en": "World Dominator",
+        "ja": ""
+    },
+    "7151": {
+        "zh-CN": "世界主宰",
+        "en": "World Dominator",
+        "ja": ""
+    },
+    "7152": {
+        "zh-CN": "世界主宰",
+        "en": "World Overlord",
+        "ja": ""
+    },
+    "8001": {
+        "zh-CN": "村庄保卫战",
+        "en": "Village Defense Battle",
+        "ja": ""
+    },
+    "8002": {
+        "zh-CN": "机像擂台",
+        "en": "Golem Arena",
+        "ja": ""
+    },
+    "8005": {
+        "zh-CN": "快递紧急运输",
+        "en": "Urgent Delivery",
+        "ja": ""
+    },
+    "8006": {
+        "zh-CN": "快递紧急运输",
+        "en": "Urgent Delivery",
+        "ja": ""
+    },
+    "8020": {
+        "zh-CN": "亚人对决",
+        "en": "Demi-Human Duel",
+        "ja": ""
+    },
+    "8021": {
+        "zh-CN": "亚人对决",
+        "en": "Demi-Human Duel",
+        "ja": ""
+    },
+    "9000": {
+        "zh-CN": "躲避蜘蛛雷挑战",
+        "en": "Spider Mine",
+        "ja": ""
+    },
+    "9001": {
+        "zh-CN": "气球捕获大作战",
+        "en": "Balloon Capture",
+        "ja": ""
+    },
+    "9002": {
+        "zh-CN": "驱逐年兽",
+        "en": "Defeat the Year Demon",
+        "ja": ""
+    },
+    "9200": {
+        "zh-CN": "神龙枷所：适格者特训",
+        "en": "Dragon Shackles: Adept's Trial",
+        "ja": ""
+    },
+    "9201": {
+        "zh-CN": "千梦织灵之夜",
+        "en": "Loom of Dreams​",
+        "ja": ""
+    },
+    "9202": {
+        "zh-CN": "普通-沉梦林谷",
+        "en": "Slumberdream Valley",
+        "ja": ""
+    },
+    "9203": {
+        "zh-CN": "困难-沉梦林谷",
+        "en": "Slumberdream Valley",
+        "ja": ""
+    },
+    "9204": {
+        "zh-CN": "噩梦-沉梦林谷",
+        "en": "Slumberdream Valley",
+        "ja": ""
+    },
+    "10001": {
+        "zh-CN": "方形练习场1",
+        "en": "Square Practice Field 1",
+        "ja": ""
+    },
+    "10002": {
+        "zh-CN": "方形练习场2",
+        "en": "Square Practice Field 2",
+        "ja": ""
+    },
+    "10003": {
+        "zh-CN": "测试动态场景1（副本）",
+        "en": "Test Dynamic Scene 1 (Copy)",
+        "ja": ""
+    },
+    "10004": {
+        "zh-CN": "测试动态场景2（副本）",
+        "en": "Test Dynamic Scene 2 (Copy)",
+        "ja": ""
+    },
+    "10005": {
+        "zh-CN": "测试逻辑专用副本",
+        "en": "Test Logic Special Copy",
+        "ja": ""
+    },
+    "10010": {
+        "zh-CN": "3C测试场景",
+        "en": "3C Test Scene",
+        "ja": ""
+    },
+    "10020": {
+        "zh-CN": "表演用的测试场景1",
+        "en": "Performance Test Scene 1",
+        "ja": ""
+    },
+    "10021": {
+        "zh-CN": "表演用的测试场景2",
+        "en": "Performance Test Scene 2",
+        "ja": ""
+    },
+    "11001": {
+        "zh-CN": "不思议的追逃游戏",
+        "en": "Wondrous Chase-and-Escape Game",
+        "ja": ""
+    },
+    "10030": {
+        "zh-CN": "Zone测试场景",
+        "en": "Zone Test Scene",
+        "ja": ""
+    },
+    "12000": {
+        "zh-CN": "协会活动中心",
+        "en": "Guild Center",
+        "ja": ""
+    },
+    "12011": {
+        "zh-CN": "协会狩猎·困难",
+        "en": "Guild Hunt - Hard",
+        "ja": ""
+    },
+    "12012": {
+        "zh-CN": "协会狩猎·普通",
+        "en": "Guild Hunt - Normal",
+        "ja": ""
+    },
+    "12013": {
+        "zh-CN": "协会狩猎·简单",
+        "en": "Guild Hunt - Easy",
+        "ja": ""
+    },
+    "12014": {
+        "zh-CN": "协会狩猎·普通",
+        "en": "Guild Hunt - Normal",
+        "ja": ""
+    },
+    "12015": {
+        "zh-CN": "协会狩猎·困难",
+        "en": "Guild Hunt - Hard",
+        "ja": ""
+    },
+    "12016": {
+        "zh-CN": "噬光牢笼共享",
+        "en": "Devourer Cage Sharing",
+        "ja": ""
+    },
+    "12017": {
+        "zh-CN": "噬光牢笼共享",
+        "en": "Devourer Cage Sharing",
+        "ja": ""
+    },
+    "12018": {
+        "zh-CN": "协会狩猎·普通",
+        "en": "Guild Hunt - Normal",
+        "ja": ""
+    },
+    "12019": {
+        "zh-CN": "协会狩猎·困难",
+        "en": "Guild Hunt - Hard",
+        "ja": ""
+    },
+    "12022": {
+        "zh-CN": "协会狩猎·普通",
+        "en": "Association Hunt - Normal",
+        "ja": ""
+    },
+    "12023": {
+        "zh-CN": "协会狩猎·困难",
+        "en": "Association Hunt - Hard",
+        "ja": ""
+    },
+    "12030": {
+        "zh-CN": "小伊的故事",
+        "en": "Ee-chan's Story",
+        "ja": ""
+    },
+    "12040": {
+        "zh-CN": "协会派对",
+        "en": "Guild Party",
+        "ja": ""
+    },
+    "12050": {
+        "zh-CN": "巨型机像讨伐战",
+        "en": "Giant Golem Crusade",
+        "ja": ""
+    },
+    "12051": {
+        "zh-CN": "巨型机像讨伐战",
+        "en": "Giant Golem Crusade",
+        "ja": ""
+    },
+    "12052": {
+        "zh-CN": "巨型机像讨伐战",
+        "en": "Giant Automaton Subjugation Battle",
+        "ja": ""
+    },
+    "12100": {
+        "zh-CN": "回音副本",
+        "en": "Echoing Dungeon",
+        "ja": ""
+    },
+    "13001": {
+        "zh-CN": "激斗！虚空浮岛·神龙枷所",
+        "en": "Clash! Floating Island - Dragon Shackles",
+        "ja": ""
+    },
+    "13002": {
+        "zh-CN": "血战！虚空浮岛·神龙枷所",
+        "en": "Brutal! Floating Island - Dragon Shackles",
+        "ja": ""
+    },
+    "13003": {
+        "zh-CN": "决战！虚空浮岛·神龙枷所",
+        "en": "Purge! Floating Island - Dragon Shackles",
+        "ja": ""
+    },
+    "13011": {
+        "zh-CN": "激斗！幻花沉眠之地",
+        "en": "Clash! Dreambloom Ruins",
+        "ja": ""
+    },
+    "13012": {
+        "zh-CN": "血战！幻花沉眠之地",
+        "en": "Brutal! Dreambloom Ruins",
+        "ja": ""
+    },
+    "13013": {
+        "zh-CN": "决战！幻花沉眠之地",
+        "en": "Purge! Dreambloom Ruins",
+        "ja": ""
+    },
+    "15001": {
+        "zh-CN": "记忆1：暗淡的讨伐记忆",
+        "en": "Memory 1",
+        "ja": ""
+    },
+    "15002": {
+        "zh-CN": "记忆13：明亮的讨伐记忆",
+        "en": "Memory 13",
+        "ja": ""
+    },
+    "15003": {
+        "zh-CN": "记忆9：暗淡的讨伐记忆",
+        "en": "Memory 9",
+        "ja": ""
+    },
+    "15004": {
+        "zh-CN": "记忆7：暗淡的讨伐记忆",
+        "en": "Memory 7",
+        "ja": ""
+    },
+    "15005": {
+        "zh-CN": "记忆31：暗淡的讨伐记忆",
+        "en": "Memory 31",
+        "ja": ""
+    },
+    "15006": {
+        "zh-CN": "记忆32：暗淡的讨伐记忆",
+        "en": "Memory 32",
+        "ja": ""
+    },
+    "15007": {
+        "zh-CN": "记忆18：暗淡的讨伐记忆",
+        "en": "Memory 18",
+        "ja": ""
+    },
+    "15008": {
+        "zh-CN": "记忆22：暗淡的讨伐记忆",
+        "en": "Memory 22",
+        "ja": ""
+    },
+    "15009": {
+        "zh-CN": "记忆24：暗淡的讨伐记忆",
+        "en": "Memory 24",
+        "ja": ""
+    },
+    "15010": {
+        "zh-CN": "记忆48：暗淡的讨伐记忆",
+        "en": "Memory 48",
+        "ja": ""
+    },
+    "15011": {
+        "zh-CN": "记忆16：暗淡的讨伐记忆",
+        "en": "Memory 16",
+        "ja": ""
+    },
+    "15012": {
+        "zh-CN": "记忆42：暗淡的讨伐记忆",
+        "en": "Memory 42",
+        "ja": ""
+    },
+    "15501": {
+        "zh-CN": "记忆3：明亮的对决记忆",
+        "en": "Memory 3",
+        "ja": ""
+    },
+    "15502": {
+        "zh-CN": "记忆49：明亮的对决记忆",
+        "en": "Memory 49",
+        "ja": ""
+    },
+    "15503": {
+        "zh-CN": "记忆23：暗淡的对决记忆",
+        "en": "Memory 23",
+        "ja": ""
+    },
+    "15504": {
+        "zh-CN": "记忆15：强烈的对决记忆",
+        "en": "Memory 15",
+        "ja": ""
+    },
+    "15505": {
+        "zh-CN": "记忆50：强烈的对决记忆",
+        "en": "Memory 50",
+        "ja": ""
+    },
+    "15506": {
+        "zh-CN": "记忆30：强烈的对决记忆",
+        "en": "Memory 30",
+        "ja": ""
+    },
+    "15507": {
+        "zh-CN": "记忆45：暗淡的对决记忆",
+        "en": "Memory 45",
+        "ja": ""
+    },
+    "15508": {
+        "zh-CN": "记忆40：强烈的对决记忆",
+        "en": "Memory 40",
+        "ja": ""
+    },
+    "16001": {
+        "zh-CN": "记忆2：暗淡的求生记忆",
+        "en": "Memory 2",
+        "ja": ""
+    },
+    "16002": {
+        "zh-CN": "记忆14：明亮的求生记忆",
+        "en": "Memory 14",
+        "ja": ""
+    },
+    "16003": {
+        "zh-CN": "记忆20：暗淡的求生记忆",
+        "en": "Memory 20",
+        "ja": ""
+    },
+    "16004": {
+        "zh-CN": "记忆36：暗淡的求生记忆",
+        "en": "Memory 36",
+        "ja": ""
+    },
+    "16005": {
+        "zh-CN": "大秘境生存验证模板",
+        "en": "Great Dungeon Survival Verification Template",
+        "ja": ""
+    },
+    "16006": {
+        "zh-CN": "大秘境生存验证模板",
+        "en": "Great Dungeon Survival Verification Template",
+        "ja": ""
+    },
+    "16501": {
+        "zh-CN": "记忆4：暗淡的净化记忆",
+        "en": "Memory 4",
+        "ja": ""
+    },
+    "16502": {
+        "zh-CN": "记忆34：暗淡的净化记忆",
+        "en": "Memory 34",
+        "ja": ""
+    },
+    "16503": {
+        "zh-CN": "记忆41：暗淡的净化记忆",
+        "en": "Memory 41",
+        "ja": ""
+    },
+    "16504": {
+        "zh-CN": "记忆28：明亮的净化记忆",
+        "en": "Memory 28",
+        "ja": ""
+    },
+    "17001": {
+        "zh-CN": "记忆38：暗淡的征讨记忆",
+        "en": "Memory 38",
+        "ja": ""
+    },
+    "17002": {
+        "zh-CN": "记忆46：明亮的征讨记忆",
+        "en": "Memory 46",
+        "ja": ""
+    },
+    "17003": {
+        "zh-CN": "记忆11：暗淡的征讨记忆",
+        "en": "Memory 11",
+        "ja": ""
+    },
+    "17004": {
+        "zh-CN": "记忆17：暗淡的征讨记忆",
+        "en": "Memory 17",
+        "ja": ""
+    },
+    "17501": {
+        "zh-CN": "记忆35：暗淡的探索记忆",
+        "en": "Memory 35",
+        "ja": ""
+    },
+    "17502": {
+        "zh-CN": "记忆26：明亮的探索记忆",
+        "en": "Memory 26",
+        "ja": ""
+    },
+    "17503": {
+        "zh-CN": "记忆47：暗淡的探索记忆",
+        "en": "Memory 47",
+        "ja": ""
+    },
+    "17504": {
+        "zh-CN": "记忆10：暗淡的探索记忆",
+        "en": "Memory 10",
+        "ja": ""
+    },
+    "17505": {
+        "zh-CN": "记忆19：暗淡的探索记忆",
+        "en": "Memory 19",
+        "ja": ""
+    },
+    "18001": {
+        "zh-CN": "记忆6：暗淡的守护记忆",
+        "en": "Memory 6",
+        "ja": ""
+    },
+    "18002": {
+        "zh-CN": "记忆21：暗淡的守护记忆",
+        "en": "Memory 21",
+        "ja": ""
+    },
+    "18003": {
+        "zh-CN": "记忆44：暗淡的守护记忆",
+        "en": "Memory 44",
+        "ja": ""
+    },
+    "18004": {
+        "zh-CN": "记忆39：明亮的守护记忆",
+        "en": "Memory 39",
+        "ja": ""
+    },
+    "18501": {
+        "zh-CN": "记忆8：暗淡的治愈记忆",
+        "en": "Memory 8",
+        "ja": ""
+    },
+    "18502": {
+        "zh-CN": "记忆27：暗淡的治愈记忆",
+        "en": "Memory 27",
+        "ja": ""
+    },
+    "18503": {
+        "zh-CN": "记忆43：暗淡的治愈记忆",
+        "en": "Memory 43",
+        "ja": ""
+    },
+    "18504": {
+        "zh-CN": "记忆37：明亮的治愈记忆",
+        "en": "Memory 37",
+        "ja": ""
+    },
+    "19001": {
+        "zh-CN": "记忆5：暗淡的挑战记忆",
+        "en": "Memory 5",
+        "ja": ""
+    },
+    "19002": {
+        "zh-CN": "记忆12：暗淡的挑战记忆",
+        "en": "Memory 12",
+        "ja": ""
+    },
+    "19003": {
+        "zh-CN": "记忆25：暗淡的挑战记忆",
+        "en": "Memory 25",
+        "ja": ""
+    },
+    "19004": {
+        "zh-CN": "记忆29：明亮的挑战记忆",
+        "en": "Memory 29",
+        "ja": ""
+    },
+    "19005": {
+        "zh-CN": "记忆33：暗淡的挑战记忆",
+        "en": "Memory 33",
+        "ja": ""
+    },
+    "20101": {
+        "zh-CN": "守护之路1：团队守护",
+        "en": "Guardian 1",
+        "ja": ""
+    },
+    "20102": {
+        "zh-CN": "守护之路10：团队守护",
+        "en": "Guardian 10",
+        "ja": ""
+    },
+    "20201": {
+        "zh-CN": "守护之路2：团队守护",
+        "en": "Guardian 2",
+        "ja": ""
+    },
+    "20202": {
+        "zh-CN": "守护之路22：团队守护",
+        "en": "Guardian 22",
+        "ja": ""
+    },
+    "20301": {
+        "zh-CN": "守护之路4：团队守护",
+        "en": "Guardian 4",
+        "ja": ""
+    },
+    "20302": {
+        "zh-CN": "守护之路13：团队守护",
+        "en": "Guardian 13",
+        "ja": ""
+    },
+    "20303": {
+        "zh-CN": "守护之路25：团队守护",
+        "en": "Guardian 25",
+        "ja": ""
+    },
+    "20401": {
+        "zh-CN": "守护之路5：职责试炼",
+        "en": "Guardian 5",
+        "ja": ""
+    },
+    "20402": {
+        "zh-CN": "守护之路16：职责试炼",
+        "en": "Guardian 16",
+        "ja": ""
+    },
+    "20501": {
+        "zh-CN": "守护之路7：团队守护",
+        "en": "Guardian 7",
+        "ja": ""
+    },
+    "20502": {
+        "zh-CN": "守护之路19：团队守护",
+        "en": "Guardian 19",
+        "ja": ""
+    },
+    "20701": {
+        "zh-CN": "守护之路14：团队守护",
+        "en": "Guardian 14",
+        "ja": ""
+    },
+    "20702": {
+        "zh-CN": "守护之路20：团队守护",
+        "en": "Guardian 20",
+        "ja": ""
+    },
+    "20801": {
+        "zh-CN": "守护之路8：团队守护",
+        "en": "Guardian 8",
+        "ja": ""
+    },
+    "20802": {
+        "zh-CN": "守护之路17：团队守护",
+        "en": "Guardian 17",
+        "ja": ""
+    },
+    "20803": {
+        "zh-CN": "守护之路26：团队守护",
+        "en": "Guardian 26",
+        "ja": ""
+    },
+    "21201": {
+        "zh-CN": "守护之路23：团队守护",
+        "en": "Guardian 23",
+        "ja": ""
+    },
+    "21202": {
+        "zh-CN": "守护之路29：团队守护",
+        "en": "Guardian 29",
+        "ja": ""
+    },
+    "21301": {
+        "zh-CN": "守护之路6：攻防试炼",
+        "en": "Guardian 6",
+        "ja": ""
+    },
+    "21302": {
+        "zh-CN": "守护之路12：攻防试炼",
+        "en": "Guardian 12",
+        "ja": ""
+    },
+    "21303": {
+        "zh-CN": "守护之路18：攻防试炼",
+        "en": "Guardian 18",
+        "ja": ""
+    },
+    "21304": {
+        "zh-CN": "守护之路24：攻防试炼",
+        "en": "Guardian 24",
+        "ja": ""
+    },
+    "21305": {
+        "zh-CN": "守护之路30：攻防试炼",
+        "en": "Guardian 30",
+        "ja": ""
+    },
+    "21306": {
+        "zh-CN": "守护之路3：攻防试炼",
+        "en": "Guardian 3",
+        "ja": ""
+    },
+    "21307": {
+        "zh-CN": "守护之路9：攻防试炼",
+        "en": "Guardian 9",
+        "ja": ""
+    },
+    "21308": {
+        "zh-CN": "守护之路15：攻防试炼",
+        "en": "Guardian 15",
+        "ja": ""
+    },
+    "21309": {
+        "zh-CN": "守护之路21：攻防试炼",
+        "en": "Guardian 21",
+        "ja": ""
+    },
+    "21310": {
+        "zh-CN": "守护之路27：攻防试炼",
+        "en": "Guardian 27",
+        "ja": ""
+    },
+    "21401": {
+        "zh-CN": "守护之路11：职责试炼",
+        "en": "Guardian 11",
+        "ja": ""
+    },
+    "21402": {
+        "zh-CN": "守护之路28：职责试炼",
+        "en": "Guardian 28",
+        "ja": ""
+    },
+    "22101": {
+        "zh-CN": "力量之路17：怪物讨伐",
+        "en": "Attack 17",
+        "ja": ""
+    },
+    "22201": {
+        "zh-CN": "力量之路10：怪物讨伐",
+        "en": "Attack 10",
+        "ja": ""
+    },
+    "22202": {
+        "zh-CN": "力量之路23：怪物讨伐",
+        "en": "Attack 23",
+        "ja": ""
+    },
+    "22301": {
+        "zh-CN": "力量之路11：怪物讨伐",
+        "en": "Attack 11",
+        "ja": ""
+    },
+    "22401": {
+        "zh-CN": "力量之路13：木桩试炼",
+        "en": "Attack 13",
+        "ja": ""
+    },
+    "22402": {
+        "zh-CN": "力量之路19：木桩试炼",
+        "en": "Attack 19",
+        "ja": ""
+    },
+    "22501": {
+        "zh-CN": "力量之路6：怪物讨伐",
+        "en": "Attack 6",
+        "ja": ""
+    },
+    "22502": {
+        "zh-CN": "力量之路12：怪物讨伐",
+        "en": "Attack 12",
+        "ja": ""
+    },
+    "22503": {
+        "zh-CN": "力量之路18：怪物讨伐",
+        "en": "Attack 18",
+        "ja": ""
+    },
+    "22504": {
+        "zh-CN": "力量之路24：怪物讨伐",
+        "en": "Attack 24",
+        "ja": ""
+    },
+    "22505": {
+        "zh-CN": "力量之路30：怪物讨伐",
+        "en": "Attack 30",
+        "ja": ""
+    },
+    "22601": {
+        "zh-CN": "力量之路7：怪物讨伐",
+        "en": "Attack 7",
+        "ja": ""
+    },
+    "22602": {
+        "zh-CN": "力量之路14：怪物讨伐",
+        "en": "Attack 14",
+        "ja": ""
+    },
+    "22701": {
+        "zh-CN": "力量之路8：怪物讨伐",
+        "en": "Attack 8",
+        "ja": ""
+    },
+    "22702": {
+        "zh-CN": "力量之路26：怪物讨伐",
+        "en": "Attack 26",
+        "ja": ""
+    },
+    "23101": {
+        "zh-CN": "力量之路3：木桩试炼",
+        "en": "Attack 3",
+        "ja": ""
+    },
+    "23102": {
+        "zh-CN": "力量之路9：木桩试炼",
+        "en": "Attack 9",
+        "ja": ""
+    },
+    "23103": {
+        "zh-CN": "力量之路15：木桩试炼",
+        "en": "Attack 15",
+        "ja": ""
+    },
+    "23104": {
+        "zh-CN": "力量之路21：木桩试炼",
+        "en": "Attack 21",
+        "ja": ""
+    },
+    "23105": {
+        "zh-CN": "力量之路27：木桩试炼",
+        "en": "Attack 27",
+        "ja": ""
+    },
+    "23201": {
+        "zh-CN": "力量之路4：怪物讨伐",
+        "en": "Attack 4",
+        "ja": ""
+    },
+    "23301": {
+        "zh-CN": "力量之路1：怪物讨伐",
+        "en": "Attack 1",
+        "ja": ""
+    },
+    "23302": {
+        "zh-CN": "力量之路20：怪物讨伐",
+        "en": "Attack 20",
+        "ja": ""
+    },
+    "23401": {
+        "zh-CN": "力量之路2：怪物讨伐",
+        "en": "Attack 2",
+        "ja": ""
+    },
+    "23501": {
+        "zh-CN": "力量之路5：怪物讨伐",
+        "en": "Attack 5",
+        "ja": ""
+    },
+    "23502": {
+        "zh-CN": "力量之路25：怪物讨伐",
+        "en": "Attack 25",
+        "ja": ""
+    },
+    "23601": {
+        "zh-CN": "力量之路16：怪物讨伐",
+        "en": "Attack 16",
+        "ja": ""
+    },
+    "23602": {
+        "zh-CN": "力量之路28：怪物讨伐",
+        "en": "Attack 28",
+        "ja": ""
+    },
+    "23701": {
+        "zh-CN": "力量之路22：怪物讨伐",
+        "en": "Attack 22",
+        "ja": ""
+    },
+    "23702": {
+        "zh-CN": "力量之路29：怪物讨伐",
+        "en": "Attack 29",
+        "ja": ""
+    },
+    "24101": {
+        "zh-CN": "辅助之路3：团队治疗",
+        "en": "Support 3",
+        "ja": ""
+    },
+    "24102": {
+        "zh-CN": "辅助之路6：团队治疗",
+        "en": "Support 6",
+        "ja": ""
+    },
+    "24103": {
+        "zh-CN": "辅助之路9：团队治疗",
+        "en": "Support 9",
+        "ja": ""
+    },
+    "24104": {
+        "zh-CN": "辅助之路12：团队治疗",
+        "en": "Support 12",
+        "ja": ""
+    },
+    "24105": {
+        "zh-CN": "辅助之路15：团队治疗",
+        "en": "Support 15",
+        "ja": ""
+    },
+    "24106": {
+        "zh-CN": "辅助之路18：团队治疗",
+        "en": "Support 18",
+        "ja": ""
+    },
+    "24107": {
+        "zh-CN": "辅助之路21：团队治疗",
+        "en": "Support 21",
+        "ja": ""
+    },
+    "24108": {
+        "zh-CN": "辅助之路24：团队治疗",
+        "en": "Support 24",
+        "ja": ""
+    },
+    "24109": {
+        "zh-CN": "辅助之路27：团队治疗",
+        "en": "Support 27",
+        "ja": ""
+    },
+    "24110": {
+        "zh-CN": "辅助之路30：团队治疗",
+        "en": "Support 30",
+        "ja": ""
+    },
+    "24201": {
+        "zh-CN": "辅助之路2：团队治疗",
+        "en": "Support 2",
+        "ja": ""
+    },
+    "24202": {
+        "zh-CN": "辅助之路10：团队治疗",
+        "en": "Support 10",
+        "ja": ""
+    },
+    "24203": {
+        "zh-CN": "辅助之路17：团队治疗",
+        "en": "Support 17",
+        "ja": ""
+    },
+    "24204": {
+        "zh-CN": "辅助之路25：团队治疗",
+        "en": "Support 25",
+        "ja": ""
+    },
+    "24301": {
+        "zh-CN": "辅助之路5：团队治疗",
+        "en": "Support 5",
+        "ja": ""
+    },
+    "24302": {
+        "zh-CN": "辅助之路14：团队治疗",
+        "en": "Support 14",
+        "ja": ""
+    },
+    "24303": {
+        "zh-CN": "辅助之路20：团队治疗",
+        "en": "Support 20",
+        "ja": ""
+    },
+    "24304": {
+        "zh-CN": "辅助之路29：团队治疗",
+        "en": "Support 29",
+        "ja": ""
+    },
+    "24401": {
+        "zh-CN": "辅助之路4：团队治疗",
+        "en": "Support 4",
+        "ja": ""
+    },
+    "24402": {
+        "zh-CN": "辅助之路11：团队治疗",
+        "en": "Support 11",
+        "ja": ""
+    },
+    "24403": {
+        "zh-CN": "辅助之路19：团队治疗",
+        "en": "Support 19",
+        "ja": ""
+    },
+    "24404": {
+        "zh-CN": "辅助之路23：团队治疗",
+        "en": "Support 23",
+        "ja": ""
+    },
+    "24501": {
+        "zh-CN": "辅助之路7：团队治疗",
+        "en": "Support 7",
+        "ja": ""
+    },
+    "24502": {
+        "zh-CN": "辅助之路16：团队治疗",
+        "en": "Support 16",
+        "ja": ""
+    },
+    "24503": {
+        "zh-CN": "辅助之路22：团队治疗",
+        "en": "Support 22",
+        "ja": ""
+    },
+    "24504": {
+        "zh-CN": "辅助之路28：团队治疗",
+        "en": "Support 28",
+        "ja": ""
+    },
+    "24601": {
+        "zh-CN": "辅助之路1：团队治疗",
+        "en": "Support 1",
+        "ja": ""
+    },
+    "24602": {
+        "zh-CN": "辅助之路8：团队治疗",
+        "en": "Support 8",
+        "ja": ""
+    },
+    "24603": {
+        "zh-CN": "辅助之路13：团队治疗",
+        "en": "Support 13",
+        "ja": ""
+    },
+    "24604": {
+        "zh-CN": "辅助之路26：团队治疗",
+        "en": "Support 26",
+        "ja": ""
+    },
+    "30001": {
+        "zh-CN": "家园庭院",
+        "en": "Homestead Courtyard",
+        "ja": ""
+    },
+    "30101": {
+        "zh-CN": "司第门遗迹1层",
+        "en": "Stimen Vaults Floor 1",
+        "ja": ""
+    },
+    "30102": {
+        "zh-CN": "司第门遗迹2层",
+        "en": "Stimen Vaults Floor 2",
+        "ja": ""
+    },
+    "30103": {
+        "zh-CN": "司第门遗迹3层",
+        "en": "Stimen Vaults Floor 3",
+        "ja": ""
+    },
+    "30104": {
+        "zh-CN": "司第门遗迹4层",
+        "en": "Stimen Vaults Floor 4",
+        "ja": ""
+    },
+    "30105": {
+        "zh-CN": "司第门遗迹5层",
+        "en": "Stimen Vaults Floor 5",
+        "ja": ""
+    },
+    "30106": {
+        "zh-CN": "司第门遗迹6层",
+        "en": "Stimen Vaults Floor 6",
+        "ja": ""
+    },
+    "30107": {
+        "zh-CN": "司第门遗迹7层",
+        "en": "Stimen Vaults Floor 7",
+        "ja": ""
+    },
+    "30108": {
+        "zh-CN": "司第门遗迹8层",
+        "en": "Stimen Vaults Floor 8",
+        "ja": ""
+    },
+    "30109": {
+        "zh-CN": "司第门遗迹9层",
+        "en": "Stimen Vaults Floor 9",
+        "ja": ""
+    },
+    "30110": {
+        "zh-CN": "司第门遗迹10层",
+        "en": "Stimen Vaults Floor 10",
+        "ja": ""
+    },
+    "30111": {
+        "zh-CN": "司第门遗迹11层",
+        "en": "Stimen Vaults Floor 11",
+        "ja": ""
+    },
+    "30112": {
+        "zh-CN": "司第门遗迹12层",
+        "en": "Stimen Vaults Floor 12",
+        "ja": ""
+    },
+    "30113": {
+        "zh-CN": "司第门遗迹13层",
+        "en": "Stimen Vaults Floor 13",
+        "ja": ""
+    },
+    "30114": {
+        "zh-CN": "司第门遗迹14层",
+        "en": "Stimen Vaults Floor 14",
+        "ja": ""
+    },
+    "30115": {
+        "zh-CN": "司第门遗迹15层",
+        "en": "Stimen Vaults Floor 15",
+        "ja": ""
+    },
+    "30116": {
+        "zh-CN": "司第门遗迹16层",
+        "en": "Stimen Vaults Floor 16",
+        "ja": ""
+    },
+    "30117": {
+        "zh-CN": "司第门遗迹17层",
+        "en": "Stimen Vaults Floor 17",
+        "ja": ""
+    },
+    "30118": {
+        "zh-CN": "司第门遗迹18层",
+        "en": "Stimen Vaults Floor 18",
+        "ja": ""
+    },
+    "30119": {
+        "zh-CN": "司第门遗迹19层",
+        "en": "Stimen Vaults Floor 19",
+        "ja": ""
+    },
+    "30120": {
+        "zh-CN": "司第门遗迹20层",
+        "en": "Stimen Vaults Floor 20",
+        "ja": ""
+    },
+    "30121": {
+        "zh-CN": "司第门遗迹21层",
+        "en": "Stimen Vaults Floor 21",
+        "ja": ""
+    },
+    "30122": {
+        "zh-CN": "司第门遗迹22层",
+        "en": "Stimen Vaults Floor 22",
+        "ja": ""
+    },
+    "30123": {
+        "zh-CN": "司第门遗迹23层",
+        "en": "Stimen Vaults Floor 23",
+        "ja": ""
+    },
+    "30124": {
+        "zh-CN": "司第门遗迹24层",
+        "en": "Stimen Vaults Floor 24",
+        "ja": ""
+    },
+    "30125": {
+        "zh-CN": "司第门遗迹25层",
+        "en": "Stimen Vaults Floor 25",
+        "ja": ""
+    },
+    "30126": {
+        "zh-CN": "司第门遗迹26层",
+        "en": "Stimen Vaults Floor 26",
+        "ja": ""
+    },
+    "30127": {
+        "zh-CN": "司第门遗迹27层",
+        "en": "Stimen Vaults Floor 27",
+        "ja": ""
+    },
+    "30128": {
+        "zh-CN": "司第门遗迹28层",
+        "en": "Stimen Vaults Floor 28",
+        "ja": ""
+    },
+    "30129": {
+        "zh-CN": "司第门遗迹29层",
+        "en": "Stimen Vaults Floor 29",
+        "ja": ""
+    },
+    "30130": {
+        "zh-CN": "司第门遗迹30层",
+        "en": "Stimen Vaults Floor 30",
+        "ja": ""
+    },
+    "30131": {
+        "zh-CN": "司第门遗迹31层",
+        "en": "Stimen Vaults Floor 31",
+        "ja": ""
+    },
+    "30132": {
+        "zh-CN": "司第门遗迹32层",
+        "en": "Stimen Vaults Floor 32",
+        "ja": ""
+    },
+    "30133": {
+        "zh-CN": "司第门遗迹33层",
+        "en": "Stimen Vaults Floor 33",
+        "ja": ""
+    },
+    "30134": {
+        "zh-CN": "司第门遗迹34层",
+        "en": "Stimen Vaults Floor 34",
+        "ja": ""
+    },
+    "30135": {
+        "zh-CN": "司第门遗迹35层",
+        "en": "Stimen Vaults Floor 35",
+        "ja": ""
+    },
+    "30136": {
+        "zh-CN": "司第门遗迹36层",
+        "en": "Stimen Vaults Floor 36",
+        "ja": ""
+    },
+    "30137": {
+        "zh-CN": "司第门遗迹37层",
+        "en": "Stimen Vaults Floor 37",
+        "ja": ""
+    },
+    "30138": {
+        "zh-CN": "司第门遗迹38层",
+        "en": "Stimen Vaults Floor 38",
+        "ja": ""
+    },
+    "30139": {
+        "zh-CN": "司第门遗迹39层",
+        "en": "Stimen Vaults Floor 39",
+        "ja": ""
+    },
+    "30140": {
+        "zh-CN": "司第门遗迹40层",
+        "en": "Stimen Vaults Floor 40",
+        "ja": ""
+    },
+    "30141": {
+        "zh-CN": "司第门遗迹41层",
+        "en": "Stimen Vaults Floor 41",
+        "ja": ""
+    },
+    "30142": {
+        "zh-CN": "司第门遗迹42层",
+        "en": "Stimen Vaults Floor 42",
+        "ja": ""
+    },
+    "30143": {
+        "zh-CN": "司第门遗迹43层",
+        "en": "Stimen Vaults Floor 43",
+        "ja": ""
+    },
+    "30144": {
+        "zh-CN": "司第门遗迹44层",
+        "en": "Stimen Vaults Floor 44",
+        "ja": ""
+    },
+    "30145": {
+        "zh-CN": "司第门遗迹45层",
+        "en": "Stimen Vaults Floor 45",
+        "ja": ""
+    },
+    "30146": {
+        "zh-CN": "司第门遗迹46层",
+        "en": "Stimen Vaults Floor 46",
+        "ja": ""
+    },
+    "30147": {
+        "zh-CN": "司第门遗迹47层",
+        "en": "Stimen Vaults Floor 47",
+        "ja": ""
+    },
+    "30148": {
+        "zh-CN": "司第门遗迹48层",
+        "en": "Stimen Vaults Floor 48",
+        "ja": ""
+    },
+    "30149": {
+        "zh-CN": "司第门遗迹49层",
+        "en": "Stimen Vaults Floor 49",
+        "ja": ""
+    },
+    "30150": {
+        "zh-CN": "司第门遗迹50层",
+        "en": "Stimen Vaults Floor 50",
+        "ja": ""
+    },
+    "30151": {
+        "zh-CN": "司第门遗迹51层",
+        "en": "Stimen Vaults Floor 51",
+        "ja": ""
+    },
+    "30152": {
+        "zh-CN": "司第门遗迹52层",
+        "en": "Stimen Vaults Floor 52",
+        "ja": ""
+    },
+    "30153": {
+        "zh-CN": "司第门遗迹53层",
+        "en": "Stimen Vaults Floor 53",
+        "ja": ""
+    },
+    "30154": {
+        "zh-CN": "司第门遗迹54层",
+        "en": "Stimen Vaults Floor 54",
+        "ja": ""
+    },
+    "30155": {
+        "zh-CN": "司第门遗迹55层",
+        "en": "Stimen Vaults Floor 55",
+        "ja": ""
+    },
+    "30156": {
+        "zh-CN": "司第门遗迹56层",
+        "en": "Stimen Vaults Floor 56",
+        "ja": ""
+    },
+    "30157": {
+        "zh-CN": "司第门遗迹57层",
+        "en": "Stimen Vaults Floor 57",
+        "ja": ""
+    },
+    "30158": {
+        "zh-CN": "司第门遗迹58层",
+        "en": "Stimen Vaults Floor 58",
+        "ja": ""
+    },
+    "30159": {
+        "zh-CN": "司第门遗迹59层",
+        "en": "Stimen Vaults Floor 59",
+        "ja": ""
+    },
+    "30160": {
+        "zh-CN": "司第门遗迹60层",
+        "en": "Stimen Vaults Floor 60",
+        "ja": ""
+    },
+    "30161": {
+        "zh-CN": "司第门遗迹61层",
+        "en": "Stimen Vaults Floor 61",
+        "ja": ""
+    },
+    "30162": {
+        "zh-CN": "司第门遗迹62层",
+        "en": "Stimen Vaults Floor 62",
+        "ja": ""
+    },
+    "30163": {
+        "zh-CN": "司第门遗迹63层",
+        "en": "Stimen Vaults Floor 63",
+        "ja": ""
+    },
+    "30164": {
+        "zh-CN": "司第门遗迹64层",
+        "en": "Stimen Vaults Floor 64",
+        "ja": ""
+    },
+    "30165": {
+        "zh-CN": "司第门遗迹65层",
+        "en": "Stimen Vaults Floor 65",
+        "ja": ""
+    },
+    "30166": {
+        "zh-CN": "司第门遗迹66层",
+        "en": "Stimen Vaults Floor 66",
+        "ja": ""
+    },
+    "30167": {
+        "zh-CN": "司第门遗迹67层",
+        "en": "Stimen Vaults Floor 67",
+        "ja": ""
+    },
+    "30168": {
+        "zh-CN": "司第门遗迹68层",
+        "en": "Stimen Vaults Floor 68",
+        "ja": ""
+    },
+    "30169": {
+        "zh-CN": "司第门遗迹69层",
+        "en": "Stimen Vaults Floor 69",
+        "ja": ""
+    },
+    "30170": {
+        "zh-CN": "司第门遗迹70层",
+        "en": "Stimen Vaults Floor 70",
+        "ja": ""
+    },
+    "30171": {
+        "zh-CN": "司第门遗迹71层",
+        "en": "Stimen Vaults Floor 71",
+        "ja": ""
+    },
+    "30172": {
+        "zh-CN": "司第门遗迹72层",
+        "en": "Stimen Vaults Floor 72",
+        "ja": ""
+    },
+    "30173": {
+        "zh-CN": "司第门遗迹73层",
+        "en": "Stimen Vaults Floor 73",
+        "ja": ""
+    },
+    "30174": {
+        "zh-CN": "司第门遗迹74层",
+        "en": "Stimen Vaults Floor 74",
+        "ja": ""
+    },
+    "30175": {
+        "zh-CN": "司第门遗迹75层",
+        "en": "Stimen Vaults Floor 75",
+        "ja": ""
+    },
+    "30200": {
+        "zh-CN": "司第门遗迹75层",
+        "en": "Stimen Vaults Floor 75",
+        "ja": ""
+    },
+    "31101": {
+        "zh-CN": "司第门遗迹1层",
+        "en": "Stimen Vaults Floor 1",
+        "ja": ""
+    },
+    "31102": {
+        "zh-CN": "司第门遗迹2层",
+        "en": "Stimen Vaults Floor 2",
+        "ja": ""
+    },
+    "31103": {
+        "zh-CN": "司第门遗迹3层",
+        "en": "Stimen Vaults Floor 3",
+        "ja": ""
+    },
+    "31104": {
+        "zh-CN": "司第门遗迹4层",
+        "en": "Stimen Vaults Floor 4",
+        "ja": ""
+    },
+    "31105": {
+        "zh-CN": "司第门遗迹5层",
+        "en": "Stimen Vaults Floor 5",
+        "ja": ""
+    },
+    "31106": {
+        "zh-CN": "司第门遗迹6层",
+        "en": "Stimen Vaults Floor 6",
+        "ja": ""
+    },
+    "31107": {
+        "zh-CN": "司第门遗迹7层",
+        "en": "Stimen Vaults Floor 7",
+        "ja": ""
+    },
+    "31108": {
+        "zh-CN": "司第门遗迹8层",
+        "en": "Stimen Vaults Floor 8",
+        "ja": ""
+    },
+    "31109": {
+        "zh-CN": "司第门遗迹9层",
+        "en": "Stimen Vaults Floor 9",
+        "ja": ""
+    },
+    "31110": {
+        "zh-CN": "司第门遗迹10层",
+        "en": "Stimen Vaults Floor 10",
+        "ja": ""
+    },
+    "31111": {
+        "zh-CN": "司第门遗迹11层",
+        "en": "Stimen Vaults Floor 11",
+        "ja": ""
+    },
+    "31112": {
+        "zh-CN": "司第门遗迹12层",
+        "en": "Stimen Vaults Floor 12",
+        "ja": ""
+    },
+    "31113": {
+        "zh-CN": "司第门遗迹13层",
+        "en": "Stimen Vaults Floor 13",
+        "ja": ""
+    },
+    "31114": {
+        "zh-CN": "司第门遗迹14层",
+        "en": "Stimen Vaults Floor 14",
+        "ja": ""
+    },
+    "31115": {
+        "zh-CN": "司第门遗迹15层",
+        "en": "Stimen Vaults Floor 15",
+        "ja": ""
+    },
+    "31116": {
+        "zh-CN": "司第门遗迹16层",
+        "en": "Stimen Vaults Floor 16",
+        "ja": ""
+    },
+    "31117": {
+        "zh-CN": "司第门遗迹17层",
+        "en": "Stimen Vaults Floor 17",
+        "ja": ""
+    },
+    "31118": {
+        "zh-CN": "司第门遗迹18层",
+        "en": "Stimen Vaults Floor 18",
+        "ja": ""
+    },
+    "31119": {
+        "zh-CN": "司第门遗迹19层",
+        "en": "Stimen Vaults Floor 19",
+        "ja": ""
+    },
+    "31120": {
+        "zh-CN": "司第门遗迹20层",
+        "en": "Stimen Vaults Floor 20",
+        "ja": ""
+    },
+    "31121": {
+        "zh-CN": "司第门遗迹21层",
+        "en": "Stimen Vaults Floor 21",
+        "ja": ""
+    },
+    "31122": {
+        "zh-CN": "司第门遗迹22层",
+        "en": "Stimen Vaults Floor 22",
+        "ja": ""
+    },
+    "31123": {
+        "zh-CN": "司第门遗迹23层",
+        "en": "Stimen Vaults Floor 23",
+        "ja": ""
+    },
+    "31124": {
+        "zh-CN": "司第门遗迹24层",
+        "en": "Stimen Vaults Floor 24",
+        "ja": ""
+    },
+    "31125": {
+        "zh-CN": "司第门遗迹25层",
+        "en": "Stimen Vaults Floor 25",
+        "ja": ""
+    },
+    "31126": {
+        "zh-CN": "司第门遗迹26层",
+        "en": "Stimen Vaults Floor 26",
+        "ja": ""
+    },
+    "31127": {
+        "zh-CN": "司第门遗迹27层",
+        "en": "Stimen Vaults Floor 27",
+        "ja": ""
+    },
+    "31128": {
+        "zh-CN": "司第门遗迹28层",
+        "en": "Stimen Vaults Floor 28",
+        "ja": ""
+    },
+    "31129": {
+        "zh-CN": "司第门遗迹29层",
+        "en": "Stimen Vaults Floor 29",
+        "ja": ""
+    },
+    "31130": {
+        "zh-CN": "司第门遗迹30层",
+        "en": "Stimen Vaults Floor 30",
+        "ja": ""
+    },
+    "31131": {
+        "zh-CN": "司第门遗迹31层",
+        "en": "Stimen Vaults Floor 31",
+        "ja": ""
+    },
+    "31132": {
+        "zh-CN": "司第门遗迹32层",
+        "en": "Stimen Vaults Floor 32",
+        "ja": ""
+    },
+    "31133": {
+        "zh-CN": "司第门遗迹33层",
+        "en": "Stimen Vaults Floor 33",
+        "ja": ""
+    },
+    "31134": {
+        "zh-CN": "司第门遗迹34层",
+        "en": "Stimen Vaults Floor 34",
+        "ja": ""
+    },
+    "31135": {
+        "zh-CN": "司第门遗迹35层",
+        "en": "Stimen Vaults Floor 35",
+        "ja": ""
+    },
+    "31136": {
+        "zh-CN": "司第门遗迹36层",
+        "en": "Stimen Vaults Floor 36",
+        "ja": ""
+    },
+    "31137": {
+        "zh-CN": "司第门遗迹37层",
+        "en": "Stimen Vaults Floor 37",
+        "ja": ""
+    },
+    "31138": {
+        "zh-CN": "司第门遗迹38层",
+        "en": "Stimen Vaults Floor 38",
+        "ja": ""
+    },
+    "31139": {
+        "zh-CN": "司第门遗迹39层",
+        "en": "Stimen Vaults Floor 39",
+        "ja": ""
+    },
+    "31140": {
+        "zh-CN": "司第门遗迹40层",
+        "en": "Stimen Vaults Floor 40",
+        "ja": ""
+    },
+    "31141": {
+        "zh-CN": "司第门遗迹41层",
+        "en": "Stimen Vaults Floor 41",
+        "ja": ""
+    },
+    "31142": {
+        "zh-CN": "司第门遗迹42层",
+        "en": "Stimen Vaults Floor 42",
+        "ja": ""
+    },
+    "31143": {
+        "zh-CN": "司第门遗迹43层",
+        "en": "Stimen Vaults Floor 43",
+        "ja": ""
+    },
+    "31144": {
+        "zh-CN": "司第门遗迹44层",
+        "en": "Stimen Vaults Floor 44",
+        "ja": ""
+    },
+    "31145": {
+        "zh-CN": "司第门遗迹45层",
+        "en": "Stimen Vaults Floor 45",
+        "ja": ""
+    },
+    "31146": {
+        "zh-CN": "司第门遗迹46层",
+        "en": "Stimen Vaults Floor 46",
+        "ja": ""
+    },
+    "31147": {
+        "zh-CN": "司第门遗迹47层",
+        "en": "Stimen Vaults Floor 47",
+        "ja": ""
+    },
+    "31148": {
+        "zh-CN": "司第门遗迹48层",
+        "en": "Stimen Vaults Floor 48",
+        "ja": ""
+    },
+    "31149": {
+        "zh-CN": "司第门遗迹49层",
+        "en": "Stimen Vaults Floor 49",
+        "ja": ""
+    },
+    "31150": {
+        "zh-CN": "司第门遗迹50层",
+        "en": "Stimen Vaults Floor 50",
+        "ja": ""
+    },
+    "31151": {
+        "zh-CN": "司第门遗迹51层",
+        "en": "Stimen Vaults Floor 51",
+        "ja": ""
+    },
+    "31152": {
+        "zh-CN": "司第门遗迹52层",
+        "en": "Stimen Vaults Floor 52",
+        "ja": ""
+    },
+    "31153": {
+        "zh-CN": "司第门遗迹53层",
+        "en": "Stimen Vaults Floor 53",
+        "ja": ""
+    },
+    "31154": {
+        "zh-CN": "司第门遗迹54层",
+        "en": "Stimen Vaults Floor 54",
+        "ja": ""
+    },
+    "31155": {
+        "zh-CN": "司第门遗迹55层",
+        "en": "Stimen Vaults Floor 55",
+        "ja": ""
+    },
+    "31156": {
+        "zh-CN": "司第门遗迹56层",
+        "en": "Stimen Vaults Floor 56",
+        "ja": ""
+    },
+    "31157": {
+        "zh-CN": "司第门遗迹57层",
+        "en": "Stimen Vaults Floor 57",
+        "ja": ""
+    },
+    "31158": {
+        "zh-CN": "司第门遗迹58层",
+        "en": "Stimen Vaults Floor 58",
+        "ja": ""
+    },
+    "31159": {
+        "zh-CN": "司第门遗迹59层",
+        "en": "Stimen Vaults Floor 59",
+        "ja": ""
+    },
+    "31160": {
+        "zh-CN": "司第门遗迹60层",
+        "en": "Stimen Vaults Floor 60",
+        "ja": ""
+    },
+    "31161": {
+        "zh-CN": "司第门遗迹61层",
+        "en": "Stimen Vaults Floor 61",
+        "ja": ""
+    },
+    "31162": {
+        "zh-CN": "司第门遗迹62层",
+        "en": "Stimen Vaults Floor 62",
+        "ja": ""
+    },
+    "31163": {
+        "zh-CN": "司第门遗迹63层",
+        "en": "Stimen Vaults Floor 63",
+        "ja": ""
+    },
+    "31164": {
+        "zh-CN": "司第门遗迹64层",
+        "en": "Stimen Vaults Floor 64",
+        "ja": ""
+    },
+    "31165": {
+        "zh-CN": "司第门遗迹65层",
+        "en": "Stimen Vaults Floor 65",
+        "ja": ""
+    },
+    "31166": {
+        "zh-CN": "司第门遗迹66层",
+        "en": "Stimen Vaults Floor 66",
+        "ja": ""
+    },
+    "31167": {
+        "zh-CN": "司第门遗迹67层",
+        "en": "Stimen Vaults Floor 67",
+        "ja": ""
+    },
+    "31168": {
+        "zh-CN": "司第门遗迹68层",
+        "en": "Stimen Vaults Floor 68",
+        "ja": ""
+    },
+    "31169": {
+        "zh-CN": "司第门遗迹69层",
+        "en": "Stimen Vaults Floor 69",
+        "ja": ""
+    },
+    "31170": {
+        "zh-CN": "司第门遗迹70层",
+        "en": "Stimen Vaults Floor 70",
+        "ja": ""
+    },
+    "31171": {
+        "zh-CN": "司第门遗迹71层",
+        "en": "Stimen Vaults Floor 71",
+        "ja": ""
+    },
+    "31172": {
+        "zh-CN": "司第门遗迹72层",
+        "en": "Stimen Vaults Floor 72",
+        "ja": ""
+    },
+    "31173": {
+        "zh-CN": "司第门遗迹73层",
+        "en": "Stimen Vaults Floor 73",
+        "ja": ""
+    },
+    "31174": {
+        "zh-CN": "司第门遗迹74层",
+        "en": "Stimen Vaults Floor 74",
+        "ja": ""
+    },
+    "31175": {
+        "zh-CN": "司第门遗迹75层",
+        "en": "Stimen Vaults Floor 75",
+        "ja": ""
+    },
+    "32101": {
+        "zh-CN": "司第门遗迹1层",
+        "en": "Sidimen Ruins Floor 1",
+        "ja": ""
+    },
+    "32102": {
+        "zh-CN": "司第门遗迹2层",
+        "en": "Sidimen Ruins Floor 2",
+        "ja": ""
+    },
+    "32103": {
+        "zh-CN": "司第门遗迹3层",
+        "en": "Sidimen Ruins Floor 3",
+        "ja": ""
+    },
+    "32104": {
+        "zh-CN": "司第门遗迹4层",
+        "en": "Sidimen Ruins Floor 4",
+        "ja": ""
+    },
+    "32105": {
+        "zh-CN": "司第门遗迹5层",
+        "en": "Sidimen Ruins Floor 5",
+        "ja": ""
+    },
+    "32106": {
+        "zh-CN": "司第门遗迹6层",
+        "en": "Sidimen Ruins Floor 6",
+        "ja": ""
+    },
+    "32107": {
+        "zh-CN": "司第门遗迹7层",
+        "en": "Sidimen Ruins Floor 7",
+        "ja": ""
+    },
+    "32108": {
+        "zh-CN": "司第门遗迹8层",
+        "en": "Sidimen Ruins Floor 8",
+        "ja": ""
+    },
+    "32109": {
+        "zh-CN": "司第门遗迹9层",
+        "en": "Sidimen Ruins Floor 9",
+        "ja": ""
+    },
+    "32110": {
+        "zh-CN": "司第门遗迹10层",
+        "en": "Sidimen Ruins Floor 10",
+        "ja": ""
+    },
+    "32111": {
+        "zh-CN": "司第门遗迹11层",
+        "en": "Sidimen Ruins Floor 11",
+        "ja": ""
+    },
+    "32112": {
+        "zh-CN": "司第门遗迹12层",
+        "en": "Sidimen Ruins Floor 12",
+        "ja": ""
+    },
+    "32113": {
+        "zh-CN": "司第门遗迹13层",
+        "en": "Sidimen Ruins Floor 13",
+        "ja": ""
+    },
+    "32114": {
+        "zh-CN": "司第门遗迹14层",
+        "en": "Sidimen Ruins Floor 14",
+        "ja": ""
+    },
+    "32115": {
+        "zh-CN": "司第门遗迹15层",
+        "en": "Sidimen Ruins Floor 15",
+        "ja": ""
+    },
+    "32116": {
+        "zh-CN": "司第门遗迹16层",
+        "en": "Sidimen Ruins Floor 16",
+        "ja": ""
+    },
+    "32117": {
+        "zh-CN": "司第门遗迹17层",
+        "en": "Sidimen Ruins Floor 17",
+        "ja": ""
+    },
+    "32118": {
+        "zh-CN": "司第门遗迹18层",
+        "en": "Sidimen Ruins Floor 18",
+        "ja": ""
+    },
+    "32119": {
+        "zh-CN": "司第门遗迹19层",
+        "en": "Sidimen Ruins Floor 19",
+        "ja": ""
+    },
+    "32120": {
+        "zh-CN": "司第门遗迹20层",
+        "en": "Sidimen Ruins Floor 20",
+        "ja": ""
+    },
+    "32121": {
+        "zh-CN": "司第门遗迹21层",
+        "en": "Sidimen Ruins Floor 21",
+        "ja": ""
+    },
+    "32122": {
+        "zh-CN": "司第门遗迹22层",
+        "en": "Sidimen Ruins Floor 22",
+        "ja": ""
+    },
+    "32123": {
+        "zh-CN": "司第门遗迹23层",
+        "en": "Sidimen Ruins Floor 23",
+        "ja": ""
+    },
+    "32124": {
+        "zh-CN": "司第门遗迹24层",
+        "en": "Sidimen Ruins Floor 24",
+        "ja": ""
+    },
+    "32125": {
+        "zh-CN": "司第门遗迹25层",
+        "en": "Sidimen Ruins Floor 25",
+        "ja": ""
+    },
+    "32126": {
+        "zh-CN": "司第门遗迹26层",
+        "en": "Sidimen Ruins Floor 26",
+        "ja": ""
+    },
+    "32127": {
+        "zh-CN": "司第门遗迹27层",
+        "en": "Sidimen Ruins Floor 27",
+        "ja": ""
+    },
+    "32128": {
+        "zh-CN": "司第门遗迹28层",
+        "en": "Sidimen Ruins Floor 28",
+        "ja": ""
+    },
+    "32129": {
+        "zh-CN": "司第门遗迹29层",
+        "en": "Sidimen Ruins Floor 29",
+        "ja": ""
+    },
+    "32130": {
+        "zh-CN": "司第门遗迹30层",
+        "en": "Sidimen Ruins Floor 30",
+        "ja": ""
+    },
+    "32131": {
+        "zh-CN": "司第门遗迹31层",
+        "en": "Sidimen Ruins Floor 31",
+        "ja": ""
+    },
+    "32132": {
+        "zh-CN": "司第门遗迹32层",
+        "en": "Sidimen Ruins Floor 32",
+        "ja": ""
+    },
+    "32133": {
+        "zh-CN": "司第门遗迹33层",
+        "en": "Sidimen Ruins Floor 33",
+        "ja": ""
+    },
+    "32134": {
+        "zh-CN": "司第门遗迹34层",
+        "en": "Sidimen Ruins Floor 34",
+        "ja": ""
+    },
+    "32135": {
+        "zh-CN": "司第门遗迹35层",
+        "en": "Sidimen Ruins Floor 35",
+        "ja": ""
+    },
+    "32136": {
+        "zh-CN": "司第门遗迹36层",
+        "en": "Sidimen Ruins Floor 36",
+        "ja": ""
+    },
+    "32137": {
+        "zh-CN": "司第门遗迹37层",
+        "en": "Sidimen Ruins Floor 37",
+        "ja": ""
+    },
+    "32138": {
+        "zh-CN": "司第门遗迹38层",
+        "en": "Sidimen Ruins Floor 38",
+        "ja": ""
+    },
+    "32139": {
+        "zh-CN": "司第门遗迹39层",
+        "en": "Sidimen Ruins Floor 39",
+        "ja": ""
+    },
+    "32140": {
+        "zh-CN": "司第门遗迹40层",
+        "en": "Sidimen Ruins Floor 40",
+        "ja": ""
+    },
+    "32141": {
+        "zh-CN": "司第门遗迹41层",
+        "en": "Sidimen Ruins Floor 41",
+        "ja": ""
+    },
+    "32142": {
+        "zh-CN": "司第门遗迹42层",
+        "en": "Sidimen Ruins Floor 42",
+        "ja": ""
+    },
+    "32143": {
+        "zh-CN": "司第门遗迹43层",
+        "en": "Sidimen Ruins Floor 43",
+        "ja": ""
+    },
+    "32144": {
+        "zh-CN": "司第门遗迹44层",
+        "en": "Sidimen Ruins Floor 44",
+        "ja": ""
+    },
+    "32145": {
+        "zh-CN": "司第门遗迹45层",
+        "en": "Sidimen Ruins Floor 45",
+        "ja": ""
+    },
+    "32146": {
+        "zh-CN": "司第门遗迹46层",
+        "en": "Sidimen Ruins Floor 46",
+        "ja": ""
+    },
+    "32147": {
+        "zh-CN": "司第门遗迹47层",
+        "en": "Sidimen Ruins Floor 47",
+        "ja": ""
+    },
+    "32148": {
+        "zh-CN": "司第门遗迹48层",
+        "en": "Sidimen Ruins Floor 48",
+        "ja": ""
+    },
+    "32149": {
+        "zh-CN": "司第门遗迹49层",
+        "en": "Sidimen Ruins Floor 49",
+        "ja": ""
+    },
+    "32150": {
+        "zh-CN": "司第门遗迹50层",
+        "en": "Sidimen Ruins Floor 50",
+        "ja": ""
+    },
+    "32151": {
+        "zh-CN": "司第门遗迹51层",
+        "en": "Sidimen Ruins Floor 51",
+        "ja": ""
+    },
+    "32152": {
+        "zh-CN": "司第门遗迹52层",
+        "en": "Sidimen Ruins Floor 52",
+        "ja": ""
+    },
+    "32153": {
+        "zh-CN": "司第门遗迹53层",
+        "en": "Sidimen Ruins Floor 53",
+        "ja": ""
+    },
+    "32154": {
+        "zh-CN": "司第门遗迹54层",
+        "en": "Sidimen Ruins Floor 54",
+        "ja": ""
+    },
+    "32155": {
+        "zh-CN": "司第门遗迹55层",
+        "en": "Sidimen Ruins Floor 55",
+        "ja": ""
+    },
+    "32156": {
+        "zh-CN": "司第门遗迹56层",
+        "en": "Sidimen Ruins Floor 56",
+        "ja": ""
+    },
+    "32157": {
+        "zh-CN": "司第门遗迹57层",
+        "en": "Sidimen Ruins Floor 57",
+        "ja": ""
+    },
+    "32158": {
+        "zh-CN": "司第门遗迹58层",
+        "en": "Sidimen Ruins Floor 58",
+        "ja": ""
+    },
+    "32159": {
+        "zh-CN": "司第门遗迹59层",
+        "en": "Sidimen Ruins Floor 59",
+        "ja": ""
+    },
+    "32160": {
+        "zh-CN": "司第门遗迹60层",
+        "en": "Sidimen Ruins Floor 60",
+        "ja": ""
+    },
+    "40001": {
+        "zh-CN": "家园房屋",
+        "en": "Homestead House",
+        "ja": ""
+    },
+    "171001": {
+        "zh-CN": "孤岛",
+        "en": "Isolated Island",
+        "ja": ""
+    }
+}

@@ -10,6 +10,7 @@
 		import { CLASS_MAP, getClassIcon, tooltip } from "$lib/utils.svelte";
 	import { resolveNavigationTranslation } from "$lib/i18n";
 	import { SETTINGS } from "$lib/settings-store";
+	import { localizeRawSceneName } from "$lib/scene-mappings";
 
 	let encounters = $state<EncounterSummaryDto[]>([]);
 	let errorMsg = $state<string | null>(null);
@@ -136,6 +137,11 @@
 	let availablePlayerNames = $state<string[]>([]);
 	let isLoadingBossNames = $state(false);
 
+	type SearchOption = {
+		raw: string;
+		label: string;
+	};
+
 	function updateAvailablePlayerNames(rows: EncounterSummaryDto[]) {
 		const merged = new Set(availablePlayerNames);
 		for (const row of rows) {
@@ -159,7 +165,7 @@
 		}
 	});
 
-	const searchOptions = $derived.by(() => {
+	const searchOptions = $derived.by((): SearchOption[] => {
 		const source =
 			searchType === "boss"
 				? availableBossNames
@@ -167,16 +173,53 @@
 					? availablePlayerNames
 					: availableEncounterNames;
 		const needle = searchValue.trim().toLowerCase();
+		const mapped = source.map((item) => ({
+			raw: item,
+			label:
+				searchType === "encounter"
+					? localizeRawSceneName(item, item)
+					: item,
+		}));
 		const filtered = needle
-			? source.filter((item) => item.toLowerCase().includes(needle))
-			: source;
+			? mapped.filter(
+				(option) =>
+					option.raw.toLowerCase().includes(needle) ||
+					option.label.toLowerCase().includes(needle),
+			)
+			: mapped;
 		return filtered.slice(0, 100);
 	});
+
+	function resolveSearchSelectionValue(
+		value: string,
+		type: "boss" | "player" | "encounter",
+	): string {
+		const trimmed = value.trim();
+		if (!trimmed) return trimmed;
+		const lowered = trimmed.toLowerCase();
+		const exact = searchOptions.find(
+			(option) =>
+				option.raw.toLowerCase() === lowered ||
+				option.label.toLowerCase() === lowered,
+		);
+		if (exact) return exact.raw;
+		if (type !== "encounter") return trimmed;
+		const partialMatches = searchOptions.filter(
+			(option) =>
+				option.raw.toLowerCase().includes(lowered) ||
+				option.label.toLowerCase().includes(lowered),
+		);
+		if (partialMatches.length === 1) {
+			return partialMatches[0].raw;
+		}
+		return trimmed;
+	}
 
 	function applySearchValue() {
 		const value = searchValue.trim();
 		if (!value) return;
-		handleSearchSelect(value, searchType);
+		const resolvedValue = resolveSearchSelectionValue(value, searchType);
+		handleSearchSelect(resolvedValue, searchType);
 		searchValue = "";
 	}
 
@@ -187,7 +230,14 @@
 			applySearchValue();
 			return;
 		}
-		if (searchOptions.includes(value)) {
+		const lowered = value.toLowerCase();
+		if (
+			searchOptions.some(
+				(option) =>
+					option.raw.toLowerCase() === lowered ||
+					option.label.toLowerCase() === lowered,
+			)
+		) {
 			applySearchValue();
 		}
 	}
@@ -443,7 +493,7 @@
 
 					<datalist id="history-search-options">
 						{#each searchOptions as option}
-							<option value={option}></option>
+							<option value={option.label}></option>
 						{/each}
 					</datalist>
 				</div>
@@ -540,7 +590,7 @@
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-popover text-muted-foreground leading-tight border border-border/60"
 					>
 						<span class="text-muted-foreground/70">{t("dps.historyPage.scenePrefix", "Scene: ")}</span>
-						{encounter}
+						{localizeRawSceneName(encounter, encounter)}
 						<button
 							onclick={() => removeEncounterFilter(encounter)}
 							class="text-muted-foreground/70 hover:text-destructive transition-colors"
@@ -647,7 +697,7 @@
 							<div class="space-y-1">
 								<div>
 									{#if enc.sceneName}
-										<span class="text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">{enc.sceneName}</span>
+										<span class="text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">{localizeRawSceneName(enc.sceneName, enc.sceneName)}</span>
 									{:else}
 										<span class="text-muted-foreground text-xs opacity-70">{t("dps.historyPage.openSceneNone", "No Scene")}</span>
 									{/if}
