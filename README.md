@@ -10,7 +10,8 @@ For anyone that wants to support translataions to other languages or fix wrong t
 
 These are the biggest changes:
 
-<img width="2149" height="2044" alt="image" src="https://github.com/user-attachments/assets/77c78af9-8ac6-4813-ac2e-6d1763c3f3d7" />
+<img width="2068" height="1829" alt="image" src="https://github.com/user-attachments/assets/3a9deefb-84d4-4d9b-a508-6c8084435828" />
+
 <img width="2147" height="1874" alt="image" src="https://github.com/user-attachments/assets/4d8999dc-2f37-4f50-b077-b03de81f113a" />
 
 
