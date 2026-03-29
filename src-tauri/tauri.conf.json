@@ -88,13 +88,13 @@
     },
     "plugins": {
         "updater": {
-            "active": true,
+            "active": false,
             "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ5RTQ4NzgzQTlFM0Q0QzQKUldURTFPT3BnNGZrU1dJY01aaGNwelZxc3U0UGpGTVJaQ2FpcVdQd1FsTVVXSDRBakFxbkVSNjkK",
             "endpoints": [
                 "https://bptimer.cn/resonance-logs/latest.json",
                 "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json"
             ],
-            "dialog": true,
+            "dialog": false,
             "windows": {
                 "installMode": "basicUi"
             }
