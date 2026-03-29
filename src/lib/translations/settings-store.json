@@ -2,1046 +2,1046 @@
     "settingsStore.panelAttr.11720": {
         "zh-CN": "攻速",
         "en": "Attack Speed",
-        "ja": ""
+        "ja": "攻撃速度"
     },
     "settingsStore.panelAttr.11710": {
         "zh-CN": "暴击率",
         "en": "Crit Rate",
-        "ja": ""
+        "ja": "クリティカル率"
     },
     "settingsStore.panelAttr.11930": {
         "zh-CN": "急速",
         "en": "Haste",
-        "ja": ""
+        "ja": "ヘイスト"
     },
     "settingsStore.panelAttr.11780": {
         "zh-CN": "幸运",
         "en": "Lucky",
-        "ja": ""
+        "ja": "ラッキー"
     },
     "settingsStore.panelAttr.11940": {
         "zh-CN": "精通",
         "en": "Mastery",
-        "ja": ""
+        "ja": "熟練"
     },
     "settingsStore.panelAttr.11950": {
         "zh-CN": "全能",
         "en": "Versatility",
-        "ja": ""
+        "ja": "万能"
     },
     "settingsStore.panelAttr.11760": {
         "zh-CN": "冷却缩减",
         "en": "Cooldown Reduction",
-        "ja": ""
+        "ja": "クールダウン短縮"
     },
     "settingsStore.panelAttr.11960": {
         "zh-CN": "冷却加速",
         "en": "Cooldown Acceleration",
-        "ja": ""
+        "ja": "クールダウン加速"
     },
     "settingsStore.panelAttr.11010": {
         "zh-CN": "力量",
         "en": "Strength",
-        "ja": ""
+        "ja": "筋力"
     },
     "settingsStore.panelAttr.11020": {
         "zh-CN": "智力",
         "en": "Intelligence",
-        "ja": ""
+        "ja": "知力"
     },
     "settingsStore.panelAttr.11030": {
         "zh-CN": "敏捷",
         "en": "Agility",
-        "ja": ""
+        "ja": "敏捷"
     },
     "settingsStore.panelAttr.11330": {
         "zh-CN": "物理攻击",
         "en": "Physical Attack",
-        "ja": ""
+        "ja": "物理攻撃"
     },
     "settingsStore.panelAttr.11340": {
         "zh-CN": "魔法攻击",
         "en": "Magic Attack",
-        "ja": ""
+        "ja": "魔法攻撃"
     },
     "settingsStore.panelAttr.11730": {
         "zh-CN": "施法速度",
         "en": "Cast Speed",
-        "ja": ""
+        "ja": "詠唱速度"
     },
     "settingsStore.panelAttr.12510": {
         "zh-CN": "暴击伤害",
         "en": "Crit Damage",
-        "ja": ""
+        "ja": "クリティカルダメージ"
     },
     "settingsStore.panelAttr.12530": {
         "zh-CN": "幸运伤害倍率",
         "en": "Lucky Damage Multiplier",
-        "ja": ""
+        "ja": "ラッキーダメージ倍率"
     },
     "settingsStore.panelAttr.12540": {
         "zh-CN": "格挡伤害减免",
         "en": "Block Damage Reduction",
-        "ja": ""
+        "ja": "ブロック時ダメージ軽減"
     },
     "settingsStore.panelAttr.11970": {
         "zh-CN": "格挡",
         "en": "Block",
-        "ja": ""
+        "ja": "ブロック"
     },
     "settingsStore.skillMonitor.defaultProfileName": {
         "zh-CN": "默认方案",
         "en": "Default Profile",
-        "ja": ""
+        "ja": "デフォルトプロファイル"
     },
     "settingsStore.skillMonitor.defaultBuffGroupName": {
         "zh-CN": "新分组",
         "en": "New Group",
-        "ja": ""
+        "ja": "新しいグループ"
     },
     "settingsStore.skillMonitor.defaultCustomPanelGroupName": {
         "zh-CN": "监控区 1",
         "en": "Monitor Area 1",
-        "ja": ""
+        "ja": "監視エリア 1"
     },
     "settingsStore.fontSize.xs": {
         "zh-CN": "超小",
         "en": "Extra Small",
-        "ja": ""
+        "ja": "極小"
     },
     "settingsStore.fontSize.sm": {
         "zh-CN": "小",
         "en": "Small",
-        "ja": ""
+        "ja": "小"
     },
     "settingsStore.fontSize.base": {
         "zh-CN": "标准",
         "en": "Standard",
-        "ja": ""
+        "ja": "標準"
     },
     "settingsStore.fontSize.lg": {
         "zh-CN": "大",
         "en": "Large",
-        "ja": ""
+        "ja": "大"
     },
     "settingsStore.fontSize.xl": {
         "zh-CN": "超大",
         "en": "Extra Large",
-        "ja": ""
+        "ja": "特大"
     },
     "settingsStore.themeLabel.backgroundMain.label": {
         "zh-CN": "背景（主窗口）",
         "en": "Background (Main Window)",
-        "ja": ""
+        "ja": "背景（メインウィンドウ）"
     },
     "settingsStore.themeLabel.backgroundMain.description": {
         "zh-CN": "主窗口背景颜色",
         "en": "Main window background color",
-        "ja": ""
+        "ja": "メインウィンドウの背景色"
     },
     "settingsStore.themeLabel.backgroundLive.label": {
         "zh-CN": "背景（实时）",
         "en": "Background (Live)",
-        "ja": ""
+        "ja": "背景（ライブ）"
     },
     "settingsStore.themeLabel.backgroundLive.description": {
         "zh-CN": "实时统计窗口背景颜色",
         "en": "Live meter window background color",
-        "ja": ""
+        "ja": "ライブメーターウィンドウの背景色"
     },
     "settingsStore.themeLabel.foreground.label": {
         "zh-CN": "前景",
         "en": "Foreground",
-        "ja": ""
+        "ja": "前景"
     },
     "settingsStore.themeLabel.foreground.description": {
         "zh-CN": "主要文本颜色",
         "en": "Primary text color",
-        "ja": ""
+        "ja": "主要テキスト色"
     },
     "settingsStore.themeLabel.surface.label": {
         "zh-CN": "表面",
         "en": "Surface",
-        "ja": ""
+        "ja": "サーフェス"
     },
     "settingsStore.themeLabel.surface.description": {
         "zh-CN": "卡片、弹窗和面板的背景颜色",
         "en": "Background color for cards, dialogs, and panels",
-        "ja": ""
+        "ja": "カード、ダイアログ、パネルの背景色"
     },
     "settingsStore.themeLabel.surfaceForeground.label": {
         "zh-CN": "表面文本",
         "en": "Surface Text",
-        "ja": ""
+        "ja": "サーフェステキスト"
     },
     "settingsStore.themeLabel.surfaceForeground.description": {
         "zh-CN": "表面上的文本颜色",
         "en": "Text color shown on surfaces",
-        "ja": ""
+        "ja": "サーフェス上のテキスト色"
     },
     "settingsStore.themeLabel.primary.label": {
         "zh-CN": "主色",
         "en": "Primary",
-        "ja": ""
+        "ja": "プライマリ"
     },
     "settingsStore.themeLabel.primary.description": {
         "zh-CN": "主要强调色",
         "en": "Primary accent color",
-        "ja": ""
+        "ja": "主要アクセント色"
     },
     "settingsStore.themeLabel.primaryForeground.label": {
         "zh-CN": "主色文本",
         "en": "Primary Text",
-        "ja": ""
+        "ja": "プライマリテキスト"
     },
     "settingsStore.themeLabel.primaryForeground.description": {
         "zh-CN": "主色元素上的文本颜色",
         "en": "Text color shown on primary elements",
-        "ja": ""
+        "ja": "主要要素上のテキスト色"
     },
     "settingsStore.themeLabel.secondary.label": {
         "zh-CN": "次色",
         "en": "Secondary",
-        "ja": ""
+        "ja": "セカンダリ"
     },
     "settingsStore.themeLabel.secondary.description": {
         "zh-CN": "次要强调色",
         "en": "Secondary accent color",
-        "ja": ""
+        "ja": "副次アクセント色"
     },
     "settingsStore.themeLabel.secondaryForeground.label": {
         "zh-CN": "次色文本",
         "en": "Secondary Text",
-        "ja": ""
+        "ja": "セカンダリテキスト"
     },
     "settingsStore.themeLabel.secondaryForeground.description": {
         "zh-CN": "次色元素上的文本颜色",
         "en": "Text color shown on secondary elements",
-        "ja": ""
+        "ja": "副次要素上のテキスト色"
     },
     "settingsStore.themeLabel.muted.label": {
         "zh-CN": "柔和",
         "en": "Muted",
-        "ja": ""
+        "ja": "ミュート"
     },
     "settingsStore.themeLabel.muted.description": {
         "zh-CN": "柔和/低调的背景颜色",
         "en": "Muted or low-emphasis background color",
-        "ja": ""
+        "ja": "控えめな背景色"
     },
     "settingsStore.themeLabel.mutedForeground.label": {
         "zh-CN": "柔和文本",
         "en": "Muted Text",
-        "ja": ""
+        "ja": "ミュートテキスト"
     },
     "settingsStore.themeLabel.mutedForeground.description": {
         "zh-CN": "低调的文本颜色",
         "en": "Low-emphasis text color",
-        "ja": ""
+        "ja": "控えめなテキスト色"
     },
     "settingsStore.themeLabel.accent.label": {
         "zh-CN": "强调",
         "en": "Accent",
-        "ja": ""
+        "ja": "アクセント"
     },
     "settingsStore.themeLabel.accent.description": {
         "zh-CN": "高亮强调色",
         "en": "Highlight accent color",
-        "ja": ""
+        "ja": "強調アクセント色"
     },
     "settingsStore.themeLabel.accentForeground.label": {
         "zh-CN": "强调文本",
         "en": "Accent Text",
-        "ja": ""
+        "ja": "アクセントテキスト"
     },
     "settingsStore.themeLabel.accentForeground.description": {
         "zh-CN": "强调色元素上的文本颜色",
         "en": "Text color shown on accent elements",
-        "ja": ""
+        "ja": "アクセント要素上のテキスト色"
     },
     "settingsStore.themeLabel.destructive.label": {
         "zh-CN": "破坏性",
         "en": "Destructive",
-        "ja": ""
+        "ja": "破壊的"
     },
     "settingsStore.themeLabel.destructive.description": {
         "zh-CN": "错误/危险颜色",
         "en": "Error or danger color",
-        "ja": ""
+        "ja": "エラー／危険色"
     },
     "settingsStore.themeLabel.destructiveForeground.label": {
         "zh-CN": "破坏性文本",
         "en": "Destructive Text",
-        "ja": ""
+        "ja": "破壊的テキスト"
     },
     "settingsStore.themeLabel.destructiveForeground.description": {
         "zh-CN": "破坏性元素上的文本颜色",
         "en": "Text color shown on destructive elements",
-        "ja": ""
+        "ja": "破壊的要素上のテキスト色"
     },
     "settingsStore.themeLabel.border.label": {
         "zh-CN": "边框",
         "en": "Border",
-        "ja": ""
+        "ja": "境界線"
     },
     "settingsStore.themeLabel.border.description": {
         "zh-CN": "边框颜色",
         "en": "Border color",
-        "ja": ""
+        "ja": "境界線の色"
     },
     "settingsStore.themeLabel.input.label": {
         "zh-CN": "输入框",
         "en": "Input",
-        "ja": ""
+        "ja": "入力"
     },
     "settingsStore.themeLabel.input.description": {
         "zh-CN": "输入框背景颜色",
         "en": "Input background color",
-        "ja": ""
+        "ja": "入力欄の背景色"
     },
     "settingsStore.themeLabel.tableTextColor.label": {
         "zh-CN": "表格文本",
         "en": "Table Text",
-        "ja": ""
+        "ja": "表テキスト"
     },
     "settingsStore.themeLabel.tableTextColor.description": {
         "zh-CN": "实时表格中的文本颜色",
         "en": "Text color used in live tables",
-        "ja": ""
+        "ja": "ライブテーブルで使用されるテキスト色"
     },
     "settingsStore.themeLabel.tableAbbreviatedColor.label": {
         "zh-CN": "后缀颜色",
         "en": "Suffix Color",
-        "ja": ""
+        "ja": "接尾辞の色"
     },
     "settingsStore.themeLabel.tableAbbreviatedColor.description": {
         "zh-CN": "表格中 K、M、% 后缀的颜色",
         "en": "Color for K, M, and % suffixes in tables",
-        "ja": ""
+        "ja": "表内の K、M、% 接尾辞の色"
     },
     "settingsStore.themeLabel.tooltipBg.label": {
         "zh-CN": "提示背景",
         "en": "Tooltip Background",
-        "ja": ""
+        "ja": "ツールチップ背景"
     },
     "settingsStore.themeLabel.tooltipBg.description": {
         "zh-CN": "提示框背景颜色",
         "en": "Tooltip background color",
-        "ja": ""
+        "ja": "ツールチップの背景色"
     },
     "settingsStore.themeLabel.tooltipBorder.label": {
         "zh-CN": "提示边框",
         "en": "Tooltip Border",
-        "ja": ""
+        "ja": "ツールチップ境界線"
     },
     "settingsStore.themeLabel.tooltipBorder.description": {
         "zh-CN": "提示框边框颜色",
         "en": "Tooltip border color",
-        "ja": ""
+        "ja": "ツールチップの境界線色"
     },
     "settingsStore.themeLabel.tooltipFg.label": {
         "zh-CN": "提示文本",
         "en": "Tooltip Text",
-        "ja": ""
+        "ja": "ツールチップテキスト"
     },
     "settingsStore.themeLabel.tooltipFg.description": {
         "zh-CN": "提示框文本颜色",
         "en": "Tooltip text color",
-        "ja": ""
+        "ja": "ツールチップのテキスト色"
     },
     "settingsStore.themeCategory.base": {
-        "zh-CN": "Base",
+        "zh-CN": "基础",
         "en": "Base",
-        "ja": ""
+        "ja": "ベース"
     },
     "settingsStore.themeCategory.surfaces": {
-        "zh-CN": "Surfaces",
+        "zh-CN": "表面",
         "en": "Surfaces",
-        "ja": ""
+        "ja": "サーフェス"
     },
     "settingsStore.themeCategory.tooltip": {
-        "zh-CN": "Tooltip",
+        "zh-CN": "提示",
         "en": "Tooltip",
-        "ja": ""
+        "ja": "ツールチップ"
     },
     "settingsStore.themeCategory.accents": {
-        "zh-CN": "Accents",
+        "zh-CN": "强调",
         "en": "Accents",
-        "ja": ""
+        "ja": "アクセント"
     },
     "settingsStore.themeCategory.tables": {
-        "zh-CN": "Tables",
+        "zh-CN": "表格",
         "en": "Tables",
-        "ja": ""
+        "ja": "テーブル"
     },
     "settingsStore.themeCategory.utility": {
-        "zh-CN": "Utility",
+        "zh-CN": "工具",
         "en": "Utility",
-        "ja": ""
+        "ja": "ユーティリティ"
     },
     "settingsStore.dpsThemes.playerTableSettings.description": {
         "zh-CN": "控制行外观与高亮模式。这些设置适用于所有实时表格。",
         "en": "Control row appearance and highlight mode. These settings apply to all live tables.",
-        "ja": ""
+        "ja": "行の外観とハイライトモードを制御します。これらの設定はすべてのライブテーブルに適用されます。"
     },
     "settingsStore.dpsThemes.playerTableSettings.playerRows": {
         "zh-CN": "玩家行",
         "en": "Player Rows",
-        "ja": ""
+        "ja": "プレイヤー行"
     },
     "settingsStore.dpsThemes.common.rowHeight": {
         "zh-CN": "行高",
         "en": "Row Height",
-        "ja": ""
+        "ja": "行の高さ"
     },
     "settingsStore.dpsThemes.playerTableSettings.rowHeight.description": {
-        "zh-CN": "Height of each player row (pixels)",
+        "zh-CN": "每个玩家行的高度（像素）",
         "en": "Height of each player row (pixels)",
-        "ja": ""
+        "ja": "各プレイヤー行の高さ（ピクセル）"
     },
     "settingsStore.dpsThemes.common.fontSize": {
         "zh-CN": "字体大小",
         "en": "Font Size",
-        "ja": ""
+        "ja": "フォントサイズ"
     },
     "settingsStore.dpsThemes.playerTableSettings.fontSize.description": {
-        "zh-CN": "Font size for player names and stats",
+        "zh-CN": "玩家名称和统计数据的字体大小",
         "en": "Font size for player names and stats",
-        "ja": ""
+        "ja": "プレイヤー名とステータスのフォントサイズ"
     },
     "settingsStore.dpsThemes.common.iconSize": {
         "zh-CN": "图标大小",
         "en": "Icon Size",
-        "ja": ""
+        "ja": "アイコンサイズ"
     },
     "settingsStore.dpsThemes.playerTableSettings.iconSize.description": {
-        "zh-CN": "Class/spec icon size",
+        "zh-CN": "职业/专精图标大小",
         "en": "Class/spec icon size",
-        "ja": ""
+        "ja": "クラス／特化アイコンのサイズ"
     },
     "settingsStore.dpsThemes.common.mode": {
         "zh-CN": "模式",
         "en": "Mode",
-        "ja": ""
+        "ja": "モード"
     },
     "settingsStore.dpsThemes.common.gradientUnderline": {
         "zh-CN": "渐变（下划线）",
         "en": "Gradient (Underline)",
-        "ja": ""
+        "ja": "グラデーション（下線）"
     },
     "settingsStore.dpsThemes.common.gradient": {
         "zh-CN": "渐变",
         "en": "Gradient",
-        "ja": ""
+        "ja": "グラデーション"
     },
     "settingsStore.dpsThemes.common.solid": {
         "zh-CN": "纯色",
         "en": "Solid",
-        "ja": ""
+        "ja": "単色"
     },
     "settingsStore.dpsThemes.playerTableSettings.rowHighlightOpacity": {
         "zh-CN": "行高亮透明度",
         "en": "Row Highlight Opacity",
-        "ja": ""
+        "ja": "行ハイライトの不透明度"
     },
     "settingsStore.dpsThemes.playerTableSettings.rowHighlightOpacity.description": {
-        "zh-CN": "Row highlight fill opacity (0 = transparent, 1 = opaque)",
+        "zh-CN": "行高亮填充透明度（0 = 透明，1 = 不透明）",
         "en": "Row highlight fill opacity (0 = transparent, 1 = opaque)",
-        "ja": ""
+        "ja": "行ハイライト塗りつぶしの不透明度（0 = 透明、1 = 不透明）"
     },
     "settingsStore.dpsThemes.playerTableSettings.rowCornerRadius": {
         "zh-CN": "行圆角",
         "en": "Row Corner Radius",
-        "ja": ""
+        "ja": "行の角丸"
     },
     "settingsStore.dpsThemes.playerTableSettings.rowCornerRadius.description": {
-        "zh-CN": "Corner radius for row highlight",
+        "zh-CN": "行高亮的圆角半径",
         "en": "Corner radius for row highlight",
-        "ja": ""
+        "ja": "行ハイライトの角丸"
     },
     "settingsStore.dpsThemes.common.showHeader": {
         "zh-CN": "显示表头",
         "en": "Show Header",
-        "ja": ""
+        "ja": "ヘッダーを表示"
     },
     "settingsStore.dpsThemes.playerTableSettings.showHeader.description": {
-        "zh-CN": "Toggle column title visibility",
+        "zh-CN": "切换列标题的显示/隐藏",
         "en": "Toggle column title visibility",
-        "ja": ""
+        "ja": "列タイトルの表示／非表示を切り替えます"
     },
     "settingsStore.dpsThemes.common.headerHeight": {
         "zh-CN": "表头高度",
         "en": "Header Height",
-        "ja": ""
+        "ja": "ヘッダーの高さ"
     },
     "settingsStore.dpsThemes.playerTableSettings.headerHeight.description": {
-        "zh-CN": "Header row height",
+        "zh-CN": "表头行高度",
         "en": "Header row height",
-        "ja": ""
+        "ja": "ヘッダー行の高さ"
     },
     "settingsStore.dpsThemes.common.headerFontSize": {
         "zh-CN": "表头字体大小",
         "en": "Header Font Size",
-        "ja": ""
+        "ja": "ヘッダーフォントサイズ"
     },
     "settingsStore.dpsThemes.playerTableSettings.headerFontSize.description": {
-        "zh-CN": "Column title font size",
+        "zh-CN": "列标题字体大小",
         "en": "Column title font size",
-        "ja": ""
+        "ja": "列タイトルのフォントサイズ"
     },
     "settingsStore.dpsThemes.playerTableSettings.headerTextColor": {
         "zh-CN": "表头文字颜色",
         "en": "Header Text Color",
-        "ja": ""
+        "ja": "ヘッダーテキスト色"
     },
     "settingsStore.dpsThemes.playerTableSettings.headerTextColor.description": {
-        "zh-CN": "Column title text color",
+        "zh-CN": "列标题文本颜色",
         "en": "Column title text color",
-        "ja": ""
+        "ja": "列タイトルの文字色"
     },
     "settingsStore.dpsThemes.playerTableSettings.suffixFontSize": {
         "zh-CN": "后缀字体大小",
         "en": "Suffix Font Size",
-        "ja": ""
+        "ja": "接尾辞フォントサイズ"
     },
     "settingsStore.dpsThemes.playerTableSettings.suffixFontSize.description": {
-        "zh-CN": "Font size for K/M/% suffixes",
+        "zh-CN": "K/M/% 后缀的字体大小",
         "en": "Font size for K/M/% suffixes",
-        "ja": ""
+        "ja": "K/M/% 接尾辞のフォントサイズ"
     },
     "settingsStore.dpsThemes.skillTableSettings.description": {
         "zh-CN": "自定义技能表格的尺寸、表头与缩写数字样式。",
         "en": "Customize size, headers, and abbreviated-number styling for the skill table.",
-        "ja": ""
+        "ja": "スキルテーブルのサイズ、ヘッダー、省略数値の表示スタイルをカスタマイズします。"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillRows": {
         "zh-CN": "技能行",
         "en": "Skill Rows",
-        "ja": ""
+        "ja": "スキル行"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillRowHeight": {
-        "zh-CN": "Skill Row Height",
+        "zh-CN": "技能行高度",
         "en": "Skill Row Height",
-        "ja": ""
+        "ja": "スキル行の高さ"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillRowHeight.description": {
-        "zh-CN": "Height of each skill row (pixels)",
+        "zh-CN": "每个技能行的高度（像素）",
         "en": "Height of each skill row (pixels)",
-        "ja": ""
+        "ja": "各スキル行の高さ（ピクセル）"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillFontSize": {
-        "zh-CN": "Skill Font Size",
+        "zh-CN": "技能字体大小",
         "en": "Skill Font Size",
-        "ja": ""
+        "ja": "スキルフォントサイズ"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillFontSize.description": {
-        "zh-CN": "Font size for skill names and stats",
+        "zh-CN": "技能名称和统计数据的字体大小",
         "en": "Font size for skill names and stats",
-        "ja": ""
+        "ja": "スキル名とステータスのフォントサイズ"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillIconSize": {
-        "zh-CN": "Skill Icon Size",
+        "zh-CN": "技能图标大小",
         "en": "Skill Icon Size",
-        "ja": ""
+        "ja": "スキルアイコンサイズ"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillIconSize.description": {
-        "zh-CN": "Skill icon size",
+        "zh-CN": "技能图标大小",
         "en": "Skill icon size",
-        "ja": ""
+        "ja": "スキルアイコンのサイズ"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillRowHighlightOpacity": {
-        "zh-CN": "Skill Row Highlight Opacity",
+        "zh-CN": "技能行高亮透明度",
         "en": "Skill Row Highlight Opacity",
-        "ja": ""
+        "ja": "スキル行ハイライトの不透明度"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillRowHighlightOpacity.description": {
-        "zh-CN": "Skill row highlight fill opacity (0 = transparent, 1 = opaque)",
+        "zh-CN": "技能行高亮填充透明度（0 = 透明，1 = 不透明）",
         "en": "Skill row highlight fill opacity (0 = transparent, 1 = opaque)",
-        "ja": ""
+        "ja": "スキル行ハイライト塗りつぶしの不透明度（0 = 透明、1 = 不透明）"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillRowCornerRadius": {
-        "zh-CN": "Skill Row Corner Radius",
+        "zh-CN": "技能行圆角",
         "en": "Skill Row Corner Radius",
-        "ja": ""
+        "ja": "スキル行の角丸"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillRowCornerRadius.description": {
-        "zh-CN": "Corner radius for skill row highlight",
+        "zh-CN": "技能行高亮的圆角半径",
         "en": "Corner radius for skill row highlight",
-        "ja": ""
+        "ja": "スキル行ハイライトの角丸"
     },
     "settingsStore.dpsThemes.skillTableSettings.showSkillHeader": {
-        "zh-CN": "Show Skill Header",
+        "zh-CN": "显示技能表头",
         "en": "Show Skill Header",
-        "ja": ""
+        "ja": "スキルヘッダーを表示"
     },
     "settingsStore.dpsThemes.skillTableSettings.showSkillHeader.description": {
-        "zh-CN": "Toggle skill table column title visibility",
+        "zh-CN": "切换技能表列标题的显示/隐藏",
         "en": "Toggle skill table column title visibility",
-        "ja": ""
+        "ja": "スキルテーブル列タイトルの表示／非表示を切り替えます"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillHeaderHeight": {
-        "zh-CN": "Skill Header Height",
+        "zh-CN": "技能表头高度",
         "en": "Skill Header Height",
-        "ja": ""
+        "ja": "スキルヘッダーの高さ"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillHeaderHeight.description": {
-        "zh-CN": "Skill header row height",
+        "zh-CN": "技能表头行高度",
         "en": "Skill header row height",
-        "ja": ""
+        "ja": "スキルヘッダー行の高さ"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillHeaderFontSize": {
-        "zh-CN": "Skill Header Font Size",
+        "zh-CN": "技能表头字体大小",
         "en": "Skill Header Font Size",
-        "ja": ""
+        "ja": "スキルヘッダーフォントサイズ"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillHeaderFontSize.description": {
-        "zh-CN": "Skill table column title font size",
+        "zh-CN": "技能表列标题字体大小",
         "en": "Skill table column title font size",
-        "ja": ""
+        "ja": "スキルテーブル列タイトルのフォントサイズ"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillHeaderTextColor": {
-        "zh-CN": "Skill Header Text Color",
+        "zh-CN": "技能表头文字颜色",
         "en": "Skill Header Text Color",
-        "ja": ""
+        "ja": "スキルヘッダーテキスト色"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillHeaderTextColor.description": {
-        "zh-CN": "Skill table column title text color",
+        "zh-CN": "技能表列标题文本颜色",
         "en": "Skill table column title text color",
-        "ja": ""
+        "ja": "スキルテーブル列タイトルの文字色"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillSuffixFontSize": {
-        "zh-CN": "Skill Suffix Font Size",
+        "zh-CN": "技能后缀字体大小",
         "en": "Skill Suffix Font Size",
-        "ja": ""
+        "ja": "スキル接尾辞フォントサイズ"
     },
     "settingsStore.dpsThemes.skillTableSettings.skillSuffixFontSize.description": {
-        "zh-CN": "Font size for K/M/% suffixes in skill rows",
+        "zh-CN": "技能行中 K/M/% 后缀的字体大小",
         "en": "Font size for K/M/% suffixes in skill rows",
-        "ja": ""
+        "ja": "スキル行内の K/M/% 接尾辞のフォントサイズ"
     },
     "settingsStore.dpsThemes.liveWindowDisplay.clickthroughMode": {
         "zh-CN": "穿透模式",
         "en": "Clickthrough Mode",
-        "ja": ""
+        "ja": "クリックスルーモード"
     },
     "settingsStore.dpsThemes.liveWindowDisplay.clickthroughEnabledDescription": {
-        "zh-CN": "Clickthrough Enabled - Mouse clicks pass through window",
+        "zh-CN": "已启用点击穿透 - 鼠标点击将穿透窗口",
         "en": "Clickthrough Enabled - Mouse clicks pass through window",
-        "ja": ""
+        "ja": "クリックスルー有効 - マウスクリックがウィンドウを通過します"
     },
     "settingsStore.dpsThemes.liveWindowDisplay.clickthroughMode.description": {
-        "zh-CN": "Enable Clickthrough Mode",
+        "zh-CN": "启用点击穿透模式",
         "en": "Enable Clickthrough Mode",
-        "ja": ""
+        "ja": "クリックスルーモードを有効化"
     },
     "settingsStore.dpsThemes.liveHeader.windowPadding": {
-        "zh-CN": "Window Padding",
+        "zh-CN": "窗口内边距",
         "en": "Window Padding",
-        "ja": ""
+        "ja": "ウィンドウ余白"
     },
     "settingsStore.dpsThemes.liveHeader.windowPadding.description": {
-        "zh-CN": "Overall live window padding",
+        "zh-CN": "实时窗口整体内边距",
         "en": "Overall live window padding",
-        "ja": ""
+        "ja": "ライブウィンドウ全体の余白"
     },
     "settingsStore.dpsThemes.liveHeader.headerPadding": {
-        "zh-CN": "Header Padding",
+        "zh-CN": "表头内边距",
         "en": "Header Padding",
-        "ja": ""
+        "ja": "ヘッダー余白"
     },
     "settingsStore.dpsThemes.liveHeader.headerPadding.description": {
-        "zh-CN": "Inner spacing inside the header area",
+        "zh-CN": "表头区域内部间距",
         "en": "Inner spacing inside the header area",
-        "ja": ""
+        "ja": "ヘッダー領域内の内側余白"
     },
     "settingsStore.dpsThemes.liveHeader.timer": {
         "zh-CN": "计时器",
         "en": "Timer",
-        "ja": ""
+        "ja": "タイマー"
     },
     "settingsStore.dpsThemes.liveHeader.showTimer": {
-        "zh-CN": "Show Timer",
+        "zh-CN": "显示计时器",
         "en": "Show Timer",
-        "ja": ""
+        "ja": "タイマーを表示"
     },
     "settingsStore.dpsThemes.liveHeader.showTimer.description": {
-        "zh-CN": "Show encounter timer",
+        "zh-CN": "显示战斗计时器",
         "en": "Show encounter timer",
-        "ja": ""
+        "ja": "戦闘タイマーを表示"
     },
     "settingsStore.dpsThemes.liveHeader.showActiveCombatTime": {
-        "zh-CN": "Show Active Combat Time",
+        "zh-CN": "显示活跃战斗时间",
         "en": "Show Active Combat Time",
-        "ja": ""
+        "ja": "アクティブ戦闘時間を表示"
     },
     "settingsStore.dpsThemes.liveHeader.showActiveCombatTime.description": {
-        "zh-CN": "Show global active combat time next to the main timer for true DPS",
+        "zh-CN": "在主计时器旁显示全局活跃战斗时间，用于真 DPS",
         "en": "Show global active combat time next to the main timer for true DPS",
-        "ja": ""
+        "ja": "真のDPS用に、メインタイマーの横に全体のアクティブ戦闘時間を表示します"
     },
     "settingsStore.dpsThemes.common.labelFontSize": {
         "zh-CN": "标签字体大小",
         "en": "Label Font Size",
-        "ja": ""
+        "ja": "ラベルフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.timerLabelFontSize.description": {
-        "zh-CN": "“Timer” label font size (0 = hidden)",
+        "zh-CN": "“计时器”标签字体大小（0 = 隐藏）",
         "en": "“Timer” label font size (0 = hidden)",
-        "ja": ""
+        "ja": "「Timer」ラベルのフォントサイズ（0 = 非表示）"
     },
     "settingsStore.dpsThemes.liveHeader.timerFontSize": {
-        "zh-CN": "Timer Font Size",
+        "zh-CN": "计时器字体大小",
         "en": "Timer Font Size",
-        "ja": ""
+        "ja": "タイマーフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.timerFontSize.description": {
-        "zh-CN": "Timer value font size",
+        "zh-CN": "计时器数值字体大小",
         "en": "Timer value font size",
-        "ja": ""
+        "ja": "タイマー値のフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.activeTimeFontSize": {
-        "zh-CN": "Active Time Font Size",
+        "zh-CN": "活跃时间字体大小",
         "en": "Active Time Font Size",
-        "ja": ""
+        "ja": "アクティブ時間フォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.activeTimeFontSize.description": {
-        "zh-CN": "Active combat time value font size",
+        "zh-CN": "活跃战斗时间数值字体大小",
         "en": "Active combat time value font size",
-        "ja": ""
+        "ja": "アクティブ戦闘時間のフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.showSceneName": {
-        "zh-CN": "Show Scene Name",
+        "zh-CN": "显示场景名称",
         "en": "Show Scene Name",
-        "ja": ""
+        "ja": "シーン名を表示"
     },
     "settingsStore.dpsThemes.liveHeader.showSceneName.description": {
-        "zh-CN": "Show current dungeon / scene name",
+        "zh-CN": "显示当前副本/场景名称",
         "en": "Show current dungeon / scene name",
-        "ja": ""
+        "ja": "現在のダンジョン／シーン名を表示"
     },
     "settingsStore.dpsThemes.liveHeader.sceneNameFontSize": {
-        "zh-CN": "Scene Name Font Size",
+        "zh-CN": "场景名称字体大小",
         "en": "Scene Name Font Size",
-        "ja": ""
+        "ja": "シーン名フォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.sceneNameFontSize.description": {
-        "zh-CN": "Scene name font size",
+        "zh-CN": "场景名称字体大小",
         "en": "Scene name font size",
-        "ja": ""
+        "ja": "シーン名のフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.showResetButton": {
-        "zh-CN": "Show Reset Button",
+        "zh-CN": "显示重置按钮",
         "en": "Show Reset Button",
-        "ja": ""
+        "ja": "リセットボタンを表示"
     },
     "settingsStore.dpsThemes.liveHeader.showResetButton.description": {
-        "zh-CN": "Button used to reset the encounter",
+        "zh-CN": "用于重置战斗的按钮",
         "en": "Button used to reset the encounter",
-        "ja": ""
+        "ja": "戦闘をリセットするボタン"
     },
     "settingsStore.dpsThemes.common.padding": {
         "zh-CN": "内边距",
         "en": "Padding",
-        "ja": ""
+        "ja": "余白"
     },
     "settingsStore.dpsThemes.liveHeader.showPauseButton": {
-        "zh-CN": "Show Pause Button",
+        "zh-CN": "显示暂停按钮",
         "en": "Show Pause Button",
-        "ja": ""
+        "ja": "一時停止ボタンを表示"
     },
     "settingsStore.dpsThemes.liveHeader.showPauseButton.description": {
-        "zh-CN": "Button used to pause / resume the encounter",
+        "zh-CN": "用于暂停/恢复战斗的按钮",
         "en": "Button used to pause / resume the encounter",
-        "ja": ""
+        "ja": "戦闘を一時停止／再開するボタン"
     },
     "settingsStore.dpsThemes.liveHeader.showSettingsButton": {
-        "zh-CN": "Show Settings Button",
+        "zh-CN": "显示设置按钮",
         "en": "Show Settings Button",
-        "ja": ""
+        "ja": "設定ボタンを表示"
     },
     "settingsStore.dpsThemes.liveHeader.showSettingsButton.description": {
-        "zh-CN": "Button used to open the settings window",
+        "zh-CN": "用于打开设置窗口的按钮",
         "en": "Button used to open the settings window",
-        "ja": ""
+        "ja": "設定ウィンドウを開くボタン"
     },
     "settingsStore.dpsThemes.liveHeader.showMinimizeButton": {
-        "zh-CN": "Show Minimize Button",
+        "zh-CN": "显示最小化按钮",
         "en": "Show Minimize Button",
-        "ja": ""
+        "ja": "最小化ボタンを表示"
     },
     "settingsStore.dpsThemes.liveHeader.showMinimizeButton.description": {
-        "zh-CN": "Button used to minimize the live window",
+        "zh-CN": "用于最小化实时窗口的按钮",
         "en": "Button used to minimize the live window",
-        "ja": ""
+        "ja": "ライブウィンドウを最小化するボタン"
     },
     "settingsStore.dpsThemes.liveHeader.showTotalDamage": {
-        "zh-CN": "Show Total Damage",
+        "zh-CN": "显示总伤害",
         "en": "Show Total Damage",
-        "ja": ""
+        "ja": "総ダメージを表示"
     },
     "settingsStore.dpsThemes.liveHeader.showTotalDamage.description": {
-        "zh-CN": "Show total damage dealt",
+        "zh-CN": "显示造成的总伤害",
         "en": "Show total damage dealt",
-        "ja": ""
+        "ja": "与えた総ダメージを表示"
     },
     "settingsStore.dpsThemes.liveHeader.totalDamageLabelFontSize.description": {
-        "zh-CN": "“T.DMG” label font size",
+        "zh-CN": "“T.DMG” 标签字体大小",
         "en": "“T.DMG” label font size",
-        "ja": ""
+        "ja": "「T.DMG」ラベルのフォントサイズ"
     },
     "settingsStore.dpsThemes.common.valueFontSize": {
         "zh-CN": "数值字体大小",
         "en": "Value Font Size",
-        "ja": ""
+        "ja": "値フォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.totalDamageValueFontSize.description": {
-        "zh-CN": "Damage value font size",
+        "zh-CN": "伤害数值字体大小",
         "en": "Damage value font size",
-        "ja": ""
+        "ja": "ダメージ値のフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.showTotalDps": {
-        "zh-CN": "Show Total DPS",
+        "zh-CN": "显示总 DPS",
         "en": "Show Total DPS",
-        "ja": ""
+        "ja": "総DPSを表示"
     },
     "settingsStore.dpsThemes.liveHeader.showTotalDps.description": {
-        "zh-CN": "Show total damage per second",
+        "zh-CN": "显示总每秒伤害",
         "en": "Show total damage per second",
-        "ja": ""
+        "ja": "総ダメージ毎秒を表示"
     },
     "settingsStore.dpsThemes.liveHeader.totalDpsLabelFontSize.description": {
-        "zh-CN": "“T.DPS” label font size",
+        "zh-CN": "“T.DPS” 标签字体大小",
         "en": "“T.DPS” label font size",
-        "ja": ""
+        "ja": "「T.DPS」ラベルのフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.totalDpsValueFontSize.description": {
-        "zh-CN": "DPS value font size",
+        "zh-CN": "DPS 数值字体大小",
         "en": "DPS value font size",
-        "ja": ""
+        "ja": "DPS値のフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.showBossHealth": {
-        "zh-CN": "Show Boss Health",
+        "zh-CN": "显示首领血量",
         "en": "Show Boss Health",
-        "ja": ""
+        "ja": "ボスの体力を表示"
     },
     "settingsStore.dpsThemes.liveHeader.showBossHealth.description": {
-        "zh-CN": "Show current boss health bar",
+        "zh-CN": "显示当前首领血条",
         "en": "Show current boss health bar",
-        "ja": ""
+        "ja": "現在のボス体力バーを表示"
     },
     "settingsStore.dpsThemes.liveHeader.bossHealthLabelFontSize.description": {
-        "zh-CN": "“BOSS” label font size",
+        "zh-CN": "“BOSS” 标签字体大小",
         "en": "“BOSS” label font size",
-        "ja": ""
+        "ja": "「BOSS」ラベルのフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.bossNameFontSize": {
-        "zh-CN": "Boss Name Font Size",
+        "zh-CN": "首领名称字体大小",
         "en": "Boss Name Font Size",
-        "ja": ""
+        "ja": "ボス名フォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.bossNameFontSize.description": {
-        "zh-CN": "Boss name font size",
+        "zh-CN": "首领名称字体大小",
         "en": "Boss name font size",
-        "ja": ""
+        "ja": "ボス名のフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.healthValueFontSize": {
-        "zh-CN": "Health Value Font Size",
+        "zh-CN": "血量数值字体大小",
         "en": "Health Value Font Size",
-        "ja": ""
+        "ja": "体力値フォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.healthValueFontSize.description": {
-        "zh-CN": "Health value font size (1.5M / 3M)",
+        "zh-CN": "血量数值字体大小（1.5M / 3M）",
         "en": "Health value font size (1.5M / 3M)",
-        "ja": ""
+        "ja": "体力値のフォントサイズ（1.5M / 3M）"
     },
     "settingsStore.dpsThemes.liveHeader.percentageFontSize": {
-        "zh-CN": "Percentage Font Size",
+        "zh-CN": "百分比字体大小",
         "en": "Percentage Font Size",
-        "ja": ""
+        "ja": "割合フォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.percentageFontSize.description": {
-        "zh-CN": "Health percentage font size",
+        "zh-CN": "血量百分比字体大小",
         "en": "Health percentage font size",
-        "ja": ""
+        "ja": "体力割合のフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.showNavigationTabs": {
-        "zh-CN": "Show Navigation Tabs",
+        "zh-CN": "显示导航标签",
         "en": "Show Navigation Tabs",
-        "ja": ""
+        "ja": "ナビゲーションタブを表示"
     },
     "settingsStore.dpsThemes.liveHeader.showNavigationTabs.description": {
-        "zh-CN": "Show DPS / Heal / Tanked switch buttons",
+        "zh-CN": "显示 DPS / 治疗 / 承伤 切换按钮",
         "en": "Show DPS / Heal / Tanked switch buttons",
-        "ja": ""
+        "ja": "DPS／Heal／Tanked 切替ボタンを表示"
     },
     "settingsStore.dpsThemes.liveHeader.navigationTabLabelFontSize.description": {
-        "zh-CN": "Tab label font size",
+        "zh-CN": "标签文字字体大小",
         "en": "Tab label font size",
-        "ja": ""
+        "ja": "タブラベルのフォントサイズ"
     },
     "settingsStore.dpsThemes.liveHeader.horizontalPadding": {
-        "zh-CN": "Horizontal Padding",
+        "zh-CN": "水平内边距",
         "en": "Horizontal Padding",
-        "ja": ""
+        "ja": "左右余白"
     },
     "settingsStore.dpsThemes.liveHeader.horizontalPadding.description": {
-        "zh-CN": "Left and right padding for tabs",
+        "zh-CN": "标签左右内边距",
         "en": "Left and right padding for tabs",
-        "ja": ""
+        "ja": "タブの左右余白"
     },
     "settingsStore.dpsThemes.liveHeader.verticalPadding": {
-        "zh-CN": "Vertical Padding",
+        "zh-CN": "垂直内边距",
         "en": "Vertical Padding",
-        "ja": ""
+        "ja": "上下余白"
     },
     "settingsStore.dpsThemes.liveHeader.verticalPadding.description": {
-        "zh-CN": "Top and bottom padding for tabs",
+        "zh-CN": "标签上下内边距",
         "en": "Top and bottom padding for tabs",
-        "ja": ""
+        "ja": "タブの上下余白"
     },
     "settingsStore.dpsThemes.presets.colorThemes.description": {
         "zh-CN": "选择一个预设颜色主题",
         "en": "Choose a preset color theme",
-        "ja": ""
+        "ja": "プリセットのカラーテーマを選択"
     },
     "settingsStore.dpsThemes.presets.sizePresets.description": {
         "zh-CN": "根据你的显示器调整表格和表头尺寸",
         "en": "Adjust table and header sizes based on your display",
-        "ja": ""
+        "ja": "表示に応じてテーブルとヘッダーのサイズを調整します"
     },
     "settingsStore.dpsThemes.presets.colorPreset.dark.name": {
-        "zh-CN": "Dark",
+        "zh-CN": "深色",
         "en": "Dark",
-        "ja": ""
+        "ja": "ダーク"
     },
     "settingsStore.dpsThemes.presets.colorPreset.dark.description": {
-        "zh-CN": "Clean dark theme with neutral grays",
+        "zh-CN": "干净的深色主题，使用中性灰色",
         "en": "Clean dark theme with neutral grays",
-        "ja": ""
+        "ja": "ニュートラルグレーを基調にしたクリーンなダークテーマ"
     },
     "settingsStore.dpsThemes.presets.colorPreset.light.name": {
-        "zh-CN": "Light",
+        "zh-CN": "浅色",
         "en": "Light",
-        "ja": ""
+        "ja": "ライト"
     },
     "settingsStore.dpsThemes.presets.colorPreset.light.description": {
-        "zh-CN": "Bright theme suitable for daytime use",
+        "zh-CN": "适合白天使用的明亮主题",
         "en": "Bright theme suitable for daytime use",
-        "ja": ""
+        "ja": "日中の使用に適した明るいテーマ"
     },
     "settingsStore.dpsThemes.presets.colorPreset.pink.name": {
-        "zh-CN": "Pink UwU",
+        "zh-CN": "粉色 UwU",
         "en": "Pink UwU",
-        "ja": ""
+        "ja": "ピンク UwU"
     },
     "settingsStore.dpsThemes.presets.colorPreset.pink.description": {
-        "zh-CN": "Cute soft pink theme",
+        "zh-CN": "可爱的柔和粉色主题",
         "en": "Cute soft pink theme",
-        "ja": ""
+        "ja": "やわらかく可愛いピンクテーマ"
     },
     "settingsStore.dpsThemes.presets.colorPreset.green.name": {
-        "zh-CN": "Soft Green",
+        "zh-CN": "柔和绿色",
         "en": "Soft Green",
-        "ja": ""
+        "ja": "ソフトグリーン"
     },
     "settingsStore.dpsThemes.presets.colorPreset.green.description": {
-        "zh-CN": "Soft natural green palette",
+        "zh-CN": "柔和自然的绿色配色",
         "en": "Soft natural green palette",
-        "ja": ""
+        "ja": "自然でやわらかなグリーンパレット"
     },
     "settingsStore.dpsThemes.presets.colorPreset.matcha.name": {
-        "zh-CN": "Matcha",
+        "zh-CN": "抹茶",
         "en": "Matcha",
-        "ja": ""
+        "ja": "抹茶"
     },
     "settingsStore.dpsThemes.presets.colorPreset.matcha.description": {
-        "zh-CN": "Earthy green / matcha mood",
+        "zh-CN": "大地感绿色 / 抹茶氛围",
         "en": "Earthy green / matcha mood",
-        "ja": ""
+        "ja": "落ち着いたグリーン／抹茶風の雰囲気"
     },
     "settingsStore.dpsThemes.presets.colorPreset.rainbow.name": {
-        "zh-CN": "Rainbow Gradient",
+        "zh-CN": "彩虹渐变",
         "en": "Rainbow Gradient",
-        "ja": ""
+        "ja": "レインボーグラデーション"
     },
     "settingsStore.dpsThemes.presets.colorPreset.rainbow.description": {
-        "zh-CN": "Colorful gradient background",
+        "zh-CN": "多彩渐变背景",
         "en": "Colorful gradient background",
-        "ja": ""
+        "ja": "カラフルなグラデーション背景"
     },
     "settingsStore.dpsThemes.presets.sizePreset.compact.name": {
-        "zh-CN": "Minimal",
+        "zh-CN": "极简",
         "en": "Minimal",
-        "ja": ""
+        "ja": "ミニマル"
     },
     "settingsStore.dpsThemes.presets.sizePreset.compact.description": {
-        "zh-CN": "Minimal: no padding, no header",
+        "zh-CN": "极简：无内边距、无表头",
         "en": "Minimal: no padding, no header",
-        "ja": ""
+        "ja": "ミニマル：余白なし、ヘッダーなし"
     },
     "settingsStore.dpsThemes.presets.sizePreset.small.name": {
-        "zh-CN": "Small",
+        "zh-CN": "小",
         "en": "Small",
-        "ja": ""
+        "ja": "小"
     },
     "settingsStore.dpsThemes.presets.sizePreset.small.description": {
-        "zh-CN": "Compact layout that shows more rows",
+        "zh-CN": "可显示更多行的紧凑布局",
         "en": "Compact layout that shows more rows",
-        "ja": ""
+        "ja": "より多くの行を表示するコンパクトレイアウト"
     },
     "settingsStore.dpsThemes.presets.sizePreset.medium.name": {
-        "zh-CN": "Medium",
+        "zh-CN": "中",
         "en": "Medium",
-        "ja": ""
+        "ja": "中"
     },
     "settingsStore.dpsThemes.presets.sizePreset.medium.description": {
-        "zh-CN": "Balanced size for most screens",
+        "zh-CN": "适合大多数屏幕的平衡尺寸",
         "en": "Balanced size for most screens",
-        "ja": ""
+        "ja": "ほとんどの画面に適したバランスサイズ"
     },
     "settingsStore.dpsThemes.presets.sizePreset.large.name": {
-        "zh-CN": "Large",
+        "zh-CN": "大",
         "en": "Large",
-        "ja": ""
+        "ja": "大"
     },
     "settingsStore.dpsThemes.presets.sizePreset.large.description": {
-        "zh-CN": "Larger UI for high-resolution screens",
+        "zh-CN": "适合高分辨率屏幕的更大界面",
         "en": "Larger UI for high-resolution screens",
-        "ja": ""
+        "ja": "高解像度画面向けの大きめUI"
     },
     "settingsStore.dpsThemes.playerTableSettings.title": {
         "zh-CN": "玩家表格设置",
         "en": "Player Table Settings",
-        "ja": ""
+        "ja": "プレイヤーテーブル設定"
     },
     "settingsStore.dpsThemes.skillTableSettings.title": {
         "zh-CN": "技能表格设置",
         "en": "Skill Table Settings",
-        "ja": ""
+        "ja": "スキルテーブル設定"
     },
     "settingsStore.dpsThemes.liveWindowDisplay.title": {
         "zh-CN": "实时窗口显示设置",
         "en": "Live Window Display Settings",
-        "ja": ""
+        "ja": "ライブウィンドウ表示設定"
     },
     "settingsStore.dpsThemes.common.headerSettings": {
         "zh-CN": "表头设置",
         "en": "Header Settings",
-        "ja": ""
+        "ja": "ヘッダー設定"
     },
     "settingsStore.dpsThemes.liveHeader.layoutPadding": {
         "zh-CN": "布局与边距",
         "en": "Layout & Padding",
-        "ja": ""
+        "ja": "レイアウトと余白"
     },
     "settingsStore.dpsThemes.presets.colorThemes": {
         "zh-CN": "颜色主题",
         "en": "Color Themes",
-        "ja": ""
+        "ja": "カラーテーマ"
     },
     "settingsStore.dpsThemes.presets.sizePresets": {
         "zh-CN": "尺寸预设",
         "en": "Size Presets",
-        "ja": ""
+        "ja": "サイズプリセット"
     }
 }
