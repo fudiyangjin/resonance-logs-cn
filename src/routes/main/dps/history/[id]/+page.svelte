@@ -1011,7 +1011,7 @@
           </svg>
         </button>
         <div>
-          <h2 class="text-xl font-semibold text-foreground">技能明细</h2>
+          <h2 class="text-xl font-semibold text-foreground">{t("dps.historyDetail.skillDetails", "技能明细", "Skill Details", "スキル詳細")}</h2>
           <div class="text-sm text-neutral-400">
             Player: {getDisplayName({
               player: {
@@ -1033,10 +1033,10 @@
     {#if skillType === "heal"}
       <div class="mb-3 rounded border border-border/60 bg-card/30 p-3">
         <div class="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-          治疗目标分布
+          {t("dps.historyDetail.healTargetDistribution", "治疗目标分布", "Healing Target Distribution", "回復対象の内訳")}
         </div>
         {#if healTargetSummary.length === 0}
-          <div class="text-sm text-muted-foreground">暂无目标治疗数据</div>
+          <div class="text-sm text-muted-foreground">{t("dps.historyDetail.noHealTargetData", "暂无治疗目标数据", "No healing target data", "回復対象データはありません")}</div>
         {:else}
           <div class="space-y-1.5">
             {#each healTargetSummary as target (target.targetUid)}
