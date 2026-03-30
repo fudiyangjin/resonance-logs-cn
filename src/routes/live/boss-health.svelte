@@ -7,6 +7,7 @@
   import { tooltip } from "$lib/utils.svelte";
 
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
+  import { localizeRawMonsterName } from "$lib/monster-mappings";
 
   let headerInfo: HeaderInfo = $state({
     totalDps: 0,
@@ -52,7 +53,7 @@
     {#each headerInfo.bosses as boss (boss.uid)}
       {@const hpPercent = boss.maxHp && boss.currentHp !== null ? Math.min(100, Math.max(0, (boss.currentHp / boss.maxHp) * 100)) : 0}
       <div class="flex items-center gap-1 whitespace-nowrap">
-        <span class="text-base truncate text-neutral-100 font-semibold tracking-tight" {@attach tooltip(() => boss.name)}>{boss.name + " -"}</span>
+        <span class="text-base truncate text-neutral-100 font-semibold tracking-tight" {@attach tooltip(() => localizeRawMonsterName(boss.name, boss.name))}>{localizeRawMonsterName(boss.name, boss.name) + " -"}</span>
         <span class="text-base tabular-nums font-semibold text-neutral-100">
           <AbbreviatedNumber num={boss.currentHp !== null ? boss.currentHp : 0} />
           {#if boss.maxHp}

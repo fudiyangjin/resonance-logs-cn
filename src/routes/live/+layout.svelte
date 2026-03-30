@@ -10,6 +10,7 @@
    */
   import { onMount } from "svelte";
   import { SETTINGS } from "$lib/settings-store";
+  import { resolveNavigationTranslation } from "$lib/i18n";
   import {
     onLiveData,
     onResetEncounter,
@@ -20,6 +21,22 @@
   import { applyCustomFonts } from "$lib/font-loader";
   import { writable } from "svelte/store";
   import { beforeNavigate, afterNavigate } from "$app/navigation";
+
+
+  function ui(zh: string, en: string, ja = ""): string {
+    const language = SETTINGS.live.general.state.language;
+    if (language === "en") return en || zh;
+    if (language === "ja") return ja || en || zh;
+    return zh;
+  }
+
+  function t(key: string, zh: string, en: string, ja = ""): string {
+    return resolveNavigationTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      ui(zh, en, ja),
+    );
+  }
 
   // Store for pause state
   export const isPaused = writable(false);
@@ -91,7 +108,12 @@
         clearMeterData();
         notificationToast?.showToast(
           "notice",
-          "战斗记录已重置",
+          t(
+            "dps.live.resetToast",
+            "战斗记录已重置",
+            "Encounter reset",
+            "戦闘記録をリセットしました",
+          ),
         );
       });
 
@@ -121,9 +143,25 @@
           lastPauseState !== newPaused
         ) {
           if (newPaused) {
-            notificationToast?.showToast("notice", "Encounter paused");
+            notificationToast?.showToast(
+              "notice",
+              t(
+                "dps.live.pauseToast",
+                "战斗已暂停",
+                "Encounter paused",
+                "戦闘を一時停止しました",
+              ),
+            );
           } else {
-            notificationToast?.showToast("notice", "Encounter resumed");
+            notificationToast?.showToast(
+              "notice",
+              t(
+                "dps.live.resumeToast",
+                "战斗已继续",
+                "Encounter resumed",
+                "戦闘を再開しました",
+              ),
+            );
           }
         }
         lastPauseState = newPaused;

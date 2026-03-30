@@ -13,7 +13,7 @@
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import PercentFormat from "$lib/components/percent-format.svelte";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
-  import { resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
+  import { resolveNavigationTranslation, resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
 
   type FlatSkillRow = SkillDisplayRow & {
     key: string;
@@ -98,6 +98,28 @@
     const note = resolveSkillNote(skillId, language).trim();
   
     return `ID: #${skillId}\nSources:\n- RecountTable.json\n- DamageAttrIdName.json${note ? `\n\nNote:\n${note}` : ""}`;
+  }
+
+  function thLabel(
+    col: { headerKey?: string; labelKey?: string; header: string; label?: string },
+  ): string {
+    const language = SETTINGS.live.general.state.language;
+
+    if (col.headerKey) {
+      const translatedHeader = resolveNavigationTranslation(col.headerKey, language, "");
+      if (translatedHeader?.trim()) return translatedHeader;
+    }
+
+    if (col.labelKey) {
+      const translatedLabel = resolveNavigationTranslation(
+        col.labelKey,
+        language,
+        col.label ?? col.header,
+      );
+      if (translatedLabel?.trim()) return translatedLabel;
+    }
+
+    return col.header;
   }
 
   let flatRows = $derived.by(() => {
@@ -224,7 +246,7 @@
               onclick={() => handleSort(col.key)}
             >
               <span class="inline-flex items-center gap-1 justify-end">
-                {col.header}
+                {thLabel(col)}
                 {#if sortKey === col.key}
                   <span class="text-primary">{sortDesc ? "▼" : "▲"}</span>
                 {/if}

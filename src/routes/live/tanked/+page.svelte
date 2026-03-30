@@ -10,6 +10,7 @@
   import getDisplayName from "$lib/name-display";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
+  import { resolveNavigationTranslation } from "$lib/i18n";
 
   let liveData = $derived(getLiveData());
   let rawTankedData = $derived(
@@ -32,6 +33,38 @@
       SETTINGS.live.sorting.tankedPlayers.state.sortKey = key;
       SETTINGS.live.sorting.tankedPlayers.state.sortDesc = true;
     }
+  }
+
+  function t(key: string, fallback: string): string {
+    return resolveNavigationTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
+  function thLabel(
+    col: { headerKey?: string; labelKey?: string; header: string; label?: string },
+  ): string {
+    if (col.headerKey) {
+      const translatedHeader = resolveNavigationTranslation(
+        col.headerKey,
+        SETTINGS.live.general.state.language,
+        "",
+      );
+      if (translatedHeader?.trim()) return translatedHeader;
+    }
+
+    if (col.labelKey) {
+      const translatedLabel = resolveNavigationTranslation(
+        col.labelKey,
+        SETTINGS.live.general.state.language,
+        col.label ?? col.header,
+      );
+      if (translatedLabel?.trim()) return translatedLabel;
+    }
+
+    return col.header;
   }
 
   // Sorted player data based on settings
@@ -109,7 +142,7 @@
           <th
             class="px-3 py-1 text-left font-medium uppercase tracking-wide"
             style="font-size: {tableSettings.tableHeaderFontSize}px; color: {tableSettings.tableHeaderTextColor};"
-            >Player</th
+            >{t("dps.historyDetail.player", "Player")}</th
           >
           {#each visiblePlayerColumns as col (col.key)}
             <th
@@ -118,7 +151,7 @@
               onclick={() => handleSort(col.key)}
             >
               <span class="inline-flex items-center gap-1 justify-end">
-                {col.header}
+                {thLabel(col)}
                 {#if sortKey === col.key}
                   <span class="text-primary">{sortDesc ? "▼" : "▲"}</span>
                 {/if}
@@ -161,11 +194,11 @@
                 style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                 class="object-contain"
                 src={getClassIcon(className)}
-                alt="Class icon"
+                alt={t("dps.live.classIconAlt", "Class icon")}
                 {@attach tooltip(
                   () =>
                     formatClassSpecLabel(player.className, player.classSpecName) ||
-                    "未知职业",
+                    t("dps.live.unknownClass", "Unknown Class"),
                 )}
               />
               {#if player.abilityScore > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourAbilityScore : SETTINGS.live.general.state.showOthersAbilityScore)}
