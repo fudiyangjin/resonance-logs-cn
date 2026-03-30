@@ -21,6 +21,8 @@
   let isGeneratingSceneNameTranslation = $state(false);
   let isGeneratingMonsterNameTranslation = $state(false);
   let isGeneratingSkillNameTranslation = $state(false);
+  let isTranslationDebugCollapsed = $state(false);
+  let showTranslationGenerateInfo = $state(false);
 
   const unsubscribeTranslationSourceMode = TRANSLATION_SOURCE_MODE.subscribe((value) => {
     translationSourceMode = value;
@@ -219,6 +221,93 @@
       isSwitchingTranslationSource = false;
     }
   }
+
+  function debugUi(zh: string, en: string, ja: string): string {
+    const language = SETTINGS.live.general.state.language;
+    if (language === "en") return en;
+    if (language === "ja") return ja;
+    return zh;
+  }
+
+  function translationGenerateInfoText(): string {
+    return debugUi(
+      `点击“生成”后，应用会读取现有的运行时翻译文件，根据源表重建数据，添加新发现的 ID，保留当前源遍历中不存在的条目，然后把合并后的结果写回运行时文件。
+
+以 skillnames.json 为例，当前生成器会按以下优先顺序读取这些来源：
+• RecountTable.json
+• DamageAttrIdName.json
+• SkillEffectTable.json
+• SkillFightLevelTable.json
+• TempAttrTable.json
+
+会保留：
+• 现有的 en
+• 现有的 ja
+• 条目上的额外自定义字段
+• 只存在于运行时文件、但当前 bundled 来源中不存在的条目
+
+不会保留：
+• 自动生成的 name.zh-CN
+• 当来源里存在 note 时，自动生成的 note.zh-CN
+
+准确行为：
+• bundled 里的新 ID 会被添加
+• 英文和日文自定义翻译会被保留
+• 评论和额外自定义字段只要挂在条目对象上就会被保留
+• 手动修改的 zh-CN 可能会被覆盖
+• 如果来源提供了 note，手动修改的 zh-CN note 也可能会被覆盖`,
+      `When you click Generate, the app reads the existing runtime translation file, rebuilds data from the source tables, adds new IDs it finds, preserves entries that are not part of the current source pass, and writes the merged result back to the runtime file.
+
+Using skillnames.json as the example, the generator currently pulls from these sources in this priority order:
+• RecountTable.json
+• DamageAttrIdName.json
+• SkillEffectTable.json
+• SkillFightLevelTable.json
+• TempAttrTable.json
+
+Preserved:
+• existing en
+• existing ja
+• existing extra fields on an entry
+• existing entries that only exist in the runtime file and are not found in the current bundled sources
+
+Not preserved:
+• generated zh-CN values for name
+• generated zh-CN values for note when a source note exists
+
+Accurate behavior:
+• New IDs from the bundle are added
+• English and Japanese custom translations are preserved
+• comments and extra custom fields are preserved if they live on the entry object
+• manual zh-CN edits can be overwritten
+• manual zh-CN notes can also be overwritten when a source note exists`,
+      `「生成」をクリックすると、アプリは既存の実行時翻訳ファイルを読み込み、ソーステーブルからデータを再構築し、新しく見つかった ID を追加し、現在のソース走査に含まれない項目は保持したまま、マージ結果を実行時ファイルへ書き戻します。
+
+skillnames.json を例にすると、現在のジェネレーターは次のソースをこの優先順で読み込みます：
+• RecountTable.json
+• DamageAttrIdName.json
+• SkillEffectTable.json
+• SkillFightLevelTable.json
+• TempAttrTable.json
+
+保持されるもの：
+• 既存の en
+• 既存の ja
+• エントリ上の追加カスタム項目
+• 実行時ファイルにのみ存在し、現在の bundled ソースにないエントリ
+
+保持されないもの：
+• 自動生成された name.zh-CN
+• ソースに note がある場合の自動生成された note.zh-CN
+
+正確な挙動：
+• bundled 内の新しい ID は追加されます
+• 英語と日本語のカスタム翻訳は保持されます
+• コメントや追加カスタム項目はエントリオブジェクト上にあれば保持されます
+• 手動で編集した zh-CN は上書きされることがあります
+• ソースが note を提供している場合、手動の zh-CN note も上書きされることがあります`,
+    );
+  }
 </script>
 
 <div class="space-y-3">
@@ -288,14 +377,60 @@
     class="overflow-hidden rounded-lg border border-border/60 bg-card/40 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
   >
     <div class="px-4 py-3 space-y-4">
-      <h2 class="text-base font-semibold text-foreground">
-        {resolveNavigationTranslation(
-          "debug.translationTools",
-          SETTINGS.live.general.state.language,
-          "翻译调试",
-        )}
-      </h2>
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-semibold text-foreground">
+            {resolveNavigationTranslation(
+              "debug.translationTools",
+              SETTINGS.live.general.state.language,
+              "翻译调试",
+            )}
+          </h2>
 
+          <button
+            type="button"
+            class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/60 text-xs font-semibold text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+            onclick={() => (showTranslationGenerateInfo = !showTranslationGenerateInfo)}
+            aria-label={debugUi("生成说明", "Generate Info", "生成情報")}
+            title={debugUi("生成说明", "Generate Info", "生成情報")}
+          >
+            i
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex h-8 w-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+          onclick={() => (isTranslationDebugCollapsed = !isTranslationDebugCollapsed)}
+          aria-label={isTranslationDebugCollapsed
+            ? debugUi("展开", "Expand", "展開")
+            : debugUi("收起", "Collapse", "折りたたむ")}
+          title={isTranslationDebugCollapsed
+            ? debugUi("展开", "Expand", "展開")
+            : debugUi("收起", "Collapse", "折りたたむ")}
+        >
+          <svg
+            class={`h-4 w-4 transition-transform ${isTranslationDebugCollapsed ? "" : "rotate-180"}`}
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 15l-7-7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {#if showTranslationGenerateInfo}
+        <div class="rounded-md border border-border/60 bg-background/50 p-3 text-sm text-muted-foreground whitespace-pre-line">
+          <div class="mb-2 font-medium text-foreground">
+            {debugUi("点击“生成”后会发生什么？", "What happens when you click Generate?", "「生成」をクリックすると何が起こりますか？")}
+          </div>
+          {translationGenerateInfoText()}
+        </div>
+      {/if}
+
+      {#if !isTranslationDebugCollapsed}
       <div class="space-y-3">
         <div class="flex items-center justify-between">
           <div class="text-sm text-muted-foreground">
@@ -632,6 +767,7 @@
           },
         ]}
       />
+      {/if}
     </div>
   </div>
 </div>

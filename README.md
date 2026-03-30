@@ -5,6 +5,22 @@ Also some minor UI adjustments were done.
 
 For anyone that wants to support translataions to other languages or fix wrong translations due to the starresonancetool giving the wrong name or a bad name (such as the Imagines not having their actual name; i.e. Rorola is not called Rorola), then please reach out to me and I can show you how it works. For any other issues; I will address later as this is still a WIP
 
+This is what's done now:
+
+99% sure all UI translations are done.
+
+CN is preserved language, as it will default back to it if there isn't any translations for something. 
+
+EN skills is mostly done. Probably have to correct a lot of things since even ZDPS didn't have everything right, or the traansition over to resonancelogs wasn't perfect.
+
+JP UI is probably also at 99%. Anything in game for JP i left blank intentionally because I do not know the in game JP locales for those IDs. 
+
+I'm 99% sure that all UI translations are done and on the translation layer and not hardcoded to anything outside the translation layer anymore. I'm 100% sure that someone will find the 1% that is not translated lol.
+
+Next plan i have is that I'm going to add a new main menu item to help with editing appdata translations. 
+
+After that I will send a PR.
+
 
 -Donne
 

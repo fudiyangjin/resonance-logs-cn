@@ -2603,5 +2603,20 @@
     "zh-CN": "生成技能翻译",
     "en": "Generate Skill Translations",
     "ja": "スキル翻訳を生成"
+  },
+  "debug.generateInfoButton": {
+    "zh-CN": "点击查看“生成”行为说明",
+    "en": "Show generate behavior info",
+    "ja": "生成時の挙動を表示"
+  },
+  "debug.generateInfoTitle": {
+    "zh-CN": "点击“生成”后会发生什么？",
+    "en": "What happens when you click Generate?",
+    "ja": "「生成」を押すと何が起こりますか？"
+  },
+  "debug.generateInfoBody": {
+    "zh-CN": "以 skillnames.json 为例：\n\n点击“生成技能翻译”后，现在会发生这些事：\n\n• 读取现有的运行时 skillnames.json\n• 根据源数据表重新构建文件\n• 添加在源 JSON 中发现的新 ID\n• 保留当前源数据轮次中未出现但已存在的条目\n• 将合并后的结果写回运行时 common/skillnames.json\n\n当前生成器是基于源数据的，优先级顺序如下：\n\n1. RecountTable.json\n2. DamageAttrIdName.json\n3. SkillEffectTable.json\n4. SkillFightLevelTable.json\n5. TempAttrTable.json\n\n会被保留的内容：\n\n• 现有的 en\n• 现有的 ja\n• 条目上的现有额外字段\n• 只存在于运行时文件、但当前 bundled 源数据中没有的现有条目\n\n不会被保留的内容：\n\n• 根据源数据生成的 name.zh-CN\n• 当源数据存在备注时，根据源数据生成的 note.zh-CN\n\n也就是说：\n\n• 来自 bundled 源的新 ID：会添加\n• 你手动写的英文/日文翻译：会保留\n• 你添加的评论或额外自定义字段：只要还在条目对象里，就应当保留\n• 你手动改过的 zh-CN 名称：可能会被生成器覆盖\n• 你手动改过的 zh-CN 备注：如果源数据提供了备注，也可能会被覆盖",
+    "en": "Using skillnames.json as the example:\n\nWhen you click Generate Skill Translations, it now does the following:\n\n• reads the existing runtime skillnames.json\n• rebuilds the file from the source tables\n• adds new IDs it finds from the source JSONs\n• preserves existing entries that are not in the current source pass\n• writes the merged result back to runtime common/skillnames.json\n\nThe current generator is source-based and pulls from these, in this priority order:\n\n1. RecountTable.json\n2. DamageAttrIdName.json\n3. SkillEffectTable.json\n4. SkillFightLevelTable.json\n5. TempAttrTable.json\n\nWhat is preserved:\n\n• existing en\n• existing ja\n• existing extra fields on an entry\n• existing entries that are only in your runtime file and not found in the current bundled sources\n\nWhat is not preserved:\n\n• generated zh-CN values for name\n• generated zh-CN values for note when a source note exists\n\nSo the accurate behavior is:\n\n• New IDs from the bundle: yes, they get added\n• Your English/Japanese custom translations: yes, they are preserved\n• Your comments or extra custom fields: yes, they should stay if they live on the entry object\n• Your manual zh-CN edits: no, those can be overwritten by the generator\n• Your manual zh-CN notes: also no, those can be overwritten if the source provides a note",
+    "ja": "skillnames.json を例にすると、現在「スキル翻訳を生成」を押したときの挙動は次のとおりです。\n\n• 既存の実行時 skillnames.json を読み込みます\n• ソーステーブルからファイルを再構築します\n• ソース JSON で見つかった新しい ID を追加します\n• 現在のソース走査で見つからなかった既存エントリは保持します\n• マージ後の結果を実行時 common/skillnames.json に書き戻します\n\n現在のジェネレーターはソースベースで、優先順は次のとおりです。\n\n1. RecountTable.json\n2. DamageAttrIdName.json\n3. SkillEffectTable.json\n4. SkillFightLevelTable.json\n5. TempAttrTable.json\n\n保持されるもの：\n\n• 既存の en\n• 既存の ja\n• エントリ上の既存の追加フィールド\n• 実行時ファイルにのみ存在し、現在の bundled ソースには無い既存エントリ\n\n保持されないもの：\n\n• ソースから再生成される name.zh-CN\n• ソースにノートがある場合に再生成される note.zh-CN\n\nつまり：\n\n• bundled ソースの新しい ID：追加されます\n• 英語/日本語のカスタム翻訳：保持されます\n• コメントや追加のカスタムフィールド：エントリオブジェクト上にあれば保持されるはずです\n• 手動で編集した zh-CN 名称：ジェネレーターで上書きされる可能性があります\n• 手動で編集した zh-CN ノート：ソースにノートがある場合は上書きされる可能性があります"
   }
 }
