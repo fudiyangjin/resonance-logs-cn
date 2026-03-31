@@ -3,6 +3,7 @@
  */
 import ActivityIcon from "virtual:icons/lucide/activity";
 import CalculatorIcon from "virtual:icons/lucide/calculator";
+import GlobeIcon from "virtual:icons/lucide/globe";
 import HourglassIcon from "virtual:icons/lucide/hourglass";
 import PaletteIcon from "virtual:icons/lucide/palette";
 import SettingsIcon from "virtual:icons/lucide/settings";
@@ -15,6 +16,7 @@ export const TOOL_ROUTES = {
   "/main/module-calc": { label: "模组计算", icon: CalculatorIcon },
   "/main/skill-monitor": { label: "实时监控", icon: SwordsIcon },
   "/main/monster-monitor": { label: "怪物监控", icon: ShieldAlertIcon },
+  "/main/localization": { label: "本地化工具", icon: GlobeIcon },
 };
 
 // Sub-routes for DPS tool (tabs in the right panel)

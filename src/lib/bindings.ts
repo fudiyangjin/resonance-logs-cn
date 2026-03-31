@@ -378,6 +378,22 @@ async readTranslationRuntimeFile(relativePath: string) : Promise<Result<string, 
     else return { status: "error", error: e  as any };
 }
 },
+async writeTranslationRuntimeFile(relativePath: string, contents: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("write_translation_runtime_file", { relativePath, contents }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async listTranslationRuntimeFiles() : Promise<Result<TranslationRuntimeFileEntry[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_translation_runtime_files") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async generateBuffNameSearchScaffold() : Promise<Result<string, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("generate_buff_name_search_scaffold") };
@@ -621,6 +637,7 @@ export type SceneNamesResult = {
  */
 names: string[] }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[] }
+export type TranslationRuntimeFileEntry = { relative_path: string }
 
 /** tauri-specta globals **/
 

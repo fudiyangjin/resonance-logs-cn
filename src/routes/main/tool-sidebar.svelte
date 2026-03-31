@@ -28,6 +28,7 @@
       "/main/module-calc": "tool.moduleOptimizer",
       "/main/skill-monitor": "tool.skillMonitor",
       "/main/monster-monitor": "tool.monsterTracker",
+      "/main/localization": "tool.localization",
     };
 
     const key = keyMap[href];

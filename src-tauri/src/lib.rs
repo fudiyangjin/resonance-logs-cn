@@ -81,6 +81,8 @@ pub fn run() {
             debug_commands::initialize_translation_runtime_files,
             debug_commands::refresh_translation_runtime_data,
             debug_commands::read_translation_runtime_file,
+            debug_commands::write_translation_runtime_file,
+            debug_commands::list_translation_runtime_files,
             debug_commands::generate_buff_name_search_scaffold,
             debug_commands::generate_buff_name_translation_scaffold,
             debug_commands::generate_scene_name_translation_scaffold,
@@ -220,6 +222,11 @@ struct EmbeddedTranslationFile {
     contents: &'static str,
 }
 
+#[derive(Clone, serde::Serialize, specta::Type)]
+pub struct TranslationRuntimeFileEntry {
+    relative_path: String,
+}
+
 const BUFF_NAME_SOURCE_JSON: &str = include_str!("../../src/lib/config/BuffName.json");
 const BUFF_NAME_RUNTIME_RELATIVE_PATH: &str = "BuffName.json";
 const BUFF_NAME_SEARCH_RUNTIME_RELATIVE_PATH: &str = "BuffNameSearch.json";
@@ -292,6 +299,10 @@ const EMBEDDED_TRANSLATION_FILES: &[EmbeddedTranslationFile] = &[
         contents: include_str!("../../src/lib/translations/settings-store.json"),
     },
     EmbeddedTranslationFile {
+        relative_path: "localization.json",
+        contents: include_str!("../../src/lib/translations/localization.json"),
+    },
+    EmbeddedTranslationFile {
         relative_path: "resonance-skill-search.json",
         contents: include_str!("../../src/lib/translations/resonance-skill-search.json"),
     },
@@ -319,6 +330,66 @@ fn translation_runtime_dir(app_handle: &tauri::AppHandle) -> Result<PathBuf, Str
         .app_data_dir()
         .map_err(|e| format!("Failed to resolve app data dir: {e}"))?;
     Ok(base_dir.join("translations"))
+}
+
+fn collect_translation_runtime_files(
+    root_dir: &Path,
+    current_dir: &Path,
+    output: &mut Vec<TranslationRuntimeFileEntry>,
+) -> Result<(), String> {
+    let mut entries = std::fs::read_dir(current_dir)
+        .map_err(|e| format!("Failed to read {}: {e}", current_dir.display()))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| format!("Failed to iterate {}: {e}", current_dir.display()))?;
+
+    entries.sort_by_key(|entry| entry.path());
+
+    for entry in entries {
+        let path = entry.path();
+
+        if path.is_dir() {
+            collect_translation_runtime_files(root_dir, &path, output)?;
+            continue;
+        }
+
+        let is_json = path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| ext.eq_ignore_ascii_case("json"))
+            .unwrap_or(false);
+
+        if !is_json {
+            continue;
+        }
+
+        let relative_path = path
+            .strip_prefix(root_dir)
+            .map_err(|e| {
+                format!(
+                    "Failed to compute relative path for {} from {}: {e}",
+                    path.display(),
+                    root_dir.display()
+                )
+            })?
+            .to_string_lossy()
+            .replace('\\', "/");
+
+        output.push(TranslationRuntimeFileEntry { relative_path });
+    }
+
+    Ok(())
+}
+
+fn list_translation_runtime_files(
+    app_handle: &tauri::AppHandle,
+) -> Result<Vec<TranslationRuntimeFileEntry>, String> {
+    let (runtime_dir, _) = ensure_translation_runtime_files(app_handle)?;
+
+    let mut files = Vec::new();
+    collect_translation_runtime_files(&runtime_dir, &runtime_dir, &mut files)?;
+    files.sort_by(|a, b| a.relative_path.cmp(&b.relative_path));
+
+    Ok(files)
 }
 
 fn ensure_translation_runtime_files(
@@ -379,6 +450,18 @@ fn read_translation_runtime_file_contents(
     std::fs::read_to_string(&file_path)
         .map_err(|e| format!("Failed to read {}: {e}", file_path.display()))
 }
+
+fn write_translation_runtime_file_contents(
+    app_handle: &tauri::AppHandle,
+    relative_path: &str,
+    contents: &str,
+) -> Result<PathBuf, String> {
+    let parsed: Value = serde_json::from_str(contents)
+        .map_err(|e| format!("Failed to parse translation JSON for {}: {e}", relative_path))?;
+
+    write_translation_runtime_json_value(app_handle, relative_path, &parsed)
+}
+
 
 fn translation_runtime_file_path(
     app_handle: &tauri::AppHandle,
@@ -498,6 +581,40 @@ fn ensure_multilang_string_object(
         object.insert("zh-CN".to_string(), Value::String(zh_cn.to_string()));
     } else if !object.get("zh-CN").and_then(Value::as_str).is_some() {
         object.insert("zh-CN".to_string(), Value::String(String::new()));
+    }
+
+    if !object.get("en").and_then(Value::as_str).is_some() {
+        object.insert("en".to_string(), Value::String(String::new()));
+    }
+
+    if !object.get("ja").and_then(Value::as_str).is_some() {
+        object.insert("ja".to_string(), Value::String(String::new()));
+    }
+
+    Value::Object(object)
+}
+
+fn ensure_multilang_note_object_preserve_existing_zh_cn(
+    existing_value: Option<&Value>,
+    derived_zh_cn: Option<&str>,
+) -> Value {
+    let mut object = existing_value
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+
+    let existing_zh_cn = object
+        .get("zh-CN")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+
+    if existing_zh_cn.is_none() {
+        if let Some(zh_cn) = derived_zh_cn.map(str::trim).filter(|value| !value.is_empty()) {
+            object.insert("zh-CN".to_string(), Value::String(zh_cn.to_string()));
+        } else if !object.get("zh-CN").and_then(Value::as_str).is_some() {
+            object.insert("zh-CN".to_string(), Value::String(String::new()));
+        }
     }
 
     if !object.get("en").and_then(Value::as_str).is_some() {
@@ -882,7 +999,7 @@ fn upsert_skill_name_translation_entry(
         if let Some(existing_object) = existing_value.as_object_mut() {
             if let Some(note_text) = zh_note.map(str::trim).filter(|value| !value.is_empty()) {
                 let updated_note =
-                    ensure_multilang_string_object(existing_object.get("note"), Some(note_text));
+                    ensure_multilang_note_object_preserve_existing_zh_cn(existing_object.get("note"), Some(note_text));
                 existing_object.insert("note".to_string(), updated_note);
             }
         }
@@ -904,7 +1021,7 @@ fn upsert_skill_name_translation_entry(
     );
     entry_object.insert(
         "note".to_string(),
-        ensure_multilang_string_object(entry_object.get("note"), zh_note),
+        ensure_multilang_note_object_preserve_existing_zh_cn(entry_object.get("note"), zh_note),
     );
 
     next_root.insert(entry_key.to_string(), Value::Object(entry_object));
@@ -1236,6 +1353,43 @@ mod debug_commands {
         relative_path: String,
     ) -> Result<String, String> {
         crate::read_translation_runtime_file_contents(&app_handle, &relative_path)
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn write_translation_runtime_file(
+        app_handle: tauri::AppHandle,
+        relative_path: String,
+        contents: String,
+    ) -> Result<String, String> {
+        let file_path = crate::write_translation_runtime_file_contents(
+            &app_handle,
+            &relative_path,
+            &contents,
+        )?;
+
+        let payload = json!({
+            "dir": file_path
+                .parent()
+                .map(|path| path.display().to_string())
+                .unwrap_or_default(),
+            "savedFile": relative_path,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+        });
+
+        app_handle
+            .emit("translation-data-refreshed", payload)
+            .map_err(|e| format!("Failed to emit translation refresh event: {e}"))?;
+
+        Ok(format!("Saved translation runtime file to {}", file_path.display()))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn list_translation_runtime_files(
+        app_handle: tauri::AppHandle,
+    ) -> Result<Vec<crate::TranslationRuntimeFileEntry>, String> {
+        crate::list_translation_runtime_files(&app_handle)
     }
 
     #[tauri::command]

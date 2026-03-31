@@ -9,6 +9,7 @@ import monsterMonitorTranslations from "$lib/translations/monster-monitor.json";
 import skillMonitorTranslations from "$lib/translations/skill-monitor.json";
 import classLabelTranslations from "$lib/translations/class-labels.json";
 import settingsStoreTranslations from "$lib/translations/settings-store.json";
+import localizationTranslations from "$lib/translations/localization.json";
 
 export type LocaleCode = "zh-CN" | "en" | "ja";
 export type SkillIdDisplayMode = "off" | "hover" | "column";
@@ -83,7 +84,6 @@ function emitTranslationSourceModeChanged(mode: TranslationSourceMode): void {
 export function getCurrentTranslationSourceMode(): TranslationSourceMode {
   return currentTranslationSourceMode;
 }
-
 
 function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -163,6 +163,10 @@ export const SETTINGS_STORE_TRANSLATIONS: TranslationTable = cloneJson(
   settingsStoreTranslations as unknown as TranslationTable,
 );
 
+export const LOCALIZATION_TRANSLATIONS: TranslationTable = cloneJson(
+  localizationTranslations as TranslationTable,
+);
+
 const BUNDLED_SKILL_NAME_TRANSLATIONS = cloneJson(SKILL_NAME_TRANSLATIONS);
 const BUNDLED_NAVIGATION_TRANSLATIONS = cloneJson(NAVIGATION_TRANSLATIONS);
 const BUNDLED_MODULE_CALC_TRANSLATIONS = cloneJson(MODULE_CALC_TRANSLATIONS);
@@ -170,6 +174,7 @@ const BUNDLED_MONSTER_MONITOR_TRANSLATIONS = cloneJson(MONSTER_MONITOR_TRANSLATI
 const BUNDLED_SKILL_MONITOR_TRANSLATIONS = cloneJson(SKILL_MONITOR_TRANSLATIONS);
 const BUNDLED_CLASS_LABEL_TRANSLATIONS = cloneJson(CLASS_LABEL_TRANSLATIONS);
 const BUNDLED_SETTINGS_STORE_TRANSLATIONS = cloneJson(SETTINGS_STORE_TRANSLATIONS);
+const BUNDLED_LOCALIZATION_TRANSLATIONS = cloneJson(LOCALIZATION_TRANSLATIONS);
 
 const RUNTIME_TRANSLATION_DESCRIPTORS = [
   {
@@ -206,6 +211,11 @@ const RUNTIME_TRANSLATION_DESCRIPTORS = [
     relativePath: "settings-store.json",
     target: SETTINGS_STORE_TRANSLATIONS,
     fallback: BUNDLED_SETTINGS_STORE_TRANSLATIONS,
+  },
+  {
+    relativePath: "localization.json",
+    target: LOCALIZATION_TRANSLATIONS,
+    fallback: BUNDLED_LOCALIZATION_TRANSLATIONS,
   },
 ] as const;
 
@@ -368,6 +378,14 @@ export function resolveSettingsStoreTranslation(
   fallback: string,
 ): string {
   return resolveTranslation(SETTINGS_STORE_TRANSLATIONS, key, locale, fallback);
+}
+
+export function resolveLocalizationTranslation(
+  key: string,
+  locale: LocaleCode,
+  fallback: string,
+): string {
+  return resolveTranslation(LOCALIZATION_TRANSLATIONS, key, locale, fallback);
 }
 
 export function buildSkillMonitorClassNameKey(classKey: string): string {
