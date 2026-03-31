@@ -1,6 +1,6 @@
 {
     "productName": "Resonance Logs Global",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "identifier": "com.resonance-logs-cn",
     "build": {
         "beforeDevCommand": "npm run dev:stop-windivert",
