@@ -72,5 +72,19 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
     }
+  },
+  {
+    "slotTemplateId": "beat_performer_x5",
+    "name": "灵魂真实因子X5, 召唤音响, 冷却 15s",
+    "description": "召唤音响",
+    "slot": {
+      "threshold": 402,
+      "resetBuffId": 9903,
+      "onBuffAdd": "freeze",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp",
+      "freezeDurationMs": 15000,
+      "onFreezeExpire": "resetAndStartCount"
+    }
   }
 ]

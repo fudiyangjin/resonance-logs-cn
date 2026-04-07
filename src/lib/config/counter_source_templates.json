@@ -104,5 +104,43 @@
         "increment": 47
       }
     }
+  },
+  {
+    "sourceId": "beat_performer_x10",
+    "name": "灵魂X10, 战斗状态站立不动每秒获得 12 点能量",
+    "description": "战斗状态站立不动每秒获得 12 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 3057101,
+        "tickIntervalMs": 1000,
+        "increment": 12,
+        "attrCondition": {
+          "attrId": 71,
+          "requiredValue": 0
+        }
+      }
+    }
+  },
+  {
+    "sourceId": "beat_performer_x5",
+    "name": "灵魂X5, 释放热情挥洒, 激昂热情挥洒获得 50 点能量",
+    "description": "释放热情挥洒, 激昂热情挥洒获得 50 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [2313, 2332],
+        "increment": 50
+      }
+    }
+  },
+  {
+    "sourceId": "beat_performer_x11",
+    "name": "灵魂X11, 释放激涌五重奏获得 150 点能量",
+    "description": "释放激涌五重奏获得 150 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [2312],
+        "increment": 150
+      }
+    }
   }
 ]
