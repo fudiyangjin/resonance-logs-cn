@@ -256,11 +256,12 @@ impl BuffCounterTracker {
                     CounterSource::DamageBySkillKeyOnce {
                         skill_keys,
                         increment,
-                    } if events
-                        .iter()
-                        .any(|event| skill_keys.contains(&event.skill_key)) =>
-                    {
-                        Some(*increment)
+                    } => {
+                        let distinct_count = skill_keys
+                            .iter()
+                            .filter(|sk| events.iter().any(|e| e.skill_key == **sk))
+                            .count();
+                        scaled_increment(*increment, distinct_count)
                     }
                     CounterSource::DamageBySkillKeySelfTarget {
                         skill_keys,
