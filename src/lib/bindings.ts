@@ -401,10 +401,11 @@ maxHp: number | null;
  * Whether the boss was defeated.
  */
 isDefeated: boolean }
-export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "startCount" | "noOp"
-export type CounterRule = { ruleId: number; trigger: CounterTrigger; linkedBuffId: number; threshold: number | null; onBuffAdd: CounterAction; onBuffRemove: CounterAction }
-export type CounterTrigger = { damageBySkillKey: number[] } | { damageBySkillKeySelfTarget: number[] } | "anyDamage"
+export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "resetAndStartCount" | "startCount" | "noOp"
+export type CounterRule = { ruleId: number; sources: CounterSource[]; effectSlots: EffectSlotConfig[] }
+export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number } } | { anyDamage: { increment: number } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number } } | { skillCast: { skillBaseIds: number[]; increment: number } }
 export type Device = { name: string; description: string | null }
+export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction }
 /**
  * Filters for querying encounters.
  */

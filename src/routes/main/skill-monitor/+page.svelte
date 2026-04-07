@@ -36,15 +36,27 @@
     type SkillMonitorProfile,
     type TextBuffPanelDisplayMode,
     type TextBuffPanelStyle,
+    type UserCounterRule,
   } from "$lib/settings-store";
   import {
     findResonanceSkill,
+    ensureUserCounterRules,
     getCounterRules,
     getClassConfigs,
     getDurationSkillsByClass,
+    getSlotTemplates,
+    getSourceTemplates,
     getSkillsByClass,
+    resolveUserCounterRulesToPresets,
     searchResonanceSkills,
+    type CounterRulePreset,
   } from "$lib/skill-mappings";
+  import {
+    ensureCustomPanelGroups,
+    ensureInlineBuffEntries,
+  } from "$lib/custom-panel-utils";
+
+  type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
 
   const availableBuffs = getAvailableBuffDefinitions();
   const buffCategoryDefinitions = getBuffCategoryDefinitions();
@@ -68,6 +80,8 @@
 
   const classConfigs = $derived(getClassConfigs());
   const counterRules = $derived(getCounterRules());
+  const sourceTemplates = $derived(getSourceTemplates());
+  const slotTemplates = $derived(getSlotTemplates());
   const buffAliases = $derived.by(() =>
     ensureBuffAliases(SETTINGS.skillMonitor.state.buffAliases),
   );
@@ -151,6 +165,18 @@
   const textBuffMaxVisible = $derived(
     Math.max(1, Math.min(20, activeProfile.textBuffMaxVisible ?? 10)),
   );
+  const userCounterRules = $derived.by(() =>
+    ensureUserCounterRules(activeProfile.userCounterRules),
+  );
+  const resolvedUserCounterRules = $derived.by<CounterRuleOption[]>(() =>
+    resolveUserCounterRulesToPresets(activeProfile.userCounterRules).map(
+      (rule) => ({ ...rule, origin: "user" as const }),
+    )
+  );
+  const allCounterRules = $derived.by<CounterRuleOption[]>(() => [
+    ...counterRules.map((rule) => ({ ...rule, origin: "preset" as const })),
+    ...resolvedUserCounterRules,
+  ]);
   const customPanelGroups = $derived.by(() => ensureCustomPanelGroups(activeProfile));
   const panelAreaRowOrder = $derived.by(() => ensurePanelAreaRowOrder(activeProfile));
   const filteredInlineBuffSearchResults = $derived.by(() => {
@@ -234,62 +260,6 @@
         format: existing?.format ?? item.format,
       };
     });
-  }
-
-  function ensureInlineBuffEntries(profile: SkillMonitorProfile): InlineBuffEntry[] {
-    return (profile.inlineBuffEntries ?? []).map((entry, idx) => ({
-      id: entry.id ?? `inline_${idx + 1}`,
-      sourceType: entry.sourceType ?? "buff",
-      sourceId: entry.sourceId,
-      label: entry.sourceType === "counter"
-        ? (entry.label ?? `计数器 ${entry.sourceId}`)
-        : (entry.label ?? ""),
-      format: entry.format ?? "timer",
-    }));
-  }
-
-  function ensureCustomPanelEntries(entries: InlineBuffEntry[] | undefined): InlineBuffEntry[] {
-    return (entries ?? []).map((entry, idx) => ({
-      id: entry.id ?? `inline_${idx + 1}`,
-      sourceType: entry.sourceType ?? "buff",
-      sourceId: entry.sourceId,
-      label: entry.sourceType === "counter"
-        ? (entry.label ?? `计数器 ${entry.sourceId}`)
-        : (entry.label ?? ""),
-      format: entry.format ?? "timer",
-    }));
-  }
-
-  function ensureCustomPanelGroups(profile: SkillMonitorProfile): CustomPanelGroup[] {
-    const groups = profile.customPanelGroups ?? [];
-    const legacyPosition = profile.overlayPositions?.customPanelGroup ?? { x: 700, y: 280 };
-    const legacyScale = Math.max(
-      0.5,
-      Math.min(2.5, profile.overlaySizes?.customPanelGroupScale ?? 1),
-    );
-    if (groups.length > 0) {
-      return groups.map((group, idx) => ({
-        id: group.id ?? `custom_panel_group_${idx + 1}`,
-        name: group.name ?? `监控区 ${idx + 1}`,
-        entries: ensureCustomPanelEntries(group.entries),
-        position: group.position ?? {
-          x: legacyPosition.x + idx * 40,
-          y: legacyPosition.y + idx * 40,
-        },
-        scale: Math.max(0.5, Math.min(2.5, group.scale ?? (idx === 0 ? legacyScale : 1))),
-      }));
-    }
-    const legacyEntries = ensureInlineBuffEntries(profile);
-    if (legacyEntries.length === 0) return [];
-    return [
-      {
-        id: "custom_panel_group_1",
-        name: "监控区 1",
-        entries: legacyEntries,
-        position: legacyPosition,
-        scale: legacyScale,
-      },
-    ];
   }
 
   function isSameRowRef(a: PanelAreaRowRef, b: PanelAreaRowRef): boolean {
@@ -749,13 +719,108 @@
     }));
   }
 
+  function updateUserCounterRules(
+    updater: (rules: UserCounterRule[]) => UserCounterRule[],
+  ) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      userCounterRules: updater(ensureUserCounterRules(profile.userCounterRules)),
+    }));
+  }
+
+  function getNextUserCounterRuleId(profile: SkillMonitorProfile): number {
+    const highestPresetRuleId = counterRules.reduce(
+      (maxId, rule) => Math.max(maxId, rule.ruleId),
+      10000,
+    );
+    const highestUserRuleId = ensureUserCounterRules(profile.userCounterRules).reduce(
+      (maxId, rule) => Math.max(maxId, rule.ruleId),
+      10000,
+    );
+    return Math.max(highestPresetRuleId, highestUserRuleId, 10000) + 1;
+  }
+
+  function addUserCounterRule(name: string, sourceRefs: string[], slotRefs: string[]) {
+    const nextName = name.trim();
+    const nextSourceRefs = Array.from(
+      new Set(sourceRefs.filter((item) => typeof item === "string" && item.trim())),
+    );
+    const nextSlotRefs = Array.from(
+      new Set(slotRefs.filter((item) => typeof item === "string" && item.trim())),
+    );
+    if (!nextName || nextSourceRefs.length === 0 || nextSlotRefs.length === 0) {
+      return;
+    }
+    updateActiveProfile((profile) => ({
+      ...profile,
+      userCounterRules: [
+        ...ensureUserCounterRules(profile.userCounterRules),
+        {
+          ruleId: getNextUserCounterRuleId(profile),
+          name: nextName,
+          sourceRefs: nextSourceRefs,
+          slotRefs: nextSlotRefs,
+        },
+      ],
+    }));
+  }
+
+  function removeUserCounterRule(ruleId: number) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      userCounterRules: ensureUserCounterRules(profile.userCounterRules).filter((rule) =>
+        rule.ruleId !== ruleId
+      ),
+      customPanelGroups: ensureCustomPanelGroups(profile).map((group) => ({
+        ...group,
+        entries: group.entries.filter((entry) =>
+          !(entry.sourceType === "counter" && entry.sourceId === ruleId)
+        ),
+      })),
+      inlineBuffEntries: ensureInlineBuffEntries(profile).filter((entry) =>
+        !(entry.sourceType === "counter" && entry.sourceId === ruleId)
+      ),
+    }));
+  }
+
+  function updateUserCounterRule(ruleId: number, updates: Partial<UserCounterRule>) {
+    updateUserCounterRules((rules) =>
+      rules.map((rule) => {
+        if (rule.ruleId !== ruleId) return rule;
+        return {
+          ...rule,
+          ...(updates.name !== undefined ? { name: updates.name.trim() || rule.name } : {}),
+          ...(updates.sourceRefs !== undefined
+            ? {
+                sourceRefs: Array.from(
+                  new Set(updates.sourceRefs.filter((item) => typeof item === "string" && item.trim())),
+                ),
+              }
+            : {}),
+          ...(updates.slotRefs !== undefined
+            ? {
+                slotRefs: Array.from(
+                  new Set(updates.slotRefs.filter((item) => typeof item === "string" && item.trim())),
+                ),
+              }
+            : {}),
+        };
+      })
+    );
+  }
+
   function findCustomPanelEntryLocation(
     sourceType: InlineBuffEntry["sourceType"],
     sourceId: number,
+    counterSlotId: number | undefined,
     groups: CustomPanelGroup[],
   ): { groupId: string; groupName: string } | null {
     for (const group of groups) {
-      if (group.entries.some((entry) => entry.sourceType === sourceType && entry.sourceId === sourceId)) {
+      if (group.entries.some((entry) =>
+        entry.sourceType === sourceType
+        && entry.sourceId === sourceId
+        && (sourceType !== "counter" || entry.counterSlotId === counterSlotId)
+      )) {
         return { groupId: group.id, groupName: group.name };
       }
     }
@@ -879,19 +944,27 @@
     groupId: string,
     sourceType: "buff" | "counter",
     sourceId: number,
+    counterSlotId?: number,
   ) {
     updateActiveProfile((profile) => {
       const groups = ensureCustomPanelGroups(profile);
-      if (findCustomPanelEntryLocation(sourceType, sourceId, groups)) {
+      if (findCustomPanelEntryLocation(sourceType, sourceId, counterSlotId, groups)) {
         return profile;
       }
+      const counterRule = sourceType === "counter"
+        ? allCounterRules.find((rule) => rule.ruleId === sourceId)
+        : null;
+      const counterSlot = counterRule?.effectSlots.find((slot) => slot.slotId === counterSlotId);
       const label = sourceType === "counter"
-        ? (counterRules.find((rule) => rule.ruleId === sourceId)?.name ?? `计数器 ${sourceId}`)
+        ? (counterSlot
+          ? `${counterRule?.name ?? `计数器 ${sourceId}`} #${counterSlot.slotId}`
+          : (counterRule?.name ?? `计数器 ${sourceId}`))
         : "";
       const nextEntry: InlineBuffEntry = {
         id: `inline_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
         sourceType,
         sourceId,
+        ...(counterSlotId !== undefined ? { counterSlotId } : {}),
         label,
         format: "timer",
       };
@@ -1395,7 +1468,10 @@
     />
   {:else if activeTab === "custom-panel"}
     <TabCustomPanel
-      {counterRules}
+      counterRules={allCounterRules}
+      {sourceTemplates}
+      {slotTemplates}
+      {userCounterRules}
       {availableBuffMap}
       {getBuffDisplayName}
       {inlineBuffSearch}
@@ -1407,6 +1483,9 @@
       {removeCustomPanelGroup}
       {renameCustomPanelGroup}
       {addCustomPanelEntry}
+      {addUserCounterRule}
+      {removeUserCounterRule}
+      {updateUserCounterRule}
       {removeCustomPanelEntry}
       {setCustomPanelEntryLabel}
       {moveCustomPanelEntry}

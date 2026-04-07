@@ -1,0 +1,104 @@
+[
+  {
+    "sourceId": "stormablade_x1",
+    "name": "雷影X1, 释放居合斩获得 25 点能量",
+    "description": "雷影X1, 释放居合斩获得 25 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1714],
+        "increment": 25
+      }
+    }
+  },
+  {
+    "sourceId": "stormablade_x4",
+    "name": "雷影X4, 释放雷切获得 120 点能量",
+    "description": "雷影X4, 释放雷切获得 120 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1745],
+        "increment": 120
+      }
+    }
+  },
+  {
+    "sourceId": "stormablade_x5",
+    "name": "雷影X5, 无穷雷霆之力期间每秒获得 26 点能量",
+    "description": "雷影X5, 无穷雷霆之力期间每秒获得 26 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 43101,
+        "tickIntervalMs": 1000,
+        "increment": 26
+      }
+    }
+  },
+  {
+    "sourceId": "stormablade_x8",
+    "name": "雷影X8, 战斗状态站立不动每秒获得 12 点能量",
+    "description": "雷影X8, 战斗状态站立不动每秒获得 12 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 3050081,
+        "tickIntervalMs": 1000,
+        "increment": 12
+      }
+    }
+  },
+  {
+    "sourceId": "flame_berserker_x1",
+    "name": "双斧X1, 无相火斩造成伤害获得 3 点能量",
+    "description": "无相火斩造成伤害获得 3 点能量",
+    "source": {
+      "damageBySkillKey": {
+        "skillKeys": [23510703, 23510803, 23510903],
+        "increment": 3
+      }
+    }
+  },
+  {
+    "sourceId": "flame_berserker_x2",
+    "name": "双斧X2, 暴怒劈斩释放获得 54 点能量",
+    "description": "暴怒劈斩释放获得 54 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1608, 1609, 1610, 1611],
+        "increment": 54
+      }
+    }
+  },
+  {
+    "sourceId": "flame_berserker_x4",
+    "name": "双斧X4, 荒川之寂灭期间每秒获得 20 点能量",
+    "description": "荒川之寂灭期间每秒获得 20 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 35102,
+        "tickIntervalMs": 1000,
+        "increment": 20
+      }
+    }
+  },
+  {
+    "sourceId": "flame_berserker_x9",
+    "name": "双斧X9, 大红莲丸造成伤害获得 37 点能量",
+    "description": "大红莲丸造成伤害获得 37 点能量",
+    "source": {
+      "damageBySkillKeyOnce": {
+        "skillKeys": [116230101],
+        "increment": 37
+      }
+    }
+  },
+  {
+    "sourceId": "flame_berserker_x8",
+    "name": "双斧X8, 释放无羁坠星, 炎魔天落杀获得 47 点能量",
+    "description": "释放无羁坠星, 炎魔天落杀获得 47 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1621, 1614],
+        "increment": 47
+      }
+    }
+  }
+]

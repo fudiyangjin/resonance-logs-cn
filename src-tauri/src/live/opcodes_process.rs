@@ -59,6 +59,7 @@ pub struct SyncToMeDeltaResult {
     pub skill_cds: Vec<ParsedSkillCd>,
     pub buff_effect_bytes: Option<Vec<u8>>,
     pub fight_resources: Option<Vec<i64>>,
+    pub attr_skill_id: Option<i32>,
     pub local_damage_events: Vec<LocalDamageEvent>,
 }
 
@@ -398,7 +399,7 @@ pub fn process_sync_to_me_delta_info(
     monitored_panel_attr_ids: &[i32],
     combat_target_filter: Option<i64>,
 ) -> SyncToMeDeltaResult {
-    use crate::live::opcodes_models::attr_type::ATTR_FIGHT_RESOURCES;
+    use crate::live::opcodes_models::attr_type::{ATTR_FIGHT_RESOURCES, ATTR_SKILL_ID};
 
     let mut result = SyncToMeDeltaResult::default();
     let delta_info = match sync_to_me_delta_info.delta_info {
@@ -435,6 +436,12 @@ pub fn process_sync_to_me_delta_info(
                 .find(|a| a.id == Some(ATTR_FIGHT_RESOURCES))
                 .and_then(|a| a.raw_data.as_ref())
                 .and_then(|raw| parse_fight_resources(raw));
+            result.attr_skill_id = attrs_collection
+                .attrs
+                .iter()
+                .find(|attr| attr.id == Some(ATTR_SKILL_ID))
+                .and_then(decode_single_attr_i32)
+                .filter(|skill_id| *skill_id > 0);
             apply_panel_attrs(attr_store, attrs_collection, monitored_panel_attr_ids);
         }
         if let Some(temp_attr_collection) = base_delta.temp_attrs.as_ref() {

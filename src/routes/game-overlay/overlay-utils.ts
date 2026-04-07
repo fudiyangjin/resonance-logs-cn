@@ -3,9 +3,13 @@ import type {
   CounterUpdateState,
   SkillCdState,
 } from "$lib/api";
+export {
+  ensureCustomPanelEntries,
+  ensureCustomPanelGroups,
+  ensureInlineBuffEntries,
+} from "$lib/custom-panel-utils";
 import type {
   BuffGroup,
-  CustomPanelGroup,
   CustomPanelStyle,
   InlineBuffEntry,
   OverlayPositions,
@@ -16,7 +20,10 @@ import type {
   SkillMonitorProfile,
   TextBuffPanelStyle,
 } from "$lib/settings-store";
-import { findAnySkillByBaseId } from "$lib/skill-mappings";
+import {
+  findAnySkillByBaseId,
+  type CounterRulePreset,
+} from "$lib/skill-mappings";
 import {
   DEFAULT_OVERLAY_POSITIONS,
   DEFAULT_OVERLAY_SIZES,
@@ -228,7 +235,7 @@ export function getCustomPanelDisplayRow(
   now: number,
   buffMap: Map<number, BuffUpdateState>,
   counterMap: Map<number, CounterUpdateState>,
-  counterRuleMap: Map<number, { linkedBuffId: number }>,
+  counterRuleMap: Map<number, CounterRulePreset>,
   resolveBuffName: (baseId: number) => string,
 ): CustomPanelDisplayRow | null {
   if (entry.sourceType === "buff") {
@@ -244,10 +251,15 @@ export function getCustomPanelDisplayRow(
 
   const counter = counterMap.get(entry.sourceId);
   const rule = counterRuleMap.get(entry.sourceId);
-  const linkedBuff = buffMap.get(counter?.linkedBuffId ?? rule?.linkedBuffId ?? -1);
-  const active = counter?.linkedBuffActive ?? isBuffActive(linkedBuff, now);
-  const remainingMs = getBuffRemainingMs(linkedBuff, now);
-  if (!counter) {
+  const selectedSlotId = entry.counterSlotId
+    ?? counter?.slots[0]?.slotId
+    ?? rule?.effectSlots[0]?.slotId;
+  const selectedSlot = counter?.slots.find((slot) => slot.slotId === selectedSlotId)
+    ?? counter?.slots[0];
+  const slotConfig = rule?.effectSlots.find((slot) => slot.slotId === selectedSlotId)
+    ?? rule?.effectSlots[0];
+  const linkedBuff = buffMap.get(slotConfig?.resetBuffId ?? -1);
+  if (!counter || !selectedSlot) {
     return {
       key: `counter_${entry.id}`,
       label: entry.label,
@@ -256,16 +268,35 @@ export function getCustomPanelDisplayRow(
       showProgress: false,
     };
   }
-  if (counter.isCounting) {
+  if (selectedSlot.isCounting) {
     return {
       key: `inline_counter_${entry.id}`,
       label: entry.label,
-      valueText: `${Math.max(0, counter.currentCount)}`,
+      valueText: `${Math.max(0, selectedSlot.currentCount)}`,
       metaText: undefined,
       progressPercent: 0,
       showProgress: false,
     };
   }
+  const fixedFreezeUntilMs = selectedSlot.freezeUntilMs;
+  if (fixedFreezeUntilMs !== null && fixedFreezeUntilMs !== undefined) {
+    const fixedRemainingMs = Math.max(0, fixedFreezeUntilMs - now);
+    const freezeDurationMs = selectedSlot.freezeDurationMs ?? 0;
+    const progressPercent =
+      freezeDurationMs > 0
+        ? Math.max(0, Math.min(100, (fixedRemainingMs / freezeDurationMs) * 100))
+        : 0;
+    return {
+      key: `inline_counter_${entry.id}`,
+      label: entry.label,
+      valueText: fixedRemainingMs > 0 ? formatTimerText(fixedRemainingMs) : "--",
+      metaText: "冷却中",
+      progressPercent,
+      showProgress: freezeDurationMs > 0 && fixedRemainingMs > 0,
+    };
+  }
+  const active = selectedSlot.resetBuffActive ?? isBuffActive(linkedBuff, now);
+  const remainingMs = getBuffRemainingMs(linkedBuff, now);
   return {
     key: `inline_counter_${entry.id}`,
     label: entry.label,
@@ -315,72 +346,6 @@ export function ensureIndividualMonitorAllGroup(
     showTime: group.showTime ?? true,
     showLayer: group.showLayer ?? true,
   };
-}
-
-export function ensureInlineBuffEntries(
-  profile: SkillMonitorProfile,
-): InlineBuffEntry[] {
-  return (profile.inlineBuffEntries ?? []).map((entry, idx) => ({
-    id: entry.id ?? `inline_${idx + 1}`,
-    sourceType: entry.sourceType ?? "buff",
-    sourceId: entry.sourceId,
-    label:
-      entry.sourceType === "counter"
-        ? (entry.label ?? `计数器 ${entry.sourceId}`)
-        : (entry.label ?? ""),
-    format: entry.format ?? "timer",
-  }));
-}
-
-function ensureCustomPanelEntries(entries: InlineBuffEntry[] | undefined): InlineBuffEntry[] {
-  return (entries ?? []).map((entry, idx) => ({
-    id: entry.id ?? `inline_${idx + 1}`,
-    sourceType: entry.sourceType ?? "buff",
-    sourceId: entry.sourceId,
-    label:
-      entry.sourceType === "counter"
-        ? (entry.label ?? `计数器 ${entry.sourceId}`)
-        : (entry.label ?? ""),
-    format: entry.format ?? "timer",
-  }));
-}
-
-export function ensureCustomPanelGroups(
-  profile: SkillMonitorProfile,
-): CustomPanelGroup[] {
-  const groups = profile.customPanelGroups ?? [];
-  const legacyPosition =
-    profile.overlayPositions?.customPanelGroup ?? DEFAULT_OVERLAY_POSITIONS.customPanelGroup;
-  const legacyScale = clampDecimal(
-    profile.overlaySizes?.customPanelGroupScale ??
-      DEFAULT_OVERLAY_SIZES.customPanelGroupScale,
-    0.5,
-    2.5,
-  );
-  if (groups.length > 0) {
-    return groups.map((group, index) => ({
-      id: group.id ?? `custom_panel_group_${index + 1}`,
-      name: group.name ?? `监控区 ${index + 1}`,
-      entries: ensureCustomPanelEntries(group.entries),
-      position: group.position ?? {
-        x: legacyPosition.x + index * 40,
-        y: legacyPosition.y + index * 40,
-      },
-      scale: clampDecimal(group.scale ?? (index === 0 ? legacyScale : 1), 0.5, 2.5),
-    }));
-  }
-
-  const legacyEntries = ensureInlineBuffEntries(profile);
-  if (legacyEntries.length === 0) return [];
-  return [
-    {
-      id: "custom_panel_group_1",
-      name: "监控区 1",
-      entries: legacyEntries,
-      position: legacyPosition,
-      scale: legacyScale,
-    },
-  ];
 }
 
 function samePanelRowRef(a: PanelAreaRowRef, b: PanelAreaRowRef): boolean {

@@ -54,7 +54,7 @@ pub enum AttrType {
     GearTier,
     BaseStrength,
     Gender,
-    TotalDefense,
+    SkillId,
     ResurrectionCount,
     Endurance,
     CombatMode,
@@ -127,7 +127,7 @@ impl AttrType {
             attr_type::ATTR_GEAR_TIER => Some(AttrType::GearTier),
             attr_type::ATTR_BASE_STRENGTH => Some(AttrType::BaseStrength),
             attr_type::ATTR_GENDER => Some(AttrType::Gender),
-            attr_type::ATTR_TOTAL_DEFENSE => Some(AttrType::TotalDefense),
+            attr_type::ATTR_SKILL_ID => Some(AttrType::SkillId),
             attr_type::ATTR_RESURRECTION_COUNT => Some(AttrType::ResurrectionCount),
             attr_type::ATTR_ENDURANCE => Some(AttrType::Endurance),
             attr_type::ATTR_COMBAT_MODE => Some(AttrType::CombatMode),
@@ -199,7 +199,7 @@ impl AttrType {
             AttrType::GearTier => attr_type::ATTR_GEAR_TIER,
             AttrType::BaseStrength => attr_type::ATTR_BASE_STRENGTH,
             AttrType::Gender => attr_type::ATTR_GENDER,
-            AttrType::TotalDefense => attr_type::ATTR_TOTAL_DEFENSE,
+            AttrType::SkillId => attr_type::ATTR_SKILL_ID,
             AttrType::ResurrectionCount => attr_type::ATTR_RESURRECTION_COUNT,
             AttrType::Endurance => attr_type::ATTR_ENDURANCE,
             AttrType::CombatMode => attr_type::ATTR_COMBAT_MODE,
@@ -439,7 +439,7 @@ pub mod attr_type {
     pub const ATTR_GEAR_TIER: i32 = 0x35; // Gear tier/grade
     pub const ATTR_BASE_STRENGTH: i32 = 0x46; // Base strength/attack stat
     pub const ATTR_GENDER: i32 = 0x47; // Character gender/appearance
-    pub const ATTR_TOTAL_DEFENSE: i32 = 0x64; // Total defense stat
+    pub const ATTR_SKILL_ID: i32 = 0x64; // AttrSkillId
     pub const ATTR_RESURRECTION_COUNT: i32 = 0x65; // Number of resurrections/revives
     pub const ATTR_ENDURANCE: i32 = 0x67; // Endurance/stamina stat
     pub const ATTR_COMBAT_MODE: i32 = 0x68; // PvP/combat mode toggle

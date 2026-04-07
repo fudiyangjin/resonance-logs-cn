@@ -138,31 +138,21 @@ export type EntityNameMapPayload = {
 
 export type CounterUpdateState = {
   ruleId: number;
-  linkedBuffId: number;
-  currentCount: number;
-  threshold: number | null;
-  isCounting: boolean;
-  linkedBuffActive: boolean;
+  slots: CounterSlotState[];
 };
 
 export type BuffCounterUpdatePayload = {
   counters: CounterUpdateState[];
 };
 
-export type CounterTrigger =
-  | { damageBySkillKey: number[] }
-  | { damageBySkillKeySelfTarget: number[] }
-  | "anyDamage";
-
-export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "startCount" | "noOp";
-
-export type CounterRule = {
-  ruleId: number;
-  trigger: CounterTrigger;
-  linkedBuffId: number;
+export type CounterSlotState = {
+  slotId: number;
+  currentCount: number;
   threshold: number | null;
-  onBuffAdd: CounterAction;
-  onBuffRemove: CounterAction;
+  isCounting: boolean;
+  resetBuffActive: boolean;
+  freezeUntilMs: number | null;
+  freezeDurationMs: number | null;
 };
 
 export type PanelAttrState = {

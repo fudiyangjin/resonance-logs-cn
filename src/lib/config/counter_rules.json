@@ -2,34 +2,67 @@
   {
     "ruleId": 1,
     "name": "超然触发计数",
-    "trigger": {
-      "damageBySkillKeySelfTarget": [22140403]
-    },
-    "linkedBuffId": 2202671,
-    "threshold": 60,
-    "onBuffAdd": "reset",
-    "onBuffRemove": "noOp"
+    "sources": [
+      {
+        "damageBySkillKeySelfTarget": {
+          "skillKeys": [22140403],
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 60,
+        "resetBuffId": 2202671,
+        "onBuffAdd": "reset",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp"
+      }
+    ]
   },
   {
     "ruleId": 2,
     "name": "幻想冲击层数-30-冰法",
-    "trigger": {
-      "damageBySkillKey": [2203110203]
-    },
-    "linkedBuffId": 3002011,
-    "threshold": 30,
-    "onBuffAdd": "resetAndFreeze",
-    "onBuffRemove": "startCount"
+    "sources": [
+      {
+        "damageBySkillKey": {
+          "skillKeys": [2203110203],
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 30,
+        "resetBuffId": 3002011,
+        "onBuffAdd": "resetAndFreeze",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "startCount"
+      }
+    ]
   },
   {
     "ruleId": 3,
     "name": "幻想冲击层数-30-吉他",
-    "trigger": {
-      "damageBySkillKey": [2203111103]
-    },
-    "linkedBuffId": 3002011,
-    "threshold": 30,
-    "onBuffAdd": "resetAndFreeze",
-    "onBuffRemove": "startCount"
+    "sources": [
+      {
+        "damageBySkillKey": {
+          "skillKeys": [2203111103],
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 30,
+        "resetBuffId": 3002011,
+        "onBuffAdd": "resetAndFreeze",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "startCount"
+      }
+    ]
   }
 ]

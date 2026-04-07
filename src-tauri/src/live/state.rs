@@ -252,10 +252,7 @@ fn build_training_dummy_state(runtime: &TrainingDummyRuntime) -> TrainingDummySt
     }
 }
 
-fn emit_training_dummy_update_if_changed(
-    state: &mut AppState,
-    previous: TrainingDummyState,
-) {
+fn emit_training_dummy_update_if_changed(state: &mut AppState, previous: TrainingDummyState) {
     let current = build_training_dummy_state(&state.training_dummy);
     if current != previous && state.event_manager.should_emit_events() {
         state.event_manager.emit_training_dummy_update(current);
@@ -399,6 +396,7 @@ impl AppStateManager {
             return;
         }
 
+        let mut counter_dirty = state.local_monitor.counter_tracker.tick_counters(now_ms());
         match event {
             StateEvent::ServerChange => {
                 self.on_server_change(state);
@@ -434,13 +432,13 @@ impl AppStateManager {
                 self.apply_battle_state_resets_if_needed(state);
             }
             StateEvent::SyncToMeDeltaInfo(data) => {
-                self.process_sync_to_me_delta_info(state, data);
+                counter_dirty |= self.process_sync_to_me_delta_info(state, data);
                 self.apply_battle_state_resets_if_needed(state);
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
             StateEvent::SyncNearDeltaInfo(data) => {
-                self.process_sync_near_delta_info(state, data);
+                counter_dirty |= self.process_sync_near_delta_info(state, data);
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
@@ -448,6 +446,12 @@ impl AppStateManager {
                 state.pending_auto_reset = None;
                 self.reset_encounter(state, is_manual);
             }
+        }
+        if counter_dirty {
+            emit_buff_counter_update_if_needed(
+                state,
+                state.local_monitor.counter_tracker.build_payload(),
+            );
         }
         self.apply_attr_store_changes(state);
     }
@@ -809,7 +813,7 @@ impl AppStateManager {
         &self,
         state: &mut AppState,
         sync_to_me_delta_info: blueprotobuf::SyncToMeDeltaInfo,
-    ) {
+    ) -> bool {
         use crate::live::opcodes_process::{
             aoi_delta_has_player_damage, process_sync_to_me_delta_info,
         };
@@ -877,12 +881,26 @@ impl AppStateManager {
         }
 
         let mut counter_dirty = false;
-        for damage_event in &result.local_damage_events {
-            counter_dirty |= state.local_monitor.counter_tracker.on_damage_event(
-                damage_event.skill_key,
-                damage_event.target_uid,
+        if !result.local_damage_events.is_empty() {
+            counter_dirty |= state.local_monitor.counter_tracker.on_damage_events(
+                &result.local_damage_events,
                 state.encounter.local_player_uid,
             );
+        }
+
+        if let Some(skill_base_id) = result.attr_skill_id {
+            counter_dirty |= state
+                .local_monitor
+                .counter_tracker
+                .on_skill_cast(skill_base_id);
+        }
+
+        if !result.skill_cds.is_empty() {
+            state.attr_store.mark_cd_dirty();
+            state
+                .local_monitor
+                .skill_cd_monitor
+                .apply_skill_cd_updates(&result.skill_cds, &state.attr_store);
         }
 
         if let Some(raw_bytes) = result.buff_effect_bytes {
@@ -900,27 +918,14 @@ impl AppStateManager {
                 .on_buff_changes(&buff_process_result.changes);
         }
 
-        if counter_dirty {
-            emit_buff_counter_update_if_needed(
-                state,
-                state.local_monitor.counter_tracker.build_payload(),
-            );
-        }
-
-        if !result.skill_cds.is_empty() {
-            state.attr_store.mark_cd_dirty();
-            state
-                .local_monitor
-                .skill_cd_monitor
-                .apply_skill_cd_updates(&result.skill_cds, &state.attr_store);
-        }
+        counter_dirty
     }
 
     fn process_sync_near_delta_info(
         &self,
         state: &mut AppState,
         sync_near_delta_info: blueprotobuf::SyncNearDeltaInfo,
-    ) {
+    ) -> bool {
         use crate::live::opcodes_process::{aoi_delta_has_player_damage, process_aoi_sync_delta};
         if state.pending_auto_reset.is_some() {
             let has_damage = sync_near_delta_info
@@ -931,6 +936,7 @@ impl AppStateManager {
         }
 
         let mut counter_dirty = false;
+        let mut aggregated_damage_events = Vec::new();
         for mut aoi_sync_delta in sync_near_delta_info.delta_infos {
             let target_uid = aoi_sync_delta.uuid.map(|uuid| uuid >> 16);
             let buff_bytes = aoi_sync_delta.buff_effect.take();
@@ -948,13 +954,7 @@ impl AppStateManager {
                 aoi_sync_delta,
                 combat_target_filter,
             ) {
-                for event in &events {
-                    counter_dirty |= state.local_monitor.counter_tracker.on_damage_event(
-                        event.skill_key,
-                        event.target_uid,
-                        state.encounter.local_player_uid,
-                    );
-                }
+                aggregated_damage_events.extend(events);
             }
 
             if let (Some(target_uid), Some(raw_bytes)) = (target_uid, buff_bytes) {
@@ -981,12 +981,14 @@ impl AppStateManager {
             }
         }
 
-        if counter_dirty {
-            emit_buff_counter_update_if_needed(
-                state,
-                state.local_monitor.counter_tracker.build_payload(),
-            );
+        if !aggregated_damage_events.is_empty() {
+            counter_dirty |= state
+                .local_monitor
+                .counter_tracker
+                .on_damage_events(&aggregated_damage_events, state.encounter.local_player_uid);
         }
+
+        counter_dirty
     }
 
     fn try_deferred_reset(&self, state: &mut AppState, has_damage: bool, source: &str) {

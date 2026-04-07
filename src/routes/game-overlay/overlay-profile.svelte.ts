@@ -12,10 +12,14 @@ import {
   normalizeBuffCategoryKeys,
   type BuffCategoryKey,
 } from "$lib/config/buff-name-table";
+import {
+  resolveUserCounterRulesToPresets,
+  type CounterRulePreset,
+} from "$lib/skill-mappings";
+import { ensureCustomPanelGroups } from "$lib/custom-panel-utils";
 import { DEFAULT_OVERLAY_VISIBILITY } from "./overlay-constants";
 import {
   ensureBuffGroups,
-  ensureCustomPanelGroups,
   ensureCustomPanelStyle,
   ensureOverlayVisibility,
   ensureTextBuffPanelStyle,
@@ -116,6 +120,9 @@ const _inlineBuffIds = $derived.by(
         .map((entry) => entry.sourceId),
     ),
 );
+const _resolvedUserCounterRules = $derived.by<CounterRulePreset[]>(() =>
+  resolveUserCounterRulesToPresets(_activeProfile?.userCounterRules),
+);
 
 export function activeProfileIndex() {
   return _activeProfileIndex;
@@ -195,6 +202,10 @@ export function inlineBuffEntries() {
 
 export function inlineBuffIds() {
   return _inlineBuffIds;
+}
+
+export function resolvedUserCounterRules() {
+  return _resolvedUserCounterRules;
 }
 
 export function updateActiveProfile(

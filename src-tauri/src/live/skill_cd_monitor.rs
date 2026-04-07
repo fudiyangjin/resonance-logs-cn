@@ -123,6 +123,7 @@ impl SkillCdMonitor {
             }
 
             let duration = cd.duration.unwrap_or(0);
+            let begin_time = cd.begin_time.unwrap_or(0);
             let (attr_skill_cd, attr_skill_cd_pct, attr_cd_accelerate_pct) = attr_store.cd_inputs();
             let (calculated_duration, cd_accelerate_rate) = if duration > 0 {
                 calculate_skill_cd(
@@ -141,7 +142,7 @@ impl SkillCdMonitor {
                 id,
                 SkillCdState {
                     skill_level_id: id,
-                    begin_time: cd.begin_time.unwrap_or(0),
+                    begin_time,
                     duration,
                     skill_cd_type: cd.skill_cd_type.unwrap_or(0),
                     valid_cd_time: cd.valid_cd_time.unwrap_or(0),

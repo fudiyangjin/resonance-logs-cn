@@ -1,0 +1,76 @@
+[
+  {
+    "slotTemplateId": "stormablade_",
+    "name": "雷影真实因子, 额外获得雷之印",
+    "description": "雷影真实因子, 额外获得雷之印",
+    "slot": {
+      "threshold": 93,
+      "resetBuffId": 3050411,
+      "onBuffAdd": "reset",
+      "onBuffChange": "reset",
+      "onBuffRemove": "noOp"
+    }
+  },
+  {
+    "slotTemplateId": "stormablade_x",
+    "name": "雷影真实因子, 释放居合斩时附加1记雷切刀气",
+    "description": "雷影真实因子, 释放居合斩时附加1记雷切刀气",
+    "slot": {
+      "threshold": 610,
+      "resetBuffId": 3050401,
+      "onBuffAdd": "freeze",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "resetAndStartCount"
+    }
+  },
+  {
+    "slotTemplateId": "flame_berserker_x1",
+    "name": "双斧真实因子X1, 达到充能后无相火斩必定暴击",
+    "description": "双斧真实因子X1, 达到充能后无相火斩必定暴击",
+    "slot": {
+      "threshold": 660,
+      "resetBuffId": 3060401,
+      "onBuffAdd": "reset",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp"
+    }
+  },
+  {
+    "slotTemplateId": "flame_berserker_x3",
+    "name": "双斧真实因子X3, 达到充能后 10 秒内无相火斩最终伤害提升",
+    "description": "双斧真实因子X3, 达到充能后 10 秒内无相火斩最终伤害提升",
+    "slot": {
+      "threshold": 240,
+      "resetBuffId": 3060421,
+      "onBuffAdd": "reset",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp"
+    }
+  },
+  {
+    "slotTemplateId": "flame_berserker_x4",
+    "name": "双斧真实因子X4, 触发大红莲丸",
+    "description": "双斧真实因子X4, 触发大红莲丸",
+    "slot": {
+      "threshold": 350,
+      "resetBuffId": 3060431,
+      "onBuffAdd": "freeze",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp",
+      "freezeDurationMs": 5000,
+      "onFreezeExpire": "resetAndStartCount"
+    }
+  },
+  {
+    "slotTemplateId": "flame_berserker_x5",
+    "name": "双斧真实因子X5, 10 秒内迷狂炎舞最终伤害增加",
+    "description": "双斧真实因子X5, 10 秒内迷狂炎舞最终伤害增加",
+    "slot": {
+      "threshold": 300,
+      "resetBuffId": 3060441,
+      "onBuffAdd": "reset",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp"
+    }
+  }
+]
