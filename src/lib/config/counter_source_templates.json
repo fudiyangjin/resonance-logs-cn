@@ -142,5 +142,38 @@
         "increment": 150
       }
     }
+  },
+  {
+    "sourceId": "marksman_x11",
+    "name": "神射X11, 释放聚能射击获得 40 点能量",
+    "description": "释放聚能射击获得 40 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [2233],
+        "increment": 40
+      }
+    }
+  },
+  {
+    "sourceId": "marksman_x7",
+    "name": "神射X7, 闪电冲击造成伤害获得 51 点能量",
+    "description": "闪电冲击造成伤害获得 51 点能量",
+    "source": {
+      "damageBySkillKeyOnce": {
+        "skillKeys": [2220329109],
+        "increment": 51
+      }
+    }
+  },
+  {
+    "sourceId": "marksman_x9",
+    "name": "神射X9, 光能轰炸造成伤害获得 30 点能量",
+    "description": "光能轰炸造成伤害获得 30 点能量",
+    "source": {
+      "damageBySkillKeyOnce": {
+        "skillKeys": [25524003, 25524004],
+        "increment": 30
+      }
+    }
   }
 ]

@@ -86,5 +86,19 @@
       "freezeDurationMs": 15000,
       "onFreezeExpire": "resetAndStartCount"
     }
+  },
+  {
+    "slotTemplateId": "marksman_x5",
+    "name": "神射真实因子X5, 召唤一只猎鹰, 冷却 30s",
+    "description": "召唤一只猎鹰",
+    "slot": {
+      "threshold": 900,
+      "resetBuffId": 3053441,
+      "onBuffAdd": "freeze",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp",
+      "freezeDurationMs": 30000,
+      "onFreezeExpire": "resetAndStartCount"
+    }
   }
 ]
