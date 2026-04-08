@@ -280,11 +280,33 @@ function collectResonanceSearchTexts(skill: ResonanceSkillDefinition): string[] 
 export type CounterRulePreset = {
   ruleId: number;
   name: string;
-  trigger: CounterTrigger;
-  linkedBuffId: number;
+  sources: CounterSource[];
+  effectSlots: CounterEffectSlotPreset[];
+};
+
+export type CounterEffectSlotPreset = {
+  slotId: number;
   threshold: number | null;
+  resetBuffId: number;
   onBuffAdd: CounterAction;
+  onBuffChange: CounterAction;
   onBuffRemove: CounterAction;
+  freezeDurationMs?: number;
+  onFreezeExpire?: CounterAction;
+};
+
+export type SourceTemplate = {
+  sourceId: string;
+  name: string;
+  description: string;
+  source: CounterSource;
+};
+
+export type SlotTemplate = {
+  slotTemplateId: string;
+  name: string;
+  description: string;
+  slot: Omit<CounterEffectSlotPreset, "slotId">;
 };
 
 export const CLASS_RESOURCES: Record<string, ResourceDefinition[]> =
@@ -317,7 +339,12 @@ export const RESONANCE_SKILLS: ResonanceSkillDefinition[] = (
     : {}),
 }));
 
-export const COUNTER_RULES: CounterRulePreset[] = counterRulesRaw as CounterRulePreset[];
+export const COUNTER_RULES: CounterRulePreset[] =
+  counterRulesRaw as CounterRulePreset[];
+export const SOURCE_TEMPLATES: SourceTemplate[] =
+  counterSourceTemplatesRaw as SourceTemplate[];
+export const SLOT_TEMPLATES: SlotTemplate[] =
+  counterSlotTemplatesRaw as SlotTemplate[];
 
 export function getClassConfigs(): ClassSkillConfig[] {
   return Object.values(CLASS_SKILL_CONFIGS);
@@ -327,12 +354,104 @@ export function getCounterRules(): CounterRulePreset[] {
   return COUNTER_RULES;
 }
 
+export function getSourceTemplates(): SourceTemplate[] {
+  return SOURCE_TEMPLATES;
+}
+
+export function getSlotTemplates(): SlotTemplate[] {
+  return SLOT_TEMPLATES;
+}
+
+export function resolveCounterSources(sourceRefs: string[]): CounterSource[] {
+  const templateMap = new Map(
+    SOURCE_TEMPLATES.map((item) => [item.sourceId, item]),
+  );
+  return sourceRefs.flatMap((ref) => {
+    const item = templateMap.get(ref);
+    return item ? [item.source] : [];
+  });
+}
+
+export function resolveCounterEffectSlots(
+  slotRefs: string[],
+): CounterEffectSlotPreset[] {
+  const templateMap = new Map(
+    SLOT_TEMPLATES.map((item) => [item.slotTemplateId, item]),
+  );
+  return slotRefs.flatMap((ref, idx) => {
+    const item = templateMap.get(ref);
+    return item
+      ? [
+          {
+            slotId: idx + 1,
+            threshold: item.slot.threshold,
+            resetBuffId: item.slot.resetBuffId,
+            onBuffAdd: item.slot.onBuffAdd,
+            onBuffChange: item.slot.onBuffChange,
+            onBuffRemove: item.slot.onBuffRemove,
+            ...(item.slot.freezeDurationMs !== undefined
+              ? { freezeDurationMs: item.slot.freezeDurationMs }
+              : {}),
+            ...(item.slot.onFreezeExpire !== undefined
+              ? { onFreezeExpire: item.slot.onFreezeExpire }
+              : {}),
+          },
+        ]
+      : [];
+  });
+}
+
+export function ensureUserCounterRules(
+  rules: UserCounterRule[] | undefined,
+): UserCounterRule[] {
+  return (rules ?? []).map((rule, idx) => ({
+    ruleId: Number.isInteger(rule.ruleId) ? rule.ruleId : 10001 + idx,
+    name: rule.name?.trim() || `自定义计数器 ${idx + 1}`,
+    sourceRefs: Array.from(
+      new Set(
+        (rule.sourceRefs ?? []).filter(
+          (item) => typeof item === "string" && item.trim(),
+        ),
+      ),
+    ),
+    slotRefs: Array.from(
+      new Set(
+        (rule.slotRefs ?? []).filter(
+          (item) => typeof item === "string" && item.trim(),
+        ),
+      ),
+    ),
+  }));
+}
+
+export function resolveUserCounterRulesToPresets(
+  rules: UserCounterRule[] | undefined,
+): CounterRulePreset[] {
+  return ensureUserCounterRules(rules).flatMap((rule) => {
+    const sources = resolveCounterSources(rule.sourceRefs);
+    const effectSlots = resolveCounterEffectSlots(rule.slotRefs);
+    if (sources.length === 0 || effectSlots.length === 0) {
+      return [];
+    }
+    return [
+      {
+        ruleId: rule.ruleId,
+        name: rule.name,
+        sources,
+        effectSlots,
+      },
+    ];
+  });
+}
+
 export function getSkillsByClass(classKey: string): SkillDefinition[] {
   return CLASS_SKILL_CONFIGS[classKey]?.skills ?? [];
 }
 
 export function getDurationSkillsByClass(classKey: string): SkillDefinition[] {
-  return getSkillsByClass(classKey).filter((skill) => skill.effectDurationMs !== undefined);
+  return getSkillsByClass(classKey).filter(
+    (skill) => skill.effectDurationMs !== undefined,
+  );
 }
 
 export function findSkillById(
@@ -348,7 +467,9 @@ export function findResourcesByClass(classKey: string): ResourceDefinition[] {
   return CLASS_RESOURCES[classKey] || [];
 }
 
-export function findSpecialBuffDisplays(classKey: string): SpecialBuffDisplay[] {
+export function findSpecialBuffDisplays(
+  classKey: string,
+): SpecialBuffDisplay[] {
   return CLASS_SPECIAL_BUFF_DISPLAYS[classKey] ?? [];
 }
 

@@ -1,0 +1,190 @@
+[
+  {
+    "sourceId": "stormablade_x1",
+    "name": "雷影X1, 释放居合斩获得 25 点能量",
+    "description": "雷影X1, 释放居合斩获得 25 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1714],
+        "increment": 25
+      }
+    }
+  },
+  {
+    "sourceId": "stormablade_x2",
+    "name": "雷影X2, 释放一闪, 飞雷神获得 24 点能量",
+    "description": "释放一闪, 飞雷神获得 24 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1718, 1717],
+        "increment": 24
+      }
+    }
+  },
+  {
+    "sourceId": "stormablade_x4",
+    "name": "雷影X4, 释放雷切获得 120 点能量",
+    "description": "雷影X4, 释放雷切获得 120 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1745],
+        "increment": 120
+      }
+    }
+  },
+  {
+    "sourceId": "stormablade_x5",
+    "name": "雷影X5, 无穷雷霆之力期间每秒获得 26 点能量",
+    "description": "雷影X5, 无穷雷霆之力期间每秒获得 26 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 43101,
+        "tickIntervalMs": 1000,
+        "increment": 26
+      }
+    }
+  },
+  {
+    "sourceId": "stormablade_x8",
+    "name": "雷影X8, 战斗状态站立不动每秒获得 12 点能量",
+    "description": "雷影X8, 战斗状态站立不动每秒获得 12 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 3050081,
+        "tickIntervalMs": 1000,
+        "increment": 12,
+        "attrCondition": {
+          "attrId": 71,
+          "requiredValue": 0
+        }
+      }
+    }
+  },
+  {
+    "sourceId": "flame_berserker_x1",
+    "name": "双斧X1, 无相火斩造成伤害获得 3 点能量",
+    "description": "无相火斩造成伤害获得 3 点能量",
+    "source": {
+      "damageBySkillKey": {
+        "skillKeys": [23510703, 23510803, 23510903],
+        "increment": 3
+      }
+    }
+  },
+  {
+    "sourceId": "flame_berserker_x2",
+    "name": "双斧X2, 暴怒劈斩释放获得 54 点能量",
+    "description": "暴怒劈斩释放获得 54 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1608, 1609, 1610, 1611],
+        "increment": 54
+      }
+    }
+  },
+  {
+    "sourceId": "flame_berserker_x4",
+    "name": "双斧X4, 荒川之寂灭期间每秒获得 20 点能量",
+    "description": "荒川之寂灭期间每秒获得 20 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 35102,
+        "tickIntervalMs": 1000,
+        "increment": 20
+      }
+    }
+  },
+  {
+    "sourceId": "flame_berserker_x9",
+    "name": "双斧X9, 大红莲丸造成伤害获得 37 点能量",
+    "description": "大红莲丸造成伤害获得 37 点能量",
+    "source": {
+      "damageBySkillKeyOnce": {
+        "skillKeys": [116230101],
+        "increment": 37
+      }
+    }
+  },
+  {
+    "sourceId": "flame_berserker_x8",
+    "name": "双斧X8, 释放无羁坠星, 炎魔天落杀获得 47 点能量",
+    "description": "释放无羁坠星, 炎魔天落杀获得 47 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1621, 1614],
+        "increment": 47
+      }
+    }
+  },
+  {
+    "sourceId": "beat_performer_x10",
+    "name": "灵魂X10, 战斗状态站立不动每秒获得 12 点能量",
+    "description": "战斗状态站立不动每秒获得 12 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 3057101,
+        "tickIntervalMs": 1000,
+        "increment": 12,
+        "attrCondition": {
+          "attrId": 71,
+          "requiredValue": 0
+        }
+      }
+    }
+  },
+  {
+    "sourceId": "beat_performer_x5",
+    "name": "灵魂X5, 释放热情挥洒, 激昂热情挥洒获得 50 点能量",
+    "description": "释放热情挥洒, 激昂热情挥洒获得 50 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [2313, 2332],
+        "increment": 50
+      }
+    }
+  },
+  {
+    "sourceId": "beat_performer_x11",
+    "name": "灵魂X11, 释放激涌五重奏获得 150 点能量",
+    "description": "释放激涌五重奏获得 150 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [2312],
+        "increment": 150
+      }
+    }
+  },
+  {
+    "sourceId": "marksman_x11",
+    "name": "神射X11, 释放聚能射击获得 40 点能量",
+    "description": "释放聚能射击获得 40 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [2233],
+        "increment": 40
+      }
+    }
+  },
+  {
+    "sourceId": "marksman_x7",
+    "name": "神射X7, 闪电冲击造成伤害获得 51 点能量",
+    "description": "闪电冲击造成伤害获得 51 点能量",
+    "source": {
+      "damageBySkillKeyOnce": {
+        "skillKeys": [2220329109],
+        "increment": 51
+      }
+    }
+  },
+  {
+    "sourceId": "marksman_x9",
+    "name": "神射X9, 光能轰炸造成伤害获得 30 点能量",
+    "description": "光能轰炸造成伤害获得 30 点能量",
+    "source": {
+      "damageBySkillKeyOnce": {
+        "skillKeys": [25524003, 25524004],
+        "increment": 30
+      }
+    }
+  }
+]

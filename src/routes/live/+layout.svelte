@@ -17,6 +17,7 @@
     onEncounterUpdate,
     onSceneChange,
     onPauseEncounter,
+    onTrainingDummyUpdate,
   } from "$lib/api";
   import { applyCustomFonts } from "$lib/font-loader";
   import { writable } from "svelte/store";
@@ -46,6 +47,7 @@
 
   import {
     setLiveData,
+    setTrainingDummyState,
     clearMeterData,
     cleanupStores,
   } from "$lib/stores/live-meter-store.svelte";
@@ -91,7 +93,9 @@
         if (isDestroyed) return;
         lastEventTime = Date.now();
         hadAnyEvent = true;
-        setLiveData(event.payload);
+        if (event.payload.fightStartTimestampMs > 0) {
+          setLiveData(event.payload);
+        }
       });
 
       if (isDestroyed) {
@@ -194,6 +198,23 @@
         return;
       }
 
+      const trainingDummyUnlisten = await onTrainingDummyUpdate((event) => {
+        if (isDestroyed) return;
+        lastEventTime = Date.now();
+        hadAnyEvent = true;
+        setTrainingDummyState(event.payload);
+      });
+
+      if (isDestroyed) {
+        playersUnlisten();
+        resetUnlisten();
+        encounterUnlisten();
+        sceneChangeUnlisten();
+        trainingDummyUnlisten();
+        listenersSetupInProgress = false;
+        return;
+      }
+
       // Listen for explicit pause/resume events as a keep-alive as well
       const pauseUnlisten = await onPauseEncounter((event) => {
         if (isDestroyed) return;
@@ -207,6 +228,7 @@
         resetUnlisten();
         encounterUnlisten();
         sceneChangeUnlisten();
+        trainingDummyUnlisten();
         pauseUnlisten();
         listenersSetupInProgress = false;
         return;
@@ -227,6 +249,9 @@
         } catch {}
         try {
           sceneChangeUnlisten();
+        } catch {}
+        try {
+          trainingDummyUnlisten();
         } catch {}
         try {
           pauseUnlisten();

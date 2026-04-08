@@ -2,6 +2,7 @@ import {
   findAnySkillByBaseId,
   findSpecialBuffDisplays,
   getCounterRules,
+  type CounterRulePreset,
 } from "$lib/skill-mappings";
 import {
   getBuffCategoryLabel,
@@ -38,6 +39,7 @@ import {
   monitoredBuffCategories,
   monitoredBuffIds,
   monitoredSkillDurationIds,
+  resolvedUserCounterRules,
   selectedClassKey,
   textBuffMaxVisible,
 } from "./overlay-profile.svelte.js";
@@ -76,8 +78,11 @@ const _specialBuffConfigMap = $derived.by(() => {
 });
 
 const _counterRuleMap = $derived.by(() => {
-  const map = new Map<number, (ReturnType<typeof getCounterRules>)[number]>();
+  const map = new Map<number, CounterRulePreset>();
   for (const rule of getCounterRules()) {
+    map.set(rule.ruleId, rule);
+  }
+  for (const rule of resolvedUserCounterRules()) {
     map.set(rule.ruleId, rule);
   }
   return map;

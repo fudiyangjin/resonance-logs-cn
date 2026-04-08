@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { SETTINGS, type SkillMonitorProfile } from "$lib/settings-store";
+  import { SETTINGS } from "$lib/settings-store";
+  import { activeProfile } from "$lib/skill-monitor-profile.svelte.js";
   import { ensureCustomPanelGroups } from "../game-overlay/overlay-utils";
   import {
     DEFAULT_MONSTER_OVERLAY_POSITIONS,
@@ -7,18 +8,8 @@
   } from "./monster-constants";
   import type { GhostArea } from "./monster-types";
 
-  function getActiveSkillMonitorProfile(): SkillMonitorProfile | null {
-    const profiles = SETTINGS.skillMonitor.state.profiles;
-    if (profiles.length === 0) return null;
-    const index = Math.min(
-      Math.max(SETTINGS.skillMonitor.state.activeProfileIndex, 0),
-      profiles.length - 1,
-    );
-    return profiles[index] ?? null;
-  }
-
   const ghostAreas = $derived.by(() => {
-    const profile = getActiveSkillMonitorProfile();
+    const profile = activeProfile();
     if (!profile) return [] as GhostArea[];
 
     const next: GhostArea[] = [];

@@ -1,20 +1,27 @@
 <script lang="ts">
   import { settings, SETTINGS } from "$lib/settings-store";
-  import { computePlayerRows, computeSkillRows } from "$lib/live-derived";
-  import { lookupDamageIdName } from "$lib/config/recount-table";
+  import { computePlayerRows } from "$lib/live-derived";
+  import {
+    groupSkillsByRecount,
+    type RecountGroup,
+    type SkillDisplayRow,
+  } from "$lib/config/recount-table";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
-  import TableRowGlow from "$lib/components/table-row-glow.svelte";
+  import LiveGroupedSkillTable from "$lib/components/live-grouped-skill-table.svelte";
   import { liveTankedSkillColumns } from "$lib/column-data";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
-  import PercentFormat from "$lib/components/percent-format.svelte";
   import getDisplayName from "$lib/name-display";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { toSpecLabel } from "$lib/class-labels";
   import { resolveNavigationTranslation, resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
 
   const playerUid = Number(page.url.searchParams.get("playerUid") ?? "-1");
+  const emptyGroupedSkills = {
+    groups: [] as RecountGroup[],
+    ungrouped: [] as SkillDisplayRow[],
+  };
 
   let liveData = $derived(getLiveData());
   let tankedPlayers = $derived(
@@ -26,25 +33,21 @@
   let currentEntity = $derived(
     liveData?.entities.find((entity) => entity.uid === playerUid) ?? null,
   );
+  let elapsedSecs = $derived((liveData?.elapsedMs ?? 0) / 1000);
 
-  let skillRows = $derived(
-    currentEntity && liveData
-      ? computeSkillRows(
+  let groupedSkills = $derived(
+    currentEntity
+      ? groupSkillsByRecount(
           currentEntity.takenSkills,
-          liveData.elapsedMs,
+          elapsedSecs,
           currentEntity.taken.total,
-          lookupDamageIdName,
         )
-      : [],
+      : emptyGroupedSkills,
   );
 
-  let maxTakenSkill = $state(0);
-  let SETTINGS_YOUR_NAME = $state(settings.state.live.general.showYourName);
-  let SETTINGS_OTHERS_NAME = $state(settings.state.live.general.showOthersName);
-  let SETTINGS_SHORTEN_TPS = $state(settings.state.live.general.shortenTps);
-  let SETTINGS_RELATIVE_TO_TOP_TANKED_SKILL = $state(
-    settings.state.live.general.relativeToTopTankedSkill,
-  );
+  let SETTINGS_YOUR_NAME = $derived(settings.state.live.general.showYourName);
+  let SETTINGS_OTHERS_NAME = $derived(settings.state.live.general.showOthersName);
+  let shortenTps = $derived(SETTINGS.live.general.state.shortenTps);
 
   let tableSettings = $derived(SETTINGS.live.tableCustomization.state);
   let abbreviatedDecimalPlaces = $derived(
@@ -137,18 +140,29 @@
       return aIdx - bIdx;
     });
   });
+
+  const glowClassName = $derived.by(() => {
+    if (!currentPlayer) return "";
+    const isLocalPlayer =
+      liveData?.localPlayerUid != null &&
+      currentPlayer.uid === liveData.localPlayerUid;
+    return isLocalPlayer
+      ? normalizeNameDisplaySetting(SETTINGS_YOUR_NAME) !== "Hide Your Name"
+        ? currentPlayer.className
+        : ""
+      : normalizeNameDisplaySetting(SETTINGS_OTHERS_NAME) !== "Hide Others' Name"
+        ? currentPlayer.className
+        : "";
+  });
+
+  function formatRateValue(value: number) {
+    return value.toFixed(1);
+  }
 </script>
 
 {#if currentPlayer}
   {@const isLocalPlayer = liveData?.localPlayerUid != null &&
     currentPlayer.uid === liveData.localPlayerUid}
-  {@const className = isLocalPlayer
-    ? normalizeNameDisplaySetting(SETTINGS_YOUR_NAME) !== "Hide Your Name"
-      ? currentPlayer.className
-      : ""
-    : normalizeNameDisplaySetting(SETTINGS_OTHERS_NAME) !== "Hide Others' Name"
-      ? currentPlayer.className
-      : ""}
   {@const nameSetting = normalizeNameDisplaySetting(
     isLocalPlayer ? SETTINGS_YOUR_NAME : SETTINGS_OTHERS_NAME,
   )}
@@ -165,7 +179,7 @@
   })}
   <div
     class="sticky top-0 z-10 flex h-8 w-full items-center gap-2 bg-popover/60 px-2 text-xs"
-    style="background-color: {`color-mix(in srgb, ${className ? `var(--class-color-${className.toLowerCase().replace(/\s+/g, '-')})` : '#6b7280'} 30%, transparent)`};"
+    style="background-color: {`color-mix(in srgb, ${glowClassName ? `var(--class-color-${glowClassName.toLowerCase().replace(/\s+/g, '-')})` : '#6b7280'} 30%, transparent)`};"
   >
     <button class="underline" onclick={() => goto("/live/tanked")}>Back</button>
     <span class="font-bold">{displayName || `#${currentPlayer.uid}`}</span>
@@ -176,7 +190,7 @@
     {/if}
     <span class="ml-auto">
       <span class="text-xs">Total: </span>
-      {#if SETTINGS_SHORTEN_TPS}
+      {#if shortenTps}
         <AbbreviatedNumber
           num={currentPlayer.totalDmg}
           decimalPlaces={abbreviatedDecimalPlaces}

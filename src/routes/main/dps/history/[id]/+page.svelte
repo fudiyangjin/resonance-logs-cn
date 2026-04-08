@@ -65,6 +65,8 @@
     effectiveHeal: number;
     ehps: number;
     hps: number;
+    effectiveHeal: number;
+    ehps: number;
     healPct: number;
     critHealRate: number;
     hitsHeal: number;
@@ -225,6 +227,8 @@
           hitsTaken: tank?.hits ?? 0,
           healDealt: heal?.totalDmg ?? 0,
           hps: heal?.dps ?? 0,
+          effectiveHeal: heal?.effectiveTotal ?? 0,
+          ehps: heal?.effectiveDps ?? 0,
           healPct: heal?.dmgPct ?? 0,
           critHealRate: heal?.critRate ?? 0,
           hitsHeal: heal?.hits ?? 0,

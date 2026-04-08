@@ -12,6 +12,7 @@ pub struct ActiveBuff {
     pub layer: i32,
     pub duration: i32,
     pub create_time: i64,
+    pub received_time_ms: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -24,7 +25,11 @@ pub enum BuffChangeType {
 #[derive(Debug, Clone)]
 pub struct BuffChangeEvent {
     pub base_id: i32,
+    pub buff_uuid: i32,
     pub change_type: BuffChangeType,
+    /// Local packet receive time used by counter tick logic.
+    pub create_time_ms: Option<i64>,
+    pub duration_ms: Option<i32>,
 }
 
 #[derive(Debug, Default)]
@@ -105,11 +110,15 @@ impl BuffMonitor {
                                 layer,
                                 duration,
                                 create_time,
+                                received_time_ms: now,
                             },
                         );
                         changes.push(BuffChangeEvent {
                             base_id,
+                            buff_uuid,
                             change_type: BuffChangeType::Added,
+                            create_time_ms: Some(now),
+                            duration_ms: Some(duration),
                         });
                     }
                 } else if effect_type == EBuffEffectLogicPbType::BuffEffectBuffChange as i32 {
@@ -127,7 +136,10 @@ impl BuffMonitor {
                             }
                             changes.push(BuffChangeEvent {
                                 base_id,
+                                buff_uuid,
                                 change_type: BuffChangeType::Changed,
+                                create_time_ms: Some(entry.received_time_ms),
+                                duration_ms: Some(entry.duration),
                             });
                         }
                     }
@@ -139,7 +151,10 @@ impl BuffMonitor {
                 if let Some(removed_buff) = removed_buff {
                     changes.push(BuffChangeEvent {
                         base_id: removed_buff.base_id,
+                        buff_uuid,
                         change_type: BuffChangeType::Removed,
+                        create_time_ms: Some(removed_buff.received_time_ms),
+                        duration_ms: Some(removed_buff.duration),
                     });
                 }
             }

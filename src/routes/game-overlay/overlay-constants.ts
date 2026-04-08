@@ -1,8 +1,5 @@
-import type {
-  OverlayPositions,
-  OverlaySizes,
-  OverlayVisibility,
-} from "$lib/settings-store";
+import type { OverlayPositions, OverlayVisibility } from "$lib/settings-store";
+export { DEFAULT_OVERLAY_SIZES } from "$lib/skill-monitor-normalize";
 
 export const RESOURCE_SCALES_BY_CLASS: Record<string, Record<number, number>> = {
   wind_knight: {
@@ -35,20 +32,6 @@ export const DEFAULT_OVERLAY_POSITIONS: OverlayPositions = {
   iconBuffPositions: {},
   skillDurationPositions: {},
   categoryIconPositions: {},
-};
-
-export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
-  skillCdGroupScale: 1,
-  resourceGroupScale: 1,
-  textBuffPanelScale: 1,
-  panelAttrGroupScale: 1,
-  customPanelGroupScale: 1,
-  panelAttrGap: 4,
-  panelAttrFontSize: 14,
-  panelAttrColumnGap: 12,
-  iconBuffSizes: {},
-  skillDurationSizes: {},
-  categoryIconSizes: {},
 };
 
 export const DEFAULT_OVERLAY_VISIBILITY: OverlayVisibility = {

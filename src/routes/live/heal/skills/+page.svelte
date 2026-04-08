@@ -12,6 +12,10 @@
   import { resolveNavigationTranslation, resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
 
   const playerUid = Number(page.url.searchParams.get("playerUid") ?? "-1");
+  const emptyGroupedSkills = {
+    groups: [] as RecountGroup[],
+    ungrouped: [] as SkillDisplayRow[],
+  };
 
   let liveData = $derived(getLiveData());
   let healPlayers = $derived(
@@ -21,22 +25,20 @@
   let currEntity = $derived(
     liveData?.entities.find((entity) => entity.uid === playerUid) ?? null,
   );
+  let elapsedSecs = $derived((liveData?.elapsedMs ?? 0) / 1000);
 
-  let healSkillRows = $derived(
-    currEntity && liveData
-      ? computeSkillRows(
+  let groupedSkills = $derived(
+    currEntity
+      ? groupSkillsByRecount(
           currEntity.healSkills,
-          liveData.elapsedMs,
+          elapsedSecs,
           currEntity.healing.total,
-          lookupDamageIdName,
         )
-      : [],
+      : emptyGroupedSkills,
   );
 
-  let maxSkillValue = $state(0);
-  let SETTINGS_YOUR_NAME = $state(settings.state.live.general.showYourName);
-  let SETTINGS_OTHERS_NAME = $state(settings.state.live.general.showOthersName);
-  let SETTINGS_SHORTEN_DPS = $state(settings.state.live.general.shortenDps);
+  let SETTINGS_YOUR_NAME = $derived(settings.state.live.general.showYourName);
+  let SETTINGS_OTHERS_NAME = $derived(settings.state.live.general.showOthersName);
 
   let tableSettings = $derived(SETTINGS.live.tableCustomization.state);
   let abbreviatedDecimalPlaces = $derived(
@@ -124,6 +126,23 @@
       return aIdx - bIdx;
     });
   });
+
+  const glowClassName = $derived.by(() => {
+    if (!currPlayer) return "";
+    const isLocalPlayer =
+      liveData?.localPlayerUid != null && currPlayer.uid === liveData.localPlayerUid;
+    return isLocalPlayer
+      ? normalizeNameDisplaySetting(SETTINGS_YOUR_NAME) !== "Hide Your Name"
+        ? currPlayer.className
+        : ""
+      : normalizeNameDisplaySetting(SETTINGS_OTHERS_NAME) !== "Hide Others' Name"
+        ? currPlayer.className
+        : "";
+  });
+
+  function formatRateValue(value: number) {
+    return value.toFixed(1);
+  }
 </script>
 
 <svelte:window oncontextmenu={() => window.history.back()} />

@@ -4,8 +4,6 @@ import type {
   PlayerRow,
   RawCombatStats,
   RawEntityData,
-  RawSkillStats,
-  SkillRow,
 } from "$lib/api";
 
 type Metric = "dps" | "heal" | "tanked";
@@ -54,6 +52,8 @@ export function computePlayerRowsFromEntities(
     .map((entity) => {
       const stats = statsByMetric(entity, metric);
       const total = Number(stats.total || 0);
+      const effectiveTotal =
+        metric === "heal" ? Number(stats.effectiveTotal || 0) : 0;
       const hits = Number(stats.hits || 0);
       const bossDmg = metric === "dps" ? Number(entity.damageBossOnly?.total || 0) : 0;
       const bossTotal = Number(source.totalDmgBossOnly || 0);
@@ -83,6 +83,9 @@ export function computePlayerRowsFromEntities(
         hitsPerMinute: elapsedSecs > 0 ? (hits / elapsedSecs) * 60 : 0,
         bossDmg,
         bossDmgPct: metric === "dps" ? percent(bossDmg, bossTotal) : 0,
+        effectiveTotal,
+        effectiveDps:
+          metric === "heal" && elapsedSecs > 0 ? effectiveTotal / elapsedSecs : 0,
       };
 
       return row;
@@ -154,6 +157,8 @@ export function computeHeaderInfo(data: LiveDataPayload): HeaderInfo {
     bosses: data.bosses,
     sceneId: data.sceneId,
     sceneName: data.sceneName,
-    trainingDummy: data.trainingDummy,
+    trainingDummy: {
+      phase: "idle",
+    },
   };
 }

@@ -2,7 +2,7 @@
  * @file This file contains the settings store for the application.
  * It uses `@tauri-store/svelte` to create persistent stores for user settings.
  */
-import { RuneStore } from '@tauri-store/svelte';
+import { RuneStore } from "@tauri-store/svelte";
 import type { BuffCategoryKey } from "./config/buff-name-table";
 import type { LocaleCode, SkillIdDisplayMode } from "./i18n";
 
@@ -76,12 +76,12 @@ export const DEFAULT_TANKED_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', '
 
 // Default sort settings for live tables
 export const DEFAULT_LIVE_SORT_SETTINGS = {
-  dpsPlayers: { sortKey: 'totalDmg', sortDesc: true },
-  dpsSkills: { sortKey: 'totalDmg', sortDesc: true },
-  healPlayers: { sortKey: 'totalDmg', sortDesc: true },
-  healSkills: { sortKey: 'totalDmg', sortDesc: true },
-  tankedPlayers: { sortKey: 'totalDmg', sortDesc: true },
-  tankedSkills: { sortKey: 'totalDmg', sortDesc: true },
+  dpsPlayers: { sortKey: "totalDmg", sortDesc: true },
+  dpsSkills: { sortKey: "totalDmg", sortDesc: true },
+  healPlayers: { sortKey: "totalDmg", sortDesc: true },
+  healSkills: { sortKey: "totalDmg", sortDesc: true },
+  tankedPlayers: { sortKey: "totalDmg", sortDesc: true },
+  tankedSkills: { sortKey: "totalDmg", sortDesc: true },
 };
 
 type MutableRecord = Record<string, unknown>;
@@ -131,24 +131,132 @@ export type PanelAttrConfig = {
 };
 
 export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
-  { attrId: 11720, label: "攻速", color: "#6ee7ff", enabled: false, format: "percent" },
-  { attrId: 11710, label: "暴击率", color: "#ff7a7a", enabled: false, format: "percent" },
-  { attrId: 11930, label: "急速", color: "#facc15", enabled: false, format: "percent" },
-  { attrId: 11780, label: "幸运", color: "#a78bfa", enabled: false, format: "percent" },
-  { attrId: 11940, label: "精通", color: "#60a5fa", enabled: false, format: "percent" },
-  { attrId: 11950, label: "全能", color: "#34d399", enabled: false, format: "percent" },
-  { attrId: 11760, label: "冷却缩减", color: "#f97316", enabled: false, format: "percent" },
-  { attrId: 11960, label: "冷却加速", color: "#38bdf8", enabled: false, format: "percent" },
-  { attrId: 11010, label: "力量", color: "#f87171", enabled: false, format: "integer" },
-  { attrId: 11020, label: "智力", color: "#818cf8", enabled: false, format: "integer" },
-  { attrId: 11030, label: "敏捷", color: "#4ade80", enabled: false, format: "integer" },
-  { attrId: 11330, label: "物理攻击", color: "#fb923c", enabled: false, format: "integer" },
-  { attrId: 11340, label: "魔法攻击", color: "#c084fc", enabled: false, format: "integer" },
-  { attrId: 11730, label: "施法速度", color: "#22d3ee", enabled: false, format: "percent" },
-  { attrId: 12510, label: "暴击伤害", color: "#f472b6", enabled: false, format: "percent" },
-  { attrId: 12530, label: "幸运伤害倍率", color: "#d8b4fe", enabled: false, format: "percent" },
-  { attrId: 12540, label: "格挡伤害减免", color: "#86efac", enabled: false, format: "percent" },
-  { attrId: 11970, label: "格挡", color: "#fbbf24", enabled: false, format: "percent" },
+  {
+    attrId: 11720,
+    label: "攻速",
+    color: "#6ee7ff",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 11710,
+    label: "暴击率",
+    color: "#ff7a7a",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 11930,
+    label: "急速",
+    color: "#facc15",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 11780,
+    label: "幸运",
+    color: "#a78bfa",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 11940,
+    label: "精通",
+    color: "#60a5fa",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 11950,
+    label: "全能",
+    color: "#34d399",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 11760,
+    label: "冷却缩减",
+    color: "#f97316",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 11960,
+    label: "冷却加速",
+    color: "#38bdf8",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 11010,
+    label: "力量",
+    color: "#f87171",
+    enabled: false,
+    format: "integer",
+  },
+  {
+    attrId: 11020,
+    label: "智力",
+    color: "#818cf8",
+    enabled: false,
+    format: "integer",
+  },
+  {
+    attrId: 11030,
+    label: "敏捷",
+    color: "#4ade80",
+    enabled: false,
+    format: "integer",
+  },
+  {
+    attrId: 11330,
+    label: "物理攻击",
+    color: "#fb923c",
+    enabled: false,
+    format: "integer",
+  },
+  {
+    attrId: 11340,
+    label: "魔法攻击",
+    color: "#c084fc",
+    enabled: false,
+    format: "integer",
+  },
+  {
+    attrId: 11730,
+    label: "施法速度",
+    color: "#22d3ee",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 12510,
+    label: "暴击伤害",
+    color: "#f472b6",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 12530,
+    label: "幸运伤害倍率",
+    color: "#d8b4fe",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 12540,
+    label: "格挡伤害减免",
+    color: "#86efac",
+    enabled: false,
+    format: "percent",
+  },
+  {
+    attrId: 11970,
+    label: "格挡",
+    color: "#fbbf24",
+    enabled: false,
+    format: "percent",
+  },
 ];
 
 export type OverlayPositions = {
@@ -241,8 +349,16 @@ export type InlineBuffEntry = {
   id: string;
   sourceType: "buff" | "counter";
   sourceId: number;
+  counterSlotId?: number;
   label: string;
   format: InlineBuffFormat;
+};
+
+export type UserCounterRule = {
+  ruleId: number;
+  name: string;
+  sourceRefs: string[];
+  slotRefs: string[];
 };
 
 export type PanelAreaRowRef = { type: "attr"; attrId: number };
@@ -283,6 +399,7 @@ export type SkillMonitorProfile = {
   buffDisplayMode: BuffDisplayMode;
   buffGroups: BuffGroup[];
   individualMonitorAllGroup?: BuffGroup | null;
+  userCounterRules?: UserCounterRule[];
   customPanelGroups?: CustomPanelGroup[];
   inlineBuffEntries?: InlineBuffEntry[];
   panelAreaRowOrder?: PanelAreaRowRef[];
@@ -385,10 +502,7 @@ function createDefaultTextBuffPanelStyle(): TextBuffPanelStyle {
   };
 }
 
-export function createDefaultBuffGroup(
-  name = "新分组",
-  index = 1,
-): BuffGroup {
+export function createDefaultBuffGroup(name = "新分组", index = 1): BuffGroup {
   return {
     id: `group_${Date.now()}_${index}`,
     name,
@@ -435,6 +549,7 @@ export function createDefaultSkillMonitorProfile(
     buffDisplayMode: "individual",
     buffGroups: [],
     individualMonitorAllGroup: null,
+    userCounterRules: [],
     customPanelGroups: [],
     inlineBuffEntries: [],
     panelAreaRowOrder: [],
@@ -507,58 +622,76 @@ const DEFAULT_GENERAL_SETTINGS: {
 };
 
 export const DEFAULT_CLASS_COLORS: Record<string, string> = {
-  "Stormblade": "#674598",
+  Stormblade: "#674598",
   "Frost Mage": "#4de3d1",
   "Flame Berserker": "#e64a19",
   "Wind Knight": "#0099c6",
   "Verdant Oracle": "#66aa00",
   "Heavy Guardian": "#b38915",
-  "Marksman": "#ffee00",
+  Marksman: "#ffee00",
   "Shield Knight": "#7b9aa2",
   "Beat Performer": "#ee2e48",
 };
 
 export const CLASS_SPEC_MAP: Record<string, string> = {
-  "Iaido": "Stormblade", "Moonstrike": "Stormblade",
-  "Icicle": "Frost Mage", "Frostbeam": "Frost Mage",
-  "Voidflame": "Flame Berserker", "Blazecrimson": "Flame Berserker",
-  "Vanguard": "Wind Knight", "Skyward": "Wind Knight",
-  "Smite": "Verdant Oracle", "Lifebind": "Verdant Oracle",
-  "Earthfort": "Heavy Guardian", "Block": "Heavy Guardian",
-  "Wildpack": "Marksman", "Falconry": "Marksman",
-  "Recovery": "Shield Knight", "Shield": "Shield Knight",
-  "Dissonance": "Beat Performer", "Concerto": "Beat Performer",
+  Iaido: "Stormblade",
+  Moonstrike: "Stormblade",
+  Icicle: "Frost Mage",
+  Frostbeam: "Frost Mage",
+  Voidflame: "Flame Berserker",
+  Blazecrimson: "Flame Berserker",
+  Vanguard: "Wind Knight",
+  Skyward: "Wind Knight",
+  Smite: "Verdant Oracle",
+  Lifebind: "Verdant Oracle",
+  Earthfort: "Heavy Guardian",
+  Block: "Heavy Guardian",
+  Wildpack: "Marksman",
+  Falconry: "Marksman",
+  Recovery: "Shield Knight",
+  Shield: "Shield Knight",
+  Dissonance: "Beat Performer",
+  Concerto: "Beat Performer",
 };
 
 export const CLASS_SPEC_NAMES = Object.keys(CLASS_SPEC_MAP);
 
 export const DEFAULT_CLASS_SPEC_COLORS: Record<string, string> = {
   // Stormblade
-  "Iaido": "#9b6cf0", "Moonstrike": "#4a2f80",
+  Iaido: "#9b6cf0",
+  Moonstrike: "#4a2f80",
   // Frost Mage
-  "Icicle": "#8ff7ee", "Frostbeam": "#2fbfb3",
+  Icicle: "#8ff7ee",
+  Frostbeam: "#2fbfb3",
   // Flame Berserker
-  "Voidflame": "#ff6d3a", "Blazecrimson": "#c41e00",
+  Voidflame: "#ff6d3a",
+  Blazecrimson: "#c41e00",
   // Wind Knight
-  "Vanguard": "#4ddff6", "Skyward": "#006b8f",
+  Vanguard: "#4ddff6",
+  Skyward: "#006b8f",
   // Verdant Oracle
-  "Smite": "#b9f36e", "Lifebind": "#3b6d00",
+  Smite: "#b9f36e",
+  Lifebind: "#3b6d00",
   // Heavy Guardian
-  "Earthfort": "#e6c25a", "Block": "#7b5b08",
+  Earthfort: "#e6c25a",
+  Block: "#7b5b08",
   // Marksman
-  "Wildpack": "#fff9a6", "Falconry": "#cab400",
+  Wildpack: "#fff9a6",
+  Falconry: "#cab400",
   // Shield Knight
-  "Recovery": "#b6d1d6", "Shield": "#4f6b70",
+  Recovery: "#b6d1d6",
+  Shield: "#4f6b70",
   // Beat Performer
-  "Dissonance": "#ff7b94", "Concerto": "#9f1322",
+  Dissonance: "#ff7b94",
+  Concerto: "#9f1322",
 };
 
 export const DEFAULT_FONT_SIZES = {
-  xs: 10,    // Extra small - labels, hints (default 0.625rem = 10px)
-  sm: 12,    // Small - secondary text (default 0.75rem = 12px)
-  base: 14,  // Base - default text (default 0.875rem = 14px)
-  lg: 16,    // Large - emphasis (default 1rem = 16px)
-  xl: 20,    // Extra large - titles (default 1.25rem = 20px)
+  xs: 10, // Extra small - labels, hints (default 0.625rem = 10px)
+  sm: 12, // Small - secondary text (default 0.75rem = 12px)
+  base: 14, // Base - default text (default 0.875rem = 14px)
+  lg: 16, // Large - emphasis (default 1rem = 16px)
+  xl: 20, // Extra large - titles (default 1.25rem = 20px)
 };
 
 // Live table customization defaults
@@ -589,12 +722,18 @@ export const DEFAULT_LIVE_TABLE_SETTINGS = {
   skillAbbreviatedFontSize: 9,
 
   // Skill-specific row glow / highlight customization (separate from player rows)
-  skillRowGlowMode: 'gradient-underline' as 'gradient-underline' | 'gradient' | 'solid',
+  skillRowGlowMode: "gradient-underline" as
+    | "gradient-underline"
+    | "gradient"
+    | "solid",
   skillRowGlowOpacity: 0.15,
   skillRowBorderRadius: 0,
   // Row glow / highlight customization
   // modes: 'gradient-underline' (gradient + neon underline), 'gradient' (gradient only), 'solid' (solid color fill)
-  rowGlowMode: 'gradient-underline' as 'gradient-underline' | 'gradient' | 'solid',
+  rowGlowMode: "gradient-underline" as
+    | "gradient-underline"
+    | "gradient"
+    | "solid",
   // opacity applied to the fill (0-1)
   rowGlowOpacity: 0.15,
   // border height in pixels for the neon underline effect
@@ -609,11 +748,11 @@ export const DEFAULT_LIVE_TABLE_SETTINGS = {
 // (Header preset constants removed - header defaults inlined into DEFAULT_SETTINGS)
 
 export const FONT_SIZE_LABELS: Record<string, string> = {
-  xs: '超小',
-  sm: '小',
-  base: '标准',
-  lg: '大',
-  xl: '超大',
+  xs: "超小",
+  sm: "小",
+  base: "标准",
+  lg: "大",
+  xl: "超大",
 };
 
 // Default custom theme colors (based on dark theme)
@@ -643,54 +782,125 @@ export type CustomThemeColors = {
 };
 
 export const DEFAULT_CUSTOM_THEME_COLORS: CustomThemeColors = {
-  backgroundMain: 'rgba(33, 33, 33, 1)',
-  backgroundLive: 'rgba(33, 33, 33, 1)',
-  foreground: 'rgba(226, 226, 226, 1)',
-  surface: 'rgba(41, 41, 41, 1)',
-  surfaceForeground: 'rgba(226, 226, 226, 1)',
-  primary: 'rgba(166, 166, 166, 1)',
-  primaryForeground: 'rgba(33, 33, 33, 1)',
-  secondary: 'rgba(64, 64, 64, 1)',
-  secondaryForeground: 'rgba(226, 226, 226, 1)',
-  muted: 'rgba(56, 56, 56, 1)',
-  mutedForeground: 'rgba(138, 138, 138, 1)',
-  accent: 'rgba(82, 82, 82, 1)',
-  accentForeground: 'rgba(226, 226, 226, 1)',
-  destructive: 'rgba(220, 80, 80, 1)',
-  destructiveForeground: 'rgba(255, 255, 255, 1)',
-  border: 'rgba(74, 74, 74, 1)',
-  input: 'rgba(64, 64, 64, 1)',
-  tooltipBg: 'rgba(33, 33, 33, 0.92)',
-  tooltipBorder: 'rgba(74, 74, 74, 0.55)',
-  tooltipFg: 'rgba(226, 226, 226, 1)',
-  tableTextColor: '#ffffff',
-  tableAbbreviatedColor: '#71717a',
+  backgroundMain: "rgba(33, 33, 33, 1)",
+  backgroundLive: "rgba(33, 33, 33, 1)",
+  foreground: "rgba(226, 226, 226, 1)",
+  surface: "rgba(41, 41, 41, 1)",
+  surfaceForeground: "rgba(226, 226, 226, 1)",
+  primary: "rgba(166, 166, 166, 1)",
+  primaryForeground: "rgba(33, 33, 33, 1)",
+  secondary: "rgba(64, 64, 64, 1)",
+  secondaryForeground: "rgba(226, 226, 226, 1)",
+  muted: "rgba(56, 56, 56, 1)",
+  mutedForeground: "rgba(138, 138, 138, 1)",
+  accent: "rgba(82, 82, 82, 1)",
+  accentForeground: "rgba(226, 226, 226, 1)",
+  destructive: "rgba(220, 80, 80, 1)",
+  destructiveForeground: "rgba(255, 255, 255, 1)",
+  border: "rgba(74, 74, 74, 1)",
+  input: "rgba(64, 64, 64, 1)",
+  tooltipBg: "rgba(33, 33, 33, 0.92)",
+  tooltipBorder: "rgba(74, 74, 74, 0.55)",
+  tooltipFg: "rgba(226, 226, 226, 1)",
+  tableTextColor: "#ffffff",
+  tableAbbreviatedColor: "#71717a",
 };
 
 // Labels for custom theme color variables
-export const CUSTOM_THEME_COLOR_LABELS: Record<string, { label: string; description: string; category: string }> = {
-  backgroundMain: { label: '背景（主窗口）', description: '主窗口背景颜色', category: 'Base' },
-  backgroundLive: { label: '背景（实时）', description: '实时统计窗口背景颜色', category: 'Base' },
-  foreground: { label: '前景', description: '主要文本颜色', category: 'Base' },
-  surface: { label: '表面', description: '卡片、弹窗和面板的背景颜色', category: 'Surfaces' },
-  surfaceForeground: { label: '表面文本', description: '表面上的文本颜色', category: 'Surfaces' },
-  primary: { label: '主色', description: '主要强调色', category: 'Accents' },
-  primaryForeground: { label: '主色文本', description: '主色元素上的文本颜色', category: 'Accents' },
-  secondary: { label: '次色', description: '次要强调色', category: 'Accents' },
-  secondaryForeground: { label: '次色文本', description: '次色元素上的文本颜色', category: 'Accents' },
-  muted: { label: '柔和', description: '柔和/低调的背景颜色', category: 'Utility' },
-  mutedForeground: { label: '柔和文本', description: '低调的文本颜色', category: 'Utility' },
-  accent: { label: '强调', description: '高亮强调色', category: 'Accents' },
-  accentForeground: { label: '强调文本', description: '强调色元素上的文本颜色', category: 'Accents' },
-  destructive: { label: '破坏性', description: '错误/危险颜色', category: 'Utility' },
-  destructiveForeground: { label: '破坏性文本', description: '破坏性元素上的文本颜色', category: 'Utility' },
-  border: { label: '边框', description: '边框颜色', category: 'Utility' },
-  input: { label: '输入框', description: '输入框背景颜色', category: 'Utility' },
-  tableTextColor: { label: '表格文本', description: '实时表格中的文本颜色', category: 'Tables' },
-  tableAbbreviatedColor: { label: '后缀颜色', description: '表格中 K、M、% 后缀的颜色', category: 'Tables' },
-  tooltipBg: { label: '提示背景', description: '提示框背景颜色', category: 'Tooltip' },
-  tooltipBorder: { label: '提示边框', description: '提示框边框颜色', category: 'Tooltip' },
-  tooltipFg: { label: '提示文本', description: '提示框文本颜色', category: 'Tooltip' },
+export const CUSTOM_THEME_COLOR_LABELS: Record<
+  string,
+  { label: string; description: string; category: string }
+> = {
+  backgroundMain: {
+    label: "背景（主窗口）",
+    description: "主窗口背景颜色",
+    category: "Base",
+  },
+  backgroundLive: {
+    label: "背景（实时）",
+    description: "实时统计窗口背景颜色",
+    category: "Base",
+  },
+  foreground: { label: "前景", description: "主要文本颜色", category: "Base" },
+  surface: {
+    label: "表面",
+    description: "卡片、弹窗和面板的背景颜色",
+    category: "Surfaces",
+  },
+  surfaceForeground: {
+    label: "表面文本",
+    description: "表面上的文本颜色",
+    category: "Surfaces",
+  },
+  primary: { label: "主色", description: "主要强调色", category: "Accents" },
+  primaryForeground: {
+    label: "主色文本",
+    description: "主色元素上的文本颜色",
+    category: "Accents",
+  },
+  secondary: { label: "次色", description: "次要强调色", category: "Accents" },
+  secondaryForeground: {
+    label: "次色文本",
+    description: "次色元素上的文本颜色",
+    category: "Accents",
+  },
+  muted: {
+    label: "柔和",
+    description: "柔和/低调的背景颜色",
+    category: "Utility",
+  },
+  mutedForeground: {
+    label: "柔和文本",
+    description: "低调的文本颜色",
+    category: "Utility",
+  },
+  accent: { label: "强调", description: "高亮强调色", category: "Accents" },
+  accentForeground: {
+    label: "强调文本",
+    description: "强调色元素上的文本颜色",
+    category: "Accents",
+  },
+  destructive: {
+    label: "破坏性",
+    description: "错误/危险颜色",
+    category: "Utility",
+  },
+  destructiveForeground: {
+    label: "破坏性文本",
+    description: "破坏性元素上的文本颜色",
+    category: "Utility",
+  },
+  border: { label: "边框", description: "边框颜色", category: "Utility" },
+  input: {
+    label: "输入框",
+    description: "输入框背景颜色",
+    category: "Utility",
+  },
+  tableTextColor: {
+    label: "表格文本",
+    description: "实时表格中的文本颜色",
+    category: "Tables",
+  },
+  tableAbbreviatedColor: {
+    label: "后缀颜色",
+    description: "表格中 K、M、% 后缀的颜色",
+    category: "Tables",
+  },
+  tooltipBg: {
+    label: "提示背景",
+    description: "提示框背景颜色",
+    category: "Tooltip",
+  },
+  tooltipBorder: {
+    label: "提示边框",
+    description: "提示框边框颜色",
+    category: "Tooltip",
+  },
+  tooltipFg: {
+    label: "提示文本",
+    description: "提示框文本颜色",
+    category: "Tooltip",
+  },
 };
 
 const DEFAULT_SETTINGS = {
@@ -703,17 +913,17 @@ const DEFAULT_SETTINGS = {
     fontSizes: { ...DEFAULT_FONT_SIZES },
     customThemeColors: { ...DEFAULT_CUSTOM_THEME_COLORS },
     // Background image settings
-    backgroundImage: '' as string,
+    backgroundImage: "" as string,
     backgroundImageEnabled: false,
-    backgroundImageMode: 'cover' as 'cover' | 'contain',
-    backgroundImageContainColor: 'rgba(0, 0, 0, 1)',
+    backgroundImageMode: "cover" as "cover" | "contain",
+    backgroundImageContainColor: "rgba(0, 0, 0, 1)",
     // Custom font settings
     customFontSansEnabled: false,
-    customFontSansUrl: '' as string,
-    customFontSansName: '' as string,
+    customFontSansUrl: "" as string,
+    customFontSansName: "" as string,
     customFontMonoEnabled: false,
-    customFontMonoUrl: '' as string,
-    customFontMonoName: '' as string,
+    customFontMonoUrl: "" as string,
+    customFontMonoName: "" as string,
   },
   shortcuts: {
     showLiveMeter: "",
@@ -724,7 +934,7 @@ const DEFAULT_SETTINGS = {
     disableClickthrough: "",
     toggleClickthrough: "",
     resetEncounter: "",
-      togglePauseEncounter: "",
+    togglePauseEncounter: "",
     hardReset: "",
     toggleBossHp: "",
     toggleOverlayEdit: "",
@@ -815,155 +1025,203 @@ const DEFAULT_SETTINGS = {
 const RUNE_STORE_OPTIONS = { autoStart: true, saveOnChange: true };
 export const SETTINGS = {
   accessibility: new RuneStore(
-    'accessibility',
+    "accessibility",
     DEFAULT_SETTINGS.accessibility,
-    RUNE_STORE_OPTIONS
+    RUNE_STORE_OPTIONS,
   ),
   shortcuts: new RuneStore(
-    'shortcuts',
+    "shortcuts",
     DEFAULT_SETTINGS.shortcuts,
-    RUNE_STORE_OPTIONS
+    RUNE_STORE_OPTIONS,
   ),
   moduleSync: new RuneStore(
-    'moduleSync',
+    "moduleSync",
     DEFAULT_SETTINGS.moduleSync,
-    RUNE_STORE_OPTIONS
+    RUNE_STORE_OPTIONS,
   ),
   skillMonitor: new RuneStore(
-    'skillMonitor',
+    "skillMonitor",
     DEFAULT_SETTINGS.skillMonitor,
-    RUNE_STORE_OPTIONS
+    RUNE_STORE_OPTIONS,
   ),
   monsterMonitor: new RuneStore(
-    'monsterMonitor',
+    "monsterMonitor",
     DEFAULT_SETTINGS.monsterMonitor,
-    RUNE_STORE_OPTIONS
+    RUNE_STORE_OPTIONS,
   ),
   trainingDummy: new RuneStore(
-    'trainingDummy',
+    "trainingDummy",
     DEFAULT_SETTINGS.trainingDummy,
-    RUNE_STORE_OPTIONS
+    RUNE_STORE_OPTIONS,
   ),
   live: {
     general: new RuneStore(
-      'liveGeneral',
+      "liveGeneral",
       DEFAULT_SETTINGS.live.general,
-      RUNE_STORE_OPTIONS
+      RUNE_STORE_OPTIONS,
     ),
     dps: {
       players: new RuneStore(
-        'liveDpsPlayers',
+        "liveDpsPlayers",
         DEFAULT_SETTINGS.live.dpsPlayers,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
       skillBreakdown: new RuneStore(
-        'liveDpsSkillBreakdown',
+        "liveDpsSkillBreakdown",
         DEFAULT_SETTINGS.live.dpsSkillBreakdown,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
     },
     heal: {
       players: new RuneStore(
-        'liveHealPlayers',
+        "liveHealPlayers",
         DEFAULT_SETTINGS.live.healPlayers,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
       skillBreakdown: new RuneStore(
-        'liveHealSkillBreakdown',
+        "liveHealSkillBreakdown",
         DEFAULT_SETTINGS.live.healSkillBreakdown,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
     },
     tanked: {
       players: new RuneStore(
-        'liveTankedPlayers',
+        "liveTankedPlayers",
         DEFAULT_SETTINGS.live.tankedPlayers,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
       skills: new RuneStore(
-        'liveTankedSkills',
+        "liveTankedSkills",
         DEFAULT_SETTINGS.live.tankedSkillBreakdown,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
     },
     tableCustomization: new RuneStore(
-      'liveTableCustomization',
+      "liveTableCustomization",
       DEFAULT_SETTINGS.live.tableCustomization,
-      RUNE_STORE_OPTIONS
+      RUNE_STORE_OPTIONS,
     ),
     headerCustomization: new RuneStore(
-      'liveHeaderCustomization',
+      "liveHeaderCustomization",
       DEFAULT_SETTINGS.live.headerCustomization,
-      RUNE_STORE_OPTIONS
+      RUNE_STORE_OPTIONS,
     ),
     // Column order settings
     columnOrder: {
-      dpsPlayers: new RuneStore('liveDpsPlayersColumnOrder', { order: DEFAULT_DPS_PLAYER_COLUMN_ORDER }, RUNE_STORE_OPTIONS),
-      dpsSkills: new RuneStore('liveDpsSkillsColumnOrder', { order: DEFAULT_DPS_SKILL_COLUMN_ORDER }, RUNE_STORE_OPTIONS),
-      healPlayers: new RuneStore('liveHealPlayersColumnOrder', { order: DEFAULT_HEAL_PLAYER_COLUMN_ORDER }, RUNE_STORE_OPTIONS),
-      healSkills: new RuneStore('liveHealSkillsColumnOrder', { order: DEFAULT_HEAL_SKILL_COLUMN_ORDER }, RUNE_STORE_OPTIONS),
-      tankedPlayers: new RuneStore('liveTankedPlayersColumnOrder', { order: DEFAULT_TANKED_PLAYER_COLUMN_ORDER }, RUNE_STORE_OPTIONS),
-      tankedSkills: new RuneStore('liveTankedSkillsColumnOrder', { order: DEFAULT_TANKED_SKILL_COLUMN_ORDER }, RUNE_STORE_OPTIONS),
+      dpsPlayers: new RuneStore(
+        "liveDpsPlayersColumnOrder",
+        { order: DEFAULT_DPS_PLAYER_COLUMN_ORDER },
+        RUNE_STORE_OPTIONS,
+      ),
+      dpsSkills: new RuneStore(
+        "liveDpsSkillsColumnOrder",
+        { order: DEFAULT_DPS_SKILL_COLUMN_ORDER },
+        RUNE_STORE_OPTIONS,
+      ),
+      healPlayers: new RuneStore(
+        "liveHealPlayersColumnOrder",
+        { order: DEFAULT_HEAL_PLAYER_COLUMN_ORDER },
+        RUNE_STORE_OPTIONS,
+      ),
+      healSkills: new RuneStore(
+        "liveHealSkillsColumnOrder",
+        { order: DEFAULT_HEAL_SKILL_COLUMN_ORDER },
+        RUNE_STORE_OPTIONS,
+      ),
+      tankedPlayers: new RuneStore(
+        "liveTankedPlayersColumnOrder",
+        { order: DEFAULT_TANKED_PLAYER_COLUMN_ORDER },
+        RUNE_STORE_OPTIONS,
+      ),
+      tankedSkills: new RuneStore(
+        "liveTankedSkillsColumnOrder",
+        { order: DEFAULT_TANKED_SKILL_COLUMN_ORDER },
+        RUNE_STORE_OPTIONS,
+      ),
     },
     // Sort settings
     sorting: {
-      dpsPlayers: new RuneStore('liveDpsPlayersSorting', DEFAULT_LIVE_SORT_SETTINGS.dpsPlayers, RUNE_STORE_OPTIONS),
-      dpsSkills: new RuneStore('liveDpsSkillsSorting', DEFAULT_LIVE_SORT_SETTINGS.dpsSkills, RUNE_STORE_OPTIONS),
-      healPlayers: new RuneStore('liveHealPlayersSorting', DEFAULT_LIVE_SORT_SETTINGS.healPlayers, RUNE_STORE_OPTIONS),
-      healSkills: new RuneStore('liveHealSkillsSorting', DEFAULT_LIVE_SORT_SETTINGS.healSkills, RUNE_STORE_OPTIONS),
-      tankedPlayers: new RuneStore('liveTankedPlayersSorting', DEFAULT_LIVE_SORT_SETTINGS.tankedPlayers, RUNE_STORE_OPTIONS),
-      tankedSkills: new RuneStore('liveTankedSkillsSorting', DEFAULT_LIVE_SORT_SETTINGS.tankedSkills, RUNE_STORE_OPTIONS),
+      dpsPlayers: new RuneStore(
+        "liveDpsPlayersSorting",
+        DEFAULT_LIVE_SORT_SETTINGS.dpsPlayers,
+        RUNE_STORE_OPTIONS,
+      ),
+      dpsSkills: new RuneStore(
+        "liveDpsSkillsSorting",
+        DEFAULT_LIVE_SORT_SETTINGS.dpsSkills,
+        RUNE_STORE_OPTIONS,
+      ),
+      healPlayers: new RuneStore(
+        "liveHealPlayersSorting",
+        DEFAULT_LIVE_SORT_SETTINGS.healPlayers,
+        RUNE_STORE_OPTIONS,
+      ),
+      healSkills: new RuneStore(
+        "liveHealSkillsSorting",
+        DEFAULT_LIVE_SORT_SETTINGS.healSkills,
+        RUNE_STORE_OPTIONS,
+      ),
+      tankedPlayers: new RuneStore(
+        "liveTankedPlayersSorting",
+        DEFAULT_LIVE_SORT_SETTINGS.tankedPlayers,
+        RUNE_STORE_OPTIONS,
+      ),
+      tankedSkills: new RuneStore(
+        "liveTankedSkillsSorting",
+        DEFAULT_LIVE_SORT_SETTINGS.tankedSkills,
+        RUNE_STORE_OPTIONS,
+      ),
     },
   },
   history: {
     general: new RuneStore(
-      'historyGeneral',
+      "historyGeneral",
       DEFAULT_SETTINGS.history.general,
-      RUNE_STORE_OPTIONS
+      RUNE_STORE_OPTIONS,
     ),
     dps: {
       players: new RuneStore(
-        'historyDpsPlayers',
+        "historyDpsPlayers",
         DEFAULT_SETTINGS.history.dpsPlayers,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
       skillBreakdown: new RuneStore(
-        'historyDpsSkillBreakdown',
+        "historyDpsSkillBreakdown",
         DEFAULT_SETTINGS.history.dpsSkillBreakdown,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
     },
     heal: {
       players: new RuneStore(
-        'historyHealPlayers',
+        "historyHealPlayers",
         DEFAULT_SETTINGS.history.healPlayers,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
       skillBreakdown: new RuneStore(
-        'historyHealSkillBreakdown',
+        "historyHealSkillBreakdown",
         DEFAULT_SETTINGS.history.healSkillBreakdown,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
     },
     tanked: {
       players: new RuneStore(
-        'historyTankedPlayers',
+        "historyTankedPlayers",
         DEFAULT_SETTINGS.history.tankedPlayers,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
       skillBreakdown: new RuneStore(
-        'historyTankedSkillBreakdown',
+        "historyTankedSkillBreakdown",
         DEFAULT_SETTINGS.history.tankedSkillBreakdown,
-        RUNE_STORE_OPTIONS
+        RUNE_STORE_OPTIONS,
       ),
     },
   },
   // persisted app metadata (tracks which app version the user last saw)
-  appVersion: new RuneStore('appVersion', { value: '' }, RUNE_STORE_OPTIONS),
+  appVersion: new RuneStore("appVersion", { value: "" }, RUNE_STORE_OPTIONS),
   packetCapture: new RuneStore(
-    'packetCapture',
+    "packetCapture",
     { method: "WinDivert", npcapDevice: "" },
-    RUNE_STORE_OPTIONS
+    RUNE_STORE_OPTIONS,
   ),
 };
 

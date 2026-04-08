@@ -20,10 +20,8 @@
     type BuffNameInfo,
   } from "$lib/config/buff-name-table";
   import {
-    AVAILABLE_PANEL_ATTRS,
     createDefaultBuffGroup,
     createDefaultCustomPanelGroup,
-    createDefaultSkillMonitorProfile,
     ensureBuffAliases,
     SETTINGS,
     type BuffDisplayMode,
@@ -31,19 +29,24 @@
     type CustomPanelGroup,
     type CustomPanelStyle,
     type InlineBuffEntry,
-    type PanelAttrConfig,
     type PanelAreaRowRef,
     type SkillMonitorProfile,
     type TextBuffPanelDisplayMode,
     type TextBuffPanelStyle,
+    type UserCounterRule,
   } from "$lib/settings-store";
   import {
     findResonanceSkill,
+    ensureUserCounterRules,
     getCounterRules,
     getClassConfigs,
     getDurationSkillsByClass,
+    getSlotTemplates,
+    getSourceTemplates,
     getSkillsByClass,
+    resolveUserCounterRulesToPresets,
     searchResonanceSkills,
+    type CounterRulePreset,
   } from "$lib/skill-mappings";
   import { resolveSkillMonitorTranslation } from "$lib/i18n";
 
@@ -77,19 +80,12 @@
 
   const classConfigs = $derived(getClassConfigs());
   const counterRules = $derived(getCounterRules());
+  const sourceTemplates = $derived(getSourceTemplates());
+  const slotTemplates = $derived(getSlotTemplates());
   const buffAliases = $derived.by(() =>
     ensureBuffAliases(SETTINGS.skillMonitor.state.buffAliases),
   );
-  const profiles = $derived(SETTINGS.skillMonitor.state.profiles);
-  const activeProfileIndex = $derived(
-    Math.min(
-      Math.max(SETTINGS.skillMonitor.state.activeProfileIndex, 0),
-      Math.max(0, profiles.length - 1),
-    ),
-  );
-  const activeProfile = $derived(
-    profiles[activeProfileIndex] ?? createDefaultSkillMonitorProfile(),
-  );
+  const activeProfile = $derived.by(() => activeProfileOrDefault());
   const selectedClassKey = $derived(activeProfile.selectedClass);
   const classSkills = $derived(getSkillsByClass(selectedClassKey));
   const durationSkills = $derived(getDurationSkillsByClass(selectedClassKey));
@@ -105,21 +101,9 @@
     expandBuffSelection(monitoredBuffIds, monitoredBuffCategories),
   );
   const monitoredPanelAttrs = $derived.by(() => ensurePanelAttrs(activeProfile));
-  const panelAttrGap = $derived(
-    Math.max(0, Math.min(24, Math.round(activeProfile.overlaySizes?.panelAttrGap ?? 4))),
-  );
-  const panelAttrFontSize = $derived(
-    Math.max(
-      10,
-      Math.min(28, Math.round(activeProfile.overlaySizes?.panelAttrFontSize ?? 14)),
-    ),
-  );
-  const panelAttrColumnGap = $derived(
-    Math.max(
-      0,
-      Math.min(240, Math.round(activeProfile.overlaySizes?.panelAttrColumnGap ?? 12)),
-    ),
-  );
+  const panelAttrGap = $derived(ensureOverlaySizes(activeProfile).panelAttrGap);
+  const panelAttrFontSize = $derived(ensureOverlaySizes(activeProfile).panelAttrFontSize);
+  const panelAttrColumnGap = $derived(ensureOverlaySizes(activeProfile).panelAttrColumnGap);
   const showSkillCdGroup = $derived(
     activeProfile.overlayVisibility?.showSkillCdGroup ?? true,
   );
@@ -160,6 +144,18 @@
   const textBuffMaxVisible = $derived(
     Math.max(1, Math.min(20, activeProfile.textBuffMaxVisible ?? 10)),
   );
+  const userCounterRules = $derived.by(() =>
+    ensureUserCounterRules(activeProfile.userCounterRules),
+  );
+  const resolvedUserCounterRules = $derived.by<CounterRuleOption[]>(() =>
+    resolveUserCounterRulesToPresets(activeProfile.userCounterRules).map(
+      (rule) => ({ ...rule, origin: "user" as const }),
+    )
+  );
+  const allCounterRules = $derived.by<CounterRuleOption[]>(() => [
+    ...counterRules.map((rule) => ({ ...rule, origin: "preset" as const })),
+    ...resolvedUserCounterRules,
+  ]);
   const customPanelGroups = $derived.by(() => ensureCustomPanelGroups(activeProfile));
   const panelAreaRowOrder = $derived.by(() => ensurePanelAreaRowOrder(activeProfile));
   const filteredInlineBuffSearchResults = $derived.by(() => {
@@ -173,6 +169,12 @@
 
   function uniqueIds(ids: number[]): number[] {
     return Array.from(new Set(ids));
+  }
+
+  function updateActiveProfile(
+    updater: (profile: SkillMonitorProfile) => SkillMonitorProfile,
+  ) {
+    updateSharedActiveProfile(updater, { createDefaultIfEmpty: true });
   }
 
   function moveItem(ids: number[], item: number, direction: "up" | "down"): number[] {
@@ -758,13 +760,108 @@
     }));
   }
 
+  function updateUserCounterRules(
+    updater: (rules: UserCounterRule[]) => UserCounterRule[],
+  ) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      userCounterRules: updater(ensureUserCounterRules(profile.userCounterRules)),
+    }));
+  }
+
+  function getNextUserCounterRuleId(profile: SkillMonitorProfile): number {
+    const highestPresetRuleId = counterRules.reduce(
+      (maxId, rule) => Math.max(maxId, rule.ruleId),
+      10000,
+    );
+    const highestUserRuleId = ensureUserCounterRules(profile.userCounterRules).reduce(
+      (maxId, rule) => Math.max(maxId, rule.ruleId),
+      10000,
+    );
+    return Math.max(highestPresetRuleId, highestUserRuleId, 10000) + 1;
+  }
+
+  function addUserCounterRule(name: string, sourceRefs: string[], slotRefs: string[]) {
+    const nextName = name.trim();
+    const nextSourceRefs = Array.from(
+      new Set(sourceRefs.filter((item) => typeof item === "string" && item.trim())),
+    );
+    const nextSlotRefs = Array.from(
+      new Set(slotRefs.filter((item) => typeof item === "string" && item.trim())),
+    );
+    if (!nextName || nextSourceRefs.length === 0 || nextSlotRefs.length === 0) {
+      return;
+    }
+    updateActiveProfile((profile) => ({
+      ...profile,
+      userCounterRules: [
+        ...ensureUserCounterRules(profile.userCounterRules),
+        {
+          ruleId: getNextUserCounterRuleId(profile),
+          name: nextName,
+          sourceRefs: nextSourceRefs,
+          slotRefs: nextSlotRefs,
+        },
+      ],
+    }));
+  }
+
+  function removeUserCounterRule(ruleId: number) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      userCounterRules: ensureUserCounterRules(profile.userCounterRules).filter((rule) =>
+        rule.ruleId !== ruleId
+      ),
+      customPanelGroups: ensureCustomPanelGroups(profile).map((group) => ({
+        ...group,
+        entries: group.entries.filter((entry) =>
+          !(entry.sourceType === "counter" && entry.sourceId === ruleId)
+        ),
+      })),
+      inlineBuffEntries: ensureInlineBuffEntries(profile).filter((entry) =>
+        !(entry.sourceType === "counter" && entry.sourceId === ruleId)
+      ),
+    }));
+  }
+
+  function updateUserCounterRule(ruleId: number, updates: Partial<UserCounterRule>) {
+    updateUserCounterRules((rules) =>
+      rules.map((rule) => {
+        if (rule.ruleId !== ruleId) return rule;
+        return {
+          ...rule,
+          ...(updates.name !== undefined ? { name: updates.name.trim() || rule.name } : {}),
+          ...(updates.sourceRefs !== undefined
+            ? {
+                sourceRefs: Array.from(
+                  new Set(updates.sourceRefs.filter((item) => typeof item === "string" && item.trim())),
+                ),
+              }
+            : {}),
+          ...(updates.slotRefs !== undefined
+            ? {
+                slotRefs: Array.from(
+                  new Set(updates.slotRefs.filter((item) => typeof item === "string" && item.trim())),
+                ),
+              }
+            : {}),
+        };
+      })
+    );
+  }
+
   function findCustomPanelEntryLocation(
     sourceType: InlineBuffEntry["sourceType"],
     sourceId: number,
+    counterSlotId: number | undefined,
     groups: CustomPanelGroup[],
   ): { groupId: string; groupName: string } | null {
     for (const group of groups) {
-      if (group.entries.some((entry) => entry.sourceType === sourceType && entry.sourceId === sourceId)) {
+      if (group.entries.some((entry) =>
+        entry.sourceType === sourceType
+        && entry.sourceId === sourceId
+        && (sourceType !== "counter" || entry.counterSlotId === counterSlotId)
+      )) {
         return { groupId: group.id, groupName: group.name };
       }
     }
@@ -888,12 +985,17 @@
     groupId: string,
     sourceType: "buff" | "counter",
     sourceId: number,
+    counterSlotId?: number,
   ) {
     updateActiveProfile((profile) => {
       const groups = ensureCustomPanelGroups(profile);
-      if (findCustomPanelEntryLocation(sourceType, sourceId, groups)) {
+      if (findCustomPanelEntryLocation(sourceType, sourceId, counterSlotId, groups)) {
         return profile;
       }
+      const counterRule = sourceType === "counter"
+        ? allCounterRules.find((rule) => rule.ruleId === sourceId)
+        : null;
+      const counterSlot = counterRule?.effectSlots.find((slot) => slot.slotId === counterSlotId);
       const label = sourceType === "counter"
         ? (counterRules.find((rule) => rule.ruleId === sourceId)?.name ?? `${t("skillMonitor.counterDefault", "计数器")} ${sourceId}`)
         : "";
@@ -901,6 +1003,7 @@
         id: `inline_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
         sourceType,
         sourceId,
+        ...(counterSlotId !== undefined ? { counterSlotId } : {}),
         label,
         format: "timer",
       };
@@ -955,7 +1058,7 @@
   function movePanelAreaRow(row: PanelAreaRowRef, direction: "up" | "down") {
     updateActiveProfile((profile) => {
       const current = ensurePanelAreaRowOrder(profile);
-      const idx = current.findIndex((item) => isSameRowRef(item, row));
+      const idx = current.findIndex((item) => item.attrId === row.attrId);
       if (idx === -1) return profile;
       const target = direction === "up" ? idx - 1 : idx + 1;
       if (target < 0 || target >= current.length) return profile;
@@ -1404,7 +1507,10 @@
     />
   {:else if activeTab === "custom-panel"}
     <TabCustomPanel
-      {counterRules}
+      counterRules={allCounterRules}
+      {sourceTemplates}
+      {slotTemplates}
+      {userCounterRules}
       {availableBuffMap}
       {getBuffDisplayName}
       {inlineBuffSearch}
@@ -1416,6 +1522,9 @@
       {removeCustomPanelGroup}
       {renameCustomPanelGroup}
       {addCustomPanelEntry}
+      {addUserCounterRule}
+      {removeUserCounterRule}
+      {updateUserCounterRule}
       {removeCustomPanelEntry}
       {setCustomPanelEntryLabel}
       {moveCustomPanelEntry}

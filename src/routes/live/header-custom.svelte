@@ -40,6 +40,7 @@ import { localizeRawMonsterName } from "$lib/monster-mappings";
   const trainingDummySettings = $derived(SETTINGS.trainingDummy.state);
 
   const liveData = $derived(getLiveData());
+  const runtimeTrainingDummyState = $derived(getRuntimeTrainingDummyState());
 
   const emptyTrainingDummy: TrainingDummyState = {
     phase: "idle",
@@ -62,6 +63,12 @@ import { localizeRawMonsterName } from "$lib/monster-mappings";
   }
 
   onMount(() => {
+    try {
+      appWindow = getCurrentWebviewWindow();
+    } catch (error) {
+      console.error("Failed to get current live webview window", error);
+    }
+
     animationFrameId = requestAnimationFrame(updateClientTimer);
     return () => {
       if (animationFrameId !== null) {
@@ -89,7 +96,9 @@ import { localizeRawMonsterName } from "$lib/monster-mappings";
     sceneName: null,
     trainingDummy: emptyTrainingDummy,
   };
-  const trainingDummyState = $derived(liveData?.trainingDummy ?? emptyTrainingDummy);
+  const trainingDummyState = $derived.by(
+    () => runtimeTrainingDummyState ?? emptyTrainingDummy,
+  );
   const isEncounterPaused = $derived(!!liveData?.isPaused);
   const headerInfo = $derived.by((): HeaderInfo => {
     const data = liveData;
@@ -110,7 +119,7 @@ import { localizeRawMonsterName } from "$lib/monster-mappings";
       bosses: data.bosses,
       sceneId: data.sceneId,
       sceneName: data.sceneName,
-      trainingDummy: data.trainingDummy,
+      trainingDummy: trainingDummyState,
     };
   });
 
@@ -127,7 +136,7 @@ import { localizeRawMonsterName } from "$lib/monster-mappings";
   const displayBosses = $derived(headerInfo.bosses);
   const isTrainingDummyActive = $derived(trainingDummyState.phase !== "idle");
 
-  const appWindow = getCurrentWebviewWindow();
+  let appWindow = $state<ReturnType<typeof getCurrentWebviewWindow> | null>(null);
 
   async function openSettings() {
     const mainWindow = await WebviewWindow.getByLabel("main");
@@ -346,7 +355,7 @@ import { localizeRawMonsterName } from "$lib/monster-mappings";
           <button
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.minimizeButtonPadding}px"
-            onclick={() => appWindow.hide()}
+            onclick={() => appWindow?.hide()}
             {@attach tooltip(() => "Minimize")}
           >
             <MinusIcon
