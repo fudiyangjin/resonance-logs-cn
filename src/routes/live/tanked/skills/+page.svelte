@@ -127,9 +127,10 @@
   });
 
   let visibleSkillColumns = $derived.by(() => {
-    const visible = liveTankedSkillColumns.filter(
-      (col) => settings.state.live.tanked.skills[col.key],
-    );
+    const visible = liveTankedSkillColumns.filter((col) => {
+      if (col.key === "effectiveTotal" || col.key === "effectiveDps") return false;
+      return settings.state.live.tanked.skills[col.key];
+    });
     return visible.sort((a, b) => {
       const aIdx = columnOrder.indexOf(a.key);
       const bIdx = columnOrder.indexOf(b.key);
@@ -261,18 +262,18 @@
               class="px-2 py-1 text-right relative z-10"
               style="color: {customThemeColors.tableTextColor};"
             >
-              {#if col.key === "totalDmg"}
+              {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
                 {#if SETTINGS_SHORTEN_TPS}
                   <AbbreviatedNumber
-                    num={skill.totalDmg}
+                    num={col.key === "totalDmg" ? skill.totalDmg : skill.effectiveTotal}
                     decimalPlaces={abbreviatedDecimalPlaces}
                     suffixFontSize={tableSettings.skillAbbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
-                  {skill.totalDmg.toLocaleString()}
+                  {(col.key === "totalDmg" ? skill.totalDmg : skill.effectiveTotal).toLocaleString()}
                 {/if}
-              {:else if col.key === "dps"}
+              {:else if col.key === "dps" || col.key === "effectiveDps"}
                 {#if SETTINGS_SHORTEN_TPS}
                   <AbbreviatedNumber
                     num={skill.dps}

@@ -17,6 +17,7 @@ pub struct Encounter {
     pub total_dmg: u128,
     pub total_dmg_boss_only: u128,
     pub total_heal: u128,
+    pub total_effective_heal: u128,
     pub local_player_uid: i64,
     pub entity_uid_to_entity: HashMap<i64, Entity>, // key: entity uid
     pub local_player: SyncContainerData,
@@ -315,6 +316,7 @@ impl AttrValue {
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct CombatStats {
     pub total: u128,
+    pub effective_total: u128,
     pub crit_total: u128,
     pub crit_hits: u128,
     pub lucky_total: u128,
@@ -359,6 +361,7 @@ pub struct Entity {
 pub struct SkillTargetStats {
     pub hits: u128,
     pub total_value: u128,
+    pub effective_total_value: u128,
     pub crit_hits: u128,
     pub lucky_hits: u128,
     pub crit_total: u128,
@@ -371,6 +374,7 @@ pub struct SkillTargetStats {
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Skill {
     pub total_value: u128,
+    pub effective_total_value: u128,
     pub crit_total_value: u128,
     pub crit_hits: u128,
     pub lucky_total_value: u128,
@@ -399,6 +403,7 @@ impl Encounter {
         self.total_dmg = 0;
         self.total_dmg_boss_only = 0;
         self.total_heal = 0;
+        self.total_effective_heal = 0;
 
         // Reset per-entity combat stats while preserving identity
         for entity in self.entity_uid_to_entity.values_mut() {

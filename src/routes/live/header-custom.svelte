@@ -32,6 +32,8 @@
   import { emitTo } from "@tauri-apps/api/event";
   import { SETTINGS } from "$lib/settings-store";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
+import { localizeRawSceneName } from "$lib/scene-mappings";
+import { localizeRawMonsterName } from "$lib/monster-mappings";
 
   // Get header settings
   const h = $derived(SETTINGS.live.headerCustomization.state);
@@ -121,7 +123,7 @@
 
   const displayHeaderInfo = $derived(headerInfo);
   const displayElapsedMs = $derived(clientElapsedMs);
-  const displaySceneName = $derived(headerInfo.sceneName);
+  const displaySceneName = $derived(localizeRawSceneName(headerInfo.sceneName, headerInfo.sceneName));
   const displayBosses = $derived(headerInfo.bosses);
   const isTrainingDummyActive = $derived(trainingDummyState.phase !== "idle");
 
@@ -421,7 +423,7 @@
                     <span
                       class="truncate text-foreground font-semibold tracking-tight"
                       style="font-size: {h.bossHealthNameFontSize}px"
-                      {@attach tooltip(() => boss.name)}>{boss.name} -</span
+                      {@attach tooltip(() => localizeRawMonsterName(boss.name, boss.name))}>{localizeRawMonsterName(boss.name, boss.name)} -</span
                     >
                     <span
                       class="tabular-nums font-semibold text-foreground"

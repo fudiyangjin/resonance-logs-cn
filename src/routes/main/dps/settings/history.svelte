@@ -125,7 +125,7 @@
       </button>
       {#if expandedSections.dpsPlayers}
         <div class="px-4 pb-3 space-y-1">
-          {#each historyDpsPlayerColumns as col (col.key)}
+          {#each historyDpsPlayerColumns.filter((col) => col.key !== "effectiveTotal" && col.key !== "effectiveDps") as col (col.key)}
             <SettingsSwitch bind:checked={SETTINGS.history.dps.players.state[col.key]} label={colLabel(col)} description={colDescription(col)} />
           {/each}
         </div>
@@ -143,7 +143,7 @@
       </button>
       {#if expandedSections.dpsSkills}
         <div class="px-4 pb-3 space-y-1">
-          {#each historyDpsSkillColumns as col (col.key)}
+          {#each historyDpsSkillColumns.filter((col) => col.key !== "effectiveTotal" && col.key !== "effectiveDps") as col (col.key)}
             <SettingsSwitch bind:checked={SETTINGS.history.dps.skillBreakdown.state[col.key]} label={colLabel(col)} description={colDescription(col)} />
           {/each}
         </div>

@@ -152,7 +152,7 @@
   });
 </script>
 
-<div class="flex h-full min-h-0 flex-col gap-6">
+<div class="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div
@@ -242,7 +242,7 @@
     bind:minRequirements={MODULE_CALC.minRequirements}
   />
 
-  <div class="flex min-h-0 flex-1 flex-col rounded-lg border border-border/60 bg-card/40 p-4 space-y-3">
+  <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 p-4 space-y-3">
     <div class="flex items-center justify-between">
       <div class="text-base font-semibold text-foreground">
         {resolveModuleCalcTranslation(
@@ -289,7 +289,9 @@
         </div>
       {/if}
     </div>
-    <ResultsTable solutions={MODULE_CALC.solutions} onview={openDetail} />
+    <div class="min-h-0 flex-1 overflow-y-auto pr-1">
+      <ResultsTable solutions={MODULE_CALC.solutions} onview={openDetail} />
+    </div>
   </div>
 
   <ModuleDetail

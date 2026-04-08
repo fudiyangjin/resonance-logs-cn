@@ -211,7 +211,7 @@
 				option.label.toLowerCase().includes(lowered),
 		);
 		if (partialMatches.length === 1) {
-			return partialMatches[0].raw;
+			return partialMatches[0]!.raw;
 		}
 		return trimmed;
 	}

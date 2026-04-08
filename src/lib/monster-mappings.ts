@@ -1,14 +1,18 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-import monsterNameTranslations from "$lib/translations/MonsterName.json";
+import { getBundledTranslationTable } from "$lib/locale-bundles";
 import {
+    DEFAULT_LOCALE,
+    PRIMARY_FALLBACK_LOCALE,
+    SUPPORTED_LOCALES,
     TRANSLATION_SOURCE_MODE_EVENT,
     getCurrentTranslationSourceMode,
+    isLocaleCode,
+    type LocaleCode,
 } from "$lib/i18n";
 import { settings } from "$lib/settings-store";
 
-type LocaleCode = "zh-CN" | "en" | "ja";
 type MultiLangValue = Partial<Record<LocaleCode, string>>;
 
 function cloneJson<T>(value: T): T {
@@ -26,10 +30,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-const MONSTER_RUNTIME_RELATIVE_PATH = "MonsterName.json";
+const MONSTER_RUNTIME_RELATIVE_PATH = "parser/MonsterName.json";
 
 const MONSTER_NAME_TRANSLATIONS: Record<string, MultiLangValue> = cloneJson(
-    monsterNameTranslations as unknown as Record<string, MultiLangValue>,
+    getBundledTranslationTable("parser/MonsterName.json") as unknown as Record<string, MultiLangValue>,
 );
 
 const BUNDLED_MONSTER_NAME_TRANSLATIONS = cloneJson(MONSTER_NAME_TRANSLATIONS);
@@ -140,13 +144,13 @@ function normalizeText(value: string | null | undefined): string {
 }
 
 function getCurrentLocale(): LocaleCode {
-    const locale = String(settings.state.live.general.language);
+  const locale = String(settings.state.live.general.language);
 
-    if (locale === "en" || locale === "ja" || locale === "zh-CN") {
-        return locale;
-    }
+  if (isLocaleCode(locale)) {
+    return locale;
+  }
 
-    return "zh-CN";
+  return DEFAULT_LOCALE;
 }
 
 function resolveMultiLangName(value: MultiLangValue | undefined, fallback: string): string {
@@ -155,23 +159,51 @@ function resolveMultiLangName(value: MultiLangValue | undefined, fallback: strin
     const selected = normalizeText(value?.[locale]);
     if (selected) return selected;
 
-    const zh = normalizeText(value?.["zh-CN"]);
-    if (zh) return zh;
+    if (locale !== PRIMARY_FALLBACK_LOCALE) {
+        const en = normalizeText(value?.[PRIMARY_FALLBACK_LOCALE]);
+        if (en) return en;
+    }
+
+    if (locale !== DEFAULT_LOCALE) {
+        const zh = normalizeText(value?.[DEFAULT_LOCALE]);
+        if (zh) return zh;
+    }
 
     return fallback;
+}
+
+function normalizeMonsterLookupName(rawName: string | null | undefined): string {
+    const normalized = normalizeText(rawName);
+    if (!normalized) {
+        return "";
+    }
+
+    return normalized
+        .replace(/_Coordinates$/i, "")
+        .replace(/_/g, " ")
+        .trim();
+}
+
+function splitCompositeMonsterNames(rawName: string | null | undefined): string[] {
+    const normalized = normalizeText(rawName);
+    if (!normalized) {
+        return [];
+    }
+
+    return normalized
+        .split(/[;,]+/)
+        .map((part) => part.trim())
+        .filter(Boolean);
 }
 
 function buildRawNameIndex(): Map<string, string> {
     const index = new Map<string, string>();
 
     for (const [monsterId, entry] of Object.entries(MONSTER_NAME_TRANSLATIONS)) {
-        const zh = normalizeText(entry?.["zh-CN"]);
-        const en = normalizeText(entry?.["en"]);
-        const ja = normalizeText(entry?.["ja"]);
-
-        if (zh) index.set(zh, monsterId);
-        if (en) index.set(en, monsterId);
-        if (ja) index.set(ja, monsterId);
+        for (const locale of SUPPORTED_LOCALES) {
+            const localized = normalizeText(entry?.[locale]);
+            if (localized) index.set(localized, monsterId);
+        }
     }
 
     return index;
@@ -181,8 +213,17 @@ function findMonsterIdByRawName(rawName: string | null | undefined): string | nu
     const normalized = normalizeText(rawName);
     if (!normalized) return null;
 
-    const exactId = buildRawNameIndex().get(normalized);
-    return exactId ?? null;
+    const index = buildRawNameIndex();
+    const candidates = [normalized, normalizeMonsterLookupName(normalized)].filter(Boolean);
+
+    for (const candidate of candidates) {
+        const exactId = index.get(candidate);
+        if (exactId) {
+            return exactId;
+        }
+    }
+
+    return null;
 }
 
 export function hasMonsterTranslation(monsterId: string | number): boolean {
@@ -214,13 +255,27 @@ export function localizeRawMonsterName(
     fallback?: string | null,
 ): string {
     const normalizedRawName = normalizeText(rawMonsterName);
-    const matchedId = findMonsterIdByRawName(normalizedRawName);
+    const compositeParts = splitCompositeMonsterNames(normalizedRawName);
 
-    if (matchedId) {
-        return getLocalizedMonsterName(matchedId, normalizedRawName);
+    if (compositeParts.length > 1) {
+        return compositeParts
+            .map((part) => localizeRawMonsterName(part, part))
+            .filter(Boolean)
+            .join(", ");
     }
 
-    return normalizedRawName || normalizeText(fallback) || "Unknown Monster";
+    const matchedId = findMonsterIdByRawName(normalizedRawName);
+    if (matchedId) {
+        return getLocalizedMonsterName(
+            matchedId,
+            normalizeMonsterLookupName(normalizedRawName) || normalizedRawName,
+        );
+    }
+
+    return normalizeMonsterLookupName(normalizedRawName)
+        || normalizedRawName
+        || normalizeText(fallback)
+        || "Unknown Monster";
 }
 
 void initializeMonsterRuntimeData();

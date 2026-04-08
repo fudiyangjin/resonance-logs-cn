@@ -115,6 +115,18 @@ function main() {
     if (fs.existsSync(mdPath)) buildFile(mdPath, outPath, baseHref);
   }
 
+  const faqMdDir = path.join(DOC_DIR, 'faq');
+  if (fs.existsSync(faqMdDir)) {
+    ensureDir(path.join(OUT_DIR, 'faq'));
+    for (const name of fs.readdirSync(faqMdDir)) {
+      if (name.endsWith('.md')) {
+        const mdPath = path.join(faqMdDir, name);
+        const outPath = path.join(OUT_DIR, 'faq', name.replace(/\.md$/, '.html'));
+        buildFile(mdPath, outPath, '../');
+      }
+    }
+  }
+
   const changelogDir = path.join(DOC_DIR, 'changelog');
   if (fs.existsSync(changelogDir)) {
     ensureDir(path.join(OUT_DIR, 'changelog'));

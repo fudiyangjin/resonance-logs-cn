@@ -1,14 +1,18 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-import sceneNameTranslationsRaw from "$lib/translations/SceneName.json";
+import { getBundledTranslationTable } from "$lib/locale-bundles";
 import {
+    DEFAULT_LOCALE,
+    PRIMARY_FALLBACK_LOCALE,
+    SUPPORTED_LOCALES,
     TRANSLATION_SOURCE_MODE_EVENT,
     getCurrentTranslationSourceMode,
+    isLocaleCode,
+    type LocaleCode,
 } from "$lib/i18n";
 import { settings } from "$lib/settings-store";
 
-type LocaleCode = "zh-CN" | "en" | "ja";
 type MultiLangValue = Partial<Record<LocaleCode, string>>;
 
 type SceneTranslationEntry = MultiLangValue;
@@ -28,10 +32,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-const SCENE_RUNTIME_RELATIVE_PATH = "SceneName.json";
+const SCENE_RUNTIME_RELATIVE_PATH = "parser/SceneName.json";
 
 const SCENE_NAME_TRANSLATIONS: Record<string, SceneTranslationEntry> = cloneJson(
-    sceneNameTranslationsRaw as unknown as Record<string, SceneTranslationEntry>,
+    getBundledTranslationTable("parser/SceneName.json") as unknown as Record<string, SceneTranslationEntry>,
 );
 
 const BUNDLED_SCENE_NAME_TRANSLATIONS = cloneJson(SCENE_NAME_TRANSLATIONS);
@@ -138,24 +142,31 @@ export async function reloadSceneNameRuntimeData(): Promise<void> {
 }
 
 function getCurrentLocale(): LocaleCode {
-    const locale = String(settings.state.live.general.language);
+  const locale = String(settings.state.live.general.language);
 
-    if (locale === "en" || locale === "ja" || locale === "zh-CN") {
-        return locale;
-    }
+  if (isLocaleCode(locale)) {
+    return locale;
+  }
 
-    return "zh-CN";
+  return DEFAULT_LOCALE;
 }
 
 function resolveMultiLangName(value: MultiLangValue | undefined, fallback: string): string {
-    const locale = getCurrentLocale();
-    const selected = value?.[locale]?.trim();
-    if (selected) return selected;
+  const locale = getCurrentLocale();
+  const selected = value?.[locale]?.trim();
+  if (selected) return selected;
 
-    const zh = value?.["zh-CN"]?.trim();
+  if (locale !== PRIMARY_FALLBACK_LOCALE) {
+    const en = value?.[PRIMARY_FALLBACK_LOCALE]?.trim();
+    if (en) return en;
+  }
+
+  if (locale !== DEFAULT_LOCALE) {
+    const zh = value?.[DEFAULT_LOCALE]?.trim();
     if (zh) return zh;
+  }
 
-    return fallback;
+  return fallback;
 }
 
 function normalizeSceneId(sceneId: number | string | null | undefined): string | null {
@@ -172,20 +183,65 @@ function getUnknownSceneFallback(sceneId: number | string | null | undefined): s
     return normalized ? `Unknown Scene ${normalized}` : "Unknown Scene";
 }
 
+const SCENE_DIFFICULTY_SUFFIX_REGEX = /^(.*?)-(\d+)$/;
+
+function splitSceneDifficultySuffix(
+    rawSceneName: string | null | undefined,
+): { baseName: string; suffix: string } | null {
+    const normalized = rawSceneName?.trim();
+    if (!normalized) {
+        return null;
+    }
+
+    const match = normalized.match(SCENE_DIFFICULTY_SUFFIX_REGEX);
+    if (!match) {
+        return null;
+    }
+
+    const [, baseName, difficulty] = match;
+    const trimmedBase = baseName?.trim();
+    if (!trimmedBase) {
+        return null;
+    }
+
+    return {
+        baseName: trimmedBase,
+        suffix: `-${difficulty}`,
+    };
+}
+
+function appendSceneDifficultySuffix(
+    localizedName: string,
+    rawSceneName: string | null | undefined,
+): string {
+    const split = splitSceneDifficultySuffix(rawSceneName);
+    if (!split) {
+        return localizedName;
+    }
+
+    return localizedName.endsWith(split.suffix)
+        ? localizedName
+        : `${localizedName}${split.suffix}`;
+}
+
 function findSceneEntryByRawName(rawSceneName: string | null | undefined): SceneTranslationEntry | undefined {
     const normalized = rawSceneName?.trim();
     if (!normalized) {
         return undefined;
     }
 
-    for (const entry of Object.values(SCENE_NAME_TRANSLATIONS)) {
-        if (!entry) continue;
-        if (
-            entry["zh-CN"]?.trim() === normalized ||
-            entry.en?.trim() === normalized ||
-            entry.ja?.trim() === normalized
-        ) {
-            return entry;
+    const candidates = [normalized];
+    const split = splitSceneDifficultySuffix(normalized);
+    if (split) {
+        candidates.push(split.baseName);
+    }
+
+    for (const candidate of candidates) {
+        for (const entry of Object.values(SCENE_NAME_TRANSLATIONS)) {
+            if (!entry) continue;
+            if (SUPPORTED_LOCALES.some((locale) => entry[locale]?.trim() === candidate)) {
+                return entry;
+            }
         }
     }
 
@@ -200,15 +256,15 @@ export function getLocalizedSceneName(
     const fallback = fallbackRawName?.trim() || getUnknownSceneFallback(sceneId);
 
     if (!normalized) {
-        return fallback;
+        return localizeRawSceneName(fallbackRawName, fallback);
     }
 
     const entry = SCENE_NAME_TRANSLATIONS[normalized];
     if (!entry) {
-        return fallback;
+        return localizeRawSceneName(fallbackRawName, fallback);
     }
 
-    return resolveMultiLangName(entry, fallback);
+    return appendSceneDifficultySuffix(resolveMultiLangName(entry, fallback), fallbackRawName);
 }
 
 export function localizeSceneName(
@@ -229,7 +285,7 @@ export function localizeRawSceneName(
     if (!entry) {
         return fallback;
     }
-    return resolveMultiLangName(entry, fallback);
+    return appendSceneDifficultySuffix(resolveMultiLangName(entry, fallback), rawSceneName);
 }
 
 export function hasSceneTranslation(sceneId: number | string | null | undefined): boolean {

@@ -2,11 +2,13 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 import buffNameRaw from "./BuffName.json";
-import buffNameTranslations from "$lib/translations/BuffName.json";
-import buffNameSearchTranslations from "$lib/translations/BuffNameSearch.json";
 import {
+  DEFAULT_LOCALE,
+  PRIMARY_FALLBACK_LOCALE,
+  SUPPORTED_LOCALES,
   TRANSLATION_SOURCE_MODE_EVENT,
-  getCurrentTranslationSourceMode,
+  isLocaleCode,
+  type LocaleCode,
 } from "$lib/i18n";
 import { settings } from "$lib/settings-store";
 
@@ -49,7 +51,6 @@ type RawBuffEntry = {
   SpriteFile?: string | null;
 };
 
-type LocaleCode = "zh-CN" | "en" | "ja";
 type MultiLangValue = Partial<Record<LocaleCode, string>>;
 type MultiLangKeywords = Partial<Record<LocaleCode, string[]>>;
 
@@ -92,19 +93,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-const BUFF_NAME_RUNTIME_RELATIVE_PATH = "BuffName.json";
-const BUFF_SEARCH_RUNTIME_RELATIVE_PATH = "BuffNameSearch.json";
+const BUFF_NAME_RUNTIME_RELATIVE_PATH = "parser/BuffName.json";
+const BUFF_SEARCH_RUNTIME_RELATIVE_PATH = "search/BuffNameSearch.json";
 
-const BUFF_NAME_TRANSLATIONS: Record<string, BuffNameTranslationEntry> = cloneJson(
-  buffNameTranslations as unknown as Record<string, BuffNameTranslationEntry>,
-);
+const BUFF_NAME_TRANSLATIONS: Record<string, BuffNameTranslationEntry> = {};
 
-const BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = cloneJson(
-  buffNameSearchTranslations as unknown as Record<string, BuffSearchTranslationEntry>,
-);
+const BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = {};
 
-const BUNDLED_BUFF_NAME_TRANSLATIONS = cloneJson(BUFF_NAME_TRANSLATIONS);
-const BUNDLED_BUFF_SEARCH_TRANSLATIONS = cloneJson(BUFF_SEARCH_TRANSLATIONS);
+const BUNDLED_BUFF_NAME_TRANSLATIONS: Record<string, BuffNameTranslationEntry> = {};
+const BUNDLED_BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = {};
 
 const BUFF_SEARCH_INDEX: BuffSearchIndexEntry[] = [];
 const BUFF_SEARCH_INDEX_MAP = new Map<number, string[]>();
@@ -177,19 +174,6 @@ async function readRuntimeBuffSearchTranslations(): Promise<
 }
 
 async function loadBuffTranslationRuntimeData(): Promise<void> {
-  if (getCurrentTranslationSourceMode() === "bundled") {
-    replaceRecordContents(
-      BUFF_NAME_TRANSLATIONS,
-      cloneJson(BUNDLED_BUFF_NAME_TRANSLATIONS),
-    );
-    replaceRecordContents(
-      BUFF_SEARCH_TRANSLATIONS,
-      cloneJson(BUNDLED_BUFF_SEARCH_TRANSLATIONS),
-    );
-    rebuildBuffSearchIndex();
-    return;
-  }
-
   await ensureBuffTranslationRuntimeFiles();
 
   const [runtimeBuffNameValue, runtimeBuffSearchValue] = await Promise.all([
@@ -318,11 +302,11 @@ function normalizeText(value: string): string {
 function getCurrentLocale(): LocaleCode {
   const locale = String(settings.state.live.general.language);
 
-  if (locale === "en" || locale === "ja" || locale === "zh-CN") {
+  if (isLocaleCode(locale)) {
     return locale;
   }
 
-  return "zh-CN";
+  return DEFAULT_LOCALE;
 }
 
 function resolveMultiLangValue(
@@ -333,8 +317,15 @@ function resolveMultiLangValue(
   const selected = value?.[locale]?.trim();
   if (selected) return selected;
 
-  const zh = value?.["zh-CN"]?.trim();
-  if (zh) return zh;
+  if (locale !== PRIMARY_FALLBACK_LOCALE) {
+    const en = value?.[PRIMARY_FALLBACK_LOCALE]?.trim();
+    if (en) return en;
+  }
+
+  if (locale !== DEFAULT_LOCALE) {
+    const zh = value?.[DEFAULT_LOCALE]?.trim();
+    if (zh) return zh;
+  }
 
   return fallback;
 }
@@ -343,7 +334,7 @@ function collectMultiLangTexts(value: MultiLangValue | undefined): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
 
-  for (const locale of ["zh-CN", "en", "ja"] as const) {
+  for (const locale of SUPPORTED_LOCALES) {
     const text = value?.[locale]?.trim();
     if (!text || seen.has(text)) continue;
     seen.add(text);
@@ -357,7 +348,7 @@ function collectKeywordTexts(value: MultiLangKeywords | undefined): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
 
-  for (const locale of ["zh-CN", "en", "ja"] as const) {
+  for (const locale of SUPPORTED_LOCALES) {
     for (const keyword of value?.[locale] ?? []) {
       const trimmed = keyword.trim();
       if (!trimmed || seen.has(trimmed)) continue;

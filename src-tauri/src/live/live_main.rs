@@ -399,6 +399,14 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     SceneChangePayload { scene_name },
                 );
             }
+            OutboundEvent::TrainingDummyUpdate(training_dummy) => {
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_LIVE_LABEL,
+                    "training-dummy-update",
+                    training_dummy,
+                );
+            }
             OutboundEvent::LiveData(payload) => {
                 safe_emit_to(app_handle, crate::WINDOW_LIVE_LABEL, "live-data", payload);
             }

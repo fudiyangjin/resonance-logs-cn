@@ -155,7 +155,9 @@
         skillId: group.recountId,
         name: group.recountName,
         totalDmg: group.totalDmg,
+        effectiveTotal: group.effectiveTotal,
         dps: group.dps,
+        effectiveDps: group.effectiveDps,
         dmgPct: group.dmgPct,
         critRate: group.critRate,
         critDmgRate: group.critDmgRate,
@@ -214,7 +216,7 @@
 
   let visibleSkillColumns = $derived.by(() => {
     const visible = historyDpsSkillColumns.filter(
-      (col) => settings.state.live.dps.skillBreakdown[col.key],
+      (col) => col.key !== "effectiveTotal" && col.key !== "effectiveDps" && settings.state.live.dps.skillBreakdown[col.key],
     );
     return visible.sort((a, b) => {
       const aIdx = columnOrder.indexOf(a.key);
@@ -329,18 +331,18 @@
                 class="px-2 py-1 text-right relative z-10"
                 style="color: {customThemeColors.tableTextColor};"
               >
-                {#if col.key === "totalDmg"}
+                {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
                   {#if SETTINGS.live.general.state.shortenDps}
                     <AbbreviatedNumber
-                      num={skill.totalDmg}
+                      num={col.key === "totalDmg" ? skill.totalDmg : skill.effectiveTotal}
                       decimalPlaces={abbreviatedDecimalPlaces}
                       suffixFontSize={tableSettings.skillAbbreviatedFontSize}
                       suffixColor={customThemeColors.tableAbbreviatedColor}
                     />
                   {:else}
-                    {skill.totalDmg.toLocaleString()}
+                    {(col.key === "totalDmg" ? skill.totalDmg : skill.effectiveTotal).toLocaleString()}
                   {/if}
-                {:else if col.key === "dps"}
+                {:else if col.key === "dps" || col.key === "effectiveDps"}
                   {#if SETTINGS.live.general.state.shortenDps}
                     <AbbreviatedNumber
                       num={skill.dps}
@@ -349,7 +351,7 @@
                       suffixColor={customThemeColors.tableAbbreviatedColor}
                     />
                   {:else}
-                    {Math.round(skill.dps).toLocaleString()}
+                    {Math.round(col.key === "dps" ? skill.dps : skill.effectiveDps).toLocaleString()}
                   {/if}
                 {:else if col.key === "dmgPct"}
                   <PercentFormat

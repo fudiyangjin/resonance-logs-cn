@@ -11,23 +11,34 @@ type RuntimeTranslationFileEntry =
     };
 
 const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
-    "common/skillnames.json": "Skill Names",
-    "common/navigation.json": "UI",
-    "common/buffnames.json": "Buff Names",
-    "common/buffnamesearch.json": "Buff Name Search",
-    "MonsterName.json": "Monster Names",
-    "SceneName.json": "Scene Names",
-    "localization.json": "Localization",
+    "parser/skillnames.json": "Skill Names",
+    "ui/DPS.json": "DPS UI",
+    "ui/module-calc.json": "Module Calculator UI",
+    "ui/monster-monitor.json": "Monster Monitor UI",
+    "ui/skill-monitor.json": "Skill Monitor UI",
+    "ui/settings-store.json": "Settings Store UI",
+    "ui/localization.json": "Localization UI",
+    "parser/BuffName.json": "Buff Names",
+    "search/BuffNameSearch.json": "Buff Name Search",
+    "search/resonance-skill-search.json": "Resonance Skill Search",
+    "parser/MonsterName.json": "Monster Names",
+    "parser/SceneName.json": "Scene Names",
 };
 
 const SORT_PRIORITY: Record<string, number> = {
-    "common/skillnames.json": 0,
-    "common/navigation.json": 1,
-    "common/buffnames.json": 2,
-    "common/buffnamesearch.json": 3,
-    "MonsterName.json": 4,
-    "SceneName.json": 5,
-    "localization.json": 6,
+    "ui/DPS.json": 0,
+    "ui/module-calc.json": 1,
+    "ui/monster-monitor.json": 2,
+    "ui/skill-monitor.json": 3,
+    "ui/settings-store.json": 4,
+    "ui/localization.json": 5,
+    "parser/class-labels.json": 6,
+    "parser/skillnames.json": 7,
+    "parser/MonsterName.json": 8,
+    "parser/SceneName.json": 9,
+    "parser/BuffName.json": 10,
+    "search/BuffNameSearch.json": 11,
+    "search/resonance-skill-search.json": 12,
 };
 
 function normalizeRelativePath(path: string): string {
@@ -65,7 +76,7 @@ function detectFileKind(relativePath: string): TranslationFileKind {
         return "skillnames";
     }
 
-    if (normalized.endsWith("navigation.json")) {
+    if (normalized.endsWith("dps.json")) {
         return "navigation";
     }
 

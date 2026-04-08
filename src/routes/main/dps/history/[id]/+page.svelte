@@ -54,12 +54,16 @@
     luckyDmgRate: number;
     hits: number;
     hitsPerMinute: number;
+    effectiveTotal: number;
+    effectiveDps: number;
     damageTaken: number;
     tankedPS: number;
     tankedPct: number;
     critTakenRate: number;
     hitsTaken: number;
     healDealt: number;
+    effectiveHeal: number;
+    ehps: number;
     hps: number;
     healPct: number;
     critHealRate: number;
@@ -212,6 +216,8 @@
           luckyDmgRate: dps?.luckyDmgRate ?? 0,
           hits: dps?.hits ?? 0,
           hitsPerMinute: dps?.hitsPerMinute ?? 0,
+          effectiveTotal: dps?.effectiveTotal ?? 0,
+          effectiveDps: dps?.effectiveDps ?? 0,
           damageTaken: tank?.totalDmg ?? 0,
           tankedPS: tank?.dps ?? 0,
           tankedPct: tank?.dmgPct ?? 0,
@@ -222,6 +228,8 @@
           healPct: heal?.dmgPct ?? 0,
           critHealRate: heal?.critRate ?? 0,
           hitsHeal: heal?.hits ?? 0,
+          effectiveHeal: heal?.effectiveTotal ?? 0,
+          ehps: heal?.effectiveDps ?? 0,
         };
       })
       .filter((row) => row.totalDmg > 0 || row.healDealt > 0 || row.damageTaken > 0);
@@ -231,6 +239,7 @@
   function zeroCombatStats(): RawCombatStats {
     return {
       total: 0,
+      effectiveTotal: 0,
       hits: 0,
       critHits: 0,
       critTotal: 0,
@@ -478,6 +487,7 @@
       return historyTankedPlayerColumns.filter((col) => settings.state.history.tanked.players[col.key] ?? true);
     }
     return historyDpsPlayerColumns.filter((col) => {
+      if (col.key === "effectiveTotal" || col.key === "effectiveDps") return false;
       const defaultValue = DEFAULT_HISTORY_STATS[col.key as keyof typeof DEFAULT_HISTORY_STATS] ?? true;
       const setting = settings.state.history.dps.players[col.key as keyof typeof settings.state.history.dps.players];
       return setting ?? defaultValue;
@@ -490,7 +500,7 @@
     } else if (skillType === "tanked") {
       return historyTankedSkillColumns.filter((col) => settings.state.history.tanked.skillBreakdown[col.key]);
     }
-    return historyDpsSkillColumns.filter((col) => settings.state.history.dps.skillBreakdown[col.key]);
+    return historyDpsSkillColumns.filter((col) => col.key !== "effectiveTotal" && col.key !== "effectiveDps" && settings.state.history.dps.skillBreakdown[col.key]);
   });
 
   const websiteBaseUrl = $derived.by(() => {
@@ -950,7 +960,7 @@
                   <td
                     class="px-3 py-3 text-right text-sm text-muted-foreground relative z-10"
                   >
-                    {#if (activeTab === "damage" && (col.key === "totalDmg" || col.key === "bossDmg" || col.key === "bossDps" || col.key === "dps" || col.key === "tdps") && SETTINGS.history.general.state.shortenDps) || (activeTab === "healing" && (col.key === "healDealt" || col.key === "hps") && SETTINGS.history.general.state.shortenDps) || (activeTab === "tanked" && (col.key === "damageTaken" || col.key === "tankedPS") && SETTINGS.history.general.state.shortenTps)}
+                    {#if (activeTab === "damage" && (col.key === "totalDmg" || col.key === "effectiveTotal" || col.key === "bossDmg" || col.key === "bossDps" || col.key === "dps" || col.key === "effectiveDps" || col.key === "tdps") && SETTINGS.history.general.state.shortenDps) || (activeTab === "healing" && (col.key === "healDealt" || col.key === "effectiveHeal" || col.key === "hps" || col.key === "ehps") && SETTINGS.history.general.state.shortenDps) || (activeTab === "tanked" && (col.key === "damageTaken" || col.key === "tankedPS") && SETTINGS.history.general.state.shortenTps)}
                       {#if activeTab === "tanked" ? SETTINGS.history.general.state.shortenTps : SETTINGS.history.general.state.shortenDps}
                         <AbbreviatedNumber
                           num={p[col.key] ?? 0}
@@ -1150,7 +1160,7 @@
                 <td
                   class="px-3 py-3 text-right text-sm text-muted-foreground relative z-10"
                 >
-                  {#if (col.key === "totalDmg" || col.key === "dps") && (skillType === "tanked" ? SETTINGS.history.general.state.shortenTps : SETTINGS.history.general.state.shortenDps)}
+                  {#if (col.key === "totalDmg" || col.key === "effectiveTotal" || col.key === "dps" || col.key === "effectiveDps") && (skillType === "tanked" ? SETTINGS.history.general.state.shortenTps : SETTINGS.history.general.state.shortenDps)}
                     <AbbreviatedNumber
                       num={skillCellValue(item, col.key)}
                       decimalPlaces={abbreviatedDecimalPlaces}

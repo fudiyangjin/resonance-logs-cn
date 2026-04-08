@@ -94,28 +94,51 @@
     compareRows.reduce((count, row) => {
       let nextCount = count;
       if (row.selection?.nameSelected) nextCount += 1;
-      if (row.selection?.noteSelected) nextCount += 1;
       return nextCount;
     }, 0),
   );
 
   const PARSER_TAB_RELATIVE_PATHS = new Set([
-    "common/skillnames.json",
-    "MonsterName.json",
-    "SceneName.json",
-    "BuffName.json",
+    "parser/skillnames.json",
+    "parser/MonsterName.json",
+    "parser/SceneName.json",
+    "parser/BuffName.json",
+    "parser/class-labels.json",
+  ]);
+
+  const SEARCH_TAB_RELATIVE_PATHS = new Set([
+    "search/BuffNameSearch.json",
+    "search/resonance-skill-search.json",
   ]);
 
   function getTabLabel(tab: TranslationFileTab) {
     switch (tab.relativePath) {
-      case "common/skillnames.json":
+      case "parser/skillnames.json":
         return t("localization.tabs.skillNames", "Skill Names");
-      case "MonsterName.json":
+      case "parser/MonsterName.json":
         return t("localization.tabs.monsterNames", "Monster Names");
-      case "SceneName.json":
+      case "parser/SceneName.json":
         return t("localization.tabs.sceneNames", "Scene Names");
-      case "BuffName.json":
+      case "parser/BuffName.json":
         return t("localization.tabs.buffName", "Buff Names");
+      case "parser/class-labels.json":
+        return t("localization.tabs.classLabels", "Class Labels");
+      case "ui/DPS.json":
+        return t("localization.tabs.dpsUi", "DPS UI");
+      case "ui/module-calc.json":
+        return t("localization.tabs.moduleCalcUi", "Module Calculator UI");
+      case "ui/monster-monitor.json":
+        return t("localization.tabs.monsterMonitorUi", "Monster Monitor UI");
+      case "ui/skill-monitor.json":
+        return t("localization.tabs.skillMonitorUi", "Skill Monitor UI");
+      case "ui/settings-store.json":
+        return t("localization.tabs.settingsStoreUi", "Settings Store UI");
+      case "ui/localization.json":
+        return t("localization.tabs.localizationUi", "Localization UI");
+      case "search/BuffNameSearch.json":
+        return t("localization.tabs.buffNameSearch", "Buff Name Search");
+      case "search/resonance-skill-search.json":
+        return t("localization.tabs.resonanceSkillSearch", "Resonance Skill Search");
       default:
         return tab.displayName;
     }
@@ -124,16 +147,19 @@
   function splitTabsByCategory(tabs: TranslationFileTab[]) {
     const parserTabs: TranslationFileTab[] = [];
     const uiTabs: TranslationFileTab[] = [];
+    const searchTabs: TranslationFileTab[] = [];
 
     for (const tab of tabs) {
       if (PARSER_TAB_RELATIVE_PATHS.has(tab.relativePath)) {
         parserTabs.push(tab);
+      } else if (SEARCH_TAB_RELATIVE_PATHS.has(tab.relativePath)) {
+        searchTabs.push(tab);
       } else {
         uiTabs.push(tab);
       }
     }
 
-    return { parserTabs, uiTabs };
+    return { parserTabs, uiTabs, searchTabs };
   }
 
   const editLocalTabGroups = $derived(splitTabsByCategory(editLocalTabs));
@@ -145,6 +171,18 @@
 
   function t(key: string, fallback: string) {
     return resolveLocalizationTranslation(key, getLocale(), fallback);
+  }
+
+  function currentInputValue(event: Event): string {
+    return (event.currentTarget as HTMLInputElement).value;
+  }
+
+  function currentTextareaValue(event: Event): string {
+    return (event.currentTarget as HTMLTextAreaElement).value;
+  }
+
+  function currentChecked(event: Event): boolean {
+    return (event.currentTarget as HTMLInputElement).checked;
   }
 
   function tn(key: string, fallback: string) {
@@ -218,14 +256,14 @@
 
       const raw = row.raw;
       const isSkillnamesShape =
-        isRecord(raw.name) || isRecord(raw.note);
+        isRecord(raw["name"]) || isRecord(raw["note"]);
 
       const localName = isSkillnamesShape
-        ? getDirectLocaleValue(raw.name, locale)
+        ? getDirectLocaleValue(raw["name"], locale)
         : getDirectLocaleValue(raw, locale);
 
       const localNote = isSkillnamesShape
-        ? getDirectLocaleValue(raw.note, locale)
+        ? getDirectLocaleValue(raw["note"], locale)
         : "";
 
       const nextRow: TranslationWorkspaceRow = {
@@ -246,22 +284,22 @@
   ): Record<string, unknown> {
     const nextEntry = cloneJson(entry) as Record<string, unknown>;
     const isSkillnamesShape =
-      isRecord(nextEntry.name) || isRecord(nextEntry.note);
+      isRecord(nextEntry["name"]) || isRecord(nextEntry["note"]);
 
     if (isSkillnamesShape) {
-      const nextName = isRecord(nextEntry.name)
-        ? { ...(nextEntry.name as Record<string, unknown>) }
+      const nextName = isRecord(nextEntry["name"])
+        ? { ...(nextEntry["name"] as Record<string, unknown>) }
         : {};
 
       if (hasOwnKey(nextName, locale) || row.localName !== "") {
         nextName[locale] = row.localName;
       }
 
-      nextEntry.name = nextName;
+      nextEntry["name"] = nextName;
 
-      const hadNoteObject = isRecord(nextEntry.note);
+      const hadNoteObject = isRecord(nextEntry["note"]);
       const nextNote = hadNoteObject
-        ? { ...(nextEntry.note as Record<string, unknown>) }
+        ? { ...(nextEntry["note"] as Record<string, unknown>) }
         : {};
 
       if (hasOwnKey(nextNote, locale) || row.localNote !== "") {
@@ -269,7 +307,7 @@
       }
 
       if (hadNoteObject || row.localNote !== "") {
-        nextEntry.note = nextNote;
+        nextEntry["note"] = nextNote;
       }
 
       return nextEntry;
@@ -489,11 +527,11 @@
     compareMergeTabs = discoveredTabs;
 
     if (!activeEditLocalTab && editLocalTabs.length > 0) {
-      activeEditLocalTab = editLocalTabs[0].relativePath;
+      activeEditLocalTab = editLocalTabs[0]!.relativePath;
     }
 
     if (!activeCompareMergeTab && compareMergeTabs.length > 0) {
-      activeCompareMergeTab = compareMergeTabs[0].relativePath;
+      activeCompareMergeTab = compareMergeTabs[0]!.relativePath;
     }
 
     isLoadingTabs = false;
@@ -781,8 +819,8 @@
       };
 
       nextSelection[field] = checked;
-      nextSelection.rowSelected =
-        nextSelection.nameSelected || nextSelection.noteSelected;
+      nextSelection.noteSelected = false;
+      nextSelection.rowSelected = nextSelection.nameSelected;
 
       return {
         ...row,
@@ -801,15 +839,10 @@
         row.nameStatus,
         row.compareName ?? "",
       );
-      const noteSelectable = isMergeableField(
-        row.noteStatus,
-        row.compareNote ?? "",
-      );
-
       const nextSelection: TranslationCompareSelection = {
-        rowSelected: checked && (nameSelectable || noteSelectable),
+        rowSelected: checked && nameSelectable,
         nameSelected: checked ? nameSelectable : false,
-        noteSelected: checked ? noteSelectable : false,
+        noteSelected: false,
       };
 
       return {
@@ -829,7 +862,7 @@
 
     for (const compareRow of compareRows) {
       const selection = compareRow.selection;
-      if (!selection?.nameSelected && !selection?.noteSelected) {
+      if (!selection?.nameSelected) {
         continue;
       }
 
@@ -856,9 +889,6 @@
         nextRow.localName = importedRow.localName;
       }
 
-      if (selection.noteSelected) {
-        nextRow.localNote = importedRow.localNote;
-      }
 
       nextRow.searchBlob = buildSearchBlob(nextRow);
       localMap.set(compareRow.id, nextRow);
@@ -979,7 +1009,7 @@ When you click Generate Skill Translations, it now does the following:
 • rebuilds the file from the source tables
 • adds new IDs it finds from the source JSONs
 • preserves existing entries that are not in the current source pass
-• writes the merged result back to runtime common/skillnames.json
+• writes the merged result back to runtime locales/<locale>/parser/skillnames.json
 
 The current generator is source-based and pulls from these, in this priority order:
 
@@ -1123,6 +1153,21 @@ So the accurate behavior is:
                   {/each}
                 </div>
               {/if}
+
+              {#if showUiJsonTabs && editLocalTabGroups.searchTabs.length > 0}
+                <div class="file-tab-row">
+                  {#each editLocalTabGroups.searchTabs as tab}
+                    <button
+                      type="button"
+                      class="file-tab"
+                      class:active={activeEditLocalTab === tab.relativePath}
+                      onclick={() => (activeEditLocalTab = tab.relativePath)}
+                    >
+                      {getTabLabel(tab)}
+                    </button>
+                  {/each}
+                </div>
+              {/if}
             {/if}
           </div>
         </div>
@@ -1212,7 +1257,6 @@ So the accurate behavior is:
               <div class="results-header">
                 <div>{t("localization.columns.id", "ID / Key")}</div>
                 <div>{t("localization.columns.baseName", "基础名称 (CN)")}</div>
-                <div>{t("localization.columns.baseNote", "基础备注 (CN)")}</div>
                 <div>{t("localization.columns.localName", "当前语言名称")}</div>
                 <div>{t("localization.columns.localNote", "当前语言备注")}</div>
               </div>
@@ -1221,9 +1265,7 @@ So the accurate behavior is:
                 <div class="results-row">
                   <div class="cell cell-id">{row.id}</div>
 
-                  <div class="cell readonly-cell">{row.baseName}</div>
-
-                  <div class="cell readonly-cell note-cell">{row.baseNote}</div>
+                  <div class="cell base-text-cell">{row.baseName}</div>
 
                   <div class="cell">
                     <input
@@ -1233,7 +1275,7 @@ So the accurate behavior is:
                         updateRowField(
                           row.id,
                           "localName",
-                          (event.currentTarget as HTMLInputElement).value,
+                          currentInputValue(event),
                         )}
                     />
                   </div>
@@ -1245,7 +1287,7 @@ So the accurate behavior is:
                         updateRowField(
                           row.id,
                           "localNote",
-                          (event.currentTarget as HTMLTextAreaElement).value,
+                          currentTextareaValue(event),
                         )}
                     >{row.localNote}</textarea>
                   </div>
@@ -1286,6 +1328,21 @@ So the accurate behavior is:
               {#if showUiJsonTabs && compareMergeTabGroups.uiTabs.length > 0}
                 <div class="file-tab-row">
                   {#each compareMergeTabGroups.uiTabs as tab}
+                    <button
+                      type="button"
+                      class="file-tab"
+                      class:active={activeCompareMergeTab === tab.relativePath}
+                      onclick={() => (activeCompareMergeTab = tab.relativePath)}
+                    >
+                      {getTabLabel(tab)}
+                    </button>
+                  {/each}
+                </div>
+              {/if}
+
+              {#if showUiJsonTabs && compareMergeTabGroups.searchTabs.length > 0}
+                <div class="file-tab-row">
+                  {#each compareMergeTabGroups.searchTabs as tab}
                     <button
                       type="button"
                       class="file-tab"
@@ -1432,9 +1489,6 @@ So the accurate behavior is:
                 <div>{t("localization.compare.localName", "当前名称")}</div>
                 <div>{t("localization.compare.compareName", "对比名称")}</div>
                 <div>{t("localization.compare.mergeName", "合并名称")}</div>
-                <div>{t("localization.compare.localNote", "当前备注")}</div>
-                <div>{t("localization.compare.compareNote", "对比备注")}</div>
-                <div>{t("localization.compare.mergeNote", "合并备注")}</div>
                 <div>{t("localization.compare.mergeRow", "整行")}</div>
               </div>
 
@@ -1442,7 +1496,7 @@ So the accurate behavior is:
                 <div class="compare-row">
                   <div class="cell cell-id">{row.id}</div>
 
-                  <div class="cell readonly-cell">{row.baseName}</div>
+                  <div class="cell base-text-cell">{row.baseName}</div>
 
                   <div class="cell readonly-cell {getStatusClass(row.nameStatus)}">
                     {row.localName}
@@ -1461,29 +1515,7 @@ So the accurate behavior is:
                         toggleCompareFieldSelection(
                           row.id,
                           "nameSelected",
-                          (event.currentTarget as HTMLInputElement).checked,
-                        )}
-                    />
-                  </div>
-
-                  <div class="cell readonly-cell note-cell {getStatusClass(row.noteStatus)}">
-                    {row.localNote}
-                  </div>
-
-                  <div class="cell readonly-cell note-cell {getStatusClass(row.noteStatus)}">
-                    {row.compareNote}
-                  </div>
-
-                  <div class="cell checkbox-cell">
-                    <input
-                      type="checkbox"
-                      checked={row.selection?.noteSelected ?? false}
-                      disabled={!isMergeableField(row.noteStatus, row.compareNote ?? "")}
-                      onchange={(event) =>
-                        toggleCompareFieldSelection(
-                          row.id,
-                          "noteSelected",
-                          (event.currentTarget as HTMLInputElement).checked,
+                          currentChecked(event),
                         )}
                     />
                   </div>
@@ -1492,14 +1524,11 @@ So the accurate behavior is:
                     <input
                       type="checkbox"
                       checked={row.selection?.rowSelected ?? false}
-                      disabled={
-                        !isMergeableField(row.nameStatus, row.compareName ?? "") &&
-                        !isMergeableField(row.noteStatus, row.compareNote ?? "")
-                      }
+                      disabled={!isMergeableField(row.nameStatus, row.compareName ?? "")}
                       onchange={(event) =>
                         toggleCompareRowSelection(
                           row.id,
-                          (event.currentTarget as HTMLInputElement).checked,
+                          currentChecked(event),
                         )}
                     />
                   </div>
@@ -1542,17 +1571,17 @@ So the accurate behavior is:
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {t("localization.settings.visibility.uiJsons.title", "UI JSON Tabs")}
+                    {t("localization.settings.visibility.uiJsons.title", "UI / Search JSON Tabs")}
                   </div>
                   <div class="settings-debug-description">
-                    {t("localization.settings.visibility.uiJsons.description", "Show or hide the UI-related JSON row in Edit Local and Compare / Merge.")}
+                    {t("localization.settings.visibility.uiJsons.description", "Show or hide the UI and search JSON rows in Edit Local and Compare / Merge.")}
                   </div>
                 </div>
 
                 <button type="button" onclick={() => (showUiJsonTabs = !showUiJsonTabs)}>
                   {showUiJsonTabs
-                    ? t("localization.settings.visibility.uiJsons.hide", "Hide UI JSONs")
-                    : t("localization.settings.visibility.uiJsons.show", "Show UI JSONs")}
+                    ? t("localization.settings.visibility.uiJsons.hide", "Hide UI / Search JSONs")
+                    : t("localization.settings.visibility.uiJsons.show", "Show UI / Search JSONs")}
                 </button>
               </div>
 
@@ -1601,7 +1630,7 @@ So the accurate behavior is:
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.generateBuffNameSearchTitle", "Generate BuffNameSearch Scaffold")}
+                    {tn("debug.generateBuffNameSearchTitle", "Generate BuffNameSearch Runtime File")}
                   </div>
                   <div class="settings-debug-description">
                     {tn("debug.generateBuffNameSearchDescription", "Non-destructively generate or update runtime BuffNameSearch.json from src/lib/config/BuffName.json.")}
@@ -1622,7 +1651,7 @@ So the accurate behavior is:
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.generateBuffNameTitle", "Generate BuffName Translation Scaffold")}
+                    {tn("debug.generateBuffNameTitle", "Generate BuffName Runtime File")}
                   </div>
                   <div class="settings-debug-description">
                     {tn("debug.generateBuffNameDescription", "Non-destructively generate or update runtime BuffName.json from src/lib/config/BuffName.json.")}
@@ -1643,7 +1672,7 @@ So the accurate behavior is:
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.generateSceneNameTitle", "Generate SceneName Translation Scaffold")}
+                    {tn("debug.generateSceneNameTitle", "Generate SceneName Runtime File")}
                   </div>
                   <div class="settings-debug-description">
                     {tn("debug.generateSceneNameDescription", "Non-destructively generate or update runtime SceneName.json from src-tauri/meter-data/SceneName.json.")}
@@ -1664,7 +1693,7 @@ So the accurate behavior is:
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.generateMonsterNameTitle", "Generate MonsterName Translation Scaffold")}
+                    {tn("debug.generateMonsterNameTitle", "Generate MonsterName Runtime File")}
                   </div>
                   <div class="settings-debug-description">
                     {tn("debug.generateMonsterNameDescription", "Non-destructively generate or update runtime MonsterName.json from src-tauri/meter-data/MonsterIdNameType.json.")}
@@ -1685,10 +1714,10 @@ So the accurate behavior is:
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.generateSkillNamesTitle", "Generate Skill Translation Scaffold")}
+                    {tn("debug.generateSkillNamesTitle", "Generate Skill Translation Runtime Files")}
                   </div>
                   <div class="settings-debug-description">
-                    {tn("debug.generateSkillNamesDescription", "Non-destructively generate or update runtime common/skillnames.json from RecountTable.json, DamageAttrIdName.json, SkillEffectTable.json, SkillFightLevelTable.json, and TempAttrTable.json.")}
+                    {tn("debug.generateSkillNamesDescription", "Generate or update per-locale runtime parser/skillnames.json files in AppData from RecountTable.json, DamageAttrIdName.json, SkillEffectTable.json, SkillFightLevelTable.json, and TempAttrTable.json.")}
                   </div>
                 </div>
 
@@ -1716,6 +1745,10 @@ So the accurate behavior is:
     flex-direction: column;
     gap: 16px;
     padding: 16px;
+    height: calc(100vh - 132px);
+    min-height: 0;
+    overflow: hidden;
+    box-sizing: border-box;
   }
 
   .localization-header {
@@ -1762,13 +1795,20 @@ So the accurate behavior is:
   }
 
   .section-content {
-    min-height: 360px;
+    display: flex;
+    flex: 1 1 auto;
+    min-height: min(560px, calc(100vh - 260px));
+    min-height: 0;
+    height: 100%;
   }
 
   .panel {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     gap: 12px;
+    min-height: 0;
+    overflow: hidden;
     padding: 16px;
     border-radius: 12px;
     border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
@@ -1939,8 +1979,11 @@ So the accurate behavior is:
 
   .panel-body {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     gap: 12px;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .active-file-label {
@@ -1974,14 +2017,41 @@ So the accurate behavior is:
   .results-table,
   .compare-table {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     gap: 8px;
-    max-height: min(56vh, 720px);
-    overflow: auto;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
     padding: 10px;
     border-radius: 10px;
     border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
     background: rgba(255, 255, 255, 0.02);
+  }
+
+
+  .results-table::-webkit-scrollbar,
+  .compare-table::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .results-table::-webkit-scrollbar-track,
+  .compare-table::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 999px;
+  }
+
+  .results-table::-webkit-scrollbar-thumb,
+  .compare-table::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+  }
+
+  .results-table::-webkit-scrollbar-thumb:hover,
+  .compare-table::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.32);
   }
 
   .results-header,
@@ -1989,10 +2059,9 @@ So the accurate behavior is:
     display: grid;
     grid-template-columns:
       minmax(120px, 1fr)
-      minmax(160px, 1.2fr)
-      minmax(180px, 1.4fr)
-      minmax(180px, 1.2fr)
-      minmax(220px, 1.5fr);
+      minmax(180px, 1.25fr)
+      minmax(220px, 1.4fr)
+      minmax(240px, 1.6fr);
     gap: 8px;
     align-items: start;
   }
@@ -2002,12 +2071,9 @@ So the accurate behavior is:
     display: grid;
     grid-template-columns:
       minmax(110px, 1fr)
-      minmax(150px, 1.1fr)
-      minmax(160px, 1.1fr)
-      minmax(160px, 1.1fr)
-      96px
-      minmax(190px, 1.3fr)
-      minmax(190px, 1.3fr)
+      minmax(180px, 1.3fr)
+      minmax(180px, 1.3fr)
+      minmax(180px, 1.3fr)
       96px
       72px;
     gap: 8px;
@@ -2044,6 +2110,17 @@ So the accurate behavior is:
     font-size: 13px;
     word-break: break-word;
     padding-top: 10px;
+  }
+
+  .base-text-cell {
+    font-size: 13px;
+    line-height: 1.4;
+    padding: 10px 12px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 
   .readonly-cell {

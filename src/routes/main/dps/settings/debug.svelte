@@ -299,12 +299,16 @@
           description={resolveNavigationTranslation(
             "debug.languageDescription",
             SETTINGS.live.general.state.language,
-            "选择翻译语言。缺失时回退到 zh-CN。",
+            "选择翻译语言。缺失时依次回退到 EN、zh-CN，然后显示键名/ID。",
           )}
           values={[
             { label: "zh-CN", value: "zh-CN" },
             { label: "EN", value: "en" },
             { label: "JP", value: "ja" },
+            { label: "DE", value: "de" },
+            { label: "ES", value: "es" },
+            { label: "FR", value: "fr" },
+            { label: "PT-BR", value: "pt-BR" },
           ]}
         />
 

@@ -25,6 +25,7 @@
   const activeIds = $derived(activeBuffIds());
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="overlay-group skill-group"
   class:editable={editing}
@@ -97,6 +98,7 @@
   </div>
 
   {#if editing}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="resize-handle"
       onpointerdown={(e) =>

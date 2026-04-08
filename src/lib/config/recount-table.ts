@@ -3,6 +3,7 @@ import damageAttrIdNamesRaw from "./DamageAttrIdName.json";
 
 export type RawSkillStatsLike = {
   totalValue: number;
+  effectiveTotalValue?: number;
   hits: number;
   critHits: number;
   critTotalValue: number;
@@ -15,7 +16,9 @@ export type SkillDisplayRow = {
   name: string;
   showSkillId?: boolean;
   totalDmg: number;
+  effectiveTotal: number;
   dps: number;
+  effectiveDps: number;
   dmgPct: number;
   critRate: number;
   critDmgRate: number;
@@ -30,7 +33,9 @@ export type RecountGroup = {
   recountId: number;
   recountName: string;
   totalDmg: number;
+  effectiveTotal: number;
   dps: number;
+  effectiveDps: number;
   dmgPct: number;
   critRate: number;
   critDmgRate: number;
@@ -92,12 +97,15 @@ export function buildSkillDisplayRow(
   parentTotal: number,
 ): SkillDisplayRow {
   const totalDmg = Number(stats.totalValue || 0);
+  const effectiveTotal = Number(stats.effectiveTotalValue || 0);
   const hits = Number(stats.hits || 0);
   return {
     skillId,
     name: lookupDamageIdName(skillId),
     totalDmg,
+    effectiveTotal,
     dps: elapsedSecs > 0 ? totalDmg / elapsedSecs : 0,
+    effectiveDps: elapsedSecs > 0 ? effectiveTotal / elapsedSecs : 0,
     dmgPct: pct(totalDmg, parentTotal),
     critRate: rate(Number(stats.critHits || 0), hits),
     critDmgRate: pct(Number(stats.critTotalValue || 0), totalDmg),
@@ -135,7 +143,9 @@ export function groupSkillsByRecount(
         recountId: mapping.recountId,
         recountName: mapping.recountName,
         totalDmg: 0,
+        effectiveTotal: 0,
         dps: 0,
+        effectiveDps: 0,
         dmgPct: 0,
         critRate: 0,
         critDmgRate: 0,
@@ -149,6 +159,7 @@ export function groupSkillsByRecount(
     }
 
     group.totalDmg += row.totalDmg;
+    group.effectiveTotal += row.effectiveTotal;
     group.hits += row.hits;
     row.name = lookupChildDamageIdName(skillId);
     group.skills.push(row);
@@ -166,6 +177,7 @@ export function groupSkillsByRecount(
       0,
     );
     group.dps = elapsedSecs > 0 ? group.totalDmg / elapsedSecs : 0;
+    group.effectiveDps = elapsedSecs > 0 ? group.effectiveTotal / elapsedSecs : 0;
     group.dmgPct = pct(group.totalDmg, parentTotal);
     group.critRate = rate(critHits, group.hits);
     group.critDmgRate = pct(critTotal, group.totalDmg);

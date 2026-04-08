@@ -76,7 +76,7 @@
     setCustomPanelProgressOpacity,
   }: Props = $props();
 
-  let selectedGroupId = $state<string | null>(customPanelGroups[0]?.id ?? null);
+  let selectedGroupId = $state<string | null>(null);
 
   $effect(() => {
     if (customPanelGroups.length === 0) {

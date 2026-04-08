@@ -19,6 +19,7 @@
 </script>
 
 {#if buffs.length > 0 || editing}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     class="overlay-group text-buff-panel"
     class:editable={editing}
@@ -67,6 +68,7 @@
     {/each}
 
     {#if editing}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
         class="resize-handle"
         onpointerdown={(e) =>

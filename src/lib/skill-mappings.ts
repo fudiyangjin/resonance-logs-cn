@@ -6,10 +6,13 @@ import classSkillConfigsRaw from "$lib/config/class_skill_configs.json";
 import classResourcesRaw from "$lib/config/class_resources.json";
 import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays.json";
 import counterRulesRaw from "$lib/config/counter_rules.json";
-import resonanceSkillSearchTranslations from "$lib/translations/resonance-skill-search.json";
 import {
+  DEFAULT_LOCALE,
+  PRIMARY_FALLBACK_LOCALE,
+  SUPPORTED_LOCALES,
   TRANSLATION_SOURCE_MODE_EVENT,
-  getCurrentTranslationSourceMode,
+  isLocaleCode,
+  type LocaleCode,
 } from "$lib/i18n";
 import { settings } from "$lib/settings-store";
 import type { CounterAction, CounterTrigger } from "$lib/bindings";
@@ -64,7 +67,6 @@ type ResonanceSkillIconRaw = {
   maxValidCdTime?: number;
 };
 
-type LocaleCode = "zh-CN" | "en" | "ja";
 type MultiLangValue = Partial<Record<LocaleCode, string>>;
 type MultiLangKeywords = Partial<Record<LocaleCode, string[]>>;
 
@@ -88,15 +90,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-const RESONANCE_RUNTIME_RELATIVE_PATH = "resonance-skill-search.json";
+const RESONANCE_RUNTIME_RELATIVE_PATH = "search/resonance-skill-search.json";
 
-const RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = cloneJson(
-  resonanceSkillSearchTranslations as unknown as Record<string, ResonanceSkillSearchEntry>,
-);
+const RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = {};
 
-const BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS = cloneJson(
-  RESONANCE_SKILL_SEARCH_TRANSLATIONS,
-);
+const BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = {};
 
 let resonanceRuntimeInitPromise: Promise<void> | null = null;
 let resonanceRuntimeListenerPromise: Promise<void> | null = null;
@@ -140,14 +138,6 @@ async function readRuntimeResonanceTranslations(): Promise<
 }
 
 async function loadResonanceSkillSearchRuntimeData(): Promise<void> {
-  if (getCurrentTranslationSourceMode() === "bundled") {
-    replaceRecordContents(
-      RESONANCE_SKILL_SEARCH_TRANSLATIONS,
-      cloneJson(BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS),
-    );
-    return;
-  }
-
   await ensureResonanceTranslationRuntimeFiles();
 
   const runtimeValue = await readRuntimeResonanceTranslations();
@@ -206,7 +196,7 @@ function normalizeSearchText(value: string | null | undefined): string {
 function collectMultiLangTexts(value: MultiLangValue | undefined): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
-  for (const locale of ["zh-CN", "en", "ja"] as const) {
+  for (const locale of SUPPORTED_LOCALES) {
     const text = normalizeSearchText(value?.[locale]);
     if (!text || seen.has(text)) continue;
     seen.add(text);
@@ -218,7 +208,7 @@ function collectMultiLangTexts(value: MultiLangValue | undefined): string[] {
 function collectKeywordTexts(value: MultiLangKeywords | undefined): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
-  for (const locale of ["zh-CN", "en", "ja"] as const) {
+  for (const locale of SUPPORTED_LOCALES) {
     for (const keyword of value?.[locale] ?? []) {
       const text = normalizeSearchText(keyword);
       if (!text || seen.has(text)) continue;
@@ -232,11 +222,11 @@ function collectKeywordTexts(value: MultiLangKeywords | undefined): string[] {
 function getCurrentLocale(): LocaleCode {
   const locale = String(settings.state.live.general.language);
 
-  if (locale === "en" || locale === "ja" || locale === "zh-CN") {
+  if (isLocaleCode(locale)) {
     return locale;
   }
 
-  return "zh-CN";
+  return DEFAULT_LOCALE;
 }
 
 function resolveMultiLangName(value: MultiLangValue | undefined, fallback: string): string {
@@ -244,8 +234,15 @@ function resolveMultiLangName(value: MultiLangValue | undefined, fallback: strin
   const selected = value?.[locale]?.trim();
   if (selected) return selected;
 
-  const zh = value?.["zh-CN"]?.trim();
-  if (zh) return zh;
+  if (locale !== PRIMARY_FALLBACK_LOCALE) {
+    const en = value?.[PRIMARY_FALLBACK_LOCALE]?.trim();
+    if (en) return en;
+  }
+
+  if (locale !== DEFAULT_LOCALE) {
+    const zh = value?.[DEFAULT_LOCALE]?.trim();
+    if (zh) return zh;
+  }
 
   return fallback;
 }

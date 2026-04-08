@@ -60,6 +60,8 @@ export type PlayerRow = {
   hitsPerMinute: number;
   bossDmg: number;
   bossDmgPct: number;
+  effectiveTotal: number;
+  effectiveDps: number;
 };
 
 export type PlayersWindow = {
@@ -70,7 +72,9 @@ export type SkillRow = {
   skillId: number;
   name: string;
   totalDmg: number;
+  effectiveTotal: number;
   dps: number;
+  effectiveDps: number;
   dmgPct: number;
   critRate: number;
   critDmgRate: number;
@@ -186,11 +190,12 @@ export type LiveDataPayload = {
   totalDmg: number;
   totalDmgBossOnly: number;
   totalHeal: number;
+  totalEffectiveHeal: number;
   localPlayerUid: number;
   sceneId: number | null;
   sceneName: string | null;
-  isPaused: boolean;
   trainingDummy: TrainingDummyState;
+  isPaused: boolean;
   bosses: BossHealth[];
   entities: RawEntityData[];
 };
@@ -205,6 +210,9 @@ export const onEncounterUpdate = (handler: (event: Event<EncounterUpdatePayload>
 
 export const onLiveData = (handler: (event: Event<LiveDataPayload>) => void): Promise<UnlistenFn> =>
   listen<LiveDataPayload>("live-data", handler);
+
+export const onTrainingDummyUpdate = (handler: (event: Event<TrainingDummyState>) => void): Promise<UnlistenFn> =>
+  listen<TrainingDummyState>("training-dummy-update", handler);
 
 export const onSceneChange = (handler: (event: Event<SceneChangePayload>) => void): Promise<UnlistenFn> =>
   listen<SceneChangePayload>("scene-change", handler);

@@ -5,7 +5,7 @@
   import { computePlayerRows, computeSkillRows } from "$lib/live-derived";
   import { lookupDamageIdName } from "$lib/config/recount-table";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
-  import { historyDpsSkillColumns } from "$lib/column-data";
+  import { liveHealSkillColumns } from "$lib/column-data";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import PercentFormat from "$lib/components/percent-format.svelte";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
@@ -115,7 +115,7 @@
   });
 
   let visibleSkillColumns = $derived.by(() => {
-    const visible = historyDpsSkillColumns.filter(
+    const visible = liveHealSkillColumns.filter(
       (col) => settings.state.live.heal.skillBreakdown[col.key],
     );
     return visible.sort((a, b) => {
@@ -200,10 +200,10 @@
                 class="px-2 py-1 text-right relative z-10"
                 style="color: {customThemeColors.tableTextColor};"
               >
-                {#if col.key === "totalDmg"}
+                {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
                   {#if SETTINGS_SHORTEN_DPS}
                     <AbbreviatedNumber
-                      num={skill.totalDmg}
+                      num={col.key === "totalDmg" ? skill.totalDmg : skill.effectiveTotal}
                       decimalPlaces={abbreviatedDecimalPlaces}
                       suffixFontSize={tableSettings.skillAbbreviatedFontSize}
                       suffixColor={customThemeColors.tableAbbreviatedColor}

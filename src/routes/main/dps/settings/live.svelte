@@ -524,7 +524,7 @@
               "使用箭头调整顺序；用开关控制显示/隐藏。",
             )}
           </p>
-          {#each SETTINGS.live.columnOrder.dpsPlayers.state.order as colKey, idx (colKey)}
+          {#each SETTINGS.live.columnOrder.dpsPlayers.state.order.filter((colKey) => colKey !== "effectiveTotal" && colKey !== "effectiveDps") as colKey, idx (colKey)}
             {@const col = liveDpsPlayerColumns.find((c) => c.key === colKey)}
             {#if col}
               <div
@@ -613,7 +613,7 @@
               "使用箭头调整顺序；用开关控制显示/隐藏。",
             )}
           </p>
-          {#each SETTINGS.live.columnOrder.dpsSkills.state.order as colKey, idx (colKey)}
+          {#each SETTINGS.live.columnOrder.dpsSkills.state.order.filter((colKey) => colKey !== "effectiveTotal" && colKey !== "effectiveDps") as colKey, idx (colKey)}
             {@const col = liveDpsSkillColumns.find((c) => c.key === colKey)}
             {#if col}
               <div
@@ -880,7 +880,7 @@
               "使用箭头调整顺序；用开关控制显示/隐藏。",
             )}
           </p>
-          {#each SETTINGS.live.columnOrder.tankedPlayers.state.order as colKey, idx (colKey)}
+          {#each SETTINGS.live.columnOrder.tankedPlayers.state.order.filter((colKey) => colKey !== "effectiveTotal" && colKey !== "effectiveDps") as colKey, idx (colKey)}
             {@const col = liveTankedPlayerColumns.find((c) => c.key === colKey)}
             {#if col}
               <div
@@ -972,7 +972,7 @@
               "使用箭头调整顺序；用开关控制显示/隐藏。",
             )}
           </p>
-          {#each SETTINGS.live.columnOrder.tankedSkills.state.order as colKey, idx (colKey)}
+          {#each SETTINGS.live.columnOrder.tankedSkills.state.order.filter((colKey) => colKey !== "effectiveTotal" && colKey !== "effectiveDps") as colKey, idx (colKey)}
             {@const col = liveTankedSkillColumns.find((c) => c.key === colKey)}
             {#if col}
               <div

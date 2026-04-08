@@ -36,4 +36,19 @@ export default defineConfig(async () => ({
       ignored: ["**/src-tauri/**"],
     },
   },
+  optimizeDeps: {
+    include: [
+      "colorjs.io",
+      "bits-ui",
+      "@tauri-apps/plugin-dialog",
+      "svelte-sonner",
+      "tailwind-merge",
+      "tailwind-variants",
+    ],
+  },
+  build: {
+    minify: false,
+    cssMinify: false,
+    reportCompressedSize: false,
+  },
 }));

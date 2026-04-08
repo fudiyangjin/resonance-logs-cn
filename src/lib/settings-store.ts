@@ -4,10 +4,13 @@
  */
 import { RuneStore } from '@tauri-store/svelte';
 import type { BuffCategoryKey } from "./config/buff-name-table";
+import type { LocaleCode, SkillIdDisplayMode } from "./i18n";
 
 export const DEFAULT_STATS = {
   totalDmg: true,
   dps: true,
+  effectiveTotal: true,
+  effectiveDps: true,
   tdps: false,
   bossDmg: true,
   bossDps: true,
@@ -23,6 +26,8 @@ export const DEFAULT_STATS = {
 export const DEFAULT_HISTORY_STATS = {
   totalDmg: true,
   dps: true,
+  effectiveTotal: true,
+  effectiveDps: true,
   tdps: false,
   bossDmg: true,
   bossDps: true,
@@ -50,6 +55,8 @@ export const DEFAULT_HISTORY_TANKED_STATS = {
 export const DEFAULT_HISTORY_HEAL_STATS = {
   healDealt: true,
   hps: true,
+  effectiveHeal: true,
+  ehps: true,
   healPct: true,
   critHealRate: false,
   critDmgRate: false,
@@ -62,8 +69,8 @@ export const DEFAULT_HISTORY_HEAL_STATS = {
 // Default column order for live tables (keys from column-data.ts)
 export const DEFAULT_DPS_PLAYER_COLUMN_ORDER = ['totalDmg', 'dps', 'tdps', 'bossDmg', 'bossDps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
 export const DEFAULT_DPS_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
-export const DEFAULT_HEAL_PLAYER_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
-export const DEFAULT_HEAL_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
+export const DEFAULT_HEAL_PLAYER_COLUMN_ORDER = ['totalDmg', 'dps', 'effectiveTotal', 'effectiveDps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
+export const DEFAULT_HEAL_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'effectiveTotal', 'effectiveDps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
 export const DEFAULT_TANKED_PLAYER_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
 export const DEFAULT_TANKED_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
 
@@ -76,6 +83,36 @@ export const DEFAULT_LIVE_SORT_SETTINGS = {
   tankedPlayers: { sortKey: 'totalDmg', sortDesc: true },
   tankedSkills: { sortKey: 'totalDmg', sortDesc: true },
 };
+
+type MutableRecord = Record<string, unknown>;
+
+function mergeFlatDefaults<T extends MutableRecord>(
+  target: T,
+  defaults: Record<string, unknown>,
+): void {
+  for (const [key, value] of Object.entries(defaults)) {
+    if (!(key in target)) {
+      (target as MutableRecord)[key] = value;
+    }
+  }
+}
+
+function normalizeColumnOrder(
+  target: { order?: string[] },
+  defaults: readonly string[],
+): void {
+  const current = Array.isArray(target.order) ? target.order : [];
+  const defaultSet = new Set(defaults);
+  const deduped = current.filter(
+    (key, index) => defaultSet.has(key) && current.indexOf(key) === index,
+  );
+
+  for (const key of defaults) {
+    if (!deduped.includes(key)) deduped.push(key);
+  }
+
+  target.order = deduped;
+}
 
 export type ShortcutSettingId = keyof typeof DEFAULT_SETTINGS.shortcuts;
 
@@ -94,24 +131,24 @@ export type PanelAttrConfig = {
 };
 
 export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
-  { attrId: 11720, label: "攻速", labelKey: "settingsStore.panelAttr.11720", color: "#6ee7ff", enabled: false, format: "percent" },
-  { attrId: 11710, label: "暴击率", labelKey: "settingsStore.panelAttr.11710", color: "#ff7a7a", enabled: false, format: "percent" },
-  { attrId: 11930, label: "急速", labelKey: "settingsStore.panelAttr.11930", color: "#facc15", enabled: false, format: "percent" },
-  { attrId: 11780, label: "幸运", labelKey: "settingsStore.panelAttr.11780", color: "#a78bfa", enabled: false, format: "percent" },
-  { attrId: 11940, label: "精通", labelKey: "settingsStore.panelAttr.11940", color: "#60a5fa", enabled: false, format: "percent" },
-  { attrId: 11950, label: "全能", labelKey: "settingsStore.panelAttr.11950", color: "#34d399", enabled: false, format: "percent" },
-  { attrId: 11760, label: "冷却缩减", labelKey: "settingsStore.panelAttr.11760", color: "#f97316", enabled: false, format: "percent" },
-  { attrId: 11960, label: "冷却加速", labelKey: "settingsStore.panelAttr.11960", color: "#38bdf8", enabled: false, format: "percent" },
-  { attrId: 11010, label: "力量", labelKey: "settingsStore.panelAttr.11010", color: "#f87171", enabled: false, format: "integer" },
-  { attrId: 11020, label: "智力", labelKey: "settingsStore.panelAttr.11020", color: "#818cf8", enabled: false, format: "integer" },
-  { attrId: 11030, label: "敏捷", labelKey: "settingsStore.panelAttr.11030", color: "#4ade80", enabled: false, format: "integer" },
-  { attrId: 11330, label: "物理攻击", labelKey: "settingsStore.panelAttr.11330", color: "#fb923c", enabled: false, format: "integer" },
-  { attrId: 11340, label: "魔法攻击", labelKey: "settingsStore.panelAttr.11340", color: "#c084fc", enabled: false, format: "integer" },
-  { attrId: 11730, label: "施法速度", labelKey: "settingsStore.panelAttr.11730", color: "#22d3ee", enabled: false, format: "percent" },
-  { attrId: 12510, label: "暴击伤害", labelKey: "settingsStore.panelAttr.12510", color: "#f472b6", enabled: false, format: "percent" },
-  { attrId: 12530, label: "幸运伤害倍率", labelKey: "settingsStore.panelAttr.12530", color: "#d8b4fe", enabled: false, format: "percent" },
-  { attrId: 12540, label: "格挡伤害减免", labelKey: "settingsStore.panelAttr.12540", color: "#86efac", enabled: false, format: "percent" },
-  { attrId: 11970, label: "格挡", labelKey: "settingsStore.panelAttr.11970", color: "#fbbf24", enabled: false, format: "percent" },
+  { attrId: 11720, label: "攻速", color: "#6ee7ff", enabled: false, format: "percent" },
+  { attrId: 11710, label: "暴击率", color: "#ff7a7a", enabled: false, format: "percent" },
+  { attrId: 11930, label: "急速", color: "#facc15", enabled: false, format: "percent" },
+  { attrId: 11780, label: "幸运", color: "#a78bfa", enabled: false, format: "percent" },
+  { attrId: 11940, label: "精通", color: "#60a5fa", enabled: false, format: "percent" },
+  { attrId: 11950, label: "全能", color: "#34d399", enabled: false, format: "percent" },
+  { attrId: 11760, label: "冷却缩减", color: "#f97316", enabled: false, format: "percent" },
+  { attrId: 11960, label: "冷却加速", color: "#38bdf8", enabled: false, format: "percent" },
+  { attrId: 11010, label: "力量", color: "#f87171", enabled: false, format: "integer" },
+  { attrId: 11020, label: "智力", color: "#818cf8", enabled: false, format: "integer" },
+  { attrId: 11030, label: "敏捷", color: "#4ade80", enabled: false, format: "integer" },
+  { attrId: 11330, label: "物理攻击", color: "#fb923c", enabled: false, format: "integer" },
+  { attrId: 11340, label: "魔法攻击", color: "#c084fc", enabled: false, format: "integer" },
+  { attrId: 11730, label: "施法速度", color: "#22d3ee", enabled: false, format: "percent" },
+  { attrId: 12510, label: "暴击伤害", color: "#f472b6", enabled: false, format: "percent" },
+  { attrId: 12530, label: "幸运伤害倍率", color: "#d8b4fe", enabled: false, format: "percent" },
+  { attrId: 12540, label: "格挡伤害减免", color: "#86efac", enabled: false, format: "percent" },
+  { attrId: 11970, label: "格挡", color: "#fbbf24", enabled: false, format: "percent" },
 ];
 
 export type OverlayPositions = {
@@ -348,23 +385,8 @@ function createDefaultTextBuffPanelStyle(): TextBuffPanelStyle {
   };
 }
 
-export const DEFAULT_SKILL_MONITOR_PROFILE_NAME = {
-  value: "默认方案",
-  key: "settingsStore.skillMonitor.defaultProfileName",
-} as const;
-
-export const DEFAULT_BUFF_GROUP_NAME = {
-  value: "新分组",
-  key: "settingsStore.skillMonitor.defaultBuffGroupName",
-} as const;
-
-export const DEFAULT_CUSTOM_PANEL_GROUP_NAME = {
-  value: "监控区 1",
-  key: "settingsStore.skillMonitor.defaultCustomPanelGroupName",
-} as const;
-
 export function createDefaultBuffGroup(
-  name = DEFAULT_BUFF_GROUP_NAME.value,
+  name = "新分组",
   index = 1,
 ): BuffGroup {
   return {
@@ -385,7 +407,7 @@ export function createDefaultBuffGroup(
 }
 
 export function createDefaultCustomPanelGroup(
-  name = DEFAULT_CUSTOM_PANEL_GROUP_NAME.value,
+  name = "监控区 1",
   index = 1,
 ): CustomPanelGroup {
   return {
@@ -398,7 +420,7 @@ export function createDefaultCustomPanelGroup(
 }
 
 export function createDefaultSkillMonitorProfile(
-  name = DEFAULT_SKILL_MONITOR_PROFILE_NAME.value,
+  name = "默认方案",
   classKey = "wind_knight",
 ): SkillMonitorProfile {
   return {
@@ -440,7 +462,28 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
   };
 }
 
-const DEFAULT_GENERAL_SETTINGS = {
+const DEFAULT_GENERAL_SETTINGS: {
+  showYourName: string;
+  showOthersName: string;
+  showYourAbilityScore: boolean;
+  showOthersAbilityScore: boolean;
+  showYourSeasonStrength: boolean;
+  showOthersSeasonStrength: boolean;
+  relativeToTopDPSPlayer: boolean;
+  relativeToTopDPSSkill: boolean;
+  relativeToTopHealPlayer: boolean;
+  relativeToTopHealSkill: boolean;
+  relativeToTopTankedPlayer: boolean;
+  relativeToTopTankedSkill: boolean;
+  shortenAbilityScore: boolean;
+  shortenDps: boolean;
+  shortenTps: boolean;
+  abbreviationStyle: 'western' | 'cn';
+  abbreviatedDecimalPlaces: number;
+  eventUpdateRateMs: number;
+  language: LocaleCode;
+  skillIdDisplayMode: SkillIdDisplayMode;
+} = {
   showYourName: "Show Your Name",
   showOthersName: "Show Others' Name",
   showYourAbilityScore: true,
@@ -456,10 +499,11 @@ const DEFAULT_GENERAL_SETTINGS = {
   shortenAbilityScore: true,
   shortenDps: true,
   shortenTps: true,
+  abbreviationStyle: 'western',
   abbreviatedDecimalPlaces: 1,
   eventUpdateRateMs: 200,
-  language: 'zh-CN' as const,
-  skillIdDisplayMode: 'hover' as const,
+  language: 'zh-CN',
+  skillIdDisplayMode: 'off',
 };
 
 export const DEFAULT_CLASS_COLORS: Record<string, string> = {
@@ -572,16 +616,6 @@ export const FONT_SIZE_LABELS: Record<string, string> = {
   xl: '超大',
 };
 
-
-export const FONT_SIZE_LABEL_KEYS: Record<string, string> = {
-  xs: "settingsStore.fontSize.xs",
-  sm: "settingsStore.fontSize.sm",
-  base: "settingsStore.fontSize.base",
-  lg: "settingsStore.fontSize.lg",
-  xl: "settingsStore.fontSize.xl",
-};
-
-
 // Default custom theme colors (based on dark theme)
 export type CustomThemeColors = {
   backgroundMain: string;
@@ -634,29 +668,29 @@ export const DEFAULT_CUSTOM_THEME_COLORS: CustomThemeColors = {
 };
 
 // Labels for custom theme color variables
-export const CUSTOM_THEME_COLOR_LABELS: Record<string, { label: string; description: string; category: string; labelKey?: string; descriptionKey?: string; categoryKey?: string }> = {
-  backgroundMain: { label: '背景（主窗口）', description: '主窗口背景颜色', category: 'Base', labelKey: 'settingsStore.themeLabel.backgroundMain.label', descriptionKey: 'settingsStore.themeLabel.backgroundMain.description', categoryKey: 'settingsStore.themeCategory.base' },
-  backgroundLive: { label: '背景（实时）', description: '实时统计窗口背景颜色', category: 'Base', labelKey: 'settingsStore.themeLabel.backgroundLive.label', descriptionKey: 'settingsStore.themeLabel.backgroundLive.description', categoryKey: 'settingsStore.themeCategory.base' },
-  foreground: { label: '前景', description: '主要文本颜色', category: 'Base', labelKey: 'settingsStore.themeLabel.foreground.label', descriptionKey: 'settingsStore.themeLabel.foreground.description', categoryKey: 'settingsStore.themeCategory.base' },
-  surface: { label: '表面', description: '卡片、弹窗和面板的背景颜色', category: 'Surfaces', labelKey: 'settingsStore.themeLabel.surface.label', descriptionKey: 'settingsStore.themeLabel.surface.description', categoryKey: 'settingsStore.themeCategory.surfaces' },
-  surfaceForeground: { label: '表面文本', description: '表面上的文本颜色', category: 'Surfaces', labelKey: 'settingsStore.themeLabel.surfaceForeground.label', descriptionKey: 'settingsStore.themeLabel.surfaceForeground.description', categoryKey: 'settingsStore.themeCategory.surfaces' },
-  primary: { label: '主色', description: '主要强调色', category: 'Accents', labelKey: 'settingsStore.themeLabel.primary.label', descriptionKey: 'settingsStore.themeLabel.primary.description', categoryKey: 'settingsStore.themeCategory.accents' },
-  primaryForeground: { label: '主色文本', description: '主色元素上的文本颜色', category: 'Accents', labelKey: 'settingsStore.themeLabel.primaryForeground.label', descriptionKey: 'settingsStore.themeLabel.primaryForeground.description', categoryKey: 'settingsStore.themeCategory.accents' },
-  secondary: { label: '次色', description: '次要强调色', category: 'Accents', labelKey: 'settingsStore.themeLabel.secondary.label', descriptionKey: 'settingsStore.themeLabel.secondary.description', categoryKey: 'settingsStore.themeCategory.accents' },
-  secondaryForeground: { label: '次色文本', description: '次色元素上的文本颜色', category: 'Accents', labelKey: 'settingsStore.themeLabel.secondaryForeground.label', descriptionKey: 'settingsStore.themeLabel.secondaryForeground.description', categoryKey: 'settingsStore.themeCategory.accents' },
-  muted: { label: '柔和', description: '柔和/低调的背景颜色', category: 'Utility', labelKey: 'settingsStore.themeLabel.muted.label', descriptionKey: 'settingsStore.themeLabel.muted.description', categoryKey: 'settingsStore.themeCategory.utility' },
-  mutedForeground: { label: '柔和文本', description: '低调的文本颜色', category: 'Utility', labelKey: 'settingsStore.themeLabel.mutedForeground.label', descriptionKey: 'settingsStore.themeLabel.mutedForeground.description', categoryKey: 'settingsStore.themeCategory.utility' },
-  accent: { label: '强调', description: '高亮强调色', category: 'Accents', labelKey: 'settingsStore.themeLabel.accent.label', descriptionKey: 'settingsStore.themeLabel.accent.description', categoryKey: 'settingsStore.themeCategory.accents' },
-  accentForeground: { label: '强调文本', description: '强调色元素上的文本颜色', category: 'Accents', labelKey: 'settingsStore.themeLabel.accentForeground.label', descriptionKey: 'settingsStore.themeLabel.accentForeground.description', categoryKey: 'settingsStore.themeCategory.accents' },
-  destructive: { label: '破坏性', description: '错误/危险颜色', category: 'Utility', labelKey: 'settingsStore.themeLabel.destructive.label', descriptionKey: 'settingsStore.themeLabel.destructive.description', categoryKey: 'settingsStore.themeCategory.utility' },
-  destructiveForeground: { label: '破坏性文本', description: '破坏性元素上的文本颜色', category: 'Utility', labelKey: 'settingsStore.themeLabel.destructiveForeground.label', descriptionKey: 'settingsStore.themeLabel.destructiveForeground.description', categoryKey: 'settingsStore.themeCategory.utility' },
-  border: { label: '边框', description: '边框颜色', category: 'Utility', labelKey: 'settingsStore.themeLabel.border.label', descriptionKey: 'settingsStore.themeLabel.border.description', categoryKey: 'settingsStore.themeCategory.utility' },
-  input: { label: '输入框', description: '输入框背景颜色', category: 'Utility', labelKey: 'settingsStore.themeLabel.input.label', descriptionKey: 'settingsStore.themeLabel.input.description', categoryKey: 'settingsStore.themeCategory.utility' },
-  tableTextColor: { label: '表格文本', description: '实时表格中的文本颜色', category: 'Tables', labelKey: 'settingsStore.themeLabel.tableTextColor.label', descriptionKey: 'settingsStore.themeLabel.tableTextColor.description', categoryKey: 'settingsStore.themeCategory.tables' },
-  tableAbbreviatedColor: { label: '后缀颜色', description: '表格中 K、M、% 后缀的颜色', category: 'Tables', labelKey: 'settingsStore.themeLabel.tableAbbreviatedColor.label', descriptionKey: 'settingsStore.themeLabel.tableAbbreviatedColor.description', categoryKey: 'settingsStore.themeCategory.tables' },
-  tooltipBg: { label: '提示背景', description: '提示框背景颜色', category: 'Tooltip', labelKey: 'settingsStore.themeLabel.tooltipBg.label', descriptionKey: 'settingsStore.themeLabel.tooltipBg.description', categoryKey: 'settingsStore.themeCategory.tooltip' },
-  tooltipBorder: { label: '提示边框', description: '提示框边框颜色', category: 'Tooltip', labelKey: 'settingsStore.themeLabel.tooltipBorder.label', descriptionKey: 'settingsStore.themeLabel.tooltipBorder.description', categoryKey: 'settingsStore.themeCategory.tooltip' },
-  tooltipFg: { label: '提示文本', description: '提示框文本颜色', category: 'Tooltip', labelKey: 'settingsStore.themeLabel.tooltipFg.label', descriptionKey: 'settingsStore.themeLabel.tooltipFg.description', categoryKey: 'settingsStore.themeCategory.tooltip' },
+export const CUSTOM_THEME_COLOR_LABELS: Record<string, { label: string; description: string; category: string }> = {
+  backgroundMain: { label: '背景（主窗口）', description: '主窗口背景颜色', category: 'Base' },
+  backgroundLive: { label: '背景（实时）', description: '实时统计窗口背景颜色', category: 'Base' },
+  foreground: { label: '前景', description: '主要文本颜色', category: 'Base' },
+  surface: { label: '表面', description: '卡片、弹窗和面板的背景颜色', category: 'Surfaces' },
+  surfaceForeground: { label: '表面文本', description: '表面上的文本颜色', category: 'Surfaces' },
+  primary: { label: '主色', description: '主要强调色', category: 'Accents' },
+  primaryForeground: { label: '主色文本', description: '主色元素上的文本颜色', category: 'Accents' },
+  secondary: { label: '次色', description: '次要强调色', category: 'Accents' },
+  secondaryForeground: { label: '次色文本', description: '次色元素上的文本颜色', category: 'Accents' },
+  muted: { label: '柔和', description: '柔和/低调的背景颜色', category: 'Utility' },
+  mutedForeground: { label: '柔和文本', description: '低调的文本颜色', category: 'Utility' },
+  accent: { label: '强调', description: '高亮强调色', category: 'Accents' },
+  accentForeground: { label: '强调文本', description: '强调色元素上的文本颜色', category: 'Accents' },
+  destructive: { label: '破坏性', description: '错误/危险颜色', category: 'Utility' },
+  destructiveForeground: { label: '破坏性文本', description: '破坏性元素上的文本颜色', category: 'Utility' },
+  border: { label: '边框', description: '边框颜色', category: 'Utility' },
+  input: { label: '输入框', description: '输入框背景颜色', category: 'Utility' },
+  tableTextColor: { label: '表格文本', description: '实时表格中的文本颜色', category: 'Tables' },
+  tableAbbreviatedColor: { label: '后缀颜色', description: '表格中 K、M、% 后缀的颜色', category: 'Tables' },
+  tooltipBg: { label: '提示背景', description: '提示框背景颜色', category: 'Tooltip' },
+  tooltipBorder: { label: '提示边框', description: '提示框边框颜色', category: 'Tooltip' },
+  tooltipFg: { label: '提示文本', description: '提示框文本颜色', category: 'Tooltip' },
 };
 
 const DEFAULT_SETTINGS = {
@@ -690,7 +724,7 @@ const DEFAULT_SETTINGS = {
     disableClickthrough: "",
     toggleClickthrough: "",
     resetEncounter: "",
-    togglePauseEncounter: "",
+      togglePauseEncounter: "",
     hardReset: "",
     toggleBossHp: "",
     toggleOverlayEdit: "",
@@ -734,6 +768,7 @@ const DEFAULT_SETTINGS = {
       showBossOnlyButton: true,
       showSettingsButton: true,
       showMinimizeButton: true,
+      showHeaderControl: true,
       showTotalDamage: true,
       showTotalDps: true,
       showBossHealth: true,
@@ -992,6 +1027,32 @@ export const settings = {
     },
   },
 };
+
+
+
+export function normalizePersistedSettings(): void {
+  mergeFlatDefaults(SETTINGS.live.dps.players.state as MutableRecord, DEFAULT_SETTINGS.live.dpsPlayers);
+  mergeFlatDefaults(SETTINGS.live.dps.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.live.dpsSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.live.heal.players.state as MutableRecord, DEFAULT_SETTINGS.live.healPlayers);
+  mergeFlatDefaults(SETTINGS.live.heal.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.live.healSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.live.tanked.players.state as MutableRecord, DEFAULT_SETTINGS.live.tankedPlayers);
+  mergeFlatDefaults(SETTINGS.live.tanked.skills.state as MutableRecord, DEFAULT_SETTINGS.live.tankedSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.history.dps.players.state as MutableRecord, DEFAULT_SETTINGS.history.dpsPlayers);
+  mergeFlatDefaults(SETTINGS.history.dps.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.history.dpsSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.history.heal.players.state as MutableRecord, DEFAULT_SETTINGS.history.healPlayers);
+  mergeFlatDefaults(SETTINGS.history.heal.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.history.healSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.history.tanked.players.state as MutableRecord, DEFAULT_SETTINGS.history.tankedPlayers);
+  mergeFlatDefaults(SETTINGS.history.tanked.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.history.tankedSkillBreakdown);
+
+  normalizeColumnOrder(SETTINGS.live.columnOrder.dpsPlayers.state, DEFAULT_DPS_PLAYER_COLUMN_ORDER);
+  normalizeColumnOrder(SETTINGS.live.columnOrder.dpsSkills.state, DEFAULT_DPS_SKILL_COLUMN_ORDER);
+  normalizeColumnOrder(SETTINGS.live.columnOrder.healPlayers.state, DEFAULT_HEAL_PLAYER_COLUMN_ORDER);
+  normalizeColumnOrder(SETTINGS.live.columnOrder.healSkills.state, DEFAULT_HEAL_SKILL_COLUMN_ORDER);
+  normalizeColumnOrder(SETTINGS.live.columnOrder.tankedPlayers.state, DEFAULT_TANKED_PLAYER_COLUMN_ORDER);
+  normalizeColumnOrder(SETTINGS.live.columnOrder.tankedSkills.state, DEFAULT_TANKED_SKILL_COLUMN_ORDER);
+}
+
+normalizePersistedSettings();
 
 // Accessibility helpers
 

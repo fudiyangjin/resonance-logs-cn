@@ -53,11 +53,11 @@ pub struct LiveDataPayload {
     pub total_dmg: u128,
     pub total_dmg_boss_only: u128,
     pub total_heal: u128,
+    pub total_effective_heal: u128,
     pub local_player_uid: i64,
     pub scene_id: Option<i32>,
     pub scene_name: Option<String>,
     pub is_paused: bool,
-    pub training_dummy: TrainingDummyState,
     pub bosses: Vec<BossHealth>,
     pub entities: Vec<RawEntityData>,
 }
@@ -114,6 +114,7 @@ pub struct HistoryEntityData {
 #[serde(rename_all = "camelCase")]
 pub struct RawCombatStats {
     pub total: u128,
+    pub effective_total: u128,
     pub hits: u128,
     pub crit_hits: u128,
     pub crit_total: u128,
@@ -125,6 +126,7 @@ pub struct RawCombatStats {
 #[serde(rename_all = "camelCase")]
 pub struct RawSkillStats {
     pub total_value: u128,
+    pub effective_total_value: u128,
     pub hits: u128,
     pub crit_hits: u128,
     pub crit_total_value: u128,
@@ -145,6 +147,7 @@ pub struct PerTargetStats {
 pub fn to_raw_combat_stats(stats: &CombatStats) -> RawCombatStats {
     RawCombatStats {
         total: stats.total,
+        effective_total: stats.effective_total,
         hits: stats.hits,
         crit_hits: stats.crit_hits,
         crit_total: stats.crit_total,
@@ -156,6 +159,7 @@ pub fn to_raw_combat_stats(stats: &CombatStats) -> RawCombatStats {
 pub fn to_raw_skill_stats(skill: &Skill) -> RawSkillStats {
     RawSkillStats {
         total_value: skill.total_value,
+        effective_total_value: skill.effective_total_value,
         hits: skill.hits,
         crit_hits: skill.crit_hits,
         crit_total_value: skill.crit_total_value,
@@ -190,6 +194,7 @@ pub fn build_per_target_stats(
             skill_id,
             RawSkillStats {
                 total_value: stats.total_value,
+                effective_total_value: stats.effective_total_value,
                 hits: stats.hits,
                 crit_hits: stats.crit_hits,
                 crit_total_value: stats.crit_total,
@@ -199,6 +204,7 @@ pub fn build_per_target_stats(
         );
         entry.total_value += stats.total_value;
         entry.damage.total += stats.total_value;
+        entry.damage.effective_total += stats.effective_total_value;
         entry.damage.hits += stats.hits;
         entry.damage.crit_hits += stats.crit_hits;
         entry.damage.crit_total += stats.crit_total;

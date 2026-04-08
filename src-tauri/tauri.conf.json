@@ -1,6 +1,7 @@
 {
-    "productName": "Resonance Logs Global",
-    "version": "0.0.2",
+    "$schema": "https://schema.tauri.app/config/2",
+    "productName": "resonance-logs-cn",
+    "version": "0.0.9",
     "identifier": "com.resonance-logs-cn",
     "build": {
         "beforeDevCommand": "npm run dev:stop-windivert",
@@ -11,7 +12,7 @@
     "app": {
         "windows": [
             {
-                "title": "Resonance Logs Global - Live",
+                "title": "Resonance Logs CN - Live",
                 "label": "live",
                 "url": "live",
                 "shadow": false,
@@ -23,7 +24,7 @@
                 "skipTaskbar": true
             },
             {
-                "title": "Resonance Logs Global - Main 0.0.1",
+                "title": "Resonance Logs CN - Main 0.0.9",
                 "label": "main",
                 "url": "main",
                 "width": 1200,
@@ -82,19 +83,20 @@
         "resources": [
             "./WinDivert.dll",
             "./WinDivert64.sys",
-            "./meter-data/"
+            "./meter-data/",
+            "../src/lib/locales/"
         ],
         "createUpdaterArtifacts": true
     },
     "plugins": {
         "updater": {
-            "active": false,
+            "active": true,
             "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ5RTQ4NzgzQTlFM0Q0QzQKUldURTFPT3BnNGZrU1dJY01aaGNwelZxc3U0UGpGTVJaQ2FpcVdQd1FsTVVXSDRBakFxbkVSNjkK",
             "endpoints": [
                 "https://bptimer.cn/resonance-logs/latest.json",
                 "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json"
             ],
-            "dialog": false,
+            "dialog": true,
             "windows": {
                 "installMode": "basicUi"
             }

@@ -71,16 +71,20 @@
   });
   const levelLabel = $derived.by(() => {
     const locale = SETTINGS.live.general.state.language;
-    const prefix = resolveModuleCalcTranslation(
-      "moduleCalc.attrLevelPrefix",
-      locale,
-      locale === "en" ? "Lv." : "",
-    );
-    const suffix = resolveModuleCalcTranslation(
-      "moduleCalc.attrLevelSuffix",
-      locale,
-      locale === "zh-CN" ? "级" : "",
-    );
+    const prefix = locale === "zh-CN"
+      ? resolveModuleCalcTranslation(
+          "moduleCalc.attrLevelPrefix",
+          locale,
+          "",
+        )
+      : "Lv.";
+    const suffix = locale === "zh-CN"
+      ? resolveModuleCalcTranslation(
+          "moduleCalc.attrLevelSuffix",
+          locale,
+          "级",
+        )
+      : "";
     return `${prefix}${level}${suffix}`;
   });
 </script>

@@ -68,6 +68,56 @@ pub struct LocalDamageEvent {
     pub target_uid: i64,
 }
 
+#[derive(Debug, Default, Clone, Copy)]
+struct TargetHpState {
+    current_hp: Option<u128>,
+    max_hp: Option<u128>,
+}
+
+impl TargetHpState {
+    fn from_attr_store(attr_store: &EntityAttrStore, target_uid: i64) -> Self {
+        let current_hp = attr_store
+            .attr(target_uid, AttrType::CurrentHp)
+            .and_then(AttrValue::as_int)
+            .and_then(|value| u128::try_from(value).ok());
+        let max_hp = attr_store
+            .attr(target_uid, AttrType::MaxHp)
+            .and_then(AttrValue::as_int)
+            .and_then(|value| u128::try_from(value).ok())
+            .filter(|value| *value > 0);
+
+        Self { current_hp, max_hp }
+    }
+
+    fn apply_damage(&mut self, hp_loss: u128, shield_loss: u128, fallback_damage: u128) {
+        let hp_delta = if hp_loss > 0 {
+            hp_loss
+        } else if shield_loss == 0 {
+            fallback_damage
+        } else {
+            0
+        };
+
+        if let (Some(current_hp), Some(max_hp)) = (&mut self.current_hp, self.max_hp) {
+            *current_hp = (*current_hp).min(max_hp).saturating_sub(hp_delta);
+        }
+    }
+
+    fn apply_heal(&mut self, raw_heal: u128) -> u128 {
+        if let (Some(current_hp), Some(max_hp)) = (&mut self.current_hp, self.max_hp) {
+            let clamped_current_hp = (*current_hp).min(max_hp);
+            let missing_hp = max_hp.saturating_sub(clamped_current_hp);
+            let effective_heal = raw_heal.min(missing_hp);
+            *current_hp = clamped_current_hp
+                .saturating_add(effective_heal)
+                .min(max_hp);
+            effective_heal
+        } else {
+            raw_heal
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct ParsedSkillCd {
     pub skill_level_id: Option<i32>,
@@ -567,6 +617,7 @@ pub fn process_aoi_sync_delta(
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis();
+    let mut target_hp_state = TargetHpState::from_attr_store(attr_store, target_uid);
     let mut local_damage_events = Vec::new();
     let mut had_player_damage = false;
     let mut had_allowed_combat = false;
@@ -580,6 +631,14 @@ pub fn process_aoi_sync_delta(
             actual_dmg as u128
         } else {
             continue; // skip this iteration
+        };
+        let hp_loss_value = sync_damage_info.hp_lessen_value.unwrap_or(0).max(0) as u128;
+        let shield_loss_value = sync_damage_info.shield_lessen_value.unwrap_or(0).max(0) as u128;
+        let is_heal = sync_damage_info.r#type.unwrap_or(0) == EDamageType::Heal as i32;
+        let effective_heal_value = if allow_combat && is_heal {
+            target_hp_state.apply_heal(actual_value)
+        } else {
+            0
         };
 
         let attacker_uuid = sync_damage_info
@@ -637,7 +696,6 @@ pub fn process_aoi_sync_delta(
                 attacker_entity.class_spec = determined_spec;
             }
 
-            let is_heal = sync_damage_info.r#type.unwrap_or(0) == EDamageType::Heal as i32;
             let is_lucky_local = lucky_value.is_some();
             const CRIT_BIT: i32 = 0b00_00_00_01;
             let is_crit_local = (flag & CRIT_BIT) != 0;
@@ -669,10 +727,13 @@ pub fn process_aoi_sync_delta(
                     skill.lucky_total_value += actual_value;
                 }
                 encounter.total_heal += actual_value;
+                encounter.total_effective_heal += effective_heal_value;
                 attacker_entity.healing.hits += 1;
                 attacker_entity.healing.total += actual_value;
+                attacker_entity.healing.effective_total += effective_heal_value;
                 skill.hits += 1;
                 skill.total_value += actual_value;
+                skill.effective_total_value += effective_heal_value;
 
                 // Track per-skill per-target stats for healing
                 let key = (skill_key, target_uid);
@@ -680,6 +741,7 @@ pub fn process_aoi_sync_delta(
 
                 stats.hits += 1;
                 stats.total_value += actual_value;
+                stats.effective_total_value += effective_heal_value;
                 if is_crit_local {
                     stats.crit_hits += 1;
                     stats.crit_total += actual_value;
@@ -765,11 +827,8 @@ pub fn process_aoi_sync_delta(
                     stats.lucky_total += actual_value;
                 }
 
-                let hp_loss_val = sync_damage_info.hp_lessen_value.unwrap_or(0).max(0) as u128;
-                let shield_loss_val =
-                    sync_damage_info.shield_lessen_value.unwrap_or(0).max(0) as u128;
-                stats.hp_loss_total += hp_loss_val;
-                stats.shield_loss_total += shield_loss_val;
+                stats.hp_loss_total += hp_loss_value;
+                stats.shield_loss_total += shield_loss_value;
 
                 if stats.monster_name.is_none() {
                     stats.monster_name = target_name_opt.clone();
@@ -788,12 +847,14 @@ pub fn process_aoi_sync_delta(
             had_player_damage = true;
         }
 
+        if allow_combat && !was_heal_event {
+            target_hp_state.apply_damage(hp_loss_value, shield_loss_value, actual_value);
+        }
+
         // Track damage taken when a non-player attacks the defender.
         if allow_combat && !was_heal_event {
-            let hp_loss = sync_damage_info.hp_lessen_value.unwrap_or(0).max(0) as u128;
-            let shield_loss = sync_damage_info.shield_lessen_value.unwrap_or(0).max(0) as u128;
-            let effective_value = if hp_loss + shield_loss > 0 {
-                hp_loss + shield_loss
+            let effective_value = if hp_loss_value + shield_loss_value > 0 {
+                hp_loss_value + shield_loss_value
             } else {
                 actual_value
             };

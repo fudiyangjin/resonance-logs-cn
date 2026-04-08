@@ -1,10 +1,10 @@
 {
   "name": "resonance-logs-cn",
-  "version": "0.0.1",
+  "version": "0.0.9",
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "svelte-kit sync && vite dev",
     "build": "svelte-kit sync && vite build",
     "preview": "vite preview",
     "dev:stop-windivert": "sc stop windivert 2>NUL & npm run dev",

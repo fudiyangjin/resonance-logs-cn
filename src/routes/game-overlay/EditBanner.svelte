@@ -20,6 +20,7 @@
   </button>
 </div>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="window-drag-bar" onpointerdown={onWindowDragPointerDown}>
   拖动此处移动 Game Overlay 窗口
 </div>

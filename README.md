@@ -1,48 +1,4 @@
-This is a fork of Resonance Logs CN. I have no idea what I'm doing, so I added a translation layer to it lol. I will eventually do a PR. This is based off of version 0.0.8
-
-Don't expect patchnotes for this until it's nearly done.
-Also some minor UI adjustments were done. 
-
-For anyone that wants to support translataions to other languages or fix wrong translations due to the starresonancetool giving the wrong name or a bad name (such as the Imagines not having their actual name; i.e. Rorola is not called Rorola), then please reach out to me and I can show you how it works. For any other issues; I will address later as this is still a WIP
-
-This is what's done now:
-
-99% sure all UI translations are done.
-
-CN is preserved language, as it will default back to it if there isn't any translations for something. 
-
-EN skills is mostly done. Probably have to correct a lot of things since even ZDPS didn't have everything right, or the traansition over to resonancelogs wasn't perfect.
-
-JP UI is probably also at 99%. Anything in game for JP i left blank intentionally because I do not know the in game JP locales for those IDs. 
-
-I'm 99% sure that all UI translations are done and on the translation layer and not hardcoded to anything outside the translation layer anymore. I'm 100% sure that someone will find the 1% that is not translated lol.
-
-Next plan i have is that I'm going to add a new main menu item to help with editing appdata translations. 
-
-After that I will send a PR.
-
-
--Donne
-
-These are the biggest changes:
-
-<img width="2068" height="1829" alt="image" src="https://github.com/user-attachments/assets/3a9deefb-84d4-4d9b-a508-6c8084435828" />
-
-<img width="2147" height="1874" alt="image" src="https://github.com/user-attachments/assets/4d8999dc-2f37-4f50-b077-b03de81f113a" />
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Resonance Logs GLOBAL
+# Resonance Logs CN
 
 [Blue Protocol: Star Resonance](https://www.starresonance.com/) 战斗数据分析桌面应用，支持实时 DPS 统计、Buff 监控、技能 CD 展示等功能。
 

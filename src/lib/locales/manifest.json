@@ -1,0 +1,34 @@
+{
+  "defaultLocale": "zh-CN",
+  "fallbackLocale": "en",
+  "locales": [
+    "de",
+    "en",
+    "es",
+    "fr",
+    "ja",
+    "pt-BR",
+    "zh-CN"
+  ],
+  "categories": {
+    "ui": [
+      "DPS.json",
+      "module-calc.json",
+      "monster-monitor.json",
+      "skill-monitor.json",
+      "settings-store.json",
+      "localization.json"
+    ],
+    "parser": [
+      "class-labels.json",
+      "skillnames.json",
+      "MonsterName.json",
+      "SceneName.json",
+      "BuffName.json"
+    ],
+    "search": [
+      "BuffNameSearch.json",
+      "resonance-skill-search.json"
+    ]
+  }
+}

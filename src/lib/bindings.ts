@@ -346,9 +346,20 @@ async createDiagnosticsBundle(destinationPath: string | null) : Promise<Result<s
     else return { status: "error", error: e  as any };
 }
 },
-async openTranslationDataDir() : Promise<Result<null, string>> {
+async checkGpuSupport() : Promise<GpuSupport> {
+    return await TAURI_INVOKE("check_gpu_support");
+},
+async getLatestModules() : Promise<Result<ModuleInfo[], string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("open_translation_data_dir") };
+    return { status: "ok", data: await TAURI_INVOKE("get_latest_modules") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async optimizeLatestModules(targetAttributes: number[], excludeAttributes: number[], minTotalValue: number | null, minAttrRequirements: Partial<{ [key in number]: number }> | null, useGpu: boolean | null, combinationSize: number | null) : Promise<Result<ModuleSolution[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("optimize_latest_modules", { targetAttributes, excludeAttributes, minTotalValue, minAttrRequirements, useGpu, combinationSize }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -362,9 +373,25 @@ async initializeTranslationRuntimeFiles() : Promise<Result<string, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+async openTranslationDataDir() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("open_translation_data_dir") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async refreshTranslationRuntimeData() : Promise<Result<string, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("refresh_translation_runtime_data") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async listTranslationRuntimeFiles() : Promise<Result<string[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_translation_runtime_files") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -381,14 +408,6 @@ async readTranslationRuntimeFile(relativePath: string) : Promise<Result<string, 
 async writeTranslationRuntimeFile(relativePath: string, contents: string) : Promise<Result<string, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("write_translation_runtime_file", { relativePath, contents }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async listTranslationRuntimeFiles() : Promise<Result<TranslationRuntimeFileEntry[], string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("list_translation_runtime_files") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -429,25 +448,6 @@ async generateMonsterNameTranslationScaffold() : Promise<Result<string, string>>
 async generateSkillNameTranslationScaffold() : Promise<Result<string, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("generate_skill_name_translation_scaffold") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async checkGpuSupport() : Promise<GpuSupport> {
-    return await TAURI_INVOKE("check_gpu_support");
-},
-async getLatestModules() : Promise<Result<ModuleInfo[], string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("get_latest_modules") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async optimizeLatestModules(targetAttributes: number[], excludeAttributes: number[], minTotalValue: number | null, minAttrRequirements: Partial<{ [key in number]: number }> | null, useGpu: boolean | null, combinationSize: number | null) : Promise<Result<ModuleSolution[], string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("optimize_latest_modules", { targetAttributes, excludeAttributes, minTotalValue, minAttrRequirements, useGpu, combinationSize }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -614,8 +614,8 @@ name: string;
  * The class ID of the player.
  */
 classId: number }
-export type RawCombatStats = { total: number; hits: number; critHits: number; critTotal: number; luckyHits: number; luckyTotal: number }
-export type RawSkillStats = { totalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number }
+export type RawCombatStats = { total: number; effectiveTotal: number; hits: number; critHits: number; critTotal: number; luckyHits: number; luckyTotal: number }
+export type RawSkillStats = { totalValue: number; effectiveTotalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number }
 /**
  * The result of a query for recent encounters.
  */
@@ -637,7 +637,6 @@ export type SceneNamesResult = {
  */
 names: string[] }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[] }
-export type TranslationRuntimeFileEntry = { relative_path: string }
 
 /** tauri-specta globals **/
 

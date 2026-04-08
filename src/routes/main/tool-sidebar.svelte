@@ -6,8 +6,6 @@
   import { page } from "$app/state";
   import { TOOL_ROUTES } from "./routes.svelte";
   import { getVersion } from "@tauri-apps/api/app";
-  import { resolveNavigationTranslation } from "$lib/i18n";
-  import { SETTINGS } from "$lib/settings-store";
 
   let languageMenuOpen = $state(false);
 
@@ -15,12 +13,11 @@
     { value: "zh-CN", label: "CN" },
     { value: "en", label: "EN" },
     { value: "ja", label: "JP" },
+    { value: "de", label: "DE" },
+    { value: "es", label: "ES" },
+    { value: "fr", label: "FR" },
+    { value: "pt-BR", label: "PT-BR" },
   ] as const;
-
-  function isActiveRoute(toolPath: string): boolean {
-    const pathname = page.url.pathname;
-    return pathname === toolPath || pathname.startsWith(toolPath + "/");
-  }
 
   function getToolRouteLabel(href: string, fallback: string): string {
     const keyMap: Record<string, string> = {
@@ -41,7 +38,7 @@
     );
   }
 
-  function setLanguage(locale: "zh-CN" | "en" | "ja") {
+  function setLanguage(locale: LocaleCode) {
     SETTINGS.live.general.state.language = locale;
     languageMenuOpen = false;
   }
@@ -49,6 +46,16 @@
   function getLanguageLabel(locale: string): string {
     return languageOptions.find((option) => option.value === locale)?.label ?? "CN";
   }
+
+  import { resolveNavigationTranslation, type LocaleCode } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
+
+  // Check if current path matches or starts with the tool path
+  function isActiveRoute(toolPath: string): boolean {
+    const pathname = page.url.pathname;
+    return pathname === toolPath || pathname.startsWith(toolPath + "/");
+  }
+
 </script>
 
 <style>
@@ -58,6 +65,7 @@
 </style>
 
 <aside class="flex flex-col w-56 shrink-0 bg-card/50 border-r border-border/50 h-full">
+  <!-- Header with logo -->
   <div class="px-4 py-4 border-b border-border/50">
     <h1 class="text-lg font-bold text-foreground tracking-tight">Resonance Logs</h1>
     <p class="text-xs text-muted-foreground mt-0.5">
@@ -69,6 +77,7 @@
     </p>
   </div>
 
+  <!-- Tool list -->
   <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
     <p class="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
       {resolveNavigationTranslation(
@@ -77,7 +86,6 @@
         "工具",
       )}
     </p>
-
     {#each Object.entries(TOOL_ROUTES) as [href, route] (route.label)}
       <a
         {href}

@@ -252,6 +252,16 @@ fn build_training_dummy_state(runtime: &TrainingDummyRuntime) -> TrainingDummySt
     }
 }
 
+fn emit_training_dummy_update_if_changed(
+    state: &mut AppState,
+    previous: TrainingDummyState,
+) {
+    let current = build_training_dummy_state(&state.training_dummy);
+    if current != previous && state.event_manager.should_emit_events() {
+        state.event_manager.emit_training_dummy_update(current);
+    }
+}
+
 fn build_encounter_metadata(
     encounter: &Encounter,
     boss_names: Vec<String>,
@@ -455,15 +465,19 @@ impl AppStateManager {
                 self.apply_monitor_runtime_snapshot_with_state(state, snapshot);
             }
             LiveControlCommand::StartTrainingDummy { monster_id } => {
+                let previous = build_training_dummy_state(&state.training_dummy);
                 state.training_dummy.arm(monster_id);
+                emit_training_dummy_update_if_changed(state, previous);
             }
             LiveControlCommand::StopTrainingDummy => {
+                let previous = build_training_dummy_state(&state.training_dummy);
                 if state.training_dummy.locked_target_uid.is_some()
                     && encounter_has_stats(&state.encounter)
                 {
                     self.reset_encounter(state, false);
                 }
                 state.training_dummy.clear();
+                emit_training_dummy_update_if_changed(state, previous);
             }
             LiveControlCommand::SetEventUpdateRateMs(rate_ms) => {
                 state.event_update_rate_ms = rate_ms;
@@ -605,15 +619,12 @@ impl AppStateManager {
     fn on_server_change(&self, state: &mut AppState) {
         use crate::live::opcodes_process::on_server_change;
         state.pending_auto_reset = None;
+        let previous = build_training_dummy_state(&state.training_dummy);
         state.training_dummy.clear();
+        emit_training_dummy_update_if_changed(state, previous);
 
         persist_and_save_encounter(state, false, "server_change");
         on_server_change(&mut state.encounter);
-
-        // Emit encounter reset event
-        if state.event_manager.should_emit_events() {
-            state.event_manager.emit_encounter_reset();
-        }
         state.battle_state = BattleStateMachine::default();
     }
 
@@ -634,7 +645,9 @@ impl AppStateManager {
             info!("Initial scene detected");
             state.initial_scene_change_handled = true;
         }
+        let previous = build_training_dummy_state(&state.training_dummy);
         state.training_dummy.clear();
+        emit_training_dummy_update_if_changed(state, previous);
 
         if let Some(scene_id) = parsed.scene_id {
             let scene_name = scene_names::lookup(scene_id);
@@ -691,7 +704,9 @@ impl AppStateManager {
         state.sent_overlay_uids.clear();
         state.battle_state = BattleStateMachine::default();
         state.pending_auto_reset = None;
+        let previous = build_training_dummy_state(&state.training_dummy);
         state.training_dummy.clear();
+        emit_training_dummy_update_if_changed(state, previous);
 
         if process_sync_container_data(
             &mut state.encounter,
@@ -1087,7 +1102,9 @@ impl AppStateManager {
         if is_manual {
             state.battle_state = BattleStateMachine::default();
             if state.training_dummy.has_selection() {
+                let previous = build_training_dummy_state(&state.training_dummy);
                 state.training_dummy.rearm_selected();
+                emit_training_dummy_update_if_changed(state, previous);
             }
         }
     }
@@ -1185,13 +1202,13 @@ impl AppStateManager {
         let payload = crate::live::event_manager::generate_live_data_payload(
             &state.encounter,
             &state.attr_store,
-            build_training_dummy_state(&state.training_dummy),
         );
 
         state.event_manager.emit_live_data(payload);
-        let boss_buff_snapshot = state
+        let mut boss_buff_snapshot = state
             .boss_buff_monitors
             .build_all_buff_snapshots(state.server_clock_offset);
+        boss_buff_snapshot.retain(|&uid, _| !state.attr_store.is_dead(uid));
 
         let boss_count = state
             .encounter
@@ -1205,6 +1222,9 @@ impl AppStateManager {
 
         for (&boss_uid, entity) in &state.encounter.entity_uid_to_entity {
             if !entity.is_boss() {
+                continue;
+            }
+            if state.attr_store.is_dead(boss_uid) {
                 continue;
             }
 
@@ -1275,7 +1295,9 @@ impl AppStateManager {
             return None;
         }
 
+        let previous = build_training_dummy_state(&state.training_dummy);
         state.training_dummy.maybe_enter_pending_rollover();
+        emit_training_dummy_update_if_changed(state, previous);
         let matched = inspect_aoi_delta(&state.encounter, delta, local_player_uid);
 
         if let Some(matched) = matched {
@@ -1292,7 +1314,9 @@ impl AppStateManager {
                     );
                     self.reset_encounter(state, false);
                 }
+                let previous = build_training_dummy_state(&state.training_dummy);
                 state.training_dummy.lock_target(matched);
+                emit_training_dummy_update_if_changed(state, previous);
                 info!(
                     target: "app::live",
                     "training_dummy_locked source={} target_uid={} monster_id={}",

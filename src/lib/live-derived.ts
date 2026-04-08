@@ -58,6 +58,8 @@ export function computePlayerRowsFromEntities(
       const bossDmg = metric === "dps" ? Number(entity.damageBossOnly?.total || 0) : 0;
       const bossTotal = Number(source.totalDmgBossOnly || 0);
 
+      const effectiveTotal = Number(stats.effectiveTotal || 0);
+
       const row: PlayerRow = {
         uid: entity.uid,
         name: entity.name || `#${entity.uid}`,
@@ -66,7 +68,9 @@ export function computePlayerRowsFromEntities(
         abilityScore: entity.abilityScore,
         seasonStrength: entity.seasonStrength ?? 0,
         totalDmg: total,
+        effectiveTotal,
         dps: elapsedSecs > 0 ? total / elapsedSecs : 0,
+        effectiveDps: elapsedSecs > 0 ? effectiveTotal / elapsedSecs : 0,
         tdps: metric === "dps" && activeCombatSecs > 0 ? total / activeCombatSecs : 0,
         activeTimeMs: metric === "dps" ? effectiveActiveCombatMs : 0,
         bossDps: metric === "dps" && elapsedSecs > 0 ? bossDmg / elapsedSecs : 0,
@@ -115,11 +119,15 @@ export function computeSkillRows(
       const total = Number(stats.totalValue || 0);
       const hits = Number(stats.hits || 0);
 
+      const effectiveTotal = Number(stats.effectiveTotalValue || 0);
+
       const row: SkillRow = {
         skillId,
         name: nameResolver(skillId),
         totalDmg: total,
+        effectiveTotal,
         dps: elapsedSecs > 0 ? total / elapsedSecs : 0,
+        effectiveDps: elapsedSecs > 0 ? effectiveTotal / elapsedSecs : 0,
         dmgPct: percent(total, parentTotal),
         critRate: rate(Number(stats.critHits || 0), hits),
         critDmgRate: percent(Number(stats.critTotalValue || 0), total),

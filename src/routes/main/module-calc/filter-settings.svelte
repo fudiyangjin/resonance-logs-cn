@@ -94,11 +94,13 @@
           class="max-w-[70%]"
         />
         <div class="min-w-12 text-sm text-foreground">
-          {minTotalValue}{resolveModuleCalcTranslation(
-            "moduleCalc.levelSuffix",
-            SETTINGS.live.general.state.language,
-            "级",
-          )}
+          {minTotalValue}{SETTINGS.live.general.state.language === "zh-CN"
+            ? resolveModuleCalcTranslation(
+                "moduleCalc.levelSuffix",
+                SETTINGS.live.general.state.language,
+                "级",
+              )
+            : ""}
         </div>
       </div>
     </div>

@@ -118,9 +118,10 @@
 
   // Get visible columns based on settings and column order
   let visiblePlayerColumns = $derived.by(() => {
-    const visible = liveTankedPlayerColumns.filter(
-      (col) => settings.state.live.tanked.players[col.key],
-    );
+    const visible = liveTankedPlayerColumns.filter((col) => {
+      if (col.key === "effectiveTotal" || col.key === "effectiveDps") return false;
+      return settings.state.live.tanked.players[col.key];
+    });
     return visible.sort((a, b) => {
       const aIdx = columnOrder.indexOf(a.key);
       const bIdx = columnOrder.indexOf(b.key);
@@ -239,21 +240,21 @@
               class="px-3 py-1 text-right relative z-10 tabular-nums font-medium"
               style="color: {customThemeColors.tableTextColor};"
             >
-              {#if col.key === "totalDmg"}
+              {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
                 {#if SETTINGS_SHORTEN_TPS}
                   <AbbreviatedNumber
-                    num={player.totalDmg}
+                    num={col.key === "totalDmg" ? player.totalDmg : player.effectiveTotal}
                     decimalPlaces={abbreviatedDecimalPlaces}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
-                  {player.totalDmg.toLocaleString()}
+                  {(col.key === "totalDmg" ? player.totalDmg : player.effectiveTotal).toLocaleString()}
                 {/if}
-              {:else if col.key === "dps"}
+              {:else if col.key === "dps" || col.key === "effectiveDps"}
                 {#if SETTINGS_SHORTEN_TPS}
                   <AbbreviatedNumber
-                    num={player.dps}
+                    num={col.key === "dps" ? player.dps : player.effectiveDps}
                     decimalPlaces={abbreviatedDecimalPlaces}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
@@ -275,7 +276,7 @@
                   suffixColor={customThemeColors.tableAbbreviatedColor}
                 />
               {:else}
-                {col.format(player[col.key] ?? 0)}
+                {col.format(player[col.key as keyof typeof player] as number ?? 0)}
               {/if}
             </td>
           {/each}

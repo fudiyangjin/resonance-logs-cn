@@ -244,7 +244,8 @@
       {
         "skillId": 1730,
         "name": "无穷雷霆之力",
-        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx07_5011786851491862633.png"
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx07_5011786851491862633.png",
+        "maxCharges": 2
       },
       {
         "skillId": 1731,
@@ -254,6 +255,11 @@
       {
         "skillId": 1713,
         "name": "极诣·大破灭连斩",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_ult_3879339252261768906.png"
+      },
+      {
+        "skillId": 1728,
+        "name": "极诣·大破灭连斩-居合天赋",
         "imagePath": "/images/stormblade/skill/weapon_tdl-01_ult_3879339252261768906.png"
       },
       {

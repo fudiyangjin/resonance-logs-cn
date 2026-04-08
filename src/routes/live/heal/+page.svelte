@@ -234,16 +234,16 @@
               class="px-3 py-1 text-right relative z-10 tabular-nums font-medium"
               style="color: {customThemeColors.tableTextColor};"
             >
-              {#if col.key === "totalDmg"}
+              {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
                 {#if SETTINGS_SHORTEN_DPS}
                   <AbbreviatedNumber
-                    num={player.totalDmg}
+                    num={col.key === "totalDmg" ? player.totalDmg : player.effectiveTotal}
                     decimalPlaces={abbreviatedDecimalPlaces}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
-                  {player.totalDmg.toLocaleString()}
+                  {(col.key === "totalDmg" ? player.totalDmg : player.effectiveTotal).toLocaleString()}
                 {/if}
               {:else if col.key === "dmgPct"}
                 <PercentFormat
@@ -259,7 +259,7 @@
                   suffixColor={customThemeColors.tableAbbreviatedColor}
                 />
               {:else}
-                {col.format(player[col.key] ?? 0)}
+                {col.format(player[col.key as keyof typeof player] as number ?? 0)}
               {/if}
             </td>
           {/each}

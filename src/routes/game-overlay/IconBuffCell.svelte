@@ -34,6 +34,7 @@
   );
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class:overlay-group={standalone}
   class:editable={editable}
@@ -71,6 +72,7 @@
   {/if}
 
   {#if editable && onResizePointerDown}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="resize-handle icon" onpointerdown={onResizePointerDown}></div>
   {/if}
 </div>

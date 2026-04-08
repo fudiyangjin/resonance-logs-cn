@@ -2,16 +2,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { writable } from "svelte/store";
 
-import skillNameTranslations from "$lib/translations/common/skillnames.json";
-import navigationTranslations from "$lib/translations/common/navigation.json";
-import moduleCalcTranslations from "$lib/translations/module-calc.json";
-import monsterMonitorTranslations from "$lib/translations/monster-monitor.json";
-import skillMonitorTranslations from "$lib/translations/skill-monitor.json";
-import classLabelTranslations from "$lib/translations/class-labels.json";
-import settingsStoreTranslations from "$lib/translations/settings-store.json";
-import localizationTranslations from "$lib/translations/localization.json";
+import { getBundledTranslationTable } from "$lib/locale-bundles";
 
-export type LocaleCode = "zh-CN" | "en" | "ja";
+
+export const SUPPORTED_LOCALES = ["zh-CN", "en", "ja", "de", "es", "fr", "pt-BR"] as const;
+export type LocaleCode = typeof SUPPORTED_LOCALES[number];
 export type SkillIdDisplayMode = "off" | "hover" | "column";
 export type TranslationSourceMode = "runtime" | "bundled";
 
@@ -26,6 +21,11 @@ export type SkillTranslationEntry = {
 export type SkillTranslationTable = Record<string, SkillTranslationEntry>;
 
 export const DEFAULT_LOCALE: LocaleCode = "zh-CN";
+export const PRIMARY_FALLBACK_LOCALE: LocaleCode = "en";
+
+export function isLocaleCode(value: string): value is LocaleCode {
+  return (SUPPORTED_LOCALES as readonly string[]).includes(value);
+}
 
 export const DEFAULT_TRANSLATION_SOURCE_MODE: TranslationSourceMode = "bundled";
 export const TRANSLATION_SOURCE_MODE_STORAGE_KEY = "resonance.translationSourceMode";
@@ -101,7 +101,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function normalizeRuntimePath(relativePath: string): string {
-  return `translations/${relativePath}`;
+  return relativePath;
 }
 
 async function ensureTranslationRuntimeFiles(): Promise<void> {
@@ -135,39 +135,37 @@ async function readRuntimeJson<T extends Record<string, unknown>>(
   }
 }
 
-export const SKILL_NAME_TRANSLATIONS: SkillTranslationTable = cloneJson(
-  skillNameTranslations as SkillTranslationTable,
-);
+export const SKILL_NAME_TRANSLATIONS: SkillTranslationTable = {};
 
 export const NAVIGATION_TRANSLATIONS: TranslationTable = cloneJson(
-  navigationTranslations as TranslationTable,
+  getBundledTranslationTable("ui/DPS.json") as TranslationTable,
 );
 
 export const MODULE_CALC_TRANSLATIONS: TranslationTable = cloneJson(
-  moduleCalcTranslations as TranslationTable,
+  getBundledTranslationTable("ui/module-calc.json") as TranslationTable,
 );
 
 export const MONSTER_MONITOR_TRANSLATIONS: TranslationTable = cloneJson(
-  monsterMonitorTranslations as TranslationTable,
+  getBundledTranslationTable("ui/monster-monitor.json") as TranslationTable,
 );
 
 export const SKILL_MONITOR_TRANSLATIONS: TranslationTable = cloneJson(
-  skillMonitorTranslations as TranslationTable,
+  getBundledTranslationTable("ui/skill-monitor.json") as TranslationTable,
 );
 
 export const CLASS_LABEL_TRANSLATIONS: TranslationTable = cloneJson(
-  classLabelTranslations as TranslationTable,
+  getBundledTranslationTable("parser/class-labels.json") as TranslationTable,
 );
 
 export const SETTINGS_STORE_TRANSLATIONS: TranslationTable = cloneJson(
-  settingsStoreTranslations as unknown as TranslationTable,
+  getBundledTranslationTable("ui/settings-store.json") as unknown as TranslationTable,
 );
 
 export const LOCALIZATION_TRANSLATIONS: TranslationTable = cloneJson(
-  localizationTranslations as TranslationTable,
+  getBundledTranslationTable("ui/localization.json") as TranslationTable,
 );
 
-const BUNDLED_SKILL_NAME_TRANSLATIONS = cloneJson(SKILL_NAME_TRANSLATIONS);
+const BUNDLED_SKILL_NAME_TRANSLATIONS: SkillTranslationTable = {};
 const BUNDLED_NAVIGATION_TRANSLATIONS = cloneJson(NAVIGATION_TRANSLATIONS);
 const BUNDLED_MODULE_CALC_TRANSLATIONS = cloneJson(MODULE_CALC_TRANSLATIONS);
 const BUNDLED_MONSTER_MONITOR_TRANSLATIONS = cloneJson(MONSTER_MONITOR_TRANSLATIONS);
@@ -178,44 +176,52 @@ const BUNDLED_LOCALIZATION_TRANSLATIONS = cloneJson(LOCALIZATION_TRANSLATIONS);
 
 const RUNTIME_TRANSLATION_DESCRIPTORS = [
   {
-    relativePath: "common/skillnames.json",
+    relativePath: "parser/skillnames.json",
     target: SKILL_NAME_TRANSLATIONS,
     fallback: BUNDLED_SKILL_NAME_TRANSLATIONS,
+    runtimeOnly: true,
   },
   {
-    relativePath: "common/navigation.json",
+    relativePath: "ui/DPS.json",
     target: NAVIGATION_TRANSLATIONS,
     fallback: BUNDLED_NAVIGATION_TRANSLATIONS,
+    runtimeOnly: false,
   },
   {
-    relativePath: "module-calc.json",
+    relativePath: "ui/module-calc.json",
     target: MODULE_CALC_TRANSLATIONS,
     fallback: BUNDLED_MODULE_CALC_TRANSLATIONS,
+    runtimeOnly: false,
   },
   {
-    relativePath: "monster-monitor.json",
+    relativePath: "ui/monster-monitor.json",
     target: MONSTER_MONITOR_TRANSLATIONS,
     fallback: BUNDLED_MONSTER_MONITOR_TRANSLATIONS,
+    runtimeOnly: false,
   },
   {
-    relativePath: "skill-monitor.json",
+    relativePath: "ui/skill-monitor.json",
     target: SKILL_MONITOR_TRANSLATIONS,
     fallback: BUNDLED_SKILL_MONITOR_TRANSLATIONS,
+    runtimeOnly: false,
   },
   {
-    relativePath: "class-labels.json",
+    relativePath: "parser/class-labels.json",
     target: CLASS_LABEL_TRANSLATIONS,
     fallback: BUNDLED_CLASS_LABEL_TRANSLATIONS,
+    runtimeOnly: false,
   },
   {
-    relativePath: "settings-store.json",
+    relativePath: "ui/settings-store.json",
     target: SETTINGS_STORE_TRANSLATIONS,
     fallback: BUNDLED_SETTINGS_STORE_TRANSLATIONS,
+    runtimeOnly: false,
   },
   {
-    relativePath: "localization.json",
+    relativePath: "ui/localization.json",
     target: LOCALIZATION_TRANSLATIONS,
     fallback: BUNDLED_LOCALIZATION_TRANSLATIONS,
+    runtimeOnly: false,
   },
 ] as const;
 
@@ -231,19 +237,20 @@ let translationRuntimeInitPromise: Promise<void> | null = null;
 let translationRuntimeListenerPromise: Promise<void> | null = null;
 
 async function loadRuntimeTranslationTables(): Promise<void> {
-  if (getCurrentTranslationSourceMode() === "bundled") {
-    for (const descriptor of RUNTIME_TRANSLATION_DESCRIPTORS) {
-      replaceRecordContents(descriptor.target, cloneJson(descriptor.fallback));
-    }
+  const sourceMode = getCurrentTranslationSourceMode();
+  const needsRuntime = sourceMode === "runtime" || RUNTIME_TRANSLATION_DESCRIPTORS.some((descriptor) => descriptor.runtimeOnly);
 
-    TRANSLATION_RUNTIME_REVISION.update((value) => value + 1);
-    return;
+  if (needsRuntime) {
+    await ensureTranslationRuntimeFiles();
   }
-
-  await ensureTranslationRuntimeFiles();
 
   await Promise.all(
     RUNTIME_TRANSLATION_DESCRIPTORS.map(async (descriptor) => {
+      if (sourceMode === "bundled" && !descriptor.runtimeOnly) {
+        replaceRecordContents(descriptor.target, cloneJson(descriptor.fallback));
+        return;
+      }
+
       const runtimeValue = await readRuntimeJson(descriptor.relativePath);
       const nextValue = runtimeValue ?? descriptor.fallback;
       replaceRecordContents(descriptor.target, cloneJson(nextValue));
@@ -316,8 +323,15 @@ export function resolveMultiLangValue(
   const selected = value?.[locale]?.trim();
   if (selected) return selected;
 
-  const zh = value?.[DEFAULT_LOCALE]?.trim();
-  if (zh) return zh;
+  if (locale !== PRIMARY_FALLBACK_LOCALE) {
+    const en = value?.[PRIMARY_FALLBACK_LOCALE]?.trim();
+    if (en) return en;
+  }
+
+  if (locale !== DEFAULT_LOCALE) {
+    const zh = value?.[DEFAULT_LOCALE]?.trim();
+    if (zh) return zh;
+  }
 
   return fallback;
 }
