@@ -102,6 +102,18 @@
     }
   },
   {
+    "slotTemplateId": "marksman_x6",
+    "name": "神射真实因子X6, 召唤天界雄鹰",
+    "description": "召唤天界雄鹰",
+    "slot": {
+      "threshold": 360,
+      "resetBuffId": 3053451,
+      "onBuffAdd": "reset",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp"
+    }
+  },
+  {
     "slotTemplateId": "frost_mage_x1",
     "name": "冰魔真实因子X1, 下次冰之灌注期间玄冰上限+2",
     "description": "下次冰之灌注期间玄冰上限+2",

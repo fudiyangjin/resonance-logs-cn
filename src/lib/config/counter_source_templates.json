@@ -128,6 +128,18 @@
     }
   },
   {
+    "sourceId": "beat_performer_x9",
+    "name": "灵魂X9, 愈合乐章激活时每秒获得 8 点虚妄能量",
+    "description": "愈合乐章激活时每秒获得 8 点虚妄能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 55332,
+        "tickIntervalMs": 1000,
+        "increment": 8
+      }
+    }
+  },
+  {
     "sourceId": "beat_performer_x10",
     "name": "灵魂X10, 战斗状态站立不动每秒获得 12 点能量",
     "description": "战斗状态站立不动每秒获得 12 点能量",
