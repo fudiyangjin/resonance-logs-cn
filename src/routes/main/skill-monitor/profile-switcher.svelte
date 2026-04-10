@@ -4,6 +4,11 @@
     createDefaultSkillMonitorProfile,
   } from "$lib/settings-store";
   import { resolveSkillMonitorTranslation } from "$lib/i18n";
+  import {
+    clampedProfileIndex,
+    activeProfileOrDefault,
+    updateActiveProfile,
+  } from "$lib/skill-monitor-profile.svelte";
 
   function t(key: string, fallback: string): string {
     return resolveSkillMonitorTranslation(

@@ -20,6 +20,7 @@
     type BuffNameInfo,
   } from "$lib/config/buff-name-table";
   import {
+    AVAILABLE_PANEL_ATTRS,
     createDefaultBuffGroup,
     createDefaultCustomPanelGroup,
     ensureBuffAliases,
@@ -29,11 +30,11 @@
     type CustomPanelGroup,
     type CustomPanelStyle,
     type InlineBuffEntry,
+    type PanelAttrConfig,
     type PanelAreaRowRef,
     type SkillMonitorProfile,
     type TextBuffPanelDisplayMode,
     type TextBuffPanelStyle,
-    type UserCounterRule,
   } from "$lib/settings-store";
   import {
     findResonanceSkill,
@@ -49,6 +50,12 @@
     type CounterRulePreset,
   } from "$lib/skill-mappings";
   import { resolveSkillMonitorTranslation } from "$lib/i18n";
+  import {
+    activeProfileOrDefault,
+    updateActiveProfile as updateSharedActiveProfile,
+  } from "$lib/skill-monitor-profile.svelte";
+
+  type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
 
   function t(key: string, fallback: string): string {
     return resolveSkillMonitorTranslation(
@@ -143,9 +150,6 @@
   });
   const textBuffMaxVisible = $derived(
     Math.max(1, Math.min(20, activeProfile.textBuffMaxVisible ?? 10)),
-  );
-  const userCounterRules = $derived.by(() =>
-    ensureUserCounterRules(activeProfile.userCounterRules),
   );
   const resolvedUserCounterRules = $derived.by<CounterRuleOption[]>(() =>
     resolveUserCounterRulesToPresets(activeProfile.userCounterRules).map(
@@ -378,25 +382,6 @@
     };
   }
 
-  function updateActiveProfile(
-    updater: (profile: SkillMonitorProfile) => SkillMonitorProfile,
-  ) {
-    const state = SETTINGS.skillMonitor.state;
-    const currentProfiles = state.profiles;
-    if (currentProfiles.length === 0) {
-      state.profiles = [createDefaultSkillMonitorProfile()];
-      state.activeProfileIndex = 0;
-      return;
-    }
-
-    const index = Math.min(
-      Math.max(state.activeProfileIndex, 0),
-      currentProfiles.length - 1,
-    );
-    state.profiles = currentProfiles.map((profile, i) =>
-      i === index ? updater(profile) : profile,
-    );
-  }
 
   function setSelectedClass(classKey: string) {
     updateActiveProfile((profile) => ({
@@ -759,16 +744,6 @@
       inlineBuffEntries: [],
     }));
   }
-
-  function updateUserCounterRules(
-    updater: (rules: UserCounterRule[]) => UserCounterRule[],
-  ) {
-    updateActiveProfile((profile) => ({
-      ...profile,
-      userCounterRules: updater(ensureUserCounterRules(profile.userCounterRules)),
-    }));
-  }
-
   function getNextUserCounterRuleId(profile: SkillMonitorProfile): number {
     const highestPresetRuleId = counterRules.reduce(
       (maxId, rule) => Math.max(maxId, rule.ruleId),
@@ -824,31 +799,6 @@
     }));
   }
 
-  function updateUserCounterRule(ruleId: number, updates: Partial<UserCounterRule>) {
-    updateUserCounterRules((rules) =>
-      rules.map((rule) => {
-        if (rule.ruleId !== ruleId) return rule;
-        return {
-          ...rule,
-          ...(updates.name !== undefined ? { name: updates.name.trim() || rule.name } : {}),
-          ...(updates.sourceRefs !== undefined
-            ? {
-                sourceRefs: Array.from(
-                  new Set(updates.sourceRefs.filter((item) => typeof item === "string" && item.trim())),
-                ),
-              }
-            : {}),
-          ...(updates.slotRefs !== undefined
-            ? {
-                slotRefs: Array.from(
-                  new Set(updates.slotRefs.filter((item) => typeof item === "string" && item.trim())),
-                ),
-              }
-            : {}),
-        };
-      })
-    );
-  }
 
   function findCustomPanelEntryLocation(
     sourceType: InlineBuffEntry["sourceType"],
@@ -992,10 +942,6 @@
       if (findCustomPanelEntryLocation(sourceType, sourceId, counterSlotId, groups)) {
         return profile;
       }
-      const counterRule = sourceType === "counter"
-        ? allCounterRules.find((rule) => rule.ruleId === sourceId)
-        : null;
-      const counterSlot = counterRule?.effectSlots.find((slot) => slot.slotId === counterSlotId);
       const label = sourceType === "counter"
         ? (counterRules.find((rule) => rule.ruleId === sourceId)?.name ?? `${t("skillMonitor.counterDefault", "计数器")} ${sourceId}`)
         : "";
@@ -1510,7 +1456,6 @@
       counterRules={allCounterRules}
       {sourceTemplates}
       {slotTemplates}
-      {userCounterRules}
       {availableBuffMap}
       {getBuffDisplayName}
       {inlineBuffSearch}
@@ -1524,7 +1469,6 @@
       {addCustomPanelEntry}
       {addUserCounterRule}
       {removeUserCounterRule}
-      {updateUserCounterRule}
       {removeCustomPanelEntry}
       {setCustomPanelEntryLabel}
       {moveCustomPanelEntry}

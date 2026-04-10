@@ -31,7 +31,7 @@
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import { emitTo } from "@tauri-apps/api/event";
   import { SETTINGS } from "$lib/settings-store";
-  import { getLiveData } from "$lib/stores/live-meter-store.svelte";
+  import { getLiveData, getTrainingDummyState } from "$lib/stores/live-meter-store.svelte";
 import { localizeRawSceneName } from "$lib/scene-mappings";
 import { localizeRawMonsterName } from "$lib/monster-mappings";
 
@@ -40,7 +40,7 @@ import { localizeRawMonsterName } from "$lib/monster-mappings";
   const trainingDummySettings = $derived(SETTINGS.trainingDummy.state);
 
   const liveData = $derived(getLiveData());
-  const runtimeTrainingDummyState = $derived(getRuntimeTrainingDummyState());
+  const runtimeTrainingDummyState = $derived(getTrainingDummyState());
 
   const emptyTrainingDummy: TrainingDummyState = {
     phase: "idle",

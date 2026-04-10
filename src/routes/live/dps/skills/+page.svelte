@@ -8,16 +8,28 @@
     type RecountGroup,
     type SkillDisplayRow,
   } from "$lib/config/recount-table";
-  import LiveGroupedSkillTable from "$lib/components/live-grouped-skill-table.svelte";
-  import { liveDpsSkillColumns } from "$lib/column-data";
+  import TableRowGlow from "$lib/components/table-row-glow.svelte";
+  import { historyDpsSkillColumns } from "$lib/column-data";
+  import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
+  import PercentFormat from "$lib/components/percent-format.svelte";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { resolveNavigationTranslation, resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
 
-  const playerUid = Number(page.url.searchParams.get("playerUid") ?? "-1");
-  const emptyGroupedSkills = {
-    groups: [] as RecountGroup[],
-    ungrouped: [] as SkillDisplayRow[],
+  type FlatSkillRow = SkillDisplayRow & {
+    key: string;
+    isGroup: boolean;
+    depth: number;
+    groupId?: number;
+    expandable?: boolean;
+    expanded?: boolean;
   };
+
+  type TopLevelSkillItem =
+    | { kind: "group"; row: RecountGroup }
+    | { kind: "skill"; row: SkillDisplayRow };
+
+  const playerUid = Number(page.url.searchParams.get("playerUid") ?? "-1");
+  const expandedGroups = $state(new Set<number>());
 
   let liveData = $derived(getLiveData());
   let dpsPlayers = $derived(
@@ -36,7 +48,7 @@
           elapsedSecs,
           currEntity.damage.total,
         )
-      : emptyGroupedSkills,
+      : { groups: [] as RecountGroup[], ungrouped: [] as SkillDisplayRow[] },
   );
 
   let SETTINGS_YOUR_NAME = $derived(settings.state.live.general.showYourName);
@@ -212,23 +224,6 @@
       return aIdx - bIdx;
     });
   });
-
-  const glowClassName = $derived.by(() => {
-    if (!currPlayer) return "";
-    const isLocalPlayer =
-      liveData?.localPlayerUid != null && currPlayer.uid === liveData.localPlayerUid;
-    return isLocalPlayer
-      ? normalizeNameDisplaySetting(SETTINGS_YOUR_NAME) !== "Hide Your Name"
-        ? currPlayer.className
-        : ""
-      : normalizeNameDisplaySetting(SETTINGS_OTHERS_NAME) !== "Hide Others' Name"
-        ? currPlayer.className
-        : "";
-  });
-
-  function formatRateValue(value: number) {
-    return Math.round(value).toLocaleString();
-  }
 </script>
 
 <svelte:window oncontextmenu={() => window.history.back()} />

@@ -309,7 +309,6 @@
             { label: "ES", value: "es" },
             { label: "FR", value: "fr" },
             { label: "PT-BR", value: "pt-BR" },
-            { label: "KO", value: "ko-KR" },
           ]}
         />
 

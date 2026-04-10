@@ -17,7 +17,6 @@
     { value: "es", label: "ES" },
     { value: "fr", label: "FR" },
     { value: "pt-BR", label: "PT-BR" },
-    { value: "ko-KR", label: "KO" },
   ] as const;
 
   function getToolRouteLabel(href: string, fallback: string): string {

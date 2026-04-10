@@ -6,6 +6,8 @@ import classSkillConfigsRaw from "$lib/config/class_skill_configs.json";
 import classResourcesRaw from "$lib/config/class_resources.json";
 import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays.json";
 import counterRulesRaw from "$lib/config/counter_rules.json";
+import counterSourceTemplatesRaw from "$lib/config/counter_source_templates.json";
+import counterSlotTemplatesRaw from "$lib/config/counter_slot_templates.json";
 import {
   DEFAULT_LOCALE,
   PRIMARY_FALLBACK_LOCALE,
@@ -15,7 +17,8 @@ import {
   type LocaleCode,
 } from "$lib/i18n";
 import { settings } from "$lib/settings-store";
-import type { CounterAction, CounterTrigger } from "$lib/bindings";
+import type { UserCounterRule } from "$lib/settings-store";
+import type { CounterAction, CounterSource } from "$lib/bindings";
 
 export type SkillDisplayInfo = {
   skillId: number;

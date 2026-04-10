@@ -5,7 +5,7 @@ import { writable } from "svelte/store";
 import { getBundledTranslationTable } from "$lib/locale-bundles";
 
 
-export const SUPPORTED_LOCALES = ["zh-CN", "en", "ja", "de", "es", "fr", "pt-BR", "ko-KR"] as const;
+export const SUPPORTED_LOCALES = ["zh-CN", "en", "ja", "de", "es", "fr", "pt-BR"] as const;
 export type LocaleCode = typeof SUPPORTED_LOCALES[number];
 export type SkillIdDisplayMode = "off" | "hover" | "column";
 export type TranslationSourceMode = "runtime" | "bundled";

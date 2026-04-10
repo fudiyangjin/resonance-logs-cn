@@ -5,17 +5,17 @@
     CustomPanelGroup,
     CustomPanelStyle,
     InlineBuffEntry,
-    UserCounterRule,
   } from "$lib/settings-store";
-  import type { CounterRulePreset } from "$lib/skill-mappings";
+  import type { CounterRulePreset, SourceTemplate, SlotTemplate } from "$lib/skill-mappings";
   import { SETTINGS } from "$lib/settings-store";
   import { resolveSkillMonitorTranslation } from "$lib/i18n";
+
+  type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
 
   interface Props {
     counterRules: CounterRuleOption[];
     sourceTemplates: SourceTemplate[];
     slotTemplates: SlotTemplate[];
-    userCounterRules: UserCounterRule[];
     availableBuffMap: Map<number, BuffDefinition>;
     getBuffDisplayName: (buffId: number) => string;
     inlineBuffSearch: string;
@@ -34,7 +34,6 @@
     ) => void;
     addUserCounterRule: (name: string, sourceRefs: string[], slotRefs: string[]) => void;
     removeUserCounterRule: (ruleId: number) => void;
-    updateUserCounterRule: (ruleId: number, updates: Partial<UserCounterRule>) => void;
     removeCustomPanelEntry: (groupId: string, entryId: string) => void;
     setCustomPanelEntryLabel: (groupId: string, entryId: string, label: string) => void;
     moveCustomPanelEntry: (
@@ -63,7 +62,6 @@
     counterRules,
     sourceTemplates,
     slotTemplates,
-    userCounterRules,
     availableBuffMap,
     getBuffDisplayName,
     inlineBuffSearch,
@@ -77,7 +75,6 @@
     addCustomPanelEntry,
     addUserCounterRule,
     removeUserCounterRule,
-    updateUserCounterRule,
     removeCustomPanelEntry,
     setCustomPanelEntryLabel,
     moveCustomPanelEntry,
@@ -91,6 +88,10 @@
   }: Props = $props();
 
   let selectedGroupId = $state<string | null>(null);
+  let isCreatingUserRule = $state(false);
+  let draftRuleName = $state("");
+  let draftSourceRefs = $state<string[]>([]);
+  let draftSlotRefs = $state<string[]>([]);
 
   $effect(() => {
     if (customPanelGroups.length === 0) {
@@ -104,12 +105,6 @@
 
   const selectedGroup = $derived.by(
     () => customPanelGroups.find((group) => group.id === selectedGroupId) ?? null,
-  );
-  const sourceTemplateMap = $derived.by(
-    () => new Map(sourceTemplates.map((template) => [template.sourceId, template])),
-  );
-  const slotTemplateMap = $derived.by(
-    () => new Map(slotTemplates.map((template) => [template.slotTemplateId, template])),
   );
   const canSaveDraftRule = $derived(
     draftRuleName.trim().length > 0 && draftSourceRefs.length > 0 && draftSlotRefs.length > 0,
@@ -158,18 +153,6 @@
     if (!canSaveDraftRule) return;
     addUserCounterRule(draftRuleName, draftSourceRefs, draftSlotRefs);
     resetDraftRule();
-  }
-
-  function getUserRuleSourceNames(rule: UserCounterRule): string {
-    return rule.sourceRefs
-      .map((ref) => sourceTemplateMap.get(ref)?.name ?? ref)
-      .join("、");
-  }
-
-  function getUserRuleSlotNames(rule: UserCounterRule): string {
-    return rule.slotRefs
-      .map((ref) => slotTemplateMap.get(ref)?.name ?? ref)
-      .join("、");
   }
 </script>
 
@@ -282,8 +265,9 @@
         {#each counterRules as rule (rule.ruleId)}
           {@const location = getEntryLocation("counter", rule.ruleId)}
           {@const exists = Boolean(location)}
-          <button
-            type="button"
+          <div
+            role="button"
+            tabindex="0"
             class="min-h-11 rounded-lg border border-border/60 bg-muted/20 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/40 cursor-pointer"
             onclick={() => {
               isCreatingUserRule = !isCreatingUserRule;
@@ -291,6 +275,17 @@
                 draftRuleName = "";
                 draftSourceRefs = [];
                 draftSlotRefs = [];
+              }
+            }}
+            onkeydown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                isCreatingUserRule = !isCreatingUserRule;
+                if (!isCreatingUserRule) {
+                  draftRuleName = "";
+                  draftSourceRefs = [];
+                  draftSlotRefs = [];
+                }
               }
             }}
           >
@@ -308,7 +303,7 @@
               <button
                 type="button"
                 class="min-h-11 rounded-md border border-border/60 px-3 py-1.5 text-xs text-destructive transition-colors hover:bg-destructive/10 cursor-pointer"
-                onclick={() => removeUserCounterRule(rule.ruleId)}
+                onclick={(event) => { event.stopPropagation(); removeUserCounterRule(rule.ruleId); }}
               >
                 删除
               </button>
@@ -443,9 +438,6 @@
       {#each selectedGroup.entries as entry, idx (entry.id)}
         {@const counterRule = entry.sourceType === "counter"
           ? counterRules.find((item) => item.ruleId === entry.sourceId)
-          : null}
-        {@const counterSlot = entry.sourceType === "counter"
-          ? counterRule?.effectSlots.find((slot) => slot.slotId === entry.counterSlotId)
           : null}
         {@const buffName = entry.sourceType === "buff" ? getBuffDisplayName(entry.sourceId) : null}
         <div class="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
