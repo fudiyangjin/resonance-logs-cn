@@ -63,6 +63,12 @@ import ui_pt_BR_localization from "$lib/locales/pt-BR/ui/localization.json";
 import parser_pt_BR_class_labels from "$lib/locales/pt-BR/parser/class-labels.json";
 import parser_pt_BR_MonsterName from "$lib/locales/pt-BR/parser/MonsterName.json";
 import parser_pt_BR_SceneName from "$lib/locales/pt-BR/parser/SceneName.json";
+import ui_ko_KR_DPS from "$lib/locales/ko-KR/ui/DPS.json";
+import ui_ko_KR_module_calc from "$lib/locales/ko-KR/ui/module-calc.json";
+import ui_ko_KR_monster_monitor from "$lib/locales/ko-KR/ui/monster-monitor.json";
+import ui_ko_KR_skill_monitor from "$lib/locales/ko-KR/ui/skill-monitor.json";
+import ui_ko_KR_settings_store from "$lib/locales/ko-KR/ui/settings-store.json";
+import ui_ko_KR_localization from "$lib/locales/ko-KR/ui/localization.json";
 
 
 export type LocaleManifest = {
@@ -145,6 +151,12 @@ const SMALL_BUNDLED_LOCALE_FILES: Record<string, JsonValue> = {
   "/src/lib/locales/pt-BR/parser/class-labels.json": parser_pt_BR_class_labels as JsonValue,
   "/src/lib/locales/pt-BR/parser/MonsterName.json": parser_pt_BR_MonsterName as JsonValue,
   "/src/lib/locales/pt-BR/parser/SceneName.json": parser_pt_BR_SceneName as JsonValue,
+  "/src/lib/locales/ko-KR/ui/DPS.json": ui_ko_KR_DPS as JsonValue,
+  "/src/lib/locales/ko-KR/ui/module-calc.json": ui_ko_KR_module_calc as JsonValue,
+  "/src/lib/locales/ko-KR/ui/monster-monitor.json": ui_ko_KR_monster_monitor as JsonValue,
+  "/src/lib/locales/ko-KR/ui/skill-monitor.json": ui_ko_KR_skill_monitor as JsonValue,
+  "/src/lib/locales/ko-KR/ui/settings-store.json": ui_ko_KR_settings_store as JsonValue,
+  "/src/lib/locales/ko-KR/ui/localization.json": ui_ko_KR_localization as JsonValue,
 };
 
 
