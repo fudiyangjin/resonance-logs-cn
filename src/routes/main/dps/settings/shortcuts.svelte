@@ -10,7 +10,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
 
   import { SETTINGS } from "$lib/settings-store";
-  import { resolveNavigationTranslation } from "$lib/i18n";
+  import { uiT } from "$lib/i18n";
   import { registerShortcut } from "./shortcuts.js";
   import type { BaseInput, BaseInputs } from "./settings.js";
 
@@ -110,13 +110,7 @@
     }
   }
 
-  function t(key: string, fallback: string): string {
-    return resolveNavigationTranslation(
-      key,
-      SETTINGS.live.general.state.language,
-      fallback,
-    );
-  }
+  const t = uiT("dps/settings-hotkeys", () => SETTINGS.live.general.state.language);
 
   onDestroy(stopEdit);
 
@@ -174,20 +168,20 @@
   <div class="space-y-3">
     <Alert.Root class="shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
       <AlertCircleIcon />
-      <Alert.Title>{t("dps.shortcuts.clearHint", "右键可清除快捷键")}</Alert.Title>
+      <Alert.Title>{t("clearHint", "右键可清除快捷键")}</Alert.Title>
     </Alert.Root>
     <div class="rounded-lg border bg-card/40 border-border/60 p-4 space-y-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
       {#each inputs as input (input.id)}
         <Item.Root>
           <Item.Content>
-            <Item.Title>{t(`dps.shortcuts.${input.id}`, input.label)}</Item.Title>
+            <Item.Title>{t(`shortcuts.${input.id}`, input.label)}</Item.Title>
           </Item.Content>
           <Item.Actions>
             <Button variant="outline" class="uppercase" onclick={() => startEdit(input)} oncontextmenu={(e: MouseEvent) => clearShortcut(input, e)}>
               {#if editingId === input.id}
-                {currentShortcutString() || t("dps.shortcuts.pressKey", "请按键")}...
+                {currentShortcutString() || t("pressKey", "请按键")}...
               {:else}
-                {SETTINGS.shortcuts.state[input.id] || t("dps.shortcuts.unbound", "未绑定")}
+                {SETTINGS.shortcuts.state[input.id] || t("unbound", "未绑定")}
               {/if}
             </Button>
           </Item.Actions>

@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { writable } from "svelte/store";
 
-import { getBundledTranslationTable } from "$lib/locale-bundles";
+import { getBundledTranslationTable, getLocaleManifest } from "$lib/locale-bundles";
 
 
 export const SUPPORTED_LOCALES = ["zh-CN", "en", "ja", "de", "es", "fr", "pt-BR", "ko-KR"] as const;
@@ -137,42 +137,37 @@ async function readRuntimeJson<T extends Record<string, unknown>>(
 
 export const SKILL_NAME_TRANSLATIONS: SkillTranslationTable = {};
 
-export const NAVIGATION_TRANSLATIONS: TranslationTable = cloneJson(
-  getBundledTranslationTable("ui/DPS.json") as TranslationTable,
+const UI_TRANSLATION_PATHS = (getLocaleManifest().categories["ui"] ?? []).map(
+  (relativePath) => `ui/${relativePath}`,
 );
 
-export const MODULE_CALC_TRANSLATIONS: TranslationTable = cloneJson(
-  getBundledTranslationTable("ui/module-calc.json") as TranslationTable,
-);
+function buildUiTranslationTables(): Record<string, TranslationTable> {
+  const tables: Record<string, TranslationTable> = {};
 
-export const MONSTER_MONITOR_TRANSLATIONS: TranslationTable = cloneJson(
-  getBundledTranslationTable("ui/monster-monitor.json") as TranslationTable,
-);
+  for (const relativePath of UI_TRANSLATION_PATHS) {
+    tables[relativePath] = cloneJson(
+      getBundledTranslationTable(relativePath) as TranslationTable,
+    );
+  }
 
-export const SKILL_MONITOR_TRANSLATIONS: TranslationTable = cloneJson(
-  getBundledTranslationTable("ui/skill-monitor.json") as TranslationTable,
-);
+  return tables;
+}
+
+export const UI_TRANSLATION_TABLES = buildUiTranslationTables();
+
+export const MODULE_CALC_TRANSLATIONS: TranslationTable =
+  UI_TRANSLATION_TABLES["ui/module-calc.json"] ?? {};
+
+export const MONSTER_MONITOR_TRANSLATIONS: TranslationTable =
+  UI_TRANSLATION_TABLES["ui/monster-monitor.json"] ?? {};
 
 export const CLASS_LABEL_TRANSLATIONS: TranslationTable = cloneJson(
   getBundledTranslationTable("parser/class-labels.json") as TranslationTable,
 );
 
-export const SETTINGS_STORE_TRANSLATIONS: TranslationTable = cloneJson(
-  getBundledTranslationTable("ui/settings-store.json") as unknown as TranslationTable,
-);
-
-export const LOCALIZATION_TRANSLATIONS: TranslationTable = cloneJson(
-  getBundledTranslationTable("ui/localization.json") as TranslationTable,
-);
-
 const BUNDLED_SKILL_NAME_TRANSLATIONS: SkillTranslationTable = {};
-const BUNDLED_NAVIGATION_TRANSLATIONS = cloneJson(NAVIGATION_TRANSLATIONS);
-const BUNDLED_MODULE_CALC_TRANSLATIONS = cloneJson(MODULE_CALC_TRANSLATIONS);
-const BUNDLED_MONSTER_MONITOR_TRANSLATIONS = cloneJson(MONSTER_MONITOR_TRANSLATIONS);
-const BUNDLED_SKILL_MONITOR_TRANSLATIONS = cloneJson(SKILL_MONITOR_TRANSLATIONS);
+const BUNDLED_UI_TRANSLATION_TABLES = cloneJson(UI_TRANSLATION_TABLES);
 const BUNDLED_CLASS_LABEL_TRANSLATIONS = cloneJson(CLASS_LABEL_TRANSLATIONS);
-const BUNDLED_SETTINGS_STORE_TRANSLATIONS = cloneJson(SETTINGS_STORE_TRANSLATIONS);
-const BUNDLED_LOCALIZATION_TRANSLATIONS = cloneJson(LOCALIZATION_TRANSLATIONS);
 
 const RUNTIME_TRANSLATION_DESCRIPTORS = [
   {
@@ -181,46 +176,16 @@ const RUNTIME_TRANSLATION_DESCRIPTORS = [
     fallback: BUNDLED_SKILL_NAME_TRANSLATIONS,
     runtimeOnly: true,
   },
-  {
-    relativePath: "ui/DPS.json",
-    target: NAVIGATION_TRANSLATIONS,
-    fallback: BUNDLED_NAVIGATION_TRANSLATIONS,
+  ...UI_TRANSLATION_PATHS.map((relativePath) => ({
+    relativePath,
+    target: UI_TRANSLATION_TABLES[relativePath],
+    fallback: cloneJson(BUNDLED_UI_TRANSLATION_TABLES[relativePath] ?? {}),
     runtimeOnly: false,
-  },
-  {
-    relativePath: "ui/module-calc.json",
-    target: MODULE_CALC_TRANSLATIONS,
-    fallback: BUNDLED_MODULE_CALC_TRANSLATIONS,
-    runtimeOnly: false,
-  },
-  {
-    relativePath: "ui/monster-monitor.json",
-    target: MONSTER_MONITOR_TRANSLATIONS,
-    fallback: BUNDLED_MONSTER_MONITOR_TRANSLATIONS,
-    runtimeOnly: false,
-  },
-  {
-    relativePath: "ui/skill-monitor.json",
-    target: SKILL_MONITOR_TRANSLATIONS,
-    fallback: BUNDLED_SKILL_MONITOR_TRANSLATIONS,
-    runtimeOnly: false,
-  },
+  })),
   {
     relativePath: "parser/class-labels.json",
     target: CLASS_LABEL_TRANSLATIONS,
     fallback: BUNDLED_CLASS_LABEL_TRANSLATIONS,
-    runtimeOnly: false,
-  },
-  {
-    relativePath: "ui/settings-store.json",
-    target: SETTINGS_STORE_TRANSLATIONS,
-    fallback: BUNDLED_SETTINGS_STORE_TRANSLATIONS,
-    runtimeOnly: false,
-  },
-  {
-    relativePath: "ui/localization.json",
-    target: LOCALIZATION_TRANSLATIONS,
-    fallback: BUNDLED_LOCALIZATION_TRANSLATIONS,
     runtimeOnly: false,
   },
 ] as const;
@@ -246,14 +211,20 @@ async function loadRuntimeTranslationTables(): Promise<void> {
 
   await Promise.all(
     RUNTIME_TRANSLATION_DESCRIPTORS.map(async (descriptor) => {
+      const targetRecord = descriptor.target;
+      if (!targetRecord) {
+        return;
+      }
+
       if (sourceMode === "bundled" && !descriptor.runtimeOnly) {
-        replaceRecordContents(descriptor.target, cloneJson(descriptor.fallback));
+        const fallbackValue = (descriptor.fallback ?? {}) as Record<string, unknown>;
+        replaceRecordContents(targetRecord, cloneJson(fallbackValue));
         return;
       }
 
       const runtimeValue = await readRuntimeJson(descriptor.relativePath);
-      const nextValue = runtimeValue ?? descriptor.fallback;
-      replaceRecordContents(descriptor.target, cloneJson(nextValue));
+      const nextValue = (runtimeValue ?? descriptor.fallback ?? {}) as Record<string, unknown>;
+      replaceRecordContents(targetRecord, cloneJson(nextValue));
     }),
   );
 
@@ -346,12 +317,93 @@ export function resolveTranslation(
   return resolveMultiLangValue(entry, locale, fallback);
 }
 
+function normalizeUiVirtualPath(relativePath: string): string {
+  let normalized = relativePath.replace(/^\/+/, "").trim();
+
+  if (!normalized.startsWith("ui/")) {
+    normalized = `ui/${normalized}`;
+  }
+
+  if (!normalized.endsWith(".json")) {
+    normalized = `${normalized}.json`;
+  }
+
+  return normalized;
+}
+
+function getUiPathsByPrefix(prefix: string): string[] {
+  const normalizedPrefix = prefix.replace(/^\/+/, "");
+  return UI_TRANSLATION_PATHS.filter((path) => path.startsWith(`ui/${normalizedPrefix}`));
+}
+
+function resolveTranslationFromUiPaths(
+  paths: string[],
+  key: string,
+  locale: LocaleCode,
+  fallback: string,
+): string {
+  for (const path of paths) {
+    const entry = UI_TRANSLATION_TABLES[path]?.[key];
+    if (entry) {
+      return resolveMultiLangValue(entry, locale, fallback);
+    }
+  }
+
+  return fallback;
+}
+
+export function resolveUiTranslation(
+  relativePathOrKey: string,
+  keyOrLocale: string | LocaleCode,
+  localeOrFallback: LocaleCode | string,
+  fallback?: string,
+): string {
+  if (fallback === undefined) {
+    return resolveTranslationFromUiPaths(
+      UI_TRANSLATION_PATHS,
+      relativePathOrKey,
+      keyOrLocale as LocaleCode,
+      localeOrFallback as string,
+    );
+  }
+
+  const normalizedPath = normalizeUiVirtualPath(relativePathOrKey);
+  return resolveTranslation(
+    UI_TRANSLATION_TABLES[normalizedPath],
+    keyOrLocale as string,
+    localeOrFallback as LocaleCode,
+    fallback,
+  );
+}
+
+export function uiT(
+  relativePath: string,
+  locale: LocaleCode | (() => LocaleCode),
+): (key: string, fallback: string) => string {
+  const normalizedPath = normalizeUiVirtualPath(relativePath);
+
+  return (key: string, fallback: string) =>
+    resolveUiTranslation(
+      normalizedPath,
+      key,
+      typeof locale === "function" ? locale() : locale,
+      fallback,
+    );
+}
+
+const DPS_UI_TRANSLATION_PATHS = getUiPathsByPrefix("dps/");
+const SKILL_MONITOR_UI_TRANSLATION_PATHS = getUiPathsByPrefix("skill-monitor/");
 export function resolveNavigationTranslation(
   key: string,
   locale: LocaleCode,
   fallback: string,
 ): string {
-  return resolveTranslation(NAVIGATION_TRANSLATIONS, key, locale, fallback);
+  return resolveTranslationFromUiPaths(
+    ["ui/shell.json", ...DPS_UI_TRANSLATION_PATHS],
+    key,
+    locale,
+    fallback,
+  );
 }
 
 export function resolveModuleCalcTranslation(
@@ -359,7 +411,7 @@ export function resolveModuleCalcTranslation(
   locale: LocaleCode,
   fallback: string,
 ): string {
-  return resolveTranslation(MODULE_CALC_TRANSLATIONS, key, locale, fallback);
+  return resolveUiTranslation("ui/module-calc.json", key, locale, fallback);
 }
 
 export function resolveMonsterMonitorTranslation(
@@ -367,7 +419,7 @@ export function resolveMonsterMonitorTranslation(
   locale: LocaleCode,
   fallback: string,
 ): string {
-  return resolveTranslation(MONSTER_MONITOR_TRANSLATIONS, key, locale, fallback);
+  return resolveUiTranslation("ui/monster-monitor.json", key, locale, fallback);
 }
 
 export function resolveSkillMonitorTranslation(
@@ -375,7 +427,12 @@ export function resolveSkillMonitorTranslation(
   locale: LocaleCode,
   fallback: string,
 ): string {
-  return resolveTranslation(SKILL_MONITOR_TRANSLATIONS, key, locale, fallback);
+  return resolveTranslationFromUiPaths(
+    SKILL_MONITOR_UI_TRANSLATION_PATHS,
+    key,
+    locale,
+    fallback,
+  );
 }
 
 export function resolveClassLabelTranslation(
@@ -386,20 +443,12 @@ export function resolveClassLabelTranslation(
   return resolveTranslation(CLASS_LABEL_TRANSLATIONS, key, locale, fallback);
 }
 
-export function resolveSettingsStoreTranslation(
-  key: string,
-  locale: LocaleCode,
-  fallback: string,
-): string {
-  return resolveTranslation(SETTINGS_STORE_TRANSLATIONS, key, locale, fallback);
-}
-
 export function resolveLocalizationTranslation(
   key: string,
   locale: LocaleCode,
   fallback: string,
 ): string {
-  return resolveTranslation(LOCALIZATION_TRANSLATIONS, key, locale, fallback);
+  return resolveUiTranslation("ui/localization-tool.json", key, locale, fallback);
 }
 
 export function buildSkillMonitorClassNameKey(classKey: string): string {
@@ -426,7 +475,8 @@ export function resolveSkillMonitorClassName(
   locale: LocaleCode,
   fallback: string,
 ): string {
-  return resolveSkillMonitorTranslation(
+  return resolveUiTranslation(
+    "ui/skill-monitor/skill-cd.json",
     buildSkillMonitorClassNameKey(classKey),
     locale,
     fallback,
@@ -439,7 +489,8 @@ export function resolveSkillMonitorClassSkillName(
   locale: LocaleCode,
   fallback: string,
 ): string {
-  return resolveSkillMonitorTranslation(
+  return resolveUiTranslation(
+    "ui/skill-monitor/skill-cd.json",
     buildSkillMonitorClassSkillKey(classKey, skillId),
     locale,
     fallback,
@@ -453,7 +504,8 @@ export function resolveSkillMonitorDerivedSkillName(
   locale: LocaleCode,
   fallback: string,
 ): string {
-  return resolveSkillMonitorTranslation(
+  return resolveUiTranslation(
+    "ui/skill-monitor/skill-cd.json",
     buildSkillMonitorDerivedSkillKey(classKey, sourceSkillId, triggerBuffBaseId),
     locale,
     fallback,

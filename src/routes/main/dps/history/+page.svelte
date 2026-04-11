@@ -8,7 +8,7 @@
 		EncounterFiltersDto,
 	} from "$lib/bindings";
 		import { CLASS_MAP, getClassIcon, tooltip } from "$lib/utils.svelte";
-	import { resolveNavigationTranslation } from "$lib/i18n";
+	import { uiT } from "$lib/i18n";
 	import { SETTINGS } from "$lib/settings-store";
 	import { localizeRawSceneName } from "$lib/scene-mappings";
   import { localizeRawMonsterName } from "$lib/monster-mappings";
@@ -22,16 +22,10 @@
 	let totalCount = $state(0);
 	let isRefreshing = $state(false);
 
-	function t(key: string, fallback: string): string {
-		return resolveNavigationTranslation(
-			key,
-			SETTINGS.live.general.state.language,
-			fallback,
-		);
-	}
+	const t = uiT("dps/history", () => SETTINGS.live.general.state.language);
 
 	function deleteTitle(count: number): string {
-		return t("dps.historyPage.deleteRecords", "Delete {count} Record(s)").replace("{count}", String(count));
+		return t("list.deleteRecords", "删除 {count} 条记录").replace("{count}", String(count));
 	}
 
 	function parseNonNegativeInt(raw: string | null, fallback: number) {
@@ -118,7 +112,7 @@
 				showDeleteModal = false;
 				await loadEncounters(page);
 			} else {
-				errorMsg = `${t("dps.historyPage.deleteFailed", "Delete failed: ")}${res.error}`;
+				errorMsg = `${t("list.deleteFailed", "Delete failed: ")}${res.error}`;
 			}
 		} catch (e) {
 			console.error("Delete error", e);
@@ -158,11 +152,11 @@
 	const searchPlaceholder = $derived.by(() => {
 		switch (searchType) {
 			case "boss":
-				return t("dps.historyPage.searchBoss", "Search bosses...");
+				return t("list.searchBoss", "搜索首领...");
 			case "player":
-				return t("dps.historyPage.searchPlayer", "Search players...");
+				return t("list.searchPlayer", "搜索玩家...");
 			default:
-				return t("dps.historyPage.searchScene", "Search scenes...");
+				return t("list.searchScene", "搜索场景...");
 		}
 	});
 
@@ -469,11 +463,11 @@
 					<select
 						bind:value={searchType}
 						class="h-8 min-w-[96px] rounded-md border border-border bg-popover px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-						aria-label={t("dps.historyPage.searchType", "Search type")}
+						aria-label={t("list.searchType", "Search type")}
 					>
-						<option value="encounter">{t("dps.historyPage.scene", "Scene")}</option>
-						<option value="boss">{t("dps.historyPage.boss", "Boss")}</option>
-						<option value="player">{t("dps.historyPage.player", "Player")}</option>
+						<option value="encounter">{t("list.scene", "场景")}</option>
+						<option value="boss">{t("list.boss", "首领")}</option>
+						<option value="player">{t("list.player", "玩家")}</option>
 					</select>
 
 					<input
@@ -508,7 +502,7 @@
 				class="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border transition-colors text-sm {showFavoritesOnly
 					? 'bg-yellow-500/10 border-yellow-500/50 text-yellow-500'
 					: 'bg-popover text-muted-foreground hover:bg-muted/40 hover:text-foreground'}"
-				title={t("dps.historyPage.favoriteOnly", "Favorites Only")}
+				title={t("list.favoriteOnly", "仅收藏")}
 			>
 				<svg
 					class="w-4 h-4"
@@ -523,16 +517,16 @@
 						d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
 					/>
 				</svg>
-				<span>{t("dps.historyPage.favoriteOnly", "Favorites Only")}</span>
+				<span>{t("list.favoriteOnly", "仅收藏")}</span>
 			</button>
 
 			{#if hasActiveFilters}
 				<button
 					onclick={clearAllFilters}
 					class="px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-destructive transition-colors"
-					title={t("dps.historyPage.clearAllTitle", "Clear all filters")}
+					title={t("list.clearAllTitle", "清除所有筛选")}
 				>
-					{t("dps.historyPage.clearAll", "Clear All")}
+					{t("list.clearAll", "清除全部")}
 				</button>
 			{/if}
 		</div>
@@ -543,14 +537,14 @@
 					<span
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-yellow-500/10 text-yellow-500 leading-tight border border-yellow-500/30"
 					>
-						<span>{t("dps.historyPage.favoriteOnly", "Favorites Only")}</span>
+						<span>{t("list.favoriteOnly", "仅收藏")}</span>
 						<button
 							onclick={() => {
 								showFavoritesOnly = false;
 								loadEncounters(0);
 							}}
 							class="hover:text-yellow-600 transition-colors"
-							aria-label={t("dps.historyPage.removeFavoriteFilter", "Remove favorites filter")}
+							aria-label={t("list.removeFavoriteFilter", "移除收藏筛选")}
 						>
 							✕
 						</button>
@@ -560,12 +554,12 @@
 					<span
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-popover text-muted-foreground leading-tight border border-border/60"
 					>
-						<span class="text-muted-foreground/70">{t("dps.historyPage.bossPrefix", "Boss: ")}</span>
+						<span class="text-muted-foreground/70">{t("list.bossPrefix", "首领：")}</span>
 						{localizeRawMonsterName(boss, boss)}
 						<button
 							onclick={() => removeBossFilter(boss)}
 							class="text-muted-foreground/70 hover:text-destructive transition-colors"
-							aria-label={`${t("dps.historyPage.clearAll", "Clear")} ${localizeRawMonsterName(boss, boss)}`}
+							aria-label={`${t("list.clearAll", "清除全部")} ${localizeRawMonsterName(boss, boss)}`}
 						>
 							✕
 						</button>
@@ -575,12 +569,12 @@
 					<span
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-popover text-muted-foreground leading-tight border border-border/60"
 					>
-						<span class="text-muted-foreground/70">{t("dps.historyPage.playerPrefix", "Player: ")}</span>
+						<span class="text-muted-foreground/70">{t("list.playerPrefix", "玩家：")}</span>
 						{player}
 						<button
 							onclick={() => removePlayerNameFilter(player)}
 							class="text-muted-foreground/70 hover:text-destructive transition-colors"
-							aria-label={`${t("dps.historyPage.clearAll", "Clear")} ${player}`}
+							aria-label={`${t("list.clearAll", "清除全部")} ${player}`}
 						>
 							✕
 						</button>
@@ -590,12 +584,12 @@
 					<span
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-popover text-muted-foreground leading-tight border border-border/60"
 					>
-						<span class="text-muted-foreground/70">{t("dps.historyPage.scenePrefix", "Scene: ")}</span>
+						<span class="text-muted-foreground/70">{t("list.scenePrefix", "场景：")}</span>
 						{localizeRawSceneName(encounter, encounter)}
 						<button
 							onclick={() => removeEncounterFilter(encounter)}
 							class="text-muted-foreground/70 hover:text-destructive transition-colors"
-							aria-label={`${t("dps.historyPage.clearAll", "Clear")} ${encounter}`}
+							aria-label={`${t("list.clearAll", "清除全部")} ${encounter}`}
 						>
 							✕
 						</button>
@@ -611,7 +605,7 @@
 				onclick={() => loadEncounters(page)}
 				class="text-neutral-400 hover:text-neutral-200 transition-colors"
 				disabled={isRefreshing}
-				aria-label={t("dps.historyPage.refreshEncounterList", "Refresh encounter list")}
+				aria-label={t("list.refreshEncounterList", "刷新战斗列表")}
 			>
 				<svg
 					class:animate-spin={isRefreshing}
@@ -642,8 +636,8 @@
 								: someSelected && encounters.some((e) => selectedIds.has(e.id))
 									? 'bg-primary/50 border-primary'
 									: 'border-border hover:border-primary/50'}"
-							aria-label={allSelected ? t("dps.historyPage.deselectAll", "Deselect all") : t("dps.historyPage.selectAll", "Select all")}
-							title={allSelected ? t("dps.historyPage.deselectAll", "Deselect all") : t("dps.historyPage.selectAll", "Select all")}
+							aria-label={allSelected ? t("list.deselectAll", "取消全选") : t("list.selectAll", "全选")}
+							title={allSelected ? t("list.deselectAll", "取消全选") : t("list.selectAll", "全选")}
 						>
 							{#if allSelected}
 								<svg class="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -656,11 +650,11 @@
 							{/if}
 						</button>
 					</th>
-					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-10">{t("dps.historyPage.id", "ID")}</th>
-					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-80">{t("dps.historyPage.encounter", "Encounter")}</th>
-					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-[400px]">{t("dps.historyPage.players", "Players")}</th>
-					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-12">{t("dps.historyPage.duration", "Duration")}</th>
-					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-48">{t("dps.historyPage.date", "Date")}</th>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-10">{t("list.id", "ID")}</th>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-80">{t("list.encounter", "战斗")}</th>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-[400px]">{t("list.players", "玩家")}</th>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-12">{t("list.duration", "时长")}</th>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-48">{t("list.date", "日期")}</th>
 				</tr>
 			</thead>
 			<tbody class="bg-background/40">
@@ -675,7 +669,7 @@
 								class="flex items-center justify-center w-5 h-5 rounded border transition-colors {selectedIds.has(enc.id)
 									? 'bg-primary border-primary'
 									: 'border-border hover:border-primary/50'}"
-								aria-label={selectedIds.has(enc.id) ? t("dps.historyPage.deselect", "Deselect") : t("dps.historyPage.select", "Select")}
+								aria-label={selectedIds.has(enc.id) ? t("list.deselect", "取消选择") : t("list.select", "选择")}
 							>
 								{#if selectedIds.has(enc.id)}
 									<svg class="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -700,7 +694,7 @@
 									{#if enc.sceneName}
 										<span class="text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">{localizeRawSceneName(enc.sceneName, enc.sceneName)}</span>
 									{:else}
-										<span class="text-muted-foreground text-xs opacity-70">{t("dps.historyPage.openSceneNone", "No Scene")}</span>
+										<span class="text-muted-foreground text-xs opacity-70">{t("list.openSceneNone", "无场景")}</span>
 									{/if}
 								</div>
 								<div>
@@ -709,7 +703,7 @@
 											<span class="text-xs py-0.5 rounded px-1.5">{localizeRawMonsterName(enc.bosses[0]?.monsterName, enc.bosses[0]?.monsterName)}</span>
 										</div>
 									{:else}
-										<span class="inline-block text-muted-foreground text-xs opacity-70 py-0.5 px-1.5">{t("dps.historyPage.noBoss", "No Boss")}</span>
+										<span class="inline-block text-muted-foreground text-xs opacity-70 py-0.5 px-1.5">{t("list.noBoss", "无 Boss")}</span>
 									{/if}
 								</div>
 							</div>
@@ -753,7 +747,7 @@
 
 	<div class="flex items-center justify-between mt-4 gap-4">
 		<div class="flex items-center gap-3 text-sm text-muted-foreground">
-			<span>{t("dps.historyPage.rowsPerPage", "Rows per page:")}</span>
+			<span>{t("list.rowsPerPage", "每页行数：")}</span>
 			<input
 				type="number"
 				bind:value={pageSize}
@@ -762,26 +756,26 @@
 				class="w-16 px-2 py-1 bg-popover border border-border rounded text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
 				onchange={() => loadEncounters(0)}
 			/>
-			<span>{t("dps.historyPage.showing", "Showing")} {page * pageSize + 1} - {Math.min((page + 1) * pageSize, totalCount)} / {totalCount}</span>
+			<span>{t("list.showing", "显示")} {page * pageSize + 1} - {Math.min((page + 1) * pageSize, totalCount)} / {totalCount}</span>
 		</div>
 
 		<div class="flex items-center gap-1 ml-auto">
-			<button onclick={() => loadEncounters(0)} disabled={page === 0} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("dps.historyPage.firstPage", "First page")}>
+			<button onclick={() => loadEncounters(0)} disabled={page === 0} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("list.firstPage", "第一页")}>
 				<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
 				</svg>
 			</button>
-			<button onclick={() => loadEncounters(page - 1)} disabled={page === 0} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("dps.historyPage.previousPage", "Previous page")}>
+			<button onclick={() => loadEncounters(page - 1)} disabled={page === 0} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("list.previousPage", "上一页")}>
 				<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
 			</button>
-			<button onclick={() => loadEncounters(page + 1)} disabled={(page + 1) * pageSize >= totalCount} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("dps.historyPage.nextPage", "Next page")}>
+			<button onclick={() => loadEncounters(page + 1)} disabled={(page + 1) * pageSize >= totalCount} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("list.nextPage", "下一页")}>
 				<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 				</svg>
 			</button>
-			<button onclick={() => loadEncounters(Math.floor((totalCount - 1) / pageSize))} disabled={(page + 1) * pageSize >= totalCount} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("dps.historyPage.lastPage", "Last page")}>
+			<button onclick={() => loadEncounters(Math.floor((totalCount - 1) / pageSize))} disabled={(page + 1) * pageSize >= totalCount} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("list.lastPage", "最后一页")}>
 				<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
 				</svg>
@@ -795,20 +789,20 @@
 		<div class="flex items-center gap-4 px-5 py-3 rounded-xl border border-border bg-popover/95 backdrop-blur-sm shadow-xl">
 			<div class="flex items-center gap-2 text-sm">
 				<span class="text-primary font-semibold">{selectedIds.size}</span>
-				<span class="text-muted-foreground">{t("dps.historyPage.recordsSelected", "record(s) selected")}</span>
+				<span class="text-muted-foreground">{t("list.recordsSelected", "条记录已选择")}</span>
 			</div>
 
 			<div class="w-px h-5 bg-border"></div>
 
 			<div class="flex items-center gap-2">
 				<button onclick={clearSelection} class="px-3 py-1.5 text-sm rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
-					{t("dps.historyPage.clear", "Clear")}
+					{t("list.clear", "清除")}
 				</button>
 				<button onclick={openDeleteModal} class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
 					</svg>
-					{t("dps.historyPage.delete", "Delete")}
+					{t("list.delete", "删除")}
 				</button>
 			</div>
 		</div>
@@ -817,7 +811,7 @@
 
 {#if showDeleteModal}
 	<div class="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
-		<button class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick={closeDeleteModal} aria-label={t("dps.historyPage.closeModal", "Close dialog")}></button>
+		<button class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick={closeDeleteModal} aria-label={t("list.closeModal", "Close dialog")}></button>
 
 		<div class="relative z-10 w-full max-w-md mx-4 p-6 rounded-xl border border-border bg-popover shadow-2xl animate-in fade-in zoom-in-95 duration-200">
 			<div class="flex items-center gap-3 mb-4">
@@ -828,19 +822,19 @@
 				</div>
 				<div>
 					<h3 id="delete-modal-title" class="text-lg font-semibold text-foreground">{deleteTitle(selectedIds.size)}</h3>
-					<p class="text-sm text-muted-foreground">{t("dps.historyPage.actionCannotUndo", "This action cannot be undone")}</p>
+					<p class="text-sm text-muted-foreground">{t("list.actionCannotUndo", "此操作无法撤销")}</p>
 				</div>
 			</div>
 
 			<p class="text-sm text-muted-foreground mb-6">
 				{selectedIds.size === 1
-					? t("dps.historyPage.confirmDeleteOne", "Are you sure you want to permanently delete this encounter? All related data, including player stats, skill stats, and death events, will also be deleted.")
-					: t("dps.historyPage.confirmDeleteMany", "Are you sure you want to permanently delete these encounters? All related data, including player stats, skill stats, and death events, will also be deleted.")}
+					? t("list.confirmDeleteOne", "确认要永久删除这条战斗记录吗？所有关联数据（包括玩家统计、技能统计、死亡事件等）都会被删除。")
+					: t("list.confirmDeleteMany", "确认要永久删除这 {count} 条战斗记录吗？所有关联数据（包括玩家统计、技能统计、死亡事件等）都会被删除。")}
 			</p>
 
 			<div class="flex justify-end gap-3">
 				<button onclick={closeDeleteModal} disabled={isDeleting} class="px-4 py-2 text-sm rounded-md border border-border bg-popover text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-					{t("common.cancel", "Cancel")}
+					{t("common.cancel", "取消")}
 				</button>
 				<button onclick={confirmDeleteSelected} disabled={isDeleting} class="flex items-center gap-2 px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
 					{#if isDeleting}
@@ -848,9 +842,9 @@
 							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 						</svg>
-						{t("dps.historyPage.deleting", "Deleting...")}
+						{t("list.deleting", "Deleting...")}
 					{:else}
-						{t("dps.historyPage.delete", "Delete")}
+						{t("list.delete", "删除")}
 					{/if}
 				</button>
 			</div>

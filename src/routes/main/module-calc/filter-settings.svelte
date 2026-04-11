@@ -6,6 +6,18 @@
   import { SETTINGS } from "$lib/settings-store";
   import { resolveModuleCalcTranslation } from "$lib/i18n";
 
+  function t(key: string, fallback: string): string {
+    return resolveModuleCalcTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
+  function formatLevelValue(value: number): string {
+    return t("filterSettings.level", "{value}级").replace("{value}", String(value));
+  }
+
   type AttrOption = { id: number; label: string };
   type MinReq = { attrId: number | null; value: number | null };
 
@@ -64,11 +76,7 @@
     aria-expanded={isExpanded}
   >
     <div class="text-base font-semibold text-foreground">
-      {resolveModuleCalcTranslation(
-        "moduleCalc.filterSettings",
-        SETTINGS.live.general.state.language,
-        "筛选设置",
-      )}
+      {t("filterSettings", "筛选设置")}
     </div>
     <ChevronDownIcon
       class="h-5 w-5 shrink-0 text-muted-foreground transition-transform {isExpanded ? 'rotate-180' : ''}"
@@ -78,11 +86,7 @@
   {#if isExpanded}
     <div class="space-y-2">
       <div class="text-sm text-foreground">
-        {resolveModuleCalcTranslation(
-          "moduleCalc.excludeLowTotalValue",
-          SETTINGS.live.general.state.language,
-          "排除总值低于多少的模组:",
-        )}
+        {t("excludeLowTotalValue", "排除总值低于多少的模组:")}
       </div>
       <div class="flex items-center gap-4">
         <Slider
@@ -94,24 +98,14 @@
           class="max-w-[70%]"
         />
         <div class="min-w-12 text-sm text-foreground">
-          {minTotalValue}{SETTINGS.live.general.state.language === "zh-CN"
-            ? resolveModuleCalcTranslation(
-                "moduleCalc.levelSuffix",
-                SETTINGS.live.general.state.language,
-                "级",
-              )
-            : ""}
+          {formatLevelValue(minTotalValue)}
         </div>
       </div>
     </div>
 
     <div class="space-y-2">
       <div class="text-sm text-muted-foreground">
-        {resolveModuleCalcTranslation(
-          "moduleCalc.targetAttributesDescription",
-          SETTINGS.live.general.state.language,
-          "目标属性, 选中后只会计算携带该属性的模组(模组数超过1000时可利用该设置先进行筛选)",
-        )}
+        {t("targetAttributesDescription", "目标属性, 选中后只会计算携带该属性的模组(模组数超过1000时可利用该设置先进行筛选)")}
       </div>
       <div class="flex flex-wrap gap-2">
         {#each attributeOptions as opt}
@@ -128,11 +122,7 @@
 
     <div class="space-y-2">
       <div class="text-sm text-muted-foreground">
-        {resolveModuleCalcTranslation(
-          "moduleCalc.excludeAttributes",
-          SETTINGS.live.general.state.language,
-          "排除属性",
-        )}
+        {t("excludeAttributes", "排除属性")}
       </div>
       <div class="flex flex-wrap gap-2">
         {#each attributeOptions as opt}
@@ -149,11 +139,7 @@
 
     <div class="space-y-3">
       <div class="text-sm text-muted-foreground">
-        {resolveModuleCalcTranslation(
-          "moduleCalc.minAttributeRequirements",
-          SETTINGS.live.general.state.language,
-          "最小属性要求",
-        )}
+        {t("minAttributeRequirements", "最小属性要求")}
       </div>
       <div class="space-y-2">
         {#each minRequirements as req, idx}
@@ -165,11 +151,7 @@
                 updateMin(idx, "attrId", parseNullableNumber((e.target as HTMLSelectElement).value))}
             >
               <option value="" class="bg-popover text-foreground">
-                {resolveModuleCalcTranslation(
-                  "moduleCalc.selectAttribute",
-                  SETTINGS.live.general.state.language,
-                  "选择属性",
-                )}
+                {t("selectAttribute", "选择属性")}
               </option>
               {#each attributeOptions as opt}
                 <option value={opt.id} class="bg-popover text-foreground">{opt.label}</option>
@@ -184,21 +166,13 @@
                 updateMin(idx, "value", parseNullableNumber((e.target as HTMLInputElement).value))}
             />
             <Button size="sm" variant="ghost" onclick={() => removeMin(idx)}>
-              {resolveModuleCalcTranslation(
-                "moduleCalc.remove",
-                SETTINGS.live.general.state.language,
-                "移除",
-              )}
+              {t("remove", "移除")}
             </Button>
           </div>
         {/each}
       </div>
       <Button size="sm" variant="outline" onclick={addMin}>
-        {resolveModuleCalcTranslation(
-          "moduleCalc.add",
-          SETTINGS.live.general.state.language,
-          "+ 添加",
-        )}
+        {t("add", "+ 添加")}
       </Button>
     </div>
   {/if}

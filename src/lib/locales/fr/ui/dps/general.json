@@ -1,0 +1,15 @@
+{
+  "selectTabPrompt": "Please select a tab above to view detailed settings",
+  "settings.debug": "Débogage",
+  "settings.history": "Historique",
+  "settings.live": "Direct",
+  "settings.network": "Réseau",
+  "settings.shortcuts": "Raccourcis",
+  "subtitle": "Surveillez les données de combat et les statistiques DPS en temps réel",
+  "title": "Compteur DPS",
+  "toggleWindow": "Toggle DPS Fenêtre",
+  "viewHistory": "View History",
+  "history": "Historique",
+  "themes": "Thèmes",
+  "settings": "Paramètres"
+}

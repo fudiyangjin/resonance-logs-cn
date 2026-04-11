@@ -17,7 +17,7 @@
 {#if !solutions.length}
   <div class="text-sm text-muted-foreground">
     {resolveModuleCalcTranslation(
-      "moduleCalc.noResultsYet",
+      "noResultsYet",
       SETTINGS.live.general.state.language,
       "暂无结果",
     )}
@@ -43,7 +43,7 @@
             <div class="min-w-0">
               <div class="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 {resolveModuleCalcTranslation(
-                  "moduleCalc.solutionScore",
+                  "solutionScore",
                   SETTINGS.live.general.state.language,
                   "方案得分",
                 )}
@@ -67,7 +67,7 @@
                 onclick={() => onview?.(sol)}
               >
                 {resolveModuleCalcTranslation(
-                  "moduleCalc.viewDetails",
+                  "viewDetails",
                   SETTINGS.live.general.state.language,
                   "查看详情",
                 )}

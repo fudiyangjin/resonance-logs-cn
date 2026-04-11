@@ -4,8 +4,10 @@
    * Displays the list of available tools in the left panel.
    */
   import { page } from "$app/state";
-  import { TOOL_ROUTES } from "./routes.svelte";
   import { getVersion } from "@tauri-apps/api/app";
+  import { uiT, type LocaleCode } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
+  import { TOOL_ROUTES } from "./routes.svelte";
 
   let languageMenuOpen = $state(false);
 
@@ -17,8 +19,10 @@
     { value: "es", label: "ES" },
     { value: "fr", label: "FR" },
     { value: "pt-BR", label: "PT-BR" },
-    { value: "ko-KR", label: "KO" },
+    { value: "ko-KR", label: "KR" },
   ] as const;
+
+  const tShell = uiT("shell", () => SETTINGS.live.general.state.language);
 
   function getToolRouteLabel(href: string, fallback: string): string {
     const keyMap: Record<string, string> = {
@@ -30,13 +34,7 @@
     };
 
     const key = keyMap[href];
-    if (!key) return fallback;
-
-    return resolveNavigationTranslation(
-      key,
-      SETTINGS.live.general.state.language,
-      fallback,
-    );
+    return key ? tShell(key, fallback) : fallback;
   }
 
   function setLanguage(locale: LocaleCode) {
@@ -48,15 +46,11 @@
     return languageOptions.find((option) => option.value === locale)?.label ?? "CN";
   }
 
-  import { resolveNavigationTranslation, type LocaleCode } from "$lib/i18n";
-  import { SETTINGS } from "$lib/settings-store";
-
   // Check if current path matches or starts with the tool path
   function isActiveRoute(toolPath: string): boolean {
     const pathname = page.url.pathname;
     return pathname === toolPath || pathname.startsWith(toolPath + "/");
   }
-
 </script>
 
 <style>
@@ -70,22 +64,14 @@
   <div class="px-4 py-4 border-b border-border/50">
     <h1 class="text-lg font-bold text-foreground tracking-tight">Resonance Logs</h1>
     <p class="text-xs text-muted-foreground mt-0.5">
-      {resolveNavigationTranslation(
-        "sidebar.toolbox",
-        SETTINGS.live.general.state.language,
-        "工具箱",
-      )}
+      {tShell("sidebar.toolbox", "工具箱")}
     </p>
   </div>
 
   <!-- Tool list -->
   <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
     <p class="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-      {resolveNavigationTranslation(
-        "sidebar.tools",
-        SETTINGS.live.general.state.language,
-        "工具",
-      )}
+      {tShell("sidebar.tools", "工具")}
     </p>
     {#each Object.entries(TOOL_ROUTES) as [href, route] (route.label)}
       <a

@@ -4,7 +4,7 @@
   import { onMount } from "svelte";
   import {
     resolveLocalizationTranslation,
-    resolveNavigationTranslation,
+    uiT,
     type LocaleCode,
   } from "$lib/i18n";
   import { SETTINGS } from "$lib/settings-store";
@@ -73,6 +73,8 @@
   let isGeneratingSceneNameTranslation = $state(false);
   let isGeneratingMonsterNameTranslation = $state(false);
   let isGeneratingSkillNameTranslation = $state(false);
+  let isGeneratingSelectedUiTranslation = $state(false);
+  let isGeneratingAllUiTranslations = $state(false);
   let showTranslationGenerateInfo = $state(false);
   let showUiJsonTabs = $state(false);
 
@@ -98,50 +100,15 @@
     }, 0),
   );
 
-  const PARSER_TAB_RELATIVE_PATHS = new Set([
-    "parser/skillnames.json",
-    "parser/MonsterName.json",
-    "parser/SceneName.json",
-    "parser/BuffName.json",
-    "parser/class-labels.json",
-  ]);
-
-  const SEARCH_TAB_RELATIVE_PATHS = new Set([
-    "search/BuffNameSearch.json",
-    "search/resonance-skill-search.json",
-  ]);
-
   function getTabLabel(tab: TranslationFileTab) {
-    switch (tab.relativePath) {
-      case "parser/skillnames.json":
-        return t("localization.tabs.skillNames", "Skill Names");
-      case "parser/MonsterName.json":
-        return t("localization.tabs.monsterNames", "Monster Names");
-      case "parser/SceneName.json":
-        return t("localization.tabs.sceneNames", "Scene Names");
-      case "parser/BuffName.json":
-        return t("localization.tabs.buffName", "Buff Names");
-      case "parser/class-labels.json":
-        return t("localization.tabs.classLabels", "Class Labels");
-      case "ui/DPS.json":
-        return t("localization.tabs.dpsUi", "DPS UI");
-      case "ui/module-calc.json":
-        return t("localization.tabs.moduleCalcUi", "Module Calculator UI");
-      case "ui/monster-monitor.json":
-        return t("localization.tabs.monsterMonitorUi", "Monster Monitor UI");
-      case "ui/skill-monitor.json":
-        return t("localization.tabs.skillMonitorUi", "Skill Monitor UI");
-      case "ui/settings-store.json":
-        return t("localization.tabs.settingsStoreUi", "Settings Store UI");
-      case "ui/localization.json":
-        return t("localization.tabs.localizationUi", "Localization UI");
-      case "search/BuffNameSearch.json":
-        return t("localization.tabs.buffNameSearch", "Buff Name Search");
-      case "search/resonance-skill-search.json":
-        return t("localization.tabs.resonanceSkillSearch", "Resonance Skill Search");
-      default:
-        return tab.displayName;
-    }
+    if (tab.relativePath === "parser/skillnames.json") return t("tabs.skillNames", "技能名称");
+    if (tab.relativePath === "parser/MonsterName.json") return t("tabs.monsterNames", "怪物名称");
+    if (tab.relativePath === "parser/SceneName.json") return t("tabs.sceneNames", "场景名称");
+    if (tab.relativePath === "parser/BuffName.json") return t("tabs.buffName", "Buff 名称");
+    if (tab.relativePath === "parser/class-labels.json") return t("tabs.classLabels", "职业标签");
+    if (tab.relativePath === "search/BuffNameSearch.json") return t("tabs.buffNameSearch", "Buff 名称搜索");
+    if (tab.relativePath === "search/resonance-skill-search.json") return t("tabs.resonanceSkillSearch", "共鸣技能搜索");
+    return tab.displayName;
   }
 
   function splitTabsByCategory(tabs: TranslationFileTab[]) {
@@ -150,9 +117,9 @@
     const searchTabs: TranslationFileTab[] = [];
 
     for (const tab of tabs) {
-      if (PARSER_TAB_RELATIVE_PATHS.has(tab.relativePath)) {
+      if (tab.relativePath.startsWith("parser/")) {
         parserTabs.push(tab);
-      } else if (SEARCH_TAB_RELATIVE_PATHS.has(tab.relativePath)) {
+      } else if (tab.relativePath.startsWith("search/")) {
         searchTabs.push(tab);
       } else {
         uiTabs.push(tab);
@@ -185,24 +152,22 @@
     return (event.currentTarget as HTMLInputElement).checked;
   }
 
-  function tn(key: string, fallback: string) {
-    return resolveNavigationTranslation(key, getLocale(), fallback);
-  }
+  const tn = uiT("localization-tool", () => getLocale());
 
   const sections: { id: LocalizationSection; key: string; fallback: string }[] = [
     {
       id: "editLocal",
-      key: "localization.sections.editLocal",
+      key: "sections.editLocal",
       fallback: "本地编辑",
     },
     {
       id: "compareMerge",
-      key: "localization.sections.compareMerge",
+      key: "sections.compareMerge",
       fallback: "对比 / 合并",
     },
     {
       id: "settings",
-      key: "localization.sections.settings",
+      key: "sections.settings",
       fallback: "设置",
     },
   ];
@@ -557,7 +522,7 @@
       editLocalRows = [];
       hasUnsavedChanges = false;
       editLocalError = t(
-        "localization.errors.readFailed",
+        "errors.readFailed",
         "无法读取或解析所选翻译文件。",
       );
       isLoadingRows = false;
@@ -590,7 +555,7 @@
       compareLocalRows = [];
       clearCompareState();
       compareError = t(
-        "localization.errors.readFailed",
+        "errors.readFailed",
         "无法读取或解析所选翻译文件。",
       );
       isLoadingCompareRows = false;
@@ -628,7 +593,7 @@
 
       if (!result.ok) {
         editLocalError = result.error || t(
-          "localization.errors.saveFailed",
+          "errors.saveFailed",
           "保存所选翻译文件失败。",
         );
         return;
@@ -637,7 +602,7 @@
       editLocalRawJson = payload;
       resetEditLocalRowsFromSource();
       editLocalSaveMessage = t(
-        "localization.messages.saved",
+        "messages.saved",
         "已保存。",
       );
     } catch (error) {
@@ -645,7 +610,7 @@
       editLocalError = error instanceof Error
         ? error.message
         : t(
-            "localization.errors.saveFailed",
+            "errors.saveFailed",
             "保存所选翻译文件失败。",
           );
     } finally {
@@ -677,7 +642,7 @@
 
       if (!result.ok) {
         compareError = result.error || t(
-          "localization.errors.saveFailed",
+          "errors.saveFailed",
           "保存所选翻译文件失败。",
         );
         return;
@@ -687,7 +652,7 @@
       resetCompareLocalRowsFromSource();
       rebuildCompareRows(false);
       compareSaveMessage = t(
-        "localization.messages.saved",
+        "messages.saved",
         "已保存。",
       );
     } catch (error) {
@@ -695,7 +660,7 @@
       compareError = error instanceof Error
         ? error.message
         : t(
-            "localization.errors.saveFailed",
+            "errors.saveFailed",
             "保存所选翻译文件失败。",
           );
     } finally {
@@ -759,7 +724,7 @@
     const activeTab = getCompareMergeActiveTab();
     if (!activeTab) {
       compareError = t(
-        "localization.compare.noLocalFile",
+        "compare.noLocalFile",
         "请先选择一个本地翻译文件标签。",
       );
       input.value = "";
@@ -790,7 +755,7 @@
       console.warn("[localization] Failed to load compare JSON:", error);
       clearCompareState();
       compareError = t(
-        "localization.compare.invalidJson",
+        "compare.invalidJson",
         "无法读取或解析对比 JSON 文件。",
       );
     } finally {
@@ -909,7 +874,7 @@
       toast.success(message);
     } catch (error) {
       console.error(error);
-      toast.error(`${t("localization.settings.initError", "Failed to initialize translation runtime files.")} ${String(error)}`);
+      toast.error(`${t("settings.initError", "初始化运行时翻译文件失败。")} ${String(error)}`);
     } finally {
       isInitializingRuntimeFiles = false;
     }
@@ -923,7 +888,7 @@
       await invoke("open_translation_data_dir");
     } catch (error) {
       console.error(error);
-      toast.error(`${t("localization.settings.openDirError", "Failed to open the translation folder.")} ${String(error)}`);
+      toast.error(`${t("settings.openDirError", "打开翻译文件夹失败。")} ${String(error)}`);
     } finally {
       isOpeningTranslationDir = false;
     }
@@ -934,10 +899,11 @@
     start: () => void,
     end: () => void,
     failureFallback: string,
+    args?: Record<string, unknown>,
   ) {
     start();
     try {
-      const message = await invoke<string>(command);
+      const message = await invoke<string>(command, args);
       await invoke<string>("refresh_translation_runtime_data");
       toast.success(message);
     } catch (error) {
@@ -948,13 +914,56 @@
     }
   }
 
+  function getPreferredUiGeneratorPath(): string | null {
+    const candidates = [activeEditLocalTab, activeCompareMergeTab];
+
+    for (const candidate of candidates) {
+      if (candidate?.startsWith("ui/")) {
+        return candidate;
+      }
+    }
+
+    return null;
+  }
+
+  async function generateSelectedUiTranslationScaffold() {
+    if (isGeneratingSelectedUiTranslation) return;
+
+    const relativePath = getPreferredUiGeneratorPath();
+    if (!relativePath) {
+      toast.error(t(
+        "settings.generateSelectedUiError",
+        "请先在“本地编辑”或“对比 / 合并”中选中一个 UI 文件标签。",
+      ));
+      return;
+    }
+
+    await runGenerator(
+      "generate_ui_translation_scaffold",
+      () => (isGeneratingSelectedUiTranslation = true),
+      () => (isGeneratingSelectedUiTranslation = false),
+      t("settings.generateSelectedUiError", "生成所选 UI 翻译脚手架失败。"),
+      { relativePath },
+    );
+  }
+
+  async function generateAllUiTranslationScaffolds() {
+    if (isGeneratingAllUiTranslations) return;
+    await runGenerator(
+      "generate_all_ui_translation_scaffolds",
+      () => (isGeneratingAllUiTranslations = true),
+      () => (isGeneratingAllUiTranslations = false),
+      t("settings.generateAllUiError", "生成全部 UI 翻译脚手架失败。"),
+    );
+  }
+
   async function generateBuffNameSearchScaffold() {
     if (isGeneratingBuffNameSearch) return;
     await runGenerator(
       "generate_buff_name_search_scaffold",
       () => (isGeneratingBuffNameSearch = true),
       () => (isGeneratingBuffNameSearch = false),
-      t("localization.settings.generateBuffNameSearchError", "Failed to generate BuffNameSearch scaffold."),
+      t("settings.generateBuffNameSearchError", "生成 BuffNameSearch 脚手架失败。"),
     );
   }
 
@@ -964,7 +973,7 @@
       "generate_buff_name_translation_scaffold",
       () => (isGeneratingBuffNameTranslation = true),
       () => (isGeneratingBuffNameTranslation = false),
-      t("localization.settings.generateBuffNameError", "Failed to generate BuffName translation scaffold."),
+      t("settings.generateBuffNameError", "生成 BuffName 翻译脚手架失败。"),
     );
   }
 
@@ -974,7 +983,7 @@
       "generate_scene_name_translation_scaffold",
       () => (isGeneratingSceneNameTranslation = true),
       () => (isGeneratingSceneNameTranslation = false),
-      t("localization.settings.generateSceneNameError", "Failed to generate SceneName translation scaffold."),
+      t("settings.generateSceneNameError", "生成 SceneName 翻译脚手架失败。"),
     );
   }
 
@@ -984,7 +993,7 @@
       "generate_monster_name_translation_scaffold",
       () => (isGeneratingMonsterNameTranslation = true),
       () => (isGeneratingMonsterNameTranslation = false),
-      t("localization.settings.generateMonsterNameError", "Failed to generate MonsterName translation scaffold."),
+      t("settings.generateMonsterNameError", "生成 MonsterName 翻译脚手架失败。"),
     );
   }
 
@@ -994,7 +1003,7 @@
       "generate_skill_name_translation_scaffold",
       () => (isGeneratingSkillNameTranslation = true),
       () => (isGeneratingSkillNameTranslation = false),
-      t("localization.settings.generateSkillNameError", "Failed to generate skill translation scaffold."),
+      t("settings.generateSkillNameError", "生成技能翻译脚手架失败。"),
     );
   }
 
@@ -1089,13 +1098,13 @@ So the accurate behavior is:
 </script>
 
 <svelte:head>
-  <title>{t("localization.meta.title", "本地化工具")}</title>
+  <title>{t("meta.title", "本地化工具")}</title>
 </svelte:head>
 
 <div class="localization-page">
   <div class="localization-header">
-    <h1>{t("localization.title", "本地化工具")}</h1>
-    <p>{t("localization.description", "管理本地翻译、对比 JSON，并选择要合并的内容。")}</p>
+    <h1>{t("title", "本地化工具")}</h1>
+    <p>{t("description", "管理本地翻译、对比 JSON，并选择要合并的内容。")}</p>
   </div>
 
   <div class="section-tabs">
@@ -1117,11 +1126,11 @@ So the accurate behavior is:
           <div class="file-tabs">
             {#if isLoadingTabs}
               <div class="tab-message">
-                {t("localization.tabs.loading", "正在加载翻译文件…")}
+                {t("tabs.loading", "正在加载翻译文件…")}
               </div>
             {:else if editLocalTabs.length === 0}
               <div class="tab-message">
-                {t("localization.tabs.empty", "暂未发现可用的翻译 JSON 文件。")}
+                {t("tabs.empty", "暂未发现可用的翻译 JSON 文件。")}
               </div>
             {:else}
               {#if editLocalTabGroups.parserTabs.length > 0}
@@ -1178,7 +1187,7 @@ So the accurate behavior is:
             class:locked={hasUnsavedChanges}
             title={hasUnsavedChanges
               ? t(
-                  "localization.search.locked",
+                  "search.locked",
                   "保存或取消当前编辑后才能再次搜索。",
                 )
               : ""}
@@ -1186,7 +1195,7 @@ So the accurate behavior is:
             <input
               type="text"
               bind:value={searchQuery}
-              placeholder={t("localization.search.placeholder", "搜索 ID、名称或备注…")}
+              placeholder={t("search.placeholder", "搜索 ID、名称或备注…")}
               disabled={hasUnsavedChanges}
             />
 
@@ -1197,8 +1206,8 @@ So the accurate behavior is:
 
           <button type="button" onclick={toggleEditViewAll}>
             {editShowAllRows
-              ? t("localization.actions.hideAll", "隐藏全部")
-              : t("localization.actions.viewAll", "查看全部")}
+              ? t("actions.hideAll", "隐藏全部")
+              : t("actions.viewAll", "查看全部")}
           </button>
 
           <button
@@ -1208,8 +1217,8 @@ So the accurate behavior is:
             disabled={!hasUnsavedChanges || isSaving || isLoadingRows || !getEditLocalActiveTab()}
           >
             {isSaving
-              ? t("localization.actions.saving", "保存中…")
-              : t("localization.actions.save", "保存")}
+              ? t("actions.saving", "保存中…")
+              : t("actions.save", "保存")}
           </button>
 
           <button
@@ -1217,7 +1226,7 @@ So the accurate behavior is:
             onclick={cancelEditLocalEdits}
             disabled={!hasUnsavedChanges || isSaving || isLoadingRows}
           >
-            {t("localization.actions.cancel", "取消")}
+            {t("actions.cancel", "取消")}
           </button>
         </div>
 
@@ -1225,12 +1234,12 @@ So the accurate behavior is:
         <div class="panel-body">
           {#if !isLoadingTabs && getEditLocalActiveTab()}
             <div class="active-file-label">
-              {t("localization.labels.currentFile", "当前文件")}:
+              {t("labels.currentFile", "当前文件")}:
               <span>{getEditLocalActiveTab()?.relativePath}</span>
 
               {#if hasUnsavedChanges}
                 <strong class="dirty-indicator">
-                  {t("localization.labels.unsaved", "未保存更改")}
+                  {t("labels.unsaved", "未保存更改")}
                 </strong>
               {/if}
             </div>
@@ -1242,23 +1251,23 @@ So the accurate behavior is:
 
           {#if isLoadingRows}
             <div class="empty-state">
-              {t("localization.rows.loading", "正在加载文件内容…")}
+              {t("rows.loading", "正在加载文件内容…")}
             </div>
           {:else if editLocalError}
             <div class="error-state">{editLocalError}</div>
           {:else if visibleEditLocalRows.length === 0}
             <div class="empty-state">
               {editShowAllRows
-                ? t("localization.rows.empty", "此文件没有可显示的条目。")
-                : t("localization.rows.searchPrompt", "输入搜索内容，或点击“查看全部”显示所有条目。")}
+                ? t("rows.empty", "此文件没有可显示的条目。")
+                : t("rows.searchPrompt", "输入搜索内容，或点击“查看全部”显示所有条目。")}
             </div>
           {:else}
             <div class="results-table">
               <div class="results-header">
-                <div>{t("localization.columns.id", "ID / Key")}</div>
-                <div>{t("localization.columns.baseName", "基础名称 (CN)")}</div>
-                <div>{t("localization.columns.localName", "当前语言名称")}</div>
-                <div>{t("localization.columns.localNote", "当前语言备注")}</div>
+                <div>{t("columns.id", "ID / 键")}</div>
+                <div>{t("columns.baseName", "基础名称 (CN)")}</div>
+                <div>{t("columns.localName", "当前语言名称")}</div>
+                <div>{t("columns.localNote", "当前语言备注")}</div>
               </div>
 
               {#each visibleEditLocalRows as row}
@@ -1303,11 +1312,11 @@ So the accurate behavior is:
           <div class="file-tabs">
             {#if isLoadingTabs}
               <div class="tab-message">
-                {t("localization.tabs.loading", "正在加载翻译文件…")}
+                {t("tabs.loading", "正在加载翻译文件…")}
               </div>
             {:else if compareMergeTabs.length === 0}
               <div class="tab-message">
-                {t("localization.tabs.empty", "暂未发现可用的翻译 JSON 文件。")}
+                {t("tabs.empty", "暂未发现可用的翻译 JSON 文件。")}
               </div>
             {:else}
               {#if compareMergeTabGroups.parserTabs.length > 0}
@@ -1363,14 +1372,14 @@ So the accurate behavior is:
             <input
               type="text"
               bind:value={searchQuery}
-              placeholder={t("localization.search.placeholder", "搜索 ID、名称或备注…")}
+              placeholder={t("search.placeholder", "搜索 ID、名称或备注…")}
             />
           </div>
 
           <button type="button" onclick={toggleCompareViewAll}>
             {compareShowAllRows
-              ? t("localization.actions.hideAll", "隐藏全部")
-              : t("localization.actions.viewAll", "查看全部")}
+              ? t("actions.hideAll", "隐藏全部")
+              : t("actions.viewAll", "查看全部")}
           </button>
         </div>
 
@@ -1386,18 +1395,18 @@ So the accurate behavior is:
         <div class="panel-body">
           {#if !isLoadingTabs && getCompareMergeActiveTab()}
             <div class="active-file-label">
-              {t("localization.labels.currentFile", "当前文件")}:
+              {t("labels.currentFile", "当前文件")}:
               <span>{getCompareMergeActiveTab()?.relativePath}</span>
 
               {#if compareImportedFileName}
                 <span class="compare-file-pill">
-                  {t("localization.compare.compareFile", "对比文件")}: {compareImportedFileName}
+                  {t("compare.compareFile", "对比文件")}: {compareImportedFileName}
                 </span>
               {/if}
 
               {#if compareHasUnsavedChanges}
                 <strong class="dirty-indicator">
-                  {t("localization.labels.unsaved", "未保存更改")}
+                  {t("labels.unsaved", "未保存更改")}
                 </strong>
               {/if}
             </div>
@@ -1405,7 +1414,7 @@ So the accurate behavior is:
 
           <div class="compare-secondary-actions">
             <button type="button" onclick={openCompareFilePicker}>
-              {t("localization.compare.loadJson", "加载对比 JSON")}
+              {t("compare.loadJson", "加载对比 JSON")}
             </button>
 
             <button
@@ -1413,7 +1422,7 @@ So the accurate behavior is:
               onclick={clearCompareFile}
               disabled={!compareImportedRawJson}
             >
-              {t("localization.compare.clearJson", "清除对比文件")}
+              {t("compare.clearJson", "清除对比文件")}
             </button>
           </div>
 
@@ -1424,7 +1433,7 @@ So the accurate behavior is:
               onclick={() => (compareDifferencesOnly = !compareDifferencesOnly)}
               disabled={!compareImportedRawJson}
             >
-              {t("localization.actions.differencesOnly", "仅显示差异")}
+              {t("actions.differencesOnly", "仅显示差异")}
             </button>
 
             <button
@@ -1432,7 +1441,7 @@ So the accurate behavior is:
               onclick={applySelectedCompareChanges}
               disabled={!compareImportedRawJson || selectedCompareFieldCount === 0}
             >
-              {t("localization.compare.applySelected", "应用所选更改")}
+              {t("compare.applySelected", "应用所选更改")}
             </button>
 
             <button
@@ -1442,8 +1451,8 @@ So the accurate behavior is:
               disabled={!compareHasUnsavedChanges || isSavingCompare || isLoadingCompareRows}
             >
               {isSavingCompare
-                ? t("localization.actions.saving", "保存中…")
-                : t("localization.compare.saveMerged", "保存合并结果")}
+                ? t("actions.saving", "保存中…")
+                : t("compare.saveMerged", "保存合并结果")}
             </button>
 
             <button
@@ -1451,7 +1460,7 @@ So the accurate behavior is:
               onclick={cancelCompareMergedEdits}
               disabled={!compareHasUnsavedChanges || isSavingCompare || isLoadingCompareRows}
             >
-              {t("localization.actions.cancel", "取消")}
+              {t("actions.cancel", "取消")}
             </button>
           </div>
 
@@ -1461,35 +1470,35 @@ So the accurate behavior is:
 
           {#if isLoadingCompareRows}
             <div class="empty-state">
-              {t("localization.rows.loading", "正在加载文件内容…")}
+              {t("rows.loading", "正在加载文件内容…")}
             </div>
           {:else if compareError}
             <div class="error-state">{compareError}</div>
           {:else if !compareImportedRawJson}
             <div class="empty-state">
               {t(
-                "localization.compare.loadPrompt",
+                "compare.loadPrompt",
                 "加载一个对比 JSON 文件以查看差异并选择要合并的字段。",
               )}
             </div>
           {:else if visibleCompareRows.length === 0}
             <div class="empty-state">
               {compareShowAllRows
-                ? t("localization.rows.empty", "此文件没有可显示的条目。")
+                ? t("rows.empty", "此文件没有可显示的条目。")
                 : t(
-                    "localization.compare.noMatches",
+                    "compare.noMatches",
                     "当前筛选条件下没有可显示的对比结果。",
                   )}
             </div>
           {:else}
             <div class="compare-table">
               <div class="compare-header">
-                <div>{t("localization.columns.id", "ID / Key")}</div>
-                <div>{t("localization.columns.baseName", "基础名称 (CN)")}</div>
-                <div>{t("localization.compare.localName", "当前名称")}</div>
-                <div>{t("localization.compare.compareName", "对比名称")}</div>
-                <div>{t("localization.compare.mergeName", "合并名称")}</div>
-                <div>{t("localization.compare.mergeRow", "整行")}</div>
+                <div>{t("columns.id", "ID / 键")}</div>
+                <div>{t("columns.baseName", "基础名称 (CN)")}</div>
+                <div>{t("compare.localName", "当前名称")}</div>
+                <div>{t("compare.compareName", "对比名称")}</div>
+                <div>{t("compare.mergeName", "合并名称")}</div>
+                <div>{t("compare.mergeRow", "整行")}</div>
               </div>
 
               {#each visibleCompareRows as row}
@@ -1544,13 +1553,13 @@ So the accurate behavior is:
           <div class="settings-group">
             <div class="settings-group-header settings-group-header-inline">
               <div class="settings-title-with-icon">
-                <h2>{t("localization.settings.translationDebug.title", "Translations Tool Settings")}</h2>
+                <h2>{t("settings.translationDebug.title", "翻译调试设置")}</h2>
                 <button
                   type="button"
                   class="settings-info-icon-button"
                   class:active={showTranslationGenerateInfo}
-                  aria-label={tn("debug.generateInfoButton", "Show generate behavior info")}
-                  title={tn("debug.generateInfoButton", "Show generate behavior info")}
+                  aria-label={tn("debug.generateInfoButton", "点击查看“生成”行为说明")}
+                  title={tn("debug.generateInfoButton", "点击查看“生成”行为说明")}
                   onclick={() => (showTranslationGenerateInfo = !showTranslationGenerateInfo)}
                 >
                   ⓘ
@@ -1561,7 +1570,7 @@ So the accurate behavior is:
             {#if showTranslationGenerateInfo}
               <div class="settings-info-panel">
                 <div class="settings-debug-info-title">
-                  {tn("debug.generateInfoTitle", "What happens when you click Generate?")}
+                  {tn("debug.generateInfoTitle", "点击“生成”后会发生什么？")}
                 </div>
                 {translationGenerateInfoText()}
               </div>
@@ -1571,27 +1580,27 @@ So the accurate behavior is:
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {t("localization.settings.visibility.uiJsons.title", "UI / Search JSON Tabs")}
+                    {t("settings.visibility.uiJsons.title", "UI / 搜索 JSON 标签页")}
                   </div>
                   <div class="settings-debug-description">
-                    {t("localization.settings.visibility.uiJsons.description", "Show or hide the UI and search JSON rows in Edit Local and Compare / Merge.")}
+                    {t("settings.visibility.uiJsons.description", "在“本地编辑”和“对比 / 合并”中显示或隐藏 UI 与搜索 JSON 行。")}
                   </div>
                 </div>
 
                 <button type="button" onclick={() => (showUiJsonTabs = !showUiJsonTabs)}>
                   {showUiJsonTabs
-                    ? t("localization.settings.visibility.uiJsons.hide", "Hide UI / Search JSONs")
-                    : t("localization.settings.visibility.uiJsons.show", "Show UI / Search JSONs")}
+                    ? t("settings.visibility.uiJsons.hide", "隐藏 UI / 搜索 JSON")
+                    : t("settings.visibility.uiJsons.show", "显示 UI / 搜索 JSON")}
                 </button>
               </div>
 
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.translationInitTitle", "Initialize Translation Files")}
+                    {tn("debug.translationInitTitle", "初始化翻译文件")}
                   </div>
                   <div class="settings-debug-description">
-                    {tn("debug.translationInitDescription", "Create any missing runtime translation files in the app data directory.")}
+                    {tn("debug.translationInitDescription", "在应用数据目录中创建缺失的运行时翻译文件。")}
                   </div>
                 </div>
 
@@ -1601,18 +1610,18 @@ So the accurate behavior is:
                   disabled={isInitializingRuntimeFiles}
                 >
                   {isInitializingRuntimeFiles
-                    ? t("localization.actions.processing", "Processing…")
-                    : tn("debug.translationInitButton", "Initialize Translation Files")}
+                    ? t("actions.processing", "处理中…")
+                    : tn("debug.translationInitButton", "初始化翻译文件")}
                 </button>
               </div>
 
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.translationOpenTitle", "Open Translation Folder")}
+                    {tn("debug.translationOpenTitle", "打开翻译文件夹")}
                   </div>
                   <div class="settings-debug-description">
-                    {tn("debug.translationOpenDescription", "Open the runtime translation directory in app data.")}
+                    {tn("debug.translationOpenDescription", "打开应用数据中的运行时翻译目录。")}
                   </div>
                 </div>
 
@@ -1622,18 +1631,60 @@ So the accurate behavior is:
                   disabled={isOpeningTranslationDir}
                 >
                   {isOpeningTranslationDir
-                    ? t("localization.actions.processing", "Processing…")
-                    : tn("debug.translationOpenButton", "Open Translation Folder")}
+                    ? t("actions.processing", "处理中…")
+                    : tn("debug.translationOpenButton", "打开翻译文件夹")}
                 </button>
               </div>
 
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.generateBuffNameSearchTitle", "Generate BuffNameSearch Runtime File")}
+                    {tn("debug.generateSelectedUiTitle", "生成所选 UI 运行时文件")}
                   </div>
                   <div class="settings-debug-description">
-                    {tn("debug.generateBuffNameSearchDescription", "Non-destructively generate or update runtime BuffNameSearch.json from src/lib/config/BuffName.json.")}
+                    {tn("debug.generateSelectedUiDescription", "根据当前选中的 UI 文件标签，从源码 zh-CN UI 文件生成或补齐对应的运行时文件，并保留其他语言的已有翻译。")}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onclick={generateSelectedUiTranslationScaffold}
+                  disabled={isGeneratingSelectedUiTranslation}
+                >
+                  {isGeneratingSelectedUiTranslation
+                    ? t("actions.processing", "处理中…")
+                    : tn("debug.generateSelectedUiButton", "生成所选 UI 文件")}
+                </button>
+              </div>
+
+              <div class="settings-debug-row">
+                <div class="settings-debug-copy">
+                  <div class="settings-debug-title">
+                    {tn("debug.generateAllUiTitle", "生成全部 UI 运行时文件")}
+                  </div>
+                  <div class="settings-debug-description">
+                    {tn("debug.generateAllUiDescription", "根据源码 UI 文件结构，为所有 UI 工具 / 功能文件生成或补齐对应的运行时文件，并保留其他语言的已有翻译。")}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onclick={generateAllUiTranslationScaffolds}
+                  disabled={isGeneratingAllUiTranslations}
+                >
+                  {isGeneratingAllUiTranslations
+                    ? t("actions.processing", "处理中…")
+                    : tn("debug.generateAllUiButton", "生成全部 UI 文件")}
+                </button>
+              </div>
+
+              <div class="settings-debug-row">
+                <div class="settings-debug-copy">
+                  <div class="settings-debug-title">
+                    {tn("debug.generateBuffNameSearchTitle", "生成 BuffNameSearch 运行时文件")}
+                  </div>
+                  <div class="settings-debug-description">
+                    {tn("debug.generateBuffNameSearchDescription", "根据 src/lib/config/BuffName.json 在 AppData 中生成或更新各语言的 search/BuffNameSearch.json 运行时文件。")}
                   </div>
                 </div>
 
@@ -1643,18 +1694,18 @@ So the accurate behavior is:
                   disabled={isGeneratingBuffNameSearch}
                 >
                   {isGeneratingBuffNameSearch
-                    ? t("localization.actions.processing", "Processing…")
-                    : tn("debug.generateBuffNameSearchButton", "Generate BuffNameSearch")}
+                    ? t("actions.processing", "处理中…")
+                    : tn("debug.generateBuffNameSearchButton", "生成 BuffNameSearch")}
                 </button>
               </div>
 
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.generateBuffNameTitle", "Generate BuffName Runtime File")}
+                    {tn("debug.generateBuffNameTitle", "生成 BuffName 运行时文件")}
                   </div>
                   <div class="settings-debug-description">
-                    {tn("debug.generateBuffNameDescription", "Non-destructively generate or update runtime BuffName.json from src/lib/config/BuffName.json.")}
+                    {tn("debug.generateBuffNameDescription", "根据 src/lib/config/BuffName.json 在 AppData 中生成或更新各语言的 parser/BuffName.json 运行时文件。")}
                   </div>
                 </div>
 
@@ -1664,18 +1715,18 @@ So the accurate behavior is:
                   disabled={isGeneratingBuffNameTranslation}
                 >
                   {isGeneratingBuffNameTranslation
-                    ? t("localization.actions.processing", "Processing…")
-                    : tn("debug.generateBuffNameButton", "Generate BuffName")}
+                    ? t("actions.processing", "处理中…")
+                    : tn("debug.generateBuffNameButton", "生成 BuffName")}
                 </button>
               </div>
 
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.generateSceneNameTitle", "Generate SceneName Runtime File")}
+                    {tn("debug.generateSceneNameTitle", "生成 SceneName 运行时文件")}
                   </div>
                   <div class="settings-debug-description">
-                    {tn("debug.generateSceneNameDescription", "Non-destructively generate or update runtime SceneName.json from src-tauri/meter-data/SceneName.json.")}
+                    {tn("debug.generateSceneNameDescription", "根据 src-tauri/meter-data/SceneName.json 在 AppData 中生成或更新各语言的 parser/SceneName.json 运行时文件。")}
                   </div>
                 </div>
 
@@ -1685,18 +1736,18 @@ So the accurate behavior is:
                   disabled={isGeneratingSceneNameTranslation}
                 >
                   {isGeneratingSceneNameTranslation
-                    ? t("localization.actions.processing", "Processing…")
-                    : tn("debug.generateSceneNameButton", "Generate SceneName")}
+                    ? t("actions.processing", "处理中…")
+                    : tn("debug.generateSceneNameButton", "生成 SceneName")}
                 </button>
               </div>
 
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.generateMonsterNameTitle", "Generate MonsterName Runtime File")}
+                    {tn("debug.generateMonsterNameTitle", "生成 MonsterName 运行时文件")}
                   </div>
                   <div class="settings-debug-description">
-                    {tn("debug.generateMonsterNameDescription", "Non-destructively generate or update runtime MonsterName.json from src-tauri/meter-data/MonsterIdNameType.json.")}
+                    {tn("debug.generateMonsterNameDescription", "根据 src-tauri/meter-data/MonsterIdNameType.json 在 AppData 中生成或更新各语言的 parser/MonsterName.json 运行时文件。")}
                   </div>
                 </div>
 
@@ -1706,18 +1757,18 @@ So the accurate behavior is:
                   disabled={isGeneratingMonsterNameTranslation}
                 >
                   {isGeneratingMonsterNameTranslation
-                    ? t("localization.actions.processing", "Processing…")
-                    : tn("debug.generateMonsterNameButton", "Generate MonsterName")}
+                    ? t("actions.processing", "处理中…")
+                    : tn("debug.generateMonsterNameButton", "生成 MonsterName")}
                 </button>
               </div>
 
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.generateSkillNamesTitle", "Generate Skill Translation Runtime Files")}
+                    {tn("debug.generateSkillNamesTitle", "生成技能翻译运行时文件")}
                   </div>
                   <div class="settings-debug-description">
-                    {tn("debug.generateSkillNamesDescription", "Generate or update per-locale runtime parser/skillnames.json files in AppData from RecountTable.json, DamageAttrIdName.json, SkillEffectTable.json, SkillFightLevelTable.json, and TempAttrTable.json.")}
+                    {tn("debug.generateSkillNamesDescription", "根据 RecountTable.json、DamageAttrIdName.json、SkillEffectTable.json、SkillFightLevelTable.json 与 TempAttrTable.json，在 AppData 中生成或更新各语言的 parser/skillnames.json 运行时文件。")}
                   </div>
                 </div>
 
@@ -1727,8 +1778,8 @@ So the accurate behavior is:
                   disabled={isGeneratingSkillNameTranslation}
                 >
                   {isGeneratingSkillNameTranslation
-                    ? t("localization.actions.processing", "Processing…")
-                    : tn("debug.generateSkillNamesButton", "Generate Skill Translations")}
+                    ? t("actions.processing", "处理中…")
+                    : tn("debug.generateSkillNamesButton", "生成技能翻译")}
                 </button>
               </div>
             </div>

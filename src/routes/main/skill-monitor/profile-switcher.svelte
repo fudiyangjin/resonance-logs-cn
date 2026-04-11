@@ -3,24 +3,18 @@
     SETTINGS,
     createDefaultSkillMonitorProfile,
   } from "$lib/settings-store";
-  import { resolveSkillMonitorTranslation } from "$lib/i18n";
+  import { uiT } from "$lib/i18n";
   import {
     clampedProfileIndex,
     activeProfileOrDefault,
     updateActiveProfile,
   } from "$lib/skill-monitor-profile.svelte";
 
-  function t(key: string, fallback: string): string {
-    return resolveSkillMonitorTranslation(
-      key,
-      SETTINGS.live.general.state.language,
-      fallback,
-    );
-  }
+  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   function displayProfileName(name: string): string {
     if (name === "默认方案") {
-      return t("skillMonitor.profile.defaultStoredName", "默认方案");
+      return t("profile.defaultStoredName", "默认方案");
     }
     return name;
   }
@@ -44,7 +38,7 @@
   function addProfile() {
     const nextIndex = SETTINGS.skillMonitor.state.profiles.length + 1;
     const nextProfile = createDefaultSkillMonitorProfile(
-      `${t("skillMonitor.profile.defaultName", "方案")} ${nextIndex}`,
+      `${t("profile.defaultName", "方案")} ${nextIndex}`,
     );
     SETTINGS.skillMonitor.state.profiles = [
       ...SETTINGS.skillMonitor.state.profiles,
@@ -56,7 +50,7 @@
 
   function renameActiveProfile() {
     const nextName = window.prompt(
-      t("skillMonitor.profile.renamePrompt", "请输入新的方案名称"),
+      t("profile.renamePrompt", "请输入新的方案名称"),
       activeProfile.name,
     );
     if (!nextName) return;
@@ -79,8 +73,8 @@
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
   <div>
-    <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.profile.title", "配置方案")}</h2>
-    <p class="text-xs text-muted-foreground">{t("skillMonitor.profile.subtitle", "可创建多个角色监控方案并快速切换")}</p>
+    <h2 class="text-base font-semibold text-foreground">{t("profile.title", "配置方案")}</h2>
+    <p class="text-xs text-muted-foreground">{t("profile.subtitle", "可创建多个角色监控方案并快速切换")}</p>
   </div>
   <div class="flex flex-wrap items-center gap-2">
     <select
@@ -98,14 +92,14 @@
       class="text-xs px-3 py-2 rounded border border-border/60 text-foreground hover:bg-muted/40 transition-colors"
       onclick={addProfile}
     >
-      {t("skillMonitor.profile.new", "新建方案")}
+      {t("profile.new", "新建方案")}
     </button>
     <button
       type="button"
       class="text-xs px-3 py-2 rounded border border-border/60 text-foreground hover:bg-muted/40 transition-colors"
       onclick={renameActiveProfile}
     >
-      {t("skillMonitor.profile.rename", "重命名")}
+      {t("profile.rename", "重命名")}
     </button>
     <button
       type="button"
@@ -113,7 +107,7 @@
       onclick={removeActiveProfile}
       disabled={profiles.length <= 1}
     >
-      {t("skillMonitor.profile.delete", "删除方案")}
+      {t("profile.delete", "删除方案")}
     </button>
   </div>
 </div>

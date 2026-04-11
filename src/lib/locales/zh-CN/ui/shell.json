@@ -1,0 +1,12 @@
+{
+  "history": "历史",
+  "settings": "设置",
+  "sidebar.toolbox": "工具箱",
+  "sidebar.tools": "工具",
+  "themes": "主题",
+  "tool.dps": "DPS检测",
+  "tool.localization": "本地化工具",
+  "tool.moduleOptimizer": "模组计算",
+  "tool.monsterTracker": "怪物监控",
+  "tool.skillMonitor": "实时监控"
+}

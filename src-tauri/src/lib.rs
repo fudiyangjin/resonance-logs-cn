@@ -85,6 +85,8 @@ pub fn run() {
             translation_runtime::list_translation_runtime_files,
             translation_runtime::read_translation_runtime_file,
             translation_runtime::write_translation_runtime_file,
+            translation_runtime::generate_ui_translation_scaffold,
+            translation_runtime::generate_all_ui_translation_scaffolds,
             translation_runtime::generate_buff_name_search_scaffold,
             translation_runtime::generate_buff_name_translation_scaffold,
             translation_runtime::generate_scene_name_translation_scaffold,

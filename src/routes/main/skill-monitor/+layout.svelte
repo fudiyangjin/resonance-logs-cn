@@ -7,16 +7,10 @@
   import PenSquareIcon from "virtual:icons/lucide/pen-square";
   import ProfileSwitcher from "./profile-switcher.svelte";
   import { SETTINGS } from "$lib/settings-store";
-  import { resolveSkillMonitorTranslation } from "$lib/i18n";
+  import { uiT } from "$lib/i18n";
 
   let { children } = $props();
-  function t(key: string, fallback: string): string {
-    return resolveSkillMonitorTranslation(
-      key,
-      SETTINGS.live.general.state.language,
-      fallback,
-    );
-  }
+  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
 
 
   async function toggleOverlayWindow() {
@@ -61,8 +55,8 @@
         <SwordsIcon class="w-5 h-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">{t("skillMonitor.title", "实时监控")}</h1>
-        <p class="text-sm text-muted-foreground">{t("skillMonitor.subtitle", "自定义监控技能CD, 战斗资源等")}</p>
+        <h1 class="text-xl font-bold text-foreground">{t("title", "实时监控")}</h1>
+        <p class="text-sm text-muted-foreground">{t("subtitle", "自定义监控技能CD, 战斗资源等")}</p>
       </div>
     </div>
 
@@ -73,7 +67,7 @@
         onclick={toggleOverlayWindow}
       >
         <PlayIcon class="w-4 h-4" />
-        <span>{t("skillMonitor.toggleOverlayWindow", "切换遮罩窗口")}</span>
+        <span>{t("toggleOverlayWindow", "切换遮罩窗口")}</span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
 
@@ -83,7 +77,7 @@
         onclick={toggleOverlayEditMode}
       >
         <PenSquareIcon class="w-4 h-4" />
-        <span>{t("skillMonitor.editOverlayLayout", "编辑遮罩布局")}</span>
+        <span>{t("editOverlayLayout", "编辑遮罩布局")}</span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
     </div>

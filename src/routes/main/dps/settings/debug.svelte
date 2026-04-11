@@ -9,7 +9,7 @@
   import {
     TRANSLATION_SOURCE_MODE,
     getCurrentTranslationSourceMode,
-    resolveNavigationTranslation,
+    uiT,
     setTranslationSourceMode,
     type TranslationSourceMode,
   } from "$lib/i18n";
@@ -17,6 +17,8 @@
   let translationSourceMode = $state(getCurrentTranslationSourceMode() as TranslationSourceMode);
   let isSwitchingTranslationSource = $state(false);
   let isTranslationDebugCollapsed = $state(false);
+
+  const t = uiT("dps/settings-debug", () => SETTINGS.live.general.state.language);
 
   const unsubscribeTranslationSourceMode = TRANSLATION_SOURCE_MODE.subscribe((value) => {
     translationSourceMode = value;
@@ -109,58 +111,30 @@
   >
     <div class="px-4 py-3">
       <h2 class="mb-4 text-base font-semibold text-foreground">
-        {resolveNavigationTranslation(
-          "debug.title",
-          SETTINGS.live.general.state.language,
-          "调试",
-        )}
+        {t("title", "调试")}
       </h2>
 
       <div class="flex items-center justify-between">
         <div class="text-sm text-muted-foreground">
           <div class="font-medium text-foreground">
-            {resolveNavigationTranslation(
-              "debug.logFiles",
-              SETTINGS.live.general.state.language,
-              "日志文件",
-            )}
+            {t("logFiles", "日志文件")}
           </div>
-          {resolveNavigationTranslation(
-            "debug.openLogDir",
-            SETTINGS.live.general.state.language,
-            "打开应用日志所在文件夹",
-          )}
+          {t("openLogDir", "打开应用日志所在文件夹")}
         </div>
         <Button variant="outline" onclick={openLogDir}>
-          {resolveNavigationTranslation(
-            "debug.openLogsButton",
-            SETTINGS.live.general.state.language,
-            "打开日志",
-          )}
+          {t("openLogsButton", "打开日志")}
         </Button>
       </div>
 
       <div class="mt-4 flex items-center justify-between">
         <div class="text-sm text-muted-foreground">
           <div class="font-medium text-foreground">
-            {resolveNavigationTranslation(
-              "debug.bundleTitle",
-              SETTINGS.live.general.state.language,
-              "调试压缩包",
-            )}
+            {t("bundleTitle", "调试压缩包")}
           </div>
-          {resolveNavigationTranslation(
-            "debug.bundleDescription",
-            SETTINGS.live.general.state.language,
-            "生成包含最近日志的 ZIP，便于支持与排查",
-          )}
+          {t("bundleDescription", "生成包含最近日志的 ZIP，便于支持与排查")}
         </div>
         <Button variant="outline" onclick={createDiagnosticsBundle}>
-          {resolveNavigationTranslation(
-            "debug.bundleButton",
-            SETTINGS.live.general.state.language,
-            "创建调试压缩包",
-          )}
+          {t("bundleButton", "创建调试压缩包")}
         </Button>
       </div>
     </div>
@@ -172,11 +146,7 @@
     <div class="px-4 py-3 space-y-4">
       <div class="flex items-center justify-between gap-3">
         <h2 class="text-base font-semibold text-foreground">
-          {resolveNavigationTranslation(
-            "debug.translationTools",
-            SETTINGS.live.general.state.language,
-            "翻译调试",
-          )}
+          {t("translationTools", "翻译调试")}
         </h2>
 
         <button
@@ -203,24 +173,12 @@
           <div class="flex items-center justify-between">
             <div class="text-sm text-muted-foreground">
               <div class="font-medium text-foreground">
-                {resolveNavigationTranslation(
-                  "debug.translationRefreshTitle",
-                  SETTINGS.live.general.state.language,
-                  "刷新翻译数据",
-                )}
+                {t("translationRefreshTitle", "刷新翻译数据")}
               </div>
-              {resolveNavigationTranslation(
-                "debug.translationRefreshDescription",
-                SETTINGS.live.general.state.language,
-                "重新加载运行时翻译数据并通知前端。",
-              )}
+              {t("translationRefreshDescription", "重新加载运行时翻译数据并通知前端。")}
             </div>
             <Button variant="outline" onclick={refreshTranslationRuntimeData}>
-              {resolveNavigationTranslation(
-                "debug.translationRefreshButton",
-                SETTINGS.live.general.state.language,
-                "刷新翻译数据",
-              )}
+              {t("translationRefreshButton", "刷新翻译数据")}
             </Button>
           </div>
         </div>
@@ -228,37 +186,17 @@
         <div class="space-y-3">
           <div class="text-sm text-muted-foreground">
             <div class="font-medium text-foreground">
-              {resolveNavigationTranslation(
-                "debug.translationSourceMode",
-                SETTINGS.live.general.state.language,
-                "Translation Source",
-              )}
+              {t("translationSourceMode", "Translation Source")}
             </div>
-            {resolveNavigationTranslation(
-              "debug.translationSourceModeDescription",
-              SETTINGS.live.general.state.language,
-              "Switch between bundled source translations and runtime app-data translations.",
-            )}
+            {t("translationSourceModeDescription", "Switch between bundled source translations and runtime app-data translations.")}
           </div>
 
           <div class="text-xs text-muted-foreground">
-            {resolveNavigationTranslation(
-              "debug.translationSourceModeCurrent",
-              SETTINGS.live.general.state.language,
-              "Current source:",
-            )}
+            {t("translationSourceModeCurrent", "Current source:")}
             <span class="ml-1 font-medium text-foreground">
               {translationSourceMode === "bundled"
-                ? resolveNavigationTranslation(
-                    "debug.translationSourceMode.bundled",
-                    SETTINGS.live.general.state.language,
-                    "Bundled Source",
-                  )
-                : resolveNavigationTranslation(
-                    "debug.translationSourceMode.runtime",
-                    SETTINGS.live.general.state.language,
-                    "Runtime Files",
-                  )}
+                ? t("translationSourceMode.bundled", "Bundled Source")
+                : t("translationSourceMode.runtime", "Runtime Files")}
             </span>
           </div>
 
@@ -268,11 +206,7 @@
               disabled={isSwitchingTranslationSource}
               onclick={() => changeTranslationSourceMode("bundled")}
             >
-              {resolveNavigationTranslation(
-                "debug.translationSourceMode.bundled",
-                SETTINGS.live.general.state.language,
-                "Bundled Source",
-              )}
+              {t("translationSourceMode.bundled", "Bundled Source")}
             </Button>
 
             <Button
@@ -280,74 +214,42 @@
               disabled={isSwitchingTranslationSource}
               onclick={() => changeTranslationSourceMode("runtime")}
             >
-              {resolveNavigationTranslation(
-                "debug.translationSourceMode.runtime",
-                SETTINGS.live.general.state.language,
-                "Runtime Files",
-              )}
+              {t("translationSourceMode.runtime", "Runtime Files")}
             </Button>
           </div>
         </div>
 
         <SettingsSelect
           bind:selected={SETTINGS.live.general.state.language}
-          label={resolveNavigationTranslation(
-            "debug.language",
-            SETTINGS.live.general.state.language,
-            "语言",
-          )}
-          description={resolveNavigationTranslation(
-            "debug.languageDescription",
-            SETTINGS.live.general.state.language,
-            "选择翻译语言。缺失时依次回退到 EN、zh-CN，然后显示键名/ID。",
-          )}
+          label={t("language", "语言")}
+          description={t("languageDescription", "选择翻译语言。缺失时依次回退到 EN、zh-CN，然后显示键名/ID。")}
           values={[
-            { label: "zh-CN", value: "zh-CN" },
+            { label: "CN", value: "zh-CN" },
             { label: "EN", value: "en" },
             { label: "JP", value: "ja" },
             { label: "DE", value: "de" },
             { label: "ES", value: "es" },
             { label: "FR", value: "fr" },
             { label: "PT-BR", value: "pt-BR" },
-            { label: "KO", value: "ko-KR" },
+            { label: "KR", value: "ko-KR" },
           ]}
         />
 
         <SettingsSelect
           bind:selected={SETTINGS.live.general.state.skillIdDisplayMode}
-          label={resolveNavigationTranslation(
-            "debug.skillIdDisplay",
-            SETTINGS.live.general.state.language,
-            "技能 ID 显示",
-          )}
-          description={resolveNavigationTranslation(
-            "debug.skillIdDisplayDescription",
-            SETTINGS.live.general.state.language,
-            "控制技能表中的 ID 显示方式。",
-          )}
+          label={t("skillIdDisplay", "技能 ID 显示")}
+          description={t("skillIdDisplayDescription", "控制技能表中的 ID 显示方式。")}
           values={[
             {
-              label: resolveNavigationTranslation(
-                "debug.skillIdDisplay.off",
-                SETTINGS.live.general.state.language,
-                "仅名称",
-              ),
+              label: t("skillIdDisplay.off", "仅名称"),
               value: "off",
             },
             {
-              label: resolveNavigationTranslation(
-                "debug.skillIdDisplay.hover",
-                SETTINGS.live.general.state.language,
-                "悬停显示 ID",
-              ),
+              label: t("skillIdDisplay.hover", "悬停显示 ID"),
               value: "hover",
             },
             {
-              label: resolveNavigationTranslation(
-                "debug.skillIdDisplay.column",
-                SETTINGS.live.general.state.language,
-                "始终显示 ID 列",
-              ),
+              label: t("skillIdDisplay.column", "始终显示 ID 列"),
               value: "column",
             },
           ]}

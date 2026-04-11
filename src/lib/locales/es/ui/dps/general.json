@@ -1,0 +1,15 @@
+{
+  "selectTabPrompt": "Please select a tab above to view detailed settings",
+  "settings.debug": "Depuración",
+  "settings.history": "Historial",
+  "settings.live": "En vivo",
+  "settings.network": "Red",
+  "settings.shortcuts": "Atajos",
+  "subtitle": "Supervisa los datos de combate y las estadísticas de DPS en tiempo real",
+  "title": "Medidor de DPS",
+  "toggleWindow": "Toggle DPS Ventana",
+  "viewHistory": "View History",
+  "history": "Historial",
+  "themes": "Temas",
+  "settings": "Configuración"
+}

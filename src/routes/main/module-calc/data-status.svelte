@@ -24,7 +24,7 @@
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-1">
   <div class="text-base font-semibold text-foreground">
     {resolveModuleCalcTranslation(
-      "moduleCalc.dataStatus",
+      "dataStatus",
       SETTINGS.live.general.state.language,
       "数据状态",
     )}
@@ -33,7 +33,7 @@
   <div class="text-sm text-muted-foreground">
     <span>
       {resolveModuleCalcTranslation(
-        "moduleCalc.moduleCountStatus",
+        "moduleCountStatus",
         SETTINGS.live.general.state.language,
         "模组数量：",
       )}
@@ -41,7 +41,7 @@
     <span class="ml-1">
       {moduleCount ??
         resolveModuleCalcTranslation(
-          "moduleCalc.notSynced",
+          "notSynced",
           SETTINGS.live.general.state.language,
           "未同步",
         )}
@@ -51,7 +51,7 @@
   <div class="text-sm text-muted-foreground">
     <span>
       {resolveModuleCalcTranslation(
-        "moduleCalc.filteredTotalValue",
+        "filteredTotalValue",
         SETTINGS.live.general.state.language,
         "总值筛选后：",
       )}
@@ -59,7 +59,7 @@
     <span class="ml-1">
       {moduleCount === null
         ? resolveModuleCalcTranslation(
-            "moduleCalc.notSynced",
+            "notSynced",
             SETTINGS.live.general.state.language,
             "未同步",
           )

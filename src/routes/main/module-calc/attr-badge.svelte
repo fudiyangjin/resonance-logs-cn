@@ -23,6 +23,14 @@
   import { resolveModuleCalcTranslation } from "$lib/i18n";
   import { SETTINGS } from "$lib/settings-store";
 
+  function t(key: string, fallback: string): string {
+    return resolveModuleCalcTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
   let {
     name,
     value,
@@ -64,29 +72,14 @@
     const attrId = ATTR_NAME_TO_ID[name];
     if (!attrId) return name;
     return resolveModuleCalcTranslation(
-      `moduleCalc.attr.${attrId}`,
+      `attr.${attrId}`,
       SETTINGS.live.general.state.language,
       name,
     );
   });
-  const levelLabel = $derived.by(() => {
-    const locale = SETTINGS.live.general.state.language;
-    const prefix = locale === "zh-CN"
-      ? resolveModuleCalcTranslation(
-          "moduleCalc.attrLevelPrefix",
-          locale,
-          "",
-        )
-      : "Lv.";
-    const suffix = locale === "zh-CN"
-      ? resolveModuleCalcTranslation(
-          "moduleCalc.attrLevelSuffix",
-          locale,
-          "级",
-        )
-      : "";
-    return `${prefix}${level}${suffix}`;
-  });
+  const levelLabel = $derived.by(() =>
+    t("attrBadge.level", "{level}级").replace("{level}", String(level))
+  );
 </script>
 
 <div

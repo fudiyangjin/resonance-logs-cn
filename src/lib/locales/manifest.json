@@ -13,12 +13,24 @@
   ],
   "categories": {
     "ui": [
-      "DPS.json",
+      "shell.json",
+      "dps/general.json",
+      "dps/live.json",
+      "dps/history.json",
+      "dps/themes.json",
+      "dps/settings-live.json",
+      "dps/settings-network.json",
+      "dps/settings-history.json",
+      "dps/settings-hotkeys.json",
+      "dps/settings-debug.json",
       "module-calc.json",
       "monster-monitor.json",
-      "skill-monitor.json",
-      "settings-store.json",
-      "localization.json"
+      "skill-monitor/general.json",
+      "skill-monitor/skill-cd.json",
+      "skill-monitor/buff-monitor.json",
+      "skill-monitor/panel-attr.json",
+      "skill-monitor/custom-panel.json",
+      "localization-tool.json"
     ],
     "parser": [
       "class-labels.json",

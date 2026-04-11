@@ -49,7 +49,7 @@
     searchResonanceSkills,
     type CounterRulePreset,
   } from "$lib/skill-mappings";
-  import { resolveSkillMonitorTranslation } from "$lib/i18n";
+  import { uiT } from "$lib/i18n";
   import {
     activeProfileOrDefault,
     updateActiveProfile as updateSharedActiveProfile,
@@ -57,13 +57,7 @@
 
   type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
 
-  function t(key: string, fallback: string): string {
-    return resolveSkillMonitorTranslation(
-      key,
-      SETTINGS.live.general.state.language,
-      fallback,
-    );
-  }
+  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   const availableBuffs = getAvailableBuffDefinitions();
   const buffCategoryDefinitions = getBuffCategoryDefinitions();
@@ -206,7 +200,7 @@
   function ensureBuffGroup(group: BuffGroup, index: number): BuffGroup {
     return {
       id: group.id ?? `group_${index + 1}`,
-      name: group.name ?? `${t("skillMonitor.buffGroupDefault", "分组")} ${index + 1}`,
+      name: group.name ?? `${t("buffGroupDefault", "分组")} ${index + 1}`,
       buffIds: group.buffIds ?? [],
       priorityBuffIds: group.priorityBuffIds ?? [],
       monitorAll: group.monitorAll ?? false,
@@ -232,7 +226,7 @@
     return {
       ...normalized,
       monitorAll: true,
-      name: normalized.name || t("skillMonitor.allBuffs", "全部 Buff"),
+      name: normalized.name || t("allBuffs", "全部 Buff"),
     };
   }
 
@@ -257,7 +251,7 @@
       sourceType: entry.sourceType ?? "buff",
       sourceId: entry.sourceId,
       label: entry.sourceType === "counter"
-        ? (entry.label ?? `${t("skillMonitor.counterDefault", "计数器")} ${entry.sourceId}`)
+        ? (entry.label ?? `${t("counterDefault", "计数器")} ${entry.sourceId}`)
         : (entry.label ?? ""),
       format: entry.format ?? "timer",
     }));
@@ -269,7 +263,7 @@
       sourceType: entry.sourceType ?? "buff",
       sourceId: entry.sourceId,
       label: entry.sourceType === "counter"
-        ? (entry.label ?? `${t("skillMonitor.counterDefault", "计数器")} ${entry.sourceId}`)
+        ? (entry.label ?? `${t("counterDefault", "计数器")} ${entry.sourceId}`)
         : (entry.label ?? ""),
       format: entry.format ?? "timer",
     }));
@@ -285,7 +279,7 @@
     if (groups.length > 0) {
       return groups.map((group, idx) => ({
         id: group.id ?? `custom_panel_group_${idx + 1}`,
-        name: group.name ?? `${t("skillMonitor.monitorAreaDefault", "监控区")} ${idx + 1}`,
+        name: group.name ?? `${t("monitorAreaDefault", "监控区")} ${idx + 1}`,
         entries: ensureCustomPanelEntries(group.entries),
         position: group.position ?? {
           x: legacyPosition.x + idx * 40,
@@ -299,7 +293,7 @@
     return [
       {
         id: "custom_panel_group_1",
-        name: `${t("skillMonitor.monitorAreaDefault", "监控区")} 1`,
+        name: `${t("monitorAreaDefault", "监控区")} 1`,
         entries: legacyEntries,
         position: legacyPosition,
         scale: legacyScale,
@@ -864,7 +858,7 @@
   function addCustomPanelGroup() {
     updateCustomPanelGroups((groups) => [
       ...groups,
-      createDefaultCustomPanelGroup(`${t("skillMonitor.monitorAreaDefault", "监控区")} ${groups.length + 1}`, groups.length + 1),
+      createDefaultCustomPanelGroup(`${t("monitorAreaDefault", "监控区")} ${groups.length + 1}`, groups.length + 1),
     ]);
   }
 
@@ -943,7 +937,7 @@
         return profile;
       }
       const label = sourceType === "counter"
-        ? (counterRules.find((rule) => rule.ruleId === sourceId)?.name ?? `${t("skillMonitor.counterDefault", "计数器")} ${sourceId}`)
+        ? (counterRules.find((rule) => rule.ruleId === sourceId)?.name ?? `${t("counterDefault", "计数器")} ${sourceId}`)
         : "";
       const nextEntry: InlineBuffEntry = {
         id: `inline_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
@@ -1087,7 +1081,7 @@
       const groups = ensureBuffGroups(profile);
       return {
         ...profile,
-        buffGroups: [...groups, createDefaultBuffGroup(`${t("skillMonitor.buffGroupDefault", "分组")} ${groups.length + 1}`, groups.length + 1)],
+        buffGroups: [...groups, createDefaultBuffGroup(`${t("buffGroupDefault", "分组")} ${groups.length + 1}`, groups.length + 1)],
       };
     });
   }
@@ -1118,7 +1112,7 @@
       return {
         ...profile,
         individualMonitorAllGroup: {
-          ...createDefaultBuffGroup(t("skillMonitor.allBuffs", "全部 Buff"), 1),
+          ...createDefaultBuffGroup(t("allBuffs", "全部 Buff"), 1),
           monitorAll: true,
         },
       };
@@ -1289,8 +1283,8 @@
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-2">
     <SettingsSwitch
       bind:checked={SETTINGS.skillMonitor.state.enabled}
-      label={t("skillMonitor.enableMonitoring", "启用实时监控")}
-      description={t("skillMonitor.enableMonitoringDescription", "开启后将实时推送监控数据到悬浮窗口")}
+      label={t("enableMonitoring", "启用实时监控")}
+      description={t("enableMonitoringDescription", "开启后将实时推送监控数据到悬浮窗口")}
     />
   </div>
 
@@ -1303,7 +1297,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "skill-cd")}
       >
-        {t("skillMonitor.tab.skillCd", "技能CD")}
+        {t("tab.skillCd", "技能CD")}
       </button>
       <button
         type="button"
@@ -1312,7 +1306,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "buff")}
       >
-        {t("skillMonitor.tab.buffMonitor", "Buff监控")}
+        {t("tab.buffMonitor", "Buff监控")}
       </button>
       <button
         type="button"
@@ -1321,7 +1315,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "panel-attr")}
       >
-        {t("skillMonitor.tab.panelAttr", "角色面板")}
+        {t("tab.panelAttr", "角色面板")}
       </button>
       <button
         type="button"
@@ -1330,7 +1324,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "custom-panel")}
       >
-        {t("skillMonitor.tab.customPanel", "自定义监控")}
+        {t("tab.customPanel", "自定义监控")}
       </button>
       <button
         type="button"
@@ -1339,7 +1333,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "overlay")}
       >
-        {t("skillMonitor.tab.overlay", "启用窗口")}
+        {t("tab.overlay", "启用窗口")}
       </button>
     </div>
   </div>

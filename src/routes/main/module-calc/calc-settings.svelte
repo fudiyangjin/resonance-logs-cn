@@ -4,6 +4,20 @@
   import { SETTINGS } from "$lib/settings-store";
   import { resolveModuleCalcTranslation } from "$lib/i18n";
 
+  function t(key: string, fallback: string): string {
+    return resolveModuleCalcTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
+  function supportStatusLabel(isAvailable: boolean): string {
+    return isAvailable
+      ? t("available", "可用")
+      : t("unavailable", "不可用");
+  }
+
   let {
     useGpu = $bindable(true),
     gpuSupport = $bindable<{ cuda_available: boolean; opencl_available: boolean } | null>(null),
@@ -13,20 +27,12 @@
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3">
   <div class="text-base font-semibold text-foreground">
-    {resolveModuleCalcTranslation(
-      "moduleCalc.calcSettings",
-      SETTINGS.live.general.state.language,
-      "计算设置",
-    )}
+    {t("calcSettings", "计算设置")}
   </div>
 
   <div class="space-y-2">
     <div class="text-sm text-foreground">
-      {resolveModuleCalcTranslation(
-        "moduleCalc.moduleCount",
-        SETTINGS.live.general.state.language,
-        "模组数量",
-      )}
+      {t("moduleCount", "模组数量")}
     </div>
 
     <div class="flex items-center gap-2">
@@ -36,11 +42,7 @@
         size="sm"
         onclick={() => (combinationSize = 4)}
       >
-        {resolveModuleCalcTranslation(
-          "moduleCalc.modules4",
-          SETTINGS.live.general.state.language,
-          "4 模组",
-        )}
+        {t("modules4", "4 模组")}
       </Button>
 
       <Button
@@ -49,11 +51,7 @@
         size="sm"
         onclick={() => (combinationSize = 5)}
       >
-        {resolveModuleCalcTranslation(
-          "moduleCalc.modules5",
-          SETTINGS.live.general.state.language,
-          "5 模组",
-        )}
+        {t("modules5", "5 模组")}
       </Button>
     </div>
   </div>
@@ -62,73 +60,18 @@
     <Switch bind:checked={useGpu} />
 
     <div class="text-sm text-foreground">
-      {resolveModuleCalcTranslation(
-        "moduleCalc.gpuAcceleration",
-        SETTINGS.live.general.state.language,
-        "GPU 加速",
-      )}
+      {t("gpuAcceleration", "GPU 加速")}
     </div>
 
     {#if gpuSupport}
-      {#if SETTINGS.live.general.state.language === "en"}
-        <div class="text-xs text-muted-foreground leading-tight">
-          <div>
-            CUDA:
-            {gpuSupport.cuda_available
-              ? resolveModuleCalcTranslation(
-                  "moduleCalc.available",
-                  SETTINGS.live.general.state.language,
-                  "可用",
-                )
-              : resolveModuleCalcTranslation(
-                  "moduleCalc.unavailable",
-                  SETTINGS.live.general.state.language,
-                  "不可用",
-                )}
-          </div>
-          <div>
-            OpenCL:
-            {gpuSupport.opencl_available
-              ? resolveModuleCalcTranslation(
-                  "moduleCalc.available",
-                  SETTINGS.live.general.state.language,
-                  "可用",
-                )
-              : resolveModuleCalcTranslation(
-                  "moduleCalc.unavailable",
-                  SETTINGS.live.general.state.language,
-                  "不可用",
-                )}
-          </div>
+      <div class="space-y-1 text-xs leading-tight text-muted-foreground">
+        <div>
+          {t("gpu.cuda", "CUDA")}: {supportStatusLabel(gpuSupport.cuda_available)}
         </div>
-      {:else}
-        <div class="text-xs text-muted-foreground">
-          CUDA:
-          {gpuSupport.cuda_available
-            ? resolveModuleCalcTranslation(
-                "moduleCalc.available",
-                SETTINGS.live.general.state.language,
-                "可用",
-              )
-            : resolveModuleCalcTranslation(
-                "moduleCalc.unavailable",
-                SETTINGS.live.general.state.language,
-                "不可用",
-              )}
-          · OpenCL:
-          {gpuSupport.opencl_available
-            ? resolveModuleCalcTranslation(
-                "moduleCalc.available",
-                SETTINGS.live.general.state.language,
-                "可用",
-              )
-            : resolveModuleCalcTranslation(
-                "moduleCalc.unavailable",
-                SETTINGS.live.general.state.language,
-                "不可用",
-              )}
+        <div>
+          {t("gpu.opencl", "OpenCL")}: {supportStatusLabel(gpuSupport.opencl_available)}
         </div>
-      {/if}
+      </div>
     {/if}
   </div>
 </div>

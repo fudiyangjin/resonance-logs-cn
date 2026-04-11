@@ -87,9 +87,6 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<(), String> {
         let entry = entry.map_err(|e| format!("Failed to read dir entry: {e}"))?;
         let path = entry.path();
         let name = entry.file_name();
-        if name.to_string_lossy() == "OLD" {
-            continue;
-        }
         let target = dst.join(name);
         if path.is_dir() {
             copy_dir_recursive(&path, &target)?;
@@ -171,10 +168,10 @@ fn set_locale_array(target: &mut Map<String, Value>, field: &str, locale: &str, 
     map.insert(locale.to_string(), Value::Array(value));
 }
 
-fn combine_generic_string_tables(locales_dir: &Path, locales: &[String], category: &str, file_name: &str) -> Result<Value, String> {
+fn combine_generic_string_tables(locales_dir: &Path, locales: &[String], relative_path: &str) -> Result<Value, String> {
     let mut combined = Map::new();
     for locale in locales {
-        let path = locales_dir.join(locale).join(category).join(file_name);
+        let path = locales_dir.join(locale).join(relative_path);
         let data = ensure_object(read_json_or_empty(&path)?);
         for (key, value) in data {
             let text = value.as_str().unwrap_or("").to_string();
@@ -253,13 +250,16 @@ fn combine_search_table(locales_dir: &Path, locales: &[String], file_name: &str)
 }
 
 fn combine_virtual_file(locales_dir: &Path, locales: &[String], relative_path: &str) -> Result<Value, String> {
+    if relative_path.starts_with("ui/")
+        || matches!(
+            relative_path,
+            "parser/class-labels.json" | "parser/MonsterName.json" | "parser/SceneName.json"
+        )
+    {
+        return combine_generic_string_tables(locales_dir, locales, relative_path);
+    }
+
     match relative_path {
-        "ui/DPS.json" | "ui/module-calc.json" | "ui/monster-monitor.json" | "ui/skill-monitor.json" | "ui/settings-store.json" | "ui/localization.json" | "parser/class-labels.json" | "parser/MonsterName.json" | "parser/SceneName.json" => {
-            let mut parts = relative_path.split('/');
-            let category = parts.next().unwrap_or("ui");
-            let file_name = parts.next().unwrap_or("DPS.json");
-            combine_generic_string_tables(locales_dir, locales, category, file_name)
-        }
         "parser/skillnames.json" => combine_skillnames(locales_dir, locales),
         "parser/BuffName.json" => combine_buff_name(locales_dir, locales),
         "search/BuffNameSearch.json" => combine_search_table(locales_dir, locales, "BuffNameSearch.json"),
@@ -349,12 +349,20 @@ fn split_search_table(contents: &Value, locales: &[String]) -> Result<Vec<(Strin
 }
 
 fn split_virtual_file(relative_path: &str, contents: &Value, locales: &[String]) -> Result<Vec<(String, String, Value)>, String> {
-    let split: Vec<(String, Value)> = match relative_path {
-        "ui/DPS.json" | "ui/module-calc.json" | "ui/monster-monitor.json" | "ui/skill-monitor.json" | "ui/settings-store.json" | "ui/localization.json" | "parser/class-labels.json" | "parser/MonsterName.json" | "parser/SceneName.json" => split_generic_string_table(contents, locales)?,
-        "parser/skillnames.json" => split_skillnames(contents, locales)?,
-        "parser/BuffName.json" => split_buff_name(contents, locales)?,
-        "search/BuffNameSearch.json" | "search/resonance-skill-search.json" => split_search_table(contents, locales)?,
-        _ => return Err(format!("Unknown virtual translation file: {relative_path}")),
+    let split: Vec<(String, Value)> = if relative_path.starts_with("ui/")
+        || matches!(
+            relative_path,
+            "parser/class-labels.json" | "parser/MonsterName.json" | "parser/SceneName.json"
+        )
+    {
+        split_generic_string_table(contents, locales)?
+    } else {
+        match relative_path {
+            "parser/skillnames.json" => split_skillnames(contents, locales)?,
+            "parser/BuffName.json" => split_buff_name(contents, locales)?,
+            "search/BuffNameSearch.json" | "search/resonance-skill-search.json" => split_search_table(contents, locales)?,
+            _ => return Err(format!("Unknown virtual translation file: {relative_path}")),
+        }
     };
     Ok(split
         .into_iter()
@@ -474,6 +482,24 @@ fn generated_monster_source() -> Result<BTreeMap<String, String>, String> {
             .to_string();
         out.insert(id, name);
     }
+    Ok(out)
+}
+
+fn generated_ui_string_source(app_handle: &AppHandle, relative_path: &str) -> Result<BTreeMap<String, String>, String> {
+    let normalized = normalize_relative_path(relative_path);
+    if !normalized.starts_with("ui/") {
+        return Err(format!("UI generator only supports ui/* paths, got {normalized}"));
+    }
+
+    let source_dir = source_locales_dir(app_handle)?;
+    let source_path = source_dir.join("zh-CN").join(&normalized);
+    let raw = ensure_object(read_json_or_empty(&source_path)?);
+    let mut out = BTreeMap::new();
+
+    for (key, value) in raw {
+        out.insert(key, value.as_str().unwrap_or("").to_string());
+    }
+
     Ok(out)
 }
 
@@ -883,6 +909,55 @@ pub fn write_translation_runtime_file(app_handle: tauri::AppHandle, relative_pat
         }),
     );
     Ok(format!("Saved {normalized}"))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn generate_ui_translation_scaffold(app_handle: tauri::AppHandle, relative_path: String) -> Result<String, String> {
+    let runtime_dir = ensure_runtime_locales_seeded(&app_handle)?;
+    let locales = read_manifest_locales(&runtime_dir)?;
+    let normalized = normalize_relative_path(&relative_path);
+    let generated = generated_ui_string_source(&app_handle, &normalized)?;
+    let entry_count = generated.len();
+    generate_locale_file_for_all_locales(&runtime_dir, &locales, &normalized, |locale, existing| {
+        Ok(merge_generated_string_locale_file(&generated, existing, locale))
+    })?;
+    let _ = refresh_translation_runtime_data(app_handle.clone())?;
+    Ok(format!(
+        "Generated {normalized} for {} locales ({} keys)",
+        locales.len(),
+        entry_count
+    ))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn generate_all_ui_translation_scaffolds(app_handle: tauri::AppHandle) -> Result<String, String> {
+    let runtime_dir = ensure_runtime_locales_seeded(&app_handle)?;
+    let locales = read_manifest_locales(&runtime_dir)?;
+    let virtual_paths = read_manifest_virtual_paths(&runtime_dir)?;
+
+    let ui_paths: Vec<String> = virtual_paths
+        .into_iter()
+        .filter(|path| path.starts_with("ui/"))
+        .collect();
+
+    let mut total_keys = 0usize;
+    for relative_path in &ui_paths {
+        let generated = generated_ui_string_source(&app_handle, relative_path)?;
+        total_keys += generated.len();
+        generate_locale_file_for_all_locales(&runtime_dir, &locales, relative_path, |locale, existing| {
+            Ok(merge_generated_string_locale_file(&generated, existing, locale))
+        })?;
+    }
+
+    let _ = refresh_translation_runtime_data(app_handle.clone())?;
+    Ok(format!(
+        "Generated {} UI files for {} locales ({} keys)",
+        ui_paths.len(),
+        locales.len(),
+        total_keys
+    ))
 }
 
 #[tauri::command]

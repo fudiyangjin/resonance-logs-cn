@@ -11,7 +11,7 @@
   import getDisplayName from "$lib/name-display";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
-  import { resolveNavigationTranslation } from "$lib/i18n";
+  import { resolveUiTranslation } from "$lib/i18n";
 
   let liveData = $derived(getLiveData());
   let rawDpsData = $derived(
@@ -101,24 +101,17 @@
   });
 
 
-function ui(zh: string, en: string, ja = ""): string {
-  const language = SETTINGS.live.general.state.language;
-  if (language === "en") return en || zh;
-  if (language === "ja") return ja || en || zh;
-  return zh;
-}
-
-function t(key: string, zh: string, en: string, ja = ""): string {
-  return resolveNavigationTranslation(
+function t(key: string, fallback: string): string {
+  return resolveUiTranslation(
     key,
     SETTINGS.live.general.state.language,
-    ui(zh, en, ja),
+    fallback,
   );
 }
 
 function thLabel(col: { headerKey?: string; header: string }): string {
   if (!col.headerKey) return col.header;
-  return resolveNavigationTranslation(
+  return resolveUiTranslation(
     col.headerKey,
     SETTINGS.live.general.state.language,
     col.header,
@@ -141,7 +134,7 @@ function thLabel(col: { headerKey?: string; header: string }): string {
             data-tauri-drag-region
             class="px-3 py-1 text-left font-medium uppercase tracking-wide"
             style="font-size: {tableSettings.tableHeaderFontSize}px; color: {tableSettings.tableHeaderTextColor};"
-            >{t("dps.historyDetail.player", "玩家", "Player", "プレイヤー")}</th
+            >{t("historyDetail.player", "玩家")}</th
           >
           {#each visiblePlayerColumns as col (col.key)}
             <th
@@ -194,11 +187,11 @@ function thLabel(col: { headerKey?: string; header: string }): string {
                 style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                 class="object-contain"
                 src={getClassIcon(className)}
-                alt={t("dps.historyDetail.classIcon", "职业图标", "Class Icon", "クラスアイコン")}
+                alt={t("historyDetail.classIcon", "职业图标")}
                 {@attach tooltip(
                   () =>
                     formatClassSpecLabel(player.className, player.classSpecName) ||
-                    t("dps.historyDetail.unknownClass", "未知职业", "Unknown Class", "不明なクラス"),
+                    t("historyDetail.unknownClass", "未知职业"),
                 )}
               />
               {#if (player.abilityScore > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourAbilityScore : SETTINGS.live.general.state.showOthersAbilityScore)) || (player.seasonStrength > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourSeasonStrength : SETTINGS.live.general.state.showOthersSeasonStrength))}

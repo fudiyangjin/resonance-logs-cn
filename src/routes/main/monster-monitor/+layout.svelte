@@ -54,14 +54,14 @@
       <div>
         <h1 class="text-xl font-bold text-foreground">
           {resolveMonsterMonitorTranslation(
-            "monsterMonitor.title",
+            "title",
             SETTINGS.live.general.state.language,
             "怪物监控",
           )}
         </h1>
         <p class="text-sm text-muted-foreground">
           {resolveMonsterMonitorTranslation(
-            "monsterMonitor.subtitle",
+            "subtitle",
             SETTINGS.live.general.state.language,
             "监控 Boss buff 等数据",
           )}
@@ -78,7 +78,7 @@
         <PlayIcon class="w-4 h-4" />
         <span>
           {resolveMonsterMonitorTranslation(
-            "monsterMonitor.toggleOverlay",
+            "toggleOverlay",
             SETTINGS.live.general.state.language,
             "切换怪物遮罩",
           )}
@@ -94,7 +94,7 @@
         <PenSquareIcon class="w-4 h-4" />
         <span>
           {resolveMonsterMonitorTranslation(
-            "monsterMonitor.editLayout",
+            "editLayout",
             SETTINGS.live.general.state.language,
             "编辑怪物布局",
           )}

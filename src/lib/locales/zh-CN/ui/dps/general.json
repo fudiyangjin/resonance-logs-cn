@@ -1,0 +1,15 @@
+{
+  "selectTabPrompt": "请选择上方的选项卡查看详细设置",
+  "settings.debug": "调试",
+  "settings.history": "历史",
+  "settings.live": "实时",
+  "settings.network": "网络",
+  "settings.shortcuts": "快捷键",
+  "subtitle": "实时监测战斗数据和DPS统计",
+  "title": "DPS检测",
+  "toggleWindow": "切换 DPS 窗口",
+  "viewHistory": "查看历史记录",
+  "history": "历史",
+  "themes": "主题",
+  "settings": "设置"
+}

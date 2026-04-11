@@ -8,7 +8,7 @@
   } from "$lib/settings-store";
   import type { CounterRulePreset, SourceTemplate, SlotTemplate } from "$lib/skill-mappings";
   import { SETTINGS } from "$lib/settings-store";
-  import { resolveSkillMonitorTranslation } from "$lib/i18n";
+  import { uiT } from "$lib/i18n";
 
   type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
 
@@ -50,13 +50,7 @@
     setCustomPanelProgressOpacity: (value: number) => void;
   }
 
-  function t(key: string, fallback: string): string {
-    return resolveSkillMonitorTranslation(
-      key,
-      SETTINGS.live.general.state.language,
-      fallback,
-    );
-  }
+  const t = uiT("skill-monitor/custom-panel", () => SETTINGS.live.general.state.language);
 
   let {
     counterRules,
@@ -130,7 +124,7 @@
   function buffStatusLabel(buffId: number): string | null {
     const location = getEntryLocation("buff", buffId);
     if (!location) return null;
-    return location.groupId === selectedGroup?.id ? t("skillMonitor.currentGroupAdded", "当前组已添加") : `${t("skillMonitor.alreadyInGroup", "已在")}${location.groupName}`;
+    return location.groupId === selectedGroup?.id ? t("currentGroupAdded", "当前组已添加") : `${t("alreadyInGroup", "已在")}${location.groupName}`;
   }
 
   function toggleDraftRef(
@@ -159,9 +153,9 @@
 <div class="space-y-6">
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-4">
     <div>
-      <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.customPanel.title", "自定义监控区")}</h2>
+      <h2 class="text-base font-semibold text-foreground">{t("customPanel.title", "自定义监控区")}</h2>
       <p class="text-xs text-muted-foreground">
-        {t("skillMonitor.customPanel.subtitle", "可创建多个文本监控区；同一个 Buff 或计数器在所有监控区内全局唯一。")}
+        {t("customPanel.subtitle", "可创建多个文本监控区；同一个 Buff 或计数器在所有监控区内全局唯一。")}
       </p>
     </div>
 
@@ -171,13 +165,13 @@
         class="min-h-11 rounded-lg border border-border/60 bg-muted/20 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/40 cursor-pointer"
         onclick={addCustomPanelGroup}
       >
-        {t("skillMonitor.customPanel.newGroup", "新建监控区")}
+        {t("customPanel.newGroup", "新建监控区")}
       </button>
       <div class="text-xs text-muted-foreground" role="status" aria-live="polite">
         {#if selectedGroup}
-          {t("skillMonitor.customPanel.editing", "当前编辑：")}{selectedGroup.name}
+          {t("customPanel.editing", "当前编辑：")}{selectedGroup.name}
         {:else}
-          {t("skillMonitor.customPanel.selectOrCreate", "请选择或新建一个监控区")}
+          {t("customPanel.selectOrCreate", "请选择或新建一个监控区")}
         {/if}
       </div>
     </div>
@@ -198,7 +192,7 @@
             >
               <div class="text-sm font-medium text-foreground">{group.name}</div>
               <div class="mt-1 text-xs text-muted-foreground">
-                {t("skillMonitor.entries", "条目")} {group.entries.length}
+                {t("entries", "条目")} {group.entries.length}
               </div>
             </button>
             <button
@@ -206,7 +200,7 @@
               class="min-h-11 rounded-md border border-border/60 px-3 py-1.5 text-xs text-destructive transition-colors hover:bg-destructive/10 cursor-pointer"
               onclick={() => removeCustomPanelGroup(group.id)}
             >
-              {t("skillMonitor.deleteGroup", "删除")}
+              {t("deleteGroup", "删除分组")}
             </button>
           </div>
         </div>
@@ -217,13 +211,13 @@
   {#if selectedGroup}
     <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-4">
       <div class="space-y-1">
-        <div class="text-sm font-medium text-foreground">{t("skillMonitor.customPanel.currentGroup", "当前监控区")}</div>
+        <div class="text-sm font-medium text-foreground">{t("customPanel.currentGroup", "当前监控区")}</div>
         <p class="text-xs text-muted-foreground">
-          {t("skillMonitor.customPanel.currentGroupDescription", "该监控区中的条目会在 overlay 中作为独立文本区域显示，并可单独拖拽和缩放。")}
+          {t("customPanel.currentGroupDescription", "该监控区中的条目会在 overlay 中作为独立文本区域显示，并可单独拖拽和缩放。")}
         </p>
       </div>
       <label class="block text-xs text-muted-foreground">
-        {t("skillMonitor.customPanel.groupName", "监控区名称")}
+        {t("customPanel.groupName", "监控区名称")}
         <input
           class="mt-1 w-full max-w-sm rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           value={selectedGroup.name}
@@ -235,12 +229,12 @@
 
     <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-3">
       <div class="space-y-1">
-        <div class="text-sm font-medium text-foreground">{t("skillMonitor.customPanel.addBuff", "添加 Buff")}</div>
-        <p class="text-xs text-muted-foreground">{t("skillMonitor.customPanel.addBuffDescription", "仅添加到当前监控区的文本区域")}</p>
+        <div class="text-sm font-medium text-foreground">{t("customPanel.addBuff", "添加 Buff")}</div>
+        <p class="text-xs text-muted-foreground">{t("customPanel.addBuffDescription", "仅添加到当前监控区的文本区域")}</p>
       </div>
       <input
         class="w-full sm:w-80 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-        placeholder={t("skillMonitor.customPanel.searchAddBuff", "搜索并添加 Buff")}
+        placeholder={t("customPanel.searchAddBuff", "搜索并添加 Buff")}
         value={inlineBuffSearch}
         oninput={(event) => setInlineBuffSearch((event.currentTarget as HTMLInputElement).value)}
       />
@@ -251,15 +245,15 @@
           onSelect={(buffId) => addCustomPanelEntry(selectedGroup.id, "buff", buffId)}
           isDisabled={(buffId) => Boolean(getEntryLocation("buff", buffId))}
           getStatusLabel={buffStatusLabel}
-          emptyMessage={t("skillMonitor.noMatchingBuff", "没有匹配的 Buff")}
+          emptyMessage={t("noMatchingBuff", "没有匹配的 Buff")}
         />
       {/if}
     </div>
 
     <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-3">
       <div class="space-y-1">
-        <div class="text-sm font-medium text-foreground">{t("skillMonitor.customPanel.addCounter", "添加计数器")}</div>
-        <p class="text-xs text-muted-foreground">{t("skillMonitor.customPanel.addCounterDescription", "计数器同样全局唯一，只能属于一个监控区。")}</p>
+        <div class="text-sm font-medium text-foreground">{t("customPanel.addCounter", "添加计数器")}</div>
+        <p class="text-xs text-muted-foreground">{t("customPanel.addCounterDescription", "计数器同样全局唯一，只能属于一个监控区。")}</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
         {#each counterRules as rule (rule.ruleId)}
@@ -293,11 +287,11 @@
               <div class="text-sm font-medium text-foreground">{rule.name}</div>
               <div class="text-xs {exists ? 'text-primary' : 'text-muted-foreground'}">
                 {#if !exists}
-                  {t("skillMonitor.clickToAdd", "点击添加")}
+                  {t("clickToAdd", "点击添加")}
                 {:else if location?.groupId === selectedGroup.id}
-                  {t("skillMonitor.currentGroupAdded", "当前组已添加")}
+                  {t("currentGroupAdded", "当前组已添加")}
                 {:else}
-                  {t("skillMonitor.alreadyInGroup", "已在")}{location?.groupName}
+                  {t("alreadyInGroup", "已在")}{location?.groupName}
                 {/if}
               </div>
               <button
@@ -429,10 +423,10 @@
     </div>
 
     <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-3">
-      <div class="text-sm font-medium text-foreground">{t("skillMonitor.customPanel.currentGroupEntries", "当前组条目")}</div>
+      <div class="text-sm font-medium text-foreground">{t("customPanel.currentGroupEntries", "当前组条目")}</div>
       {#if selectedGroup.entries.length === 0}
         <div class="rounded-lg border border-dashed border-border/60 bg-muted/10 px-3 py-6 text-center text-sm text-muted-foreground">
-          {t("skillMonitor.customPanel.noEntries", "当前监控区暂无条目")}
+          {t("customPanel.noEntries", "当前监控区暂无条目")}
         </div>
       {/if}
       {#each selectedGroup.entries as entry, idx (entry.id)}
@@ -442,15 +436,15 @@
         {@const buffName = entry.sourceType === "buff" ? getBuffDisplayName(entry.sourceId) : null}
         <div class="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
           <div class="text-xs text-muted-foreground">
-            {t("skillMonitor.source", "来源")}：{entry.sourceType === "counter"
-              ? `${t("skillMonitor.counter", "计数器")} - ${counterRule?.name ?? `#${entry.sourceId}`}`
+            {t("source", "来源")}：{entry.sourceType === "counter"
+              ? `${t("counter", "计数器")} - ${counterRule?.name ?? `#${entry.sourceId}`}`
               : `Buff - ${buffName}`}
           </div>
           {#if entry.sourceType === "counter"}
             <input
               class="w-full rounded border border-border/60 bg-muted/30 px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               value={entry.label}
-              placeholder={t("skillMonitor.displayName", "显示名称")}
+              placeholder={t("displayName", "显示名称")}
               oninput={(event) =>
                 setCustomPanelEntryLabel(
                   selectedGroup.id,
@@ -470,7 +464,7 @@
               onclick={() => moveCustomPanelEntry(selectedGroup.id, entry.id, "up")}
               disabled={idx === 0}
             >
-              {t("skillMonitor.moveUp", "上移")}
+              {t("moveUp", "上移")}
             </button>
             <button
               type="button"
@@ -478,14 +472,14 @@
               onclick={() => moveCustomPanelEntry(selectedGroup.id, entry.id, "down")}
               disabled={idx === selectedGroup.entries.length - 1}
             >
-              {t("skillMonitor.moveDown", "下移")}
+              {t("moveDown", "下移")}
             </button>
             <button
               type="button"
               class="min-h-11 rounded border border-border/60 px-3 py-1 text-xs text-destructive transition-colors hover:bg-destructive/10 cursor-pointer"
               onclick={() => removeCustomPanelEntry(selectedGroup.id, entry.id)}
             >
-              {t("skillMonitor.deleteGroup", "删除")}
+              {t("deleteGroup", "删除分组")}
             </button>
           </div>
         </div>
@@ -493,19 +487,19 @@
     </div>
   {:else}
     <div class="rounded-lg border border-border/60 bg-card/40 p-6 text-sm text-muted-foreground shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
-      {t("skillMonitor.customPanel.emptyState", "还没有任何自定义监控区。先点击上方“新建监控区”，再向其中添加 Buff 或计数器。")}
+      {t("customPanel.emptyState", "还没有任何自定义监控区。先点击上方“新建监控区”，再向其中添加 Buff 或计数器。")}
     </div>
   {/if}
 
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-4">
     <div>
-      <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.customPanel.sharedStyleTitle", "共享样式")}</h2>
-      <p class="text-xs text-muted-foreground">{t("skillMonitor.customPanel.sharedStyleDescription", "所有自定义监控区共用以下文字与进度条样式。")}</p>
+      <h2 class="text-base font-semibold text-foreground">{t("customPanel.sharedStyleTitle", "共享样式")}</h2>
+      <p class="text-xs text-muted-foreground">{t("customPanel.sharedStyleDescription", "所有自定义监控区共用以下文字与进度条样式。")}</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
       <label class="text-xs text-muted-foreground">
-        {t("skillMonitor.buff.gap", "行间距")}: {customPanelStyle.gap}px
+        {t("buff.gap", "间距")}: {customPanelStyle.gap}px
         <input
           class="mt-1 w-full"
           type="range"
@@ -517,7 +511,7 @@
         />
       </label>
       <label class="text-xs text-muted-foreground">
-        {t("skillMonitor.textBuff.fontSize", "字体大小")}: {customPanelStyle.fontSize}px
+        {t("textBuff.fontSize", "字体大小")}: {customPanelStyle.fontSize}px
         <input
           class="mt-1 w-full"
           type="range"
@@ -529,7 +523,7 @@
         />
       </label>
       <label class="text-xs text-muted-foreground">
-        {t("skillMonitor.textBuff.nameValueGap", "名称-数值间距")}: {customPanelStyle.columnGap}px
+        {t("textBuff.nameValueGap", "名称-数值间距")}: {customPanelStyle.columnGap}px
         <input
           class="mt-1 w-full"
           type="range"
@@ -544,7 +538,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        {t("skillMonitor.nameColor", "名称颜色")}
+        {t("nameColor", "名称颜色")}
         <input
           type="color"
           value={customPanelStyle.nameColor}
@@ -553,7 +547,7 @@
         />
       </label>
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        {t("skillMonitor.valueColor", "数值颜色")}
+        {t("valueColor", "数值颜色")}
         <input
           type="color"
           value={customPanelStyle.valueColor}
@@ -562,7 +556,7 @@
         />
       </label>
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        {t("skillMonitor.progressColor", "进度条颜色")}
+        {t("progressColor", "进度条颜色")}
         <input
           type="color"
           value={customPanelStyle.progressColor}
@@ -571,7 +565,7 @@
         />
       </label>
       <label class="rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        <div>{t("skillMonitor.progressOpacity", "进度条透明度")}: {Math.round(customPanelStyle.progressOpacity * 100)}%</div>
+        <div>{t("progressOpacity", "进度条透明度")}: {Math.round(customPanelStyle.progressOpacity * 100)}%</div>
         <input
           class="mt-2 w-full"
           type="range"

@@ -20,52 +20,38 @@
     getClassColorRaw,
   } from "$lib/utils.svelte";
   import ChevronDown from "virtual:icons/lucide/chevron-down";
-import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$lib/i18n";
+  import { uiT } from "$lib/i18n";
 
   const themesTabs = [
-    { id: "general", key: "themes.tab.general", label: "General" },
-    { id: "live", key: "themes.tab.live", label: "Live" },
-    { id: "presets", key: "themes.tab.presets", label: "Presets" },
+    { id: "general", key: "tab.general", label: "通用" },
+    { id: "live", key: "tab.live", label: "实时" },
+    { id: "presets", key: "tab.presets", label: "预设" },
   ];
 
-  function t(key: string, fallback: string): string {
-    return resolveNavigationTranslation(
-      key,
-      SETTINGS.live.general.state.language,
-      fallback,
-    );
-  }
-
-  function ts(key: string, fallback: string): string {
-    return resolveSettingsStoreTranslation(
-      key,
-      SETTINGS.live.general.state.language,
-      fallback,
-    );
-  }
+  const t = uiT("dps/themes", () => SETTINGS.live.general.state.language);
 
   function themeLabel(colorKey: keyof typeof DEFAULT_CUSTOM_THEME_COLORS, fallback: string): string {
-    return ts(`settingsStore.themeLabel.${String(colorKey)}.label`, fallback);
+    return t(`themeLabel.${String(colorKey)}.label`, fallback);
   }
 
   function themeDescription(colorKey: keyof typeof DEFAULT_CUSTOM_THEME_COLORS, fallback: string): string {
-    return ts(`settingsStore.themeLabel.${String(colorKey)}.description`, fallback);
+    return t(`themeLabel.${String(colorKey)}.description`, fallback);
   }
 
   function themeCategoryName(category: string): string {
     switch (category) {
       case "Base":
-        return ts("settingsStore.themeCategory.base", "Base");
+        return t("themeCategory.base", "基础");
       case "Surfaces":
-        return ts("settingsStore.themeCategory.surfaces", "Surfaces");
+        return t("themeCategory.surfaces", "表面");
       case "Tooltip":
-        return ts("settingsStore.themeCategory.tooltip", "Tooltip");
+        return t("themeCategory.tooltip", "提示");
       case "Accents":
-        return ts("settingsStore.themeCategory.accents", "Accents");
+        return t("themeCategory.accents", "强调");
       case "Tables":
-        return ts("settingsStore.themeCategory.tables", "Tables");
+        return t("themeCategory.tables", "表格");
       case "Utility":
-        return ts("settingsStore.themeCategory.utility", "Utility");
+        return t("themeCategory.utility", "工具");
       default:
         return category;
     }
@@ -731,7 +717,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
             onclick={() => toggleSection("colorThemes")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              {t("themes.general.colorThemes", "Theme Colors")}
+              {t("themes.general.colorThemes", "主题颜色")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.colorThemes
@@ -745,16 +731,16 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                 <div class="flex items-center justify-between mb-3">
                   <div>
                     <h3 class="text-sm font-semibold text-foreground">
-                      {t("themes.general.customColorThemeTitle", "Custom Theme Colors")}
+                      {t("themes.general.customColorThemeTitle", "自定义颜色主题")}
                     </h3>
                     <p class="text-xs text-muted-foreground mt-0.5">
-                      {t("themes.general.customColorThemeDescription", "Customize each color variable, including alpha transparency")}
+                      {t("themes.general.customColorThemeDescription", "自定义每个颜色变量（支持设置透明度）")}
                     </p>
                   </div>
                   <button
                     onclick={resetCustomThemeColors}
                     class="px-3 py-1.5 text-xs font-medium rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                    >{t("common.reset", "Reset")}</button
+                    >{t("common.reset", "重置")}</button
                   >
                 </div>
 
@@ -802,7 +788,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
             onclick={() => toggleSection("classSpecColors")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              {t("themes.general.classSpecColors", "Class & Spec Colors")}
+              {t("themes.general.classSpecColors", "职业与专精颜色")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.classSpecColors
@@ -813,7 +799,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
           {#if expandedSections.classSpecColors}
             <div class="px-4 pb-4 space-y-3">
               <p class="text-xs text-muted-foreground">
-                {t("themes.general.classSpecIntro", "Customize class or spec colors. Choose spec colors to show a specific color when a spec is detected.")}
+                {t("themes.general.classSpecIntro", "自定义职业或专精的颜色。选择“专精颜色”可在检测到专精时显示特定颜色。")}
               </p>
 
               <!-- Tab buttons for Class/Spec -->
@@ -828,7 +814,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
                   onclick={() => (colorMode = "class")}
                 >
-                  {t("themes.general.classColorsTab", "Class Colors")}
+                  {t("themes.general.classColorsTab", "职业颜色")}
                 </button>
                 <button
                   type="button"
@@ -838,19 +824,19 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
                   onclick={() => (colorMode = "spec")}
                 >
-                  {t("themes.general.specColorsTab", "Spec Colors")}
+                  {t("themes.general.specColorsTab", "专精颜色")}
                 </button>
               </div>
 
               {#if colorMode === "class"}
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-muted-foreground">
-                    {t("themes.general.classColorsDescription", "Customize class colors used in the live meter.")}
+                    {t("themes.general.classColorsDescription", "自定义实时统计中各职业的颜色。")}
                   </p>
                   <button
                     onclick={resetClassColors}
                     class="px-3 py-1.5 text-xs font-medium rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                    >{t("common.reset", "Reset")}</button
+                    >{t("common.reset", "重置")}</button
                   >
                 </div>
                 <div class="grid grid-cols-2 gap-2 mt-2">
@@ -874,12 +860,12 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
               {:else}
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-muted-foreground">
-                    {t("themes.general.specColorsDescription", "Customize colors for each spec.")}
+                    {t("themes.general.specColorsDescription", "自定义各专精的颜色。")}
                   </p>
                   <button
                     onclick={resetClassSpecColors}
                     class="px-3 py-1.5 text-xs font-medium rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                    >{t("common.reset", "Reset")}</button
+                    >{t("common.reset", "重置")}</button
                   >
                 </div>
                 <div class="grid grid-cols-2 gap-2 mt-2">
@@ -916,7 +902,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
             onclick={() => toggleSection("tableRowSettings")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              {t("themes.general.playerTableSettings", "Player Table Settings")}
+              {t("themes.general.playerTableSettings", "玩家表格设置")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.tableRowSettings
@@ -927,10 +913,10 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
           {#if expandedSections.tableRowSettings}
             <div class="px-4 pb-4 space-y-3">
               <p class="text-xs text-muted-foreground">
-                {ts("settingsStore.dpsThemes.playerTableSettings.description", "Control row appearance and highlight mode. These settings apply to all live tables.")}
+                {t("playerTableSettings.description", "控制行外观与高亮模式。这些设置适用于所有实时表格。")}
               </p>
               <div class="mt-2 space-y-2">
-                <h4 class="text-sm font-medium text-foreground">{ts("settingsStore.dpsThemes.playerTableSettings.playerRows", "Player Rows")}</h4>
+                <h4 class="text-sm font-medium text-foreground">{t("playerTableSettings.playerRows", "玩家行")}</h4>
                 <SettingsSlider
                   bind:value={
                     SETTINGS.live.tableCustomization.state.playerRowHeight
@@ -938,8 +924,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={100}
                   step={1}
-                  label={ts("settingsStore.dpsThemes.common.rowHeight", "Row Height")}
-                  description={ts("settingsStore.dpsThemes.playerTableSettings.rowHeight.description", "Height of each player row (pixels)")}
+                  label={t("common.rowHeight", "行高")}
+                  description={t("playerTableSettings.rowHeight.description", "每个玩家行的高度（像素）")}
                   unit="px"
                 />
                 <SettingsSlider
@@ -949,8 +935,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={100}
                   step={1}
-                  label={ts("settingsStore.dpsThemes.common.fontSize", "Font Size")}
-                  description={ts("settingsStore.dpsThemes.playerTableSettings.fontSize.description", "Font size for player names and stats")}
+                  label={t("common.fontSize", "字体大小")}
+                  description={t("playerTableSettings.fontSize.description", "玩家名称和统计数据的字体大小")}
                   unit="px"
                 />
                 <SettingsSlider
@@ -960,13 +946,13 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={100}
                   step={1}
-                  label={ts("settingsStore.dpsThemes.common.iconSize", "Icon Size")}
-                  description={ts("settingsStore.dpsThemes.playerTableSettings.iconSize.description", "Class/spec icon size")}
+                  label={t("common.iconSize", "图标大小")}
+                  description={t("playerTableSettings.iconSize.description", "职业/专精图标大小")}
                   unit="px"
                 />
 
                 <div class="flex items-center gap-2">
-                  <span class="text-sm text-muted-foreground">{ts("settingsStore.dpsThemes.common.mode", "Mode")}</span>
+                  <span class="text-sm text-muted-foreground">{t("common.mode", "模式")}</span>
                   <div class="flex items-center gap-1">
                     <button
                       type="button"
@@ -977,7 +963,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (SETTINGS.live.tableCustomization.state.rowGlowMode =
-                          "gradient-underline")}>{ts("settingsStore.dpsThemes.common.gradientUnderline", "Gradient (Underline)")}</button
+                          "gradient-underline")}>{t("common.gradientUnderline", "渐变（下划线）")}</button
                     >
                     <button
                       type="button"
@@ -987,7 +973,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (SETTINGS.live.tableCustomization.state.rowGlowMode =
-                          "gradient")}>{ts("settingsStore.dpsThemes.common.gradient", "Gradient")}</button
+                          "gradient")}>{t("common.gradient", "渐变")}</button
                     >
                     <button
                       type="button"
@@ -997,7 +983,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (SETTINGS.live.tableCustomization.state.rowGlowMode =
-                          "solid")}>{ts("settingsStore.dpsThemes.common.solid", "Solid")}</button
+                          "solid")}>{t("common.solid", "纯色")}</button
                     >
                   </div>
                 </div>
@@ -1009,8 +995,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={1}
                   step={0.01}
-                  label={ts("settingsStore.dpsThemes.playerTableSettings.rowHighlightOpacity", "Row Highlight Opacity")}
-                  description={ts("settingsStore.dpsThemes.playerTableSettings.rowHighlightOpacity.description", "Row highlight fill opacity (0 = transparent, 1 = opaque)")}
+                  label={t("playerTableSettings.rowHighlightOpacity", "行高亮透明度")}
+                  description={t("playerTableSettings.rowHighlightOpacity.description", "行高亮填充透明度（0 = 透明，1 = 不透明）")}
                 />
 
                 <SettingsSlider
@@ -1020,8 +1006,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={24}
                   step={1}
-                  label={ts("settingsStore.dpsThemes.playerTableSettings.rowCornerRadius", "Row Corner Radius")}
-                  description={ts("settingsStore.dpsThemes.playerTableSettings.rowCornerRadius.description", "Corner radius for row highlight")}
+                  label={t("playerTableSettings.rowCornerRadius", "行圆角")}
+                  description={t("playerTableSettings.rowCornerRadius.description", "行高亮的圆角半径")}
                   unit="px"
                 />
               </div>
@@ -1030,14 +1016,14 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                 <!-- Table Header Customization -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
                   <h3 class="text-sm font-semibold text-foreground">
-                    {ts("settingsStore.dpsThemes.common.headerSettings", "Header Settings")}
+                    {t("common.headerSettings", "表头设置")}
                   </h3>
                   <SettingsSwitch
                     bind:checked={
                       SETTINGS.live.tableCustomization.state.showTableHeader
                     }
-                    label={ts("settingsStore.dpsThemes.common.showHeader", "Show Header")}
-                    description={ts("settingsStore.dpsThemes.playerTableSettings.showHeader.description", "Toggle column title visibility")}
+                    label={t("common.showHeader", "显示表头")}
+                    description={t("playerTableSettings.showHeader.description", "切换列标题的显示/隐藏")}
                   />
                   {#if SETTINGS.live.tableCustomization.state.showTableHeader}
                     <SettingsSlider
@@ -1047,8 +1033,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={0}
                       max={100}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.common.headerHeight", "Header Height")}
-                      description={ts("settingsStore.dpsThemes.playerTableSettings.headerHeight.description", "Header row height")}
+                      label={t("common.headerHeight", "表头高度")}
+                      description={t("playerTableSettings.headerHeight.description", "表头行高度")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1059,8 +1045,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={0}
                       max={100}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.common.headerFontSize", "Header Font Size")}
-                      description={ts("settingsStore.dpsThemes.playerTableSettings.headerFontSize.description", "Column title font size")}
+                      label={t("common.headerFontSize", "表头字体大小")}
+                      description={t("playerTableSettings.headerFontSize.description", "列标题字体大小")}
                       unit="px"
                     />
                     <SettingsColor
@@ -1068,8 +1054,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         SETTINGS.live.tableCustomization.state
                           .tableHeaderTextColor
                       }
-                      label={ts("settingsStore.dpsThemes.playerTableSettings.headerTextColor", "Header Text Color")}
-                      description={ts("settingsStore.dpsThemes.playerTableSettings.headerTextColor.description", "Column title text color")}
+                      label={t("playerTableSettings.headerTextColor", "表头文字颜色")}
+                      description={t("playerTableSettings.headerTextColor.description", "列标题文本颜色")}
                     />
                   {/if}
                 </div>
@@ -1086,8 +1072,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     min={0}
                     max={100}
                     step={1}
-                    label={ts("settingsStore.dpsThemes.playerTableSettings.suffixFontSize", "Suffix Font Size")}
-                    description={ts("settingsStore.dpsThemes.playerTableSettings.suffixFontSize.description", "Font size for K/M/% suffixes")}
+                    label={t("playerTableSettings.suffixFontSize", "后缀字体大小")}
+                    description={t("playerTableSettings.suffixFontSize.description", "K/M/% 后缀的字体大小")}
                     unit="px"
                   />
                 </div>
@@ -1105,7 +1091,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
             onclick={() => toggleSection("skillTableSettings")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              {ts("settingsStore.dpsThemes.skillTableSettings.title", "Skill Table Settings")}
+              {t("skillTableSettings.title", "技能表格设置")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.skillTableSettings
@@ -1116,11 +1102,11 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
           {#if expandedSections.skillTableSettings}
             <div class="px-4 pb-4 space-y-4">
               <p class="text-xs text-muted-foreground">
-                {ts("settingsStore.dpsThemes.skillTableSettings.description", "Customize size, headers, and abbreviated-number styling for the skill table.")}
+                {t("skillTableSettings.description", "自定义技能表格的尺寸、表头与缩写数字样式。")}
               </p>
 
               <div class="space-y-2 pt-3 border-t border-border/30">
-                <h3 class="text-sm font-semibold text-foreground">{ts("settingsStore.dpsThemes.skillTableSettings.skillRows", "Skill Rows")}</h3>
+                <h3 class="text-sm font-semibold text-foreground">{t("skillTableSettings.skillRows", "技能行")}</h3>
                 <SettingsSlider
                   bind:value={
                     SETTINGS.live.tableCustomization.state.skillRowHeight
@@ -1128,8 +1114,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={100}
                   step={1}
-                  label={ts("settingsStore.dpsThemes.skillTableSettings.skillRowHeight", "Skill Row Height")}
-                  description={ts("settingsStore.dpsThemes.skillTableSettings.skillRowHeight.description", "Height of each skill row (pixels)")}
+                  label={t("skillTableSettings.skillRowHeight", "技能行高度")}
+                  description={t("skillTableSettings.skillRowHeight.description", "每个技能行的高度（像素）")}
                   unit="px"
                 />
                 <SettingsSlider
@@ -1139,8 +1125,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={100}
                   step={1}
-                  label={ts("settingsStore.dpsThemes.skillTableSettings.skillFontSize", "Skill Font Size")}
-                  description={ts("settingsStore.dpsThemes.skillTableSettings.skillFontSize.description", "Font size for skill names and stats")}
+                  label={t("skillTableSettings.skillFontSize", "技能字体大小")}
+                  description={t("skillTableSettings.skillFontSize.description", "技能名称和统计数据的字体大小")}
                   unit="px"
                 />
                 <SettingsSlider
@@ -1150,12 +1136,12 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={100}
                   step={1}
-                  label={ts("settingsStore.dpsThemes.skillTableSettings.skillIconSize", "Skill Icon Size")}
-                  description={ts("settingsStore.dpsThemes.skillTableSettings.skillIconSize.description", "Skill icon size")}
+                  label={t("skillTableSettings.skillIconSize", "技能图标大小")}
+                  description={t("skillTableSettings.skillIconSize.description", "技能图标大小")}
                   unit="px"
                 />
                 <div class="flex items-center gap-2 mt-2">
-                  <span class="text-sm text-muted-foreground">{ts("settingsStore.dpsThemes.common.mode", "Mode")}</span>
+                  <span class="text-sm text-muted-foreground">{t("common.mode", "模式")}</span>
                   <div class="flex items-center gap-1">
                     <button
                       type="button"
@@ -1165,7 +1151,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (tableCustomizationState.skillRowGlowMode =
-                          "gradient-underline")}>{ts("settingsStore.dpsThemes.common.gradientUnderline", "Gradient (Underline)")}</button
+                          "gradient-underline")}>{t("common.gradientUnderline", "渐变（下划线）")}</button
                     >
                     <button
                       type="button"
@@ -1175,7 +1161,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (tableCustomizationState.skillRowGlowMode = "gradient")}
-                      >{ts("settingsStore.dpsThemes.common.gradient", "Gradient")}</button
+                      >{t("common.gradient", "渐变")}</button
                     >
                     <button
                       type="button"
@@ -1185,7 +1171,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         : 'text-muted-foreground hover:bg-popover/30'}"
                       onclick={() =>
                         (tableCustomizationState.skillRowGlowMode = "solid")}
-                      >{ts("settingsStore.dpsThemes.common.solid", "Solid")}</button
+                      >{t("common.solid", "纯色")}</button
                     >
                   </div>
                 </div>
@@ -1195,8 +1181,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={1}
                   step={0.01}
-                  label={ts("settingsStore.dpsThemes.skillTableSettings.skillRowHighlightOpacity", "Skill Row Highlight Opacity")}
-                  description={ts("settingsStore.dpsThemes.skillTableSettings.skillRowHighlightOpacity.description", "Skill row highlight fill opacity (0 = transparent, 1 = opaque)")}
+                  label={t("skillTableSettings.skillRowHighlightOpacity", "技能行高亮透明度")}
+                  description={t("skillTableSettings.skillRowHighlightOpacity.description", "技能行高亮填充透明度（0 = 透明，1 = 不透明）")}
                 />
 
                 <SettingsSlider
@@ -1204,8 +1190,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={24}
                   step={1}
-                  label={ts("settingsStore.dpsThemes.skillTableSettings.skillRowCornerRadius", "Skill Row Corner Radius")}
-                  description={ts("settingsStore.dpsThemes.skillTableSettings.skillRowCornerRadius.description", "Corner radius for skill row highlight")}
+                  label={t("skillTableSettings.skillRowCornerRadius", "技能行圆角")}
+                  description={t("skillTableSettings.skillRowCornerRadius.description", "技能行高亮的圆角半径")}
                   unit="px"
                 />
               </div>
@@ -1218,8 +1204,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   bind:checked={
                     SETTINGS.live.tableCustomization.state.skillShowHeader
                   }
-                  label={ts("settingsStore.dpsThemes.skillTableSettings.showSkillHeader", "Show Skill Header")}
-                  description={ts("settingsStore.dpsThemes.skillTableSettings.showSkillHeader.description", "Toggle skill table column title visibility")}
+                  label={t("skillTableSettings.showSkillHeader", "显示技能表头")}
+                  description={t("skillTableSettings.showSkillHeader.description", "切换技能表列标题的显示/隐藏")}
                 />
                 {#if SETTINGS.live.tableCustomization.state.skillShowHeader}
                   <SettingsSlider
@@ -1229,8 +1215,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     min={0}
                     max={100}
                     step={1}
-                    label={ts("settingsStore.dpsThemes.skillTableSettings.skillHeaderHeight", "Skill Header Height")}
-                    description={ts("settingsStore.dpsThemes.skillTableSettings.skillHeaderHeight.description", "Skill header row height")}
+                    label={t("skillTableSettings.skillHeaderHeight", "技能表头高度")}
+                    description={t("skillTableSettings.skillHeaderHeight.description", "技能表头行高度")}
                     unit="px"
                   />
                   <SettingsSlider
@@ -1240,8 +1226,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     min={0}
                     max={100}
                     step={1}
-                    label={ts("settingsStore.dpsThemes.skillTableSettings.skillHeaderFontSize", "Skill Header Font Size")}
-                    description={ts("settingsStore.dpsThemes.skillTableSettings.skillHeaderFontSize.description", "Skill table column title font size")}
+                    label={t("skillTableSettings.skillHeaderFontSize", "技能表头字体大小")}
+                    description={t("skillTableSettings.skillHeaderFontSize.description", "技能表列标题字体大小")}
                     unit="px"
                   />
                   <SettingsColor
@@ -1249,8 +1235,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       SETTINGS.live.tableCustomization.state
                         .skillHeaderTextColor
                     }
-                    label={ts("settingsStore.dpsThemes.skillTableSettings.skillHeaderTextColor", "Skill Header Text Color")}
-                    description={ts("settingsStore.dpsThemes.skillTableSettings.skillHeaderTextColor.description", "Skill table column title text color")}
+                    label={t("skillTableSettings.skillHeaderTextColor", "技能表头文字颜色")}
+                    description={t("skillTableSettings.skillHeaderTextColor.description", "技能表列标题文本颜色")}
                   />
                 {/if}
               </div>
@@ -1267,8 +1253,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   min={0}
                   max={100}
                   step={1}
-                  label={ts("settingsStore.dpsThemes.skillTableSettings.skillSuffixFontSize", "Skill Suffix Font Size")}
-                  description={ts("settingsStore.dpsThemes.skillTableSettings.skillSuffixFontSize.description", "Font size for K/M/% suffixes in skill rows")}
+                  label={t("skillTableSettings.skillSuffixFontSize", "技能后缀字体大小")}
+                  description={t("skillTableSettings.skillSuffixFontSize.description", "技能行中 K/M/% 后缀的字体大小")}
                   unit="px"
                 />
               </div>
@@ -1284,7 +1270,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
             onclick={() => toggleSection("backgroundImage")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              {t("themes.general.backgroundImage", "Background Image")}
+              {t("themes.general.backgroundImage", "背景图片")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.backgroundImage
@@ -1295,20 +1281,20 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
           {#if expandedSections.backgroundImage}
             <div class="px-4 pb-4 space-y-2">
               <p class="text-xs text-muted-foreground">
-                {t("themes.general.backgroundImageDescription", "Use a custom background image for all windows. Note: background colors must be semi-transparent for the image to be visible.")}
+                {t("themes.general.backgroundImageDescription", "为所有窗口使用自定义背景图片。注意：需要将背景颜色设置为半透明，图片才能显示出来。")}
               </p>
               <SettingsSwitch
                 bind:checked={
                   SETTINGS.accessibility.state.backgroundImageEnabled
                 }
-                label={t("themes.general.enableBackgroundImage", "Enable Background Image")}
-                description={t("themes.general.enableBackgroundImageDescription", "Use an image as the background")}
+                label={t("themes.general.enableBackgroundImage", "启用背景图片")}
+                description={t("themes.general.enableBackgroundImageDescription", "使用图片作为背景")}
               />
               {#if SETTINGS.accessibility.state.backgroundImageEnabled}
                 <div class="mt-2 space-y-2">
                   <SettingsFilePicker
-                    label={t("themes.general.selectImage", "Select Image")}
-                    description={t("themes.general.selectImageDescription", "Choose an image file (PNG/JPG/WebP)")}
+                    label={t("themes.general.selectImage", "选择图片")}
+                    description={t("themes.general.selectImageDescription", "选择图片文件（PNG/JPG/WebP）")}
                     accept="image/*"
                     value={SETTINGS.accessibility.state.backgroundImage}
                     onchange={(dataUrl, _fileName) => {
@@ -1319,8 +1305,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     }}
                   />
                   <SettingsSelect
-                    label={t("themes.general.imageMode", "Image Mode")}
-                    description={t("themes.general.imageModeDescription", "How the image should fit the window")}
+                    label={t("themes.general.imageMode", "图片模式")}
+                    description={t("themes.general.imageModeDescription", "图片如何适配窗口")}
                     bind:selected={
                       SETTINGS.accessibility.state.backgroundImageMode
                     }
@@ -1328,8 +1314,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   />
                   {#if SETTINGS.accessibility.state.backgroundImageMode === "contain"}
                     <SettingsColorAlpha
-                      label={t("themes.general.containFillColor", "Contain Fill Color")}
-                      description={t("themes.general.containFillColorDescription", "Background color used for the empty area when the image is fit with contain mode")}
+                      label={t("themes.general.containFillColor", "留白填充颜色")}
+                      description={t("themes.general.containFillColorDescription", "当图片以“包含”方式适配时，周围留白的背景色")}
                       value={SETTINGS.accessibility.state
                         .backgroundImageContainColor}
                       oninput={(value: string) => {
@@ -1352,7 +1338,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
             onclick={() => toggleSection("customFonts")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              {t("themes.general.customFonts", "Custom Fonts")}
+              {t("themes.general.customFonts", "自定义字体")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.customFonts
@@ -1369,22 +1355,22 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
               <!-- Sans-serif Font -->
               <div class="space-y-2 pt-2 border-t border-border/30">
                 <h3 class="text-sm font-semibold text-foreground">
-                  {t("themes.general.sansFont", "Sans Serif Font (UI Text)")}
+                  {t("themes.general.sansFont", "无衬线字体（UI 文本）")}
                 </h3>
                 <p class="text-xs text-muted-foreground">
-                  {t("themes.general.sansFontDefault", "Default: Inter Variable")}
+                  {t("themes.general.sansFontDefault", "默认：Inter Variable")}
                 </p>
                 <SettingsSwitch
                   bind:checked={
                     SETTINGS.accessibility.state.customFontSansEnabled
                   }
-                  label={t("themes.general.enableCustomSans", "Enable Custom Sans Serif Font")}
-                  description={t("themes.general.enableCustomSansDescription", "Use custom fonts for UI text")}
+                  label={t("themes.general.enableCustomSans", "启用自定义无衬线字体")}
+                  description={t("themes.general.enableCustomSansDescription", "UI 文本使用自定义字体")}
                 />
                 {#if SETTINGS.accessibility.state.customFontSansEnabled}
                   <SettingsFilePicker
-                    label={t("themes.general.pickFontFile", "Choose Font File")}
-                    description={t("themes.general.pickFontFileDescription", "Choose a font file (.woff2/.woff/.ttf/.otf)")}
+                    label={t("themes.general.pickFontFile", "选择字体文件")}
+                    description={t("themes.general.pickFontFileDescription", "选择字体文件（.woff2/.woff/.ttf/.otf）")}
                     accept=".woff2,.woff,.ttf,.otf"
                     value={SETTINGS.accessibility.state.customFontSansUrl}
                     onchange={(dataUrl, fileName) => {
@@ -1424,22 +1410,22 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
               <!-- Monospace Font -->
               <div class="space-y-2 pt-3 border-t border-border/30">
                 <h3 class="text-sm font-semibold text-foreground">
-                  {t("themes.general.monoFont", "Monospace Font (Numbers, Code)")}
+                  {t("themes.general.monoFont", "等宽字体（数字、代码）")}
                 </h3>
                 <p class="text-xs text-muted-foreground">
-                  {t("themes.general.monoFontDefault", "Default: Geist Mono Variable")}
+                  {t("themes.general.monoFontDefault", "默认：Geist Mono Variable")}
                 </p>
                 <SettingsSwitch
                   bind:checked={
                     SETTINGS.accessibility.state.customFontMonoEnabled
                   }
-                  label={t("themes.general.enableCustomMono", "Enable Custom Monospace Font")}
-                  description={t("themes.general.enableCustomMonoDescription", "Use a custom monospace font for numbers and code")}
+                  label={t("themes.general.enableCustomMono", "启用自定义等宽字体")}
+                  description={t("themes.general.enableCustomMonoDescription", "数字/代码使用自定义等宽字体")}
                 />
                 {#if SETTINGS.accessibility.state.customFontMonoEnabled}
                   <SettingsFilePicker
-                    label={t("themes.general.pickFontFile", "Choose Font File")}
-                    description={t("themes.general.pickFontFileDescription", "Choose a font file (.woff2/.woff/.ttf/.otf)")}
+                    label={t("themes.general.pickFontFile", "选择字体文件")}
+                    description={t("themes.general.pickFontFileDescription", "选择字体文件（.woff2/.woff/.ttf/.otf）")}
                     accept=".woff2,.woff,.ttf,.otf"
                     value={SETTINGS.accessibility.state.customFontMonoUrl}
                     onchange={(dataUrl, fileName) => {
@@ -1493,7 +1479,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
             onclick={() => toggleSection("liveDisplay")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              {ts("settingsStore.dpsThemes.liveWindowDisplay.title", "Live Window Display Settings")}
+              {t("liveWindowDisplay.title", "实时窗口显示设置")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.liveDisplay
@@ -1505,10 +1491,10 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
             <div class="px-4 pb-4 space-y-2">
               <SettingsSwitch
                 bind:checked={SETTINGS.accessibility.state.clickthrough}
-                label={ts("settingsStore.dpsThemes.liveWindowDisplay.clickthroughMode", "Clickthrough Mode")}
+                label={t("liveWindowDisplay.clickthroughMode", "穿透模式")}
                 description={SETTINGS.accessibility.state.clickthrough
-                  ? ts("settingsStore.dpsThemes.liveWindowDisplay.clickthroughEnabledDescription", "Clickthrough Enabled - Mouse clicks pass through window")
-                  : ts("settingsStore.dpsThemes.liveWindowDisplay.clickthroughMode.description", "Enable Clickthrough Mode")}
+                  ? t("liveWindowDisplay.clickthroughEnabledDescription", "已启用点击穿透 - 鼠标点击将穿透窗口")
+                  : t("liveWindowDisplay.clickthroughMode.description", "启用点击穿透模式")}
               />
             </div>
           {/if}
@@ -1524,7 +1510,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
             onclick={() => toggleSection("headerSettings")}
           >
             <h2 class="text-base font-semibold text-foreground">
-              {ts("settingsStore.dpsThemes.common.headerSettings", "Header Settings")}
+              {t("common.headerSettings", "表头设置")}
             </h2>
             <ChevronDown
               class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.headerSettings
@@ -1540,7 +1526,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                 <div class="space-y-2">
                   <div class="flex items-center justify-between">
                     <h3 class="text-sm font-semibold text-foreground">
-                      {ts("settingsStore.dpsThemes.liveHeader.layoutPadding", "Layout & Padding")}
+                      {t("liveHeader.layoutPadding", "布局与边距")}
                     </h3>
                   </div>
                   <SettingsSlider
@@ -1550,8 +1536,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     min={0}
                     max={24}
                     step={1}
-                    label={ts("settingsStore.dpsThemes.liveHeader.windowPadding", "Window Padding")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.windowPadding.description", "Overall live window padding")}
+                    label={t("liveHeader.windowPadding", "窗口内边距")}
+                    description={t("liveHeader.windowPadding.description", "实时窗口整体内边距")}
                     unit="px"
                   />
                   <SettingsSlider
@@ -1561,29 +1547,29 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     min={0}
                     max={16}
                     step={1}
-                    label={ts("settingsStore.dpsThemes.liveHeader.headerPadding", "Header Padding")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.headerPadding.description", "Inner spacing inside the header area")}
+                    label={t("liveHeader.headerPadding", "表头内边距")}
+                    description={t("liveHeader.headerPadding.description", "表头区域内部间距")}
                     unit="px"
                   />
                 </div>
 
                 <!-- Timer Settings -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
-                  <h3 class="text-sm font-semibold text-foreground">{ts("settingsStore.dpsThemes.liveHeader.timer", "Timer")}</h3>
+                  <h3 class="text-sm font-semibold text-foreground">{t("liveHeader.timer", "计时器")}</h3>
                   <SettingsSwitch
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showTimer
                     }
-                    label={ts("settingsStore.dpsThemes.liveHeader.showTimer", "Show Timer")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.showTimer.description", "Show encounter timer")}
+                    label={t("liveHeader.showTimer", "显示计时器")}
+                    description={t("liveHeader.showTimer.description", "显示战斗计时器")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showTimer}
                     <SettingsSwitch
                       bind:checked={
                         SETTINGS.live.headerCustomization.state.showActiveTimer
                       }
-                      label={ts("settingsStore.dpsThemes.liveHeader.showActiveCombatTime", "Show Active Combat Time")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.showActiveCombatTime.description", "Show global active combat time next to the main timer for true DPS")}
+                      label={t("liveHeader.showActiveCombatTime", "显示活跃战斗时间")}
+                      description={t("liveHeader.showActiveCombatTime.description", "在主计时器旁显示全局活跃战斗时间，用于真 DPS")}
                     />
                     <SettingsSlider
                       bind:value={
@@ -1593,8 +1579,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={0}
                       max={20}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.common.labelFontSize", "Label Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.timerLabelFontSize.description", "“Timer” label font size (0 = hidden)")}
+                      label={t("common.labelFontSize", "标签字体大小")}
+                      description={t("liveHeader.timerLabelFontSize.description", "“计时器”标签字体大小（0 = 隐藏）")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1604,8 +1590,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={10}
                       max={32}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.liveHeader.timerFontSize", "Timer Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.timerFontSize.description", "Timer value font size")}
+                      label={t("liveHeader.timerFontSize", "计时器字体大小")}
+                      description={t("liveHeader.timerFontSize.description", "计时器数值字体大小")}
                       unit="px"
                     />
                     {#if SETTINGS.live.headerCustomization.state.showActiveTimer}
@@ -1617,8 +1603,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         min={10}
                         max={32}
                         step={1}
-                        label={ts("settingsStore.dpsThemes.liveHeader.activeTimeFontSize", "Active Time Font Size")}
-                        description={ts("settingsStore.dpsThemes.liveHeader.activeTimeFontSize.description", "Active combat time value font size")}
+                        label={t("liveHeader.activeTimeFontSize", "活跃时间字体大小")}
+                        description={t("liveHeader.activeTimeFontSize.description", "活跃战斗时间数值字体大小")}
                         unit="px"
                       />
                     {/if}
@@ -1634,8 +1620,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showSceneName
                     }
-                    label={ts("settingsStore.dpsThemes.liveHeader.showSceneName", "Show Scene Name")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.showSceneName.description", "Show current dungeon / scene name")}
+                    label={t("liveHeader.showSceneName", "显示场景名称")}
+                    description={t("liveHeader.showSceneName.description", "显示当前副本/场景名称")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showSceneName}
                     <SettingsSlider
@@ -1646,8 +1632,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={10}
                       max={24}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.liveHeader.sceneNameFontSize", "Scene Name Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.sceneNameFontSize.description", "Scene name font size")}
+                      label={t("liveHeader.sceneNameFontSize", "场景名称字体大小")}
+                      description={t("liveHeader.sceneNameFontSize.description", "场景名称字体大小")}
                       unit="px"
                     />
                   {/if}
@@ -1664,8 +1650,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showResetButton
                     }
-                    label={ts("settingsStore.dpsThemes.liveHeader.showResetButton", "Show Reset Button")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.showResetButton.description", "Button used to reset the encounter")}
+                    label={t("liveHeader.showResetButton", "显示重置按钮")}
+                    description={t("liveHeader.showResetButton.description", "用于重置战斗的按钮")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showResetButton}
                     <div class="grid grid-cols-2 gap-2 pl-4">
@@ -1677,7 +1663,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         min={12}
                         max={32}
                         step={1}
-                        label={ts("settingsStore.dpsThemes.common.iconSize", "Icon Size")}
+                        label={t("common.iconSize", "图标大小")}
                         unit="px"
                       />
                       <SettingsSlider
@@ -1688,7 +1674,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         min={2}
                         max={16}
                         step={1}
-                        label={ts("settingsStore.dpsThemes.common.padding", "Padding")}
+                        label={t("common.padding", "内边距")}
                         unit="px"
                       />
                     </div>
@@ -1699,8 +1685,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showPauseButton
                     }
-                    label={ts("settingsStore.dpsThemes.liveHeader.showPauseButton", "Show Pause Button")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.showPauseButton.description", "Button used to pause / resume the encounter")}
+                    label={t("liveHeader.showPauseButton", "显示暂停按钮")}
+                    description={t("liveHeader.showPauseButton.description", "用于暂停/恢复战斗的按钮")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showPauseButton}
                     <div class="grid grid-cols-2 gap-2 pl-4">
@@ -1712,7 +1698,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         min={12}
                         max={32}
                         step={1}
-                        label={ts("settingsStore.dpsThemes.common.iconSize", "Icon Size")}
+                        label={t("common.iconSize", "图标大小")}
                         unit="px"
                       />
                       <SettingsSlider
@@ -1723,7 +1709,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         min={2}
                         max={16}
                         step={1}
-                        label={ts("settingsStore.dpsThemes.common.padding", "Padding")}
+                        label={t("common.padding", "内边距")}
                         unit="px"
                       />
                     </div>
@@ -1734,8 +1720,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showSettingsButton
                     }
-                    label={ts("settingsStore.dpsThemes.liveHeader.showSettingsButton", "Show Settings Button")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.showSettingsButton.description", "Button used to open the settings window")}
+                    label={t("liveHeader.showSettingsButton", "显示设置按钮")}
+                    description={t("liveHeader.showSettingsButton.description", "用于打开设置窗口的按钮")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showSettingsButton}
                     <div class="grid grid-cols-2 gap-2 pl-4">
@@ -1747,7 +1733,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         min={12}
                         max={32}
                         step={1}
-                        label={ts("settingsStore.dpsThemes.common.iconSize", "Icon Size")}
+                        label={t("common.iconSize", "图标大小")}
                         unit="px"
                       />
                       <SettingsSlider
@@ -1758,7 +1744,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         min={2}
                         max={16}
                         step={1}
-                        label={ts("settingsStore.dpsThemes.common.padding", "Padding")}
+                        label={t("common.padding", "内边距")}
                         unit="px"
                       />
                     </div>
@@ -1769,8 +1755,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showMinimizeButton
                     }
-                    label={ts("settingsStore.dpsThemes.liveHeader.showMinimizeButton", "Show Minimize Button")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.showMinimizeButton.description", "Button used to minimize the live window")}
+                    label={t("liveHeader.showMinimizeButton", "显示最小化按钮")}
+                    description={t("liveHeader.showMinimizeButton.description", "用于最小化实时窗口的按钮")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showMinimizeButton}
                     <div class="grid grid-cols-2 gap-2 pl-4">
@@ -1782,7 +1768,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         min={12}
                         max={32}
                         step={1}
-                        label={ts("settingsStore.dpsThemes.common.iconSize", "Icon Size")}
+                        label={t("common.iconSize", "图标大小")}
                         unit="px"
                       />
                       <SettingsSlider
@@ -1793,7 +1779,7 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                         min={2}
                         max={16}
                         step={1}
-                        label={ts("settingsStore.dpsThemes.common.padding", "Padding")}
+                        label={t("common.padding", "内边距")}
                         unit="px"
                       />
                     </div>
@@ -1809,8 +1795,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showTotalDamage
                     }
-                    label={ts("settingsStore.dpsThemes.liveHeader.showTotalDamage", "Show Total Damage")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.showTotalDamage.description", "Show total damage dealt")}
+                    label={t("liveHeader.showTotalDamage", "显示总伤害")}
+                    description={t("liveHeader.showTotalDamage.description", "显示造成的总伤害")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showTotalDamage}
                     <SettingsSlider
@@ -1821,8 +1807,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={8}
                       max={20}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.common.labelFontSize", "Label Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.totalDamageLabelFontSize.description", "“T.DMG” label font size")}
+                      label={t("common.labelFontSize", "标签字体大小")}
+                      description={t("liveHeader.totalDamageLabelFontSize.description", "“T.DMG” 标签字体大小")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1833,8 +1819,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={10}
                       max={32}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.common.valueFontSize", "Value Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.totalDamageValueFontSize.description", "Damage value font size")}
+                      label={t("common.valueFontSize", "数值字体大小")}
+                      description={t("liveHeader.totalDamageValueFontSize.description", "伤害数值字体大小")}
                       unit="px"
                     />
                   {/if}
@@ -1849,8 +1835,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showTotalDps
                     }
-                    label={ts("settingsStore.dpsThemes.liveHeader.showTotalDps", "Show Total DPS")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.showTotalDps.description", "Show total damage per second")}
+                    label={t("liveHeader.showTotalDps", "显示总 DPS")}
+                    description={t("liveHeader.showTotalDps.description", "显示总每秒伤害")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showTotalDps}
                     <SettingsSlider
@@ -1861,8 +1847,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={8}
                       max={20}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.common.labelFontSize", "Label Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.totalDpsLabelFontSize.description", "“T.DPS” label font size")}
+                      label={t("common.labelFontSize", "标签字体大小")}
+                      description={t("liveHeader.totalDpsLabelFontSize.description", "“T.DPS” 标签字体大小")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1873,8 +1859,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={10}
                       max={32}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.common.valueFontSize", "Value Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.totalDpsValueFontSize.description", "DPS value font size")}
+                      label={t("common.valueFontSize", "数值字体大小")}
+                      description={t("liveHeader.totalDpsValueFontSize.description", "DPS 数值字体大小")}
                       unit="px"
                     />
                   {/if}
@@ -1889,8 +1875,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showBossHealth
                     }
-                    label={ts("settingsStore.dpsThemes.liveHeader.showBossHealth", "Show Boss Health")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.showBossHealth.description", "Show current boss health bar")}
+                    label={t("liveHeader.showBossHealth", "显示首领血量")}
+                    description={t("liveHeader.showBossHealth.description", "显示当前首领血条")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showBossHealth}
                     <SettingsSlider
@@ -1901,8 +1887,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={0}
                       max={20}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.common.labelFontSize", "Label Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.bossHealthLabelFontSize.description", "“BOSS” label font size")}
+                      label={t("common.labelFontSize", "标签字体大小")}
+                      description={t("liveHeader.bossHealthLabelFontSize.description", "“BOSS” 标签字体大小")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1913,8 +1899,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={0}
                       max={24}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.liveHeader.bossNameFontSize", "Boss Name Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.bossNameFontSize.description", "Boss name font size")}
+                      label={t("liveHeader.bossNameFontSize", "首领名称字体大小")}
+                      description={t("liveHeader.bossNameFontSize.description", "首领名称字体大小")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1925,8 +1911,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={0}
                       max={24}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.liveHeader.healthValueFontSize", "Health Value Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.healthValueFontSize.description", "Health value font size (1.5M / 3M)")}
+                      label={t("liveHeader.healthValueFontSize", "血量数值字体大小")}
+                      description={t("liveHeader.healthValueFontSize.description", "血量数值字体大小（1.5M / 3M）")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1937,8 +1923,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={0}
                       max={24}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.liveHeader.percentageFontSize", "Percentage Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.percentageFontSize.description", "Health percentage font size")}
+                      label={t("liveHeader.percentageFontSize", "百分比字体大小")}
+                      description={t("liveHeader.percentageFontSize.description", "血量百分比字体大小")}
                       unit="px"
                     />
                   {/if}
@@ -1953,8 +1939,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                     bind:checked={
                       SETTINGS.live.headerCustomization.state.showNavigationTabs
                     }
-                    label={ts("settingsStore.dpsThemes.liveHeader.showNavigationTabs", "Show Navigation Tabs")}
-                    description={ts("settingsStore.dpsThemes.liveHeader.showNavigationTabs.description", "Show DPS / Heal / Tanked switch buttons")}
+                    label={t("liveHeader.showNavigationTabs", "显示导航标签")}
+                    description={t("liveHeader.showNavigationTabs.description", "显示 DPS / 治疗 / 承伤 切换按钮")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showNavigationTabs}
                     <SettingsSlider
@@ -1964,8 +1950,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={8}
                       max={18}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.common.labelFontSize", "Label Font Size")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.navigationTabLabelFontSize.description", "Tab label font size")}
+                      label={t("common.labelFontSize", "标签字体大小")}
+                      description={t("liveHeader.navigationTabLabelFontSize.description", "标签文字字体大小")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1975,8 +1961,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={4}
                       max={24}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.liveHeader.horizontalPadding", "Horizontal Padding")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.horizontalPadding.description", "Left and right padding for tabs")}
+                      label={t("liveHeader.horizontalPadding", "水平内边距")}
+                      description={t("liveHeader.horizontalPadding.description", "标签左右内边距")}
                       unit="px"
                     />
                     <SettingsSlider
@@ -1986,8 +1972,8 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                       min={2}
                       max={16}
                       step={1}
-                      label={ts("settingsStore.dpsThemes.liveHeader.verticalPadding", "Vertical Padding")}
-                      description={ts("settingsStore.dpsThemes.liveHeader.verticalPadding.description", "Top and bottom padding for tabs")}
+                      label={t("liveHeader.verticalPadding", "垂直内边距")}
+                      description={t("liveHeader.verticalPadding.description", "标签上下内边距")}
                       unit="px"
                     />
                   {/if}
@@ -2005,10 +1991,10 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
         <div class="space-y-3">
           <div>
             <h2 class="text-base font-semibold text-foreground">
-              {ts("settingsStore.dpsThemes.presets.colorThemes", "Color Themes")}
+              {t("presets.colorThemes", "颜色主题")}
             </h2>
             <p class="text-xs text-muted-foreground mt-0.5">
-              {ts("settingsStore.dpsThemes.presets.colorThemes.description", "Choose a preset color theme")}
+              {t("presets.colorThemes.description", "选择一个预设颜色主题")}
             </p>
           </div>
           <div class="grid grid-cols-2 gap-3">
@@ -2038,10 +2024,10 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   ></span>
                 </div>
                 <span class="text-sm font-medium text-foreground"
-                  >{ts(`settingsStore.dpsThemes.presets.colorPreset.${key}.name`, preset.name)}</span
+                  >{t(`presets.colorPreset.${key}.name`, preset.name)}</span
                 >
                 <span class="text-xs text-muted-foreground mt-0.5"
-                  >{ts(`settingsStore.dpsThemes.presets.colorPreset.${key}.description`, preset.description)}</span
+                  >{t(`presets.colorPreset.${key}.description`, preset.description)}</span
                 >
               </button>
             {/each}
@@ -2052,10 +2038,10 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
         <div class="space-y-3 pt-4 border-t border-border/50">
           <div>
             <h2 class="text-base font-semibold text-foreground">
-              {ts("settingsStore.dpsThemes.presets.sizePresets", "Size Presets")}
+              {t("presets.sizePresets", "尺寸预设")}
             </h2>
             <p class="text-xs text-muted-foreground mt-0.5">
-              {ts("settingsStore.dpsThemes.presets.sizePresets.description", "Adjust table and header sizes based on your display")}
+              {t("presets.sizePresets.description", "根据你的显示器调整表格和表头尺寸")}
             </p>
           </div>
           <div class="grid grid-cols-4 gap-3">
@@ -2090,10 +2076,10 @@ import { resolveNavigationTranslation, resolveSettingsStoreTranslation } from "$
                   {/if}
                 </div>
                 <span class="text-sm font-medium text-foreground"
-                  >{ts(`settingsStore.dpsThemes.presets.sizePreset.${key}.name`, preset.name)}</span
+                  >{t(`presets.sizePreset.${key}.name`, preset.name)}</span
                 >
                 <span class="text-xs text-muted-foreground mt-0.5 text-center"
-                  >{ts(`settingsStore.dpsThemes.presets.sizePreset.${key}.description`, preset.description)}</span
+                  >{t(`presets.sizePreset.${key}.description`, preset.description)}</span
                 >
               </button>
             {/each}

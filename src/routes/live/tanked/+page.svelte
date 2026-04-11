@@ -10,7 +10,7 @@
   import getDisplayName from "$lib/name-display";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
-  import { resolveNavigationTranslation } from "$lib/i18n";
+  import { resolveUiTranslation } from "$lib/i18n";
 
   let liveData = $derived(getLiveData());
   let rawTankedData = $derived(
@@ -36,7 +36,8 @@
   }
 
   function t(key: string, fallback: string): string {
-    return resolveNavigationTranslation(
+    return resolveUiTranslation(
+      "ui/dps/live.json",
       key,
       SETTINGS.live.general.state.language,
       fallback,
@@ -47,7 +48,7 @@
     col: { headerKey?: string; labelKey?: string; header: string; label?: string },
   ): string {
     if (col.headerKey) {
-      const translatedHeader = resolveNavigationTranslation(
+      const translatedHeader = resolveUiTranslation(
         col.headerKey,
         SETTINGS.live.general.state.language,
         "",
@@ -56,7 +57,7 @@
     }
 
     if (col.labelKey) {
-      const translatedLabel = resolveNavigationTranslation(
+      const translatedLabel = resolveUiTranslation(
         col.labelKey,
         SETTINGS.live.general.state.language,
         col.label ?? col.header,
@@ -143,7 +144,7 @@
           <th
             class="px-3 py-1 text-left font-medium uppercase tracking-wide"
             style="font-size: {tableSettings.tableHeaderFontSize}px; color: {tableSettings.tableHeaderTextColor};"
-            >{t("dps.historyDetail.player", "Player")}</th
+            >{t("historyDetail.player", "玩家")}</th
           >
           {#each visiblePlayerColumns as col (col.key)}
             <th
@@ -195,11 +196,11 @@
                 style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                 class="object-contain"
                 src={getClassIcon(className)}
-                alt={t("dps.live.classIconAlt", "Class icon")}
+                alt={t("live.classIconAlt", "Class icon")}
                 {@attach tooltip(
                   () =>
                     formatClassSpecLabel(player.className, player.classSpecName) ||
-                    t("dps.live.unknownClass", "Unknown Class"),
+                    t("live.unknownClass", "Unknown Class"),
                 )}
               />
               {#if player.abilityScore > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourAbilityScore : SETTINGS.live.general.state.showOthersAbilityScore)}

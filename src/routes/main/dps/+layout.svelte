@@ -5,13 +5,16 @@
    */
   import { page } from "$app/state";
   import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-  import { DPS_SUB_ROUTES } from "../routes.svelte";
   import ActivityIcon from "virtual:icons/lucide/activity";
   import ExternalLinkIcon from "virtual:icons/lucide/external-link";
   import PlayIcon from "virtual:icons/lucide/play";
-  import { resolveNavigationTranslation } from "$lib/i18n";
+  import { uiT } from "$lib/i18n";
   import { SETTINGS } from "$lib/settings-store";
+  import { DPS_SUB_ROUTES } from "../routes.svelte";
+
   let { children } = $props();
+
+  const t = uiT("dps/general", () => SETTINGS.live.general.state.language);
 
   // Check if current path matches the tab
   function isActiveTab(tabPath: string): boolean {
@@ -26,19 +29,13 @@
 
   function getDpsSubRouteLabel(href: string, fallback: string): string {
     const keyMap: Record<string, string> = {
-      "/main/dps/history": "dps.history",
-      "/main/dps/themes": "dps.themes",
-      "/main/dps/settings": "dps.settings",
+      "/main/dps/history": "history",
+      "/main/dps/themes": "themes",
+      "/main/dps/settings": "settings",
     };
 
     const key = keyMap[href];
-    if (!key) return fallback;
-
-    return resolveNavigationTranslation(
-      key,
-      SETTINGS.live.general.state.language,
-      fallback,
-    );
+    return key ? t(key, fallback) : fallback;
   }
 
   // Check if we're on the base DPS path (need to show default content or redirect)
@@ -49,11 +46,10 @@
       const liveWindow = await WebviewWindow.getByLabel("live");
       if (liveWindow !== null) {
         const isVisible = await liveWindow.isVisible();
-        
+
         if (isVisible) {
           await liveWindow.hide();
         } else {
-          // Show first, then unminimize and focus
           await liveWindow.show();
           await liveWindow.unminimize();
           await liveWindow.setFocus();
@@ -68,49 +64,28 @@
 </script>
 
 <div class="space-y-6">
-  <!-- Tool Header -->
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary">
         <ActivityIcon class="w-5 h-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">
-          {resolveNavigationTranslation(
-            "dps.title",
-            SETTINGS.live.general.state.language,
-            "DPS检测",
-          )}
-        </h1>
-        <p class="text-sm text-muted-foreground">
-          {resolveNavigationTranslation(
-            "dps.subtitle",
-            SETTINGS.live.general.state.language,
-            "实时监测战斗数据和DPS统计",
-          )}
-        </p>
+        <h1 class="text-xl font-bold text-foreground">{t("title", "DPS检测")}</h1>
+        <p class="text-sm text-muted-foreground">{t("subtitle", "实时监测战斗数据和DPS统计")}</p>
       </div>
     </div>
-    
-    <!-- Launch Live Window Button -->
+
     <button
       type="button"
       class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors shadow-sm"
       onclick={toggleLiveWindow}
     >
       <PlayIcon class="w-4 h-4" />
-      <span>
-        {resolveNavigationTranslation(
-          "dps.toggleWindow",
-          SETTINGS.live.general.state.language,
-          "切换 DPS 窗口",
-        )}
-      </span>
+      <span>{t("toggleWindow", "切换 DPS 窗口")}</span>
       <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
     </button>
   </div>
 
-  <!-- Tabs Navigation -->
   <div class="border-b border-border/60">
     <nav class="flex gap-1 -mb-px">
       {#each Object.entries(DPS_SUB_ROUTES) as [href, route] (route.label)}
@@ -127,27 +102,15 @@
     </nav>
   </div>
 
-  <!-- Tab Content -->
   <div class="min-h-0">
     {#if isBasePath}
-      <!-- Default content when on base path - prompt to select a tab -->
       <div class="flex flex-col items-center justify-center py-12 text-center">
-        <p class="text-muted-foreground mb-4">
-          {resolveNavigationTranslation(
-            "dps.selectTabPrompt",
-            SETTINGS.live.general.state.language,
-            "请选择上方的选项卡查看详细设置",
-          )}
-        </p>
+        <p class="text-muted-foreground mb-4">{t("selectTabPrompt", "请选择上方的选项卡查看详细设置")}</p>
         <a
           href={getDefaultTabPath()}
           class="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-sm font-medium transition-colors"
         >
-          {resolveNavigationTranslation(
-            "dps.viewHistory",
-            SETTINGS.live.general.state.language,
-            "查看历史记录",
-          )}
+          {t("viewHistory", "查看历史记录")}
         </a>
       </div>
     {:else}

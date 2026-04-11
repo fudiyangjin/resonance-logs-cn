@@ -11,34 +11,45 @@ type RuntimeTranslationFileEntry =
     };
 
 const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
+    "ui/shell.json": "UI / Shell",
+    "ui/module-calc.json": "UI / Module Calc",
+    "ui/monster-monitor.json": "UI / Monster Monitor",
+    "ui/localization-tool.json": "UI / Localization Tool",
     "parser/skillnames.json": "Skill Names",
-    "ui/DPS.json": "DPS UI",
-    "ui/module-calc.json": "Module Calculator UI",
-    "ui/monster-monitor.json": "Monster Monitor UI",
-    "ui/skill-monitor.json": "Skill Monitor UI",
-    "ui/settings-store.json": "Settings Store UI",
-    "ui/localization.json": "Localization UI",
     "parser/BuffName.json": "Buff Names",
-    "search/BuffNameSearch.json": "Buff Name Search",
-    "search/resonance-skill-search.json": "Resonance Skill Search",
     "parser/MonsterName.json": "Monster Names",
     "parser/SceneName.json": "Scene Names",
+    "parser/class-labels.json": "Class Labels",
+    "search/BuffNameSearch.json": "Buff Name Search",
+    "search/resonance-skill-search.json": "Resonance Skill Search",
 };
 
 const SORT_PRIORITY: Record<string, number> = {
-    "ui/DPS.json": 0,
-    "ui/module-calc.json": 1,
-    "ui/monster-monitor.json": 2,
-    "ui/skill-monitor.json": 3,
-    "ui/settings-store.json": 4,
-    "ui/localization.json": 5,
-    "parser/class-labels.json": 6,
-    "parser/skillnames.json": 7,
-    "parser/MonsterName.json": 8,
-    "parser/SceneName.json": 9,
-    "parser/BuffName.json": 10,
-    "search/BuffNameSearch.json": 11,
-    "search/resonance-skill-search.json": 12,
+    "ui/shell.json": 0,
+    "ui/dps/general.json": 1,
+    "ui/dps/live.json": 2,
+    "ui/dps/history.json": 3,
+    "ui/dps/themes.json": 4,
+    "ui/dps/settings-live.json": 5,
+    "ui/dps/settings-network.json": 6,
+    "ui/dps/settings-history.json": 7,
+    "ui/dps/settings-hotkeys.json": 8,
+    "ui/dps/settings-debug.json": 9,
+    "ui/module-calc.json": 10,
+    "ui/monster-monitor.json": 11,
+    "ui/skill-monitor/general.json": 12,
+    "ui/skill-monitor/skill-cd.json": 13,
+    "ui/skill-monitor/buff-monitor.json": 14,
+    "ui/skill-monitor/panel-attr.json": 15,
+    "ui/skill-monitor/custom-panel.json": 16,
+    "ui/localization-tool.json": 17,
+    "parser/class-labels.json": 18,
+    "parser/skillnames.json": 19,
+    "parser/MonsterName.json": 20,
+    "parser/SceneName.json": 21,
+    "parser/BuffName.json": 22,
+    "search/BuffNameSearch.json": 23,
+    "search/resonance-skill-search.json": 24,
 };
 
 function normalizeRelativePath(path: string): string {
@@ -64,9 +75,9 @@ function titleCaseWords(value: string): string {
 }
 
 function buildFallbackDisplayName(relativePath: string): string {
-    const fileName = getFileName(relativePath);
-    const withoutExtension = fileName.replace(/\.json$/i, "");
-    return titleCaseWords(withoutExtension);
+    const normalized = normalizeRelativePath(relativePath).replace(/\.json$/i, "");
+    const segments = normalized.split("/").filter(Boolean);
+    return segments.map(titleCaseWords).join(" / ");
 }
 
 function detectFileKind(relativePath: string): TranslationFileKind {
@@ -76,7 +87,7 @@ function detectFileKind(relativePath: string): TranslationFileKind {
         return "skillnames";
     }
 
-    if (normalized.endsWith("dps.json")) {
+    if (normalized.endsWith("json")) {
         return "navigation";
     }
 

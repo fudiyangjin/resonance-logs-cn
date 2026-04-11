@@ -33,7 +33,7 @@
 
   function moduleName(configId: number, fallback: string) {
     return resolveModuleCalcTranslation(
-      `moduleCalc.module.${configId}`,
+      `module.${configId}`,
       SETTINGS.live.general.state.language,
       fallback,
     );
@@ -51,7 +51,7 @@
         role="dialog"
         aria-modal="true"
         aria-label={resolveModuleCalcTranslation(
-          "moduleCalc.detailDialogLabel",
+          "detailDialogLabel",
           SETTINGS.live.general.state.language,
           "模组方案详情",
         )}
@@ -65,7 +65,7 @@
             <div class="space-y-3">
               <div class="text-xs uppercase tracking-[0.22em] text-muted-foreground">
                 {resolveModuleCalcTranslation(
-                  "moduleCalc.detailTitle",
+                  "detailTitle",
                   SETTINGS.live.general.state.language,
                   "方案详情",
                 )}
@@ -74,14 +74,14 @@
                 <div class="text-3xl font-semibold text-foreground">{solution.score}</div>
                 <div class="rounded-full border border-border/60 bg-background/80 px-3 py-1 text-sm text-muted-foreground">
                   {resolveModuleCalcTranslation(
-                    "moduleCalc.totalScore",
+                    "totalScore",
                     SETTINGS.live.general.state.language,
                     "总分",
                   )}
                 </div>
                 <div class="rounded-full border border-border/60 bg-background/80 px-3 py-1 text-sm text-muted-foreground">
                   {solution.modules.length} {resolveModuleCalcTranslation(
-                    "moduleCalc.moduleCountSuffix",
+                    "moduleCountSuffix",
                     SETTINGS.live.general.state.language,
                     "个模组",
                   )}
@@ -91,7 +91,7 @@
 
             <Button size="sm" variant="ghost" onclick={closeDialog}>
               {resolveModuleCalcTranslation(
-                "moduleCalc.close",
+                "close",
                 SETTINGS.live.general.state.language,
                 "关闭",
               )}
@@ -121,7 +121,7 @@
                       class={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getQualityClass(mod.quality)}`}
                     >
                       {resolveModuleCalcTranslation(
-                        "moduleCalc.quality",
+                        "quality",
                         SETTINGS.live.general.state.language,
                         "品质",
                       )} {mod.quality}
@@ -132,7 +132,7 @@
                 <div class="rounded-xl border border-border/50 bg-background/70 px-3 py-2 lg:text-right">
                   <div class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                     {resolveModuleCalcTranslation(
-                      "moduleCalc.totalAttributesValue",
+                      "totalAttributesValue",
                       SETTINGS.live.general.state.language,
                       "属性总值",
                     )}

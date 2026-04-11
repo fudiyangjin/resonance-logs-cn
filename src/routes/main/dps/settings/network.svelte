@@ -5,7 +5,7 @@
     import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
     import { untrack } from "svelte";
-    import { resolveNavigationTranslation } from "$lib/i18n";
+    import { uiT } from "$lib/i18n";
 
     type Device = {
         name: string;
@@ -18,6 +18,8 @@
     let mounted = $state(false);
     let initialMethod = $state<string | null>(null);
     let initialDevice = $state<string | null>(null);
+
+    const t = uiT("dps/settings-network", () => SETTINGS.live.general.state.language);
 
     async function loadDevices() {
         loading = true;
@@ -73,25 +75,13 @@
     >
         <div class="px-4 py-3">
             <h2 class="text-base font-semibold text-foreground mb-2">
-                {resolveNavigationTranslation(
-                    "dps.network.title",
-                    SETTINGS.live.general.state.language,
-                    "抓包",
-                )}
+                {t("title", "抓包")}
             </h2>
 
             <SettingsSelect
                 bind:selected={SETTINGS.packetCapture.state.method}
-                label={resolveNavigationTranslation(
-                    "dps.network.captureMethod",
-                    SETTINGS.live.general.state.language,
-                    "捕获方式",
-                )}
-                description={resolveNavigationTranslation(
-                    "dps.network.captureMethodDescription",
-                    SETTINGS.live.general.state.language,
-                    "选择用于捕获网络数据包的方法（需要重启应用）。",
-                )}
+                label={t("captureMethod", "捕获方式")}
+                description={t("captureMethodDescription", "选择用于捕获网络数据包的方法（需要重启应用）。")}
                 values={["WinDivert", "Npcap"]}
             />
 
@@ -100,11 +90,7 @@
                     <div
                         class="mt-2 p-3 bg-destructive/10 text-destructive rounded-md text-sm"
                     >
-                        {resolveNavigationTranslation(
-                            "dps.network.npcapMissing",
-                            SETTINGS.live.general.state.language,
-                            "未检测到 Npcap。请从",
-                        )}
+                        {t("npcapMissing", "未检测到 Npcap。请从")}
                         <a
                             href="https://npcap.com/"
                             target="_blank"
@@ -113,37 +99,17 @@
                             npcap.com
                         </a>
                         {" "}
-                        {resolveNavigationTranslation(
-                            "dps.network.npcapMissingSuffix",
-                            SETTINGS.live.general.state.language,
-                            "安装 Npcap 以使用该功能。",
-                        )}
+                        {t("npcapMissingSuffix", "安装 Npcap 以使用该功能。")}
                     </div>
                 {:else}
                     <SettingsDropdown
                         bind:selected={SETTINGS.packetCapture.state.npcapDevice}
-                        label={resolveNavigationTranslation(
-                            "dps.network.networkDevice",
-                            SETTINGS.live.general.state.language,
-                            "网络设备",
-                        )}
-                        description={resolveNavigationTranslation(
-                            "dps.network.networkDeviceDescription",
-                            SETTINGS.live.general.state.language,
-                            "选择用于捕获流量的网卡。",
-                        )}
+                        label={t("networkDevice", "网络设备")}
+                        description={t("networkDeviceDescription", "选择用于捕获流量的网卡。")}
                         options={deviceOptions}
                         placeholder={loading
-                            ? resolveNavigationTranslation(
-                                "dps.network.loadingDevices",
-                                SETTINGS.live.general.state.language,
-                                "正在加载设备...",
-                            )
-                            : resolveNavigationTranslation(
-                                "dps.network.selectDevice",
-                                SETTINGS.live.general.state.language,
-                                "选择设备",
-                            )}
+                            ? t("loadingDevices", "正在加载设备...")
+                            : t("selectDevice", "选择设备")}
                     />
                 {/if}
             {/if}

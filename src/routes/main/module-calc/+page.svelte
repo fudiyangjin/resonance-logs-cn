@@ -55,7 +55,7 @@
     ATTR_OPTIONS_BASE.map((option) => ({
       ...option,
       label: resolveModuleCalcTranslation(
-        `moduleCalc.attr.${option.id}`,
+        `attr.${option.id}`,
         SETTINGS.live.general.state.language,
         option.label,
       ),
@@ -73,7 +73,7 @@
       MODULE_CALC.error =
         (e as Error)?.message ??
         resolveModuleCalcTranslation(
-          "moduleCalc.fetchModulesFailed",
+          "fetchModulesFailed",
           SETTINGS.live.general.state.language,
           "拉取模组失败",
         );
@@ -116,7 +116,7 @@
       MODULE_CALC.solutions = await optimizeLatestModules(payload);
       if (MODULE_CALC.solutions.length === 0) {
         MODULE_CALC.error = resolveModuleCalcTranslation(
-          "moduleCalc.noSolutions",
+          "noSolutions",
           SETTINGS.live.general.state.language,
           "无可用方案，请调整筛选条件",
         );
@@ -130,7 +130,7 @@
       } else {
         MODULE_CALC.error =
           resolveModuleCalcTranslation(
-            "moduleCalc.calculationFailed",
+            "calculationFailed",
             SETTINGS.live.general.state.language,
             "计算失败",
           ) + ": " + JSON.stringify(e);
@@ -163,14 +163,14 @@
       <div>
         <h1 class="text-xl font-bold text-foreground">
           {resolveModuleCalcTranslation(
-            "moduleCalc.title",
+            "title",
             SETTINGS.live.general.state.language,
             "模组计算",
           )}
         </h1>
         <p class="text-sm text-muted-foreground">
           {resolveModuleCalcTranslation(
-            "moduleCalc.subtitle",
+            "subtitle",
             SETTINGS.live.general.state.language,
             "计算和优化模组配置",
           )}
@@ -189,7 +189,7 @@
           <RefreshCw class="w-4 h-4 mr-2" />
         {/if}
         {resolveModuleCalcTranslation(
-          "moduleCalc.refreshData",
+          "refreshData",
           SETTINGS.live.general.state.language,
           "刷新数据",
         )}
@@ -204,7 +204,7 @@
           <PlayIcon class="w-4 h-4 mr-2" />
         {/if}
         {resolveModuleCalcTranslation(
-          "moduleCalc.startCalculation",
+          "startCalculation",
           SETTINGS.live.general.state.language,
           "开始计算",
         )}
@@ -246,7 +246,7 @@
     <div class="flex items-center justify-between">
       <div class="text-base font-semibold text-foreground">
         {resolveModuleCalcTranslation(
-          "moduleCalc.resultsTop10",
+          "resultsTop10",
           SETTINGS.live.general.state.language,
           "计算结果 (Top 10)",
         )}
@@ -260,12 +260,12 @@
             <span>
               {MODULE_CALC.combinationSize === 5
                 ? resolveModuleCalcTranslation(
-                    "moduleCalc.loadingMultiStrategy",
+                    "loadingMultiStrategy",
                     SETTINGS.live.general.state.language,
                     "多策略计算中...",
                   )
                 : resolveModuleCalcTranslation(
-                    "moduleCalc.loadingCalculating",
+                    "loadingCalculating",
                     SETTINGS.live.general.state.language,
                     "计算中...",
                   )}

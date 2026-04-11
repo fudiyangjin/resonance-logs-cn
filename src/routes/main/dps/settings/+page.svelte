@@ -4,20 +4,22 @@
    * Contains Live settings, Network settings, Shortcuts, History, and Debug tabs.
    */
   import * as Tabs from "$lib/components/ui/tabs/index.js";
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
+  import DebugSettings from "./debug.svelte";
+  import HistorySettings from "./history.svelte";
   import LiveSettings from "./live.svelte";
   import NetworkSettings from "./network.svelte";
   import ShortcutsSettings from "./shortcuts.svelte";
-  import HistorySettings from "./history.svelte";
-  import DebugSettings from "./debug.svelte";
-  import { resolveNavigationTranslation } from "$lib/i18n";
-  import { SETTINGS } from "$lib/settings-store";
+
+  const t = uiT("dps/general", () => SETTINGS.live.general.state.language);
 
   const settingsTabs = [
-    { id: "live", key: "dps.settings.live", label: "实时" },
-    { id: "network", key: "dps.settings.network", label: "网络" },
-    { id: "shortcuts", key: "dps.settings.shortcuts", label: "快捷键" },
-    { id: "history", key: "dps.settings.history", label: "历史" },
-    { id: "debug", key: "dps.settings.debug", label: "调试" },
+    { id: "live", key: "settings.live", label: "实时" },
+    { id: "network", key: "settings.network", label: "网络" },
+    { id: "shortcuts", key: "settings.shortcuts", label: "快捷键" },
+    { id: "history", key: "settings.history", label: "历史" },
+    { id: "debug", key: "settings.debug", label: "调试" },
   ];
 
   let activeTab = $state("live");
@@ -27,12 +29,7 @@
   <Tabs.Root bind:value={activeTab}>
     <Tabs.List>
       {#each settingsTabs as tab (tab.id)}
-        <Tabs.Trigger value={tab.id}>{resolveNavigationTranslation(
-          tab.key,
-          SETTINGS.live.general.state.language,
-          tab.label,
-          )}
-        </Tabs.Trigger>
+        <Tabs.Trigger value={tab.id}>{t(tab.key, tab.label)}</Tabs.Trigger>
       {/each}
     </Tabs.List>
 

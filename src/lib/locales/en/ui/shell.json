@@ -1,0 +1,12 @@
+{
+  "history": "History",
+  "settings": "Settings",
+  "sidebar.toolbox": "Toolbox",
+  "sidebar.tools": "Tools",
+  "themes": "Themes",
+  "tool.dps": "DPS Meter",
+  "tool.localization": "Localization Tool",
+  "tool.moduleOptimizer": "Module Calculator",
+  "tool.monsterTracker": "Monster Monitor",
+  "tool.skillMonitor": "Skill Monitor"
+}
