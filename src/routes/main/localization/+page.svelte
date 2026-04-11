@@ -66,15 +66,14 @@
 
   let compareFileInput = $state<HTMLInputElement | null>(null);
 
-  let isInitializingRuntimeFiles = $state(false);
+  let isRepairingRuntimeLocaleFolder = $state(false);
   let isOpeningTranslationDir = $state(false);
   let isGeneratingBuffNameSearch = $state(false);
   let isGeneratingBuffNameTranslation = $state(false);
   let isGeneratingSceneNameTranslation = $state(false);
   let isGeneratingMonsterNameTranslation = $state(false);
   let isGeneratingSkillNameTranslation = $state(false);
-  let isGeneratingSelectedUiTranslation = $state(false);
-  let isGeneratingAllUiTranslations = $state(false);
+    let isGeneratingAllUiTranslations = $state(false);
   let showTranslationGenerateInfo = $state(false);
   let showUiJsonTabs = $state(false);
 
@@ -865,18 +864,18 @@
     rebuildCompareRows(false);
   }
 
-  async function initializeTranslationRuntimeFiles() {
-    if (isInitializingRuntimeFiles) return;
-    isInitializingRuntimeFiles = true;
+  async function repairRuntimeLocaleFolder() {
+    if (isRepairingRuntimeLocaleFolder) return;
+    isRepairingRuntimeLocaleFolder = true;
 
     try {
-      const message = await invoke<string>("initialize_translation_runtime_files");
+      const message = await invoke<string>("repair_runtime_locale_folder");
       toast.success(message);
     } catch (error) {
       console.error(error);
-      toast.error(`${t("settings.initError", "初始化运行时翻译文件失败。")} ${String(error)}`);
+      toast.error(`${t("settings.repairRuntimeLocaleError", "修复运行时语言环境文件夹失败。")} ${String(error)}`);
     } finally {
-      isInitializingRuntimeFiles = false;
+      isRepairingRuntimeLocaleFolder = false;
     }
   }
 
@@ -912,39 +911,6 @@
     } finally {
       end();
     }
-  }
-
-  function getPreferredUiGeneratorPath(): string | null {
-    const candidates = [activeEditLocalTab, activeCompareMergeTab];
-
-    for (const candidate of candidates) {
-      if (candidate?.startsWith("ui/")) {
-        return candidate;
-      }
-    }
-
-    return null;
-  }
-
-  async function generateSelectedUiTranslationScaffold() {
-    if (isGeneratingSelectedUiTranslation) return;
-
-    const relativePath = getPreferredUiGeneratorPath();
-    if (!relativePath) {
-      toast.error(t(
-        "settings.generateSelectedUiError",
-        "请先在“本地编辑”或“对比 / 合并”中选中一个 UI 文件标签。",
-      ));
-      return;
-    }
-
-    await runGenerator(
-      "generate_ui_translation_scaffold",
-      () => (isGeneratingSelectedUiTranslation = true),
-      () => (isGeneratingSelectedUiTranslation = false),
-      t("settings.generateSelectedUiError", "生成所选 UI 翻译脚手架失败。"),
-      { relativePath },
-    );
   }
 
   async function generateAllUiTranslationScaffolds() {
@@ -1597,21 +1563,21 @@ So the accurate behavior is:
               <div class="settings-debug-row">
                 <div class="settings-debug-copy">
                   <div class="settings-debug-title">
-                    {tn("debug.translationInitTitle", "初始化翻译文件")}
+                    {tn("debug.repairRuntimeLocaleTitle", "修复运行时语言环境文件夹")}
                   </div>
                   <div class="settings-debug-description">
-                    {tn("debug.translationInitDescription", "在应用数据目录中创建缺失的运行时翻译文件。")}
+                    {tn("debug.repairRuntimeLocaleDescription", "检查并修复应用数据中的运行时语言环境文件夹，补齐缺失的清单、目录与文件，并仅回填缺失项而不覆盖现有翻译。")}
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onclick={initializeTranslationRuntimeFiles}
-                  disabled={isInitializingRuntimeFiles}
+                  onclick={repairRuntimeLocaleFolder}
+                  disabled={isRepairingRuntimeLocaleFolder}
                 >
-                  {isInitializingRuntimeFiles
+                  {isRepairingRuntimeLocaleFolder
                     ? t("actions.processing", "处理中…")
-                    : tn("debug.translationInitButton", "初始化翻译文件")}
+                    : tn("debug.repairRuntimeLocaleButton", "修复运行时语言环境文件夹")}
                 </button>
               </div>
 
@@ -1633,27 +1599,6 @@ So the accurate behavior is:
                   {isOpeningTranslationDir
                     ? t("actions.processing", "处理中…")
                     : tn("debug.translationOpenButton", "打开翻译文件夹")}
-                </button>
-              </div>
-
-              <div class="settings-debug-row">
-                <div class="settings-debug-copy">
-                  <div class="settings-debug-title">
-                    {tn("debug.generateSelectedUiTitle", "生成所选 UI 运行时文件")}
-                  </div>
-                  <div class="settings-debug-description">
-                    {tn("debug.generateSelectedUiDescription", "根据当前选中的 UI 文件标签，从源码 zh-CN UI 文件生成或补齐对应的运行时文件，并保留其他语言的已有翻译。")}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onclick={generateSelectedUiTranslationScaffold}
-                  disabled={isGeneratingSelectedUiTranslation}
-                >
-                  {isGeneratingSelectedUiTranslation
-                    ? t("actions.processing", "处理中…")
-                    : tn("debug.generateSelectedUiButton", "生成所选 UI 文件")}
                 </button>
               </div>
 

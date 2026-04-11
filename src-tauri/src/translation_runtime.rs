@@ -103,6 +103,92 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<(), String> {
     Ok(())
 }
 
+fn copy_file_with_parents(src: &Path, dst: &Path) -> Result<(), String> {
+    if let Some(parent) = dst.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create {}: {e}", parent.display()))?;
+    }
+    fs::copy(src, dst)
+        .map_err(|e| format!("Failed to copy {} -> {}: {e}", src.display(), dst.display()))?;
+    Ok(())
+}
+
+fn deep_fill_missing(target: &mut Value, source: &Value) -> usize {
+    match (target, source) {
+        (Value::Object(target_map), Value::Object(source_map)) => {
+            let mut inserted = 0usize;
+            for (key, source_value) in source_map {
+                if let Some(existing_value) = target_map.get_mut(key) {
+                    inserted += deep_fill_missing(existing_value, source_value);
+                } else {
+                    target_map.insert(key.clone(), source_value.clone());
+                    inserted += 1;
+                }
+            }
+            inserted
+        }
+        _ => 0,
+    }
+}
+
+fn repair_runtime_locales_folder(app_handle: &AppHandle) -> Result<(PathBuf, usize, usize, usize), String> {
+    let source_dir = source_locales_dir(app_handle)?;
+    let runtime_dir = ensure_runtime_locales_seeded(app_handle)?;
+
+    let source_manifest_path = source_dir.join("manifest.json");
+    let runtime_manifest_path = runtime_dir.join("manifest.json");
+    if source_manifest_path.exists() {
+        copy_file_with_parents(&source_manifest_path, &runtime_manifest_path)?;
+    }
+
+    let locales = read_manifest_locales(&source_dir)?;
+    let virtual_paths = read_manifest_virtual_paths(&source_dir)?;
+
+    let mut created_files = 0usize;
+    let mut repaired_files = 0usize;
+    let mut inserted_keys = 0usize;
+
+    for locale in &locales {
+        let locale_dir = runtime_dir.join(locale);
+        fs::create_dir_all(&locale_dir)
+            .map_err(|e| format!("Failed to create {}: {e}", locale_dir.display()))?;
+
+        for relative_path in &virtual_paths {
+            let source_path = locale_dir_from_base(&source_dir, locale).join(relative_path);
+            let runtime_path = locale_dir_from_base(&runtime_dir, locale).join(relative_path);
+
+            if !runtime_path.exists() {
+                if source_path.exists() {
+                    copy_file_with_parents(&source_path, &runtime_path)?;
+                } else {
+                    write_json_file(&runtime_path, &Value::Object(Map::new()))?;
+                }
+                created_files += 1;
+                continue;
+            }
+
+            if !source_path.exists() {
+                continue;
+            }
+
+            let mut runtime_value = read_json_or_empty(&runtime_path)?;
+            let source_value = read_json_or_empty(&source_path)?;
+            let added = deep_fill_missing(&mut runtime_value, &source_value);
+            if added > 0 {
+                write_json_file(&runtime_path, &runtime_value)?;
+                repaired_files += 1;
+                inserted_keys += added;
+            }
+        }
+    }
+
+    Ok((runtime_dir, created_files, repaired_files, inserted_keys))
+}
+
+fn locale_dir_from_base(base: &Path, locale: &str) -> PathBuf {
+    base.join(locale)
+}
+
 fn ensure_runtime_locales_seeded(app_handle: &AppHandle) -> Result<PathBuf, String> {
     let runtime_dir = runtime_locales_dir(app_handle)?;
     let manifest_path = runtime_dir.join("manifest.json");
@@ -835,6 +921,34 @@ where
 pub fn initialize_translation_runtime_files(app_handle: tauri::AppHandle) -> Result<String, String> {
     let runtime_dir = ensure_runtime_locales_seeded(&app_handle)?;
     Ok(format!("Initialized runtime locale files at {}", runtime_dir.display()))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn repair_runtime_locale_folder(app_handle: tauri::AppHandle) -> Result<String, String> {
+    let (runtime_dir, created_files, repaired_files, inserted_keys) =
+        repair_runtime_locales_folder(&app_handle)?;
+    let timestamp = chrono::Utc::now().to_rfc3339();
+    app_handle
+        .emit(
+            "translation-data-refreshed",
+            serde_json::json!({
+                "dir": runtime_dir,
+                "createdCount": created_files,
+                "repairedCount": repaired_files,
+                "insertedKeyCount": inserted_keys,
+                "timestamp": timestamp,
+            }),
+        )
+        .map_err(|e| format!("Failed to emit refresh event: {e}"))?;
+
+    Ok(format!(
+        "Repaired runtime locale folder at {} (created {} files, backfilled {} files, inserted {} missing keys)",
+        runtime_dir.display(),
+        created_files,
+        repaired_files,
+        inserted_keys
+    ))
 }
 
 #[tauri::command]
