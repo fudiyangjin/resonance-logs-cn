@@ -33,6 +33,7 @@
   "classSkill.stormblade.1719": "鎌車",
   "classSkill.stormblade.1720": "心眼",
   "classSkill.stormblade.1724": "霹靂連斬",
+  "classSkill.stormblade.1728": "奥義・大破滅連斬 - 居合天賦",
   "classSkill.stormblade.1730": "果てなき雷の力",
   "classSkill.stormblade.1731": "千雷閃影の意",
   "classSkill.wind_knight.1401": "基本攻撃",
@@ -72,13 +73,12 @@
   "notConfigured": "未設定",
   "resonanceSkills": "共鳴スキル",
   "resonanceSkillsDescription": "共鳴スキルを検索して選択します。通常スキルと同じ10個の監視スロットを共有します",
+  "resourceLabel.stormblade.bar": "刀意",
+  "resourceLabel.stormblade.charges": "雷の印",
   "searchResonancePrompt": "キーワードを入力して共鳴スキルを検索",
   "searchResonanceSkills": "共鳴スキル名を検索",
   "selectedCount": "選択済み",
   "selectedResonanceSkills": "選択済み共鳴スキル",
   "skillSelection": "スキル選択",
-  "skillSelectionDescription": "最大10個のスキルを監視できます（2行 × 5列）",
-  "classSkill.stormblade.1728": "Supreme Art: Great Cataclysm Combo Slash - Iaijutsu Talent",
-  "resourceLabel.stormblade.bar": "Blade Intent",
-  "resourceLabel.stormblade.charges": "Thunder Sigil"
+  "skillSelectionDescription": "最大10個のスキルを監視できます（2行 × 5列）"
 }

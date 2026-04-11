@@ -80,6 +80,7 @@ pub fn run() {
             module_optimizer::commands::get_latest_modules,
             module_optimizer::commands::optimize_latest_modules,
             translation_runtime::initialize_translation_runtime_files,
+            translation_runtime::get_translation_runtime_status,
             translation_runtime::repair_runtime_locale_folder,
             translation_runtime::open_translation_data_dir,
             translation_runtime::refresh_translation_runtime_data,

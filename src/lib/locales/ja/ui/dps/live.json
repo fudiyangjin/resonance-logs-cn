@@ -226,9 +226,9 @@
   "historyDetail.classIcon": "クラスアイコン",
   "historyDetail.player": "プレイヤー",
   "historyDetail.unknownClass": "不明なクラス",
-  "live.classIconAlt": "Class icon",
+  "live.classIconAlt": "クラスアイコン",
   "live.pauseToast": "戦闘を一時停止しました",
   "live.resetToast": "戦闘記録をリセットしました",
   "live.resumeToast": "戦闘を再開しました",
-  "live.unknownClass": "Unknown Class"
+  "live.unknownClass": "不明なクラス"
 }

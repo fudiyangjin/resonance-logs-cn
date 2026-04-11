@@ -1,28 +1,102 @@
+use serde::Serialize;
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Emitter, Manager};
 
-fn source_locales_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
+fn looks_like_locales_dir(path: &Path) -> bool {
+    path.join("manifest.json").exists()
+}
+
+fn source_locales_candidates(app_handle: &AppHandle) -> Result<Vec<PathBuf>, String> {
+    let mut candidates = Vec::new();
+
     let dev_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../src/lib/locales");
-    if dev_path.exists() {
-        return Ok(dev_path);
+    candidates.push(dev_path);
+
+    if let Ok(resource_dir) = app_handle.path().resource_dir() {
+        candidates.push(resource_dir.join("locales"));
+        candidates.push(resource_dir.join("src/lib/locales"));
+        candidates.push(resource_dir.join("resources/locales"));
+        if let Some(parent) = resource_dir.parent() {
+            candidates.push(parent.join("locales"));
+            candidates.push(parent.join("Resources/locales"));
+        }
     }
 
-    let resource_dir = app_handle
-        .path()
-        .resource_dir()
-        .map_err(|e| format!("Failed to resolve resource dir: {e}"))?;
-    let bundled_path = resource_dir.join("locales");
-    if bundled_path.exists() {
-        return Ok(bundled_path);
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            candidates.push(exe_dir.join("locales"));
+            candidates.push(exe_dir.join("resources/locales"));
+            candidates.push(exe_dir.join("Resources/locales"));
+            if let Some(parent) = exe_dir.parent() {
+                candidates.push(parent.join("locales"));
+                candidates.push(parent.join("resources/locales"));
+                candidates.push(parent.join("Resources/locales"));
+            }
+        }
     }
+
+    let mut unique = Vec::new();
+    for candidate in candidates {
+        if !unique.iter().any(|existing: &PathBuf| existing == &candidate) {
+            unique.push(candidate);
+        }
+    }
+
+    Ok(unique)
+}
+
+fn find_locales_dir_under(root: &Path, max_depth: usize) -> Option<PathBuf> {
+    fn walk(path: &Path, depth: usize, max_depth: usize) -> Option<PathBuf> {
+        if depth > max_depth {
+            return None;
+        }
+        if looks_like_locales_dir(path) {
+            return Some(path.to_path_buf());
+        }
+        let entries = fs::read_dir(path).ok()?;
+        for entry in entries.flatten() {
+            let child = entry.path();
+            if child.is_dir() {
+                if let Some(found) = walk(&child, depth + 1, max_depth) {
+                    return Some(found);
+                }
+            }
+        }
+        None
+    }
+
+    if !root.exists() {
+        return None;
+    }
+
+    walk(root, 0, max_depth)
+}
+
+fn source_locales_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
+    let candidates = source_locales_candidates(app_handle)?;
+    for candidate in &candidates {
+        if looks_like_locales_dir(candidate) {
+            return Ok(candidate.clone());
+        }
+    }
+
+    if let Ok(resource_dir) = app_handle.path().resource_dir() {
+        if let Some(found) = find_locales_dir_under(&resource_dir, 4) {
+            return Ok(found);
+        }
+    }
+
+    let checked = candidates
+        .iter()
+        .map(|path| path.display().to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
 
     Err(format!(
-        "Could not locate bundled locales directory (checked {} and {})",
-        dev_path.display(),
-        bundled_path.display()
+        "Could not locate bundled locales directory (checked: {checked})"
     ))
 }
 
@@ -916,6 +990,50 @@ where
     Ok(())
 }
 
+#[derive(Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TranslationRuntimeStatus {
+    pub runtime_dir: String,
+    pub runtime_exists: bool,
+    pub runtime_manifest_exists: bool,
+    pub source_dir: Option<String>,
+    pub source_exists: bool,
+    pub source_manifest_exists: bool,
+    pub source_candidates: Vec<String>,
+    pub source_error: Option<String>,
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn get_translation_runtime_status(app_handle: tauri::AppHandle) -> Result<TranslationRuntimeStatus, String> {
+    let runtime_dir = runtime_locales_dir(&app_handle)?;
+    let runtime_manifest_path = runtime_dir.join("manifest.json");
+    let source_candidates = source_locales_candidates(&app_handle)?
+        .into_iter()
+        .map(|path| path.display().to_string())
+        .collect::<Vec<_>>();
+
+    let source_result = source_locales_dir(&app_handle);
+    let (source_dir, source_exists, source_manifest_exists, source_error) = match source_result {
+        Ok(path) => {
+            let manifest_exists = path.join("manifest.json").exists();
+            (Some(path.display().to_string()), path.exists(), manifest_exists, None)
+        }
+        Err(error) => (None, false, false, Some(error)),
+    };
+
+    Ok(TranslationRuntimeStatus {
+        runtime_dir: runtime_dir.display().to_string(),
+        runtime_exists: runtime_dir.exists(),
+        runtime_manifest_exists: runtime_manifest_path.exists(),
+        source_dir,
+        source_exists,
+        source_manifest_exists,
+        source_candidates,
+        source_error,
+    })
+}
+
 #[tauri::command]
 #[specta::specta]
 pub fn initialize_translation_runtime_files(app_handle: tauri::AppHandle) -> Result<String, String> {
@@ -954,7 +1072,10 @@ pub fn repair_runtime_locale_folder(app_handle: tauri::AppHandle) -> Result<Stri
 #[tauri::command]
 #[specta::specta]
 pub fn open_translation_data_dir(app_handle: tauri::AppHandle) -> Result<(), String> {
-    let runtime_dir = ensure_runtime_locales_seeded(&app_handle)?;
+    let runtime_dir = runtime_locales_dir(&app_handle)?;
+    fs::create_dir_all(&runtime_dir)
+        .map_err(|e| format!("Failed to create translation dir {}: {e}", runtime_dir.display()))?;
+    let _ = ensure_runtime_locales_seeded(&app_handle);
     #[cfg(target_os = "windows")]
     {
         std::process::Command::new("explorer")

@@ -33,6 +33,7 @@
   "classSkill.stormblade.1719": "낫바퀴",
   "classSkill.stormblade.1720": "심안",
   "classSkill.stormblade.1724": "뇌명 연속 참격",
+  "classSkill.stormblade.1728": "극의·대파멸 연속베기 - 거합 특성",
   "classSkill.stormblade.1730": "끝없는 뇌전의 힘",
   "classSkill.stormblade.1731": "천뢰영의 의지",
   "classSkill.wind_knight.1401": "기본 공격",
@@ -72,13 +73,12 @@
   "notConfigured": "설정되지 않음",
   "resonanceSkills": "공명 스킬",
   "resonanceSkillsDescription": "공명 스킬을 검색하고 선택합니다. 일반 스킬과 동일한 10개 모니터링 슬롯을 공유합니다",
+  "resourceLabel.stormblade.bar": "도의",
+  "resourceLabel.stormblade.charges": "뇌의 인장",
   "searchResonancePrompt": "공명 스킬 검색 키워드를 입력하세요",
   "searchResonanceSkills": "공명 스킬 이름 검색",
   "selectedCount": "선택됨",
   "selectedResonanceSkills": "선택된 공명 스킬",
   "skillSelection": "스킬 선택",
-  "skillSelectionDescription": "최대 10개의 스킬(2행 × 5열)을 모니터링합니다",
-  "classSkill.stormblade.1728": "Supreme Art: Great Cataclysm Combo Slash - Iaijutsu Talent",
-  "resourceLabel.stormblade.bar": "Blade Intent",
-  "resourceLabel.stormblade.charges": "Thunder Sigil"
+  "skillSelectionDescription": "최대 10개의 스킬(2행 × 5열)을 모니터링합니다"
 }

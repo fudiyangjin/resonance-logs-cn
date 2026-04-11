@@ -99,5 +99,20 @@
   "debug.repairRuntimeLocaleButton": "Repair Runtime Locale Folder",
   "debug.repairRuntimeLocaleDescription": "Check and repair the runtime locale folder in app data, restore missing manifest entries, folders, and files, and only backfill missing items without overwriting existing translations.",
   "debug.repairRuntimeLocaleTitle": "Repair Runtime Locale Folder",
-  "settings.repairRuntimeLocaleError": "Failed to repair the runtime locale folder."
+  "settings.repairRuntimeLocaleError": "Failed to repair the runtime locale folder.",
+  "debug.runtimePathsTitle": "Runtime Locale Path Status",
+  "debug.runtimePathsDescription": "Shows how the app data runtime locale folder and the bundled source locale folder were resolved, so packaged-build translation folder issues are easier to debug.",
+  "debug.runtimeLocalePathLabel": "Runtime Locale Path",
+  "debug.runtimeLocaleExistsLabel": "Runtime Directory Exists",
+  "debug.runtimeManifestExistsLabel": "Runtime Manifest Exists",
+  "debug.sourceLocalePathLabel": "Source Locale Path",
+  "debug.sourceLocaleExistsLabel": "Source Directory Exists",
+  "debug.sourceManifestExistsLabel": "Source Manifest Exists",
+  "debug.sourceResolutionErrorLabel": "Source Resolution Error",
+  "debug.pathMissing": "Not Found",
+  "debug.statusYes": "Yes",
+  "debug.statusNo": "No",
+  "debug.refreshStatusButton": "Refresh Path Status",
+  "settings.translationStatusError": "Failed to read the translation runtime status.",
+  "settings.general.title": "General"
 }

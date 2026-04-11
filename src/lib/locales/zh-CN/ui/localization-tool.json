@@ -99,5 +99,20 @@
   "debug.repairRuntimeLocaleButton": "修复运行时语言环境文件夹",
   "debug.repairRuntimeLocaleDescription": "检查并修复应用数据中的运行时语言环境文件夹，补齐缺失的清单、目录与文件，并仅回填缺失项而不覆盖现有翻译。",
   "debug.repairRuntimeLocaleTitle": "修复运行时语言环境文件夹",
-  "settings.repairRuntimeLocaleError": "修复运行时语言环境文件夹失败。"
+  "settings.repairRuntimeLocaleError": "修复运行时语言环境文件夹失败。",
+  "debug.runtimePathsTitle": "运行时语言环境路径状态",
+  "debug.runtimePathsDescription": "显示应用数据运行时语言环境目录与打包源语言环境目录的解析状态，便于排查安装版无法创建或修复翻译文件的问题。",
+  "debug.runtimeLocalePathLabel": "运行时语言环境路径",
+  "debug.runtimeLocaleExistsLabel": "运行时目录存在",
+  "debug.runtimeManifestExistsLabel": "运行时清单存在",
+  "debug.sourceLocalePathLabel": "源语言环境路径",
+  "debug.sourceLocaleExistsLabel": "源目录存在",
+  "debug.sourceManifestExistsLabel": "源清单存在",
+  "debug.sourceResolutionErrorLabel": "源路径解析错误",
+  "debug.pathMissing": "未找到",
+  "debug.statusYes": "是",
+  "debug.statusNo": "否",
+  "debug.refreshStatusButton": "刷新路径状态",
+  "settings.translationStatusError": "读取翻译运行时状态失败。",
+  "settings.general.title": "常规设置"
 }

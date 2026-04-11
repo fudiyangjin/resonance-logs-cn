@@ -256,7 +256,7 @@
   "themes.general.customColorThemeTitle": "사용자 지정 색상 테마",
   "themes.general.customFonts": "사용자 정의 글꼴",
   "themes.general.customFontsDescription": "기본 글꼴을 대체할 사용자 지정 글꼴을 가져옵니다. 지원 형식: .woff2, .woff, .ttf, .otf",
-  "themes.general.customFontsIntro": "Import custom fonts to replace the defaults. Supported font file formats: .woff2, .woff, .ttf, and .otf.",
+  "themes.general.customFontsIntro": "기본 글꼴을 대체할 사용자 지정 글꼴을 가져옵니다. 지원 형식: .woff2, .woff, .ttf, .otf.",
   "themes.general.enableBackgroundImage": "사용 배경 이미지",
   "themes.general.enableBackgroundImageDescription": "배경으로 이미지를 사용합니다.",
   "themes.general.enableCustomMono": "사용자 정의 고정폭 글꼴 사용",

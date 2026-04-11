@@ -76,6 +76,22 @@
     let isGeneratingAllUiTranslations = $state(false);
   let showTranslationGenerateInfo = $state(false);
   let showUiJsonTabs = $state(false);
+  let showGeneralSettings = $state(true);
+  let showTranslationDebugSettings = $state(true);
+
+  type TranslationRuntimeStatus = {
+    runtimeDir: string;
+    runtimeExists: boolean;
+    runtimeManifestExists: boolean;
+    sourceDir: string | null;
+    sourceExists: boolean;
+    sourceManifestExists: boolean;
+    sourceCandidates: string[];
+    sourceError: string | null;
+  };
+
+  let translationRuntimeStatus = $state<TranslationRuntimeStatus | null>(null);
+  let isLoadingTranslationRuntimeStatus = $state(false);
 
   const visibleEditLocalRows = $derived(
     filterTranslationRows(editLocalRows, searchQuery, editShowAllRows),
@@ -864,6 +880,20 @@
     rebuildCompareRows(false);
   }
 
+  async function loadTranslationRuntimeStatus() {
+    if (isLoadingTranslationRuntimeStatus) return;
+    isLoadingTranslationRuntimeStatus = true;
+
+    try {
+      translationRuntimeStatus = await invoke<TranslationRuntimeStatus>("get_translation_runtime_status");
+    } catch (error) {
+      console.error(error);
+      toast.error(`${tn("settings.translationStatusError", "读取翻译运行时状态失败。")} ${String(error)}`);
+    } finally {
+      isLoadingTranslationRuntimeStatus = false;
+    }
+  }
+
   async function repairRuntimeLocaleFolder() {
     if (isRepairingRuntimeLocaleFolder) return;
     isRepairingRuntimeLocaleFolder = true;
@@ -876,6 +906,7 @@
       toast.error(`${t("settings.repairRuntimeLocaleError", "修复运行时语言环境文件夹失败。")} ${String(error)}`);
     } finally {
       isRepairingRuntimeLocaleFolder = false;
+      await loadTranslationRuntimeStatus();
     }
   }
 
@@ -890,6 +921,7 @@
       toast.error(`${t("settings.openDirError", "打开翻译文件夹失败。")} ${String(error)}`);
     } finally {
       isOpeningTranslationDir = false;
+      await loadTranslationRuntimeStatus();
     }
   }
 
@@ -1060,6 +1092,7 @@ So the accurate behavior is:
 
   onMount(() => {
     void loadTabs();
+    void loadTranslationRuntimeStatus();
   });
 </script>
 
@@ -1517,9 +1550,52 @@ So the accurate behavior is:
       <div class="panel">
         <div class="settings-debug-panel">
           <div class="settings-group">
+            <div class="settings-group-header">
+              <button
+                type="button"
+                class="settings-collapse-button"
+                onclick={() => (showGeneralSettings = !showGeneralSettings)}
+                aria-expanded={showGeneralSettings}
+              >
+                <span class="settings-collapse-button-label">{t("settings.general.title", "常规设置")}</span>
+                <span class="settings-collapse-chevron" aria-hidden="true">{showGeneralSettings ? "▾" : "▸"}</span>
+              </button>
+            </div>
+
+            {#if showGeneralSettings}
+              <div class="settings-debug-body">
+                <div class="settings-debug-row">
+                  <div class="settings-debug-copy">
+                    <div class="settings-debug-title">
+                      {t("settings.visibility.uiJsons.title", "UI / 搜索 JSON 标签页")}
+                    </div>
+                    <div class="settings-debug-description">
+                      {t("settings.visibility.uiJsons.description", "在“本地编辑”和“对比 / 合并”中显示或隐藏 UI 与搜索 JSON 行。")}
+                    </div>
+                  </div>
+
+                  <button type="button" onclick={() => (showUiJsonTabs = !showUiJsonTabs)}>
+                    {showUiJsonTabs
+                      ? t("settings.visibility.uiJsons.hide", "隐藏 UI / 搜索 JSON")
+                      : t("settings.visibility.uiJsons.show", "显示 UI / 搜索 JSON")}
+                  </button>
+                </div>
+              </div>
+            {/if}
+          </div>
+
+          <div class="settings-group">
             <div class="settings-group-header settings-group-header-inline">
-              <div class="settings-title-with-icon">
-                <h2>{t("settings.translationDebug.title", "翻译调试设置")}</h2>
+              <div class="settings-header-main">
+                <button
+                  type="button"
+                  class="settings-collapse-button settings-collapse-button-inline settings-collapse-button-text"
+                  onclick={() => (showTranslationDebugSettings = !showTranslationDebugSettings)}
+                  aria-expanded={showTranslationDebugSettings}
+                >
+                  <span class="settings-collapse-button-label">{t("settings.translationDebug.title", "翻译调试设置")}</span>
+                </button>
+
                 <button
                   type="button"
                   class="settings-info-icon-button"
@@ -1531,6 +1607,21 @@ So the accurate behavior is:
                   ⓘ
                 </button>
               </div>
+
+              <button
+                type="button"
+                class="settings-collapse-icon-button"
+                onclick={() => (showTranslationDebugSettings = !showTranslationDebugSettings)}
+                aria-expanded={showTranslationDebugSettings}
+                aria-label={showTranslationDebugSettings
+                  ? t("settings.collapse.hide", "收起")
+                  : t("settings.collapse.show", "展开")}
+                title={showTranslationDebugSettings
+                  ? t("settings.collapse.hide", "收起")
+                  : t("settings.collapse.show", "展开")}
+              >
+                <span class="settings-collapse-chevron" aria-hidden="true">{showTranslationDebugSettings ? "▾" : "▸"}</span>
+              </button>
             </div>
 
             {#if showTranslationGenerateInfo}
@@ -1542,192 +1633,233 @@ So the accurate behavior is:
               </div>
             {/if}
 
-            <div class="settings-debug-body">
-              <div class="settings-debug-row">
-                <div class="settings-debug-copy">
-                  <div class="settings-debug-title">
-                    {t("settings.visibility.uiJsons.title", "UI / 搜索 JSON 标签页")}
+            {#if showTranslationDebugSettings}
+              <div class="settings-debug-body">
+                <div class="settings-debug-row settings-debug-row-status">
+                  <div class="settings-debug-copy">
+                    <div class="settings-debug-title">
+                      {tn("debug.runtimePathsTitle", "运行时语言环境路径状态")}
+                    </div>
+                    <div class="settings-debug-description">
+                      {tn("debug.runtimePathsDescription", "显示应用数据运行时语言环境目录与打包源语言环境目录的解析状态，便于排查安装版无法创建或修复翻译文件的问题。")}
+                    </div>
+
+                    {#if translationRuntimeStatus}
+                      <div class="settings-debug-status-grid">
+                        <div class="settings-debug-status-line">
+                          <span class="settings-debug-status-label">{tn("debug.runtimeLocalePathLabel", "运行时语言环境路径")}</span>
+                          <code>{translationRuntimeStatus.runtimeDir}</code>
+                        </div>
+                        <div class="settings-debug-status-line">
+                          <span class="settings-debug-status-label">{tn("debug.runtimeLocaleExistsLabel", "运行时目录存在")}</span>
+                          <span>{translationRuntimeStatus.runtimeExists ? tn("debug.statusYes", "是") : tn("debug.statusNo", "否")}</span>
+                        </div>
+                        <div class="settings-debug-status-line">
+                          <span class="settings-debug-status-label">{tn("debug.runtimeManifestExistsLabel", "运行时清单存在")}</span>
+                          <span>{translationRuntimeStatus.runtimeManifestExists ? tn("debug.statusYes", "是") : tn("debug.statusNo", "否")}</span>
+                        </div>
+                        <div class="settings-debug-status-line">
+                          <span class="settings-debug-status-label">{tn("debug.sourceLocalePathLabel", "源语言环境路径")}</span>
+                          <code>{translationRuntimeStatus.sourceDir ?? tn("debug.pathMissing", "未找到")}</code>
+                        </div>
+                        <div class="settings-debug-status-line">
+                          <span class="settings-debug-status-label">{tn("debug.sourceLocaleExistsLabel", "源目录存在")}</span>
+                          <span>{translationRuntimeStatus.sourceExists ? tn("debug.statusYes", "是") : tn("debug.statusNo", "否")}</span>
+                        </div>
+                        <div class="settings-debug-status-line">
+                          <span class="settings-debug-status-label">{tn("debug.sourceManifestExistsLabel", "源清单存在")}</span>
+                          <span>{translationRuntimeStatus.sourceManifestExists ? tn("debug.statusYes", "是") : tn("debug.statusNo", "否")}</span>
+                        </div>
+                        {#if translationRuntimeStatus.sourceError}
+                          <div class="settings-debug-status-line settings-debug-status-line-error">
+                            <span class="settings-debug-status-label">{tn("debug.sourceResolutionErrorLabel", "源路径解析错误")}</span>
+                            <span>{translationRuntimeStatus.sourceError}</span>
+                          </div>
+                        {/if}
+                      </div>
+                    {/if}
                   </div>
-                  <div class="settings-debug-description">
-                    {t("settings.visibility.uiJsons.description", "在“本地编辑”和“对比 / 合并”中显示或隐藏 UI 与搜索 JSON 行。")}
-                  </div>
+
+                  <button
+                    type="button"
+                    onclick={loadTranslationRuntimeStatus}
+                    disabled={isLoadingTranslationRuntimeStatus}
+                  >
+                    {isLoadingTranslationRuntimeStatus
+                      ? t("actions.processing", "处理中…")
+                      : tn("debug.refreshStatusButton", "刷新路径状态")}
+                  </button>
                 </div>
 
-                <button type="button" onclick={() => (showUiJsonTabs = !showUiJsonTabs)}>
-                  {showUiJsonTabs
-                    ? t("settings.visibility.uiJsons.hide", "隐藏 UI / 搜索 JSON")
-                    : t("settings.visibility.uiJsons.show", "显示 UI / 搜索 JSON")}
-                </button>
-              </div>
+                <div class="settings-debug-row">
+                  <div class="settings-debug-copy">
+                    <div class="settings-debug-title">
+                      {tn("debug.repairRuntimeLocaleTitle", "修复运行时语言环境文件夹")}
+                    </div>
+                    <div class="settings-debug-description">
+                      {tn("debug.repairRuntimeLocaleDescription", "检查并修复应用数据中的运行时语言环境文件夹，补齐缺失的清单、目录与文件，并仅回填缺失项而不覆盖现有翻译。")}
+                    </div>
+                  </div>
 
-              <div class="settings-debug-row">
-                <div class="settings-debug-copy">
-                  <div class="settings-debug-title">
-                    {tn("debug.repairRuntimeLocaleTitle", "修复运行时语言环境文件夹")}
-                  </div>
-                  <div class="settings-debug-description">
-                    {tn("debug.repairRuntimeLocaleDescription", "检查并修复应用数据中的运行时语言环境文件夹，补齐缺失的清单、目录与文件，并仅回填缺失项而不覆盖现有翻译。")}
-                  </div>
+                  <button
+                    type="button"
+                    onclick={repairRuntimeLocaleFolder}
+                    disabled={isRepairingRuntimeLocaleFolder}
+                  >
+                    {isRepairingRuntimeLocaleFolder
+                      ? t("actions.processing", "处理中…")
+                      : tn("debug.repairRuntimeLocaleButton", "修复运行时语言环境文件夹")}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onclick={repairRuntimeLocaleFolder}
-                  disabled={isRepairingRuntimeLocaleFolder}
-                >
-                  {isRepairingRuntimeLocaleFolder
-                    ? t("actions.processing", "处理中…")
-                    : tn("debug.repairRuntimeLocaleButton", "修复运行时语言环境文件夹")}
-                </button>
-              </div>
+                <div class="settings-debug-row">
+                  <div class="settings-debug-copy">
+                    <div class="settings-debug-title">
+                      {tn("debug.translationOpenTitle", "打开翻译文件夹")}
+                    </div>
+                    <div class="settings-debug-description">
+                      {tn("debug.translationOpenDescription", "打开应用数据中的运行时翻译目录。")}
+                    </div>
+                  </div>
 
-              <div class="settings-debug-row">
-                <div class="settings-debug-copy">
-                  <div class="settings-debug-title">
-                    {tn("debug.translationOpenTitle", "打开翻译文件夹")}
-                  </div>
-                  <div class="settings-debug-description">
-                    {tn("debug.translationOpenDescription", "打开应用数据中的运行时翻译目录。")}
-                  </div>
+                  <button
+                    type="button"
+                    onclick={openTranslationDataDir}
+                    disabled={isOpeningTranslationDir}
+                  >
+                    {isOpeningTranslationDir
+                      ? t("actions.processing", "处理中…")
+                      : tn("debug.translationOpenButton", "打开翻译文件夹")}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onclick={openTranslationDataDir}
-                  disabled={isOpeningTranslationDir}
-                >
-                  {isOpeningTranslationDir
-                    ? t("actions.processing", "处理中…")
-                    : tn("debug.translationOpenButton", "打开翻译文件夹")}
-                </button>
-              </div>
+                <div class="settings-debug-row">
+                  <div class="settings-debug-copy">
+                    <div class="settings-debug-title">
+                      {tn("debug.generateAllUiTitle", "生成全部 UI 运行时文件")}
+                    </div>
+                    <div class="settings-debug-description">
+                      {tn("debug.generateAllUiDescription", "根据源码 UI 文件结构，为所有 UI 工具 / 功能文件生成或补齐对应的运行时文件，并保留其他语言的已有翻译。")}
+                    </div>
+                  </div>
 
-              <div class="settings-debug-row">
-                <div class="settings-debug-copy">
-                  <div class="settings-debug-title">
-                    {tn("debug.generateAllUiTitle", "生成全部 UI 运行时文件")}
-                  </div>
-                  <div class="settings-debug-description">
-                    {tn("debug.generateAllUiDescription", "根据源码 UI 文件结构，为所有 UI 工具 / 功能文件生成或补齐对应的运行时文件，并保留其他语言的已有翻译。")}
-                  </div>
+                  <button
+                    type="button"
+                    onclick={generateAllUiTranslationScaffolds}
+                    disabled={isGeneratingAllUiTranslations}
+                  >
+                    {isGeneratingAllUiTranslations
+                      ? t("actions.processing", "处理中…")
+                      : tn("debug.generateAllUiButton", "生成全部 UI 文件")}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onclick={generateAllUiTranslationScaffolds}
-                  disabled={isGeneratingAllUiTranslations}
-                >
-                  {isGeneratingAllUiTranslations
-                    ? t("actions.processing", "处理中…")
-                    : tn("debug.generateAllUiButton", "生成全部 UI 文件")}
-                </button>
-              </div>
+                <div class="settings-debug-row">
+                  <div class="settings-debug-copy">
+                    <div class="settings-debug-title">
+                      {tn("debug.generateBuffNameSearchTitle", "生成 BuffNameSearch 运行时文件")}
+                    </div>
+                    <div class="settings-debug-description">
+                      {tn("debug.generateBuffNameSearchDescription", "根据 src/lib/config/BuffName.json 在 AppData 中生成或更新各语言的 search/BuffNameSearch.json 运行时文件。")}
+                    </div>
+                  </div>
 
-              <div class="settings-debug-row">
-                <div class="settings-debug-copy">
-                  <div class="settings-debug-title">
-                    {tn("debug.generateBuffNameSearchTitle", "生成 BuffNameSearch 运行时文件")}
-                  </div>
-                  <div class="settings-debug-description">
-                    {tn("debug.generateBuffNameSearchDescription", "根据 src/lib/config/BuffName.json 在 AppData 中生成或更新各语言的 search/BuffNameSearch.json 运行时文件。")}
-                  </div>
+                  <button
+                    type="button"
+                    onclick={generateBuffNameSearchScaffold}
+                    disabled={isGeneratingBuffNameSearch}
+                  >
+                    {isGeneratingBuffNameSearch
+                      ? t("actions.processing", "处理中…")
+                      : tn("debug.generateBuffNameSearchButton", "生成 BuffNameSearch")}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onclick={generateBuffNameSearchScaffold}
-                  disabled={isGeneratingBuffNameSearch}
-                >
-                  {isGeneratingBuffNameSearch
-                    ? t("actions.processing", "处理中…")
-                    : tn("debug.generateBuffNameSearchButton", "生成 BuffNameSearch")}
-                </button>
-              </div>
+                <div class="settings-debug-row">
+                  <div class="settings-debug-copy">
+                    <div class="settings-debug-title">
+                      {tn("debug.generateBuffNameTitle", "生成 BuffName 运行时文件")}
+                    </div>
+                    <div class="settings-debug-description">
+                      {tn("debug.generateBuffNameDescription", "根据 src/lib/config/BuffName.json 在 AppData 中生成或更新各语言的 parser/BuffName.json 运行时文件。")}
+                    </div>
+                  </div>
 
-              <div class="settings-debug-row">
-                <div class="settings-debug-copy">
-                  <div class="settings-debug-title">
-                    {tn("debug.generateBuffNameTitle", "生成 BuffName 运行时文件")}
-                  </div>
-                  <div class="settings-debug-description">
-                    {tn("debug.generateBuffNameDescription", "根据 src/lib/config/BuffName.json 在 AppData 中生成或更新各语言的 parser/BuffName.json 运行时文件。")}
-                  </div>
+                  <button
+                    type="button"
+                    onclick={generateBuffNameTranslationScaffold}
+                    disabled={isGeneratingBuffNameTranslation}
+                  >
+                    {isGeneratingBuffNameTranslation
+                      ? t("actions.processing", "处理中…")
+                      : tn("debug.generateBuffNameButton", "生成 BuffName")}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onclick={generateBuffNameTranslationScaffold}
-                  disabled={isGeneratingBuffNameTranslation}
-                >
-                  {isGeneratingBuffNameTranslation
-                    ? t("actions.processing", "处理中…")
-                    : tn("debug.generateBuffNameButton", "生成 BuffName")}
-                </button>
-              </div>
+                <div class="settings-debug-row">
+                  <div class="settings-debug-copy">
+                    <div class="settings-debug-title">
+                      {tn("debug.generateSceneNameTitle", "生成 SceneName 运行时文件")}
+                    </div>
+                    <div class="settings-debug-description">
+                      {tn("debug.generateSceneNameDescription", "根据 src-tauri/meter-data/SceneName.json 在 AppData 中生成或更新各语言的 parser/SceneName.json 运行时文件。")}
+                    </div>
+                  </div>
 
-              <div class="settings-debug-row">
-                <div class="settings-debug-copy">
-                  <div class="settings-debug-title">
-                    {tn("debug.generateSceneNameTitle", "生成 SceneName 运行时文件")}
-                  </div>
-                  <div class="settings-debug-description">
-                    {tn("debug.generateSceneNameDescription", "根据 src-tauri/meter-data/SceneName.json 在 AppData 中生成或更新各语言的 parser/SceneName.json 运行时文件。")}
-                  </div>
+                  <button
+                    type="button"
+                    onclick={generateSceneNameTranslationScaffold}
+                    disabled={isGeneratingSceneNameTranslation}
+                  >
+                    {isGeneratingSceneNameTranslation
+                      ? t("actions.processing", "处理中…")
+                      : tn("debug.generateSceneNameButton", "生成 SceneName")}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onclick={generateSceneNameTranslationScaffold}
-                  disabled={isGeneratingSceneNameTranslation}
-                >
-                  {isGeneratingSceneNameTranslation
-                    ? t("actions.processing", "处理中…")
-                    : tn("debug.generateSceneNameButton", "生成 SceneName")}
-                </button>
-              </div>
+                <div class="settings-debug-row">
+                  <div class="settings-debug-copy">
+                    <div class="settings-debug-title">
+                      {tn("debug.generateMonsterNameTitle", "生成 MonsterName 运行时文件")}
+                    </div>
+                    <div class="settings-debug-description">
+                      {tn("debug.generateMonsterNameDescription", "根据 src-tauri/meter-data/MonsterIdNameType.json 在 AppData 中生成或更新各语言的 parser/MonsterName.json 运行时文件。")}
+                    </div>
+                  </div>
 
-              <div class="settings-debug-row">
-                <div class="settings-debug-copy">
-                  <div class="settings-debug-title">
-                    {tn("debug.generateMonsterNameTitle", "生成 MonsterName 运行时文件")}
-                  </div>
-                  <div class="settings-debug-description">
-                    {tn("debug.generateMonsterNameDescription", "根据 src-tauri/meter-data/MonsterIdNameType.json 在 AppData 中生成或更新各语言的 parser/MonsterName.json 运行时文件。")}
-                  </div>
+                  <button
+                    type="button"
+                    onclick={generateMonsterNameTranslationScaffold}
+                    disabled={isGeneratingMonsterNameTranslation}
+                  >
+                    {isGeneratingMonsterNameTranslation
+                      ? t("actions.processing", "处理中…")
+                      : tn("debug.generateMonsterNameButton", "生成 MonsterName")}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onclick={generateMonsterNameTranslationScaffold}
-                  disabled={isGeneratingMonsterNameTranslation}
-                >
-                  {isGeneratingMonsterNameTranslation
-                    ? t("actions.processing", "处理中…")
-                    : tn("debug.generateMonsterNameButton", "生成 MonsterName")}
-                </button>
-              </div>
+                <div class="settings-debug-row">
+                  <div class="settings-debug-copy">
+                    <div class="settings-debug-title">
+                      {tn("debug.generateSkillNamesTitle", "生成技能翻译运行时文件")}
+                    </div>
+                    <div class="settings-debug-description">
+                      {tn("debug.generateSkillNamesDescription", "根据 RecountTable.json、DamageAttrIdName.json、SkillEffectTable.json、SkillFightLevelTable.json 与 TempAttrTable.json，在 AppData 中生成或更新各语言的 parser/skillnames.json 运行时文件。")}
+                    </div>
+                  </div>
 
-              <div class="settings-debug-row">
-                <div class="settings-debug-copy">
-                  <div class="settings-debug-title">
-                    {tn("debug.generateSkillNamesTitle", "生成技能翻译运行时文件")}
-                  </div>
-                  <div class="settings-debug-description">
-                    {tn("debug.generateSkillNamesDescription", "根据 RecountTable.json、DamageAttrIdName.json、SkillEffectTable.json、SkillFightLevelTable.json 与 TempAttrTable.json，在 AppData 中生成或更新各语言的 parser/skillnames.json 运行时文件。")}
-                  </div>
+                  <button
+                    type="button"
+                    onclick={generateSkillNameTranslationScaffold}
+                    disabled={isGeneratingSkillNameTranslation}
+                  >
+                    {isGeneratingSkillNameTranslation
+                      ? t("actions.processing", "处理中…")
+                      : tn("debug.generateSkillNamesButton", "生成技能翻译")}
+                  </button>
                 </div>
-
-                <button
-                  type="button"
-                  onclick={generateSkillNameTranslationScaffold}
-                  disabled={isGeneratingSkillNameTranslation}
-                >
-                  {isGeneratingSkillNameTranslation
-                    ? t("actions.processing", "处理中…")
-                    : tn("debug.generateSkillNamesButton", "生成技能翻译")}
-                </button>
               </div>
-            </div>
+            {/if}
           </div>
         </div>
       </div>
@@ -2202,14 +2334,42 @@ So the accurate behavior is:
 
   .settings-debug-panel {
     display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
     flex-direction: column;
     gap: 18px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
+    padding-right: 4px;
+  }
+
+  .settings-debug-panel::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .settings-debug-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 999px;
+  }
+
+  .settings-debug-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+  }
+
+  .settings-debug-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.32);
   }
 
   .settings-group {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+    background: rgba(255, 255, 255, 0.02);
   }
 
   .settings-group-header {
@@ -2221,21 +2381,72 @@ So the accurate behavior is:
   .settings-group-header-inline {
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
   }
 
-  .settings-group-header h2 {
-    margin: 0;
+  .settings-collapse-button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .settings-collapse-button-inline {
+    width: auto;
+    flex: 1 1 auto;
+  }
+
+  .settings-collapse-button-text {
+    justify-content: flex-start;
+    flex: 0 1 auto;
+  }
+
+  .settings-collapse-button-label {
     font-size: 16px;
     font-weight: 700;
+  }
+
+  .settings-collapse-chevron {
+    font-size: 16px;
+    opacity: 0.8;
+    line-height: 1;
+  }
+
+
+  .settings-header-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .settings-title-with-icon {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .settings-collapse-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
   }
 
   .settings-info-icon-button {
@@ -2344,6 +2555,42 @@ So the accurate behavior is:
     font-size: 13px;
     font-weight: 700;
     margin-bottom: 10px;
+  }
+
+  .settings-debug-row-status {
+    align-items: flex-start;
+  }
+
+  .settings-debug-status-grid {
+    margin-top: 10px;
+    display: grid;
+    gap: 6px;
+  }
+
+  .settings-debug-status-line {
+    display: grid;
+    grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .settings-debug-status-line code {
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .settings-debug-status-label {
+    font-weight: 600;
+    opacity: 0.85;
+  }
+
+  .settings-debug-status-line-error {
+    color: #ffb4b4;
   }
 
   @media (max-width: 900px) {
