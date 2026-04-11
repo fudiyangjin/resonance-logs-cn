@@ -3,8 +3,8 @@
     {
       "type": "bar",
       "label": "Energy",
-      "currentIndex": 4,
-      "maxIndex": 5,
+      "currentIndex": -4,
+      "maxIndex": -3,
       "imageOn": "/images/wind_knight/res/main_lance_bar_on_-1421954657832119123.png",
       "imageOff": "/images/wind_knight/res/main_lance_bar_off_8817179120914854547.png",
       "buffBaseId": 31201
@@ -12,8 +12,8 @@
     {
       "type": "charges",
       "label": "Sharpness",
-      "currentIndex": 6,
-      "maxIndex": 7,
+      "currentIndex": -2,
+      "maxIndex": -1,
       "imageOn": "/images/wind_knight/res/main_lance_on_7736397267241150037.png",
       "imageOff": "/images/wind_knight/res/main_lance_off_523133555372855246.png"
     }
@@ -22,8 +22,8 @@
     {
       "type": "bar",
       "label": "Energy",
-      "currentIndex": 4,
-      "maxIndex": 5,
+      "currentIndex": -4,
+      "maxIndex": -3,
       "imageOn": "/images/frost_mage/res/main_snow_bar_on_5638853610256406615.png",
       "imageOff": "/images/frost_mage/res/main_snow_bar_off_6351435705225501293.png",
       "buffBaseId": 27007
@@ -31,8 +31,8 @@
     {
       "type": "charges",
       "label": "Sharpness",
-      "currentIndex": 6,
-      "maxIndex": 7,
+      "currentIndex": -2,
+      "maxIndex": -1,
       "imageOn": "/images/frost_mage/res/main_snow_on_7752257676452734961.png",
       "imageOff": "/images/frost_mage/res/main_snow_off_3542757998136383818.png"
     }
@@ -41,8 +41,8 @@
     {
       "type": "bar",
       "label": "刀意",
-      "currentIndex": 4,
-      "maxIndex": 5,
+      "currentIndex": -4,
+      "maxIndex": -3,
       "imageOn": "/images/stormblade/res/main_thunder_bar_on_-2759248337309027904.png",
       "imageOff": "/images/stormblade/res/main_thunder_bar_off_667491608039266660.png",
       "buffBaseIds": [43201, 43101]
@@ -50,8 +50,8 @@
     {
       "type": "charges",
       "label": "雷之印",
-      "currentIndex": 6,
-      "maxIndex": 7,
+      "currentIndex": -2,
+      "maxIndex": -1,
       "imageOn": "/images/stormblade/res/main_thunder_on_2474287416440235716.png",
       "imageOff": "/images/stormblade/res/main_thunder_off_2990056487819530159.png"
     }

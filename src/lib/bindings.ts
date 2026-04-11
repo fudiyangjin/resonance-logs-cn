@@ -499,9 +499,9 @@ maxHp: number | null;
 isDefeated: boolean }
 export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "resetAndStartCount" | "startCount" | "noOp"
 export type CounterRule = { ruleId: number; sources: CounterSource[]; effectSlots: EffectSlotConfig[] }
-export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number } } | { anyDamage: { increment: number } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } }
+export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number } } | { anyDamage: { increment: number } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } }
 export type Device = { name: string; description: string | null }
-export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction }
+export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; resetSourceConfigId?: number | null; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction }
 /**
  * Filters for querying encounters.
  */

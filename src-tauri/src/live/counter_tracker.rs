@@ -4,6 +4,7 @@ use crate::live::commands_models::{CounterUpdateState, SlotUpdateState};
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::opcodes_models::{AttrType, AttrValue};
 use crate::live::opcodes_process::LocalDamageEvent;
+use blueprotobuf_lib::blueprotobuf::EActorState;
 use log::info;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
@@ -24,6 +25,8 @@ pub enum CounterSource {
         #[serde(rename = "skillKeys")]
         skill_keys: Vec<i64>,
         increment: u32,
+        #[serde(default, rename = "hitsRequired")]
+        hits_required: Option<u32>,
     },
     DamageBySkillKeyOnce {
         #[serde(rename = "skillKeys")]
@@ -34,9 +37,13 @@ pub enum CounterSource {
         #[serde(rename = "skillKeys")]
         skill_keys: Vec<i64>,
         increment: u32,
+        #[serde(default, rename = "hitsRequired")]
+        hits_required: Option<u32>,
     },
     AnyDamage {
         increment: u32,
+        #[serde(default, rename = "hitsRequired")]
+        hits_required: Option<u32>,
     },
     BuffDurationTick {
         #[serde(rename = "buffId")]
@@ -50,6 +57,13 @@ pub enum CounterSource {
     SkillCast {
         #[serde(rename = "skillBaseIds")]
         skill_base_ids: Vec<i32>,
+        increment: u32,
+    },
+    SkillDurationTick {
+        #[serde(rename = "skillBaseId")]
+        skill_base_id: i32,
+        #[serde(rename = "tickIntervalMs")]
+        tick_interval_ms: u64,
         increment: u32,
     },
 }
@@ -67,6 +81,8 @@ pub struct EffectSlotConfig {
     pub slot_id: i32,
     pub threshold: Option<u32>,
     pub reset_buff_id: i32,
+    #[serde(default)]
+    pub reset_source_config_id: Option<i32>,
     #[serde(default)]
     pub on_buff_add: CounterAction,
     #[serde(default)]
@@ -96,6 +112,8 @@ pub(crate) struct CounterModelState {
     pub rule_id: i32,
     pub slot_states: Vec<SlotState>,
     pub tick_states: Vec<BuffTickState>,
+    pub skill_tick_states: Vec<SkillCastTickState>,
+    pub damage_hit_accumulators: Vec<u32>,
 }
 
 #[derive(Debug, Clone)]
@@ -123,6 +141,16 @@ pub(crate) struct BuffTickState {
     pub attr_type: Option<AttrType>,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct SkillCastTickState {
+    pub skill_base_id: i32,
+    pub is_active: bool,
+    pub start_time_ms: i64,
+    pub applied_ticks: u64,
+    pub tick_interval_ms: u64,
+    pub increment: u32,
+}
+
 #[derive(Debug, Default)]
 pub struct BuffCounterTracker {
     rules: Vec<CounterRule>,
@@ -147,6 +175,7 @@ impl<'de> Deserialize<'de> for CounterRule {
                     slot_id: 1,
                     threshold: rule.threshold,
                     reset_buff_id: rule.linked_buff_id,
+                    reset_source_config_id: None,
                     on_buff_add: rule.on_buff_add,
                     on_buff_change: CounterAction::NoOp,
                     on_buff_remove: rule.on_buff_remove,
@@ -216,12 +245,33 @@ impl BuffCounterTracker {
                     _ => None,
                 })
                 .collect();
+            let skill_tick_states = rule
+                .sources
+                .iter()
+                .filter_map(|source| match source {
+                    CounterSource::SkillDurationTick {
+                        skill_base_id,
+                        tick_interval_ms,
+                        increment,
+                    } => Some(SkillCastTickState {
+                        skill_base_id: *skill_base_id,
+                        is_active: false,
+                        start_time_ms: 0,
+                        applied_ticks: 0,
+                        tick_interval_ms: (*tick_interval_ms).max(1),
+                        increment: *increment,
+                    }),
+                    _ => None,
+                })
+                .collect();
             states.insert(
                 rule.rule_id,
                 CounterModelState {
                     rule_id: rule.rule_id,
                     slot_states,
                     tick_states,
+                    skill_tick_states,
+                    damage_hit_accumulators: vec![0; rule.sources.len()],
                 },
             );
         }
@@ -241,13 +291,16 @@ impl BuffCounterTracker {
             let Some(state) = states.get_mut(&rule.rule_id) else {
                 continue;
             };
-            for source in &rule.sources {
+            for (source_idx, source) in rule.sources.iter().enumerate() {
                 let increment = match source {
                     CounterSource::DamageBySkillKey {
                         skill_keys,
                         increment,
-                    } => scaled_increment(
+                        hits_required,
+                    } => apply_damage_hits_required(
+                        &mut state.damage_hit_accumulators[source_idx],
                         *increment,
+                        *hits_required,
                         events
                             .iter()
                             .filter(|event| skill_keys.contains(&event.skill_key))
@@ -266,8 +319,11 @@ impl BuffCounterTracker {
                     CounterSource::DamageBySkillKeySelfTarget {
                         skill_keys,
                         increment,
-                    } => scaled_increment(
+                        hits_required,
+                    } => apply_damage_hits_required(
+                        &mut state.damage_hit_accumulators[source_idx],
                         *increment,
+                        *hits_required,
                         events
                             .iter()
                             .filter(|event| {
@@ -276,9 +332,15 @@ impl BuffCounterTracker {
                             })
                             .count(),
                     ),
-                    CounterSource::AnyDamage { increment } => {
-                        scaled_increment(*increment, events.len())
-                    }
+                    CounterSource::AnyDamage {
+                        increment,
+                        hits_required,
+                    } => apply_damage_hits_required(
+                        &mut state.damage_hit_accumulators[source_idx],
+                        *increment,
+                        *hits_required,
+                        events.len(),
+                    ),
                     _ => continue,
                 };
                 let Some(increment) = increment else {
@@ -309,6 +371,12 @@ impl BuffCounterTracker {
                     changed |= add_increment_to_slots(state, *increment);
                 }
             }
+            for tick_state in &mut state.skill_tick_states {
+                if tick_state.skill_base_id != skill_base_id {
+                    continue;
+                }
+                changed |= activate_skill_tick_state(tick_state);
+            }
         }
         changed
     }
@@ -332,6 +400,11 @@ impl BuffCounterTracker {
                 {
                     if slot_config.reset_buff_id != change.base_id {
                         continue;
+                    }
+                    if let Some(required_source_config_id) = slot_config.reset_source_config_id {
+                        if change.source_config_id != Some(required_source_config_id) {
+                            continue;
+                        }
                     }
                     let action = match change.change_type {
                         BuffChangeType::Added => slot_config.on_buff_add,
@@ -433,6 +506,33 @@ impl BuffCounterTracker {
                     }
                 }
             }
+            for tick_state in &mut state.skill_tick_states {
+                if !tick_state.is_active {
+                    continue;
+                }
+
+                if !matches_skill_duration_tick_state(attr_store, local_player_uid, tick_state) {
+                    tick_state.is_active = false;
+                    changed = true;
+                    continue;
+                }
+
+                if now_ms < tick_state.start_time_ms {
+                    continue;
+                }
+
+                let elapsed_ms = now_ms.saturating_sub(tick_state.start_time_ms) as u64;
+                let expected_ticks = elapsed_ms / tick_state.tick_interval_ms.max(1) + 1;
+
+                if expected_ticks > tick_state.applied_ticks {
+                    let new_ticks = expected_ticks - tick_state.applied_ticks;
+                    tick_state.applied_ticks = expected_ticks;
+
+                    let multiplier = u32::try_from(new_ticks).unwrap_or(u32::MAX);
+                    let increment_total = tick_state.increment.saturating_mul(multiplier);
+                    pending_increment = pending_increment.saturating_add(increment_total);
+                }
+            }
 
             if pending_increment > 0 {
                 changed |= add_increment_to_slots(state, pending_increment);
@@ -481,6 +581,14 @@ impl BuffCounterTracker {
                 tick.buff_duration_ms = 0;
                 tick.applied_ticks = 0;
             }
+            for tick in &mut state.skill_tick_states {
+                tick.is_active = false;
+                tick.start_time_ms = 0;
+                tick.applied_ticks = 0;
+            }
+            for accumulator in &mut state.damage_hit_accumulators {
+                *accumulator = 0;
+            }
         }
     }
 }
@@ -522,14 +630,19 @@ impl CounterTriggerLegacy {
             CounterTriggerLegacy::DamageBySkillKey(skill_keys) => CounterSource::DamageBySkillKey {
                 skill_keys,
                 increment: 1,
+                hits_required: None,
             },
             CounterTriggerLegacy::DamageBySkillKeySelfTarget(skill_keys) => {
                 CounterSource::DamageBySkillKeySelfTarget {
                     skill_keys,
                     increment: 1,
+                    hits_required: None,
                 }
             }
-            CounterTriggerLegacy::AnyDamage => CounterSource::AnyDamage { increment: 1 },
+            CounterTriggerLegacy::AnyDamage => CounterSource::AnyDamage {
+                increment: 1,
+                hits_required: None,
+            },
         }
     }
 }
@@ -553,6 +666,32 @@ fn scaled_increment(increment: u32, matches: usize) -> Option<u32> {
     Some(increment.saturating_mul(u32::try_from(matches).unwrap_or(u32::MAX)))
 }
 
+fn apply_damage_hits_required(
+    accumulator: &mut u32,
+    increment: u32,
+    hits_required: Option<u32>,
+    matches: usize,
+) -> Option<u32> {
+    let matches = u32::try_from(matches).unwrap_or(u32::MAX);
+    if matches == 0 {
+        return None;
+    }
+
+    match hits_required {
+        Some(required) if required > 1 => {
+            *accumulator = accumulator.saturating_add(matches);
+            let triggers = *accumulator / required;
+            *accumulator %= required;
+            if triggers == 0 {
+                None
+            } else {
+                Some(increment.saturating_mul(triggers))
+            }
+        }
+        _ => Some(increment.saturating_mul(matches)),
+    }
+}
+
 fn matches_attr_condition(
     attr_store: &EntityAttrStore,
     local_player_uid: i64,
@@ -569,6 +708,37 @@ fn matches_attr_condition(
                 == Some(condition.required_value)
         }
     }
+}
+
+fn is_actor_state_skill(attr_store: &EntityAttrStore, local_player_uid: i64) -> bool {
+    attr_store
+        .attr(local_player_uid, AttrType::ActorState)
+        .and_then(AttrValue::as_int)
+        .is_some_and(|value| value == i64::from(EActorState::ActorStateSkill as i32))
+}
+
+fn matches_skill_duration_tick_state(
+    attr_store: &EntityAttrStore,
+    local_player_uid: i64,
+    tick_state: &SkillCastTickState,
+) -> bool {
+    is_actor_state_skill(attr_store, local_player_uid)
+        && attr_store
+            .attr(local_player_uid, AttrType::SkillId)
+            .and_then(AttrValue::as_int)
+            .and_then(|value| i32::try_from(value).ok())
+            == Some(tick_state.skill_base_id)
+}
+
+fn activate_skill_tick_state(tick_state: &mut SkillCastTickState) -> bool {
+    let start_time_ms = now_ms();
+    let changed = !tick_state.is_active
+        || tick_state.start_time_ms != start_time_ms
+        || tick_state.applied_ticks != 0;
+    tick_state.is_active = true;
+    tick_state.start_time_ms = start_time_ms;
+    tick_state.applied_ticks = 0;
+    changed
 }
 
 fn add_increment_to_slots(state: &mut CounterModelState, increment: u32) -> bool {

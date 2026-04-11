@@ -13,6 +13,7 @@ pub struct ActiveBuff {
     pub duration: i32,
     pub create_time: i64,
     pub received_time_ms: i64,
+    pub source_config_id: Option<i32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -30,6 +31,7 @@ pub struct BuffChangeEvent {
     /// Local packet receive time used by counter tick logic.
     pub create_time_ms: Option<i64>,
     pub duration_ms: Option<i32>,
+    pub source_config_id: Option<i32>,
 }
 
 #[derive(Debug, Default)]
@@ -99,6 +101,10 @@ impl BuffMonitor {
                         let layer = buff_info.layer.unwrap_or(1);
                         let duration = buff_info.duration.unwrap_or(0);
                         let create_time = buff_info.create_time.unwrap_or(now);
+                        let source_config_id = buff_info
+                            .fight_source_info
+                            .as_ref()
+                            .and_then(|info| info.source_config_id);
                         if buff_info.create_time.is_some() {
                             *server_clock_offset = now - create_time;
                         }
@@ -111,6 +117,7 @@ impl BuffMonitor {
                                 duration,
                                 create_time,
                                 received_time_ms: now,
+                                source_config_id,
                             },
                         );
                         changes.push(BuffChangeEvent {
@@ -119,12 +126,14 @@ impl BuffMonitor {
                             change_type: BuffChangeType::Added,
                             create_time_ms: Some(now),
                             duration_ms: Some(duration),
+                            source_config_id,
                         });
                     }
                 } else if effect_type == EBuffEffectLogicPbType::BuffEffectBuffChange as i32 {
                     if let Ok(change_info) = BuffChange::decode(raw.as_slice()) {
                         if let Some(entry) = self.active_buffs.get_mut(&buff_uuid) {
                             let base_id = entry.base_id;
+                            let source_config_id = entry.source_config_id;
                             if let Some(layer) = change_info.layer {
                                 entry.layer = layer;
                             }
@@ -140,6 +149,7 @@ impl BuffMonitor {
                                 change_type: BuffChangeType::Changed,
                                 create_time_ms: Some(entry.received_time_ms),
                                 duration_ms: Some(entry.duration),
+                                source_config_id,
                             });
                         }
                     }
@@ -155,6 +165,7 @@ impl BuffMonitor {
                         change_type: BuffChangeType::Removed,
                         create_time_ms: Some(removed_buff.received_time_ms),
                         duration_ms: Some(removed_buff.duration),
+                        source_config_id: removed_buff.source_config_id,
                     });
                 }
             }
