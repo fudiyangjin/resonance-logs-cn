@@ -1,5 +1,16 @@
 {
   "clearHint": "右クリックでホットキーを解除",
-  "pressKey": "请按键",
-  "unbound": "未割り当て"
+  "pressKey": "キーを押してください",
+  "unbound": "未割り当て",
+  "shortcuts.showLiveMeter": "ライブメーターを表示",
+  "shortcuts.hideLiveMeter": "ライブメーターを非表示",
+  "shortcuts.toggleLiveMeter": "ライブメーターを切り替え",
+  "shortcuts.enableClickthrough": "クリック透過を有効化",
+  "shortcuts.disableClickthrough": "クリック透過を無効化",
+  "shortcuts.toggleClickthrough": "クリック透過を切り替え",
+  "shortcuts.resetEncounter": "戦闘をリセット",
+  "shortcuts.togglePauseEncounter": "戦闘の一時停止を切り替え",
+  "shortcuts.toggleBossHp": "ボスHP表示を切り替え",
+  "shortcuts.toggleOverlayEdit": "オーバーレイ編集モードを切り替え",
+  "shortcuts.toggleOverlayWindow": "オーバーレイウィンドウを切り替え"
 }

@@ -77,5 +77,8 @@
   "selectedCount": "選択済み",
   "selectedResonanceSkills": "選択済み共鳴スキル",
   "skillSelection": "スキル選択",
-  "skillSelectionDescription": "最大10個のスキルを監視できます（2行 × 5列）"
+  "skillSelectionDescription": "最大10個のスキルを監視できます（2行 × 5列）",
+  "classSkill.stormblade.1728": "Supreme Art: Great Cataclysm Combo Slash - Iaijutsu Talent",
+  "resourceLabel.stormblade.bar": "Blade Intent",
+  "resourceLabel.stormblade.charges": "Thunder Sigil"
 }

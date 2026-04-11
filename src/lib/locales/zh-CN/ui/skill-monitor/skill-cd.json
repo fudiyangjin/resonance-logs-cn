@@ -77,5 +77,8 @@
   "selectedCount": "已选",
   "selectedResonanceSkills": "已选共鸣技能",
   "skillSelection": "技能选择",
-  "skillSelectionDescription": "最多监控 10 个技能（2行 x 5列）"
+  "skillSelectionDescription": "最多监控 10 个技能（2行 x 5列）",
+  "classSkill.stormblade.1728": "极诣·大破灭连斩-居合天赋",
+  "resourceLabel.stormblade.bar": "刀意",
+  "resourceLabel.stormblade.charges": "雷之印"
 }

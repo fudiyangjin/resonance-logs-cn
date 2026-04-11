@@ -1,8 +1,8 @@
 [
   {
-    "slotTemplateId": "stormablade_",
-    "name": "雷影真实因子, 额外获得雷之印",
-    "description": "雷影真实因子, 额外获得雷之印",
+    "slotTemplateId": "stormablade_x2",
+    "name": "雷影真实因子X2, 额外获得雷之印",
+    "description": "额外获得雷之印",
     "slot": {
       "threshold": 93,
       "resetBuffId": 3050411,
@@ -12,9 +12,9 @@
     }
   },
   {
-    "slotTemplateId": "stormablade_x",
-    "name": "雷影真实因子, 释放居合斩时附加1记雷切刀气",
-    "description": "雷影真实因子, 释放居合斩时附加1记雷切刀气",
+    "slotTemplateId": "stormablade_x1",
+    "name": "雷影真实因子X1, 释放居合斩时附加1记雷切刀气",
+    "description": "释放居合斩时附加1记雷切刀气",
     "slot": {
       "threshold": 610,
       "resetBuffId": 3050401,
@@ -99,6 +99,72 @@
       "onBuffRemove": "noOp",
       "freezeDurationMs": 30000,
       "onFreezeExpire": "resetAndStartCount"
+    }
+  },
+  {
+    "slotTemplateId": "marksman_x6",
+    "name": "神射真实因子X6, 召唤天界雄鹰",
+    "description": "召唤天界雄鹰",
+    "slot": {
+      "threshold": 360,
+      "resetBuffId": 3053451,
+      "onBuffAdd": "reset",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp"
+    }
+  },
+  {
+    "slotTemplateId": "frost_mage_x1",
+    "name": "冰魔真实因子X1, 下次冰之灌注期间玄冰上限+2",
+    "description": "下次冰之灌注期间玄冰上限+2",
+    "slot": {
+      "threshold": 400,
+      "resetBuffId": 3052401,
+      "onBuffAdd": "reset",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp"
+    }
+  },
+  {
+    "slotTemplateId": "frost_mage_x3",
+    "name": "冰魔真实因子X3, 释放水球, 并且赋予极寒状态, 冷却 10s",
+    "description": "释放水球, 并且赋予极寒状态, 冷却 10s",
+    "slot": {
+      "threshold": 514,
+      "resetBuffId": 25401,
+      "resetSourceConfigId": 3052420,
+      "onBuffAdd": "freeze",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp",
+      "freezeDurationMs": 10000,
+      "onFreezeExpire": "resetAndStartCount"
+    }
+  },
+  {
+    "slotTemplateId": "frost_mage_x4",
+    "name": "冰魔真实因子X4, 下一次释放浪潮汇聚不会进入冷却, 冷却 7s",
+    "description": "下一次释放浪潮汇聚不会进入冷却, 冷却 7s",
+    "slot": {
+      "threshold": 720,
+      "resetBuffId": 9901,
+      "resetSourceConfigId": 3052430,
+      "onBuffAdd": "freeze",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp",
+      "freezeDurationMs": 7000,
+      "onFreezeExpire": "resetAndStartCount"
+    }
+  },
+  {
+    "slotTemplateId": "frost_mage_x5",
+    "name": "冰魔真实因子X5, 15s 内玄冰上限 + 3",
+    "description": "15s 内玄冰上限 + 3",
+    "slot": {
+      "threshold": 720,
+      "resetBuffId": 3052441,
+      "onBuffAdd": "reset",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp"
     }
   }
 ]

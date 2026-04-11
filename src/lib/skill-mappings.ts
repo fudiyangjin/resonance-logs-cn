@@ -14,6 +14,7 @@ import {
   SUPPORTED_LOCALES,
   TRANSLATION_SOURCE_MODE_EVENT,
   isLocaleCode,
+  resolveUiTranslation,
   type LocaleCode,
 } from "$lib/i18n";
 import { settings } from "$lib/settings-store";
@@ -232,6 +233,19 @@ function getCurrentLocale(): LocaleCode {
   return DEFAULT_LOCALE;
 }
 
+function resolveSkillMonitorUiTranslation(
+  relativePath: string,
+  key: string,
+  fallback: string,
+): string {
+  return resolveUiTranslation(
+    `ui/skill-monitor/${relativePath}.json`,
+    key,
+    getCurrentLocale(),
+    fallback,
+  );
+}
+
 function resolveMultiLangName(value: MultiLangValue | undefined, fallback: string): string {
   const locale = getCurrentLocale();
   const selected = value?.[locale]?.trim();
@@ -291,6 +305,7 @@ export type CounterEffectSlotPreset = {
   slotId: number;
   threshold: number | null;
   resetBuffId: number;
+  resetSourceConfigId?: number;
   onBuffAdd: CounterAction;
   onBuffChange: CounterAction;
   onBuffRemove: CounterAction;
@@ -349,20 +364,119 @@ export const SOURCE_TEMPLATES: SourceTemplate[] =
 export const SLOT_TEMPLATES: SlotTemplate[] =
   counterSlotTemplatesRaw as SlotTemplate[];
 
+function localizeSkillDefinition(classKey: string, skill: SkillDefinition): SkillDefinition {
+  return {
+    ...skill,
+    name: resolveSkillMonitorUiTranslation(
+      "skill-cd",
+      `classSkill.${classKey}.${skill.skillId}`,
+      skill.name,
+    ),
+  };
+}
+
+function localizeSkillDerivation(classKey: string, derivation: SkillDerivation): SkillDerivation {
+  return {
+    ...derivation,
+    derivedName: resolveSkillMonitorUiTranslation(
+      "skill-cd",
+      `classSkillDerived.${classKey}.${derivation.sourceSkillId}.${derivation.triggerBuffBaseId}`,
+      derivation.derivedName,
+    ),
+  };
+}
+
+function localizeClassConfig(config: ClassSkillConfig): ClassSkillConfig {
+  return {
+    ...config,
+    className: resolveSkillMonitorUiTranslation(
+      "skill-cd",
+      `className.${config.classKey}`,
+      config.className,
+    ),
+    skills: config.skills.map((skill) => localizeSkillDefinition(config.classKey, skill)),
+    ...(config.derivations
+      ? {
+          derivations: config.derivations.map((derivation) =>
+            localizeSkillDerivation(config.classKey, derivation),
+          ),
+        }
+      : {}),
+  };
+}
+
+function localizeResourceDefinition(
+  classKey: string,
+  resource: ResourceDefinition,
+): ResourceDefinition {
+  const suffix = resource.type === "bar" ? "bar" : "charges";
+  return {
+    ...resource,
+    label: resolveSkillMonitorUiTranslation(
+      "skill-cd",
+      `resourceLabel.${classKey}.${suffix}`,
+      resource.label,
+    ),
+  };
+}
+
+function localizeCounterRule(rule: CounterRulePreset): CounterRulePreset {
+  return {
+    ...rule,
+    name: resolveSkillMonitorUiTranslation(
+      "custom-panel",
+      `counterRule.${rule.ruleId}.name`,
+      rule.name,
+    ),
+  };
+}
+
+function localizeSourceTemplate(template: SourceTemplate): SourceTemplate {
+  return {
+    ...template,
+    name: resolveSkillMonitorUiTranslation(
+      "custom-panel",
+      `sourceTemplate.${template.sourceId}.name`,
+      template.name,
+    ),
+    description: resolveSkillMonitorUiTranslation(
+      "custom-panel",
+      `sourceTemplate.${template.sourceId}.description`,
+      template.description,
+    ),
+  };
+}
+
+function localizeSlotTemplate(template: SlotTemplate): SlotTemplate {
+  return {
+    ...template,
+    name: resolveSkillMonitorUiTranslation(
+      "custom-panel",
+      `slotTemplate.${template.slotTemplateId}.name`,
+      template.name,
+    ),
+    description: resolveSkillMonitorUiTranslation(
+      "custom-panel",
+      `slotTemplate.${template.slotTemplateId}.description`,
+      template.description,
+    ),
+  };
+}
+
 export function getClassConfigs(): ClassSkillConfig[] {
-  return Object.values(CLASS_SKILL_CONFIGS);
+  return Object.values(CLASS_SKILL_CONFIGS).map((config) => localizeClassConfig(config));
 }
 
 export function getCounterRules(): CounterRulePreset[] {
-  return COUNTER_RULES;
+  return COUNTER_RULES.map((rule) => localizeCounterRule(rule));
 }
 
 export function getSourceTemplates(): SourceTemplate[] {
-  return SOURCE_TEMPLATES;
+  return SOURCE_TEMPLATES.map((template) => localizeSourceTemplate(template));
 }
 
 export function getSlotTemplates(): SlotTemplate[] {
-  return SLOT_TEMPLATES;
+  return SLOT_TEMPLATES.map((template) => localizeSlotTemplate(template));
 }
 
 export function resolveCounterSources(sourceRefs: string[]): CounterSource[] {
@@ -389,6 +503,9 @@ export function resolveCounterEffectSlots(
             slotId: idx + 1,
             threshold: item.slot.threshold,
             resetBuffId: item.slot.resetBuffId,
+            ...(item.slot.resetSourceConfigId !== undefined
+              ? { resetSourceConfigId: item.slot.resetSourceConfigId }
+              : {}),
             onBuffAdd: item.slot.onBuffAdd,
             onBuffChange: item.slot.onBuffChange,
             onBuffRemove: item.slot.onBuffRemove,
@@ -448,7 +565,9 @@ export function resolveUserCounterRulesToPresets(
 }
 
 export function getSkillsByClass(classKey: string): SkillDefinition[] {
-  return CLASS_SKILL_CONFIGS[classKey]?.skills ?? [];
+  return (CLASS_SKILL_CONFIGS[classKey]?.skills ?? []).map((skill) =>
+    localizeSkillDefinition(classKey, skill),
+  );
 }
 
 export function getDurationSkillsByClass(classKey: string): SkillDefinition[] {
@@ -461,13 +580,16 @@ export function findSkillById(
   classKey: string,
   skillId: number,
 ): SkillDefinition | undefined {
-  return CLASS_SKILL_CONFIGS[classKey]?.skills.find(
+  const skill = CLASS_SKILL_CONFIGS[classKey]?.skills.find(
     (skill) => skill.skillId === skillId,
   );
+  return skill ? localizeSkillDefinition(classKey, skill) : undefined;
 }
 
 export function findResourcesByClass(classKey: string): ResourceDefinition[] {
-  return CLASS_RESOURCES[classKey] || [];
+  return (CLASS_RESOURCES[classKey] || []).map((resource) =>
+    localizeResourceDefinition(classKey, resource),
+  );
 }
 
 export function findSpecialBuffDisplays(
@@ -484,9 +606,10 @@ export function findSkillDerivationBySource(
   classKey: string,
   sourceSkillId: number,
 ): SkillDerivation | undefined {
-  return CLASS_SKILL_CONFIGS[classKey]?.derivations?.find(
+  const derivation = CLASS_SKILL_CONFIGS[classKey]?.derivations?.find(
     (derivation) => derivation.sourceSkillId === sourceSkillId,
   );
+  return derivation ? localizeSkillDerivation(classKey, derivation) : undefined;
 }
 
 export function findResonanceSkill(

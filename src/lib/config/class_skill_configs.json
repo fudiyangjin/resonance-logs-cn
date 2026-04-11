@@ -62,7 +62,7 @@
         "skillId": 1419,
         "name": "翔返",
         "imagePath": "/images/wind_knight/skill/weapon_cq-01_tg02_-133786615417471994.png",
-        "resourceRequirement": { "resourceIndex": 4, "amount": 35 }
+        "resourceRequirement": { "resourceIndex": -4, "amount": 35 }
       },
       {
         "skillId": 1421,
@@ -84,7 +84,7 @@
         "skillId": 1424,
         "name": "刹那",
         "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx05_-4769613798753072914.png",
-        "resourceRequirement": { "resourceIndex": 6, "amount": 3 }
+        "resourceRequirement": { "resourceIndex": -2, "amount": 3 }
       },
       {
         "skillId": 1401,

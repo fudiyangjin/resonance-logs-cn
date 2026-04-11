@@ -33,13 +33,14 @@
   }
 
   const t = uiT("dps/settings-live", () => SETTINGS.live.general.state.language);
+  const colT = uiT("dps/live", () => SETTINGS.live.general.state.language);
 
   function colLabel(col: { label: string; labelKey?: string }): string {
-    return col.labelKey ? t(col.labelKey, col.label) : col.label;
+    return col.labelKey ? colT(col.labelKey, col.label) : col.label;
   }
 
   function colDescription(col: { description: string; descriptionKey?: string }): string {
-    return col.descriptionKey ? t(col.descriptionKey, col.description) : col.description;
+    return col.descriptionKey ? colT(col.descriptionKey, col.description) : col.description;
   }
   // Drag state for column reordering (unused - keeping for potential future use)
 </script>

@@ -1,5 +1,16 @@
 {
   "clearHint": "마우스 오른쪽 버튼으로 단축키를 지울 수 있습니다",
-  "pressKey": "请按键",
-  "unbound": "바인딩되지 않음"
+  "pressKey": "키를 누르세요",
+  "unbound": "바인딩되지 않음",
+  "shortcuts.showLiveMeter": "실시간 미터 표시",
+  "shortcuts.hideLiveMeter": "실시간 미터 숨기기",
+  "shortcuts.toggleLiveMeter": "실시간 미터 전환",
+  "shortcuts.enableClickthrough": "클릭 스루 활성화",
+  "shortcuts.disableClickthrough": "클릭 스루 비활성화",
+  "shortcuts.toggleClickthrough": "클릭 스루 전환",
+  "shortcuts.resetEncounter": "전투 초기화",
+  "shortcuts.togglePauseEncounter": "전투 일시정지 전환",
+  "shortcuts.toggleBossHp": "보스 HP 표시 전환",
+  "shortcuts.toggleOverlayEdit": "오버레이 편집 모드 전환",
+  "shortcuts.toggleOverlayWindow": "오버레이 창 전환"
 }

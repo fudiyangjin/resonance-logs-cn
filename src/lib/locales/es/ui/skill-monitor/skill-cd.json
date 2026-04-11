@@ -77,5 +77,8 @@
   "selectedCount": "Seleccionado",
   "selectedResonanceSkills": "Selected Resonance Skills",
   "skillSelection": "Skill Selection",
-  "skillSelectionDescription": "Monitor up to 10 skills (2 rows × 5 columns)"
+  "skillSelectionDescription": "Monitor up to 10 skills (2 rows × 5 columns)",
+  "classSkill.stormblade.1728": "Supreme Art: Great Cataclysm Combo Slash - Iaijutsu Talent",
+  "resourceLabel.stormblade.bar": "Blade Intent",
+  "resourceLabel.stormblade.charges": "Thunder Sigil"
 }

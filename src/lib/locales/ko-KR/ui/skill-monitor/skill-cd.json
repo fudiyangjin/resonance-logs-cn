@@ -77,5 +77,8 @@
   "selectedCount": "선택됨",
   "selectedResonanceSkills": "선택된 공명 스킬",
   "skillSelection": "스킬 선택",
-  "skillSelectionDescription": "최대 10개의 스킬(2행 × 5열)을 모니터링합니다"
+  "skillSelectionDescription": "최대 10개의 스킬(2행 × 5열)을 모니터링합니다",
+  "classSkill.stormblade.1728": "Supreme Art: Great Cataclysm Combo Slash - Iaijutsu Talent",
+  "resourceLabel.stormblade.bar": "Blade Intent",
+  "resourceLabel.stormblade.charges": "Thunder Sigil"
 }

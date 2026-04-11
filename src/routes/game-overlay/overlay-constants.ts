@@ -3,12 +3,12 @@ export { DEFAULT_OVERLAY_SIZES } from "$lib/skill-monitor-normalize";
 
 export const RESOURCE_SCALES_BY_CLASS: Record<string, Record<number, number>> = {
   wind_knight: {
-    4: 100,
-    5: 100,
+    [-4]: 100,
+    [-3]: 100,
   },
   frost_mage: {
-    4: 100,
-    5: 100,
+    [-4]: 100,
+    [-3]: 100,
   },
   stormblade: {},
 };
@@ -17,9 +17,9 @@ export const DEFAULT_RESOURCE_VALUES_BY_CLASS: Record<
   string,
   Record<number, number>
 > = {
-  wind_knight: { 4: 130, 5: 130, 6: 6, 7: 6 },
-  frost_mage: { 4: 0, 5: 125, 6: 0, 7: 4 },
-  stormblade: { 4: 0, 5: 400, 6: 0, 7: 6 },
+  wind_knight: { [-4]: 130, [-3]: 130, [-2]: 6, [-1]: 6 },
+  frost_mage: { [-4]: 0, [-3]: 125, [-2]: 0, [-1]: 4 },
+  stormblade: { [-4]: 0, [-3]: 400, [-2]: 0, [-1]: 6 },
 };
 
 export const DEFAULT_OVERLAY_POSITIONS: OverlayPositions = {

@@ -343,7 +343,8 @@ export function getResourceValue(
   selectedClassKey: string,
   index: number,
 ): number {
-  const raw = fightResValues[index];
+  const resolved = index < 0 ? fightResValues.length + index : index;
+  const raw = fightResValues[resolved];
   if (raw === undefined) {
     return DEFAULT_RESOURCE_VALUES_BY_CLASS[selectedClassKey]?.[index] ?? 0;
   }
@@ -356,7 +357,8 @@ export function getResourcePreciseValue(
   selectedClassKey: string,
   index: number,
 ): number {
-  const raw = fightResValues[index];
+  const resolved = index < 0 ? fightResValues.length + index : index;
+  const raw = fightResValues[resolved];
   if (raw === undefined) {
     return DEFAULT_RESOURCE_VALUES_BY_CLASS[selectedClassKey]?.[index] ?? 0;
   }

@@ -117,6 +117,29 @@
     }
   },
   {
+    "sourceId": "beat_performer_x5",
+    "name": "灵魂X5, 释放热情挥洒, 激昂热情挥洒获得 50 点能量",
+    "description": "释放热情挥洒, 激昂热情挥洒获得 50 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [2313, 2332],
+        "increment": 50
+      }
+    }
+  },
+  {
+    "sourceId": "beat_performer_x9",
+    "name": "灵魂X9, 愈合乐章激活时每秒获得 8 点虚妄能量",
+    "description": "愈合乐章激活时每秒获得 8 点虚妄能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 55332,
+        "tickIntervalMs": 1000,
+        "increment": 8
+      }
+    }
+  },
+  {
     "sourceId": "beat_performer_x10",
     "name": "灵魂X10, 战斗状态站立不动每秒获得 12 点能量",
     "description": "战斗状态站立不动每秒获得 12 点能量",
@@ -133,17 +156,6 @@
     }
   },
   {
-    "sourceId": "beat_performer_x5",
-    "name": "灵魂X5, 释放热情挥洒, 激昂热情挥洒获得 50 点能量",
-    "description": "释放热情挥洒, 激昂热情挥洒获得 50 点能量",
-    "source": {
-      "skillCast": {
-        "skillBaseIds": [2313, 2332],
-        "increment": 50
-      }
-    }
-  },
-  {
     "sourceId": "beat_performer_x11",
     "name": "灵魂X11, 释放激涌五重奏获得 150 点能量",
     "description": "释放激涌五重奏获得 150 点能量",
@@ -151,17 +163,6 @@
       "skillCast": {
         "skillBaseIds": [2312],
         "increment": 150
-      }
-    }
-  },
-  {
-    "sourceId": "marksman_x11",
-    "name": "神射X11, 释放聚能射击获得 40 点能量",
-    "description": "释放聚能射击获得 40 点能量",
-    "source": {
-      "skillCast": {
-        "skillBaseIds": [2233],
-        "increment": 40
       }
     }
   },
@@ -184,6 +185,85 @@
       "damageBySkillKeyOnce": {
         "skillKeys": [25524003, 25524004],
         "increment": 30
+      }
+    }
+  },
+  {
+    "sourceId": "marksman_x11",
+    "name": "神射X11, 释放聚能射击获得 40 点能量",
+    "description": "释放聚能射击获得 40 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [2233],
+        "increment": 40
+      }
+    }
+  },
+  {
+    "sourceId": "frost_mage_x1",
+    "name": "冰魔X1, 释放冰霜之矛获得 12 点能量",
+    "description": "释放冰之灌注获得 12 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1242],
+        "increment": 12
+      }
+    }
+  },
+  {
+    "sourceId": "frost_mage_x3",
+    "name": "冰魔X3, 冰箭每造成 5 次伤害获得 8 点能量",
+    "description": "冰箭每造成 5 次伤害获得 8 点能量",
+    "source": {
+      "damageBySkillKey": {
+        "skillKeys": [312130100, 312130200],
+        "increment": 8,
+        "hitsRequired": 5
+      }
+    }
+  },
+  {
+    "sourceId": "frost_mage_x4",
+    "name": "冰魔X4, 贯穿之矛, 冰霜彗星造成伤害获得 24 点虚妄能量",
+    "description": "贯穿之矛, 冰霜彗星造成伤害获得 24 点虚妄能量",
+    "source": {
+      "damageBySkillKeyOnce": {
+        "skillKeys": [312090100, 112590101],
+        "increment": 24
+      }
+    }
+  },
+  {
+    "sourceId": "frost_mage_x6",
+    "name": "冰魔X6, 释放寒冰射线期间每秒获得 10 点能量",
+    "description": "释放寒冰射线期间每秒获得 10 点能量",
+    "source": {
+      "skillDurationTick": {
+        "skillBaseId": 1241,
+        "tickIntervalMs": 500,
+        "increment": 10
+      }
+    }
+  },
+  {
+    "sourceId": "frost_mage_x7",
+    "name": "冰魔X7, 浪潮汇聚造成伤害获得 10 点能量",
+    "description": "浪潮汇聚造成伤害获得 10 点能量",
+    "source": {
+      "damageBySkillKeyOnce": {
+        "skillKeys": [112560101, 112560102],
+        "increment": 10
+      }
+    }
+  },
+  {
+    "sourceId": "frost_mage_x10",
+    "name": "冰魔X10, 释放冰之灌注获得 400 点能量",
+    "description": "释放冰之灌注获得 400 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1243],
+        "increment": 400
       }
     }
   }
