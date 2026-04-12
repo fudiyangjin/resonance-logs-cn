@@ -36,5 +36,11 @@
   "tab.hate": "仇恨列表",
   "title": "怪物监控",
   "toggleOverlay": "切换怪物遮罩",
-  "valueColor": "数值颜色"
+  "valueColor": "数值颜色",
+  "overlay.hatePanel": "仇恨区",
+  "overlay.edit.title": "编辑模式 - 可拖拽调整怪物监控位置",
+  "overlay.edit.resetPosition": "重置位置",
+  "overlay.edit.resetSize": "重置尺寸",
+  "overlay.edit.done": "完成编辑",
+  "overlay.edit.dragWindow": "拖动此处移动 Monster Overlay 窗口"
 }

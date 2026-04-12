@@ -39,5 +39,11 @@
   "tab.panelAttr": "Character Panel",
   "tab.skillCd": "Skill CD",
   "title": "Monitor de habilidades",
-  "toggleOverlayWindow": "Alternar ventana de overlay"
+  "toggleOverlayWindow": "Alternar ventana de overlay",
+  "overlay.textBuff": "Área de buffs de texto",
+  "overlay.edit.title": "Modo de edición: arrastra para ajustar la posición",
+  "overlay.edit.resetPosition": "Restablecer posición",
+  "overlay.edit.resetSize": "Restablecer tamaño",
+  "overlay.edit.done": "Terminar edición",
+  "overlay.edit.dragWindow": "Arrastra aquí para mover la ventana del Game Overlay"
 }

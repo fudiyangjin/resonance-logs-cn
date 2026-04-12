@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { uiT } from "$lib/i18n";
   import { SETTINGS } from "$lib/settings-store";
   import { activeProfile } from "$lib/skill-monitor-profile.svelte.js";
   import { ensureCustomPanelGroups } from "../game-overlay/overlay-utils";
@@ -7,6 +8,9 @@
     DEFAULT_MONSTER_OVERLAY_SIZES,
   } from "./monster-constants";
   import type { GhostArea } from "./monster-types";
+
+  const tSkill = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const tMonster = uiT("monster-monitor", () => SETTINGS.live.general.state.language);
 
   const ghostAreas = $derived.by(() => {
     const profile = activeProfile();
@@ -37,13 +41,13 @@
     };
 
     if (overlayVisibility.showSkillCdGroup) {
-      pushArea("skillCdGroup", "技能CD区", overlayPositions.skillCdGroup.x, overlayPositions.skillCdGroup.y, 280, 118, overlaySizes.skillCdGroupScale);
+      pushArea("skillCdGroup", tSkill("overlay.skillCd", "技能CD区"), overlayPositions.skillCdGroup.x, overlayPositions.skillCdGroup.y, 280, 118, overlaySizes.skillCdGroupScale);
     }
     if (overlayVisibility.showResourceGroup) {
-      pushArea("resourceGroup", "资源区", overlayPositions.resourceGroup.x, overlayPositions.resourceGroup.y, 250, 90, overlaySizes.resourceGroupScale);
+      pushArea("resourceGroup", tSkill("overlay.resource", "资源区"), overlayPositions.resourceGroup.x, overlayPositions.resourceGroup.y, 250, 90, overlaySizes.resourceGroupScale);
     }
     if (overlayVisibility.showPanelAttrGroup) {
-      pushArea("panelAttrGroup", "角色属性区", overlayPositions.panelAttrGroup.x, overlayPositions.panelAttrGroup.y, 220, 130, overlaySizes.panelAttrGroupScale);
+      pushArea("panelAttrGroup", tSkill("overlay.panelAttr", "角色属性区"), overlayPositions.panelAttrGroup.x, overlayPositions.panelAttrGroup.y, 220, 130, overlaySizes.panelAttrGroupScale);
     }
     if (overlayVisibility.showCustomPanelGroup) {
       for (const group of ensureCustomPanelGroups(profile)) {
@@ -60,12 +64,12 @@
       }
     }
 
-    pushArea("textBuffPanel", "无图标Buff区", overlayPositions.textBuffPanel.x, overlayPositions.textBuffPanel.y, 240, 130, overlaySizes.textBuffPanelScale);
+    pushArea("textBuffPanel", tSkill("overlay.textBuff", "无图标Buff区"), overlayPositions.textBuffPanel.x, overlayPositions.textBuffPanel.y, 240, 130, overlaySizes.textBuffPanelScale);
 
     if (monsterMonitor.hateListEnabled) {
       pushArea(
         "monsterHatePanel",
-        "仇恨区",
+        tMonster("overlay.hatePanel", "仇恨区"),
         monsterOverlayPositions.hatePanel.x,
         monsterOverlayPositions.hatePanel.y,
         240,

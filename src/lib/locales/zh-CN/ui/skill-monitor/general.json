@@ -39,5 +39,11 @@
   "tab.panelAttr": "角色面板",
   "tab.skillCd": "技能CD",
   "title": "实时监控",
-  "toggleOverlayWindow": "切换遮罩窗口"
+  "toggleOverlayWindow": "切换遮罩窗口",
+  "overlay.textBuff": "无图标Buff区",
+  "overlay.edit.title": "编辑模式 - 可拖拽调整位置",
+  "overlay.edit.resetPosition": "重置位置",
+  "overlay.edit.resetSize": "重置尺寸",
+  "overlay.edit.done": "完成编辑",
+  "overlay.edit.dragWindow": "拖动此处移动 Game Overlay 窗口"
 }

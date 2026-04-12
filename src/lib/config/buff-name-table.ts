@@ -2,11 +2,13 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 import buffNameRaw from "./BuffName.json";
+import { getBundledTranslationTable } from "$lib/locale-bundles";
 import {
   DEFAULT_LOCALE,
   PRIMARY_FALLBACK_LOCALE,
   SUPPORTED_LOCALES,
   TRANSLATION_SOURCE_MODE_EVENT,
+  getCurrentTranslationSourceMode,
   isLocaleCode,
   type LocaleCode,
 } from "$lib/i18n";
@@ -96,12 +98,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 const BUFF_NAME_RUNTIME_RELATIVE_PATH = "parser/BuffName.json";
 const BUFF_SEARCH_RUNTIME_RELATIVE_PATH = "search/BuffNameSearch.json";
 
-const BUFF_NAME_TRANSLATIONS: Record<string, BuffNameTranslationEntry> = {};
+const BUFF_NAME_TRANSLATIONS: Record<string, BuffNameTranslationEntry> = cloneJson(
+  getBundledTranslationTable("parser/BuffName.json") as unknown as Record<string, BuffNameTranslationEntry>,
+);
 
-const BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = {};
+const BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = cloneJson(
+  getBundledTranslationTable("search/BuffNameSearch.json") as unknown as Record<string, BuffSearchTranslationEntry>,
+);
 
-const BUNDLED_BUFF_NAME_TRANSLATIONS: Record<string, BuffNameTranslationEntry> = {};
-const BUNDLED_BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = {};
+const BUNDLED_BUFF_NAME_TRANSLATIONS: Record<string, BuffNameTranslationEntry> = cloneJson(BUFF_NAME_TRANSLATIONS);
+const BUNDLED_BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = cloneJson(BUFF_SEARCH_TRANSLATIONS);
 
 const BUFF_SEARCH_INDEX: BuffSearchIndexEntry[] = [];
 const BUFF_SEARCH_INDEX_MAP = new Map<number, string[]>();
@@ -174,6 +180,13 @@ async function readRuntimeBuffSearchTranslations(): Promise<
 }
 
 async function loadBuffTranslationRuntimeData(): Promise<void> {
+  if (getCurrentTranslationSourceMode() === "bundled") {
+    replaceRecordContents(BUFF_NAME_TRANSLATIONS, cloneJson(BUNDLED_BUFF_NAME_TRANSLATIONS));
+    replaceRecordContents(BUFF_SEARCH_TRANSLATIONS, cloneJson(BUNDLED_BUFF_SEARCH_TRANSLATIONS));
+    rebuildBuffSearchIndex();
+    return;
+  }
+
   await ensureBuffTranslationRuntimeFiles();
 
   const [runtimeBuffNameValue, runtimeBuffSearchValue] = await Promise.all([
@@ -296,7 +309,12 @@ for (const category of Object.values(BUFF_CATEGORY_CATALOG)) {
 }
 
 function normalizeText(value: string): string {
-  return value.trim().toLowerCase();
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/cooldowns?/g, "cd")
+    .replace(/cool\s+downs?/g, "cd")
+    .replace(/cds/g, "cd");
 }
 
 function getCurrentLocale(): LocaleCode {
@@ -432,6 +450,10 @@ function collectBuffSearchTexts(meta: BuffMeta): string[] {
   const buffNameEntry = lookupBuffNameEntry(meta.baseId);
   const texts = new Set<string>();
 
+  const idText = String(meta.baseId);
+  texts.add(idText);
+  texts.add(`#${idText}`);
+
   const normalizedDefaultName = normalizeText(meta.defaultName);
   if (normalizedDefaultName) texts.add(normalizedDefaultName);
 
@@ -446,6 +468,11 @@ function collectBuffSearchTexts(meta: BuffMeta): string[] {
   }
 
   for (const text of collectKeywordTexts(searchEntry?.keywords)) {
+    const normalized = normalizeText(text);
+    if (normalized) texts.add(normalized);
+  }
+
+  for (const text of collectMultiLangTexts(searchEntry?.notes)) {
     const normalized = normalizeText(text);
     if (normalized) texts.add(normalized);
   }

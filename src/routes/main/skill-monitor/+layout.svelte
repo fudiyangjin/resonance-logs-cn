@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
   import { emit } from "@tauri-apps/api/event";
+  import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+  import { commands } from "$lib/bindings";
   import SwordsIcon from "virtual:icons/lucide/swords";
   import ExternalLinkIcon from "virtual:icons/lucide/external-link";
   import PlayIcon from "virtual:icons/lucide/play";
@@ -15,20 +16,7 @@
 
   async function toggleOverlayWindow() {
     try {
-      const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
-      if (overlayWindow !== null) {
-        const isVisible = await overlayWindow.isVisible();
-
-        if (isVisible) {
-          await overlayWindow.hide();
-        } else {
-          await overlayWindow.show();
-          await overlayWindow.unminimize();
-          await overlayWindow.setFocus();
-        }
-      } else {
-        console.warn("Game overlay window not found");
-      }
+      await commands.toggleGameOverlayWindow();
     } catch (err) {
       console.error("Failed to toggle overlay window:", err);
     }

@@ -36,5 +36,11 @@
   "tab.hate": "Aggroliste",
   "title": "Monstermonitor",
   "toggleOverlay": "Monster-Overlay umschalten",
-  "valueColor": "Wertfarbe"
+  "valueColor": "Wertfarbe",
+  "overlay.hatePanel": "Aggro-Bereich",
+  "overlay.edit.title": "Bearbeitungsmodus - Position des Monster-Monitors per Ziehen anpassen",
+  "overlay.edit.resetPosition": "Position zurücksetzen",
+  "overlay.edit.resetSize": "Größe zurücksetzen",
+  "overlay.edit.done": "Bearbeitung beenden",
+  "overlay.edit.dragWindow": "Hier ziehen, um das Monster-Overlay-Fenster zu verschieben"
 }

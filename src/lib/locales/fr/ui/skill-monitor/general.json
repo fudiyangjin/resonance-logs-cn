@@ -39,5 +39,11 @@
   "tab.panelAttr": "Character Panneau",
   "tab.skillCd": "Skill CD",
   "title": "Moniteur de compétences",
-  "toggleOverlayWindow": "Afficher/Masquer la fenêtre d’overlay"
+  "toggleOverlayWindow": "Afficher/Masquer la fenêtre d’overlay",
+  "overlay.textBuff": "Zone de buffs texte",
+  "overlay.edit.title": "Mode édition - faites glisser pour ajuster la position",
+  "overlay.edit.resetPosition": "Réinitialiser la position",
+  "overlay.edit.resetSize": "Réinitialiser la taille",
+  "overlay.edit.done": "Terminer l’édition",
+  "overlay.edit.dragWindow": "Faites glisser ici pour déplacer la fenêtre Game Overlay"
 }

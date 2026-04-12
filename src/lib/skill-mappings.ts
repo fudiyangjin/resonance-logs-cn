@@ -8,11 +8,13 @@ import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays
 import counterRulesRaw from "$lib/config/counter_rules.json";
 import counterSourceTemplatesRaw from "$lib/config/counter_source_templates.json";
 import counterSlotTemplatesRaw from "$lib/config/counter_slot_templates.json";
+import { getBundledTranslationTable } from "$lib/locale-bundles";
 import {
   DEFAULT_LOCALE,
   PRIMARY_FALLBACK_LOCALE,
   SUPPORTED_LOCALES,
   TRANSLATION_SOURCE_MODE_EVENT,
+  getCurrentTranslationSourceMode,
   isLocaleCode,
   resolveUiTranslation,
   type LocaleCode,
@@ -77,6 +79,7 @@ type MultiLangKeywords = Partial<Record<LocaleCode, string[]>>;
 type ResonanceSkillSearchEntry = {
   name?: MultiLangValue;
   keywords?: MultiLangKeywords;
+  notes?: MultiLangValue;
 };
 
 function cloneJson<T>(value: T): T {
@@ -96,9 +99,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 const RESONANCE_RUNTIME_RELATIVE_PATH = "search/resonance-skill-search.json";
 
-const RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = {};
+const RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = cloneJson(
+  getBundledTranslationTable("search/resonance-skill-search.json") as unknown as Record<string, ResonanceSkillSearchEntry>,
+);
 
-const BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = {};
+const BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = cloneJson(
+  RESONANCE_SKILL_SEARCH_TRANSLATIONS,
+);
 
 let resonanceRuntimeInitPromise: Promise<void> | null = null;
 let resonanceRuntimeListenerPromise: Promise<void> | null = null;
@@ -142,6 +149,14 @@ async function readRuntimeResonanceTranslations(): Promise<
 }
 
 async function loadResonanceSkillSearchRuntimeData(): Promise<void> {
+  if (getCurrentTranslationSourceMode() === "bundled") {
+    replaceRecordContents(
+      RESONANCE_SKILL_SEARCH_TRANSLATIONS,
+      cloneJson(BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS),
+    );
+    return;
+  }
+
   await ensureResonanceTranslationRuntimeFiles();
 
   const runtimeValue = await readRuntimeResonanceTranslations();
@@ -280,6 +295,10 @@ function collectResonanceSearchTexts(skill: ResonanceSkillDefinition): string[] 
   const texts = new Set<string>();
   const entry = RESONANCE_SKILL_SEARCH_TRANSLATIONS[String(skill.skillId)];
 
+  const idText = String(skill.skillId);
+  texts.add(idText);
+  texts.add(`#${idText}`);
+
   const rawName = normalizeSearchText(skill.name);
   if (rawName) texts.add(rawName);
 
@@ -288,6 +307,10 @@ function collectResonanceSearchTexts(skill: ResonanceSkillDefinition): string[] 
   }
 
   for (const text of collectKeywordTexts(entry?.keywords)) {
+    texts.add(text);
+  }
+
+  for (const text of collectMultiLangTexts(entry?.notes)) {
     texts.add(text);
   }
 
@@ -624,11 +647,28 @@ export function searchResonanceSkills(
 ): ResonanceSkillDefinition[] {
   const normalized = normalizeSearchText(keyword);
   if (!normalized) return [];
-  return RESONANCE_SKILLS
-    .filter((skill) =>
-      collectResonanceSearchTexts(skill).some((text) => text.includes(normalized)),
-    )
-    .map((skill) => localizeResonanceSkill(skill));
+
+  const matches = RESONANCE_SKILLS
+    .map((skill) => {
+      const texts = collectResonanceSearchTexts(skill);
+      let rank: number | null = null;
+
+      for (const text of texts) {
+        if (text === normalized) {
+          rank = rank === null ? 0 : Math.min(rank, 0);
+          continue;
+        }
+        if (text.includes(normalized)) {
+          rank = rank === null ? 1 : Math.min(rank, 1);
+        }
+      }
+
+      return rank === null ? null : { skill, rank };
+    })
+    .filter((entry): entry is { skill: ResonanceSkillDefinition; rank: number } => entry !== null)
+    .sort((a, b) => a.rank - b.rank || a.skill.skillId - b.skill.skillId);
+
+  return matches.map(({ skill }) => localizeResonanceSkill(skill));
 }
 
 export function findAnySkillByBaseId(

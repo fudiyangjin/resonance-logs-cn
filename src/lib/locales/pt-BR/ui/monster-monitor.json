@@ -36,5 +36,11 @@
   "tab.hate": "Lista de ameaça",
   "title": "Monitor de monstros",
   "toggleOverlay": "Alternar overlay de monstros",
-  "valueColor": "Cor do valor"
+  "valueColor": "Cor do valor",
+  "overlay.hatePanel": "Área de ódio",
+  "overlay.edit.title": "Modo de edição - arraste para ajustar a posição do monitor de monstros",
+  "overlay.edit.resetPosition": "Redefinir posição",
+  "overlay.edit.resetSize": "Redefinir tamanho",
+  "overlay.edit.done": "Concluir edição",
+  "overlay.edit.dragWindow": "Arraste aqui para mover a janela do Monster Overlay"
 }

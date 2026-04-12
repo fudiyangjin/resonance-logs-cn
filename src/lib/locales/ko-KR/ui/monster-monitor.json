@@ -36,5 +36,11 @@
   "tab.hate": "어그로 목록",
   "title": "몬스터 모니터",
   "toggleOverlay": "몬스터 오버레이 전환",
-  "valueColor": "값 색상"
+  "valueColor": "값 색상",
+  "overlay.hatePanel": "어그로 영역",
+  "overlay.edit.title": "편집 모드 - 드래그하여 몬스터 모니터 위치 조정",
+  "overlay.edit.resetPosition": "위치 초기화",
+  "overlay.edit.resetSize": "크기 초기화",
+  "overlay.edit.done": "편집 완료",
+  "overlay.edit.dragWindow": "여기를 드래그해 Monster Overlay 창 이동"
 }

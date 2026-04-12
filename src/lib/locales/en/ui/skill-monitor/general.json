@@ -39,5 +39,11 @@
   "tab.panelAttr": "Character Panel",
   "tab.skillCd": "Skill CD",
   "title": "Skill Monitor",
-  "toggleOverlayWindow": "Toggle Overlay Window"
+  "toggleOverlayWindow": "Toggle Overlay Window",
+  "overlay.textBuff": "Text Buff Area",
+  "overlay.edit.title": "Edit Mode - Drag to Adjust Position",
+  "overlay.edit.resetPosition": "Reset Position",
+  "overlay.edit.resetSize": "Reset Size",
+  "overlay.edit.done": "Done Editing",
+  "overlay.edit.dragWindow": "Drag here to move the Game Overlay window"
 }

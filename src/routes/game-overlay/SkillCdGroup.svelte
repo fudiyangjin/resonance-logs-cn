@@ -11,10 +11,14 @@
     startDrag,
     startResize,
   } from "./overlay-state.svelte.js";
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
   import {
     findAnySkillByBaseId,
     findSkillDerivationBySource,
   } from "$lib/skill-mappings";
+
+  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   const editing = $derived(isEditing());
   const groupPos = $derived(getGroupPosition("skillCdGroup"));
@@ -36,7 +40,7 @@
   onpointerdown={(e) => startDrag(e, { kind: "group", key: "skillCdGroup" }, groupPos)}
 >
   {#if editing}
-    <div class="group-tag">技能CD区</div>
+    <div class="group-tag">{t("overlay.skillCd", "技能CD区")}</div>
   {/if}
 
   <div class="skill-cd-grid">

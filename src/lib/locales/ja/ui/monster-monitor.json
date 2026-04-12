@@ -36,5 +36,11 @@
   "tab.hate": "ヘイトリスト",
   "title": "モンスターモニター",
   "toggleOverlay": "モンスターオーバーレイ切替",
-  "valueColor": "値の色"
+  "valueColor": "値の色",
+  "overlay.hatePanel": "ヘイト領域",
+  "overlay.edit.title": "編集モード - ドラッグしてモンター監視位置を調整",
+  "overlay.edit.resetPosition": "位置をリセット",
+  "overlay.edit.resetSize": "サイズをリセット",
+  "overlay.edit.done": "編集完了",
+  "overlay.edit.dragWindow": "ここをドラッグして Monster Overlay ウィンドウを移動"
 }

@@ -109,5 +109,15 @@
   "slotTemplate.frost_mage_x4.name": "Mage de givre Trait Factor X4, None",
   "slotTemplate.frost_mage_x4.description": "La prochaine Tidal Convergence ne déclenchera pas de recharge, recharge 7 s",
   "slotTemplate.frost_mage_x5.name": "Mage de givre Trait Factor X5, +3 à la limite de Glace noire pendant 15 s",
-  "slotTemplate.frost_mage_x5.description": "+3 à la limite de Glace noire pendant 15 s"
+  "slotTemplate.frost_mage_x5.description": "+3 à la limite de Glace noire pendant 15 s",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "custom": "Custom",
+  "preset": "Preset",
+  "customPanel.ruleName": "Rule Name",
+  "customPanel.ruleNamePlaceholder": "For example: Iaijutsu + Tick Energy",
+  "customPanel.selectSources": "Select Sources",
+  "customPanel.selectSlots": "Select Slots",
+  "customPanel.saveRule": "Save Rule",
+  "customPanel.addCounterListDescription": "Counter slots are globally unique and can only belong to one monitor area. Preset and custom rules are shown together."
 }

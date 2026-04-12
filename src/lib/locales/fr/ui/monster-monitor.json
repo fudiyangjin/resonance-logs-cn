@@ -36,5 +36,11 @@
   "tab.hate": "Liste d’aggro",
   "title": "Moniteur de monstres",
   "toggleOverlay": "Afficher/Masquer l’overlay des monstres",
-  "valueColor": "Couleur de la valeur"
+  "valueColor": "Couleur de la valeur",
+  "overlay.hatePanel": "Zone d’aggro",
+  "overlay.edit.title": "Mode édition - faites glisser pour ajuster la position du moniteur de monstres",
+  "overlay.edit.resetPosition": "Réinitialiser la position",
+  "overlay.edit.resetSize": "Réinitialiser la taille",
+  "overlay.edit.done": "Terminer l’édition",
+  "overlay.edit.dragWindow": "Faites glisser ici pour déplacer la fenêtre Monster Overlay"
 }

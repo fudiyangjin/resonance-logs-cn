@@ -109,5 +109,15 @@
   "slotTemplate.frost_mage_x4.name": "フロストメイジ Trait Factor X4, None",
   "slotTemplate.frost_mage_x4.description": "次のTidal Convergenceはクールダウンに入らない。クールダウン7秒",
   "slotTemplate.frost_mage_x5.name": "フロストメイジ Trait Factor X5, 15秒間、黒氷上限+3",
-  "slotTemplate.frost_mage_x5.description": "15秒間、黒氷上限+3"
+  "slotTemplate.frost_mage_x5.description": "15秒間、黒氷上限+3",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "custom": "Custom",
+  "preset": "Preset",
+  "customPanel.ruleName": "Rule Name",
+  "customPanel.ruleNamePlaceholder": "For example: Iaijutsu + Tick Energy",
+  "customPanel.selectSources": "Select Sources",
+  "customPanel.selectSlots": "Select Slots",
+  "customPanel.saveRule": "Save Rule",
+  "customPanel.addCounterListDescription": "Counter slots are globally unique and can only belong to one monitor area. Preset and custom rules are shown together."
 }

@@ -39,5 +39,11 @@
   "tab.panelAttr": "キャラクターパネル",
   "tab.skillCd": "スキルCD",
   "title": "スキルモニター",
-  "toggleOverlayWindow": "オーバーレイウィンドウ切替"
+  "toggleOverlayWindow": "オーバーレイウィンドウ切替",
+  "overlay.textBuff": "テキストバフ領域",
+  "overlay.edit.title": "編集モード - ドラッグして位置を調整",
+  "overlay.edit.resetPosition": "位置をリセット",
+  "overlay.edit.resetSize": "サイズをリセット",
+  "overlay.edit.done": "編集完了",
+  "overlay.edit.dragWindow": "ここをドラッグして Game Overlay ウィンドウを移動"
 }

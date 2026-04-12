@@ -47,6 +47,83 @@ function combineGenericLocaleMaps(category: string, fileName: string): Record<st
   return combined;
 }
 
+function combineParserBuffNameMaps(fileName: string): JsonRecord {
+  const combined: Record<string, {
+    Id?: number;
+    Icon?: string | null;
+    NameDesign?: Record<string, string>;
+    SpriteFile?: string | null;
+  }> = {};
+
+  for (const locale of MANIFEST.locales) {
+    const raw = getBundledLocaleValue(locale, "parser", fileName);
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+      const entry = value as Record<string, unknown>;
+      const target =
+        combined[key] ??
+        (combined[key] = {
+          NameDesign: {},
+        });
+
+      if (typeof entry["Id"] === "number") target.Id = entry["Id"];
+      if (typeof entry["Icon"] === "string" || entry["Icon"] === null) target.Icon = entry["Icon"] as string | null;
+      if (typeof entry["SpriteFile"] === "string" || entry["SpriteFile"] === null) target.SpriteFile = entry["SpriteFile"] as string | null;
+      if (typeof entry["NameDesign"] === "string") {
+        target.NameDesign ??= {};
+        target.NameDesign[locale] = entry["NameDesign"];
+      }
+    }
+  }
+
+  return combined;
+}
+
+function combineSearchLocaleMaps(fileName: string): JsonRecord {
+  const combined: Record<string, {
+    name?: Record<string, string>;
+    keywords?: Record<string, string[]>;
+    notes?: Record<string, string>;
+    categories?: JsonValue;
+    iconKey?: string | null;
+    spriteFile?: string | null;
+    hasSpriteFile?: boolean;
+  }> = {};
+
+  for (const locale of MANIFEST.locales) {
+    const raw = getBundledLocaleValue(locale, "search", fileName);
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+      const entry = value as Record<string, unknown>;
+      const target = combined[key] ?? (combined[key] = {});
+
+      if (typeof entry["name"] === "string") {
+        target.name ??= {};
+        target.name[locale] = entry["name"];
+      }
+      if (Array.isArray(entry["keywords"])) {
+        const normalizedKeywords = entry["keywords"].filter((item): item is string => typeof item === "string");
+        target.keywords ??= {};
+        target.keywords[locale] = normalizedKeywords;
+      }
+      if (typeof entry["notes"] === "string") {
+        target.notes ??= {};
+        target.notes[locale] = entry["notes"];
+      }
+      if (entry["categories"] !== undefined && target.categories === undefined) target.categories = cloneJson(entry["categories"] as JsonValue);
+      if ((typeof entry["iconKey"] === "string" || entry["iconKey"] === null) && target.iconKey === undefined) target.iconKey = entry["iconKey"] as string | null;
+      if ((typeof entry["spriteFile"] === "string" || entry["spriteFile"] === null) && target.spriteFile === undefined) target.spriteFile = entry["spriteFile"] as string | null;
+      if (typeof entry["hasSpriteFile"] === "boolean" && target.hasSpriteFile === undefined) target.hasSpriteFile = entry["hasSpriteFile"];
+    }
+  }
+
+  return combined;
+}
+
 export function getLocaleManifest(): LocaleManifest {
   return cloneJson(MANIFEST);
 }
@@ -76,6 +153,14 @@ export function getBundledTranslationTable(virtualPath: string): JsonRecord {
     ["class-labels.json", "MonsterName.json", "SceneName.json"].includes(fileName)
   ) {
     return combineGenericLocaleMaps(category, fileName);
+  }
+
+  if (category === "parser" && fileName === "BuffName.json") {
+    return combineParserBuffNameMaps(fileName);
+  }
+
+  if (category === "search" && ["BuffNameSearch.json", "resonance-skill-search.json"].includes(fileName)) {
+    return combineSearchLocaleMaps(fileName);
   }
 
   return {};

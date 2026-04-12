@@ -36,5 +36,11 @@
   "tab.hate": "Hate List",
   "title": "Monster Monitor",
   "toggleOverlay": "Toggle Monster Overlay",
-  "valueColor": "Value Color"
+  "valueColor": "Value Color",
+  "overlay.hatePanel": "Hate Area",
+  "overlay.edit.title": "Edit Mode - Drag to Adjust Monster Monitor Position",
+  "overlay.edit.resetPosition": "Reset Position",
+  "overlay.edit.resetSize": "Reset Size",
+  "overlay.edit.done": "Done Editing",
+  "overlay.edit.dragWindow": "Drag here to move the Monster Overlay window"
 }

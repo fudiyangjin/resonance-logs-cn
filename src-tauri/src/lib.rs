@@ -33,6 +33,29 @@ pub const WINDOW_GAME_OVERLAY_LABEL: &str = "game-overlay";
 /// The label for the monster overlay window.
 pub const WINDOW_MONSTER_OVERLAY_LABEL: &str = "monster-overlay";
 
+
+#[tauri::command]
+#[specta::specta]
+fn toggle_game_overlay_window(app: tauri::AppHandle) -> Result<(), String> {
+    let Some(overlay_window) = app.get_webview_window(WINDOW_GAME_OVERLAY_LABEL) else {
+        return Err("Game overlay window not found".into());
+    };
+
+    let next_visible = !overlay_window.is_visible().map_err(|e| e.to_string())?;
+    if next_visible {
+        overlay_window.show().map_err(|e| e.to_string())?;
+        overlay_window.unminimize().map_err(|e| e.to_string())?;
+        let _ = overlay_window.set_focus();
+    } else {
+        overlay_window.hide().map_err(|e| e.to_string())?;
+    }
+
+    app.emit("game-overlay-visibility-changed", json!({ "visible": next_visible }))
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 /// Keeps the non-blocking tracing appender worker alive for the lifetime of the process.
 /// If this guard is dropped, file logging may stop flushing.
 static LOGGING_GUARD: OnceLock<tracing_appender::non_blocking::WorkerGuard> = OnceLock::new();
@@ -94,6 +117,7 @@ pub fn run() {
             translation_runtime::generate_scene_name_translation_scaffold,
             translation_runtime::generate_monster_name_translation_scaffold,
             translation_runtime::generate_skill_name_translation_scaffold,
+            toggle_game_overlay_window,
         ]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds

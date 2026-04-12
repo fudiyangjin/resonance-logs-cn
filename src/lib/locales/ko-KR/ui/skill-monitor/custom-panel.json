@@ -109,5 +109,15 @@
   "slotTemplate.frost_mage_x4.name": "프로스트 메이지 Trait Factor X4, None",
   "slotTemplate.frost_mage_x4.description": "다음 Tidal Convergence는 재사용 대기시간에 들어가지 않음, 재사용 대기시간 7초",
   "slotTemplate.frost_mage_x5.name": "프로스트 메이지 Trait Factor X5, 15초 동안 흑빙 최대치 +3",
-  "slotTemplate.frost_mage_x5.description": "15초 동안 흑빙 최대치 +3"
+  "slotTemplate.frost_mage_x5.description": "15초 동안 흑빙 최대치 +3",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "custom": "Custom",
+  "preset": "Preset",
+  "customPanel.ruleName": "Rule Name",
+  "customPanel.ruleNamePlaceholder": "For example: Iaijutsu + Tick Energy",
+  "customPanel.selectSources": "Select Sources",
+  "customPanel.selectSlots": "Select Slots",
+  "customPanel.saveRule": "Save Rule",
+  "customPanel.addCounterListDescription": "Counter slots are globally unique and can only belong to one monitor area. Preset and custom rules are shown together."
 }

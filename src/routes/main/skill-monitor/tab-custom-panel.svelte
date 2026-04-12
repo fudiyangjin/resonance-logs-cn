@@ -299,7 +299,7 @@
                 class="min-h-11 rounded-md border border-border/60 px-3 py-1.5 text-xs text-destructive transition-colors hover:bg-destructive/10 cursor-pointer"
                 onclick={(event) => { event.stopPropagation(); removeUserCounterRule(rule.ruleId); }}
               >
-                删除
+                {t("delete", "删除")}
               </button>
             </div>
           </div>
@@ -309,17 +309,17 @@
       {#if isCreatingUserRule}
         <div class="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-4">
           <label class="block text-xs text-muted-foreground">
-            规则名称
+            {t("customPanel.ruleName", "规则名称")}
             <input
               class="mt-1 w-full rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               value={draftRuleName}
-              placeholder="例如：居合 + Tick 能量"
+              placeholder={t("customPanel.ruleNamePlaceholder", "例如：居合 + Tick 能量")}
               oninput={(event) => (draftRuleName = (event.currentTarget as HTMLInputElement).value)}
             />
           </label>
 
           <div class="space-y-2">
-            <div class="text-sm font-medium text-foreground">选择 Sources</div>
+            <div class="text-sm font-medium text-foreground">{t("customPanel.selectSources", "选择 Sources")}</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
               {#each sourceTemplates as template (template.sourceId)}
                 {@const selected = draftSourceRefs.includes(template.sourceId)}
@@ -337,7 +337,7 @@
           </div>
 
           <div class="space-y-2">
-            <div class="text-sm font-medium text-foreground">选择 Slots</div>
+            <div class="text-sm font-medium text-foreground">{t("customPanel.selectSlots", "选择 Slots")}</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
               {#each slotTemplates as template (template.slotTemplateId)}
                 {@const selected = draftSlotRefs.includes(template.slotTemplateId)}
@@ -360,7 +360,7 @@
               class="min-h-11 rounded border border-border/60 px-4 py-2 text-sm text-foreground hover:bg-muted/40 cursor-pointer"
               onclick={resetDraftRule}
             >
-              取消
+              {t("cancel", "取消")}
             </button>
             <button
               type="button"
@@ -368,7 +368,7 @@
               onclick={submitDraftRule}
               disabled={!canSaveDraftRule}
             >
-              保存规则
+              {t("customPanel.saveRule", "保存规则")}
             </button>
           </div>
         </div>
@@ -377,9 +377,9 @@
 
     <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-3">
       <div class="space-y-1">
-        <div class="text-sm font-medium text-foreground">添加计数器</div>
+        <div class="text-sm font-medium text-foreground">{t("customPanel.addCounter", "添加计数器")}</div>
         <p class="text-xs text-muted-foreground">
-          计数器槽位全局唯一，只能属于一个监控区。预设规则与自定义规则会一起显示。
+          {t("customPanel.addCounterListDescription", "计数器槽位全局唯一，只能属于一个监控区。预设规则与自定义规则会一起显示。")}
         </p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -402,17 +402,17 @@
                   </div>
                   <div class="mt-1 text-xs text-muted-foreground">
                     <span class="inline-block rounded border border-border/60 bg-muted/30 px-1.5 py-0.5">
-                      {rule.origin === "user" ? "自定义" : "预设"}
+                      {rule.origin === "user" ? t("custom", "自定义") : t("preset", "预设")}
                     </span>
                   </div>
                 </div>
                 <div class="text-xs {exists ? 'text-primary' : 'text-muted-foreground'}">
                   {#if !exists}
-                    点击添加
+                    {t("clickToAdd", "点击添加")}
                   {:else if location?.groupId === selectedGroup.id}
-                    当前组已添加
+                    {t("currentGroupAdded", "当前组已添加")}
                   {:else}
-                    已在{location?.groupName}
+                    {t("alreadyInGroup", "已在")}{location?.groupName}
                   {/if}
                 </div>
               </div>

@@ -109,5 +109,15 @@
   "slotTemplate.frost_mage_x1.description": "下次冰之灌注期间玄冰上限+2",
   "slotTemplate.frost_mage_x3.description": "释放水球, 并且赋予极寒状态, 冷却 10s",
   "slotTemplate.frost_mage_x4.description": "下一次释放浪潮汇聚不会进入冷却, 冷却 7s",
-  "slotTemplate.frost_mage_x5.description": "15s 内玄冰上限 + 3"
+  "slotTemplate.frost_mage_x5.description": "15s 内玄冰上限 + 3",
+  "delete": "删除",
+  "cancel": "取消",
+  "custom": "自定义",
+  "preset": "预设",
+  "customPanel.ruleName": "规则名称",
+  "customPanel.ruleNamePlaceholder": "例如：居合 + Tick 能量",
+  "customPanel.selectSources": "选择 Sources",
+  "customPanel.selectSlots": "选择 Slots",
+  "customPanel.saveRule": "保存规则",
+  "customPanel.addCounterListDescription": "计数器槽位全局唯一，只能属于一个监控区。预设规则与自定义规则会一起显示。"
 }

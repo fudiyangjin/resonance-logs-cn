@@ -39,5 +39,11 @@
   "tab.panelAttr": "Character Panel",
   "tab.skillCd": "Skill CD",
   "title": "Skill-Monitor",
-  "toggleOverlayWindow": "Overlay-Fenster umschalten"
+  "toggleOverlayWindow": "Overlay-Fenster umschalten",
+  "overlay.textBuff": "Text-Buff-Bereich",
+  "overlay.edit.title": "Bearbeitungsmodus - Position per Ziehen anpassen",
+  "overlay.edit.resetPosition": "Position zurücksetzen",
+  "overlay.edit.resetSize": "Größe zurücksetzen",
+  "overlay.edit.done": "Bearbeitung beenden",
+  "overlay.edit.dragWindow": "Hier ziehen, um das Game-Overlay-Fenster zu verschieben"
 }
