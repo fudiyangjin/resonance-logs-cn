@@ -10,6 +10,7 @@
   "columns.baseNote": "기준 노트(CN)",
   "columns.id": "ID / 키",
   "columns.localName": "현재 언어 이름",
+  "columns.localOverlayAlias": "현재 Overlay Alias",
   "columns.localNote": "현재 언어 노트",
   "compare.applySelected": "선택한 변경 적용",
   "compare.clearJson": "비교 파일 지우기",

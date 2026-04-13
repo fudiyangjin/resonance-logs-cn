@@ -10,10 +10,13 @@
     getAvailableBuffDefinitions,
     getBuffCategoryDefinitions,
     getBuffIdsByCategory,
+    getConfiguredBuffOverlayAliasIds,
+    getDirectBuffOverlayAlias,
     lookupDefaultBuffName,
     normalizeBuffCategoryKeys,
     resolveBuffDisplayName,
-    searchBuffsByName,
+    saveBuffOverlayAlias,
+    searchIconBuffsByName,
     type BuffCategoryKey,
     type BuffCategoryDefinition,
     type BuffDefinition,
@@ -50,6 +53,7 @@
     type CounterRulePreset,
   } from "$lib/skill-mappings";
   import { uiT } from "$lib/i18n";
+  import { toast } from "svelte-sonner";
   import {
     activeProfileOrDefault,
     updateActiveProfile as updateSharedActiveProfile,
@@ -133,10 +137,7 @@
     ),
   );
   const configuredBuffAliasIds = $derived.by(() =>
-    Object.keys(buffAliases)
-      .map((baseId) => Number(baseId))
-      .filter((baseId) => Number.isFinite(baseId))
-      .sort((a, b) => a - b),
+    getConfiguredBuffOverlayAliasIds(buffAliases),
   );
   const buffPriorityIds = $derived.by(() => {
     const selected = new Set(expandedSelectedBuffIds);
@@ -344,6 +345,7 @@
         Math.min(240, Math.round(current?.panelAttrColumnGap ?? 12)),
       ),
       iconBuffSizes: current?.iconBuffSizes ?? {},
+      standaloneIconSizes: current?.standaloneIconSizes ?? {},
       skillDurationSizes: current?.skillDurationSizes ?? {},
       categoryIconSizes: current?.categoryIconSizes ?? {},
     };
@@ -479,24 +481,29 @@
   }
 
   function getBuffAlias(buffId: number): string {
-    return buffAliases[String(buffId)] ?? "";
+    return getDirectBuffOverlayAlias(buffId) || buffAliases[String(buffId)] || "";
   }
 
-  function setBuffAlias(buffId: number, alias: string) {
-    const next = { ...buffAliases };
-    const trimmed = alias.trim();
-    if (trimmed) {
-      next[String(buffId)] = trimmed;
-    } else {
-      delete next[String(buffId)];
+  async function setBuffAlias(buffId: number, alias: string) {
+    const legacyAliases = { ...buffAliases };
+    delete legacyAliases[String(buffId)];
+    SETTINGS.skillMonitor.state.buffAliases = legacyAliases;
+
+    const result = await saveBuffOverlayAlias(buffId, alias);
+    if (!result.ok) {
+      toast.error(`Failed to save overlay alias: ${result.error}`);
     }
-    SETTINGS.skillMonitor.state.buffAliases = next;
   }
 
-  function resetBuffAlias(buffId: number) {
-    const next = { ...buffAliases };
-    delete next[String(buffId)];
-    SETTINGS.skillMonitor.state.buffAliases = next;
+  async function resetBuffAlias(buffId: number) {
+    const legacyAliases = { ...buffAliases };
+    delete legacyAliases[String(buffId)];
+    SETTINGS.skillMonitor.state.buffAliases = legacyAliases;
+
+    const result = await saveBuffOverlayAlias(buffId, "");
+    if (!result.ok) {
+      toast.error(`Failed to reset overlay alias: ${result.error}`);
+    }
   }
 
   function setGlobalPrioritySearch(value: string) {
@@ -599,19 +606,19 @@
   );
 
   $effect(() => {
-    buffSearchResults = searchBuffsByName(buffSearch, buffAliases);
+    buffSearchResults = searchIconBuffsByName(buffSearch, buffAliases);
   });
 
   $effect(() => {
-    globalPrioritySearchResults = searchBuffsByName(globalPrioritySearch, buffAliases);
+    globalPrioritySearchResults = searchIconBuffsByName(globalPrioritySearch, buffAliases);
   });
 
   $effect(() => {
-    inlineBuffSearchResults = searchBuffsByName(inlineBuffSearch, buffAliases);
+    inlineBuffSearchResults = searchIconBuffsByName(inlineBuffSearch, buffAliases);
   });
 
   $effect(() => {
-    buffAliasSearchResults = searchBuffsByName(buffAliasSearch, buffAliases);
+    buffAliasSearchResults = searchIconBuffsByName(buffAliasSearch, buffAliases);
   });
 
   function setBuffAliasSearch(value: string) {
@@ -1150,7 +1157,7 @@
     }
     groupSearchResults = {
       ...groupSearchResults,
-      [groupId]: searchBuffsByName(keyword, buffAliases),
+      [groupId]: searchIconBuffsByName(keyword, buffAliases),
     };
   }
 
@@ -1167,7 +1174,7 @@
     }
     groupPrioritySearchResults = {
       ...groupPrioritySearchResults,
-      [groupId]: searchBuffsByName(keyword, buffAliases),
+      [groupId]: searchIconBuffsByName(keyword, buffAliases),
     };
   }
 

@@ -1,4 +1,6 @@
-import { resolveBuffDisplayName } from "$lib/config/buff-name-table";
+import { resolveBuffOverlayDisplayName } from "$lib/config/buff-name-table";
+import { localizeRawMonsterName } from "$lib/monster-mappings";
+import { resolveMonsterMonitorTranslation } from "$lib/i18n";
 import { SETTINGS, ensureBuffAliases } from "$lib/settings-store";
 import type { HateEntry } from "$lib/api";
 import { buildBuffTextRow } from "../game-overlay/overlay-utils";
@@ -8,6 +10,27 @@ import type {
   MonsterBossBuffSection,
   MonsterHateSection,
 } from "./monster-types";
+
+
+function tMonster(key: string, fallback: string): string {
+  return resolveMonsterMonitorTranslation(
+    key,
+    SETTINGS.live.general.state.language,
+    fallback,
+  );
+}
+
+function targetTitle(uid: number): string {
+  return `${tMonster("placeholder.targetPrefix", "Target")} ${uid}`;
+}
+
+function resolveMonsterSectionTitle(uid: number): string {
+  const rawName = monsterRuntime.nameCache.get(uid)?.trim();
+  if (rawName) {
+    return localizeRawMonsterName(rawName, rawName);
+  }
+  return targetTitle(uid);
+}
 
 function selectedMonsterBuffIds() {
   return Array.from(new Set([
@@ -23,7 +46,7 @@ function buildPlaceholderRows(now: number): TextBuffDisplay[] {
     .map((baseId) =>
       buildBuffTextRow(
         `monster_preview_${baseId}`,
-        resolveBuffDisplayName(baseId, aliases),
+        resolveBuffOverlayDisplayName(baseId, aliases),
         {
           baseId,
           durationMs: 0,
@@ -40,7 +63,7 @@ function buildPlaceholderRows(now: number): TextBuffDisplay[] {
   return [
     {
       key: "monster_preview_empty",
-      label: "在怪物监控页选择 Buff",
+      label: tMonster("placeholder.selectBuff", "Select buffs in Monster Monitor"),
       valueText: "--",
       progressPercent: 0,
       showProgress: false,
@@ -153,7 +176,7 @@ export function updateMonsterDisplay() {
       .map((buff) =>
         buildBuffTextRow(
           `monster_${bossUid}_${buff.baseId}`,
-          resolveBuffDisplayName(buff.baseId, aliases),
+          resolveBuffOverlayDisplayName(buff.baseId, aliases),
           buff,
           now,
         ))
@@ -162,7 +185,7 @@ export function updateMonsterDisplay() {
     if (buffRows.length === 0) continue;
     nextSections.push({
       bossUid,
-      title: monsterRuntime.nameCache.get(bossUid) ?? `目标 ${bossUid}`,
+      title: resolveMonsterSectionTitle(bossUid),
       rows: buffRows,
     });
   }
@@ -180,7 +203,7 @@ export function updateMonsterDisplay() {
       if (hateRows.length === 0) continue;
       nextHateSections.push({
         bossUid,
-        title: monsterRuntime.nameCache.get(bossUid) ?? `目标 ${bossUid}`,
+        title: resolveMonsterSectionTitle(bossUid),
         rows: hateRows,
       });
     }
@@ -189,7 +212,7 @@ export function updateMonsterDisplay() {
   if (nextSections.length === 0 && monsterRuntime.isEditing) {
     nextSections.push({
       bossUid: 0,
-      title: "预览",
+      title: tMonster("placeholder.preview", "Preview"),
       rows: buildPlaceholderRows(now),
       isPlaceholder: true,
     });
@@ -202,7 +225,7 @@ export function updateMonsterDisplay() {
   ) {
     nextHateSections.push({
       bossUid: 0,
-      title: "目标 0",
+      title: targetTitle(0),
       rows: buildHatePlaceholderRows(),
       isPlaceholder: true,
     });

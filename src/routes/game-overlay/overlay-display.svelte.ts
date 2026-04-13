@@ -8,7 +8,7 @@ import {
   getBuffCategoryLabel,
   getBuffIdsByCategory,
   resolveBuffCategoryKey,
-  resolveBuffDisplayName,
+  resolveBuffOverlayDisplayName,
 } from "$lib/config/buff-name-table";
 import type {
   CustomPanelDisplayRow,
@@ -130,7 +130,7 @@ const _buffSnapshot = $derived.by(() => {
     if (buff.durationMs <= 0 && buff.layer <= 1) continue;
 
     const definition = buffDefinitionsMap.get(baseId);
-    const name = resolveBuffDisplayName(baseId, currentBuffAliases);
+    const name = resolveBuffOverlayDisplayName(baseId, currentBuffAliases);
     const timeText = formatTimerText(remaining);
     const specialConfig = _specialBuffConfigMap.get(baseId);
     const specialImages = specialConfig
@@ -165,7 +165,7 @@ const _buffSnapshot = $derived.by(() => {
     for (const baseId of explicitSelectedBuffIds) {
       if (iconIds.has(baseId) || textIds.has(`buff_${baseId}`)) continue;
       const definition = buffDefinitionsMap.get(baseId);
-      const name = resolveBuffDisplayName(baseId, currentBuffAliases);
+      const name = resolveBuffOverlayDisplayName(baseId, currentBuffAliases);
       const specialConfig = _specialBuffConfigMap.get(baseId);
       const placeholderSpecialImages =
         specialConfig && specialConfig.layerImages.length > 0
@@ -222,7 +222,7 @@ const _buffSnapshot = $derived.by(() => {
         buffMap(),
         counterMap(),
         _counterRuleMap,
-        (baseId) => resolveBuffDisplayName(baseId, currentBuffAliases),
+        (baseId) => resolveBuffOverlayDisplayName(baseId, currentBuffAliases),
       );
       if (row) nextRows.push(row);
     }
@@ -327,17 +327,23 @@ const _groupedIconBuffs = $derived.by(() => {
 const _individualModeIconBuffs = $derived.by(() => {
   if (buffDisplayMode() !== "individual") return [];
   const selected = new Set(expandedMonitoredBuffIds());
-  const explicitSelected = new Set(monitoredBuffIds());
+  const explicitSelectedIds = monitoredBuffIds();
+  const explicitSelected = new Set(explicitSelectedIds);
   const selectedCategories = monitoredBuffCategories();
   const visibleBuffs = _iconDisplayBuffs.filter((buff) =>
     selected.has(buff.baseId),
   );
-  const explicitBuffs = visibleBuffs
-    .filter((buff) => explicitSelected.has(buff.baseId))
-    .map((buff) => ({
-      ...buff,
-      layoutKey: `buff:${buff.baseId}`,
-    }));
+
+  const explicitBuffs: IconBuffDisplay[] = [];
+  for (const selectedBaseId of explicitSelectedIds) {
+    const activeBuff = visibleBuffs.find((buff) => buff.baseId === selectedBaseId);
+    if (!activeBuff) continue;
+    explicitBuffs.push({
+      ...activeBuff,
+      layoutKey: `individual:selected:${selectedBaseId}`,
+    });
+  }
+
   const categoryBuffs: IconBuffDisplay[] = [];
   for (const categoryKey of selectedCategories) {
     const activeCategoryBuff = visibleBuffs.find((buff) =>
@@ -347,7 +353,7 @@ const _individualModeIconBuffs = $derived.by(() => {
     if (activeCategoryBuff) {
       categoryBuffs.push({
         ...activeCategoryBuff,
-        layoutKey: `category:${categoryKey}`,
+        layoutKey: `individual:category:${categoryKey}`,
         categoryKey,
       });
       continue;
@@ -364,7 +370,7 @@ const _individualModeIconBuffs = $derived.by(() => {
       text: "--",
       layer: 1,
       isPlaceholder: true,
-      layoutKey: `category:${categoryKey}`,
+      layoutKey: `individual:category:${categoryKey}`,
       categoryKey,
     });
   }

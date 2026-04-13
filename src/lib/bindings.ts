@@ -71,6 +71,22 @@ async toggleGameOverlayWindow() : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+async toggleGameOverlayEditMode() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("toggle_game_overlay_edit_mode") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async syncMonsterOverlayWindowToGameOverlay() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("sync_monster_overlay_window_to_game_overlay") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async startTrainingDummy(monsterId: number) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("start_training_dummy", { monsterId }) };

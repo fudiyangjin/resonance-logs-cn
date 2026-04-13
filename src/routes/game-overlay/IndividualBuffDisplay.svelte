@@ -4,10 +4,14 @@
   import {
     getDisplayIconPosition,
     getDisplayIconSize,
+    hasStandaloneIconPosition,
+    hasStandaloneIconSize,
     individualAllGroupBuffs,
     individualModeIconBuffs,
     individualMonitorAllGroup,
     isEditing,
+    setStandaloneIconPosition,
+    setStandaloneIconSize,
     startDrag,
     startResize,
   } from "./overlay-state.svelte.js";
@@ -16,6 +20,21 @@
   const individualBuffs = $derived(individualModeIconBuffs());
   const allGroup = $derived(individualMonitorAllGroup());
   const allGroupBuffs = $derived(individualAllGroupBuffs());
+
+  $effect(() => {
+    const buffs = individualBuffs;
+    buffs.forEach((buff, idx) => {
+      if (!buff.layoutKey) return;
+      if (!hasStandaloneIconPosition(buff.layoutKey)) {
+        const initialPos = getDisplayIconPosition(buff, idx);
+        setStandaloneIconPosition(buff.layoutKey, initialPos);
+      }
+      if (!hasStandaloneIconSize(buff.layoutKey)) {
+        const initialSize = getDisplayIconSize(buff);
+        setStandaloneIconSize(buff.layoutKey, initialSize);
+      }
+    });
+  });
 </script>
 
 {#each individualBuffs as buff, idx (buff.layoutKey ?? `buff:${buff.baseId}`)}
@@ -31,17 +50,21 @@
     onPointerDown={(e) =>
       startDrag(
         e,
-        buff.categoryKey
-          ? { kind: "categoryIcon", categoryKey: buff.categoryKey }
-          : { kind: "iconBuff", baseId: buff.baseId },
+        buff.layoutKey
+          ? { kind: "standaloneIcon", layoutKey: buff.layoutKey }
+          : buff.categoryKey
+            ? { kind: "categoryIcon", categoryKey: buff.categoryKey }
+            : { kind: "iconBuff", baseId: buff.baseId },
         iconPos,
       )}
     onResizePointerDown={(e) =>
       startResize(
         e,
-        buff.categoryKey
-          ? { kind: "categoryIcon", categoryKey: buff.categoryKey }
-          : { kind: "iconBuff", baseId: buff.baseId },
+        buff.layoutKey
+          ? { kind: "standaloneIcon", layoutKey: buff.layoutKey }
+          : buff.categoryKey
+            ? { kind: "categoryIcon", categoryKey: buff.categoryKey }
+            : { kind: "iconBuff", baseId: buff.baseId },
         iconSize,
       )}
   />

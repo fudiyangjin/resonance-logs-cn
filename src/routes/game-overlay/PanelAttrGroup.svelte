@@ -75,11 +75,10 @@
 
 <style>
   .panel-attr-group.editable {
-    border: 2px solid rgba(102, 204, 255, 0.9);
+    outline: 2px solid rgba(102, 204, 255, 0.9);
     border-radius: 10px;
     background: rgba(20, 36, 56, 0.45);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
-    padding: 8px;
   }
 
   .panel-attr-list {

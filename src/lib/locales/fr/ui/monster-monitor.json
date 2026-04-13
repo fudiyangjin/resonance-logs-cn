@@ -42,5 +42,10 @@
   "overlay.edit.resetPosition": "Réinitialiser la position",
   "overlay.edit.resetSize": "Réinitialiser la taille",
   "overlay.edit.done": "Terminer l’édition",
-  "overlay.edit.dragWindow": "Faites glisser ici pour déplacer la fenêtre Monster Overlay"
+  "overlay.edit.dragWindow": "Faites glisser ici pour déplacer la fenêtre Monster Overlay",
+  "overlay.buffPanel": "Zone de buffs du monstre",
+  "overlay.hateSuffix": " - Aggro",
+  "placeholder.selectBuff": "Sélectionnez des buffs dans le moniteur de monstres",
+  "placeholder.preview": "Aperçu",
+  "placeholder.targetPrefix": "Cible"
 }

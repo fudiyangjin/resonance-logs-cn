@@ -10,6 +10,7 @@
   "columns.baseNote": "ベースメモ (CN)",
   "columns.id": "ID / キー",
   "columns.localName": "現在の言語名",
+  "columns.localOverlayAlias": "現在の Overlay Alias",
   "columns.localNote": "現在の言語メモ",
   "compare.applySelected": "選択した変更を適用",
   "compare.clearJson": "比較ファイルをクリア",

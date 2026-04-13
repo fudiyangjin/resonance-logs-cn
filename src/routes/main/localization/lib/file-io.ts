@@ -105,3 +105,40 @@ export async function writeTranslationRuntimeJson(
         };
     }
 }
+
+export async function writeTranslationRuntimeJsonForLocale(
+    relativePath: string,
+    locale: string,
+    value: unknown,
+): Promise<WriteTranslationRuntimeResult> {
+    try {
+        const contents = JSON.stringify(value, null, 2);
+        const result = await invoke<string>("write_translation_runtime_locale_file", {
+            relativePath,
+            locale,
+            contents,
+        });
+
+        if (typeof result === "string" && result.length > 0) {
+            return {
+                ok: true,
+                message: result,
+            };
+        }
+
+        return { ok: true };
+    } catch (error) {
+        const errorMessage =
+            error instanceof Error ? error.message : String(error);
+
+        console.warn(
+            `[localization] Failed to write runtime locale JSON: ${relativePath} (${locale})`,
+            error,
+        );
+
+        return {
+            ok: false,
+            error: errorMessage,
+        };
+    }
+}

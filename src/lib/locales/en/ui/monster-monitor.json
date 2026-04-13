@@ -42,5 +42,10 @@
   "overlay.edit.resetPosition": "Reset Position",
   "overlay.edit.resetSize": "Reset Size",
   "overlay.edit.done": "Done Editing",
-  "overlay.edit.dragWindow": "Drag here to move the Monster Overlay window"
+  "overlay.edit.dragWindow": "Drag here to move the Monster Overlay window",
+  "overlay.buffPanel": "Monster Buff Area",
+  "overlay.hateSuffix": " - Hate",
+  "placeholder.selectBuff": "Select buffs in Monster Monitor",
+  "placeholder.preview": "Preview",
+  "placeholder.targetPrefix": "Target"
 }

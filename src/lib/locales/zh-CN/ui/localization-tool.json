@@ -10,6 +10,7 @@
   "columns.baseNote": "基础备注 (CN)",
   "columns.id": "ID / 键",
   "columns.localName": "当前语言名称",
+  "columns.localOverlayAlias": "当前 Overlay Alias",
   "columns.localNote": "当前语言备注",
   "compare.applySelected": "应用所选更改",
   "compare.clearJson": "清除对比文件",

@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { emit } from "@tauri-apps/api/event";
-  import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
   import { commands } from "$lib/bindings";
   import SwordsIcon from "virtual:icons/lucide/swords";
   import ExternalLinkIcon from "virtual:icons/lucide/external-link";
@@ -24,12 +22,7 @@
 
   async function toggleOverlayEditMode() {
     try {
-      const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
-      if (overlayWindow !== null) {
-        await emit("overlay-edit-toggle");
-      } else {
-        console.warn("Game overlay window not found");
-      }
+      await commands.toggleGameOverlayEditMode();
     } catch (error) {
       console.error("Failed to toggle overlay edit mode", error);
     }

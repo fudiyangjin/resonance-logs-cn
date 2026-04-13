@@ -4,6 +4,8 @@ export type LocalizationSection = "editLocal" | "compareMerge" | "settings";
 
 export type TranslationFileKind =
     | "skillnames"
+    | "buffname"
+    | "searchtable"
     | "navigation"
     | "generic";
 
@@ -33,12 +35,16 @@ export type TranslationWorkspaceRow = {
     id: string;
     baseName: string;
     baseNote: string;
+    baseOverlayAlias?: string;
     localName: string;
     localNote: string;
+    localOverlayAlias?: string;
     compareName?: string;
     compareNote?: string;
+    compareOverlayAlias?: string;
     nameStatus?: TranslationFieldStatus;
     noteStatus?: TranslationFieldStatus;
+    overlayAliasStatus?: TranslationFieldStatus;
     selection?: TranslationCompareSelection;
     searchBlob: string;
     raw?: unknown;

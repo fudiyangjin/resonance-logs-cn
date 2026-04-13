@@ -15,6 +15,11 @@ import { settings } from "$lib/settings-store";
 
 type MultiLangValue = Partial<Record<LocaleCode, string>>;
 
+type TranslationRefreshPayload = {
+    relativePath?: string;
+    locale?: string;
+};
+
 function cloneJson<T>(value: T): T {
     return JSON.parse(JSON.stringify(value)) as T;
 }
@@ -102,7 +107,12 @@ async function registerMonsterRuntimeListener(): Promise<void> {
     }
 
     if (!monsterRuntimeListenerPromise) {
-        monsterRuntimeListenerPromise = listen("translation-data-refreshed", async () => {
+        monsterRuntimeListenerPromise = listen<TranslationRefreshPayload>("translation-data-refreshed", async (event) => {
+            const relativePath = event.payload?.relativePath;
+            if (relativePath && relativePath !== MONSTER_RUNTIME_RELATIVE_PATH) {
+                return;
+            }
+
             await loadMonsterRuntimeData();
         })
             .then(() => undefined)

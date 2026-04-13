@@ -19,6 +19,7 @@ export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   panelAttrFontSize: 14,
   panelAttrColumnGap: 12,
   iconBuffSizes: {},
+  standaloneIconSizes: {},
   skillDurationSizes: {},
   categoryIconSizes: {},
 };
@@ -152,6 +153,7 @@ export function ensureOverlaySizes(profile: SkillMonitorProfile): OverlaySizes {
       240,
     ),
     iconBuffSizes: current?.iconBuffSizes ?? {},
+    standaloneIconSizes: current?.standaloneIconSizes ?? {},
     skillDurationSizes: current?.skillDurationSizes ?? {},
     categoryIconSizes: current?.categoryIconSizes ?? {},
   };

@@ -82,6 +82,11 @@ type ResonanceSkillSearchEntry = {
   notes?: MultiLangValue;
 };
 
+type TranslationRefreshPayload = {
+  relativePath?: string;
+  locale?: string;
+};
+
 function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
@@ -171,7 +176,12 @@ async function registerResonanceRuntimeListener(): Promise<void> {
   }
 
   if (!resonanceRuntimeListenerPromise) {
-    resonanceRuntimeListenerPromise = listen("translation-data-refreshed", async () => {
+    resonanceRuntimeListenerPromise = listen<TranslationRefreshPayload>("translation-data-refreshed", async (event) => {
+      const relativePath = event.payload?.relativePath;
+      if (relativePath && relativePath !== RESONANCE_RUNTIME_RELATIVE_PATH) {
+        return;
+      }
+
       await loadResonanceSkillSearchRuntimeData();
     })
       .then(() => undefined)

@@ -56,6 +56,11 @@ type RawBuffEntry = {
 type MultiLangValue = Partial<Record<LocaleCode, string>>;
 type MultiLangKeywords = Partial<Record<LocaleCode, string[]>>;
 
+type TranslationRefreshPayload = {
+  relativePath?: string;
+  locale?: string;
+};
+
 type BuffNameTranslationEntry = {
   Id?: number;
   Icon?: string | null;
@@ -67,6 +72,7 @@ type BuffSearchTranslationEntry = {
   name?: MultiLangValue;
   keywords?: MultiLangKeywords;
   notes?: MultiLangValue;
+  overlayAlias?: MultiLangValue;
   categories?: BuffCategoryKey[];
   iconKey?: string | null;
   spriteFile?: string | null;
@@ -209,7 +215,12 @@ async function registerBuffTranslationRuntimeListener(): Promise<void> {
   }
 
   if (!buffTranslationRuntimeListenerPromise) {
-    buffTranslationRuntimeListenerPromise = listen("translation-data-refreshed", async () => {
+    buffTranslationRuntimeListenerPromise = listen<TranslationRefreshPayload>("translation-data-refreshed", async (event) => {
+      const relativePath = event.payload?.relativePath;
+      if (relativePath && relativePath !== BUFF_NAME_RUNTIME_RELATIVE_PATH && relativePath !== BUFF_SEARCH_RUNTIME_RELATIVE_PATH) {
+        return;
+      }
+
       await loadBuffTranslationRuntimeData();
     })
       .then(() => undefined)
@@ -348,6 +359,13 @@ function resolveMultiLangValue(
   return fallback;
 }
 
+function getDirectMultiLangValue(
+  value: MultiLangValue | undefined,
+  locale = getCurrentLocale(),
+): string {
+  return value?.[locale]?.trim() ?? "";
+}
+
 function collectMultiLangTexts(value: MultiLangValue | undefined): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
@@ -398,36 +416,12 @@ function resolveEffectiveBuffCategories(meta: BuffMeta): BuffCategoryKey[] {
   return normalizeBuffCategoryKeys(meta.categories);
 }
 
-function resolveEffectiveHasSpriteFile(meta: BuffMeta): boolean {
-  const entry = lookupBuffSearchEntry(meta.baseId);
-
-  if (typeof entry?.hasSpriteFile === "boolean") {
-    return entry.hasSpriteFile;
-  }
-
-  if (typeof entry?.spriteFile === "string") {
-    return entry.spriteFile.trim().length > 0;
-  }
-
-  return meta.hasSpriteFile;
-}
-
-function isBuffSearchable(meta: BuffMeta): boolean {
-  return (
-    resolveEffectiveHasSpriteFile(meta) ||
-    resolveEffectiveBuffCategories(meta).length > 0
-  );
-}
 
 function rebuildBuffSearchIndex(): void {
   BUFF_SEARCH_INDEX.length = 0;
   BUFF_SEARCH_INDEX_MAP.clear();
 
   for (const meta of BUFF_META_MAP.values()) {
-    if (!isBuffSearchable(meta)) {
-      continue;
-    }
-
     const texts = collectBuffSearchTexts(meta);
     if (texts.length === 0) {
       continue;
@@ -443,6 +437,109 @@ function rebuildBuffSearchIndex(): void {
 
 function resolveBuffTranslatedName(baseId: number, fallback: string): string {
   return resolveMultiLangValue(lookupBuffNameEntry(baseId)?.NameDesign, fallback);
+}
+
+function resolveBuffSearchTranslatedName(baseId: number, fallback: string): string {
+  return resolveMultiLangValue(
+    lookupBuffSearchEntry(baseId)?.name,
+    resolveBuffTranslatedName(baseId, fallback),
+  );
+}
+
+function resolveBuffOverlayAlias(baseId: number): string {
+  return resolveMultiLangValue(lookupBuffSearchEntry(baseId)?.overlayAlias, "");
+}
+
+export function getDirectBuffOverlayAlias(baseId: number): string {
+  return getDirectMultiLangValue(lookupBuffSearchEntry(baseId)?.overlayAlias);
+}
+
+export function getConfiguredBuffOverlayAliasIds(
+  aliases?: BuffAliasMap,
+): number[] {
+  const directLocale = getCurrentLocale();
+  const idSet = new Set<number>();
+
+  for (const [baseId, entry] of Object.entries(BUFF_SEARCH_TRANSLATIONS)) {
+    const id = Number(baseId);
+    if (!Number.isFinite(id)) continue;
+    const directOverlayAlias = getDirectMultiLangValue(entry.overlayAlias, directLocale);
+    if (directOverlayAlias) {
+      idSet.add(id);
+    }
+  }
+
+  for (const baseId of Object.keys(normalizeAliasMap(aliases))) {
+    const id = Number(baseId);
+    if (Number.isFinite(id)) {
+      idSet.add(id);
+    }
+  }
+
+  return Array.from(idSet).sort((a, b) => a - b);
+}
+
+function buildSearchTranslationSeed(baseId: number): BuffSearchTranslationEntry {
+  const meta = lookupBuffMeta(baseId);
+  const defaultName = meta?.defaultName ?? `#${baseId}`;
+
+  return {
+    name: {
+      [DEFAULT_LOCALE]: resolveBuffTranslatedName(baseId, defaultName),
+    },
+    notes: {},
+    overlayAlias: {},
+    keywords: {},
+    categories: meta ? resolveEffectiveBuffCategories(meta) : [],
+    iconKey: meta?.iconKey ?? null,
+    spriteFile: meta?.spriteFile ?? null,
+    hasSpriteFile: meta?.hasSpriteFile ?? false,
+  };
+}
+
+export async function saveBuffOverlayAlias(
+  baseId: number,
+  overlayAlias: string,
+): Promise<{ ok: true; message?: string } | { ok: false; error: string }> {
+  const locale = getCurrentLocale();
+  await ensureBuffTranslationRuntimeFiles();
+  const runtimeTranslations = await readRuntimeBuffSearchTranslations();
+  const nextTranslations = cloneJson(runtimeTranslations ?? BUFF_SEARCH_TRANSLATIONS);
+  const key = String(baseId);
+  const nextEntry = {
+    ...buildSearchTranslationSeed(baseId),
+    ...(nextTranslations[key] ?? {}),
+  } satisfies BuffSearchTranslationEntry;
+
+  nextEntry.overlayAlias = {
+    ...(nextEntry.overlayAlias ?? {}),
+    [locale]: overlayAlias.trim(),
+  };
+
+  nextTranslations[key] = nextEntry;
+
+  try {
+    const result = await invoke<string>("write_translation_runtime_locale_file", {
+      relativePath: BUFF_SEARCH_RUNTIME_RELATIVE_PATH,
+      locale,
+      contents: JSON.stringify(nextTranslations, null, 2),
+    });
+
+    replaceRecordContents(BUFF_SEARCH_TRANSLATIONS, nextTranslations);
+    rebuildBuffSearchIndex();
+
+    return {
+      ok: true,
+      ...(typeof result === "string" && result.length > 0
+        ? { message: result }
+        : {}),
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 function collectBuffSearchTexts(meta: BuffMeta): string[] {
@@ -473,6 +570,11 @@ function collectBuffSearchTexts(meta: BuffMeta): string[] {
   }
 
   for (const text of collectMultiLangTexts(searchEntry?.notes)) {
+    const normalized = normalizeText(text);
+    if (normalized) texts.add(normalized);
+  }
+
+  for (const text of collectMultiLangTexts(searchEntry?.overlayAlias)) {
     const normalized = normalizeText(text);
     if (normalized) texts.add(normalized);
   }
@@ -618,6 +720,22 @@ export function expandBuffSelection(
   );
 }
 
+export function lookupResolvedBuffBaseName(baseId: number): string | undefined {
+  const defaultName = lookupDefaultBuffName(baseId);
+  if (!defaultName) return undefined;
+  return resolveBuffSearchTranslatedName(baseId, defaultName);
+}
+
+export function resolveBuffSearchDisplayName(
+  baseId: number,
+  aliases?: BuffAliasMap,
+): string {
+  const alias = getAlias(baseId, aliases);
+  if (alias) return alias;
+
+  return lookupResolvedBuffBaseName(baseId) ?? `#${baseId}`;
+}
+
 export function resolveBuffDisplayName(
   baseId: number,
   aliases?: BuffAliasMap,
@@ -629,6 +747,19 @@ export function resolveBuffDisplayName(
   return resolveBuffTranslatedName(baseId, defaultName);
 }
 
+export function resolveBuffOverlayDisplayName(
+  baseId: number,
+  aliases?: BuffAliasMap,
+): string {
+  const alias = getAlias(baseId, aliases);
+  if (alias) return alias;
+
+  const overlayAlias = resolveBuffOverlayAlias(baseId);
+  if (overlayAlias) return overlayAlias;
+
+  return resolveBuffSearchDisplayName(baseId, aliases);
+}
+
 export function resolveBuffNameInfo(
   baseId: number,
   aliases?: BuffAliasMap,
@@ -636,15 +767,21 @@ export function resolveBuffNameInfo(
   const meta = lookupBuffMeta(baseId);
   return {
     baseId,
-    name: resolveBuffDisplayName(baseId, aliases),
+    name: resolveBuffSearchDisplayName(baseId, aliases),
     hasSpriteFile: meta?.hasSpriteFile ?? false,
   };
 }
 
-export function searchBuffsByName(
+function isIconSearchableBuff(baseId: number): boolean {
+  const meta = lookupBuffMeta(baseId);
+  return Boolean(meta?.hasSpriteFile && meta.spriteFile);
+}
+
+function searchBuffs(
   keyword: string,
   aliases?: BuffAliasMap,
   limit?: number | null,
+  matcher?: (baseId: number) => boolean,
 ): BuffNameInfo[] {
   const normalizedKeyword = normalizeText(keyword);
   if (!normalizedKeyword) return [];
@@ -653,6 +790,10 @@ export function searchBuffsByName(
   const matches: Array<{ baseId: number; rank: number }> = [];
 
   for (const entry of BUFF_SEARCH_INDEX) {
+    if (matcher && !matcher(entry.baseId)) {
+      continue;
+    }
+
     const alias = normalizedAliases[String(entry.baseId)] ?? null;
     const aliasRank = getMatchRank(alias, normalizedKeyword, 1, 2);
 
@@ -682,6 +823,22 @@ export function searchBuffsByName(
   return visibleMatches.map((match) =>
     resolveBuffNameInfo(match.baseId, normalizedAliases),
   );
+}
+
+export function searchBuffsByName(
+  keyword: string,
+  aliases?: BuffAliasMap,
+  limit?: number | null,
+): BuffNameInfo[] {
+  return searchBuffs(keyword, aliases, limit);
+}
+
+export function searchIconBuffsByName(
+  keyword: string,
+  aliases?: BuffAliasMap,
+  limit?: number | null,
+): BuffNameInfo[] {
+  return searchBuffs(keyword, aliases, limit, isIconSearchableBuff);
 }
 
 void initializeBuffSearchRuntimeData();

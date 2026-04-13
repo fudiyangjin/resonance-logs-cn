@@ -22,11 +22,11 @@ import {
 
 type OverlayPositionKey = keyof Omit<
   typeof DEFAULT_OVERLAY_POSITIONS,
-  "iconBuffPositions" | "skillDurationPositions" | "categoryIconPositions"
+  "iconBuffPositions" | "standaloneIconPositions" | "skillDurationPositions" | "categoryIconPositions"
 >;
 type OverlaySizeKey = keyof Omit<
   typeof DEFAULT_OVERLAY_SIZES,
-  "iconBuffSizes" | "skillDurationSizes" | "categoryIconSizes"
+  "iconBuffSizes" | "standaloneIconSizes" | "skillDurationSizes" | "categoryIconSizes"
 >;
 
 function clampGroupScale(value: number) {
@@ -35,6 +35,36 @@ function clampGroupScale(value: number) {
 
 function clampIconSize(value: number) {
   return Math.max(24, Math.min(120, Math.round(value)));
+}
+
+function getLegacyStandaloneIconPositionRecord() {
+  const record = getOverlayPositions().iconBuffPositions as Record<string, { x: number; y: number }>;
+  return Object.fromEntries(
+    Object.entries(record).filter(([key]) => Number.isNaN(Number(key))),
+  ) as Record<string, { x: number; y: number }>;
+}
+
+function getStandaloneIconPositionRecord() {
+  return (getOverlayPositions().standaloneIconPositions ?? {}) as Record<string, { x: number; y: number }>;
+}
+
+function getLegacyStandaloneIconSizeRecord() {
+  const record = getOverlaySizes().iconBuffSizes as Record<string, number>;
+  return Object.fromEntries(
+    Object.entries(record).filter(([key]) => Number.isNaN(Number(key))),
+  ) as Record<string, number>;
+}
+
+function getStandaloneIconSizeRecord() {
+  return (getOverlaySizes().standaloneIconSizes ?? {}) as Record<string, number>;
+}
+
+export function hasStandaloneIconPosition(layoutKey: string) {
+  return getStandaloneIconPositionRecord()[layoutKey] !== undefined;
+}
+
+export function hasStandaloneIconSize(layoutKey: string) {
+  return getStandaloneIconSizeRecord()[layoutKey] !== undefined;
 }
 
 function updateOverlaySizes(
@@ -163,6 +193,12 @@ export function getDisplayIconPosition(
   buff: IconBuffDisplay,
   fallbackIndex = 0,
 ) {
+  if (buff.layoutKey) {
+    const cached = getStandaloneIconPositionRecord()[buff.layoutKey];
+    if (cached) return cached;
+    const legacy = getLegacyStandaloneIconPositionRecord()[buff.layoutKey];
+    if (legacy) return legacy;
+  }
   if (buff.categoryKey) {
     return getCategoryIconPosition(buff.categoryKey, fallbackIndex);
   }
@@ -199,10 +235,32 @@ export function getCategoryIconSize(categoryKey: BuffCategoryKey): number {
 }
 
 export function getDisplayIconSize(buff: IconBuffDisplay): number {
+  if (buff.layoutKey) {
+    const cached = getStandaloneIconSizeRecord()[buff.layoutKey];
+    if (cached !== undefined) return cached;
+    const legacy = getLegacyStandaloneIconSizeRecord()[buff.layoutKey];
+    if (legacy !== undefined) return legacy;
+  }
   if (buff.categoryKey) {
     return getCategoryIconSize(buff.categoryKey);
   }
   return getIconBuffSize(buff.baseId);
+}
+
+export function setStandaloneIconSize(layoutKey: string, value: number) {
+  const nextValue = clampIconSize(value);
+  updateOverlaySizes((sizes) => {
+    const nextLegacy = { ...(sizes.iconBuffSizes as Record<string, number>) };
+    delete nextLegacy[layoutKey];
+    return {
+      ...sizes,
+      iconBuffSizes: nextLegacy as typeof sizes.iconBuffSizes,
+      standaloneIconSizes: {
+        ...(sizes.standaloneIconSizes ?? {}),
+        [layoutKey]: nextValue,
+      },
+    };
+  });
 }
 
 export function setIconBuffSize(baseId: number, value: number) {
@@ -248,6 +306,24 @@ export function setIconBuffPosition(
       [baseId]: nextPos,
     },
   }));
+}
+
+export function setStandaloneIconPosition(
+  layoutKey: string,
+  nextPos: { x: number; y: number },
+) {
+  updateOverlayPositions((positions) => {
+    const nextLegacy = { ...(positions.iconBuffPositions as Record<string, { x: number; y: number }>) };
+    delete nextLegacy[layoutKey];
+    return {
+      ...positions,
+      iconBuffPositions: nextLegacy as typeof positions.iconBuffPositions,
+      standaloneIconPositions: {
+        ...(positions.standaloneIconPositions ?? {}),
+        [layoutKey]: nextPos,
+      },
+    };
+  });
 }
 
 export function setSkillDurationPosition(
@@ -389,6 +465,11 @@ export function onGlobalPointerMove(e: PointerEvent) {
         overlayRuntime.resizeState.target.groupId,
         overlayRuntime.resizeState.startValue + delta / 300,
       );
+    } else if (overlayRuntime.resizeState.target.kind === "standaloneIcon") {
+      setStandaloneIconSize(
+        overlayRuntime.resizeState.target.layoutKey,
+        overlayRuntime.resizeState.startValue + delta / 2,
+      );
     } else if (overlayRuntime.resizeState.target.kind === "individualAllGroup") {
       setIndividualAllGroupIconSize(overlayRuntime.resizeState.startValue + delta / 2);
     } else if (overlayRuntime.resizeState.target.kind === "buffGroup") {
@@ -438,6 +519,8 @@ export function onGlobalPointerMove(e: PointerEvent) {
     setGroupPosition(overlayRuntime.dragState.target.key, nextPos);
   } else if (overlayRuntime.dragState.target.kind === "customPanelGroup") {
     setCustomPanelGroupPosition(overlayRuntime.dragState.target.groupId, nextPos);
+  } else if (overlayRuntime.dragState.target.kind === "standaloneIcon") {
+    setStandaloneIconPosition(overlayRuntime.dragState.target.layoutKey, nextPos);
   } else if (overlayRuntime.dragState.target.kind === "individualAllGroup") {
     setIndividualAllGroupPosition(nextPos);
   } else if (overlayRuntime.dragState.target.kind === "buffGroup") {

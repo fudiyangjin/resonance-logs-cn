@@ -193,6 +193,8 @@ const RUNTIME_TRANSLATION_DESCRIPTORS = [
 type TranslationRefreshPayload = {
   dir?: string;
   createdCount?: number;
+  relativePath?: string;
+  locale?: string;
   timestamp?: string;
 };
 
@@ -258,7 +260,12 @@ async function registerTranslationRuntimeListener(): Promise<void> {
   if (!translationRuntimeListenerPromise) {
     translationRuntimeListenerPromise = listen<TranslationRefreshPayload>(
       "translation-data-refreshed",
-      async () => {
+      async (event) => {
+        const relativePath = event.payload?.relativePath;
+        if (relativePath && !RUNTIME_TRANSLATION_DESCRIPTORS.some((descriptor) => descriptor.relativePath === relativePath)) {
+          return;
+        }
+
         await loadRuntimeTranslationTables();
       },
     )

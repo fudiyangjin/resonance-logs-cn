@@ -10,6 +10,7 @@
   "columns.baseNote": "Nota base (CN)",
   "columns.id": "ID / Clave",
   "columns.localName": "Nombre del idioma actual",
+  "columns.localOverlayAlias": "Alias de Overlay actual",
   "columns.localNote": "Idioma actual Note",
   "compare.applySelected": "Aplicar cambios seleccionados",
   "compare.clearJson": "Limpiar archivo de comparación",

@@ -40,8 +40,8 @@
     getBuffDisplayName: (buffId: number) => string;
     getBuffDefaultName: (buffId: number) => string;
     getBuffAlias: (buffId: number) => string;
-    setBuffAlias: (buffId: number, alias: string) => void;
-    resetBuffAlias: (buffId: number) => void;
+    setBuffAlias: (buffId: number, alias: string) => void | Promise<void>;
+    resetBuffAlias: (buffId: number) => void | Promise<void>;
     isBuffSelected: (buffId: number) => boolean;
     isBuffCategorySelected: (categoryKey: BuffCategoryKey) => boolean;
     toggleBuff: (buffId: number) => void;
@@ -431,7 +431,7 @@
                   <button
                     type="button"
                     class="text-xs px-2 py-1 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50"
-                    onclick={() => resetBuffAlias(buffAliasEditingBuffId)}
+                    onclick={() => void resetBuffAlias(buffAliasEditingBuffId)}
                     disabled={!getBuffAlias(buffAliasEditingBuffId)}
                   >
                     {t("restoreDefault", "恢复默认")}
@@ -441,8 +441,8 @@
                   class="w-full rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder={getBuffDefaultName(buffAliasEditingBuffId)}
                   value={getBuffAlias(buffAliasEditingBuffId)}
-                  oninput={(event) =>
-                    setBuffAlias(buffAliasEditingBuffId, (event.currentTarget as HTMLInputElement).value)}
+                  onchange={(event) =>
+                    void setBuffAlias(buffAliasEditingBuffId, (event.currentTarget as HTMLInputElement).value)}
                 />
               </div>
             {/if}
@@ -475,7 +475,7 @@
                     <button
                       type="button"
                       class="text-xs px-2 py-1 rounded border border-border/60 hover:bg-muted/40"
-                      onclick={() => resetBuffAlias(buffId)}
+                      onclick={() => void resetBuffAlias(buffId)}
                     >
                       {t("restoreDefault", "恢复默认")}
                     </button>
@@ -484,8 +484,8 @@
                     class="w-full rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                     placeholder={getBuffDefaultName(buffId)}
                     value={getBuffAlias(buffId)}
-                    oninput={(event) =>
-                      setBuffAlias(buffId, (event.currentTarget as HTMLInputElement).value)}
+                    onchange={(event) =>
+                      void setBuffAlias(buffId, (event.currentTarget as HTMLInputElement).value)}
                   />
                 </div>
               {/each}

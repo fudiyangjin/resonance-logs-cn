@@ -61,10 +61,11 @@ export type DragTarget =
       kind: "group";
       key: keyof Omit<
         OverlayPositions,
-        "iconBuffPositions" | "skillDurationPositions" | "categoryIconPositions"
+        "iconBuffPositions" | "standaloneIconPositions" | "skillDurationPositions" | "categoryIconPositions"
       >;
     }
   | { kind: "customPanelGroup"; groupId: string }
+  | { kind: "standaloneIcon"; layoutKey: string }
   | { kind: "iconBuff"; baseId: number }
   | { kind: "skillDuration"; skillId: number }
   | { kind: "categoryIcon"; categoryKey: BuffCategoryKey }
@@ -83,10 +84,11 @@ export type ResizeTarget =
       kind: "group";
       key: keyof Omit<
         OverlaySizes,
-        "iconBuffSizes" | "skillDurationSizes" | "categoryIconSizes"
+        "iconBuffSizes" | "standaloneIconSizes" | "skillDurationSizes" | "categoryIconSizes"
       >;
     }
   | { kind: "customPanelGroup"; groupId: string }
+  | { kind: "standaloneIcon"; layoutKey: string }
   | { kind: "iconBuff"; baseId: number }
   | { kind: "skillDuration"; skillId: number }
   | { kind: "categoryIcon"; categoryKey: BuffCategoryKey }

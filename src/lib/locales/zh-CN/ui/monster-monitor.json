@@ -42,5 +42,10 @@
   "overlay.edit.resetPosition": "重置位置",
   "overlay.edit.resetSize": "重置尺寸",
   "overlay.edit.done": "完成编辑",
-  "overlay.edit.dragWindow": "拖动此处移动 Monster Overlay 窗口"
+  "overlay.edit.dragWindow": "拖动此处移动 Monster Overlay 窗口",
+  "overlay.buffPanel": "怪物 Buff 区",
+  "overlay.hateSuffix": " - 仇恨",
+  "placeholder.selectBuff": "在怪物监控页选择 Buff",
+  "placeholder.preview": "预览",
+  "placeholder.targetPrefix": "目标"
 }

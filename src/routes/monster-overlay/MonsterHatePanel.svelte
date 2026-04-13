@@ -1,5 +1,7 @@
 <script lang="ts">
   import TextBuffRow from "$lib/components/TextBuffRow.svelte";
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
   import {
     getHatePanelPosition,
     getHatePanelScale,
@@ -15,6 +17,7 @@
   const styleConfig = $derived(hatePanelStyle());
   const panelPos = $derived(getHatePanelPosition());
   const panelScale = $derived(getHatePanelScale());
+  const t = uiT("monster-monitor", () => SETTINGS.live.general.state.language);
 </script>
 
 {#if sections.length > 0 || editing}
@@ -29,13 +32,13 @@
     onpointerdown={(event) => startMonsterDrag(event, { kind: "hatePanel" }, panelPos)}
   >
     {#if editing}
-      <div class="group-tag">仇恨区</div>
+      <div class="group-tag">{t("overlay.hatePanel", "Hate Area")}</div>
     {/if}
 
     <div class="section-list">
       {#each sections as section (section.bossUid)}
         <section class="boss-section" class:placeholder={section.isPlaceholder}>
-          <div class="boss-title">{section.title} - 仇恨</div>
+          <div class="boss-title">{section.title}{t("overlay.hateSuffix", " - Hate")}</div>
           <div class="boss-rows" style:gap={`${styleConfig.gap}px`}>
             {#each section.rows as row (row.key)}
               <TextBuffRow
@@ -79,7 +82,6 @@
     border-radius: 10px;
     background: rgba(52, 24, 42, 0.5);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
-    padding: 8px;
   }
 
   .section-list {

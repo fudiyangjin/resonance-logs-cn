@@ -201,6 +201,14 @@ fn deep_fill_missing(target: &mut Value, source: &Value) -> usize {
             }
             inserted
         }
+        (Value::String(target_value), Value::String(source_value)) => {
+            if target_value.trim().is_empty() && !source_value.trim().is_empty() {
+                *target_value = source_value.clone();
+                1
+            } else {
+                0
+            }
+        }
         _ => 0,
     }
 }
@@ -396,7 +404,7 @@ fn combine_search_table(locales_dir: &Path, locales: &[String], file_name: &str)
             if let Value::Object(target_obj) = target {
                 for (k, v) in entry {
                     match k.as_str() {
-                        "name" | "notes" => set_locale_string(target_obj, &k, locale, v.as_str().unwrap_or("").to_string()),
+                        "name" | "notes" | "overlayAlias" => set_locale_string(target_obj, &k, locale, v.as_str().unwrap_or("").to_string()),
                         "keywords" => set_locale_array(target_obj, &k, locale, v.as_array().cloned().unwrap_or_default()),
                         _ => {
                             target_obj.entry(k).or_insert(v);
@@ -491,6 +499,7 @@ fn split_search_table(contents: &Value, locales: &[String]) -> Result<Vec<(Strin
         let entry = value.as_object().ok_or_else(|| format!("Expected object entry for id {id}"))?;
         let name_map = entry.get("name").and_then(Value::as_object).cloned().unwrap_or_default();
         let notes_map = entry.get("notes").and_then(Value::as_object).cloned().unwrap_or_default();
+        let overlay_alias_map = entry.get("overlayAlias").and_then(Value::as_object).cloned().unwrap_or_default();
         let keywords_map = entry.get("keywords").and_then(Value::as_object).cloned().unwrap_or_default();
         for (locale, out) in outputs.iter_mut() {
             let mut local_entry = Map::new();
@@ -498,6 +507,7 @@ fn split_search_table(contents: &Value, locales: &[String]) -> Result<Vec<(Strin
                 match k.as_str() {
                     "name" => { local_entry.insert(k.clone(), Value::String(name_map.get(locale).and_then(Value::as_str).unwrap_or("").to_string())); },
                     "notes" => { local_entry.insert(k.clone(), Value::String(notes_map.get(locale).and_then(Value::as_str).unwrap_or("").to_string())); },
+                    "overlayAlias" => { local_entry.insert(k.clone(), Value::String(overlay_alias_map.get(locale).and_then(Value::as_str).unwrap_or("").to_string())); },
                     "keywords" => { local_entry.insert(k.clone(), Value::Array(keywords_map.get(locale).and_then(Value::as_array).cloned().unwrap_or_default())); },
                     _ => { local_entry.insert(k.clone(), v.clone()); },
                 }
@@ -544,6 +554,38 @@ fn write_runtime_virtual_file(locales_dir: &Path, locales: &[String], relative_p
         fs::write(&target, pretty_json(&value)?)
             .map_err(|e| format!("Failed to write {}: {e}", target.display()))?;
     }
+    Ok(())
+}
+
+fn write_runtime_virtual_file_for_locale(
+    locales_dir: &Path,
+    locales: &[String],
+    relative_path: &str,
+    locale: &str,
+    contents: &str,
+) -> Result<(), String> {
+    let normalized = normalize_relative_path(relative_path);
+
+    if !locales.iter().any(|candidate| candidate == locale) {
+        return Err(format!("Unsupported locale for runtime write: {locale}"));
+    }
+
+    let parsed: Value = serde_json::from_str(contents)
+        .map_err(|e| format!("Failed to parse JSON for {normalized}: {e}"))?;
+
+    let split_outputs = split_virtual_file(&normalized, &parsed, &[locale.to_string()])?;
+    let Some((_, rel, value)) = split_outputs.into_iter().next() else {
+        return Err(format!("Failed to build locale output for {normalized} ({locale})"));
+    };
+
+    let target = locales_dir.join(locale).join(&rel);
+    if let Some(parent) = target.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create {}: {e}", parent.display()))?;
+    }
+    fs::write(&target, pretty_json(&value)?)
+        .map_err(|e| format!("Failed to write {}: {e}", target.display()))?;
+
     Ok(())
 }
 
@@ -646,13 +688,26 @@ fn generated_monster_source() -> Result<BTreeMap<String, String>, String> {
 }
 
 fn generated_ui_string_source(app_handle: &AppHandle, relative_path: &str) -> Result<BTreeMap<String, String>, String> {
+    source_ui_string_source_for_locale(app_handle, "zh-CN", relative_path)
+}
+
+fn source_ui_string_source_for_locale(
+    app_handle: &AppHandle,
+    locale: &str,
+    relative_path: &str,
+) -> Result<BTreeMap<String, String>, String> {
     let normalized = normalize_relative_path(relative_path);
     if !normalized.starts_with("ui/") {
         return Err(format!("UI generator only supports ui/* paths, got {normalized}"));
     }
 
     let source_dir = source_locales_dir(app_handle)?;
-    let source_path = source_dir.join("zh-CN").join(&normalized);
+    let preferred_path = source_dir.join(locale).join(&normalized);
+    let source_path = if preferred_path.exists() {
+        preferred_path
+    } else {
+        source_dir.join("zh-CN").join(&normalized)
+    };
     let raw = ensure_object(read_json_or_empty(&source_path)?);
     let mut out = BTreeMap::new();
 
@@ -773,6 +828,7 @@ fn generated_buff_name_search_source() -> Result<BTreeMap<String, Map<String, Va
             if icon.is_empty() { Value::Null } else { Value::String(icon) },
         );
         next.insert("name".to_string(), Value::String(name.clone()));
+        next.insert("overlayAlias".to_string(), Value::String(String::new()));
         next.insert("notes".to_string(), Value::String(String::new()));
         next.insert(
             "keywords".to_string(),
@@ -788,20 +844,17 @@ fn generated_buff_name_search_source() -> Result<BTreeMap<String, Map<String, Va
 fn merge_generated_string_locale_file(
     generated: &BTreeMap<String, String>,
     existing: Map<String, Value>,
-    locale: &str,
+    _locale: &str,
 ) -> Value {
     let mut existing = existing;
     let mut out = Map::new();
 
-    for (id, zh_value) in generated {
-        let value = if locale == "zh-CN" {
-            zh_value.clone()
-        } else {
-            existing
-                .remove(id)
-                .and_then(|value| value.as_str().map(ToOwned::to_owned))
-                .unwrap_or_default()
-        };
+    for (id, source_value) in generated {
+        let value = existing
+            .remove(id)
+            .and_then(|value| value.as_str().map(ToOwned::to_owned))
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| source_value.clone());
         out.insert(id.clone(), Value::String(value));
     }
 
@@ -935,6 +988,14 @@ fn merge_generated_search_locale_file(
                 "notes" => {
                     let localized = existing_entry
                         .get("notes")
+                        .and_then(Value::as_str)
+                        .unwrap_or("")
+                        .to_string();
+                    next_entry.insert(key.clone(), Value::String(localized));
+                }
+                "overlayAlias" => {
+                    let localized = existing_entry
+                        .get("overlayAlias")
                         .and_then(Value::as_str)
                         .unwrap_or("")
                         .to_string();
@@ -1148,6 +1209,31 @@ pub fn write_translation_runtime_file(app_handle: tauri::AppHandle, relative_pat
 
 #[tauri::command]
 #[specta::specta]
+pub fn write_translation_runtime_locale_file(
+    app_handle: tauri::AppHandle,
+    relative_path: String,
+    locale: String,
+    contents: String,
+) -> Result<String, String> {
+    let runtime_dir = ensure_runtime_locales_seeded(&app_handle)?;
+    let locales = read_manifest_locales(&runtime_dir)?;
+    let normalized = normalize_relative_path(&relative_path);
+    write_runtime_virtual_file_for_locale(&runtime_dir, &locales, &normalized, &locale, &contents)?;
+    let timestamp = chrono::Utc::now().to_rfc3339();
+    let _ = app_handle.emit(
+        "translation-data-refreshed",
+        serde_json::json!({
+            "dir": runtime_dir,
+            "relativePath": normalized,
+            "locale": locale,
+            "timestamp": timestamp,
+        }),
+    );
+    Ok(format!("Saved {normalized} ({locale})"))
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn generate_ui_translation_scaffold(app_handle: tauri::AppHandle, relative_path: String) -> Result<String, String> {
     let runtime_dir = ensure_runtime_locales_seeded(&app_handle)?;
     let locales = read_manifest_locales(&runtime_dir)?;
@@ -1155,7 +1241,8 @@ pub fn generate_ui_translation_scaffold(app_handle: tauri::AppHandle, relative_p
     let generated = generated_ui_string_source(&app_handle, &normalized)?;
     let entry_count = generated.len();
     generate_locale_file_for_all_locales(&runtime_dir, &locales, &normalized, |locale, existing| {
-        Ok(merge_generated_string_locale_file(&generated, existing, locale))
+        let localized_source = source_ui_string_source_for_locale(&app_handle, locale, &normalized)?;
+        Ok(merge_generated_string_locale_file(&localized_source, existing, locale))
     })?;
     let _ = refresh_translation_runtime_data(app_handle.clone())?;
     Ok(format!(
@@ -1182,7 +1269,8 @@ pub fn generate_all_ui_translation_scaffolds(app_handle: tauri::AppHandle) -> Re
         let generated = generated_ui_string_source(&app_handle, relative_path)?;
         total_keys += generated.len();
         generate_locale_file_for_all_locales(&runtime_dir, &locales, relative_path, |locale, existing| {
-            Ok(merge_generated_string_locale_file(&generated, existing, locale))
+            let localized_source = source_ui_string_source_for_locale(&app_handle, locale, relative_path)?;
+            Ok(merge_generated_string_locale_file(&localized_source, existing, locale))
         })?;
     }
 

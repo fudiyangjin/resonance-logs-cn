@@ -14,6 +14,7 @@
     createMonitorRuntimeSnapshotSignature,
     saveAndApplyMonitorRuntimeSnapshot,
   } from "$lib/runtime-monitor-sync";
+  import { commands } from "$lib/bindings";
   import { onMount } from 'svelte';
   import ToolSidebar from "./tool-sidebar.svelte";
   import ChangelogModal from '$lib/components/ChangelogModal.svelte';
@@ -97,6 +98,10 @@
           if (lastMonsterOverlayVisibleState !== enabled) {
             lastMonsterOverlayVisibleState = enabled;
             if (enabled) {
+              const syncResult = await commands.syncMonsterOverlayWindowToGameOverlay();
+              if (syncResult.status === "error") {
+                console.warn("[monster-monitor] failed to sync monster overlay bounds", syncResult.error);
+              }
               await monsterOverlayWindow.show();
               await monsterOverlayWindow.unminimize();
             } else {

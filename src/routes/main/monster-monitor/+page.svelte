@@ -3,14 +3,17 @@
   import BuffSearchResultGrid from "$lib/components/BuffSearchResultGrid.svelte";
   import {
     getAvailableBuffDefinitions,
-    lookupDefaultBuffName,
-    resolveBuffDisplayName,
+    getDirectBuffOverlayAlias,
+    lookupResolvedBuffBaseName,
+    resolveBuffSearchDisplayName,
+    saveBuffOverlayAlias,
     searchBuffsByName,
     type BuffDefinition,
     type BuffNameInfo,
   } from "$lib/config/buff-name-table";
   import { SETTINGS, ensureBuffAliases } from "$lib/settings-store";
   import { resolveMonsterMonitorTranslation } from "$lib/i18n";
+  import { toast } from "svelte-sonner";
 
   type SearchTarget = "global" | "self";
   type MonsterMonitorTab = "buff" | "hate";
@@ -89,20 +92,20 @@
     }));
   }
 
-  function setAlias(buffId: number, alias: string) {
+  async function setAlias(buffId: number, alias: string) {
     updateMonsterMonitor((state) => {
       const nextAliases = { ...state.buffAliases };
-      const trimmed = alias.trim();
-      if (trimmed) {
-        nextAliases[buffId] = trimmed;
-      } else {
-        delete nextAliases[buffId];
-      }
+      delete nextAliases[String(buffId)];
       return {
         ...state,
         buffAliases: nextAliases,
       };
     });
+
+    const result = await saveBuffOverlayAlias(buffId, alias);
+    if (!result.ok) {
+      toast.error(`Failed to save overlay alias: ${result.error}`);
+    }
   }
 
   function updatePanelStyle<K extends keyof typeof monsterMonitor.panelStyle>(
@@ -139,21 +142,21 @@
 
   function searchStatusLabel(buffId: number): string | null {
     if (searchTarget === "global") {
-      if (globalBuffIds.includes(buffId)) return t("status.addedGlobal", "已加全局");
-      if (selfAppliedBuffIds.includes(buffId)) return t("status.currentlySelf", "当前在仅自身");
+      if (globalBuffIds.includes(buffId)) return t("status.addedGlobal", "Added to Global");
+      if (selfAppliedBuffIds.includes(buffId)) return t("status.currentlySelf", "Currently in Self Only");
       return null;
     }
-    if (selfAppliedBuffIds.includes(buffId)) return t("status.addedSelf", "已加仅自身");
-    if (globalBuffIds.includes(buffId)) return t("status.currentlyGlobal", "当前在全局");
+    if (selfAppliedBuffIds.includes(buffId)) return t("status.addedSelf", "Added to Self Only");
+    if (globalBuffIds.includes(buffId)) return t("status.currentlyGlobal", "Currently in Global");
     return null;
   }
 
   function buffName(buffId: number) {
-    return resolveBuffDisplayName(buffId, buffAliases);
+    return resolveBuffSearchDisplayName(buffId, buffAliases);
   }
 
   function defaultBuffName(buffId: number) {
-    return lookupDefaultBuffName(buffId) ?? `Buff ${buffId}`;
+    return lookupResolvedBuffBaseName(buffId) ?? `Buff ${buffId}`;
   }
 </script>
 
@@ -162,7 +165,7 @@
     <div class="flex justify-start">
       <div class="min-w-[220px]">
         <SettingsSwitch
-          label={t("enable", "启用怪物监控")}
+          label={t("enable", "Enable Monster Monitor")}
           bind:checked={SETTINGS.monsterMonitor.state.enabled}
         />
       </div>
@@ -180,7 +183,7 @@
           activeTab = "buff";
         }}
       >
-        {t("tab.buff", "Buff 监控")}
+        {t("tab.buff", "Buff Monitor")}
       </button>
       <button
         type="button"
@@ -191,7 +194,7 @@
           activeTab = "hate";
         }}
       >
-        {t("tab.hate", "仇恨列表")}
+        {t("tab.hate", "Hate List")}
       </button>
     </div>
   </section>
@@ -199,7 +202,7 @@
   {#if activeTab === "buff"}
     <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-5">
       <div class="space-y-1">
-        <h2 class="text-base font-semibold text-foreground">{t("buffSearchTitle", "Buff 搜索与选择")}</h2>
+        <h2 class="text-base font-semibold text-foreground">{t("buffSearchTitle", "Buff Search & Selection")}</h2>
       </div>
 
       <div class="flex flex-wrap gap-2">
@@ -212,7 +215,7 @@
             searchTarget = "self";
           }}
         >
-          {t("searchTarget.self", "搜索加入仅自身施加")}
+          {t("searchTarget.self", "Search to Add to Self Only")}
         </button>
         <button
           type="button"
@@ -223,7 +226,7 @@
             searchTarget = "global";
           }}
         >
-          {t("searchTarget.global", "搜索加入全局监控")}
+          {t("searchTarget.global", "Search to Add to Global Monitoring")}
         </button>
       </div>
 
@@ -232,8 +235,8 @@
           type="text"
           bind:value={searchKeyword}
           placeholder={searchTarget === "global"
-            ? t("placeholder.global", "搜索要加入全局监控的 Boss Buff")
-            : t("placeholder.self", "搜索要加入仅自身施加的 Boss Buff")}
+            ? t("placeholder.global", "Search for boss buffs to add to global monitoring")
+            : t("placeholder.self", "Search for boss buffs to add to self-only monitoring")}
           class="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-sm outline-none focus:border-primary"
         />
 
@@ -244,7 +247,7 @@
             onSelect={toggleSelectedBuff}
             isSelected={isSelectedInCurrentTarget}
             getStatusLabel={searchStatusLabel}
-            emptyMessage={t("emptySearch", "没有匹配的 Boss Buff")}
+            emptyMessage={t("emptySearch", "No matching boss buffs")}
           />
         {/if}
       </div>
@@ -252,8 +255,8 @@
       <div class="grid gap-4 xl:grid-cols-2">
         <div class="rounded-lg border border-border/60 bg-background/50 p-4 space-y-3">
           <div>
-            <div class="text-sm font-semibold text-foreground">{t("selfApplied", "仅自身施加")}</div>
-            <div class="text-xs text-muted-foreground">{t("selfAppliedDescription", "只追踪本角色施加到 Boss 身上的 Buff")}</div>
+            <div class="text-sm font-semibold text-foreground">{t("selfApplied", "Self Only")}</div>
+            <div class="text-xs text-muted-foreground">{t("selfAppliedDescription", "Track only buffs applied to the boss by your character")}</div>
           </div>
           {#if selfAppliedBuffIds.length > 0}
             <div class="flex flex-wrap gap-2">
@@ -263,7 +266,7 @@
                   type="button"
                   class="selected-buff"
                   onclick={() => removeBuff("self", buffId)}
-                  title={t("removeHint", "点击移除")}
+                  title={t("removeHint", "Click to remove")}
                 >
                   {#if iconBuff}
                     <img
@@ -277,14 +280,14 @@
               {/each}
             </div>
           {:else}
-            <div class="text-xs text-muted-foreground">{t("noneSelected", "尚未选择 Buff")}</div>
+            <div class="text-xs text-muted-foreground">{t("noneSelected", "No buffs selected yet")}</div>
           {/if}
         </div>
 
         <div class="rounded-lg border border-border/60 bg-background/50 p-4 space-y-3">
           <div>
-            <div class="text-sm font-semibold text-foreground">{t("globalMonitoring", "全局监控")}</div>
-            <div class="text-xs text-muted-foreground">{t("globalMonitoringDescription", "无论是谁施加，只要 Boss 身上出现就显示")}</div>
+            <div class="text-sm font-semibold text-foreground">{t("globalMonitoring", "Global Monitoring")}</div>
+            <div class="text-xs text-muted-foreground">{t("globalMonitoringDescription", "Show the buff whenever it appears on the boss, no matter who applied it")}</div>
           </div>
           {#if globalBuffIds.length > 0}
             <div class="flex flex-wrap gap-2">
@@ -294,7 +297,7 @@
                   type="button"
                   class="selected-buff"
                   onclick={() => removeBuff("global", buffId)}
-                  title={t("removeHint", "点击移除")}
+                  title={t("removeHint", "Click to remove")}
                 >
                   {#if iconBuff}
                     <img
@@ -308,7 +311,7 @@
               {/each}
             </div>
           {:else}
-            <div class="text-xs text-muted-foreground">{t("noneSelected", "尚未选择 Buff")}</div>
+            <div class="text-xs text-muted-foreground">{t("noneSelected", "No buffs selected yet")}</div>
           {/if}
         </div>
       </div>
@@ -316,7 +319,7 @@
 
     <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-5">
       <div class="space-y-1">
-        <h2 class="text-base font-semibold text-foreground">{t("displayNames", "显示名称")}</h2>
+        <h2 class="text-base font-semibold text-foreground">{t("displayNames", "Display Names")}</h2>
       </div>
 
       {#if combinedBuffIds.length > 0}
@@ -326,11 +329,11 @@
               <div class="text-sm text-foreground">{defaultBuffName(buffId)}</div>
               <input
                 type="text"
-                value={buffAliases[buffId] ?? ""}
+                value={getDirectBuffOverlayAlias(buffId) || buffAliases[String(buffId)] || ""}
                 placeholder={defaultBuffName(buffId)}
                 class="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:border-primary"
-                oninput={(event) =>
-                  setAlias(
+                onchange={(event) =>
+                  void setAlias(
                     buffId,
                     (event.currentTarget as HTMLInputElement).value,
                   )}
@@ -339,18 +342,18 @@
           {/each}
         </div>
       {:else}
-        <div class="text-sm text-muted-foreground">{t("displayNamesEmpty", "先选择要监控的怪物 Buff，之后可在这里设置别名。")}</div>
+        <div class="text-sm text-muted-foreground">{t("displayNamesEmpty", "Select monster buffs to monitor first, then you can set aliases here.")}</div>
       {/if}
     </section>
 
     <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-5">
       <div class="space-y-1">
-        <h2 class="text-base font-semibold text-foreground">{t("panelStyle", "文字面板样式")}</h2>
+        <h2 class="text-base font-semibold text-foreground">{t("panelStyle", "Text Panel Style")}</h2>
       </div>
 
       <div class="grid gap-4 lg:grid-cols-3">
         <label class="style-field">
-          <span>{t("rowGap", "行间距")}</span>
+          <span>{t("rowGap", "Row Gap")}</span>
           <input
             type="range"
             min="0"
@@ -366,7 +369,7 @@
         </label>
 
         <label class="style-field">
-          <span>{t("columnGap", "列间距")}</span>
+          <span>{t("columnGap", "Column Gap")}</span>
           <input
             type="range"
             min="0"
@@ -382,7 +385,7 @@
         </label>
 
         <label class="style-field">
-          <span>{t("fontSize", "字号")}</span>
+          <span>{t("fontSize", "Font Size")}</span>
           <input
             type="range"
             min="10"
@@ -400,7 +403,7 @@
 
       <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <label class="color-field">
-          <span>{t("nameColor", "名称颜色")}</span>
+          <span>{t("nameColor", "Name Color")}</span>
           <input
             type="color"
             value={monsterMonitor.panelStyle.nameColor}
@@ -413,7 +416,7 @@
         </label>
 
         <label class="color-field">
-          <span>{t("valueColor", "数值颜色")}</span>
+          <span>{t("valueColor", "Value Color")}</span>
           <input
             type="color"
             value={monsterMonitor.panelStyle.valueColor}
@@ -426,7 +429,7 @@
         </label>
 
         <label class="color-field">
-          <span>{t("progressColor", "进度条颜色")}</span>
+          <span>{t("progressColor", "Progress Bar Color")}</span>
           <input
             type="color"
             value={monsterMonitor.panelStyle.progressColor}
@@ -439,7 +442,7 @@
         </label>
 
         <label class="color-field">
-          <span>{t("progressOpacity", "进度条透明度")}</span>
+          <span>{t("progressOpacity", "Progress Bar Opacity")}</span>
           <input
             type="range"
             min="0"
@@ -459,14 +462,14 @@
   {:else}
     <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-5">
       <div class="space-y-1">
-        <h2 class="text-base font-semibold text-foreground">{t("hateDisplay", "仇恨列表显示")}</h2>
-        <p class="text-sm text-muted-foreground">{t("hateDisplayDescription", "独立启用怪物仇恨面板，并单独配置它的样式。")}</p>
+        <h2 class="text-base font-semibold text-foreground">{t("hateDisplay", "Hate List Display")}</h2>
+        <p class="text-sm text-muted-foreground">{t("hateDisplayDescription", "Enable the monster hate panel separately and configure its style independently.")}</p>
       </div>
 
       <div class="flex justify-start">
         <div class="min-w-[220px]">
           <SettingsSwitch
-            label={t("enableHateList", "启用仇恨列表")}
+            label={t("enableHateList", "Enable Hate List")}
             bind:checked={SETTINGS.monsterMonitor.state.hateListEnabled}
           />
         </div>
@@ -474,7 +477,7 @@
 
       <div class="grid gap-4 lg:grid-cols-3">
         <label class="style-field">
-          <span>{t("maxCharacters", "最多显示角色数")}</span>
+          <span>{t("maxCharacters", "Maximum Characters Shown")}</span>
           <input
             type="range"
             min="5"
@@ -497,12 +500,12 @@
 
     <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-5">
       <div class="space-y-1">
-        <h2 class="text-base font-semibold text-foreground">{t("hatePanelStyle", "仇恨面板样式")}</h2>
+        <h2 class="text-base font-semibold text-foreground">{t("hatePanelStyle", "Hate Panel Style")}</h2>
       </div>
 
       <div class="grid gap-4 lg:grid-cols-3">
         <label class="style-field">
-          <span>{t("rowGap", "行间距")}</span>
+          <span>{t("rowGap", "Row Gap")}</span>
           <input
             type="range"
             min="0"
@@ -518,7 +521,7 @@
         </label>
 
         <label class="style-field">
-          <span>{t("columnGap", "列间距")}</span>
+          <span>{t("columnGap", "Column Gap")}</span>
           <input
             type="range"
             min="0"
@@ -534,7 +537,7 @@
         </label>
 
         <label class="style-field">
-          <span>{t("fontSize", "字号")}</span>
+          <span>{t("fontSize", "Font Size")}</span>
           <input
             type="range"
             min="10"
@@ -552,7 +555,7 @@
 
       <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <label class="color-field">
-          <span>{t("nameColor", "名称颜色")}</span>
+          <span>{t("nameColor", "Name Color")}</span>
           <input
             type="color"
             value={hatePanelStyle.nameColor}
@@ -565,7 +568,7 @@
         </label>
 
         <label class="color-field">
-          <span>{t("valueColor", "数值颜色")}</span>
+          <span>{t("valueColor", "Value Color")}</span>
           <input
             type="color"
             value={hatePanelStyle.valueColor}
@@ -578,7 +581,7 @@
         </label>
 
         <label class="color-field">
-          <span>{t("progressColor", "进度条颜色")}</span>
+          <span>{t("progressColor", "Progress Bar Color")}</span>
           <input
             type="color"
             value={hatePanelStyle.progressColor}
@@ -591,7 +594,7 @@
         </label>
 
         <label class="color-field">
-          <span>{t("progressOpacity", "进度条透明度")}</span>
+          <span>{t("progressOpacity", "Progress Bar Opacity")}</span>
           <input
             type="range"
             min="0"

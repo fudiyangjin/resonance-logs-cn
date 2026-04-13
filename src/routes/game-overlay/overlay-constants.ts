@@ -30,6 +30,7 @@ export const DEFAULT_OVERLAY_POSITIONS: OverlayPositions = {
   panelAttrGroup: { x: 700, y: 40 },
   customPanelGroup: { x: 700, y: 280 },
   iconBuffPositions: {},
+  standaloneIconPositions: {},
   skillDurationPositions: {},
   categoryIconPositions: {},
 };

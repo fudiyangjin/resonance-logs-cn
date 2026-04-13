@@ -56,15 +56,21 @@
   }
 
   :global(.group-tag) {
-    margin-bottom: 6px;
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 6px);
+    margin: 0;
     padding: 3px 7px;
     border-radius: 6px;
     display: inline-block;
     font-size: 11px;
     font-weight: 700;
     color: #fff;
-    background: rgba(37, 99, 235, 0.78);
-    border: 1px solid rgba(191, 219, 254, 0.8);
+    background: rgba(255, 140, 0, 0.75);
+    border: 1px solid rgba(255, 220, 170, 0.8);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 6;
   }
 
   :global(.resize-handle) {
@@ -74,10 +80,11 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: rgba(37, 99, 235, 0.96);
+    background: rgba(255, 140, 0, 0.95);
     border: 2px solid rgba(255, 255, 255, 0.95);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     cursor: nwse-resize;
+    z-index: 7;
   }
 
   :global(html),

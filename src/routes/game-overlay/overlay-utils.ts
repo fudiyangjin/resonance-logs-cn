@@ -62,6 +62,7 @@ export function ensureOverlayPositions(
     customPanelGroup:
       current?.customPanelGroup ?? DEFAULT_OVERLAY_POSITIONS.customPanelGroup,
     iconBuffPositions: current?.iconBuffPositions ?? {},
+    standaloneIconPositions: current?.standaloneIconPositions ?? {},
     skillDurationPositions: current?.skillDurationPositions ?? {},
     categoryIconPositions: current?.categoryIconPositions ?? {},
   };

@@ -1,105 +1,107 @@
 {
-    "$schema": "https://schema.tauri.app/config/2",
-    "productName": "resonance-logs-cn",
-    "version": "0.0.9",
-    "identifier": "com.resonance-logs-cn",
-    "build": {
-        "beforeDevCommand": "npm run dev:stop-windivert",
-        "beforeBuildCommand": "npm run build:stop-windivert",
-        "devUrl": "http://localhost:1420",
-        "frontendDist": "../build"
-    },
-    "app": {
-        "windows": [
-            {
-                "title": "Resonance Logs CN - Live",
-                "label": "live",
-                "url": "live",
-                "shadow": false,
-                "decorations": false,
-                "transparent": true,
-                "minWidth": 410,
-                "minHeight": 120,
-                "alwaysOnTop": true,
-                "skipTaskbar": true
-            },
-            {
-                "title": "Resonance Logs CN - Main 0.0.9",
-                "label": "main",
-                "url": "main",
-                "width": 1200,
-                "height": 800,
-                "minWidth": 855,
-                "minHeight": 300,
-                "visible": false,
-                "transparent": true
-            },
-            {
-                "title": "Game Overlay",
-                "label": "game-overlay",
-                "url": "game-overlay",
-                "decorations": false,
-                "transparent": true,
-                "alwaysOnTop": true,
-                "skipTaskbar": true,
-                "width": 1280,
-                "height": 960,
-                "visible": false,
-                "resizable": true,
-                "shadow": false
-            },
-            {
-                "title": "Monster Overlay",
-                "label": "monster-overlay",
-                "url": "monster-overlay",
-                "decorations": false,
-                "transparent": true,
-                "alwaysOnTop": true,
-                "skipTaskbar": true,
-                "width": 1280,
-                "height": 960,
-                "visible": false,
-                "resizable": true,
-                "shadow": false
-            }
-        ],
-        "security": {
-            "csp": null
-        }
-    },
-    "bundle": {
-        "active": true,
-        "copyright": "GNU Affero General Public License v3.0",
-        "targets": [
-            "nsis"
-        ],
-        "icon": [
-            "icons/32x32.png",
-            "icons/128x128.png",
-            "icons/128x128@2x.png",
-            "icons/icon.icns",
-            "icons/icon.ico"
-        ],
-        "resources": [
-            "./WinDivert.dll",
-            "./WinDivert64.sys",
-            "./meter-data/",
-            "../src/lib/locales/"
-        ],
-        "createUpdaterArtifacts": true
-    },
-    "plugins": {
-        "updater": {
-            "active": true,
-            "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ5RTQ4NzgzQTlFM0Q0QzQKUldURTFPT3BnNGZrU1dJY01aaGNwelZxc3U0UGpGTVJaQ2FpcVdQd1FsTVVXSDRBakFxbkVSNjkK",
-            "endpoints": [
-                "https://bptimer.cn/resonance-logs/latest.json",
-                "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json"
-            ],
-            "dialog": true,
-            "windows": {
-                "installMode": "basicUi"
-            }
-        }
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "resonance-logs-cn",
+  "version": "0.0.9",
+  "identifier": "com.resonance-logs-cn",
+  "build": {
+    "beforeDevCommand": "npm run dev:stop-windivert",
+    "beforeBuildCommand": "npm run build:stop-windivert",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Resonance Logs CN - Live",
+        "label": "live",
+        "url": "live",
+        "shadow": false,
+        "decorations": false,
+        "transparent": true,
+        "minWidth": 410,
+        "minHeight": 120,
+        "alwaysOnTop": true,
+        "skipTaskbar": true
+      },
+      {
+        "title": "Resonance Logs CN - Main 0.0.9",
+        "label": "main",
+        "url": "main",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 855,
+        "minHeight": 300,
+        "visible": false,
+        "transparent": true
+      },
+      {
+        "title": "Game Overlay",
+        "label": "game-overlay",
+        "url": "game-overlay",
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "width": 1280,
+        "height": 960,
+        "visible": false,
+        "resizable": true,
+        "shadow": false,
+        "maximizable": false
+      },
+      {
+        "title": "Monster Overlay",
+        "label": "monster-overlay",
+        "url": "monster-overlay",
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "width": 1280,
+        "height": 960,
+        "visible": false,
+        "resizable": true,
+        "shadow": false,
+        "maximizable": false
+      }
+    ],
+    "security": {
+      "csp": null
     }
+  },
+  "bundle": {
+    "active": true,
+    "copyright": "GNU Affero General Public License v3.0",
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "./WinDivert.dll",
+      "./WinDivert64.sys",
+      "./meter-data/",
+      "../src/lib/locales/"
+    ],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ5RTQ4NzgzQTlFM0Q0QzQKUldURTFPT3BnNGZrU1dJY01aaGNwelZxc3U0UGpGTVJaQ2FpcVdQd1FsTVVXSDRBakFxbkVSNjkK",
+      "endpoints": [
+        "https://bptimer.cn/resonance-logs/latest.json",
+        "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "windows": {
+        "installMode": "basicUi"
+      }
+    }
+  }
 }

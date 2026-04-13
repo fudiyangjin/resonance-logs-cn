@@ -12,7 +12,7 @@
   import { discoverTranslationFileTabs } from "./lib/file-discovery";
   import {
     readTranslationRuntimeJson,
-    writeTranslationRuntimeJson,
+    writeTranslationRuntimeJsonForLocale,
   } from "./lib/file-io";
   import { normalizeTranslationRows } from "./lib/normalize";
   import { filterTranslationRows } from "./lib/search";
@@ -23,6 +23,24 @@
     TranslationFileTab,
     TranslationWorkspaceRow,
   } from "./lib/types";
+
+  const SHOW_UI_JSON_TABS_STORAGE_KEY = "resonance.localization.showUiJsonTabs";
+
+  function readStoredBoolean(key: string, fallback: boolean): boolean {
+    if (typeof window === "undefined") {
+      return fallback;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw === "1" || raw === "true") return true;
+      if (raw === "0" || raw === "false") return false;
+    } catch (error) {
+      console.warn(`[localization] Failed to read setting ${key}:`, error);
+    }
+
+    return fallback;
+  }
 
   let activeSection = $state<LocalizationSection>("editLocal");
 
@@ -75,7 +93,7 @@
   let isGeneratingSkillNameTranslation = $state(false);
     let isGeneratingAllUiTranslations = $state(false);
   let showTranslationGenerateInfo = $state(false);
-  let showUiJsonTabs = $state(false);
+  let showUiJsonTabs = $state(readStoredBoolean(SHOW_UI_JSON_TABS_STORAGE_KEY, false));
   let showGeneralSettings = $state(true);
   let showTranslationDebugSettings = $state(true);
 
@@ -93,6 +111,21 @@
   let translationRuntimeStatus = $state<TranslationRuntimeStatus | null>(null);
   let isLoadingTranslationRuntimeStatus = $state(false);
 
+  $effect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(
+        SHOW_UI_JSON_TABS_STORAGE_KEY,
+        showUiJsonTabs ? "1" : "0",
+      );
+    } catch (error) {
+      console.warn("[localization] Failed to persist UI/Search tab visibility:", error);
+    }
+  });
+
   const visibleEditLocalRows = $derived(
     filterTranslationRows(editLocalRows, searchQuery, editShowAllRows),
   );
@@ -106,6 +139,10 @@
 
     return filterTranslationRows(rows, searchQuery, compareShowAllRows);
   });
+
+  const editLocalShowsOverlayAliasColumn = $derived.by(
+    () => getEditLocalActiveTab()?.relativePath === "search/BuffNameSearch.json",
+  );
 
   const selectedCompareFieldCount = $derived.by(() =>
     compareRows.reduce((count, row) => {
@@ -213,9 +250,12 @@
       row.id,
       row.baseName,
       row.baseNote,
+      row.baseOverlayAlias ?? "",
       row.localName,
+      row.localOverlayAlias ?? "",
       row.localNote,
       row.compareName ?? "",
+      row.compareOverlayAlias ?? "",
       row.compareNote ?? "",
     ]
       .map((value) => value.trim().toLowerCase())
@@ -229,26 +269,42 @@
   ): TranslationWorkspaceRow[] {
     return rows.map((row) => {
       if (!isRecord(row.raw)) {
-        const nextRow = { ...row, localName: "", localNote: "" };
+        const nextRow = {
+          ...row,
+          localName: "",
+          localOverlayAlias: "",
+          localNote: "",
+        };
         nextRow.searchBlob = buildSearchBlob(nextRow);
         return nextRow;
       }
 
       const raw = row.raw;
-      const isSkillnamesShape =
-        isRecord(raw["name"]) || isRecord(raw["note"]);
+      const hasBuffNameShape = isRecord(raw["NameDesign"]);
+      const hasNamedShape =
+        isRecord(raw["name"]) || isRecord(raw["note"]) || isRecord(raw["notes"]);
+      const hasOverlayAliasShape = isRecord(raw["overlayAlias"]) || hasOwnKey(raw, "overlayAlias");
 
-      const localName = isSkillnamesShape
-        ? getDirectLocaleValue(raw["name"], locale)
-        : getDirectLocaleValue(raw, locale);
+      const localName = hasBuffNameShape
+        ? getDirectLocaleValue(raw["NameDesign"], locale)
+        : hasNamedShape
+          ? getDirectLocaleValue(raw["name"], locale)
+          : getDirectLocaleValue(raw, locale);
 
-      const localNote = isSkillnamesShape
-        ? getDirectLocaleValue(raw["note"], locale)
+      const localOverlayAlias = hasOverlayAliasShape
+        ? getDirectLocaleValue(raw["overlayAlias"], locale)
         : "";
+
+      const localNote = hasBuffNameShape
+        ? ""
+        : hasNamedShape
+          ? getDirectLocaleValue(raw["notes"], locale) || getDirectLocaleValue(raw["note"], locale)
+          : "";
 
       const nextRow: TranslationWorkspaceRow = {
         ...row,
         localName,
+        localOverlayAlias,
         localNote,
       };
 
@@ -263,10 +319,22 @@
     locale: LocaleCode,
   ): Record<string, unknown> {
     const nextEntry = cloneJson(entry) as Record<string, unknown>;
-    const isSkillnamesShape =
-      isRecord(nextEntry["name"]) || isRecord(nextEntry["note"]);
 
-    if (isSkillnamesShape) {
+    if (isRecord(nextEntry["NameDesign"])) {
+      const nextName = { ...(nextEntry["NameDesign"] as Record<string, unknown>) };
+
+      if (hasOwnKey(nextName, locale) || row.localName !== "") {
+        nextName[locale] = row.localName;
+      }
+
+      nextEntry["NameDesign"] = nextName;
+      return nextEntry;
+    }
+
+    const hasNamedShape =
+      isRecord(nextEntry["name"]) || isRecord(nextEntry["note"]) || isRecord(nextEntry["notes"]);
+
+    if (hasNamedShape) {
       const nextName = isRecord(nextEntry["name"])
         ? { ...(nextEntry["name"] as Record<string, unknown>) }
         : {};
@@ -277,9 +345,25 @@
 
       nextEntry["name"] = nextName;
 
-      const hadNoteObject = isRecord(nextEntry["note"]);
+      const hasOverlayAliasShape = isRecord(nextEntry["overlayAlias"]) || hasOwnKey(nextEntry, "overlayAlias");
+      const nextOverlayAlias = isRecord(nextEntry["overlayAlias"])
+        ? { ...(nextEntry["overlayAlias"] as Record<string, unknown>) }
+        : {};
+
+      if (hasOwnKey(nextOverlayAlias, locale) || (row.localOverlayAlias ?? "") !== "") {
+        nextOverlayAlias[locale] = row.localOverlayAlias ?? "";
+      }
+
+      if (hasOverlayAliasShape || (row.localOverlayAlias ?? "") !== "") {
+        nextEntry["overlayAlias"] = nextOverlayAlias;
+      }
+
+      const noteKey = isRecord(nextEntry["notes"]) || hasOwnKey(nextEntry, "notes")
+        ? "notes"
+        : "note";
+      const hadNoteObject = isRecord(nextEntry[noteKey]);
       const nextNote = hadNoteObject
-        ? { ...(nextEntry["note"] as Record<string, unknown>) }
+        ? { ...(nextEntry[noteKey] as Record<string, unknown>) }
         : {};
 
       if (hasOwnKey(nextNote, locale) || row.localNote !== "") {
@@ -287,7 +371,7 @@
       }
 
       if (hadNoteObject || row.localNote !== "") {
-        nextEntry["note"] = nextNote;
+        nextEntry[noteKey] = nextNote;
       }
 
       return nextEntry;
@@ -300,6 +384,37 @@
     return nextEntry;
   }
 
+  function rowNeedsSave(
+    rawEntry: Record<string, unknown>,
+    row: TranslationWorkspaceRow,
+    locale: LocaleCode,
+  ): boolean {
+    const hasBuffNameShape = isRecord(rawEntry["NameDesign"]);
+    const hasNamedShape =
+      isRecord(rawEntry["name"]) || isRecord(rawEntry["note"]) || isRecord(rawEntry["notes"]);
+    const hasOverlayAliasShape = isRecord(rawEntry["overlayAlias"]) || hasOwnKey(rawEntry, "overlayAlias");
+
+    const currentLocalName = hasBuffNameShape
+      ? getDirectLocaleValue(rawEntry["NameDesign"], locale)
+      : hasNamedShape
+        ? getDirectLocaleValue(rawEntry["name"], locale)
+        : getDirectLocaleValue(rawEntry, locale);
+
+    const currentLocalOverlayAlias = hasOverlayAliasShape
+      ? getDirectLocaleValue(rawEntry["overlayAlias"], locale)
+      : "";
+
+    const currentLocalNote = hasBuffNameShape
+      ? ""
+      : hasNamedShape
+        ? getDirectLocaleValue(rawEntry["notes"], locale) || getDirectLocaleValue(rawEntry["note"], locale)
+        : "";
+
+    return currentLocalName !== row.localName
+      || currentLocalOverlayAlias !== (row.localOverlayAlias ?? "")
+      || currentLocalNote !== row.localNote;
+  }
+
   function buildSavePayload(
     rawJson: unknown,
     rows: TranslationWorkspaceRow[],
@@ -309,13 +424,18 @@
       return rawJson;
     }
 
-    const nextRoot = cloneJson(rawJson) as Record<string, unknown>;
+    const nextRoot = { ...(rawJson as Record<string, unknown>) };
     const rowMap = new Map(rows.map((row) => [row.id, row]));
     const processedIds = new Set<string>();
 
-    for (const [id, rawEntry] of Object.entries(nextRoot)) {
+    for (const [id, rawEntry] of Object.entries(rawJson)) {
       const row = rowMap.get(id);
       if (!row || !isRecord(rawEntry)) {
+        continue;
+      }
+
+      if (!rowNeedsSave(rawEntry, row, locale)) {
+        processedIds.add(id);
         continue;
       }
 
@@ -476,9 +596,12 @@
         id,
         baseName: localRow?.baseName ?? importedRow?.baseName ?? "",
         baseNote: localRow?.baseNote ?? importedRow?.baseNote ?? "",
+        baseOverlayAlias: localRow?.baseOverlayAlias ?? importedRow?.baseOverlayAlias ?? "",
         localName: localRow?.localName ?? "",
+        localOverlayAlias: localRow?.localOverlayAlias ?? "",
         localNote: localRow?.localNote ?? "",
         compareName,
+        compareOverlayAlias: importedRow?.localOverlayAlias ?? "",
         compareNote,
         nameStatus,
         noteStatus,
@@ -601,8 +724,9 @@
         getLocale(),
       );
 
-      const result = await writeTranslationRuntimeJson(
+      const result = await writeTranslationRuntimeJsonForLocale(
         activeTab.relativePath,
+        getLocale(),
         payload,
       );
 
@@ -615,7 +739,7 @@
       }
 
       editLocalRawJson = payload;
-      resetEditLocalRowsFromSource();
+      hasUnsavedChanges = false;
       editLocalSaveMessage = t(
         "messages.saved",
         "已保存。",
@@ -650,8 +774,9 @@
         getLocale(),
       );
 
-      const result = await writeTranslationRuntimeJson(
+      const result = await writeTranslationRuntimeJsonForLocale(
         activeTab.relativePath,
+        getLocale(),
         payload,
       );
 
@@ -664,7 +789,7 @@
       }
 
       compareLocalRawJson = payload;
-      resetCompareLocalRowsFromSource();
+      compareHasUnsavedChanges = false;
       rebuildCompareRows(false);
       compareSaveMessage = t(
         "messages.saved",
@@ -706,7 +831,7 @@
 
   function updateRowField(
     rowId: string,
-    field: "localName" | "localNote",
+    field: "localName" | "localOverlayAlias" | "localNote",
     value: string,
   ) {
     editLocalSaveMessage = "";
@@ -859,7 +984,9 @@
             id: importedRow.id,
             baseName: importedRow.baseName,
             baseNote: importedRow.baseNote,
+            baseOverlayAlias: importedRow.baseOverlayAlias ?? "",
             localName: "",
+            localOverlayAlias: "",
             localNote: "",
             searchBlob: "",
             raw: importedRow.raw,
@@ -1261,16 +1388,19 @@ So the accurate behavior is:
                 : t("rows.searchPrompt", "输入搜索内容，或点击“查看全部”显示所有条目。")}
             </div>
           {:else}
-            <div class="results-table">
-              <div class="results-header">
+            <div class="results-table" class:overlay-alias-mode={editLocalShowsOverlayAliasColumn}>
+              <div class="results-header" class:overlay-alias-mode={editLocalShowsOverlayAliasColumn}>
                 <div>{t("columns.id", "ID / 键")}</div>
                 <div>{t("columns.baseName", "基础名称 (CN)")}</div>
                 <div>{t("columns.localName", "当前语言名称")}</div>
+                {#if editLocalShowsOverlayAliasColumn}
+                  <div>{t("columns.localOverlayAlias", "当前 Overlay Alias")}</div>
+                {/if}
                 <div>{t("columns.localNote", "当前语言备注")}</div>
               </div>
 
               {#each visibleEditLocalRows as row}
-                <div class="results-row">
+                <div class="results-row" class:overlay-alias-mode={editLocalShowsOverlayAliasColumn}>
                   <div class="cell cell-id">{row.id}</div>
 
                   <div class="cell base-text-cell">{row.baseName}</div>
@@ -1287,6 +1417,21 @@ So the accurate behavior is:
                         )}
                     />
                   </div>
+
+                  {#if editLocalShowsOverlayAliasColumn}
+                    <div class="cell">
+                      <input
+                        type="text"
+                        value={row.localOverlayAlias ?? ""}
+                        oninput={(event) =>
+                          updateRowField(
+                            row.id,
+                            "localOverlayAlias",
+                            currentInputValue(event),
+                          )}
+                      />
+                    </div>
+                  {/if}
 
                   <div class="cell">
                     <textarea
@@ -2194,6 +2339,16 @@ So the accurate behavior is:
     align-items: start;
   }
 
+  .results-header.overlay-alias-mode,
+  .results-row.overlay-alias-mode {
+    grid-template-columns:
+      minmax(110px, 0.9fr)
+      minmax(180px, 1.2fr)
+      minmax(220px, 1.3fr)
+      minmax(220px, 1.3fr)
+      minmax(240px, 1.5fr);
+  }
+
   .compare-header,
   .compare-row {
     display: grid;
@@ -2212,13 +2367,16 @@ So the accurate behavior is:
   .compare-header {
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 2;
     font-size: 12px;
-    opacity: 0.9;
+    opacity: 0.95;
     font-weight: 600;
-    padding: 0 4px 8px;
-    background: rgba(33, 33, 33, 0.96);
-    backdrop-filter: blur(4px);
+    padding: 12px 6px 10px;
+    margin: -10px -10px 10px;
+    background: rgba(24, 24, 24, 0.98);
+    border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(6px);
   }
 
   .results-row,

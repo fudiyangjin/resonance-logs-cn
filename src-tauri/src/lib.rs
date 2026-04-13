@@ -11,7 +11,7 @@ use specta_typescript::{BigIntExportBehavior, Typescript};
 use std::process::{Command, Stdio};
 
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 
 use tauri::menu::MenuBuilder;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -56,11 +56,87 @@ fn toggle_game_overlay_window(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+#[specta::specta]
+fn toggle_game_overlay_edit_mode(app: tauri::AppHandle) -> Result<(), String> {
+    let Some(overlay_window) = app.get_webview_window(WINDOW_GAME_OVERLAY_LABEL) else {
+        return Err("Game overlay window not found".into());
+    };
+
+    if !overlay_window.is_visible().map_err(|e| e.to_string())? {
+        overlay_window.show().map_err(|e| e.to_string())?;
+        overlay_window.unminimize().map_err(|e| e.to_string())?;
+    }
+
+    app.emit("overlay-edit-toggle", json!({}))
+        .map_err(|e| e.to_string())?;
+    let _ = overlay_window.set_focus();
+
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+fn sync_monster_overlay_window_to_game_overlay(app: tauri::AppHandle) -> Result<(), String> {
+    mirror_overlay_window_bounds(
+        &app,
+        WINDOW_GAME_OVERLAY_LABEL,
+        WINDOW_MONSTER_OVERLAY_LABEL,
+    )
+}
+
 /// Keeps the non-blocking tracing appender worker alive for the lifetime of the process.
 /// If this guard is dropped, file logging may stop flushing.
 static LOGGING_GUARD: OnceLock<tracing_appender::non_blocking::WorkerGuard> = OnceLock::new();
 /// Ensures we only initialize global logging once.
 static LOGGING_INIT: OnceLock<Result<(), String>> = OnceLock::new();
+
+/// Prevents recursive overlay window sync when mirroring move/resize events.
+static OVERLAY_WINDOW_SYNC_GUARD: OnceLock<Mutex<bool>> = OnceLock::new();
+
+fn mirror_overlay_window_bounds(
+    app: &tauri::AppHandle,
+    source_label: &str,
+    target_label: &str,
+) -> Result<(), String> {
+    let guard = OVERLAY_WINDOW_SYNC_GUARD.get_or_init(|| Mutex::new(false));
+    {
+        let mut syncing = guard
+            .lock()
+            .map_err(|_| "Overlay window sync guard lock poisoned".to_string())?;
+        if *syncing {
+            return Ok(());
+        }
+        *syncing = true;
+    }
+
+    let result = (|| {
+        let Some(source_window) = app.get_webview_window(source_label) else {
+            return Err(format!("{} window not found", source_label));
+        };
+        let Some(target_window) = app.get_webview_window(target_label) else {
+            return Err(format!("{} window not found", target_label));
+        };
+
+        let source_position = source_window.outer_position().map_err(|e| e.to_string())?;
+        let source_size = source_window.outer_size().map_err(|e| e.to_string())?;
+
+        target_window
+            .set_position(Position::Physical(source_position))
+            .map_err(|e| e.to_string())?;
+        target_window
+            .set_size(Size::Physical(source_size))
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    })();
+
+    let mut syncing = guard
+        .lock()
+        .map_err(|_| "Overlay window sync guard lock poisoned".to_string())?;
+    *syncing = false;
+
+    result
+}
 
 /// The main entry point for the application logic.
 ///
@@ -110,6 +186,7 @@ pub fn run() {
             translation_runtime::list_translation_runtime_files,
             translation_runtime::read_translation_runtime_file,
             translation_runtime::write_translation_runtime_file,
+            translation_runtime::write_translation_runtime_locale_file,
             translation_runtime::generate_ui_translation_scaffold,
             translation_runtime::generate_all_ui_translation_scaffolds,
             translation_runtime::generate_buff_name_search_scaffold,
@@ -118,6 +195,8 @@ pub fn run() {
             translation_runtime::generate_monster_name_translation_scaffold,
             translation_runtime::generate_skill_name_translation_scaffold,
             toggle_game_overlay_window,
+            toggle_game_overlay_edit_mode,
+            sync_monster_overlay_window_to_game_overlay,
         ]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds
@@ -818,6 +897,27 @@ fn on_window_event_fn(window: &Window, event: &WindowEvent) {
         WindowEvent::Focused(focused) if !focused => {
             if let Err(e) = window.app_handle().save_window_state(StateFlags::all()) {
                 warn!("failed to save window state for {}: {}", window.label(), e);
+            }
+        }
+        WindowEvent::Moved(_) | WindowEvent::Resized(_) => {
+            let source_label = window.label();
+            let target_label = if source_label == WINDOW_GAME_OVERLAY_LABEL {
+                Some(WINDOW_MONSTER_OVERLAY_LABEL)
+            } else if source_label == WINDOW_MONSTER_OVERLAY_LABEL {
+                Some(WINDOW_GAME_OVERLAY_LABEL)
+            } else {
+                None
+            };
+
+            if let Some(target_label) = target_label {
+                if let Err(e) = mirror_overlay_window_bounds(&window.app_handle(), source_label, target_label) {
+                    warn!(
+                        "failed to mirror overlay window bounds from {} to {}: {}",
+                        source_label,
+                        target_label,
+                        e
+                    );
+                }
             }
         }
         _ => {}

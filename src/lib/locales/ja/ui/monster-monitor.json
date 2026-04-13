@@ -42,5 +42,10 @@
   "overlay.edit.resetPosition": "位置をリセット",
   "overlay.edit.resetSize": "サイズをリセット",
   "overlay.edit.done": "編集完了",
-  "overlay.edit.dragWindow": "ここをドラッグして Monster Overlay ウィンドウを移動"
+  "overlay.edit.dragWindow": "ここをドラッグして Monster Overlay ウィンドウを移動",
+  "overlay.buffPanel": "モンスターバフ領域",
+  "overlay.hateSuffix": " - ヘイト",
+  "placeholder.selectBuff": "モンスターモニターでバフを選択",
+  "placeholder.preview": "プレビュー",
+  "placeholder.targetPrefix": "対象"
 }

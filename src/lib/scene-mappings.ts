@@ -17,6 +17,11 @@ type MultiLangValue = Partial<Record<LocaleCode, string>>;
 
 type SceneTranslationEntry = MultiLangValue;
 
+type TranslationRefreshPayload = {
+    relativePath?: string;
+    locale?: string;
+};
+
 function cloneJson<T>(value: T): T {
     return JSON.parse(JSON.stringify(value)) as T;
 }
@@ -104,7 +109,12 @@ async function registerSceneRuntimeListener(): Promise<void> {
     }
 
     if (!sceneRuntimeListenerPromise) {
-        sceneRuntimeListenerPromise = listen("translation-data-refreshed", async () => {
+        sceneRuntimeListenerPromise = listen<TranslationRefreshPayload>("translation-data-refreshed", async (event) => {
+            const relativePath = event.payload?.relativePath;
+            if (relativePath && relativePath !== SCENE_RUNTIME_RELATIVE_PATH) {
+                return;
+            }
+
             await loadSceneRuntimeData();
         })
             .then(() => undefined)

@@ -1,5 +1,7 @@
 <script lang="ts">
   import TextBuffRow from "$lib/components/TextBuffRow.svelte";
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
   import {
     getMonsterPanelPosition,
     getMonsterPanelScale,
@@ -15,6 +17,7 @@
   const styleConfig = $derived(monsterPanelStyle());
   const panelPos = $derived(getMonsterPanelPosition());
   const panelScale = $derived(getMonsterPanelScale());
+  const t = uiT("monster-monitor", () => SETTINGS.live.general.state.language);
 </script>
 
 {#if sections.length > 0 || editing}
@@ -29,7 +32,7 @@
     onpointerdown={(event) => startMonsterDrag(event, { kind: "buffPanel" }, panelPos)}
   >
     {#if editing}
-      <div class="group-tag">怪物 Buff 区</div>
+      <div class="group-tag">{t("overlay.buffPanel", "Monster Buff Area")}</div>
     {/if}
 
     <div class="section-list">
@@ -75,11 +78,10 @@
   }
 
   .monster-buff-panel.editable {
-    border: 2px solid rgba(102, 204, 255, 0.9);
+    outline: 2px solid rgba(102, 204, 255, 0.9);
     border-radius: 10px;
     background: rgba(20, 36, 56, 0.48);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
-    padding: 8px;
   }
 
   .section-list {

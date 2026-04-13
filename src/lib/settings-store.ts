@@ -267,6 +267,7 @@ export type OverlayPositions = {
   panelAttrGroup: Point;
   customPanelGroup: Point;
   iconBuffPositions: Record<number, Point>;
+  standaloneIconPositions?: Record<string, Point>;
   skillDurationPositions: Record<number, Point>;
   categoryIconPositions?: Partial<Record<BuffCategoryKey, Point>>;
 };
@@ -281,6 +282,7 @@ export type OverlaySizes = {
   panelAttrFontSize: number;
   panelAttrColumnGap: number;
   iconBuffSizes: Record<number, number>;
+  standaloneIconSizes?: Record<string, number>;
   skillDurationSizes: Record<number, number>;
   categoryIconSizes?: Partial<Record<BuffCategoryKey, number>>;
 };
@@ -432,6 +434,7 @@ function createDefaultOverlayPositions(): OverlayPositions {
     panelAttrGroup: { x: 700, y: 40 },
     customPanelGroup: { x: 700, y: 280 },
     iconBuffPositions: {},
+    standaloneIconPositions: {},
     skillDurationPositions: {},
     categoryIconPositions: {},
   };
@@ -448,6 +451,7 @@ function createDefaultOverlaySizes(): OverlaySizes {
     panelAttrFontSize: 14,
     panelAttrColumnGap: 12,
     iconBuffSizes: {},
+    standaloneIconSizes: {},
     skillDurationSizes: {},
     categoryIconSizes: {},
   };

@@ -87,6 +87,17 @@ function detectFileKind(relativePath: string): TranslationFileKind {
         return "skillnames";
     }
 
+    if (normalized === "parser/buffname.json") {
+        return "buffname";
+    }
+
+    if (
+        normalized === "search/buffnamesearch.json" ||
+        normalized === "search/resonance-skill-search.json"
+    ) {
+        return "searchtable";
+    }
+
     if (normalized.endsWith("json")) {
         return "navigation";
     }

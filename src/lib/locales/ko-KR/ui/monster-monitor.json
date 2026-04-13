@@ -42,5 +42,10 @@
   "overlay.edit.resetPosition": "위치 초기화",
   "overlay.edit.resetSize": "크기 초기화",
   "overlay.edit.done": "편집 완료",
-  "overlay.edit.dragWindow": "여기를 드래그해 Monster Overlay 창 이동"
+  "overlay.edit.dragWindow": "여기를 드래그해 Monster Overlay 창 이동",
+  "overlay.buffPanel": "몬스터 버프 영역",
+  "overlay.hateSuffix": " - 어그로",
+  "placeholder.selectBuff": "몬스터 모니터에서 버프를 선택하세요",
+  "placeholder.preview": "미리보기",
+  "placeholder.targetPrefix": "대상"
 }

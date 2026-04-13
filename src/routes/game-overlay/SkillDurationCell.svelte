@@ -72,10 +72,9 @@
   }
 
   .skill-duration-cell.editable {
-    border: 2px solid rgba(102, 204, 255, 0.9);
+    outline: 2px solid rgba(102, 204, 255, 0.9);
     border-radius: 8px;
     background: rgba(20, 36, 56, 0.55);
-    padding: 4px 2px;
   }
 
   .skill-icon-wrap {
@@ -109,5 +108,10 @@
     line-height: 1;
     font-variant-numeric: tabular-nums;
     text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+    min-height: 1.2em;
+    height: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 </style>
