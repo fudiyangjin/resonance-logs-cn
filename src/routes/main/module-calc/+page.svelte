@@ -24,8 +24,10 @@
     MODULE_CALC,
     ensureModuleCalcProgressListener,
   } from "$lib/stores/module-calc-store.svelte";
+  import { resolveModuleCalcTranslation } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
 
-  const ATTR_OPTIONS = [
+  const ATTR_OPTIONS_BASE = [
     { id: 1110, label: "力量加持" },
     { id: 1111, label: "敏捷加持" },
     { id: 1112, label: "智力加持" },
@@ -49,6 +51,17 @@
     { id: 2304, label: "极-绝境守护" },
   ];
 
+  const ATTR_OPTIONS = $derived.by(() =>
+    ATTR_OPTIONS_BASE.map((option) => ({
+      ...option,
+      label: resolveModuleCalcTranslation(
+        `attr.${option.id}`,
+        SETTINGS.live.general.state.language,
+        option.label,
+      ),
+    })),
+  );
+
   async function refreshModules() {
     if (MODULE_CALC.loading) return;
     MODULE_CALC.loading = true;
@@ -57,7 +70,13 @@
       MODULE_CALC.modules = await getLatestModules();
       MODULE_CALC.moduleCount = MODULE_CALC.modules.length;
     } catch (e) {
-      MODULE_CALC.error = (e as Error)?.message ?? "拉取模组失败";
+      MODULE_CALC.error =
+        (e as Error)?.message ??
+        resolveModuleCalcTranslation(
+          "fetchModulesFailed",
+          SETTINGS.live.general.state.language,
+          "拉取模组失败",
+        );
     } finally {
       MODULE_CALC.loading = false;
     }
@@ -80,10 +99,9 @@
       const minMap = Object.fromEntries(
         MODULE_CALC.minRequirements
           .filter((m) => m.attrId && m.value !== null)
-          .map((m) => [m.attrId as number, m.value as number])
+          .map((m) => [m.attrId as number, m.value as number]),
       );
 
-      // Deep clone/snapshot to ensure no Proxy issues passed to invoke
       const payload = {
         targetAttributes: [...MODULE_CALC.targetAttributes],
         excludeAttributes: [...MODULE_CALC.excludeAttributes],
@@ -97,7 +115,11 @@
 
       MODULE_CALC.solutions = await optimizeLatestModules(payload);
       if (MODULE_CALC.solutions.length === 0) {
-        MODULE_CALC.error = "无可用方案，请调整筛选条件";
+        MODULE_CALC.error = resolveModuleCalcTranslation(
+          "noSolutions",
+          SETTINGS.live.general.state.language,
+          "无可用方案，请调整筛选条件",
+        );
       }
     } catch (e) {
       console.error("Optimize error:", e);
@@ -106,7 +128,12 @@
       } else if (e instanceof Error) {
         MODULE_CALC.error = e.message;
       } else {
-        MODULE_CALC.error = "计算失败: " + JSON.stringify(e);
+        MODULE_CALC.error =
+          resolveModuleCalcTranslation(
+            "calculationFailed",
+            SETTINGS.live.general.state.language,
+            "计算失败",
+          ) + ": " + JSON.stringify(e);
       }
     } finally {
       MODULE_CALC.loading = false;
@@ -125,8 +152,7 @@
   });
 </script>
 
-<div class="space-y-6">
-  <!-- Header -->
+<div class="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div
@@ -135,8 +161,20 @@
         <CalculatorIcon class="w-5 h-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">模组计算</h1>
-        <p class="text-sm text-muted-foreground">计算和优化模组配置</p>
+        <h1 class="text-xl font-bold text-foreground">
+          {resolveModuleCalcTranslation(
+            "title",
+            SETTINGS.live.general.state.language,
+            "模组计算",
+          )}
+        </h1>
+        <p class="text-sm text-muted-foreground">
+          {resolveModuleCalcTranslation(
+            "subtitle",
+            SETTINGS.live.general.state.language,
+            "计算和优化模组配置",
+          )}
+        </p>
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -150,7 +188,11 @@
         {:else}
           <RefreshCw class="w-4 h-4 mr-2" />
         {/if}
-        刷新数据
+        {resolveModuleCalcTranslation(
+          "refreshData",
+          SETTINGS.live.general.state.language,
+          "刷新数据",
+        )}
       </Button>
       <Button
         onclick={runOptimize}
@@ -161,7 +203,11 @@
         {:else}
           <PlayIcon class="w-4 h-4 mr-2" />
         {/if}
-        开始计算
+        {resolveModuleCalcTranslation(
+          "startCalculation",
+          SETTINGS.live.general.state.language,
+          "开始计算",
+        )}
       </Button>
     </div>
   </div>
@@ -196,10 +242,14 @@
     bind:minRequirements={MODULE_CALC.minRequirements}
   />
 
-  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3">
+  <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 p-4 space-y-3">
     <div class="flex items-center justify-between">
       <div class="text-base font-semibold text-foreground">
-        计算结果 (Top 10)
+        {resolveModuleCalcTranslation(
+          "resultsTop10",
+          SETTINGS.live.general.state.language,
+          "计算结果 (Top 10)",
+        )}
       </div>
       {#if MODULE_CALC.loading}
         <div class="flex flex-col gap-1 w-64">
@@ -208,8 +258,19 @@
           >
             <Loader2 class="w-3 h-3 mr-1 animate-spin" />
             <span>
-              {MODULE_CALC.combinationSize === 5 ? "多策略计算中..." : "计算中..."} {MODULE_CALC.progress.max > 0
-                ? `${Math.round((MODULE_CALC.progress.value / MODULE_CALC.progress.max) * 100)}%`
+              {MODULE_CALC.combinationSize === 5
+                ? resolveModuleCalcTranslation(
+                    "loadingMultiStrategy",
+                    SETTINGS.live.general.state.language,
+                    "多策略计算中...",
+                  )
+                : resolveModuleCalcTranslation(
+                    "loadingCalculating",
+                    SETTINGS.live.general.state.language,
+                    "计算中...",
+                  )}
+              {MODULE_CALC.progress.max > 0
+                ? ` ${Math.round((MODULE_CALC.progress.value / MODULE_CALC.progress.max) * 100)}%`
                 : ""}
             </span>
           </div>
@@ -228,10 +289,9 @@
         </div>
       {/if}
     </div>
-    <ResultsTable
-      solutions={MODULE_CALC.solutions}
-      onview={openDetail}
-    />
+    <div class="min-h-0 flex-1 overflow-y-auto pr-1">
+      <ResultsTable solutions={MODULE_CALC.solutions} onview={openDetail} />
+    </div>
   </div>
 
   <ModuleDetail

@@ -18,6 +18,7 @@
 {#each groups as group (group.id)}
   {@const rows = rowsByGroup.get(group.id) ?? []}
   {#if rows.length > 0 || editing}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="overlay-group custom-panel-group"
       class:editable={editing}
@@ -55,6 +56,7 @@
       </div>
 
       {#if editing}
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
           class="resize-handle"
           onpointerdown={(e) =>

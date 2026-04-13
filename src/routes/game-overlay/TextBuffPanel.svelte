@@ -1,6 +1,8 @@
 <script lang="ts">
   import ClassicTextBuffRow from "./ClassicTextBuffRow.svelte";
   import TextBuffRow from "$lib/components/TextBuffRow.svelte";
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
   import {
     getGroupPosition,
     getGroupScale,
@@ -11,6 +13,7 @@
     textBuffPanelStyle,
   } from "./overlay-state.svelte.js";
 
+  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
   const editing = $derived(isEditing());
   const buffs = $derived(limitedTextBuffs());
   const styleConfig = $derived(textBuffPanelStyle());
@@ -19,6 +22,7 @@
 </script>
 
 {#if buffs.length > 0 || editing}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     class="overlay-group text-buff-panel"
     class:editable={editing}
@@ -30,7 +34,7 @@
     onpointerdown={(e) => startDrag(e, { kind: "group", key: "textBuffPanel" }, groupPos)}
   >
     {#if editing}
-      <div class="group-tag">无图标Buff区</div>
+      <div class="group-tag">{t("overlay.textBuff", "无图标Buff区")}</div>
     {/if}
 
     {#each buffs as buff (buff.key)}
@@ -67,6 +71,7 @@
     {/each}
 
     {#if editing}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
         class="resize-handle"
         onpointerdown={(e) =>

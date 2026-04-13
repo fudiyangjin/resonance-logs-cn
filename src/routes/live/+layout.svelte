@@ -10,6 +10,7 @@
    */
   import { onMount } from "svelte";
   import { SETTINGS } from "$lib/settings-store";
+  import { resolveUiTranslation } from "$lib/i18n";
   import {
     onLiveData,
     onResetEncounter,
@@ -21,6 +22,16 @@
   import { applyCustomFonts } from "$lib/font-loader";
   import { writable } from "svelte/store";
   import { beforeNavigate, afterNavigate } from "$app/navigation";
+
+
+  function t(key: string, fallback: string): string {
+    return resolveUiTranslation(
+      "ui/dps/live.json",
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
 
   // Store for pause state
   export const isPaused = writable(false);
@@ -95,7 +106,7 @@
         clearMeterData();
         notificationToast?.showToast(
           "notice",
-          "战斗记录已重置",
+t("live.resetToast", "战斗记录已重置"),
         );
       });
 
@@ -125,9 +136,15 @@
           lastPauseState !== newPaused
         ) {
           if (newPaused) {
-            notificationToast?.showToast("notice", "Encounter paused");
+            notificationToast?.showToast(
+              "notice",
+t("live.pauseToast", "战斗已暂停"),
+            );
           } else {
-            notificationToast?.showToast("notice", "Encounter resumed");
+            notificationToast?.showToast(
+              "notice",
+t("live.resumeToast", "战斗已继续"),
+            );
           }
         }
         lastPauseState = newPaused;

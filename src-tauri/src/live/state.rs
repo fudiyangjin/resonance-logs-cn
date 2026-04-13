@@ -253,7 +253,10 @@ fn build_training_dummy_state(runtime: &TrainingDummyRuntime) -> TrainingDummySt
     }
 }
 
-fn emit_training_dummy_update_if_changed(state: &mut AppState, previous: TrainingDummyState) {
+fn emit_training_dummy_update_if_changed(
+    state: &mut AppState,
+    previous: TrainingDummyState,
+) {
     let current = build_training_dummy_state(&state.training_dummy);
     if current != previous && state.event_manager.should_emit_events() {
         state.event_manager.emit_training_dummy_update(current);

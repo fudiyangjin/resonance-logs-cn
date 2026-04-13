@@ -20,6 +20,17 @@
 </script>
 
 <script lang="ts">
+  import { resolveModuleCalcTranslation } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
+
+  function t(key: string, fallback: string): string {
+    return resolveModuleCalcTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
   let {
     name,
     value,
@@ -30,20 +41,56 @@
     compact?: boolean;
   } = $props();
 
+  const ATTR_NAME_TO_ID: Record<string, number> = {
+    "力量加持": 1110,
+    "敏捷加持": 1111,
+    "智力加持": 1112,
+    "特攻伤害": 1113,
+    "精英打击": 1114,
+    "特攻治疗加持": 1205,
+    "专精治疗加持": 1206,
+    "施法专注": 1407,
+    "攻速专注": 1408,
+    "暴击专注": 1409,
+    "幸运专注": 1410,
+    "抵御魔法": 1307,
+    "抵御物理": 1308,
+    "极-伤害叠加": 2104,
+    "极-灵活身法": 2105,
+    "极-生命凝聚": 2204,
+    "极-急救措施": 2205,
+    "极-生命波动": 2404,
+    "极-生命汲取": 2405,
+    "极-全队幸暴": 2406,
+    "极-绝境守护": 2304,
+  };
+
   const level = $derived(Math.max(1, getAttrLevel(value)));
   const tierClass = $derived(`tier-${level}`);
   const isHighlighted = $derived(level >= 5);
+  const translatedName = $derived.by(() => {
+    const attrId = ATTR_NAME_TO_ID[name];
+    if (!attrId) return name;
+    return resolveModuleCalcTranslation(
+      `attr.${attrId}`,
+      SETTINGS.live.general.state.language,
+      name,
+    );
+  });
+  const levelLabel = $derived.by(() =>
+    t("attrBadge.level", "{level}级").replace("{level}", String(level))
+  );
 </script>
 
 <div
   class={`attr-badge ${compact ? "attr-badge--compact" : ""} ${tierClass}`}
-  aria-label={`${name} +${value}，${level}级`}
+  aria-label={`${translatedName} +${value}, ${levelLabel}`}
 >
-  <div class="attr-badge__name">{name}</div>
+  <div class="attr-badge__name">{translatedName}</div>
   <div class="attr-badge__meta">
     <span class="attr-badge__value">+{value}</span>
     {#if isHighlighted}
-      <span class="attr-badge__level">{level}级</span>
+      <span class="attr-badge__level">{levelLabel}</span>
     {/if}
   </div>
 </div>
@@ -112,21 +159,10 @@
     padding: 0.22rem 0.45rem;
   }
 
-  .tier-1 {
-    --tier-color: var(--border);
-  }
-
-  .tier-2 {
-    --tier-color: var(--border);
-  }
-
-  .tier-3 {
-    --tier-color: var(--border);
-  }
-
-  .tier-4 {
-    --tier-color: var(--border);
-  }
+  .tier-1 { --tier-color: var(--border); }
+  .tier-2 { --tier-color: var(--border); }
+  .tier-3 { --tier-color: var(--border); }
+  .tier-4 { --tier-color: var(--border); }
 
   .tier-5 {
     --tier-color: var(--tier-5);

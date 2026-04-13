@@ -1,0 +1,15 @@
+{
+  "selectTabPrompt": "위의 탭을 선택하여 자세한 설정을 확인하세요.",
+  "settings.debug": "디버그",
+  "settings.history": "히스토리",
+  "settings.live": "실시간",
+  "settings.network": "네트워크",
+  "settings.shortcuts": "단축키",
+  "subtitle": "전투 데이터와 DPS 통계를 실시간으로 모니터링합니다",
+  "title": "DPS 미터",
+  "toggleWindow": "DPS 창 전환",
+  "viewHistory": "기록 보기",
+  "history": "히스토리",
+  "themes": "테마",
+  "settings": "설정"
+}

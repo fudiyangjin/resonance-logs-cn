@@ -1,0 +1,16 @@
+{
+  "clearHint": "右键可清除快捷键",
+  "pressKey": "请按键",
+  "unbound": "未绑定",
+  "shortcuts.showLiveMeter": "显示实时窗口",
+  "shortcuts.hideLiveMeter": "隐藏实时窗口",
+  "shortcuts.toggleLiveMeter": "切换实时窗口",
+  "shortcuts.enableClickthrough": "启用点击穿透",
+  "shortcuts.disableClickthrough": "禁用点击穿透",
+  "shortcuts.toggleClickthrough": "切换点击穿透",
+  "shortcuts.resetEncounter": "重置战斗",
+  "shortcuts.togglePauseEncounter": "切换暂停战斗",
+  "shortcuts.toggleBossHp": "切换 Boss 血量显示",
+  "shortcuts.toggleOverlayEdit": "切换遮罩编辑模式",
+  "shortcuts.toggleOverlayWindow": "切换遮罩窗口"
+}

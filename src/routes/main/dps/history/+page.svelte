@@ -7,8 +7,11 @@
 		EncounterSummaryDto,
 		EncounterFiltersDto,
 	} from "$lib/bindings";
-	import UnifiedSearch from "$lib/components/unified-search.svelte";
-	import { CLASS_MAP, getClassIcon, tooltip } from "$lib/utils.svelte";
+		import { CLASS_MAP, getClassIcon, tooltip } from "$lib/utils.svelte";
+	import { uiT } from "$lib/i18n";
+	import { SETTINGS } from "$lib/settings-store";
+	import { localizeRawSceneName } from "$lib/scene-mappings";
+  import { localizeRawMonsterName } from "$lib/monster-mappings";
 
 	let encounters = $state<EncounterSummaryDto[]>([]);
 	let errorMsg = $state<string | null>(null);
@@ -18,6 +21,12 @@
 	let page = $state(0); // 0-indexed, page 0 = newest
 	let totalCount = $state(0);
 	let isRefreshing = $state(false);
+
+	const t = uiT("dps/history", () => SETTINGS.live.general.state.language);
+
+	function deleteTitle(count: number): string {
+		return t("list.deleteRecords", "删除 {count} 条记录").replace("{count}", String(count));
+	}
 
 	function parseNonNegativeInt(raw: string | null, fallback: number) {
 		if (raw === null) return fallback;
@@ -57,13 +66,11 @@
 
 	function toggleSelectAll() {
 		if (allSelected) {
-			// Deselect all visible
 			const visibleIds = new Set(encounters.map((e) => e.id));
 			selectedIds = new Set(
 				[...selectedIds].filter((id) => !visibleIds.has(id)),
 			);
 		} else {
-			// Select all visible
 			selectedIds = new Set([
 				...selectedIds,
 				...encounters.map((e) => e.id),
@@ -103,10 +110,9 @@
 			if (res.status === "ok") {
 				selectedIds = new Set();
 				showDeleteModal = false;
-				// Reload encounters
 				await loadEncounters(page);
 			} else {
-				errorMsg = `删除失败：${res.error}`;
+				errorMsg = `${t("list.deleteFailed", "Delete failed: ")}${res.error}`;
 			}
 		} catch (e) {
 			console.error("Delete error", e);
@@ -116,7 +122,6 @@
 		}
 	}
 
-	// Unified search (boss, player and encounter names)
 	let availableBossNames = $state<string[]>([]);
 	let availableEncounterNames = $state<string[]>([]);
 	let selectedBosses = $state<string[]>([]);
@@ -124,7 +129,113 @@
 	let selectedPlayerNames = $state<string[]>([]);
 	let searchValue = $state("");
 	let searchType = $state<"boss" | "player" | "encounter">("encounter");
+	let availablePlayerNames = $state<string[]>([]);
 	let isLoadingBossNames = $state(false);
+
+	type SearchOption = {
+		raw: string;
+		label: string;
+	};
+
+	function updateAvailablePlayerNames(rows: EncounterSummaryDto[]) {
+		const merged = new Set(availablePlayerNames);
+		for (const row of rows) {
+			for (const player of row.players ?? []) {
+				if (player?.name) merged.add(player.name);
+			}
+		}
+		availablePlayerNames = [...merged].sort((a, b) =>
+			a.localeCompare(b, undefined, { sensitivity: "base" }),
+		);
+	}
+
+	const searchPlaceholder = $derived.by(() => {
+		switch (searchType) {
+			case "boss":
+				return t("list.searchBoss", "搜索首领...");
+			case "player":
+				return t("list.searchPlayer", "搜索玩家...");
+			default:
+				return t("list.searchScene", "搜索场景...");
+		}
+	});
+
+	const searchOptions = $derived.by((): SearchOption[] => {
+		const source =
+			searchType === "boss"
+				? availableBossNames
+				: searchType === "player"
+					? availablePlayerNames
+					: availableEncounterNames;
+		const needle = searchValue.trim().toLowerCase();
+		const mapped = source.map((item) => ({
+			raw: item,
+			label:
+				searchType === "encounter"
+					? localizeRawSceneName(item, item)
+					: item,
+		}));
+		const filtered = needle
+			? mapped.filter(
+				(option) =>
+					option.raw.toLowerCase().includes(needle) ||
+					option.label.toLowerCase().includes(needle),
+			)
+			: mapped;
+		return filtered.slice(0, 100);
+	});
+
+	function resolveSearchSelectionValue(
+		value: string,
+		type: "boss" | "player" | "encounter",
+	): string {
+		const trimmed = value.trim();
+		if (!trimmed) return trimmed;
+		const lowered = trimmed.toLowerCase();
+		const exact = searchOptions.find(
+			(option) =>
+				option.raw.toLowerCase() === lowered ||
+				option.label.toLowerCase() === lowered,
+		);
+		if (exact) return exact.raw;
+		if (type !== "encounter") return trimmed;
+		const partialMatches = searchOptions.filter(
+			(option) =>
+				option.raw.toLowerCase().includes(lowered) ||
+				option.label.toLowerCase().includes(lowered),
+		);
+		if (partialMatches.length === 1) {
+			return partialMatches[0]!.raw;
+		}
+		return trimmed;
+	}
+
+	function applySearchValue() {
+		const value = searchValue.trim();
+		if (!value) return;
+		const resolvedValue = resolveSearchSelectionValue(value, searchType);
+		handleSearchSelect(resolvedValue, searchType);
+		searchValue = "";
+	}
+
+	function maybeApplySearchValue() {
+		const value = searchValue.trim();
+		if (!value) return;
+		if (searchType === "player") {
+			applySearchValue();
+			return;
+		}
+		const lowered = value.toLowerCase();
+		if (
+			searchOptions.some(
+				(option) =>
+					option.raw.toLowerCase() === lowered ||
+					option.label.toLowerCase() === lowered,
+			)
+		) {
+			applySearchValue();
+		}
+	}
 
 	let showFavoritesOnly = $state(false);
 
@@ -189,13 +300,12 @@
 			);
 
 			if (res.status === "ok") {
-				console.log("encounter data", res.data);
 				encounters = res.data.rows ?? [];
+				updateAvailablePlayerNames(encounters);
 				totalCount = res.data.totalCount ?? 0;
 				errorMsg = null;
 				page = p;
 
-				// Persist pagination in the URL so browser back/forward restores it.
 				const sp = buildHistorySearchParams({ page: p, pageSize });
 				await goto(`/main/dps/history?${sp.toString()}`, {
 					replaceState: true,
@@ -249,7 +359,6 @@
 		loadEncounters(0);
 	}
 
-
 	function removePlayerNameFilter(playerName: string) {
 		selectedPlayerNames = selectedPlayerNames.filter(
 			(name) => name !== playerName,
@@ -278,7 +387,6 @@
 
 		const sp = $pageStore.url.searchParams;
 
-		// Restore pagination from query params (e.g. /main/dps/history?page=4&pageSize=10)
 		const initialPage = parseNonNegativeInt(
 			sp.get("page"),
 			0,
@@ -339,8 +447,6 @@
 	}
 
 	async function onView(enc: EncounterSummaryDto) {
-		// Carry the current pagination state into the detail URL so the
-		// in-app "back" button can return you to the same page.
 		goto(`/main/dps/history/${enc.id}${$pageStore.url.search}`);
 	}
 </script>
@@ -350,23 +456,44 @@
 		<div class="text-red-400 mb-3 text-sm">{errorMsg}</div>
 	{/if}
 
-	<!-- Filters Section -->
 	<div class="mb-2 space-y-2">
-		<!-- Search and Filter Row -->
 		<div class="flex items-center gap-2">
 			<div class="flex-1 max-w-md">
-				<UnifiedSearch
-					id="unified-search"
-					bind:value={searchValue}
-					bind:searchType
-					{availableBossNames}
-					{availableEncounterNames}
-					onSelect={handleSearchSelect}
-					disabled={isLoadingBossNames}
-				/>
+				<div class="flex items-center gap-2">
+					<select
+						bind:value={searchType}
+						class="h-8 min-w-[96px] rounded-md border border-border bg-popover px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+						aria-label={t("list.searchType", "Search type")}
+					>
+						<option value="encounter">{t("list.scene", "场景")}</option>
+						<option value="boss">{t("list.boss", "首领")}</option>
+						<option value="player">{t("list.player", "玩家")}</option>
+					</select>
+
+					<input
+						bind:value={searchValue}
+						list="history-search-options"
+						class="h-8 flex-1 rounded-md border border-border bg-popover px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+						placeholder={searchPlaceholder}
+						disabled={isLoadingBossNames}
+						onchange={maybeApplySearchValue}
+						onkeydown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault();
+								applySearchValue();
+							}
+						}}
+						aria-label={searchPlaceholder}
+					/>
+
+					<datalist id="history-search-options">
+						{#each searchOptions as option}
+							<option value={option.label}></option>
+						{/each}
+					</datalist>
+				</div>
 			</div>
 
-			<!-- Favorites Toggle -->
 			<button
 				onclick={() => {
 					showFavoritesOnly = !showFavoritesOnly;
@@ -375,7 +502,7 @@
 				class="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border transition-colors text-sm {showFavoritesOnly
 					? 'bg-yellow-500/10 border-yellow-500/50 text-yellow-500'
 					: 'bg-popover text-muted-foreground hover:bg-muted/40 hover:text-foreground'}"
-				title="仅显示收藏"
+				title={t("list.favoriteOnly", "仅收藏")}
 			>
 				<svg
 					class="w-4 h-4"
@@ -390,36 +517,34 @@
 						d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
 					/>
 				</svg>
-				<span>收藏</span>
+				<span>{t("list.favoriteOnly", "仅收藏")}</span>
 			</button>
 
-			<!-- Clear All Filters Button -->
 			{#if hasActiveFilters}
 				<button
 					onclick={clearAllFilters}
 					class="px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-destructive transition-colors"
-					title="清除所有筛选"
+					title={t("list.clearAllTitle", "清除所有筛选")}
 				>
-					清除全部
+					{t("list.clearAll", "清除全部")}
 				</button>
 			{/if}
 		</div>
 
-		<!-- Active Filters Chips -->
 		{#if hasActiveFilters}
 			<div class="flex flex-wrap items-center gap-1.5">
 				{#if showFavoritesOnly}
 					<span
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-yellow-500/10 text-yellow-500 leading-tight border border-yellow-500/30"
 					>
-						<span>仅收藏</span>
+						<span>{t("list.favoriteOnly", "仅收藏")}</span>
 						<button
 							onclick={() => {
 								showFavoritesOnly = false;
 								loadEncounters(0);
 							}}
 							class="hover:text-yellow-600 transition-colors"
-							aria-label="移除收藏筛选"
+							aria-label={t("list.removeFavoriteFilter", "移除收藏筛选")}
 						>
 							✕
 						</button>
@@ -429,12 +554,12 @@
 					<span
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-popover text-muted-foreground leading-tight border border-border/60"
 					>
-						<span class="text-muted-foreground/70">首领：</span>
-						{boss}
+						<span class="text-muted-foreground/70">{t("list.bossPrefix", "首领：")}</span>
+						{localizeRawMonsterName(boss, boss)}
 						<button
 							onclick={() => removeBossFilter(boss)}
 							class="text-muted-foreground/70 hover:text-destructive transition-colors"
-							aria-label={`移除 ${boss} 筛选`}
+							aria-label={`${t("list.clearAll", "清除全部")} ${localizeRawMonsterName(boss, boss)}`}
 						>
 							✕
 						</button>
@@ -444,12 +569,12 @@
 					<span
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-popover text-muted-foreground leading-tight border border-border/60"
 					>
-						<span class="text-muted-foreground/70">玩家：</span>
+						<span class="text-muted-foreground/70">{t("list.playerPrefix", "玩家：")}</span>
 						{player}
 						<button
 							onclick={() => removePlayerNameFilter(player)}
 							class="text-muted-foreground/70 hover:text-destructive transition-colors"
-							aria-label={`移除 ${player} 筛选`}
+							aria-label={`${t("list.clearAll", "清除全部")} ${player}`}
 						>
 							✕
 						</button>
@@ -459,12 +584,12 @@
 					<span
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-popover text-muted-foreground leading-tight border border-border/60"
 					>
-						<span class="text-muted-foreground/70">场景：</span>
-						{encounter}
+						<span class="text-muted-foreground/70">{t("list.scenePrefix", "场景：")}</span>
+						{localizeRawSceneName(encounter, encounter)}
 						<button
 							onclick={() => removeEncounterFilter(encounter)}
 							class="text-muted-foreground/70 hover:text-destructive transition-colors"
-							aria-label={`移除 ${encounter} 筛选`}
+							aria-label={`${t("list.clearAll", "清除全部")} ${encounter}`}
 						>
 							✕
 						</button>
@@ -474,15 +599,13 @@
 		{/if}
 	</div>
 
-	<div
-		class="overflow-x-auto rounded border border-border/60 bg-card/30 relative"
-	>
+	<div class="overflow-x-auto rounded border border-border/60 bg-card/30 relative">
 		<div class="absolute top-2 right-3 z-10">
 			<button
 				onclick={() => loadEncounters(page)}
 				class="text-neutral-400 hover:text-neutral-200 transition-colors"
 				disabled={isRefreshing}
-				aria-label="刷新战斗列表"
+				aria-label={t("list.refreshEncounterList", "刷新战斗列表")}
 			>
 				<svg
 					class:animate-spin={isRefreshing}
@@ -505,112 +628,52 @@
 		<table class="w-full border-collapse" style="min-width: 780px;">
 			<thead>
 				<tr class="bg-popover/60">
-					<th
-						class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-10"
-					>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-10">
 						<button
 							onclick={toggleSelectAll}
 							class="flex items-center justify-center w-5 h-5 rounded border transition-colors {allSelected
 								? 'bg-primary border-primary'
-								: someSelected &&
-									  encounters.some((e) =>
-											selectedIds.has(e.id),
-									  )
+								: someSelected && encounters.some((e) => selectedIds.has(e.id))
 									? 'bg-primary/50 border-primary'
 									: 'border-border hover:border-primary/50'}"
-							aria-label={allSelected
-								? "取消全选"
-								: "全选"}
-							title={allSelected ? "取消全选" : "全选"}
+							aria-label={allSelected ? t("list.deselectAll", "取消全选") : t("list.selectAll", "全选")}
+							title={allSelected ? t("list.deselectAll", "取消全选") : t("list.selectAll", "全选")}
 						>
 							{#if allSelected}
-								<svg
-									class="w-3 h-3 text-primary-foreground"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="3"
-										d="M5 13l4 4L19 7"
-									/>
+								<svg class="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
 								</svg>
-							{:else if encounters.some( (e) => selectedIds.has(e.id), )}
-								<svg
-									class="w-3 h-3 text-primary-foreground"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="3"
-										d="M18 12H6"
-									/>
+							{:else if encounters.some((e) => selectedIds.has(e.id))}
+								<svg class="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M18 12H6" />
 								</svg>
 							{/if}
 						</button>
 					</th>
-					<th
-						class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-10"
-						>ID</th
-					>
-					<th
-						class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-80"
-						>战斗</th
-					>
-					<th
-						class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-[400px]"
-						>玩家</th
-					>
-					<th
-						class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-12"
-						>时长</th
-					>
-					<th
-						class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-48"
-						>日期</th
-					>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-10">{t("list.id", "ID")}</th>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-80">{t("list.encounter", "战斗")}</th>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-[400px]">{t("list.players", "玩家")}</th>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-12">{t("list.duration", "时长")}</th>
+					<th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground w-48">{t("list.date", "日期")}</th>
 				</tr>
 			</thead>
 			<tbody class="bg-background/40">
 				{#each encounters as enc (enc.id)}
 					<tr
-						class="border-t border-border/40 hover:bg-muted/60 transition-colors cursor-pointer {selectedIds.has(
-							enc.id,
-						)
-							? 'bg-primary/5'
-							: ''}"
+						class="border-t border-border/40 hover:bg-muted/60 transition-colors cursor-pointer {selectedIds.has(enc.id) ? 'bg-primary/5' : ''}"
 						onclick={() => onView(enc)}
 					>
 						<td class="px-3 py-2 text-sm text-muted-foreground">
 							<button
 								onclick={(e) => toggleSelect(enc.id, e)}
-								class="flex items-center justify-center w-5 h-5 rounded border transition-colors {selectedIds.has(
-									enc.id,
-								)
+								class="flex items-center justify-center w-5 h-5 rounded border transition-colors {selectedIds.has(enc.id)
 									? 'bg-primary border-primary'
 									: 'border-border hover:border-primary/50'}"
-								aria-label={selectedIds.has(enc.id)
-									? "取消选择"
-									: "选择"}
+								aria-label={selectedIds.has(enc.id) ? t("list.deselect", "取消选择") : t("list.select", "选择")}
 							>
 								{#if selectedIds.has(enc.id)}
-									<svg
-										class="w-3 h-3 text-primary-foreground"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="3"
-											d="M5 13l4 4L19 7"
-										/>
+									<svg class="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
 									</svg>
 								{/if}
 							</button>
@@ -619,14 +682,8 @@
 							<span class="inline-flex items-center gap-1">
 								{enc.id}
 								{#if enc.isFavorite}
-									<svg
-										class="w-3.5 h-3.5 text-yellow-500 flex-shrink-0"
-										fill="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-										/>
+									<svg class="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+										<path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
 									</svg>
 								{/if}
 							</span>
@@ -635,76 +692,51 @@
 							<div class="space-y-1">
 								<div>
 									{#if enc.sceneName}
-										<span
-											class="text-xs bg-muted px-1.5 py-0.5 rounded text-foreground"
-											>{enc.sceneName}</span
-										>
+										<span class="text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">{localizeRawSceneName(enc.sceneName, enc.sceneName)}</span>
 									{:else}
-										<span
-											class="text-muted-foreground text-xs opacity-70"
-											>无场景</span
-										>
+										<span class="text-muted-foreground text-xs opacity-70">{t("list.openSceneNone", "无场景")}</span>
 									{/if}
 								</div>
 								<div>
 									{#if enc.bosses.length > 0}
 										<div class="flex flex-wrap gap-1">
-											<span
-												class="text-xs py-0.5 rounded px-1.5"
-												>{enc.bosses[0]
-													?.monsterName}</span
-											>
+											<span class="text-xs py-0.5 rounded px-1.5">{localizeRawMonsterName(enc.bosses[0]?.monsterName, enc.bosses[0]?.monsterName)}</span>
 										</div>
 									{:else}
-										<span
-											class="inline-block text-muted-foreground text-xs opacity-70 py-0.5 px-1.5"
-											>无 Boss</span
-										>
+										<span class="inline-block text-muted-foreground text-xs opacity-70 py-0.5 px-1.5">{t("list.noBoss", "无 Boss")}</span>
 									{/if}
 								</div>
 							</div>
 						</td>
 						<td class="px-3 py-2 text-sm text-muted-foreground">
 							{#if enc.players.length > 0}
-								{@const sortedPlayers = [...enc.players].sort(
-									(a, b) => {
-										const aHasClass = a.classId !== 0;
-										const bHasClass = b.classId !== 0;
-										if (aHasClass && !bHasClass) return -1;
-										if (!aHasClass && bHasClass) return 1;
-										return 0;
-									},
-								)}
+								{@const sortedPlayers = [...enc.players].sort((a, b) => {
+									const aHasClass = a.classId !== 0;
+									const bHasClass = b.classId !== 0;
+									if (aHasClass && !bHasClass) return -1;
+									if (!aHasClass && bHasClass) return 1;
+									return 0;
+								})}
 								<div class="flex gap-1 items-center">
 									{#each sortedPlayers.slice(0, 8) as player}
 										<img
 											class="size-5 object-contain flex-shrink-0"
-											src={getClassIcon(
-												CLASS_MAP[player.classId] ?? "",
-											)}
+											src={getClassIcon(CLASS_MAP[player.classId] ?? "")}
 											alt="Class icon"
 											{@attach tooltip(() => player.name)}
 										/>
 									{/each}
 									{#if enc.players.length > 8}
-										<span class="text-xs text-muted-foreground"
-											>+{enc.players.length - 8}</span
-										>
+										<span class="text-xs text-muted-foreground">+{enc.players.length - 8}</span>
 									{/if}
 								</div>
 							{/if}
 						</td>
-						<td class="px-3 py-2 text-sm text-muted-foreground"
-							>{fmtDuration(enc.duration)}</td
-						>
+						<td class="px-3 py-2 text-sm text-muted-foreground">{fmtDuration(enc.duration)}</td>
 						<td class="px-3 py-2 text-sm text-muted-foreground">
 							<div class="leading-snug">
 								<div>{fmtDate(enc.startedAtMs)}</div>
-								<div
-									class="text-xs text-muted-foreground opacity-70"
-								>
-									{fmtTime(enc.startedAtMs)}
-								</div>
+								<div class="text-xs text-muted-foreground opacity-70">{fmtTime(enc.startedAtMs)}</div>
 							</div>
 						</td>
 					</tr>
@@ -713,10 +745,9 @@
 		</table>
 	</div>
 
-	<!-- Pagination controls -->
 	<div class="flex items-center justify-between mt-4 gap-4">
 		<div class="flex items-center gap-3 text-sm text-muted-foreground">
-			<span>每页行数：</span>
+			<span>{t("list.rowsPerPage", "每页行数：")}</span>
 			<input
 				type="number"
 				bind:value={pageSize}
@@ -725,244 +756,95 @@
 				class="w-16 px-2 py-1 bg-popover border border-border rounded text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
 				onchange={() => loadEncounters(0)}
 			/>
-			<span
-				>显示 {page * pageSize + 1} - {Math.min(
-					(page + 1) * pageSize,
-					totalCount,
-				)} / {totalCount}</span
-			>
+			<span>{t("list.showing", "显示")} {page * pageSize + 1} - {Math.min((page + 1) * pageSize, totalCount)} / {totalCount}</span>
 		</div>
 
 		<div class="flex items-center gap-1 ml-auto">
-			<button
-				onclick={() => loadEncounters(0)}
-				disabled={page === 0}
-				class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-				aria-label="第一页"
-			>
-				<svg
-					class="w-5 h-5"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-					/>
+			<button onclick={() => loadEncounters(0)} disabled={page === 0} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("list.firstPage", "第一页")}>
+				<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
 				</svg>
 			</button>
-			<button
-				onclick={() => loadEncounters(page - 1)}
-				disabled={page === 0}
-				class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-				aria-label="上一页"
-			>
-				<svg
-					class="w-5 h-5"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M15 19l-7-7 7-7"
-					/>
+			<button onclick={() => loadEncounters(page - 1)} disabled={page === 0} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("list.previousPage", "上一页")}>
+				<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
 			</button>
-			<button
-				onclick={() => loadEncounters(page + 1)}
-				disabled={(page + 1) * pageSize >= totalCount}
-				class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-				aria-label="下一页"
-			>
-				<svg
-					class="w-5 h-5"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M9 5l7 7-7 7"
-					/>
+			<button onclick={() => loadEncounters(page + 1)} disabled={(page + 1) * pageSize >= totalCount} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("list.nextPage", "下一页")}>
+				<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 				</svg>
 			</button>
-			<button
-				onclick={() =>
-					loadEncounters(Math.floor((totalCount - 1) / pageSize))}
-				disabled={(page + 1) * pageSize >= totalCount}
-				class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-				aria-label="最后一页"
-			>
-				<svg
-					class="w-5 h-5"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M13 5l7 7-7 7M5 5l7 7-7 7"
-					/>
+			<button onclick={() => loadEncounters(Math.floor((totalCount - 1) / pageSize))} disabled={(page + 1) * pageSize >= totalCount} class="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors" aria-label={t("list.lastPage", "最后一页")}>
+				<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
 				</svg>
 			</button>
 		</div>
 	</div>
 </div>
 
-<!-- Floating Action Bar for Multi-select -->
 {#if someSelected}
-	<div
-		class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-200"
-	>
-		<div
-			class="flex items-center gap-4 px-5 py-3 rounded-xl border border-border bg-popover/95 backdrop-blur-sm shadow-xl"
-		>
+	<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-200">
+		<div class="flex items-center gap-4 px-5 py-3 rounded-xl border border-border bg-popover/95 backdrop-blur-sm shadow-xl">
 			<div class="flex items-center gap-2 text-sm">
-				<span class="text-primary font-semibold"
-					>{selectedIds.size}</span
-				>
-				<span class="text-muted-foreground"
-					>条记录已选择</span
-				>
+				<span class="text-primary font-semibold">{selectedIds.size}</span>
+				<span class="text-muted-foreground">{t("list.recordsSelected", "条记录已选择")}</span>
 			</div>
 
 			<div class="w-px h-5 bg-border"></div>
 
 			<div class="flex items-center gap-2">
-				<button
-					onclick={clearSelection}
-					class="px-3 py-1.5 text-sm rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-				>
-					清除
+				<button onclick={clearSelection} class="px-3 py-1.5 text-sm rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+					{t("list.clear", "清除")}
 				</button>
-				<button
-					onclick={openDeleteModal}
-					class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
-				>
-					<svg
-						class="w-4 h-4"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-						/>
+				<button onclick={openDeleteModal} class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
 					</svg>
-					删除
+					{t("list.delete", "删除")}
 				</button>
 			</div>
 		</div>
 	</div>
 {/if}
 
-<!-- Delete Confirmation Modal -->
 {#if showDeleteModal}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center"
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="delete-modal-title"
-	>
-		<!-- Backdrop -->
-		<button
-			class="absolute inset-0 bg-black/60 backdrop-blur-sm"
-			onclick={closeDeleteModal}
-			aria-label="关闭弹窗"
-		></button>
+	<div class="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+		<button class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick={closeDeleteModal} aria-label={t("list.closeModal", "Close dialog")}></button>
 
-		<!-- Modal Content -->
-		<div
-			class="relative z-10 w-full max-w-md mx-4 p-6 rounded-xl border border-border bg-popover shadow-2xl animate-in fade-in zoom-in-95 duration-200"
-		>
+		<div class="relative z-10 w-full max-w-md mx-4 p-6 rounded-xl border border-border bg-popover shadow-2xl animate-in fade-in zoom-in-95 duration-200">
 			<div class="flex items-center gap-3 mb-4">
-				<div
-					class="flex items-center justify-center w-10 h-10 rounded-full bg-destructive/10"
-				>
-					<svg
-						class="w-5 h-5 text-destructive"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-						/>
+				<div class="flex items-center justify-center w-10 h-10 rounded-full bg-destructive/10">
+					<svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 					</svg>
 				</div>
 				<div>
-					<h3
-						id="delete-modal-title"
-						class="text-lg font-semibold text-foreground"
-					>
-						删除 {selectedIds.size} 条记录
-					</h3>
-					<p class="text-sm text-muted-foreground">
-						此操作无法撤销
-					</p>
+					<h3 id="delete-modal-title" class="text-lg font-semibold text-foreground">{deleteTitle(selectedIds.size)}</h3>
+					<p class="text-sm text-muted-foreground">{t("list.actionCannotUndo", "此操作无法撤销")}</p>
 				</div>
 			</div>
 
 			<p class="text-sm text-muted-foreground mb-6">
-				确认要永久删除{selectedIds.size === 1 ? "这条战斗记录" : "这些战斗记录"}吗？所有关联数据（包括玩家统计、技能统计、死亡事件等）都会被删除。
+				{selectedIds.size === 1
+					? t("list.confirmDeleteOne", "确认要永久删除这条战斗记录吗？所有关联数据（包括玩家统计、技能统计、死亡事件等）都会被删除。")
+					: t("list.confirmDeleteMany", "确认要永久删除这 {count} 条战斗记录吗？所有关联数据（包括玩家统计、技能统计、死亡事件等）都会被删除。")}
 			</p>
 
 			<div class="flex justify-end gap-3">
-				<button
-					onclick={closeDeleteModal}
-					disabled={isDeleting}
-					class="px-4 py-2 text-sm rounded-md border border-border bg-popover text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					取消
+				<button onclick={closeDeleteModal} disabled={isDeleting} class="px-4 py-2 text-sm rounded-md border border-border bg-popover text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+					{t("common.cancel", "取消")}
 				</button>
-				<button
-					onclick={confirmDeleteSelected}
-					disabled={isDeleting}
-					class="flex items-center gap-2 px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-				>
+				<button onclick={confirmDeleteSelected} disabled={isDeleting} class="flex items-center gap-2 px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
 					{#if isDeleting}
-						<svg
-							class="animate-spin w-4 h-4"
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<circle
-								class="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								stroke-width="4"
-							></circle>
-							<path
-								class="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							></path>
+						<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 						</svg>
-						正在删除...
+						{t("list.deleting", "Deleting...")}
 					{:else}
-						删除
+						{t("list.delete", "删除")}
 					{/if}
 				</button>
 			</div>

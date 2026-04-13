@@ -1,27 +1,32 @@
 <script lang="ts">
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
   import {
     onWindowDragPointerDown,
     resetOverlayPositions,
     resetOverlaySizes,
     setEditMode,
   } from "./overlay-state.svelte.js";
+
+  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
 </script>
 
 <div class="edit-banner">
-  <div class="edit-title">编辑模式 - 可拖拽调整位置</div>
+  <div class="edit-title">{t("overlay.edit.title", "编辑模式 - 可拖拽调整位置")}</div>
   <button type="button" class="done-btn secondary" onclick={resetOverlayPositions}>
-    重置位置
+    {t("overlay.edit.resetPosition", "重置位置")}
   </button>
   <button type="button" class="done-btn secondary" onclick={resetOverlaySizes}>
-    重置尺寸
+    {t("overlay.edit.resetSize", "重置尺寸")}
   </button>
   <button type="button" class="done-btn" onclick={() => setEditMode(false)}>
-    完成编辑
+    {t("overlay.edit.done", "完成编辑")}
   </button>
 </div>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="window-drag-bar" onpointerdown={onWindowDragPointerDown}>
-  拖动此处移动 Game Overlay 窗口
+  {t("overlay.edit.dragWindow", "拖动此处移动 Game Overlay 窗口")}
 </div>
 
 <style>

@@ -83,7 +83,8 @@
         "resources": [
             "./WinDivert.dll",
             "./WinDivert64.sys",
-            "./meter-data/"
+            "./meter-data/",
+            "../src/lib/locales/"
         ],
         "createUpdaterArtifacts": true
     },

@@ -1,0 +1,11 @@
+{
+  "captureMethod": "キャプチャ方式",
+  "captureMethodDescription": "ネットワークパケットのキャプチャ方法を選択します。（アプリの再起動が必要です。）",
+  "loadingDevices": "ネットワークデバイスを読み込み中...",
+  "networkDevice": "ネットワークデバイス",
+  "networkDeviceDescription": "トラフィックのキャプチャに使用するネットワークアダプターを選択します。",
+  "npcapMissing": "Npcap が検出されませんでした。",
+  "npcapMissingSuffix": "この方式を使用する前に Npcap をインストールしてください。",
+  "selectDevice": "ネットワークデバイスを選択",
+  "title": "パケットキャプチャ"
+}

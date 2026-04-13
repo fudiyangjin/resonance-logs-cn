@@ -1,0 +1,16 @@
+{
+  "clearHint": "Right-click to clear hotkeys",
+  "pressKey": "Taste drücken",
+  "unbound": "Unbound",
+  "shortcuts.showLiveMeter": "Live-Meter anzeigen",
+  "shortcuts.hideLiveMeter": "Live-Meter ausblenden",
+  "shortcuts.toggleLiveMeter": "Live-Meter umschalten",
+  "shortcuts.enableClickthrough": "Klickdurchlass aktivieren",
+  "shortcuts.disableClickthrough": "Klickdurchlass deaktivieren",
+  "shortcuts.toggleClickthrough": "Klickdurchlass umschalten",
+  "shortcuts.resetEncounter": "Begegnung zurücksetzen",
+  "shortcuts.togglePauseEncounter": "Kampfpause umschalten",
+  "shortcuts.toggleBossHp": "Boss-LP-Anzeige umschalten",
+  "shortcuts.toggleOverlayEdit": "Overlay-Bearbeitungsmodus umschalten",
+  "shortcuts.toggleOverlayWindow": "Overlay-Fenster umschalten"
+}

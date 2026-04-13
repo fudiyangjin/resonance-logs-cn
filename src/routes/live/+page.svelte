@@ -8,7 +8,7 @@
 
   onMount(() => {
     // Default going to dps tab TODO: make it remember which tab it was in last? not sure if this is a good idea
-    goto(resolve("/live/dps/"));
+    goto(resolve("/live/dps"));
   });
 </script>
 

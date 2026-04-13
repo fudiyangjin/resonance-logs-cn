@@ -11,6 +11,7 @@
   import getDisplayName from "$lib/name-display";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
+  import { resolveUiTranslation } from "$lib/i18n";
 
   let liveData = $derived(getLiveData());
   let rawDpsData = $derived(
@@ -61,7 +62,6 @@
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.live.general.state.abbreviatedDecimalPlaces ?? 1,
   );
-  let abbreviationStyle = $derived(SETTINGS.live.general.state.abbreviationStyle);
   let customThemeColors = $derived(
     SETTINGS.accessibility.state.customThemeColors,
   );
@@ -83,6 +83,7 @@
   // Get visible columns based on settings and column order
   let visiblePlayerColumns = $derived.by(() => {
     const visible = historyDpsPlayerColumns.filter((col) => {
+      if (col.key === "effectiveTotal" || col.key === "effectiveDps") return false;
       const defaultValue =
         DEFAULT_STATS[col.key as keyof typeof DEFAULT_STATS] ?? true;
       const setting =
@@ -98,6 +99,25 @@
       return aIdx - bIdx;
     });
   });
+
+
+function t(key: string, fallback: string): string {
+  return resolveUiTranslation(
+    key,
+    SETTINGS.live.general.state.language,
+    fallback,
+  );
+}
+
+function thLabel(col: { headerKey?: string; header: string }): string {
+  if (!col.headerKey) return col.header;
+  return resolveUiTranslation(
+    col.headerKey,
+    SETTINGS.live.general.state.language,
+    col.header,
+  );
+}
+
 </script>
 
 <div
@@ -114,7 +134,7 @@
             data-tauri-drag-region
             class="px-3 py-1 text-left font-medium uppercase tracking-wide"
             style="font-size: {tableSettings.tableHeaderFontSize}px; color: {tableSettings.tableHeaderTextColor};"
-            >Player</th
+            >{t("historyDetail.player", "玩家")}</th
           >
           {#each visiblePlayerColumns as col (col.key)}
             <th
@@ -123,7 +143,7 @@
               onclick={() => handleSort(col.key)}
             >
               <span class="inline-flex items-center gap-1 justify-end">
-                {col.header}
+                {thLabel(col)}
                 {#if sortKey === col.key}
                   <span class="text-primary">{sortDesc ? "▼" : "▲"}</span>
                 {/if}
@@ -177,11 +197,11 @@
                 style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                 class="object-contain"
                 src={getClassIcon(className)}
-                alt="Class icon"
+                alt={t("historyDetail.classIcon", "职业图标")}
                 {@attach tooltip(
                   () =>
                     formatClassSpecLabel(player.className, player.classSpecName) ||
-                    "未知职业",
+                    t("historyDetail.unknownClass", "未知职业"),
                 )}
               />
               {#if showAbilityScore || showSeasonStrength}
@@ -221,24 +241,22 @@
               class="px-3 py-1 text-right relative z-10 tabular-nums font-medium"
               style="color: {customThemeColors.tableTextColor};"
             >
-              {#if col.key === "totalDmg"}
+              {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
                 {#if SETTINGS.live.general.state.shortenDps}
                   <AbbreviatedNumber
-                    num={player.totalDmg}
+                    num={col.key === "totalDmg" ? player.totalDmg : player.effectiveTotal}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
-                  {player.totalDmg.toLocaleString()}
+                  {(col.key === "totalDmg" ? player.totalDmg : player.effectiveTotal).toLocaleString()}
                 {/if}
               {:else if col.key === "bossDmg"}
                 {#if SETTINGS.live.general.state.shortenDps}
                   <AbbreviatedNumber
                     num={player.bossDmg}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
@@ -250,31 +268,28 @@
                   <AbbreviatedNumber
                     num={player.bossDps}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
                   {Math.round(player.bossDps).toLocaleString()}
                 {/if}
-              {:else if col.key === "dps"}
+              {:else if col.key === "dps" || col.key === "effectiveDps"}
                 {#if SETTINGS.live.general.state.shortenDps}
                   <AbbreviatedNumber
-                    num={player.dps}
+                    num={col.key === "dps" ? player.dps : player.effectiveDps}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
-                  {Math.round(player.dps).toLocaleString()}
+                  {Math.round(col.key === "dps" ? player.dps : player.effectiveDps).toLocaleString()}
                 {/if}
               {:else if col.key === "tdps"}
                 {#if SETTINGS.live.general.state.shortenDps}
                   <AbbreviatedNumber
                     num={player.tdps}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
@@ -295,7 +310,7 @@
                   suffixColor={customThemeColors.tableAbbreviatedColor}
                 />
               {:else}
-                {col.format(player[col.key] ?? 0)}
+                {col.format(player[col.key as keyof typeof player] as number ?? 0)}
               {/if}
             </td>
           {/each}

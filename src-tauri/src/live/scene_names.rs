@@ -37,6 +37,7 @@ pub fn lookup_with_difficulty(scene_id: i32, difficulty: Option<i32>) -> String 
 }
 
 /// Returns true if a scene id exists in the loaded scene map.
+#[allow(dead_code)]
 pub fn contains(scene_id: i32) -> bool {
     let cache = SCENE_NAME_CACHE.read();
     cache.names.contains_key(&scene_id)

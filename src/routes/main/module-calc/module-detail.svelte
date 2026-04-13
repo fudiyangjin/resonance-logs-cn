@@ -2,6 +2,8 @@
   import { Button } from "$lib/components/ui/button";
   import type { ModuleSolution } from "$lib/api";
   import AttrBadge, { sortAttrEntries } from "./attr-badge.svelte";
+  import { resolveModuleCalcTranslation } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
 
   let { open = $bindable(false), solution = $bindable<ModuleSolution | null>(null) } = $props();
 
@@ -28,6 +30,14 @@
   function getTotalValue(parts: ModuleSolution["modules"][number]["parts"]) {
     return parts.reduce((sum, part) => sum + part.value, 0);
   }
+
+  function moduleName(configId: number, fallback: string) {
+    return resolveModuleCalcTranslation(
+      `module.${configId}`,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
 </script>
 
 {#if open && solution}
@@ -40,7 +50,11 @@
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="模组方案详情"
+        aria-label={resolveModuleCalcTranslation(
+          "detailDialogLabel",
+          SETTINGS.live.general.state.language,
+          "模组方案详情",
+        )}
         tabindex="-1"
         class="flex max-h-full w-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/95 shadow-2xl"
         onclick={(event) => event.stopPropagation()}
@@ -50,20 +64,38 @@
           <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div class="space-y-3">
               <div class="text-xs uppercase tracking-[0.22em] text-muted-foreground">
-                方案详情
+                {resolveModuleCalcTranslation(
+                  "detailTitle",
+                  SETTINGS.live.general.state.language,
+                  "方案详情",
+                )}
               </div>
               <div class="flex flex-wrap items-end gap-3">
                 <div class="text-3xl font-semibold text-foreground">{solution.score}</div>
                 <div class="rounded-full border border-border/60 bg-background/80 px-3 py-1 text-sm text-muted-foreground">
-                  总分
+                  {resolveModuleCalcTranslation(
+                    "totalScore",
+                    SETTINGS.live.general.state.language,
+                    "总分",
+                  )}
                 </div>
                 <div class="rounded-full border border-border/60 bg-background/80 px-3 py-1 text-sm text-muted-foreground">
-                  {solution.modules.length} 个模组
+                  {solution.modules.length} {resolveModuleCalcTranslation(
+                    "moduleCountSuffix",
+                    SETTINGS.live.general.state.language,
+                    "个模组",
+                  )}
                 </div>
               </div>
             </div>
 
-            <Button size="sm" variant="ghost" onclick={closeDialog}>关闭</Button>
+            <Button size="sm" variant="ghost" onclick={closeDialog}>
+              {resolveModuleCalcTranslation(
+                "close",
+                SETTINGS.live.general.state.language,
+                "关闭",
+              )}
+            </Button>
           </div>
 
           <div class="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
@@ -84,18 +116,26 @@
                     <div class="flex size-8 items-center justify-center rounded-xl bg-background text-sm font-semibold text-muted-foreground">
                       {idx + 1}
                     </div>
-                    <h3 class="text-base font-semibold text-foreground">{mod.name}</h3>
+                    <h3 class="text-base font-semibold text-foreground">{moduleName(mod.config_id, mod.name)}</h3>
                     <div
                       class={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getQualityClass(mod.quality)}`}
                     >
-                      品质 {mod.quality}
+                      {resolveModuleCalcTranslation(
+                        "quality",
+                        SETTINGS.live.general.state.language,
+                        "品质",
+                      )} {mod.quality}
                     </div>
                   </div>
                 </div>
 
                 <div class="rounded-xl border border-border/50 bg-background/70 px-3 py-2 lg:text-right">
                   <div class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                    属性总值
+                    {resolveModuleCalcTranslation(
+                      "totalAttributesValue",
+                      SETTINGS.live.general.state.language,
+                      "属性总值",
+                    )}
                   </div>
                   <div class="mt-1 text-lg font-semibold text-foreground">{totalValue}</div>
                 </div>

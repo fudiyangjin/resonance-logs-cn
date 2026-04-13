@@ -1,30 +1,22 @@
 <script lang="ts">
-  import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
   import { emit } from "@tauri-apps/api/event";
+  import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+  import { commands } from "$lib/bindings";
   import SwordsIcon from "virtual:icons/lucide/swords";
   import ExternalLinkIcon from "virtual:icons/lucide/external-link";
   import PlayIcon from "virtual:icons/lucide/play";
   import PenSquareIcon from "virtual:icons/lucide/pen-square";
   import ProfileSwitcher from "./profile-switcher.svelte";
+  import { SETTINGS } from "$lib/settings-store";
+  import { uiT } from "$lib/i18n";
 
   let { children } = $props();
+  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+
 
   async function toggleOverlayWindow() {
     try {
-      const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
-      if (overlayWindow !== null) {
-        const isVisible = await overlayWindow.isVisible();
-
-        if (isVisible) {
-          await overlayWindow.hide();
-        } else {
-          await overlayWindow.show();
-          await overlayWindow.unminimize();
-          await overlayWindow.setFocus();
-        }
-      } else {
-        console.warn("Game overlay window not found");
-      }
+      await commands.toggleGameOverlayWindow();
     } catch (err) {
       console.error("Failed to toggle overlay window:", err);
     }
@@ -51,8 +43,8 @@
         <SwordsIcon class="w-5 h-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">实时监控</h1>
-        <p class="text-sm text-muted-foreground">自定义监控技能CD, 战斗资源等</p>
+        <h1 class="text-xl font-bold text-foreground">{t("title", "实时监控")}</h1>
+        <p class="text-sm text-muted-foreground">{t("subtitle", "自定义监控技能CD, 战斗资源等")}</p>
       </div>
     </div>
 
@@ -63,7 +55,7 @@
         onclick={toggleOverlayWindow}
       >
         <PlayIcon class="w-4 h-4" />
-        <span>切换遮罩窗口</span>
+        <span>{t("toggleOverlayWindow", "切换遮罩窗口")}</span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
 
@@ -73,7 +65,7 @@
         onclick={toggleOverlayEditMode}
       >
         <PenSquareIcon class="w-4 h-4" />
-        <span>编辑遮罩布局</span>
+        <span>{t("editOverlayLayout", "编辑遮罩布局")}</span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
     </div>

@@ -34,6 +34,7 @@
   );
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class:overlay-group={standalone}
   class:editable={editable}
@@ -46,7 +47,7 @@
 >
   {#if showName && !hasSpecialImages}
     <div class="buff-name-label" style:max-width={`${iconSize + 8}px`}>
-      {buff.name.slice(0, 6)}
+      {buff.name}
     </div>
   {/if}
 
@@ -71,6 +72,7 @@
   {/if}
 
   {#if editable && onResizePointerDown}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="resize-handle icon" onpointerdown={onResizePointerDown}></div>
   {/if}
 </div>
@@ -82,6 +84,7 @@
     align-items: center;
     gap: 2px;
     width: 52px;
+    position: relative;
   }
 
   .icon-buff-cell.placeholder {
@@ -102,9 +105,15 @@
     line-height: 1;
     max-width: 52px;
     text-align: center;
-    white-space: nowrap;
+    white-space: normal;
     overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    max-height: 4.2em;
   }
 
   .buff-icon-wrap {

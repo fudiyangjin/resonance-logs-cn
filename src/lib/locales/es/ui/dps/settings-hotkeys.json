@@ -1,0 +1,16 @@
+{
+  "clearHint": "Right-click to clear hotkeys",
+  "pressKey": "Pulsa una tecla",
+  "unbound": "Unbound",
+  "shortcuts.showLiveMeter": "Mostrar medidor en vivo",
+  "shortcuts.hideLiveMeter": "Ocultar medidor en vivo",
+  "shortcuts.toggleLiveMeter": "Alternar medidor en vivo",
+  "shortcuts.enableClickthrough": "Activar clic a través",
+  "shortcuts.disableClickthrough": "Desactivar clic a través",
+  "shortcuts.toggleClickthrough": "Alternar clic a través",
+  "shortcuts.resetEncounter": "Restablecer combate",
+  "shortcuts.togglePauseEncounter": "Alternar pausa del combate",
+  "shortcuts.toggleBossHp": "Alternar visualización de HP del jefe",
+  "shortcuts.toggleOverlayEdit": "Alternar modo de edición de superposición",
+  "shortcuts.toggleOverlayWindow": "Alternar ventana de superposición"
+}

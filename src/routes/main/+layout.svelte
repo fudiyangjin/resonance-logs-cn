@@ -33,6 +33,8 @@
   let lastOverlayVisibleState: boolean | null = null;
   let lastMonsterOverlayVisibleState: boolean | null = null;
   let runtimeSyncTimer: ReturnType<typeof setTimeout> | null = null;
+  let overlayVisibilityOverride: boolean | null = null;
+  let lastSkillMonitorEnabled: boolean | null = null;
 
   $effect(() => {
     const runtimeSnapshot = buildMonitorRuntimeSnapshot();
@@ -58,13 +60,21 @@
     }
 
     const enabled = SETTINGS.skillMonitor.state.enabled;
+
+    if (lastSkillMonitorEnabled !== enabled) {
+      lastSkillMonitorEnabled = enabled;
+      overlayVisibilityOverride = null;
+    }
+
+    const desiredOverlayVisible = overlayVisibilityOverride ?? enabled;
+
     void (async () => {
       try {
         const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
         if (overlayWindow) {
-          if (lastOverlayVisibleState !== enabled) {
-            lastOverlayVisibleState = enabled;
-            if (enabled) {
+          if (lastOverlayVisibleState !== desiredOverlayVisible) {
+            lastOverlayVisibleState = desiredOverlayVisible;
+            if (desiredOverlayVisible) {
               await overlayWindow.show();
               await overlayWindow.unminimize();
             } else {
@@ -123,6 +133,8 @@
   };
   let updateInfo = $state<UpdateInfo | null>(null);
   let updateUnlisten: UnlistenFn | null = null;
+  let overlayToggleUnlisten: UnlistenFn | null = null;
+  let overlayChangedUnlisten: UnlistenFn | null = null;
 
   onMount(() => {
     // Set up navigation listener
@@ -132,6 +144,43 @@
       goto(route);
     }).then((unlisten) => {
       navigateUnlisten = unlisten;
+    });
+
+    listen("game-overlay-visibility-toggle", async () => {
+      try {
+        const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
+        if (!overlayWindow) {
+          console.warn("Game overlay window not found");
+          return;
+        }
+
+        const nextVisible = !(await overlayWindow.isVisible());
+        overlayVisibilityOverride = nextVisible;
+        lastOverlayVisibleState = nextVisible;
+
+        if (nextVisible) {
+          await overlayWindow.show();
+          await overlayWindow.unminimize();
+          await overlayWindow.setFocus();
+        } else {
+          await overlayWindow.hide();
+        }
+      } catch (error) {
+        console.error("[skill-monitor] failed to toggle overlay visibility", error);
+      }
+    }).then((unlisten) => {
+      overlayToggleUnlisten = unlisten;
+    }).catch((err) => {
+      console.error("Failed to subscribe game-overlay-visibility-toggle event", err);
+    });
+
+    listen<{ visible: boolean }>("game-overlay-visibility-changed", (event) => {
+      overlayVisibilityOverride = event.payload.visible;
+      lastOverlayVisibleState = event.payload.visible;
+    }).then((unlisten) => {
+      overlayChangedUnlisten = unlisten;
+    }).catch((err) => {
+      console.error("Failed to subscribe game-overlay-visibility-changed event", err);
     });
 
     listen<UpdateInfo>("update-available", (event) => {
@@ -196,6 +245,14 @@
       if (updateUnlisten) {
         updateUnlisten();
         updateUnlisten = null;
+      }
+      if (overlayToggleUnlisten) {
+        overlayToggleUnlisten();
+        overlayToggleUnlisten = null;
+      }
+      if (overlayChangedUnlisten) {
+        overlayChangedUnlisten();
+        overlayChangedUnlisten = null;
       }
       clearInterval(bgAndFontInterval);
     };

@@ -11,6 +11,7 @@
   import getDisplayName from "$lib/name-display";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
+  import { resolveUiTranslation } from "$lib/i18n";
 
   let liveData = $derived(getLiveData());
   let rawHealData = $derived(
@@ -31,6 +32,39 @@
       SETTINGS.live.sorting.healPlayers.state.sortKey = key;
       SETTINGS.live.sorting.healPlayers.state.sortDesc = true;
     }
+  }
+
+  function t(key: string, fallback: string): string {
+    return resolveUiTranslation(
+      "ui/dps/live.json",
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
+  function thLabel(
+    col: { headerKey?: string; labelKey?: string; header: string; label?: string },
+  ): string {
+    if (col.headerKey) {
+      const translatedHeader = resolveUiTranslation(
+        col.headerKey,
+        SETTINGS.live.general.state.language,
+        "",
+      );
+      if (translatedHeader?.trim()) return translatedHeader;
+    }
+
+    if (col.labelKey) {
+      const translatedLabel = resolveUiTranslation(
+        col.labelKey,
+        SETTINGS.live.general.state.language,
+        col.label ?? col.header,
+      );
+      if (translatedLabel?.trim()) return translatedLabel;
+    }
+
+    return col.header;
   }
 
   // Sorted player data based on settings
@@ -58,7 +92,6 @@
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.live.general.state.abbreviatedDecimalPlaces ?? 1,
   );
-  let abbreviationStyle = $derived(SETTINGS.live.general.state.abbreviationStyle);
   let customThemeColors = $derived(
     SETTINGS.accessibility.state.customThemeColors,
   );
@@ -104,7 +137,7 @@
           <th
             class="px-3 py-1 text-left font-medium uppercase tracking-wide"
             style="font-size: {tableSettings.tableHeaderFontSize}px; color: {tableSettings.tableHeaderTextColor};"
-            >Player</th
+            >{t("historyDetail.player", "玩家")}</th
           >
           {#each visiblePlayerColumns as col (col.key)}
             <th
@@ -113,7 +146,7 @@
               onclick={() => handleSort(col.key)}
             >
               <span class="inline-flex items-center gap-1 justify-end">
-                {col.header}
+                {thLabel(col)}
                 {#if sortKey === col.key}
                   <span class="text-primary">{sortDesc ? "▼" : "▲"}</span>
                 {/if}
@@ -167,11 +200,11 @@
                 style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                 class="object-contain"
                 src={getClassIcon(className)}
-                alt="Class icon"
+                alt={t("live.classIconAlt", "Class icon")}
                 {@attach tooltip(
                   () =>
                     formatClassSpecLabel(player.className, player.classSpecName) ||
-                    "未知职业",
+                    t("live.unknownClass", "Unknown Class"),
                 )}
               />
               {#if showAbilityScore || showSeasonStrength}
@@ -214,28 +247,13 @@
               {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
                 {#if SETTINGS_SHORTEN_DPS}
                   <AbbreviatedNumber
-                    num={col.key === "totalDmg"
-                      ? player.totalDmg
-                      : player.effectiveTotal}
+                    num={col.key === "totalDmg" ? player.totalDmg : player.effectiveTotal}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
-                  {col.format(player[col.key] ?? 0)}
-                {/if}
-              {:else if col.key === "dps" || col.key === "effectiveDps"}
-                {#if SETTINGS_SHORTEN_DPS}
-                  <AbbreviatedNumber
-                    num={player[col.key] ?? 0}
-                    decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
-                    suffixFontSize={tableSettings.abbreviatedFontSize}
-                    suffixColor={customThemeColors.tableAbbreviatedColor}
-                  />
-                {:else}
-                  {col.format(player[col.key] ?? 0)}
+                  {(col.key === "totalDmg" ? player.totalDmg : player.effectiveTotal).toLocaleString()}
                 {/if}
               {:else if col.key === "dmgPct"}
                 <PercentFormat
@@ -251,7 +269,7 @@
                   suffixColor={customThemeColors.tableAbbreviatedColor}
                 />
               {:else}
-                {col.format(player[col.key] ?? 0)}
+                {col.format(player[col.key as keyof typeof player] as number ?? 0)}
               {/if}
             </td>
           {/each}

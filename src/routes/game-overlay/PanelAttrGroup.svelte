@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
   import { formatAttrValue } from "./overlay-utils";
   import {
     getGroupPosition,
@@ -11,6 +13,7 @@
     startResize,
   } from "./overlay-state.svelte.js";
 
+  const t = uiT("skill-monitor/panel-attr", () => SETTINGS.live.general.state.language);
   const editing = $derived(isEditing());
   const rows = $derived(panelAreaRows());
   const groupPos = $derived(getGroupPosition("panelAttrGroup"));
@@ -20,6 +23,7 @@
 </script>
 
 {#if rows.length > 0}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     class="overlay-group panel-attr-group"
     class:editable={editing}
@@ -30,7 +34,7 @@
     onpointerdown={(e) => startDrag(e, { kind: "group", key: "panelAttrGroup" }, groupPos)}
   >
     {#if editing}
-      <div class="group-tag">角色属性区</div>
+      <div class="group-tag">{t("panelAttr.title", "角色属性区")}</div>
     {/if}
 
     <div class="panel-attr-list" style:gap={`${sizes.panelAttrGap}px`}>
@@ -41,7 +45,7 @@
             style:color={row.attr.color}
             style:font-size={`${sizes.panelAttrFontSize}px`}
           >
-            {row.attr.label}
+            {t(row.attr.labelKey ?? `panelAttr.${row.attr.attrId}`, row.attr.label)}
           </span>
           <span
             class="panel-attr-value"
@@ -55,6 +59,7 @@
     </div>
 
     {#if editing}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
         class="resize-handle"
         onpointerdown={(e) =>

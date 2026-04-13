@@ -2,6 +2,7 @@ mod build_app;
 mod live;
 pub mod module_optimizer;
 mod packets;
+mod translation_runtime;
 
 use crate::build_app::build_and_run;
 use log::{info, warn};
@@ -31,6 +32,29 @@ pub const WINDOW_MAIN_LABEL: &str = "main";
 pub const WINDOW_GAME_OVERLAY_LABEL: &str = "game-overlay";
 /// The label for the monster overlay window.
 pub const WINDOW_MONSTER_OVERLAY_LABEL: &str = "monster-overlay";
+
+
+#[tauri::command]
+#[specta::specta]
+fn toggle_game_overlay_window(app: tauri::AppHandle) -> Result<(), String> {
+    let Some(overlay_window) = app.get_webview_window(WINDOW_GAME_OVERLAY_LABEL) else {
+        return Err("Game overlay window not found".into());
+    };
+
+    let next_visible = !overlay_window.is_visible().map_err(|e| e.to_string())?;
+    if next_visible {
+        overlay_window.show().map_err(|e| e.to_string())?;
+        overlay_window.unminimize().map_err(|e| e.to_string())?;
+        let _ = overlay_window.set_focus();
+    } else {
+        overlay_window.hide().map_err(|e| e.to_string())?;
+    }
+
+    app.emit("game-overlay-visibility-changed", json!({ "visible": next_visible }))
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
 
 /// Keeps the non-blocking tracing appender worker alive for the lifetime of the process.
 /// If this guard is dropped, file logging may stop flushing.
@@ -78,6 +102,22 @@ pub fn run() {
             module_optimizer::commands::check_gpu_support,
             module_optimizer::commands::get_latest_modules,
             module_optimizer::commands::optimize_latest_modules,
+            translation_runtime::initialize_translation_runtime_files,
+            translation_runtime::get_translation_runtime_status,
+            translation_runtime::repair_runtime_locale_folder,
+            translation_runtime::open_translation_data_dir,
+            translation_runtime::refresh_translation_runtime_data,
+            translation_runtime::list_translation_runtime_files,
+            translation_runtime::read_translation_runtime_file,
+            translation_runtime::write_translation_runtime_file,
+            translation_runtime::generate_ui_translation_scaffold,
+            translation_runtime::generate_all_ui_translation_scaffolds,
+            translation_runtime::generate_buff_name_search_scaffold,
+            translation_runtime::generate_buff_name_translation_scaffold,
+            translation_runtime::generate_scene_name_translation_scaffold,
+            translation_runtime::generate_monster_name_translation_scaffold,
+            translation_runtime::generate_skill_name_translation_scaffold,
+            toggle_game_overlay_window,
         ]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds

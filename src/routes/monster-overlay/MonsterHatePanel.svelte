@@ -18,6 +18,7 @@
 </script>
 
 {#if sections.length > 0 || editing}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     class="overlay-group monster-hate-panel"
     class:editable={editing}
@@ -58,6 +59,7 @@
     </div>
 
     {#if editing}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
         class="resize-handle"
         onpointerdown={(event) => startMonsterResize(event, { kind: "hatePanel" }, panelScale)}

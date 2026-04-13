@@ -189,6 +189,7 @@ export type LiveDataPayload = {
   localPlayerUid: number;
   sceneId: number | null;
   sceneName: string | null;
+  trainingDummy: TrainingDummyState;
   isPaused: boolean;
   bosses: BossHealth[];
   entities: RawEntityData[];

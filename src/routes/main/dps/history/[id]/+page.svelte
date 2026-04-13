@@ -16,6 +16,8 @@
     historyTankedSkillColumns,
   } from "$lib/column-data";
   import { settings, SETTINGS, DEFAULT_HISTORY_STATS } from "$lib/settings-store";
+  import { localizeSceneName } from "$lib/scene-mappings";
+  import { localizeRawMonsterName } from "$lib/monster-mappings";
   import getDisplayName from "$lib/name-display";
   import { openUrl } from "@tauri-apps/plugin-opener";
   import { computePlayerRowsFromEntities } from "$lib/live-derived";
@@ -25,6 +27,7 @@
     type SkillDisplayRow,
   } from "$lib/config/recount-table";
   import { formatClassSpecLabel } from "$lib/class-labels";
+  import { uiT, resolveSkillNote, resolveSkillTranslation, type LocaleCode } from "$lib/i18n";
 
   type HistorySkillType = "dps" | "heal" | "tanked";
 
@@ -51,15 +54,17 @@
     luckyDmgRate: number;
     hits: number;
     hitsPerMinute: number;
+    effectiveTotal: number;
+    effectiveDps: number;
     damageTaken: number;
     tankedPS: number;
     tankedPct: number;
     critTakenRate: number;
     hitsTaken: number;
     healDealt: number;
-    hps: number;
     effectiveHeal: number;
     ehps: number;
+    hps: number;
     healPct: number;
     critHealRate: number;
     hitsHeal: number;
@@ -106,10 +111,17 @@
 
   // Tab state for encounter view
   let activeTab = $state<"damage" | "tanked" | "healing">("damage");
+
+  const t = uiT("dps/history", () => SETTINGS.live.general.state.language);
+
+  function thLabel(col: { header?: string; headerKey?: string }): string {
+    return col.headerKey ? t(col.headerKey, col.header ?? "") : (col.header ?? "");
+  }
+
   const tabs: { key: "damage" | "tanked" | "healing"; label: string }[] = [
-    { key: "damage", label: "伤害" },
-    { key: "tanked", label: "承伤" },
-    { key: "healing", label: "治疗" },
+    { key: "damage", label: t("detail.tab.damage", "伤害") },
+    { key: "tanked", label: t("detail.tab.tanked", "承伤") },
+    { key: "healing", label: t("detail.tab.healing", "治疗") },
   ];
 
   let encounterDurationSeconds = $derived.by(() => {
@@ -168,7 +180,7 @@
           isLocalPlayer: localUid !== null && entity.uid === localUid,
           className,
           classSpecName,
-          classDisplay: formatClassSpecLabel(className, classSpecName) || "未知职业",
+          classDisplay: formatClassSpecLabel(className, classSpecName) || t("detail.unknownClass", "未知职业"),
           abilityScore: entity.abilityScore || 0,
           seasonStrength: entity.seasonStrength || 0,
           totalDmg: dps?.totalDmg ?? 0,
@@ -185,6 +197,8 @@
           luckyDmgRate: dps?.luckyDmgRate ?? 0,
           hits: dps?.hits ?? 0,
           hitsPerMinute: dps?.hitsPerMinute ?? 0,
+          effectiveTotal: dps?.effectiveTotal ?? 0,
+          effectiveDps: dps?.effectiveDps ?? 0,
           damageTaken: tank?.totalDmg ?? 0,
           tankedPS: tank?.dps ?? 0,
           tankedPct: tank?.dmgPct ?? 0,
@@ -192,11 +206,11 @@
           hitsTaken: tank?.hits ?? 0,
           healDealt: heal?.totalDmg ?? 0,
           hps: heal?.dps ?? 0,
-          effectiveHeal: heal?.effectiveTotal ?? 0,
-          ehps: heal?.effectiveDps ?? 0,
           healPct: heal?.dmgPct ?? 0,
           critHealRate: heal?.critRate ?? 0,
           hitsHeal: heal?.hits ?? 0,
+          effectiveHeal: heal?.effectiveTotal ?? 0,
+          ehps: heal?.effectiveDps ?? 0,
         };
       })
       .filter((row) => row.totalDmg > 0 || row.healDealt > 0 || row.damageTaken > 0);
@@ -454,6 +468,7 @@
       return historyTankedPlayerColumns.filter((col) => settings.state.history.tanked.players[col.key] ?? true);
     }
     return historyDpsPlayerColumns.filter((col) => {
+      if (col.key === "effectiveTotal" || col.key === "effectiveDps") return false;
       const defaultValue = DEFAULT_HISTORY_STATS[col.key as keyof typeof DEFAULT_HISTORY_STATS] ?? true;
       const setting = settings.state.history.dps.players[col.key as keyof typeof settings.state.history.dps.players];
       return setting ?? defaultValue;
@@ -466,7 +481,7 @@
     } else if (skillType === "tanked") {
       return historyTankedSkillColumns.filter((col) => settings.state.history.tanked.skillBreakdown[col.key]);
     }
-    return historyDpsSkillColumns.filter((col) => settings.state.history.dps.skillBreakdown[col.key]);
+    return historyDpsSkillColumns.filter((col) => col.key !== "effectiveTotal" && col.key !== "effectiveDps" && settings.state.history.dps.skillBreakdown[col.key]);
   });
 
   const websiteBaseUrl = $derived.by(() => {
@@ -489,9 +504,6 @@
   });
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.history.general.state.abbreviatedDecimalPlaces ?? 1,
-  );
-  let abbreviationStyle = $derived(
-    SETTINGS.history.general.state.abbreviationStyle,
   );
 
   function toggleGroup(id: number) {
@@ -603,6 +615,18 @@
     showDeleteModal = false;
   }
 
+  function buildHistoryGroupHoverText(recountId: string | number, language: LocaleCode) {
+    const note = resolveSkillNote(recountId, language).trim();
+
+    return `ID: #${recountId}\nSources:\n- RecountTable.json${note ? `\n\nNote:\n${note}` : ""}`;
+  }
+
+  function buildHistorySkillHoverText(skillId: string | number, language: LocaleCode) {
+    const note = resolveSkillNote(skillId, language).trim();
+
+    return `ID: #${skillId}\nSources:\n- RecountTable.json\n- DamageAttrIdName.json${note ? `\n\nNote:\n${note}` : ""}`;
+  }
+
   async function confirmDeleteEncounter() {
     if (!encounter) return;
     isDeleting = true;
@@ -612,7 +636,7 @@
       backToHistory();
     } catch (e) {
       console.error("Failed to delete encounter", e);
-      alert("删除战斗记录失败：" + e);
+      alert(`${t("detail.deleteFailed", "删除战斗记录失败")}: ${e}`);
       isDeleting = false;
       showDeleteModal = false;
     }
@@ -663,8 +687,8 @@
                 <button
                   onclick={backToHistory}
                   class="p-0.5 text-muted-foreground/70 hover:text-foreground transition-colors rounded shrink-0"
-                  title="返回历史"
-                  aria-label="返回历史"
+                  title={t("detail.backToHistory", "返回历史")}
+                  aria-label={t("detail.backToHistory", "返回历史")}
                 >
                   <svg
                     class="w-4 h-4"
@@ -682,7 +706,7 @@
                   </svg>
                 </button>
                 <h2 class="text-lg font-semibold text-foreground leading-tight">
-                  {encounter.sceneName ?? "未知场景"}
+                  {localizeSceneName((encounter as { sceneId?: number | string | null }).sceneId ?? null, encounter.sceneName || t("detail.unknownScene", "未知场景"))}
                 </h2>
               </div>
               {#if encounter.bosses.length > 0}
@@ -693,7 +717,7 @@
                         class={b.isDefeated
                           ? "text-destructive line-through"
                           : "text-primary"}
-                        >{b.monsterName}{i < encounter.bosses.length - 1 ? "," : ""}</span
+                        >{localizeRawMonsterName(b.monsterName, t("detail.unknownBoss", "未知首领"))}{i < encounter.bosses.length - 1 ? "," : ""}</span
                       >
                     {/each}
                   </div>
@@ -702,7 +726,7 @@
               <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                 <span>{new Date(encounter.startedAtMs).toLocaleString()}</span>
                 <span class="text-muted-foreground">•</span>
-                <span>时长：{formatEncounterDuration(encounterDurationSeconds)}</span>
+                <span>{t("detail.duration", "时长")}: {formatEncounterDuration(encounterDurationSeconds)}</span>
                 <span class="text-muted-foreground">•</span>
                 <span class="text-[11px] text-muted-foreground">#{encounter.id}</span>
               </div>
@@ -715,8 +739,8 @@
                 <button
                   onclick={openEncounterOnWebsite}
                   class="inline-flex items-center justify-center rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors p-2"
-                  title="在 resonance-logs.com 打开该战斗记录"
-                  aria-label="在网站打开"
+                  title={t("detail.openOnWebsiteTitle", "在 resonance-logs.com 打开该战斗记录")}
+                  aria-label={t("detail.openOnWebsite", "在 resonance-logs.com 打开该战斗记录")}
                 >
                   <svg
                     class="w-4 h-4"
@@ -740,11 +764,11 @@
                   ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20'
                   : 'bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground'}"
                 title={encounter.isFavorite
-                  ? "取消收藏"
-                  : "加入收藏"}
+                  ? t("detail.removeFavorite", "取消收藏")
+                  : t("detail.addFavorite", "加入收藏")}
                 aria-label={encounter.isFavorite
-                  ? "取消收藏"
-                  : "加入收藏"}
+                  ? t("detail.removeFavorite", "取消收藏")
+                  : t("detail.addFavorite", "加入收藏")}
               >
                 <svg
                   class="w-4 h-4"
@@ -764,8 +788,8 @@
               <button
                 onclick={openDeleteModal}
                 class="inline-flex items-center justify-center rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors p-2"
-                title="删除该战斗记录"
-                aria-label="删除战斗记录"
+                title={t("detail.deleteEncounterTitle", "删除该战斗记录")}
+                aria-label={t("detail.deleteEncounterAria", "删除战斗记录")}
               >
                 <svg
                   class="w-4 h-4"
@@ -808,7 +832,7 @@
             : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}"
           onclick={() => (overviewTargetUid = null)}
         >
-          总计
+          {t("detail.total", "总计")}
         </button>
         {#each overviewTargets as target (target.targetUid)}
           <button
@@ -816,9 +840,9 @@
               ? 'bg-muted/40 text-foreground'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}"
             onclick={() => (overviewTargetUid = target.targetUid)}
-            title={`目标 #${target.targetUid}`}
+            title={`${t("detail.target", "目标")} #${target.targetUid}`}
           >
-            {target.targetName}
+            {localizeRawMonsterName(target.targetName, target.targetName)}
           </button>
         {/each}
       </div>
@@ -830,12 +854,12 @@
             <tr class="bg-popover/60">
               <th
                 class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >玩家</th
+                >{t("detail.player", "玩家")}</th
               >
               {#each visiblePlayerColumns as col (col.key)}
                 <th
                   class="px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                  >{col.header}</th
+                  >{thLabel(col)}</th
                 >
               {/each}
             </tr>
@@ -862,8 +886,8 @@
                     <img
                       class="size-5 object-contain"
                       src={getClassIcon(p.className)}
-                      alt="职业图标"
-                      {@attach tooltip(() => p.classDisplay || "未知职业")}
+                      alt={t("detail.classIcon", "职业图标")}
+                      {@attach tooltip(() => p.classDisplay || t("detail.unknownClass", "未知职业"))}
                     />
                     <span
                       class="truncate"
@@ -874,7 +898,7 @@
                         : SETTINGS.history.general.state.showOthersAbilityScore)) || (p.seasonStrength > 0 && (p.isLocalPlayer
                         ? SETTINGS.history.general.state.showYourSeasonStrength
                         : SETTINGS.history.general.state.showOthersSeasonStrength))}
-                        <span class="inline-flex items-center gap-0 text-muted-foreground tabular-nums">
+                        <span class="inline-flex items-center gap-1 text-muted-foreground tabular-nums">
                           {#if p.abilityScore > 0 && (p.isLocalPlayer
                             ? SETTINGS.history.general.state.showYourAbilityScore
                             : SETTINGS.history.general.state.showOthersAbilityScore)}
@@ -887,6 +911,7 @@
                           {#if p.seasonStrength > 0 && (p.isLocalPlayer
                             ? SETTINGS.history.general.state.showYourSeasonStrength
                             : SETTINGS.history.general.state.showOthersSeasonStrength)}
+                            <span>·</span>
                             <span>({p.seasonStrength})</span>
                           {/if}
                         </span>
@@ -906,7 +931,7 @@
                       })}
                       {#if p.isLocalPlayer}
                         <span class="ml-1 text-[oklch(0.65_0.1_250)]"
-                          >（你）</span
+                          >{`(${t("detail.you", "你")})`}</span
                         >
                       {/if}
                     </span>
@@ -916,12 +941,11 @@
                   <td
                     class="px-3 py-3 text-right text-sm text-muted-foreground relative z-10"
                   >
-                    {#if (activeTab === "damage" && (col.key === "totalDmg" || col.key === "bossDmg" || col.key === "bossDps" || col.key === "dps" || col.key === "tdps") && SETTINGS.history.general.state.shortenDps) || (activeTab === "healing" && (col.key === "healDealt" || col.key === "hps" || col.key === "effectiveHeal" || col.key === "ehps") && SETTINGS.history.general.state.shortenDps) || (activeTab === "tanked" && (col.key === "damageTaken" || col.key === "tankedPS") && SETTINGS.history.general.state.shortenTps)}
+                    {#if (activeTab === "damage" && (col.key === "totalDmg" || col.key === "effectiveTotal" || col.key === "bossDmg" || col.key === "bossDps" || col.key === "dps" || col.key === "effectiveDps" || col.key === "tdps") && SETTINGS.history.general.state.shortenDps) || (activeTab === "healing" && (col.key === "healDealt" || col.key === "effectiveHeal" || col.key === "hps" || col.key === "ehps") && SETTINGS.history.general.state.shortenDps) || (activeTab === "tanked" && (col.key === "damageTaken" || col.key === "tankedPS") && SETTINGS.history.general.state.shortenTps)}
                       {#if activeTab === "tanked" ? SETTINGS.history.general.state.shortenTps : SETTINGS.history.general.state.shortenDps}
                         <AbbreviatedNumber
                           num={p[col.key] ?? 0}
                           decimalPlaces={abbreviatedDecimalPlaces}
-                          {abbreviationStyle}
                         />
                       {:else}
                         {col.format(p[col.key] ?? 0)}
@@ -960,7 +984,7 @@
         <button
           onclick={backToEncounter}
           class="p-1.5 text-neutral-400 hover:text-neutral-200 transition-colors rounded hover:bg-neutral-800"
-          aria-label="返回战斗概览"
+          aria-label={t("detail.backToOverview", "返回战斗概览")}
         >
           <svg
             class="w-5 h-5"
@@ -978,9 +1002,9 @@
           </svg>
         </button>
         <div>
-          <h2 class="text-xl font-semibold text-foreground">技能明细</h2>
+          <h2 class="text-xl font-semibold text-foreground">{t("detail.skillDetails", "技能明细")}</h2>
           <div class="text-sm text-neutral-400">
-            Player: {getDisplayName({
+            {t("detail.playerLabel", "玩家")}: {getDisplayName({
               player: {
                 uid: selectedPlayer.uid,
                 name: selectedPlayer.name,
@@ -1000,10 +1024,10 @@
     {#if skillType === "heal"}
       <div class="mb-3 rounded border border-border/60 bg-card/30 p-3">
         <div class="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-          治疗目标分布
+          {t("detail.healTargetDistribution", "治疗目标分布")}
         </div>
         {#if healTargetSummary.length === 0}
-          <div class="text-sm text-muted-foreground">暂无目标治疗数据</div>
+          <div class="text-sm text-muted-foreground">{t("detail.noHealTargetData", "暂无治疗目标数据")}</div>
         {:else}
           <div class="space-y-1.5">
             {#each healTargetSummary as target (target.targetUid)}
@@ -1031,12 +1055,12 @@
           <tr class="bg-popover/60">
             <th
               class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
-              >技能</th
+              >{t("detail.skillColumn", "技能")}</th
             >
             {#each visibleSkillColumns as col (col.key)}
               <th
                 class="px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >{col.header}</th
+                >{thLabel(col)}</th
               >
             {/each}
           </tr>
@@ -1070,7 +1094,19 @@
                         d="M9 5l7 7-7 7"
                       />
                     </svg>
-                    <span>{item.row.recountName}</span>
+                    <span
+                      class="truncate"
+                      title={SETTINGS.live.general.state.skillIdDisplayMode === 'hover'
+                        ? buildHistoryGroupHoverText(item.row.recountId, SETTINGS.live.general.state.language as LocaleCode)
+                        : undefined}
+                    >
+                      {resolveSkillTranslation(item.row.recountId, SETTINGS.live.general.state.language, item.row.recountName)}
+                    </span>
+                    {#if SETTINGS.live.general.state.skillIdDisplayMode === 'column'}
+                      <span class="text-[10px] text-muted-foreground/50 shrink-0">
+                        #{item.row.recountId}
+                      </span>
+                    {/if}
                   </button>
                 {:else}
                   <div
@@ -1084,8 +1120,15 @@
                     {:else}
                       <span class="w-3 shrink-0"></span>
                     {/if}
-                    <span class="truncate">{item.row.name}</span>
-                    {#if item.row.showSkillId}
+                    <span
+                      class="truncate"
+                      title={SETTINGS.live.general.state.skillIdDisplayMode === 'hover'
+                        ? buildHistorySkillHoverText(item.row.skillId, SETTINGS.live.general.state.language as LocaleCode)
+                        : undefined}
+                    >
+                      {resolveSkillTranslation(item.row.skillId, SETTINGS.live.general.state.language, item.row.name)}
+                    </span>
+                    {#if SETTINGS.live.general.state.skillIdDisplayMode === 'column'}
                       <span class="text-[10px] text-muted-foreground/50 shrink-0">
                         #{item.row.skillId}
                       </span>
@@ -1098,11 +1141,10 @@
                 <td
                   class="px-3 py-3 text-right text-sm text-muted-foreground relative z-10"
                 >
-                  {#if (col.key === "totalDmg" || col.key === "dps" || col.key === "effectiveTotal" || col.key === "effectiveDps") && (skillType === "tanked" ? SETTINGS.history.general.state.shortenTps : SETTINGS.history.general.state.shortenDps)}
+                  {#if (col.key === "totalDmg" || col.key === "effectiveTotal" || col.key === "dps" || col.key === "effectiveDps") && (skillType === "tanked" ? SETTINGS.history.general.state.shortenTps : SETTINGS.history.general.state.shortenDps)}
                     <AbbreviatedNumber
                       num={skillCellValue(item, col.key)}
                       decimalPlaces={abbreviatedDecimalPlaces}
-                      {abbreviationStyle}
                     />
                   {:else}
                     {col.format(skillCellValue(item, col.key))}
@@ -1132,7 +1174,7 @@
       </table>
     </div>
   {:else}
-    <div class="text-neutral-400">加载中...</div>
+    <div class="text-neutral-400">{t("detail.loading", "加载中...")}</div>
   {/if}
 </div>
 
@@ -1148,7 +1190,7 @@
     <button
       class="absolute inset-0 bg-black/60 backdrop-blur-sm"
       onclick={closeDeleteModal}
-      aria-label="关闭弹窗"
+      aria-label={t("detail.closeModal", "关闭弹窗")}
     ></button>
 
     <!-- Modal Content -->
@@ -1180,11 +1222,10 @@
             id="delete-modal-title"
             class="text-lg font-semibold text-foreground"
           >
-            Delete Encounter
+            {t("detail.deleteModalTitle", "删除战斗记录")}
           </h3>
           <p class="mt-2 text-sm text-muted-foreground">
-            Are you sure you want to delete this encounter? This action cannot
-            be undone and all associated data will be permanently removed.
+            {t("detail.deleteModalDescription", "确定要删除这条战斗记录吗？此操作无法撤销，所有关联数据都会被永久移除。")}
           </p>
         </div>
       </div>
@@ -1196,7 +1237,7 @@
           disabled={isDeleting}
           class="px-4 py-2 text-sm rounded-md border border-border bg-popover text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Cancel
+          {t("detail.cancel", "取消")}
         </button>
         <button
           onclick={confirmDeleteEncounter}
@@ -1219,9 +1260,9 @@
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            Deleting...
+            {t("detail.deleting", "删除中...")}
           {:else}
-            Delete
+            {t("detail.delete", "删除")}
           {/if}
         </button>
       </div>

@@ -3,7 +3,7 @@ import damageAttrIdNamesRaw from "./DamageAttrIdName.json";
 
 export type RawSkillStatsLike = {
   totalValue: number;
-  effectiveTotalValue: number;
+  effectiveTotalValue?: number;
   hits: number;
   critHits: number;
   critTotalValue: number;
@@ -177,8 +177,7 @@ export function groupSkillsByRecount(
       0,
     );
     group.dps = elapsedSecs > 0 ? group.totalDmg / elapsedSecs : 0;
-    group.effectiveDps =
-      elapsedSecs > 0 ? group.effectiveTotal / elapsedSecs : 0;
+    group.effectiveDps = elapsedSecs > 0 ? group.effectiveTotal / elapsedSecs : 0;
     group.dmgPct = pct(group.totalDmg, parentTotal);
     group.critRate = rate(critHits, group.hits);
     group.critDmgRate = pct(critTotal, group.totalDmg);

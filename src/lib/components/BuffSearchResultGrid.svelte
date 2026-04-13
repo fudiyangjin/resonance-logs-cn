@@ -40,7 +40,7 @@
         : `ID ${item.baseId}`}
       <button
         type="button"
-        class={`group relative flex items-start gap-3 rounded-lg border bg-card/40 p-3 text-left transition-all ${selected
+        class={`group relative flex flex-col rounded-lg border bg-card/40 p-3 text-left transition-all ${selected
             ? "border-primary bg-primary/10 ring-1 ring-primary/40"
             : "border-border/60 hover:border-primary/50 hover:bg-card/60"} ${disabled
             ? "cursor-not-allowed opacity-70"
@@ -49,37 +49,41 @@
         disabled={disabled}
         onclick={() => onSelect(item.baseId)}
       >
-        <div class="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/50 bg-muted/20">
-          {#if iconBuff}
-            <img
-              src={`/images/buff/${iconBuff.spriteFile}`}
-              alt={item.name}
-              class="h-full w-full object-contain p-1"
-            />
-          {:else}
-            <div class="flex h-full w-full items-center justify-center px-1 text-center text-[11px] text-foreground">
-              {item.name.slice(0, 8)}
-            </div>
-          {/if}
-        </div>
-
-        <div class="min-w-0 flex-1">
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
-              <div class="break-words text-sm font-medium leading-5 text-foreground">
-                {item.name}
+        <div class="flex min-w-0 items-start gap-3">
+          <div class="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/50 bg-muted/20">
+            {#if iconBuff}
+              <img
+                src={`/images/buff/${iconBuff.spriteFile}`}
+                alt={item.name}
+                class="h-full w-full object-contain p-1"
+              />
+            {:else}
+              <div class="flex h-full w-full items-center justify-center px-1 text-center text-[11px] text-foreground">
+                {item.name.slice(0, 8)}
               </div>
-              <div class="mt-1 text-xs text-muted-foreground">
-                {subtitle}
-              </div>
-            </div>
-            {#if statusLabel}
-              <span class="shrink-0 rounded border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
-                {statusLabel}
-              </span>
             {/if}
           </div>
+
+          <div class="min-w-0 flex-1 self-stretch">
+            <div class="flex h-full min-w-0 flex-col justify-between gap-2">
+              <div class="min-w-0">
+                <div class="break-words text-sm font-medium leading-5 text-foreground">
+                  {item.name}
+                </div>
+                <div class="mt-1 text-xs text-muted-foreground">
+                  {subtitle}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+        {#if statusLabel}
+          <div class="flex justify-center pt-2">
+            <span class="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
+              {statusLabel}
+            </span>
+          </div>
+        {/if}
       </button>
     {/each}
   </div>

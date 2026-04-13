@@ -4,6 +4,8 @@ import type {
   PlayerRow,
   RawCombatStats,
   RawEntityData,
+  RawSkillStats,
+  SkillRow,
 } from "$lib/api";
 
 type Metric = "dps" | "heal" | "tanked";
@@ -52,11 +54,11 @@ export function computePlayerRowsFromEntities(
     .map((entity) => {
       const stats = statsByMetric(entity, metric);
       const total = Number(stats.total || 0);
-      const effectiveTotal =
-        metric === "heal" ? Number(stats.effectiveTotal || 0) : 0;
       const hits = Number(stats.hits || 0);
       const bossDmg = metric === "dps" ? Number(entity.damageBossOnly?.total || 0) : 0;
       const bossTotal = Number(source.totalDmgBossOnly || 0);
+
+      const effectiveTotal = Number(stats.effectiveTotal || 0);
 
       const row: PlayerRow = {
         uid: entity.uid,
@@ -66,7 +68,9 @@ export function computePlayerRowsFromEntities(
         abilityScore: entity.abilityScore,
         seasonStrength: entity.seasonStrength ?? 0,
         totalDmg: total,
+        effectiveTotal,
         dps: elapsedSecs > 0 ? total / elapsedSecs : 0,
+        effectiveDps: elapsedSecs > 0 ? effectiveTotal / elapsedSecs : 0,
         tdps: metric === "dps" && activeCombatSecs > 0 ? total / activeCombatSecs : 0,
         activeTimeMs: metric === "dps" ? effectiveActiveCombatMs : 0,
         bossDps: metric === "dps" && elapsedSecs > 0 ? bossDmg / elapsedSecs : 0,
@@ -79,9 +83,6 @@ export function computePlayerRowsFromEntities(
         hitsPerMinute: elapsedSecs > 0 ? (hits / elapsedSecs) * 60 : 0,
         bossDmg,
         bossDmgPct: metric === "dps" ? percent(bossDmg, bossTotal) : 0,
-        effectiveTotal,
-        effectiveDps:
-          metric === "heal" && elapsedSecs > 0 ? effectiveTotal / elapsedSecs : 0,
       };
 
       return row;
@@ -103,6 +104,45 @@ export function computePlayerRows(data: LiveDataPayload, metric: Metric): Player
   );
 }
 
+export function computeSkillRows(
+  skills: Partial<Record<number, RawSkillStats>>,
+  elapsedMs: number,
+  parentTotal: number,
+  nameResolver: (skillId: number) => string,
+): SkillRow[] {
+  const elapsedSecs = elapsedMs > 0 ? elapsedMs / 1000 : 0;
+
+  return Object.entries(skills)
+    .map(([skillIdText, stats]) => {
+      if (!stats) return null;
+      const skillId = Number(skillIdText);
+      const total = Number(stats.totalValue || 0);
+      const hits = Number(stats.hits || 0);
+
+      const effectiveTotal = Number(stats.effectiveTotalValue || 0);
+
+      const row: SkillRow = {
+        skillId,
+        name: nameResolver(skillId),
+        totalDmg: total,
+        effectiveTotal,
+        dps: elapsedSecs > 0 ? total / elapsedSecs : 0,
+        effectiveDps: elapsedSecs > 0 ? effectiveTotal / elapsedSecs : 0,
+        dmgPct: percent(total, parentTotal),
+        critRate: rate(Number(stats.critHits || 0), hits),
+        critDmgRate: percent(Number(stats.critTotalValue || 0), total),
+        luckyRate: rate(Number(stats.luckyHits || 0), hits),
+        luckyDmgRate: percent(Number(stats.luckyTotalValue || 0), total),
+        hits,
+        hitsPerMinute: elapsedSecs > 0 ? (hits / elapsedSecs) * 60 : 0,
+      };
+      return row;
+    })
+    .filter((row): row is SkillRow =>
+      !!row && Number.isFinite(row.skillId) && row.totalDmg > 0,
+    );
+}
+
 export function computeHeaderInfo(data: LiveDataPayload): HeaderInfo {
   const elapsedSecs = data.elapsedMs > 0 ? data.elapsedMs / 1000 : 0;
   return {
@@ -114,8 +154,6 @@ export function computeHeaderInfo(data: LiveDataPayload): HeaderInfo {
     bosses: data.bosses,
     sceneId: data.sceneId,
     sceneName: data.sceneName,
-    trainingDummy: {
-      phase: "idle",
-    },
+    trainingDummy: data.trainingDummy,
   };
 }

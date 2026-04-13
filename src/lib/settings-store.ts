@@ -4,6 +4,7 @@
  */
 import { RuneStore } from "@tauri-store/svelte";
 import type { BuffCategoryKey } from "./config/buff-name-table";
+import type { LocaleCode, SkillIdDisplayMode } from "./i18n";
 
 export const DEFAULT_STATS = {
   totalDmg: true,
@@ -66,87 +67,12 @@ export const DEFAULT_HISTORY_HEAL_STATS = {
 };
 
 // Default column order for live tables (keys from column-data.ts)
-export const DEFAULT_DPS_PLAYER_COLUMN_ORDER = [
-  "totalDmg",
-  "dps",
-  "effectiveTotal",
-  "effectiveDps",
-  "tdps",
-  "bossDmg",
-  "bossDps",
-  "dmgPct",
-  "critRate",
-  "critDmgRate",
-  "luckyRate",
-  "luckyDmgRate",
-  "hits",
-  "hitsPerMinute",
-];
-export const DEFAULT_DPS_SKILL_COLUMN_ORDER = [
-  "totalDmg",
-  "dps",
-  "effectiveTotal",
-  "effectiveDps",
-  "dmgPct",
-  "critRate",
-  "critDmgRate",
-  "luckyRate",
-  "luckyDmgRate",
-  "hits",
-  "hitsPerMinute",
-];
-export const DEFAULT_HEAL_PLAYER_COLUMN_ORDER = [
-  "totalDmg",
-  "dps",
-  "effectiveTotal",
-  "effectiveDps",
-  "dmgPct",
-  "critRate",
-  "critDmgRate",
-  "luckyRate",
-  "luckyDmgRate",
-  "hits",
-  "hitsPerMinute",
-];
-export const DEFAULT_HEAL_SKILL_COLUMN_ORDER = [
-  "totalDmg",
-  "dps",
-  "effectiveTotal",
-  "effectiveDps",
-  "dmgPct",
-  "critRate",
-  "critDmgRate",
-  "luckyRate",
-  "luckyDmgRate",
-  "hits",
-  "hitsPerMinute",
-];
-export const DEFAULT_TANKED_PLAYER_COLUMN_ORDER = [
-  "totalDmg",
-  "dps",
-  "effectiveTotal",
-  "effectiveDps",
-  "dmgPct",
-  "critRate",
-  "critDmgRate",
-  "luckyRate",
-  "luckyDmgRate",
-  "hits",
-  "hitsPerMinute",
-];
-export const DEFAULT_TANKED_SKILL_COLUMN_ORDER = [
-  "totalDmg",
-  "dps",
-  "effectiveTotal",
-  "effectiveDps",
-  "dmgPct",
-  "critRate",
-  "critDmgRate",
-  "luckyRate",
-  "luckyDmgRate",
-  "hits",
-  "hitsPerMinute",
-];
+export const DEFAULT_DPS_PLAYER_COLUMN_ORDER = ['totalDmg', 'dps', 'tdps', 'bossDmg', 'bossDps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
+export const DEFAULT_DPS_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
+export const DEFAULT_HEAL_PLAYER_COLUMN_ORDER = ['totalDmg', 'dps', 'effectiveTotal', 'effectiveDps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
+export const DEFAULT_HEAL_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'effectiveTotal', 'effectiveDps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
+export const DEFAULT_TANKED_PLAYER_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
+export const DEFAULT_TANKED_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
 
 // Default sort settings for live tables
 export const DEFAULT_LIVE_SORT_SETTINGS = {
@@ -158,6 +84,36 @@ export const DEFAULT_LIVE_SORT_SETTINGS = {
   tankedSkills: { sortKey: "totalDmg", sortDesc: true },
 };
 
+type MutableRecord = Record<string, unknown>;
+
+function mergeFlatDefaults<T extends MutableRecord>(
+  target: T,
+  defaults: Record<string, unknown>,
+): void {
+  for (const [key, value] of Object.entries(defaults)) {
+    if (!(key in target)) {
+      (target as MutableRecord)[key] = value;
+    }
+  }
+}
+
+function normalizeColumnOrder(
+  target: { order?: string[] },
+  defaults: readonly string[],
+): void {
+  const current = Array.isArray(target.order) ? target.order : [];
+  const defaultSet = new Set(defaults);
+  const deduped = current.filter(
+    (key, index) => defaultSet.has(key) && current.indexOf(key) === index,
+  );
+
+  for (const key of defaults) {
+    if (!deduped.includes(key)) deduped.push(key);
+  }
+
+  target.order = deduped;
+}
+
 export type ShortcutSettingId = keyof typeof DEFAULT_SETTINGS.shortcuts;
 
 export type Point = {
@@ -168,6 +124,7 @@ export type Point = {
 export type PanelAttrConfig = {
   attrId: number;
   label: string;
+  labelKey?: string;
   color: string;
   enabled: boolean;
   format: "percent" | "integer";
@@ -746,7 +703,28 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
   };
 }
 
-const DEFAULT_GENERAL_SETTINGS = {
+const DEFAULT_GENERAL_SETTINGS: {
+  showYourName: string;
+  showOthersName: string;
+  showYourAbilityScore: boolean;
+  showOthersAbilityScore: boolean;
+  showYourSeasonStrength: boolean;
+  showOthersSeasonStrength: boolean;
+  relativeToTopDPSPlayer: boolean;
+  relativeToTopDPSSkill: boolean;
+  relativeToTopHealPlayer: boolean;
+  relativeToTopHealSkill: boolean;
+  relativeToTopTankedPlayer: boolean;
+  relativeToTopTankedSkill: boolean;
+  shortenAbilityScore: boolean;
+  shortenDps: boolean;
+  shortenTps: boolean;
+  abbreviationStyle: 'western' | 'cn';
+  abbreviatedDecimalPlaces: number;
+  eventUpdateRateMs: number;
+  language: LocaleCode;
+  skillIdDisplayMode: SkillIdDisplayMode;
+} = {
   showYourName: "Show Your Name",
   showOthersName: "Show Others' Name",
   showYourAbilityScore: true,
@@ -762,9 +740,11 @@ const DEFAULT_GENERAL_SETTINGS = {
   shortenAbilityScore: true,
   shortenDps: true,
   shortenTps: true,
-  abbreviationStyle: "western" as "western" | "cn",
+  abbreviationStyle: 'western',
   abbreviatedDecimalPlaces: 1,
   eventUpdateRateMs: 200,
+  language: 'zh-CN',
+  skillIdDisplayMode: 'off',
 };
 
 export const DEFAULT_CLASS_COLORS: Record<string, string> = {
@@ -1102,6 +1082,7 @@ const DEFAULT_SETTINGS = {
   monsterMonitor: createDefaultMonsterMonitorConfig(),
   trainingDummy: {
     defaultMonsterId: 122 as 115 | 122,
+    showHeaderControl: true,
   },
   live: {
     general: { ...DEFAULT_GENERAL_SETTINGS },
@@ -1430,6 +1411,32 @@ export const settings = {
     },
   },
 };
+
+
+
+export function normalizePersistedSettings(): void {
+  mergeFlatDefaults(SETTINGS.live.dps.players.state as MutableRecord, DEFAULT_SETTINGS.live.dpsPlayers);
+  mergeFlatDefaults(SETTINGS.live.dps.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.live.dpsSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.live.heal.players.state as MutableRecord, DEFAULT_SETTINGS.live.healPlayers);
+  mergeFlatDefaults(SETTINGS.live.heal.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.live.healSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.live.tanked.players.state as MutableRecord, DEFAULT_SETTINGS.live.tankedPlayers);
+  mergeFlatDefaults(SETTINGS.live.tanked.skills.state as MutableRecord, DEFAULT_SETTINGS.live.tankedSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.history.dps.players.state as MutableRecord, DEFAULT_SETTINGS.history.dpsPlayers);
+  mergeFlatDefaults(SETTINGS.history.dps.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.history.dpsSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.history.heal.players.state as MutableRecord, DEFAULT_SETTINGS.history.healPlayers);
+  mergeFlatDefaults(SETTINGS.history.heal.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.history.healSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.history.tanked.players.state as MutableRecord, DEFAULT_SETTINGS.history.tankedPlayers);
+  mergeFlatDefaults(SETTINGS.history.tanked.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.history.tankedSkillBreakdown);
+
+  normalizeColumnOrder(SETTINGS.live.columnOrder.dpsPlayers.state, DEFAULT_DPS_PLAYER_COLUMN_ORDER);
+  normalizeColumnOrder(SETTINGS.live.columnOrder.dpsSkills.state, DEFAULT_DPS_SKILL_COLUMN_ORDER);
+  normalizeColumnOrder(SETTINGS.live.columnOrder.healPlayers.state, DEFAULT_HEAL_PLAYER_COLUMN_ORDER);
+  normalizeColumnOrder(SETTINGS.live.columnOrder.healSkills.state, DEFAULT_HEAL_SKILL_COLUMN_ORDER);
+  normalizeColumnOrder(SETTINGS.live.columnOrder.tankedPlayers.state, DEFAULT_TANKED_PLAYER_COLUMN_ORDER);
+  normalizeColumnOrder(SETTINGS.live.columnOrder.tankedSkills.state, DEFAULT_TANKED_SKILL_COLUMN_ORDER);
+}
+
+normalizePersistedSettings();
 
 // Accessibility helpers
 

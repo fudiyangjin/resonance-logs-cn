@@ -1,0 +1,16 @@
+{
+  "clearHint": "Right-click to clear hotkeys",
+  "pressKey": "Appuyez sur une touche",
+  "unbound": "Unbound",
+  "shortcuts.showLiveMeter": "Afficher le compteur en direct",
+  "shortcuts.hideLiveMeter": "Masquer le compteur en direct",
+  "shortcuts.toggleLiveMeter": "Basculer le compteur en direct",
+  "shortcuts.enableClickthrough": "Activer le clic traversant",
+  "shortcuts.disableClickthrough": "Désactiver le clic traversant",
+  "shortcuts.toggleClickthrough": "Basculer le clic traversant",
+  "shortcuts.resetEncounter": "Réinitialiser le combat",
+  "shortcuts.togglePauseEncounter": "Basculer la pause du combat",
+  "shortcuts.toggleBossHp": "Basculer l’affichage des PV du boss",
+  "shortcuts.toggleOverlayEdit": "Basculer le mode édition de l’overlay",
+  "shortcuts.toggleOverlayWindow": "Basculer la fenêtre d’overlay"
+}

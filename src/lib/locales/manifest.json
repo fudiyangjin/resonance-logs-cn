@@ -1,0 +1,47 @@
+{
+  "defaultLocale": "zh-CN",
+  "fallbackLocale": "en",
+  "locales": [
+    "de",
+    "en",
+    "es",
+    "fr",
+    "ja",
+    "pt-BR",
+    "zh-CN",
+    "ko-KR"
+  ],
+  "categories": {
+    "ui": [
+      "shell.json",
+      "dps/general.json",
+      "dps/live.json",
+      "dps/history.json",
+      "dps/themes.json",
+      "dps/settings-live.json",
+      "dps/settings-network.json",
+      "dps/settings-history.json",
+      "dps/settings-hotkeys.json",
+      "dps/settings-debug.json",
+      "module-calc.json",
+      "monster-monitor.json",
+      "skill-monitor/general.json",
+      "skill-monitor/skill-cd.json",
+      "skill-monitor/buff-monitor.json",
+      "skill-monitor/panel-attr.json",
+      "skill-monitor/custom-panel.json",
+      "localization-tool.json"
+    ],
+    "parser": [
+      "class-labels.json",
+      "skillnames.json",
+      "MonsterName.json",
+      "SceneName.json",
+      "BuffName.json"
+    ],
+    "search": [
+      "BuffNameSearch.json",
+      "resonance-skill-search.json"
+    ]
+  }
+}

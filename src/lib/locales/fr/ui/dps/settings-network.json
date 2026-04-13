@@ -1,0 +1,11 @@
+{
+  "captureMethod": "Capture Method",
+  "captureMethodDescription": "Choose the method used to capture network packets. (Requires app restart.)",
+  "loadingDevices": "Loading network devices...",
+  "networkDevice": "Network Device",
+  "networkDeviceDescription": "Choose the network adapter used to capture traffic.",
+  "npcapMissing": "Npcap was not detected.",
+  "npcapMissingSuffix": "Please install Npcap before using this method.",
+  "selectDevice": "Select Network Device",
+  "title": "Packet Capture"
+}

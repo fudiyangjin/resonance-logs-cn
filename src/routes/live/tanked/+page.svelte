@@ -10,6 +10,7 @@
   import getDisplayName from "$lib/name-display";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
+  import { resolveUiTranslation } from "$lib/i18n";
 
   let liveData = $derived(getLiveData());
   let rawTankedData = $derived(
@@ -32,6 +33,39 @@
       SETTINGS.live.sorting.tankedPlayers.state.sortKey = key;
       SETTINGS.live.sorting.tankedPlayers.state.sortDesc = true;
     }
+  }
+
+  function t(key: string, fallback: string): string {
+    return resolveUiTranslation(
+      "ui/dps/live.json",
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
+  function thLabel(
+    col: { headerKey?: string; labelKey?: string; header: string; label?: string },
+  ): string {
+    if (col.headerKey) {
+      const translatedHeader = resolveUiTranslation(
+        col.headerKey,
+        SETTINGS.live.general.state.language,
+        "",
+      );
+      if (translatedHeader?.trim()) return translatedHeader;
+    }
+
+    if (col.labelKey) {
+      const translatedLabel = resolveUiTranslation(
+        col.labelKey,
+        SETTINGS.live.general.state.language,
+        col.label ?? col.header,
+      );
+      if (translatedLabel?.trim()) return translatedLabel;
+    }
+
+    return col.header;
   }
 
   // Sorted player data based on settings
@@ -62,7 +96,6 @@
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.live.general.state.abbreviatedDecimalPlaces ?? 1,
   );
-  let abbreviationStyle = $derived(SETTINGS.live.general.state.abbreviationStyle);
   let customThemeColors = $derived(
     SETTINGS.accessibility.state.customThemeColors,
   );
@@ -86,9 +119,10 @@
 
   // Get visible columns based on settings and column order
   let visiblePlayerColumns = $derived.by(() => {
-    const visible = liveTankedPlayerColumns.filter(
-      (col) => settings.state.live.tanked.players[col.key],
-    );
+    const visible = liveTankedPlayerColumns.filter((col) => {
+      if (col.key === "effectiveTotal" || col.key === "effectiveDps") return false;
+      return settings.state.live.tanked.players[col.key];
+    });
     return visible.sort((a, b) => {
       const aIdx = columnOrder.indexOf(a.key);
       const bIdx = columnOrder.indexOf(b.key);
@@ -110,7 +144,7 @@
           <th
             class="px-3 py-1 text-left font-medium uppercase tracking-wide"
             style="font-size: {tableSettings.tableHeaderFontSize}px; color: {tableSettings.tableHeaderTextColor};"
-            >Player</th
+            >{t("historyDetail.player", "玩家")}</th
           >
           {#each visiblePlayerColumns as col (col.key)}
             <th
@@ -119,7 +153,7 @@
               onclick={() => handleSort(col.key)}
             >
               <span class="inline-flex items-center gap-1 justify-end">
-                {col.header}
+                {thLabel(col)}
                 {#if sortKey === col.key}
                   <span class="text-primary">{sortDesc ? "▼" : "▲"}</span>
                 {/if}
@@ -172,11 +206,11 @@
                 style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                 class="object-contain"
                 src={getClassIcon(className)}
-                alt="Class icon"
+                alt={t("live.classIconAlt", "Class icon")}
                 {@attach tooltip(
                   () =>
                     formatClassSpecLabel(player.className, player.classSpecName) ||
-                    "未知职业",
+                    t("live.unknownClass", "Unknown Class"),
                 )}
               />
               {#if showAbilityScore || showSeasonStrength}
@@ -216,24 +250,22 @@
               class="px-3 py-1 text-right relative z-10 tabular-nums font-medium"
               style="color: {customThemeColors.tableTextColor};"
             >
-              {#if col.key === "totalDmg"}
+              {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
                 {#if SETTINGS_SHORTEN_TPS}
                   <AbbreviatedNumber
-                    num={player.totalDmg}
+                    num={col.key === "totalDmg" ? player.totalDmg : player.effectiveTotal}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
                 {:else}
-                  {player.totalDmg.toLocaleString()}
+                  {(col.key === "totalDmg" ? player.totalDmg : player.effectiveTotal).toLocaleString()}
                 {/if}
-              {:else if col.key === "dps"}
+              {:else if col.key === "dps" || col.key === "effectiveDps"}
                 {#if SETTINGS_SHORTEN_TPS}
                   <AbbreviatedNumber
-                    num={player.dps}
+                    num={col.key === "dps" ? player.dps : player.effectiveDps}
                     decimalPlaces={abbreviatedDecimalPlaces}
-                    {abbreviationStyle}
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                   />
@@ -254,7 +286,7 @@
                   suffixColor={customThemeColors.tableAbbreviatedColor}
                 />
               {:else}
-                {col.format(player[col.key] ?? 0)}
+                {col.format(player[col.key as keyof typeof player] as number ?? 0)}
               {/if}
             </td>
           {/each}

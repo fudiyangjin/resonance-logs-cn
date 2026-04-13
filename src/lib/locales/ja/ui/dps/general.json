@@ -1,0 +1,15 @@
+{
+  "selectTabPrompt": "上のタブを選択すると詳細設定を表示できます",
+  "settings.debug": "デバッグ",
+  "settings.history": "履歴",
+  "settings.live": "ライブ",
+  "settings.network": "ネットワーク",
+  "settings.shortcuts": "ホットキー",
+  "subtitle": "戦闘データとDPS統計をリアルタイムで監視します",
+  "title": "DPSメーター",
+  "toggleWindow": "DPSウィンドウを切り替え",
+  "viewHistory": "履歴を表示",
+  "history": "履歴",
+  "themes": "テーマ",
+  "settings": "設定"
+}

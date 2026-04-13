@@ -10,7 +10,11 @@
     startDrag,
     startResize,
   } from "./overlay-state.svelte.js";
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
   import { findResourcesByClass } from "$lib/skill-mappings";
+
+  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   const editing = $derived(isEditing());
   const groupPos = $derived(getGroupPosition("resourceGroup"));
@@ -24,6 +28,7 @@
   );
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="overlay-group resource-group"
   class:editable={editing}
@@ -34,7 +39,7 @@
   onpointerdown={(e) => startDrag(e, { kind: "group", key: "resourceGroup" }, groupPos)}
 >
   {#if editing}
-    <div class="group-tag">资源区</div>
+    <div class="group-tag">{t("overlay.resource", "资源区")}</div>
   {/if}
 
   <div class="resources-panel" data-class={classKey}>
@@ -78,6 +83,7 @@
   </div>
 
   {#if editing}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="resize-handle"
       onpointerdown={(e) =>

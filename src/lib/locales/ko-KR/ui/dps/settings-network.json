@@ -1,0 +1,11 @@
+{
+  "captureMethod": "캡처 방식",
+  "captureMethodDescription": "네트워크 패킷을 캡처하는 방식을 선택합니다. (앱 재시작 필요)",
+  "loadingDevices": "네트워크 장치를 불러오는 중...",
+  "networkDevice": "네트워크 장치",
+  "networkDeviceDescription": "트래픽을 캡처할 네트워크 어댑터를 선택합니다.",
+  "npcapMissing": "Npcap이 감지되지 않았습니다.",
+  "npcapMissingSuffix": "이 방식을 사용하려면 먼저 Npcap을 설치하세요.",
+  "selectDevice": "네트워크 장치 선택",
+  "title": "패킷 캡처"
+}

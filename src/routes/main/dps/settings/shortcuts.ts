@@ -53,17 +53,10 @@ export async function registerShortcut(cmdId: string, shortcutKey: string) {
       case "toggleOverlayWindow":
         await register(shortcutKey, async (event) => {
           if (event.state === "Pressed") {
-            const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
-            if (!overlayWindow) {
-              return;
-            }
-            const isVisible = await overlayWindow.isVisible();
-            if (isVisible) {
-              await overlayWindow.hide();
-            } else {
-              await overlayWindow.show();
-              await overlayWindow.unminimize();
-              await overlayWindow.setFocus();
+            try {
+              await commands.toggleGameOverlayWindow();
+            } catch (error) {
+              console.error("Failed to toggle overlay window hotkey", error);
             }
           }
         });

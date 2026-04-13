@@ -1,3 +1,6 @@
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+
 import resonanceSkillIcons from "$lib/config/skill_aoyi_icons.json";
 import classSkillConfigsRaw from "$lib/config/class_skill_configs.json";
 import classResourcesRaw from "$lib/config/class_resources.json";
@@ -5,8 +8,20 @@ import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays
 import counterRulesRaw from "$lib/config/counter_rules.json";
 import counterSourceTemplatesRaw from "$lib/config/counter_source_templates.json";
 import counterSlotTemplatesRaw from "$lib/config/counter_slot_templates.json";
-import type { CounterAction, CounterSource } from "$lib/bindings";
+import { getBundledTranslationTable } from "$lib/locale-bundles";
+import {
+  DEFAULT_LOCALE,
+  PRIMARY_FALLBACK_LOCALE,
+  SUPPORTED_LOCALES,
+  TRANSLATION_SOURCE_MODE_EVENT,
+  getCurrentTranslationSourceMode,
+  isLocaleCode,
+  resolveUiTranslation,
+  type LocaleCode,
+} from "$lib/i18n";
+import { settings } from "$lib/settings-store";
 import type { UserCounterRule } from "$lib/settings-store";
+import type { CounterAction, CounterSource } from "$lib/bindings";
 
 export type SkillDisplayInfo = {
   skillId: number;
@@ -58,7 +73,249 @@ type ResonanceSkillIconRaw = {
   maxValidCdTime?: number;
 };
 
+type MultiLangValue = Partial<Record<LocaleCode, string>>;
+type MultiLangKeywords = Partial<Record<LocaleCode, string[]>>;
+
+type ResonanceSkillSearchEntry = {
+  name?: MultiLangValue;
+  keywords?: MultiLangKeywords;
+  notes?: MultiLangValue;
+};
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function replaceRecordContents<T extends Record<string, any>>(target: T, source: T): void {
+  for (const key of Object.keys(target)) {
+    delete target[key as keyof T];
+  }
+  Object.assign(target, source);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+const RESONANCE_RUNTIME_RELATIVE_PATH = "search/resonance-skill-search.json";
+
+const RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = cloneJson(
+  getBundledTranslationTable("search/resonance-skill-search.json") as unknown as Record<string, ResonanceSkillSearchEntry>,
+);
+
+const BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = cloneJson(
+  RESONANCE_SKILL_SEARCH_TRANSLATIONS,
+);
+
+let resonanceRuntimeInitPromise: Promise<void> | null = null;
+let resonanceRuntimeListenerPromise: Promise<void> | null = null;
+let resonanceSourceModeListenerRegistered = false;
+
+async function ensureResonanceTranslationRuntimeFiles(): Promise<void> {
+  try {
+    await invoke<string>("initialize_translation_runtime_files");
+  } catch (error) {
+    console.warn(
+      "[skill-mappings] Failed to initialize runtime translation files:",
+      error,
+    );
+  }
+}
+
+async function readRuntimeResonanceTranslations(): Promise<
+  Record<string, ResonanceSkillSearchEntry> | null
+> {
+  try {
+    const raw = await invoke<string>("read_translation_runtime_file", {
+      relativePath: RESONANCE_RUNTIME_RELATIVE_PATH,
+    });
+    const parsed: unknown = JSON.parse(raw);
+
+    if (!isRecord(parsed)) {
+      console.warn(
+        `[skill-mappings] Runtime resonance translation file is not an object: ${RESONANCE_RUNTIME_RELATIVE_PATH}`,
+      );
+      return null;
+    }
+
+    return parsed as Record<string, ResonanceSkillSearchEntry>;
+  } catch (error) {
+    console.warn(
+      `[skill-mappings] Failed to read runtime resonance translation file: ${RESONANCE_RUNTIME_RELATIVE_PATH}`,
+      error,
+    );
+    return null;
+  }
+}
+
+async function loadResonanceSkillSearchRuntimeData(): Promise<void> {
+  if (getCurrentTranslationSourceMode() === "bundled") {
+    replaceRecordContents(
+      RESONANCE_SKILL_SEARCH_TRANSLATIONS,
+      cloneJson(BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS),
+    );
+    return;
+  }
+
+  await ensureResonanceTranslationRuntimeFiles();
+
+  const runtimeValue = await readRuntimeResonanceTranslations();
+  const nextValue = runtimeValue ?? BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS;
+
+  replaceRecordContents(RESONANCE_SKILL_SEARCH_TRANSLATIONS, cloneJson(nextValue));
+}
+
+async function registerResonanceRuntimeListener(): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (!resonanceRuntimeListenerPromise) {
+    resonanceRuntimeListenerPromise = listen("translation-data-refreshed", async () => {
+      await loadResonanceSkillSearchRuntimeData();
+    })
+      .then(() => undefined)
+      .catch((error) => {
+        console.warn(
+          "[skill-mappings] Failed to register translation refresh listener:",
+          error,
+        );
+      });
+  }
+
+  if (!resonanceSourceModeListenerRegistered) {
+    window.addEventListener(TRANSLATION_SOURCE_MODE_EVENT, async () => {
+      await loadResonanceSkillSearchRuntimeData();
+    });
+    resonanceSourceModeListenerRegistered = true;
+  }
+
+  await resonanceRuntimeListenerPromise;
+}
+
+export async function initializeResonanceSkillSearchRuntimeData(): Promise<void> {
+  if (!resonanceRuntimeInitPromise) {
+    resonanceRuntimeInitPromise = (async () => {
+      await registerResonanceRuntimeListener();
+      await loadResonanceSkillSearchRuntimeData();
+    })();
+  }
+
+  await resonanceRuntimeInitPromise;
+}
+
+export async function reloadResonanceSkillSearchRuntimeData(): Promise<void> {
+  await loadResonanceSkillSearchRuntimeData();
+}
+
+function normalizeSearchText(value: string | null | undefined): string {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+function collectMultiLangTexts(value: MultiLangValue | undefined): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const locale of SUPPORTED_LOCALES) {
+    const text = normalizeSearchText(value?.[locale]);
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    out.push(text);
+  }
+  return out;
+}
+
+function collectKeywordTexts(value: MultiLangKeywords | undefined): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const locale of SUPPORTED_LOCALES) {
+    for (const keyword of value?.[locale] ?? []) {
+      const text = normalizeSearchText(keyword);
+      if (!text || seen.has(text)) continue;
+      seen.add(text);
+      out.push(text);
+    }
+  }
+  return out;
+}
+
+function getCurrentLocale(): LocaleCode {
+  const locale = String(settings.state.live.general.language);
+
+  if (isLocaleCode(locale)) {
+    return locale;
+  }
+
+  return DEFAULT_LOCALE;
+}
+
+function resolveSkillMonitorUiTranslation(
+  relativePath: string,
+  key: string,
+  fallback: string,
+): string {
+  return resolveUiTranslation(
+    `ui/skill-monitor/${relativePath}.json`,
+    key,
+    getCurrentLocale(),
+    fallback,
+  );
+}
+
+function resolveMultiLangName(value: MultiLangValue | undefined, fallback: string): string {
+  const locale = getCurrentLocale();
+  const selected = value?.[locale]?.trim();
+  if (selected) return selected;
+
+  if (locale !== PRIMARY_FALLBACK_LOCALE) {
+    const en = value?.[PRIMARY_FALLBACK_LOCALE]?.trim();
+    if (en) return en;
+  }
+
+  if (locale !== DEFAULT_LOCALE) {
+    const zh = value?.[DEFAULT_LOCALE]?.trim();
+    if (zh) return zh;
+  }
+
+  return fallback;
+}
+
+function localizeResonanceSkill(skill: ResonanceSkillDefinition): ResonanceSkillDefinition {
+  const entry = RESONANCE_SKILL_SEARCH_TRANSLATIONS[String(skill.skillId)];
+  const displayName = resolveMultiLangName(entry?.name, skill.name);
+  if (displayName === skill.name) return skill;
+  return {
+    ...skill,
+    name: displayName,
+  };
+}
+
 export type ResonanceSkillDefinition = SkillDisplayInfo;
+
+function collectResonanceSearchTexts(skill: ResonanceSkillDefinition): string[] {
+  const texts = new Set<string>();
+  const entry = RESONANCE_SKILL_SEARCH_TRANSLATIONS[String(skill.skillId)];
+
+  const idText = String(skill.skillId);
+  texts.add(idText);
+  texts.add(`#${idText}`);
+
+  const rawName = normalizeSearchText(skill.name);
+  if (rawName) texts.add(rawName);
+
+  for (const text of collectMultiLangTexts(entry?.name)) {
+    texts.add(text);
+  }
+
+  for (const text of collectKeywordTexts(entry?.keywords)) {
+    texts.add(text);
+  }
+
+  for (const text of collectMultiLangTexts(entry?.notes)) {
+    texts.add(text);
+  }
+
+  return Array.from(texts);
+}
 
 export type CounterRulePreset = {
   ruleId: number;
@@ -134,20 +391,119 @@ export const SOURCE_TEMPLATES: SourceTemplate[] =
 export const SLOT_TEMPLATES: SlotTemplate[] =
   counterSlotTemplatesRaw as SlotTemplate[];
 
+function localizeSkillDefinition(classKey: string, skill: SkillDefinition): SkillDefinition {
+  return {
+    ...skill,
+    name: resolveSkillMonitorUiTranslation(
+      "skill-cd",
+      `classSkill.${classKey}.${skill.skillId}`,
+      skill.name,
+    ),
+  };
+}
+
+function localizeSkillDerivation(classKey: string, derivation: SkillDerivation): SkillDerivation {
+  return {
+    ...derivation,
+    derivedName: resolveSkillMonitorUiTranslation(
+      "skill-cd",
+      `classSkillDerived.${classKey}.${derivation.sourceSkillId}.${derivation.triggerBuffBaseId}`,
+      derivation.derivedName,
+    ),
+  };
+}
+
+function localizeClassConfig(config: ClassSkillConfig): ClassSkillConfig {
+  return {
+    ...config,
+    className: resolveSkillMonitorUiTranslation(
+      "skill-cd",
+      `className.${config.classKey}`,
+      config.className,
+    ),
+    skills: config.skills.map((skill) => localizeSkillDefinition(config.classKey, skill)),
+    ...(config.derivations
+      ? {
+          derivations: config.derivations.map((derivation) =>
+            localizeSkillDerivation(config.classKey, derivation),
+          ),
+        }
+      : {}),
+  };
+}
+
+function localizeResourceDefinition(
+  classKey: string,
+  resource: ResourceDefinition,
+): ResourceDefinition {
+  const suffix = resource.type === "bar" ? "bar" : "charges";
+  return {
+    ...resource,
+    label: resolveSkillMonitorUiTranslation(
+      "skill-cd",
+      `resourceLabel.${classKey}.${suffix}`,
+      resource.label,
+    ),
+  };
+}
+
+function localizeCounterRule(rule: CounterRulePreset): CounterRulePreset {
+  return {
+    ...rule,
+    name: resolveSkillMonitorUiTranslation(
+      "custom-panel",
+      `counterRule.${rule.ruleId}.name`,
+      rule.name,
+    ),
+  };
+}
+
+function localizeSourceTemplate(template: SourceTemplate): SourceTemplate {
+  return {
+    ...template,
+    name: resolveSkillMonitorUiTranslation(
+      "custom-panel",
+      `sourceTemplate.${template.sourceId}.name`,
+      template.name,
+    ),
+    description: resolveSkillMonitorUiTranslation(
+      "custom-panel",
+      `sourceTemplate.${template.sourceId}.description`,
+      template.description,
+    ),
+  };
+}
+
+function localizeSlotTemplate(template: SlotTemplate): SlotTemplate {
+  return {
+    ...template,
+    name: resolveSkillMonitorUiTranslation(
+      "custom-panel",
+      `slotTemplate.${template.slotTemplateId}.name`,
+      template.name,
+    ),
+    description: resolveSkillMonitorUiTranslation(
+      "custom-panel",
+      `slotTemplate.${template.slotTemplateId}.description`,
+      template.description,
+    ),
+  };
+}
+
 export function getClassConfigs(): ClassSkillConfig[] {
-  return Object.values(CLASS_SKILL_CONFIGS);
+  return Object.values(CLASS_SKILL_CONFIGS).map((config) => localizeClassConfig(config));
 }
 
 export function getCounterRules(): CounterRulePreset[] {
-  return COUNTER_RULES;
+  return COUNTER_RULES.map((rule) => localizeCounterRule(rule));
 }
 
 export function getSourceTemplates(): SourceTemplate[] {
-  return SOURCE_TEMPLATES;
+  return SOURCE_TEMPLATES.map((template) => localizeSourceTemplate(template));
 }
 
 export function getSlotTemplates(): SlotTemplate[] {
-  return SLOT_TEMPLATES;
+  return SLOT_TEMPLATES.map((template) => localizeSlotTemplate(template));
 }
 
 export function resolveCounterSources(sourceRefs: string[]): CounterSource[] {
@@ -242,7 +598,9 @@ export function resolveUserCounterRulesToPresets(
 }
 
 export function getSkillsByClass(classKey: string): SkillDefinition[] {
-  return CLASS_SKILL_CONFIGS[classKey]?.skills ?? [];
+  return (CLASS_SKILL_CONFIGS[classKey]?.skills ?? []).map((skill) =>
+    localizeSkillDefinition(classKey, skill),
+  );
 }
 
 export function getDurationSkillsByClass(classKey: string): SkillDefinition[] {
@@ -255,13 +613,16 @@ export function findSkillById(
   classKey: string,
   skillId: number,
 ): SkillDefinition | undefined {
-  return CLASS_SKILL_CONFIGS[classKey]?.skills.find(
+  const skill = CLASS_SKILL_CONFIGS[classKey]?.skills.find(
     (skill) => skill.skillId === skillId,
   );
+  return skill ? localizeSkillDefinition(classKey, skill) : undefined;
 }
 
 export function findResourcesByClass(classKey: string): ResourceDefinition[] {
-  return CLASS_RESOURCES[classKey] || [];
+  return (CLASS_RESOURCES[classKey] || []).map((resource) =>
+    localizeResourceDefinition(classKey, resource),
+  );
 }
 
 export function findSpecialBuffDisplays(
@@ -278,25 +639,46 @@ export function findSkillDerivationBySource(
   classKey: string,
   sourceSkillId: number,
 ): SkillDerivation | undefined {
-  return CLASS_SKILL_CONFIGS[classKey]?.derivations?.find(
+  const derivation = CLASS_SKILL_CONFIGS[classKey]?.derivations?.find(
     (derivation) => derivation.sourceSkillId === sourceSkillId,
   );
+  return derivation ? localizeSkillDerivation(classKey, derivation) : undefined;
 }
 
 export function findResonanceSkill(
   skillId: number,
 ): ResonanceSkillDefinition | undefined {
-  return RESONANCE_SKILLS.find((skill) => skill.skillId === skillId);
+  const skill = RESONANCE_SKILLS.find((item) => item.skillId === skillId);
+  return skill ? localizeResonanceSkill(skill) : undefined;
 }
 
 export function searchResonanceSkills(
   keyword: string,
 ): ResonanceSkillDefinition[] {
-  const normalized = keyword.trim().toLowerCase();
+  const normalized = normalizeSearchText(keyword);
   if (!normalized) return [];
-  return RESONANCE_SKILLS.filter((skill) =>
-    skill.name.toLowerCase().includes(normalized),
-  );
+
+  const matches = RESONANCE_SKILLS
+    .map((skill) => {
+      const texts = collectResonanceSearchTexts(skill);
+      let rank: number | null = null;
+
+      for (const text of texts) {
+        if (text === normalized) {
+          rank = rank === null ? 0 : Math.min(rank, 0);
+          continue;
+        }
+        if (text.includes(normalized)) {
+          rank = rank === null ? 1 : Math.min(rank, 1);
+        }
+      }
+
+      return rank === null ? null : { skill, rank };
+    })
+    .filter((entry): entry is { skill: ResonanceSkillDefinition; rank: number } => entry !== null)
+    .sort((a, b) => a.rank - b.rank || a.skill.skillId - b.skill.skillId);
+
+  return matches.map(({ skill }) => localizeResonanceSkill(skill));
 }
 
 export function findAnySkillByBaseId(
@@ -305,3 +687,5 @@ export function findAnySkillByBaseId(
 ): SkillDisplayInfo | undefined {
   return findSkillById(classKey, skillId) ?? findResonanceSkill(skillId);
 }
+
+void initializeResonanceSkillSearchRuntimeData();

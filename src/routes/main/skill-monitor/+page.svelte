@@ -20,6 +20,7 @@
     type BuffNameInfo,
   } from "$lib/config/buff-name-table";
   import {
+    AVAILABLE_PANEL_ATTRS,
     createDefaultBuffGroup,
     createDefaultCustomPanelGroup,
     ensureBuffAliases,
@@ -29,11 +30,11 @@
     type CustomPanelGroup,
     type CustomPanelStyle,
     type InlineBuffEntry,
+    type PanelAttrConfig,
     type PanelAreaRowRef,
     type SkillMonitorProfile,
     type TextBuffPanelDisplayMode,
     type TextBuffPanelStyle,
-    type UserCounterRule,
   } from "$lib/settings-store";
   import {
     findResonanceSkill,
@@ -48,26 +49,15 @@
     searchResonanceSkills,
     type CounterRulePreset,
   } from "$lib/skill-mappings";
+  import { uiT } from "$lib/i18n";
   import {
     activeProfileOrDefault,
     updateActiveProfile as updateSharedActiveProfile,
-  } from "$lib/skill-monitor-profile.svelte.js";
-  import {
-    ensureBuffGroup,
-    ensureBuffGroups,
-    ensureCustomPanelStyle,
-    ensureIndividualMonitorAllGroup,
-    ensureOverlaySizes,
-    ensurePanelAreaRowOrder,
-    ensurePanelAttrs,
-    ensureTextBuffPanelStyle,
-  } from "$lib/skill-monitor-normalize";
-  import {
-    ensureCustomPanelGroups,
-    ensureInlineBuffEntries,
-  } from "$lib/custom-panel-utils";
+  } from "$lib/skill-monitor-profile.svelte";
 
   type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
+
+  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   const availableBuffs = getAvailableBuffDefinitions();
   const buffCategoryDefinitions = getBuffCategoryDefinitions();
@@ -155,9 +145,6 @@
   const textBuffMaxVisible = $derived(
     Math.max(1, Math.min(20, activeProfile.textBuffMaxVisible ?? 10)),
   );
-  const userCounterRules = $derived.by(() =>
-    ensureUserCounterRules(activeProfile.userCounterRules),
-  );
   const resolvedUserCounterRules = $derived.by<CounterRuleOption[]>(() =>
     resolveUserCounterRulesToPresets(activeProfile.userCounterRules).map(
       (rule) => ({ ...rule, origin: "user" as const }),
@@ -209,6 +196,186 @@
     const inGroup = new Set(group.buffIds);
     return uniqueIds((group.priorityBuffIds ?? []).filter((id) => inGroup.has(id)));
   }
+
+  function ensureBuffGroup(group: BuffGroup, index: number): BuffGroup {
+    return {
+      id: group.id ?? `group_${index + 1}`,
+      name: group.name ?? `${t("buffGroupDefault", "分组")} ${index + 1}`,
+      buffIds: group.buffIds ?? [],
+      priorityBuffIds: group.priorityBuffIds ?? [],
+      monitorAll: group.monitorAll ?? false,
+      position: group.position ?? { x: 40 + index * 40, y: 310 + index * 40 },
+      iconSize: Math.max(24, Math.min(120, group.iconSize ?? 44)),
+      columns: Math.max(1, Math.min(12, group.columns ?? 6)),
+      rows: Math.max(1, Math.min(12, group.rows ?? 3)),
+      gap: Math.max(0, Math.min(16, group.gap ?? 6)),
+      showName: group.showName ?? true,
+      showTime: group.showTime ?? true,
+      showLayer: group.showLayer ?? true,
+    };
+  }
+
+  function ensureBuffGroups(profile: SkillMonitorProfile): BuffGroup[] {
+    return (profile.buffGroups ?? []).map((group, idx) => ensureBuffGroup(group, idx));
+  }
+
+  function ensureIndividualMonitorAllGroup(profile: SkillMonitorProfile): BuffGroup | null {
+    const group = profile.individualMonitorAllGroup;
+    if (!group) return null;
+    const normalized = ensureBuffGroup(group, 0);
+    return {
+      ...normalized,
+      monitorAll: true,
+      name: normalized.name || t("allBuffs", "全部 Buff"),
+    };
+  }
+
+  function ensurePanelAttrs(profile: SkillMonitorProfile): PanelAttrConfig[] {
+    const current = profile.monitoredPanelAttrs ?? [];
+    const currentMap = new Map(current.map((item) => [item.attrId, item]));
+    return AVAILABLE_PANEL_ATTRS.map((item) => {
+      const existing = currentMap.get(item.attrId);
+      return {
+        attrId: item.attrId,
+        label: existing?.label ?? item.label,
+        color: existing?.color ?? item.color,
+        enabled: existing?.enabled ?? item.enabled,
+        format: existing?.format ?? item.format,
+      };
+    });
+  }
+
+  function ensureInlineBuffEntries(profile: SkillMonitorProfile): InlineBuffEntry[] {
+    return (profile.inlineBuffEntries ?? []).map((entry, idx) => ({
+      id: entry.id ?? `inline_${idx + 1}`,
+      sourceType: entry.sourceType ?? "buff",
+      sourceId: entry.sourceId,
+      label: entry.sourceType === "counter"
+        ? (entry.label ?? `${t("counterDefault", "计数器")} ${entry.sourceId}`)
+        : (entry.label ?? ""),
+      format: entry.format ?? "timer",
+    }));
+  }
+
+  function ensureCustomPanelEntries(entries: InlineBuffEntry[] | undefined): InlineBuffEntry[] {
+    return (entries ?? []).map((entry, idx) => ({
+      id: entry.id ?? `inline_${idx + 1}`,
+      sourceType: entry.sourceType ?? "buff",
+      sourceId: entry.sourceId,
+      label: entry.sourceType === "counter"
+        ? (entry.label ?? `${t("counterDefault", "计数器")} ${entry.sourceId}`)
+        : (entry.label ?? ""),
+      format: entry.format ?? "timer",
+    }));
+  }
+
+  function ensureCustomPanelGroups(profile: SkillMonitorProfile): CustomPanelGroup[] {
+    const groups = profile.customPanelGroups ?? [];
+    const legacyPosition = profile.overlayPositions?.customPanelGroup ?? { x: 700, y: 280 };
+    const legacyScale = Math.max(
+      0.5,
+      Math.min(2.5, profile.overlaySizes?.customPanelGroupScale ?? 1),
+    );
+    if (groups.length > 0) {
+      return groups.map((group, idx) => ({
+        id: group.id ?? `custom_panel_group_${idx + 1}`,
+        name: group.name ?? `${t("monitorAreaDefault", "监控区")} ${idx + 1}`,
+        entries: ensureCustomPanelEntries(group.entries),
+        position: group.position ?? {
+          x: legacyPosition.x + idx * 40,
+          y: legacyPosition.y + idx * 40,
+        },
+        scale: Math.max(0.5, Math.min(2.5, group.scale ?? (idx === 0 ? legacyScale : 1))),
+      }));
+    }
+    const legacyEntries = ensureInlineBuffEntries(profile);
+    if (legacyEntries.length === 0) return [];
+    return [
+      {
+        id: "custom_panel_group_1",
+        name: `${t("monitorAreaDefault", "监控区")} 1`,
+        entries: legacyEntries,
+        position: legacyPosition,
+        scale: legacyScale,
+      },
+    ];
+  }
+
+  function isSameRowRef(a: PanelAreaRowRef, b: PanelAreaRowRef): boolean {
+    return a.attrId === b.attrId;
+  }
+
+  function ensurePanelAreaRowOrder(profile: SkillMonitorProfile): PanelAreaRowRef[] {
+    const enabledAttrIds = ensurePanelAttrs(profile)
+      .filter((item) => item.enabled)
+      .map((item) => item.attrId);
+    const attrIdSet = new Set(enabledAttrIds);
+    const normalized: PanelAreaRowRef[] = [];
+    for (const row of profile.panelAreaRowOrder ?? []) {
+      if (!attrIdSet.has(row.attrId)) continue;
+      if (!normalized.some((item) => isSameRowRef(item, row))) {
+        normalized.push({ type: "attr", attrId: row.attrId });
+      }
+    }
+    for (const attrId of enabledAttrIds) {
+      const row: PanelAreaRowRef = { type: "attr", attrId };
+      if (!normalized.some((item) => isSameRowRef(item, row))) {
+        normalized.push(row);
+      }
+    }
+    return normalized;
+  }
+
+  function ensureOverlaySizes(profile: SkillMonitorProfile) {
+    const current = profile.overlaySizes;
+    return {
+      skillCdGroupScale: current?.skillCdGroupScale ?? 1,
+      resourceGroupScale: current?.resourceGroupScale ?? 1,
+      textBuffPanelScale: current?.textBuffPanelScale ?? 1,
+      panelAttrGroupScale: current?.panelAttrGroupScale ?? 1,
+      customPanelGroupScale: current?.customPanelGroupScale ?? 1,
+      panelAttrGap: Math.max(0, Math.min(24, Math.round(current?.panelAttrGap ?? 4))),
+      panelAttrFontSize: Math.max(
+        10,
+        Math.min(28, Math.round(current?.panelAttrFontSize ?? 14)),
+      ),
+      panelAttrColumnGap: Math.max(
+        0,
+        Math.min(240, Math.round(current?.panelAttrColumnGap ?? 12)),
+      ),
+      iconBuffSizes: current?.iconBuffSizes ?? {},
+      skillDurationSizes: current?.skillDurationSizes ?? {},
+      categoryIconSizes: current?.categoryIconSizes ?? {},
+    };
+  }
+
+  function ensureCustomPanelStyle(profile: SkillMonitorProfile): CustomPanelStyle {
+    const current = profile.customPanelStyle;
+    return {
+      gap: Math.max(0, Math.min(24, Math.round(current?.gap ?? 6))),
+      columnGap: Math.max(0, Math.min(240, Math.round(current?.columnGap ?? 12))),
+      fontSize: Math.max(10, Math.min(28, Math.round(current?.fontSize ?? 14))),
+      nameColor: current?.nameColor ?? "#ffffff",
+      valueColor: current?.valueColor ?? "#ffffff",
+      progressColor: current?.progressColor ?? "#ffffff",
+      progressOpacity: Math.max(0, Math.min(1, current?.progressOpacity ?? 0.4)),
+    };
+  }
+
+  function ensureTextBuffPanelStyle(profile: SkillMonitorProfile): TextBuffPanelStyle {
+    const current = profile.textBuffPanelStyle;
+    return {
+      displayMode: current?.displayMode === "classic" ? "classic" : "modern",
+      gap: Math.max(0, Math.min(24, Math.round(current?.gap ?? 6))),
+      columnGap: Math.max(0, Math.min(240, Math.round(current?.columnGap ?? 8))),
+      fontSize: Math.max(10, Math.min(28, Math.round(current?.fontSize ?? 12))),
+      nameColor: current?.nameColor ?? "#ffffff",
+      valueColor: current?.valueColor ?? "#ffffff",
+      progressColor: current?.progressColor ?? "#ffffff",
+      progressOpacity: Math.max(0, Math.min(1, current?.progressOpacity ?? 0.4)),
+    };
+  }
+
 
   function setSelectedClass(classKey: string) {
     updateActiveProfile((profile) => ({
@@ -571,16 +738,6 @@
       inlineBuffEntries: [],
     }));
   }
-
-  function updateUserCounterRules(
-    updater: (rules: UserCounterRule[]) => UserCounterRule[],
-  ) {
-    updateActiveProfile((profile) => ({
-      ...profile,
-      userCounterRules: updater(ensureUserCounterRules(profile.userCounterRules)),
-    }));
-  }
-
   function getNextUserCounterRuleId(profile: SkillMonitorProfile): number {
     const highestPresetRuleId = counterRules.reduce(
       (maxId, rule) => Math.max(maxId, rule.ruleId),
@@ -636,31 +793,6 @@
     }));
   }
 
-  function updateUserCounterRule(ruleId: number, updates: Partial<UserCounterRule>) {
-    updateUserCounterRules((rules) =>
-      rules.map((rule) => {
-        if (rule.ruleId !== ruleId) return rule;
-        return {
-          ...rule,
-          ...(updates.name !== undefined ? { name: updates.name.trim() || rule.name } : {}),
-          ...(updates.sourceRefs !== undefined
-            ? {
-                sourceRefs: Array.from(
-                  new Set(updates.sourceRefs.filter((item) => typeof item === "string" && item.trim())),
-                ),
-              }
-            : {}),
-          ...(updates.slotRefs !== undefined
-            ? {
-                slotRefs: Array.from(
-                  new Set(updates.slotRefs.filter((item) => typeof item === "string" && item.trim())),
-                ),
-              }
-            : {}),
-        };
-      })
-    );
-  }
 
   function findCustomPanelEntryLocation(
     sourceType: InlineBuffEntry["sourceType"],
@@ -726,7 +858,7 @@
   function addCustomPanelGroup() {
     updateCustomPanelGroups((groups) => [
       ...groups,
-      createDefaultCustomPanelGroup(`监控区 ${groups.length + 1}`, groups.length + 1),
+      createDefaultCustomPanelGroup(`${t("monitorAreaDefault", "监控区")} ${groups.length + 1}`, groups.length + 1),
     ]);
   }
 
@@ -804,14 +936,8 @@
       if (findCustomPanelEntryLocation(sourceType, sourceId, counterSlotId, groups)) {
         return profile;
       }
-      const counterRule = sourceType === "counter"
-        ? allCounterRules.find((rule) => rule.ruleId === sourceId)
-        : null;
-      const counterSlot = counterRule?.effectSlots.find((slot) => slot.slotId === counterSlotId);
       const label = sourceType === "counter"
-        ? (counterSlot
-          ? `${counterRule?.name ?? `计数器 ${sourceId}`} #${counterSlot.slotId}`
-          : (counterRule?.name ?? `计数器 ${sourceId}`))
+        ? (counterRules.find((rule) => rule.ruleId === sourceId)?.name ?? `${t("counterDefault", "计数器")} ${sourceId}`)
         : "";
       const nextEntry: InlineBuffEntry = {
         id: `inline_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
@@ -955,7 +1081,7 @@
       const groups = ensureBuffGroups(profile);
       return {
         ...profile,
-        buffGroups: [...groups, createDefaultBuffGroup(`分组 ${groups.length + 1}`, groups.length + 1)],
+        buffGroups: [...groups, createDefaultBuffGroup(`${t("buffGroupDefault", "分组")} ${groups.length + 1}`, groups.length + 1)],
       };
     });
   }
@@ -986,7 +1112,7 @@
       return {
         ...profile,
         individualMonitorAllGroup: {
-          ...createDefaultBuffGroup("全部 Buff", 1),
+          ...createDefaultBuffGroup(t("allBuffs", "全部 Buff"), 1),
           monitorAll: true,
         },
       };
@@ -1157,8 +1283,8 @@
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-2">
     <SettingsSwitch
       bind:checked={SETTINGS.skillMonitor.state.enabled}
-      label="启用实时监控"
-      description="开启后将实时推送监控数据到悬浮窗口"
+      label={t("enableMonitoring", "启用实时监控")}
+      description={t("enableMonitoringDescription", "开启后将实时推送监控数据到悬浮窗口")}
     />
   </div>
 
@@ -1171,7 +1297,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "skill-cd")}
       >
-        技能CD
+        {t("tab.skillCd", "技能CD")}
       </button>
       <button
         type="button"
@@ -1180,7 +1306,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "buff")}
       >
-        Buff监控
+        {t("tab.buffMonitor", "Buff监控")}
       </button>
       <button
         type="button"
@@ -1189,7 +1315,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "panel-attr")}
       >
-        角色面板
+        {t("tab.panelAttr", "角色面板")}
       </button>
       <button
         type="button"
@@ -1198,7 +1324,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "custom-panel")}
       >
-        自定义监控
+        {t("tab.customPanel", "自定义监控")}
       </button>
       <button
         type="button"
@@ -1207,7 +1333,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "overlay")}
       >
-        启用窗口
+        {t("tab.overlay", "启用窗口")}
       </button>
     </div>
   </div>
@@ -1324,7 +1450,6 @@
       counterRules={allCounterRules}
       {sourceTemplates}
       {slotTemplates}
-      {userCounterRules}
       {availableBuffMap}
       {getBuffDisplayName}
       {inlineBuffSearch}
@@ -1338,7 +1463,6 @@
       {addCustomPanelEntry}
       {addUserCounterRule}
       {removeUserCounterRule}
-      {updateUserCounterRule}
       {removeCustomPanelEntry}
       {setCustomPanelEntryLabel}
       {moveCustomPanelEntry}

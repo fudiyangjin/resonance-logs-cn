@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { SETTINGS } from "$lib/settings-store";
+  import { uiT } from "$lib/i18n";
   interface Props {
     showSkillCdGroup: boolean;
     showSkillDurationGroup: boolean;
@@ -15,6 +17,8 @@
     ) => void;
   }
 
+  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+
   let {
     showSkillCdGroup,
     showSkillDurationGroup,
@@ -27,9 +31,9 @@
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
   <div>
-    <h2 class="text-base font-semibold text-foreground">Overlay 区域显示</h2>
+    <h2 class="text-base font-semibold text-foreground">{t("overlay.title", "Overlay 区域显示")}</h2>
     <p class="text-xs text-muted-foreground">
-      可分别控制技能区、持续时间技能区和资源区是否显示（按方案保存）
+      {t("overlay.subtitle", "可分别控制技能区、持续时间技能区和资源区是否显示（按方案保存）")}
     </p>
   </div>
   <div class="space-y-2">
@@ -41,7 +45,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showSkillCdGroup")}
       >
-        技能CD区：{showSkillCdGroup ? "显示" : "隐藏"}
+        {t("overlay.skillCd", "技能CD区")}：{showSkillCdGroup ? t("show", "显示") : t("hide", "隐藏")}
       </button>
       <button
         type="button"
@@ -50,7 +54,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showSkillDurationGroup")}
       >
-        技能持续区：{showSkillDurationGroup ? "显示" : "隐藏"}
+        {t("overlay.skillDuration", "技能持续区")}：{showSkillDurationGroup ? t("show", "显示") : t("hide", "隐藏")}
       </button>
       <button
         type="button"
@@ -59,7 +63,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showResourceGroup")}
       >
-        资源监控区：{showResourceGroup ? "显示" : "隐藏"}
+        {t("overlay.resource", "资源监控区")}：{showResourceGroup ? t("show", "显示") : t("hide", "隐藏")}
       </button>
       <button
         type="button"
@@ -68,7 +72,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showPanelAttrGroup")}
       >
-        角色属性区：{showPanelAttrGroup ? "显示" : "隐藏"}
+        {t("overlay.panelAttr", "角色属性区")}：{showPanelAttrGroup ? t("show", "显示") : t("hide", "隐藏")}
       </button>
       <button
         type="button"
@@ -77,11 +81,11 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showCustomPanelGroup")}
       >
-        自定义监控区：{showCustomPanelGroup ? "显示" : "隐藏"}
+        {t("overlay.customPanel", "自定义监控区")}：{showCustomPanelGroup ? t("show", "显示") : t("hide", "隐藏")}
       </button>
     </div>
     <p class="text-xs text-muted-foreground">
-      点击按钮切换显示状态（按方案保存）
+      {t("overlay.footer", "点击按钮切换显示状态（按方案保存）")}
     </p>
   </div>
 </div>

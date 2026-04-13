@@ -1,0 +1,16 @@
+{
+  "clearHint": "Right-click to clear hotkeys",
+  "pressKey": "Press key",
+  "unbound": "Unbound",
+  "shortcuts.showLiveMeter": "Show live meter",
+  "shortcuts.hideLiveMeter": "Hide live meter",
+  "shortcuts.toggleLiveMeter": "Toggle live meter",
+  "shortcuts.enableClickthrough": "Enable clickthrough",
+  "shortcuts.disableClickthrough": "Disable clickthrough",
+  "shortcuts.toggleClickthrough": "Toggle clickthrough",
+  "shortcuts.resetEncounter": "Reset encounter",
+  "shortcuts.togglePauseEncounter": "Toggle pause encounter",
+  "shortcuts.toggleBossHp": "Toggle boss HP display",
+  "shortcuts.toggleOverlayEdit": "Toggle overlay edit mode",
+  "shortcuts.toggleOverlayWindow": "Toggle overlay window"
+}

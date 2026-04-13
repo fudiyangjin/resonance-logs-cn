@@ -31,18 +31,17 @@
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import { emitTo } from "@tauri-apps/api/event";
   import { SETTINGS } from "$lib/settings-store";
-  import {
-    getLiveData,
-    getTrainingDummyState as getRuntimeTrainingDummyState,
-  } from "$lib/stores/live-meter-store.svelte";
+  import { resolveUiTranslation, type LocaleCode } from "$lib/i18n";
+  import { getLiveData, getTrainingDummyState } from "$lib/stores/live-meter-store.svelte";
+  import { localizeRawSceneName } from "$lib/scene-mappings";
+  import { localizeRawMonsterName } from "$lib/monster-mappings";
 
   // Get header settings
   const h = $derived(SETTINGS.live.headerCustomization.state);
   const trainingDummySettings = $derived(SETTINGS.trainingDummy.state);
-  const abbreviationStyle = $derived(SETTINGS.live.general.state.abbreviationStyle);
 
   const liveData = $derived(getLiveData());
-  const runtimeTrainingDummyState = $derived(getRuntimeTrainingDummyState());
+  const runtimeTrainingDummyState = $derived(getTrainingDummyState());
 
   const emptyTrainingDummy: TrainingDummyState = {
     phase: "idle",
@@ -134,7 +133,7 @@
 
   const displayHeaderInfo = $derived(headerInfo);
   const displayElapsedMs = $derived(clientElapsedMs);
-  const displaySceneName = $derived(headerInfo.sceneName);
+  const displaySceneName = $derived(localizeRawSceneName(headerInfo.sceneName, headerInfo.sceneName));
   const displayBosses = $derived(headerInfo.bosses);
   const isTrainingDummyActive = $derived(trainingDummyState.phase !== "idle");
 
@@ -155,14 +154,22 @@
     void resetEncounter();
   }
 
+  function t(key: string, fallback: string): string {
+    return resolveUiTranslation(
+      key,
+      SETTINGS.live.general.state.language as LocaleCode,
+      fallback,
+    );
+  }
+
   function formatTrainingDummyLabel(state: TrainingDummyState) {
     switch (state.phase) {
       case "armed":
-        return "打桩待命";
+        return t("header.training.ready", "打桩待命");
       case "running":
-        return "打桩中";
+        return t("header.training.active", "打桩中");
       case "pendingRollover":
-        return "待切段";
+        return t("header.training.waitSegment", "待切段");
       default:
         return "";
     }
@@ -189,7 +196,7 @@
 
   // Check if we have any row 1 right content (buttons)
   const hasRow1Right = $derived(
-    h.showHeaderControl ||
+    trainingDummySettings.showHeaderControl ||
     h.showResetButton ||
       h.showPauseButton ||
       h.showSettingsButton ||
@@ -228,20 +235,20 @@
             {#if h.timerLabelFontSize > 0}
               <span
                 class="font-medium text-muted-foreground uppercase tracking-wider leading-none"
-                style="font-size: {h.timerLabelFontSize}px">Timer</span
+                style="font-size: {h.timerLabelFontSize}px">{t("header.timer", "计时")}</span
               >
             {/if}
             <span
               class="font-bold text-foreground tabular-nums tracking-tight leading-none"
               style="font-size: {h.timerFontSize}px"
-              {@attach tooltip(() => "Time Elapsed")}
+              {@attach tooltip(() => t("header.timeElapsed", "战斗经过时间"))}
               >{formatElapsed(displayElapsedMs)}</span
             >
             {#if h.showActiveTimer}
               <span
                 class="font-bold text-foreground tabular-nums tracking-tight leading-none"
                 style="font-size: {h.activeTimerFontSize}px"
-                {@attach tooltip(() => "Active Combat Time")}
+                {@attach tooltip(() => t("header.activeCombatTime", "有效战斗时间"))}
               >
                 / {formatElapsed(displayHeaderInfo.activeCombatTimeMs)}
               </span>
@@ -284,7 +291,7 @@
       <div
         class="col-start-2 row-start-1 flex items-center justify-self-end gap-2 shrink-0"
       >
-        {#if h.showHeaderControl}
+        {#if trainingDummySettings.showHeaderControl}
           <button
             class="{isTrainingDummyActive
               ? 'bg-muted text-foreground border-border shadow-sm'
@@ -292,12 +299,14 @@
             style="padding: {h.pauseButtonPadding}px"
             aria-pressed={isTrainingDummyActive}
             aria-label={isTrainingDummyActive
-              ? "关闭打桩模式"
-              : "开启打桩模式"}
+              ? t("header.training.disableMode", "关闭打桩模式")
+              : t("header.training.enableMode", "开启打桩模式")}
             disabled={trainingDummyBusy}
             onclick={toggleTrainingDummyMode}
             {@attach tooltip(() =>
-              isTrainingDummyActive ? "关闭打桩模式" : "开启打桩模式")}
+              isTrainingDummyActive
+                ? t("header.training.disableMode", "关闭打桩模式")
+                : t("header.training.enableMode", "开启打桩模式"))}
           >
             <CrosshairIcon
               style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
@@ -310,7 +319,7 @@
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.resetButtonPadding}px"
             onclick={handleResetEncounter}
-            {@attach tooltip(() => "Reset Encounter")}
+            {@attach tooltip(() => t("header.resetEncounter", "重置战斗"))}
           >
             <RefreshCwIcon
               style="width: {h.resetButtonSize}px; height: {h.resetButtonSize}px"
@@ -328,12 +337,12 @@
           >
             {#if isEncounterPaused}
               <PlayIcon
-                {@attach tooltip(() => "Resume Encounter")}
+                {@attach tooltip(() => t("header.resumeEncounter", "继续战斗"))}
                 style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
               />
             {:else}
               <PauseIcon
-                {@attach tooltip(() => "Pause Encounter")}
+                {@attach tooltip(() => t("header.pauseEncounter", "暂停战斗"))}
                 style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
               />
             {/if}
@@ -345,7 +354,7 @@
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.settingsButtonPadding}px"
             onclick={() => openSettings()}
-            {@attach tooltip(() => "Settings")}
+            {@attach tooltip(() => t("header.settings", "设置"))}
           >
             <SettingsIcon
               style="width: {h.settingsButtonSize}px; height: {h.settingsButtonSize}px"
@@ -358,7 +367,7 @@
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.minimizeButtonPadding}px"
             onclick={() => appWindow?.hide()}
-            {@attach tooltip(() => "Minimize")}
+            {@attach tooltip(() => t("header.minimize", "最小化"))}
           >
             <MinusIcon
               style="width: {h.minimizeButtonSize}px; height: {h.minimizeButtonSize}px"
@@ -379,7 +388,7 @@
               <span
                 class="font-bold text-muted-foreground uppercase tracking-wider"
                 style="font-size: {h.totalDamageLabelFontSize}px"
-                {@attach tooltip(() => "Total Damage Dealt")}>T.DMG</span
+                {@attach tooltip(() => t("header.totalDamage", "总伤害"))}>T.DMG</span
               >
               <span
                 class="font-bold text-foreground"
@@ -389,7 +398,6 @@
                 )}
                 ><AbbreviatedNumber
                   num={Number(displayHeaderInfo.totalDmg)}
-                  {abbreviationStyle}
                 /></span
               >
             </div>
@@ -400,17 +408,14 @@
               <span
                 class="font-bold text-muted-foreground uppercase tracking-wider"
                 style="font-size: {h.totalDpsLabelFontSize}px"
-                {@attach tooltip(() => "Total Damage per Second")}>T.DPS</span
+                {@attach tooltip(() => t("header.totalDps", "总每秒伤害"))}>T.DPS</span
               >
               <span
                 class="font-bold text-foreground"
                 style="font-size: {h.totalDpsValueFontSize}px"
                 {@attach tooltip(() =>
                   displayHeaderInfo.totalDps.toLocaleString(),
-                )}><AbbreviatedNumber
-                  num={displayHeaderInfo.totalDps}
-                  {abbreviationStyle}
-                /></span
+                )}><AbbreviatedNumber num={displayHeaderInfo.totalDps} /></span
               >
             </div>
           {/if}
@@ -421,7 +426,7 @@
             <span
               class="font-bold text-muted-foreground uppercase tracking-wider"
               style="font-size: {h.bossHealthLabelFontSize}px"
-              {@attach tooltip(() => "Boss Health")}>BOSS</span
+              {@attach tooltip(() => t("header.bossHealth", "首领血量"))}>BOSS</span
             >
             <!-- Inline Boss Health Display -->
             {#if displayBosses.length > 0}
@@ -438,7 +443,7 @@
                     <span
                       class="truncate text-foreground font-semibold tracking-tight"
                       style="font-size: {h.bossHealthNameFontSize}px"
-                      {@attach tooltip(() => boss.name)}>{boss.name} -</span
+                      {@attach tooltip(() => localizeRawMonsterName(boss.name, boss.name))}>{localizeRawMonsterName(boss.name, boss.name)} -</span
                     >
                     <span
                       class="tabular-nums font-semibold text-foreground"
@@ -446,12 +451,9 @@
                     >
                       <AbbreviatedNumber
                         num={boss.currentHp !== null ? boss.currentHp : 0}
-                        {abbreviationStyle}
                       />
                       {#if boss.maxHp}
-                        <span
-                          > / <AbbreviatedNumber num={boss.maxHp} {abbreviationStyle} /></span
-                        >
+                        <span> / <AbbreviatedNumber num={boss.maxHp} /></span>
                         <span
                           class="text-destructive ml-1"
                           style="font-size: {h.bossHealthPercentFontSize}px"
@@ -465,7 +467,7 @@
             {:else}
               <span
                 class="text-neutral-500 font-medium italic"
-                style="font-size: {h.bossHealthNameFontSize}px">No Boss</span
+                style="font-size: {h.bossHealthNameFontSize}px">{t("header.noBoss", "无首领")}</span
               >
             {/if}
           </div>
