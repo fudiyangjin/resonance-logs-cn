@@ -101,5 +101,27 @@
         "onFreezeExpire": "noOp"
       }
     ]
+  },
+  {
+    "ruleId": 5,
+    "name": "岩之心触发计数",
+    "sources": [
+      {
+        "skillCast": {
+          "skillBaseIds": [1937],
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 10,
+        "resetBuffId": 2201611,
+        "onBuffAdd": "reset",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp"
+      }
+    ]
   }
 ]
