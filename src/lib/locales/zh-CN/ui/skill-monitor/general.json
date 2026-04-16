@@ -45,5 +45,7 @@
   "overlay.edit.resetPosition": "重置位置",
   "overlay.edit.resetSize": "重置尺寸",
   "overlay.edit.done": "完成编辑",
-  "overlay.edit.dragWindow": "拖动此处移动 Game Overlay 窗口"
+  "overlay.edit.dragWindow": "拖动此处移动 Game Overlay 窗口",
+  "overlay.buffUptime": "Buff 覆盖率区",
+  "tab.buffUptime": "Buff 覆盖率"
 }

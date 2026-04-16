@@ -14,10 +14,19 @@ export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   resourceGroupScale: 1,
   textBuffPanelScale: 1,
   panelAttrGroupScale: 1,
+  buffUptimeGroupScale: 1,
   customPanelGroupScale: 1,
   panelAttrGap: 4,
   panelAttrFontSize: 14,
   panelAttrColumnGap: 12,
+  buffUptimeGap: 4,
+  buffUptimeFontSize: 14,
+  buffUptimeEncounterFontSize: 15,
+  buffUptimeTrueFontSize: 15,
+  buffUptimeColumnGap: 12,
+  buffUptimeNameColumnAdjust: 0,
+  buffUptimeEncounterColumnAdjust: 0,
+  buffUptimeTrueColumnAdjust: 0,
   iconBuffSizes: {},
   standaloneIconSizes: {},
   skillDurationSizes: {},
@@ -134,6 +143,8 @@ export function ensureOverlaySizes(profile: SkillMonitorProfile): OverlaySizes {
       current?.textBuffPanelScale ?? DEFAULT_OVERLAY_SIZES.textBuffPanelScale,
     panelAttrGroupScale:
       current?.panelAttrGroupScale ?? DEFAULT_OVERLAY_SIZES.panelAttrGroupScale,
+    buffUptimeGroupScale:
+      current?.buffUptimeGroupScale ?? DEFAULT_OVERLAY_SIZES.buffUptimeGroupScale,
     customPanelGroupScale:
       current?.customPanelGroupScale ??
       DEFAULT_OVERLAY_SIZES.customPanelGroupScale,
@@ -150,6 +161,46 @@ export function ensureOverlaySizes(profile: SkillMonitorProfile): OverlaySizes {
     panelAttrColumnGap: clampRounded(
       current?.panelAttrColumnGap ?? DEFAULT_OVERLAY_SIZES.panelAttrColumnGap,
       0,
+      240,
+    ),
+    buffUptimeGap: clampRounded(
+      current?.buffUptimeGap ?? DEFAULT_OVERLAY_SIZES.buffUptimeGap,
+      0,
+      24,
+    ),
+    buffUptimeFontSize: clampRounded(
+      current?.buffUptimeFontSize ?? DEFAULT_OVERLAY_SIZES.buffUptimeFontSize,
+      10,
+      28,
+    ),
+    buffUptimeEncounterFontSize: clampRounded(
+      current?.buffUptimeEncounterFontSize ?? DEFAULT_OVERLAY_SIZES.buffUptimeEncounterFontSize,
+      10,
+      28,
+    ),
+    buffUptimeTrueFontSize: clampRounded(
+      current?.buffUptimeTrueFontSize ?? DEFAULT_OVERLAY_SIZES.buffUptimeTrueFontSize,
+      10,
+      28,
+    ),
+    buffUptimeColumnGap: clampRounded(
+      current?.buffUptimeColumnGap ?? DEFAULT_OVERLAY_SIZES.buffUptimeColumnGap,
+      -24,
+      240,
+    ),
+    buffUptimeNameColumnAdjust: clampRounded(
+      current?.buffUptimeNameColumnAdjust ?? DEFAULT_OVERLAY_SIZES.buffUptimeNameColumnAdjust,
+      -120,
+      240,
+    ),
+    buffUptimeEncounterColumnAdjust: clampRounded(
+      current?.buffUptimeEncounterColumnAdjust ?? DEFAULT_OVERLAY_SIZES.buffUptimeEncounterColumnAdjust,
+      -120,
+      240,
+    ),
+    buffUptimeTrueColumnAdjust: clampRounded(
+      current?.buffUptimeTrueColumnAdjust ?? DEFAULT_OVERLAY_SIZES.buffUptimeTrueColumnAdjust,
+      -120,
       240,
     ),
     iconBuffSizes: current?.iconBuffSizes ?? {},

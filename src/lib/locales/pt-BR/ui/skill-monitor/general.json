@@ -45,5 +45,7 @@
   "overlay.edit.resetPosition": "Redefinir posição",
   "overlay.edit.resetSize": "Redefinir tamanho",
   "overlay.edit.done": "Concluir edição",
-  "overlay.edit.dragWindow": "Arraste aqui para mover a janela do Game Overlay"
+  "overlay.edit.dragWindow": "Arraste aqui para mover a janela do Game Overlay",
+  "overlay.buffUptime": "Área de uptime de buffs",
+  "tab.buffUptime": "Uptime de buffs"
 }

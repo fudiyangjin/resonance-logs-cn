@@ -6,6 +6,7 @@
     showSkillDurationGroup: boolean;
     showResourceGroup: boolean;
     showPanelAttrGroup: boolean;
+    showBuffUptimeGroup: boolean;
     showCustomPanelGroup: boolean;
     toggleOverlaySectionVisibility: (
       key:
@@ -13,6 +14,7 @@
         | "showSkillDurationGroup"
         | "showResourceGroup"
         | "showPanelAttrGroup"
+        | "showBuffUptimeGroup"
         | "showCustomPanelGroup",
     ) => void;
   }
@@ -24,6 +26,7 @@
     showSkillDurationGroup,
     showResourceGroup,
     showPanelAttrGroup,
+    showBuffUptimeGroup,
     showCustomPanelGroup,
     toggleOverlaySectionVisibility,
   }: Props = $props();
@@ -73,6 +76,15 @@
         onclick={() => toggleOverlaySectionVisibility("showPanelAttrGroup")}
       >
         {t("overlay.panelAttr", "角色属性区")}：{showPanelAttrGroup ? t("show", "显示") : t("hide", "隐藏")}
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {showBuffUptimeGroup
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => toggleOverlaySectionVisibility("showBuffUptimeGroup")}
+      >
+        {t("overlay.buffUptime", "Buff Uptime") }：{showBuffUptimeGroup ? t("show", "显示") : t("hide", "隐藏")}
       </button>
       <button
         type="button"

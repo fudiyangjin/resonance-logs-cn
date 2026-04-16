@@ -3,6 +3,7 @@
   import TabSkillCd from "./tab-skill-cd.svelte";
   import TabBuffMonitor from "./tab-buff-monitor.svelte";
   import TabPanelAttr from "./tab-panel-attr.svelte";
+  import TabBuffUptime from "./tab-buff-uptime.svelte";
   import TabCustomPanel from "./tab-custom-panel.svelte";
   import TabOverlay from "./tab-overlay.svelte";
   import {
@@ -16,6 +17,7 @@
     normalizeBuffCategoryKeys,
     resolveBuffDisplayName,
     saveBuffOverlayAlias,
+    searchBuffsByName,
     searchIconBuffsByName,
     type BuffCategoryKey,
     type BuffCategoryDefinition,
@@ -27,6 +29,11 @@
     createDefaultBuffGroup,
     createDefaultCustomPanelGroup,
     ensureBuffAliases,
+    ensureBuffUptimeActiveIndicators,
+    ensureBuffUptimeAliases,
+    ensureBuffUptimeColors,
+    ensureBuffUptimeTextStyle,
+    ensureBuffUptimeTrackingModes,
     SETTINGS,
     type BuffDisplayMode,
     type BuffGroup,
@@ -76,12 +83,14 @@
   let resonanceSearch = $state("");
   let inlineBuffSearch = $state("");
   let inlineBuffSearchResults = $state<BuffNameInfo[]>([]);
-  let activeTab = $state<"skill-cd" | "buff" | "panel-attr" | "custom-panel" | "overlay">("skill-cd");
+  let activeTab = $state<"skill-cd" | "buff" | "panel-attr" | "buff-uptime" | "custom-panel" | "overlay">("skill-cd");
   let attrSectionExpanded = $state(false);
   let buffAliasSectionExpanded = $state(false);
   let buffAliasSearch = $state("");
   let buffAliasSearchResults = $state<BuffNameInfo[]>([]);
   let buffAliasEditingBuffId = $state<number | null>(null);
+  let uptimeBuffSearch = $state("");
+  let uptimeBuffSearchResults = $state<BuffNameInfo[]>([]);
 
   const classConfigs = $derived(getClassConfigs());
   const counterRules = $derived(getCounterRules());
@@ -109,6 +118,25 @@
   const panelAttrGap = $derived(ensureOverlaySizes(activeProfile).panelAttrGap);
   const panelAttrFontSize = $derived(ensureOverlaySizes(activeProfile).panelAttrFontSize);
   const panelAttrColumnGap = $derived(ensureOverlaySizes(activeProfile).panelAttrColumnGap);
+  const monitoredUptimeBuffIds = $derived(activeProfile.monitoredUptimeBuffIds ?? []);
+  const uptimeBuffColors = $derived.by(() => ensureBuffUptimeColors(activeProfile.buffUptimeColors));
+  const uptimeBuffAliases = $derived.by(() => ensureBuffUptimeAliases(activeProfile.buffUptimeAliases));
+  const uptimeBuffTrackingModes = $derived.by(() => ensureBuffUptimeTrackingModes(activeProfile.buffUptimeTrackingModes));
+  const uptimeBuffActiveIndicators = $derived.by(() =>
+    ensureBuffUptimeActiveIndicators(activeProfile.buffUptimeActiveIndicators),
+  );
+  const buffUptimeTextStyle = $derived.by(() =>
+    ensureBuffUptimeTextStyle(activeProfile.buffUptimeTextStyle),
+  );
+  const showTrueUptime = $derived(activeProfile.showTrueUptime ?? true);
+  const buffUptimeGap = $derived(ensureOverlaySizes(activeProfile).buffUptimeGap);
+  const buffUptimeFontSize = $derived(ensureOverlaySizes(activeProfile).buffUptimeFontSize);
+  const buffUptimeEncounterFontSize = $derived(ensureOverlaySizes(activeProfile).buffUptimeEncounterFontSize);
+  const buffUptimeTrueFontSize = $derived(ensureOverlaySizes(activeProfile).buffUptimeTrueFontSize);
+  const buffUptimeColumnGap = $derived(ensureOverlaySizes(activeProfile).buffUptimeColumnGap);
+  const buffUptimeNameColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeNameColumnAdjust);
+  const buffUptimeEncounterColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeEncounterColumnAdjust);
+  const buffUptimeTrueColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeTrueColumnAdjust);
   const showSkillCdGroup = $derived(
     activeProfile.overlayVisibility?.showSkillCdGroup ?? true,
   );
@@ -120,6 +148,9 @@
   );
   const showPanelAttrGroup = $derived(
     activeProfile.overlayVisibility?.showPanelAttrGroup ?? true,
+  );
+  const showBuffUptimeGroup = $derived(
+    activeProfile.overlayVisibility?.showBuffUptimeGroup ?? true,
   );
   const showCustomPanelGroup = $derived(
     activeProfile.overlayVisibility?.showCustomPanelGroup ?? true,
@@ -334,6 +365,7 @@
       resourceGroupScale: current?.resourceGroupScale ?? 1,
       textBuffPanelScale: current?.textBuffPanelScale ?? 1,
       panelAttrGroupScale: current?.panelAttrGroupScale ?? 1,
+      buffUptimeGroupScale: current?.buffUptimeGroupScale ?? 1,
       customPanelGroupScale: current?.customPanelGroupScale ?? 1,
       panelAttrGap: Math.max(0, Math.min(24, Math.round(current?.panelAttrGap ?? 4))),
       panelAttrFontSize: Math.max(
@@ -343,6 +375,35 @@
       panelAttrColumnGap: Math.max(
         0,
         Math.min(240, Math.round(current?.panelAttrColumnGap ?? 12)),
+      ),
+      buffUptimeGap: Math.max(0, Math.min(24, Math.round(current?.buffUptimeGap ?? 4))),
+      buffUptimeFontSize: Math.max(
+        10,
+        Math.min(28, Math.round(current?.buffUptimeFontSize ?? 14)),
+      ),
+      buffUptimeEncounterFontSize: Math.max(
+        10,
+        Math.min(28, Math.round(current?.buffUptimeEncounterFontSize ?? 15)),
+      ),
+      buffUptimeTrueFontSize: Math.max(
+        10,
+        Math.min(28, Math.round(current?.buffUptimeTrueFontSize ?? 15)),
+      ),
+      buffUptimeColumnGap: Math.max(
+        -24,
+        Math.min(240, Math.round(current?.buffUptimeColumnGap ?? 12)),
+      ),
+      buffUptimeNameColumnAdjust: Math.max(
+        -120,
+        Math.min(240, Math.round(current?.buffUptimeNameColumnAdjust ?? 0)),
+      ),
+      buffUptimeEncounterColumnAdjust: Math.max(
+        -120,
+        Math.min(240, Math.round(current?.buffUptimeEncounterColumnAdjust ?? 0)),
+      ),
+      buffUptimeTrueColumnAdjust: Math.max(
+        -120,
+        Math.min(240, Math.round(current?.buffUptimeTrueColumnAdjust ?? 0)),
       ),
       iconBuffSizes: current?.iconBuffSizes ?? {},
       standaloneIconSizes: current?.standaloneIconSizes ?? {},
@@ -470,6 +531,207 @@
 
   function setBuffSearch(value: string) {
     buffSearch = value;
+  }
+
+  function setUptimeBuffSearch(value: string) {
+    uptimeBuffSearch = value;
+  }
+
+  function isUptimeBuffSelected(buffId: number): boolean {
+    return monitoredUptimeBuffIds.includes(buffId);
+  }
+
+  function toggleUptimeBuff(buffId: number) {
+    const current = monitoredUptimeBuffIds;
+    const exists = current.includes(buffId);
+    updateActiveProfile((profile) => ({
+      ...profile,
+      monitoredUptimeBuffIds: exists
+        ? current.filter((id) => id !== buffId)
+        : [...current, buffId],
+    }));
+  }
+
+  function clearUptimeBuffs() {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      monitoredUptimeBuffIds: [],
+    }));
+  }
+
+  function setShowTrueUptime(value: boolean) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      showTrueUptime: value,
+    }));
+  }
+
+  function setBuffUptimeAlias(buffId: number, alias: string) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      buffUptimeAliases: {
+        ...ensureBuffUptimeAliases(profile.buffUptimeAliases),
+        [String(buffId)]: alias.trim(),
+      },
+    }));
+  }
+
+  function setBuffUptimeTrackingMode(buffId: number, value: "self" | "global") {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      buffUptimeTrackingModes: {
+        ...ensureBuffUptimeTrackingModes(profile.buffUptimeTrackingModes),
+        [String(buffId)]: value,
+      },
+    }));
+  }
+
+  function setBuffUptimeActiveIndicator(buffId: number, value: boolean) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      buffUptimeActiveIndicators: {
+        ...ensureBuffUptimeActiveIndicators(profile.buffUptimeActiveIndicators),
+        [String(buffId)]: value,
+      },
+    }));
+  }
+
+  function setBuffUptimeColor(buffId: number, color: string) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      buffUptimeColors: {
+        ...ensureBuffUptimeColors(profile.buffUptimeColors),
+        [String(buffId)]: color,
+      },
+    }));
+  }
+
+  function setBuffUptimeOutlineEnabled(value: boolean) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      buffUptimeTextStyle: {
+        ...ensureBuffUptimeTextStyle(profile.buffUptimeTextStyle),
+        useOutline: value,
+      },
+    }));
+  }
+
+  function setBuffUptimeOutlineColor(color: string) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      buffUptimeTextStyle: {
+        ...ensureBuffUptimeTextStyle(profile.buffUptimeTextStyle),
+        outlineColor: color,
+      },
+    }));
+  }
+
+  function setBuffUptimeOutlineStrength(value: number) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      buffUptimeTextStyle: {
+        ...ensureBuffUptimeTextStyle(profile.buffUptimeTextStyle),
+        outlineStrength: Math.max(0, Math.min(4, Math.round(value))),
+      },
+    }));
+  }
+
+  function setBuffUptimeShowTitle(value: boolean) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      buffUptimeTextStyle: {
+        ...ensureBuffUptimeTextStyle(profile.buffUptimeTextStyle),
+        showTitle: value,
+      },
+    }));
+  }
+
+  function setBuffUptimeGap(value: number) {
+    const nextValue = Math.max(0, Math.min(24, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        buffUptimeGap: nextValue,
+      },
+    }));
+  }
+
+  function setBuffUptimeFontSize(value: number) {
+    const nextValue = Math.max(10, Math.min(28, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        buffUptimeFontSize: nextValue,
+      },
+    }));
+  }
+
+  function setBuffUptimeEncounterFontSize(value: number) {
+    const nextValue = Math.max(10, Math.min(28, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        buffUptimeEncounterFontSize: nextValue,
+      },
+    }));
+  }
+
+  function setBuffUptimeTrueFontSize(value: number) {
+    const nextValue = Math.max(10, Math.min(28, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        buffUptimeTrueFontSize: nextValue,
+      },
+    }));
+  }
+
+  function setBuffUptimeColumnGap(value: number) {
+    const nextValue = Math.max(-24, Math.min(240, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        buffUptimeColumnGap: nextValue,
+      },
+    }));
+  }
+
+  function setBuffUptimeNameColumnAdjust(value: number) {
+    const nextValue = Math.max(-120, Math.min(240, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        buffUptimeNameColumnAdjust: nextValue,
+      },
+    }));
+  }
+
+  function setBuffUptimeEncounterColumnAdjust(value: number) {
+    const nextValue = Math.max(-120, Math.min(240, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        buffUptimeEncounterColumnAdjust: nextValue,
+      },
+    }));
+  }
+
+  function setBuffUptimeTrueColumnAdjust(value: number) {
+    const nextValue = Math.max(-120, Math.min(240, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        buffUptimeTrueColumnAdjust: nextValue,
+      },
+    }));
   }
 
   function getBuffDisplayName(buffId: number): string {
@@ -621,6 +883,10 @@
     buffAliasSearchResults = searchIconBuffsByName(buffAliasSearch, buffAliases);
   });
 
+  $effect(() => {
+    uptimeBuffSearchResults = searchBuffsByName(uptimeBuffSearch, buffAliases);
+  });
+
   function setBuffAliasSearch(value: string) {
     buffAliasSearch = value;
     if (!value.trim()) {
@@ -634,6 +900,7 @@
       | "showSkillDurationGroup"
       | "showResourceGroup"
       | "showPanelAttrGroup"
+      | "showBuffUptimeGroup"
       | "showCustomPanelGroup",
     checked: boolean,
   ) {
@@ -645,6 +912,7 @@
           profile.overlayVisibility?.showSkillDurationGroup ?? true,
         showResourceGroup: profile.overlayVisibility?.showResourceGroup ?? true,
         showPanelAttrGroup: profile.overlayVisibility?.showPanelAttrGroup ?? true,
+        showBuffUptimeGroup: profile.overlayVisibility?.showBuffUptimeGroup ?? true,
         showCustomPanelGroup: profile.overlayVisibility?.showCustomPanelGroup ?? true,
         [key]: checked,
       },
@@ -657,6 +925,7 @@
       | "showSkillDurationGroup"
       | "showResourceGroup"
       | "showPanelAttrGroup"
+      | "showBuffUptimeGroup"
       | "showCustomPanelGroup",
   ) {
     const current = key === "showSkillCdGroup"
@@ -667,6 +936,8 @@
       ? showResourceGroup
       : key === "showPanelAttrGroup"
       ? showPanelAttrGroup
+      : key === "showBuffUptimeGroup"
+      ? showBuffUptimeGroup
       : showCustomPanelGroup;
     setOverlaySectionVisibility(key, !current);
   }
@@ -1304,7 +1575,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "skill-cd")}
       >
-        {t("tab.skillCd", "技能CD")}
+        {t("tab.skillCd", "Skill CD")}
       </button>
       <button
         type="button"
@@ -1313,7 +1584,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "buff")}
       >
-        {t("tab.buffMonitor", "Buff监控")}
+        {t("tab.buffMonitor", "Buff Monitor")}
       </button>
       <button
         type="button"
@@ -1322,7 +1593,16 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "panel-attr")}
       >
-        {t("tab.panelAttr", "角色面板")}
+        {t("tab.panelAttr", "Character Panel")}
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {activeTab === 'buff-uptime'
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => (activeTab = "buff-uptime")}
+      >
+        {t("tab.buffUptime", "Buff Uptime")}
       </button>
       <button
         type="button"
@@ -1331,7 +1611,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "custom-panel")}
       >
-        {t("tab.customPanel", "自定义监控")}
+        {t("tab.customPanel", "Custom Monitor")}
       </button>
       <button
         type="button"
@@ -1340,7 +1620,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => (activeTab = "overlay")}
       >
-        {t("tab.overlay", "启用窗口")}
+        {t("tab.overlay", "Overlay")}
       </button>
     </div>
   </div>
@@ -1452,6 +1732,50 @@
       {setPanelAttrColumnGap}
       {movePanelAreaRow}
     />
+  {:else if activeTab === "buff-uptime"}
+    <TabBuffUptime
+      {uptimeBuffSearch}
+      {uptimeBuffSearchResults}
+      {monitoredUptimeBuffIds}
+      {uptimeBuffColors}
+      {uptimeBuffAliases}
+      {uptimeBuffTrackingModes}
+      {uptimeBuffActiveIndicators}
+      {buffUptimeTextStyle}
+      {showTrueUptime}
+      {buffUptimeGap}
+      {buffUptimeFontSize}
+      {buffUptimeEncounterFontSize}
+      {buffUptimeTrueFontSize}
+      {buffUptimeColumnGap}
+      {buffUptimeNameColumnAdjust}
+      {buffUptimeEncounterColumnAdjust}
+      {buffUptimeTrueColumnAdjust}
+      {availableBuffs}
+      {availableBuffMap}
+      {setUptimeBuffSearch}
+      {toggleUptimeBuff}
+      {isUptimeBuffSelected}
+      {clearUptimeBuffs}
+      {setShowTrueUptime}
+      {setBuffUptimeAlias}
+      {setBuffUptimeTrackingMode}
+      {setBuffUptimeActiveIndicator}
+      {setBuffUptimeColor}
+      {setBuffUptimeOutlineEnabled}
+      {setBuffUptimeOutlineColor}
+      {setBuffUptimeOutlineStrength}
+      {setBuffUptimeShowTitle}
+      {setBuffUptimeGap}
+      {setBuffUptimeFontSize}
+      {setBuffUptimeEncounterFontSize}
+      {setBuffUptimeTrueFontSize}
+      {setBuffUptimeColumnGap}
+      {setBuffUptimeNameColumnAdjust}
+      {setBuffUptimeEncounterColumnAdjust}
+      {setBuffUptimeTrueColumnAdjust}
+      {getBuffDisplayName}
+    />
   {:else if activeTab === "custom-panel"}
     <TabCustomPanel
       counterRules={allCounterRules}
@@ -1487,6 +1811,7 @@
       {showSkillDurationGroup}
       {showResourceGroup}
       {showPanelAttrGroup}
+      {showBuffUptimeGroup}
       {showCustomPanelGroup}
       {toggleOverlaySectionVisibility}
     />

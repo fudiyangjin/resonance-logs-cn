@@ -95,8 +95,13 @@
 
   const t = uiT("skill-monitor/buff-monitor", () => SETTINGS.live.general.state.language);
 
+  const defaultCategoryLabels: Record<BuffCategoryKey, string> = {
+    food: "Food",
+    alchemy: "Alchemy",
+  };
+
   function buffCategoryLabel(category: { key: BuffCategoryKey; label: string }): string {
-    return t(`buffCategory.${category.key}`, category.label);
+    return t(`buffCategory.${category.key}`, defaultCategoryLabels[category.key] ?? category.label);
   }
 
 
@@ -172,13 +177,14 @@
   }: Props = $props();
 
   function buffSearchStatusLabel(buffId: number): string | null {
-    return isBuffSelected(buffId) ? t("selected", "已选择") : null;
+    return isBuffSelected(buffId) ? t("selected", "Selected") : null;
   }
 
   function buffAliasStatusLabel(buffId: number): string | null {
-    if (buffAliasEditingBuffId === buffId) return t("editing", "编辑中");
-    return configuredBuffAliasIds.includes(buffId) ? t("aliasSet", "已设别名") : null;
+    if (buffAliasEditingBuffId === buffId) return t("editing", "Editing");
+    return configuredBuffAliasIds.includes(buffId) ? t("aliasSet", "Alias Set") : null;
   }
+
 
   function getFilteredGlobalPrioritySearchResults(): BuffNameInfo[] {
     const ids = new Set<number>();
@@ -334,7 +340,7 @@
         onSelect={toggleBuff}
         isSelected={isBuffSelected}
         getStatusLabel={buffSearchStatusLabel}
-        emptyMessage={t("noMatchingBuff", "没有匹配的 Buff")}
+        emptyMessage={t("noMatchingBuff", "No matching buffs")}
       />
     {:else}
       <div class="text-xs text-muted-foreground">{t("searchKeywordBuffPrompt", "请输入关键词搜索 Buff")}</div>
@@ -374,6 +380,7 @@
 
   </div>
 
+
   <div class="rounded-lg border border-border/60 bg-card/40 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <button
       type="button"
@@ -381,7 +388,7 @@
       onclick={() => setBuffAliasSectionExpanded(!buffAliasSectionExpanded)}
     >
       <div class="text-left">
-        <h2 class="text-base font-semibold text-foreground">{t("buffAlias.title", "Buff 别名设置")}</h2>
+        <h2 class="text-base font-semibold text-foreground">{t("buffAlias.title", "Buff Alias Settings")}</h2>
       </div>
       <ChevronDown
         class="w-5 h-5 text-muted-foreground transition-transform duration-200 {buffAliasSectionExpanded
@@ -394,11 +401,11 @@
       <div class="px-4 pb-4 space-y-4">
         <div class="space-y-2">
           <div class="text-xs text-muted-foreground">
-            {t("buffAlias.configuredCount", "已设置别名")} {configuredBuffAliasIds.length}
+            {t("buffAlias.configuredCount", "Aliases Set")} {configuredBuffAliasIds.length}
           </div>
           <input
             class="w-full sm:w-80 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            placeholder={t("buffAlias.searchPlaceholder", "搜索任意 Buff 后设置别名")}
+            placeholder={t("buffAlias.searchPlaceholder", "Search buffs to edit overlay aliases")}
             value={buffAliasSearch}
             oninput={(event) =>
               setBuffAliasSearch((event.currentTarget as HTMLInputElement).value)}
@@ -407,14 +414,14 @@
 
         {#if buffAliasSearch.trim().length > 0}
           <div class="space-y-2">
-            <div class="text-xs text-muted-foreground">{t("searchResults", "搜索结果")}</div>
+            <div class="text-xs text-muted-foreground">{t("searchResults", "Search Results")}</div>
             <BuffSearchResultGrid
               items={buffAliasSearchResults}
               {availableBuffMap}
               onSelect={(buffId) => setBuffAliasEditingBuffId(buffId)}
               isSelected={(buffId) => buffAliasEditingBuffId === buffId}
               getStatusLabel={buffAliasStatusLabel}
-              emptyMessage={t("noMatchingBuff", "没有匹配的 Buff")}
+              emptyMessage={t("noMatchingBuff", "No matching buffs")}
             />
 
             {#if buffAliasEditingBuffId !== null}
@@ -425,7 +432,7 @@
                       {getBuffDisplayName(buffAliasEditingBuffId)}
                     </div>
                     <div class="text-xs text-muted-foreground truncate">
-                      {t("defaultName", "默认名")}：{getBuffDefaultName(buffAliasEditingBuffId)} | ID: {buffAliasEditingBuffId}
+                      {t("defaultName", "Default Name")}：{getBuffDefaultName(buffAliasEditingBuffId)} | ID: {buffAliasEditingBuffId}
                     </div>
                   </div>
                   <button
@@ -434,7 +441,7 @@
                     onclick={() => void resetBuffAlias(buffAliasEditingBuffId)}
                     disabled={!getBuffAlias(buffAliasEditingBuffId)}
                   >
-                    {t("restoreDefault", "恢复默认")}
+                    {t("restoreDefault", "Restore Default")}
                   </button>
                 </div>
                 <input
@@ -449,7 +456,7 @@
           </div>
         {:else if configuredBuffAliasIds.length > 0}
           <div class="space-y-2">
-            <div class="text-xs text-muted-foreground">{t("buffAlias.configuredCount", "已设置别名")}</div>
+            <div class="text-xs text-muted-foreground">{t("buffAlias.configuredCount", "Aliases Set")}</div>
             <div class="space-y-2">
               {#each configuredBuffAliasIds as buffId (buffId)}
                 {@const iconBuff = availableBuffMap.get(buffId)}
@@ -469,7 +476,7 @@
                     <div class="min-w-0 flex-1">
                       <div class="text-sm text-foreground truncate">{getBuffDisplayName(buffId)}</div>
                       <div class="text-xs text-muted-foreground truncate">
-                        {t("defaultName", "默认名")}：{getBuffDefaultName(buffId)} | ID: {buffId}
+                        {t("defaultName", "Default Name")}：{getBuffDefaultName(buffId)} | ID: {buffId}
                       </div>
                     </div>
                     <button
@@ -477,7 +484,7 @@
                       class="text-xs px-2 py-1 rounded border border-border/60 hover:bg-muted/40"
                       onclick={() => void resetBuffAlias(buffId)}
                     >
-                      {t("restoreDefault", "恢复默认")}
+                      {t("restoreDefault", "Restore Default")}
                     </button>
                   </div>
                   <input

@@ -45,5 +45,7 @@
   "overlay.edit.resetPosition": "위치 초기화",
   "overlay.edit.resetSize": "크기 초기화",
   "overlay.edit.done": "편집 완료",
-  "overlay.edit.dragWindow": "여기를 드래그해 Game Overlay 창 이동"
+  "overlay.edit.dragWindow": "여기를 드래그해 Game Overlay 창 이동",
+  "overlay.buffUptime": "버프 가동률 구역",
+  "tab.buffUptime": "버프 가동률"
 }

@@ -16,6 +16,7 @@ import type {
   SkillDisplay,
   SkillDurationDisplay,
   TextBuffDisplay,
+  BuffUptimeDisplayRow,
 } from "./overlay-types";
 import {
   buildBuffTextRow,
@@ -33,8 +34,13 @@ import {
   buffAliases,
   buffDisplayMode,
   buffPriorityIds,
+  buffUptimeActiveIndicators,
+  buffUptimeAliases,
+  buffUptimeColors,
+  buffUptimeTrackingModes,
   customPanelGroups,
   expandedMonitoredBuffIds,
+  monitoredUptimeBuffIds,
   enabledPanelAttrs,
   monitoredBuffCategories,
   monitoredBuffIds,
@@ -42,16 +48,23 @@ import {
   resolvedUserCounterRules,
   selectedClassKey,
   textBuffMaxVisible,
+  showTrueUptime,
 } from "./overlay-profile.svelte.js";
 import {
+  activeUptimeRowKeys,
   buffMap,
   buffDefinitions,
   cdMap,
   counterMap,
+  liveData,
+  nameCache,
   overlayRuntime,
   skillDurationMap,
+  uptimeTotals,
 } from "./overlay-runtime.svelte.js";
 import { overlayNow } from "./overlay-clock.svelte.js";
+import { resolveUiTranslation } from "$lib/i18n";
+import { SETTINGS } from "$lib/settings-store";
 
 const _normalizedBuffGroups = $derived.by(() => {
   const profile = activeProfile();
@@ -192,6 +205,8 @@ const _buffSnapshot = $derived.by(() => {
             durationMs: 0,
             createTimeMs: now,
             layer: 1,
+            hostUid: 0,
+            sourceUid: 0,
           },
           now,
           true,
@@ -236,6 +251,97 @@ const _buffSnapshot = $derived.by(() => {
     textBuffs: nextTextBuffs,
     customPanelRowsByGroup: nextCustomPanelRowsByGroup,
   };
+});
+
+
+const _buffUptimeRows = $derived.by<BuffUptimeDisplayRow[]>(() => {
+  const trackedIds = monitoredUptimeBuffIds();
+  const currentAliases = buffAliases();
+  const uptimeAliases = buffUptimeAliases();
+  const uptimeColors = buffUptimeColors();
+  const trackingModes = buffUptimeTrackingModes();
+  const activeIndicators = buffUptimeActiveIndicators();
+  const totals = uptimeTotals();
+  const activeKeys = activeUptimeRowKeys();
+  const names = nameCache();
+  const live = liveData();
+  const locale = SETTINGS.live.general.state.language;
+  const encounterMs = Math.max(0, live?.elapsedMs ?? 0);
+  const trueMs = Math.max(0, live?.activeCombatTimeMs ?? 0);
+  const localPlayerUid = live?.localPlayerUid ?? 0;
+  const rows: BuffUptimeDisplayRow[] = [];
+
+  const uptimeT = (key: string, fallback: string) =>
+    resolveUiTranslation("ui/skill-monitor/buff-monitor.json", key, locale, fallback);
+
+  function resolveSourceLabel(sourceUid: number, sourceConfigId: number | null): string | undefined {
+    if (sourceUid > 0) {
+      return names.get(sourceUid) || uptimeT("uptime.sourceUnknown", "Unknown");
+    }
+    if (sourceConfigId !== null) {
+      return uptimeT("uptime.sourceDungeon", "Dungeon");
+    }
+    return uptimeT("uptime.sourceUnknown", "Unknown");
+  }
+
+  for (const baseId of trackedIds) {
+    const mode = trackingModes[String(baseId)] ?? "self";
+    const label = uptimeAliases[String(baseId)]?.trim() || resolveBuffOverlayDisplayName(baseId, currentAliases);
+    const color = uptimeColors[String(baseId)] ?? "#ffffff";
+    const showIndicator = activeIndicators[String(baseId)] ?? true;
+
+    const matchingEntries = Array.from(totals.entries())
+      .filter(([, total]) => total.baseId === baseId && total.trackingMode === mode)
+      .sort((left, right) => {
+        const leftTotal = left[1];
+        const rightTotal = right[1];
+        const leftSelf = leftTotal.sourceUid === localPlayerUid;
+        const rightSelf = rightTotal.sourceUid === localPlayerUid;
+        if (leftSelf !== rightSelf) return leftSelf ? -1 : 1;
+        const leftSource = resolveSourceLabel(leftTotal.sourceUid, leftTotal.sourceConfigId) || "";
+        const rightSource = resolveSourceLabel(rightTotal.sourceUid, rightTotal.sourceConfigId) || "";
+        return leftSource.localeCompare(rightSource);
+      });
+
+    for (const [key, total] of matchingEntries) {
+      const encounterPercent = encounterMs > 0
+        ? Math.max(0, Math.min(100, (total.encounterActiveMs / encounterMs) * 100))
+        : 0;
+      const truePercent = trueMs > 0
+        ? Math.max(0, Math.min(100, (total.trueActiveMs / trueMs) * 100))
+        : null;
+      const sourceName = total.sourceUid === localPlayerUid
+        ? undefined
+        : resolveSourceLabel(total.sourceUid, total.sourceConfigId);
+
+      rows.push({
+        key,
+        label,
+        encounterPercentText: encounterMs > 0 ? `${Math.round(encounterPercent)}%` : `0%`,
+        truePercentText: showTrueUptime() ? (truePercent === null ? `--` : `${Math.round(truePercent)}%`) : undefined,
+        sourceText: sourceName ? `${uptimeT("uptime.sourcePrefix", "Src")}: ${sourceName}` : undefined,
+        color,
+        isActive: activeKeys.has(key),
+        showActiveIndicator: showIndicator,
+      });
+    }
+  }
+
+  if (rows.length === 0 && overlayRuntime.isEditing) {
+    rows.push({
+      key: "uptime_placeholder",
+      label: uptimeT("uptime.previewName1", "Lifewave"),
+      encounterPercentText: "60%",
+      truePercentText: showTrueUptime() ? "80%" : undefined,
+      sourceText: undefined,
+      color: "#ffffff",
+      isActive: true,
+      showActiveIndicator: true,
+      isPlaceholder: true,
+    });
+  }
+
+  return rows;
 });
 
 const _skillSnapshot = $derived.by(() => {
@@ -295,6 +401,7 @@ const _textBuffs = $derived.by(() => _buffSnapshot.textBuffs);
 const _customPanelRowsByGroup = $derived.by(
   () => _buffSnapshot.customPanelRowsByGroup,
 );
+const _buffUptimeDisplayRows = $derived.by(() => _buffUptimeRows);
 const _displayMap = $derived.by(() => _skillSnapshot.displayMap);
 const _skillDurationDisplays = $derived.by(
   () => _skillSnapshot.skillDurationDisplays,
@@ -505,4 +612,9 @@ function getTextBuffBaseId(row: TextBuffDisplay): number {
   const match = /^buff_(\d+)$/.exec(row.key);
   const baseId = match?.[1];
   return baseId ? Number.parseInt(baseId, 10) : Number.MAX_SAFE_INTEGER;
+}
+
+
+export function buffUptimeDisplayRows() {
+  return _buffUptimeDisplayRows;
 }

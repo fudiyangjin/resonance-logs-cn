@@ -2,6 +2,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import type {
   BuffUpdateState,
   CounterUpdateState,
+  LiveDataPayload,
   SkillCdState,
 } from "$lib/api";
 import type { BuffDefinition } from "$lib/config/buff-name-table";
@@ -10,6 +11,16 @@ import type {
   ResizeState,
   SkillDurationState,
 } from "./overlay-types";
+
+export type BuffUptimeTotals = {
+  baseId: number;
+  trackingMode: "self" | "global";
+  hostUid: number;
+  sourceUid: number;
+  sourceConfigId: number | null;
+  encounterActiveMs: number;
+  trueActiveMs: number;
+};
 
 export const overlayRuntime = $state({
   currentWindow: null as ReturnType<typeof getCurrentWindow> | null,
@@ -20,9 +31,18 @@ export const overlayRuntime = $state({
   skillDurationMap: new Map<number, SkillDurationState>(),
   fightResValues: [] as number[],
   buffMap: new Map<number, BuffUpdateState>(),
+  localBuffs: [] as BuffUpdateState[],
+  bossBuffLists: new Map<number, BuffUpdateState[]>(),
+  activeUptimeRowKeys: new Set<string>(),
+  nameCache: new Map<number, string>(),
   counterMap: new Map<number, CounterUpdateState>(),
   panelAttrMap: new Map<number, number>(),
   buffDefinitions: new Map<number, BuffDefinition>(),
+  liveData: null as LiveDataPayload | null,
+  uptimeTotals: new Map<string, BuffUptimeTotals>(),
+  uptimeFightStartTimestampMs: 0,
+  uptimeLastElapsedMs: 0,
+  uptimeLastActiveCombatTimeMs: 0,
   isEditing: false,
   dragState: null as DragState | null,
   resizeState: null as ResizeState | null,
@@ -42,6 +62,22 @@ export function fightResValues() {
 
 export function buffMap() {
   return overlayRuntime.buffMap;
+}
+
+export function localBuffs() {
+  return overlayRuntime.localBuffs;
+}
+
+export function bossBuffLists() {
+  return overlayRuntime.bossBuffLists;
+}
+
+export function activeUptimeRowKeys() {
+  return overlayRuntime.activeUptimeRowKeys;
+}
+
+export function nameCache() {
+  return overlayRuntime.nameCache;
 }
 
 export function counterMap() {
@@ -66,4 +102,13 @@ export function dragState() {
 
 export function resizeState() {
   return overlayRuntime.resizeState;
+}
+
+
+export function liveData() {
+  return overlayRuntime.liveData;
+}
+
+export function uptimeTotals() {
+  return overlayRuntime.uptimeTotals;
 }

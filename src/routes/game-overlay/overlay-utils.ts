@@ -59,6 +59,8 @@ export function ensureOverlayPositions(
       current?.specialBuffGroup ?? DEFAULT_OVERLAY_POSITIONS.specialBuffGroup,
     panelAttrGroup:
       current?.panelAttrGroup ?? DEFAULT_OVERLAY_POSITIONS.panelAttrGroup,
+    buffUptimeGroup:
+      current?.buffUptimeGroup ?? DEFAULT_OVERLAY_POSITIONS.buffUptimeGroup,
     customPanelGroup:
       current?.customPanelGroup ?? DEFAULT_OVERLAY_POSITIONS.customPanelGroup,
     iconBuffPositions: current?.iconBuffPositions ?? {},
@@ -85,6 +87,9 @@ export function ensureOverlayVisibility(
     showPanelAttrGroup:
       current?.showPanelAttrGroup ??
       DEFAULT_OVERLAY_VISIBILITY.showPanelAttrGroup,
+    showBuffUptimeGroup:
+      current?.showBuffUptimeGroup ??
+      DEFAULT_OVERLAY_VISIBILITY.showBuffUptimeGroup,
     showCustomPanelGroup:
       current?.showCustomPanelGroup ??
       DEFAULT_OVERLAY_VISIBILITY.showCustomPanelGroup,

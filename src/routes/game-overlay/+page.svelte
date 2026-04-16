@@ -5,6 +5,7 @@
   import GroupedBuffDisplay from "./GroupedBuffDisplay.svelte";
   import IndividualBuffDisplay from "./IndividualBuffDisplay.svelte";
   import PanelAttrGroup from "./PanelAttrGroup.svelte";
+  import BuffUptimeGroup from "./BuffUptimeGroup.svelte";
   import ResourceGroup from "./ResourceGroup.svelte";
   import SkillCdGroup from "./SkillCdGroup.svelte";
   import SkillDurationDisplay from "./SkillDurationDisplay.svelte";
@@ -42,6 +43,10 @@
 
   {#if visibility.showPanelAttrGroup}
     <PanelAttrGroup />
+  {/if}
+
+  {#if visibility.showBuffUptimeGroup}
+    <BuffUptimeGroup />
   {/if}
 
   {#if visibility.showCustomPanelGroup}

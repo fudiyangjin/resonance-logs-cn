@@ -45,5 +45,7 @@
   "overlay.edit.resetPosition": "Reset Position",
   "overlay.edit.resetSize": "Reset Size",
   "overlay.edit.done": "Done Editing",
-  "overlay.edit.dragWindow": "Drag here to move the Game Overlay window"
+  "overlay.edit.dragWindow": "Drag here to move the Game Overlay window",
+  "overlay.buffUptime": "Buff Uptime",
+  "tab.buffUptime": "Buff Uptime"
 }

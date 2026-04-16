@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
   import BuffGroupGrid from "./BuffGroupGrid.svelte";
   import IconBuffCell from "./IconBuffCell.svelte";
   import {
@@ -16,6 +18,7 @@
     startResize,
   } from "./overlay-state.svelte.js";
 
+  const t = uiT("skill-monitor/buff-monitor", () => SETTINGS.live.general.state.language);
   const editing = $derived(isEditing());
   const individualBuffs = $derived(individualModeIconBuffs());
   const allGroup = $derived(individualMonitorAllGroup());
@@ -77,7 +80,7 @@
     {group}
     buffs={allGroupBuffs.slice(0, maxVisible)}
     editable={editing}
-    tagText={`${group.name}（全部）`}
+    tagText={`${group.name}${t("allSuffix", "(All)")}`}
     onPointerDown={(e) => startDrag(e, { kind: "individualAllGroup" }, group.position)}
     onResizePointerDown={(e) =>
       startResize(e, { kind: "individualAllGroup" }, group.iconSize)}

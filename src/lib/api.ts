@@ -113,6 +113,9 @@ export type BuffUpdateState = {
   layer: number;
   durationMs: number;
   createTimeMs: number;
+  hostUid: number;
+  sourceUid: number;
+  sourceConfigId?: number | null;
 };
 
 export type BuffUpdatePayload = {

@@ -265,6 +265,7 @@ export type OverlayPositions = {
   textBuffPanel: Point;
   specialBuffGroup: Point;
   panelAttrGroup: Point;
+  buffUptimeGroup: Point;
   customPanelGroup: Point;
   iconBuffPositions: Record<number, Point>;
   standaloneIconPositions?: Record<string, Point>;
@@ -277,10 +278,19 @@ export type OverlaySizes = {
   resourceGroupScale: number;
   textBuffPanelScale: number;
   panelAttrGroupScale: number;
+  buffUptimeGroupScale: number;
   customPanelGroupScale: number;
   panelAttrGap: number;
   panelAttrFontSize: number;
   panelAttrColumnGap: number;
+  buffUptimeGap: number;
+  buffUptimeFontSize: number;
+  buffUptimeEncounterFontSize: number;
+  buffUptimeTrueFontSize: number;
+  buffUptimeColumnGap: number;
+  buffUptimeNameColumnAdjust: number;
+  buffUptimeEncounterColumnAdjust: number;
+  buffUptimeTrueColumnAdjust: number;
   iconBuffSizes: Record<number, number>;
   standaloneIconSizes?: Record<string, number>;
   skillDurationSizes: Record<number, number>;
@@ -292,6 +302,7 @@ export type OverlayVisibility = {
   showSkillDurationGroup: boolean;
   showResourceGroup: boolean;
   showPanelAttrGroup: boolean;
+  showBuffUptimeGroup: boolean;
   showCustomPanelGroup: boolean;
 };
 
@@ -340,6 +351,15 @@ export type TextBuffPanelStyle = {
   progressColor: string;
   progressOpacity: number;
 };
+
+export type BuffUptimeTextStyle = {
+  useOutline: boolean;
+  outlineColor: string;
+  outlineStrength: number;
+  showTitle: boolean;
+};
+
+export type BuffUptimeTrackingMode = "self" | "global";
 
 export type BuffDisplayMode = "individual" | "grouped";
 
@@ -395,6 +415,7 @@ export type SkillMonitorProfile = {
   monitoredSkillIds: number[];
   monitoredSkillDurationIds: number[];
   monitoredBuffIds: number[];
+  monitoredUptimeBuffIds?: number[];
   monitoredBuffCategories?: BuffCategoryKey[];
   monitoredPanelAttrs: PanelAttrConfig[];
   buffPriorityIds: number[];
@@ -407,7 +428,14 @@ export type SkillMonitorProfile = {
   panelAreaRowOrder?: PanelAreaRowRef[];
   customPanelStyle?: CustomPanelStyle;
   textBuffPanelStyle?: TextBuffPanelStyle;
+  buffUptimeColors?: Record<string, string>;
+  buffUptimeAliases?: Record<string, string>;
+  buffUptimeTrackingModes?: Record<string, BuffUptimeTrackingMode>;
+  buffUptimeActiveIndicators?: Record<string, boolean>;
+  buffUptimeTextStyle?: BuffUptimeTextStyle;
   textBuffMaxVisible: number;
+  showTrueUptime?: boolean;
+  showBuffUptimeActiveIndicator?: boolean;
   overlayPositions: OverlayPositions;
   overlaySizes: OverlaySizes;
   overlayVisibility: OverlayVisibility;
@@ -432,7 +460,8 @@ function createDefaultOverlayPositions(): OverlayPositions {
     textBuffPanel: { x: 360, y: 40 },
     specialBuffGroup: { x: 360, y: 220 },
     panelAttrGroup: { x: 700, y: 40 },
-    customPanelGroup: { x: 700, y: 280 },
+    buffUptimeGroup: { x: 700, y: 220 },
+    customPanelGroup: { x: 700, y: 320 },
     iconBuffPositions: {},
     standaloneIconPositions: {},
     skillDurationPositions: {},
@@ -446,10 +475,19 @@ function createDefaultOverlaySizes(): OverlaySizes {
     resourceGroupScale: 1,
     textBuffPanelScale: 1,
     panelAttrGroupScale: 1,
+    buffUptimeGroupScale: 1,
     customPanelGroupScale: 1,
     panelAttrGap: 4,
     panelAttrFontSize: 14,
     panelAttrColumnGap: 12,
+    buffUptimeGap: 4,
+    buffUptimeFontSize: 14,
+    buffUptimeEncounterFontSize: 15,
+    buffUptimeTrueFontSize: 15,
+    buffUptimeColumnGap: 12,
+    buffUptimeNameColumnAdjust: 0,
+    buffUptimeEncounterColumnAdjust: 0,
+    buffUptimeTrueColumnAdjust: 0,
     iconBuffSizes: {},
     standaloneIconSizes: {},
     skillDurationSizes: {},
@@ -463,6 +501,7 @@ function createDefaultOverlayVisibility(): OverlayVisibility {
     showSkillDurationGroup: true,
     showResourceGroup: true,
     showPanelAttrGroup: true,
+    showBuffUptimeGroup: true,
     showCustomPanelGroup: true,
   };
 }
@@ -503,6 +542,15 @@ function createDefaultTextBuffPanelStyle(): TextBuffPanelStyle {
     valueColor: "#ffffff",
     progressColor: "#ffffff",
     progressOpacity: 0.4,
+  };
+}
+
+function createDefaultBuffUptimeTextStyle(): BuffUptimeTextStyle {
+  return {
+    useOutline: true,
+    outlineColor: "#000000",
+    outlineStrength: 2,
+    showTitle: true,
   };
 }
 
@@ -547,6 +595,7 @@ export function createDefaultSkillMonitorProfile(
     monitoredSkillIds: [],
     monitoredSkillDurationIds: [],
     monitoredBuffIds: [],
+    monitoredUptimeBuffIds: [],
     monitoredBuffCategories: [],
     monitoredPanelAttrs: AVAILABLE_PANEL_ATTRS.map((item) => ({ ...item })),
     buffPriorityIds: [],
@@ -559,10 +608,73 @@ export function createDefaultSkillMonitorProfile(
     panelAreaRowOrder: [],
     customPanelStyle: createDefaultCustomPanelStyle(),
     textBuffPanelStyle: createDefaultTextBuffPanelStyle(),
+    buffUptimeColors: {},
+    buffUptimeAliases: {},
+    buffUptimeTrackingModes: {},
+    buffUptimeActiveIndicators: {},
+    buffUptimeTextStyle: createDefaultBuffUptimeTextStyle(),
     textBuffMaxVisible: 10,
+    showTrueUptime: true,
+    showBuffUptimeActiveIndicator: true,
     overlayPositions: createDefaultOverlayPositions(),
     overlaySizes: createDefaultOverlaySizes(),
     overlayVisibility: createDefaultOverlayVisibility(),
+  };
+}
+
+
+export function ensureBuffUptimeColors(
+  colors: Record<string, string> | null | undefined,
+): Record<string, string> {
+  const next: Record<string, string> = {};
+  for (const [buffId, color] of Object.entries(colors ?? {})) {
+    const trimmed = typeof color === "string" ? color.trim() : "";
+    if (!trimmed) continue;
+    next[buffId] = trimmed;
+  }
+  return next;
+}
+
+
+export function ensureBuffUptimeAliases(
+  aliases: Record<string, string> | null | undefined,
+): Record<string, string> {
+  const next: Record<string, string> = {};
+  for (const [buffId, alias] of Object.entries(aliases ?? {})) {
+    const trimmed = typeof alias === "string" ? alias.trim() : "";
+    if (!trimmed) continue;
+    next[buffId] = trimmed;
+  }
+  return next;
+}
+
+export function ensureBuffUptimeTrackingModes(
+  modes: Record<string, BuffUptimeTrackingMode> | null | undefined,
+): Record<string, BuffUptimeTrackingMode> {
+  const next: Record<string, BuffUptimeTrackingMode> = {};
+  for (const [buffId, mode] of Object.entries(modes ?? {})) {
+    next[buffId] = mode === "global" ? "global" : "self";
+  }
+  return next;
+}
+
+export function ensureBuffUptimeActiveIndicators(
+  indicators: Record<string, boolean> | null | undefined,
+): Record<string, boolean> {
+  const next: Record<string, boolean> = {};
+  for (const [buffId, enabled] of Object.entries(indicators ?? {})) {
+    next[buffId] = enabled !== false;
+  }
+  return next;
+}
+export function ensureBuffUptimeTextStyle(
+  style: BuffUptimeTextStyle | null | undefined,
+): BuffUptimeTextStyle {
+  return {
+    useOutline: style?.useOutline ?? true,
+    outlineColor: style?.outlineColor?.trim() || "#000000",
+    outlineStrength: Math.max(0, Math.min(4, Math.round(style?.outlineStrength ?? 2))),
+    showTitle: style?.showTitle !== false,
   };
 }
 

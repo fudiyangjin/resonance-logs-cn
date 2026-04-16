@@ -45,5 +45,7 @@
   "overlay.edit.resetPosition": "位置をリセット",
   "overlay.edit.resetSize": "サイズをリセット",
   "overlay.edit.done": "編集完了",
-  "overlay.edit.dragWindow": "ここをドラッグして Game Overlay ウィンドウを移動"
+  "overlay.edit.dragWindow": "ここをドラッグして Game Overlay ウィンドウを移動",
+  "overlay.buffUptime": "Buff 稼働率エリア",
+  "tab.buffUptime": "Buff 稼働率"
 }

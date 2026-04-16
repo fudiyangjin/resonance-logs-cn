@@ -13,6 +13,8 @@ pub struct ActiveBuff {
     pub duration: i32,
     pub create_time: i64,
     pub received_time_ms: i64,
+    pub host_uid: i64,
+    pub source_uid: i64,
     pub source_config_id: Option<i32>,
 }
 
@@ -93,9 +95,10 @@ impl BuffMonitor {
                         let Some(base_id) = buff_info.base_id else {
                             continue;
                         };
-                        let fire_uid = buff_info.fire_uuid.unwrap_or(0) >> 16;
+                        let host_uid = buff_info.host_uuid.unwrap_or(0) >> 16;
+                        let source_uid = buff_info.fire_uuid.unwrap_or(0) >> 16;
                         let in_self_list = self.self_applied_buff_ids.contains(&base_id);
-                        if in_self_list && fire_uid != local_player_uid {
+                        if in_self_list && source_uid != local_player_uid {
                             continue;
                         }
                         let layer = buff_info.layer.unwrap_or(1);
@@ -117,6 +120,8 @@ impl BuffMonitor {
                                 duration,
                                 create_time,
                                 received_time_ms: now,
+                                host_uid,
+                                source_uid,
                                 source_config_id,
                             },
                         );
@@ -199,6 +204,9 @@ impl BuffMonitor {
                     layer: buff.layer,
                     duration_ms: buff.duration,
                     create_time_ms: buff.create_time.saturating_add(server_clock_offset),
+                    host_uid: buff.host_uid,
+                    source_uid: buff.source_uid,
+                    source_config_id: buff.source_config_id,
                 })
                 .collect(),
         )

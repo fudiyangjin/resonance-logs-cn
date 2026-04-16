@@ -52,6 +52,8 @@ function buildPlaceholderRows(now: number): TextBuffDisplay[] {
           durationMs: 0,
           createTimeMs: now,
           layer: 1,
+          hostUid: 0,
+          sourceUid: 0,
         },
         now,
         true,

@@ -2,10 +2,22 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { findAnySkillByBaseId } from "$lib/skill-mappings";
 import {
+  ensureBuffUptimeActiveIndicators,
+  ensureBuffUptimeAliases,
+  ensureBuffUptimeColors,
+  ensureBuffUptimeTextStyle,
+  ensureBuffUptimeTrackingModes,
+  type BuffUptimeTrackingMode,
+} from "$lib/settings-store";
+import {
+  onBossBuffUpdate,
   onBuffCounterUpdate,
   onBuffUpdate,
+  onEntityNames,
   onFightResUpdate,
+  onLiveData,
   onPanelAttrUpdate,
+  onResetEncounter,
   onSkillCdUpdate,
   type BuffUpdateState,
   type CounterUpdateState,
@@ -23,10 +35,13 @@ import {
   ensureOverlaySizes,
   ensureOverlayVisibility,
   ensureTextBuffPanelStyle,
+  isBuffActive,
 } from "./overlay-utils";
 import {
   activeProfile,
+  buffUptimeTrackingModes,
   monitoredSkillDurationIds,
+  monitoredUptimeBuffIds,
   selectedClassKey,
   updateActiveProfile,
 } from "./overlay-profile.svelte.js";
@@ -38,6 +53,89 @@ import {
   setOverlayWindow,
 } from "./overlay-layout.svelte.js";
 import { initOverlayClock } from "./overlay-clock.svelte.js";
+
+type TrackedUptimeRow = {
+  key: string;
+  baseId: number;
+  trackingMode: BuffUptimeTrackingMode;
+  hostUid: number;
+  sourceUid: number;
+  sourceConfigId: number | null;
+  isActive: boolean;
+};
+
+function buildLatestBuffMap(buffs: BuffUpdateState[]) {
+  const next = new Map<number, BuffUpdateState>();
+  for (const buff of buffs) {
+    const existing = next.get(buff.baseId);
+    if (!existing || buff.createTimeMs >= existing.createTimeMs) {
+      next.set(buff.baseId, buff);
+    }
+  }
+  return next;
+}
+
+function buildTrackedUptimeRows(localPlayerUid: number, now: number) {
+  const trackedIds = monitoredUptimeBuffIds();
+  const trackingModes = buffUptimeTrackingModes();
+  const allBuffs: BuffUpdateState[] = [
+    ...overlayRuntime.localBuffs,
+    ...Array.from(overlayRuntime.bossBuffLists.values()).flat(),
+  ];
+  const next = new Map<string, TrackedUptimeRow>();
+
+  for (const baseId of trackedIds) {
+    const trackingMode = trackingModes[String(baseId)] ?? "self";
+    const matches = allBuffs.filter((buff) => buff.baseId === baseId);
+
+    if (trackingMode === "self") {
+      const ownMatches = matches.filter((buff) => buff.sourceUid === localPlayerUid);
+      if (ownMatches.length === 0) continue;
+      next.set(`uptime:${baseId}:self`, {
+        key: `uptime:${baseId}:self`,
+        baseId,
+        trackingMode,
+        hostUid: ownMatches[0]?.hostUid ?? 0,
+        sourceUid: localPlayerUid,
+        sourceConfigId: ownMatches[0]?.sourceConfigId ?? null,
+        isActive: ownMatches.some((buff) => isBuffActive(buff, now)),
+      });
+      continue;
+    }
+
+    const grouped = new Map<string, BuffUpdateState[]>();
+    for (const buff of matches) {
+      const sourceUid = buff.sourceUid ?? 0;
+      const hostUid = buff.hostUid ?? 0;
+      const sourceConfigId = buff.sourceConfigId ?? null;
+      const sourceKey = sourceUid > 0
+        ? `uid:${sourceUid}`
+        : sourceConfigId !== null
+          ? `cfg:${sourceConfigId}`
+          : `unknown:${hostUid}`;
+      const rowKey = `uptime:${baseId}:global:${sourceKey}:host:${hostUid}`;
+      const current = grouped.get(rowKey) ?? [];
+      current.push(buff);
+      grouped.set(rowKey, current);
+    }
+
+    for (const [key, buffs] of grouped) {
+      const first = buffs[0];
+      if (!first) continue;
+      next.set(key, {
+        key,
+        baseId,
+        trackingMode,
+        hostUid: first.hostUid ?? 0,
+        sourceUid: first.sourceUid ?? 0,
+        sourceConfigId: first.sourceConfigId ?? null,
+        isActive: buffs.some((buff) => isBuffActive(buff, now)),
+      });
+    }
+  }
+
+  return next;
+}
 
 export function initOverlay() {
   if (overlayRuntime.cleanup) return overlayRuntime.cleanup;
@@ -64,14 +162,22 @@ export function initOverlay() {
     void setEditMode(!overlayRuntime.isEditing);
   });
   const unlistenBuff = onBuffUpdate((event) => {
-    const next = new Map<number, BuffUpdateState>();
-    for (const buff of event.payload.buffs) {
-      const existing = next.get(buff.baseId);
-      if (!existing || buff.createTimeMs >= existing.createTimeMs) {
-        next.set(buff.baseId, buff);
-      }
+    overlayRuntime.localBuffs = event.payload.buffs;
+    overlayRuntime.buffMap = buildLatestBuffMap(event.payload.buffs);
+  });
+  const unlistenBossBuff = onBossBuffUpdate((event) => {
+    const next = new Map<number, BuffUpdateState[]>();
+    for (const [uid, buffs] of Object.entries(event.payload.bossBuffs)) {
+      next.set(Number(uid), buffs);
     }
-    overlayRuntime.buffMap = next;
+    overlayRuntime.bossBuffLists = next;
+  });
+  const unlistenNames = onEntityNames((event) => {
+    const next = new Map(overlayRuntime.nameCache);
+    for (const [uid, name] of Object.entries(event.payload.names)) {
+      next.set(Number(uid), name);
+    }
+    overlayRuntime.nameCache = next;
   });
   const unlistenCounter = onBuffCounterUpdate((event) => {
     const next = new Map<number, CounterUpdateState>();
@@ -120,6 +226,81 @@ export function initOverlay() {
     overlayRuntime.panelAttrMap = next;
   });
 
+  const unlistenLiveData = onLiveData((event) => {
+    const data = event.payload;
+    overlayRuntime.liveData = data;
+
+    const shouldReset =
+      overlayRuntime.uptimeFightStartTimestampMs !== data.fightStartTimestampMs
+      || data.elapsedMs < overlayRuntime.uptimeLastElapsedMs
+      || data.activeCombatTimeMs < overlayRuntime.uptimeLastActiveCombatTimeMs
+      || data.elapsedMs === 0;
+
+    const prevElapsedMs = shouldReset ? 0 : overlayRuntime.uptimeLastElapsedMs;
+    const prevActiveCombatMs = shouldReset ? 0 : overlayRuntime.uptimeLastActiveCombatTimeMs;
+
+    if (shouldReset) {
+      overlayRuntime.uptimeTotals = new Map();
+      overlayRuntime.activeUptimeRowKeys = new Set();
+      overlayRuntime.uptimeFightStartTimestampMs = data.fightStartTimestampMs;
+      if (data.elapsedMs === 0) {
+        overlayRuntime.uptimeLastElapsedMs = 0;
+        overlayRuntime.uptimeLastActiveCombatTimeMs = 0;
+        return;
+      }
+    }
+
+    const deltaElapsedMs = Math.max(0, data.elapsedMs - prevElapsedMs);
+    const deltaActiveCombatMs = Math.max(0, data.activeCombatTimeMs - prevActiveCombatMs);
+    const now = Date.now();
+    const trackedRows = buildTrackedUptimeRows(data.localPlayerUid, now);
+    overlayRuntime.activeUptimeRowKeys = new Set(
+      Array.from(trackedRows.entries())
+        .filter(([, row]) => row.isActive)
+        .map(([key]) => key),
+    );
+
+    const nextTotals = new Map(overlayRuntime.uptimeTotals);
+    for (const [key, row] of trackedRows) {
+      const current = nextTotals.get(key) ?? {
+        baseId: row.baseId,
+        trackingMode: row.trackingMode,
+        hostUid: row.hostUid,
+        sourceUid: row.sourceUid,
+        sourceConfigId: row.sourceConfigId,
+        encounterActiveMs: 0,
+        trueActiveMs: 0,
+      };
+
+      current.baseId = row.baseId;
+      current.trackingMode = row.trackingMode;
+      current.hostUid = row.hostUid;
+      current.sourceUid = row.sourceUid;
+      current.sourceConfigId = row.sourceConfigId;
+
+      if (row.isActive) {
+        current.encounterActiveMs += deltaElapsedMs;
+        current.trueActiveMs += deltaActiveCombatMs;
+      }
+
+      nextTotals.set(key, current);
+    }
+    overlayRuntime.uptimeTotals = nextTotals;
+
+    overlayRuntime.uptimeFightStartTimestampMs = data.fightStartTimestampMs;
+    overlayRuntime.uptimeLastElapsedMs = data.elapsedMs;
+    overlayRuntime.uptimeLastActiveCombatTimeMs = data.activeCombatTimeMs;
+  });
+
+  const unlistenResetEncounter = onResetEncounter(() => {
+    overlayRuntime.liveData = null;
+    overlayRuntime.uptimeTotals = new Map();
+    overlayRuntime.activeUptimeRowKeys = new Set();
+    overlayRuntime.uptimeFightStartTimestampMs = 0;
+    overlayRuntime.uptimeLastElapsedMs = 0;
+    overlayRuntime.uptimeLastActiveCombatTimeMs = 0;
+  });
+
   window.addEventListener("pointermove", onGlobalPointerMove);
   window.addEventListener("pointerup", onGlobalPointerUp);
   const cleanupClock = initOverlayClock();
@@ -129,12 +310,20 @@ export function initOverlay() {
     overlayRuntime.isInitialized = false;
     overlayRuntime.dragState = null;
     overlayRuntime.resizeState = null;
+    overlayRuntime.activeUptimeRowKeys = new Set();
+    overlayRuntime.nameCache = new Map();
+    overlayRuntime.localBuffs = [];
+    overlayRuntime.bossBuffLists = new Map();
     unlistenEditToggle.then((fn) => fn());
     unlistenBuff.then((fn) => fn());
+    unlistenBossBuff.then((fn) => fn());
+    unlistenNames.then((fn) => fn());
     unlistenCounter.then((fn) => fn());
     unlistenCd.then((fn) => fn());
     unlistenRes.then((fn) => fn());
     unlistenPanelAttr.then((fn) => fn());
+    unlistenLiveData.then((fn) => fn());
+    unlistenResetEncounter.then((fn) => fn());
     window.removeEventListener("pointermove", onGlobalPointerMove);
     window.removeEventListener("pointerup", onGlobalPointerUp);
     cleanupClock();
@@ -163,17 +352,32 @@ function ensureActiveProfileDefaults() {
       profile.overlaySizes.skillDurationSizes === undefined ||
       !profile.overlayVisibility ||
       profile.overlayVisibility.showSkillDurationGroup === undefined ||
+      profile.overlayVisibility.showBuffUptimeGroup === undefined ||
       !profile.buffDisplayMode ||
       !profile.buffGroups ||
       !profile.customPanelGroups ||
       !profile.customPanelStyle ||
       !profile.textBuffPanelStyle ||
       !profile.textBuffMaxVisible ||
-      profile.monitoredSkillDurationIds === undefined)
+      profile.monitoredSkillDurationIds === undefined ||
+      profile.monitoredUptimeBuffIds === undefined ||
+      profile.buffUptimeColors === undefined ||
+      profile.buffUptimeAliases === undefined ||
+      profile.buffUptimeTrackingModes === undefined ||
+      profile.buffUptimeActiveIndicators === undefined ||
+      profile.buffUptimeTextStyle === undefined ||
+      profile.showTrueUptime === undefined)
   ) {
     updateActiveProfile((profile) => ({
       ...profile,
       monitoredSkillDurationIds: profile.monitoredSkillDurationIds ?? [],
+      monitoredUptimeBuffIds: profile.monitoredUptimeBuffIds ?? [],
+      buffUptimeColors: ensureBuffUptimeColors(profile.buffUptimeColors),
+      buffUptimeAliases: ensureBuffUptimeAliases(profile.buffUptimeAliases),
+      buffUptimeTrackingModes: ensureBuffUptimeTrackingModes(profile.buffUptimeTrackingModes),
+      buffUptimeActiveIndicators: ensureBuffUptimeActiveIndicators(profile.buffUptimeActiveIndicators),
+      buffUptimeTextStyle: ensureBuffUptimeTextStyle(profile.buffUptimeTextStyle),
+      showTrueUptime: profile.showTrueUptime ?? true,
       overlayPositions: ensureOverlayPositions(profile),
       overlaySizes: ensureOverlaySizes(profile),
       overlayVisibility: ensureOverlayVisibility(profile),

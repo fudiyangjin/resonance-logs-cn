@@ -28,7 +28,8 @@ export const DEFAULT_OVERLAY_POSITIONS: OverlayPositions = {
   textBuffPanel: { x: 360, y: 40 },
   specialBuffGroup: { x: 360, y: 220 },
   panelAttrGroup: { x: 700, y: 40 },
-  customPanelGroup: { x: 700, y: 280 },
+  buffUptimeGroup: { x: 700, y: 220 },
+  customPanelGroup: { x: 700, y: 320 },
   iconBuffPositions: {},
   standaloneIconPositions: {},
   skillDurationPositions: {},
@@ -40,5 +41,6 @@ export const DEFAULT_OVERLAY_VISIBILITY: OverlayVisibility = {
   showSkillDurationGroup: true,
   showResourceGroup: true,
   showPanelAttrGroup: true,
+  showBuffUptimeGroup: true,
   showCustomPanelGroup: true,
 };

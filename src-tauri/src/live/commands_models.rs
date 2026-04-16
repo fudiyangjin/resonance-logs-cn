@@ -256,6 +256,9 @@ pub struct BuffUpdateState {
     pub layer: i32,
     pub duration_ms: i32,
     pub create_time_ms: i64,
+    pub host_uid: i64,
+    pub source_uid: i64,
+    pub source_config_id: Option<i32>,
 }
 
 #[derive(serde::Serialize, Debug, Clone)]

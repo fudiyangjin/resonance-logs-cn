@@ -1,6 +1,12 @@
 import {
   SETTINGS,
   ensureBuffAliases,
+  ensureBuffUptimeActiveIndicators,
+  ensureBuffUptimeAliases,
+  ensureBuffUptimeColors,
+  ensureBuffUptimeTextStyle,
+  ensureBuffUptimeTrackingModes,
+  type BuffUptimeTextStyle,
   type CustomPanelStyle,
   type InlineBuffEntry,
   type TextBuffPanelStyle,
@@ -52,6 +58,9 @@ const _monitoredSkillDurationIds = $derived.by(
 const _monitoredBuffIds = $derived.by(
   () => _activeProfile?.monitoredBuffIds ?? [],
 );
+const _monitoredUptimeBuffIds = $derived.by(
+  () => _activeProfile?.monitoredUptimeBuffIds ?? [],
+);
 const _monitoredBuffCategories = $derived.by<BuffCategoryKey[]>(() =>
   normalizeBuffCategoryKeys(_activeProfile?.monitoredBuffCategories),
 );
@@ -74,6 +83,25 @@ const _buffDisplayMode = $derived.by(
 );
 const _textBuffMaxVisible = $derived.by(() =>
   Math.max(1, Math.min(20, _activeProfile?.textBuffMaxVisible ?? 10)),
+);
+const _showTrueUptime = $derived.by(() => _activeProfile?.showTrueUptime ?? true);
+const _showBuffUptimeActiveIndicator = $derived.by(
+  () => _activeProfile?.showBuffUptimeActiveIndicator ?? true,
+);
+const _buffUptimeColors = $derived.by(() =>
+  ensureBuffUptimeColors(_activeProfile?.buffUptimeColors),
+);
+const _buffUptimeAliases = $derived.by(() =>
+  ensureBuffUptimeAliases(_activeProfile?.buffUptimeAliases),
+);
+const _buffUptimeTrackingModes = $derived.by(() =>
+  ensureBuffUptimeTrackingModes(_activeProfile?.buffUptimeTrackingModes),
+);
+const _buffUptimeActiveIndicators = $derived.by(() =>
+  ensureBuffUptimeActiveIndicators(_activeProfile?.buffUptimeActiveIndicators),
+);
+const _buffUptimeTextStyle = $derived.by<BuffUptimeTextStyle>(() =>
+  ensureBuffUptimeTextStyle(_activeProfile?.buffUptimeTextStyle),
 );
 const _overlayVisibility = $derived.by(() =>
   _activeProfile
@@ -137,6 +165,10 @@ export function monitoredBuffIds() {
   return _monitoredBuffIds;
 }
 
+export function monitoredUptimeBuffIds() {
+  return _monitoredUptimeBuffIds;
+}
+
 export function monitoredBuffCategories() {
   return _monitoredBuffCategories;
 }
@@ -155,6 +187,34 @@ export function buffDisplayMode() {
 
 export function textBuffMaxVisible() {
   return _textBuffMaxVisible;
+}
+
+export function showTrueUptime() {
+  return _showTrueUptime;
+}
+
+export function showBuffUptimeActiveIndicator() {
+  return _showBuffUptimeActiveIndicator;
+}
+
+export function buffUptimeColors() {
+  return _buffUptimeColors;
+}
+
+export function buffUptimeAliases() {
+  return _buffUptimeAliases;
+}
+
+export function buffUptimeTrackingModes() {
+  return _buffUptimeTrackingModes;
+}
+
+export function buffUptimeActiveIndicators() {
+  return _buffUptimeActiveIndicators;
+}
+
+export function buffUptimeTextStyle() {
+  return _buffUptimeTextStyle;
 }
 
 export function overlayVisibility() {

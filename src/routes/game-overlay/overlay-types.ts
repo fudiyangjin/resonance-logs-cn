@@ -56,6 +56,18 @@ export type PanelAreaDisplayRow = {
   attr: PanelAttrConfig;
 };
 
+export type BuffUptimeDisplayRow = {
+  key: string;
+  label: string;
+  encounterPercentText: string;
+  truePercentText?: string | undefined;
+  sourceText?: string | undefined;
+  color?: string | undefined;
+  isActive?: boolean | undefined;
+  showActiveIndicator?: boolean | undefined;
+  isPlaceholder?: boolean | undefined;
+};
+
 export type DragTarget =
   | {
       kind: "group";
