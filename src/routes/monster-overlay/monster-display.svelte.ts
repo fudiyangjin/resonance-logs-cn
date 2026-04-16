@@ -19,7 +19,19 @@ function selectedMonsterBuffIds() {
 function buildPlaceholderRows(now: number): TextBuffDisplay[] {
   const aliases = ensureBuffAliases(SETTINGS.monsterMonitor.state.buffAliases);
   const selectedIds = selectedMonsterBuffIds();
-  const rows = selectedIds
+  const priorityIds = SETTINGS.monsterMonitor.state.buffPriorityIds ?? [];
+  
+  const priorityIndex = new Map<number, number>();
+  priorityIds.forEach((id, idx) => priorityIndex.set(id, idx));
+  const fallbackBase = priorityIds.length;
+  
+  const sortedIds = [...selectedIds].sort((left, right) => {
+    const leftPriority = priorityIndex.has(left) ? priorityIndex.get(left)! : fallbackBase + selectedIds.indexOf(left);
+    const rightPriority = priorityIndex.has(right) ? priorityIndex.get(right)! : fallbackBase + selectedIds.indexOf(right);
+    return leftPriority - rightPriority;
+  });
+
+  const rows = sortedIds
     .map((baseId) =>
       buildBuffTextRow(
         `monster_preview_${baseId}`,
@@ -135,7 +147,17 @@ export function updateMonsterDisplay() {
   const now = Date.now();
   const aliases = ensureBuffAliases(SETTINGS.monsterMonitor.state.buffAliases);
   const selectedIds = selectedMonsterBuffIds();
-  const priorityIndex = new Map(selectedIds.map((id, index) => [id, index]));
+  
+  const priorityIds = SETTINGS.monsterMonitor.state.buffPriorityIds ?? [];
+  const priorityIndex = new Map<number, number>();
+  priorityIds.forEach((id, idx) => priorityIndex.set(id, idx));
+  const fallbackBase = priorityIds.length;
+  selectedIds.forEach((id, idx) => {
+    if (!priorityIndex.has(id)) {
+      priorityIndex.set(id, fallbackBase + idx);
+    }
+  });
+
   const nextSections: MonsterBossBuffSection[] = [];
   const nextHateSections: MonsterHateSection[] = [];
 

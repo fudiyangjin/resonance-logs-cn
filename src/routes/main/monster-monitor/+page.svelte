@@ -20,6 +20,7 @@
   );
 
   let searchKeyword = $state("");
+  let prioritySearchKeyword = $state("");
   let searchTarget = $state<SearchTarget>("self");
   let activeTab = $state<MonsterMonitorTab>("buff");
 
@@ -32,6 +33,7 @@
   );
   const globalBuffIds = $derived(monsterMonitor.monitoredBuffIds);
   const selfAppliedBuffIds = $derived(monsterMonitor.selfAppliedBuffIds);
+  const buffPriorityIds = $derived(monsterMonitor.buffPriorityIds ?? []);
   const combinedBuffIds = $derived.by(() =>
     Array.from(new Set([...globalBuffIds, ...selfAppliedBuffIds])),
   );
@@ -40,6 +42,17 @@
       ? searchBuffsByName(searchKeyword, buffAliases)
       : ([] as BuffNameInfo[]),
   );
+  const prioritySearchResults = $derived.by(() => {
+    if (prioritySearchKeyword.trim().length === 0) return [];
+    
+    const matching = searchBuffsByName(prioritySearchKeyword, buffAliases);
+    const combinedSet = new Set(combinedBuffIds);
+    const prioritySet = new Set(buffPriorityIds);
+    
+    return matching.filter((item) => 
+      combinedSet.has(item.baseId) && !prioritySet.has(item.baseId)
+    );
+  });
 
   function updateMonsterMonitor(
     updater: (state: typeof SETTINGS.monsterMonitor.state) => Partial<typeof SETTINGS.monsterMonitor.state>,
@@ -60,24 +73,44 @@
         : state.selfAppliedBuffIds).includes(buffId);
       const nextTargetIds = existsInTarget ? targetIds : [...targetIds, buffId];
 
+      const monitoredBuffIds = searchTarget === "global" ? nextTargetIds : nextGlobal;
+      const selfAppliedBuffIds = searchTarget === "self" ? nextTargetIds : nextSelf;
+      
+      const stillMonitored = monitoredBuffIds.includes(buffId) || selfAppliedBuffIds.includes(buffId);
+      const buffPriorityIds = !stillMonitored && state.buffPriorityIds
+        ? state.buffPriorityIds.filter(id => id !== buffId)
+        : state.buffPriorityIds;
+
       return {
         ...state,
-        monitoredBuffIds: searchTarget === "global" ? nextTargetIds : nextGlobal,
-        selfAppliedBuffIds: searchTarget === "self" ? nextTargetIds : nextSelf,
+        monitoredBuffIds,
+        selfAppliedBuffIds,
+        buffPriorityIds,
       };
     });
   }
 
   function removeBuff(target: SearchTarget, buffId: number) {
-    updateMonsterMonitor((state) => ({
-      ...state,
-      monitoredBuffIds: target === "global"
+    updateMonsterMonitor((state) => {
+      const nextMonitored = target === "global"
         ? state.monitoredBuffIds.filter((id) => id !== buffId)
-        : state.monitoredBuffIds,
-      selfAppliedBuffIds: target === "self"
+        : state.monitoredBuffIds;
+      const nextSelfApplied = target === "self"
         ? state.selfAppliedBuffIds.filter((id) => id !== buffId)
-        : state.selfAppliedBuffIds,
-    }));
+        : state.selfAppliedBuffIds;
+        
+      const stillMonitored = nextMonitored.includes(buffId) || nextSelfApplied.includes(buffId);
+      const nextPriorityIds = !stillMonitored && state.buffPriorityIds 
+        ? state.buffPriorityIds.filter((id) => id !== buffId)
+        : state.buffPriorityIds;
+        
+      return {
+        ...state,
+        monitoredBuffIds: nextMonitored,
+        selfAppliedBuffIds: nextSelfApplied,
+        buffPriorityIds: nextPriorityIds,
+      };
+    });
   }
 
   function setAlias(buffId: number, alias: string) {
@@ -145,6 +178,37 @@
 
   function defaultBuffName(buffId: number) {
     return lookupDefaultBuffName(buffId) ?? `Buff ${buffId}`;
+  }
+
+  function toggleMonsterBuffPriority(buffId: number) {
+    updateMonsterMonitor((state) => {
+      const current = state.buffPriorityIds ?? [];
+      const exists = current.includes(buffId);
+      return {
+        ...state,
+        buffPriorityIds: exists 
+          ? current.filter((id) => id !== buffId) 
+          : [...current, buffId],
+      };
+    });
+  }
+
+  function moveMonsterBuffPriority(buffId: number, direction: "up" | "down") {
+    updateMonsterMonitor((state) => {
+      const current = state.buffPriorityIds ?? [];
+      const idx = current.indexOf(buffId);
+      if (idx === -1) return state;
+      
+      const next = [...current];
+      if (direction === "up" && idx > 0) {
+        next[idx] = next[idx - 1]!;
+        next[idx - 1] = buffId;
+      } else if (direction === "down" && idx < next.length - 1) {
+        next[idx] = next[idx + 1]!;
+        next[idx + 1] = buffId;
+      }
+      return { ...state, buffPriorityIds: next };
+    });
   }
 </script>
 
@@ -301,6 +365,44 @@
         {:else}
           <div class="text-xs text-muted-foreground">尚未选择 Buff</div>
         {/if}
+      </div>
+    </div>
+  </section>
+
+  <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-5">
+    <div class="space-y-2">
+      <div class="text-base font-semibold text-foreground">Buff 优先级</div>
+      <div class="text-xs text-muted-foreground">自定义怪物 Buff 的显示排序。排在前面的 Buff 会优先显示。</div>
+      
+      <input
+        class="w-full sm:w-72 mt-2 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+        placeholder="搜索并添加到优先级列表"
+        value={prioritySearchKeyword}
+        oninput={(event) => { prioritySearchKeyword = (event.currentTarget as HTMLInputElement).value; }}
+      />
+      {#if prioritySearchKeyword.trim().length > 0}
+        <BuffSearchResultGrid
+          items={prioritySearchResults}
+          {availableBuffMap}
+          onSelect={toggleMonsterBuffPriority}
+          emptyMessage="没有可添加到优先级的 Buff（需先在上方加入监控）"
+          minColumnWidth={180}
+        />
+      {/if}
+      <div class="space-y-1 mt-3">
+        {#each buffPriorityIds as buffId, idx (buffId)}
+          <div class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-2 py-1">
+            <span class="w-6 text-center text-xs text-muted-foreground">{idx + 1}</span>
+            <span class="flex-1 text-xs text-foreground truncate">
+              {buffName(buffId)}
+            </span>
+            <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40" onclick={() => toggleMonsterBuffPriority(buffId)}>移除</button>
+            <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveMonsterBuffPriority(buffId, "up")} disabled={idx === 0}>上移</button>
+            <button type="button" class="text-xs px-2 py-0.5 rounded border border-border/60 hover:bg-muted/40 disabled:opacity-50" onclick={() => moveMonsterBuffPriority(buffId, "down")} disabled={idx === buffPriorityIds.length - 1}>下移</button>
+          </div>
+        {:else}
+          <div class="text-xs text-muted-foreground py-2">尚未设置优先级。你可以通过上方搜索框将监控中的 Buff 加入。</div>
+        {/each}
       </div>
     </div>
   </section>
