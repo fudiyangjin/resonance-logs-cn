@@ -110,4 +110,7 @@
   relativeToTop={SETTINGS.live.general.state.relativeToTopHealSkill}
   shortenValues={SETTINGS.live.general.state.shortenDps}
   {formatRateValue}
+  compactMode={tableSettings.compactMode}
+  compactPrimaryKey="totalDmg"
+  compactSecondaryKey="dps"
 />

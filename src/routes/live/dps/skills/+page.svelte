@@ -110,4 +110,7 @@
   relativeToTop={SETTINGS.live.general.state.relativeToTopDPSSkill}
   shortenValues={SETTINGS.live.general.state.shortenDps}
   {formatRateValue}
+  compactMode={tableSettings.compactMode}
+  compactPrimaryKey="totalDmg"
+  compactSecondaryKey="dps"
 />

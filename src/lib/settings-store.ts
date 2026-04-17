@@ -844,6 +844,11 @@ export const DEFAULT_FONT_SIZES = {
 
 // Live table customization defaults
 export const DEFAULT_LIVE_TABLE_SETTINGS = {
+  // Compact mode - shows single-line rows with only total(rate) + pct, no header
+  compactMode: false,
+  // Which secondary value to show inside the parentheses for DPS compact view
+  compactDpsKey: "dps" as "dps" | "tdps",
+
   // Player row settings
   playerRowHeight: 28,
   playerFontSize: 13,

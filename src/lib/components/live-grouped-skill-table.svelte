@@ -65,6 +65,9 @@
     abbreviatedDecimalPlaces: number;
     abbreviationStyle: "western" | "cn";
     formatRateValue: (value: number) => string;
+    compactMode?: boolean;
+    compactPrimaryKey?: "totalDmg" | "effectiveTotal";
+    compactSecondaryKey?: "dps" | "effectiveDps";
   };
 
   let {
@@ -82,6 +85,9 @@
     abbreviatedDecimalPlaces,
     abbreviationStyle,
     formatRateValue,
+    compactMode = false,
+    compactPrimaryKey = "totalDmg",
+    compactSecondaryKey = "dps",
   }: Props = $props();
 
   const expandedGroups = new SvelteSet<number>();
@@ -131,6 +137,9 @@
     else expandedGroups.add(groupId);
   }
 
+  const effectiveSortKey = $derived(compactMode ? compactPrimaryKey : sortKey);
+  const effectiveSortDesc = $derived(compactMode ? true : sortDesc);
+
   const flatRows = $derived.by(() => {
     const rows: FlatSkillRow[] = [];
     const topLevel: TopLevelSkillItem[] = [
@@ -141,10 +150,10 @@
         (skill): TopLevelSkillItem => ({ kind: "skill", row: skill }),
       ),
     ].sort((a, b) => {
-      const key = sortKey as keyof SkillDisplayRow & keyof RecountGroup;
+      const key = effectiveSortKey as keyof SkillDisplayRow & keyof RecountGroup;
       const aVal = numericValue(a.row[key]);
       const bVal = numericValue(b.row[key]);
-      return sortDesc ? bVal - aVal : aVal - bVal;
+      return effectiveSortDesc ? bVal - aVal : aVal - bVal;
     });
 
     for (const item of topLevel) {
@@ -184,8 +193,20 @@
 
       if (!expandedGroups.has(group.recountId)) continue;
 
+      const sortedChildren = compactMode
+        ? [...group.skills].sort((a, b) => {
+            const aVal = numericValue(
+              (a as Record<string, unknown>)[effectiveSortKey],
+            );
+            const bVal = numericValue(
+              (b as Record<string, unknown>)[effectiveSortKey],
+            );
+            return bVal - aVal;
+          })
+        : sortRows(group.skills);
+
       rows.push(
-        ...sortRows(group.skills).map((skill) => ({
+        ...sortedChildren.map((skill) => ({
           ...skill,
           key: `skill-${group.recountId}-${skill.skillId}`,
           isGroup: false,
@@ -198,14 +219,25 @@
     return rows;
   });
 
+  const compactPrimaryMax = $derived(
+    flatRows.reduce((max, row) => {
+      const v = numericValue((row as Record<string, unknown>)[compactPrimaryKey]);
+      return v > max ? v : max;
+    }, 0),
+  );
   const maxSkillValue = $derived(
-    flatRows.reduce((max, row) => (row.totalDmg > max ? row.totalDmg : max), 0),
+    compactMode
+      ? compactPrimaryMax
+      : flatRows.reduce(
+          (max, row) => (row.totalDmg > max ? row.totalDmg : max),
+          0,
+        ),
   );
 </script>
 
 <div class="relative flex flex-col">
   <table class="w-full border-collapse">
-    {#if tableSettings.skillShowHeader}
+    {#if tableSettings.skillShowHeader && !compactMode}
       <thead class="z-1 sticky top-0">
         <tr
           class="bg-popover/60"
@@ -233,6 +265,112 @@
         </tr>
       </thead>
     {/if}
+    {#if compactMode}
+      <tbody>
+        {#each flatRows as skill (skill.key)}
+          {@const primaryVal = numericValue(
+            (skill as Record<string, unknown>)[compactPrimaryKey],
+          )}
+          {@const secondaryVal = numericValue(
+            (skill as Record<string, unknown>)[compactSecondaryKey],
+          )}
+          <tr
+            class="relative hover:bg-muted/60 transition-colors bg-background/40"
+            style="height: {tableSettings.skillRowHeight}px; font-size: {tableSettings.skillFontSize}px;"
+          >
+            <td
+              class="px-2 py-1 relative z-10"
+              style="color: {customThemeColors.tableTextColor};"
+            >
+              <div class="flex items-center h-full gap-2">
+                <button
+                  class="flex items-center gap-1 h-full text-left min-w-0 flex-1"
+                  onclick={() =>
+                    skill.isGroup && skill.groupId !== undefined
+                      ? toggleGroup(skill.groupId)
+                      : undefined}
+                  disabled={!skill.isGroup}
+                >
+                  <span style="padding-left: {skill.depth * 16}px;"></span>
+                  {#if skill.isGroup && skill.expandable}
+                    <svg
+                      class="size-3 shrink-0 text-muted-foreground/70 transition-transform duration-150 {skill.expanded
+                        ? 'rotate-90'
+                        : ''}"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2.5"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  {:else if skill.depth > 0}
+                    <span class="w-3 shrink-0 flex justify-center">
+                      <span
+                        class="size-1 rounded-full bg-muted-foreground/35"
+                      ></span>
+                    </span>
+                  {:else}
+                    <span class="w-3 shrink-0"></span>
+                  {/if}
+                  <span class="truncate">{skill.name}</span>
+                </button>
+                <span
+                  class="inline-flex items-center gap-1 tabular-nums shrink-0"
+                >
+                  <span class="inline-flex items-baseline">
+                    {#if shortenValues}
+                      <AbbreviatedNumber
+                        num={primaryVal}
+                        decimalPlaces={abbreviatedDecimalPlaces}
+                        {abbreviationStyle}
+                        suffixFontSize={tableSettings.skillAbbreviatedFontSize}
+                        suffixColor={customThemeColors.tableAbbreviatedColor}
+                      />
+                      <span class="opacity-70">(</span>
+                      <AbbreviatedNumber
+                        num={secondaryVal}
+                        decimalPlaces={abbreviatedDecimalPlaces}
+                        {abbreviationStyle}
+                        suffixFontSize={tableSettings.skillAbbreviatedFontSize}
+                        suffixColor={customThemeColors.tableAbbreviatedColor}
+                      />
+                      <span class="opacity-70">)</span>
+                    {:else}
+                      {primaryVal.toLocaleString()}<span class="opacity-70"
+                        >({formatRateValue(secondaryVal)})</span
+                      >
+                    {/if}
+                  </span>
+                  <span class="w-12 text-right">
+                    <PercentFormat
+                      val={skill.dmgPct}
+                      fractionDigits={0}
+                      suffixFontSize={tableSettings.skillAbbreviatedFontSize}
+                      suffixColor={customThemeColors.tableAbbreviatedColor}
+                    />
+                  </span>
+                </span>
+              </div>
+            </td>
+            <TableRowGlow
+              isSkill={true}
+              className={glowClassName}
+              {classSpecName}
+              percentage={relativeToTop
+                ? maxSkillValue > 0
+                  ? (primaryVal / maxSkillValue) * 100
+                  : 0
+                : skill.dmgPct}
+            />
+          </tr>
+        {/each}
+      </tbody>
+    {:else}
     <tbody>
       {#each flatRows as skill (skill.key)}
         <tr
@@ -343,5 +481,6 @@
         </tr>
       {/each}
     </tbody>
+    {/if}
   </table>
 </div>

@@ -576,6 +576,7 @@
     liveDisplay: false,
     headerSettings: false,
     tableSettings: false,
+    compactMode: false,
     tableRowSettings: false,
     skillTableSettings: false,
   });
@@ -873,7 +874,50 @@
           {/if}
         </div>
 
-        <!-- Custom Fonts Section -->
+        <!-- Compact Mode (applies to both player and skill tables) -->
+        <div
+          class="rounded-lg border bg-card/40 border-border/60 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+        >
+          <button
+            type="button"
+            class="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            onclick={() => toggleSection("compactMode")}
+          >
+            <h2 class="text-base font-semibold text-foreground">紧凑模式</h2>
+            <ChevronDown
+              class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.compactMode
+                ? 'rotate-180'
+                : ''}"
+            />
+          </button>
+          {#if expandedSections.compactMode}
+            <div class="px-4 pb-4 space-y-3">
+              <p class="text-xs text-muted-foreground">
+                紧凑模式同时作用于玩家表格和技能详情表格。隐藏表头，每行仅展示总量(秒伤)与占比，按总量降序排列。
+              </p>
+              <SettingsSwitch
+                bind:checked={
+                  SETTINGS.live.tableCustomization.state.compactMode
+                }
+                label="启用紧凑模式"
+                description="适用于伤害、治疗、承伤及各自的技能详情页"
+              />
+              {#if SETTINGS.live.tableCustomization.state.compactMode}
+                <SettingsSelect
+                  bind:selected={
+                    SETTINGS.live.tableCustomization.state.compactDpsKey
+                  }
+                  label="DPS 紧凑秒伤类型"
+                  description="仅在 DPS 面板生效：括号内展示秒伤还是真秒伤"
+                  values={[
+                    { label: "秒伤", value: "dps" },
+                    { label: "真秒伤", value: "tdps" },
+                  ]}
+                />
+              {/if}
+            </div>
+          {/if}
+        </div>
         <!-- Table Row Settings (moved from Live > Table Settings) -->
         <div
           class="rounded-lg border bg-card/40 border-border/60 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"

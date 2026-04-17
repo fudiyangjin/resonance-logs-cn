@@ -163,4 +163,7 @@
   relativeToTop={SETTINGS.live.general.state.relativeToTopTankedSkill}
   shortenValues={shortenTps}
   {formatRateValue}
+  compactMode={tableSettings.compactMode}
+  compactPrimaryKey="totalDmg"
+  compactSecondaryKey="dps"
 />

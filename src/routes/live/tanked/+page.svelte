@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getClassIcon, tooltip } from "$lib/utils.svelte";
+  import { goto } from "$app/navigation";
   import { settings, SETTINGS } from "$lib/settings-store";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
   import { computePlayerRows } from "$lib/live-derived";
@@ -95,12 +96,118 @@
       return aIdx - bIdx;
     });
   });
+
+  // Compact mode: sort by totalDmg (= total taken) desc
+  let compactMode = $derived(tableSettings.compactMode);
+  let compactData = $derived.by(() => {
+    if (!compactMode) return tankedData;
+    return [...rawTankedData].sort((a, b) => b.totalDmg - a.totalDmg);
+  });
 </script>
 
 <div
   class="relative flex flex-col gap-2 overflow-hidden rounded-lg ring-1 ring-border/60 bg-card/30 backdrop-blur-sm"
 >
   <table class="w-full border-collapse overflow-hidden">
+    {#if compactMode}
+      <tbody>
+        {#each compactData as player (player.uid)}
+          {@const isLocalPlayer = liveData?.localPlayerUid != null &&
+            player.uid === liveData.localPlayerUid}
+          {@const displayName = getDisplayName({
+            player: {
+              uid: player.uid,
+              name: player.name,
+              className: player.className,
+              classSpecName: player.classSpecName,
+            },
+            showYourNameSetting: SETTINGS_YOUR_NAME,
+            showOthersNameSetting: SETTINGS_OTHERS_NAME,
+            isLocalPlayer,
+          })}
+          {@const className = isLocalPlayer
+            ? normalizeNameDisplaySetting(SETTINGS_YOUR_NAME) !== "Hide Your Name"
+              ? player.className
+              : ""
+            : normalizeNameDisplaySetting(SETTINGS_OTHERS_NAME) !==
+                "Hide Others' Name"
+              ? player.className
+              : ""}
+          <tr
+            class="relative bg-background/40 hover:bg-muted/60 transition-colors cursor-pointer group"
+            style="height: {tableSettings.playerRowHeight}px; font-size: {tableSettings.playerFontSize}px;"
+            onclick={() => goto(`/live/tanked/skills?playerUid=${player.uid}`)}
+          >
+            <td class="px-3 py-1 relative z-10">
+              <div class="flex items-center h-full gap-2">
+                <img
+                  style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
+                  class="object-contain shrink-0"
+                  src={getClassIcon(className)}
+                  alt="Class icon"
+                  {@attach tooltip(
+                    () =>
+                      formatClassSpecLabel(player.className, player.classSpecName) ||
+                      "未知职业",
+                  )}
+                />
+                <span
+                  class="truncate font-medium flex-1 min-w-0"
+                  style="color: {customThemeColors.tableTextColor};"
+                  >{displayName || `#${player.uid}`}</span
+                >
+                <span
+                  class="inline-flex items-center gap-1 tabular-nums font-medium shrink-0"
+                  style="color: {customThemeColors.tableTextColor};"
+                >
+                  <span class="inline-flex items-baseline">
+                    {#if SETTINGS_SHORTEN_TPS}
+                      <AbbreviatedNumber
+                        num={player.totalDmg}
+                        decimalPlaces={abbreviatedDecimalPlaces}
+                        {abbreviationStyle}
+                        suffixFontSize={tableSettings.abbreviatedFontSize}
+                        suffixColor={customThemeColors.tableAbbreviatedColor}
+                      />
+                      <span class="opacity-70">(</span>
+                      <AbbreviatedNumber
+                        num={player.dps}
+                        decimalPlaces={abbreviatedDecimalPlaces}
+                        {abbreviationStyle}
+                        suffixFontSize={tableSettings.abbreviatedFontSize}
+                        suffixColor={customThemeColors.tableAbbreviatedColor}
+                      />
+                      <span class="opacity-70">)</span>
+                    {:else}
+                      {player.totalDmg.toLocaleString()}<span class="opacity-70"
+                        >({player.dps.toFixed(1)})</span
+                      >
+                    {/if}
+                  </span>
+                  <span class="w-12 text-right">
+                    <PercentFormat
+                      val={player.dmgPct}
+                      fractionDigits={0}
+                      suffixFontSize={tableSettings.abbreviatedFontSize}
+                      suffixColor={customThemeColors.tableAbbreviatedColor}
+                    />
+                  </span>
+                </span>
+              </div>
+            </td>
+            <TableRowGlow
+              {className}
+              classSpecName={player.classSpecName}
+              percentage={SETTINGS_RELATIVE_TO_TOP_TANKED_PLAYER
+                ? maxTaken > 0
+                  ? (player.totalDmg / maxTaken) * 100
+                  : 0
+                : player.dmgPct}
+            />
+          </tr>
+        {/each}
+      </tbody>
+    {:else}
     {#if tableSettings.showTableHeader}
       <thead>
         <tr
@@ -270,5 +377,6 @@
         </tr>
       {/each}
     </tbody>
+    {/if}
   </table>
 </div>
