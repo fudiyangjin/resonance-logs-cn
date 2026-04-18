@@ -5,7 +5,7 @@
   "defaultBuffGroupName": "New Group",
   "defaultCustomPanelGroupName": "Monitor Area 1",
   "defaultProfileName": "Default Profile",
-  "editOverlayLayout": "Edit Overlay Layout",
+  "editOverlayLayout": "Edit Overlay",
   "enableMonitoring": "Enable Skill Monitor",
   "enableMonitoringDescription": "Push monitoring data to the overlay window in real time when enabled",
   "fontSize.base": "Standard",

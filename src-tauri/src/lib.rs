@@ -100,15 +100,20 @@ fn toggle_game_overlay_edit_mode(app: tauri::AppHandle) -> Result<(), String> {
         return Err("Game overlay window not found".into());
     };
 
+    let was_visible_before_edit = overlay_window.is_visible().map_err(|e| e.to_string())?;
+
     let _ = overlay_window.set_ignore_cursor_events(false);
 
-    if !overlay_window.is_visible().map_err(|e| e.to_string())? {
+    if !was_visible_before_edit {
         overlay_window.show().map_err(|e| e.to_string())?;
         overlay_window.unminimize().map_err(|e| e.to_string())?;
     }
 
-    app.emit("overlay-edit-toggle", json!({}))
-        .map_err(|e| e.to_string())?;
+    app.emit(
+        "overlay-edit-toggle",
+        json!({ "visibleBeforeEdit": was_visible_before_edit }),
+    )
+    .map_err(|e| e.to_string())?;
     let _ = overlay_window.set_focus();
 
     Ok(())

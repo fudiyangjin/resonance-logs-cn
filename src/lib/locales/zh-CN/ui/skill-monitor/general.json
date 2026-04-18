@@ -5,7 +5,7 @@
   "defaultBuffGroupName": "新分组",
   "defaultCustomPanelGroupName": "监控区 1",
   "defaultProfileName": "默认方案",
-  "editOverlayLayout": "编辑遮罩布局",
+  "editOverlayLayout": "编辑遮罩",
   "enableMonitoring": "启用实时监控",
   "enableMonitoringDescription": "开启后将实时推送监控数据到悬浮窗口",
   "fontSize.base": "标准",

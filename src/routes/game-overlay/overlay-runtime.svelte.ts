@@ -44,6 +44,7 @@ export const overlayRuntime = $state({
   uptimeLastElapsedMs: 0,
   uptimeLastActiveCombatTimeMs: 0,
   isEditing: false,
+  restoreVisibilityAfterEditing: false,
   dragState: null as DragState | null,
   resizeState: null as ResizeState | null,
 });

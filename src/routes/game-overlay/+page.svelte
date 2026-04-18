@@ -101,7 +101,6 @@
   }
 
   :global(.overlay-group.editable:not(.standalone-layout)) {
-    outline: 2px dashed rgba(255, 255, 255, 0.85);
     outline-offset: 3px;
     cursor: move;
   }
@@ -136,6 +135,82 @@
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     cursor: nwse-resize;
     z-index: 7;
+  }
+
+  :global(.skill-group.editable),
+  :global(.resource-group.editable),
+  :global(.panel-attr-group.editable),
+  :global(.buff-uptime-group.editable),
+  :global(.text-buff-panel.editable),
+  :global(.buff-group-container.editable),
+  :global(.icon-buff-cell.editable:not(.standalone-layout)),
+  :global(.skill-duration-cell.editable),
+  :global(.custom-panel-group.editable),
+  :global(.icon-buff-cell.standalone-layout.editable .buff-icon-wrap) {
+    outline: 2px dashed rgba(239, 68, 68, 0.95) !important;
+    border-radius: 10px;
+    background: rgba(60, 20, 20, 0.32) !important;
+  }
+
+  :global(.monster-buff-panel.editable),
+  :global(.monster-hate-panel.editable) {
+    outline: 2px dashed rgba(59, 130, 246, 0.95) !important;
+    border: none !important;
+    border-radius: 10px;
+    background: rgba(18, 37, 65, 0.34) !important;
+  }
+
+  :global(.overlay-root.editing .custom-trigger-group),
+  :global(.overlay-root.editing .custom-trigger-notification-group),
+  :global(.overlay-root.editing .empty-free-state),
+  :global(.overlay-root.editing .custom-trigger-free-item.editable) {
+    outline: 2px dashed rgba(34, 197, 94, 0.95) !important;
+    outline-offset: 3px;
+    border-radius: 10px;
+    background: rgba(16, 56, 30, 0.3) !important;
+  }
+
+  :global(.skill-group.editable .group-tag),
+  :global(.resource-group.editable .group-tag),
+  :global(.panel-attr-group.editable .group-tag),
+  :global(.buff-uptime-group.editable .group-tag),
+  :global(.text-buff-panel.editable .group-tag),
+  :global(.buff-group-container.editable .group-tag),
+  :global(.custom-panel-group.editable .group-tag),
+  :global(.skill-duration-cell.editable .group-tag) {
+    background: rgba(185, 28, 28, 0.9) !important;
+    border-color: rgba(254, 202, 202, 0.95) !important;
+  }
+
+  :global(.monster-buff-panel.editable .group-tag),
+  :global(.monster-hate-panel.editable .group-tag) {
+    background: rgba(30, 64, 175, 0.92) !important;
+    border-color: rgba(191, 219, 254, 0.95) !important;
+  }
+
+  :global(.overlay-root.editing .custom-trigger-group .group-tag),
+  :global(.overlay-root.editing .custom-trigger-notification-group .group-tag),
+  :global(.overlay-root.editing .empty-free-state .group-tag),
+  :global(.overlay-root.editing .custom-trigger-free-item.editable .group-tag) {
+    background: rgba(21, 128, 61, 0.92) !important;
+    border-color: rgba(187, 247, 208, 0.95) !important;
+  }
+
+  :global(.skill-group.editable .resize-handle),
+  :global(.resource-group.editable .resize-handle),
+  :global(.panel-attr-group.editable .resize-handle),
+  :global(.buff-uptime-group.editable .resize-handle),
+  :global(.text-buff-panel.editable .resize-handle),
+  :global(.buff-group-container.editable .resize-handle),
+  :global(.custom-panel-group.editable .resize-handle),
+  :global(.skill-duration-cell.editable .resize-handle),
+  :global(.icon-buff-cell.editable .resize-handle) {
+    background: rgba(239, 68, 68, 0.95) !important;
+  }
+
+  :global(.monster-buff-panel.editable .resize-handle),
+  :global(.monster-hate-panel.editable .resize-handle) {
+    background: rgba(59, 130, 246, 0.95) !important;
   }
 
   :global(.resize-handle.icon) {

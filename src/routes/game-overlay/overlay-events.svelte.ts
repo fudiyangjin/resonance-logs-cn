@@ -158,8 +158,12 @@ export function initOverlay() {
   void setEditMode(false);
   loadAvailableBuffs();
 
-  const unlistenEditToggle = listen("overlay-edit-toggle", () => {
-    void setEditMode(!overlayRuntime.isEditing);
+  const unlistenEditToggle = listen<{ visibleBeforeEdit?: boolean }>("overlay-edit-toggle", (event) => {
+    const nextEditing = !overlayRuntime.isEditing;
+    if (nextEditing) {
+      overlayRuntime.restoreVisibilityAfterEditing = !(event.payload?.visibleBeforeEdit ?? true);
+    }
+    void setEditMode(nextEditing);
   });
   const unlistenBuff = onBuffUpdate((event) => {
     overlayRuntime.localBuffs = event.payload.buffs;

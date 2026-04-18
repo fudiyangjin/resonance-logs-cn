@@ -126,6 +126,15 @@
       <button
         type="button"
         class="flex w-full items-center justify-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-popover/60"
+        onclick={toggleDpsWindow}
+      >
+        <PanelBottomOpenIcon class="w-4 h-4 shrink-0" />
+        <span>{tDps("toggleWindow", "Toggle DPS Window")}</span>
+      </button>
+
+      <button
+        type="button"
+        class="flex w-full items-center justify-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-popover/60"
         onclick={toggleOverlayWindow}
       >
         <MonitorUpIcon class="w-4 h-4 shrink-0" />
@@ -135,10 +144,10 @@
       <button
         type="button"
         class="flex w-full items-center justify-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-popover/60"
-        onclick={toggleDpsWindow}
+        onclick={toggleOverlayEditMode}
       >
-        <PanelBottomOpenIcon class="w-4 h-4 shrink-0" />
-        <span>{tDps("toggleWindow", "Toggle DPS Window")}</span>
+        <PenSquareIcon class="w-4 h-4 shrink-0" />
+        <span>{tOverlay("editOverlayLayout", "Edit Overlay")}</span>
       </button>
 
       <button
@@ -170,15 +179,6 @@
   </nav>
 
   <div class="p-3 border-t border-border/50 space-y-3">
-    <button
-      type="button"
-      class="flex w-full items-center justify-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-popover/60"
-      onclick={toggleOverlayEditMode}
-    >
-      <PenSquareIcon class="w-4 h-4 shrink-0" />
-      <span>{tOverlay("editOverlayLayout", "Edit Overlay Layout")}</span>
-    </button>
-
     <a
       href="/main/settings"
       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {isActiveRoute('/main/settings')

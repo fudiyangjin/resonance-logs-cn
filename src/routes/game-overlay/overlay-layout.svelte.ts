@@ -541,8 +541,18 @@ export function onGlobalPointerUp() {
 
 export async function setEditMode(editing: boolean) {
   overlayRuntime.isEditing = editing;
-  if (overlayRuntime.currentWindow) {
-    await overlayRuntime.currentWindow.setIgnoreCursorEvents(!editing);
+  if (!overlayRuntime.currentWindow) {
+    if (!editing) {
+      overlayRuntime.restoreVisibilityAfterEditing = false;
+    }
+    return;
+  }
+
+  await overlayRuntime.currentWindow.setIgnoreCursorEvents(!editing);
+
+  if (!editing && overlayRuntime.restoreVisibilityAfterEditing) {
+    overlayRuntime.restoreVisibilityAfterEditing = false;
+    await overlayRuntime.currentWindow.hide();
   }
 }
 
