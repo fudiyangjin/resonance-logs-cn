@@ -360,7 +360,6 @@ export type BuffUptimeTextStyle = {
 };
 
 export type BuffUptimeTrackingMode = "self" | "global";
-
 export type BuffUptimeMinStacksEnabledMap = Record<string, boolean>;
 export type BuffUptimeMinStacksMap = Record<string, number>;
 
@@ -617,8 +616,6 @@ export function createDefaultSkillMonitorProfile(
     buffUptimeAliases: {},
     buffUptimeTrackingModes: {},
     buffUptimeActiveIndicators: {},
-    buffUptimeMinStacksEnabled: {},
-    buffUptimeMinStacks: {},
     buffUptimeTextStyle: createDefaultBuffUptimeTextStyle(),
     textBuffMaxVisible: 10,
     showTrueUptime: true,
@@ -696,7 +693,6 @@ export function ensureBuffUptimeMinStacks(
   }
   return next;
 }
-
 export function ensureBuffUptimeTextStyle(
   style: BuffUptimeTextStyle | null | undefined,
 ): BuffUptimeTextStyle {
@@ -1084,6 +1080,7 @@ const DEFAULT_SETTINGS = {
     hardReset: "",
     toggleBossHp: "",
     toggleOverlayEdit: "",
+    toggleEventLogger: "",
   },
   moduleSync: {
     enabled: false,
@@ -1095,9 +1092,41 @@ const DEFAULT_SETTINGS = {
   },
   skillMonitor: {
     enabled: false,
+    overlayStartWithApp: false,
     activeProfileIndex: 0,
     buffAliases: {} as BuffAliasMap,
     profiles: [createDefaultSkillMonitorProfile()] as SkillMonitorProfile[],
+  },
+  customTriggers: {
+    enabled: true,
+    loggerAlwaysOnTop: false,
+    loggerStartWithMeter: false,
+    loggerReduceClutter: true,
+    loggerDisplayMode: "name_uid" as "name" | "name_uid" | "uid",
+    loggerBufferSize: 1000,
+    loggerVisibleColumns: {
+      time: true,
+      category: true,
+      action: true,
+      name: true,
+      known: true,
+      uid: true,
+      source: true,
+      target: true,
+      stacks: true,
+      duration: true,
+      summary: true,
+    } as Record<string, boolean>,
+    selectedHotkeyTriggerId: "",
+    selectedHotkeyGroupId: "",
+    groupUiStates: {} as Record<string, { collapsed?: boolean; settingsCollapsed?: boolean; triggersCollapsed?: boolean }>,
+    hotkeys: {
+      fireSelectedTrigger: "",
+      stopSelectedTrigger: "",
+      resetSelectedTrigger: "",
+      clearSelectedGroup: "",
+      resetAllRuntimeState: "",
+    },
   },
   monsterMonitor: createDefaultMonsterMonitorConfig(),
   trainingDummy: {
@@ -1188,6 +1217,11 @@ export const SETTINGS = {
   skillMonitor: new RuneStore(
     "skillMonitor",
     DEFAULT_SETTINGS.skillMonitor,
+    RUNE_STORE_OPTIONS,
+  ),
+  customTriggers: new RuneStore(
+    "customTriggers",
+    DEFAULT_SETTINGS.customTriggers,
     RUNE_STORE_OPTIONS,
   ),
   monsterMonitor: new RuneStore(
@@ -1378,6 +1412,7 @@ export const settings = {
     shortcuts: SETTINGS.shortcuts.state,
     moduleSync: SETTINGS.moduleSync.state,
     skillMonitor: SETTINGS.skillMonitor.state,
+    customTriggers: SETTINGS.customTriggers.state,
     monsterMonitor: SETTINGS.monsterMonitor.state,
     trainingDummy: SETTINGS.trainingDummy.state,
     live: {

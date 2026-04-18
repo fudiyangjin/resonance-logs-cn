@@ -5,7 +5,15 @@
    */
   import { page } from "$app/state";
   import { getVersion } from "@tauri-apps/api/app";
+  import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
   import { uiT, type LocaleCode } from "$lib/i18n";
+  import { commands } from "$lib/bindings";
+  import { toggleEventLoggerWindow } from "$lib/event-logger-window";
+  import MonitorUpIcon from "virtual:icons/lucide/monitor-up";
+  import PanelBottomOpenIcon from "virtual:icons/lucide/panel-bottom-open";
+  import ClipboardListIcon from "virtual:icons/lucide/clipboard-list";
+  import PenSquareIcon from "virtual:icons/lucide/pen-square";
+  import SettingsIcon from "virtual:icons/lucide/settings";
   import { SETTINGS } from "$lib/settings-store";
   import { TOOL_ROUTES } from "./routes.svelte";
 
@@ -23,6 +31,9 @@
   ] as const;
 
   const tShell = uiT("shell", () => SETTINGS.live.general.state.language);
+  const tDps = uiT("dps/general", () => SETTINGS.live.general.state.language);
+  const tCustom = uiT("custom-triggers/general", () => SETTINGS.live.general.state.language);
+  const tOverlay = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   function getToolRouteLabel(href: string, fallback: string): string {
     const keyMap: Record<string, string> = {
@@ -30,7 +41,9 @@
       "/main/module-calc": "tool.moduleOptimizer",
       "/main/skill-monitor": "tool.skillMonitor",
       "/main/monster-monitor": "tool.monsterTracker",
+      "/main/custom-triggers": "tool.customTriggers",
       "/main/localization": "tool.localization",
+      "/main/settings": "tool.settings",
     };
 
     const key = keyMap[href];
@@ -46,7 +59,48 @@
     return languageOptions.find((option) => option.value === locale)?.label ?? "CN";
   }
 
-  // Check if current path matches or starts with the tool path
+  async function toggleOverlayWindow() {
+    try {
+      await commands.toggleGameOverlayWindow();
+    } catch (error) {
+      console.error("Failed to toggle overlay window from sidebar", error);
+    }
+  }
+
+  async function toggleDpsWindow() {
+    try {
+      const liveWindow = await WebviewWindow.getByLabel("live");
+      if (liveWindow !== null) {
+        const isVisible = await liveWindow.isVisible();
+        if (isVisible) {
+          await liveWindow.hide();
+        } else {
+          await liveWindow.show();
+          await liveWindow.unminimize();
+          await liveWindow.setFocus();
+        }
+      }
+    } catch (error) {
+      console.error("Failed to toggle DPS window from sidebar", error);
+    }
+  }
+
+  async function toggleLoggerWindow() {
+    try {
+      await toggleEventLoggerWindow();
+    } catch (error) {
+      console.error("Failed to toggle event logger from sidebar", error);
+    }
+  }
+
+  async function toggleOverlayEditMode() {
+    try {
+      await commands.toggleGameOverlayEditMode();
+    } catch (error) {
+      console.error("Failed to toggle overlay edit mode from sidebar", error);
+    }
+  }
+
   function isActiveRoute(toolPath: string): boolean {
     const pathname = page.url.pathname;
     return pathname === toolPath || pathname.startsWith(toolPath + "/");
@@ -60,15 +114,44 @@
 </style>
 
 <aside class="flex flex-col w-56 shrink-0 bg-card/50 border-r border-border/50 h-full">
-  <!-- Header with logo -->
-  <div class="px-4 py-4 border-b border-border/50">
-    <h1 class="text-lg font-bold text-foreground tracking-tight">Resonance Logs</h1>
-    <p class="text-xs text-muted-foreground mt-0.5">
-      {tShell("sidebar.toolbox", "工具箱")}
-    </p>
+  <div class="px-4 py-4 border-b border-border/50 space-y-3">
+    <div>
+      <h1 class="text-lg font-bold text-foreground tracking-tight">Resonance Logs</h1>
+      <p class="text-xs text-muted-foreground mt-0.5">
+        {tShell("sidebar.toolbox", "工具箱")}
+      </p>
+    </div>
+
+    <div class="space-y-2">
+      <button
+        type="button"
+        class="flex w-full items-center justify-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-popover/60"
+        onclick={toggleOverlayWindow}
+      >
+        <MonitorUpIcon class="w-4 h-4 shrink-0" />
+        <span>{tShell("sidebar.toggleOverlay", "Toggle Overlay")}</span>
+      </button>
+
+      <button
+        type="button"
+        class="flex w-full items-center justify-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-popover/60"
+        onclick={toggleDpsWindow}
+      >
+        <PanelBottomOpenIcon class="w-4 h-4 shrink-0" />
+        <span>{tDps("toggleWindow", "Toggle DPS Window")}</span>
+      </button>
+
+      <button
+        type="button"
+        class="flex w-full items-center justify-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-popover/60"
+        onclick={toggleLoggerWindow}
+      >
+        <ClipboardListIcon class="w-4 h-4 shrink-0" />
+        <span>{tCustom("toggleEventLogger", "Toggle Event Logger")}</span>
+      </button>
+    </div>
   </div>
 
-  <!-- Tool list -->
   <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
     <p class="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
       {tShell("sidebar.tools", "工具")}
@@ -86,7 +169,26 @@
     {/each}
   </nav>
 
-  <div class="p-3 border-t border-border/50">
+  <div class="p-3 border-t border-border/50 space-y-3">
+    <button
+      type="button"
+      class="flex w-full items-center justify-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-popover/60"
+      onclick={toggleOverlayEditMode}
+    >
+      <PenSquareIcon class="w-4 h-4 shrink-0" />
+      <span>{tOverlay("editOverlayLayout", "Edit Overlay Layout")}</span>
+    </button>
+
+    <a
+      href="/main/settings"
+      class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {isActiveRoute('/main/settings')
+        ? 'bg-muted text-foreground shadow-sm'
+        : 'text-muted-foreground hover:text-foreground hover:bg-popover/50'}"
+    >
+      <SettingsIcon class="w-5 h-5 shrink-0" />
+      <span>{getToolRouteLabel('/main/settings', 'Settings')}</span>
+    </a>
+
     <div class="flex items-center justify-center gap-2 text-xs text-muted-foreground">
       <span>v{#await getVersion()}...{:then version}{version}{/await}</span>
 

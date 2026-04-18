@@ -63,8 +63,6 @@ import {
   uptimeTotals,
 } from "./overlay-runtime.svelte.js";
 import { overlayNow } from "./overlay-clock.svelte.js";
-import { uiT } from "$lib/i18n";
-import { SETTINGS } from "$lib/settings-store";
 
 const _normalizedBuffGroups = $derived.by(() => {
   const profile = activeProfile();
@@ -104,15 +102,6 @@ const _counterRuleMap = $derived.by(() => {
 const _buffSnapshot = $derived.by(() => {
   const now = overlayNow();
   const explicitSelectedBuffIds = monitoredBuffIds();
-  const persistentBuffIds = new Set<number>(explicitSelectedBuffIds);
-  if (buffDisplayMode() === "grouped") {
-    for (const group of _normalizedBuffGroups) {
-      if (group.monitorAll) continue;
-      for (const buffId of group.buffIds) {
-        persistentBuffIds.add(buffId);
-      }
-    }
-  }
   const priorityIds = buffPriorityIds();
   const buffDefinitionsMap = buffDefinitions();
   const panelGroups = customPanelGroups();
@@ -148,10 +137,8 @@ const _buffSnapshot = $derived.by(() => {
       continue;
     }
 
-    const allowUntimedSingleStack = persistentBuffIds.has(baseId);
-
-    // Filter passive/infinite single-stack buffs unless they were explicitly selected.
-    if (buff.durationMs <= 0 && buff.layer <= 1 && !allowUntimedSingleStack) continue;
+    // Filter passive/infinite single-stack buffs from both icon and text displays.
+    if (buff.durationMs <= 0 && buff.layer <= 1) continue;
 
     const definition = buffDefinitionsMap.get(baseId);
     const name = resolveBuffOverlayDisplayName(baseId, currentBuffAliases);
@@ -178,14 +165,7 @@ const _buffSnapshot = $derived.by(() => {
         ...(specialImages.length > 0 ? { specialImages } : {}),
       });
     } else {
-      const row = buildBuffTextRow(
-        `buff_${baseId}`,
-        name,
-        buff,
-        now,
-        false,
-        { allowUntimedSingleStack },
-      );
+      const row = buildBuffTextRow(`buff_${baseId}`, name, buff, now);
       if (row) nextTextBuffs.push(row);
     }
   }
@@ -272,8 +252,6 @@ const _buffSnapshot = $derived.by(() => {
 });
 
 
-const tUptime = uiT("skill-monitor/buff-monitor", () => SETTINGS.live.general.state.language);
-
 const _buffUptimeRows = $derived.by<BuffUptimeDisplayRow[]>(() => {
   const trackedIds = monitoredUptimeBuffIds();
   const currentAliases = buffAliases();
@@ -292,12 +270,12 @@ const _buffUptimeRows = $derived.by<BuffUptimeDisplayRow[]>(() => {
 
   function resolveSourceLabel(sourceUid: number, sourceConfigId: number | null): string | undefined {
     if (sourceUid > 0) {
-      return names.get(sourceUid) || tUptime("uptime.sourceUnknown", "Unknown");
+      return names.get(sourceUid) || "Unknown";
     }
     if (sourceConfigId !== null) {
-      return tUptime("uptime.sourceDungeon", "Dungeon");
+      return "Dungeon";
     }
-    return tUptime("uptime.sourceUnknown", "Unknown");
+    return "Unknown";
   }
 
   for (const baseId of trackedIds) {
@@ -335,7 +313,7 @@ const _buffUptimeRows = $derived.by<BuffUptimeDisplayRow[]>(() => {
         label,
         encounterPercentText: encounterMs > 0 ? `${Math.round(encounterPercent)}%` : `0%`,
         truePercentText: showTrueUptime() ? (truePercent === null ? `--` : `${Math.round(truePercent)}%`) : undefined,
-        sourceText: sourceName ? `${tUptime("uptime.sourcePrefix", "From")}: ${sourceName}` : undefined,
+        sourceText: sourceName ? `fr: ${sourceName}` : undefined,
         color,
         isActive: activeKeys.has(key),
         showActiveIndicator: showIndicator,
@@ -346,7 +324,7 @@ const _buffUptimeRows = $derived.by<BuffUptimeDisplayRow[]>(() => {
   if (rows.length === 0 && overlayRuntime.isEditing) {
     rows.push({
       key: "uptime_placeholder",
-      label: tUptime("uptime.previewName1", "Lifewave"),
+      label: "Lifewave",
       encounterPercentText: "60%",
       truePercentText: showTrueUptime() ? "80%" : undefined,
       sourceText: undefined,

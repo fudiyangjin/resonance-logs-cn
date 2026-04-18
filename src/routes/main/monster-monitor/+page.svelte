@@ -1,5 +1,4 @@
 <script lang="ts">
-  import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import BuffSearchResultGrid from "$lib/components/BuffSearchResultGrid.svelte";
   import {
     getAvailableBuffDefinitions,
@@ -12,6 +11,7 @@
     type BuffNameInfo,
   } from "$lib/config/buff-name-table";
   import { SETTINGS, ensureBuffAliases } from "$lib/settings-store";
+  import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import { resolveMonsterMonitorTranslation } from "$lib/i18n";
   import { toast } from "svelte-sonner";
 
@@ -161,17 +161,6 @@
 </script>
 
 <div class="space-y-6">
-  <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-4">
-    <div class="flex justify-start">
-      <div class="min-w-[220px]">
-        <SettingsSwitch
-          label={t("enable", "Enable Monster Monitor")}
-          bind:checked={SETTINGS.monsterMonitor.state.enabled}
-        />
-      </div>
-    </div>
-  </section>
-
   <section class="rounded-xl border border-border/60 bg-card/60 p-2">
     <div class="flex flex-wrap gap-2">
       <button
@@ -183,7 +172,7 @@
           activeTab = "buff";
         }}
       >
-        {t("tab.buff", "Buff Monitor")}
+        {t("tab.buff", "On-Hit Monitor")}
       </button>
       <button
         type="button"
@@ -215,7 +204,7 @@
             searchTarget = "self";
           }}
         >
-          {t("searchTarget.self", "Search to Add to Self Only")}
+          {t("searchTarget.self", "Search to Add to Self-Only On-Hit Monitoring")}
         </button>
         <button
           type="button"
@@ -226,7 +215,7 @@
             searchTarget = "global";
           }}
         >
-          {t("searchTarget.global", "Search to Add to Global Monitoring")}
+          {t("searchTarget.global", "Search to Add to Global On-Hit Monitoring")}
         </button>
       </div>
 
@@ -235,8 +224,8 @@
           type="text"
           bind:value={searchKeyword}
           placeholder={searchTarget === "global"
-            ? t("placeholder.global", "Search for boss buffs to add to global monitoring")
-            : t("placeholder.self", "Search for boss buffs to add to self-only monitoring")}
+            ? t("placeholder.global", "Search for on-boss hit effects to add to global monitoring")
+            : t("placeholder.self", "Search for on-boss hit effects to add to self-only monitoring")}
           class="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-sm outline-none focus:border-primary"
         />
 

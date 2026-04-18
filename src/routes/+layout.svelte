@@ -4,6 +4,9 @@
    * It imports the global stylesheet and disables the context menu.
    */
   import "../app.css";
+  import { onMount } from "svelte";
+  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+  import { hideEventLoggerWindow, showEventLoggerWindow } from "$lib/event-logger-window";
   import { SETTINGS } from "$lib/settings-store";
   // Only allow warnings and errors to be printed to console in production builds
   if (typeof window !== "undefined" && import.meta.env.PROD) {
@@ -54,6 +57,20 @@
       }
     }
   }
+
+
+  onMount(() => {
+    const currentWindow = getCurrentWebviewWindow();
+    if (currentWindow.label !== "main") return;
+
+    void (async () => {
+      if (SETTINGS.customTriggers.state.loggerStartWithMeter) {
+        await showEventLoggerWindow();
+      } else {
+        await hideEventLoggerWindow();
+      }
+    })();
+  });
 
   // Remove custom theme inline styles
   function clearCustomThemeColors() {

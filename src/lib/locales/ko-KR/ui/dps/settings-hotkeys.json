@@ -12,5 +12,7 @@
   "shortcuts.togglePauseEncounter": "전투 일시정지 전환",
   "shortcuts.toggleBossHp": "보스 HP 표시 전환",
   "shortcuts.toggleOverlayEdit": "오버레이 편집 모드 전환",
-  "shortcuts.toggleOverlayWindow": "오버레이 창 전환"
+  "shortcuts.toggleOverlayWindow": "오버레이 창 전환",
+  "shortcuts.toggleEventLogger": "이벤트 로거 전환",
+  "conflictAssigned": "해당 단축키는 이미 다음에 할당되어 있습니다"
 }

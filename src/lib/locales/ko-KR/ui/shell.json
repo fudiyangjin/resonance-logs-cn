@@ -8,5 +8,6 @@
   "tool.localization": "현지화 도구",
   "tool.moduleOptimizer": "모듈 계산기",
   "tool.monsterTracker": "몬스터 모니터",
-  "tool.skillMonitor": "스킬 모니터"
+  "tool.skillMonitor": "스킬 모니터",
+  "tool.customTriggers": "커스텀 트리거"
 }

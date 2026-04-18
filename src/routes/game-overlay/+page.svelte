@@ -3,9 +3,12 @@
   import CustomPanelGroup from "./CustomPanelGroup.svelte";
   import EditBanner from "./EditBanner.svelte";
   import GroupedBuffDisplay from "./GroupedBuffDisplay.svelte";
+  import MonsterBuffPanel from "../monster-overlay/MonsterBuffPanel.svelte";
+  import MonsterHatePanel from "../monster-overlay/MonsterHatePanel.svelte";
   import IndividualBuffDisplay from "./IndividualBuffDisplay.svelte";
   import PanelAttrGroup from "./PanelAttrGroup.svelte";
   import BuffUptimeGroup from "./BuffUptimeGroup.svelte";
+  import CustomTriggerGroups from "./CustomTriggerGroups.svelte";
   import ResourceGroup from "./ResourceGroup.svelte";
   import SkillCdGroup from "./SkillCdGroup.svelte";
   import SkillDurationDisplay from "./SkillDurationDisplay.svelte";
@@ -16,12 +19,16 @@
     isEditing,
     overlayVisibility,
   } from "./overlay-state.svelte.js";
+  import { SETTINGS } from "$lib/settings-store";
+  import { initMonsterOverlay } from "../monster-overlay/monster-state.svelte.js";
 
   const editing = $derived(isEditing());
   const visibility = $derived(overlayVisibility());
   const displayMode = $derived(buffDisplayMode());
+  const hateEnabled = $derived(SETTINGS.monsterMonitor.state.hateListEnabled);
 
   onMount(initOverlay);
+  onMount(initMonsterOverlay);
 </script>
 
 <div class="overlay-root" class:editing={editing}>
@@ -52,6 +59,13 @@
   {#if visibility.showCustomPanelGroup}
     <CustomPanelGroup />
   {/if}
+
+  <MonsterBuffPanel />
+  {#if hateEnabled}
+    <MonsterHatePanel />
+  {/if}
+
+  <CustomTriggerGroups />
 
   <TextBuffPanel />
 

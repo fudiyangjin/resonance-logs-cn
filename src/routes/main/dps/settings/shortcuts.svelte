@@ -11,10 +11,11 @@
 
   import { SETTINGS } from "$lib/settings-store";
   import { uiT } from "$lib/i18n";
-  import { registerShortcut } from "./shortcuts.js";
+  import { clearRegisteredShortcut, findShortcutConflict, registerShortcut, type ShortcutOwner } from "./shortcuts.js";
   import type { BaseInput, BaseInputs } from "./settings.js";
 
   let editingId: string | null = $state(null);
+  let editingConflict = $state<ShortcutOwner | null>(null);
 
   const modifierOrder = ["ctrl", "shift", "alt", "meta"];
   const MODIFIERS = new SvelteSet(modifierOrder);
@@ -61,6 +62,7 @@
     window.removeEventListener("keyup", handleKeyUp);
     activeMods.clear();
     mainKey = null;
+    editingConflict = null;
     editingId = null;
   }
 
@@ -93,9 +95,15 @@
 
       const cmd = inputs.find((c) => c.id === editingId);
       if (cmd) {
+        const conflict = findShortcutConflict(shortcutKey, { section: "general", id: cmd.id });
+        if (conflict) {
+          editingConflict = conflict;
+          return;
+        }
+        editingConflict = null;
         unregister(SETTINGS.shortcuts.state[cmd.id]);
         SETTINGS.shortcuts.state[cmd.id] = shortcutKey;
-        registerShortcut(cmd.id, shortcutKey);
+        registerShortcut("general", cmd.id, shortcutKey);
       }
       stopEdit();
     }
@@ -103,14 +111,17 @@
 
   async function clearShortcut(shortcut: BaseInput, e: MouseEvent) {
     e.preventDefault();
-    const existing = SETTINGS.shortcuts.state[shortcut.id];
-    if (existing) {
-      SETTINGS.shortcuts.state[shortcut.id] = "";
-      await unregister(existing);
-    }
+    await clearRegisteredShortcut("general", shortcut.id);
   }
 
   const t = uiT("dps/settings-hotkeys", () => SETTINGS.live.general.state.language);
+  const customHotkeyT = uiT("custom-triggers/general", () => SETTINGS.live.general.state.language);
+
+  function conflictLabel(owner: ShortcutOwner): string {
+    return owner.section === "customTriggers"
+      ? customHotkeyT(owner.labelKey, owner.fallbackLabel)
+      : t(owner.labelKey, owner.fallbackLabel);
+  }
 
   onDestroy(stopEdit);
 
@@ -161,6 +172,10 @@
       id: "toggleOverlayWindow",
       label: "切换遮罩窗口",
     },
+    {
+      id: "toggleEventLogger",
+      label: "切换事件日志器",
+    },
   ];
 </script>
 
@@ -170,6 +185,12 @@
       <AlertCircleIcon />
       <Alert.Title>{t("clearHint", "右键可清除快捷键")}</Alert.Title>
     </Alert.Root>
+    {#if editingConflict}
+      <Alert.Root class="shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] border-destructive/40 text-destructive">
+        <AlertCircleIcon />
+        <Alert.Title>{t("conflictAssigned", "That hotkey is already assigned to")}: {conflictLabel(editingConflict)}</Alert.Title>
+      </Alert.Root>
+    {/if}
     <div class="rounded-lg border bg-card/40 border-border/60 p-4 space-y-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
       {#each inputs as input (input.id)}
         <Item.Root>

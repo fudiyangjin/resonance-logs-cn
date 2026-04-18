@@ -63,30 +63,6 @@ async togglePauseEncounter() : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async toggleGameOverlayWindow() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("toggle_game_overlay_window") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async toggleGameOverlayEditMode() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("toggle_game_overlay_edit_mode") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async syncMonsterOverlayWindowToGameOverlay() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("sync_monster_overlay_window_to_game_overlay") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async startTrainingDummy(monsterId: number) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("start_training_dummy", { monsterId }) };
@@ -337,6 +313,100 @@ async savePacketCaptureSettings(method: string, npcapDevice: string) : Promise<R
     else return { status: "error", error: e  as any };
 }
 },
+async readCustomDefinitions() : Promise<Result<CustomDefinitionsFile, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("read_custom_definitions") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async writeCustomDefinitions(payload: CustomDefinitionsFile) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("write_custom_definitions", { payload }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async readCustomTriggers() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("read_custom_triggers") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async writeCustomTriggers(payload: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("write_custom_triggers", { payload }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async readEventLoggerBuffer() : Promise<EventLoggerBatchPayload> {
+    return await TAURI_INVOKE("read_event_logger_buffer");
+},
+async clearEventLoggerBuffer() : Promise<void> {
+    await TAURI_INVOKE("clear_event_logger_buffer");
+},
+async showEventLoggerWindow(alwaysOnTop: boolean | null) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("show_event_logger_window", { alwaysOnTop }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async hideEventLoggerWindow() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("hide_event_logger_window") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async toggleEventLoggerWindow(alwaysOnTop: boolean | null) : Promise<Result<boolean, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("toggle_event_logger_window", { alwaysOnTop }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setEventLoggerWindowAlwaysOnTop(alwaysOnTop: boolean) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_event_logger_window_always_on_top", { alwaysOnTop }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getEventLoggerSessionDirectory() : Promise<Result<EventLoggerSessionDirectoryPayload, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_event_logger_session_directory") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setEventLoggerSaveDirectory(directory: string | null) : Promise<Result<EventLoggerSessionDirectoryPayload, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_event_logger_save_directory", { directory }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async openEventLoggerSessionDir() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("open_event_logger_session_dir") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getNetworkDevices() : Promise<Result<Device[], string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_network_devices") };
@@ -397,7 +467,7 @@ async initializeTranslationRuntimeFiles() : Promise<Result<string, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async getTranslationRuntimeStatus() : Promise<Result<any, string>> {
+async getTranslationRuntimeStatus() : Promise<Result<TranslationRuntimeStatus, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_translation_runtime_status") };
 } catch (e) {
@@ -453,6 +523,30 @@ async writeTranslationRuntimeFile(relativePath: string, contents: string) : Prom
     else return { status: "error", error: e  as any };
 }
 },
+async writeTranslationRuntimeLocaleFile(relativePath: string, locale: string, contents: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("write_translation_runtime_locale_file", { relativePath, locale, contents }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async generateUiTranslationScaffold(relativePath: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("generate_ui_translation_scaffold", { relativePath }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async generateAllUiTranslationScaffolds() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("generate_all_ui_translation_scaffolds") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async generateBuffNameSearchScaffold() : Promise<Result<string, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("generate_buff_name_search_scaffold") };
@@ -488,6 +582,30 @@ async generateMonsterNameTranslationScaffold() : Promise<Result<string, string>>
 async generateSkillNameTranslationScaffold() : Promise<Result<string, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("generate_skill_name_translation_scaffold") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async toggleGameOverlayWindow() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("toggle_game_overlay_window") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async toggleGameOverlayEditMode() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("toggle_game_overlay_edit_mode") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async syncMonsterOverlayWindowToGameOverlay() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("sync_monster_overlay_window_to_game_overlay") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -531,7 +649,9 @@ maxHp: number | null;
 isDefeated: boolean }
 export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "resetAndStartCount" | "startCount" | "noOp"
 export type CounterRule = { ruleId: number; sources: CounterSource[]; effectSlots: EffectSlotConfig[] }
-export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number } } | { anyDamage: { increment: number } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } }
+export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { anyDamage: { increment: number; hitsRequired?: number | null } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } }
+export type CustomDefinitionEntry = { uid: number; type: string; name: string; shortName: string | null; notes: string | null; icon: string | null; color: string | null }
+export type CustomDefinitionsFile = { version: number; definitions: CustomDefinitionEntry[] }
 export type Device = { name: string; description: string | null }
 export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; resetSourceConfigId?: number | null; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction }
 /**
@@ -626,6 +746,9 @@ remoteEncounterId: number | null;
  * Whether the encounter is favorited.
  */
 isFavorite: boolean }
+export type EventLoggerBatchPayload = { entries: EventLoggerEntry[] }
+export type EventLoggerEntry = { tsMs: number; category: string; action: string; uid: number | null; targetUid: number | null; sourceUid: number | null; sourceLabel: string | null; targetLabel: string | null; nameHint: string | null; summary: string | null; stacks: number | null; durationMs: number | null; remainingMs: number | null; value: string | null; raw: string }
+export type EventLoggerSessionDirectoryPayload = { configuredDirectory: string | null; resolvedDirectory: string; usingDefault: boolean }
 export type GpuSupport = { cuda_available: boolean; opencl_available: boolean }
 export type HistoryEntityData = { uid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; seasonStrength: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }>; dmgPerTarget: PerTargetStats[]; healPerTarget: PerTargetStats[] }
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number }
@@ -679,6 +802,7 @@ export type SceneNamesResult = {
 names: string[] }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[] }
 export type TickAttrCondition = { attrId: number; requiredValue: number }
+export type TranslationRuntimeStatus = { runtimeDir: string; runtimeExists: boolean; runtimeManifestExists: boolean; sourceDir: string | null; sourceExists: boolean; sourceManifestExists: boolean; sourceCandidates: string[]; sourceError: string | null }
 
 /** tauri-specta globals **/
 

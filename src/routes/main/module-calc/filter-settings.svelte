@@ -84,7 +84,8 @@
   </button>
 
   {#if isExpanded}
-    <div class="space-y-2">
+    <div class="max-h-[min(46vh,32rem)] space-y-4 overflow-y-auto pr-1">
+      <div class="space-y-2">
       <div class="text-sm text-foreground">
         {t("excludeLowTotalValue", "排除总值低于多少的模组:")}
       </div>
@@ -174,6 +175,7 @@
       <Button size="sm" variant="outline" onclick={addMin}>
         {t("add", "+ 添加")}
       </Button>
+    </div>
     </div>
   {/if}
 </div>

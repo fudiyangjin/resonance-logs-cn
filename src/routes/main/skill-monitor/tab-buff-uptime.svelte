@@ -53,11 +53,13 @@
     getBuffDisplayName: (buffId: number) => string;
   }
 
+  type PreviewIndicatorState = "hidden" | "active" | "inactive";
+
   type PreviewRow = {
     key: string;
     label: string;
     color: string;
-    showIndicator: boolean;
+    indicatorState: PreviewIndicatorState;
     encounterText: string;
     trueText?: string;
     sourceText?: string;
@@ -136,13 +138,18 @@
   function buildPreviewRow(
     key: string,
     base: { label: string; color: string; showIndicator: boolean },
-    sample: { encounterText: string; trueText?: string; sourceText?: string },
+    sample: {
+      encounterText: string;
+      trueText?: string;
+      sourceText?: string;
+      indicatorState?: Exclude<PreviewIndicatorState, "hidden">;
+    },
   ): PreviewRow {
     return {
       key,
       label: base.label,
       color: base.color,
-      showIndicator: base.showIndicator,
+      indicatorState: base.showIndicator ? (sample.indicatorState ?? "active") : "hidden",
       encounterText: sample.encounterText,
       ...(sample.trueText !== undefined ? { trueText: sample.trueText } : {}),
       ...(sample.sourceText !== undefined ? { sourceText: sample.sourceText } : {}),
@@ -152,12 +159,13 @@
   const previewRows = $derived.by<PreviewRow[]>(() => {
     const sourcePrefix = t("uptime.sourcePrefix", "From");
     const samples = [
-      { encounterText: "9%", trueText: "[9%]" },
-      { encounterText: "99%", trueText: "[99%]" },
+      { encounterText: "9%", trueText: "[9%]", indicatorState: "active" as const },
+      { encounterText: "99%", trueText: "[99%]", indicatorState: "active" as const },
       {
         encounterText: "100%",
         trueText: "[100%]",
         sourceText: `${sourcePrefix}: ${t("uptime.previewSourceParty", "Party")}`,
+        indicatorState: "inactive" as const,
       },
     ];
 
@@ -241,8 +249,12 @@
           >
             <div class="preview-name-cell">
               <span class="preview-indicator" aria-hidden="true">
-                {#if row.showIndicator}
-                  <span class="preview-indicator-dot active"></span>
+                {#if row.indicatorState !== "hidden"}
+                  <span
+                    class="preview-indicator-dot"
+                    class:active={row.indicatorState === "active"}
+                    class:inactive={row.indicatorState === "inactive"}
+                  ></span>
                 {/if}
               </span>
               <span class="preview-label" style:font-size={`${buffUptimeFontSize}px`} style:color={row.color} style:text-shadow={previewTextShadow}>{row.label}:</span>
@@ -550,6 +562,15 @@
       0 0 0 1px rgba(0, 0, 0, 0.4),
       0 0 8px rgba(74, 222, 128, 0.92),
       0 0 14px rgba(34, 197, 94, 0.55);
+  }
+
+  .preview-indicator-dot.inactive {
+    background: radial-gradient(circle at 35% 35%, #f4f4f5 0%, #a1a1aa 45%, #52525b 100%);
+    border-color: rgba(250, 250, 250, 0.95);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.4),
+      0 0 8px rgba(161, 161, 170, 0.45),
+      0 0 12px rgba(82, 82, 91, 0.32);
   }
 
   .preview-label {

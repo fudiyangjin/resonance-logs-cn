@@ -32,10 +32,10 @@
   let lastRuntimeSnapshotKey = "";
   let runtimeSnapshotInitialized = false;
   let lastOverlayVisibleState: boolean | null = null;
-  let lastMonsterOverlayVisibleState: boolean | null = null;
   let runtimeSyncTimer: ReturnType<typeof setTimeout> | null = null;
   let overlayVisibilityOverride: boolean | null = null;
-  let lastSkillMonitorEnabled: boolean | null = null;
+  let lastSharedOverlayEnabled: boolean | null = null;
+  let overlayStartupHandled = false;
 
   $effect(() => {
     const runtimeSnapshot = buildMonitorRuntimeSnapshot();
@@ -60,14 +60,19 @@
       }, 50);
     }
 
-    const enabled = SETTINGS.skillMonitor.state.enabled;
+    const sharedOverlayEnabled =
+      SETTINGS.skillMonitor.state.enabled || SETTINGS.monsterMonitor.state.enabled;
 
-    if (lastSkillMonitorEnabled !== enabled) {
-      lastSkillMonitorEnabled = enabled;
+    if (lastSharedOverlayEnabled !== sharedOverlayEnabled) {
+      lastSharedOverlayEnabled = sharedOverlayEnabled;
       overlayVisibilityOverride = null;
     }
 
-    const desiredOverlayVisible = overlayVisibilityOverride ?? enabled;
+    const desiredOverlayVisible = overlayVisibilityOverride ?? (overlayStartupHandled
+      ? sharedOverlayEnabled
+      : SETTINGS.skillMonitor.state.overlayStartWithApp
+        ? sharedOverlayEnabled
+        : false);
 
     void (async () => {
       try {
@@ -82,6 +87,7 @@
               await overlayWindow.hide();
             }
           }
+          overlayStartupHandled = true;
         }
       } catch (error) {
         console.error("[skill-monitor] failed to sync monitor state", error);
@@ -90,27 +96,18 @@
   });
 
   $effect(() => {
-    const enabled = SETTINGS.monsterMonitor.state.enabled;
+    const monsterMonitorEnabled = SETTINGS.monsterMonitor.state.enabled;
     void (async () => {
       try {
         const monsterOverlayWindow = await WebviewWindow.getByLabel("monster-overlay");
-        if (monsterOverlayWindow) {
-          if (lastMonsterOverlayVisibleState !== enabled) {
-            lastMonsterOverlayVisibleState = enabled;
-            if (enabled) {
-              const syncResult = await commands.syncMonsterOverlayWindowToGameOverlay();
-              if (syncResult.status === "error") {
-                console.warn("[monster-monitor] failed to sync monster overlay bounds", syncResult.error);
-              }
-              await monsterOverlayWindow.show();
-              await monsterOverlayWindow.unminimize();
-            } else {
-              await monsterOverlayWindow.hide();
-            }
-          }
+        if (!monsterOverlayWindow) return;
+
+        const isVisible = await monsterOverlayWindow.isVisible();
+        if (isVisible || monsterMonitorEnabled) {
+          await monsterOverlayWindow.hide();
         }
       } catch (error) {
-        console.error("[monster-monitor] failed to sync monster monitor state", error);
+        console.error("[monster-monitor] failed to retire legacy monster overlay window", error);
       }
     })();
   });
@@ -153,23 +150,7 @@
 
     listen("game-overlay-visibility-toggle", async () => {
       try {
-        const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
-        if (!overlayWindow) {
-          console.warn("Game overlay window not found");
-          return;
-        }
-
-        const nextVisible = !(await overlayWindow.isVisible());
-        overlayVisibilityOverride = nextVisible;
-        lastOverlayVisibleState = nextVisible;
-
-        if (nextVisible) {
-          await overlayWindow.show();
-          await overlayWindow.unminimize();
-          await overlayWindow.setFocus();
-        } else {
-          await overlayWindow.hide();
-        }
+        await commands.toggleGameOverlayWindow();
       } catch (error) {
         console.error("[skill-monitor] failed to toggle overlay visibility", error);
       }

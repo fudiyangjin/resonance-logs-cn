@@ -8,5 +8,6 @@
   "tool.localization": "ローカライズツール",
   "tool.moduleOptimizer": "モジュール計算機",
   "tool.monsterTracker": "モンスターモニター",
-  "tool.skillMonitor": "スキルモニター"
+  "tool.skillMonitor": "スキルモニター",
+  "tool.customTriggers": "カスタムトリガー"
 }

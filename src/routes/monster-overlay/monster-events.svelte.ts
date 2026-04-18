@@ -13,10 +13,6 @@ import {
   setMonsterEditMode,
   setMonsterOverlayWindow,
 } from "./monster-layout.svelte.js";
-import {
-  buildMonitorRuntimeSnapshot,
-  saveAndApplyMonitorRuntimeSnapshot,
-} from "$lib/runtime-monitor-sync";
 import { updateMonsterDisplay } from "./monster-display.svelte.js";
 import { monsterRuntime } from "./monster-runtime.svelte.js";
 
@@ -50,9 +46,12 @@ export function initMonsterOverlay() {
 
   void setMonsterEditMode(false);
 
-  const unlistenEditToggle = listen("monster-overlay-edit-toggle", () => {
+  const handleEditToggle = () => {
     void setMonsterEditMode(!monsterRuntime.isEditing);
-  });
+  };
+
+  const unlistenEditToggle = listen("monster-overlay-edit-toggle", handleEditToggle);
+  const unlistenSharedEditToggle = listen("overlay-edit-toggle", handleEditToggle);
   const unlistenBossBuff = onBossBuffUpdate((event) => {
     const next = new Map<number, Map<number, BuffUpdateState>>();
     for (const [uid, buffs] of Object.entries(event.payload.bossBuffs)) {
@@ -79,14 +78,6 @@ export function initMonsterOverlay() {
   window.addEventListener("pointerup", onGlobalPointerUp);
   monsterRuntime.rafId = requestAnimationFrame(updateMonsterDisplay);
 
-  void (async () => {
-    try {
-      await saveAndApplyMonitorRuntimeSnapshot(buildMonitorRuntimeSnapshot());
-    } catch (error) {
-      console.error("Failed to refresh monster overlay state:", error);
-    }
-  })();
-
   monsterRuntime.cleanup = () => {
     monsterRuntime.isMounted = false;
     monsterRuntime.isInitialized = false;
@@ -98,6 +89,7 @@ export function initMonsterOverlay() {
     monsterRuntime.bossSections = [];
     monsterRuntime.hateSections = [];
     unlistenEditToggle.then((fn) => fn());
+    unlistenSharedEditToggle.then((fn) => fn());
     unlistenBossBuff.then((fn) => fn());
     unlistenHateList.then((fn) => fn());
     unlistenNames.then((fn) => fn());

@@ -8,6 +8,7 @@
     type LocaleCode,
   } from "$lib/i18n";
   import { SETTINGS } from "$lib/settings-store";
+  import LanguagesIcon from "virtual:icons/lucide/languages";
 
   import { discoverTranslationFileTabs } from "./lib/file-discovery";
   import {
@@ -25,6 +26,7 @@
   } from "./lib/types";
 
   const SHOW_UI_JSON_TABS_STORAGE_KEY = "resonance.localization.showUiJsonTabs";
+const SHOW_LEGACY_TRANSLATION_DEBUG_SETTINGS = false;
 
   function readStoredBoolean(key: string, fallback: boolean): boolean {
     if (typeof window === "undefined") {
@@ -1228,9 +1230,16 @@ So the accurate behavior is:
 </svelte:head>
 
 <div class="localization-page">
-  <div class="localization-header">
-    <h1>{t("title", "本地化工具")}</h1>
-    <p>{t("description", "管理本地翻译、对比 JSON，并选择要合并的内容。")}</p>
+  <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <LanguagesIcon class="w-5 h-5" />
+      </div>
+      <div class="space-y-1">
+        <h1 class="text-xl font-bold text-foreground">{t("title", "本地化工具")}</h1>
+        <p class="text-sm text-muted-foreground">{t("description", "管理本地翻译、对比 JSON，并选择要合并的内容。")}</p>
+      </div>
+    </div>
   </div>
 
   <div class="section-tabs">
@@ -1729,8 +1738,9 @@ So the accurate behavior is:
             {/if}
           </div>
 
-          <div class="settings-group">
-            <div class="settings-group-header settings-group-header-inline">
+          {#if SHOW_LEGACY_TRANSLATION_DEBUG_SETTINGS}
+            <div class="settings-group">
+              <div class="settings-group-header settings-group-header-inline">
               <div class="settings-header-main">
                 <button
                   type="button"
@@ -2005,7 +2015,8 @@ So the accurate behavior is:
                 </div>
               </div>
             {/if}
-          </div>
+            </div>
+          {/if}
         </div>
       </div>
     {/if}
@@ -2016,31 +2027,14 @@ So the accurate behavior is:
   .localization-page {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 16px;
+    gap: 24px;
+    padding: 24px;
     height: calc(100vh - 132px);
     min-height: 0;
     overflow: hidden;
     box-sizing: border-box;
   }
 
-  .localization-header {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .localization-header h1 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 700;
-  }
-
-  .localization-header p {
-    margin: 0;
-    opacity: 0.8;
-    font-size: 14px;
-  }
 
   .section-tabs {
     display: flex;

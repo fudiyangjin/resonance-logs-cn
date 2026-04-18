@@ -8,5 +8,6 @@
   "tool.localization": "Lokalisierungstool",
   "tool.moduleOptimizer": "Modulrechner",
   "tool.monsterTracker": "Monstermonitor",
-  "tool.skillMonitor": "Skill-Monitor"
+  "tool.skillMonitor": "Skill-Monitor",
+  "tool.customTriggers": "Benutzerdefinierte Trigger"
 }

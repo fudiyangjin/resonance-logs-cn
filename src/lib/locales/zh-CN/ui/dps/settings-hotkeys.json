@@ -12,5 +12,7 @@
   "shortcuts.togglePauseEncounter": "切换暂停战斗",
   "shortcuts.toggleBossHp": "切换 Boss 血量显示",
   "shortcuts.toggleOverlayEdit": "切换遮罩编辑模式",
-  "shortcuts.toggleOverlayWindow": "切换遮罩窗口"
+  "shortcuts.toggleOverlayWindow": "切换遮罩窗口",
+  "shortcuts.toggleEventLogger": "切换事件日志器",
+  "conflictAssigned": "该快捷键已分配给"
 }

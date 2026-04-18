@@ -77,5 +77,6 @@
   "totalAttributesValue": "属性总值",
   "totalScore": "总分",
   "unavailable": "不可用",
-  "viewDetails": "查看详情"
+  "viewDetails": "查看详情",
+  "requiresAtLeastModules": "需要至少 {count} 个模组"
 }

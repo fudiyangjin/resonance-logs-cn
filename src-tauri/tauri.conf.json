@@ -63,6 +63,21 @@
         "resizable": true,
         "shadow": false,
         "maximizable": false
+      },
+      {
+        "title": "Resonance Logs CN - Event Logger",
+        "label": "event-logger",
+        "url": "event-logger",
+        "width": 1200,
+        "height": 760,
+        "minWidth": 900,
+        "minHeight": 520,
+        "visible": false,
+        "transparent": false,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "resizable": true
       }
     ],
     "security": {

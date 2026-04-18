@@ -12,5 +12,7 @@
   "shortcuts.togglePauseEncounter": "Toggle pause encounter",
   "shortcuts.toggleBossHp": "Toggle boss HP display",
   "shortcuts.toggleOverlayEdit": "Toggle overlay edit mode",
-  "shortcuts.toggleOverlayWindow": "Toggle overlay window"
+  "shortcuts.toggleOverlayWindow": "Toggle overlay window",
+  "shortcuts.toggleEventLogger": "Toggle event logger",
+  "conflictAssigned": "That hotkey is already assigned to"
 }

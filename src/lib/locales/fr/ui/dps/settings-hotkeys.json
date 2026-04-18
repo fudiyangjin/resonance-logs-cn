@@ -12,5 +12,7 @@
   "shortcuts.togglePauseEncounter": "Basculer la pause du combat",
   "shortcuts.toggleBossHp": "Basculer l’affichage des PV du boss",
   "shortcuts.toggleOverlayEdit": "Basculer le mode édition de l’overlay",
-  "shortcuts.toggleOverlayWindow": "Basculer la fenêtre d’overlay"
+  "shortcuts.toggleOverlayWindow": "Basculer la fenêtre d’overlay",
+  "shortcuts.toggleEventLogger": "Basculer le journal des événements",
+  "conflictAssigned": "Ce raccourci est déjà attribué à"
 }

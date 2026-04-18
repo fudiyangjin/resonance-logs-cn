@@ -1,11 +1,9 @@
 <script lang="ts">
-  import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import TabSkillCd from "./tab-skill-cd.svelte";
   import TabBuffMonitor from "./tab-buff-monitor.svelte";
   import TabPanelAttr from "./tab-panel-attr.svelte";
   import TabBuffUptime from "./tab-buff-uptime.svelte";
   import TabCustomPanel from "./tab-custom-panel.svelte";
-  import TabOverlay from "./tab-overlay.svelte";
   import {
     expandBuffSelection,
     getAvailableBuffDefinitions,
@@ -18,6 +16,7 @@
     resolveBuffDisplayName,
     saveBuffOverlayAlias,
     searchBuffsByName,
+    searchIconBuffsByName,
     type BuffCategoryKey,
     type BuffCategoryDefinition,
     type BuffDefinition,
@@ -144,24 +143,6 @@
   const buffUptimeNameColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeNameColumnAdjust);
   const buffUptimeEncounterColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeEncounterColumnAdjust);
   const buffUptimeTrueColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeTrueColumnAdjust);
-  const showSkillCdGroup = $derived(
-    activeProfile.overlayVisibility?.showSkillCdGroup ?? true,
-  );
-  const showSkillDurationGroup = $derived(
-    activeProfile.overlayVisibility?.showSkillDurationGroup ?? true,
-  );
-  const showResourceGroup = $derived(
-    activeProfile.overlayVisibility?.showResourceGroup ?? true,
-  );
-  const showPanelAttrGroup = $derived(
-    activeProfile.overlayVisibility?.showPanelAttrGroup ?? true,
-  );
-  const showBuffUptimeGroup = $derived(
-    activeProfile.overlayVisibility?.showBuffUptimeGroup ?? true,
-  );
-  const showCustomPanelGroup = $derived(
-    activeProfile.overlayVisibility?.showCustomPanelGroup ?? true,
-  );
   const customPanelStyle = $derived.by(() => ensureCustomPanelStyle(activeProfile));
   const textBuffPanelStyle = $derived.by(() => ensureTextBuffPanelStyle(activeProfile));
   const buffDisplayMode = $derived(
@@ -896,19 +877,19 @@
   );
 
   $effect(() => {
-    buffSearchResults = searchBuffsByName(buffSearch, buffAliases);
+    buffSearchResults = searchIconBuffsByName(buffSearch, buffAliases);
   });
 
   $effect(() => {
-    globalPrioritySearchResults = searchBuffsByName(globalPrioritySearch, buffAliases);
+    globalPrioritySearchResults = searchIconBuffsByName(globalPrioritySearch, buffAliases);
   });
 
   $effect(() => {
-    inlineBuffSearchResults = searchBuffsByName(inlineBuffSearch, buffAliases);
+    inlineBuffSearchResults = searchIconBuffsByName(inlineBuffSearch, buffAliases);
   });
 
   $effect(() => {
-    buffAliasSearchResults = searchBuffsByName(buffAliasSearch, buffAliases);
+    buffAliasSearchResults = searchIconBuffsByName(buffAliasSearch, buffAliases);
   });
 
   $effect(() => {
@@ -920,54 +901,6 @@
     if (!value.trim()) {
       buffAliasEditingBuffId = null;
     }
-  }
-
-  function setOverlaySectionVisibility(
-    key:
-      | "showSkillCdGroup"
-      | "showSkillDurationGroup"
-      | "showResourceGroup"
-      | "showPanelAttrGroup"
-      | "showBuffUptimeGroup"
-      | "showCustomPanelGroup",
-    checked: boolean,
-  ) {
-    updateActiveProfile((profile) => ({
-      ...profile,
-      overlayVisibility: {
-        showSkillCdGroup: profile.overlayVisibility?.showSkillCdGroup ?? true,
-        showSkillDurationGroup:
-          profile.overlayVisibility?.showSkillDurationGroup ?? true,
-        showResourceGroup: profile.overlayVisibility?.showResourceGroup ?? true,
-        showPanelAttrGroup: profile.overlayVisibility?.showPanelAttrGroup ?? true,
-        showBuffUptimeGroup: profile.overlayVisibility?.showBuffUptimeGroup ?? true,
-        showCustomPanelGroup: profile.overlayVisibility?.showCustomPanelGroup ?? true,
-        [key]: checked,
-      },
-    }));
-  }
-
-  function toggleOverlaySectionVisibility(
-    key:
-      | "showSkillCdGroup"
-      | "showSkillDurationGroup"
-      | "showResourceGroup"
-      | "showPanelAttrGroup"
-      | "showBuffUptimeGroup"
-      | "showCustomPanelGroup",
-  ) {
-    const current = key === "showSkillCdGroup"
-      ? showSkillCdGroup
-      : key === "showSkillDurationGroup"
-      ? showSkillDurationGroup
-      : key === "showResourceGroup"
-      ? showResourceGroup
-      : key === "showPanelAttrGroup"
-      ? showPanelAttrGroup
-      : key === "showBuffUptimeGroup"
-      ? showBuffUptimeGroup
-      : showCustomPanelGroup;
-    setOverlaySectionVisibility(key, !current);
   }
 
   function setPanelAttrEnabled(attrId: number, enabled: boolean) {
@@ -1456,7 +1389,7 @@
     }
     groupSearchResults = {
       ...groupSearchResults,
-      [groupId]: searchBuffsByName(keyword, buffAliases),
+      [groupId]: searchIconBuffsByName(keyword, buffAliases),
     };
   }
 
@@ -1473,7 +1406,7 @@
     }
     groupPrioritySearchResults = {
       ...groupPrioritySearchResults,
-      [groupId]: searchBuffsByName(keyword, buffAliases),
+      [groupId]: searchIconBuffsByName(keyword, buffAliases),
     };
   }
 
@@ -1586,14 +1519,6 @@
 </script>
 
 <div class="space-y-6">
-  <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-2">
-    <SettingsSwitch
-      bind:checked={SETTINGS.skillMonitor.state.enabled}
-      label={t("enableMonitoring", "启用实时监控")}
-      description={t("enableMonitoringDescription", "开启后将实时推送监控数据到悬浮窗口")}
-    />
-  </div>
-
   <div class="rounded-lg border border-border/60 bg-card/40 p-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <div class="flex flex-wrap gap-2">
       <button
@@ -1640,15 +1565,6 @@
         onclick={() => (activeTab = "custom-panel")}
       >
         {t("tab.customPanel", "Custom Monitor")}
-      </button>
-      <button
-        type="button"
-        class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {activeTab === 'overlay'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => (activeTab = "overlay")}
-      >
-        {t("tab.overlay", "Overlay")}
       </button>
     </div>
   </div>
@@ -1836,16 +1752,6 @@
       {setCustomPanelValueColor}
       {setCustomPanelProgressColor}
       {setCustomPanelProgressOpacity}
-    />
-  {:else}
-    <TabOverlay
-      {showSkillCdGroup}
-      {showSkillDurationGroup}
-      {showResourceGroup}
-      {showPanelAttrGroup}
-      {showBuffUptimeGroup}
-      {showCustomPanelGroup}
-      {toggleOverlaySectionVisibility}
     />
   {/if}
 

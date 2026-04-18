@@ -12,5 +12,7 @@
   "shortcuts.togglePauseEncounter": "Alternar pausa del combate",
   "shortcuts.toggleBossHp": "Alternar visualización de HP del jefe",
   "shortcuts.toggleOverlayEdit": "Alternar modo de edición de superposición",
-  "shortcuts.toggleOverlayWindow": "Alternar ventana de superposición"
+  "shortcuts.toggleOverlayWindow": "Alternar ventana de superposición",
+  "shortcuts.toggleEventLogger": "Alternar registrador de eventos",
+  "conflictAssigned": "Ese atajo ya está asignado a"
 }

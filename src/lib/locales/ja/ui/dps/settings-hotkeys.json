@@ -12,5 +12,7 @@
   "shortcuts.togglePauseEncounter": "戦闘の一時停止を切り替え",
   "shortcuts.toggleBossHp": "ボスHP表示を切り替え",
   "shortcuts.toggleOverlayEdit": "オーバーレイ編集モードを切り替え",
-  "shortcuts.toggleOverlayWindow": "オーバーレイウィンドウを切り替え"
+  "shortcuts.toggleOverlayWindow": "オーバーレイウィンドウを切り替え",
+  "shortcuts.toggleEventLogger": "イベントロガーを切り替え",
+  "conflictAssigned": "そのホットキーはすでに次に割り当てられています"
 }

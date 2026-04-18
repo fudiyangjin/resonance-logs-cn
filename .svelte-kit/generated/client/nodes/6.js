@@ -1,0 +1,1 @@
+export { default as component } from "../../../../src/routes/main/monster-monitor/+layout.svelte";

@@ -8,5 +8,13 @@
   "tool.localization": "本地化工具",
   "tool.moduleOptimizer": "模组计算",
   "tool.monsterTracker": "怪物监控",
-  "tool.skillMonitor": "实时监控"
+  "tool.skillMonitor": "实时监控",
+  "tool.customTriggers": "自定义触发器",
+  "settings.profile": "配置方案",
+  "settings.profile.subtitle": "创建并管理技能监控配置方案，同时配置事件日志窗口行为和会话日志存储。",
+  "settings.overlay": "Overlay",
+  "settings.overlay.subtitle": "控制哪些监控系统会主动把数据推送到共享悬浮窗。",
+  "settings.subtitle": "配置主题、网络、快捷键、监控方案、Overlay 发布、语言环境处理和全局调试工具",
+  "settings.overlay.startWithApp": "随应用启动",
+  "settings.overlay.startWithAppDescription": "当应用启动且已启用遮罩发布时，自动打开共享遮罩。"
 }

@@ -148,27 +148,17 @@ export function getBuffRemainPercent(
   );
 }
 
-type BuffTextRowOptions = {
-  allowUntimedSingleStack?: boolean;
-};
-
 export function buildBuffTextRow(
   key: string,
   label: string,
   buff: BuffUpdateState,
   now: number,
   isPlaceholder = false,
-  options: BuffTextRowOptions = {},
 ): TextBuffDisplay | null {
   const active = isBuffActive(buff, now);
   if (!active && !isPlaceholder) return null;
 
-  if (
-    buff.durationMs <= 0
-    && buff.layer <= 1
-    && !isPlaceholder
-    && !options.allowUntimedSingleStack
-  ) {
+  if (buff.durationMs <= 0 && buff.layer <= 1 && !isPlaceholder) {
     return null;
   }
 
@@ -202,8 +192,6 @@ export function getCustomPanelDisplayRow(
       resolveBuffName(entry.sourceId),
       buff,
       now,
-      false,
-      { allowUntimedSingleStack: true },
     );
   }
 

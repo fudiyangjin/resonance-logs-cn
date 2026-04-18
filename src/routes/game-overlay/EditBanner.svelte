@@ -2,31 +2,57 @@
   import { uiT } from "$lib/i18n";
   import { SETTINGS } from "$lib/settings-store";
   import {
+    resetCustomTriggerOverlayPositions,
+    resetCustomTriggerOverlaySizes,
+  } from "$lib/custom-triggers-store";
+  import {
     onWindowDragPointerDown,
     resetOverlayPositions,
     resetOverlaySizes,
     setEditMode,
   } from "./overlay-state.svelte.js";
+  import {
+    resetMonsterOverlayPositions,
+    resetMonsterOverlaySizes,
+    setMonsterEditMode,
+  } from "../monster-overlay/monster-state.svelte.js";
 
   const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+
+  async function doneEditing() {
+    await setEditMode(false);
+    await setMonsterEditMode(false);
+  }
+
+  async function resetAllOverlayPositions() {
+    resetOverlayPositions();
+    resetMonsterOverlayPositions();
+    await resetCustomTriggerOverlayPositions();
+  }
+
+  async function resetAllOverlaySizes() {
+    resetOverlaySizes();
+    resetMonsterOverlaySizes();
+    await resetCustomTriggerOverlaySizes();
+  }
 </script>
 
 <div class="edit-banner">
   <div class="edit-title">{t("overlay.edit.title", "编辑模式 - 可拖拽调整位置")}</div>
-  <button type="button" class="done-btn secondary" onclick={resetOverlayPositions}>
+  <button type="button" class="done-btn secondary" onclick={resetAllOverlayPositions}>
     {t("overlay.edit.resetPosition", "重置位置")}
   </button>
-  <button type="button" class="done-btn secondary" onclick={resetOverlaySizes}>
+  <button type="button" class="done-btn secondary" onclick={resetAllOverlaySizes}>
     {t("overlay.edit.resetSize", "重置尺寸")}
   </button>
-  <button type="button" class="done-btn" onclick={() => setEditMode(false)}>
+  <button type="button" class="done-btn" onclick={doneEditing}>
     {t("overlay.edit.done", "完成编辑")}
   </button>
 </div>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="window-drag-bar" onpointerdown={onWindowDragPointerDown}>
-  {t("overlay.edit.dragWindow", "拖动此处移动 Game Overlay 窗口")}
+  {t("overlay.edit.dragWindow", "拖动此处移动 Overlay 窗口")}
 </div>
 
 <style>

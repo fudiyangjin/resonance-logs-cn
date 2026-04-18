@@ -181,8 +181,6 @@ export function updateMonsterDisplay() {
           resolveBuffOverlayDisplayName(buff.baseId, aliases),
           buff,
           now,
-          false,
-          { allowUntimedSingleStack: selectedIds.includes(buff.baseId) },
         ))
       .filter((row): row is TextBuffDisplay => row !== null);
 

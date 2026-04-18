@@ -12,5 +12,7 @@
   "shortcuts.togglePauseEncounter": "Alternar pausa do combate",
   "shortcuts.toggleBossHp": "Alternar exibição de HP do chefe",
   "shortcuts.toggleOverlayEdit": "Alternar modo de edição do overlay",
-  "shortcuts.toggleOverlayWindow": "Alternar janela do overlay"
+  "shortcuts.toggleOverlayWindow": "Alternar janela do overlay",
+  "shortcuts.toggleEventLogger": "Alternar registrador de eventos",
+  "conflictAssigned": "Esse atalho já está atribuído a"
 }

@@ -32,6 +32,43 @@ pub const WINDOW_MAIN_LABEL: &str = "main";
 pub const WINDOW_GAME_OVERLAY_LABEL: &str = "game-overlay";
 /// The label for the monster overlay window.
 pub const WINDOW_MONSTER_OVERLAY_LABEL: &str = "monster-overlay";
+/// The label for the event logger window.
+pub const WINDOW_EVENT_LOGGER_LABEL: &str = "event-logger";
+
+#[cfg(debug_assertions)]
+fn clean_generated_bindings(bindings_path: &Path) {
+    const MARKER: &str = "/** tauri-specta globals **/";
+    const CLEAN_GLOBALS: &str = r#"/** tauri-specta globals **/
+
+import {
+	invoke as TAURI_INVOKE,
+} from "@tauri-apps/api/core";
+
+export type Result<T, E> =
+	| { status: "ok"; data: T }
+	| { status: "error"; error: E };
+"#;
+
+    let Ok(bindings) = std::fs::read_to_string(bindings_path) else {
+        return;
+    };
+
+    if bindings.matches("__makeEvents__").count() != 1 {
+        return;
+    }
+
+    let Some(marker_index) = bindings.find(MARKER) else {
+        return;
+    };
+
+    let mut cleaned = String::with_capacity(marker_index + CLEAN_GLOBALS.len() + 2);
+    cleaned.push_str(bindings[..marker_index].trim_end());
+    cleaned.push_str("\n\n");
+    cleaned.push_str(CLEAN_GLOBALS);
+    cleaned.push('\n');
+
+    let _ = std::fs::write(bindings_path, cleaned);
+}
 
 
 #[tauri::command]
@@ -43,9 +80,9 @@ fn toggle_game_overlay_window(app: tauri::AppHandle) -> Result<(), String> {
 
     let next_visible = !overlay_window.is_visible().map_err(|e| e.to_string())?;
     if next_visible {
+        let _ = overlay_window.set_ignore_cursor_events(true);
         overlay_window.show().map_err(|e| e.to_string())?;
         overlay_window.unminimize().map_err(|e| e.to_string())?;
-        let _ = overlay_window.set_focus();
     } else {
         overlay_window.hide().map_err(|e| e.to_string())?;
     }
@@ -62,6 +99,8 @@ fn toggle_game_overlay_edit_mode(app: tauri::AppHandle) -> Result<(), String> {
     let Some(overlay_window) = app.get_webview_window(WINDOW_GAME_OVERLAY_LABEL) else {
         return Err("Game overlay window not found".into());
     };
+
+    let _ = overlay_window.set_ignore_cursor_events(false);
 
     if !overlay_window.is_visible().map_err(|e| e.to_string())? {
         overlay_window.show().map_err(|e| e.to_string())?;
@@ -171,6 +210,19 @@ pub fn run() {
             database::commands::get_recent_players_command,
             database::commands::get_player_name_command,
             packet_settings_commands::save_packet_capture_settings,
+            custom_data_commands::read_custom_definitions,
+            custom_data_commands::write_custom_definitions,
+            custom_data_commands::read_custom_triggers,
+            custom_data_commands::write_custom_triggers,
+            debug_commands::read_event_logger_buffer,
+            debug_commands::clear_event_logger_buffer,
+            debug_commands::show_event_logger_window,
+            debug_commands::hide_event_logger_window,
+            debug_commands::toggle_event_logger_window,
+            debug_commands::set_event_logger_window_always_on_top,
+            debug_commands::get_event_logger_session_directory,
+            debug_commands::set_event_logger_save_directory,
+            debug_commands::open_event_logger_session_dir,
             packets::npcap::get_network_devices,
             packets::npcap::check_npcap_status,
             debug_commands::open_log_dir,
@@ -200,12 +252,17 @@ pub fn run() {
         ]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds
-    builder
-        .export(
-            Typescript::new().bigint(BigIntExportBehavior::Number),
-            "../src/lib/bindings.ts",
-        )
-        .expect("Failed to export typescript bindings");
+    {
+        let bindings_path = "../src/lib/bindings.ts";
+        builder
+            .export(
+                Typescript::new().bigint(BigIntExportBehavior::Number),
+                bindings_path,
+            )
+            .expect("Failed to export typescript bindings");
+
+        clean_generated_bindings(Path::new(bindings_path));
+    }
 
     let tauri_builder = tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
@@ -310,6 +367,14 @@ pub fn run() {
             let (state_manager, control_rx) = crate::live::state::AppStateManager::new();
             app.manage(state_manager.clone());
 
+            // Keep the logger hidden on startup unless the frontend explicitly opens it.
+            // This avoids a brief flash when previous window-state visibility is restored.
+            if let Some(window) = app_handle.get_webview_window(WINDOW_EVENT_LOGGER_LABEL) {
+                if let Err(e) = window.hide() {
+                    warn!("failed to hide event logger window during startup: {}", e);
+                }
+            }
+
             // Live Meter
             // https://v2.tauri.app/learn/splashscreen/#start-some-setup-tasks
             tauri::async_runtime::spawn(async move {
@@ -325,6 +390,127 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init()) // used to show save/open dialogs
         .plugin(tauri_plugin_svelte::init()); // used for settings file
     build_and_run(tauri_builder);
+}
+
+mod custom_data_commands {
+    use super::*;
+
+    #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
+    #[serde(rename_all = "camelCase")]
+    pub struct CustomDefinitionEntry {
+        pub uid: i64,
+        pub r#type: String,
+        pub name: String,
+        pub short_name: Option<String>,
+        pub notes: Option<String>,
+        pub icon: Option<String>,
+        pub color: Option<String>,
+    }
+
+    #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+    #[serde(rename_all = "camelCase")]
+    pub struct CustomDefinitionsFile {
+        pub version: i32,
+        pub definitions: Vec<CustomDefinitionEntry>,
+    }
+
+    impl Default for CustomDefinitionsFile {
+        fn default() -> Self {
+            Self {
+                version: 1,
+                definitions: Vec::new(),
+            }
+        }
+    }
+
+    fn custom_definitions_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
+        let base_dir = app_handle
+            .path()
+            .app_data_dir()
+            .or_else(|_| app_handle.path().app_local_data_dir())
+            .map_err(|e| format!("Failed to resolve app data directory: {}", e))?;
+
+        let stores_dir = base_dir.join("stores");
+        std::fs::create_dir_all(&stores_dir)
+            .map_err(|e| format!("Failed to create {}: {}", stores_dir.display(), e))?;
+        Ok(stores_dir.join("customDefinitions.json"))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn read_custom_definitions(
+        app_handle: tauri::AppHandle,
+    ) -> Result<CustomDefinitionsFile, String> {
+        let path = custom_definitions_path(&app_handle)?;
+        if !path.exists() {
+            return Ok(CustomDefinitionsFile::default());
+        }
+
+        let raw = std::fs::read_to_string(&path)
+            .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
+
+        serde_json::from_str::<CustomDefinitionsFile>(&raw)
+            .map_err(|e| format!("Failed to parse {}: {}", path.display(), e))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn write_custom_definitions(
+        app_handle: tauri::AppHandle,
+        payload: CustomDefinitionsFile,
+    ) -> Result<(), String> {
+        let path = custom_definitions_path(&app_handle)?;
+        let bytes = serde_json::to_vec_pretty(&payload)
+            .map_err(|e| format!("Failed to serialize custom definitions: {}", e))?;
+        std::fs::write(&path, bytes)
+            .map_err(|e| format!("Failed to write {}: {}", path.display(), e))?;
+        let _ = app_handle.emit("custom-definitions-updated", serde_json::json!({}));
+        Ok(())
+    }
+
+    fn custom_triggers_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
+        let base_dir = app_handle
+            .path()
+            .app_data_dir()
+            .or_else(|_| app_handle.path().app_local_data_dir())
+            .map_err(|e| format!("Failed to resolve app data directory: {}", e))?;
+
+        let stores_dir = base_dir.join("stores");
+        std::fs::create_dir_all(&stores_dir)
+            .map_err(|e| format!("Failed to create {}: {}", stores_dir.display(), e))?;
+        Ok(stores_dir.join("customTriggers.json"))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn read_custom_triggers(
+        app_handle: tauri::AppHandle,
+    ) -> Result<String, String> {
+        let path = custom_triggers_path(&app_handle)?;
+        if !path.exists() {
+            return Ok(String::from(r#"{"version":2,"audio":{"primaryOutputDeviceId":null,"secondaryOutputDeviceId":null},"groups":[],"triggers":[]}"#));
+        }
+
+        std::fs::read_to_string(&path)
+            .map_err(|e| format!("Failed to read {}: {}", path.display(), e))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn write_custom_triggers(
+        app_handle: tauri::AppHandle,
+        payload: String,
+    ) -> Result<(), String> {
+        let path = custom_triggers_path(&app_handle)?;
+        let parsed: serde_json::Value = serde_json::from_str(&payload)
+            .map_err(|e| format!("Failed to parse custom triggers payload: {}", e))?;
+        let bytes = serde_json::to_vec_pretty(&parsed)
+            .map_err(|e| format!("Failed to serialize custom triggers: {}", e))?;
+        std::fs::write(&path, bytes)
+            .map_err(|e| format!("Failed to write {}: {}", path.display(), e))?;
+        let _ = app_handle.emit("custom-triggers-updated", serde_json::json!({}));
+        Ok(())
+    }
 }
 
 mod packet_settings_commands {
@@ -375,6 +561,140 @@ mod debug_commands {
 
     #[tauri::command]
     #[specta::specta]
+    pub fn read_event_logger_buffer() -> crate::live::event_logger::EventLoggerBatchPayload {
+        crate::live::event_logger::EventLoggerBatchPayload {
+            entries: crate::live::event_logger::get_logger_buffer_entries(),
+        }
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn clear_event_logger_buffer() {
+        crate::live::event_logger::clear_logger_buffer_entries();
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn show_event_logger_window(
+        app_handle: tauri::AppHandle,
+        always_on_top: Option<bool>,
+    ) -> Result<(), String> {
+        let Some(window) = app_handle.get_webview_window(WINDOW_EVENT_LOGGER_LABEL) else {
+            return Err("Event logger window not found".to_string());
+        };
+
+        if let Some(value) = always_on_top {
+            let _ = window.set_always_on_top(value);
+        }
+        let _ = window.unminimize();
+        window
+            .show()
+            .map_err(|e| format!("Failed to show event logger window: {}", e))?;
+        let _ = window.set_focus();
+        Ok(())
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn hide_event_logger_window(app_handle: tauri::AppHandle) -> Result<(), String> {
+        let Some(window) = app_handle.get_webview_window(WINDOW_EVENT_LOGGER_LABEL) else {
+            return Err("Event logger window not found".to_string());
+        };
+        window
+            .hide()
+            .map_err(|e| format!("Failed to hide event logger window: {}", e))?;
+        Ok(())
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn toggle_event_logger_window(
+        app_handle: tauri::AppHandle,
+        always_on_top: Option<bool>,
+    ) -> Result<bool, String> {
+        let Some(window) = app_handle.get_webview_window(WINDOW_EVENT_LOGGER_LABEL) else {
+            return Err("Event logger window not found".to_string());
+        };
+
+        let visible = crate::live::event_logger::logger_window_visible(&app_handle);
+        if visible {
+            window
+                .hide()
+                .map_err(|e| format!("Failed to hide event logger window: {}", e))?;
+            return Ok(false);
+        }
+
+        if let Some(value) = always_on_top {
+            let _ = window.set_always_on_top(value);
+        }
+        let _ = window.unminimize();
+        window
+            .show()
+            .map_err(|e| format!("Failed to show event logger window: {}", e))?;
+        let _ = window.set_focus();
+        Ok(true)
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn set_event_logger_window_always_on_top(
+        app_handle: tauri::AppHandle,
+        always_on_top: bool,
+    ) -> Result<(), String> {
+        let Some(window) = app_handle.get_webview_window(WINDOW_EVENT_LOGGER_LABEL) else {
+            return Err("Event logger window not found".to_string());
+        };
+        window
+            .set_always_on_top(always_on_top)
+            .map_err(|e| format!("Failed to update event logger always-on-top: {}", e))?;
+        Ok(())
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn get_event_logger_session_directory(
+        app_handle: tauri::AppHandle,
+    ) -> Result<crate::live::event_logger::EventLoggerSessionDirectoryPayload, String> {
+        crate::live::event_logger::get_event_logger_session_directory_payload(&app_handle)
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn set_event_logger_save_directory(
+        app_handle: tauri::AppHandle,
+        directory: Option<String>,
+    ) -> Result<crate::live::event_logger::EventLoggerSessionDirectoryPayload, String> {
+        crate::live::event_logger::set_event_logger_session_directory(&app_handle, directory)
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn open_event_logger_session_dir(app_handle: tauri::AppHandle) -> Result<(), String> {
+        let session_dir = crate::live::event_logger::resolve_event_logger_session_dir(&app_handle)?;
+        std::fs::create_dir_all(&session_dir)
+            .map_err(|e| format!("Failed to create session log dir {}: {}", session_dir.display(), e))?;
+
+        #[cfg(target_os = "windows")]
+        {
+            Command::new("explorer")
+                .arg(&session_dir)
+                .spawn()
+                .map_err(|e| format!("Failed to open session log dir: {}", e))?;
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            Command::new("xdg-open")
+                .arg(&session_dir)
+                .spawn()
+                .map_err(|e| format!("Failed to open session log dir: {}", e))?;
+        }
+
+        Ok(())
+    }
+
+    #[tauri::command]
+    #[specta::specta]
     pub fn open_log_dir(app_handle: tauri::AppHandle) -> Result<(), String> {
         let log_dir = app_handle
             .path()
@@ -395,11 +715,6 @@ mod debug_commands {
 
         #[cfg(not(target_os = "windows"))]
         {
-            // For other OSs, we can use 'open' (macOS) or 'xdg-open' (Linux)
-            // But since this is a Windows-focused request, I'll essentially leave it as a no-op or specific to Windows for now based on user context.
-            // But good to have a fallback or error.
-            // Using `open` crate or tauri's `open` plugin would be better but let's stick to simple Command for now as requested.
-            // Actually, tauri_plugin_opener is initialized in lib.rs, so we might utilize that if we want, but 'explorer' is specific.
             Command::new("xdg-open")
                 .arg(&log_dir)
                 .spawn()

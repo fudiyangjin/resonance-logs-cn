@@ -49,7 +49,6 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
     profile?.monitoredBuffIds ?? [],
     profile?.monitoredBuffCategories,
   );
-  const monitoredUptimeBuffIds = profile?.monitoredUptimeBuffIds ?? [];
   const monitoredPanelAttrs = profile?.monitoredPanelAttrs ?? [];
   const customPanelEntries = profile?.customPanelGroups?.length
     ? profile.customPanelGroups.flatMap((group) => group.entries ?? [])
@@ -94,7 +93,6 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
   const defaultLinkedBuffIds = getDefaultMonitoredBuffIds(selectedClass);
   const mergedBuffIds = uniqueSortedNumbers([
     ...monitoredBuffIds,
-    ...monitoredUptimeBuffIds,
     ...groupBuffIds,
     ...inlineBuffIds,
     ...counterBuffIds,

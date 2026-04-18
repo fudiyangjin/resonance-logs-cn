@@ -30,7 +30,9 @@
       "skill-monitor/buff-monitor.json",
       "skill-monitor/panel-attr.json",
       "skill-monitor/custom-panel.json",
-      "localization-tool.json"
+      "localization-tool.json",
+      "custom-triggers/general.json",
+      "custom-triggers/logger.json"
     ],
     "parser": [
       "class-labels.json",

@@ -8,5 +8,6 @@
   "tool.localization": "Ferramenta de localização",
   "tool.moduleOptimizer": "Calculadora de módulos",
   "tool.monsterTracker": "Monitor de monstros",
-  "tool.skillMonitor": "Monitor de habilidades"
+  "tool.skillMonitor": "Monitor de habilidades",
+  "tool.customTriggers": "Gatilhos personalizados"
 }

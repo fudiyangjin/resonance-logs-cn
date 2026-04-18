@@ -1,0 +1,100 @@
+{
+	"/": [
+		"src/routes/+layout.ts"
+	],
+	"/event-logger": [
+		"src/routes/+layout.ts"
+	],
+	"/game-overlay": [
+		"src/routes/+layout.ts"
+	],
+	"/live": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/live/dps": [
+		"src/routes/+layout.ts"
+	],
+	"/live/dps/skills": [
+		"src/routes/+layout.ts"
+	],
+	"/live/heal": [
+		"src/routes/+layout.ts"
+	],
+	"/live/heal/skills": [
+		"src/routes/+layout.ts"
+	],
+	"/live/tanked": [
+		"src/routes/+layout.ts"
+	],
+	"/live/tanked/skills": [
+		"src/routes/+layout.ts"
+	],
+	"/main": [
+		"src/routes/main/+page.ts",
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/main/custom-triggers": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/main/dps": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/main/dps/history": [
+		"src/routes/+layout.ts"
+	],
+	"/main/dps/history/[id]": [
+		"src/routes/+layout.ts"
+	],
+	"/main/dps/settings": [
+		"src/routes/+layout.ts"
+	],
+	"/main/dps/themes": [
+		"src/routes/+layout.ts"
+	],
+	"/main/localization": [
+		"src/routes/+layout.ts"
+	],
+	"/main/module-calc": [
+		"src/routes/+layout.ts"
+	],
+	"/main/monster-monitor": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/main/settings": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/main/settings/debug": [
+		"src/routes/+layout.ts"
+	],
+	"/main/settings/hotkeys": [
+		"src/routes/+layout.ts"
+	],
+	"/main/settings/locales": [
+		"src/routes/+layout.ts"
+	],
+	"/main/settings/network": [
+		"src/routes/+layout.ts"
+	],
+	"/main/settings/overlay": [
+		"src/routes/+layout.ts"
+	],
+	"/main/settings/profile": [
+		"src/routes/+layout.ts"
+	],
+	"/main/settings/themes": [
+		"src/routes/+layout.ts"
+	],
+	"/main/skill-monitor": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/monster-overlay": [
+		"src/routes/+layout.ts"
+	]
+}

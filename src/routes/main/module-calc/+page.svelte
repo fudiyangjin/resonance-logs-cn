@@ -10,6 +10,7 @@
   import DataStatus from "./data-status.svelte";
   import FilterSettings from "./filter-settings.svelte";
   import CalcSettings from "./calc-settings.svelte";
+  import GpuSettings from "./gpu-settings.svelte";
   import ResultsTable from "./results-table.svelte";
   import ModuleDetail from "./module-detail.svelte";
 
@@ -90,6 +91,20 @@
     }
   }
 
+  function normalizeOptimizeErrorMessage(message: string): string {
+    const requiresModulesMatch = message.match(/^需要至少\s*(\d+)\s*个模组$/);
+    if (requiresModulesMatch) {
+      const count = requiresModulesMatch[1] ?? "";
+      return resolveModuleCalcTranslation(
+        "requiresAtLeastModules",
+        SETTINGS.live.general.state.language,
+        "Requires at least {count} modules",
+      ).replace("{count}", count);
+    }
+
+    return message;
+  }
+
   async function runOptimize() {
     if (MODULE_CALC.loading) return;
     MODULE_CALC.loading = true;
@@ -124,9 +139,9 @@
     } catch (e) {
       console.error("Optimize error:", e);
       if (typeof e === "string") {
-        MODULE_CALC.error = e;
+        MODULE_CALC.error = normalizeOptimizeErrorMessage(e);
       } else if (e instanceof Error) {
-        MODULE_CALC.error = e.message;
+        MODULE_CALC.error = normalizeOptimizeErrorMessage(e.message);
       } else {
         MODULE_CALC.error =
           resolveModuleCalcTranslation(
@@ -221,16 +236,18 @@
     </div>
   {/if}
 
-  <div class="grid gap-4 md:grid-cols-2">
+  <div class="grid gap-4 md:grid-cols-3">
     <DataStatus
       moduleCount={MODULE_CALC.moduleCount}
       modules={MODULE_CALC.modules}
       minTotalValue={MODULE_CALC.minTotalValue}
     />
     <CalcSettings
+      bind:combinationSize={MODULE_CALC.combinationSize}
+    />
+    <GpuSettings
       bind:useGpu={MODULE_CALC.useGpu}
       bind:gpuSupport={MODULE_CALC.gpuSupport}
-      bind:combinationSize={MODULE_CALC.combinationSize}
     />
   </div>
 

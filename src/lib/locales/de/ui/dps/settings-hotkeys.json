@@ -12,5 +12,7 @@
   "shortcuts.togglePauseEncounter": "Kampfpause umschalten",
   "shortcuts.toggleBossHp": "Boss-LP-Anzeige umschalten",
   "shortcuts.toggleOverlayEdit": "Overlay-Bearbeitungsmodus umschalten",
-  "shortcuts.toggleOverlayWindow": "Overlay-Fenster umschalten"
+  "shortcuts.toggleOverlayWindow": "Overlay-Fenster umschalten",
+  "shortcuts.toggleEventLogger": "Ereignisprotokoll umschalten",
+  "conflictAssigned": "Dieser Hotkey ist bereits zugewiesen an"
 }
