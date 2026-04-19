@@ -67,7 +67,10 @@ export type CounterRulePreset = {
   effectSlots: CounterEffectSlotPreset[];
 };
 
-export type CounterSlotDisplayMode = "raw" | "remainingToThreshold";
+export type CounterSlotDisplayMode =
+  | "raw"
+  | "remainingToThreshold"
+  | "percentOfThreshold";
 
 export type CounterEffectSlotPreset = {
   slotId: number;

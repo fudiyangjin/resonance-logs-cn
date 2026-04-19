@@ -123,5 +123,28 @@
         "onBuffRemove": "noOp"
       }
     ]
+  },
+  {
+    "ruleId": 6,
+    "name": "迷狂劈杀连招计数",
+    "sources": [
+      {
+        "damageBySkillKeyOnce": {
+          "skillKeys": [116130101, 116130103],
+          "increment": 25
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 1000,
+        "displayMode": "percentOfThreshold",
+        "resetBuffId": 2208641,
+        "onBuffAdd": "noOp",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "reset"
+      }
+    ]
   }
 ]

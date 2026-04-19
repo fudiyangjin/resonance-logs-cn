@@ -176,11 +176,23 @@ function formatCounterCountText(
   slotState: CounterSlotState,
   slotConfig?: CounterRulePreset["effectSlots"][number],
 ): string {
+  const threshold = slotState.threshold;
+  if (
+    slotConfig?.displayMode === "percentOfThreshold"
+    && threshold !== null
+    && threshold > 0
+  ) {
+    const ratio = Math.min(1, Math.max(0, slotState.currentCount / threshold));
+    const percent = Math.round(ratio * 1000) / 10;
+    return Number.isInteger(percent)
+      ? `${percent}%`
+      : `${percent.toFixed(1)}%`;
+  }
   if (
     slotConfig?.displayMode === "remainingToThreshold"
-    && slotState.threshold !== null
+    && threshold !== null
   ) {
-    return `${Math.max(0, slotState.threshold - slotState.currentCount)}`;
+    return `${Math.max(0, threshold - slotState.currentCount)}`;
   }
   return `${Math.max(0, slotState.currentCount)}`;
 }
