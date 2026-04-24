@@ -3,6 +3,7 @@ import {
   ensureBuffAliases,
   type CustomPanelStyle,
   type InlineBuffEntry,
+  type ShieldDetailStyle,
   type TextBuffPanelStyle,
 } from "$lib/settings-store";
 import {
@@ -26,6 +27,7 @@ import {
   ensureBuffGroups,
   ensureCustomPanelStyle,
   ensureOverlayVisibility,
+  ensureShieldDetailStyle,
   ensureTextBuffPanelStyle,
 } from "./overlay-utils";
 
@@ -85,6 +87,9 @@ const _customPanelStyle = $derived.by<CustomPanelStyle>(() =>
 );
 const _textBuffPanelStyle = $derived.by<TextBuffPanelStyle>(() =>
   ensureTextBuffPanelStyle(_activeProfile),
+);
+const _shieldDetailStyle = $derived.by<ShieldDetailStyle>(() =>
+  ensureShieldDetailStyle(_activeProfile),
 );
 const _monitoredPanelAttrs = $derived.by(() => ensurePanelAttrs(_activeProfile));
 const _enabledPanelAttrs = $derived.by(() =>
@@ -167,6 +172,10 @@ export function customPanelStyle() {
 
 export function textBuffPanelStyle() {
   return _textBuffPanelStyle;
+}
+
+export function shieldDetailStyle() {
+  return _shieldDetailStyle;
 }
 
 export function monitoredPanelAttrs() {

@@ -300,11 +300,25 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
     format: "percent",
   },
   {
+    attrId: 11810,
+    label: "护盾强度",
+    color: "#7dd3fc",
+    enabled: false,
+    format: "percent",
+  },
+  {
     attrId: 11970,
     label: "格挡",
     color: "#fbbf24",
     enabled: false,
     format: "percent",
+  },
+  {
+    attrId: 11350,
+    label: "物理防御",
+    color: "#fdba74",
+    enabled: false,
+    format: "integer",
   },
   {
     attrId: 11500,
@@ -441,6 +455,7 @@ export type OverlayPositions = {
   specialBuffGroup: Point;
   panelAttrGroup: Point;
   customPanelGroup: Point;
+  shieldDetailGroup: Point;
   iconBuffPositions: Record<number, Point>;
   skillDurationPositions: Record<number, Point>;
   categoryIconPositions?: Partial<Record<BuffCategoryKey, Point>>;
@@ -452,6 +467,7 @@ export type OverlaySizes = {
   textBuffPanelScale: number;
   panelAttrGroupScale: number;
   customPanelGroupScale: number;
+  shieldDetailGroupScale: number;
   panelAttrGap: number;
   panelAttrFontSize: number;
   panelAttrColumnGap: number;
@@ -466,6 +482,7 @@ export type OverlayVisibility = {
   showResourceGroup: boolean;
   showPanelAttrGroup: boolean;
   showCustomPanelGroup: boolean;
+  showShieldDetailGroup: boolean;
 };
 
 export type CustomPanelStyle = {
@@ -476,6 +493,15 @@ export type CustomPanelStyle = {
   valueColor: string;
   progressColor: string;
   progressOpacity: number;
+};
+
+export type ShieldDetailStyle = {
+  fontSize: number;
+  barWidth: number;
+  gap: number;
+  hpColor: string;
+  shieldColor: string;
+  healShieldColor: string;
 };
 
 export type MonsterOverlayPositions = {
@@ -581,6 +607,7 @@ export type SkillMonitorProfile = {
   panelAreaRowOrder?: PanelAreaRowRef[];
   customPanelStyle?: CustomPanelStyle;
   textBuffPanelStyle?: TextBuffPanelStyle;
+  shieldDetailStyle?: ShieldDetailStyle;
   textBuffMaxVisible: number;
   overlayPositions: OverlayPositions;
   overlaySizes: OverlaySizes;
@@ -607,6 +634,7 @@ function createDefaultOverlayPositions(): OverlayPositions {
     specialBuffGroup: { x: 360, y: 220 },
     panelAttrGroup: { x: 700, y: 40 },
     customPanelGroup: { x: 700, y: 280 },
+    shieldDetailGroup: { x: 40, y: 550 },
     iconBuffPositions: {},
     skillDurationPositions: {},
     categoryIconPositions: {},
@@ -620,6 +648,7 @@ function createDefaultOverlaySizes(): OverlaySizes {
     textBuffPanelScale: 1,
     panelAttrGroupScale: 1,
     customPanelGroupScale: 1,
+    shieldDetailGroupScale: 1,
     panelAttrGap: 4,
     panelAttrFontSize: 14,
     panelAttrColumnGap: 12,
@@ -636,6 +665,7 @@ function createDefaultOverlayVisibility(): OverlayVisibility {
     showResourceGroup: true,
     showPanelAttrGroup: true,
     showCustomPanelGroup: true,
+    showShieldDetailGroup: true,
   };
 }
 

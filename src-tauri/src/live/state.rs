@@ -3,14 +3,14 @@ use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
 use crate::live::buff_monitor::{BossBuffMonitors, BuffMonitor};
 use crate::live::commands_models::{
     CounterUpdateState, DeathRecord, FightResourceEntry, FightResourceState, PanelAttrState,
-    SkillCdState, TrainingDummyState,
+    ShieldDetailEntry, SkillCdState, TrainingDummyState,
 };
 use crate::live::counter_tracker::{BuffCounterTracker, CounterRule};
 use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::event_manager::EventManager;
 use crate::live::monster_registry;
-use crate::live::opcodes_models::{AttrType, Encounter, Entity};
+use crate::live::opcodes_models::{AttrType, AttrValue, Encounter, Entity};
 use crate::live::skill_cd_monitor::SkillCdMonitor;
 use crate::live::training_dummy::{
     TrainingDummyMonsterId, TrainingDummyRuntime, inspect_aoi_delta,
@@ -195,6 +195,50 @@ fn emit_panel_attr_update_if_needed(state: &mut AppState, payload: Vec<PanelAttr
         return;
     }
     state.event_manager.emit_panel_attr_update(payload);
+}
+
+fn emit_shield_detail_update_if_needed(
+    state: &mut AppState,
+    mut entries: Vec<ShieldDetailEntry>,
+) {
+    // Note: unlike other *_if_needed emitters, empty `entries` is meaningful
+    // (all shields expired) and must still be forwarded so the overlay clears.
+    let uid = state.attr_store.local_player_uid();
+    let current_hp = state
+        .attr_store
+        .attr(uid, AttrType::CurrentHp)
+        .and_then(AttrValue::as_int)
+        .unwrap_or(0);
+    let max_hp = state
+        .attr_store
+        .attr(uid, AttrType::MaxHp)
+        .and_then(AttrValue::as_int)
+        .unwrap_or(0);
+
+    // Enrich entries with buff monitor data (base_id, expire_time)
+    let clock_offset = state.server_clock_offset;
+    for entry in &mut entries {
+        let buff_uuid_i32 = entry.buff_uuid as i32;
+        if let Some(active_buff) = state
+            .local_monitor
+            .buff_monitor
+            .active_buffs
+            .get(&buff_uuid_i32)
+        {
+            entry.base_id = active_buff.base_id;
+            if active_buff.duration > 0 {
+                // expire = server_create_time + offset (→ local time) + duration
+                entry.expire_time_ms = active_buff
+                    .create_time
+                    .saturating_add(clock_offset)
+                    .saturating_add(active_buff.duration as i64);
+            }
+        }
+    }
+
+    state
+        .event_manager
+        .emit_shield_detail_update(current_hp, max_hp, entries);
 }
 
 fn emit_buff_counter_update_if_needed(state: &mut AppState, payload: Vec<CounterUpdateState>) {
@@ -945,7 +989,9 @@ impl AppStateManager {
         state: &mut AppState,
         sync_near_delta_info: blueprotobuf::SyncNearDeltaInfo,
     ) -> bool {
-        use crate::live::opcodes_process::{aoi_delta_has_player_damage, process_aoi_sync_delta};
+        use crate::live::opcodes_process::{
+            aoi_delta_has_player_damage, apply_panel_attrs, process_aoi_sync_delta,
+        };
         if state.pending_auto_reset.is_some() {
             let has_damage = sync_near_delta_info
                 .delta_infos
@@ -956,13 +1002,31 @@ impl AppStateManager {
 
         let mut counter_dirty = false;
         let mut aggregated_damage_events = Vec::new();
+        let local_player_uid = state.encounter.local_player_uid;
         for mut aoi_sync_delta in sync_near_delta_info.delta_infos {
             let target_uid = aoi_sync_delta.uuid.map(|uuid| uuid >> 16);
+            let is_local_player = target_uid == Some(local_player_uid) && local_player_uid != 0;
+
+            // Apply panel attrs for local player from AoiSyncDelta
+            if is_local_player {
+                if let Some(uuid) = aoi_sync_delta.uuid {
+                    if EEntityType::from(uuid) == EEntityType::EntChar {
+                        if let Some(attrs) = aoi_sync_delta.attrs.as_ref() {
+                            apply_panel_attrs(
+                                &mut state.attr_store,
+                                attrs,
+                                &state.local_monitor.monitored_panel_attr_ids,
+                            );
+                        }
+                    }
+                }
+            }
+
             let buff_bytes = aoi_sync_delta.buff_effect.take();
             let combat_target_filter = self.prepare_training_dummy_for_delta(
                 state,
                 &aoi_sync_delta,
-                state.encounter.local_player_uid,
+                local_player_uid,
                 "SyncNearDeltaInfo",
             );
 
@@ -1079,6 +1143,10 @@ impl AppStateManager {
                 .skill_cd_monitor
                 .build_filtered_skill_cds();
             emit_skill_cd_update_if_needed(state, filtered);
+        }
+
+        if changes.shield_detail_dirty {
+            emit_shield_detail_update_if_needed(state, changes.shield_detail_entries);
         }
 
         for death in changes.death_events {

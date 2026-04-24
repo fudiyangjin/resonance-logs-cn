@@ -2,6 +2,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import type {
   BuffUpdateState,
   CounterUpdateState,
+  ShieldDetailEntry,
   SkillCdState,
 } from "$lib/api";
 import type { BuffDefinition } from "$lib/config/buff-name-table";
@@ -22,6 +23,8 @@ export const overlayRuntime = $state({
   buffMap: new Map<number, BuffUpdateState>(),
   counterMap: new Map<number, CounterUpdateState>(),
   panelAttrMap: new Map<number, number>(),
+  shieldDetailHp: { current: 0, max: 0 },
+  shieldDetailEntries: [] as ShieldDetailEntry[],
   buffDefinitions: new Map<number, BuffDefinition>(),
   isEditing: false,
   dragState: null as DragState | null,
@@ -50,6 +53,14 @@ export function counterMap() {
 
 export function panelAttrMap() {
   return overlayRuntime.panelAttrMap;
+}
+
+export function shieldDetailHp() {
+  return overlayRuntime.shieldDetailHp;
+}
+
+export function shieldDetailEntries() {
+  return overlayRuntime.shieldDetailEntries;
 }
 
 export function buffDefinitions() {

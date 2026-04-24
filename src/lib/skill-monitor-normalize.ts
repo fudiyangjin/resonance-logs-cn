@@ -5,6 +5,7 @@ import {
   type OverlaySizes,
   type PanelAreaRowRef,
   type PanelAttrConfig,
+  type ShieldDetailStyle,
   type SkillMonitorProfile,
   type TextBuffPanelStyle,
 } from "$lib/settings-store";
@@ -15,6 +16,7 @@ export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   textBuffPanelScale: 1,
   panelAttrGroupScale: 1,
   customPanelGroupScale: 1,
+  shieldDetailGroupScale: 1,
   panelAttrGap: 4,
   panelAttrFontSize: 14,
   panelAttrColumnGap: 12,
@@ -81,7 +83,8 @@ export function ensurePanelAttrs(
 ): PanelAttrConfig[] {
   const current = profile?.monitoredPanelAttrs ?? [];
   const currentMap = new Map(current.map((item) => [item.attrId, item]));
-  return AVAILABLE_PANEL_ATTRS.map((item) => {
+  const allAttrs: PanelAttrConfig[] = [...AVAILABLE_PANEL_ATTRS];
+  return allAttrs.map((item) => {
     const existing = currentMap.get(item.attrId);
     return {
       attrId: item.attrId,
@@ -136,6 +139,9 @@ export function ensureOverlaySizes(profile: SkillMonitorProfile): OverlaySizes {
     customPanelGroupScale:
       current?.customPanelGroupScale ??
       DEFAULT_OVERLAY_SIZES.customPanelGroupScale,
+    shieldDetailGroupScale:
+      current?.shieldDetailGroupScale ??
+      DEFAULT_OVERLAY_SIZES.shieldDetailGroupScale,
     panelAttrGap: clampRounded(
       current?.panelAttrGap ?? DEFAULT_OVERLAY_SIZES.panelAttrGap,
       0,
@@ -185,5 +191,19 @@ export function ensureTextBuffPanelStyle(
     valueColor: current?.valueColor ?? "#ffffff",
     progressColor: current?.progressColor ?? "#ffffff",
     progressOpacity: clampDecimal(current?.progressOpacity ?? 0.4, 0, 1),
+  };
+}
+
+export function ensureShieldDetailStyle(
+  profile: SkillMonitorProfile | null,
+): ShieldDetailStyle {
+  const current = profile?.shieldDetailStyle;
+  return {
+    fontSize: clampRounded(current?.fontSize ?? 11, 8, 28),
+    barWidth: clampRounded(current?.barWidth ?? 160, 60, 400),
+    gap: clampRounded(current?.gap ?? 3, 0, 24),
+    hpColor: current?.hpColor ?? "#4ade80",
+    shieldColor: current?.shieldColor ?? "#60a5fa",
+    healShieldColor: current?.healShieldColor ?? "#fde68a",
   };
 }

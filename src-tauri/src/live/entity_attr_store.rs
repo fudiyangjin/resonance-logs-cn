@@ -1,4 +1,4 @@
-use crate::live::commands_models::{HateEntry, PanelAttrState};
+use crate::live::commands_models::{HateEntry, PanelAttrState, ShieldDetailEntry};
 use crate::live::opcodes_models::{AttrType, AttrValue, Entity};
 use blueprotobuf_lib::blueprotobuf::EActorState;
 use std::collections::HashMap;
@@ -20,6 +20,8 @@ pub struct EntityAttrStore {
     panel_attr_values: HashMap<i32, i32>,
     cd_dirty: bool,
     panel_dirty_attrs: Vec<PanelAttrState>,
+    shield_detail_entries: Vec<ShieldDetailEntry>,
+    shield_detail_dirty: bool,
     death_events: Vec<DeathEvent>,
 }
 
@@ -27,6 +29,8 @@ pub struct EntityAttrStore {
 pub struct AttrChanges {
     pub cd_dirty: bool,
     pub panel_dirty_attrs: Vec<PanelAttrState>,
+    pub shield_detail_dirty: bool,
+    pub shield_detail_entries: Vec<ShieldDetailEntry>,
     pub death_events: Vec<DeathEvent>,
 }
 
@@ -41,12 +45,18 @@ impl EntityAttrStore {
             panel_attr_values: HashMap::new(),
             cd_dirty: false,
             panel_dirty_attrs: Vec::with_capacity(8),
+            shield_detail_entries: Vec::new(),
+            shield_detail_dirty: false,
             death_events: Vec::new(),
         }
     }
 
     pub fn set_local_uid(&mut self, uid: i64) {
         self.local_player_uid = uid;
+    }
+
+    pub fn local_player_uid(&self) -> i64 {
+        self.local_player_uid
     }
 
     pub fn set_attr(&mut self, uid: i64, attr_type: AttrType, value: AttrValue) -> bool {
@@ -207,6 +217,11 @@ impl EntityAttrStore {
         self.cd_dirty = true;
     }
 
+    pub fn set_shield_detail(&mut self, entries: Vec<ShieldDetailEntry>) {
+        self.shield_detail_entries = entries;
+        self.shield_detail_dirty = true;
+    }
+
     pub fn clear_all_entities(&mut self) {
         self.attrs.clear();
         self.hate_lists.clear();
@@ -215,9 +230,17 @@ impl EntityAttrStore {
     }
 
     pub fn drain_changes(&mut self) -> AttrChanges {
+        let shield_dirty = std::mem::take(&mut self.shield_detail_dirty);
+        let shield_entries = if shield_dirty {
+            self.shield_detail_entries.clone()
+        } else {
+            Vec::new()
+        };
         AttrChanges {
             cd_dirty: std::mem::take(&mut self.cd_dirty),
             panel_dirty_attrs: std::mem::take(&mut self.panel_dirty_attrs),
+            shield_detail_dirty: shield_dirty,
+            shield_detail_entries: shield_entries,
             death_events: std::mem::take(&mut self.death_events),
         }
     }

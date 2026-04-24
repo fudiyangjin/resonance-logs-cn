@@ -1,6 +1,6 @@
 // NOTE: opcodes_process works on Encounter directly; avoid importing opcodes_models at top-level.
 use crate::database::{flush_playerdata, now_ms};
-use crate::live::commands_models::{DamageSnapshot, HateEntry};
+use crate::live::commands_models::{DamageSnapshot, HateEntry, ShieldDetailEntry};
 use crate::live::damage_id;
 use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
 use crate::live::entity_attr_store::EntityAttrStore;
@@ -14,6 +14,9 @@ use bytes::Buf;
 use log::{info, warn};
 use std::collections::hash_map::Entry;
 use std::default::Default;
+
+/// Attr ID for the shield display data (nested protobuf with current/max shield values).
+const ATTR_SHIELD_DISPLAY: i32 = 60050;
 
 /// Parses packed varints from ATTR_FIGHT_RESOURCES (50002) raw data.
 /// The raw data is expected to be a protobuf message with field 1 containing packed varints.
@@ -572,14 +575,23 @@ pub fn apply_panel_attrs(
     attrs: &blueprotobuf::AttrCollection,
     monitored_panel_attr_ids: &[i32],
 ) {
-    if monitored_panel_attr_ids.is_empty() {
-        return;
-    }
-
+    // Note: this function always scans attrs to decode ATTR_SHIELD_DISPLAY (60050)
+    // for the shield detail overlay, regardless of whether any panel attrs are
+    // monitored. Do not early-return when `monitored_panel_attr_ids` is empty.
     for attr in &attrs.attrs {
         let Some(attr_id) = attr.id else {
             continue;
         };
+        // attr 60050 is decoded into shield detail entries for the shield detail overlay.
+        // It is not exposed as a regular panel attr; see ShieldDetailGroup.svelte.
+        if attr_id == ATTR_SHIELD_DISPLAY {
+            let detail_entries = match attr.raw_data.as_deref() {
+                Some(raw) => decode_shield_detail_entries(raw),
+                None => Vec::new(),
+            };
+            attr_store.set_shield_detail(detail_entries);
+            continue;
+        }
         if !monitored_panel_attr_ids.contains(&attr_id) {
             continue;
         }
@@ -996,6 +1008,69 @@ fn decode_varint_i64_or_default(raw: Option<&[u8]>) -> i64 {
     raw.and_then(decode_varint_i64).unwrap_or(0)
 }
 
+/// Decodes attr 60050 shield display data into individual entries.
+/// Each entry: field 1=buff_uuid, field 2=display_type, field 3=current, field 4=initial_shield (shield when buff applied), field 5=max_shield.
+fn decode_shield_detail_entries(raw: &[u8]) -> Vec<ShieldDetailEntry> {
+    let mut buf = raw;
+    let mut entries = Vec::new();
+    while buf.has_remaining() {
+        let Some(tag) = prost::encoding::decode_varint(&mut buf).ok() else {
+            break;
+        };
+        if tag != 0x0A {
+            break;
+        }
+        let Some(entry_len) = prost::encoding::decode_varint(&mut buf).ok().map(|v| v as usize) else {
+            break;
+        };
+        if buf.remaining() < entry_len {
+            break;
+        }
+        let entry_bytes = &buf[..entry_len];
+        buf.advance(entry_len);
+
+        let mut entry_buf = entry_bytes;
+        let mut buff_uuid: i64 = 0;
+        let mut display_type: i32 = 0;
+        let mut current: i64 = 0;
+        let mut initial_shield: i64 = 0;
+        let mut max_shield: i64 = 0;
+
+        while entry_buf.has_remaining() {
+            let Some(field_tag) = prost::encoding::decode_varint(&mut entry_buf).ok() else {
+                break;
+            };
+            let field_num = field_tag >> 3;
+            let wire_type = field_tag & 0x07;
+            if wire_type != 0 {
+                break;
+            }
+            let Some(val) = prost::encoding::decode_varint(&mut entry_buf).ok() else {
+                break;
+            };
+            match field_num {
+                1 => buff_uuid = val as i64,
+                2 => display_type = val as i32,
+                3 => current = val as i64,
+                4 => initial_shield = val as i64,
+                5 => max_shield = val as i64,
+                _ => {}
+            }
+        }
+
+        entries.push(ShieldDetailEntry {
+            buff_uuid,
+            display_type,
+            current,
+            initial_shield,
+            max_shield,
+            base_id: 0,
+            expire_time_ms: 0,
+        });
+    }
+    entries
+}
+
 fn decode_prefixed_string(raw: &[u8]) -> Option<String> {
     let mut buf = raw;
     let len = prost::encoding::decode_varint(&mut buf).ok()? as usize;
@@ -1062,6 +1137,24 @@ fn process_player_attrs(
             continue;
         }
 
+        // Decode shield display (attr 60050) for all players, store total shield as CurrentShield
+        if attr_id == ATTR_SHIELD_DISPLAY {
+            let total_shield = raw_bytes_opt
+                .map(|raw| {
+                    decode_shield_detail_entries(raw)
+                        .iter()
+                        .map(|e| e.current)
+                        .sum::<i64>()
+                })
+                .unwrap_or(0);
+            attr_store.set_attr(
+                target_uid,
+                AttrType::CurrentShield,
+                AttrValue::Int(total_shield),
+            );
+            continue;
+        }
+
         let decoded = if attr_id == attr_type::ATTR_NAME {
             let name = decode_prefixed_string_or_default(raw_bytes_opt);
             if !name.is_empty() {
@@ -1076,7 +1169,7 @@ fn process_player_attrs(
         };
 
         if let Some((attr_type, value)) = decoded {
-            let _ = attr_store.set_attr(target_uid, attr_type, value);
+            attr_store.set_attr(target_uid, attr_type, value);
         }
     }
 }

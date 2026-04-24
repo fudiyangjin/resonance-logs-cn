@@ -340,6 +340,37 @@ pub struct PanelAttrUpdatePayload {
     pub attrs: Vec<PanelAttrState>,
 }
 
+/// A single shield entry parsed from attr 60050.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ShieldDetailEntry {
+    pub buff_uuid: i64,
+    pub display_type: i32,
+    /// Current shield value (field 3)
+    pub current: i64,
+    /// Initial shield value when the buff was applied (field 4)
+    pub initial_shield: i64,
+    /// Max shield value (field 5)
+    pub max_shield: i64,
+    /// Base ID of the buff (from buff monitor lookup), 0 if unknown
+    pub base_id: i32,
+    /// Local-clock expiry timestamp in ms, 0 if unknown or permanent
+    pub expire_time_ms: i64,
+}
+
+/// Payload for shield detail update event.
+///
+/// HP is duplicated here (rather than relying on `panel-attr-update` for
+/// attrs 11310/11320) so the shield detail overlay works even when the user
+/// has not enabled HP panel attrs.
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ShieldDetailUpdatePayload {
+    pub current_hp: i64,
+    pub max_hp: i64,
+    pub entries: Vec<ShieldDetailEntry>,
+}
+
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FightResourceEntry {

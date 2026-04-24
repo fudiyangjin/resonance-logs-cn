@@ -130,6 +130,9 @@
   const showCustomPanelGroup = $derived(
     activeProfile.overlayVisibility?.showCustomPanelGroup ?? true,
   );
+  const showShieldDetailGroup = $derived(
+    activeProfile.overlayVisibility?.showShieldDetailGroup ?? true,
+  );
   const customPanelStyle = $derived.by(() => ensureCustomPanelStyle(activeProfile));
   const textBuffPanelStyle = $derived.by(() => ensureTextBuffPanelStyle(activeProfile));
   const buffDisplayMode = $derived(
@@ -460,7 +463,8 @@
       | "showSkillDurationGroup"
       | "showResourceGroup"
       | "showPanelAttrGroup"
-      | "showCustomPanelGroup",
+      | "showCustomPanelGroup"
+      | "showShieldDetailGroup",
     checked: boolean,
   ) {
     updateActiveProfile((profile) => ({
@@ -472,6 +476,7 @@
         showResourceGroup: profile.overlayVisibility?.showResourceGroup ?? true,
         showPanelAttrGroup: profile.overlayVisibility?.showPanelAttrGroup ?? true,
         showCustomPanelGroup: profile.overlayVisibility?.showCustomPanelGroup ?? true,
+        showShieldDetailGroup: profile.overlayVisibility?.showShieldDetailGroup ?? true,
         [key]: checked,
       },
     }));
@@ -483,7 +488,8 @@
       | "showSkillDurationGroup"
       | "showResourceGroup"
       | "showPanelAttrGroup"
-      | "showCustomPanelGroup",
+      | "showCustomPanelGroup"
+      | "showShieldDetailGroup",
   ) {
     const current = key === "showSkillCdGroup"
       ? showSkillCdGroup
@@ -493,6 +499,8 @@
       ? showResourceGroup
       : key === "showPanelAttrGroup"
       ? showPanelAttrGroup
+      : key === "showShieldDetailGroup"
+      ? showShieldDetailGroup
       : showCustomPanelGroup;
     setOverlaySectionVisibility(key, !current);
   }
@@ -1357,6 +1365,7 @@
       {showResourceGroup}
       {showPanelAttrGroup}
       {showCustomPanelGroup}
+      {showShieldDetailGroup}
       {toggleOverlaySectionVisibility}
     />
   {/if}

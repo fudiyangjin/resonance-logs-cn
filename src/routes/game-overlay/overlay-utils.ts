@@ -18,6 +18,7 @@ export {
   ensureOverlaySizes,
   ensurePanelAreaRowOrder,
   ensurePanelAttrs,
+  ensureShieldDetailStyle,
   ensureTextBuffPanelStyle,
 } from "$lib/skill-monitor-normalize";
 import { ensurePanelAreaRowOrder } from "$lib/skill-monitor-normalize";
@@ -62,6 +63,8 @@ export function ensureOverlayPositions(
       current?.panelAttrGroup ?? DEFAULT_OVERLAY_POSITIONS.panelAttrGroup,
     customPanelGroup:
       current?.customPanelGroup ?? DEFAULT_OVERLAY_POSITIONS.customPanelGroup,
+    shieldDetailGroup:
+      current?.shieldDetailGroup ?? DEFAULT_OVERLAY_POSITIONS.shieldDetailGroup,
     iconBuffPositions: current?.iconBuffPositions ?? {},
     skillDurationPositions: current?.skillDurationPositions ?? {},
     categoryIconPositions: current?.categoryIconPositions ?? {},
@@ -88,6 +91,9 @@ export function ensureOverlayVisibility(
     showCustomPanelGroup:
       current?.showCustomPanelGroup ??
       DEFAULT_OVERLAY_VISIBILITY.showCustomPanelGroup,
+    showShieldDetailGroup:
+      current?.showShieldDetailGroup ??
+      DEFAULT_OVERLAY_VISIBILITY.showShieldDetailGroup,
   };
 }
 

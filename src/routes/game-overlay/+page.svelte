@@ -6,6 +6,7 @@
   import IndividualBuffDisplay from "./IndividualBuffDisplay.svelte";
   import PanelAttrGroup from "./PanelAttrGroup.svelte";
   import ResourceGroup from "./ResourceGroup.svelte";
+  import ShieldDetailGroup from "./ShieldDetailGroup.svelte";
   import SkillCdGroup from "./SkillCdGroup.svelte";
   import SkillDurationDisplay from "./SkillDurationDisplay.svelte";
   import TextBuffPanel from "./TextBuffPanel.svelte";
@@ -46,6 +47,10 @@
 
   {#if visibility.showCustomPanelGroup}
     <CustomPanelGroup />
+  {/if}
+
+  {#if visibility.showShieldDetailGroup}
+    <ShieldDetailGroup />
   {/if}
 
   <TextBuffPanel />

@@ -6,6 +6,7 @@ import {
   onBuffUpdate,
   onFightResUpdate,
   onPanelAttrUpdate,
+  onShieldDetailUpdate,
   onSkillCdUpdate,
   type BuffUpdateState,
   type CounterUpdateState,
@@ -123,6 +124,13 @@ export function initOverlay() {
     }
     overlayRuntime.panelAttrMap = next;
   });
+  const unlistenShieldDetail = onShieldDetailUpdate((event) => {
+    overlayRuntime.shieldDetailHp = {
+      current: event.payload.currentHp,
+      max: event.payload.maxHp,
+    };
+    overlayRuntime.shieldDetailEntries = event.payload.entries;
+  });
 
   window.addEventListener("pointermove", onGlobalPointerMove);
   window.addEventListener("pointerup", onGlobalPointerUp);
@@ -139,6 +147,7 @@ export function initOverlay() {
     unlistenCd.then((fn) => fn());
     unlistenRes.then((fn) => fn());
     unlistenPanelAttr.then((fn) => fn());
+    unlistenShieldDetail.then((fn) => fn());
     window.removeEventListener("pointermove", onGlobalPointerMove);
     window.removeEventListener("pointerup", onGlobalPointerUp);
     cleanupClock();

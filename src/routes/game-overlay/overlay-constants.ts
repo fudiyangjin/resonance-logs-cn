@@ -29,6 +29,7 @@ export const DEFAULT_OVERLAY_POSITIONS: OverlayPositions = {
   specialBuffGroup: { x: 360, y: 220 },
   panelAttrGroup: { x: 700, y: 40 },
   customPanelGroup: { x: 700, y: 280 },
+  shieldDetailGroup: { x: 40, y: 550 },
   iconBuffPositions: {},
   skillDurationPositions: {},
   categoryIconPositions: {},
@@ -40,4 +41,5 @@ export const DEFAULT_OVERLAY_VISIBILITY: OverlayVisibility = {
   showResourceGroup: true,
   showPanelAttrGroup: true,
   showCustomPanelGroup: true,
+  showShieldDetailGroup: true,
 };

@@ -46,6 +46,12 @@
       }
     }
 
+    if (overlayVisibility?.showShieldDetailGroup !== false) {
+      const pos = overlayPositions?.shieldDetailGroup ?? { x: 40, y: 550 };
+      const scale = overlaySizes?.shieldDetailGroupScale ?? 1;
+      pushArea("shieldDetailGroup", "血量护盾区", pos.x, pos.y, 240, 120, scale);
+    }
+
     pushArea("textBuffPanel", "无图标Buff区", overlayPositions.textBuffPanel.x, overlayPositions.textBuffPanel.y, 240, 130, overlaySizes.textBuffPanelScale);
 
     if (profile.buffDisplayMode === "grouped") {

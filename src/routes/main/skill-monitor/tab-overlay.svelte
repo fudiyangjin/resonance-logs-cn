@@ -5,13 +5,15 @@
     showResourceGroup: boolean;
     showPanelAttrGroup: boolean;
     showCustomPanelGroup: boolean;
+    showShieldDetailGroup: boolean;
     toggleOverlaySectionVisibility: (
       key:
         | "showSkillCdGroup"
         | "showSkillDurationGroup"
         | "showResourceGroup"
         | "showPanelAttrGroup"
-        | "showCustomPanelGroup",
+        | "showCustomPanelGroup"
+        | "showShieldDetailGroup",
     ) => void;
   }
 
@@ -21,6 +23,7 @@
     showResourceGroup,
     showPanelAttrGroup,
     showCustomPanelGroup,
+    showShieldDetailGroup,
     toggleOverlaySectionVisibility,
   }: Props = $props();
 </script>
@@ -78,6 +81,15 @@
         onclick={() => toggleOverlaySectionVisibility("showCustomPanelGroup")}
       >
         自定义监控区：{showCustomPanelGroup ? "显示" : "隐藏"}
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {showShieldDetailGroup
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => toggleOverlaySectionVisibility("showShieldDetailGroup")}
+      >
+        血量护盾区：{showShieldDetailGroup ? "显示" : "隐藏"}
       </button>
     </div>
     <p class="text-xs text-muted-foreground">

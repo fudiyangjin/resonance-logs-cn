@@ -171,6 +171,22 @@ export type PanelAttrUpdatePayload = {
   attrs: PanelAttrState[];
 };
 
+export type ShieldDetailEntry = {
+  buffUuid: number;
+  displayType: number;
+  current: number;
+  initialShield: number;
+  maxShield: number;
+  baseId: number;
+  expireTimeMs: number;
+};
+
+export type ShieldDetailUpdatePayload = {
+  currentHp: number;
+  maxHp: number;
+  entries: ShieldDetailEntry[];
+};
+
 export type EncounterUpdatePayload = {
   headerInfo: HeaderInfo;
   isPaused: boolean;
@@ -264,6 +280,11 @@ export const onPanelAttrUpdate = (
   handler: (event: Event<PanelAttrUpdatePayload>) => void
 ): Promise<UnlistenFn> =>
   listen<PanelAttrUpdatePayload>("panel-attr-update", handler);
+
+export const onShieldDetailUpdate = (
+  handler: (event: Event<ShieldDetailUpdatePayload>) => void
+): Promise<UnlistenFn> =>
+  listen<ShieldDetailUpdatePayload>("shield-detail-update", handler);
 
 export const onDeathReplay = (
   handler: (event: Event<DeathReplayPayload>) => void
