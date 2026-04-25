@@ -52,6 +52,11 @@ const BUFF_CATEGORY_CATALOG: Record<
 };
 
 const FOOD_NAME_KEYWORDS = ["物攻", "魔攻", "护甲", "耐力", "生命恢复"];
+const ALCHEMY_NAME_KEYWORDS = ["元素强度", "元素抗性", "增效强度"];
+
+function isAlchemyBuffName(defaultName: string): boolean {
+  return ALCHEMY_NAME_KEYWORDS.some((keyword) => defaultName.includes(keyword));
+}
 
 function resolveBuffCategories(
   defaultName: string,
@@ -66,7 +71,7 @@ function resolveBuffCategories(
   }
   if (
     iconKey?.startsWith("buff_agentia_up") &&
-    defaultName.includes("元素强度")
+    isAlchemyBuffName(defaultName)
   ) {
     categories.push("alchemy");
   }
@@ -170,9 +175,11 @@ export function getAvailableBuffDefinitions(): BuffDefinition[] {
 }
 
 export function getBuffCategoryDefinitions(): BuffCategoryDefinition[] {
-  return (Object.entries(BUFF_CATEGORY_CATALOG) as Array<
-    [BuffCategoryKey, { label: string; buffIds: number[] }]
-  >).map(([key, category]) => ({
+  return (
+    Object.entries(BUFF_CATEGORY_CATALOG) as Array<
+      [BuffCategoryKey, { label: string; buffIds: number[] }]
+    >
+  ).map(([key, category]) => ({
     key,
     label: category.label,
     count: category.buffIds.length,
@@ -243,15 +250,23 @@ export function searchBuffsByName(
     const alias = normalizedAliases[String(meta.baseId)] ?? null;
     const aliasRank = getMatchRank(alias, normalizedKeyword, 1, 2);
     const defaultRank = getMatchRank(meta.defaultName, normalizedKeyword, 3, 4);
-    const rank = Math.min(aliasRank ?? Number.POSITIVE_INFINITY, defaultRank ?? Number.POSITIVE_INFINITY);
+    const rank = Math.min(
+      aliasRank ?? Number.POSITIVE_INFINITY,
+      defaultRank ?? Number.POSITIVE_INFINITY,
+    );
     if (!Number.isFinite(rank)) continue;
     matches.push({ baseId: meta.baseId, rank });
   }
 
   matches.sort((a, b) => a.rank - b.rank || a.baseId - b.baseId);
 
-  const normalizedLimit = Number.isFinite(limit) ? Math.max(1, Math.floor(limit ?? 0)) : null;
-  const visibleMatches = normalizedLimit === null ? matches : matches.slice(0, normalizedLimit);
+  const normalizedLimit = Number.isFinite(limit)
+    ? Math.max(1, Math.floor(limit ?? 0))
+    : null;
+  const visibleMatches =
+    normalizedLimit === null ? matches : matches.slice(0, normalizedLimit);
 
-  return visibleMatches.map((match) => resolveBuffNameInfo(match.baseId, normalizedAliases));
+  return visibleMatches.map((match) =>
+    resolveBuffNameInfo(match.baseId, normalizedAliases),
+  );
 }
