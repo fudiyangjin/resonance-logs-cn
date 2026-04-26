@@ -137,6 +137,21 @@
   let updateUnlisten: UnlistenFn | null = null;
   let clickthroughUnlisten: UnlistenFn | null = null;
 
+  async function revealMainWindowForNotice() {
+    try {
+      const appWebview = getCurrentWebviewWindow();
+
+      if (!(await appWebview.isVisible())) {
+        await appWebview.show();
+      }
+
+      await appWebview.unminimize();
+      await appWebview.setFocus();
+    } catch (err) {
+      console.error("Failed to reveal main window for notice", err);
+    }
+  }
+
   onMount(() => {
     // Set up navigation listener
     const appWebview = getCurrentWebviewWindow();
@@ -149,6 +164,7 @@
 
     listen<UpdateInfo>("update-available", (event) => {
       updateInfo = event.payload;
+      void revealMainWindowForNotice();
     }).then((unlisten) => {
       updateUnlisten = unlisten;
     }).catch((err) => {
@@ -169,6 +185,7 @@
       // Compare persisted last-seen version with current app version
       if ((SETTINGS.appVersion.state as any).value !== v) {
         showChangelog = true;
+        void revealMainWindowForNotice();
       }
     }).catch((err) => {
       console.error('Failed to get app version', err);
