@@ -8,6 +8,7 @@
   import { liveHealPlayerColumns } from "$lib/column-data";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import PercentFormat from "$lib/components/percent-format.svelte";
+  import LivePlayerPowerBadge from "$lib/components/live-player-power-badge.svelte";
   import getDisplayName from "$lib/name-display";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
@@ -144,11 +145,21 @@
                       "未知职业",
                   )}
                 />
-                <span
-                  class="truncate font-medium flex-1 min-w-0"
-                  style="color: {customThemeColors.tableTextColor};"
-                  >{displayName || `#${player.uid}`}</span
-                >
+                <div class="flex flex-1 min-w-0 items-center gap-1">
+                  <span
+                    class="truncate font-medium min-w-0"
+                    style="color: {customThemeColors.tableTextColor};"
+                    >{displayName || `#${player.uid}`}</span
+                  >
+                  <LivePlayerPowerBadge
+                    abilityScore={player.abilityScore}
+                    seasonStrength={player.seasonStrength}
+                    {isLocalPlayer}
+                    suffixFontSize={tableSettings.abbreviatedFontSize}
+                    suffixColor={customThemeColors.tableAbbreviatedColor}
+                    textColor={customThemeColors.tableTextColor}
+                  />
+                </div>
                 <span
                   class="inline-flex items-center gap-1 tabular-nums font-medium shrink-0"
                   style="color: {customThemeColors.tableTextColor};"
