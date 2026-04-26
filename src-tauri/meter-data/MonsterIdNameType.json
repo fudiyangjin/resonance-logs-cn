@@ -2691,6 +2691,22 @@
     "Name": "深绿之牙",
     "MonsterType": 1
   },
+  "8652": {
+    "Name": "姆克·半机体猎犬",
+    "MonsterType": 0
+  },
+  "8653": {
+    "Name": "神秘人",
+    "MonsterType": 0
+  },
+  "8654": {
+    "Name": "黑石军团士兵",
+    "MonsterType": 0
+  },
+  "8655": {
+    "Name": "黑石军团士兵",
+    "MonsterType": 0
+  },
   "8701": {
     "Name": "蜥蜴人战士",
     "MonsterType": 0
@@ -3927,6 +3943,86 @@
     "Name": "空洞监察者",
     "MonsterType": 2
   },
+  "11220": {
+    "Name": "虾菇",
+    "MonsterType": 0
+  },
+  "11221": {
+    "Name": "剧毒虾菇",
+    "MonsterType": 0
+  },
+  "11222": {
+    "Name": "麻痹虾菇",
+    "MonsterType": 1
+  },
+  "11223": {
+    "Name": "梦现宿主",
+    "MonsterType": 2
+  },
+  "11224": {
+    "Name": "溪谷姆克",
+    "MonsterType": 0
+  },
+  "11225": {
+    "Name": "溪谷姆克",
+    "MonsterType": 0
+  },
+  "11226": {
+    "Name": "溪谷斗技者",
+    "MonsterType": 1
+  },
+  "11227": {
+    "Name": "溪谷尖兵",
+    "MonsterType": 2
+  },
+  "11228": {
+    "Name": "青沫哥布林",
+    "MonsterType": 0
+  },
+  "11229": {
+    "Name": "雷沫哥布林",
+    "MonsterType": 0
+  },
+  "11230": {
+    "Name": "哥布林贤者",
+    "MonsterType": 1
+  },
+  "11231": {
+    "Name": "拾贝异教徒",
+    "MonsterType": 2
+  },
+  "11232": {
+    "Name": "溪谷斥候",
+    "MonsterType": 0
+  },
+  "11233": {
+    "Name": "溪谷弩手",
+    "MonsterType": 0
+  },
+  "11234": {
+    "Name": "溪谷游猎者",
+    "MonsterType": 1
+  },
+  "11235": {
+    "Name": "流浪的游子",
+    "MonsterType": 2
+  },
+  "11236": {
+    "Name": "鲨鱼人1",
+    "MonsterType": 0
+  },
+  "11237": {
+    "Name": "鲨鱼人2",
+    "MonsterType": 0
+  },
+  "11238": {
+    "Name": "鲨鱼人精英",
+    "MonsterType": 1
+  },
+  "11239": {
+    "Name": "鲨鱼人首领",
+    "MonsterType": 2
+  },
   "12000": {
     "Name": "矿道蟹蛛",
     "MonsterType": 2
@@ -4662,6 +4758,18 @@
   "30137": {
     "Name": "裁定执行者",
     "MonsterType": 1
+  },
+  "30150": {
+    "Name": "切齿毛球",
+    "MonsterType": 0
+  },
+  "30151": {
+    "Name": "多戈尔曼",
+    "MonsterType": 1
+  },
+  "30152": {
+    "Name": "狂悖之王",
+    "MonsterType": 2
   },
   "30301": {
     "Name": "造景卫兵",
@@ -9115,6 +9223,10 @@
     "Name": "机械眼舱",
     "MonsterType": 1
   },
+  "103209": {
+    "Name": "隐身怪（结局表演冲锋用）",
+    "MonsterType": 0
+  },
   "103102": {
     "Name": "歼灭炮",
     "MonsterType": 1
@@ -9897,6 +10009,34 @@
   },
   "581105": {
     "Name": "极速蟹蛛",
+    "MonsterType": 0
+  },
+  "590001": {
+    "Name": "蜥蜴人士兵",
+    "MonsterType": 1
+  },
+  "590002": {
+    "Name": "深海凝视者",
+    "MonsterType": 1
+  },
+  "590101": {
+    "Name": "凶猛金牙",
+    "MonsterType": 2
+  },
+  "590102": {
+    "Name": "幻妖蟹蛛",
+    "MonsterType": 2
+  },
+  "590103": {
+    "Name": "破雾之牙",
+    "MonsterType": 2
+  },
+  "590104": {
+    "Name": "克劳泽",
+    "MonsterType": 0
+  },
+  "590105": {
+    "Name": "雅戈尔将军",
     "MonsterType": 0
   },
   "604001": {
@@ -10892,7 +11032,7 @@
     "MonsterType": 0
   },
   "920533": {
-    "Name": "弥妄·游魂",
+    "Name": "迷失·游离体",
     "MonsterType": 0
   },
   "920534": {
@@ -10904,12 +11044,12 @@
     "MonsterType": 0
   },
   "920536": {
-    "Name": "弥妄·研究员",
+    "Name": "迷失·研究员",
     "MonsterType": 0
   },
   "920550": {
     "Name": "弥妄·巨像",
-    "MonsterType": 0
+    "MonsterType": 1
   },
   "920551": {
     "Name": "巫师哥布林",
@@ -11890,5 +12030,21 @@
   "7700002": {
     "Name": "战斗机像03型",
     "MonsterType": 0
+  },
+  "591001": {
+    "Name": "三足重型眼舱",
+    "MonsterType": 1
+  },
+  "591002": {
+    "Name": "三足眼舱",
+    "MonsterType": 0
+  },
+  "591003": {
+    "Name": "煌墓守护者",
+    "MonsterType": 1
+  },
+  "591004": {
+    "Name": "神罚代理者",
+    "MonsterType": 2
   }
 }
