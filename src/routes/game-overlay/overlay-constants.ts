@@ -41,10 +41,10 @@ export const DEFAULT_OVERLAY_POSITIONS: OverlayPositions = {
 };
 
 export const DEFAULT_OVERLAY_VISIBILITY: OverlayVisibility = {
-  showSkillCdGroup: true,
+  showSkillCdGroup: false,
   showSkillDurationGroup: true,
-  showResourceGroup: true,
+  showResourceGroup: false,
   showPanelAttrGroup: true,
   showCustomPanelGroup: true,
-  showShieldDetailGroup: true,
+  showShieldDetailGroup: false,
 };

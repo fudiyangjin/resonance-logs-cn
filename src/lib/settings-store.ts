@@ -665,12 +665,12 @@ function createDefaultOverlaySizes(): OverlaySizes {
 
 function createDefaultOverlayVisibility(): OverlayVisibility {
   return {
-    showSkillCdGroup: true,
+    showSkillCdGroup: false,
     showSkillDurationGroup: true,
-    showResourceGroup: true,
+    showResourceGroup: false,
     showPanelAttrGroup: true,
     showCustomPanelGroup: true,
-    showShieldDetailGroup: true,
+    showShieldDetailGroup: false,
   };
 }
 

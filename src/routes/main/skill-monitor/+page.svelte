@@ -116,13 +116,13 @@
   const panelAttrFontSize = $derived(ensureOverlaySizes(activeProfile).panelAttrFontSize);
   const panelAttrColumnGap = $derived(ensureOverlaySizes(activeProfile).panelAttrColumnGap);
   const showSkillCdGroup = $derived(
-    activeProfile.overlayVisibility?.showSkillCdGroup ?? true,
+    activeProfile.overlayVisibility?.showSkillCdGroup ?? false,
   );
   const showSkillDurationGroup = $derived(
     activeProfile.overlayVisibility?.showSkillDurationGroup ?? true,
   );
   const showResourceGroup = $derived(
-    activeProfile.overlayVisibility?.showResourceGroup ?? true,
+    activeProfile.overlayVisibility?.showResourceGroup ?? false,
   );
   const showPanelAttrGroup = $derived(
     activeProfile.overlayVisibility?.showPanelAttrGroup ?? true,
@@ -131,7 +131,7 @@
     activeProfile.overlayVisibility?.showCustomPanelGroup ?? true,
   );
   const showShieldDetailGroup = $derived(
-    activeProfile.overlayVisibility?.showShieldDetailGroup ?? true,
+    activeProfile.overlayVisibility?.showShieldDetailGroup ?? false,
   );
   const customPanelStyle = $derived.by(() => ensureCustomPanelStyle(activeProfile));
   const textBuffPanelStyle = $derived.by(() => ensureTextBuffPanelStyle(activeProfile));
@@ -470,13 +470,13 @@
     updateActiveProfile((profile) => ({
       ...profile,
       overlayVisibility: {
-        showSkillCdGroup: profile.overlayVisibility?.showSkillCdGroup ?? true,
+        showSkillCdGroup: profile.overlayVisibility?.showSkillCdGroup ?? false,
         showSkillDurationGroup:
           profile.overlayVisibility?.showSkillDurationGroup ?? true,
-        showResourceGroup: profile.overlayVisibility?.showResourceGroup ?? true,
+        showResourceGroup: profile.overlayVisibility?.showResourceGroup ?? false,
         showPanelAttrGroup: profile.overlayVisibility?.showPanelAttrGroup ?? true,
         showCustomPanelGroup: profile.overlayVisibility?.showCustomPanelGroup ?? true,
-        showShieldDetailGroup: profile.overlayVisibility?.showShieldDetailGroup ?? true,
+        showShieldDetailGroup: profile.overlayVisibility?.showShieldDetailGroup ?? false,
         [key]: checked,
       },
     }));
