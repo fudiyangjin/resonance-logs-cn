@@ -227,6 +227,8 @@ pub fn process_sync_container_data(
 ) -> Option<()> {
     let v_data = sync_container_data.v_data?;
     let player_uid = v_data.char_id?;
+    encounter.local_player_uid = player_uid;
+    attr_store.set_local_uid(player_uid);
 
     let target_entity = encounter
         .entity_uid_to_entity
