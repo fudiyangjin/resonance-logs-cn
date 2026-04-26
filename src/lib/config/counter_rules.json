@@ -108,7 +108,7 @@
     "sources": [
       {
         "skillCast": {
-          "skillBaseIds": [1937],
+          "skillBaseIds": [1937, 1939],
           "increment": 1
         }
       }
