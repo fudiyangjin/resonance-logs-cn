@@ -24,6 +24,7 @@
     type RecountGroup,
     type SkillDisplayRow,
   } from "$lib/config/recount-table";
+  import { resolveMonsterName, resolveSceneName } from "$lib/config/game-names";
   import { formatClassSpecLabel } from "$lib/class-labels";
   import DeathPlayerList, {
     type DeathPlayerEntry,
@@ -76,7 +77,7 @@
 
   type PerTargetStats = {
     targetUid: number;
-    targetName: string;
+    targetMonsterId: number | null;
     totalValue: number;
     damage: RawCombatStats;
     skills: Partial<Record<number, RawSkillStats>>;
@@ -90,8 +91,13 @@
 
   type OverviewTargetOption = {
     targetUid: number;
+    targetMonsterId: number | null;
     targetName: string;
     totalValue: number;
+  };
+
+  type DisplayPerTargetStats = PerTargetStats & {
+    targetName: string;
   };
 
   // Get encounter ID from URL params
@@ -245,6 +251,17 @@
     return mapping;
   });
 
+  function resolveTargetDisplayName(target: PerTargetStats): string {
+    const entityName = entityNameByUid.get(target.targetUid);
+    if (entityName) return entityName;
+
+    if (target.targetMonsterId !== null) {
+      return resolveMonsterName(target.targetMonsterId);
+    }
+
+    return `#${target.targetUid}`;
+  }
+
   let pushedUidSet = $derived.by(() => new Set(rawEntities.map((row) => row.uid)));
 
   function isNumericLikeName(name: string): boolean {
@@ -255,16 +272,21 @@
     const merged = new Map<number, OverviewTargetOption>();
     for (const row of rawEntities) {
       for (const target of row.dmgPerTarget ?? []) {
+        const targetName = resolveTargetDisplayName(target);
         const existing = merged.get(target.targetUid);
         if (existing) {
           existing.totalValue += target.totalValue;
-          if (existing.targetName.startsWith("#") && target.targetName) {
-            existing.targetName = target.targetName;
+          if (existing.targetName.startsWith("#") && targetName) {
+            existing.targetName = targetName;
+          }
+          if (existing.targetMonsterId === null && target.targetMonsterId !== null) {
+            existing.targetMonsterId = target.targetMonsterId;
           }
         } else {
           merged.set(target.targetUid, {
             targetUid: target.targetUid,
-            targetName: target.targetName,
+            targetMonsterId: target.targetMonsterId,
+            targetName,
             totalValue: target.totalValue,
           });
         }
@@ -443,14 +465,12 @@
   let flatSkillRows = $derived.by(() => flattenGrouping(skillGrouping));
 
   let healTargetSummary = $derived.by(() => {
-    if (!selectedPlayer || skillType !== "heal") return [] as PerTargetStats[];
+    if (!selectedPlayer || skillType !== "heal") return [] as DisplayPerTargetStats[];
     return [...(perTargetByUid.get(selectedPlayer.uid)?.healTargets ?? [])]
-      .map((target) => {
-        const resolvedName = entityNameByUid.get(target.targetUid);
-        return resolvedName
-          ? { ...target, targetName: resolvedName }
-          : target;
-      })
+      .map((target) => ({
+        ...target,
+        targetName: resolveTargetDisplayName(target),
+      }))
       .filter(
         (target) =>
           target.totalValue > 0 &&
@@ -755,7 +775,12 @@
                   </svg>
                 </button>
                 <h2 class="text-lg font-semibold text-foreground leading-tight">
-                  {encounter.sceneName ?? "未知场景"}
+                  {encounter.sceneId !== null
+                    ? resolveSceneName(
+                        encounter.sceneId,
+                        encounter.dungeonDifficulty,
+                      )
+                    : "未知场景"}
                 </h2>
               </div>
               {#if encounter.bosses.length > 0}
@@ -766,7 +791,10 @@
                         class={b.isDefeated
                           ? "text-destructive line-through"
                           : "text-primary"}
-                        >{b.monsterName}{i < encounter.bosses.length - 1 ? "," : ""}</span
+                        >{resolveMonsterName(b.monsterId)}{i <
+                        encounter.bosses.length - 1
+                          ? ","
+                          : ""}</span
                       >
                     {/each}
                   </div>

@@ -123,8 +123,8 @@ pub struct EncounterRow {
     pub total_heal: Option<i64>,
     /// The ID of the scene where the encounter took place.
     pub scene_id: Option<i32>,
-    /// The name of the scene where the encounter took place.
-    pub scene_name: Option<String>,
+    /// Dungeon difficulty suffix for the scene, if known.
+    pub dungeon_difficulty: Option<i32>,
     /// The duration of the encounter in seconds.
     pub duration: f64,
     /// The accumulated active combat duration in seconds.
@@ -137,7 +137,7 @@ pub struct EncounterRow {
     pub is_favorite: i32,
     /// Whether the encounter was manually reset (should not be uploaded).
     pub is_manually_reset: i32,
-    pub boss_names: Option<String>,
+    pub boss_monster_ids: Option<String>,
     pub player_names: Option<String>,
 }
 
@@ -157,8 +157,8 @@ pub struct NewEncounter {
     pub total_heal: Option<i64>,
     /// The ID of the scene where the encounter took place.
     pub scene_id: Option<i32>,
-    /// The name of the scene where the encounter took place.
-    pub scene_name: Option<String>,
+    /// Dungeon difficulty suffix for the scene, if known.
+    pub dungeon_difficulty: Option<i32>,
     /// The duration of the encounter in seconds.
     pub duration: f64,
     /// The accumulated active combat duration in seconds.

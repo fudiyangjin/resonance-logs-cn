@@ -8,6 +8,7 @@
 
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import { SETTINGS } from "$lib/settings-store";
+  import { resolveMonsterName } from "$lib/config/game-names";
 
   let headerInfo: HeaderInfo = $state({
     totalDps: 0,
@@ -17,12 +18,18 @@
     fightStartTimestampMs: 0,
     bosses: [],
     sceneId: null,
-    sceneName: null,
+    dungeonDifficulty: null,
     trainingDummy: {
       phase: "idle",
     },
   });
   let abbreviationStyle = $derived(SETTINGS.live.general.state.abbreviationStyle);
+  const displayBosses = $derived(
+    headerInfo.bosses.map((boss) => ({
+      ...boss,
+      displayName: resolveMonsterName(boss.monsterId),
+    })),
+  );
 
 
 
@@ -49,12 +56,12 @@
   });
 </script>
 
-{#if headerInfo.bosses.length > 0}
+{#if displayBosses.length > 0}
   <div class="flex flex-col gap-1">
-    {#each headerInfo.bosses as boss (boss.uid)}
+    {#each displayBosses as boss (boss.uid)}
       {@const hpPercent = boss.maxHp && boss.currentHp !== null ? Math.min(100, Math.max(0, (boss.currentHp / boss.maxHp) * 100)) : 0}
       <div class="flex items-center gap-1 whitespace-nowrap">
-        <span class="text-base truncate text-neutral-100 font-semibold tracking-tight" {@attach tooltip(() => boss.name)}>{boss.name + " -"}</span>
+        <span class="text-base truncate text-neutral-100 font-semibold tracking-tight" {@attach tooltip(() => boss.displayName)}>{boss.displayName + " -"}</span>
         <span class="text-base tabular-nums font-semibold text-neutral-100">
           <AbbreviatedNumber
             num={boss.currentHp !== null ? boss.currentHp : 0}

@@ -14,43 +14,23 @@ pub enum MonsterType {
     Boss = 2,
 }
 
-#[derive(Debug, Clone)]
-pub struct MonsterInfo {
-    pub name: String,
-    pub monster_type: MonsterType,
-}
-
 const EXTRA_BUFF_MONITORED_MONSTERS_RELATIVE: &str = "meter-data/ExtraBuffMonitoredMonsters.json";
 
-static MONSTER_REGISTRY: LazyLock<HashMap<i32, MonsterInfo>> = LazyLock::new(|| {
-    #[derive(Deserialize)]
-    struct RawMonsterInfo {
-        #[serde(rename = "Name")]
-        name: String,
-        #[serde(rename = "MonsterType")]
-        monster_type: u8,
-    }
-
+static MONSTER_REGISTRY: LazyLock<HashMap<i32, MonsterType>> = LazyLock::new(|| {
     let data = include_str!("../../meter-data/MonsterIdNameType.json");
-    let raw: HashMap<String, RawMonsterInfo> =
+    let raw: HashMap<String, u8> =
         serde_json::from_str(data).expect("invalid MonsterIdNameType.json");
 
     let mut registry = HashMap::with_capacity(raw.len());
-    for (key, info) in raw {
+    for (key, monster_type) in raw {
         if let Ok(id) = key.parse::<i32>() {
-            let monster_type = match info.monster_type {
+            let monster_type = match monster_type {
                 1 => MonsterType::Elite,
                 2 => MonsterType::Boss,
                 _ => MonsterType::Normal,
             };
 
-            registry.insert(
-                id,
-                MonsterInfo {
-                    name: info.name,
-                    monster_type,
-                },
-            );
+            registry.insert(id, monster_type);
         }
     }
 
@@ -116,12 +96,8 @@ fn load_extra_buff_monitored_monster_ids() -> Result<HashSet<i32>> {
         .with_context(|| format!("failed to parse {}", path.display()))
 }
 
-pub fn monster_name(id: i32) -> Option<&'static str> {
-    MONSTER_REGISTRY.get(&id).map(|info| info.name.as_str())
-}
-
 pub fn monster_type(id: i32) -> Option<MonsterType> {
-    MONSTER_REGISTRY.get(&id).map(|info| info.monster_type)
+    MONSTER_REGISTRY.get(&id).copied()
 }
 
 pub fn is_extra_buff_monitored_monster(id: i32) -> bool {

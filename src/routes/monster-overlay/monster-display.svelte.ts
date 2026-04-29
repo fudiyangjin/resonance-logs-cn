@@ -1,4 +1,5 @@
 import { resolveBuffDisplayName } from "$lib/config/buff-name-table";
+import { resolveMonsterName } from "$lib/config/game-names";
 import { SETTINGS, ensureBuffAliases } from "$lib/settings-store";
 import type { HateEntry } from "$lib/api";
 import { buildBuffTextRow } from "../game-overlay/overlay-utils";
@@ -90,6 +91,23 @@ function buildHatePlaceholderRows(): TextBuffDisplay[] {
   ];
 }
 
+function resolveEntityDisplayName(uid: number): string {
+  const playerName = monsterRuntime.playerNameCache.get(uid);
+  if (playerName) return playerName;
+
+  const monsterId = monsterRuntime.monsterIdCache.get(uid);
+  if (monsterId !== undefined) return resolveMonsterName(monsterId);
+
+  return `UID ${uid}`;
+}
+
+function resolveMonsterSectionTitle(uid: number): string {
+  const monsterId = monsterRuntime.monsterIdCache.get(uid);
+  if (monsterId !== undefined) return resolveMonsterName(monsterId);
+
+  return `目标 ${uid}`;
+}
+
 function buildHateRows(entries: HateEntry[], maxDisplay: number): TextBuffDisplay[] {
   const sortedEntries = [...entries].sort((left, right) => {
     if (right.hateVal !== left.hateVal) {
@@ -135,7 +153,7 @@ function buildHateRows(entries: HateEntry[], maxDisplay: number): TextBuffDispla
   return sortedEntries
     .map((entry, index) => ({
       key: `hate_${entry.uid}`,
-      label: `${index + 1}. ${monsterRuntime.nameCache.get(entry.uid) ?? `UID ${entry.uid}`}`,
+      label: `${index + 1}. ${resolveEntityDisplayName(entry.uid)}`,
       valueText: `${displayPercents[index] ?? 0}%`,
       progressPercent: 0,
       showProgress: false,
@@ -184,7 +202,7 @@ export function updateMonsterDisplay() {
     if (buffRows.length === 0) continue;
     nextSections.push({
       bossUid,
-      title: monsterRuntime.nameCache.get(bossUid) ?? `目标 ${bossUid}`,
+      title: resolveMonsterSectionTitle(bossUid),
       rows: buffRows,
     });
   }
@@ -202,7 +220,7 @@ export function updateMonsterDisplay() {
       if (hateRows.length === 0) continue;
       nextHateSections.push({
         bossUid,
-        title: monsterRuntime.nameCache.get(bossUid) ?? `目标 ${bossUid}`,
+        title: resolveMonsterSectionTitle(bossUid),
         rows: hateRows,
       });
     }

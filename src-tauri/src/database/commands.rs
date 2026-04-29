@@ -34,8 +34,8 @@ pub struct EncounterSummaryDto {
     pub total_heal: i64,
     /// The ID of the scene where the encounter took place.
     pub scene_id: Option<i32>,
-    /// The name of the scene where the encounter took place.
-    pub scene_name: Option<String>,
+    /// Dungeon difficulty suffix for the scene, if known.
+    pub dungeon_difficulty: Option<i32>,
     /// The duration of the encounter in seconds.
     pub duration: f64,
     /// The accumulated active combat duration in seconds.
@@ -66,10 +66,10 @@ pub struct RecentEncountersResult {
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct EncounterFiltersDto {
-    /// A list of boss names to filter by.
-    pub boss_names: Option<Vec<String>>,
-    /// A list of encounter names to filter by.
-    pub encounter_names: Option<Vec<String>>,
+    /// A list of boss monster template IDs to filter by.
+    pub boss_monster_ids: Option<Vec<i32>>,
+    /// A list of scene IDs to filter by.
+    pub scene_ids: Option<Vec<i32>>,
     /// A player name to filter by.
     pub player_name: Option<String>,
     /// A list of player names to filter by.
@@ -82,32 +82,32 @@ pub struct EncounterFiltersDto {
     pub is_favorite: Option<bool>,
 }
 
-/// The result of a query for boss names.
+/// The result of a query for boss monster template IDs.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct BossNamesResult {
-    /// A list of boss names.
-    pub names: Vec<String>,
+pub struct BossMonsterIdsResult {
+    /// A list of boss monster template IDs.
+    pub ids: Vec<i32>,
 }
 
 /// A summary of a boss.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct BossSummaryDto {
-    /// The name of the monster.
-    pub monster_name: String,
+    /// The monster template ID.
+    pub monster_id: i32,
     /// The maximum HP of the monster.
     pub max_hp: Option<i64>,
     /// Whether the boss was defeated.
     pub is_defeated: bool,
 }
 
-/// The result of a query for scene names.
+/// The result of a query for scene IDs.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct SceneNamesResult {
-    /// A list of scene names.
-    pub names: Vec<String>,
+pub struct SceneIdsResult {
+    /// A list of scene IDs.
+    pub ids: Vec<i32>,
 }
 
 /// The result of a query for player names.
@@ -155,61 +155,63 @@ fn extract_player_names_from_json(json: &Option<String>) -> Vec<String> {
         .collect()
 }
 
-/// Gets a list of unique boss names.
+/// Gets a list of unique boss monster template IDs.
 ///
 /// # Returns
 ///
-/// * `Result<BossNamesResult, String>` - A list of unique boss names.
+/// * `Result<BossMonsterIdsResult, String>` - A list of unique boss monster IDs.
 #[tauri::command]
 #[specta::specta]
-pub fn get_unique_boss_names() -> Result<BossNamesResult, String> {
+pub fn get_unique_boss_monster_ids() -> Result<BossMonsterIdsResult, String> {
     with_db(|conn| {
         use sch::encounters::dsl as e;
         use std::collections::HashSet;
 
         let rows: Vec<Option<String>> = e::encounters
-            .select(e::boss_names)
+            .select(e::boss_monster_ids)
             .load::<Option<String>>(conn)
             .map_err(|e| e.to_string())?;
         let mut set = HashSet::new();
         for json in rows.into_iter().flatten() {
-            if let Ok(names) = serde_json::from_str::<Vec<String>>(&json) {
-                for name in names {
-                    if !name.is_empty() {
-                        set.insert(name);
+            if let Ok(ids) = serde_json::from_str::<Vec<i32>>(&json) {
+                for id in ids {
+                    if id > 0 {
+                        set.insert(id);
                     }
                 }
             }
         }
-        let boss_names: Vec<String> = set.into_iter().collect();
-        Ok(BossNamesResult { names: boss_names })
+        let mut ids: Vec<i32> = set.into_iter().collect();
+        ids.sort_unstable();
+        Ok(BossMonsterIdsResult { ids })
     })
 }
 
-/// Gets a list of unique scene names.
+/// Gets a list of unique scene IDs.
 ///
 /// # Returns
 ///
-/// * `Result<SceneNamesResult, String>` - A list of unique scene names.
+/// * `Result<SceneIdsResult, String>` - A list of unique scene IDs.
 #[tauri::command]
 #[specta::specta]
-pub fn get_unique_scene_names() -> Result<SceneNamesResult, String> {
+pub fn get_unique_scene_ids() -> Result<SceneIdsResult, String> {
     with_db(|conn| {
         use std::collections::HashSet;
 
-        let scene_names: Vec<Option<String>> = sch::encounters::dsl::encounters
-            .select(sch::encounters::dsl::scene_name)
-            .load::<Option<String>>(conn)
+        let scene_ids: Vec<Option<i32>> = sch::encounters::dsl::encounters
+            .select(sch::encounters::dsl::scene_id)
+            .load::<Option<i32>>(conn)
             .map_err(|e| e.to_string())?;
 
-        let names: Vec<String> = scene_names
+        let mut ids: Vec<i32> = scene_ids
             .into_iter()
             .flatten()
             .collect::<HashSet<_>>()
             .into_iter()
             .collect();
+        ids.sort_unstable();
 
-        Ok(SceneNamesResult { names })
+        Ok(SceneIdsResult { ids })
     })
 }
 
@@ -282,7 +284,7 @@ pub fn get_recent_encounters_filtered(
             Option<i64>,
             Option<i64>,
             Option<i32>,
-            Option<String>,
+            Option<i32>,
             f64,
             Option<f64>,
             Option<i64>,
@@ -299,12 +301,12 @@ pub fn get_recent_encounters_filtered(
                 e::total_dmg,
                 e::total_heal,
                 e::scene_id,
-                e::scene_name,
+                e::dungeon_difficulty,
                 e::duration,
                 e::active_combat_duration,
                 e::remote_encounter_id,
                 e::is_favorite,
-                e::boss_names,
+                e::boss_monster_ids,
                 e::player_names,
             ))
             .load(conn)
@@ -317,8 +319,8 @@ pub fn get_recent_encounters_filtered(
                     _,
                     _,
                     _,
+                    scene_id,
                     _,
-                    scene_name,
                     _,
                     _,
                     _,
@@ -341,23 +343,20 @@ pub fn get_recent_encounters_filtered(
                             return false;
                         }
                     }
-                    if let Some(ref encounter_names) = filter.encounter_names {
-                        if !encounter_names.is_empty()
-                            && !scene_name
-                                .as_ref()
-                                .map(|n| encounter_names.contains(n))
-                                .unwrap_or(false)
+                    if let Some(ref scene_ids) = filter.scene_ids {
+                        if !scene_ids.is_empty()
+                            && !scene_id.is_some_and(|id| scene_ids.contains(&id))
                         {
                             return false;
                         }
                     }
-                    if let Some(ref boss_names) = filter.boss_names {
-                        if !boss_names.is_empty() {
-                            let stored: Vec<String> = boss_names_json
+                    if let Some(ref boss_monster_ids) = filter.boss_monster_ids {
+                        if !boss_monster_ids.is_empty() {
+                            let stored: Vec<i32> = boss_names_json
                                 .as_ref()
                                 .and_then(|j| serde_json::from_str(j).ok())
                                 .unwrap_or_default();
-                            if !boss_names.iter().any(|b| stored.contains(b)) {
+                            if !boss_monster_ids.iter().any(|id| stored.contains(id)) {
                                 return false;
                             }
                         }
@@ -399,7 +398,7 @@ pub fn get_recent_encounters_filtered(
             td,
             th,
             scene_id,
-            scene_name,
+            dungeon_difficulty,
             duration,
             active_combat_duration,
             remote_id,
@@ -410,11 +409,11 @@ pub fn get_recent_encounters_filtered(
         {
             let boss_entries: Vec<BossSummaryDto> = boss_json
                 .as_ref()
-                .and_then(|j| serde_json::from_str::<Vec<String>>(j).ok())
+                .and_then(|j| serde_json::from_str::<Vec<i32>>(j).ok())
                 .unwrap_or_default()
                 .into_iter()
-                .map(|name| BossSummaryDto {
-                    monster_name: name,
+                .map(|monster_id| BossSummaryDto {
+                    monster_id,
                     max_hp: None,
                     is_defeated: true,
                 })
@@ -428,7 +427,7 @@ pub fn get_recent_encounters_filtered(
                 total_dmg: td.unwrap_or(0),
                 total_heal: th.unwrap_or(0),
                 scene_id,
-                scene_name,
+                dungeon_difficulty,
                 duration,
                 active_combat_duration,
                 local_player_id: None,
@@ -564,7 +563,7 @@ pub fn get_encounter_by_id(encounter_id: i32) -> Result<EncounterSummaryDto, Str
         Option<i64>,
         Option<i64>,
         Option<i32>,
-        Option<String>,
+        Option<i32>,
         f64,
         Option<f64>,
         Option<i64>,
@@ -582,27 +581,27 @@ pub fn get_encounter_by_id(encounter_id: i32) -> Result<EncounterSummaryDto, Str
                 e::total_dmg,
                 e::total_heal,
                 e::scene_id,
-                e::scene_name,
+                e::dungeon_difficulty,
                 e::duration,
                 e::active_combat_duration,
                 e::local_player_id,
                 e::remote_encounter_id,
                 e::is_favorite,
-                e::boss_names,
+                e::boss_monster_ids,
                 e::player_names,
             ))
             .first(conn)
             .map_err(|er| er.to_string())
     })?;
 
-    let boss_names: Vec<BossSummaryDto> = row
+    let boss_entries: Vec<BossSummaryDto> = row
         .12
         .as_ref()
-        .and_then(|j| serde_json::from_str::<Vec<String>>(j).ok())
+        .and_then(|j| serde_json::from_str::<Vec<i32>>(j).ok())
         .unwrap_or_default()
         .into_iter()
-        .map(|name| BossSummaryDto {
-            monster_name: name,
+        .map(|monster_id| BossSummaryDto {
+            monster_id,
             max_hp: None,
             is_defeated: true,
         })
@@ -616,11 +615,11 @@ pub fn get_encounter_by_id(encounter_id: i32) -> Result<EncounterSummaryDto, Str
         total_dmg: row.3.unwrap_or(0),
         total_heal: row.4.unwrap_or(0),
         scene_id: row.5,
-        scene_name: row.6.clone(),
+        dungeon_difficulty: row.6,
         duration: row.7,
         active_combat_duration: row.8,
         local_player_id: row.9,
-        bosses: boss_names,
+        bosses: boss_entries,
         players: player_entries,
         remote_encounter_id: row.10,
         is_favorite: row.11 != 0,

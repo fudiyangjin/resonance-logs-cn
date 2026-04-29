@@ -99,14 +99,18 @@ pub enum OutboundEvent {
     },
     EncounterReset,
     EncounterPause(bool),
-    SceneChange(String),
+    SceneChange {
+        scene_id: i32,
+        dungeon_difficulty: Option<i32>,
+    },
     TrainingDummyUpdate(TrainingDummyState),
     LiveData(LiveDataPayload),
     BuffUpdate(Vec<BuffUpdateState>),
     BossBuffUpdate(HashMap<i64, Vec<BuffUpdateState>>),
     HateListUpdate(HashMap<i64, Vec<HateEntry>>),
-    EntityNameMap {
-        names: HashMap<i64, String>,
+    EntityIdentityMap {
+        player_names: HashMap<i64, String>,
+        monster_ids: HashMap<i64, i32>,
     },
     BuffCounterUpdate(Vec<CounterUpdateState>),
     SkillCdUpdate(Vec<SkillCdState>),
@@ -162,14 +166,11 @@ impl EventManager {
             .push(OutboundEvent::EncounterPause(is_paused));
     }
 
-    /// Emits a scene change event.
-    ///
-    /// # Arguments
-    ///
-    /// * `scene_name` - The name of the new scene.
-    pub fn emit_scene_change(&mut self, scene_name: String) {
-        self.outbound_events
-            .push(OutboundEvent::SceneChange(scene_name));
+    pub fn emit_scene_change(&mut self, scene_id: i32, dungeon_difficulty: Option<i32>) {
+        self.outbound_events.push(OutboundEvent::SceneChange {
+            scene_id,
+            dungeon_difficulty,
+        });
     }
 
     pub fn emit_training_dummy_update(&mut self, training_dummy: TrainingDummyState) {
@@ -200,9 +201,15 @@ impl EventManager {
             .push(OutboundEvent::HateListUpdate(hate_lists));
     }
 
-    pub fn emit_entity_name_map(&mut self, names: HashMap<i64, String>) {
-        self.outbound_events
-            .push(OutboundEvent::EntityNameMap { names });
+    pub fn emit_entity_identity_map(
+        &mut self,
+        player_names: HashMap<i64, String>,
+        monster_ids: HashMap<i64, i32>,
+    ) {
+        self.outbound_events.push(OutboundEvent::EntityIdentityMap {
+            player_names,
+            monster_ids,
+        });
     }
 
     pub fn emit_buff_counter_update(&mut self, counters: Vec<CounterUpdateState>) {
@@ -265,8 +272,8 @@ pub struct EncounterUpdatePayload {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneChangePayload {
-    /// The name of the new scene.
-    pub scene_name: String,
+    pub scene_id: i32,
+    pub dungeon_difficulty: Option<i32>,
 }
 
 impl Default for EventManager {
@@ -369,22 +376,9 @@ pub fn generate_live_data_payload(
                 return None;
             }
 
-            let name = if let Some(attr_name) = attr_store
-                .attr(uid, AttrType::Name)
-                .and_then(|value| value.as_string())
-            {
-                attr_name.to_string()
-            } else if !entity.name.is_empty() {
-                entity.name.clone()
-            } else if let Some(packet_name) = &entity.monster_name_packet {
-                packet_name.clone()
-            } else {
-                format!("Boss {uid}")
-            };
-
             Some(BossHealth {
                 uid,
-                name,
+                monster_id: entity.monster_type_id,
                 current_hp,
                 max_hp,
                 is_dead: attr_store.is_dead(uid),
@@ -403,7 +397,7 @@ pub fn generate_live_data_payload(
         total_effective_heal: encounter.total_effective_heal,
         local_player_uid: encounter.local_player_uid,
         scene_id: encounter.current_scene_id,
-        scene_name: encounter.current_scene_name.clone(),
+        dungeon_difficulty: encounter.current_dungeon_difficulty,
         is_paused: encounter.is_encounter_paused,
         bosses,
         entities,

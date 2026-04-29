@@ -4,14 +4,17 @@
 	 */
 	import { onMount } from 'svelte';
 	import { commands } from '$lib/bindings';
+	import type { NameOption } from '$lib/config/game-names';
+
+	type SearchOption = NameOption | { label: string; ids: [] };
 
 	let {
 		value = $bindable(''),
 		searchType = $bindable<'boss' | 'player' | 'encounter'>('encounter'),
 		placeholder,
 		disabled = false,
-		availableBossNames = [],
-		availableEncounterNames = [],
+		availableBossOptions = [],
+		availableEncounterOptions = [],
 		onSelect,
 		id
 		} = $props<{
@@ -19,14 +22,14 @@
 			searchType: 'boss' | 'player' | 'encounter';
 			placeholder?: string;
 			disabled?: boolean;
-			availableBossNames: string[];
-			availableEncounterNames: string[];
-			onSelect: (name: string, type: 'boss' | 'player' | 'encounter') => void;
+			availableBossOptions: NameOption[];
+			availableEncounterOptions: NameOption[];
+			onSelect: (option: SearchOption, type: 'boss' | 'player' | 'encounter') => void;
 			id?: string;
 		}>();
 
 	let showDropdown = $state(false);
-	let filteredNames = $state<string[]>([]);
+	let filteredOptions = $state<SearchOption[]>([]);
 	let isLoading = $state(false);
 	let showTypeDropdown = $state(false);
 
@@ -49,22 +52,22 @@
 		if (searchType === 'boss' || searchType === 'encounter') {
 			// Boss filtering - filter locally from available names
 			if (trimmedValue === '') {
-				filteredNames = [];
+				filteredOptions = [];
 				showDropdown = false;
 			} else {
-				const source = searchType === 'boss' ? availableBossNames : availableEncounterNames;
+				const source = searchType === 'boss' ? availableBossOptions : availableEncounterOptions;
 				// Limit local filter results to at most 5 items for responsiveness
-				const matches = source.filter((name: string) =>
-					name.toLowerCase().includes(trimmedValue.toLowerCase())
+				const matches = source.filter((option: NameOption) =>
+					option.label.toLowerCase().includes(trimmedValue.toLowerCase())
 				);
-				filteredNames = matches.slice(0, 5);
+				filteredOptions = matches.slice(0, 5);
 				// show dropdown if any matches exist (even if we only display the first 5)
 				showDropdown = matches.length > 0;
 			}
 		} else {
 			// Player filtering - query backend with 1-char minimum
 			if (trimmedValue.length < 1) {
-				filteredNames = [];
+				filteredOptions = [];
 				showDropdown = false;
 				isLoading = false;
 				return;
@@ -76,17 +79,17 @@
 				if (res.status === 'ok') {
 					// Limit backend results shown to the user to improve UX and avoid huge lists
 					const names = res.data.names ?? [];
-					filteredNames = names.slice(0, 5);
+					filteredOptions = names.slice(0, 5).map((name) => ({ label: name, ids: [] }));
 					// show dropdown if any results exist
 					showDropdown = names.length > 0;
 				} else {
 					console.error('Failed to load player names:', res.error);
-					filteredNames = [];
+					filteredOptions = [];
 					showDropdown = false;
 				}
 			} catch (error) {
 				console.error('Error loading player names:', error);
-				filteredNames = [];
+				filteredOptions = [];
 				showDropdown = false;
 			} finally {
 				isLoading = false;
@@ -94,11 +97,11 @@
 		}
 	}
 
-	function selectName(name: string) {
+	function selectOption(option: SearchOption) {
 		value = '';
 		showDropdown = false;
-		filteredNames = [];
-		onSelect(name, searchType);
+		filteredOptions = [];
+		onSelect(option, searchType);
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -127,7 +130,7 @@
 	function selectSearchType(type: 'boss' | 'player' | 'encounter') {
 		searchType = type;
 		showTypeDropdown = false;
-		filteredNames = [];
+		filteredOptions = [];
 		showDropdown = false;
 		if (value.trim().length >= 1) {
 			handleInput();
@@ -224,21 +227,21 @@
 			>
 				<div class="text-muted-foreground text-sm">加载中...</div>
 			</div>
-		{:else if showDropdown && filteredNames.length > 0}
+		{:else if showDropdown && filteredOptions.length > 0}
 			<div
 				class="absolute z-10 w-full mt-1 bg-popover/95 backdrop-blur-md border border-border rounded-md shadow-lg max-h-48 overflow-y-auto animate-in fade-in-0 zoom-in-95"
 			>
-				{#each filteredNames as name}
+				{#each filteredOptions as option}
 					<button
 						type="button"
-						onclick={() => selectName(name)}
+						onclick={() => selectOption(option)}
 						class="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/40 focus:bg-muted/50 focus:outline-none transition-colors"
 					>
-						{name}
+						{option.label}
 					</button>
 				{/each}
 			</div>
-		{:else if searchType === 'player' && value.trim().length >= 1 && !isLoading && filteredNames.length === 0}
+		{:else if searchType === 'player' && value.trim().length >= 1 && !isLoading && filteredOptions.length === 0}
 			<div
 				class="absolute z-10 w-full mt-1 bg-popover/95 backdrop-blur-md border border-border rounded-md shadow-lg px-3 py-2 animate-in fade-in-0 zoom-in-95"
 			>

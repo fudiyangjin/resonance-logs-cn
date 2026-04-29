@@ -23,7 +23,6 @@ pub struct Encounter {
     pub entity_uid_to_entity: HashMap<i64, Entity>, // key: entity uid
     pub local_player: SyncContainerData,
     pub current_scene_id: Option<i32>,
-    pub current_scene_name: Option<String>,
     pub current_dungeon_difficulty: Option<i32>,
 }
 
@@ -333,8 +332,6 @@ pub struct Entity {
     pub class_spec: ClassSpec,
     pub ability_score: i32,
     pub level: i32,
-    // Raw monster name captured from packet ATTR_NAME when available (monsters only)
-    pub monster_name_packet: Option<String>,
     // Legacy attribute storage retained for MessagePack compatibility with old encounter blobs.
     #[serde(default)]
     pub _legacy_attributes: HashMap<AttrType, AttrValue>,
@@ -373,7 +370,7 @@ pub struct SkillTargetStats {
     pub lucky_total: u128,
     pub hp_loss_total: u128,
     pub shield_loss_total: u128,
-    pub monster_name: Option<String>,
+    pub target_monster_id: Option<i32>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -645,12 +642,9 @@ pub mod class {
 }
 
 impl Entity {
-    /// Assign monster type id and update display name from mapping if available.
+    /// Assign monster type id for backend classification and frontend display lookup.
     pub fn set_monster_type(&mut self, monster_id: i32) {
         self.monster_type_id = Some(monster_id);
-        if let Some(name) = monster_registry::monster_name(monster_id) {
-            self.name = name.to_string();
-        }
     }
 
     /// Determine whether this entity is a boss based on game data categorization.

@@ -18,9 +18,10 @@ import type {
 // Type definitions for event payloads
 export type BossHealth = {
   uid: number;
-  name: string;
+  monsterId: number | null;
   currentHp: number | null;
   maxHp: number | null;
+  isDead: boolean;
 };
 
 export type HeaderInfo = {
@@ -31,7 +32,7 @@ export type HeaderInfo = {
   fightStartTimestampMs: number; // Unix timestamp when fight started
   bosses: BossHealth[];
   sceneId: number | null;
-  sceneName: string | null;
+  dungeonDifficulty: number | null;
   trainingDummy: TrainingDummyState;
 };
 
@@ -139,8 +140,9 @@ export type HateListUpdatePayload = {
   hateLists: Record<string, HateEntry[]>;
 };
 
-export type EntityNameMapPayload = {
-  names: Record<string, string>;
+export type EntityIdentityMapPayload = {
+  playerNames: Record<string, string>;
+  monsterIds: Record<string, number>;
 };
 
 export type CounterUpdateState = {
@@ -206,14 +208,15 @@ export type LiveDataPayload = {
   totalEffectiveHeal: number;
   localPlayerUid: number;
   sceneId: number | null;
-  sceneName: string | null;
+  dungeonDifficulty: number | null;
   isPaused: boolean;
   bosses: BossHealth[];
   entities: RawEntityData[];
 };
 
 export type SceneChangePayload = {
-  sceneName: string;
+  sceneId: number;
+  dungeonDifficulty: number | null;
 };
 
 export type DamageSnapshot = BindingDamageSnapshot;
@@ -266,10 +269,10 @@ export const onHateListUpdate = (
 ): Promise<UnlistenFn> =>
   listen<HateListUpdatePayload>("hate-list-update", handler);
 
-export const onEntityNames = (
-  handler: (event: Event<EntityNameMapPayload>) => void
+export const onEntityIdentities = (
+  handler: (event: Event<EntityIdentityMapPayload>) => void
 ): Promise<UnlistenFn> =>
-  listen<EntityNameMapPayload>("entity-names", handler);
+  listen<EntityIdentityMapPayload>("entity-identities", handler);
 
 export const onBuffCounterUpdate = (
   handler: (event: Event<BuffCounterUpdatePayload>) => void

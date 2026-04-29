@@ -9,8 +9,8 @@ use std::collections::HashMap;
 pub struct BossHealth {
     /// The unique ID of the boss.
     pub uid: i64,
-    /// The name of the boss.
-    pub name: String,
+    /// Monster template ID used by the frontend to resolve the display name.
+    pub monster_id: Option<i32>,
     /// The current HP of the boss.
     pub current_hp: Option<i64>,
     /// The maximum HP of the boss.
@@ -37,8 +37,8 @@ pub struct HeaderInfo {
     pub bosses: Vec<BossHealth>,
     /// The ID of the scene where the encounter took place.
     pub scene_id: Option<i32>,
-    /// The name of the scene where the encounter took place.
-    pub scene_name: Option<String>,
+    /// Dungeon difficulty suffix for the current scene, when available.
+    pub dungeon_difficulty: Option<i32>,
     /// Current training dummy runtime state for the live window.
     pub training_dummy: TrainingDummyState,
 }
@@ -56,7 +56,7 @@ pub struct LiveDataPayload {
     pub total_effective_heal: u128,
     pub local_player_uid: i64,
     pub scene_id: Option<i32>,
-    pub scene_name: Option<String>,
+    pub dungeon_difficulty: Option<i32>,
     pub is_paused: bool,
     pub bosses: Vec<BossHealth>,
     pub entities: Vec<RawEntityData>,
@@ -141,7 +141,7 @@ pub struct RawSkillStats {
 #[serde(rename_all = "camelCase")]
 pub struct PerTargetStats {
     pub target_uid: i64,
-    pub target_name: String,
+    pub target_monster_id: Option<i32>,
     pub total_value: u128,
     pub damage: RawCombatStats,
     pub skills: HashMap<i64, RawSkillStats>,
@@ -182,17 +182,14 @@ pub fn build_per_target_stats(
     for (&(skill_id, target_uid), stats) in stats_by_skill_target {
         let entry = grouped.entry(target_uid).or_insert_with(|| PerTargetStats {
             target_uid,
-            target_name: stats
-                .monster_name
-                .clone()
-                .unwrap_or_else(|| format!("#{}", target_uid)),
+            target_monster_id: stats.target_monster_id,
             total_value: 0,
             damage: RawCombatStats::default(),
             skills: HashMap::new(),
         });
 
-        if entry.target_name.starts_with('#') && stats.monster_name.is_some() {
-            entry.target_name = stats.monster_name.clone().unwrap_or_default();
+        if entry.target_monster_id.is_none() && stats.target_monster_id.is_some() {
+            entry.target_monster_id = stats.target_monster_id;
         }
 
         entry.skills.insert(
@@ -292,8 +289,9 @@ pub struct HateListUpdatePayload {
 
 #[derive(serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct EntityNameMapPayload {
-    pub names: HashMap<i64, String>,
+pub struct EntityIdentityMapPayload {
+    pub player_names: HashMap<i64, String>,
+    pub monster_ids: HashMap<i64, i32>,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]

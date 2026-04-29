@@ -704,16 +704,10 @@ pub fn process_aoi_sync_delta(
             .map(|e| e.is_boss())
             .unwrap_or(false);
 
-        let target_name_opt = encounter
+        let target_monster_id = encounter
             .entity_uid_to_entity
             .get(&target_uid)
-            .and_then(|e| {
-                if e.name.is_empty() {
-                    None
-                } else {
-                    Some(e.name.clone())
-                }
-            });
+            .and_then(|entity| entity.monster_type_id);
 
         // First update attacker-side state in its own scope (single mutable borrow)
         let (is_crit, is_lucky, attacker_entity_type_copy, was_heal_event) = {
@@ -787,6 +781,9 @@ pub fn process_aoi_sync_delta(
                 }
                 stats.hp_loss_total = 0;
                 stats.shield_loss_total = 0;
+                if stats.target_monster_id.is_none() {
+                    stats.target_monster_id = target_monster_id;
+                }
 
                 (
                     is_crit_local,
@@ -865,8 +862,8 @@ pub fn process_aoi_sync_delta(
                 stats.hp_loss_total += hp_loss_value;
                 stats.shield_loss_total += shield_loss_value;
 
-                if stats.monster_name.is_none() {
-                    stats.monster_name = target_name_opt.clone();
+                if stats.target_monster_id.is_none() {
+                    stats.target_monster_id = target_monster_id;
                 }
 
                 (
@@ -1203,11 +1200,6 @@ fn process_monster_attrs(
         }
 
         if attr_id == attr_type::ATTR_NAME {
-            let name = decode_prefixed_string_or_default(raw_bytes_opt);
-            monster_entity.monster_name_packet = Some(name.clone());
-            if monster_entity.monster_type_id.is_none() {
-                monster_entity.name = name;
-            }
             continue;
         }
 

@@ -251,17 +251,23 @@ fn hydrate_entities_from_attr_store(state: &mut AppState) {
     }
 }
 
-fn resolve_entity_display_name(uid: i64, entity: &Entity, attr_store: &EntityAttrStore) -> String {
+fn resolve_player_display_name(
+    uid: i64,
+    entity: Option<&Entity>,
+    attr_store: &EntityAttrStore,
+) -> String {
     if let Some(name) = attr_store
         .attr(uid, AttrType::Name)
         .and_then(|value| value.as_string())
     {
         return name.to_string();
     }
-    if !entity.name.is_empty() {
-        return entity.name.clone();
+    if let Some(entity) = entity {
+        if !entity.name.is_empty() {
+            return entity.name.clone();
+        }
     }
-    format!("目标 {uid}")
+    format!("UID {uid}")
 }
 
 fn collect_player_names(encounter: &Encounter) -> Vec<PlayerNameEntry> {
@@ -310,7 +316,7 @@ fn emit_training_dummy_update_if_changed(state: &mut AppState, previous: Trainin
 
 fn build_encounter_metadata(
     encounter: &Encounter,
-    boss_names: Vec<String>,
+    boss_monster_ids: Vec<i32>,
     player_names: Vec<PlayerNameEntry>,
     is_manual: bool,
 ) -> EncounterMetadata {
@@ -326,32 +332,29 @@ fn build_encounter_metadata(
         total_dmg: encounter.total_dmg.min(i64::MAX as u128) as i64,
         total_heal: encounter.total_heal.min(i64::MAX as u128) as i64,
         scene_id: encounter.current_scene_id,
-        scene_name: encounter.current_scene_name.clone(),
+        dungeon_difficulty: encounter.current_dungeon_difficulty,
         duration: (elapsed_ms as f64) / 1000.0,
         active_combat_duration: Some(active_combat_time_ms as f64 / 1000.0),
         is_manually_reset: is_manual,
-        boss_names,
+        boss_monster_ids,
         player_names,
     }
 }
 
 fn persist_and_save_encounter(state: &mut AppState, is_manual: bool, source: &str) {
     hydrate_entities_from_attr_store(state);
-    let defeated: Vec<String> = state
+    let mut boss_monster_ids: Vec<i32> = state
         .encounter
         .entity_uid_to_entity
         .values()
         .filter(|entity| entity.is_boss())
-        .filter_map(|entity| {
-            if entity.name.is_empty() {
-                None
-            } else {
-                Some(entity.name.clone())
-            }
-        })
+        .filter_map(|entity| entity.monster_type_id)
         .collect();
+    boss_monster_ids.sort_unstable();
+    boss_monster_ids.dedup();
     let player_names = collect_player_names(&state.encounter);
-    let metadata = build_encounter_metadata(&state.encounter, defeated, player_names, is_manual);
+    let metadata =
+        build_encounter_metadata(&state.encounter, boss_monster_ids, player_names, is_manual);
 
     if metadata.started_at_ms > 0 {
         info!(
@@ -364,7 +367,7 @@ fn persist_and_save_encounter(state: &mut AppState, is_manual: bool, source: &st
             metadata.total_heal,
             metadata.scene_id,
             metadata.player_names.len(),
-            metadata.boss_names.len(),
+            metadata.boss_monster_ids.len(),
             metadata.is_manually_reset
         );
         save_encounter(&state.encounter, &metadata);
@@ -688,7 +691,6 @@ impl AppStateManager {
     // all scene id extraction logic is here (its pretty rough)
     fn process_enter_scene(&self, state: &mut AppState, enter_scene: blueprotobuf::EnterScene) {
         use crate::live::opcodes_process::process_enter_scene as parse_enter_scene;
-        use crate::live::scene_names;
 
         info!("EnterScene packet received");
 
@@ -707,19 +709,16 @@ impl AppStateManager {
         emit_training_dummy_update_if_changed(state, previous);
 
         if let Some(scene_id) = parsed.scene_id {
-            let scene_name = scene_names::lookup(scene_id);
-
             // Update encounter with scene info
             state.encounter.current_scene_id = Some(scene_id);
-            state.encounter.current_scene_name = Some(scene_name.clone());
             state.encounter.current_dungeon_difficulty = None;
 
-            info!("Scene changed to: {} (ID: {})", scene_name, scene_id);
+            info!("Scene changed to ID: {}", scene_id);
 
             // Emit scene change event
             if state.event_manager.should_emit_events() {
-                info!("Emitting scene change event for: {}", scene_name);
-                state.event_manager.emit_scene_change(scene_name);
+                info!("Emitting scene change event for ID: {}", scene_id);
+                state.event_manager.emit_scene_change(scene_id, None);
             } else {
                 warn!("Event manager not ready, skipping scene change emit");
             }
@@ -795,7 +794,6 @@ impl AppStateManager {
         sync_dungeon_data: blueprotobuf::SyncDungeonData,
     ) {
         use crate::live::opcodes_process::process_sync_dungeon_data;
-        use crate::live::scene_names;
 
         let difficulty = sync_dungeon_data
             .v_data
@@ -804,22 +802,16 @@ impl AppStateManager {
             .and_then(|info| info.difficulty);
 
         if let Some(difficulty) = difficulty {
+            let previous_difficulty = state.encounter.current_dungeon_difficulty;
             state.encounter.current_dungeon_difficulty = Some(difficulty);
 
-            if let Some(scene_id) = state.encounter.current_scene_id {
-                let scene_name = scene_names::lookup_with_difficulty(scene_id, Some(difficulty));
-                let should_emit = state
-                    .encounter
-                    .current_scene_name
-                    .as_ref()
-                    .map(|name| name != &scene_name)
-                    .unwrap_or(true);
-
-                state.encounter.current_scene_name = Some(scene_name.clone());
-
-                if should_emit && state.event_manager.should_emit_events() {
-                    state.event_manager.emit_scene_change(scene_name.clone());
-                }
+            if let Some(scene_id) = state.encounter.current_scene_id
+                && previous_difficulty != Some(difficulty)
+                && state.event_manager.should_emit_events()
+            {
+                state
+                    .event_manager
+                    .emit_scene_change(scene_id, Some(difficulty));
             }
         }
 
@@ -1197,7 +1189,7 @@ impl AppStateManager {
                 fight_start_timestamp_ms: 0,
                 bosses: vec![],
                 scene_id: state.encounter.current_scene_id,
-                scene_name: state.encounter.current_scene_name.clone(),
+                dungeon_difficulty: state.encounter.current_dungeon_difficulty,
                 training_dummy: build_training_dummy_state(&state.training_dummy),
             };
             state
@@ -1334,7 +1326,9 @@ impl AppStateManager {
             .filter(|entity| entity.is_boss())
             .count();
         let mut all_hate_lists = HashMap::with_capacity(boss_count);
-        let mut new_names =
+        let mut player_names =
+            HashMap::with_capacity(boss_count.saturating_add(boss_buff_snapshot.len()));
+        let mut monster_ids =
             HashMap::with_capacity(boss_count.saturating_add(boss_buff_snapshot.len()));
 
         for (&boss_uid, entity) in &state.encounter.entity_uid_to_entity {
@@ -1346,10 +1340,9 @@ impl AppStateManager {
             }
 
             if state.sent_overlay_uids.insert(boss_uid) {
-                new_names.insert(
-                    boss_uid,
-                    resolve_entity_display_name(boss_uid, entity, &state.attr_store),
-                );
+                if let Some(monster_id) = entity.monster_type_id {
+                    monster_ids.insert(boss_uid, monster_id);
+                }
             }
 
             let entries = state
@@ -1361,13 +1354,15 @@ impl AppStateManager {
 
             for entry in &entries {
                 if state.sent_overlay_uids.insert(entry.uid) {
-                    let name = state
-                        .attr_store
-                        .attr(entry.uid, AttrType::Name)
-                        .and_then(|value| value.as_string())
-                        .map(ToString::to_string)
-                        .unwrap_or_else(|| format!("UID {}", entry.uid));
-                    new_names.insert(entry.uid, name);
+                    let entity = state.encounter.entity_uid_to_entity.get(&entry.uid);
+                    if let Some(monster_id) = entity.and_then(|entity| entity.monster_type_id) {
+                        monster_ids.insert(entry.uid, monster_id);
+                    } else {
+                        player_names.insert(
+                            entry.uid,
+                            resolve_player_display_name(entry.uid, entity, &state.attr_store),
+                        );
+                    }
                 }
             }
 
@@ -1385,16 +1380,17 @@ impl AppStateManager {
                 continue;
             };
 
-            new_names.insert(
-                target_uid,
-                resolve_entity_display_name(target_uid, entity, &state.attr_store),
-            );
+            if let Some(monster_id) = entity.monster_type_id {
+                monster_ids.insert(target_uid, monster_id);
+            }
         }
 
         state.event_manager.emit_hate_list_update(all_hate_lists);
 
-        if !new_names.is_empty() {
-            state.event_manager.emit_entity_name_map(new_names);
+        if !player_names.is_empty() || !monster_ids.is_empty() {
+            state
+                .event_manager
+                .emit_entity_identity_map(player_names, monster_ids);
         }
         state
             .event_manager

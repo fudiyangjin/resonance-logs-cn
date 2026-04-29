@@ -113,7 +113,7 @@ export function computeHeaderInfo(data: LiveDataPayload): HeaderInfo {
     fightStartTimestampMs: data.fightStartTimestampMs,
     bosses: data.bosses,
     sceneId: data.sceneId,
-    sceneName: data.sceneName,
+    dungeonDifficulty: data.dungeonDifficulty,
     trainingDummy: {
       phase: "idle",
     },

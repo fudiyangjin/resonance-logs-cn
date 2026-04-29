@@ -153,7 +153,7 @@
         lastEventTime = Date.now();
         hadAnyEvent = true;
         console.log("Scene change event received:", event.payload);
-        // notificationToast?.showToast('notice', `Scene changed to ${event.payload.sceneName}`);
+        // Scene display names are resolved from sceneId on the frontend.
       });
 
       if (isDestroyed) {

@@ -39,6 +39,10 @@
     getLiveData,
     getTrainingDummyState as getRuntimeTrainingDummyState,
   } from "$lib/stores/live-meter-store.svelte";
+  import {
+    resolveMonsterName,
+    resolveSceneName,
+  } from "$lib/config/game-names";
 
   // Get header settings
   const h = $derived(SETTINGS.live.headerCustomization.state);
@@ -101,7 +105,7 @@
     fightStartTimestampMs: 0,
     bosses: [],
     sceneId: null,
-    sceneName: null,
+    dungeonDifficulty: null,
     trainingDummy: emptyTrainingDummy,
   };
   const trainingDummyState = $derived.by(
@@ -128,7 +132,7 @@
       fightStartTimestampMs: Number(data.fightStartTimestampMs),
       bosses: data.bosses,
       sceneId: data.sceneId,
-      sceneName: data.sceneName,
+      dungeonDifficulty: data.dungeonDifficulty,
       trainingDummy: trainingDummyState,
     };
   });
@@ -143,8 +147,15 @@
 
   const displayHeaderInfo = $derived(headerInfo);
   const displayElapsedMs = $derived(clientElapsedMs);
-  const displaySceneName = $derived(headerInfo.sceneName);
-  const displayBosses = $derived(headerInfo.bosses);
+  const displaySceneName = $derived(
+    resolveSceneName(headerInfo.sceneId, headerInfo.dungeonDifficulty),
+  );
+  const displayBosses = $derived(
+    headerInfo.bosses.map((boss) => ({
+      ...boss,
+      displayName: resolveMonsterName(boss.monsterId),
+    })),
+  );
   const isTrainingDummyActive = $derived(trainingDummyState.phase !== "idle");
 
   let appWindow = $state<ReturnType<typeof getCurrentWebviewWindow> | null>(
@@ -353,7 +364,7 @@
             <span
               class="truncate text-foreground font-semibold tracking-tight"
               style="font-size: {h.bossHealthNameFontSize}px"
-              {@attach tooltip(() => boss.name)}>{boss.name} -</span
+              {@attach tooltip(() => boss.displayName)}>{boss.displayName} -</span
             >
             <span
               class="tabular-nums font-semibold text-foreground"
@@ -808,7 +819,8 @@
                     <span
                       class="truncate text-foreground font-semibold tracking-tight"
                       style="font-size: {h.bossHealthNameFontSize}px"
-                      {@attach tooltip(() => boss.name)}>{boss.name} -</span
+                      {@attach tooltip(() => boss.displayName)}
+                      >{boss.displayName} -</span
                     >
                     <span
                       class="tabular-nums font-semibold text-foreground"

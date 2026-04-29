@@ -108,30 +108,30 @@ async getRecentEncounters(limit: number, offset: number) : Promise<Result<Recent
 }
 },
 /**
- * Gets a list of unique scene names.
+ * Gets a list of unique scene IDs.
  * 
  * # Returns
  * 
- * * `Result<SceneNamesResult, String>` - A list of unique scene names.
+ * * `Result<SceneIdsResult, String>` - A list of unique scene IDs.
  */
-async getUniqueSceneNames() : Promise<Result<SceneNamesResult, string>> {
+async getUniqueSceneIds() : Promise<Result<SceneIdsResult, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("get_unique_scene_names") };
+    return { status: "ok", data: await TAURI_INVOKE("get_unique_scene_ids") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Gets a list of unique boss names.
+ * Gets a list of unique boss monster template IDs.
  * 
  * # Returns
  * 
- * * `Result<BossNamesResult, String>` - A list of unique boss names.
+ * * `Result<BossMonsterIdsResult, String>` - A list of unique boss monster IDs.
  */
-async getUniqueBossNames() : Promise<Result<BossNamesResult, string>> {
+async getUniqueBossMonsterIds() : Promise<Result<BossMonsterIdsResult, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("get_unique_boss_names") };
+    return { status: "ok", data: await TAURI_INVOKE("get_unique_boss_monster_ids") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -379,21 +379,21 @@ async optimizeLatestModules(targetAttributes: number[], excludeAttributes: numbe
 
 export type AltFreezeConfig = { conditionBuffId: number; freezeDurationMs: number }
 /**
- * The result of a query for boss names.
+ * The result of a query for boss monster template IDs.
  */
-export type BossNamesResult = { 
+export type BossMonsterIdsResult = { 
 /**
- * A list of boss names.
+ * A list of boss monster template IDs.
  */
-names: string[] }
+ids: number[] }
 /**
  * A summary of a boss.
  */
 export type BossSummaryDto = { 
 /**
- * The name of the monster.
+ * The monster template ID.
  */
-monsterName: string; 
+monsterId: number; 
 /**
  * The maximum HP of the monster.
  */
@@ -444,13 +444,13 @@ export type EffectSlotConfig = { slotId: number; threshold: number | null; reset
  */
 export type EncounterFiltersDto = { 
 /**
- * A list of boss names to filter by.
+ * A list of boss monster template IDs to filter by.
  */
-bossNames: string[] | null; 
+bossMonsterIds: number[] | null; 
 /**
- * A list of encounter names to filter by.
+ * A list of scene IDs to filter by.
  */
-encounterNames: string[] | null; 
+sceneIds: number[] | null; 
 /**
  * A player name to filter by.
  */
@@ -500,9 +500,9 @@ totalHeal: number;
  */
 sceneId: number | null; 
 /**
- * The name of the scene where the encounter took place.
+ * Dungeon difficulty suffix for the scene, if known.
  */
-sceneName: string | null; 
+dungeonDifficulty: number | null; 
 /**
  * The duration of the encounter in seconds.
  */
@@ -539,7 +539,7 @@ export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
 export type MonitorRuntimeSnapshot = { live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot }
 export type MonsterRuntimeSnapshot = { enabled: boolean; globalIds: number[]; selfAppliedIds: number[] }
-export type PerTargetStats = { targetUid: number; targetName: string; totalValue: number; damage: RawCombatStats; skills: Partial<{ [key in number]: RawSkillStats }> }
+export type PerTargetStats = { targetUid: number; targetMonsterId: number | null; totalValue: number; damage: RawCombatStats; skills: Partial<{ [key in number]: RawSkillStats }> }
 /**
  * The result of a query for player names.
  */
@@ -575,13 +575,13 @@ rows: EncounterSummaryDto[];
  */
 totalCount: number }
 /**
- * The result of a query for scene names.
+ * The result of a query for scene IDs.
  */
-export type SceneNamesResult = { 
+export type SceneIdsResult = { 
 /**
- * A list of scene names.
+ * A list of scene IDs.
  */
-names: string[] }
+ids: number[] }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[] }
 export type TickAttrCondition = { attrId: number; requiredValue: number }
 

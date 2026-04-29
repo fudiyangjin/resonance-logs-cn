@@ -64,8 +64,8 @@ diesel::table! {
         total_heal -> Nullable<BigInt>,
         // The ID of the scene where the encounter took place.
         scene_id -> Nullable<Integer>,
-        // The name of the scene where the encounter took place.
-        scene_name -> Nullable<Text>,
+        // Dungeon difficulty suffix for the scene, if known.
+        dungeon_difficulty -> Nullable<Integer>,
         // The duration of the encounter in seconds.
         duration -> Double,
         // The accumulated active combat duration in seconds.
@@ -78,8 +78,8 @@ diesel::table! {
         is_favorite -> Integer,
         // Whether this encounter was manually reset by the user (should not be uploaded).
         is_manually_reset -> Integer,
-        // JSON-encoded array of boss names for fast list/filter queries.
-        boss_names -> Nullable<Text>,
+        // JSON-encoded array of boss monster template IDs for fast list/filter queries.
+        boss_monster_ids -> Nullable<Text>,
         // JSON-encoded array of player names for fast list/filter queries.
         player_names -> Nullable<Text>,
     }

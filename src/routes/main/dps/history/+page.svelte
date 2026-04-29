@@ -8,6 +8,13 @@
 		EncounterFiltersDto,
 	} from "$lib/bindings";
 	import UnifiedSearch from "$lib/components/unified-search.svelte";
+	import {
+		getBossOptions,
+		getSceneOptions,
+		resolveMonsterName,
+		resolveSceneName,
+		type NameOption,
+	} from "$lib/config/game-names";
 	import { CLASS_MAP, getClassIcon, tooltip } from "$lib/utils.svelte";
 
 	let encounters = $state<EncounterSummaryDto[]>([]);
@@ -25,6 +32,22 @@
 		return Number.isFinite(n) && n >= 0 ? n : fallback;
 	}
 
+	function parsePositiveIntList(raw: string | null): number[] {
+		if (!raw) return [];
+		return [
+			...new Set(
+				raw
+					.split(",")
+					.map((part) => Number.parseInt(part, 10))
+					.filter((value) => Number.isFinite(value) && value > 0),
+			),
+		].sort((left, right) => left - right);
+	}
+
+	function mergeIds(current: number[], ids: number[]): number[] {
+		return [...new Set([...current, ...ids])].sort((left, right) => left - right);
+	}
+
 	function buildHistorySearchParams(next: {
 		page: number;
 		pageSize: number;
@@ -32,12 +55,14 @@
 		const sp = new URLSearchParams();
 		sp.set("page", String(next.page));
 		sp.set("pageSize", String(next.pageSize));
-		if (selectedBosses.length > 0) sp.set("bosses", selectedBosses.join(","));
+		if (selectedBossMonsterIds.length > 0) {
+			sp.set("bossIds", selectedBossMonsterIds.join(","));
+		}
 		if (selectedPlayerNames.length > 0) {
 			sp.set("players", selectedPlayerNames.join(","));
 		}
-		if (selectedEncounters.length > 0) {
-			sp.set("encounters", selectedEncounters.join(","));
+		if (selectedSceneIds.length > 0) {
+			sp.set("sceneIds", selectedSceneIds.join(","));
 		}
 		if (showFavoritesOnly) sp.set("fav", "1");
 		return sp;
@@ -117,43 +142,49 @@
 	}
 
 	// Unified search (boss, player and encounter names)
-	let availableBossNames = $state<string[]>([]);
-	let availableEncounterNames = $state<string[]>([]);
-	let selectedBosses = $state<string[]>([]);
-	let selectedEncounters = $state<string[]>([]);
+	let availableBossOptions = $state<NameOption[]>([]);
+	let availableEncounterOptions = $state<NameOption[]>([]);
+	let selectedBossMonsterIds = $state<number[]>([]);
+	let selectedSceneIds = $state<number[]>([]);
 	let selectedPlayerNames = $state<string[]>([]);
 	let searchValue = $state("");
 	let searchType = $state<"boss" | "player" | "encounter">("encounter");
 	let isLoadingBossNames = $state(false);
 
 	let showFavoritesOnly = $state(false);
+	const selectedBossFilterOptions = $derived(
+		getBossOptions(selectedBossMonsterIds),
+	);
+	const selectedSceneFilterOptions = $derived(
+		getSceneOptions(selectedSceneIds),
+	);
 
 	async function loadSceneNames() {
 		try {
-			const res = await commands.getUniqueSceneNames();
+			const res = await commands.getUniqueSceneIds();
 			if (res.status === "ok") {
-				availableEncounterNames = res.data.names ?? [];
+				availableEncounterOptions = getSceneOptions(res.data.ids ?? []);
 			} else {
-				availableEncounterNames = [];
+				availableEncounterOptions = [];
 			}
 		} catch (e) {
 			console.error("loadSceneNames error", e);
-			availableEncounterNames = [];
+			availableEncounterOptions = [];
 		}
 	}
 
 	async function loadBossNames() {
 		isLoadingBossNames = true;
 		try {
-			const res = await commands.getUniqueBossNames();
+			const res = await commands.getUniqueBossMonsterIds();
 			if (res.status === "ok") {
-				availableBossNames = res.data.names ?? [];
+				availableBossOptions = getBossOptions(res.data.ids ?? []);
 			} else {
 				throw new Error(String(res.error));
 			}
 		} catch (e) {
 			console.error("loadBossNames error", e);
-			availableBossNames = [];
+			availableBossOptions = [];
 		} finally {
 			isLoadingBossNames = false;
 		}
@@ -165,10 +196,10 @@
 			const offset = p * pageSize;
 
 			const filterPayload: EncounterFiltersDto = {
-				bossNames: selectedBosses.length > 0 ? selectedBosses : null,
+				bossMonsterIds:
+					selectedBossMonsterIds.length > 0 ? selectedBossMonsterIds : null,
 				playerName: null,
-				encounterNames:
-					selectedEncounters.length > 0 ? selectedEncounters : null,
+				sceneIds: selectedSceneIds.length > 0 ? selectedSceneIds : null,
 				playerNames:
 					selectedPlayerNames.length > 0 ? selectedPlayerNames : null,
 				dateFromMs: null,
@@ -177,8 +208,8 @@
 			};
 
 			const hasFilters =
-				filterPayload.bossNames !== null ||
-				filterPayload.encounterNames !== null ||
+				filterPayload.bossMonsterIds !== null ||
+				filterPayload.sceneIds !== null ||
 				filterPayload.playerNames !== null ||
 				filterPayload.isFavorite !== null;
 
@@ -216,20 +247,23 @@
 	}
 
 	function handleSearchSelect(
-		name: string,
+		option: NameOption | { label: string; ids: [] },
 		type: "boss" | "player" | "encounter",
 	) {
 		if (type === "boss") {
-			if (!selectedBosses.includes(name)) {
-				selectedBosses = [...selectedBosses, name];
+			const nextIds = mergeIds(selectedBossMonsterIds, option.ids);
+			if (nextIds.length !== selectedBossMonsterIds.length) {
+				selectedBossMonsterIds = nextIds;
 				loadEncounters(0);
 			}
 		} else if (type === "encounter") {
-			if (!selectedEncounters.includes(name)) {
-				selectedEncounters = [...selectedEncounters, name];
+			const nextIds = mergeIds(selectedSceneIds, option.ids);
+			if (nextIds.length !== selectedSceneIds.length) {
+				selectedSceneIds = nextIds;
 				loadEncounters(0);
 			}
 		} else {
+			const name = option.label;
 			if (!selectedPlayerNames.includes(name)) {
 				selectedPlayerNames = [...selectedPlayerNames, name];
 				loadEncounters(0);
@@ -237,15 +271,15 @@
 		}
 	}
 
-	function removeBossFilter(bossName: string) {
-		selectedBosses = selectedBosses.filter((name) => name !== bossName);
+	function removeBossFilter(ids: number[]) {
+		const removeIds = new Set(ids);
+		selectedBossMonsterIds = selectedBossMonsterIds.filter((id) => !removeIds.has(id));
 		loadEncounters(0);
 	}
 
-	function removeEncounterFilter(encounterName: string) {
-		selectedEncounters = selectedEncounters.filter(
-			(name) => name !== encounterName,
-		);
+	function removeEncounterFilter(ids: number[]) {
+		const removeIds = new Set(ids);
+		selectedSceneIds = selectedSceneIds.filter((id) => !removeIds.has(id));
 		loadEncounters(0);
 	}
 
@@ -258,17 +292,17 @@
 	}
 
 	function clearAllFilters() {
-		selectedBosses = [];
+		selectedBossMonsterIds = [];
 		selectedPlayerNames = [];
-		selectedEncounters = [];
+		selectedSceneIds = [];
 		showFavoritesOnly = false;
 		loadEncounters(0);
 	}
 
 	const hasActiveFilters = $derived(
-		selectedBosses.length > 0 ||
+		selectedBossMonsterIds.length > 0 ||
 			selectedPlayerNames.length > 0 ||
-			selectedEncounters.length > 0 ||
+			selectedSceneIds.length > 0 ||
 			showFavoritesOnly,
 	);
 
@@ -288,20 +322,14 @@
 			pageSize,
 		);
 
-		const bossesParam = sp.get("bosses");
-		if (bossesParam) {
-			selectedBosses = bossesParam.split(",").filter(Boolean);
-		}
+		selectedBossMonsterIds = parsePositiveIntList(sp.get("bossIds"));
 
 		const playersParam = sp.get("players");
 		if (playersParam) {
 			selectedPlayerNames = playersParam.split(",").filter(Boolean);
 		}
 
-		const encountersParam = sp.get("encounters");
-		if (encountersParam) {
-			selectedEncounters = encountersParam.split(",").filter(Boolean);
-		}
+		selectedSceneIds = parsePositiveIntList(sp.get("sceneIds"));
 
 		showFavoritesOnly = sp.get("fav") === "1";
 
@@ -359,8 +387,8 @@
 					id="unified-search"
 					bind:value={searchValue}
 					bind:searchType
-					{availableBossNames}
-					{availableEncounterNames}
+					{availableBossOptions}
+					{availableEncounterOptions}
 					onSelect={handleSearchSelect}
 					disabled={isLoadingBossNames}
 				/>
@@ -425,16 +453,16 @@
 						</button>
 					</span>
 				{/if}
-				{#each selectedBosses as boss}
+				{#each selectedBossFilterOptions as boss}
 					<span
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-popover text-muted-foreground leading-tight border border-border/60"
 					>
 						<span class="text-muted-foreground/70">首领：</span>
-						{boss}
+						{boss.label}
 						<button
-							onclick={() => removeBossFilter(boss)}
+							onclick={() => removeBossFilter(boss.ids)}
 							class="text-muted-foreground/70 hover:text-destructive transition-colors"
-							aria-label={`移除 ${boss} 筛选`}
+							aria-label={`移除 ${boss.label} 筛选`}
 						>
 							✕
 						</button>
@@ -455,16 +483,16 @@
 						</button>
 					</span>
 				{/each}
-				{#each selectedEncounters as encounter}
+				{#each selectedSceneFilterOptions as encounter}
 					<span
 						class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-popover text-muted-foreground leading-tight border border-border/60"
 					>
 						<span class="text-muted-foreground/70">场景：</span>
-						{encounter}
+						{encounter.label}
 						<button
-							onclick={() => removeEncounterFilter(encounter)}
+							onclick={() => removeEncounterFilter(encounter.ids)}
 							class="text-muted-foreground/70 hover:text-destructive transition-colors"
-							aria-label={`移除 ${encounter} 筛选`}
+							aria-label={`移除 ${encounter.label} 筛选`}
 						>
 							✕
 						</button>
@@ -634,10 +662,13 @@
 						<td class="px-3 py-2 text-sm text-muted-foreground">
 							<div class="space-y-1">
 								<div>
-									{#if enc.sceneName}
+									{#if enc.sceneId !== null}
 										<span
 											class="text-xs bg-muted px-1.5 py-0.5 rounded text-foreground"
-											>{enc.sceneName}</span
+											>{resolveSceneName(
+												enc.sceneId,
+												enc.dungeonDifficulty,
+											)}</span
 										>
 									{:else}
 										<span
@@ -652,7 +683,10 @@
 											<span
 												class="text-xs py-0.5 rounded px-1.5"
 												>{enc.bosses[0]
-													?.monsterName}</span
+													? resolveMonsterName(
+															enc.bosses[0].monsterId,
+														)
+													: ""}</span
 											>
 										</div>
 									{:else}

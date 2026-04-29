@@ -45,11 +45,11 @@ pub struct EncounterMetadata {
     pub total_dmg: i64,
     pub total_heal: i64,
     pub scene_id: Option<i32>,
-    pub scene_name: Option<String>,
+    pub dungeon_difficulty: Option<i32>,
     pub duration: f64,
     pub active_combat_duration: Option<f64>,
     pub is_manually_reset: bool,
-    pub boss_names: Vec<String>,
+    pub boss_monster_ids: Vec<i32>,
     pub player_names: Vec<PlayerNameEntry>,
 }
 
@@ -243,14 +243,14 @@ fn prune_and_reindex_encounters(conn: &mut SqliteConnection, keep: i64) -> Resul
                    total_dmg,
                    total_heal,
                    scene_id,
-                   scene_name,
+                   dungeon_difficulty,
                    duration,
                    active_combat_duration,
                    uploaded_at_ms,
                    remote_encounter_id,
                    is_favorite,
                    is_manually_reset,
-                   boss_names,
+                   boss_monster_ids,
                    player_names
                  FROM encounters;",
             )
@@ -278,14 +278,14 @@ fn prune_and_reindex_encounters(conn: &mut SqliteConnection, keep: i64) -> Resul
                    total_dmg,
                    total_heal,
                    scene_id,
-                   scene_name,
+                   dungeon_difficulty,
                    duration,
                    active_combat_duration,
                    uploaded_at_ms,
                    remote_encounter_id,
                    is_favorite,
                    is_manually_reset,
-                   boss_names,
+                   boss_monster_ids,
                    player_names
                  )
                  SELECT
@@ -296,14 +296,14 @@ fn prune_and_reindex_encounters(conn: &mut SqliteConnection, keep: i64) -> Resul
                    total_dmg,
                    total_heal,
                    scene_id,
-                   scene_name,
+                   dungeon_difficulty,
                    duration,
                    active_combat_duration,
                    uploaded_at_ms,
                    remote_encounter_id,
                    is_favorite,
                    is_manually_reset,
-                   boss_names,
+                   boss_monster_ids,
                    player_names
                  FROM temp_encounters_reindex
                  ORDER BY new_id;",
@@ -409,10 +409,10 @@ pub fn save_encounter(encounter: &Encounter, metadata: &EncounterMetadata) {
                 return;
             }
         };
-        let boss_names_json = match serde_json::to_string(&metadata.boss_names) {
+        let boss_monster_ids_json = match serde_json::to_string(&metadata.boss_monster_ids) {
             Ok(v) => v,
             Err(e) => {
-                log::warn!(target: "app::db", "save_encounter_boss_json_failed error={}", e);
+                log::warn!(target: "app::db", "save_encounter_boss_ids_json_failed error={}", e);
                 return;
             }
         };
@@ -432,7 +432,7 @@ pub fn save_encounter(encounter: &Encounter, metadata: &EncounterMetadata) {
                 total_dmg: Some(metadata.total_dmg),
                 total_heal: Some(metadata.total_heal),
                 scene_id: metadata.scene_id,
-                scene_name: metadata.scene_name.clone(),
+                dungeon_difficulty: metadata.dungeon_difficulty,
                 duration: metadata.duration,
                 active_combat_duration: metadata.active_combat_duration,
             };
@@ -445,7 +445,7 @@ pub fn save_encounter(encounter: &Encounter, metadata: &EncounterMetadata) {
             diesel::update(e::encounters.filter(e::id.eq(encounter_id)))
                 .set((
                     e::is_manually_reset.eq(if metadata.is_manually_reset { 1 } else { 0 }),
-                    e::boss_names.eq(Some(boss_names_json)),
+                    e::boss_monster_ids.eq(Some(boss_monster_ids_json)),
                     e::player_names.eq(Some(player_names_json)),
                 ))
                 .execute(tx)?;

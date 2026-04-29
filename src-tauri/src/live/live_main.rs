@@ -2,7 +2,7 @@ use crate::live::state::{AppState, AppStateManager, StateEvent};
 use crate::live::{
     commands_models::{
         BossBuffUpdatePayload, BuffCounterUpdatePayload, BuffUpdatePayload, DeathReplayPayload,
-        EntityNameMapPayload, FightResourceUpdatePayload, HateListUpdatePayload,
+        EntityIdentityMapPayload, FightResourceUpdatePayload, HateListUpdatePayload,
         PanelAttrUpdatePayload, ShieldDetailUpdatePayload, SkillCdUpdatePayload,
     },
     event_manager::{EncounterUpdatePayload, SceneChangePayload},
@@ -391,12 +391,18 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     is_paused,
                 );
             }
-            OutboundEvent::SceneChange(scene_name) => {
+            OutboundEvent::SceneChange {
+                scene_id,
+                dungeon_difficulty,
+            } => {
                 safe_emit_to(
                     app_handle,
                     crate::WINDOW_LIVE_LABEL,
                     "scene-change",
-                    SceneChangePayload { scene_name },
+                    SceneChangePayload {
+                        scene_id,
+                        dungeon_difficulty,
+                    },
                 );
             }
             OutboundEvent::TrainingDummyUpdate(training_dummy) => {
@@ -434,12 +440,18 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     HateListUpdatePayload { hate_lists },
                 );
             }
-            OutboundEvent::EntityNameMap { names } => {
+            OutboundEvent::EntityIdentityMap {
+                player_names,
+                monster_ids,
+            } => {
                 safe_emit_to(
                     app_handle,
                     crate::WINDOW_MONSTER_OVERLAY_LABEL,
-                    "entity-names",
-                    EntityNameMapPayload { names },
+                    "entity-identities",
+                    EntityIdentityMapPayload {
+                        player_names,
+                        monster_ids,
+                    },
                 );
             }
             OutboundEvent::BuffCounterUpdate(counters) => {
