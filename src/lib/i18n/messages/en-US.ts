@@ -1,0 +1,38 @@
+import type { zhCNMessages } from "./zh-CN";
+
+export const enUSMessages = {
+  "app.name": "Resonance Logs",
+  "toolbox.subtitle": "Toolbox",
+  "toolbox.section.tools": "Tools",
+  "routes.tools.dps": "DPS Meter",
+  "routes.tools.moduleCalc": "Module Calculator",
+  "routes.tools.skillMonitor": "Live Monitor",
+  "routes.tools.monsterMonitor": "Monster Monitor",
+  "routes.dps.history": "History",
+  "routes.dps.themes": "Themes",
+  "routes.dps.settings": "Settings",
+  "dps.title": "DPS Meter",
+  "dps.description": "Monitor live combat data and DPS statistics",
+  "dps.live.toggle": "Toggle DPS Window",
+  "dps.default.prompt": "Select a tab above to view details",
+  "dps.default.history": "View History",
+  "settings.tabs.live": "Live",
+  "settings.tabs.network": "Network",
+  "settings.tabs.shortcuts": "Shortcuts",
+  "settings.tabs.history": "History",
+  "settings.tabs.debug": "Debug",
+  "settings.tabs.language": "Language",
+  "settings.language.title": "Language",
+  "settings.language.description":
+    "Choose the UI language.",
+  "settings.language.current": "Current Language",
+  "settings.language.zhCN": "Simplified Chinese (CN)",
+  "settings.language.enUS": "English (NA)",
+  "settings.language.note":
+    "displayed with the current language.",
+  "game.damage.unknown": "Unknown ({id})",
+  "game.scene.unknown": "Unknown Scene {id}",
+  "game.monster.unknown": "Monster {id}",
+  "game.buffCategory.food": "Food",
+  "game.buffCategory.alchemy": "Alchemy",
+} satisfies typeof zhCNMessages;

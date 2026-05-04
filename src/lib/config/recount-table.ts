@@ -1,5 +1,9 @@
-import recountTableRaw from "./RecountTable.json";
-import damageAttrIdNamesRaw from "./DamageAttrIdName.json";
+import { getLocale, t, type AppLocale } from "$lib/i18n/index.svelte";
+import {
+  getGameData,
+  getGameDataFallbackChain,
+  normalizeGameDataText,
+} from "$lib/i18n/game-data";
 
 export type RawSkillStatsLike = {
   totalValue: number;
@@ -56,15 +60,64 @@ type RecountEntry = {
   DamageId: number[];
 };
 
-const recountTable = recountTableRaw as Record<string, RecountEntry>;
-const damageAttrIdNames = damageAttrIdNamesRaw as Record<string, string>;
+const DAMAGE_TO_RECOUNT_BY_LOCALE = new Map<
+  AppLocale,
+  Map<number, { recountId: number; recountName: string }>
+>();
 
-const DAMAGE_TO_RECOUNT = new Map<number, { recountId: number; recountName: string }>();
+function getDamageToRecount(locale: AppLocale) {
+  const cached = DAMAGE_TO_RECOUNT_BY_LOCALE.get(locale);
+  if (cached) return cached;
 
-for (const entry of Object.values(recountTable)) {
-  for (const did of entry.DamageId) {
-    DAMAGE_TO_RECOUNT.set(did, { recountId: entry.Id, recountName: entry.RecountName });
+  const damageToRecount = new Map<
+    number,
+    { recountId: number; recountName: string }
+  >();
+  const recountTable = getGameData(locale).recountTable as Record<
+    string,
+    RecountEntry
+  >;
+  for (const entry of Object.values(recountTable)) {
+    for (const did of entry.DamageId) {
+      damageToRecount.set(did, {
+        recountId: entry.Id,
+        recountName: entry.RecountName,
+      });
+    }
   }
+
+  DAMAGE_TO_RECOUNT_BY_LOCALE.set(locale, damageToRecount);
+  return damageToRecount;
+}
+
+function lookupDamageAttrIdName(
+  damageId: number,
+  locale: AppLocale,
+): string | null {
+  for (const candidate of getGameDataFallbackChain(locale)) {
+    const name = normalizeGameDataText(
+      getGameData(candidate).damageAttrIdNames[String(damageId)],
+    );
+    if (name) return name;
+  }
+  return null;
+}
+
+function lookupRecountName(
+  recountId: number,
+  recountName: string,
+  locale: AppLocale,
+): string | null {
+  const currentName = normalizeGameDataText(recountName);
+  if (currentName) return currentName;
+
+  for (const candidate of getGameDataFallbackChain(locale).slice(1)) {
+    const fallbackName = normalizeGameDataText(
+      getGameData(candidate).recountTable[String(recountId)]?.RecountName,
+    );
+    if (fallbackName) return fallbackName;
+  }
+  return null;
 }
 
 function pct(numerator: number, denominator: number): number {
@@ -82,16 +135,30 @@ function perMinute(value: number, elapsedSecs: number): number {
   return (value / elapsedSecs) * 60;
 }
 
-export function lookupDamageIdName(damageId: number): string {
-  const recount = DAMAGE_TO_RECOUNT.get(damageId);
-  if (recount) return recount.recountName;
-  return damageAttrIdNames[String(damageId)] ?? `Unknown (${damageId})`;
+export function lookupDamageIdName(
+  damageId: number,
+  locale = getLocale(),
+): string {
+  const recount = getDamageToRecount(locale).get(damageId);
+  if (recount) {
+    return (
+      lookupRecountName(recount.recountId, recount.recountName, locale) ??
+      t("game.damage.unknown", { id: damageId })
+    );
+  }
+  return (
+    lookupDamageAttrIdName(damageId, locale) ??
+    t("game.damage.unknown", { id: damageId })
+  );
 }
 
-export function lookupChildDamageIdName(damageId: number): string {
-  const individual = damageAttrIdNames[String(damageId)];
+export function lookupChildDamageIdName(
+  damageId: number,
+  locale = getLocale(),
+): string {
+  const individual = lookupDamageAttrIdName(damageId, locale);
   if (individual) return individual;
-  return lookupDamageIdName(damageId);
+  return lookupDamageIdName(damageId, locale);
 }
 
 export function buildSkillDisplayRow(
@@ -99,13 +166,14 @@ export function buildSkillDisplayRow(
   stats: RawSkillStatsLike,
   elapsedSecs: number,
   parentTotal: number,
+  locale = getLocale(),
 ): SkillDisplayRow {
   const totalDmg = Number(stats.totalValue || 0);
   const effectiveTotal = Number(stats.effectiveTotalValue || 0);
   const hits = Number(stats.hits || 0);
   return {
     skillId,
-    name: lookupDamageIdName(skillId),
+    name: lookupDamageIdName(skillId, locale),
     totalDmg,
     effectiveTotal,
     dps: elapsedSecs > 0 ? totalDmg / elapsedSecs : 0,
@@ -127,17 +195,25 @@ export function groupSkillsByRecount(
   skills: Partial<Record<number, RawSkillStatsLike>>,
   elapsedSecs: number,
   parentTotal: number,
+  locale = getLocale(),
 ): { groups: RecountGroup[]; ungrouped: SkillDisplayRow[] } {
   const groupMap = new Map<number, RecountGroup>();
   const ungrouped: SkillDisplayRow[] = [];
+  const damageToRecount = getDamageToRecount(locale);
 
   for (const [skillIdText, stats] of Object.entries(skills)) {
     if (!stats) continue;
     const skillId = Number(skillIdText);
     if (!Number.isFinite(skillId)) continue;
 
-    const row = buildSkillDisplayRow(skillId, stats, elapsedSecs, parentTotal);
-    const mapping = DAMAGE_TO_RECOUNT.get(skillId);
+    const row = buildSkillDisplayRow(
+      skillId,
+      stats,
+      elapsedSecs,
+      parentTotal,
+      locale,
+    );
+    const mapping = damageToRecount.get(skillId);
     if (!mapping) {
       ungrouped.push(row);
       continue;
@@ -147,7 +223,9 @@ export function groupSkillsByRecount(
     if (!group) {
       group = {
         recountId: mapping.recountId,
-        recountName: mapping.recountName,
+        recountName:
+          lookupRecountName(mapping.recountId, mapping.recountName, locale) ??
+          t("game.damage.unknown", { id: skillId }),
         totalDmg: 0,
         effectiveTotal: 0,
         dps: 0,
@@ -167,17 +245,23 @@ export function groupSkillsByRecount(
     group.totalDmg += row.totalDmg;
     group.effectiveTotal += row.effectiveTotal;
     group.hits += row.hits;
-    row.name = lookupChildDamageIdName(skillId);
+    row.name = lookupChildDamageIdName(skillId, locale);
     group.skills.push(row);
   }
 
   const groups = Array.from(groupMap.values()).map((group) => {
-    const critHits = group.skills.reduce((sum, s) => sum + Number(s.raw.critHits || 0), 0);
+    const critHits = group.skills.reduce(
+      (sum, s) => sum + Number(s.raw.critHits || 0),
+      0,
+    );
     const critTotal = group.skills.reduce(
       (sum, s) => sum + Number(s.raw.critTotalValue || 0),
       0,
     );
-    const luckyHits = group.skills.reduce((sum, s) => sum + Number(s.raw.luckyHits || 0), 0);
+    const luckyHits = group.skills.reduce(
+      (sum, s) => sum + Number(s.raw.luckyHits || 0),
+      0,
+    );
     const luckyTotal = group.skills.reduce(
       (sum, s) => sum + Number(s.raw.luckyTotalValue || 0),
       0,

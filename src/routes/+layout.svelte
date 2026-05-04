@@ -4,6 +4,7 @@
    * It imports the global stylesheet and disables the context menu.
    */
   import "../app.css";
+  import { setLocale } from "$lib/i18n/index.svelte";
   import { SETTINGS } from "$lib/settings-store";
   // Only allow warnings and errors to be printed to console in production builds
   if (typeof window !== "undefined" && import.meta.env.PROD) {
@@ -47,7 +48,7 @@
       const colorValue = colors[key];
       if (colorValue) {
         if (Array.isArray(cssVars)) {
-          cssVars.forEach(v => root.style.setProperty(v, colorValue));
+          cssVars.forEach((v) => root.style.setProperty(v, colorValue));
         } else {
           root.style.setProperty(cssVars, colorValue);
         }
@@ -60,14 +61,12 @@
     const root = document.documentElement;
     for (const cssVars of Object.values(customThemeKeyToCssVar)) {
       if (Array.isArray(cssVars)) {
-        cssVars.forEach(v => root.style.removeProperty(v));
+        cssVars.forEach((v) => root.style.removeProperty(v));
       } else {
         root.style.removeProperty(cssVars);
       }
     }
   }
-
-
 </script>
 
 <svelte:window oncontextmenu={(e) => e.preventDefault()} />
@@ -76,6 +75,9 @@
 {(() => {
   $effect(() => {
     if (typeof document !== "undefined") {
+      const locale = setLocale(SETTINGS.i18n.state.locale);
+      document.documentElement.lang = locale;
+
       const customThemeColors = SETTINGS.accessibility.state.customThemeColors;
 
       // Always operate in 'custom' theme mode. Apply any custom colors if present.
@@ -90,7 +92,6 @@
   });
 })()}
 
-{(() => {
-})()}
+{(() => {})()}
 
 {@render children()}

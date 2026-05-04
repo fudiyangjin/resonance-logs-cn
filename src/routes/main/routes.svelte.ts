@@ -1,6 +1,7 @@
 /**
  * @file This file defines the tool routes for the toolbox sidebar.
  */
+import type { MessageKey } from "$lib/i18n/index.svelte";
 import ActivityIcon from "virtual:icons/lucide/activity";
 import CalculatorIcon from "virtual:icons/lucide/calculator";
 import HourglassIcon from "virtual:icons/lucide/hourglass";
@@ -9,20 +10,34 @@ import SettingsIcon from "virtual:icons/lucide/settings";
 import ShieldAlertIcon from "virtual:icons/lucide/shield-alert";
 import SwordsIcon from "virtual:icons/lucide/swords";
 
+type RouteDefinition = {
+  labelKey: MessageKey;
+  icon: typeof ActivityIcon;
+};
+
 // Tool-level routes for the left sidebar
 export const TOOL_ROUTES = {
-  "/main/dps": { label: "DPS检测", icon: ActivityIcon },
-  "/main/module-calc": { label: "模组计算", icon: CalculatorIcon },
-  "/main/skill-monitor": { label: "实时监控", icon: SwordsIcon },
-  "/main/monster-monitor": { label: "怪物监控", icon: ShieldAlertIcon },
-};
+  "/main/dps": { labelKey: "routes.tools.dps", icon: ActivityIcon },
+  "/main/module-calc": {
+    labelKey: "routes.tools.moduleCalc",
+    icon: CalculatorIcon,
+  },
+  "/main/skill-monitor": {
+    labelKey: "routes.tools.skillMonitor",
+    icon: SwordsIcon,
+  },
+  "/main/monster-monitor": {
+    labelKey: "routes.tools.monsterMonitor",
+    icon: ShieldAlertIcon,
+  },
+} satisfies Record<string, RouteDefinition>;
 
 // Sub-routes for DPS tool (tabs in the right panel)
 export const DPS_SUB_ROUTES = {
-  "/main/dps/history": { label: "历史", icon: HourglassIcon },
-  "/main/dps/themes": { label: "主题", icon: PaletteIcon },
-  "/main/dps/settings": { label: "设置", icon: SettingsIcon },
-};
+  "/main/dps/history": { labelKey: "routes.dps.history", icon: HourglassIcon },
+  "/main/dps/themes": { labelKey: "routes.dps.themes", icon: PaletteIcon },
+  "/main/dps/settings": { labelKey: "routes.dps.settings", icon: SettingsIcon },
+} satisfies Record<string, RouteDefinition>;
 
 // Legacy export for backward compatibility (if needed)
 export const SIDEBAR_ROUTES = DPS_SUB_ROUTES;

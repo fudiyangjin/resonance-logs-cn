@@ -4,6 +4,7 @@
  */
 import { RuneStore } from "@tauri-store/svelte";
 import type { BuffCategoryKey } from "./config/buff-name-table";
+import type { AppLocale } from "./i18n/locales";
 import {
   cloneHeaderCustomLayout,
   type HeaderCustomLayout,
@@ -1098,6 +1099,9 @@ export const CUSTOM_THEME_COLOR_LABELS: Record<
 };
 
 const DEFAULT_SETTINGS = {
+  i18n: {
+    locale: "zh-CN" as AppLocale,
+  },
   accessibility: {
     blur: false,
     clickthrough: false,
@@ -1221,6 +1225,7 @@ const DEFAULT_SETTINGS = {
 // We need flattened settings for every update to be able to auto-detect new changes
 const RUNE_STORE_OPTIONS = { autoStart: true, saveOnChange: true };
 export const SETTINGS = {
+  i18n: new RuneStore("i18n", DEFAULT_SETTINGS.i18n, RUNE_STORE_OPTIONS),
   accessibility: new RuneStore(
     "accessibility",
     DEFAULT_SETTINGS.accessibility,
@@ -1425,6 +1430,7 @@ export const SETTINGS = {
 // Create flattened settings object for backwards compatibility
 export const settings = {
   state: {
+    i18n: SETTINGS.i18n.state,
     accessibility: SETTINGS.accessibility.state,
     shortcuts: SETTINGS.shortcuts.state,
     moduleSync: SETTINGS.moduleSync.state,
