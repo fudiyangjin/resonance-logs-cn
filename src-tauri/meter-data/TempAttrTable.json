@@ -3740,8 +3740,8 @@
   },
   "90314": {
     "Id": 90314,
-    "Name": "血槽积攒效率",
-    "Desc": "血槽积攒效率",
+    "Name": "炎魂积攒效率",
+    "Desc": "炎魂积攒效率",
     "AttrType": 301,
     "LogicType": 2,
     "AttrParams": [
@@ -3843,8 +3843,8 @@
   },
   "90320": {
     "Id": 90320,
-    "Name": "赤红积攒效率",
-    "Desc": "赤红积攒效率",
+    "Name": "血槽积攒效率",
+    "Desc": "血槽积攒效率",
     "AttrType": 301,
     "LogicType": 2,
     "AttrParams": [
@@ -3852,6 +3852,34 @@
     ],
     "LowerLimit": -99999,
     "UpperLimit": 99999,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "90321": {
+    "Id": 90321,
+    "Name": "无穷雷霆之力充能层数",
+    "Desc": "无穷雷霆之力充能层数",
+    "AttrType": 352,
+    "LogicType": 1,
+    "AttrParams": [
+      1730
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 2,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "90332": {
+    "Id": 90332,
+    "Name": "如川流华斩因子属性管理",
+    "Desc": "如川流华斩因子属性管理",
+    "AttrType": 0,
+    "LogicType": 0,
+    "AttrParams": [],
+    "LowerLimit": 0,
+    "UpperLimit": 2,
     "IsSyncClient": true,
     "AttrDesc": "全子弹大小",
     "AttrIcon": ""
@@ -4289,6 +4317,66 @@
     ],
     "LowerLimit": 0,
     "UpperLimit": 9999999,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "92043": {
+    "Id": 92043,
+    "Name": "无相流词条刷新概率提高",
+    "Desc": "无相流词条刷新概率提高",
+    "AttrType": 851,
+    "LogicType": 9,
+    "AttrParams": [
+      36
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 9999999,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "92044": {
+    "Id": 92044,
+    "Name": "赤红流词条刷新概率提高",
+    "Desc": "赤红流词条刷新概率提高",
+    "AttrType": 851,
+    "LogicType": 9,
+    "AttrParams": [
+      37
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 9999999,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "92045": {
+    "Id": 92045,
+    "Name": "脉冲刷新概率提高",
+    "Desc": "脉冲刷新概率提高",
+    "AttrType": 851,
+    "LogicType": 9,
+    "AttrParams": [
+      12
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 99999,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "92046": {
+    "Id": 92046,
+    "Name": "精通刷新概率提高",
+    "Desc": "精通刷新概率提高",
+    "AttrType": 851,
+    "LogicType": 9,
+    "AttrParams": [
+      13
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 99999,
     "IsSyncClient": true,
     "AttrDesc": "全子弹大小",
     "AttrIcon": ""
