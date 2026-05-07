@@ -3,18 +3,27 @@
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import PercentFormat from "$lib/components/percent-format.svelte";
   import { SvelteSet } from "svelte/reactivity";
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
+  import {
+    buildSkillContributionNote,
+    resolveSkillContributionLabel,
+    type SkillContributionAttribution,
+  } from "$lib/config/recount-table";
   import type {
     RawSkillStatsLike,
     RecountGroup,
     SkillDisplayRow,
   } from "$lib/config/recount-table";
 
+  const t = uiT("dps/live", () => SETTINGS.live.general.state.language);
+
   type SkillColumn = {
     key: string;
     header: string;
     label: string;
     description: string;
-    format: (value: number) => string;
+    format: (value: number | null) => string;
   };
 
   type GroupedSkills = {
@@ -65,6 +74,9 @@
     abbreviatedDecimalPlaces: number;
     abbreviationStyle: "western" | "cn";
     formatRateValue: (value: number) => string;
+    compactMode?: boolean;
+    compactPrimaryKey?: string;
+    compactSecondaryKey?: string;
   };
 
   let {
@@ -82,9 +94,18 @@
     abbreviatedDecimalPlaces,
     abbreviationStyle,
     formatRateValue,
+    compactMode = false,
+    compactPrimaryKey = "totalDmg",
+    compactSecondaryKey = "dps",
   }: Props = $props();
 
   const expandedGroups = new SvelteSet<number>();
+  const GROUP_ATTRIBUTION: SkillContributionAttribution = {
+    kind: "exact",
+    basis: "direct-damage-row",
+    label: "Exact",
+    detail: "Measured recount rollup total.",
+  };
 
   function numericValue(value: unknown): number {
     return typeof value === "number" ? value : 0;
@@ -99,30 +120,27 @@
       totalValue: group.totalDmg,
       effectiveTotalValue: group.effectiveTotal,
       hits: group.hits,
-      critHits: group.skills.reduce(
-        (sum, skill) => sum + Number(skill.raw.critHits || 0),
-        0,
-      ),
-      critTotalValue: group.skills.reduce(
-        (sum, skill) => sum + Number(skill.raw.critTotalValue || 0),
-        0,
-      ),
-      luckyHits: group.skills.reduce(
-        (sum, skill) => sum + Number(skill.raw.luckyHits || 0),
-        0,
-      ),
-      luckyTotalValue: group.skills.reduce(
-        (sum, skill) => sum + Number(skill.raw.luckyTotalValue || 0),
-        0,
-      ),
+      critHits: group.raw.critHits,
+      critTotalValue: group.raw.critTotalValue,
+      luckyHits: group.raw.luckyHits,
+      luckyTotalValue: group.raw.luckyTotalValue,
+      property: group.property,
+      damageMode: group.damageMode,
     };
+  }
+
+  function isContributionCellUnknown(skill: FlatSkillRow): boolean {
+    if (skill.isGroup) return false;
+    return skill.attribution.kind === "source-only";
   }
 
   function sortRows<T extends Record<string, unknown>>(rows: readonly T[]): T[] {
     return [...rows].sort((a, b) => {
-      const aVal = numericValue(a[sortKey]);
-      const bVal = numericValue(b[sortKey]);
-      return sortDesc ? bVal - aVal : aVal - bVal;
+      const key = compactMode ? compactPrimaryKey : sortKey;
+      const desc = compactMode ? true : sortDesc;
+      const aVal = numericValue(a[key]);
+      const bVal = numericValue(b[key]);
+      return desc ? bVal - aVal : aVal - bVal;
     });
   }
 
@@ -141,10 +159,11 @@
         (skill): TopLevelSkillItem => ({ kind: "skill", row: skill }),
       ),
     ].sort((a, b) => {
-      const key = sortKey as keyof SkillDisplayRow & keyof RecountGroup;
+      const key = (compactMode ? compactPrimaryKey : sortKey) as keyof SkillDisplayRow & keyof RecountGroup;
+      const desc = compactMode ? true : sortDesc;
       const aVal = numericValue(a.row[key]);
       const bVal = numericValue(b.row[key]);
-      return sortDesc ? bVal - aVal : aVal - bVal;
+      return desc ? bVal - aVal : aVal - bVal;
     });
 
     for (const item of topLevel) {
@@ -174,6 +193,11 @@
         luckyDmgRate: group.luckyDmgRate,
         hits: group.hits,
         hitsPerMinute: group.hitsPerMinute,
+        property: group.property,
+        damageMode: group.damageMode,
+        attribution: GROUP_ATTRIBUTION,
+        ...(group.activeFactors?.length ? { activeFactors: group.activeFactors } : {}),
+        ...(group.activeEffects?.length ? { activeEffects: group.activeEffects } : {}),
         raw: buildGroupRaw(group),
         isGroup: true,
         depth: 0,
@@ -205,7 +229,7 @@
 
 <div class="relative flex flex-col">
   <table class="w-full border-collapse">
-    {#if tableSettings.skillShowHeader}
+    {#if tableSettings.skillShowHeader && !compactMode}
       <thead class="z-1 sticky top-0">
         <tr
           class="bg-popover/60"
@@ -214,7 +238,7 @@
           <th
             class="px-2 py-1 text-left font-medium uppercase tracking-wider"
             style="font-size: {tableSettings.skillHeaderFontSize}px; color: {tableSettings.skillHeaderTextColor};"
-            >Skill</th
+            >{t("table.skill", "Skill")}</th
           >
           {#each visibleColumns as col (col.key)}
             <th
@@ -234,6 +258,90 @@
       </thead>
     {/if}
     <tbody>
+      {#if compactMode}
+        {#each flatRows as skill (skill.key)}
+          <tr
+            class="relative hover:bg-muted/60 transition-colors bg-background/40"
+            style="height: {tableSettings.skillRowHeight}px; font-size: {tableSettings.skillFontSize}px;"
+          >
+            <td
+              colspan={visibleColumns.length + 1}
+              class="px-2 py-1 relative z-10"
+              style="color: {customThemeColors.tableTextColor};"
+            >
+              <button
+                class="flex items-center justify-between gap-3 h-full w-full text-left"
+                onclick={() =>
+                  skill.isGroup && skill.groupId !== undefined
+                    ? toggleGroup(skill.groupId)
+                    : undefined}
+                disabled={!skill.isGroup}
+              >
+                <span class="flex min-w-0 items-center gap-1">
+                  <span style="padding-left: {skill.depth * 16}px;"></span>
+                  {#if skill.isGroup && skill.expandable}
+                    <span class="size-3 shrink-0 text-muted-foreground/70 {skill.expanded ? 'rotate-90' : ''}">›</span>
+                  {:else if skill.depth > 0}
+                    <span class="w-3 shrink-0 flex justify-center">
+                      <span class="size-1 rounded-full bg-muted-foreground/35"></span>
+                    </span>
+                  {:else}
+                    <span class="w-3 shrink-0"></span>
+                  {/if}
+                  <span class="truncate">{skill.name}</span>
+                  {#if !skill.isGroup && skill.depth > 0}
+                    <span
+                      class="shrink-0 rounded border border-border/50 bg-background/60 px-1 py-0.5 text-[9px] leading-none text-muted-foreground"
+                      title={buildSkillContributionNote(skill)}
+                    >
+                      {resolveSkillContributionLabel(skill)}
+                    </span>
+                  {/if}
+                  {#if skill.showSkillId}
+                    <span class="text-[10px] text-muted-foreground/50 shrink-0">
+                      #{skill.skillId}
+                    </span>
+                  {/if}
+                </span>
+                <span class="flex shrink-0 items-baseline gap-2 tabular-nums">
+                  <span class="font-semibold">
+                    {#if shortenValues}
+                      <AbbreviatedNumber
+                        num={columnValue(skill, compactPrimaryKey)}
+                        decimalPlaces={abbreviatedDecimalPlaces}
+                        {abbreviationStyle}
+                        suffixFontSize={tableSettings.skillAbbreviatedFontSize}
+                        suffixColor={customThemeColors.tableAbbreviatedColor}
+                      />
+                    {:else}
+                      {columnValue(skill, compactPrimaryKey).toLocaleString()}
+                    {/if}
+                  </span>
+                  <span class="text-muted-foreground">
+                    {formatRateValue(columnValue(skill, compactSecondaryKey))}
+                  </span>
+                  <PercentFormat
+                    val={skill.dmgPct}
+                    fractionDigits={0}
+                    suffixFontSize={tableSettings.skillAbbreviatedFontSize}
+                    suffixColor={customThemeColors.tableAbbreviatedColor}
+                  />
+                </span>
+              </button>
+            </td>
+            <TableRowGlow
+              isSkill={true}
+              className={glowClassName}
+              {classSpecName}
+              percentage={relativeToTop
+                ? maxSkillValue > 0
+                  ? (skill.totalDmg / maxSkillValue) * 100
+                  : 0
+                : skill.dmgPct}
+            />
+          </tr>
+        {/each}
+      {:else}
       {#each flatRows as skill (skill.key)}
         <tr
           class="relative hover:bg-muted/60 transition-colors bg-background/40"
@@ -276,6 +384,14 @@
                 <span class="w-3 shrink-0"></span>
               {/if}
               <span class="truncate">{skill.name}</span>
+              {#if !skill.isGroup && skill.depth > 0}
+                <span
+                  class="shrink-0 rounded border border-border/50 bg-background/60 px-1 py-0.5 text-[9px] leading-none text-muted-foreground"
+                  title={buildSkillContributionNote(skill)}
+                >
+                  {resolveSkillContributionLabel(skill)}
+                </span>
+              {/if}
               {#if skill.showSkillId}
                 <span class="text-[10px] text-muted-foreground/50 shrink-0">
                   #{skill.skillId}
@@ -288,7 +404,12 @@
               class="px-2 py-1 text-right relative z-10"
               style="color: {customThemeColors.tableTextColor};"
             >
-              {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
+              {#if isContributionCellUnknown(skill)}
+                <span
+                  class="text-muted-foreground/60"
+                  title={buildSkillContributionNote(skill)}
+                >--</span>
+              {:else if col.key === "totalDmg" || col.key === "effectiveTotal"}
                 {#if shortenValues}
                   <AbbreviatedNumber
                     num={col.key === "totalDmg" ? skill.totalDmg : skill.effectiveTotal}
@@ -325,6 +446,8 @@
                   suffixFontSize={tableSettings.skillAbbreviatedFontSize}
                   suffixColor={customThemeColors.tableAbbreviatedColor}
                 />
+              {:else if col.key === "property" || col.key === "damageMode"}
+                {col.format(skill[col.key] ?? null)}
               {:else}
                 {col.format(columnValue(skill, col.key))}
               {/if}
@@ -342,6 +465,7 @@
           />
         </tr>
       {/each}
+      {/if}
     </tbody>
   </table>
 </div>

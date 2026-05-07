@@ -21,5 +21,16 @@
   "translationSourceMode.runtime": "AppData翻訳ファイル",
   "translationSourceModeCurrent": "現在のソース:",
   "translationSourceModeDescription": "アプリ内蔵の翻訳と AppData に保存された編集可能な翻訳ファイルを切り替えます。",
-  "translationTools": "翻訳デバッグ"
+  "translationTools": "翻訳デバッグ",
+  "globalDebugInfoButton": "Show debug info",
+  "globalDebugInfoButtonLabel": "Info",
+  "globalDebugInfoTitle": "Debug Tools Overview",
+  "globalDebugInfoBody": "Use this page for logs, diagnostics bundles, translation runtime tools, and developer-facing display helpers. These tools affect the app globally and are no longer nested under Meter Settings.",
+  "showHoverDescriptions": "ホバー説明を表示",
+  "showHoverDescriptionsDescription": "利用可能な場合、スキル、バフ、修正、モジュール、その他 UID 付き行のホバーテキストに生成された説明を表示します。",
+  "openLogDirFailed": "Failed to open log folder:",
+  "bundleSaveTitle": "Save Diagnostics Bundle",
+  "bundleCreatedCopied": "Diagnostics bundle created and path copied:",
+  "bundleCreated": "Diagnostics bundle created:",
+  "bundleFailed": "Failed to create diagnostics bundle:"
 }

@@ -17,7 +17,7 @@
   const styleConfig = $derived(hatePanelStyle());
   const panelPos = $derived(getHatePanelPosition());
   const panelScale = $derived(getHatePanelScale());
-  const t = uiT("monster-monitor", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/monster-monitor", () => SETTINGS.live.general.state.language);
 </script>
 
 {#if sections.length > 0 || editing}
@@ -35,11 +35,11 @@
       <div class="group-tag">{t("overlay.hatePanel", "Hate Area")}</div>
     {/if}
 
-    <div class="section-list">
+    <div class="monster-overlay-section-list">
       {#each sections as section (section.bossUid)}
-        <section class="boss-section" class:placeholder={section.isPlaceholder}>
-          <div class="boss-title">{section.title}{t("overlay.hateSuffix", " - Hate")}</div>
-          <div class="boss-rows" style:gap={`${styleConfig.gap}px`}>
+        <section class="monster-overlay-boss-section" class:placeholder={section.isPlaceholder}>
+          <div class="monster-overlay-boss-title">{section.title}{t("overlay.hateSuffix", " - Hate")}</div>
+          <div class="monster-overlay-boss-rows" style:gap={`${styleConfig.gap}px`}>
             {#each section.rows as row (row.key)}
               <TextBuffRow
                 label={row.label}
@@ -70,46 +70,3 @@
     {/if}
   </div>
 {/if}
-
-<style>
-  .monster-hate-panel {
-    min-width: 240px;
-    max-width: 320px;
-  }
-
-  .monster-hate-panel.editable {
-    border: 2px solid rgba(244, 114, 182, 0.9);
-    border-radius: 10px;
-    background: rgba(52, 24, 42, 0.5);
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
-  }
-
-  .section-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-width: 240px;
-  }
-
-  .boss-section {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .boss-section.placeholder {
-    opacity: 0.8;
-  }
-
-  .boss-title {
-    font-size: 12px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.92);
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
-  }
-
-  .boss-rows {
-    display: flex;
-    flex-direction: column;
-  }
-</style>

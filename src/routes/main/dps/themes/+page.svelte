@@ -6,6 +6,7 @@
   import SettingsColor from "../settings/settings-color.svelte";
   import SettingsColorAlpha from "../settings/settings-color-alpha.svelte";
   import SettingsFilePicker from "../settings/settings-file-picker.svelte";
+  import HeaderLayoutEditor from "../settings/header-layout-editor.svelte";
   import {
     SETTINGS,
     DEFAULT_CLASS_COLORS,
@@ -917,6 +918,19 @@
               </p>
               <div class="mt-2 space-y-2">
                 <h4 class="text-sm font-medium text-foreground">{t("playerTableSettings.playerRows", "玩家行")}</h4>
+                <SettingsSwitch
+                  bind:checked={SETTINGS.live.tableCustomization.state.compactMode}
+                  label={t("playerTableSettings.compactMode", "Compact Mode")}
+                  description={t("playerTableSettings.compactMode.description", "Show live rows as single-line summaries with total, rate, and share.")}
+                />
+                {#if SETTINGS.live.tableCustomization.state.compactMode}
+                  <SettingsSelect
+                    label={t("playerTableSettings.compactDpsKey", "Compact DPS Metric")}
+                    description={t("playerTableSettings.compactDpsKey.description", "Choose whether compact DPS rows show DPS or true DPS.")}
+                    bind:selected={SETTINGS.live.tableCustomization.state.compactDpsKey}
+                    values={["dps", "tdps"]}
+                  />
+                {/if}
                 <SettingsSlider
                   bind:value={
                     SETTINGS.live.tableCustomization.state.playerRowHeight
@@ -1553,6 +1567,32 @@
                   />
                 </div>
 
+                <!-- Header Layout -->
+                <div class="space-y-3 pt-3 border-t border-border/30">
+                  <h3 class="text-sm font-semibold text-foreground">
+                    {t("liveHeader.headerLayout", "Title Bar Layout")}
+                  </h3>
+                  <SettingsSelect
+                    bind:selected={
+                      SETTINGS.live.headerCustomization.state.headerLayoutMode
+                    }
+                    label={t("liveHeader.headerLayoutMode", "Layout Mode")}
+                    description={t("liveHeader.headerLayoutMode.description", "Classic keeps the current two-row layout. Free layout lets you arrange title bar components across rows.")}
+                    values={[
+                      { label: t("liveHeader.headerLayoutMode.classic", "Classic Layout"), value: "classic" },
+                      { label: t("liveHeader.headerLayoutMode.custom", "Free Layout"), value: "custom" },
+                    ]}
+                  />
+                  {#if SETTINGS.live.headerCustomization.state.headerLayoutMode === "custom"}
+                    <HeaderLayoutEditor
+                      bind:layout={
+                        SETTINGS.live.headerCustomization.state
+                          .headerCustomLayout
+                      }
+                    />
+                  {/if}
+                </div>
+
                 <!-- Timer Settings -->
                 <div class="space-y-2 pt-3 border-t border-border/30">
                   <h3 class="text-sm font-semibold text-foreground">{t("liveHeader.timer", "计时器")}</h3>
@@ -1879,6 +1919,17 @@
                     description={t("liveHeader.showBossHealth.description", "显示当前首领血条")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showBossHealth}
+                    <SettingsSelect
+                      bind:selected={
+                        SETTINGS.live.headerCustomization.state.bossHealthLayout
+                      }
+                      label={t("liveHeader.bossHealthLayout", "Boss Health Direction")}
+                      description={t("liveHeader.bossHealthLayout.description", "Horizontal display keeps boss health on one line for custom title bar layouts.")}
+                      values={[
+                        { label: t("liveHeader.bossHealthLayout.vertical", "Vertical"), value: "vertical" },
+                        { label: t("liveHeader.bossHealthLayout.horizontal", "Horizontal"), value: "horizontal" },
+                      ]}
+                    />
                     <SettingsSlider
                       bind:value={
                         SETTINGS.live.headerCustomization.state
@@ -1941,6 +1992,13 @@
                     }
                     label={t("liveHeader.showNavigationTabs", "显示导航标签")}
                     description={t("liveHeader.showNavigationTabs.description", "显示 DPS / 治疗 / 承伤 切换按钮")}
+                  />
+                  <SettingsSwitch
+                    bind:checked={
+                      SETTINGS.live.headerCustomization.state.showDeathTab
+                    }
+                    label={t("liveHeader.showDeathTab", "Show Death Tab")}
+                    description={t("liveHeader.showDeathTab.description", "Add the death replay tab to the live navigation.")}
                   />
                   {#if SETTINGS.live.headerCustomization.state.showNavigationTabs}
                     <SettingsSlider

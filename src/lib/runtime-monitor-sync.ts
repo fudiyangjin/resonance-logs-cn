@@ -26,6 +26,11 @@ function normalizeCounterRules(rules: CounterRule[]): CounterRule[] {
 
 function getCounterRuleBuffIds(rule: CounterRule): number[] {
   const result = rule.effectSlots.map((slot) => slot.resetBuffId);
+  for (const slot of rule.effectSlots) {
+    if (slot.altFreeze) {
+      result.push(slot.altFreeze.conditionBuffId);
+    }
+  }
   for (const source of rule.sources) {
     if ("buffDurationTick" in source) {
       result.push(source.buffDurationTick.buffId);

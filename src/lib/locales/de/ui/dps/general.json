@@ -1,15 +1,16 @@
 {
+  "history": "Verlauf",
+  "meterSettings": "Meter Settings",
   "selectTabPrompt": "Please select a tab above to view detailed settings",
+  "settings": "Einstellungen",
   "settings.debug": "Debug",
   "settings.history": "Verlauf",
   "settings.live": "Live",
   "settings.network": "Netzwerk",
   "settings.shortcuts": "Hotkeys",
   "subtitle": "Kampfdaten und DPS-Statistiken in Echtzeit überwachen",
+  "themes": "Themen",
   "title": "DPS-Meter",
   "toggleWindow": "Toggle DPS Fenster",
-  "viewHistory": "View History",
-  "history": "Verlauf",
-  "themes": "Themen",
-  "settings": "Einstellungen"
+  "viewHistory": "View History"
 }

@@ -13,7 +13,7 @@
     textBuffPanelStyle,
   } from "./overlay-state.svelte.js";
 
-  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
   const editing = $derived(isEditing());
   const buffs = $derived(limitedTextBuffs());
   const styleConfig = $derived(textBuffPanelStyle());
@@ -34,7 +34,7 @@
     onpointerdown={(e) => startDrag(e, { kind: "group", key: "textBuffPanel" }, groupPos)}
   >
     {#if editing}
-      <div class="group-tag">{t("overlay.textBuff", "无图标Buff区")}</div>
+      <div class="group-tag">{t("overlay.textBuff", "Text Buff Area")}</div>
     {/if}
 
     {#each buffs as buff (buff.key)}

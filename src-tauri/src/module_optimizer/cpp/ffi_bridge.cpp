@@ -1,4 +1,4 @@
-#include "resonance-logs-cn/src/module_optimizer/bridge.rs.h"
+#include "resonance-logs-global/src/module_optimizer/bridge.rs.h"
 #include "module_optimizer.h"
 #include <mutex>
 #include <unordered_set>

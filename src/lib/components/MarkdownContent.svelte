@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { marked } from 'marked';
+  import { parse } from 'marked';
 
   let {
     source,
     loadingText = 'Loading content...',
-    emptyText = '暂无内容。',
+    emptyText = "No content.",
     contentClass = '',
   }: {
     source: string;
@@ -37,7 +37,7 @@
       html = null;
 
       try {
-        const parsed = await marked.parse(source);
+        const parsed = await parse(source);
         if (!cancelled) {
           html = parsed as string;
         }

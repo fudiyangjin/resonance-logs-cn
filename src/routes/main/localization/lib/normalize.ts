@@ -2,7 +2,6 @@ import type { LocaleCode } from "$lib/i18n";
 
 import type {
     GenericTranslationTable,
-    SkillTranslationTable,
     TranslationFileKind,
     TranslationWorkspaceRow,
 } from "./types";
@@ -13,6 +12,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function normalizeText(value: unknown): string {
     return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeId(value: unknown): string {
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return String(value);
+    }
+    return normalizeText(value);
 }
 
 function resolveLocalizedValue(
@@ -36,6 +42,20 @@ function resolveLocalizedValue(
     return "";
 }
 
+function resolveGeneratedLocalizedValue(
+    value: Record<string, unknown> | undefined,
+    locale: LocaleCode,
+): string {
+    if (!value) {
+        return "";
+    }
+
+    return resolveLocalizedValue(value, locale)
+        || normalizeText(value["en"])
+        || normalizeText(value["design"])
+        || normalizeText(value["und"]);
+}
+
 function buildSearchBlob(parts: Array<string | undefined>): string {
     return parts
         .map((value) => (value ?? "").trim().toLowerCase())
@@ -43,141 +63,104 @@ function buildSearchBlob(parts: Array<string | undefined>): string {
         .join(" ");
 }
 
-function sortRows(rows: TranslationWorkspaceRow[]): TranslationWorkspaceRow[] {
-    return [...rows].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
-}
-
-function normalizeSkillnamesRows(
-    rawJson: unknown,
+function normalizeGeneratedEntry(
+    id: string,
+    entry: Record<string, unknown>,
     locale: LocaleCode,
-): TranslationWorkspaceRow[] {
-    if (!isRecord(rawJson)) {
-        return [];
-    }
-
-    const table = rawJson as SkillTranslationTable;
-    const rows: TranslationWorkspaceRow[] = [];
-
-    for (const [id, entry] of Object.entries(table)) {
-        if (!isRecord(entry)) {
-            continue;
-        }
-
-        const nameValue = isRecord(entry["name"]) ? entry["name"] : undefined;
-        const noteValue = isRecord(entry["note"]) ? entry["note"] : undefined;
-
-        const baseName = resolveLocalizedValue(nameValue, "zh-CN");
-        const baseNote = resolveLocalizedValue(noteValue, "zh-CN");
-        const localName = resolveLocalizedValue(nameValue, locale);
-        const localNote = resolveLocalizedValue(noteValue, locale);
-
-        rows.push({
-            id,
-            baseName,
-            baseNote,
-            baseOverlayAlias: "",
-            localName,
-            localNote,
-            localOverlayAlias: "",
-            searchBlob: buildSearchBlob([id, baseName, baseNote, localName, localNote]),
-            raw: entry,
-        });
-    }
-
-    return sortRows(rows);
-}
-
-function normalizeBuffNameRows(
-    rawJson: unknown,
-    locale: LocaleCode,
-): TranslationWorkspaceRow[] {
-    if (!isRecord(rawJson)) {
-        return [];
-    }
-
-    const table = rawJson as Record<string, Record<string, unknown>>;
-    const rows: TranslationWorkspaceRow[] = [];
-
-    for (const [id, entry] of Object.entries(table)) {
-        if (!isRecord(entry)) {
-            continue;
-        }
-
-        const nameValue = isRecord(entry["NameDesign"]) ? entry["NameDesign"] : undefined;
-        const baseName = resolveLocalizedValue(nameValue, "zh-CN");
-        const localName = resolveLocalizedValue(nameValue, locale);
-
-        rows.push({
-            id,
-            baseName,
-            baseNote: "",
-            baseOverlayAlias: "",
-            localName,
-            localNote: "",
-            localOverlayAlias: "",
-            searchBlob: buildSearchBlob([id, baseName, localName]),
-            raw: entry,
-        });
-    }
-
-    return sortRows(rows);
-}
-
-function normalizeSearchTableRows(
-    rawJson: unknown,
-    locale: LocaleCode,
-): TranslationWorkspaceRow[] {
-    if (!isRecord(rawJson)) {
-        return [];
-    }
-
-    const table = rawJson as Record<string, Record<string, unknown>>;
-    const rows: TranslationWorkspaceRow[] = [];
-
-    for (const [id, entry] of Object.entries(table)) {
-        if (!isRecord(entry)) {
-            continue;
-        }
-
-        const nameValue = isRecord(entry["name"]) ? entry["name"] : undefined;
-        const noteValue = isRecord(entry["notes"])
-            ? entry["notes"]
+): TranslationWorkspaceRow {
+    const names = isRecord(entry["Names"])
+        ? entry["Names"]
+        : isRecord(entry["NameDesign"])
+            ? entry["NameDesign"]
+            : isRecord(entry["name"])
+                ? entry["name"]
+                : isRecord(entry)
+                    && ["en", "zh-CN", "zh-TW", "ja", "ko-KR", "fr", "de", "es", "pt-BR", "th", "id"].some((key) => typeof entry[key] === "string")
+                        ? entry
+                        : undefined;
+    const notes = isRecord(entry["Notes"])
+        ? entry["Notes"]
+        : isRecord(entry["Note"])
+            ? entry["Note"]
             : isRecord(entry["note"])
                 ? entry["note"]
                 : undefined;
-        const overlayAliasValue = isRecord(entry["overlayAlias"])
-            ? entry["overlayAlias"]
-            : undefined;
+    const baseName = resolveGeneratedLocalizedValue(names, "zh-CN")
+        || normalizeText(entry["Name"])
+        || normalizeText(entry["NameDesign"])
+        || normalizeText(entry["RecountName"])
+        || normalizeText(entry["DamageName"])
+        || normalizeText(entry["name"]);
+    const localName = resolveGeneratedLocalizedValue(names, locale)
+        || normalizeText(entry["Name"])
+        || normalizeText(entry["NameDesign"])
+        || normalizeText(entry["RecountName"])
+        || normalizeText(entry["DamageName"])
+        || normalizeText(entry["name"]);
+    const baseNote = resolveGeneratedLocalizedValue(notes, "zh-CN");
+    const userNote = normalizeText(entry["UserNote"]);
+    const localNote = userNote || resolveGeneratedLocalizedValue(notes, locale);
 
-        const baseName = resolveLocalizedValue(nameValue, "zh-CN");
-        const baseNote = resolveLocalizedValue(noteValue, "zh-CN");
-        const baseOverlayAlias = resolveLocalizedValue(overlayAliasValue, "zh-CN");
-        const localName = resolveLocalizedValue(nameValue, locale);
-        const localNote = resolveLocalizedValue(noteValue, locale);
-        const localOverlayAlias = resolveLocalizedValue(overlayAliasValue, locale);
-
-        rows.push({
+    return {
+        id,
+        baseName,
+        baseNote,
+        localName,
+        localNote,
+        localOverlayAlias: "",
+        baseOverlayAlias: "",
+        searchBlob: buildSearchBlob([
             id,
             baseName,
-            baseNote,
-            baseOverlayAlias,
             localName,
+            normalizeText(entry["Name"]),
+            normalizeText(entry["NameDesign"]),
+            normalizeText(entry["RecountName"]),
+            normalizeText(entry["DamageName"]),
+            baseNote,
             localNote,
-            localOverlayAlias,
-            searchBlob: buildSearchBlob([
-                id,
-                baseName,
-                baseNote,
-                baseOverlayAlias,
-                localName,
-                localNote,
-                localOverlayAlias,
-            ]),
-            raw: entry,
-        });
+        ]),
+        raw: entry,
+    };
+}
+
+function normalizeGeneratedRows(
+    rawJson: unknown,
+    locale: LocaleCode,
+): TranslationWorkspaceRow[] {
+    const rows: TranslationWorkspaceRow[] = [];
+
+    if (Array.isArray(rawJson)) {
+        for (const entry of rawJson) {
+            if (!isRecord(entry)) {
+                continue;
+            }
+            const id = normalizeId(entry["Id"]) || normalizeId(entry["id"]);
+            if (!id) {
+                continue;
+            }
+            rows.push(normalizeGeneratedEntry(id, entry, locale));
+        }
+        return sortRows(rows);
+    }
+
+    if (!isRecord(rawJson)) {
+        return [];
+    }
+
+    for (const [id, entry] of Object.entries(rawJson)) {
+        if (!isRecord(entry)) {
+            continue;
+        }
+
+        rows.push(normalizeGeneratedEntry(id, entry, locale));
     }
 
     return sortRows(rows);
+}
+
+function sortRows(rows: TranslationWorkspaceRow[]): TranslationWorkspaceRow[] {
+    return [...rows].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 }
 
 function normalizeGenericRows(
@@ -221,15 +204,8 @@ export function normalizeTranslationRows(
     locale: LocaleCode,
 ): TranslationWorkspaceRow[] {
     switch (fileKind) {
-        case "skillnames":
-            return normalizeSkillnamesRows(rawJson, locale);
-
-        case "buffname":
-            return normalizeBuffNameRows(rawJson, locale);
-
-        case "searchtable":
-            return normalizeSearchTableRows(rawJson, locale);
-
+        case "generated":
+            return normalizeGeneratedRows(rawJson, locale);
         case "navigation":
         case "generic":
         default:

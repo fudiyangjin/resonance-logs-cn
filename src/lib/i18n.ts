@@ -2,11 +2,25 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { writable } from "svelte/store";
 
+import classLabelsData from "$parserData/generated/class-labels.json";
 import { getBundledTranslationTable, getLocaleManifest } from "$lib/locale-bundles";
 
 
-export const SUPPORTED_LOCALES = ["zh-CN", "en", "ja", "de", "es", "fr", "pt-BR", "ko-KR"] as const;
+export const SUPPORTED_LOCALES = ["en", "zh-CN", "zh-TW", "ja", "ko-KR", "fr", "de", "es", "pt-BR", "th", "id"] as const;
 export type LocaleCode = typeof SUPPORTED_LOCALES[number];
+export const LOCALE_OPTIONS: Array<{ value: LocaleCode; label: string }> = [
+  { value: "en", label: "EN" },
+  { value: "zh-CN", label: "CN" },
+  { value: "zh-TW", label: "TW" },
+  { value: "ja", label: "JP" },
+  { value: "ko-KR", label: "KR" },
+  { value: "fr", label: "FR" },
+  { value: "de", label: "DE" },
+  { value: "es", label: "ES" },
+  { value: "pt-BR", label: "PT-BR" },
+  { value: "th", label: "TH" },
+  { value: "id", label: "ID" },
+];
 export type SkillIdDisplayMode = "off" | "hover" | "column";
 export type TranslationSourceMode = "runtime" | "bundled";
 
@@ -100,6 +114,58 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function firstString(...values: unknown[]): string {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+function extractLocaleStringMap(value: unknown): MultiLangValue {
+  const out: MultiLangValue = {};
+  if (!isRecord(value)) return out;
+
+  for (const locale of SUPPORTED_LOCALES) {
+    const text = value[locale];
+    if (typeof text === "string" && text.trim()) {
+      out[locale] = text.trim();
+    }
+  }
+
+  return out;
+}
+
+function buildGeneratedSkillNameTranslations(source: unknown): SkillTranslationTable {
+  const out: SkillTranslationTable = {};
+  if (!isRecord(source)) return out;
+
+  for (const [id, rawEntry] of Object.entries(source)) {
+    if (!isRecord(rawEntry)) continue;
+
+    const name = extractLocaleStringMap(rawEntry["Names"]);
+    const fallbackName = firstString(rawEntry["Name"], rawEntry["NameDesign"], rawEntry["name"]);
+    if (Object.keys(name).length === 0 && fallbackName) {
+      name[PRIMARY_FALLBACK_LOCALE] = fallbackName;
+    }
+
+    const note = extractLocaleStringMap(rawEntry["Notes"] ?? rawEntry["Note"] ?? rawEntry["note"]);
+    const userNote = firstString(rawEntry["UserNote"]);
+    if (userNote) {
+      for (const locale of SUPPORTED_LOCALES) {
+        note[locale] = userNote;
+      }
+    }
+    const entry: SkillTranslationEntry = { name };
+    if (Object.keys(note).length > 0) {
+      entry.note = note;
+    }
+
+    out[id] = entry;
+  }
+
+  return out;
+}
+
 function normalizeRuntimePath(relativePath: string): string {
   return relativePath;
 }
@@ -159,23 +225,16 @@ export const MODULE_CALC_TRANSLATIONS: TranslationTable =
   UI_TRANSLATION_TABLES["ui/module-calc.json"] ?? {};
 
 export const MONSTER_MONITOR_TRANSLATIONS: TranslationTable =
-  UI_TRANSLATION_TABLES["ui/monster-monitor.json"] ?? {};
+  UI_TRANSLATION_TABLES["ui/overlay/monster-monitor.json"] ?? {};
 
 export const CLASS_LABEL_TRANSLATIONS: TranslationTable = cloneJson(
-  getBundledTranslationTable("parser/class-labels.json") as TranslationTable,
+  classLabelsData as TranslationTable,
 );
 
-const BUNDLED_SKILL_NAME_TRANSLATIONS: SkillTranslationTable = {};
 const BUNDLED_UI_TRANSLATION_TABLES = cloneJson(UI_TRANSLATION_TABLES);
 const BUNDLED_CLASS_LABEL_TRANSLATIONS = cloneJson(CLASS_LABEL_TRANSLATIONS);
 
 const RUNTIME_TRANSLATION_DESCRIPTORS = [
-  {
-    relativePath: "parser/skillnames.json",
-    target: SKILL_NAME_TRANSLATIONS,
-    fallback: BUNDLED_SKILL_NAME_TRANSLATIONS,
-    runtimeOnly: true,
-  },
   ...UI_TRANSLATION_PATHS.map((relativePath) => ({
     relativePath,
     target: UI_TRANSLATION_TABLES[relativePath],
@@ -183,7 +242,7 @@ const RUNTIME_TRANSLATION_DESCRIPTORS = [
     runtimeOnly: false,
   })),
   {
-    relativePath: "parser/class-labels.json",
+    relativePath: "generated/class-labels.json",
     target: CLASS_LABEL_TRANSLATIONS,
     fallback: BUNDLED_CLASS_LABEL_TRANSLATIONS,
     runtimeOnly: false,
@@ -202,6 +261,50 @@ export const TRANSLATION_RUNTIME_REVISION = writable(0);
 
 let translationRuntimeInitPromise: Promise<void> | null = null;
 let translationRuntimeListenerPromise: Promise<void> | null = null;
+let bundledSkillNameTranslations: SkillTranslationTable | null = null;
+let skillNameTranslationInitPromise: Promise<void> | null = null;
+let skillNameTranslationsLoaded = false;
+
+async function loadBundledSkillNameTranslations(): Promise<SkillTranslationTable> {
+  if (!bundledSkillNameTranslations) {
+    const module = await import("$parserData/generated/skillnames.json");
+    bundledSkillNameTranslations = buildGeneratedSkillNameTranslations(module.default);
+  }
+
+  return bundledSkillNameTranslations;
+}
+
+async function loadSkillNameTranslationTable(): Promise<void> {
+  const fallback = await loadBundledSkillNameTranslations();
+  if (getCurrentTranslationSourceMode() === "runtime") {
+    await ensureTranslationRuntimeFiles();
+    const runtimeValue = await readRuntimeJson("generated/skillnames.json");
+    const nextValue = runtimeValue
+      ? buildGeneratedSkillNameTranslations(runtimeValue)
+      : fallback;
+    replaceRecordContents(SKILL_NAME_TRANSLATIONS, cloneJson(nextValue));
+  } else {
+    replaceRecordContents(SKILL_NAME_TRANSLATIONS, cloneJson(fallback));
+  }
+  skillNameTranslationsLoaded = true;
+  TRANSLATION_RUNTIME_REVISION.update((value) => value + 1);
+}
+
+export async function initializeSkillNameTranslationData(): Promise<void> {
+  if (!skillNameTranslationInitPromise) {
+    skillNameTranslationInitPromise = loadSkillNameTranslationTable().finally(() => {
+      skillNameTranslationInitPromise = null;
+    });
+  }
+
+  await skillNameTranslationInitPromise;
+}
+
+function ensureSkillNameTranslationsLoading(): void {
+  if (!skillNameTranslationsLoaded) {
+    void initializeSkillNameTranslationData();
+  }
+}
 
 async function loadRuntimeTranslationTables(): Promise<void> {
   const sourceMode = getCurrentTranslationSourceMode();
@@ -249,6 +352,7 @@ export async function setTranslationSourceMode(
   TRANSLATION_SOURCE_MODE.set(mode);
 
   await loadRuntimeTranslationTables();
+  await loadSkillNameTranslationTable();
   emitTranslationSourceModeChanged(mode);
 }
 
@@ -262,11 +366,15 @@ async function registerTranslationRuntimeListener(): Promise<void> {
       "translation-data-refreshed",
       async (event) => {
         const relativePath = event.payload?.relativePath;
-        if (relativePath && !RUNTIME_TRANSLATION_DESCRIPTORS.some((descriptor) => descriptor.relativePath === relativePath)) {
+        const isSkillNameRefresh = relativePath === "generated/skillnames.json";
+        if (relativePath && !isSkillNameRefresh && !RUNTIME_TRANSLATION_DESCRIPTORS.some((descriptor) => descriptor.relativePath === relativePath)) {
           return;
         }
 
         await loadRuntimeTranslationTables();
+        if (isSkillNameRefresh || !relativePath) {
+          await loadSkillNameTranslationTable();
+        }
       },
     )
       .then(() => undefined)
@@ -399,7 +507,7 @@ export function uiT(
 }
 
 const DPS_UI_TRANSLATION_PATHS = getUiPathsByPrefix("dps/");
-const SKILL_MONITOR_UI_TRANSLATION_PATHS = getUiPathsByPrefix("skill-monitor/");
+const SKILL_MONITOR_UI_TRANSLATION_PATHS = getUiPathsByPrefix("overlay/skill-monitor/");
 export function resolveNavigationTranslation(
   key: string,
   locale: LocaleCode,
@@ -426,7 +534,7 @@ export function resolveMonsterMonitorTranslation(
   locale: LocaleCode,
   fallback: string,
 ): string {
-  return resolveUiTranslation("ui/monster-monitor.json", key, locale, fallback);
+  return resolveUiTranslation("ui/overlay/monster-monitor.json", key, locale, fallback);
 }
 
 export function resolveSkillMonitorTranslation(
@@ -483,7 +591,7 @@ export function resolveSkillMonitorClassName(
   fallback: string,
 ): string {
   return resolveUiTranslation(
-    "ui/skill-monitor/skill-cd.json",
+    "ui/overlay/skill-monitor/skill-cd.json",
     buildSkillMonitorClassNameKey(classKey),
     locale,
     fallback,
@@ -497,7 +605,7 @@ export function resolveSkillMonitorClassSkillName(
   fallback: string,
 ): string {
   return resolveUiTranslation(
-    "ui/skill-monitor/skill-cd.json",
+    "ui/overlay/skill-monitor/skill-cd.json",
     buildSkillMonitorClassSkillKey(classKey, skillId),
     locale,
     fallback,
@@ -512,7 +620,7 @@ export function resolveSkillMonitorDerivedSkillName(
   fallback: string,
 ): string {
   return resolveUiTranslation(
-    "ui/skill-monitor/skill-cd.json",
+    "ui/overlay/skill-monitor/skill-cd.json",
     buildSkillMonitorDerivedSkillKey(classKey, sourceSkillId, triggerBuffBaseId),
     locale,
     fallback,
@@ -524,6 +632,7 @@ export function resolveSkillTranslation(
   locale: LocaleCode,
   fallbackName: string,
 ): string {
+  ensureSkillNameTranslationsLoading();
   const entry = SKILL_NAME_TRANSLATIONS[String(id)];
   return resolveMultiLangValue(entry?.name, locale, fallbackName);
 }
@@ -532,6 +641,7 @@ export function resolveSkillNote(
   id: string | number,
   locale: LocaleCode,
 ): string {
+  ensureSkillNameTranslationsLoading();
   const entry = SKILL_NAME_TRANSLATIONS[String(id)];
   return resolveMultiLangValue(entry?.note, locale, "");
 }

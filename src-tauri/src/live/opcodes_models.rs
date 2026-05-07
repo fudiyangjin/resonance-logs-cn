@@ -1,8 +1,9 @@
+use crate::live::commands_models::{DamageSnapshot, DeathRecord};
 use crate::live::monster_registry::{self, MonsterType};
 use crate::live::opcodes_models::class::ClassSpec;
 use blueprotobuf_lib::blueprotobuf::{EEntityType, SyncContainerData};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use tokio::sync::RwLock;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -325,6 +326,257 @@ pub struct CombatStats {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedActiveBuff {
+    pub buff_uuid: i32,
+    pub base_id: i32,
+    pub buff_level: Option<i32>,
+    pub part_id: Option<i32>,
+    pub count: Option<i32>,
+    pub fight_source_type: Option<i32>,
+    pub source_config_id: Option<i32>,
+    pub layer: i32,
+    pub duration: i32,
+    pub create_time: i64,
+    pub received_time_ms: i64,
+    pub host_uid: i64,
+    pub source_uid: i64,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedFactorBuff {
+    pub factor_buff_id: i32,
+    pub observed_buff_id: i32,
+    pub buff_level: Option<i32>,
+    pub part_id: Option<i32>,
+    pub count: Option<i32>,
+    pub fight_source_type: Option<i32>,
+    pub source_config_id: Option<i32>,
+    pub layer: i32,
+    pub duration: i32,
+    pub create_time: i64,
+    pub received_time_ms: i64,
+    pub host_uid: i64,
+    pub source_uid: i64,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedEffectBuff {
+    pub effect_source_buff_id: i32,
+    pub observed_buff_id: i32,
+    pub buff_level: Option<i32>,
+    pub part_id: Option<i32>,
+    pub count: Option<i32>,
+    pub fight_source_type: Option<i32>,
+    pub source_config_id: Option<i32>,
+    pub layer: i32,
+    pub duration: i32,
+    pub create_time: i64,
+    pub received_time_ms: i64,
+    pub host_uid: i64,
+    pub source_uid: i64,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedModifierWindow {
+    pub buff_uuid: i32,
+    pub base_id: i32,
+    pub buff_level: Option<i32>,
+    pub part_id: Option<i32>,
+    pub count: Option<i32>,
+    pub fight_source_type: Option<i32>,
+    pub source_config_id: Option<i32>,
+    pub layer: i32,
+    pub duration: i32,
+    pub start_time_ms: i64,
+    pub end_time_ms: Option<i64>,
+    pub host_uid: i64,
+    pub source_uid: i64,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedDamageHit {
+    pub timestamp_ms: i64,
+    pub skill_key: i64,
+    pub damage_id: i64,
+    pub owner_id: i32,
+    pub owner_level: Option<i32>,
+    pub hit_event_id: Option<i32>,
+    pub damage_source: Option<i32>,
+    pub property: Option<i32>,
+    pub damage_mode: Option<i32>,
+    pub attacker_uid: i64,
+    pub original_attacker_uid: i64,
+    pub top_summoner_uid: Option<i64>,
+    pub target_uid: i64,
+    pub target_monster_type_id: Option<i32>,
+    pub value: u128,
+    pub effective_value: u128,
+    pub hp_loss_value: u128,
+    pub shield_loss_value: u128,
+    pub is_heal: bool,
+    pub is_crit: bool,
+    pub is_lucky: bool,
+    pub attacker_attrs: Vec<ObservedFormulaAttr>,
+    pub target_attrs: Vec<ObservedFormulaAttr>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedFormulaAttr {
+    pub attr_id: i32,
+    pub value_int: Option<i64>,
+    pub value_float: Option<f64>,
+    pub value_bool: Option<bool>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedModifierReplaySource {
+    pub modifier_base_id: i32,
+    pub modifier_source_config_id: Option<i32>,
+    pub modifier_buff_level: Option<i32>,
+    pub modifier_count: Option<i32>,
+    pub modifier_layer: i32,
+    pub modifier_host_uid: i64,
+    pub modifier_source_uid: i64,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedModifierReplayHit {
+    pub timestamp_ms: i64,
+    pub skill_key: i64,
+    pub damage_id: i64,
+    pub owner_id: i32,
+    pub owner_level: Option<i32>,
+    pub hit_event_id: Option<i32>,
+    pub damage_source: Option<i32>,
+    pub property: Option<i32>,
+    pub damage_mode: Option<i32>,
+    pub attacker_uid: i64,
+    pub original_attacker_uid: i64,
+    pub top_summoner_uid: Option<i64>,
+    pub target_uid: i64,
+    pub target_monster_type_id: Option<i32>,
+    pub is_heal: bool,
+    pub is_crit: bool,
+    pub is_lucky: bool,
+    pub value: u128,
+    pub effective_value: u128,
+    pub hp_loss_value: u128,
+    pub shield_loss_value: u128,
+    pub active_modifiers: Vec<ObservedModifierReplaySource>,
+    pub attacker_attrs: Vec<ObservedFormulaAttr>,
+    pub target_attrs: Vec<ObservedFormulaAttr>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedModifierHitBucket {
+    pub modifier_buff_uuid: i32,
+    pub modifier_base_id: i32,
+    pub modifier_buff_level: Option<i32>,
+    pub modifier_part_id: Option<i32>,
+    pub modifier_count: Option<i32>,
+    pub modifier_fight_source_type: Option<i32>,
+    pub modifier_source_config_id: Option<i32>,
+    pub modifier_layer: i32,
+    pub modifier_duration: i32,
+    pub modifier_start_time_ms: i64,
+    pub modifier_end_time_ms: Option<i64>,
+    pub modifier_host_uid: i64,
+    pub modifier_source_uid: i64,
+    pub skill_key: i64,
+    pub damage_id: i64,
+    pub owner_id: i32,
+    pub owner_level: Option<i32>,
+    pub hit_event_id: Option<i32>,
+    pub damage_source: Option<i32>,
+    pub property: Option<i32>,
+    pub damage_mode: Option<i32>,
+    pub attacker_uid: i64,
+    pub original_attacker_uid: i64,
+    pub top_summoner_uid: Option<i64>,
+    pub target_uid: i64,
+    pub target_monster_type_id: Option<i32>,
+    pub is_heal: bool,
+    pub hits: u128,
+    pub total_value: u128,
+    pub effective_total_value: u128,
+    pub crit_hits: u128,
+    pub crit_total_value: u128,
+    pub lucky_hits: u128,
+    pub lucky_total_value: u128,
+    pub hp_loss_total: u128,
+    pub shield_loss_total: u128,
+    pub first_hit_time_ms: i64,
+    pub last_hit_time_ms: i64,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedSkillCastEvent {
+    pub timestamp_ms: i64,
+    pub skill_id: i32,
+    pub source: String,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedSkillCooldownEvent {
+    pub timestamp_ms: i64,
+    pub skill_level_id: i32,
+    pub skill_id: i32,
+    pub begin_time: i64,
+    pub duration: i32,
+    pub calculated_duration: i32,
+    pub cd_accelerate_rate: f32,
+    pub skill_cd_type: i32,
+    pub valid_cd_time: i32,
+    pub attr_skill_cd: f32,
+    pub attr_skill_cd_pct: f32,
+    pub attr_cd_accelerate_pct: f32,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedEffectSource {
+    pub source_id: String,
+    pub runtime_source: String,
+    pub source_entity_id: Option<i32>,
+    pub node_id: Option<u32>,
+    pub node_level: Option<u32>,
+    pub slot: Option<i32>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedFactorItem {
+    pub factor_buff_id: i32,
+    pub item_config_id: i32,
+    pub item_uuid: Option<i64>,
+    pub package_key: i32,
+    pub package_type: Option<i32>,
+    pub grade: Option<i32>,
+    pub family_id: Option<i32>,
+    pub runtime_source: String,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedPassiveSkill {
+    pub passive_uuid: Option<i64>,
+    pub target_uid: Option<i64>,
+    pub stage_begin_time: Option<i64>,
+    pub begin_time: Option<i64>,
+    pub stage_play_num: Option<i32>,
+    pub skill_id: Option<i32>,
+    pub skill_level: Option<i32>,
+    pub skill_stage: Option<i32>,
+    pub runtime_source: String,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ObservedProfessionTalent {
+    pub profession_id: i32,
+    pub talent_node_id: u32,
+    pub used_talent_points: Option<u32>,
+    pub talent_stage_cfg_id: Option<i32>,
+    pub runtime_source: String,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Entity {
     pub name: String,
     pub entity_type: EEntityType,
@@ -348,13 +600,48 @@ pub struct Entity {
     // Tanked/Taken (damage received)
     pub taken: CombatStats,
     pub skill_uid_to_taken_skill: HashMap<i64, Skill>,
-
     // Monster metadata and per-target aggregates (for boss-only filtering)
     pub monster_type_id: Option<i32>,
     pub dmg_to_target: HashMap<i64, u128>,
     pub skill_dmg_to_target: HashMap<(i64, i64), SkillTargetStats>,
     pub skill_heal_to_target: HashMap<(i64, i64), SkillTargetStats>,
     pub season_strength: i32,
+    #[serde(default)]
+    pub active_buffs: Vec<ObservedActiveBuff>,
+    #[serde(default)]
+    pub active_factor_buffs: Vec<ObservedFactorBuff>,
+    #[serde(default)]
+    pub active_effect_buffs: Vec<ObservedEffectBuff>,
+    #[serde(default)]
+    pub modifier_windows: Vec<ObservedModifierWindow>,
+    /// Runtime-only hit log used to build exact modifier-window attribution at save time.
+    #[serde(skip)]
+    pub observed_damage_hits: Vec<ObservedDamageHit>,
+    /// Persisted per-skill/per-target hit buckets for damage or healing done during modifier windows.
+    #[serde(default)]
+    pub modifier_hit_buckets: Vec<ObservedModifierHitBucket>,
+    /// Persisted per-hit replay evidence for future formula contribution math.
+    #[serde(default)]
+    pub modifier_replay_hits: Vec<ObservedModifierReplayHit>,
+    /// Persisted local skill cast markers. Used for cooldown-acceleration attribution.
+    #[serde(default)]
+    pub skill_cast_events: Vec<ObservedSkillCastEvent>,
+    /// Persisted skill cooldown starts and calculated cooldown-reduction state.
+    #[serde(default)]
+    pub skill_cooldown_events: Vec<ObservedSkillCooldownEvent>,
+    #[serde(default)]
+    pub active_effect_sources: Vec<ObservedEffectSource>,
+    #[serde(default)]
+    pub active_factor_items: Vec<ObservedFactorItem>,
+    #[serde(default)]
+    pub active_passive_skills: Vec<ObservedPassiveSkill>,
+    #[serde(default)]
+    pub active_profession_talents: Vec<ObservedProfessionTalent>,
+    /// Rolling 2s window of damage taken events; used to build death-replay snapshots.
+    #[serde(skip)]
+    pub recent_taken_events: VecDeque<DamageSnapshot>,
+    #[serde(default)]
+    pub deaths: Vec<DeathRecord>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -380,6 +667,10 @@ pub struct Skill {
     pub lucky_total_value: u128,
     pub lucky_hits: u128,
     pub hits: u128,
+    #[serde(default)]
+    pub property: Option<i32>,
+    #[serde(default)]
+    pub damage_mode: Option<i32>,
 }
 
 impl Encounter {
@@ -422,6 +713,19 @@ impl Encounter {
             // Taken
             entity.taken = CombatStats::default();
             entity.skill_uid_to_taken_skill.clear();
+            entity.active_buffs.clear();
+            entity.active_factor_buffs.clear();
+            entity.active_effect_buffs.clear();
+            entity.modifier_windows.clear();
+            entity.observed_damage_hits.clear();
+            entity.modifier_hit_buckets.clear();
+            entity.skill_cast_events.clear();
+            entity.skill_cooldown_events.clear();
+            entity.active_effect_sources.clear();
+            entity.active_factor_items.clear();
+            entity.active_passive_skills.clear();
+            entity.recent_taken_events.clear();
+            entity.deaths.clear();
         }
     }
 }
@@ -493,6 +797,7 @@ pub mod attr_type {
     pub const ATTR_REDUCTION_LEVEL: i32 = 0x64696d;
     pub const ATTR_REDUCTION_ID: i32 = 0x6f6c65;
     pub const ATTR_FIGHT_RESOURCES: i32 = 0xc352; // Active buff/consumable slot
+    pub const ATTR_FIGHT_RESOURCE_IDS: i32 = 0xc351; // Fight resource IDs
     pub const ATTR_BUFF_SLOT_2: i32 = 0xea92; // Active buff/consumable slot (type 2)
     pub const ATTR_ENERGY_FLAG: i32 = 0x543cd3c6;
 }
@@ -578,7 +883,9 @@ pub mod class {
             199902 => ClassSpec::Earthfort,
             1930 | 1931 | 1934 | 1935 => ClassSpec::Block,
 
-            220112 | 2203622 => ClassSpec::Falconry,
+            220112 | 2203622 | 2233 | 2234 | 223300..=223399 | 223400..=223499 => {
+                ClassSpec::Falconry
+            }
             2292 | 1700820 | 1700825 | 1700827 => ClassSpec::Wildpack,
 
             2406 => ClassSpec::Shield,

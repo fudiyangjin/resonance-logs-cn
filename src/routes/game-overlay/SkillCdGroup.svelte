@@ -18,7 +18,7 @@
     findSkillDerivationBySource,
   } from "$lib/skill-mappings";
 
-  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   const editing = $derived(isEditing());
   const groupPos = $derived(getGroupPosition("skillCdGroup"));
@@ -27,6 +27,10 @@
   const displays = $derived(displayMap());
   const classKey = $derived(selectedClassKey());
   const activeIds = $derived(activeBuffIds());
+
+  function requirementResourceId(requirement: { resourceId?: number; resourceIndex?: number }) {
+    return requirement.resourceId ?? requirement.resourceIndex ?? 0;
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -40,7 +44,7 @@
   onpointerdown={(e) => startDrag(e, { kind: "group", key: "skillCdGroup" }, groupPos)}
 >
   {#if editing}
-    <div class="group-tag">{t("overlay.skillCd", "技能CD区")}</div>
+    <div class="group-tag">{t("overlay.skillCd", "Skill CD Area")}</div>
   {/if}
 
   <div class="skill-cd-grid">
@@ -61,12 +65,13 @@
         ? undefined
         : display}
       {@const resourceBlocked = skill?.resourceRequirement
-        ? getResourceValue(skill.resourceRequirement.resourceIndex) <
+        ? getResourceValue(requirementResourceId(skill.resourceRequirement)) <
           skill.resourceRequirement.amount
         : false}
       {@const isOnCd = effectiveDisplay?.isActive ?? false}
       {@const isUnavailable = isOnCd || resourceBlocked}
       {@const percent = isOnCd ? effectiveDisplay?.percent ?? 0 : 0}
+      {@const cooldownAngle = `${Math.max(0, Math.min(1, percent)) * 360}deg`}
       {@const displayText = effectiveDisplay?.text ?? ""}
 
       <div
@@ -91,7 +96,7 @@
         {/if}
 
         {#if isOnCd}
-          <div class="cd-overlay" style={`--cd-percent: ${percent}`}>
+          <div class="cd-overlay" style={`--cd-angle: ${cooldownAngle}`}>
             {#if displayText}
               <span class="cd-text">{displayText}</span>
             {/if}
@@ -178,8 +183,8 @@
     align-items: center;
     justify-content: center;
     background: conic-gradient(
-      rgba(0, 0, 0, 0.65) calc(var(--cd-percent) * 360deg),
-      transparent calc(var(--cd-percent) * 360deg)
+      rgba(0, 0, 0, 0.65) var(--cd-angle),
+      transparent var(--cd-angle)
     );
   }
 

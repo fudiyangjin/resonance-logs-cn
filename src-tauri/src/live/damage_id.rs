@@ -1,11 +1,10 @@
+use crate::parser_data;
 use log::warn;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs;
-use std::path::PathBuf;
 use std::sync::LazyLock;
 
-const SKILL_FIGHT_LEVEL_TABLE_RELATIVE: &str = "meter-data/SkillFightLevelTable.json";
+const SKILL_FIGHT_LEVEL_TABLE_RELATIVE: &str = "logic/SkillFightLevelTable.json";
 
 #[derive(Debug, Clone, Deserialize)]
 struct RawSkillFightLevelEntry {
@@ -23,36 +22,8 @@ static SKILL_LEVEL_TO_EFFECT: LazyLock<HashMap<i32, i32>> = LazyLock::new(|| {
     })
 });
 
-fn locate_meter_data_file(relative_path: &str) -> Option<PathBuf> {
-    let mut p = PathBuf::from(relative_path);
-    if p.exists() {
-        return Some(p);
-    }
-
-    p = PathBuf::from(format!("src-tauri/{}", relative_path));
-    if p.exists() {
-        return Some(p);
-    }
-
-    if let Ok(mut exe_dir) = std::env::current_exe() {
-        exe_dir.pop();
-        let candidate = exe_dir.join(relative_path);
-        if candidate.exists() {
-            return Some(candidate);
-        }
-    }
-
-    None
-}
-
 fn load_skill_level_to_effect_map() -> Result<HashMap<i32, i32>, Box<dyn std::error::Error>> {
-    let path = locate_meter_data_file(SKILL_FIGHT_LEVEL_TABLE_RELATIVE).ok_or_else(|| {
-        format!(
-            "{} not found in known locations",
-            SKILL_FIGHT_LEVEL_TABLE_RELATIVE
-        )
-    })?;
-    let contents = fs::read_to_string(path)?;
+    let contents = parser_data::read_to_string(SKILL_FIGHT_LEVEL_TABLE_RELATIVE)?;
     let raw_map: HashMap<String, RawSkillFightLevelEntry> = serde_json::from_str(&contents)?;
 
     let mut result = HashMap::new();

@@ -10,7 +10,7 @@
     updateActiveProfile,
   } from "$lib/skill-monitor-profile.svelte";
 
-  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   function displayProfileName(name: string): string {
     if (name === "默认方案") {

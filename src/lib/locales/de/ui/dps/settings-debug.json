@@ -21,5 +21,16 @@
   "translationSourceMode.runtime": "AppData-Übersetzungsdateien",
   "translationSourceModeCurrent": "Aktuelle Quelle:",
   "translationSourceModeDescription": "Switch between the app's built-in translations and the editable translation files stored in AppDaten.",
-  "translationTools": "Übersetzung Debug"
+  "translationTools": "Übersetzung Debug",
+  "globalDebugInfoButton": "Show debug info",
+  "globalDebugInfoButtonLabel": "Info",
+  "globalDebugInfoTitle": "Debug Tools Overview",
+  "globalDebugInfoBody": "Use this page for logs, diagnostics bundles, translation runtime tools, and developer-facing display helpers. These tools affect the app globally and are no longer nested under Meter Settings.",
+  "showHoverDescriptions": "Hover-Beschreibungen anzeigen",
+  "showHoverDescriptionsDescription": "Zeigt verfügbare generierte Beschreibungen im Hovertext für Fertigkeiten, Buffs, Modifikatoren, Module und andere UID-basierte Zeilen an.",
+  "openLogDirFailed": "Failed to open log folder:",
+  "bundleSaveTitle": "Save Diagnostics Bundle",
+  "bundleCreatedCopied": "Diagnostics bundle created and path copied:",
+  "bundleCreated": "Diagnostics bundle created:",
+  "bundleFailed": "Failed to create diagnostics bundle:"
 }

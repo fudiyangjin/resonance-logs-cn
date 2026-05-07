@@ -35,7 +35,7 @@
     movePanelAreaRow,
   }: Props = $props();
 
-  const tSkillMonitor = uiT("skill-monitor/panel-attr", () => SETTINGS.live.general.state.language);
+  const tSkillMonitor = uiT("overlay/skill-monitor/panel-attr", () => SETTINGS.live.general.state.language);
 
   function attrLabel(attr: PanelAttrConfig): string {
     const fallback = typeof attr.label === "string" && attr.label.trim() ? attr.label : `Attr ${attr.attrId}`;

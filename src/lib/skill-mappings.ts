@@ -1,20 +1,14 @@
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-
-import resonanceSkillIcons from "$lib/config/skill_aoyi_icons.json";
-import classSkillConfigsRaw from "$lib/config/class_skill_configs.json";
-import classResourcesRaw from "$lib/config/class_resources.json";
-import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays.json";
-import counterRulesRaw from "$lib/config/counter_rules.json";
-import counterSourceTemplatesRaw from "$lib/config/counter_source_templates.json";
-import counterSlotTemplatesRaw from "$lib/config/counter_slot_templates.json";
-import { getBundledTranslationTable } from "$lib/locale-bundles";
+import classResourcesRaw from "$parserData/app-rules/class_resources.json";
+import classSkillConfigsRaw from "$parserData/app-rules/class_skill_configs.json";
+import classSpecialBuffDisplaysRaw from "$parserData/app-rules/class_special_buff_displays.json";
+import counterRulesRaw from "$parserData/app-rules/counter_rules.json";
+import counterSlotTemplatesRaw from "$parserData/app-rules/counter_slot_templates.json";
+import counterSourceTemplatesRaw from "$parserData/app-rules/counter_source_templates.json";
+import resonanceSkillIcons from "$parserData/generated/skill_aoyi_icons.json";
 import {
   DEFAULT_LOCALE,
   PRIMARY_FALLBACK_LOCALE,
   SUPPORTED_LOCALES,
-  TRANSLATION_SOURCE_MODE_EVENT,
-  getCurrentTranslationSourceMode,
   isLocaleCode,
   resolveUiTranslation,
   type LocaleCode,
@@ -47,8 +41,10 @@ export type ClassSkillConfig = {
 export type ResourceDefinition = {
   type: "bar" | "charges";
   label: string;
-  currentIndex: number;
-  maxIndex: number;
+  currentId?: number;
+  maxId?: number;
+  currentIndex?: number;
+  maxIndex?: number;
   imageOn: string;
   imageOff: string;
   buffBaseId?: number;
@@ -61,161 +57,32 @@ export type SpecialBuffDisplay = {
 };
 
 export type ResourceRequirement = {
-  resourceIndex: number;
+  resourceId?: number;
+  resourceIndex?: number;
   amount: number;
 };
 
 type ResonanceSkillIconRaw = {
   id: number;
   NameDesign: string;
+  Names?: unknown;
   Icon: string;
   maxCharges?: number;
   maxValidCdTime?: number;
 };
 
 type MultiLangValue = Partial<Record<LocaleCode, string>>;
-type MultiLangKeywords = Partial<Record<LocaleCode, string[]>>;
-
-type ResonanceSkillSearchEntry = {
-  name?: MultiLangValue;
-  keywords?: MultiLangKeywords;
-  notes?: MultiLangValue;
-};
-
-type TranslationRefreshPayload = {
-  relativePath?: string;
-  locale?: string;
-};
-
-function cloneJson<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
-}
-
-function replaceRecordContents<T extends Record<string, any>>(target: T, source: T): void {
-  for (const key of Object.keys(target)) {
-    delete target[key as keyof T];
-  }
-  Object.assign(target, source);
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-const RESONANCE_RUNTIME_RELATIVE_PATH = "search/resonance-skill-search.json";
-
-const RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = cloneJson(
-  getBundledTranslationTable("search/resonance-skill-search.json") as unknown as Record<string, ResonanceSkillSearchEntry>,
-);
-
-const BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS: Record<string, ResonanceSkillSearchEntry> = cloneJson(
-  RESONANCE_SKILL_SEARCH_TRANSLATIONS,
-);
-
-let resonanceRuntimeInitPromise: Promise<void> | null = null;
-let resonanceRuntimeListenerPromise: Promise<void> | null = null;
-let resonanceSourceModeListenerRegistered = false;
-
-async function ensureResonanceTranslationRuntimeFiles(): Promise<void> {
-  try {
-    await invoke<string>("initialize_translation_runtime_files");
-  } catch (error) {
-    console.warn(
-      "[skill-mappings] Failed to initialize runtime translation files:",
-      error,
-    );
-  }
-}
-
-async function readRuntimeResonanceTranslations(): Promise<
-  Record<string, ResonanceSkillSearchEntry> | null
-> {
-  try {
-    const raw = await invoke<string>("read_translation_runtime_file", {
-      relativePath: RESONANCE_RUNTIME_RELATIVE_PATH,
-    });
-    const parsed: unknown = JSON.parse(raw);
-
-    if (!isRecord(parsed)) {
-      console.warn(
-        `[skill-mappings] Runtime resonance translation file is not an object: ${RESONANCE_RUNTIME_RELATIVE_PATH}`,
-      );
-      return null;
-    }
-
-    return parsed as Record<string, ResonanceSkillSearchEntry>;
-  } catch (error) {
-    console.warn(
-      `[skill-mappings] Failed to read runtime resonance translation file: ${RESONANCE_RUNTIME_RELATIVE_PATH}`,
-      error,
-    );
-    return null;
-  }
-}
-
-async function loadResonanceSkillSearchRuntimeData(): Promise<void> {
-  if (getCurrentTranslationSourceMode() === "bundled") {
-    replaceRecordContents(
-      RESONANCE_SKILL_SEARCH_TRANSLATIONS,
-      cloneJson(BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS),
-    );
-    return;
-  }
-
-  await ensureResonanceTranslationRuntimeFiles();
-
-  const runtimeValue = await readRuntimeResonanceTranslations();
-  const nextValue = runtimeValue ?? BUNDLED_RESONANCE_SKILL_SEARCH_TRANSLATIONS;
-
-  replaceRecordContents(RESONANCE_SKILL_SEARCH_TRANSLATIONS, cloneJson(nextValue));
-}
-
-async function registerResonanceRuntimeListener(): Promise<void> {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (!resonanceRuntimeListenerPromise) {
-    resonanceRuntimeListenerPromise = listen<TranslationRefreshPayload>("translation-data-refreshed", async (event) => {
-      const relativePath = event.payload?.relativePath;
-      if (relativePath && relativePath !== RESONANCE_RUNTIME_RELATIVE_PATH) {
-        return;
-      }
-
-      await loadResonanceSkillSearchRuntimeData();
-    })
-      .then(() => undefined)
-      .catch((error) => {
-        console.warn(
-          "[skill-mappings] Failed to register translation refresh listener:",
-          error,
-        );
-      });
-  }
-
-  if (!resonanceSourceModeListenerRegistered) {
-    window.addEventListener(TRANSLATION_SOURCE_MODE_EVENT, async () => {
-      await loadResonanceSkillSearchRuntimeData();
-    });
-    resonanceSourceModeListenerRegistered = true;
-  }
-
-  await resonanceRuntimeListenerPromise;
-}
-
 export async function initializeResonanceSkillSearchRuntimeData(): Promise<void> {
-  if (!resonanceRuntimeInitPromise) {
-    resonanceRuntimeInitPromise = (async () => {
-      await registerResonanceRuntimeListener();
-      await loadResonanceSkillSearchRuntimeData();
-    })();
-  }
-
-  await resonanceRuntimeInitPromise;
+  return;
 }
 
 export async function reloadResonanceSkillSearchRuntimeData(): Promise<void> {
-  await loadResonanceSkillSearchRuntimeData();
+  return;
 }
 
 function normalizeSearchText(value: string | null | undefined): string {
@@ -230,20 +97,6 @@ function collectMultiLangTexts(value: MultiLangValue | undefined): string[] {
     if (!text || seen.has(text)) continue;
     seen.add(text);
     out.push(text);
-  }
-  return out;
-}
-
-function collectKeywordTexts(value: MultiLangKeywords | undefined): string[] {
-  const out: string[] = [];
-  const seen = new Set<string>();
-  for (const locale of SUPPORTED_LOCALES) {
-    for (const keyword of value?.[locale] ?? []) {
-      const text = normalizeSearchText(keyword);
-      if (!text || seen.has(text)) continue;
-      seen.add(text);
-      out.push(text);
-    }
   }
   return out;
 }
@@ -264,7 +117,7 @@ function resolveSkillMonitorUiTranslation(
   fallback: string,
 ): string {
   return resolveUiTranslation(
-    `ui/skill-monitor/${relativePath}.json`,
+    `ui/overlay/skill-monitor/${relativePath}.json`,
     key,
     getCurrentLocale(),
     fallback,
@@ -289,9 +142,22 @@ function resolveMultiLangName(value: MultiLangValue | undefined, fallback: strin
   return fallback;
 }
 
+function collectGeneratedNames(value: unknown): MultiLangValue {
+  const out: MultiLangValue = {};
+  if (!isRecord(value)) return out;
+
+  for (const locale of SUPPORTED_LOCALES) {
+    const text = value[locale];
+    if (typeof text === "string" && text.trim()) {
+      out[locale] = text.trim();
+    }
+  }
+
+  return out;
+}
+
 function localizeResonanceSkill(skill: ResonanceSkillDefinition): ResonanceSkillDefinition {
-  const entry = RESONANCE_SKILL_SEARCH_TRANSLATIONS[String(skill.skillId)];
-  const displayName = resolveMultiLangName(entry?.name, skill.name);
+  const displayName = resolveMultiLangName(skill.generatedNames, skill.name);
   if (displayName === skill.name) return skill;
   return {
     ...skill,
@@ -299,11 +165,12 @@ function localizeResonanceSkill(skill: ResonanceSkillDefinition): ResonanceSkill
   };
 }
 
-export type ResonanceSkillDefinition = SkillDisplayInfo;
+export type ResonanceSkillDefinition = SkillDisplayInfo & {
+  generatedNames?: MultiLangValue;
+};
 
 function collectResonanceSearchTexts(skill: ResonanceSkillDefinition): string[] {
   const texts = new Set<string>();
-  const entry = RESONANCE_SKILL_SEARCH_TRANSLATIONS[String(skill.skillId)];
 
   const idText = String(skill.skillId);
   texts.add(idText);
@@ -312,15 +179,7 @@ function collectResonanceSearchTexts(skill: ResonanceSkillDefinition): string[] 
   const rawName = normalizeSearchText(skill.name);
   if (rawName) texts.add(rawName);
 
-  for (const text of collectMultiLangTexts(entry?.name)) {
-    texts.add(text);
-  }
-
-  for (const text of collectKeywordTexts(entry?.keywords)) {
-    texts.add(text);
-  }
-
-  for (const text of collectMultiLangTexts(entry?.notes)) {
+  for (const text of collectMultiLangTexts(skill.generatedNames)) {
     texts.add(text);
   }
 
@@ -344,6 +203,7 @@ export type CounterEffectSlotPreset = {
   onBuffRemove: CounterAction;
   freezeDurationMs?: number;
   onFreezeExpire?: CounterAction;
+  altFreeze?: { conditionBuffId: number; freezeDurationMs: number };
 };
 
 export type SourceTemplate = {
@@ -383,12 +243,52 @@ export const RESONANCE_SKILLS: ResonanceSkillDefinition[] = (
 ).map((skill) => ({
   skillId: skill.id,
   name: skill.NameDesign,
+  generatedNames: collectGeneratedNames(skill.Names),
   imagePath: `/images/resonance_skill/${skill.Icon}`,
   ...(skill.maxCharges !== undefined ? { maxCharges: skill.maxCharges } : {}),
   ...(skill.maxValidCdTime !== undefined
     ? { maxValidCdTime: skill.maxValidCdTime }
     : {}),
 }));
+
+const SKILL_ICON_PATH_BY_ID = new Map<number, string>();
+
+function addSkillIconPath(skillId: unknown, imagePath: unknown): void {
+  const id = Number(skillId);
+  const path = typeof imagePath === "string" ? imagePath.trim() : "";
+  if (!Number.isFinite(id) || !path || SKILL_ICON_PATH_BY_ID.has(id)) {
+    return;
+  }
+  SKILL_ICON_PATH_BY_ID.set(id, path);
+}
+
+for (const config of Object.values(CLASS_SKILL_CONFIGS)) {
+  for (const skill of config.skills ?? []) {
+    addSkillIconPath(skill.skillId, skill.imagePath);
+  }
+  for (const derivation of config.derivations ?? []) {
+    addSkillIconPath(derivation.derivedSkillId, derivation.derivedImagePath);
+  }
+}
+
+for (const skill of RESONANCE_SKILLS) {
+  addSkillIconPath(skill.skillId, skill.imagePath);
+}
+
+export function lookupSkillIconPath(skillId: number | string | null | undefined): string | undefined {
+  const id = Number(skillId);
+  return Number.isFinite(id) ? SKILL_ICON_PATH_BY_ID.get(id) : undefined;
+}
+
+export function lookupFirstSkillIconPath(
+  skillIds: Iterable<number | string | null | undefined>,
+): string | undefined {
+  for (const skillId of skillIds) {
+    const iconPath = lookupSkillIconPath(skillId);
+    if (iconPath) return iconPath;
+  }
+  return undefined;
+}
 
 export const COUNTER_RULES: CounterRulePreset[] =
   counterRulesRaw as CounterRulePreset[];
@@ -547,6 +447,9 @@ export function resolveCounterEffectSlots(
               : {}),
             ...(item.slot.onFreezeExpire !== undefined
               ? { onFreezeExpire: item.slot.onFreezeExpire }
+              : {}),
+            ...(item.slot.altFreeze !== undefined
+              ? { altFreeze: item.slot.altFreeze }
               : {}),
           },
         ]

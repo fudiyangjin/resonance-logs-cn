@@ -12,7 +12,7 @@
     startResize,
   } from "./overlay-state.svelte.js";
 
-  const t = uiT("skill-monitor/buff-monitor", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/buff-monitor", () => SETTINGS.live.general.state.language);
   const editing = $derived(isEditing());
   const rows = $derived(buffUptimeDisplayRows());
   const groupPos = $derived(getGroupPosition("buffUptimeGroup"));

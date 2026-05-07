@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
   /**
    * @file Fully customizable header component for the live meter.
    * Renders header elements based on user settings.
@@ -31,6 +31,10 @@
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import { emitTo } from "@tauri-apps/api/event";
   import { SETTINGS } from "$lib/settings-store";
+  import {
+    normalizeHeaderLayout,
+    type HeaderLayoutComponentId,
+  } from "$lib/live-header-layout";
   import { resolveUiTranslation, type LocaleCode } from "$lib/i18n";
   import { getLiveData, getTrainingDummyState } from "$lib/stores/live-meter-store.svelte";
   import { localizeRawSceneName } from "$lib/scene-mappings";
@@ -165,11 +169,11 @@
   function formatTrainingDummyLabel(state: TrainingDummyState) {
     switch (state.phase) {
       case "armed":
-        return t("header.training.ready", "打桩待命");
+        return t("header.training.ready", "Training Dummy Ready");
       case "running":
-        return t("header.training.active", "打桩中");
+        return t("header.training.active", "Training Dummy Active");
       case "pendingRollover":
-        return t("header.training.waitSegment", "待切段");
+        return t("header.training.waitSegment", "Awaiting Split");
       default:
         return "";
     }
@@ -213,9 +217,360 @@
 
   // Check if we have any row 1 content at all
   const hasRow1 = $derived(hasRow1Left || hasRow1Right);
+  const isCustomLayout = $derived(h.headerLayoutMode === "custom");
+  const normalizedHeaderLayout = $derived(normalizeHeaderLayout(h.headerCustomLayout));
+  const hasCustomHeader = $derived(
+    normalizedHeaderLayout.rows.some((row) =>
+      row.zones.start.length > 0 || row.zones.end.length > 0,
+    ),
+  );
 </script>
 
-{#if hasRow1 || hasRow2}
+{#snippet timerItem()}
+  {#if h.showTimer}
+    <div class="flex items-center gap-2 shrink-0">
+      {#if h.timerLabelFontSize > 0}
+        <span
+          class="font-medium text-muted-foreground uppercase tracking-wider leading-none"
+          style="font-size: {h.timerLabelFontSize}px">{t("header.timer", "Timer")}</span
+        >
+      {/if}
+      <span
+        class="font-bold text-foreground tabular-nums tracking-tight leading-none"
+        style="font-size: {h.timerFontSize}px"
+        {@attach tooltip(() => t("header.timeElapsed", "Time Elapsed"))}
+        >{formatElapsed(displayElapsedMs)}</span
+      >
+      {#if h.showActiveTimer}
+        <span
+          class="font-bold text-foreground tabular-nums tracking-tight leading-none"
+          style="font-size: {h.activeTimerFontSize}px"
+          {@attach tooltip(() => t("header.activeCombatTime", "Active Combat Time"))}
+        >
+          / {formatElapsed(displayHeaderInfo.activeCombatTimeMs)}
+        </span>
+      {/if}
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet sceneNameItem()}
+  {#if h.showSceneName && displaySceneName}
+    <span
+      class="text-muted-foreground font-medium shrink-0 leading-none"
+      style="font-size: {h.sceneNameFontSize}px"
+      {@attach tooltip(() => displaySceneName || "")}
+      >{displaySceneName}</span
+    >
+  {/if}
+{/snippet}
+
+{#snippet trainingDummyStatusItem()}
+  {#if isTrainingDummyActive}
+    <div
+      class="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-foreground shrink-0"
+      {@attach tooltip(() => formatTrainingDummyLabel(trainingDummyState))}
+    >
+      <CrosshairIcon
+        class="text-muted-foreground shrink-0"
+        style="width: {h.sceneNameFontSize}px; height: {h.sceneNameFontSize}px"
+      />
+      <span
+        class="font-medium leading-none"
+        style="font-size: {h.sceneNameFontSize}px"
+      >
+        {formatTrainingDummyLabel(trainingDummyState)}
+      </span>
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet totalDamageItem()}
+  {#if h.showTotalDamage}
+    <div class="flex items-center gap-2 shrink-0">
+      <span
+        class="font-bold text-muted-foreground uppercase tracking-wider"
+        style="font-size: {h.totalDamageLabelFontSize}px"
+        {@attach tooltip(() => t("header.totalDamage", "Total Damage Dealt"))}>T.DMG</span
+      >
+      <span
+        class="font-bold text-foreground"
+        style="font-size: {h.totalDamageValueFontSize}px"
+        {@attach tooltip(() => displayHeaderInfo.totalDmg.toLocaleString())}
+        ><AbbreviatedNumber num={Number(displayHeaderInfo.totalDmg)} /></span
+      >
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet totalDpsItem()}
+  {#if h.showTotalDps}
+    <div class="flex items-center gap-2 shrink-0">
+      <span
+        class="font-bold text-muted-foreground uppercase tracking-wider"
+        style="font-size: {h.totalDpsLabelFontSize}px"
+        {@attach tooltip(() => t("header.totalDps", "Total Damage per Second"))}>T.DPS</span
+      >
+      <span
+        class="font-bold text-foreground"
+        style="font-size: {h.totalDpsValueFontSize}px"
+        {@attach tooltip(() => displayHeaderInfo.totalDps.toLocaleString())}
+        ><AbbreviatedNumber num={displayHeaderInfo.totalDps} /></span
+      >
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet bossHealthItem()}
+  {#if h.showBossHealth}
+    <div class="flex items-center gap-2 shrink-0">
+      <span
+        class="font-bold text-muted-foreground uppercase tracking-wider"
+        style="font-size: {h.bossHealthLabelFontSize}px"
+        {@attach tooltip(() => t("header.bossHealth", "Boss Health"))}>BOSS</span
+      >
+      {#if displayBosses.length > 0}
+        <div
+          class="flex gap-1 overflow-hidden"
+          class:flex-col={h.bossHealthLayout !== "horizontal"}
+          class:flex-row={h.bossHealthLayout === "horizontal"}
+          class:flex-nowrap={h.bossHealthLayout === "horizontal"}
+        >
+          {#each displayBosses as boss (boss.uid)}
+            {@const hpPercent =
+              boss.maxHp && boss.currentHp !== null
+                ? Math.min(100, Math.max(0, (boss.currentHp / boss.maxHp) * 100))
+                : 0}
+            {@const localizedBossName = localizeRawMonsterName(boss.name, boss.name)}
+            <div class="flex items-center gap-1 whitespace-nowrap">
+              <span
+                class="truncate text-foreground font-semibold tracking-tight"
+                style="font-size: {h.bossHealthNameFontSize}px"
+                {@attach tooltip(() => localizedBossName)}>{localizedBossName} -</span
+              >
+              <span
+                class="tabular-nums font-semibold text-foreground"
+                style="font-size: {h.bossHealthValueFontSize}px"
+              >
+                <AbbreviatedNumber num={boss.currentHp !== null ? boss.currentHp : 0} />
+                {#if boss.maxHp}
+                  <span> / <AbbreviatedNumber num={boss.maxHp} /></span>
+                  <span
+                    class="text-destructive ml-1"
+                    style="font-size: {h.bossHealthPercentFontSize}px"
+                    >({hpPercent.toFixed(1)}%)</span
+                  >
+                {/if}
+              </span>
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <span
+          class="text-neutral-500 font-medium italic"
+          style="font-size: {h.bossHealthNameFontSize}px">{t("header.noBoss", "No Boss")}</span
+        >
+      {/if}
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet navigationTabsItem()}
+  {#if h.showNavigationTabs}
+    <div
+      class="flex items-stretch border border-border rounded-lg overflow-hidden bg-popover/30 shrink-0"
+    >
+      <button
+        class="transition-all duration-200 font-bold tracking-wider uppercase border-r border-border whitespace-nowrap h-full flex items-center {$page.url.pathname.includes(
+          'dps',
+        )
+          ? 'bg-muted text-foreground'
+          : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
+        style="font-size: {h.navTabFontSize}px; padding: {h.navTabPaddingY}px {h.navTabPaddingX}px"
+        aria-current={$page.url.pathname.includes("dps") ? "page" : undefined}
+        onclick={() => goto(resolve("/live/dps"))}>DPS</button
+      >
+      <button
+        class="transition-all duration-200 font-bold tracking-wider uppercase border-r border-border whitespace-nowrap h-full flex items-center {$page.url.pathname.includes(
+          'heal',
+        )
+          ? 'bg-muted text-foreground'
+          : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
+        style="font-size: {h.navTabFontSize}px; padding: {h.navTabPaddingY}px {h.navTabPaddingX}px"
+        aria-current={$page.url.pathname.includes("heal") ? "page" : undefined}
+        onclick={() => goto(resolve("/live/heal"))}>HEAL</button
+      >
+      <button
+        class="transition-all duration-200 font-bold tracking-wider uppercase {h.showDeathTab
+          ? 'border-r border-border'
+          : ''} whitespace-nowrap h-full flex items-center {$page.url.pathname.includes(
+          'tanked',
+        )
+          ? 'bg-muted text-foreground'
+          : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
+        style="font-size: {h.navTabFontSize}px; padding: {h.navTabPaddingY}px {h.navTabPaddingX}px"
+        aria-current={$page.url.pathname.includes("tanked") ? "page" : undefined}
+        onclick={() => goto(resolve("/live/tanked"))}>TANKED</button
+      >
+      {#if h.showDeathTab}
+        <button
+          class="transition-all duration-200 font-bold tracking-wider uppercase whitespace-nowrap h-full flex items-center {$page.url.pathname.includes(
+            'death',
+          )
+            ? 'bg-muted text-foreground'
+            : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
+          style="font-size: {h.navTabFontSize}px; padding: {h.navTabPaddingY}px {h.navTabPaddingX}px"
+          aria-current={$page.url.pathname.includes("death") ? "page" : undefined}
+          onclick={() => goto(resolve("/live/death"))}>DEATH</button
+        >
+      {/if}
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet controlButtonsItem()}
+  {#if hasRow1Right}
+    <div class="flex items-center justify-end gap-2 shrink-0">
+      {#if trainingDummySettings.showHeaderControl}
+        <button
+          class="{isTrainingDummyActive
+            ? 'bg-muted text-foreground border-border shadow-sm'
+            : 'text-muted-foreground border-transparent'} hover:text-foreground hover:bg-popover/60 rounded-lg border transition-all duration-200 disabled:opacity-60"
+          style="padding: {h.pauseButtonPadding}px"
+          aria-pressed={isTrainingDummyActive}
+          aria-label={isTrainingDummyActive
+            ? t("header.training.disableMode", "Disable Training Dummy Mode")
+            : t("header.training.enableMode", "Enable Training Dummy Mode")}
+          disabled={trainingDummyBusy}
+          onclick={toggleTrainingDummyMode}
+          {@attach tooltip(() =>
+            isTrainingDummyActive
+              ? t("header.training.disableMode", "Disable Training Dummy Mode")
+              : t("header.training.enableMode", "Enable Training Dummy Mode"))}
+        >
+          <CrosshairIcon
+            style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
+          />
+        </button>
+      {/if}
+
+      {#if h.showResetButton}
+        <button
+          class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
+          style="padding: {h.resetButtonPadding}px"
+          onclick={handleResetEncounter}
+          {@attach tooltip(() => t("header.resetEncounter", "Reset Encounter"))}
+        >
+          <RefreshCwIcon
+            style="width: {h.resetButtonSize}px; height: {h.resetButtonSize}px"
+          />
+        </button>
+      {/if}
+
+      {#if h.showPauseButton}
+        <button
+          class="{isEncounterPaused
+            ? 'text-[oklch(0.65_0.1_145)] bg-[oklch(0.9_0.02_145)]/30'
+            : 'text-muted-foreground'} hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
+          style="padding: {h.pauseButtonPadding}px"
+          onclick={() => void togglePauseEncounter()}
+        >
+          {#if isEncounterPaused}
+            <PlayIcon
+              {@attach tooltip(() => t("header.resumeEncounter", "Resume Encounter"))}
+              style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
+            />
+          {:else}
+            <PauseIcon
+              {@attach tooltip(() => t("header.pauseEncounter", "Pause Encounter"))}
+              style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
+            />
+          {/if}
+        </button>
+      {/if}
+
+      {#if h.showSettingsButton}
+        <button
+          class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
+          style="padding: {h.settingsButtonPadding}px"
+          onclick={() => openSettings()}
+          {@attach tooltip(() => t("header.settings", "Settings"))}
+        >
+          <SettingsIcon
+            style="width: {h.settingsButtonSize}px; height: {h.settingsButtonSize}px"
+          />
+        </button>
+      {/if}
+
+      {#if h.showMinimizeButton}
+        <button
+          class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
+          style="padding: {h.minimizeButtonPadding}px"
+          onclick={() => appWindow?.hide()}
+          {@attach tooltip(() => t("header.minimize", "Minimize"))}
+        >
+          <MinusIcon
+            style="width: {h.minimizeButtonSize}px; height: {h.minimizeButtonSize}px"
+          />
+        </button>
+      {/if}
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet headerLayoutComponent(componentId: HeaderLayoutComponentId)}
+  {#if componentId === "timer"}
+    {@render timerItem()}
+  {:else if componentId === "sceneName"}
+    {@render sceneNameItem()}
+  {:else if componentId === "trainingDummyStatus"}
+    {@render trainingDummyStatusItem()}
+  {:else if componentId === "totalDamage"}
+    {@render totalDamageItem()}
+  {:else if componentId === "totalDps"}
+    {@render totalDpsItem()}
+  {:else if componentId === "bossHealth"}
+    {@render bossHealthItem()}
+  {:else if componentId === "navigationTabs"}
+    {@render navigationTabsItem()}
+  {:else if componentId === "controlButtons"}
+    {@render controlButtonsItem()}
+  {/if}
+{/snippet}
+
+{#if isCustomLayout && hasCustomHeader}
+  <header
+    data-tauri-drag-region
+    class="flex w-full flex-col text-sm"
+    style="padding: {h.headerPadding}px; padding-bottom: {h.headerPadding +
+      4}px; row-gap: {normalizedHeaderLayout.rowGap}px"
+  >
+    {#each normalizedHeaderLayout.rows as row (row.id + row.zones.start.join("|") + row.zones.end.join("|"))}
+      <div
+        data-tauri-drag-region
+        class="grid w-full min-w-0 grid-cols-[1fr_auto] items-center overflow-hidden"
+        style="column-gap: {normalizedHeaderLayout.itemGap}px"
+      >
+        <div
+          class="flex min-w-0 flex-wrap items-center justify-start overflow-hidden"
+          style="gap: {normalizedHeaderLayout.itemGap}px"
+        >
+          {#each row.zones.start as componentId (componentId)}
+            {@render headerLayoutComponent(componentId)}
+          {/each}
+        </div>
+        <div
+          class="flex min-w-0 flex-wrap items-center justify-end overflow-hidden"
+          style="gap: {normalizedHeaderLayout.itemGap}px"
+        >
+          {#each row.zones.end as componentId (componentId)}
+            {@render headerLayoutComponent(componentId)}
+          {/each}
+        </div>
+      </div>
+    {/each}
+  </header>
+{:else if hasRow1 || hasRow2}
   <header
     data-tauri-drag-region
     class="grid w-full grid-cols-[1fr_auto] text-sm"
@@ -235,20 +590,20 @@
             {#if h.timerLabelFontSize > 0}
               <span
                 class="font-medium text-muted-foreground uppercase tracking-wider leading-none"
-                style="font-size: {h.timerLabelFontSize}px">{t("header.timer", "计时")}</span
+                style="font-size: {h.timerLabelFontSize}px">{t("header.timer", "Timer")}</span
               >
             {/if}
             <span
               class="font-bold text-foreground tabular-nums tracking-tight leading-none"
               style="font-size: {h.timerFontSize}px"
-              {@attach tooltip(() => t("header.timeElapsed", "战斗经过时间"))}
+              {@attach tooltip(() => t("header.timeElapsed", "Time Elapsed"))}
               >{formatElapsed(displayElapsedMs)}</span
             >
             {#if h.showActiveTimer}
               <span
                 class="font-bold text-foreground tabular-nums tracking-tight leading-none"
                 style="font-size: {h.activeTimerFontSize}px"
-                {@attach tooltip(() => t("header.activeCombatTime", "有效战斗时间"))}
+                {@attach tooltip(() => t("header.activeCombatTime", "Active Combat Time"))}
               >
                 / {formatElapsed(displayHeaderInfo.activeCombatTimeMs)}
               </span>
@@ -299,14 +654,14 @@
             style="padding: {h.pauseButtonPadding}px"
             aria-pressed={isTrainingDummyActive}
             aria-label={isTrainingDummyActive
-              ? t("header.training.disableMode", "关闭打桩模式")
-              : t("header.training.enableMode", "开启打桩模式")}
+              ? t("header.training.disableMode", "Disable Training Dummy Mode")
+              : t("header.training.enableMode", "Enable Training Dummy Mode")}
             disabled={trainingDummyBusy}
             onclick={toggleTrainingDummyMode}
             {@attach tooltip(() =>
               isTrainingDummyActive
-                ? t("header.training.disableMode", "关闭打桩模式")
-                : t("header.training.enableMode", "开启打桩模式"))}
+                ? t("header.training.disableMode", "Disable Training Dummy Mode")
+                : t("header.training.enableMode", "Enable Training Dummy Mode"))}
           >
             <CrosshairIcon
               style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
@@ -319,7 +674,7 @@
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.resetButtonPadding}px"
             onclick={handleResetEncounter}
-            {@attach tooltip(() => t("header.resetEncounter", "重置战斗"))}
+            {@attach tooltip(() => t("header.resetEncounter", "Reset Encounter"))}
           >
             <RefreshCwIcon
               style="width: {h.resetButtonSize}px; height: {h.resetButtonSize}px"
@@ -337,12 +692,12 @@
           >
             {#if isEncounterPaused}
               <PlayIcon
-                {@attach tooltip(() => t("header.resumeEncounter", "继续战斗"))}
+                {@attach tooltip(() => t("header.resumeEncounter", "Resume Encounter"))}
                 style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
               />
             {:else}
               <PauseIcon
-                {@attach tooltip(() => t("header.pauseEncounter", "暂停战斗"))}
+                {@attach tooltip(() => t("header.pauseEncounter", "Pause Encounter"))}
                 style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
               />
             {/if}
@@ -354,7 +709,7 @@
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.settingsButtonPadding}px"
             onclick={() => openSettings()}
-            {@attach tooltip(() => t("header.settings", "设置"))}
+            {@attach tooltip(() => t("header.settings", "Settings"))}
           >
             <SettingsIcon
               style="width: {h.settingsButtonSize}px; height: {h.settingsButtonSize}px"
@@ -367,7 +722,7 @@
             class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
             style="padding: {h.minimizeButtonPadding}px"
             onclick={() => appWindow?.hide()}
-            {@attach tooltip(() => t("header.minimize", "最小化"))}
+            {@attach tooltip(() => t("header.minimize", "Minimize"))}
           >
             <MinusIcon
               style="width: {h.minimizeButtonSize}px; height: {h.minimizeButtonSize}px"
@@ -388,7 +743,7 @@
               <span
                 class="font-bold text-muted-foreground uppercase tracking-wider"
                 style="font-size: {h.totalDamageLabelFontSize}px"
-                {@attach tooltip(() => t("header.totalDamage", "总伤害"))}>T.DMG</span
+                {@attach tooltip(() => t("header.totalDamage", "Total Damage Dealt"))}>T.DMG</span
               >
               <span
                 class="font-bold text-foreground"
@@ -408,7 +763,7 @@
               <span
                 class="font-bold text-muted-foreground uppercase tracking-wider"
                 style="font-size: {h.totalDpsLabelFontSize}px"
-                {@attach tooltip(() => t("header.totalDps", "总每秒伤害"))}>T.DPS</span
+                {@attach tooltip(() => t("header.totalDps", "Total Damage per Second"))}>T.DPS</span
               >
               <span
                 class="font-bold text-foreground"
@@ -426,11 +781,16 @@
             <span
               class="font-bold text-muted-foreground uppercase tracking-wider"
               style="font-size: {h.bossHealthLabelFontSize}px"
-              {@attach tooltip(() => t("header.bossHealth", "首领血量"))}>BOSS</span
+              {@attach tooltip(() => t("header.bossHealth", "Boss Health"))}>BOSS</span
             >
             <!-- Inline Boss Health Display -->
             {#if displayBosses.length > 0}
-              <div class="flex flex-col gap-1">
+              <div
+                class="flex gap-1 overflow-hidden"
+                class:flex-col={h.bossHealthLayout !== "horizontal"}
+                class:flex-row={h.bossHealthLayout === "horizontal"}
+                class:flex-nowrap={h.bossHealthLayout === "horizontal"}
+              >
                 {#each displayBosses as boss (boss.uid)}
                   {@const hpPercent =
                     boss.maxHp && boss.currentHp !== null
@@ -467,7 +827,7 @@
             {:else}
               <span
                 class="text-neutral-500 font-medium italic"
-                style="font-size: {h.bossHealthNameFontSize}px">{t("header.noBoss", "无首领")}</span
+                style="font-size: {h.bossHealthNameFontSize}px">{t("header.noBoss", "No Boss")}</span
               >
             {/if}
           </div>
@@ -514,6 +874,20 @@
             : undefined}
           onclick={() => goto(resolve("/live/tanked"))}>TANKED</button
         >
+        {#if h.showDeathTab}
+          <button
+            class="transition-all duration-200 font-bold tracking-wider uppercase whitespace-nowrap h-full flex items-center {$page.url.pathname.includes(
+              'death',
+            )
+              ? 'bg-muted text-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
+            style="font-size: {h.navTabFontSize}px; padding: {h.navTabPaddingY}px {h.navTabPaddingX}px"
+            aria-current={$page.url.pathname.includes("death")
+              ? "page"
+              : undefined}
+            onclick={() => goto(resolve("/live/death"))}>DEATH</button
+          >
+        {/if}
       </div>
     {/if}
   </header>

@@ -14,7 +14,7 @@
   import { SETTINGS } from "$lib/settings-store";
   import { findResourcesByClass } from "$lib/skill-mappings";
 
-  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   const editing = $derived(isEditing());
   const groupPos = $derived(getGroupPosition("resourceGroup"));
@@ -26,6 +26,14 @@
   const chargeResources = $derived(
     resources.filter((res) => res.type === "charges"),
   );
+
+  function currentResourceId(res: { currentId?: number; currentIndex?: number }) {
+    return res.currentId ?? res.currentIndex ?? 0;
+  }
+
+  function maxResourceId(res: { maxId?: number; maxIndex?: number }) {
+    return res.maxId ?? res.maxIndex ?? 0;
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -39,16 +47,18 @@
   onpointerdown={(e) => startDrag(e, { kind: "group", key: "resourceGroup" }, groupPos)}
 >
   {#if editing}
-    <div class="group-tag">{t("overlay.resource", "资源区")}</div>
+    <div class="group-tag">{t("overlay.resource", "Resource Area")}</div>
   {/if}
 
   <div class="resources-panel" data-class={classKey}>
     <div class="resources-row energy-row">
       {#each barResources as res}
-        {@const cur = getResourceValue(res.currentIndex)}
-        {@const max = Math.max(1, getResourceValue(res.maxIndex))}
-        {@const curPrecise = getResourcePreciseValue(res.currentIndex)}
-        {@const maxPrecise = Math.max(1, getResourcePreciseValue(res.maxIndex))}
+        {@const curId = currentResourceId(res)}
+        {@const maxId = maxResourceId(res)}
+        {@const cur = getResourceValue(curId)}
+        {@const max = Math.max(1, getResourceValue(maxId))}
+        {@const curPrecise = getResourcePreciseValue(curId)}
+        {@const maxPrecise = Math.max(1, getResourcePreciseValue(maxId))}
         {@const energyPercent = Math.min(100, Math.max(0, (curPrecise / maxPrecise) * 100))}
         {@const effectiveBuffIds = res.buffBaseIds ?? (res.buffBaseId ? [res.buffBaseId] : [])}
         {@const buffPercent = effectiveBuffIds.length
@@ -71,8 +81,8 @@
 
     <div class="resources-row sharpness-row">
       {#each chargeResources as res}
-        {@const cur = getResourceValue(res.currentIndex)}
-        {@const max = Math.max(1, getResourceValue(res.maxIndex))}
+        {@const cur = getResourceValue(currentResourceId(res))}
+        {@const max = Math.max(1, getResourceValue(maxResourceId(res)))}
         <div class="res-charges-container">
           {#each Array(max) as _, i}
             <img src={i < cur ? res.imageOn : res.imageOff} alt={res.label} class="res-charge-icon" />

@@ -1,0 +1,78 @@
+{
+  "wind_knight": [
+    {
+      "type": "bar",
+      "label": "Energy",
+      "currentId": 14011,
+      "maxId": 14017,
+      "imageOn": "/images/wind_knight/res/main_lance_bar_on_-1421954657832119123.png",
+      "imageOff": "/images/wind_knight/res/main_lance_bar_off_8817179120914854547.png",
+      "buffBaseId": 31201
+    },
+    {
+      "type": "charges",
+      "label": "Sharpness",
+      "currentId": 14001,
+      "maxId": 14007,
+      "imageOn": "/images/wind_knight/res/main_lance_on_7736397267241150037.png",
+      "imageOff": "/images/wind_knight/res/main_lance_off_523133555372855246.png"
+    }
+  ],
+  "frost_mage": [
+    {
+      "type": "bar",
+      "label": "Energy",
+      "currentId": 12001,
+      "maxId": 12007,
+      "imageOn": "/images/frost_mage/res/main_snow_bar_on_5638853610256406615.png",
+      "imageOff": "/images/frost_mage/res/main_snow_bar_off_6351435705225501293.png",
+      "buffBaseId": 27007
+    },
+    {
+      "type": "charges",
+      "label": "Sharpness",
+      "currentId": 12021,
+      "maxId": 12027,
+      "imageOn": "/images/frost_mage/res/main_snow_on_7752257676452734961.png",
+      "imageOff": "/images/frost_mage/res/main_snow_off_3542757998136383818.png"
+    }
+  ],
+  "flame_berserker": [
+    {
+      "type": "bar",
+      "label": "炎魂",
+      "currentId": 13011,
+      "maxId": 13017,
+      "imageOn": "/images/flame_berserker/res/main_axe_bar_on_6151548781199815166.png",
+      "imageOff": "/images/flame_berserker/res/main_axe_bar_off_-8593627078287687699.png",
+      "buffBaseId": 35103
+    },
+    {
+      "type": "charges",
+      "label": "狂意",
+      "currentId": 13001,
+      "maxId": 13007,
+      "imageOn": "/images/flame_berserker/res/main_axe_on_9059906859962064051.png",
+      "imageOff": "/images/flame_berserker/res/main_axe_off_-292607344260861433.png"
+    }
+  ],
+  "stormblade": [
+    {
+      "type": "bar",
+      "label": "刀意",
+      "currentId": 12051,
+      "maxId": 12057,
+      "imageOn": "/images/stormblade/res/main_thunder_bar_on_-2759248337309027904.png",
+      "imageOff": "/images/stormblade/res/main_thunder_bar_off_667491608039266660.png",
+      "buffBaseIds": [43201, 43101]
+    },
+    {
+      "type": "charges",
+      "label": "雷之印",
+      "currentId": 12041,
+      "maxId": 12047,
+      "imageOn": "/images/stormblade/res/main_thunder_on_2474287416440235716.png",
+      "imageOff": "/images/stormblade/res/main_thunder_off_2990056487819530159.png"
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 mod build_app;
-mod live;
+pub mod live;
 pub mod module_optimizer;
 mod packets;
+mod parser_data;
 mod translation_runtime;
 
 use crate::build_app::build_and_run;
@@ -34,6 +35,10 @@ pub const WINDOW_GAME_OVERLAY_LABEL: &str = "game-overlay";
 pub const WINDOW_MONSTER_OVERLAY_LABEL: &str = "monster-overlay";
 /// The label for the event logger window.
 pub const WINDOW_EVENT_LOGGER_LABEL: &str = "event-logger";
+
+const LEGACY_APP_IDENTIFIER: &str = "com.resonance-logs-cn";
+const LOG_FILE_PREFIX: &str = "resonance-logs-global_v";
+const LEGACY_LOG_FILE_PREFIX: &str = "resonance-logs-cn_v";
 
 #[cfg(debug_assertions)]
 fn clean_generated_bindings(bindings_path: &Path) {
@@ -70,7 +75,6 @@ export type Result<T, E> =
     let _ = std::fs::write(bindings_path, cleaned);
 }
 
-
 #[tauri::command]
 #[specta::specta]
 fn toggle_game_overlay_window(app: tauri::AppHandle) -> Result<(), String> {
@@ -87,8 +91,11 @@ fn toggle_game_overlay_window(app: tauri::AppHandle) -> Result<(), String> {
         overlay_window.hide().map_err(|e| e.to_string())?;
     }
 
-    app.emit("game-overlay-visibility-changed", json!({ "visible": next_visible }))
-        .map_err(|e| e.to_string())?;
+    app.emit(
+        "game-overlay-visibility-changed",
+        json!({ "visible": next_visible }),
+    )
+    .map_err(|e| e.to_string())?;
 
     Ok(())
 }
@@ -177,6 +184,67 @@ fn mirror_overlay_window_bounds(
     result
 }
 
+fn copy_missing_file(source: &Path, target: &Path) -> Result<(), String> {
+    if target.exists() {
+        return Ok(());
+    }
+    if let Some(parent) = target.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("create_dir_all {}: {}", parent.display(), e))?;
+    }
+    std::fs::copy(source, target)
+        .map(|_| ())
+        .map_err(|e| format!("copy {} -> {}: {}", source.display(), target.display(), e))
+}
+
+fn copy_missing_dir(source: &Path, target: &Path) -> Result<(), String> {
+    if !source.exists() {
+        return Ok(());
+    }
+
+    std::fs::create_dir_all(target)
+        .map_err(|e| format!("create_dir_all {}: {}", target.display(), e))?;
+
+    let entries =
+        std::fs::read_dir(source).map_err(|e| format!("read_dir {}: {}", source.display(), e))?;
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("read_dir entry {}: {}", source.display(), e))?;
+        let source_path = entry.path();
+        let target_path = target.join(entry.file_name());
+        let file_type = entry
+            .file_type()
+            .map_err(|e| format!("file_type {}: {}", source_path.display(), e))?;
+        if file_type.is_dir() {
+            copy_missing_dir(&source_path, &target_path)?;
+        } else if file_type.is_file() {
+            copy_missing_file(&source_path, &target_path)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn migrate_legacy_data_dir(global_dir: PathBuf) -> Result<(), String> {
+    let Some(parent) = global_dir.parent() else {
+        return Ok(());
+    };
+    let legacy_dir = parent.join(LEGACY_APP_IDENTIFIER);
+    if !legacy_dir.exists() || legacy_dir == global_dir {
+        return Ok(());
+    }
+    copy_missing_dir(&legacy_dir, &global_dir)
+}
+
+fn migrate_legacy_app_data(app: &tauri::AppHandle) -> Result<(), String> {
+    if let Ok(dir) = app.path().app_data_dir() {
+        migrate_legacy_data_dir(dir)?;
+    }
+    if let Ok(dir) = app.path().app_local_data_dir() {
+        migrate_legacy_data_dir(dir)?;
+    }
+    Ok(())
+}
+
 /// The main entry point for the application logic.
 ///
 /// This function sets up and runs the Tauri application.
@@ -204,6 +272,8 @@ pub fn run() {
             database::commands::get_recent_encounters_filtered,
             database::commands::get_encounter_by_id,
             database::commands::get_encounter_entities_raw,
+            database::commands::get_encounter_entities_compact_raw,
+            database::commands::get_encounter_modifier_entities_raw,
             database::commands::delete_encounter,
             database::commands::delete_encounters,
             database::commands::toggle_favorite_encounter,
@@ -220,10 +290,11 @@ pub fn run() {
             debug_commands::hide_event_logger_window,
             debug_commands::toggle_event_logger_window,
             debug_commands::set_event_logger_window_always_on_top,
-            debug_commands::get_event_logger_capture_options,
-            debug_commands::set_event_logger_capture_options,
             debug_commands::get_event_logger_session_directory,
             debug_commands::set_event_logger_save_directory,
+            debug_commands::get_event_logger_file_storage_settings,
+            debug_commands::set_event_logger_file_storage_settings,
+            debug_commands::export_event_logger_session,
             debug_commands::open_event_logger_session_dir,
             packets::npcap::get_network_devices,
             packets::npcap::check_npcap_status,
@@ -241,13 +312,9 @@ pub fn run() {
             translation_runtime::read_translation_runtime_file,
             translation_runtime::write_translation_runtime_file,
             translation_runtime::write_translation_runtime_locale_file,
+            translation_runtime::write_translation_runtime_locale_patch,
             translation_runtime::generate_ui_translation_scaffold,
             translation_runtime::generate_all_ui_translation_scaffolds,
-            translation_runtime::generate_buff_name_search_scaffold,
-            translation_runtime::generate_buff_name_translation_scaffold,
-            translation_runtime::generate_scene_name_translation_scaffold,
-            translation_runtime::generate_monster_name_translation_scaffold,
-            translation_runtime::generate_skill_name_translation_scaffold,
             toggle_game_overlay_window,
             toggle_game_overlay_edit_mode,
             sync_monster_overlay_window_to_game_overlay,
@@ -273,6 +340,10 @@ pub fn run() {
         .invoke_handler(builder.invoke_handler())
         .setup(|app| {
             let app_handle = app.handle().clone();
+
+            if let Err(e) = migrate_legacy_app_data(&app_handle) {
+                eprintln!("Failed to migrate legacy Resonance Logs CN AppData: {e}");
+            }
 
             // Setup logs as early as possible so we don't lose startup context.
             // If logging fails, fall back to stderr so we still get a breadcrumb.
@@ -375,6 +446,17 @@ pub fn run() {
                 if let Err(e) = window.hide() {
                     warn!("failed to hide event logger window during startup: {}", e);
                 }
+            }
+
+            if let Ok(file_storage) =
+                crate::live::event_logger::get_event_logger_file_storage_payload(&app_handle)
+            {
+                crate::packets::packet_capture::set_capture_census_enabled(
+                    file_storage.capture_census_enabled,
+                );
+                crate::live::attribution_census::set_attribution_census_enabled(
+                    file_storage.attribution_census_enabled,
+                );
             }
 
             // Live Meter
@@ -485,12 +567,12 @@ mod custom_data_commands {
 
     #[tauri::command]
     #[specta::specta]
-    pub fn read_custom_triggers(
-        app_handle: tauri::AppHandle,
-    ) -> Result<String, String> {
+    pub fn read_custom_triggers(app_handle: tauri::AppHandle) -> Result<String, String> {
         let path = custom_triggers_path(&app_handle)?;
         if !path.exists() {
-            return Ok(String::from(r#"{"version":2,"audio":{"primaryOutputDeviceId":null,"secondaryOutputDeviceId":null},"groups":[],"triggers":[]}"#));
+            return Ok(String::from(
+                r#"{"version":2,"audio":{"primaryOutputDeviceId":null,"secondaryOutputDeviceId":null},"groups":[],"triggers":[]}"#,
+            ));
         }
 
         std::fs::read_to_string(&path)
@@ -654,26 +736,6 @@ mod debug_commands {
 
     #[tauri::command]
     #[specta::specta]
-    pub fn get_event_logger_capture_options() -> crate::live::event_logger::EventLoggerCaptureOptions {
-        crate::live::event_logger::get_event_logger_capture_options()
-    }
-
-    #[tauri::command]
-    #[specta::specta]
-    pub fn set_event_logger_capture_options(
-        capture_events: bool,
-        capture_snapshots: bool,
-    ) -> crate::live::event_logger::EventLoggerCaptureOptions {
-        let capture_options = crate::live::event_logger::EventLoggerCaptureOptions {
-            capture_events,
-            capture_snapshots,
-        };
-        crate::live::event_logger::set_event_logger_capture_options(capture_options);
-        capture_options
-    }
-
-    #[tauri::command]
-    #[specta::specta]
     pub fn get_event_logger_session_directory(
         app_handle: tauri::AppHandle,
     ) -> Result<crate::live::event_logger::EventLoggerSessionDirectoryPayload, String> {
@@ -691,10 +753,62 @@ mod debug_commands {
 
     #[tauri::command]
     #[specta::specta]
+    pub fn get_event_logger_file_storage_settings(
+        app_handle: tauri::AppHandle,
+    ) -> Result<crate::live::event_logger::EventLoggerFileStoragePayload, String> {
+        crate::live::event_logger::get_event_logger_file_storage_payload(&app_handle)
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn set_event_logger_file_storage_settings(
+        app_handle: tauri::AppHandle,
+        store_log_files: bool,
+        include_repeated_snapshot_rows: bool,
+        delete_older_than_days: Option<u32>,
+        capture_census_enabled: bool,
+        attribution_census_enabled: bool,
+    ) -> Result<crate::live::event_logger::EventLoggerFileStoragePayload, String> {
+        crate::live::event_logger::set_event_logger_file_storage_settings(
+            &app_handle,
+            store_log_files,
+            include_repeated_snapshot_rows,
+            delete_older_than_days,
+            capture_census_enabled,
+            attribution_census_enabled,
+        )
+    }
+
+    #[tauri::command]
+    #[specta::specta]
+    pub fn export_event_logger_session(
+        app_handle: tauri::AppHandle,
+    ) -> Result<Option<String>, String> {
+        let file_storage =
+            crate::live::event_logger::get_event_logger_file_storage_payload(&app_handle)?;
+        if !file_storage.store_log_files {
+            return Err("Enable Store Log Files before exporting an event log.".to_string());
+        }
+
+        crate::live::event_logger::flush_current_session_to_file(
+            &app_handle,
+            "manual_export",
+            crate::live::event_logger::EventLoggerSessionContext::default(),
+        )
+        .map(|path| path.map(|path| path.display().to_string()))
+    }
+
+    #[tauri::command]
+    #[specta::specta]
     pub fn open_event_logger_session_dir(app_handle: tauri::AppHandle) -> Result<(), String> {
         let session_dir = crate::live::event_logger::resolve_event_logger_session_dir(&app_handle)?;
-        std::fs::create_dir_all(&session_dir)
-            .map_err(|e| format!("Failed to create session log dir {}: {}", session_dir.display(), e))?;
+        std::fs::create_dir_all(&session_dir).map_err(|e| {
+            format!(
+                "Failed to create session log dir {}: {}",
+                session_dir.display(),
+                e
+            )
+        })?;
 
         #[cfg(target_os = "windows")]
         {
@@ -786,17 +900,28 @@ fn start_windivert() {
     }
 }
 
+fn windivert_service_exists() -> bool {
+    let mut cmd = Command::new("sc");
+    cmd.args(["query", "windivert"]);
+    run_command_silently(&mut cmd).is_ok_and(|status| status.success())
+}
+
 /// Stops the WinDivert driver.
 ///
 /// This function executes a shell command to stop the WinDivert driver service.
 fn stop_windivert() {
+    if !windivert_service_exists() {
+        info!("WinDivert driver service not installed; skipping stop");
+        return;
+    }
+
     let mut cmd = Command::new("sc");
     cmd.args(["stop", "windivert"]);
     let status = run_command_silently(&mut cmd);
     if status.is_ok_and(|status| status.success()) {
         info!("stopped driver");
     } else {
-        warn!("could not execute command to stop driver");
+        info!("could not stop WinDivert driver; it may already be stopped");
     }
 }
 
@@ -804,8 +929,13 @@ fn stop_windivert() {
 ///
 /// This function executes a shell command to delete the WinDivert driver service.
 fn remove_windivert() {
+    if !windivert_service_exists() {
+        info!("WinDivert driver service not installed; skipping delete");
+        return;
+    }
+
     let mut cmd = Command::new("sc");
-    cmd.args(["delete", "windivert", "start=", "demand"]);
+    cmd.args(["delete", "windivert"]);
     let status = run_command_silently(&mut cmd);
     if status.is_ok_and(|status| status.success()) {
         info!("deleted driver");
@@ -912,7 +1042,7 @@ fn init_logging(app: &tauri::AppHandle) -> Result<(), String> {
 
     let version = app.package_info().version.to_string();
     let timestamp = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
-    let file_name = format!("resonance-logs-cn_v{version}_{timestamp}.log");
+    let file_name = format!("{LOG_FILE_PREFIX}{version}_{timestamp}.log");
 
     let file_appender = tracing_appender::rolling::never(&log_dir, &file_name);
     let (file_writer, guard) = tracing_appender::non_blocking(file_appender);
@@ -978,7 +1108,10 @@ fn cleanup_old_logs(log_dir: &Path, keep: usize) -> Result<(), String> {
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
 
         // Only prune our own log files. Keep crash dumps.
-        if !file_name.starts_with("resonance-logs-cn_v") || file_name.contains("crash_dump") {
+        if (!file_name.starts_with(LOG_FILE_PREFIX)
+            && !file_name.starts_with(LEGACY_LOG_FILE_PREFIX))
+            || file_name.contains("crash_dump")
+        {
             continue;
         }
 
@@ -1041,7 +1174,9 @@ fn create_diagnostics_bundle(
             continue;
         }
         let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-        if !name.starts_with("resonance-logs-cn_v") || !name.ends_with(".log") {
+        if (!name.starts_with(LOG_FILE_PREFIX) && !name.starts_with(LEGACY_LOG_FILE_PREFIX))
+            || !name.ends_with(".log")
+        {
             continue;
         }
         let meta =
@@ -1058,7 +1193,7 @@ fn create_diagnostics_bundle(
     let name = path
         .file_name()
         .and_then(|s| s.to_str())
-        .unwrap_or("resonance-logs-cn.log");
+        .unwrap_or("resonance-logs-global.log");
 
     // Avoid zipping extremely large files.
     let meta = std::fs::metadata(&path).map_err(|e| format!("metadata {}: {e}", path.display()))?;
@@ -1247,12 +1382,12 @@ fn on_window_event_fn(window: &Window, event: &WindowEvent) {
             };
 
             if let Some(target_label) = target_label {
-                if let Err(e) = mirror_overlay_window_bounds(&window.app_handle(), source_label, target_label) {
+                if let Err(e) =
+                    mirror_overlay_window_bounds(&window.app_handle(), source_label, target_label)
+                {
                     warn!(
                         "failed to mirror overlay window bounds from {} to {}: {}",
-                        source_label,
-                        target_label,
-                        e
+                        source_label, target_label, e
                     );
                 }
             }

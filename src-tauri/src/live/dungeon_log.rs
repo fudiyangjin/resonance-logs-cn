@@ -1,12 +1,15 @@
+use crate::parser_data;
 use log::info;
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
 use std::time::Instant;
 
+const RESET_IGNORE_TARGETS_RELATIVE: &str = "logic/ResetIgnoreTargets.json";
+
 /// Dungeon target IDs that should not trigger objective-based resets.
 pub static RESET_IGNORE_TARGETS: LazyLock<HashSet<i32>> = LazyLock::new(|| {
-    let data = include_str!("../../meter-data/ResetIgnoreTargets.json");
-    serde_json::from_str::<Vec<i32>>(data)
+    let data = parser_data::read_to_string(RESET_IGNORE_TARGETS_RELATIVE).unwrap_or_default();
+    serde_json::from_str::<Vec<i32>>(&data)
         .unwrap_or_default()
         .into_iter()
         .collect()

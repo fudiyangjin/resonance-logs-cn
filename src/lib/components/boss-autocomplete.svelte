@@ -3,10 +3,14 @@
 	 * @file This component provides an autocomplete input for boss names.
 	 */
 	import { onMount } from 'svelte';
+	import { uiT } from '$lib/i18n';
+	import { SETTINGS } from '$lib/settings-store';
+
+	const t = uiT('shell', () => SETTINGS.live.general.state.language);
 
 	let {
 		value = $bindable(''),
-		placeholder = 'Filter by boss name...',
+		placeholder,
 		disabled = false,
 		availableBossNames = [],
 		onSelect = () => {},
@@ -22,6 +26,7 @@
 
 	let showDropdown = $state(false);
 	let filteredBossNames = $state<string[]>([]);
+	let localizedPlaceholder = $derived(placeholder ?? t('search.filterBossName', 'Filter by boss name...'));
 
 	function handleInput() {
 		if (value.trim() === '') {
@@ -85,7 +90,7 @@
 		onfocus={handleFocus}
 		onblur={handleBlur}
 		onkeydown={handleKeydown}
-		{placeholder}
+		placeholder={localizedPlaceholder}
 		{disabled}
 		{id}
 		class="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded text-neutral-300 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"

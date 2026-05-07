@@ -18,6 +18,7 @@
     onSceneChange,
     onPauseEncounter,
     onTrainingDummyUpdate,
+    onDeathReplay,
   } from "$lib/api";
   import { applyCustomFonts } from "$lib/font-loader";
   import { writable } from "svelte/store";
@@ -41,6 +42,7 @@
 
   import {
     setLiveData,
+    setDeathRecords,
     setTrainingDummyState,
     clearMeterData,
     cleanupStores,
@@ -159,12 +161,11 @@ t("live.resumeToast", "战斗已继续"),
       }
 
       // Set up scene change listener
-      const sceneChangeUnlisten = await onSceneChange((event) => {
+      const sceneChangeUnlisten = await onSceneChange(() => {
         if (isDestroyed) return;
         // Treat scene change as a keep-alive
         lastEventTime = Date.now();
         hadAnyEvent = true;
-        console.log("Scene change event received:", event.payload);
         // notificationToast?.showToast('notice', `Scene changed to ${event.payload.sceneName}`);
       });
 
@@ -194,6 +195,24 @@ t("live.resumeToast", "战斗已继续"),
         return;
       }
 
+      const deathReplayUnlisten = await onDeathReplay((event) => {
+        if (isDestroyed) return;
+        lastEventTime = Date.now();
+        hadAnyEvent = true;
+        setDeathRecords(event.payload.records);
+      });
+
+      if (isDestroyed) {
+        playersUnlisten();
+        resetUnlisten();
+        encounterUnlisten();
+        sceneChangeUnlisten();
+        trainingDummyUnlisten();
+        deathReplayUnlisten();
+        listenersSetupInProgress = false;
+        return;
+      }
+
       // Listen for explicit pause/resume events as a keep-alive as well
       const pauseUnlisten = await onPauseEncounter((event) => {
         if (isDestroyed) return;
@@ -208,12 +227,11 @@ t("live.resumeToast", "战斗已继续"),
         encounterUnlisten();
         sceneChangeUnlisten();
         trainingDummyUnlisten();
+        deathReplayUnlisten();
         pauseUnlisten();
         listenersSetupInProgress = false;
         return;
       }
-
-      console.log("Scene change listener set up");
 
       // Combine all unlisten functions
       unlisten = () => {
@@ -233,11 +251,12 @@ t("live.resumeToast", "战斗已继续"),
           trainingDummyUnlisten();
         } catch {}
         try {
+          deathReplayUnlisten();
+        } catch {}
+        try {
           pauseUnlisten();
         } catch {}
       };
-
-      console.log("Event listeners set up for live meter data");
 
       listenersSetupInProgress = false;
     } catch (e) {

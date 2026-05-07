@@ -1,6 +1,12 @@
 {
 	"compilerOptions": {
 		"paths": {
+			"$parserData": [
+				"../parser-data"
+			],
+			"$parserData/*": [
+				"../parser-data/*"
+			],
 			"$lib": [
 				"../src/lib"
 			],

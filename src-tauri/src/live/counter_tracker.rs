@@ -66,6 +66,11 @@ pub enum CounterSource {
         tick_interval_ms: u64,
         increment: u32,
     },
+    SkillCastComplete {
+        #[serde(rename = "skillBaseIds")]
+        skill_base_ids: Vec<i32>,
+        increment: u32,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
@@ -73,6 +78,13 @@ pub enum CounterSource {
 pub struct TickAttrCondition {
     pub attr_id: i32,
     pub required_value: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AltFreezeConfig {
+    pub condition_buff_id: i32,
+    pub freeze_duration_ms: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
@@ -93,6 +105,8 @@ pub struct EffectSlotConfig {
     pub freeze_duration_ms: Option<u64>,
     #[serde(default = "default_on_freeze_expire")]
     pub on_freeze_expire: CounterAction,
+    #[serde(default)]
+    pub alt_freeze: Option<AltFreezeConfig>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, Default)]
@@ -113,6 +127,7 @@ pub(crate) struct CounterModelState {
     pub slot_states: Vec<SlotState>,
     pub tick_states: Vec<BuffTickState>,
     pub skill_tick_states: Vec<SkillCastTickState>,
+    pub skill_complete_states: Vec<SkillCastCompleteState>,
     pub damage_hit_accumulators: Vec<u32>,
 }
 
@@ -123,6 +138,7 @@ pub(crate) struct SlotState {
     pub threshold: Option<u32>,
     pub is_counting: bool,
     pub reset_buff_active: bool,
+    pub condition_buff_active: bool,
     pub freeze_until_ms: Option<i64>,
     pub freeze_duration_ms: Option<u64>,
 }
@@ -148,6 +164,13 @@ pub(crate) struct SkillCastTickState {
     pub start_time_ms: i64,
     pub applied_ticks: u64,
     pub tick_interval_ms: u64,
+    pub increment: u32,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct SkillCastCompleteState {
+    pub skill_base_ids: Vec<i32>,
+    pub active_skill_id: Option<i32>,
     pub increment: u32,
 }
 
@@ -181,6 +204,7 @@ impl<'de> Deserialize<'de> for CounterRule {
                     on_buff_remove: rule.on_buff_remove,
                     freeze_duration_ms: None,
                     on_freeze_expire: default_on_freeze_expire(),
+                    alt_freeze: None,
                 }],
             }),
         }
@@ -215,6 +239,7 @@ impl BuffCounterTracker {
                     threshold: slot.threshold,
                     is_counting: true,
                     reset_buff_active: false,
+                    condition_buff_active: false,
                     freeze_until_ms: None,
                     freeze_duration_ms: slot.freeze_duration_ms,
                 })
@@ -264,6 +289,21 @@ impl BuffCounterTracker {
                     _ => None,
                 })
                 .collect();
+            let skill_complete_states = rule
+                .sources
+                .iter()
+                .filter_map(|source| match source {
+                    CounterSource::SkillCastComplete {
+                        skill_base_ids,
+                        increment,
+                    } => Some(SkillCastCompleteState {
+                        skill_base_ids: skill_base_ids.clone(),
+                        active_skill_id: None,
+                        increment: *increment,
+                    }),
+                    _ => None,
+                })
+                .collect();
             states.insert(
                 rule.rule_id,
                 CounterModelState {
@@ -271,6 +311,7 @@ impl BuffCounterTracker {
                     slot_states,
                     tick_states,
                     skill_tick_states,
+                    skill_complete_states,
                     damage_hit_accumulators: vec![0; rule.sources.len()],
                 },
             );
@@ -377,6 +418,20 @@ impl BuffCounterTracker {
                 }
                 changed |= activate_skill_tick_state(tick_state);
             }
+            let mut complete_increment = 0u32;
+            for complete_state in &mut state.skill_complete_states {
+                if !complete_state.skill_base_ids.contains(&skill_base_id) {
+                    continue;
+                }
+                if complete_state.active_skill_id.is_some() {
+                    complete_increment =
+                        complete_increment.saturating_add(complete_state.increment);
+                }
+                complete_state.active_skill_id = Some(skill_base_id);
+            }
+            if complete_increment > 0 {
+                changed |= add_increment_to_slots(state, complete_increment);
+            }
         }
         changed
     }
@@ -398,6 +453,23 @@ impl BuffCounterTracker {
                 for (slot_config, slot_state) in
                     rule.effect_slots.iter().zip(&mut state.slot_states)
                 {
+                    if let Some(alt_freeze) = &slot_config.alt_freeze {
+                        if alt_freeze.condition_buff_id == change.base_id {
+                            match change.change_type {
+                                BuffChangeType::Added => {
+                                    if !slot_state.condition_buff_active {
+                                        slot_state.condition_buff_active = true;
+                                    }
+                                }
+                                BuffChangeType::Removed => {
+                                    if slot_state.condition_buff_active {
+                                        slot_state.condition_buff_active = false;
+                                    }
+                                }
+                                BuffChangeType::Changed => {}
+                            }
+                        }
+                    }
                     if slot_config.reset_buff_id != change.base_id {
                         continue;
                     }
@@ -427,7 +499,12 @@ impl BuffCounterTracker {
                         }
                     }
                     changed |= apply_action(slot_state, action);
-                    changed |= start_fixed_freeze_timer(slot_state, action, change.create_time_ms);
+                    changed |= start_freeze_with_resolved_duration(
+                        slot_config,
+                        slot_state,
+                        action,
+                        change.create_time_ms,
+                    );
                 }
             }
         }
@@ -533,6 +610,22 @@ impl BuffCounterTracker {
                     pending_increment = pending_increment.saturating_add(increment_total);
                 }
             }
+            for complete_state in &mut state.skill_complete_states {
+                let Some(active_id) = complete_state.active_skill_id else {
+                    continue;
+                };
+                let still_casting = is_actor_state_skill(attr_store, local_player_uid)
+                    && attr_store
+                        .attr(local_player_uid, AttrType::SkillId)
+                        .and_then(AttrValue::as_int)
+                        .and_then(|v| i32::try_from(v).ok())
+                        == Some(active_id);
+                if !still_casting {
+                    complete_state.active_skill_id = None;
+                    pending_increment = pending_increment.saturating_add(complete_state.increment);
+                    changed = true;
+                }
+            }
 
             if pending_increment > 0 {
                 changed |= add_increment_to_slots(state, pending_increment);
@@ -572,6 +665,7 @@ impl BuffCounterTracker {
                 slot.current_count = 0;
                 slot.is_counting = true;
                 slot.reset_buff_active = false;
+                slot.condition_buff_active = false;
                 slot.freeze_until_ms = None;
             }
             for tick in &mut state.tick_states {
@@ -585,6 +679,9 @@ impl BuffCounterTracker {
                 tick.is_active = false;
                 tick.start_time_ms = 0;
                 tick.applied_ticks = 0;
+            }
+            for complete in &mut state.skill_complete_states {
+                complete.active_skill_id = None;
             }
             for accumulator in &mut state.damage_hit_accumulators {
                 *accumulator = 0;
@@ -756,7 +853,17 @@ fn add_increment_to_slots(state: &mut CounterModelState, increment: u32) -> bool
     changed
 }
 
-fn start_fixed_freeze_timer(
+fn resolve_freeze_duration(config: &EffectSlotConfig, state: &SlotState) -> Option<u64> {
+    if let Some(alt) = &config.alt_freeze {
+        if state.condition_buff_active {
+            return Some(alt.freeze_duration_ms);
+        }
+    }
+    config.freeze_duration_ms
+}
+
+fn start_freeze_with_resolved_duration(
+    slot_config: &EffectSlotConfig,
     slot_state: &mut SlotState,
     action: CounterAction,
     event_time_ms: Option<i64>,
@@ -767,16 +874,17 @@ fn start_fixed_freeze_timer(
     ) {
         return false;
     }
-    let Some(freeze_duration_ms) = slot_state.freeze_duration_ms else {
+    let Some(duration) = resolve_freeze_duration(slot_config, slot_state) else {
         return false;
     };
     let freeze_until_ms = event_time_ms
         .unwrap_or_else(now_ms)
-        .saturating_add(i64::try_from(freeze_duration_ms).unwrap_or(i64::MAX));
+        .saturating_add(i64::try_from(duration).unwrap_or(i64::MAX));
     if slot_state.freeze_until_ms == Some(freeze_until_ms) {
         return false;
     }
     slot_state.freeze_until_ms = Some(freeze_until_ms);
+    slot_state.freeze_duration_ms = Some(duration);
     true
 }
 

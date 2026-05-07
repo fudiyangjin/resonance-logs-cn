@@ -26,7 +26,11 @@ type OverlayPositionKey = keyof Omit<
 >;
 type OverlaySizeKey = keyof Omit<
   typeof DEFAULT_OVERLAY_SIZES,
-  "iconBuffSizes" | "standaloneIconSizes" | "skillDurationSizes" | "categoryIconSizes"
+  | "iconBuffStackCounterSize"
+  | "iconBuffSizes"
+  | "standaloneIconSizes"
+  | "skillDurationSizes"
+  | "categoryIconSizes"
 >;
 
 function clampGroupScale(value: number) {
@@ -35,6 +39,10 @@ function clampGroupScale(value: number) {
 
 function clampIconSize(value: number) {
   return Math.max(24, Math.min(120, Math.round(value)));
+}
+
+function clampStackCounterSize(value: number) {
+  return Math.max(6, Math.min(24, Math.round(value)));
 }
 
 function getLegacyStandaloneIconPositionRecord() {
@@ -224,6 +232,10 @@ export function setGroupScale(
 
 export function getIconBuffSize(baseId: number): number {
   return getOverlaySizes().iconBuffSizes[baseId] ?? 44;
+}
+
+export function getIconBuffStackCounterSize(): number {
+  return clampStackCounterSize(getOverlaySizes().iconBuffStackCounterSize ?? 9);
 }
 
 export function getSkillDurationSize(skillId: number): number {

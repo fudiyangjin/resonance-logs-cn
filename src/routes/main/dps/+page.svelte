@@ -10,4 +10,4 @@
   });
 </script>
 
-<p class="text-muted-foreground">正在跳转...</p>
+<p class="text-muted-foreground">Redirecting...</p>

@@ -142,3 +142,40 @@ export async function writeTranslationRuntimeJsonForLocale(
         };
     }
 }
+
+export async function writeTranslationRuntimeLocalePatch(
+    relativePath: string,
+    locale: string,
+    patch: unknown,
+): Promise<WriteTranslationRuntimeResult> {
+    try {
+        const patchContents = JSON.stringify(patch);
+        const result = await invoke<string>("write_translation_runtime_locale_patch", {
+            relativePath,
+            locale,
+            patchContents,
+        });
+
+        if (typeof result === "string" && result.length > 0) {
+            return {
+                ok: true,
+                message: result,
+            };
+        }
+
+        return { ok: true };
+    } catch (error) {
+        const errorMessage =
+            error instanceof Error ? error.message : String(error);
+
+        console.warn(
+            `[localization] Failed to patch runtime locale JSON: ${relativePath} (${locale})`,
+            error,
+        );
+
+        return {
+            ok: false,
+            error: errorMessage,
+        };
+    }
+}

@@ -1,1 +1,1 @@
-export { default as component } from "../../../../src/routes/monster-overlay/+page.svelte";
+export { default as component } from "../../../../src/routes/main/settings/hotkeys/+page.svelte";

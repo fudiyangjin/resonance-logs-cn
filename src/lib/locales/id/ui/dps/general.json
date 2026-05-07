@@ -1,0 +1,16 @@
+{
+  "history": "Riwayat",
+  "meterSettings": "Pengaturan Meter",
+  "selectTabPrompt": "Pilih tab di atas untuk melihat pengaturan terperinci",
+  "settings": "Pengaturan",
+  "settings.debug": "Debug",
+  "settings.history": "Riwayat",
+  "settings.live": "Langsung",
+  "settings.network": "Jaringan",
+  "settings.shortcuts": "Hotkey",
+  "subtitle": "Pantau data combat dan statistik DPS secara real time",
+  "themes": "Tema",
+  "title": "Meter DPS",
+  "toggleWindow": "Alihkan Jendela DPS",
+  "viewHistory": "Lihat Riwayat"
+}

@@ -2,6 +2,7 @@
   import { invoke } from "@tauri-apps/api/core";
   import { listen } from "@tauri-apps/api/event";
   import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+  import { dev } from "$app/environment";
   import { onMount } from "svelte";
   import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
@@ -24,9 +25,15 @@
     LoggerDisplayMode,
     LoggerCategory,
   } from "$lib/event-logger-types";
-  import { localizeRawMonsterName } from "$lib/monster-mappings";
-  import { getLocalizedSceneName, localizeRawSceneName } from "$lib/scene-mappings";
-  import { uiT } from "$lib/i18n";
+  import {
+    decodeGearStatLine,
+    decodeGearStatLineByPairId,
+    decodeGearStatLinesForItem,
+    resolveItemName,
+    type GearStatLine,
+  } from "$lib/gear-stat-decoder";
+  import { uiT, type LocaleCode } from "$lib/i18n";
+  import { localizeRawSceneName } from "$lib/scene-mappings";
   import { SETTINGS } from "$lib/settings-store";
 
   const t = uiT("custom-triggers/logger", () => SETTINGS.live.general.state.language);
@@ -34,7 +41,18 @@
   type DisplayRow = EventLoggerEntry & { localId: number };
   type ContextMenuState = { x: number; y: number; row: DisplayRow } | null;
   type HeaderMenuState = { x: number; y: number; column: ColumnKey } | null;
-  type DetailsTab = "details" | "filters" | "settings";
+  type DetailsTab = "details" | "filters" | "settings" | "debug";
+
+  type EventLoggerFileStoragePayload = {
+    configuredDirectory: string | null;
+    resolvedDirectory: string;
+    usingDefault: boolean;
+    storeLogFiles: boolean;
+    includeRepeatedSnapshotRows: boolean;
+    deleteOlderThanDays: number | null;
+    captureCensusEnabled: boolean;
+    attributionCensusEnabled: boolean;
+  };
   type SortDirection = "asc" | "desc";
   type ColumnKey =
     | "time"
@@ -99,7 +117,7 @@
     { key: "counter", label: "Counter", enabledByDefault: true },
     { key: "encounter", label: "Encounter", enabledByDefault: true },
     { key: "scene", label: "Scene", enabledByDefault: true },
-    { key: "system", label: "System", enabledByDefault: true },
+    { key: "system", label: "System", enabledByDefault: false },
     { key: "hate", label: "Hate", enabledByDefault: true },
     { key: "chat", label: "Chat", enabledByDefault: true },
     { key: "item_drop", label: "Item Drop", enabledByDefault: true },
@@ -123,8 +141,6 @@
     SETTINGS.customTriggers.state.loggerVisibleColumns ??= { ...defaultColumnVisibility };
     SETTINGS.customTriggers.state.loggerStartWithMeter ??= false;
     SETTINGS.customTriggers.state.loggerReduceClutter ??= true;
-    SETTINGS.customTriggers.state.loggerCaptureEvents ??= true;
-    SETTINGS.customTriggers.state.loggerCaptureSnapshots ??= true;
   }
 
   ensureLoggerSettingsShape();
@@ -151,6 +167,12 @@
   let headerMenu = $state<HeaderMenuState>(null);
   let copyToast = $state<{ text: string; x: number; y: number } | null>(null);
   let detailsTab = $state<DetailsTab>("details");
+  let loggerFileStorage = $state<EventLoggerFileStoragePayload | null>(null);
+  let loggerFileStorageLoading = $state(false);
+  let loggerFileStorageError = $state("");
+  let exportingLoggerSession = $state(false);
+  let deleteOldFilesEnabled = $state(false);
+  let deleteOldFilesDaysInput = $state("30");
   let definitionEditor = $state<{
     row: DisplayRow;
     uid: number;
@@ -161,7 +183,11 @@
   let categorySelections = $state<Record<string, boolean>>({
     ...defaultCategorySelections,
   });
-  let actionSelections = $state<Record<string, boolean>>({});
+  let actionSelections = $state<Record<string, boolean>>({
+    panel_attr: false,
+    stream_limit: false,
+    connection_seen: false,
+  });
   let knownSelections = $state({ known: true, unknown: true });
   let sortState = $state<{ column: ColumnKey | null; direction: SortDirection }>({
     column: null,
@@ -187,83 +213,39 @@
     return trimmed;
   }
 
-  function replaceLiteral(value: string, search: string, replacement: string): string {
-    if (!search || search === replacement) return value;
-    return value.split(search).join(replacement);
+  function parsePositiveUid(value: unknown): number | null {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) return null;
+    return Math.trunc(parsed);
   }
 
-  function getLocalizedNameHint(row: DisplayRow): string {
-    const rawNameHint = normalizeLabel(row.nameHint);
-    if (!rawNameHint) return "";
-
-    if (row.category === "scene" || row.category === "live_totals") {
-      return Number.isFinite(Number(row.uid))
-        ? getLocalizedSceneName(Number(row.uid), rawNameHint)
-        : localizeRawSceneName(rawNameHint, rawNameHint);
-    }
-
-    if (row.category === "boss_hp" || row.category === "mob") {
-      return localizeRawMonsterName(rawNameHint, rawNameHint);
-    }
-
-    return rawNameHint;
+  function isNumericLikeLabel(value: string | null | undefined): boolean {
+    const trimmed = normalizeLabel(value);
+    return Boolean(trimmed) && /^\d+$/.test(trimmed);
   }
 
-  function getLocalizedSourceLabel(row: DisplayRow): string {
-    const rawSource = normalizeLabel(row.sourceLabel);
-    if (!rawSource) return "";
-
-    return rawSource;
+  function tryParseRawObject(value: unknown): Record<string, unknown> | null {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return value as Record<string, unknown>;
+    }
+    if (typeof value !== "string") return null;
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return null;
+    }
+    return null;
   }
 
-  function getLocalizedTargetLabel(row: DisplayRow): string {
-    const rawTarget = normalizeLabel(row.targetLabel);
-    if (!rawTarget) return "";
-
-    if (
-      row.category === "live_totals" ||
-      row.category === "player" ||
-      row.category === "boss_hp" ||
-      row.category === "mob" ||
-      row.category === "scene"
-    ) {
-      return localizeRawSceneName(rawTarget, rawTarget);
+  function tryGetRawChildObject(value: Record<string, unknown>, key: string): Record<string, unknown> | null {
+    const child = value[key];
+    if (child && typeof child === "object" && !Array.isArray(child)) {
+      return child as Record<string, unknown>;
     }
-
-    if (
-      row.category === "player_target_damage" ||
-      row.category === "player_target_skill_damage" ||
-      row.category === "player_target_skill_heal"
-    ) {
-      return localizeRawMonsterName(rawTarget, rawTarget);
-    }
-
-    return rawTarget;
-  }
-
-  function localizeSummaryText(row: DisplayRow, summary: string): string {
-    let nextSummary = summary;
-
-    const rawNameHint = normalizeLabel(row.nameHint);
-    const localizedNameHint = getLocalizedNameHint(row);
-    const rawSource = normalizeLabel(row.sourceLabel);
-    const localizedSource = getLocalizedSourceLabel(row);
-    const rawTarget = normalizeLabel(row.targetLabel);
-    const localizedTarget = getLocalizedTargetLabel(row);
-
-    if (rawNameHint && localizedNameHint) {
-      nextSummary = replaceLiteral(nextSummary, rawNameHint, localizedNameHint);
-    }
-
-    if (rawSource && localizedSource) {
-      nextSummary = replaceLiteral(nextSummary, rawSource, localizedSource);
-    }
-
-    if (rawTarget && localizedTarget) {
-      nextSummary = replaceLiteral(nextSummary, rawTarget, localizedTarget);
-    }
-
-    return nextSummary;
+    return null;
   }
 
   function formatTime(tsMs: number): string {
@@ -305,6 +287,65 @@
     return resolved;
   }
 
+  const knownEntityLabels = $derived.by(() => {
+    const labels = new Map<number, string>();
+
+    for (const row of rows) {
+      const ownUid = parsePositiveUid(row.uid);
+      const preferredName = getPreferredName(row);
+      if (ownUid && preferredName) {
+        labels.set(ownUid, preferredName);
+      }
+
+      const sourceUid = parsePositiveUid(row.sourceUid);
+      const sourceLabel = normalizeLabel(row.sourceLabel);
+      if (sourceUid && sourceLabel && !isNumericLikeLabel(sourceLabel)) {
+        labels.set(sourceUid, sourceLabel);
+      }
+
+      const targetUid = parsePositiveUid(row.targetUid);
+      const targetLabel = normalizeLabel(row.targetLabel);
+      if (targetUid && targetLabel && !isNumericLikeLabel(targetLabel)) {
+        labels.set(targetUid, targetLabel);
+      }
+
+      const rawObject = tryParseRawObject(row.raw);
+      if (!rawObject) continue;
+
+      const playerUid = parsePositiveUid(rawObject["playerUid"]);
+      const playerName = normalizeLabel(typeof rawObject["playerName"] === "string" ? rawObject["playerName"] : null);
+      if (playerUid && playerName && !isNumericLikeLabel(playerName)) {
+        labels.set(playerUid, playerName);
+      }
+
+      const sourceUidRaw = parsePositiveUid(rawObject["sourceUid"]);
+      const sourceNameRaw = normalizeLabel(typeof rawObject["sourceName"] === "string" ? rawObject["sourceName"] : null);
+      if (sourceUidRaw && sourceNameRaw && !isNumericLikeLabel(sourceNameRaw)) {
+        labels.set(sourceUidRaw, sourceNameRaw);
+      }
+
+      const targetUidRaw = parsePositiveUid(rawObject["targetUid"]);
+      const targetNameRaw = normalizeLabel(typeof rawObject["targetName"] === "string" ? rawObject["targetName"] : null);
+      if (targetUidRaw && targetNameRaw && !isNumericLikeLabel(targetNameRaw)) {
+        labels.set(targetUidRaw, targetNameRaw);
+      }
+    }
+
+    return labels;
+  });
+
+  function resolveKnownEntityLabel(uid: unknown): string {
+    const normalizedUid = parsePositiveUid(uid);
+    if (!normalizedUid) return "";
+    return knownEntityLabels.get(normalizedUid) ?? "";
+  }
+
+  function formatEntityReference(uid: unknown): string {
+    const normalizedUid = parsePositiveUid(uid);
+    if (!normalizedUid) return t("meta.none", "—");
+    return resolveKnownEntityLabel(normalizedUid) || String(normalizedUid);
+  }
+
   function getDisplayLabel(row: DisplayRow): string {
     return buildLoggerDisplayLabel(
       row,
@@ -331,15 +372,614 @@
     return !explicitName;
   }
 
-  function getSummary(row: DisplayRow): string {
-    const summary =
-      normalizeText(row.summary) ||
-      normalizeText(row.value) ||
-      getLocalizedNameHint(row) ||
-      normalizeText(row.nameHint) ||
-      t("meta.none", "—");
+  function currentLoggerLocale(): LocaleCode {
+    return SETTINGS.live.general.state.language as LocaleCode;
+  }
 
-    return localizeSummaryText(row, summary);
+  function localizeSceneLabel(value: string | null | undefined): string {
+    const normalized = normalizeLabel(value);
+    if (!normalized) return "";
+    return localizeRawSceneName(normalized, normalized, currentLoggerLocale());
+  }
+
+  function shouldLocalizeSourceAsScene(row: DisplayRow): boolean {
+    return row.category === "scene";
+  }
+
+  function shouldLocalizeTargetAsScene(row: DisplayRow): boolean {
+    return (
+      row.category === "scene" ||
+      row.category === "live_totals" ||
+      row.category === "player" ||
+      row.category === "boss_hp" ||
+      row.category === "mob" ||
+      row.category === "encounter"
+    );
+  }
+
+  function getActionLabel(action: string): string {
+    return t(`action.${action}`, action);
+  }
+
+  function getSummary(row: DisplayRow): string {
+    const gearStatSummary = getGearStatSummary(row);
+    if (gearStatSummary) return gearStatSummary;
+
+    const itemDropSummary = getItemDropFallbackSummary(row);
+    if (itemDropSummary) return itemDropSummary;
+
+    const summary = normalizeText(row.summary);
+    if (summary) {
+      if (row.category === "scene" || row.category === "encounter") {
+        return appendSummaryDetail(localizeSceneLabel(summary) || summary, gearStatSummary);
+      }
+      if (row.category === "buff" || row.category === "monster_buff") {
+        const resolvedSummary = summary
+          .replace(/host=(\d+)/g, (_match, uid) => `host=${formatEntityReference(uid)}`)
+          .replace(/src=(\d+)/g, (_match, uid) => `src=${formatEntityReference(uid)}`)
+          .replace(/boss=(\d+)/g, (_match, uid) => `boss=${formatEntityReference(uid)}`);
+        return appendSummaryDetail(resolvedSummary, gearStatSummary);
+      }
+      return appendSummaryDetail(summary, gearStatSummary);
+    }
+
+    const value = normalizeText(row.value);
+    if (value) return appendSummaryDetail(value, gearStatSummary);
+
+    const nameHint = normalizeText(row.nameHint);
+    if (nameHint) {
+      if (row.category === "scene" || row.category === "encounter") {
+        return appendSummaryDetail(localizeSceneLabel(nameHint) || nameHint, gearStatSummary);
+      }
+      return appendSummaryDetail(nameHint, gearStatSummary);
+    }
+
+    if (gearStatSummary) return gearStatSummary;
+
+    return t("meta.none", "—");
+  }
+
+  function getItemDropGearItemId(row: DisplayRow): number | null {
+    const decoded = getItemDropDecoded(row);
+    if (!decoded) return null;
+
+    return getItemDropActualGearItemId(decoded);
+  }
+
+  function getGearStatSummary(row: DisplayRow): string {
+    const decoded = getItemDropDecoded(row);
+    if (!isGearItemDrop(row, decoded)) return "";
+
+    const gearItemId = getItemDropGearItemId(row);
+    if (!gearItemId) return "";
+
+    const gearSlot = getGearSlotLabel(gearItemId);
+    const detailLines = decoded ? getItemDropDetailStatLines(decoded) : [];
+    const pairIds = decoded ? getItemDropPairIds(decoded) : [];
+    const matchedLines = decodeGearStatLinesByPairIds(gearItemId, pairIds);
+    const statLines = matchedLines.length || pairIds.length ? matchedLines : decodeGearStatLinesForItem(gearItemId);
+    const statSummary = formatGearStatDetails(statLines, detailLines, canShowGearSpecialStats(decoded));
+
+    return formatGearDropSummary(gearSlot, statSummary);
+  }
+
+  function canShowGearSpecialStats(decoded: Record<string, unknown> | null): boolean {
+    if (!decoded) return false;
+
+    const rawQualityLabel = typeof decoded["qualityLabel"] === "string" ? decoded["qualityLabel"].trim().toLowerCase() : "";
+    if (["white", "green", "blue", "purple", "unknown"].includes(rawQualityLabel)) return false;
+    if (
+      rawQualityLabel.includes("gold") ||
+      rawQualityLabel.includes("legendary") ||
+      rawQualityLabel.includes("orange")
+    ) {
+      return true;
+    }
+
+    const qualityTier = parseFiniteInteger(decoded["qualityTier"]);
+    if (qualityTier === null || [0, 1, 2, 3, 4, 40, 60, 80, 100].includes(qualityTier)) return false;
+    return qualityTier > 4;
+  }
+
+  function formatGearDropSummary(slotLabel: string, statSummary: string): string {
+    return [slotLabel, statSummary].filter(Boolean).join(": ");
+  }
+
+  function getGearSlotLabel(itemId: number): string {
+    const group = Math.trunc(itemId / 10000);
+
+    switch (group) {
+      case 200:
+        return "Weapon";
+      case 201:
+        return "Mask";
+      case 202:
+        return "Armor";
+      case 203:
+        return "Gloves";
+      case 204:
+        return "Boots";
+      case 205:
+        return "Earring";
+      case 206:
+        return "Necklace";
+      case 207:
+        return "Ring";
+      case 208:
+        return "Bracelet (L)";
+      case 209:
+        return "Bracelet (R)";
+      case 210:
+        return "Charm";
+      default:
+        return "";
+    }
+  }
+
+  function getItemDropDecoded(row: DisplayRow): Record<string, unknown> | null {
+    if (row.category !== "item_drop") return null;
+
+    const rawObject = tryParseRawObject(row.raw);
+    if (!rawObject) return null;
+
+    return tryGetRawChildObject(rawObject, "decoded");
+  }
+
+  function isGearItemDrop(row: DisplayRow, decoded = getItemDropDecoded(row)): boolean {
+    if (row.category !== "item_drop" || !decoded) return false;
+
+    const itemKind = typeof decoded["itemKind"] === "string" ? decoded["itemKind"].trim().toLowerCase() : "";
+    if (itemKind && itemKind !== "gear") return false;
+
+    const gearItemId = getItemDropActualGearItemId(decoded);
+    if (!gearItemId) return false;
+
+    return decoded["isGear"] === true || itemKind === "gear" || getItemDropPairIds(decoded).length > 0;
+  }
+
+  function getItemDropActualGearItemId(decoded: Record<string, unknown>): number | null {
+    const candidates = [
+      parsePositiveUid(decoded["detailGearInstanceId"]),
+      parsePositiveUid(decoded["instanceId"]),
+    ];
+
+    return candidates.find((candidate) => candidate !== null && itemIdLooksLikeGearItem(candidate)) ?? null;
+  }
+
+  function itemIdLooksLikeGearItem(itemId: number): boolean {
+    return itemId >= 2_000_000 && itemId <= 2_200_000;
+  }
+
+  function isLegendaryRewardBoxItemId(itemId: number | null): boolean {
+    return itemId !== null && itemId >= 1_049_705 && itemId <= 1_049_740;
+  }
+
+  function getItemDropDisplayQualityLabel(row: DisplayRow): string {
+    const decoded = getItemDropDecoded(row);
+    if (!decoded) return "";
+
+    const itemIds = [
+      parsePositiveUid(decoded["detailGearInstanceId"]),
+      parsePositiveUid(decoded["instanceId"]),
+      parsePositiveUid(row.uid),
+    ];
+
+    if (itemIds.some(isLegendaryRewardBoxItemId)) return "Legendary";
+
+    const itemName = itemIds
+      .map((itemId) => (itemId ? resolveItemName(itemId, "en") : null))
+      .find((name) => typeof name === "string" && name.trim());
+    if (itemName && /\blegendary\b/i.test(itemName)) return "Legendary";
+
+    const gearItemId = getItemDropActualGearItemId(decoded);
+    const qualityTier = parseFiniteInteger(decoded["qualityTier"]);
+    const rawQualityLabel = typeof decoded["qualityLabel"] === "string" ? decoded["qualityLabel"].trim() : "";
+    const displayQualityLabel =
+      typeof decoded["displayQualityLabel"] === "string" ? decoded["displayQualityLabel"].trim() : "";
+
+    if (!gearItemId) return "";
+
+    const normalizedQuality = (displayQualityLabel || rawQualityLabel).toLowerCase();
+    if (qualityTier === 5 || normalizedQuality === "quality 5" || normalizedQuality === "gold") {
+      return "Legendary";
+    }
+
+    if (["purple", "blue", "green", "white"].includes(normalizedQuality)) {
+      return normalizedQuality.charAt(0).toUpperCase() + normalizedQuality.slice(1);
+    }
+
+    return displayQualityLabel || "";
+  }
+
+  function getItemDropFallbackSummary(row: DisplayRow): string {
+    const decoded = getItemDropDecoded(row);
+    if (!decoded) return "";
+
+    const itemIds = [
+      parsePositiveUid(decoded["detailGearInstanceId"]),
+      parsePositiveUid(decoded["instanceId"]),
+      parsePositiveUid(row.uid),
+    ];
+    if (itemIds.some(isLegendaryRewardBoxItemId)) return "Legendary gift box";
+
+    if (!getItemDropActualGearItemId(decoded) && /^(?:Gold|Quality 5)\s+item\b/i.test(normalizeText(row.summary))) {
+      return formatItemDropTechnicalSummary(decoded);
+    }
+
+    return "";
+  }
+
+  function formatItemDropTechnicalSummary(decoded: Record<string, unknown>): string {
+    const configId = parsePositiveUid(decoded["configId"]);
+    const instanceId = parsePositiveUid(decoded["instanceId"]);
+    const lineCount = parseFiniteInteger(decoded["lineCountHint"]);
+    const detailCandidates = decoded["matchedDetailCandidates"];
+    const detailSize =
+      Array.isArray(detailCandidates) && detailCandidates[0] && typeof detailCandidates[0] === "object"
+        ? parseFiniteInteger((detailCandidates[0] as Record<string, unknown>)["payload_len"] ?? (detailCandidates[0] as Record<string, unknown>)["payloadLen"])
+        : null;
+    return [
+      "Item",
+      configId ? `cfg=${configId}` : "",
+      instanceId ? `inst=${instanceId}` : "",
+      lineCount !== null ? `lines=${lineCount}` : "",
+      detailSize !== null ? `details=${detailSize}B` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  function getItemDropPairIds(decoded: Record<string, unknown>): number[] {
+    return dedupeNumbers([
+      ...getItemDropDetailStatPairIds(decoded),
+      ...parseItemLinePairIds(decoded["field10Pairs"]),
+      ...parseItemLinePairIds(decoded["field11Pairs"]),
+      ...parseItemLinePairIds(decoded["field14Pairs"]),
+      ...parsePositiveNumberArray(decoded["field10Ids"]),
+      ...parsePositiveNumberArray(decoded["field11Ids"]),
+      ...parsePositiveNumberArray(decoded["field14Ids"]),
+    ]);
+  }
+
+  function getItemDropDetailStatPairIds(decoded: Record<string, unknown>): number[] {
+    const rawLines = decoded["detailStatLines"];
+    if (!Array.isArray(rawLines)) return [];
+
+    return rawLines
+      .flatMap((entry, index) => {
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+        const rawEntry = entry as Record<string, unknown>;
+        const pairId = parsePositiveUid(rawEntry["pairId"] ?? rawEntry["pair_id"]);
+        if (!pairId) return [];
+        return [{ slot: parseFiniteInteger(rawEntry["slot"]) ?? index, pairId }];
+      })
+      .sort((left, right) => left.slot - right.slot)
+      .map((line) => line.pairId);
+  }
+
+  type ItemDropDetailStatLine = {
+    slot: number;
+    pairId: number;
+    value: number;
+  };
+
+  type GearSubStatSummaryLine = {
+    label: string;
+    pairSlot: number;
+    hasDetail: boolean;
+    value: number | null;
+  };
+
+  const gearSubStatLabels = new Set(["Crit", "Haste", "Luck", "Mastery", "Versatility"]);
+
+  function getItemDropDetailStatLines(decoded: Record<string, unknown>): ItemDropDetailStatLine[] {
+    const rawLines = decoded["detailStatLines"];
+    if (!Array.isArray(rawLines)) return getLegacyItemDropDetailStatLines(decoded);
+
+    const lines = rawLines
+      .flatMap((entry) => {
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+        const rawEntry = entry as Record<string, unknown>;
+        const slot = parseFiniteInteger(rawEntry["slot"]);
+        const pairId = parsePositiveUid(rawEntry["pairId"] ?? rawEntry["pair_id"]);
+        const value = parseFiniteInteger(rawEntry["value"]);
+        if (slot === null || !pairId || value === null) return [];
+        return [{ slot, pairId, value }];
+      })
+      .sort((left, right) => left.slot - right.slot);
+
+    return lines.length ? lines : getLegacyItemDropDetailStatLines(decoded);
+  }
+
+  function getLegacyItemDropDetailStatLines(decoded: Record<string, unknown>): ItemDropDetailStatLine[] {
+    const rawCandidates = decoded["matchedDetailCandidates"];
+    if (!Array.isArray(rawCandidates)) return [];
+
+    const pairIds = getItemDropPairIds(decoded);
+    if (pairIds.length === 0) return [];
+
+    const itemId =
+      parsePositiveUid(decoded["detailGearInstanceId"]) ??
+      parsePositiveUid(decoded["instanceId"]) ??
+      parsePositiveUid(decoded["configId"]);
+    const blockedValues = new Set([
+      ...pairIds,
+      parsePositiveUid(decoded["detailGearConfigId"]),
+      parsePositiveUid(decoded["detailGearInstanceId"]),
+      parsePositiveUid(decoded["configId"]),
+      parsePositiveUid(decoded["instanceId"]),
+      parsePositiveUid(decoded["perfectionValue"]),
+      parsePositiveUid(decoded["perfectionCap"]),
+    ].filter((value): value is number => Boolean(value)));
+
+    for (const candidate of rawCandidates) {
+      if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) continue;
+      const rawCandidate = candidate as Record<string, unknown>;
+      const rawValues = rawCandidate["firstValues"] ?? rawCandidate["first_values"];
+      if (!Array.isArray(rawValues)) continue;
+      const values = rawValues.flatMap((value) => {
+        const parsed = parseFiniteInteger(value);
+        return parsed === null ? [] : [parsed];
+      });
+      const itemIndex = itemId ? values.findIndex((value) => value === itemId) : -1;
+      const displayValues = values
+        .slice(Math.max(0, itemIndex + 1))
+        .filter((value) => value >= 180 && value <= 5000 && !blockedValues.has(value));
+      const dedupedValues = dedupeNumbers(displayValues);
+      if (dedupedValues.length === 0) continue;
+
+      return pairIds.slice(0, dedupedValues.length).flatMap((pairId, slot) => {
+        const value = dedupedValues[slot];
+        return value === undefined ? [] : [{ slot, pairId, value }];
+      });
+    }
+
+    return [];
+  }
+
+  function formatGearStatDetails(
+    statLines: GearStatLine[],
+    detailLines: ItemDropDetailStatLine[],
+    includeSpecialStats: boolean,
+  ): string {
+    const specialStats = includeSpecialStats
+      ? statLines
+          .filter(isGearSpecialStatLine)
+          .sort((left, right) => left.pairSlot - right.pairSlot)
+          .map(formatGearSpecialStatLine)
+          .filter(Boolean)
+      : [];
+
+    const subStatSummary = formatGearSubStatDetails(statLines, detailLines);
+
+    return [...specialStats, subStatSummary].filter(Boolean).join(", ");
+  }
+
+  function formatGearSubStatDetails(statLines: GearStatLine[], detailLines: ItemDropDetailStatLine[]): string {
+    const detailPairIds = new Set(detailLines.map((line) => line.pairId));
+    const subStats = statLines
+      .filter((line) => isGearSubStatLabel(line.label))
+      .map((line): GearSubStatSummaryLine => {
+        const decodedValue =
+          typeof line.value === "number" && line.valueKind !== "unknown" && line.valueKind !== "locked"
+            ? line.value
+            : null;
+        return {
+          label: canonicalGearSubStatLabel(line.label),
+          pairSlot: line.pairSlot,
+          hasDetail: detailPairIds.has(line.pairId),
+          value: decodedValue,
+        };
+      })
+      .sort(compareGearSubStatsForSummary);
+
+    const summaries: string[] = [];
+    const seenLabels = new Set<string>();
+    for (const line of subStats) {
+      if (seenLabels.has(line.label)) continue;
+      seenLabels.add(line.label);
+      summaries.push(formatGearSubStatSummaryLine(line));
+    }
+
+    return summaries.join(" > ");
+  }
+
+  function formatGearSubStatSummaryLine(line: GearSubStatSummaryLine): string {
+    if (line.value === null) return line.label;
+    return `${line.label} ${line.value}`;
+  }
+
+  function isGearSpecialStatLine(line: GearStatLine): boolean {
+    return line.lane === "legendary-affix" && !isGearSubStatLabel(line.label) && line.canDisplayValue;
+  }
+
+  function formatGearSpecialStatLine(line: GearStatLine): string {
+    if (!line.valueText) return "";
+    return `${canonicalGearSpecialStatLabel(line.label)} +${line.valueText}`;
+  }
+
+  function canonicalGearSpecialStatLabel(label: string): string {
+    const trimmed = label.trim();
+    if (trimmed === "Attack SPD") return "Attack Speed";
+    if (trimmed === "All Resistance") return "All Element Resistance";
+    return trimmed;
+  }
+
+  function canonicalGearSubStatLabel(label: string): string {
+    const normalized = label.trim().toLowerCase();
+    if (normalized.includes("crit")) return "Crit";
+    if (normalized.includes("haste")) return "Haste";
+    if (normalized.includes("luck")) return "Luck";
+    if (normalized.includes("mastery")) return "Mastery";
+    if (normalized.includes("versatility")) return "Versatility";
+    return label.trim();
+  }
+
+  function isGearSubStatLabel(label: string): boolean {
+    return gearSubStatLabels.has(canonicalGearSubStatLabel(label));
+  }
+
+  function compareGearSubStatsForSummary(left: GearSubStatSummaryLine, right: GearSubStatSummaryLine): number {
+    if (left.pairSlot !== right.pairSlot) return left.pairSlot - right.pairSlot;
+    if (left.hasDetail !== right.hasDetail) return left.hasDetail ? -1 : 1;
+    return left.label.localeCompare(right.label, undefined, { sensitivity: "base" });
+  }
+
+  function decodeGearStatLinesByPairIds(itemId: number, pairIds: number[]): GearStatLine[] {
+    const lines: GearStatLine[] = [];
+    const seenSlots = new Set<number>();
+
+    for (const [index, pairId] of pairIds.entries()) {
+      const itemLine = decodeGearStatLine({ itemId, pairId });
+      const pairLine = decodeGearStatLineByPairId({ itemId, pairId, pairSlot: index });
+      const line = chooseGearStatLineForSummary(itemLine, pairLine);
+      if (!line || seenSlots.has(line.pairSlot)) continue;
+      seenSlots.add(line.pairSlot);
+      lines.push(line);
+    }
+
+    return lines.sort((left, right) => left.pairSlot - right.pairSlot);
+  }
+
+  function chooseGearStatLineForSummary(itemLine: GearStatLine | null, pairLine: GearStatLine | null): GearStatLine | null {
+    if (!itemLine) return pairLine;
+    if (!pairLine) return itemLine;
+    if (!itemLine.canDisplayValue && pairLine.canDisplayValue && areCompatibleGearStatLabels(itemLine.label, pairLine.label)) {
+      return pairLine;
+    }
+    return itemLine;
+  }
+
+  function areCompatibleGearStatLabels(left: string, right: string): boolean {
+    const leftSpecial = canonicalGearSpecialStatLabel(left);
+    const rightSpecial = canonicalGearSpecialStatLabel(right);
+    if (leftSpecial === rightSpecial) return true;
+
+    const leftSub = canonicalGearSubStatLabel(left);
+    const rightSub = canonicalGearSubStatLabel(right);
+    return gearSubStatLabels.has(leftSub) && leftSub === rightSub;
+  }
+
+  function parsePositiveNumberArray(value: unknown): number[] {
+    if (!Array.isArray(value)) return [];
+
+    return value.flatMap((entry) => {
+      const parsed = parsePositiveUid(entry);
+      return parsed ? [parsed] : [];
+    });
+  }
+
+  function dedupeNumbers(values: number[]): number[] {
+    return Array.from(new Set(values));
+  }
+
+  function parseItemLinePairIds(value: unknown): number[] {
+    if (!Array.isArray(value)) return [];
+
+    return value.flatMap((entry) => {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+      const rawEntry = entry as Record<string, unknown>;
+      const parsed = parsePositiveUid(rawEntry["id"] ?? rawEntry["pairId"] ?? rawEntry["pair_id"]);
+      return parsed ? [parsed] : [];
+    });
+  }
+
+  function parseFiniteInteger(value: unknown): number | null {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return null;
+    return Math.trunc(parsed);
+  }
+
+  function appendSummaryDetail(summary: string, detail: string): string {
+    if (!detail) return summary;
+    if (!summary) return detail;
+    if (summary.includes(detail)) return summary;
+    return `${summary} ${detail}`;
+  }
+
+  function syncLoggerFileStorageControls(payload: EventLoggerFileStoragePayload | null) {
+    deleteOldFilesEnabled = Boolean(payload?.deleteOlderThanDays);
+    deleteOldFilesDaysInput = String(payload?.deleteOlderThanDays ?? 30);
+  }
+
+  function parseDeleteOldFilesDays(): number | null {
+    if (!deleteOldFilesEnabled) return null;
+    const parsed = Math.floor(Number(deleteOldFilesDaysInput));
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return 30;
+    }
+    return parsed;
+  }
+
+  async function refreshLoggerFileStorage() {
+    loggerFileStorageLoading = true;
+    loggerFileStorageError = "";
+    try {
+      loggerFileStorage = await invoke<EventLoggerFileStoragePayload>("get_event_logger_file_storage_settings");
+      syncLoggerFileStorageControls(loggerFileStorage);
+    } catch (error) {
+      console.error("[event-logger] failed to load logger file storage settings", error);
+      loggerFileStorageError = String(error);
+    } finally {
+      loggerFileStorageLoading = false;
+    }
+  }
+
+  async function saveLoggerFileStorage() {
+    if (!loggerFileStorage) return;
+    loggerFileStorageLoading = true;
+    loggerFileStorageError = "";
+    try {
+      loggerFileStorage = await invoke<EventLoggerFileStoragePayload>(
+        "set_event_logger_file_storage_settings",
+        {
+          storeLogFiles: loggerFileStorage.storeLogFiles,
+          includeRepeatedSnapshotRows: loggerFileStorage.includeRepeatedSnapshotRows,
+          deleteOlderThanDays: parseDeleteOldFilesDays(),
+          captureCensusEnabled: loggerFileStorage.captureCensusEnabled,
+          attributionCensusEnabled: loggerFileStorage.attributionCensusEnabled,
+        },
+      );
+      syncLoggerFileStorageControls(loggerFileStorage);
+    } catch (error) {
+      console.error("[event-logger] failed to save logger file storage settings", error);
+      loggerFileStorageError = String(error);
+    } finally {
+      loggerFileStorageLoading = false;
+    }
+  }
+
+  async function openLoggerFileStorageFolder() {
+    loggerFileStorageError = "";
+    try {
+      await invoke("open_event_logger_session_dir");
+    } catch (error) {
+      console.error("[event-logger] failed to open logger file storage folder", error);
+      loggerFileStorageError = String(error);
+    }
+  }
+
+  async function exportLoggerSession() {
+    if (exportingLoggerSession) return;
+
+    exportingLoggerSession = true;
+    loggerFileStorageError = "";
+    try {
+      const exportedPath = await invoke<string | null>("export_event_logger_session");
+      showToast(
+        exportedPath
+          ? t("debug.exported", "Exported event log")
+          : t("debug.noSessionToExport", "No event log to export"),
+        40,
+        40,
+      );
+    } catch (error) {
+      console.error("[event-logger] failed to export logger session", error);
+      loggerFileStorageError = String(error);
+      showToast(t("debug.exportFailed", "Export failed"), 40, 40);
+    } finally {
+      exportingLoggerSession = false;
+    }
   }
 
   function getKnownLabel(row: DisplayRow): string {
@@ -347,17 +987,38 @@
   }
 
   function getSourceText(row: DisplayRow): string {
-    return (
-      getLocalizedSourceLabel(row) ||
-      (Number.isFinite(Number(row.sourceUid)) ? String(row.sourceUid) : t("meta.none", "—"))
-    );
+    const sourceLabel = normalizeLabel(row.sourceLabel);
+    if (sourceLabel && !isNumericLikeLabel(sourceLabel)) {
+      if (shouldLocalizeSourceAsScene(row)) {
+        return localizeSceneLabel(sourceLabel) || sourceLabel;
+      }
+      return sourceLabel;
+    }
+
+    const resolved = resolveKnownEntityLabel(row.sourceUid);
+    if (resolved) return resolved;
+
+    const sourceUid = parsePositiveUid(row.sourceUid);
+    return sourceUid ? String(sourceUid) : t("meta.none", "—");
   }
 
   function getTargetText(row: DisplayRow): string {
-    return (
-      getLocalizedTargetLabel(row) ||
-      (Number.isFinite(Number(row.targetUid)) ? String(row.targetUid) : t("meta.none", "—"))
-    );
+    const itemDropQualityLabel = getItemDropDisplayQualityLabel(row);
+    if (row.category === "item_drop") return itemDropQualityLabel || t("meta.none", "—");
+
+    const targetLabel = normalizeLabel(row.targetLabel);
+    if (targetLabel && !isNumericLikeLabel(targetLabel)) {
+      if (shouldLocalizeTargetAsScene(row)) {
+        return localizeSceneLabel(targetLabel) || targetLabel;
+      }
+      return targetLabel;
+    }
+
+    const resolved = resolveKnownEntityLabel(row.targetUid);
+    if (resolved) return resolved;
+
+    const targetUid = parsePositiveUid(row.targetUid);
+    return targetUid ? String(targetUid) : t("meta.none", "—");
   }
 
   function getColumnLabel(columnKey: ColumnKey): string {
@@ -441,14 +1102,6 @@
     }
 
     return deduped;
-  }
-
-  function matchesCaptureVisibility(row: EventLoggerEntry | DisplayRow): boolean {
-    if (row.action === "snapshot") {
-      return SETTINGS.customTriggers.state.loggerCaptureSnapshots !== false;
-    }
-
-    return SETTINGS.customTriggers.state.loggerCaptureEvents !== false;
   }
 
   function isColumnVisible(columnKey: ColumnKey): boolean {
@@ -578,19 +1231,16 @@
     knownSelections = { known: nextValue, unknown: nextValue };
   }
 
+  const selectedRow = $derived(rows.find((row) => row.localId === selectedRowId) ?? null);
+
   const allCategoriesSelected = $derived(
     loggerCategories.every((item) => categorySelections[item.key] !== false),
   );
 
   const availableActions = $derived.by(() =>
-    Array.from(
-      new Set(
-        rows
-          .filter((row) => matchesCaptureVisibility(row))
-          .map((row) => normalizeText(row.action))
-          .filter(Boolean),
-      ),
-    ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    Array.from(new Set(rows.map((row) => normalizeText(row.action)).filter(Boolean))).sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" }),
+    ),
   );
 
   const allActionsSelected = $derived(
@@ -605,10 +1255,6 @@
     const keyword = searchText.trim().toLowerCase();
 
     const nextRows = rows.filter((row) => {
-      if (!matchesCaptureVisibility(row)) {
-        return false;
-      }
-
       if (categorySelections[row.category] === false) {
         return false;
       }
@@ -663,9 +1309,6 @@
     return sortState.direction === "asc" ? sorted : sorted.reverse();
   });
 
-
-  const selectedRow = $derived(filteredRows.find((row) => row.localId === selectedRowId) ?? null);
-
   const selectedRowRaw = $derived.by(() => {
     if (!selectedRow) return "";
     const raw = selectedRow.raw ?? selectedRow;
@@ -676,89 +1319,6 @@
   const tableMinWidth = $derived.by(() =>
     visibleColumns.reduce((sum, columnKey) => sum + columnWidths[columnKey], 0),
   );
-
-  function getColumnCellText(row: DisplayRow, columnKey: ColumnKey): string {
-    switch (columnKey) {
-      case "time":
-        return formatTime(row.tsMs);
-      case "category":
-        return getCategoryLabel(row.category);
-      case "action":
-        return normalizeText(row.action) || t("meta.none", "—");
-      case "name": {
-        const nameText = getNameCellText(row);
-        const uidText = shouldShowUidChip(row) ? String(row.uid ?? "") : "";
-        return [nameText, uidText].filter(Boolean).join(" ") || t("meta.none", "—");
-      }
-      case "known":
-        return getKnownLabel(row);
-      case "uid":
-        return Number.isFinite(Number(row.uid)) ? String(row.uid) : t("meta.none", "—");
-      case "source":
-        return getSourceText(row);
-      case "target":
-        return getTargetText(row);
-      case "stacks":
-        return Number.isFinite(Number(row.stacks)) ? String(row.stacks) : t("meta.none", "—");
-      case "duration":
-        return formatDuration(row.durationMs);
-      case "summary":
-        return getSummary(row);
-    }
-  }
-
-  function getColumnAutoWidth(columnKey: ColumnKey): number {
-    if (typeof document === "undefined") {
-      return columnWidths[columnKey];
-    }
-
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    if (!context) {
-      return columnWidths[columnKey];
-    }
-
-    const bodySample = document.querySelector("tbody td") as HTMLElement | null;
-    const headerSample = document.querySelector("thead th") as HTMLElement | null;
-    const bodyFont = bodySample ? getComputedStyle(bodySample).font : "13px system-ui";
-    const headerFont = headerSample ? getComputedStyle(headerSample).font : bodyFont;
-
-    context.font = headerFont;
-    let maxWidth = context.measureText(getColumnLabel(columnKey)).width;
-
-    context.font = bodyFont;
-    for (const row of filteredRows) {
-      const nextWidth = context.measureText(getColumnCellText(row, columnKey)).width;
-      if (nextWidth > maxWidth) {
-        maxWidth = nextWidth;
-      }
-    }
-
-    return Math.max(columnMinimumWidths[columnKey], Math.ceil(maxWidth + 28));
-  }
-
-  function autoFitColumn(columnKey: ColumnKey, event?: MouseEvent) {
-    event?.preventDefault();
-    event?.stopPropagation();
-
-    columnWidths = {
-      ...columnWidths,
-      [columnKey]: getColumnAutoWidth(columnKey),
-    };
-  }
-
-  const selectedRowSummary = $derived(selectedRow ? getSummary(selectedRow) : t("meta.none", "—"));
-
-  async function syncEventLoggerCaptureOptions() {
-    try {
-      await invoke("set_event_logger_capture_options", {
-        captureEvents: SETTINGS.customTriggers.state.loggerCaptureEvents,
-        captureSnapshots: SETTINGS.customTriggers.state.loggerCaptureSnapshots,
-      });
-    } catch (error) {
-      console.error("[event-logger] failed to sync capture options", error);
-    }
-  }
 
   function showToast(message: string, x?: number, y?: number) {
     if (copyToastTimer) {
@@ -930,8 +1490,8 @@
     void (async () => {
       await loadCustomDefinitions();
       await setEventLoggerAlwaysOnTop(SETTINGS.customTriggers.state.loggerAlwaysOnTop);
-      await syncEventLoggerCaptureOptions();
       await hydrateFromBuffer();
+      await refreshLoggerFileStorage();
       unlisten = await listen<EventLoggerBatchPayload>("event-logger-batch", (event) => {
         if (Array.isArray(event.payload?.entries)) {
           queue.push(...event.payload.entries);
@@ -1011,6 +1571,13 @@
         {paused ? t("controls.resume", "Resume") : t("controls.pause", "Pause")}
       </Button>
       <Button variant="outline" onclick={() => void clearRows()}>{t("controls.clear", "Clear")}</Button>
+      <Button
+        variant="destructive"
+        disabled={exportingLoggerSession}
+        onclick={() => void exportLoggerSession()}
+      >
+        {exportingLoggerSession ? t("controls.exporting", "Exporting...") : t("controls.endExport", "End / Export")}
+      </Button>
     </div>
   </header>
 
@@ -1035,9 +1602,7 @@
                     type="button"
                     class="absolute top-0 right-0 h-full w-3 cursor-col-resize opacity-0 transition-opacity group-hover:opacity-100"
                     aria-label={`Resize ${getColumnLabel(columnKey)} column`}
-                    title={t("context.resizeColumn", "Drag to resize. Double-click to auto-fit.")}
                     onmousedown={(event) => startColumnResize(columnKey, event)}
-                    ondblclick={(event) => autoFitColumn(columnKey, event)}
                   >
                     <span class="mx-auto block h-full w-px bg-border/70"></span>
                   </button>
@@ -1058,7 +1623,7 @@
                   {:else if columnKey === "category"}
                     <td class="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">{getCategoryLabel(row.category)}</td>
                   {:else if columnKey === "action"}
-                    <td class="px-3 py-2 text-xs uppercase text-muted-foreground whitespace-nowrap">{row.action}</td>
+                    <td class="px-3 py-2 text-xs uppercase text-muted-foreground whitespace-nowrap">{getActionLabel(row.action)}</td>
                   {:else if columnKey === "name"}
                     <td class="px-3 py-2 select-text">
                       <div class="flex items-center gap-2 overflow-hidden">
@@ -1110,12 +1675,13 @@
       </div>
     </section>
 
-    <aside class="flex min-h-0 flex-col overflow-hidden bg-card/40 p-4">
+    <aside class="min-h-0 overflow-auto bg-card/40 p-4">
       <div class="mb-4 border-b border-border/60 pb-3">
         <div class="mb-3 flex items-center gap-2">
           <Button size="sm" variant={detailsTab === "details" ? "default" : "outline"} onclick={() => (detailsTab = "details")}>{t("tabs.details", "Details")}</Button>
           <Button size="sm" variant={detailsTab === "filters" ? "default" : "outline"} onclick={() => (detailsTab = "filters")}>{t("tabs.filters", "Filters")}</Button>
           <Button size="sm" variant={detailsTab === "settings" ? "default" : "outline"} onclick={() => (detailsTab = "settings")}>{t("tabs.settings", "Settings")}</Button>
+          <Button size="sm" variant={detailsTab === "debug" ? "default" : "outline"} onclick={() => (detailsTab = "debug")}>{t("tabs.debug", "Debug")}</Button>
         </div>
 
         {#if detailsTab === "details"}
@@ -1149,17 +1715,22 @@
             <h2 class="text-base font-semibold">{t("filters.title", "Filters")}</h2>
             <p class="text-xs text-muted-foreground">{t("details.empty", "Select an event to inspect its payload.")}</p>
           </div>
-        {:else}
+        {:else if detailsTab === "settings"}
           <div>
             <h2 class="text-base font-semibold">{t("settings.title", "Settings")}</h2>
             <p class="text-xs text-muted-foreground">{t("settings.startWithMeterDescription", "Open the event logger automatically when the app starts.")}</p>
+          </div>
+        {:else}
+          <div>
+            <h2 class="text-base font-semibold">{t("debug.title", "Debug")}</h2>
+            <p class="text-xs text-muted-foreground">{t("debug.subtitle", "Store scene rollover log files for debugging and packet verification.")}</p>
           </div>
         {/if}
       </div>
 
       {#if detailsTab === "details"}
         {#if selectedRow}
-          <div class="flex min-h-0 flex-1 flex-col gap-3">
+          <div class="space-y-3">
             <div class="grid gap-3 sm:grid-cols-2">
               <div class="rounded-lg border border-border/60 bg-background/60 p-3 text-sm">
                 <div class="text-xs uppercase tracking-wide text-muted-foreground">{t("table.category", "Category")}</div>
@@ -1179,27 +1750,19 @@
               </div>
             </div>
 
-            <section class="rounded-lg border border-border/60 bg-background/60 p-3 text-sm">
-              <div class="text-xs uppercase tracking-wide text-muted-foreground">{t("details.summary", "Summary")}</div>
-              <div class="mt-2 whitespace-pre-wrap break-words text-sm leading-6">{selectedRowSummary}</div>
-            </section>
-
-            <section class="flex min-h-0 flex-1 flex-col rounded-lg border border-border/60 bg-background/60 p-3 text-sm">
-              <div class="mb-2 text-xs uppercase tracking-wide text-muted-foreground">{t("details.detailedSummary", "Detailed Summary")}</div>
-              <textarea
-                readonly
-                class="h-full min-h-[260px] w-full flex-1 resize-none rounded-md border border-border/50 bg-background/70 p-3 font-mono text-xs leading-5"
-                value={selectedRowRaw}
-              ></textarea>
-            </section>
+            <textarea
+              readonly
+              class="min-h-[420px] w-full rounded-lg border border-border/60 bg-background/60 p-3 font-mono text-xs leading-5"
+              value={selectedRowRaw}
+            ></textarea>
           </div>
         {:else}
-          <div class="flex flex-1 items-center rounded-lg border border-dashed border-border/60 bg-background/40 px-4 py-10 text-center text-sm text-muted-foreground">
-            <div class="w-full">{t("details.empty", "Select an event to inspect its payload.")}</div>
+          <div class="rounded-lg border border-dashed border-border/60 bg-background/40 px-4 py-10 text-center text-sm text-muted-foreground">
+            {t("details.empty", "Select an event to inspect its payload.")}
           </div>
         {/if}
       {:else if detailsTab === "filters"}
-        <div class="flex-1 space-y-4 overflow-auto pr-1">
+        <div class="space-y-4">
           <section class="rounded-lg border border-border/60 bg-background/50 p-4">
             <div class="mb-3 flex items-center justify-between gap-3">
               <h3 class="text-sm font-semibold">{t("filters.categories", "Categories")}</h3>
@@ -1256,7 +1819,7 @@
                       onchange={(event) => setActionSelected(actionValue, (event.currentTarget as HTMLInputElement).checked)}
                       class="h-4 w-4"
                     />
-                    <span>{actionValue}</span>
+                    <span>{getActionLabel(actionValue)}</span>
                   </label>
                 {/each}
               {/if}
@@ -1295,8 +1858,8 @@
             </div>
           </section>
         </div>
-      {:else}
-        <div class="flex-1 space-y-4 overflow-auto pr-1">
+      {:else if detailsTab === "settings"}
+        <div class="space-y-4">
           <section class="rounded-lg border border-border/60 bg-background/50 p-4">
             <h3 class="mb-3 text-sm font-semibold">{t("settings.behavior", "Behavior")}</h3>
             <div class="space-y-2">
@@ -1330,42 +1893,6 @@
           </section>
 
           <section class="rounded-lg border border-border/60 bg-background/50 p-4">
-            <h3 class="mb-3 text-sm font-semibold">{t("settings.eventCapture", "Event Capture")}</h3>
-            <div class="grid gap-2 sm:grid-cols-2">
-              <label class="flex items-center gap-3 rounded-md border border-border/50 bg-card/40 px-3 py-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={SETTINGS.customTriggers.state.loggerCaptureEvents}
-                  onchange={(event) => {
-                    SETTINGS.customTriggers.state.loggerCaptureEvents = (event.currentTarget as HTMLInputElement).checked;
-                    void syncEventLoggerCaptureOptions();
-                  }}
-                  class="h-4 w-4"
-                />
-                <div>
-                  <div>{t("settings.eventCapture.events", "Events")}</div>
-                  <div class="text-xs text-muted-foreground">{t("settings.eventCapture.eventsDescription", "Capture non-snapshot event rows in the logger.")}</div>
-                </div>
-              </label>
-              <label class="flex items-center gap-3 rounded-md border border-border/50 bg-card/40 px-3 py-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={SETTINGS.customTriggers.state.loggerCaptureSnapshots}
-                  onchange={(event) => {
-                    SETTINGS.customTriggers.state.loggerCaptureSnapshots = (event.currentTarget as HTMLInputElement).checked;
-                    void syncEventLoggerCaptureOptions();
-                  }}
-                  class="h-4 w-4"
-                />
-                <div>
-                  <div>{t("settings.eventCapture.snapshots", "Snapshots")}</div>
-                  <div class="text-xs text-muted-foreground">{t("settings.eventCapture.snapshotsDescription", "Capture state snapshot rows such as live totals and entity snapshots.")}</div>
-                </div>
-              </label>
-            </div>
-          </section>
-
-          <section class="rounded-lg border border-border/60 bg-background/50 p-4">
             <h3 class="mb-3 text-sm font-semibold">{t("settings.headers", "Headers")}</h3>
             <div class="grid gap-2 sm:grid-cols-2">
               {#each columnOrder as columnKey (columnKey)}
@@ -1379,6 +1906,174 @@
                   <span>{getColumnLabel(columnKey)}</span>
                 </label>
               {/each}
+            </div>
+          </section>
+        </div>
+      {:else}
+        <div class="space-y-4">
+          <section class="rounded-lg border border-border/60 bg-background/50 p-4">
+            <div class="mb-3 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 class="text-sm font-semibold">{t("debug.logFiles", "Log Files")}</h3>
+                <p class="mt-1 text-xs text-muted-foreground">{t("debug.description", "Automatically save the current Event Logger session to AppData\\EventLogs whenever the scene changes, the encounter resets, or the live loop exits.")}</p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onclick={() => void refreshLoggerFileStorage()}>
+                  {loggerFileStorageLoading ? t("debug.loading", "Loading…") : t("debug.reload", "Reload")}
+                </Button>
+                <Button size="sm" variant="outline" onclick={() => void openLoggerFileStorageFolder()}>
+                  {t("debug.openFolder", "Open Folder")}
+                </Button>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 rounded-md border border-border/50 bg-card/40 px-3 py-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={loggerFileStorage?.storeLogFiles ?? false}
+                  onchange={(event) => {
+                    if (!loggerFileStorage) return;
+                    loggerFileStorage = {
+                      ...loggerFileStorage,
+                      storeLogFiles: (event.currentTarget as HTMLInputElement).checked,
+                    };
+                    void saveLoggerFileStorage();
+                  }}
+                  class="h-4 w-4"
+                />
+                <div>
+                  <div>{t("debug.storeLogFiles", "Store Log Files")}</div>
+                  <div class="text-xs text-muted-foreground">{t("debug.storeLogFilesDescription", "Writes Event Logger scene rollover files to your AppData EventLogs folder for debugging.")}</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-3 rounded-md border border-border/50 bg-card/40 px-3 py-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={loggerFileStorage?.includeRepeatedSnapshotRows ?? false}
+                  disabled={!(loggerFileStorage?.storeLogFiles ?? false)}
+                  onchange={(event) => {
+                    if (!loggerFileStorage) return;
+                    loggerFileStorage = {
+                      ...loggerFileStorage,
+                      includeRepeatedSnapshotRows: (event.currentTarget as HTMLInputElement).checked,
+                    };
+                    void saveLoggerFileStorage();
+                  }}
+                  class="h-4 w-4"
+                />
+                <div>
+                  <div>{t("debug.includeRepeatedSnapshotRows", "Include repeated snapshot rows")}</div>
+                  <div class="text-xs text-muted-foreground">{t("debug.includeRepeatedSnapshotRowsDescription", "Off by default. When disabled, exported log files omit repeated idle snapshot rows to keep file sizes smaller.")}</div>
+                </div>
+              </label>
+
+              {#if dev}
+                <label class="flex items-center gap-3 rounded-md border border-border/50 bg-card/40 px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={loggerFileStorage?.captureCensusEnabled ?? false}
+                    disabled={!loggerFileStorage}
+                    onchange={(event) => {
+                      if (!loggerFileStorage) return;
+                      loggerFileStorage = {
+                        ...loggerFileStorage,
+                        captureCensusEnabled: (event.currentTarget as HTMLInputElement).checked,
+                      };
+                      void saveLoggerFileStorage();
+                    }}
+                    class="h-4 w-4"
+                  />
+                  <div>
+                    <div>{t("debug.captureCensus", "Capture census")}</div>
+                    <div class="text-xs text-muted-foreground">{t("debug.captureCensusDescription", "Dev-only packet census rows for service and fragment discovery. Off on every app start.")}</div>
+                  </div>
+                </label>
+
+                <label class="flex items-center gap-3 rounded-md border border-border/50 bg-card/40 px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={loggerFileStorage?.attributionCensusEnabled ?? false}
+                    disabled={!loggerFileStorage}
+                    onchange={(event) => {
+                      if (!loggerFileStorage) return;
+                      loggerFileStorage = {
+                        ...loggerFileStorage,
+                        attributionCensusEnabled: (event.currentTarget as HTMLInputElement).checked,
+                      };
+                      void saveLoggerFileStorage();
+                    }}
+                    class="h-4 w-4"
+                  />
+                  <div>
+                    <div>{t("debug.attributionCensus", "Attribution census")}</div>
+                    <div class="text-xs text-muted-foreground">{t("debug.attributionCensusDescription", "Dev-only aggregate damage-id census for attribution discovery. Off on every app start.")}</div>
+                  </div>
+                </label>
+              {/if}
+
+              <label class="flex items-center gap-3 rounded-md border border-border/50 bg-card/40 px-3 py-2 text-sm">
+                <input
+                  type="checkbox"
+                  bind:checked={deleteOldFilesEnabled}
+                  onchange={() => void saveLoggerFileStorage()}
+                  class="h-4 w-4"
+                />
+                <div class="flex flex-1 flex-wrap items-center gap-3">
+                  <div>
+                    <div>{t("debug.deleteOldFiles", "Delete log files older than")}</div>
+                    <div class="text-xs text-muted-foreground">{t("debug.deleteOldFilesDescription", "Automatically removes older log files from the EventLogs folder.")}</div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      bind:value={deleteOldFilesDaysInput}
+                      class="w-24 rounded-md border border-border/60 bg-background px-3 py-2 text-sm"
+                      disabled={!deleteOldFilesEnabled}
+                      onchange={() => void saveLoggerFileStorage()}
+                    />
+                    <span class="text-xs text-muted-foreground">{t("debug.days", "days")}</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <section class="rounded-lg border border-border/60 bg-background/50 p-4">
+            <h3 class="mb-3 text-sm font-semibold">{t("debug.storagePath", "Storage Path")}</h3>
+            <div class="space-y-3 text-sm">
+              <div class="space-y-1">
+                <div class="text-xs uppercase tracking-wide text-muted-foreground">{t("debug.currentFolder", "Current folder")}</div>
+                <div class="break-all rounded-md border border-border/60 bg-background px-3 py-2 font-mono text-xs">
+                  {#if loggerFileStorage}
+                    {loggerFileStorage.resolvedDirectory}
+                  {:else if loggerFileStorageLoading}
+                    {t("debug.loading", "Loading…")}
+                  {:else}
+                    {t("debug.unavailable", "Unavailable")}
+                  {/if}
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <div class="text-xs uppercase tracking-wide text-muted-foreground">{t("debug.filePattern", "File pattern")}</div>
+                <div class="rounded-md border border-border/60 bg-background px-3 py-2 font-mono text-xs">
+                  EventLogs\&lt;YYYY.MM.DD&gt;\&lt;characterName&gt;.&lt;characterUid&gt;.&lt;sceneName&gt;.&lt;DDMMYYYY-HHMMSS&gt;.json
+                </div>
+              </div>
+
+              <p class="text-xs text-muted-foreground">
+                {t("debug.sceneChangeNotice", "Files are written automatically when the scene changes, the encounter resets, or the live loop exits. Each day is stored in its own YYYY.MM.DD subfolder.")}
+              </p>
+
+              {#if loggerFileStorageError}
+                <div class="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+                  {loggerFileStorageError}
+                </div>
+              {/if}
             </div>
           </section>
         </div>

@@ -53,6 +53,8 @@
     setBuffDisplayMode: (mode: BuffDisplayMode) => void;
     textBuffMaxVisible: number;
     setTextBuffMaxVisible: (value: number) => void;
+    iconBuffStackCounterSize: number;
+    setIconBuffStackCounterSize: (value: number) => void;
     textBuffPanelStyle: TextBuffPanelStyle;
     setTextBuffPanelDisplayMode: (value: TextBuffPanelDisplayMode) => void;
     setTextBuffPanelGap: (value: number) => void;
@@ -93,7 +95,7 @@
     moveGroupPriority: (groupId: string, buffId: number, direction: "up" | "down") => void;
   }
 
-  const t = uiT("skill-monitor/buff-monitor", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/buff-monitor", () => SETTINGS.live.general.state.language);
 
   const defaultCategoryLabels: Record<BuffCategoryKey, string> = {
     food: "Food",
@@ -139,6 +141,8 @@
     setBuffDisplayMode,
     textBuffMaxVisible,
     setTextBuffMaxVisible,
+    iconBuffStackCounterSize,
+    setIconBuffStackCounterSize,
     textBuffPanelStyle,
     setTextBuffPanelDisplayMode,
     setTextBuffPanelGap,
@@ -562,6 +566,19 @@
         step="1"
         value={textBuffMaxVisible}
         oninput={(event) => setTextBuffMaxVisible(Number((event.currentTarget as HTMLInputElement).value))}
+      />
+    </label>
+    <label class="block text-xs text-muted-foreground max-w-md">
+      {t("buff.stackCounterSize", "Stack counter size")}: {iconBuffStackCounterSize}px
+      <input
+        class="w-full mt-1"
+        type="range"
+        min="6"
+        max="24"
+        step="1"
+        value={iconBuffStackCounterSize}
+        oninput={(event) =>
+          setIconBuffStackCounterSize(Number((event.currentTarget as HTMLInputElement).value))}
       />
     </label>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl">

@@ -5,6 +5,11 @@
 import { RuneStore } from "@tauri-store/svelte";
 import type { BuffCategoryKey } from "./config/buff-name-table";
 import type { LocaleCode, SkillIdDisplayMode } from "./i18n";
+import {
+  cloneHeaderCustomLayout,
+  type HeaderCustomLayout,
+  type HeaderLayoutMode,
+} from "./live-header-layout";
 
 export const DEFAULT_STATS = {
   totalDmg: true,
@@ -21,6 +26,8 @@ export const DEFAULT_STATS = {
   luckyDmgRate: false,
   hits: false,
   hitsPerMinute: false,
+  property: true,
+  damageMode: true,
 };
 
 export const DEFAULT_HISTORY_STATS = {
@@ -38,6 +45,13 @@ export const DEFAULT_HISTORY_STATS = {
   luckyDmgRate: false,
   hits: false,
   hitsPerMinute: false,
+  property: true,
+  damageMode: true,
+};
+
+export const DEFAULT_HISTORY_DPS_SKILL_STATS = {
+  ...DEFAULT_HISTORY_STATS,
+  hits: true,
 };
 
 export const DEFAULT_HISTORY_TANKED_STATS = {
@@ -72,7 +86,7 @@ export const DEFAULT_DPS_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'cri
 export const DEFAULT_HEAL_PLAYER_COLUMN_ORDER = ['totalDmg', 'dps', 'effectiveTotal', 'effectiveDps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
 export const DEFAULT_HEAL_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'effectiveTotal', 'effectiveDps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
 export const DEFAULT_TANKED_PLAYER_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
-export const DEFAULT_TANKED_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute'];
+export const DEFAULT_TANKED_SKILL_COLUMN_ORDER = ['totalDmg', 'dps', 'dmgPct', 'critRate', 'critDmgRate', 'luckyRate', 'luckyDmgRate', 'hits', 'hitsPerMinute', 'property', 'damageMode'];
 
 // Default sort settings for live tables
 export const DEFAULT_LIVE_SORT_SETTINGS = {
@@ -133,6 +147,7 @@ export type PanelAttrConfig = {
 export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   {
     attrId: 11720,
+    labelKey: "panelAttr.11720",
     label: "攻速",
     color: "#6ee7ff",
     enabled: false,
@@ -140,6 +155,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11710,
+    labelKey: "panelAttr.11710",
     label: "暴击率",
     color: "#ff7a7a",
     enabled: false,
@@ -147,6 +163,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11930,
+    labelKey: "panelAttr.11930",
     label: "急速",
     color: "#facc15",
     enabled: false,
@@ -154,6 +171,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11780,
+    labelKey: "panelAttr.11780",
     label: "幸运",
     color: "#a78bfa",
     enabled: false,
@@ -161,6 +179,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11940,
+    labelKey: "panelAttr.11940",
     label: "精通",
     color: "#60a5fa",
     enabled: false,
@@ -168,6 +187,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11950,
+    labelKey: "panelAttr.11950",
     label: "全能",
     color: "#34d399",
     enabled: false,
@@ -175,6 +195,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11760,
+    labelKey: "panelAttr.11760",
     label: "冷却缩减",
     color: "#f97316",
     enabled: false,
@@ -182,6 +203,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11960,
+    labelKey: "panelAttr.11960",
     label: "冷却加速",
     color: "#38bdf8",
     enabled: false,
@@ -189,6 +211,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11010,
+    labelKey: "panelAttr.11010",
     label: "力量",
     color: "#f87171",
     enabled: false,
@@ -196,6 +219,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11020,
+    labelKey: "panelAttr.11020",
     label: "智力",
     color: "#818cf8",
     enabled: false,
@@ -203,6 +227,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11030,
+    labelKey: "panelAttr.11030",
     label: "敏捷",
     color: "#4ade80",
     enabled: false,
@@ -210,6 +235,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11330,
+    labelKey: "panelAttr.11330",
     label: "物理攻击",
     color: "#fb923c",
     enabled: false,
@@ -217,6 +243,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11340,
+    labelKey: "panelAttr.11340",
     label: "魔法攻击",
     color: "#c084fc",
     enabled: false,
@@ -224,6 +251,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11730,
+    labelKey: "panelAttr.11730",
     label: "施法速度",
     color: "#22d3ee",
     enabled: false,
@@ -231,6 +259,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 12510,
+    labelKey: "panelAttr.12510",
     label: "暴击伤害",
     color: "#f472b6",
     enabled: false,
@@ -238,6 +267,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 12530,
+    labelKey: "panelAttr.12530",
     label: "幸运伤害倍率",
     color: "#d8b4fe",
     enabled: false,
@@ -245,6 +275,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 12540,
+    labelKey: "panelAttr.12540",
     label: "格挡伤害减免",
     color: "#86efac",
     enabled: false,
@@ -252,6 +283,7 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
   },
   {
     attrId: 11970,
+    labelKey: "panelAttr.11970",
     label: "格挡",
     color: "#fbbf24",
     enabled: false,
@@ -267,6 +299,7 @@ export type OverlayPositions = {
   panelAttrGroup: Point;
   buffUptimeGroup: Point;
   customPanelGroup: Point;
+  shieldDetailGroup: Point;
   iconBuffPositions: Record<number, Point>;
   standaloneIconPositions?: Record<string, Point>;
   skillDurationPositions: Record<number, Point>;
@@ -280,6 +313,7 @@ export type OverlaySizes = {
   panelAttrGroupScale: number;
   buffUptimeGroupScale: number;
   customPanelGroupScale: number;
+  shieldDetailGroupScale: number;
   panelAttrGap: number;
   panelAttrFontSize: number;
   panelAttrColumnGap: number;
@@ -291,6 +325,7 @@ export type OverlaySizes = {
   buffUptimeNameColumnAdjust: number;
   buffUptimeEncounterColumnAdjust: number;
   buffUptimeTrueColumnAdjust: number;
+  iconBuffStackCounterSize: number;
   iconBuffSizes: Record<number, number>;
   standaloneIconSizes?: Record<string, number>;
   skillDurationSizes: Record<number, number>;
@@ -304,6 +339,7 @@ export type OverlayVisibility = {
   showPanelAttrGroup: boolean;
   showBuffUptimeGroup: boolean;
   showCustomPanelGroup: boolean;
+  showShieldDetailGroup: boolean;
 };
 
 export type CustomPanelStyle = {
@@ -357,6 +393,15 @@ export type BuffUptimeTextStyle = {
   outlineColor: string;
   outlineStrength: number;
   showTitle: boolean;
+};
+
+export type ShieldDetailStyle = {
+  fontSize: number;
+  barWidth: number;
+  gap: number;
+  hpColor: string;
+  shieldColor: string;
+  healShieldColor: string;
 };
 
 export type BuffUptimeTrackingMode = "self" | "global";
@@ -437,6 +482,7 @@ export type SkillMonitorProfile = {
   buffUptimeMinStacksEnabled?: BuffUptimeMinStacksEnabledMap;
   buffUptimeMinStacks?: BuffUptimeMinStacksMap;
   buffUptimeTextStyle?: BuffUptimeTextStyle;
+  shieldDetailStyle?: ShieldDetailStyle;
   textBuffMaxVisible: number;
   showTrueUptime?: boolean;
   showBuffUptimeActiveIndicator?: boolean;
@@ -466,6 +512,7 @@ function createDefaultOverlayPositions(): OverlayPositions {
     panelAttrGroup: { x: 700, y: 40 },
     buffUptimeGroup: { x: 700, y: 220 },
     customPanelGroup: { x: 700, y: 320 },
+    shieldDetailGroup: { x: 40, y: 550 },
     iconBuffPositions: {},
     standaloneIconPositions: {},
     skillDurationPositions: {},
@@ -481,6 +528,7 @@ function createDefaultOverlaySizes(): OverlaySizes {
     panelAttrGroupScale: 1,
     buffUptimeGroupScale: 1,
     customPanelGroupScale: 1,
+    shieldDetailGroupScale: 1,
     panelAttrGap: 4,
     panelAttrFontSize: 14,
     panelAttrColumnGap: 12,
@@ -492,6 +540,7 @@ function createDefaultOverlaySizes(): OverlaySizes {
     buffUptimeNameColumnAdjust: 0,
     buffUptimeEncounterColumnAdjust: 0,
     buffUptimeTrueColumnAdjust: 0,
+    iconBuffStackCounterSize: 9,
     iconBuffSizes: {},
     standaloneIconSizes: {},
     skillDurationSizes: {},
@@ -507,6 +556,7 @@ function createDefaultOverlayVisibility(): OverlayVisibility {
     showPanelAttrGroup: true,
     showBuffUptimeGroup: true,
     showCustomPanelGroup: true,
+    showShieldDetailGroup: false,
   };
 }
 
@@ -555,6 +605,17 @@ function createDefaultBuffUptimeTextStyle(): BuffUptimeTextStyle {
     outlineColor: "#000000",
     outlineStrength: 2,
     showTitle: true,
+  };
+}
+
+function createDefaultShieldDetailStyle(): ShieldDetailStyle {
+  return {
+    fontSize: 13,
+    barWidth: 220,
+    gap: 4,
+    hpColor: "#ef4444",
+    shieldColor: "#38bdf8",
+    healShieldColor: "#22c55e",
   };
 }
 
@@ -617,6 +678,7 @@ export function createDefaultSkillMonitorProfile(
     buffUptimeTrackingModes: {},
     buffUptimeActiveIndicators: {},
     buffUptimeTextStyle: createDefaultBuffUptimeTextStyle(),
+    shieldDetailStyle: createDefaultShieldDetailStyle(),
     textBuffMaxVisible: 10,
     showTrueUptime: true,
     showBuffUptimeActiveIndicator: true,
@@ -740,6 +802,7 @@ const DEFAULT_GENERAL_SETTINGS: {
   eventUpdateRateMs: number;
   language: LocaleCode;
   skillIdDisplayMode: SkillIdDisplayMode;
+  showHoverDescriptions: boolean;
 } = {
   showYourName: "Show Your Name",
   showOthersName: "Show Others' Name",
@@ -761,6 +824,7 @@ const DEFAULT_GENERAL_SETTINGS: {
   eventUpdateRateMs: 200,
   language: 'zh-CN',
   skillIdDisplayMode: 'off',
+  showHoverDescriptions: true,
 };
 
 export const DEFAULT_CLASS_COLORS: Record<string, string> = {
@@ -838,6 +902,9 @@ export const DEFAULT_FONT_SIZES = {
 
 // Live table customization defaults
 export const DEFAULT_LIVE_TABLE_SETTINGS = {
+  compactMode: false,
+  compactDpsKey: "dps" as "dps" | "tdps",
+
   // Player row settings
   playerRowHeight: 28,
   playerFontSize: 13,
@@ -1145,6 +1212,8 @@ const DEFAULT_SETTINGS = {
     tankedSkillBreakdown: { ...DEFAULT_STATS },
     tableCustomization: { ...DEFAULT_LIVE_TABLE_SETTINGS },
     headerCustomization: {
+      headerLayoutMode: "classic" as HeaderLayoutMode,
+      headerCustomLayout: cloneHeaderCustomLayout() as HeaderCustomLayout,
       windowPadding: 12,
       headerPadding: 8,
       showTimer: true,
@@ -1160,6 +1229,7 @@ const DEFAULT_SETTINGS = {
       showTotalDps: true,
       showBossHealth: true,
       showNavigationTabs: true,
+      showDeathTab: false,
       timerLabelFontSize: 12,
       timerFontSize: 18,
       activeTimerFontSize: 18,
@@ -1182,6 +1252,7 @@ const DEFAULT_SETTINGS = {
       bossHealthNameFontSize: 14,
       bossHealthValueFontSize: 14,
       bossHealthPercentFontSize: 14,
+      bossHealthLayout: "vertical" as "vertical" | "horizontal",
       navTabFontSize: 11,
       navTabPaddingX: 14,
       navTabPaddingY: 6,
@@ -1190,7 +1261,7 @@ const DEFAULT_SETTINGS = {
   history: {
     general: { ...DEFAULT_GENERAL_SETTINGS },
     dpsPlayers: { ...DEFAULT_HISTORY_STATS },
-    dpsSkillBreakdown: { ...DEFAULT_HISTORY_STATS },
+    dpsSkillBreakdown: { ...DEFAULT_HISTORY_DPS_SKILL_STATS },
     healPlayers: { ...DEFAULT_HISTORY_HEAL_STATS },
     healSkillBreakdown: { ...DEFAULT_HISTORY_STATS },
     tankedPlayers: { ...DEFAULT_HISTORY_TANKED_STATS },
@@ -1472,12 +1543,16 @@ export const settings = {
 
 
 export function normalizePersistedSettings(): void {
+  mergeFlatDefaults(SETTINGS.live.general.state as MutableRecord, DEFAULT_SETTINGS.live.general);
+  mergeFlatDefaults(SETTINGS.live.tableCustomization.state as MutableRecord, DEFAULT_SETTINGS.live.tableCustomization);
+  mergeFlatDefaults(SETTINGS.live.headerCustomization.state as MutableRecord, DEFAULT_SETTINGS.live.headerCustomization);
   mergeFlatDefaults(SETTINGS.live.dps.players.state as MutableRecord, DEFAULT_SETTINGS.live.dpsPlayers);
   mergeFlatDefaults(SETTINGS.live.dps.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.live.dpsSkillBreakdown);
   mergeFlatDefaults(SETTINGS.live.heal.players.state as MutableRecord, DEFAULT_SETTINGS.live.healPlayers);
   mergeFlatDefaults(SETTINGS.live.heal.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.live.healSkillBreakdown);
   mergeFlatDefaults(SETTINGS.live.tanked.players.state as MutableRecord, DEFAULT_SETTINGS.live.tankedPlayers);
   mergeFlatDefaults(SETTINGS.live.tanked.skills.state as MutableRecord, DEFAULT_SETTINGS.live.tankedSkillBreakdown);
+  mergeFlatDefaults(SETTINGS.history.general.state as MutableRecord, DEFAULT_SETTINGS.history.general);
   mergeFlatDefaults(SETTINGS.history.dps.players.state as MutableRecord, DEFAULT_SETTINGS.history.dpsPlayers);
   mergeFlatDefaults(SETTINGS.history.dps.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.history.dpsSkillBreakdown);
   mergeFlatDefaults(SETTINGS.history.heal.players.state as MutableRecord, DEFAULT_SETTINGS.history.healPlayers);

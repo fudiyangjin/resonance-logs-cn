@@ -1,23 +1,37 @@
-use crate::live::commands_models::{HateEntry, PanelAttrState};
+use crate::live::commands_models::{HateEntry, PanelAttrState, ShieldDetailEntry};
 use crate::live::opcodes_models::{AttrType, AttrValue, Entity};
 use blueprotobuf_lib::blueprotobuf::EActorState;
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+#[derive(Debug, Clone)]
+pub struct DeathEvent {
+    pub uid: i64,
+    pub timestamp_ms: u128,
+}
 
 #[derive(Debug, Default)]
 pub struct EntityAttrStore {
     attrs: HashMap<i64, HashMap<AttrType, AttrValue>>,
     hate_lists: HashMap<i64, Vec<HateEntry>>,
+    fight_resource_ids: HashMap<i64, Vec<i32>>,
     temp_attrs: HashMap<i32, i32>,
     local_player_uid: i64,
     panel_attr_values: HashMap<i32, i32>,
     cd_dirty: bool,
     panel_dirty_attrs: Vec<PanelAttrState>,
+    shield_detail_entries: Vec<ShieldDetailEntry>,
+    shield_detail_dirty: bool,
+    death_events: Vec<DeathEvent>,
 }
 
 #[derive(Debug, Default)]
 pub struct AttrChanges {
     pub cd_dirty: bool,
     pub panel_dirty_attrs: Vec<PanelAttrState>,
+    pub shield_detail_dirty: bool,
+    pub shield_detail_entries: Vec<ShieldDetailEntry>,
+    pub death_events: Vec<DeathEvent>,
 }
 
 impl EntityAttrStore {
@@ -25,11 +39,15 @@ impl EntityAttrStore {
         Self {
             attrs: HashMap::with_capacity(attr_entries),
             hate_lists: HashMap::new(),
+            fight_resource_ids: HashMap::new(),
             temp_attrs: HashMap::new(),
             local_player_uid: 0,
             panel_attr_values: HashMap::new(),
             cd_dirty: false,
             panel_dirty_attrs: Vec::with_capacity(8),
+            shield_detail_entries: Vec::new(),
+            shield_detail_dirty: false,
+            death_events: Vec::new(),
         }
     }
 
@@ -37,7 +55,12 @@ impl EntityAttrStore {
         self.local_player_uid = uid;
     }
 
+    pub fn local_player_uid(&self) -> i64 {
+        self.local_player_uid
+    }
+
     pub fn set_attr(&mut self, uid: i64, attr_type: AttrType, value: AttrValue) -> bool {
+        let was_dead = matches!(attr_type, AttrType::ActorState) && self.is_dead(uid);
         let changed = self
             .attrs
             .entry(uid)
@@ -56,6 +79,16 @@ impl EntityAttrStore {
         {
             self.cd_dirty = true;
         }
+        if matches!(attr_type, AttrType::ActorState) {
+            let is_dead_now = self.is_dead(uid);
+            if !was_dead && is_dead_now {
+                let timestamp_ms = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis();
+                self.death_events.push(DeathEvent { uid, timestamp_ms });
+            }
+        }
         true
     }
 
@@ -73,6 +106,24 @@ impl EntityAttrStore {
         self.panel_attr_values.get(&attr_id).copied()
     }
 
+    pub fn set_fight_resource_ids(&mut self, uid: i64, ids: Vec<i32>) -> bool {
+        let changed = self
+            .fight_resource_ids
+            .get(&uid)
+            .is_none_or(|prev| prev.as_slice() != ids.as_slice());
+        if !changed {
+            return false;
+        }
+        self.fight_resource_ids.insert(uid, ids);
+        true
+    }
+
+    pub fn fight_resource_ids(&self, uid: i64) -> &[i32] {
+        self.fight_resource_ids
+            .get(&uid)
+            .map_or(&[], std::vec::Vec::as_slice)
+    }
+
     pub fn set_temp_attr(&mut self, attr_id: i32, value: i32) -> bool {
         let prev = self.temp_attrs.insert(attr_id, value);
         if prev == Some(value) {
@@ -80,6 +131,10 @@ impl EntityAttrStore {
         }
         self.cd_dirty = true;
         true
+    }
+
+    pub fn temp_attr_value(&self, attr_id: i32) -> Option<i32> {
+        self.temp_attrs.get(&attr_id).copied()
     }
 
     pub fn attr(&self, uid: i64, attr_type: AttrType) -> Option<&AttrValue> {
@@ -161,15 +216,39 @@ impl EntityAttrStore {
         self.cd_dirty = true;
     }
 
+    pub fn set_shield_detail(&mut self, entries: Vec<ShieldDetailEntry>) {
+        self.shield_detail_entries = entries;
+        self.shield_detail_dirty = true;
+    }
+
     pub fn clear_all_entities(&mut self) {
         self.attrs.clear();
         self.hate_lists.clear();
+        self.fight_resource_ids.clear();
+        self.panel_dirty_attrs
+            .extend(self.panel_attr_values.keys().map(|attr_id| PanelAttrState {
+                attr_id: *attr_id,
+                value: 0,
+            }));
+        self.panel_attr_values.clear();
+        self.shield_detail_entries.clear();
+        self.shield_detail_dirty = true;
+        self.death_events.clear();
     }
 
     pub fn drain_changes(&mut self) -> AttrChanges {
+        let shield_dirty = std::mem::take(&mut self.shield_detail_dirty);
+        let shield_entries = if shield_dirty {
+            self.shield_detail_entries.clone()
+        } else {
+            Vec::new()
+        };
         AttrChanges {
             cd_dirty: std::mem::take(&mut self.cd_dirty),
             panel_dirty_attrs: std::mem::take(&mut self.panel_dirty_attrs),
+            shield_detail_dirty: shield_dirty,
+            shield_detail_entries: shield_entries,
+            death_events: std::mem::take(&mut self.death_events),
         }
     }
 }

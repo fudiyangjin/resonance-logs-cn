@@ -13,7 +13,7 @@
       await invoke("open_log_dir");
     } catch (e) {
       console.error(e);
-      toast.error("打开日志目录失败：" + e);
+      toast.error(`${t("openLogDirFailed", "Failed to open log folder:")} ${String(e)}`);
     }
   }
 
@@ -24,7 +24,7 @@
       const defaultName = `debug_${ts.getFullYear()}-${pad(ts.getMonth() + 1)}-${pad(ts.getDate())}_${pad(ts.getHours())}-${pad(ts.getMinutes())}-${pad(ts.getSeconds())}.zip`;
 
       const destinationPath = await save({
-        title: "保存调试压缩包",
+        title: t("bundleSaveTitle", "Save Diagnostics Bundle"),
         defaultPath: defaultName,
         filters: [{ name: "Zip", extensions: ["zip"] }],
       });
@@ -38,13 +38,13 @@
       });
       try {
         await navigator.clipboard.writeText(path);
-        toast.success("已创建调试压缩包（路径已复制）：" + path);
+        toast.success(`${t("bundleCreatedCopied", "Diagnostics bundle created and path copied:")} ${path}`);
       } catch {
-        toast.success("已创建调试压缩包：" + path);
+        toast.success(`${t("bundleCreated", "Diagnostics bundle created:")} ${path}`);
       }
     } catch (e) {
       console.error(e);
-      toast.error("创建调试压缩包失败：" + e);
+      toast.error(`${t("bundleFailed", "Failed to create diagnostics bundle:")} ${String(e)}`);
     }
   }
 </script>

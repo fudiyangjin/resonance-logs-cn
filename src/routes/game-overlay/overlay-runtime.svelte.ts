@@ -3,6 +3,7 @@ import type {
   BuffUpdateState,
   CounterUpdateState,
   LiveDataPayload,
+  ShieldDetailEntry,
   SkillCdState,
 } from "$lib/api";
 import type { BuffDefinition } from "$lib/config/buff-name-table";
@@ -29,7 +30,7 @@ export const overlayRuntime = $state({
   isMounted: false,
   cdMap: new Map<number, SkillCdState>(),
   skillDurationMap: new Map<number, SkillDurationState>(),
-  fightResValues: [] as number[],
+  fightResMap: new Map<number, number>(),
   buffMap: new Map<number, BuffUpdateState>(),
   localBuffs: [] as BuffUpdateState[],
   bossBuffLists: new Map<number, BuffUpdateState[]>(),
@@ -37,6 +38,8 @@ export const overlayRuntime = $state({
   nameCache: new Map<number, string>(),
   counterMap: new Map<number, CounterUpdateState>(),
   panelAttrMap: new Map<number, number>(),
+  shieldDetailEntries: [] as ShieldDetailEntry[],
+  shieldDetailHp: { current: 0, max: 0 },
   buffDefinitions: new Map<number, BuffDefinition>(),
   liveData: null as LiveDataPayload | null,
   uptimeTotals: new Map<string, BuffUptimeTotals>(),
@@ -57,8 +60,8 @@ export function skillDurationMap() {
   return overlayRuntime.skillDurationMap;
 }
 
-export function fightResValues() {
-  return overlayRuntime.fightResValues;
+export function fightResMap() {
+  return overlayRuntime.fightResMap;
 }
 
 export function buffMap() {
@@ -87,6 +90,14 @@ export function counterMap() {
 
 export function panelAttrMap() {
   return overlayRuntime.panelAttrMap;
+}
+
+export function shieldDetailEntries() {
+  return overlayRuntime.shieldDetailEntries;
+}
+
+export function shieldDetailHp() {
+  return overlayRuntime.shieldDetailHp;
 }
 
 export function buffDefinitions() {

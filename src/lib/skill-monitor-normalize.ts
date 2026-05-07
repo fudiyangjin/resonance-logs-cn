@@ -5,6 +5,7 @@ import {
   type OverlaySizes,
   type PanelAreaRowRef,
   type PanelAttrConfig,
+  type ShieldDetailStyle,
   type SkillMonitorProfile,
   type TextBuffPanelStyle,
 } from "$lib/settings-store";
@@ -16,6 +17,7 @@ export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   panelAttrGroupScale: 1,
   buffUptimeGroupScale: 1,
   customPanelGroupScale: 1,
+  shieldDetailGroupScale: 1,
   panelAttrGap: 4,
   panelAttrFontSize: 14,
   panelAttrColumnGap: 12,
@@ -27,6 +29,7 @@ export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   buffUptimeNameColumnAdjust: 0,
   buffUptimeEncounterColumnAdjust: 0,
   buffUptimeTrueColumnAdjust: 0,
+  iconBuffStackCounterSize: 9,
   iconBuffSizes: {},
   standaloneIconSizes: {},
   skillDurationSizes: {},
@@ -93,8 +96,10 @@ export function ensurePanelAttrs(
   const currentMap = new Map(current.map((item) => [item.attrId, item]));
   return AVAILABLE_PANEL_ATTRS.map((item) => {
     const existing = currentMap.get(item.attrId);
+    const labelKey = existing?.labelKey ?? item.labelKey;
     return {
       attrId: item.attrId,
+      ...(labelKey ? { labelKey } : {}),
       label: existing?.label ?? item.label,
       color: existing?.color ?? item.color,
       enabled: existing?.enabled ?? item.enabled,
@@ -148,6 +153,9 @@ export function ensureOverlaySizes(profile: SkillMonitorProfile): OverlaySizes {
     customPanelGroupScale:
       current?.customPanelGroupScale ??
       DEFAULT_OVERLAY_SIZES.customPanelGroupScale,
+    shieldDetailGroupScale:
+      current?.shieldDetailGroupScale ??
+      DEFAULT_OVERLAY_SIZES.shieldDetailGroupScale,
     panelAttrGap: clampRounded(
       current?.panelAttrGap ?? DEFAULT_OVERLAY_SIZES.panelAttrGap,
       0,
@@ -203,6 +211,11 @@ export function ensureOverlaySizes(profile: SkillMonitorProfile): OverlaySizes {
       -120,
       240,
     ),
+    iconBuffStackCounterSize: clampRounded(
+      current?.iconBuffStackCounterSize ?? DEFAULT_OVERLAY_SIZES.iconBuffStackCounterSize,
+      6,
+      24,
+    ),
     iconBuffSizes: current?.iconBuffSizes ?? {},
     standaloneIconSizes: current?.standaloneIconSizes ?? {},
     skillDurationSizes: current?.skillDurationSizes ?? {},
@@ -238,5 +251,19 @@ export function ensureTextBuffPanelStyle(
     valueColor: current?.valueColor ?? "#ffffff",
     progressColor: current?.progressColor ?? "#ffffff",
     progressOpacity: clampDecimal(current?.progressOpacity ?? 0.4, 0, 1),
+  };
+}
+
+export function ensureShieldDetailStyle(
+  profile: SkillMonitorProfile | null,
+): ShieldDetailStyle {
+  const current = profile?.shieldDetailStyle;
+  return {
+    fontSize: clampRounded(current?.fontSize ?? 13, 10, 28),
+    barWidth: clampRounded(current?.barWidth ?? 220, 120, 520),
+    gap: clampRounded(current?.gap ?? 4, 0, 24),
+    hpColor: current?.hpColor ?? "#ef4444",
+    shieldColor: current?.shieldColor ?? "#38bdf8",
+    healShieldColor: current?.healShieldColor ?? "#22c55e",
   };
 }

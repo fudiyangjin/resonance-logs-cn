@@ -12,6 +12,15 @@
 		"src/routes/+layout.ts",
 		"src/routes/+layout.ts"
 	],
+	"/live/death": [
+		"src/routes/+layout.ts"
+	],
+	"/live/death/deaths": [
+		"src/routes/+layout.ts"
+	],
+	"/live/death/replay": [
+		"src/routes/+layout.ts"
+	],
 	"/live/dps": [
 		"src/routes/+layout.ts"
 	],
@@ -62,7 +71,19 @@
 		"src/routes/+layout.ts"
 	],
 	"/main/monster-monitor": [
+		"src/routes/main/monster-monitor/+page.ts",
 		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/main/overlay": [
+		"src/routes/main/overlay/+page.ts",
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/main/overlay/monster-monitor": [
+		"src/routes/+layout.ts"
+	],
+	"/main/overlay/skill-monitor": [
 		"src/routes/+layout.ts"
 	],
 	"/main/settings": [
@@ -91,6 +112,7 @@
 		"src/routes/+layout.ts"
 	],
 	"/main/skill-monitor": [
+		"src/routes/main/skill-monitor/+page.ts",
 		"src/routes/+layout.ts",
 		"src/routes/+layout.ts"
 	],

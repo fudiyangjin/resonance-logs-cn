@@ -8,7 +8,7 @@
     setMonsterEditMode,
   } from "./monster-state.svelte.js";
 
-  const t = uiT("monster-monitor", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/monster-monitor", () => SETTINGS.live.general.state.language);
 </script>
 
 <div class="edit-banner">

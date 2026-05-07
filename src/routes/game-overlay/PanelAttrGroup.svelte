@@ -13,7 +13,7 @@
     startResize,
   } from "./overlay-state.svelte.js";
 
-  const t = uiT("skill-monitor/panel-attr", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/panel-attr", () => SETTINGS.live.general.state.language);
   const editing = $derived(isEditing());
   const rows = $derived(panelAreaRows());
   const groupPos = $derived(getGroupPosition("panelAttrGroup"));
@@ -34,7 +34,7 @@
     onpointerdown={(e) => startDrag(e, { kind: "group", key: "panelAttrGroup" }, groupPos)}
   >
     {#if editing}
-      <div class="group-tag">{t("panelAttr.title", "角色属性区")}</div>
+      <div class="group-tag">{t("panelAttr.title", "Character Attribute Area")}</div>
     {/if}
 
     <div class="panel-attr-list" style:gap={`${sizes.panelAttrGap}px`}>

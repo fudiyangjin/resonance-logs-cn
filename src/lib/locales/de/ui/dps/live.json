@@ -230,5 +230,6 @@
   "live.pauseToast": "Kampf pausiert",
   "live.resetToast": "Kampf zurückgesetzt",
   "live.resumeToast": "Kampf fortgesetzt",
-  "live.unknownClass": "Unbekannte Klasse"
+  "live.unknownClass": "Unbekannte Klasse",
+  "table.skill": "Fertigkeit"
 }

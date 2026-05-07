@@ -65,7 +65,7 @@
     sourceText?: string;
   };
 
-  const t = uiT("skill-monitor/buff-monitor", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/buff-monitor", () => SETTINGS.live.general.state.language);
   let searchSectionExpanded = $state(true);
   let colorSectionExpanded = $state(true);
   let optionsSectionExpanded = $state(false);

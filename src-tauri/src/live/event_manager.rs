@@ -1,6 +1,9 @@
 use crate::live::commands_models::{
-    BossHealth, BuffUpdateState, CounterUpdateState, FightResourceState, HateEntry, HeaderInfo,
-    LiveDataPayload, PanelAttrState, RawEntityData, SkillCdState, TrainingDummyState,
+    BossHealth, BuffUpdateState, CounterUpdateState, DeathRecord, FightResourceState, HateEntry,
+    HeaderInfo, LiveDataPayload, PanelAttrState, RawEntityData, ShieldDetailEntry, SkillCdState,
+    TrainingDummyState, to_active_buff_state, to_active_effect_buff_state,
+    to_active_effect_source_state, to_active_factor_buff_state, to_active_factor_item_state,
+    to_active_passive_skill_state, to_active_profession_talent_state, to_modifier_window_state,
     to_raw_combat_stats, to_raw_skill_stats,
 };
 use crate::live::entity_attr_store::EntityAttrStore;
@@ -112,6 +115,12 @@ pub enum OutboundEvent {
     SkillCdUpdate(Vec<SkillCdState>),
     PanelAttrUpdate(Vec<PanelAttrState>),
     FightResourceUpdate(FightResourceState),
+    ShieldDetailUpdate {
+        current_hp: i64,
+        max_hp: i64,
+        entries: Vec<ShieldDetailEntry>,
+    },
+    DeathReplay(Vec<DeathRecord>),
 }
 
 impl EventManager {
@@ -218,6 +227,28 @@ impl EventManager {
             .push(OutboundEvent::FightResourceUpdate(fight_res));
     }
 
+    pub fn emit_shield_detail_update(
+        &mut self,
+        current_hp: i64,
+        max_hp: i64,
+        entries: Vec<ShieldDetailEntry>,
+    ) {
+        self.outbound_events
+            .push(OutboundEvent::ShieldDetailUpdate {
+                current_hp,
+                max_hp,
+                entries,
+            });
+    }
+
+    pub fn emit_death_replay(&mut self, records: Vec<DeathRecord>) {
+        if records.is_empty() {
+            return;
+        }
+        self.outbound_events
+            .push(OutboundEvent::DeathReplay(records));
+    }
+
     pub fn drain_outbound_events(&mut self) -> Vec<OutboundEvent> {
         std::mem::take(&mut self.outbound_events)
     }
@@ -315,6 +346,54 @@ pub fn generate_live_data_payload(
                 .skill_uid_to_taken_skill
                 .iter()
                 .map(|(skill_id, stats)| (*skill_id, to_raw_skill_stats(stats)))
+                .collect(),
+            active_buffs: entity
+                .active_buffs
+                .iter()
+                .map(to_active_buff_state)
+                .collect(),
+            active_factor_buffs: entity
+                .active_factor_buffs
+                .iter()
+                .map(to_active_factor_buff_state)
+                .collect(),
+            active_effect_buffs: entity
+                .active_effect_buffs
+                .iter()
+                .map(to_active_effect_buff_state)
+                .collect(),
+            modifier_windows: entity
+                .modifier_windows
+                .iter()
+                .map(to_modifier_window_state)
+                .collect(),
+            // Exact hit buckets are save-time history data. Keeping them out of
+            // live payloads avoids replaying a large encounter ledger every tick.
+            modifier_hit_buckets: Vec::new(),
+            modifier_replay_hits: Vec::new(),
+            // Cooldown/cast ledgers are also history data; live cooldown state is emitted
+            // separately through SkillCdUpdate.
+            skill_cast_events: Vec::new(),
+            skill_cooldown_events: Vec::new(),
+            active_effect_sources: entity
+                .active_effect_sources
+                .iter()
+                .map(to_active_effect_source_state)
+                .collect(),
+            active_factor_items: entity
+                .active_factor_items
+                .iter()
+                .map(to_active_factor_item_state)
+                .collect(),
+            active_passive_skills: entity
+                .active_passive_skills
+                .iter()
+                .map(to_active_passive_skill_state)
+                .collect(),
+            active_profession_talents: entity
+                .active_profession_talents
+                .iter()
+                .map(to_active_profession_talent_state)
                 .collect(),
         });
     }

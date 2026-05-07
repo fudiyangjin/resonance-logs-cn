@@ -303,3 +303,63 @@
 .toast-root {
   box-shadow: var(--toast-shadow);
 }
+
+.monster-buff-panel {
+  min-width: 260px;
+  max-width: 360px;
+}
+
+.monster-buff-panel.editable {
+  outline: 2px solid rgba(102, 204, 255, 0.9);
+  border-radius: 10px;
+  background: rgba(20, 36, 56, 0.48);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+.monster-hate-panel {
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.monster-hate-panel.editable {
+  border: 2px solid rgba(244, 114, 182, 0.9);
+  border-radius: 10px;
+  background: rgba(52, 24, 42, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+.monster-overlay-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.monster-buff-panel .monster-overlay-section-list {
+  min-width: 260px;
+}
+
+.monster-hate-panel .monster-overlay-section-list {
+  min-width: 240px;
+}
+
+.monster-overlay-boss-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.monster-overlay-boss-section.placeholder {
+  opacity: 0.8;
+}
+
+.monster-overlay-boss-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+}
+
+.monster-overlay-boss-rows {
+  display: flex;
+  flex-direction: column;
+}

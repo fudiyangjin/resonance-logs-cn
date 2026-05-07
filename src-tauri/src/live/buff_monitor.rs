@@ -9,12 +9,16 @@ use std::collections::{HashMap, HashSet};
 #[derive(Debug, Clone)]
 pub struct ActiveBuff {
     pub base_id: i32,
+    pub buff_level: Option<i32>,
+    pub part_id: Option<i32>,
+    pub count: Option<i32>,
     pub layer: i32,
     pub duration: i32,
     pub create_time: i64,
     pub received_time_ms: i64,
     pub host_uid: i64,
     pub source_uid: i64,
+    pub fight_source_type: Option<i32>,
     pub source_config_id: Option<i32>,
 }
 
@@ -32,8 +36,17 @@ pub struct BuffChangeEvent {
     pub change_type: BuffChangeType,
     /// Local packet receive time used by counter tick logic.
     pub create_time_ms: Option<i64>,
+    /// Local packet receive time for this specific add/change/remove event.
+    pub event_time_ms: i64,
     pub duration_ms: Option<i32>,
+    pub buff_level: Option<i32>,
+    pub part_id: Option<i32>,
+    pub count: Option<i32>,
+    pub fight_source_type: Option<i32>,
     pub source_config_id: Option<i32>,
+    pub layer: i32,
+    pub host_uid: i64,
+    pub source_uid: i64,
 }
 
 #[derive(Debug, Default)]
@@ -108,6 +121,10 @@ impl BuffMonitor {
                             .fight_source_info
                             .as_ref()
                             .and_then(|info| info.source_config_id);
+                        let fight_source_type = buff_info
+                            .fight_source_info
+                            .as_ref()
+                            .and_then(|info| info.fight_source_type);
                         if buff_info.create_time.is_some() {
                             *server_clock_offset = now - create_time;
                         }
@@ -116,12 +133,16 @@ impl BuffMonitor {
                             buff_uuid,
                             ActiveBuff {
                                 base_id,
+                                buff_level: buff_info.level,
+                                part_id: buff_info.part_id,
+                                count: buff_info.count,
                                 layer,
                                 duration,
                                 create_time,
                                 received_time_ms: now,
                                 host_uid,
                                 source_uid,
+                                fight_source_type,
                                 source_config_id,
                             },
                         );
@@ -130,8 +151,16 @@ impl BuffMonitor {
                             buff_uuid,
                             change_type: BuffChangeType::Added,
                             create_time_ms: Some(now),
+                            event_time_ms: now,
                             duration_ms: Some(duration),
+                            buff_level: buff_info.level,
+                            part_id: buff_info.part_id,
+                            count: buff_info.count,
+                            fight_source_type,
                             source_config_id,
+                            layer,
+                            host_uid,
+                            source_uid,
                         });
                     }
                 } else if effect_type == EBuffEffectLogicPbType::BuffEffectBuffChange as i32 {
@@ -153,8 +182,16 @@ impl BuffMonitor {
                                 buff_uuid,
                                 change_type: BuffChangeType::Changed,
                                 create_time_ms: Some(entry.received_time_ms),
+                                event_time_ms: now,
                                 duration_ms: Some(entry.duration),
+                                buff_level: entry.buff_level,
+                                part_id: entry.part_id,
+                                count: entry.count,
+                                fight_source_type: entry.fight_source_type,
                                 source_config_id,
+                                layer: entry.layer,
+                                host_uid: entry.host_uid,
+                                source_uid: entry.source_uid,
                             });
                         }
                     }
@@ -169,8 +206,16 @@ impl BuffMonitor {
                         buff_uuid,
                         change_type: BuffChangeType::Removed,
                         create_time_ms: Some(removed_buff.received_time_ms),
+                        event_time_ms: now,
                         duration_ms: Some(removed_buff.duration),
+                        buff_level: removed_buff.buff_level,
+                        part_id: removed_buff.part_id,
+                        count: removed_buff.count,
+                        fight_source_type: removed_buff.fight_source_type,
                         source_config_id: removed_buff.source_config_id,
+                        layer: removed_buff.layer,
+                        host_uid: removed_buff.host_uid,
+                        source_uid: removed_buff.source_uid,
                     });
                 }
             }

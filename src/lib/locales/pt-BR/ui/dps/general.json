@@ -1,15 +1,16 @@
 {
+  "history": "Histórico",
+  "meterSettings": "Meter Settings",
   "selectTabPrompt": "Please select a tab above to view detailed settings",
+  "settings": "Configurações",
   "settings.debug": "Depuração",
   "settings.history": "Histórico",
   "settings.live": "Ao vivo",
   "settings.network": "Rede",
   "settings.shortcuts": "Atalhos",
   "subtitle": "Monitore dados de combate e estatísticas de DPS em tempo real",
+  "themes": "Temas",
   "title": "Medidor de DPS",
   "toggleWindow": "Toggle DPS Janela",
-  "viewHistory": "View History",
-  "history": "Histórico",
-  "themes": "Temas",
-  "settings": "Configurações"
+  "viewHistory": "View History"
 }

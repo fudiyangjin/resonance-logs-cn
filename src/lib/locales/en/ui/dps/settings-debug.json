@@ -12,6 +12,8 @@
   "skillIdDisplay.hover": "Show ID on Hover",
   "skillIdDisplay.off": "Name Only",
   "skillIdDisplayDescription": "Control how IDs are shown in skill tables.",
+  "showHoverDescriptions": "Show Hover Descriptions",
+  "showHoverDescriptionsDescription": "Show generated descriptions in hover text for skills, buffs, modifiers, modules, and other UID-backed rows when available.",
   "title": "Debug",
   "translationRefreshButton": "Refresh Translation Data",
   "translationRefreshDescription": "Reload runtime translation data and notify the frontend.",
@@ -25,5 +27,10 @@
   "globalDebugInfoButton": "Show debug info",
   "globalDebugInfoButtonLabel": "Info",
   "globalDebugInfoTitle": "Debug Tools Overview",
-  "globalDebugInfoBody": "Use this page for logs, diagnostics bundles, translation runtime tools, and developer-facing display helpers. These tools affect the app globally and are no longer nested under Meter Settings."
+  "globalDebugInfoBody": "Use this page for logs, diagnostics bundles, translation runtime tools, and developer-facing display helpers. These tools affect the app globally and are no longer nested under Meter Settings.",
+  "openLogDirFailed": "Failed to open log folder:",
+  "bundleSaveTitle": "Save Diagnostics Bundle",
+  "bundleCreatedCopied": "Diagnostics bundle created and path copied:",
+  "bundleCreated": "Diagnostics bundle created:",
+  "bundleFailed": "Failed to create diagnostics bundle:"
 }

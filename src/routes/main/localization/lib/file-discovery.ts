@@ -13,17 +13,28 @@ type RuntimeTranslationFileEntry =
 const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
     "ui/shell.json": "UI / Shell",
     "ui/module-calc.json": "UI / Module Calc",
-    "ui/monster-monitor.json": "UI / Monster Monitor",
+    "ui/overlay/monster-monitor.json": "UI / Overlay / Monster Monitor",
+    "ui/overlay/skill-monitor/general.json": "UI / Overlay / Skill Monitor / General",
+    "ui/overlay/skill-monitor/skill-cd.json": "UI / Overlay / Skill Monitor / Skill CD",
+    "ui/overlay/skill-monitor/buff-monitor.json": "UI / Overlay / Skill Monitor / Buff Monitor",
+    "ui/overlay/skill-monitor/panel-attr.json": "UI / Overlay / Skill Monitor / Character Panel",
+    "ui/overlay/skill-monitor/custom-panel.json": "UI / Overlay / Skill Monitor / Custom Monitor",
     "ui/localization-tool.json": "UI / Localization Tool",
     "ui/custom-triggers/general.json": "UI / Custom Triggers / General",
     "ui/custom-triggers/logger.json": "UI / Custom Triggers / Logger",
-    "parser/skillnames.json": "Skill Names",
-    "parser/BuffName.json": "Buff Names",
-    "parser/MonsterName.json": "Monster Names",
-    "parser/SceneName.json": "Scene Names",
-    "parser/class-labels.json": "Class Labels",
-    "search/BuffNameSearch.json": "Buff Name Search",
-    "search/resonance-skill-search.json": "Resonance Skill Search",
+    "generated/BuffName.json": "Generated / Buff Names",
+    "generated/class-labels.json": "Generated / Class Labels",
+    "generated/DamageAttrIdName.json": "Generated / Damage Attr Names",
+    "generated/EffectSources.json": "Generated / Effect Sources",
+    "generated/itemnames.json": "Generated / Item Names",
+    "generated/monsternames.json": "Generated / Monster Names",
+    "generated/Notes.json": "Generated / User Notes",
+    "generated/RecountTable.json": "Generated / Recount Table",
+    "generated/scenenames.json": "Generated / Scene Names",
+    "generated/SeasonPhantomFactors.json": "Generated / Season Phantom Factors",
+    "generated/skill_aoyi_icons.json": "Generated / Skill Aoyi Icons",
+    "generated/SkillBreakdownDetails.json": "Generated / Skill Breakdown Details",
+    "generated/skillnames.json": "Generated / Skill Names",
 };
 
 const SORT_PRIORITY: Record<string, number> = {
@@ -38,22 +49,24 @@ const SORT_PRIORITY: Record<string, number> = {
     "ui/dps/settings-hotkeys.json": 8,
     "ui/dps/settings-debug.json": 9,
     "ui/module-calc.json": 10,
-    "ui/monster-monitor.json": 11,
-    "ui/skill-monitor/general.json": 12,
-    "ui/skill-monitor/skill-cd.json": 13,
-    "ui/skill-monitor/buff-monitor.json": 14,
-    "ui/skill-monitor/panel-attr.json": 15,
-    "ui/skill-monitor/custom-panel.json": 16,
+    "ui/overlay/monster-monitor.json": 11,
+    "ui/overlay/skill-monitor/general.json": 12,
+    "ui/overlay/skill-monitor/skill-cd.json": 13,
+    "ui/overlay/skill-monitor/buff-monitor.json": 14,
+    "ui/overlay/skill-monitor/panel-attr.json": 15,
+    "ui/overlay/skill-monitor/custom-panel.json": 16,
     "ui/localization-tool.json": 17,
     "ui/custom-triggers/general.json": 18,
     "ui/custom-triggers/logger.json": 19,
-    "parser/class-labels.json": 20,
-    "parser/skillnames.json": 21,
-    "parser/MonsterName.json": 22,
-    "parser/SceneName.json": 23,
-    "parser/BuffName.json": 24,
-    "search/BuffNameSearch.json": 25,
-    "search/resonance-skill-search.json": 26,
+    "generated/class-labels.json": 100,
+    "generated/skillnames.json": 101,
+    "generated/RecountTable.json": 102,
+    "generated/DamageAttrIdName.json": 103,
+    "generated/BuffName.json": 104,
+    "generated/itemnames.json": 105,
+    "generated/monsternames.json": 106,
+    "generated/scenenames.json": 107,
+    "generated/Notes.json": 199,
 };
 
 function normalizeRelativePath(path: string): string {
@@ -87,19 +100,8 @@ function buildFallbackDisplayName(relativePath: string): string {
 function detectFileKind(relativePath: string): TranslationFileKind {
     const normalized = normalizeRelativePath(relativePath).toLowerCase();
 
-    if (normalized.endsWith("skillnames.json")) {
-        return "skillnames";
-    }
-
-    if (normalized === "parser/buffname.json") {
-        return "buffname";
-    }
-
-    if (
-        normalized === "search/buffnamesearch.json" ||
-        normalized === "search/resonance-skill-search.json"
-    ) {
-        return "searchtable";
+    if (normalized.startsWith("generated/")) {
+        return "generated";
     }
 
     if (normalized.endsWith("json")) {

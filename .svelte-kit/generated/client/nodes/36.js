@@ -1,1 +1,1 @@
-export { default as component } from "../../../../src/routes/main/skill-monitor/+page.svelte";
+export { default as component } from "../../../../src/routes/main/settings/debug/+page.svelte";

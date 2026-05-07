@@ -96,7 +96,11 @@ export type ResizeTarget =
       kind: "group";
       key: keyof Omit<
         OverlaySizes,
-        "iconBuffSizes" | "standaloneIconSizes" | "skillDurationSizes" | "categoryIconSizes"
+        | "iconBuffStackCounterSize"
+        | "iconBuffSizes"
+        | "standaloneIconSizes"
+        | "skillDurationSizes"
+        | "categoryIconSizes"
       >;
     }
   | { kind: "customPanelGroup"; groupId: string }

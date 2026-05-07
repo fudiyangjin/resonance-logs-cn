@@ -1,0 +1,18 @@
+{
+  "clearHint": "Klik kanan untuk menghapus hotkey",
+  "pressKey": "Tekan tombol",
+  "unbound": "Belum Diikat",
+  "shortcuts.showLiveMeter": "Tampilkan meter live",
+  "shortcuts.hideLiveMeter": "Sembunyikan meter live",
+  "shortcuts.toggleLiveMeter": "Alihkan meter live",
+  "shortcuts.enableClickthrough": "Aktifkan clickthrough",
+  "shortcuts.disableClickthrough": "Nonaktifkan clickthrough",
+  "shortcuts.toggleClickthrough": "Alihkan clickthrough",
+  "shortcuts.resetEncounter": "Reset pertarungan",
+  "shortcuts.togglePauseEncounter": "Alihkan jeda encounter",
+  "shortcuts.toggleBossHp": "Alihkan tampilan HP boss",
+  "shortcuts.toggleOverlayEdit": "Alihkan mode edit overlay",
+  "shortcuts.toggleOverlayWindow": "Alihkan jendela overlay",
+  "shortcuts.toggleEventLogger": "Alihkan logger event",
+  "conflictAssigned": "Hotkey itu sudah ditetapkan ke"
+}

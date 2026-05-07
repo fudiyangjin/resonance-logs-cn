@@ -3,11 +3,9 @@ import type { LocaleCode } from "$lib/i18n";
 export type LocalizationSection = "editLocal" | "compareMerge" | "settings";
 
 export type TranslationFileKind =
-    | "skillnames"
-    | "buffname"
-    | "searchtable"
     | "navigation"
-    | "generic";
+    | "generic"
+    | "generated";
 
 export type TranslationFileTab = {
     relativePath: string;
@@ -64,10 +62,3 @@ export type TranslationSearchContext = {
 export type GenericTranslationValue = Partial<Record<LocaleCode, string>>;
 
 export type GenericTranslationTable = Record<string, GenericTranslationValue>;
-
-export type SkillTranslationEntry = {
-    name?: GenericTranslationValue;
-    note?: GenericTranslationValue;
-};
-
-export type SkillTranslationTable = Record<string, SkillTranslationEntry>;

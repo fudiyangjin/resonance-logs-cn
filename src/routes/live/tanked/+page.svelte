@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getClassIcon, tooltip } from "$lib/utils.svelte";
+  import { goto } from "$app/navigation";
   import { settings, SETTINGS } from "$lib/settings-store";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
   import { computePlayerRows } from "$lib/live-derived";
@@ -93,6 +94,7 @@
 
   // Table customization settings
   let tableSettings = $derived(SETTINGS.live.tableCustomization.state);
+  let compactMode = $derived(tableSettings.compactMode);
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.live.general.state.abbreviatedDecimalPlaces ?? 1,
   );
@@ -129,13 +131,18 @@
       return aIdx - bIdx;
     });
   });
+
+  let compactTankedData = $derived.by(() => {
+    if (!compactMode) return tankedData;
+    return [...tankedData].sort((a, b) => b.totalDmg - a.totalDmg);
+  });
 </script>
 
 <div
   class="relative flex flex-col gap-2 overflow-hidden rounded-lg ring-1 ring-border/60 bg-card/30 backdrop-blur-sm"
 >
   <table class="w-full border-collapse overflow-hidden">
-    {#if tableSettings.showTableHeader}
+    {#if tableSettings.showTableHeader && !compactMode}
       <thead>
         <tr
           class="bg-popover/60"
@@ -164,6 +171,100 @@
       </thead>
     {/if}
     <tbody>
+      {#if compactMode}
+        {#each compactTankedData as player (player.uid)}
+          {@const isLocalPlayer = liveData?.localPlayerUid != null &&
+            player.uid === liveData.localPlayerUid}
+          {@const displayName = getDisplayName({
+            player: {
+              uid: player.uid,
+              name: player.name,
+              className: player.className,
+              classSpecName: player.classSpecName,
+            },
+            showYourNameSetting: SETTINGS_YOUR_NAME,
+            showOthersNameSetting: SETTINGS_OTHERS_NAME,
+            isLocalPlayer,
+          })}
+          {@const className = isLocalPlayer
+            ? normalizeNameDisplaySetting(SETTINGS_YOUR_NAME) !== "Hide Your Name"
+              ? player.className
+              : ""
+            : normalizeNameDisplaySetting(SETTINGS_OTHERS_NAME) !==
+                "Hide Others' Name"
+              ? player.className
+              : ""}
+          <tr
+            class="relative bg-background/40 hover:bg-muted/60 transition-colors cursor-pointer group"
+            style="height: {tableSettings.playerRowHeight}px; font-size: {tableSettings.playerFontSize}px;"
+            onclick={() => goto(`/live/tanked/skills?playerUid=${player.uid}`)}
+          >
+            <td
+              colspan={visiblePlayerColumns.length + 1}
+              class="px-3 py-1 relative z-10"
+              style="color: {customThemeColors.tableTextColor};"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <span class="flex min-w-0 items-center gap-2">
+                  <img
+                    style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
+                    class="object-contain"
+                    src={getClassIcon(className)}
+                    alt={t("live.classIconAlt", "Class icon")}
+                  />
+                  <span class="truncate font-medium">{displayName || `#${player.uid}`}</span>
+                  {#if player.classSpecName || player.className}
+                    <span class="text-muted-foreground truncate">
+                      {formatClassSpecLabel(player.className, player.classSpecName)}
+                    </span>
+                  {/if}
+                </span>
+                <span class="flex shrink-0 items-baseline gap-2 tabular-nums">
+                  <span class="font-semibold">
+                    {#if SETTINGS_SHORTEN_TPS}
+                      <AbbreviatedNumber
+                        num={player.totalDmg}
+                        decimalPlaces={abbreviatedDecimalPlaces}
+                        suffixFontSize={tableSettings.abbreviatedFontSize}
+                        suffixColor={customThemeColors.tableAbbreviatedColor}
+                      />
+                    {:else}
+                      {player.totalDmg.toLocaleString()}
+                    {/if}
+                  </span>
+                  <span class="text-muted-foreground">
+                    {#if SETTINGS_SHORTEN_TPS}
+                      <AbbreviatedNumber
+                        num={player.dps}
+                        decimalPlaces={abbreviatedDecimalPlaces}
+                        suffixFontSize={tableSettings.abbreviatedFontSize}
+                        suffixColor={customThemeColors.tableAbbreviatedColor}
+                      />
+                    {:else}
+                      {Math.round(player.dps).toLocaleString()}
+                    {/if}
+                  </span>
+                  <PercentFormat
+                    val={player.dmgPct}
+                    fractionDigits={0}
+                    suffixFontSize={tableSettings.abbreviatedFontSize}
+                    suffixColor={customThemeColors.tableAbbreviatedColor}
+                  />
+                </span>
+              </div>
+            </td>
+            <TableRowGlow
+              {className}
+              classSpecName={player.classSpecName}
+              percentage={SETTINGS_RELATIVE_TO_TOP_TANKED_PLAYER
+                ? maxTaken > 0
+                  ? (player.totalDmg / maxTaken) * 100
+                  : 0
+                : player.dmgPct}
+            />
+          </tr>
+        {/each}
+      {:else}
       {#each tankedData as player (player.uid)}
         {@const isLocalPlayer = liveData?.localPlayerUid != null &&
           player.uid === liveData.localPlayerUid}
@@ -292,6 +393,7 @@
           />
         </tr>
       {/each}
+      {/if}
     </tbody>
   </table>
 </div>

@@ -21,8 +21,7 @@ import WifiIcon from "virtual:icons/lucide/wifi";
 export const TOOL_ROUTES = {
   "/main/dps": { label: "DPS Meter", icon: ActivityIcon },
   "/main/module-calc": { label: "Module Calculator", icon: CalculatorIcon },
-  "/main/skill-monitor": { label: "Skill Monitor", icon: SwordsIcon },
-  "/main/monster-monitor": { label: "Monster Monitor", icon: ShieldAlertIcon },
+  "/main/overlay": { label: "Overlay", icon: MonitorUpIcon },
   "/main/custom-triggers": { label: "Custom Triggers", icon: SparklesIcon },
   "/main/localization": { label: "Localization Tool", icon: GlobeIcon },
 };
@@ -31,6 +30,12 @@ export const TOOL_ROUTES = {
 export const DPS_SUB_ROUTES = {
   "/main/dps/history": { label: "History", icon: HourglassIcon },
   "/main/dps/settings": { label: "Meter Settings", icon: SettingsIcon },
+};
+
+// Sub-routes for the overlay tool
+export const OVERLAY_SUB_ROUTES = {
+  "/main/overlay/skill-monitor": { label: "Skill Monitor", icon: SwordsIcon },
+  "/main/overlay/monster-monitor": { label: "Monster Monitor", icon: ShieldAlertIcon },
 };
 
 // Sub-routes for global settings

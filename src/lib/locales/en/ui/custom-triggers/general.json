@@ -206,5 +206,21 @@
   "tabs.customTriggers": "Custom Triggers",
   "tabs.triggerSettings": "Trigger Settings",
   "tabs.triggerDebug": "Trigger Debug",
-  "panel.triggerSettings.description": "Manage trigger data and import/export files."
+  "panel.triggerSettings.description": "Manage trigger data and import/export files.",
+  "sessionLogs.chooseFolder": "Choose session log folder",
+  "sessionLogs.folderUpdated": "Logger session folder updated.",
+  "sessionLogs.folderReset": "Logger session folder reset to default.",
+  "sessionLogs.loading": "Loading...",
+  "eventCapture": "Event Capture",
+  "eventCapture.events": "Events",
+  "eventCapture.snapshots": "Snapshots",
+  "sessionLogs.title": "Session log folder",
+  "sessionLogs.description": "Choose where Event Logger session files are written. Leaving this on default keeps logs under the app data folder.",
+  "sessionLogs.openFolder": "Open Folder",
+  "sessionLogs.useDefault": "Use Default",
+  "sessionLogs.currentFolder": "Current folder",
+  "sessionLogs.unavailable": "Unavailable",
+  "sessionLogs.filePattern": "File pattern",
+  "sessionLogs.defaultNotice": "Using the default app log folder for event logger sessions.",
+  "sessionLogs.customNotice": "Using your custom folder for event logger sessions."
 }

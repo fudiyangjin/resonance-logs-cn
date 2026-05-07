@@ -78,5 +78,10 @@
   "totalScore": "总分",
   "unavailable": "不可用",
   "viewDetails": "查看详情",
+  "off": "Off",
+  "on": "On",
+  "gpuChecking": "Checking GPU availability...",
+  "gpuDisabledDescription": "GPU-accelerated calculations are disabled.",
+  "gpuEnabledDescription": "GPU-accelerated calculations are enabled.",
   "requiresAtLeastModules": "需要至少 {count} 个模组"
 }

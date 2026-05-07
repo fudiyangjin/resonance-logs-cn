@@ -11,6 +11,9 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
+		alias: {
+			$parserData: "./parser-data",
+		},
 		adapter: adapter({
 			fallback: "index.html",
 		}),

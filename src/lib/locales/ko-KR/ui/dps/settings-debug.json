@@ -21,5 +21,16 @@
   "translationSourceMode.runtime": "AppData 번역 파일",
   "translationSourceModeCurrent": "현재 소스:",
   "translationSourceModeDescription": "앱에 내장된 번역과 AppData에 저장된 편집 가능한 번역 파일 사이를 전환합니다.",
-  "translationTools": "번역 디버그"
+  "translationTools": "번역 디버그",
+  "globalDebugInfoButton": "Show debug info",
+  "globalDebugInfoButtonLabel": "Info",
+  "globalDebugInfoTitle": "Debug Tools Overview",
+  "globalDebugInfoBody": "Use this page for logs, diagnostics bundles, translation runtime tools, and developer-facing display helpers. These tools affect the app globally and are no longer nested under Meter Settings.",
+  "showHoverDescriptions": "호버 설명 표시",
+  "showHoverDescriptionsDescription": "사용 가능한 경우 스킬, 버프, 수정 효과, 모듈 및 기타 UID 기반 행의 호버 텍스트에 생성된 설명을 표시합니다.",
+  "openLogDirFailed": "Failed to open log folder:",
+  "bundleSaveTitle": "Save Diagnostics Bundle",
+  "bundleCreatedCopied": "Diagnostics bundle created and path copied:",
+  "bundleCreated": "Diagnostics bundle created:",
+  "bundleFailed": "Failed to create diagnostics bundle:"
 }

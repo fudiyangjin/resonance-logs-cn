@@ -1,0 +1,151 @@
+[
+  {
+    "ruleId": 1,
+    "name": "超然触发计数",
+    "sources": [
+      {
+        "damageBySkillKeySelfTarget": {
+          "skillKeys": [22140403],
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 60,
+        "resetBuffId": 2202671,
+        "onBuffAdd": "reset",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp"
+      }
+    ]
+  },
+  {
+    "ruleId": 2,
+    "name": "幻想冲击层数-30-冰法",
+    "sources": [
+      {
+        "damageBySkillKey": {
+          "skillKeys": [2203110203],
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 30,
+        "resetBuffId": 3002011,
+        "onBuffAdd": "resetAndFreeze",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "startCount"
+      }
+    ]
+  },
+  {
+    "ruleId": 3,
+    "name": "幻想冲击层数-30-吉他",
+    "sources": [
+      {
+        "damageBySkillKey": {
+          "skillKeys": [2203111103],
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 30,
+        "resetBuffId": 3002011,
+        "onBuffAdd": "resetAndFreeze",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "startCount"
+      }
+    ]
+  },
+  {
+    "ruleId": 4,
+    "name": "炎角-被动",
+    "sources": [
+      {
+        "skillCastComplete": {
+          "skillBaseIds": [1520, 1519],
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 3,
+        "displayMode": "remainingToThreshold",
+        "resetBuffId": 3210141,
+        "onBuffAdd": "resetAndStartCount",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp"
+      },
+      {
+        "slotId": 2,
+        "threshold": null,
+        "resetBuffId": 3210141,
+        "onBuffAdd": "freeze",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp",
+        "freezeDurationMs": 15000,
+        "altFreeze": {
+          "conditionBuffId": 2110123,
+          "freezeDurationMs": 5000
+        },
+        "onFreezeExpire": "noOp"
+      }
+    ]
+  },
+  {
+    "ruleId": 5,
+    "name": "岩之心触发计数",
+    "sources": [
+      {
+        "skillCast": {
+          "skillBaseIds": [1937, 1939],
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 10,
+        "resetBuffId": 2201611,
+        "resetSourceConfigId": 2201610,
+        "onBuffAdd": "reset",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp"
+      }
+    ]
+  },
+  {
+    "ruleId": 6,
+    "name": "迷狂劈杀连招计数",
+    "sources": [
+      {
+        "damageBySkillKeyOnce": {
+          "skillKeys": [116130101, 116130103],
+          "increment": 25
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 1000,
+        "displayMode": "percentOfThreshold",
+        "resetBuffId": 2208641,
+        "onBuffAdd": "noOp",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "reset"
+      }
+    ]
+  }
+]

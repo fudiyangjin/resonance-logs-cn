@@ -17,6 +17,7 @@ export {
   ensureOverlaySizes,
   ensurePanelAreaRowOrder,
   ensurePanelAttrs,
+  ensureShieldDetailStyle,
   ensureTextBuffPanelStyle,
 } from "$lib/skill-monitor-normalize";
 import { ensurePanelAreaRowOrder } from "$lib/skill-monitor-normalize";
@@ -63,6 +64,8 @@ export function ensureOverlayPositions(
       current?.buffUptimeGroup ?? DEFAULT_OVERLAY_POSITIONS.buffUptimeGroup,
     customPanelGroup:
       current?.customPanelGroup ?? DEFAULT_OVERLAY_POSITIONS.customPanelGroup,
+    shieldDetailGroup:
+      current?.shieldDetailGroup ?? DEFAULT_OVERLAY_POSITIONS.shieldDetailGroup,
     iconBuffPositions: current?.iconBuffPositions ?? {},
     standaloneIconPositions: current?.standaloneIconPositions ?? {},
     skillDurationPositions: current?.skillDurationPositions ?? {},
@@ -93,6 +96,9 @@ export function ensureOverlayVisibility(
     showCustomPanelGroup:
       current?.showCustomPanelGroup ??
       DEFAULT_OVERLAY_VISIBILITY.showCustomPanelGroup,
+    showShieldDetailGroup:
+      current?.showShieldDetailGroup ??
+      DEFAULT_OVERLAY_VISIBILITY.showShieldDetailGroup,
   };
 }
 
@@ -236,7 +242,7 @@ export function getCustomPanelDisplayRow(
       key: `inline_counter_${entry.id}`,
       label: entry.label,
       valueText: fixedRemainingMs > 0 ? formatTimerText(fixedRemainingMs) : "--",
-      metaText: "冷却中",
+      metaText: "On Cooldown",
       progressPercent,
       showProgress: freezeDurationMs > 0 && fixedRemainingMs > 0,
     };
@@ -247,7 +253,7 @@ export function getCustomPanelDisplayRow(
     key: `inline_counter_${entry.id}`,
     label: entry.label,
     valueText: active ? formatTimerText(remainingMs) : "--",
-    metaText: active ? "冷却中" : "冷却中",
+    metaText: active ? "On Cooldown" : "On Cooldown",
     progressPercent: getBuffRemainPercent(linkedBuff, now),
     showProgress: active && Boolean(linkedBuff && linkedBuff.durationMs > 0),
   };
@@ -345,30 +351,28 @@ export function computeDisplay(
 }
 
 export function getResourceValue(
-  fightResValues: number[],
+  fightResMap: Map<number, number>,
   selectedClassKey: string,
-  index: number,
+  resourceId: number,
 ): number {
-  const resolved = index < 0 ? fightResValues.length + index : index;
-  const raw = fightResValues[resolved];
+  const raw = fightResMap.get(resourceId);
   if (raw === undefined) {
-    return DEFAULT_RESOURCE_VALUES_BY_CLASS[selectedClassKey]?.[index] ?? 0;
+    return DEFAULT_RESOURCE_VALUES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 0;
   }
-  const scale = RESOURCE_SCALES_BY_CLASS[selectedClassKey]?.[index] ?? 1;
+  const scale = RESOURCE_SCALES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 1;
   return Math.floor(raw / scale);
 }
 
 export function getResourcePreciseValue(
-  fightResValues: number[],
+  fightResMap: Map<number, number>,
   selectedClassKey: string,
-  index: number,
+  resourceId: number,
 ): number {
-  const resolved = index < 0 ? fightResValues.length + index : index;
-  const raw = fightResValues[resolved];
+  const raw = fightResMap.get(resourceId);
   if (raw === undefined) {
-    return DEFAULT_RESOURCE_VALUES_BY_CLASS[selectedClassKey]?.[index] ?? 0;
+    return DEFAULT_RESOURCE_VALUES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 0;
   }
-  const scale = RESOURCE_SCALES_BY_CLASS[selectedClassKey]?.[index] ?? 1;
+  const scale = RESOURCE_SCALES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 1;
   return raw / scale;
 }
 

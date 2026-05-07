@@ -5,7 +5,7 @@
   import { SETTINGS } from "$lib/settings-store";
 
   const tShell = uiT("shell", () => SETTINGS.live.general.state.language);
-  const tSkill = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const tSkill = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   function tMonster(key: string, fallback: string): string {
     return resolveMonsterMonitorTranslation(key, SETTINGS.live.general.state.language, fallback);
@@ -18,7 +18,8 @@
     | "showResourceGroup"
     | "showPanelAttrGroup"
     | "showBuffUptimeGroup"
-    | "showCustomPanelGroup";
+    | "showCustomPanelGroup"
+    | "showShieldDetailGroup";
 
   const activeProfile = $derived.by(() => activeProfileOrDefault());
   const showSkillCdGroup = $derived(activeProfile.overlayVisibility?.showSkillCdGroup ?? true);
@@ -33,6 +34,9 @@
   const showCustomPanelGroup = $derived(
     activeProfile.overlayVisibility?.showCustomPanelGroup ?? true,
   );
+  const showShieldDetailGroup = $derived(
+    activeProfile.overlayVisibility?.showShieldDetailGroup ?? false,
+  );
 
   function setOverlaySectionVisibility(key: OverlayVisibilityKey, checked: boolean) {
     updateActiveProfile(
@@ -45,6 +49,7 @@
           showPanelAttrGroup: profile.overlayVisibility?.showPanelAttrGroup ?? true,
           showBuffUptimeGroup: profile.overlayVisibility?.showBuffUptimeGroup ?? true,
           showCustomPanelGroup: profile.overlayVisibility?.showCustomPanelGroup ?? true,
+          showShieldDetailGroup: profile.overlayVisibility?.showShieldDetailGroup ?? false,
           [key]: checked,
         },
       }),
@@ -63,7 +68,9 @@
       ? showPanelAttrGroup
       : key === "showBuffUptimeGroup"
       ? showBuffUptimeGroup
-      : showCustomPanelGroup;
+      : key === "showCustomPanelGroup"
+      ? showCustomPanelGroup
+      : showShieldDetailGroup;
     setOverlaySectionVisibility(key, !current);
   }
 
@@ -172,6 +179,16 @@
         onclick={() => toggleOverlaySectionVisibility("showCustomPanelGroup")}
       >
         {tSkill("overlay.customPanel", "Custom Monitor Area")} : {showCustomPanelGroup ? tSkill("show", "Show") : tSkill("hide", "Hide")}
+      </button>
+
+      <button
+        type="button"
+        class={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${showShieldDetailGroup
+          ? "bg-primary text-primary-foreground border-primary"
+          : "bg-muted/30 text-foreground border-border/60 hover:bg-muted/50"}`}
+        onclick={() => toggleOverlaySectionVisibility("showShieldDetailGroup")}
+      >
+        {tSkill("overlay.shieldDetail", "Health and Shield Area")} : {showShieldDetailGroup ? tSkill("show", "Show") : tSkill("hide", "Hide")}
       </button>
     </div>
 

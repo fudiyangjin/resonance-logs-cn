@@ -428,5 +428,20 @@
   "tab.general": "General",
   "tab.live": "Ao vivo",
   "tab.presets": "Presets",
-  "themes.tools": "Ferramenta"
+  "themes.tools": "Ferramenta",
+  "playerTableSettings.compactMode": "Compact Mode",
+  "playerTableSettings.compactMode.description": "Show live rows as single-line summaries with total, rate, and share.",
+  "playerTableSettings.compactDpsKey": "Compact DPS Metric",
+  "playerTableSettings.compactDpsKey.description": "Choose whether compact DPS rows show DPS or true DPS.",
+  "liveHeader.headerLayout": "Title Bar Layout",
+  "liveHeader.headerLayoutMode": "Layout Mode",
+  "liveHeader.headerLayoutMode.description": "Classic keeps the current two-row layout. Free layout lets you arrange title bar components across rows.",
+  "liveHeader.headerLayoutMode.classic": "Classic Layout",
+  "liveHeader.headerLayoutMode.custom": "Free Layout",
+  "liveHeader.bossHealthLayout": "Boss Health Direction",
+  "liveHeader.bossHealthLayout.description": "Horizontal display keeps boss health on one line for custom title bar layouts.",
+  "liveHeader.bossHealthLayout.vertical": "Vertical",
+  "liveHeader.bossHealthLayout.horizontal": "Horizontal",
+  "liveHeader.showDeathTab": "Show Death Tab",
+  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation."
 }

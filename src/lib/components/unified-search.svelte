@@ -4,6 +4,10 @@
 	 */
 	import { onMount } from 'svelte';
 	import { commands } from '$lib/bindings';
+	import { uiT } from '$lib/i18n';
+	import { SETTINGS } from '$lib/settings-store';
+
+	const t = uiT('shell', () => SETTINGS.live.general.state.language);
 
 	let {
 		value = $bindable(''),
@@ -31,16 +35,20 @@
 	let showTypeDropdown = $state(false);
 
 	const searchTypeDisplay = $derived(
-		searchType === 'boss' ? '首领' : searchType === 'player' ? '玩家' : '场景'
+		searchType === 'boss'
+			? t('search.type.boss', 'Boss')
+			: searchType === 'player'
+				? t('search.type.player', 'Player')
+				: t('search.type.scene', 'Scene')
 	);
 
 	const computedPlaceholder = $derived(
 		placeholder ||
 			(searchType === 'boss'
-				? '搜索首领...'
+				? t('search.searchBosses', 'Search bosses...')
 				: searchType === 'encounter'
-				? '搜索场景...'
-				: '搜索玩家...')
+					? t('search.searchScenes', 'Search scenes...')
+					: t('search.searchPlayers', 'Search players...'))
 	);
 
 	async function handleInput() {
@@ -182,21 +190,21 @@
 					onclick={() => selectSearchType('boss')}
 					class="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/40 focus:bg-muted/50 focus:outline-none transition-colors {searchType === 'boss' ? 'bg-muted/60 text-foreground' : ''}"
 				>
-					首领
+					{t('search.type.boss', 'Boss')}
 				</button>
 				<button
 					type="button"
 					onclick={() => selectSearchType('player')}
 					class="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/40 focus:bg-muted/50 focus:outline-none transition-colors {searchType === 'player' ? 'bg-muted/60 text-foreground' : ''}"
 				>
-					玩家
+					{t('search.type.player', 'Player')}
 				</button>
 				<button
 					type="button"
 					onclick={() => selectSearchType('encounter')}
 					class="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/40 focus:bg-muted/50 focus:outline-none transition-colors {searchType === 'encounter' ? 'bg-muted/60 text-foreground' : ''}"
 				>
-					场景
+					{t('search.type.scene', 'Scene')}
 				</button>
 			</div>
 		{/if}
@@ -222,7 +230,7 @@
 			<div
 				class="absolute z-10 w-full mt-1 bg-popover/95 backdrop-blur-md border border-border rounded-md shadow-lg px-3 py-2 animate-in fade-in-0 zoom-in-95"
 			>
-				<div class="text-muted-foreground text-sm">加载中...</div>
+				<div class="text-muted-foreground text-sm">{t('common.loading', 'Loading...')}</div>
 			</div>
 		{:else if showDropdown && filteredNames.length > 0}
 			<div
@@ -242,7 +250,7 @@
 			<div
 				class="absolute z-10 w-full mt-1 bg-popover/95 backdrop-blur-md border border-border rounded-md shadow-lg px-3 py-2 animate-in fade-in-0 zoom-in-95"
 			>
-				<div class="text-muted-foreground text-sm">未找到玩家</div>
+				<div class="text-muted-foreground text-sm">{t('search.noPlayersFound', 'No players found')}</div>
 			</div>
 		{/if}
 	</div>

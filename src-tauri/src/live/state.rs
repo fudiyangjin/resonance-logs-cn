@@ -1,16 +1,24 @@
 use crate::database::{EncounterMetadata, PlayerNameEntry, now_ms, save_encounter};
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
-use crate::live::buff_monitor::{BossBuffMonitors, BuffMonitor};
+use crate::live::buff_monitor::{
+    ActiveBuff, BossBuffMonitors, BuffChangeEvent, BuffChangeType, BuffMonitor,
+};
 use crate::live::commands_models::{
-    CounterUpdateState, FightResourceState, PanelAttrState, SkillCdState, TrainingDummyState,
+    CounterUpdateState, DeathRecord, FightResourceEntry, FightResourceState, PanelAttrState,
+    ShieldDetailEntry, SkillCdState, TrainingDummyState,
 };
 use crate::live::counter_tracker::{BuffCounterTracker, CounterRule};
 use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::event_manager::EventManager;
 use crate::live::monster_registry;
-use crate::live::opcodes_models::{AttrType, Encounter, Entity};
-use crate::live::skill_cd_monitor::SkillCdMonitor;
+use crate::live::opcodes_models::{
+    AttrType, AttrValue, Encounter, Entity, ObservedActiveBuff, ObservedDamageHit,
+    ObservedEffectBuff, ObservedFactorBuff, ObservedModifierHitBucket, ObservedModifierReplayHit,
+    ObservedModifierReplaySource, ObservedModifierWindow, ObservedSkillCastEvent,
+    ObservedSkillCooldownEvent,
+};
+use crate::live::skill_cd_monitor::{SkillCdMonitor, calculate_skill_cd};
 use crate::live::training_dummy::{
     TrainingDummyMonsterId, TrainingDummyRuntime, inspect_aoi_delta,
 };
@@ -21,6 +29,8 @@ use log::{info, warn};
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
+
+const MAX_SKILL_TIMING_EVENTS: usize = 20_000;
 
 /// Represents the possible events that can be handled by the state manager.
 #[derive(Debug, Clone)]
@@ -62,6 +72,8 @@ pub struct AppState {
     pub event_manager: EventManager,
     /// Monitoring context for the local player.
     pub local_monitor: EntityMonitor,
+    /// Player buff state observed from nearby-player deltas for modifier history.
+    pub modifier_buff_monitor: BuffMonitor,
     /// Boss buff monitoring state and configuration.
     pub boss_buff_monitors: BossBuffMonitors,
     /// Whether we've already handled the first scene change after startup.
@@ -81,6 +93,8 @@ pub struct AppState {
     pub training_dummy: TrainingDummyRuntime,
     /// UIDs whose display names have already been pushed to the monster overlay.
     pub sent_overlay_uids: HashSet<i64>,
+    /// Set after a new death replay record is appended and cleared after the next frontend emit.
+    pub death_snapshot_dirty: bool,
 }
 
 #[derive(Debug)]
@@ -144,6 +158,7 @@ impl AppState {
             encounter: Encounter::default(),
             event_manager: EventManager::new(),
             local_monitor: EntityMonitor::new(0),
+            modifier_buff_monitor: BuffMonitor::new(),
             boss_buff_monitors: BossBuffMonitors::new(),
             initial_scene_change_handled: false,
             event_update_rate_ms: 200,
@@ -153,6 +168,7 @@ impl AppState {
             pending_auto_reset: None,
             training_dummy: TrainingDummyRuntime::default(),
             sent_overlay_uids: HashSet::new(),
+            death_snapshot_dirty: false,
         }
     }
 
@@ -192,6 +208,42 @@ fn emit_panel_attr_update_if_needed(state: &mut AppState, payload: Vec<PanelAttr
     state.event_manager.emit_panel_attr_update(payload);
 }
 
+fn emit_shield_detail_update_if_needed(state: &mut AppState, mut entries: Vec<ShieldDetailEntry>) {
+    let uid = state.attr_store.local_player_uid();
+    let current_hp = state
+        .attr_store
+        .attr(uid, AttrType::CurrentHp)
+        .and_then(AttrValue::as_int)
+        .unwrap_or(0);
+    let max_hp = state
+        .attr_store
+        .attr(uid, AttrType::MaxHp)
+        .and_then(AttrValue::as_int)
+        .unwrap_or(0);
+    let clock_offset = state.server_clock_offset;
+
+    for entry in &mut entries {
+        if let Some(active_buff) = state
+            .local_monitor
+            .buff_monitor
+            .active_buffs
+            .get(&(entry.buff_uuid as i32))
+        {
+            entry.base_id = active_buff.base_id;
+            if active_buff.duration > 0 {
+                entry.expire_time_ms = active_buff
+                    .create_time
+                    .saturating_add(clock_offset)
+                    .saturating_add(active_buff.duration as i64);
+            }
+        }
+    }
+
+    state
+        .event_manager
+        .emit_shield_detail_update(current_hp, max_hp, entries);
+}
+
 fn emit_buff_counter_update_if_needed(state: &mut AppState, payload: Vec<CounterUpdateState>) {
     state.event_manager.emit_buff_counter_update(payload);
 }
@@ -202,7 +254,11 @@ fn hydrate_entities_from_attr_store(state: &mut AppState) {
     }
 }
 
-pub(crate) fn resolve_entity_display_name(uid: i64, entity: &Entity, attr_store: &EntityAttrStore) -> String {
+pub(crate) fn resolve_entity_display_name(
+    uid: i64,
+    entity: &Entity,
+    attr_store: &EntityAttrStore,
+) -> String {
     if let Some(name) = attr_store
         .attr(uid, AttrType::Name)
         .and_then(|value| value.as_string())
@@ -252,10 +308,7 @@ fn build_training_dummy_state(runtime: &TrainingDummyRuntime) -> TrainingDummySt
     }
 }
 
-fn emit_training_dummy_update_if_changed(
-    state: &mut AppState,
-    previous: TrainingDummyState,
-) {
+fn emit_training_dummy_update_if_changed(state: &mut AppState, previous: TrainingDummyState) {
     let current = build_training_dummy_state(&state.training_dummy);
     if current != previous && state.event_manager.should_emit_events() {
         state.event_manager.emit_training_dummy_update(current);
@@ -289,8 +342,957 @@ fn build_encounter_metadata(
     }
 }
 
+fn collect_observed_active_buffs(
+    active_buffs: &HashMap<i32, ActiveBuff>,
+    local_player_uid: i64,
+) -> Vec<ObservedActiveBuff> {
+    let mut observed = Vec::new();
+
+    for (&buff_uuid, buff) in active_buffs {
+        observed.push(ObservedActiveBuff {
+            buff_uuid,
+            base_id: buff.base_id,
+            buff_level: buff.buff_level,
+            part_id: buff.part_id,
+            count: buff.count,
+            fight_source_type: buff.fight_source_type,
+            source_config_id: buff.source_config_id,
+            layer: buff.layer,
+            duration: buff.duration,
+            create_time: buff.create_time,
+            received_time_ms: buff.received_time_ms,
+            host_uid: if buff.host_uid != 0 {
+                buff.host_uid
+            } else {
+                local_player_uid
+            },
+            source_uid: buff.source_uid,
+        });
+    }
+
+    observed.sort_by_key(|buff| (buff.base_id, buff.buff_uuid));
+    observed
+}
+
+fn collect_observed_factor_buffs(
+    active_buffs: &HashMap<i32, ActiveBuff>,
+    local_player_uid: i64,
+) -> Vec<ObservedFactorBuff> {
+    let mut by_key = HashMap::<(i32, i32), ObservedFactorBuff>::new();
+
+    for buff in active_buffs.values() {
+        let source_factor_id = buff
+            .source_config_id
+            .filter(|id| crate::live::season_phantom_factors::is_factor_buff_id(*id));
+        let factor_buff_id = if crate::live::season_phantom_factors::is_factor_buff_id(buff.base_id)
+        {
+            Some(buff.base_id)
+        } else {
+            source_factor_id
+        };
+        let Some(factor_buff_id) = factor_buff_id else {
+            continue;
+        };
+
+        by_key.insert(
+            (factor_buff_id, buff.base_id),
+            ObservedFactorBuff {
+                factor_buff_id,
+                observed_buff_id: buff.base_id,
+                buff_level: buff.buff_level,
+                part_id: buff.part_id,
+                count: buff.count,
+                fight_source_type: buff.fight_source_type,
+                source_config_id: buff.source_config_id,
+                layer: buff.layer,
+                duration: buff.duration,
+                create_time: buff.create_time,
+                received_time_ms: buff.received_time_ms,
+                host_uid: if buff.host_uid != 0 {
+                    buff.host_uid
+                } else {
+                    local_player_uid
+                },
+                source_uid: buff.source_uid,
+            },
+        );
+    }
+
+    let mut observed: Vec<_> = by_key.into_values().collect();
+    observed.sort_by_key(|buff| (buff.factor_buff_id, buff.observed_buff_id));
+    observed
+}
+
+fn collect_observed_effect_buffs(
+    active_buffs: &HashMap<i32, ActiveBuff>,
+    local_player_uid: i64,
+) -> Vec<ObservedEffectBuff> {
+    let mut by_key = HashMap::<(i32, i32), ObservedEffectBuff>::new();
+
+    for buff in active_buffs.values() {
+        let source_effect_id = buff
+            .source_config_id
+            .filter(|id| crate::live::effect_sources::is_effect_buff_id(*id));
+        let effect_source_buff_id = if crate::live::effect_sources::is_effect_buff_id(buff.base_id)
+        {
+            Some(buff.base_id)
+        } else {
+            source_effect_id
+        };
+        let Some(effect_source_buff_id) = effect_source_buff_id else {
+            continue;
+        };
+
+        by_key.insert(
+            (effect_source_buff_id, buff.base_id),
+            ObservedEffectBuff {
+                effect_source_buff_id,
+                observed_buff_id: buff.base_id,
+                buff_level: buff.buff_level,
+                part_id: buff.part_id,
+                count: buff.count,
+                fight_source_type: buff.fight_source_type,
+                source_config_id: buff.source_config_id,
+                layer: buff.layer,
+                duration: buff.duration,
+                create_time: buff.create_time,
+                received_time_ms: buff.received_time_ms,
+                host_uid: if buff.host_uid != 0 {
+                    buff.host_uid
+                } else {
+                    local_player_uid
+                },
+                source_uid: buff.source_uid,
+            },
+        );
+    }
+
+    let mut observed: Vec<_> = by_key.into_values().collect();
+    observed.sort_by_key(|buff| (buff.effect_source_buff_id, buff.observed_buff_id));
+    observed
+}
+
+fn combined_modifier_active_buffs(state: &AppState) -> HashMap<i32, ActiveBuff> {
+    let mut active_buffs = state.modifier_buff_monitor.active_buffs.clone();
+    for (&buff_uuid, buff) in &state.local_monitor.buff_monitor.active_buffs {
+        active_buffs.insert(buff_uuid, buff.clone());
+    }
+    active_buffs
+}
+
+fn sync_active_buffs_to_encounter(state: &mut AppState) {
+    let local_player_uid = state.encounter.local_player_uid;
+    if local_player_uid <= 0 {
+        return;
+    }
+    let active_buff_map = combined_modifier_active_buffs(state);
+
+    let active_buffs = collect_observed_active_buffs(&active_buff_map, local_player_uid);
+    let active_factor_buffs = collect_observed_factor_buffs(&active_buff_map, local_player_uid);
+    let active_effect_buffs = collect_observed_effect_buffs(&active_buff_map, local_player_uid);
+
+    for entity in state.encounter.entity_uid_to_entity.values_mut() {
+        entity.active_buffs.clear();
+        entity.active_factor_buffs.clear();
+        entity.active_effect_buffs.clear();
+    }
+
+    for buff in active_buffs {
+        let host_uid = if buff.host_uid > 0 {
+            buff.host_uid
+        } else {
+            local_player_uid
+        };
+        if host_uid <= 0 {
+            continue;
+        }
+        let entity = state
+            .encounter
+            .entity_uid_to_entity
+            .entry(host_uid)
+            .or_insert_with(|| Entity {
+                entity_type: EEntityType::EntChar,
+                ..Default::default()
+            });
+        entity.active_buffs.push(buff);
+    }
+
+    for buff in active_factor_buffs {
+        let host_uid = if buff.host_uid > 0 {
+            buff.host_uid
+        } else {
+            local_player_uid
+        };
+        if host_uid <= 0 {
+            continue;
+        }
+        let entity = state
+            .encounter
+            .entity_uid_to_entity
+            .entry(host_uid)
+            .or_insert_with(|| Entity {
+                entity_type: EEntityType::EntChar,
+                ..Default::default()
+            });
+        entity.active_factor_buffs.push(buff);
+    }
+
+    for buff in active_effect_buffs {
+        let host_uid = if buff.host_uid > 0 {
+            buff.host_uid
+        } else {
+            local_player_uid
+        };
+        if host_uid <= 0 {
+            continue;
+        }
+        let entity = state
+            .encounter
+            .entity_uid_to_entity
+            .entry(host_uid)
+            .or_insert_with(|| Entity {
+                entity_type: EEntityType::EntChar,
+                ..Default::default()
+            });
+        entity.active_effect_buffs.push(buff);
+    }
+}
+
+fn modifier_window_host_uid(change: &BuffChangeEvent, fallback_host_uid: i64) -> i64 {
+    if change.host_uid > 0 {
+        change.host_uid
+    } else {
+        fallback_host_uid
+    }
+}
+
+fn modifier_window_from_change(
+    change: &BuffChangeEvent,
+    start_time_ms: i64,
+) -> ObservedModifierWindow {
+    ObservedModifierWindow {
+        buff_uuid: change.buff_uuid,
+        base_id: change.base_id,
+        buff_level: change.buff_level,
+        part_id: change.part_id,
+        count: change.count,
+        fight_source_type: change.fight_source_type,
+        source_config_id: change.source_config_id,
+        layer: change.layer,
+        duration: change.duration_ms.unwrap_or(0),
+        start_time_ms,
+        end_time_ms: None,
+        host_uid: change.host_uid,
+        source_uid: change.source_uid,
+    }
+}
+
+fn close_open_modifier_window(
+    entity: &mut Entity,
+    buff_uuid: i32,
+    host_uid: i64,
+    end_time_ms: i64,
+) -> bool {
+    if let Some(window) = entity.modifier_windows.iter_mut().rev().find(|window| {
+        window.buff_uuid == buff_uuid && window.host_uid == host_uid && window.end_time_ms.is_none()
+    }) {
+        window.end_time_ms = Some(end_time_ms.max(window.start_time_ms));
+        return true;
+    }
+    false
+}
+
+fn apply_modifier_buff_changes(
+    state: &mut AppState,
+    changes: &[BuffChangeEvent],
+    fallback_host_uid: i64,
+) {
+    let local_player_uid = state.encounter.local_player_uid;
+    let fallback_host_uid = if fallback_host_uid > 0 {
+        fallback_host_uid
+    } else {
+        local_player_uid
+    };
+    if fallback_host_uid <= 0 || changes.is_empty() {
+        return;
+    }
+
+    for change in changes {
+        let host_uid = modifier_window_host_uid(change, fallback_host_uid);
+        if host_uid <= 0 {
+            continue;
+        }
+        if let Some(active_buff) = state
+            .modifier_buff_monitor
+            .active_buffs
+            .get_mut(&change.buff_uuid)
+        {
+            if active_buff.host_uid <= 0 {
+                active_buff.host_uid = host_uid;
+            }
+        }
+        let entity = state
+            .encounter
+            .entity_uid_to_entity
+            .entry(host_uid)
+            .or_insert_with(|| Entity {
+                entity_type: EEntityType::EntChar,
+                ..Default::default()
+            });
+        match change.change_type {
+            BuffChangeType::Added => {
+                close_open_modifier_window(
+                    entity,
+                    change.buff_uuid,
+                    host_uid,
+                    change.event_time_ms,
+                );
+                let mut window = modifier_window_from_change(
+                    change,
+                    change.create_time_ms.unwrap_or(change.event_time_ms),
+                );
+                window.host_uid = host_uid;
+                entity.modifier_windows.push(window);
+            }
+            BuffChangeType::Changed => {
+                if let Some(window) = entity.modifier_windows.iter_mut().rev().find(|window| {
+                    window.buff_uuid == change.buff_uuid
+                        && window.host_uid == host_uid
+                        && window.end_time_ms.is_none()
+                }) {
+                    window.layer = change.layer;
+                    window.duration = change.duration_ms.unwrap_or(window.duration);
+                    window.buff_level = change.buff_level;
+                    window.part_id = change.part_id;
+                    window.count = change.count;
+                    window.fight_source_type = change.fight_source_type;
+                    window.source_config_id = change.source_config_id;
+                    window.source_uid = change.source_uid;
+                }
+            }
+            BuffChangeType::Removed => {
+                if !close_open_modifier_window(
+                    entity,
+                    change.buff_uuid,
+                    host_uid,
+                    change.event_time_ms,
+                ) {
+                    let duration_ms = i64::from(change.duration_ms.unwrap_or(0).max(0));
+                    let mut window = modifier_window_from_change(
+                        change,
+                        change.event_time_ms.saturating_sub(duration_ms),
+                    );
+                    window.host_uid = host_uid;
+                    window.end_time_ms = Some(change.event_time_ms);
+                    entity.modifier_windows.push(window);
+                }
+            }
+        }
+    }
+}
+
+fn temp_attr_modifier_buff_uuid(temp_attr_id: i32) -> i32 {
+    -temp_attr_id.abs()
+}
+
+fn apply_temp_attr_modifier_changes(
+    state: &mut AppState,
+    changes: &[crate::live::opcodes_process::TempAttrModifierChange],
+) {
+    let host_uid = state.encounter.local_player_uid;
+    if host_uid <= 0 || changes.is_empty() {
+        return;
+    }
+
+    let entity = state
+        .encounter
+        .entity_uid_to_entity
+        .entry(host_uid)
+        .or_insert_with(|| Entity {
+            entity_type: EEntityType::EntChar,
+            ..Default::default()
+        });
+    if !matches!(entity.entity_type, EEntityType::EntChar) {
+        return;
+    }
+
+    for change in changes {
+        let buff_uuid = temp_attr_modifier_buff_uuid(change.temp_attr_id);
+        if change.value > 0 && change.previous_value <= 0 {
+            close_open_modifier_window(entity, buff_uuid, host_uid, change.event_time_ms);
+            entity.modifier_windows.push(ObservedModifierWindow {
+                buff_uuid,
+                base_id: change.buff_id,
+                buff_level: None,
+                part_id: Some(change.temp_attr_id),
+                count: Some(change.value),
+                fight_source_type: None,
+                source_config_id: None,
+                layer: 1,
+                duration: 0,
+                start_time_ms: change.event_time_ms,
+                end_time_ms: None,
+                host_uid,
+                source_uid: host_uid,
+            });
+        } else if change.value > 0 {
+            if let Some(window) = entity.modifier_windows.iter_mut().rev().find(|window| {
+                window.buff_uuid == buff_uuid
+                    && window.host_uid == host_uid
+                    && window.end_time_ms.is_none()
+            }) {
+                window.count = Some(change.value);
+                window.part_id = Some(change.temp_attr_id);
+            }
+        } else if change.previous_value > 0 {
+            close_open_modifier_window(entity, buff_uuid, host_uid, change.event_time_ms);
+        }
+    }
+}
+
+fn active_modifier_start_ms(
+    buff: &ActiveBuff,
+    encounter_start_ms: i64,
+    encounter_end_ms: i64,
+    server_clock_offset: i64,
+) -> i64 {
+    let adjusted_create_time = buff.create_time.saturating_add(server_clock_offset);
+    let duration_start = if buff.duration > 0 {
+        encounter_end_ms.saturating_sub(i64::from(buff.duration))
+    } else {
+        encounter_start_ms
+    };
+    let start = if adjusted_create_time > 0 {
+        adjusted_create_time
+    } else {
+        duration_start
+    };
+    start.clamp(encounter_start_ms, encounter_end_ms)
+}
+
+fn seed_open_modifier_windows_from_active_buffs(
+    state: &mut AppState,
+    encounter_start_ms: i64,
+    encounter_end_ms: i64,
+) {
+    let local_player_uid = state.encounter.local_player_uid;
+    if local_player_uid <= 0 {
+        return;
+    }
+    let active_buffs = combined_modifier_active_buffs(state);
+    for (&buff_uuid, buff) in &active_buffs {
+        let host_uid = if buff.host_uid > 0 {
+            buff.host_uid
+        } else {
+            local_player_uid
+        };
+        if host_uid <= 0 {
+            continue;
+        }
+        let entity = state
+            .encounter
+            .entity_uid_to_entity
+            .entry(host_uid)
+            .or_insert_with(|| Entity {
+                entity_type: EEntityType::EntChar,
+                ..Default::default()
+            });
+        let has_open_window = entity.modifier_windows.iter().any(|window| {
+            window.buff_uuid == buff_uuid
+                && window.host_uid == host_uid
+                && window.end_time_ms.is_none()
+        });
+        if has_open_window {
+            continue;
+        }
+
+        entity.modifier_windows.push(ObservedModifierWindow {
+            buff_uuid,
+            base_id: buff.base_id,
+            buff_level: buff.buff_level,
+            part_id: buff.part_id,
+            count: buff.count,
+            fight_source_type: buff.fight_source_type,
+            source_config_id: buff.source_config_id,
+            layer: buff.layer,
+            duration: buff.duration,
+            start_time_ms: active_modifier_start_ms(
+                buff,
+                encounter_start_ms,
+                encounter_end_ms,
+                state.server_clock_offset,
+            ),
+            end_time_ms: None,
+            host_uid,
+            source_uid: buff.source_uid,
+        });
+    }
+}
+
+fn finalize_modifier_windows_for_save(state: &mut AppState, encounter_end_ms: i64) {
+    let encounter_start_ms = if state.encounter.time_fight_start_ms > 0 {
+        state.encounter.time_fight_start_ms as i64
+    } else {
+        encounter_end_ms
+    };
+    seed_open_modifier_windows_from_active_buffs(state, encounter_start_ms, encounter_end_ms);
+    for entity in state.encounter.entity_uid_to_entity.values_mut() {
+        for window in &mut entity.modifier_windows {
+            if window.end_time_ms.is_none() {
+                window.end_time_ms = Some(encounter_end_ms.max(window.start_time_ms));
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct ModifierHitBucketKey {
+    modifier_buff_uuid: i32,
+    modifier_base_id: i32,
+    modifier_buff_level: Option<i32>,
+    modifier_part_id: Option<i32>,
+    modifier_fight_source_type: Option<i32>,
+    modifier_source_config_id: Option<i32>,
+    modifier_host_uid: i64,
+    modifier_source_uid: i64,
+    skill_key: i64,
+    damage_id: i64,
+    owner_id: i32,
+    owner_level: Option<i32>,
+    hit_event_id: Option<i32>,
+    damage_source: Option<i32>,
+    property: Option<i32>,
+    damage_mode: Option<i32>,
+    attacker_uid: i64,
+    original_attacker_uid: i64,
+    top_summoner_uid: Option<i64>,
+    target_uid: i64,
+    target_monster_type_id: Option<i32>,
+    is_heal: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct ModifierHitSeenKey {
+    modifier_base_id: i32,
+    modifier_source_config_id: Option<i32>,
+    skill_key: i64,
+    damage_id: i64,
+    owner_id: i32,
+    owner_level: Option<i32>,
+    hit_event_id: Option<i32>,
+    damage_source: Option<i32>,
+    property: Option<i32>,
+    damage_mode: Option<i32>,
+    attacker_uid: i64,
+    original_attacker_uid: i64,
+    top_summoner_uid: Option<i64>,
+    target_uid: i64,
+    target_monster_type_id: Option<i32>,
+    is_heal: bool,
+}
+
+fn modifier_window_covers_hit(window: &ObservedModifierWindow, hit: &ObservedDamageHit) -> bool {
+    if window.base_id <= 0 {
+        return false;
+    }
+    let start = window.start_time_ms;
+    let end = window.end_time_ms.unwrap_or(hit.timestamp_ms).max(start);
+    hit.timestamp_ms >= start && hit.timestamp_ms <= end
+}
+
+fn modifier_hit_seen_key(
+    window: &ObservedModifierWindow,
+    hit: &ObservedDamageHit,
+) -> ModifierHitSeenKey {
+    ModifierHitSeenKey {
+        modifier_base_id: window.base_id,
+        modifier_source_config_id: window.source_config_id,
+        skill_key: hit.skill_key,
+        damage_id: hit.damage_id,
+        owner_id: hit.owner_id,
+        owner_level: hit.owner_level,
+        hit_event_id: hit.hit_event_id,
+        damage_source: hit.damage_source,
+        property: hit.property,
+        damage_mode: hit.damage_mode,
+        attacker_uid: hit.attacker_uid,
+        original_attacker_uid: hit.original_attacker_uid,
+        top_summoner_uid: hit.top_summoner_uid,
+        target_uid: hit.target_uid,
+        target_monster_type_id: hit.target_monster_type_id,
+        is_heal: hit.is_heal,
+    }
+}
+
+fn modifier_hit_bucket_key(
+    window: &ObservedModifierWindow,
+    hit: &ObservedDamageHit,
+) -> ModifierHitBucketKey {
+    ModifierHitBucketKey {
+        modifier_buff_uuid: window.buff_uuid,
+        modifier_base_id: window.base_id,
+        modifier_buff_level: window.buff_level,
+        modifier_part_id: window.part_id,
+        modifier_fight_source_type: window.fight_source_type,
+        modifier_source_config_id: window.source_config_id,
+        modifier_host_uid: window.host_uid,
+        modifier_source_uid: window.source_uid,
+        skill_key: hit.skill_key,
+        damage_id: hit.damage_id,
+        owner_id: hit.owner_id,
+        owner_level: hit.owner_level,
+        hit_event_id: hit.hit_event_id,
+        damage_source: hit.damage_source,
+        property: hit.property,
+        damage_mode: hit.damage_mode,
+        attacker_uid: hit.attacker_uid,
+        original_attacker_uid: hit.original_attacker_uid,
+        top_summoner_uid: hit.top_summoner_uid,
+        target_uid: hit.target_uid,
+        target_monster_type_id: hit.target_monster_type_id,
+        is_heal: hit.is_heal,
+    }
+}
+
+fn empty_modifier_hit_bucket(
+    window: &ObservedModifierWindow,
+    hit: &ObservedDamageHit,
+) -> ObservedModifierHitBucket {
+    ObservedModifierHitBucket {
+        modifier_buff_uuid: window.buff_uuid,
+        modifier_base_id: window.base_id,
+        modifier_buff_level: window.buff_level,
+        modifier_part_id: window.part_id,
+        modifier_count: window.count,
+        modifier_fight_source_type: window.fight_source_type,
+        modifier_source_config_id: window.source_config_id,
+        modifier_layer: window.layer,
+        modifier_duration: window.duration,
+        modifier_start_time_ms: window.start_time_ms,
+        modifier_end_time_ms: window.end_time_ms,
+        modifier_host_uid: window.host_uid,
+        modifier_source_uid: window.source_uid,
+        skill_key: hit.skill_key,
+        damage_id: hit.damage_id,
+        owner_id: hit.owner_id,
+        owner_level: hit.owner_level,
+        hit_event_id: hit.hit_event_id,
+        damage_source: hit.damage_source,
+        property: hit.property,
+        damage_mode: hit.damage_mode,
+        attacker_uid: hit.attacker_uid,
+        original_attacker_uid: hit.original_attacker_uid,
+        top_summoner_uid: hit.top_summoner_uid,
+        target_uid: hit.target_uid,
+        target_monster_type_id: hit.target_monster_type_id,
+        is_heal: hit.is_heal,
+        hits: 0,
+        total_value: 0,
+        effective_total_value: 0,
+        crit_hits: 0,
+        crit_total_value: 0,
+        lucky_hits: 0,
+        lucky_total_value: 0,
+        hp_loss_total: 0,
+        shield_loss_total: 0,
+        first_hit_time_ms: hit.timestamp_ms,
+        last_hit_time_ms: hit.timestamp_ms,
+    }
+}
+
+fn add_hit_to_modifier_bucket(bucket: &mut ObservedModifierHitBucket, hit: &ObservedDamageHit) {
+    bucket.hits += 1;
+    bucket.total_value += hit.value;
+    bucket.effective_total_value += hit.effective_value;
+    if hit.is_crit {
+        bucket.crit_hits += 1;
+        bucket.crit_total_value += hit.value;
+    }
+    if hit.is_lucky {
+        bucket.lucky_hits += 1;
+        bucket.lucky_total_value += hit.value;
+    }
+    bucket.hp_loss_total += hit.hp_loss_value;
+    bucket.shield_loss_total += hit.shield_loss_value;
+    bucket.first_hit_time_ms = bucket.first_hit_time_ms.min(hit.timestamp_ms);
+    bucket.last_hit_time_ms = bucket.last_hit_time_ms.max(hit.timestamp_ms);
+}
+
+fn build_modifier_hit_buckets(
+    entity_uid: i64,
+    hits: &[ObservedDamageHit],
+    windows_by_host_uid: &HashMap<i64, Vec<ObservedModifierWindow>>,
+) -> Vec<ObservedModifierHitBucket> {
+    let mut buckets = HashMap::<ModifierHitBucketKey, ObservedModifierHitBucket>::new();
+    for hit in hits {
+        let mut host_uids = vec![entity_uid];
+        if hit.target_uid != entity_uid {
+            host_uids.push(hit.target_uid);
+        }
+
+        let mut seen_keys_for_hit = HashSet::<ModifierHitSeenKey>::new();
+        for host_uid in host_uids {
+            let Some(windows) = windows_by_host_uid.get(&host_uid) else {
+                continue;
+            };
+            for window in windows {
+                if !modifier_window_covers_hit(window, hit) {
+                    continue;
+                }
+                let seen_key = modifier_hit_seen_key(window, hit);
+                if !seen_keys_for_hit.insert(seen_key) {
+                    continue;
+                }
+                let key = modifier_hit_bucket_key(window, hit);
+                let bucket = buckets
+                    .entry(key)
+                    .or_insert_with(|| empty_modifier_hit_bucket(window, hit));
+                add_hit_to_modifier_bucket(bucket, hit);
+            }
+        }
+    }
+
+    let mut rows: Vec<ObservedModifierHitBucket> = buckets.into_values().collect();
+    rows.sort_by(|left, right| {
+        right
+            .total_value
+            .cmp(&left.total_value)
+            .then_with(|| right.hits.cmp(&left.hits))
+            .then_with(|| left.modifier_base_id.cmp(&right.modifier_base_id))
+            .then_with(|| left.skill_key.cmp(&right.skill_key))
+    });
+    rows
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct ModifierReplaySourceKey {
+    modifier_base_id: i32,
+    modifier_source_config_id: Option<i32>,
+    modifier_host_uid: i64,
+    modifier_source_uid: i64,
+}
+
+fn replay_source_key(window: &ObservedModifierWindow) -> ModifierReplaySourceKey {
+    ModifierReplaySourceKey {
+        modifier_base_id: window.base_id,
+        modifier_source_config_id: window.source_config_id,
+        modifier_host_uid: window.host_uid,
+        modifier_source_uid: window.source_uid,
+    }
+}
+
+fn modifier_replay_source(window: &ObservedModifierWindow) -> ObservedModifierReplaySource {
+    ObservedModifierReplaySource {
+        modifier_base_id: window.base_id,
+        modifier_source_config_id: window.source_config_id,
+        modifier_buff_level: window.buff_level,
+        modifier_count: window.count,
+        modifier_layer: window.layer,
+        modifier_host_uid: window.host_uid,
+        modifier_source_uid: window.source_uid,
+    }
+}
+
+fn build_modifier_replay_hits(
+    entity_uid: i64,
+    hits: &[ObservedDamageHit],
+    windows_by_host_uid: &HashMap<i64, Vec<ObservedModifierWindow>>,
+) -> Vec<ObservedModifierReplayHit> {
+    let mut rows = Vec::new();
+    for hit in hits {
+        let mut host_uids = vec![entity_uid];
+        if hit.target_uid != entity_uid {
+            host_uids.push(hit.target_uid);
+        }
+
+        let mut seen_sources = HashSet::<ModifierReplaySourceKey>::new();
+        let mut active_modifiers = Vec::new();
+        for host_uid in host_uids {
+            let Some(windows) = windows_by_host_uid.get(&host_uid) else {
+                continue;
+            };
+            for window in windows {
+                if !modifier_window_covers_hit(window, hit) {
+                    continue;
+                }
+                if !crate::live::modifier_recount::is_reportable_modifier_bucket(
+                    window.base_id,
+                    window.source_config_id,
+                ) {
+                    continue;
+                }
+                let key = replay_source_key(window);
+                if !seen_sources.insert(key) {
+                    continue;
+                }
+                active_modifiers.push(modifier_replay_source(window));
+            }
+        }
+        if active_modifiers.is_empty() {
+            continue;
+        }
+        active_modifiers.sort_by(|left, right| {
+            left.modifier_base_id
+                .cmp(&right.modifier_base_id)
+                .then_with(|| left.modifier_source_config_id.cmp(&right.modifier_source_config_id))
+                .then_with(|| left.modifier_source_uid.cmp(&right.modifier_source_uid))
+                .then_with(|| left.modifier_host_uid.cmp(&right.modifier_host_uid))
+        });
+        rows.push(ObservedModifierReplayHit {
+            timestamp_ms: hit.timestamp_ms,
+            skill_key: hit.skill_key,
+            damage_id: hit.damage_id,
+            owner_id: hit.owner_id,
+            owner_level: hit.owner_level,
+            hit_event_id: hit.hit_event_id,
+            damage_source: hit.damage_source,
+            property: hit.property,
+            damage_mode: hit.damage_mode,
+            attacker_uid: hit.attacker_uid,
+            original_attacker_uid: hit.original_attacker_uid,
+            top_summoner_uid: hit.top_summoner_uid,
+            target_uid: hit.target_uid,
+            target_monster_type_id: hit.target_monster_type_id,
+            is_heal: hit.is_heal,
+            is_crit: hit.is_crit,
+            is_lucky: hit.is_lucky,
+            value: hit.value,
+            effective_value: hit.effective_value,
+            hp_loss_value: hit.hp_loss_value,
+            shield_loss_value: hit.shield_loss_value,
+            active_modifiers,
+            attacker_attrs: hit.attacker_attrs.clone(),
+            target_attrs: hit.target_attrs.clone(),
+        });
+    }
+
+    rows.sort_by(|left, right| {
+        left.timestamp_ms
+            .cmp(&right.timestamp_ms)
+            .then_with(|| left.damage_id.cmp(&right.damage_id))
+            .then_with(|| left.target_uid.cmp(&right.target_uid))
+    });
+    rows
+}
+
+fn finalize_modifier_hit_buckets_for_save(state: &mut AppState) {
+    let mut windows_by_host_uid = HashMap::<i64, Vec<ObservedModifierWindow>>::new();
+    for (&entity_uid, entity) in &state.encounter.entity_uid_to_entity {
+        for window in &entity.modifier_windows {
+            let mut window = window.clone();
+            if window.host_uid <= 0 {
+                window.host_uid = entity_uid;
+            }
+            windows_by_host_uid
+                .entry(window.host_uid)
+                .or_default()
+                .push(window);
+        }
+    }
+
+    for (&entity_uid, entity) in &mut state.encounter.entity_uid_to_entity {
+        entity.modifier_hit_buckets = build_modifier_hit_buckets(
+            entity_uid,
+            &entity.observed_damage_hits,
+            &windows_by_host_uid,
+        );
+        entity.modifier_replay_hits = build_modifier_replay_hits(
+            entity_uid,
+            &entity.observed_damage_hits,
+            &windows_by_host_uid,
+        );
+    }
+}
+
+fn trim_skill_timing_events(entity: &mut Entity) {
+    if entity.skill_cast_events.len() > MAX_SKILL_TIMING_EVENTS {
+        let overflow = entity.skill_cast_events.len() - MAX_SKILL_TIMING_EVENTS;
+        entity.skill_cast_events.drain(0..overflow);
+    }
+    if entity.skill_cooldown_events.len() > MAX_SKILL_TIMING_EVENTS {
+        let overflow = entity.skill_cooldown_events.len() - MAX_SKILL_TIMING_EVENTS;
+        entity.skill_cooldown_events.drain(0..overflow);
+    }
+}
+
+fn record_local_skill_cast_event(state: &mut AppState, skill_id: i32) {
+    if skill_id <= 0 {
+        return;
+    }
+    let local_uid = state.encounter.local_player_uid;
+    let Some(entity) = state.encounter.entity_uid_to_entity.get_mut(&local_uid) else {
+        return;
+    };
+    entity.skill_cast_events.push(ObservedSkillCastEvent {
+        timestamp_ms: now_ms(),
+        skill_id,
+        source: "attr-skill-id".to_string(),
+    });
+    trim_skill_timing_events(entity);
+}
+
+fn record_local_skill_cooldown_events(
+    state: &mut AppState,
+    skill_cds: &[crate::live::opcodes_process::ParsedSkillCd],
+) {
+    if skill_cds.is_empty() {
+        return;
+    }
+
+    let now = now_ms();
+    let (attr_skill_cd, attr_skill_cd_pct, attr_cd_accelerate_pct) = state.attr_store.cd_inputs();
+    let temp_attrs = state.attr_store.temp_attrs();
+    let events: Vec<ObservedSkillCooldownEvent> = skill_cds
+        .iter()
+        .filter_map(|cd| {
+            let skill_level_id = cd.skill_level_id?;
+            if skill_level_id <= 0 {
+                return None;
+            }
+            let duration = cd.duration.unwrap_or(0);
+            let (calculated_duration, cd_accelerate_rate) = if duration > 0 {
+                calculate_skill_cd(
+                    duration as f32,
+                    skill_level_id,
+                    temp_attrs,
+                    attr_skill_cd,
+                    attr_skill_cd_pct,
+                    attr_cd_accelerate_pct,
+                )
+            } else {
+                (duration as f32, 0.0)
+            };
+            Some(ObservedSkillCooldownEvent {
+                timestamp_ms: now,
+                skill_level_id,
+                skill_id: skill_level_id / 100,
+                begin_time: cd.begin_time.unwrap_or(0),
+                duration,
+                calculated_duration: calculated_duration.round() as i32,
+                cd_accelerate_rate,
+                skill_cd_type: cd.skill_cd_type.unwrap_or(0),
+                valid_cd_time: cd.valid_cd_time.unwrap_or(0),
+                attr_skill_cd,
+                attr_skill_cd_pct,
+                attr_cd_accelerate_pct,
+            })
+        })
+        .collect();
+    if events.is_empty() {
+        return;
+    }
+
+    let local_uid = state.encounter.local_player_uid;
+    let Some(entity) = state.encounter.entity_uid_to_entity.get_mut(&local_uid) else {
+        return;
+    };
+    entity.skill_cooldown_events.extend(events);
+    trim_skill_timing_events(entity);
+}
+
 fn persist_and_save_encounter(state: &mut AppState, is_manual: bool, source: &str) {
     hydrate_entities_from_attr_store(state);
+    sync_active_buffs_to_encounter(state);
     let defeated: Vec<String> = state
         .encounter
         .entity_uid_to_entity
@@ -306,6 +1308,13 @@ fn persist_and_save_encounter(state: &mut AppState, is_manual: bool, source: &st
         .collect();
     let player_names = collect_player_names(&state.encounter);
     let metadata = build_encounter_metadata(&state.encounter, defeated, player_names, is_manual);
+    finalize_modifier_windows_for_save(
+        state,
+        metadata
+            .ended_at_ms
+            .unwrap_or_else(|| state.encounter.time_last_combat_packet_ms as i64),
+    );
+    finalize_modifier_hit_buckets_for_save(state);
 
     if metadata.started_at_ms > 0 {
         info!(
@@ -636,6 +1645,7 @@ impl AppStateManager {
 
         persist_and_save_encounter(state, false, "server_change");
         on_server_change(&mut state.encounter);
+        state.modifier_buff_monitor.active_buffs.clear();
         state.battle_state = BattleStateMachine::default();
     }
 
@@ -647,6 +1657,7 @@ impl AppStateManager {
         info!("EnterScene packet received");
 
         let parsed = parse_enter_scene(
+            &mut state.encounter,
             &mut state.attr_store,
             &enter_scene,
             &state.local_monitor.monitored_panel_attr_ids,
@@ -711,6 +1722,7 @@ impl AppStateManager {
         state.attr_store.clear_all_entities();
         state.encounter.reset_combat_state();
         state.local_monitor.clear_runtime_state();
+        state.modifier_buff_monitor.active_buffs.clear();
         state.boss_buff_monitors.clear();
         state.sent_overlay_uids.clear();
         state.battle_state = BattleStateMachine::default();
@@ -864,6 +1876,8 @@ impl AppStateManager {
             state.local_monitor.uid = state.encounter.local_player_uid;
         }
 
+        apply_temp_attr_modifier_changes(state, &result.temp_attr_modifier_changes);
+
         if !result.skill_cds.is_empty() {
             let ids: Vec<i32> = result
                 .skill_cds
@@ -878,13 +1892,23 @@ impl AppStateManager {
         }
 
         if let Some(values) = result.fight_resources {
-            let now = crate::database::now_ms();
-            let new_state = FightResourceState {
-                values,
-                received_at: now,
-            };
-            state.local_monitor.fight_res_state = Some(new_state.clone());
-            state.event_manager.emit_fight_resource_update(new_state);
+            let ids = state
+                .attr_store
+                .fight_resource_ids(state.encounter.local_player_uid);
+            if !ids.is_empty() {
+                let now = crate::database::now_ms();
+                let new_state = FightResourceState {
+                    entries: ids
+                        .iter()
+                        .copied()
+                        .zip(values)
+                        .map(|(id, value)| FightResourceEntry { id, value })
+                        .collect(),
+                    received_at: now,
+                };
+                state.local_monitor.fight_res_state = Some(new_state.clone());
+                state.event_manager.emit_fight_resource_update(new_state);
+            }
         }
 
         let mut counter_dirty = false;
@@ -896,6 +1920,7 @@ impl AppStateManager {
         }
 
         if let Some(skill_base_id) = result.attr_skill_id {
+            record_local_skill_cast_event(state, skill_base_id);
             counter_dirty |= state
                 .local_monitor
                 .counter_tracker
@@ -903,6 +1928,7 @@ impl AppStateManager {
         }
 
         if !result.skill_cds.is_empty() {
+            record_local_skill_cooldown_events(state, &result.skill_cds);
             state.attr_store.mark_cd_dirty();
             state
                 .local_monitor
@@ -919,6 +1945,11 @@ impl AppStateManager {
             if let Some(payload) = buff_process_result.update_payload {
                 state.event_manager.emit_buff_update(payload);
             }
+            apply_modifier_buff_changes(
+                state,
+                &buff_process_result.changes,
+                state.encounter.local_player_uid,
+            );
             counter_dirty |= state
                 .local_monitor
                 .counter_tracker
@@ -945,7 +1976,9 @@ impl AppStateManager {
         let mut counter_dirty = false;
         let mut aggregated_damage_events = Vec::new();
         for mut aoi_sync_delta in sync_near_delta_info.delta_infos {
-            let target_uid = aoi_sync_delta.uuid.map(|uuid| uuid >> 16);
+            let target_uuid = aoi_sync_delta.uuid;
+            let target_uid = target_uuid.map(|uuid| uuid >> 16);
+            let target_entity_type = target_uuid.map(EEntityType::from);
             let buff_bytes = aoi_sync_delta.buff_effect.take();
             let combat_target_filter = self.prepare_training_dummy_for_delta(
                 state,
@@ -976,6 +2009,16 @@ impl AppStateManager {
                                 .is_some_and(monster_registry::is_extra_buff_monitored_monster)
                     })
                     .unwrap_or(false);
+                if matches!(target_entity_type, Some(EEntityType::EntChar)) {
+                    let local_player_uid = state.encounter.local_player_uid;
+                    let buff_process_result =
+                        state.modifier_buff_monitor.process_buff_effect_bytes(
+                            &raw_bytes,
+                            &mut state.server_clock_offset,
+                            local_player_uid,
+                        );
+                    apply_modifier_buff_changes(state, &buff_process_result.changes, target_uid);
+                }
                 if should_monitor_monster_buffs {
                     let local_player_uid = state.encounter.local_player_uid;
                     let monitor = state.boss_buff_monitors.monitor_for(target_uid);
@@ -1068,6 +2111,25 @@ impl AppStateManager {
                 .build_filtered_skill_cds();
             emit_skill_cd_update_if_needed(state, filtered);
         }
+
+        if changes.shield_detail_dirty {
+            emit_shield_detail_update_if_needed(state, changes.shield_detail_entries);
+        }
+
+        for death in changes.death_events {
+            if let Some(entity) = state.encounter.entity_uid_to_entity.get_mut(&death.uid) {
+                let recent_damages: Vec<_> = entity.recent_taken_events.drain(..).collect();
+                if recent_damages.is_empty() {
+                    continue;
+                }
+                entity.deaths.push(DeathRecord {
+                    victim_uid: death.uid,
+                    death_timestamp_ms: death.timestamp_ms,
+                    recent_damages,
+                });
+                state.death_snapshot_dirty = true;
+            }
+        }
     }
 
     fn apply_battle_state_resets_if_needed(&self, state: &mut AppState) {
@@ -1087,6 +2149,8 @@ impl AppStateManager {
     fn reset_encounter(&self, state: &mut AppState, is_manual: bool) {
         persist_and_save_encounter(state, is_manual, "reset");
         state.encounter.reset_combat_state();
+        state.modifier_buff_monitor.active_buffs.clear();
+        state.death_snapshot_dirty = false;
 
         if state.event_manager.should_emit_events() {
             state.event_manager.emit_encounter_reset();
@@ -1208,12 +2272,25 @@ impl AppStateManager {
             return;
         }
 
+        sync_active_buffs_to_encounter(state);
         let payload = crate::live::event_manager::generate_live_data_payload(
             &state.encounter,
             &state.attr_store,
         );
 
         state.event_manager.emit_live_data(payload);
+
+        if state.death_snapshot_dirty {
+            let mut records: Vec<DeathRecord> = state
+                .encounter
+                .entity_uid_to_entity
+                .values()
+                .flat_map(|entity| entity.deaths.iter().cloned())
+                .collect();
+            records.sort_by_key(|record| record.death_timestamp_ms);
+            state.event_manager.emit_death_replay(records);
+            state.death_snapshot_dirty = false;
+        }
         let mut boss_buff_snapshot = state
             .boss_buff_monitors
             .build_all_buff_snapshots(state.server_clock_offset);

@@ -5,20 +5,22 @@
  * reflect its purpose as generic column metadata.
  */
 
+import { damageModeLabel, propertyLabel } from "./damage-type";
+
 export type ColumnDefinition<K extends string = string> = {
   key: K;
   header: string;
   label: string;
   description: string;
-  format: (v: number) => string;
+  format: (v: number | null) => string;
   headerKey?: string;
   labelKey?: string;
   descriptionKey?: string;
 };
 
-const integer = (v: number) => v.toLocaleString();
-const fixed1 = (v: number) => v.toFixed(1);
-const percent1 = (v: number) => v.toFixed(1) + "%";
+const integer = (v: number | null) => Number(v ?? 0).toLocaleString();
+const fixed1 = (v: number | null) => Number(v ?? 0).toFixed(1);
+const percent1 = (v: number | null) => Number(v ?? 0).toFixed(1) + "%";
 
 function makeColumn<K extends string>(
   section: string,
@@ -26,7 +28,7 @@ function makeColumn<K extends string>(
   header: string,
   label: string,
   description: string,
-  format: (v: number) => string,
+  format: (v: number | null) => string,
 ): ColumnDefinition<K> {
   return {
     key,
@@ -125,6 +127,8 @@ export const liveTankedSkillColumns = [
   makeColumn("columns.liveTankedSkills", "luckyDmgRate", "幸运承伤%", "幸运承伤%", "显示该技能承受的幸运一击伤害比例", percent1),
   makeColumn("columns.liveTankedSkills", "hits", "受击数", "受击数", "显示该技能造成的总受击次数", integer),
   makeColumn("columns.liveTankedSkills", "hitsPerMinute", "分均受击", "分均受击", "显示该技能每分钟造成的受击次数", fixed1),
+  makeColumn("columns.liveTankedSkills", "property", "Element", "Element", "Skill damage element property", propertyLabel),
+  makeColumn("columns.liveTankedSkills", "damageMode", "P/M", "P/M", "Physical or magical damage type", damageModeLabel),
 ] as const satisfies readonly ColumnDefinition[];
 
 export const historyTankedPlayerColumns = [
@@ -149,6 +153,8 @@ export const historyTankedSkillColumns = [
   makeColumn("columns.historyTankedSkills", "luckyDmgRate", "幸运承伤%", "幸运承伤%", "显示该技能承受的幸运一击伤害比例", percent1),
   makeColumn("columns.historyTankedSkills", "hits", "受击数", "受击数", "显示该技能造成的总受击次数", integer),
   makeColumn("columns.historyTankedSkills", "hitsPerMinute", "分均受击", "分均受击", "显示该技能每分钟造成的受击次数", fixed1),
+  makeColumn("columns.historyTankedSkills", "property", "Element", "Element", "Skill damage element property", propertyLabel),
+  makeColumn("columns.historyTankedSkills", "damageMode", "P/M", "P/M", "Physical or magical damage type", damageModeLabel),
 ] as const satisfies readonly ColumnDefinition[];
 
 export const historyHealSkillColumns = [

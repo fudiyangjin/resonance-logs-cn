@@ -4,6 +4,7 @@
   import TabPanelAttr from "./tab-panel-attr.svelte";
   import TabBuffUptime from "./tab-buff-uptime.svelte";
   import TabCustomPanel from "./tab-custom-panel.svelte";
+  import TabOverlay from "./tab-overlay.svelte";
   import {
     expandBuffSelection,
     getAvailableBuffDefinitions,
@@ -16,7 +17,6 @@
     resolveBuffDisplayName,
     saveBuffOverlayAlias,
     searchBuffsByName,
-    searchIconBuffsByName,
     type BuffCategoryKey,
     type BuffCategoryDefinition,
     type BuffDefinition,
@@ -40,6 +40,7 @@
     type CustomPanelGroup,
     type CustomPanelStyle,
     type InlineBuffEntry,
+    type OverlayVisibility,
     type PanelAttrConfig,
     type PanelAreaRowRef,
     type SkillMonitorProfile,
@@ -68,7 +69,7 @@
 
   type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
 
-  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   const availableBuffs = getAvailableBuffDefinitions();
   const buffCategoryDefinitions = getBuffCategoryDefinitions();
@@ -143,8 +144,16 @@
   const buffUptimeNameColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeNameColumnAdjust);
   const buffUptimeEncounterColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeEncounterColumnAdjust);
   const buffUptimeTrueColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeTrueColumnAdjust);
+  const iconBuffStackCounterSize = $derived(ensureOverlaySizes(activeProfile).iconBuffStackCounterSize);
   const customPanelStyle = $derived.by(() => ensureCustomPanelStyle(activeProfile));
   const textBuffPanelStyle = $derived.by(() => ensureTextBuffPanelStyle(activeProfile));
+  const showSkillCdGroup = $derived(activeProfile.overlayVisibility?.showSkillCdGroup ?? true);
+  const showSkillDurationGroup = $derived(activeProfile.overlayVisibility?.showSkillDurationGroup ?? true);
+  const showResourceGroup = $derived(activeProfile.overlayVisibility?.showResourceGroup ?? true);
+  const showPanelAttrGroup = $derived(activeProfile.overlayVisibility?.showPanelAttrGroup ?? true);
+  const showBuffUptimeGroup = $derived(activeProfile.overlayVisibility?.showBuffUptimeGroup ?? true);
+  const showCustomPanelGroup = $derived(activeProfile.overlayVisibility?.showCustomPanelGroup ?? true);
+  const showShieldDetailGroup = $derived(activeProfile.overlayVisibility?.showShieldDetailGroup ?? false);
   const buffDisplayMode = $derived(
     activeProfile.buffDisplayMode ?? "individual",
   );
@@ -255,8 +264,10 @@
     const currentMap = new Map(current.map((item) => [item.attrId, item]));
     return AVAILABLE_PANEL_ATTRS.map((item) => {
       const existing = currentMap.get(item.attrId);
+      const labelKey = existing?.labelKey ?? item.labelKey;
       return {
         attrId: item.attrId,
+        ...(labelKey ? { labelKey } : {}),
         label: existing?.label ?? item.label,
         color: existing?.color ?? item.color,
         enabled: existing?.enabled ?? item.enabled,
@@ -355,6 +366,7 @@
       panelAttrGroupScale: current?.panelAttrGroupScale ?? 1,
       buffUptimeGroupScale: current?.buffUptimeGroupScale ?? 1,
       customPanelGroupScale: current?.customPanelGroupScale ?? 1,
+      shieldDetailGroupScale: current?.shieldDetailGroupScale ?? 1,
       panelAttrGap: Math.max(0, Math.min(24, Math.round(current?.panelAttrGap ?? 4))),
       panelAttrFontSize: Math.max(
         10,
@@ -392,6 +404,10 @@
       buffUptimeTrueColumnAdjust: Math.max(
         -120,
         Math.min(240, Math.round(current?.buffUptimeTrueColumnAdjust ?? 0)),
+      ),
+      iconBuffStackCounterSize: Math.max(
+        6,
+        Math.min(24, Math.round(current?.iconBuffStackCounterSize ?? 9)),
       ),
       iconBuffSizes: current?.iconBuffSizes ?? {},
       standaloneIconSizes: current?.standaloneIconSizes ?? {},
@@ -743,6 +759,23 @@
     }));
   }
 
+  function toggleOverlaySectionVisibility(key: keyof OverlayVisibility) {
+    updateActiveProfile((profile) => {
+      const current = profile.overlayVisibility ?? {};
+      const fallback =
+        key === "showShieldDetailGroup"
+          ? false
+          : true;
+      return {
+        ...profile,
+        overlayVisibility: {
+          ...current,
+          [key]: !(current[key] ?? fallback),
+        } as OverlayVisibility,
+      };
+    });
+  }
+
   function getBuffDisplayName(buffId: number): string {
     return resolveBuffDisplayName(buffId, buffAliases);
   }
@@ -877,19 +910,19 @@
   );
 
   $effect(() => {
-    buffSearchResults = searchIconBuffsByName(buffSearch, buffAliases);
+    buffSearchResults = searchBuffsByName(buffSearch, buffAliases);
   });
 
   $effect(() => {
-    globalPrioritySearchResults = searchIconBuffsByName(globalPrioritySearch, buffAliases);
+    globalPrioritySearchResults = searchBuffsByName(globalPrioritySearch, buffAliases);
   });
 
   $effect(() => {
-    inlineBuffSearchResults = searchIconBuffsByName(inlineBuffSearch, buffAliases);
+    inlineBuffSearchResults = searchBuffsByName(inlineBuffSearch, buffAliases);
   });
 
   $effect(() => {
-    buffAliasSearchResults = searchIconBuffsByName(buffAliasSearch, buffAliases);
+    buffAliasSearchResults = searchBuffsByName(buffAliasSearch, buffAliases);
   });
 
   $effect(() => {
@@ -1298,6 +1331,17 @@
     }));
   }
 
+  function setIconBuffStackCounterSize(value: number) {
+    const nextValue = Math.max(6, Math.min(24, Math.round(value)));
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        iconBuffStackCounterSize: nextValue,
+      },
+    }));
+  }
+
   function updateBuffGroup(groupId: string, updater: (group: BuffGroup) => BuffGroup) {
     updateActiveProfile((profile) => ({
       ...profile,
@@ -1389,7 +1433,7 @@
     }
     groupSearchResults = {
       ...groupSearchResults,
-      [groupId]: searchIconBuffsByName(keyword, buffAliases),
+      [groupId]: searchBuffsByName(keyword, buffAliases),
     };
   }
 
@@ -1406,7 +1450,7 @@
     }
     groupPrioritySearchResults = {
       ...groupPrioritySearchResults,
-      [groupId]: searchIconBuffsByName(keyword, buffAliases),
+      [groupId]: searchBuffsByName(keyword, buffAliases),
     };
   }
 
@@ -1566,6 +1610,15 @@
       >
         {t("tab.customPanel", "Custom Monitor")}
       </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {activeTab === 'overlay'
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => (activeTab = "overlay")}
+      >
+        {t("tab.overlay", "Overlay")}
+      </button>
     </div>
   </div>
 
@@ -1624,6 +1677,8 @@
       {setBuffDisplayMode}
       {textBuffMaxVisible}
       {setTextBuffMaxVisible}
+      {iconBuffStackCounterSize}
+      {setIconBuffStackCounterSize}
       {textBuffPanelStyle}
       {setTextBuffPanelDisplayMode}
       {setTextBuffPanelGap}
@@ -1752,6 +1807,17 @@
       {setCustomPanelValueColor}
       {setCustomPanelProgressColor}
       {setCustomPanelProgressOpacity}
+    />
+  {:else if activeTab === "overlay"}
+    <TabOverlay
+      {showSkillCdGroup}
+      {showSkillDurationGroup}
+      {showResourceGroup}
+      {showPanelAttrGroup}
+      {showBuffUptimeGroup}
+      {showCustomPanelGroup}
+      {showShieldDetailGroup}
+      {toggleOverlaySectionVisibility}
     />
   {/if}
 

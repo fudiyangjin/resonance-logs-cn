@@ -1,1 +1,3 @@
-export { default as component } from "../../../../src/routes/main/dps/history/[id]/+page.svelte";
+import * as universal from "../../../../src/routes/main/+page.ts";
+export { universal };
+export { default as component } from "../../../../src/routes/main/+page.svelte";

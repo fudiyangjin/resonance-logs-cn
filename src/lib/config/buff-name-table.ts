@@ -1,18 +1,15 @@
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-
-import buffNameRaw from "./BuffName.json";
-import { getBundledTranslationTable } from "$lib/locale-bundles";
+import buffNameData from "$parserData/generated/BuffName.json";
+import monsterNameData from "$parserData/generated/monsternames.json";
 import {
   DEFAULT_LOCALE,
   PRIMARY_FALLBACK_LOCALE,
   SUPPORTED_LOCALES,
-  TRANSLATION_SOURCE_MODE_EVENT,
-  getCurrentTranslationSourceMode,
   isLocaleCode,
   type LocaleCode,
 } from "$lib/i18n";
 import { settings } from "$lib/settings-store";
+import { BUFF_ICON_FILE_BY_ID } from "./buff-icon-map.generated";
+import { BUFF_ICON_FILES } from "./buff-icon-files.generated";
 
 export type BuffAliasMap = Record<string, string>;
 export type BuffCategoryKey = "food" | "alchemy";
@@ -46,26 +43,26 @@ export type BuffCategoryDefinition = {
   count: number;
 };
 
+type MultiLangValue = Partial<Record<LocaleCode | "design" | "und", string>>;
+type MultiLangKeywords = Partial<Record<LocaleCode, string[]>>;
+
 type RawBuffEntry = {
   Id: number;
   Icon?: string | null;
+  IconPath?: string | null;
+  DesignName?: string | null;
+  Name?: string | null;
   NameDesign?: string | null;
+  Names?: unknown;
   SpriteFile?: string | null;
 };
 
-type MultiLangValue = Partial<Record<LocaleCode, string>>;
-type MultiLangKeywords = Partial<Record<LocaleCode, string[]>>;
-
-type TranslationRefreshPayload = {
-  relativePath?: string;
-  locale?: string;
-};
-
-type BuffNameTranslationEntry = {
+type RawMonsterNameEntry = {
   Id?: number;
-  Icon?: string | null;
-  NameDesign?: MultiLangValue;
-  SpriteFile?: string | null;
+  Name?: string | null;
+  NameDesign?: string | null;
+  DesignName?: string | null;
+  Names?: unknown;
 };
 
 type BuffSearchTranslationEntry = {
@@ -101,163 +98,231 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-const BUFF_NAME_RUNTIME_RELATIVE_PATH = "parser/BuffName.json";
-const BUFF_SEARCH_RUNTIME_RELATIVE_PATH = "search/BuffNameSearch.json";
+function normalizeRawDataEntries<T>(value: unknown): T[] {
+  const values = Array.isArray(value)
+    ? value
+    : isRecord(value)
+      ? Object.values(value)
+      : [];
 
-const BUFF_NAME_TRANSLATIONS: Record<string, BuffNameTranslationEntry> = cloneJson(
-  getBundledTranslationTable("parser/BuffName.json") as unknown as Record<string, BuffNameTranslationEntry>,
-);
+  return values.filter((entry): entry is T => isRecord(entry));
+}
 
-const BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = cloneJson(
-  getBundledTranslationTable("search/BuffNameSearch.json") as unknown as Record<string, BuffSearchTranslationEntry>,
-);
+function collectMultiLangRecord(value: unknown): MultiLangValue {
+  const out: MultiLangValue = {};
+  if (!isRecord(value)) return out;
 
-const BUNDLED_BUFF_NAME_TRANSLATIONS: Record<string, BuffNameTranslationEntry> = cloneJson(BUFF_NAME_TRANSLATIONS);
-const BUNDLED_BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = cloneJson(BUFF_SEARCH_TRANSLATIONS);
+  for (const [locale, rawValue] of Object.entries(value)) {
+    if (typeof rawValue !== "string") continue;
+    const text = rawValue.trim();
+    if (!text) continue;
+    out[locale as keyof MultiLangValue] = text;
+  }
 
+  return out;
+}
+
+function collectAllMultiLangTexts(value: MultiLangValue | undefined): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+
+  for (const rawText of Object.values(value ?? {})) {
+    const text = rawText?.trim();
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    out.push(text);
+  }
+
+  return out;
+}
+
+function addMergedMultiLangValue(
+  target: MultiLangValue,
+  source: MultiLangValue | undefined,
+  overwrite = false,
+): void {
+  for (const [locale, rawValue] of Object.entries(source ?? {})) {
+    const text = rawValue?.trim();
+    if (!text) continue;
+    const key = locale as keyof MultiLangValue;
+    if (!overwrite && target[key]) continue;
+    target[key] = text;
+  }
+}
+
+function trimString(value: string | null | undefined): string {
+  return value?.trim() ?? "";
+}
+
+function designNameCandidates(entry: RawBuffEntry): string[] {
+  return [
+    entry.NameDesign,
+    entry.DesignName,
+    entry.Name,
+    isRecord(entry.Names) ? entry.Names["design"] : null,
+  ]
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
+    .filter((value, index, values) => value && values.indexOf(value) === index);
+}
+
+function designOwnerTokens(value: string): string[] {
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+
+  const tokens: string[] = [];
+  const leadingCjk = trimmed.match(/^[\u3400-\u9fff]+/u)?.[0]?.trim();
+  if (leadingCjk) tokens.push(leadingCjk);
+
+  const delimiterPrefix = trimmed.split(/[-_－—–:：]/u)[0]?.trim();
+  if (delimiterPrefix && delimiterPrefix !== trimmed) {
+    tokens.push(delimiterPrefix);
+  }
+
+  return tokens.filter((token, index, values) => token.length >= 2 && values.indexOf(token) === index);
+}
+
+function addOwnerToken(
+  ownerNamesByToken: Map<string, MultiLangValue>,
+  token: string | null | undefined,
+  names: MultiLangValue,
+): void {
+  const trimmed = token?.trim();
+  if (!trimmed || trimmed.length < 2) return;
+
+  const existing = ownerNamesByToken.get(trimmed) ?? {};
+  addMergedMultiLangValue(existing, names);
+  ownerNamesByToken.set(trimmed, existing);
+}
+
+function buildMonsterOwnerNameMap(): Map<string, MultiLangValue> {
+  const ownerNamesByToken = new Map<string, MultiLangValue>();
+  const monsterEntries = normalizeRawDataEntries<RawMonsterNameEntry>(monsterNameData);
+
+  for (const entry of monsterEntries) {
+    const names = collectMultiLangRecord(entry.Names);
+    if (!names[PRIMARY_FALLBACK_LOCALE]) {
+      const fallbackName = trimString(entry.Name);
+      if (fallbackName) names[PRIMARY_FALLBACK_LOCALE] = fallbackName;
+    }
+    if (!names.design) {
+      const designName = trimString(entry.NameDesign) || trimString(entry.DesignName);
+      if (designName) names.design = designName;
+    }
+    if (Object.keys(names).length === 0) continue;
+
+    const aliases = [
+      ...collectAllMultiLangTexts(names),
+      trimString(entry.Name),
+      trimString(entry.NameDesign),
+      trimString(entry.DesignName),
+    ];
+
+    for (const alias of aliases) {
+      if (!alias) continue;
+      addOwnerToken(ownerNamesByToken, alias, names);
+      for (const token of designOwnerTokens(alias)) {
+        addOwnerToken(ownerNamesByToken, token, names);
+      }
+    }
+  }
+
+  return ownerNamesByToken;
+}
+
+const BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = {};
+
+const BUFF_GENERATED_NAMES_BY_ID = new Map<number, MultiLangValue>();
 const BUFF_SEARCH_INDEX: BuffSearchIndexEntry[] = [];
 const BUFF_SEARCH_INDEX_MAP = new Map<number, string[]>();
+const BUFF_ICON_FILE_BY_BASE_ID = BUFF_ICON_FILE_BY_ID as Record<string, string>;
+const BUFF_ICON_FILE_BY_STEM = new Map<string, string>();
+const MONSTER_OWNER_NAMES_BY_TOKEN = buildMonsterOwnerNameMap();
 
-let buffTranslationRuntimeInitPromise: Promise<void> | null = null;
-let buffTranslationRuntimeListenerPromise: Promise<void> | null = null;
-let buffTranslationSourceModeListenerRegistered = false;
+const DESIGN_ONLY_BUFF_NAME_FALLBACKS: Record<string, MultiLangValue> = {
+  "罗罗拉-主动记时": {
+    en: "Rorola - Active Timer",
+    "zh-CN": "罗罗拉 - 主动计时",
+    "zh-TW": "羅羅拉 - 主動計時",
+    ja: "ロローラ - アクティブタイマー",
+    "ko-KR": "로로라 - 액티브 타이머",
+    fr: "Rorola - Minuteur actif",
+    de: "Rorola - Aktiver Timer",
+    es: "Rorola - Temporizador activo",
+    "pt-BR": "Rorula - Temporizador ativo",
+    th: "Rorola - ตัวจับเวลาใช้งาน",
+    id: "Lorola - Timer Aktif",
+    design: "罗罗拉-主动记时",
+  },
+  "梦幻之箭层数": {
+    en: "Phantom Arrow stacks",
+    "zh-CN": "梦幻之箭层数",
+    "zh-TW": "夢幻之箭層數",
+    ja: "幻影の矢スタック",
+    "ko-KR": "환영 화살 중첩",
+    fr: "Cumuls de Flèche fantôme",
+    de: "Phantompfeil-Stapel",
+    es: "Acumulaciones de Flecha fantasma",
+    "pt-BR": "Acúmulos de Flecha Fantasma",
+    th: "สแต็ก Phantom Arrow",
+    id: "Stack Phantom Arrow",
+    design: "梦幻之箭层数",
+  },
+  "梦幻之箭内置CD": {
+    en: "Phantom Arrow internal CD",
+    "zh-CN": "梦幻之箭内置CD",
+    "zh-TW": "夢幻之箭內置CD",
+    ja: "幻影の矢 内部CD",
+    "ko-KR": "환영 화살 내부 재사용 대기시간",
+    fr: "Temps de recharge interne de Flèche fantôme",
+    de: "Interne Abklingzeit von Phantompfeil",
+    es: "Recarga interna de Flecha fantasma",
+    "pt-BR": "Recarga interna de Flecha Fantasma",
+    th: "คูลดาวน์ภายใน Phantom Arrow",
+    id: "Cooldown internal Phantom Arrow",
+    design: "梦幻之箭内置CD",
+  },
+};
 
-async function ensureBuffTranslationRuntimeFiles(): Promise<void> {
-  try {
-    await invoke<string>("initialize_translation_runtime_files");
-  } catch (error) {
-    console.warn(
-      "[buff-name-table] Failed to initialize runtime translation files:",
-      error,
-    );
-  }
-}
+const DESIGN_ONLY_SUFFIX_FALLBACKS: Record<string, MultiLangValue> = {
+  "主动记时": {
+    en: "Active Timer",
+    "zh-CN": "主动计时",
+    "zh-TW": "主動計時",
+    ja: "アクティブタイマー",
+    "ko-KR": "액티브 타이머",
+    fr: "Minuteur actif",
+    de: "Aktiver Timer",
+    es: "Temporizador activo",
+    "pt-BR": "Temporizador ativo",
+    th: "ตัวจับเวลาใช้งาน",
+    id: "Timer Aktif",
+    design: "主动记时",
+  },
+  "玩家身上监控": {
+    en: "Player Monitor",
+    "zh-CN": "玩家身上监控",
+    "zh-TW": "玩家身上監控",
+    ja: "プレイヤー監視",
+    "ko-KR": "플레이어 모니터",
+    fr: "Surveillance du joueur",
+    de: "Spielerüberwachung",
+    es: "Monitor de jugador",
+    "pt-BR": "Monitor de jogador",
+    th: "ติดตามผู้เล่น",
+    id: "Monitor Pemain",
+    design: "玩家身上监控",
+  },
+};
 
-async function readRuntimeBuffNameTranslations(): Promise<
-  Record<string, BuffNameTranslationEntry> | null
-> {
-  try {
-    const raw = await invoke<string>("read_translation_runtime_file", {
-      relativePath: BUFF_NAME_RUNTIME_RELATIVE_PATH,
-    });
-    const parsed: unknown = JSON.parse(raw);
-
-    if (!isRecord(parsed)) {
-      console.warn(
-        `[buff-name-table] Runtime buff translation file is not an object: ${BUFF_NAME_RUNTIME_RELATIVE_PATH}`,
-      );
-      return null;
-    }
-
-    return parsed as Record<string, BuffNameTranslationEntry>;
-  } catch (error) {
-    console.warn(
-      `[buff-name-table] Failed to read runtime buff translation file: ${BUFF_NAME_RUNTIME_RELATIVE_PATH}`,
-      error,
-    );
-    return null;
-  }
-}
-
-async function readRuntimeBuffSearchTranslations(): Promise<
-  Record<string, BuffSearchTranslationEntry> | null
-> {
-  try {
-    const raw = await invoke<string>("read_translation_runtime_file", {
-      relativePath: BUFF_SEARCH_RUNTIME_RELATIVE_PATH,
-    });
-    const parsed: unknown = JSON.parse(raw);
-
-    if (!isRecord(parsed)) {
-      console.warn(
-        `[buff-name-table] Runtime buff search translation file is not an object: ${BUFF_SEARCH_RUNTIME_RELATIVE_PATH}`,
-      );
-      return null;
-    }
-
-    return parsed as Record<string, BuffSearchTranslationEntry>;
-  } catch (error) {
-    console.warn(
-      `[buff-name-table] Failed to read runtime buff search translation file: ${BUFF_SEARCH_RUNTIME_RELATIVE_PATH}`,
-      error,
-    );
-    return null;
-  }
-}
-
-async function loadBuffTranslationRuntimeData(): Promise<void> {
-  if (getCurrentTranslationSourceMode() === "bundled") {
-    replaceRecordContents(BUFF_NAME_TRANSLATIONS, cloneJson(BUNDLED_BUFF_NAME_TRANSLATIONS));
-    replaceRecordContents(BUFF_SEARCH_TRANSLATIONS, cloneJson(BUNDLED_BUFF_SEARCH_TRANSLATIONS));
-    rebuildBuffSearchIndex();
-    return;
-  }
-
-  await ensureBuffTranslationRuntimeFiles();
-
-  const [runtimeBuffNameValue, runtimeBuffSearchValue] = await Promise.all([
-    readRuntimeBuffNameTranslations(),
-    readRuntimeBuffSearchTranslations(),
-  ]);
-
-  const nextBuffNameValue = runtimeBuffNameValue ?? BUNDLED_BUFF_NAME_TRANSLATIONS;
-  const nextBuffSearchValue =
-    runtimeBuffSearchValue ?? BUNDLED_BUFF_SEARCH_TRANSLATIONS;
-
-  replaceRecordContents(BUFF_NAME_TRANSLATIONS, cloneJson(nextBuffNameValue));
-  replaceRecordContents(BUFF_SEARCH_TRANSLATIONS, cloneJson(nextBuffSearchValue));
+export async function initializeBuffSearchRuntimeData(): Promise<void> {
   rebuildBuffSearchIndex();
 }
 
-async function registerBuffTranslationRuntimeListener(): Promise<void> {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (!buffTranslationRuntimeListenerPromise) {
-    buffTranslationRuntimeListenerPromise = listen<TranslationRefreshPayload>("translation-data-refreshed", async (event) => {
-      const relativePath = event.payload?.relativePath;
-      if (relativePath && relativePath !== BUFF_NAME_RUNTIME_RELATIVE_PATH && relativePath !== BUFF_SEARCH_RUNTIME_RELATIVE_PATH) {
-        return;
-      }
-
-      await loadBuffTranslationRuntimeData();
-    })
-      .then(() => undefined)
-      .catch((error) => {
-        console.warn(
-          "[buff-name-table] Failed to register translation refresh listener:",
-          error,
-        );
-      });
-  }
-
-  if (!buffTranslationSourceModeListenerRegistered) {
-    window.addEventListener(TRANSLATION_SOURCE_MODE_EVENT, async () => {
-      await loadBuffTranslationRuntimeData();
-    });
-    buffTranslationSourceModeListenerRegistered = true;
-  }
-
-  await buffTranslationRuntimeListenerPromise;
-}
-
-export async function initializeBuffSearchRuntimeData(): Promise<void> {
-  if (!buffTranslationRuntimeInitPromise) {
-    buffTranslationRuntimeInitPromise = (async () => {
-      await registerBuffTranslationRuntimeListener();
-      await loadBuffTranslationRuntimeData();
-    })();
-  }
-
-  await buffTranslationRuntimeInitPromise;
-}
-
 export async function reloadBuffSearchRuntimeData(): Promise<void> {
-  await loadBuffTranslationRuntimeData();
+  rebuildBuffSearchIndex();
 }
 
-const rawBuffEntries = buffNameRaw as RawBuffEntry[];
+const rawBuffEntries = normalizeRawDataEntries<RawBuffEntry>(buffNameData);
 
 const BUFF_META_MAP = new Map<number, BuffMeta>();
 const AVAILABLE_BUFF_IDS_WITH_SPRITE: number[] = [];
@@ -269,31 +334,250 @@ const BUFF_CATEGORY_CATALOG: Record<
   alchemy: { label: "炼金", buffIds: [] },
 };
 
+for (const fileName of BUFF_ICON_FILES) {
+  const stem = fileName
+    .replace(/\.png$/i, "")
+    .replace(/_[+-]?\d{10,}$/i, "");
+  const existing = BUFF_ICON_FILE_BY_STEM.get(stem);
+  if (!existing || fileName === `${stem}.png`) {
+    BUFF_ICON_FILE_BY_STEM.set(stem, fileName);
+  }
+}
+
+function iconStemFromReference(reference: string | null | undefined): string | null {
+  const trimmed = reference?.trim();
+  if (!trimmed) return null;
+
+  const fileName = trimmed.split(/[\\/]/).pop()?.trim();
+  if (!fileName) return null;
+
+  return fileName
+    .replace(/\.png$/i, "")
+    .replace(/_[+-]?\d{10,}$/i, "");
+}
+
+function resolveBuffSpriteFile(...references: Array<string | null | undefined>): string | null {
+  for (const reference of references) {
+    const trimmed = reference?.trim();
+    if (trimmed && /^[^\\/]+\.png$/i.test(trimmed)) {
+      return trimmed;
+    }
+
+    const stem = iconStemFromReference(reference);
+    if (!stem) continue;
+
+    const matchedFile = BUFF_ICON_FILE_BY_STEM.get(stem);
+    if (matchedFile) return matchedFile;
+  }
+
+  return null;
+}
+
 function resolveBuffCategories(
   _defaultName: string,
   iconKey: string | null,
 ): BuffCategoryKey[] {
   const categories: BuffCategoryKey[] = [];
+  const iconStem = iconStemFromReference(iconKey);
 
-  if (iconKey?.startsWith("buff_food_up")) {
+  if (iconStem?.startsWith("buff_food_up")) {
     categories.push("food");
   }
 
-  if (iconKey?.startsWith("buff_agentia_up")) {
+  if (iconStem?.startsWith("buff_agentia_up")) {
     categories.push("alchemy");
   }
 
   return categories;
 }
 
-for (const entry of rawBuffEntries) {
-  const defaultName = entry.NameDesign?.trim() ?? "";
-  if (!defaultName) continue;
+function collectGeneratedBuffNames(entry: RawBuffEntry): MultiLangValue {
+  const out = collectMultiLangRecord(entry.Names);
 
-  const iconKey = entry.Icon?.trim() || null;
-  const spriteFile = entry.SpriteFile?.trim() || null;
+  const fallback = trimString(entry.NameDesign) || trimString(entry.Name) || trimString(entry.DesignName);
+  if (fallback && !out.design) {
+    out.design = fallback;
+  }
+
+  return out;
+}
+
+function findDesignFallbackNames(entry: RawBuffEntry): MultiLangValue | undefined {
+  for (const candidate of designNameCandidates(entry)) {
+    const fallback = DESIGN_ONLY_BUFF_NAME_FALLBACKS[candidate];
+    if (fallback) return fallback;
+  }
+
+  const ownerSuffixFallback = findDesignOwnerSuffixFallbackNames(entry);
+  if (ownerSuffixFallback) return ownerSuffixFallback;
+
+  return undefined;
+}
+
+function findDesignMonsterOwnerNames(entry: RawBuffEntry): MultiLangValue | undefined {
+  for (const candidate of designNameCandidates(entry)) {
+    for (const token of designOwnerTokens(candidate)) {
+      const names = MONSTER_OWNER_NAMES_BY_TOKEN.get(token);
+      if (names) return names;
+    }
+  }
+
+  return undefined;
+}
+
+function splitDesignOwnerSuffix(
+  value: string,
+): { ownerToken: string; suffix: string } | null {
+  const trimmed = value.trim();
+  const tokens = designOwnerTokens(trimmed)
+    .filter((token) => MONSTER_OWNER_NAMES_BY_TOKEN.has(token))
+    .sort((a, b) => b.length - a.length);
+
+  for (const ownerToken of tokens) {
+    if (!trimmed.startsWith(ownerToken)) continue;
+
+    const suffix = trimmed
+      .slice(ownerToken.length)
+      .replace(/^[-_－—–:：\s]+/u, "")
+      .trim();
+
+    if (suffix) {
+      return { ownerToken, suffix };
+    }
+  }
+
+  return null;
+}
+
+function composeOwnerSuffixNames(
+  ownerNames: MultiLangValue,
+  suffixNames: MultiLangValue,
+): MultiLangValue {
+  const out: MultiLangValue = {};
+  const localeKeys: Array<LocaleCode | "design"> = [...SUPPORTED_LOCALES, "design"];
+
+  for (const locale of localeKeys) {
+    const ownerName = ownerNames[locale]
+      || ownerNames[PRIMARY_FALLBACK_LOCALE]
+      || ownerNames[DEFAULT_LOCALE]
+      || ownerNames.design;
+    const suffixName = suffixNames[locale]
+      || suffixNames[PRIMARY_FALLBACK_LOCALE]
+      || suffixNames[DEFAULT_LOCALE]
+      || suffixNames.design;
+
+    if (ownerName && suffixName) {
+      out[locale] = `${ownerName} - ${suffixName}`;
+    }
+  }
+
+  return out;
+}
+
+function findDesignOwnerSuffixFallbackNames(entry: RawBuffEntry): MultiLangValue | undefined {
+  for (const candidate of designNameCandidates(entry)) {
+    const parts = splitDesignOwnerSuffix(candidate);
+    if (!parts) continue;
+
+    const ownerNames = MONSTER_OWNER_NAMES_BY_TOKEN.get(parts.ownerToken);
+    const suffixNames = DESIGN_ONLY_SUFFIX_FALLBACKS[parts.suffix];
+    if (!ownerNames || !suffixNames) continue;
+
+    const composed = composeOwnerSuffixNames(ownerNames, suffixNames);
+    if (Object.keys(composed).length > 0) {
+      return composed;
+    }
+  }
+
+  return undefined;
+}
+
+function composeOwnerQualifiedBuffNames(
+  entry: RawBuffEntry,
+  names: MultiLangValue,
+): MultiLangValue | undefined {
+  const ownerNames = findDesignMonsterOwnerNames(entry);
+  if (!ownerNames) return undefined;
+
+  const out: MultiLangValue = {};
+  for (const locale of SUPPORTED_LOCALES) {
+    const ownerName = ownerNames[locale]
+      || ownerNames[PRIMARY_FALLBACK_LOCALE]
+      || ownerNames[DEFAULT_LOCALE]
+      || ownerNames.design;
+    const buffName = names[locale]
+      || names[PRIMARY_FALLBACK_LOCALE]
+      || names[DEFAULT_LOCALE];
+
+    if (ownerName && buffName && normalizeText(ownerName) !== normalizeText(buffName)) {
+      out[locale] = `${ownerName} - ${buffName}`;
+    }
+  }
+
+  const designName = designNameCandidates(entry)[0] ?? names.design;
+  if (designName) {
+    out.design = designName;
+  }
+
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+function enrichGeneratedBuffNames(entry: RawBuffEntry, names: MultiLangValue): MultiLangValue {
+  const enriched: MultiLangValue = {};
+  addMergedMultiLangValue(enriched, findDesignFallbackNames(entry));
+  addMergedMultiLangValue(enriched, names, true);
+  addMergedMultiLangValue(enriched, composeOwnerQualifiedBuffNames(entry, names), true);
+  return enriched;
+}
+
+function collectBuffGeneratedSearchKeywords(
+  entry: RawBuffEntry,
+  generatedNames: MultiLangValue,
+): string[] {
+  const keywords = new Set<string>();
+
+  for (const text of collectAllMultiLangTexts(findDesignFallbackNames(entry))) {
+    keywords.add(text);
+  }
+
+  for (const text of collectAllMultiLangTexts(findDesignMonsterOwnerNames(entry))) {
+    keywords.add(text);
+  }
+
+  for (const text of designNameCandidates(entry)) {
+    keywords.add(text);
+  }
+
+  for (const text of collectAllMultiLangTexts(generatedNames)) {
+    keywords.add(text);
+  }
+
+  return Array.from(keywords);
+}
+
+for (const entry of rawBuffEntries) {
+  const generatedNames = enrichGeneratedBuffNames(entry, collectGeneratedBuffNames(entry));
+  const defaultName = generatedNames[PRIMARY_FALLBACK_LOCALE]
+    || generatedNames[DEFAULT_LOCALE]
+    || generatedNames.design
+    || trimString(entry.NameDesign)
+    || trimString(entry.Name)
+    || trimString(entry.DesignName);
+  if (!defaultName) continue;
+  BUFF_GENERATED_NAMES_BY_ID.set(entry.Id, generatedNames);
+
+  const iconKey = entry.Icon?.trim() || entry.IconPath?.trim() || null;
+  const spriteFile = resolveBuffSpriteFile(
+    BUFF_ICON_FILE_BY_BASE_ID[String(entry.Id)] ?? null,
+    entry.SpriteFile,
+    entry.IconPath,
+    entry.Icon,
+  );
   const categories = resolveBuffCategories(defaultName, iconKey);
-  const searchKeywords = [defaultName];
+  const searchKeywords = [
+    defaultName,
+    ...collectBuffGeneratedSearchKeywords(entry, generatedNames),
+  ];
   const meta: BuffMeta = {
     baseId: entry.Id,
     defaultName,
@@ -328,7 +612,11 @@ function normalizeText(value: string): string {
     .replace(/cds/g, "cd");
 }
 
-function getCurrentLocale(): LocaleCode {
+function getCurrentLocale(localeOverride?: LocaleCode): LocaleCode {
+  if (localeOverride && isLocaleCode(localeOverride)) {
+    return localeOverride;
+  }
+
   const locale = String(settings.state.live.general.language);
 
   if (isLocaleCode(locale)) {
@@ -341,8 +629,9 @@ function getCurrentLocale(): LocaleCode {
 function resolveMultiLangValue(
   value: MultiLangValue | undefined,
   fallback: string,
+  localeOverride?: LocaleCode,
 ): string {
-  const locale = getCurrentLocale();
+  const locale = getCurrentLocale(localeOverride);
   const selected = value?.[locale]?.trim();
   if (selected) return selected;
 
@@ -396,10 +685,6 @@ function collectKeywordTexts(value: MultiLangKeywords | undefined): string[] {
   return out;
 }
 
-function lookupBuffNameEntry(baseId: number): BuffNameTranslationEntry | undefined {
-  return BUFF_NAME_TRANSLATIONS[String(baseId)];
-}
-
 function lookupBuffSearchEntry(baseId: number): BuffSearchTranslationEntry | undefined {
   return BUFF_SEARCH_TRANSLATIONS[String(baseId)];
 }
@@ -435,19 +720,38 @@ function rebuildBuffSearchIndex(): void {
   }
 }
 
-function resolveBuffTranslatedName(baseId: number, fallback: string): string {
-  return resolveMultiLangValue(lookupBuffNameEntry(baseId)?.NameDesign, fallback);
+function resolveBuffTranslatedName(
+  baseId: number,
+  fallback: string,
+  localeOverride?: LocaleCode,
+): string {
+  return resolveGeneratedBuffName(baseId, localeOverride) || fallback;
 }
 
-function resolveBuffSearchTranslatedName(baseId: number, fallback: string): string {
+function resolveGeneratedBuffName(
+  baseId: number,
+  localeOverride?: LocaleCode,
+): string {
+  return resolveMultiLangValue(BUFF_GENERATED_NAMES_BY_ID.get(baseId), "", localeOverride);
+}
+
+function resolveBuffSearchTranslatedName(
+  baseId: number,
+  fallback: string,
+  localeOverride?: LocaleCode,
+): string {
+  const generatedName = resolveGeneratedBuffName(baseId, localeOverride);
+  if (generatedName) return generatedName;
+
   return resolveMultiLangValue(
     lookupBuffSearchEntry(baseId)?.name,
-    resolveBuffTranslatedName(baseId, fallback),
+    fallback,
+    localeOverride,
   );
 }
 
-function resolveBuffOverlayAlias(baseId: number): string {
-  return resolveMultiLangValue(lookupBuffSearchEntry(baseId)?.overlayAlias, "");
+function resolveBuffOverlayAlias(baseId: number, localeOverride?: LocaleCode): string {
+  return resolveMultiLangValue(lookupBuffSearchEntry(baseId)?.overlayAlias, "", localeOverride);
 }
 
 export function getDirectBuffOverlayAlias(baseId: number): string {
@@ -502,9 +806,7 @@ export async function saveBuffOverlayAlias(
   overlayAlias: string,
 ): Promise<{ ok: true; message?: string } | { ok: false; error: string }> {
   const locale = getCurrentLocale();
-  await ensureBuffTranslationRuntimeFiles();
-  const runtimeTranslations = await readRuntimeBuffSearchTranslations();
-  const nextTranslations = cloneJson(runtimeTranslations ?? BUFF_SEARCH_TRANSLATIONS);
+  const nextTranslations = cloneJson(BUFF_SEARCH_TRANSLATIONS);
   const key = String(baseId);
   const nextEntry = {
     ...buildSearchTranslationSeed(baseId),
@@ -518,33 +820,14 @@ export async function saveBuffOverlayAlias(
 
   nextTranslations[key] = nextEntry;
 
-  try {
-    const result = await invoke<string>("write_translation_runtime_locale_file", {
-      relativePath: BUFF_SEARCH_RUNTIME_RELATIVE_PATH,
-      locale,
-      contents: JSON.stringify(nextTranslations, null, 2),
-    });
+  replaceRecordContents(BUFF_SEARCH_TRANSLATIONS, nextTranslations);
+  rebuildBuffSearchIndex();
 
-    replaceRecordContents(BUFF_SEARCH_TRANSLATIONS, nextTranslations);
-    rebuildBuffSearchIndex();
-
-    return {
-      ok: true,
-      ...(typeof result === "string" && result.length > 0
-        ? { message: result }
-        : {}),
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
+  return { ok: true };
 }
 
 function collectBuffSearchTexts(meta: BuffMeta): string[] {
   const searchEntry = lookupBuffSearchEntry(meta.baseId);
-  const buffNameEntry = lookupBuffNameEntry(meta.baseId);
   const texts = new Set<string>();
 
   const idText = String(meta.baseId);
@@ -559,7 +842,7 @@ function collectBuffSearchTexts(meta: BuffMeta): string[] {
     if (normalized) texts.add(normalized);
   }
 
-  for (const text of collectMultiLangTexts(buffNameEntry?.NameDesign)) {
+  for (const text of collectMultiLangTexts(BUFF_GENERATED_NAMES_BY_ID.get(meta.baseId))) {
     const normalized = normalizeText(text);
     if (normalized) texts.add(normalized);
   }
@@ -637,6 +920,17 @@ export function lookupBuffMeta(baseId: number): BuffMeta | undefined {
 
 export function lookupDefaultBuffName(baseId: number): string | undefined {
   return lookupBuffMeta(baseId)?.defaultName;
+}
+
+export function lookupBuffLocalizedNames(baseId: number): Record<string, string> | undefined {
+  const names = BUFF_GENERATED_NAMES_BY_ID.get(baseId);
+  if (!names) return undefined;
+
+  const entries = Object.entries(names)
+    .map(([locale, value]) => [locale, value?.trim() ?? ""] as const)
+    .filter(([, value]) => value);
+
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
 export function getAvailableBuffDefinitions(): BuffDefinition[] {
@@ -729,45 +1023,53 @@ export function lookupResolvedBuffBaseName(baseId: number): string | undefined {
 export function resolveBuffSearchDisplayName(
   baseId: number,
   aliases?: BuffAliasMap,
+  localeOverride?: LocaleCode,
 ): string {
   const alias = getAlias(baseId, aliases);
   if (alias) return alias;
 
-  return lookupResolvedBuffBaseName(baseId) ?? `#${baseId}`;
+  return resolveBuffSearchTranslatedName(
+    baseId,
+    lookupDefaultBuffName(baseId) ?? `#${baseId}`,
+    localeOverride,
+  );
 }
 
 export function resolveBuffDisplayName(
   baseId: number,
   aliases?: BuffAliasMap,
+  localeOverride?: LocaleCode,
 ): string {
   const alias = getAlias(baseId, aliases);
   if (alias) return alias;
 
   const defaultName = lookupDefaultBuffName(baseId) ?? `#${baseId}`;
-  return resolveBuffTranslatedName(baseId, defaultName);
+  return resolveBuffTranslatedName(baseId, defaultName, localeOverride);
 }
 
 export function resolveBuffOverlayDisplayName(
   baseId: number,
   aliases?: BuffAliasMap,
+  localeOverride?: LocaleCode,
 ): string {
   const alias = getAlias(baseId, aliases);
   if (alias) return alias;
 
-  const overlayAlias = resolveBuffOverlayAlias(baseId);
+  const overlayAlias = resolveBuffOverlayAlias(baseId, localeOverride);
   if (overlayAlias) return overlayAlias;
 
-  return resolveBuffSearchDisplayName(baseId, aliases);
+  return resolveBuffSearchDisplayName(baseId, aliases, localeOverride);
 }
 
 export function resolveBuffNameInfo(
   baseId: number,
   aliases?: BuffAliasMap,
+  localeOverride?: LocaleCode,
 ): BuffNameInfo {
   const meta = lookupBuffMeta(baseId);
   return {
     baseId,
-    name: resolveBuffSearchDisplayName(baseId, aliases),
+    name: resolveBuffSearchDisplayName(baseId, aliases, localeOverride),
     hasSpriteFile: meta?.hasSpriteFile ?? false,
   };
 }

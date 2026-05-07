@@ -59,6 +59,8 @@
 
   // Table customization settings
   let tableSettings = $derived(SETTINGS.live.tableCustomization.state);
+  let compactMode = $derived(tableSettings.compactMode);
+  let compactDpsKey = $derived(tableSettings.compactDpsKey ?? "dps");
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.live.general.state.abbreviatedDecimalPlaces ?? 1,
   );
@@ -100,6 +102,11 @@
     });
   });
 
+  let compactDpsData = $derived.by(() => {
+    if (!compactMode) return dpsData;
+    return [...dpsData].sort((a, b) => b.totalDmg - a.totalDmg);
+  });
+
 
 function t(key: string, fallback: string): string {
   return resolveUiTranslation(
@@ -124,7 +131,7 @@ function thLabel(col: { headerKey?: string; header: string }): string {
   class="relative flex flex-col gap-2 overflow-hidden rounded-lg ring-1 ring-border/60 bg-card/30"
 >
   <table class="w-full border-collapse overflow-hidden">
-    {#if tableSettings.showTableHeader}
+    {#if tableSettings.showTableHeader && !compactMode}
       <thead>
         <tr
           class="bg-popover/60"
@@ -154,6 +161,105 @@ function thLabel(col: { headerKey?: string; header: string }): string {
       </thead>
     {/if}
     <tbody>
+      {#if compactMode}
+        {#each compactDpsData as player (player.uid)}
+          {@const isLocalPlayer = liveData?.localPlayerUid != null &&
+            player.uid === liveData.localPlayerUid}
+          {@const displayName = getDisplayName({
+            player: {
+              uid: player.uid,
+              name: player.name,
+              className: player.className,
+              classSpecName: player.classSpecName,
+            },
+            showYourNameSetting: SETTINGS_YOUR_NAME,
+            showOthersNameSetting: SETTINGS_OTHERS_NAME,
+            isLocalPlayer,
+          })}
+          {@const className = isLocalPlayer
+            ? normalizeNameDisplaySetting(SETTINGS_YOUR_NAME) !== "Hide Your Name"
+              ? player.className
+              : ""
+            : normalizeNameDisplaySetting(SETTINGS_OTHERS_NAME) !==
+                "Hide Others' Name"
+              ? player.className
+              : ""}
+          <tr
+            class="relative bg-background/40 hover:bg-muted/60 transition-colors cursor-pointer group"
+            style="height: {tableSettings.playerRowHeight}px; font-size: {tableSettings.playerFontSize}px;"
+            onclick={() => goto(`/live/dps/skills?playerUid=${player.uid}`)}
+          >
+            <td
+              colspan={visiblePlayerColumns.length + 1}
+              class="px-3 py-1 relative z-10"
+              style="color: {customThemeColors.tableTextColor};"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <span class="flex min-w-0 items-center gap-2">
+                  <img
+                    style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
+                    class="object-contain"
+                    src={getClassIcon(className)}
+                    alt={t("historyDetail.classIcon", "Class icon")}
+                  />
+                  <span class="truncate font-medium">{displayName || `#${player.uid}`}</span>
+                  {#if player.classSpecName || player.className}
+                    <span class="text-muted-foreground truncate">
+                      {formatClassSpecLabel(player.className, player.classSpecName)}
+                    </span>
+                  {/if}
+                  {#if player.abilityScore > 0 || player.seasonStrength > 0}
+                    <span class="tabular-nums text-muted-foreground">
+                      ({player.abilityScore}{player.seasonStrength > 0 ? ` - ${player.seasonStrength}` : ""})
+                    </span>
+                  {/if}
+                </span>
+                <span class="flex shrink-0 items-baseline gap-2 tabular-nums">
+                  <span class="font-semibold">
+                    {#if SETTINGS.live.general.state.shortenDps}
+                      <AbbreviatedNumber
+                        num={player.totalDmg}
+                        decimalPlaces={abbreviatedDecimalPlaces}
+                        suffixFontSize={tableSettings.abbreviatedFontSize}
+                        suffixColor={customThemeColors.tableAbbreviatedColor}
+                      />
+                    {:else}
+                      {player.totalDmg.toLocaleString()}
+                    {/if}
+                  </span>
+                  <span class="text-muted-foreground">
+                    {#if SETTINGS.live.general.state.shortenDps}
+                      <AbbreviatedNumber
+                        num={compactDpsKey === "tdps" ? player.tdps : player.dps}
+                        decimalPlaces={abbreviatedDecimalPlaces}
+                        suffixFontSize={tableSettings.abbreviatedFontSize}
+                        suffixColor={customThemeColors.tableAbbreviatedColor}
+                      />
+                    {:else}
+                      {Math.round(compactDpsKey === "tdps" ? player.tdps : player.dps).toLocaleString()}
+                    {/if}
+                  </span>
+                  <PercentFormat
+                    val={player.dmgPct}
+                    fractionDigits={0}
+                    suffixFontSize={tableSettings.abbreviatedFontSize}
+                    suffixColor={customThemeColors.tableAbbreviatedColor}
+                  />
+                </span>
+              </div>
+            </td>
+            <TableRowGlow
+              {className}
+              classSpecName={player.classSpecName}
+              percentage={SETTINGS.live.general.state.relativeToTopDPSPlayer
+                ? maxDamage > 0
+                  ? (player.totalDmg / maxDamage) * 100
+                  : 0
+                : player.dmgPct}
+            />
+          </tr>
+        {/each}
+      {:else}
       {#each dpsData as player (player.uid)}
         {@const isLocalPlayer = liveData?.localPlayerUid != null &&
           player.uid === liveData.localPlayerUid}
@@ -315,6 +421,7 @@ function thLabel(col: { headerKey?: string; header: string }): string {
           />
         </tr>
       {/each}
+      {/if}
     </tbody>
   </table>
 </div>

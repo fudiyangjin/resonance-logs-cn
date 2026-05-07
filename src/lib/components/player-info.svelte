@@ -30,7 +30,7 @@
   // Derived helpers
   const isYou = $derived(name?.includes("You") ?? false);
   const classDisplay = $derived(
-    formatClassSpecLabel(className, classSpecName) || "未知职业",
+    formatClassSpecLabel(className, classSpecName) || "Unknown Class",
   );
 
   const nameDisplay = $derived(() => {

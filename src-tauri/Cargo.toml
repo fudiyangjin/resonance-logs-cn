@@ -1,10 +1,11 @@
 [package]
-name = "resonance-logs-cn"
-version = "0.0.9"
+name = "resonance-logs-global"
+version = "1.0.6-beta.3"
 description = "Blue Protocol: Star Resonance DPS Meter"
 authors = ["Keberrye", "Deusexitium"]
 license = "AGPL-3.0-only"
 edition = "2024"
+default-run = "resonance-logs-global"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -80,4 +81,3 @@ tauri-plugin-updater = "2"
 
 [dev-dependencies]
 rand = "0.9.2"
-

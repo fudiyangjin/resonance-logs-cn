@@ -1,0 +1,11 @@
+{
+  "captureMethod": "Metode Capture",
+  "captureMethodDescription": "Pilih metode untuk menangkap paket jaringan. (Perlu restart aplikasi.)",
+  "loadingDevices": "Memuat perangkat jaringan...",
+  "networkDevice": "Perangkat Jaringan",
+  "networkDeviceDescription": "Pilih adapter jaringan untuk menangkap traffic.",
+  "npcapMissing": "Npcap tidak terdeteksi.",
+  "npcapMissingSuffix": "Instal Npcap sebelum menggunakan metode ini.",
+  "selectDevice": "Pilih Perangkat Jaringan",
+  "title": "Packet Capture"
+}

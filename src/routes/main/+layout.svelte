@@ -23,12 +23,6 @@
 
   let { children } = $props();
 
-  $effect.pre(() => {
-    (async () => {
-      await setupShortcuts();
-    })();
-  });
-
   let lastRuntimeSnapshotKey = "";
   let runtimeSnapshotInitialized = false;
   let lastOverlayVisibleState: boolean | null = null;
@@ -139,6 +133,10 @@
   let overlayChangedUnlisten: UnlistenFn | null = null;
 
   onMount(() => {
+    void setupShortcuts().catch((err) => {
+      console.error("Failed to set up shortcuts", err);
+    });
+
     // Set up navigation listener
     const appWebview = getCurrentWebviewWindow();
     appWebview.listen<string>("navigate", (event) => {
@@ -146,6 +144,8 @@
       goto(route);
     }).then((unlisten) => {
       navigateUnlisten = unlisten;
+    }).catch((err) => {
+      console.error("Failed to subscribe navigate event", err);
     });
 
     listen("game-overlay-visibility-toggle", async () => {

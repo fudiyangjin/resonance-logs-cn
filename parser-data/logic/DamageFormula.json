@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "id": "community-damage-v1",
+  "status": "hypothesis",
+  "source": {
+    "kind": "community-datamined",
+    "description": "Initial adjustable damage formula provided by community datamining and player testing.",
+    "lastReviewed": "2026-05-02"
+  },
+  "formula": {
+    "displayName": "Community Damage Formula",
+    "perHitExpression": "((((primaryAttack * (1 - resistance)) + refinedOrElementalAttack) * skillMultiplier) + flatDamage) * critMultiplier * (1 + versatilityDamagePct) * (1 + elementalDamagePct) * (1 + genericDamagePct)",
+    "encounterExpression": "sum(perHitDamage)",
+    "orderedTerms": [
+      "primaryAttack",
+      "resistance",
+      "refinedOrElementalAttack",
+      "skillMultiplier",
+      "flatDamage",
+      "critMultiplier",
+      "versatilityDamagePct",
+      "elementalDamagePct",
+      "genericDamagePct"
+    ]
+  },
+  "terms": {
+    "primaryAttack": {
+      "label": "ATK/MATK",
+      "kind": "stat",
+      "scope": "attacker",
+      "defaultValue": 0,
+      "contributionGroup": "baseAttack",
+      "description": "Physical skills are expected to use ATK and magical skills are expected to use MATK. The skill or damage row must identify which side applies."
+    },
+    "resistance": {
+      "label": "Resistance",
+      "kind": "mitigation",
+      "scope": "target",
+      "defaultValue": 0,
+      "contributionGroup": "targetMitigation",
+      "description": "Target resistance multiplier. Formula currently treats this as a decimal where 10% resistance is 0.10. Resistance break/down effects can be tested through same-hit observed deltas even when the raw target resistance snapshot is not available."
+    },
+    "targetArmorMitigation": {
+      "label": "Armor / Defense Mitigation",
+      "kind": "mitigation",
+      "scope": "target",
+      "defaultValue": 0,
+      "contributionGroup": "targetMitigation",
+      "description": "Hypothesis term for target armor/defense reduction such as Armor Break, Defense Break, Shattered Armor, or target defense down. The exact formula position is not validated yet; current parser estimates use matching-hit observed deltas when a clean outside-window baseline exists."
+    },
+    "refinedOrElementalAttack": {
+      "label": "Refined/Elemental ATK",
+      "kind": "stat",
+      "scope": "attacker",
+      "defaultValue": 0,
+      "contributionGroup": "baseAttack",
+      "description": "Flat refined or elemental attack added after resistance is applied to ATK/MATK."
+    },
+    "skillMultiplier": {
+      "label": "Multiplier",
+      "kind": "skillCoefficient",
+      "scope": "skill",
+      "defaultValue": 1,
+      "contributionGroup": "skillCoefficient",
+      "description": "Skill or damage-row coefficient. This should come from Recount/DamageAttr/skill formula sources once mapped."
+    },
+    "flatDamage": {
+      "label": "Flat Damage",
+      "kind": "flatDamage",
+      "scope": "skill",
+      "defaultValue": 0,
+      "contributionGroup": "skillCoefficient",
+      "description": "Flat damage added after the skill multiplier."
+    },
+    "critMultiplier": {
+      "label": "CRIT",
+      "kind": "hitFlagMultiplier",
+      "scope": "hit",
+      "defaultValue": 1,
+      "contributionGroup": "critical",
+      "hitFlag": "isCrit",
+      "description": "Expected to be 1 for non-critical hits and the character's crit-damage multiplier for critical hits."
+    },
+    "versatilityDamagePct": {
+      "label": "Versatility DMG %",
+      "kind": "percentMultiplier",
+      "scope": "attacker",
+      "defaultValue": 0,
+      "contributionGroup": "versatility",
+      "description": "Decimal percent damage bonus from versatility-derived damage."
+    },
+    "elementalDamagePct": {
+      "label": "Elemental DMG %",
+      "kind": "percentMultiplier",
+      "scope": "attacker-skill",
+      "defaultValue": 0,
+      "contributionGroup": "elemental",
+      "description": "Decimal percent damage bonus for the skill or damage row's element."
+    },
+    "genericDamagePct": {
+      "label": "Generic DMG %",
+      "kind": "percentMultiplier",
+      "scope": "attacker-target-skill",
+      "defaultValue": 0,
+      "contributionGroup": "genericDamage",
+      "description": "Generic damage bonuses, including target-qualified bonuses such as damage to elites or bosses when their predicates match."
+    }
+  },
+  "contributionGroups": {
+    "baseAttack": {
+      "label": "Base Attack",
+      "termIds": [
+        "primaryAttack",
+        "refinedOrElementalAttack"
+      ],
+      "description": "Stat-derived base damage before skill coefficients."
+    },
+    "targetMitigation": {
+      "label": "Target Mitigation",
+      "termIds": [
+        "resistance",
+        "targetArmorMitigation"
+      ],
+      "description": "Target-side reduction or amplification that changes the resisted or mitigated base value."
+    },
+    "skillCoefficient": {
+      "label": "Skill Coefficient",
+      "termIds": [
+        "skillMultiplier",
+        "flatDamage"
+      ],
+      "description": "Damage-row coefficient and flat skill damage."
+    },
+    "critical": {
+      "label": "Critical",
+      "termIds": [
+        "critMultiplier"
+      ],
+      "description": "Critical-hit multiplier contribution."
+    },
+    "versatility": {
+      "label": "Versatility",
+      "termIds": [
+        "versatilityDamagePct"
+      ],
+      "description": "Versatility-derived percent damage."
+    },
+    "elemental": {
+      "label": "Elemental",
+      "termIds": [
+        "elementalDamagePct"
+      ],
+      "description": "Element-specific percent damage."
+    },
+    "genericDamage": {
+      "label": "Generic Damage",
+      "termIds": [
+        "genericDamagePct"
+      ],
+      "description": "Generic, skill-specific, source-specific, and target-qualified percent damage."
+    },
+    "hitTiming": {
+      "label": "Hit Timing",
+      "termIds": [],
+      "description": "Not a per-hit formula term. Used for effects that change casts, cooldowns, attack speed, animation speed, or hit count."
+    },
+    "procDamage": {
+      "label": "Proc Damage",
+      "termIds": [],
+      "description": "Not a parent-hit multiplier. Used for effects that create separate damage rows or extra hits."
+    }
+  },
+  "runtimeEvidence": {
+    "currentlyCaptured": [
+      "damage hit value",
+      "effective damage value",
+      "skill key",
+      "damage id",
+      "target uid",
+      "target monster config id",
+      "attacker uid",
+      "original attacker uid",
+      "top summoner uid",
+      "crit flag",
+      "lucky flag",
+      "modifier windows"
+    ],
+    "neededForExactContribution": [
+      "attacker stat snapshot at hit time",
+      "target resistance snapshot at hit time",
+      "target armor/defense snapshot at hit time or matching-hit observed delta baseline",
+      "skill coefficient mapping by damage id",
+      "damage element mapping by damage id",
+      "modifier to formula-term classification",
+      "target predicate evaluation, such as elite-or-stronger",
+      "source predicate evaluation, such as companion or summon"
+    ]
+  },
+  "unmodeledTerms": {
+    "lucky": {
+      "status": "tracked-but-not-in-formula",
+      "description": "Hits currently carry a lucky flag, but the community formula does not define where lucky enters the damage equation."
+    },
+    "defense": {
+      "status": "observed-delta-candidate",
+      "description": "The community formula describes resistance but does not yet identify a validated separate defense or armor term. Armor/defense break effects are modeled as targetArmorMitigation candidates and can be estimated through same-hit baseline-vs-active deltas."
+    }
+  }
+}

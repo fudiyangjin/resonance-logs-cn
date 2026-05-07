@@ -1,7 +1,7 @@
 <script lang="ts">
   import { settings, SETTINGS } from "$lib/settings-store";
   import { computePlayerRows, computeSkillRows } from "$lib/live-derived";
-  import { lookupDamageIdName } from "$lib/config/recount-table";
+  import { lookupDamageIdName, lookupSkillBreakdownIconPath } from "$lib/config/recount-table";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
@@ -71,9 +71,17 @@
   }
 
   function buildSkillHoverText(skillId: string | number, language: LocaleCode) {
-  const note = resolveSkillNote(skillId, language).trim();
+  const note = hoverDescriptionsEnabled() ? resolveSkillNote(skillId, language).trim() : "";
 
   return `ID: #${skillId}\nSources:\n- RecountTable.json\n- DamageAttrIdName.json${note ? `\n\nNote:\n${note}` : ""}`;
+  }
+
+  function hoverDescriptionsEnabled(): boolean {
+    return SETTINGS.live.general.state.showHoverDescriptions !== false;
+  }
+
+  function shouldShowUidHover(): boolean {
+    return SETTINGS.live.general.state.skillIdDisplayMode === 'hover' || hoverDescriptionsEnabled();
   }
 
   function thLabel(
@@ -222,6 +230,7 @@
     {/if}
     <tbody>
       {#each sortedSkillRows as skill (skill.skillId)}
+        {@const iconPath = lookupSkillBreakdownIconPath(skill.skillId)}
         {@const rowIsLocalPlayer = liveData?.localPlayerUid != null &&
           currentPlayer != null &&
           currentPlayer.uid === liveData.localPlayerUid}
@@ -242,9 +251,17 @@
             style="color: {customThemeColors.tableTextColor};"
           >
             <div class="flex items-center gap-1 h-full">
+              {#if iconPath}
+                <img
+                  class="size-4 shrink-0 rounded-sm object-cover"
+                  src={iconPath}
+                  alt=""
+                  loading="lazy"
+                />
+              {/if}
               <span
                 class="truncate"
-                title={SETTINGS.live.general.state.skillIdDisplayMode === 'hover'
+                title={shouldShowUidHover()
                   ? buildSkillHoverText(skill.skillId, SETTINGS.live.general.state.language as LocaleCode)
                   : undefined}
               >

@@ -135,6 +135,8 @@ export function computeSkillRows(
         luckyDmgRate: percent(Number(stats.luckyTotalValue || 0), total),
         hits,
         hitsPerMinute: elapsedSecs > 0 ? (hits / elapsedSecs) * 60 : 0,
+        property: stats.property ?? null,
+        damageMode: stats.damageMode ?? null,
       };
       return row;
     })

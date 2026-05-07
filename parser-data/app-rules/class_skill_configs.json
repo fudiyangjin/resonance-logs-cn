@@ -1,0 +1,358 @@
+{
+  "wind_knight": {
+    "classKey": "wind_knight",
+    "className": "青岚骑士",
+    "classId": 4,
+    "defaultMonitoredBuffIds": [510072, 2205561, 31201, 2205211, 2205401, 2205134, 2205521, 31901],
+    "derivations": [
+      {
+        "sourceSkillId": 1425,
+        "derivedSkillId": 1433,
+        "triggerBuffBaseId": 2205561,
+        "derivedName": "极·岚切",
+        "derivedImagePath": "/images/wind_knight/skill/weapon_cq-01_tf01_-1316877155940038893.png"
+      },
+      {
+        "sourceSkillId": 1418,
+        "derivedSkillId": 1418,
+        "triggerBuffBaseId": 2205401,
+        "derivedName": "免费的疾空刺",
+        "derivedImagePath": "/images/wind_knight/skill/weapon_cq-01_tg01_-2586550948717895893.png"
+      },
+      {
+        "sourceSkillId": 1421,
+        "derivedSkillId": 1434,
+        "triggerBuffBaseId": 2205134,
+        "derivedName": "神影螺旋",
+        "derivedImagePath": "/images/wind_knight/skill/weapon_cq-01_tf02_7523168108073174119.png"
+      },
+      {
+        "sourceSkillId": 1401,
+        "derivedSkillId": 1435,
+        "triggerBuffBaseId": 2205521,
+        "derivedName": "龙击炮",
+        "derivedImagePath": "/images/wind_knight/skill/weapon_cq-01_tf03_6517484585993130536.png"
+      },
+      {
+        "sourceSkillId": 1430,
+        "derivedSkillId": 1430,
+        "triggerBuffBaseId": 31901,
+        "derivedName": "风环持续",
+        "derivedImagePath": "/images/wind_knight/skill/weapon_cq_skill_passive_-4587170372366891142.png"
+      }
+    ],
+    "skills": [
+      {
+        "skillId": 1420,
+        "name": "风姿卓绝",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx01_-8358011576239105760.png",
+        "maxCharges": 2
+      },
+      {
+        "skillId": 1426,
+        "name": "非举旗大招",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_ult_01_9050689552264825112.png"
+      },
+      {
+        "skillId": 1410,
+        "name": "举旗大招",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_ult_02_-7515185664632347258.png"
+      },
+      {
+        "skillId": 1419,
+        "name": "翔返",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_tg02_-133786615417471994.png",
+        "resourceRequirement": { "resourceId": 14011, "amount": 35 }
+      },
+      {
+        "skillId": 1421,
+        "name": "螺旋击刺",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx02_-1800090862594513853.png"
+      },
+      {
+        "skillId": 1422,
+        "name": "破追",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx03_4124089693214742787.png"
+      },
+      {
+        "skillId": 1425,
+        "name": "飞鸟投",
+        "imagePath": "/images/wind_knight/skill/weapon_cq_skill_02ex_-5338755465175740072.png",
+        "maxCharges": 2
+      },
+      {
+        "skillId": 1424,
+        "name": "刹那",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx05_-4769613798753072914.png",
+        "resourceRequirement": { "resourceId": 14001, "amount": 3 }
+      },
+      {
+        "skillId": 1401,
+        "name": "普攻",
+        "imagePath": "/images/wind_knight/skill/weapon_cq_skill_atk_-7208739400043910585.png"
+      },
+      {
+        "skillId": 1418,
+        "name": "疾风刺",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_tg01_-2586550948717895893.png"
+      },
+      {
+        "skillId": 1423,
+        "name": "护佑之风",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx04_-7456099577516937621.png"
+      },
+      {
+        "skillId": 1430,
+        "name": "勇气风环",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx07_-8968489817801649529.png"
+      },
+      {
+        "skillId": 1431,
+        "name": "锐利冲击",
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx08_-5400252487671298175.png",
+        "maxValidCdTime": 10000
+      }
+    ]
+  },
+  "frost_mage": {
+    "classKey": "frost_mage",
+    "className": "冰法",
+    "classId": 2,
+    "defaultMonitoredBuffIds": [510072, 27007, 2204191],
+    "derivations": [
+      {
+        "sourceSkillId": 1244,
+        "derivedSkillId": 1244,
+        "triggerBuffBaseId": 2204191,
+        "derivedName": "免读条的寒冰风暴",
+        "derivedImagePath": "/images/frost_mage/skill/weapon_mz-01_kx03_-5346524802378145274.png",
+        "keepCdWhenDerived": true
+      }
+    ],
+    "skills": [
+      {
+        "skillId": 1239,
+        "name": "陨星风暴",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx07_-8948074613709733940.png",
+        "maxCharges": 2
+      },
+      {
+        "skillId": 1211,
+        "name": "清滝绕珠",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx05_-3747281467355150039.png",
+        "maxCharges": 2
+      },
+      {
+        "skillId": 1242,
+        "name": "冰霜之矛",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_tg02_4654006341741505144.png"
+      },
+      {
+        "skillId": 1210,
+        "name": "水之涡流",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx06_-674373002471455789.png"
+      },
+      {
+        "skillId": 1246,
+        "name": "浪潮汇聚",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx04_7233443487415579343.png"
+      },
+      {
+        "skillId": 1245,
+        "name": "寒冰庇护",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx02_7577393985859312091.png"
+      },
+      {
+        "skillId": 1243,
+        "name": "冰之灌注",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx01_-8852182945774833470.png"
+      },
+      {
+        "skillId": 1244,
+        "name": "寒冰风暴",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx03_-5346524802378145274.png"
+      },
+      {
+        "skillId": 1240,
+        "name": "冻结寒风",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx08_6659465293341352126.png"
+      },
+      {
+        "skillId": 1248,
+        "name": "极寒·冰雪颂歌",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_ult_6019181098229944913.png"
+      }
+    ]
+  },
+  "flame_berserker": {
+    "classKey": "flame_berserker",
+    "className": "赤炎狂战士",
+    "classId": 3,
+    "defaultMonitoredBuffIds": [510072, 2208483],
+    "derivations": [
+      {
+        "sourceSkillId": 1614,
+        "derivedSkillId": 1621,
+        "triggerBuffBaseId": 2208483,
+        "derivedName": "炎魔天落杀",
+        "derivedImagePath": "/images/flame_berserker/skill/weapon_sf-01_kx05.png",
+        "keepCdWhenDerived": true
+      }
+    ],
+    "skills": [
+      {
+        "skillId": 1606,
+        "name": "狂热斩击",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_tg02.png"
+      },
+      {
+        "skillId": 1613,
+        "name": "迷狂炎舞",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx04.png"
+      },
+      {
+        "skillId": 1617,
+        "name": "无尽之炎魔",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx08.png"
+      },
+      {
+        "skillId": 1614,
+        "name": "无羁坠星",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx05.png"
+      },
+      {
+        "skillId": 1616,
+        "name": "如川流华斩",
+        "maxCharges": 2,
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx07.png"
+      }
+    ]
+  },
+  "stormblade": {
+    "classKey": "stormblade",
+    "className": "雷影剑士",
+    "classId": 1,
+    "defaultMonitoredBuffIds": [510072, 2200601, 2200431, 2200641, 2200121, 2200051, 2200231, 43201, 43101],
+    "derivations": [
+      {
+        "sourceSkillId": 1701,
+        "derivedSkillId": 1737,
+        "triggerBuffBaseId": 2200601,
+        "derivedName": "神罚之镰",
+        "derivedImagePath": "/images/stormblade/skill/weapon_tdl-01_tf01_5544459437439574016.png"
+      },
+      {
+        "sourceSkillId": 1718,
+        "derivedSkillId": 1736,
+        "triggerBuffBaseId": 2200431,
+        "derivedName": "神影斩",
+        "derivedImagePath": "/images/stormblade/skill/weapon_tdl-01_tf04_2216604320468850874.png"
+      },
+      {
+        "sourceSkillId": 1717,
+        "derivedSkillId": 1735,
+        "triggerBuffBaseId": 2200431,
+        "derivedName": "坠龙闪",
+        "derivedImagePath": "/images/stormblade/skill/weapon_tdl-01_tf03_9184457839467773652.png"
+      },
+      {
+        "sourceSkillId": 1715,
+        "derivedSkillId": 1738,
+        "triggerBuffBaseId": 2200641,
+        "derivedName": "缭乱兜割",
+        "derivedImagePath": "/images/stormblade/skill/weapon_tdl-01_kx01_7335935797506849194.png"
+      },
+      {
+        "sourceSkillId": 1714,
+        "derivedSkillId": 1734,
+        "triggerBuffBaseId": 2200121,
+        "derivedName": "雷切",
+        "derivedImagePath": "/images/stormblade/skill/weapon_tdl-01_tf05_6590570411655847853.png"
+      },
+      {
+        "sourceSkillId": 1705,
+        "derivedSkillId": 1739,
+        "triggerBuffBaseId": 2200051,
+        "derivedName": "看破斩",
+        "derivedImagePath": "/images/stormblade/skill/weapon_tdl-01_kx01_01_-6871866389254527098.png"
+      },
+      {
+        "sourceSkillId": 1724,
+        "derivedSkillId": 1742,
+        "triggerBuffBaseId": 2200231,
+        "derivedName": "霹雳升龙斩",
+        "derivedImagePath": "/images/stormblade/skill/weapon_tdl-01_kx06_1_-301087840969471084.png"
+      }
+    ],
+    "skills": [
+      {
+        "skillId": 1730,
+        "name": "无穷雷霆之力",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx07_5011786851491862633.png",
+        "maxCharges": 2
+      },
+      {
+        "skillId": 1731,
+        "name": "千雷闪影之意",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx08_1310086718716380591.png"
+      },
+      {
+        "skillId": 1713,
+        "name": "极诣·大破灭连斩",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_ult_3879339252261768906.png"
+      },
+      {
+        "skillId": 1728,
+        "name": "极诣·大破灭连斩-居合天赋",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_ult_3879339252261768906.png"
+      },
+      {
+        "skillId": 1720,
+        "name": "心眼",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx05_4628201897339635824.png"
+      },
+      {
+        "skillId": 1701,
+        "name": "我流刀法·诸恶",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_skill_atk01_-4614215089673209881.png"
+      },
+      {
+        "skillId": 1718,
+        "name": "飞雷神",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx03_-1967467053699191033.png"
+      },
+      {
+        "skillId": 1719,
+        "name": "镰车",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx04_7614798060604092699.png",
+        "effectDurationMs": 35000
+      },
+      {
+        "skillId": 1717,
+        "name": "一闪",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx02_2266075239079587707.png"
+      },
+      {
+        "skillId": 1715,
+        "name": "月影",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_tg02_-857792875300157552.png"
+      },
+      {
+        "skillId": 1714,
+        "name": "居合斩",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_tg01_5475604808947104442.png"
+      },
+      {
+        "skillId": 1705,
+        "name": "超高出力",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_skill_101_1_924013895986459687.png",
+        "maxCharges": 5
+      },
+      {
+        "skillId": 1724,
+        "name": "霹雳连斩",
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx06_-1183548700792331979.png"
+      }
+    ]
+  }
+}

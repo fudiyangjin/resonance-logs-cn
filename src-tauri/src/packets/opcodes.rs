@@ -2,7 +2,7 @@
 pub struct ParseError;
 
 #[non_exhaustive]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Pkt {
     ServerChangeInfo,
     // TODO: change all these names
@@ -105,7 +105,7 @@ impl TryFrom<u32> for Pkt {
 
 #[repr(u16)] // ensures the enum is stored as an u16
 #[non_exhaustive]
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FragmentType {
     None = 0,
     Call = 1,

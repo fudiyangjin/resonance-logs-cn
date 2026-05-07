@@ -230,5 +230,6 @@
   "live.pauseToast": "战斗已暂停",
   "live.resetToast": "战斗记录已重置",
   "live.resumeToast": "战斗已继续",
-  "live.unknownClass": "Unknown Class"
+  "live.unknownClass": "Unknown Class",
+  "table.skill": "技能"
 }

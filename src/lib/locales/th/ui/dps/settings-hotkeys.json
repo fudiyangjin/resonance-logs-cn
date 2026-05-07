@@ -1,0 +1,18 @@
+{
+  "clearHint": "คลิกขวาเพื่อล้างปุ่มลัด",
+  "pressKey": "กดปุ่ม",
+  "unbound": "ยังไม่กำหนด",
+  "shortcuts.showLiveMeter": "แสดงมิเตอร์สด",
+  "shortcuts.hideLiveMeter": "ซ่อนมิเตอร์สด",
+  "shortcuts.toggleLiveMeter": "เปิด/ปิดมิเตอร์สด",
+  "shortcuts.enableClickthrough": "เปิดใช้คลิกทะลุ",
+  "shortcuts.disableClickthrough": "ปิดใช้คลิกทะลุ",
+  "shortcuts.toggleClickthrough": "เปิด/ปิดคลิกทะลุ",
+  "shortcuts.resetEncounter": "รีเซ็ตการต่อสู้",
+  "shortcuts.togglePauseEncounter": "เปิด/ปิดหยุด encounter ชั่วคราว",
+  "shortcuts.toggleBossHp": "เปิด/ปิดการแสดง HP บอส",
+  "shortcuts.toggleOverlayEdit": "เปิด/ปิดโหมดแก้ไขโอเวอร์เลย์",
+  "shortcuts.toggleOverlayWindow": "เปิด/ปิดหน้าต่างโอเวอร์เลย์",
+  "shortcuts.toggleEventLogger": "เปิด/ปิดตัวบันทึกอีเวนต์",
+  "conflictAssigned": "ปุ่มลัดนี้ถูกกำหนดให้กับ"
+}

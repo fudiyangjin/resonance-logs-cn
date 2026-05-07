@@ -18,6 +18,7 @@ import {
   onLiveData,
   onPanelAttrUpdate,
   onResetEncounter,
+  onShieldDetailUpdate,
   onSkillCdUpdate,
   type BuffUpdateState,
   type CounterUpdateState,
@@ -34,6 +35,7 @@ import {
   ensureOverlayPositions,
   ensureOverlaySizes,
   ensureOverlayVisibility,
+  ensureShieldDetailStyle,
   ensureTextBuffPanelStyle,
   isBuffActive,
 } from "./overlay-utils";
@@ -220,7 +222,11 @@ export function initOverlay() {
     overlayRuntime.skillDurationMap = nextDurationMap;
   });
   const unlistenRes = onFightResUpdate((event) => {
-    overlayRuntime.fightResValues = event.payload.fightRes.values;
+    const next = new Map<number, number>();
+    for (const entry of event.payload.fightRes.entries) {
+      next.set(entry.id, entry.value);
+    }
+    overlayRuntime.fightResMap = next;
   });
   const unlistenPanelAttr = onPanelAttrUpdate((event) => {
     const next = new Map(overlayRuntime.panelAttrMap);
@@ -228,6 +234,13 @@ export function initOverlay() {
       next.set(attr.attrId, attr.value);
     }
     overlayRuntime.panelAttrMap = next;
+  });
+  const unlistenShieldDetail = onShieldDetailUpdate((event) => {
+    overlayRuntime.shieldDetailHp = {
+      current: event.payload.currentHp,
+      max: event.payload.maxHp,
+    };
+    overlayRuntime.shieldDetailEntries = event.payload.entries;
   });
 
   const unlistenLiveData = onLiveData((event) => {
@@ -298,6 +311,8 @@ export function initOverlay() {
 
   const unlistenResetEncounter = onResetEncounter(() => {
     overlayRuntime.liveData = null;
+    overlayRuntime.shieldDetailHp = { current: 0, max: 0 };
+    overlayRuntime.shieldDetailEntries = [];
     overlayRuntime.uptimeTotals = new Map();
     overlayRuntime.activeUptimeRowKeys = new Set();
     overlayRuntime.uptimeFightStartTimestampMs = 0;
@@ -326,6 +341,7 @@ export function initOverlay() {
     unlistenCd.then((fn) => fn());
     unlistenRes.then((fn) => fn());
     unlistenPanelAttr.then((fn) => fn());
+    unlistenShieldDetail.then((fn) => fn());
     unlistenLiveData.then((fn) => fn());
     unlistenResetEncounter.then((fn) => fn());
     window.removeEventListener("pointermove", onGlobalPointerMove);
@@ -357,6 +373,7 @@ function ensureActiveProfileDefaults() {
       !profile.overlayVisibility ||
       profile.overlayVisibility.showSkillDurationGroup === undefined ||
       profile.overlayVisibility.showBuffUptimeGroup === undefined ||
+      profile.overlayVisibility.showShieldDetailGroup === undefined ||
       !profile.buffDisplayMode ||
       !profile.buffGroups ||
       !profile.customPanelGroups ||
@@ -370,6 +387,7 @@ function ensureActiveProfileDefaults() {
       profile.buffUptimeTrackingModes === undefined ||
       profile.buffUptimeActiveIndicators === undefined ||
       profile.buffUptimeTextStyle === undefined ||
+      profile.shieldDetailStyle === undefined ||
       profile.showTrueUptime === undefined)
   ) {
     updateActiveProfile((profile) => ({
@@ -381,6 +399,7 @@ function ensureActiveProfileDefaults() {
       buffUptimeTrackingModes: ensureBuffUptimeTrackingModes(profile.buffUptimeTrackingModes),
       buffUptimeActiveIndicators: ensureBuffUptimeActiveIndicators(profile.buffUptimeActiveIndicators),
       buffUptimeTextStyle: ensureBuffUptimeTextStyle(profile.buffUptimeTextStyle),
+      shieldDetailStyle: ensureShieldDetailStyle(profile),
       showTrueUptime: profile.showTrueUptime ?? true,
       overlayPositions: ensureOverlayPositions(profile),
       overlaySizes: ensureOverlaySizes(profile),

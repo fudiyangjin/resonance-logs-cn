@@ -42,7 +42,7 @@ pub mod ffi {
     }
 
     unsafe extern "C++" {
-        include!("resonance-logs-cn/src/module_optimizer/cpp/ffi_bridge.h");
+        include!("resonance-logs-global/src/module_optimizer/cpp/ffi_bridge.h");
 
         fn check_gpu_support_ffi() -> GpuSupportInfo;
 

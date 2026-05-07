@@ -1,9 +1,8 @@
+use crate::parser_data;
 use anyhow::{Context, Result};
 use log::warn;
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
-use std::fs;
-use std::path::PathBuf;
 use std::sync::LazyLock;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,7 +19,8 @@ pub struct MonsterInfo {
     pub monster_type: MonsterType,
 }
 
-const EXTRA_BUFF_MONITORED_MONSTERS_RELATIVE: &str = "meter-data/ExtraBuffMonitoredMonsters.json";
+const MONSTER_ID_NAME_TYPE_RELATIVE: &str = "generated/monsternames.json";
+const EXTRA_BUFF_MONITORED_MONSTERS_RELATIVE: &str = "logic/ExtraBuffMonitoredMonsters.json";
 
 static MONSTER_REGISTRY: LazyLock<HashMap<i32, MonsterInfo>> = LazyLock::new(|| {
     #[derive(Deserialize)]
@@ -31,9 +31,20 @@ static MONSTER_REGISTRY: LazyLock<HashMap<i32, MonsterInfo>> = LazyLock::new(|| 
         monster_type: u8,
     }
 
-    let data = include_str!("../../meter-data/MonsterIdNameType.json");
-    let raw: HashMap<String, RawMonsterInfo> =
-        serde_json::from_str(data).expect("invalid MonsterIdNameType.json");
+    let data = parser_data::read_to_string(MONSTER_ID_NAME_TYPE_RELATIVE).unwrap_or_else(|err| {
+        warn!(
+            "[monster-registry] failed to load {}: {}",
+            MONSTER_ID_NAME_TYPE_RELATIVE, err
+        );
+        String::new()
+    });
+    let raw: HashMap<String, RawMonsterInfo> = serde_json::from_str(&data).unwrap_or_else(|err| {
+        warn!(
+            "[monster-registry] failed to parse {}: {}",
+            MONSTER_ID_NAME_TYPE_RELATIVE, err
+        );
+        HashMap::new()
+    });
 
     let mut registry = HashMap::with_capacity(raw.len());
     for (key, info) in raw {
@@ -73,28 +84,6 @@ struct RawExtraBuffMonitoredMonsters {
     monster_ids: Vec<i32>,
 }
 
-fn locate_meter_data_file(relative_path: &str) -> Option<PathBuf> {
-    let mut path = PathBuf::from(relative_path);
-    if path.exists() {
-        return Some(path);
-    }
-
-    path = PathBuf::from(format!("src-tauri/{}", relative_path));
-    if path.exists() {
-        return Some(path);
-    }
-
-    if let Ok(mut exe_dir) = std::env::current_exe() {
-        exe_dir.pop();
-        let candidate = exe_dir.join(relative_path);
-        if candidate.exists() {
-            return Some(candidate);
-        }
-    }
-
-    None
-}
-
 fn parse_extra_buff_monitored_monster_ids(
     contents: &str,
 ) -> Result<HashSet<i32>, serde_json::Error> {
@@ -103,17 +92,10 @@ fn parse_extra_buff_monitored_monster_ids(
 }
 
 fn load_extra_buff_monitored_monster_ids() -> Result<HashSet<i32>> {
-    let path =
-        locate_meter_data_file(EXTRA_BUFF_MONITORED_MONSTERS_RELATIVE).with_context(|| {
-            format!(
-                "{} not found in known locations",
-                EXTRA_BUFF_MONITORED_MONSTERS_RELATIVE
-            )
-        })?;
-    let contents =
-        fs::read_to_string(&path).with_context(|| format!("failed to read {}", path.display()))?;
+    let contents = parser_data::read_to_string(EXTRA_BUFF_MONITORED_MONSTERS_RELATIVE)
+        .with_context(|| format!("failed to read {}", EXTRA_BUFF_MONITORED_MONSTERS_RELATIVE))?;
     parse_extra_buff_monitored_monster_ids(&contents)
-        .with_context(|| format!("failed to parse {}", path.display()))
+        .with_context(|| format!("failed to parse {}", EXTRA_BUFF_MONITORED_MONSTERS_RELATIVE))
 }
 
 pub fn monster_name(id: i32) -> Option<&'static str> {

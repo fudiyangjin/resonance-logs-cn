@@ -1,0 +1,18 @@
+{
+  "clearHint": "右鍵可清除快捷鍵",
+  "pressKey": "請按鍵",
+  "unbound": "未綁定",
+  "shortcuts.showLiveMeter": "顯示實時視窗",
+  "shortcuts.hideLiveMeter": "隱藏實時視窗",
+  "shortcuts.toggleLiveMeter": "切換實時視窗",
+  "shortcuts.enableClickthrough": "啟用點擊穿透",
+  "shortcuts.disableClickthrough": "禁用點擊穿透",
+  "shortcuts.toggleClickthrough": "切換點擊穿透",
+  "shortcuts.resetEncounter": "重設戰鬥",
+  "shortcuts.togglePauseEncounter": "切換暫停戰鬥",
+  "shortcuts.toggleBossHp": "切換 Boss 血量顯示",
+  "shortcuts.toggleOverlayEdit": "切換遮罩編輯模式",
+  "shortcuts.toggleOverlayWindow": "切換遮罩視窗",
+  "shortcuts.toggleEventLogger": "切換事件日誌器",
+  "conflictAssigned": "該快捷鍵已分配給"
+}

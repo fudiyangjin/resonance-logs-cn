@@ -230,5 +230,6 @@
   "live.pauseToast": "戦闘を一時停止しました",
   "live.resetToast": "戦闘記録をリセットしました",
   "live.resumeToast": "戦闘を再開しました",
-  "live.unknownClass": "不明なクラス"
+  "live.unknownClass": "不明なクラス",
+  "table.skill": "スキル"
 }

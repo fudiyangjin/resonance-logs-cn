@@ -1,4 +1,4 @@
-# Resonance Logs CN
+# Resonance Logs - Global
 
 A desktop combat data analysis app for [Blue Protocol: Star Resonance](https://www.starresonance.com/), featuring real-time DPS tracking, Buff monitoring, skill cooldown display, and more.
 
@@ -15,7 +15,7 @@ This project is modified from [resonance-logs](https://github.com/resonance-logs
 
 ## Tech Stack
 
-- **Backend**: Rust + [Tauri 2](https://tauri.app/)
+- **Backend**: Rust + [Tauroh godi 2](https://tauri.app/)
 - **Frontend**: SvelteKit 5 + Svelte + TypeScript + Tailwind CSS
 - **Data Capture**: WinDivert / Npcap (Windows packet capture)
 
@@ -69,11 +69,7 @@ The build script will automatically detect CUDA/OpenCL. If neither is detected, 
 
 ## Downloads
 
-- [Releases](https://github.com/fudiyangjin/resonance-logs-cn/releases) - Prebuilt installers
-
-## Community
-
-- QQ Group: 1084866292
+- [Releases](https://github.com/donneeee/resonance-logs-global/releases) - Prebuilt installers
 
 ## Changelog
 
@@ -88,3 +84,4 @@ See [CHANGELOG.md](./CHANGELOG.md) for details.
 - [resonance-logs](https://github.com/resonance-logs/resonance-logs) - Original project
 - [StarResonanceDamageCounter](https://github.com/dmlgzs/StarResonanceDamageCounter) - Reference implementation for damage tracking
 - [StarResonanceAutoMod](https://github.com/fudiyangjin/StarResonanceAutoMod) - Module optimization algorithm and build reference
+- [Resonance-Logs-CN](https://github.com/fudiyangjin/resonance-logs-cn) - Original Fork I based Global on and where I get feature updates from.

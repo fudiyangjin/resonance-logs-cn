@@ -4,7 +4,18 @@
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
   import { computePlayerRows } from "$lib/live-derived";
   import {
+    buildRecountGroupHoverText,
+    buildSkillBreakdownHoverText,
+    buildSkillContributionNote,
+    buildSkillSourceEvidenceNote,
     groupSkillsByRecount,
+    lookupRecountGroupIconPath,
+    lookupSkillBreakdownIconPath,
+    resolveActiveEffectDetailName,
+    resolveRecountGroupName,
+    resolveSkillContributionLabel,
+    resolveSkillBreakdownDetailName,
+    resolveSkillBreakdownName,
     type RecountGroup,
     type SkillDisplayRow,
   } from "$lib/config/recount-table";
@@ -47,6 +58,10 @@
           currEntity.dmgSkills,
           elapsedSecs,
           currEntity.damage.total,
+          currEntity.activeFactorBuffs ?? [],
+          currEntity.activeEffectBuffs ?? [],
+          currEntity.activeEffectSources ?? [],
+          currEntity.activeFactorItems ?? [],
         )
       : { groups: [] as RecountGroup[], ungrouped: [] as SkillDisplayRow[] },
   );
@@ -94,10 +109,61 @@
     expandedGroups;
   }
 
-  function buildSkillHoverText(skillId: string | number, language: LocaleCode) {
-    const note = resolveSkillNote(skillId, language).trim();
-  
-    return `ID: #${skillId}\nSources:\n- RecountTable.json\n- DamageAttrIdName.json${note ? `\n\nNote:\n${note}` : ""}`;
+  function buildSkillHoverText(skill: FlatSkillRow, language: LocaleCode) {
+    const mergedIds = !skill.isGroup && skill.mergedSkillIds && skill.mergedSkillIds.length > 1
+      ? `Merged damage IDs: ${skill.mergedSkillIds.map((id) => `#${id}`).join(", ")}`
+      : "";
+    const effectNote = buildSkillSourceEvidenceNote(skill.activeEffects, skill.activeFactors, language);
+    const contributionNote = skill.isGroup ? "" : buildSkillContributionNote(skill);
+    const descriptionNote = hoverDescriptionsEnabled()
+      ? resolveSkillNote(skill.skillId, language).trim()
+      : "";
+    const note = [contributionNote, mergedIds, effectNote, descriptionNote]
+      .filter(Boolean)
+      .join("\n");
+    if (skill.sourceRowKind === "factor") {
+      return [
+        `Source row: ${displaySkillName(skill, language)} - ${displaySkillDetailName(skill, language)}`,
+        note,
+      ].filter(Boolean).join("\n");
+    }
+    if (skill.isGroup) {
+      return buildRecountGroupHoverText(skill.skillId, language, note);
+    }
+    return buildSkillBreakdownHoverText(skill.skillId, language, note);
+  }
+
+  function hoverDescriptionsEnabled(): boolean {
+    return SETTINGS.live.general.state.showHoverDescriptions !== false;
+  }
+
+  function shouldShowUidHover(): boolean {
+    return SETTINGS.live.general.state.skillIdDisplayMode === 'hover' || hoverDescriptionsEnabled();
+  }
+
+  function skillIconPath(skill: FlatSkillRow): string | undefined {
+    return skill.isGroup
+      ? lookupRecountGroupIconPath(skill.skillId)
+      : lookupSkillBreakdownIconPath(skill.skillId);
+  }
+
+  function displaySkillName(skill: FlatSkillRow, language: LocaleCode): string {
+    if (skill.isGroup) {
+      return resolveRecountGroupName(skill.skillId, language, skill.name);
+    }
+    if (skill.details) {
+      return resolveSkillBreakdownName(skill, language);
+    }
+    return resolveSkillTranslation(skill.skillId, language, skill.name);
+  }
+
+  function displaySkillDetailName(skill: FlatSkillRow, language: LocaleCode): string {
+    if (skill.isGroup) {
+      return resolveActiveEffectDetailName(skill.activeEffects, skill.activeFactors, language);
+    }
+    return skill.details
+      ? resolveSkillBreakdownDetailName(skill, language)
+      : resolveActiveEffectDetailName(skill.activeEffects, skill.activeFactors, language);
   }
 
   function thLabel(
@@ -120,6 +186,11 @@
     }
 
     return col.header;
+  }
+
+  function isContributionCellUnknown(skill: FlatSkillRow): boolean {
+    if (skill.isGroup) return false;
+    return skill.attribution.kind === "source-only";
   }
 
   let flatRows = $derived.by(() => {
@@ -165,25 +236,26 @@
         luckyDmgRate: group.luckyDmgRate,
         hits: group.hits,
         hitsPerMinute: group.hitsPerMinute,
+        property: group.property,
+        damageMode: group.damageMode,
+        attribution: {
+          kind: "exact",
+          basis: "direct-damage-row",
+          label: "Exact",
+          detail: "Measured recount rollup total.",
+        },
+        ...(group.activeFactors?.length ? { activeFactors: group.activeFactors } : {}),
+        ...(group.activeEffects?.length ? { activeEffects: group.activeEffects } : {}),
         raw: {
           totalValue: group.totalDmg,
+          effectiveTotalValue: group.effectiveTotal,
           hits: group.hits,
-          critHits: group.skills.reduce(
-            (sum, skill) => sum + Number(skill.raw.critHits || 0),
-            0,
-          ),
-          critTotalValue: group.skills.reduce(
-            (sum, skill) => sum + Number(skill.raw.critTotalValue || 0),
-            0,
-          ),
-          luckyHits: group.skills.reduce(
-            (sum, skill) => sum + Number(skill.raw.luckyHits || 0),
-            0,
-          ),
-          luckyTotalValue: group.skills.reduce(
-            (sum, skill) => sum + Number(skill.raw.luckyTotalValue || 0),
-            0,
-          ),
+          critHits: group.raw.critHits,
+          critTotalValue: group.raw.critTotalValue,
+          luckyHits: group.raw.luckyHits,
+          luckyTotalValue: group.raw.luckyTotalValue,
+          property: group.raw.property ?? null,
+          damageMode: group.raw.damageMode ?? null,
         },
         isGroup: true,
         depth: 0,
@@ -260,6 +332,7 @@
     {/if}
     <tbody>
       {#each flatRows as skill (skill.key)}
+        {@const iconPath = skillIconPath(skill)}
         {#if currPlayer}
           {@const isLocalPlayer = liveData?.localPlayerUid != null &&
             currPlayer.uid === liveData.localPlayerUid}
@@ -311,17 +384,46 @@
                 {:else}
                   <span class="w-3 shrink-0"></span>
                 {/if}
+                {#if iconPath}
+                  <img
+                    class="size-4 shrink-0 rounded-sm object-cover"
+                    src={iconPath}
+                    alt=""
+                    loading="lazy"
+                  />
+                {/if}
                 <span
                   class="truncate"
-                  title={SETTINGS.live.general.state.skillIdDisplayMode === 'hover'
-                    ? buildSkillHoverText(skill.skillId, SETTINGS.live.general.state.language as LocaleCode)
+                  title={shouldShowUidHover()
+                    ? buildSkillHoverText(skill, SETTINGS.live.general.state.language as LocaleCode)
                     : undefined}
                 >
-                  {resolveSkillTranslation(skill.skillId, SETTINGS.live.general.state.language, skill.name)}
+                  {displaySkillName(skill, SETTINGS.live.general.state.language as LocaleCode)}
                 </span>
+                {#if displaySkillDetailName(skill, SETTINGS.live.general.state.language as LocaleCode)}
+                  <span class="shrink-0 text-xs opacity-70">
+                    - {displaySkillDetailName(skill, SETTINGS.live.general.state.language as LocaleCode)}
+                  </span>
+                {/if}
+                {#if !skill.isGroup && skill.details?.Badge && skill.details.Category !== "base-skill"}
+                  <span
+                    class="shrink-0 rounded border border-border/50 bg-muted/30 px-1 py-0.5 text-[9px] leading-none text-muted-foreground"
+                    title={skill.details.CategoryLabel}
+                  >
+                    {skill.details.Badge}
+                  </span>
+                {/if}
+                {#if !skill.isGroup && skill.depth > 0}
+                  <span
+                    class="shrink-0 rounded border border-border/50 bg-background/60 px-1 py-0.5 text-[9px] leading-none text-muted-foreground"
+                    title={buildSkillContributionNote(skill)}
+                  >
+                    {resolveSkillContributionLabel(skill)}
+                  </span>
+                {/if}
                 {#if SETTINGS.live.general.state.skillIdDisplayMode === 'column'}
                   <span class="text-[10px] text-muted-foreground/50 shrink-0">
-                    #{skill.skillId}
+                    #{skill.skillId}{!skill.isGroup && skill.mergedSkillIds && skill.mergedSkillIds.length > 1 ? ` +${skill.mergedSkillIds.length - 1}` : ""}
                   </span>
                 {/if}
               </button>
@@ -331,7 +433,12 @@
                 class="px-2 py-1 text-right relative z-10"
                 style="color: {customThemeColors.tableTextColor};"
               >
-                {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
+                {#if isContributionCellUnknown(skill)}
+                  <span
+                    class="text-muted-foreground/60"
+                    title={buildSkillContributionNote(skill)}
+                  >--</span>
+                {:else if col.key === "totalDmg" || col.key === "effectiveTotal"}
                   {#if SETTINGS.live.general.state.shortenDps}
                     <AbbreviatedNumber
                       num={col.key === "totalDmg" ? skill.totalDmg : skill.effectiveTotal}
@@ -345,7 +452,7 @@
                 {:else if col.key === "dps" || col.key === "effectiveDps"}
                   {#if SETTINGS.live.general.state.shortenDps}
                     <AbbreviatedNumber
-                      num={skill.dps}
+                      num={col.key === "dps" ? skill.dps : skill.effectiveDps}
                       decimalPlaces={abbreviatedDecimalPlaces}
                       suffixFontSize={tableSettings.skillAbbreviatedFontSize}
                       suffixColor={customThemeColors.tableAbbreviatedColor}

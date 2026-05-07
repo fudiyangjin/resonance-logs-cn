@@ -57,43 +57,45 @@
     }, 100);
 
     const handlePointerMove = (event: PointerEvent) => {
-      if (!dragState) return;
+      const currentDragState = dragState;
+      if (!currentDragState) return;
 
-      if (dragState.kind === "item") {
-        const nextX = Math.max(0, Math.min(window.innerWidth - 80, event.clientX - dragState.offsetX));
-        const nextY = Math.max(0, Math.min(window.innerHeight - 40, event.clientY - dragState.offsetY));
-        const nextGroupLayouts = { ...(transientLayouts[dragState.groupId] ?? {}) };
-        const previous = nextGroupLayouts[dragState.itemKey] ?? { x: nextX, y: nextY, z: 0 };
-        nextGroupLayouts[dragState.itemKey] = { ...previous, x: nextX, y: nextY };
+      if (currentDragState.kind === "item") {
+        const nextX = Math.max(0, Math.min(window.innerWidth - 80, event.clientX - currentDragState.offsetX));
+        const nextY = Math.max(0, Math.min(window.innerHeight - 40, event.clientY - currentDragState.offsetY));
+        const nextGroupLayouts = { ...(transientLayouts[currentDragState.groupId] ?? {}) };
+        const previous = nextGroupLayouts[currentDragState.itemKey] ?? { x: nextX, y: nextY, z: 0 };
+        nextGroupLayouts[currentDragState.itemKey] = { ...previous, x: nextX, y: nextY };
         transientLayouts = {
           ...transientLayouts,
-          [dragState.groupId]: nextGroupLayouts,
+          [currentDragState.groupId]: nextGroupLayouts,
         };
         return;
       }
 
-      const group = get(customTriggersFile).groups.find((item) => item.id === dragState.groupId);
+      const group = get(customTriggersFile).groups.find((item) => item.id === currentDragState.groupId);
       const groupWidth = Math.max(80, group?.width ?? 280);
-      const nextX = Math.max(0, Math.min(window.innerWidth - groupWidth, event.clientX - dragState.offsetX));
-      const nextY = Math.max(0, Math.min(window.innerHeight - 40, event.clientY - dragState.offsetY));
+      const nextX = Math.max(0, Math.min(window.innerWidth - groupWidth, event.clientX - currentDragState.offsetX));
+      const nextY = Math.max(0, Math.min(window.innerHeight - 40, event.clientY - currentDragState.offsetY));
       transientGroupPositions = {
         ...transientGroupPositions,
-        [dragState.groupId]: { x: nextX, y: nextY },
+        [currentDragState.groupId]: { x: nextX, y: nextY },
       };
     };
 
     const handlePointerUp = async () => {
-      if (!dragState) return;
+      const currentDragState = dragState;
+      if (!currentDragState) return;
 
-      if (dragState.kind === "item") {
-        const layout = transientLayouts[dragState.groupId]?.[dragState.itemKey];
+      if (currentDragState.kind === "item") {
+        const layout = transientLayouts[currentDragState.groupId]?.[currentDragState.itemKey];
         if (layout) {
-          await setTriggerGroupItemLayout(dragState.groupId, dragState.itemKey, layout);
+          await setTriggerGroupItemLayout(currentDragState.groupId, currentDragState.itemKey, layout);
         }
       } else {
-        const nextPosition = transientGroupPositions[dragState.groupId];
+        const nextPosition = transientGroupPositions[currentDragState.groupId];
         if (nextPosition) {
-          await updateTriggerGroup(dragState.groupId, nextPosition);
+          await updateTriggerGroup(currentDragState.groupId, nextPosition);
         }
       }
 
@@ -315,6 +317,8 @@
         class="overlay-group empty-free-state"
         class:editable={editing && !group.locked}
         style={`left:${getEffectiveGroupPosition(group).x}px;top:${getEffectiveGroupPosition(group).y}px;width:${group.width}px;`}
+        role="group"
+        aria-label={group.name}
         onpointerdown={(event) => beginGroupDrag(event, group)}
       >
         <div class="empty-state">{group.layoutMode === "notifications" ? t("overlayNotificationsEmpty", "No trigger notifications") : t("overlayEmpty", "No active trigger bars")}</div>
@@ -370,6 +374,8 @@
       class="overlay-group custom-trigger-group"
       class:editable={editing && !group.locked}
       style={`left:${getEffectiveGroupPosition(group).x}px;top:${getEffectiveGroupPosition(group).y}px;width:${group.width}px;`}
+      role="group"
+      aria-label={group.name}
       onpointerdown={(event) => beginGroupDrag(event, group)}
     >
       {#if editing || (group.showHeader && items.length > 0)}
@@ -407,6 +413,8 @@
       class="overlay-group custom-trigger-notification-group"
       class:editable={editing && !group.locked}
       style={`left:${getEffectiveGroupPosition(group).x}px;top:${getEffectiveGroupPosition(group).y}px;width:${group.width}px;`}
+      role="group"
+      aria-label={group.name}
       onpointerdown={(event) => beginGroupDrag(event, group)}
     >
       {#if editing || (group.showHeader && $triggerNotifications.length > 0)}

@@ -578,7 +578,7 @@ export function customPanelRowsByGroup() {
 
 export function getResourceValue(index: number): number {
   return getResourceValueValue(
-    overlayRuntime.fightResValues,
+    overlayRuntime.fightResMap,
     selectedClassKey(),
     index,
   );
@@ -586,7 +586,7 @@ export function getResourceValue(index: number): number {
 
 export function getResourcePreciseValue(index: number): number {
   return getResourcePreciseValueValue(
-    overlayRuntime.fightResValues,
+    overlayRuntime.fightResMap,
     selectedClassKey(),
     index,
   );

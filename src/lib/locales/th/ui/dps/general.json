@@ -1,0 +1,16 @@
+{
+  "history": "ประวัติ",
+  "meterSettings": "การตั้งค่ามิเตอร์",
+  "selectTabPrompt": "เลือกแท็บด้านบนเพื่อดูการตั้งค่าโดยละเอียด",
+  "settings": "การตั้งค่า",
+  "settings.debug": "ดีบัก",
+  "settings.history": "ประวัติ",
+  "settings.live": "สด",
+  "settings.network": "เครือข่าย",
+  "settings.shortcuts": "ปุ่มลัด",
+  "subtitle": "ติดตามข้อมูลการต่อสู้และสถิติ DPS แบบเรียลไทม์",
+  "themes": "ธีม",
+  "title": "มิเตอร์ DPS",
+  "toggleWindow": "เปิด/ปิดหน้าต่าง DPS",
+  "viewHistory": "ดูประวัติ"
+}

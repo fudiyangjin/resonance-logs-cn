@@ -17,7 +17,7 @@
     setMonsterEditMode,
   } from "../monster-overlay/monster-state.svelte.js";
 
-  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   async function doneEditing() {
     await setEditMode(false);
@@ -38,21 +38,21 @@
 </script>
 
 <div class="edit-banner">
-  <div class="edit-title">{t("overlay.edit.title", "编辑模式 - 可拖拽调整位置")}</div>
+  <div class="edit-title">{t("overlay.edit.title", "Edit Mode - Drag to reposition")}</div>
   <button type="button" class="done-btn secondary" onclick={resetAllOverlayPositions}>
-    {t("overlay.edit.resetPosition", "重置位置")}
+    {t("overlay.edit.resetPosition", "Reset Position")}
   </button>
   <button type="button" class="done-btn secondary" onclick={resetAllOverlaySizes}>
-    {t("overlay.edit.resetSize", "重置尺寸")}
+    {t("overlay.edit.resetSize", "Reset Size")}
   </button>
   <button type="button" class="done-btn" onclick={doneEditing}>
-    {t("overlay.edit.done", "完成编辑")}
+    {t("overlay.edit.done", "Done")}
   </button>
 </div>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="window-drag-bar" onpointerdown={onWindowDragPointerDown}>
-  {t("overlay.edit.dragWindow", "拖动此处移动 Overlay 窗口")}
+  {t("overlay.edit.dragWindow", "Drag here to move the overlay window")}
 </div>
 
 <style>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { goto } from "$app/navigation";
+	import { goto, replaceState } from "$app/navigation";
 	import { page as pageStore } from "$app/stores";
 	import { commands } from "$lib/bindings";
 	import type {
@@ -15,6 +15,8 @@
 
 	let encounters = $state<EncounterSummaryDto[]>([]);
 	let errorMsg = $state<string | null>(null);
+	let isMounted = false;
+	let loadRequestId = 0;
 
 	// Pagination
 	let pageSize = $state(10);
@@ -271,6 +273,7 @@
 	}
 
 	async function loadEncounters(p: number = page) {
+		const requestId = ++loadRequestId;
 		isRefreshing = true;
 		try {
 			const offset = p * pageSize;
@@ -298,6 +301,7 @@
 				offset,
 				hasFilters ? filterPayload : null,
 			);
+			if (!isMounted || requestId !== loadRequestId) return;
 
 			if (res.status === "ok") {
 				encounters = res.data.rows ?? [];
@@ -307,21 +311,22 @@
 				page = p;
 
 				const sp = buildHistorySearchParams({ page: p, pageSize });
-				await goto(`/main/dps/history?${sp.toString()}`, {
-					replaceState: true,
-					keepFocus: true,
-					noScroll: true,
-				});
+				if ($pageStore.url.pathname === "/main/dps/history") {
+					replaceState(`/main/dps/history?${sp.toString()}`, $pageStore.state);
+				}
 			} else {
 				throw new Error(String(res.error));
 			}
 		} catch (e) {
+			if (!isMounted || requestId !== loadRequestId) return;
 			console.error("loadEncounters error", e);
 			errorMsg = String(e);
 			encounters = [];
 			totalCount = 0;
 		} finally {
-			isRefreshing = false;
+			if (isMounted && requestId === loadRequestId) {
+				isRefreshing = false;
+			}
 		}
 	}
 
@@ -382,6 +387,7 @@
 	);
 
 	onMount(() => {
+		isMounted = true;
 		loadBossNames();
 		loadSceneNames();
 
@@ -415,6 +421,11 @@
 
 		pageSize = initialPageSize;
 		loadEncounters(initialPage);
+
+		return () => {
+			isMounted = false;
+			loadRequestId += 1;
+		};
 	});
 
 	function fmtDuration(durationSeconds: number) {

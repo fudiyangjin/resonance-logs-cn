@@ -1,0 +1,11 @@
+{
+  "captureMethod": "วิธีจับแพ็กเก็ต",
+  "captureMethodDescription": "เลือกวิธีจับแพ็กเก็ตเครือข่าย (ต้องรีสตาร์ทแอป)",
+  "loadingDevices": "กำลังโหลดอุปกรณ์เครือข่าย...",
+  "networkDevice": "อุปกรณ์เครือข่าย",
+  "networkDeviceDescription": "เลือกอะแดปเตอร์เครือข่ายที่จะใช้จับทราฟฟิก",
+  "npcapMissing": "ไม่พบ Npcap",
+  "npcapMissingSuffix": "โปรดติดตั้ง Npcap ก่อนใช้วิธีนี้",
+  "selectDevice": "เลือกอุปกรณ์เครือข่าย",
+  "title": "การจับแพ็กเก็ต"
+}

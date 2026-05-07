@@ -2,15 +2,14 @@ use crate::database::now_ms;
 use crate::live::commands_models::SkillCdState;
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::opcodes_process::ParsedSkillCd;
-use log::{info, warn};
+use crate::parser_data;
+use log::{debug, warn};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
-use std::fs;
-use std::path::PathBuf;
 use std::sync::LazyLock;
 
-const TEMP_ATTR_TABLE_RELATIVE: &str = "meter-data/TempAttrTable.json";
-const SKILL_EFFECT_TABLE_RELATIVE: &str = "meter-data/SkillEffectTable.json";
+const TEMP_ATTR_TABLE_RELATIVE: &str = "logic/TempAttrTable.json";
+const SKILL_EFFECT_TABLE_RELATIVE: &str = "logic/SkillEffectTable.json";
 const TAG_NO_CD_REDUCE: i32 = 103;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -155,32 +154,8 @@ impl SkillCdMonitor {
     }
 }
 
-fn locate_meter_data_file(relative_path: &str) -> Option<PathBuf> {
-    let mut p = PathBuf::from(relative_path);
-    if p.exists() {
-        return Some(p);
-    }
-
-    p = PathBuf::from(format!("src-tauri/{}", relative_path));
-    if p.exists() {
-        return Some(p);
-    }
-
-    if let Ok(mut exe_dir) = std::env::current_exe() {
-        exe_dir.pop();
-        let candidate = exe_dir.join(relative_path);
-        if candidate.exists() {
-            return Some(candidate);
-        }
-    }
-
-    None
-}
-
 fn load_cd_temp_attr_defs() -> Result<HashMap<i32, CdTempAttrDef>, Box<dyn std::error::Error>> {
-    let path = locate_meter_data_file(TEMP_ATTR_TABLE_RELATIVE)
-        .ok_or_else(|| format!("{} not found in known locations", TEMP_ATTR_TABLE_RELATIVE))?;
-    let contents = fs::read_to_string(path)?;
+    let contents = parser_data::read_to_string(TEMP_ATTR_TABLE_RELATIVE)?;
     let raw_map: HashMap<String, RawTempAttrDef> = serde_json::from_str(&contents)?;
 
     let mut result = HashMap::new();
@@ -202,13 +177,7 @@ fn load_cd_temp_attr_defs() -> Result<HashMap<i32, CdTempAttrDef>, Box<dyn std::
 }
 
 fn load_skill_effect_tags() -> Result<HashMap<i32, Vec<i32>>, Box<dyn std::error::Error>> {
-    let path = locate_meter_data_file(SKILL_EFFECT_TABLE_RELATIVE).ok_or_else(|| {
-        format!(
-            "{} not found in known locations",
-            SKILL_EFFECT_TABLE_RELATIVE
-        )
-    })?;
-    let contents = fs::read_to_string(path)?;
+    let contents = parser_data::read_to_string(SKILL_EFFECT_TABLE_RELATIVE)?;
     let raw_map: HashMap<String, RawSkillEffectEntry> = serde_json::from_str(&contents)?;
 
     let mut result = HashMap::new();
@@ -229,7 +198,7 @@ fn temp_attr_matches(def: &CdTempAttrDef, skill_id: i32, skill_tags: &HashSet<i3
     }
 }
 
-fn calculate_skill_cd(
+pub(crate) fn calculate_skill_cd(
     base_cd: f32,
     skill_level_id: i32,
     temp_attr_values: &HashMap<i32, i32>,
@@ -242,7 +211,7 @@ fn calculate_skill_cd(
         .filter(|(_, v)| **v != 0)
         .map(|(k, v)| (*k, *v))
         .collect();
-    info!(
+    debug!(
         "[skill-cd] calc skill_level_id={} base_cd={} attr_skill_cd={} attr_skill_cd_pct={} attr_cd_accelerate_pct={} temp_attrs={:?}",
         skill_level_id,
         base_cd,
@@ -253,7 +222,7 @@ fn calculate_skill_cd(
     );
 
     if base_cd <= 0.0 {
-        info!("[skill-cd]   base_cd<=0, return (0.0, 0.0)");
+        debug!("[skill-cd]   base_cd<=0, return (0.0, 0.0)");
         return (0.0, 0.0);
     }
 
@@ -264,13 +233,13 @@ fn calculate_skill_cd(
         .cloned()
         .unwrap_or_default();
     let skill_tags: HashSet<i32> = skill_tags_vec.iter().copied().collect();
-    info!(
+    debug!(
         "[skill-cd]   skill_id={} tag_lookup={} skill_tags={:?}",
         skill_id, tag_lookup_skill_level_id, skill_tags_vec
     );
 
     if skill_tags.contains(&TAG_NO_CD_REDUCE) {
-        info!(
+        debug!(
             "[skill-cd]   skill has TAG_NO_CD_REDUCE(103), no reduction applied, return (base_cd={}, accelerate=0.0)",
             base_cd
         );
@@ -280,7 +249,7 @@ fn calculate_skill_cd(
     let mut flat_reduce = attr_skill_cd;
     let mut pct_reduce = attr_skill_cd_pct / 10000.0;
     let mut accelerate = attr_cd_accelerate_pct / 10000.0;
-    info!(
+    debug!(
         "[skill-cd]   init flat_reduce={} pct_reduce={} accelerate={}",
         flat_reduce, pct_reduce, accelerate
     );
@@ -290,7 +259,7 @@ fn calculate_skill_cd(
             continue;
         }
         let Some(def) = CD_TEMP_ATTR_DEFS.get(temp_attr_id) else {
-            info!(
+            debug!(
                 "[skill-cd]   temp_attr {} value={} def_found=false (not in CD_TEMP_ATTR_DEFS), skip",
                 temp_attr_id, value
             );
@@ -298,7 +267,7 @@ fn calculate_skill_cd(
         };
         let matches = temp_attr_matches(def, skill_id, &skill_tags);
         if !matches {
-            info!(
+            debug!(
                 "[skill-cd]   temp_attr {} value={} def_found=true matches=false (attr_type={} logic_type={} params={:?}), skip",
                 temp_attr_id, value, def.attr_type, def.logic_type, def.attr_params
             );
@@ -309,7 +278,7 @@ fn calculate_skill_cd(
             101 => {
                 let contrib = *value as f32 / 1000.0;
                 flat_reduce += contrib;
-                info!(
+                debug!(
                     "[skill-cd]   temp_attr {} value={} attr_type=101(flat) contrib={} -> flat_reduce={}",
                     temp_attr_id, value, contrib, flat_reduce
                 );
@@ -317,7 +286,7 @@ fn calculate_skill_cd(
             100 => {
                 let contrib = *value as f32 / 10000.0;
                 pct_reduce += contrib;
-                info!(
+                debug!(
                     "[skill-cd]   temp_attr {} value={} attr_type=100(pct) contrib={} -> pct_reduce={}",
                     temp_attr_id, value, contrib, pct_reduce
                 );
@@ -325,7 +294,7 @@ fn calculate_skill_cd(
             103 => {
                 let contrib = *value as f32 / 10000.0;
                 accelerate += contrib;
-                info!(
+                debug!(
                     "[skill-cd]   temp_attr {} value={} attr_type=103(accelerate) contrib={} -> accelerate={}",
                     temp_attr_id, value, contrib, accelerate
                 );
@@ -334,18 +303,18 @@ fn calculate_skill_cd(
         }
     }
 
-    info!(
+    debug!(
         "[skill-cd]   final flat_reduce={} pct_reduce={} accelerate={}",
         flat_reduce, pct_reduce, accelerate
     );
 
     let reduced_cd = ((1.0 - pct_reduce) * (base_cd - flat_reduce)).max(0.0);
-    info!(
+    debug!(
         "[skill-cd]   reduced_cd=(1-{})*({}-{})={}",
         pct_reduce, base_cd, flat_reduce, reduced_cd
     );
 
-    info!(
+    debug!(
         "[skill-cd]   final_result actual_cd={} accelerate_rate={}",
         reduced_cd, accelerate
     );

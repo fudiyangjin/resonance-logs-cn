@@ -11,6 +11,8 @@ import type {
   RawCombatStats as BindingRawCombatStats,
   RawSkillStats as BindingRawSkillStats,
   HistoryEntityData as BindingRawEntityData,
+  DamageSnapshot as BindingDamageSnapshot,
+  DeathRecord as BindingDeathRecord,
 } from "./bindings";
 
 // Type definitions for event payloads
@@ -81,7 +83,9 @@ export type SkillRow = {
   luckyRate: number;
   luckyDmgRate: number;
   hits: number;
-  hitsPerMinute: number
+  hitsPerMinute: number;
+  property: number | null;
+  damageMode: number | null;
 };
 
 export type SkillCdState = {
@@ -99,8 +103,13 @@ export type SkillCdUpdatePayload = {
   skillCds: SkillCdState[];
 };
 
+export type FightResourceEntry = {
+  id: number;
+  value: number;
+};
+
 export type FightResourceState = {
-  values: number[];
+  entries: FightResourceEntry[];
   receivedAt: number;
 };
 
@@ -167,6 +176,22 @@ export type PanelAttrUpdatePayload = {
   attrs: PanelAttrState[];
 };
 
+export type ShieldDetailEntry = {
+  buffUuid: number;
+  displayType: number;
+  current: number;
+  initialShield: number;
+  maxShield: number;
+  baseId: number;
+  expireTimeMs: number;
+};
+
+export type ShieldDetailUpdatePayload = {
+  currentHp: number;
+  maxHp: number;
+  entries: ShieldDetailEntry[];
+};
+
 export type EncounterUpdatePayload = {
   headerInfo: HeaderInfo;
   isPaused: boolean;
@@ -195,6 +220,13 @@ export type LiveDataPayload = {
 
 export type SceneChangePayload = {
   sceneName: string;
+};
+
+export type DamageSnapshot = BindingDamageSnapshot;
+export type DeathRecord = BindingDeathRecord;
+
+export type DeathReplayPayload = {
+  records: DeathRecord[];
 };
 
 // Event listener functions
@@ -255,6 +287,15 @@ export const onPanelAttrUpdate = (
 ): Promise<UnlistenFn> =>
   listen<PanelAttrUpdatePayload>("panel-attr-update", handler);
 
+export const onShieldDetailUpdate = (
+  handler: (event: Event<ShieldDetailUpdatePayload>) => void
+): Promise<UnlistenFn> =>
+  listen<ShieldDetailUpdatePayload>("shield-detail-update", handler);
+
+export const onDeathReplay = (
+  handler: (event: Event<DeathReplayPayload>) => void
+): Promise<UnlistenFn> => listen<DeathReplayPayload>("death-replay", handler);
+
 // Command wrappers (still using generated bindings)
 
 export const resetEncounter = (): Promise<Result<null, string>> => commands.resetEncounter();
@@ -268,6 +309,15 @@ export const getEncounterEntitiesRaw = (
   encounterId: number,
 ): Promise<Result<RawEntityData[], string>> =>
   commands.getEncounterEntitiesRaw(encounterId);
+export const getEncounterEntitiesCompactRaw = (
+  encounterId: number,
+): Promise<Result<RawEntityData[], string>> =>
+  commands.getEncounterEntitiesCompactRaw(encounterId);
+export const getEncounterModifierEntitiesRaw = (
+  encounterId: number,
+  entityUid: number,
+): Promise<Result<RawEntityData[], string>> =>
+  commands.getEncounterModifierEntitiesRaw(encounterId, entityUid);
 
 // =========================
 // 模组计算器相关 API

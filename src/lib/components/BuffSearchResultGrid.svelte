@@ -1,5 +1,9 @@
 <script lang="ts">
   import type { BuffDefinition, BuffNameInfo } from "$lib/config/buff-name-table";
+  import { uiT } from "$lib/i18n";
+  import { SETTINGS } from "$lib/settings-store";
+
+  const t = uiT("overlay/skill-monitor/buff-monitor", () => SETTINGS.live.general.state.language);
 
   interface Props {
     items: BuffNameInfo[];
@@ -19,9 +23,11 @@
     isSelected = () => false,
     isDisabled = () => false,
     getStatusLabel = () => null,
-    emptyMessage = "没有匹配的 Buff",
+    emptyMessage,
     minColumnWidth = 180,
   }: Props = $props();
+
+  const localizedEmptyMessage = $derived(emptyMessage ?? t("search.noMatchingBuffs", "No matching Buffs"));
 </script>
 
 {#if items.length > 0}
@@ -36,8 +42,14 @@
       {@const statusLabel = getStatusLabel(item.baseId)}
       {@const defaultName = iconBuff?.name ?? null}
       {@const subtitle = defaultName && defaultName !== item.name
-        ? `${defaultName} · ID ${item.baseId}`
-        : `ID ${item.baseId}`}
+        ? `${defaultName} - ${t("search.id", "ID")} ${item.baseId}`
+        : `${t("search.id", "ID")} ${item.baseId}`}
+      {@const hoverTitle = [
+        item.name,
+        `${t("search.buffId", "Buff ID")}: #${item.baseId}`,
+        defaultName && defaultName !== item.name ? `${t("search.default", "Default")}: ${defaultName}` : "",
+        statusLabel ? `${t("search.status", "Status")}: ${statusLabel}` : "",
+      ].filter(Boolean).join("\n")}
       <button
         type="button"
         class={`group relative flex flex-col rounded-lg border bg-card/40 p-3 text-left transition-all ${selected
@@ -45,7 +57,7 @@
             : "border-border/60 hover:border-primary/50 hover:bg-card/60"} ${disabled
             ? "cursor-not-allowed opacity-70"
             : "cursor-pointer"}`}
-        title={item.name}
+        title={hoverTitle}
         disabled={disabled}
         onclick={() => onSelect(item.baseId)}
       >
@@ -88,5 +100,5 @@
     {/each}
   </div>
 {:else}
-  <div class="text-xs text-muted-foreground">{emptyMessage}</div>
+  <div class="text-xs text-muted-foreground">{localizedEmptyMessage}</div>
 {/if}

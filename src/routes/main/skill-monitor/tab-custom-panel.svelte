@@ -50,7 +50,7 @@
     setCustomPanelProgressOpacity: (value: number) => void;
   }
 
-  const t = uiT("skill-monitor/custom-panel", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/custom-panel", () => SETTINGS.live.general.state.language);
 
   let {
     counterRules,

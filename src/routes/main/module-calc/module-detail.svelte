@@ -38,6 +38,15 @@
       fallback,
     );
   }
+
+  function moduleHoverTitle(mod: ModuleSolution["modules"][number]) {
+    return [
+      moduleName(mod.config_id, mod.name),
+      `Module config ID: #${mod.config_id}`,
+      `Module UUID: #${mod.uuid}`,
+      `Quality: ${mod.quality}`,
+    ].join("\n");
+  }
 </script>
 
 {#if open && solution}
@@ -116,7 +125,7 @@
                     <div class="flex size-8 items-center justify-center rounded-xl bg-background text-sm font-semibold text-muted-foreground">
                       {idx + 1}
                     </div>
-                    <h3 class="text-base font-semibold text-foreground">{moduleName(mod.config_id, mod.name)}</h3>
+                    <h3 class="text-base font-semibold text-foreground" title={moduleHoverTitle(mod)}>{moduleName(mod.config_id, mod.name)}</h3>
                     <div
                       class={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getQualityClass(mod.quality)}`}
                     >

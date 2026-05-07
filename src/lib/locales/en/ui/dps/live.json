@@ -230,5 +230,6 @@
   "live.pauseToast": "Encounter paused",
   "live.resetToast": "Encounter reset",
   "live.resumeToast": "Encounter resumed",
-  "live.unknownClass": "Unknown Class"
+  "live.unknownClass": "Unknown Class",
+  "table.skill": "Skill"
 }

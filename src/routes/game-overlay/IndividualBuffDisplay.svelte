@@ -4,6 +4,7 @@
   import {
     getDisplayIconPosition,
     getDisplayIconSize,
+    getIconBuffStackCounterSize,
     hasStandaloneIconPosition,
     hasStandaloneIconSize,
     individualAllGroupBuffs,
@@ -20,6 +21,7 @@
   const individualBuffs = $derived(individualModeIconBuffs());
   const allGroup = $derived(individualMonitorAllGroup());
   const allGroupBuffs = $derived(individualAllGroupBuffs());
+  const stackCounterSize = $derived(getIconBuffStackCounterSize());
 
   $effect(() => {
     const buffs = individualBuffs;
@@ -43,6 +45,7 @@
   <IconBuffCell
     {buff}
     {iconSize}
+    {stackCounterSize}
     standalone={true}
     editable={editing}
     left={iconPos.x}
@@ -76,8 +79,9 @@
   <BuffGroupGrid
     {group}
     buffs={allGroupBuffs.slice(0, maxVisible)}
+    {stackCounterSize}
     editable={editing}
-    tagText={`${group.name}（全部）`}
+    tagText={`${group.name} (All)`}
     onPointerDown={(e) => startDrag(e, { kind: "individualAllGroup" }, group.position)}
     onResizePointerDown={(e) =>
       startResize(e, { kind: "individualAllGroup" }, group.iconSize)}

@@ -11,6 +11,7 @@
     showPanelAttrGroup: boolean;
     showBuffUptimeGroup: boolean;
     showCustomPanelGroup: boolean;
+    showShieldDetailGroup: boolean;
     toggleOverlaySectionVisibility: (
       key:
         | "showSkillCdGroup"
@@ -18,11 +19,12 @@
         | "showResourceGroup"
         | "showPanelAttrGroup"
         | "showBuffUptimeGroup"
-        | "showCustomPanelGroup",
+        | "showCustomPanelGroup"
+        | "showShieldDetailGroup",
     ) => void;
   }
 
-  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   let {
     title = t("overlay.title", "Overlay Section Visibility"),
@@ -34,6 +36,7 @@
     showPanelAttrGroup,
     showBuffUptimeGroup,
     showCustomPanelGroup,
+    showShieldDetailGroup,
     toggleOverlaySectionVisibility,
   }: Props = $props();
 </script>
@@ -52,7 +55,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showSkillCdGroup")}
       >
-        {t("overlay.skillCd", "技能CD区")}：{showSkillCdGroup ? t("show", "显示") : t("hide", "隐藏")}
+        {t("overlay.skillCd", "Skill CD Area")}: {showSkillCdGroup ? t("show", "Show") : t("hide", "Hide")}
       </button>
       <button
         type="button"
@@ -61,7 +64,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showSkillDurationGroup")}
       >
-        {t("overlay.skillDuration", "技能持续区")}：{showSkillDurationGroup ? t("show", "显示") : t("hide", "隐藏")}
+        {t("overlay.skillDuration", "Duration Skill Area")}: {showSkillDurationGroup ? t("show", "Show") : t("hide", "Hide")}
       </button>
       <button
         type="button"
@@ -70,7 +73,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showResourceGroup")}
       >
-        {t("overlay.resource", "资源监控区")}：{showResourceGroup ? t("show", "显示") : t("hide", "隐藏")}
+        {t("overlay.resource", "Resource Area")}: {showResourceGroup ? t("show", "Show") : t("hide", "Hide")}
       </button>
       <button
         type="button"
@@ -79,7 +82,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showPanelAttrGroup")}
       >
-        {t("overlay.panelAttr", "角色属性区")}：{showPanelAttrGroup ? t("show", "显示") : t("hide", "隐藏")}
+        {t("overlay.panelAttr", "Character Panel Area")}: {showPanelAttrGroup ? t("show", "Show") : t("hide", "Hide")}
       </button>
       <button
         type="button"
@@ -88,7 +91,7 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showBuffUptimeGroup")}
       >
-        {t("overlay.buffUptime", "Buff Uptime") }：{showBuffUptimeGroup ? t("show", "显示") : t("hide", "隐藏")}
+        {t("overlay.buffUptime", "Buff Uptime")}: {showBuffUptimeGroup ? t("show", "Show") : t("hide", "Hide")}
       </button>
       <button
         type="button"
@@ -97,7 +100,16 @@
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
         onclick={() => toggleOverlaySectionVisibility("showCustomPanelGroup")}
       >
-        {t("overlay.customPanel", "自定义监控区")}：{showCustomPanelGroup ? t("show", "显示") : t("hide", "隐藏")}
+        {t("overlay.customPanel", "Custom Monitor Area")}: {showCustomPanelGroup ? t("show", "Show") : t("hide", "Hide")}
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {showShieldDetailGroup
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => toggleOverlaySectionVisibility("showShieldDetailGroup")}
+      >
+        {t("overlay.shieldDetail", "Health and Shield Area")}: {showShieldDetailGroup ? t("show", "Show") : t("hide", "Hide")}
       </button>
     </div>
     <p class="text-xs text-muted-foreground">{footer}</p>

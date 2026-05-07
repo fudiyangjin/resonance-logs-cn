@@ -35,7 +35,7 @@
 
       <div class="custom-panel-list" style:gap={`${styleConfig.gap}px`}>
         {#if rows.length === 0}
-          <div class="empty-tip">暂无条目</div>
+          <div class="empty-tip">No entries</div>
         {/if}
         {#each rows as row (row.key)}
           <TextBuffRow

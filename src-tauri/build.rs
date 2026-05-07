@@ -56,13 +56,6 @@ fn build_module_optimizer() {
     let opencl_clhpp_include = find_opencl_clhpp();
     let use_opencl = opencl_path.is_some() && opencl_clhpp_include.is_some();
 
-    println!("cargo:warning=CUDA enabled: {}", use_cuda);
-    println!("cargo:warning=OpenCL detected: {}", use_opencl);
-    println!(
-        "cargo:warning=OpenCL C++ Wrapper found: {}",
-        opencl_clhpp_include.is_some()
-    );
-
     // Build C++ source files list
     let mut cpp_sources = vec![
         cpp_dir.join("module_optimizer.cpp"),
@@ -98,10 +91,6 @@ fn build_module_optimizer() {
         build.define("USE_CUDA", None);
 
         if let Some(lib_dir) = cuda_lib_dir {
-            println!(
-                "cargo:warning=Linking CUDA static library from: {}",
-                lib_dir.display()
-            );
             println!("cargo:rustc-link-search=native={}", lib_dir.display());
         }
 
@@ -219,10 +208,6 @@ fn find_opencl_clhpp() -> Option<PathBuf> {
 
     for include_dir in candidates {
         if include_dir.join("CL/opencl.hpp").exists() {
-            println!(
-                "cargo:warning=Using OpenCL C++ Wrapper from: {}",
-                include_dir.display()
-            );
             return Some(include_dir);
         }
     }
@@ -244,7 +229,6 @@ fn find_cccl_root() -> Option<PathBuf> {
     ];
 
     if required_dirs.iter().all(|dir| dir.exists()) {
-        println!("cargo:warning=Using CCCL from: {}", cccl_root.display());
         Some(cccl_root)
     } else {
         println!(
@@ -291,7 +275,6 @@ fn compile_cuda(cpp_dir: &Path, cccl_root: Option<&Path>) -> Option<PathBuf> {
 
     for lib_dir in [dst.join("lib")] {
         if lib_dir.exists() {
-            println!("cargo:warning=CUDA compilation successful");
             return Some(lib_dir);
         }
     }
@@ -306,10 +289,6 @@ fn compile_cuda(cpp_dir: &Path, cccl_root: Option<&Path>) -> Option<PathBuf> {
 fn emit_cuda_runtime_links() {
     if let Some(cuda_home) = find_cuda_home() {
         if let Some(lib_dir) = find_cuda_lib_dir(&cuda_home) {
-            println!(
-                "cargo:warning=Linking CUDA runtime from: {}",
-                lib_dir.display()
-            );
             println!("cargo:rustc-link-search=native={}", lib_dir.display());
         }
     }

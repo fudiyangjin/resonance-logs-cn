@@ -1,0 +1,16 @@
+{
+  "history": "歷史",
+  "meterSettings": "儀表設定",
+  "selectTabPrompt": "請選擇上方的選項卡查看詳細設定",
+  "settings": "設定",
+  "settings.debug": "偵錯",
+  "settings.history": "歷史",
+  "settings.live": "實時",
+  "settings.network": "網路",
+  "settings.shortcuts": "快捷鍵",
+  "subtitle": "實時監測戰鬥資料和DPS統計",
+  "themes": "主題",
+  "title": "DPS偵測",
+  "toggleWindow": "切換 DPS 視窗",
+  "viewHistory": "查看歷史記錄"
+}

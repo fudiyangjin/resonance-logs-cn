@@ -1,13 +1,8 @@
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-
-import { getBundledTranslationTable } from "$lib/locale-bundles";
+import monsterNamesData from "$parserData/generated/monsternames.json";
 import {
     DEFAULT_LOCALE,
     PRIMARY_FALLBACK_LOCALE,
     SUPPORTED_LOCALES,
-    TRANSLATION_SOURCE_MODE_EVENT,
-    getCurrentTranslationSourceMode,
     isLocaleCode,
     type LocaleCode,
 } from "$lib/i18n";
@@ -15,145 +10,73 @@ import { settings } from "$lib/settings-store";
 
 type MultiLangValue = Partial<Record<LocaleCode, string>>;
 
-type TranslationRefreshPayload = {
-    relativePath?: string;
-    locale?: string;
-};
-
 function cloneJson<T>(value: T): T {
     return JSON.parse(JSON.stringify(value)) as T;
-}
-
-function replaceRecordContents<T extends Record<string, any>>(target: T, source: T): void {
-    for (const key of Object.keys(target)) {
-        delete target[key as keyof T];
-    }
-    Object.assign(target, source);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-const MONSTER_RUNTIME_RELATIVE_PATH = "parser/MonsterName.json";
-
-const MONSTER_NAME_TRANSLATIONS: Record<string, MultiLangValue> = cloneJson(
-    getBundledTranslationTable("parser/MonsterName.json") as unknown as Record<string, MultiLangValue>,
-);
-
-const BUNDLED_MONSTER_NAME_TRANSLATIONS = cloneJson(MONSTER_NAME_TRANSLATIONS);
-
-let monsterRuntimeInitPromise: Promise<void> | null = null;
-let monsterRuntimeListenerPromise: Promise<void> | null = null;
-let monsterSourceModeListenerRegistered = false;
-
-async function ensureMonsterTranslationRuntimeFiles(): Promise<void> {
-    try {
-        await invoke<string>("initialize_translation_runtime_files");
-    } catch (error) {
-        console.warn(
-            "[monster-mappings] Failed to initialize runtime translation files:",
-            error,
-        );
+function firstGeneratedString(entry: Record<string, unknown>, keys: string[]): string {
+    for (const key of keys) {
+        const value = entry[key];
+        if (typeof value === "string" && value.trim()) return value.trim();
     }
+    return "";
 }
 
-async function readRuntimeMonsterTranslations(): Promise<
-    Record<string, MultiLangValue> | null
-> {
-    try {
-        const raw = await invoke<string>("read_translation_runtime_file", {
-            relativePath: MONSTER_RUNTIME_RELATIVE_PATH,
-        });
-        const parsed: unknown = JSON.parse(raw);
+function buildGeneratedMonsterTranslations(source: unknown): Record<string, MultiLangValue> {
+    const out: Record<string, MultiLangValue> = {};
+    if (!isRecord(source)) return out;
 
-        if (!isRecord(parsed)) {
-            console.warn(
-                `[monster-mappings] Runtime monster translation file is not an object: ${MONSTER_RUNTIME_RELATIVE_PATH}`,
-            );
-            return null;
+    for (const [id, value] of Object.entries(source)) {
+        const entry = isRecord(value) ? value : { Name: value };
+        const names: MultiLangValue = {};
+        const rawNames = entry["Names"];
+        if (isRecord(rawNames)) {
+            for (const locale of SUPPORTED_LOCALES) {
+                const text = rawNames[locale];
+                if (typeof text === "string" && text.trim()) {
+                    names[locale] = text.trim();
+                }
+            }
         }
 
-        return parsed as Record<string, MultiLangValue>;
-    } catch (error) {
-        console.warn(
-            `[monster-mappings] Failed to read runtime monster translation file: ${MONSTER_RUNTIME_RELATIVE_PATH}`,
-            error,
-        );
-        return null;
+        if (Object.keys(names).length === 0) {
+            const fallback = firstGeneratedString(entry, ["Name", "NameDesign", "DesignName"]);
+            if (fallback) names[PRIMARY_FALLBACK_LOCALE] = fallback;
+        }
+
+        if (Object.keys(names).length > 0) {
+            out[id] = names;
+        }
     }
+
+    return out;
 }
 
-async function loadMonsterRuntimeData(): Promise<void> {
-    if (getCurrentTranslationSourceMode() === "bundled") {
-        replaceRecordContents(
-            MONSTER_NAME_TRANSLATIONS,
-            cloneJson(BUNDLED_MONSTER_NAME_TRANSLATIONS),
-        );
-        return;
-    }
-
-    await ensureMonsterTranslationRuntimeFiles();
-
-    const runtimeValue = await readRuntimeMonsterTranslations();
-    const nextValue = runtimeValue ?? BUNDLED_MONSTER_NAME_TRANSLATIONS;
-
-    replaceRecordContents(MONSTER_NAME_TRANSLATIONS, cloneJson(nextValue));
-}
-
-async function registerMonsterRuntimeListener(): Promise<void> {
-    if (typeof window === "undefined") {
-        return;
-    }
-
-    if (!monsterRuntimeListenerPromise) {
-        monsterRuntimeListenerPromise = listen<TranslationRefreshPayload>("translation-data-refreshed", async (event) => {
-            const relativePath = event.payload?.relativePath;
-            if (relativePath && relativePath !== MONSTER_RUNTIME_RELATIVE_PATH) {
-                return;
-            }
-
-            await loadMonsterRuntimeData();
-        })
-            .then(() => undefined)
-            .catch((error) => {
-                console.warn(
-                    "[monster-mappings] Failed to register translation refresh listener:",
-                    error,
-                );
-            });
-    }
-
-    if (!monsterSourceModeListenerRegistered) {
-        window.addEventListener(TRANSLATION_SOURCE_MODE_EVENT, async () => {
-            await loadMonsterRuntimeData();
-        });
-        monsterSourceModeListenerRegistered = true;
-    }
-
-    await monsterRuntimeListenerPromise;
-}
+const MONSTER_NAME_TRANSLATIONS: Record<string, MultiLangValue> = cloneJson(
+    buildGeneratedMonsterTranslations(monsterNamesData),
+);
 
 export async function initializeMonsterRuntimeData(): Promise<void> {
-    if (!monsterRuntimeInitPromise) {
-        monsterRuntimeInitPromise = (async () => {
-            await registerMonsterRuntimeListener();
-            await loadMonsterRuntimeData();
-        })();
-    }
-
-    await monsterRuntimeInitPromise;
+    return;
 }
 
 export async function reloadMonsterRuntimeData(): Promise<void> {
-    await loadMonsterRuntimeData();
+    return;
 }
 
 function normalizeText(value: string | null | undefined): string {
     return value?.trim() ?? "";
 }
 
-function getCurrentLocale(): LocaleCode {
+function getCurrentLocale(localeOverride?: LocaleCode): LocaleCode {
+  if (localeOverride && isLocaleCode(localeOverride)) {
+    return localeOverride;
+  }
+
   const locale = String(settings.state.live.general.language);
 
   if (isLocaleCode(locale)) {
@@ -163,8 +86,12 @@ function getCurrentLocale(): LocaleCode {
   return DEFAULT_LOCALE;
 }
 
-function resolveMultiLangName(value: MultiLangValue | undefined, fallback: string): string {
-    const locale = getCurrentLocale();
+function resolveMultiLangName(
+    value: MultiLangValue | undefined,
+    fallback: string,
+    localeOverride?: LocaleCode,
+): string {
+    const locale = getCurrentLocale(localeOverride);
 
     const selected = normalizeText(value?.[locale]);
     if (selected) return selected;
@@ -243,6 +170,7 @@ export function hasMonsterTranslation(monsterId: string | number): boolean {
 export function getLocalizedMonsterName(
     monsterId: string | number,
     fallbackRawName?: string | null,
+    localeOverride?: LocaleCode,
 ): string {
     const id = String(monsterId);
     const entry = MONSTER_NAME_TRANSLATIONS[id];
@@ -250,26 +178,29 @@ export function getLocalizedMonsterName(
     return resolveMultiLangName(
         entry,
         normalizeText(fallbackRawName) || `Unknown Monster ${id}`,
+        localeOverride,
     );
 }
 
 export function localizeMonsterName(
     monsterId: string | number,
     fallbackRawName?: string | null,
+    localeOverride?: LocaleCode,
 ): string {
-    return getLocalizedMonsterName(monsterId, fallbackRawName);
+    return getLocalizedMonsterName(monsterId, fallbackRawName, localeOverride);
 }
 
 export function localizeRawMonsterName(
     rawMonsterName: string | null | undefined,
     fallback?: string | null,
+    localeOverride?: LocaleCode,
 ): string {
     const normalizedRawName = normalizeText(rawMonsterName);
     const compositeParts = splitCompositeMonsterNames(normalizedRawName);
 
     if (compositeParts.length > 1) {
         return compositeParts
-            .map((part) => localizeRawMonsterName(part, part))
+            .map((part) => localizeRawMonsterName(part, part, localeOverride))
             .filter(Boolean)
             .join(", ");
     }
@@ -279,6 +210,7 @@ export function localizeRawMonsterName(
         return getLocalizedMonsterName(
             matchedId,
             normalizeMonsterLookupName(normalizedRawName) || normalizedRawName,
+            localeOverride,
         );
     }
 

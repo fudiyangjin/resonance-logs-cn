@@ -3,6 +3,7 @@
   import { SETTINGS } from "$lib/settings-store";
   import {
     uiT,
+    resolveSkillNote,
     resolveSkillMonitorClassName,
     resolveSkillMonitorClassSkillName,
   } from "$lib/i18n";
@@ -27,7 +28,7 @@
     setResonanceSearch: (value: string) => void;
   }
 
-  const t = uiT("skill-monitor/skill-cd", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/skill-cd", () => SETTINGS.live.general.state.language);
 
   let {
     classConfigs,
@@ -69,6 +70,18 @@
   function formatEffectDuration(durationMs: number | undefined): string {
     if (!durationMs || durationMs <= 0) return "--";
     return `${durationMs % 1000 === 0 ? durationMs / 1000 : (durationMs / 1000).toFixed(1)}s`;
+  }
+
+  function skillHoverTitle(skill: SkillDefinition, extra = ""): string {
+    const note = SETTINGS.live.general.state.showHoverDescriptions !== false
+      ? resolveSkillNote(skill.skillId, SETTINGS.live.general.state.language).trim()
+      : "";
+    return [
+      displaySkillName(skill),
+      `ID: #${skill.skillId}`,
+      extra,
+      note ? `Description:\n${note}` : "",
+    ].filter(Boolean).join("\n");
   }
 </script>
 
@@ -124,7 +137,7 @@
           class="relative min-h-[78px] cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
             ? 'border-primary ring-1 ring-primary'
             : 'border-border/60 hover:border-border'}"
-          title={displaySkillName(skill)}
+          title={skillHoverTitle(skill)}
           onclick={() => toggleSkill(skill.skillId)}
         >
           {#if skill.imagePath}
@@ -183,7 +196,7 @@
             class="relative min-h-[78px] cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isDurationSelected(skill.skillId)
               ? 'border-primary ring-1 ring-primary'
               : 'border-border/60 hover:border-border'}"
-            title={`${displaySkillName(skill)} ${formatEffectDuration(skill.effectDurationMs)}`}
+            title={skillHoverTitle(skill, formatEffectDuration(skill.effectDurationMs))}
             onclick={() => toggleSkillDuration(skill.skillId)}
           >
             {#if skill.imagePath}
@@ -244,7 +257,7 @@
             class="relative min-h-[78px] cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
               ? 'border-primary ring-1 ring-primary'
               : 'border-border/60 hover:border-border'}"
-            title={skill.name}
+            title={skillHoverTitle(skill)}
             onclick={() => toggleSkill(skill.skillId)}
           >
             <img
@@ -272,7 +285,7 @@
           <button
             type="button"
             class="relative cursor-pointer rounded-md border border-border/60 overflow-hidden bg-muted/20 w-[72px] h-[78px] hover:border-border hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
-            title={skill.name}
+            title={skillHoverTitle(skill)}
             onclick={() => toggleSkill(skill.skillId)}
           >
             <img

@@ -9,8 +9,8 @@
   } from "./monster-constants";
   import type { GhostArea } from "./monster-types";
 
-  const tSkill = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
-  const tMonster = uiT("monster-monitor", () => SETTINGS.live.general.state.language);
+  const tSkill = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const tMonster = uiT("overlay/monster-monitor", () => SETTINGS.live.general.state.language);
 
   const ghostAreas = $derived.by(() => {
     const profile = activeProfile();
@@ -48,6 +48,9 @@
     }
     if (overlayVisibility.showPanelAttrGroup) {
       pushArea("panelAttrGroup", tSkill("overlay.panelAttr", "Character Panel Area"), overlayPositions.panelAttrGroup.x, overlayPositions.panelAttrGroup.y, 220, 130, overlaySizes.panelAttrGroupScale);
+    }
+    if (overlayVisibility.showShieldDetailGroup) {
+      pushArea("shieldDetailGroup", tSkill("overlay.shieldDetail", "Health and Shield Area"), overlayPositions.shieldDetailGroup.x, overlayPositions.shieldDetailGroup.y, 260, 110, overlaySizes.shieldDetailGroupScale);
     }
     if (overlayVisibility.showCustomPanelGroup) {
       for (const group of ensureCustomPanelGroups(profile)) {

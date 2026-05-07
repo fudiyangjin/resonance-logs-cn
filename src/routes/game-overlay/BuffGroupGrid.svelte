@@ -10,6 +10,7 @@
     buffs,
     editable = false,
     tagText = "",
+    stackCounterSize = 9,
     onPointerDown = undefined,
     onResizePointerDown = undefined,
   }: {
@@ -17,6 +18,7 @@
     buffs: IconBuffDisplay[];
     editable?: boolean;
     tagText?: string;
+    stackCounterSize?: number;
     onPointerDown?: PointerHandler;
     onResizePointerDown?: PointerHandler;
   } = $props();
@@ -47,6 +49,7 @@
         showName={group.showName}
         showTime={group.showTime}
         showLayer={group.showLayer}
+        {stackCounterSize}
       />
     {/each}
   </div>

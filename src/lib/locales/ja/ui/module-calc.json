@@ -77,5 +77,11 @@
   "totalAttributesValue": "属性総値",
   "totalScore": "合計スコア",
   "unavailable": "利用不可",
-  "viewDetails": "詳細を見る"
+  "viewDetails": "詳細を見る",
+  "off": "Off",
+  "on": "On",
+  "gpuChecking": "Checking GPU availability...",
+  "gpuDisabledDescription": "GPU-accelerated calculations are disabled.",
+  "gpuEnabledDescription": "GPU-accelerated calculations are enabled.",
+  "requiresAtLeastModules": "Requires at least {count} modules"
 }

@@ -77,5 +77,11 @@
   "totalAttributesValue": "총 속성 값",
   "totalScore": "총 점수",
   "unavailable": "사용 불가",
-  "viewDetails": "세부 정보 보기"
+  "viewDetails": "세부 정보 보기",
+  "off": "Off",
+  "on": "On",
+  "gpuChecking": "Checking GPU availability...",
+  "gpuDisabledDescription": "GPU-accelerated calculations are disabled.",
+  "gpuEnabledDescription": "GPU-accelerated calculations are enabled.",
+  "requiresAtLeastModules": "Requires at least {count} modules"
 }

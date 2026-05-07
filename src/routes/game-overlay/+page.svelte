@@ -8,6 +8,7 @@
   import IndividualBuffDisplay from "./IndividualBuffDisplay.svelte";
   import PanelAttrGroup from "./PanelAttrGroup.svelte";
   import BuffUptimeGroup from "./BuffUptimeGroup.svelte";
+  import ShieldDetailGroup from "./ShieldDetailGroup.svelte";
   import CustomTriggerGroups from "./CustomTriggerGroups.svelte";
   import ResourceGroup from "./ResourceGroup.svelte";
   import SkillCdGroup from "./SkillCdGroup.svelte";
@@ -58,6 +59,10 @@
 
   {#if visibility.showCustomPanelGroup}
     <CustomPanelGroup />
+  {/if}
+
+  {#if visibility.showShieldDetailGroup}
+    <ShieldDetailGroup />
   {/if}
 
   <MonsterBuffPanel />

@@ -1,10 +1,11 @@
+use crate::parser_data;
 use log::warn;
 use parking_lot::RwLock;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::fs;
-use std::path::PathBuf;
 use std::sync::LazyLock;
+
+const SCENE_NAME_RELATIVE: &str = "generated/scenenames.json";
 
 /// Stores cached scene names to minimize JSON reloads.
 #[derive(Default)]
@@ -45,53 +46,42 @@ pub fn contains(scene_id: i32) -> bool {
 
 /// Loads the scene names JSON file and builds a lookup map from id to display name.
 fn load_scene_names() -> SceneNameCache {
-    // Try to find the SceneName.json file in meter-data folder
-    let mut path = PathBuf::from("meter-data/SceneName.json");
-
-    // If not found, try from src-tauri directory (development)
-    if !path.exists() {
-        path = PathBuf::from("src-tauri/meter-data/SceneName.json");
-    }
-
-    // If still not found, try from current exe directory (production)
-    if !path.exists() {
-        if let Ok(mut exe_dir) = std::env::current_exe() {
-            exe_dir.pop();
-            exe_dir.push("meter-data");
-            exe_dir.push("SceneName.json");
-            path = exe_dir;
-        }
-    }
-
     let mut names = HashMap::new();
 
-    match fs::read_to_string(&path) {
+    match parser_data::read_to_string(SCENE_NAME_RELATIVE) {
         Ok(data) => match serde_json::from_str::<Value>(&data) {
             Ok(Value::Object(root)) => {
                 for (id_str, name_value) in root {
                     if let Ok(scene_id) = id_str.parse::<i32>() {
                         if let Some(name) = name_value.as_str() {
                             names.insert(scene_id, name.to_string());
+                        } else if let Some(name) = name_value
+                            .as_object()
+                            .and_then(|entry| entry.get("Name"))
+                            .and_then(Value::as_str)
+                        {
+                            names.insert(scene_id, name.to_string());
                         }
                     }
                 }
             }
             Ok(_) => {
-                warn!("Scene names JSON is not an object at {}", path.display());
+                warn!(
+                    "Scene names JSON is not an object at {}",
+                    SCENE_NAME_RELATIVE
+                );
             }
             Err(err) => {
                 warn!(
                     "Failed to parse scene names JSON at {}: {}",
-                    path.display(),
-                    err
+                    SCENE_NAME_RELATIVE, err
                 );
             }
         },
         Err(err) => {
             warn!(
                 "Failed to read scene names JSON at {}: {}",
-                path.display(),
-                err
+                SCENE_NAME_RELATIVE, err
             );
         }
     }

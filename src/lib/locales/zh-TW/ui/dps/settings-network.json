@@ -1,0 +1,11 @@
+{
+  "captureMethod": "捕獲方式",
+  "captureMethodDescription": "選擇用於捕獲網路資料包的方法（需要重啟應用）。",
+  "loadingDevices": "正在加載網路設備...",
+  "networkDevice": "網路設備",
+  "networkDeviceDescription": "選擇用於捕獲流量的網卡。",
+  "npcapMissing": "未偵測到 Npcap。",
+  "npcapMissingSuffix": "請安裝 Npcap 后再使用該方式。",
+  "selectDevice": "選擇網路設備",
+  "title": "抓包"
+}

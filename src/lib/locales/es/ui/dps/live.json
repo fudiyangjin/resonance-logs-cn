@@ -230,5 +230,6 @@
   "live.pauseToast": "Combate en pausa",
   "live.resetToast": "Combate reiniciado",
   "live.resumeToast": "Combate reanudado",
-  "live.unknownClass": "Clase desconocida"
+  "live.unknownClass": "Clase desconocida",
+  "table.skill": "Habilidad"
 }

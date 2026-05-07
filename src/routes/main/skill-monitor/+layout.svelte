@@ -4,7 +4,7 @@
   import { uiT } from "$lib/i18n";
 
   let { children } = $props();
-  const t = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const t = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
 </script>
 
 <div class="space-y-6">

@@ -9,6 +9,7 @@
     showName = true,
     showTime = true,
     showLayer = true,
+    stackCounterSize = 9,
     standalone = false,
     editable = false,
     left = undefined,
@@ -21,6 +22,7 @@
     showName?: boolean;
     showTime?: boolean;
     showLayer?: boolean;
+    stackCounterSize?: number;
     standalone?: boolean;
     editable?: boolean;
     left?: number;
@@ -35,6 +37,10 @@
   const showNameBlock = $derived(showName && !hasSpecialImages);
   const showTimeBlock = $derived(showTime && !hasSpecialImages);
   const frameWidth = $derived(standalone ? iconSize : iconSize + 8);
+  const badgeFontSize = $derived(Math.max(6, Math.min(24, Math.round(stackCounterSize))));
+  const badgePaddingY = $derived(Math.max(1, Math.round(badgeFontSize * 0.12)));
+  const badgePaddingX = $derived(Math.max(3, Math.round(badgeFontSize * 0.44)));
+  const badgeRadius = $derived(Math.max(4, Math.round(badgeFontSize * 0.65)));
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -74,7 +80,14 @@
     {/if}
 
     {#if showLayer && !hasSpecialImages && buff.layer > 1}
-      <div class="layer-badge">{buff.layer}</div>
+      <div
+        class="layer-badge"
+        style:font-size={`${badgeFontSize}px`}
+        style:padding={`${badgePaddingY}px ${badgePaddingX}px`}
+        style:border-radius={`${badgeRadius}px`}
+      >
+        {buff.layer}
+      </div>
     {/if}
   </div>
 

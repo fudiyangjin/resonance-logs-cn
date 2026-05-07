@@ -11,7 +11,7 @@ type EnsureDefined<T> = T extends null | undefined ? {} : T;
 type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 export type Snapshot<T = any> = Kit.Snapshot<T>;
 type PageParentData = Omit<EnsureDefined<import('../$types.js').LayoutData>, keyof LayoutData> & EnsureDefined<LayoutData>;
-type LayoutRouteId = RouteId | "/main" | "/main/custom-triggers" | "/main/dps" | "/main/dps/history" | "/main/dps/history/[id]" | "/main/dps/settings" | "/main/dps/themes" | "/main/localization" | "/main/module-calc" | "/main/monster-monitor" | "/main/settings" | "/main/settings/debug" | "/main/settings/hotkeys" | "/main/settings/locales" | "/main/settings/network" | "/main/settings/overlay" | "/main/settings/profile" | "/main/settings/themes" | "/main/skill-monitor"
+type LayoutRouteId = RouteId | "/main" | "/main/custom-triggers" | "/main/dps" | "/main/dps/history" | "/main/dps/history/[id]" | "/main/dps/settings" | "/main/dps/themes" | "/main/localization" | "/main/module-calc" | "/main/monster-monitor" | "/main/overlay" | "/main/overlay/monster-monitor" | "/main/overlay/skill-monitor" | "/main/settings" | "/main/settings/debug" | "/main/settings/hotkeys" | "/main/settings/locales" | "/main/settings/network" | "/main/settings/overlay" | "/main/settings/profile" | "/main/settings/themes" | "/main/skill-monitor"
 type LayoutParams = RouteParams & { id?: string }
 type LayoutParentData = EnsureDefined<import('../$types.js').LayoutData>;
 

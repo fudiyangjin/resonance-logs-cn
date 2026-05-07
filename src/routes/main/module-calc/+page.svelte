@@ -126,8 +126,6 @@
         combinationSize: MODULE_CALC.combinationSize,
       };
 
-      console.log("Calling optimize_latest_modules with:", payload);
-
       MODULE_CALC.solutions = await optimizeLatestModules(payload);
       if (MODULE_CALC.solutions.length === 0) {
         MODULE_CALC.error = resolveModuleCalcTranslation(

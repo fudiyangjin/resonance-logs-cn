@@ -6,7 +6,7 @@
   import { page } from "$app/state";
   import { getVersion } from "@tauri-apps/api/app";
   import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-  import { uiT, type LocaleCode } from "$lib/i18n";
+  import { LOCALE_OPTIONS, uiT, type LocaleCode } from "$lib/i18n";
   import { commands } from "$lib/bindings";
   import { toggleEventLoggerWindow } from "$lib/event-logger-window";
   import MonitorUpIcon from "virtual:icons/lucide/monitor-up";
@@ -19,26 +19,18 @@
 
   let languageMenuOpen = $state(false);
 
-  const languageOptions = [
-    { value: "zh-CN", label: "CN" },
-    { value: "en", label: "EN" },
-    { value: "ja", label: "JP" },
-    { value: "de", label: "DE" },
-    { value: "es", label: "ES" },
-    { value: "fr", label: "FR" },
-    { value: "pt-BR", label: "PT-BR" },
-    { value: "ko-KR", label: "KR" },
-  ] as const;
+  const languageOptions = LOCALE_OPTIONS;
 
   const tShell = uiT("shell", () => SETTINGS.live.general.state.language);
   const tDps = uiT("dps/general", () => SETTINGS.live.general.state.language);
   const tCustom = uiT("custom-triggers/general", () => SETTINGS.live.general.state.language);
-  const tOverlay = uiT("skill-monitor/general", () => SETTINGS.live.general.state.language);
+  const tOverlay = uiT("overlay/skill-monitor/general", () => SETTINGS.live.general.state.language);
 
   function getToolRouteLabel(href: string, fallback: string): string {
     const keyMap: Record<string, string> = {
       "/main/dps": "tool.dps",
       "/main/module-calc": "tool.moduleOptimizer",
+      "/main/overlay": "tool.overlay",
       "/main/skill-monitor": "tool.skillMonitor",
       "/main/monster-monitor": "tool.monsterTracker",
       "/main/custom-triggers": "tool.customTriggers",
@@ -57,6 +49,10 @@
 
   function getLanguageLabel(locale: string): string {
     return languageOptions.find((option) => option.value === locale)?.label ?? "CN";
+  }
+
+  function formatAppVersion(version: string): string {
+    return version.replace(/-beta\.?(\d+)$/i, "_beta$1");
   }
 
   async function toggleOverlayWindow() {
@@ -190,7 +186,7 @@
     </a>
 
     <div class="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-      <span>v{#await getVersion()}...{:then version}{version}{/await}</span>
+      <span>v{#await getVersion()}...{:then version}{formatAppVersion(version)}{/await}</span>
 
       <span aria-hidden="true" class="opacity-40">|</span>
 

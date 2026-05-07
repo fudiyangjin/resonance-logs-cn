@@ -2,14 +2,17 @@
   "defaultLocale": "zh-CN",
   "fallbackLocale": "en",
   "locales": [
-    "de",
     "en",
-    "es",
-    "fr",
-    "ja",
-    "pt-BR",
     "zh-CN",
-    "ko-KR"
+    "zh-TW",
+    "ja",
+    "ko-KR",
+    "fr",
+    "de",
+    "es",
+    "pt-BR",
+    "th",
+    "id"
   ],
   "categories": {
     "ui": [
@@ -24,26 +27,15 @@
       "dps/settings-hotkeys.json",
       "dps/settings-debug.json",
       "module-calc.json",
-      "monster-monitor.json",
-      "skill-monitor/general.json",
-      "skill-monitor/skill-cd.json",
-      "skill-monitor/buff-monitor.json",
-      "skill-monitor/panel-attr.json",
-      "skill-monitor/custom-panel.json",
+      "overlay/monster-monitor.json",
+      "overlay/skill-monitor/general.json",
+      "overlay/skill-monitor/skill-cd.json",
+      "overlay/skill-monitor/buff-monitor.json",
+      "overlay/skill-monitor/panel-attr.json",
+      "overlay/skill-monitor/custom-panel.json",
       "localization-tool.json",
       "custom-triggers/general.json",
       "custom-triggers/logger.json"
-    ],
-    "parser": [
-      "class-labels.json",
-      "skillnames.json",
-      "MonsterName.json",
-      "SceneName.json",
-      "BuffName.json"
-    ],
-    "search": [
-      "BuffNameSearch.json",
-      "resonance-skill-search.json"
     ]
   }
 }

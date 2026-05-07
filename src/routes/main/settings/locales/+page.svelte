@@ -4,12 +4,14 @@
   import { toast } from "svelte-sonner";
   import { onDestroy, onMount } from "svelte";
   import SettingsSelect from "../../dps/settings/settings-select.svelte";
+  import SettingsSwitch from "../../dps/settings/settings-switch.svelte";
   import { SETTINGS } from "$lib/settings-store";
   import {
     TRANSLATION_SOURCE_MODE,
     getCurrentTranslationSourceMode,
     uiT,
     setTranslationSourceMode,
+    LOCALE_OPTIONS,
     type TranslationSourceMode,
   } from "$lib/i18n";
 
@@ -31,11 +33,6 @@
   let translationRuntimeStatus = $state<TranslationRuntimeStatus | null>(null);
   let isRepairingRuntimeLocaleFolder = $state(false);
   let isOpeningTranslationDir = $state(false);
-  let isGeneratingBuffNameSearch = $state(false);
-  let isGeneratingBuffNameTranslation = $state(false);
-  let isGeneratingSceneNameTranslation = $state(false);
-  let isGeneratingMonsterNameTranslation = $state(false);
-  let isGeneratingSkillNameTranslation = $state(false);
   let isGeneratingAllUiTranslations = $state(false);
 
   const tDebug = uiT("dps/settings-debug", () => SETTINGS.live.general.state.language);
@@ -62,7 +59,7 @@
       await loadTranslationRuntimeStatus();
     } catch (e) {
       console.error(e);
-      toast.error("刷新翻译运行时数据失败：" + e);
+      toast.error(`${tLoc("settings.refreshRuntimeDataError", "Failed to refresh translation runtime data:")} ${String(e)}`);
     }
   }
 
@@ -79,14 +76,14 @@
       await setTranslationSourceMode(mode);
       toast.success(
         mode === "runtime"
-          ? "Translation source switched to runtime files."
-          : "Translation source switched to bundled source files.",
+          ? tLoc("settings.translationSourceRuntime", "Translation source switched to runtime files.")
+          : tLoc("settings.translationSourceBundled", "Translation source switched to bundled source files."),
       );
       await loadTranslationRuntimeStatus();
     } catch (e) {
       console.error(e);
       translationSourceMode = previousMode;
-      toast.error("切换翻译数据源失败：" + e);
+      toast.error(`${tLoc("settings.translationSourceSwitchError", "Failed to switch translation source:")} ${String(e)}`);
     } finally {
       isSwitchingTranslationSource = false;
     }
@@ -167,55 +164,6 @@
     );
   }
 
-  async function generateBuffNameSearchScaffold() {
-    if (isGeneratingBuffNameSearch) return;
-    await runGenerator(
-      "generate_buff_name_search_scaffold",
-      () => (isGeneratingBuffNameSearch = true),
-      () => (isGeneratingBuffNameSearch = false),
-      tLoc("settings.generateBuffNameSearchError", "Failed to generate BuffNameSearch scaffold."),
-    );
-  }
-
-  async function generateBuffNameTranslationScaffold() {
-    if (isGeneratingBuffNameTranslation) return;
-    await runGenerator(
-      "generate_buff_name_translation_scaffold",
-      () => (isGeneratingBuffNameTranslation = true),
-      () => (isGeneratingBuffNameTranslation = false),
-      tLoc("settings.generateBuffNameError", "Failed to generate BuffName translation scaffold."),
-    );
-  }
-
-  async function generateSceneNameTranslationScaffold() {
-    if (isGeneratingSceneNameTranslation) return;
-    await runGenerator(
-      "generate_scene_name_translation_scaffold",
-      () => (isGeneratingSceneNameTranslation = true),
-      () => (isGeneratingSceneNameTranslation = false),
-      tLoc("settings.generateSceneNameError", "Failed to generate SceneName translation scaffold."),
-    );
-  }
-
-  async function generateMonsterNameTranslationScaffold() {
-    if (isGeneratingMonsterNameTranslation) return;
-    await runGenerator(
-      "generate_monster_name_translation_scaffold",
-      () => (isGeneratingMonsterNameTranslation = true),
-      () => (isGeneratingMonsterNameTranslation = false),
-      tLoc("settings.generateMonsterNameError", "Failed to generate MonsterName translation scaffold."),
-    );
-  }
-
-  async function generateSkillNameTranslationScaffold() {
-    if (isGeneratingSkillNameTranslation) return;
-    await runGenerator(
-      "generate_skill_name_translation_scaffold",
-      () => (isGeneratingSkillNameTranslation = true),
-      () => (isGeneratingSkillNameTranslation = false),
-      tLoc("settings.generateSkillNameError", "Failed to generate skill translation scaffold."),
-    );
-  }
 </script>
 
 <div class="space-y-4">
@@ -276,16 +224,7 @@
         bind:selected={SETTINGS.live.general.state.language}
         label={tDebug("language", "Language")}
         description={tDebug("languageDescription", "Choose the translation language. Missing entries fall back to EN, then zh-CN, then the key or ID.")}
-        values={[
-          { label: "CN", value: "zh-CN" },
-          { label: "EN", value: "en" },
-          { label: "JP", value: "ja" },
-          { label: "DE", value: "de" },
-          { label: "ES", value: "es" },
-          { label: "FR", value: "fr" },
-          { label: "PT-BR", value: "pt-BR" },
-          { label: "KR", value: "ko-KR" },
-        ]}
+        values={LOCALE_OPTIONS}
       />
 
       <SettingsSelect
@@ -306,6 +245,12 @@
             value: "column",
           },
         ]}
+      />
+
+      <SettingsSwitch
+        bind:checked={SETTINGS.live.general.state.showHoverDescriptions}
+        label={tDebug("showHoverDescriptions", "Show Hover Descriptions")}
+        description={tDebug("showHoverDescriptionsDescription", "Show generated descriptions in hover text for skills, buffs, modifiers, modules, and other UID-backed rows when available.")}
       />
     </div>
   </div>
@@ -395,56 +340,6 @@
           </div>
           <Button variant="outline" onclick={generateAllUiTranslationScaffolds} disabled={isGeneratingAllUiTranslations}>
             {isGeneratingAllUiTranslations ? tLoc("actions.processing", "Processing…") : tLoc("debug.generateAllUiButton", "Generate All UI Files")}
-          </Button>
-        </div>
-
-        <div class="rounded-lg border border-border/60 bg-background/30 p-3 flex items-start justify-between gap-3">
-          <div>
-            <div class="font-medium text-foreground">{tLoc("debug.generateBuffNameSearchTitle", "Generate BuffNameSearch Runtime File")}</div>
-            <div class="text-sm text-muted-foreground mt-1">{tLoc("debug.generateBuffNameSearchDescription", "Generate or update per-locale runtime search/BuffNameSearch.json files in AppData from src/lib/config/BuffName.json.")}</div>
-          </div>
-          <Button variant="outline" onclick={generateBuffNameSearchScaffold} disabled={isGeneratingBuffNameSearch}>
-            {isGeneratingBuffNameSearch ? tLoc("actions.processing", "Processing…") : tLoc("debug.generateBuffNameSearchButton", "Generate BuffNameSearch")}
-          </Button>
-        </div>
-
-        <div class="rounded-lg border border-border/60 bg-background/30 p-3 flex items-start justify-between gap-3">
-          <div>
-            <div class="font-medium text-foreground">{tLoc("debug.generateBuffNameTitle", "Generate BuffName Runtime File")}</div>
-            <div class="text-sm text-muted-foreground mt-1">{tLoc("debug.generateBuffNameDescription", "Generate or update per-locale runtime parser/BuffName.json files in AppData from src/lib/config/BuffName.json.")}</div>
-          </div>
-          <Button variant="outline" onclick={generateBuffNameTranslationScaffold} disabled={isGeneratingBuffNameTranslation}>
-            {isGeneratingBuffNameTranslation ? tLoc("actions.processing", "Processing…") : tLoc("debug.generateBuffNameButton", "Generate BuffName")}
-          </Button>
-        </div>
-
-        <div class="rounded-lg border border-border/60 bg-background/30 p-3 flex items-start justify-between gap-3">
-          <div>
-            <div class="font-medium text-foreground">{tLoc("debug.generateSceneNameTitle", "Generate SceneName Runtime File")}</div>
-            <div class="text-sm text-muted-foreground mt-1">{tLoc("debug.generateSceneNameDescription", "Generate or update per-locale runtime parser/SceneName.json files in AppData from src-tauri/meter-data/SceneName.json.")}</div>
-          </div>
-          <Button variant="outline" onclick={generateSceneNameTranslationScaffold} disabled={isGeneratingSceneNameTranslation}>
-            {isGeneratingSceneNameTranslation ? tLoc("actions.processing", "Processing…") : tLoc("debug.generateSceneNameButton", "Generate SceneName")}
-          </Button>
-        </div>
-
-        <div class="rounded-lg border border-border/60 bg-background/30 p-3 flex items-start justify-between gap-3">
-          <div>
-            <div class="font-medium text-foreground">{tLoc("debug.generateMonsterNameTitle", "Generate MonsterName Runtime File")}</div>
-            <div class="text-sm text-muted-foreground mt-1">{tLoc("debug.generateMonsterNameDescription", "Generate or update per-locale runtime parser/MonsterName.json files in AppData from src-tauri/meter-data/MonsterIdNameType.json.")}</div>
-          </div>
-          <Button variant="outline" onclick={generateMonsterNameTranslationScaffold} disabled={isGeneratingMonsterNameTranslation}>
-            {isGeneratingMonsterNameTranslation ? tLoc("actions.processing", "Processing…") : tLoc("debug.generateMonsterNameButton", "Generate MonsterName")}
-          </Button>
-        </div>
-
-        <div class="rounded-lg border border-border/60 bg-background/30 p-3 flex items-start justify-between gap-3">
-          <div>
-            <div class="font-medium text-foreground">{tLoc("debug.generateSkillNamesTitle", "Generate Skill Translation Runtime Files")}</div>
-            <div class="text-sm text-muted-foreground mt-1">{tLoc("debug.generateSkillNamesDescription", "Generate or update per-locale runtime parser/skillnames.json files in AppData from RecountTable.json, DamageAttrIdName.json, SkillEffectTable.json, SkillFightLevelTable.json, and TempAttrTable.json.")}</div>
-          </div>
-          <Button variant="outline" onclick={generateSkillNameTranslationScaffold} disabled={isGeneratingSkillNameTranslation}>
-            {isGeneratingSkillNameTranslation ? tLoc("actions.processing", "Processing…") : tLoc("debug.generateSkillNamesButton", "Generate Skill Translations")}
           </Button>
         </div>
       </div>

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "resonance-logs-cn",
-  "version": "0.0.9",
-  "identifier": "com.resonance-logs-cn",
+  "productName": "Resonance Logs - Global",
+  "version": "1.0.6-beta.3",
+  "identifier": "com.resonance-logs-global",
   "build": {
     "beforeDevCommand": "npm run dev:stop-windivert",
     "beforeBuildCommand": "npm run build:stop-windivert",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Resonance Logs CN - Live",
+        "title": "Resonance Logs - Global v1.0.6_beta3 - Live",
         "label": "live",
         "url": "live",
         "shadow": false,
@@ -24,7 +24,7 @@
         "skipTaskbar": true
       },
       {
-        "title": "Resonance Logs CN - Main 0.0.9",
+        "title": "Resonance Logs - Global v1.0.6_beta3 - Main",
         "label": "main",
         "url": "main",
         "width": 1200,
@@ -65,7 +65,7 @@
         "maximizable": false
       },
       {
-        "title": "Resonance Logs CN - Event Logger",
+        "title": "Resonance Logs - Global v1.0.6_beta3 - Event Logger",
         "label": "event-logger",
         "url": "event-logger",
         "width": 1200,
@@ -100,18 +100,22 @@
     "resources": [
       "./WinDivert.dll",
       "./WinDivert64.sys",
-      "./meter-data/",
+      "../parser-data/",
       "../src/lib/locales/"
     ],
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": true,
+    "windows": {
+      "nsis": {
+        "installerHooks": "installer-hooks.nsh"
+      }
+    }
   },
   "plugins": {
     "updater": {
       "active": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ5RTQ4NzgzQTlFM0Q0QzQKUldURTFPT3BnNGZrU1dJY01aaGNwelZxc3U0UGpGTVJaQ2FpcVdQd1FsTVVXSDRBakFxbkVSNjkK",
       "endpoints": [
-        "https://bptimer.cn/resonance-logs/latest.json",
-        "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json"
+        "https://github.com/donneeee/resonance-logs-global/releases/latest/download/latest.json"
       ],
       "dialog": true,
       "windows": {

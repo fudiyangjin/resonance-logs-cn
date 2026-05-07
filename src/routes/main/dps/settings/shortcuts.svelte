@@ -11,8 +11,8 @@
 
   import { SETTINGS } from "$lib/settings-store";
   import { uiT } from "$lib/i18n";
-  import { clearRegisteredShortcut, findShortcutConflict, registerShortcut, type ShortcutOwner } from "./shortcuts.js";
-  import type { BaseInput, BaseInputs } from "./settings.js";
+  import { GENERAL_SHORTCUTS, clearRegisteredShortcut, findShortcutConflict, registerShortcut, type ShortcutOwner } from "./shortcuts.js";
+  import type { BaseInput } from "./settings.js";
 
   let editingId: string | null = $state(null);
   let editingConflict = $state<ShortcutOwner | null>(null);
@@ -127,56 +127,10 @@
 
   const SETTINGS_CATEGORY = "shortcuts";
 
-  let inputs: BaseInputs = [
-    {
-      id: "showLiveMeter",
-      label: "显示实时窗口",
-    },
-    {
-      id: "hideLiveMeter",
-      label: "隐藏实时窗口",
-    },
-    {
-      id: "toggleLiveMeter",
-      label: "切换实时窗口",
-    },
-    {
-      id: "enableClickthrough",
-      label: "启用点击穿透",
-    },
-    {
-      id: "disableClickthrough",
-      label: "禁用点击穿透",
-    },
-    {
-      id: "toggleClickthrough",
-      label: "切换点击穿透",
-    },
-    {
-      id: "resetEncounter",
-      label: "重置战斗",
-    },
-    {
-      id: "togglePauseEncounter",
-      label: "切换暂停战斗",
-    },
-    {
-      id: "toggleBossHp",
-      label: "切换 Boss 血量显示",
-    },
-    {
-      id: "toggleOverlayEdit",
-      label: "切换遮罩编辑模式",
-    },
-    {
-      id: "toggleOverlayWindow",
-      label: "切换遮罩窗口",
-    },
-    {
-      id: "toggleEventLogger",
-      label: "切换事件日志器",
-    },
-  ];
+  let inputs: BaseInput[] = GENERAL_SHORTCUTS.map((shortcut) => ({
+    id: shortcut.id,
+    label: shortcut.fallbackLabel,
+  }));
 </script>
 
 <Tabs.Content value={SETTINGS_CATEGORY}>

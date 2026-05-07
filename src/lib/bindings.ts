@@ -210,6 +210,28 @@ async getEncounterEntitiesRaw(encounterId: number) : Promise<Result<HistoryEntit
 }
 },
 /**
+ * Gets compact historical entities without modifier ledgers for fast overview/skill pages.
+ */
+async getEncounterEntitiesCompactRaw(encounterId: number) : Promise<Result<HistoryEntityData[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_encounter_entities_compact_raw", { encounterId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Gets modifier details scoped to one historical player plus hosted external state.
+ */
+async getEncounterModifierEntitiesRaw(encounterId: number, entityUid: number) : Promise<Result<HistoryEntityData[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_encounter_modifier_entities_raw", { encounterId, entityUid }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Deletes an encounter by its ID.
  * 
  * # Arguments
@@ -383,12 +405,6 @@ async setEventLoggerWindowAlwaysOnTop(alwaysOnTop: boolean) : Promise<Result<nul
     else return { status: "error", error: e  as any };
 }
 },
-async getEventLoggerCaptureOptions() : Promise<EventLoggerCaptureOptions> {
-    return await TAURI_INVOKE("get_event_logger_capture_options");
-},
-async setEventLoggerCaptureOptions(captureEvents: boolean, captureSnapshots: boolean) : Promise<EventLoggerCaptureOptions> {
-    return await TAURI_INVOKE("set_event_logger_capture_options", { captureEvents, captureSnapshots });
-},
 async getEventLoggerSessionDirectory() : Promise<Result<EventLoggerSessionDirectoryPayload, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_event_logger_session_directory") };
@@ -400,6 +416,30 @@ async getEventLoggerSessionDirectory() : Promise<Result<EventLoggerSessionDirect
 async setEventLoggerSaveDirectory(directory: string | null) : Promise<Result<EventLoggerSessionDirectoryPayload, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("set_event_logger_save_directory", { directory }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getEventLoggerFileStorageSettings() : Promise<Result<EventLoggerFileStoragePayload, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_event_logger_file_storage_settings") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setEventLoggerFileStorageSettings(storeLogFiles: boolean, includeRepeatedSnapshotRows: boolean, deleteOlderThanDays: number | null, captureCensusEnabled: boolean, attributionCensusEnabled: boolean) : Promise<Result<EventLoggerFileStoragePayload, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_event_logger_file_storage_settings", { storeLogFiles, includeRepeatedSnapshotRows, deleteOlderThanDays, captureCensusEnabled, attributionCensusEnabled }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async exportEventLoggerSession() : Promise<Result<string | null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("export_event_logger_session") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -537,6 +577,14 @@ async writeTranslationRuntimeLocaleFile(relativePath: string, locale: string, co
     else return { status: "error", error: e  as any };
 }
 },
+async writeTranslationRuntimeLocalePatch(relativePath: string, locale: string, patchContents: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("write_translation_runtime_locale_patch", { relativePath, locale, patchContents }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async generateUiTranslationScaffold(relativePath: string) : Promise<Result<string, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("generate_ui_translation_scaffold", { relativePath }) };
@@ -548,46 +596,6 @@ async generateUiTranslationScaffold(relativePath: string) : Promise<Result<strin
 async generateAllUiTranslationScaffolds() : Promise<Result<string, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("generate_all_ui_translation_scaffolds") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async generateBuffNameSearchScaffold() : Promise<Result<string, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("generate_buff_name_search_scaffold") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async generateBuffNameTranslationScaffold() : Promise<Result<string, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("generate_buff_name_translation_scaffold") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async generateSceneNameTranslationScaffold() : Promise<Result<string, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("generate_scene_name_translation_scaffold") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async generateMonsterNameTranslationScaffold() : Promise<Result<string, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("generate_monster_name_translation_scaffold") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async generateSkillNameTranslationScaffold() : Promise<Result<string, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("generate_skill_name_translation_scaffold") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -629,6 +637,14 @@ async syncMonsterOverlayWindowToGameOverlay() : Promise<Result<null, string>> {
 
 /** user-defined types **/
 
+export type ActiveBuffState = { buffUuid: number; baseId: number; buffLevel: number | null; partId: number | null; count: number | null; fightSourceType: number | null; sourceConfigId: number | null; layer: number; durationMs: number; createTimeMs: number; receivedTimeMs: number; hostUid: number; sourceUid: number }
+export type ActiveEffectBuffState = { effectSourceBuffId: number; observedBuffId: number; buffLevel: number | null; partId: number | null; count: number | null; fightSourceType: number | null; sourceConfigId: number | null; layer: number; durationMs: number; createTimeMs: number; receivedTimeMs: number; hostUid: number; sourceUid: number }
+export type ActiveEffectSourceState = { sourceId: string; runtimeSource: string; sourceEntityId: number | null; nodeId: number | null; nodeLevel: number | null; slot: number | null }
+export type ActiveFactorBuffState = { factorBuffId: number; observedBuffId: number; buffLevel: number | null; partId: number | null; count: number | null; fightSourceType: number | null; sourceConfigId: number | null; layer: number; durationMs: number; createTimeMs: number; receivedTimeMs: number; hostUid: number; sourceUid: number }
+export type ActiveFactorItemState = { factorBuffId: number; itemConfigId: number; itemUuid: number | null; packageKey: number; packageType: number | null; grade: number | null; familyId: number | null; runtimeSource: string }
+export type ActivePassiveSkillState = { passiveUuid: number | null; targetUid: number | null; stageBeginTime: number | null; beginTime: number | null; stagePlayNum: number | null; skillId: number | null; skillLevel: number | null; skillStage: number | null; runtimeSource: string }
+export type ActiveProfessionTalentState = { professionId: number; talentNodeId: number; usedTalentPoints: number | null; talentStageCfgId: number | null; runtimeSource: string }
+export type AltFreezeConfig = { conditionBuffId: number; freezeDurationMs: number }
 /**
  * The result of a query for boss names.
  */
@@ -655,11 +671,16 @@ maxHp: number | null;
 isDefeated: boolean }
 export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "resetAndStartCount" | "startCount" | "noOp"
 export type CounterRule = { ruleId: number; sources: CounterSource[]; effectSlots: EffectSlotConfig[] }
-export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { anyDamage: { increment: number; hitsRequired?: number | null } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } }
+export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { anyDamage: { increment: number; hitsRequired?: number | null } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } } | { skillCastComplete: { skillBaseIds: number[]; increment: number } }
 export type CustomDefinitionEntry = { uid: number; type: string; name: string; shortName: string | null; notes: string | null; icon: string | null; color: string | null }
 export type CustomDefinitionsFile = { version: number; definitions: CustomDefinitionEntry[] }
+/**
+ * A single damage event recorded in the 2s sliding window used for death replay.
+ */
+export type DamageSnapshot = { timestampMs: number; attackerUid: number; attackerMonsterTypeId: number | null; skillKey: number; value: number }
+export type DeathRecord = { victimUid: number; deathTimestampMs: number; recentDamages: DamageSnapshot[] }
 export type Device = { name: string; description: string | null }
-export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; resetSourceConfigId?: number | null; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction }
+export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; resetSourceConfigId?: number | null; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction; altFreeze?: AltFreezeConfig | null }
 /**
  * Filters for querying encounters.
  */
@@ -753,12 +774,18 @@ remoteEncounterId: number | null;
  */
 isFavorite: boolean }
 export type EventLoggerBatchPayload = { entries: EventLoggerEntry[] }
-export type EventLoggerCaptureOptions = { captureEvents: boolean; captureSnapshots: boolean }
 export type EventLoggerEntry = { tsMs: number; category: string; action: string; uid: number | null; targetUid: number | null; sourceUid: number | null; sourceLabel: string | null; targetLabel: string | null; nameHint: string | null; summary: string | null; stacks: number | null; durationMs: number | null; remainingMs: number | null; value: string | null; raw: string }
+export type EventLoggerFileStoragePayload = { configuredDirectory: string | null; resolvedDirectory: string; usingDefault: boolean; storeLogFiles: boolean; includeRepeatedSnapshotRows: boolean; deleteOlderThanDays: number | null; captureCensusEnabled: boolean; attributionCensusEnabled: boolean }
 export type EventLoggerSessionDirectoryPayload = { configuredDirectory: string | null; resolvedDirectory: string; usingDefault: boolean }
 export type GpuSupport = { cuda_available: boolean; opencl_available: boolean }
-export type HistoryEntityData = { uid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; seasonStrength: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }>; dmgPerTarget: PerTargetStats[]; healPerTarget: PerTargetStats[] }
+export type HistoryEntityData = { uid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; seasonStrength: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }>; activeBuffs: ActiveBuffState[]; activeFactorBuffs: ActiveFactorBuffState[]; activeEffectBuffs: ActiveEffectBuffState[]; modifierWindows: ModifierWindowState[]; modifierHitBuckets: ModifierHitBucketState[]; modifierReplayHits: ModifierReplayHitState[]; skillCastEvents: SkillCastEventState[]; skillCooldownEvents: SkillCooldownEventState[]; activeEffectSources: ActiveEffectSourceState[]; activeFactorItems: ActiveFactorItemState[]; activePassiveSkills: ActivePassiveSkillState[]; activeProfessionTalents: ActiveProfessionTalentState[]; modifierSourceActors?: ModifierSourceActorState[]; dmgPerTarget: PerTargetStats[]; healPerTarget: PerTargetStats[]; deaths: DeathRecord[] }
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number }
+export type ModifierHitBucketState = { modifierBuffUuid: number; modifierBaseId: number; modifierBuffLevel: number | null; modifierPartId: number | null; modifierCount: number | null; modifierFightSourceType: number | null; modifierSourceConfigId: number | null; modifierLayer: number; modifierDurationMs: number; modifierStartTimeMs: number; modifierEndTimeMs: number | null; modifierHostUid: number; modifierSourceUid: number; skillKey: number; damageId: number; ownerId: number; ownerLevel: number | null; hitEventId: number | null; damageSource: number | null; property: number | null; damageMode: number | null; attackerUid: number; originalAttackerUid: number; topSummonerUid: number | null; targetUid: number; targetMonsterTypeId: number | null; isHeal: boolean; hits: number; totalValue: number; effectiveTotalValue: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number; hpLossTotal: number; shieldLossTotal: number; firstHitTimeMs: number; lastHitTimeMs: number }
+export type ModifierReplayAttrState = { attrId: number; valueInt: number | null; valueFloat: number | null; valueBool: boolean | null }
+export type ModifierReplayHitState = { timestampMs: number; skillKey: number; damageId: number; ownerId: number; ownerLevel: number | null; hitEventId: number | null; damageSource: number | null; property: number | null; damageMode: number | null; attackerUid: number; originalAttackerUid: number; topSummonerUid: number | null; targetUid: number; targetMonsterTypeId: number | null; isHeal: boolean; isCrit: boolean; isLucky: boolean; value: number; effectiveValue: number; hpLossValue: number; shieldLossValue: number; activeModifiers: ModifierReplaySourceState[]; attackerAttrs: ModifierReplayAttrState[]; targetAttrs: ModifierReplayAttrState[] }
+export type ModifierReplaySourceState = { modifierBaseId: number; modifierSourceConfigId: number | null; modifierBuffLevel: number | null; modifierCount: number | null; modifierLayer: number; modifierHostUid: number; modifierSourceUid: number }
+export type ModifierSourceActorState = { uid: number; name: string; entityType: string; ownerUid: number | null; ownerName: string | null; sourceConfigIds: number[]; baseIds: number[] }
+export type ModifierWindowState = { buffUuid: number; baseId: number; buffLevel: number | null; partId: number | null; count: number | null; fightSourceType: number | null; sourceConfigId: number | null; layer: number; durationMs: number; startTimeMs: number; endTimeMs: number | null; hostUid: number; sourceUid: number }
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
@@ -786,7 +813,7 @@ name: string;
  */
 classId: number }
 export type RawCombatStats = { total: number; effectiveTotal: number; hits: number; critHits: number; critTotal: number; luckyHits: number; luckyTotal: number }
-export type RawSkillStats = { totalValue: number; effectiveTotalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number }
+export type RawSkillStats = { totalValue: number; effectiveTotalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number; property: number | null; damageMode: number | null }
 /**
  * The result of a query for recent encounters.
  */
@@ -807,6 +834,8 @@ export type SceneNamesResult = {
  * A list of scene names.
  */
 names: string[] }
+export type SkillCastEventState = { timestampMs: number; skillId: number; source: string }
+export type SkillCooldownEventState = { timestampMs: number; skillLevelId: number; skillId: number; beginTime: number; duration: number; calculatedDuration: number; cdAccelerateRate: number; skillCdType: number; validCdTime: number; attrSkillCd: number; attrSkillCdPct: number; attrCdAcceleratePct: number }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[] }
 export type TickAttrCondition = { attrId: number; requiredValue: number }
 export type TranslationRuntimeStatus = { runtimeDir: string; runtimeExists: boolean; runtimeManifestExists: boolean; sourceDir: string | null; sourceExists: boolean; sourceManifestExists: boolean; sourceCandidates: string[]; sourceError: string | null }

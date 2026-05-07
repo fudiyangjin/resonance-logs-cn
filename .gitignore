@@ -1,4 +1,6 @@
 node_modules/
+.svelte-kit/
+build/
 
 src-tauri/target/*
 !src-tauri/target/debug/
@@ -6,3 +8,16 @@ src-tauri/target/*
 src-tauri/target/debug/*
 !src-tauri/target/debug/WinDivert.dll
 !src-tauri/target/debug/Windivert64.sys
+
+DEV_exports/
+
+# Local scratch/debug artifacts. These can contain machine-specific paths,
+# browser profile cache data, or temporary run logs.
+/TODO.md
+/recovery_snapshots/
+/svelte-check-report*.txt
+/tmp-*/
+/tmp-*.log
+/src-tauri/DEV_probes/
+/src-tauri/target-check/
+/src-tauri/target-codex-check/
