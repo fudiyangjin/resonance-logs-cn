@@ -178,6 +178,17 @@
     }
   },
   {
+    "sourceId": "marksman_x2",
+    "name": "神射X2, 释放箭雨获得 150 点能量",
+    "description": "释放箭雨获得 150 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [2232],
+        "increment": 150
+      }
+    }
+  },
+  {
     "sourceId": "marksman_x3",
     "name": "神射X3, 野狼造成伤害获得 4 点能量",
     "description": "野狼造成伤害获得 4 点能量",
