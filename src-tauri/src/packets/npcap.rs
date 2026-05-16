@@ -8,11 +8,21 @@ use std::sync::OnceLock;
 // Type definitions for pcap functions
 type PcapFindAllDevs = unsafe extern "C" fn(*mut *mut PcapIf, *mut i8) -> i32;
 type PcapFreeAllDevs = unsafe extern "C" fn(*mut PcapIf);
-type PcapOpenLive = unsafe extern "C" fn(*const i8, i32, i32, i32, *mut i8) -> *mut PcapT;
+type PcapCreate = unsafe extern "C" fn(*const i8, *mut i8) -> *mut PcapT;
+type PcapSetSnaplen = unsafe extern "C" fn(*mut PcapT, i32) -> i32;
+type PcapSetPromisc = unsafe extern "C" fn(*mut PcapT, i32) -> i32;
+type PcapSetTimeout = unsafe extern "C" fn(*mut PcapT, i32) -> i32;
+type PcapSetBufferSize = unsafe extern "C" fn(*mut PcapT, i32) -> i32;
+type PcapActivate = unsafe extern "C" fn(*mut PcapT) -> i32;
 type PcapClose = unsafe extern "C" fn(*mut PcapT);
 type PcapNextEx = unsafe extern "C" fn(*mut PcapT, *mut *mut PcapPkthdr, *mut *const u8) -> i32;
 type PcapGetErr = unsafe extern "C" fn(*mut PcapT) -> *mut i8;
 type PcapDataLink = unsafe extern "C" fn(*mut PcapT) -> i32;
+
+const NPCAP_SNAPLEN: i32 = 65_536;
+const NPCAP_PROMISC: i32 = 1;
+const NPCAP_TIMEOUT_MS: i32 = 1_000;
+const NPCAP_BUFFER_SIZE: i32 = 64 * 1024 * 1024;
 
 #[repr(C)]
 pub struct PcapIf {
@@ -129,11 +139,31 @@ impl NpcapCapture {
     pub fn new(device_name: &str) -> Result<Self, String> {
         let context = NpcapContext::new()?;
         unsafe {
-            let open_live: Symbol<PcapOpenLive> = context
+            let create: Symbol<PcapCreate> =
+                context.lib.get(b"pcap_create").map_err(|e| e.to_string())?;
+            let set_snaplen: Symbol<PcapSetSnaplen> = context
                 .lib
-                .get(b"pcap_open_live")
+                .get(b"pcap_set_snaplen")
                 .map_err(|e| e.to_string())?;
-            let _get_err: Symbol<PcapGetErr> =
+            let set_promisc: Symbol<PcapSetPromisc> = context
+                .lib
+                .get(b"pcap_set_promisc")
+                .map_err(|e| e.to_string())?;
+            let set_timeout: Symbol<PcapSetTimeout> = context
+                .lib
+                .get(b"pcap_set_timeout")
+                .map_err(|e| e.to_string())?;
+            let set_buffer_size: Symbol<PcapSetBufferSize> = context
+                .lib
+                .get(b"pcap_set_buffer_size")
+                .map_err(|e| e.to_string())?;
+            let activate: Symbol<PcapActivate> = context
+                .lib
+                .get(b"pcap_activate")
+                .map_err(|e| e.to_string())?;
+            let close: Symbol<PcapClose> =
+                context.lib.get(b"pcap_close").map_err(|e| e.to_string())?;
+            let get_err: Symbol<PcapGetErr> =
                 context.lib.get(b"pcap_geterr").map_err(|e| e.to_string())?;
             let data_link_fn: Symbol<PcapDataLink> = context
                 .lib
@@ -143,14 +173,69 @@ impl NpcapCapture {
             let device_c = CString::new(device_name).map_err(|e| e.to_string())?;
             let mut errbuf = [0i8; 256];
 
-            // Snaplen 65536, promiscuous 1, timeout 1000ms
-            let handle = open_live(device_c.as_ptr(), 65536, 1, 1000, errbuf.as_mut_ptr());
+            let handle = create(device_c.as_ptr(), errbuf.as_mut_ptr());
 
             if handle.is_null() {
                 return Err(CStr::from_ptr(errbuf.as_ptr())
                     .to_string_lossy()
                     .into_owned());
             }
+
+            let configure = || -> Result<(), String> {
+                if set_snaplen(handle, NPCAP_SNAPLEN) != 0 {
+                    return Err(format!(
+                        "pcap_set_snaplen failed: {}",
+                        pcap_error(*get_err, handle)
+                    ));
+                }
+                if set_promisc(handle, NPCAP_PROMISC) != 0 {
+                    return Err(format!(
+                        "pcap_set_promisc failed: {}",
+                        pcap_error(*get_err, handle)
+                    ));
+                }
+                if set_timeout(handle, NPCAP_TIMEOUT_MS) != 0 {
+                    return Err(format!(
+                        "pcap_set_timeout failed: {}",
+                        pcap_error(*get_err, handle)
+                    ));
+                }
+                if set_buffer_size(handle, NPCAP_BUFFER_SIZE) != 0 {
+                    return Err(format!(
+                        "pcap_set_buffer_size failed: {}",
+                        pcap_error(*get_err, handle)
+                    ));
+                }
+
+                let activate_result = activate(handle);
+                if activate_result < 0 {
+                    return Err(format!(
+                        "pcap_activate failed ({}): {}",
+                        activate_result,
+                        pcap_error(*get_err, handle)
+                    ));
+                }
+                if activate_result > 0 {
+                    log::warn!(
+                        "pcap_activate warning ({}) for device {}: {}",
+                        activate_result,
+                        device_name,
+                        pcap_error(*get_err, handle)
+                    );
+                }
+
+                Ok(())
+            };
+
+            if let Err(err) = configure() {
+                close(handle);
+                return Err(err);
+            }
+
+            info!(
+                "Npcap handle configured device={} buffer_size={} bytes snaplen={} timeout_ms={}",
+                device_name, NPCAP_BUFFER_SIZE, NPCAP_SNAPLEN, NPCAP_TIMEOUT_MS
+            );
 
             let data_link = data_link_fn(handle);
             static LOGGED_DLT: OnceLock<i32> = OnceLock::new();
@@ -187,17 +272,33 @@ impl NpcapCapture {
                 1 => {
                     // Success
                     let len = (*header).caplen as usize;
-                    let mut packet_data = Vec::with_capacity(len);
-                    ptr::copy_nonoverlapping(data, packet_data.as_mut_ptr(), len);
-                    packet_data.set_len(len);
+                    let packet_data = std::slice::from_raw_parts(data, len).to_vec();
                     Ok(Some(packet_data))
                 }
                 0 => Ok(None), // Timeout
-                -1 => Err("Error reading packet".to_string()),
+                -1 => {
+                    let get_err: Symbol<PcapGetErr> =
+                        self.lib.get(b"pcap_geterr").map_err(|e| e.to_string())?;
+                    Err(format!(
+                        "Error reading packet: {}",
+                        pcap_error(*get_err, self.handle)
+                    ))
+                }
                 -2 => Ok(None), // EOF
                 _ => Err(format!("Unknown pcap_next_ex return code: {}", res)),
             }
         }
+    }
+}
+
+unsafe fn pcap_error(get_err: PcapGetErr, handle: *mut PcapT) -> String {
+    let err = unsafe { get_err(handle) };
+    if err.is_null() {
+        "unknown pcap error".to_string()
+    } else {
+        unsafe { CStr::from_ptr(err) }
+            .to_string_lossy()
+            .into_owned()
     }
 }
 

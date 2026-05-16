@@ -3,7 +3,7 @@ use crate::packets::npcap::NpcapCapture;
 use crate::packets::opcodes::Pkt;
 use crate::packets::packet_process::process_packet;
 use crate::packets::reassembler::Reassembler;
-use crate::packets::utils::{Server, TCPReassembler, tcp_sequence_before};
+use crate::packets::utils::{Server, TCPReassembler, TcpInsertResult, tcp_sequence_before};
 use bytes::Bytes;
 use etherparse::NetSlice::Ipv4;
 use etherparse::SlicedPacket;
@@ -438,8 +438,26 @@ fn read_packets(
             }
         }
 
-        if let Some(buffer) = tcp_reassembler.insert_segment(sequence_number, payload) {
-            reassembler.feed_owned(buffer);
+        match tcp_reassembler.insert_segment(sequence_number, payload) {
+            TcpInsertResult::Contiguous(buffer) => {
+                reassembler.feed_owned(buffer);
+            }
+            TcpInsertResult::SkippedGap {
+                from,
+                to,
+                reason,
+                data,
+            } => {
+                warn!(
+                    target: "app::capture",
+                    "TCP gap skipped for {curr_server}: from={from} to={to} reason={reason:?}; clearing frame reassembler"
+                );
+                reassembler.take_remaining();
+                if !data.is_empty() {
+                    reassembler.feed_owned(data);
+                }
+            }
+            TcpInsertResult::Gap | TcpInsertResult::NoData => {}
         }
 
         while let Some(packet) = reassembler.try_next() {
