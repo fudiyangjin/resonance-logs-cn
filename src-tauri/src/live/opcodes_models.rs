@@ -586,10 +586,10 @@ pub mod class {
 
     pub fn get_class_spec_from_skill_id(skill_id: i32) -> ClassSpec {
         match skill_id {
-            1714 | 1734 => ClassSpec::Iaido,
-            1715 | 1733 | 1742 => ClassSpec::Moonstrike,
+            1714 => ClassSpec::Iaido,
+            1737 => ClassSpec::Moonstrike,
 
-            120901 | 120902 => ClassSpec::Icicle,
+            120902 => ClassSpec::Icicle,
             1241 => ClassSpec::Frostbeam,
 
             1605 => ClassSpec::Voidflame,
@@ -601,8 +601,8 @@ pub mod class {
             1518 | 1541 | 21402 => ClassSpec::Smite,
             20301 => ClassSpec::Lifebind,
 
-            199902 => ClassSpec::Earthfort,
-            1930 | 1931 | 1934 | 1935 => ClassSpec::Block,
+            1922 => ClassSpec::Earthfort,
+            1930 => ClassSpec::Block,
 
             220112 | 2203622 => ClassSpec::Falconry,
             2292 | 1700820 | 1700825 | 1700827 => ClassSpec::Wildpack,
