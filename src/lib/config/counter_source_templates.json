@@ -291,6 +291,17 @@
     }
   },
   {
+    "sourceId": "frost_mage_x2",
+    "name": "冰魔X2, 释放陨星风暴获得 44 点能量",
+    "description": "释放陨星风暴获得 44 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1239],
+        "increment": 44
+      }
+    }
+  },
+  {
     "sourceId": "frost_mage_x3",
     "name": "冰魔X3, 冰箭每造成 5 次伤害获得 8 点能量",
     "description": "冰箭每造成 5 次伤害获得 8 点能量",
