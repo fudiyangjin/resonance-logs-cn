@@ -441,9 +441,6 @@ export const zhCNMessages = {
   "settings.live.trainingDummy.eliteEnemy": "精英敌方木桩",
   "settings.live.trainingDummy.eliteGuardian": "精英守护木桩",
   "settings.network.packetCapture": "抓包",
-  "settings.network.method": "捕获方式",
-  "settings.network.methodDescription":
-    "选择用于捕获网络数据包的方法（需要重启应用）。",
   "settings.network.npcapMissing.prefix": "未检测到 Npcap。请从 ",
   "settings.network.npcapMissing.suffix": " 安装 Npcap 以使用该功能。",
   "settings.network.device": "网络设备",

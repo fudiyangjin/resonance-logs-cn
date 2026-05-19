@@ -169,12 +169,6 @@ fn update_active_damage_time(encounter: &mut Encounter, timestamp_ms: u128) {
     encounter.last_combat_timestamp_ms = Some(timestamp_ms);
 }
 
-pub fn on_server_change(encounter: &mut Encounter) {
-    info!("on server change");
-    // Preserve entity identity and local player info; only reset combat state
-    encounter.reset_combat_state();
-}
-
 /// Decide whether a newly observed entity type should replace a cached one.
 ///
 /// Entity type observations are not equally specific: `EntErrType` is an

@@ -1478,7 +1478,7 @@ export const SETTINGS = {
   appVersion: new RuneStore("appVersion", { value: "" }, RUNE_STORE_OPTIONS),
   packetCapture: new RuneStore(
     "packetCapture",
-    { method: "WinDivert", npcapDevice: "" },
+    { npcapDevice: "" },
     RUNE_STORE_OPTIONS,
   ),
 };

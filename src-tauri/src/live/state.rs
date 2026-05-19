@@ -12,6 +12,7 @@ use crate::live::event_manager::EventManager;
 use crate::live::monster_registry;
 use crate::live::opcodes_models::{AttrType, AttrValue, Encounter, Entity};
 use crate::live::skill_cd_monitor::SkillCdMonitor;
+use crate::live::team::{TeamEvent, TeamRuntimeState};
 use crate::live::training_dummy::{
     TrainingDummyMonsterId, TrainingDummyRuntime, inspect_aoi_delta,
 };
@@ -26,8 +27,6 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 /// Represents the possible events that can be handled by the state manager.
 #[derive(Debug, Clone)]
 pub enum StateEvent {
-    /// A server change event.
-    ServerChange,
     /// An enter scene event.
     EnterScene(blueprotobuf::EnterScene),
     /// A sync near entities event.
@@ -46,6 +45,8 @@ pub enum StateEvent {
     SyncToMeDeltaInfo(blueprotobuf::SyncToMeDeltaInfo),
     /// A sync near delta info event.
     SyncNearDeltaInfo(blueprotobuf::SyncNearDeltaInfo),
+    /// A team service notification.
+    Team(TeamEvent),
     /// A reset encounter event. Contains whether this was a manual reset by the user.
     #[allow(dead_code)]
     ResetEncounter {
@@ -85,6 +86,8 @@ pub struct AppState {
     /// Set to true whenever a new DeathRecord has been appended to an Entity, signalling that
     /// the next emit cycle should push a full death-replay snapshot.
     pub death_snapshot_dirty: bool,
+    /// Runtime state from GrpcTeamNtf packets, which can arrive on a separate TCP link.
+    pub team: TeamRuntimeState,
 }
 
 #[derive(Debug)]
@@ -158,6 +161,7 @@ impl AppState {
             training_dummy: TrainingDummyRuntime::default(),
             sent_overlay_uids: HashSet::new(),
             death_snapshot_dirty: false,
+            team: TeamRuntimeState::default(),
         }
     }
 
@@ -435,7 +439,6 @@ impl AppStateManager {
             && matches!(
                 event,
                 StateEvent::SyncNearEntities(_)
-                    | StateEvent::SyncContainerData(_)
                     | StateEvent::SyncContainerDirtyData(_)
                     | StateEvent::SyncToMeDeltaInfo(_)
                     | StateEvent::SyncNearDeltaInfo(_)
@@ -451,9 +454,6 @@ impl AppStateManager {
             state.encounter.local_player_uid,
         );
         match event {
-            StateEvent::ServerChange => {
-                self.on_server_change(state);
-            }
             StateEvent::EnterScene(data) => {
                 self.process_enter_scene(state, data);
             }
@@ -495,6 +495,9 @@ impl AppStateManager {
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
+            StateEvent::Team(event) => {
+                self.process_team_event(state, event);
+            }
             StateEvent::ResetEncounter { is_manual } => {
                 state.pending_auto_reset = None;
                 self.reset_encounter(state, is_manual);
@@ -510,6 +513,20 @@ impl AppStateManager {
             );
         }
         self.apply_attr_store_changes(state);
+    }
+
+    fn process_team_event(&self, state: &mut AppState, event: TeamEvent) {
+        info!(target: "app::live", "team event: {:?}", event);
+        state
+            .team
+            .apply_event(event, state.encounter.local_player_uid);
+        info!(
+            target: "app::live",
+            "team state team_id={} leader_id={} members={:?}",
+            state.team.team_id,
+            state.team.leader_id,
+            state.team.members
+        );
     }
 
     pub(crate) fn apply_control_command(&self, state: &mut AppState, command: LiveControlCommand) {
@@ -676,18 +693,6 @@ impl AppStateManager {
         );
     }
 
-    fn on_server_change(&self, state: &mut AppState) {
-        use crate::live::opcodes_process::on_server_change;
-        state.pending_auto_reset = None;
-        let previous = build_training_dummy_state(&state.training_dummy);
-        state.training_dummy.clear();
-        emit_training_dummy_update_if_changed(state, previous);
-
-        persist_and_save_encounter(state, false, "server_change");
-        on_server_change(&mut state.encounter);
-        state.battle_state = BattleStateMachine::default();
-    }
-
     // all scene id extraction logic is here (its pretty rough)
     fn process_enter_scene(&self, state: &mut AppState, enter_scene: blueprotobuf::EnterScene) {
         use crate::live::opcodes_process::process_enter_scene as parse_enter_scene;
@@ -763,6 +768,7 @@ impl AppStateManager {
         let previous = build_training_dummy_state(&state.training_dummy);
         state.training_dummy.clear();
         emit_training_dummy_update_if_changed(state, previous);
+        info!("team members: {:?}", state.team.members);
 
         if process_sync_container_data(
             &mut state.encounter,

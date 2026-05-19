@@ -498,9 +498,6 @@ export const enUSMessages = {
   "settings.live.trainingDummy.eliteEnemy": "Elite Enemy Dummy",
   "settings.live.trainingDummy.eliteGuardian": "Elite Guardian Dummy",
   "settings.network.packetCapture": "Packet Capture",
-  "settings.network.method": "Capture Method",
-  "settings.network.methodDescription":
-    "Choose the network packet capture method (requires app restart).",
   "settings.network.npcapMissing.prefix":
     "Npcap was not detected. Install it from ",
   "settings.network.npcapMissing.suffix": " to use this feature.",

@@ -970,6 +970,97 @@ pub struct CharTeam {
     pub team_member_data: ::std::collections::HashMap<i64, TeamMemData>,
 }
 #[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NoticeTeamDissolve {
+    #[prost(message, optional, tag = "1")]
+    pub v_request: ::core::option::Option<NoticeTeamDissolveRequest>,
+}
+#[derive(specta::Type, Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct NoticeTeamDissolveRequest {}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NoticeUpdateTeamInfo {
+    #[prost(message, optional, tag = "1")]
+    pub v_request: ::core::option::Option<NoticeUpdateTeamInfoRequest>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NoticeUpdateTeamInfoRequest {
+    #[prost(message, optional, tag = "1")]
+    pub base_info: ::core::option::Option<TeamBaseInfo>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NoticeUpdateTeamMemberInfo {
+    #[prost(message, optional, tag = "1")]
+    pub v_request: ::core::option::Option<NoticeUpdateTeamMemberInfoRequest>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NoticeUpdateTeamMemberInfoRequest {
+    #[prost(message, repeated, tag = "5")]
+    pub team_member_sync_datas: ::prost::alloc::vec::Vec<TeamMemberFastSyncData>,
+    #[prost(message, repeated, tag = "6")]
+    pub team_member_social_datas: ::prost::alloc::vec::Vec<TeamMemData>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NotifyJoinTeam {
+    #[prost(message, optional, tag = "1")]
+    pub v_request: ::core::option::Option<NotifyJoinTeamRequest>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NotifyJoinTeamRequest {
+    #[prost(message, optional, tag = "1")]
+    pub base_info: ::core::option::Option<TeamBaseInfo>,
+    #[prost(message, repeated, tag = "2")]
+    pub member_data: ::prost::alloc::vec::Vec<TeamMemData>,
+    #[prost(map = "int64, message", tag = "4")]
+    pub mem_real_time_voice_infos: ::std::collections::HashMap<i64, TeamMemRealTimeVoiceInfo>,
+    #[prost(enumeration = "ETeamJoinType", optional, tag = "5")]
+    pub team_join_type: ::core::option::Option<i32>,
+    #[prost(map = "int64, message", tag = "6")]
+    pub member_sync_datas: ::std::collections::HashMap<i64, TeamMemberFastSyncData>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NotifyLeaveTeam {
+    #[prost(message, optional, tag = "1")]
+    pub v_request: ::core::option::Option<NotifyLeaveTeamRequest>,
+}
+#[derive(specta::Type, Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct NotifyLeaveTeamRequest {
+    #[prost(int64, optional, tag = "1")]
+    pub char_id: ::core::option::Option<i64>,
+    #[prost(int32, optional, tag = "2")]
+    pub leave_type: ::core::option::Option<i32>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct TeamBaseInfo {
+    #[prost(int64, optional, tag = "1")]
+    pub team_id: ::core::option::Option<i64>,
+    #[prost(uint32, optional, tag = "2")]
+    pub target_id: ::core::option::Option<u32>,
+    #[prost(int64, optional, tag = "3")]
+    pub leader_id: ::core::option::Option<i64>,
+    #[prost(string, optional, tag = "4")]
+    pub desc: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(bool, optional, tag = "5")]
+    pub auto_match: ::core::option::Option<bool>,
+    #[prost(bool, optional, tag = "6")]
+    pub hall_show: ::core::option::Option<bool>,
+    #[prost(bool, optional, tag = "7")]
+    pub matching: ::core::option::Option<bool>,
+    #[prost(enumeration = "ETeamMemberType", optional, tag = "8")]
+    pub team_member_type: ::core::option::Option<i32>,
+    #[prost(map = "int32, message", tag = "9")]
+    pub team_member_group_infos: ::std::collections::HashMap<i32, TeamMemberGroupInfo>,
+    #[prost(int64, optional, tag = "10")]
+    pub create_time: ::core::option::Option<i64>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct TeamInfo {
+    #[prost(int64, optional, tag = "1")]
+    pub team_id: ::core::option::Option<i64>,
+    #[prost(map = "int64, message", tag = "2")]
+    pub members: ::std::collections::HashMap<i64, TeamMemData>,
+    #[prost(message, optional, tag = "3")]
+    pub base_info: ::core::option::Option<TeamBaseInfo>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
 pub struct TeamMemData {
     #[prost(int64, optional, tag = "1")]
     pub char_id: ::core::option::Option<i64>,
@@ -989,6 +1080,30 @@ pub struct TeamMemData {
     pub group_id: ::core::option::Option<i32>,
     #[prost(message, optional, tag = "9")]
     pub social_data: ::core::option::Option<TeamMemberSocialData>,
+}
+#[derive(specta::Type, Clone, Copy, PartialEq, ::prost::Message)]
+pub struct TeamMemberFastSyncData {
+    #[prost(int64, optional, tag = "1")]
+    pub char_id: ::core::option::Option<i64>,
+    #[prost(int32, optional, tag = "2")]
+    pub scene_id: ::core::option::Option<i32>,
+    #[prost(message, optional, tag = "3")]
+    pub position: ::core::option::Option<Position>,
+    #[prost(int64, optional, tag = "4")]
+    pub hp: ::core::option::Option<i64>,
+    #[prost(int64, optional, tag = "5")]
+    pub max_hp: ::core::option::Option<i64>,
+    #[prost(int32, optional, tag = "6")]
+    pub state: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "7")]
+    pub scene_area_id: ::core::option::Option<i32>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct TeamMemberGroupInfo {
+    #[prost(int32, optional, tag = "1")]
+    pub group_id: ::core::option::Option<i32>,
+    #[prost(int64, repeated, tag = "2")]
+    pub char_ids: ::prost::alloc::vec::Vec<i64>,
 }
 #[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
 pub struct TeamMemberSocialData {
@@ -1010,6 +1125,64 @@ pub struct TeamMemberSocialData {
     pub user_attr_data: ::core::option::Option<UserAttrData>,
     #[prost(message, optional, tag = "9")]
     pub personal_zone: ::core::option::Option<PersonalZoneShow>,
+}
+#[derive(specta::Type, Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TeamMemRealTimeVoiceInfo {
+    #[prost(int32, optional, tag = "1")]
+    pub microphone_status: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "2")]
+    pub speak_status: ::core::option::Option<i32>,
+}
+#[derive(
+    specta::Type, Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
+)]
+#[repr(i32)]
+pub enum ETeamJoinType {
+    ETeamJoinTypeNone = 0,
+    ETeamJoinTypeInvite = 1,
+    ETeamJoinTypeTargetMatch = 2,
+}
+impl ETeamJoinType {
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::ETeamJoinTypeNone => "ETeamJoinTypeNone",
+            Self::ETeamJoinTypeInvite => "ETeamJoinTypeInvite",
+            Self::ETeamJoinTypeTargetMatch => "ETeamJoinTypeTargetMatch",
+        }
+    }
+
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "ETeamJoinTypeNone" => Some(Self::ETeamJoinTypeNone),
+            "ETeamJoinTypeInvite" => Some(Self::ETeamJoinTypeInvite),
+            "ETeamJoinTypeTargetMatch" => Some(Self::ETeamJoinTypeTargetMatch),
+            _ => None,
+        }
+    }
+}
+#[derive(
+    specta::Type, Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
+)]
+#[repr(i32)]
+pub enum ETeamMemberType {
+    ETeamMemberTypeFive = 0,
+    ETeamMemberTypeTwenty = 1,
+}
+impl ETeamMemberType {
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::ETeamMemberTypeFive => "ETeamMemberTypeFive",
+            Self::ETeamMemberTypeTwenty => "ETeamMemberTypeTwenty",
+        }
+    }
+
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "ETeamMemberTypeFive" => Some(Self::ETeamMemberTypeFive),
+            "ETeamMemberTypeTwenty" => Some(Self::ETeamMemberTypeTwenty),
+            _ => None,
+        }
+    }
 }
 #[derive(specta::Type, Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ProfessionData {

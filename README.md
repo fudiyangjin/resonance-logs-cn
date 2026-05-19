@@ -17,11 +17,11 @@
 
 - **后端**：Rust + [Tauri 2](https://tauri.app/)
 - **前端**：SvelteKit 5 + Svelte + TypeScript + Tailwind CSS
-- **数据捕获**：WinDivert / Npcap（Windows 网络包捕获）
+- **数据捕获**：Npcap（Windows 网络包捕获）
 
 ## 系统要求
 
-- **平台**：Windows（需管理员权限以使用 WinDivert）
+- **平台**：Windows（需安装 [Npcap](https://npcap.com/) 并选择正确网卡）
 - **Node.js**：用于前端构建
 - **Rust**：用于 Tauri 构建
 

@@ -1,4 +1,5 @@
 use crate::live::state::{AppState, AppStateManager, StateEvent};
+use crate::live::team::decode_team_event;
 use crate::live::{
     commands_models::{
         BossBuffUpdatePayload, BuffCounterUpdatePayload, BuffUpdatePayload, DeathReplayPayload,
@@ -9,6 +10,7 @@ use crate::live::{
     event_manager::{OutboundEvent, safe_emit_to},
 };
 use crate::packets;
+use crate::packets::opcodes::{CaptureEvent, GRPC_TEAM_NTF_SERVICE_ID, WORLD_NTF_SERVICE_ID};
 use blueprotobuf_lib::blueprotobuf;
 use bytes::Bytes;
 use log::{debug, info, trace, warn};
@@ -69,7 +71,6 @@ fn log_queue_depth_if_needed(
 /// Decodes packet payload into a state event.
 fn decode_state_event(op: packets::opcodes::Pkt, data: Bytes) -> Option<StateEvent> {
     match op {
-        packets::opcodes::Pkt::ServerChangeInfo => Some(StateEvent::ServerChange),
         packets::opcodes::Pkt::EnterScene => {
             info!(target: "app::live", "Received EnterScene packet");
             match blueprotobuf::EnterScene::decode(data) {
@@ -213,6 +214,31 @@ fn decode_state_event(op: packets::opcodes::Pkt, data: Bytes) -> Option<StateEve
     }
 }
 
+fn decode_capture_event(event: CaptureEvent) -> Option<StateEvent> {
+    match event {
+        CaptureEvent::Notify { key, payload } if key.service_id == WORLD_NTF_SERVICE_ID => {
+            let op = match packets::opcodes::Pkt::try_from(key.method_id) {
+                Ok(op) => op,
+                Err(_) => {
+                    trace!("Unhandled WorldNtf method_id={}", key.method_id);
+                    return None;
+                }
+            };
+            decode_state_event(op, payload)
+        }
+        CaptureEvent::Notify { key, payload } if key.service_id == GRPC_TEAM_NTF_SERVICE_ID => {
+            decode_team_event(key, payload).map(StateEvent::Team)
+        }
+        CaptureEvent::Notify { key, .. } => {
+            trace!(
+                "Unhandled notify service_id={} method_id={}",
+                key.service_id, key.method_id
+            );
+            None
+        }
+    }
+}
+
 /// Starts the live meter.
 ///
 /// This function captures packets, processes them, and emits events to the frontend.
@@ -249,8 +275,8 @@ pub async fn start(
     let heartbeat_duration = Duration::from_secs(2);
 
     // 1. Start capturing packets and send to rx
-    let method = get_capture_method(&app_handle);
-    let (mut rx, queue_depth) = packets::packet_capture::start_capture(method);
+    let npcap_device = get_npcap_device(&app_handle);
+    let (mut rx, queue_depth) = packets::packet_capture::start_capture(npcap_device);
     let mut queue_depth_warn_counter = 0usize;
     let mut queue_depth_last_log_at = Instant::now();
 
@@ -270,7 +296,7 @@ pub async fn start(
                 flush_outbound_events(&app_handle, &mut state);
             }
             packet = rx.recv() => match packet {
-            Some((op, data)) => {
+            Some(event) => {
                 queue_depth
                     .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |depth| {
                         Some(depth.saturating_sub(1))
@@ -278,7 +304,7 @@ pub async fn start(
                     .ok();
                 // Process the first packet immediately (low-latency path)
                 let mut batch_events = Vec::new();
-                if let Some(event) = decode_state_event(op, data) {
+                if let Some(event) = decode_capture_event(event) {
                     batch_events.push(event);
                 }
 
@@ -297,17 +323,18 @@ pub async fn start(
                     }
 
                     match rx.try_recv() {
-                        Ok((op, data)) => {
+                        Ok(event) => {
                             queue_depth
                                 .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |depth| {
                                     Some(depth.saturating_sub(1))
                                 })
                                 .ok();
-                            if let Some(event) = decode_state_event(op, data) {
-                                let is_server_change = matches!(event, StateEvent::ServerChange);
+                            if let Some(event) = decode_capture_event(event) {
+                                let is_container_resync =
+                                    matches!(event, StateEvent::SyncContainerData(_));
                                 batch_events.push(event);
                                 drained += 1;
-                                if is_server_change {
+                                if is_container_resync {
                                     break;
                                 }
                             } else {
@@ -514,9 +541,7 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
     }
 }
 
-fn get_capture_method(app: &AppHandle) -> packets::packet_capture::CaptureMethod {
-    use packets::packet_capture::CaptureMethod;
-
+fn get_npcap_device(app: &AppHandle) -> String {
     let filename_candidates = ["packetCapture.json", "packetCapture.bin", "packetCapture"];
     let mut dir_candidates = Vec::new();
     if let Some(dir) = app.path().app_data_dir().ok() {
@@ -536,10 +561,6 @@ fn get_capture_method(app: &AppHandle) -> packets::packet_capture::CaptureMethod
             }
             if let Ok(file) = std::fs::File::open(&path) {
                 if let Ok(json) = serde_json::from_reader::<_, serde_json::Value>(file) {
-                    let method = json
-                        .get("method")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("WinDivert");
                     let device = json
                         .get("npcapDevice")
                         .and_then(|v| v.as_str())
@@ -547,19 +568,13 @@ fn get_capture_method(app: &AppHandle) -> packets::packet_capture::CaptureMethod
 
                     info!(
                         target: "app::capture",
-                        "Packet capture config found at {} (method={}, device={})",
+                        "Packet capture config found at {} (device={})",
                         path.display(),
-                        method,
                         device
                     );
 
-                    if method == "Npcap" {
-                        info!(target: "app::capture", "Using Npcap capture method device={}", device);
-                        return CaptureMethod::Npcap(device.to_string());
-                    } else {
-                        info!(target: "app::capture", "Using WinDivert capture method (from config)");
-                        return CaptureMethod::WinDivert;
-                    }
+                    info!(target: "app::capture", "Using Npcap capture device={}", device);
+                    return device.to_string();
                 } else {
                     warn!(
                         "Failed to parse packet capture config at {}",
@@ -580,10 +595,6 @@ fn get_capture_method(app: &AppHandle) -> packets::packet_capture::CaptureMethod
                 }
                 if let Ok(file) = std::fs::File::open(&path) {
                     if let Ok(json) = serde_json::from_reader::<_, serde_json::Value>(file) {
-                        let method = json
-                            .get("method")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("WinDivert");
                         let device = json
                             .get("npcapDevice")
                             .and_then(|v| v.as_str())
@@ -591,19 +602,13 @@ fn get_capture_method(app: &AppHandle) -> packets::packet_capture::CaptureMethod
 
                         info!(
                             target: "app::capture",
-                            "Packet capture config found at {} (method={}, device={})",
+                            "Packet capture config found at {} (device={})",
                             path.display(),
-                            method,
                             device
                         );
 
-                        if method == "Npcap" {
-                            info!(target: "app::capture", "Using Npcap capture method device={}", device);
-                            return CaptureMethod::Npcap(device.to_string());
-                        } else {
-                            info!(target: "app::capture", "Using WinDivert capture method (from config)");
-                            return CaptureMethod::WinDivert;
-                        }
+                        info!(target: "app::capture", "Using Npcap capture device={}", device);
+                        return device.to_string();
                     } else {
                         warn!(
                             "Failed to parse packet capture config at {}",
@@ -615,8 +620,6 @@ fn get_capture_method(app: &AppHandle) -> packets::packet_capture::CaptureMethod
         }
     }
 
-    warn!(target: "app::capture", "No packetCapture config found in app data dirs; falling back to WinDivert");
-
-    info!(target: "app::capture", "Using WinDivert capture method (default)");
-    CaptureMethod::WinDivert
+    warn!(target: "app::capture", "No packetCapture config found in app data dirs; Npcap device is empty");
+    String::new()
 }

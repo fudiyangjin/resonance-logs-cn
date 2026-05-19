@@ -1,5 +1,4 @@
 <script lang="ts">
-  import SettingsSelect from "./settings-select.svelte";
   import SettingsDropdown from "./settings-dropdown.svelte";
   import { SETTINGS } from "$lib/settings-store";
   import { invoke } from "@tauri-apps/api/core";
@@ -17,7 +16,6 @@
   let loading = $state(false);
   let mounted = $state(false);
   // Track initial values to detect actual user changes
-  let initialMethod = $state<string | null>(null);
   let initialDevice = $state<string | null>(null);
 
   async function loadDevices() {
@@ -37,7 +35,6 @@
     // Capture initial values before marking as mounted
     // Use untrack to avoid reactive dependencies
     untrack(() => {
-      initialMethod = SETTINGS.packetCapture.state.method;
       initialDevice = SETTINGS.packetCapture.state.npcapDevice;
     });
     mounted = true;
@@ -46,24 +43,17 @@
 
   $effect(() => {
     if (!mounted) return;
-    const method = SETTINGS.packetCapture.state.method;
     const device = SETTINGS.packetCapture.state.npcapDevice;
 
     // Skip saving if values haven't changed from initial (prevents overwriting on mount)
-    if (
-      initialMethod !== null &&
-      method === initialMethod &&
-      device === initialDevice
-    ) {
+    if (initialDevice !== null && device === initialDevice) {
       return;
     }
 
     // Update tracked values for future comparisons
-    initialMethod = method;
     initialDevice = device;
 
     invoke("save_packet_capture_settings", {
-      method,
       npcapDevice: device,
     }).catch((e) => console.error("Failed to save packet capture settings", e));
   });
@@ -85,35 +75,24 @@
         {t("settings.network.packetCapture")}
       </h2>
 
-      <SettingsSelect
-        bind:selected={SETTINGS.packetCapture.state.method}
-        label={t("settings.network.method")}
-        description={t("settings.network.methodDescription")}
-        values={["WinDivert", "Npcap"]}
-      />
-
-      {#if SETTINGS.packetCapture.state.method === "Npcap"}
-        {#if !npcapInstalled}
-          <div
-            class="mt-2 p-3 bg-destructive/10 text-destructive rounded-md text-sm"
-          >
-            {t("settings.network.npcapMissing.prefix")}<a
-              href="https://npcap.com/"
-              target="_blank"
-              class="underline">npcap.com</a
-            >{t("settings.network.npcapMissing.suffix")}
-          </div>
-        {:else}
-          <SettingsDropdown
-            bind:selected={SETTINGS.packetCapture.state.npcapDevice}
-            label={t("settings.network.device")}
-            description={t("settings.network.deviceDescription")}
-            options={deviceOptions}
-            placeholder={loading
-              ? t("settings.network.deviceLoading")
-              : t("settings.network.devicePlaceholder")}
-          />
-        {/if}
+      {#if !npcapInstalled}
+        <div class="mt-2 p-3 bg-destructive/10 text-destructive rounded-md text-sm">
+          {t("settings.network.npcapMissing.prefix")}<a
+            href="https://npcap.com/"
+            target="_blank"
+            class="underline">npcap.com</a
+          >{t("settings.network.npcapMissing.suffix")}
+        </div>
+      {:else}
+        <SettingsDropdown
+          bind:selected={SETTINGS.packetCapture.state.npcapDevice}
+          label={t("settings.network.device")}
+          description={t("settings.network.deviceDescription")}
+          options={deviceOptions}
+          placeholder={loading
+            ? t("settings.network.deviceLoading")
+            : t("settings.network.devicePlaceholder")}
+        />
       {/if}
     </div>
   </div>

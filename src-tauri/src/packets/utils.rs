@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::time::{Duration, Instant};
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Server {
     src_addr: [u8; 4],
     src_port: u16,
@@ -18,6 +18,22 @@ impl Server {
             dst_addr,
             dst_port,
         }
+    }
+
+    pub fn source_addr(&self) -> [u8; 4] {
+        self.src_addr
+    }
+
+    pub fn source_port(&self) -> u16 {
+        self.src_port
+    }
+
+    pub fn destination_addr(&self) -> [u8; 4] {
+        self.dst_addr
+    }
+
+    pub fn destination_port(&self) -> u16 {
+        self.dst_port
     }
 }
 

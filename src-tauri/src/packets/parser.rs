@@ -1,5 +1,4 @@
-use crate::packets;
-use crate::packets::opcodes::Pkt;
+use crate::packets::opcodes::NotifyKey;
 use bytes::Bytes;
 use log::debug;
 
@@ -9,7 +8,7 @@ pub fn parse_notify_fragment(
     payload_start: usize,
     payload_end: usize,
     compressed: bool,
-) -> Option<(packets::opcodes::Pkt, Bytes)> {
+) -> Option<(NotifyKey, Bytes)> {
     let payload = frame.get(payload_start..payload_end)?;
     if payload.len() < 16 {
         debug!("Notify: payload too short: {}", payload.len());
@@ -21,23 +20,20 @@ pub fn parse_notify_fragment(
     let _stub_id = u32::from_be_bytes(payload[8..12].try_into().ok()?);
     let method_id_raw = u32::from_be_bytes(payload[12..16].try_into().ok()?);
 
-    if service_uuid != 0x0000000063335342 {
-        debug!("Notify: service_uuid mismatch: {service_uuid:x}");
-        return None;
-    }
+    let key = NotifyKey {
+        service_id: service_uuid,
+        method_id: method_id_raw,
+    };
 
     if compressed {
         match zstd::decode_all(&payload[16..]) {
-            Ok(decoded) => Some((Pkt::try_from(method_id_raw).ok()?, Bytes::from(decoded))),
+            Ok(decoded) => Some((key, Bytes::from(decoded))),
             Err(e) => {
                 debug!("Notify: zstd decompression failed: {e}");
                 None
             }
         }
     } else {
-        Some((
-            Pkt::try_from(method_id_raw).ok()?,
-            frame.slice(payload_start + 16..payload_end),
-        ))
+        Some((key, frame.slice(payload_start + 16..payload_end)))
     }
 }

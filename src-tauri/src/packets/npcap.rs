@@ -18,6 +18,9 @@ type PcapClose = unsafe extern "C" fn(*mut PcapT);
 type PcapNextEx = unsafe extern "C" fn(*mut PcapT, *mut *mut PcapPkthdr, *mut *const u8) -> i32;
 type PcapGetErr = unsafe extern "C" fn(*mut PcapT) -> *mut i8;
 type PcapDataLink = unsafe extern "C" fn(*mut PcapT) -> i32;
+type PcapCompile = unsafe extern "C" fn(*mut PcapT, *mut BpfProgram, *const i8, i32, u32) -> i32;
+type PcapSetFilter = unsafe extern "C" fn(*mut PcapT, *mut BpfProgram) -> i32;
+type PcapFreeCode = unsafe extern "C" fn(*mut BpfProgram);
 
 const NPCAP_SNAPLEN: i32 = 65_536;
 const NPCAP_PROMISC: i32 = 1;
@@ -47,6 +50,20 @@ pub struct PcapPkthdr {
     pub ts: libc::timeval,
     pub caplen: u32,
     pub len: u32,
+}
+
+#[repr(C)]
+struct BpfProgram {
+    bf_len: u32,
+    bf_insns: *mut BpfInsn,
+}
+
+#[repr(C)]
+struct BpfInsn {
+    code: u16,
+    jt: u8,
+    jf: u8,
+    k: u32,
 }
 
 pub enum PcapT {}
@@ -169,6 +186,18 @@ impl NpcapCapture {
                 .lib
                 .get(b"pcap_datalink")
                 .map_err(|e| e.to_string())?;
+            let compile: Symbol<PcapCompile> = context
+                .lib
+                .get(b"pcap_compile")
+                .map_err(|e| e.to_string())?;
+            let set_filter: Symbol<PcapSetFilter> = context
+                .lib
+                .get(b"pcap_setfilter")
+                .map_err(|e| e.to_string())?;
+            let free_code: Symbol<PcapFreeCode> = context
+                .lib
+                .get(b"pcap_freecode")
+                .map_err(|e| e.to_string())?;
 
             let device_c = CString::new(device_name).map_err(|e| e.to_string())?;
             let mut errbuf = [0i8; 256];
@@ -224,6 +253,15 @@ impl NpcapCapture {
                     );
                 }
 
+                set_bpf_filter(
+                    handle,
+                    *compile,
+                    *set_filter,
+                    *free_code,
+                    *get_err,
+                    "tcp and not portrange 0-1000",
+                )?;
+
                 Ok(())
             };
 
@@ -233,8 +271,12 @@ impl NpcapCapture {
             }
 
             info!(
-                "Npcap handle configured device={} buffer_size={} bytes snaplen={} timeout_ms={}",
-                device_name, NPCAP_BUFFER_SIZE, NPCAP_SNAPLEN, NPCAP_TIMEOUT_MS
+                "Npcap handle configured device={} buffer_size={} bytes snaplen={} timeout_ms={} filter={}",
+                device_name,
+                NPCAP_BUFFER_SIZE,
+                NPCAP_SNAPLEN,
+                NPCAP_TIMEOUT_MS,
+                "tcp and not portrange 0-1000"
             );
 
             let data_link = data_link_fn(handle);
@@ -300,6 +342,45 @@ unsafe fn pcap_error(get_err: PcapGetErr, handle: *mut PcapT) -> String {
             .to_string_lossy()
             .into_owned()
     }
+}
+
+fn set_bpf_filter(
+    handle: *mut PcapT,
+    compile: PcapCompile,
+    set_filter: PcapSetFilter,
+    free_code: PcapFreeCode,
+    get_err: PcapGetErr,
+    filter: &str,
+) -> Result<(), String> {
+    let filter_c = CString::new(filter).map_err(|e| e.to_string())?;
+    let mut program = BpfProgram {
+        bf_len: 0,
+        bf_insns: ptr::null_mut(),
+    };
+
+    let compile_result = unsafe { compile(handle, &mut program, filter_c.as_ptr(), 1, 0) };
+    if compile_result != 0 {
+        return Err(format!(
+            "pcap_compile failed for filter {:?}: {}",
+            filter,
+            unsafe { pcap_error(get_err, handle) }
+        ));
+    }
+
+    let set_result = unsafe { set_filter(handle, &mut program) };
+    unsafe {
+        free_code(&mut program);
+    }
+
+    if set_result != 0 {
+        return Err(format!(
+            "pcap_setfilter failed for filter {:?}: {}",
+            filter,
+            unsafe { pcap_error(get_err, handle) }
+        ));
+    }
+
+    Ok(())
 }
 
 impl Drop for NpcapCapture {

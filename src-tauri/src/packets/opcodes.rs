@@ -1,10 +1,34 @@
+use bytes::Bytes;
+
 #[derive(Debug)]
 pub struct ParseError;
 
+pub const WORLD_NTF_SERVICE_ID: u64 = 1_664_308_034;
+pub const GRPC_TEAM_NTF_SERVICE_ID: u64 = 966_773_353;
+
+pub mod grpc_team_method {
+    pub const NOTICE_UPDATE_TEAM_INFO: u32 = 0x1;
+    pub const NOTICE_UPDATE_TEAM_MEMBER_INFO: u32 = 0x2;
+    pub const NOTIFY_JOIN_TEAM: u32 = 0x3;
+    pub const NOTIFY_LEAVE_TEAM: u32 = 0x4;
+    pub const NOTIFY_BE_TRANSFER_LEADER: u32 = 0x0b;
+    pub const NOTICE_TEAM_DISSOLVE: u32 = 0x0d;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct NotifyKey {
+    pub service_id: u64,
+    pub method_id: u32,
+}
+
+#[derive(Debug)]
+pub enum CaptureEvent {
+    Notify { key: NotifyKey, payload: Bytes },
+}
+
 #[non_exhaustive]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Pkt {
-    ServerChangeInfo,
     // TODO: change all these names
     SyncSubSceneAttrs = 0x00000001,
     NotifySwitchSceneEnd = 0x00000002,

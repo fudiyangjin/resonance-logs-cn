@@ -4,8 +4,8 @@
     "version": "0.1.4",
     "identifier": "com.resonance-logs-cn",
     "build": {
-        "beforeDevCommand": "npm run dev:stop-windivert",
-        "beforeBuildCommand": "npm run build:stop-windivert",
+        "beforeDevCommand": "npm run dev",
+        "beforeBuildCommand": "npm run build",
         "devUrl": "http://127.0.0.1:1420",
         "frontendDist": "../build"
     },
@@ -81,8 +81,6 @@
             "icons/icon.ico"
         ],
         "resources": [
-            "./WinDivert.dll",
-            "./WinDivert64.sys",
             "./meter-data/"
         ],
         "createUpdaterArtifacts": true

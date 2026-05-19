@@ -1,4 +1,4 @@
-use crate::packets;
+use crate::packets::opcodes::CaptureEvent;
 use crate::packets::opcodes::FragmentType;
 use crate::packets::parser;
 use bytes::Bytes;
@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub fn process_packet(
     frame: &Bytes,
-    packet_sender: &tokio::sync::mpsc::UnboundedSender<(packets::opcodes::Pkt, Bytes)>,
+    packet_sender: &tokio::sync::mpsc::UnboundedSender<CaptureEvent>,
     queue_depth: &AtomicUsize,
 ) {
     let mut offset = 0usize;
@@ -46,13 +46,13 @@ pub fn process_packet(
 
         match FragmentType::from(msg_type_id) {
             FragmentType::Notify => {
-                if let Some((method_id, payload)) = parser::parse_notify_fragment(
+                if let Some((key, payload)) = parser::parse_notify_fragment(
                     frame,
                     payload_start,
                     payload_end,
                     is_zstd_compressed,
                 ) {
-                    if let Err(err) = packet_sender.send((method_id, payload)) {
+                    if let Err(err) = packet_sender.send(CaptureEvent::Notify { key, payload }) {
                         debug!("Failed to send packet: {err}");
                     } else {
                         queue_depth.fetch_add(1, Ordering::Relaxed);
