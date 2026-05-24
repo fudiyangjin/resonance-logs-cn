@@ -10,9 +10,8 @@ use crate::live::commands_models::{
 use crate::live::counter_tracker::{BuffCounterTracker, CounterRule};
 use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
 use crate::live::entity_attr_store::EntityAttrStore;
-use crate::live::entity_id::{entity_uuid_string, uid_from_uuid};
+use crate::live::entity_id::entity_uuid_string;
 use crate::live::event_manager::EventManager;
-use crate::live::monster_registry;
 use crate::live::opcodes_models::{AttrType, AttrValue, DeathRecord, Encounter, Entity};
 use crate::live::skill_cd_monitor::SkillCdMonitor;
 use crate::live::team::{TeamEvent, TeamRuntimeState};
@@ -261,23 +260,19 @@ fn hydrate_entities_from_attr_store(state: &mut AppState) {
     }
 }
 
-fn resolve_player_display_name(
+fn resolve_known_player_display_name(
     entity_uuid: i64,
     entity: Option<&Entity>,
     attr_store: &EntityAttrStore,
-) -> String {
+) -> Option<String> {
     if let Some(name) = attr_store
         .attr(entity_uuid, AttrType::Name)
         .and_then(|value| value.as_string())
+        .filter(|name| !name.is_empty())
     {
-        return name.to_string();
+        return Some(name.to_string());
     }
-    if let Some(entity) = entity {
-        if !entity.name.is_empty() {
-            return entity.name.clone();
-        }
-    }
-    format!("UID {}", uid_from_uuid(entity_uuid))
+    entity.and_then(|entity| (!entity.name.is_empty()).then(|| entity.name.clone()))
 }
 
 fn collect_player_names(encounter: &Encounter) -> Vec<PlayerNameEntry> {
@@ -302,25 +297,44 @@ fn collect_player_names(encounter: &Encounter) -> Vec<PlayerNameEntry> {
     player_names
 }
 
-fn is_monitorable_monster(state: &AppState, entity_uuid: i64) -> bool {
+fn is_known_monster_entity(state: &AppState, entity_uuid: i64) -> bool {
     state
         .encounter
         .entity_uuid_to_entity
         .get(&entity_uuid)
-        .map(|entity| {
-            entity.is_boss()
-                || entity
-                    .monster_type_id
-                    .is_some_and(monster_registry::is_extra_buff_monitored_monster)
-        })
-        .unwrap_or(false)
+        .is_some_and(|entity| entity.entity_type == EEntityType::EntMonster)
 }
 
-fn classify_buff_target(state: &AppState, target_uuid: i64) -> Option<BuffTargetKind> {
+fn current_attack_target_uuid(state: &AppState) -> Option<i64> {
+    let local_player_uuid = state.encounter.local_player_uuid;
+    if local_player_uuid == 0 {
+        return None;
+    }
+
+    let target_uuid = state
+        .attr_store
+        .attr(local_player_uuid, AttrType::TargetId)
+        .and_then(AttrValue::as_int)
+        .filter(|uuid| *uuid > 0)?;
+
+    state
+        .encounter
+        .entity_uuid_to_entity
+        .get(&target_uuid)
+        .filter(|entity| entity.entity_type == EEntityType::EntMonster)?;
+
+    if state.attr_store.is_dead(target_uuid) {
+        return None;
+    }
+
+    Some(target_uuid)
+}
+
+fn classify_buff_effect_target(state: &AppState, target_uuid: i64) -> Option<BuffTargetKind> {
     if target_uuid == state.encounter.local_player_uuid && target_uuid != 0 {
         return Some(BuffTargetKind::LocalPlayer);
     }
-    if is_monitorable_monster(state, target_uuid) {
+    if is_known_monster_entity(state, target_uuid) {
         return Some(BuffTargetKind::Monster);
     }
     if state.team.members.contains(&target_uuid) {
@@ -329,12 +343,62 @@ fn classify_buff_target(state: &AppState, target_uuid: i64) -> Option<BuffTarget
     None
 }
 
+fn classify_buff_snapshot_target(state: &AppState, target_uuid: i64) -> Option<BuffTargetKind> {
+    if target_uuid == state.encounter.local_player_uuid && target_uuid != 0 {
+        return Some(BuffTargetKind::LocalPlayer);
+    }
+    if current_attack_target_uuid(state) == Some(target_uuid) {
+        return Some(BuffTargetKind::Monster);
+    }
+    if state.team.members.contains(&target_uuid) {
+        return Some(BuffTargetKind::Teammate);
+    }
+    None
+}
+
+fn collect_overlay_identity_for_entity(
+    state: &mut AppState,
+    entity_uuid: i64,
+    player_names: &mut HashMap<String, String>,
+    monster_ids: &mut HashMap<String, i32>,
+) {
+    let entity_uuid_string = entity_uuid_string(entity_uuid);
+    let entity = state.encounter.entity_uuid_to_entity.get(&entity_uuid);
+
+    if let Some(monster_id) = entity.and_then(|entity| entity.monster_type_id) {
+        if state.sent_overlay_entity_uuids.insert(entity_uuid) {
+            monster_ids.insert(entity_uuid_string, monster_id);
+        }
+        return;
+    }
+
+    if let Some(name) = resolve_known_player_display_name(entity_uuid, entity, &state.attr_store) {
+        if state.sent_overlay_entity_uuids.insert(entity_uuid) {
+            player_names.insert(entity_uuid_string, name);
+        }
+    }
+}
+
+fn collect_overlay_identity_for_hate_entries(
+    state: &mut AppState,
+    entries: &[crate::live::commands_models::HateEntry],
+    player_names: &mut HashMap<String, String>,
+    monster_ids: &mut HashMap<String, i32>,
+) {
+    for entry in entries {
+        let Ok(entity_uuid) = entry.entity_uuid.parse::<i64>() else {
+            continue;
+        };
+        collect_overlay_identity_for_entity(state, entity_uuid, player_names, monster_ids);
+    }
+}
+
 fn process_entity_buff_effect_bytes(
     state: &mut AppState,
     target_uuid: i64,
     raw_bytes: &[u8],
 ) -> Option<(BuffTargetKind, crate::live::buff_monitor::BuffProcessResult)> {
-    let kind = classify_buff_target(state, target_uuid)?;
+    let kind = classify_buff_effect_target(state, target_uuid)?;
     if kind != BuffTargetKind::LocalPlayer && !state.entity_buff_config.profile_for(kind).enabled {
         return None;
     }
@@ -1086,14 +1150,18 @@ impl AppStateManager {
             if let Some((BuffTargetKind::LocalPlayer, buff_process_result)) =
                 process_entity_buff_effect_bytes(state, local_player_uuid, &raw_bytes)
             {
-                let payload = state.entity_buff_monitors.monitors
+                let payload = state
+                    .entity_buff_monitors
+                    .monitors
                     .get(&local_player_uuid)
-                    .map(|monitor| monitor.build_update_payload(
-                        local_player_uuid,
-                        local_player_uuid,
-                        &state.entity_buff_config.local_player,
-                        state.server_clock_offset,
-                    ))
+                    .map(|monitor| {
+                        monitor.build_update_payload(
+                            local_player_uuid,
+                            local_player_uuid,
+                            &state.entity_buff_config.local_player,
+                            state.server_clock_offset,
+                        )
+                    })
                     .unwrap_or_default();
                 state.event_manager.emit_buff_update(payload);
                 counter_dirty |= state.local_monitor.counter_tracker.on_buff_changes(
@@ -1423,6 +1491,146 @@ impl AppStateManager {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::live::buff_monitor::{ActiveBuff, BuffWatchProfile};
+    use crate::live::entity_id::{canonical_player_uuid, entity_id_to_uuid};
+
+    fn monster_uuid(uid: i64) -> i64 {
+        entity_id_to_uuid(uid, EEntityType::EntMonster, false, false)
+    }
+
+    fn player_uuid(uid: i64) -> i64 {
+        canonical_player_uuid(uid)
+    }
+
+    fn add_entity(state: &mut AppState, uuid: i64, entity_type: EEntityType) {
+        state
+            .encounter
+            .entity_uuid_to_entity
+            .insert(uuid, Entity::new(uuid, entity_type));
+    }
+
+    fn set_current_target(state: &mut AppState, target_uuid: i64) {
+        let local_player_uuid = state.encounter.local_player_uuid;
+        let _ = state.attr_store.set_attr(
+            local_player_uuid,
+            AttrType::TargetId,
+            AttrValue::Int(target_uuid),
+        );
+    }
+
+    fn active_buff(base_id: i32) -> ActiveBuff {
+        ActiveBuff {
+            base_id,
+            layer: 1,
+            duration: 1000,
+            create_time: 10,
+            received_time_ms: 20,
+            fire_uuid: None,
+            source_config_id: None,
+        }
+    }
+
+    #[test]
+    fn current_attack_target_requires_live_known_monster() {
+        let mut state = AppState::new();
+        let local_player_uuid = player_uuid(100);
+        let target_monster_uuid = monster_uuid(200);
+        let other_player_uuid = player_uuid(300);
+        state.encounter.local_player_uuid = local_player_uuid;
+        state.attr_store.set_local_uuid(local_player_uuid);
+        add_entity(&mut state, local_player_uuid, EEntityType::EntChar);
+        add_entity(&mut state, target_monster_uuid, EEntityType::EntMonster);
+        add_entity(&mut state, other_player_uuid, EEntityType::EntChar);
+
+        set_current_target(&mut state, target_monster_uuid);
+        assert_eq!(
+            current_attack_target_uuid(&state),
+            Some(target_monster_uuid)
+        );
+
+        set_current_target(&mut state, other_player_uuid);
+        assert_eq!(current_attack_target_uuid(&state), None);
+
+        set_current_target(&mut state, monster_uuid(404));
+        assert_eq!(current_attack_target_uuid(&state), None);
+
+        set_current_target(&mut state, target_monster_uuid);
+        let _ = state.attr_store.set_attr(
+            target_monster_uuid,
+            AttrType::ActorState,
+            AttrValue::Int(i64::from(blueprotobuf::EActorState::ActorStateDead as i32)),
+        );
+        assert_eq!(current_attack_target_uuid(&state), None);
+    }
+
+    #[test]
+    fn buff_effect_classification_tracks_all_monsters_but_snapshot_tracks_current_target_only() {
+        let mut state = AppState::new();
+        let local_player_uuid = player_uuid(100);
+        let current_monster_uuid = monster_uuid(200);
+        let other_monster_uuid = monster_uuid(201);
+        state.encounter.local_player_uuid = local_player_uuid;
+        state.attr_store.set_local_uuid(local_player_uuid);
+        add_entity(&mut state, local_player_uuid, EEntityType::EntChar);
+        add_entity(&mut state, current_monster_uuid, EEntityType::EntMonster);
+        add_entity(&mut state, other_monster_uuid, EEntityType::EntMonster);
+        set_current_target(&mut state, current_monster_uuid);
+
+        assert_eq!(
+            classify_buff_effect_target(&state, other_monster_uuid),
+            Some(BuffTargetKind::Monster)
+        );
+        assert_eq!(
+            classify_buff_snapshot_target(&state, current_monster_uuid),
+            Some(BuffTargetKind::Monster)
+        );
+        assert_eq!(
+            classify_buff_snapshot_target(&state, other_monster_uuid),
+            None
+        );
+    }
+
+    #[test]
+    fn monster_snapshot_contains_only_attr_target_id_target() {
+        let mut state = AppState::new();
+        let local_player_uuid = player_uuid(100);
+        let current_monster_uuid = monster_uuid(200);
+        let other_monster_uuid = monster_uuid(201);
+        state.encounter.local_player_uuid = local_player_uuid;
+        state.attr_store.set_local_uuid(local_player_uuid);
+        add_entity(&mut state, local_player_uuid, EEntityType::EntChar);
+        add_entity(&mut state, current_monster_uuid, EEntityType::EntMonster);
+        add_entity(&mut state, other_monster_uuid, EEntityType::EntMonster);
+        set_current_target(&mut state, current_monster_uuid);
+        state.entity_buff_config.monster = BuffWatchProfile::from_any_source_ids(vec![1], false);
+        state
+            .entity_buff_monitors
+            .monitor_for(current_monster_uuid)
+            .active_buffs
+            .insert(1, active_buff(1));
+        state
+            .entity_buff_monitors
+            .monitor_for(other_monster_uuid)
+            .active_buffs
+            .insert(1, active_buff(1));
+
+        let snapshot = state.entity_buff_monitors.build_snapshots_for_kind(
+            BuffTargetKind::Monster,
+            &state.entity_buff_config,
+            local_player_uuid,
+            0,
+            |entity_uuid| classify_buff_snapshot_target(&state, entity_uuid),
+        );
+
+        assert_eq!(snapshot.len(), 1);
+        assert!(snapshot.contains_key(&entity_uuid_string(current_monster_uuid)));
+        assert!(!snapshot.contains_key(&entity_uuid_string(other_monster_uuid)));
+    }
+}
+
 impl AppStateManager {
     /// Updates and emits events.
     pub fn update_and_emit_events_with_state(&self, state: &mut AppState) {
@@ -1449,7 +1657,7 @@ impl AppStateManager {
             state.death_snapshot_dirty = false;
         }
         let local_player_uuid = state.encounter.local_player_uuid;
-        let classify = |entity_uuid| classify_buff_target(state, entity_uuid);
+        let classify = |entity_uuid| classify_buff_snapshot_target(state, entity_uuid);
 
         let local_buff_snapshot = state.entity_buff_monitors.build_snapshots_for_kind(
             BuffTargetKind::LocalPlayer,
@@ -1458,7 +1666,7 @@ impl AppStateManager {
             state.server_clock_offset,
             classify,
         );
-        let mut boss_buff_snapshot = state.entity_buff_monitors.build_snapshots_for_kind(
+        let boss_buff_snapshot = state.entity_buff_monitors.build_snapshots_for_kind(
             BuffTargetKind::Monster,
             &state.entity_buff_config,
             local_player_uuid,
@@ -1472,90 +1680,38 @@ impl AppStateManager {
             state.server_clock_offset,
             classify,
         );
-        boss_buff_snapshot.retain(|entity_uuid, _| {
-            entity_uuid
-                .parse::<i64>()
-                .ok()
-                .is_some_and(|uuid| !state.attr_store.is_dead(uuid))
-        });
+        let current_target_uuid = current_attack_target_uuid(state);
+        let mut all_hate_lists = HashMap::with_capacity(usize::from(current_target_uuid.is_some()));
+        let mut player_names = HashMap::with_capacity(
+            boss_buff_snapshot
+                .len()
+                .saturating_add(teammate_buff_snapshot.len()),
+        );
+        let mut monster_ids = HashMap::with_capacity(boss_buff_snapshot.len());
 
-        let boss_count = state
-            .encounter
-            .entity_uuid_to_entity
-            .values()
-            .filter(|entity| entity.is_boss())
-            .count();
-        let mut all_hate_lists = HashMap::with_capacity(boss_count);
-        let mut player_names =
-            HashMap::with_capacity(
-                boss_count
-                    .saturating_add(boss_buff_snapshot.len())
-                    .saturating_add(teammate_buff_snapshot.len()),
+        if let Some(target_uuid) = current_target_uuid {
+            collect_overlay_identity_for_entity(
+                state,
+                target_uuid,
+                &mut player_names,
+                &mut monster_ids,
             );
-        let mut monster_ids =
-            HashMap::with_capacity(boss_count.saturating_add(boss_buff_snapshot.len()));
-
-        for (&boss_uuid, entity) in &state.encounter.entity_uuid_to_entity {
-            if !entity.is_boss() {
-                continue;
-            }
-            if state.attr_store.is_dead(boss_uuid) {
-                continue;
-            }
-
-            if state.sent_overlay_entity_uuids.insert(boss_uuid) {
-                if let Some(monster_id) = entity.monster_type_id {
-                    monster_ids.insert(entity_uuid_string(boss_uuid), monster_id);
-                }
-            }
 
             let entries = state
                 .attr_store
                 .hate_lists()
-                .get(&boss_uuid)
+                .get(&target_uuid)
                 .cloned()
                 .unwrap_or_default();
-
-            for entry in &entries {
-                let Ok(entry_uuid) = entry.entity_uuid.parse::<i64>() else {
-                    continue;
-                };
-                if state.sent_overlay_entity_uuids.insert(entry_uuid) {
-                    let entity = state.encounter.entity_uuid_to_entity.get(&entry_uuid);
-                    if let Some(monster_id) = entity.and_then(|entity| entity.monster_type_id) {
-                        monster_ids.insert(entry.entity_uuid.clone(), monster_id);
-                    } else {
-                        player_names.insert(
-                            entry.entity_uuid.clone(),
-                            resolve_player_display_name(entry_uuid, entity, &state.attr_store),
-                        );
-                    }
-                }
-            }
+            collect_overlay_identity_for_hate_entries(
+                state,
+                &entries,
+                &mut player_names,
+                &mut monster_ids,
+            );
 
             if !entries.is_empty() {
-                all_hate_lists.insert(entity_uuid_string(boss_uuid), entries);
-            }
-        }
-
-        for target_uuid in boss_buff_snapshot.keys() {
-            let Ok(target_uuid_value) = target_uuid.parse::<i64>() else {
-                continue;
-            };
-            if !state.sent_overlay_entity_uuids.insert(target_uuid_value) {
-                continue;
-            }
-
-            let Some(entity) = state
-                .encounter
-                .entity_uuid_to_entity
-                .get(&target_uuid_value)
-            else {
-                continue;
-            };
-
-            if let Some(monster_id) = entity.monster_type_id {
-                monster_ids.insert(target_uuid.clone(), monster_id);
+                all_hate_lists.insert(entity_uuid_string(target_uuid), entries);
             }
         }
 
@@ -1563,13 +1719,11 @@ impl AppStateManager {
             let Ok(target_uuid_value) = target_uuid.parse::<i64>() else {
                 continue;
             };
-            if !state.sent_overlay_entity_uuids.insert(target_uuid_value) {
-                continue;
-            }
-            let entity = state.encounter.entity_uuid_to_entity.get(&target_uuid_value);
-            player_names.insert(
-                target_uuid.clone(),
-                resolve_player_display_name(target_uuid_value, entity, &state.attr_store),
+            collect_overlay_identity_for_entity(
+                state,
+                target_uuid_value,
+                &mut player_names,
+                &mut monster_ids,
             );
         }
 
