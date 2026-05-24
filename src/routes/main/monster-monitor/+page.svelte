@@ -19,7 +19,7 @@
   } from "$lib/settings-store";
 
   type SearchTarget = "global" | "self";
-  type MonsterMonitorTab = "buff" | "hate";
+  type MonsterMonitorTab = "buff" | "teammate" | "hate";
 
   const availableBuffDefinitions = getAvailableBuffDefinitions();
   const availableBuffMap = new Map<number, BuffDefinition>(
@@ -27,6 +27,7 @@
   );
 
   let searchKeyword = $state("");
+  let teammateSearchKeyword = $state("");
   let prioritySearchKeyword = $state("");
   let alertSearchKeyword = $state("");
   let searchTarget = $state<SearchTarget>("self");
@@ -41,18 +42,25 @@
   );
   const globalBuffIds = $derived(monsterMonitor.monitoredBuffIds);
   const selfAppliedBuffIds = $derived(monsterMonitor.selfAppliedBuffIds);
+  const teammateBuffIds = $derived(monsterMonitor.teammateBuffIds);
   const buffPriorityIds = $derived(monsterMonitor.buffPriorityIds ?? []);
   const buffAlerts = $derived.by(() =>
     ensureBuffAlerts(monsterMonitor.buffAlerts),
   );
-  const combinedBuffIds = $derived.by(() =>
-    Array.from(new Set([...globalBuffIds, ...selfAppliedBuffIds])),
+  const allConfiguredBuffIds = $derived.by(() =>
+    Array.from(
+      new Set([
+        ...globalBuffIds,
+        ...selfAppliedBuffIds,
+      ]),
+    ),
   );
   const configuredAlertBuffIds = $derived.by(() =>
     Object.keys(buffAlerts)
       .map((baseId) => Number(baseId))
       .filter(
-        (baseId) => Number.isFinite(baseId) && combinedBuffIds.includes(baseId),
+        (baseId) =>
+          Number.isFinite(baseId) && allConfiguredBuffIds.includes(baseId),
       )
       .sort((a, b) => a - b),
   );
@@ -61,11 +69,16 @@
       ? searchBuffsByName(searchKeyword, buffAliases)
       : ([] as BuffNameInfo[]),
   );
+  const teammateSearchResults = $derived.by(() =>
+    teammateSearchKeyword.trim().length > 0
+      ? searchBuffsByName(teammateSearchKeyword, buffAliases)
+      : ([] as BuffNameInfo[]),
+  );
   const prioritySearchResults = $derived.by(() => {
     if (prioritySearchKeyword.trim().length === 0) return [];
 
     const matching = searchBuffsByName(prioritySearchKeyword, buffAliases);
-    const combinedSet = new Set(combinedBuffIds);
+    const combinedSet = new Set(allConfiguredBuffIds);
     const prioritySet = new Set(buffPriorityIds);
 
     return matching.filter(
@@ -79,7 +92,7 @@
 
     return matching.filter(
       (item) =>
-        combinedBuffIds.includes(item.baseId) &&
+        allConfiguredBuffIds.includes(item.baseId) &&
         !configuredAlertBuffIds.includes(item.baseId),
     );
   });
@@ -113,12 +126,12 @@
     updateMonsterMonitor((state) => {
       const nextGlobal = state.monitoredBuffIds.filter((id) => id !== buffId);
       const nextSelf = state.selfAppliedBuffIds.filter((id) => id !== buffId);
-      const targetIds = searchTarget === "global" ? nextGlobal : nextSelf;
-      const existsInTarget = (
+      const targetIds =
+        searchTarget === "global" ? nextGlobal : nextSelf;
+      const existsInTarget =
         searchTarget === "global"
-          ? state.monitoredBuffIds
-          : state.selfAppliedBuffIds
-      ).includes(buffId);
+          ? state.monitoredBuffIds.includes(buffId)
+          : state.selfAppliedBuffIds.includes(buffId);
       const nextTargetIds = existsInTarget ? targetIds : [...targetIds, buffId];
 
       const monitoredBuffIds =
@@ -127,8 +140,7 @@
         searchTarget === "self" ? nextTargetIds : nextSelf;
 
       const stillMonitored =
-        monitoredBuffIds.includes(buffId) ||
-        selfAppliedBuffIds.includes(buffId);
+        monitoredBuffIds.includes(buffId) || selfAppliedBuffIds.includes(buffId);
       const buffPriorityIds =
         !stillMonitored && state.buffPriorityIds
           ? state.buffPriorityIds.filter((id) => id !== buffId)
@@ -184,6 +196,26 @@
     });
   }
 
+  function toggleTeammateBuff(buffId: number) {
+    updateMonsterMonitor((state) => {
+      const current = state.teammateBuffIds;
+      const exists = current.includes(buffId);
+      return {
+        ...state,
+        teammateBuffIds: exists
+          ? current.filter((id) => id !== buffId)
+          : [...current, buffId],
+      };
+    });
+  }
+
+  function removeTeammateBuff(buffId: number) {
+    updateMonsterMonitor((state) => ({
+      ...state,
+      teammateBuffIds: state.teammateBuffIds.filter((id) => id !== buffId),
+    }));
+  }
+
   function setAlias(buffId: number, alias: string) {
     updateMonsterMonitor((state) => {
       const nextAliases = { ...state.buffAliases };
@@ -232,6 +264,10 @@
       : selfAppliedBuffIds.includes(buffId);
   }
 
+  function isSelectedTeammateBuff(buffId: number) {
+    return teammateBuffIds.includes(buffId);
+  }
+
   function searchStatusLabel(buffId: number): string | null {
     if (searchTarget === "global") {
       if (globalBuffIds.includes(buffId))
@@ -244,6 +280,12 @@
       return t("monsterMonitor.buffSearch.status.addedSelf");
     if (globalBuffIds.includes(buffId))
       return t("monsterMonitor.buffSearch.status.currentGlobal");
+    return null;
+  }
+
+  function teammateSearchStatusLabel(buffId: number): string | null {
+    if (teammateBuffIds.includes(buffId))
+      return t("monsterMonitor.buffSearch.status.addedTeammate");
     return null;
   }
 
@@ -346,6 +388,18 @@
         }}
       >
         {t("monsterMonitor.tabs.buff")}
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
+        'teammate'
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => {
+          activeTab = "teammate";
+        }}
+      >
+        {t("monsterMonitor.tabs.teammate")}
       </button>
       <button
         type="button"
@@ -500,6 +554,7 @@
           {/if}
         </div>
       </div>
+
     </section>
 
     <section
@@ -689,9 +744,9 @@
         </h2>
       </div>
 
-      {#if combinedBuffIds.length > 0}
+      {#if allConfiguredBuffIds.length > 0}
         <div class="grid gap-3">
-          {#each combinedBuffIds as buffId (buffId)}
+          {#each allConfiguredBuffIds as buffId (buffId)}
             <div
               class="grid gap-2 md:grid-cols-[220px_minmax(0,1fr)] md:items-center"
             >
@@ -847,6 +902,72 @@
             )}%</strong
           >
         </label>
+      </div>
+    </section>
+  {:else if activeTab === "teammate"}
+    <section
+      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
+    >
+      <div class="space-y-1">
+        <h2 class="text-foreground text-base font-semibold">
+          {t("monsterMonitor.teammate.title")}
+        </h2>
+      </div>
+
+      <div class="space-y-3">
+        <input
+          type="text"
+          bind:value={teammateSearchKeyword}
+          placeholder={t("monsterMonitor.teammate.placeholder")}
+          class="border-border bg-background focus:border-primary w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+        />
+
+        {#if teammateSearchKeyword.trim().length > 0}
+          <BuffSearchResultGrid
+            items={teammateSearchResults}
+            {availableBuffMap}
+            onSelect={toggleTeammateBuff}
+            isSelected={isSelectedTeammateBuff}
+            getStatusLabel={teammateSearchStatusLabel}
+            emptyMessage={t("monsterMonitor.teammate.emptySearch")}
+          />
+        {/if}
+      </div>
+
+      <div
+        class="border-border/60 bg-background/50 space-y-3 rounded-lg border p-4"
+      >
+        <div>
+          <div class="text-foreground text-sm font-semibold">
+            {t("monsterMonitor.teammate.groupTitle")}
+          </div>
+        </div>
+        {#if teammateBuffIds.length > 0}
+          <div class="flex flex-wrap gap-2">
+            {#each teammateBuffIds as buffId (buffId)}
+              {@const iconBuff = availableBuffMap.get(buffId)}
+              <button
+                type="button"
+                class="selected-buff"
+                onclick={() => removeTeammateBuff(buffId)}
+                title={t("monsterMonitor.buffGroups.removeTitle")}
+              >
+                {#if iconBuff}
+                  <img
+                    src={`/images/buff/${iconBuff.spriteFile}`}
+                    alt={buffName(buffId)}
+                    class="bg-muted/20 h-8 w-8 rounded object-contain"
+                  />
+                {/if}
+                <span>{buffName(buffId)}</span>
+              </button>
+            {/each}
+          </div>
+        {:else}
+          <div class="text-muted-foreground text-xs">
+            {t("monsterMonitor.buffGroups.empty")}
+          </div>
+        {/if}
       </div>
     </section>
   {:else}

@@ -283,6 +283,12 @@ pub struct BossBuffUpdatePayload {
     pub boss_buffs: HashMap<String, Vec<BuffUpdateState>>,
 }
 
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct TeammateBuffUpdatePayload {
+    pub teammate_buffs: HashMap<String, Vec<BuffUpdateState>>,
+}
+
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct HateEntry {

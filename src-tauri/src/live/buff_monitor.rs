@@ -1,6 +1,6 @@
 use crate::database::now_ms;
 use crate::live::commands_models::BuffUpdateState;
-use crate::live::entity_id::entity_uuid_string;
+use crate::live::entity_id::{EntityUuid, entity_uuid_string};
 use blueprotobuf_lib::blueprotobuf::{
     BuffChange, BuffEffectSync, BuffInfo, EBuffEffectLogicPbType, EBuffEventType,
 };
@@ -14,7 +14,108 @@ pub struct ActiveBuff {
     pub duration: i32,
     pub create_time: i64,
     pub received_time_ms: i64,
+    pub fire_uuid: Option<EntityUuid>,
     pub source_config_id: Option<i32>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BuffTargetKind {
+    LocalPlayer,
+    Monster,
+    Teammate,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct BuffWatchProfile {
+    pub enabled: bool,
+    pub any_source_ids: HashSet<i32>,
+    pub local_player_source_ids: HashSet<i32>,
+    pub target_self_source_ids: HashSet<i32>,
+    pub monitor_all: bool,
+}
+
+impl BuffWatchProfile {
+    pub(crate) fn from_any_source_ids(ids: Vec<i32>, monitor_all: bool) -> Self {
+        let enabled = monitor_all || !ids.is_empty();
+        Self {
+            enabled,
+            any_source_ids: ids.into_iter().collect(),
+            local_player_source_ids: HashSet::new(),
+            target_self_source_ids: HashSet::new(),
+            monitor_all,
+        }
+    }
+
+    pub(crate) fn from_any_and_local_player_source_ids(
+        any_source_ids: Vec<i32>,
+        local_player_source_ids: Vec<i32>,
+    ) -> Self {
+        let enabled = !any_source_ids.is_empty() || !local_player_source_ids.is_empty();
+        Self {
+            enabled,
+            any_source_ids: any_source_ids.into_iter().collect(),
+            local_player_source_ids: local_player_source_ids.into_iter().collect(),
+            target_self_source_ids: HashSet::new(),
+            monitor_all: false,
+        }
+    }
+
+    pub(crate) fn from_all_sources(
+        any_source_ids: Vec<i32>,
+        local_player_source_ids: Vec<i32>,
+        target_self_source_ids: Vec<i32>,
+        monitor_all: bool,
+    ) -> Self {
+        let enabled = monitor_all
+            || !any_source_ids.is_empty()
+            || !local_player_source_ids.is_empty()
+            || !target_self_source_ids.is_empty();
+        Self {
+            enabled,
+            any_source_ids: any_source_ids.into_iter().collect(),
+            local_player_source_ids: local_player_source_ids.into_iter().collect(),
+            target_self_source_ids: target_self_source_ids.into_iter().collect(),
+            monitor_all,
+        }
+    }
+
+    pub(crate) fn matches(
+        &self,
+        target_uuid: EntityUuid,
+        local_player_uuid: EntityUuid,
+        buff: &ActiveBuff,
+    ) -> bool {
+        if !self.enabled {
+            return false;
+        }
+        if self.monitor_all || self.any_source_ids.contains(&buff.base_id) {
+            return true;
+        }
+        if self.local_player_source_ids.contains(&buff.base_id)
+            && buff.fire_uuid == Some(local_player_uuid)
+        {
+            return true;
+        }
+        self.target_self_source_ids.contains(&buff.base_id)
+            && buff.fire_uuid == Some(target_uuid)
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct EntityBuffMonitorConfig {
+    pub local_player: BuffWatchProfile,
+    pub monster: BuffWatchProfile,
+    pub teammate: BuffWatchProfile,
+}
+
+impl EntityBuffMonitorConfig {
+    pub(crate) fn profile_for(&self, kind: BuffTargetKind) -> &BuffWatchProfile {
+        match kind {
+            BuffTargetKind::LocalPlayer => &self.local_player,
+            BuffTargetKind::Monster => &self.monster,
+            BuffTargetKind::Teammate => &self.teammate,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,37 +138,24 @@ pub struct BuffChangeEvent {
 
 #[derive(Debug, Default)]
 pub struct BuffProcessResult {
-    pub update_payload: Option<Vec<BuffUpdateState>>,
     pub changes: Vec<BuffChangeEvent>,
 }
 
 #[derive(Debug, Default)]
 pub struct BuffMonitor {
-    /// Monitored buff base IDs.
-    pub monitored_buff_ids: HashSet<i32>,
-    /// Self-applied buff base IDs.
-    pub self_applied_buff_ids: HashSet<i32>,
     /// Active buffs keyed by buff UUID.
     pub active_buffs: HashMap<i32, ActiveBuff>,
-    /// Monitor all buffs.
-    pub monitor_all_buff: bool,
 }
 
 impl BuffMonitor {
     pub(crate) fn new() -> Self {
-        Self {
-            monitored_buff_ids: HashSet::new(),
-            self_applied_buff_ids: HashSet::new(),
-            active_buffs: HashMap::new(),
-            monitor_all_buff: false,
-        }
+        Self::default()
     }
 
     pub(crate) fn process_buff_effect_bytes(
         &mut self,
         raw_bytes: &[u8],
         server_clock_offset: &mut i64,
-        local_player_uuid: i64,
     ) -> BuffProcessResult {
         let mut changes = Vec::new();
         let Ok(buff_effect_sync) = BuffEffectSync::decode(raw_bytes) else {
@@ -94,11 +182,7 @@ impl BuffMonitor {
                         let Some(base_id) = buff_info.base_id else {
                             continue;
                         };
-                        let fire_uuid = buff_info.fire_uuid.unwrap_or(0);
-                        let in_self_list = self.self_applied_buff_ids.contains(&base_id);
-                        if in_self_list && fire_uuid != local_player_uuid {
-                            continue;
-                        }
+                        let fire_uuid = buff_info.fire_uuid.filter(|id| *id != 0);
                         let layer = buff_info.layer.unwrap_or(1);
                         let duration = buff_info.duration.unwrap_or(0);
                         let create_time = buff_info.create_time.unwrap_or(now);
@@ -118,6 +202,7 @@ impl BuffMonitor {
                                 duration,
                                 create_time,
                                 received_time_ms: now,
+                                fire_uuid,
                                 source_config_id,
                             },
                         );
@@ -172,48 +257,35 @@ impl BuffMonitor {
             }
         }
 
-        let update_payload = self.build_update_payload(*server_clock_offset);
-        BuffProcessResult {
-            update_payload,
-            changes,
-        }
+        BuffProcessResult { changes }
     }
 
-    fn build_update_payload(&self, server_clock_offset: i64) -> Option<Vec<BuffUpdateState>> {
-        if self.monitored_buff_ids.is_empty()
-            && self.self_applied_buff_ids.is_empty()
-            && !self.monitor_all_buff
-        {
-            return None;
-        }
-
-        Some(
-            self.active_buffs
-                .values()
-                .filter(|buff| {
-                    self.monitor_all_buff
-                        || self.monitored_buff_ids.contains(&buff.base_id)
-                        || self.self_applied_buff_ids.contains(&buff.base_id)
-                })
-                .map(|buff| BuffUpdateState {
-                    base_id: buff.base_id,
-                    layer: buff.layer,
-                    duration_ms: buff.duration,
-                    create_time_ms: buff.create_time.saturating_add(server_clock_offset),
-                })
-                .collect(),
-        )
+    pub(crate) fn build_update_payload(
+        &self,
+        target_uuid: EntityUuid,
+        local_player_uuid: EntityUuid,
+        profile: &BuffWatchProfile,
+        server_clock_offset: i64,
+    ) -> Vec<BuffUpdateState> {
+        self.active_buffs
+            .values()
+            .filter(|buff| profile.matches(target_uuid, local_player_uuid, buff))
+            .map(|buff| BuffUpdateState {
+                base_id: buff.base_id,
+                layer: buff.layer,
+                duration_ms: buff.duration,
+                create_time_ms: buff.create_time.saturating_add(server_clock_offset),
+            })
+            .collect()
     }
 }
 
 #[derive(Debug, Default)]
-pub struct BossBuffMonitors {
-    pub monitors: HashMap<i64, BuffMonitor>,
-    pub monitored_buff_ids: HashSet<i32>,
-    pub self_applied_buff_ids: HashSet<i32>,
+pub struct EntityBuffMonitors {
+    pub monitors: HashMap<EntityUuid, BuffMonitor>,
 }
 
-impl BossBuffMonitors {
+impl EntityBuffMonitors {
     pub(crate) fn new() -> Self {
         Self::default()
     }
@@ -222,43 +294,131 @@ impl BossBuffMonitors {
         self.monitors.clear();
     }
 
-    pub(crate) fn set_config(&mut self, global_ids: Vec<i32>, self_applied_ids: Vec<i32>) {
-        self.monitored_buff_ids = global_ids.into_iter().collect();
-        self.self_applied_buff_ids = self_applied_ids.into_iter().collect();
-
-        for monitor in self.monitors.values_mut() {
-            monitor.monitored_buff_ids = self.monitored_buff_ids.clone();
-            monitor.self_applied_buff_ids = self.self_applied_buff_ids.clone();
-        }
+    pub(crate) fn monitor_for(&mut self, entity_uuid: EntityUuid) -> &mut BuffMonitor {
+        self.monitors
+            .entry(entity_uuid)
+            .or_insert_with(BuffMonitor::new)
     }
 
-    pub(crate) fn monitor_for(&mut self, boss_uuid: i64) -> &mut BuffMonitor {
-        let monitored_buff_ids = self.monitored_buff_ids.clone();
-        let self_applied_buff_ids = self.self_applied_buff_ids.clone();
-
-        self.monitors.entry(boss_uuid).or_insert_with(|| {
-            let mut monitor = BuffMonitor::new();
-            monitor.monitored_buff_ids = monitored_buff_ids;
-            monitor.self_applied_buff_ids = self_applied_buff_ids;
-            monitor
-        })
-    }
-
-    pub(crate) fn build_all_buff_snapshots(
+    pub(crate) fn build_snapshots_for_kind<F>(
         &self,
+        kind: BuffTargetKind,
+        config: &EntityBuffMonitorConfig,
+        local_player_uuid: EntityUuid,
         server_clock_offset: i64,
-    ) -> HashMap<String, Vec<BuffUpdateState>> {
+        mut classify: F,
+    ) -> HashMap<String, Vec<BuffUpdateState>>
+    where
+        F: FnMut(EntityUuid) -> Option<BuffTargetKind>,
+    {
+        let profile = config.profile_for(kind);
+        if !profile.enabled {
+            return HashMap::new();
+        }
+
         let mut snapshots = HashMap::with_capacity(self.monitors.len());
 
-        for (&boss_uuid, monitor) in &self.monitors {
-            let Some(buffs) = monitor.build_update_payload(server_clock_offset) else {
+        for (&entity_uuid, monitor) in &self.monitors {
+            if classify(entity_uuid) != Some(kind) {
                 continue;
-            };
+            }
+
+            let buffs = monitor.build_update_payload(
+                entity_uuid,
+                local_player_uuid,
+                profile,
+                server_clock_offset,
+            );
             if !buffs.is_empty() {
-                snapshots.insert(entity_uuid_string(boss_uuid), buffs);
+                snapshots.insert(entity_uuid_string(entity_uuid), buffs);
             }
         }
 
         snapshots
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn active_buff(base_id: i32, fire_uuid: Option<EntityUuid>) -> ActiveBuff {
+        ActiveBuff {
+            base_id,
+            layer: 1,
+            duration: 1000,
+            create_time: 10,
+            received_time_ms: 20,
+            fire_uuid,
+            source_config_id: None,
+        }
+    }
+
+    #[test]
+    fn profile_matches_independent_source_lists() {
+        let local_player_uuid = 100;
+        let target_uuid = 200;
+        let profile = BuffWatchProfile::from_all_sources(
+            vec![1],
+            vec![2],
+            vec![3],
+            false,
+        );
+
+        assert!(profile.matches(
+            target_uuid,
+            local_player_uuid,
+            &active_buff(1, Some(999))
+        ));
+        assert!(profile.matches(
+            target_uuid,
+            local_player_uuid,
+            &active_buff(2, Some(local_player_uuid))
+        ));
+        assert!(!profile.matches(
+            target_uuid,
+            local_player_uuid,
+            &active_buff(2, Some(999))
+        ));
+        assert!(profile.matches(
+            target_uuid,
+            local_player_uuid,
+            &active_buff(3, Some(target_uuid))
+        ));
+        assert!(!profile.matches(
+            target_uuid,
+            local_player_uuid,
+            &active_buff(4, Some(target_uuid))
+        ));
+    }
+
+    #[test]
+    fn entity_snapshots_use_target_kind_profile() {
+        let mut monitors = EntityBuffMonitors::new();
+        monitors.monitor_for(10).active_buffs.insert(1, active_buff(1, None));
+        monitors.monitor_for(20).active_buffs.insert(1, active_buff(2, None));
+
+        let config = EntityBuffMonitorConfig {
+            local_player: BuffWatchProfile::from_any_source_ids(vec![1], false),
+            monster: BuffWatchProfile::from_any_source_ids(vec![2], false),
+            teammate: BuffWatchProfile::default(),
+        };
+
+        let monster_snapshot = monitors.build_snapshots_for_kind(
+            BuffTargetKind::Monster,
+            &config,
+            10,
+            0,
+            |uuid| {
+                if uuid == 20 {
+                    Some(BuffTargetKind::Monster)
+                } else {
+                    Some(BuffTargetKind::LocalPlayer)
+                }
+            },
+        );
+
+        assert_eq!(monster_snapshot.len(), 1);
+        assert!(monster_snapshot.contains_key("20"));
     }
 }

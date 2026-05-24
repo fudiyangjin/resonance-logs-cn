@@ -536,6 +536,7 @@ export type MonsterMonitorConfig = {
   hateListMaxDisplay: number;
   monitoredBuffIds: number[];
   selfAppliedBuffIds: number[];
+  teammateBuffIds: number[];
   buffPriorityIds: number[];
   buffAliases: BuffAliasMap;
   buffAlerts: BuffAlertMap;
@@ -835,6 +836,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     hateListMaxDisplay: 5,
     monitoredBuffIds: [],
     selfAppliedBuffIds: [],
+    teammateBuffIds: [],
     buffPriorityIds: [],
     buffAliases: {},
     buffAlerts: {},

@@ -136,6 +136,10 @@ export type BossBuffUpdatePayload = {
   bossBuffs: Record<string, BuffUpdateState[]>;
 };
 
+export type TeammateBuffUpdatePayload = {
+  teammateBuffs: Record<string, BuffUpdateState[]>;
+};
+
 export type HateEntry = {
   entityUuid: string;
   hateVal: number;
@@ -277,6 +281,11 @@ export const onBossBuffUpdate = (
   handler: (event: Event<BossBuffUpdatePayload>) => void,
 ): Promise<UnlistenFn> =>
   listen<BossBuffUpdatePayload>("boss-buff-update", handler);
+
+export const onTeammateBuffUpdate = (
+  handler: (event: Event<TeammateBuffUpdatePayload>) => void,
+): Promise<UnlistenFn> =>
+  listen<TeammateBuffUpdatePayload>("teammate-buff-update", handler);
 
 export const onHateListUpdate = (
   handler: (event: Event<HateListUpdatePayload>) => void,

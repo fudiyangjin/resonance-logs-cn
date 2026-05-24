@@ -1008,6 +1008,7 @@ export const zhCNMessages = {
   "monsterMonitor.actions.editLayout": "编辑怪物布局",
   "monsterMonitor.enabled": "启用怪物监控",
   "monsterMonitor.tabs.buff": "Buff 监控",
+  "monsterMonitor.tabs.teammate": "队友 Buff",
   "monsterMonitor.tabs.hate": "仇恨列表",
   "monsterMonitor.buffSearch.title": "Buff 搜索与选择",
   "monsterMonitor.buffSearch.self": "搜索加入仅自身施加",
@@ -1021,6 +1022,7 @@ export const zhCNMessages = {
   "monsterMonitor.buffSearch.status.currentSelf": "当前在仅自身",
   "monsterMonitor.buffSearch.status.addedSelf": "已加仅自身",
   "monsterMonitor.buffSearch.status.currentGlobal": "当前在全局",
+  "monsterMonitor.buffSearch.status.addedTeammate": "已加入队友 Buff",
   "monsterMonitor.buffGroups.self.title": "仅自身施加",
   "monsterMonitor.buffGroups.self.description":
     "只追踪本角色施加到 Boss 身上的 Buff",
@@ -1029,6 +1031,10 @@ export const zhCNMessages = {
     "无论是谁施加，只要 Boss 身上出现就显示",
   "monsterMonitor.buffGroups.removeTitle": "点击移除",
   "monsterMonitor.buffGroups.empty": "尚未选择 Buff",
+  "monsterMonitor.teammate.title": "队友 Buff 监控",
+  "monsterMonitor.teammate.placeholder": "搜索并添加队友 Buff",
+  "monsterMonitor.teammate.emptySearch": "没有匹配的队友 Buff",
+  "monsterMonitor.teammate.groupTitle": "已监控队友 Buff",
   "monsterMonitor.priority.title": "Buff 优先级",
   "monsterMonitor.priority.description":
     "自定义怪物 Buff 的显示排序。排在前面的 Buff 会优先显示。",

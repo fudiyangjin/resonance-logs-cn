@@ -17,6 +17,7 @@ export const monsterRuntime = $state({
   playerNameCache: new Map<EntityId, string>(),
   monsterIdCache: new Map<EntityId, number>(),
   bossBuffMap: new Map<EntityId, Map<number, BuffUpdateState>>(),
+  teammateBuffMap: new Map<EntityId, Map<number, BuffUpdateState>>(),
   bossHateMap: new Map<EntityId, HateEntry[]>(),
   bossSections: [] as MonsterBossBuffSection[],
   hateSections: [] as MonsterHateSection[],

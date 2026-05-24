@@ -1,6 +1,8 @@
 use crate::database::{EncounterMetadata, PlayerNameEntry, now_ms, save_encounter};
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
-use crate::live::buff_monitor::{BossBuffMonitors, BuffMonitor};
+use crate::live::buff_monitor::{
+    BuffTargetKind, BuffWatchProfile, EntityBuffMonitorConfig, EntityBuffMonitors,
+};
 use crate::live::commands_models::{
     CounterUpdateState, FightResourceEntry, FightResourceState, PanelAttrState, ShieldDetailEntry,
     SkillCdState, TrainingDummyState, to_death_record,
@@ -65,8 +67,10 @@ pub struct AppState {
     pub event_manager: EventManager,
     /// Monitoring context for the local player.
     pub local_monitor: EntityMonitor,
-    /// Boss buff monitoring state and configuration.
-    pub boss_buff_monitors: BossBuffMonitors,
+    /// Buff monitoring state for all tracked entities keyed by entity UUID.
+    pub entity_buff_monitors: EntityBuffMonitors,
+    /// Buff watch lists split by target kind.
+    pub entity_buff_config: EntityBuffMonitorConfig,
     /// Whether we've already handled the first scene change after startup.
     pub initial_scene_change_handled: bool,
     /// Event update rate in milliseconds (default: 200ms). Controls how often events are emitted to frontend.
@@ -94,7 +98,6 @@ pub struct AppState {
 #[derive(Debug)]
 pub struct EntityMonitor {
     pub entity_uuid: i64,
-    pub buff_monitor: BuffMonitor,
     pub skill_cd_monitor: SkillCdMonitor,
     pub monitored_panel_attr_ids: Vec<i32>,
     pub fight_res_state: Option<FightResourceState>,
@@ -105,7 +108,6 @@ impl EntityMonitor {
     fn new(entity_uuid: i64) -> Self {
         Self {
             entity_uuid,
-            buff_monitor: BuffMonitor::new(),
             skill_cd_monitor: SkillCdMonitor::new(),
             monitored_panel_attr_ids: Vec::new(),
             fight_res_state: None,
@@ -114,7 +116,6 @@ impl EntityMonitor {
     }
 
     fn clear_runtime_state(&mut self) {
-        self.buff_monitor.active_buffs.clear();
         self.skill_cd_monitor.skill_cd_map.clear();
         self.fight_res_state = None;
         self.counter_tracker.reset_counts();
@@ -132,13 +133,19 @@ pub enum LiveControlCommand {
     StopTrainingDummy,
     SetEventUpdateRateMs(u64),
     SetMonitoredBuffs(Vec<i32>),
+    SetMonitorAllBuff(bool),
     SetBossMonitoredBuffs {
         global_ids: Vec<i32>,
         self_applied_ids: Vec<i32>,
     },
+    SetTeammateMonitoredBuffs {
+        any_source_ids: Vec<i32>,
+        local_player_source_ids: Vec<i32>,
+        target_self_source_ids: Vec<i32>,
+        monitor_all: bool,
+    },
     SetMonitoredPanelAttrs(Vec<i32>),
     SetMonitoredSkills(Vec<i32>),
-    SetMonitorAllBuff(bool),
     SetBuffCounterRules(Vec<CounterRule>),
 }
 
@@ -152,7 +159,8 @@ impl AppState {
             encounter: Encounter::default(),
             event_manager: EventManager::new(),
             local_monitor: EntityMonitor::new(0),
-            boss_buff_monitors: BossBuffMonitors::new(),
+            entity_buff_monitors: EntityBuffMonitors::new(),
+            entity_buff_config: EntityBuffMonitorConfig::default(),
             initial_scene_change_handled: false,
             event_update_rate_ms: 200,
             attr_store: EntityAttrStore::with_capacity(256),
@@ -222,10 +230,10 @@ fn emit_shield_detail_update_if_needed(state: &mut AppState, mut entries: Vec<Sh
     for entry in &mut entries {
         let buff_uuid_i32 = entry.buff_uuid as i32;
         if let Some(active_buff) = state
-            .local_monitor
-            .buff_monitor
-            .active_buffs
-            .get(&buff_uuid_i32)
+            .entity_buff_monitors
+            .monitors
+            .get(&state.encounter.local_player_uuid)
+            .and_then(|monitor| monitor.active_buffs.get(&buff_uuid_i32))
         {
             entry.base_id = active_buff.base_id;
             if active_buff.duration > 0 {
@@ -292,6 +300,50 @@ fn collect_player_names(encounter: &Encounter) -> Vec<PlayerNameEntry> {
     player_names.sort_by(|a, b| a.name.cmp(&b.name));
     player_names.dedup_by(|a, b| a.name == b.name);
     player_names
+}
+
+fn is_monitorable_monster(state: &AppState, entity_uuid: i64) -> bool {
+    state
+        .encounter
+        .entity_uuid_to_entity
+        .get(&entity_uuid)
+        .map(|entity| {
+            entity.is_boss()
+                || entity
+                    .monster_type_id
+                    .is_some_and(monster_registry::is_extra_buff_monitored_monster)
+        })
+        .unwrap_or(false)
+}
+
+fn classify_buff_target(state: &AppState, target_uuid: i64) -> Option<BuffTargetKind> {
+    if target_uuid == state.encounter.local_player_uuid && target_uuid != 0 {
+        return Some(BuffTargetKind::LocalPlayer);
+    }
+    if is_monitorable_monster(state, target_uuid) {
+        return Some(BuffTargetKind::Monster);
+    }
+    if state.team.members.contains(&target_uuid) {
+        return Some(BuffTargetKind::Teammate);
+    }
+    None
+}
+
+fn process_entity_buff_effect_bytes(
+    state: &mut AppState,
+    target_uuid: i64,
+    raw_bytes: &[u8],
+) -> Option<(BuffTargetKind, crate::live::buff_monitor::BuffProcessResult)> {
+    let kind = classify_buff_target(state, target_uuid)?;
+    if kind != BuffTargetKind::LocalPlayer && !state.entity_buff_config.profile_for(kind).enabled {
+        return None;
+    }
+
+    let result = state
+        .entity_buff_monitors
+        .monitor_for(target_uuid)
+        .process_buff_effect_bytes(raw_bytes, &mut state.server_clock_offset);
+    Some((kind, result))
 }
 
 fn encounter_has_stats(encounter: &Encounter) -> bool {
@@ -561,16 +613,52 @@ impl AppStateManager {
                 state.event_update_rate_ms = rate_ms;
             }
             LiveControlCommand::SetMonitoredBuffs(buff_base_ids) => {
-                state.local_monitor.buff_monitor.monitored_buff_ids =
-                    buff_base_ids.into_iter().collect();
+                state.entity_buff_config.local_player = BuffWatchProfile::from_any_source_ids(
+                    buff_base_ids,
+                    state.entity_buff_config.local_player.monitor_all,
+                );
+            }
+            LiveControlCommand::SetMonitorAllBuff(monitor_all_buff) => {
+                state.entity_buff_config.local_player.monitor_all = monitor_all_buff;
+                state.entity_buff_config.local_player.enabled = monitor_all_buff
+                    || !state
+                        .entity_buff_config
+                        .local_player
+                        .any_source_ids
+                        .is_empty()
+                    || !state
+                        .entity_buff_config
+                        .local_player
+                        .local_player_source_ids
+                        .is_empty()
+                    || !state
+                        .entity_buff_config
+                        .local_player
+                        .target_self_source_ids
+                        .is_empty();
             }
             LiveControlCommand::SetBossMonitoredBuffs {
                 global_ids,
                 self_applied_ids,
             } => {
-                state
-                    .boss_buff_monitors
-                    .set_config(global_ids, self_applied_ids);
+                state.entity_buff_config.monster =
+                    BuffWatchProfile::from_any_and_local_player_source_ids(
+                        global_ids,
+                        self_applied_ids,
+                    );
+            }
+            LiveControlCommand::SetTeammateMonitoredBuffs {
+                any_source_ids,
+                local_player_source_ids,
+                target_self_source_ids,
+                monitor_all,
+            } => {
+                state.entity_buff_config.teammate = BuffWatchProfile::from_all_sources(
+                    any_source_ids,
+                    local_player_source_ids,
+                    target_self_source_ids,
+                    monitor_all,
+                );
             }
             LiveControlCommand::SetMonitoredPanelAttrs(attr_ids) => {
                 state.local_monitor.monitored_panel_attr_ids = attr_ids;
@@ -602,9 +690,6 @@ impl AppStateManager {
                     })
                     .collect();
             }
-            LiveControlCommand::SetMonitorAllBuff(monitor_all_buff) => {
-                state.local_monitor.buff_monitor.monitor_all_buff = monitor_all_buff;
-            }
             LiveControlCommand::SetBuffCounterRules(rules) => {
                 state.local_monitor.counter_tracker.set_rules(rules);
             }
@@ -620,14 +705,16 @@ impl AppStateManager {
             live,
             skill,
             monster,
+            teammate,
         } = snapshot;
 
         info!(
             target: "app::live",
-            "[runtime-monitor] applying snapshot: event_update_rate_ms={} skill_enabled={} monster_enabled={}",
+            "[runtime-monitor] applying snapshot: event_update_rate_ms={} skill_enabled={} monster_enabled={} teammate_enabled={}",
             live.event_update_rate_ms,
             skill.enabled,
-            monster.enabled
+            monster.enabled,
+            teammate.enabled
         );
         info!(
             target: "app::live",
@@ -660,6 +747,14 @@ impl AppStateManager {
             monster.global_ids,
             monster.self_applied_ids
         );
+        info!(
+            target: "app::live",
+            "[teammate-buff] set monitored buffs: any={:?} local_player={:?} target_self={:?} monitor_all={:?}",
+            teammate.any_source_ids,
+            teammate.local_player_source_ids,
+            teammate.target_self_source_ids,
+            teammate.monitor_all
+        );
 
         self.apply_control_command(
             state,
@@ -690,6 +785,15 @@ impl AppStateManager {
             LiveControlCommand::SetBossMonitoredBuffs {
                 global_ids: monster.global_ids,
                 self_applied_ids: monster.self_applied_ids,
+            },
+        );
+        self.apply_control_command(
+            state,
+            LiveControlCommand::SetTeammateMonitoredBuffs {
+                any_source_ids: teammate.any_source_ids,
+                local_player_source_ids: teammate.local_player_source_ids,
+                target_self_source_ids: teammate.target_self_source_ids,
+                monitor_all: teammate.monitor_all,
             },
         );
     }
@@ -762,7 +866,7 @@ impl AppStateManager {
         state.attr_store.clear_all_entities();
         state.encounter.reset_combat_state();
         state.local_monitor.clear_runtime_state();
-        state.boss_buff_monitors.clear();
+        state.entity_buff_monitors.clear();
         state.sent_overlay_entity_uuids.clear();
         state.battle_state = BattleStateMachine::default();
         state.pending_auto_reset = None;
@@ -978,19 +1082,26 @@ impl AppStateManager {
         }
 
         if let Some(raw_bytes) = result.buff_effect_bytes {
-            let buff_process_result = state.local_monitor.buff_monitor.process_buff_effect_bytes(
-                &raw_bytes,
-                &mut state.server_clock_offset,
-                state.encounter.local_player_uuid,
-            );
-            if let Some(payload) = buff_process_result.update_payload {
+            let local_player_uuid = state.encounter.local_player_uuid;
+            if let Some((BuffTargetKind::LocalPlayer, buff_process_result)) =
+                process_entity_buff_effect_bytes(state, local_player_uuid, &raw_bytes)
+            {
+                let payload = state.entity_buff_monitors.monitors
+                    .get(&local_player_uuid)
+                    .map(|monitor| monitor.build_update_payload(
+                        local_player_uuid,
+                        local_player_uuid,
+                        &state.entity_buff_config.local_player,
+                        state.server_clock_offset,
+                    ))
+                    .unwrap_or_default();
                 state.event_manager.emit_buff_update(payload);
+                counter_dirty |= state.local_monitor.counter_tracker.on_buff_changes(
+                    &buff_process_result.changes,
+                    &state.attr_store,
+                    local_player_uuid,
+                );
             }
-            counter_dirty |= state.local_monitor.counter_tracker.on_buff_changes(
-                &buff_process_result.changes,
-                &state.attr_store,
-                state.encounter.local_player_uuid,
-            );
         }
 
         counter_dirty |= state
@@ -1059,26 +1170,7 @@ impl AppStateManager {
             }
 
             if let (Some(target_uuid), Some(raw_bytes)) = (target_uuid, buff_bytes) {
-                let should_monitor_monster_buffs = state
-                    .encounter
-                    .entity_uuid_to_entity
-                    .get(&target_uuid)
-                    .map(|entity| {
-                        entity.is_boss()
-                            || entity
-                                .monster_type_id
-                                .is_some_and(monster_registry::is_extra_buff_monitored_monster)
-                    })
-                    .unwrap_or(false);
-                if should_monitor_monster_buffs {
-                    let local_player_uuid = state.encounter.local_player_uuid;
-                    let monitor = state.boss_buff_monitors.monitor_for(target_uuid);
-                    monitor.process_buff_effect_bytes(
-                        &raw_bytes,
-                        &mut state.server_clock_offset,
-                        local_player_uuid,
-                    );
-                }
+                process_entity_buff_effect_bytes(state, target_uuid, &raw_bytes);
             }
         }
 
@@ -1199,11 +1291,17 @@ impl AppStateManager {
             return;
         }
 
-        if let Some(reason) = state
-            .battle_state
-            .check_for_wipe(&mut state.local_monitor.buff_monitor.active_buffs)
+        if let Some(local_monitor) = state
+            .entity_buff_monitors
+            .monitors
+            .get_mut(&state.encounter.local_player_uuid)
         {
-            self.apply_reset_reason(state, reason);
+            if let Some(reason) = state
+                .battle_state
+                .check_for_wipe(&mut local_monitor.active_buffs)
+            {
+                self.apply_reset_reason(state, reason);
+            }
         }
     }
 
@@ -1350,9 +1448,30 @@ impl AppStateManager {
             state.event_manager.emit_death_replay(records);
             state.death_snapshot_dirty = false;
         }
-        let mut boss_buff_snapshot = state
-            .boss_buff_monitors
-            .build_all_buff_snapshots(state.server_clock_offset);
+        let local_player_uuid = state.encounter.local_player_uuid;
+        let classify = |entity_uuid| classify_buff_target(state, entity_uuid);
+
+        let local_buff_snapshot = state.entity_buff_monitors.build_snapshots_for_kind(
+            BuffTargetKind::LocalPlayer,
+            &state.entity_buff_config,
+            local_player_uuid,
+            state.server_clock_offset,
+            classify,
+        );
+        let mut boss_buff_snapshot = state.entity_buff_monitors.build_snapshots_for_kind(
+            BuffTargetKind::Monster,
+            &state.entity_buff_config,
+            local_player_uuid,
+            state.server_clock_offset,
+            classify,
+        );
+        let teammate_buff_snapshot = state.entity_buff_monitors.build_snapshots_for_kind(
+            BuffTargetKind::Teammate,
+            &state.entity_buff_config,
+            local_player_uuid,
+            state.server_clock_offset,
+            classify,
+        );
         boss_buff_snapshot.retain(|entity_uuid, _| {
             entity_uuid
                 .parse::<i64>()
@@ -1368,7 +1487,11 @@ impl AppStateManager {
             .count();
         let mut all_hate_lists = HashMap::with_capacity(boss_count);
         let mut player_names =
-            HashMap::with_capacity(boss_count.saturating_add(boss_buff_snapshot.len()));
+            HashMap::with_capacity(
+                boss_count
+                    .saturating_add(boss_buff_snapshot.len())
+                    .saturating_add(teammate_buff_snapshot.len()),
+            );
         let mut monster_ids =
             HashMap::with_capacity(boss_count.saturating_add(boss_buff_snapshot.len()));
 
@@ -1436,6 +1559,20 @@ impl AppStateManager {
             }
         }
 
+        for target_uuid in teammate_buff_snapshot.keys() {
+            let Ok(target_uuid_value) = target_uuid.parse::<i64>() else {
+                continue;
+            };
+            if !state.sent_overlay_entity_uuids.insert(target_uuid_value) {
+                continue;
+            }
+            let entity = state.encounter.entity_uuid_to_entity.get(&target_uuid_value);
+            player_names.insert(
+                target_uuid.clone(),
+                resolve_player_display_name(target_uuid_value, entity, &state.attr_store),
+            );
+        }
+
         state.event_manager.emit_hate_list_update(all_hate_lists);
 
         if !player_names.is_empty() || !monster_ids.is_empty() {
@@ -1443,9 +1580,18 @@ impl AppStateManager {
                 .event_manager
                 .emit_entity_identity_map(player_names, monster_ids);
         }
+        if let Some(local_buffs) = local_buff_snapshot
+            .get(&entity_uuid_string(local_player_uuid))
+            .cloned()
+        {
+            state.event_manager.emit_buff_update(local_buffs);
+        }
         state
             .event_manager
             .emit_boss_buff_update(boss_buff_snapshot);
+        state
+            .event_manager
+            .emit_teammate_buff_update(teammate_buff_snapshot);
     }
 
     fn prepare_training_dummy_for_delta(

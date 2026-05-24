@@ -1112,6 +1112,7 @@ export const enUSMessages = {
   "monsterMonitor.actions.editLayout": "Edit Monster Layout",
   "monsterMonitor.enabled": "Enable Monster Monitor",
   "monsterMonitor.tabs.buff": "Buff Monitor",
+  "monsterMonitor.tabs.teammate": "Teammate Buffs",
   "monsterMonitor.tabs.hate": "Hate List",
   "monsterMonitor.buffSearch.title": "Buff Search and Selection",
   "monsterMonitor.buffSearch.self": "Search and Add Self-Applied",
@@ -1125,6 +1126,7 @@ export const enUSMessages = {
   "monsterMonitor.buffSearch.status.currentSelf": "Currently self-applied",
   "monsterMonitor.buffSearch.status.addedSelf": "Added as self-applied",
   "monsterMonitor.buffSearch.status.currentGlobal": "Currently global",
+  "monsterMonitor.buffSearch.status.addedTeammate": "Added to teammate buffs",
   "monsterMonitor.buffGroups.self.title": "Self-Applied",
   "monsterMonitor.buffGroups.self.description":
     "Only track buffs this character applies to the Boss",
@@ -1133,6 +1135,10 @@ export const enUSMessages = {
     "Show the buff whenever it appears on the Boss, regardless of source",
   "monsterMonitor.buffGroups.removeTitle": "Click to remove",
   "monsterMonitor.buffGroups.empty": "No buffs selected",
+  "monsterMonitor.teammate.title": "Teammate Buff Monitor",
+  "monsterMonitor.teammate.placeholder": "Search and add teammate buffs",
+  "monsterMonitor.teammate.emptySearch": "No matching teammate buffs",
+  "monsterMonitor.teammate.groupTitle": "Monitored Teammate Buffs",
   "monsterMonitor.priority.title": "Buff Priority",
   "monsterMonitor.priority.description":
     "Customize monster buff display order. Buffs higher in the list are shown first.",

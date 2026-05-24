@@ -4,6 +4,7 @@ import {
   onBossBuffUpdate,
   onEntityIdentities,
   onHateListUpdate,
+  onTeammateBuffUpdate,
   type BuffUpdateState,
   type HateEntry,
 } from "$lib/api";
@@ -27,6 +28,8 @@ function mapBossBuffs(buffs: BuffUpdateState[]) {
   }
   return next;
 }
+
+const mapEntityBuffs = mapBossBuffs;
 
 export function initMonsterOverlay() {
   if (monsterRuntime.cleanup) return monsterRuntime.cleanup;
@@ -53,9 +56,18 @@ export function initMonsterOverlay() {
   const unlistenBossBuff = onBossBuffUpdate((event) => {
     const next = new Map<EntityId, Map<number, BuffUpdateState>>();
     for (const [entityUuid, buffs] of Object.entries(event.payload.bossBuffs)) {
-      next.set(entityUuid, mapBossBuffs(buffs));
+      next.set(entityUuid, mapEntityBuffs(buffs));
     }
     monsterRuntime.bossBuffMap = next;
+  });
+  const unlistenTeammateBuff = onTeammateBuffUpdate((event) => {
+    const next = new Map<EntityId, Map<number, BuffUpdateState>>();
+    for (const [entityUuid, buffs] of Object.entries(
+      event.payload.teammateBuffs,
+    )) {
+      next.set(entityUuid, mapEntityBuffs(buffs));
+    }
+    monsterRuntime.teammateBuffMap = next;
   });
   const unlistenHateList = onHateListUpdate((event) => {
     const next = new Map<EntityId, HateEntry[]>();
@@ -89,11 +101,13 @@ export function initMonsterOverlay() {
     monsterRuntime.playerNameCache = new Map();
     monsterRuntime.monsterIdCache = new Map();
     monsterRuntime.bossBuffMap = new Map();
+    monsterRuntime.teammateBuffMap = new Map();
     monsterRuntime.bossHateMap = new Map();
     monsterRuntime.bossSections = [];
     monsterRuntime.hateSections = [];
     unlistenEditToggle.then((fn) => fn());
     unlistenBossBuff.then((fn) => fn());
+    unlistenTeammateBuff.then((fn) => fn());
     unlistenHateList.then((fn) => fn());
     unlistenIdentities.then((fn) => fn());
     window.removeEventListener("pointermove", onGlobalPointerMove);

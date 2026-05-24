@@ -108,6 +108,7 @@ pub enum OutboundEvent {
     LiveData(LiveDataPayload),
     BuffUpdate(Vec<BuffUpdateState>),
     BossBuffUpdate(HashMap<String, Vec<BuffUpdateState>>),
+    TeammateBuffUpdate(HashMap<String, Vec<BuffUpdateState>>),
     HateListUpdate(HashMap<String, Vec<HateEntry>>),
     EntityIdentityMap {
         player_names: HashMap<String, String>,
@@ -195,6 +196,14 @@ impl EventManager {
     pub fn emit_boss_buff_update(&mut self, boss_buffs: HashMap<String, Vec<BuffUpdateState>>) {
         self.outbound_events
             .push(OutboundEvent::BossBuffUpdate(boss_buffs));
+    }
+
+    pub fn emit_teammate_buff_update(
+        &mut self,
+        teammate_buffs: HashMap<String, Vec<BuffUpdateState>>,
+    ) {
+        self.outbound_events
+            .push(OutboundEvent::TeammateBuffUpdate(teammate_buffs));
     }
 
     pub fn emit_hate_list_update(&mut self, hate_lists: HashMap<String, Vec<HateEntry>>) {

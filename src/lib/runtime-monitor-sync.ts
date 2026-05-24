@@ -166,6 +166,30 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
   };
 }
 
+function buildTeammateRuntimeSnapshot(): MonitorRuntimeSnapshot["teammate"] {
+  const enabled = SETTINGS.monsterMonitor.state.enabled;
+  const anySourceIds = uniqueSortedNumbers(
+    SETTINGS.monsterMonitor.state.teammateBuffIds,
+  );
+  if (!enabled) {
+    return {
+      enabled: false,
+      anySourceIds: [],
+      localPlayerSourceIds: [],
+      targetSelfSourceIds: [],
+      monitorAll: false,
+    };
+  }
+
+  return {
+    enabled: anySourceIds.length > 0,
+    anySourceIds,
+    localPlayerSourceIds: [],
+    targetSelfSourceIds: [],
+    monitorAll: false,
+  };
+}
+
 export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
   return {
     live: {
@@ -173,6 +197,7 @@ export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
     },
     skill: buildSkillRuntimeSnapshot(),
     monster: buildMonsterRuntimeSnapshot(),
+    teammate: buildTeammateRuntimeSnapshot(),
   };
 }
 

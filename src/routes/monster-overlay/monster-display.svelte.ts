@@ -241,6 +241,43 @@ export function updateMonsterDisplay() {
       bossEntityUuid: bossUid,
       title: resolveMonsterSectionTitle(bossUid),
       rows: buffRows,
+      kind: "monster",
+    });
+  }
+
+  const sortedTeammateUuids = Array.from(
+    monsterRuntime.teammateBuffMap.keys(),
+  ).sort();
+
+  for (const teammateUuid of sortedTeammateUuids) {
+    const buffMap = monsterRuntime.teammateBuffMap.get(teammateUuid) ?? new Map();
+    const buffRows = Array.from(buffMap.values())
+      .sort((left, right) => {
+        const leftPriority =
+          priorityIndex.get(left.baseId) ?? Number.MAX_SAFE_INTEGER;
+        const rightPriority =
+          priorityIndex.get(right.baseId) ?? Number.MAX_SAFE_INTEGER;
+        return leftPriority - rightPriority || left.baseId - right.baseId;
+      })
+      .map((buff) =>
+        buildBuffTextRow(
+          `teammate_${teammateUuid}_${buff.baseId}`,
+          resolveBuffDisplayName(buff.baseId, aliases),
+          buff,
+          now,
+          false,
+          false,
+          resolveAlert,
+        ),
+      )
+      .filter((row): row is TextBuffDisplay => row !== null);
+
+    if (buffRows.length === 0) continue;
+    nextSections.push({
+      bossEntityUuid: teammateUuid,
+      title: resolveEntityDisplayName(teammateUuid),
+      rows: buffRows,
+      kind: "teammate",
     });
   }
 

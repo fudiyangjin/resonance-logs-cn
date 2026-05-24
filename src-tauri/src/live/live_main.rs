@@ -5,6 +5,7 @@ use crate::live::{
         BossBuffUpdatePayload, BuffCounterUpdatePayload, BuffUpdatePayload, DeathReplayPayload,
         EntityIdentityMapPayload, FightResourceUpdatePayload, HateListUpdatePayload,
         PanelAttrUpdatePayload, ShieldDetailUpdatePayload, SkillCdUpdatePayload,
+        TeammateBuffUpdatePayload,
     },
     event_manager::{EncounterUpdatePayload, SceneChangePayload},
     event_manager::{OutboundEvent, safe_emit_to},
@@ -457,6 +458,14 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     crate::WINDOW_MONSTER_OVERLAY_LABEL,
                     "boss-buff-update",
                     BossBuffUpdatePayload { boss_buffs },
+                );
+            }
+            OutboundEvent::TeammateBuffUpdate(teammate_buffs) => {
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_MONSTER_OVERLAY_LABEL,
+                    "teammate-buff-update",
+                    TeammateBuffUpdatePayload { teammate_buffs },
                 );
             }
             OutboundEvent::HateListUpdate(hate_lists) => {

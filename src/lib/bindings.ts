@@ -538,7 +538,7 @@ export type LiveRuntimeSnapshot = { eventUpdateRateMs: number }
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
-export type MonitorRuntimeSnapshot = { live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot }
+export type MonitorRuntimeSnapshot = { live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot }
 export type MonsterRuntimeSnapshot = { enabled: boolean; globalIds: number[]; selfAppliedIds: number[] }
 export type PerTargetStats = { targetEntityUuid: string; targetDisplayUid: number; targetMonsterId: number | null; totalValue: number; damage: RawCombatStats; skills: Partial<{ [key in number]: RawSkillStats }> }
 /**
@@ -584,6 +584,7 @@ export type SceneIdsResult = {
  */
 ids: number[] }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[] }
+export type TeammateRuntimeSnapshot = { enabled: boolean; anySourceIds: number[]; localPlayerSourceIds: number[]; targetSelfSourceIds: number[]; monitorAll: boolean }
 export type TickAttrCondition = { attrId: number; requiredValue: number }
 
 /** tauri-specta globals **/
@@ -645,6 +646,3 @@ function __makeEvents__<T extends Record<string, any>>(
 		},
 	);
 }
-
-void TAURI_CHANNEL;
-void __makeEvents__;

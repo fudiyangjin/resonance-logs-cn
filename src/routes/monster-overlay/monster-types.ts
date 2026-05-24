@@ -6,6 +6,7 @@ export type MonsterBossBuffSection = {
   title: string;
   rows: TextBuffDisplay[];
   isPlaceholder?: boolean;
+  kind?: "monster" | "teammate";
 };
 
 export type MonsterHateSection = {
