@@ -31,6 +31,7 @@
     type BuffDisplayMode,
     type BuffGroup,
     type CustomPanelGroup,
+    type CustomPanelGroupKind,
     type CustomPanelStyle,
     type InlineBuffEntry,
     type PanelAreaRowRef,
@@ -349,6 +350,7 @@
       .filter((group) => !group.monitorAll)
       .flatMap((group) => group.buffIds);
     const customPanelBuffIds = ensureCustomPanelGroups(profile)
+      .filter((group) => group.kind === "manual")
       .flatMap((group) => group.entries)
       .filter((entry) => entry.sourceType === "buff")
       .map((entry) => entry.sourceId);
@@ -775,10 +777,13 @@
       ),
       customPanelGroups: ensureCustomPanelGroups(profile).map((group) => ({
         ...group,
-        entries: group.entries.filter(
-          (entry) =>
-            !(entry.sourceType === "counter" && entry.sourceId === ruleId),
-        ),
+        entries:
+          group.kind === "manual"
+            ? group.entries.filter(
+                (entry) =>
+                  !(entry.sourceType === "counter" && entry.sourceId === ruleId),
+              )
+            : [],
       })),
       inlineBuffEntries: ensureInlineBuffEntries(profile).filter(
         (entry) =>
@@ -833,6 +838,7 @@
     groups: CustomPanelGroup[],
   ): { groupId: string; groupName: string } | null {
     for (const group of groups) {
+      if (group.kind !== "manual") continue;
       if (
         group.entries.some(
           (entry) =>
@@ -861,10 +867,10 @@
     }));
   }
 
-  function addCustomPanelGroup() {
+  function addCustomPanelGroup(kind: CustomPanelGroupKind = "manual") {
     updateCustomPanelGroups((groups) => [
       ...groups,
-      createDefaultCustomPanelGroup("", groups.length + 1),
+      createDefaultCustomPanelGroup("", groups.length + 1, kind),
     ]);
   }
 
@@ -939,6 +945,9 @@
   ) {
     updateActiveProfile((profile) => {
       const groups = ensureCustomPanelGroups(profile);
+      if (!groups.some((group) => group.id === groupId && group.kind === "manual")) {
+        return profile;
+      }
       if (
         findCustomPanelEntryLocation(
           sourceType,
@@ -973,7 +982,7 @@
       return {
         ...profile,
         customPanelGroups: groups.map((group) =>
-          group.id === groupId
+          group.id === groupId && group.kind === "manual"
             ? { ...group, entries: [...group.entries, nextEntry] }
             : group,
         ),
@@ -985,7 +994,7 @@
   function removeCustomPanelEntry(groupId: string, entryId: string) {
     updateCustomPanelGroups((groups) =>
       groups.map((group) =>
-        group.id === groupId
+        group.id === groupId && group.kind === "manual"
           ? {
               ...group,
               entries: group.entries.filter((entry) => entry.id !== entryId),
@@ -1002,7 +1011,7 @@
   ) {
     updateCustomPanelGroups((groups) =>
       groups.map((group) =>
-        group.id === groupId
+        group.id === groupId && group.kind === "manual"
           ? {
               ...group,
               entries: group.entries.map((entry) =>
@@ -1050,6 +1059,7 @@
     updateCustomPanelGroups((groups) =>
       groups.map((group) => {
         if (group.id !== groupId) return group;
+        if (group.kind !== "manual") return group;
         const idx = group.entries.findIndex((entry) => entry.id === entryId);
         if (idx < 0) return group;
         const target = direction === "up" ? idx - 1 : idx + 1;

@@ -6,6 +6,7 @@ use crate::live::commands_models::{
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::entity_id::{entity_uuid_string, uid_from_uuid};
 use crate::live::opcodes_models::{AttrType, Encounter, class};
+use crate::live::season_cultivate::SeasonCultivateFactorSelection;
 use blueprotobuf_lib::blueprotobuf::EEntityType;
 use log::{trace, warn};
 use serde::{Deserialize, Serialize};
@@ -115,6 +116,10 @@ pub enum OutboundEvent {
         monster_ids: HashMap<String, i32>,
     },
     BuffCounterUpdate(Vec<CounterUpdateState>),
+    SeasonCultivateFactorCounterUpdate {
+        selection: SeasonCultivateFactorSelection,
+        counters: Vec<CounterUpdateState>,
+    },
     SkillCdUpdate(Vec<SkillCdState>),
     PanelAttrUpdate(Vec<PanelAttrState>),
     FightResourceUpdate(FightResourceState),
@@ -225,6 +230,18 @@ impl EventManager {
     pub fn emit_buff_counter_update(&mut self, counters: Vec<CounterUpdateState>) {
         self.outbound_events
             .push(OutboundEvent::BuffCounterUpdate(counters));
+    }
+
+    pub fn emit_season_cultivate_factor_counter_update(
+        &mut self,
+        selection: SeasonCultivateFactorSelection,
+        counters: Vec<CounterUpdateState>,
+    ) {
+        self.outbound_events
+            .push(OutboundEvent::SeasonCultivateFactorCounterUpdate {
+                selection,
+                counters,
+            });
     }
 
     pub fn emit_skill_cd_update(&mut self, cds: Vec<SkillCdState>) {

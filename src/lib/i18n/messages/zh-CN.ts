@@ -952,6 +952,9 @@ export const zhCNMessages = {
   "skillMonitor.customPanel.description":
     "可创建多个文本监控区；同一个 Buff 或计数器在所有监控区内全局唯一。",
   "skillMonitor.customPanel.new": "新建监控区",
+  "skillMonitor.customPanel.newFactor": "新建因子区",
+  "skillMonitor.customPanel.kind.manual": "普通自定义区",
+  "skillMonitor.customPanel.kind.factor": "因子配置区",
   "skillMonitor.customPanel.currentEditing": "当前编辑：{name}",
   "skillMonitor.customPanel.chooseOrCreate": "请选择或新建一个监控区",
   "skillMonitor.customPanel.entryCount": "条目 {count} 个",

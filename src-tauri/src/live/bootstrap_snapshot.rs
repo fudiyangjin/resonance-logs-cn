@@ -1,4 +1,5 @@
 use crate::live::counter_tracker::CounterRule;
+use crate::live::season_cultivate::FactorCounterTemplate;
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -43,6 +44,18 @@ impl MonitorRuntimeSnapshot {
         self.skill
             .buff_counter_rules
             .dedup_by_key(|rule| rule.rule_id);
+        self.skill
+            .season_cultivate_factor_templates
+            .sort_by_key(|template| template.rule_id);
+        self.skill
+            .season_cultivate_factor_templates
+            .dedup_by_key(|template| {
+                (
+                    template.item_id,
+                    !template.sources.is_empty(),
+                    !template.effect_slots.is_empty(),
+                )
+            });
 
         if !self.skill.enabled {
             self.skill.monitored_skill_ids.clear();
@@ -50,6 +63,7 @@ impl MonitorRuntimeSnapshot {
             self.skill.monitor_all_buff = false;
             self.skill.monitored_panel_attr_ids.clear();
             self.skill.buff_counter_rules.clear();
+            self.skill.season_cultivate_factor_templates.clear();
         }
 
         dedup_and_sort_i32(&mut self.monster.global_ids);
@@ -96,6 +110,7 @@ pub struct SkillRuntimeSnapshot {
     pub monitor_all_buff: bool,
     pub monitored_panel_attr_ids: Vec<i32>,
     pub buff_counter_rules: Vec<CounterRule>,
+    pub season_cultivate_factor_templates: Vec<FactorCounterTemplate>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default)]

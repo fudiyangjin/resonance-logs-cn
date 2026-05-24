@@ -163,6 +163,12 @@ export type BuffCounterUpdatePayload = {
   counters: CounterUpdateState[];
 };
 
+export type SeasonCultivateFactorCounterUpdatePayload = {
+  sourceItemIds: number[];
+  slotItemIds: number[];
+  counters: CounterUpdateState[];
+};
+
 export type CounterSlotState = {
   slotId: number;
   currentCount: number;
@@ -301,6 +307,14 @@ export const onBuffCounterUpdate = (
   handler: (event: Event<BuffCounterUpdatePayload>) => void,
 ): Promise<UnlistenFn> =>
   listen<BuffCounterUpdatePayload>("buff-counter-update", handler);
+
+export const onSeasonCultivateFactorCounterUpdate = (
+  handler: (event: Event<SeasonCultivateFactorCounterUpdatePayload>) => void,
+): Promise<UnlistenFn> =>
+  listen<SeasonCultivateFactorCounterUpdatePayload>(
+    "season-cultivate-factor-counter-update",
+    handler,
+  );
 
 export const onPanelAttrUpdate = (
   handler: (event: Event<PanelAttrUpdatePayload>) => void,

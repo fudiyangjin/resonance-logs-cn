@@ -13,6 +13,7 @@ use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::entity_id::entity_uuid_string;
 use crate::live::event_manager::EventManager;
 use crate::live::opcodes_models::{AttrType, AttrValue, DeathRecord, Encounter, Entity};
+use crate::live::season_cultivate::{FactorCounterTemplate, SeasonCultivateRuntimeState};
 use crate::live::skill_cd_monitor::SkillCdMonitor;
 use crate::live::team::{TeamEvent, TeamRuntimeState};
 use crate::live::training_dummy::{
@@ -101,6 +102,8 @@ pub struct EntityMonitor {
     pub monitored_panel_attr_ids: Vec<i32>,
     pub fight_res_state: Option<FightResourceState>,
     pub counter_tracker: BuffCounterTracker,
+    pub factor_counter_tracker: BuffCounterTracker,
+    pub season_cultivate: SeasonCultivateRuntimeState,
 }
 
 impl EntityMonitor {
@@ -111,6 +114,8 @@ impl EntityMonitor {
             monitored_panel_attr_ids: Vec::new(),
             fight_res_state: None,
             counter_tracker: BuffCounterTracker::default(),
+            factor_counter_tracker: BuffCounterTracker::default(),
+            season_cultivate: SeasonCultivateRuntimeState::default(),
         }
     }
 
@@ -118,6 +123,7 @@ impl EntityMonitor {
         self.skill_cd_monitor.skill_cd_map.clear();
         self.fight_res_state = None;
         self.counter_tracker.reset_counts();
+        self.factor_counter_tracker.reset_counts();
     }
 }
 
@@ -146,6 +152,7 @@ pub enum LiveControlCommand {
     SetMonitoredPanelAttrs(Vec<i32>),
     SetMonitoredSkills(Vec<i32>),
     SetBuffCounterRules(Vec<CounterRule>),
+    SetSeasonCultivateFactorTemplates(Vec<FactorCounterTemplate>),
 }
 
 impl AppState {
@@ -252,6 +259,21 @@ fn emit_shield_detail_update_if_needed(state: &mut AppState, mut entries: Vec<Sh
 
 fn emit_buff_counter_update_if_needed(state: &mut AppState, payload: Vec<CounterUpdateState>) {
     state.event_manager.emit_buff_counter_update(payload);
+}
+
+fn emit_season_cultivate_factor_counter_update(state: &mut AppState) {
+    let selection = state.local_monitor.season_cultivate.active_selection();
+    let counters = state
+        .local_monitor
+        .factor_counter_tracker
+        .build_payload(&state.attr_store, state.encounter.local_player_uuid);
+    state
+        .event_manager
+        .emit_season_cultivate_factor_counter_update(selection, counters);
+}
+
+fn apply_factor_counter_rules(state: &mut AppState, rules: Vec<CounterRule>) {
+    state.local_monitor.factor_counter_tracker.set_rules(rules);
 }
 
 fn hydrate_entities_from_attr_store(state: &mut AppState) {
@@ -565,10 +587,17 @@ impl AppStateManager {
             return;
         }
 
+        let tick_now_ms = now_ms();
+        let local_player_uuid = state.encounter.local_player_uuid;
         let mut counter_dirty = state.local_monitor.counter_tracker.tick_counters(
-            now_ms(),
+            tick_now_ms,
             &state.attr_store,
-            state.encounter.local_player_uuid,
+            local_player_uuid,
+        );
+        let mut factor_counter_dirty = state.local_monitor.factor_counter_tracker.tick_counters(
+            tick_now_ms,
+            &state.attr_store,
+            local_player_uuid,
         );
         match event {
             StateEvent::EnterScene(data) => {
@@ -583,12 +612,33 @@ impl AppStateManager {
                 // store local_player copy
                 state.encounter.local_player = data.clone();
 
-                self.process_sync_container_data(state, data);
+                if let Some(result) = self.process_sync_container_data(state, &data) {
+                    let next_rules = if let Some(data) = result.season_cultivate_line_data {
+                        state.local_monitor.season_cultivate.replace_data(data)
+                    } else {
+                        state.local_monitor.season_cultivate.clear_data()
+                    };
+                    if let Some(rules) = next_rules {
+                        apply_factor_counter_rules(state, rules);
+                    }
+                }
+                factor_counter_dirty = true;
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
             StateEvent::SyncContainerDirtyData(data) => {
-                self.process_sync_container_dirty_data(state, data);
+                let dirty_bytes = self
+                    .process_sync_container_dirty_data(state, &data)
+                    .and_then(|result| result.season_cultivate_dirty_bytes);
+                if let Some(rules) = dirty_bytes.and_then(|bytes| {
+                    state
+                        .local_monitor
+                        .season_cultivate
+                        .apply_dirty_bytes(bytes)
+                }) {
+                    apply_factor_counter_rules(state, rules);
+                    factor_counter_dirty = true;
+                }
             }
             StateEvent::SyncServerTime(_data) => {
                 // todo: this is skipped, not sure what info it has
@@ -602,13 +652,19 @@ impl AppStateManager {
                 self.apply_battle_state_resets_if_needed(state);
             }
             StateEvent::SyncToMeDeltaInfo(data) => {
-                counter_dirty |= self.process_sync_to_me_delta_info(state, data);
+                let (next_counter_dirty, next_factor_counter_dirty) =
+                    self.process_sync_to_me_delta_info(state, data);
+                counter_dirty |= next_counter_dirty;
+                factor_counter_dirty |= next_factor_counter_dirty;
                 self.apply_battle_state_resets_if_needed(state);
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
             StateEvent::SyncNearDeltaInfo(data) => {
-                counter_dirty |= self.process_sync_near_delta_info(state, data);
+                let (next_counter_dirty, next_factor_counter_dirty) =
+                    self.process_sync_near_delta_info(state, data);
+                counter_dirty |= next_counter_dirty;
+                factor_counter_dirty |= next_factor_counter_dirty;
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
@@ -628,6 +684,9 @@ impl AppStateManager {
                     .counter_tracker
                     .build_payload(&state.attr_store, state.encounter.local_player_uuid),
             );
+        }
+        if factor_counter_dirty {
+            emit_season_cultivate_factor_counter_update(state);
         }
         self.apply_attr_store_changes(state);
     }
@@ -757,6 +816,16 @@ impl AppStateManager {
             LiveControlCommand::SetBuffCounterRules(rules) => {
                 state.local_monitor.counter_tracker.set_rules(rules);
             }
+            LiveControlCommand::SetSeasonCultivateFactorTemplates(templates) => {
+                if let Some(rules) = state
+                    .local_monitor
+                    .season_cultivate
+                    .set_templates(templates)
+                {
+                    apply_factor_counter_rules(state, rules);
+                    emit_season_cultivate_factor_counter_update(state);
+                }
+            }
         }
     }
 
@@ -846,6 +915,12 @@ impl AppStateManager {
         );
         self.apply_control_command(
             state,
+            LiveControlCommand::SetSeasonCultivateFactorTemplates(
+                skill.season_cultivate_factor_templates,
+            ),
+        );
+        self.apply_control_command(
+            state,
             LiveControlCommand::SetBossMonitoredBuffs {
                 global_ids: monster.global_ids,
                 self_applied_ids: monster.self_applied_ids,
@@ -921,8 +996,8 @@ impl AppStateManager {
     fn process_sync_container_data(
         &self,
         state: &mut AppState,
-        sync_container_data: blueprotobuf::SyncContainerData,
-    ) {
+        sync_container_data: &blueprotobuf::SyncContainerData,
+    ) -> Option<crate::live::opcodes_process::SyncContainerProcessResult> {
         use crate::live::opcodes_process::process_sync_container_data;
 
         persist_and_save_encounter(state, false, "container_data_resync");
@@ -939,28 +1014,29 @@ impl AppStateManager {
         emit_training_dummy_update_if_changed(state, previous);
         info!("team members: {:?}", state.team.members);
 
-        if process_sync_container_data(
+        let result = process_sync_container_data(
             &mut state.encounter,
             &mut state.attr_store,
             sync_container_data,
-        )
-        .is_none()
-        {
+        );
+        if result.is_none() {
             warn!("Error processing SyncContainerData.. ignoring.");
         }
+        result
     }
 
-    fn process_sync_container_dirty_data(
+    fn process_sync_container_dirty_data<'a>(
         &self,
         state: &mut AppState,
-        sync_container_dirty_data: blueprotobuf::SyncContainerDirtyData,
-    ) {
+        sync_container_dirty_data: &'a blueprotobuf::SyncContainerDirtyData,
+    ) -> Option<crate::live::opcodes_process::SyncContainerDirtyProcessResult<'a>> {
         use crate::live::opcodes_process::process_sync_container_dirty_data;
-        if process_sync_container_dirty_data(&mut state.encounter, sync_container_dirty_data)
-            .is_none()
-        {
+        let result =
+            process_sync_container_dirty_data(&mut state.encounter, sync_container_dirty_data);
+        if result.is_none() {
             warn!("Error processing SyncContainerDirtyData.. ignoring.");
         }
+        result
     }
 
     fn process_sync_dungeon_data(
@@ -1033,7 +1109,7 @@ impl AppStateManager {
         &self,
         state: &mut AppState,
         sync_to_me_delta_info: blueprotobuf::SyncToMeDeltaInfo,
-    ) -> bool {
+    ) -> (bool, bool) {
         use crate::live::opcodes_process::{
             aoi_delta_has_player_damage, process_sync_to_me_delta_info,
         };
@@ -1090,6 +1166,7 @@ impl AppStateManager {
         }
 
         let mut counter_dirty = false;
+        let mut factor_counter_dirty = false;
 
         if let Some(values) = result.fight_resources {
             let ids = state
@@ -1110,6 +1187,10 @@ impl AppStateManager {
                     .local_monitor
                     .counter_tracker
                     .on_fight_resource_update(&new_state.entries);
+                factor_counter_dirty |= state
+                    .local_monitor
+                    .factor_counter_tracker
+                    .on_fight_resource_update(&new_state.entries);
                 state.local_monitor.fight_res_state = Some(new_state.clone());
                 state.event_manager.emit_fight_resource_update(new_state);
             }
@@ -1121,6 +1202,11 @@ impl AppStateManager {
                 state.encounter.local_player_uuid,
                 &state.attr_store,
             );
+            factor_counter_dirty |= state.local_monitor.factor_counter_tracker.on_damage_events(
+                &result.local_damage_events,
+                state.encounter.local_player_uuid,
+                &state.attr_store,
+            );
         }
 
         if !result.local_damage_taken_events.is_empty() {
@@ -1128,12 +1214,23 @@ impl AppStateManager {
                 &result.local_damage_taken_events,
                 state.encounter.local_player_uuid,
             );
+            factor_counter_dirty |= state
+                .local_monitor
+                .factor_counter_tracker
+                .on_damage_taken_events(
+                    &result.local_damage_taken_events,
+                    state.encounter.local_player_uuid,
+                );
         }
 
         if let Some(skill_base_id) = result.attr_skill_id {
             counter_dirty |= state
                 .local_monitor
                 .counter_tracker
+                .on_skill_cast(skill_base_id);
+            factor_counter_dirty |= state
+                .local_monitor
+                .factor_counter_tracker
                 .on_skill_cast(skill_base_id);
         }
 
@@ -1169,6 +1266,11 @@ impl AppStateManager {
                     &state.attr_store,
                     local_player_uuid,
                 );
+                factor_counter_dirty |= state.local_monitor.factor_counter_tracker.on_buff_changes(
+                    &buff_process_result.changes,
+                    &state.attr_store,
+                    local_player_uuid,
+                );
             }
         }
 
@@ -1176,15 +1278,19 @@ impl AppStateManager {
             .local_monitor
             .counter_tracker
             .on_movement_sample(&state.attr_store, state.encounter.local_player_uuid);
+        factor_counter_dirty |= state
+            .local_monitor
+            .factor_counter_tracker
+            .on_movement_sample(&state.attr_store, state.encounter.local_player_uuid);
 
-        counter_dirty
+        (counter_dirty, factor_counter_dirty)
     }
 
     fn process_sync_near_delta_info(
         &self,
         state: &mut AppState,
         sync_near_delta_info: blueprotobuf::SyncNearDeltaInfo,
-    ) -> bool {
+    ) -> (bool, bool) {
         use crate::live::opcodes_process::{
             aoi_delta_has_player_damage, apply_panel_attrs, process_aoi_sync_delta,
         };
@@ -1197,6 +1303,7 @@ impl AppStateManager {
         }
 
         let mut counter_dirty = false;
+        let mut factor_counter_dirty = false;
         let mut aggregated_damage_events = Vec::new();
         let local_player_uuid = state.encounter.local_player_uuid;
         for mut aoi_sync_delta in sync_near_delta_info.delta_infos {
@@ -1248,14 +1355,23 @@ impl AppStateManager {
                 state.encounter.local_player_uuid,
                 &state.attr_store,
             );
+            factor_counter_dirty |= state.local_monitor.factor_counter_tracker.on_damage_events(
+                &aggregated_damage_events,
+                state.encounter.local_player_uuid,
+                &state.attr_store,
+            );
         }
 
         counter_dirty |= state
             .local_monitor
             .counter_tracker
             .on_movement_sample(&state.attr_store, local_player_uuid);
+        factor_counter_dirty |= state
+            .local_monitor
+            .factor_counter_tracker
+            .on_movement_sample(&state.attr_store, local_player_uuid);
 
-        counter_dirty
+        (counter_dirty, factor_counter_dirty)
     }
 
     fn try_deferred_reset(&self, state: &mut AppState, has_damage: bool, source: &str) {

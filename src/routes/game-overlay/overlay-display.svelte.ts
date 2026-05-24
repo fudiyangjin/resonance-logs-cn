@@ -2,6 +2,8 @@ import {
   findAnySkillByBaseId,
   findSpecialBuffDisplays,
   getCounterRules,
+  getSeasonCultivateFactorRuleId,
+  getSeasonCultivateFactorRuleMap,
   type CounterRulePreset,
 } from "$lib/skill-mappings";
 import {
@@ -50,9 +52,12 @@ import {
   buffDefinitions,
   cdMap,
   counterMap,
+  factorCounterMap,
   overlayRuntime,
+  seasonCultivateFactorSlotItemIds,
   skillDurationMap,
 } from "./overlay-runtime.svelte.js";
+import type { InlineBuffEntry } from "$lib/settings-store";
 import { overlayNow } from "./overlay-clock.svelte.js";
 
 const _normalizedBuffGroups = $derived.by(() => {
@@ -93,6 +98,10 @@ const _counterRuleMap = $derived.by(() => {
   return map;
 });
 
+const _seasonCultivateFactorRuleMap = $derived.by(() =>
+  getSeasonCultivateFactorRuleMap(),
+);
+
 const _buffSnapshot = $derived.by(() => {
   const now = overlayNow();
   const explicitSelectedBuffIds = monitoredBuffIds();
@@ -107,6 +116,7 @@ const _buffSnapshot = $derived.by(() => {
   ) => resolveAlertState(alertMap[String(baseId)], remainingMs, durationMs);
   const skippedInlineBuffIds = new Set(
     panelGroups
+      .filter((group) => group.kind === "manual")
       .flatMap((group) => group.entries)
       .filter((entry) => entry.sourceType === "buff")
       .map((entry) => entry.sourceId),
@@ -250,17 +260,43 @@ const _buffSnapshot = $derived.by(() => {
 
   for (const group of panelGroups) {
     const nextRows: CustomPanelDisplayRow[] = [];
-    for (const entry of group.entries) {
-      const row = getCustomPanelDisplayRow(
-        entry,
-        now,
-        buffMap(),
-        counterMap(),
-        _counterRuleMap,
-        (baseId) => resolveBuffDisplayName(baseId, currentBuffAliases),
-        resolveAlert,
-      );
-      if (row) nextRows.push(row);
+    if (group.kind === "seasonCultivateFactor") {
+      for (const itemId of seasonCultivateFactorSlotItemIds()) {
+        const ruleId = getSeasonCultivateFactorRuleId(itemId);
+        const rule = _seasonCultivateFactorRuleMap.get(ruleId);
+        if (!rule) continue;
+        const entry: InlineBuffEntry = {
+          id: `season_cultivate_factor_${itemId}`,
+          sourceType: "counter",
+          sourceId: ruleId,
+          counterSlotId: rule.effectSlots[0]?.slotId ?? 1,
+          label: rule.name,
+          format: "timer",
+        };
+        const row = getCustomPanelDisplayRow(
+          entry,
+          now,
+          buffMap(),
+          factorCounterMap(),
+          _seasonCultivateFactorRuleMap,
+          (baseId) => resolveBuffDisplayName(baseId, currentBuffAliases),
+          resolveAlert,
+        );
+        if (row) nextRows.push(row);
+      }
+    } else {
+      for (const entry of group.entries) {
+        const row = getCustomPanelDisplayRow(
+          entry,
+          now,
+          buffMap(),
+          counterMap(),
+          _counterRuleMap,
+          (baseId) => resolveBuffDisplayName(baseId, currentBuffAliases),
+          resolveAlert,
+        );
+        if (row) nextRows.push(row);
+      }
     }
     nextCustomPanelRowsByGroup.set(group.id, nextRows);
   }

@@ -240,7 +240,10 @@
           customPanelLabel(group, index),
           group.position,
           240,
-          customPanelHeight(group.entries.length, group.style),
+          customPanelHeight(
+            group.kind === "seasonCultivateFactor" ? 2 : group.entries.length,
+            group.style,
+          ),
           group.scale,
         );
       }

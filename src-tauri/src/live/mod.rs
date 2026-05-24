@@ -13,6 +13,7 @@ pub mod live_main;
 pub mod monster_registry;
 pub mod opcodes_models;
 pub mod opcodes_process;
+pub mod season_cultivate;
 pub mod skill_cd_monitor;
 pub mod state;
 pub mod team;

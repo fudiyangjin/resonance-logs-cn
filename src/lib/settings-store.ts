@@ -593,9 +593,12 @@ export type UserCounterRule = {
 
 export type PanelAreaRowRef = { type: "attr"; attrId: number };
 
+export type CustomPanelGroupKind = "manual" | "seasonCultivateFactor";
+
 export type CustomPanelGroup = {
   id: string;
   name: string;
+  kind: CustomPanelGroupKind;
   entries: InlineBuffEntry[];
   position: Point;
   scale: number;
@@ -806,10 +809,12 @@ export function createDefaultBuffGroup(name = "", index = 1): BuffGroup {
 export function createDefaultCustomPanelGroup(
   name = "",
   index = 1,
+  kind: CustomPanelGroupKind = "manual",
 ): CustomPanelGroup {
   return {
     id: `custom_panel_group_${Date.now()}_${index}`,
     name,
+    kind,
     entries: [],
     position: { x: 700 + (index - 1) * 40, y: 280 + (index - 1) * 40 },
     scale: 1,

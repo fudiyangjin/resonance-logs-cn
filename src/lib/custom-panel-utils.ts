@@ -1,5 +1,6 @@
 import type {
   CustomPanelGroup,
+  CustomPanelGroupKind,
   InlineBuffEntry,
   SkillMonitorProfile,
 } from "$lib/settings-store";
@@ -7,6 +8,12 @@ import { ensureCustomPanelStyle } from "$lib/skill-monitor-normalize";
 
 const DEFAULT_CUSTOM_PANEL_GROUP_POSITION = { x: 700, y: 280 };
 const DEFAULT_CUSTOM_PANEL_GROUP_SCALE = 1;
+
+function normalizeCustomPanelGroupKind(
+  kind: CustomPanelGroupKind | undefined,
+): CustomPanelGroupKind {
+  return kind === "seasonCultivateFactor" ? "seasonCultivateFactor" : "manual";
+}
 
 export function ensureCustomPanelEntries(
   entries: InlineBuffEntry[] | undefined,
@@ -52,7 +59,11 @@ export function ensureCustomPanelGroups(
     return groups.map((group, index) => ({
       id: group.id ?? `custom_panel_group_${index + 1}`,
       name: group.name ?? "",
-      entries: ensureCustomPanelEntries(group.entries),
+      kind: normalizeCustomPanelGroupKind(group.kind),
+      entries:
+        normalizeCustomPanelGroupKind(group.kind) === "manual"
+          ? ensureCustomPanelEntries(group.entries)
+          : [],
       position: group.position ?? {
         x: legacyPosition.x + index * 40,
         y: legacyPosition.y + index * 40,
@@ -74,6 +85,7 @@ export function ensureCustomPanelGroups(
     {
       id: "custom_panel_group_1",
       name: "",
+      kind: "manual",
       entries: legacyEntries,
       position: legacyPosition,
       scale: legacyScale,

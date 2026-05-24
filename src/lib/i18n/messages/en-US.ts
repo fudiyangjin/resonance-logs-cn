@@ -1053,6 +1053,9 @@ export const enUSMessages = {
   "skillMonitor.customPanel.description":
     "Create multiple text monitor areas. The same buff or counter can only belong to one area.",
   "skillMonitor.customPanel.new": "New Monitor Area",
+  "skillMonitor.customPanel.newFactor": "New Factor Area",
+  "skillMonitor.customPanel.kind.manual": "Manual Area",
+  "skillMonitor.customPanel.kind.factor": "Factor Config Area",
   "skillMonitor.customPanel.currentEditing": "Editing: {name}",
   "skillMonitor.customPanel.chooseOrCreate": "Choose or create a monitor area",
   "skillMonitor.customPanel.entryCount": "{count} entries",

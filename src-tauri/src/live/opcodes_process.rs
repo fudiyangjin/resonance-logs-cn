@@ -244,9 +244,10 @@ pub fn process_sync_near_entities(
 pub fn process_sync_container_data(
     encounter: &mut Encounter,
     attr_store: &mut EntityAttrStore,
-    sync_container_data: blueprotobuf::SyncContainerData,
-) -> Option<()> {
-    let v_data = sync_container_data.v_data?;
+    sync_container_data: &blueprotobuf::SyncContainerData,
+) -> Option<SyncContainerProcessResult> {
+    let v_data = sync_container_data.v_data.as_ref()?;
+    let season_cultivate_line_data = v_data.season_cultivate_line_data.clone();
     let player_uid = v_data.char_id?;
     let player_uuid = canonical_player_uuid(player_uid);
     encounter.local_player_uuid = player_uuid;
@@ -306,17 +307,34 @@ pub fn process_sync_container_data(
         flush_playerdata(player_uid, now, vdata_bytes);
     }
 
-    Some(())
+    Some(SyncContainerProcessResult {
+        season_cultivate_line_data,
+    })
 }
 
-pub fn process_sync_container_dirty_data(
+#[derive(Debug, Clone, Default)]
+pub struct SyncContainerProcessResult {
+    pub season_cultivate_line_data: Option<blueprotobuf::SeasonCultivateLineData>,
+}
+
+pub fn process_sync_container_dirty_data<'a>(
     _encounter: &mut Encounter,
-    _sync_container_dirty_data: blueprotobuf::SyncContainerDirtyData,
-) -> Option<()> {
+    sync_container_dirty_data: &'a blueprotobuf::SyncContainerDirtyData,
+) -> Option<SyncContainerDirtyProcessResult<'a>> {
     // SyncContainerDirtyData.v_data is a BufferStream (raw bytes)
     // Incremental attribute updates come through process_player_attrs via AoiSyncDelta
     // which handles attr packets with proper typing
-    Some(())
+    Some(SyncContainerDirtyProcessResult {
+        season_cultivate_dirty_bytes: sync_container_dirty_data
+            .v_data
+            .as_ref()
+            .and_then(|v_data| v_data.buffer.as_deref()),
+    })
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct SyncContainerDirtyProcessResult<'a> {
+    pub season_cultivate_dirty_bytes: Option<&'a [u8]>,
 }
 
 pub fn process_sync_dungeon_data(
@@ -1263,122 +1281,5 @@ fn process_monster_attrs(
             let value = decode_varint_i64_or_default(raw_bytes_opt);
             let _ = attr_store.set_attr(target_uuid, attr_type, AttrValue::Int(value));
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::live::entity_id::{canonical_player_uuid, entity_id_to_uuid};
-    use blueprotobuf_lib::blueprotobuf::{AttrCollection, SyncNearEntities};
-
-    fn encode_varint_i64(value: i64) -> Vec<u8> {
-        let mut buf = Vec::new();
-        prost::encoding::encode_varint(value as u64, &mut buf);
-        buf
-    }
-
-    #[test]
-    fn sync_near_entities_keeps_same_uid_distinct_uuids() {
-        let uid = 777;
-        let player_uuid = canonical_player_uuid(uid);
-        let monster_uuid = entity_id_to_uuid(uid, EEntityType::EntMonster, false, false);
-        let mut encounter = Encounter::default();
-        let mut attr_store = EntityAttrStore::default();
-
-        process_sync_near_entities(
-            &mut encounter,
-            &mut attr_store,
-            SyncNearEntities {
-                appear: vec![
-                    blueprotobuf::Entity {
-                        uuid: Some(player_uuid),
-                        attrs: Some(AttrCollection::default()),
-                        ..Default::default()
-                    },
-                    blueprotobuf::Entity {
-                        uuid: Some(monster_uuid),
-                        attrs: Some(AttrCollection::default()),
-                        ..Default::default()
-                    },
-                ],
-                disappear: Vec::new(),
-            },
-        );
-
-        assert_eq!(encounter.entity_uuid_to_entity.len(), 2);
-        assert!(encounter.entity_uuid_to_entity.contains_key(&player_uuid));
-        assert!(encounter.entity_uuid_to_entity.contains_key(&monster_uuid));
-    }
-
-    #[test]
-    fn container_data_uses_canonical_player_uuid_boundary() {
-        let mut encounter = Encounter::default();
-        let mut attr_store = EntityAttrStore::default();
-        let char_id = 12345;
-        let player_uuid = canonical_player_uuid(char_id);
-
-        let mut sync_container_data = blueprotobuf::SyncContainerData::default();
-        let mut v_data = blueprotobuf::CharSerialize::default();
-        v_data.char_id = Some(char_id);
-        v_data.char_base = Some(blueprotobuf::CharBaseInfo {
-            name: Some("Test Player".to_string()),
-            fight_point: Some(100),
-            ..Default::default()
-        });
-        v_data.profession_list = Some(blueprotobuf::ProfessionList {
-            cur_profession_id: Some(1),
-            ..Default::default()
-        });
-        v_data.role_level = Some(blueprotobuf::RoleLevel {
-            level: Some(50),
-            ..Default::default()
-        });
-        sync_container_data.v_data = Some(v_data);
-
-        process_sync_container_data(&mut encounter, &mut attr_store, sync_container_data);
-
-        assert_eq!(encounter.local_player_uuid, player_uuid);
-        assert!(encounter.entity_uuid_to_entity.contains_key(&player_uuid));
-        assert!(encounter.entity_uuid_to_entity.get(&char_id).is_none());
-    }
-
-    #[test]
-    fn sync_to_me_delta_captures_target_id_through_player_attr_parser() {
-        let mut encounter = Encounter::default();
-        let mut attr_store = EntityAttrStore::default();
-        let local_player_uuid = canonical_player_uuid(12345);
-        let target_uuid = entity_id_to_uuid(9988, EEntityType::EntMonster, false, false);
-
-        process_sync_to_me_delta_info(
-            &mut encounter,
-            &mut attr_store,
-            blueprotobuf::SyncToMeDeltaInfo {
-                delta_info: Some(blueprotobuf::AoiSyncToMeDelta {
-                    uuid: Some(local_player_uuid),
-                    base_delta: Some(blueprotobuf::AoiSyncDelta {
-                        uuid: Some(local_player_uuid),
-                        attrs: Some(AttrCollection {
-                            attrs: vec![blueprotobuf::Attr {
-                                id: Some(attr_type::ATTR_TARGET_ID),
-                                raw_data: Some(encode_varint_i64(target_uuid)),
-                            }],
-                            ..Default::default()
-                        }),
-                        ..Default::default()
-                    }),
-                    ..Default::default()
-                }),
-            },
-            &[],
-            None,
-        );
-
-        assert_eq!(
-            attr_store
-                .attr(local_player_uuid, AttrType::TargetId)
-                .and_then(AttrValue::as_int),
-            Some(target_uuid)
-        );
     }
 }

@@ -5,7 +5,11 @@ import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays
 import counterRulesRaw from "$lib/config/counter_rules.json";
 import counterSourceTemplatesRaw from "$lib/config/counter_source_templates.json";
 import counterSlotTemplatesRaw from "$lib/config/counter_slot_templates.json";
-import type { CounterAction, CounterSource } from "$lib/bindings";
+import type {
+  CounterAction,
+  CounterSource,
+  FactorCounterTemplate,
+} from "$lib/bindings";
 import type { UserCounterRule } from "$lib/settings-store";
 
 export type SkillDisplayInfo = {
@@ -98,6 +102,8 @@ export type CounterEffectSlotPreset = {
 
 export type SourceTemplate = {
   sourceId: string;
+  itemId: number;
+  itemIds?: number[];
   name: string;
   description: string;
   source: CounterSource;
@@ -105,10 +111,14 @@ export type SourceTemplate = {
 
 export type SlotTemplate = {
   slotTemplateId: string;
+  itemId: number;
+  itemIds?: number[];
   name: string;
   description: string;
   slot: Omit<CounterEffectSlotPreset, "slotId">;
 };
+
+export const FACTOR_RULE_ID_BASE = 900_000_000;
 
 export const CLASS_RESOURCES: Record<string, ResourceDefinition[]> =
   classResourcesRaw as Record<string, ResourceDefinition[]>;
@@ -161,6 +171,60 @@ export function getSourceTemplates(): SourceTemplate[] {
 
 export function getSlotTemplates(): SlotTemplate[] {
   return SLOT_TEMPLATES;
+}
+
+export function getSeasonCultivateFactorRuleId(itemId: number): number {
+  return FACTOR_RULE_ID_BASE + itemId;
+}
+
+function normalizeTemplateItemIds(item: {
+  itemId: number;
+  itemIds?: number[];
+}): number[] {
+  return Array.from(new Set([item.itemId, ...(item.itemIds ?? [])])).sort(
+    (left, right) => left - right,
+  );
+}
+
+export function getSeasonCultivateFactorTemplates(): FactorCounterTemplate[] {
+  return [
+    ...SOURCE_TEMPLATES.map((template) => ({
+      itemId: template.itemId,
+      itemIds: normalizeTemplateItemIds(template),
+      ruleId: getSeasonCultivateFactorRuleId(template.itemId),
+      sources: [template.source],
+      effectSlots: [],
+    })),
+    ...SLOT_TEMPLATES.map((template) => ({
+      itemId: template.itemId,
+      itemIds: normalizeTemplateItemIds(template),
+      ruleId: getSeasonCultivateFactorRuleId(template.itemId),
+      sources: [],
+      effectSlots: resolveCounterEffectSlots([template.slotTemplateId]).map(
+        ({ displayMode: _displayMode, ...slot }) => slot,
+      ),
+    })),
+  ];
+}
+
+export function getSeasonCultivateFactorRuleMap(): Map<
+  number,
+  CounterRulePreset
+> {
+  const map = new Map<number, CounterRulePreset>();
+  for (const template of SLOT_TEMPLATES) {
+    const itemIds = normalizeTemplateItemIds(template);
+    const effectSlots = resolveCounterEffectSlots([template.slotTemplateId]);
+    for (const itemId of itemIds) {
+      map.set(getSeasonCultivateFactorRuleId(itemId), {
+        ruleId: getSeasonCultivateFactorRuleId(itemId),
+        name: template.name,
+        sources: [],
+        effectSlots,
+      });
+    }
+  }
+  return map;
 }
 
 export function resolveCounterSources(sourceRefs: string[]): CounterSource[] {

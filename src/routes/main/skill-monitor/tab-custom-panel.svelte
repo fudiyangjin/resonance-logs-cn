@@ -3,6 +3,7 @@
   import type { BuffDefinition, BuffNameInfo } from "$lib/config/buff-name-table";
   import type {
     CustomPanelGroup,
+    CustomPanelGroupKind,
     CustomPanelStyle,
     InlineBuffEntry,
     UserCounterRule,
@@ -27,7 +28,7 @@
     filteredInlineBuffSearchResults: BuffNameInfo[];
     customPanelGroups: CustomPanelGroup[];
     setInlineBuffSearch: (value: string) => void;
-    addCustomPanelGroup: () => void;
+    addCustomPanelGroup: (kind?: CustomPanelGroupKind) => void;
     removeCustomPanelGroup: (groupId: string) => void;
     renameCustomPanelGroup: (groupId: string, name: string) => void;
     updateCustomPanelGroupStyle: (
@@ -107,6 +108,7 @@
   const canSaveDraftRule = $derived(
     draftRuleName.trim().length > 0 && draftSourceRefs.length > 0 && draftSlotRefs.length > 0,
   );
+  const isSelectedManualGroup = $derived(selectedGroup?.kind !== "seasonCultivateFactor");
 
   function getEntryLocation(
     sourceType: InlineBuffEntry["sourceType"],
@@ -116,6 +118,7 @@
     for (let index = 0; index < customPanelGroups.length; index += 1) {
       const group = customPanelGroups[index];
       if (!group) continue;
+      if (group.kind === "seasonCultivateFactor") continue;
       if (group.entries.some((entry) =>
         entry.sourceType === sourceType
         && entry.sourceId === sourceId
@@ -142,6 +145,12 @@
     return group.name.trim() || t("skillMonitor.defaults.customPanelGroupName", {
       index: index + 1,
     });
+  }
+
+  function getCustomPanelGroupKindLabel(group: CustomPanelGroup): string {
+    return group.kind === "seasonCultivateFactor"
+      ? t("skillMonitor.customPanel.kind.factor")
+      : t("skillMonitor.customPanel.kind.manual");
   }
 
   function getSelectedGroupDisplayName(): string {
@@ -241,9 +250,16 @@
       <button
         type="button"
         class="min-h-11 rounded-lg border border-border/60 bg-muted/20 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/40 cursor-pointer"
-        onclick={addCustomPanelGroup}
+        onclick={() => addCustomPanelGroup("manual")}
       >
         {t("skillMonitor.customPanel.new")}
+      </button>
+      <button
+        type="button"
+        class="min-h-11 rounded-lg border border-border/60 bg-muted/20 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/40 cursor-pointer"
+        onclick={() => addCustomPanelGroup("seasonCultivateFactor")}
+      >
+        {t("skillMonitor.customPanel.newFactor")}
       </button>
       <div class="text-xs text-muted-foreground" role="status" aria-live="polite">
         {#if selectedGroup}
@@ -270,7 +286,10 @@
             >
               <div class="text-sm font-medium text-foreground">{getCustomPanelGroupDisplayName(group, groupIndex)}</div>
               <div class="mt-1 text-xs text-muted-foreground">
-                {t("skillMonitor.customPanel.entryCount", { count: group.entries.length })}
+                {getCustomPanelGroupKindLabel(group)}
+                {#if group.kind !== "seasonCultivateFactor"}
+                  · {t("skillMonitor.customPanel.entryCount", { count: group.entries.length })}
+                {/if}
               </div>
             </button>
             <button
@@ -395,6 +414,7 @@
       </div>
     </div>
 
+    {#if isSelectedManualGroup}
     <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-3">
       <div class="space-y-1">
         <div class="text-sm font-medium text-foreground">{t("skillMonitor.customPanel.addBuff")}</div>
@@ -681,6 +701,7 @@
         </div>
       {/each}
     </div>
+    {/if}
   {:else}
     <div class="rounded-lg border border-border/60 bg-card/40 p-6 text-sm text-muted-foreground shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
       {t("skillMonitor.customPanel.empty")}

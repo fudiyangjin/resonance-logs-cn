@@ -338,6 +338,14 @@ pub struct BuffCounterUpdatePayload {
 
 #[derive(serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct SeasonCultivateFactorCounterUpdatePayload {
+    pub source_item_ids: Vec<i32>,
+    pub slot_item_ids: Vec<i32>,
+    pub counters: Vec<CounterUpdateState>,
+}
+
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct SkillCdUpdatePayload {
     pub skill_cds: Vec<SkillCdState>,
 }

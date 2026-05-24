@@ -1493,6 +1493,122 @@ pub struct CharSerialize {
     pub sign: ::core::option::Option<SignInfo>,
     #[prost(message, optional, tag = "98")]
     pub char_statistics_data: ::core::option::Option<CharStatisticsData>,
+    #[prost(message, optional, tag = "101")]
+    pub season_cultivate_line_data: ::core::option::Option<SeasonCultivateLineData>,
+}
+#[derive(
+    specta::Type,
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct SeasonCultivateLineData {
+    #[prost(map = "int32, message", tag = "1")]
+    pub season_cultivate_line_map: ::std::collections::HashMap<i32, CultivateLineData>,
+}
+#[derive(
+    specta::Type,
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct CultivateLineData {
+    #[prost(map = "int32, message", tag = "1")]
+    pub cultivate_line_map: ::std::collections::HashMap<i32, CultivateLineSubTypeData>,
+}
+#[derive(
+    specta::Type,
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct CultivateLineSubTypeData {
+    #[prost(map = "int32, message", tag = "1")]
+    pub cultivate_line_data_map: ::std::collections::HashMap<i32, CultivateAreaData>,
+    #[prost(int32, repeated, tag = "2")]
+    pub cultivate_line_area_list: ::prost::alloc::vec::Vec<i32>,
+}
+#[derive(
+    specta::Type,
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct CultivateAreaData {
+    #[prost(map = "int32, message", tag = "1")]
+    pub cultivate_normal_node_map: ::std::collections::HashMap<i32, CultivateNormalNodeData>,
+    #[prost(map = "int32, message", tag = "2")]
+    pub cultivate_middle_node_map: ::std::collections::HashMap<i32, CultivateMiddleNodeData>,
+    #[prost(map = "int32, message", tag = "3")]
+    pub cultivate_big_node_map: ::std::collections::HashMap<i32, CultivateBigNodeData>,
+    #[prost(int32, optional, tag = "4")]
+    pub activate_effect_score: ::core::option::Option<i32>,
+    #[prost(bool, optional, tag = "5")]
+    pub is_active: ::core::option::Option<bool>,
+}
+#[derive(
+    specta::Type,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct CultivateNormalNodeData {
+    #[prost(int32, optional, tag = "1")]
+    pub active_level: ::core::option::Option<i32>,
+}
+#[derive(
+    specta::Type,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct CultivateMiddleNodeData {
+    #[prost(int32, optional, tag = "1")]
+    pub item_id: ::core::option::Option<i32>,
+}
+#[derive(
+    specta::Type,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct CultivateBigNodeData {
+    #[prost(int32, optional, tag = "1")]
+    pub fantasy_id: ::core::option::Option<i32>,
 }
 #[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
 pub struct SceneData {

@@ -9,6 +9,7 @@ import { SETTINGS } from "$lib/settings-store";
 import {
   getCounterRules,
   getDefaultMonitoredBuffIds,
+  getSeasonCultivateFactorTemplates,
   resolveUserCounterRulesToPresets,
 } from "$lib/skill-mappings";
 
@@ -71,8 +72,15 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
   );
   const monitoredPanelAttrs = profile?.monitoredPanelAttrs ?? [];
   const customPanelEntries = profile?.customPanelGroups?.length
-    ? profile.customPanelGroups.flatMap((group) => group.entries ?? [])
+    ? profile.customPanelGroups
+        .filter((group) => (group.kind ?? "manual") === "manual")
+        .flatMap((group) => group.entries ?? [])
     : (profile?.inlineBuffEntries ?? []);
+  const hasSeasonCultivateFactorGroup = Boolean(
+    profile?.customPanelGroups?.some(
+      (group) => group.kind === "seasonCultivateFactor",
+    ),
+  );
   const inlineCounterRuleIds = customPanelEntries
     .filter((entry) => entry.sourceType === "counter")
     .map((entry) => entry.sourceId);
@@ -107,8 +115,18 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
     ...enabledPresetCounterRules,
     ...enabledUserCounterRules,
   ]);
+  const seasonCultivateFactorTemplates = hasSeasonCultivateFactorGroup
+    ? getSeasonCultivateFactorTemplates()
+    : [];
   const counterBuffIds = enabledCounterRules.flatMap((rule) =>
     getCounterRuleBuffIds(rule),
+  );
+  const factorBuffIds = seasonCultivateFactorTemplates.flatMap((template) =>
+    getCounterRuleBuffIds({
+      ruleId: template.ruleId,
+      sources: template.sources ?? [],
+      effectSlots: template.effectSlots ?? [],
+    }),
   );
   const defaultLinkedBuffIds = getDefaultMonitoredBuffIds(selectedClass);
   const mergedBuffIds = uniqueSortedNumbers([
@@ -116,6 +134,7 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
     ...groupBuffIds,
     ...inlineBuffIds,
     ...counterBuffIds,
+    ...factorBuffIds,
     ...defaultLinkedBuffIds,
   ]);
   const monitoredPanelAttrIds = uniqueSortedNumbers(
@@ -132,6 +151,7 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
       monitorAllBuff: false,
       monitoredPanelAttrIds: [],
       buffCounterRules: [],
+      seasonCultivateFactorTemplates: [],
     };
   }
 
@@ -142,6 +162,7 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
     monitorAllBuff,
     monitoredPanelAttrIds,
     buffCounterRules: enabledCounterRules,
+    seasonCultivateFactorTemplates,
   };
 }
 

@@ -9706,6 +9706,9 @@ impl serde::Serialize for CharSerialize {
         if self.char_statistics_data.is_some() {
             len += 1;
         }
+        if self.season_cultivate_line_data.is_some() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("blueprotobuf_package.CharSerialize", len)?;
         if let Some(v) = self.char_id.as_ref() {
             #[allow(clippy::needless_borrow)]
@@ -9997,6 +10000,9 @@ impl serde::Serialize for CharSerialize {
         if let Some(v) = self.char_statistics_data.as_ref() {
             struct_ser.serialize_field("CharStatisticsData", v)?;
         }
+        if let Some(v) = self.season_cultivate_line_data.as_ref() {
+            struct_ser.serialize_field("SeasonCultivateLineData", v)?;
+        }
         struct_ser.end()
     }
 }
@@ -10103,6 +10109,7 @@ impl<'de> serde::Deserialize<'de> for CharSerialize {
             "FightPoint",
             "Sign",
             "CharStatisticsData",
+            "SeasonCultivateLineData",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -10203,6 +10210,7 @@ impl<'de> serde::Deserialize<'de> for CharSerialize {
             FightPoint,
             Sign,
             CharStatisticsData,
+            SeasonCultivateLineData,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -10320,6 +10328,7 @@ impl<'de> serde::Deserialize<'de> for CharSerialize {
                             "FightPoint" => Ok(GeneratedField::FightPoint),
                             "Sign" => Ok(GeneratedField::Sign),
                             "CharStatisticsData" => Ok(GeneratedField::CharStatisticsData),
+                            "SeasonCultivateLineData" => Ok(GeneratedField::SeasonCultivateLineData),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -10435,6 +10444,7 @@ impl<'de> serde::Deserialize<'de> for CharSerialize {
                 let mut fight_point__ = None;
                 let mut sign__ = None;
                 let mut char_statistics_data__ = None;
+                let mut season_cultivate_line_data__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::CharId => {
@@ -11015,6 +11025,12 @@ impl<'de> serde::Deserialize<'de> for CharSerialize {
                             }
                             char_statistics_data__ = map_.next_value()?;
                         }
+                        GeneratedField::SeasonCultivateLineData => {
+                            if season_cultivate_line_data__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("SeasonCultivateLineData"));
+                            }
+                            season_cultivate_line_data__ = map_.next_value()?;
+                        }
                     }
                 }
                 Ok(CharSerialize {
@@ -11114,6 +11130,7 @@ impl<'de> serde::Deserialize<'de> for CharSerialize {
                     fight_point: fight_point__,
                     sign: sign__,
                     char_statistics_data: char_statistics_data__,
+                    season_cultivate_line_data: season_cultivate_line_data__,
                 })
             }
         }

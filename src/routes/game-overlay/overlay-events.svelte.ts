@@ -6,6 +6,7 @@ import {
   onBuffUpdate,
   onFightResUpdate,
   onPanelAttrUpdate,
+  onSeasonCultivateFactorCounterUpdate,
   onShieldDetailUpdate,
   onSkillCdUpdate,
   type BuffUpdateState,
@@ -80,6 +81,15 @@ export function initOverlay() {
     }
     overlayRuntime.counterMap = next;
   });
+  const unlistenFactorCounter = onSeasonCultivateFactorCounterUpdate((event) => {
+    const next = new Map<number, CounterUpdateState>();
+    for (const counter of event.payload.counters) {
+      next.set(counter.ruleId, counter);
+    }
+    overlayRuntime.factorCounterMap = next;
+    overlayRuntime.seasonCultivateFactorSourceItemIds = event.payload.sourceItemIds;
+    overlayRuntime.seasonCultivateFactorSlotItemIds = event.payload.slotItemIds;
+  });
   const unlistenCd = onSkillCdUpdate((event) => {
     const next = new Map(overlayRuntime.cdMap);
     const nextDurationMap = new Map(overlayRuntime.skillDurationMap);
@@ -143,6 +153,7 @@ export function initOverlay() {
     unlistenEditToggle.then((fn) => fn());
     unlistenBuff.then((fn) => fn());
     unlistenCounter.then((fn) => fn());
+    unlistenFactorCounter.then((fn) => fn());
     unlistenCd.then((fn) => fn());
     unlistenRes.then((fn) => fn());
     unlistenPanelAttr.then((fn) => fn());
@@ -178,7 +189,7 @@ function ensureActiveProfileDefaults() {
       !profile.buffDisplayMode ||
       !profile.buffGroups ||
       !profile.customPanelGroups ||
-      profile.customPanelGroups.some((group) => !group.style) ||
+      profile.customPanelGroups.some((group) => !group.style || !group.kind) ||
       !profile.textBuffPanelStyle ||
       !profile.textBuffMaxVisible ||
       profile.monitoredSkillDurationIds === undefined)

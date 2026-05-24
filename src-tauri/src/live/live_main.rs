@@ -4,8 +4,8 @@ use crate::live::{
     commands_models::{
         BossBuffUpdatePayload, BuffCounterUpdatePayload, BuffUpdatePayload, DeathReplayPayload,
         EntityIdentityMapPayload, FightResourceUpdatePayload, HateListUpdatePayload,
-        PanelAttrUpdatePayload, ShieldDetailUpdatePayload, SkillCdUpdatePayload,
-        TeammateBuffUpdatePayload,
+        PanelAttrUpdatePayload, SeasonCultivateFactorCounterUpdatePayload,
+        ShieldDetailUpdatePayload, SkillCdUpdatePayload, TeammateBuffUpdatePayload,
     },
     event_manager::{EncounterUpdatePayload, SceneChangePayload},
     event_manager::{OutboundEvent, safe_emit_to},
@@ -496,6 +496,21 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     crate::WINDOW_GAME_OVERLAY_LABEL,
                     "buff-counter-update",
                     BuffCounterUpdatePayload { counters },
+                );
+            }
+            OutboundEvent::SeasonCultivateFactorCounterUpdate {
+                selection,
+                counters,
+            } => {
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_GAME_OVERLAY_LABEL,
+                    "season-cultivate-factor-counter-update",
+                    SeasonCultivateFactorCounterUpdatePayload {
+                        source_item_ids: selection.source_item_ids,
+                        slot_item_ids: selection.slot_item_ids,
+                        counters,
+                    },
                 );
             }
             OutboundEvent::SkillCdUpdate(skill_cds) => {

@@ -9,7 +9,20 @@
       "onBuffAdd": "reset",
       "onBuffChange": "reset",
       "onBuffRemove": "noOp"
-    }
+    },
+    "itemId": 20021741,
+    "itemIds": [
+      20021741,
+      20021742,
+      20021743,
+      20021744,
+      20021745,
+      20021746,
+      20021747,
+      20021748,
+      20021749,
+      20021750
+    ]
   },
   {
     "slotTemplateId": "stormablade_x1",
@@ -21,7 +34,20 @@
       "onBuffAdd": "freeze",
       "onBuffChange": "noOp",
       "onBuffRemove": "resetAndStartCount"
-    }
+    },
+    "itemId": 20021731,
+    "itemIds": [
+      20021731,
+      20021732,
+      20021733,
+      20021734,
+      20021735,
+      20021736,
+      20021737,
+      20021738,
+      20021739,
+      20021740
+    ]
   },
   {
     "slotTemplateId": "flame_berserker_x1",
@@ -33,7 +59,20 @@
       "onBuffAdd": "reset",
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
-    }
+    },
+    "itemId": 20022211,
+    "itemIds": [
+      20022211,
+      20022212,
+      20022213,
+      20022214,
+      20022215,
+      20022216,
+      20022217,
+      20022218,
+      20022219,
+      20022220
+    ]
   },
   {
     "slotTemplateId": "flame_berserker_x2",
@@ -45,7 +84,20 @@
       "onBuffAdd": "reset",
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
-    }
+    },
+    "itemId": 20022221,
+    "itemIds": [
+      20022221,
+      20022222,
+      20022223,
+      20022224,
+      20022225,
+      20022226,
+      20022227,
+      20022228,
+      20022229,
+      20022230
+    ]
   },
   {
     "slotTemplateId": "flame_berserker_x3",
@@ -57,7 +109,20 @@
       "onBuffAdd": "reset",
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
-    }
+    },
+    "itemId": 20022231,
+    "itemIds": [
+      20022231,
+      20022232,
+      20022233,
+      20022234,
+      20022235,
+      20022236,
+      20022237,
+      20022238,
+      20022239,
+      20022240
+    ]
   },
   {
     "slotTemplateId": "flame_berserker_x4",
@@ -71,7 +136,20 @@
       "onBuffRemove": "noOp",
       "freezeDurationMs": 5000,
       "onFreezeExpire": "resetAndStartCount"
-    }
+    },
+    "itemId": 20022241,
+    "itemIds": [
+      20022241,
+      20022242,
+      20022243,
+      20022244,
+      20022245,
+      20022246,
+      20022247,
+      20022248,
+      20022249,
+      20022250
+    ]
   },
   {
     "slotTemplateId": "flame_berserker_x5",
@@ -83,7 +161,20 @@
       "onBuffAdd": "reset",
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
-    }
+    },
+    "itemId": 20022251,
+    "itemIds": [
+      20022251,
+      20022252,
+      20022253,
+      20022254,
+      20022255,
+      20022256,
+      20022257,
+      20022258,
+      20022259,
+      20022260
+    ]
   },
   {
     "slotTemplateId": "beat_performer_x3",
@@ -97,7 +188,20 @@
       "onBuffRemove": "noOp",
       "freezeDurationMs": 2000,
       "onFreezeExpire": "resetAndStartCount"
-    }
+    },
+    "itemId": 20022171,
+    "itemIds": [
+      20022171,
+      20022172,
+      20022173,
+      20022174,
+      20022175,
+      20022176,
+      20022177,
+      20022178,
+      20022179,
+      20022180
+    ]
   },
   {
     "slotTemplateId": "beat_performer_x5",
@@ -111,7 +215,20 @@
       "onBuffRemove": "noOp",
       "freezeDurationMs": 15000,
       "onFreezeExpire": "resetAndStartCount"
-    }
+    },
+    "itemId": 20022191,
+    "itemIds": [
+      20022191,
+      20022192,
+      20022193,
+      20022194,
+      20022195,
+      20022196,
+      20022197,
+      20022198,
+      20022199,
+      20022200
+    ]
   },
   {
     "slotTemplateId": "marksman_x1",
@@ -125,7 +242,20 @@
       "onBuffRemove": "noOp",
       "freezeDurationMs": 30000,
       "onFreezeExpire": "resetAndStartCount"
-    }
+    },
+    "itemId": 20021911,
+    "itemIds": [
+      20021911,
+      20021912,
+      20021913,
+      20021914,
+      20021915,
+      20021916,
+      20021917,
+      20021918,
+      20021919,
+      20021920
+    ]
   },
   {
     "slotTemplateId": "marksman_x2",
@@ -139,7 +269,20 @@
       "onBuffRemove": "noOp",
       "freezeDurationMs": 12000,
       "onFreezeExpire": "resetAndStartCount"
-    }
+    },
+    "itemId": 20021921,
+    "itemIds": [
+      20021921,
+      20021922,
+      20021923,
+      20021924,
+      20021925,
+      20021926,
+      20021927,
+      20021928,
+      20021929,
+      20021930
+    ]
   },
   {
     "slotTemplateId": "marksman_x5",
@@ -153,7 +296,20 @@
       "onBuffRemove": "noOp",
       "freezeDurationMs": 30000,
       "onFreezeExpire": "resetAndStartCount"
-    }
+    },
+    "itemId": 20021951,
+    "itemIds": [
+      20021951,
+      20021952,
+      20021953,
+      20021954,
+      20021955,
+      20021956,
+      20021957,
+      20021958,
+      20021959,
+      20021960
+    ]
   },
   {
     "slotTemplateId": "marksman_x6",
@@ -165,7 +321,20 @@
       "onBuffAdd": "reset",
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
-    }
+    },
+    "itemId": 20021961,
+    "itemIds": [
+      20021961,
+      20021962,
+      20021963,
+      20021964,
+      20021965,
+      20021966,
+      20021967,
+      20021968,
+      20021969,
+      20021970
+    ]
   },
   {
     "slotTemplateId": "frost_mage_x1",
@@ -177,7 +346,20 @@
       "onBuffAdd": "reset",
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
-    }
+    },
+    "itemId": 20021851,
+    "itemIds": [
+      20021851,
+      20021852,
+      20021853,
+      20021854,
+      20021855,
+      20021856,
+      20021857,
+      20021858,
+      20021859,
+      20021860
+    ]
   },
   {
     "slotTemplateId": "frost_mage_x2",
@@ -191,7 +373,20 @@
       "onBuffRemove": "noOp",
       "freezeDurationMs": 8000,
       "onFreezeExpire": "resetAndStartCount"
-    }
+    },
+    "itemId": 20021861,
+    "itemIds": [
+      20021861,
+      20021862,
+      20021863,
+      20021864,
+      20021865,
+      20021866,
+      20021867,
+      20021868,
+      20021869,
+      20021870
+    ]
   },
   {
     "slotTemplateId": "frost_mage_x3",
@@ -206,7 +401,20 @@
       "onBuffRemove": "noOp",
       "freezeDurationMs": 10000,
       "onFreezeExpire": "resetAndStartCount"
-    }
+    },
+    "itemId": 20021871,
+    "itemIds": [
+      20021871,
+      20021872,
+      20021873,
+      20021874,
+      20021875,
+      20021876,
+      20021877,
+      20021878,
+      20021879,
+      20021880
+    ]
   },
   {
     "slotTemplateId": "frost_mage_x4",
@@ -221,7 +429,20 @@
       "onBuffRemove": "noOp",
       "freezeDurationMs": 7000,
       "onFreezeExpire": "resetAndStartCount"
-    }
+    },
+    "itemId": 20021881,
+    "itemIds": [
+      20021881,
+      20021882,
+      20021883,
+      20021884,
+      20021885,
+      20021886,
+      20021887,
+      20021888,
+      20021889,
+      20021890
+    ]
   },
   {
     "slotTemplateId": "frost_mage_x5",
@@ -233,7 +454,20 @@
       "onBuffAdd": "reset",
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
-    }
+    },
+    "itemId": 20021891,
+    "itemIds": [
+      20021891,
+      20021892,
+      20021893,
+      20021894,
+      20021895,
+      20021896,
+      20021897,
+      20021898,
+      20021899,
+      20021900
+    ]
   },
   {
     "slotTemplateId": "wind_knight_x4",
@@ -245,7 +479,20 @@
       "onBuffAdd": "reset",
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
-    }
+    },
+    "itemId": 20021821,
+    "itemIds": [
+      20021821,
+      20021822,
+      20021823,
+      20021824,
+      20021825,
+      20021826,
+      20021827,
+      20021828,
+      20021829,
+      20021830
+    ]
   },
   {
     "slotTemplateId": "wind_knight_x5",
@@ -257,6 +504,19 @@
       "onBuffAdd": "reset",
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
-    }
+    },
+    "itemId": 20021831,
+    "itemIds": [
+      20021831,
+      20021832,
+      20021833,
+      20021834,
+      20021835,
+      20021836,
+      20021837,
+      20021838,
+      20021839,
+      20021840
+    ]
   }
 ]

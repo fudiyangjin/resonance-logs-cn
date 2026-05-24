@@ -95,7 +95,9 @@ const _customPanelGroups = $derived.by(() => {
   return ensureCustomPanelGroups(_activeProfile);
 });
 const _inlineBuffEntries = $derived.by<InlineBuffEntry[]>(() => {
-  return _customPanelGroups.flatMap((group) => group.entries);
+  return _customPanelGroups
+    .filter((group) => group.kind === "manual")
+    .flatMap((group) => group.entries);
 });
 const _inlineBuffIds = $derived.by(
   () =>

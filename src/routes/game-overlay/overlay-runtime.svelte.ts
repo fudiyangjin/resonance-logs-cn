@@ -22,6 +22,9 @@ export const overlayRuntime = $state({
   fightResMap: new Map<number, number>(),
   buffMap: new Map<number, BuffUpdateState>(),
   counterMap: new Map<number, CounterUpdateState>(),
+  factorCounterMap: new Map<number, CounterUpdateState>(),
+  seasonCultivateFactorSourceItemIds: [] as number[],
+  seasonCultivateFactorSlotItemIds: [] as number[],
   panelAttrMap: new Map<number, number>(),
   shieldDetailHp: { current: 0, max: 0 },
   shieldDetailEntries: [] as ShieldDetailEntry[],
@@ -49,6 +52,18 @@ export function buffMap() {
 
 export function counterMap() {
   return overlayRuntime.counterMap;
+}
+
+export function factorCounterMap() {
+  return overlayRuntime.factorCounterMap;
+}
+
+export function seasonCultivateFactorSourceItemIds() {
+  return overlayRuntime.seasonCultivateFactorSourceItemIds;
+}
+
+export function seasonCultivateFactorSlotItemIds() {
+  return overlayRuntime.seasonCultivateFactorSlotItemIds;
 }
 
 export function panelAttrMap() {
