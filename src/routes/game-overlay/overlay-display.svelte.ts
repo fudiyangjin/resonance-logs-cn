@@ -2,6 +2,8 @@ import {
   findAnySkillByBaseId,
   findSpecialBuffDisplays,
   getCounterRules,
+  getSeasonCultivateFactorConfiguredEffectBuffIds,
+  getSeasonCultivateFactorEffectBuffIdMap,
   getSeasonCultivateFactorRuleId,
   getSeasonCultivateFactorRuleMap,
   type CounterRulePreset,
@@ -102,6 +104,23 @@ const _seasonCultivateFactorRuleMap = $derived.by(() =>
   getSeasonCultivateFactorRuleMap(),
 );
 
+const _seasonCultivateFactorEffectBuffIdMap = $derived.by(() =>
+  getSeasonCultivateFactorEffectBuffIdMap(),
+);
+
+const _seasonCultivateFactorOwnedEffectBuffIds = $derived.by(() => {
+  const result = new Set<number>();
+  const hasFactorPanelGroup = customPanelGroups().some(
+    (group) => group.kind === "seasonCultivateFactor",
+  );
+  if (!hasFactorPanelGroup) return result;
+
+  for (const buffId of getSeasonCultivateFactorConfiguredEffectBuffIds()) {
+    result.add(buffId);
+  }
+  return result;
+});
+
 const _buffSnapshot = $derived.by(() => {
   const now = overlayNow();
   const explicitSelectedBuffIds = monitoredBuffIds();
@@ -127,6 +146,7 @@ const _buffSnapshot = $derived.by(() => {
   const nextIconBuffs: IconBuffDisplay[] = [];
   const nextTextBuffs: TextBuffDisplay[] = [];
   const nextCustomPanelRowsByGroup = new Map<string, CustomPanelDisplayRow[]>();
+  const factorOwnedEffectBuffIds = _seasonCultivateFactorOwnedEffectBuffIds;
   const userExplicitBuffIds = new Set([
     ...expandedMonitoredBuffIds(),
     ..._normalizedBuffGroups
@@ -159,6 +179,7 @@ const _buffSnapshot = $derived.by(() => {
       !userExplicitBuffIds.has(baseId)
     )
       continue;
+    if (factorOwnedEffectBuffIds.has(baseId)) continue;
 
     const definition = buffDefinitionsMap.get(baseId);
     const name = resolveBuffDisplayName(baseId, currentBuffAliases);
@@ -204,6 +225,7 @@ const _buffSnapshot = $derived.by(() => {
     const iconIds = new Set(nextIconBuffs.map((buff) => buff.baseId));
     const textIds = new Set(nextTextBuffs.map((buff) => buff.key));
     for (const baseId of explicitSelectedBuffIds) {
+      if (factorOwnedEffectBuffIds.has(baseId)) continue;
       if (iconIds.has(baseId) || textIds.has(`buff_${baseId}`)) continue;
       const definition = buffDefinitionsMap.get(baseId);
       const name = resolveBuffDisplayName(baseId, currentBuffAliases);
@@ -261,6 +283,8 @@ const _buffSnapshot = $derived.by(() => {
   for (const group of panelGroups) {
     const nextRows: CustomPanelDisplayRow[] = [];
     if (group.kind === "seasonCultivateFactor") {
+      const effectBuffIds = new Set<number>();
+      const effectBuffEntries: InlineBuffEntry[] = [];
       for (const itemId of seasonCultivateFactorSlotItemIds()) {
         const ruleId = getSeasonCultivateFactorRuleId(itemId);
         const rule = _seasonCultivateFactorRuleMap.get(ruleId);
@@ -283,6 +307,50 @@ const _buffSnapshot = $derived.by(() => {
           resolveAlert,
         );
         if (row) nextRows.push(row);
+        const configuredEffectBuffIds =
+          _seasonCultivateFactorEffectBuffIdMap.get(itemId) ?? [];
+        for (const buffId of configuredEffectBuffIds) {
+          if (effectBuffIds.has(buffId)) continue;
+          effectBuffIds.add(buffId);
+          effectBuffEntries.push({
+            id: `season_cultivate_factor_effect_${itemId}_${buffId}`,
+            sourceType: "buff",
+            sourceId: buffId,
+            label: resolveBuffDisplayName(buffId, currentBuffAliases),
+            format: "timer",
+          });
+        }
+      }
+      for (const entry of effectBuffEntries) {
+        const row = getCustomPanelDisplayRow(
+          entry,
+          now,
+          buffMap(),
+          factorCounterMap(),
+          _seasonCultivateFactorRuleMap,
+          (baseId) => resolveBuffDisplayName(baseId, currentBuffAliases),
+          resolveAlert,
+        );
+        if (row) {
+          nextRows.push(row);
+          continue;
+        }
+        if (!overlayRuntime.isEditing) continue;
+        const placeholderRow = buildBuffTextRow(
+          `inline_buff_${entry.id}`,
+          entry.label,
+          {
+            baseId: entry.sourceId,
+            durationMs: 0,
+            createTimeMs: now,
+            layer: 1,
+          },
+          now,
+          true,
+          true,
+          resolveAlert,
+        );
+        if (placeholderRow) nextRows.push(placeholderRow);
       }
     } else {
       for (const entry of group.entries) {

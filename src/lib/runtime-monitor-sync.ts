@@ -9,6 +9,7 @@ import { SETTINGS } from "$lib/settings-store";
 import {
   getCounterRules,
   getDefaultMonitoredBuffIds,
+  getSeasonCultivateFactorConfiguredEffectBuffIds,
   getSeasonCultivateFactorTemplates,
   resolveUserCounterRulesToPresets,
 } from "$lib/skill-mappings";
@@ -25,7 +26,10 @@ function normalizeCounterRules(rules: CounterRule[]): CounterRule[] {
   return Array.from(deduped.values()).sort((a, b) => a.ruleId - b.ruleId);
 }
 
-function getCounterRuleBuffIds(rule: CounterRule): number[] {
+function getCounterConfigBuffIds(rule: {
+  sources: CounterRule["sources"];
+  effectSlots: CounterRule["effectSlots"];
+}): number[] {
   const result = rule.effectSlots.map((slot) => slot.resetBuffId);
   for (const slot of rule.effectSlots) {
     if (slot.altFreeze) {
@@ -119,15 +123,17 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
     ? getSeasonCultivateFactorTemplates()
     : [];
   const counterBuffIds = enabledCounterRules.flatMap((rule) =>
-    getCounterRuleBuffIds(rule),
+    getCounterConfigBuffIds(rule),
   );
   const factorBuffIds = seasonCultivateFactorTemplates.flatMap((template) =>
-    getCounterRuleBuffIds({
-      ruleId: template.ruleId,
+    getCounterConfigBuffIds({
       sources: template.sources ?? [],
       effectSlots: template.effectSlots ?? [],
     }),
   );
+  const factorEffectBuffIds = hasSeasonCultivateFactorGroup
+    ? getSeasonCultivateFactorConfiguredEffectBuffIds()
+    : [];
   const defaultLinkedBuffIds = getDefaultMonitoredBuffIds(selectedClass);
   const mergedBuffIds = uniqueSortedNumbers([
     ...monitoredBuffIds,
@@ -135,6 +141,7 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
     ...inlineBuffIds,
     ...counterBuffIds,
     ...factorBuffIds,
+    ...factorEffectBuffIds,
     ...defaultLinkedBuffIds,
   ]);
   const monitoredPanelAttrIds = uniqueSortedNumbers(

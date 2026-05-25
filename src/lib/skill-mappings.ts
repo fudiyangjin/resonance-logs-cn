@@ -102,8 +102,7 @@ export type CounterEffectSlotPreset = {
 
 export type SourceTemplate = {
   sourceId: string;
-  itemId: number;
-  itemIds?: number[];
+  itemIds: number[];
   name: string;
   description: string;
   source: CounterSource;
@@ -111,8 +110,8 @@ export type SourceTemplate = {
 
 export type SlotTemplate = {
   slotTemplateId: string;
-  itemId: number;
-  itemIds?: number[];
+  itemIds: number[];
+  effectBuffIds?: number[];
   name: string;
   description: string;
   slot: Omit<CounterEffectSlotPreset, "slotId">;
@@ -177,28 +176,38 @@ export function getSeasonCultivateFactorRuleId(itemId: number): number {
   return FACTOR_RULE_ID_BASE + itemId;
 }
 
-function normalizeTemplateItemIds(item: {
-  itemId: number;
-  itemIds?: number[];
+function normalizeTemplateItemIds(item: { itemIds: number[] }): number[] {
+  return Array.from(
+    new Set(
+      item.itemIds.filter(
+        (itemId) => Number.isInteger(itemId) && itemId > 0,
+      ),
+    ),
+  ).sort((left, right) => left - right);
+}
+
+function normalizeTemplateEffectBuffIds(item: {
+  effectBuffIds?: number[];
 }): number[] {
-  return Array.from(new Set([item.itemId, ...(item.itemIds ?? [])])).sort(
-    (left, right) => left - right,
-  );
+  const result: number[] = [];
+  const seen = new Set<number>();
+  for (const buffId of item.effectBuffIds ?? []) {
+    if (!Number.isInteger(buffId) || buffId <= 0 || seen.has(buffId)) continue;
+    seen.add(buffId);
+    result.push(buffId);
+  }
+  return result;
 }
 
 export function getSeasonCultivateFactorTemplates(): FactorCounterTemplate[] {
   return [
     ...SOURCE_TEMPLATES.map((template) => ({
-      itemId: template.itemId,
       itemIds: normalizeTemplateItemIds(template),
-      ruleId: getSeasonCultivateFactorRuleId(template.itemId),
       sources: [template.source],
       effectSlots: [],
     })),
     ...SLOT_TEMPLATES.map((template) => ({
-      itemId: template.itemId,
       itemIds: normalizeTemplateItemIds(template),
-      ruleId: getSeasonCultivateFactorRuleId(template.itemId),
       sources: [],
       effectSlots: resolveCounterEffectSlots([template.slotTemplateId]).map(
         ({ displayMode: _displayMode, ...slot }) => slot,
@@ -225,6 +234,31 @@ export function getSeasonCultivateFactorRuleMap(): Map<
     }
   }
   return map;
+}
+
+export function getSeasonCultivateFactorEffectBuffIdMap(): Map<
+  number,
+  number[]
+> {
+  const map = new Map<number, number[]>();
+  for (const template of SLOT_TEMPLATES) {
+    const effectBuffIds = normalizeTemplateEffectBuffIds(template);
+    if (effectBuffIds.length === 0) continue;
+    for (const itemId of normalizeTemplateItemIds(template)) {
+      map.set(itemId, effectBuffIds);
+    }
+  }
+  return map;
+}
+
+export function getSeasonCultivateFactorConfiguredEffectBuffIds(): number[] {
+  return Array.from(
+    new Set(
+      SLOT_TEMPLATES.flatMap((template) =>
+        normalizeTemplateEffectBuffIds(template),
+      ),
+    ),
+  ).sort((left, right) => left - right);
 }
 
 export function resolveCounterSources(sourceRefs: string[]): CounterSource[] {

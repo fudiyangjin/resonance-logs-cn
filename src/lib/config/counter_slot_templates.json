@@ -10,7 +10,9 @@
       "onBuffChange": "reset",
       "onBuffRemove": "noOp"
     },
-    "itemId": 20021741,
+    "effectBuffIds": [
+      3050411
+    ],
     "itemIds": [
       20021741,
       20021742,
@@ -35,7 +37,9 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "resetAndStartCount"
     },
-    "itemId": 20021731,
+    "effectBuffIds": [
+      3050401
+    ],
     "itemIds": [
       20021731,
       20021732,
@@ -60,7 +64,9 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
     },
-    "itemId": 20022211,
+    "effectBuffIds": [
+      3060401
+    ],
     "itemIds": [
       20022211,
       20022212,
@@ -85,7 +91,9 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
     },
-    "itemId": 20022221,
+    "effectBuffIds": [
+      3060411
+    ],
     "itemIds": [
       20022221,
       20022222,
@@ -110,7 +118,9 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
     },
-    "itemId": 20022231,
+    "effectBuffIds": [
+      3060421
+    ],
     "itemIds": [
       20022231,
       20022232,
@@ -137,7 +147,9 @@
       "freezeDurationMs": 5000,
       "onFreezeExpire": "resetAndStartCount"
     },
-    "itemId": 20022241,
+    "effectBuffIds": [
+      3060431
+    ],
     "itemIds": [
       20022241,
       20022242,
@@ -162,7 +174,9 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
     },
-    "itemId": 20022251,
+    "effectBuffIds": [
+      3060441
+    ],
     "itemIds": [
       20022251,
       20022252,
@@ -189,7 +203,9 @@
       "freezeDurationMs": 2000,
       "onFreezeExpire": "resetAndStartCount"
     },
-    "itemId": 20022171,
+    "effectBuffIds": [
+      3057421
+    ],
     "itemIds": [
       20022171,
       20022172,
@@ -216,7 +232,9 @@
       "freezeDurationMs": 15000,
       "onFreezeExpire": "resetAndStartCount"
     },
-    "itemId": 20022191,
+    "effectBuffIds": [
+      3057261
+    ],
     "itemIds": [
       20022191,
       20022192,
@@ -243,7 +261,9 @@
       "freezeDurationMs": 30000,
       "onFreezeExpire": "resetAndStartCount"
     },
-    "itemId": 20021911,
+    "effectBuffIds": [
+      3053401
+    ],
     "itemIds": [
       20021911,
       20021912,
@@ -270,7 +290,10 @@
       "freezeDurationMs": 12000,
       "onFreezeExpire": "resetAndStartCount"
     },
-    "itemId": 20021921,
+    "effectBuffIds": [
+      3053411,
+      3053412
+    ],
     "itemIds": [
       20021921,
       20021922,
@@ -297,7 +320,9 @@
       "freezeDurationMs": 30000,
       "onFreezeExpire": "resetAndStartCount"
     },
-    "itemId": 20021951,
+    "effectBuffIds": [
+      3053441
+    ],
     "itemIds": [
       20021951,
       20021952,
@@ -322,7 +347,9 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
     },
-    "itemId": 20021961,
+    "effectBuffIds": [
+      3053451
+    ],
     "itemIds": [
       20021961,
       20021962,
@@ -347,7 +374,10 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
     },
-    "itemId": 20021851,
+    "effectBuffIds": [
+      3052401,
+      3052402
+    ],
     "itemIds": [
       20021851,
       20021852,
@@ -374,7 +404,10 @@
       "freezeDurationMs": 8000,
       "onFreezeExpire": "resetAndStartCount"
     },
-    "itemId": 20021861,
+    "effectBuffIds": [
+      3052411,
+      3052412
+    ],
     "itemIds": [
       20021861,
       20021862,
@@ -402,7 +435,9 @@
       "freezeDurationMs": 10000,
       "onFreezeExpire": "resetAndStartCount"
     },
-    "itemId": 20021871,
+    "effectBuffIds": [
+      3052421
+    ],
     "itemIds": [
       20021871,
       20021872,
@@ -430,7 +465,9 @@
       "freezeDurationMs": 7000,
       "onFreezeExpire": "resetAndStartCount"
     },
-    "itemId": 20021881,
+    "effectBuffIds": [
+      3052431
+    ],
     "itemIds": [
       20021881,
       20021882,
@@ -455,7 +492,9 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
     },
-    "itemId": 20021891,
+    "effectBuffIds": [
+      3052441
+    ],
     "itemIds": [
       20021891,
       20021892,
@@ -472,7 +511,7 @@
   {
     "slotTemplateId": "wind_knight_x4",
     "name": "青岚真实因子X4, 15s 内特殊攻击暴击提升",
-    "description": "15s 内玄冰上限 + 3",
+    "description": "15s 内特殊攻击暴击提升",
     "slot": {
       "threshold": 360,
       "resetBuffId": 3051431,
@@ -480,7 +519,9 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
     },
-    "itemId": 20021821,
+    "effectBuffIds": [
+      3051431
+    ],
     "itemIds": [
       20021821,
       20021822,
@@ -505,7 +546,9 @@
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"
     },
-    "itemId": 20021831,
+    "effectBuffIds": [
+      3051441
+    ],
     "itemIds": [
       20021831,
       20021832,

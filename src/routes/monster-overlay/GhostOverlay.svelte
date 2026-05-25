@@ -7,7 +7,10 @@
   } from "$lib/config/buff-name-table";
   import { ensureCustomPanelGroups } from "$lib/custom-panel-utils";
   import { t } from "$lib/i18n/index.svelte";
-  import { findAnySkillByBaseId } from "$lib/skill-mappings";
+  import {
+    findAnySkillByBaseId,
+    getSeasonCultivateFactorConfiguredEffectBuffIds,
+  } from "$lib/skill-mappings";
   import { activeProfile } from "$lib/skill-monitor-profile.svelte";
   import { DEFAULT_OVERLAY_POSITIONS } from "../game-overlay/overlay-constants";
   import {
@@ -177,6 +180,14 @@
     );
   }
 
+  function customPanelPreviewEntryCount(group: {
+    kind?: string;
+    entries: unknown[];
+  }) {
+    if (group.kind !== "seasonCultivateFactor") return group.entries.length;
+    return 2 + getSeasonCultivateFactorConfiguredEffectBuffIds().length;
+  }
+
   const ghostItems = $derived.by(() => {
     const profile = activeProfile();
     if (!profile) return [] as GhostItem[];
@@ -240,10 +251,7 @@
           customPanelLabel(group, index),
           group.position,
           240,
-          customPanelHeight(
-            group.kind === "seasonCultivateFactor" ? 2 : group.entries.length,
-            group.style,
-          ),
+          customPanelHeight(customPanelPreviewEntryCount(group), group.style),
           group.scale,
         );
       }

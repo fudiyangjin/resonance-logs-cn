@@ -1,5 +1,5 @@
 use crate::live::counter_tracker::CounterRule;
-use crate::live::season_cultivate::FactorCounterTemplate;
+use crate::live::season_cultivate::{FactorCounterTemplate, normalize_factor_templates};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -44,14 +44,23 @@ impl MonitorRuntimeSnapshot {
         self.skill
             .buff_counter_rules
             .dedup_by_key(|rule| rule.rule_id);
+        self.skill.season_cultivate_factor_templates = normalize_factor_templates(
+            std::mem::take(&mut self.skill.season_cultivate_factor_templates),
+        );
         self.skill
             .season_cultivate_factor_templates
-            .sort_by_key(|template| template.rule_id);
+            .sort_by_key(|template| {
+                (
+                    template.item_ids.first().copied().unwrap_or_default(),
+                    !template.sources.is_empty(),
+                    !template.effect_slots.is_empty(),
+                )
+            });
         self.skill
             .season_cultivate_factor_templates
             .dedup_by_key(|template| {
                 (
-                    template.item_id,
+                    template.item_ids.first().copied().unwrap_or_default(),
                     !template.sources.is_empty(),
                     !template.effect_slots.is_empty(),
                 )

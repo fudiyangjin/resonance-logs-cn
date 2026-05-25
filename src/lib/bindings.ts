@@ -532,7 +532,7 @@ remoteEncounterId: number | null;
  * Whether the encounter is favorited.
  */
 isFavorite: boolean }
-export type FactorCounterTemplate = { itemId: number; itemIds?: number[]; ruleId: number; sources?: CounterSource[]; effectSlots?: EffectSlotConfig[] }
+export type FactorCounterTemplate = { itemIds?: number[]; sources?: CounterSource[]; effectSlots?: EffectSlotConfig[] }
 export type GpuSupport = { cuda_available: boolean; opencl_available: boolean }
 export type HistoryEntityData = { entityUuid: string; displayUid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; seasonStrength: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }>; dmgPerTarget: PerTargetStats[]; healPerTarget: PerTargetStats[]; deaths: DeathRecord[] }
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number }

@@ -11,10 +11,8 @@ const DIRTY_END: i32 = -3;
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct FactorCounterTemplate {
-    pub item_id: i32,
     #[serde(default)]
     pub item_ids: Vec<i32>,
-    pub rule_id: i32,
     #[serde(default)]
     pub sources: Vec<CounterSource>,
     #[serde(default)]
@@ -41,7 +39,7 @@ impl SeasonCultivateRuntimeState {
         &mut self,
         templates: Vec<FactorCounterTemplate>,
     ) -> Option<Vec<CounterRule>> {
-        self.templates = templates;
+        self.templates = normalize_factor_templates(templates);
         self.active_signature.clear();
         self.rebuild_factor_rules()
     }
@@ -183,7 +181,6 @@ fn template_item_id_set<'a>(
 ) -> HashSet<i32> {
     let mut result = HashSet::new();
     for template in templates {
-        result.insert(template.item_id);
         result.extend(template.item_ids.iter().copied());
     }
     result
@@ -196,7 +193,21 @@ fn template_matches_any_item_id(template: &FactorCounterTemplate, item_ids: &[i3
 }
 
 fn template_matches_item_id(template: &FactorCounterTemplate, item_id: i32) -> bool {
-    item_id == template.item_id || template.item_ids.contains(&item_id)
+    template.item_ids.contains(&item_id)
+}
+
+pub fn normalize_factor_templates(
+    templates: Vec<FactorCounterTemplate>,
+) -> Vec<FactorCounterTemplate> {
+    templates
+        .into_iter()
+        .filter_map(|mut template| {
+            template.item_ids.retain(|item_id| *item_id > 0);
+            template.item_ids.sort_unstable();
+            template.item_ids.dedup();
+            (!template.item_ids.is_empty()).then_some(template)
+        })
+        .collect()
 }
 
 trait SeasonCultivateActiveItems {
