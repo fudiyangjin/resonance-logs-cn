@@ -1,3 +1,4 @@
+import type { BuffCategoryKey } from "$lib/config/buff-name-table";
 import type { TextBuffDisplay } from "../game-overlay/overlay-types";
 import type { BuffAlertState } from "../game-overlay/overlay-types";
 import type { EntityId } from "$lib/entity-id";
@@ -26,6 +27,15 @@ export type MonsterTeammateBuffCell = {
   progressPercent: number;
   hasBuff: boolean;
   alert?: BuffAlertState | undefined;
+  categoryKey?: BuffCategoryKey | undefined;
+  matchedBuffId?: number | undefined;
+};
+
+export type MonsterTeammateBuffColumn = {
+  key: string;
+  buffIds: number[];
+  label: string;
+  categoryKey?: BuffCategoryKey | undefined;
 };
 
 export type MonsterTeammateBuffRow = {
@@ -33,6 +43,11 @@ export type MonsterTeammateBuffRow = {
   teammateName: string;
   cells: MonsterTeammateBuffCell[];
   isPlaceholder?: boolean;
+};
+
+export type MonsterTeammateBuffDisplay = {
+  columns: MonsterTeammateBuffColumn[];
+  rows: MonsterTeammateBuffRow[];
 };
 
 export type MonsterDragTarget =
