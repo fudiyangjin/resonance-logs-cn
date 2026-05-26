@@ -868,6 +868,7 @@ export const enUSMessages = {
   "components.deathReplay.unknownClass": "Unknown class",
   "components.deathReplay.uidTooltip": "UID: #{uid}",
   "components.deathReplay.attackerUid": "Attacker #{uid}",
+  "components.deathReplay.unknownSource": "Unknown source",
   "components.deathReplay.sourceLabel": "Source: {source}",
   "components.deathReplay.deathCountText": "{count} deaths",
   "components.deathReplay.hitCountText": "{count} hits taken",

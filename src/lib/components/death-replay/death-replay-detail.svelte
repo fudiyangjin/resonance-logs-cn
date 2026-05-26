@@ -94,7 +94,7 @@
       });
     }
 
-    return "";
+    return t("components.deathReplay.unknownSource");
   }
 
   function resolveSkillName(snapshot: DamageSnapshot): string {

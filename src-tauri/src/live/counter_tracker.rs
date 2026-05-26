@@ -3,7 +3,7 @@ use crate::live::buff_monitor::{BuffChangeEvent, BuffChangeType};
 use crate::live::commands_models::{CounterUpdateState, FightResourceEntry, SlotUpdateState};
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::opcodes_models::{AttrType, AttrValue, PositionAttr};
-use crate::live::opcodes_process::{LocalDamageEvent, LocalDamageTakenEvent};
+use crate::live::opcodes_process::{DamageTakenSource, LocalDamageEvent, LocalDamageTakenEvent};
 use blueprotobuf_lib::blueprotobuf::EActorState;
 use log::info;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -557,7 +557,7 @@ impl BuffCounterTracker {
                 let matches = events
                     .iter()
                     .filter(|event| {
-                        event.attacker_entity_uuid != local_player_uuid
+                        !matches!(event.source, DamageTakenSource::Entity(uuid) if uuid == local_player_uuid)
                             && skill_keys
                                 .as_ref()
                                 .is_none_or(|keys| keys.contains(&event.skill_key))

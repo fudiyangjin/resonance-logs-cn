@@ -422,8 +422,8 @@ pub struct FightResourceUpdatePayload {
 pub struct DamageSnapshot {
     /// Absolute timestamp in milliseconds since UNIX epoch.
     pub timestamp_ms: u128,
-    /// Attacker entity UUID, serialized as a string for JS safety.
-    pub attacker_entity_uuid: String,
+    /// Attacker entity UUID, serialized as a string for JS safety. None for unknown sources.
+    pub attacker_entity_uuid: Option<String>,
     /// Monster type id of the attacker, if the attacker is a monster. None otherwise.
     pub attacker_monster_type_id: Option<i32>,
     /// Skill key produced by `damage_id::compute_damage_id`.
@@ -451,7 +451,7 @@ pub struct DeathReplayPayload {
 pub fn to_damage_snapshot(snapshot: &RuntimeDamageSnapshot) -> DamageSnapshot {
     DamageSnapshot {
         timestamp_ms: snapshot.timestamp_ms,
-        attacker_entity_uuid: snapshot.attacker_entity_uuid.to_string(),
+        attacker_entity_uuid: snapshot.attacker_entity_uuid.map(|uuid| uuid.to_string()),
         attacker_monster_type_id: snapshot.attacker_monster_type_id,
         skill_key: snapshot.skill_key,
         value: snapshot.value,

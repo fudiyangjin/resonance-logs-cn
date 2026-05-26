@@ -781,6 +781,7 @@ export const zhCNMessages = {
   "components.deathReplay.unknownClass": "未知职业",
   "components.deathReplay.uidTooltip": "UID：#{uid}",
   "components.deathReplay.attackerUid": "攻击者 #{uid}",
+  "components.deathReplay.unknownSource": "未知来源",
   "components.deathReplay.sourceLabel": "来源：{source}",
   "components.deathReplay.deathCountText": "共 {count} 次死亡",
   "components.deathReplay.hitCountText": "{count} 次受击",

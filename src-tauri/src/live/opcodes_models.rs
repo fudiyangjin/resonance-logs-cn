@@ -345,7 +345,7 @@ pub struct CombatStats {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DamageSnapshot {
     pub timestamp_ms: u128,
-    pub attacker_entity_uuid: EntityUuid,
+    pub attacker_entity_uuid: Option<EntityUuid>,
     pub attacker_monster_type_id: Option<i32>,
     pub skill_key: i64,
     pub value: u128,
