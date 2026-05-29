@@ -71,6 +71,13 @@
     ]
   },
   {
+    "sourceId": "stormablade_s3_x3",
+    "name": "雷影S3 X3, 释放坠龙闪、神影斩获得 24 点能量",
+    "description": "释放坠龙闪、神影斩获得 24 点能量",
+    "source": { "skillCast": { "skillBaseIds": [1735, 1736], "increment": 24 } },
+    "itemIds": [20020021, 20020022, 20020023, 20020024, 20020025, 20020026, 20020027, 20020028, 20020029, 20020030]
+  },
+  {
     "sourceId": "stormablade_x4",
     "name": "雷影X4, 释放雷切获得 120 点能量",
     "description": "雷影X4, 释放雷切获得 120 点能量",
@@ -140,6 +147,20 @@
     ]
   },
   {
+    "sourceId": "stormablade_s3_x6",
+    "name": "雷影S3 X6, 释放霹雳连斩获得 16 点能量",
+    "description": "释放霹雳连斩获得 16 点能量",
+    "source": { "skillCast": { "skillBaseIds": [1724, 1725, 1726, 1742], "increment": 16 } },
+    "itemIds": [20020051, 20020052, 20020053, 20020054, 20020055, 20020056, 20020057, 20020058, 20020059, 20020060]
+  },
+  {
+    "sourceId": "stormablade_x7",
+    "name": "雷影X7, 每消耗10枚电荷之种获得 12 点能量",
+    "description": "每消耗10枚电荷之种获得 12 点能量",
+    "source": { "buffLayerSpent": { "buffId": 2200182, "unitsRequired": 10, "increment": 12 } },
+    "itemIds": [20020061, 20020062, 20020063, 20020064, 20020065, 20020066, 20020067, 20020068, 20020069, 20020070]
+  },
+  {
     "sourceId": "stormablade_x8",
     "name": "雷影X8, 战斗状态站立不动每秒获得 12 点能量",
     "description": "雷影X8, 战斗状态站立不动每秒获得 12 点能量",
@@ -176,6 +197,20 @@
       20020079,
       20020080
     ]
+  },
+  {
+    "sourceId": "stormablade_s3_x9",
+    "name": "雷影S3 X9, 释放月影获得 29 点能量",
+    "description": "释放月影获得 29 点能量",
+    "source": { "skillCast": { "skillBaseIds": [1715], "increment": 29 } },
+    "itemIds": [20020081, 20020082, 20020083, 20020084, 20020085, 20020086, 20020087, 20020088, 20020089, 20020090]
+  },
+  {
+    "sourceId": "stormablade_s3_x10",
+    "name": "雷影S3 X10, 千雷闪影之意期间每秒获得 20 点能量",
+    "description": "千雷闪影之意期间每秒获得 20 点能量",
+    "source": { "buffDurationTick": { "buffId": 43201, "tickIntervalMs": 1000, "increment": 20 } },
+    "itemIds": [20020091, 20020092, 20020093, 20020094, 20020095, 20020096, 20020097, 20020098, 20020099, 20020100]
   },
   {
     "sourceId": "wind_knight_x7",
@@ -283,6 +318,55 @@
     ]
   },
   {
+    "sourceId": "wind_knight_s3_x1",
+    "name": "青岚S3 X1, 勇气风环造成伤害获得 4 点能量",
+    "description": "勇气风环造成伤害获得 4 点能量",
+    "source": { "damageBySkillKey": { "skillKeys": [114320101], "increment": 4 } },
+    "itemIds": [20020111, 20020112, 20020113, 20020114, 20020115, 20020116, 20020117, 20020118, 20020119, 20020120]
+  },
+  {
+    "sourceId": "wind_knight_s3_x2",
+    "name": "青岚S3 X2, 释放螺旋击刺、破追获得 32 点能量",
+    "description": "释放螺旋击刺、破追获得 32 点能量",
+    "source": { "skillCast": { "skillBaseIds": [1421, 1422], "increment": 32 } },
+    "itemIds": [20020121, 20020122, 20020123, 20020124, 20020125, 20020126, 20020127, 20020128, 20020129, 20020130]
+  },
+  {
+    "sourceId": "wind_knight_s3_x3",
+    "name": "青岚S3 X3, 神影螺旋造成伤害获得 33 点能量",
+    "description": "神影螺旋造成伤害获得 33 点能量",
+    "source": { "damageBySkillKeyOnce": { "skillKeys": [114340102, 314030100], "increment": 33 } },
+    "itemIds": [20020131, 20020132, 20020133, 20020134, 20020135, 20020136, 20020137, 20020138, 20020139, 20020140]
+  },
+  {
+    "sourceId": "wind_knight_s3_x4",
+    "name": "青岚S3 X4, 龙击炮造成伤害获得 33 点能量",
+    "description": "龙击炮造成伤害获得 33 点能量",
+    "source": { "damageBySkillKeyOnce": { "skillKeys": [114350101, 314040100], "increment": 33 } },
+    "itemIds": [20020141, 20020142, 20020143, 20020144, 20020145, 20020146, 20020147, 20020148, 20020149, 20020150]
+  },
+  {
+    "sourceId": "wind_knight_s3_x6",
+    "name": "青岚S3 X6, 风姿卓绝期间每秒获得 8 点能量",
+    "description": "风姿卓绝期间每秒获得 8 点能量",
+    "source": { "buffDurationTick": { "buffId": 31201, "tickIntervalMs": 1000, "increment": 8 } },
+    "itemIds": [20020161, 20020162, 20020163, 20020164, 20020165, 20020166, 20020167, 20020168, 20020169, 20020170]
+  },
+  {
+    "sourceId": "wind_knight_s3_x10",
+    "name": "青岚S3 X10, 释放飞鸟投、极·岚切获得 46 点能量",
+    "description": "释放飞鸟投、极·岚切获得 46 点能量",
+    "source": { "skillCast": { "skillBaseIds": [1425, 1433], "increment": 46 } },
+    "itemIds": [20020201, 20020202, 20020203, 20020204, 20020205, 20020206, 20020207, 20020208, 20020209, 20020210]
+  },
+  {
+    "sourceId": "wind_knight_s3_x11",
+    "name": "青岚S3 X11, 释放锐利冲击获得 200 点能量",
+    "description": "释放锐利冲击获得 200 点能量",
+    "source": { "skillCast": { "skillBaseIds": [1431], "increment": 200 } },
+    "itemIds": [20020211, 20020212, 20020213, 20020214, 20020215, 20020216, 20020217, 20020218, 20020219, 20020220]
+  },
+  {
     "sourceId": "flame_berserker_x1",
     "name": "双斧X1, 无相火斩造成伤害获得 3 点能量",
     "description": "无相火斩造成伤害获得 3 点能量",
@@ -338,6 +422,13 @@
     ]
   },
   {
+    "sourceId": "flame_berserker_s3_x3",
+    "name": "双斧S3 X3, 斧风持续期间每 0.5 秒获得 11 点能量",
+    "description": "斧风持续期间每 0.5 秒获得 11 点能量",
+    "source": { "skillDurationTick": { "skillBaseId": 1612, "tickIntervalMs": 500, "increment": 11 } },
+    "itemIds": [20021581, 20021582, 20021583, 20021584, 20021585, 20021586, 20021587, 20021588, 20021589, 20021590]
+  },
+  {
     "sourceId": "flame_berserker_x4",
     "name": "双斧X4, 荒川之寂灭期间每秒获得 20 点能量",
     "description": "荒川之寂灭期间每秒获得 20 点能量",
@@ -359,6 +450,46 @@
       20021598,
       20021599,
       20021600
+    ]
+  },
+  {
+    "sourceId": "flame_berserker_s3_x6",
+    "name": "双斧S3 X6, 迷狂炎舞持续期间每 0.5 秒获得 6 点能量",
+    "description": "迷狂炎舞持续期间每 0.5 秒获得 6 点能量",
+    "source": { "skillDurationTick": { "skillBaseId": 1613, "tickIntervalMs": 500, "increment": 6 } },
+    "itemIds": [20021611, 20021612, 20021613, 20021614, 20021615, 20021616, 20021617, 20021618, 20021619, 20021620]
+  },
+  {
+    "sourceId": "flame_berserker_s3_x7",
+    "name": "双斧S3 X7, 释放如川流华斩获得 25 点能量",
+    "description": "释放如川流华斩获得 25 点能量",
+    "source": { "skillCast": { "skillBaseIds": [1616], "increment": 25 } },
+    "itemIds": [20021621, 20021622, 20021623, 20021624, 20021625, 20021626, 20021627, 20021628, 20021629, 20021630]
+  },
+  {
+    "sourceId": "flame_berserker_x8",
+    "name": "双斧X8, 释放无羁坠星, 炎魔天落杀获得 47 点能量",
+    "description": "释放无羁坠星, 炎魔天落杀获得 47 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [
+          1621,
+          1614
+        ],
+        "increment": 47
+      }
+    },
+    "itemIds": [
+      20021631,
+      20021632,
+      20021633,
+      20021634,
+      20021635,
+      20021636,
+      20021637,
+      20021638,
+      20021639,
+      20021640
     ]
   },
   {
@@ -387,30 +518,53 @@
     ]
   },
   {
-    "sourceId": "flame_berserker_x8",
-    "name": "双斧X8, 释放无羁坠星, 炎魔天落杀获得 47 点能量",
-    "description": "释放无羁坠星, 炎魔天落杀获得 47 点能量",
+    "sourceId": "flame_berserker_s3_x10",
+    "name": "双斧S3 X10, 战斗状态下站立不动每秒获得 12 点能量",
+    "description": "战斗状态下站立不动每秒获得 12 点能量",
     "source": {
-      "skillCast": {
-        "skillBaseIds": [
-          1621,
-          1614
-        ],
-        "increment": 47
+      "buffDurationTick": {
+        "buffId": 3060102,
+        "tickIntervalMs": 1000,
+        "increment": 12,
+        "attrCondition": { "attrId": 71, "requiredValue": 0 }
       }
     },
-    "itemIds": [
-      20021631,
-      20021632,
-      20021633,
-      20021634,
-      20021635,
-      20021636,
-      20021637,
-      20021638,
-      20021639,
-      20021640
-    ]
+    "itemIds": [20021651, 20021652, 20021653, 20021654, 20021655, 20021656, 20021657, 20021658, 20021659, 20021660]
+  },
+  {
+    "sourceId": "flame_berserker_s3_x11",
+    "name": "双斧S3 X11, 每消耗 50 炎魂获得 24 点能量",
+    "description": "每消耗 50 炎魂获得 24 点能量",
+    "source": { "fightResourceSpent": { "resourceId": 13011, "unitsRequired": 5000, "increment": 24 } },
+    "itemIds": [20021661, 20021662, 20021663, 20021664, 20021665, 20021666, 20021667, 20021668, 20021669, 20021670]
+  },
+  {
+    "sourceId": "beat_performer_s3_x1",
+    "name": "灵魂S3 X1, 释放增幅节拍获得 36 点能量",
+    "description": "释放增幅节拍获得 36 点能量",
+    "source": { "skillCast": { "skillBaseIds": [2306], "increment": 36 } },
+    "itemIds": [20020771, 20020772, 20020773, 20020774, 20020775, 20020776, 20020777, 20020778, 20020779, 20020780]
+  },
+  {
+    "sourceId": "beat_performer_s3_x2",
+    "name": "灵魂S3 X2, 释放聚合乐章获得 60 点能量",
+    "description": "释放聚合乐章获得 60 点能量",
+    "source": { "skillCast": { "skillBaseIds": [2308], "increment": 60 } },
+    "itemIds": [20020781, 20020782, 20020783, 20020784, 20020785, 20020786, 20020787, 20020788, 20020789, 20020790]
+  },
+  {
+    "sourceId": "beat_performer_s3_x3",
+    "name": "灵魂S3 X3, 释放烈焰狂想获得 44 点能量",
+    "description": "释放烈焰狂想获得 44 点能量",
+    "source": { "skillCast": { "skillBaseIds": [2309], "increment": 44 } },
+    "itemIds": [20020791, 20020792, 20020793, 20020794, 20020795, 20020796, 20020797, 20020798, 20020799, 20020800]
+  },
+  {
+    "sourceId": "beat_performer_s3_x4",
+    "name": "灵魂S3 X4, 鸣奏·英勇乐章激活时每秒获得 8 点能量",
+    "description": "鸣奏·英勇乐章激活时每秒获得 8 点能量",
+    "source": { "buffDurationTick": { "buffId": 55392, "tickIntervalMs": 1000, "increment": 8 } },
+    "itemIds": [20020801, 20020802, 20020803, 20020804, 20020805, 20020806, 20020807, 20020808, 20020809, 20020810]
   },
   {
     "sourceId": "beat_performer_x5",
@@ -447,6 +601,20 @@
       20020819,
       20020820
     ]
+  },
+  {
+    "sourceId": "beat_performer_s3_x6",
+    "name": "灵魂S3 X6, 释放安可获得 300 点能量",
+    "description": "释放安可获得 300 点能量",
+    "source": { "skillCast": { "skillBaseIds": [2315], "increment": 300 } },
+    "itemIds": [20020821, 20020822, 20020823, 20020824, 20020825, 20020826, 20020827, 20020828, 20020829, 20020830]
+  },
+  {
+    "sourceId": "beat_performer_s3_x7",
+    "name": "灵魂S3 X7, 烈焰音符造成伤害获得 15 点能量",
+    "description": "烈焰音符造成伤害获得 15 点能量",
+    "source": { "damageBySkillKey": { "skillKeys": [12301060101], "increment": 15 } },
+    "itemIds": [20020831, 20020832, 20020833, 20020834, 20020835, 20020836, 20020837, 20020838, 20020839, 20020840]
   },
   {
     "sourceId": "beat_performer_x9",
@@ -700,6 +868,13 @@
     ]
   },
   {
+    "sourceId": "marksman_s3_x5",
+    "name": "神射S3 X5, 释放二连矢获得 27 点能量",
+    "description": "释放二连矢获得 27 点能量",
+    "source": { "skillCast": { "skillBaseIds": [2222], "increment": 27 } },
+    "itemIds": [20020371, 20020372, 20020373, 20020374, 20020375, 20020376, 20020377, 20020378, 20020379, 20020380]
+  },
+  {
     "sourceId": "marksman_x7",
     "name": "神射X7, 闪电冲击造成伤害获得 51 点能量",
     "description": "闪电冲击造成伤害获得 51 点能量",
@@ -733,6 +908,13 @@
       20020399,
       20020400
     ]
+  },
+  {
+    "sourceId": "marksman_s3_x8",
+    "name": "神射S3 X8, 怒涛射击造成伤害获得 9 点能量",
+    "description": "怒涛射击造成伤害获得 9 点能量",
+    "source": { "damageBySkillKey": { "skillKeys": [322010200, 122400103], "increment": 9 } },
+    "itemIds": [20020401, 20020402, 20020403, 20020404, 20020405, 20020406, 20020407, 20020408, 20020409, 20020410]
   },
   {
     "sourceId": "marksman_x9",
@@ -769,6 +951,13 @@
       20020419,
       20020420
     ]
+  },
+  {
+    "sourceId": "marksman_s3_x10",
+    "name": "神射S3 X10, 释放爆炸射击获得 92 点能量",
+    "description": "释放爆炸射击获得 92 点能量",
+    "source": { "skillCast": { "skillBaseIds": [2238], "increment": 92 } },
+    "itemIds": [20020421, 20020422, 20020423, 20020424, 20020425, 20020426, 20020427, 20020428, 20020429, 20020430]
   },
   {
     "sourceId": "marksman_x11",
@@ -949,6 +1138,13 @@
     ]
   },
   {
+    "sourceId": "frost_mage_s3_x5",
+    "name": "冰魔S3 X5, 寒冰风暴造成伤害获得 2 点能量",
+    "description": "寒冰风暴造成伤害（命中多个目标时只触发一次）获得 2 点能量",
+    "source": { "damageBySkillKeyOnce": { "skillKeys": [112570101, 112610101, 2305211201], "increment": 2 } },
+    "itemIds": [20020261, 20020262, 20020263, 20020264, 20020265, 20020266, 20020267, 20020268, 20020269, 20020270]
+  },
+  {
     "sourceId": "frost_mage_x6",
     "name": "冰魔X6, 释放寒冰射线期间每秒获得 10 点能量",
     "description": "释放寒冰射线期间每秒获得 10 点能量",
@@ -1019,6 +1215,13 @@
     ]
   },
   {
+    "sourceId": "frost_mage_s3_x9",
+    "name": "冰魔S3 X9, 冻结寒风造成伤害获得 48 点能量",
+    "description": "冻结寒风造成伤害获得 48 点能量",
+    "source": { "damageBySkillKeyOnce": { "skillKeys": [112400101, 112400102], "increment": 48 } },
+    "itemIds": [20020301, 20020302, 20020303, 20020304, 20020305, 20020306, 20020307, 20020308, 20020309, 20020310]
+  },
+  {
     "sourceId": "frost_mage_x10",
     "name": "冰魔X10, 释放冰之灌注获得 400 点能量",
     "description": "释放冰之灌注获得 400 点能量",
@@ -1051,6 +1254,544 @@
       20020318,
       20020319,
       20020320
+    ]
+  },
+  {
+    "sourceId": "holy_shield_x1",
+    "name": "神盾X1, 释放英勇盾击获得 26 点能量",
+    "description": "释放英勇盾击获得 26 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [
+          2405
+        ],
+        "increment": 26
+      }
+    },
+    "itemIds": [
+      20020441,
+      20020442,
+      20020443,
+      20020444,
+      20020445,
+      20020446,
+      20020447,
+      20020448,
+      20020449,
+      20020450
+    ]
+  },
+  {
+    "sourceId": "holy_shield_x3",
+    "name": "神盾X3, 释放专精技能获得 9 点能量",
+    "description": "释放专精技能获得 9 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [
+          2408,
+          2409,
+          2410,
+          2411,
+          2412,
+          2413,
+          2414,
+          2415,
+          2419,
+          2420,
+          2421,
+          2425,
+          2426
+        ],
+        "increment": 9
+      }
+    },
+    "itemIds": [
+      20020461,
+      20020462,
+      20020463,
+      20020464,
+      20020465,
+      20020466,
+      20020467,
+      20020468,
+      20020469,
+      20020470
+    ]
+  },
+  {
+    "sourceId": "holy_shield_x4",
+    "name": "神盾X4, 圣环内站立不动每秒获得 12 点能量",
+    "description": "圣环内站立不动每秒获得 12 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 55418,
+        "tickIntervalMs": 1000,
+        "increment": 12,
+        "attrCondition": {
+          "attrId": 71,
+          "requiredValue": 0
+        }
+      }
+    },
+    "itemIds": [
+      20020471,
+      20020472,
+      20020473,
+      20020474,
+      20020475,
+      20020476,
+      20020477,
+      20020478,
+      20020479,
+      20020480
+    ]
+  },
+  {
+    "sourceId": "holy_shield_x5",
+    "name": "神盾X5, 圣光守卫期间每秒获得 30 点能量",
+    "description": "圣光守卫期间每秒获得 30 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 55405,
+        "tickIntervalMs": 1000,
+        "increment": 30
+      }
+    },
+    "itemIds": [
+      20020481,
+      20020482,
+      20020483,
+      20020484,
+      20020485,
+      20020486,
+      20020487,
+      20020488,
+      20020489,
+      20020490
+    ]
+  },
+  {
+    "sourceId": "holy_shield_x6",
+    "name": "神盾X6, 释放凛威·圣光灌注获得 300 点能量",
+    "description": "释放凛威·圣光灌注获得 300 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [
+          2407
+        ],
+        "increment": 300
+      }
+    },
+    "itemIds": [
+      20020491,
+      20020492,
+      20020493,
+      20020494,
+      20020495,
+      20020496,
+      20020497,
+      20020498,
+      20020499,
+      20020500
+    ]
+  },
+  {
+    "sourceId": "holy_shield_x7",
+    "name": "神盾X7, 消耗圣令获得 7 点能量",
+    "description": "消耗圣令获得 7 点能量",
+    "source": {
+      "fightResourceSpent": {
+        "resourceId": 25001,
+        "unitsRequired": 1,
+        "increment": 7
+      }
+    },
+    "itemIds": [
+      20020501,
+      20020502,
+      20020503,
+      20020504,
+      20020505,
+      20020506,
+      20020507,
+      20020508,
+      20020509,
+      20020510
+    ]
+  },
+  {
+    "sourceId": "holy_shield_x8",
+    "name": "神盾X8, 释放圣剑获得 37 点能量",
+    "description": "释放圣剑获得 37 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [
+          2421
+        ],
+        "increment": 37
+      }
+    },
+    "itemIds": [
+      20020511,
+      20020512,
+      20020513,
+      20020514,
+      20020515,
+      20020516,
+      20020517,
+      20020518,
+      20020519,
+      20020520
+    ]
+  },
+  {
+    "sourceId": "holy_shield_s3_x9",
+    "name": "神盾S3 X9, 战斗状态下站立不动每秒获得 12 点能量",
+    "description": "战斗状态下站立不动每秒获得 12 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 3054091,
+        "tickIntervalMs": 1000,
+        "increment": 12,
+        "attrCondition": { "attrId": 71, "requiredValue": 0 }
+      }
+    },
+    "itemIds": [
+      20020521,
+      20020522,
+      20020523,
+      20020524,
+      20020525,
+      20020526,
+      20020527,
+      20020528,
+      20020529,
+      20020530
+    ]
+  },
+  {
+    "sourceId": "holy_shield_x10",
+    "name": "神盾X10, 光明决心期间每秒获得 8 点能量",
+    "description": "光明决心期间每秒获得 8 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 55413,
+        "tickIntervalMs": 1000,
+        "increment": 8
+      }
+    },
+    "itemIds": [
+      20020531,
+      20020532,
+      20020533,
+      20020534,
+      20020535,
+      20020536,
+      20020537,
+      20020538,
+      20020539,
+      20020540
+    ]
+  },
+  {
+    "sourceId": "holy_shield_x11",
+    "name": "神盾X11, 圣环内站立不动每秒获得 12 点能量",
+    "description": "圣环内站立不动每秒获得 12 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 55418,
+        "tickIntervalMs": 1000,
+        "increment": 12,
+        "attrCondition": {
+          "attrId": 71,
+          "requiredValue": 0
+        }
+      }
+    },
+    "itemIds": [
+      20020541,
+      20020542,
+      20020543,
+      20020544,
+      20020545,
+      20020546,
+      20020547,
+      20020548,
+      20020549,
+      20020550
+    ]
+  },
+  {
+    "sourceId": "giant_blade_x1",
+    "name": "巨刃X1, 护盾猛击状态下每秒获得 8 点能量",
+    "description": "护盾猛击状态下每秒获得 8 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 50024,
+        "tickIntervalMs": 1000,
+        "increment": 8
+      }
+    },
+    "itemIds": [
+      20020551,
+      20020552,
+      20020553,
+      20020554,
+      20020555,
+      20020556,
+      20020557,
+      20020558,
+      20020559,
+      20020560
+    ]
+  },
+  {
+    "sourceId": "giant_blade_x2",
+    "name": "巨刃X2, 释放护盾猛击获得 21 点能量",
+    "description": "释放护盾猛击获得 21 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [
+          1922,
+          1932
+        ],
+        "increment": 21
+      }
+    },
+    "itemIds": [
+      20020561,
+      20020562,
+      20020563,
+      20020564,
+      20020565,
+      20020566,
+      20020567,
+      20020568,
+      20020569,
+      20020570
+    ]
+  },
+  {
+    "sourceId": "giant_blade_x3",
+    "name": "巨刃X3, 释放怒爆获得 42 点能量",
+    "description": "释放怒爆获得 42 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [
+          1925,
+          1940,
+          1944
+        ],
+        "increment": 42
+      }
+    },
+    "itemIds": [
+      20020571,
+      20020572,
+      20020573,
+      20020574,
+      20020575,
+      20020576,
+      20020577,
+      20020578,
+      20020579,
+      20020580
+    ]
+  },
+  {
+    "sourceId": "giant_blade_x4",
+    "name": "巨刃X4, 释放砂岩之握获得 400 点能量",
+    "description": "释放砂岩之握获得 400 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [
+          1926
+        ],
+        "increment": 400
+      }
+    },
+    "itemIds": [
+      20020581,
+      20020582,
+      20020583,
+      20020584,
+      20020585,
+      20020586,
+      20020587,
+      20020588,
+      20020589,
+      20020590
+    ]
+  },
+  {
+    "sourceId": "giant_blade_x5",
+    "name": "巨刃X5, 释放岩御·崩裂回环获得 600 点能量",
+    "description": "释放岩御·崩裂回环获得 600 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [
+          1907
+        ],
+        "increment": 600
+      }
+    },
+    "itemIds": [
+      20020591,
+      20020592,
+      20020593,
+      20020594,
+      20020595,
+      20020596,
+      20020597,
+      20020598,
+      20020599,
+      20020600
+    ]
+  },
+  {
+    "sourceId": "giant_blade_x6",
+    "name": "巨刃X6, 格挡冲击状态下每秒获得 9 点能量",
+    "description": "格挡冲击状态下每秒获得 9 点能量",
+    "source": {
+      "buffDurationTick": {
+        "buffId": 50050,
+        "tickIntervalMs": 1000,
+        "increment": 9
+      }
+    },
+    "itemIds": [
+      20020601,
+      20020602,
+      20020603,
+      20020604,
+      20020605,
+      20020606,
+      20020607,
+      20020608,
+      20020609,
+      20020610
+    ]
+  },
+  {
+    "sourceId": "giant_blade_x7",
+    "name": "巨刃X7, 释放岩怒之击、巨岩轰击获得 38 点能量",
+    "description": "释放岩怒之击、巨岩轰击获得 38 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [
+          1937,
+          1939,
+          1943
+        ],
+        "increment": 38
+      }
+    },
+    "itemIds": [
+      20020611,
+      20020612,
+      20020613,
+      20020614,
+      20020615,
+      20020616,
+      20020617,
+      20020618,
+      20020619,
+      20020620
+    ]
+  },
+  {
+    "sourceId": "giant_blade_s3_x8",
+    "name": "巨刃S3 X8, 格挡成功获得 3 点能量",
+    "description": "格挡成功后触发巨刃G8子BUFF，获得 3 点能量",
+    "source": {
+      "damageTaken": {
+        "increment": 3,
+        "requiredTypeFlags": 2
+      }
+    },
+    "itemIds": [
+      20020621,
+      20020622,
+      20020623,
+      20020624,
+      20020625,
+      20020626,
+      20020627,
+      20020628,
+      20020629,
+      20020630
+    ]
+  },
+  {
+    "sourceId": "giant_blade_s3_x9",
+    "name": "巨刃S3 X9, 格挡成功获得 3 点能量",
+    "description": "格挡成功后触发巨刃G9子BUFF，获得 3 点能量",
+    "source": {
+      "damageTaken": {
+        "increment": 3,
+        "requiredTypeFlags": 2
+      }
+    },
+    "itemIds": [
+      20020631,
+      20020632,
+      20020633,
+      20020634,
+      20020635,
+      20020636,
+      20020637,
+      20020638,
+      20020639,
+      20020640
+    ]
+  },
+  {
+    "sourceId": "giant_blade_x10",
+    "name": "巨刃X10, 触发格挡反击获得 7 点能量",
+    "description": "触发格挡反击获得 7 点能量",
+    "source": {
+      "damageBySkillKeyOnce": {
+        "skillKeys": [
+          25003703
+        ],
+        "increment": 7
+      }
+    },
+    "itemIds": [
+      20020641,
+      20020642,
+      20020643,
+      20020644,
+      20020645,
+      20020646,
+      20020647,
+      20020648,
+      20020649,
+      20020650
+    ]
+  },
+  {
+    "sourceId": "giant_blade_x11",
+    "name": "巨刃X11, 获得岩之心获得 153 点能量",
+    "description": "获得岩之心获得 153 点能量",
+    "source": {
+      "buffAdded": {
+        "buffId": 2201611,
+        "sourceConfigId": 2201610,
+        "increment": 153
+      }
+    },
+    "itemIds": [
+      20020651,
+      20020652,
+      20020653,
+      20020654,
+      20020655,
+      20020656,
+      20020657,
+      20020658,
+      20020659,
+      20020660
     ]
   }
 ]
