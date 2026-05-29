@@ -152,6 +152,8 @@ export const enUSMessages = {
   "columns.tanked.critDmgRate": "Crit Taken Dmg %",
   "columns.tanked.luckyRate": "Lucky Taken %",
   "columns.tanked.luckyDmgRate": "Lucky Taken Dmg %",
+  "columns.tanked.blockRate": "Block %",
+  "columns.tanked.luckyBlockRate": "Lucky Block %",
   "columns.tanked.hits": "Hits Taken",
   "columns.tanked.hitsPerMinute": "Hits Taken/Min",
   "columns.skill.property": "Element",
@@ -250,6 +252,10 @@ export const enUSMessages = {
     "Shows how often the player was lucky-hit",
   "columns.description.tanked.player.luckyDmgRate":
     "Shows the share of the player's damage taken that was lucky hits",
+  "columns.description.tanked.player.blockRate":
+    "Shows how often the player blocked incoming damage",
+  "columns.description.tanked.player.luckyBlockRate":
+    "Shows how often the player triggered a lucky block on incoming damage",
   "columns.description.tanked.player.hits":
     "Shows the player's total hits taken",
   "columns.description.tanked.player.hitsPerMinute":
@@ -268,6 +274,10 @@ export const enUSMessages = {
     "Shows how often this skill lucky-hit",
   "columns.description.tanked.skill.luckyDmgRate":
     "Shows the share of damage taken from this skill that was lucky hits",
+  "columns.description.tanked.skill.blockRate":
+    "Shows how often damage from this skill was blocked",
+  "columns.description.tanked.skill.luckyBlockRate":
+    "Shows how often damage from this skill triggered a lucky block",
   "columns.description.tanked.skill.hits":
     "Shows the total hits taken from this skill",
   "columns.description.tanked.skill.hitsPerMinute":

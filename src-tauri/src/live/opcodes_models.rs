@@ -346,6 +346,12 @@ pub struct CombatStats {
     pub lucky_total: u128,
     pub lucky_hits: u128,
     pub hits: u128,
+    #[serde(default)]
+    pub trigger_hits: u128,
+    #[serde(default)]
+    pub block_hits: u128,
+    #[serde(default)]
+    pub lucky_block_hits: u128,
 }
 
 /// A single damage event recorded in the 2s sliding window used for death replay.
@@ -424,6 +430,8 @@ pub struct SkillTargetStats {
     pub hp_loss_total: u128,
     pub shield_loss_total: u128,
     pub target_monster_id: Option<i32>,
+    #[serde(default)]
+    pub trigger_hits: u128,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -439,6 +447,12 @@ pub struct Skill {
     pub property: Option<i32>,
     #[serde(default)]
     pub damage_mode: Option<i32>,
+    #[serde(default)]
+    pub trigger_hits: u128,
+    #[serde(default)]
+    pub block_hits: u128,
+    #[serde(default)]
+    pub lucky_block_hits: u128,
 }
 
 impl Encounter {

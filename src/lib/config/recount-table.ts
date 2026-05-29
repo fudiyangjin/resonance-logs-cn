@@ -15,6 +15,9 @@ export type RawSkillStatsLike = {
   luckyTotalValue: number;
   property?: number | null;
   damageMode?: number | null;
+  triggerHits?: number;
+  blockHits?: number;
+  luckyBlockHits?: number;
 };
 
 export type SkillDisplayRow = {
@@ -30,6 +33,8 @@ export type SkillDisplayRow = {
   critDmgRate: number;
   luckyRate: number;
   luckyDmgRate: number;
+  blockRate: number;
+  luckyBlockRate: number;
   hits: number;
   hitsPerMinute: number;
   property: number | null;
@@ -49,6 +54,8 @@ export type RecountGroup = {
   critDmgRate: number;
   luckyRate: number;
   luckyDmgRate: number;
+  blockRate: number;
+  luckyBlockRate: number;
   hits: number;
   hitsPerMinute: number;
   skills: SkillDisplayRow[];
@@ -171,6 +178,7 @@ export function buildSkillDisplayRow(
   const totalDmg = Number(stats.totalValue || 0);
   const effectiveTotal = Number(stats.effectiveTotalValue || 0);
   const hits = Number(stats.hits || 0);
+  const triggerHits = Number(stats.triggerHits || stats.hits || 0);
   return {
     skillId,
     name: lookupDamageIdName(skillId, locale),
@@ -181,8 +189,10 @@ export function buildSkillDisplayRow(
     dmgPct: pct(totalDmg, parentTotal),
     critRate: rate(Number(stats.critHits || 0), hits),
     critDmgRate: pct(Number(stats.critTotalValue || 0), totalDmg),
-    luckyRate: rate(Number(stats.luckyHits || 0), hits),
+    luckyRate: rate(Number(stats.luckyHits || 0), triggerHits),
     luckyDmgRate: pct(Number(stats.luckyTotalValue || 0), totalDmg),
+    blockRate: rate(Number(stats.blockHits || 0), hits),
+    luckyBlockRate: rate(Number(stats.luckyBlockHits || 0), hits),
     hits,
     hitsPerMinute: perMinute(hits, elapsedSecs),
     property: stats.property ?? null,
@@ -235,6 +245,8 @@ export function groupSkillsByRecount(
         critDmgRate: 0,
         luckyRate: 0,
         luckyDmgRate: 0,
+        blockRate: 0,
+        luckyBlockRate: 0,
         hits: 0,
         hitsPerMinute: 0,
         skills: [],
@@ -266,14 +278,28 @@ export function groupSkillsByRecount(
       (sum, s) => sum + Number(s.raw.luckyTotalValue || 0),
       0,
     );
+    const triggerHitsSum = group.skills.reduce(
+      (sum, s) => sum + Number(s.raw.triggerHits || s.raw.hits || 0),
+      0,
+    );
+    const blockHitsSum = group.skills.reduce(
+      (sum, s) => sum + Number(s.raw.blockHits || 0),
+      0,
+    );
+    const luckyBlockHitsSum = group.skills.reduce(
+      (sum, s) => sum + Number(s.raw.luckyBlockHits || 0),
+      0,
+    );
     group.dps = elapsedSecs > 0 ? group.totalDmg / elapsedSecs : 0;
     group.effectiveDps =
       elapsedSecs > 0 ? group.effectiveTotal / elapsedSecs : 0;
     group.dmgPct = pct(group.totalDmg, parentTotal);
     group.critRate = rate(critHits, group.hits);
     group.critDmgRate = pct(critTotal, group.totalDmg);
-    group.luckyRate = rate(luckyHits, group.hits);
+    group.luckyRate = rate(luckyHits, triggerHitsSum);
     group.luckyDmgRate = pct(luckyTotal, group.totalDmg);
+    group.blockRate = rate(blockHitsSum, group.hits);
+    group.luckyBlockRate = rate(luckyBlockHitsSum, group.hits);
     group.hitsPerMinute = perMinute(group.hits, elapsedSecs);
     const nameCount = new Map<string, number>();
     for (const skill of group.skills) {

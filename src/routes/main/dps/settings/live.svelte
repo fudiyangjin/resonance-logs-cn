@@ -3,7 +3,13 @@
   import SettingsSwitch from "./settings-switch.svelte";
   import SettingsSelect from "./settings-select.svelte";
   import SettingsSlider from "./settings-slider.svelte";
-  import { SETTINGS } from "$lib/settings-store";
+  import {
+    SETTINGS,
+    DEFAULT_LIVE_TANKED_PLAYER_STATS,
+    DEFAULT_LIVE_TANKED_SKILL_STATS,
+    normalizeTankedPlayerColumnOrder,
+    normalizeTankedSkillColumnOrder,
+  } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
   import ChevronDown from "virtual:icons/lucide/chevron-down";
   import {
@@ -31,6 +37,30 @@
   function toggleSection(section: keyof typeof expandedSections) {
     expandedSections[section] = !expandedSections[section];
   }
+
+  const tankedPlayerColumnOrder = $derived(
+    normalizeTankedPlayerColumnOrder(
+      SETTINGS.live.columnOrder.tankedPlayers.state.order,
+    ),
+  );
+  const tankedSkillColumnOrder = $derived(
+    normalizeTankedSkillColumnOrder(
+      SETTINGS.live.columnOrder.tankedSkills.state.order,
+    ),
+  );
+
+  $effect(() => {
+    for (const key of tankedPlayerColumnOrder) {
+      const typedKey = key as keyof typeof DEFAULT_LIVE_TANKED_PLAYER_STATS;
+      SETTINGS.live.tanked.players.state[typedKey] ??=
+        DEFAULT_LIVE_TANKED_PLAYER_STATS[typedKey];
+    }
+    for (const key of tankedSkillColumnOrder) {
+      const typedKey = key as keyof typeof DEFAULT_LIVE_TANKED_SKILL_STATS;
+      SETTINGS.live.tanked.skills.state[typedKey] ??=
+        DEFAULT_LIVE_TANKED_SKILL_STATS[typedKey];
+    }
+  });
   // Drag state for column reordering (unused - keeping for potential future use)
 </script>
 
@@ -597,9 +627,10 @@
           <p class="text-xs text-muted-foreground mb-2">
             {t("settings.common.columns.orderHint")}
           </p>
-          {#each SETTINGS.live.columnOrder.tankedPlayers.state.order as colKey, idx (colKey)}
+          {#each tankedPlayerColumnOrder as colKey, idx (colKey)}
             {@const col = liveTankedPlayerColumns.find((c) => c.key === colKey)}
             {#if col}
+              {@const key = col.key as keyof typeof DEFAULT_LIVE_TANKED_PLAYER_STATS}
               <div
                 class="flex items-center gap-2 px-2 py-1 rounded bg-muted/20 border border-border/30"
               >
@@ -610,7 +641,7 @@
                     disabled={idx === 0}
                     onclick={() => {
                       const arr = [
-                        ...SETTINGS.live.columnOrder.tankedPlayers.state.order,
+                        ...tankedPlayerColumnOrder,
                       ];
                       const prev = arr[idx - 1];
                       const curr = arr[idx];
@@ -625,12 +656,10 @@
                     type="button"
                     class="text-xs px-1 hover:bg-muted/50 rounded disabled:opacity-30"
                     disabled={idx ===
-                      SETTINGS.live.columnOrder.tankedPlayers.state.order
-                        .length -
-                        1}
+                      tankedPlayerColumnOrder.length - 1}
                     onclick={() => {
                       const arr = [
-                        ...SETTINGS.live.columnOrder.tankedPlayers.state.order,
+                        ...tankedPlayerColumnOrder,
                       ];
                       const curr = arr[idx];
                       const next = arr[idx + 1];
@@ -644,9 +673,7 @@
                 </div>
                 <SettingsSwitch
                   bind:checked={
-                    SETTINGS.live.tanked.players.state[
-                      col.key as keyof typeof SETTINGS.live.tanked.players.state
-                    ]
+                    SETTINGS.live.tanked.players.state[key]
                   }
                   label={col.label}
                   description={col.description}
@@ -681,9 +708,10 @@
           <p class="text-xs text-muted-foreground mb-2">
             {t("settings.common.columns.orderHint")}
           </p>
-          {#each SETTINGS.live.columnOrder.tankedSkills.state.order as colKey, idx (colKey)}
+          {#each tankedSkillColumnOrder as colKey, idx (colKey)}
             {@const col = liveTankedSkillColumns.find((c) => c.key === colKey)}
             {#if col}
+              {@const key = col.key as keyof typeof DEFAULT_LIVE_TANKED_SKILL_STATS}
               <div
                 class="flex items-center gap-2 px-2 py-1 rounded bg-muted/20 border border-border/30"
               >
@@ -694,7 +722,7 @@
                     disabled={idx === 0}
                     onclick={() => {
                       const arr = [
-                        ...SETTINGS.live.columnOrder.tankedSkills.state.order,
+                        ...tankedSkillColumnOrder,
                       ];
                       const prev = arr[idx - 1];
                       const curr = arr[idx];
@@ -709,12 +737,10 @@
                     type="button"
                     class="text-xs px-1 hover:bg-muted/50 rounded disabled:opacity-30"
                     disabled={idx ===
-                      SETTINGS.live.columnOrder.tankedSkills.state.order
-                        .length -
-                        1}
+                      tankedSkillColumnOrder.length - 1}
                     onclick={() => {
                       const arr = [
-                        ...SETTINGS.live.columnOrder.tankedSkills.state.order,
+                        ...tankedSkillColumnOrder,
                       ];
                       const curr = arr[idx];
                       const next = arr[idx + 1];
@@ -728,9 +754,7 @@
                 </div>
                 <SettingsSwitch
                   bind:checked={
-                    SETTINGS.live.tanked.skills.state[
-                      col.key as keyof typeof SETTINGS.live.tanked.skills.state
-                    ]
+                    SETTINGS.live.tanked.skills.state[key]
                   }
                   label={col.label}
                   description={col.description}

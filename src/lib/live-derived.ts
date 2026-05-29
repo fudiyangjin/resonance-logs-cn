@@ -55,6 +55,7 @@ export function computePlayerRowsFromEntities(
       const effectiveTotal =
         metric === "heal" ? Number(stats.effectiveTotal || 0) : 0;
       const hits = Number(stats.hits || 0);
+      const triggerHits = Number(stats.triggerHits || stats.hits || 0);
       const bossDmg = metric === "dps" ? Number(entity.damageBossOnly?.total || 0) : 0;
       const bossTotal = Number(source.totalDmgBossOnly || 0);
 
@@ -74,8 +75,11 @@ export function computePlayerRowsFromEntities(
         dmgPct: percent(total, totalMetric),
         critRate: rate(Number(stats.critHits || 0), hits),
         critDmgRate: percent(Number(stats.critTotal || 0), total),
-        luckyRate: rate(Number(stats.luckyHits || 0), hits),
+        luckyRate: rate(Number(stats.luckyHits || 0), triggerHits),
         luckyDmgRate: percent(Number(stats.luckyTotal || 0), total),
+        blockRate: metric === "tanked" ? rate(Number(stats.blockHits || 0), hits) : 0,
+        luckyBlockRate:
+          metric === "tanked" ? rate(Number(stats.luckyBlockHits || 0), hits) : 0,
         hits,
         hitsPerMinute: elapsedSecs > 0 ? (hits / elapsedSecs) * 60 : 0,
         bossDmg,

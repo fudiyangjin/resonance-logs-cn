@@ -19,6 +19,8 @@
     settings,
     SETTINGS,
     DEFAULT_HISTORY_STATS,
+    DEFAULT_HISTORY_TANKED_STATS,
+    DEFAULT_HISTORY_TANKED_SKILL_STATS,
   } from "$lib/settings-store";
   import getDisplayName from "$lib/name-display";
   import { openUrl } from "@tauri-apps/plugin-opener";
@@ -66,6 +68,8 @@
     critDmgRate: number;
     luckyRate: number;
     luckyDmgRate: number;
+    blockRate: number;
+    luckyBlockRate: number;
     hits: number;
     hitsPerMinute: number;
     damageTaken: number;
@@ -231,6 +235,8 @@
           tankedPS: tank?.dps ?? 0,
           tankedPct: tank?.dmgPct ?? 0,
           critTakenRate: tank?.critRate ?? 0,
+          blockRate: tank?.blockRate ?? 0,
+          luckyBlockRate: tank?.luckyBlockRate ?? 0,
           hitsTaken: tank?.hits ?? 0,
           healDealt: heal?.totalDmg ?? 0,
           hps: heal?.dps ?? 0,
@@ -256,6 +262,9 @@
       critTotal: 0,
       luckyHits: 0,
       luckyTotal: 0,
+      triggerHits: 0,
+      blockHits: 0,
+      luckyBlockHits: 0,
     };
   }
 
@@ -563,9 +572,13 @@
         (col) => settings.state.history.heal.players[col.key] ?? true,
       );
     } else if (activeTab === "tanked") {
-      return historyTankedPlayerColumns.filter(
-        (col) => settings.state.history.tanked.players[col.key] ?? true,
-      );
+      return historyTankedPlayerColumns.filter((col) => {
+        const defaultValue =
+          DEFAULT_HISTORY_TANKED_STATS[
+            col.key as keyof typeof DEFAULT_HISTORY_TANKED_STATS
+          ] ?? false;
+        return settings.state.history.tanked.players[col.key] ?? defaultValue;
+      });
     }
     return historyDpsPlayerColumns.filter((col) => {
       const defaultValue =
@@ -585,9 +598,15 @@
         (col) => settings.state.history.heal.skillBreakdown[col.key],
       );
     } else if (skillType === "tanked") {
-      return historyTankedSkillColumns.filter(
-        (col) => settings.state.history.tanked.skillBreakdown[col.key],
-      );
+      return historyTankedSkillColumns.filter((col) => {
+        const defaultValue =
+          DEFAULT_HISTORY_TANKED_SKILL_STATS[
+            col.key as keyof typeof DEFAULT_HISTORY_TANKED_SKILL_STATS
+          ] ?? false;
+        return (
+          settings.state.history.tanked.skillBreakdown[col.key] ?? defaultValue
+        );
+      });
     }
     return historyDpsSkillColumns.filter(
       (col) => settings.state.history.dps.skillBreakdown[col.key],

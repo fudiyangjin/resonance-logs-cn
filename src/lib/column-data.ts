@@ -367,6 +367,18 @@ export const liveTankedPlayerColumns = [
     format: formatPercent,
   }),
   createColumn({
+    key: "blockRate",
+    labelKey: "columns.tanked.blockRate",
+    descriptionKey: "columns.description.tanked.player.blockRate",
+    format: formatPercent,
+  }),
+  createColumn({
+    key: "luckyBlockRate",
+    labelKey: "columns.tanked.luckyBlockRate",
+    descriptionKey: "columns.description.tanked.player.luckyBlockRate",
+    format: formatPercent,
+  }),
+  createColumn({
     key: "hits",
     labelKey: "columns.tanked.hits",
     descriptionKey: "columns.description.tanked.player.hits",
@@ -421,6 +433,18 @@ export const liveTankedSkillColumns = [
     key: "luckyDmgRate",
     labelKey: "columns.tanked.luckyDmgRate",
     descriptionKey: "columns.description.tanked.skill.luckyDmgRate",
+    format: formatPercent,
+  }),
+  createColumn({
+    key: "blockRate",
+    labelKey: "columns.tanked.blockRate",
+    descriptionKey: "columns.description.tanked.skill.blockRate",
+    format: formatPercent,
+  }),
+  createColumn({
+    key: "luckyBlockRate",
+    labelKey: "columns.tanked.luckyBlockRate",
+    descriptionKey: "columns.description.tanked.skill.luckyBlockRate",
     format: formatPercent,
   }),
   createColumn({
@@ -493,6 +517,18 @@ export const historyTankedPlayerColumns = [
     format: formatPercent,
   }),
   createColumn({
+    key: "blockRate",
+    labelKey: "columns.tanked.blockRate",
+    descriptionKey: "columns.description.tanked.player.blockRate",
+    format: formatPercent,
+  }),
+  createColumn({
+    key: "luckyBlockRate",
+    labelKey: "columns.tanked.luckyBlockRate",
+    descriptionKey: "columns.description.tanked.player.luckyBlockRate",
+    format: formatPercent,
+  }),
+  createColumn({
     key: "hitsTaken",
     labelKey: "columns.tanked.hits",
     descriptionKey: "columns.description.tanked.player.hits",
@@ -547,6 +583,18 @@ export const historyTankedSkillColumns = [
     key: "luckyDmgRate",
     labelKey: "columns.tanked.luckyDmgRate",
     descriptionKey: "columns.description.tanked.skill.luckyDmgRate",
+    format: formatPercent,
+  }),
+  createColumn({
+    key: "blockRate",
+    labelKey: "columns.tanked.blockRate",
+    descriptionKey: "columns.description.tanked.skill.blockRate",
+    format: formatPercent,
+  }),
+  createColumn({
+    key: "luckyBlockRate",
+    labelKey: "columns.tanked.luckyBlockRate",
+    descriptionKey: "columns.description.tanked.skill.luckyBlockRate",
     format: formatPercent,
   }),
   createColumn({

@@ -405,7 +405,7 @@ maxHp: number | null;
 isDefeated: boolean }
 export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "resetAndFreezeKeepCounting" | "resetAndStartCount" | "startCount" | "noOp"
 export type CounterRule = { ruleId: number; sources: CounterSource[]; effectSlots: EffectSlotConfig[] }
-export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { anyDamage: { increment: number; hitsRequired?: number | null } } | { damageTaken: { skillKeys?: number[] | null; increment: number; hitsRequired?: number | null } } | { fightResourceSpent: { resourceId: number; unitsRequired: number; increment: number } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } } | { skillCastComplete: { skillBaseIds: number[]; increment: number } } | { movementDistance: { buffId: number; attrId: number; metersRequired: number; increment: number } }
+export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { anyDamage: { increment: number; hitsRequired?: number | null } } | { damageTaken: { skillKeys?: number[] | null; increment: number; hitsRequired?: number | null; requiredTypeFlags?: number | null } } | { fightResourceSpent: { resourceId: number; unitsRequired: number; increment: number } } | { buffAdded: { buffId: number; sourceConfigId?: number | null; increment: number } } | { buffLayerSpent: { buffId: number; unitsRequired: number; increment: number } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } } | { skillCastComplete: { skillBaseIds: number[]; increment: number } } | { movementDistance: { buffId: number; attrId: number; metersRequired: number; increment: number } }
 /**
  * A single damage event recorded in the 2s sliding window used for death replay.
  */
@@ -562,8 +562,8 @@ name: string;
  * The class ID of the player.
  */
 classId: number }
-export type RawCombatStats = { total: number; effectiveTotal: number; hits: number; critHits: number; critTotal: number; luckyHits: number; luckyTotal: number }
-export type RawSkillStats = { totalValue: number; effectiveTotalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number; property: number | null; damageMode: number | null }
+export type RawCombatStats = { total: number; effectiveTotal: number; hits: number; critHits: number; critTotal: number; luckyHits: number; luckyTotal: number; triggerHits: number; blockHits: number; luckyBlockHits: number }
+export type RawSkillStats = { totalValue: number; effectiveTotalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number; property: number | null; damageMode: number | null; triggerHits: number; blockHits: number; luckyBlockHits: number }
 /**
  * The result of a query for recent encounters.
  */

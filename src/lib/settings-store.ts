@@ -30,6 +30,26 @@ export const DEFAULT_STATS = {
   damageMode: true,
 };
 
+export const DEFAULT_LIVE_TANKED_PLAYER_STATS = {
+  totalDmg: true,
+  dps: true,
+  dmgPct: true,
+  critRate: true,
+  critDmgRate: true,
+  luckyRate: false,
+  luckyDmgRate: false,
+  blockRate: false,
+  luckyBlockRate: false,
+  hits: false,
+  hitsPerMinute: false,
+};
+
+export const DEFAULT_LIVE_TANKED_SKILL_STATS = {
+  ...DEFAULT_LIVE_TANKED_PLAYER_STATS,
+  property: true,
+  damageMode: true,
+};
+
 export const DEFAULT_HISTORY_STATS = {
   totalDmg: true,
   dps: true,
@@ -57,8 +77,26 @@ export const DEFAULT_HISTORY_TANKED_STATS = {
   critDmgRate: false,
   luckyRate: false,
   luckyDmgRate: false,
+  blockRate: false,
+  luckyBlockRate: false,
   hitsTaken: false,
   hitsPerMinute: false,
+};
+
+export const DEFAULT_HISTORY_TANKED_SKILL_STATS = {
+  totalDmg: true,
+  dps: true,
+  dmgPct: true,
+  critRate: false,
+  critDmgRate: false,
+  luckyRate: false,
+  luckyDmgRate: false,
+  blockRate: false,
+  luckyBlockRate: false,
+  hits: false,
+  hitsPerMinute: false,
+  property: true,
+  damageMode: true,
 };
 
 export const DEFAULT_HISTORY_HEAL_STATS = {
@@ -141,6 +179,8 @@ export const DEFAULT_TANKED_PLAYER_COLUMN_ORDER = [
   "critDmgRate",
   "luckyRate",
   "luckyDmgRate",
+  "blockRate",
+  "luckyBlockRate",
   "hits",
   "hitsPerMinute",
 ];
@@ -154,11 +194,40 @@ export const DEFAULT_TANKED_SKILL_COLUMN_ORDER = [
   "critDmgRate",
   "luckyRate",
   "luckyDmgRate",
+  "blockRate",
+  "luckyBlockRate",
   "hits",
   "hitsPerMinute",
   "property",
   "damageMode",
 ];
+
+function normalizeColumnOrder(
+  order: readonly string[] | undefined,
+  defaultOrder: readonly string[],
+) {
+  const allowedKeys = new Set(defaultOrder);
+  const normalized: string[] = [];
+  for (const key of order ?? []) {
+    if (allowedKeys.has(key) && !normalized.includes(key)) {
+      normalized.push(key);
+    }
+  }
+  for (const key of defaultOrder) {
+    if (!normalized.includes(key)) {
+      normalized.push(key);
+    }
+  }
+  return normalized;
+}
+
+export function normalizeTankedPlayerColumnOrder(order: readonly string[] | undefined) {
+  return normalizeColumnOrder(order, DEFAULT_TANKED_PLAYER_COLUMN_ORDER);
+}
+
+export function normalizeTankedSkillColumnOrder(order: readonly string[] | undefined) {
+  return normalizeColumnOrder(order, DEFAULT_TANKED_SKILL_COLUMN_ORDER);
+}
 
 // Default sort settings for live tables
 export const DEFAULT_LIVE_SORT_SETTINGS = {
@@ -1248,8 +1317,8 @@ const DEFAULT_SETTINGS = {
     dpsSkillBreakdown: { ...DEFAULT_STATS },
     healPlayers: { ...DEFAULT_STATS },
     healSkillBreakdown: { ...DEFAULT_STATS },
-    tankedPlayers: { ...DEFAULT_STATS },
-    tankedSkillBreakdown: { ...DEFAULT_STATS },
+    tankedPlayers: { ...DEFAULT_LIVE_TANKED_PLAYER_STATS },
+    tankedSkillBreakdown: { ...DEFAULT_LIVE_TANKED_SKILL_STATS },
     tableCustomization: { ...DEFAULT_LIVE_TABLE_SETTINGS },
     headerCustomization: {
       windowPadding: 12,
@@ -1305,7 +1374,7 @@ const DEFAULT_SETTINGS = {
     healPlayers: { ...DEFAULT_HISTORY_HEAL_STATS },
     healSkillBreakdown: { ...DEFAULT_HISTORY_STATS },
     tankedPlayers: { ...DEFAULT_HISTORY_TANKED_STATS },
-    tankedSkillBreakdown: { ...DEFAULT_HISTORY_STATS },
+    tankedSkillBreakdown: { ...DEFAULT_HISTORY_TANKED_SKILL_STATS },
   },
 };
 

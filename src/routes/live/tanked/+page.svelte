@@ -1,7 +1,12 @@
 <script lang="ts">
   import { getClassIcon, tooltip } from "$lib/utils.svelte";
   import { goto } from "$app/navigation";
-  import { settings, SETTINGS } from "$lib/settings-store";
+  import {
+    settings,
+    SETTINGS,
+    DEFAULT_LIVE_TANKED_PLAYER_STATS,
+    normalizeTankedPlayerColumnOrder,
+  } from "$lib/settings-store";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
   import { computePlayerRows } from "$lib/live-derived";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
@@ -23,7 +28,9 @@
   let sortKey = $derived(SETTINGS.live.sorting.tankedPlayers.state.sortKey);
   let sortDesc = $derived(SETTINGS.live.sorting.tankedPlayers.state.sortDesc);
   let columnOrder = $derived(
-    SETTINGS.live.columnOrder.tankedPlayers.state.order,
+    normalizeTankedPlayerColumnOrder(
+      SETTINGS.live.columnOrder.tankedPlayers.state.order,
+    ),
   );
 
   // Handle column header click for sorting
@@ -89,9 +96,13 @@
 
   // Get visible columns based on settings and column order
   let visiblePlayerColumns = $derived.by(() => {
-    const visible = liveTankedPlayerColumns.filter(
-      (col) => settings.state.live.tanked.players[col.key],
-    );
+    const visible = liveTankedPlayerColumns.filter((col) => {
+      const defaultValue =
+        DEFAULT_LIVE_TANKED_PLAYER_STATS[
+          col.key as keyof typeof DEFAULT_LIVE_TANKED_PLAYER_STATS
+        ] ?? false;
+      return settings.state.live.tanked.players[col.key] ?? defaultValue;
+    });
     return visible.sort((a, b) => {
       const aIdx = columnOrder.indexOf(a.key);
       const bIdx = columnOrder.indexOf(b.key);
@@ -375,7 +386,7 @@
                   suffixFontSize={tableSettings.abbreviatedFontSize}
                   suffixColor={customThemeColors.tableAbbreviatedColor}
                 />
-              {:else if col.key === "critRate" || col.key === "critDmgRate" || col.key === "luckyRate" || col.key === "luckyDmgRate"}
+              {:else if col.key === "critRate" || col.key === "critDmgRate" || col.key === "luckyRate" || col.key === "luckyDmgRate" || col.key === "blockRate" || col.key === "luckyBlockRate"}
                 <PercentFormat
                   val={player[col.key]}
                   suffixFontSize={tableSettings.abbreviatedFontSize}

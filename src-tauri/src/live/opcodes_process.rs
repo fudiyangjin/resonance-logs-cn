@@ -768,7 +768,10 @@ pub fn process_aoi_sync_delta(
             .get(&target_uuid)
             .and_then(|entity| entity.monster_type_id);
 
-        let is_lucky = lucky_value.is_some();
+        let is_lucky_bonus_only = non_lucky_dmg.is_none() && lucky_value.is_some();
+        let is_attacker_lucky_trigger = (flag & damage_type_flag::ATTACKER_LUCK) != 0;
+        let is_attacked_lucky_trigger = (flag & damage_type_flag::ATTACKED_LUCK) != 0;
+        let is_block = (flag & damage_type_flag::BLOCK) != 0;
         let is_crit = (flag & damage_type_flag::CRIT) != 0;
         let mut was_heal_event = is_heal;
         let mut attacker_entity_type = None;
@@ -803,10 +806,15 @@ pub fn process_aoi_sync_delta(
                     skill.crit_hits += 1;
                     skill.crit_total_value += actual_value;
                 }
-                if is_lucky {
-                    attacker_entity.healing.lucky_hits += 1;
+                if !is_lucky_bonus_only {
+                    attacker_entity.healing.trigger_hits += 1;
+                    skill.trigger_hits += 1;
+                    if is_attacker_lucky_trigger {
+                        attacker_entity.healing.lucky_hits += 1;
+                        skill.lucky_hits += 1;
+                    }
+                } else {
                     attacker_entity.healing.lucky_total += actual_value;
-                    skill.lucky_hits += 1;
                     skill.lucky_total_value += actual_value;
                 }
                 encounter.total_heal += actual_value;
@@ -829,8 +837,12 @@ pub fn process_aoi_sync_delta(
                     stats.crit_hits += 1;
                     stats.crit_total += actual_value;
                 }
-                if is_lucky {
-                    stats.lucky_hits += 1;
+                if !is_lucky_bonus_only {
+                    stats.trigger_hits += 1;
+                    if is_attacker_lucky_trigger {
+                        stats.lucky_hits += 1;
+                    }
+                } else {
                     stats.lucky_total += actual_value;
                 }
                 stats.hp_loss_total = 0;
@@ -853,10 +865,15 @@ pub fn process_aoi_sync_delta(
                     skill.crit_hits += 1;
                     skill.crit_total_value += actual_value;
                 }
-                if is_lucky {
-                    attacker_entity.damage.lucky_hits += 1;
+                if !is_lucky_bonus_only {
+                    attacker_entity.damage.trigger_hits += 1;
+                    skill.trigger_hits += 1;
+                    if is_attacker_lucky_trigger {
+                        attacker_entity.damage.lucky_hits += 1;
+                        skill.lucky_hits += 1;
+                    }
+                } else {
                     attacker_entity.damage.lucky_total += actual_value;
-                    skill.lucky_hits += 1;
                     skill.lucky_total_value += actual_value;
                 }
                 if attacker_entity.entity_type == EEntityType::EntChar {
@@ -872,8 +889,12 @@ pub fn process_aoi_sync_delta(
                         attacker_entity.damage_boss_only.crit_hits += 1;
                         attacker_entity.damage_boss_only.crit_total += actual_value;
                     }
-                    if is_lucky {
-                        attacker_entity.damage_boss_only.lucky_hits += 1;
+                    if !is_lucky_bonus_only {
+                        attacker_entity.damage_boss_only.trigger_hits += 1;
+                        if is_attacker_lucky_trigger {
+                            attacker_entity.damage_boss_only.lucky_hits += 1;
+                        }
+                    } else {
                         attacker_entity.damage_boss_only.lucky_total += actual_value;
                     }
                     if attacker_entity.entity_type == EEntityType::EntChar {
@@ -904,8 +925,12 @@ pub fn process_aoi_sync_delta(
                     stats.crit_hits += 1;
                     stats.crit_total += actual_value;
                 }
-                if is_lucky {
-                    stats.lucky_hits += 1;
+                if !is_lucky_bonus_only {
+                    stats.trigger_hits += 1;
+                    if is_attacker_lucky_trigger {
+                        stats.lucky_hits += 1;
+                    }
+                } else {
                     stats.lucky_total += actual_value;
                 }
 
@@ -970,10 +995,23 @@ pub fn process_aoi_sync_delta(
                     taken_skill.crit_hits += 1;
                     taken_skill.crit_total_value += effective_value;
                 }
-                if is_lucky {
-                    defender_entity.taken.lucky_hits += 1;
+                if !is_lucky_bonus_only {
+                    defender_entity.taken.trigger_hits += 1;
+                    taken_skill.trigger_hits += 1;
+                    if is_attacked_lucky_trigger {
+                        defender_entity.taken.lucky_hits += 1;
+                        taken_skill.lucky_hits += 1;
+                    }
+                    if is_block {
+                        defender_entity.taken.block_hits += 1;
+                        taken_skill.block_hits += 1;
+                        if is_attacked_lucky_trigger {
+                            defender_entity.taken.lucky_block_hits += 1;
+                            taken_skill.lucky_block_hits += 1;
+                        }
+                    }
+                } else {
                     defender_entity.taken.lucky_total += effective_value;
-                    taken_skill.lucky_hits += 1;
                     taken_skill.lucky_total_value += effective_value;
                 }
                 defender_entity.taken.hits += 1;

@@ -122,6 +122,18 @@
         (sum, skill) => sum + Number(skill.raw.luckyTotalValue || 0),
         0,
       ),
+      triggerHits: group.skills.reduce(
+        (sum, skill) => sum + Number(skill.raw.triggerHits || skill.raw.hits || 0),
+        0,
+      ),
+      blockHits: group.skills.reduce(
+        (sum, skill) => sum + Number(skill.raw.blockHits || 0),
+        0,
+      ),
+      luckyBlockHits: group.skills.reduce(
+        (sum, skill) => sum + Number(skill.raw.luckyBlockHits || 0),
+        0,
+      ),
     };
   }
 
@@ -182,6 +194,8 @@
         critDmgRate: group.critDmgRate,
         luckyRate: group.luckyRate,
         luckyDmgRate: group.luckyDmgRate,
+        blockRate: group.blockRate,
+        luckyBlockRate: group.luckyBlockRate,
         hits: group.hits,
         hitsPerMinute: group.hitsPerMinute,
         property: null,
@@ -460,7 +474,7 @@
                   suffixFontSize={tableSettings.skillAbbreviatedFontSize}
                   suffixColor={customThemeColors.tableAbbreviatedColor}
                 />
-              {:else if col.key === "critRate" || col.key === "critDmgRate" || col.key === "luckyRate" || col.key === "luckyDmgRate"}
+              {:else if col.key === "critRate" || col.key === "critDmgRate" || col.key === "luckyRate" || col.key === "luckyDmgRate" || col.key === "blockRate" || col.key === "luckyBlockRate"}
                 <PercentFormat
                   val={skill[col.key]}
                   suffixFontSize={tableSettings.skillAbbreviatedFontSize}

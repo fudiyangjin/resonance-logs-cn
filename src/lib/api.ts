@@ -64,6 +64,8 @@ export type PlayerRow = {
   critDmgRate: number;
   luckyRate: number;
   luckyDmgRate: number;
+  blockRate: number;
+  luckyBlockRate: number;
   hits: number;
   hitsPerMinute: number;
   bossDmg: number;
@@ -88,6 +90,8 @@ export type SkillRow = {
   critDmgRate: number;
   luckyRate: number;
   luckyDmgRate: number;
+  blockRate: number;
+  luckyBlockRate: number;
   hits: number;
   hitsPerMinute: number;
 };

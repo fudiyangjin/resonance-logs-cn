@@ -1,6 +1,11 @@
 ﻿<script lang="ts">
   import { page } from "$app/state";
-  import { settings, SETTINGS } from "$lib/settings-store";
+  import {
+    settings,
+    SETTINGS,
+    DEFAULT_LIVE_TANKED_SKILL_STATS,
+    normalizeTankedSkillColumnOrder,
+  } from "$lib/settings-store";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
   import { computePlayerRows } from "$lib/live-derived";
   import {
@@ -54,7 +59,9 @@
   let sortKey = $derived(SETTINGS.live.sorting.tankedSkills.state.sortKey);
   let sortDesc = $derived(SETTINGS.live.sorting.tankedSkills.state.sortDesc);
   let columnOrder = $derived(
-    SETTINGS.live.columnOrder.tankedSkills.state.order,
+    normalizeTankedSkillColumnOrder(
+      SETTINGS.live.columnOrder.tankedSkills.state.order,
+    ),
   );
 
   function handleSort(key: string) {
@@ -68,9 +75,13 @@
   }
 
   let visibleSkillColumns = $derived.by(() => {
-    const visible = liveTankedSkillColumns.filter(
-      (col) => settings.state.live.tanked.skills[col.key],
-    );
+    const visible = liveTankedSkillColumns.filter((col) => {
+      const defaultValue =
+        DEFAULT_LIVE_TANKED_SKILL_STATS[
+          col.key as keyof typeof DEFAULT_LIVE_TANKED_SKILL_STATS
+        ] ?? false;
+      return settings.state.live.tanked.skills[col.key] ?? defaultValue;
+    });
     return visible.sort((a, b) => {
       const aIdx = columnOrder.indexOf(a.key);
       const bIdx = columnOrder.indexOf(b.key);

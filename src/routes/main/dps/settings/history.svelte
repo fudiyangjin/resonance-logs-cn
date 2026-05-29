@@ -10,7 +10,11 @@
     historyTankedPlayerColumns,
     historyTankedSkillColumns,
   } from "$lib/column-data";
-  import { SETTINGS } from "$lib/settings-store";
+  import {
+    SETTINGS,
+    DEFAULT_HISTORY_TANKED_STATS,
+    DEFAULT_HISTORY_TANKED_SKILL_STATS,
+  } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
   import ChevronDown from "virtual:icons/lucide/chevron-down";
 
@@ -30,6 +34,19 @@
   function toggleSection(section: keyof typeof expandedSections) {
     expandedSections[section] = !expandedSections[section];
   }
+
+  $effect(() => {
+    for (const key of Object.keys(DEFAULT_HISTORY_TANKED_STATS)) {
+      const typedKey = key as keyof typeof DEFAULT_HISTORY_TANKED_STATS;
+      SETTINGS.history.tanked.players.state[typedKey] ??=
+        DEFAULT_HISTORY_TANKED_STATS[typedKey];
+    }
+    for (const key of Object.keys(DEFAULT_HISTORY_TANKED_SKILL_STATS)) {
+      const typedKey = key as keyof typeof DEFAULT_HISTORY_TANKED_SKILL_STATS;
+      SETTINGS.history.tanked.skillBreakdown.state[typedKey] ??=
+        DEFAULT_HISTORY_TANKED_SKILL_STATS[typedKey];
+    }
+  });
 </script>
 
 <Tabs.Content value={SETTINGS_CATEGORY}>
@@ -354,8 +371,9 @@
       {#if expandedSections.tankedPlayers}
         <div class="px-4 pb-3 space-y-1">
           {#each historyTankedPlayerColumns as col (col.key)}
+            {@const key = col.key as keyof typeof DEFAULT_HISTORY_TANKED_STATS}
             <SettingsSwitch
-              bind:checked={SETTINGS.history.tanked.players.state[col.key]}
+              bind:checked={SETTINGS.history.tanked.players.state[key]}
               label={col.label}
               description={col.description}
             />
@@ -385,9 +403,10 @@
       {#if expandedSections.tankedSkills}
         <div class="px-4 pb-3 space-y-1">
           {#each historyTankedSkillColumns as col (col.key)}
+            {@const key = col.key as keyof typeof DEFAULT_HISTORY_TANKED_SKILL_STATS}
             <SettingsSwitch
               bind:checked={
-                SETTINGS.history.tanked.skillBreakdown.state[col.key]
+                SETTINGS.history.tanked.skillBreakdown.state[key]
               }
               label={col.label}
               description={col.description}

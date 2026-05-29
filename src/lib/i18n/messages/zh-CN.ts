@@ -148,6 +148,8 @@ export const zhCNMessages = {
   "columns.tanked.critDmgRate": "暴击承伤%",
   "columns.tanked.luckyRate": "被幸运%",
   "columns.tanked.luckyDmgRate": "幸运承伤%",
+  "columns.tanked.blockRate": "格挡率%",
+  "columns.tanked.luckyBlockRate": "幸运格挡率%",
   "columns.tanked.hits": "受击数",
   "columns.tanked.hitsPerMinute": "分均受击",
   "columns.skill.property": "元素",
@@ -210,6 +212,9 @@ export const zhCNMessages = {
   "columns.description.tanked.player.luckyRate": "显示玩家被幸运一击的几率",
   "columns.description.tanked.player.luckyDmgRate":
     "显示玩家承受的幸运一击伤害比例",
+  "columns.description.tanked.player.blockRate": "显示玩家承受伤害时的格挡几率",
+  "columns.description.tanked.player.luckyBlockRate":
+    "显示玩家承受伤害时触发幸运格挡的几率",
   "columns.description.tanked.player.hits": "显示玩家的总受击次数",
   "columns.description.tanked.player.hitsPerMinute": "显示玩家每分钟的受击次数",
   "columns.description.tanked.skill.total": "显示技能造成的总承伤",
@@ -221,6 +226,9 @@ export const zhCNMessages = {
   "columns.description.tanked.skill.luckyRate": "显示该技能被幸运一击的几率",
   "columns.description.tanked.skill.luckyDmgRate":
     "显示该技能承受的幸运一击伤害比例",
+  "columns.description.tanked.skill.blockRate": "显示该技能造成伤害被格挡的几率",
+  "columns.description.tanked.skill.luckyBlockRate":
+    "显示该技能造成伤害被幸运格挡的几率",
   "columns.description.tanked.skill.hits": "显示该技能造成的总受击次数",
   "columns.description.tanked.skill.hitsPerMinute":
     "显示该技能每分钟造成的受击次数",

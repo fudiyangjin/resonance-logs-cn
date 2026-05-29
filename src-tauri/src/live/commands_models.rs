@@ -126,6 +126,9 @@ pub struct RawCombatStats {
     pub crit_total: u128,
     pub lucky_hits: u128,
     pub lucky_total: u128,
+    pub trigger_hits: u128,
+    pub block_hits: u128,
+    pub lucky_block_hits: u128,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
@@ -140,6 +143,9 @@ pub struct RawSkillStats {
     pub lucky_total_value: u128,
     pub property: Option<i32>,
     pub damage_mode: Option<i32>,
+    pub trigger_hits: u128,
+    pub block_hits: u128,
+    pub lucky_block_hits: u128,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
@@ -162,6 +168,9 @@ pub fn to_raw_combat_stats(stats: &CombatStats) -> RawCombatStats {
         crit_total: stats.crit_total,
         lucky_hits: stats.lucky_hits,
         lucky_total: stats.lucky_total,
+        trigger_hits: stats.trigger_hits,
+        block_hits: stats.block_hits,
+        lucky_block_hits: stats.lucky_block_hits,
     }
 }
 
@@ -176,6 +185,9 @@ pub fn to_raw_skill_stats(skill: &Skill) -> RawSkillStats {
         lucky_total_value: skill.lucky_total_value,
         property: skill.property,
         damage_mode: skill.damage_mode,
+        trigger_hits: skill.trigger_hits,
+        block_hits: skill.block_hits,
+        lucky_block_hits: skill.lucky_block_hits,
     }
 }
 
@@ -213,6 +225,9 @@ pub fn build_per_target_stats(
                 lucky_total_value: stats.lucky_total,
                 property: None,
                 damage_mode: None,
+                trigger_hits: stats.trigger_hits,
+                block_hits: 0,
+                lucky_block_hits: 0,
             },
         );
         entry.total_value += stats.total_value;
@@ -223,6 +238,7 @@ pub fn build_per_target_stats(
         entry.damage.crit_total += stats.crit_total;
         entry.damage.lucky_hits += stats.lucky_hits;
         entry.damage.lucky_total += stats.lucky_total;
+        entry.damage.trigger_hits += stats.trigger_hits;
     }
 
     if let Some(totals) = totals_by_target {
