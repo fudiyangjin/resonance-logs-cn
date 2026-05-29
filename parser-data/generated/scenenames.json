@@ -18,7 +18,7 @@
       "id": "Dataran Asteria"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294551978
+    "SourceOffset": 4947
   },
   "8": {
     "Id": 8,
@@ -39,7 +39,7 @@
       "id": "Asteris"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294552113
+    "SourceOffset": 5082
   },
   "9": {
     "Id": 9,
@@ -60,28 +60,28 @@
       "id": "Dataran Tinggi Bajamar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294552248
+    "SourceOffset": 5217
   },
   "10": {
     "Id": 10,
-    "Name": "Valley",
-    "NameDesign": "Valley",
+    "Name": "Montegnor Valley",
+    "NameDesign": "Montegnor Valley",
     "NameId": 224765947,
     "Names": {
-      "en": "Valley",
-      "zh-CN": "溪谷",
-      "zh-TW": "溪谷",
+      "en": "Montegnor Valley",
+      "zh-CN": "蒙特诺尔溪谷",
+      "zh-TW": "蒙特諾爾溪谷",
       "ja": "渓谷",
       "ko-KR": "계곡",
-      "fr": "Vallée",
-      "de": "Tal",
-      "es": "Valle",
-      "pt-BR": "Vale",
+      "fr": "Vallée de Montegnor",
+      "de": "Montegnor-Tal",
+      "es": "Valle Montegnor",
+      "pt-BR": "Vale Montegnor",
       "th": "หุบเขาลำธาร",
       "id": "Lembah Sungai"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294552383
+    "SourceOffset": 5352
   },
   "11": {
     "Id": 11,
@@ -102,7 +102,7 @@
       "id": "Pulau Starwander"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294552518
+    "SourceOffset": 5487
   },
   "71": {
     "Id": 71,
@@ -123,7 +123,7 @@
       "id": "Hutan Bloomlight"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294552653
+    "SourceOffset": 5622
   },
   "72": {
     "Id": 72,
@@ -144,7 +144,7 @@
       "id": "Hutan Gleamfall"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294552788
+    "SourceOffset": 5757
   },
   "73": {
     "Id": 73,
@@ -165,7 +165,7 @@
       "id": "Kanyon Windhowl"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294552923
+    "SourceOffset": 5892
   },
   "74": {
     "Id": 74,
@@ -186,7 +186,7 @@
       "id": "Kawasan Bawah Tanah"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294553058
+    "SourceOffset": 6027
   },
   "75": {
     "Id": 75,
@@ -207,7 +207,7 @@
       "id": "Gua Darkblue"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294553193
+    "SourceOffset": 6162
   },
   "76": {
     "Id": 76,
@@ -228,7 +228,7 @@
       "id": "Land of Illusion Flower"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294553328
+    "SourceOffset": 6297
   },
   "91": {
     "Id": 91,
@@ -238,7 +238,7 @@
     "Names": {
       "en": "Sunken Corridor",
       "zh-CN": "陷落回廊",
-      "zh-TW": "陷落回廊",
+      "zh-TW": "陷落迴廊",
       "ja": "フィエル回廊",
       "ko-KR": "가라앉은 회랑",
       "fr": "Couloir englouti",
@@ -249,7 +249,7 @@
       "id": "Koridor Runtuh"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294553463
+    "SourceOffset": 6432
   },
   "92": {
     "Id": 92,
@@ -270,7 +270,7 @@
       "id": "Dasar Kegelapan"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294553598
+    "SourceOffset": 6567
   },
   "93": {
     "Id": 93,
@@ -291,7 +291,7 @@
       "id": "Ladang Moonshade"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294553733
+    "SourceOffset": 6702
   },
   "94": {
     "Id": 94,
@@ -312,7 +312,7 @@
       "id": "Setapak Bintang"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294553868
+    "SourceOffset": 6837
   },
   "95": {
     "Id": 95,
@@ -333,7 +333,7 @@
       "id": "Hutan Senja"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294554003
+    "SourceOffset": 6972
   },
   "1001": {
     "Id": 1001,
@@ -354,7 +354,7 @@
       "id": "Tina - Dunia Spiritual"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294554138
+    "SourceOffset": 7107
   },
   "1002": {
     "Id": 1002,
@@ -375,7 +375,7 @@
       "id": "Tina - Dunia Spiritual"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294554273
+    "SourceOffset": 7242
   },
   "1011": {
     "Id": 1011,
@@ -396,7 +396,7 @@
       "id": "Unstable Space - Tina - Dunia Spiritual"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294554408
+    "SourceOffset": 7377
   },
   "1021": {
     "Id": 1021,
@@ -417,7 +417,7 @@
       "id": "Unstable Space - Tina - Dunia Spiritual"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294554543
+    "SourceOffset": 7512
   },
   "1031": {
     "Id": 1031,
@@ -438,7 +438,7 @@
       "id": "Extreme - Tina - Dunia Spiritual"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294554678
+    "SourceOffset": 7647
   },
   "1032": {
     "Id": 1032,
@@ -459,7 +459,7 @@
       "id": "Extreme - Tina - Dunia Spiritual"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294554813
+    "SourceOffset": 7782
   },
   "1033": {
     "Id": 1033,
@@ -480,7 +480,7 @@
       "id": "Extreme - Tina - Dunia Spiritual"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294554948
+    "SourceOffset": 7917
   },
   "1101": {
     "Id": 1101,
@@ -501,7 +501,7 @@
       "id": "Tower Ruin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294555083
+    "SourceOffset": 8052
   },
   "1102": {
     "Id": 1102,
@@ -522,7 +522,7 @@
       "id": "Tower Ruin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294555218
+    "SourceOffset": 8187
   },
   "1111": {
     "Id": 1111,
@@ -543,7 +543,7 @@
       "id": "Unstable Space - Tower Ruin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294555353
+    "SourceOffset": 8322
   },
   "1112": {
     "Id": 1112,
@@ -564,7 +564,7 @@
       "id": "Unstable Space - Tower Ruin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294555488
+    "SourceOffset": 8457
   },
   "1121": {
     "Id": 1121,
@@ -585,7 +585,7 @@
       "id": "Extreme - Tower Ruin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294555623
+    "SourceOffset": 8592
   },
   "1122": {
     "Id": 1122,
@@ -606,7 +606,7 @@
       "id": "Extreme - Tower Ruin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294555758
+    "SourceOffset": 8727
   },
   "1123": {
     "Id": 1123,
@@ -627,7 +627,112 @@
       "id": "Extreme - Tower Ruin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294555893
+    "SourceOffset": 8862
+  },
+  "1150": {
+    "Id": 1150,
+    "Name": "Chaotic - Towering Ruin",
+    "NameDesign": "Chaotic - Towering Ruin",
+    "NameId": 2104466945,
+    "Names": {
+      "en": "Chaotic - Towering Ruin",
+      "zh-CN": "极限·巨塔遗迹",
+      "zh-TW": "極限·巨塔遺跡",
+      "ja": "極限・巨塔の遺跡",
+      "ko-KR": "극한・거탑 유적",
+      "fr": "Chaotique - Ruines imposantes",
+      "de": "Chaotisch – Aufragende Ruinen",
+      "es": "Caótico: Ruina Imponente",
+      "pt-BR": "Caótico – Ruína Imponente",
+      "th": "Extreme - Towering Ruin",
+      "id": "Extreme - Tower Ruin"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 8997
+  },
+  "1151": {
+    "Id": 1151,
+    "Name": "Chaotic - Towering Ruin",
+    "NameDesign": "Chaotic - Towering Ruin",
+    "NameId": 2104466946,
+    "Names": {
+      "en": "Chaotic - Towering Ruin",
+      "zh-CN": "极限·巨塔遗迹",
+      "zh-TW": "極限·巨塔遺跡",
+      "ja": "極限・巨塔の遺跡",
+      "ko-KR": "극한・거탑 유적",
+      "fr": "Chaotique - Ruines imposantes",
+      "de": "Chaotisch – Aufragende Ruinen",
+      "es": "Caótico: Ruina Imponente",
+      "pt-BR": "Caótico – Ruína Imponente",
+      "th": "Extreme - Towering Ruin",
+      "id": "Extreme - Tower Ruin"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 9132
+  },
+  "1152": {
+    "Id": 1152,
+    "Name": "Chaotic - Towering Ruin",
+    "NameDesign": "Chaotic - Towering Ruin",
+    "NameId": 2104466947,
+    "Names": {
+      "en": "Chaotic - Towering Ruin",
+      "zh-CN": "极限·巨塔遗迹",
+      "zh-TW": "極限·巨塔遺跡",
+      "ja": "極限・巨塔の遺跡",
+      "ko-KR": "극한・거탑 유적",
+      "fr": "Chaotique - Ruines imposantes",
+      "de": "Chaotisch – Aufragende Ruinen",
+      "es": "Caótico: Ruina Imponente",
+      "pt-BR": "Caótico – Ruína Imponente",
+      "th": "Extreme - Towering Ruin",
+      "id": "Extreme - Tower Ruin"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 9267
+  },
+  "1153": {
+    "Id": 1153,
+    "Name": "Unstable - Towering Ruin",
+    "NameDesign": "Unstable - Towering Ruin",
+    "NameId": 2104466948,
+    "Names": {
+      "en": "Unstable - Towering Ruin",
+      "zh-CN": "不稳定空间·巨塔遗迹",
+      "zh-TW": "不穩定空間·巨塔遺跡",
+      "ja": "不安定な空間・巨塔の遺跡",
+      "ko-KR": "불안정 공간・거탑 유적",
+      "fr": "Instable - Ruines imposantes",
+      "de": "Instabil – Aufragende Ruinen",
+      "es": "Inestable: Ruina Imponente",
+      "pt-BR": "Instável – Ruína Imponente",
+      "th": "Unstable Space - Towering Ruin",
+      "id": "Unstable Space - Tower Ruin"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 9402
+  },
+  "1154": {
+    "Id": 1154,
+    "Name": "Unstable - Towering Ruin",
+    "NameDesign": "Unstable - Towering Ruin",
+    "NameId": 2104466949,
+    "Names": {
+      "en": "Unstable - Towering Ruin",
+      "zh-CN": "不稳定空间·巨塔遗迹",
+      "zh-TW": "不穩定空間·巨塔遺跡",
+      "ja": "不安定な空間・巨塔の遺跡",
+      "ko-KR": "불안정 공간・거탑 유적",
+      "fr": "Instable - Ruines imposantes",
+      "de": "Instabil – Aufragende Ruinen",
+      "es": "Inestable: Ruina Imponente",
+      "pt-BR": "Instável – Ruína Imponente",
+      "th": "Unstable Space - Towering Ruin",
+      "id": "Unstable Space - Tower Ruin"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 9537
   },
   "1201": {
     "Id": 1201,
@@ -648,7 +753,7 @@
       "id": "Drake Clawmark"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294556028
+    "SourceOffset": 9672
   },
   "1202": {
     "Id": 1202,
@@ -669,7 +774,7 @@
       "id": "Drake Clawmark"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294556163
+    "SourceOffset": 9807
   },
   "1211": {
     "Id": 1211,
@@ -690,7 +795,7 @@
       "id": "Unstable Space - Drake Clawmark"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294556298
+    "SourceOffset": 9942
   },
   "1212": {
     "Id": 1212,
@@ -711,7 +816,7 @@
       "id": "Unstable Space - Drake Clawmark"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294556433
+    "SourceOffset": 10077
   },
   "1221": {
     "Id": 1221,
@@ -732,7 +837,7 @@
       "id": "Extreme - Drake Clawmark"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294556568
+    "SourceOffset": 10212
   },
   "1222": {
     "Id": 1222,
@@ -753,7 +858,7 @@
       "id": "Extreme - Drake Clawmark"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294556703
+    "SourceOffset": 10347
   },
   "1223": {
     "Id": 1223,
@@ -774,7 +879,7 @@
       "id": "Extreme - Drake Clawmark"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294556838
+    "SourceOffset": 10482
   },
   "1301": {
     "Id": 1301,
@@ -795,7 +900,7 @@
       "id": "Shadow Fortress"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294556973
+    "SourceOffset": 10617
   },
   "1302": {
     "Id": 1302,
@@ -816,7 +921,7 @@
       "id": "Shadow Fortress"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294557108
+    "SourceOffset": 10752
   },
   "1311": {
     "Id": 1311,
@@ -837,7 +942,7 @@
       "id": "Unstable Space - Shadow Fortress"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294557243
+    "SourceOffset": 10887
   },
   "1321": {
     "Id": 1321,
@@ -858,7 +963,7 @@
       "id": "Unstable Space - Shadow Fortress"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294557378
+    "SourceOffset": 11022
   },
   "1331": {
     "Id": 1331,
@@ -879,7 +984,7 @@
       "id": "Extreme - Shadow Fortress"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294557513
+    "SourceOffset": 11157
   },
   "1332": {
     "Id": 1332,
@@ -900,7 +1005,7 @@
       "id": "Extreme - Shadow Fortress"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294557648
+    "SourceOffset": 11292
   },
   "1333": {
     "Id": 1333,
@@ -921,7 +1026,7 @@
       "id": "Extreme - Shadow Fortress"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294557783
+    "SourceOffset": 11427
   },
   "1399": {
     "Id": 1399,
@@ -942,7 +1047,7 @@
       "id": "Tes Misi Stage"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294557918
+    "SourceOffset": 11562
   },
   "1401": {
     "Id": 1401,
@@ -959,11 +1064,11 @@
       "de": "Illusorische Mondschleierwildnis",
       "es": "Yermo del Velo Lunar Ilusorio",
       "pt-BR": "Ermos do Véu Lunar Ilusório",
-      "th": "Field of Illusory Moon",
+      "th": "Illusory Moonveil Wilds",
       "id": "Phantasmal Moonflow"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294558053
+    "SourceOffset": 11697
   },
   "1402": {
     "Id": 1402,
@@ -980,11 +1085,11 @@
       "de": "Illusorische Mondschleierwildnis",
       "es": "Yermo del Velo Lunar Ilusorio",
       "pt-BR": "Ermos do Véu Lunar Ilusório",
-      "th": "Field of Illusory Moon",
+      "th": "Illusory Moonveil Wilds",
       "id": "Phantasmal Moonflow"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294558188
+    "SourceOffset": 11832
   },
   "1403": {
     "Id": 1403,
@@ -1001,11 +1106,11 @@
       "de": "Illusorische Mondschleierwildnis",
       "es": "Yermo del Velo Lunar Ilusorio",
       "pt-BR": "Ermos do Véu Lunar Ilusório",
-      "th": "Field of Illusory Moon",
+      "th": "Illusory Moonveil Wilds",
       "id": "Phantasmal Moonflow"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294558323
+    "SourceOffset": 11967
   },
   "1411": {
     "Id": 1411,
@@ -1022,11 +1127,11 @@
       "de": "Instabiler Raum – Illusorische Mondschleierwildnis",
       "es": "Espacio Inestable: Yermo del Velo Lunar Ilusorio",
       "pt-BR": "Espaço Instável – Ermos do Véu Lunar Ilusório",
-      "th": "Unstable Space - Field of Illusory Moon",
+      "th": "Unstable Space - Illusory Moonveil Wilds",
       "id": "Unstable Space - Phantasmal Moonflow"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294558458
+    "SourceOffset": 12102
   },
   "1412": {
     "Id": 1412,
@@ -1043,11 +1148,11 @@
       "de": "Instabiler Raum – Illusorische Mondschleierwildnis",
       "es": "Espacio Inestable: Yermo del Velo Lunar Ilusorio",
       "pt-BR": "Espaço Instável – Ermos do Véu Lunar Ilusório",
-      "th": "Unstable Space - Field of Illusory Moon",
+      "th": "Unstable Space - Illusory Moonveil Wilds",
       "id": "Unstable Space - Phantasmal Moonflow"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294558593
+    "SourceOffset": 12237
   },
   "1421": {
     "Id": 1421,
@@ -1064,11 +1169,11 @@
       "de": "Chaotisch – Illusorische Mondschleierwildnis",
       "es": "Caótico: Yermo del Velo Lunar Ilusorio",
       "pt-BR": "Caótico – Ermos do Véu Lunar Ilusório",
-      "th": "Chaotic - Field of Illusory Moon",
+      "th": "Chaotic - Illusory Moonveil Wilds",
       "id": "Extreme - Phantasmal Moonflow"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294558728
+    "SourceOffset": 12372
   },
   "1422": {
     "Id": 1422,
@@ -1085,11 +1190,11 @@
       "de": "Chaotisch – Illusorische Mondschleierwildnis",
       "es": "Caótico: Yermo del Velo Lunar Ilusorio",
       "pt-BR": "Caótico – Ermos do Véu Lunar Ilusório",
-      "th": "Chaotic - Field of Illusory Moon",
+      "th": "Chaotic - Illusory Moonveil Wilds",
       "id": "Extreme - Phantasmal Moonflow"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294558863
+    "SourceOffset": 12507
   },
   "1423": {
     "Id": 1423,
@@ -1106,11 +1211,11 @@
       "de": "Chaotisch – Illusorische Mondschleierwildnis",
       "es": "Caótico: Yermo del Velo Lunar Ilusorio",
       "pt-BR": "Caótico – Ermos do Véu Lunar Ilusório",
-      "th": "Chaotic - Field of Illusory Moon",
+      "th": "Chaotic - Illusory Moonveil Wilds",
       "id": "Extreme - Phantasmal Moonflow"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294558998
+    "SourceOffset": 12642
   },
   "1501": {
     "Id": 1501,
@@ -1131,7 +1236,7 @@
       "id": "Sarang Rocksnake"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294559133
+    "SourceOffset": 12777
   },
   "1502": {
     "Id": 1502,
@@ -1152,7 +1257,7 @@
       "id": "Sarang Rocksnake"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294559268
+    "SourceOffset": 12912
   },
   "1511": {
     "Id": 1511,
@@ -1173,7 +1278,7 @@
       "id": "Unstable Space - Sarang Rocksnake"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294559403
+    "SourceOffset": 13047
   },
   "1521": {
     "Id": 1521,
@@ -1194,7 +1299,7 @@
       "id": "Unstable Space - Sarang Rocksnake"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294559538
+    "SourceOffset": 13182
   },
   "1531": {
     "Id": 1531,
@@ -1215,7 +1320,7 @@
       "id": "Extreme - Sarang Rocksnake"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294559673
+    "SourceOffset": 13317
   },
   "1532": {
     "Id": 1532,
@@ -1236,7 +1341,7 @@
       "id": "Extreme - Sarang Rocksnake"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294559808
+    "SourceOffset": 13452
   },
   "1533": {
     "Id": 1533,
@@ -1257,7 +1362,112 @@
       "id": "Extreme - Sarang Rocksnake"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294559943
+    "SourceOffset": 13587
+  },
+  "1611": {
+    "Id": 1611,
+    "Name": "Unstable - Tina's Mindrealm",
+    "NameDesign": "Unstable - Tina's Mindrealm",
+    "NameId": 2104472259,
+    "Names": {
+      "en": "Unstable - Tina's Mindrealm",
+      "zh-CN": "不稳定空间·蒂娜·精神之界",
+      "zh-TW": "不穩定空間·蒂娜·精神之界",
+      "ja": "不安定な空間・ティナ・精神領域",
+      "ko-KR": "불안정 공간・티나・정신 세계",
+      "fr": "Instable - Monde spirituel de Tina",
+      "de": "Instabil – Tinas Gedankenwelt",
+      "es": "Inestable: Reino Mental de Tina",
+      "pt-BR": "Instável – Mundo Mental da Tina",
+      "th": "Unstable Space - Tina's Mindrealm",
+      "id": "Unstable Space - Tina - Dunia Spiritual"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 13722
+  },
+  "1621": {
+    "Id": 1621,
+    "Name": "Unstable - Tina's Mindrealm",
+    "NameDesign": "Unstable - Tina's Mindrealm",
+    "NameId": 2104472292,
+    "Names": {
+      "en": "Unstable - Tina's Mindrealm",
+      "zh-CN": "不稳定空间·蒂娜·精神之界",
+      "zh-TW": "不穩定空間·蒂娜·精神之界",
+      "ja": "不安定な空間・ティナ・精神領域",
+      "ko-KR": "불안정 공간・티나・정신 세계",
+      "fr": "Instable - Monde spirituel de Tina",
+      "de": "Instabil – Tinas Gedankenwelt",
+      "es": "Inestable: Reino Mental de Tina",
+      "pt-BR": "Instável – Mundo Mental da Tina",
+      "th": "Unstable Space - Tina's Mindrealm",
+      "id": "Unstable Space - Tina - Dunia Spiritual"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 13857
+  },
+  "1631": {
+    "Id": 1631,
+    "Name": "Chaotic - Tina's Mindrealm",
+    "NameDesign": "Chaotic - Tina's Mindrealm",
+    "NameId": 2104472325,
+    "Names": {
+      "en": "Chaotic - Tina's Mindrealm",
+      "zh-CN": "极限·蒂娜·精神之界",
+      "zh-TW": "極限·蒂娜·精神之界",
+      "ja": "極限・ティナ・精神領域",
+      "ko-KR": "극한・티나・정신 세계",
+      "fr": "Chaotique - Monde spirituel de Tina",
+      "de": "Chaotisch – Tinas Gedankenwelt",
+      "es": "Caótico: Reino Mental de Tina",
+      "pt-BR": "Caótico – Mundo Mental da Tina",
+      "th": "Extreme - Tina's Mindrealm",
+      "id": "Extreme - Tina - Dunia Spiritual"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 13992
+  },
+  "1632": {
+    "Id": 1632,
+    "Name": "Chaotic - Tina's Mindrealm",
+    "NameDesign": "Chaotic - Tina's Mindrealm",
+    "NameId": 2104472326,
+    "Names": {
+      "en": "Chaotic - Tina's Mindrealm",
+      "zh-CN": "极限·蒂娜·精神之界",
+      "zh-TW": "極限·蒂娜·精神之界",
+      "ja": "極限・ティナ・精神領域",
+      "ko-KR": "극한・티나・정신 세계",
+      "fr": "Chaotique - Monde spirituel de Tina",
+      "de": "Chaotisch – Tinas Gedankenwelt",
+      "es": "Caótico: Reino Mental de Tina",
+      "pt-BR": "Caótico – Mundo Mental da Tina",
+      "th": "Extreme - Tina's Mindrealm",
+      "id": "Extreme - Tina - Dunia Spiritual"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 14127
+  },
+  "1633": {
+    "Id": 1633,
+    "Name": "Chaotic - Tina's Mindrealm",
+    "NameDesign": "Chaotic - Tina's Mindrealm",
+    "NameId": 2104472327,
+    "Names": {
+      "en": "Chaotic - Tina's Mindrealm",
+      "zh-CN": "极限·蒂娜·精神之界",
+      "zh-TW": "極限·蒂娜·精神之界",
+      "ja": "極限・ティナ・精神領域",
+      "ko-KR": "극한・티나・정신 세계",
+      "fr": "Chaotique - Monde spirituel de Tina",
+      "de": "Chaotisch – Tinas Gedankenwelt",
+      "es": "Caótico: Reino Mental de Tina",
+      "pt-BR": "Caótico – Mundo Mental da Tina",
+      "th": "Extreme - Tina's Mindrealm",
+      "id": "Extreme - Tina - Dunia Spiritual"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 14262
   },
   "5000": {
     "Id": 5000,
@@ -1278,7 +1488,7 @@
       "id": "Area Tes Mekanisme Konten"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294560078
+    "SourceOffset": 14397
   },
   "5002": {
     "Id": 5002,
@@ -1299,7 +1509,7 @@
       "id": "Sea of Origin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294560213
+    "SourceOffset": 14532
   },
   "5033": {
     "Id": 5033,
@@ -1320,7 +1530,7 @@
       "id": "Ruin of Tower"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294560348
+    "SourceOffset": 14667
   },
   "5200": {
     "Id": 5200,
@@ -1341,7 +1551,7 @@
       "id": "Kantor Ramond"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294560483
+    "SourceOffset": 14802
   },
   "5206": {
     "Id": 5206,
@@ -1362,7 +1572,7 @@
       "id": "Asteris"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294560618
+    "SourceOffset": 14937
   },
   "5211": {
     "Id": 5211,
@@ -1383,7 +1593,7 @@
       "id": "Kantor Ramond"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294560753
+    "SourceOffset": 15072
   },
   "5220": {
     "Id": 5220,
@@ -1404,7 +1614,7 @@
       "id": "Sea Cruise"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294560888
+    "SourceOffset": 15207
   },
   "5401": {
     "Id": 5401,
@@ -1425,7 +1635,7 @@
       "id": "Hutan Kahneman"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294561023
+    "SourceOffset": 15342
   },
   "5403": {
     "Id": 5403,
@@ -1446,7 +1656,7 @@
       "id": "Trial Pejuang Nomor Wahid"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294561158
+    "SourceOffset": 15477
   },
   "5501": {
     "Id": 5501,
@@ -1467,7 +1677,7 @@
       "id": "Drake Clawmark"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294561293
+    "SourceOffset": 15612
   },
   "5602": {
     "Id": 5602,
@@ -1488,7 +1698,7 @@
       "id": "Rumah Pavara"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294561428
+    "SourceOffset": 15747
   },
   "5603": {
     "Id": 5603,
@@ -1509,7 +1719,28 @@
       "id": "Rumah Pavara"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294561563
+    "SourceOffset": 15882
+  },
+  "5604": {
+    "Id": 5604,
+    "Name": "Fafala's Home",
+    "NameDesign": "Fafala's Home",
+    "NameId": 2104615977,
+    "Names": {
+      "en": "Fafala's Home",
+      "zh-CN": "法法菈家",
+      "zh-TW": "法法菈家",
+      "ja": "ファルファラの家",
+      "ko-KR": "파파라의 집",
+      "fr": "Chez Fafala",
+      "de": "Fafalas Zuhause",
+      "es": "Casa de Fafala",
+      "pt-BR": "Casa da Fafala",
+      "th": "Fafala's Home",
+      "id": "Rumah Pavara"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 16017
   },
   "5811": {
     "Id": 5811,
@@ -1530,7 +1761,7 @@
       "id": "Pipa Smelting"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294561698
+    "SourceOffset": 16152
   },
   "5812": {
     "Id": 5812,
@@ -1551,7 +1782,91 @@
       "id": "Gemuruh Es"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294561833
+    "SourceOffset": 16287
+  },
+  "5813": {
+    "Id": 5813,
+    "Name": "Ruins Deep Within the Mine",
+    "NameDesign": "Ruins Deep Within the Mine",
+    "NameId": 2104618187,
+    "Names": {
+      "en": "Ruins Deep Within the Mine",
+      "zh-CN": "矿场深处的遗迹",
+      "zh-TW": "礦場深處的遺跡",
+      "ja": "鉱山深部の遺跡",
+      "ko-KR": "광산 깊은 곳 유적",
+      "fr": "Ruines des profondeurs de la mine",
+      "de": "Ruinen in den Tiefen der Mine",
+      "es": "Ruinas Profundas de la Mina",
+      "pt-BR": "Ruínas nas Profundezas da Mina",
+      "th": "ซากโบราณในส่วนลึกของเหมือง",
+      "id": "Reruntuhan Tambang"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 16422
+  },
+  "5900": {
+    "Id": 5900,
+    "Name": "Sea-Ringed Reef",
+    "NameDesign": "Sea-Ringed Reef",
+    "NameId": 2104619240,
+    "Names": {
+      "en": "Sea-Ringed Reef",
+      "zh-CN": "环海石礁",
+      "zh-TW": "環海石礁",
+      "ja": "珊瑚岩の谷",
+      "ko-KR": "환해 암초 지대",
+      "fr": "Récif de l'anneau marin",
+      "de": "Meerumringtes Riff",
+      "es": "Arrecife Abrazo Marino",
+      "pt-BR": "Recife Cercado pelo Mar",
+      "th": "Unstable Space - Void -Towering Ruin",
+      "id": "Ringsea Reef"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 16557
+  },
+  "5901": {
+    "Id": 5901,
+    "Name": "Mistveil Hunting Ground",
+    "NameDesign": "Mistveil Hunting Ground",
+    "NameId": 2104619241,
+    "Names": {
+      "en": "Mistveil Hunting Ground",
+      "zh-CN": "隐雾猎场",
+      "zh-TW": "隱霧獵場",
+      "ja": "霧に潜む猟場",
+      "ko-KR": "안개 사냥터",
+      "fr": "Terrain de chasse de Voilebrume",
+      "de": "Nebelschleier-Jagdgrund",
+      "es": "Coto de Caza Velo de Niebla",
+      "pt-BR": "Campo de Caça do Véu da Névoa",
+      "th": "The Silent Hunt",
+      "id": "Misty Hunting Ground"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 16827
+  },
+  "5910": {
+    "Id": 5910,
+    "Name": "Cursed Radiant Tomb",
+    "NameDesign": "Cursed Radiant Tomb",
+    "NameId": 2104619273,
+    "Names": {
+      "en": "Cursed Radiant Tomb",
+      "zh-CN": "诅咒的煌墓",
+      "zh-TW": "詛咒的煌墓",
+      "ja": "呪われし煌墓",
+      "ko-KR": "저주받은 무덤",
+      "fr": "Tombeau radieux maudit",
+      "de": "Verfluchtes strahlendes Grab",
+      "es": "Tumba Radiante Maldita",
+      "pt-BR": "Tumba Radiante Amaldiçoada",
+      "th": "The Hexed Shining Vault",
+      "id": "Cursed Tomb"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 16692
   },
   "6001": {
     "Id": 6001,
@@ -1572,7 +1887,7 @@
       "id": "Hero Dungeon Test Area"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294561968
+    "SourceOffset": 16962
   },
   "6005": {
     "Id": 6005,
@@ -1593,7 +1908,7 @@
       "id": "Unstable Space - Sarang Goblin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294562103
+    "SourceOffset": 17097
   },
   "6006": {
     "Id": 6006,
@@ -1614,7 +1929,7 @@
       "id": "Unstable Space - Sarang Goblin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294562238
+    "SourceOffset": 17232
   },
   "6007": {
     "Id": 6007,
@@ -1635,7 +1950,7 @@
       "id": "Extreme - Sarang Goblin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294562373
+    "SourceOffset": 17367
   },
   "6008": {
     "Id": 6008,
@@ -1656,7 +1971,7 @@
       "id": "Extreme - Sarang Goblin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294562508
+    "SourceOffset": 17502
   },
   "6009": {
     "Id": 6009,
@@ -1677,7 +1992,7 @@
       "id": "Extreme - Sarang Goblin"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294562643
+    "SourceOffset": 17637
   },
   "6011": {
     "Id": 6011,
@@ -1698,7 +2013,7 @@
       "id": "Unstable Space - Kahneman Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294562778
+    "SourceOffset": 17772
   },
   "6012": {
     "Id": 6012,
@@ -1719,7 +2034,7 @@
       "id": "Unstable Space - Kahneman Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294562913
+    "SourceOffset": 17907
   },
   "6021": {
     "Id": 6021,
@@ -1740,7 +2055,7 @@
       "id": "Extreme - Kahneman Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294563048
+    "SourceOffset": 18042
   },
   "6022": {
     "Id": 6022,
@@ -1761,7 +2076,7 @@
       "id": "Extreme - Kahneman Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294563183
+    "SourceOffset": 18177
   },
   "6023": {
     "Id": 6023,
@@ -1782,7 +2097,7 @@
       "id": "Extreme - Kahneman Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294563318
+    "SourceOffset": 18312
   },
   "6031": {
     "Id": 6031,
@@ -1803,7 +2118,7 @@
       "id": "Unstable Space - Kahneman Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294563453
+    "SourceOffset": 18447
   },
   "6032": {
     "Id": 6032,
@@ -1824,7 +2139,7 @@
       "id": "Unstable Space - Kahneman Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294563588
+    "SourceOffset": 18582
   },
   "6040": {
     "Id": 6040,
@@ -1845,7 +2160,7 @@
       "id": "Blue City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294563723
+    "SourceOffset": 18717
   },
   "6041": {
     "Id": 6041,
@@ -1866,7 +2181,7 @@
       "id": "Unstable Space - City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294563858
+    "SourceOffset": 18852
   },
   "6042": {
     "Id": 6042,
@@ -1887,7 +2202,7 @@
       "id": "Unstable Space - City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294563993
+    "SourceOffset": 18987
   },
   "6043": {
     "Id": 6043,
@@ -1908,7 +2223,7 @@
       "id": "Extreme - City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294564128
+    "SourceOffset": 19122
   },
   "6044": {
     "Id": 6044,
@@ -1929,7 +2244,7 @@
       "id": "Extreme - City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294564263
+    "SourceOffset": 19257
   },
   "6045": {
     "Id": 6045,
@@ -1950,7 +2265,7 @@
       "id": "Extreme - City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294564398
+    "SourceOffset": 19392
   },
   "6111": {
     "Id": 6111,
@@ -1967,11 +2282,11 @@
       "de": "Instabiler Raum – Geisterschrein",
       "es": "Espacio Inestable: Santuario Espectral",
       "pt-BR": "Espaço Instável – Santuário do Espectro",
-      "th": "Unstable Space - Desolate Spirit Shrine",
+      "th": "Unstable Space - Wraith Shrine",
       "id": "Unstable Space - Altar Roh Liar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294564533
+    "SourceOffset": 19527
   },
   "6112": {
     "Id": 6112,
@@ -1988,11 +2303,11 @@
       "de": "Instabil – Geisterschrein",
       "es": "Inestable: Santuario Espectral",
       "pt-BR": "Instável – Santuário do Espectro",
-      "th": "Unstable Space - Desolate Spirit Shrine",
+      "th": "Unstable Space - Wraith Shrine",
       "id": "Unstable Space - Altar Roh Liar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294564668
+    "SourceOffset": 19662
   },
   "6121": {
     "Id": 6121,
@@ -2009,11 +2324,11 @@
       "de": "Chaotisch – Geisterschrein",
       "es": "Caótico: Santuario Espectral",
       "pt-BR": "Caótico – Santuário do Espectro",
-      "th": "Chaotic - Desolate Spirit Shrine",
+      "th": "Chaotic - Wraith Shrine",
       "id": "Extreme - Altar Roh Liar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294564803
+    "SourceOffset": 19797
   },
   "6122": {
     "Id": 6122,
@@ -2030,11 +2345,11 @@
       "de": "Chaotisch – Geisterschrein",
       "es": "Caótico: Santuario Espectral",
       "pt-BR": "Caótico – Santuário do Espectro",
-      "th": "Chaotic - Desolate Spirit Shrine",
+      "th": "Chaotic - Wraith Shrine",
       "id": "Extreme - Altar Roh Liar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294564938
+    "SourceOffset": 19932
   },
   "6123": {
     "Id": 6123,
@@ -2051,11 +2366,11 @@
       "de": "Chaotisch – Geisterschrein",
       "es": "Caótico: Santuario Espectral",
       "pt-BR": "Caótico – Santuário do Espectro",
-      "th": "Chaotic - Desolate Spirit Shrine",
+      "th": "Chaotic - Wraith Shrine",
       "id": "Extreme - Altar Roh Liar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294565073
+    "SourceOffset": 20067
   },
   "6211": {
     "Id": 6211,
@@ -2072,11 +2387,11 @@
       "de": "Instabiler Raum – Tiefen des Verfalls",
       "es": "Espacio Inestable: Profundidades Decadentes",
       "pt-BR": "Espaço Instável – Profundezas da Decadência",
-      "th": "Unstable Space - Deep into the Abyss",
+      "th": "Unstable Space - Depths of Decay",
       "id": "Unstable Space - Depths of Decay"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294565208
+    "SourceOffset": 20202
   },
   "6212": {
     "Id": 6212,
@@ -2093,11 +2408,11 @@
       "de": "Instabiler Raum – Tiefen des Verfalls",
       "es": "Espacio Inestable: Profundidades Decadentes",
       "pt-BR": "Espaço Instável – Profundezas da Decadência",
-      "th": "Unstable Space - Deep into the Abyss",
+      "th": "Unstable Space - Depths of Decay",
       "id": "Unstable Space - Depths of Decay"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294565343
+    "SourceOffset": 20337
   },
   "6221": {
     "Id": 6221,
@@ -2114,11 +2429,11 @@
       "de": "Chaotisch – Tiefen des Verfalls",
       "es": "Caótico: Profundidades Decadentes",
       "pt-BR": "Caótico – Profundezas da Decadência",
-      "th": "Chaotic - Deep into the Abyss",
+      "th": "Chaotic - Depths of Decay",
       "id": "Extreme - Depths of Decay"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294565478
+    "SourceOffset": 20472
   },
   "6222": {
     "Id": 6222,
@@ -2135,11 +2450,11 @@
       "de": "Chaotisch – Tiefen des Verfalls",
       "es": "Caótico: Profundidades Decadentes",
       "pt-BR": "Caótico – Profundezas da Decadência",
-      "th": "Chaotic - Deep into the Abyss",
+      "th": "Chaotic - Depths of Decay",
       "id": "Extreme - Depths of Decay"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294565613
+    "SourceOffset": 20607
   },
   "6223": {
     "Id": 6223,
@@ -2156,11 +2471,11 @@
       "de": "Chaotisch – Tiefen des Verfalls",
       "es": "Caótico: Profundidades Decadentes",
       "pt-BR": "Caótico – Profundezas da Decadência",
-      "th": "Chaotic - Deep into the Abyss",
+      "th": "Chaotic - Depths of Decay",
       "id": "Extreme - Depths of Decay"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294565748
+    "SourceOffset": 20742
   },
   "6311": {
     "Id": 6311,
@@ -2181,7 +2496,7 @@
       "id": "Unstable Space - Light Devourer Cage"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294565883
+    "SourceOffset": 20877
   },
   "6321": {
     "Id": 6321,
@@ -2202,7 +2517,7 @@
       "id": "Unstable Space - Light Devourer Cage"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294566018
+    "SourceOffset": 21012
   },
   "6331": {
     "Id": 6331,
@@ -2223,7 +2538,7 @@
       "id": "Extreme - Light Devourer Cage"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294566153
+    "SourceOffset": 21147
   },
   "6332": {
     "Id": 6332,
@@ -2244,7 +2559,7 @@
       "id": "Extreme - Light Devourer Cage"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294566288
+    "SourceOffset": 21282
   },
   "6333": {
     "Id": 6333,
@@ -2265,7 +2580,7 @@
       "id": "Extreme - Light Devourer Cage"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294566423
+    "SourceOffset": 21417
   },
   "6411": {
     "Id": 6411,
@@ -2286,7 +2601,7 @@
       "id": "Unstable Space - City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294566558
+    "SourceOffset": 21552
   },
   "6412": {
     "Id": 6412,
@@ -2307,7 +2622,7 @@
       "id": "Unstable Space - City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294566693
+    "SourceOffset": 21687
   },
   "6421": {
     "Id": 6421,
@@ -2328,7 +2643,7 @@
       "id": "Extreme - City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294566828
+    "SourceOffset": 21822
   },
   "6422": {
     "Id": 6422,
@@ -2349,7 +2664,7 @@
       "id": "Extreme - City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294566963
+    "SourceOffset": 21957
   },
   "6423": {
     "Id": 6423,
@@ -2370,7 +2685,427 @@
       "id": "Extreme - City of Silence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294567098
+    "SourceOffset": 22092
+  },
+  "6511": {
+    "Id": 6511,
+    "Name": "Unstable Space - Cursed Radiant Tomb",
+    "NameDesign": "Unstable Space - Cursed Radiant Tomb",
+    "NameId": 2104650855,
+    "Names": {
+      "en": "Unstable Space - Cursed Radiant Tomb",
+      "zh-CN": "不稳定空间·诅咒的煌墓",
+      "zh-TW": "不穩定空間·詛咒的煌墓",
+      "ja": "不安定な空間・呪われし煌墓",
+      "ko-KR": "불안정 공간・저주받은 무덤",
+      "fr": "Espace instable - Tombeau radieux maudit",
+      "de": "Instabiler Raum – Verfluchtes strahlendes Grab",
+      "es": "Espacio Inestable: Tumba Radiante Maldita",
+      "pt-BR": "Espaço Instável – Tumba Radiante Amaldiçoada",
+      "th": "Unstable Space - Cursed Radiant Tomb",
+      "id": "Unstable Space - Cursed Tomb"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 22902
+  },
+  "6512": {
+    "Id": 6512,
+    "Name": "Unstable Space - Cursed Radiant Tomb",
+    "NameDesign": "Unstable Space - Cursed Radiant Tomb",
+    "NameId": 2104650856,
+    "Names": {
+      "en": "Unstable Space - Cursed Radiant Tomb",
+      "zh-CN": "不稳定空间·诅咒的煌墓",
+      "zh-TW": "不穩定空間·詛咒的煌墓",
+      "ja": "不安定な空間・呪われし煌墓",
+      "ko-KR": "불안정 공간・저주받은 무덤",
+      "fr": "Espace instable - Tombeau radieux maudit",
+      "de": "Instabiler Raum – Verfluchtes strahlendes Grab",
+      "es": "Espacio Inestable: Tumba Radiante Maldita",
+      "pt-BR": "Espaço Instável – Tumba Radiante Amaldiçoada",
+      "th": "Unstable Space - Cursed Radiant Tomb",
+      "id": "Unstable Space - Cursed Tomb"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 23037
+  },
+  "6513": {
+    "Id": 6513,
+    "Name": "Cursed Radiant Tomb",
+    "NameDesign": "Cursed Radiant Tomb",
+    "NameId": 2104650857,
+    "Names": {
+      "en": "Cursed Radiant Tomb",
+      "zh-CN": "诅咒的煌墓",
+      "zh-TW": "詛咒的煌墓",
+      "ja": "呪われし煌墓",
+      "ko-KR": "저주받은 무덤",
+      "fr": "Tombeau radieux maudit",
+      "de": "Verfluchtes strahlendes Grab",
+      "es": "Tumba Radiante Maldita",
+      "pt-BR": "Tumba Radiante Amaldiçoada",
+      "th": "The Hexed Shining Vault",
+      "id": "Cursed Tomb"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 23172
+  },
+  "6514": {
+    "Id": 6514,
+    "Name": "Cursed Radiant Tomb",
+    "NameDesign": "Cursed Radiant Tomb",
+    "NameId": 2104650858,
+    "Names": {
+      "en": "Cursed Radiant Tomb",
+      "zh-CN": "诅咒的煌墓",
+      "zh-TW": "詛咒的煌墓",
+      "ja": "呪われし煌墓",
+      "ko-KR": "저주받은 무덤",
+      "fr": "Tombeau radieux maudit",
+      "de": "Verfluchtes strahlendes Grab",
+      "es": "Tumba Radiante Maldita",
+      "pt-BR": "Tumba Radiante Amaldiçoada",
+      "th": "The Hexed Shining Vault",
+      "id": "Cursed Tomb"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 23442
+  },
+  "6515": {
+    "Id": 6515,
+    "Name": "Cursed Radiant Tomb",
+    "NameDesign": "Cursed Radiant Tomb",
+    "NameId": 2104650859,
+    "Names": {
+      "en": "Cursed Radiant Tomb",
+      "zh-CN": "诅咒的煌墓",
+      "zh-TW": "詛咒的煌墓",
+      "ja": "呪われし煌墓",
+      "ko-KR": "저주받은 무덤",
+      "fr": "Tombeau radieux maudit",
+      "de": "Verfluchtes strahlendes Grab",
+      "es": "Tumba Radiante Maldita",
+      "pt-BR": "Tumba Radiante Amaldiçoada",
+      "th": "The Hexed Shining Vault",
+      "id": "Cursed Tomb"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 23712
+  },
+  "6521": {
+    "Id": 6521,
+    "Name": "Chaotic - Mech Facility",
+    "NameDesign": "Chaotic - Mech Facility",
+    "NameId": 2104650888,
+    "Names": {
+      "en": "Chaotic - Mech Facility",
+      "zh-CN": "极限·机化处理所",
+      "zh-TW": "極限·機化處理所",
+      "ja": "極限・機械化工場",
+      "ko-KR": "극한・기계화 처리소",
+      "fr": "Chaotique - Centre de mechs",
+      "de": "Chaotisch – Mecha-Fabrik",
+      "es": "Caótico: Taller Mecánico",
+      "pt-BR": "Caótico – Oficina Mecânica",
+      "th": "Chaotic Realm - Mechanization Lab - ยาก",
+      "id": "Extreme - Mechanization Facility"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 22227
+  },
+  "6522": {
+    "Id": 6522,
+    "Name": "Chaotic - Mech Facility",
+    "NameDesign": "Chaotic - Mech Facility",
+    "NameId": 2104650889,
+    "Names": {
+      "en": "Chaotic - Mech Facility",
+      "zh-CN": "极限·机化处理所",
+      "zh-TW": "極限·機化處理所",
+      "ja": "極限・機械化工場",
+      "ko-KR": "극한・기계화 처리소",
+      "fr": "Chaotique - Centre de mechs",
+      "de": "Chaotisch – Mecha-Fabrik",
+      "es": "Caótico: Taller Mecánico",
+      "pt-BR": "Caótico – Oficina Mecânica",
+      "th": "Chaotic Realm - Mechanization Lab - ยาก",
+      "id": "Extreme - Mechanization Facility"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 22362
+  },
+  "6523": {
+    "Id": 6523,
+    "Name": "Chaotic - Mech Facility",
+    "NameDesign": "Chaotic - Mech Facility",
+    "NameId": 2104650890,
+    "Names": {
+      "en": "Chaotic - Mech Facility",
+      "zh-CN": "极限·机化处理所",
+      "zh-TW": "極限·機化處理所",
+      "ja": "極限・機械化工場",
+      "ko-KR": "극한・기계화 처리소",
+      "fr": "Chaotique - Centre de mechs",
+      "de": "Chaotisch – Mecha-Fabrik",
+      "es": "Caótico: Taller Mecánico",
+      "pt-BR": "Caótico – Oficina Mecânica",
+      "th": "Chaotic Realm - Mechanization Lab - ยาก",
+      "id": "Extreme - Mechanization Facility"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 22497
+  },
+  "6524": {
+    "Id": 6524,
+    "Name": "Chaotic - Mech Facility",
+    "NameDesign": "Chaotic - Mech Facility",
+    "NameId": 2104650891,
+    "Names": {
+      "en": "Chaotic - Mech Facility",
+      "zh-CN": "极限·机化处理所",
+      "zh-TW": "極限·機化處理所",
+      "ja": "極限・機械化工場",
+      "ko-KR": "극한・기계화 처리소",
+      "fr": "Chaotique - Centre de mechs",
+      "de": "Chaotisch – Mecha-Fabrik",
+      "es": "Caótico: Taller Mecánico",
+      "pt-BR": "Caótico – Oficina Mecânica",
+      "th": "Chaotic Realm - Mechanization Lab - ยาก",
+      "id": "Extreme - Mechanization Facility"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 22632
+  },
+  "6525": {
+    "Id": 6525,
+    "Name": "Chaotic - Mech Facility",
+    "NameDesign": "Chaotic - Mech Facility",
+    "NameId": 2104650892,
+    "Names": {
+      "en": "Chaotic - Mech Facility",
+      "zh-CN": "极限·机化处理所",
+      "zh-TW": "極限·機化處理所",
+      "ja": "極限・機械化工場",
+      "ko-KR": "극한・기계화 처리소",
+      "fr": "Chaotique - Centre de mechs",
+      "de": "Chaotisch – Mecha-Fabrik",
+      "es": "Caótico: Taller Mecánico",
+      "pt-BR": "Caótico – Oficina Mecânica",
+      "th": "Chaotic Realm - Mechanization Lab - ยาก",
+      "id": "Extreme - Mechanization Facility"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 22767
+  },
+  "6541": {
+    "Id": 6541,
+    "Name": "Unstable Space - Mistveil Hunting Ground",
+    "NameDesign": "Unstable Space - Mistveil Hunting Ground",
+    "NameId": 2104650954,
+    "Names": {
+      "en": "Unstable Space - Mistveil Hunting Ground",
+      "zh-CN": "不稳定空间·隐雾猎场",
+      "zh-TW": "不穩定空間·隱霧獵場",
+      "ja": "不安定な空間・霧に潜む猟場",
+      "ko-KR": "불안정 공간・안개 사냥터",
+      "fr": "Espace instable - Terrain de chasse de Voilebrume",
+      "de": "Instabiler Raum – Nebelschleier-Jagdgrund",
+      "es": "Espacio Inestable: Coto de Caza Velo de Niebla",
+      "pt-BR": "Espaço Instável – Campo de Caça do Véu da Névoa",
+      "th": "Unstable Space - The Shrouded Hunter’s Range",
+      "id": "Unstable Space - Misty Hunting Ground"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 23307
+  },
+  "6542": {
+    "Id": 6542,
+    "Name": "Unstable Space - Mistveil Hunting Ground",
+    "NameDesign": "Unstable Space - Mistveil Hunting Ground",
+    "NameId": 2104650955,
+    "Names": {
+      "en": "Unstable Space - Mistveil Hunting Ground",
+      "zh-CN": "不稳定空间·隐雾猎场",
+      "zh-TW": "不穩定空間·隱霧獵場",
+      "ja": "不安定な空間・霧に潜む猟場",
+      "ko-KR": "불안정 공간・안개 사냥터",
+      "fr": "Espace instable - Terrain de chasse de Voilebrume",
+      "de": "Instabiler Raum – Nebelschleier-Jagdgrund",
+      "es": "Espacio Inestable: Coto de Caza Velo de Niebla",
+      "pt-BR": "Espaço Instável – Campo de Caça do Véu da Névoa",
+      "th": "Unstable Space - The Shrouded Hunter’s Range",
+      "id": "Unstable Space - Misty Hunting Ground"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 23577
+  },
+  "6543": {
+    "Id": 6543,
+    "Name": "Chaotic - Mistveil Hunting Ground",
+    "NameDesign": "Chaotic - Mistveil Hunting Ground",
+    "NameId": 2104650956,
+    "Names": {
+      "en": "Chaotic - Mistveil Hunting Ground",
+      "zh-CN": "极限·隐雾猎场",
+      "zh-TW": "極限·隱霧獵場",
+      "ja": "極限・霧に潜む猟場",
+      "ko-KR": "극한・안개 사냥터",
+      "fr": "Chaotique - Terrain de chasse de Voilebrume",
+      "de": "Chaotisch – Nebelschleier-Jagdgrund",
+      "es": "Caótico: Coto de Caza Velo de Niebla",
+      "pt-BR": "Caótico – Campo de Caça do Véu da Névoa",
+      "th": "Chaotic - Mistveil Hunting Ground",
+      "id": "Extreme - Misty Hunting Ground"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 23847
+  },
+  "6544": {
+    "Id": 6544,
+    "Name": "Chaotic - Mistveil Hunting Ground",
+    "NameDesign": "Chaotic - Mistveil Hunting Ground",
+    "NameId": 2104650957,
+    "Names": {
+      "en": "Chaotic - Mistveil Hunting Ground",
+      "zh-CN": "极限·隐雾猎场",
+      "zh-TW": "極限·隱霧獵場",
+      "ja": "極限・霧に潜む猟場",
+      "ko-KR": "극한・안개 사냥터",
+      "fr": "Chaotique - Terrain de chasse de Voilebrume",
+      "de": "Chaotisch – Nebelschleier-Jagdgrund",
+      "es": "Caótico: Coto de Caza Velo de Niebla",
+      "pt-BR": "Caótico – Campo de Caça do Véu da Névoa",
+      "th": "Chaotic - Mistveil Hunting Ground",
+      "id": "Extreme - Misty Hunting Ground"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 23982
+  },
+  "6545": {
+    "Id": 6545,
+    "Name": "Chaotic - Mistveil Hunting Ground",
+    "NameDesign": "Chaotic - Mistveil Hunting Ground",
+    "NameId": 2104650958,
+    "Names": {
+      "en": "Chaotic - Mistveil Hunting Ground",
+      "zh-CN": "极限·隐雾猎场",
+      "zh-TW": "極限·隱霧獵場",
+      "ja": "極限・霧に潜む猟場",
+      "ko-KR": "극한・안개 사냥터",
+      "fr": "Chaotique - Terrain de chasse de Voilebrume",
+      "de": "Chaotisch – Nebelschleier-Jagdgrund",
+      "es": "Caótico: Coto de Caza Velo de Niebla",
+      "pt-BR": "Caótico – Campo de Caça do Véu da Névoa",
+      "th": "Chaotic - Mistveil Hunting Ground",
+      "id": "Extreme - Misty Hunting Ground"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 24117
+  },
+  "6561": {
+    "Id": 6561,
+    "Name": "Unstable Space - Sea-Ringed Reef",
+    "NameDesign": "Unstable Space - Sea-Ringed Reef",
+    "NameId": 2104651020,
+    "Names": {
+      "en": "Unstable Space - Sea-Ringed Reef",
+      "zh-CN": "不稳定空间·环海石礁",
+      "zh-TW": "不穩定空間·環海石礁",
+      "ja": "不安定な空間・環礁",
+      "ko-KR": "불안정 공간・환해 암초 지대",
+      "fr": "Espace instable - Récif de l'anneau marin",
+      "de": "Instabiler Raum – Meerumringtes Riff",
+      "es": "Espacio Inestable: Arrecife Abrazo Marino",
+      "pt-BR": "Espaço Instável – Recife Cercado pelo Mar",
+      "th": "Unstable Space - Seawring Reef",
+      "id": "Unstable Space - Ringsea Reef"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 24252
+  },
+  "6562": {
+    "Id": 6562,
+    "Name": "Unstable Space - Sea-Ringed Reef",
+    "NameDesign": "Unstable Space - Sea-Ringed Reef",
+    "NameId": 2104651021,
+    "Names": {
+      "en": "Unstable Space - Sea-Ringed Reef",
+      "zh-CN": "不稳定空间·环海石礁",
+      "zh-TW": "不穩定空間·環海石礁",
+      "ja": "不安定な空間・環礁",
+      "ko-KR": "불안정 공간・환해 암초 지대",
+      "fr": "Espace instable - Récif de l'anneau marin",
+      "de": "Instabiler Raum – Meerumringtes Riff",
+      "es": "Espacio Inestable: Arrecife Abrazo Marino",
+      "pt-BR": "Espaço Instável – Recife Cercado pelo Mar",
+      "th": "Unstable Space - Seawring Reef",
+      "id": "Unstable Space - Ringsea Reef"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 24387
+  },
+  "6563": {
+    "Id": 6563,
+    "Name": "Chaotic - Sea-Ringed Reef",
+    "NameDesign": "Chaotic - Sea-Ringed Reef",
+    "NameId": 2104651022,
+    "Names": {
+      "en": "Chaotic - Sea-Ringed Reef",
+      "zh-CN": "极限·环海石礁",
+      "zh-TW": "極限·環海石礁",
+      "ja": "極限・環礁",
+      "ko-KR": "극한・환해 암초 지대",
+      "fr": "Chaotique - Récif de l'anneau marin",
+      "de": "Chaotisch – Meerumringtes Riff",
+      "es": "Caótico: Arrecife Abrazo Marino",
+      "pt-BR": "Caótico – Recife Cercado pelo Mar",
+      "th": "Chaotic Realm - Seawring Reef",
+      "id": "Extreme - Ringsea Reef"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 24522
+  },
+  "6564": {
+    "Id": 6564,
+    "Name": "Chaotic - Sea-Ringed Reef",
+    "NameDesign": "Chaotic - Sea-Ringed Reef",
+    "NameId": 2104651023,
+    "Names": {
+      "en": "Chaotic - Sea-Ringed Reef",
+      "zh-CN": "极限·环海石礁",
+      "zh-TW": "極限·環海石礁",
+      "ja": "極限・環礁",
+      "ko-KR": "극한・환해 암초 지대",
+      "fr": "Chaotique - Récif de l'anneau marin",
+      "de": "Chaotisch – Meerumringtes Riff",
+      "es": "Caótico: Arrecife Abrazo Marino",
+      "pt-BR": "Caótico – Recife Cercado pelo Mar",
+      "th": "Chaotic Realm - Seawring Reef",
+      "id": "Extreme - Ringsea Reef"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 24657
+  },
+  "6565": {
+    "Id": 6565,
+    "Name": "Chaotic - Sea-Ringed Reef",
+    "NameDesign": "Chaotic - Sea-Ringed Reef",
+    "NameId": 2104651024,
+    "Names": {
+      "en": "Chaotic - Sea-Ringed Reef",
+      "zh-CN": "极限·环海石礁",
+      "zh-TW": "極限·環海石礁",
+      "ja": "極限・環礁",
+      "ko-KR": "극한・환해 암초 지대",
+      "fr": "Chaotique - Récif de l'anneau marin",
+      "de": "Chaotisch – Meerumringtes Riff",
+      "es": "Caótico: Arrecife Abrazo Marino",
+      "pt-BR": "Caótico – Recife Cercado pelo Mar",
+      "th": "Chaotic Realm - Seawring Reef",
+      "id": "Extreme - Ringsea Reef"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 24792
   },
   "7001": {
     "Id": 7001,
@@ -2391,7 +3126,7 @@
       "id": "Parkur Multiplayer"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294567233
+    "SourceOffset": 24927
   },
   "7002": {
     "Id": 7002,
@@ -2412,7 +3147,7 @@
       "id": "Parkur Multiplayer"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294567368
+    "SourceOffset": 25062
   },
   "7003": {
     "Id": 7003,
@@ -2433,7 +3168,7 @@
       "id": "Wasteland Race"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294567503
+    "SourceOffset": 25197
   },
   "7004": {
     "Id": 7004,
@@ -2454,7 +3189,7 @@
       "id": "Mount City Race"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294567638
+    "SourceOffset": 25332
   },
   "7050": {
     "Id": 7050,
@@ -2475,7 +3210,7 @@
       "id": "Goblin Mengamuk"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294567773
+    "SourceOffset": 25467
   },
   "7051": {
     "Id": 7051,
@@ -2496,7 +3231,7 @@
       "id": "Goblin Mengamuk"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294567908
+    "SourceOffset": 25602
   },
   "7052": {
     "Id": 7052,
@@ -2517,7 +3252,7 @@
       "id": "Goblin Mengamuk"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294568043
+    "SourceOffset": 25737
   },
   "7053": {
     "Id": 7053,
@@ -2538,7 +3273,7 @@
       "id": "Goblin Mengamuk"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294568178
+    "SourceOffset": 25872
   },
   "7054": {
     "Id": 7054,
@@ -2559,7 +3294,7 @@
       "id": "Goblin Mengamuk"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294568313
+    "SourceOffset": 26007
   },
   "7055": {
     "Id": 7055,
@@ -2580,7 +3315,7 @@
       "id": "Taklukkan Goblin Mage"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294568448
+    "SourceOffset": 26142
   },
   "7056": {
     "Id": 7056,
@@ -2601,7 +3336,7 @@
       "id": "Taklukkan Goblin Mage"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294568583
+    "SourceOffset": 26277
   },
   "7057": {
     "Id": 7057,
@@ -2622,7 +3357,7 @@
       "id": "Taklukkan Goblin Mage"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294568718
+    "SourceOffset": 26412
   },
   "7058": {
     "Id": 7058,
@@ -2643,7 +3378,7 @@
       "id": "Taklukkan Goblin Mage"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294568853
+    "SourceOffset": 26547
   },
   "7060": {
     "Id": 7060,
@@ -2664,7 +3399,7 @@
       "id": "Perang Kanyon Andra"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294568988
+    "SourceOffset": 26682
   },
   "7061": {
     "Id": 7061,
@@ -2685,7 +3420,7 @@
       "id": "Perang Kanyon Andra"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294569123
+    "SourceOffset": 26817
   },
   "7065": {
     "Id": 7065,
@@ -2706,7 +3441,7 @@
       "id": "Pengantaran Paket Darurat"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294569258
+    "SourceOffset": 26952
   },
   "7070": {
     "Id": 7070,
@@ -2727,7 +3462,7 @@
       "id": "Periksa Lightbridge"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294569393
+    "SourceOffset": 27087
   },
   "7071": {
     "Id": 7071,
@@ -2748,7 +3483,7 @@
       "id": "Periksa Lightbridge"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294569528
+    "SourceOffset": 27222
   },
   "7072": {
     "Id": 7072,
@@ -2769,7 +3504,7 @@
       "id": "Periksa Lightbridge"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294569663
+    "SourceOffset": 27357
   },
   "7073": {
     "Id": 7073,
@@ -2790,7 +3525,7 @@
       "id": "Periksa Lightbridge"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294569798
+    "SourceOffset": 27492
   },
   "7075": {
     "Id": 7075,
@@ -2811,7 +3546,7 @@
       "id": "Kuis Ekologi Demi-human"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294569933
+    "SourceOffset": 27627
   },
   "7076": {
     "Id": 7076,
@@ -2832,7 +3567,7 @@
       "id": "Kuis Ekologi Demi-human"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294570068
+    "SourceOffset": 27762
   },
   "7077": {
     "Id": 7077,
@@ -2853,7 +3588,7 @@
       "id": "Kuis Ekologi Demi-human"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294570203
+    "SourceOffset": 27897
   },
   "7080": {
     "Id": 7080,
@@ -2874,7 +3609,7 @@
       "id": "Wind Turbulence"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294570338
+    "SourceOffset": 28032
   },
   "7085": {
     "Id": 7085,
@@ -2895,7 +3630,7 @@
       "id": "Piggy Run"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294570473
+    "SourceOffset": 28167
   },
   "7090": {
     "Id": 7090,
@@ -2916,7 +3651,7 @@
       "id": "Redakan Gelombang Void"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294570608
+    "SourceOffset": 28302
   },
   "7095": {
     "Id": 7095,
@@ -2937,7 +3672,7 @@
       "id": "Tantangan Menghindari Spidermine"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294570743
+    "SourceOffset": 28437
   },
   "7101": {
     "Id": 7101,
@@ -2958,7 +3693,7 @@
       "id": "Patroli Udara"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294570878
+    "SourceOffset": 28572
   },
   "7102": {
     "Id": 7102,
@@ -2979,7 +3714,7 @@
       "id": "Patroli Udara"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294571013
+    "SourceOffset": 28707
   },
   "7103": {
     "Id": 7103,
@@ -3000,7 +3735,7 @@
       "id": "Patroli Udara"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294571148
+    "SourceOffset": 28842
   },
   "7150": {
     "Id": 7150,
@@ -3021,7 +3756,7 @@
       "id": "Penguasa Dunia"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294571283
+    "SourceOffset": 28977
   },
   "7151": {
     "Id": 7151,
@@ -3042,7 +3777,28 @@
       "id": "Penguasa Dunia"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294571418
+    "SourceOffset": 29112
+  },
+  "7152": {
+    "Id": 7152,
+    "Name": "World Dominator",
+    "NameDesign": "World Dominator",
+    "NameId": 2104682569,
+    "Names": {
+      "en": "World Dominator",
+      "zh-CN": "世界主宰",
+      "zh-TW": "世界主宰",
+      "ja": "世界の支配者",
+      "ko-KR": "세계의 지배자",
+      "fr": "Dominateur du monde",
+      "de": "Weltenherrscher",
+      "es": "Dominador del Mundo",
+      "pt-BR": "Dominador do Mundo",
+      "th": "เจ้าแห่งโลก",
+      "id": "Penguasa Dunia"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 29247
   },
   "8001": {
     "Id": 8001,
@@ -3063,7 +3819,7 @@
       "id": "Pertahanan Desa"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294571553
+    "SourceOffset": 29382
   },
   "8002": {
     "Id": 8002,
@@ -3084,7 +3840,7 @@
       "id": "Arena Mecha"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294571688
+    "SourceOffset": 29517
   },
   "8005": {
     "Id": 8005,
@@ -3105,7 +3861,7 @@
       "id": "Pengantaran Paket Darurat"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294571823
+    "SourceOffset": 29652
   },
   "8006": {
     "Id": 8006,
@@ -3126,7 +3882,7 @@
       "id": "Pengantaran Paket Darurat"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294571958
+    "SourceOffset": 29787
   },
   "8020": {
     "Id": 8020,
@@ -3147,7 +3903,7 @@
       "id": "Duel Demi-human"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294572093
+    "SourceOffset": 29922
   },
   "8021": {
     "Id": 8021,
@@ -3168,7 +3924,75 @@
       "id": "Duel Demi-human"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294572228
+    "SourceOffset": 30597
+  },
+  "8051": {
+    "Id": 8051,
+    "Name": "Toxic Mire Breach",
+    "NameDesign": "Toxic Mire Breach",
+    "NameId": 2104717416,
+    "Names": {
+      "en": "Toxic Mire Breach",
+      "zh-CN": "毒沼侵蚀之隙",
+      "zh-TW": "毒沼侵蝕之隙",
+      "fr": "Brèche du bourbier toxique",
+      "de": "Giftiges Miasma",
+      "es": "Brecha del Miasma Tóxico",
+      "pt-BR": "Fenda do Miasma Tóxico"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 30057
+  },
+  "8052": {
+    "Id": 8052,
+    "Name": "Rift of Chaos",
+    "NameDesign": "Rift of Chaos",
+    "NameId": 2104717417,
+    "Names": {
+      "en": "Rift of Chaos",
+      "zh-CN": "错乱之隙",
+      "zh-TW": "錯亂之隙",
+      "fr": "Faille du chaos",
+      "de": "Riss des Chaos",
+      "es": "Falla del Caos",
+      "pt-BR": "Fenda do Caos"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 30192
+  },
+  "8053": {
+    "Id": 8053,
+    "Name": "Wasteland",
+    "NameDesign": "Wasteland",
+    "NameId": 2104717418,
+    "Names": {
+      "en": "Wasteland",
+      "zh-CN": "废弃之地",
+      "zh-TW": "廢棄之地",
+      "fr": "Terres défrichées",
+      "de": "Ödland",
+      "es": "Páramo",
+      "pt-BR": "Ermos"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 30327
+  },
+  "8054": {
+    "Id": 8054,
+    "Name": "Wasteland",
+    "NameDesign": "Wasteland",
+    "NameId": 2104717419,
+    "Names": {
+      "en": "Wasteland",
+      "zh-CN": "废弃之地",
+      "zh-TW": "廢棄之地",
+      "fr": "Terres défrichées",
+      "de": "Ödland",
+      "es": "Páramo",
+      "pt-BR": "Ermos"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 30462
   },
   "9000": {
     "Id": 9000,
@@ -3189,7 +4013,7 @@
       "id": "Tantangan Menghindari Spidermine"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294572363
+    "SourceOffset": 30732
   },
   "9001": {
     "Id": 9001,
@@ -3210,7 +4034,7 @@
       "id": "Perang Tangkap Balon"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294572498
+    "SourceOffset": 30867
   },
   "9002": {
     "Id": 9002,
@@ -3231,7 +4055,7 @@
       "id": "Mengusir Nian Beast"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294572633
+    "SourceOffset": 31002
   },
   "9200": {
     "Id": 9200,
@@ -3252,28 +4076,28 @@
       "id": "Belenggu Naga: Pelatihan Kandidat"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294572768
+    "SourceOffset": 31137
   },
   "9201": {
     "Id": 9201,
-    "Name": "Loom of Dreams​",
-    "NameDesign": "Loom of Dreams​",
+    "Name": "Loom of Dreams",
+    "NameDesign": "Loom of Dreams",
     "NameId": 2104755366,
     "Names": {
-      "en": "Loom of Dreams​",
+      "en": "Loom of Dreams",
       "zh-CN": "千梦织灵之夜",
       "zh-TW": "千夢織靈之夜",
       "ja": "千夢織霊の夜",
       "ko-KR": "꿈을 엮는 밤",
-      "fr": "Tricotin des rêves​",
-      "de": "Webstuhl der Träume​",
+      "fr": "Tricotin des rêves",
+      "de": "Webstuhl der Träume",
       "es": "Tejido de Sueños",
-      "pt-BR": "Tear dos Sonhos​",
+      "pt-BR": "Tear dos Sonhos",
       "th": "Thousand Dream Weavers Night",
       "id": "Malam Roh Penenun Mimpi"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294572903
+    "SourceOffset": 31272
   },
   "9202": {
     "Id": 9202,
@@ -3294,7 +4118,7 @@
       "id": "Dreamfall Grove"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294573038
+    "SourceOffset": 31407
   },
   "9203": {
     "Id": 9203,
@@ -3315,7 +4139,7 @@
       "id": "Dreamfall Grove"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294573173
+    "SourceOffset": 31542
   },
   "9204": {
     "Id": 9204,
@@ -3336,7 +4160,70 @@
       "id": "Dreamfall Grove"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294573308
+    "SourceOffset": 31677
+  },
+  "9205": {
+    "Id": 9205,
+    "Name": "Illusion-Shroud Woods",
+    "NameDesign": "Illusion-Shroud Woods",
+    "NameId": 2104755370,
+    "Names": {
+      "en": "Illusion-Shroud Woods",
+      "zh-CN": "弥妄栖林",
+      "zh-TW": "彌妄棲林",
+      "ja": "迷妄の森",
+      "ko-KR": "미망의 숲",
+      "fr": "Bois du Voile illusoire",
+      "de": "Illusionsschleierwald",
+      "es": "Bosque Velo Ilusorio",
+      "pt-BR": "Bosque do Manto da Ilusão",
+      "th": "Illusion-Shroud Woods",
+      "id": "Delirium Forest"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 31812
+  },
+  "9206": {
+    "Id": 9206,
+    "Name": "Illusion-Shroud Woods",
+    "NameDesign": "Illusion-Shroud Woods",
+    "NameId": 2104755371,
+    "Names": {
+      "en": "Illusion-Shroud Woods",
+      "zh-CN": "弥妄栖林",
+      "zh-TW": "彌妄棲林",
+      "ja": "迷妄の森",
+      "ko-KR": "미망의 숲",
+      "fr": "Bois du Voile illusoire",
+      "de": "Illusionsschleierwald",
+      "es": "Bosque Velo Ilusorio",
+      "pt-BR": "Bosque do Manto da Ilusão",
+      "th": "Illusion-Shroud Woods",
+      "id": "Delirium Forest"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 31947
+  },
+  "9207": {
+    "Id": 9207,
+    "Name": "Illusion-Shroud Woods",
+    "NameDesign": "Illusion-Shroud Woods",
+    "NameId": 2104755372,
+    "Names": {
+      "en": "Illusion-Shroud Woods",
+      "zh-CN": "弥妄栖林",
+      "zh-TW": "彌妄棲林",
+      "ja": "迷妄の森",
+      "ko-KR": "미망의 숲",
+      "fr": "Bois du Voile illusoire",
+      "de": "Illusionsschleierwald",
+      "es": "Bosque Velo Ilusorio",
+      "pt-BR": "Bosque do Manto da Ilusão",
+      "th": "Illusion-Shroud Woods",
+      "id": "Delirium Forest"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 32082
   },
   "10001": {
     "Id": 10001,
@@ -3357,7 +4244,7 @@
       "id": "Tempat Latihan Persegi 1"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294573443
+    "SourceOffset": 32217
   },
   "10002": {
     "Id": 10002,
@@ -3378,7 +4265,7 @@
       "id": "Tempat Latihan Persegi 2"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294573578
+    "SourceOffset": 32352
   },
   "10003": {
     "Id": 10003,
@@ -3399,7 +4286,7 @@
       "id": "Test Dynamic Area 1 (Dungeon)"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294573713
+    "SourceOffset": 32487
   },
   "10004": {
     "Id": 10004,
@@ -3420,7 +4307,7 @@
       "id": "Test Dynamic Area 2 (Dungeon)"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294573848
+    "SourceOffset": 32622
   },
   "10005": {
     "Id": 10005,
@@ -3441,7 +4328,7 @@
       "id": "Dungeon Tes Logika"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294573983
+    "SourceOffset": 32757
   },
   "10010": {
     "Id": 10010,
@@ -3462,7 +4349,7 @@
       "id": "3C Test Area"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294574118
+    "SourceOffset": 32892
   },
   "10020": {
     "Id": 10020,
@@ -3483,7 +4370,7 @@
       "id": "Area uji coba pertunjukan 1"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294574253
+    "SourceOffset": 33027
   },
   "10021": {
     "Id": 10021,
@@ -3504,7 +4391,7 @@
       "id": "Area uji coba pertunjukan 2"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294574388
+    "SourceOffset": 33162
   },
   "10030": {
     "Id": 10030,
@@ -3525,7 +4412,7 @@
       "id": "Zone Test Area"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294574523
+    "SourceOffset": 33432
   },
   "11001": {
     "Id": 11001,
@@ -3546,7 +4433,7 @@
       "id": "Permainan Kejar-kejaran Ajaib"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294574658
+    "SourceOffset": 33297
   },
   "12000": {
     "Id": 12000,
@@ -3567,7 +4454,7 @@
       "id": "Pusat Event Guild"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294574793
+    "SourceOffset": 33567
   },
   "12011": {
     "Id": 12011,
@@ -3588,7 +4475,7 @@
       "id": "Perburuan Guild - Hard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294574928
+    "SourceOffset": 33702
   },
   "12012": {
     "Id": 12012,
@@ -3609,7 +4496,7 @@
       "id": "Perburuan Guild - Normal"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294575063
+    "SourceOffset": 33837
   },
   "12013": {
     "Id": 12013,
@@ -3630,7 +4517,7 @@
       "id": "Perburuan Guild - Easy"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294575198
+    "SourceOffset": 33972
   },
   "12014": {
     "Id": 12014,
@@ -3651,7 +4538,7 @@
       "id": "Perburuan Guild - Normal"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294575333
+    "SourceOffset": 34107
   },
   "12015": {
     "Id": 12015,
@@ -3672,7 +4559,7 @@
       "id": "Perburuan Guild - Hard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294575468
+    "SourceOffset": 34242
   },
   "12016": {
     "Id": 12016,
@@ -3693,7 +4580,7 @@
       "id": "Light Devourer Cage Bersama"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294575603
+    "SourceOffset": 34377
   },
   "12017": {
     "Id": 12017,
@@ -3714,7 +4601,7 @@
       "id": "Light Devourer Cage Bersama"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294575738
+    "SourceOffset": 34512
   },
   "12018": {
     "Id": 12018,
@@ -3735,7 +4622,7 @@
       "id": "Perburuan Guild - Normal"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294575873
+    "SourceOffset": 34647
   },
   "12019": {
     "Id": 12019,
@@ -3756,7 +4643,49 @@
       "id": "Perburuan Guild - Hard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294576008
+    "SourceOffset": 34782
+  },
+  "12022": {
+    "Id": 12022,
+    "Name": "Guild Hunt - Normal",
+    "NameDesign": "Guild Hunt - Normal",
+    "NameId": 727963057,
+    "Names": {
+      "en": "Guild Hunt - Normal",
+      "zh-CN": "协会狩猎·普通",
+      "zh-TW": "協會狩獵·普通",
+      "ja": "ギルドハント・ノーマル",
+      "ko-KR": "길드 사냥・노멀",
+      "fr": "Chasse de guilde - Normal",
+      "de": "Gildenjagd – Normal",
+      "es": "Cacería Gremial (normal)",
+      "pt-BR": "Caçada da Guilda – Normal",
+      "th": "นักล่ากิลด์ - Normal",
+      "id": "Perburuan Guild - Normal"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 34917
+  },
+  "12023": {
+    "Id": 12023,
+    "Name": "Guild Hunt - Hard",
+    "NameDesign": "Guild Hunt - Hard",
+    "NameId": 727963058,
+    "Names": {
+      "en": "Guild Hunt - Hard",
+      "zh-CN": "协会狩猎·困难",
+      "zh-TW": "協會狩獵·困難",
+      "ja": "ギルドハント・ハード",
+      "ko-KR": "길드 사냥・하드",
+      "fr": "Chasse de guilde - Difficile",
+      "de": "Gildenjagd – Schwer",
+      "es": "Cacería Gremial (difícil)",
+      "pt-BR": "Caçada da Guilda – Difícil",
+      "th": "นักล่ากิลด์ - Hard",
+      "id": "Perburuan Guild - Hard"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 35052
   },
   "12030": {
     "Id": 12030,
@@ -3777,7 +4706,7 @@
       "id": "Cerita Koi"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294576143
+    "SourceOffset": 35187
   },
   "12040": {
     "Id": 12040,
@@ -3798,7 +4727,7 @@
       "id": "Pesta Guild"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294576278
+    "SourceOffset": 35322
   },
   "12050": {
     "Id": 12050,
@@ -3819,7 +4748,7 @@
       "id": "Penaklukan Giant Mecha"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294576413
+    "SourceOffset": 35457
   },
   "12051": {
     "Id": 12051,
@@ -3840,7 +4769,28 @@
       "id": "Penaklukan Giant Mecha"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294576548
+    "SourceOffset": 35592
+  },
+  "12052": {
+    "Id": 12052,
+    "Name": "Giant Golem Crusade",
+    "NameDesign": "Giant Golem Crusade",
+    "NameId": 727963156,
+    "Names": {
+      "en": "Giant Golem Crusade",
+      "zh-CN": "巨型机像讨伐战",
+      "zh-TW": "巨型機像討伐戰",
+      "ja": "巨大ゴーレム討伐戦",
+      "ko-KR": "초대형 골렘 토벌전",
+      "fr": "Croisade du golem géant",
+      "de": "Riesengolem-Kreuzzug",
+      "es": "Cruzada del Gólem Gigante",
+      "pt-BR": "Cruzada do Golem Gigante",
+      "th": "ศึกกำจัด Gigantic Machine",
+      "id": "Penaklukan Giant Mecha"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 35727
   },
   "12100": {
     "Id": 12100,
@@ -3861,7 +4811,7 @@
       "id": "Dungeon Gemaaan"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294576683
+    "SourceOffset": 35862
   },
   "13001": {
     "Id": 13001,
@@ -3882,7 +4832,7 @@
       "id": "Pertarungan! Pulau Hampa - Belenggu Naga"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294576818
+    "SourceOffset": 35997
   },
   "13002": {
     "Id": 13002,
@@ -3903,7 +4853,7 @@
       "id": "Pertarungan Berdarah! Pulau Hampa - Belenggu Naga"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294576953
+    "SourceOffset": 36132
   },
   "13003": {
     "Id": 13003,
@@ -3924,7 +4874,7 @@
       "id": "Pertarungan Terakhir! Pulau Hampa - Belenggu Naga"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294577088
+    "SourceOffset": 36267
   },
   "13011": {
     "Id": 13011,
@@ -3945,7 +4895,7 @@
       "id": "Pertarungan! Land of Phantabloom Slumber"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294577223
+    "SourceOffset": 36402
   },
   "13012": {
     "Id": 13012,
@@ -3966,7 +4916,7 @@
       "id": "Pertarungan Berdarah! Land of Phantabloom Slumber"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294577358
+    "SourceOffset": 36537
   },
   "13013": {
     "Id": 13013,
@@ -3987,7 +4937,70 @@
       "id": "Pertarungan Terakhir! Land of Phantabloom Slumber"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294577493
+    "SourceOffset": 36672
+  },
+  "13021": {
+    "Id": 13021,
+    "Name": "Clash! Field of Forgotten Illusions",
+    "NameDesign": "Clash! Field of Forgotten Illusions",
+    "NameId": 727998993,
+    "Names": {
+      "en": "Clash! Field of Forgotten Illusions",
+      "zh-CN": "激斗！遗忘幻梦之野",
+      "zh-TW": "激鬥！遺忘幻夢之野",
+      "ja": "激闘！忘られし幻夢の野",
+      "ko-KR": "격투! 잊혀진 환상꿈의 들판",
+      "fr": "Affrontement ! Champ des illusions oubliées",
+      "de": "Gefecht! Feld der Vergessenen Illusionen",
+      "es": "¡Choque! Campo de Ilusiones Olvidadas",
+      "pt-BR": "Confronto! Campo das Ilusões Esquecidas",
+      "th": "Clash!Dream’s Oblivion",
+      "id": "Pertarungan! Forsaken Phantasm"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 36807
+  },
+  "13022": {
+    "Id": 13022,
+    "Name": "Brutal! Field of Forgotten Illusions",
+    "NameDesign": "Brutal! Field of Forgotten Illusions",
+    "NameId": 727998994,
+    "Names": {
+      "en": "Brutal! Field of Forgotten Illusions",
+      "zh-CN": "血战！遗忘幻梦之野",
+      "zh-TW": "血戰！遺忘幻夢之野",
+      "ja": "血戦！忘られし幻夢の野",
+      "ko-KR": "혈전! 잊혀진 환상꿈의 들판",
+      "fr": "Brutal ! Champ des illusions oubliées",
+      "de": "Schlacht! Feld der Vergessenen Illusionen",
+      "es": "¡Brutal! Campo de Ilusiones Olvidadas",
+      "pt-BR": "Brutal! Campo das Ilusões Esquecidas",
+      "th": "Brutal! Dream’s Oblivion",
+      "id": "Pertarungan Berdarah! Forsaken Phantasm"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 36942
+  },
+  "13023": {
+    "Id": 13023,
+    "Name": "Purge! Field of Forgotten Illusions",
+    "NameDesign": "Purge! Field of Forgotten Illusions",
+    "NameId": 727998995,
+    "Names": {
+      "en": "Purge! Field of Forgotten Illusions",
+      "zh-CN": "决战！遗忘幻梦之野",
+      "zh-TW": "決戰！遺忘幻夢之野",
+      "ja": "決戦！忘られし幻夢の野",
+      "ko-KR": "결전! 잊혀진 환상꿈의 들판",
+      "fr": "Purge ! Champ des illusions oubliées",
+      "de": "Endschlacht! Feld der Vergessenen Illusionen",
+      "es": "¡Purga! Campo de Ilusiones Olvidadas",
+      "pt-BR": "Expurgo! Campo das Ilusões Esquecidas",
+      "th": "Purge! Field of Forgotten Illusions",
+      "id": "Pertarungan Terakhir! Forsaken Phantasm"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 37077
   },
   "15001": {
     "Id": 15001,
@@ -4008,7 +5021,7 @@
       "id": "Memory 1: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294577628
+    "SourceOffset": 37212
   },
   "15002": {
     "Id": 15002,
@@ -4029,7 +5042,7 @@
       "id": "Memory 13: Kenangan Penaklukan yang Bersinar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294577763
+    "SourceOffset": 37347
   },
   "15003": {
     "Id": 15003,
@@ -4050,7 +5063,7 @@
       "id": "Memory 9: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294577898
+    "SourceOffset": 37482
   },
   "15004": {
     "Id": 15004,
@@ -4071,7 +5084,7 @@
       "id": "Memory 7: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294578033
+    "SourceOffset": 37617
   },
   "15005": {
     "Id": 15005,
@@ -4092,7 +5105,7 @@
       "id": "Memory 31: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294578168
+    "SourceOffset": 37752
   },
   "15006": {
     "Id": 15006,
@@ -4113,7 +5126,7 @@
       "id": "Memory 32: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294578303
+    "SourceOffset": 37887
   },
   "15007": {
     "Id": 15007,
@@ -4134,7 +5147,7 @@
       "id": "Memory 18: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294578438
+    "SourceOffset": 38022
   },
   "15008": {
     "Id": 15008,
@@ -4155,7 +5168,7 @@
       "id": "Memory 22: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294578573
+    "SourceOffset": 38157
   },
   "15009": {
     "Id": 15009,
@@ -4176,7 +5189,7 @@
       "id": "Memory 24: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294578708
+    "SourceOffset": 38292
   },
   "15010": {
     "Id": 15010,
@@ -4197,7 +5210,7 @@
       "id": "Memory 48: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294578843
+    "SourceOffset": 38427
   },
   "15011": {
     "Id": 15011,
@@ -4218,7 +5231,7 @@
       "id": "Memory 16: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294578978
+    "SourceOffset": 38562
   },
   "15012": {
     "Id": 15012,
@@ -4239,7 +5252,7 @@
       "id": "Memory 42: Kenangan Penaklukan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294579113
+    "SourceOffset": 38697
   },
   "15501": {
     "Id": 15501,
@@ -4260,7 +5273,7 @@
       "id": "Memory 3: Kenangan Duel yang Bersinar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294579248
+    "SourceOffset": 38832
   },
   "15502": {
     "Id": 15502,
@@ -4281,7 +5294,7 @@
       "id": "Memory 49: Kenangan Duel yang Bersinar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294579383
+    "SourceOffset": 38967
   },
   "15503": {
     "Id": 15503,
@@ -4302,7 +5315,7 @@
       "id": "Memory 23: Kenangan Duel yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294579518
+    "SourceOffset": 39102
   },
   "15504": {
     "Id": 15504,
@@ -4323,7 +5336,7 @@
       "id": "Memory 15: Kenangan Duel yang Menggebu"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294579653
+    "SourceOffset": 39237
   },
   "15505": {
     "Id": 15505,
@@ -4344,7 +5357,7 @@
       "id": "Memory 50: Kenangan Duel yang Menggebu"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294579788
+    "SourceOffset": 39372
   },
   "15506": {
     "Id": 15506,
@@ -4365,7 +5378,7 @@
       "id": "Memory 30: Kenangan Duel yang Menggebu"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294579923
+    "SourceOffset": 39507
   },
   "15507": {
     "Id": 15507,
@@ -4386,7 +5399,7 @@
       "id": "Memory 45: Kenangan Duel yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294580058
+    "SourceOffset": 39642
   },
   "15508": {
     "Id": 15508,
@@ -4407,7 +5420,7 @@
       "id": "Memory 40: Kenangan Duel yang Menggebu"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294580193
+    "SourceOffset": 39777
   },
   "16001": {
     "Id": 16001,
@@ -4428,7 +5441,7 @@
       "id": "Memory 2: Kenangan Bertahan Hidup yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294580328
+    "SourceOffset": 39912
   },
   "16002": {
     "Id": 16002,
@@ -4449,7 +5462,7 @@
       "id": "Memory 14: Kenangan Bertahan Hidup yang Bersinar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294580463
+    "SourceOffset": 40047
   },
   "16003": {
     "Id": 16003,
@@ -4470,7 +5483,7 @@
       "id": "Memory 20: Kenangan Bertahan Hidup yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294580598
+    "SourceOffset": 40182
   },
   "16004": {
     "Id": 16004,
@@ -4491,7 +5504,7 @@
       "id": "Memory 36: Kenangan Bertahan Hidup yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294580733
+    "SourceOffset": 40317
   },
   "16005": {
     "Id": 16005,
@@ -4512,7 +5525,7 @@
       "id": "Templat Verifikasi Survival Alam Mistis"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294580868
+    "SourceOffset": 40452
   },
   "16006": {
     "Id": 16006,
@@ -4533,7 +5546,7 @@
       "id": "Templat Verifikasi Survival Alam Mistis"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294581003
+    "SourceOffset": 40587
   },
   "16501": {
     "Id": 16501,
@@ -4554,7 +5567,7 @@
       "id": "Memory 4: Kenangan Pemurnian yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294581138
+    "SourceOffset": 40722
   },
   "16502": {
     "Id": 16502,
@@ -4575,7 +5588,7 @@
       "id": "Memory 34: Kenangan Pemurnian yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294581273
+    "SourceOffset": 40857
   },
   "16503": {
     "Id": 16503,
@@ -4596,7 +5609,7 @@
       "id": "Memory 41: Kenangan Pemurnian yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294581408
+    "SourceOffset": 40992
   },
   "16504": {
     "Id": 16504,
@@ -4617,7 +5630,7 @@
       "id": "Memory 28: Kenangan Pemurnian yang Bersinar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294581543
+    "SourceOffset": 41127
   },
   "17001": {
     "Id": 17001,
@@ -4638,7 +5651,7 @@
       "id": "Memory 38: Kenangan Penyerbuan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294581678
+    "SourceOffset": 41262
   },
   "17002": {
     "Id": 17002,
@@ -4659,7 +5672,7 @@
       "id": "Memory 46: Kenangan Penyerbuan yang Bersinar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294581813
+    "SourceOffset": 41397
   },
   "17003": {
     "Id": 17003,
@@ -4680,7 +5693,7 @@
       "id": "Memory 11: Kenangan Penyerbuan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294581948
+    "SourceOffset": 41532
   },
   "17004": {
     "Id": 17004,
@@ -4701,7 +5714,7 @@
       "id": "Memory 17: Kenangan Penyerbuan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294582083
+    "SourceOffset": 41667
   },
   "17501": {
     "Id": 17501,
@@ -4722,7 +5735,7 @@
       "id": "Memory 35: Kenangan Penjelajahan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294582218
+    "SourceOffset": 41802
   },
   "17502": {
     "Id": 17502,
@@ -4743,7 +5756,7 @@
       "id": "Memory 26: Kenangan Penjelajahan yang Bersinar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294582353
+    "SourceOffset": 41937
   },
   "17503": {
     "Id": 17503,
@@ -4764,7 +5777,7 @@
       "id": "Memory 47: Kenangan Penjelajahan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294582488
+    "SourceOffset": 42072
   },
   "17504": {
     "Id": 17504,
@@ -4785,7 +5798,7 @@
       "id": "Memory 10: Kenangan Penjelajahan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294582623
+    "SourceOffset": 42207
   },
   "17505": {
     "Id": 17505,
@@ -4806,7 +5819,7 @@
       "id": "Memory 19: Kenangan Penjelajahan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294582758
+    "SourceOffset": 42342
   },
   "18001": {
     "Id": 18001,
@@ -4827,7 +5840,7 @@
       "id": "Memory 6: Kenangan Perlindungan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294582893
+    "SourceOffset": 42477
   },
   "18002": {
     "Id": 18002,
@@ -4848,7 +5861,7 @@
       "id": "Memory 21: Kenangan Perlindungan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294583028
+    "SourceOffset": 42612
   },
   "18003": {
     "Id": 18003,
@@ -4869,7 +5882,7 @@
       "id": "Memory 44: Kenangan Perlindungan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294583163
+    "SourceOffset": 42747
   },
   "18004": {
     "Id": 18004,
@@ -4890,7 +5903,7 @@
       "id": "Memory 39: Kenangan Perlindungan yang Bersinar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294583298
+    "SourceOffset": 42882
   },
   "18501": {
     "Id": 18501,
@@ -4911,7 +5924,7 @@
       "id": "Memory 8: Kenangan Pemulihan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294583433
+    "SourceOffset": 43017
   },
   "18502": {
     "Id": 18502,
@@ -4932,7 +5945,7 @@
       "id": "Memory 27: Kenangan Pemulihan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294583568
+    "SourceOffset": 43152
   },
   "18503": {
     "Id": 18503,
@@ -4953,7 +5966,7 @@
       "id": "Memory 43: Kenangan Pemulihan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294583703
+    "SourceOffset": 43287
   },
   "18504": {
     "Id": 18504,
@@ -4974,7 +5987,7 @@
       "id": "Memory 37: Kenangan Pemulihan yang Bersinar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294583838
+    "SourceOffset": 43422
   },
   "19001": {
     "Id": 19001,
@@ -4995,7 +6008,7 @@
       "id": "Memory 5: Kenangan Tantangan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294583973
+    "SourceOffset": 43557
   },
   "19002": {
     "Id": 19002,
@@ -5016,7 +6029,7 @@
       "id": "Memory 12: Kenangan Tantangan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294584108
+    "SourceOffset": 43692
   },
   "19003": {
     "Id": 19003,
@@ -5037,7 +6050,7 @@
       "id": "Memory 25: Kenangan Tantangan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294584243
+    "SourceOffset": 43827
   },
   "19004": {
     "Id": 19004,
@@ -5058,7 +6071,7 @@
       "id": "Memory 29: Kenangan Tantangan yang Bersinar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294584378
+    "SourceOffset": 43962
   },
   "19005": {
     "Id": 19005,
@@ -5079,7 +6092,7 @@
       "id": "Memory 33: Kenangan Tantangan yang Pudar"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294584513
+    "SourceOffset": 44097
   },
   "20101": {
     "Id": 20101,
@@ -5100,7 +6113,7 @@
       "id": "Path of Guardian 1: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294584648
+    "SourceOffset": 44232
   },
   "20102": {
     "Id": 20102,
@@ -5121,7 +6134,7 @@
       "id": "Path of Guardian 10: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294584783
+    "SourceOffset": 44367
   },
   "20201": {
     "Id": 20201,
@@ -5142,7 +6155,7 @@
       "id": "Path of Guardian 2: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294584918
+    "SourceOffset": 44502
   },
   "20202": {
     "Id": 20202,
@@ -5163,7 +6176,7 @@
       "id": "Path of Guardian 22: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294585053
+    "SourceOffset": 44637
   },
   "20301": {
     "Id": 20301,
@@ -5184,7 +6197,7 @@
       "id": "Path of Guardian 4: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294585188
+    "SourceOffset": 44772
   },
   "20302": {
     "Id": 20302,
@@ -5205,7 +6218,7 @@
       "id": "Path of Guardian 13: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294585323
+    "SourceOffset": 44907
   },
   "20303": {
     "Id": 20303,
@@ -5226,7 +6239,7 @@
       "id": "Path of Guardian 25: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294585458
+    "SourceOffset": 45042
   },
   "20401": {
     "Id": 20401,
@@ -5247,7 +6260,7 @@
       "id": "Path of Guardian 5: Role Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294585593
+    "SourceOffset": 45177
   },
   "20402": {
     "Id": 20402,
@@ -5268,7 +6281,7 @@
       "id": "Path of Guardian 16: Role Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294585728
+    "SourceOffset": 45312
   },
   "20501": {
     "Id": 20501,
@@ -5289,7 +6302,7 @@
       "id": "Path of Guardian 7: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294585863
+    "SourceOffset": 45447
   },
   "20502": {
     "Id": 20502,
@@ -5310,7 +6323,7 @@
       "id": "Path of Guardian 19: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294585998
+    "SourceOffset": 45582
   },
   "20701": {
     "Id": 20701,
@@ -5331,7 +6344,7 @@
       "id": "Path of Guardian 14: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294586133
+    "SourceOffset": 45717
   },
   "20702": {
     "Id": 20702,
@@ -5352,7 +6365,7 @@
       "id": "Path of Guardian 20: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294586268
+    "SourceOffset": 45852
   },
   "20801": {
     "Id": 20801,
@@ -5373,7 +6386,7 @@
       "id": "Path of Guardian 8: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294586403
+    "SourceOffset": 45987
   },
   "20802": {
     "Id": 20802,
@@ -5394,7 +6407,7 @@
       "id": "Path of Guardian 17: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294586538
+    "SourceOffset": 46122
   },
   "20803": {
     "Id": 20803,
@@ -5415,7 +6428,7 @@
       "id": "Path of Guardian 26: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294586673
+    "SourceOffset": 46257
   },
   "21201": {
     "Id": 21201,
@@ -5436,7 +6449,7 @@
       "id": "Path of Guardian 23: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294586808
+    "SourceOffset": 46392
   },
   "21202": {
     "Id": 21202,
@@ -5457,7 +6470,7 @@
       "id": "Path of Guardian 29: Team Guard"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294586943
+    "SourceOffset": 46527
   },
   "21301": {
     "Id": 21301,
@@ -5478,7 +6491,7 @@
       "id": "Path of Guardian 6: Combat Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294587078
+    "SourceOffset": 46662
   },
   "21302": {
     "Id": 21302,
@@ -5499,7 +6512,7 @@
       "id": "Path of Guardian 12: Combat Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294587213
+    "SourceOffset": 46797
   },
   "21303": {
     "Id": 21303,
@@ -5520,7 +6533,7 @@
       "id": "Path of Guardian 18: Combat Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294587348
+    "SourceOffset": 46932
   },
   "21304": {
     "Id": 21304,
@@ -5541,7 +6554,7 @@
       "id": "Path of Guardian 24: Combat Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294587483
+    "SourceOffset": 47067
   },
   "21305": {
     "Id": 21305,
@@ -5562,7 +6575,7 @@
       "id": "Path of Guardian 30: Combat Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294587618
+    "SourceOffset": 47202
   },
   "21306": {
     "Id": 21306,
@@ -5583,7 +6596,7 @@
       "id": "Path of Guardian 3: Combat Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294587753
+    "SourceOffset": 47337
   },
   "21307": {
     "Id": 21307,
@@ -5604,7 +6617,7 @@
       "id": "Path of Guardian 9: Combat Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294587888
+    "SourceOffset": 47472
   },
   "21308": {
     "Id": 21308,
@@ -5625,7 +6638,7 @@
       "id": "Path of Guardian 15: Combat Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294588023
+    "SourceOffset": 47607
   },
   "21309": {
     "Id": 21309,
@@ -5646,7 +6659,7 @@
       "id": "Path of Guardian 21: Combat Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294588158
+    "SourceOffset": 47742
   },
   "21310": {
     "Id": 21310,
@@ -5667,7 +6680,7 @@
       "id": "Path of Guardian 27: Combat Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294588293
+    "SourceOffset": 47877
   },
   "21401": {
     "Id": 21401,
@@ -5688,7 +6701,7 @@
       "id": "Path of Guardian 11: Role Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294588428
+    "SourceOffset": 48012
   },
   "21402": {
     "Id": 21402,
@@ -5709,7 +6722,7 @@
       "id": "Path of Guardian 28: Role Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294588563
+    "SourceOffset": 48147
   },
   "22101": {
     "Id": 22101,
@@ -5730,7 +6743,7 @@
       "id": "Path of Strength 17: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294588698
+    "SourceOffset": 48282
   },
   "22201": {
     "Id": 22201,
@@ -5751,7 +6764,7 @@
       "id": "Path of Strength 10: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294588833
+    "SourceOffset": 48417
   },
   "22202": {
     "Id": 22202,
@@ -5772,7 +6785,7 @@
       "id": "Path of Strength 23: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294588968
+    "SourceOffset": 48552
   },
   "22301": {
     "Id": 22301,
@@ -5793,7 +6806,7 @@
       "id": "Path of Strength 11: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294589103
+    "SourceOffset": 48687
   },
   "22401": {
     "Id": 22401,
@@ -5814,7 +6827,7 @@
       "id": "Path of Strength 13: Target Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294589238
+    "SourceOffset": 48822
   },
   "22402": {
     "Id": 22402,
@@ -5835,7 +6848,7 @@
       "id": "Path of Strength 19: Target Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294589373
+    "SourceOffset": 48957
   },
   "22501": {
     "Id": 22501,
@@ -5856,7 +6869,7 @@
       "id": "Path of Strength 6: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294589508
+    "SourceOffset": 49092
   },
   "22502": {
     "Id": 22502,
@@ -5877,7 +6890,7 @@
       "id": "Path of Strength 12: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294589643
+    "SourceOffset": 49227
   },
   "22503": {
     "Id": 22503,
@@ -5898,7 +6911,7 @@
       "id": "Path of Strength 18: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294589778
+    "SourceOffset": 49362
   },
   "22504": {
     "Id": 22504,
@@ -5919,7 +6932,7 @@
       "id": "Path of Strength 24: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294589913
+    "SourceOffset": 49497
   },
   "22505": {
     "Id": 22505,
@@ -5940,7 +6953,7 @@
       "id": "Path of Strength 30: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294590048
+    "SourceOffset": 49632
   },
   "22601": {
     "Id": 22601,
@@ -5961,7 +6974,7 @@
       "id": "Path of Strength 7: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294590183
+    "SourceOffset": 49767
   },
   "22602": {
     "Id": 22602,
@@ -5982,7 +6995,7 @@
       "id": "Path of Strength 14: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294590318
+    "SourceOffset": 49902
   },
   "22701": {
     "Id": 22701,
@@ -6003,7 +7016,7 @@
       "id": "Path of Strength 8: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294590453
+    "SourceOffset": 50037
   },
   "22702": {
     "Id": 22702,
@@ -6024,7 +7037,7 @@
       "id": "Path of Strength 26: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294590588
+    "SourceOffset": 50172
   },
   "23101": {
     "Id": 23101,
@@ -6045,7 +7058,7 @@
       "id": "Path of Strength 3: Target Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294590723
+    "SourceOffset": 50307
   },
   "23102": {
     "Id": 23102,
@@ -6066,7 +7079,7 @@
       "id": "Path of Strength 9: Target Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294590858
+    "SourceOffset": 50442
   },
   "23103": {
     "Id": 23103,
@@ -6087,7 +7100,7 @@
       "id": "Path of Strength 15: Target Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294590993
+    "SourceOffset": 50577
   },
   "23104": {
     "Id": 23104,
@@ -6108,7 +7121,7 @@
       "id": "Path of Strength 21: Target Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294591128
+    "SourceOffset": 50712
   },
   "23105": {
     "Id": 23105,
@@ -6129,7 +7142,7 @@
       "id": "Path of Strength 27: Target Trial"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294591263
+    "SourceOffset": 50847
   },
   "23201": {
     "Id": 23201,
@@ -6150,7 +7163,7 @@
       "id": "Path of Strength 4: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294591398
+    "SourceOffset": 50982
   },
   "23301": {
     "Id": 23301,
@@ -6171,7 +7184,7 @@
       "id": "Path of Strength 1: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294591533
+    "SourceOffset": 51117
   },
   "23302": {
     "Id": 23302,
@@ -6192,7 +7205,7 @@
       "id": "Path of Strength 20: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294591668
+    "SourceOffset": 51252
   },
   "23401": {
     "Id": 23401,
@@ -6213,7 +7226,7 @@
       "id": "Path of Strength 2: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294591803
+    "SourceOffset": 51387
   },
   "23501": {
     "Id": 23501,
@@ -6234,7 +7247,7 @@
       "id": "Path of Strength 5: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294591938
+    "SourceOffset": 51522
   },
   "23502": {
     "Id": 23502,
@@ -6255,7 +7268,7 @@
       "id": "Path of Strength 25: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294592073
+    "SourceOffset": 51657
   },
   "23601": {
     "Id": 23601,
@@ -6276,7 +7289,7 @@
       "id": "Path of Strength 16: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294592208
+    "SourceOffset": 51792
   },
   "23602": {
     "Id": 23602,
@@ -6297,7 +7310,7 @@
       "id": "Path of Strength 28: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294592343
+    "SourceOffset": 51927
   },
   "23701": {
     "Id": 23701,
@@ -6318,7 +7331,7 @@
       "id": "Path of Strength 22: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294592478
+    "SourceOffset": 52062
   },
   "23702": {
     "Id": 23702,
@@ -6339,7 +7352,7 @@
       "id": "Path of Strength 29: Penaklukan Monster"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294592613
+    "SourceOffset": 52197
   },
   "24101": {
     "Id": 24101,
@@ -6360,7 +7373,7 @@
       "id": "Path of Support 3: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294592748
+    "SourceOffset": 52332
   },
   "24102": {
     "Id": 24102,
@@ -6381,7 +7394,7 @@
       "id": "Path of Support 6: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294592883
+    "SourceOffset": 52467
   },
   "24103": {
     "Id": 24103,
@@ -6402,7 +7415,7 @@
       "id": "Path of Support 9: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294593018
+    "SourceOffset": 52602
   },
   "24104": {
     "Id": 24104,
@@ -6423,7 +7436,7 @@
       "id": "Path of Support 12: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294593153
+    "SourceOffset": 52737
   },
   "24105": {
     "Id": 24105,
@@ -6444,7 +7457,7 @@
       "id": "Path of Support 15: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294593288
+    "SourceOffset": 52872
   },
   "24106": {
     "Id": 24106,
@@ -6465,7 +7478,7 @@
       "id": "Path of Support 18: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294593423
+    "SourceOffset": 53007
   },
   "24107": {
     "Id": 24107,
@@ -6486,7 +7499,7 @@
       "id": "Path of Support 21: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294593558
+    "SourceOffset": 53142
   },
   "24108": {
     "Id": 24108,
@@ -6507,7 +7520,7 @@
       "id": "Path of Support 24: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294593693
+    "SourceOffset": 53277
   },
   "24109": {
     "Id": 24109,
@@ -6528,7 +7541,7 @@
       "id": "Path of Support 27: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294593828
+    "SourceOffset": 53412
   },
   "24110": {
     "Id": 24110,
@@ -6549,7 +7562,7 @@
       "id": "Path of Support 30: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294593963
+    "SourceOffset": 53547
   },
   "24201": {
     "Id": 24201,
@@ -6570,7 +7583,7 @@
       "id": "Path of Support 2: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294594098
+    "SourceOffset": 53682
   },
   "24202": {
     "Id": 24202,
@@ -6591,7 +7604,7 @@
       "id": "Path of Support 10: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294594233
+    "SourceOffset": 53817
   },
   "24203": {
     "Id": 24203,
@@ -6612,7 +7625,7 @@
       "id": "Path of Support 17: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294594368
+    "SourceOffset": 53952
   },
   "24204": {
     "Id": 24204,
@@ -6633,7 +7646,7 @@
       "id": "Path of Support 25: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294594503
+    "SourceOffset": 54087
   },
   "24301": {
     "Id": 24301,
@@ -6654,7 +7667,7 @@
       "id": "Path of Support 5: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294594638
+    "SourceOffset": 54222
   },
   "24302": {
     "Id": 24302,
@@ -6675,7 +7688,7 @@
       "id": "Path of Support 14: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294594773
+    "SourceOffset": 54357
   },
   "24303": {
     "Id": 24303,
@@ -6696,7 +7709,7 @@
       "id": "Path of Support 20: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294594908
+    "SourceOffset": 54492
   },
   "24304": {
     "Id": 24304,
@@ -6717,7 +7730,7 @@
       "id": "Path of Support 29: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294595043
+    "SourceOffset": 54627
   },
   "24401": {
     "Id": 24401,
@@ -6738,7 +7751,7 @@
       "id": "Path of Support 4: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294595178
+    "SourceOffset": 54762
   },
   "24402": {
     "Id": 24402,
@@ -6759,7 +7772,7 @@
       "id": "Path of Support 11: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294595313
+    "SourceOffset": 54897
   },
   "24403": {
     "Id": 24403,
@@ -6780,7 +7793,7 @@
       "id": "Path of Support 19: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294595448
+    "SourceOffset": 55032
   },
   "24404": {
     "Id": 24404,
@@ -6801,7 +7814,7 @@
       "id": "Path of Support 23: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294595583
+    "SourceOffset": 55167
   },
   "24501": {
     "Id": 24501,
@@ -6822,7 +7835,7 @@
       "id": "Path of Support 7: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294595718
+    "SourceOffset": 55302
   },
   "24502": {
     "Id": 24502,
@@ -6843,7 +7856,7 @@
       "id": "Path of Support 16: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294595853
+    "SourceOffset": 55437
   },
   "24503": {
     "Id": 24503,
@@ -6864,7 +7877,7 @@
       "id": "Path of Support 22: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294595988
+    "SourceOffset": 55572
   },
   "24504": {
     "Id": 24504,
@@ -6885,7 +7898,7 @@
       "id": "Path of Support 28: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294596123
+    "SourceOffset": 55707
   },
   "24601": {
     "Id": 24601,
@@ -6906,7 +7919,7 @@
       "id": "Path of Support 1: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294596258
+    "SourceOffset": 55842
   },
   "24602": {
     "Id": 24602,
@@ -6927,7 +7940,7 @@
       "id": "Path of Support 8: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294596393
+    "SourceOffset": 55977
   },
   "24603": {
     "Id": 24603,
@@ -6948,7 +7961,7 @@
       "id": "Path of Support 13: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294596528
+    "SourceOffset": 56112
   },
   "24604": {
     "Id": 24604,
@@ -6969,7 +7982,58 @@
       "id": "Path of Support 26: Heal Tim"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294596663
+    "SourceOffset": 56247
+  },
+  "24650": {
+    "Id": 24650,
+    "Name": "Guardian 31",
+    "NameDesign": "Guardian 31",
+    "NameId": 729227483,
+    "Names": {
+      "en": "Guardian 31",
+      "zh-CN": "守护之路31：木桩试炼",
+      "zh-TW": "守護之路31：木樁試煉",
+      "fr": "Gardien 31",
+      "de": "Wächter 31",
+      "es": "Senda del Guardián 31",
+      "pt-BR": "Guardião 31"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 56382
+  },
+  "24651": {
+    "Id": 24651,
+    "Name": "Attack 31",
+    "NameDesign": "Attack 31",
+    "NameId": 729227484,
+    "Names": {
+      "en": "Attack 31",
+      "zh-CN": "力量之路31：木桩试炼",
+      "zh-TW": "力量之路31：木樁試煉",
+      "fr": "Attaque 31",
+      "de": "Angriff 31",
+      "es": "Ataque 31",
+      "pt-BR": "Ataque 31"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 56517
+  },
+  "24652": {
+    "Id": 24652,
+    "Name": "Support 31",
+    "NameDesign": "Support 31",
+    "NameId": 729227485,
+    "Names": {
+      "en": "Support 31",
+      "zh-CN": "辅助之路31：木桩试炼",
+      "zh-TW": "輔助之路31：木樁試煉",
+      "fr": "Soutien 31",
+      "de": "Unterstützung 31",
+      "es": "Senda del Apoyo 31",
+      "pt-BR": "Suporte 31"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 56652
   },
   "30001": {
     "Id": 30001,
@@ -6990,7 +8054,7 @@
       "id": "Taman Rumah"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294596798
+    "SourceOffset": 56787
   },
   "30101": {
     "Id": 30101,
@@ -7011,7 +8075,7 @@
       "id": "Stimen Ruin 1F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294596933
+    "SourceOffset": 56922
   },
   "30102": {
     "Id": 30102,
@@ -7032,7 +8096,7 @@
       "id": "Stimen Ruin 2F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294597068
+    "SourceOffset": 57057
   },
   "30103": {
     "Id": 30103,
@@ -7053,7 +8117,7 @@
       "id": "Stimen Ruin 3F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294597203
+    "SourceOffset": 57192
   },
   "30104": {
     "Id": 30104,
@@ -7074,7 +8138,7 @@
       "id": "Stimen Ruin 4F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294597338
+    "SourceOffset": 57327
   },
   "30105": {
     "Id": 30105,
@@ -7095,7 +8159,7 @@
       "id": "Stimen Ruin 5F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294597473
+    "SourceOffset": 57462
   },
   "30106": {
     "Id": 30106,
@@ -7116,7 +8180,7 @@
       "id": "Stimen Ruin 6F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294597608
+    "SourceOffset": 57597
   },
   "30107": {
     "Id": 30107,
@@ -7137,7 +8201,7 @@
       "id": "Stimen Ruin 7F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294597743
+    "SourceOffset": 57732
   },
   "30108": {
     "Id": 30108,
@@ -7158,7 +8222,7 @@
       "id": "Stimen Ruin 8F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294597878
+    "SourceOffset": 57867
   },
   "30109": {
     "Id": 30109,
@@ -7179,7 +8243,7 @@
       "id": "Stimen Ruin 9F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294598013
+    "SourceOffset": 58002
   },
   "30110": {
     "Id": 30110,
@@ -7200,7 +8264,7 @@
       "id": "Stimen Ruin 10F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294598148
+    "SourceOffset": 58137
   },
   "30111": {
     "Id": 30111,
@@ -7221,7 +8285,7 @@
       "id": "Stimen Ruin 11F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294598283
+    "SourceOffset": 58272
   },
   "30112": {
     "Id": 30112,
@@ -7242,7 +8306,7 @@
       "id": "Stimen Ruin 12F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294598418
+    "SourceOffset": 58407
   },
   "30113": {
     "Id": 30113,
@@ -7263,7 +8327,7 @@
       "id": "Stimen Ruin 13F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294598553
+    "SourceOffset": 58542
   },
   "30114": {
     "Id": 30114,
@@ -7284,7 +8348,7 @@
       "id": "Stimen Ruin 14F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294598688
+    "SourceOffset": 58677
   },
   "30115": {
     "Id": 30115,
@@ -7305,7 +8369,7 @@
       "id": "Stimen Ruin 15F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294598823
+    "SourceOffset": 58812
   },
   "30116": {
     "Id": 30116,
@@ -7326,7 +8390,7 @@
       "id": "Stimen Ruin 16F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294598958
+    "SourceOffset": 58947
   },
   "30117": {
     "Id": 30117,
@@ -7347,7 +8411,7 @@
       "id": "Stimen Ruin 17F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294599093
+    "SourceOffset": 59082
   },
   "30118": {
     "Id": 30118,
@@ -7368,7 +8432,7 @@
       "id": "Stimen Ruin 18F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294599228
+    "SourceOffset": 59217
   },
   "30119": {
     "Id": 30119,
@@ -7389,7 +8453,7 @@
       "id": "Stimen Ruin 19F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294599363
+    "SourceOffset": 59352
   },
   "30120": {
     "Id": 30120,
@@ -7410,7 +8474,7 @@
       "id": "Stimen Ruin 20F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294599498
+    "SourceOffset": 59487
   },
   "30121": {
     "Id": 30121,
@@ -7431,7 +8495,7 @@
       "id": "Stimen Ruin 21F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294599633
+    "SourceOffset": 59622
   },
   "30122": {
     "Id": 30122,
@@ -7452,7 +8516,7 @@
       "id": "Stimen Ruin 22F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294599768
+    "SourceOffset": 59757
   },
   "30123": {
     "Id": 30123,
@@ -7473,7 +8537,7 @@
       "id": "Stimen Ruin 23F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294599903
+    "SourceOffset": 59892
   },
   "30124": {
     "Id": 30124,
@@ -7494,7 +8558,7 @@
       "id": "Stimen Ruin 24F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294600038
+    "SourceOffset": 60027
   },
   "30125": {
     "Id": 30125,
@@ -7515,7 +8579,7 @@
       "id": "Stimen Ruin 25F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294600173
+    "SourceOffset": 60162
   },
   "30126": {
     "Id": 30126,
@@ -7536,7 +8600,7 @@
       "id": "Stimen Ruin 26F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294600308
+    "SourceOffset": 60297
   },
   "30127": {
     "Id": 30127,
@@ -7557,7 +8621,7 @@
       "id": "Stimen Ruin 27F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294600443
+    "SourceOffset": 60432
   },
   "30128": {
     "Id": 30128,
@@ -7578,7 +8642,7 @@
       "id": "Stimen Ruin 28F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294600578
+    "SourceOffset": 60567
   },
   "30129": {
     "Id": 30129,
@@ -7599,7 +8663,7 @@
       "id": "Stimen Ruin 29F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294600713
+    "SourceOffset": 60702
   },
   "30130": {
     "Id": 30130,
@@ -7620,7 +8684,7 @@
       "id": "Stimen Ruin 30F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294600848
+    "SourceOffset": 60837
   },
   "30131": {
     "Id": 30131,
@@ -7641,7 +8705,7 @@
       "id": "Stimen Ruin 31F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294600983
+    "SourceOffset": 60972
   },
   "30132": {
     "Id": 30132,
@@ -7662,7 +8726,7 @@
       "id": "Stimen Ruin 32F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294601118
+    "SourceOffset": 61107
   },
   "30133": {
     "Id": 30133,
@@ -7683,7 +8747,7 @@
       "id": "Stimen Ruin 33F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294601253
+    "SourceOffset": 61242
   },
   "30134": {
     "Id": 30134,
@@ -7704,7 +8768,7 @@
       "id": "Stimen Ruin 34F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294601388
+    "SourceOffset": 61377
   },
   "30135": {
     "Id": 30135,
@@ -7725,7 +8789,7 @@
       "id": "Stimen Ruin 35F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294601523
+    "SourceOffset": 61512
   },
   "30136": {
     "Id": 30136,
@@ -7746,7 +8810,7 @@
       "id": "Stimen Ruin 36F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294601658
+    "SourceOffset": 61647
   },
   "30137": {
     "Id": 30137,
@@ -7767,7 +8831,7 @@
       "id": "Stimen Ruin 37F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294601793
+    "SourceOffset": 61782
   },
   "30138": {
     "Id": 30138,
@@ -7788,7 +8852,7 @@
       "id": "Stimen Ruin 38F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294601928
+    "SourceOffset": 61917
   },
   "30139": {
     "Id": 30139,
@@ -7809,7 +8873,7 @@
       "id": "Stimen Ruin 39F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294602063
+    "SourceOffset": 62052
   },
   "30140": {
     "Id": 30140,
@@ -7830,7 +8894,7 @@
       "id": "Stimen Ruin 40F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294602198
+    "SourceOffset": 62187
   },
   "30141": {
     "Id": 30141,
@@ -7851,7 +8915,7 @@
       "id": "Stimen Ruin 41F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294602333
+    "SourceOffset": 62322
   },
   "30142": {
     "Id": 30142,
@@ -7872,7 +8936,7 @@
       "id": "Stimen Ruin 42F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294602468
+    "SourceOffset": 62457
   },
   "30143": {
     "Id": 30143,
@@ -7893,7 +8957,7 @@
       "id": "Stimen Ruin 43F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294602603
+    "SourceOffset": 62592
   },
   "30144": {
     "Id": 30144,
@@ -7914,7 +8978,7 @@
       "id": "Stimen Ruin 44F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294602738
+    "SourceOffset": 62727
   },
   "30145": {
     "Id": 30145,
@@ -7935,7 +8999,7 @@
       "id": "Stimen Ruin 45F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294602873
+    "SourceOffset": 62862
   },
   "30146": {
     "Id": 30146,
@@ -7956,7 +9020,7 @@
       "id": "Stimen Ruin 46F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294603008
+    "SourceOffset": 62997
   },
   "30147": {
     "Id": 30147,
@@ -7977,7 +9041,7 @@
       "id": "Stimen Ruin 47F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294603143
+    "SourceOffset": 63132
   },
   "30148": {
     "Id": 30148,
@@ -7998,7 +9062,7 @@
       "id": "Stimen Ruin 48F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294603278
+    "SourceOffset": 63267
   },
   "30149": {
     "Id": 30149,
@@ -8019,7 +9083,7 @@
       "id": "Stimen Ruin 49F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294603413
+    "SourceOffset": 63402
   },
   "30150": {
     "Id": 30150,
@@ -8040,7 +9104,7 @@
       "id": "Stimen Ruin 50F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294603548
+    "SourceOffset": 63537
   },
   "30151": {
     "Id": 30151,
@@ -8061,7 +9125,7 @@
       "id": "Stimen Ruin 51F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294603683
+    "SourceOffset": 63672
   },
   "30152": {
     "Id": 30152,
@@ -8082,7 +9146,7 @@
       "id": "Stimen Ruin 52F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294603818
+    "SourceOffset": 63807
   },
   "30153": {
     "Id": 30153,
@@ -8103,7 +9167,7 @@
       "id": "Stimen Ruin 53F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294603953
+    "SourceOffset": 63942
   },
   "30154": {
     "Id": 30154,
@@ -8124,7 +9188,7 @@
       "id": "Stimen Ruin 54F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294604088
+    "SourceOffset": 64077
   },
   "30155": {
     "Id": 30155,
@@ -8145,7 +9209,7 @@
       "id": "Stimen Ruin 55F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294604223
+    "SourceOffset": 64212
   },
   "30156": {
     "Id": 30156,
@@ -8166,7 +9230,7 @@
       "id": "Stimen Ruin 56F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294604358
+    "SourceOffset": 64347
   },
   "30157": {
     "Id": 30157,
@@ -8187,7 +9251,7 @@
       "id": "Stimen Ruin 57F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294604493
+    "SourceOffset": 64482
   },
   "30158": {
     "Id": 30158,
@@ -8208,7 +9272,7 @@
       "id": "Stimen Ruin 58F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294604628
+    "SourceOffset": 64617
   },
   "30159": {
     "Id": 30159,
@@ -8229,7 +9293,7 @@
       "id": "Stimen Ruin 59F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294604763
+    "SourceOffset": 64752
   },
   "30160": {
     "Id": 30160,
@@ -8250,7 +9314,7 @@
       "id": "Stimen Ruin 60F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294604898
+    "SourceOffset": 64887
   },
   "30161": {
     "Id": 30161,
@@ -8271,7 +9335,7 @@
       "id": "Stimen Ruin 61F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294605033
+    "SourceOffset": 65022
   },
   "30162": {
     "Id": 30162,
@@ -8292,7 +9356,7 @@
       "id": "Stimen Ruin 62F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294605168
+    "SourceOffset": 65157
   },
   "30163": {
     "Id": 30163,
@@ -8313,7 +9377,7 @@
       "id": "Stimen Ruin 63F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294605303
+    "SourceOffset": 65292
   },
   "30164": {
     "Id": 30164,
@@ -8334,7 +9398,7 @@
       "id": "Stimen Ruin 64F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294605438
+    "SourceOffset": 65427
   },
   "30165": {
     "Id": 30165,
@@ -8355,7 +9419,7 @@
       "id": "Stimen Ruin 65F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294605573
+    "SourceOffset": 65562
   },
   "30166": {
     "Id": 30166,
@@ -8376,7 +9440,7 @@
       "id": "Stimen Ruin 66F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294605708
+    "SourceOffset": 65697
   },
   "30167": {
     "Id": 30167,
@@ -8397,7 +9461,7 @@
       "id": "Stimen Ruin 67F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294605843
+    "SourceOffset": 65832
   },
   "30168": {
     "Id": 30168,
@@ -8418,7 +9482,7 @@
       "id": "Stimen Ruin 68F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294605978
+    "SourceOffset": 65967
   },
   "30169": {
     "Id": 30169,
@@ -8439,7 +9503,7 @@
       "id": "Stimen Ruin 69F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294606113
+    "SourceOffset": 66102
   },
   "30170": {
     "Id": 30170,
@@ -8460,7 +9524,7 @@
       "id": "Stimen Ruin 70F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294606248
+    "SourceOffset": 66237
   },
   "30171": {
     "Id": 30171,
@@ -8481,7 +9545,7 @@
       "id": "Stimen Ruin 71F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294606383
+    "SourceOffset": 66372
   },
   "30172": {
     "Id": 30172,
@@ -8502,7 +9566,7 @@
       "id": "Stimen Ruin 72F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294606518
+    "SourceOffset": 66507
   },
   "30173": {
     "Id": 30173,
@@ -8523,7 +9587,7 @@
       "id": "Stimen Ruin 73F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294606653
+    "SourceOffset": 66642
   },
   "30174": {
     "Id": 30174,
@@ -8544,7 +9608,7 @@
       "id": "Stimen Ruin 74F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294606788
+    "SourceOffset": 66777
   },
   "30175": {
     "Id": 30175,
@@ -8565,7 +9629,7 @@
       "id": "Stimen Ruin 75F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294606923
+    "SourceOffset": 66912
   },
   "30200": {
     "Id": 30200,
@@ -8586,7 +9650,7 @@
       "id": "Stimen Ruin 75F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294607058
+    "SourceOffset": 67047
   },
   "31101": {
     "Id": 31101,
@@ -8607,7 +9671,7 @@
       "id": "Stimen Ruin 1F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294607193
+    "SourceOffset": 67182
   },
   "31102": {
     "Id": 31102,
@@ -8628,7 +9692,7 @@
       "id": "Stimen Ruin 2F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294607328
+    "SourceOffset": 67317
   },
   "31103": {
     "Id": 31103,
@@ -8649,7 +9713,7 @@
       "id": "Stimen Ruin 3F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294607463
+    "SourceOffset": 67452
   },
   "31104": {
     "Id": 31104,
@@ -8670,7 +9734,7 @@
       "id": "Stimen Ruin 4F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294607598
+    "SourceOffset": 67587
   },
   "31105": {
     "Id": 31105,
@@ -8691,7 +9755,7 @@
       "id": "Stimen Ruin 5F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294607733
+    "SourceOffset": 67722
   },
   "31106": {
     "Id": 31106,
@@ -8712,7 +9776,7 @@
       "id": "Stimen Ruin 6F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294607868
+    "SourceOffset": 67857
   },
   "31107": {
     "Id": 31107,
@@ -8733,7 +9797,7 @@
       "id": "Stimen Ruin 7F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294608003
+    "SourceOffset": 67992
   },
   "31108": {
     "Id": 31108,
@@ -8754,7 +9818,7 @@
       "id": "Stimen Ruin 8F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294608138
+    "SourceOffset": 68127
   },
   "31109": {
     "Id": 31109,
@@ -8775,7 +9839,7 @@
       "id": "Stimen Ruin 9F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294608273
+    "SourceOffset": 68262
   },
   "31110": {
     "Id": 31110,
@@ -8796,7 +9860,7 @@
       "id": "Stimen Ruin 10F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294608408
+    "SourceOffset": 68397
   },
   "31111": {
     "Id": 31111,
@@ -8817,7 +9881,7 @@
       "id": "Stimen Ruin 11F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294608543
+    "SourceOffset": 68532
   },
   "31112": {
     "Id": 31112,
@@ -8838,7 +9902,7 @@
       "id": "Stimen Ruin 12F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294608678
+    "SourceOffset": 68667
   },
   "31113": {
     "Id": 31113,
@@ -8859,7 +9923,7 @@
       "id": "Stimen Ruin 13F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294608813
+    "SourceOffset": 68802
   },
   "31114": {
     "Id": 31114,
@@ -8880,7 +9944,7 @@
       "id": "Stimen Ruin 14F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294608948
+    "SourceOffset": 68937
   },
   "31115": {
     "Id": 31115,
@@ -8901,7 +9965,7 @@
       "id": "Stimen Ruin 15F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294609083
+    "SourceOffset": 69072
   },
   "31116": {
     "Id": 31116,
@@ -8922,7 +9986,7 @@
       "id": "Stimen Ruin 16F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294609218
+    "SourceOffset": 69207
   },
   "31117": {
     "Id": 31117,
@@ -8943,7 +10007,7 @@
       "id": "Stimen Ruin 17F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294609353
+    "SourceOffset": 69342
   },
   "31118": {
     "Id": 31118,
@@ -8964,7 +10028,7 @@
       "id": "Stimen Ruin 18F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294609488
+    "SourceOffset": 69477
   },
   "31119": {
     "Id": 31119,
@@ -8985,7 +10049,7 @@
       "id": "Stimen Ruin 19F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294609623
+    "SourceOffset": 69612
   },
   "31120": {
     "Id": 31120,
@@ -9006,7 +10070,7 @@
       "id": "Stimen Ruin 20F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294609758
+    "SourceOffset": 69747
   },
   "31121": {
     "Id": 31121,
@@ -9027,7 +10091,7 @@
       "id": "Stimen Ruin 21F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294609893
+    "SourceOffset": 69882
   },
   "31122": {
     "Id": 31122,
@@ -9048,7 +10112,7 @@
       "id": "Stimen Ruin 22F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294610028
+    "SourceOffset": 70017
   },
   "31123": {
     "Id": 31123,
@@ -9069,7 +10133,7 @@
       "id": "Stimen Ruin 23F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294610163
+    "SourceOffset": 70152
   },
   "31124": {
     "Id": 31124,
@@ -9090,7 +10154,7 @@
       "id": "Stimen Ruin 24F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294610298
+    "SourceOffset": 70287
   },
   "31125": {
     "Id": 31125,
@@ -9111,7 +10175,7 @@
       "id": "Stimen Ruin 25F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294610433
+    "SourceOffset": 70422
   },
   "31126": {
     "Id": 31126,
@@ -9132,7 +10196,7 @@
       "id": "Stimen Ruin 26F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294610568
+    "SourceOffset": 70557
   },
   "31127": {
     "Id": 31127,
@@ -9153,7 +10217,7 @@
       "id": "Stimen Ruin 27F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294610703
+    "SourceOffset": 70692
   },
   "31128": {
     "Id": 31128,
@@ -9174,7 +10238,7 @@
       "id": "Stimen Ruin 28F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294610838
+    "SourceOffset": 70827
   },
   "31129": {
     "Id": 31129,
@@ -9195,7 +10259,7 @@
       "id": "Stimen Ruin 29F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294610973
+    "SourceOffset": 70962
   },
   "31130": {
     "Id": 31130,
@@ -9216,7 +10280,7 @@
       "id": "Stimen Ruin 30F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294611108
+    "SourceOffset": 71097
   },
   "31131": {
     "Id": 31131,
@@ -9237,7 +10301,7 @@
       "id": "Stimen Ruin 31F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294611243
+    "SourceOffset": 71232
   },
   "31132": {
     "Id": 31132,
@@ -9258,7 +10322,7 @@
       "id": "Stimen Ruin 32F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294611378
+    "SourceOffset": 71367
   },
   "31133": {
     "Id": 31133,
@@ -9279,7 +10343,7 @@
       "id": "Stimen Ruin 33F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294611513
+    "SourceOffset": 71502
   },
   "31134": {
     "Id": 31134,
@@ -9300,7 +10364,7 @@
       "id": "Stimen Ruin 34F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294611648
+    "SourceOffset": 71637
   },
   "31135": {
     "Id": 31135,
@@ -9321,7 +10385,7 @@
       "id": "Stimen Ruin 35F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294611783
+    "SourceOffset": 71772
   },
   "31136": {
     "Id": 31136,
@@ -9342,7 +10406,7 @@
       "id": "Stimen Ruin 36F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294611918
+    "SourceOffset": 71907
   },
   "31137": {
     "Id": 31137,
@@ -9363,7 +10427,7 @@
       "id": "Stimen Ruin 37F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294612053
+    "SourceOffset": 72042
   },
   "31138": {
     "Id": 31138,
@@ -9384,7 +10448,7 @@
       "id": "Stimen Ruin 38F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294612188
+    "SourceOffset": 72177
   },
   "31139": {
     "Id": 31139,
@@ -9405,7 +10469,7 @@
       "id": "Stimen Ruin 39F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294612323
+    "SourceOffset": 72312
   },
   "31140": {
     "Id": 31140,
@@ -9426,7 +10490,7 @@
       "id": "Stimen Ruin 40F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294612458
+    "SourceOffset": 72447
   },
   "31141": {
     "Id": 31141,
@@ -9447,7 +10511,7 @@
       "id": "Stimen Ruin 41F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294612593
+    "SourceOffset": 72582
   },
   "31142": {
     "Id": 31142,
@@ -9468,7 +10532,7 @@
       "id": "Stimen Ruin 42F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294612728
+    "SourceOffset": 72717
   },
   "31143": {
     "Id": 31143,
@@ -9489,7 +10553,7 @@
       "id": "Stimen Ruin 43F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294612863
+    "SourceOffset": 72852
   },
   "31144": {
     "Id": 31144,
@@ -9510,7 +10574,7 @@
       "id": "Stimen Ruin 44F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294612998
+    "SourceOffset": 72987
   },
   "31145": {
     "Id": 31145,
@@ -9531,7 +10595,7 @@
       "id": "Stimen Ruin 45F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294613133
+    "SourceOffset": 73122
   },
   "31146": {
     "Id": 31146,
@@ -9552,7 +10616,7 @@
       "id": "Stimen Ruin 46F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294613268
+    "SourceOffset": 73257
   },
   "31147": {
     "Id": 31147,
@@ -9573,7 +10637,7 @@
       "id": "Stimen Ruin 47F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294613403
+    "SourceOffset": 73392
   },
   "31148": {
     "Id": 31148,
@@ -9594,7 +10658,7 @@
       "id": "Stimen Ruin 48F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294613538
+    "SourceOffset": 73527
   },
   "31149": {
     "Id": 31149,
@@ -9615,7 +10679,7 @@
       "id": "Stimen Ruin 49F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294613673
+    "SourceOffset": 73662
   },
   "31150": {
     "Id": 31150,
@@ -9636,7 +10700,7 @@
       "id": "Stimen Ruin 50F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294613808
+    "SourceOffset": 73797
   },
   "31151": {
     "Id": 31151,
@@ -9657,7 +10721,7 @@
       "id": "Stimen Ruin 51F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294613943
+    "SourceOffset": 73932
   },
   "31152": {
     "Id": 31152,
@@ -9678,7 +10742,7 @@
       "id": "Stimen Ruin 52F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294614078
+    "SourceOffset": 74067
   },
   "31153": {
     "Id": 31153,
@@ -9699,7 +10763,7 @@
       "id": "Stimen Ruin 53F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294614213
+    "SourceOffset": 74202
   },
   "31154": {
     "Id": 31154,
@@ -9720,7 +10784,7 @@
       "id": "Stimen Ruin 54F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294614348
+    "SourceOffset": 74337
   },
   "31155": {
     "Id": 31155,
@@ -9741,7 +10805,7 @@
       "id": "Stimen Ruin 55F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294614483
+    "SourceOffset": 74472
   },
   "31156": {
     "Id": 31156,
@@ -9762,7 +10826,7 @@
       "id": "Stimen Ruin 56F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294614618
+    "SourceOffset": 74607
   },
   "31157": {
     "Id": 31157,
@@ -9783,7 +10847,7 @@
       "id": "Stimen Ruin 57F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294614753
+    "SourceOffset": 74742
   },
   "31158": {
     "Id": 31158,
@@ -9804,7 +10868,7 @@
       "id": "Stimen Ruin 58F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294614888
+    "SourceOffset": 74877
   },
   "31159": {
     "Id": 31159,
@@ -9825,7 +10889,7 @@
       "id": "Stimen Ruin 59F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294615023
+    "SourceOffset": 75012
   },
   "31160": {
     "Id": 31160,
@@ -9846,7 +10910,7 @@
       "id": "Stimen Ruin 60F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294615158
+    "SourceOffset": 75147
   },
   "31161": {
     "Id": 31161,
@@ -9867,7 +10931,7 @@
       "id": "Stimen Ruin 61F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294615293
+    "SourceOffset": 75282
   },
   "31162": {
     "Id": 31162,
@@ -9888,7 +10952,7 @@
       "id": "Stimen Ruin 62F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294615428
+    "SourceOffset": 75417
   },
   "31163": {
     "Id": 31163,
@@ -9909,7 +10973,7 @@
       "id": "Stimen Ruin 63F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294615563
+    "SourceOffset": 75552
   },
   "31164": {
     "Id": 31164,
@@ -9930,7 +10994,7 @@
       "id": "Stimen Ruin 64F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294615698
+    "SourceOffset": 75687
   },
   "31165": {
     "Id": 31165,
@@ -9951,7 +11015,7 @@
       "id": "Stimen Ruin 65F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294615833
+    "SourceOffset": 75822
   },
   "31166": {
     "Id": 31166,
@@ -9972,7 +11036,7 @@
       "id": "Stimen Ruin 66F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294615968
+    "SourceOffset": 75957
   },
   "31167": {
     "Id": 31167,
@@ -9993,7 +11057,7 @@
       "id": "Stimen Ruin 67F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294616103
+    "SourceOffset": 76092
   },
   "31168": {
     "Id": 31168,
@@ -10014,7 +11078,7 @@
       "id": "Stimen Ruin 68F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294616238
+    "SourceOffset": 76227
   },
   "31169": {
     "Id": 31169,
@@ -10035,7 +11099,7 @@
       "id": "Stimen Ruin 69F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294616373
+    "SourceOffset": 76362
   },
   "31170": {
     "Id": 31170,
@@ -10056,7 +11120,7 @@
       "id": "Stimen Ruin 70F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294616508
+    "SourceOffset": 76497
   },
   "31171": {
     "Id": 31171,
@@ -10077,7 +11141,7 @@
       "id": "Stimen Ruin 71F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294616643
+    "SourceOffset": 76632
   },
   "31172": {
     "Id": 31172,
@@ -10098,7 +11162,7 @@
       "id": "Stimen Ruin 72F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294616778
+    "SourceOffset": 76767
   },
   "31173": {
     "Id": 31173,
@@ -10119,7 +11183,7 @@
       "id": "Stimen Ruin 73F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294616913
+    "SourceOffset": 76902
   },
   "31174": {
     "Id": 31174,
@@ -10140,7 +11204,7 @@
       "id": "Stimen Ruin 74F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294617048
+    "SourceOffset": 77037
   },
   "31175": {
     "Id": 31175,
@@ -10161,7 +11225,1267 @@
       "id": "Stimen Ruin 75F"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294617183
+    "SourceOffset": 77172
+  },
+  "32101": {
+    "Id": 32101,
+    "Name": "Floor 1",
+    "NameDesign": "Floor 1",
+    "NameId": 730335921,
+    "Names": {
+      "en": "Floor 1",
+      "zh-CN": "司第门遗迹1层",
+      "zh-TW": "司第門遺跡1層",
+      "ja": "レグディニス遺跡1層",
+      "ko-KR": "시디문 유적 1층",
+      "fr": "Étage 1",
+      "de": "Ebene 1",
+      "es": "Piso 1",
+      "pt-BR": "Andar 1",
+      "th": "Stimen Vaults Floor 1",
+      "id": "Stimen Ruin 1F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 77307
+  },
+  "32102": {
+    "Id": 32102,
+    "Name": "Floor 2",
+    "NameDesign": "Floor 2",
+    "NameId": 730335922,
+    "Names": {
+      "en": "Floor 2",
+      "zh-CN": "司第门遗迹2层",
+      "zh-TW": "司第門遺跡2層",
+      "ja": "レグディニス遺跡2層",
+      "ko-KR": "시디문 유적 2층",
+      "fr": "Étage 2",
+      "de": "Ebene 2",
+      "es": "Piso 2",
+      "pt-BR": "Andar 2",
+      "th": "Stimen Vaults Floor 2",
+      "id": "Stimen Ruin 2F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 77442
+  },
+  "32103": {
+    "Id": 32103,
+    "Name": "Floor 3",
+    "NameDesign": "Floor 3",
+    "NameId": 730335923,
+    "Names": {
+      "en": "Floor 3",
+      "zh-CN": "司第门遗迹3层",
+      "zh-TW": "司第門遺跡3層",
+      "ja": "レグディニス遺跡3層",
+      "ko-KR": "시디문 유적 3층",
+      "fr": "Étage 3",
+      "de": "Ebene 3",
+      "es": "Piso 3",
+      "pt-BR": "Andar 3",
+      "th": "Stimen Vaults Floor 3",
+      "id": "Stimen Ruin 3F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 77577
+  },
+  "32104": {
+    "Id": 32104,
+    "Name": "Floor 4",
+    "NameDesign": "Floor 4",
+    "NameId": 730335924,
+    "Names": {
+      "en": "Floor 4",
+      "zh-CN": "司第门遗迹4层",
+      "zh-TW": "司第門遺跡4層",
+      "ja": "レグディニス遺跡4層",
+      "ko-KR": "시디문 유적 4층",
+      "fr": "Étage 4",
+      "de": "Ebene 4",
+      "es": "Piso 4",
+      "pt-BR": "Andar 4",
+      "th": "Stimen Vaults Floor 4",
+      "id": "Stimen Ruin 4F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 77712
+  },
+  "32105": {
+    "Id": 32105,
+    "Name": "Floor 5",
+    "NameDesign": "Floor 5",
+    "NameId": 730335925,
+    "Names": {
+      "en": "Floor 5",
+      "zh-CN": "司第门遗迹5层",
+      "zh-TW": "司第門遺跡5層",
+      "ja": "レグディニス遺跡5層",
+      "ko-KR": "시디문 유적 5층",
+      "fr": "Étage 5",
+      "de": "Ebene 5",
+      "es": "Piso 5",
+      "pt-BR": "Andar 5",
+      "th": "Stimen Vaults Floor 5",
+      "id": "Stimen Ruin 5F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 77847
+  },
+  "32106": {
+    "Id": 32106,
+    "Name": "Floor 6",
+    "NameDesign": "Floor 6",
+    "NameId": 730335926,
+    "Names": {
+      "en": "Floor 6",
+      "zh-CN": "司第门遗迹6层",
+      "zh-TW": "司第門遺跡6層",
+      "ja": "レグディニス遺跡6層",
+      "ko-KR": "시디문 유적 6층",
+      "fr": "Étage 6",
+      "de": "Ebene 6",
+      "es": "Piso 6",
+      "pt-BR": "Andar 6",
+      "th": "Stimen Vaults Floor 6",
+      "id": "Stimen Ruin 6F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 77982
+  },
+  "32107": {
+    "Id": 32107,
+    "Name": "Floor 7",
+    "NameDesign": "Floor 7",
+    "NameId": 730335927,
+    "Names": {
+      "en": "Floor 7",
+      "zh-CN": "司第门遗迹7层",
+      "zh-TW": "司第門遺跡7層",
+      "ja": "レグディニス遺跡7層",
+      "ko-KR": "시디문 유적 7층",
+      "fr": "Étage 7",
+      "de": "Ebene 7",
+      "es": "Piso 7",
+      "pt-BR": "Andar 7",
+      "th": "Stimen Vaults Floor 7",
+      "id": "Stimen Ruin 7F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 78117
+  },
+  "32108": {
+    "Id": 32108,
+    "Name": "Floor 8",
+    "NameDesign": "Floor 8",
+    "NameId": 730335928,
+    "Names": {
+      "en": "Floor 8",
+      "zh-CN": "司第门遗迹8层",
+      "zh-TW": "司第門遺跡8層",
+      "ja": "レグディニス遺跡8層",
+      "ko-KR": "시디문 유적 8층",
+      "fr": "Étage 8",
+      "de": "Ebene 8",
+      "es": "Piso 8",
+      "pt-BR": "Andar 8",
+      "th": "Stimen Vaults Floor 8",
+      "id": "Stimen Ruin 8F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 78252
+  },
+  "32109": {
+    "Id": 32109,
+    "Name": "Floor 9",
+    "NameDesign": "Floor 9",
+    "NameId": 730335929,
+    "Names": {
+      "en": "Floor 9",
+      "zh-CN": "司第门遗迹9层",
+      "zh-TW": "司第門遺跡9層",
+      "ja": "レグディニス遺跡9層",
+      "ko-KR": "시디문 유적 9층",
+      "fr": "Étage 9",
+      "de": "Ebene 9",
+      "es": "Piso 9",
+      "pt-BR": "Andar 9",
+      "th": "Stimen Vaults Floor 9",
+      "id": "Stimen Ruin 9F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 78387
+  },
+  "32110": {
+    "Id": 32110,
+    "Name": "Floor 10",
+    "NameDesign": "Floor 10",
+    "NameId": 730335953,
+    "Names": {
+      "en": "Floor 10",
+      "zh-CN": "司第门遗迹10层",
+      "zh-TW": "司第門遺跡10層",
+      "ja": "レグディニス遺跡10層",
+      "ko-KR": "시디문 유적 10층",
+      "fr": "Étage 10",
+      "de": "Ebene 10",
+      "es": "Piso 10",
+      "pt-BR": "Andar 10",
+      "th": "Stimen Vaults Floor 10",
+      "id": "Stimen Ruin 10F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 78522
+  },
+  "32111": {
+    "Id": 32111,
+    "Name": "Floor 11",
+    "NameDesign": "Floor 11",
+    "NameId": 730335954,
+    "Names": {
+      "en": "Floor 11",
+      "zh-CN": "司第门遗迹11层",
+      "zh-TW": "司第門遺跡11層",
+      "ja": "レグディニス遺跡11層",
+      "ko-KR": "시디문 유적 11층",
+      "fr": "Étage 11",
+      "de": "Ebene 11",
+      "es": "Piso 11",
+      "pt-BR": "Andar 11",
+      "th": "Stimen Vaults Floor 11",
+      "id": "Stimen Ruin 11F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 78657
+  },
+  "32112": {
+    "Id": 32112,
+    "Name": "Floor 12",
+    "NameDesign": "Floor 12",
+    "NameId": 730335955,
+    "Names": {
+      "en": "Floor 12",
+      "zh-CN": "司第门遗迹12层",
+      "zh-TW": "司第門遺跡12層",
+      "ja": "レグディニス遺跡12層",
+      "ko-KR": "시디문 유적 12층",
+      "fr": "Étage 12",
+      "de": "Ebene 12",
+      "es": "Piso 12",
+      "pt-BR": "Andar 12",
+      "th": "Stimen Vaults Floor 12",
+      "id": "Stimen Ruin 12F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 78792
+  },
+  "32113": {
+    "Id": 32113,
+    "Name": "Floor 13",
+    "NameDesign": "Floor 13",
+    "NameId": 730335956,
+    "Names": {
+      "en": "Floor 13",
+      "zh-CN": "司第门遗迹13层",
+      "zh-TW": "司第門遺跡13層",
+      "ja": "レグディニス遺跡13層",
+      "ko-KR": "시디문 유적 13층",
+      "fr": "Étage 13",
+      "de": "Ebene 13",
+      "es": "Piso 13",
+      "pt-BR": "Andar 13",
+      "th": "Stimen Vaults Floor 13",
+      "id": "Stimen Ruin 13F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 78927
+  },
+  "32114": {
+    "Id": 32114,
+    "Name": "Floor 14",
+    "NameDesign": "Floor 14",
+    "NameId": 730335957,
+    "Names": {
+      "en": "Floor 14",
+      "zh-CN": "司第门遗迹14层",
+      "zh-TW": "司第門遺跡14層",
+      "ja": "レグディニス遺跡14層",
+      "ko-KR": "시디문 유적 14층",
+      "fr": "Étage 14",
+      "de": "Ebene 14",
+      "es": "Piso 14",
+      "pt-BR": "Andar 14",
+      "th": "Stimen Vaults Floor 14",
+      "id": "Stimen Ruin 14F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 79062
+  },
+  "32115": {
+    "Id": 32115,
+    "Name": "Floor 15",
+    "NameDesign": "Floor 15",
+    "NameId": 730335958,
+    "Names": {
+      "en": "Floor 15",
+      "zh-CN": "司第门遗迹15层",
+      "zh-TW": "司第門遺跡15層",
+      "ja": "レグディニス遺跡15層",
+      "ko-KR": "시디문 유적 15층",
+      "fr": "Étage 15",
+      "de": "Ebene 15",
+      "es": "Piso 15",
+      "pt-BR": "Andar 15",
+      "th": "Stimen Vaults Floor 15",
+      "id": "Stimen Ruin 15F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 79197
+  },
+  "32116": {
+    "Id": 32116,
+    "Name": "Floor 16",
+    "NameDesign": "Floor 16",
+    "NameId": 730335959,
+    "Names": {
+      "en": "Floor 16",
+      "zh-CN": "司第门遗迹16层",
+      "zh-TW": "司第門遺跡16層",
+      "ja": "レグディニス遺跡16層",
+      "ko-KR": "시디문 유적 16층",
+      "fr": "Étage 16",
+      "de": "Ebene 16",
+      "es": "Piso 16",
+      "pt-BR": "Andar 16",
+      "th": "Stimen Vaults Floor 16",
+      "id": "Stimen Ruin 16F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 79332
+  },
+  "32117": {
+    "Id": 32117,
+    "Name": "Floor 17",
+    "NameDesign": "Floor 17",
+    "NameId": 730335960,
+    "Names": {
+      "en": "Floor 17",
+      "zh-CN": "司第门遗迹17层",
+      "zh-TW": "司第門遺跡17層",
+      "ja": "レグディニス遺跡17層",
+      "ko-KR": "시디문 유적 17층",
+      "fr": "Étage 17",
+      "de": "Ebene 17",
+      "es": "Piso 17",
+      "pt-BR": "Andar 17",
+      "th": "Stimen Vaults Floor 17",
+      "id": "Stimen Ruin 17F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 79467
+  },
+  "32118": {
+    "Id": 32118,
+    "Name": "Floor 18",
+    "NameDesign": "Floor 18",
+    "NameId": 730335961,
+    "Names": {
+      "en": "Floor 18",
+      "zh-CN": "司第门遗迹18层",
+      "zh-TW": "司第門遺跡18層",
+      "ja": "レグディニス遺跡18層",
+      "ko-KR": "시디문 유적 18층",
+      "fr": "Étage 18",
+      "de": "Ebene 18",
+      "es": "Piso 18",
+      "pt-BR": "Andar 18",
+      "th": "Stimen Vaults Floor 18",
+      "id": "Stimen Ruin 18F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 79602
+  },
+  "32119": {
+    "Id": 32119,
+    "Name": "Floor 19",
+    "NameDesign": "Floor 19",
+    "NameId": 730335962,
+    "Names": {
+      "en": "Floor 19",
+      "zh-CN": "司第门遗迹19层",
+      "zh-TW": "司第門遺跡19層",
+      "ja": "レグディニス遺跡19層",
+      "ko-KR": "시디문 유적 19층",
+      "fr": "Étage 19",
+      "de": "Ebene 19",
+      "es": "Piso 19",
+      "pt-BR": "Andar 19",
+      "th": "Stimen Vaults Floor 19",
+      "id": "Stimen Ruin 19F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 79737
+  },
+  "32120": {
+    "Id": 32120,
+    "Name": "Floor 20",
+    "NameDesign": "Floor 20",
+    "NameId": 730335986,
+    "Names": {
+      "en": "Floor 20",
+      "zh-CN": "司第门遗迹20层",
+      "zh-TW": "司第門遺跡20層",
+      "ja": "レグディニス遺跡20層",
+      "ko-KR": "시디문 유적 20층",
+      "fr": "Étage 20",
+      "de": "Ebene 20",
+      "es": "Piso 20",
+      "pt-BR": "Andar 20",
+      "th": "Stimen Vaults Floor 20",
+      "id": "Stimen Ruin 20F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 79872
+  },
+  "32121": {
+    "Id": 32121,
+    "Name": "Floor 21",
+    "NameDesign": "Floor 21",
+    "NameId": 730335987,
+    "Names": {
+      "en": "Floor 21",
+      "zh-CN": "司第门遗迹21层",
+      "zh-TW": "司第門遺跡21層",
+      "ja": "レグディニス遺跡21層",
+      "ko-KR": "시디문 유적 21층",
+      "fr": "Étage 21",
+      "de": "Ebene 21",
+      "es": "Piso 21",
+      "pt-BR": "Andar 21",
+      "th": "Stimen Floor 21",
+      "id": "Stimen Ruin 21F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 80007
+  },
+  "32122": {
+    "Id": 32122,
+    "Name": "Floor 22",
+    "NameDesign": "Floor 22",
+    "NameId": 730335988,
+    "Names": {
+      "en": "Floor 22",
+      "zh-CN": "司第门遗迹22层",
+      "zh-TW": "司第門遺跡22層",
+      "ja": "レグディニス遺跡22層",
+      "ko-KR": "시디문 유적 22층",
+      "fr": "Étage 22",
+      "de": "Ebene 22",
+      "es": "Piso 22",
+      "pt-BR": "Andar 22",
+      "th": "Stimen Floor 22",
+      "id": "Stimen Ruin 22F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 80142
+  },
+  "32123": {
+    "Id": 32123,
+    "Name": "Floor 23",
+    "NameDesign": "Floor 23",
+    "NameId": 730335989,
+    "Names": {
+      "en": "Floor 23",
+      "zh-CN": "司第门遗迹23层",
+      "zh-TW": "司第門遺跡23層",
+      "ja": "レグディニス遺跡23層",
+      "ko-KR": "시디문 유적 23층",
+      "fr": "Étage 23",
+      "de": "Ebene 23",
+      "es": "Piso 23",
+      "pt-BR": "Andar 23",
+      "th": "Stimen Floor 23",
+      "id": "Stimen Ruin 23F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 80277
+  },
+  "32124": {
+    "Id": 32124,
+    "Name": "Floor 24",
+    "NameDesign": "Floor 24",
+    "NameId": 730335990,
+    "Names": {
+      "en": "Floor 24",
+      "zh-CN": "司第门遗迹24层",
+      "zh-TW": "司第門遺跡24層",
+      "ja": "レグディニス遺跡24層",
+      "ko-KR": "시디문 유적 24층",
+      "fr": "Étage 24",
+      "de": "Ebene 24",
+      "es": "Piso 24",
+      "pt-BR": "Andar 24",
+      "th": "Stimen Floor 24",
+      "id": "Stimen Ruin 24F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 80412
+  },
+  "32125": {
+    "Id": 32125,
+    "Name": "Floor 25",
+    "NameDesign": "Floor 25",
+    "NameId": 730335991,
+    "Names": {
+      "en": "Floor 25",
+      "zh-CN": "司第门遗迹25层",
+      "zh-TW": "司第門遺跡25層",
+      "ja": "レグディニス遺跡25層",
+      "ko-KR": "시디문 유적 25층",
+      "fr": "Étage 25",
+      "de": "Ebene 25",
+      "es": "Piso 25",
+      "pt-BR": "Andar 25",
+      "th": "Stimen Floor 25",
+      "id": "Stimen Ruin 25F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 80547
+  },
+  "32126": {
+    "Id": 32126,
+    "Name": "Floor 26",
+    "NameDesign": "Floor 26",
+    "NameId": 730335992,
+    "Names": {
+      "en": "Floor 26",
+      "zh-CN": "司第门遗迹26层",
+      "zh-TW": "司第門遺跡26層",
+      "ja": "レグディニス遺跡26層",
+      "ko-KR": "시디문 유적 26층",
+      "fr": "Étage 26",
+      "de": "Ebene 26",
+      "es": "Piso 26",
+      "pt-BR": "Andar 26",
+      "th": "Stimen Floor 26",
+      "id": "Stimen Ruin 26F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 80682
+  },
+  "32127": {
+    "Id": 32127,
+    "Name": "Floor 27",
+    "NameDesign": "Floor 27",
+    "NameId": 730335993,
+    "Names": {
+      "en": "Floor 27",
+      "zh-CN": "司第门遗迹27层",
+      "zh-TW": "司第門遺跡27層",
+      "ja": "レグディニス遺跡27層",
+      "ko-KR": "시디문 유적 27층",
+      "fr": "Étage 27",
+      "de": "Ebene 27",
+      "es": "Piso 27",
+      "pt-BR": "Andar 27",
+      "th": "Stimen Floor 27",
+      "id": "Stimen Ruin 27F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 80817
+  },
+  "32128": {
+    "Id": 32128,
+    "Name": "Floor 28",
+    "NameDesign": "Floor 28",
+    "NameId": 730335994,
+    "Names": {
+      "en": "Floor 28",
+      "zh-CN": "司第门遗迹28层",
+      "zh-TW": "司第門遺跡28層",
+      "ja": "レグディニス遺跡28層",
+      "ko-KR": "시디문 유적 28층",
+      "fr": "Étage 28",
+      "de": "Ebene 28",
+      "es": "Piso 28",
+      "pt-BR": "Andar 28",
+      "th": "Stimen Floor 28",
+      "id": "Stimen Ruin 28F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 80952
+  },
+  "32129": {
+    "Id": 32129,
+    "Name": "Floor 29",
+    "NameDesign": "Floor 29",
+    "NameId": 730335995,
+    "Names": {
+      "en": "Floor 29",
+      "zh-CN": "司第门遗迹29层",
+      "zh-TW": "司第門遺跡29層",
+      "ja": "レグディニス遺跡29層",
+      "ko-KR": "시디문 유적 29층",
+      "fr": "Étage 29",
+      "de": "Ebene 29",
+      "es": "Piso 29",
+      "pt-BR": "Andar 29",
+      "th": "Stimen Floor 29",
+      "id": "Stimen Ruin 29F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 81087
+  },
+  "32130": {
+    "Id": 32130,
+    "Name": "Floor 30",
+    "NameDesign": "Floor 30",
+    "NameId": 730336019,
+    "Names": {
+      "en": "Floor 30",
+      "zh-CN": "司第门遗迹30层",
+      "zh-TW": "司第門遺跡30層",
+      "ja": "レグディニス遺跡30層",
+      "ko-KR": "시디문 유적 30층",
+      "fr": "Étage 30",
+      "de": "Ebene 30",
+      "es": "Piso 30",
+      "pt-BR": "Andar 30",
+      "th": "Stimen Floor 30",
+      "id": "Stimen Ruin 30F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 81222
+  },
+  "32131": {
+    "Id": 32131,
+    "Name": "Floor 31",
+    "NameDesign": "Floor 31",
+    "NameId": 730336020,
+    "Names": {
+      "en": "Floor 31",
+      "zh-CN": "司第门遗迹31层",
+      "zh-TW": "司第門遺跡31層",
+      "ja": "レグディニス遺跡31層",
+      "ko-KR": "시디문 유적 31층",
+      "fr": "Étage 31",
+      "de": "Ebene 31",
+      "es": "Piso 31",
+      "pt-BR": "Andar 31",
+      "th": "Stimen Floor 31",
+      "id": "Stimen Ruin 31F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 81357
+  },
+  "32132": {
+    "Id": 32132,
+    "Name": "Floor 32",
+    "NameDesign": "Floor 32",
+    "NameId": 730336021,
+    "Names": {
+      "en": "Floor 32",
+      "zh-CN": "司第门遗迹32层",
+      "zh-TW": "司第門遺跡32層",
+      "ja": "レグディニス遺跡32層",
+      "ko-KR": "시디문 유적 32층",
+      "fr": "Étage 32",
+      "de": "Ebene 32",
+      "es": "Piso 32",
+      "pt-BR": "Andar 32",
+      "th": "Stimen Floor 32",
+      "id": "Stimen Ruin 32F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 81492
+  },
+  "32133": {
+    "Id": 32133,
+    "Name": "Floor 33",
+    "NameDesign": "Floor 33",
+    "NameId": 730336022,
+    "Names": {
+      "en": "Floor 33",
+      "zh-CN": "司第门遗迹33层",
+      "zh-TW": "司第門遺跡33層",
+      "ja": "レグディニス遺跡33層",
+      "ko-KR": "시디문 유적 33층",
+      "fr": "Étage 33",
+      "de": "Ebene 33",
+      "es": "Piso 33",
+      "pt-BR": "Andar 33",
+      "th": "Stimen Floor 33",
+      "id": "Stimen Ruin 33F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 81627
+  },
+  "32134": {
+    "Id": 32134,
+    "Name": "Floor 34",
+    "NameDesign": "Floor 34",
+    "NameId": 730336023,
+    "Names": {
+      "en": "Floor 34",
+      "zh-CN": "司第门遗迹34层",
+      "zh-TW": "司第門遺跡34層",
+      "ja": "レグディニス遺跡34層",
+      "ko-KR": "시디문 유적 34층",
+      "fr": "Étage 34",
+      "de": "Ebene 34",
+      "es": "Piso 34",
+      "pt-BR": "Andar 34",
+      "th": "Stimen Floor 34",
+      "id": "Stimen Ruin 34F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 81762
+  },
+  "32135": {
+    "Id": 32135,
+    "Name": "Floor 35",
+    "NameDesign": "Floor 35",
+    "NameId": 730336024,
+    "Names": {
+      "en": "Floor 35",
+      "zh-CN": "司第门遗迹35层",
+      "zh-TW": "司第門遺跡35層",
+      "ja": "レグディニス遺跡35層",
+      "ko-KR": "시디문 유적 35층",
+      "fr": "Étage 35",
+      "de": "Ebene 35",
+      "es": "Piso 35",
+      "pt-BR": "Andar 35",
+      "th": "Stimen Floor 35",
+      "id": "Stimen Ruin 35F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 81897
+  },
+  "32136": {
+    "Id": 32136,
+    "Name": "Floor 36",
+    "NameDesign": "Floor 36",
+    "NameId": 730336025,
+    "Names": {
+      "en": "Floor 36",
+      "zh-CN": "司第门遗迹36层",
+      "zh-TW": "司第門遺跡36層",
+      "ja": "レグディニス遺跡36層",
+      "ko-KR": "시디문 유적 36층",
+      "fr": "Étage 36",
+      "de": "Ebene 36",
+      "es": "Piso 36",
+      "pt-BR": "Andar 36",
+      "th": "Stimen Floor 36",
+      "id": "Stimen Ruin 36F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 82032
+  },
+  "32137": {
+    "Id": 32137,
+    "Name": "Floor 37",
+    "NameDesign": "Floor 37",
+    "NameId": 730336026,
+    "Names": {
+      "en": "Floor 37",
+      "zh-CN": "司第门遗迹37层",
+      "zh-TW": "司第門遺跡37層",
+      "ja": "レグディニス遺跡37層",
+      "ko-KR": "시디문 유적 37층",
+      "fr": "Étage 37",
+      "de": "Ebene 37",
+      "es": "Piso 37",
+      "pt-BR": "Andar 37",
+      "th": "Stimen Floor 37",
+      "id": "Stimen Ruin 37F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 82167
+  },
+  "32138": {
+    "Id": 32138,
+    "Name": "Floor 38",
+    "NameDesign": "Floor 38",
+    "NameId": 730336027,
+    "Names": {
+      "en": "Floor 38",
+      "zh-CN": "司第门遗迹38层",
+      "zh-TW": "司第門遺跡38層",
+      "ja": "レグディニス遺跡38層",
+      "ko-KR": "시디문 유적 38층",
+      "fr": "Étage 38",
+      "de": "Ebene 38",
+      "es": "Piso 38",
+      "pt-BR": "Andar 38",
+      "th": "Stimen Floor 38",
+      "id": "Stimen Ruin 38F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 82302
+  },
+  "32139": {
+    "Id": 32139,
+    "Name": "Floor 39",
+    "NameDesign": "Floor 39",
+    "NameId": 730336028,
+    "Names": {
+      "en": "Floor 39",
+      "zh-CN": "司第门遗迹39层",
+      "zh-TW": "司第門遺跡39層",
+      "ja": "レグディニス遺跡39層",
+      "ko-KR": "시디문 유적 39층",
+      "fr": "Étage 39",
+      "de": "Ebene 39",
+      "es": "Piso 39",
+      "pt-BR": "Andar 39",
+      "th": "Stimen Floor 39",
+      "id": "Stimen Ruin 39F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 82437
+  },
+  "32140": {
+    "Id": 32140,
+    "Name": "Floor 40",
+    "NameDesign": "Floor 40",
+    "NameId": 730336052,
+    "Names": {
+      "en": "Floor 40",
+      "zh-CN": "司第门遗迹40层",
+      "zh-TW": "司第門遺跡40層",
+      "ja": "レグディニス遺跡40層",
+      "ko-KR": "시디문 유적 40층",
+      "fr": "Étage 40",
+      "de": "Ebene 40",
+      "es": "Piso 40",
+      "pt-BR": "Andar 40",
+      "th": "Stimen Floor 40",
+      "id": "Stimen Ruin 40F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 82572
+  },
+  "32141": {
+    "Id": 32141,
+    "Name": "Floor 41",
+    "NameDesign": "Floor 41",
+    "NameId": 730336053,
+    "Names": {
+      "en": "Floor 41",
+      "zh-CN": "司第门遗迹41层",
+      "zh-TW": "司第門遺跡41層",
+      "ja": "レグディニス遺跡41層",
+      "ko-KR": "시디문 유적 41층",
+      "fr": "Étage 41",
+      "de": "Ebene 41",
+      "es": "Piso 41",
+      "pt-BR": "Andar 41",
+      "th": "Stimen Floor 41",
+      "id": "Stimen Ruin 41F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 82707
+  },
+  "32142": {
+    "Id": 32142,
+    "Name": "Floor 42",
+    "NameDesign": "Floor 42",
+    "NameId": 730336054,
+    "Names": {
+      "en": "Floor 42",
+      "zh-CN": "司第门遗迹42层",
+      "zh-TW": "司第門遺跡42層",
+      "ja": "レグディニス遺跡42層",
+      "ko-KR": "시디문 유적 42층",
+      "fr": "Étage 42",
+      "de": "Ebene 42",
+      "es": "Piso 42",
+      "pt-BR": "Andar 42",
+      "th": "Stimen Floor 42",
+      "id": "Stimen Ruin 42F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 82842
+  },
+  "32143": {
+    "Id": 32143,
+    "Name": "Floor 43",
+    "NameDesign": "Floor 43",
+    "NameId": 730336055,
+    "Names": {
+      "en": "Floor 43",
+      "zh-CN": "司第门遗迹43层",
+      "zh-TW": "司第門遺跡43層",
+      "ja": "レグディニス遺跡43層",
+      "ko-KR": "시디문 유적 43층",
+      "fr": "Étage 43",
+      "de": "Ebene 43",
+      "es": "Piso 43",
+      "pt-BR": "Andar 43",
+      "th": "Stimen Floor 43",
+      "id": "Stimen Ruin 43F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 82977
+  },
+  "32144": {
+    "Id": 32144,
+    "Name": "Floor 44",
+    "NameDesign": "Floor 44",
+    "NameId": 730336056,
+    "Names": {
+      "en": "Floor 44",
+      "zh-CN": "司第门遗迹44层",
+      "zh-TW": "司第門遺跡44層",
+      "ja": "レグディニス遺跡44層",
+      "ko-KR": "시디문 유적 44층",
+      "fr": "Étage 44",
+      "de": "Ebene 44",
+      "es": "Piso 44",
+      "pt-BR": "Andar 44",
+      "th": "Stimen Floor 44",
+      "id": "Stimen Ruin 44F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 83112
+  },
+  "32145": {
+    "Id": 32145,
+    "Name": "Floor 45",
+    "NameDesign": "Floor 45",
+    "NameId": 730336057,
+    "Names": {
+      "en": "Floor 45",
+      "zh-CN": "司第门遗迹45层",
+      "zh-TW": "司第門遺跡45層",
+      "ja": "レグディニス遺跡45層",
+      "ko-KR": "시디문 유적 45층",
+      "fr": "Étage 45",
+      "de": "Ebene 45",
+      "es": "Piso 45",
+      "pt-BR": "Andar 45",
+      "th": "Stimen Floor 45",
+      "id": "Stimen Ruin 45F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 83247
+  },
+  "32146": {
+    "Id": 32146,
+    "Name": "Floor 46",
+    "NameDesign": "Floor 46",
+    "NameId": 730336058,
+    "Names": {
+      "en": "Floor 46",
+      "zh-CN": "司第门遗迹46层",
+      "zh-TW": "司第門遺跡46層",
+      "ja": "レグディニス遺跡46層",
+      "ko-KR": "시디문 유적 46층",
+      "fr": "Étage 46",
+      "de": "Ebene 46",
+      "es": "Piso 46",
+      "pt-BR": "Andar 46",
+      "th": "Stimen Vaults Floor 46",
+      "id": "Stimen Ruin 46F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 83382
+  },
+  "32147": {
+    "Id": 32147,
+    "Name": "Floor 47",
+    "NameDesign": "Floor 47",
+    "NameId": 730336059,
+    "Names": {
+      "en": "Floor 47",
+      "zh-CN": "司第门遗迹47层",
+      "zh-TW": "司第門遺跡47層",
+      "ja": "レグディニス遺跡47層",
+      "ko-KR": "시디문 유적 47층",
+      "fr": "Étage 47",
+      "de": "Ebene 47",
+      "es": "Piso 47",
+      "pt-BR": "Andar 47",
+      "th": "Stimen Vaults Floor 47",
+      "id": "Stimen Ruin 47F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 83517
+  },
+  "32148": {
+    "Id": 32148,
+    "Name": "Floor 48",
+    "NameDesign": "Floor 48",
+    "NameId": 730336060,
+    "Names": {
+      "en": "Floor 48",
+      "zh-CN": "司第门遗迹48层",
+      "zh-TW": "司第門遺跡48層",
+      "ja": "レグディニス遺跡48層",
+      "ko-KR": "시디문 유적 48층",
+      "fr": "Étage 48",
+      "de": "Ebene 48",
+      "es": "Piso 48",
+      "pt-BR": "Andar 48",
+      "th": "Stimen Vaults Floor 48",
+      "id": "Stimen Ruin 48F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 83652
+  },
+  "32149": {
+    "Id": 32149,
+    "Name": "Floor 49",
+    "NameDesign": "Floor 49",
+    "NameId": 730336061,
+    "Names": {
+      "en": "Floor 49",
+      "zh-CN": "司第门遗迹49层",
+      "zh-TW": "司第門遺跡49層",
+      "ja": "レグディニス遺跡49層",
+      "ko-KR": "시디문 유적 49층",
+      "fr": "Étage 49",
+      "de": "Ebene 49",
+      "es": "Piso 49",
+      "pt-BR": "Andar 49",
+      "th": "Stimen Vaults Floor 49",
+      "id": "Stimen Ruin 49F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 83787
+  },
+  "32150": {
+    "Id": 32150,
+    "Name": "Floor 50",
+    "NameDesign": "Floor 50",
+    "NameId": 730336085,
+    "Names": {
+      "en": "Floor 50",
+      "zh-CN": "司第门遗迹50层",
+      "zh-TW": "司第門遺跡50層",
+      "ja": "レグディニス遺跡50層",
+      "ko-KR": "시디문 유적 50층",
+      "fr": "Étage 50",
+      "de": "Ebene 50",
+      "es": "Piso 50",
+      "pt-BR": "Andar 50",
+      "th": "Stimen Vaults Floor 50",
+      "id": "Stimen Ruin 50F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 83922
+  },
+  "32151": {
+    "Id": 32151,
+    "Name": "Floor 51",
+    "NameDesign": "Floor 51",
+    "NameId": 730336086,
+    "Names": {
+      "en": "Floor 51",
+      "zh-CN": "司第门遗迹51层",
+      "zh-TW": "司第門遺跡51層",
+      "ja": "レグディニス遺跡51層",
+      "ko-KR": "시디문 유적 51층",
+      "fr": "Étage 51",
+      "de": "Ebene 51",
+      "es": "Piso 51",
+      "pt-BR": "Andar 51",
+      "th": "Stimen Vaults Floor 51",
+      "id": "Stimen Ruin 51F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 84057
+  },
+  "32152": {
+    "Id": 32152,
+    "Name": "Floor 52",
+    "NameDesign": "Floor 52",
+    "NameId": 730336087,
+    "Names": {
+      "en": "Floor 52",
+      "zh-CN": "司第门遗迹52层",
+      "zh-TW": "司第門遺跡52層",
+      "ja": "レグディニス遺跡52層",
+      "ko-KR": "시디문 유적 52층",
+      "fr": "Étage 52",
+      "de": "Ebene 52",
+      "es": "Piso 52",
+      "pt-BR": "Andar 52",
+      "th": "Stimen Vaults Floor 52",
+      "id": "Stimen Ruin 52F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 84192
+  },
+  "32153": {
+    "Id": 32153,
+    "Name": "Floor 53",
+    "NameDesign": "Floor 53",
+    "NameId": 730336088,
+    "Names": {
+      "en": "Floor 53",
+      "zh-CN": "司第门遗迹53层",
+      "zh-TW": "司第門遺跡53層",
+      "ja": "レグディニス遺跡53層",
+      "ko-KR": "시디문 유적 53층",
+      "fr": "Étage 53",
+      "de": "Ebene 53",
+      "es": "Piso 53",
+      "pt-BR": "Andar 53",
+      "th": "Stimen Vaults Floor 53",
+      "id": "Stimen Ruin 53F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 84327
+  },
+  "32154": {
+    "Id": 32154,
+    "Name": "Floor 54",
+    "NameDesign": "Floor 54",
+    "NameId": 730336089,
+    "Names": {
+      "en": "Floor 54",
+      "zh-CN": "司第门遗迹54层",
+      "zh-TW": "司第門遺跡54層",
+      "ja": "レグディニス遺跡54層",
+      "ko-KR": "시디문 유적 54층",
+      "fr": "Étage 54",
+      "de": "Ebene 54",
+      "es": "Piso 54",
+      "pt-BR": "Andar 54",
+      "th": "Stimen Vaults Floor 54",
+      "id": "Stimen Ruin 54F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 84462
+  },
+  "32155": {
+    "Id": 32155,
+    "Name": "Floor 55",
+    "NameDesign": "Floor 55",
+    "NameId": 730336090,
+    "Names": {
+      "en": "Floor 55",
+      "zh-CN": "司第门遗迹55层",
+      "zh-TW": "司第門遺跡55層",
+      "ja": "レグディニス遺跡55層",
+      "ko-KR": "시디문 유적 55층",
+      "fr": "Étage 55",
+      "de": "Ebene 55",
+      "es": "Piso 55",
+      "pt-BR": "Andar 55",
+      "th": "Stimen Vaults Floor 55",
+      "id": "Stimen Ruin 55F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 84597
+  },
+  "32156": {
+    "Id": 32156,
+    "Name": "Floor 56",
+    "NameDesign": "Floor 56",
+    "NameId": 730336091,
+    "Names": {
+      "en": "Floor 56",
+      "zh-CN": "司第门遗迹56层",
+      "zh-TW": "司第門遺跡56層",
+      "ja": "レグディニス遺跡56層",
+      "ko-KR": "시디문 유적 56층",
+      "fr": "Étage 56",
+      "de": "Ebene 56",
+      "es": "Piso 56",
+      "pt-BR": "Andar 56",
+      "th": "Stimen Vaults Floor 56",
+      "id": "Stimen Ruin 56F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 84732
+  },
+  "32157": {
+    "Id": 32157,
+    "Name": "Floor 57",
+    "NameDesign": "Floor 57",
+    "NameId": 730336092,
+    "Names": {
+      "en": "Floor 57",
+      "zh-CN": "司第门遗迹57层",
+      "zh-TW": "司第門遺跡57層",
+      "ja": "レグディニス遺跡57層",
+      "ko-KR": "시디문 유적 57층",
+      "fr": "Étage 57",
+      "de": "Ebene 57",
+      "es": "Piso 57",
+      "pt-BR": "Andar 57",
+      "th": "Stimen Vaults Floor 57",
+      "id": "Stimen Ruin 57F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 84867
+  },
+  "32158": {
+    "Id": 32158,
+    "Name": "Floor 58",
+    "NameDesign": "Floor 58",
+    "NameId": 730336093,
+    "Names": {
+      "en": "Floor 58",
+      "zh-CN": "司第门遗迹58层",
+      "zh-TW": "司第門遺跡58層",
+      "ja": "レグディニス遺跡58層",
+      "ko-KR": "시디문 유적 58층",
+      "fr": "Étage 58",
+      "de": "Ebene 58",
+      "es": "Piso 58",
+      "pt-BR": "Andar 58",
+      "th": "Stimen Vaults Floor 58",
+      "id": "Stimen Ruin 58F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 85002
+  },
+  "32159": {
+    "Id": 32159,
+    "Name": "Floor 59",
+    "NameDesign": "Floor 59",
+    "NameId": 730336094,
+    "Names": {
+      "en": "Floor 59",
+      "zh-CN": "司第门遗迹59层",
+      "zh-TW": "司第門遺跡59層",
+      "ja": "レグディニス遺跡59層",
+      "ko-KR": "시디문 유적 59층",
+      "fr": "Étage 59",
+      "de": "Ebene 59",
+      "es": "Piso 59",
+      "pt-BR": "Andar 59",
+      "th": "Stimen Vaults Floor 59",
+      "id": "Stimen Ruin 59F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 85137
+  },
+  "32160": {
+    "Id": 32160,
+    "Name": "Floor 60",
+    "NameDesign": "Floor 60",
+    "NameId": 730336118,
+    "Names": {
+      "en": "Floor 60",
+      "zh-CN": "司第门遗迹60层",
+      "zh-TW": "司第門遺跡60層",
+      "ja": "レグディニス遺跡60層",
+      "ko-KR": "시디문 유적 60층",
+      "fr": "Étage 60",
+      "de": "Ebene 60",
+      "es": "Piso 60",
+      "pt-BR": "Andar 60",
+      "th": "Stimen Vaults Floor 60",
+      "id": "Stimen Ruin 60F"
+    },
+    "Source": "SceneTable",
+    "SourceOffset": 85272
   },
   "40001": {
     "Id": 40001,
@@ -10182,7 +12506,7 @@
       "id": "Bangunan Rumah"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294617318
+    "SourceOffset": 85407
   },
   "171001": {
     "Id": 171001,
@@ -10203,6 +12527,6 @@
       "id": "Pulau Terasing"
     },
     "Source": "SceneTable",
-    "SourceOffset": 294617453
+    "SourceOffset": 85542
   }
 }

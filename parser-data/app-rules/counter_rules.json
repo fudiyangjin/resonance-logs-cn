@@ -147,5 +147,149 @@
         "onBuffRemove": "reset"
       }
     ]
+  },
+  {
+    "ruleId": 7,
+    "name": "猛击追击计数",
+    "sources": [
+      {
+        "damageTaken": {
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 50,
+        "displayMode": "remainingToThreshold",
+        "resetBuffId": 0,
+        "resetSkillKeys": [2220154005],
+        "onResetSkill": "resetAndFreezeKeepCounting",
+        "onBuffAdd": "noOp",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp",
+        "freezeDurationMs": 20000,
+        "onFreezeExpire": "noOp",
+        "thresholdModifier": {
+          "attrId": 11940,
+          "basisPointsPerUnit": 1,
+          "maxReductionBasisPoints": 5000
+        },
+        "freezeDurationModifier": {
+          "attrId": 11950,
+          "basisPointsPerUnit": 1,
+          "maxReductionBasisPoints": 5000
+        }
+      }
+    ]
+  },
+  {
+    "ruleId": 8,
+    "name": "岩怒追击计数",
+    "sources": [
+      {
+        "damageTaken": {
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 50,
+        "displayMode": "remainingToThreshold",
+        "resetBuffId": 0,
+        "resetSkillKeys": [2220164005],
+        "onResetSkill": "resetAndFreezeKeepCounting",
+        "onBuffAdd": "noOp",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp",
+        "freezeDurationMs": 20000,
+        "onFreezeExpire": "noOp",
+        "thresholdModifier": {
+          "attrId": 11940,
+          "basisPointsPerUnit": 1,
+          "maxReductionBasisPoints": 5000
+        },
+        "freezeDurationModifier": {
+          "attrId": 11780,
+          "basisPointsPerUnit": 1,
+          "maxReductionBasisPoints": 5000
+        }
+      }
+    ]
+  },
+  {
+    "ruleId": 9,
+    "name": "裁决追击计数-光盾",
+    "sources": [
+      {
+        "damageTaken": {
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 50,
+        "displayMode": "remainingToThreshold",
+        "resetBuffId": 0,
+        "resetSkillKeys": [2220629005],
+        "onResetSkill": "resetAndFreezeKeepCounting",
+        "onBuffAdd": "noOp",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp",
+        "freezeDurationMs": 20000,
+        "onFreezeExpire": "noOp",
+        "thresholdModifier": {
+          "attrId": 11940,
+          "basisPointsPerUnit": 1,
+          "maxReductionBasisPoints": 5000
+        },
+        "freezeDurationModifier": {
+          "attrId": 11930,
+          "basisPointsPerUnit": 1,
+          "maxReductionBasisPoints": 5000
+        }
+      }
+    ]
+  },
+  {
+    "ruleId": 10,
+    "name": "裁决追击计数-防盾",
+    "sources": [
+      {
+        "damageTaken": {
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 50,
+        "displayMode": "remainingToThreshold",
+        "resetBuffId": 0,
+        "resetSkillKeys": [2220668005],
+        "onResetSkill": "resetAndFreezeKeepCounting",
+        "onBuffAdd": "noOp",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp",
+        "freezeDurationMs": 20000,
+        "onFreezeExpire": "noOp",
+        "thresholdModifier": {
+          "attrId": 11940,
+          "basisPointsPerUnit": 1,
+          "maxReductionBasisPoints": 5000
+        },
+        "freezeDurationModifier": {
+          "attrId": 11710,
+          "basisPointsPerUnit": 1,
+          "maxReductionBasisPoints": 5000
+        }
+      }
+    ]
   }
 ]

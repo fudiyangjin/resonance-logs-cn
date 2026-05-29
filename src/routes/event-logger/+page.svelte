@@ -1554,16 +1554,16 @@
   });
 </script>
 
-<div class="flex h-screen flex-col bg-background text-foreground">
+<div class="flex h-screen flex-col bg-background-main text-foreground">
   <header class="border-b border-border/60 bg-card/85 px-4 py-3 shadow-sm backdrop-blur">
     <div class="flex flex-wrap items-center gap-2">
       <input
         bind:value={searchText}
-        class="min-w-[220px] flex-1 rounded-md border border-border/60 bg-background px-3 py-2 text-sm"
+        class="min-w-[220px] flex-1 rounded-md border border-border/60 bg-background-main px-3 py-2 text-sm"
         placeholder={t("controls.search", "Search")}
       />
 
-      <div class="flex items-center gap-1 rounded-md border border-border/60 bg-background p-1">
+      <div class="flex items-center gap-1 rounded-md border border-border/60 bg-background-main p-1">
         <Button
           size="sm"
           variant={SETTINGS.customTriggers.state.loggerDisplayMode === "name" ? "default" : "ghost"}
@@ -1653,7 +1653,7 @@
                         {#if shouldShowUidChip(row)}
                           <button
                             type="button"
-                            class="shrink-0 rounded-md border border-border/60 bg-background px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground hover:text-foreground"
+                            class="shrink-0 rounded-md border border-border/60 bg-background-main px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground hover:text-foreground"
                             onclick={(event) => {
                               event.stopPropagation();
                               void copyUid(row, event);
@@ -1752,19 +1752,19 @@
         {#if selectedRow}
           <div class="space-y-3">
             <div class="grid gap-3 sm:grid-cols-2">
-              <div class="rounded-lg border border-border/60 bg-background/60 p-3 text-sm">
+              <div class="rounded-lg border border-border/60 bg-background-main/60 p-3 text-sm">
                 <div class="text-xs uppercase tracking-wide text-muted-foreground">{t("table.category", "Category")}</div>
                 <div class="mt-1 font-medium">{getCategoryLabel(selectedRow.category)}</div>
               </div>
-              <div class="rounded-lg border border-border/60 bg-background/60 p-3 text-sm">
+              <div class="rounded-lg border border-border/60 bg-background-main/60 p-3 text-sm">
                 <div class="text-xs uppercase tracking-wide text-muted-foreground">{t("table.action", "Action")}</div>
                 <div class="mt-1 font-medium uppercase">{selectedRow.action}</div>
               </div>
-              <div class="rounded-lg border border-border/60 bg-background/60 p-3 text-sm">
+              <div class="rounded-lg border border-border/60 bg-background-main/60 p-3 text-sm">
                 <div class="text-xs uppercase tracking-wide text-muted-foreground">{t("table.source", "Source")}</div>
                 <div class="mt-1 font-medium break-all">{getSourceText(selectedRow)}</div>
               </div>
-              <div class="rounded-lg border border-border/60 bg-background/60 p-3 text-sm">
+              <div class="rounded-lg border border-border/60 bg-background-main/60 p-3 text-sm">
                 <div class="text-xs uppercase tracking-wide text-muted-foreground">{t("table.target", "Target")}</div>
                 <div class="mt-1 font-medium break-all">{getTargetText(selectedRow)}</div>
               </div>
@@ -1772,18 +1772,18 @@
 
             <textarea
               readonly
-              class="min-h-[420px] w-full rounded-lg border border-border/60 bg-background/60 p-3 font-mono text-xs leading-5"
+              class="min-h-[420px] w-full rounded-lg border border-border/60 bg-background-main/60 p-3 font-mono text-xs leading-5"
               value={selectedRowRaw}
             ></textarea>
           </div>
         {:else}
-          <div class="rounded-lg border border-dashed border-border/60 bg-background/40 px-4 py-10 text-center text-sm text-muted-foreground">
+          <div class="rounded-lg border border-dashed border-border/60 bg-background-main/40 px-4 py-10 text-center text-sm text-muted-foreground">
             {t("details.empty", "Select an event to inspect its payload.")}
           </div>
         {/if}
       {:else if detailsTab === "filters"}
         <div class="space-y-4">
-          <section class="rounded-lg border border-border/60 bg-background/50 p-4">
+          <section class="rounded-lg border border-border/60 bg-background-main/50 p-4">
             <div class="mb-3 flex items-center justify-between gap-3">
               <h3 class="text-sm font-semibold">{t("filters.categories", "Categories")}</h3>
               <label class="flex items-center gap-2 text-xs text-muted-foreground">
@@ -1812,7 +1812,7 @@
           </section>
 
 
-          <section class="rounded-lg border border-border/60 bg-background/50 p-4">
+          <section class="rounded-lg border border-border/60 bg-background-main/50 p-4">
             <div class="mb-3 flex items-center justify-between gap-3">
               <h3 class="text-sm font-semibold">{t("filters.actions", "Actions")}</h3>
               <label class="flex items-center gap-2 text-xs text-muted-foreground">
@@ -1845,7 +1845,7 @@
               {/if}
             </div>
           </section>
-          <section class="rounded-lg border border-border/60 bg-background/50 p-4">
+          <section class="rounded-lg border border-border/60 bg-background-main/50 p-4">
             <div class="mb-3 flex items-center justify-between gap-3">
               <h3 class="text-sm font-semibold">{t("filters.knownState", "Known state")}</h3>
               <label class="flex items-center gap-2 text-xs text-muted-foreground">
@@ -1880,7 +1880,7 @@
         </div>
       {:else if detailsTab === "settings"}
         <div class="space-y-4">
-          <section class="rounded-lg border border-border/60 bg-background/50 p-4">
+          <section class="rounded-lg border border-border/60 bg-background-main/50 p-4">
             <h3 class="mb-3 text-sm font-semibold">{t("settings.behavior", "Behavior")}</h3>
             <div class="space-y-2">
               <div class="rounded-md border border-border/50 bg-card/40 px-3 py-2 text-sm text-muted-foreground">
@@ -1912,7 +1912,7 @@
             </div>
           </section>
 
-          <section class="rounded-lg border border-border/60 bg-background/50 p-4">
+          <section class="rounded-lg border border-border/60 bg-background-main/50 p-4">
             <h3 class="mb-3 text-sm font-semibold">{t("settings.headers", "Headers")}</h3>
             <div class="grid gap-2 sm:grid-cols-2">
               {#each columnOrder as columnKey (columnKey)}
@@ -1931,7 +1931,7 @@
         </div>
       {:else}
         <div class="space-y-4">
-          <section class="rounded-lg border border-border/60 bg-background/50 p-4">
+          <section class="rounded-lg border border-border/60 bg-background-main/50 p-4">
             <div class="mb-3 flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 class="text-sm font-semibold">{t("debug.logFiles", "Log Files")}</h3>
@@ -2051,7 +2051,7 @@
                       min="1"
                       step="1"
                       bind:value={deleteOldFilesDaysInput}
-                      class="w-24 rounded-md border border-border/60 bg-background px-3 py-2 text-sm"
+                      class="w-24 rounded-md border border-border/60 bg-background-main px-3 py-2 text-sm"
                       disabled={!deleteOldFilesEnabled}
                       onchange={() => void saveLoggerFileStorage()}
                     />
@@ -2062,12 +2062,12 @@
             </div>
           </section>
 
-          <section class="rounded-lg border border-border/60 bg-background/50 p-4">
+          <section class="rounded-lg border border-border/60 bg-background-main/50 p-4">
             <h3 class="mb-3 text-sm font-semibold">{t("debug.storagePath", "Storage Path")}</h3>
             <div class="space-y-3 text-sm">
               <div class="space-y-1">
                 <div class="text-xs uppercase tracking-wide text-muted-foreground">{t("debug.currentFolder", "Current folder")}</div>
-                <div class="break-all rounded-md border border-border/60 bg-background px-3 py-2 font-mono text-xs">
+                <div class="break-all rounded-md border border-border/60 bg-background-main px-3 py-2 font-mono text-xs">
                   {#if loggerFileStorage}
                     {loggerFileStorage.resolvedDirectory}
                   {:else if loggerFileStorageLoading}
@@ -2080,7 +2080,7 @@
 
               <div class="space-y-1">
                 <div class="text-xs uppercase tracking-wide text-muted-foreground">{t("debug.filePattern", "File pattern")}</div>
-                <div class="rounded-md border border-border/60 bg-background px-3 py-2 font-mono text-xs">
+                <div class="rounded-md border border-border/60 bg-background-main px-3 py-2 font-mono text-xs">
                   EventLogs\&lt;YYYY.MM.DD&gt;\&lt;characterName&gt;.&lt;characterUid&gt;.&lt;sceneName&gt;.&lt;DDMMYYYY-HHMMSS&gt;.json
                 </div>
               </div>
@@ -2152,7 +2152,7 @@
         <div class="mt-4 space-y-3">
           <label class="block space-y-1 text-sm">
             <span class="text-muted-foreground">{t("editor.uid", "UID")}</span>
-            <input class="w-full rounded-md border border-border/60 bg-background px-3 py-2 font-mono" readonly value={definitionEditor.uid} />
+            <input class="w-full rounded-md border border-border/60 bg-background-main px-3 py-2 font-mono" readonly value={definitionEditor.uid} />
           </label>
 
           <label class="block space-y-1 text-sm">
@@ -2168,12 +2168,12 @@
 
           <label class="block space-y-1 text-sm">
             <span class="text-muted-foreground">{t("editor.name", "Name")}</span>
-            <input bind:value={definitionEditor.name} class="w-full rounded-md border border-border/60 bg-background px-3 py-2" placeholder={t("editor.placeholder.name", "Enter a custom display name")} />
+            <input bind:value={definitionEditor.name} class="w-full rounded-md border border-border/60 bg-background-main px-3 py-2" placeholder={t("editor.placeholder.name", "Enter a custom display name")} />
           </label>
 
           <label class="block space-y-1 text-sm">
             <span class="text-muted-foreground">{t("editor.notes", "Notes")}</span>
-            <textarea bind:value={definitionEditor.notes} class="min-h-[96px] w-full rounded-md border border-border/60 bg-background px-3 py-2" placeholder={t("editor.placeholder.notes", "Optional notes")}></textarea>
+            <textarea bind:value={definitionEditor.notes} class="min-h-[96px] w-full rounded-md border border-border/60 bg-background-main px-3 py-2" placeholder={t("editor.placeholder.notes", "Optional notes")}></textarea>
           </label>
         </div>
 

@@ -7,7 +7,7 @@ use tauri::AppHandle;
 use tauri::Manager;
 
 const SNAPSHOT_FILE_NAME: &str = "monitorRuntime.json";
-const MODIFIER_REPORTS_RUNTIME_OPT_IN_VERSION: &str = "1.0.6-beta.5";
+const MODIFIER_REPORTS_RUNTIME_OPT_IN_VERSION: &str = "1.0.7-release-guard-2026-05-29";
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase", default)]

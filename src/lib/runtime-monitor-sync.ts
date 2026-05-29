@@ -24,6 +24,16 @@ function normalizeCounterRules(rules: CounterRule[]): CounterRule[] {
   return Array.from(deduped.values()).sort((a, b) => a.ruleId - b.ruleId);
 }
 
+function getGlobalUptimeBuffIds(
+  profile: ReturnType<typeof getActiveProfile>,
+): number[] {
+  if (!profile) return [];
+  const trackingModes = profile.buffUptimeTrackingModes ?? {};
+  return (profile.monitoredUptimeBuffIds ?? []).filter(
+    (buffId) => trackingModes[String(buffId)] === "global",
+  );
+}
+
 function getCounterRuleBuffIds(rule: CounterRule): number[] {
   const result = rule.effectSlots.map((slot) => slot.resetBuffId);
   for (const slot of rule.effectSlots) {
@@ -35,8 +45,25 @@ function getCounterRuleBuffIds(rule: CounterRule): number[] {
     if ("buffDurationTick" in source) {
       result.push(source.buffDurationTick.buffId);
     }
+    const movementDistance = (source as { movementDistance?: { buffId?: number } })
+      .movementDistance;
+    if (movementDistance?.buffId !== undefined) {
+      result.push(movementDistance.buffId);
+    }
   }
   return result;
+}
+
+function stripUiOnlyCounterRuleFields(rule: {
+  ruleId: number;
+  sources: CounterRule["sources"];
+  effectSlots: Array<CounterRule["effectSlots"][number] & { displayMode?: unknown }>;
+}): CounterRule {
+  return {
+    ruleId: rule.ruleId,
+    sources: rule.sources,
+    effectSlots: rule.effectSlots.map(({ displayMode: _displayMode, ...slot }) => slot),
+  };
 }
 
 function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
@@ -54,6 +81,7 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
     profile?.monitoredBuffIds ?? [],
     profile?.monitoredBuffCategories,
   );
+  const monitoredUptimeBuffIds = profile?.monitoredUptimeBuffIds ?? [];
   const monitoredPanelAttrs = profile?.monitoredPanelAttrs ?? [];
   const customPanelEntries = profile?.customPanelGroups?.length
     ? profile.customPanelGroups.flatMap((group) => group.entries ?? [])
@@ -78,16 +106,18 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
   const activeCounterRuleIds = uniqueSortedNumbers(inlineCounterRuleIds);
   const enabledPresetCounterRules = getCounterRules()
     .filter((rule) => activeCounterRuleIds.includes(rule.ruleId))
-    .map((rule) => ({
-      ruleId: rule.ruleId,
-      sources: rule.sources,
-      effectSlots: rule.effectSlots,
-    }));
+    .map((rule) =>
+      stripUiOnlyCounterRuleFields({
+        ruleId: rule.ruleId,
+        sources: rule.sources,
+        effectSlots: rule.effectSlots,
+      }),
+    );
   const enabledUserCounterRules = resolveUserCounterRulesToPresets(
     (profile?.userCounterRules ?? []).filter((rule) =>
       activeCounterRuleIds.includes(rule.ruleId),
     ),
-  ).map(({ name: _name, ...rule }) => rule);
+  ).map(({ name: _name, ...rule }) => stripUiOnlyCounterRuleFields(rule));
   const enabledCounterRules = normalizeCounterRules([
     ...enabledPresetCounterRules,
     ...enabledUserCounterRules,
@@ -98,6 +128,7 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
   const defaultLinkedBuffIds = getDefaultMonitoredBuffIds(selectedClass);
   const mergedBuffIds = uniqueSortedNumbers([
     ...monitoredBuffIds,
+    ...monitoredUptimeBuffIds,
     ...groupBuffIds,
     ...inlineBuffIds,
     ...counterBuffIds,
@@ -131,7 +162,12 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
 }
 
 function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
-  const enabled = SETTINGS.monsterMonitor.state.enabled;
+  const profile = getActiveProfile();
+  const globalUptimeBuffIds = SETTINGS.skillMonitor.state.enabled
+    ? getGlobalUptimeBuffIds(profile)
+    : [];
+  const enabled =
+    SETTINGS.monsterMonitor.state.enabled || globalUptimeBuffIds.length > 0;
   if (!enabled) {
     return {
       enabled: false,
@@ -143,7 +179,7 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
   return {
     enabled: true,
     globalIds: uniqueSortedNumbers(
-      SETTINGS.monsterMonitor.state.monitoredBuffIds,
+      [...SETTINGS.monsterMonitor.state.monitoredBuffIds, ...globalUptimeBuffIds],
     ),
     selfAppliedIds: uniqueSortedNumbers(
       SETTINGS.monsterMonitor.state.selfAppliedBuffIds,

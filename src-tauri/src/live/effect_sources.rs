@@ -16,6 +16,7 @@ struct EffectSourcesData {
 
 static EFFECT_BUFF_IDS: OnceLock<HashSet<i32>> = OnceLock::new();
 static EFFECT_SOURCE_IDS: OnceLock<HashSet<String>> = OnceLock::new();
+static EFFECT_SOURCE_IDS_BY_BUFF_ID: OnceLock<HashMap<i32, Vec<String>>> = OnceLock::new();
 
 pub fn effect_buff_ids() -> &'static HashSet<i32> {
     EFFECT_BUFF_IDS.get_or_init(load_effect_buff_ids)
@@ -31,6 +32,14 @@ pub fn effect_source_ids() -> &'static HashSet<String> {
 
 pub fn is_effect_source_id(source_id: &str) -> bool {
     effect_source_ids().contains(source_id)
+}
+
+pub fn effect_source_ids_for_buff_id(buff_id: i32) -> Vec<String> {
+    EFFECT_SOURCE_IDS_BY_BUFF_ID
+        .get_or_init(load_effect_source_ids_by_buff_id)
+        .get(&buff_id)
+        .cloned()
+        .unwrap_or_default()
 }
 
 fn load_effect_buff_ids() -> HashSet<i32> {
@@ -61,6 +70,40 @@ fn load_effect_buff_ids() -> HashSet<i32> {
                 err
             );
             HashSet::new()
+        }
+    }
+}
+
+fn load_effect_source_ids_by_buff_id() -> HashMap<i32, Vec<String>> {
+    let contents = match parser_data::read_to_string(EFFECT_SOURCES_RELATIVE) {
+        Ok(contents) => contents,
+        Err(err) => {
+            warn!(
+                target: "app::live",
+                "effect_sources_load_failed path={} error={}",
+                EFFECT_SOURCES_RELATIVE,
+                err
+            );
+            return HashMap::new();
+        }
+    };
+
+    match serde_json::from_str::<EffectSourcesData>(&contents) {
+        Ok(data) => data
+            .buff_id_to_effect_source_ids
+            .into_iter()
+            .filter_map(|(key, source_ids)| {
+                key.parse::<i32>().ok().map(|buff_id| (buff_id, source_ids))
+            })
+            .collect(),
+        Err(err) => {
+            warn!(
+                target: "app::live",
+                "effect_sources_parse_failed path={} error={}",
+                EFFECT_SOURCES_RELATIVE,
+                err
+            );
+            HashMap::new()
         }
     }
 }

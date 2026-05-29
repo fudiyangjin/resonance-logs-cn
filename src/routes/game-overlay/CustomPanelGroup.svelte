@@ -3,7 +3,6 @@
   import {
     customPanelGroups,
     customPanelRowsByGroup,
-    customPanelStyle,
     isEditing,
     startDrag,
     startResize,
@@ -12,11 +11,15 @@
   const editing = $derived(isEditing());
   const groups = $derived(customPanelGroups());
   const rowsByGroup = $derived(customPanelRowsByGroup());
-  const styleConfig = $derived(customPanelStyle());
+
+  function getGroupName(group: { name: string }, index: number): string {
+    return group.name.trim() || `Custom Monitor ${index + 1}`;
+  }
 </script>
 
-{#each groups as group (group.id)}
+{#each groups as group, groupIndex (group.id)}
   {@const rows = rowsByGroup.get(group.id) ?? []}
+  {@const styleConfig = group.style}
   {#if rows.length > 0 || editing}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
@@ -30,7 +33,7 @@
         startDrag(e, { kind: "customPanelGroup", groupId: group.id }, group.position)}
     >
       {#if editing}
-        <div class="group-tag">{group.name}</div>
+        <div class="group-tag">{getGroupName(group, groupIndex)}</div>
       {/if}
 
       <div class="custom-panel-list" style:gap={`${styleConfig.gap}px`}>
@@ -51,6 +54,7 @@
             fontSize={styleConfig.fontSize}
             columnGap={styleConfig.columnGap}
             placeholder={row.isPlaceholder}
+            alert={row.alert}
           />
         {/each}
       </div>
@@ -77,10 +81,12 @@
   }
 
   .custom-panel-group.editable {
-    outline: 2px solid rgba(102, 204, 255, 0.9);
+    border: 2px solid rgba(102, 204, 255, 0.9);
     border-radius: 10px;
     background: rgba(20, 36, 56, 0.45);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+    margin: -10px;
+    padding: 8px;
   }
 
   .custom-panel-list {

@@ -9,30 +9,29 @@
   import { goto } from "$app/navigation";
   import { SETTINGS } from '$lib/settings-store';
   import { applyCustomFonts } from "$lib/font-loader";
-  import {
-    buildMonitorRuntimeSnapshot,
-    createMonitorRuntimeSnapshotSignature,
-    saveAndApplyMonitorRuntimeSnapshot,
-  } from "$lib/runtime-monitor-sync";
   import { commands } from "$lib/bindings";
   import { onMount } from 'svelte';
   import ToolSidebar from "./tool-sidebar.svelte";
+  import AppBackgroundLayer from "$lib/components/app-background-layer.svelte";
   import ChangelogModal from '$lib/components/ChangelogModal.svelte';
   import UpdateModal from '$lib/components/UpdateModal.svelte';
   import { getVersion } from "@tauri-apps/api/app";
 
+  type RuntimeMonitorSyncModule = typeof import("$lib/runtime-monitor-sync");
+
   let { children } = $props();
 
+  let runtimeMonitorSync = $state<RuntimeMonitorSyncModule | null>(null);
   let lastRuntimeSnapshotKey = "";
   let runtimeSnapshotInitialized = false;
   let lastOverlayVisibleState: boolean | null = null;
   let runtimeSyncTimer: ReturnType<typeof setTimeout> | null = null;
   let overlayVisibilityOverride: boolean | null = null;
   let lastSharedOverlayEnabled: boolean | null = null;
-  let overlayStartupHandled = false;
 
   function queueRuntimeSnapshotSync(
-    runtimeSnapshot: ReturnType<typeof buildMonitorRuntimeSnapshot>,
+    sync: RuntimeMonitorSyncModule,
+    runtimeSnapshot: ReturnType<RuntimeMonitorSyncModule["buildMonitorRuntimeSnapshot"]>,
     runtimeSnapshotKey: string,
     delayMs = 50,
   ) {
@@ -43,7 +42,7 @@
       void (async () => {
         try {
           lastRuntimeSnapshotKey = runtimeSnapshotKey;
-          await saveAndApplyMonitorRuntimeSnapshot(runtimeSnapshot);
+          await sync.saveAndApplyMonitorRuntimeSnapshot(runtimeSnapshot);
         } catch (error) {
           console.error("[runtime-monitor] failed to sync runtime snapshot", error);
         }
@@ -52,14 +51,17 @@
   }
 
   $effect(() => {
-    const runtimeSnapshot = buildMonitorRuntimeSnapshot();
-    const runtimeSnapshotKey = createMonitorRuntimeSnapshotSignature(runtimeSnapshot);
+    const sync = runtimeMonitorSync;
+    if (!sync) return;
+
+    const runtimeSnapshot = sync.buildMonitorRuntimeSnapshot();
+    const runtimeSnapshotKey = sync.createMonitorRuntimeSnapshotSignature(runtimeSnapshot);
 
     if (!runtimeSnapshotInitialized) {
       runtimeSnapshotInitialized = true;
-      queueRuntimeSnapshotSync(runtimeSnapshot, runtimeSnapshotKey, 250);
+      queueRuntimeSnapshotSync(sync, runtimeSnapshot, runtimeSnapshotKey, 250);
     } else if (runtimeSnapshotKey !== lastRuntimeSnapshotKey) {
-      queueRuntimeSnapshotSync(runtimeSnapshot, runtimeSnapshotKey);
+      queueRuntimeSnapshotSync(sync, runtimeSnapshot, runtimeSnapshotKey);
     }
 
     const sharedOverlayEnabled =
@@ -70,11 +72,9 @@
       overlayVisibilityOverride = null;
     }
 
-    const desiredOverlayVisible = overlayVisibilityOverride ?? (overlayStartupHandled
-      ? sharedOverlayEnabled
-      : SETTINGS.skillMonitor.state.overlayStartWithApp
-        ? sharedOverlayEnabled
-        : false);
+    const desiredOverlayVisible = overlayVisibilityOverride ?? (
+      SETTINGS.skillMonitor.state.overlayStartWithApp ? sharedOverlayEnabled : false
+    );
 
     void (async () => {
       try {
@@ -89,7 +89,6 @@
               await overlayWindow.hide();
             }
           }
-          overlayStartupHandled = true;
         }
       } catch (error) {
         console.error("[skill-monitor] failed to sync monitor state", error);
@@ -141,6 +140,14 @@
   let overlayChangedUnlisten: UnlistenFn | null = null;
 
   onMount(() => {
+    void import("$lib/runtime-monitor-sync")
+      .then((module) => {
+        runtimeMonitorSync = module;
+      })
+      .catch((error) => {
+        console.error("[runtime-monitor] failed to load runtime sync module", error);
+      });
+
     void setupShortcuts().catch((err) => {
       console.error("Failed to set up shortcuts", err);
     });
@@ -196,36 +203,6 @@
       console.error('Failed to get app version', err);
     });
 
-    // Poll settings for background image
-    const bgAndFontInterval = window.setInterval(() => {
-      try {
-        // Apply background image if enabled
-        const bgImageEnabled = SETTINGS.accessibility.state.backgroundImageEnabled;
-        const bgImage = SETTINGS.accessibility.state.backgroundImage;
-        const bgMode = SETTINGS.accessibility.state.backgroundImageMode || 'cover';
-        const bgContainColor = SETTINGS.accessibility.state.backgroundImageContainColor || 'rgba(0, 0, 0, 1)';
-
-        if (bgImageEnabled && bgImage) {
-          document.body.style.backgroundImage = `url('${bgImage}')`;
-          document.body.style.backgroundSize = bgMode;
-          document.body.style.backgroundPosition = 'center';
-          document.body.style.backgroundRepeat = 'no-repeat';
-          if (bgMode === 'contain') {
-            document.body.style.backgroundColor = bgContainColor;
-          } else {
-            document.body.style.backgroundColor = '';
-          }
-        } else {
-          // Clear any background image settings
-          document.body.style.background = '';
-          document.body.style.backgroundImage = '';
-          document.body.style.backgroundColor = '';
-        }
-      } catch (e) {
-        // ignore
-      }
-    }, 200);
-
     // Cleanup on unmount
     return () => {
       if (runtimeSyncTimer) {
@@ -248,7 +225,6 @@
         overlayChangedUnlisten();
         overlayChangedUnlisten = null;
       }
-      clearInterval(bgAndFontInterval);
     };
   });
 
@@ -263,16 +239,27 @@
   }
 </script>
 
-<div class="flex h-screen bg-background-main text-foreground font-sans">
-  <!-- Left Sidebar - Tool List -->
-  <ToolSidebar />
+<div class="relative isolate h-screen overflow-hidden text-foreground font-sans">
+  <AppBackgroundLayer
+    enabled={SETTINGS.accessibility.state.backgroundImageEnabled}
+    image={SETTINGS.accessibility.state.backgroundImage}
+    mode={SETTINGS.accessibility.state.backgroundImageMode || "cover"}
+    containColor={SETTINGS.accessibility.state.backgroundImageContainColor || "rgba(0, 0, 0, 0)"}
+    opacity={SETTINGS.accessibility.state.backgroundImageOpacity ?? 100}
+  />
+  <div class="pointer-events-none absolute inset-0 z-10 bg-background-main"></div>
 
-  <!-- Right Content Area -->
-  <main class="flex-1 flex flex-col overflow-hidden">
-    <div class="flex-1 overflow-y-auto p-6">
-      {@render children()}
-    </div>
-  </main>
+  <div class="relative z-20 flex h-full">
+    <!-- Left Sidebar - Tool List -->
+    <ToolSidebar />
+
+    <!-- Right Content Area -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <div class="flex-1 overflow-y-auto p-6">
+        {@render children()}
+      </div>
+    </main>
+  </div>
 
   {#if showChangelog}
     <ChangelogModal onclose={handleClose} />
@@ -291,6 +278,11 @@
 
 <style>
   :global {
+    html,
+    body {
+      background: transparent;
+    }
+
     /* Hide scrollbars globally but keep scrolling functional */
     * {
       -ms-overflow-style: none; /* IE and Edge */

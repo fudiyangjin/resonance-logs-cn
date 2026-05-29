@@ -3,7 +3,11 @@ import { listen } from "@tauri-apps/api/event";
 import { writable } from "svelte/store";
 
 import classLabelsData from "$parserData/generated/class-labels.json";
-import { getBundledTranslationTable, getLocaleManifest } from "$lib/locale-bundles";
+import {
+  getBundledTranslationTable,
+  getLocaleManifest,
+  hydrateAllBundledUiLocales,
+} from "$lib/locale-bundles";
 
 
 export const SUPPORTED_LOCALES = ["en", "zh-CN", "zh-TW", "ja", "ko-KR", "fr", "de", "es", "pt-BR", "th", "id"] as const;
@@ -233,6 +237,7 @@ export const CLASS_LABEL_TRANSLATIONS: TranslationTable = cloneJson(
 
 const BUNDLED_UI_TRANSLATION_TABLES = cloneJson(UI_TRANSLATION_TABLES);
 const BUNDLED_CLASS_LABEL_TRANSLATIONS = cloneJson(CLASS_LABEL_TRANSLATIONS);
+let bundledUiLocaleHydrationPromise: Promise<void> | null = null;
 
 const RUNTIME_TRANSLATION_DESCRIPTORS = [
   ...UI_TRANSLATION_PATHS.map((relativePath) => ({
@@ -336,6 +341,38 @@ async function loadRuntimeTranslationTables(): Promise<void> {
   TRANSLATION_RUNTIME_REVISION.update((value) => value + 1);
 }
 
+async function hydrateBundledUiLocaleFallbacks(): Promise<void> {
+  if (!bundledUiLocaleHydrationPromise) {
+    bundledUiLocaleHydrationPromise = (async () => {
+      const changed = await hydrateAllBundledUiLocales();
+      if (!changed) return;
+
+      const bundledTables = BUNDLED_UI_TRANSLATION_TABLES as Record<string, TranslationTable>;
+      for (const relativePath of UI_TRANSLATION_PATHS) {
+        const nextTable = cloneJson(
+          getBundledTranslationTable(relativePath) as TranslationTable,
+        );
+        const bundledTarget = bundledTables[relativePath] ?? {};
+        replaceRecordContents(bundledTarget, nextTable);
+        bundledTables[relativePath] = bundledTarget;
+
+        if (getCurrentTranslationSourceMode() === "bundled") {
+          const runtimeTarget = UI_TRANSLATION_TABLES[relativePath];
+          if (runtimeTarget) {
+            replaceRecordContents(runtimeTarget, cloneJson(nextTable));
+          }
+        }
+      }
+
+      TRANSLATION_RUNTIME_REVISION.update((value) => value + 1);
+    })().finally(() => {
+      bundledUiLocaleHydrationPromise = null;
+    });
+  }
+
+  await bundledUiLocaleHydrationPromise;
+}
+
 export async function setTranslationSourceMode(
   mode: TranslationSourceMode,
 ): Promise<void> {
@@ -391,6 +428,9 @@ export async function initializeTranslationRuntimeData(): Promise<void> {
     translationRuntimeInitPromise = (async () => {
       await registerTranslationRuntimeListener();
       await loadRuntimeTranslationTables();
+      if (typeof window !== "undefined") {
+        void hydrateBundledUiLocaleFallbacks();
+      }
     })();
   }
 
@@ -650,4 +690,6 @@ export function fallbackIdLabel(id: string | number): string {
   return String(id);
 }
 
-void initializeTranslationRuntimeData();
+if (typeof window !== "undefined") {
+  void initializeTranslationRuntimeData();
+}

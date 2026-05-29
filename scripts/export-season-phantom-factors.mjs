@@ -80,13 +80,56 @@ function preferredText(values) {
     ?? "";
 }
 
+const rawEffectStatRenderers = new Map([
+  [11012, { label: "Strength", divisor: 1, suffix: "" }],
+  [11014, { label: "Strength", divisor: 100, suffix: "%" }],
+  [11022, { label: "Intellect", divisor: 1, suffix: "" }],
+  [11024, { label: "Intellect", divisor: 100, suffix: "%" }],
+  [11032, { label: "Agility", divisor: 1, suffix: "" }],
+  [11034, { label: "Agility", divisor: 100, suffix: "%" }],
+]);
+
+function formatEffectNumber(value) {
+  if (!Number.isFinite(value)) return "";
+  if (Number.isInteger(value)) return String(value);
+  return Number(value.toFixed(2)).toString();
+}
+
+function formatSignedEffectValue(value, suffix) {
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${formatEffectNumber(value)}${suffix}`;
+}
+
+function rawEffectRecordText(row) {
+  const effectRecords = Array.isArray(row.effectRecords) ? row.effectRecords : [];
+  const parts = [];
+
+  for (const record of effectRecords) {
+    const rawValues = Array.isArray(record.rawValues) ? record.rawValues : [];
+    const opcode = toNumber(rawValues[0]);
+    const effectId = toNumber(rawValues[1]);
+    const value = toNumber(rawValues[2]);
+    const renderer = rawEffectStatRenderers.get(effectId);
+
+    if (opcode !== 1 || effectId === null || value === null || !renderer) {
+      continue;
+    }
+
+    parts.push(`${renderer.label} ${formatSignedEffectValue(value / renderer.divisor, renderer.suffix)}`);
+  }
+
+  return parts.join("; ");
+}
+
 function buildFactorModifierEvidence(gradeRows) {
   const rows = gradeRows
     .map((row) => {
-      const text = preferredText(row.cleanResolvedDescriptions)
+      const resolvedText = preferredText(row.cleanResolvedDescriptions)
         || preferredText(row.resolvedDescriptions)
         || row.resolvedDescription
         || "";
+      const rawText = rawEffectRecordText(row);
+      const text = resolvedText || rawText || "";
       return stripUndefined({
         grade: toNumber(row.grade),
         itemId: toNumber(row.itemId),
@@ -94,16 +137,20 @@ function buildFactorModifierEvidence(gradeRows) {
         parameterValues: uniqueNumbers(row.parameterValues ?? []),
         valueTexts: extractValueTexts(text),
         cleanResolvedDescription: text,
+        descriptionSource: !resolvedText && rawText ? "effectRecords.rawValues" : undefined,
         sourceOffset: toNumber(row.sourceOffset),
       });
     })
     .filter((row) => row.grade !== undefined || row.cleanResolvedDescription);
 
   if (!rows.length) return undefined;
+  const hasRawEffectRecordDescriptions = rows.some((row) => row.descriptionSource === "effectRecords.rawValues");
 
   return {
     source: "SeasonPhantomFactorProbe.gradeRows",
-    valueStatus: "grade-table-rendered-description",
+    valueStatus: hasRawEffectRecordDescriptions
+      ? "grade-table-rendered-description-or-raw-effect-record"
+      : "grade-table-rendered-description",
     runtimeSelectionStatus: "active-buff-observed-grade-not-exposed",
     gradeRows: rows,
   };
@@ -123,21 +170,52 @@ function stripUndefined(value) {
   return value;
 }
 
+function inferredBuffIdForFamily(family) {
+  const familyId = toNumber(family.familyId);
+  if (familyId === null) return null;
+
+  const buffId = 3_050_000 + (familyId - 200_100) * 10;
+  return buffId >= 3_050_000 && buffId <= 3_069_990 ? buffId : null;
+}
+
+function factorBuffRowsForFamily(family) {
+  const primaryBuffIds = uniqueNumbers(family.primaryBuffIds ?? []);
+  if (primaryBuffIds.length > 0) {
+    return primaryBuffIds.map((buffId) => ({
+      buffId,
+      buffIdSource: "probe-primary-buff-id",
+      runtimeDetection: "active-buff-or-selected-factor-grade-item",
+    }));
+  }
+
+  const gradeRows = Array.isArray(family.gradeRows) ? family.gradeRows : [];
+  const inferredBuffId = gradeRows.length > 0 ? inferredBuffIdForFamily(family) : null;
+  if (inferredBuffId === null) return [];
+
+  return [{
+    buffId: inferredBuffId,
+    buffIdSource: "family-id-derived-stat-factor-id",
+    runtimeDetection: "selected-factor-grade-item",
+  }];
+}
+
 function buildFactorsByBuffId(probe) {
   const factorsByBuffId = {};
   const factorBuffIds = [];
 
   for (const family of probe.families ?? []) {
-    const primaryBuffIds = uniqueNumbers(family.primaryBuffIds ?? []);
-    for (const buffId of primaryBuffIds) {
+    for (const buffRow of factorBuffRowsForFamily(family)) {
+      const { buffId, buffIdSource, runtimeDetection } = buffRow;
       factorBuffIds.push(buffId);
       const gradeRows = Array.isArray(family.gradeRows) ? family.gradeRows : [];
       factorsByBuffId[String(buffId)] = stripUndefined({
         familyId: toNumber(family.familyId),
         buffId,
+        buffIdSource,
         familyName: family.familyName ?? "",
         familyNames: family.familyNames ?? {},
         iconPath: family.iconPath,
+        runtimeDetection,
         classGateIds: uniqueNumbers(family.classGateIds ?? []),
         descriptionId: toNumber(family.descriptionId),
         descriptions: family.descriptions ?? {},

@@ -10,6 +10,8 @@
     BuffNameInfo,
   } from "$lib/config/buff-name-table";
   import type {
+    BuffAlertMap,
+    BuffAlertRule,
     BuffDisplayMode,
     BuffGroup,
     TextBuffPanelDisplayMode,
@@ -71,6 +73,15 @@
     buffPriorityIds: number[];
     toggleGlobalPriority: (buffId: number) => void;
     moveGlobalPriority: (buffId: number, direction: "up" | "down") => void;
+    buffAlerts: BuffAlertMap;
+    buffAlertSectionExpanded: boolean;
+    setBuffAlertSectionExpanded: (expanded: boolean) => void;
+    alertSearch: string;
+    alertSearchResults: BuffNameInfo[];
+    alertEligibleBuffIds: number[];
+    setAlertSearch: (value: string) => void;
+    upsertBuffAlert: (buffId: number, patch: Partial<BuffAlertRule>) => void;
+    removeBuffAlert: (buffId: number) => void;
 
     individualMonitorAllGroup: BuffGroup | null;
     addIndividualMonitorAll: () => void;
@@ -158,6 +169,15 @@
     buffPriorityIds,
     toggleGlobalPriority,
     moveGlobalPriority,
+    buffAlerts,
+    buffAlertSectionExpanded,
+    setBuffAlertSectionExpanded,
+    alertSearch,
+    alertSearchResults,
+    alertEligibleBuffIds,
+    setAlertSearch,
+    upsertBuffAlert,
+    removeBuffAlert,
     individualMonitorAllGroup,
     addIndividualMonitorAll,
     removeIndividualMonitorAll,
@@ -197,6 +217,24 @@
       if (!expandedSelectedBuffIds.includes(item.baseId)) return false;
       if (buffPriorityIds.includes(item.baseId)) return false;
       ids.add(item.baseId);
+      return true;
+    });
+  }
+
+  const configuredAlertBuffIds = $derived.by(() =>
+    Object.keys(buffAlerts)
+      .map((baseId) => Number(baseId))
+      .filter((baseId) => Number.isFinite(baseId) && alertEligibleBuffIds.includes(baseId))
+      .sort((a, b) => a - b),
+  );
+
+  function getFilteredAlertSearchResults(): BuffNameInfo[] {
+    const seen = new Set<number>();
+    return alertSearchResults.filter((item) => {
+      if (seen.has(item.baseId)) return false;
+      if (!alertEligibleBuffIds.includes(item.baseId)) return false;
+      if (buffAlerts[String(item.baseId)]) return false;
+      seen.add(item.baseId);
       return true;
     });
   }
@@ -698,6 +736,147 @@
         {/each}
       </div>
     </div>
+  </div>
+
+  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
+    <button
+      type="button"
+      class="flex w-full items-center justify-between gap-3 text-left"
+      onclick={() => setBuffAlertSectionExpanded(!buffAlertSectionExpanded)}
+    >
+      <div>
+        <h2 class="text-base font-semibold text-foreground">
+          {t("buff.alert.title", "Buff Countdown Alerts")}
+        </h2>
+        <p class="text-xs text-muted-foreground">
+          {t("buff.alert.description", "Highlight monitored buff rows when their remaining timer drops below the configured threshold.")}
+        </p>
+      </div>
+      <ChevronDown
+        class="h-4 w-4 shrink-0 text-muted-foreground transition-transform {buffAlertSectionExpanded ? 'rotate-180' : ''}"
+      />
+    </button>
+
+    {#if buffAlertSectionExpanded}
+      <div class="space-y-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <input
+            class="w-full sm:w-72 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+            placeholder={t("buff.alert.searchPlaceholder", "Search monitored buffs to add an alert")}
+            value={alertSearch}
+            oninput={(event) => setAlertSearch((event.currentTarget as HTMLInputElement).value)}
+          />
+          <div class="text-xs text-muted-foreground">
+            {t("buff.alert.configured", "Configured")}: {configuredAlertBuffIds.length}
+          </div>
+        </div>
+
+        {#if alertSearch.trim().length > 0}
+          <BuffSearchResultGrid
+            items={getFilteredAlertSearchResults()}
+            {availableBuffMap}
+            onSelect={(buffId) => upsertBuffAlert(buffId, {})}
+            emptyMessage={t("buff.alert.noAvailable", "No monitored buffs available for alerts")}
+            minColumnWidth={180}
+          />
+        {/if}
+
+        <div class="space-y-2">
+          {#if configuredAlertBuffIds.length > 0}
+            {#each configuredAlertBuffIds as buffId (buffId)}
+              {@const rule = buffAlerts[String(buffId)]!}
+              <div class="rounded border border-border/60 bg-muted/20 p-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="truncate text-sm font-medium text-foreground">
+                      {getBuffDisplayName(buffId)}
+                    </div>
+                    <div class="text-xs text-muted-foreground">{getBuffDefaultName(buffId)}</div>
+                  </div>
+                  <button
+                    type="button"
+                    class="rounded border border-border/60 px-3 py-1.5 text-xs text-destructive transition-colors hover:bg-destructive/10"
+                    onclick={() => removeBuffAlert(buffId)}
+                  >
+                    {t("remove", "Remove")}
+                  </button>
+                </div>
+
+                <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-5">
+                  <label class="text-xs text-muted-foreground">
+                    {t("buff.alert.threshold", "Threshold")} ({t("seconds", "s")})
+                    <input
+                      class="mt-1 w-full rounded border border-border/60 bg-muted/30 px-2 py-1 text-sm text-foreground"
+                      type="number"
+                      min="1"
+                      max="60"
+                      step="1"
+                      value={rule.thresholdSeconds}
+                      oninput={(event) =>
+                        upsertBuffAlert(buffId, {
+                          thresholdSeconds: Number((event.currentTarget as HTMLInputElement).value),
+                        })}
+                    />
+                  </label>
+                  <label class="text-xs text-muted-foreground">
+                    {t("buff.alert.flashMs", "Flash ms")}
+                    <input
+                      class="mt-1 w-full rounded border border-border/60 bg-muted/30 px-2 py-1 text-sm text-foreground"
+                      type="number"
+                      min="100"
+                      step="50"
+                      value={rule.flashIntervalMs ?? 600}
+                      oninput={(event) =>
+                        upsertBuffAlert(buffId, {
+                          flashIntervalMs: Number((event.currentTarget as HTMLInputElement).value),
+                        })}
+                    />
+                  </label>
+                  <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                    {t("buff.alert.color", "Color")}
+                    <input
+                      type="color"
+                      value={rule.highlightColor}
+                      class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
+                      onchange={(event) =>
+                        upsertBuffAlert(buffId, {
+                          highlightColor: (event.currentTarget as HTMLInputElement).value,
+                        })}
+                    />
+                  </label>
+                  <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={rule.flash}
+                      onchange={(event) =>
+                        upsertBuffAlert(buffId, {
+                          flash: (event.currentTarget as HTMLInputElement).checked,
+                        })}
+                    />
+                    {t("buff.alert.flash", "Flash")}
+                  </label>
+                  <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={rule.applyToProgress ?? true}
+                      onchange={(event) =>
+                        upsertBuffAlert(buffId, {
+                          applyToProgress: (event.currentTarget as HTMLInputElement).checked,
+                        })}
+                    />
+                    {t("buff.alert.progress", "Progress")}
+                  </label>
+                </div>
+              </div>
+            {/each}
+          {:else}
+            <div class="rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+              {t("buff.alert.empty", "No countdown alerts configured.")}
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
   </div>
 
   {#if buffDisplayMode === "individual"}

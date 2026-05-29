@@ -54,6 +54,7 @@
                 fontSize={styleConfig.fontSize}
                 columnGap={styleConfig.columnGap}
                 placeholder={row.isPlaceholder}
+                alert={row.alert}
               />
             {/each}
           </div>

@@ -6,17 +6,20 @@ use crate::live::damage_id;
 use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::opcodes_models::class::{
-    ClassSpec, get_class_id_from_spec, get_class_spec_from_skill_id,
+    ClassSpec, get_class_id_from_spec, get_class_spec_from_selector_buff_id,
+    get_class_spec_from_skill_id, get_class_spec_from_talent_node_id,
 };
 use crate::live::opcodes_models::{
     AttrType, AttrValue, Encounter, Entity, ObservedDamageHit, ObservedEffectSource,
     ObservedFormulaAttr, ObservedPassiveSkill, ObservedProfessionSkill, ObservedProfessionTalent,
-    Skill, attr_type,
+    PositionAttr, Skill, attr_type,
 };
 use blueprotobuf_lib::blueprotobuf;
 use blueprotobuf_lib::blueprotobuf::{Attr, EDamageType, EEntityType};
 use bytes::Buf;
 use log::{info, warn};
+use prost::Message;
+use std::collections::hash_map::Entry;
 use std::default::Default;
 
 /// Attr ID for the shield display data (nested protobuf with current/max shield values).
@@ -69,6 +72,7 @@ pub struct SyncToMeDeltaResult {
     pub fight_resources: Option<Vec<i64>>,
     pub attr_skill_id: Option<i32>,
     pub local_damage_events: Vec<LocalDamageEvent>,
+    pub local_damage_taken_events: Vec<LocalDamageTakenEvent>,
     pub temp_attr_modifier_changes: Vec<TempAttrModifierChange>,
 }
 
@@ -79,6 +83,12 @@ pub struct LocalDamageEvent {
     pub attacker_uid: i64,
     pub original_attacker_uid: i64,
     pub top_summoner_uid: Option<i64>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct LocalDamageTakenEvent {
+    pub skill_key: i64,
+    pub attacker_uid: i64,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -142,6 +152,11 @@ const FORMULA_TARGET_ATTRS: &[(AttrType, &str)] = &[
     (AttrType::Level, "Level"),
 ];
 
+const FORMULA_PANEL_ATTR_IDS: &[i32] = &[
+    11010, 11020, 11030, 11330, 11340, 11710, 11720, 11730, 11780, 11930, 11940, 11950, 11970,
+    12510, 12530, 12540,
+];
+
 fn formula_attr_snapshot(
     attr_store: &EntityAttrStore,
     uid: i64,
@@ -162,6 +177,13 @@ fn formula_attr_snapshot(
         .collect()
 }
 
+fn formula_panel_attr_type(attr_id: i32) -> Option<AttrType> {
+    if !FORMULA_PANEL_ATTR_IDS.contains(&attr_id) {
+        return None;
+    }
+    Some(AttrType::from_id(attr_id).unwrap_or(AttrType::Unknown(attr_id)))
+}
+
 fn observed_formula_attrs(snapshots: Vec<FormulaAttrSnapshot>) -> Vec<ObservedFormulaAttr> {
     snapshots
         .into_iter()
@@ -176,11 +198,30 @@ fn observed_formula_attrs(snapshots: Vec<FormulaAttrSnapshot>) -> Vec<ObservedFo
                 AttrValue::Int(value) => out.value_int = Some(value),
                 AttrValue::Float(value) => out.value_float = Some(value),
                 AttrValue::Bool(value) => out.value_bool = Some(value),
-                AttrValue::String(_) => return None,
+                AttrValue::String(_) | AttrValue::Position(_) => return None,
             }
             Some(out)
         })
         .collect()
+}
+
+/// Entity type observations are not equally specific: `EntErrType` is an
+/// unknown fallback, while `EntChar` and `EntMonster` are stable identities that
+/// should not be downgraded or swapped by later UID-colliding observations.
+pub(crate) fn should_overwrite_entity_type(existing: EEntityType, observed: EEntityType) -> bool {
+    if existing == observed {
+        return false;
+    }
+
+    if observed == EEntityType::EntErrType {
+        return false;
+    }
+
+    if existing == EEntityType::EntErrType {
+        return true;
+    }
+
+    false
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -450,23 +491,45 @@ pub fn process_sync_near_entities(
     encounter: &mut Encounter,
     attr_store: &mut EntityAttrStore,
     sync_near_entities: blueprotobuf::SyncNearEntities,
+    capture_modifier_evidence: bool,
 ) -> Option<()> {
     for pkt_entity in sync_near_entities.appear {
         let target_uuid = pkt_entity.uuid?;
         let target_uid = target_uuid >> 16;
         let target_entity_type = EEntityType::from(target_uuid);
 
-        let target_entity = encounter
-            .entity_uid_to_entity
-            .entry(target_uid)
-            .or_default();
-        target_entity.entity_type = target_entity_type;
+        let target_entity = match encounter.entity_uid_to_entity.entry(target_uid) {
+            Entry::Occupied(mut entry) => {
+                let existing_type = entry.get().entity_type;
+                if should_overwrite_entity_type(existing_type, target_entity_type) {
+                    entry.get_mut().entity_type = target_entity_type;
+                } else if existing_type != target_entity_type {
+                    info!(
+                        target: "app::live",
+                        "SyncNearEntities: blocked entity_type overwrite for uid={} from {:?} to {:?} (uuid=0x{:x}, low16={})",
+                        target_uid,
+                        existing_type,
+                        target_entity_type,
+                        target_uuid,
+                        target_uuid & 0xffff
+                    );
+                }
+                entry.into_mut()
+            }
+            Entry::Vacant(entry) => entry.insert(Entity {
+                entity_type: target_entity_type,
+                ..Default::default()
+            }),
+        };
         if let Some(passive_infos) = pkt_entity.passive_skill_infos.as_ref() {
-            observe_passive_skill_infos(
-                target_entity,
-                passive_infos,
-                "SyncNearEntities.appear.passive_skill_infos",
-            );
+            sync_entity_spec_from_passive_skill_infos(target_entity, passive_infos);
+            if capture_modifier_evidence {
+                observe_passive_skill_infos(
+                    target_entity,
+                    passive_infos,
+                    "SyncNearEntities.appear.passive_skill_infos",
+                );
+            }
         }
 
         match target_entity_type {
@@ -498,6 +561,7 @@ pub fn process_sync_container_data(
     encounter: &mut Encounter,
     attr_store: &mut EntityAttrStore,
     sync_container_data: blueprotobuf::SyncContainerData,
+    capture_modifier_evidence: bool,
 ) -> Option<()> {
     let v_data = sync_container_data.v_data?;
     let player_uid = v_data.char_id?;
@@ -545,10 +609,17 @@ pub fn process_sync_container_data(
         AttrType::Level,
         AttrValue::Int(target_entity.level as i64),
     );
-    target_entity.active_effect_sources = selected_season_medal_effect_sources(&v_data);
-    target_entity.active_factor_items = observed_season_phantom_factor_items(&v_data);
-    target_entity.active_profession_skills = selected_profession_skills(&v_data);
-    target_entity.active_profession_talents = selected_profession_talents(&v_data);
+    if capture_modifier_evidence {
+        target_entity.active_effect_sources = selected_season_medal_effect_sources(&v_data);
+        target_entity.active_factor_items = observed_season_phantom_factor_items(&v_data);
+        target_entity.active_profession_skills = selected_profession_skills(&v_data);
+        target_entity.active_profession_talents = selected_profession_talents(&v_data);
+    } else {
+        target_entity.active_effect_sources.clear();
+        target_entity.active_factor_items.clear();
+        target_entity.active_profession_skills.clear();
+        target_entity.active_profession_talents.clear();
+    }
 
     // Note: HP data comes from attribute packets (ATTR_CURRENT_HP, ATTR_MAX_HP)
     // CharBaseInfo doesn't contain HP fields
@@ -582,6 +653,59 @@ fn push_profession_skill_spec(specs: &mut Vec<ClassSpec>, class_id: i32, skill_i
     }
 }
 
+fn push_profession_talent_spec(specs: &mut Vec<ClassSpec>, class_id: i32, talent_node_id: u32) {
+    let spec = get_class_spec_from_talent_node_id(talent_node_id);
+    if spec == ClassSpec::Unknown || get_class_id_from_spec(spec) != class_id {
+        return;
+    }
+
+    if !specs.contains(&spec) {
+        specs.push(spec);
+    }
+}
+
+fn push_passive_skill_spec(specs: &mut Vec<ClassSpec>, skill_id: i32) {
+    if skill_id <= 0 {
+        return;
+    }
+
+    for spec in [
+        get_class_spec_from_skill_id(skill_id),
+        get_class_spec_from_selector_buff_id(skill_id),
+    ] {
+        if spec != ClassSpec::Unknown && !specs.contains(&spec) {
+            specs.push(spec);
+        }
+    }
+}
+
+fn sync_entity_spec_from_passive_skill_infos(
+    entity: &mut Entity,
+    passive_infos: &blueprotobuf::SeqPassiveSkillInfo,
+) {
+    let mut passive_specs = Vec::new();
+    for info in &passive_infos.passive_infos {
+        if let Some(skill_id) = info.skill_id {
+            push_passive_skill_spec(&mut passive_specs, skill_id);
+        }
+    }
+
+    let spec = single_synced_spec(&passive_specs);
+    if spec == ClassSpec::Unknown {
+        return;
+    }
+
+    let spec_class_id = get_class_id_from_spec(spec);
+    if spec_class_id <= 0 {
+        return;
+    }
+
+    if entity.class_id <= 0 || entity.class_id == spec_class_id {
+        entity.class_id = spec_class_id;
+        entity.class_spec = spec;
+    }
+}
+
 fn single_synced_spec(specs: &[ClassSpec]) -> ClassSpec {
     if specs.len() == 1 {
         specs[0]
@@ -610,6 +734,17 @@ fn infer_class_spec_from_profession_list(
         return equipped_spec;
     }
 
+    if let Some(talent_info) = profession_list.talent_list.get(&class_id) {
+        let mut talent_specs = Vec::new();
+        for &talent_node_id in &talent_info.talent_node_ids {
+            push_profession_talent_spec(&mut talent_specs, class_id, talent_node_id);
+        }
+        let talent_spec = single_synced_spec(&talent_specs);
+        if talent_spec != ClassSpec::Unknown {
+            return talent_spec;
+        }
+    }
+
     let mut known_specs = equipped_specs;
     for (skill_id, skill_info) in &profession_info.skill_info_map {
         push_profession_skill_spec(&mut known_specs, class_id, *skill_id);
@@ -633,6 +768,14 @@ fn infer_class_spec_from_profession_list(
     single_synced_spec(&known_specs)
 }
 
+fn canonical_season_medal_node_id(node_id: u32) -> u32 {
+    if (100_000..=199_999).contains(&node_id) {
+        node_id - 100_000
+    } else {
+        node_id
+    }
+}
+
 fn selected_season_medal_effect_sources(
     v_data: &blueprotobuf::CharSerialize,
 ) -> Vec<ObservedEffectSource> {
@@ -648,16 +791,18 @@ fn selected_season_medal_effect_sources(
         let Some(node_id) = node.node_id else {
             continue;
         };
-        let source_id = format!("season-talent-node:{node_id}");
+        let canonical_node_id = canonical_season_medal_node_id(node_id);
+        let source_id = format!("season-talent-node:{canonical_node_id}");
         if !crate::live::effect_sources::is_effect_source_id(&source_id) {
             continue;
         }
         sources.push(ObservedEffectSource {
             source_id,
-            runtime_source: "CharSerialize.season_medal_info.core_hole_node_infos.choose"
-                .to_string(),
-            source_entity_id: Some(node_id as i32),
-            node_id: Some(node_id),
+            runtime_source:
+                "CharSerialize.season_medal_info.core_hole_node_infos.choose.normalized_node_id"
+                    .to_string(),
+            source_entity_id: Some(canonical_node_id as i32),
+            node_id: Some(canonical_node_id),
             node_level: node.node_level,
             slot: node.slot,
         });
@@ -879,6 +1024,9 @@ fn observed_season_phantom_factor_items(
                     runtime_source:
                         "CharSerialize.equip.equip_list.item_uuid->item_package.config_id"
                             .to_string(),
+                    selector_path: None,
+                    selector_signature: None,
+                    selector_offset: None,
                 });
             }
         }
@@ -896,12 +1044,52 @@ fn observed_season_phantom_factor_items(
 }
 
 pub fn process_sync_container_dirty_data(
-    _encounter: &mut Encounter,
-    _sync_container_dirty_data: blueprotobuf::SyncContainerDirtyData,
+    encounter: &mut Encounter,
+    sync_container_dirty_data: blueprotobuf::SyncContainerDirtyData,
+    capture_modifier_evidence: bool,
 ) -> Option<()> {
+    if !capture_modifier_evidence {
+        return Some(());
+    }
     // SyncContainerDirtyData.v_data is a BufferStream (raw bytes)
     // Incremental attribute updates come through process_player_attrs via AoiSyncDelta
     // which handles attr packets with proper typing
+    let selected_factor_items =
+        crate::live::seasonal_factor_selector::selected_factor_items_from_dirty_data(
+            &sync_container_dirty_data,
+        );
+    if selected_factor_items.is_empty() {
+        return Some(());
+    }
+
+    let local_player_uid = encounter.local_player_uid;
+    if local_player_uid <= 0 {
+        return Some(());
+    }
+
+    let entity = encounter
+        .entity_uid_to_entity
+        .entry(local_player_uid)
+        .or_insert_with(|| Entity {
+            entity_type: EEntityType::EntChar,
+            ..Default::default()
+        });
+
+    for item in selected_factor_items {
+        entity
+            .active_factor_items
+            .retain(|existing| existing.factor_buff_id != item.factor_buff_id);
+        entity.active_factor_items.push(item);
+    }
+    entity.active_factor_items.sort_by_key(|item| {
+        (
+            item.factor_buff_id,
+            item.grade.unwrap_or(0),
+            item.item_config_id,
+            item.item_uuid.unwrap_or(0),
+        )
+    });
+
     Some(())
 }
 
@@ -1081,7 +1269,7 @@ pub fn process_sync_to_me_delta_info(
                 let value = temp_attr.value.unwrap_or(0);
                 let previous_value = attr_store.temp_attr_value(id).unwrap_or(0);
                 let changed = attr_store.set_temp_attr(id, value);
-                if changed {
+                if capture_modifier_evidence && changed {
                     if let Some(buff_id) =
                         crate::live::temp_attr_sources::modifier_buff_id_for_temp_attr(id)
                     {
@@ -1098,14 +1286,16 @@ pub fn process_sync_to_me_delta_info(
                 }
             }
         }
-        if let Some(events) = process_aoi_sync_delta(
+        if let Some((damage_events, damage_taken_events)) = process_aoi_sync_delta(
             encounter,
             attr_store,
             base_delta,
             combat_target_filter,
+            true,
             capture_modifier_evidence,
         ) {
-            result.local_damage_events = events;
+            result.local_damage_events = damage_events;
+            result.local_damage_taken_events = damage_taken_events;
         }
     }
 
@@ -1142,6 +1332,7 @@ pub(crate) fn process_enter_scene(
     attr_store: &mut EntityAttrStore,
     enter_scene: &blueprotobuf::EnterScene,
     monitored_panel_attr_ids: &[i32],
+    capture_modifier_evidence: bool,
 ) -> EnterSceneResult {
     if let Some(info) = enter_scene.enter_scene_info.as_ref() {
         if let Some(player_ent) = info.player_ent.as_ref() {
@@ -1156,11 +1347,14 @@ pub(crate) fn process_enter_scene(
                         .entry(player_uid)
                         .or_default();
                     entity.entity_type = EEntityType::EntChar;
-                    observe_passive_skill_infos(
-                        entity,
-                        passive_infos,
-                        "EnterScene.player_ent.passive_skill_infos",
-                    );
+                    sync_entity_spec_from_passive_skill_infos(entity, passive_infos);
+                    if capture_modifier_evidence {
+                        observe_passive_skill_infos(
+                            entity,
+                            passive_infos,
+                            "EnterScene.player_ent.passive_skill_infos",
+                        );
+                    }
                 }
             }
             if let Some(attrs) = player_ent.attrs.as_ref() {
@@ -1290,13 +1484,22 @@ pub fn apply_panel_attrs(
             attr_store.set_shield_detail(detail_entries);
             continue;
         }
-        if !monitored_panel_attr_ids.contains(&attr_id) {
+        let formula_attr_type = formula_panel_attr_type(attr_id);
+        if !monitored_panel_attr_ids.contains(&attr_id) && formula_attr_type.is_none() {
             continue;
         }
         let Some(value) = decode_single_attr_i32(attr) else {
             continue;
         };
-        let _ = attr_store.set_panel_attr(attr_id, value);
+        if monitored_panel_attr_ids.contains(&attr_id) {
+            let _ = attr_store.set_panel_attr(attr_id, value);
+        }
+        if let Some(attr_type) = formula_attr_type {
+            let uid = attr_store.local_player_uid();
+            if uid != 0 {
+                let _ = attr_store.set_attr(uid, attr_type, AttrValue::Int(i64::from(value)));
+            }
+        }
     }
 }
 
@@ -1305,8 +1508,9 @@ pub fn process_aoi_sync_delta(
     attr_store: &mut EntityAttrStore,
     aoi_sync_delta: blueprotobuf::AoiSyncDelta,
     combat_target_filter: Option<i64>,
+    collect_taken: bool,
     capture_modifier_evidence: bool,
-) -> Option<Vec<LocalDamageEvent>> {
+) -> Option<(Vec<LocalDamageEvent>, Vec<LocalDamageTakenEvent>)> {
     let target_uuid = aoi_sync_delta.uuid?; // UUID =/= uid (have to >> 16)
     let target_uid = target_uuid >> 16;
     let allow_combat = match combat_target_filter {
@@ -1319,14 +1523,19 @@ pub fn process_aoi_sync_delta(
         let actor_uid = actor_uuid >> 16;
         let entity = encounter.entity_uid_to_entity.entry(actor_uid).or_default();
         entity.entity_type = EEntityType::from(actor_uuid);
-        observe_passive_skill_infos(entity, passive_infos, "AoiSyncDelta.passive_skill_infos");
+        sync_entity_spec_from_passive_skill_infos(entity, passive_infos);
+        if capture_modifier_evidence {
+            observe_passive_skill_infos(entity, passive_infos, "AoiSyncDelta.passive_skill_infos");
+        }
     }
 
-    if let Some(passive_end_infos) = aoi_sync_delta.passive_skill_end_infos.as_ref() {
-        let actor_uuid = passive_end_infos.actor_uuid.unwrap_or(target_uuid);
-        let actor_uid = actor_uuid >> 16;
-        if let Some(entity) = encounter.entity_uid_to_entity.get_mut(&actor_uid) {
-            remove_passive_skill_infos(entity, passive_end_infos);
+    if capture_modifier_evidence {
+        if let Some(passive_end_infos) = aoi_sync_delta.passive_skill_end_infos.as_ref() {
+            let actor_uuid = passive_end_infos.actor_uuid.unwrap_or(target_uuid);
+            let actor_uid = actor_uuid >> 16;
+            if let Some(entity) = encounter.entity_uid_to_entity.get_mut(&actor_uid) {
+                remove_passive_skill_infos(entity, passive_end_infos);
+            }
         }
     }
 
@@ -1339,7 +1548,19 @@ pub fn process_aoi_sync_delta(
             entity_type: target_entity_type,
             ..Default::default()
         });
-    target_entity.entity_type = target_entity_type;
+    if should_overwrite_entity_type(target_entity.entity_type, target_entity_type) {
+        target_entity.entity_type = target_entity_type;
+    } else if target_entity.entity_type != target_entity_type {
+        info!(
+            target: "app::live",
+            "AoiSyncDelta: blocked entity_type overwrite for uid={} from {:?} to {:?} (uuid=0x{:x}, low16={})",
+            target_uid,
+            target_entity.entity_type,
+            target_entity_type,
+            target_uuid,
+            target_uuid & 0xffff
+        );
+    }
 
     if let Some(attrs_collection) = aoi_sync_delta.attrs {
         match target_entity_type {
@@ -1364,7 +1585,7 @@ pub fn process_aoi_sync_delta(
     }
 
     let Some(skill_effect) = aoi_sync_delta.skill_effects else {
-        return Some(Vec::new()); // return ok since this variable usually doesn't exist
+        return Some((Vec::new(), Vec::new())); // return ok since this variable usually doesn't exist
     };
 
     let timestamp_ms = SystemTime::now()
@@ -1373,6 +1594,7 @@ pub fn process_aoi_sync_delta(
         .as_millis();
     let mut target_hp_state = TargetHpState::from_attr_store(attr_store, target_uid);
     let mut local_damage_events = Vec::new();
+    let mut local_damage_taken_events = Vec::new();
     let mut had_player_damage = false;
     let mut had_allowed_combat = false;
     // Process Damage
@@ -1436,6 +1658,12 @@ pub fn process_aoi_sync_delta(
                 attacker_uid,
                 original_attacker_uid,
                 top_summoner_uid,
+            });
+        }
+        if collect_taken && target_uid == encounter.local_player_uid && !is_heal {
+            local_damage_taken_events.push(LocalDamageTakenEvent {
+                skill_key,
+                attacker_uid,
             });
         }
         let flag = sync_damage_info.type_flag.unwrap_or_default();
@@ -1832,7 +2060,7 @@ pub fn process_aoi_sync_delta(
 
         encounter.time_last_combat_packet_ms = timestamp_ms;
     }
-    Some(local_damage_events)
+    Some((local_damage_events, local_damage_taken_events))
 }
 
 fn decode_varint_i64(raw: &[u8]) -> Option<i64> {
@@ -1940,6 +2168,15 @@ fn decode_shield_detail_entries(raw: &[u8]) -> Vec<ShieldDetailEntry> {
     entries
 }
 
+fn decode_position_attr(raw: Option<&[u8]>) -> Option<PositionAttr> {
+    let position = blueprotobuf::Position::decode(raw?).ok()?;
+    Some(PositionAttr {
+        x: position.x?,
+        y: position.y?,
+        z: position.z?,
+    })
+}
+
 fn decode_prefixed_string(raw: &[u8]) -> Option<String> {
     let mut buf = raw;
     let len = prost::encoding::decode_varint(&mut buf).ok()? as usize;
@@ -1974,8 +2211,39 @@ fn decode_unknown_attr_value(attr_id: i32, raw: &[u8]) -> Option<(AttrType, Attr
     ))
 }
 
+fn retain_player_identity_attr(player_entity: &mut Entity, attr_type: AttrType, value: &AttrValue) {
+    match attr_type {
+        AttrType::Name => {
+            if let Some(name) = value.as_string().filter(|name| !name.is_empty()) {
+                player_entity.name = name.to_string();
+            }
+        }
+        AttrType::ProfessionId => {
+            if let Some(value) = value.as_int().filter(|value| *value > 0) {
+                player_entity.class_id = value as i32;
+            }
+        }
+        AttrType::FightPoint => {
+            if let Some(value) = value.as_int().filter(|value| *value > 0) {
+                player_entity.ability_score = value as i32;
+            }
+        }
+        AttrType::SeasonStrength => {
+            if let Some(value) = value.as_int().filter(|value| *value > 0) {
+                player_entity.season_strength = value as i32;
+            }
+        }
+        AttrType::Level => {
+            if let Some(value) = value.as_int().filter(|value| *value > 0) {
+                player_entity.level = value as i32;
+            }
+        }
+        _ => {}
+    }
+}
+
 fn process_player_attrs(
-    _player_entity: &mut Entity,
+    player_entity: &mut Entity,
     target_uid: i64,
     attrs: Vec<Attr>,
     attr_store: &mut EntityAttrStore,
@@ -2024,6 +2292,17 @@ fn process_player_attrs(
             continue;
         }
 
+        if attr_id == attr_type::ATTR_POS {
+            if let Some(position) = decode_position_attr(raw_bytes_opt) {
+                let _ = attr_store.set_attr(
+                    target_uid,
+                    AttrType::Position,
+                    AttrValue::Position(position),
+                );
+            }
+            continue;
+        }
+
         let decoded = if attr_id == attr_type::ATTR_NAME {
             let name = decode_prefixed_string_or_default(raw_bytes_opt);
             if !name.is_empty() {
@@ -2038,6 +2317,7 @@ fn process_player_attrs(
         };
 
         if let Some((attr_type, value)) = decoded {
+            retain_player_identity_attr(player_entity, attr_type, &value);
             let _ = attr_store.set_attr(target_uid, attr_type, value);
         }
     }

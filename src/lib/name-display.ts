@@ -52,6 +52,28 @@ export function normalizeNameDisplaySetting(
   return CN_TO_EN_SETTING[setting] ?? setting;
 }
 
+export function shouldUseSpecIconForNameDisplay(settingRaw: string): boolean {
+  const setting = normalizeNameDisplaySetting(settingRaw);
+  return setting === "Show Your Name - Spec" || setting === "Show Others' Name - Spec";
+}
+
+export interface DisplayIconSpecNameParams {
+  classSpecName?: string;
+  showYourNameSetting: string;
+  showOthersNameSetting: string;
+  isLocalPlayer: boolean;
+}
+
+export function getDisplayIconSpecName({
+  classSpecName = "",
+  showYourNameSetting,
+  showOthersNameSetting,
+  isLocalPlayer,
+}: DisplayIconSpecNameParams): string {
+  const setting = isLocalPlayer ? showYourNameSetting : showOthersNameSetting;
+  return shouldUseSpecIconForNameDisplay(setting) ? classSpecName : "";
+}
+
 /**
  * Parameters for the name display transformation function
  */

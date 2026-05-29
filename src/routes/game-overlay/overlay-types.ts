@@ -12,6 +12,13 @@ export type SkillDisplay = {
   chargesText?: string;
 };
 
+export type BuffAlertState = {
+  highlightColor: string;
+  flash: boolean;
+  flashIntervalMs: number;
+  applyToProgress: boolean;
+};
+
 export type IconBuffDisplay = {
   baseId: number;
   name: string;
@@ -22,6 +29,7 @@ export type IconBuffDisplay = {
   categoryKey?: BuffCategoryKey;
   isPlaceholder?: boolean;
   specialImages?: string[];
+  alert?: BuffAlertState | undefined;
 };
 
 export type SkillDurationState = {
@@ -47,6 +55,7 @@ export type TextBuffRowDisplay = {
   progressPercent: number;
   showProgress: boolean;
   isPlaceholder?: boolean | undefined;
+  alert?: BuffAlertState | undefined;
 };
 
 export type TextBuffDisplay = TextBuffRowDisplay;

@@ -5,7 +5,8 @@
   import { commands } from "$lib/bindings";
   import type { EncounterSummaryDto, HistoryEntityData, ModifierReplayHitState } from "$lib/bindings";
   import type { RawCombatStats, RawSkillStats } from "$lib/api";
-  import { getClassIcon, tooltip } from "$lib/utils.svelte";
+  import { tooltip } from "$lib/utils.svelte";
+  import ClassSpecIcon from "$lib/components/class-spec-icon.svelte";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import {
@@ -19,7 +20,7 @@
   import { settings, SETTINGS, DEFAULT_HISTORY_STATS } from "$lib/settings-store";
   import { localizeSceneName } from "$lib/scene-mappings";
   import { localizeRawMonsterName } from "$lib/monster-mappings";
-  import getDisplayName from "$lib/name-display";
+  import getDisplayName, { getDisplayIconSpecName } from "$lib/name-display";
   import { openUrl } from "@tauri-apps/plugin-opener";
   import { computePlayerRowsFromEntities } from "$lib/live-derived";
   import {
@@ -260,6 +261,7 @@
   let modifierReportWorker: Worker | null = null;
   const MODIFIER_REPORT_WORKER_START_TIMEOUT_MS = 45_000;
   const MODIFIER_REPORT_WORKER_BUILD_TIMEOUT_MS = 90_000;
+  const MODIFIER_REPORT_CACHE_SCHEMA = "modifier-report-v2-buff-source-labels";
 
   function modifierCacheKey(encounterUid: number, playerUid: number): string {
     return `${encounterUid}:${playerUid}`;
@@ -267,6 +269,7 @@
 
   function modifierReportCacheKey(entityCacheKey: string): string {
     return [
+      MODIFIER_REPORT_CACHE_SCHEMA,
       entityCacheKey,
       modifierScope,
       modifierActorFilter,
@@ -632,6 +635,34 @@
       ...modifierReportEntityShell(entity),
       damage: slimCombatStats(entity.damage),
       dmgSkills,
+      activeFactorBuffs: (entity.activeFactorBuffs ?? []).map((buff) => ({
+        factorBuffId: Number(buff.factorBuffId) || 0,
+        observedBuffId: Number(buff.observedBuffId) || 0,
+        buffLevel: buff.buffLevel ?? null,
+        partId: buff.partId ?? null,
+        count: buff.count ?? null,
+        fightSourceType: buff.fightSourceType ?? null,
+        sourceConfigId: buff.sourceConfigId ?? null,
+        layer: Number(buff.layer) || 0,
+        durationMs: Number(buff.durationMs) || 0,
+        createTimeMs: Number(buff.createTimeMs) || 0,
+        receivedTimeMs: Number(buff.receivedTimeMs) || 0,
+        hostUid: Number(buff.hostUid) || 0,
+        sourceUid: Number(buff.sourceUid) || 0,
+      })),
+      activeFactorItems: (entity.activeFactorItems ?? []).map((item) => ({
+        factorBuffId: Number(item.factorBuffId) || 0,
+        itemConfigId: Number(item.itemConfigId) || 0,
+        itemUuid: item.itemUuid ?? null,
+        packageKey: Number(item.packageKey) || 0,
+        packageType: item.packageType ?? null,
+        grade: item.grade ?? null,
+        familyId: item.familyId ?? null,
+        runtimeSource: item.runtimeSource ?? "",
+        selectorPath: item.selectorPath ?? null,
+        selectorSignature: item.selectorSignature ?? null,
+        selectorOffset: item.selectorOffset ?? null,
+      })),
       modifierHitBuckets,
       modifierReplayHits,
       modifierSourceActors,
@@ -1490,11 +1521,25 @@
 
   function modifierSourceLabel(row: ModifierActivityRow, language: LocaleCode): string {
     const rowLabel = resolveModifierSourceName(row, language);
-    if (row.sourceNames || !/^(?:Buff \d+|Unknown Modifier)$/i.test(rowLabel)) {
+    const sourceIdBuffId = Number(row.sourceId.match(/^buff-source:(\d+)/)?.[1] ?? NaN);
+    const placeholderBuffIds = [
+      Number.isFinite(sourceIdBuffId) ? sourceIdBuffId : null,
+      row.sourceEntityId,
+      ...row.buffIds,
+    ].filter((buffId): buffId is number =>
+      typeof buffId === "number" && Number.isFinite(buffId) && buffId > 0
+    );
+    const isRawBuffSourceLabel = placeholderBuffIds.some((buffId) =>
+      rowLabel === `buff-source:${buffId}`
+        || rowLabel === `#${buffId}`
+        || new RegExp(`^(?:Buff|Unmapped Buff) ${buffId}$`, "i").test(rowLabel)
+    );
+
+    if (!isRawBuffSourceLabel && (row.sourceNames || !/^(?:Buff \d+|Unknown Modifier)$/i.test(rowLabel))) {
       return rowLabel;
     }
 
-    for (const buffId of row.buffIds) {
+    for (const buffId of placeholderBuffIds) {
       const localized = lookupBuffLocalizedNames(buffId);
       const fallback = lookupDefaultBuffName(buffId) ?? rowLabel;
       const label = resolveLocalizedText(localized, language, fallback).trim();
@@ -1508,6 +1553,20 @@
     const label = modifierSourceLabel(row, language);
     const providerSuffix = modifierExternalSourceInlineSuffix(row.actorSummary);
     return providerSuffix ? `${label} ${providerSuffix}` : label;
+  }
+
+  function modifierSourceUidLabel(row: ModifierActivityRow): string {
+    if (row.sourceEntityId !== undefined && Number.isFinite(row.sourceEntityId)) {
+      return `#${row.sourceEntityId}`;
+    }
+    const sourceIdBuffMatch = row.sourceId.match(/^buff-source:(\d+)/);
+    if (sourceIdBuffMatch?.[1]) return `#${sourceIdBuffMatch[1]}`;
+    return row.sourceId;
+  }
+
+  function shouldShowModifierSourceUid(row: ModifierActivityRow): boolean {
+    return SETTINGS.live.general.state.skillIdDisplayMode === 'column'
+      || /^buff-source:\d+/.test(row.sourceId);
   }
 
   function emptyModifierActorSummary(): ModifierActorSummary {
@@ -3207,9 +3266,9 @@
                             {effectSummary}
                           </span>
                         {/if}
-                        {#if SETTINGS.live.general.state.skillIdDisplayMode === 'column'}
+                        {#if shouldShowModifierSourceUid(item.row)}
                           <span class="text-[10px] text-muted-foreground/50 shrink-0">
-                            {item.row.sourceEntityId !== undefined ? `#${item.row.sourceEntityId}` : item.row.sourceId}
+                            {modifierSourceUidLabel(item.row)}
                           </span>
                         {/if}
                       </button>
@@ -3365,9 +3424,9 @@
                             {effectSummary}
                           </span>
                         {/if}
-                        {#if SETTINGS.live.general.state.skillIdDisplayMode === 'column'}
+                        {#if shouldShowModifierSourceUid(item.row.source)}
                           <span class="text-[10px] text-muted-foreground/50 shrink-0">
-                            {item.row.sourceEntityId !== undefined ? `#${item.row.sourceEntityId}` : item.row.sourceId}
+                            {modifierSourceUidLabel(item.row.source)}
                           </span>
                         {/if}
                       </div>
@@ -3449,6 +3508,13 @@
               </tr>
             {:else}
             {#each displayedPlayers as p (p.uid)}
+              {@const iconSpecName = getDisplayIconSpecName({
+                classSpecName: p.classSpecName,
+                showYourNameSetting: settings.state.history.general.showYourName,
+                showOthersNameSetting:
+                  settings.state.history.general.showOthersName,
+                isLocalPlayer: p.isLocalPlayer,
+              })}
               <tr
                 class="relative border-t border-border/40 hover:bg-muted/60 transition-colors cursor-pointer"
                 onclick={() =>
@@ -3466,11 +3532,12 @@
                   class="px-3 py-3 text-sm text-muted-foreground relative z-10"
                 >
                   <div class="flex items-center gap-2 h-full">
-                    <img
+                    <ClassSpecIcon
                       class="size-5 object-contain"
-                      src={getClassIcon(p.className)}
+                      className={p.className}
+                      classSpecName={iconSpecName}
                       alt={t("detail.classIcon", "职业图标")}
-                      {@attach tooltip(() => p.classDisplay || t("detail.unknownClass", "未知职业"))}
+                      tooltipText={p.classDisplay || t("detail.unknownClass", "Unknown Class")}
                     />
                     <span
                       class="truncate"
@@ -3579,6 +3646,7 @@
           })}
           className={selectedPlayer.className}
           classSpecName={selectedPlayer.classSpecName}
+          isLocalPlayer={selectedPlayer.isLocalPlayer}
           deaths={selectedEntity.deaths ?? []}
           fightStartTimestampMs={encounter?.startedAtMs ?? null}
           onSelect={(ts) => viewDeathReplay(selectedPlayer.uid, ts)}
@@ -3600,6 +3668,7 @@
           })}
           className={selectedPlayer.className}
           classSpecName={selectedPlayer.classSpecName}
+          isLocalPlayer={selectedPlayer.isLocalPlayer}
           record={selectedDeathRecord}
           onBack={backToDeathList}
           variant="history"

@@ -21,11 +21,14 @@
     inlineBuffSearch: string;
     filteredInlineBuffSearchResults: BuffNameInfo[];
     customPanelGroups: CustomPanelGroup[];
-    customPanelStyle: CustomPanelStyle;
     setInlineBuffSearch: (value: string) => void;
     addCustomPanelGroup: () => void;
     removeCustomPanelGroup: (groupId: string) => void;
     renameCustomPanelGroup: (groupId: string, name: string) => void;
+    updateCustomPanelGroupStyle: (
+      groupId: string,
+      updater: (style: CustomPanelStyle) => CustomPanelStyle,
+    ) => void;
     addCustomPanelEntry: (
       groupId: string,
       sourceType: "buff" | "counter",
@@ -41,13 +44,6 @@
       entryId: string,
       direction: "up" | "down",
     ) => void;
-    setCustomPanelGap: (value: number) => void;
-    setCustomPanelFontSize: (value: number) => void;
-    setCustomPanelColumnGap: (value: number) => void;
-    setCustomPanelNameColor: (value: string) => void;
-    setCustomPanelValueColor: (value: string) => void;
-    setCustomPanelProgressColor: (value: string) => void;
-    setCustomPanelProgressOpacity: (value: number) => void;
   }
 
   const t = uiT("overlay/skill-monitor/custom-panel", () => SETTINGS.live.general.state.language);
@@ -61,24 +57,17 @@
     inlineBuffSearch,
     filteredInlineBuffSearchResults,
     customPanelGroups,
-    customPanelStyle,
     setInlineBuffSearch,
     addCustomPanelGroup,
     removeCustomPanelGroup,
     renameCustomPanelGroup,
+    updateCustomPanelGroupStyle,
     addCustomPanelEntry,
     addUserCounterRule,
     removeUserCounterRule,
     removeCustomPanelEntry,
     setCustomPanelEntryLabel,
     moveCustomPanelEntry,
-    setCustomPanelGap,
-    setCustomPanelFontSize,
-    setCustomPanelColumnGap,
-    setCustomPanelNameColor,
-    setCustomPanelValueColor,
-    setCustomPanelProgressColor,
-    setCustomPanelProgressOpacity,
   }: Props = $props();
 
   let selectedGroupId = $state<string | null>(null);
@@ -148,9 +137,51 @@
     addUserCounterRule(draftRuleName, draftSourceRefs, draftSlotRefs);
     resetDraftRule();
   }
+
+  function updateSelectedGroupStyle(
+    updater: (style: CustomPanelStyle) => CustomPanelStyle,
+  ) {
+    if (!selectedGroup) return;
+    updateCustomPanelGroupStyle(selectedGroup.id, updater);
+  }
+
+  function setSelectedGroupGap(value: number) {
+    const nextValue = Math.max(0, Math.min(24, Math.round(value)));
+    updateSelectedGroupStyle((style) => ({ ...style, gap: nextValue }));
+  }
+
+  function setSelectedGroupFontSize(value: number) {
+    const nextValue = Math.max(10, Math.min(28, Math.round(value)));
+    updateSelectedGroupStyle((style) => ({ ...style, fontSize: nextValue }));
+  }
+
+  function setSelectedGroupColumnGap(value: number) {
+    const nextValue = Math.max(0, Math.min(240, Math.round(value)));
+    updateSelectedGroupStyle((style) => ({ ...style, columnGap: nextValue }));
+  }
+
+  function setSelectedGroupNameColor(value: string) {
+    updateSelectedGroupStyle((style) => ({ ...style, nameColor: value }));
+  }
+
+  function setSelectedGroupValueColor(value: string) {
+    updateSelectedGroupStyle((style) => ({ ...style, valueColor: value }));
+  }
+
+  function setSelectedGroupProgressColor(value: string) {
+    updateSelectedGroupStyle((style) => ({ ...style, progressColor: value }));
+  }
+
+  function setSelectedGroupProgressOpacity(value: number) {
+    updateSelectedGroupStyle((style) => ({
+      ...style,
+      progressOpacity: Math.max(0, Math.min(1, value)),
+    }));
+  }
 </script>
 
 <div class="space-y-6">
+  {#if selectedGroup}
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-4">
     <div>
       <h2 class="text-base font-semibold text-foreground">{t("customPanel.title", "自定义监控区")}</h2>
@@ -499,39 +530,39 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
       <label class="text-xs text-muted-foreground">
-        {t("buff.gap", "间距")}: {customPanelStyle.gap}px
+        {t("buff.gap", "间距")}: {selectedGroup.style.gap}px
         <input
           class="mt-1 w-full"
           type="range"
           min="0"
           max="24"
           step="1"
-          value={customPanelStyle.gap}
-          oninput={(event) => setCustomPanelGap(Number((event.currentTarget as HTMLInputElement).value))}
+          value={selectedGroup.style.gap}
+          oninput={(event) => setSelectedGroupGap(Number((event.currentTarget as HTMLInputElement).value))}
         />
       </label>
       <label class="text-xs text-muted-foreground">
-        {t("textBuff.fontSize", "字体大小")}: {customPanelStyle.fontSize}px
+        {t("textBuff.fontSize", "字体大小")}: {selectedGroup.style.fontSize}px
         <input
           class="mt-1 w-full"
           type="range"
           min="10"
           max="28"
           step="1"
-          value={customPanelStyle.fontSize}
-          oninput={(event) => setCustomPanelFontSize(Number((event.currentTarget as HTMLInputElement).value))}
+          value={selectedGroup.style.fontSize}
+          oninput={(event) => setSelectedGroupFontSize(Number((event.currentTarget as HTMLInputElement).value))}
         />
       </label>
       <label class="text-xs text-muted-foreground">
-        {t("textBuff.nameValueGap", "名称-数值间距")}: {customPanelStyle.columnGap}px
+        {t("textBuff.nameValueGap", "名称-数值间距")}: {selectedGroup.style.columnGap}px
         <input
           class="mt-1 w-full"
           type="range"
           min="0"
           max="240"
           step="1"
-          value={customPanelStyle.columnGap}
-          oninput={(event) => setCustomPanelColumnGap(Number((event.currentTarget as HTMLInputElement).value))}
+          value={selectedGroup.style.columnGap}
+          oninput={(event) => setSelectedGroupColumnGap(Number((event.currentTarget as HTMLInputElement).value))}
         />
       </label>
     </div>
@@ -541,42 +572,43 @@
         {t("nameColor", "名称颜色")}
         <input
           type="color"
-          value={customPanelStyle.nameColor}
+          value={selectedGroup.style.nameColor}
           class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-          onchange={(event) => setCustomPanelNameColor((event.currentTarget as HTMLInputElement).value)}
+          onchange={(event) => setSelectedGroupNameColor((event.currentTarget as HTMLInputElement).value)}
         />
       </label>
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
         {t("valueColor", "数值颜色")}
         <input
           type="color"
-          value={customPanelStyle.valueColor}
+          value={selectedGroup.style.valueColor}
           class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-          onchange={(event) => setCustomPanelValueColor((event.currentTarget as HTMLInputElement).value)}
+          onchange={(event) => setSelectedGroupValueColor((event.currentTarget as HTMLInputElement).value)}
         />
       </label>
       <label class="flex items-center justify-between gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
         {t("progressColor", "进度条颜色")}
         <input
           type="color"
-          value={customPanelStyle.progressColor}
+          value={selectedGroup.style.progressColor}
           class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-          onchange={(event) => setCustomPanelProgressColor((event.currentTarget as HTMLInputElement).value)}
+          onchange={(event) => setSelectedGroupProgressColor((event.currentTarget as HTMLInputElement).value)}
         />
       </label>
       <label class="rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        <div>{t("progressOpacity", "进度条透明度")}: {Math.round(customPanelStyle.progressOpacity * 100)}%</div>
+        <div>{t("progressOpacity", "进度条透明度")}: {Math.round(selectedGroup.style.progressOpacity * 100)}%</div>
         <input
           class="mt-2 w-full"
           type="range"
           min="0"
           max="1"
           step="0.05"
-          value={customPanelStyle.progressOpacity}
+          value={selectedGroup.style.progressOpacity}
           oninput={(event) =>
-            setCustomPanelProgressOpacity(Number((event.currentTarget as HTMLInputElement).value))}
+            setSelectedGroupProgressOpacity(Number((event.currentTarget as HTMLInputElement).value))}
         />
       </label>
     </div>
   </div>
+  {/if}
 </div>

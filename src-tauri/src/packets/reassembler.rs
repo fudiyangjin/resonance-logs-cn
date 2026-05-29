@@ -126,4 +126,20 @@ mod tests {
         let got = r.try_next().unwrap();
         assert_eq!(&got[4..], b"split-me");
     }
+
+    #[test]
+    fn take_remaining_clears_partial_frame_before_recovery() {
+        let mut r = Reassembler::new();
+        let partial = make_frame(b"lost-frame");
+        let next = make_frame(b"after-gap");
+
+        r.push(&partial[..6]);
+        assert!(r.try_next().is_none());
+        assert!(!r.take_remaining().is_empty());
+
+        r.push(&next);
+        let got = r.try_next().unwrap();
+        assert_eq!(&got[4..], b"after-gap");
+        assert!(r.try_next().is_none());
+    }
 }

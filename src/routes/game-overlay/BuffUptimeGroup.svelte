@@ -76,7 +76,7 @@
       <div class="group-tag">{t("uptime.title", "Buff Uptime")}</div>
     {/if}
 
-    {#if showTitle}
+    {#if showTitle && !editing}
       <div
         class="buff-uptime-title"
         style:font-size={`${Math.max(12, sizes.buffUptimeFontSize + 1)}px`}
@@ -155,10 +155,14 @@
   }
 
   .buff-uptime-title {
-    margin-bottom: 4px;
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 4px);
     font-weight: 800;
     color: #ffffff;
     line-height: 1.1;
+    pointer-events: none;
+    white-space: nowrap;
   }
 
   .buff-uptime-list {

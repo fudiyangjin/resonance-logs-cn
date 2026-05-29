@@ -4,9 +4,14 @@ import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
 import Icons from 'unplugin-icons/vite'
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
+const loopbackHost = "127.0.0.1";
+const rootDir = dirname(fileURLToPath(import.meta.url));
+const parserDataDir = resolve(rootDir, "parser-data");
 
 const SVELTE_VIRTUAL_STYLE_MODULE = /\.svelte\?.*svelte&type=style.*(?:&|\?)lang\.css(?:$|&)/;
 type IdFilter = {
@@ -115,6 +120,11 @@ export default defineConfig(async () => ({
       // experimental
       autoInstall: true, 
     })],
+  resolve: {
+    alias: {
+      $parserData: parserDataDir,
+    },
+  },
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent vite from obscuring rust errors
@@ -122,9 +132,12 @@ export default defineConfig(async () => ({
   // 2. tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,
-    strictPort: false,
-    host: host || false,
-    hmr: host ? { protocol: "ws", host, port: 1421 } : undefined,
+    strictPort: true,
+    host: host || loopbackHost,
+    hmr: { protocol: "ws", host: host || loopbackHost, port: 1421 },
+    fs: {
+      allow: [rootDir, parserDataDir],
+    },
     watch: {
       // 3. keep Vite focused on frontend sources; local Rust/audit outputs can be huge.
       ignored: [
@@ -139,18 +152,29 @@ export default defineConfig(async () => ({
       ],
     },
   },
+  worker: {
+    format: "iife",
+  },
   optimizeDeps: {
     include: [
+      "esm-env",
+      "svelte",
       "colorjs.io",
       "bits-ui",
+      "@tauri-apps/api/app",
+      "@tauri-apps/api/core",
+      "@tauri-apps/api/event",
+      "@tauri-apps/api/webviewWindow",
+      "@tauri-apps/api/window",
+      "@tauri-apps/plugin-clipboard-manager",
       "@tauri-apps/plugin-dialog",
+      "@tauri-apps/plugin-global-shortcut",
+      "@tauri-apps/plugin-opener",
+      "@tauri-store/svelte",
       "svelte-sonner",
       "tailwind-merge",
       "tailwind-variants",
     ],
-  },
-  worker: {
-    format: "iife",
   },
   build: {
     minify: false,

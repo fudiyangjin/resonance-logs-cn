@@ -1,9 +1,16 @@
 import { resolveBuffOverlayDisplayName } from "$lib/config/buff-name-table";
-import { localizeRawMonsterName } from "$lib/monster-mappings";
+import { localizeMonsterName, localizeRawMonsterName } from "$lib/monster-mappings";
 import { resolveMonsterMonitorTranslation } from "$lib/i18n";
-import { SETTINGS, ensureBuffAliases } from "$lib/settings-store";
+import {
+  SETTINGS,
+  ensureBuffAliases,
+  ensureBuffAlerts,
+} from "$lib/settings-store";
 import type { HateEntry } from "$lib/api";
-import { buildBuffTextRow } from "../game-overlay/overlay-utils";
+import {
+  buildBuffTextRow,
+  resolveAlertState,
+} from "../game-overlay/overlay-utils";
 import type { TextBuffDisplay } from "../game-overlay/overlay-types";
 import { monsterRuntime } from "./monster-runtime.svelte.js";
 import type {
@@ -25,11 +32,33 @@ function targetTitle(uid: number): string {
 }
 
 function resolveMonsterSectionTitle(uid: number): string {
+  const monsterId = monsterRuntime.monsterIdCache.get(uid);
+  if (monsterId !== undefined) {
+    return localizeMonsterName(monsterId);
+  }
+
   const rawName = monsterRuntime.nameCache.get(uid)?.trim();
   if (rawName) {
     return localizeRawMonsterName(rawName, rawName);
   }
   return targetTitle(uid);
+}
+
+function resolveEntityDisplayName(uid: number): string {
+  const playerName = monsterRuntime.playerNameCache.get(uid)?.trim();
+  if (playerName) return playerName;
+
+  const monsterId = monsterRuntime.monsterIdCache.get(uid);
+  if (monsterId !== undefined) {
+    return localizeMonsterName(monsterId);
+  }
+
+  const rawName = monsterRuntime.nameCache.get(uid)?.trim();
+  if (rawName) {
+    return localizeRawMonsterName(rawName, rawName);
+  }
+
+  return `UID ${uid}`;
 }
 
 function selectedMonsterBuffIds() {
@@ -42,7 +71,22 @@ function selectedMonsterBuffIds() {
 function buildPlaceholderRows(now: number): TextBuffDisplay[] {
   const aliases = ensureBuffAliases(SETTINGS.monsterMonitor.state.buffAliases);
   const selectedIds = selectedMonsterBuffIds();
-  const rows = selectedIds
+  const priorityIds = SETTINGS.monsterMonitor.state.buffPriorityIds ?? [];
+  const priorityIndex = new Map<number, number>();
+  priorityIds.forEach((id, index) => priorityIndex.set(id, index));
+  const fallbackBase = priorityIds.length;
+  selectedIds.forEach((id, index) => {
+    if (!priorityIndex.has(id)) {
+      priorityIndex.set(id, fallbackBase + index);
+    }
+  });
+
+  const rows = [...selectedIds]
+    .sort((left, right) => {
+      const leftPriority = priorityIndex.get(left) ?? Number.MAX_SAFE_INTEGER;
+      const rightPriority = priorityIndex.get(right) ?? Number.MAX_SAFE_INTEGER;
+      return leftPriority - rightPriority || left - right;
+    })
     .map((baseId) =>
       buildBuffTextRow(
         `monster_preview_${baseId}`,
@@ -149,7 +193,7 @@ function buildHateRows(entries: HateEntry[], maxDisplay: number): TextBuffDispla
   return sortedEntries
     .map((entry, index) => ({
       key: `hate_${entry.uid}`,
-      label: `${index + 1}. ${monsterRuntime.nameCache.get(entry.uid) ?? `UID ${entry.uid}`}`,
+      label: `${index + 1}. ${resolveEntityDisplayName(entry.uid)}`,
       valueText: `${displayPercents[index] ?? 0}%`,
       progressPercent: 0,
       showProgress: false,
@@ -160,8 +204,22 @@ function buildHateRows(entries: HateEntry[], maxDisplay: number): TextBuffDispla
 export function updateMonsterDisplay() {
   const now = Date.now();
   const aliases = ensureBuffAliases(SETTINGS.monsterMonitor.state.buffAliases);
+  const alertMap = ensureBuffAlerts(SETTINGS.monsterMonitor.state.buffAlerts);
+  const resolveAlert = (
+    baseId: number,
+    remainingMs: number,
+    durationMs: number,
+  ) => resolveAlertState(alertMap[String(baseId)], remainingMs, durationMs);
   const selectedIds = selectedMonsterBuffIds();
-  const priorityIndex = new Map(selectedIds.map((id, index) => [id, index]));
+  const priorityIds = SETTINGS.monsterMonitor.state.buffPriorityIds ?? [];
+  const priorityIndex = new Map<number, number>();
+  priorityIds.forEach((id, index) => priorityIndex.set(id, index));
+  const fallbackBase = priorityIds.length;
+  selectedIds.forEach((id, index) => {
+    if (!priorityIndex.has(id)) {
+      priorityIndex.set(id, fallbackBase + index);
+    }
+  });
   const nextSections: MonsterBossBuffSection[] = [];
   const nextHateSections: MonsterHateSection[] = [];
 
@@ -184,6 +242,7 @@ export function updateMonsterDisplay() {
           now,
           false,
           true,
+          resolveAlert,
         ))
       .filter((row): row is TextBuffDisplay => row !== null);
 

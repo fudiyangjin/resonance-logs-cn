@@ -1,5 +1,5 @@
 use crate::live::commands_models::{HateEntry, PanelAttrState, ShieldDetailEntry};
-use crate::live::opcodes_models::{AttrType, AttrValue, Entity};
+use crate::live::opcodes_models::{AttrType, AttrValue, Entity, PositionAttr};
 use blueprotobuf_lib::blueprotobuf::EActorState;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -148,6 +148,20 @@ impl EntityAttrStore {
             .and_then(|entity_attrs| entity_attrs.get(&attr_type))
     }
 
+    pub fn attr_int_by_id(&self, uid: i64, attr_id: i32) -> Option<i64> {
+        let entity_attrs = self.attrs.get(&uid)?;
+        let attr_type = AttrType::from_id(attr_id).unwrap_or(AttrType::Unknown(attr_id));
+        entity_attrs.get(&attr_type).and_then(AttrValue::as_int)
+    }
+
+    pub fn attr_position_by_id(&self, uid: i64, attr_id: i32) -> Option<PositionAttr> {
+        let entity_attrs = self.attrs.get(&uid)?;
+        let attr_type = AttrType::from_id(attr_id).unwrap_or(AttrType::Unknown(attr_id));
+        entity_attrs
+            .get(&attr_type)
+            .and_then(AttrValue::as_position)
+    }
+
     pub fn hate_list_mut(&mut self, uid: i64) -> &mut Vec<HateEntry> {
         self.hate_lists
             .entry(uid)
@@ -176,21 +190,28 @@ impl EntityAttrStore {
         if let Some(value) = self
             .attr(uid, AttrType::ProfessionId)
             .and_then(AttrValue::as_int)
+            .filter(|value| *value > 0)
         {
             entity.class_id = value as i32;
         }
         if let Some(value) = self
             .attr(uid, AttrType::FightPoint)
             .and_then(AttrValue::as_int)
+            .filter(|value| *value > 0)
         {
             entity.ability_score = value as i32;
         }
-        if let Some(value) = self.attr(uid, AttrType::Level).and_then(AttrValue::as_int) {
+        if let Some(value) = self
+            .attr(uid, AttrType::Level)
+            .and_then(AttrValue::as_int)
+            .filter(|value| *value > 0)
+        {
             entity.level = value as i32;
         }
         if let Some(value) = self
             .attr(uid, AttrType::SeasonStrength)
             .and_then(AttrValue::as_int)
+            .filter(|value| *value > 0)
         {
             entity.season_strength = value as i32;
         }

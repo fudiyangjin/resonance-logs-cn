@@ -1,20 +1,20 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Resonance Logs - Global",
-  "version": "1.0.6-beta.5",
+  "version": "1.0.7",
   "identifier": "com.resonance-logs-global",
   "build": {
-    "beforeDevCommand": "npm run dev:stop-windivert",
+    "beforeDevCommand": "npm run dev:tauri-static",
     "beforeBuildCommand": "npm run build:stop-windivert",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://127.0.0.1:1420",
     "frontendDist": "../build"
   },
   "app": {
     "windows": [
       {
-        "title": "Resonance Logs - Global v1.0.6_beta5 - Live",
+        "title": "Resonance Logs - Global v1.0.7 - Live",
         "label": "live",
-        "url": "live",
+        "url": "/live/dps",
         "shadow": false,
         "decorations": false,
         "transparent": true,
@@ -24,9 +24,9 @@
         "skipTaskbar": true
       },
       {
-        "title": "Resonance Logs - Global v1.0.6_beta5 - Main",
+        "title": "Resonance Logs - Global v1.0.7 - Main",
         "label": "main",
-        "url": "main",
+        "url": "/main/dps",
         "width": 1200,
         "height": 800,
         "minWidth": 855,
@@ -37,7 +37,7 @@
       {
         "title": "Game Overlay",
         "label": "game-overlay",
-        "url": "game-overlay",
+        "url": "/game-overlay",
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
@@ -52,7 +52,7 @@
       {
         "title": "Monster Overlay",
         "label": "monster-overlay",
-        "url": "monster-overlay",
+        "url": "/monster-overlay",
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
@@ -65,9 +65,9 @@
         "maximizable": false
       },
       {
-        "title": "Resonance Logs - Global v1.0.6_beta5 - Event Logger",
+        "title": "Resonance Logs - Global v1.0.7 - Event Logger",
         "label": "event-logger",
-        "url": "event-logger",
+        "url": "/event-logger",
         "width": 1200,
         "height": 760,
         "minWidth": 900,

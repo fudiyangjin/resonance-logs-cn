@@ -18,6 +18,9 @@
   const entity = $derived(
     liveData?.entities.find((e) => e.uid === playerUid) ?? null,
   );
+  const isLocalPlayer = $derived(
+    liveData?.localPlayerUid != null && playerUid === liveData.localPlayerUid,
+  );
 
   function handleSelect(deathTimestampMs: number) {
     goto(
@@ -32,6 +35,7 @@
   playerName=""
   className={entity?.className ?? ""}
   classSpecName={entity?.classSpecName ?? ""}
+  {isLocalPlayer}
   {deaths}
   fightStartTimestampMs={Number(liveData?.fightStartTimestampMs ?? 0) || null}
   onSelect={handleSelect}

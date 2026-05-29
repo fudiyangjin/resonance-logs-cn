@@ -16,17 +16,28 @@ function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-const RAW_BUNDLED_LOCALE_FILES = import.meta.glob(
-  "./locales/*/ui/**/*.json",
-  {
+const RAW_BOOTSTRAP_LOCALE_FILES = {
+  ...import.meta.glob("./locales/en/ui/**/*.json", {
     eager: true,
     import: "default",
-  },
-) as Record<string, JsonValue>;
+  }),
+  ...import.meta.glob("./locales/zh-CN/ui/**/*.json", {
+    eager: true,
+    import: "default",
+  }),
+} as Record<string, JsonValue>;
+
+const LAZY_BUNDLED_LOCALE_FILES = import.meta.glob("./locales/*/ui/**/*.json", {
+  import: "default",
+}) as Record<string, () => Promise<JsonValue>>;
+
+function normalizeBundledLocalePath(path: string): string {
+  return path.replace(/^\.\/locales\//, "/src/lib/locales/");
+}
 
 const SMALL_BUNDLED_LOCALE_FILES: Record<string, JsonValue> = Object.fromEntries(
-  Object.entries(RAW_BUNDLED_LOCALE_FILES).map(([path, value]) => [
-    path.replace(/^\.\/locales\//, "/src/lib/locales/"),
+  Object.entries(RAW_BOOTSTRAP_LOCALE_FILES).map(([path, value]) => [
+    normalizeBundledLocalePath(path),
     value,
   ]),
 );
@@ -75,4 +86,40 @@ export function getBundledTranslationTable(virtualPath: string): JsonRecord {
   }
 
   return {};
+}
+
+export async function loadBundledLocale(locale: string): Promise<boolean> {
+  if (!MANIFEST.locales.includes(locale)) {
+    return false;
+  }
+
+  const prefix = `./locales/${locale}/ui/`;
+  const loaders = Object.entries(LAZY_BUNDLED_LOCALE_FILES).filter(([path]) =>
+    path.startsWith(prefix),
+  );
+
+  if (loaders.length === 0) {
+    return false;
+  }
+
+  const missingLoaders = loaders.filter(
+    ([path]) => SMALL_BUNDLED_LOCALE_FILES[normalizeBundledLocalePath(path)] === undefined,
+  );
+
+  if (missingLoaders.length === 0) {
+    return false;
+  }
+
+  await Promise.all(
+    missingLoaders.map(async ([path, load]) => {
+      SMALL_BUNDLED_LOCALE_FILES[normalizeBundledLocalePath(path)] = await load();
+    }),
+  );
+
+  return true;
+}
+
+export async function hydrateAllBundledUiLocales(): Promise<boolean> {
+  const results = await Promise.all(MANIFEST.locales.map((locale) => loadBundledLocale(locale)));
+  return results.some(Boolean);
 }

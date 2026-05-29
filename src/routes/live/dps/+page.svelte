@@ -1,15 +1,17 @@
 <script lang="ts">
-  import { getClassIcon, tooltip } from "$lib/utils.svelte";
   import { goto } from "$app/navigation";
   import { settings, SETTINGS, DEFAULT_STATS } from "$lib/settings-store";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
   import { computePlayerRows } from "$lib/live-derived";
+  import ClassSpecIcon from "$lib/components/class-spec-icon.svelte";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import { historyDpsPlayerColumns } from "$lib/column-data";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import PercentFormat from "$lib/components/percent-format.svelte";
-  import getDisplayName from "$lib/name-display";
-  import { normalizeNameDisplaySetting } from "$lib/name-display";
+  import getDisplayName, {
+    getDisplayIconSpecName,
+    normalizeNameDisplaySetting,
+  } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
   import { resolveUiTranslation } from "$lib/i18n";
 
@@ -184,6 +186,12 @@ function thLabel(col: { headerKey?: string; header: string }): string {
                 "Hide Others' Name"
               ? player.className
               : ""}
+          {@const iconSpecName = getDisplayIconSpecName({
+            classSpecName: player.classSpecName,
+            showYourNameSetting: SETTINGS_YOUR_NAME,
+            showOthersNameSetting: SETTINGS_OTHERS_NAME,
+            isLocalPlayer,
+          })}
           <tr
             class="relative bg-background/40 hover:bg-muted/60 transition-colors cursor-pointer group"
             style="height: {tableSettings.playerRowHeight}px; font-size: {tableSettings.playerFontSize}px;"
@@ -196,10 +204,11 @@ function thLabel(col: { headerKey?: string; header: string }): string {
             >
               <div class="flex items-center justify-between gap-3">
                 <span class="flex min-w-0 items-center gap-2">
-                  <img
+                  <ClassSpecIcon
                     style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                     class="object-contain"
-                    src={getClassIcon(className)}
+                    {className}
+                    classSpecName={iconSpecName}
                     alt={t("historyDetail.classIcon", "Class icon")}
                   />
                   <span class="truncate font-medium">{displayName || `#${player.uid}`}</span>
@@ -282,6 +291,12 @@ function thLabel(col: { headerKey?: string; header: string }): string {
               "Hide Others' Name"
             ? player.className
             : ""}
+        {@const iconSpecName = getDisplayIconSpecName({
+          classSpecName: player.classSpecName,
+          showYourNameSetting: SETTINGS_YOUR_NAME,
+          showOthersNameSetting: SETTINGS_OTHERS_NAME,
+          isLocalPlayer,
+        })}
         <tr
           class="relative bg-background/40 hover:bg-muted/60 transition-colors cursor-pointer group"
           style="height: {tableSettings.playerRowHeight}px; font-size: {tableSettings.playerFontSize}px;"
@@ -289,20 +304,18 @@ function thLabel(col: { headerKey?: string; header: string }): string {
         >
           <td class="px-3 py-1 relative z-10">
             <div class="flex items-center h-full gap-2">
-              <img
+              <ClassSpecIcon
                 style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                 class="object-contain"
-                src={getClassIcon(className)}
+                {className}
+                classSpecName={iconSpecName}
                 alt={t("historyDetail.classIcon", "职业图标")}
-                {@attach tooltip(
-                  () =>
-                    formatClassSpecLabel(player.className, player.classSpecName) ||
-                    t("historyDetail.unknownClass", "未知职业"),
-                )}
+                tooltipText={formatClassSpecLabel(player.className, player.classSpecName) ||
+                    t("historyDetail.unknownClass", "Unknown Class")}
               />
               {#if (player.abilityScore > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourAbilityScore : SETTINGS.live.general.state.showOthersAbilityScore)) || (player.seasonStrength > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourSeasonStrength : SETTINGS.live.general.state.showOthersSeasonStrength))}
                 <span
-                  class="inline-flex items-center gap-0 tabular-nums"
+                  class="inline-flex items-center gap-1 tabular-nums whitespace-nowrap"
                   style="color: {customThemeColors.tableTextColor};"
                 >
                   {#if player.abilityScore > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourAbilityScore : SETTINGS.live.general.state.showOthersAbilityScore)}
@@ -318,7 +331,7 @@ function thLabel(col: { headerKey?: string; header: string }): string {
                   {/if}
                   {#if player.seasonStrength > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourSeasonStrength : SETTINGS.live.general.state.showOthersSeasonStrength)}
                     <span
-                      class="-ml-0.5 tabular-nums"
+                      class="tabular-nums"
                       style="color: {customThemeColors.tableTextColor};"
                       >({player.seasonStrength})</span
                     >

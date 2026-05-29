@@ -33,7 +33,7 @@
     "fr": "Lame-tempête",
     "de": "Sturmklinge",
     "es": "Filo tormentoso",
-    "pt-BR": "​ ​​Lâmina Tempestuosa",
+    "pt-BR": "Lâmina Tempestuosa",
     "th": "Stormblade",
     "id": "Stormblade",
     "ko-KR": "스톰 블레이드"
@@ -60,7 +60,7 @@
     "fr": "Tireur d'élite",
     "de": "Scharfschütze",
     "es": "Tirador",
-    "pt-BR": "​ Atirador de Elite",
+    "pt-BR": "Atirador de Elite",
     "th": "Marksman",
     "id": "Divine Archer"
   },
@@ -78,17 +78,17 @@
     "ko-KR": "프로스트 메이지"
   },
   "class.Flame Berserker": {
-    "en": "Flame Berserker",
+    "en": "Twin Axe",
     "zh-CN": "赤炎狂战士",
     "zh-TW": "赤炎狂戰士",
-    "ja": "Flame Berserker",
-    "ko-KR": "Flame Berserker",
-    "fr": "Flame Berserker",
-    "de": "Flame Berserker",
-    "es": "Flame Berserker",
-    "pt-BR": "Flame Berserker",
-    "th": "Flame Berserker",
-    "id": "Flame Berserker"
+    "ja": "Twin Axe",
+    "ko-KR": "Twin Axe",
+    "fr": "Twin Axe",
+    "de": "Twin Axe",
+    "es": "Twin Axe",
+    "pt-BR": "Twin Axe",
+    "th": "Twin Axe",
+    "id": "Twin Axe"
   },
   "class.Verdant Oracle": {
     "en": "Verdant Oracle",

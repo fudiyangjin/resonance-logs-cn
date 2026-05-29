@@ -4118,7 +4118,7 @@ dependencies = [
 
 [[package]]
 name = "resonance-logs-global"
-version = "1.0.6-beta.5"
+version = "1.0.7"
 dependencies = [
  "anyhow",
  "bincode",

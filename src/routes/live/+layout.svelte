@@ -21,6 +21,7 @@
     onDeathReplay,
   } from "$lib/api";
   import { applyCustomFonts } from "$lib/font-loader";
+  import AppBackgroundLayer from "$lib/components/app-background-layer.svelte";
   import { writable } from "svelte/store";
   import { beforeNavigate, afterNavigate } from "$app/navigation";
 
@@ -338,49 +339,6 @@ t("live.resumeToast", "战斗已继续"),
     };
   });
 
-  // Reactive background image effect
-  $effect(() => {
-    if (typeof document === "undefined") return;
-
-    const bgImageEnabled = SETTINGS.accessibility.state.backgroundImageEnabled;
-    const bgImage = SETTINGS.accessibility.state.backgroundImage;
-    const bgMode = SETTINGS.accessibility.state.backgroundImageMode || "cover";
-    const bgContainColor =
-      SETTINGS.accessibility.state.backgroundImageContainColor ||
-      "rgba(0, 0, 0, 1)";
-
-    if (bgImageEnabled && bgImage) {
-      document.body.style.backgroundImage = `url('${bgImage}')`;
-      document.body.style.backgroundSize = bgMode;
-      document.body.style.backgroundPosition = "center";
-      document.body.style.backgroundRepeat = "no-repeat";
-      if (bgMode === "contain") {
-        document.body.style.setProperty(
-          "background-color",
-          bgContainColor,
-          "important",
-        );
-      } else {
-        document.body.style.setProperty(
-          "background-color",
-          "transparent",
-          "important",
-        );
-      }
-    } else {
-      // Just clear the background image, keep body transparent
-      document.body.style.backgroundImage = "";
-      document.body.style.backgroundSize = "";
-      document.body.style.backgroundPosition = "";
-      document.body.style.backgroundRepeat = "";
-      document.body.style.setProperty(
-        "background-color",
-        "transparent",
-        "important",
-      );
-    }
-  });
-
   $effect(() => {
     applyCustomFonts({
       sansEnabled: SETTINGS.accessibility.state.customFontSansEnabled,
@@ -397,23 +355,39 @@ t("live.resumeToast", "战斗已继续"),
 <!-- flex flex-col min-h-screen → makes the page stretch full height and stack header, body, and footer. -->
 <!-- flex-1 on <main> → makes the body expand to fill leftover space, pushing the footer down. -->
 <div
-  class="flex h-screen flex-col bg-background-live text-[13px] text-foreground font-sans rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)]"
+  class="relative isolate h-screen overflow-hidden rounded-xl text-[13px] text-foreground font-sans shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)]"
   style="padding: {SETTINGS.live.headerCustomization.state.windowPadding}px"
   data-tauri-drag-region
 >
-  <HeaderCustom />
-  <main
-    bind:this={mainElement}
-    class="flex-1 overflow-y-auto gap-4 rounded-lg bg-card/20"
-  >
-    {@render children()}
-  </main>
-  <!-- Footer removed; navigation and version moved into Header -->
-  <NotificationToast bind:this={notificationToast} />
+  <AppBackgroundLayer
+    enabled={SETTINGS.accessibility.state.backgroundImageEnabled}
+    image={SETTINGS.accessibility.state.backgroundImage}
+    mode={SETTINGS.accessibility.state.backgroundImageMode || "cover"}
+    containColor={SETTINGS.accessibility.state.backgroundImageContainColor || "rgba(0, 0, 0, 0)"}
+    opacity={SETTINGS.accessibility.state.backgroundImageOpacity ?? 100}
+  />
+  <div class="pointer-events-none absolute inset-0 z-10 bg-background-live"></div>
+
+  <div class="relative z-20 flex h-full flex-col">
+    <HeaderCustom />
+    <main
+      bind:this={mainElement}
+      class="flex-1 overflow-y-auto gap-4 rounded-lg bg-card/20"
+    >
+      {@render children()}
+    </main>
+    <!-- Footer removed; navigation and version moved into Header -->
+    <NotificationToast bind:this={notificationToast} />
+  </div>
 </div>
 
 <style>
   :global {
+    html,
+    body {
+      background: transparent;
+    }
+
     /* Hide scrollbars globally but keep scrolling functional */
     * {
       -ms-overflow-style: none; /* IE and Edge */

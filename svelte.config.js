@@ -1,5 +1,9 @@
 import adapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const rootDir = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -12,7 +16,7 @@ const config = {
 
 	kit: {
 		alias: {
-			$parserData: "./parser-data",
+			$parserData: resolve(rootDir, "parser-data"),
 		},
 		adapter: adapter({
 			fallback: "index.html",

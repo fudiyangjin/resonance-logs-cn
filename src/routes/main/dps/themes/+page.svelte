@@ -621,6 +621,14 @@
     SETTINGS.accessibility.state.useClassSpecColors = colorMode === "spec";
   });
 
+  $effect(() => {
+    if (
+      typeof SETTINGS.accessibility.state.backgroundImageOpacity !== "number"
+    ) {
+      SETTINGS.accessibility.state.backgroundImageOpacity = 100;
+    }
+  });
+
   // Group custom theme colors by category
   const colorCategories = $derived.by(() => {
     const categories: Record<
@@ -1317,6 +1325,20 @@
                     onclear={() => {
                       SETTINGS.accessibility.state.backgroundImage = "";
                     }}
+                  />
+                  <SettingsSlider
+                    bind:value={
+                      SETTINGS.accessibility.state.backgroundImageOpacity
+                    }
+                    min={0}
+                    max={100}
+                    step={1}
+                    unit="%"
+                    label={t("themes.general.backgroundImageOpacity", "Background image opacity")}
+                    description={t(
+                      "themes.general.backgroundImageOpacityDescription",
+                      "Controls how strongly the background image is drawn behind the app.",
+                    )}
                   />
                   <SettingsSelect
                     label={t("themes.general.imageMode", "图片模式")}

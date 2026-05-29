@@ -10,6 +10,7 @@ src-tauri/target/debug/*
 !src-tauri/target/debug/Windivert64.sys
 
 DEV_exports/
+DEV_generated/
 
 # Local scratch/debug artifacts. These can contain machine-specific paths,
 # browser profile cache data, or temporary run logs.
@@ -21,5 +22,9 @@ DEV_exports/
 /src-tauri/DEV_probes/
 /src-tauri/target-check/
 /src-tauri/target-codex-check/
+/src-tauri/target-*/
+/src-tauri/target_*/
 /target-check/
 /target-codex-check/
+/target-*/
+/target_*/

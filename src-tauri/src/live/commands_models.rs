@@ -369,6 +369,9 @@ pub struct ActiveFactorItemState {
     pub grade: Option<i32>,
     pub family_id: Option<i32>,
     pub runtime_source: String,
+    pub selector_path: Option<String>,
+    pub selector_signature: Option<String>,
+    pub selector_offset: Option<i32>,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
@@ -699,6 +702,9 @@ pub fn to_active_factor_item_state(item: &ObservedFactorItem) -> ActiveFactorIte
         grade: item.grade,
         family_id: item.family_id,
         runtime_source: item.runtime_source.clone(),
+        selector_path: item.selector_path.clone(),
+        selector_signature: item.selector_signature.clone(),
+        selector_offset: item.selector_offset,
     }
 }
 
@@ -924,6 +930,13 @@ pub struct EntityNameMapPayload {
     pub names: HashMap<i64, String>,
 }
 
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct EntityIdentityMapPayload {
+    pub player_names: HashMap<i64, String>,
+    pub monster_ids: HashMap<i64, i32>,
+}
+
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CounterUpdateState {
@@ -937,10 +950,12 @@ pub struct SlotUpdateState {
     pub slot_id: i32,
     pub current_count: u32,
     pub threshold: Option<u32>,
+    pub effective_threshold: Option<u32>,
     pub is_counting: bool,
     pub reset_buff_active: bool,
     pub freeze_until_ms: Option<i64>,
     pub freeze_duration_ms: Option<u64>,
+    pub effective_freeze_duration_ms: Option<u64>,
 }
 
 #[derive(serde::Serialize, Debug, Clone)]

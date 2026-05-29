@@ -111,6 +111,7 @@
   }
 
   :global(.group-tag) {
+    /* Edit labels are chrome; they must not change saved overlay geometry. */
     position: absolute;
     left: 0;
     bottom: calc(100% + 6px);

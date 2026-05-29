@@ -3,7 +3,16 @@
     "classKey": "wind_knight",
     "className": "青岚骑士",
     "classId": 4,
-    "defaultMonitoredBuffIds": [510072, 2205561, 31201, 2205211, 2205401, 2205134, 2205521, 31901],
+    "defaultMonitoredBuffIds": [
+      510072,
+      2205561,
+      31201,
+      2205211,
+      2205401,
+      2205134,
+      2205521,
+      31901
+    ],
     "derivations": [
       {
         "sourceSkillId": 1425,
@@ -62,7 +71,10 @@
         "skillId": 1419,
         "name": "翔返",
         "imagePath": "/images/wind_knight/skill/weapon_cq-01_tg02_-133786615417471994.png",
-        "resourceRequirement": { "resourceId": 14011, "amount": 35 }
+        "resourceRequirement": {
+          "resourceId": 14011,
+          "amount": 35
+        }
       },
       {
         "skillId": 1421,
@@ -84,7 +96,10 @@
         "skillId": 1424,
         "name": "刹那",
         "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx05_-4769613798753072914.png",
-        "resourceRequirement": { "resourceId": 14001, "amount": 3 }
+        "resourceRequirement": {
+          "resourceId": 14001,
+          "amount": 3
+        }
       },
       {
         "skillId": 1401,
@@ -118,7 +133,11 @@
     "classKey": "frost_mage",
     "className": "冰法",
     "classId": 2,
-    "defaultMonitoredBuffIds": [510072, 27007, 2204191],
+    "defaultMonitoredBuffIds": [
+      510072,
+      27007,
+      2204191
+    ],
     "derivations": [
       {
         "sourceSkillId": 1244,
@@ -130,6 +149,11 @@
       }
     ],
     "skills": [
+      {
+        "skillId": 1201,
+        "name": "Raincall Surge",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_skill_atk_5391528785179154814.png"
+      },
       {
         "skillId": 1239,
         "name": "陨星风暴",
@@ -146,6 +170,11 @@
         "skillId": 1242,
         "name": "冰霜之矛",
         "imagePath": "/images/frost_mage/skill/weapon_mz-01_tg02_4654006341741505144.png"
+      },
+      {
+        "skillId": 1241,
+        "name": "Frostbeam",
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_tg01_3563690211207543178.png"
       },
       {
         "skillId": 1210,
@@ -188,43 +217,96 @@
     "classKey": "flame_berserker",
     "className": "赤炎狂战士",
     "classId": 3,
-    "defaultMonitoredBuffIds": [510072, 2208483],
+    "defaultMonitoredBuffIds": [
+      510072,
+      2208483
+    ],
     "derivations": [
       {
         "sourceSkillId": 1614,
         "derivedSkillId": 1621,
         "triggerBuffBaseId": 2208483,
         "derivedName": "炎魔天落杀",
-        "derivedImagePath": "/images/flame_berserker/skill/weapon_sf-01_kx05.png",
+        "derivedImagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_104.png",
         "keepCdWhenDerived": true
       }
     ],
     "skills": [
+      {
+        "skillId": 1601,
+        "name": "炽热挥击",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_atk01.png"
+      },
+      {
+        "skillId": 1605,
+        "name": "炽烈升腾",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_atk101.png"
+      },
       {
         "skillId": 1606,
         "name": "狂热斩击",
         "imagePath": "/images/flame_berserker/skill/weapon_sf-01_tg02.png"
       },
       {
-        "skillId": 1613,
-        "name": "迷狂炎舞",
-        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx04.png"
+        "skillId": 1607,
+        "name": "炽焰突袭",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx01.png"
       },
       {
-        "skillId": 1617,
-        "name": "无尽之炎魔",
-        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx08.png"
+        "skillId": 1608,
+        "name": "暴怒劈斩",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx02_1.png"
+      },
+      {
+        "skillId": 1609,
+        "name": "暴怒劈斩",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_102.png"
+      },
+      {
+        "skillId": 1610,
+        "name": "暴怒劈斩",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_101.png"
+      },
+      {
+        "skillId": 1611,
+        "name": "暴怒劈斩",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_03.png"
+      },
+      {
+        "skillId": 1612,
+        "name": "斧风狩猎",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill02_01.png"
+      },
+      {
+        "skillId": 1613,
+        "name": "迷狂炎舞",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_103.png"
       },
       {
         "skillId": 1614,
         "name": "无羁坠星",
-        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx05.png"
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_104.png"
+      },
+      {
+        "skillId": 1615,
+        "name": "荒火星流",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx06.png"
       },
       {
         "skillId": 1616,
         "name": "如川流华斩",
         "maxCharges": 2,
         "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx07.png"
+      },
+      {
+        "skillId": 1617,
+        "name": "爆裂之怒",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx08.png"
+      },
+      {
+        "skillId": 1618,
+        "name": "烬灭！狱炎不知火",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_ult_01.png"
       }
     ]
   },
@@ -232,7 +314,17 @@
     "classKey": "stormblade",
     "className": "雷影剑士",
     "classId": 1,
-    "defaultMonitoredBuffIds": [510072, 2200601, 2200431, 2200641, 2200121, 2200051, 2200231, 43201, 43101],
+    "defaultMonitoredBuffIds": [
+      510072,
+      2200601,
+      2200431,
+      2200641,
+      2200121,
+      2200051,
+      2200231,
+      43201,
+      43101
+    ],
     "derivations": [
       {
         "sourceSkillId": 1701,
@@ -354,5 +446,502 @@
         "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx06_-1183548700792331979.png"
       }
     ]
+  },
+  "beat_performer": {
+    "classKey": "beat_performer",
+    "className": "灵魂乐手",
+    "classId": 13,
+    "defaultMonitoredBuffIds": [
+      510072,
+      2207241,
+      55332,
+      2207011
+    ],
+    "derivations": [
+      {
+        "sourceSkillId": 2313,
+        "derivedSkillId": 2313,
+        "triggerBuffBaseId": 2207241,
+        "derivedName": "热情挥散",
+        "derivedImagePath": "/images/beat_performer/skill/weapon_jt-01_kx06_922226435693330329.png"
+      },
+      {
+        "sourceSkillId": 2311,
+        "derivedSkillId": 2318,
+        "triggerBuffBaseId": 55332,
+        "derivedName": "鸣奏·愈合乐章",
+        "derivedImagePath": "/images/beat_performer/skill/weapon_jt-01_kx04_01_1542676853620613518.png"
+      },
+      {
+        "sourceSkillId": 2307,
+        "derivedSkillId": 2307,
+        "triggerBuffBaseId": 2207011,
+        "derivedName": "愈合节拍",
+        "derivedImagePath": "/images/beat_performer/skill/weapon_jt-01_tg02_-7726600810236144266.png"
+      }
+    ],
+    "skills": [
+      {
+        "skillId": 2301,
+        "name": "Resonant Strings",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_atk_5299104718437343011.png"
+      },
+      {
+        "skillId": 2306,
+        "name": "Amplified Beat",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_tg01_7196335942740480668.png"
+      },
+      {
+        "skillId": 2308,
+        "name": "Harmonic Anthem",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx01_6790195387100573474.png"
+      },
+      {
+        "skillId": 2310,
+        "name": "Heroic Melody",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx03_-8245907516832202628.png"
+      },
+      {
+        "skillId": 2314,
+        "name": "Rock the Stage",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_ult_7388916134498847969.png"
+      },
+      {
+        "skillId": 2316,
+        "name": "Center Stage",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx08_2193884571674385388.png"
+      },
+      {
+        "skillId": 2317,
+        "name": "Fierce Strike",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx03_01_-2259019334853273532.png"
+      },
+      {
+        "skillId": 2332,
+        "name": "Passion Fury",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_tf03_01_-4800935649313795419.png"
+      },
+      {
+        "skillId": 2335,
+        "name": "Infinite Rhapsody",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_ult01_-5919892973084268531.png"
+      },
+      {
+        "skillId": 2336,
+        "name": "Concert Circuit",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_ult02_-4439127223253359714.png"
+      },
+      {
+        "skillId": 2315,
+        "name": "Encore",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx07_6080503737517248499.png"
+      },
+      {
+        "skillId": 2309,
+        "name": "Rhapsody of Flame",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx02_-3177198704358744543.png"
+      },
+      {
+        "skillId": 2313,
+        "name": "Passion Burst",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx06_922226435693330329.png"
+      },
+      {
+        "skillId": 2312,
+        "name": "Fivefold Crescendo",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx05_3251506557365611240.png"
+      },
+      {
+        "skillId": 2311,
+        "name": "Healing Melody",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx04_828493212676998087.png"
+      },
+      {
+        "skillId": 2307,
+        "name": "Healing Beat",
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_tg02_-7726600810236144266.png"
+      }
+    ]
+  },
+  "heavy_guardian": {
+    "classKey": "heavy_guardian",
+    "className": "?????",
+    "classId": 9,
+    "skills": [
+      {
+        "skillId": 1901,
+        "name": "止战之锋",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr_skill_atk_-6428171380219177885.png"
+      },
+      {
+        "skillId": 1905,
+        "name": "斩龙式",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr_skill_01_-9034419994997015568.png"
+      },
+      {
+        "skillId": 1906,
+        "name": "后撤斩",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr_skill_02_5184015716616929764.png"
+      },
+      {
+        "skillId": 1907,
+        "name": "岩御·崩裂回环",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_ult_-3650474920866972306.png"
+      },
+      {
+        "skillId": 1917,
+        "name": "巨岩撞击",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx07_7563557158961009559.png"
+      },
+      {
+        "skillId": 1922,
+        "name": "护盾猛击",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_tg02_8079734215068901140.png"
+      },
+      {
+        "skillId": 1923,
+        "name": "砂岩守护",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx06_2700380891417243473.png"
+      },
+      {
+        "skillId": 1924,
+        "name": "碎星冲",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx01_-981982055443352497.png"
+      },
+      {
+        "skillId": 1925,
+        "name": "怒爆",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx03_-3161919261785332843.png"
+      },
+      {
+        "skillId": 1926,
+        "name": "砂岩之握",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx05_4188871788809645051.png"
+      },
+      {
+        "skillId": 1927,
+        "name": "砂石斗篷",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx02_2314813405527916033.png"
+      },
+      {
+        "skillId": 1929,
+        "name": "不动如山",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx04_615789575634243887.png"
+      },
+      {
+        "skillId": 1930,
+        "name": "格挡冲击",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_tg01_01_1218573782310801813.png"
+      },
+      {
+        "skillId": 1931,
+        "name": "格挡冲击",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_tg01_-6055680706423043300.png"
+      },
+      {
+        "skillId": 1933,
+        "name": "止战之锋",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr_skill_atk_-6428171380219177885.png"
+      },
+      {
+        "skillId": 1938,
+        "name": "勇者壁垒",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx08_1959893658930417921.png"
+      },
+      {
+        "skillId": 1941,
+        "name": "碎星崩裂",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx01_01_4368234078998221213.png"
+      },
+      {
+        "skillId": 1942,
+        "name": "崩裂",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr_skill_atk_-6428171380219177885.png"
+      },
+      {
+        "skillId": 1943,
+        "name": "巨岩轰击",
+        "imagePath": "/images/heavy_guardian/skill/weaponn-wr_sikll_atk_02.png"
+      },
+      {
+        "skillId": 1944,
+        "name": "怒爆",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx03_-3161919261785332843.png"
+      }
+    ],
+    "defaultMonitoredBuffIds": [],
+    "derivations": []
+  },
+  "shield_knight": {
+    "classKey": "shield_knight",
+    "className": "????",
+    "classId": 12,
+    "skills": [
+      {
+        "skillId": 2401,
+        "name": "公正之剑",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_atk_-5299769348838875177.png"
+      },
+      {
+        "skillId": 2405,
+        "name": "英勇盾击",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_tg01_-8383665090541245509.png"
+      },
+      {
+        "skillId": 2406,
+        "name": "先锋打击",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_tg02_-6802049860399826653.png"
+      },
+      {
+        "skillId": 2407,
+        "name": "凛威·圣光灌注",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_ult_01_-8907906034734542263.png"
+      },
+      {
+        "skillId": 2408,
+        "name": "投掷盾牌",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx01_690141429852347533.png"
+      },
+      {
+        "skillId": 2409,
+        "name": "圣环",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx02_2443604969782919177.png"
+      },
+      {
+        "skillId": 2410,
+        "name": "裁决",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx03_2732677483216541835.png"
+      },
+      {
+        "skillId": 2411,
+        "name": "灼热裁决",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx03_ex_-5385913652517303802.png"
+      },
+      {
+        "skillId": 2412,
+        "name": "清算",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx04_5683706259466441767.png"
+      },
+      {
+        "skillId": 2413,
+        "name": "炽热清算",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx04_ex_778798243429291418.png"
+      },
+      {
+        "skillId": 2414,
+        "name": "神圣壁垒",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx05_-5638428109704730981.png"
+      },
+      {
+        "skillId": 2415,
+        "name": "圣光守卫",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx06_3980803170877479368.png"
+      },
+      {
+        "skillId": 2417,
+        "name": "强化断罪",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_atk_ex_4225608824393271181.png"
+      },
+      {
+        "skillId": 2419,
+        "name": "冷酷征伐",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx07_6648625417100449388.png"
+      },
+      {
+        "skillId": 2420,
+        "name": "光明决心",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx08_3933276002928830685.png"
+      },
+      {
+        "skillId": 2421,
+        "name": "圣剑",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx09_2700937844174562957.png"
+      },
+      {
+        "skillId": 2425,
+        "name": "投掷盾牌",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx01_690141429852347533.png"
+      },
+      {
+        "skillId": 2453,
+        "name": "圣剑",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx09_2700937844174562957.png"
+      }
+    ],
+    "defaultMonitoredBuffIds": [],
+    "derivations": []
+  },
+  "marksman": {
+    "classKey": "marksman",
+    "className": "???",
+    "classId": 11,
+    "skills": [
+      {
+        "skillId": 2201,
+        "name": "弹无虚发",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_atk_-2082244919131607115.png"
+      },
+      {
+        "skillId": 2209,
+        "name": "锐眼·光能巨箭",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_ult_-7582180839649827365.png"
+      },
+      {
+        "skillId": 2220,
+        "name": "暴风箭矢",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_tg01_-5987276715958096216.png"
+      },
+      {
+        "skillId": 2221,
+        "name": "暴风箭矢",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_tg01_01_8159951765972206442.png"
+      },
+      {
+        "skillId": 2222,
+        "name": "二连矢",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_tg02_-5171720677613707706.png"
+      },
+      {
+        "skillId": 2224,
+        "name": "夺命射击",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_tg03_4864783476471791824.png"
+      },
+      {
+        "skillId": 2230,
+        "name": "怒涛射击",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx01_9110525689613223507.png"
+      },
+      {
+        "skillId": 2231,
+        "name": "精神凝聚",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx02_-8721967237189344326.png"
+      },
+      {
+        "skillId": 2232,
+        "name": "箭雨",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx03_6262789116367131374.png"
+      },
+      {
+        "skillId": 2233,
+        "name": "聚能射击",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx05_1375303907558458536.png"
+      },
+      {
+        "skillId": 2234,
+        "name": "光能轰炸",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx04_-547550312812423798.png"
+      },
+      {
+        "skillId": 2235,
+        "name": "威慑射击",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx06_-2317352080954752334.png"
+      },
+      {
+        "skillId": 2237,
+        "name": "狂野呼唤",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx07_6963879478276471836.png"
+      },
+      {
+        "skillId": 2238,
+        "name": "爆炸射击",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx08_-6570599884307306030.png"
+      },
+      {
+        "skillId": 2240,
+        "name": "天翔贯星击",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx01_01_-903349546601735805.png"
+      }
+    ],
+    "defaultMonitoredBuffIds": [],
+    "derivations": []
+  },
+  "verdant_oracle": {
+    "classKey": "verdant_oracle",
+    "className": "???",
+    "classId": 5,
+    "skills": [
+      {
+        "skillId": 1501,
+        "name": "掌控藤蔓",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh_skill_atk_7207613408057060099.png"
+      },
+      {
+        "skillId": 1505,
+        "name": "起舞",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_tg01_2955740106852191547.png"
+      },
+      {
+        "skillId": 1509,
+        "name": "繁盛·希望结界",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_ult_5377337143300028519.png"
+      },
+      {
+        "skillId": 1519,
+        "name": "不羁之种",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx09_-3065777601516650668.png"
+      },
+      {
+        "skillId": 1520,
+        "name": "灌注",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx01_-777893832486412878.png"
+      },
+      {
+        "skillId": 1521,
+        "name": "森之祈愿",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx02_-8523413017795422697.png"
+      },
+      {
+        "skillId": 1522,
+        "name": "滋养",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx04_-3957964899996844983.png"
+      },
+      {
+        "skillId": 1523,
+        "name": "再生脉冲",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx05_-6309963487019551284.png"
+      },
+      {
+        "skillId": 1524,
+        "name": "加速生长",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx06_-5972192814303085887.png"
+      },
+      {
+        "skillId": 1525,
+        "name": "鹿之奔袭",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_tg01_01_1821960491715709623.png"
+      },
+      {
+        "skillId": 1526,
+        "name": "愈合",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx03_8863116099667607434.png"
+      },
+      {
+        "skillId": 1527,
+        "name": "花语回升",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_ult02_-7338637867810334646.png"
+      },
+      {
+        "skillId": 1528,
+        "name": "生机涌动",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_ult03_-922524136805580252.png"
+      },
+      {
+        "skillId": 1529,
+        "name": "盛放注能",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx07_-6626360985139412137.png"
+      },
+      {
+        "skillId": 1531,
+        "name": "自然庇护",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx08_-5368673168487156305.png"
+      },
+      {
+        "skillId": 1563,
+        "name": "鹿之奔袭",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_tg01_01_1821960491715709623.png"
+      }
+    ],
+    "defaultMonitoredBuffIds": [],
+    "derivations": []
   }
 }

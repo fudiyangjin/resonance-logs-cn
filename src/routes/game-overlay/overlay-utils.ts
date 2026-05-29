@@ -1,5 +1,6 @@
 import type {
   BuffUpdateState,
+  CounterSlotState,
   CounterUpdateState,
   SkillCdState,
 } from "$lib/api";
@@ -22,6 +23,7 @@ export {
 } from "$lib/skill-monitor-normalize";
 import { ensurePanelAreaRowOrder } from "$lib/skill-monitor-normalize";
 import type {
+  BuffAlertRule,
   InlineBuffEntry,
   OverlayPositions,
   OverlayVisibility,
@@ -39,11 +41,18 @@ import {
   RESOURCE_SCALES_BY_CLASS,
 } from "./overlay-constants";
 import type {
+  BuffAlertState,
   CustomPanelDisplayRow,
   PanelAreaDisplayRow,
   SkillDisplay,
   TextBuffDisplay,
 } from "./overlay-types";
+
+type BuffAlertResolver = (
+  baseId: number,
+  remainingMs: number,
+  durationMs: number,
+) => BuffAlertState | undefined;
 
 export function ensureOverlayPositions(
   profile: SkillMonitorProfile,
@@ -154,6 +163,21 @@ export function getBuffRemainPercent(
   );
 }
 
+export function resolveAlertState(
+  rule: BuffAlertRule | undefined,
+  remainingMs: number,
+  durationMs: number,
+): BuffAlertState | undefined {
+  if (!rule || durationMs <= 0) return undefined;
+  if (remainingMs > rule.thresholdSeconds * 1000) return undefined;
+  return {
+    highlightColor: rule.highlightColor,
+    flash: rule.flash,
+    flashIntervalMs: rule.flashIntervalMs ?? 600,
+    applyToProgress: rule.applyToProgress ?? true,
+  };
+}
+
 export function buildBuffTextRow(
   key: string,
   label: string,
@@ -161,6 +185,7 @@ export function buildBuffTextRow(
   now: number,
   isPlaceholder = false,
   allowPassiveSingleStack = false,
+  alertResolver?: BuffAlertResolver,
 ): TextBuffDisplay | null {
   const active = isBuffActive(buff, now);
   if (!active && !isPlaceholder) return null;
@@ -176,6 +201,9 @@ export function buildBuffTextRow(
 
   const remainingMs = getBuffRemainingMs(buff, now);
   const layer = Math.max(1, buff.layer);
+  const alert = isPlaceholder
+    ? undefined
+    : alertResolver?.(buff.baseId, remainingMs, buff.durationMs);
 
   return {
     key,
@@ -185,7 +213,37 @@ export function buildBuffTextRow(
     progressPercent: isPlaceholder ? 0 : getBuffRemainPercent(buff, now),
     showProgress: !isPlaceholder && buff.durationMs > 0,
     ...(isPlaceholder ? { isPlaceholder: true } : {}),
+    ...(alert ? { alert } : {}),
   };
+}
+
+function formatCounterCountText(
+  slotState: CounterSlotState,
+  slotConfig?: CounterRulePreset["effectSlots"][number],
+): string {
+  const slotWithEffective = slotState as CounterSlotState & {
+    effectiveThreshold?: number | null;
+  };
+  const slotWithDisplay = slotConfig as
+    | (CounterRulePreset["effectSlots"][number] & { displayMode?: string })
+    | undefined;
+  const threshold = slotWithEffective.effectiveThreshold ?? slotState.threshold;
+  if (
+    slotWithDisplay?.displayMode === "percentOfThreshold" &&
+    threshold !== null &&
+    threshold > 0
+  ) {
+    const ratio = Math.min(1, Math.max(0, slotState.currentCount / threshold));
+    const percent = Math.round(ratio * 1000) / 10;
+    return Number.isInteger(percent) ? `${percent}%` : `${percent.toFixed(1)}%`;
+  }
+  if (
+    slotWithDisplay?.displayMode === "remainingToThreshold" &&
+    threshold !== null
+  ) {
+    return `${Math.max(0, threshold - slotState.currentCount)}`;
+  }
+  return `${Math.max(0, slotState.currentCount)}`;
 }
 
 export function getCustomPanelDisplayRow(
@@ -195,6 +253,7 @@ export function getCustomPanelDisplayRow(
   counterMap: Map<number, CounterUpdateState>,
   counterRuleMap: Map<number, CounterRulePreset>,
   resolveBuffName: (baseId: number) => string,
+  alertResolver?: BuffAlertResolver,
 ): CustomPanelDisplayRow | null {
   if (entry.sourceType === "buff") {
     const buff = buffMap.get(entry.sourceId);
@@ -206,6 +265,7 @@ export function getCustomPanelDisplayRow(
       now,
       false,
       true,
+      alertResolver,
     );
   }
 
@@ -232,16 +292,26 @@ export function getCustomPanelDisplayRow(
     return {
       key: `inline_counter_${entry.id}`,
       label: entry.label,
-      valueText: `${Math.max(0, selectedSlot.currentCount)}`,
+      valueText: formatCounterCountText(selectedSlot, slotConfig),
       metaText: undefined,
       progressPercent: 0,
       showProgress: false,
     };
   }
   const fixedFreezeUntilMs = selectedSlot.freezeUntilMs;
-  if (fixedFreezeUntilMs !== null && fixedFreezeUntilMs !== undefined) {
+  if (
+    fixedFreezeUntilMs !== null &&
+    fixedFreezeUntilMs !== undefined &&
+    fixedFreezeUntilMs > now
+  ) {
     const fixedRemainingMs = Math.max(0, fixedFreezeUntilMs - now);
-    const freezeDurationMs = selectedSlot.freezeDurationMs ?? 0;
+    const slotWithEffective = selectedSlot as typeof selectedSlot & {
+      effectiveFreezeDurationMs?: number | null;
+    };
+    const freezeDurationMs =
+      slotWithEffective.effectiveFreezeDurationMs ??
+      selectedSlot.freezeDurationMs ??
+      0;
     const progressPercent =
       freezeDurationMs > 0
         ? Math.max(0, Math.min(100, (fixedRemainingMs / freezeDurationMs) * 100))
@@ -252,7 +322,7 @@ export function getCustomPanelDisplayRow(
       valueText: fixedRemainingMs > 0 ? formatTimerText(fixedRemainingMs) : "--",
       metaText: "On Cooldown",
       progressPercent,
-      showProgress: freezeDurationMs > 0 && fixedRemainingMs > 0,
+      showProgress: freezeDurationMs > 0,
     };
   }
   const active = selectedSlot.resetBuffActive ?? isBuffActive(linkedBuff, now);

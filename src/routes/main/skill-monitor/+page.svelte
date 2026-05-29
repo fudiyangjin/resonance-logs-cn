@@ -24,9 +24,11 @@
   } from "$lib/config/buff-name-table";
   import {
     AVAILABLE_PANEL_ATTRS,
+    createDefaultBuffAlertRule,
     createDefaultBuffGroup,
     createDefaultCustomPanelGroup,
     ensureBuffAliases,
+    ensureBuffAlerts,
     ensureBuffUptimeActiveIndicators,
     ensureBuffUptimeAliases,
     ensureBuffUptimeColors,
@@ -35,6 +37,8 @@
     ensureBuffUptimeTextStyle,
     ensureBuffUptimeTrackingModes,
     SETTINGS,
+    type BuffAlertMap,
+    type BuffAlertRule,
     type BuffDisplayMode,
     type BuffGroup,
     type CustomPanelGroup,
@@ -56,6 +60,7 @@
     getSlotTemplates,
     getSourceTemplates,
     getSkillsByClass,
+    initializeResonanceSkillSearchRuntimeData,
     resolveUserCounterRulesToPresets,
     searchResonanceSkills,
     type CounterRulePreset,
@@ -82,14 +87,17 @@
   let groupPrioritySearchKeyword = $state<Record<string, string>>({});
   let groupPrioritySearchResults = $state<Record<string, BuffNameInfo[]>>({});
   let resonanceSearch = $state("");
+  let resonanceSearchDataRevision = $state(0);
   let inlineBuffSearch = $state("");
   let inlineBuffSearchResults = $state<BuffNameInfo[]>([]);
   let activeTab = $state<"skill-cd" | "buff" | "panel-attr" | "buff-uptime" | "custom-panel" | "overlay">("skill-cd");
   let attrSectionExpanded = $state(false);
   let buffAliasSectionExpanded = $state(false);
+  let buffAlertSectionExpanded = $state(false);
   let buffAliasSearch = $state("");
   let buffAliasSearchResults = $state<BuffNameInfo[]>([]);
   let buffAliasEditingBuffId = $state<number | null>(null);
+  let alertSearch = $state("");
   let uptimeBuffSearch = $state("");
   let uptimeBuffSearchResults = $state<BuffNameInfo[]>([]);
 
@@ -145,7 +153,6 @@
   const buffUptimeEncounterColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeEncounterColumnAdjust);
   const buffUptimeTrueColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeTrueColumnAdjust);
   const iconBuffStackCounterSize = $derived(ensureOverlaySizes(activeProfile).iconBuffStackCounterSize);
-  const customPanelStyle = $derived.by(() => ensureCustomPanelStyle(activeProfile));
   const textBuffPanelStyle = $derived.by(() => ensureTextBuffPanelStyle(activeProfile));
   const showSkillCdGroup = $derived(activeProfile.overlayVisibility?.showSkillCdGroup ?? true);
   const showSkillDurationGroup = $derived(activeProfile.overlayVisibility?.showSkillDurationGroup ?? true);
@@ -171,6 +178,15 @@
     const selected = new Set(expandedSelectedBuffIds);
     return uniqueIds((activeProfile.buffPriorityIds ?? []).filter((id) => selected.has(id)));
   });
+  const buffAlerts = $derived.by(() =>
+    ensureBuffAlerts(activeProfile.buffAlerts),
+  );
+  const alertEligibleBuffIds = $derived.by(() =>
+    getAlertEligibleBuffIds(activeProfile),
+  );
+  const alertSearchResults = $derived.by(() =>
+    searchBuffsByName(alertSearch, buffAliases),
+  );
   const textBuffMaxVisible = $derived(
     Math.max(1, Math.min(20, activeProfile.textBuffMaxVisible ?? 10)),
   );
@@ -307,6 +323,7 @@
       0.5,
       Math.min(2.5, profile.overlaySizes?.customPanelGroupScale ?? 1),
     );
+    const fallbackStyle = ensureCustomPanelStyle(profile);
     if (groups.length > 0) {
       return groups.map((group, idx) => ({
         id: group.id ?? `custom_panel_group_${idx + 1}`,
@@ -317,6 +334,10 @@
           y: legacyPosition.y + idx * 40,
         },
         scale: Math.max(0.5, Math.min(2.5, group.scale ?? (idx === 0 ? legacyScale : 1))),
+        style: ensureCustomPanelStyle({
+          ...profile,
+          customPanelStyle: group.style ?? fallbackStyle,
+        }),
       }));
     }
     const legacyEntries = ensureInlineBuffEntries(profile);
@@ -328,6 +349,7 @@
         entries: legacyEntries,
         position: legacyPosition,
         scale: legacyScale,
+        style: fallbackStyle,
       },
     ];
   }
@@ -489,9 +511,10 @@
     return monitoredSkillDurationIds.includes(skillId);
   }
 
-  const filteredResonanceSkills = $derived.by(() =>
-    searchResonanceSkills(resonanceSearch),
-  );
+  const filteredResonanceSkills = $derived.by(() => {
+    resonanceSearchDataRevision;
+    return searchResonanceSkills(resonanceSearch);
+  });
   const selectedResonanceSkills = $derived.by(
     () =>
       monitoredSkillIds
@@ -517,6 +540,7 @@
       monitoredBuffIds: [],
       monitoredBuffCategories: [],
       buffPriorityIds: [],
+      buffAlerts: {},
     }));
   }
 
@@ -527,6 +551,35 @@
   ): number[] {
     const expandedIds = new Set(expandBuffSelection(nextBuffIds, nextCategories));
     return uniqueIds((profile.buffPriorityIds ?? []).filter((id) => expandedIds.has(id)));
+  }
+
+  function getAlertEligibleBuffIds(profile: SkillMonitorProfile): number[] {
+    const expandedIds = expandBuffSelection(
+      profile.monitoredBuffIds ?? [],
+      normalizeBuffCategoryKeys(profile.monitoredBuffCategories),
+    );
+    const groupBuffIds = ensureBuffGroups(profile)
+      .filter((group) => !group.monitorAll)
+      .flatMap((group) => group.buffIds);
+    const customPanelBuffIds = ensureCustomPanelGroups(profile)
+      .flatMap((group) => group.entries)
+      .filter((entry) => entry.sourceType === "buff")
+      .map((entry) => entry.sourceId);
+    return uniqueIds([...expandedIds, ...groupBuffIds, ...customPanelBuffIds]);
+  }
+
+  function filterBuffAlertsForProfile(
+    profile: SkillMonitorProfile,
+    nextAlerts: BuffAlertMap = ensureBuffAlerts(profile.buffAlerts),
+  ): BuffAlertMap {
+    const eligibleIds = new Set(getAlertEligibleBuffIds(profile));
+    const filtered: BuffAlertMap = {};
+    for (const [baseId, rule] of Object.entries(ensureBuffAlerts(nextAlerts))) {
+      if (eligibleIds.has(Number(baseId))) {
+        filtered[baseId] = rule;
+      }
+    }
+    return filtered;
   }
 
   function setResonanceSearch(value: string) {
@@ -814,12 +867,48 @@
     globalPrioritySearch = value;
   }
 
+  function setAlertSearch(value: string) {
+    alertSearch = value;
+  }
+
+  function upsertBuffAlert(buffId: number, patch: Partial<BuffAlertRule>) {
+    updateActiveProfile((profile) => {
+      const current = ensureBuffAlerts(profile.buffAlerts);
+      const existing = current[String(buffId)] ?? createDefaultBuffAlertRule();
+      return {
+        ...profile,
+        buffAlerts: {
+          ...current,
+          [String(buffId)]: {
+            ...existing,
+            ...patch,
+          },
+        },
+      };
+    });
+  }
+
+  function removeBuffAlert(buffId: number) {
+    updateActiveProfile((profile) => {
+      const next = { ...ensureBuffAlerts(profile.buffAlerts) };
+      delete next[String(buffId)];
+      return {
+        ...profile,
+        buffAlerts: next,
+      };
+    });
+  }
+
   function setAttrSectionExpanded(expanded: boolean) {
     attrSectionExpanded = expanded;
   }
 
   function setBuffAliasSectionExpanded(expanded: boolean) {
     buffAliasSectionExpanded = expanded;
+  }
+
+  function setBuffAlertSectionExpanded(expanded: boolean) {
+    buffAlertSectionExpanded = expanded;
   }
 
   function setBuffAliasEditingBuffId(buffId: number | null) {
@@ -831,15 +920,21 @@
     const exists = current.includes(buffId);
     if (exists) {
       const nextBuffIds = current.filter((id) => id !== buffId);
-      updateActiveProfile((profile) => ({
-        ...profile,
-        monitoredBuffIds: nextBuffIds,
-        buffPriorityIds: filterPriorityIdsForSelection(
-          profile,
-          nextBuffIds,
-          normalizeBuffCategoryKeys(profile.monitoredBuffCategories),
-        ),
-      }));
+      updateActiveProfile((profile) => {
+        const nextProfile = {
+          ...profile,
+          monitoredBuffIds: nextBuffIds,
+          buffPriorityIds: filterPriorityIdsForSelection(
+            profile,
+            nextBuffIds,
+            normalizeBuffCategoryKeys(profile.monitoredBuffCategories),
+          ),
+        };
+        return {
+          ...nextProfile,
+          buffAlerts: filterBuffAlertsForProfile(nextProfile),
+        };
+      });
       return;
     }
     updateActiveProfile((profile) => ({
@@ -854,7 +949,7 @@
       const nextCategories = current.includes(categoryKey)
         ? current.filter((key) => key !== categoryKey)
         : [...current, categoryKey];
-      return {
+      const nextProfile = {
         ...profile,
         monitoredBuffCategories: nextCategories,
         buffPriorityIds: filterPriorityIdsForSelection(
@@ -862,6 +957,10 @@
           profile.monitoredBuffIds ?? [],
           nextCategories,
         ),
+      };
+      return {
+        ...nextProfile,
+        buffAlerts: filterBuffAlertsForProfile(nextProfile),
       };
     });
   }
@@ -927,6 +1026,18 @@
 
   $effect(() => {
     uptimeBuffSearchResults = searchBuffsByName(uptimeBuffSearch, buffAliases);
+  });
+
+  $effect(() => {
+    let cancelled = false;
+    initializeResonanceSkillSearchRuntimeData().then(() => {
+      if (!cancelled) {
+        resonanceSearchDataRevision += 1;
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   });
 
   function setBuffAliasSearch(value: string) {
@@ -1084,46 +1195,17 @@
     return null;
   }
 
-  function updateCustomPanelStyle(
+  function updateCustomPanelGroupStyle(
+    groupId: string,
     updater: (style: CustomPanelStyle) => CustomPanelStyle,
   ) {
     updateActiveProfile((profile) => ({
       ...profile,
-      customPanelStyle: updater(ensureCustomPanelStyle(profile)),
-    }));
-  }
-
-  function setCustomPanelGap(value: number) {
-    const nextValue = Math.max(0, Math.min(24, Math.round(value)));
-    updateCustomPanelStyle((style) => ({ ...style, gap: nextValue }));
-  }
-
-  function setCustomPanelFontSize(value: number) {
-    const nextValue = Math.max(10, Math.min(28, Math.round(value)));
-    updateCustomPanelStyle((style) => ({ ...style, fontSize: nextValue }));
-  }
-
-  function setCustomPanelColumnGap(value: number) {
-    const nextValue = Math.max(0, Math.min(240, Math.round(value)));
-    updateCustomPanelStyle((style) => ({ ...style, columnGap: nextValue }));
-  }
-
-  function setCustomPanelNameColor(value: string) {
-    updateCustomPanelStyle((style) => ({ ...style, nameColor: value }));
-  }
-
-  function setCustomPanelValueColor(value: string) {
-    updateCustomPanelStyle((style) => ({ ...style, valueColor: value }));
-  }
-
-  function setCustomPanelProgressColor(value: string) {
-    updateCustomPanelStyle((style) => ({ ...style, progressColor: value }));
-  }
-
-  function setCustomPanelProgressOpacity(value: number) {
-    updateCustomPanelStyle((style) => ({
-      ...style,
-      progressOpacity: Math.max(0, Math.min(1, value)),
+      customPanelGroups: ensureCustomPanelGroups(profile).map((group) =>
+        group.id === groupId
+          ? { ...group, style: updater(group.style) }
+          : group,
+      ),
     }));
   }
 
@@ -1343,20 +1425,26 @@
   }
 
   function updateBuffGroup(groupId: string, updater: (group: BuffGroup) => BuffGroup) {
-    updateActiveProfile((profile) => ({
-      ...profile,
-      buffGroups: ensureBuffGroups(profile).map((group) =>
-        group.id === groupId
-          ? (() => {
-              const updated = updater(group);
-              return {
-                ...updated,
-                priorityBuffIds: normalizeGroupPriorityIds(updated),
-              };
-            })()
-          : group,
-      ),
-    }));
+    updateActiveProfile((profile) => {
+      const nextProfile = {
+        ...profile,
+        buffGroups: ensureBuffGroups(profile).map((group) =>
+          group.id === groupId
+            ? (() => {
+                const updated = updater(group);
+                return {
+                  ...updated,
+                  priorityBuffIds: normalizeGroupPriorityIds(updated),
+                };
+              })()
+            : group,
+        ),
+      };
+      return {
+        ...nextProfile,
+        buffAlerts: filterBuffAlertsForProfile(nextProfile),
+      };
+    });
   }
 
   function addBuffGroup() {
@@ -1370,10 +1458,16 @@
   }
 
   function removeBuffGroup(groupId: string) {
-    updateActiveProfile((profile) => ({
-      ...profile,
-      buffGroups: ensureBuffGroups(profile).filter((group) => group.id !== groupId),
-    }));
+    updateActiveProfile((profile) => {
+      const nextProfile = {
+        ...profile,
+        buffGroups: ensureBuffGroups(profile).filter((group) => group.id !== groupId),
+      };
+      return {
+        ...nextProfile,
+        buffAlerts: filterBuffAlertsForProfile(nextProfile),
+      };
+    });
     const nextKeyword = { ...groupSearchKeyword };
     delete nextKeyword[groupId];
     groupSearchKeyword = nextKeyword;
@@ -1694,6 +1788,15 @@
       {buffPriorityIds}
       {toggleGlobalPriority}
       {moveGlobalPriority}
+      {buffAlerts}
+      {buffAlertSectionExpanded}
+      {setBuffAlertSectionExpanded}
+      {alertSearch}
+      {alertSearchResults}
+      {alertEligibleBuffIds}
+      {setAlertSearch}
+      {upsertBuffAlert}
+      {removeBuffAlert}
       {individualMonitorAllGroup}
       {addIndividualMonitorAll}
       {removeIndividualMonitorAll}
@@ -1789,24 +1892,17 @@
       {inlineBuffSearch}
       {filteredInlineBuffSearchResults}
       {customPanelGroups}
-      {customPanelStyle}
       {setInlineBuffSearch}
       {addCustomPanelGroup}
       {removeCustomPanelGroup}
       {renameCustomPanelGroup}
+      {updateCustomPanelGroupStyle}
       {addCustomPanelEntry}
       {addUserCounterRule}
       {removeUserCounterRule}
       {removeCustomPanelEntry}
       {setCustomPanelEntryLabel}
       {moveCustomPanelEntry}
-      {setCustomPanelGap}
-      {setCustomPanelFontSize}
-      {setCustomPanelColumnGap}
-      {setCustomPanelNameColor}
-      {setCustomPanelValueColor}
-      {setCustomPanelProgressColor}
-      {setCustomPanelProgressOpacity}
     />
   {:else if activeTab === "overlay"}
     <TabOverlay

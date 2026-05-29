@@ -50,13 +50,49 @@
     "description": "雷影X8, 战斗状态站立不动每秒获得 12 点能量",
     "source": {
       "buffDurationTick": {
-        "buffId": 3050081,
+        "buffId": 3051081,
         "tickIntervalMs": 1000,
         "increment": 12,
         "attrCondition": {
           "attrId": 71,
           "requiredValue": 0
         }
+      }
+    }
+  },
+  {
+    "sourceId": "wind_knight_x7",
+    "name": "青岚X7, 每消耗 5 锐利获得 12 点能量",
+    "description": "每消耗 5 锐利获得 12 点能量",
+    "source": {
+      "fightResourceSpent": {
+        "resourceId": 14001,
+        "unitsRequired": 5,
+        "increment": 12
+      }
+    }
+  },
+  {
+    "sourceId": "wind_knight_x8",
+    "name": "青岚X8, 战斗状态下每移动 5 米获得 10 点能量",
+    "description": "战斗状态下每移动 5 米获得 10 点能量",
+    "source": {
+      "movementDistance": {
+        "buffId": 3051081,
+        "attrId": 52,
+        "metersRequired": 5,
+        "increment": 10
+      }
+    }
+  },
+  {
+    "sourceId": "wind_knight_x9",
+    "name": "青岚X9, 龙卷风造成伤害获得 21 点能量",
+    "description": "龙卷风造成伤害获得 21 点能量",
+    "source": {
+      "damageBySkillKeyOnce": {
+        "skillKeys": [11499030102, 314050100],
+        "increment": 21
       }
     }
   },
@@ -178,6 +214,17 @@
     }
   },
   {
+    "sourceId": "marksman_x2",
+    "name": "神射X2, 释放箭雨获得 150 点能量",
+    "description": "释放箭雨获得 150 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [2232],
+        "increment": 150
+      }
+    }
+  },
+  {
     "sourceId": "marksman_x3",
     "name": "神射X3, 野狼造成伤害获得 4 点能量",
     "description": "野狼造成伤害获得 4 点能量",
@@ -240,6 +287,17 @@
       "skillCast": {
         "skillBaseIds": [1242],
         "increment": 12
+      }
+    }
+  },
+  {
+    "sourceId": "frost_mage_x2",
+    "name": "冰魔X2, 释放陨星风暴获得 44 点能量",
+    "description": "释放陨星风暴获得 44 点能量",
+    "source": {
+      "skillCast": {
+        "skillBaseIds": [1239],
+        "increment": 44
       }
     }
   },

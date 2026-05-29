@@ -41,6 +41,17 @@ function sourceRuleIdCandidates(row: ModifierActivityRow): string[] {
     .filter((id): id is string => Boolean(id)))];
 }
 
+function shouldUseSourceIdRuleBridge(row: ModifierActivityRow, sourceId: string): boolean {
+  if (!sourceId.startsWith("buff-source:")) return true;
+  const sourceKind = String(row.sourceKind ?? "").toLowerCase();
+  const sourceType = String(row.sourceType ?? "").toLowerCase();
+  return sourceKind !== "runtime-buff" && sourceKind !== "observed-buff" && sourceType !== "runtime-buff";
+}
+
+function shouldUseDirectRuleBridge(row: ModifierActivityRow): boolean {
+  return sourceIdCandidates(row).some((sourceId) => shouldUseSourceIdRuleBridge(row, sourceId));
+}
+
 async function loadModifierDescriptionTable(): Promise<ModifierDescriptionTable> {
   if (modifierDescriptionTablePromise) return modifierDescriptionTablePromise;
   modifierDescriptionTablePromise = (async () => {
@@ -70,12 +81,15 @@ function descriptionForRow(
   row: ModifierActivityRow,
   table: ModifierDescriptionTable,
 ): ModifierDescriptionEntry | undefined {
-  for (const sourceRuleId of sourceRuleIdCandidates(row)) {
-    const description = table.sourcesByRuleId?.[sourceRuleId];
-    if (description) return description;
+  if (shouldUseDirectRuleBridge(row)) {
+    for (const sourceRuleId of sourceRuleIdCandidates(row)) {
+      const description = table.sourcesByRuleId?.[sourceRuleId];
+      if (description) return description;
+    }
   }
   const sourceIds = sourceIdCandidates(row);
   for (const sourceId of sourceIds) {
+    if (!shouldUseSourceIdRuleBridge(row, sourceId)) continue;
     for (const sourceRuleId of table.sourceRuleIdsBySourceId?.[sourceId] ?? []) {
       const description = table.sourcesByRuleId?.[sourceRuleId];
       if (description) return description;

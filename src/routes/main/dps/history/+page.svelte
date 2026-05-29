@@ -7,9 +7,11 @@
 		EncounterSummaryDto,
 		EncounterFiltersDto,
 	} from "$lib/bindings";
-		import { CLASS_MAP, getClassIcon, tooltip } from "$lib/utils.svelte";
+	import { CLASS_MAP } from "$lib/utils.svelte";
+	import ClassSpecIcon from "$lib/components/class-spec-icon.svelte";
 	import { uiT } from "$lib/i18n";
 	import { SETTINGS } from "$lib/settings-store";
+	import { getDisplayIconSpecName } from "$lib/name-display";
 	import { localizeRawSceneName } from "$lib/scene-mappings";
   import { localizeRawMonsterName } from "$lib/monster-mappings";
 
@@ -730,11 +732,22 @@
 								})}
 								<div class="flex gap-1 items-center">
 									{#each sortedPlayers.slice(0, 8) as player}
-										<img
+										{@const isLocalPlayer = enc.localPlayerId != null &&
+											player.uid === enc.localPlayerId}
+										{@const iconSpecName = getDisplayIconSpecName({
+											classSpecName: player.classSpecName,
+											showYourNameSetting:
+												SETTINGS.history.general.state.showYourName,
+											showOthersNameSetting:
+												SETTINGS.history.general.state.showOthersName,
+											isLocalPlayer,
+										})}
+										<ClassSpecIcon
 											class="size-5 object-contain flex-shrink-0"
-											src={getClassIcon(CLASS_MAP[player.classId] ?? "")}
+											className={CLASS_MAP[player.classId] ?? ""}
+											classSpecName={iconSpecName}
 											alt="Class icon"
-											{@attach tooltip(() => player.name)}
+											tooltipText={player.name}
 										/>
 									{/each}
 									{#if enc.players.length > 8}

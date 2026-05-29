@@ -337,7 +337,7 @@ function addPhantomFactors(builder, factorData) {
       sourceName: factor.familyName,
       sourceNames: factor.familyNames,
       iconPath: factor.iconPath,
-      runtimeDetection: "active-buff",
+      runtimeDetection: factor.runtimeDetection ?? "active-buff",
       sourceTable: "SeasonPhantomFactorProbe",
       classGateIds: factor.classGateIds,
       buffIds: [factor.buffId],

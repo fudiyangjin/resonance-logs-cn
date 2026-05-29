@@ -10,7 +10,13 @@
     type BuffDefinition,
     type BuffNameInfo,
   } from "$lib/config/buff-name-table";
-  import { SETTINGS, ensureBuffAliases } from "$lib/settings-store";
+  import {
+    SETTINGS,
+    createDefaultBuffAlertRule,
+    ensureBuffAliases,
+    ensureBuffAlerts,
+    type BuffAlertRule,
+  } from "$lib/settings-store";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import { resolveMonsterMonitorTranslation } from "$lib/i18n";
   import { toast } from "svelte-sonner";
@@ -24,6 +30,8 @@
   );
 
   let searchKeyword = $state("");
+  let prioritySearchKeyword = $state("");
+  let alertSearchKeyword = $state("");
   let searchTarget = $state<SearchTarget>("self");
   let activeTab = $state<MonsterMonitorTab>("buff");
 
@@ -39,9 +47,29 @@
   const combinedBuffIds = $derived.by(() =>
     Array.from(new Set([...globalBuffIds, ...selfAppliedBuffIds])),
   );
+  const buffPriorityIds = $derived.by(() =>
+    (monsterMonitor.buffPriorityIds ?? []).filter((buffId) => combinedBuffIds.includes(buffId)),
+  );
+  const buffAlerts = $derived.by(() => ensureBuffAlerts(monsterMonitor.buffAlerts));
+  const configuredAlertBuffIds = $derived.by(() =>
+    Object.keys(buffAlerts)
+      .map((baseId) => Number(baseId))
+      .filter((baseId) => Number.isFinite(baseId) && combinedBuffIds.includes(baseId))
+      .sort((a, b) => a - b),
+  );
   const searchResults = $derived.by(() =>
     searchKeyword.trim().length > 0
       ? searchBuffsByName(searchKeyword, buffAliases)
+      : ([] as BuffNameInfo[]),
+  );
+  const prioritySearchResults = $derived.by(() =>
+    prioritySearchKeyword.trim().length > 0
+      ? searchBuffsByName(prioritySearchKeyword, buffAliases)
+      : ([] as BuffNameInfo[]),
+  );
+  const alertSearchResults = $derived.by(() =>
+    alertSearchKeyword.trim().length > 0
+      ? searchBuffsByName(alertSearchKeyword, buffAliases)
       : ([] as BuffNameInfo[]),
   );
 
@@ -72,24 +100,45 @@
         : state.selfAppliedBuffIds).includes(buffId);
       const nextTargetIds = existsInTarget ? targetIds : [...targetIds, buffId];
 
+      const monitoredBuffIds = searchTarget === "global" ? nextTargetIds : nextGlobal;
+      const selfAppliedBuffIds = searchTarget === "self" ? nextTargetIds : nextSelf;
+      const stillMonitored = new Set([...monitoredBuffIds, ...selfAppliedBuffIds]);
+      const nextAlerts = { ...ensureBuffAlerts(state.buffAlerts) };
+      if (!stillMonitored.has(buffId)) {
+        delete nextAlerts[String(buffId)];
+      }
+
       return {
         ...state,
-        monitoredBuffIds: searchTarget === "global" ? nextTargetIds : nextGlobal,
-        selfAppliedBuffIds: searchTarget === "self" ? nextTargetIds : nextSelf,
+        monitoredBuffIds,
+        selfAppliedBuffIds,
+        buffPriorityIds: (state.buffPriorityIds ?? []).filter((id) => stillMonitored.has(id)),
+        buffAlerts: nextAlerts,
       };
     });
   }
 
   function removeBuff(target: SearchTarget, buffId: number) {
-    updateMonsterMonitor((state) => ({
-      ...state,
-      monitoredBuffIds: target === "global"
+    updateMonsterMonitor((state) => {
+      const monitoredBuffIds = target === "global"
         ? state.monitoredBuffIds.filter((id) => id !== buffId)
-        : state.monitoredBuffIds,
-      selfAppliedBuffIds: target === "self"
+        : state.monitoredBuffIds;
+      const selfAppliedBuffIds = target === "self"
         ? state.selfAppliedBuffIds.filter((id) => id !== buffId)
-        : state.selfAppliedBuffIds,
-    }));
+        : state.selfAppliedBuffIds;
+      const stillMonitored = new Set([...monitoredBuffIds, ...selfAppliedBuffIds]);
+      const nextAlerts = { ...ensureBuffAlerts(state.buffAlerts) };
+      if (!stillMonitored.has(buffId)) {
+        delete nextAlerts[String(buffId)];
+      }
+      return {
+        ...state,
+        monitoredBuffIds,
+        selfAppliedBuffIds,
+        buffPriorityIds: (state.buffPriorityIds ?? []).filter((id) => stillMonitored.has(id)),
+        buffAlerts: nextAlerts,
+      };
+    });
   }
 
   async function setAlias(buffId: number, alias: string) {
@@ -149,6 +198,86 @@
     if (selfAppliedBuffIds.includes(buffId)) return t("status.addedSelf", "Added to Self Only");
     if (globalBuffIds.includes(buffId)) return t("status.currentlyGlobal", "Currently in Global");
     return null;
+  }
+
+  function getFilteredPrioritySearchResults(): BuffNameInfo[] {
+    const seen = new Set<number>();
+    return prioritySearchResults.filter((item) => {
+      if (seen.has(item.baseId)) return false;
+      if (!combinedBuffIds.includes(item.baseId)) return false;
+      if (buffPriorityIds.includes(item.baseId)) return false;
+      seen.add(item.baseId);
+      return true;
+    });
+  }
+
+  function getFilteredAlertSearchResults(): BuffNameInfo[] {
+    const seen = new Set<number>();
+    return alertSearchResults.filter((item) => {
+      if (seen.has(item.baseId)) return false;
+      if (!combinedBuffIds.includes(item.baseId)) return false;
+      if (buffAlerts[String(item.baseId)]) return false;
+      seen.add(item.baseId);
+      return true;
+    });
+  }
+
+  function toggleMonsterBuffPriority(buffId: number) {
+    updateMonsterMonitor((state) => {
+      const current = (state.buffPriorityIds ?? []).filter((id) =>
+        combinedBuffIds.includes(id)
+      );
+      return {
+        ...state,
+        buffPriorityIds: current.includes(buffId)
+          ? current.filter((id) => id !== buffId)
+          : [...current, buffId],
+      };
+    });
+  }
+
+  function moveMonsterBuffPriority(buffId: number, direction: "up" | "down") {
+    updateMonsterMonitor((state) => {
+      const current = (state.buffPriorityIds ?? []).filter((id) =>
+        combinedBuffIds.includes(id)
+      );
+      const index = current.indexOf(buffId);
+      if (index < 0) return state;
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= current.length) return state;
+      const next = [...current];
+      const sourceValue = next[index];
+      const targetValue = next[targetIndex];
+      if (sourceValue === undefined || targetValue === undefined) return state;
+      next[index] = targetValue;
+      next[targetIndex] = sourceValue;
+      return { ...state, buffPriorityIds: next };
+    });
+  }
+
+  function upsertMonsterBuffAlert(buffId: number, patch: Partial<BuffAlertRule>) {
+    updateMonsterMonitor((state) => {
+      const current = ensureBuffAlerts(state.buffAlerts);
+      const existing = current[String(buffId)] ?? createDefaultBuffAlertRule();
+      return {
+        ...state,
+        buffAlerts: {
+          ...current,
+          [String(buffId)]: {
+            ...existing,
+            ...patch,
+          },
+        },
+      };
+    });
+  }
+
+  function removeMonsterBuffAlert(buffId: number) {
+    updateMonsterMonitor((state) => {
+      const next = { ...ensureBuffAlerts(state.buffAlerts) };
+      delete next[String(buffId)];
+      return { ...state, buffAlerts: next };
+    });
   }
 
   function buffName(buffId: number) {
@@ -333,6 +462,154 @@
       {:else}
         <div class="text-sm text-muted-foreground">{t("displayNamesEmpty", "Select monster buffs to monitor first, then you can set aliases here.")}</div>
       {/if}
+    </section>
+
+    <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-5">
+      <div class="space-y-1">
+        <h2 class="text-base font-semibold text-foreground">{t("buffPriorityTitle", "Display Priority")}</h2>
+        <p class="text-sm text-muted-foreground">{t("buffPriorityDescription", "Keep important monster monitor rows above other tracked buffs.")}</p>
+      </div>
+
+      <div class="space-y-3">
+        <input
+          type="text"
+          bind:value={prioritySearchKeyword}
+          placeholder={t("buffPriorityPlaceholder", "Search selected monster buffs to prioritize")}
+          class="w-full max-w-md px-3 py-2.5 rounded-lg border border-border bg-background text-sm outline-none focus:border-primary"
+        />
+        {#if prioritySearchKeyword.trim().length > 0}
+          <BuffSearchResultGrid
+            items={getFilteredPrioritySearchResults()}
+            {availableBuffMap}
+            onSelect={toggleMonsterBuffPriority}
+            emptyMessage={t("buffPriorityEmptySearch", "No selected monster buffs available for priority")}
+          />
+        {/if}
+
+        {#if buffPriorityIds.length > 0}
+          <div class="space-y-2">
+            {#each buffPriorityIds as buffId, idx (buffId)}
+              <div class="flex flex-wrap items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2">
+                <span class="w-6 text-center text-xs text-muted-foreground">{idx + 1}</span>
+                <span class="min-w-0 flex-1 truncate text-sm text-foreground">{buffName(buffId)}</span>
+                <button type="button" class="mini-button" onclick={() => toggleMonsterBuffPriority(buffId)}>{t("remove", "Remove")}</button>
+                <button type="button" class="mini-button" onclick={() => moveMonsterBuffPriority(buffId, "up")} disabled={idx === 0}>{t("moveUp", "Move Up")}</button>
+                <button type="button" class="mini-button" onclick={() => moveMonsterBuffPriority(buffId, "down")} disabled={idx === buffPriorityIds.length - 1}>{t("moveDown", "Move Down")}</button>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <div class="text-sm text-muted-foreground">{t("buffPriorityEmpty", "No monster buff priority configured.")}</div>
+        {/if}
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-5">
+      <div class="space-y-1">
+        <h2 class="text-base font-semibold text-foreground">{t("buffAlertTitle", "Buff Countdown Alerts")}</h2>
+        <p class="text-sm text-muted-foreground">{t("buffAlertDescription", "Highlight monster monitor rows when their remaining timer drops below the configured threshold.")}</p>
+      </div>
+
+      <div class="space-y-3">
+        <input
+          type="text"
+          bind:value={alertSearchKeyword}
+          placeholder={t("buffAlertPlaceholder", "Search selected monster buffs to add an alert")}
+          class="w-full max-w-md px-3 py-2.5 rounded-lg border border-border bg-background text-sm outline-none focus:border-primary"
+        />
+        {#if alertSearchKeyword.trim().length > 0}
+          <BuffSearchResultGrid
+            items={getFilteredAlertSearchResults()}
+            {availableBuffMap}
+            onSelect={(buffId) => upsertMonsterBuffAlert(buffId, {})}
+            emptyMessage={t("buffAlertEmptySearch", "No selected monster buffs available for alerts")}
+          />
+        {/if}
+
+        {#if configuredAlertBuffIds.length > 0}
+          <div class="space-y-2">
+            {#each configuredAlertBuffIds as buffId (buffId)}
+              {@const rule = buffAlerts[String(buffId)]!}
+              <div class="rounded border border-border/60 bg-muted/20 p-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="truncate text-sm font-medium text-foreground">{buffName(buffId)}</div>
+                    <div class="text-xs text-muted-foreground">{defaultBuffName(buffId)}</div>
+                  </div>
+                  <button type="button" class="mini-button danger" onclick={() => removeMonsterBuffAlert(buffId)}>
+                    {t("remove", "Remove")}
+                  </button>
+                </div>
+
+                <div class="mt-3 grid gap-3 md:grid-cols-5">
+                  <label class="style-field">
+                    <span>{t("buffAlertThreshold", "Threshold")} ({t("seconds", "s")})</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="60"
+                      step="1"
+                      value={rule.thresholdSeconds}
+                      oninput={(event) =>
+                        upsertMonsterBuffAlert(buffId, {
+                          thresholdSeconds: Number((event.currentTarget as HTMLInputElement).value),
+                        })}
+                    />
+                  </label>
+                  <label class="style-field">
+                    <span>{t("buffAlertFlashMs", "Flash ms")}</span>
+                    <input
+                      type="number"
+                      min="100"
+                      step="50"
+                      value={rule.flashIntervalMs ?? 600}
+                      oninput={(event) =>
+                        upsertMonsterBuffAlert(buffId, {
+                          flashIntervalMs: Number((event.currentTarget as HTMLInputElement).value),
+                        })}
+                    />
+                  </label>
+                  <label class="color-field">
+                    <span>{t("buffAlertColor", "Alert Color")}</span>
+                    <input
+                      type="color"
+                      value={rule.highlightColor}
+                      oninput={(event) =>
+                        upsertMonsterBuffAlert(buffId, {
+                          highlightColor: (event.currentTarget as HTMLInputElement).value,
+                        })}
+                    />
+                  </label>
+                  <label class="check-field">
+                    <input
+                      type="checkbox"
+                      checked={rule.flash}
+                      onchange={(event) =>
+                        upsertMonsterBuffAlert(buffId, {
+                          flash: (event.currentTarget as HTMLInputElement).checked,
+                        })}
+                    />
+                    {t("buffAlertFlash", "Flash")}
+                  </label>
+                  <label class="check-field">
+                    <input
+                      type="checkbox"
+                      checked={rule.applyToProgress ?? true}
+                      onchange={(event) =>
+                        upsertMonsterBuffAlert(buffId, {
+                          applyToProgress: (event.currentTarget as HTMLInputElement).checked,
+                        })}
+                    />
+                    {t("buffAlertProgress", "Progress")}
+                  </label>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <div class="text-sm text-muted-foreground">{t("buffAlertEmpty", "No monster buff countdown alerts configured.")}</div>
+        {/if}
+      </div>
     </section>
 
     <section class="rounded-xl border border-border/60 bg-card/60 p-5 space-y-5">
@@ -638,6 +915,41 @@
   .style-field strong {
     font-size: 12px;
     color: var(--muted-foreground, rgba(255, 255, 255, 0.72));
+  }
+
+  .mini-button {
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--foreground, #fff);
+    background: rgba(15, 23, 42, 0.22);
+    cursor: pointer;
+  }
+
+  .mini-button:hover {
+    background: rgba(30, 41, 59, 0.55);
+  }
+
+  .mini-button:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .mini-button.danger {
+    color: var(--destructive, #ef4444);
+  }
+
+  .check-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(15, 23, 42, 0.22);
+    font-size: 13px;
+    color: var(--foreground, #fff);
   }
 
   .color-field input[type="color"] {

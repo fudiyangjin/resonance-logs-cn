@@ -5,7 +5,7 @@ use crate::packets::opcodes::{FragmentType, Pkt};
 use crate::packets::packet_process::process_packet;
 use crate::packets::parser::ParsedNotifyFragment;
 use crate::packets::reassembler::Reassembler;
-use crate::packets::utils::{Server, TCPReassembler, tcp_sequence_before};
+use crate::packets::utils::{Server, TCPReassembler, TcpInsertResult, tcp_sequence_before};
 use bytes::Bytes;
 use etherparse::NetSlice::Ipv4;
 use etherparse::SlicedPacket;
@@ -956,11 +956,29 @@ fn process_non_scene_chat_packet(
         }
     }
 
-    if let Some(buffer) = state
+    match state
         .tcp_reassembler
         .insert_segment(sequence_number, payload)
     {
-        state.reassembler.feed_owned(buffer);
+        TcpInsertResult::Contiguous(buffer) => {
+            state.reassembler.feed_owned(buffer);
+        }
+        TcpInsertResult::SkippedGap {
+            from,
+            to,
+            reason,
+            data,
+        } => {
+            warn!(
+                target: "app::capture",
+                "TCP gap skipped for {endpoint}: from={from} to={to} reason={reason:?}; clearing frame reassembler"
+            );
+            state.reassembler.take_remaining();
+            if !data.is_empty() {
+                state.reassembler.feed_owned(data);
+            }
+        }
+        TcpInsertResult::Gap | TcpInsertResult::NoData => {}
     }
 
     while let Some(packet) = state.reassembler.try_next() {
@@ -1407,8 +1425,26 @@ fn read_packets(
             }
         }
 
-        if let Some(buffer) = tcp_reassembler.insert_segment(sequence_number, payload) {
-            reassembler.feed_owned(buffer);
+        match tcp_reassembler.insert_segment(sequence_number, payload) {
+            TcpInsertResult::Contiguous(buffer) => {
+                reassembler.feed_owned(buffer);
+            }
+            TcpInsertResult::SkippedGap {
+                from,
+                to,
+                reason,
+                data,
+            } => {
+                warn!(
+                    target: "app::capture",
+                    "TCP gap skipped for {curr_server}: from={from} to={to} reason={reason:?}; clearing frame reassembler"
+                );
+                reassembler.take_remaining();
+                if !data.is_empty() {
+                    reassembler.feed_owned(data);
+                }
+            }
+            TcpInsertResult::Gap | TcpInsertResult::NoData => {}
         }
 
         while let Some(packet) = reassembler.try_next() {

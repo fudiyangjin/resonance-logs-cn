@@ -68,7 +68,7 @@
   }
 </script>
 
-<div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4">
+<section class="flex max-h-[min(62vh,42rem)] min-h-0 flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 p-4">
   <button
     type="button"
     class="flex w-full items-center justify-between gap-3 text-left"
@@ -84,7 +84,7 @@
   </button>
 
   {#if isExpanded}
-    <div class="max-h-[min(46vh,32rem)] space-y-4 overflow-y-auto pr-1">
+    <div class="mt-4 max-h-[min(52vh,36rem)] min-h-0 space-y-4 overflow-y-auto overscroll-contain pr-1">
       <div class="space-y-2">
       <div class="text-sm text-foreground">
         {t("excludeLowTotalValue", "排除总值低于多少的模组:")}
@@ -178,4 +178,4 @@
     </div>
     </div>
   {/if}
-</div>
+</section>

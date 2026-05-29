@@ -64,11 +64,20 @@ export type ResourceRequirement = {
 
 type ResonanceSkillIconRaw = {
   id: number;
-  NameDesign: string;
+  Name?: string;
+  NameDesign?: string;
   Names?: unknown;
+  MonsterNames?: unknown;
+  QuoteTexts?: unknown;
   Icon: string;
   maxCharges?: number;
   maxValidCdTime?: number;
+};
+
+type ResonanceSkillSearchRaw = {
+  id?: number;
+  Id?: number;
+  DescriptionSearchText?: string;
 };
 
 type MultiLangValue = Partial<Record<LocaleCode, string>>;
@@ -77,12 +86,40 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+const RESONANCE_SKILL_SEARCH_DATA_URL = "/data/resonance_skill_search.json";
+let resonanceSkillDescriptionSearchById = new Map<number, string>();
+let resonanceSkillSearchRuntimeLoad: Promise<void> | null = null;
+
 export async function initializeResonanceSkillSearchRuntimeData(): Promise<void> {
-  return;
+  if (typeof window === "undefined" || typeof fetch !== "function") return;
+  if (!resonanceSkillSearchRuntimeLoad) {
+    resonanceSkillSearchRuntimeLoad = loadResonanceSkillSearchRuntimeData();
+  }
+  return resonanceSkillSearchRuntimeLoad;
 }
 
 export async function reloadResonanceSkillSearchRuntimeData(): Promise<void> {
-  return;
+  resonanceSkillSearchRuntimeLoad = null;
+  resonanceSkillDescriptionSearchById = new Map();
+  return initializeResonanceSkillSearchRuntimeData();
+}
+
+async function loadResonanceSkillSearchRuntimeData(): Promise<void> {
+  try {
+    const response = await fetch(RESONANCE_SKILL_SEARCH_DATA_URL);
+    if (!response.ok) return;
+    const rows = (await response.json()) as ResonanceSkillSearchRaw[];
+    const next = new Map<number, string>();
+    for (const row of rows) {
+      const id = row.id ?? row.Id;
+      const text = row.DescriptionSearchText?.trim();
+      if (!id || !text) continue;
+      next.set(id, text);
+    }
+    resonanceSkillDescriptionSearchById = next;
+  } catch (error) {
+    console.warn("Failed to load resonance skill search data", error);
+  }
 }
 
 function normalizeSearchText(value: string | null | undefined): string {
@@ -158,15 +195,25 @@ function collectGeneratedNames(value: unknown): MultiLangValue {
 
 function localizeResonanceSkill(skill: ResonanceSkillDefinition): ResonanceSkillDefinition {
   const displayName = resolveMultiLangName(skill.generatedNames, skill.name);
-  if (displayName === skill.name) return skill;
+  const displayImagineName = resolveMultiLangName(
+    skill.generatedImagineNames,
+    skill.imagineName ?? "",
+  );
+  if (displayName === skill.name && displayImagineName === (skill.imagineName ?? "")) {
+    return skill;
+  }
   return {
     ...skill,
     name: displayName,
+    ...(displayImagineName ? { imagineName: displayImagineName } : {}),
   };
 }
 
 export type ResonanceSkillDefinition = SkillDisplayInfo & {
   generatedNames?: MultiLangValue;
+  imagineName?: string;
+  generatedImagineNames?: MultiLangValue;
+  generatedQuoteTexts?: MultiLangValue;
 };
 
 function collectResonanceSearchTexts(skill: ResonanceSkillDefinition): string[] {
@@ -180,6 +227,22 @@ function collectResonanceSearchTexts(skill: ResonanceSkillDefinition): string[] 
   if (rawName) texts.add(rawName);
 
   for (const text of collectMultiLangTexts(skill.generatedNames)) {
+    texts.add(text);
+  }
+
+  const imagineName = normalizeSearchText(skill.imagineName);
+  if (imagineName) texts.add(imagineName);
+
+  for (const text of collectMultiLangTexts(skill.generatedImagineNames)) {
+    texts.add(text);
+  }
+
+  const descriptionSearchText = normalizeSearchText(
+    resonanceSkillDescriptionSearchById.get(skill.skillId),
+  );
+  if (descriptionSearchText) texts.add(descriptionSearchText);
+
+  for (const text of collectMultiLangTexts(skill.generatedQuoteTexts)) {
     texts.add(text);
   }
 
@@ -240,16 +303,25 @@ export type SkillDerivation = {
 
 export const RESONANCE_SKILLS: ResonanceSkillDefinition[] = (
   resonanceSkillIcons as ResonanceSkillIconRaw[]
-).map((skill) => ({
-  skillId: skill.id,
-  name: skill.NameDesign,
-  generatedNames: collectGeneratedNames(skill.Names),
-  imagePath: `/images/resonance_skill/${skill.Icon}`,
-  ...(skill.maxCharges !== undefined ? { maxCharges: skill.maxCharges } : {}),
-  ...(skill.maxValidCdTime !== undefined
-    ? { maxValidCdTime: skill.maxValidCdTime }
-    : {}),
-}));
+).map((skill) => {
+  const generatedNames = collectGeneratedNames(skill.Names);
+  const generatedImagineNames = collectGeneratedNames(skill.MonsterNames);
+  const generatedQuoteTexts = collectGeneratedNames(skill.QuoteTexts);
+  const fallbackName = skill.Name?.trim() || skill.NameDesign?.trim() || `#${skill.id}`;
+
+  return {
+    skillId: skill.id,
+    name: fallbackName,
+    generatedNames,
+    generatedImagineNames,
+    generatedQuoteTexts,
+    imagePath: `/images/resonance_skill/${skill.Icon}`,
+    ...(skill.maxCharges !== undefined ? { maxCharges: skill.maxCharges } : {}),
+    ...(skill.maxValidCdTime !== undefined
+      ? { maxValidCdTime: skill.maxValidCdTime }
+      : {}),
+  };
+});
 
 const SKILL_ICON_PATH_BY_ID = new Map<number, string>();
 

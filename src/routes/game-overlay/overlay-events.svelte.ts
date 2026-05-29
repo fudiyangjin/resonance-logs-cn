@@ -5,6 +5,8 @@ import {
   ensureBuffUptimeActiveIndicators,
   ensureBuffUptimeAliases,
   ensureBuffUptimeColors,
+  ensureBuffUptimeMinStacks,
+  ensureBuffUptimeMinStacksEnabled,
   ensureBuffUptimeTextStyle,
   ensureBuffUptimeTrackingModes,
   type BuffUptimeTrackingMode,
@@ -41,6 +43,8 @@ import {
 } from "./overlay-utils";
 import {
   activeProfile,
+  buffUptimeMinStacks,
+  buffUptimeMinStacksEnabled,
   buffUptimeTrackingModes,
   monitoredSkillDurationIds,
   monitoredUptimeBuffIds,
@@ -80,6 +84,8 @@ function buildLatestBuffMap(buffs: BuffUpdateState[]) {
 function buildTrackedUptimeRows(localPlayerUid: number, now: number) {
   const trackedIds = monitoredUptimeBuffIds();
   const trackingModes = buffUptimeTrackingModes();
+  const minStacksEnabled = buffUptimeMinStacksEnabled();
+  const minStacks = buffUptimeMinStacks();
   const allBuffs: BuffUpdateState[] = [
     ...overlayRuntime.localBuffs,
     ...Array.from(overlayRuntime.bossBuffLists.values()).flat(),
@@ -88,17 +94,20 @@ function buildTrackedUptimeRows(localPlayerUid: number, now: number) {
 
   for (const baseId of trackedIds) {
     const trackingMode = trackingModes[String(baseId)] ?? "self";
-    const matches = allBuffs.filter((buff) => buff.baseId === baseId);
+    const minStack = minStacksEnabled[String(baseId)]
+      ? Math.max(1, minStacks[String(baseId)] ?? 1)
+      : 1;
+    const matches = allBuffs.filter((buff) => buff.baseId === baseId && buff.layer >= minStack);
 
     if (trackingMode === "self") {
-      const ownMatches = matches.filter((buff) => buff.sourceUid === localPlayerUid);
+      const ownMatches = overlayRuntime.localBuffs.filter((buff) => buff.baseId === baseId && buff.layer >= minStack);
       if (ownMatches.length === 0) continue;
       next.set(`uptime:${baseId}:self`, {
         key: `uptime:${baseId}:self`,
         baseId,
         trackingMode,
         hostUid: ownMatches[0]?.hostUid ?? 0,
-        sourceUid: localPlayerUid,
+        sourceUid: ownMatches[0]?.sourceUid ?? localPlayerUid,
         sourceConfigId: ownMatches[0]?.sourceConfigId ?? null,
         isActive: ownMatches.some((buff) => isBuffActive(buff, now)),
       });
@@ -386,6 +395,8 @@ function ensureActiveProfileDefaults() {
       profile.buffUptimeAliases === undefined ||
       profile.buffUptimeTrackingModes === undefined ||
       profile.buffUptimeActiveIndicators === undefined ||
+      profile.buffUptimeMinStacksEnabled === undefined ||
+      profile.buffUptimeMinStacks === undefined ||
       profile.buffUptimeTextStyle === undefined ||
       profile.shieldDetailStyle === undefined ||
       profile.showTrueUptime === undefined)
@@ -398,6 +409,8 @@ function ensureActiveProfileDefaults() {
       buffUptimeAliases: ensureBuffUptimeAliases(profile.buffUptimeAliases),
       buffUptimeTrackingModes: ensureBuffUptimeTrackingModes(profile.buffUptimeTrackingModes),
       buffUptimeActiveIndicators: ensureBuffUptimeActiveIndicators(profile.buffUptimeActiveIndicators),
+      buffUptimeMinStacksEnabled: ensureBuffUptimeMinStacksEnabled(profile.buffUptimeMinStacksEnabled),
+      buffUptimeMinStacks: ensureBuffUptimeMinStacks(profile.buffUptimeMinStacks),
       buffUptimeTextStyle: ensureBuffUptimeTextStyle(profile.buffUptimeTextStyle),
       shieldDetailStyle: ensureShieldDetailStyle(profile),
       showTrueUptime: profile.showTrueUptime ?? true,

@@ -139,6 +139,7 @@ type ModifierSourceUidEdge = {
 
 type ModifierSourceCatalog = {
   byBuffId?: Record<string, ModifierSourceCatalogEntry[]>;
+  activeEntries?: ModifierSourceCatalogEntry[];
   ignoredBuffIds?: number[];
   reportableBuffIds?: number[];
   ownerClassId?: number;
@@ -150,9 +151,17 @@ type HistoryEntityDataWithCatalog = HistoryEntityData & {
   modifierSourceActors?: ModifierSourceActor[];
 };
 
+type ActiveFactorItem = HistoryEntityData["activeFactorItems"][number];
+
 type BucketSourceMatch = {
   entry: ModifierSourceCatalogEntry;
   match: "direct-static-target" | "no-static-target";
+  selectedFactorItem?: ActiveFactorItem | null;
+};
+
+type ActiveRuntimeEntry = {
+  entry: ModifierSourceCatalogEntry;
+  selectedFactorItem: ActiveFactorItem | null;
 };
 
 type FormulaReplayComponentEstimate = NonNullable<
@@ -382,6 +391,10 @@ function sourceKeyForEntry(
   ].join(":");
 }
 
+function sourceKeyForActiveOnlyEntry(entry: ModifierSourceCatalogEntry): string {
+  return [sourceGroupKeyForEntry(entry), "actor:self"].join(":");
+}
+
 function isGenericActorName(name: string | undefined, uid: number): boolean {
   const trimmed = name?.trim() ?? "";
   return !trimmed || trimmed === `#${uid}`;
@@ -489,6 +502,23 @@ function actorSummaryForBucket(
     sourceActors,
     externalSourceActors,
     selfSourceActors,
+  };
+}
+
+function selfActorSummaryForEntity(entity: HistoryEntityData): ModifierActorSummary {
+  const uid = finitePositiveNumber(entity.uid) ?? 0;
+  const actor: ModifierSourceActor = {
+    uid,
+    name: entity.name?.trim() || `#${uid}`,
+  };
+  return {
+    hostUids: uid > 0 ? [uid] : [],
+    sourceUids: uid > 0 ? [uid] : [],
+    externalSourceUids: [],
+    selfSourceUids: uid > 0 ? [uid] : [],
+    sourceActors: uid > 0 ? [actor] : [],
+    externalSourceActors: [],
+    selfSourceActors: uid > 0 ? [actor] : [],
   };
 }
 
@@ -711,8 +741,34 @@ function isRuntimeWindowCatalogEntry(entry: ModifierSourceCatalogEntry): boolean
     || sourceType.includes("debuff");
 }
 
+function isSelectedFactorCatalogEntry(entry: ModifierSourceCatalogEntry): boolean {
+  const sourceKind = String(entry.sourceKind ?? "").toLowerCase();
+  if (sourceKind !== "phantom-factor") return false;
+  const runtimeDetection = String(entry.runtimeDetection ?? "").toLowerCase();
+  return runtimeDetection.includes("selected-factor-grade-item");
+}
+
 function isReportVisibleCatalogEntry(entry: ModifierSourceCatalogEntry): boolean {
-  return (entry.reportPolicy ?? "include") === "include" || isRuntimeWindowCatalogEntry(entry);
+  return (entry.reportPolicy ?? "include") === "include"
+    || isRuntimeWindowCatalogEntry(entry)
+    || isSelectedFactorCatalogEntry(entry);
+}
+
+function isRuntimeProvenActiveCatalogEntry(entry: ModifierSourceCatalogEntry): boolean {
+  if ((entry.reportPolicy ?? "include") === "ignore") return false;
+  if (isReportVisibleCatalogEntry(entry)) return true;
+
+  const sourceId = String(entry.sourceId ?? "").toLowerCase();
+  const kind = String(entry.sourceKind ?? "").toLowerCase();
+  const type = String(entry.sourceType ?? "").toLowerCase();
+  if (sourceId.startsWith("observed-buff:")) return false;
+  if (kind === "runtime-buff" && type.includes("observed")) return false;
+
+  return kind.includes("talent")
+    || type.includes("talent")
+    || kind === "season-talent-node"
+    || kind === "phantom-factor"
+    || kind === "set-effect";
 }
 
 function isPureProducedDamageEntry(entry: ModifierSourceCatalogEntry): boolean {
@@ -754,6 +810,457 @@ function entryVisibleForScope(entry: ModifierSourceCatalogEntry, scope: Modifier
   return !isPureProducedDamageEntry(entry);
 }
 
+function sourceEntityIdFromSourceId(sourceId: unknown): number | null {
+  const match = String(sourceId ?? "").match(/:(\d+)(?:$|\|)/);
+  return match ? finitePositiveNumber(match[1]) : null;
+}
+
+function activeTalentSourceEntityIds(entity: HistoryEntityData): Set<number> {
+  const ids = new Set<number>();
+  for (const source of entity.activeEffectSources ?? []) {
+    const sourceId = String(source.sourceId ?? "").trim().toLowerCase();
+    if (!sourceId.startsWith("talent:")) continue;
+    const sourceEntityId = finitePositiveNumber(source.sourceEntityId) ?? sourceEntityIdFromSourceId(sourceId);
+    if (sourceEntityId !== null) ids.add(sourceEntityId);
+  }
+  return ids;
+}
+
+function selectedProfessionTalentEntityIds(entity: HistoryEntityData): Set<number> {
+  const exactActiveTalentIds = activeTalentSourceEntityIds(entity);
+  if (exactActiveTalentIds.size > 0) return exactActiveTalentIds;
+
+  const ids = new Set<number>();
+  for (const talent of entity.activeProfessionTalents ?? []) {
+    const professionId = finitePositiveNumber(talent.professionId);
+    if (professionId !== null && entity.classId > 0 && professionId !== entity.classId) continue;
+    const stageCfgId = finitePositiveNumber(talent.talentStageCfgId);
+    if (stageCfgId !== null) ids.add(stageCfgId);
+  }
+  return ids;
+}
+
+function explicitSeasonTalentSourceIds(entity: HistoryEntityData): Set<string> {
+  const ids = new Set<string>();
+  for (const source of entity.activeEffectSources ?? []) {
+    const sourceId = String(source.sourceId ?? "").trim().toLowerCase();
+    if (!sourceId.startsWith("season-talent-node:")) continue;
+    const runtimeSource = String(source.runtimeSource ?? "");
+    if (!runtimeSource.includes("season_medal_info") || !runtimeSource.includes("choose")) continue;
+    ids.add(sourceId);
+  }
+  return ids;
+}
+
+function entryRequiresSelectedTalentEvidence(entry: ModifierSourceCatalogEntry): boolean {
+  return entry.talentOwnership?.parserPolicy?.selectedTalentEvidenceRequired === true;
+}
+
+function entryHasSelectedProfessionTalentEvidence(entity: HistoryEntityData, entry: ModifierSourceCatalogEntry): boolean {
+  const sourceKind = String(entry.sourceKind ?? "").toLowerCase();
+  const sourceType = String(entry.sourceType ?? "").toLowerCase();
+  if (!sourceKind.includes("talent") && !sourceType.includes("talent")) return true;
+  const sourceEntityId = finitePositiveNumber(entry.sourceEntityId) ?? sourceEntityIdFromSourceId(entry.sourceId);
+  if (sourceEntityId === null) return false;
+  return selectedProfessionTalentEntityIds(entity).has(sourceEntityId);
+}
+
+function entryHasSelectedSeasonTalentEvidence(entity: HistoryEntityData, entry: ModifierSourceCatalogEntry): boolean {
+  const sourceKind = String(entry.sourceKind ?? "").toLowerCase();
+  if (sourceKind !== "season-talent-node") return true;
+  const explicitSourceIds = explicitSeasonTalentSourceIds(entity);
+  if (explicitSourceIds.size === 0) return true;
+  const sourceId = String(entry.sourceId ?? "").trim().toLowerCase();
+  if (sourceId && explicitSourceIds.has(sourceId)) return true;
+  const sourceEntityId = finitePositiveNumber(entry.sourceEntityId) ?? sourceEntityIdFromSourceId(sourceId);
+  return sourceEntityId !== null && explicitSourceIds.has(`season-talent-node:${sourceEntityId}`);
+}
+
+function entryAllowedForSelectedRuntimeEvidence(entity: HistoryEntityData, entry: ModifierSourceCatalogEntry): boolean {
+  if (!entryHasSelectedSeasonTalentEvidence(entity, entry)) return false;
+  if (entryRequiresSelectedTalentEvidence(entry) && !entryHasSelectedProfessionTalentEvidence(entity, entry)) {
+    return false;
+  }
+  return true;
+}
+
+function entryPhantomFactorBuffIds(entry: ModifierSourceCatalogEntry): number[] {
+  const ids = new Set<number>();
+  const sourceMatch = entry.sourceId?.match(/^phantom-factor:(\d+)(?:$|\|)/);
+  const sourceId = sourceMatch ? finitePositiveNumber(sourceMatch[1]) : null;
+  if (sourceId !== null) ids.add(sourceId);
+  const sourceEntityId = finitePositiveNumber(entry.sourceEntityId);
+  if (sourceEntityId !== null) ids.add(sourceEntityId);
+  for (const id of [
+    ...(entry.buffIds ?? []),
+    ...(entry.runtimeBaseIds ?? []),
+    ...(entry.runtimeSourceConfigIds ?? []),
+  ]) {
+    const parsed = finitePositiveNumber(id);
+    if (parsed !== null) ids.add(parsed);
+  }
+  return sortedNumbers(ids);
+}
+
+function selectedFactorItemForEntry(
+  entity: HistoryEntityData,
+  entry: ModifierSourceCatalogEntry,
+): ActiveFactorItem | null {
+  const factorIds = new Set(entryPhantomFactorBuffIds(entry));
+  if (factorIds.size === 0) return null;
+  for (const item of entity.activeFactorItems ?? []) {
+    if (!isPacketSelectedFactorGradeItem(item)) continue;
+    const factorBuffId = finitePositiveNumber(item.factorBuffId);
+    if (factorBuffId !== null && factorIds.has(factorBuffId)) return item;
+  }
+  return null;
+}
+
+function isPacketSelectedFactorGradeItem(item: ActiveFactorItem | null | undefined): boolean {
+  return String(item?.runtimeSource ?? "").startsWith("SyncContainerDirtyData.v_data.dirty_tree.");
+}
+
+function hasSelectedFactorItem(entity: HistoryEntityData, entry: ModifierSourceCatalogEntry): boolean {
+  return selectedFactorItemForEntry(entity, entry) !== null;
+}
+
+function hasActiveFactorBuff(entity: HistoryEntityData, entry: ModifierSourceCatalogEntry): boolean {
+  const factorIds = new Set(entryPhantomFactorBuffIds(entry));
+  if (factorIds.size === 0) return false;
+  for (const buff of entity.activeFactorBuffs ?? []) {
+    const factorBuffId = finitePositiveNumber(buff.factorBuffId);
+    const observedBuffId = finitePositiveNumber(buff.observedBuffId);
+    const sourceConfigId = finitePositiveNumber(buff.sourceConfigId);
+    if (
+      (factorBuffId !== null && factorIds.has(factorBuffId)) ||
+      (observedBuffId !== null && factorIds.has(observedBuffId)) ||
+      (sourceConfigId !== null && factorIds.has(sourceConfigId))
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function selectedFactorGradeSuffix(item: ActiveFactorItem | null | undefined): string {
+  const grade = finitePositiveNumber(item?.grade);
+  return grade !== null ? ` G${grade}` : "";
+}
+
+function selectedFactorSourceName(
+  entry: ModifierSourceCatalogEntry,
+  selectedFactorItem: ActiveFactorItem | null | undefined,
+): string {
+  return `${localizedCatalogName(entry)}${selectedFactorGradeSuffix(selectedFactorItem)}`;
+}
+
+function selectedFactorSourceNames(
+  entry: ModifierSourceCatalogEntry,
+  selectedFactorItem: ActiveFactorItem | null | undefined,
+): Record<string, string> | undefined {
+  const suffix = selectedFactorGradeSuffix(selectedFactorItem);
+  if (!suffix || !entry.sourceNames) return entry.sourceNames;
+  return Object.fromEntries(
+    Object.entries(entry.sourceNames).map(([locale, value]) => [locale, `${value}${suffix}`]),
+  );
+}
+
+function entryAllowedForFactorSelectorEvidence(
+  entity: HistoryEntityData,
+  entry: ModifierSourceCatalogEntry,
+): boolean {
+  if (entry.sourceKind !== "phantom-factor") return true;
+  if (entryHasStaticTargets(entry)) return true;
+  return hasSelectedFactorItem(entity, entry) || hasActiveFactorBuff(entity, entry);
+}
+
+function entryAllowsActiveOnlyStaticFallback(
+  entity: HistoryEntityData,
+  entry: ModifierSourceCatalogEntry,
+): boolean {
+  return entry.sourceKind === "phantom-factor"
+    && (hasSelectedFactorItem(entity, entry) || hasActiveFactorBuff(entity, entry));
+}
+
+function activeRuntimeEvidenceIds(entity: HistoryEntityData): Set<number> {
+  const ids = new Set<number>();
+  const add = (value: unknown) => {
+    const id = finitePositiveNumber(value);
+    if (id !== null) ids.add(id);
+  };
+
+  for (const buff of entity.activeBuffs ?? []) {
+    add(buff.baseId);
+    add(buff.sourceConfigId);
+  }
+  for (const buff of entity.activeEffectBuffs ?? []) {
+    add(buff.effectSourceBuffId);
+    add(buff.observedBuffId);
+    add(buff.sourceConfigId);
+  }
+  for (const buff of entity.activeFactorBuffs ?? []) {
+    add(buff.factorBuffId);
+    add(buff.observedBuffId);
+    add(buff.sourceConfigId);
+  }
+  for (const window of entity.modifierWindows ?? []) {
+    add(window.baseId);
+    add(window.sourceConfigId);
+  }
+
+  return ids;
+}
+
+function activeRuntimeSourceIds(entity: HistoryEntityData): Set<string> {
+  const ids = new Set<string>();
+  for (const source of entity.activeEffectSources ?? []) {
+    const legacySource = source as typeof source & { source_id?: unknown };
+    const sourceId = String(source.sourceId ?? legacySource.source_id ?? "").trim().toLowerCase();
+    if (sourceId) ids.add(sourceId);
+  }
+  return ids;
+}
+
+function entryHasEntityActiveRuntimeEvidence(
+  entity: HistoryEntityData,
+  entry: ModifierSourceCatalogEntry,
+): boolean {
+  if (entry.sourceKind === "phantom-factor") {
+    return hasSelectedFactorItem(entity, entry) || hasActiveFactorBuff(entity, entry);
+  }
+
+  const sourceKind = String(entry.sourceKind ?? "").toLowerCase();
+  const sourceId = String(entry.sourceId ?? "").trim().toLowerCase();
+  const activeSourceIds = activeRuntimeSourceIds(entity);
+  if (sourceId && activeSourceIds.has(sourceId)) return true;
+
+  if (sourceKind === "season-talent-node" && [...activeSourceIds].some((id) => id.startsWith("season-talent-node:"))) {
+    return false;
+  }
+
+  const activeIds = activeRuntimeEvidenceIds(entity);
+  return entryRuntimeBuffIds(entry).some((id) => activeIds.has(id));
+}
+
+function activeOnlySelectedFactorEntries(
+  entity: HistoryEntityData,
+  catalog: ModifierSourceCatalog | undefined,
+  scope: ModifierActivityScope,
+  existingSourceIds: Set<string>,
+): Array<{ entry: ModifierSourceCatalogEntry; selectedFactorItem: ActiveFactorItem }> {
+  if (scope !== "all-active") return [];
+  const out: Array<{ entry: ModifierSourceCatalogEntry; selectedFactorItem: ActiveFactorItem }> = [];
+  const seen = new Set<string>();
+
+  for (const item of entity.activeFactorItems ?? []) {
+    const factorBuffId = finitePositiveNumber(item.factorBuffId);
+    if (factorBuffId === null) continue;
+
+    for (const entry of catalog?.byBuffId?.[String(factorBuffId)] ?? []) {
+      if (entry.sourceKind !== "phantom-factor") continue;
+      if (!isReportVisibleCatalogEntry(entry)) continue;
+      if (!entryAllowedForDamageReport(entry)) continue;
+      if (!entryAllowedForFactorSelectorEvidence(entity, entry)) continue;
+      const allowStaticFallback = entryAllowsActiveOnlyStaticFallback(entity, entry);
+      if (!entryVisibleForScope(entry, scope) && !allowStaticFallback) continue;
+      if (hasActiveFactorBuff(entity, entry)) continue;
+      if (existingSourceIds.has(entry.sourceId)) continue;
+
+      const selectedFactorItem = selectedFactorItemForEntry(entity, entry);
+      if (!selectedFactorItem) continue;
+
+      const key = `${entry.sourceId}:${selectedFactorItem.itemConfigId}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ entry, selectedFactorItem });
+    }
+  }
+
+  return out;
+}
+
+function activeOnlyRuntimeEntries(
+  entity: HistoryEntityData,
+  catalog: ModifierSourceCatalog | undefined,
+  scope: ModifierActivityScope,
+  existingSourceIds: Set<string>,
+): ActiveRuntimeEntry[] {
+  if (scope !== "all-active") return [];
+  const out: ActiveRuntimeEntry[] = [];
+  const seen = new Set<string>();
+
+  for (const entry of catalog?.activeEntries ?? []) {
+    if (!isRuntimeProvenActiveCatalogEntry(entry)) continue;
+    if (!entryHasEntityActiveRuntimeEvidence(entity, entry)) continue;
+    if (!entryAllowedForDamageReport(entry)) continue;
+    if (!entryAllowedForFactorSelectorEvidence(entity, entry)) continue;
+    if (!entryAllowedForSelectedRuntimeEvidence(entity, entry)) continue;
+    const allowStaticFallback = entryAllowsActiveOnlyStaticFallback(entity, entry);
+    if (!entryVisibleForScope(entry, scope) && !allowStaticFallback) continue;
+    if (entryHasStaticTargets(entry) && !allowStaticFallback) continue;
+    if (existingSourceIds.has(entry.sourceId)) continue;
+
+    const key = sourceKeyForActiveOnlyEntry(entry);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      entry,
+      selectedFactorItem: selectedFactorItemForEntry(entity, entry),
+    });
+  }
+
+  return out;
+}
+
+function entryRuntimeBuffIds(entry: ModifierSourceCatalogEntry): number[] {
+  return sortedNumbers([
+    ...(entry.buffIds ?? []),
+    ...(entry.runtimeBaseIds ?? []),
+    ...(entry.runtimeSourceConfigIds ?? []),
+  ].map(finitePositiveNumber).filter((id): id is number => id !== null));
+}
+
+function activeOnlySkillRow(
+  entity: HistoryEntityData,
+  elapsedSecs: number,
+  key: string,
+): ModifierActivitySkillRow | null {
+  const playerTotal = Math.max(Number(entity.damage.total) || 0, 0);
+  const effectiveTotal = Math.max(Number(entity.damage.effectiveTotal) || 0, 0);
+  const playerHits = Math.max(Number(entity.damage.hits) || 0, 0);
+  if (playerTotal <= 0 || playerHits <= 0) return null;
+
+  return {
+    key,
+    rowKind: "skill",
+    skillId: 0,
+    name: "All Damage",
+    damageIds: [],
+    match: "no-static-target",
+    totalDmg: playerTotal,
+    effectiveTotal,
+    baseTotalDmg: playerTotal,
+    baseEffectiveTotal: effectiveTotal,
+    baseDmgPct: 100,
+    baseDps: elapsedSecs > 0 ? playerTotal / elapsedSecs : 0,
+    baseHits: playerHits,
+    baseHitsPerMinute: perMinute(playerHits, elapsedSecs),
+    dmgPct: 100,
+    sourcePct: 100,
+    coveragePct: 100,
+    dps: elapsedSecs > 0 ? playerTotal / elapsedSecs : 0,
+    hits: playerHits,
+    hitsPerMinute: perMinute(playerHits, elapsedSecs),
+    critRate: rate(Number(entity.damage.critHits) || 0, playerHits),
+    luckyRate: rate(Number(entity.damage.luckyHits) || 0, playerHits),
+  };
+}
+
+function activeOnlyRowForEntry(
+  entity: HistoryEntityData,
+  elapsedSecs: number,
+  entry: ModifierSourceCatalogEntry,
+  evidence: string[],
+  selectedFactorItem?: ActiveFactorItem | null,
+): ModifierActivityRow | null {
+  const skillRow = activeOnlySkillRow(
+    entity,
+    elapsedSecs,
+    selectedFactorItem ? "active-factor:all-damage" : "active-source:all-damage",
+  );
+  if (!skillRow) return null;
+
+  const sourceName = selectedFactorItem
+    ? selectedFactorSourceName(entry, selectedFactorItem)
+    : localizedCatalogName(entry);
+  const sourceNames = selectedFactorItem
+    ? selectedFactorSourceNames(entry, selectedFactorItem)
+    : entry.sourceNames;
+  const playerTotal = skillRow.totalDmg;
+  const effectiveTotal = skillRow.effectiveTotal;
+  const playerHits = skillRow.hits;
+
+  return {
+    key: sourceKeyForActiveOnlyEntry(entry),
+    ...(entry.sourceRuleId ? { sourceRuleId: entry.sourceRuleId } : {}),
+    sourceRuleIds: entry.sourceRuleId ? [entry.sourceRuleId] : [],
+    sourceId: entry.sourceId,
+    sourceIds: [entry.sourceId],
+    sourceKind: entry.sourceKind ?? (selectedFactorItem ? "phantom-factor" : "active-source"),
+    ...(entry.sourceType ? { sourceType: entry.sourceType } : {}),
+    ...(typeof entry.sourceEntityId === "number" ? { sourceEntityId: entry.sourceEntityId } : {}),
+    sourceName,
+    ...(sourceNames ? { sourceNames } : {}),
+    ...(entry.description ? { description: entry.description } : {}),
+    ...(entry.descriptions ? { descriptions: entry.descriptions } : {}),
+    ...(entry.iconPath ? { iconPath: entry.iconPath } : {}),
+    runtimeDetection: entry.runtimeDetection ?? (selectedFactorItem ? "selected-factor-grade-item" : "active-runtime-source"),
+    ...(entry.providerAggregation ? { providerAggregation: entry.providerAggregation } : {}),
+    ...(entry.displayOwnerKind ? { displayOwnerKind: entry.displayOwnerKind } : {}),
+    buffIds: entry.sourceKind === "phantom-factor" ? entryPhantomFactorBuffIds(entry) : entryRuntimeBuffIds(entry),
+    evidence: sortedStrings(new Set([
+      ...(entry.evidence ?? []),
+      ...evidence,
+    ].filter(Boolean))),
+    ...(entry.attributionModel ? { attributionModel: entry.attributionModel } : {}),
+    ...(entry.contributionModel ? { contributionModel: entry.contributionModel } : {}),
+    ...(entry.talentOwnership ? { talentOwnership: entry.talentOwnership } : {}),
+    ...(entry.classification ? { classification: entry.classification } : {}),
+    actorSummary: selfActorSummaryForEntity(entity),
+    match: entryHasStaticTargets(entry) ? "active-static-target-fallback" : "no-static-target",
+    targetDamageIds: sortedNumbers(entry.targetDamageIds ?? []),
+    targetRecountIds: sortedNumbers(entry.targetRecountIds ?? []),
+    totalDmg: playerTotal,
+    effectiveTotal,
+    dmgPct: 100,
+    coveragePct: 100,
+    dps: elapsedSecs > 0 ? playerTotal / elapsedSecs : 0,
+    hits: playerHits,
+    hitsPerMinute: perMinute(playerHits, elapsedSecs),
+    critRate: skillRow.critRate,
+    luckyRate: skillRow.luckyRate,
+    skills: [{ ...skillRow }],
+  };
+}
+
+function buildActiveOnlyRuntimeRows(
+  entity: HistoryEntityData,
+  elapsedSecs: number,
+  catalog: ModifierSourceCatalog | undefined,
+  scope: ModifierActivityScope,
+  actorFilter: ModifierActorFilter,
+  existingSourceIds: Set<string>,
+): ModifierActivityRow[] {
+  if (actorFilter === "external") return [];
+
+  const rows: ModifierActivityRow[] = [];
+  const emittedSourceIds = new Set(existingSourceIds);
+  for (const { entry, selectedFactorItem } of activeOnlyRuntimeEntries(entity, catalog, scope, emittedSourceIds)) {
+    const evidence = selectedFactorItem
+      ? ["active-runtime-source", "selected-factor-grade-item", selectedFactorItem.runtimeSource]
+      : ["active-runtime-source"];
+    const row = activeOnlyRowForEntry(entity, elapsedSecs, entry, evidence, selectedFactorItem);
+    if (row) {
+      rows.push(row);
+      for (const sourceId of row.sourceIds ?? []) emittedSourceIds.add(sourceId);
+    }
+  }
+  for (const { entry, selectedFactorItem } of activeOnlySelectedFactorEntries(entity, catalog, scope, emittedSourceIds)) {
+    const row = activeOnlyRowForEntry(
+      entity,
+      elapsedSecs,
+      entry,
+      ["selected-factor-grade-item", selectedFactorItem.runtimeSource],
+      selectedFactorItem,
+    );
+    if (row) {
+      rows.push(row);
+      for (const sourceId of row.sourceIds ?? []) emittedSourceIds.add(sourceId);
+    }
+  }
+  return rows;
+}
+
 function isExternalModifierBucket(entity: HistoryEntityData, bucket: ModifierHitBucketState): boolean {
   const sourceUid = finitePositiveNumber(bucket.modifierSourceUid);
   return sourceUid !== null && sourceUid !== entity.uid;
@@ -769,12 +1276,11 @@ function entryAllowedForBucketOwner(
 
   const ownership = entry.talentOwnership;
   if (!ownership) return true;
+  if (!ownership.hardFilterEligible) return true;
 
   const ownershipClassId = finitePositiveNumber(ownership.classId);
   const ownerClassId = finitePositiveNumber(catalog?.ownerClassId) ?? finitePositiveNumber(entity.classId);
   if (ownershipClassId !== null && ownerClassId !== null && ownershipClassId !== ownerClassId) return false;
-
-  if (!ownership.hardFilterEligible) return true;
 
   const ownerSpecIds = positiveNumberSet(catalog?.ownerSpecIds);
   if (ownerSpecIds.size === 0) return true;
@@ -876,18 +1382,28 @@ function sourceMatchesForBucket(
   skillId: number,
   damageIds: number[],
 ): BucketSourceMatch[] {
-    const entries = catalogEntriesForBucket(catalog, bucket, preferredId)
-      .filter(entryAllowedForDamageReport)
-      .filter((entry) => entryAllowedForBucketOwner(entity, catalog, entry, bucket))
-      .filter((entry) => entryVisibleForScope(entry, scope));
+  const entries = catalogEntriesForBucket(catalog, bucket, preferredId)
+    .filter(entryAllowedForDamageReport)
+    .filter((entry) => entryAllowedForBucketOwner(entity, catalog, entry, bucket))
+    .filter((entry) => entryAllowedForFactorSelectorEvidence(entity, entry))
+    .filter((entry) => entryAllowedForSelectedRuntimeEvidence(entity, entry))
+    .filter((entry) => entryVisibleForScope(entry, scope));
   const staticMatches = entries
     .filter(entryHasStaticTargets)
     .filter((entry) => entryMatchesBucket(entry, bucket, skillId, damageIds))
-    .map((entry) => ({ entry, match: "direct-static-target" as const }));
+    .map((entry) => ({
+      entry,
+      match: "direct-static-target" as const,
+      selectedFactorItem: selectedFactorItemForEntry(entity, entry),
+    }));
   const observedTargetDebuffMatches = entries
     .filter(entryUsesObservedTargetDebuffWindow)
     .filter((entry) => entryObservedOnBucket(entry, bucket, preferredId))
-    .map((entry) => ({ entry, match: "direct-static-target" as const }));
+    .map((entry) => ({
+      entry,
+      match: "direct-static-target" as const,
+      selectedFactorItem: selectedFactorItemForEntry(entity, entry),
+    }));
   const directMatches = dedupeSourceMatches([...staticMatches, ...observedTargetDebuffMatches]);
 
   if (scope === "static-targets") return directMatches;
@@ -896,11 +1412,34 @@ function sourceMatchesForBucket(
     ...directMatches,
     ...entries
     .filter((entry) => !entryHasStaticTargets(entry))
-    .map((entry) => ({ entry, match: "no-static-target" as const })),
+    .map((entry) => ({
+      entry,
+      match: "no-static-target" as const,
+      selectedFactorItem: selectedFactorItemForEntry(entity, entry),
+    })),
   ]);
 }
 
-function mergeEntryIntoSource(source: FastSourceAggregate, entry: ModifierSourceCatalogEntry): void {
+function mergeSelectedFactorItemIntoSource(
+  source: FastSourceAggregate,
+  entry: ModifierSourceCatalogEntry,
+  selectedFactorItem: ActiveFactorItem | null | undefined,
+): void {
+  if (entry.sourceKind !== "phantom-factor") return;
+  if (!selectedFactorGradeSuffix(selectedFactorItem)) return;
+
+  source.sourceName = selectedFactorSourceName(entry, selectedFactorItem);
+  const sourceNames = selectedFactorSourceNames(entry, selectedFactorItem);
+  if (sourceNames) source.sourceNames = sourceNames;
+  source.evidence.add("selected-factor-grade-item");
+  if (selectedFactorItem?.runtimeSource) source.evidence.add(selectedFactorItem.runtimeSource);
+}
+
+function mergeEntryIntoSource(
+  source: FastSourceAggregate,
+  entry: ModifierSourceCatalogEntry,
+  selectedFactorItem?: ActiveFactorItem | null,
+): void {
   if (entry.sourceRuleId) {
     source.sourceRuleIds.add(entry.sourceRuleId);
     if (!source.sourceRuleId) source.sourceRuleId = entry.sourceRuleId;
@@ -934,6 +1473,7 @@ function mergeEntryIntoSource(source: FastSourceAggregate, entry: ModifierSource
     const parsed = finitePositiveNumber(targetId);
     if (parsed !== null) source.targetRecountIds.add(parsed);
   }
+  mergeSelectedFactorItemIntoSource(source, entry, selectedFactorItem);
 }
 
 function aggregateMatch(matches: Set<"direct-static-target" | "no-static-target">): "direct-static-target" | "no-static-target" | "mixed" {
@@ -1445,6 +1985,13 @@ export function buildModifierActivityRowsFast(
     const actorSummary = actorSummaryForBucket(entity.uid, bucket, sourceActorIndex);
     for (const sourceMatch of sourceMatchesForBucket(entity, catalog, scope, bucket, preferredId, skillId, damageIds)) {
       const { entry, match } = sourceMatch;
+      const selectedFactorItem = sourceMatch.selectedFactorItem ?? null;
+      const sourceName = selectedFactorItem
+        ? selectedFactorSourceName(entry, selectedFactorItem)
+        : localizedCatalogName(entry);
+      const sourceNames = selectedFactorItem
+        ? selectedFactorSourceNames(entry, selectedFactorItem)
+        : entry.sourceNames;
       const sourceKey = sourceKeyForEntry(entity.uid, bucket, entry, sourceActorIndex);
       let source = sources.get(sourceKey);
       if (!source) {
@@ -1457,8 +2004,8 @@ export function buildModifierActivityRowsFast(
           sourceKind: entry.sourceKind ?? "observed-buff",
           ...(entry.sourceType ? { sourceType: entry.sourceType } : {}),
           ...(typeof entry.sourceEntityId === "number" ? { sourceEntityId: entry.sourceEntityId } : {}),
-          sourceName: localizedCatalogName(entry),
-          ...(entry.sourceNames ? { sourceNames: entry.sourceNames } : {}),
+          sourceName,
+          ...(sourceNames ? { sourceNames } : {}),
           ...(entry.description ? { description: entry.description } : {}),
           ...(entry.descriptions ? { descriptions: entry.descriptions } : {}),
             ...(entry.iconPath ? { iconPath: entry.iconPath } : {}),
@@ -1477,13 +2024,13 @@ export function buildModifierActivityRowsFast(
           targetRecountIds: new Set(),
           skills: new Map(),
         };
-        mergeEntryIntoSource(source, entry);
+        mergeEntryIntoSource(source, entry, selectedFactorItem);
         sources.set(sourceKey, source);
       } else {
         source.actorSummary = mergeActorSummary(source.actorSummary, actorSummary);
         source.matches.add(match);
         for (const buffId of bucketBuffIds(bucket)) source.buffIds.add(buffId);
-        mergeEntryIntoSource(source, entry);
+        mergeEntryIntoSource(source, entry, selectedFactorItem);
       }
 
       const skillKey = `skill:${skillId}`;
@@ -1658,6 +2205,19 @@ export function buildModifierActivityRowsFast(
       })),
     });
   }
+
+  const existingSourceIds = new Set<string>();
+  for (const source of sources.values()) {
+    for (const sourceId of source.sourceIds) existingSourceIds.add(sourceId);
+  }
+  rows.push(...buildActiveOnlyRuntimeRows(
+    entity,
+    elapsedSecs,
+    catalog,
+    scope,
+    actorFilter,
+    existingSourceIds,
+  ));
 
   return rows
     .filter((row) => row.hits > 0 && row.skills.length > 0)

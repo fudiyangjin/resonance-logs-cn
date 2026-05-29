@@ -2,6 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   onBossBuffUpdate,
+  onEntityIdentities,
   onEntityNames,
   onHateListUpdate,
   type BuffUpdateState,
@@ -73,6 +74,20 @@ export function initMonsterOverlay() {
     }
     monsterRuntime.nameCache = next;
   });
+  const unlistenIdentities = onEntityIdentities((event) => {
+    const nextPlayerNames = new Map(monsterRuntime.playerNameCache);
+    for (const [uid, name] of Object.entries(event.payload.playerNames)) {
+      nextPlayerNames.set(Number(uid), name);
+    }
+
+    const nextMonsterIds = new Map(monsterRuntime.monsterIdCache);
+    for (const [uid, monsterId] of Object.entries(event.payload.monsterIds)) {
+      nextMonsterIds.set(Number(uid), monsterId);
+    }
+
+    monsterRuntime.playerNameCache = nextPlayerNames;
+    monsterRuntime.monsterIdCache = nextMonsterIds;
+  });
 
   window.addEventListener("pointermove", onGlobalPointerMove);
   window.addEventListener("pointerup", onGlobalPointerUp);
@@ -84,6 +99,8 @@ export function initMonsterOverlay() {
     monsterRuntime.dragState = null;
     monsterRuntime.resizeState = null;
     monsterRuntime.nameCache = new Map();
+    monsterRuntime.playerNameCache = new Map();
+    monsterRuntime.monsterIdCache = new Map();
     monsterRuntime.bossBuffMap = new Map();
     monsterRuntime.bossHateMap = new Map();
     monsterRuntime.bossSections = [];
@@ -93,6 +110,7 @@ export function initMonsterOverlay() {
     unlistenBossBuff.then((fn) => fn());
     unlistenHateList.then((fn) => fn());
     unlistenNames.then((fn) => fn());
+    unlistenIdentities.then((fn) => fn());
     window.removeEventListener("pointermove", onGlobalPointerMove);
     window.removeEventListener("pointerup", onGlobalPointerUp);
     if (monsterRuntime.rafId) {

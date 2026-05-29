@@ -129,6 +129,9 @@ export type ActiveFactorItemLike = {
   grade?: number | null;
   familyId?: number | null;
   runtimeSource?: string;
+  selectorPath?: string | null;
+  selectorSignature?: string | null;
+  selectorOffset?: number | null;
 };
 
 export type ActiveEffectBuffLike = {
@@ -649,6 +652,9 @@ function observedFactorItemsByFactorId(
 ): Map<number, ActiveFactorItemLike[]> {
   const observed = new Map<number, ActiveFactorItemLike[]>();
   for (const item of activeFactorItems) {
+    if (!String(item.runtimeSource ?? "").startsWith("SyncContainerDirtyData.v_data.dirty_tree.")) {
+      continue;
+    }
     const factorBuffId = Number(item.factorBuffId);
     const itemConfigId = Number(item.itemConfigId);
     if (
@@ -716,9 +722,14 @@ function attachObservedFactorItemEvidence(
     activeFactor.observedResolvedDescription = descriptions[0]!;
   }
   if (sources.length) activeFactor.runtimeGradeSource = sources.join(", ");
-  activeFactor.runtimeGradeStatus = sortedItems.length === 1
-    ? "item-package-observed-selection-not-proven"
-    : "multiple-item-package-grade-items-observed-selection-not-proven";
+  const packetProven = sortedItems.every((item) =>
+    String(item.runtimeSource ?? "").startsWith("SyncContainerDirtyData.v_data.dirty_tree.")
+  );
+  activeFactor.runtimeGradeStatus = packetProven && sortedItems.length === 1
+    ? "packet-selected-grade"
+    : sortedItems.length === 1
+      ? "item-package-observed-selection-not-proven"
+      : "multiple-item-package-grade-items-observed-selection-not-proven";
 }
 
 function resolveObservedSkillFactors(
@@ -867,14 +878,80 @@ type ObservedEffectRuntime = {
   source: "activeEffectBuffs" | "activeFactorBuffs" | "activeEffectSources";
 };
 
+function seasonTalentNodeIdFromSourceId(sourceId: string): number | null {
+  const match = /^season-talent-node:(\d+)$/.exec(sourceId);
+  return match ? toFiniteNumber(match[1]) : null;
+}
+
+function seasonTalentTreeBandFromSourceId(sourceId: string): number | null {
+  const nodeId = seasonTalentNodeIdFromSourceId(sourceId);
+  return nodeId !== null && nodeId >= 1000 ? Math.floor(nodeId / 100) : null;
+}
+
+function sourceIdsForBuffId(buffId: number | null): string[] {
+  if (buffId === null || !Number.isFinite(buffId)) return [];
+  return (buffIdToEffectSourceIds[String(buffId)] ?? []).filter((sourceId) => effectSourcesById[sourceId]);
+}
+
+function activeSeasonTalentTreeBands(
+  activeEffectBuffs: ActiveEffectBuffLike[] = [],
+  activeEffectSources: ActiveEffectSourceLike[] = [],
+): Set<number> {
+  const bands = new Set<number>();
+
+  for (const source of activeEffectSources) {
+    const band = seasonTalentTreeBandFromSourceId(String(source.sourceId || ""));
+    if (band !== null) bands.add(band);
+  }
+
+  for (const buff of activeEffectBuffs) {
+    const buffIds = [
+      toFiniteNumber(buff.effectSourceBuffId),
+      toFiniteNumber(buff.observedBuffId),
+      toFiniteNumber(buff.sourceConfigId ?? undefined),
+    ];
+    for (const buffId of buffIds) {
+      const sourceBands = new Set(
+        sourceIdsForBuffId(buffId)
+          .map(seasonTalentTreeBandFromSourceId)
+          .filter((band): band is number => band !== null),
+      );
+      if (sourceBands.size === 1) {
+        for (const band of sourceBands) bands.add(band);
+      }
+    }
+  }
+
+  return bands;
+}
+
+function scopedSourceIdsForBuffId(buffId: number | null, activeTreeBands: Set<number>): string[] {
+  const sourceIds = sourceIdsForBuffId(buffId);
+  if (!sourceIds.length || activeTreeBands.size === 0) return sourceIds;
+
+  const sourceBands = new Set(
+    sourceIds
+      .map(seasonTalentTreeBandFromSourceId)
+      .filter((band): band is number => band !== null),
+  );
+  if (sourceBands.size <= 1) return sourceIds;
+
+  const filtered = sourceIds.filter((sourceId) => {
+    const band = seasonTalentTreeBandFromSourceId(sourceId);
+    return band === null || activeTreeBands.has(band);
+  });
+  return filtered.some((sourceId) => seasonTalentTreeBandFromSourceId(sourceId) !== null)
+    ? filtered
+    : sourceIds;
+}
+
 function addObservedEffectSourcesForBuffId(
   observed: Map<string, ObservedEffectRuntime>,
   buffId: number | null,
   runtime: ObservedEffectRuntime,
+  activeTreeBands: Set<number>,
 ) {
-  if (buffId === null || !Number.isFinite(buffId)) return;
-  for (const sourceId of buffIdToEffectSourceIds[String(buffId)] ?? []) {
-    if (!effectSourcesById[sourceId]) continue;
+  for (const sourceId of scopedSourceIdsForBuffId(buffId, activeTreeBands)) {
     if (!observed.has(sourceId) || runtime.source === "activeEffectBuffs") {
       observed.set(sourceId, runtime);
     }
@@ -896,6 +973,7 @@ function observedEffectSourceRuntime(
   activeEffectSources: ActiveEffectSourceLike[] = [],
 ): Map<string, ObservedEffectRuntime> {
   const observed = new Map<string, ObservedEffectRuntime>();
+  const activeTreeBands = activeSeasonTalentTreeBands(activeEffectBuffs, activeEffectSources);
 
   for (const buff of activeFactorBuffs) {
     const factorBuffId = toFiniteNumber(buff.factorBuffId);
@@ -912,9 +990,14 @@ function observedEffectSourceRuntime(
     if (buff.sourceConfigId !== undefined) {
       runtime.sourceConfigId = buff.sourceConfigId;
     }
-    addObservedEffectSourcesForBuffId(observed, factorBuffId, runtime);
-    addObservedEffectSourcesForBuffId(observed, toFiniteNumber(buff.observedBuffId), runtime);
-    addObservedEffectSourcesForBuffId(observed, toFiniteNumber(buff.sourceConfigId ?? undefined), runtime);
+    addObservedEffectSourcesForBuffId(observed, factorBuffId, runtime, activeTreeBands);
+    addObservedEffectSourcesForBuffId(observed, toFiniteNumber(buff.observedBuffId), runtime, activeTreeBands);
+    addObservedEffectSourcesForBuffId(
+      observed,
+      toFiniteNumber(buff.sourceConfigId ?? undefined),
+      runtime,
+      activeTreeBands,
+    );
   }
 
   for (const buff of activeEffectBuffs) {
@@ -932,9 +1015,14 @@ function observedEffectSourceRuntime(
     if (buff.sourceConfigId !== undefined) {
       runtime.sourceConfigId = buff.sourceConfigId;
     }
-    addObservedEffectSourcesForBuffId(observed, effectSourceBuffId, runtime);
-    addObservedEffectSourcesForBuffId(observed, toFiniteNumber(buff.observedBuffId), runtime);
-    addObservedEffectSourcesForBuffId(observed, toFiniteNumber(buff.sourceConfigId ?? undefined), runtime);
+    addObservedEffectSourcesForBuffId(observed, effectSourceBuffId, runtime, activeTreeBands);
+    addObservedEffectSourcesForBuffId(observed, toFiniteNumber(buff.observedBuffId), runtime, activeTreeBands);
+    addObservedEffectSourcesForBuffId(
+      observed,
+      toFiniteNumber(buff.sourceConfigId ?? undefined),
+      runtime,
+      activeTreeBands,
+    );
   }
 
   for (const source of activeEffectSources) {

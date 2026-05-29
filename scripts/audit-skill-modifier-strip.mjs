@@ -262,6 +262,33 @@ function sourceLabel(ruleId, indexes) {
   return display?.sourceName ?? display?.name ?? recount?.sourceName ?? contribution?.sourceId ?? ruleId;
 }
 
+function resolveContributionSource(ruleId, indexes) {
+  const direct = indexes.contribution.sourcesByRuleId?.[ruleId];
+  if (direct) return { sourceRule: direct, ruleId, aliasFromRuleId: null, aliasReason: "direct-rule" };
+
+  const recountSource = indexes.recount.sourcesById?.[ruleId];
+  const sourceId = recountSource?.sourceId;
+  if (!sourceId) return { blocker: "missing-contribution-runtime-row" };
+
+  const candidates = asArray(indexes.contributionRulesBySourceId?.get(sourceId)).filter(
+    (candidate) => candidate.contributionMode === "formula-replay-candidate"
+  );
+  if (candidates.length === 1) {
+    const sourceRule = candidates[0];
+    return {
+      sourceRule,
+      ruleId: sourceRule.sourceRuleId ?? ruleId,
+      aliasFromRuleId: ruleId,
+      aliasReason: "source-id-active-window-alias",
+    };
+  }
+  if (candidates.length > 1) return { blocker: `ambiguous-contribution-runtime-source-id:${sourceId}` };
+  if (recountSource?.contributionStatus === "observed-only") {
+    return { blocker: `observed-only-value-bridge-required:${sourceId}` };
+  }
+  return { blocker: "missing-contribution-runtime-row" };
+}
+
 function buildIndexes() {
   const recount = readGenerated("ModifierRecountTable.json");
   const contribution = readGenerated("ModifierContributionRuntime.json");
@@ -272,6 +299,14 @@ function buildIndexes() {
   for (const [buffId, rules] of Object.entries(recount.byBuffId ?? {})) {
     ruleIdsByBuffId.set(String(buffId), asArray(rules).map(String));
   }
+  const contributionRulesBySourceId = new Map();
+  for (const [ruleId, sourceRule] of Object.entries(contribution.sourcesByRuleId ?? {})) {
+    const sourceId = sourceRule?.sourceId;
+    if (!sourceId) continue;
+    const current = contributionRulesBySourceId.get(sourceId) ?? [];
+    current.push({ ...sourceRule, sourceRuleId: sourceRule.sourceRuleId ?? ruleId });
+    contributionRulesBySourceId.set(sourceId, current);
+  }
   return {
     recount,
     contribution,
@@ -279,6 +314,7 @@ function buildIndexes() {
     skillDetails,
     damageRows,
     ruleIdsByBuffId,
+    contributionRulesBySourceId,
   };
 }
 
@@ -368,8 +404,10 @@ function chosenPercentValue(hint, link, sample, selectedScope = selectedScopeFor
 }
 
 function classifyHint(ruleId, link, sample, row, indexes) {
-  const sourceRule = indexes.contribution.sourcesByRuleId?.[ruleId];
-  if (!sourceRule) return [{ kind: "blocked", reason: "missing-contribution-runtime-row" }];
+  const resolved = resolveContributionSource(ruleId, indexes);
+  if (!resolved.sourceRule) return [{ kind: "blocked", reason: resolved.blocker ?? "missing-contribution-runtime-row" }];
+  const sourceRule = resolved.sourceRule;
+  const contributionRuleId = resolved.ruleId ?? ruleId;
   if (sourceRule.contributionMode !== "formula-replay-candidate") {
     return [{ kind: "ignored", reason: `mode:${sourceRule.contributionMode ?? "unknown"}` }];
   }
@@ -407,9 +445,11 @@ function classifyHint(ruleId, link, sample, row, indexes) {
       }
       results.push({
         kind: chosen.status === "experimental" ? "experimental-chance-expected" : "chance-expected",
-        ruleId,
+        ruleId: contributionRuleId,
+        activeRuleId: resolved.aliasFromRuleId,
+        activeRuleAliasReason: resolved.aliasReason,
         sourceId: sourceRule.sourceId,
-        label: sourceLabel(ruleId, indexes),
+        label: sourceLabel(contributionRuleId, indexes),
         componentKey,
         contributionGroups,
         term: "criticalRatePct",
@@ -436,9 +476,11 @@ function classifyHint(ruleId, link, sample, row, indexes) {
       }
       results.push({
         kind: chosen.status === "experimental" ? "experimental-crit-damage" : "crit-damage",
-        ruleId,
+        ruleId: contributionRuleId,
+        activeRuleId: resolved.aliasFromRuleId,
+        activeRuleAliasReason: resolved.aliasReason,
         sourceId: sourceRule.sourceId,
-        label: sourceLabel(ruleId, indexes),
+        label: sourceLabel(contributionRuleId, indexes),
         componentKey,
         contributionGroups,
         term: "critMultiplier",
@@ -458,6 +500,17 @@ function classifyHint(ruleId, link, sample, row, indexes) {
         results.push({ kind: "blocked", reason: `unsupported-stat-terms:${terms.join(",") || "none"}`, componentKey, terms });
         continue;
       }
+      const flatValues = asArray(hint.values).filter(
+        (value) => value?.formulaAmount && value.unit === "flat" && finiteNumber(value.value) !== null
+      );
+      if (flatValues.length > 1) {
+        results.push({ kind: "blocked", reason: `flat-attack-term-ambiguous-values:${flatValues.length}`, componentKey, terms });
+        continue;
+      }
+      if (flatValues.length === 1) {
+        results.push({ kind: "blocked", reason: "flat-attack-term-requires-stat-snapshot", componentKey, terms });
+        continue;
+      }
       const chosen = chosenPercentValue(hint, link, sample, selectedScope);
       if (chosen.status !== "ready" && chosen.status !== "experimental") {
         results.push({ kind: "blocked", reason: chosen.reason, componentKey, terms });
@@ -470,9 +523,11 @@ function classifyHint(ruleId, link, sample, row, indexes) {
       }
       results.push({
         kind: chosen.status === "experimental" ? "experimental-attack-snapshot" : "attack-snapshot",
-        ruleId,
+        ruleId: contributionRuleId,
+        activeRuleId: resolved.aliasFromRuleId,
+        activeRuleAliasReason: resolved.aliasReason,
         sourceId: sourceRule.sourceId,
-        label: sourceLabel(ruleId, indexes),
+        label: sourceLabel(contributionRuleId, indexes),
         componentKey,
         contributionGroups,
         term: "primaryAttackPct",
@@ -507,9 +562,11 @@ function classifyHint(ruleId, link, sample, row, indexes) {
 
     results.push({
       kind: chosen.status === "experimental" ? "experimental-strip" : "strip",
-      ruleId,
+      ruleId: contributionRuleId,
+      activeRuleId: resolved.aliasFromRuleId,
+      activeRuleAliasReason: resolved.aliasReason,
       sourceId: sourceRule.sourceId,
-      label: sourceLabel(ruleId, indexes),
+      label: sourceLabel(contributionRuleId, indexes),
       componentKey,
       contributionGroups,
       term: strippableTerms[0],
@@ -533,7 +590,12 @@ function replayActionsForSample(sample, row, indexes) {
       const key = `${link.ruleId}:${action.kind}:${action.componentKey ?? ""}:${action.term ?? ""}:${action.amount ?? ""}:${action.reason ?? ""}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      actions.push({ ...action, ruleId: link.ruleId, label: action.label ?? sourceLabel(link.ruleId, indexes) });
+      actions.push({
+        ...action,
+        ruleId: action.ruleId ?? link.ruleId,
+        activeRuleId: action.activeRuleId ?? (action.ruleId && action.ruleId !== link.ruleId ? link.ruleId : null),
+        label: action.label ?? sourceLabel(action.ruleId ?? link.ruleId, indexes),
+      });
     }
   }
   return collapseScopedFormulaActions(actions);
@@ -618,6 +680,8 @@ function makeRow(damageId) {
     blockedActionHits: 0,
     ignoredActionHits: 0,
     blockedReasons: new Map(),
+    blockedActionDetails: new Map(),
+    ignoredActionDetails: new Map(),
     strippedTerms: new Map(),
     experimentalStrippedTerms: new Map(),
     critDamageTerms: new Map(),
@@ -644,10 +708,39 @@ function addCount(map, key, amount = 1) {
   map.set(key, (map.get(key) ?? 0) + amount);
 }
 
+function actionDetailKey(action) {
+  return [
+    action.reason ?? "",
+    action.ruleId ?? "",
+    action.label ?? "",
+    action.sourceId ?? "",
+    action.componentKey ?? "",
+    asArray(action.terms).join(","),
+  ].join("|");
+}
+
+function addActionDetail(map, action) {
+  const key = actionDetailKey(action);
+  if (!key) return;
+  const current = map.get(key) ?? {
+    reason: action.reason ?? "",
+    ruleId: action.ruleId ?? "",
+    label: action.label ?? "",
+    sourceId: action.sourceId ?? "",
+    componentKey: action.componentKey ?? "",
+    terms: asArray(action.terms),
+    hits: 0,
+  };
+  current.hits += 1;
+  map.set(key, current);
+}
+
 function addContribution(map, action, finalContribution, decritContribution) {
   const key = contributionKey(action);
   const row = map.get(key) ?? {
     ruleId: action.ruleId,
+    activeRuleId: action.activeRuleId,
+    activeRuleAliasReason: action.activeRuleAliasReason,
     label: action.label,
     sourceId: action.sourceId,
     sourceUid: action.sourceUid,
@@ -716,7 +809,11 @@ function analyzeSample(sample, row, filePath, indexes, rows, totals) {
   if (blockedActions.length) aggregate.blockedActionHits += 1;
   if (ignoredActions.length) aggregate.ignoredActionHits += 1;
   aggregate.normalizedCritDamageActions += normalizedActions.length;
-  for (const action of blockedActions) addCount(aggregate.blockedReasons, action.reason);
+  for (const action of blockedActions) {
+    addCount(aggregate.blockedReasons, action.reason);
+    addActionDetail(aggregate.blockedActionDetails, action);
+  }
+  for (const action of ignoredActions) addActionDetail(aggregate.ignoredActionDetails, action);
 
   if (critMultiplier === null || attackPower === null || attackPower <= 0) return true;
 
@@ -892,6 +989,15 @@ function analyzeFile(filePath, indexes, rows, totals) {
 
 function compactMap(map) {
   return Object.fromEntries([...map.entries()].sort(([left], [right]) => String(left).localeCompare(String(right))));
+}
+
+function compactActionDetails(map) {
+  return [...map.values()].sort(
+    (left, right) =>
+      right.hits - left.hits ||
+      String(left.reason).localeCompare(String(right.reason)) ||
+      String(left.label).localeCompare(String(right.label))
+  );
 }
 
 function compactContributions(map) {
@@ -1136,6 +1242,8 @@ function compactRows(rows, options) {
         experimentalStripFactorDistinctValues,
         status,
         blockedReasons: compactMap(row.blockedReasons),
+        blockedActionDetails: compactActionDetails(row.blockedActionDetails).slice(0, options.maxRows),
+        ignoredActionDetails: compactActionDetails(row.ignoredActionDetails).slice(0, options.maxRows),
         strippedTerms: compactMap(row.strippedTerms),
         experimentalStrippedTerms: compactMap(row.experimentalStrippedTerms),
         critDamageTerms: compactMap(row.critDamageTerms),
@@ -1812,6 +1920,10 @@ function renderMarkdown(report, options) {
       .slice(0, 3)
       .map(([key, count]) => `${key} x${count}`)
       .join("; "),
+    asArray(row.blockedActionDetails)
+      .slice(0, 3)
+      .map((item) => `${item.label || item.ruleId}: ${item.reason} x${item.hits}`)
+      .join("; "),
   ]);
 
   const contributionTable = report.contributionRows.slice(0, options.maxRows).map((row) => [
@@ -2039,6 +2151,7 @@ function renderMarkdown(report, options) {
             "Exp Spread Delta",
             "Stripped Terms",
             "Main Blockers",
+            "Blocked Rule Details",
           ],
           rowTable
         )

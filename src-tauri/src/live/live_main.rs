@@ -4,8 +4,9 @@ use crate::live::{
     attribution_census::flush_current_census_to_file,
     commands_models::{
         BossBuffUpdatePayload, BuffCounterUpdatePayload, BuffUpdatePayload, DeathReplayPayload,
-        EntityNameMapPayload, FightResourceUpdatePayload, HateListUpdatePayload, LiveDataPayload,
-        PanelAttrUpdatePayload, ShieldDetailUpdatePayload, SkillCdUpdatePayload,
+        EntityIdentityMapPayload, EntityNameMapPayload, FightResourceUpdatePayload,
+        HateListUpdatePayload, LiveDataPayload, PanelAttrUpdatePayload, ShieldDetailUpdatePayload,
+        SkillCdUpdatePayload,
     },
     custom_trigger_events::emit_custom_trigger_entries,
     event_logger::{
@@ -22,11 +23,14 @@ use bytes::Bytes;
 use log::{debug, info, trace, warn};
 use prost::Message;
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Manager};
 use tokio::sync::mpsc::UnboundedReceiver;
+
+static RAW_SERVICE_PROBE_ALL_COUNT: AtomicUsize = AtomicUsize::new(0);
+static RAW_SERVICE_PROBE_NEAR_DELTA_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 fn debug_env_flag_enabled(name: &str) -> bool {
     cfg!(debug_assertions)
@@ -41,10 +45,33 @@ fn debug_env_flag_enabled(name: &str) -> bool {
             .unwrap_or(false)
 }
 
+fn debug_env_usize(name: &str, fallback: usize) -> usize {
+    if !cfg!(debug_assertions) {
+        return fallback;
+    }
+
+    std::env::var(name)
+        .ok()
+        .and_then(|value| value.trim().parse::<usize>().ok())
+        .unwrap_or(fallback)
+}
+
 fn dungeon_probes_enabled() -> bool {
     static ENABLED: OnceLock<bool> = OnceLock::new();
 
     *ENABLED.get_or_init(|| debug_env_flag_enabled("RESONANCE_ENABLE_DUNGEON_PROBES"))
+}
+
+fn container_probes_enabled() -> bool {
+    static ENABLED: OnceLock<bool> = OnceLock::new();
+
+    *ENABLED.get_or_init(|| debug_env_flag_enabled("RESONANCE_ENABLE_CONTAINER_PROBES"))
+}
+
+fn container_probes_verbose_enabled() -> bool {
+    static ENABLED: OnceLock<bool> = OnceLock::new();
+
+    *ENABLED.get_or_init(|| debug_env_flag_enabled("RESONANCE_ENABLE_CONTAINER_PROBES_VERBOSE"))
 }
 
 fn emit_auxiliary_entries(app_handle: &AppHandle, entries: Vec<EventLoggerEntry>) {
@@ -2769,6 +2796,10 @@ fn decode_promoted_service_entries(
 ) -> Vec<EventLoggerEntry> {
     let ts_ms = now_ms();
 
+    if let Some(entry) = build_choose_core_season_hole_node_probe_logger_entry(ts_ms, notify) {
+        return vec![entry];
+    }
+
     if matches!(notify.fragment_type, packets::opcodes::FragmentType::Notify)
         && notify.service_id == crate::packets::parser::WORLD_NTF_SERVICE_ID
         && notify.method_id == 0x16
@@ -2893,22 +2924,231 @@ fn decode_promoted_service_entries(
     }
 }
 
+#[derive(Clone, PartialEq, ::prost::Message)]
+struct ChooseCoreSeasonHoleNodeProbe {
+    #[prost(message, repeated, tag = "1")]
+    pub chosen_node_ids: Vec<blueprotobuf::MedalNode>,
+}
+
+fn container_probe_canonical_season_medal_node_id(node_id: u32) -> u32 {
+    if (100_000..=199_999).contains(&node_id) {
+        node_id - 100_000
+    } else {
+        node_id
+    }
+}
+
+fn container_probe_medal_node_json(
+    node: &blueprotobuf::MedalNode,
+    map_key: Option<u32>,
+    runtime_source: &'static str,
+) -> serde_json::Value {
+    serde_json::json!({
+        "mapKey": map_key,
+        "nodeId": node.node_id,
+        "canonicalNodeId": node.node_id.map(container_probe_canonical_season_medal_node_id),
+        "nodeLevel": node.node_level,
+        "choose": node.choose,
+        "slot": node.slot,
+        "runtimeSource": runtime_source,
+    })
+}
+
+fn looks_like_choose_core_season_hole_node_probe(probe: &ChooseCoreSeasonHoleNodeProbe) -> bool {
+    if probe.chosen_node_ids.is_empty() || probe.chosen_node_ids.len() > 16 {
+        return false;
+    }
+
+    probe.chosen_node_ids.iter().all(|node| {
+        let Some(node_id) = node.node_id else {
+            return false;
+        };
+        if node_id == 0 || node_id > 1_000_000 {
+            return false;
+        }
+        if node.node_level.is_some_and(|level| level > 1_000) {
+            return false;
+        }
+        if node.slot.is_some_and(|slot| !(-1..=32).contains(&slot)) {
+            return false;
+        }
+        true
+    })
+}
+
+fn build_choose_core_season_hole_node_probe_logger_entry(
+    ts_ms: i64,
+    notify: &crate::packets::parser::ParsedNotifyFragment,
+) -> Option<EventLoggerEntry> {
+    if !container_probes_enabled() {
+        return None;
+    }
+    if !matches!(notify.fragment_type, packets::opcodes::FragmentType::Call) {
+        return None;
+    }
+    if notify.service_id != crate::packets::parser::WORLD_NTF_SERVICE_ID {
+        return None;
+    }
+
+    let decoded = ChooseCoreSeasonHoleNodeProbe::decode(notify.payload.clone()).ok()?;
+    if !looks_like_choose_core_season_hole_node_probe(&decoded) {
+        return None;
+    }
+
+    let dispatch_label =
+        crate::packets::dispatch::label(notify.fragment_type, notify.service_id, notify.method_id);
+    let chosen_node_ids = decoded
+        .chosen_node_ids
+        .iter()
+        .map(|node| {
+            container_probe_medal_node_json(
+                node,
+                None,
+                "World.ChooseCoreSeasonHoleNode.chosenNodeIds",
+            )
+        })
+        .collect::<Vec<_>>();
+    let payload_hex_limit = raw_service_probe_payload_hex_limit();
+    let payload_slice = if notify.payload.len() > payload_hex_limit {
+        &notify.payload[..payload_hex_limit]
+    } else {
+        notify.payload.as_ref()
+    };
+    let is_truncated = notify.payload.len() > payload_hex_limit;
+    let method_label = dispatch_label
+        .method_name
+        .map(|name| format!("{} (0x{:X})", name, notify.method_id))
+        .unwrap_or_else(|| format!("0x{:X}", notify.method_id));
+    let summary = format!(
+        "method=ChooseCoreSeasonHoleNode? rawMethod={} chosenNodes={} payload={}B",
+        method_label,
+        chosen_node_ids.len(),
+        notify.payload.len()
+    );
+
+    let raw = serde_json::json!({
+        "probe": "World.ChooseCoreSeasonHoleNode",
+        "decodeBasis": "field 1 repeated zproto.MedalNode",
+        "fragmentType": dispatch_label.fragment_label,
+        "serviceId": notify.service_id,
+        "serviceIdHex": format!("0x{:016X}", notify.service_id),
+        "serviceName": dispatch_label.service_name,
+        "methodId": notify.method_id,
+        "methodIdHex": format!("0x{:X}", notify.method_id),
+        "methodName": dispatch_label.method_name,
+        "payloadLength": notify.payload.len(),
+        "payloadHex": hex::encode(payload_slice),
+        "payloadHexTruncated": is_truncated,
+        "chooseCoreSeasonHoleNode": {
+            "chosenNodeIds": chosen_node_ids,
+        },
+    });
+
+    Some(EventLoggerEntry {
+        ts_ms,
+        category: "container_probe".to_string(),
+        action: "choose_core_season_hole_node".to_string(),
+        uid: None,
+        target_uid: None,
+        source_uid: None,
+        source_label: Some(dispatch_label.service_name.to_string()),
+        target_label: Some(method_label),
+        name_hint: Some("ChooseCoreSeasonHoleNode".to_string()),
+        summary: Some(summary),
+        stacks: i32::try_from(decoded.chosen_node_ids.len()).ok(),
+        duration_ms: None,
+        remaining_ms: None,
+        value: Some(format!("0x{:X}", notify.method_id)),
+        raw: serde_json::to_string_pretty(&raw).unwrap_or_else(|_| "null".to_string()),
+    })
+}
+
 fn should_emit_raw_service_probe(notify: &crate::packets::parser::ParsedNotifyFragment) -> bool {
     if !raw_service_probes_enabled() {
         return false;
     }
 
-    crate::packets::dispatch::should_emit_shadow_probe(
+    if crate::packets::dispatch::should_emit_shadow_probe(
         notify.fragment_type,
         notify.service_id,
         notify.recognized_pkt.is_some(),
-    )
+    ) {
+        return true;
+    }
+
+    if notify.recognized_pkt.is_some() {
+        return false;
+    }
+
+    !scan_container_factor_candidates(&notify.payload).is_empty()
 }
 
 fn raw_service_probes_enabled() -> bool {
     static ENABLED: OnceLock<bool> = OnceLock::new();
 
     *ENABLED.get_or_init(|| debug_env_flag_enabled("RESONANCE_ENABLE_RAW_SERVICE_PROBES"))
+}
+
+fn raw_service_probe_all_limit() -> usize {
+    static LIMIT: OnceLock<usize> = OnceLock::new();
+
+    *LIMIT.get_or_init(|| debug_env_usize("RESONANCE_RAW_SERVICE_PROBE_ALL_LIMIT", 0))
+}
+
+fn raw_service_probe_all_max_payload() -> usize {
+    static MAX_PAYLOAD: OnceLock<usize> = OnceLock::new();
+
+    *MAX_PAYLOAD
+        .get_or_init(|| debug_env_usize("RESONANCE_RAW_SERVICE_PROBE_ALL_MAX_PAYLOAD", 262_144))
+}
+
+fn raw_service_probe_payload_hex_limit() -> usize {
+    static LIMIT: OnceLock<usize> = OnceLock::new();
+
+    *LIMIT.get_or_init(|| debug_env_usize("RESONANCE_RAW_SERVICE_PROBE_HEX_LIMIT", 4096))
+}
+
+fn raw_service_probe_near_delta_limit() -> usize {
+    static LIMIT: OnceLock<usize> = OnceLock::new();
+
+    *LIMIT.get_or_init(|| debug_env_usize("RESONANCE_RAW_SERVICE_PROBE_NEAR_DELTA_LIMIT", 150))
+}
+
+fn is_sync_near_delta_probe(notify: &crate::packets::parser::ParsedNotifyFragment) -> bool {
+    matches!(
+        notify.recognized_pkt.as_ref(),
+        Some(packets::opcodes::Pkt::SyncNearDeltaInfo)
+    )
+}
+
+fn should_emit_raw_service_probe_sample(
+    notify: &crate::packets::parser::ParsedNotifyFragment,
+) -> bool {
+    if !raw_service_probes_enabled() {
+        return false;
+    }
+
+    let limit = raw_service_probe_all_limit();
+    if limit == 0 {
+        return false;
+    }
+
+    let max_payload = raw_service_probe_all_max_payload();
+    if max_payload > 0 && notify.payload.len() > max_payload {
+        return false;
+    }
+
+    if is_sync_near_delta_probe(notify) {
+        let near_delta_limit = raw_service_probe_near_delta_limit();
+        if near_delta_limit > 0
+            && RAW_SERVICE_PROBE_NEAR_DELTA_COUNT.fetch_add(1, Ordering::Relaxed)
+                >= near_delta_limit
+        {
+            return false;
+        }
+    }
+
+    RAW_SERVICE_PROBE_ALL_COUNT.fetch_add(1, Ordering::Relaxed) < limit
 }
 
 fn build_raw_service_probe_logger_entry(
@@ -2919,7 +3159,7 @@ fn build_raw_service_probe_logger_entry(
         crate::packets::dispatch::label(notify.fragment_type, notify.service_id, notify.method_id);
     let service_name = dispatch_label.service_name;
     let method_name = dispatch_label.method_name;
-    let payload_hex_limit = 4096usize;
+    let payload_hex_limit = raw_service_probe_payload_hex_limit();
     let payload_slice = if notify.payload.len() > payload_hex_limit {
         &notify.payload[..payload_hex_limit]
     } else {
@@ -2933,6 +3173,8 @@ fn build_raw_service_probe_logger_entry(
         .unwrap_or_else(|| format!("0x{:X}", notify.method_id));
     let detected_names = extract_candidate_names_from_payload(payload_slice);
     let string_buckets = classify_probe_strings(&detected_names);
+    let seasonal_candidates = scan_container_factor_candidates(&notify.payload);
+    let seasonal_raw_proto_candidates = scan_container_raw_proto_candidates(&notify.payload);
 
     let category = dispatch_label.category;
     let action = dispatch_label.action;
@@ -2956,6 +3198,40 @@ fn build_raw_service_probe_logger_entry(
     if !string_buckets.service_ids.is_empty() {
         summary_parts.push(format!("services={}", string_buckets.service_ids.join(",")));
     }
+    if !seasonal_candidates.is_empty() {
+        summary_parts.push(format!("seasonalCandidates={}", seasonal_candidates.len()));
+    }
+    if !seasonal_raw_proto_candidates.is_empty() {
+        summary_parts.push(format!(
+            "seasonalProtoCandidates={}",
+            seasonal_raw_proto_candidates.len()
+        ));
+    }
+
+    let seasonal_candidates_json = seasonal_candidates
+        .iter()
+        .take(200)
+        .map(|row| {
+            serde_json::json!({
+                "offset": row.offset,
+                "encoding": row.encoding,
+                "kind": row.kind,
+                "value": row.value,
+            })
+        })
+        .collect::<Vec<_>>();
+    let seasonal_raw_proto_candidates_json = seasonal_raw_proto_candidates
+        .iter()
+        .take(200)
+        .map(|row| {
+            serde_json::json!({
+                "path": row.path,
+                "offset": row.offset,
+                "kind": row.kind,
+                "value": row.value,
+            })
+        })
+        .collect::<Vec<_>>();
 
     let raw = serde_json::json!({
         "fragmentType": fragment_label,
@@ -2973,6 +3249,12 @@ fn build_raw_service_probe_logger_entry(
         "detectedLoadouts": string_buckets.loadouts.clone(),
         "detectedPlayerish": string_buckets.playerish.clone(),
         "detectedServiceIds": string_buckets.service_ids.clone(),
+        "seasonalCandidateCount": seasonal_candidates.len(),
+        "seasonalCandidatesTruncated": seasonal_candidates.len() > seasonal_candidates_json.len(),
+        "seasonalCandidates": seasonal_candidates_json,
+        "seasonalRawProtoCandidateCount": seasonal_raw_proto_candidates.len(),
+        "seasonalRawProtoCandidatesTruncated": seasonal_raw_proto_candidates.len() > seasonal_raw_proto_candidates_json.len(),
+        "seasonalRawProtoCandidates": seasonal_raw_proto_candidates_json,
         "shadowDispatch": {
             "serviceName": dispatch_label.service_name,
             "methodName": dispatch_label.method_name,
@@ -3001,6 +3283,797 @@ fn build_raw_service_probe_logger_entry(
         value: Some(format!("0x{:X}", notify.method_id)),
         raw: serde_json::to_string_pretty(&raw).unwrap_or_else(|_| "null".to_string()),
     }
+}
+
+#[derive(Clone, Debug)]
+struct ContainerCandidateId {
+    offset: usize,
+    encoding: &'static str,
+    kind: &'static str,
+    value: u32,
+}
+
+#[derive(Clone, Debug)]
+struct ContainerRawProtoCandidateId {
+    path: String,
+    offset: usize,
+    kind: &'static str,
+    value: u32,
+}
+
+#[derive(Clone, Debug)]
+struct ContainerJsonCandidateId {
+    path: String,
+    location: &'static str,
+    kind: &'static str,
+    value: u32,
+}
+
+fn classify_container_candidate_id(value: u32) -> Option<&'static str> {
+    match value {
+        100_000..=199_999 => Some("season-medal-core-node-id"),
+        200_000..=209_999 => Some("seasonal-factor-family-id"),
+        3_050_000..=3_059_999 => Some("seasonal-factor-buff-id"),
+        20_010_000..=20_019_999 => Some("seasonal-factor-grade-item-id"),
+        1_000..=9_999
+            if crate::live::effect_sources::is_effect_source_id(&format!(
+                "season-talent-node:{value}"
+            )) =>
+        {
+            Some("seasonal-talent-node-id")
+        }
+        _ if crate::live::season_phantom_factors::is_factor_affected_damage_id(value) => {
+            Some("seasonal-factor-affected-damage-id")
+        }
+        _ => None,
+    }
+}
+
+fn push_container_candidate_id(
+    rows: &mut Vec<ContainerCandidateId>,
+    seen: &mut HashSet<(usize, &'static str, u32)>,
+    offset: usize,
+    encoding: &'static str,
+    value: u32,
+) {
+    let Some(kind) = classify_container_candidate_id(value) else {
+        return;
+    };
+    if !seen.insert((offset, encoding, value)) {
+        return;
+    }
+    rows.push(ContainerCandidateId {
+        offset,
+        encoding,
+        kind,
+        value,
+    });
+}
+
+fn scan_container_factor_candidates(buffer: &[u8]) -> Vec<ContainerCandidateId> {
+    let mut rows = Vec::new();
+    let mut seen = HashSet::new();
+
+    for offset in 0..buffer.len() {
+        if offset + 4 <= buffer.len() {
+            let value = u32::from_le_bytes([
+                buffer[offset],
+                buffer[offset + 1],
+                buffer[offset + 2],
+                buffer[offset + 3],
+            ]);
+            push_container_candidate_id(&mut rows, &mut seen, offset, "u32-le", value);
+        }
+
+        let mut value = 0u32;
+        let mut shift = 0u32;
+        for width in 0..5 {
+            let Some(byte) = buffer.get(offset + width).copied() else {
+                break;
+            };
+            value |= u32::from(byte & 0x7F) << shift;
+            if byte & 0x80 == 0 {
+                push_container_candidate_id(&mut rows, &mut seen, offset, "varint", value);
+                break;
+            }
+            shift += 7;
+        }
+    }
+
+    rows.sort_by_key(|row| (row.value, row.offset, row.encoding));
+    rows
+}
+
+fn push_container_json_candidate_id(
+    rows: &mut Vec<ContainerJsonCandidateId>,
+    seen: &mut HashSet<(String, &'static str, &'static str, u32)>,
+    path: &str,
+    location: &'static str,
+    value: u64,
+) {
+    const JSON_CANDIDATE_LIMIT: usize = 512;
+    if rows.len() >= JSON_CANDIDATE_LIMIT {
+        return;
+    }
+    let Ok(value) = u32::try_from(value) else {
+        return;
+    };
+    let Some(kind) = classify_container_candidate_id(value) else {
+        return;
+    };
+    let key = (path.to_string(), location, kind, value);
+    if !seen.insert(key) {
+        return;
+    }
+    rows.push(ContainerJsonCandidateId {
+        path: path.to_string(),
+        location,
+        kind,
+        value,
+    });
+}
+
+fn scan_container_json_value(
+    value: &serde_json::Value,
+    path: &str,
+    rows: &mut Vec<ContainerJsonCandidateId>,
+    seen: &mut HashSet<(String, &'static str, &'static str, u32)>,
+) {
+    match value {
+        serde_json::Value::Object(object) => {
+            for (key, child) in object {
+                let child_path = format!("{path}.{}", key.replace('.', "\\."));
+                if let Ok(parsed) = key.parse::<u64>() {
+                    push_container_json_candidate_id(rows, seen, &child_path, "object-key", parsed);
+                }
+                scan_container_json_value(child, &child_path, rows, seen);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for (index, child) in items.iter().enumerate() {
+                let child_path = format!("{path}[{index}]");
+                scan_container_json_value(child, &child_path, rows, seen);
+            }
+        }
+        serde_json::Value::Number(number) => {
+            if let Some(parsed) = number.as_u64() {
+                push_container_json_candidate_id(rows, seen, path, "number", parsed);
+            }
+        }
+        serde_json::Value::String(text) => {
+            if let Ok(parsed) = text.parse::<u64>() {
+                push_container_json_candidate_id(rows, seen, path, "string", parsed);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn scan_container_json_candidates(value: &serde_json::Value) -> Vec<ContainerJsonCandidateId> {
+    let mut rows = Vec::new();
+    let mut seen = HashSet::new();
+    scan_container_json_value(value, "$", &mut rows, &mut seen);
+    rows.sort_by(|left, right| {
+        left.value
+            .cmp(&right.value)
+            .then_with(|| left.path.cmp(&right.path))
+            .then_with(|| left.location.cmp(right.location))
+    });
+    rows
+}
+
+fn collect_container_probe_equipped_factor_items(
+    v_data: &blueprotobuf::CharSerialize,
+) -> Vec<serde_json::Value> {
+    let Some(item_package) = v_data.item_package.as_ref() else {
+        return Vec::new();
+    };
+    let Some(equip) = v_data.equip.as_ref() else {
+        return Vec::new();
+    };
+
+    let mut items = Vec::new();
+    for (equip_slot, info) in &equip.equip_list {
+        let Some(equipped_uuid) = info.item_uuid else {
+            continue;
+        };
+        for (package_key, package) in &item_package.packages {
+            for item in package.items.values() {
+                let Some(item_uuid) = item.uuid.and_then(|uuid| u64::try_from(uuid).ok()) else {
+                    continue;
+                };
+                if item_uuid != equipped_uuid {
+                    continue;
+                }
+                let Some(config_id) = item.config_id else {
+                    continue;
+                };
+                let Some(factor_grade) =
+                    crate::live::season_phantom_factors::factor_grade_item_for_config_id(config_id)
+                else {
+                    continue;
+                };
+                items.push(serde_json::json!({
+                    "equipSlot": equip_slot,
+                    "factorBuffId": factor_grade.factor_buff_id,
+                    "familyId": factor_grade.family_id,
+                    "itemConfigId": factor_grade.item_config_id,
+                    "itemUuid": item.uuid,
+                    "packageKey": package_key,
+                    "packageType": package.r#type,
+                    "grade": factor_grade.grade,
+                    "runtimeSource": "SyncContainerData.v_data.equip.equip_list.item_uuid->item_package.config_id",
+                }));
+            }
+        }
+    }
+    items.sort_by_key(|item| {
+        (
+            item.get("factorBuffId")
+                .and_then(serde_json::Value::as_i64)
+                .unwrap_or_default(),
+            item.get("grade")
+                .and_then(serde_json::Value::as_i64)
+                .unwrap_or_default(),
+            item.get("itemConfigId")
+                .and_then(serde_json::Value::as_i64)
+                .unwrap_or_default(),
+        )
+    });
+    items
+}
+
+fn collect_container_probe_season_medal_nodes(
+    v_data: &blueprotobuf::CharSerialize,
+) -> Option<serde_json::Value> {
+    let info = v_data.season_medal_info.as_ref()?;
+    let mut normal_hole_infos = info
+        .normal_hole_infos
+        .iter()
+        .map(|(map_key, hole)| {
+            serde_json::json!({
+                "mapKey": map_key,
+                "holeId": hole.hole_id,
+                "holeLevel": hole.hole_level,
+                "curExp": hole.cur_exp,
+            })
+        })
+        .collect::<Vec<_>>();
+    normal_hole_infos.sort_by_key(|row| {
+        (
+            row.get("mapKey")
+                .and_then(serde_json::Value::as_u64)
+                .unwrap_or_default(),
+            row.get("holeId")
+                .and_then(serde_json::Value::as_u64)
+                .unwrap_or_default(),
+        )
+    });
+
+    let mut core_hole_node_infos = info
+        .core_hole_node_infos
+        .iter()
+        .map(|(map_key, node)| {
+            container_probe_medal_node_json(
+                node,
+                Some(*map_key),
+                "SyncContainerData.v_data.season_medal_info.core_hole_node_infos",
+            )
+        })
+        .collect::<Vec<_>>();
+    core_hole_node_infos.sort_by_key(|row| {
+        (
+            row.get("choose")
+                .and_then(serde_json::Value::as_bool)
+                .map(|chosen| if chosen { 0_u8 } else { 1_u8 })
+                .unwrap_or(2_u8),
+            row.get("slot")
+                .and_then(serde_json::Value::as_i64)
+                .unwrap_or(i64::MAX),
+            row.get("nodeId")
+                .and_then(serde_json::Value::as_u64)
+                .unwrap_or_default(),
+        )
+    });
+
+    let selected_core_hole_node_infos = core_hole_node_infos
+        .iter()
+        .filter(|row| {
+            row.get("choose")
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(false)
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+
+    Some(serde_json::json!({
+        "seasonId": info.season_id,
+        "coreHoleInfo": info.core_hole_info.as_ref().map(|hole| serde_json::json!({
+            "holeId": hole.hole_id,
+            "holeLevel": hole.hole_level,
+            "curExp": hole.cur_exp,
+        })),
+        "normalHoleInfos": normal_hole_infos,
+        "coreHoleNodeInfos": core_hole_node_infos,
+        "selectedCoreHoleNodeInfos": selected_core_hole_node_infos,
+    }))
+}
+
+fn push_container_raw_proto_candidate_id(
+    rows: &mut Vec<ContainerRawProtoCandidateId>,
+    seen: &mut HashSet<(String, usize, &'static str, u32)>,
+    path: &str,
+    offset: usize,
+    value: u64,
+) {
+    const RAW_PROTO_CANDIDATE_LIMIT: usize = 512;
+    if rows.len() >= RAW_PROTO_CANDIDATE_LIMIT {
+        return;
+    }
+    let Ok(value) = u32::try_from(value) else {
+        return;
+    };
+    let Some(kind) = classify_container_candidate_id(value) else {
+        return;
+    };
+    let key = (path.to_string(), offset, kind, value);
+    if !seen.insert(key) {
+        return;
+    }
+    rows.push(ContainerRawProtoCandidateId {
+        path: path.to_string(),
+        offset,
+        kind,
+        value,
+    });
+}
+
+fn decode_container_varint(bytes: &[u8], mut pos: usize, end: usize) -> Option<(u64, usize)> {
+    let mut value = 0u64;
+    let mut shift = 0u32;
+    for _ in 0..10 {
+        if pos >= end {
+            return None;
+        }
+        let byte = bytes[pos];
+        pos += 1;
+        value |= u64::from(byte & 0x7f) << shift;
+        if byte & 0x80 == 0 {
+            return Some((value, pos));
+        }
+        shift += 7;
+    }
+    None
+}
+
+fn collect_container_raw_proto_candidates(
+    bytes: &[u8],
+    start: usize,
+    end: usize,
+    path: &str,
+    depth: usize,
+    max_depth: usize,
+    max_len: usize,
+    rows: &mut Vec<ContainerRawProtoCandidateId>,
+    seen: &mut HashSet<(String, usize, &'static str, u32)>,
+) -> Option<()> {
+    if start > end || end > bytes.len() {
+        return None;
+    }
+    let mut pos = start;
+    let mut saw_field = false;
+    let mut field_counts: HashMap<u64, usize> = HashMap::new();
+
+    while pos < end {
+        let field_offset = pos;
+        let (key, next_pos) = decode_container_varint(bytes, pos, end)?;
+        pos = next_pos;
+        let field_number = key >> 3;
+        let wire_type = key & 0x07;
+        if field_number == 0 {
+            return None;
+        }
+
+        let occurrence = field_counts.entry(field_number).or_insert(0);
+        let field_path = format!("{path}.{field_number}[{occurrence}]");
+        *occurrence += 1;
+
+        match wire_type {
+            0 => {
+                let (value, next_pos) = decode_container_varint(bytes, pos, end)?;
+                pos = next_pos;
+                push_container_raw_proto_candidate_id(rows, seen, &field_path, field_offset, value);
+            }
+            1 => {
+                pos = pos.checked_add(8)?;
+                if pos > end {
+                    return None;
+                }
+            }
+            2 => {
+                let (len, next_pos) = decode_container_varint(bytes, pos, end)?;
+                pos = next_pos;
+                let len = usize::try_from(len).ok()?;
+                let child_start = pos;
+                let child_end = pos.checked_add(len)?;
+                if child_end > end {
+                    return None;
+                }
+                if len > 0 && len <= max_len && depth < max_depth {
+                    let mut child_rows = Vec::new();
+                    let mut child_seen = seen.clone();
+                    if collect_container_raw_proto_candidates(
+                        bytes,
+                        child_start,
+                        child_end,
+                        &field_path,
+                        depth + 1,
+                        max_depth,
+                        max_len,
+                        &mut child_rows,
+                        &mut child_seen,
+                    )
+                    .is_some()
+                    {
+                        for row in child_rows {
+                            let key = (row.path.clone(), row.offset, row.kind, row.value);
+                            if seen.insert(key) {
+                                rows.push(row);
+                            }
+                        }
+                    }
+                }
+                pos = child_end;
+            }
+            5 => {
+                pos = pos.checked_add(4)?;
+                if pos > end {
+                    return None;
+                }
+            }
+            _ => return None,
+        }
+        saw_field = true;
+    }
+
+    (saw_field && pos == end).then_some(())
+}
+
+fn scan_container_raw_proto_candidates(buffer: &[u8]) -> Vec<ContainerRawProtoCandidateId> {
+    let mut rows = Vec::new();
+    let mut seen = HashSet::new();
+    let _ = collect_container_raw_proto_candidates(
+        buffer,
+        0,
+        buffer.len(),
+        "$",
+        0,
+        10,
+        32_768,
+        &mut rows,
+        &mut seen,
+    );
+    rows.sort_by(|left, right| {
+        left.value
+            .cmp(&right.value)
+            .then_with(|| left.offset.cmp(&right.offset))
+            .then_with(|| left.path.cmp(&right.path))
+    });
+    rows
+}
+
+fn build_sync_container_probe_logger_entry(
+    ts_ms: i64,
+    sync_container_data: blueprotobuf::SyncContainerData,
+) -> Option<EventLoggerEntry> {
+    let Some(v_data) = sync_container_data.v_data else {
+        if !container_probes_verbose_enabled() {
+            return None;
+        }
+        let raw = serde_json::json!({
+            "probe": "sync-container",
+            "hasVData": false,
+        });
+        return Some(EventLoggerEntry {
+            ts_ms,
+            category: "container_probe".to_string(),
+            action: "sync_container".to_string(),
+            uid: None,
+            target_uid: None,
+            source_uid: None,
+            source_label: Some("WorldNtf".to_string()),
+            target_label: Some("SyncContainerData".to_string()),
+            name_hint: Some("SyncContainerData".to_string()),
+            summary: Some("method=SyncContainerData hasVData=false".to_string()),
+            stacks: None,
+            duration_ms: None,
+            remaining_ms: None,
+            value: Some("0".to_string()),
+            raw: serde_json::to_string_pretty(&raw).unwrap_or_else(|_| "null".to_string()),
+        });
+    };
+
+    let vdata_bytes = <blueprotobuf::CharSerialize as prost::Message>::encode_to_vec(&v_data);
+    let offset_candidates = scan_container_factor_candidates(&vdata_bytes);
+    let raw_proto_candidates = scan_container_raw_proto_candidates(&vdata_bytes);
+    let vdata_json = serde_json::to_value(&v_data).unwrap_or(serde_json::Value::Null);
+    let json_candidates = scan_container_json_candidates(&vdata_json);
+    let equipped_factor_items = collect_container_probe_equipped_factor_items(&v_data);
+    let season_medal = collect_container_probe_season_medal_nodes(&v_data);
+    let selected_season_medal_node_count = season_medal
+        .as_ref()
+        .and_then(|value| value.get("selectedCoreHoleNodeInfos"))
+        .and_then(serde_json::Value::as_array)
+        .map_or(0, Vec::len);
+    if offset_candidates.is_empty()
+        && raw_proto_candidates.is_empty()
+        && json_candidates.is_empty()
+        && equipped_factor_items.is_empty()
+        && selected_season_medal_node_count == 0
+        && !container_probes_verbose_enabled()
+    {
+        return None;
+    }
+
+    let mut value_counts: HashMap<u32, usize> = HashMap::new();
+    for row in &offset_candidates {
+        *value_counts.entry(row.value).or_insert(0) += 1;
+    }
+    for row in &raw_proto_candidates {
+        *value_counts.entry(row.value).or_insert(0) += 1;
+    }
+    for row in &json_candidates {
+        *value_counts.entry(row.value).or_insert(0) += 1;
+    }
+    let mut values = value_counts.into_iter().collect::<Vec<_>>();
+    values.sort_by_key(|(value, _)| *value);
+    let value_summary = values
+        .iter()
+        .take(8)
+        .map(|(value, count)| {
+            if *count > 1 {
+                format!("{value}x{count}")
+            } else {
+                value.to_string()
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let char_id = v_data.char_id;
+    let name = v_data.char_base.as_ref().and_then(|base| base.name.clone());
+    let top_level_sections = vdata_json
+        .as_object()
+        .map(|object| object.keys().cloned().collect::<Vec<_>>())
+        .unwrap_or_default();
+    let raw_candidates = offset_candidates
+        .iter()
+        .take(200)
+        .map(|row| {
+            serde_json::json!({
+                "offset": row.offset,
+                "encoding": row.encoding,
+                "kind": row.kind,
+                "value": row.value,
+            })
+        })
+        .collect::<Vec<_>>();
+    let raw_proto_candidates_json = raw_proto_candidates
+        .iter()
+        .take(200)
+        .map(|row| {
+            serde_json::json!({
+                "path": row.path,
+                "offset": row.offset,
+                "kind": row.kind,
+                "value": row.value,
+            })
+        })
+        .collect::<Vec<_>>();
+    let json_candidates_json = json_candidates
+        .iter()
+        .take(200)
+        .map(|row| {
+            serde_json::json!({
+                "path": row.path,
+                "location": row.location,
+                "kind": row.kind,
+                "value": row.value,
+            })
+        })
+        .collect::<Vec<_>>();
+
+    let mut summary_parts = vec![
+        "method=SyncContainerData".to_string(),
+        format!("vdata={}B", vdata_bytes.len()),
+        format!("offsetCandidates={}", offset_candidates.len()),
+        format!("protoCandidates={}", raw_proto_candidates.len()),
+        format!("jsonCandidates={}", json_candidates.len()),
+        format!("equippedFactorItems={}", equipped_factor_items.len()),
+        format!("seasonMedalSelectedNodes={selected_season_medal_node_count}"),
+    ];
+    if let Some(char_id) = char_id {
+        summary_parts.push(format!("charId={char_id}"));
+    }
+    if !value_summary.is_empty() {
+        summary_parts.push(format!("values={}", value_summary.join(",")));
+    }
+
+    let raw = serde_json::json!({
+        "probe": "sync-container",
+        "hasVData": true,
+        "charId": char_id,
+        "name": name.clone(),
+        "vdataBytesLength": vdata_bytes.len(),
+        "topLevelSections": top_level_sections,
+        "factorCandidateCount": offset_candidates.len(),
+        "factorCandidatesTruncated": offset_candidates.len() > raw_candidates.len(),
+        "factorCandidates": raw_candidates,
+        "rawProtoCandidateCount": raw_proto_candidates.len(),
+        "rawProtoCandidatesTruncated": raw_proto_candidates.len() > raw_proto_candidates_json.len(),
+        "rawProtoCandidates": raw_proto_candidates_json,
+        "jsonCandidateCount": json_candidates.len(),
+        "jsonCandidatesTruncated": json_candidates.len() > json_candidates_json.len(),
+        "jsonCandidates": json_candidates_json,
+        "equippedFactorItems": equipped_factor_items.clone(),
+        "seasonMedal": season_medal,
+    });
+
+    Some(EventLoggerEntry {
+        ts_ms,
+        category: "container_probe".to_string(),
+        action: "sync_container".to_string(),
+        uid: char_id,
+        target_uid: None,
+        source_uid: char_id,
+        source_label: name.clone(),
+        target_label: Some("SyncContainerData".to_string()),
+        name_hint: Some(
+            if offset_candidates.is_empty()
+                && raw_proto_candidates.is_empty()
+                && json_candidates.is_empty()
+                && equipped_factor_items.is_empty()
+                && selected_season_medal_node_count == 0
+            {
+                "SyncContainerData".to_string()
+            } else {
+                "SyncContainerData factor candidate".to_string()
+            },
+        ),
+        summary: Some(summary_parts.join(" ")),
+        stacks: i32::try_from(
+            offset_candidates.len()
+                + raw_proto_candidates.len()
+                + json_candidates.len()
+                + equipped_factor_items.len(),
+        )
+        .ok(),
+        duration_ms: None,
+        remaining_ms: None,
+        value: Some(vdata_bytes.len().to_string()),
+        raw: serde_json::to_string_pretty(&raw).unwrap_or_else(|_| "null".to_string()),
+    })
+}
+
+fn build_sync_container_dirty_probe_logger_entry(
+    ts_ms: i64,
+    sync_container_dirty_data: blueprotobuf::SyncContainerDirtyData,
+) -> Option<EventLoggerEntry> {
+    let buffer = sync_container_dirty_data
+        .v_data
+        .as_ref()
+        .and_then(|stream| stream.buffer.as_deref())
+        .unwrap_or_default();
+    let candidates = scan_container_factor_candidates(buffer);
+    let raw_proto_candidates = scan_container_raw_proto_candidates(buffer);
+    if candidates.is_empty()
+        && raw_proto_candidates.is_empty()
+        && !container_probes_verbose_enabled()
+    {
+        return None;
+    }
+
+    let buffer_hex_limit = 32_768usize;
+    let buffer_slice = if buffer.len() > buffer_hex_limit {
+        &buffer[..buffer_hex_limit]
+    } else {
+        buffer
+    };
+    let is_truncated = buffer.len() > buffer_hex_limit;
+    let mut value_counts: HashMap<u32, usize> = HashMap::new();
+    for row in &candidates {
+        *value_counts.entry(row.value).or_insert(0) += 1;
+    }
+    for row in &raw_proto_candidates {
+        *value_counts.entry(row.value).or_insert(0) += 1;
+    }
+    let mut values = value_counts.into_iter().collect::<Vec<_>>();
+    values.sort_by_key(|(value, _)| *value);
+    let value_summary = values
+        .iter()
+        .take(8)
+        .map(|(value, count)| {
+            if *count > 1 {
+                format!("{value}x{count}")
+            } else {
+                value.to_string()
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let mut summary_parts = vec![
+        "method=SyncContainerDirtyData".to_string(),
+        format!("buffer={}B", buffer.len()),
+        format!("factorCandidates={}", candidates.len()),
+        format!("protoCandidates={}", raw_proto_candidates.len()),
+    ];
+    if is_truncated {
+        summary_parts.push(format!("preview={}B", buffer_hex_limit));
+    }
+    if !value_summary.is_empty() {
+        summary_parts.push(format!("values={}", value_summary.join(",")));
+    }
+
+    let raw_candidates = candidates
+        .iter()
+        .take(200)
+        .map(|row| {
+            serde_json::json!({
+                "offset": row.offset,
+                "encoding": row.encoding,
+                "kind": row.kind,
+                "value": row.value,
+            })
+        })
+        .collect::<Vec<_>>();
+    let raw_proto_candidates_json = raw_proto_candidates
+        .iter()
+        .take(200)
+        .map(|row| {
+            serde_json::json!({
+                "path": row.path,
+                "offset": row.offset,
+                "kind": row.kind,
+                "value": row.value,
+            })
+        })
+        .collect::<Vec<_>>();
+
+    let raw = serde_json::json!({
+        "probe": "sync-container-dirty",
+        "bufferLength": buffer.len(),
+        "bufferHex": hex::encode(buffer_slice),
+        "bufferHexTruncated": is_truncated,
+        "factorCandidateCount": candidates.len(),
+        "factorCandidatesTruncated": candidates.len() > raw_candidates.len(),
+        "factorCandidates": raw_candidates,
+        "rawProtoCandidateCount": raw_proto_candidates.len(),
+        "rawProtoCandidatesTruncated": raw_proto_candidates.len() > raw_proto_candidates_json.len(),
+        "rawProtoCandidates": raw_proto_candidates_json,
+    });
+
+    Some(EventLoggerEntry {
+        ts_ms,
+        category: "container_probe".to_string(),
+        action: "sync_container_dirty".to_string(),
+        uid: None,
+        target_uid: None,
+        source_uid: None,
+        source_label: Some("WorldNtf".to_string()),
+        target_label: Some("SyncContainerDirtyData".to_string()),
+        name_hint: Some(
+            if candidates.is_empty() && raw_proto_candidates.is_empty() {
+                "SyncContainerDirtyData".to_string()
+            } else {
+                "SyncContainerDirtyData factor candidate".to_string()
+            },
+        ),
+        summary: Some(summary_parts.join(" ")),
+        stacks: i32::try_from(candidates.len() + raw_proto_candidates.len()).ok(),
+        duration_ms: None,
+        remaining_ms: None,
+        value: Some(buffer.len().to_string()),
+        raw: serde_json::to_string_pretty(&raw).unwrap_or_else(|_| "null".to_string()),
+    })
 }
 
 fn build_sync_log_logger_entry(
@@ -3186,6 +4259,9 @@ fn decode_auxiliary_logger_entries(
 
     let mut promoted_entries = decode_promoted_service_entries(notify);
     if !promoted_entries.is_empty() {
+        if should_emit_raw_service_probe_sample(notify) {
+            promoted_entries.insert(0, build_raw_service_probe_logger_entry(now_ms(), notify));
+        }
         promoted_entries.extend(entries);
         return promoted_entries;
     }
@@ -3203,6 +4279,33 @@ fn decode_auxiliary_logger_entries(
                     .collect(),
                 Err(error) => {
                     warn!("Error decoding SyncLog.. ignoring: {error}");
+                    Vec::new()
+                }
+            }
+        }
+        Some(packets::opcodes::Pkt::SyncContainerData) if container_probes_enabled() => {
+            match blueprotobuf::SyncContainerData::decode(notify.payload.clone()) {
+                Ok(sync_container_data) => {
+                    build_sync_container_probe_logger_entry(now_ms(), sync_container_data)
+                        .into_iter()
+                        .collect()
+                }
+                Err(error) => {
+                    warn!("Error decoding SyncContainerData probe.. ignoring: {error}");
+                    Vec::new()
+                }
+            }
+        }
+        Some(packets::opcodes::Pkt::SyncContainerDirtyData) if container_probes_enabled() => {
+            match blueprotobuf::SyncContainerDirtyData::decode(notify.payload.clone()) {
+                Ok(sync_container_dirty_data) => build_sync_container_dirty_probe_logger_entry(
+                    now_ms(),
+                    sync_container_dirty_data,
+                )
+                .into_iter()
+                .collect(),
+                Err(error) => {
+                    warn!("Error decoding SyncContainerDirtyData probe.. ignoring: {error}");
                     Vec::new()
                 }
             }
@@ -3233,6 +4336,10 @@ fn decode_auxiliary_logger_entries(
         }
         _ => Vec::new(),
     };
+
+    if should_emit_raw_service_probe_sample(notify) {
+        decoded_entries.insert(0, build_raw_service_probe_logger_entry(now_ms(), notify));
+    }
 
     decoded_entries.append(&mut entries);
     decoded_entries
@@ -3466,16 +4573,19 @@ fn build_live_snapshot_logger_entries(
             .attr_store
             .attr(uid, AttrType::ProfessionId)
             .and_then(|value| value.as_int())
+            .filter(|value| *value > 0)
             .map_or(entity.class_id, |value| value as i32);
         let effective_ability_score = state
             .attr_store
             .attr(uid, AttrType::FightPoint)
             .and_then(|value| value.as_int())
+            .filter(|value| *value > 0)
             .map_or(entity.ability_score, |value| value as i32);
         let effective_season_strength = state
             .attr_store
             .attr(uid, AttrType::SeasonStrength)
             .and_then(|value| value.as_int())
+            .filter(|value| *value > 0)
             .map_or(entity.season_strength, |value| value as i32);
         let has_combat = entity.damage.hits > 0 || entity.healing.hits > 0 || entity.taken.hits > 0;
         let has_hp = current_hp.is_some() || max_hp.is_some();
@@ -4019,6 +5129,8 @@ pub async fn start(
     // Get the state manager from app state
     let state_manager = app_handle.state::<AppStateManager>().inner().clone();
     let mut state = AppState::new();
+    state.local_selected_factor_items =
+        crate::live::selected_factor_cache::load_selected_factor_items(&app_handle);
     if let Some(snapshot) =
         crate::live::bootstrap_snapshot::load_monitor_runtime_snapshot(&app_handle)
     {
@@ -4166,9 +5278,12 @@ pub async fn start(
         warn!(target: "app::live", "event_logger_session_flush_failed boundary=live_loop_exit error={}", error);
     }
     flush_attribution_census(&app_handle, "live_loop_exit", &state);
+    flush_selected_factor_cache_if_needed(&app_handle, &mut state);
 }
 
 fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
+    flush_selected_factor_cache_if_needed(app_handle, state);
+
     for event in state.event_manager.drain_outbound_events() {
         let ts_ms = now_ms();
 
@@ -4511,6 +5626,20 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     }],
                 );
             }
+            OutboundEvent::EntityIdentityMap {
+                player_names,
+                monster_ids,
+            } => {
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_MONSTER_OVERLAY_LABEL,
+                    "entity-identities",
+                    EntityIdentityMapPayload {
+                        player_names,
+                        monster_ids,
+                    },
+                );
+            }
             OutboundEvent::BuffCounterUpdate(counters) => {
                 safe_emit_to(
                     app_handle,
@@ -4665,6 +5794,28 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     DeathReplayPayload { records },
                 );
             }
+        }
+    }
+}
+
+fn flush_selected_factor_cache_if_needed(app_handle: &AppHandle, state: &mut AppState) {
+    if !state.selected_factor_cache_dirty {
+        return;
+    }
+
+    match crate::live::selected_factor_cache::save_selected_factor_items(
+        app_handle,
+        &state.local_selected_factor_items,
+    ) {
+        Ok(_) => {
+            state.selected_factor_cache_dirty = false;
+        }
+        Err(error) => {
+            warn!(
+                target: "app::live",
+                "failed to save selected factor cache: {}",
+                error
+            );
         }
     }
 }

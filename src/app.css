@@ -1,7 +1,12 @@
-@import "tailwindcss";
-@plugin "@tailwindcss/typography";
+@import "tailwindcss" source(none);
+@source "./routes";
+@source "./lib/components";
 
 @layer base {
+  html {
+    background: transparent;
+  }
+
   /* https://ux.stackexchange.com/questions/105024/why-dont-button-html-elements-have-a-css-cursor-pointer-by-default */
   button:not([disabled]),
   [role="button"]:not([disabled]) {
@@ -120,38 +125,27 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
   }
   body {
-    background: var(--background-main);
+    background: transparent;
     color: var(--foreground);
   }
 }
 
 @layer components {
   .markdown-body {
-    --tw-prose-body: var(--foreground);
-    --tw-prose-headings: var(--foreground);
-    --tw-prose-lead: var(--muted-foreground);
-    --tw-prose-links: var(--foreground);
-    --tw-prose-bold: var(--foreground);
-    --tw-prose-counters: var(--muted-foreground);
-    --tw-prose-bullets: var(--muted-foreground);
-    --tw-prose-hr: var(--border);
-    --tw-prose-quotes: var(--foreground);
-    --tw-prose-quote-borders: var(--border);
-    --tw-prose-captions: var(--muted-foreground);
-    --tw-prose-code: var(--foreground);
-    --tw-prose-pre-code: var(--foreground);
-    --tw-prose-pre-bg: var(--muted);
-    --tw-prose-th-borders: var(--border);
-    --tw-prose-td-borders: var(--border);
-    @apply prose max-w-none text-[0.95rem];
+    max-width: none;
+    font-size: 0.95rem;
     color: var(--foreground);
   }
 
   .markdown-body--comfortable {
-    @apply mx-auto w-full max-w-[75ch];
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 75ch;
   }
 
   .markdown-body :where(h1, h2, h3, h4) {
@@ -159,19 +153,36 @@
   }
 
   .markdown-body :where(h1) {
-    @apply mb-5 text-2xl font-semibold;
+    margin-bottom: 1.25rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
   }
 
   .markdown-body :where(h2) {
-    @apply mt-10 mb-4 border-b border-border pb-2 text-xl font-semibold;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
   }
 
   .markdown-body :where(h3) {
-    @apply mt-8 mb-3 text-lg font-semibold;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 600;
   }
 
   .markdown-body :where(h4) {
-    @apply mt-6 mb-2 text-base font-semibold;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
   }
 
   .markdown-body :where(p, li) {
@@ -179,11 +190,14 @@
   }
 
   .markdown-body :where(p) {
-    @apply my-3;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
   }
 
   .markdown-body :where(ul, ol) {
-    @apply my-4 pl-5;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding-left: 1.25rem;
   }
 
   .markdown-body :where(ul) {
@@ -203,7 +217,8 @@
   }
 
   .markdown-body :where(li) {
-    @apply my-1.5;
+    margin-top: 0.375rem;
+    margin-bottom: 0.375rem;
   }
 
   .markdown-body :where(li > p:first-child) {
@@ -223,16 +238,21 @@
   }
 
   .markdown-body :where(blockquote) {
-    @apply border-l-2 pl-4 italic;
+    border-left: 2px solid var(--border);
+    padding-left: 1rem;
+    font-style: italic;
     color: var(--muted-foreground);
   }
 
   .markdown-body :where(hr) {
-    @apply my-8;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
   }
 
   .markdown-body :where(code):not(:where(pre code)) {
-    @apply rounded-sm px-1.5 py-0.5 text-[0.9em];
+    border-radius: 0.125rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.9em;
     background: var(--muted);
   }
 
@@ -242,7 +262,11 @@
   }
 
   .markdown-body :where(pre) {
-    @apply overflow-x-auto rounded-lg border px-4 py-3 text-[0.9rem];
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
     background: var(--muted);
     border-color: var(--border);
   }
@@ -253,7 +277,11 @@
   }
 
   .markdown-body :where(table) {
-    @apply block w-full overflow-x-auto text-sm;
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
   }
 }
 

@@ -1,0 +1,330 @@
+{
+  "generatedBy": "ClassLabels.gen",
+  "notes": [
+    "Spec icon paths are direct CTB:3345237628 talent/passive/spec row evidence.",
+    "Weapon-style icons are BuffTable weapon-style rows and are class/profession-level fallback evidence only.",
+    "App static class icon paths remain fallback paths for classes without a generated profession icon."
+  ],
+  "classes": {
+    "Heavy Guardian": {
+      "key": "Heavy Guardian",
+      "labelKey": "class.Heavy Guardian",
+      "classId": 9,
+      "staticIconPath": "/images/classes/Heavy Guardian.png",
+      "specKeys": [
+        "Earthfort",
+        "Block"
+      ],
+      "professionIconPath": "ui/atlas/hud/profession/profession_horizontal_hud06",
+      "professionIconSource": "BuffTable.weapon-style"
+    },
+    "Shield Knight": {
+      "key": "Shield Knight",
+      "labelKey": "class.Shield Knight",
+      "classId": 12,
+      "staticIconPath": "/images/classes/Shield Knight.png",
+      "specKeys": [
+        "Recovery",
+        "Shield"
+      ]
+    },
+    "Stormblade": {
+      "key": "Stormblade",
+      "labelKey": "class.Stormblade",
+      "classId": 1,
+      "staticIconPath": "/images/classes/Stormblade.png",
+      "specKeys": [
+        "Iaido",
+        "Moonstrike"
+      ],
+      "professionIconPath": "ui/atlas/hud/profession/profession_horizontal_hud03",
+      "professionIconSource": "BuffTable.weapon-style"
+    },
+    "Wind Knight": {
+      "key": "Wind Knight",
+      "labelKey": "class.Wind Knight",
+      "classId": 4,
+      "staticIconPath": "/images/classes/Wind Knight.png",
+      "specKeys": [
+        "Vanguard",
+        "Skyward"
+      ],
+      "professionIconPath": "ui/atlas/hud/profession/profession_horizontal_hud02",
+      "professionIconSource": "BuffTable.weapon-style"
+    },
+    "Marksman": {
+      "key": "Marksman",
+      "labelKey": "class.Marksman",
+      "classId": 11,
+      "staticIconPath": "/images/classes/Marksman.png",
+      "specKeys": [
+        "Wildpack",
+        "Falconry"
+      ],
+      "professionIconPath": "ui/atlas/hud/profession/profession_horizontal_hud07",
+      "professionIconSource": "BuffTable.weapon-style"
+    },
+    "Frost Mage": {
+      "key": "Frost Mage",
+      "labelKey": "class.Frost Mage",
+      "classId": 2,
+      "staticIconPath": "/images/classes/Frost Mage.png",
+      "specKeys": [
+        "Icicle",
+        "Frostbeam"
+      ],
+      "professionIconPath": "ui/atlas/hud/profession/profession_horizontal_hud05",
+      "professionIconSource": "BuffTable.weapon-style"
+    },
+    "Flame Berserker": {
+      "key": "Flame Berserker",
+      "labelKey": "class.Flame Berserker",
+      "classId": 3,
+      "staticIconPath": "/images/classes/Flame Berserker.png",
+      "specKeys": [
+        "Voidflame",
+        "Blazecrimson"
+      ]
+    },
+    "Verdant Oracle": {
+      "key": "Verdant Oracle",
+      "labelKey": "class.Verdant Oracle",
+      "classId": 5,
+      "staticIconPath": "/images/classes/Verdant Oracle.png",
+      "specKeys": [
+        "Smite",
+        "Lifebind"
+      ],
+      "professionIconPath": "ui/atlas/hud/profession/profession_horizontal_hud04",
+      "professionIconSource": "BuffTable.weapon-style"
+    },
+    "Beat Performer": {
+      "key": "Beat Performer",
+      "labelKey": "class.Beat Performer",
+      "classId": 13,
+      "staticIconPath": "/images/classes/Beat Performer.png",
+      "specKeys": [
+        "Concerto",
+        "Dissonance"
+      ]
+    }
+  },
+  "specs": {
+    "Earthfort": {
+      "key": "Earthfort",
+      "labelKey": "spec.Earthfort",
+      "classKey": "Heavy Guardian",
+      "classId": 9,
+      "talentId": 931,
+      "iconPath": "ui/atlas/talent_passive_9/talent_passive_icon_general_tank_shieldcounter",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947793781,
+      "weaponStyleBuffId": 960141,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud06",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Block": {
+      "key": "Block",
+      "labelKey": "spec.Block",
+      "classKey": "Heavy Guardian",
+      "classId": 9,
+      "talentId": 930,
+      "iconPath": "ui/atlas/talent_passive_9/talent_passive_icon_general_sup_inspireex",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947793721,
+      "weaponStyleBuffId": 960140,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud06",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Iaido": {
+      "key": "Iaido",
+      "labelKey": "spec.Iaido",
+      "classKey": "Stormblade",
+      "classId": 1,
+      "talentId": 130,
+      "iconPath": "ui/atlas/talent_passive_1/talent_passive_icon_general_dps_joy",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947773201,
+      "weaponStyleBuffId": 960132,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud03",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Moonstrike": {
+      "key": "Moonstrike",
+      "labelKey": "spec.Moonstrike",
+      "classKey": "Stormblade",
+      "classId": 1,
+      "talentId": 157,
+      "iconPath": "ui/atlas/talent_passive_1/talent_passive_icon_general_dps_sickleget",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947774821,
+      "weaponStyleBuffId": 960133,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud03",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Vanguard": {
+      "key": "Vanguard",
+      "labelKey": "spec.Vanguard",
+      "classKey": "Wind Knight",
+      "classId": 4,
+      "talentId": 433,
+      "iconPath": "ui/atlas/talent_passive_4/talent_passive_icon_general_dps_backhitget",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947785741,
+      "weaponStyleBuffId": 960142,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud02",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Skyward": {
+      "key": "Skyward",
+      "labelKey": "spec.Skyward",
+      "classKey": "Wind Knight",
+      "classId": 4,
+      "talentId": 432,
+      "iconPath": "ui/atlas/talent_passive_4/talent_passive_icon_general_dps_flyhitget",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947785681,
+      "weaponStyleBuffId": 960143,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud02",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Wildpack": {
+      "key": "Wildpack",
+      "labelKey": "spec.Wildpack",
+      "classKey": "Marksman",
+      "classId": 11,
+      "talentId": 1126,
+      "iconPath": "ui/atlas/talent_passive_11/talent_passive_icon_general_dps_petbig",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947797741,
+      "weaponStyleBuffId": 960138,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud07",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Falconry": {
+      "key": "Falconry",
+      "labelKey": "spec.Falconry",
+      "classKey": "Marksman",
+      "classId": 11,
+      "talentId": 1129,
+      "iconPath": "ui/atlas/talent_passive_11/talent_passive_icon_general_dps_skyhitget",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947797921,
+      "weaponStyleBuffId": 960139,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud07",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Icicle": {
+      "key": "Icicle",
+      "labelKey": "spec.Icicle",
+      "classKey": "Frost Mage",
+      "classId": 2,
+      "talentId": 233,
+      "iconPath": "ui/atlas/talent_passive_2/talent_passive_icon_general_dps_skilltriggericearrow",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947777581,
+      "weaponStyleBuffId": 960135,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud05",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Frostbeam": {
+      "key": "Frostbeam",
+      "labelKey": "spec.Frostbeam",
+      "classKey": "Frost Mage",
+      "classId": 2,
+      "talentId": 212,
+      "iconPath": "ui/atlas/talent_passive_2/talent_passive_icon_general_dps_icespearget",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947776501,
+      "weaponStyleBuffId": 960134,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud05",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Voidflame": {
+      "key": "Voidflame",
+      "labelKey": "spec.Voidflame",
+      "classKey": "Flame Berserker",
+      "classId": 3,
+      "talentId": 312,
+      "iconPath": "ui/atlas/talent_passive_3/shuangfu312",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947780641
+    },
+    "Blazecrimson": {
+      "key": "Blazecrimson",
+      "labelKey": "spec.Blazecrimson",
+      "classKey": "Flame Berserker",
+      "classId": 3,
+      "talentId": 342,
+      "iconPath": "ui/atlas/talent_passive_3/shuangfu342",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947782441
+    },
+    "Smite": {
+      "key": "Smite",
+      "labelKey": "spec.Smite",
+      "classKey": "Verdant Oracle",
+      "classId": 5,
+      "talentId": 510,
+      "iconPath": "ui/atlas/talent_passive_5/talent_passive_icon_general_sup_aoyitrigger",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947788621,
+      "weaponStyleBuffId": 960136,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud04",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Lifebind": {
+      "key": "Lifebind",
+      "labelKey": "spec.Lifebind",
+      "classKey": "Verdant Oracle",
+      "classId": 5,
+      "talentId": 531,
+      "iconPath": "ui/atlas/talent_passive_5/talent_passive_icon_general_sup_healringget",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947789761,
+      "weaponStyleBuffId": 960137,
+      "weaponStyleIconPath": "ui/atlas/hud/profession/profession_horizontal_hud04",
+      "weaponStyleIconSource": "BuffTable.weapon-style"
+    },
+    "Recovery": {
+      "key": "Recovery",
+      "labelKey": "spec.Recovery",
+      "classKey": "Shield Knight",
+      "classId": 12,
+      "talentId": 1208,
+      "iconPath": "ui/atlas/talent_passive_12/jiandun1208",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947800741
+    },
+    "Shield": {
+      "key": "Shield",
+      "labelKey": "spec.Shield",
+      "classKey": "Shield Knight",
+      "classId": 12,
+      "talentId": 1218,
+      "iconPath": "ui/atlas/talent_passive_12/jiandun1218",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947801341
+    },
+    "Concerto": {
+      "key": "Concerto",
+      "labelKey": "spec.Concerto",
+      "classKey": "Beat Performer",
+      "classId": 13,
+      "talentId": 1317,
+      "iconPath": "ui/atlas/talent_passive_13/gita1317",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947805361
+    },
+    "Dissonance": {
+      "key": "Dissonance",
+      "labelKey": "spec.Dissonance",
+      "classKey": "Beat Performer",
+      "classId": 13,
+      "talentId": 1308,
+      "iconPath": "ui/atlas/talent_passive_13/gita1308",
+      "iconSource": "CTB:3345237628",
+      "sourceOffset": 947804821
+    }
+  }
+}

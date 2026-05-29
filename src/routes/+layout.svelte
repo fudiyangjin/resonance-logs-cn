@@ -2,12 +2,9 @@
   /**
    * @file This is the root layout for the application.
    * It imports the global stylesheet and disables the context menu.
-   */
+  */
   import "../app.css";
   import { onMount } from "svelte";
-  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-  import { commands } from "$lib/bindings";
-  import { hideEventLoggerWindow, showEventLoggerWindow } from "$lib/event-logger-window";
   import { SETTINGS } from "$lib/settings-store";
   // Only allow warnings and errors to be printed to console in production builds
   if (typeof window !== "undefined" && import.meta.env.PROD) {
@@ -63,11 +60,13 @@
 
 
   onMount(() => {
-    const currentWindow = getCurrentWebviewWindow();
-    if (currentWindow.label !== "main") return;
-    isMainWindow = true;
-
     void (async () => {
+      const { getCurrentWebviewWindow } = await import("@tauri-apps/api/webviewWindow");
+      const { hideEventLoggerWindow, showEventLoggerWindow } = await import("$lib/event-logger-window");
+      const currentWindow = getCurrentWebviewWindow();
+      if (currentWindow.label !== "main") return;
+      isMainWindow = true;
+
       if (SETTINGS.customTriggers.state.loggerStartWithMeter) {
         await showEventLoggerWindow();
       } else {
@@ -77,6 +76,7 @@
   });
 
   async function syncHideMainWindowToTray(enabled: boolean) {
+    const { commands } = await import("$lib/bindings");
     const result = await commands.setHideMainWindowToTray(enabled);
     if (result.status === "error") {
       console.error("Failed to sync main-window tray behavior", result.error);

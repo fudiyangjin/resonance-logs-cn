@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { BuffAlertState } from "../../routes/game-overlay/overlay-types";
+
   interface Props {
     label: string;
     valueText: string;
@@ -12,6 +14,7 @@
     fontSize: number;
     columnGap?: number | undefined;
     placeholder?: boolean | undefined;
+    alert?: BuffAlertState | undefined;
   }
 
   let {
@@ -27,16 +30,27 @@
     fontSize,
     columnGap = 8,
     placeholder = false,
+    alert = undefined,
   }: Props = $props();
 </script>
 
-<div class="text-buff-row" class:placeholder>
+<div
+  class="text-buff-row"
+  class:placeholder
+  class:alert-flash={alert?.flash === true}
+  style:--alert-color={alert?.highlightColor}
+  style:--alert-flash-duration={alert
+    ? `${alert.flashIntervalMs}ms`
+    : undefined}
+>
   {#if showProgress}
     <div class="text-buff-progress-track">
       <div
         class="text-buff-progress-fill"
         style:width={`${progressPercent}%`}
-        style:background={progressColor}
+        style:background={alert?.applyToProgress
+          ? alert.highlightColor
+          : progressColor}
         style:opacity={progressOpacity}
       ></div>
     </div>
@@ -45,7 +59,7 @@
   <div class="text-buff-main" style:gap={`${columnGap}px`}>
     <span
       class="text-buff-name"
-      style:color={nameColor}
+      style:color={alert?.highlightColor ?? nameColor}
       style:font-size={`${fontSize}px`}
     >
       {label}
@@ -54,7 +68,7 @@
       {#if metaText}
         <span
           class="text-buff-meta"
-          style:color={valueColor}
+          style:color={alert?.highlightColor ?? valueColor}
           style:font-size={`${Math.max(10, fontSize - 1)}px`}
         >
           {metaText}
@@ -62,7 +76,7 @@
       {/if}
       <span
         class="text-buff-value"
-        style:color={valueColor}
+        style:color={alert?.highlightColor ?? valueColor}
         style:font-size={`${fontSize}px`}
       >
         {valueText}
@@ -81,6 +95,11 @@
 
   .text-buff-row.placeholder {
     opacity: 0.6;
+  }
+
+  .text-buff-row.alert-flash {
+    animation: buff-alert-flash var(--alert-flash-duration, 600ms) ease-in-out
+      infinite alternate;
   }
 
   .text-buff-progress-track {
@@ -136,5 +155,17 @@
 
   .text-buff-value {
     font-weight: 600;
+  }
+
+  @keyframes buff-alert-flash {
+    0% {
+      opacity: 1;
+      filter: brightness(1);
+    }
+
+    100% {
+      opacity: 0.45;
+      filter: brightness(1.6);
+    }
   }
 </style>

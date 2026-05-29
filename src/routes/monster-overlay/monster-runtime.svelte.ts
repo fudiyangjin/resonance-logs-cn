@@ -14,6 +14,8 @@ export const monsterRuntime = $state({
   isMounted: false,
   rafId: null as number | null,
   nameCache: new Map<number, string>(),
+  playerNameCache: new Map<number, string>(),
+  monsterIdCache: new Map<number, number>(),
   bossBuffMap: new Map<number, Map<number, BuffUpdateState>>(),
   bossHateMap: new Map<number, HateEntry[]>(),
   bossSections: [] as MonsterBossBuffSection[],

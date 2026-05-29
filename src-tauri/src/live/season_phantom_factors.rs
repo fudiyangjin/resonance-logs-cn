@@ -20,6 +20,8 @@ struct SeasonPhantomFactorEntry {
     family_id: Option<i32>,
     #[serde(default, rename = "buffId")]
     buff_id: Option<i32>,
+    #[serde(default, rename = "affectedDamageIds")]
+    affected_damage_ids: Vec<u32>,
     #[serde(default, rename = "gradeItemIds")]
     grade_item_ids: Vec<i32>,
     #[serde(default, rename = "modifierEvidence")]
@@ -49,6 +51,7 @@ pub struct FactorGradeItem {
 
 static FACTOR_BUFF_IDS: OnceLock<HashSet<i32>> = OnceLock::new();
 static FACTOR_GRADE_ITEMS_BY_CONFIG_ID: OnceLock<HashMap<i32, FactorGradeItem>> = OnceLock::new();
+static FACTOR_AFFECTED_DAMAGE_IDS: OnceLock<HashSet<u32>> = OnceLock::new();
 
 pub fn factor_buff_ids() -> &'static HashSet<i32> {
     FACTOR_BUFF_IDS.get_or_init(load_factor_buff_ids)
@@ -62,6 +65,12 @@ pub fn factor_grade_item_for_config_id(config_id: i32) -> Option<&'static Factor
     FACTOR_GRADE_ITEMS_BY_CONFIG_ID
         .get_or_init(load_factor_grade_items_by_config_id)
         .get(&config_id)
+}
+
+pub fn is_factor_affected_damage_id(damage_id: u32) -> bool {
+    FACTOR_AFFECTED_DAMAGE_IDS
+        .get_or_init(load_factor_affected_damage_ids)
+        .contains(&damage_id)
 }
 
 fn load_factor_buff_ids() -> HashSet<i32> {
@@ -104,6 +113,17 @@ fn load_factor_grade_items_by_config_id() -> HashMap<i32, FactorGradeItem> {
     }
 
     items
+}
+
+fn load_factor_affected_damage_ids() -> HashSet<u32> {
+    let data = load_factor_data();
+    let mut damage_ids = HashSet::new();
+
+    for entry in data.factors_by_buff_id.into_values() {
+        damage_ids.extend(entry.affected_damage_ids);
+    }
+
+    damage_ids
 }
 
 fn load_factor_data() -> SeasonPhantomFactorData {

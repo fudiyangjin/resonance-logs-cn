@@ -1,15 +1,17 @@
 <script lang="ts">
-  import { getClassIcon, tooltip } from "$lib/utils.svelte";
   import { goto } from "$app/navigation";
   import { settings, SETTINGS } from "$lib/settings-store";
   import { getLiveData } from "$lib/stores/live-meter-store.svelte";
   import { computePlayerRows } from "$lib/live-derived";
+  import ClassSpecIcon from "$lib/components/class-spec-icon.svelte";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import { liveHealPlayerColumns } from "$lib/column-data";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import PercentFormat from "$lib/components/percent-format.svelte";
-  import getDisplayName from "$lib/name-display";
-  import { normalizeNameDisplaySetting } from "$lib/name-display";
+  import getDisplayName, {
+    getDisplayIconSpecName,
+    normalizeNameDisplaySetting,
+  } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
   import { resolveUiTranslation } from "$lib/i18n";
 
@@ -186,6 +188,12 @@
                 "Hide Others' Name"
               ? player.className
               : ""}
+          {@const iconSpecName = getDisplayIconSpecName({
+            classSpecName: player.classSpecName,
+            showYourNameSetting: SETTINGS_YOUR_NAME,
+            showOthersNameSetting: SETTINGS_OTHERS_NAME,
+            isLocalPlayer,
+          })}
           <tr
             class="relative bg-background/40 hover:bg-muted/60 transition-colors cursor-pointer group"
             style="height: {tableSettings.playerRowHeight}px; font-size: {tableSettings.playerFontSize}px;"
@@ -198,10 +206,11 @@
             >
               <div class="flex items-center justify-between gap-3">
                 <span class="flex min-w-0 items-center gap-2">
-                  <img
+                  <ClassSpecIcon
                     style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                     class="object-contain"
-                    src={getClassIcon(className)}
+                    {className}
+                    classSpecName={iconSpecName}
                     alt={t("live.classIconAlt", "Class icon")}
                   />
                   <span class="truncate font-medium">{displayName || `#${player.uid}`}</span>
@@ -279,6 +288,12 @@
               "Hide Others' Name"
             ? player.className
             : ""}
+        {@const iconSpecName = getDisplayIconSpecName({
+          classSpecName: player.classSpecName,
+          showYourNameSetting: SETTINGS_YOUR_NAME,
+          showOthersNameSetting: SETTINGS_OTHERS_NAME,
+          isLocalPlayer,
+        })}
         <tr
           class="relative bg-background/40 hover:bg-muted/60 transition-colors cursor-pointer group"
           style="height: {tableSettings.playerRowHeight}px; font-size: {tableSettings.playerFontSize}px;"
@@ -286,16 +301,14 @@
         >
           <td class="px-3 py-1 relative z-10">
             <div class="flex items-center h-full gap-2">
-              <img
+              <ClassSpecIcon
                 style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                 class="object-contain"
-                src={getClassIcon(className)}
+                {className}
+                classSpecName={iconSpecName}
                 alt={t("live.classIconAlt", "Class icon")}
-                {@attach tooltip(
-                  () =>
-                    formatClassSpecLabel(player.className, player.classSpecName) ||
-                    t("live.unknownClass", "Unknown Class"),
-                )}
+                tooltipText={formatClassSpecLabel(player.className, player.classSpecName) ||
+                  t("live.unknownClass", "Unknown Class")}
               />
               {#if player.abilityScore > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourAbilityScore : SETTINGS.live.general.state.showOthersAbilityScore)}
                 {#if SETTINGS.live.general.state.shortenAbilityScore}
@@ -318,7 +331,7 @@
               {/if}
               {#if player.seasonStrength > 0 && (isLocalPlayer ? SETTINGS.live.general.state.showYourSeasonStrength : SETTINGS.live.general.state.showOthersSeasonStrength)}
                 <span
-                  class="-ml-0.5 tabular-nums"
+                  class="tabular-nums"
                   style="color: {customThemeColors.tableTextColor};"
                   >({player.seasonStrength})</span
                 >

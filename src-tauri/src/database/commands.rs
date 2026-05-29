@@ -13,7 +13,7 @@ use crate::live::monster_registry;
 use crate::live::opcodes_models::{Entity, class};
 use blueprotobuf_lib::blueprotobuf::EEntityType;
 
-const HISTORY_ENTITY_SUMMARY_VERSION: i32 = 1;
+const HISTORY_ENTITY_SUMMARY_VERSION: i32 = 2;
 const HISTORY_ENTITY_SUMMARY_CACHE_MAX: usize = 16;
 type HistoryEntitySummaryCache = Vec<(i32, Arc<Vec<lc::HistoryEntityData>>)>;
 static HISTORY_ENTITY_SUMMARY_CACHE: OnceLock<Mutex<HistoryEntitySummaryCache>> = OnceLock::new();
@@ -22,10 +22,16 @@ static HISTORY_ENTITY_SUMMARY_CACHE: OnceLock<Mutex<HistoryEntitySummaryCache>> 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerSummaryDto {
+    /// The player UID.
+    pub uid: i64,
     /// The player name.
     pub name: String,
     /// The class ID of the player.
     pub class_id: i32,
+    /// The class specialization enum value of the player.
+    pub class_spec: i32,
+    /// The class specialization name of the player.
+    pub class_spec_name: String,
 }
 
 /// A summary of an encounter.
@@ -145,8 +151,11 @@ fn parse_player_entries(json: &Option<String>) -> Vec<PlayerSummaryDto> {
         return entries
             .into_iter()
             .map(|entry| PlayerSummaryDto {
+                uid: entry.uid,
                 name: entry.name,
                 class_id: entry.class_id,
+                class_spec: entry.class_spec as i32,
+                class_spec_name: class::get_class_spec(entry.class_spec),
             })
             .collect();
     }
@@ -154,7 +163,13 @@ fn parse_player_entries(json: &Option<String>) -> Vec<PlayerSummaryDto> {
     serde_json::from_str::<Vec<String>>(j)
         .unwrap_or_default()
         .into_iter()
-        .map(|name| PlayerSummaryDto { name, class_id: 0 })
+        .map(|name| PlayerSummaryDto {
+            uid: 0,
+            name,
+            class_id: 0,
+            class_spec: 0,
+            class_spec_name: String::new(),
+        })
         .collect()
 }
 
@@ -719,9 +734,20 @@ fn entity_has_modifier_state(entity: &Entity) -> bool {
         || !entity.active_profession_talents.is_empty()
 }
 
+fn entity_has_player_identity_surface(entity: &Entity) -> bool {
+    entity.entity_type == EEntityType::EntChar
+        && (!entity.name.trim().is_empty()
+            || entity.class_id > 0
+            || entity.class_spec != class::ClassSpec::Unknown
+            || entity.ability_score > 0
+            || entity.level > 0
+            || entity.season_strength > 0)
+}
+
 fn entity_has_history_surface(entity: &Entity, include_modifier_details: bool) -> bool {
     let has_combat = entity.damage.hits > 0 || entity.healing.hits > 0 || entity.taken.hits > 0;
     has_combat
+        || entity_has_player_identity_surface(entity)
         || !entity.deaths.is_empty()
         || (include_modifier_details && entity_has_modifier_state(entity))
 }

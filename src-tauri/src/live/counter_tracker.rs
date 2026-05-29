@@ -1,9 +1,9 @@
 use crate::database::now_ms;
 use crate::live::buff_monitor::{BuffChangeEvent, BuffChangeType};
-use crate::live::commands_models::{CounterUpdateState, SlotUpdateState};
+use crate::live::commands_models::{CounterUpdateState, FightResourceEntry, SlotUpdateState};
 use crate::live::entity_attr_store::EntityAttrStore;
-use crate::live::opcodes_models::{AttrType, AttrValue};
-use crate::live::opcodes_process::LocalDamageEvent;
+use crate::live::opcodes_models::{AttrType, AttrValue, PositionAttr};
+use crate::live::opcodes_process::{LocalDamageEvent, LocalDamageTakenEvent};
 use blueprotobuf_lib::blueprotobuf::EActorState;
 use log::info;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -45,6 +45,20 @@ pub enum CounterSource {
         #[serde(default, rename = "hitsRequired")]
         hits_required: Option<u32>,
     },
+    DamageTaken {
+        #[serde(default, rename = "skillKeys")]
+        skill_keys: Option<Vec<i64>>,
+        increment: u32,
+        #[serde(default, rename = "hitsRequired")]
+        hits_required: Option<u32>,
+    },
+    FightResourceSpent {
+        #[serde(rename = "resourceId")]
+        resource_id: i32,
+        #[serde(rename = "unitsRequired")]
+        units_required: u32,
+        increment: u32,
+    },
     BuffDurationTick {
         #[serde(rename = "buffId")]
         buff_id: i32,
@@ -71,6 +85,15 @@ pub enum CounterSource {
         skill_base_ids: Vec<i32>,
         increment: u32,
     },
+    MovementDistance {
+        #[serde(rename = "buffId")]
+        buff_id: i32,
+        #[serde(rename = "attrId")]
+        attr_id: i32,
+        #[serde(rename = "metersRequired")]
+        meters_required: f32,
+        increment: u32,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
@@ -85,6 +108,15 @@ pub struct TickAttrCondition {
 pub struct AltFreezeConfig {
     pub condition_buff_id: i32,
     pub freeze_duration_ms: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AttrModifier {
+    pub attr_id: i32,
+    #[serde(default = "default_basis_points_per_unit")]
+    pub basis_points_per_unit: u32,
+    pub max_reduction_basis_points: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
@@ -107,6 +139,14 @@ pub struct EffectSlotConfig {
     pub on_freeze_expire: CounterAction,
     #[serde(default)]
     pub alt_freeze: Option<AltFreezeConfig>,
+    #[serde(default)]
+    pub threshold_modifier: Option<AttrModifier>,
+    #[serde(default)]
+    pub freeze_duration_modifier: Option<AttrModifier>,
+    #[serde(default)]
+    pub reset_skill_keys: Option<Vec<i64>>,
+    #[serde(default)]
+    pub on_reset_skill: CounterAction,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, Default)]
@@ -115,6 +155,7 @@ pub enum CounterAction {
     Reset,
     Freeze,
     ResetAndFreeze,
+    ResetAndFreezeKeepCounting,
     ResetAndStartCount,
     StartCount,
     #[default]
@@ -128,6 +169,8 @@ pub(crate) struct CounterModelState {
     pub tick_states: Vec<BuffTickState>,
     pub skill_tick_states: Vec<SkillCastTickState>,
     pub skill_complete_states: Vec<SkillCastCompleteState>,
+    pub fight_resource_spent_states: Vec<FightResourceSpentState>,
+    pub movement_distance_states: Vec<MovementDistanceState>,
     pub damage_hit_accumulators: Vec<u32>,
 }
 
@@ -154,7 +197,6 @@ pub(crate) struct BuffTickState {
     pub tick_interval_ms: u64,
     pub increment: u32,
     pub attr_condition: Option<TickAttrCondition>,
-    pub attr_type: Option<AttrType>,
 }
 
 #[derive(Debug, Clone)]
@@ -174,6 +216,26 @@ pub(crate) struct SkillCastCompleteState {
     pub increment: u32,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct FightResourceSpentState {
+    pub resource_id: i32,
+    pub previous_value: Option<i64>,
+    pub accumulated_spent: u32,
+    pub units_required: u32,
+    pub increment: u32,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct MovementDistanceState {
+    pub buff_id: i32,
+    pub attr_id: i32,
+    pub is_active: bool,
+    pub last_position: Option<PositionAttr>,
+    pub accumulated_meters: f32,
+    pub meters_required: f32,
+    pub increment: u32,
+}
+
 #[derive(Debug, Default)]
 pub struct BuffCounterTracker {
     rules: Vec<CounterRule>,
@@ -185,13 +247,18 @@ impl<'de> Deserialize<'de> for CounterRule {
     where
         D: Deserializer<'de>,
     {
-        match CounterRuleRepr::deserialize(deserializer)? {
-            CounterRuleRepr::Current(rule) => Ok(CounterRule {
-                rule_id: rule.rule_id,
-                sources: rule.sources,
-                effect_slots: rule.effect_slots,
-            }),
-            CounterRuleRepr::Legacy(rule) => Ok(CounterRule {
+        use serde::de::Error as _;
+
+        let value = serde_json::Value::deserialize(deserializer)?;
+        let object = value
+            .as_object()
+            .ok_or_else(|| D::Error::custom("counter rule must be a json object"))?;
+        let is_legacy = object.contains_key("trigger") || object.contains_key("linkedBuffId");
+
+        if is_legacy {
+            let rule: CounterRuleLegacy =
+                serde_json::from_value(value).map_err(D::Error::custom)?;
+            Ok(CounterRule {
                 rule_id: rule.rule_id,
                 sources: vec![rule.trigger.into_source()],
                 effect_slots: vec![EffectSlotConfig {
@@ -205,8 +272,20 @@ impl<'de> Deserialize<'de> for CounterRule {
                     freeze_duration_ms: None,
                     on_freeze_expire: default_on_freeze_expire(),
                     alt_freeze: None,
+                    threshold_modifier: None,
+                    freeze_duration_modifier: None,
+                    reset_skill_keys: None,
+                    on_reset_skill: CounterAction::NoOp,
                 }],
-            }),
+            })
+        } else {
+            let rule: CounterRuleCurrent =
+                serde_json::from_value(value).map_err(D::Error::custom)?;
+            Ok(CounterRule {
+                rule_id: rule.rule_id,
+                sources: rule.sources,
+                effect_slots: rule.effect_slots,
+            })
         }
     }
 }
@@ -263,9 +342,6 @@ impl BuffCounterTracker {
                         tick_interval_ms: (*tick_interval_ms).max(1),
                         increment: *increment,
                         attr_condition: attr_condition.clone(),
-                        attr_type: attr_condition
-                            .as_ref()
-                            .and_then(|condition| AttrType::from_id(condition.attr_id)),
                     }),
                     _ => None,
                 })
@@ -304,6 +380,45 @@ impl BuffCounterTracker {
                     _ => None,
                 })
                 .collect();
+            let fight_resource_spent_states = rule
+                .sources
+                .iter()
+                .filter_map(|source| match source {
+                    CounterSource::FightResourceSpent {
+                        resource_id,
+                        units_required,
+                        increment,
+                    } => Some(FightResourceSpentState {
+                        resource_id: *resource_id,
+                        previous_value: None,
+                        accumulated_spent: 0,
+                        units_required: (*units_required).max(1),
+                        increment: *increment,
+                    }),
+                    _ => None,
+                })
+                .collect();
+            let movement_distance_states = rule
+                .sources
+                .iter()
+                .filter_map(|source| match source {
+                    CounterSource::MovementDistance {
+                        buff_id,
+                        attr_id,
+                        meters_required,
+                        increment,
+                    } => Some(MovementDistanceState {
+                        buff_id: *buff_id,
+                        attr_id: *attr_id,
+                        is_active: false,
+                        last_position: None,
+                        accumulated_meters: 0.0,
+                        meters_required: normalize_meters_required(*meters_required),
+                        increment: *increment,
+                    }),
+                    _ => None,
+                })
+                .collect();
             states.insert(
                 rule.rule_id,
                 CounterModelState {
@@ -312,6 +427,8 @@ impl BuffCounterTracker {
                     tick_states,
                     skill_tick_states,
                     skill_complete_states,
+                    fight_resource_spent_states,
+                    movement_distance_states,
                     damage_hit_accumulators: vec![0; rule.sources.len()],
                 },
             );
@@ -321,7 +438,12 @@ impl BuffCounterTracker {
         self.states = states;
     }
 
-    pub fn on_damage_events(&mut self, events: &[LocalDamageEvent], local_player_uid: i64) -> bool {
+    pub fn on_damage_events(
+        &mut self,
+        events: &[LocalDamageEvent],
+        local_player_uid: i64,
+        attr_store: &EntityAttrStore,
+    ) -> bool {
         if events.is_empty() {
             return false;
         }
@@ -350,13 +472,7 @@ impl BuffCounterTracker {
                     CounterSource::DamageBySkillKeyOnce {
                         skill_keys,
                         increment,
-                    } => {
-                        let distinct_count = skill_keys
-                            .iter()
-                            .filter(|sk| events.iter().any(|e| e.skill_key == **sk))
-                            .count();
-                        scaled_increment(*increment, distinct_count)
-                    }
+                    } => apply_damage_by_skill_key_once_max(events, skill_keys, *increment),
                     CounterSource::DamageBySkillKeySelfTarget {
                         skill_keys,
                         increment,
@@ -388,6 +504,126 @@ impl BuffCounterTracker {
                     continue;
                 };
                 changed |= add_increment_to_slots(state, increment);
+            }
+            for (slot_config, slot_state) in rule.effect_slots.iter().zip(&mut state.slot_states) {
+                let Some(reset_skill_keys) = slot_config.reset_skill_keys.as_ref() else {
+                    continue;
+                };
+                if reset_skill_keys.is_empty()
+                    || !events
+                        .iter()
+                        .any(|event| reset_skill_keys.contains(&event.skill_key))
+                {
+                    continue;
+                }
+                changed |= apply_action(slot_state, slot_config.on_reset_skill);
+                changed |= start_freeze_with_resolved_duration(
+                    slot_config,
+                    slot_state,
+                    slot_config.on_reset_skill,
+                    None,
+                    attr_store,
+                    local_player_uid,
+                );
+            }
+        }
+        changed
+    }
+
+    pub fn on_damage_taken_events(
+        &mut self,
+        events: &[LocalDamageTakenEvent],
+        local_player_uid: i64,
+    ) -> bool {
+        if events.is_empty() {
+            return false;
+        }
+
+        let mut changed = false;
+        let (rules, states) = (&self.rules, &mut self.states);
+        for rule in rules {
+            let Some(state) = states.get_mut(&rule.rule_id) else {
+                continue;
+            };
+            for (source_idx, source) in rule.sources.iter().enumerate() {
+                let CounterSource::DamageTaken {
+                    skill_keys,
+                    increment,
+                    hits_required,
+                } = source
+                else {
+                    continue;
+                };
+                let matches = events
+                    .iter()
+                    .filter(|event| {
+                        event.attacker_uid != local_player_uid
+                            && skill_keys
+                                .as_ref()
+                                .is_none_or(|keys| keys.contains(&event.skill_key))
+                    })
+                    .count();
+                let Some(increment) = apply_damage_hits_required(
+                    &mut state.damage_hit_accumulators[source_idx],
+                    *increment,
+                    *hits_required,
+                    matches,
+                ) else {
+                    continue;
+                };
+                changed |= add_increment_to_slots(state, increment);
+            }
+        }
+        changed
+    }
+
+    pub fn on_fight_resource_update(&mut self, entries: &[FightResourceEntry]) -> bool {
+        if entries.is_empty() {
+            return false;
+        }
+
+        let mut changed = false;
+        for state in self.states.values_mut() {
+            let mut pending_increment = 0u32;
+            for resource_state in &mut state.fight_resource_spent_states {
+                let Some(entry) = entries
+                    .iter()
+                    .find(|entry| entry.id == resource_state.resource_id)
+                else {
+                    continue;
+                };
+                pending_increment = pending_increment
+                    .saturating_add(apply_fight_resource_spent(resource_state, entry.value));
+            }
+            if pending_increment > 0 {
+                changed |= add_increment_to_slots(state, pending_increment);
+            }
+        }
+        changed
+    }
+
+    pub fn on_movement_sample(
+        &mut self,
+        attr_store: &EntityAttrStore,
+        local_player_uid: i64,
+    ) -> bool {
+        let mut changed = false;
+        for state in self.states.values_mut() {
+            let mut pending_increment = 0u32;
+            for movement_state in &mut state.movement_distance_states {
+                if !movement_state.is_active {
+                    continue;
+                }
+                let Some(position) =
+                    attr_store.attr_position_by_id(local_player_uid, movement_state.attr_id)
+                else {
+                    continue;
+                };
+                pending_increment = pending_increment
+                    .saturating_add(apply_movement_distance_sample(movement_state, position));
+            }
+            if pending_increment > 0 {
+                changed |= add_increment_to_slots(state, pending_increment);
             }
         }
         changed
@@ -436,7 +672,12 @@ impl BuffCounterTracker {
         changed
     }
 
-    pub fn on_buff_changes(&mut self, changes: &[BuffChangeEvent]) -> bool {
+    pub fn on_buff_changes(
+        &mut self,
+        changes: &[BuffChangeEvent],
+        attr_store: &EntityAttrStore,
+        local_player_uid: i64,
+    ) -> bool {
         let mut changed = false;
         let (rules, states) = (&self.rules, &mut self.states);
         for change in changes {
@@ -449,6 +690,9 @@ impl BuffCounterTracker {
                         continue;
                     }
                     changed |= apply_tick_change(tick_state, change);
+                }
+                for movement_state in &mut state.movement_distance_states {
+                    apply_movement_buff_change(movement_state, change);
                 }
                 for (slot_config, slot_state) in
                     rule.effect_slots.iter().zip(&mut state.slot_states)
@@ -504,6 +748,8 @@ impl BuffCounterTracker {
                         slot_state,
                         action,
                         change.create_time_ms,
+                        attr_store,
+                        local_player_uid,
                     );
                 }
             }
@@ -634,25 +880,45 @@ impl BuffCounterTracker {
         changed
     }
 
-    pub fn build_payload(&self) -> Vec<CounterUpdateState> {
+    pub fn build_payload(
+        &self,
+        attr_store: &EntityAttrStore,
+        local_player_uid: i64,
+    ) -> Vec<CounterUpdateState> {
         let mut rows: Vec<CounterUpdateState> = self
-            .states
-            .values()
-            .map(|state| CounterUpdateState {
-                rule_id: state.rule_id,
-                slots: state
-                    .slot_states
-                    .iter()
-                    .map(|slot| SlotUpdateState {
-                        slot_id: slot.slot_id,
-                        current_count: slot.current_count,
-                        threshold: slot.threshold,
-                        is_counting: slot.is_counting,
-                        reset_buff_active: slot.reset_buff_active,
-                        freeze_until_ms: slot.freeze_until_ms,
-                        freeze_duration_ms: slot.freeze_duration_ms,
-                    })
-                    .collect(),
+            .rules
+            .iter()
+            .filter_map(|rule| {
+                let state = self.states.get(&rule.rule_id)?;
+                Some(CounterUpdateState {
+                    rule_id: state.rule_id,
+                    slots: rule
+                        .effect_slots
+                        .iter()
+                        .zip(&state.slot_states)
+                        .map(|(slot_config, slot)| SlotUpdateState {
+                            slot_id: slot.slot_id,
+                            current_count: slot.current_count,
+                            threshold: slot.threshold,
+                            effective_threshold: resolve_effective_threshold(
+                                slot.threshold,
+                                slot_config,
+                                attr_store,
+                                local_player_uid,
+                            ),
+                            is_counting: slot.is_counting,
+                            reset_buff_active: slot.reset_buff_active,
+                            freeze_until_ms: slot.freeze_until_ms,
+                            freeze_duration_ms: slot.freeze_duration_ms,
+                            effective_freeze_duration_ms: resolve_freeze_duration(
+                                slot_config,
+                                slot,
+                                attr_store,
+                                local_player_uid,
+                            ),
+                        })
+                        .collect(),
+                })
             })
             .collect();
         rows.sort_by(|a, b| a.rule_id.cmp(&b.rule_id));
@@ -682,6 +948,15 @@ impl BuffCounterTracker {
             }
             for complete in &mut state.skill_complete_states {
                 complete.active_skill_id = None;
+            }
+            for resource in &mut state.fight_resource_spent_states {
+                resource.previous_value = None;
+                resource.accumulated_spent = 0;
+            }
+            for movement in &mut state.movement_distance_states {
+                movement.is_active = false;
+                movement.last_position = None;
+                movement.accumulated_meters = 0.0;
             }
             for accumulator in &mut state.damage_hit_accumulators {
                 *accumulator = 0;
@@ -744,15 +1019,56 @@ impl CounterTriggerLegacy {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(untagged)]
-enum CounterRuleRepr {
-    Current(CounterRuleCurrent),
-    Legacy(CounterRuleLegacy),
-}
-
 fn default_on_freeze_expire() -> CounterAction {
     CounterAction::ResetAndStartCount
+}
+
+fn default_basis_points_per_unit() -> u32 {
+    1
+}
+
+fn resolve_attr_scale_bp(
+    modifier: Option<&AttrModifier>,
+    attr_store: &EntityAttrStore,
+    local_player_uid: i64,
+) -> u32 {
+    const FULL_SCALE_BASIS_POINTS: u64 = 10_000;
+
+    let Some(modifier) = modifier else {
+        return FULL_SCALE_BASIS_POINTS as u32;
+    };
+    let raw = attr_store
+        .attr_int_by_id(local_player_uid, modifier.attr_id)
+        .unwrap_or(0)
+        .max(0) as u64;
+    let divisor = u64::from(modifier.basis_points_per_unit.max(1));
+    let reduction = (raw / divisor).min(u64::from(modifier.max_reduction_basis_points));
+    FULL_SCALE_BASIS_POINTS.saturating_sub(reduction) as u32
+}
+
+fn scale_basis_points_ceil(value: u64, scale_basis_points: u32) -> u64 {
+    const FULL_SCALE_BASIS_POINTS: u64 = 10_000;
+
+    value
+        .saturating_mul(u64::from(scale_basis_points))
+        .saturating_add(FULL_SCALE_BASIS_POINTS - 1)
+        / FULL_SCALE_BASIS_POINTS
+}
+
+fn resolve_effective_threshold(
+    threshold: Option<u32>,
+    config: &EffectSlotConfig,
+    attr_store: &EntityAttrStore,
+    local_player_uid: i64,
+) -> Option<u32> {
+    threshold.map(|value| {
+        let scale = resolve_attr_scale_bp(
+            config.threshold_modifier.as_ref(),
+            attr_store,
+            local_player_uid,
+        );
+        u32::try_from(scale_basis_points_ceil(u64::from(value), scale)).unwrap_or(u32::MAX)
+    })
 }
 
 fn scaled_increment(increment: u32, matches: usize) -> Option<u32> {
@@ -761,6 +1077,37 @@ fn scaled_increment(increment: u32, matches: usize) -> Option<u32> {
     }
 
     Some(increment.saturating_mul(u32::try_from(matches).unwrap_or(u32::MAX)))
+}
+
+fn apply_damage_by_skill_key_once_max(
+    events: &[LocalDamageEvent],
+    skill_keys: &[i64],
+    increment: u32,
+) -> Option<u32> {
+    if events.is_empty() || skill_keys.is_empty() {
+        return None;
+    }
+
+    let mut hits: HashMap<(i64, i64), u32> = HashMap::new();
+    for event in events {
+        if skill_keys.contains(&event.skill_key) {
+            *hits.entry((event.skill_key, event.target_uid)).or_insert(0) += 1;
+        }
+    }
+
+    let total = skill_keys
+        .iter()
+        .map(|skill_key| {
+            hits.iter()
+                .filter_map(|((matched_skill_key, _), count)| {
+                    (matched_skill_key == skill_key).then_some(*count)
+                })
+                .max()
+                .unwrap_or(0)
+        })
+        .sum::<u32>();
+
+    scaled_increment(increment, usize::try_from(total).unwrap_or(usize::MAX))
 }
 
 fn apply_damage_hits_required(
@@ -789,22 +1136,101 @@ fn apply_damage_hits_required(
     }
 }
 
+fn apply_fight_resource_spent(state: &mut FightResourceSpentState, current_value: i64) -> u32 {
+    let Some(previous_value) = state.previous_value.replace(current_value) else {
+        return 0;
+    };
+    if current_value >= previous_value {
+        return 0;
+    }
+
+    let spent = u32::try_from(previous_value.saturating_sub(current_value)).unwrap_or(u32::MAX);
+    state.accumulated_spent = state.accumulated_spent.saturating_add(spent);
+    let triggers = state.accumulated_spent / state.units_required.max(1);
+    state.accumulated_spent %= state.units_required.max(1);
+    state.increment.saturating_mul(triggers)
+}
+
+fn normalize_meters_required(value: f32) -> f32 {
+    if value.is_finite() && value > 0.0 {
+        value
+    } else {
+        1.0
+    }
+}
+
+fn apply_movement_buff_change(state: &mut MovementDistanceState, change: &BuffChangeEvent) {
+    if state.buff_id != change.base_id {
+        return;
+    }
+
+    match change.change_type {
+        BuffChangeType::Added => {
+            state.is_active = true;
+            state.last_position = None;
+            state.accumulated_meters = 0.0;
+        }
+        BuffChangeType::Changed => {
+            if !state.is_active {
+                state.is_active = true;
+                state.last_position = None;
+                state.accumulated_meters = 0.0;
+            }
+        }
+        BuffChangeType::Removed => {
+            state.is_active = false;
+            state.last_position = None;
+            state.accumulated_meters = 0.0;
+        }
+    }
+}
+
+fn apply_movement_distance_sample(
+    state: &mut MovementDistanceState,
+    position: PositionAttr,
+) -> u32 {
+    const MAX_MOVEMENT_DELTA_METERS: f32 = 50.0;
+
+    let Some(previous) = state.last_position.replace(position) else {
+        return 0;
+    };
+
+    let distance = distance_between(previous, position);
+    if distance <= 0.0 || !distance.is_finite() {
+        return 0;
+    }
+    if distance > MAX_MOVEMENT_DELTA_METERS {
+        state.accumulated_meters = 0.0;
+        return 0;
+    }
+
+    state.accumulated_meters += distance;
+    let triggers = (state.accumulated_meters / state.meters_required).floor() as u32;
+    if triggers == 0 {
+        return 0;
+    }
+    state.accumulated_meters -= state.meters_required * triggers as f32;
+    state.increment.saturating_mul(triggers)
+}
+
+fn distance_between(a: PositionAttr, b: PositionAttr) -> f32 {
+    let dx = b.x - a.x;
+    let dz = b.z - a.z;
+    (dx.mul_add(dx, dz * dz)).sqrt()
+}
+
 fn matches_attr_condition(
     attr_store: &EntityAttrStore,
     local_player_uid: i64,
     tick_state: &BuffTickState,
 ) -> bool {
-    match (tick_state.attr_condition.as_ref(), tick_state.attr_type) {
-        (None, _) => true,
-        (Some(_condition), None) => false,
-        (Some(condition), Some(attr_type)) => {
-            attr_store
-                .attr(local_player_uid, attr_type)
-                .and_then(AttrValue::as_int)
-                .and_then(|value| i32::try_from(value).ok())
-                == Some(condition.required_value)
-        }
-    }
+    let Some(condition) = tick_state.attr_condition.as_ref() else {
+        return true;
+    };
+    attr_store
+        .attr_int_by_id(local_player_uid, condition.attr_id)
+        .and_then(|value| i32::try_from(value).ok())
+        == Some(condition.required_value)
 }
 
 fn is_actor_state_skill(attr_store: &EntityAttrStore, local_player_uid: i64) -> bool {
@@ -853,13 +1279,27 @@ fn add_increment_to_slots(state: &mut CounterModelState, increment: u32) -> bool
     changed
 }
 
-fn resolve_freeze_duration(config: &EffectSlotConfig, state: &SlotState) -> Option<u64> {
-    if let Some(alt) = &config.alt_freeze {
+fn resolve_freeze_duration(
+    config: &EffectSlotConfig,
+    state: &SlotState,
+    attr_store: &EntityAttrStore,
+    local_player_uid: i64,
+) -> Option<u64> {
+    let duration = if let Some(alt) = &config.alt_freeze {
         if state.condition_buff_active {
-            return Some(alt.freeze_duration_ms);
+            alt.freeze_duration_ms
+        } else {
+            config.freeze_duration_ms?
         }
-    }
-    config.freeze_duration_ms
+    } else {
+        config.freeze_duration_ms?
+    };
+    let scale = resolve_attr_scale_bp(
+        config.freeze_duration_modifier.as_ref(),
+        attr_store,
+        local_player_uid,
+    );
+    Some(scale_basis_points_ceil(duration, scale))
 }
 
 fn start_freeze_with_resolved_duration(
@@ -867,14 +1307,20 @@ fn start_freeze_with_resolved_duration(
     slot_state: &mut SlotState,
     action: CounterAction,
     event_time_ms: Option<i64>,
+    attr_store: &EntityAttrStore,
+    local_player_uid: i64,
 ) -> bool {
     if !matches!(
         action,
-        CounterAction::Freeze | CounterAction::ResetAndFreeze
+        CounterAction::Freeze
+            | CounterAction::ResetAndFreeze
+            | CounterAction::ResetAndFreezeKeepCounting
     ) {
         return false;
     }
-    let Some(duration) = resolve_freeze_duration(slot_config, slot_state) else {
+    let Some(duration) =
+        resolve_freeze_duration(slot_config, slot_state, attr_store, local_player_uid)
+    else {
         return false;
     };
     let freeze_until_ms = event_time_ms
@@ -974,6 +1420,18 @@ fn apply_action(state: &mut SlotState, action: CounterAction) -> bool {
             }
             if state.is_counting {
                 state.is_counting = false;
+                changed = true;
+            }
+            changed
+        }
+        CounterAction::ResetAndFreezeKeepCounting => {
+            let mut changed = false;
+            if state.current_count != 0 {
+                state.current_count = 0;
+                changed = true;
+            }
+            if !state.is_counting {
+                state.is_counting = true;
                 changed = true;
             }
             changed

@@ -3,9 +3,13 @@
    * @file This component displays information about a player, including their class, name, and ability score.
    */
   import { SETTINGS } from "$lib/settings-store";
-  import { copyToClipboard, getClassIcon, tooltip } from "$lib/utils.svelte";
+  import { copyToClipboard, tooltip } from "$lib/utils.svelte";
   import AbbreviatedNumber from "./abbreviated-number.svelte";
-  import { normalizeNameDisplaySetting } from "$lib/name-display";
+  import ClassSpecIcon from "$lib/components/class-spec-icon.svelte";
+  import {
+    getDisplayIconSpecName,
+    normalizeNameDisplaySetting,
+  } from "$lib/name-display";
   import { formatClassSpecLabel, toClassLabel } from "$lib/class-labels";
 
   let {
@@ -68,14 +72,24 @@
     }
     return className;
   });
+
+  const classSpecIconDisplay = $derived(
+    getDisplayIconSpecName({
+      classSpecName,
+      showYourNameSetting: SETTINGS_YOUR_NAME,
+      showOthersNameSetting: SETTINGS_OTHERS_NAME,
+      isLocalPlayer: isYou,
+    }),
+  );
 </script>
 
 <div class="ml-2 flex">
-  <img
-    {@attach tooltip(() => classDisplay)}
+  <ClassSpecIcon
     class="size-5 object-contain"
-    src={getClassIcon(classIconDisplay())}
+    className={classIconDisplay()}
+    classSpecName={classSpecIconDisplay}
     alt={classDisplay}
+    tooltipText={classDisplay}
   />
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->

@@ -28,7 +28,9 @@ import {
   getCustomPanelDisplayRow,
   getResourcePreciseValue as getResourcePreciseValueValue,
   getResourceValue as getResourceValueValue,
+  resolveAlertState,
 } from "./overlay-utils";
+import { ensureBuffAlerts } from "$lib/settings-store";
 import {
   activeProfile,
   buffAliases,
@@ -106,6 +108,12 @@ const _buffSnapshot = $derived.by(() => {
   const priorityIds = buffPriorityIds();
   const buffDefinitionsMap = buffDefinitions();
   const panelGroups = customPanelGroups();
+  const alertMap = ensureBuffAlerts(activeProfile()?.buffAlerts);
+  const resolveAlert = (
+    baseId: number,
+    remainingMs: number,
+    durationMs: number,
+  ) => resolveAlertState(alertMap[String(baseId)], remainingMs, durationMs);
   const skippedInlineBuffIds = new Set(
     panelGroups
       .flatMap((group) => group.entries)
@@ -145,6 +153,7 @@ const _buffSnapshot = $derived.by(() => {
     const definition = buffDefinitionsMap.get(baseId);
     const name = resolveBuffOverlayDisplayName(baseId, currentBuffAliases);
     const timeText = formatTimerText(remaining);
+    const alert = resolveAlert(baseId, remaining, buff.durationMs);
     const specialConfig = _specialBuffConfigMap.get(baseId);
     const specialImages = specialConfig
       ? (() => {
@@ -165,6 +174,7 @@ const _buffSnapshot = $derived.by(() => {
         text: timeText,
         layer: buff.layer,
         ...(specialImages.length > 0 ? { specialImages } : {}),
+        ...(alert ? { alert } : {}),
       });
     } else {
       const row = buildBuffTextRow(
@@ -174,6 +184,7 @@ const _buffSnapshot = $derived.by(() => {
         now,
         false,
         allowPassiveSingleStack,
+        resolveAlert,
       );
       if (row) nextTextBuffs.push(row);
     }
@@ -246,6 +257,7 @@ const _buffSnapshot = $derived.by(() => {
         counterMap(),
         _counterRuleMap,
         (baseId) => resolveBuffOverlayDisplayName(baseId, currentBuffAliases),
+        resolveAlert,
       );
       if (row) nextRows.push(row);
     }
@@ -314,7 +326,7 @@ const _buffUptimeRows = $derived.by<BuffUptimeDisplayRow[]>(() => {
       const truePercent = trueMs > 0
         ? Math.max(0, Math.min(100, (total.trueActiveMs / trueMs) * 100))
         : null;
-      const sourceName = total.sourceUid === localPlayerUid
+      const sourceName = total.trackingMode === "self" || total.sourceUid === localPlayerUid
         ? undefined
         : resolveSourceLabel(total.sourceUid, total.sourceConfigId);
 

@@ -7,6 +7,11 @@ const DEFAULT_OUT_JSON = "DEV_exports/runtime-tier-bridge-audit.json";
 const DEFAULT_OUT_MD = "DEV_exports/runtime-tier-bridge-audit.md";
 const DEFAULT_LATEST_INPUTS = 3;
 const DEFAULT_CURRENT_VDATA = "DEV_exports/factor-vdata-current-equipment.json";
+const GENERATED_ROOTS = [
+  path.join(repoRoot, "..", "BPSR-UID-Extractors", "output"),
+  path.join(repoRoot, "parser-data", "generated"),
+];
+const generatedFilesRead = new Map();
 
 function usage() {
   return `Usage: node scripts/audit-runtime-tier-bridge.mjs [options]
@@ -65,6 +70,16 @@ function readJson(filePath, fallback = null) {
   const resolved = resolveRepoPath(filePath);
   if (!resolved || !fs.existsSync(resolved)) return fallback;
   return JSON.parse(fs.readFileSync(resolved, "utf8"));
+}
+
+function readGeneratedJson(fileName, fallback = null) {
+  for (const root of GENERATED_ROOTS) {
+    const filePath = path.join(root, fileName);
+    if (!fs.existsSync(filePath)) continue;
+    generatedFilesRead.set(fileName, path.relative(repoRoot, filePath).replaceAll("\\", "/"));
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  }
+  return fallback;
 }
 
 function writeJson(filePath, value) {
@@ -134,7 +149,7 @@ function firstLocalizedName(names) {
 }
 
 function buildAoyiNameIndex() {
-  const rows = readJson("parser-data/generated/skill_aoyi_icons.json", []);
+  const rows = readGeneratedJson("skill_aoyi_icons.json", []);
   const bySkillId = new Map();
   for (const row of asArray(rows)) {
     const id = positiveNumber(row.Id ?? row.id);
@@ -285,6 +300,23 @@ function indexSkillsByEntity(entities, currentVdata) {
   return byEntityUid;
 }
 
+function skillSnapshotSummary(indexed) {
+  if (!indexed) {
+    return {
+      source: "missing",
+      rowCount: 0,
+      battleImagineRows: 0,
+      professionRows: 0,
+    };
+  }
+  return {
+    source: indexed.source,
+    rowCount: indexed.rows.length,
+    battleImagineRows: indexed.rows.filter((row) => row.sourceKind === "battle-imagine").length,
+    professionRows: indexed.rows.filter((row) => row.sourceKind === "profession-skill").length,
+  };
+}
+
 function cooldownSkillLevels(entity) {
   const bySkillId = new Map();
   for (const event of asArray(entity?.skillCooldownEvents ?? entity?.skill_cooldown_events)) {
@@ -320,6 +352,11 @@ function resolveSkillContext({ entity, entityIndex, skillIndex, currentVdata, ow
   const nameUid = uniqueEntityUidByName(entityIndex, providerName);
   if (nameUid !== null && !candidates.includes(nameUid)) candidates.push(nameUid);
   if (ownUid !== null && !candidates.includes(ownUid)) candidates.push(ownUid);
+  const candidateSkillSnapshots = candidates.map((uid) => ({
+    uid,
+    ...skillSnapshotSummary(skillIndex.get(uid)),
+    hasRequiredSkill: Boolean(skillIndex.get(uid)?.bySkillId.has(skillId)),
+  }));
 
   for (const uid of candidates) {
     const indexed = skillIndex.get(uid);
@@ -331,6 +368,7 @@ function resolveSkillContext({ entity, entityIndex, skillIndex, currentVdata, ow
         ownerUid: uid,
         skill: row,
         encounterLocal: true,
+        candidateSkillSnapshots,
       };
     }
   }
@@ -346,6 +384,7 @@ function resolveSkillContext({ entity, entityIndex, skillIndex, currentVdata, ow
         ownerUid: ownerUid ?? ownUid,
         skill: row,
         encounterLocal: false,
+        candidateSkillSnapshots,
       };
     }
   }
@@ -359,6 +398,7 @@ function resolveSkillContext({ entity, entityIndex, skillIndex, currentVdata, ow
       source: "encounter-skillCooldownEvents",
       ownerUid: ownUid,
       encounterLocal: true,
+      blockedReason: "cooldown-only-no-remodel",
       skill: {
         skillId,
         skillLevelId: [...cooldown.skillLevelIds][0] ?? null,
@@ -366,7 +406,25 @@ function resolveSkillContext({ entity, entityIndex, skillIndex, currentVdata, ow
         remodelLevel: null,
       },
       notes: levels.length > 1 ? [`multiple cooldown levels observed: ${levels.join(", ")}`] : [],
+      candidateSkillSnapshots,
     };
+  }
+
+  const isExternalProvider = ownerUid !== null && ownUid !== null && ownerUid !== ownUid;
+  const localSnapshot = ownUid !== null ? skillIndex.get(ownUid) : null;
+  const ownerSnapshot = ownerUid !== null ? skillIndex.get(ownerUid) : null;
+  const currentSnapshot = currentKey !== null ? skillIndex.get(currentKey) : null;
+  let blockedReason = "missing-runtime-skill-state";
+  if (isExternalProvider) {
+    blockedReason = ownerSnapshot?.rows.length
+      ? "external-provider-snapshot-missing-required-skill"
+      : "external-provider-no-loadout-snapshot";
+  } else if (!localSnapshot?.rows.length) {
+    blockedReason = "missing-encounter-profession-snapshot";
+  } else if (!localSnapshot.bySkillId.has(skillId)) {
+    blockedReason = "encounter-snapshot-missing-required-skill";
+  } else if (currentSnapshot?.rows.length && !currentSnapshot.bySkillId.has(skillId)) {
+    blockedReason = "current-snapshot-missing-required-skill";
   }
 
   return {
@@ -375,11 +433,13 @@ function resolveSkillContext({ entity, entityIndex, skillIndex, currentVdata, ow
     ownerUid: ownerUid ?? ownUid,
     encounterLocal: false,
     skill: null,
+    blockedReason,
+    candidateSkillSnapshots,
   };
 }
 
 function contributionRulesNeedingTier() {
-  const table = readJson("parser-data/generated/ModifierContributionRuntime.json", {});
+  const table = readGeneratedJson("ModifierContributionRuntime.json", {});
   const rows = [];
   for (const rule of Object.values(table.sourcesByRuleId ?? {})) {
     const hints = asArray(rule.componentValueHints);
@@ -510,6 +570,8 @@ function auditEntity({ filePath, entity, entities, rules, skillIndex, currentVda
           skillLevelId: skillContext.skill?.skillLevelId ?? null,
           remodelLevel: skillContext.skill?.remodelLevel ?? null,
           selectedValues: values,
+          blockedReason: skillContext.blockedReason ?? null,
+          candidateSkillSnapshots: skillContext.candidateSkillSnapshots ?? [],
           notes: skillContext.notes ?? [],
         });
       }
@@ -553,6 +615,82 @@ function auditEntity({ filePath, entity, entities, rules, skillIndex, currentVda
   };
 }
 
+function countBy(rows, keyFn) {
+  const counts = new Map();
+  for (const row of rows) {
+    const key = keyFn(row);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return Object.fromEntries([...counts.entries()].sort((left, right) => String(left[0]).localeCompare(String(right[0]))));
+}
+
+function captureGapRows(tierRows) {
+  const byReason = new Map();
+  for (const row of tierRows) {
+    if (!row.blockedReason) continue;
+    const reason = row.blockedReason;
+    const group = byReason.get(reason) ?? {
+      reason,
+      count: 0,
+      files: new Set(),
+      providers: new Set(),
+      skills: new Map(),
+      examples: [],
+    };
+    group.count += 1;
+    group.files.add(row.file);
+    const provider = row.provider?.ownerName || row.provider?.sourceName || "";
+    if (provider) group.providers.add(provider);
+    group.skills.set(row.skillId, row.skillName);
+    if (group.examples.length < 6) {
+      group.examples.push({
+        file: row.file,
+        player: row.name || row.uid,
+        provider,
+        skillId: row.skillId,
+        skillName: row.skillName,
+        sourceId: row.sourceId,
+        contextSource: row.contextSource,
+      });
+    }
+    byReason.set(reason, group);
+  }
+  return [...byReason.values()]
+    .sort((left, right) => right.count - left.count || left.reason.localeCompare(right.reason))
+    .map((group) => ({
+      reason: group.reason,
+      count: group.count,
+      files: [...group.files].sort(),
+      providers: [...group.providers].sort(),
+      skills: [...group.skills.entries()]
+        .sort((left, right) => left[0] - right[0])
+        .map(([skillId, skillName]) => ({ skillId, skillName })),
+      examples: group.examples,
+    }));
+}
+
+function skillCoverageRows({ requiredSkillIds, tierRows, currentVdataSkillRows }) {
+  const currentSkillIds = new Set(currentVdataSkillRows.map((row) => row.skillId));
+  return requiredSkillIds.map((skillId) => {
+    const rows = tierRows.filter((row) => row.skillId === skillId);
+    const resolved = rows.filter((row) => row.status === "resolved").length;
+    const fallback = rows.filter((row) => row.status === "fallback").length;
+    const levelOnly = rows.filter((row) => row.status === "level-only").length;
+    const blocked = rows.filter((row) => row.status === "blocked").length;
+    const reasonCounts = countBy(rows.filter((row) => row.blockedReason), (row) => row.blockedReason);
+    return {
+      skillId,
+      observedRows: rows.length,
+      resolved,
+      fallback,
+      levelOnly,
+      blocked,
+      currentSnapshotHasSkill: currentSkillIds.has(skillId),
+      blockedReasons: reasonCounts,
+    };
+  });
+}
+
 function renderMarkdown(report, maxRows) {
   const lines = [];
   lines.push("# Runtime Tier Bridge Audit");
@@ -567,11 +705,40 @@ function renderMarkdown(report, maxRows) {
   lines.push(`- Encounter-local resolved rows: ${report.summary.encounterLocalResolvedRows}`);
   lines.push(`- Current-snapshot fallback rows: ${report.summary.currentSnapshotFallbackRows}`);
   lines.push(`- Blocked rows: ${report.summary.blockedRows}`);
+  lines.push(`- Level-only rows without remodel tier: ${report.summary.levelOnlyRows}`);
+  lines.push(`- Required tier skill ids missing from current snapshot: ${report.summary.currentSnapshotMissingRequiredSkillIds}`);
+  lines.push(`- Blocked reasons: ${Object.entries(report.summary.blockedReasons).map(([reason, count]) => `${reason}=${count}`).join(", ") || "none"}`);
+  lines.push(`- Generated source root: ${Object.values(report.generatedSources ?? {})[0]?.startsWith("../BPSR-UID-Extractors/") ? "../BPSR-UID-Extractors/output" : "parser-data/generated"}`);
+  lines.push("");
+  lines.push("## Capture Gaps");
+  lines.push("");
+  lines.push("| Reason | Rows | Skills | Providers | Example |");
+  lines.push("| --- | ---: | --- | --- | --- |");
+  for (const gap of report.captureGaps) {
+    const skills = gap.skills.map((skill) => `${skill.skillName} (${skill.skillId})`).join(", ");
+    const providers = gap.providers.slice(0, 8).join(", ");
+    const example = gap.examples[0]
+      ? `${gap.examples[0].file} / ${gap.examples[0].provider || "unknown"} / ${gap.examples[0].sourceId}`
+      : "";
+    lines.push(`| ${gap.reason} | ${gap.count} | ${skills} | ${providers}${gap.providers.length > 8 ? ", ..." : ""} | ${example} |`);
+  }
+  if (!report.captureGaps.length) lines.push("| none | 0 |  |  |  |");
+  lines.push("");
+  lines.push("## Required Skill Coverage");
+  lines.push("");
+  lines.push("| Skill | Observed Rows | Encounter | Current Snapshot | Blocked Reasons |");
+  lines.push("| --- | ---: | --- | --- | --- |");
+  for (const row of report.requiredSkillCoverage) {
+    const skillName = report.skillNames[String(row.skillId)] || `Skill ${row.skillId}`;
+    const encounter = `resolved=${row.resolved}, levelOnly=${row.levelOnly}, blocked=${row.blocked}`;
+    const reasons = Object.entries(row.blockedReasons).map(([reason, count]) => `${reason}=${count}`).join(", ");
+    lines.push(`| ${skillName} (${row.skillId}) | ${row.observedRows} | ${encounter} | ${row.currentSnapshotHasSkill ? "has skill" : "missing skill"} | ${reasons || ""} |`);
+  }
   lines.push("");
   lines.push("## Tier Rows");
   lines.push("");
-  lines.push("| File | Player | Source | Provider | Skill | Status | Level | Remodel | Values |");
-  lines.push("| --- | --- | --- | --- | --- | --- | ---: | ---: | --- |");
+  lines.push("| File | Player | Source | Provider | Skill | Status | Reason | Level | Remodel | Values |");
+  lines.push("| --- | --- | --- | --- | --- | --- | --- | ---: | ---: | --- |");
   for (const row of report.tierRows.slice(0, maxRows)) {
     const provider = row.provider?.ownerName || row.provider?.sourceName || "";
     const values = row.selectedValues
@@ -580,10 +747,26 @@ function renderMarkdown(report, maxRows) {
         ...row.selectedValues.tierValues.map((value) => `tier${row.selectedValues.selectedTier}.${value.scope}:${value.rawText}`),
       ].join(", ")
       : "";
-    lines.push(`| ${row.file} | ${row.name || row.uid} | ${row.sourceId} | ${provider} | ${row.skillName} (${row.skillId}) | ${row.status} / ${row.contextSource} | ${row.level ?? ""} | ${row.remodelLevel ?? ""} | ${values} |`);
+    lines.push(`| ${row.file} | ${row.name || row.uid} | ${row.sourceId} | ${provider} | ${row.skillName} (${row.skillId}) | ${row.status} / ${row.contextSource} | ${row.blockedReason ?? ""} | ${row.level ?? ""} | ${row.remodelLevel ?? ""} | ${values} |`);
   }
   if (report.tierRows.length > maxRows) {
-    lines.push(`| ... | ... | ... | ... | ... | ${report.tierRows.length - maxRows} more rows |  |  |  |`);
+    lines.push(`| ... | ... | ... | ... | ... | ${report.tierRows.length - maxRows} more rows |  |  |  |  |`);
+  }
+  lines.push("");
+  lines.push("## Current Snapshot Skill Rows");
+  lines.push("");
+  lines.push("These rows come from the latest detailed-playerdata snapshot, not the historical encounter. They are only fallback clues.");
+  lines.push("");
+  lines.push(`- Required tier skill ids: ${report.requiredSkillIds.join(", ") || "none"}`);
+  lines.push(`- Missing required ids in current snapshot: ${report.currentVdataMissingRequiredSkillIds.join(", ") || "none"}`);
+  lines.push("");
+  lines.push("| Skill | Kind | Level | Remodel | Slot | Equipped | Source |");
+  lines.push("| --- | --- | ---: | ---: | ---: | --- | --- |");
+  for (const row of report.currentVdataSkillRows.slice(0, maxRows)) {
+    lines.push(`| ${row.name} (${row.skillId}) | ${row.sourceKind} | ${row.level ?? ""} | ${row.remodelLevel ?? ""} | ${row.slot ?? ""} | ${row.equipped ?? ""} | ${row.runtimeSource || row.source || ""} |`);
+  }
+  if (report.currentVdataSkillRows.length > maxRows) {
+    lines.push(`| ... | ... | ... | ... | ... | ${report.currentVdataSkillRows.length - maxRows} more rows |  |`);
   }
   lines.push("");
   lines.push("## Skill Context");
@@ -618,6 +801,24 @@ function main() {
   const skillIndex = indexSkillsByEntity(entities, currentVdata);
   const rules = contributionRulesNeedingTier();
   const aoyiNames = buildAoyiNameIndex();
+  const requiredSkillIds = uniqueNumbers(rules.flatMap((rule) => rule.skillIds));
+  const currentVdataSkillRows = currentVdata.rows
+    .map((row) => ({
+      skillId: row.skillId,
+      name: aoyiNames.get(row.skillId)?.name || aoyiNames.get(row.skillId)?.technicalName || `Skill ${row.skillId}`,
+      technicalName: aoyiNames.get(row.skillId)?.technicalName || "",
+      sourceKind: row.sourceKind,
+      level: row.level,
+      remodelLevel: row.remodelLevel,
+      skillLevelId: row.skillLevelId,
+      slot: row.slot,
+      equipped: row.equipped,
+      runtimeSource: row.runtimeSource,
+      source: currentVdata.source,
+    }))
+    .sort((left, right) => String(left.sourceKind).localeCompare(String(right.sourceKind)) || left.skillId - right.skillId);
+  const currentVdataSkillIdSet = new Set(currentVdata.rows.map((row) => row.skillId));
+  const currentVdataMissingRequiredSkillIds = requiredSkillIds.filter((skillId) => !currentVdataSkillIdSet.has(skillId));
 
   const files = inputPaths.map((filePath, index) => auditEntity({
     filePath,
@@ -635,10 +836,18 @@ function main() {
       || right.observedWindows - left.observedWindows
       || String(left.file).localeCompare(String(right.file)));
 
+  const skillNames = Object.fromEntries(requiredSkillIds.map((skillId) => [
+    String(skillId),
+    aoyiNames.get(skillId)?.name || aoyiNames.get(skillId)?.technicalName || `Skill ${skillId}`,
+  ]));
+  const captureGaps = captureGapRows(tierRows);
+  const requiredSkillCoverage = skillCoverageRows({ requiredSkillIds, tierRows, currentVdataSkillRows });
+
   const report = {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     inputs: inputPaths.map((filePath) => path.relative(repoRoot, filePath).replace(/\\/g, "/")),
+    generatedSources: Object.fromEntries([...generatedFilesRead.entries()].sort((left, right) => left[0].localeCompare(right[0]))),
     currentVdata: {
       source: currentVdata.source,
       playerId: currentVdata.playerId,
@@ -651,9 +860,18 @@ function main() {
       currentSnapshotFallbackRows: tierRows.filter((row) => row.status === "fallback").length,
       blockedRows: tierRows.filter((row) => row.status === "blocked").length,
       levelOnlyRows: tierRows.filter((row) => row.status === "level-only").length,
+      currentSnapshotBattleImagineRows: currentVdataSkillRows.filter((row) => row.sourceKind === "battle-imagine").length,
+      currentSnapshotMissingRequiredSkillIds: currentVdataMissingRequiredSkillIds.length,
+      blockedReasons: countBy(tierRows.filter((row) => row.blockedReason), (row) => row.blockedReason),
     },
     files,
     tierRows,
+    requiredSkillIds,
+    skillNames,
+    requiredSkillCoverage,
+    captureGaps,
+    currentVdataMissingRequiredSkillIds,
+    currentVdataSkillRows,
   };
 
   writeJson(args.outJson, report);

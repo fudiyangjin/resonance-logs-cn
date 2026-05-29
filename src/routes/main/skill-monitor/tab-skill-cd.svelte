@@ -1,7 +1,11 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+
   import { findAnySkillByBaseId, type ClassSkillConfig, type ResonanceSkillDefinition, type SkillDefinition } from "$lib/skill-mappings";
   import { SETTINGS } from "$lib/settings-store";
   import {
+    TRANSLATION_RUNTIME_REVISION,
+    initializeSkillNameTranslationData,
     uiT,
     resolveSkillNote,
     resolveSkillMonitorClassName,
@@ -29,6 +33,10 @@
   }
 
   const t = uiT("overlay/skill-monitor/skill-cd", () => SETTINGS.live.general.state.language);
+  type SkillTooltipPlacement = "top" | "bottom";
+
+  let skillTranslationRevision = $state(0);
+  let activeSkillTooltip = $state<{ key: string; placement: SkillTooltipPlacement } | null>(null);
 
   let {
     classConfigs,
@@ -49,6 +57,25 @@
     clearSkillDurations,
     setResonanceSearch,
   }: Props = $props();
+
+  onMount(() => {
+    const unsubscribe = TRANSLATION_RUNTIME_REVISION.subscribe((value) => {
+      skillTranslationRevision = value;
+    });
+    void initializeSkillNameTranslationData();
+    return unsubscribe;
+  });
+
+  function showSkillTooltip(key: string, placement: SkillTooltipPlacement = "bottom"): void {
+    activeSkillTooltip = { key, placement };
+  }
+
+  function hideSkillTooltip(key: string): void {
+    if (activeSkillTooltip?.key === key) {
+      activeSkillTooltip = null;
+    }
+  }
+
   function displayClassName(config: ClassSkillConfig): string {
     return resolveSkillMonitorClassName(
       config.classKey,
@@ -66,6 +93,39 @@
     );
   }
 
+  function formatSkillHoverNote(note: string): string {
+    const actionLead =
+      "(?:A key|A|An|The|When|For|Grants|Unleashes|Deals|Increases|Decreases|Consumes|Starts|Allows|Restores|After|Each|Every|If|Perform|Performs|Launches|Creates|Casts|Converts|Reduces|Boosts|Gain|Gains|Trigger|Triggers)";
+    const sectionLabels = [
+      "Basic Attack",
+      "Normal Attack",
+      "Special Attack",
+      "Expertise Skill",
+      "Active",
+      "Passive",
+      "Class-Exclusive",
+      "General ATK",
+      "General DEF",
+    ];
+    const escapedLabels = sectionLabels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+
+    let text = note.trim().replace(/\s+/g, " ");
+    text = text.replace(/\s+(?:Tips?|Dicas?|攻略|戰略|战略|戦略|팁|Strategi)[:：].*$/iu, "");
+    text = text.replace(
+      new RegExp(`\\s+(?=(?:${escapedLabels})[:：])`, "g"),
+      "\n",
+    );
+    text = text.replace(
+      new RegExp(`^([A-Z][A-Za-z]*(?: [A-Z][A-Za-z]*){0,4})\\s+(${actionLead}\\b)`),
+      "$1. $2",
+    );
+    text = text.replace(
+      new RegExp(`(^|\\n)((?:${escapedLabels})[:：]\\s*.+?)\\s+(${actionLead}\\b)`, "g"),
+      "$1$2. $3",
+    );
+    return text.trim();
+  }
+
 
   function formatEffectDuration(durationMs: number | undefined): string {
     if (!durationMs || durationMs <= 0) return "--";
@@ -73,8 +133,9 @@
   }
 
   function skillHoverTitle(skill: SkillDefinition, extra = ""): string {
+    void skillTranslationRevision;
     const note = SETTINGS.live.general.state.showHoverDescriptions !== false
-      ? resolveSkillNote(skill.skillId, SETTINGS.live.general.state.language).trim()
+      ? formatSkillHoverNote(resolveSkillNote(skill.skillId, SETTINGS.live.general.state.language))
       : "";
     return [
       displaySkillName(skill),
@@ -82,6 +143,14 @@
       extra,
       note ? `Description:\n${note}` : "",
     ].filter(Boolean).join("\n");
+  }
+
+  function resonanceSkillHoverTitle(skill: ResonanceSkillDefinition): string {
+    const imagineName = skill.imagineName?.trim();
+    return skillHoverTitle(
+      skill,
+      imagineName && imagineName !== displaySkillName(skill) ? `Imagine: ${imagineName}` : "",
+    );
   }
 </script>
 
@@ -132,36 +201,51 @@
 
     <div class="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-3">
       {#each classSkills as skill (skill.skillId)}
-        <button
-          type="button"
-          class="relative min-h-[78px] cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
-            ? 'border-primary ring-1 ring-primary'
-            : 'border-border/60 hover:border-border'}"
-          title={skillHoverTitle(skill)}
-          onclick={() => toggleSkill(skill.skillId)}
-        >
-          {#if skill.imagePath}
-            <img
-              src={skill.imagePath}
-              alt={displaySkillName(skill)}
-              class="w-full h-full object-cover aspect-square"
-            />
-          {:else}
-            <div class="w-full h-full aspect-square flex items-center justify-center bg-muted/30 text-xs text-muted-foreground">
-              {t("notConfigured", "未配置")}
+        {@const tooltipKey = `skill-${selectedClassKey}-${skill.skillId}`}
+        {@const tooltipTitle = skillHoverTitle(skill)}
+        <div class="relative">
+          <button
+            type="button"
+            class="relative min-h-[78px] w-full cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
+              ? 'border-primary ring-1 ring-primary'
+              : 'border-border/60 hover:border-border'}"
+            aria-label={displaySkillName(skill)}
+            onmouseenter={() => showSkillTooltip(tooltipKey)}
+            onmouseleave={() => hideSkillTooltip(tooltipKey)}
+            onfocus={() => showSkillTooltip(tooltipKey)}
+            onblur={() => hideSkillTooltip(tooltipKey)}
+            onclick={() => toggleSkill(skill.skillId)}
+          >
+            {#if skill.imagePath}
+              <img
+                src={skill.imagePath}
+                alt={displaySkillName(skill)}
+                class="w-full h-full object-cover aspect-square"
+              />
+            {:else}
+              <div class="w-full h-full aspect-square flex items-center justify-center bg-muted/30 text-xs text-muted-foreground">
+                {t("notConfigured", "未配置")}
+              </div>
+            {/if}
+            <div
+              class="absolute inset-0 bg-black/42 px-2 py-1.5 text-center text-[9px] leading-tight font-bold text-white flex items-center justify-center"
+            >
+              <span
+                class="whitespace-normal break-words"
+                style="display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;text-shadow:-1px -1px 0 rgba(0,0,0,0.95), 1px -1px 0 rgba(0,0,0,0.95), -1px 1px 0 rgba(0,0,0,0.95), 1px 1px 0 rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.85);"
+              >
+                {displaySkillName(skill)}
+              </span>
+            </div>
+          </button>
+          {#if activeSkillTooltip?.key === tooltipKey}
+            <div
+              class="pointer-events-none absolute left-0 z-[80] min-w-[220px] max-w-[620px] whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl {activeSkillTooltip.placement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}"
+            >
+              {tooltipTitle}
             </div>
           {/if}
-          <div
-            class="absolute inset-0 bg-black/42 px-2 py-1.5 text-center text-[9px] leading-tight font-bold text-white flex items-center justify-center"
-          >
-            <span
-              class="whitespace-normal break-words"
-              style="display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;text-shadow:-1px -1px 0 rgba(0,0,0,0.95), 1px -1px 0 rgba(0,0,0,0.95), -1px 1px 0 rgba(0,0,0,0.95), 1px 1px 0 rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.85);"
-            >
-              {displaySkillName(skill)}
-            </span>
-          </div>
-        </button>
+        </div>
       {/each}
     </div>
   </div>
@@ -191,35 +275,50 @@
     {#if durationSkills.length > 0}
       <div class="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-3">
         {#each durationSkills as skill (skill.skillId)}
-          <button
-            type="button"
-            class="relative min-h-[78px] cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isDurationSelected(skill.skillId)
-              ? 'border-primary ring-1 ring-primary'
-              : 'border-border/60 hover:border-border'}"
-            title={skillHoverTitle(skill, formatEffectDuration(skill.effectDurationMs))}
-            onclick={() => toggleSkillDuration(skill.skillId)}
-          >
-            {#if skill.imagePath}
-              <img
-                src={skill.imagePath}
-                alt={displaySkillName(skill)}
-                class="w-full h-full object-cover aspect-square"
-              />
-            {:else}
-              <div class="w-full h-full aspect-square flex items-center justify-center bg-muted/30 text-xs text-muted-foreground">
-                {t("notConfigured", "未配置")}
+          {@const tooltipKey = `duration-${selectedClassKey}-${skill.skillId}`}
+          {@const tooltipTitle = skillHoverTitle(skill, formatEffectDuration(skill.effectDurationMs))}
+          <div class="relative">
+            <button
+              type="button"
+              class="relative min-h-[78px] w-full cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isDurationSelected(skill.skillId)
+                ? 'border-primary ring-1 ring-primary'
+                : 'border-border/60 hover:border-border'}"
+              aria-label={displaySkillName(skill)}
+              onmouseenter={() => showSkillTooltip(tooltipKey)}
+              onmouseleave={() => hideSkillTooltip(tooltipKey)}
+              onfocus={() => showSkillTooltip(tooltipKey)}
+              onblur={() => hideSkillTooltip(tooltipKey)}
+              onclick={() => toggleSkillDuration(skill.skillId)}
+            >
+              {#if skill.imagePath}
+                <img
+                  src={skill.imagePath}
+                  alt={displaySkillName(skill)}
+                  class="w-full h-full object-cover aspect-square"
+                />
+              {:else}
+                <div class="w-full h-full aspect-square flex items-center justify-center bg-muted/30 text-xs text-muted-foreground">
+                  {t("notConfigured", "未配置")}
+                </div>
+              {/if}
+
+              <div class="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                {formatEffectDuration(skill.effectDurationMs)}
+              </div>
+              <div
+                class="absolute inset-x-0 bottom-0 bg-black/55 text-[10px] leading-tight text-white/90 px-1 py-0.5 text-center whitespace-nowrap overflow-hidden text-ellipsis"
+              >
+                {displaySkillName(skill)}
+              </div>
+            </button>
+            {#if activeSkillTooltip?.key === tooltipKey}
+              <div
+                class="pointer-events-none absolute left-0 z-[80] min-w-[220px] max-w-[620px] whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl {activeSkillTooltip.placement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}"
+              >
+                {tooltipTitle}
               </div>
             {/if}
-
-            <div class="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-              {formatEffectDuration(skill.effectDurationMs)}
-            </div>
-            <div
-              class="absolute inset-x-0 bottom-0 bg-black/55 text-[10px] leading-tight text-white/90 px-1 py-0.5 text-center whitespace-nowrap overflow-hidden text-ellipsis"
-            >
-              {displaySkillName(skill)}
-            </div>
-          </button>
+          </div>
         {/each}
       </div>
     {:else}
@@ -252,26 +351,41 @@
     {#if resonanceSearch.trim().length > 0}
       <div class="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-3">
         {#each filteredResonanceSkills as skill (skill.skillId)}
-          <button
-            type="button"
-            class="relative min-h-[78px] cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
-              ? 'border-primary ring-1 ring-primary'
-              : 'border-border/60 hover:border-border'}"
-            title={skillHoverTitle(skill)}
-            onclick={() => toggleSkill(skill.skillId)}
-          >
-            <img
-              src={skill.imagePath}
-              alt={displaySkillName(skill)}
-              class="w-full h-full object-contain aspect-square bg-muted/20"
-            />
-            <div
-              class="absolute inset-x-0 bottom-0 bg-black/60 text-[10px] leading-tight text-white px-1 py-1 text-center whitespace-normal break-words min-h-[2.45rem] flex items-end justify-center"
-              style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;"
+          {@const tooltipKey = `resonance-search-${skill.skillId}`}
+          {@const tooltipTitle = resonanceSkillHoverTitle(skill)}
+          <div class="relative">
+            <button
+              type="button"
+              class="relative min-h-[78px] w-full cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
+                ? 'border-primary ring-1 ring-primary'
+                : 'border-border/60 hover:border-border'}"
+              aria-label={displaySkillName(skill)}
+              onmouseenter={() => showSkillTooltip(tooltipKey)}
+              onmouseleave={() => hideSkillTooltip(tooltipKey)}
+              onfocus={() => showSkillTooltip(tooltipKey)}
+              onblur={() => hideSkillTooltip(tooltipKey)}
+              onclick={() => toggleSkill(skill.skillId)}
             >
-              {skill.name}
-            </div>
-          </button>
+              <img
+                src={skill.imagePath}
+                alt={displaySkillName(skill)}
+                class="w-full h-full object-contain aspect-square bg-muted/20"
+              />
+              <div
+                class="absolute inset-x-0 bottom-0 bg-black/60 text-[10px] leading-tight text-white px-1 py-1 text-center whitespace-normal break-words min-h-[2.45rem] flex items-end justify-center"
+                style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;"
+              >
+                {skill.name}
+              </div>
+            </button>
+            {#if activeSkillTooltip?.key === tooltipKey}
+              <div
+                class="pointer-events-none absolute left-0 z-[80] min-w-[220px] max-w-[620px] whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl {activeSkillTooltip.placement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}"
+              >
+                {tooltipTitle}
+              </div>
+            {/if}
+          </div>
         {/each}
       </div>
     {:else}
@@ -282,24 +396,39 @@
       <div class="text-xs text-muted-foreground">{t("selectedResonanceSkills", "已选共鸣技能")}</div>
       <div class="flex flex-wrap gap-2">
         {#each selectedResonanceSkills as skill (skill.skillId)}
-          <button
-            type="button"
-            class="relative cursor-pointer rounded-md border border-border/60 overflow-hidden bg-muted/20 w-[72px] h-[78px] hover:border-border hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
-            title={skillHoverTitle(skill)}
-            onclick={() => toggleSkill(skill.skillId)}
-          >
-            <img
-              src={skill.imagePath}
-              alt={displaySkillName(skill)}
-              class="w-full h-full object-contain"
-            />
-            <div
-              class="absolute inset-x-0 bottom-0 bg-black/60 text-[9px] leading-tight text-white px-1 py-1 text-center whitespace-normal break-words min-h-[2.35rem] flex items-end justify-center"
-              style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;"
+          {@const tooltipKey = `resonance-selected-${skill.skillId}`}
+          {@const tooltipTitle = resonanceSkillHoverTitle(skill)}
+          <div class="relative h-[78px] w-[72px]">
+            <button
+              type="button"
+              class="relative h-full w-full cursor-pointer rounded-md border border-border/60 overflow-hidden bg-muted/20 hover:border-border hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              aria-label={displaySkillName(skill)}
+              onmouseenter={() => showSkillTooltip(tooltipKey)}
+              onmouseleave={() => hideSkillTooltip(tooltipKey)}
+              onfocus={() => showSkillTooltip(tooltipKey)}
+              onblur={() => hideSkillTooltip(tooltipKey)}
+              onclick={() => toggleSkill(skill.skillId)}
             >
-              {skill.name}
-            </div>
-          </button>
+              <img
+                src={skill.imagePath}
+                alt={displaySkillName(skill)}
+                class="w-full h-full object-contain"
+              />
+              <div
+                class="absolute inset-x-0 bottom-0 bg-black/60 text-[9px] leading-tight text-white px-1 py-1 text-center whitespace-normal break-words min-h-[2.35rem] flex items-end justify-center"
+                style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;"
+              >
+                {skill.name}
+              </div>
+            </button>
+            {#if activeSkillTooltip?.key === tooltipKey}
+              <div
+                class="pointer-events-none absolute left-0 z-[80] min-w-[220px] max-w-[620px] whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl {activeSkillTooltip.placement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}"
+              >
+                {tooltipTitle}
+              </div>
+            {/if}
+          </div>
         {/each}
         {#if selectedResonanceSkills.length === 0}
           <div class="text-xs text-muted-foreground">{t("noResonanceSkillsSelected", "未选择共鸣技能")}</div>

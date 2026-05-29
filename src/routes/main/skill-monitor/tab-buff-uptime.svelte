@@ -175,12 +175,17 @@
       { label: t("uptime.previewName3", "Rorola Debuff"), color: "#ff2a2a", showIndicator: true },
     ];
 
-    return samples
-      .map((sample, index) => {
-        const base = fallback[index];
-        if (!base) return null;
+    const previewSources =
+      monitoredUptimeBuffIds.length > 0
+        ? monitoredUptimeBuffIds.map((buffId, index) => ({ buffId, index }))
+        : fallback.map((_, index) => ({ buffId: undefined, index }));
 
-        const buffId = monitoredUptimeBuffIds[index];
+    return previewSources
+      .map(({ buffId, index }) => {
+        const sample = samples[index % samples.length] ?? samples[0];
+        const base = fallback[index % fallback.length] ?? fallback[0];
+        if (!sample || !base) return null;
+
         if (buffId === undefined) {
           return buildPreviewRow(`fallback-${index}`, base, {
             encounterText: sample.encounterText,

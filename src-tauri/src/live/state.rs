@@ -14,9 +14,12 @@ use crate::live::event_manager::EventManager;
 use crate::live::monster_registry;
 use crate::live::opcodes_models::{
     AttrType, AttrValue, Encounter, Entity, ObservedActiveBuff, ObservedDamageHit,
-    ObservedEffectBuff, ObservedFactorBuff, ObservedModifierHitBucket, ObservedModifierReplayHit,
-    ObservedModifierReplaySource, ObservedModifierWindow, ObservedSkillCastEvent,
-    ObservedSkillCooldownEvent,
+    ObservedEffectBuff, ObservedEffectSource, ObservedFactorBuff, ObservedFactorItem,
+    ObservedModifierHitBucket, ObservedModifierReplayHit, ObservedModifierReplaySource,
+    ObservedModifierWindow, ObservedSkillCastEvent, ObservedSkillCooldownEvent,
+};
+use crate::live::seasonal_factor_selector::{
+    FactorSelectorDirtyNode, SELECTED_FACTOR_TRANSITION_RUNTIME_SOURCE,
 };
 use crate::live::skill_cd_monitor::{SkillCdMonitor, calculate_skill_cd};
 use crate::live::training_dummy::{
@@ -31,6 +34,10 @@ use std::time::{Duration, Instant};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 
 const MAX_SKILL_TIMING_EVENTS: usize = 20_000;
+const ACTIVE_EFFECT_BUFF_SOURCE_RUNTIME_PREFIX: &str = "activeEffectBuffs.";
+const SELECTED_FACTOR_RUNTIME_PREFIX: &str = "SyncContainerDirtyData.v_data.dirty_tree.";
+const MAX_FACTOR_SELECTOR_ZERO_SLOTS: usize = 128;
+const FACTOR_SELECTOR_ZERO_SLOT_TTL: Duration = Duration::from_secs(120);
 
 /// Represents the possible events that can be handled by the state manager.
 #[derive(Debug, Clone)]
@@ -82,6 +89,12 @@ pub struct AppState {
     pub local_owned_source_uids: HashSet<i64>,
     /// Source config IDs observed through local-owned proxy buff sources.
     pub local_owned_source_config_ids: HashSet<i32>,
+    /// Selected Deep-Slumber/Phantom Factor items observed from local loadout dirty packets.
+    pub local_selected_factor_items: Vec<ObservedFactorItem>,
+    /// Set when packet-proven selected factor grades need to be saved to disk.
+    pub selected_factor_cache_dirty: bool,
+    /// Recently emptied factor-selector slots, used to prove later zero-to-grade selections.
+    local_factor_selector_zero_slots: Vec<FactorSelectorZeroSlot>,
     /// Whether we've already handled the first scene change after startup.
     pub initial_scene_change_handled: bool,
     /// Event update rate in milliseconds (default: 200ms). Controls how often events are emitted to frontend.
@@ -103,6 +116,14 @@ pub struct AppState {
     pub sent_overlay_uids: HashSet<i64>,
     /// Set after a new death replay record is appended and cleared after the next frontend emit.
     pub death_snapshot_dirty: bool,
+}
+
+#[derive(Debug, Clone)]
+struct FactorSelectorZeroSlot {
+    path: String,
+    tree_signature: String,
+    offset: usize,
+    observed_at: Instant,
 }
 
 #[derive(Debug)]
@@ -173,6 +194,9 @@ impl AppState {
             boss_buff_monitors: BossBuffMonitors::new(),
             local_owned_source_uids: HashSet::new(),
             local_owned_source_config_ids: HashSet::new(),
+            local_selected_factor_items: Vec::new(),
+            selected_factor_cache_dirty: false,
+            local_factor_selector_zero_slots: Vec::new(),
             initial_scene_change_handled: false,
             event_update_rate_ms: 200,
             auto_clear_on_scene_change: true,
@@ -220,6 +244,23 @@ fn emit_panel_attr_update_if_needed(state: &mut AppState, payload: Vec<PanelAttr
         return;
     }
     state.event_manager.emit_panel_attr_update(payload);
+}
+
+fn emit_local_buff_update_snapshot(state: &mut AppState) {
+    let payload = state
+        .local_monitor
+        .buff_monitor
+        .build_update_payload(state.server_clock_offset)
+        .unwrap_or_default();
+    state.event_manager.emit_buff_update(payload);
+}
+
+fn emit_boss_buff_update_snapshot(state: &mut AppState) {
+    let mut payload = state
+        .boss_buff_monitors
+        .build_all_buff_snapshots(state.server_clock_offset);
+    payload.retain(|&uid, _| !state.attr_store.is_dead(uid));
+    state.event_manager.emit_boss_buff_update(payload);
 }
 
 fn emit_shield_detail_update_if_needed(state: &mut AppState, mut entries: Vec<ShieldDetailEntry>) {
@@ -285,6 +326,25 @@ pub(crate) fn resolve_entity_display_name(
     format!("目标 {uid}")
 }
 
+fn resolve_player_display_name(
+    uid: i64,
+    entity: Option<&Entity>,
+    attr_store: &EntityAttrStore,
+) -> String {
+    if let Some(name) = attr_store
+        .attr(uid, AttrType::Name)
+        .and_then(|value| value.as_string())
+    {
+        return name.to_string();
+    }
+    if let Some(entity) = entity {
+        if !entity.name.is_empty() {
+            return entity.name.clone();
+        }
+    }
+    format!("UID {uid}")
+}
+
 fn collect_player_names(encounter: &Encounter) -> Vec<PlayerNameEntry> {
     let mut player_names: Vec<PlayerNameEntry> =
         Vec::with_capacity(encounter.entity_uid_to_entity.len());
@@ -292,22 +352,36 @@ fn collect_player_names(encounter: &Encounter) -> Vec<PlayerNameEntry> {
         encounter
             .entity_uid_to_entity
             .iter()
-            .filter(|(_, entity)| {
-                entity.entity_type == EEntityType::EntChar
-                    && (entity.damage.hits > 0 || entity.healing.hits > 0 || entity.taken.hits > 0)
+            .filter(|(uid, entity)| {
+                entity_has_player_identity_surface(**uid, entity, encounter.local_player_uid)
             })
             .map(|(uid, entity)| PlayerNameEntry {
+                uid: *uid,
                 name: if entity.name.trim().is_empty() {
                     format!("#{uid}")
                 } else {
                     entity.name.clone()
                 },
                 class_id: entity.class_id,
+                class_spec: entity.class_spec,
             }),
     );
     player_names.sort_by(|a, b| a.name.cmp(&b.name));
     player_names.dedup_by(|a, b| a.name == b.name);
     player_names
+}
+
+fn entity_has_player_identity_surface(uid: i64, entity: &Entity, local_player_uid: i64) -> bool {
+    entity.entity_type == EEntityType::EntChar
+        && (uid == local_player_uid
+            || !entity.name.trim().is_empty()
+            || entity.class_id > 0
+            || entity.ability_score > 0
+            || entity.level > 0
+            || entity.season_strength > 0
+            || entity.damage.hits > 0
+            || entity.healing.hits > 0
+            || entity.taken.hits > 0)
 }
 
 fn infer_scene_id_from_scene_uuid(scene_uuid: i64) -> Option<i32> {
@@ -608,6 +682,161 @@ fn collect_observed_effect_buffs(
     observed
 }
 
+fn source_entity_id_from_effect_source_id(source_id: &str) -> Option<i32> {
+    source_id
+        .rsplit_once(':')
+        .and_then(|(_, value)| value.parse::<i32>().ok())
+}
+
+fn season_talent_node_id_from_effect_source_id(source_id: &str) -> Option<u32> {
+    source_id
+        .strip_prefix("season-talent-node:")
+        .and_then(|value| value.parse::<u32>().ok())
+}
+
+fn season_talent_tree_band_from_source_id(source_id: &str) -> Option<u32> {
+    let node_id = season_talent_node_id_from_effect_source_id(source_id)?;
+    (node_id >= 1_000).then_some(node_id / 100)
+}
+
+fn active_season_talent_tree_bands_from_buffs(
+    active_effect_buffs: &[ObservedEffectBuff],
+) -> HashSet<u32> {
+    let mut bands = HashSet::new();
+
+    for buff in active_effect_buffs {
+        let mut buff_ids = vec![buff.effect_source_buff_id, buff.observed_buff_id];
+        if let Some(source_config_id) = buff.source_config_id {
+            buff_ids.push(source_config_id);
+        }
+        for buff_id in buff_ids {
+            let source_ids = crate::live::effect_sources::effect_source_ids_for_buff_id(buff_id);
+            let source_bands = source_ids
+                .iter()
+                .filter_map(|source_id| season_talent_tree_band_from_source_id(source_id))
+                .collect::<HashSet<_>>();
+            if source_bands.len() == 1 {
+                bands.extend(source_bands);
+            }
+        }
+    }
+
+    bands
+}
+
+fn effect_source_ids_for_buff_id_scoped(
+    buff_id: i32,
+    active_tree_bands: &HashSet<u32>,
+) -> Vec<String> {
+    let source_ids = crate::live::effect_sources::effect_source_ids_for_buff_id(buff_id);
+    if source_ids.is_empty() || active_tree_bands.is_empty() {
+        return source_ids;
+    }
+
+    let source_bands = source_ids
+        .iter()
+        .filter_map(|source_id| season_talent_tree_band_from_source_id(source_id))
+        .collect::<HashSet<_>>();
+    if source_bands.len() <= 1 {
+        return source_ids;
+    }
+
+    let filtered = source_ids
+        .iter()
+        .filter(|source_id| {
+            season_talent_tree_band_from_source_id(source_id)
+                .is_none_or(|band| active_tree_bands.contains(&band))
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if filtered
+        .iter()
+        .any(|source_id| season_talent_tree_band_from_source_id(source_id).is_some())
+    {
+        filtered
+    } else {
+        source_ids
+    }
+}
+
+fn push_observed_effect_sources_for_buff_id(
+    rows: &mut Vec<(i64, ObservedEffectSource)>,
+    seen: &mut HashSet<(i64, String)>,
+    host_uid: i64,
+    buff_id: i32,
+    runtime_source: &'static str,
+    active_tree_bands: &HashSet<u32>,
+) {
+    for source_id in effect_source_ids_for_buff_id_scoped(buff_id, active_tree_bands) {
+        if !seen.insert((host_uid, source_id.clone())) {
+            continue;
+        }
+        rows.push((
+            host_uid,
+            ObservedEffectSource {
+                source_entity_id: source_entity_id_from_effect_source_id(&source_id),
+                node_id: season_talent_node_id_from_effect_source_id(&source_id),
+                source_id,
+                runtime_source: runtime_source.to_string(),
+                node_level: None,
+                slot: None,
+            },
+        ));
+    }
+}
+
+fn collect_observed_effect_sources_from_buffs(
+    active_effect_buffs: &[ObservedEffectBuff],
+    local_player_uid: i64,
+) -> Vec<(i64, ObservedEffectSource)> {
+    let mut rows = Vec::new();
+    let mut seen = HashSet::<(i64, String)>::new();
+    let active_tree_bands = active_season_talent_tree_bands_from_buffs(active_effect_buffs);
+
+    for buff in active_effect_buffs {
+        let host_uid = if buff.host_uid > 0 {
+            buff.host_uid
+        } else {
+            local_player_uid
+        };
+        if host_uid <= 0 {
+            continue;
+        }
+
+        push_observed_effect_sources_for_buff_id(
+            &mut rows,
+            &mut seen,
+            host_uid,
+            buff.effect_source_buff_id,
+            "activeEffectBuffs.effect_source_buff_id",
+            &active_tree_bands,
+        );
+        push_observed_effect_sources_for_buff_id(
+            &mut rows,
+            &mut seen,
+            host_uid,
+            buff.observed_buff_id,
+            "activeEffectBuffs.observed_buff_id",
+            &active_tree_bands,
+        );
+        if let Some(source_config_id) = buff.source_config_id {
+            push_observed_effect_sources_for_buff_id(
+                &mut rows,
+                &mut seen,
+                host_uid,
+                source_config_id,
+                "activeEffectBuffs.source_config_id",
+                &active_tree_bands,
+            );
+        }
+    }
+
+    rows.sort_by(|(left_uid, left), (right_uid, right)| {
+        (*left_uid, &left.source_id).cmp(&(*right_uid, &right.source_id))
+    });
+    rows
+}
+
 fn combined_modifier_active_buffs(state: &AppState) -> HashMap<i32, ActiveBuff> {
     let mut active_buffs = if state.modifier_capture_enabled {
         state.modifier_buff_monitor.active_buffs.clone()
@@ -622,12 +851,254 @@ fn combined_modifier_active_buffs(state: &AppState) -> HashMap<i32, ActiveBuff> 
 
 fn clear_modifier_capture_state(state: &mut AppState) {
     state.modifier_buff_monitor.active_buffs.clear();
+    state.local_selected_factor_items.clear();
+    state.selected_factor_cache_dirty = false;
+    state.local_factor_selector_zero_slots.clear();
     for entity in state.encounter.entity_uid_to_entity.values_mut() {
+        entity.active_factor_buffs.clear();
+        entity.active_effect_buffs.clear();
+        entity.active_effect_sources.clear();
+        entity.active_factor_items.clear();
+        entity.active_passive_skills.clear();
+        entity.active_profession_skills.clear();
+        entity.active_profession_talents.clear();
         entity.modifier_windows.clear();
         entity.modifier_hit_buckets.clear();
         entity.modifier_replay_hits.clear();
+        entity.skill_cast_events.clear();
+        entity.skill_cooldown_events.clear();
         entity.observed_damage_hits.clear();
     }
+}
+
+fn upsert_selected_factor_items(
+    target: &mut Vec<ObservedFactorItem>,
+    selected: &[ObservedFactorItem],
+) {
+    for item in selected {
+        let incoming_slot_key = selected_factor_item_slot_key(item);
+        target.retain(|existing| {
+            if existing.factor_buff_id == item.factor_buff_id {
+                return false;
+            }
+            if let (Some(incoming), Some(existing_key)) = (
+                incoming_slot_key.as_ref(),
+                selected_factor_item_slot_key(existing),
+            ) {
+                if existing_key == *incoming {
+                    return false;
+                }
+            }
+            if incoming_slot_key.is_some()
+                && selected_factor_item_slot_key(existing).is_none()
+                && observed_factor_item_is_packet_selected(existing)
+            {
+                return false;
+            }
+            true
+        });
+        target.push(item.clone());
+    }
+    target.sort_by_key(|item| {
+        (
+            item.factor_buff_id,
+            item.grade.unwrap_or(0),
+            item.item_config_id,
+            item.item_uuid.unwrap_or(0),
+        )
+    });
+}
+
+fn observed_factor_item_is_packet_selected(item: &ObservedFactorItem) -> bool {
+    item.runtime_source
+        .starts_with(SELECTED_FACTOR_RUNTIME_PREFIX)
+}
+
+fn selector_offset_as_i32(offset: usize) -> Option<i32> {
+    i32::try_from(offset).ok()
+}
+
+fn selected_factor_slot_key(path: &str, tree_signature: &str, offset: Option<i32>) -> String {
+    format!(
+        "{}|{}|{}",
+        tree_signature,
+        path,
+        offset
+            .map(|value| value.to_string())
+            .unwrap_or_else(|| "?".to_string())
+    )
+}
+
+fn selected_factor_item_slot_key(item: &ObservedFactorItem) -> Option<String> {
+    Some(selected_factor_slot_key(
+        item.selector_path.as_ref()?,
+        item.selector_signature.as_ref()?,
+        item.selector_offset,
+    ))
+}
+
+fn factor_selector_node_slot_key(node: &FactorSelectorDirtyNode) -> String {
+    selected_factor_slot_key(
+        &node.path,
+        &node.tree_signature,
+        selector_offset_as_i32(node.offset),
+    )
+}
+
+fn remove_selected_factor_slot(
+    target: &mut Vec<ObservedFactorItem>,
+    node: &FactorSelectorDirtyNode,
+) -> bool {
+    let slot_key = factor_selector_node_slot_key(node);
+    let before = target.len();
+    target.retain(|item| match selected_factor_item_slot_key(item) {
+        Some(existing_key) => existing_key != slot_key,
+        None => true,
+    });
+    before != target.len()
+}
+
+fn prune_factor_selector_zero_slots(state: &mut AppState) {
+    state
+        .local_factor_selector_zero_slots
+        .retain(|slot| slot.observed_at.elapsed() <= FACTOR_SELECTOR_ZERO_SLOT_TTL);
+    if state.local_factor_selector_zero_slots.len() > MAX_FACTOR_SELECTOR_ZERO_SLOTS {
+        let excess = state
+            .local_factor_selector_zero_slots
+            .len()
+            .saturating_sub(MAX_FACTOR_SELECTOR_ZERO_SLOTS);
+        state.local_factor_selector_zero_slots.drain(0..excess);
+    }
+}
+
+fn remember_factor_selector_zero_slot(state: &mut AppState, node: &FactorSelectorDirtyNode) {
+    prune_factor_selector_zero_slots(state);
+
+    if let Some(slot) = state
+        .local_factor_selector_zero_slots
+        .iter_mut()
+        .find(|slot| {
+            slot.path == node.path
+                && slot.tree_signature == node.tree_signature
+                && slot.offset == node.offset
+        })
+    {
+        slot.observed_at = Instant::now();
+        return;
+    }
+
+    state
+        .local_factor_selector_zero_slots
+        .push(FactorSelectorZeroSlot {
+            path: node.path.clone(),
+            tree_signature: node.tree_signature.clone(),
+            offset: node.offset,
+            observed_at: Instant::now(),
+        });
+    prune_factor_selector_zero_slots(state);
+}
+
+fn take_factor_selector_zero_slot(state: &mut AppState, node: &FactorSelectorDirtyNode) -> bool {
+    prune_factor_selector_zero_slots(state);
+    let Some(index) = state
+        .local_factor_selector_zero_slots
+        .iter()
+        .rposition(|slot| {
+            slot.path == node.path
+                && slot.tree_signature == node.tree_signature
+                && slot.offset == node.offset
+        })
+    else {
+        return false;
+    };
+    state.local_factor_selector_zero_slots.remove(index);
+    true
+}
+
+fn selected_factor_item_from_transition_node(
+    node: &FactorSelectorDirtyNode,
+) -> Option<ObservedFactorItem> {
+    Some(ObservedFactorItem {
+        factor_buff_id: node.factor_buff_id?,
+        item_config_id: node.item_config_id?,
+        item_uuid: None,
+        package_key: 0,
+        package_type: None,
+        grade: node.grade,
+        family_id: node.family_id,
+        runtime_source: SELECTED_FACTOR_TRANSITION_RUNTIME_SOURCE.to_string(),
+        selector_path: Some(node.path.clone()),
+        selector_signature: Some(node.tree_signature.clone()),
+        selector_offset: selector_offset_as_i32(node.offset),
+    })
+}
+
+fn selected_factor_items_from_dirty_transitions(
+    state: &mut AppState,
+    sync_container_dirty_data: &blueprotobuf::SyncContainerDirtyData,
+) -> Vec<ObservedFactorItem> {
+    let nodes = crate::live::seasonal_factor_selector::factor_selector_dirty_nodes_from_dirty_data(
+        sync_container_dirty_data,
+    );
+    if nodes.is_empty() {
+        return Vec::new();
+    }
+
+    let mut selected = Vec::new();
+    let mut seen_item_config_ids = HashSet::new();
+    for node in nodes {
+        if node.value == 0 {
+            if remove_selected_factor_slot(&mut state.local_selected_factor_items, &node) {
+                state.selected_factor_cache_dirty = true;
+            }
+            remember_factor_selector_zero_slot(state, &node);
+            continue;
+        }
+        if node.item_config_id.is_none() || !take_factor_selector_zero_slot(state, &node) {
+            continue;
+        }
+        let Some(item) = selected_factor_item_from_transition_node(&node) else {
+            continue;
+        };
+        if !seen_item_config_ids.insert(item.item_config_id) {
+            continue;
+        }
+        selected.push(item);
+    }
+
+    selected.sort_by_key(|item| {
+        (
+            item.factor_buff_id,
+            item.grade.unwrap_or(0),
+            item.item_config_id,
+        )
+    });
+    selected
+}
+
+fn sync_selected_factor_items_to_local_entity(state: &mut AppState) {
+    let local_player_uid = state.encounter.local_player_uid;
+    if local_player_uid <= 0 {
+        return;
+    }
+    let entity = state
+        .encounter
+        .entity_uid_to_entity
+        .entry(local_player_uid)
+        .or_insert_with(|| Entity {
+            entity_type: EEntityType::EntChar,
+            ..Default::default()
+        });
+    if state.local_selected_factor_items.is_empty() {
+        entity
+            .active_factor_items
+            .retain(|item| !observed_factor_item_is_packet_selected(item));
+        return;
+    }
+    upsert_selected_factor_items(
+        &mut entity.active_factor_items,
+        &state.local_selected_factor_items,
+    );
 }
 
 fn sync_active_buffs_to_encounter(state: &mut AppState) {
@@ -638,13 +1109,31 @@ fn sync_active_buffs_to_encounter(state: &mut AppState) {
     let active_buff_map = combined_modifier_active_buffs(state);
 
     let active_buffs = collect_observed_active_buffs(&active_buff_map, local_player_uid);
-    let active_factor_buffs = collect_observed_factor_buffs(&active_buff_map, local_player_uid);
-    let active_effect_buffs = collect_observed_effect_buffs(&active_buff_map, local_player_uid);
+    let active_factor_buffs = if state.modifier_capture_enabled {
+        collect_observed_factor_buffs(&active_buff_map, local_player_uid)
+    } else {
+        Vec::new()
+    };
+    let active_effect_buffs = if state.modifier_capture_enabled {
+        collect_observed_effect_buffs(&active_buff_map, local_player_uid)
+    } else {
+        Vec::new()
+    };
+    let active_effect_sources_from_buffs = if state.modifier_capture_enabled {
+        collect_observed_effect_sources_from_buffs(&active_effect_buffs, local_player_uid)
+    } else {
+        Vec::new()
+    };
 
     for entity in state.encounter.entity_uid_to_entity.values_mut() {
         entity.active_buffs.clear();
         entity.active_factor_buffs.clear();
         entity.active_effect_buffs.clear();
+        entity.active_effect_sources.retain(|source| {
+            !source
+                .runtime_source
+                .starts_with(ACTIVE_EFFECT_BUFF_SOURCE_RUNTIME_PREFIX)
+        });
     }
 
     for buff in active_buffs {
@@ -705,6 +1194,31 @@ fn sync_active_buffs_to_encounter(state: &mut AppState) {
                 ..Default::default()
             });
         entity.active_effect_buffs.push(buff);
+    }
+
+    for (host_uid, source) in active_effect_sources_from_buffs {
+        let entity = state
+            .encounter
+            .entity_uid_to_entity
+            .entry(host_uid)
+            .or_insert_with(|| Entity {
+                entity_type: EEntityType::EntChar,
+                ..Default::default()
+            });
+        if !entity
+            .active_effect_sources
+            .iter()
+            .any(|existing| existing.source_id == source.source_id)
+        {
+            entity.active_effect_sources.push(source);
+        }
+        entity
+            .active_effect_sources
+            .sort_by(|left, right| left.source_id.cmp(&right.source_id));
+    }
+
+    if state.modifier_capture_enabled {
+        sync_selected_factor_items_to_local_entity(state);
     }
 }
 
@@ -1645,10 +2159,11 @@ impl AppStateManager {
             }
         }
         if counter_dirty {
-            emit_buff_counter_update_if_needed(
-                state,
-                state.local_monitor.counter_tracker.build_payload(),
-            );
+            let payload = state
+                .local_monitor
+                .counter_tracker
+                .build_payload(&state.attr_store, state.encounter.local_player_uid);
+            emit_buff_counter_update_if_needed(state, payload);
         }
         self.apply_attr_store_changes(state);
     }
@@ -1706,6 +2221,7 @@ impl AppStateManager {
             LiveControlCommand::SetMonitoredBuffs(buff_base_ids) => {
                 state.local_monitor.buff_monitor.monitored_buff_ids =
                     buff_base_ids.into_iter().collect();
+                emit_local_buff_update_snapshot(state);
             }
             LiveControlCommand::SetBossMonitoredBuffs {
                 global_ids,
@@ -1714,6 +2230,7 @@ impl AppStateManager {
                 state
                     .boss_buff_monitors
                     .set_config(global_ids, self_applied_ids);
+                emit_boss_buff_update_snapshot(state);
             }
             LiveControlCommand::SetMonitoredPanelAttrs(attr_ids) => {
                 state.local_monitor.monitored_panel_attr_ids = attr_ids;
@@ -1747,6 +2264,7 @@ impl AppStateManager {
             }
             LiveControlCommand::SetMonitorAllBuff(monitor_all_buff) => {
                 state.local_monitor.buff_monitor.monitor_all_buff = monitor_all_buff;
+                emit_local_buff_update_snapshot(state);
             }
             LiveControlCommand::SetBuffCounterRules(rules) => {
                 state.local_monitor.counter_tracker.set_rules(rules);
@@ -1857,6 +2375,7 @@ impl AppStateManager {
         state.boss_buff_monitors.clear();
         state.local_owned_source_uids.clear();
         state.local_owned_source_config_ids.clear();
+        state.local_factor_selector_zero_slots.clear();
 
         if !state.auto_clear_on_scene_change {
             info!(target: "app::live", "server_change_auto_clear_skipped");
@@ -1880,6 +2399,7 @@ impl AppStateManager {
             &mut state.attr_store,
             &enter_scene,
             &state.local_monitor.monitored_panel_attr_ids,
+            state.modifier_capture_enabled,
         );
 
         if !state.initial_scene_change_handled {
@@ -1922,6 +2442,7 @@ impl AppStateManager {
             &mut state.encounter,
             &mut state.attr_store,
             sync_near_entities,
+            state.modifier_capture_enabled,
         )
         .is_none()
         {
@@ -1945,6 +2466,7 @@ impl AppStateManager {
         state.boss_buff_monitors.clear();
         state.local_owned_source_uids.clear();
         state.local_owned_source_config_ids.clear();
+        state.local_factor_selector_zero_slots.clear();
         state.sent_overlay_uids.clear();
         state.battle_state = BattleStateMachine::default();
         state.pending_auto_reset = None;
@@ -1956,10 +2478,14 @@ impl AppStateManager {
             &mut state.encounter,
             &mut state.attr_store,
             sync_container_data,
+            state.modifier_capture_enabled,
         )
         .is_none()
         {
             warn!("Error processing SyncContainerData.. ignoring.");
+        }
+        if state.modifier_capture_enabled {
+            sync_selected_factor_items_to_local_entity(state);
         }
     }
 
@@ -1969,10 +2495,34 @@ impl AppStateManager {
         sync_container_dirty_data: blueprotobuf::SyncContainerDirtyData,
     ) {
         use crate::live::opcodes_process::process_sync_container_dirty_data;
-        if process_sync_container_dirty_data(&mut state.encounter, sync_container_dirty_data)
-            .is_none()
+        if state.modifier_capture_enabled {
+            let mut selected_factor_items =
+                crate::live::seasonal_factor_selector::selected_factor_items_from_dirty_data(
+                    &sync_container_dirty_data,
+                );
+            selected_factor_items.extend(selected_factor_items_from_dirty_transitions(
+                state,
+                &sync_container_dirty_data,
+            ));
+            if !selected_factor_items.is_empty() {
+                upsert_selected_factor_items(
+                    &mut state.local_selected_factor_items,
+                    &selected_factor_items,
+                );
+                state.selected_factor_cache_dirty = true;
+            }
+        }
+        if process_sync_container_dirty_data(
+            &mut state.encounter,
+            sync_container_dirty_data,
+            state.modifier_capture_enabled,
+        )
+        .is_none()
         {
             warn!("Error processing SyncContainerDirtyData.. ignoring.");
+        }
+        if state.modifier_capture_enabled {
+            sync_selected_factor_items_to_local_entity(state);
         }
     }
 
@@ -2138,6 +2688,8 @@ impl AppStateManager {
             );
         }
 
+        let mut counter_dirty = false;
+
         if let Some(values) = result.fight_resources {
             let ids = state
                 .attr_store
@@ -2153,16 +2705,27 @@ impl AppStateManager {
                         .collect(),
                     received_at: now,
                 };
+                counter_dirty |= state
+                    .local_monitor
+                    .counter_tracker
+                    .on_fight_resource_update(&new_state.entries);
                 state.local_monitor.fight_res_state = Some(new_state.clone());
                 state.event_manager.emit_fight_resource_update(new_state);
             }
         }
 
-        let mut counter_dirty = false;
         if !result.local_damage_events.is_empty() {
             remember_local_owned_sources_from_damage_events(state, &result.local_damage_events);
             counter_dirty |= state.local_monitor.counter_tracker.on_damage_events(
                 &result.local_damage_events,
+                state.encounter.local_player_uid,
+                &state.attr_store,
+            );
+        }
+
+        if !result.local_damage_taken_events.is_empty() {
+            counter_dirty |= state.local_monitor.counter_tracker.on_damage_taken_events(
+                &result.local_damage_taken_events,
                 state.encounter.local_player_uid,
             );
         }
@@ -2201,11 +2764,17 @@ impl AppStateManager {
                     state.encounter.local_player_uid,
                 );
             }
-            counter_dirty |= state
-                .local_monitor
-                .counter_tracker
-                .on_buff_changes(&buff_process_result.changes);
+            counter_dirty |= state.local_monitor.counter_tracker.on_buff_changes(
+                &buff_process_result.changes,
+                &state.attr_store,
+                state.encounter.local_player_uid,
+            );
         }
+
+        counter_dirty |= state
+            .local_monitor
+            .counter_tracker
+            .on_movement_sample(&state.attr_store, state.encounter.local_player_uid);
 
         counter_dirty
     }
@@ -2247,11 +2816,12 @@ impl AppStateManager {
             );
 
             // Missing fields are normal, no need to log
-            if let Some(events) = process_aoi_sync_delta(
+            if let Some((events, _)) = process_aoi_sync_delta(
                 &mut state.encounter,
                 &mut state.attr_store,
                 aoi_sync_delta,
                 combat_target_filter,
+                false,
                 state.modifier_capture_enabled,
             ) {
                 remember_local_owned_sources_from_damage_events(state, &events);
@@ -2319,11 +2889,17 @@ impl AppStateManager {
         }
 
         if !aggregated_damage_events.is_empty() {
-            counter_dirty |= state
-                .local_monitor
-                .counter_tracker
-                .on_damage_events(&aggregated_damage_events, state.encounter.local_player_uid);
+            counter_dirty |= state.local_monitor.counter_tracker.on_damage_events(
+                &aggregated_damage_events,
+                state.encounter.local_player_uid,
+                &state.attr_store,
+            );
         }
+
+        counter_dirty |= state
+            .local_monitor
+            .counter_tracker
+            .on_movement_sample(&state.attr_store, state.encounter.local_player_uid);
 
         counter_dirty
     }
@@ -2436,6 +3012,7 @@ impl AppStateManager {
     fn reset_encounter(&self, state: &mut AppState, is_manual: bool) {
         persist_and_save_encounter(state, is_manual, "reset");
         state.encounter.reset_combat_state();
+        sync_selected_factor_items_to_local_entity(state);
         if is_manual && state.encounter.is_encounter_paused {
             info!(
                 target: "app::live",
@@ -2447,6 +3024,7 @@ impl AppStateManager {
         state.modifier_buff_monitor.active_buffs.clear();
         state.local_owned_source_uids.clear();
         state.local_owned_source_config_ids.clear();
+        state.local_factor_selector_zero_slots.clear();
         state.death_snapshot_dirty = false;
 
         state.event_manager.emit_encounter_reset();
@@ -2607,6 +3185,10 @@ impl AppStateManager {
         let mut all_hate_lists = HashMap::with_capacity(boss_count);
         let mut new_names =
             HashMap::with_capacity(boss_count.saturating_add(boss_buff_snapshot.len()));
+        let mut player_names =
+            HashMap::with_capacity(boss_count.saturating_add(boss_buff_snapshot.len()));
+        let mut monster_ids =
+            HashMap::with_capacity(boss_count.saturating_add(boss_buff_snapshot.len()));
 
         for (&boss_uid, entity) in &state.encounter.entity_uid_to_entity {
             if !entity.is_boss_metric_target() {
@@ -2621,6 +3203,9 @@ impl AppStateManager {
                     boss_uid,
                     resolve_entity_display_name(boss_uid, entity, &state.attr_store),
                 );
+                if let Some(monster_id) = entity.monster_type_id {
+                    monster_ids.insert(boss_uid, monster_id);
+                }
             }
 
             let entries = state
@@ -2632,6 +3217,7 @@ impl AppStateManager {
 
             for entry in &entries {
                 if state.sent_overlay_uids.insert(entry.uid) {
+                    let entity = state.encounter.entity_uid_to_entity.get(&entry.uid);
                     let name = state
                         .attr_store
                         .attr(entry.uid, AttrType::Name)
@@ -2639,6 +3225,14 @@ impl AppStateManager {
                         .map(ToString::to_string)
                         .unwrap_or_else(|| format!("UID {}", entry.uid));
                     new_names.insert(entry.uid, name);
+                    if let Some(monster_id) = entity.and_then(|entity| entity.monster_type_id) {
+                        monster_ids.insert(entry.uid, monster_id);
+                    } else {
+                        player_names.insert(
+                            entry.uid,
+                            resolve_player_display_name(entry.uid, entity, &state.attr_store),
+                        );
+                    }
                 }
             }
 
@@ -2660,12 +3254,20 @@ impl AppStateManager {
                 target_uid,
                 resolve_entity_display_name(target_uid, entity, &state.attr_store),
             );
+            if let Some(monster_id) = entity.monster_type_id {
+                monster_ids.insert(target_uid, monster_id);
+            }
         }
 
         state.event_manager.emit_hate_list_update(all_hate_lists);
 
         if !new_names.is_empty() {
             state.event_manager.emit_entity_name_map(new_names);
+        }
+        if !player_names.is_empty() || !monster_ids.is_empty() {
+            state
+                .event_manager
+                .emit_entity_identity_map(player_names, monster_ids);
         }
         state
             .event_manager

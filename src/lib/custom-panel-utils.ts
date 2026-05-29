@@ -3,6 +3,7 @@ import type {
   InlineBuffEntry,
   SkillMonitorProfile,
 } from "$lib/settings-store";
+import { ensureCustomPanelStyle } from "$lib/skill-monitor-normalize";
 
 const DEFAULT_CUSTOM_PANEL_GROUP_POSITION = { x: 700, y: 280 };
 const DEFAULT_CUSTOM_PANEL_GROUP_SCALE = 1;
@@ -44,6 +45,9 @@ export function ensureCustomPanelGroups(
     0.5,
     2.5,
   );
+  const fallbackStyle = ensureCustomPanelStyle({
+    customPanelStyle: profile.customPanelStyle,
+  } as SkillMonitorProfile);
   if (groups.length > 0) {
     return groups.map((group, index) => ({
       id: group.id ?? `custom_panel_group_${index + 1}`,
@@ -58,6 +62,9 @@ export function ensureCustomPanelGroups(
         0.5,
         2.5,
       ),
+      style: ensureCustomPanelStyle({
+        customPanelStyle: group.style ?? fallbackStyle,
+      } as SkillMonitorProfile),
     }));
   }
 
@@ -70,6 +77,7 @@ export function ensureCustomPanelGroups(
       entries: legacyEntries,
       position: legacyPosition,
       scale: legacyScale,
+      style: fallbackStyle,
     },
   ];
 }

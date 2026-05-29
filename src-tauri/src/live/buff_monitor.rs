@@ -251,7 +251,10 @@ impl BuffMonitor {
         }
     }
 
-    fn build_update_payload(&self, server_clock_offset: i64) -> Option<Vec<BuffUpdateState>> {
+    pub(crate) fn build_update_payload(
+        &self,
+        server_clock_offset: i64,
+    ) -> Option<Vec<BuffUpdateState>> {
         if self.monitored_buff_ids.is_empty()
             && self.self_applied_buff_ids.is_empty()
             && !self.monitor_all_buff

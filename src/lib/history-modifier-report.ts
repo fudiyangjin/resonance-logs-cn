@@ -1218,7 +1218,9 @@ function collectActiveBuffIds(entity: HistoryEntityData): Set<number> {
     add(buff.sourceConfigId);
   }
   for (const item of entity.activeFactorItems ?? []) {
-    add(item.factorBuffId);
+    if (String(item.runtimeSource ?? "").startsWith("SyncContainerDirtyData.v_data.dirty_tree.")) {
+      add(item.factorBuffId);
+    }
   }
   for (const buff of entity.activeEffectBuffs ?? []) {
     add(buff.effectSourceBuffId);
@@ -1394,22 +1396,32 @@ function professionTalentRowsForEntity(entityId: number): ModifierSource[] {
     .map(sourceFromEffect);
 }
 
-function decodeProfessionTalentNodeId(nodeId: number): number | null {
-  if (!Number.isFinite(nodeId)) return null;
-  if (nodeId >= 1_000_000) return Math.floor(nodeId / 1000);
-  return null;
+function sourceEntityIdFromTalentSourceId(sourceId: unknown): number | null {
+  const match = String(sourceId ?? "").trim().toLowerCase().match(/^talent:(\d+)(?:$|\|)/);
+  return match ? finitePositiveNumber(match[1]) : null;
+}
+
+function activeTalentSourceEntityIds(entity: HistoryEntityData): Set<number> {
+  const ids = new Set<number>();
+  for (const source of entity.activeEffectSources ?? []) {
+    const sourceId = String(source.sourceId ?? "").trim().toLowerCase();
+    if (!sourceId.startsWith("talent:")) continue;
+    const sourceEntityId = finitePositiveNumber(source.sourceEntityId) ?? sourceEntityIdFromTalentSourceId(sourceId);
+    if (sourceEntityId !== null) ids.add(sourceEntityId);
+  }
+  return ids;
 }
 
 function entityOwnedTalentIds(entity: HistoryEntityData): Set<number> {
+  const exactActiveTalentIds = activeTalentSourceEntityIds(entity);
+  if (exactActiveTalentIds.size > 0) return exactActiveTalentIds;
+
   const ids = new Set<number>();
   for (const talent of entity.activeProfessionTalents ?? []) {
     const professionId = finiteNumber(talent.professionId);
     if (professionId !== null && entity.classId > 0 && professionId !== entity.classId) {
       continue;
     }
-    const nodeId = finiteNumber(talent.talentNodeId);
-    const sourceEntityId = nodeId !== null ? decodeProfessionTalentNodeId(nodeId) : null;
-    if (sourceEntityId !== null) ids.add(sourceEntityId);
     const stageCfgId = finitePositiveNumber(talent.talentStageCfgId);
     if (stageCfgId !== null) ids.add(stageCfgId);
   }
@@ -1810,39 +1822,20 @@ function activeModifierSources(entity: HistoryEntityData, context: ModifierBuild
     }
   }
 
-  for (const talent of entity.activeProfessionTalents ?? []) {
-    const professionId = finiteNumber(talent.professionId);
-    if (professionId !== null && entity.classId > 0 && professionId !== entity.classId) {
-      continue;
-    }
-    const nodeId = finiteNumber(talent.talentNodeId);
-    if (nodeId === null) continue;
-    const sourceEntityId = decodeProfessionTalentNodeId(nodeId);
-    const stageCfgId = finiteNumber(talent.talentStageCfgId);
-    if (sourceEntityId !== null) {
-      const rows = professionTalentRowsForEntity(sourceEntityId);
-      if (rows.length > 0) {
-        for (const row of rows) {
-          if (!requiresRuntimeObservation(row) && sourceHasActiveBuff(row, activeBuffIds)) {
-            addSource(sources, row, [`activeProfessionTalentNode:${nodeId}->talent:${sourceEntityId}`], [], 100);
-          }
-        }
-      } else {
-        addSource(
-          sources,
-          fallbackSource(`profession-talent:${sourceEntityId}`, "profession-talent", `Profession Talent ${sourceEntityId}`, sourceEntityId),
-          [`activeProfessionTalentNode:${nodeId}->talent:${sourceEntityId}`],
-          [],
-          100,
-        );
+  if (activeTalentSourceEntityIds(entity).size === 0) {
+    for (const talent of entity.activeProfessionTalents ?? []) {
+      const professionId = finiteNumber(talent.professionId);
+      if (professionId !== null && entity.classId > 0 && professionId !== entity.classId) {
+        continue;
       }
-    }
-    if (stageCfgId !== null && stageCfgId > 0) {
-      const rows = professionTalentRowsForEntity(stageCfgId);
-      if (rows.length > 0) {
-        for (const row of rows) {
-          if (!requiresRuntimeObservation(row) && sourceHasActiveBuff(row, activeBuffIds)) {
-            addSource(sources, row, [`activeProfessionTalentStage:${stageCfgId}`], [], 100);
+      const stageCfgId = finiteNumber(talent.talentStageCfgId);
+      if (stageCfgId !== null && stageCfgId > 0) {
+        const rows = professionTalentRowsForEntity(stageCfgId);
+        if (rows.length > 0) {
+          for (const row of rows) {
+            if (!requiresRuntimeObservation(row) && sourceHasActiveBuff(row, activeBuffIds)) {
+              addSource(sources, row, [`activeProfessionTalentStage:${stageCfgId}`], [], 100);
+            }
           }
         }
       }

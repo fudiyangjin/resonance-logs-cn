@@ -26,6 +26,9 @@
   const entity = $derived(
     liveData?.entities.find((e) => e.uid === playerUid) ?? null,
   );
+  const isLocalPlayer = $derived(
+    liveData?.localPlayerUid != null && playerUid === liveData.localPlayerUid,
+  );
 
   function handleFallback() {
     if (window.history.length > 1) {
@@ -43,6 +46,7 @@
     playerName=""
     className={entity?.className ?? ""}
     classSpecName={entity?.classSpecName ?? ""}
+    {isLocalPlayer}
     {record}
   />
 {:else}

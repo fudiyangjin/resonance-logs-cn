@@ -1,10 +1,14 @@
 <script lang="ts">
-  import { getClassIcon, tooltip } from "$lib/utils.svelte";
+  import { tooltip } from "$lib/utils.svelte";
   import { SETTINGS, settings } from "$lib/settings-store";
   import type { DeathRecord } from "$lib/api";
-  import getDisplayName, { normalizeNameDisplaySetting } from "$lib/name-display";
+  import getDisplayName, {
+    getDisplayIconSpecName,
+    normalizeNameDisplaySetting,
+  } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
+  import ClassSpecIcon from "$lib/components/class-spec-icon.svelte";
   import PercentFormat from "$lib/components/percent-format.svelte";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import { uiT } from "$lib/i18n";
@@ -154,6 +158,12 @@
           : setting === "Hide Others' Name";
         return hidden ? "" : entry.className;
       })(),
+      iconSpecName: getDisplayIconSpecName({
+        classSpecName: entry.classSpecName,
+        showYourNameSetting: SETTINGS_YOUR_NAME,
+        showOthersNameSetting: SETTINGS_OTHERS_NAME,
+        isLocalPlayer: isLocal,
+      }),
     };
   }
 
@@ -218,17 +228,15 @@
             >
               <td class="px-3 py-3 text-sm text-muted-foreground relative z-10">
                 <div class="flex items-center gap-2 h-full">
-                  <img
+                  <ClassSpecIcon
                     class="size-5 object-contain"
-                    src={getClassIcon(info.className)}
+                    className={info.className}
+                    classSpecName={info.iconSpecName}
                     alt={t("detail.classIcon", "Class icon")}
-                    {@attach tooltip(
-                      () =>
-                        formatClassSpecLabel(
-                          row.entry.className,
-                          row.entry.classSpecName,
-                        ) || t("detail.unknownClass", "Unknown Class"),
-                    )}
+                    tooltipText={formatClassSpecLabel(
+                      row.entry.className,
+                      row.entry.classSpecName,
+                    ) || t("detail.unknownClass", "Unknown Class")}
                   />
                   <span
                     class="truncate"
@@ -327,18 +335,16 @@
               >
                 <td class="px-3 py-1 relative z-10">
                   <div class="flex items-center h-full gap-2">
-                    <img
+                    <ClassSpecIcon
                       style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                       class="object-contain shrink-0"
-                      src={getClassIcon(info.className)}
+                      className={info.className}
+                      classSpecName={info.iconSpecName}
                       alt={t("detail.classIcon", "Class icon")}
-                      {@attach tooltip(
-                        () =>
-                          formatClassSpecLabel(
-                            row.entry.className,
-                            row.entry.classSpecName,
-                          ) || t("detail.unknownClass", "Unknown Class"),
-                      )}
+                      tooltipText={formatClassSpecLabel(
+                        row.entry.className,
+                        row.entry.classSpecName,
+                      ) || t("detail.unknownClass", "Unknown Class")}
                     />
                     <span
                       class="truncate font-medium flex-1 min-w-0"
@@ -400,18 +406,16 @@
               >
                 <td class="px-3 py-1 relative z-10">
                   <div class="flex items-center h-full gap-2">
-                    <img
+                    <ClassSpecIcon
                       style="width: {tableSettings.playerIconSize}px; height: {tableSettings.playerIconSize}px;"
                       class="object-contain"
-                      src={getClassIcon(info.className)}
+                      className={info.className}
+                      classSpecName={info.iconSpecName}
                       alt={t("detail.classIcon", "Class icon")}
-                      {@attach tooltip(
-                        () =>
-                          formatClassSpecLabel(
-                            row.entry.className,
-                            row.entry.classSpecName,
-                          ) || t("detail.unknownClass", "Unknown Class"),
-                      )}
+                      tooltipText={formatClassSpecLabel(
+                        row.entry.className,
+                        row.entry.classSpecName,
+                      ) || t("detail.unknownClass", "Unknown Class")}
                     />
                     <span
                       class="truncate font-medium"

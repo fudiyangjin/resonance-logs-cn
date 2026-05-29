@@ -56,10 +56,20 @@ function sortedNumbers(values) {
   return [...new Set([...values].filter(Number.isFinite))].sort((left, right) => left - right);
 }
 
-function decodeProfessionTalentNodeId(nodeId) {
-  if (!Number.isFinite(nodeId)) return null;
-  if (nodeId >= 1_000_000) return Math.floor(nodeId / 1000);
-  return null;
+function sourceEntityIdFromSourceId(sourceId) {
+  const match = String(sourceId ?? "").trim().toLowerCase().match(/:(\d+)(?:$|\|)/);
+  return match ? finitePositiveNumber(match[1]) : null;
+}
+
+function activeTalentSourceEntityIds(entity) {
+  const ids = new Set();
+  for (const source of entity.activeEffectSources ?? []) {
+    const sourceId = String(source.sourceId ?? "").trim().toLowerCase();
+    if (!sourceId.startsWith("talent:")) continue;
+    const sourceEntityId = finitePositiveNumber(source.sourceEntityId) ?? sourceEntityIdFromSourceId(sourceId);
+    if (sourceEntityId !== null) ids.add(sourceEntityId);
+  }
+  return ids;
 }
 
 function localizedMap(value) {
@@ -276,8 +286,17 @@ function isRuntimeWindowCatalogEntry(entry) {
     || sourceType.includes("debuff");
 }
 
+function isSelectedFactorCatalogEntry(entry) {
+  const sourceKind = String(entry.sourceKind ?? "").toLowerCase();
+  if (sourceKind !== "phantom-factor") return false;
+  const runtimeDetection = String(entry.runtimeDetection ?? "").toLowerCase();
+  return runtimeDetection.includes("selected-factor-grade-item");
+}
+
 function isCatalogReportEntry(entry) {
-  return (entry.reportPolicy ?? "include") === "include" || isRuntimeWindowCatalogEntry(entry);
+  return (entry.reportPolicy ?? "include") === "include"
+    || isRuntimeWindowCatalogEntry(entry)
+    || isSelectedFactorCatalogEntry(entry);
 }
 
 function mergeLocalizedNames(base, incoming, overwrite = false) {
@@ -457,7 +476,12 @@ function buildProbeModifierSourceCatalog(entity) {
   }
 
   const ids = new Set();
+  const activeIds = new Set();
   const observed = new Map();
+  function recordId(id, target = ids) {
+    const parsed = finitePositiveNumber(id);
+    if (parsed !== null) target.add(parsed);
+  }
   function recordObserved(id, role, bucket) {
     const parsed = finitePositiveNumber(id);
     if (parsed === null) return;
@@ -490,6 +514,30 @@ function buildProbeModifierSourceCatalog(entity) {
     recordObserved(bucket.modifierBaseId, "base", bucket);
     recordObserved(bucket.modifierSourceConfigId, "sourceConfig", bucket);
   }
+  for (const buff of entity.activeBuffs ?? []) {
+    recordId(buff.baseId, activeIds);
+    recordId(buff.sourceConfigId, activeIds);
+  }
+  for (const buff of entity.activeFactorBuffs ?? []) {
+    recordId(buff.factorBuffId, activeIds);
+    recordId(buff.observedBuffId, activeIds);
+    recordId(buff.sourceConfigId, activeIds);
+  }
+  for (const buff of entity.activeEffectBuffs ?? []) {
+    recordId(buff.effectSourceBuffId, activeIds);
+    recordId(buff.observedBuffId, activeIds);
+    recordId(buff.sourceConfigId, activeIds);
+  }
+  for (const item of entity.activeFactorItems ?? []) {
+    if (String(item.runtimeSource ?? "").startsWith("SyncContainerDirtyData.v_data.dirty_tree.")) {
+      recordId(item.factorBuffId, activeIds);
+    }
+  }
+  for (const modifierWindow of entity.modifierWindows ?? []) {
+    recordId(modifierWindow.baseId, activeIds);
+    recordId(modifierWindow.sourceConfigId, activeIds);
+  }
+  for (const activeId of activeIds) recordId(activeId);
 
   const byBuffId = {};
   const reportableBuffIds = new Set();
@@ -546,13 +594,19 @@ function buildProbeModifierSourceCatalog(entity) {
     }
   }
   const decoratedByBuffId = decorateCatalogEntries(byBuffId);
+  const activeEntries = [];
+  const activeSeen = new Set();
+  for (const buffId of sortedNumbers(activeIds)) {
+    for (const entry of decoratedByBuffId[String(buffId)] ?? []) {
+      const key = entry.sourceRuleId ?? entry.sourceId;
+      if (!key || activeSeen.has(key)) continue;
+      activeSeen.add(key);
+      activeEntries.push(entry);
+    }
+  }
   const ownerSpecIds = new Set();
-  for (const talent of entity.activeProfessionTalents ?? []) {
-    const professionId = finitePositiveNumber(talent.professionId);
-    if (professionId !== null && entity.classId > 0 && professionId !== entity.classId) continue;
-    const nodeId = finitePositiveNumber(talent.talentNodeId);
-    const decoded = nodeId !== null ? decodeProfessionTalentNodeId(nodeId) : null;
-    if (decoded === null) continue;
+  const exactTalentSourceEntityIds = activeTalentSourceEntityIds(entity);
+  for (const decoded of exactTalentSourceEntityIds) {
     for (const [ruleId, source] of Object.entries(table.sourcesById ?? {})) {
       const entry = enrichEntry(ruleId, source);
       if (entry.talentOwnership?.ownershipKind !== "spec-selector") continue;
@@ -582,6 +636,7 @@ function buildProbeModifierSourceCatalog(entity) {
     .slice(0, 80);
   return {
     byBuffId: decoratedByBuffId,
+    activeEntries,
     ignoredBuffIds: table.ignoredBuffIds ?? [],
     reportableBuffIds: sortedNumbers(reportableBuffIds),
     debugBuffIds: table.debugBuffIds ?? [],

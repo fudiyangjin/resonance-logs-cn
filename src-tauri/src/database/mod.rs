@@ -46,8 +46,14 @@ pub enum DbInitError {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PlayerNameEntry {
+    #[serde(default)]
+    pub uid: i64,
+    #[serde(default)]
     pub name: String,
+    #[serde(default)]
     pub class_id: i32,
+    #[serde(default)]
+    pub class_spec: ClassSpec,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -478,6 +484,21 @@ pub fn flush_playerdata(player_id: i64, last_seen_ms: i64, vdata_bytes: Vec<u8>)
     })
 }
 
+fn entity_has_combat_surface(entity: &Entity) -> bool {
+    entity.damage.hits > 0 || entity.healing.hits > 0 || entity.taken.hits > 0
+}
+
+fn entity_has_player_identity_surface(uid: i64, entity: &Entity, local_player_uid: i64) -> bool {
+    entity.entity_type == EEntityType::EntChar
+        && (uid == local_player_uid
+            || !entity.name.trim().is_empty()
+            || entity.class_id > 0
+            || entity.class_spec != ClassSpec::Unknown
+            || entity.ability_score > 0
+            || entity.level > 0
+            || entity.season_strength > 0)
+}
+
 pub fn save_encounter(encounter: &Encounter, metadata: &EncounterMetadata) {
     use sch::encounter_data::dsl as ed;
     use sch::encounters::dsl as e;
@@ -485,20 +506,20 @@ pub fn save_encounter(encounter: &Encounter, metadata: &EncounterMetadata) {
     let encounter = encounter.clone();
     let metadata = metadata.clone();
     db_send(move |conn| {
-        let combat_entities: HashMap<i64, Entity> = encounter
+        let persisted_entities: HashMap<i64, Entity> = encounter
             .entity_uid_to_entity
             .iter()
             .filter_map(|(uid, entity)| {
-                let has_combat =
-                    entity.damage.hits > 0 || entity.healing.hits > 0 || entity.taken.hits > 0;
-                has_combat.then_some((*uid, entity.clone()))
+                (entity_has_combat_surface(entity)
+                    || entity_has_player_identity_surface(*uid, entity, encounter.local_player_uid))
+                .then_some((*uid, entity.clone()))
             })
             .collect();
 
         let mut entities_bin = Vec::new();
         let serialize_result = {
             let mut serializer = rmp_serde::Serializer::new(&mut entities_bin).with_struct_map();
-            combat_entities.serialize(&mut serializer)
+            persisted_entities.serialize(&mut serializer)
         };
         if let Err(e) = serialize_result {
             log::warn!(target: "app::db", "save_encounter_serialize_failed error={}", e);
@@ -568,7 +589,7 @@ pub fn save_encounter(encounter: &Encounter, metadata: &EncounterMetadata) {
 
         match result {
             Ok(encounter_id) => {
-                remember_encounter_data_cache(encounter_id, combat_entities);
+                remember_encounter_data_cache(encounter_id, persisted_entities);
             }
             Err(e) => {
                 log::warn!(target: "app::db", "save_encounter_tx_failed error={}", e);

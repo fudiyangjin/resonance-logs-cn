@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "generatedBy": "ModifierObservedUidBridge.gen",
-  "generatedAt": "2026-05-08T21:28:09.653Z",
+  "generatedAt": "2026-05-28T21:24:29.637Z",
   "inputs": {
     "auditPath": "C:\\Users\\dbcas\\Desktop\\resonancelogs-cn-gh\\BETA\\resonance-logs-global\\DEV_exports\\unresolved-modifier-uids-audit.json",
     "auditMissing": false,
-    "buffNameRows": 8588
+    "buffNameRows": 9727
   },
   "aliasesByBuffId": {
     "999": [
@@ -36,6 +36,58 @@
         "observedDamage": null,
         "evidence": [
           "unresolved-audit:observed-paired-alias:1522"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
+        ]
+      }
+    ],
+    "1531": [
+      {
+        "parentBuffIds": [
+          21422,
+          21423
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 848,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:1531"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
+        ]
+      }
+    ],
+    "1541": [
+      {
+        "parentBuffIds": [
+          21402
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 27,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:1541"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
+        ]
+      }
+    ],
+    "1561": [
+      {
+        "parentBuffIds": [
+          21423
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 19,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:1561"
         ],
         "notes": [
           "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
@@ -460,6 +512,25 @@
         ]
       }
     ],
+    "882108": [
+      {
+        "parentBuffIds": [
+          882101
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 192,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:882108",
+          "BuffName:882108",
+          "BuffName:display-name"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
+        ]
+      }
+    ],
     "883212": [
       {
         "parentBuffIds": [
@@ -597,6 +668,25 @@
         ]
       }
     ],
+    "2202113": [
+      {
+        "parentBuffIds": [
+          21423
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 502,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:2202113",
+          "BuffName:2202113",
+          "BuffName:display-name"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
+        ]
+      }
+    ],
     "2202261": [
       {
         "parentBuffIds": [
@@ -669,6 +759,27 @@
           "unresolved-audit:observed-paired-alias:2203012",
           "BuffName:2203012",
           "BuffName:display-name"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
+        ]
+      }
+    ],
+    "2203031": [
+      {
+        "parentBuffIds": [
+          2203030
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 67,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:2203031",
+          "BuffName:2203031",
+          "BuffName:NameIdSource=BuffTable",
+          "BuffName:display-name",
+          "BuffName:icon"
         ],
         "notes": [
           "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
@@ -904,6 +1015,66 @@
         ]
       }
     ],
+    "3002812": [
+      {
+        "parentBuffIds": [
+          3002811,
+          3002813
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 4081,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:3002812",
+          "BuffName:3002812",
+          "BuffName:display-name"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
+        ]
+      }
+    ],
+    "3002841": [
+      {
+        "parentBuffIds": [
+          3002813
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 533,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:3002841",
+          "BuffName:3002841",
+          "BuffName:display-name"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
+        ]
+      }
+    ],
+    "3002871": [
+      {
+        "parentBuffIds": [
+          3002813
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 533,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:3002871",
+          "BuffName:3002871",
+          "BuffName:NameIdSource=BuffTable",
+          "BuffName:display-name",
+          "BuffName:icon"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
+        ]
+      }
+    ],
     "3003013": [
       {
         "parentBuffIds": [
@@ -994,6 +1165,25 @@
         "evidence": [
           "unresolved-audit:observed-paired-alias:3053101",
           "BuffName:3053101",
+          "BuffName:display-name"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
+        ]
+      }
+    ],
+    "3056061": [
+      {
+        "parentBuffIds": [
+          3056060
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 348,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:3056061",
+          "BuffName:3056061",
           "BuffName:display-name"
         ],
         "notes": [
@@ -1182,6 +1372,23 @@
         ],
         "notes": [
           "Helper/child observed UID is tied to a promoted localized sibling UID."
+        ]
+      }
+    ],
+    "10240118": [
+      {
+        "parentBuffIds": [
+          882218
+        ],
+        "relationshipKind": "observed-paired-alias",
+        "confidence": "high",
+        "observedHits": 40,
+        "observedDamage": null,
+        "evidence": [
+          "unresolved-audit:observed-paired-alias:10240118"
+        ],
+        "notes": [
+          "Observed UID appeared on the same runtime bucket as already reportable source UID(s)."
         ]
       }
     ],
@@ -2416,6 +2623,20 @@
       ]
     },
     {
+      "buffId": 882107,
+      "reason": "helper-or-internal-observed-state",
+      "confidence": "high",
+      "observedHits": 195,
+      "observedDamage": null,
+      "displayName": "天气监控buff",
+      "evidence": [
+        "BuffName:882107",
+        "BuffName:display-name",
+        "unresolved-audit:unmapped-observed-buff:882107"
+      ],
+      "notes": []
+    },
+    {
       "buffId": 882272,
       "reason": "encounter-difficulty-marker",
       "confidence": "high",
@@ -2656,13 +2877,127 @@
       ]
     }
   ],
-  "worklist": [],
+  "worklist": [
+    {
+      "buffId": 2010003,
+      "displayName": "Sea Breeze Feast",
+      "observedHits": 4143,
+      "observedDamage": null,
+      "candidateState": "has-buff-name-row",
+      "evidence": [
+        "BuffName:2010003",
+        "BuffName:NameIdSource=BuffTable",
+        "BuffName:display-name",
+        "BuffName:icon"
+      ],
+      "nextStep": "needs direct source/effect bridge before runtime promotion"
+    },
+    {
+      "buffId": 3003700,
+      "displayName": "5板-羁绊",
+      "observedHits": 868,
+      "observedDamage": null,
+      "candidateState": "has-buff-name-row",
+      "evidence": [
+        "BuffName:3003700",
+        "BuffName:display-name"
+      ],
+      "nextStep": "needs direct source/effect bridge before runtime promotion"
+    },
+    {
+      "buffId": 882262,
+      "displayName": "Rin·Izcorgiky Weakness Research - Nightmare",
+      "observedHits": 606,
+      "observedDamage": null,
+      "candidateState": "has-buff-name-row",
+      "evidence": [
+        "BuffName:882262",
+        "BuffName:NameIdSource=BuffTable",
+        "BuffName:display-name",
+        "BuffName:icon"
+      ],
+      "nextStep": "needs direct source/effect bridge before runtime promotion"
+    },
+    {
+      "buffId": 882265,
+      "displayName": "Bone·Xiolotl Weakness Research - Nightmare",
+      "observedHits": 606,
+      "observedDamage": null,
+      "candidateState": "has-buff-name-row",
+      "evidence": [
+        "BuffName:882265",
+        "BuffName:NameIdSource=BuffTable",
+        "BuffName:display-name",
+        "BuffName:icon"
+      ],
+      "nextStep": "needs direct source/effect bridge before runtime promotion"
+    },
+    {
+      "buffId": 882268,
+      "displayName": "Light·Tonatiuh Weakness Research - Nightmare",
+      "observedHits": 606,
+      "observedDamage": null,
+      "candidateState": "has-buff-name-row",
+      "evidence": [
+        "BuffName:882268",
+        "BuffName:NameIdSource=BuffTable",
+        "BuffName:display-name",
+        "BuffName:icon"
+      ],
+      "nextStep": "needs direct source/effect bridge before runtime promotion"
+    },
+    {
+      "buffId": 882105,
+      "displayName": "人数监听buff",
+      "observedHits": 390,
+      "observedDamage": null,
+      "candidateState": "has-buff-name-row",
+      "evidence": [
+        "BuffName:882105",
+        "BuffName:display-name"
+      ],
+      "nextStep": "needs direct source/effect bridge before runtime promotion"
+    },
+    {
+      "buffId": 882161,
+      "displayName": "低人数标记",
+      "observedHits": 195,
+      "observedDamage": null,
+      "candidateState": "has-buff-name-row",
+      "evidence": [
+        "BuffName:882161",
+        "BuffName:display-name"
+      ],
+      "nextStep": "needs direct source/effect bridge before runtime promotion"
+    },
+    {
+      "buffId": 101404,
+      "displayName": "buff:101404",
+      "observedHits": 67,
+      "observedDamage": null,
+      "candidateState": "missing-buff-name-row",
+      "evidence": [],
+      "nextStep": "needs raw package source lookup"
+    },
+    {
+      "buffId": 882100,
+      "displayName": "冰彗星风暴五连",
+      "observedHits": 67,
+      "observedDamage": null,
+      "candidateState": "has-buff-name-row",
+      "evidence": [
+        "BuffName:882100",
+        "BuffName:display-name"
+      ],
+      "nextStep": "needs direct source/effect bridge before runtime promotion"
+    }
+  ],
   "stats": {
-    "aliases": 66,
-    "aliasBuffIds": 66,
+    "aliases": 77,
+    "aliasBuffIds": 77,
     "promotedSources": 18,
     "promotedBuffIds": 18,
-    "ignoredBuffIds": 32,
-    "remainingWorklist": 0
+    "ignoredBuffIds": 33,
+    "remainingWorklist": 9
   }
 }

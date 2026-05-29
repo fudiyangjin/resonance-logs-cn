@@ -41,6 +41,7 @@
   const badgePaddingY = $derived(Math.max(1, Math.round(badgeFontSize * 0.12)));
   const badgePaddingX = $derived(Math.max(3, Math.round(badgeFontSize * 0.44)));
   const badgeRadius = $derived(Math.max(4, Math.round(badgeFontSize * 0.65)));
+  const alert = $derived(buff.alert);
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -52,9 +53,13 @@
   class:placeholder={buff.isPlaceholder}
   class:has-name={showNameBlock}
   class:has-time={showTimeBlock}
+  class:alert-active={Boolean(alert)}
+  class:alert-flash={alert?.flash === true}
   style:width={`${frameWidth}px`}
   style:left={left === undefined ? undefined : `${left}px`}
   style:top={top === undefined ? undefined : `${top}px`}
+  style:--alert-color={alert?.highlightColor}
+  style:--alert-flash-duration={alert ? `${alert.flashIntervalMs}ms` : undefined}
   onpointerdown={onPointerDown}
 >
   {#if showNameBlock}
@@ -64,7 +69,7 @@
       style:width={`${iconSize + 8}px`}
       style:max-width={`${iconSize + 8}px`}
     >
-      <div class="buff-name-label">
+      <div class="buff-name-label" style:color={alert?.highlightColor}>
         {buff.name}
       </div>
     </div>
@@ -97,6 +102,7 @@
       class="buff-time"
       style:font-size={`${Math.max(10, Math.round(iconSize * 0.26))}px`}
       style:width={`${iconSize + 8}px`}
+      style:color={alert?.highlightColor}
     >
       {buff.text}
     </div>
@@ -134,6 +140,17 @@
 
   .icon-buff-cell.placeholder {
     opacity: 0.6;
+  }
+
+  .icon-buff-cell.alert-active .buff-icon-wrap {
+    border-color: var(--alert-color, #ef4444);
+    box-shadow:
+      0 0 0 2px var(--alert-color, #ef4444),
+      0 0 8px var(--alert-color, #ef4444);
+  }
+
+  .icon-buff-cell.alert-flash .buff-icon-wrap {
+    animation: buff-alert-flash var(--alert-flash-duration, 600ms) ease-in-out infinite alternate;
   }
 
   .icon-buff-cell.editable:not(.standalone-layout) {
@@ -247,5 +264,17 @@
     height: 100%;
     object-fit: contain;
     filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.9));
+  }
+
+  @keyframes buff-alert-flash {
+    0% {
+      opacity: 1;
+      filter: brightness(1);
+    }
+
+    100% {
+      opacity: 0.45;
+      filter: brightness(1.6);
+    }
   }
 </style>

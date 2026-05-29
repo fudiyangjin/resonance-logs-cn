@@ -148,6 +148,11 @@ export type EntityNameMapPayload = {
   names: Record<string, string>;
 };
 
+export type EntityIdentityMapPayload = {
+  playerNames: Record<string, string>;
+  monsterIds: Record<string, number>;
+};
+
 export type CounterUpdateState = {
   ruleId: number;
   slots: CounterSlotState[];
@@ -161,10 +166,12 @@ export type CounterSlotState = {
   slotId: number;
   currentCount: number;
   threshold: number | null;
+  effectiveThreshold?: number | null;
   isCounting: boolean;
   resetBuffActive: boolean;
   freezeUntilMs: number | null;
   freezeDurationMs: number | null;
+  effectiveFreezeDurationMs?: number | null;
 };
 
 export type PanelAttrState = {
@@ -276,6 +283,11 @@ export const onEntityNames = (
   handler: (event: Event<EntityNameMapPayload>) => void
 ): Promise<UnlistenFn> =>
   listen<EntityNameMapPayload>("entity-names", handler);
+
+export const onEntityIdentities = (
+  handler: (event: Event<EntityIdentityMapPayload>) => void
+): Promise<UnlistenFn> =>
+  listen<EntityIdentityMapPayload>("entity-identities", handler);
 
 export const onBuffCounterUpdate = (
   handler: (event: Event<BuffCounterUpdatePayload>) => void

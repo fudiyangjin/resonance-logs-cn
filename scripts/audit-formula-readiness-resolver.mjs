@@ -8,6 +8,14 @@ const DEFAULT_LATEST_INPUTS = 3;
 const DEFAULT_MAX_ROWS = 60;
 const DEFAULT_OUT_JSON = "DEV_exports/formula-readiness-resolver-audit.json";
 const DEFAULT_OUT_MD = "DEV_exports/formula-readiness-resolver-audit.md";
+const GENERATED_ROOTS = [
+  path.join(repoRoot, "DEV_generated", "modifier"),
+  path.join(repoRoot, "parser-data", "generated"),
+  path.join(repoRoot, "..", "BPSR-UID-Extractors", "output"),
+];
+const generatedFilesRead = new Map();
+const SEASONAL_MODIFIER_ID_MIN = 3050000;
+const SEASONAL_MODIFIER_ID_MAX = 3060000;
 
 const PERCENT_COMPONENT_KEYS = new Set([
   "critical-damage",
@@ -77,8 +85,28 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+function generatedPath(fileName) {
+  for (const root of GENERATED_ROOTS) {
+    const filePath = path.join(root, fileName);
+    if (fs.existsSync(filePath)) return filePath;
+  }
+  return path.join(repoRoot, "parser-data", "generated", fileName);
+}
+
 function readGenerated(fileName) {
-  return readJson(path.join(repoRoot, "parser-data", "generated", fileName));
+  const filePath = generatedPath(fileName);
+  generatedFilesRead.set(fileName, path.relative(repoRoot, filePath).replaceAll("\\", "/"));
+  return readJson(filePath);
+}
+
+function summarizeGeneratedRoots(generatedSources) {
+  const roots = new Set();
+  for (const sourcePath of Object.values(generatedSources ?? {})) {
+    const normalized = String(sourcePath ?? "").replaceAll("\\", "/");
+    const slashIndex = normalized.lastIndexOf("/");
+    roots.add(slashIndex >= 0 ? normalized.slice(0, slashIndex) : normalized);
+  }
+  return [...roots].filter(Boolean).sort().join(", ") || "unknown";
 }
 
 function latestModifierEntityExports(count) {
@@ -112,6 +140,11 @@ function finiteNumber(value) {
 function positiveNumber(value) {
   const number = finiteNumber(value);
   return number !== null && number > 0 ? number : null;
+}
+
+function seasonalFactorId(value) {
+  const id = positiveNumber(value);
+  return id !== null && id >= SEASONAL_MODIFIER_ID_MIN && id < SEASONAL_MODIFIER_ID_MAX ? id : null;
 }
 
 function numberValue(value) {
@@ -169,6 +202,7 @@ function buildIndexes() {
   const contribution = readGenerated("ModifierContributionRuntime.json");
   const display = readGenerated("ModifierDisplayTable.json");
   const descriptions = readGenerated("ModifierDescriptions.json");
+  const valueProof = readGenerated("ModifierValueProofRuntime.json");
   const damageRows = readGenerated("DamageAttrIdName.json");
   const skillDetails = readGenerated("SkillBreakdownDetails.json");
   const seasonFactors = readGenerated("SeasonPhantomFactors.json");
@@ -183,6 +217,7 @@ function buildIndexes() {
     contribution,
     display,
     descriptions,
+    valueProof,
     damageRows,
     seasonFactors,
     skillDetails,
@@ -390,6 +425,51 @@ function factorItemsForEntity(entity) {
     .filter(Boolean);
 }
 
+function activeFactorBuffId(row) {
+  return seasonalFactorId(
+    row?.factorBuffId
+      ?? row?.factor_buff_id
+      ?? row?.effectSourceBuffId
+      ?? row?.effect_source_buff_id
+      ?? row?.observedBuffId
+      ?? row?.observed_buff_id,
+  );
+}
+
+function activeFactorBuffIdsForEntity(entity) {
+  return new Set(
+    asArray(entity?.activeFactorBuffs ?? entity?.active_factor_buffs)
+      .map(activeFactorBuffId)
+      .filter((id) => id !== null)
+      .map(String),
+  );
+}
+
+function factorSelectorCaptureContext(entity, rule) {
+  const factorBuffId = sourceFactorBuffId(rule);
+  if (factorBuffId === null) return null;
+
+  const activeFactorBuffIds = activeFactorBuffIdsForEntity(entity);
+  const factorItems = factorItemsForEntity(entity).filter((item) => item.factorBuffId === factorBuffId);
+  const trustedFactorItems = factorItems.filter(isTrustedSelectedFactorItem);
+  const identitySeen = activeFactorBuffIds.has(String(factorBuffId));
+  const selectorSeen = trustedFactorItems.length > 0;
+  if (!identitySeen && !factorItems.length) return null;
+
+  const state = identitySeen && !selectorSeen ? "identity-no-selector" : selectorSeen ? "selector-captured" : "selector-untrusted";
+  return {
+    key: `factor:${factorBuffId}:${state}`,
+    factorBuffId,
+    identitySeen,
+    selectorSeen,
+    factorIdentityWithoutSelector: identitySeen && !selectorSeen,
+    activeFactorBuffIds: uniqueSortedNumbers([...activeFactorBuffIds]),
+    activeFactorItemBuffIds: uniqueSortedNumbers(factorItems.map((item) => item.factorBuffId)),
+    activeFactorItemCount: factorItems.length,
+    trustedFactorItemCount: trustedFactorItems.length,
+  };
+}
+
 function factorGradeRowForSelection(indexes, factorBuffId, factorItem) {
   const factor = indexes.seasonFactors.factorsByBuffId?.[String(factorBuffId)];
   const rows = asArray(factor?.modifierEvidence?.gradeRows);
@@ -543,6 +623,64 @@ function runtimeSelectionBlockerForHint(hint, values = normalizedHintValues(hint
   return formulaValues.length > 1 ? "runtime-grade-selection-required" : null;
 }
 
+function captureAwareRuntimeSelectionBlockerForHint(hint, values, captureContext) {
+  const blocker = runtimeSelectionBlockerForHint(hint, values);
+  if (blocker === "runtime-grade-selection-required" && captureContext?.factorIdentityWithoutSelector) {
+    return "runtime-grade-selector-capture-gap";
+  }
+  return blocker;
+}
+
+function sourceIdNumber(sourceId) {
+  const match = String(sourceId ?? "").match(/:(\d+)$/);
+  return match ? match[1] : null;
+}
+
+function valueProofKeysForRule(rule) {
+  const sourceId = String(rule?.sourceId ?? "");
+  const uid = sourceIdNumber(sourceId) ?? positiveNumber(rule?.sourceEntityId);
+  if (uid === null || uid === undefined) return [];
+  const id = String(uid);
+
+  if (sourceId.startsWith("phantom-factor:")) return [`factors:${id}`, `buffs:${id}`];
+  if (sourceId.startsWith("buff-source:") || sourceId.startsWith("observed-buff:")) {
+    return [`buffs:${id}`, `battle-imagines:${id}`];
+  }
+  if (sourceId.startsWith("talent:")) return [`talents:${id}`];
+  if (sourceId.startsWith("season-talent-node:")) return [`seasonal-talents:${id}`];
+  if (sourceId.startsWith("season-rogue-entry:")) return [`items:${id}`, `seasonal-talents:${id}`];
+  return [`buffs:${id}`, `talents:${id}`, `factors:${id}`, `items:${id}`];
+}
+
+function valueProofForRule(rule, indexes) {
+  const entries = asObject(indexes.valueProof?.entriesByKey);
+  for (const key of valueProofKeysForRule(rule)) {
+    const entry = entries[key];
+    if (entry) return { key, entry };
+  }
+  return null;
+}
+
+function valueProofSelectorForHint(valueProof, hint) {
+  const componentKey = String(hint?.componentKey ?? "").toLowerCase();
+  return asArray(valueProof?.entry?.valueSelectors).find((selector) =>
+    String(selector?.componentKey ?? "").toLowerCase() === componentKey
+  ) ?? null;
+}
+
+function valueProofBlockerForHint(valueProof, hint) {
+  const status = String(valueProof?.entry?.valueProofStatus ?? "");
+  if (status !== "needs-expected-model") return null;
+  const selector = valueProofSelectorForHint(valueProof, hint);
+  if (selector?.kind === "runtime-value-ladder" && selector?.gradeInferredFrom) {
+    return "expected-model-validation-required";
+  }
+  if (asArray(valueProof?.entry?.formulaZoneIds).some((zone) => /critical|lucky/i.test(String(zone)))) {
+    return "expected-model-validation-required";
+  }
+  return null;
+}
+
 function factorGradeValueFromRuntimeSelection(hint, runtimeSelection) {
   if (String(hint?.valueTextSource ?? "") !== "modifierEvidence.gradeRows") return null;
   if (runtimeSelection?.type !== "factor-grade" || !runtimeSelection.factorGradeRow) return null;
@@ -559,7 +697,11 @@ function factorGradeValueFromRuntimeSelection(hint, runtimeSelection) {
   const description = String(runtimeSelection.factorGradeRow.cleanResolvedDescription ?? "").toLowerCase();
 
   if (componentKey === "critical-rate") return candidates[0];
-  if (componentKey === "season-damage" || formulaTermIds.includes("seasonDamagePct")) {
+  if (
+    componentKey === "season-damage"
+    || componentKey === "seasonal-factor-damage"
+    || formulaTermIds.includes("seasonDamagePct")
+  ) {
     if (description.includes("dream dmg") || description.includes("damage")) {
       return candidates[candidates.length - 1];
     }
@@ -568,7 +710,7 @@ function factorGradeValueFromRuntimeSelection(hint, runtimeSelection) {
   return null;
 }
 
-function resolveHint(hint, selectedScope, descriptionText, runtimeSelection) {
+function resolveHint(hint, selectedScope, descriptionText, runtimeSelection, valueProof, captureContext = null) {
   const strict = strictResolveHint(hint, selectedScope);
   if (strict.status === "ready") return { ...strict, strictReady: true };
 
@@ -633,32 +775,39 @@ function resolveHint(hint, selectedScope, descriptionText, runtimeSelection) {
     };
   }
 
-  const runtimeSelectionBlocker = runtimeSelectionBlockerForHint(hint, values);
+  const runtimeSelectionBlocker = captureAwareRuntimeSelectionBlockerForHint(hint, values, captureContext);
+  const valueProofBlocker = valueProofBlockerForHint(valueProof, hint);
   return {
     status: "blocked",
     strictReady: false,
-    blocker: runtimeSelectionBlocker ?? strict.blocker ?? "ambiguous-value",
+    blocker: valueProofBlocker ?? runtimeSelectionBlocker ?? strict.blocker ?? "ambiguous-value",
     values,
   };
 }
 
-function evaluateRule(ruleId, rule, providerScope, indexes, runtimeSelection = null) {
+function evaluateRule(ruleId, rule, providerScope, indexes, runtimeSelection = null, captureContext = null) {
   const blockers = [];
   const strictBlockers = [];
   const components = [];
   const formulaTermIds = asArray(rule?.formulaTermIds).map(String).filter(Boolean);
   const hints = asArray(rule?.componentValueHints);
   const descriptionText = sourceDescription(ruleId, indexes);
+  const valueProof = valueProofForRule(rule, indexes);
 
   if (!formulaTermIds.length) blockers.push("missing-formula-term");
   if (!hints.length) blockers.push(descriptionValueHintBlocker(descriptionText));
 
   for (const hint of hints) {
     const componentKey = String(hint?.componentKey ?? "unknown");
-    const resolved = resolveHint(hint, providerScope, descriptionText, runtimeSelection);
+    const resolved = resolveHint(hint, providerScope, descriptionText, runtimeSelection, valueProof, captureContext);
     const strict = strictResolveHint(hint, providerScope);
     if (strict.status !== "ready") {
-      const strictBlocker = runtimeSelectionBlockerForHint(hint, asArray(strict.values).length ? strict.values : undefined)
+      const strictBlocker = valueProofBlockerForHint(valueProof, hint)
+        ?? captureAwareRuntimeSelectionBlockerForHint(
+          hint,
+          asArray(strict.values).length ? strict.values : undefined,
+          captureContext,
+        )
         ?? strict.blocker
         ?? "blocked";
       strictBlockers.push(`component:${componentKey}:${strictBlocker}`);
@@ -712,8 +861,14 @@ function evaluateRule(ruleId, rule, providerScope, indexes, runtimeSelection = n
   };
 }
 
-function groupKey(ruleId, provider, runtimeSelection) {
-  return `${ruleId}:${provider.scope}:${provider.providerName}:${runtimeSelection?.key ?? "no-runtime-selection"}`;
+function groupKey(ruleId, provider, runtimeSelection, captureContext = null) {
+  return [
+    ruleId,
+    provider.scope,
+    provider.providerName,
+    runtimeSelection?.key ?? "no-runtime-selection",
+    captureContext?.key ?? "no-capture-context",
+  ].join(":");
 }
 
 function uniqueModifierRecords(entries) {
@@ -732,11 +887,11 @@ function uniqueModifierRecords(entries) {
   return [...records.values()];
 }
 
-function ensureRuleGroup(map, ruleId, rule, provider, indexes, runtimeSelection = null) {
-  const key = groupKey(ruleId, provider, runtimeSelection);
+function ensureRuleGroup(map, ruleId, rule, provider, indexes, runtimeSelection = null, captureContext = null) {
+  const key = groupKey(ruleId, provider, runtimeSelection, captureContext);
   let row = map.get(key);
   if (!row) {
-    const readiness = evaluateRule(ruleId, rule, provider.scope, indexes, runtimeSelection);
+    const readiness = evaluateRule(ruleId, rule, provider.scope, indexes, runtimeSelection, captureContext);
     row = {
       key,
       ruleId,
@@ -755,6 +910,18 @@ function ensureRuleGroup(map, ruleId, rule, provider, indexes, runtimeSelection 
             runtimeSource: runtimeSelection.factorItem.runtimeSource,
             valueTexts: asArray(runtimeSelection.factorGradeRow.valueTexts).map(String),
             description: runtimeSelection.factorGradeRow.cleanResolvedDescription ?? "",
+          }
+        : null,
+      captureContext: captureContext
+        ? {
+            factorBuffId: captureContext.factorBuffId,
+            identitySeen: captureContext.identitySeen,
+            selectorSeen: captureContext.selectorSeen,
+            factorIdentityWithoutSelector: captureContext.factorIdentityWithoutSelector,
+            activeFactorBuffIds: captureContext.activeFactorBuffIds,
+            activeFactorItemBuffIds: captureContext.activeFactorItemBuffIds,
+            activeFactorItemCount: captureContext.activeFactorItemCount,
+            trustedFactorItemCount: captureContext.trustedFactorItemCount,
           }
         : null,
       providerUids: new Set(),
@@ -777,13 +944,14 @@ function ensureRuleGroup(map, ruleId, rule, provider, indexes, runtimeSelection 
       activeModifierPairs: new Map(),
       stackLayers: new Map(),
       stackCounts: new Map(),
+      factorIdentityNoSelectorFiles: new Set(),
     };
     map.set(key, row);
   }
   return row;
 }
 
-function updateRuleGroup(row, link, provider, hit, fileLabel, indexes) {
+function updateRuleGroup(row, link, provider, hit, fileLabel, indexes, captureContext = null) {
   row.hits += 1;
   row.totalValue += numberValue(hit?.value);
   if (hit?.isCrit) row.critHits += 1;
@@ -805,6 +973,7 @@ function updateRuleGroup(row, link, provider, hit, fileLabel, indexes) {
     }
   }
   addMapCount(row.files, fileLabel);
+  if (captureContext?.factorIdentityWithoutSelector) row.factorIdentityNoSelectorFiles.add(fileLabel);
 }
 
 function finalizeRuleGroup(row) {
@@ -817,6 +986,7 @@ function finalizeRuleGroup(row) {
     activeModifierPairs: countMapToObject(row.activeModifierPairs, 10),
     stackLayers: countMapToObject(row.stackLayers, 10),
     stackCounts: countMapToObject(row.stackCounts, 10),
+    factorIdentityNoSelectorFiles: [...row.factorIdentityNoSelectorFiles].sort(),
   };
 }
 
@@ -843,6 +1013,8 @@ function createGlobalState() {
       strictBlockerObservations: {},
       resolutionMethods: {},
       formulaTermObservations: {},
+      factorIdentityNoSelectorObservations: 0,
+      factorIdentityNoSelectorGroups: 0,
     },
     groups: new Map(),
   };
@@ -859,6 +1031,7 @@ function analyzeFile(filePath, indexes, global) {
   let readyLinks = 0;
   let newlyReadyLinks = 0;
   let unresolvedLinks = 0;
+  let factorIdentityNoSelectorLinks = 0;
 
   for (const hit of replayHits) {
     for (const link of activeRuleLinks(hit, indexes)) {
@@ -867,13 +1040,18 @@ function analyzeFile(filePath, indexes, global) {
 
       const provider = providerForLink(entity, actorIndex, link);
       const runtimeSelection = runtimeSelectionForRule(entity, rule, indexes);
-      const row = ensureRuleGroup(global.groups, link.ruleId, rule, provider, indexes, runtimeSelection);
-      updateRuleGroup(row, link, provider, hit, fileLabel, indexes);
+      const captureContext = factorSelectorCaptureContext(entity, rule);
+      const row = ensureRuleGroup(global.groups, link.ruleId, rule, provider, indexes, runtimeSelection, captureContext);
+      updateRuleGroup(row, link, provider, hit, fileLabel, indexes, captureContext);
 
       formulaLinks += 1;
       global.summary.formulaLinkObservations += 1;
       global.summary.totalLinkedValue += numberValue(hit?.value);
       for (const term of row.formulaTermIds) addCount(global.summary.formulaTermObservations, term);
+      if (captureContext?.factorIdentityWithoutSelector) {
+        factorIdentityNoSelectorLinks += 1;
+        global.summary.factorIdentityNoSelectorObservations += 1;
+      }
 
       if (row.ready) {
         readyLinks += 1;
@@ -912,6 +1090,7 @@ function analyzeFile(filePath, indexes, global) {
     readyLinks,
     newlyReadyLinks,
     unresolvedLinks,
+    factorIdentityNoSelectorLinks,
   };
 }
 
@@ -927,17 +1106,20 @@ function finalizeReport(inputFiles, fileReports, global, options) {
   global.summary.strictReadyGroups = strictReadyGroups.length;
   global.summary.newlyReadyGroups = newlyReadyGroups.length;
   global.summary.unresolvedGroups = unresolvedGroups.length;
+  global.summary.factorIdentityNoSelectorGroups = groups.filter((row) => row.captureContext?.factorIdentityWithoutSelector).length;
 
   const sortByValue = (left, right) => right.totalValue - left.totalValue || right.hits - left.hits;
 
   return {
     generatedAt: new Date().toISOString(),
     inputs: inputFiles.map((filePath) => path.relative(repoRoot, filePath).replaceAll("\\", "/")),
+    generatedSources: Object.fromEntries([...generatedFilesRead.entries()].sort((left, right) => left[0].localeCompare(right[0]))),
     notes: [
       "This is a dev-only formula readiness audit. It does not calculate net contribution.",
       "Linked value is repeated per active formula source and can exceed player final damage.",
       "Resolver-inferred owner/party splits only apply to two percent component values: larger owner/self, smaller party/others.",
       "Stack/counter/duration numbers attached to stat components are blocked as mechanic values until a real stat amount is found.",
+      "`runtime-grade-selector-capture-gap` means the encounter proves the seasonal factor buff identity, but did not capture a selected factor item/grade row.",
     ],
     summary: global.summary,
     files: fileReports,
@@ -971,6 +1153,16 @@ function formatRuntimeSelection(selection) {
     return `factor:${selection.factorBuffId} item:${selection.itemConfigId} grade:${selection.grade ?? "?"}${source}${values ? ` (${values})` : ""}`;
   }
   return selection.type ?? "";
+}
+
+function formatCaptureContext(context) {
+  if (!context) return "";
+  const parts = [`factor:${context.factorBuffId}`];
+  if (context.factorIdentityWithoutSelector) parts.push("identity-no-selector");
+  if (context.selectorSeen) parts.push("selector-captured");
+  if (context.activeFactorBuffIds?.length) parts.push(`buffs:${context.activeFactorBuffIds.slice(0, 4).join(",")}`);
+  if (context.activeFactorItemBuffIds?.length) parts.push(`items:${context.activeFactorItemBuffIds.slice(0, 4).join(",")}`);
+  return parts.join(" ");
 }
 
 function formatBlockers(blockers) {
@@ -1021,6 +1213,8 @@ function writeMarkdown(report, outPath, options) {
     `- Newly ready by resolver: ${formatNumber(summary.newlyReadyObservations)} observations (${formatPct(summary.newlyReadyObservations, summary.formulaLinkObservations)})`,
     `- Still unresolved: ${formatNumber(summary.unresolvedObservations)} observations (${formatPct(summary.unresolvedObservations, summary.formulaLinkObservations)})`,
     `- Rule/provider groups: ${formatNumber(summary.uniqueGroups)} total, ${formatNumber(summary.readyGroups)} ready, ${formatNumber(summary.unresolvedGroups)} unresolved`,
+    `- Factor identity without selected grade selector: ${formatNumber(summary.factorIdentityNoSelectorObservations)} observations, ${formatNumber(summary.factorIdentityNoSelectorGroups)} groups`,
+    `- Generated source roots: ${summarizeGeneratedRoots(report.generatedSources)}`,
     "",
     "## Resolver Methods",
     "",
@@ -1077,17 +1271,17 @@ function writeMarkdown(report, outPath, options) {
     "",
     "## Top Unresolved",
     "",
-    "| Source | Provider | Hits | Linked value | Terms | Blockers | Components | Runtime selection | Description | Stack evidence | Top damage rows |",
-    "| --- | --- | ---: | ---: | --- | --- | --- | --- | --- | --- | --- |",
+    "| Source | Provider | Hits | Linked value | Terms | Blockers | Components | Runtime selection | Capture context | Description | Stack evidence | Top damage rows |",
+    "| --- | --- | ---: | ---: | --- | --- | --- | --- | --- | --- | --- | --- |",
   );
   if (report.topUnresolved.length) {
     for (const row of report.topUnresolved) {
       lines.push(
-        `| ${row.sourceName} | ${row.providerName} (${row.providerScope}) | ${formatNumber(row.hits)} | ${formatNumber(row.totalValue)} | ${row.formulaTermIds.join(", ")} | ${formatBlockers(row.blockers)} | ${formatComponents(row.components)} | ${formatRuntimeSelection(row.runtimeSelection)} | ${formatCellText(row.sourceDescription)} | ${formatStackEvidence(row)} | ${formatCountObject(row.damageRows, 5)} |`,
+        `| ${row.sourceName} | ${row.providerName} (${row.providerScope}) | ${formatNumber(row.hits)} | ${formatNumber(row.totalValue)} | ${row.formulaTermIds.join(", ")} | ${formatBlockers(row.blockers)} | ${formatComponents(row.components)} | ${formatRuntimeSelection(row.runtimeSelection)} | ${formatCaptureContext(row.captureContext)} | ${formatCellText(row.sourceDescription)} | ${formatStackEvidence(row)} | ${formatCountObject(row.damageRows, 5)} |`,
       );
     }
   } else {
-    lines.push("| - | - | 0 | 0 | - | - | - | - | - | - | - |");
+    lines.push("| - | - | 0 | 0 | - | - | - | - | - | - | - | - |");
   }
 
   lines.push(

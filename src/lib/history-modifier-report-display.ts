@@ -292,7 +292,7 @@ export type ModifierActivityRow = {
   talentOwnership?: TalentOwnershipMetadata;
   classification?: ModifierSourceClassification;
   actorSummary: ModifierActorSummary;
-  match: "direct-static-target" | "no-static-target" | "mixed";
+  match: "direct-static-target" | "active-static-target-fallback" | "no-static-target" | "mixed";
   targetDamageIds: number[];
   targetRecountIds: number[];
   totalDmg: number;

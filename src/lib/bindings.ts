@@ -660,11 +660,12 @@ export type ActiveBuffState = { buffUuid: number; baseId: number; buffLevel: num
 export type ActiveEffectBuffState = { effectSourceBuffId: number; observedBuffId: number; buffLevel: number | null; partId: number | null; count: number | null; fightSourceType: number | null; sourceConfigId: number | null; layer: number; durationMs: number; createTimeMs: number; receivedTimeMs: number; hostUid: number; sourceUid: number }
 export type ActiveEffectSourceState = { sourceId: string; runtimeSource: string; sourceEntityId: number | null; nodeId: number | null; nodeLevel: number | null; slot: number | null }
 export type ActiveFactorBuffState = { factorBuffId: number; observedBuffId: number; buffLevel: number | null; partId: number | null; count: number | null; fightSourceType: number | null; sourceConfigId: number | null; layer: number; durationMs: number; createTimeMs: number; receivedTimeMs: number; hostUid: number; sourceUid: number }
-export type ActiveFactorItemState = { factorBuffId: number; itemConfigId: number; itemUuid: number | null; packageKey: number; packageType: number | null; grade: number | null; familyId: number | null; runtimeSource: string }
+export type ActiveFactorItemState = { factorBuffId: number; itemConfigId: number; itemUuid: number | null; packageKey: number; packageType: number | null; grade: number | null; familyId: number | null; runtimeSource: string; selectorPath: string | null; selectorSignature: string | null; selectorOffset: number | null }
 export type ActivePassiveSkillState = { passiveUuid: number | null; targetUid: number | null; stageBeginTime: number | null; beginTime: number | null; stagePlayNum: number | null; skillId: number | null; skillLevel: number | null; skillStage: number | null; runtimeSource: string }
 export type ActiveProfessionSkillState = { skillId: number; baseSkillId: number | null; skillLevelId: number | null; level: number | null; remodelLevel: number | null; slot: number | null; equipped: boolean | null; sourceKind: string; replaceSkillIds: number[]; runtimeSource: string }
 export type ActiveProfessionTalentState = { professionId: number; talentNodeId: number; usedTalentPoints: number | null; talentStageCfgId: number | null; runtimeSource: string }
 export type AltFreezeConfig = { conditionBuffId: number; freezeDurationMs: number }
+export type AttrModifier = { attrId: number; basisPointsPerUnit?: number; maxReductionBasisPoints: number }
 /**
  * The result of a query for boss names.
  */
@@ -689,9 +690,9 @@ maxHp: number | null;
  * Whether the boss was defeated.
  */
 isDefeated: boolean }
-export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "resetAndStartCount" | "startCount" | "noOp"
+export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "resetAndFreezeKeepCounting" | "resetAndStartCount" | "startCount" | "noOp"
 export type CounterRule = { ruleId: number; sources: CounterSource[]; effectSlots: EffectSlotConfig[] }
-export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { anyDamage: { increment: number; hitsRequired?: number | null } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } } | { skillCastComplete: { skillBaseIds: number[]; increment: number } }
+export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number; hitsRequired?: number | null } } | { anyDamage: { increment: number; hitsRequired?: number | null } } | { damageTaken: { skillKeys?: number[] | null; increment: number; hitsRequired?: number | null } } | { fightResourceSpent: { resourceId: number; unitsRequired: number; increment: number } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } } | { skillCastComplete: { skillBaseIds: number[]; increment: number } } | { movementDistance: { buffId: number; attrId: number; metersRequired: number; increment: number } }
 export type CustomDefinitionEntry = { uid: number; type: string; name: string; shortName: string | null; notes: string | null; icon: string | null; color: string | null }
 export type CustomDefinitionsFile = { version: number; definitions: CustomDefinitionEntry[] }
 /**
@@ -700,7 +701,7 @@ export type CustomDefinitionsFile = { version: number; definitions: CustomDefini
 export type DamageSnapshot = { timestampMs: number; attackerUid: number; attackerMonsterTypeId: number | null; skillKey: number; value: number }
 export type DeathRecord = { victimUid: number; deathTimestampMs: number; recentDamages: DamageSnapshot[] }
 export type Device = { name: string; description: string | null }
-export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; resetSourceConfigId?: number | null; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction; altFreeze?: AltFreezeConfig | null }
+export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; resetSourceConfigId?: number | null; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction; altFreeze?: AltFreezeConfig | null; thresholdModifier?: AttrModifier | null; freezeDurationModifier?: AttrModifier | null; resetSkillKeys?: number[] | null; onResetSkill?: CounterAction }
 /**
  * Filters for querying encounters.
  */
@@ -825,13 +826,25 @@ names: string[] }
  */
 export type PlayerSummaryDto = { 
 /**
+ * The player UID.
+ */
+uid: number; 
+/**
  * The player name.
  */
 name: string; 
 /**
  * The class ID of the player.
  */
-classId: number }
+classId: number; 
+/**
+ * The class specialization enum value of the player.
+ */
+classSpec: number; 
+/**
+ * The class specialization name of the player.
+ */
+classSpecName: string }
 export type RawCombatStats = { total: number; effectiveTotal: number; hits: number; critHits: number; critTotal: number; luckyHits: number; luckyTotal: number }
 export type RawSkillStats = { totalValue: number; effectiveTotalValue: number; hits: number; critHits: number; critTotalValue: number; luckyHits: number; luckyTotalValue: number; property: number | null; damageMode: number | null }
 /**

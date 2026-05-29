@@ -1,10 +1,13 @@
 <script lang="ts">
-  import { getClassIcon, tooltip } from "$lib/utils.svelte";
+  import { tooltip } from "$lib/utils.svelte";
+  import ClassSpecIcon from "$lib/components/class-spec-icon.svelte";
   import { SETTINGS } from "$lib/settings-store";
   import type { DamageSnapshot, DeathRecord } from "$lib/api";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import { formatClassSpecLabel } from "$lib/class-labels";
+  import { getDisplayIconSpecName } from "$lib/name-display";
   import { lookupDamageIdName } from "$lib/config/recount-table";
+  import { localizeMonsterName } from "$lib/monster-mappings";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import { uiT } from "$lib/i18n";
 
@@ -15,6 +18,7 @@
     record,
     onBack,
     variant = "live",
+    isLocalPlayer = false,
   }: {
     playerName: string;
     className: string;
@@ -22,6 +26,7 @@
     record: DeathRecord;
     onBack?: () => void;
     variant?: "live" | "history";
+    isLocalPlayer?: boolean;
   } = $props();
 
   const tableSettings = $derived(SETTINGS.live.tableCustomization.state);
@@ -42,6 +47,20 @@
     variant === "history"
       ? SETTINGS.history.general.state.abbreviationStyle
       : SETTINGS.live.general.state.abbreviationStyle,
+  );
+  const iconSpecName = $derived(
+    getDisplayIconSpecName({
+      classSpecName,
+      showYourNameSetting:
+        variant === "history"
+          ? SETTINGS.history.general.state.showYourName
+          : SETTINGS.live.general.state.showYourName,
+      showOthersNameSetting:
+        variant === "history"
+          ? SETTINGS.history.general.state.showOthersName
+          : SETTINGS.live.general.state.showOthersName,
+      isLocalPlayer,
+    }),
   );
   const t = uiT("dps/history", () => SETTINGS.live.general.state.language);
 
@@ -75,14 +94,41 @@
   }
 
   function resolveSkillName(snapshot: DamageSnapshot): string {
-    const base = lookupDamageIdName(Number(snapshot.skillKey));
+    const skillKey = Number(snapshot.skillKey);
+    const base = lookupDamageIdName(skillKey);
     if (base && !base.startsWith("Unknown")) return base;
     if (snapshot.attackerMonsterTypeId != null) {
-      return t("detail.death.monsterSkill", "Monster {monsterId} - #{skillId}")
-        .replace("{monsterId}", String(snapshot.attackerMonsterTypeId))
-        .replace("{skillId}", String(snapshot.skillKey));
+      return t("detail.death.monsterSkillName", "{monsterName} - #{skillId}")
+        .replace("{monsterName}", resolveAttackerName(snapshot))
+        .replace("{skillId}", String(skillKey));
     }
-    return base;
+    return base || `Unknown (${skillKey})`;
+  }
+
+  function resolveAttackerName(snapshot: DamageSnapshot): string {
+    if (snapshot.attackerMonsterTypeId != null) {
+      return localizeMonsterName(snapshot.attackerMonsterTypeId);
+    }
+
+    const attackerUid = Number(snapshot.attackerUid);
+    if (Number.isFinite(attackerUid) && attackerUid > 0) {
+      return t("detail.death.attackerUid", "#{uid}").replace(
+        "{uid}",
+        String(attackerUid),
+      );
+    }
+
+    return "";
+  }
+
+  function resolveDamageTooltip(snapshot: DamageSnapshot): string {
+    const skillName = resolveSkillName(snapshot);
+    const attackerName = resolveAttackerName(snapshot);
+    if (!attackerName) return skillName;
+    return `${skillName}\n${t("detail.death.sourceLabel", "Source: {source}").replace(
+      "{source}",
+      attackerName,
+    )}`;
   }
 
   function glowPercentage(value: number): number {
@@ -114,15 +160,13 @@
       </svg>
     </button>
     <div class="flex items-center gap-2">
-      <img
+      <ClassSpecIcon
         class="size-5 object-contain"
-        src={getClassIcon(className)}
+        {className}
+        classSpecName={iconSpecName}
         alt={t("detail.classIcon", "Class icon")}
-        {@attach tooltip(
-          () =>
-            formatClassSpecLabel(className, classSpecName) ||
-            t("detail.unknownClass", "Unknown Class"),
-        )}
+        tooltipText={formatClassSpecLabel(className, classSpecName) ||
+          t("detail.unknownClass", "Unknown Class")}
       />
       <h2 class="text-xl font-semibold text-foreground">{playerName}</h2>
       <span class="text-sm text-neutral-400 tabular-nums">
@@ -153,6 +197,10 @@
             >{t("detail.skillColumn", "Skill")}</th
           >
           <th
+            class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
+            >{t("detail.death.source", "Source")}</th
+          >
+          <th
             class="px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground"
             >{t("detail.damage", "Damage")}</th
           >
@@ -166,7 +214,7 @@
         {#if rows.length === 0}
           <tr>
             <td
-              colspan="4"
+              colspan="5"
               class="px-3 py-8 text-center text-xs text-muted-foreground"
             >
               {t("detail.death.noDamage", "No damage was recorded for this death.")}
@@ -175,6 +223,8 @@
         {:else}
           {#each rows as dmg, idx (idx)}
             {@const pct = glowPercentage(Number(dmg.value))}
+            {@const skillName = resolveSkillName(dmg)}
+            {@const attackerName = resolveAttackerName(dmg)}
             <tr
               class="relative border-t border-border/40 hover:bg-muted/60 transition-colors"
             >
@@ -184,8 +234,13 @@
               >
               <td
                 class="px-3 py-3 text-sm text-muted-foreground relative z-10 truncate"
-                {@attach tooltip(() => resolveSkillName(dmg))}
-                >{resolveSkillName(dmg)}</td
+                {@attach tooltip(() => resolveDamageTooltip(dmg))}
+                >{skillName}</td
+              >
+              <td
+                class="px-3 py-3 text-sm text-muted-foreground relative z-10 truncate"
+                {@attach tooltip(() => attackerName)}
+                >{attackerName || "-"}</td
               >
               <td
                 class="px-3 py-3 text-right text-sm text-muted-foreground relative z-10 tabular-nums"
@@ -233,6 +288,8 @@
         {:else}
           {#each rows as dmg, idx (idx)}
             {@const pct = glowPercentage(Number(dmg.value))}
+            {@const skillName = resolveSkillName(dmg)}
+            {@const attackerName = resolveAttackerName(dmg)}
             <tr
               class="relative hover:bg-muted/60 transition-colors bg-background/40"
               style="height: {tableSettings.skillRowHeight}px; font-size: {tableSettings.skillFontSize}px;"
@@ -247,10 +304,19 @@
                     >{formatRelativeSeconds(dmg)}</span
                   >
                   <span
-                    class="flex-1 truncate"
-                    {@attach tooltip(() => resolveSkillName(dmg))}
-                    >{resolveSkillName(dmg)}</span
+                    class="flex-1 min-w-0"
+                    {@attach tooltip(() => resolveDamageTooltip(dmg))}
                   >
+                    <span class="block truncate">{skillName}</span>
+                    {#if attackerName}
+                      <span class="block truncate text-[0.85em] text-muted-foreground/80">
+                        {t("detail.death.sourceLabel", "Source: {source}").replace(
+                          "{source}",
+                          attackerName,
+                        )}
+                      </span>
+                    {/if}
+                  </span>
                   <span
                     class="tabular-nums font-medium shrink-0"
                     {@attach tooltip(() => Number(dmg.value).toLocaleString())}

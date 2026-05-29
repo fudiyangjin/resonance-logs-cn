@@ -38,6 +38,14 @@ pub enum AttrValue {
     Float(f64),
     String(String),
     Bool(bool),
+    Position(PositionAttr),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct PositionAttr {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }
 
 /// Player attribute types from Blue Protocol packets.
@@ -51,7 +59,7 @@ pub enum AttrType {
     GuildId,
     AttackPower,
     DefensePower,
-    StarLevel,
+    Position,
     GearTier,
     BaseStrength,
     MoveType,
@@ -124,7 +132,7 @@ impl AttrType {
             attr_type::ATTR_GUILD_ID => Some(AttrType::GuildId),
             attr_type::ATTR_ATTACK_POWER => Some(AttrType::AttackPower),
             attr_type::ATTR_DEFENSE_POWER => Some(AttrType::DefensePower),
-            attr_type::ATTR_STAR_LEVEL => Some(AttrType::StarLevel),
+            attr_type::ATTR_POS => Some(AttrType::Position),
             attr_type::ATTR_GEAR_TIER => Some(AttrType::GearTier),
             attr_type::ATTR_BASE_STRENGTH => Some(AttrType::BaseStrength),
             attr_type::ATTR_MOVE_TYPE => Some(AttrType::MoveType),
@@ -196,7 +204,7 @@ impl AttrType {
             AttrType::GuildId => attr_type::ATTR_GUILD_ID,
             AttrType::AttackPower => attr_type::ATTR_ATTACK_POWER,
             AttrType::DefensePower => attr_type::ATTR_DEFENSE_POWER,
-            AttrType::StarLevel => attr_type::ATTR_STAR_LEVEL,
+            AttrType::Position => attr_type::ATTR_POS,
             AttrType::GearTier => attr_type::ATTR_GEAR_TIER,
             AttrType::BaseStrength => attr_type::ATTR_BASE_STRENGTH,
             AttrType::MoveType => attr_type::ATTR_MOVE_TYPE,
@@ -290,6 +298,13 @@ impl AttrValue {
     pub fn as_bool(&self) -> Option<bool> {
         match self {
             AttrValue::Bool(v) => Some(*v),
+            _ => None,
+        }
+    }
+
+    pub fn as_position(&self) -> Option<PositionAttr> {
+        match self {
+            AttrValue::Position(v) => Some(*v),
             _ => None,
         }
     }
@@ -552,6 +567,9 @@ pub struct ObservedFactorItem {
     pub grade: Option<i32>,
     pub family_id: Option<i32>,
     pub runtime_source: String,
+    pub selector_path: Option<String>,
+    pub selector_signature: Option<String>,
+    pub selector_offset: Option<i32>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -757,7 +775,7 @@ pub mod attr_type {
     pub const ATTR_GUILD_ID: i32 = 0x1e; // Guild/clan ID
     pub const ATTR_ATTACK_POWER: i32 = 0x32; // Attack stat
     pub const ATTR_DEFENSE_POWER: i32 = 0x33; // Defense stat
-    pub const ATTR_STAR_LEVEL: i32 = 0x34; // Enhancement/star level
+    pub const ATTR_POS: i32 = 0x34; // Position vector
     pub const ATTR_GEAR_TIER: i32 = 0x35; // Gear tier/grade
     pub const ATTR_BASE_STRENGTH: i32 = 0x46; // Base strength/attack stat
     pub const ATTR_MOVE_TYPE: i32 = 0x47; // AttrMoveType, see EMoveType
@@ -883,10 +901,10 @@ pub mod class {
 
     pub fn get_class_spec_from_skill_id(skill_id: i32) -> ClassSpec {
         match skill_id {
-            1714 | 1734 => ClassSpec::Iaido,
-            1715 | 1733 | 1742 => ClassSpec::Moonstrike,
+            1714 => ClassSpec::Iaido,
+            1737 => ClassSpec::Moonstrike,
 
-            120901 | 120902 => ClassSpec::Icicle,
+            120902 => ClassSpec::Icicle,
             1241 => ClassSpec::Frostbeam,
 
             1605 => ClassSpec::Voidflame,
@@ -898,8 +916,8 @@ pub mod class {
             1518 | 1541 | 21402 => ClassSpec::Smite,
             20301 => ClassSpec::Lifebind,
 
-            199902 => ClassSpec::Earthfort,
-            1930 | 1931 | 1934 | 1935 => ClassSpec::Block,
+            1922 => ClassSpec::Earthfort,
+            1930 => ClassSpec::Block,
 
             220112 | 2203622 | 2233 | 2234 | 223300..=223399 | 223400..=223499 => {
                 ClassSpec::Falconry
@@ -911,6 +929,54 @@ pub mod class {
 
             2306 => ClassSpec::Dissonance,
             2307 | 2361 | 55302 => ClassSpec::Concerto,
+            _ => ClassSpec::Unknown,
+        }
+    }
+
+    pub fn get_class_spec_from_talent_node_id(talent_node_id: u32) -> ClassSpec {
+        match talent_node_id {
+            130 => ClassSpec::Iaido,
+            157 => ClassSpec::Moonstrike,
+            212 => ClassSpec::Frostbeam,
+            233 => ClassSpec::Icicle,
+            312 => ClassSpec::Voidflame,
+            342 => ClassSpec::Blazecrimson,
+            432 => ClassSpec::Skyward,
+            433 => ClassSpec::Vanguard,
+            510 => ClassSpec::Smite,
+            531 => ClassSpec::Lifebind,
+            930 => ClassSpec::Block,
+            931 => ClassSpec::Earthfort,
+            1126 => ClassSpec::Wildpack,
+            1129 => ClassSpec::Falconry,
+            1208 => ClassSpec::Recovery,
+            1218 => ClassSpec::Shield,
+            1308 => ClassSpec::Dissonance,
+            1317 => ClassSpec::Concerto,
+            _ => ClassSpec::Unknown,
+        }
+    }
+
+    pub fn get_class_spec_from_selector_buff_id(selector_buff_id: i32) -> ClassSpec {
+        match selector_buff_id {
+            2_200_320 => ClassSpec::Iaido,
+            2_200_590 => ClassSpec::Moonstrike,
+            2_204_120 => ClassSpec::Frostbeam,
+            2_204_300 => ClassSpec::Icicle,
+            2_208_130 => ClassSpec::Voidflame,
+            2_208_430 => ClassSpec::Blazecrimson,
+            2_205_290 => ClassSpec::Skyward,
+            2_205_300 => ClassSpec::Vanguard,
+            2_202_110 => ClassSpec::Smite,
+            2_202_340 => ClassSpec::Lifebind,
+            2_201_320 => ClassSpec::Block,
+            2_201_330 => ClassSpec::Earthfort,
+            2_203_260 => ClassSpec::Wildpack,
+            2_203_290 => ClassSpec::Falconry,
+            2_206_090 => ClassSpec::Recovery,
+            2_206_190 => ClassSpec::Shield,
+            2_207_090 => ClassSpec::Dissonance,
+            2_207_180 => ClassSpec::Concerto,
             _ => ClassSpec::Unknown,
         }
     }
@@ -1016,6 +1082,46 @@ mod tests {
     use super::*;
 
     #[test]
+    fn class_spec_from_talent_node_id_maps_spec_roots() {
+        assert_eq!(
+            class::get_class_spec_from_talent_node_id(312),
+            class::ClassSpec::Voidflame
+        );
+        assert_eq!(
+            class::get_class_spec_from_talent_node_id(342),
+            class::ClassSpec::Blazecrimson
+        );
+        assert_eq!(
+            class::get_class_spec_from_talent_node_id(1129),
+            class::ClassSpec::Falconry
+        );
+        assert_eq!(
+            class::get_class_spec_from_talent_node_id(999_999),
+            class::ClassSpec::Unknown
+        );
+    }
+
+    #[test]
+    fn class_spec_from_selector_buff_id_maps_spec_selectors() {
+        assert_eq!(
+            class::get_class_spec_from_selector_buff_id(2_208_430),
+            class::ClassSpec::Blazecrimson
+        );
+        assert_eq!(
+            class::get_class_spec_from_selector_buff_id(2_208_130),
+            class::ClassSpec::Voidflame
+        );
+        assert_eq!(
+            class::get_class_spec_from_selector_buff_id(2_203_290),
+            class::ClassSpec::Falconry
+        );
+        assert_eq!(
+            class::get_class_spec_from_selector_buff_id(999_999),
+            class::ClassSpec::Unknown
+        );
+    }
+
+    #[test]
     fn attr_value_float_conversion() {
         let val = AttrValue::Float(3.14);
         assert_eq!(val.as_float(), Some(3.14));
@@ -1042,7 +1148,7 @@ mod tests {
         assert_eq!(AttrType::from_id(0x0b), Some(AttrType::ActorState));
         assert_eq!(AttrType::from_id(0x32), Some(AttrType::AttackPower));
         assert_eq!(AttrType::from_id(0x33), Some(AttrType::DefensePower));
-        assert_eq!(AttrType::from_id(0x34), Some(AttrType::StarLevel));
+        assert_eq!(AttrType::from_id(0x34), Some(AttrType::Position));
         assert_eq!(AttrType::from_id(0x35), Some(AttrType::GearTier));
         assert_eq!(AttrType::from_id(0xf9), Some(AttrType::PvpRank));
         assert_eq!(AttrType::from_id(0x105), Some(AttrType::TotalPower));
@@ -1062,7 +1168,7 @@ mod tests {
         assert_eq!(AttrType::ActorState.to_id(), 0x0b);
         assert_eq!(AttrType::AttackPower.to_id(), 0x32);
         assert_eq!(AttrType::DefensePower.to_id(), 0x33);
-        assert_eq!(AttrType::StarLevel.to_id(), 0x34);
+        assert_eq!(AttrType::Position.to_id(), 0x34);
         assert_eq!(AttrType::GearTier.to_id(), 0x35);
         assert_eq!(AttrType::TotalPower.to_id(), 0x105);
         assert_eq!(AttrType::PhysicalAttack.to_id(), 0x106);

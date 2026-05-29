@@ -72,6 +72,7 @@ export type ModifierSourceUidEdge = {
 
 export type ModifierSourceCatalog = {
   byBuffId: Record<string, ModifierSourceCatalogEntry[]>;
+  activeEntries?: ModifierSourceCatalogEntry[];
   ignoredBuffIds: number[];
   reportableBuffIds: number[];
   debugBuffIds: number[];
@@ -157,12 +158,6 @@ function finitePositiveNumber(value: unknown): number | null {
 
 function sortedNumbers(values: Iterable<number>): number[] {
   return [...new Set([...values].filter(Number.isFinite))].sort((left, right) => left - right);
-}
-
-function decodeProfessionTalentNodeId(nodeId: number): number | null {
-  if (!Number.isFinite(nodeId)) return null;
-  if (nodeId >= 1_000_000) return Math.floor(nodeId / 1000);
-  return null;
 }
 
 function normalizeSourceConfigSkillKey(value: string | undefined): string {
@@ -298,8 +293,34 @@ function isRuntimeWindowCatalogEntry(entry: ModifierSourceCatalogEntry): boolean
     || sourceType.includes("debuff");
 }
 
+function isSelectedFactorCatalogEntry(entry: ModifierSourceCatalogEntry): boolean {
+  const sourceKind = String(entry.sourceKind ?? "").toLowerCase();
+  if (sourceKind !== "phantom-factor") return false;
+  const runtimeDetection = String(entry.runtimeDetection ?? "").toLowerCase();
+  return runtimeDetection.includes("selected-factor-grade-item");
+}
+
 function isCatalogReportEntry(entry: ModifierSourceCatalogEntry): boolean {
-  return (entry.reportPolicy ?? "include") === "include" || isRuntimeWindowCatalogEntry(entry);
+  return (entry.reportPolicy ?? "include") === "include"
+    || isRuntimeWindowCatalogEntry(entry)
+    || isSelectedFactorCatalogEntry(entry);
+}
+
+function isRuntimeProvenActiveCatalogEntry(entry: ModifierSourceCatalogEntry): boolean {
+  if ((entry.reportPolicy ?? "include") === "ignore") return false;
+  if (isCatalogReportEntry(entry)) return true;
+
+  const sourceId = String(entry.sourceId ?? "").toLowerCase();
+  const kind = String(entry.sourceKind ?? "").toLowerCase();
+  const type = String(entry.sourceType ?? "").toLowerCase();
+  if (sourceId.startsWith("observed-buff:")) return false;
+  if (kind === "runtime-buff" && type.includes("observed")) return false;
+
+  return kind.includes("talent")
+    || type.includes("talent")
+    || kind === "season-talent-node"
+    || kind === "phantom-factor"
+    || kind === "set-effect";
 }
 
 async function loadModifierClassificationTable(): Promise<ModifierClassificationTable> {
@@ -402,10 +423,19 @@ function displayFieldsForRule(ruleId: string, entry: ModifierSourceCatalogEntry)
   };
 }
 
+function shouldAttachDescriptionFields(entry: ModifierSourceCatalogEntry): boolean {
+  if (!entry.sourceId.startsWith("buff-source:")) return true;
+  const sourceKind = String(entry.sourceKind ?? "").toLowerCase();
+  const sourceType = String(entry.sourceType ?? "").toLowerCase();
+  return sourceKind !== "runtime-buff" && sourceKind !== "observed-buff" && sourceType !== "runtime-buff";
+}
+
 function enrichCatalogEntry(ruleId: string, entry: ModifierSourceCatalogEntry): ModifierSourceCatalogEntry {
   const classification = modifierClassificationTable.sourcesByRuleId?.[ruleId];
   const contributionModel = modifierContributionTable.sourcesByRuleId?.[ruleId];
-  const descriptionFields = modifierDescriptionsTable.sourcesByRuleId?.[ruleId];
+  const descriptionFields = shouldAttachDescriptionFields(entry)
+    ? modifierDescriptionsTable.sourcesByRuleId?.[ruleId]
+    : undefined;
   const displayFields = displayFieldsForRule(ruleId, entry);
   if (!classification) {
     return {
@@ -523,6 +553,56 @@ function buffSourceIdFromEntry(entry: ModifierSourceCatalogEntry): number | null
   return null;
 }
 
+function isRawBuffSourceLabel(
+  value: string | undefined,
+  sourceId: string,
+  buffId: number,
+): boolean {
+  const text = value?.trim() ?? "";
+  if (!text) return true;
+  return text === sourceId
+    || text === `buff-source:${buffId}`
+    || new RegExp(`^(?:Buff|Unmapped Buff) ${buffId}$`, "i").test(text);
+}
+
+function hasUsableBuffSourceName(
+  entry: ModifierSourceCatalogEntry,
+  buffId: number,
+): boolean {
+  if (!isRawBuffSourceLabel(entry.sourceName, entry.sourceId, buffId)) return true;
+  return Object.values(entry.sourceNames ?? {}).some((value) =>
+    !isRawBuffSourceLabel(value, entry.sourceId, buffId)
+  );
+}
+
+function decoratePlainBuffSourceName(
+  entry: ModifierSourceCatalogEntry,
+  buffId: number,
+  buffNames: LocalizedTextMap | undefined,
+): ModifierSourceCatalogEntry {
+  const fallbackName = lookupDefaultBuffName(buffId);
+  if (!buffNames && !fallbackName) return entry;
+
+  const hasUsableName = hasUsableBuffSourceName(entry, buffId);
+  const sourceNames = mergeLocalizedTextMaps(entry.sourceNames, buffNames, !hasUsableName);
+  const sourceName = hasUsableName
+    ? entry.sourceName?.trim()
+      || sourceNames?.["en"]?.trim()
+      || sourceNames?.["zh-CN"]?.trim()
+      || fallbackName
+      || entry.sourceId
+    : sourceNames?.["en"]?.trim()
+      || fallbackName
+      || entry.sourceName?.trim()
+      || entry.sourceId;
+
+  return {
+    ...entry,
+    sourceName,
+    ...(sourceNames ? { sourceNames } : {}),
+  };
+}
+
 function isRuntimeSourceConfigQualified(entry: ModifierSourceCatalogEntry): boolean {
   return entry.sourceId.includes("|source-config:")
     || (entry.runtimeSourceConfigIds?.length ?? 0) > 0;
@@ -538,19 +618,20 @@ function hasOwnerQualifiedImagineBuffName(
 
 function decorateBuffSourceCatalogEntry(entry: ModifierSourceCatalogEntry): ModifierSourceCatalogEntry {
   const ownerDecorated = replaceImagineDesignOwnerNames(entry);
-  if (isRuntimeSourceConfigQualified(ownerDecorated)) return ownerDecorated;
   const buffId = buffSourceIdFromEntry(ownerDecorated);
   if (buffId === null) return ownerDecorated;
 
   const buffNames = lookupBuffLocalizedNames(buffId);
-  if (!hasOwnerQualifiedImagineBuffName(ownerDecorated, buffNames)) return ownerDecorated;
-  const sourceNames = mergeLocalizedTextMaps(ownerDecorated.sourceNames, buffNames, true);
+  const named = decoratePlainBuffSourceName(ownerDecorated, buffId, buffNames);
+  if (isRuntimeSourceConfigQualified(named)) return named;
+  if (!hasOwnerQualifiedImagineBuffName(named, buffNames)) return named;
+  const sourceNames = mergeLocalizedTextMaps(named.sourceNames, buffNames, true);
   const sourceName = sourceNames?.["en"]?.trim()
     || lookupDefaultBuffName(buffId)
-    || ownerDecorated.sourceName
-    || ownerDecorated.sourceId;
+    || named.sourceName
+    || named.sourceId;
   return {
-    ...ownerDecorated,
+    ...named,
     sourceName,
     ...(sourceNames ? { sourceNames } : {}),
   };
@@ -602,6 +683,77 @@ function bucketIds(entity: HistoryEntityData): number[] {
   return sortedNumbers(ids);
 }
 
+function activeFactorItemIds(entity: HistoryEntityData): number[] {
+  const ids = new Set<number>();
+  for (const item of entity.activeFactorItems ?? []) {
+    if (!String(item.runtimeSource ?? "").startsWith("SyncContainerDirtyData.v_data.dirty_tree.")) {
+      continue;
+    }
+    const factorBuffId = finitePositiveNumber(item.factorBuffId);
+    if (factorBuffId !== null) ids.add(factorBuffId);
+  }
+  return sortedNumbers(ids);
+}
+
+function activeRuntimeBuffIds(entity: HistoryEntityData): number[] {
+  const ids = new Set<number>();
+  const add = (value: unknown) => {
+    const id = finitePositiveNumber(value);
+    if (id !== null) ids.add(id);
+  };
+
+  for (const buff of entity.activeBuffs ?? []) {
+    add(buff.baseId);
+    add(buff.sourceConfigId);
+  }
+  for (const buff of entity.activeFactorBuffs ?? []) {
+    add(buff.factorBuffId);
+    add(buff.observedBuffId);
+    add(buff.sourceConfigId);
+  }
+  for (const buff of entity.activeEffectBuffs ?? []) {
+    add(buff.effectSourceBuffId);
+    add(buff.observedBuffId);
+    add(buff.sourceConfigId);
+  }
+  for (const modifierWindow of entity.modifierWindows ?? []) {
+    add(modifierWindow.baseId);
+    add(modifierWindow.sourceConfigId);
+  }
+
+  return sortedNumbers(ids);
+}
+
+function sourceIdEntityId(sourceId: string | undefined): number | null {
+  const match = String(sourceId ?? "").match(/:(\d+)(?:$|\|)/);
+  return match ? finitePositiveNumber(match[1]) : null;
+}
+
+function activeTalentSourceEntityIds(entity: HistoryEntityData): Set<number> {
+  const ids = new Set<number>();
+  for (const source of entity.activeEffectSources ?? []) {
+    const sourceId = String(source.sourceId ?? "").trim().toLowerCase();
+    if (!sourceId.startsWith("talent:")) continue;
+    const sourceEntityId = finitePositiveNumber(source.sourceEntityId) ?? sourceIdEntityId(sourceId);
+    if (sourceEntityId !== null) ids.add(sourceEntityId);
+  }
+  return ids;
+}
+
+function selectedProfessionTalentEntityIds(entity: HistoryEntityData): number[] {
+  const exactActiveTalentIds = activeTalentSourceEntityIds(entity);
+  if (exactActiveTalentIds.size > 0) return sortedNumbers(exactActiveTalentIds);
+
+  const ids = new Set<number>();
+  for (const talent of entity.activeProfessionTalents ?? []) {
+    const professionId = finitePositiveNumber(talent.professionId);
+    if (professionId !== null && entity.classId > 0 && professionId !== entity.classId) continue;
+    const stageCfgId = finitePositiveNumber(talent.talentStageCfgId);
+    if (stageCfgId !== null) ids.add(stageCfgId);
+  }
+  return sortedNumbers(ids);
+}
+
 function reportableEntriesForBuffId(buffId: number): ModifierSourceCatalogEntry[] {
   return (modifierRecountTable.byBuffId?.[String(buffId)] ?? [])
     .map((entryId) => {
@@ -610,6 +762,100 @@ function reportableEntriesForBuffId(buffId: number): ModifierSourceCatalogEntry[
     })
     .filter((entry): entry is ModifierSourceCatalogEntry => Boolean(entry))
     .filter(isCatalogReportEntry);
+}
+
+function activeEntriesForSourceId(sourceId: string): ModifierSourceCatalogEntry[] {
+  return Object.entries(modifierRecountTable.sourcesById ?? {})
+    .filter(([, entry]) => entry.sourceId === sourceId)
+    .map(([ruleId, entry]) => enrichCatalogEntry(ruleId, entry))
+    .filter(isRuntimeProvenActiveCatalogEntry);
+}
+
+function activeEntriesForSourceEntity(
+  sourceEntityId: number,
+  predicate: (entry: ModifierSourceCatalogEntry) => boolean,
+): ModifierSourceCatalogEntry[] {
+  return Object.entries(modifierRecountTable.sourcesById ?? {})
+    .filter(([, entry]) => finitePositiveNumber(entry.sourceEntityId) === sourceEntityId)
+    .map(([ruleId, entry]) => enrichCatalogEntry(ruleId, entry))
+    .filter(predicate)
+    .filter(isRuntimeProvenActiveCatalogEntry);
+}
+
+function isActiveProfessionTalentEntry(entry: ModifierSourceCatalogEntry): boolean {
+  const kind = String(entry.sourceKind ?? "").toLowerCase();
+  const type = String(entry.sourceType ?? "").toLowerCase();
+  return kind.includes("talent") || type.includes("talent") || kind === "season-talent-node";
+}
+
+function isActiveProfessionSkillEntry(entry: ModifierSourceCatalogEntry): boolean {
+  const kind = String(entry.sourceKind ?? "").toLowerCase();
+  const type = String(entry.sourceType ?? "").toLowerCase();
+  return kind.includes("skill") || type.includes("skill");
+}
+
+function addUniqueActiveEntry(
+  entries: ModifierSourceCatalogEntry[],
+  seen: Set<string>,
+  entry: ModifierSourceCatalogEntry,
+): void {
+  const key = entry.sourceRuleId ?? entry.sourceId;
+  if (!key || seen.has(key)) return;
+  seen.add(key);
+  entries.push(entry);
+}
+
+function activeCatalogEntries(entity: HistoryEntityData): ModifierSourceCatalogEntry[] {
+  const entries: ModifierSourceCatalogEntry[] = [];
+  const seen = new Set<string>();
+
+  for (const buffId of activeRuntimeBuffIds(entity)) {
+    for (const entry of reportableEntriesForBuffId(buffId)) {
+      addUniqueActiveEntry(entries, seen, entry);
+    }
+  }
+
+  for (const source of entity.activeEffectSources ?? []) {
+    const sourceId = String(source.sourceId ?? "").trim();
+    let matchedExactSource = false;
+    if (sourceId) {
+      for (const entry of activeEntriesForSourceId(sourceId)) {
+        matchedExactSource = true;
+        addUniqueActiveEntry(entries, seen, entry);
+      }
+    }
+    const sourceEntityId = finitePositiveNumber(source.sourceEntityId) ?? sourceIdEntityId(sourceId);
+    if (sourceEntityId !== null && !matchedExactSource) {
+      for (const entry of activeEntriesForSourceEntity(sourceEntityId, () => true)) {
+        addUniqueActiveEntry(entries, seen, entry);
+      }
+    }
+  }
+
+  const exactTalentSourceEntityIds = activeTalentSourceEntityIds(entity);
+  if (exactTalentSourceEntityIds.size === 0) {
+    for (const sourceEntityId of selectedProfessionTalentEntityIds(entity)) {
+      for (const entry of activeEntriesForSourceEntity(sourceEntityId, isActiveProfessionTalentEntry)) {
+        addUniqueActiveEntry(entries, seen, entry);
+      }
+    }
+  }
+
+  for (const skill of entity.activeProfessionSkills ?? []) {
+    for (const sourceEntityId of [
+      finitePositiveNumber(skill.skillId),
+      finitePositiveNumber(skill.baseSkillId),
+      finitePositiveNumber(skill.skillLevelId),
+      ...(skill.replaceSkillIds ?? []).map(finitePositiveNumber),
+    ]) {
+      if (sourceEntityId === null) continue;
+      for (const entry of activeEntriesForSourceEntity(sourceEntityId, isActiveProfessionSkillEntry)) {
+        addUniqueActiveEntry(entries, seen, entry);
+      }
+    }
+  }
+
+  return entries;
 }
 
 function ownershipSpecIds(ownership: ModifierSourceCatalogEntry["talentOwnership"] | undefined): number[] {
@@ -628,20 +874,18 @@ function inferEntitySpecIdsFromCatalog(
 ): number[] {
   const specIds = new Set<number>();
 
-  for (const talent of entity.activeProfessionTalents ?? []) {
-    const professionId = finitePositiveNumber(talent.professionId);
-    if (professionId !== null && entity.classId > 0 && professionId !== entity.classId) continue;
-    const nodeId = finitePositiveNumber(talent.talentNodeId);
-    const decoded = nodeId !== null ? decodeProfessionTalentNodeId(nodeId) : null;
-    if (decoded !== null) {
-      for (const entry of modifierRecountTable.sourcesById ? Object.entries(modifierRecountTable.sourcesById) : []) {
-        const [ruleId, source] = entry;
-        const enriched = enrichCatalogEntry(ruleId, source);
-        const ownership = enriched.talentOwnership;
-        if (ownership?.ownershipKind !== "spec-selector") continue;
-        if (finitePositiveNumber(enriched.sourceEntityId) !== decoded) continue;
-        for (const specId of ownershipSpecIds(ownership)) specIds.add(specId);
-      }
+  const exactTalentSourceEntityIds = activeTalentSourceEntityIds(entity);
+  const talentSourceEntityIds = exactTalentSourceEntityIds.size > 0
+    ? sortedNumbers(exactTalentSourceEntityIds)
+    : selectedProfessionTalentEntityIds(entity);
+  for (const sourceEntityId of talentSourceEntityIds) {
+    for (const entry of modifierRecountTable.sourcesById ? Object.entries(modifierRecountTable.sourcesById) : []) {
+      const [ruleId, source] = entry;
+      const enriched = enrichCatalogEntry(ruleId, source);
+      const ownership = enriched.talentOwnership;
+      if (ownership?.ownershipKind !== "spec-selector") continue;
+      if (finitePositiveNumber(enriched.sourceEntityId) !== sourceEntityId) continue;
+      for (const specId of ownershipSpecIds(ownership)) specIds.add(specId);
     }
   }
 
@@ -774,6 +1018,10 @@ function decorateCatalogEntries(
   );
 }
 
+function decorateCatalogEntryList(entries: ModifierSourceCatalogEntry[]): ModifierSourceCatalogEntry[] {
+  return entries.map(decorateBuffSourceCatalogEntry);
+}
+
 export async function buildModifierSourceCatalog(entity: HistoryEntityData): Promise<ModifierSourceCatalog> {
   await Promise.all([
     loadModifierClassificationTable(),
@@ -782,7 +1030,12 @@ export async function buildModifierSourceCatalog(entity: HistoryEntityData): Pro
   ]);
   let byBuffId: Record<string, ModifierSourceCatalogEntry[]> = {};
   const reportableBuffIds = new Set<number>();
-  for (const buffId of bucketIds(entity)) {
+  const relevantBuffIds = sortedNumbers(new Set([
+    ...bucketIds(entity),
+    ...activeFactorItemIds(entity),
+    ...activeRuntimeBuffIds(entity),
+  ]));
+  for (const buffId of relevantBuffIds) {
     const entries = reportableEntriesForBuffId(buffId);
     if (entries.length > 0) {
       byBuffId[String(buffId)] = entries;
@@ -791,11 +1044,19 @@ export async function buildModifierSourceCatalog(entity: HistoryEntityData): Pro
   }
   addRuntimeQualifiedImagineEntries(byBuffId, reportableBuffIds, entity);
   byBuffId = decorateCatalogEntries(byBuffId);
+  const activeEntries = decorateCatalogEntryList(activeCatalogEntries(entity));
+  for (const entry of activeEntries) {
+    for (const buffId of entry.buffIds ?? []) {
+      const parsed = finitePositiveNumber(buffId);
+      if (parsed !== null) reportableBuffIds.add(parsed);
+    }
+  }
   const ownerSpecIds = inferEntitySpecIdsFromCatalog(entity, byBuffId);
   const ignoredBuffIds = sortedNumbers(modifierRecountTable.ignoredBuffIds ?? []);
   const ignoredBuffIdSet = new Set(ignoredBuffIds);
   return {
     byBuffId,
+    ...(activeEntries.length > 0 ? { activeEntries } : {}),
     ignoredBuffIds,
     reportableBuffIds: sortedNumbers(reportableBuffIds),
     debugBuffIds: sortedNumbers(modifierRecountTable.debugBuffIds ?? []),

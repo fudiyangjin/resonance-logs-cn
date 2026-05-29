@@ -1,0 +1,406 @@
+[
+  {
+    "id": 3901,
+    "DescriptionSearchText": "Transforms into Boss: Inferno Ogre to unleash a forward fiery breath that deals Attack DMG and interrupts affected targets. Concurrently, applies Healing to you, and 100% excess healing is converted into a Shield lasting 20s. The transformed form reduces DMG taken by 50%. 变身为首领·火焰食人魔，朝前方喷吐火焰，对目标造成物理伤害并打断目标，同时自身获得治疗，过量治疗100%转化成持续20秒的护盾。变身期间受到伤害降低50%。 變身為首領·火焰食人魔，朝前方噴吐火焰，對目標造成物理傷害並打斷目標，同時自身獲得治療，過量治療100%轉化成持續20秒的護盾。變身期間受到傷害降低50%。"
+  },
+  {
+    "id": 3902,
+    "DescriptionSearchText": "Summons Boss: Tempest Ogre and channels the power of thunder to generate a vortex, continuously pulling in enemies near the target and dealing AoE Magic DMG when the duration ends. 召唤首领·雷电食人魔，引雷霆之力，召唤雷霆旋涡，持续吸引目标附近的敌人，持续时间结束后，造成范围魔法伤害。 召喚首領·雷電食人魔，引雷霆之力，召喚雷霆漩渦，持續吸引目標附近的敵人，持續時間結束後，造成範圍魔法傷害。"
+  },
+  {
+    "id": 3903,
+    "DescriptionSearchText": "Transforms into Boss: Brigand Leader and summons a blazing giant axe, increasing the party's ATK within range for a period and granting yourself additional ATK boost. (This effect cannot stack and only one can be active at a time.) 变身为首领·山贼头目，召唤烈焰巨斧，一段时间内提升范围内全队攻击力，自身获得额外攻击力提升。 【不可叠加，同时释放仅生效一个】 變身為首領·山賊頭目，召喚烈焰巨斧，一段時間內提升範圍內全隊攻擊力，自身獲得額外攻擊力提升。 【不可疊加，同時釋放僅生效一個】"
+  },
+  {
+    "id": 3904,
+    "DescriptionSearchText": "Summons Elite: Muku Warrior to leap forward and deliver a powerful strike, dealing AoE Attack DMG. This attack is guaranteed to Crit. Upon the skill cast, your Crit and Crit DMG are increased for a period. 召唤精英·姆克兵长，向前方跃起发起一次强力攻击，造成范围物理伤害，本次伤害必定暴击。 技能释放后，一段时间内你的暴击和暴击伤害获得提升。 召喚精英·姆克兵長，向前方躍起發起一次強力攻擊，造成範圍物理傷害，本次傷害必定暴擊。 技能釋放後，一段時間內你的暴擊和暴擊傷害獲得提升。"
+  },
+  {
+    "id": 3905,
+    "DescriptionSearchText": "Summons Elite: Boarrier Tyrant to charge forward with tusks for 3s. Deals Attack DMG and knocks enemies airborne during the charge. Boarrier tusks tear through flesh, inflicting 100% Wound on enemies hit for 15s. Upon the skill cast, the DMG dealt and healing of your Special Attack are increased for a period. 召唤精英·威猛野猪，向前保持獠牙冲锋状态3秒。过程中对冲锋到的敌人造成物理伤害并击飞。猪牙可以撕裂伤口，对受到伤害的敌方目标施加100%重伤，持续15秒。 技能释放后，一段时间内你的特殊攻击伤害和治疗获得提升。 召喚精英·威猛野豬，向前保持獠牙衝鋒狀態3秒。過程中對衝鋒到的敵人造成物理傷害並擊飛。豬牙可以撕裂傷口，對受到傷害的敵方目標施加100%重傷，持續15秒。 技能釋放後，一段時間內你的特殊攻擊傷害和治療獲得提升。"
+  },
+  {
+    "id": 3906,
+    "DescriptionSearchText": "Summons Boss: Frost Ogre to execute a spinning attack with an ice hammer, resulting in Attack DMG and freezing all targets on hit. Upon the skill cast, your Resilience Break Bonus is increased for a period. 召唤首领·寒霜食人魔，挥舞寒冰大锤旋转攻击敌人造成物理伤害，对命中到的目标造成冰冻效果。 技能释放后，一段时间内你的破韧加成获得提升。 召喚首領·寒霜食人魔，揮舞寒冰大錘旋轉攻擊敵人造成物理傷害，對命中到的目標造成冰凍效果。 技能釋放後，一段時間內你的破韌加成獲得提升。"
+  },
+  {
+    "id": 3907,
+    "DescriptionSearchText": "Transforms into Elite: Inferno Goblin Mage and summons meteors from the sky, dealing Magic DMG and interrupting the target's actions. Upon the skill cast, your Intellect is increased for a period. 变身为精英·火焰哥布林巫师，召唤陨石从天而降，造成魔法伤害并打断目标。 技能释放后，一段时间内你的智力获得提升。 變身為精英·火焰哥布林巫師，召喚隕石從天而降，造成魔法傷害並打斷目標。 技能釋放後，一段時間內你的智力獲得提升。"
+  },
+  {
+    "id": 3908,
+    "DescriptionSearchText": "Summons Boss: Muku King to channel Forest Energy, healing up to 10 allies over time and dispelling debuffs. Upon the skill cast, your healing received is increased for a period. 召唤首领·姆克王，指示其释放森之能量，为至多10名友方目标（优先队友）持续造成治疗，并驱散所受负面效果。 技能释放后，一段时间内你的受治疗强度获得提升。 召喚首領·姆克王，指示其釋放森之能量，為至多10名友方目標（優先隊友）持續造成治療，並驅散所受負面效果。 技能釋放後，一段時間內你的受治療強度獲得提升。"
+  },
+  {
+    "id": 3909,
+    "DescriptionSearchText": "[Elite Summon] - Void Foxen. Pounces forward with blinding speed, dealing AoE Attack DMG and increasing Haste for 20s. 共鸣精英·变异地狐的力量，变身为精英·变异地狐，腾空而起快速扑向前方进行迅捷猎杀，造成范围物理伤害，并提升自身急速，持续20秒。 共鳴精英·變異地狐的力量，變身為精英·變異地狐，騰空而起快速撲向前方進行迅捷獵殺，造成範圍物理傷害，並提升自身急速，持續20秒。"
+  },
+  {
+    "id": 3910,
+    "DescriptionSearchText": "Summons Elite: Void Ogre, roars in place, and fires 6 whirlwind-like Void Projectiles at the target, dealing Attack DMG. Inflicts Void Corruption Decay on the target for 10s, dealing Magic DMG per second, up to 5 stacks. 100% of the DMG dealt over time is converted into your HP. 召唤精英·虚蚀食人魔，原地怒吼，向目标发射6颗狂风乱舞般的虚蚀能量体，造成物理伤害。同时为目标附加持续10秒的虚蚀侵害，每秒造成魔法伤害，至多可叠加5层，造成的持续伤害100%为自身回复生命值。 召喚精英·虛蝕食人魔，原地怒吼，向目標發射6顆狂風亂舞般的虛蝕能量體，造成物理傷害。同時為目標附加持續10秒的虛蝕侵害，每秒造成魔法傷害，至多可疊加5層，造成的持續傷害100%為自身回復生命值。"
+  },
+  {
+    "id": 3911,
+    "DescriptionSearchText": "Summons Tatta to grant Battle Will to the entire team, preventing all allies from being defeated and ensuring their HP does not fall below a certain threshold for a period of time. Exhausted: Cannot be affected by the same type of effect within 60s (Exhausted effects are enhanced in party dungeons of Nightmare mode). 召唤塔塔，对全队施加战意，一定时间内不会被击败，且生命值不低于一定比例。 力竭:60秒内无法受到同类型效果影响（力竭效果在噩梦难度团队副本中会被放大） 召喚塔塔，對全隊施加戰意，一定時間內不會被擊敗，且生命值不低於一定比例。 力竭:60秒內無法受到同類型效果影響（力竭效果在噩夢難度團隊副本中會被放大）"
+  },
+  {
+    "id": 3913,
+    "DescriptionSearchText": "Transforms into Elite: Shadow Captain to launch an Electro Bomb at the designated target, dealing AoE Attack DMG and interrupting the target's actions. Upon the skill cast, the DMG dealt and healing of your Expertise Skill are increased for a period. 变身为精英·黯影枪手队长，向目标发射电磁爆弹，爆炸造成范围物理伤害并打断目标。 技能释放后，一段时间内你的专精技能伤害和治疗获得提升。 變身為精英·黯影槍手隊長，向目標發射電磁爆彈，爆炸造成範圍物理傷害並打斷目標。 技能釋放後，一段時間內你的專精技能傷害和治療獲得提升。"
+  },
+  {
+    "id": 3914,
+    "DescriptionSearchText": "Summons Elite: Goblin Guard to perform multiple sword energy attacks forward, dealing Attack DMG. Sword energy hits will reduce the target's Armor. (The effect cannot stack, and only one effect of the same type will be effective.) Upon the skill cast, your Block DMG reduction is increased for a period. 召唤精英·哥布林护卫，对前方进行多次剑气攻击，造成物理伤害，剑气命中时会降低目标物理防御力。 【不可叠加，同效果仅生效一个】 技能释放后，一段时间内你的格挡减伤获得提升。 召喚精英·哥布林護衛，對前方進行多次劍氣攻擊，造成物理傷害，劍氣命中時會降低目標物理防禦力。 【不可疊加，同效果僅生效一個】 技能釋放後，一段時間內你的格擋減傷獲得提升。"
+  },
+  {
+    "id": 3915,
+    "DescriptionSearchText": "Summons Elite: Goblin Warrior to shoot in a fan-shaped area in front, dealing Attack DMG. Upon the skill cast, your Luck and Lucky Strike Chance are increased for a period. 召唤精英·哥布林弩手，朝前方扇形范围射击，造成物理伤害。 技能释放后，一段时间内你的幸运和幸运一击倍率获得提升。 召喚精英·哥布林弩手，朝前方扇形範圍射擊，造成物理傷害。 技能釋放後，一段時間內你的幸運和幸運一擊倍率獲得提升。"
+  },
+  {
+    "id": 3916,
+    "DescriptionSearchText": "[Elite Summon] - Brigand Archer. Charges and fires a Piercing Arrow at the target, dealing Attack DMG. 共鸣精英·山贼射手的力量，召唤精英·山贼射手，在原地蓄力朝目标释放贯通箭，造成物理伤害。 共鳴精英·山賊射手的力量，召喚精英·山賊射手，在原地蓄力朝目標釋放貫通箭，造成物理傷害。"
+  },
+  {
+    "id": 3917,
+    "DescriptionSearchText": "Summons Elite: Shadow Commander to execute a forward flurry of slashes, inflicting Attack DMG and interrupting the target's actions. All Heavy Slash charges are consumed in the process to significantly amplify the DMG inflicted. 召唤精英·黯影剑士队长，朝前方连续斩击，造成物理伤害并打断目标，并且消耗所有的重斩计数，大幅度提升本次伤害。 召喚精英·黯影劍士隊長，朝前方連續斬擊，造成物理傷害並打斷目標，並且消耗所有的重斬計數，大幅度提升本次傷害。"
+  },
+  {
+    "id": 3918,
+    "DescriptionSearchText": "[Boss Summon] - Crimson Foxen. Strike instantly, dealing 1 instance of Attack DMG. Then it continues assisting the player in combat for 15s. Can be directed via Storm Arrow from the Marksman. 共鸣首领·赤玉地狐的力量，召唤首领·赤玉地狐，立即造成一次物理伤害，其后协同玩家攻击，存在15秒，可受到神射手职业的暴风箭矢技能指挥。 共鳴首領·赤玉地狐的力量，召喚首領·赤玉地狐，立即造成一次物理傷害，其後協同玩家攻擊，存在15秒，可受到神射手職業的暴風箭矢技能指揮。"
+  },
+  {
+    "id": 3919,
+    "DescriptionSearchText": "[Boss Summon] - Inspecting Floating Eye. Fires continuously at the target, dealing Attack DMG. 共鸣首领·审视浮瞳的力量，召唤首领·审视浮瞳，朝目标持续射击，造成物理伤害。 共鳴首領·審視浮瞳的力量，召喚首領·審視浮瞳，朝目標持續射擊，造成物理傷害。"
+  },
+  {
+    "id": 3920,
+    "DescriptionSearchText": "Summons Airona. After a brief cast, revives up to 4 nearby teammates. Weakness: Cannot be affected by the same type of effect within 60s (Weakness effects are enhanced in party dungeons of Nightmare mode). 召唤艾露娜，短暂吟唱后，复活周围的队友，最多4名。 虚弱:60秒内无法受到同类型效果影响（虚弱效果在噩梦难度团队副本中会被放大） 召喚艾露娜，短暫吟唱後，復活周圍的隊友，最多4名。 虛弱:60秒內無法受到同類型效果影響（虛弱效果在噩夢難度團隊副本中會被放大）"
+  },
+  {
+    "id": 3921,
+    "DescriptionSearchText": "Summons Tina to channel the power of time, reducing the Skill CDs of yourself and up to 10 surrounding allies for a certain period. (Cannot be affected by the same type of effect within 60s.) 召唤蒂娜，以时光之力灌注，使自己和周围至多10名友方目标（优先队友）一段时间内技能冷却速度提升。 【60秒内无法受到同类型效果影响】 召喚蒂娜，以時光之力灌注，使自己和周圍至多10名友方目標（優先隊友）一段時間內技能冷卻速度提升。 【60秒內無法受到同類型效果影響】"
+  },
+  {
+    "id": 3922,
+    "DescriptionSearchText": "Summons Olvera to shuttle back and forth in a forward direction, drawing in enemies encountered along the path, dealing Attack DMG, and interrupting their actions. When dealing DMG, there is a chance to inflict Seed of Lightning on the targets for 10s. Dealing DMG to targets with Seed of Lightning will cause an explosion (CD: 2s), dealing Magic DMG. Any target with Seed of Lightning defeated will reduce CD time by 20s. 召唤奥尔维拉，向前方来回穿梭，聚集路径上的敌人，并造成物理伤害并打断目标。造成伤害时有一定概率给目标施加雷电之种，持续10秒。对拥有雷电之种的目标造成伤害时会使其爆炸（冷却时间2秒），造成魔法伤害。任何拥有雷电之种的目标被击败，都会减少20秒冷却时间。 召喚奧爾維拉，向前方來回穿梭，聚集路徑上的敵人，並造成物理傷害並打斷目標。造成傷害時有一定機率給目標施加雷電之種，持續10秒。對擁有雷電之種的目標造成傷害時會使其爆炸（冷卻時間2秒），造成魔法傷害。任何擁有雷電之種的目標被擊敗，都會減少20秒冷卻時間。"
+  },
+  {
+    "id": 3923,
+    "DescriptionSearchText": "Summons Boss: Muku Chief to slam the ground around, dealing AoE Attack DMG. Holds 2 charges. Upon the skill cast, your Crit and Crit DMG are increased for a period. 召唤首领·姆克头目，对周围进行砸地，造成范围物理伤害，可充能2次。 技能释放后，一段时间内你的暴击和暴击伤害获得提升。 召喚首領·姆克頭目，對周圍進行砸地，造成範圍物理傷害，可充能2次。 技能釋放後，一段時間內你的暴擊和暴擊傷害獲得提升。"
+  },
+  {
+    "id": 3924,
+    "DescriptionSearchText": "Resonates with the power of Elite: Goblin Wind Mage to transform into its form. Executes a frontal cone attack that deals Attack DMG and silences all affected targets. 共鸣精英·风巫师哥布林的力量，变身为精英·风巫师哥布林，向前方扇形范围造成物理伤害，并沉默目标。 共鳴精英·風巫師哥布林的力量，變身為精英·風巫師哥布林，向前方扇形範圍造成物理傷害，並沉默目標。"
+  },
+  {
+    "id": 3925,
+    "DescriptionSearchText": "Transforms into Elite: Mighty Colossus to charge and deal Attack DMG. The longer you charge, the greater the effect on Resilience breaking. Each stack increases the Resilience Break done by 50%. (3 stacks at Tier 3 and 6 stacks at Tier 5.) Upon the skill cast, your Resilience Break Bonus is increased for a period. 变身为精英·巨魔，蓄力对前方造成物理伤害，蓄力越久，破韧效率越高，每层提升50%本次伤害造成的破韧值。（达到3阶后初始从3层开始叠加，达到5阶后初始从6层开始叠加） 技能释放后，一段时间内你的破韧加成获得提升。 變身為精英·巨魔，蓄力對前方造成物理傷害，蓄力越久，破韌效率越高，每層提升50%本次傷害造成的破韌值。（達到3階後初始從3層開始疊加，達到5階後初始從6層開始疊加） 技能釋放後，一段時間內你的破韌加成獲得提升。"
+  },
+  {
+    "id": 3926,
+    "DescriptionSearchText": "Summons Boss: Storm Goblin King to release a meteor shower at the target, dealing Magic DMG. Upon the skill cast, your Luck and DMG dealt and healing of Luck effects are increased for a period. Tier 5: While active, trigger all unlocked passive Luck effects from your Plains Battle Imagines. 召唤首领·飓风哥布林王，对目标释放一次流星雨，造成魔法伤害。技能释放后，一段时间内你的幸运和触发的幸运效果的伤害和治疗获得提升。 5阶激活：主动效果持续期间，可触发所有已解锁的平原战斗幻想的被动幸运效果。 召喚首領·颶風哥布林王，對目標釋放一次流星雨，造成魔法傷害。技能釋放後，一段時間內你的幸運和觸發的幸運效果的傷害和治療獲得提升。 5階啟動：主動效果持續期間，可觸發所有已解鎖的平原戰鬥幻想的被動幸運效果。"
+  },
+  {
+    "id": 3927,
+    "DescriptionSearchText": "Summons Elite: Jungle Goblin Warrior and roars. Casts the skill, temporarily boosting Strength, empowering the next attack to deal bonus Attack DMG in a limited area, and interrupting the target's actions. 召唤精英·丛林哥布林战士，发出怒吼。 技能释放后，一段时间内你的力量获得提升，并且持续期间下一次造成伤害时对首个目标周围小范围额外造成一次物理伤害并打断目标。 召喚精英·叢林哥布林戰士，發出怒吼。 技能釋放後，一段時間內你的力量獲得提升，並且持續期間下一次造成傷害時對首個目標周圍小範圍額外造成一次物理傷害並打斷目標。"
+  },
+  {
+    "id": 3928,
+    "DescriptionSearchText": "Summons Elite: Muku Scout to chase the target, dealing Attack DMG. Upon the skill cast, immediately gains full passive effects, and the stack count is doubled within 20s. 召唤精英·姆克尖兵，持续追击目标，造成物理伤害。 技能释放后立刻获得满层被动效果，且20秒内层数视为翻倍。 召喚精英·姆克尖兵，持續追擊目標，造成物理傷害。 技能釋放後立刻獲得滿層被動效果，且20秒內層數視為翻倍。"
+  },
+  {
+    "id": 3929,
+    "DescriptionSearchText": "Transforms into Elite: Void Arachnocrab, and gains Invincibility for 5s. 变身为精英·污染蟹蛛，使自身进入持续5秒的无敌状态。 變身為精英·污染蟹蛛，使自身進入持續5秒的無敵狀態。"
+  },
+  {
+    "id": 3930,
+    "DescriptionSearchText": "Transforms into Elite: Brigand Guard Captain to grant Earth Shield, recovering a percentage of lost HP when you are attacked, up to 9 times. During this, your Endurance is increased. 变身为精英·山贼护卫队长，释放后获得大地之盾，受到攻击后回复自身已损失生命值的一定比例，至多生效9次，期间你的耐力获得提升。 變身為精英·山賊護衛隊長，釋放後獲得大地之盾，受到攻擊後回復自身已損失生命值的一定比例，至多生效9次，期間你的耐力獲得提升。"
+  },
+  {
+    "id": 3931,
+    "DescriptionSearchText": "[Boss Summon] - Dogorman. Transforms into Boss Dogorman and let out a roar, summoning a sandstone field that follows you for 10s. Grants DMG Reduction to allies in the field. [Non-stackable. Only one effect of the same type may be active] 共鸣首领·多戈尔曼的力量，变身为首领·多戈尔曼，发出怒吼，召唤跟随自身移动的砂岩领域，持续10秒，领域内队友获得伤害减免。 【不可叠加，同效果仅生效一个】 共鳴首領·多戈爾曼的力量，變身為首領·多戈爾曼，發出怒吼，召喚跟隨自身移動的砂岩領域，持續10秒，領域內隊友獲得傷害減免。 【不可疊加，同效果僅生效一個】"
+  },
+  {
+    "id": 3932,
+    "DescriptionSearchText": "Resonates with the power of Elite: Crimson Sprayer to transform into its form. Deals Attack DMG to nearby enemies and inflicts 100% Wound for 15s. 共鸣精英·赤色飞沫的力量，变身为精英·赤色飞沫，对周围敌人造成物理伤害，并对受到伤害的敌方目标施加100%重伤，持续15秒。 共鳴精英·赤色飛沫的力量，變身為精英·赤色飛沫，對周圍敵人造成物理傷害，並對受到傷害的敵方目標施加100%重傷，持續15秒。"
+  },
+  {
+    "id": 3933,
+    "DescriptionSearchText": "[Elite Summon] - Axe Muku. Deals Attack DMG, reducing the target's ATK for 10s. [Non-stackable. Only one effect of the same type may be active] 共鸣精英·大斧姆克的力量，召唤精英·大斧姆克，造成物理伤害，并使目标攻击力降低，持续10秒。 【不可叠加，同效果仅生效一个】 共鳴精英·大斧姆克的力量，召喚精英·大斧姆克，造成物理傷害，並使目標攻擊力降低，持續10秒。 【不可疊加，同效果僅生效一個】"
+  },
+  {
+    "id": 3934,
+    "DescriptionSearchText": "Summons Elite: Brigand Scout Leader to execute continuous attacks on the designated target, dealing Attack DMG and interrupting their actions. Upon the skill cast, your Agility is increased for a period. 召唤精英·山贼斥候队长，对目标进行连续攻击，造成物理伤害并打断目标。 技能释放后，一段时间内你的敏捷获得提升。 召喚精英·山賊斥候隊長，對目標進行連續攻擊，造成物理傷害並打斷目標。 技能釋放後，一段時間內你的敏捷獲得提升。"
+  },
+  {
+    "id": 3935,
+    "DescriptionSearchText": "Transforms into Boss: Golden Juggernaut, granting yourself and 10 allies Shield. When dealing DMG, the shielded targets generate Thunderstrike (CD: 0.5s), and the DMG dealt depends on the friendly ATK. (This effect cannot stack and only one will be effective.) 变身为首领·凶猛金牙，为自己和周围至多10名友方目标（优先队友）提供护盾，拥有护盾的目标造成伤害时可产生雷击（冷却时间0.5秒），造成的伤害基于友方攻击力。 【不可叠加，同时释放仅生效一个】 變身為首領·兇猛金牙，為自己和周圍至多10名友方目標（優先隊友）提供護盾，擁有護盾的目標造成傷害時可產生雷擊（冷卻時間0.5秒），造成的傷害基於友方攻擊力。 【不可疊加，同時釋放僅生效一個】"
+  },
+  {
+    "id": 3936,
+    "DescriptionSearchText": "Summons Elite: Lizardman Mage to conjure the Water of Silence at the target's location, dealing Magic DMG and inflicting Slow. Upon the skill cast, your Ice Bonus is increased for a period. 召唤精英·蜥蜴人法师，在目标脚下召唤静默之水，造成魔法伤害，并使目标减速。 技能释放后，一段时间内你的冰元素加成获得提升。 召喚精英·蜥蜴人法師，在目標腳下召喚靜默之水，造成魔法傷害，並使目標減速。 技能釋放後，一段時間內你的冰元素加成獲得提升。"
+  },
+  {
+    "id": 3937,
+    "DescriptionSearchText": "Summons Elite: Lizardman Hunter to chant briefly, dealing Magic DMG. Upon the skill cast, your Luck and Lucky Strike Chance are increased for a period. 召唤精英·蜥蜴人猎手，短暂吟唱后，造成魔法伤害。 技能释放后，一段时间内你的幸运和幸运一击倍率获得提升。 召喚精英·蜥蜴人獵手，短暫吟唱後，造成魔法傷害。 技能釋放後，一段時間內你的幸運和幸運一擊倍率獲得提升。"
+  },
+  {
+    "id": 3938,
+    "DescriptionSearchText": "Summons Boss: Phantom Arachnocrab and transforms into a cocoon. Following a brief delay, the cocoon bursts, dealing Attack DMG and interrupting the actions of the affected target. Your Mastery is increased for a period. 召唤首领·幻妖蟹蛛，变为蛛茧，短暂延迟后蛛茧破裂造成物理伤害并打断目标，且一段时间内你的精通获得提升。 召喚首領·幻妖蟹蛛，變為蛛繭，短暫延遲後蛛繭破裂造成物理傷害並打斷目標，且一段時間內你的精通獲得提升。"
+  },
+  {
+    "id": 3939,
+    "DescriptionSearchText": "Summons Elite: Great Warhog to release a Lightning Orb forward, dealing Attack DMG. Upon the skill cast, your Light Bonus is increased for a period. 召唤精英·雷光野猪，对前方释放雷光球，造成物理伤害。 技能释放后，一段时间内你的光元素加成获得提升。 召喚精英·雷光野豬，對前方釋放雷光球，造成物理傷害。 技能釋放後，一段時間內你的光元素加成獲得提升。"
+  },
+  {
+    "id": 3940,
+    "DescriptionSearchText": "Summons Elite: Storm Goblin Warrior to continuously release Whirlwind Slash, dealing Attack DMG and pulling in all surrounding units. Upon the skill cast, your Wind Bonus is increased for a period. 召唤精英·飓风哥布林战士，持续释放旋风斩，造成物理伤害并裹挟周围所有单位。 技能释放后，一段时间内你的风元素加成获得提升。 召喚精英·颶風哥布林戰士，持續釋放旋風斬，造成物理傷害並裹挾周圍所有單位。 技能釋放後，一段時間內你的風元素加成獲得提升。"
+  },
+  {
+    "id": 3941,
+    "DescriptionSearchText": "Transforms into Elite: Void Bzzar for a period of time, during which you can release stings and projectiles. 变身为精英·变异蜂一段时间，持续时间内可以释放刺击和投射物。 變身為精英·變異蜂一段時間，持續時間內可以釋放刺擊和投射物。"
+  },
+  {
+    "id": 3942,
+    "DescriptionSearchText": "Summons Boss: Venobzzar Incubator to continuously attack surrounding units, dealing Attack DMG. Each attack inflicts Vulnerability on the target, and your DMG dealt to the target is increased. (This effect cannot stack and only one will be effective.) 召唤首领·剧毒蜂巢，持续对周围进行攻击，造成物理伤害，每次攻击会给目标施加易伤，自身对目标获得额外伤害提升。 【不可叠加，同时释放仅生效一个】 召喚首領·劇毒蜂巢，持續對周圍進行攻擊，造成物理傷害，每次攻擊會給目標施加易傷，自身對目標獲得額外傷害提升。 【不可疊加，同時釋放僅生效一個】"
+  },
+  {
+    "id": 3943,
+    "DescriptionSearchText": "Summons Boss: Iron Fang to deliver AoE Attack DMG to nearby enemies, inflicting a 100% Wound on all affected targets for 15s. 召唤首领·铁牙，对周围造成一次大范围物理伤害，并对敌方目标施加100%重伤，持续15秒。 召喚首領·鐵牙，對周圍造成一次大範圍物理傷害，並對敵方目標施加100%重傷，持續15秒。"
+  },
+  {
+    "id": 3944,
+    "DescriptionSearchText": "Summons Boss: Celestial Flier to charge forward, dealing Ice Attack DMG and interrupting the targets' actions. After casting, your Haste is increased for a period of time. 召唤首领·圣域飞鱼，向前冲锋造成冰元素物理伤害并打断目标。技能释放后，一段时间内你的急速获得提升。 召喚首領·聖域飛魚，向前衝鋒造成冰元素物理傷害並打斷目標。技能釋放後，一段時間內你的急速獲得提升。"
+  },
+  {
+    "id": 3945,
+    "DescriptionSearchText": "Summons Boss: Lizardman King to deal Ice Attack DMG to nearby enemies and Silence them for 10s. 召唤首领·蜥蜴人王，对周围造成冰元素物理伤害，并在10秒内持续沉默目标。 召喚首領·蜥蜴人王，對周圍造成冰元素物理傷害，並在10秒內持續沉默目標。"
+  },
+  {
+    "id": 3946,
+    "DescriptionSearchText": "Resonates with the power of Boss: Goblin King, summoning 1–3 goblins at random to cast skills. Always summons 1 from Elite: Goblin Guard or Elite: Goblin Warrior. Has a chance to additionally summon 1 Elite: Jungle Goblin Warrior. Has a chance to summon 1 from Elite: Storm Goblin Axe or Boss: Storm Goblin King. Has a 30% chance to summon the Boss. 共鸣首领·哥布林王的力量，随机召唤1~3只哥布林释放技能。 必定在精英·哥布林护卫和精英·哥布林弩手中随机召唤1只； 有一定概率额外召唤1只精英·丛林哥布林战士； 有一定概率在精英·飓风巨斧哥布林和首领·风哥布林王中随机召唤1只，其中30%概率召唤首领。 共鳴首領·哥布林王的力量，隨機召喚1~3隻哥布林釋放技能。 必定在精英·哥布林護衛和精英·哥布林弩手中隨機召喚1隻； 有一定機率額外召喚1隻精英·叢林哥布林戰士； 有一定機率在精英·颶風巨斧哥布林和首領·風哥布林王中隨機召喚1隻，其中30%機率召喚首領。"
+  },
+  {
+    "id": 3947,
+    "DescriptionSearchText": "Summons Elite: Muku Vanguard to charge forward, dealing Attack DMG. Upon the skill cast, your Thunder Bonus is increased for a period. 召唤精英·姆克狂战士，向前冲锋造成物理伤害。 技能释放后，一段时间内你的雷元素加成获得提升。 召喚精英·姆克狂戰士，向前衝鋒造成物理傷害。 技能釋放後，一段時間內你的雷元素加成獲得提升。"
+  },
+  {
+    "id": 3948,
+    "DescriptionSearchText": "Summons Rorola, resonating with the power of ancestors to gain a damage boost for some time. Also, every 10 hits on targets grant an additional damage boost, stacking up to 5 times. Once the cap is reached, subsequent hits extend the duration of the additional boost (the duration of the Base DMG boost does not extend). Each extension adds 3s, with a maximum of 5 extensions. At the same time, grants the Life Steal effect, restoring HP equal to a portion of damage dealt (the duration can extend). This skill holds 2 charges. 召唤罗罗拉，共鸣先祖之力协同攻击，一段时间内使自身对命中目标造成的伤害提高，对目标每造成10次伤害会获得额外提升，最多可额外提升5次，到达上限后，转为延续额外伤害的持续时间（基础伤害提升的时间不会被延续），每次延续3秒，最多可额外延续5次。同时自身获得生命吸取：可回复一定比例对目标造成的伤害（时间会被延续）。 技能可充能2次。 召喚羅羅拉，共鳴先祖之力協同攻擊，一段時間內使自身對命中目標造成的傷害提高，對目標每造成10次傷害會獲得額外提升，最多可額外提升5次，到達上限後，轉為延續額外傷害的持續時間（基礎傷害提升的時間不會被延續），每次延續3秒，最多可額外延續5次。同時自身獲得生命吸取：可回復一定比例對目標造成的傷害（時間會被延續）。 技能可充能2次。"
+  },
+  {
+    "id": 3949,
+    "DescriptionSearchText": "Transforms into Dorothy, replacing basic attack modules and gaining Artisan's Power. Passive: Dealing damage has a 40% chance to trigger Chain Lightning (trigger interval: at least 0.5s). ① Charges and fires a powerful shot at the target, dealing Attack DMG. Each additional charge increases the damage by 150%. ② Leaps into the air and launches a Thunderstorm Bolt at the target, dealing Attack DMG and creating a Thunderstorm Zone at the target for 7s. Thunderstorm Zone deals Attack DMG per second to enemies within and slows them. ③ Continuously unleashes Thunder Tracers, dealing Attack DMG and inflicting Paralysis on hit. ④ Fires an Oblivion Bomb, which explodes after traveling a distance or upon impact, dealing Attack DMG. 变身为陶洛斯，替换全新的普通攻击模组的同时，获得工匠之力。 被动：造成伤害时有40%概率触发闪电链（每0.5秒至多触发一次） ①蓄力朝目标射出威力强大的一枪，造成物理伤害，每额外蓄力一段，造成的伤害提高150% ②跃至空中后朝目标发射一颗雷暴弹，造成物理伤害，并在目标处产生「雷暴区域」，持续7秒，雷暴区域每秒对范围内的敌方单位造成物理伤害，并施加减速效果。 ③持续不间断的施放追踪雷弹，追踪雷弹命中后造成物理伤害，并施加麻痹效果。 ④发射一颗溟灭弹，溟灭弹在飞行一段距离或者碰撞后会爆炸造成物理伤害 變身為陶洛斯，替換全新的普通攻擊模組的同時，獲得工匠之力。 被動：造成傷害時有40%機率觸發閃電鏈（每0.5秒至多觸發一次） ①蓄力朝目標射出威力強大的一槍，造成物理傷害，每額外蓄力一段，造成的傷害提高150% ②躍至空中後朝目標發射一顆雷暴彈，造成物理傷害，並在目標處產生「雷爆區域」，持續7秒，雷爆區域每秒對範圍內的敵方單位造成物理傷害，並施加減速效果。 ③持續不間斷的施放追蹤雷彈，追蹤雷彈命中後造成物理傷害，並施加麻痹效果。 ④發射一顆溟滅彈，溟滅彈在飛行一段距離或者碰撞後會爆炸造成物理傷害"
+  },
+  {
+    "id": 3950,
+    "DescriptionSearchText": "Summons Boyce to create a field of frost by concentrating ice power, dealing Ice Magic DMG. After casting, your ATK is increased for a period of time. Each cast of a Special Attack grants an additional increase, stacking up to 5 times. At max stacks, gain a bonus to Attack SPD and Casting SPD. Performing a Special Attack extends this bonus's duration by 3s, up to a max of 5 times (The ATK bonus's duration is not affected). This skill holds 2 charges. 召唤博伊斯，凝聚冰霜之力制造冰霜区域，造成冰元素魔法伤害。 技能释放后，一段时间内你的攻击力获得提升，每次施放特殊攻击时获得额外提升，最高可叠加5层。达到满层时获得攻击速度和施法速度加成，继续施放特殊攻击可延续此加成的持续时间，每次延续3秒，最多可额外延续5次（攻击力加成的持续时间不会被延续）。 技能可充能2次。 召喚博伊斯，凝聚冰霜之力製造冰霜區域，造成冰元素魔法傷害。 技能釋放後，一段時間內你的攻擊力獲得提升，每次施放特殊攻擊時獲得額外提升，最高可疊加5層。達到滿層時獲得攻擊速度和施法速度加成，繼續施放特殊攻擊可延續此加成的持續時間，每次延續3秒，最多可額外延續5次（攻擊力加成的持續時間不會被延續）。 技能可充能2次。"
+  },
+  {
+    "id": 3951,
+    "DescriptionSearchText": "Summons Fafala to create a field. You and allies within the field gain Final DMG Reduction and Super Armor. When you deal damage from inside the field, inflict bonus damage based on a percentage of your DEF (can trigger at most once every 1s). When you take damage, reduce the CD of this Skill by 1s (can trigger at most once every 2s). [This effect does not stack. Only one instance of this effect can be active at a time. 召唤法法菈，生成一个领域。 处于领域内的自身和队友获得最终伤害减免和霸体。当自身处于领域内造成伤害时，额外附加一个防御力百分比伤害（每1秒至多触发1次），当你受到伤害时减少1秒当前共鸣技能冷却时间（每2秒至多触发1次） 【不可叠加，同效果仅生效一个】 召喚法法菈，生成一個領域。 處於領域內的自身和隊友獲得最終傷害減免和霸體。當自身處於領域內造成傷害時，額外附加一個防禦力百分比傷害（每1秒至多觸發1次），當你受到傷害時減少1秒當前共鳴技能冷卻時間（每2秒至多觸發1次） 【不可疊加，同效果僅生效一個】"
+  },
+  {
+    "id": 3952,
+    "DescriptionSearchText": "Summons Boss: Blackstone Captain to ignite flames centered on yourself, dealing Fire Attack DMG. After casting, your Attack SPD and Casting SPD are increased for a period of time. 召唤首领·黑石军团卫队长，以自身为中心燃爆火焰，造成火元素物理伤害。 技能释放后，一段时间内你的攻击速度和施法速度获得提升。 召喚首領·黑石軍團衛隊長，以自身為中心燃爆火焰，造成火元素物理傷害。 技能釋放後，一段時間內你的攻擊速度和施法速度獲得提升。"
+  },
+  {
+    "id": 3953,
+    "DescriptionSearchText": "Summons Boss: Goblin Chief to briefly charge up and unleash a forward blade wave that deals Attack DMG. After casting, your Expertise Skill's DMG and healing are increased for a period of time. During this time, dealing damage with an Expertise Skill reduces the CD of this Skill by 0.3s (can trigger at most once every 1s). 召唤首领·哥布林首领，短暂蓄力后向前方射出一道剑气，造成物理伤害。 技能释放后，一段时间内你的专精技能伤害和治疗获得提升，持续期间专精技能造成伤害减少0.3秒当前共鸣技能冷却时间（每1秒至多触发1次）。 召喚首領·哥布林首領，短暫蓄力後向前方射出一道劍氣，造成物理傷害。 技能釋放後，一段時間內你的專精技能傷害和治療獲得提升，持續期間專精技能造成傷害減少0.3秒當前共鳴技能冷卻時間（每1秒至多觸發1次）。"
+  },
+  {
+    "id": 3954,
+    "DescriptionSearchText": "Summons Boss: Crimson Foxen to spin and pounce on the target, dealing Attack DMG. After casting, your Companion ATK is increased for a period of time. 召唤首领·赤玉地狐，回旋扑向目标，造成物理伤害。 技能释放后，一段时间内你的宠物攻击力获得提升。 召喚首領·赤玉地狐，迴旋撲向目標，造成物理傷害。 技能釋放後，一段時間內你的寵物攻擊力獲得提升。"
+  },
+  {
+    "id": 3955,
+    "DescriptionSearchText": "Summons Boss: Cabbage Kingpin to briefly charge up and slam the ground with a hammer, dealing Attack DMG. After casting, your passive effect is locked to the displayed sigil for 20s, and its effect is increased by 100%-150%. 召唤首领·天才卷心菜大王，短暂蓄力后冲锤地面，造成物理伤害。 技能释放后，20秒内你的被动效果根据显示的标记锁定不会变化，且效果提升100%~150%。 召喚首領·天才捲心菜大王，短暫蓄力後衝錘地面，造成物理傷害。 技能釋放後，20秒內你的被動效果根據顯示的標記鎖定不會變化，且效果提升100%~150%。"
+  },
+  {
+    "id": 3956,
+    "DescriptionSearchText": "Summons Boss: Flamehorn to repeatedly ram the target with its horns, dealing Attack DMG. Grants a Luck effect: Triggering a Lucky Strike causes an explosion at the target's location, dealing Magic DMG (cooldown: 0.1s), and immediately grants the Absolute Luck effect. For the duration, Absolute Luck's cooldown becomes 5s. 召唤首领·炎角，对目标连续使用羊角撞击，造成物理伤害。 施放后获得一个幸运效果：触发幸运一击时，在目标处产生一次爆炸，造成魔法伤害（冷却时间0.1秒），立刻获得绝对幸运效果，且持续时间内绝对幸运冷却时间修改为5秒。 召喚首領·炎角，對目標連續使用羊角撞擊，造成物理傷害。 施放後獲得一個幸運效果：觸發幸運一擊時，在目標處產生一次爆炸，造成魔法傷害（冷卻時間0.1秒），立刻獲得絕對幸運效果，且持續時間內絕對幸運冷卻時間修改為5秒。"
+  },
+  {
+    "id": 3957,
+    "DescriptionSearchText": "Summons Boss: Basilisk to spin toward the target, dealing Attack DMG. After casting, grants an All-Element Bonus to you and up to 10 nearby allies (prioritizing teammates) for a period of time. (Cannot be affected by the same type of effect within 60s) 召唤首领·巴西利斯克，向目标旋转攻击，造成物理伤害。 技能释放后，一段时间内使自己和周围至多10名友方目标（优先队友）获得全元素加成。 【60秒内无法受到同类型效果影响】 召喚首領·巴西利斯克，向目標旋轉攻擊，造成物理傷害。 技能釋放後，一段時間內使自己和周圍至多10名友方目標（優先隊友）獲得全元素加成。 【60秒內無法受到同類型效果影響】"
+  },
+  {
+    "id": 3958,
+    "DescriptionSearchText": "Summons Elite: Bluespine Lizard to breathe frost forward, dealing Attack DMG to targets in the area. After casting, increases Versatility for a period of time. 召唤精英·蓝脊巨蜥，朝前方喷吐寒霜，对范围内目标造成物理伤害。 技能释放后，一段时间内你的全能获得提升。 召喚精英·藍脊巨蜥，朝前方噴吐寒霜，對範圍內目標造成物理傷害。 技能釋放後，一段時間內你的全能獲得提升。"
+  },
+  {
+    "id": 3959,
+    "DescriptionSearchText": "Summons Elite: Blackstone Commander to call down lightning from the sky, dealing Magic DMG. For a period of time after the skill is cast, when you deal damage, you will also deal additional Attack DMG to the target equal to a percentage of your Armor (can trigger at most once every 1s). 召唤精英·黑石军团执令官，召唤雷霆之力从天而降，造成魔法伤害。 技能释放后，一段时间内造成伤害时，会额外对目标造成一次物理防御力百分比物理伤害（每1秒至多触发1次）。 召喚精英·黑石軍團執令官，召喚雷霆之力從天而降，造成魔法傷害。 技能釋放後，一段時間內造成傷害時，會額外對目標造成一次物理防禦力百分比物理傷害（每1秒至多觸發1次）。"
+  },
+  {
+    "id": 3960,
+    "DescriptionSearchText": "Transforms into Elite: Blackstone Vanguard to perform a spinning attack that deals Fire Attack DMG. Every stack of Blade Intent allows for an additional spin (up to 15 stacks). This damage benefits from all types of elemental bonuses and is not affected by passive effects. 变身为精英·黑石军团先锋官，进行回旋攻击，造成火元素物理伤害。每有一层剑意，可额外回旋攻击一次（上限15层），该伤害可受到所有类型的元素加成，且不受被动效果影响。 變身為精英·黑石軍團先鋒官，進行迴旋攻擊，造成火元素物理傷害。每有一層劍意，可額外迴旋攻擊一次（上限15層），該傷害可受到所有類型的元素加成，且不受被動效果影響。"
+  },
+  {
+    "id": 3961,
+    "DescriptionSearchText": "Summons Elite: Goblin Trickster to channel for a long time before dealing massive AoE Magic DMG. (This skill damages enemies and up to 20 allies!) 召唤精英·哥布林欺诈师，长时间吟唱后造成大范围魔法伤害。（此技能会对敌方和至多20个友方造成伤害！） 召喚精英·哥布林欺詐師，長時間吟唱後造成大範圍魔法傷害。（此技能會對敵方和至多20個友方造成傷害！）"
+  },
+  {
+    "id": 3962,
+    "DescriptionSearchText": "Summons Elite: Goblin Shaman to briefly channel before summoning an exploding magic orb. The explosion deals Magic DMG to targets in the area and heals up to 10 nearby allies (prioritizing teammates). After casting, for 20s, you deal damage every 2s to the surrounding area equal to 50% of the self-healing from your Class Skills. 召唤精英·哥布林巫医，短暂吟唱后召唤魔力球爆炸，对范围内目标造成魔法伤害，并治疗周围至多10名友方目标（优先队友）。 技能释放后，20秒内每2秒对周围造成职业技能对自身治疗量50%的伤害。 召喚精英·哥布林巫醫，短暫吟唱後召喚魔力球爆炸，對範圍內目標造成魔法傷害，並治療周圍至多10名友方目標（優先隊友）。 技能釋放後，20秒內每2秒對周圍造成職業技能對自身治療量50%的傷害。"
+  },
+  {
+    "id": 3963,
+    "DescriptionSearchText": "Summons Elite: Blackfire Foxen to pounce on, bite, and then swipe its tail at the target, dealing Attack DMG. After casting, your Mastery is increased for a period of time. 召唤精英·黑焰地狐，扑向目标撕咬后甩尾，造成物理伤害。 技能释放后，一段时间内你的精通获得提升。 召喚精英·黑焰地狐，撲向目標撕咬後甩尾，造成物理傷害。 技能釋放後，一段時間內你的精通獲得提升。"
+  },
+  {
+    "id": 3964,
+    "DescriptionSearchText": "Summons Elite: Gloomy Cabbage to briefly charge up and swing a greatsword, dealing Attack DMG to targets in the area. After casting, your Crit and Crit DMG are increased for a while (the values fluctuate based on the Cabbage sigil). 召唤精英忧郁·卷心菜，短暂蓄力后挥舞大剑攻击，对范围内目标造成物理伤害。 技能释放后，一段时间内你的暴击和暴击伤害获得提升（数值根据卷心菜标记浮动）。 召喚精英憂鬱·捲心菜，短暫蓄力後揮舞大劍攻擊，對範圍內目標造成物理傷害。 技能釋放後，一段時間內你的暴擊和暴擊傷害獲得提升（數值根據捲心菜標記浮動）。"
+  },
+  {
+    "id": 3965,
+    "DescriptionSearchText": "Summons Elite: Ruthless Cabbage to randomly call down 1-3 bolts of simulated lightning, dealing Magic DMG to targets in the area. 召唤精英·冷酷卷心菜，随机召唤1~3道虚拟闪电，对范围内目标造成魔法伤害。 召喚精英·冷酷捲心菜，隨機召喚1~3道虛擬閃電，對範圍內目標造成魔法傷害。"
+  },
+  {
+    "id": 3966,
+    "DescriptionSearchText": "Summons Elite: Emerald Caprahorn to fire two consecutive projectiles, dealing Attack DMG to targets in the area. After casting, your Haste is increased for a period of time. 召唤精英·翡翠角羊，连续两次释放弹道攻击，对范围内目标造成物理伤害。 技能释放后，一段时间内你的急速获得提升。 召喚精英·翡翠角羊，連續兩次釋放彈道攻擊，對範圍內目標造成物理傷害。 技能釋放後，一段時間內你的急速獲得提升。"
+  },
+  {
+    "id": 3968,
+    "DescriptionSearchText": "Summons Denvel to attract nearby monsters and deal Attack DMG. After casting, grants a temporary enhancement: the user takes damage equal to 0.1% of Max HP every 0.2s and gains a DMG boost, with an additional boost for every 100,000 Max HP (Total base and extra DMG boost is capped, and the Max HP requirement is adjusted each season). This skill holds 2 charges. 召唤丹佛，吸引周围的怪物，造成物理伤害。 技能释放后，一段时间内获得强化：自身每0.2秒受到0.1%生命值上限的伤害，且获得伤害提升，每100000点生命值上限获得额外提升（基础和额外伤害提升有总和上限，且生命值上限要求会跟随每赛季变化）。 技能可充能2次。 召喚丹佛，吸引周圍的怪物，造成物理傷害。 技能釋放後，一段時間內獲得強化：自身每0.2秒受到0.1%生命值上限的傷害，且獲得傷害提升，每100000點生命值上限獲得額外提升（基礎和額外傷害提升有總和上限，且生命值上限要求會跟隨每賽季變化）。 技能可充能2次。"
+  },
+  {
+    "id": 3969,
+    "DescriptionSearchText": "Summons Igoreus to deal Attack DMG. Holds 2 charges. After casting, your Crit is temporarily increased. Any base Crit Rate exceeding 60% is converted into a Crit DMG boost at a set ratio. 召唤伊戈雷乌斯，造成物理伤害，可充能2次。 技能释放后，一段时间内你的暴击获得提升，且基础暴击率高于60%的超出部分会以一定比例转化为暴击伤害提升。 召喚伊戈雷烏斯，造成物理傷害，可充能2次。 技能釋放後，一段時間內你的暴擊獲得提升，且基礎暴擊率高於60%的超出部分會以一定比例轉化為暴擊傷害提升。"
+  },
+  {
+    "id": 3970,
+    "DescriptionSearchText": "Summons Plague Nappo. The Nappo's attack method and skill effects change based on the type of skill cast previously. If cast directly or after a Special Attack, summons Stormblade Nappo to deal AoE Attack DMG once, and reduces the current Resonance Skill's CD by 81.25%. If cast after an Expertise Skill, summons Marksman Nappo to deal Attack DMG to a single target, and reduces the current Resonance Skill's CD by 68.75%. If cast after an Ultimate, summons Wind Knight Nappo to deal Attack DMG once, reduces the current Resonance Skill's CD by 25%, and temporarily increases your DMG. If cast after another Resonance Skill, summons Beat Performer Nappo to reduce the CD of the previously cast Resonance Skill (excluding this one). 召唤幻祸娜宝，根据前一次施放的技能类型会改变娜宝的攻击方式和技能效果。 直接施放或施放特殊攻击后，本次将召唤雷影剑士娜宝，造成一次范围物理伤害，且减少当前共鸣技能81.25%冷却时间。 施放专精技能后，本次将召唤神射手娜宝，对单体目标造成物理伤害，且减少当前共鸣技能68.75%冷却时间。 施放终极技能后，本次将召唤青岚骑士娜宝，造成一次物理伤害，且减少当前共鸣技能25%冷却时间，并在一段时间内，使你的伤害提升。 施放本技能以外的共鸣技能后，本次将召唤灵魂乐手娜宝，减少上一个施放的非本技能的共鸣技能冷却时间。 召喚幻禍娜寶，根據前一次施放的技能類型會改變娜寶的攻擊方式和技能效果。 直接施放或施放特殊攻擊後，本次將召喚雷影劍士娜寶，造成一次範圍物理傷害，且減少當前共鳴技能81.25%冷卻時間。 施放專精技能後，本次將召喚神射手娜寶，對單體目標造成物理傷害，且減少當前共鳴技能68.75%冷卻時間。 施放終極技能後，本次將召喚青嵐騎士娜寶，造成一次物理傷害，且減少當前共鳴技能25%冷卻時間，並在一段時間內，使你的傷害提升。 施放本技能以外的共鳴技能後，本次將召喚靈魂樂手娜寶，減少上一個施放的非本技能的共鳴技能冷卻時間。"
+  },
+  {
+    "id": 3971,
+    "DescriptionSearchText": "Summons Kartgriff to deal Magic DMG. After casting, temporarily grants a Main Stats and Healing Received boost to you and up to 10 nearby allies (prioritizing teammates). (Cannot be affected by the same type of effect within 60s.) 召唤卡特格里夫，造成魔法伤害。 技能释放后，一段时间内使自己和周围至多10名友方目标（优先队友）获得主属性、受治疗强度提升。 【60秒内无法受到同类型效果影响】 召喚卡特格里夫，造成魔法傷害。 技能釋放後，一段時間內使自己和周圍至多10名友方目標（優先隊友）獲得主屬性、受治療強度提升。 【60秒內無法受到同類型效果影響】"
+  },
+  {
+    "id": 3972,
+    "DescriptionSearchText": "Summons Boss: Predator Spider to deal Attack DMG. After casting, your passive ATK bonus is temporarily enhanced according to your Mastery Percentage. Every 5% Mastery grants extra ATK for each passive stack (up to a max limit). 召唤首领·掠食蜘蛛，造成物理伤害。 技能释放后，一段时间内你的被动效果攻击力加成根据你所拥有的精通百分比获得强化，每5%精通使得被动每层额外提供攻击力（有上限）。 召喚首領·掠食蜘蛛，造成物理傷害。 技能釋放後，一段時間內你的被動效果攻擊力加成根據你所擁有的精通百分比獲得強化，每5%精通使得被動每層額外提供攻擊力（有上限）。"
+  },
+  {
+    "id": 3973,
+    "DescriptionSearchText": "Summons Boss: Rebel King to deal Attack DMG. After casting, temporarily grants full passive stacks, with the effect multiplied by 2. 召唤首领·狂悖之王，造成物理伤害。 技能释放后，一段时间内获得满层被动效果，且效果变为2倍。 召喚首領·狂悖之王，造成物理傷害。 技能釋放後，一段時間內獲得滿層被動效果，且效果變為2倍。"
+  },
+  {
+    "id": 3974,
+    "DescriptionSearchText": "Summons Boss: Void Watcher, dealing Magic DMG and occupying an area for a period of time. You and your teammates within the area gain increased ATK, Attack SPD, and Casting SPD. The effect on yourself is multiplied by 2.5. (Does not stack; only one of the same effect may be active.) 召唤首领·空洞监察者，造成魔法伤害，一段时间内占据一个区域。 处于区域内的自身和队友获得攻击力，攻击速度，施法速度提升，且对自身生效2.5倍。 【不可叠加，同效果仅生效一个】 召喚首領·空洞監察者，造成魔法傷害，一段時間內佔據一個區域。 處於區域內的自身和隊友獲得攻擊力，攻擊速度，施法速度提升，且對自身生效2.5倍。 【不可疊加，同效果僅生效一個】"
+  },
+  {
+    "id": 3975,
+    "DescriptionSearchText": "Summons Boss: Ridge Fang to deal Attack DMG. After casting, instantly resets Survival Instinct CD. You remain Invigorated temporarily, and your Armor and Max HP are increased. 召唤首领·山脊之牙，造成物理伤害。 技能释放后，立即刷新绝境逢生冷却时间，一段时间内保持精神抖擞且你的物理防御力、最大生命值获得提升。 召喚首領·山脊之牙，造成物理傷害。 技能釋放後，立即刷新絕境逢生冷卻時間，一段時間內保持精神抖擻且你的物理防禦力、最大生命值獲得提升。"
+  },
+  {
+    "id": 3976,
+    "DescriptionSearchText": "Summons Boss: Bloodthirsty Furball to deal Attack DMG. For a period of time after casting, every time your Class Skills and Luck effect deal damage, they add extra damage on top of the skill's base value, equal to a certain percentage of your ATK. 召唤首领·嗜血毛球，造成物理伤害。 技能释放后，一段时间内，你的职业技能和幸运效果每次造成伤害时，会额外在技能固定值上附加一定比例攻击力的伤害。 召喚首領·嗜血毛球，造成物理傷害。 技能釋放後，一段時間內，你的職業技能和幸運效果每次造成傷害時，會額外在技能固定值上附加一定比例攻擊力的傷害。"
+  },
+  {
+    "id": 3977,
+    "DescriptionSearchText": "Summons Elite: Killer Arachnocrab to deal Attack DMG. After casting, you gain full passive stacks for a period of time, during which they do not decrease. 召唤精英·杀手蟹蛛，造成物理伤害。 技能释放后，一段时间内获得满层被动效果，且持续期间内不会掉层。 召喚精英·殺手蟹蛛，造成物理傷害。 技能釋放後，一段時間內獲得滿層被動效果，且持續期間內不會掉層。"
+  },
+  {
+    "id": 3978,
+    "DescriptionSearchText": "Summons Elite: Verdant Fang to deal Attack DMG. For a period of time after casting, each Class Skill used reduces your remaining Ultimate CD (triggers up to once every 1s). 召唤精英·深绿之牙，造成物理伤害。 技能释放后，一段时间内，每施放一次职业技能减少终极技能剩余冷却时间（每1秒至多触发1次）。 召喚精英·深綠之牙，造成物理傷害。 技能釋放後，一段時間內，每施放一次職業技能減少終極技能剩餘冷卻時間（每1秒至多觸發1次）。"
+  },
+  {
+    "id": 3979,
+    "DescriptionSearchText": "Summons Elite: Man-Eating Furball to deal Attack DMG. After casting, your Fire Bonus is temporarily increased. 召唤精英·食人毛球，造成物理伤害。 技能释放后，一段时间内你的火元素加成获得提升。 召喚精英·食人毛球，造成物理傷害。 技能釋放後，一段時間內你的火元素加成獲得提升。"
+  },
+  {
+    "id": 3980,
+    "DescriptionSearchText": "Summons Elite: Dogorman, dealing Attack DMG equal to a percentage of your HP. After casting, your HP is also temporarily increased. 召唤精英·多格尔曼，对目标造成自身生命值百分比固定物理伤害 技能释放后，一段时间内你的生命值获得提升。 召喚精英·多格爾曼，對目標造成自身生命值百分比固定物理傷害 技能釋放後，一段時間內你的生命值獲得提升。"
+  },
+  {
+    "id": 3981,
+    "DescriptionSearchText": "Summons Elite: Sanctuary Eye to deal Attack DMG. After casting, grants a Shield to yourself and up to 10 nearby allies for a period of time (prioritizes teammates). 召唤精英·圣堂之眼，造成物理伤害。 技能释放后，一段时间内使自己和周围至多10名友方目标（优先队友）获得护盾。 召喚精英·聖堂之眼，造成物理傷害。 技能釋放後，一段時間內使自己和周圍至多10名友方目標（優先隊友）獲得護盾。"
+  },
+  {
+    "id": 3982,
+    "DescriptionSearchText": "Transform into Celestial Spirit Mage - Lucy, replacing your skill set while gaining Ability Conversion. Passive: Dealing damage converts 50% of the damage dealt into healing for up to 10 nearby allies (prioritizing teammates). 1. Fleuve d'Étoiles: Manifests the Fleuve d'Étoiles and swings it continuously, dealing Light Magic DMG to targets. 2. Celestial Guardian: Harnesses the power of Celestial Spirits to grant a shield lasting 20s to up to 10 allies within range (prioritizing teammates). Simultaneously inflicts debuffs on up to 5 enemies within range, reducing ATK, applying Vulnerability, and reducing Element Resistance for 10s. 3. Aqua Metria: Draws upon the power of Aquarius to unleash waves forward, dealing Water Magic DMG to targets in their path, with an additional 50% of the damage dealt converted into healing. 变身为星灵魔导士·露西，替换全新的技能模组的同时，获得能力转化。 被动：造成伤害时将50%伤害转化成治疗量对周围至多10名友方目标（优先队友）产生治疗。 ①星之大河：挥动星之大河，连续挥舞对目标造成光属性魔法伤害。 ②星灵守护：借助星灵的力量，对范围内至多10名友方目标（优先队友）添加持续20秒的护盾，同时对范围内至多5个敌方目标施加减益效果：降低攻击力，获得易伤，降低元素减免，持续10秒。（仅同时生效一个） ③水文史话：借助阿葵亚的力量，向前方释放水波浪，对途径的目标造成水元素魔法伤害，且该技能造成的伤害额外转化50%成治疗量。 變身為星靈魔導士・露西，替換全新的技能模組的同時，獲得能力轉化。 被動：造成傷害時將50%傷害轉化成治療量對周圍至多10名友方目標（優先隊友）產生治療。 ①星之大河：幻化出星之大河，連續揮舞對目標造成光屬性魔法傷害。 ②星靈守護：借助星靈的力量，對範圍內至多10名友方目標（優先隊友）添加持續20秒的護盾，同時對範圍內至多5個敵方目標施加減益效果：降低攻擊力，獲得易傷，降低元素減免，持續10秒。 ③水之星辰：借助阿葵亞的力量，向前方釋放水波浪，對途徑的目標造成水元素魔法傷害，且該技能造成的傷害額外轉化50%成治療量。"
+  },
+  {
+    "id": 3983,
+    "DescriptionSearchText": "Transform into Fire Dragon Slayer - Natsu, replacing your skill set while gaining Ability Conversion. Passive: Casting skills other than an Ultimate Skill grants stacks of Dragon Flame based on the skill type. Every 10 stacks of Dragon Flame automatically converts into 1 stack of Dragon Force. Dragon Force can stack up to 5 times. Each stack of Dragon Force grants a Fire Bonus. 1. Fire Dragon's Iron Fist: Charges briefly before unleashing a blazing punch forward, dealing Fire Attack DMG and accumulating 5 stacks of Dragon Flame. 2. Fire Dragon's Wing Attack: Leaps fiercely and dashes forward, dealing Fire Attack DMG and accumulating 5 stacks of Dragon Flame. 3. Fire Dragon's Roar: Gathers the power of flames to spew a massive blast of fire forward, dealing Fire Attack DMG. If at max Dragon Force stacks, consumes all stacks of Dragon Force to gain CD reduction for Natsu's skills and a Fire Bonus. This effect persists for the duration of the current transformation and can stack up to 3 times. 变身为火之灭龙魔导士·纳兹，替换全新的技能模组的同时，获得能力转化。 被动：释放除终极技能以外技能时，根据技能类型获得对应层数龙焰，每获得10层龙焰将自动转化成1层龙之力，龙之力至多可以叠加5层。每层龙之力使你获得火元素加成。 ①火龙的铁拳：短暂蓄力朝前方打出炙热一拳，造成火元素物理伤害，积攒5层龙焰。 ②火龙的翼击：猛然跃起交向前方突进，造成火元素物理伤害，积攒5层龙焰。 ③火龙的咆哮：聚集火焰的力量，向面朝方向喷出巨大火焰，造成火元素物理伤害。若此时拥有满层龙之力，则消耗龙之力所有层数获得纳兹技能冷却缩减和火元素加成，该效果本次变身内不会消除且最多可以叠加3次。 變身為火之滅龍魔導士・納茲，替換全新的技能模組的同時，獲得能力轉化。 被動：釋放除終極技能以外技能時，根據技能類型獲得對應層數龍焰，每獲得10層龍焰將自動轉化成1層龍之力，龍之力至多可以疊加5層。每層龍之力使你獲得火元素加成。 ①火龍的鐵拳：短暫蓄力朝前方打出炙熱一拳，造成火元素物理傷害，累積5層龍焰。 ②火龍的翼擊：猛然躍起交向前方突進，造成火元素物理傷害，累積5層龍焰。 ③火龍的咆哮：聚集火焰的力量，向面朝方向噴出巨大火焰，造成火元素物理傷害。若此時擁有滿層龍之力，則消耗龍之力所有層數獲得納茲技能冷卻縮減和火元素加成，該效果本次變身內不會消除且最多可以疊加3次。"
+  },
+  {
+    "id": 170112,
+    "DescriptionSearchText": "Arcane! Void Corruption Blade 奥义！虚蚀劫刄 奧義！虛蝕劫刄"
+  },
+  {
+    "id": 420140,
+    "DescriptionSearchText": "Resonates with the power from Elite Void Ogre and roars on the spot, launching 6 wildly dancing Void Corruption energy substances at the target, dealing Attack DMG. Applies Void Corruption Decay to the target for 10s, dealing Magic DMG per second, stacks up to 5 times. 100%of the DoT dealt restores your HP. 共鸣精英·虚蚀食人魔的力量，原地怒吼，向目标发射6颗狂风乱舞般的虚蚀能量体，造成物理伤害。同时为目标附加持续10秒的虚蚀侵害，每秒造成魔法伤害，至多可叠加5层，造成的持续伤害100%为自身回复生命值。 共鳴精英·虛蝕食人魔的力量，原地怒吼，向目標發射6顆狂風亂舞般的虛蝕能量體，造成物理傷害。同時為目標附加持續10秒的虛蝕侵害，每秒造成魔法傷害，至多可疊加5層，造成的持續傷害100%為自身回復生命值。"
+  },
+  {
+    "id": 1002440,
+    "DescriptionSearchText": "Resonates with the power from Elite Muku Warrior. Leaps forward to launch a powerful attack, dealing area Attack DMG. This strike is bound to deal Crit DMG, and increases your Crit and Crit DMG bonus for 20s. 共鸣精英·姆克兵长的力量，向前方跃起发起一次强力攻击，造成范围物理伤害。本次伤害必定暴击，并且增加自身暴击和暴击伤害加成，持续20秒。 共鳴精英·姆克兵長的力量，向前方躍起發起一次強力攻擊，造成範圍物理傷害。本次傷害必定暴擊，並且增加自身暴擊和暴擊傷害加成，持續20秒。"
+  },
+  {
+    "id": 1002830,
+    "DescriptionSearchText": "Resonates with the power from Boss Frost Ogre. Swings a frost hammer to attack enemies in a spin, dealing Attack DMG and inflicting Frozen on hit targets for 5s. Direction can be freely chosen with the joystick during this time. Cannot Frozen targets with Resilience, but will reduce their Resilience. 共鸣首领·寒霜食人魔的力量，挥舞寒冰大锤旋转攻击敌人造成物理伤害，对命中到的目标造成冰冻效果，持续5秒，期间可通过摇杆自由选择方向。无法冰冻拥有韧性值的目标，但会削减其韧性值。 共鳴首領·寒霜食人魔的力量，揮舞寒冰大錘旋轉攻擊敵人造成物理傷害，對命中到的目標造成冰凍效果，持續5秒，期間可透過搖桿自由選擇方向。無法冰凍擁有韌性值的目標，但會削減其韌性值。"
+  },
+  {
+    "id": 1005240,
+    "DescriptionSearchText": "Resonates with the power from Elite Scout Muku. Continuously pursues the target, dealing Attack DMG. For each enemy defeated, ATK +5% for 10s, stacks up to 10 times. 共鸣精英·斥候姆克的力量，持续追击目标，造成物理伤害，每击败一名敌人，增加5%攻击力，持续10秒，最多可叠加10层。 共鳴精英·斥候姆克的力量，持續追擊目標，造成物理傷害，每擊敗一名敵人，增加5%攻擊力，持續10秒，最多可疊加10層。"
+  },
+  {
+    "id": 1006940,
+    "DescriptionSearchText": "Resonates with the power from Boss Spider King. Transforms into a cocoon. After a short delay, the cocoon bursts, dealing Attack DMG and increasing the highest of your Crit/Luck/Haste/Mastery attributes for 20s. 共鸣首领·蜘蛛王的力量，变为蛛茧，短暂延迟后蛛茧破裂造成物理伤害，且提升自身暴击/幸运/急速/精通中最高的一个属性，持续20秒。 共鳴首領·蜘蛛王的力量，變為蛛繭，短暫延遲後蛛繭破裂造成物理傷害，且提升自身暴擊/幸運/急速/精通中最高的一個屬性，持續20秒。"
+  },
+  {
+    "id": 1008640,
+    "DescriptionSearchText": "Resonates with the power from Elite Flame Goblin Mage, summoning meteors to fall from the sky, dealing Magic DMG. After the skill is cast, your Intellect is increased for a period. 共鸣精英·火焰巫师哥布林的力量，召唤陨石从天而降，造成魔法伤害。技能释放后，一段时间内你的智力获得提升。 共鳴精英·火焰巫師哥布林的力量，召喚隕石從天而降，造成魔法傷害。技能釋放後，一段時間內你的智力獲得提升。"
+  },
+  {
+    "id": 1008641,
+    "DescriptionSearchText": "Resonates with the power from Elite storm Goblin Giant Axe, and continuously unleashes Whirlwind Strike, dealing Attack DMG and pulling in all surrounding units. After the skill is cast, your Wind DMG is increased for a period. 共鸣精英·飓风巨斧哥布林的力量，持续释放旋风斩，造成物理伤害并裹挟周围所有单位。技能释放后，一段时间内你的风元素伤害获得提升。 共鳴精英·颶風巨斧哥布林的力量，持續釋放旋風斬，造成物理傷害並裹挾周圍所有單位。技能釋放後，一段時間內你的風元素傷害獲得提升。"
+  },
+  {
+    "id": 1010440,
+    "DescriptionSearchText": "Resonates with the power from Elite Murloc Warrior, after a short chant, deals Attack DMG. 共鸣精英·鱼人战士的力量，短暂吟唱后，造成物理伤害。 共鳴精英·魚人戰士的力量，短暫吟唱後，造成物理傷害。"
+  },
+  {
+    "id": 1010540,
+    "DescriptionSearchText": "Resonate with the power of Elite: Lizardman Mage, transforming you into one, then summons Water of Silence beneath the target's feet, dealing Attack DMG while slowing them. After casting, your Ice DMG is increased for a period. 共鸣精英·蜥蜴人法师的力量，变身为精英·蜥蜴人法师，在目标脚下召唤静默之水，造成物理伤害，并使目标减速。技能释放后，一段时间内你的冰元素伤害获得提升。 共鳴精英·蜥蜴人法師的力量，變身為精英·蜥蜴人法師，在目標腳下召喚靜默之水，造成物理傷害，並使目標減速。技能釋放後，一段時間內你的冰元素傷害獲得提升。"
+  },
+  {
+    "id": 1011010,
+    "DescriptionSearchText": "Divine Retribution 神罚 神罰"
+  },
+  {
+    "id": 1011104,
+    "DescriptionSearchText": "Blade Storm 剑刃风暴 劍刃風暴"
+  },
+  {
+    "id": 1700440,
+    "DescriptionSearchText": "Resonates with the power from Boss Muku Chief. Smashes the ground around, dealing high area Attack DMG. Can be charged 2 times. 共鸣首领·姆克头目的力量，对周围进行砸地，对范围造成高额物理伤害，可充能2次。 共鳴首領·姆克頭目的力量，對周圍進行砸地，對範圍造成高額物理傷害，可充能2次。"
+  },
+  {
+    "id": 1700718,
+    "DescriptionSearchText": "Crimson Foxen - AoE Dark Tail Sweep - Wilds 赤玉地狐-aoe扫尾暗属性-大世界 赤玉地狐-aoe掃尾暗屬性-大世界"
+  },
+  {
+    "id": 2001740,
+    "DescriptionSearchText": "Resonates with the power from Elite Brigand Scout to teleport to the target's side, inflicting Stun and dealing Attack DMG, additionally, reduces target's DEF for 10s. [This effect cannot stack and only one will be effective.] 共鸣精英·山贼斥候的力量，瞬移至目标身边，施加眩晕并造成物理伤害，同时使目标防御力降低，持续10秒。 【不可叠加，同效果仅生效一个】 共鳴精英·山賊斥候的力量，瞬移至目標身邊，施加暈眩並造成物理傷害，同時使目標防禦力降低，持續10秒。 【不可疊加，同效果僅生效一個】"
+  },
+  {
+    "id": 2002440,
+    "DescriptionSearchText": "Resonates with the power from Boss Tempest Ogre. Channels the power of thunder, summoning a thunder vortex that continuously pulls nearby enemies. After its duration ends, deals area Magic DMG. 共鸣首领·雷电食人魔的力量，引雷霆之力，召唤雷霆旋涡，持续吸引目标附近的敌人，持续时间结束后，造成范围魔法伤害。 共鳴首領·雷電食人魔的力量，引雷霆之力，召喚雷霆漩渦，持續吸引目標附近的敵人，持續時間結束後，造成範圍魔法傷害。"
+  },
+  {
+    "id": 2900240,
+    "DescriptionSearchText": "Resonates with Airona's soul power. After a short chant, revives all Allies within 20 meters. [Cannot be affected by the same type of effect within 100s] 共鸣艾露娜的灵魂力量，短暂吟唱后，复活周围20米内的全部队友。 【100秒内无法受到同类型效果影响】 共鳴艾露娜的靈魂力量，短暫吟唱後，復活周圍20公尺內的全部隊友。 【100秒內無法受到同類型效果影響】"
+  },
+  {
+    "id": 2900340,
+    "DescriptionSearchText": "Resonates with Tina's soul power. Infuses Allies with the power of time, granting them CD reduction for 15s. [Cannot be affected by the same type of effect within 100s] 共鸣蒂娜的灵魂力量，以时光之力灌注到队友体内，使队友获得冷却时间加速的效果，持续15秒。 【100秒内无法受到同类型效果影响】 共鳴蒂娜的靈魂力量，以時光之力灌注到隊友體內，使隊友獲得冷卻時間加速的效果，持續15秒。 【100秒內無法受到同類型效果影響】"
+  },
+  {
+    "id": 2900540,
+    "DescriptionSearchText": "Resonates with Olvera's soul power, dashes back and forth, gathering enemies along the path and dealing Attack DMG. Has a chance to apply Seed of Lightning to targets when dealing DMG, lasting for 10s. Dealing DMG to targets with Seed of Lightning will cause it to explode (CD 2s), dealing Magic DMG, shared by surrounding enemies. Any defeated target with Seed of Lightning will reduce the CD by 15s. 共鸣奥尔维拉的灵魂力量，向前方来回穿梭，聚集路径上的敌人，并造成物理伤害。造成伤害时有一定概率给目标施加雷电之种，持续10秒。对拥有雷电之种的目标造成伤害时会使其爆炸（冷却时间2秒），造成魔法伤害，由周围的敌人均摊。任何拥有雷电之种的目标被击败，都会减少15秒冷却时间。 共鳴奧爾維拉的靈魂力量，向前方來回穿梭，聚集路徑上的敵人，並造成物理傷害。造成傷害時有一定機率給目標施加雷電之種，持續10秒。對擁有雷電之種的目標造成傷害時會使其爆炸（冷卻時間2秒），造成魔法傷害，由周圍的敵人均攤。任何擁有雷電之種的目標被擊敗，都會減少15秒冷卻時間。"
+  },
+  {
+    "id": 2900640,
+    "DescriptionSearchText": "Resonance Tower's soul power, the team will not be defeated for a certain period of time, and health will not fall below a certain proportion. [Cannot be affected by the same type of effect within 100s] 共鸣塔塔的灵魂力量，全队一定时间内不会被击败，且生命值不低于一定比例。 【100秒内无法受到同类型效果影响】 共鳴塔塔的靈魂力量，全隊一定時間內不會被擊敗，且生命值不低於一定比例。 【100秒內無法受到同類型效果影響】"
+  }
+]

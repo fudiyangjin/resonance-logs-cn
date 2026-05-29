@@ -120,6 +120,10 @@ pub enum OutboundEvent {
     EntityNameMap {
         names: HashMap<i64, String>,
     },
+    EntityIdentityMap {
+        player_names: HashMap<i64, String>,
+        monster_ids: HashMap<i64, i32>,
+    },
     BuffCounterUpdate(Vec<CounterUpdateState>),
     SkillCdUpdate(Vec<SkillCdState>),
     PanelAttrUpdate(Vec<PanelAttrState>),
@@ -215,6 +219,17 @@ impl EventManager {
     pub fn emit_entity_name_map(&mut self, names: HashMap<i64, String>) {
         self.outbound_events
             .push(OutboundEvent::EntityNameMap { names });
+    }
+
+    pub fn emit_entity_identity_map(
+        &mut self,
+        player_names: HashMap<i64, String>,
+        monster_ids: HashMap<i64, i32>,
+    ) {
+        self.outbound_events.push(OutboundEvent::EntityIdentityMap {
+            player_names,
+            monster_ids,
+        });
     }
 
     pub fn emit_buff_counter_update(&mut self, counters: Vec<CounterUpdateState>) {
@@ -320,23 +335,27 @@ pub fn generate_live_data_payload(
             class_id: attr_store
                 .attr(uid, AttrType::ProfessionId)
                 .and_then(|value| value.as_int())
+                .filter(|value| *value > 0)
                 .map_or(entity.class_id, |value| value as i32),
             class_spec: entity.class_spec as i32,
             class_name: class::get_class_name(
                 attr_store
                     .attr(uid, AttrType::ProfessionId)
                     .and_then(|value| value.as_int())
+                    .filter(|value| *value > 0)
                     .map_or(entity.class_id, |value| value as i32),
             ),
             class_spec_name: class::get_class_spec(entity.class_spec),
             ability_score: attr_store
                 .attr(uid, AttrType::FightPoint)
                 .and_then(|value| value.as_int())
+                .filter(|value| *value > 0)
                 .map_or(entity.ability_score, |value| value as i32),
             season_strength: attr_store
                 .attr(uid, AttrType::SeasonStrength)
                 .and_then(|value| value.as_int())
-                .map_or(0, |value| value as i32),
+                .filter(|value| *value > 0)
+                .map_or(entity.season_strength, |value| value as i32),
             damage: to_raw_combat_stats(&entity.damage),
             damage_boss_only: to_raw_combat_stats(&entity.damage_boss_only),
             healing: to_raw_combat_stats(&entity.healing),
@@ -472,5 +491,80 @@ pub fn generate_live_data_payload(
         is_paused: encounter.is_encounter_paused,
         bosses,
         entities,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::live::opcodes_models::{AttrValue, Entity};
+
+    #[test]
+    fn live_payload_preserves_entity_season_strength_without_attr_store_value() {
+        let uid = 42;
+        let mut encounter = Encounter::default();
+        let mut entity = Entity {
+            name: "Seasoned Player".to_string(),
+            entity_type: EEntityType::EntChar,
+            ability_score: 42000,
+            season_strength: 1234,
+            ..Default::default()
+        };
+        entity.damage.hits = 1;
+        entity.damage.total = 100;
+        encounter.entity_uid_to_entity.insert(uid, entity);
+
+        let payload = generate_live_data_payload(&encounter, &EntityAttrStore::default());
+
+        assert_eq!(payload.entities.len(), 1);
+        assert_eq!(payload.entities[0].season_strength, 1234);
+    }
+
+    #[test]
+    fn live_payload_uses_fresher_attr_store_season_strength_when_available() {
+        let uid = 42;
+        let mut encounter = Encounter::default();
+        let mut entity = Entity {
+            name: "Seasoned Player".to_string(),
+            entity_type: EEntityType::EntChar,
+            ability_score: 42000,
+            season_strength: 1234,
+            ..Default::default()
+        };
+        entity.damage.hits = 1;
+        entity.damage.total = 100;
+        encounter.entity_uid_to_entity.insert(uid, entity);
+
+        let mut attr_store = EntityAttrStore::default();
+        attr_store.set_attr(uid, AttrType::SeasonStrength, AttrValue::Int(5678));
+
+        let payload = generate_live_data_payload(&encounter, &attr_store);
+
+        assert_eq!(payload.entities.len(), 1);
+        assert_eq!(payload.entities[0].season_strength, 5678);
+    }
+
+    #[test]
+    fn live_payload_ignores_zero_attr_store_season_strength() {
+        let uid = 42;
+        let mut encounter = Encounter::default();
+        let mut entity = Entity {
+            name: "Seasoned Player".to_string(),
+            entity_type: EEntityType::EntChar,
+            ability_score: 42000,
+            season_strength: 1234,
+            ..Default::default()
+        };
+        entity.damage.hits = 1;
+        entity.damage.total = 100;
+        encounter.entity_uid_to_entity.insert(uid, entity);
+
+        let mut attr_store = EntityAttrStore::default();
+        attr_store.set_attr(uid, AttrType::SeasonStrength, AttrValue::Int(0));
+
+        let payload = generate_live_data_payload(&encounter, &attr_store);
+
+        assert_eq!(payload.entities.len(), 1);
+        assert_eq!(payload.entities[0].season_strength, 1234);
     }
 }

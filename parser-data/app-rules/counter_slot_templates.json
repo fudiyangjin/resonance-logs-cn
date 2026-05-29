@@ -36,6 +36,18 @@
     }
   },
   {
+    "slotTemplateId": "flame_berserker_x2",
+    "name": "双斧真实因子X2, 下一次斧风消耗 -50%, 范围提升 2 米",
+    "description": "下一次斧风消耗 -50%, 范围提升 2 米",
+    "slot": {
+      "threshold": 240,
+      "resetBuffId": 3060411,
+      "onBuffAdd": "reset",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp"
+    }
+  },
+  {
     "slotTemplateId": "flame_berserker_x3",
     "name": "双斧真实因子X3, 达到充能后 10 秒内无相火斩最终伤害提升",
     "description": "双斧真实因子X3, 达到充能后 10 秒内无相火斩最终伤害提升",
@@ -218,6 +230,30 @@
     "slot": {
       "threshold": 720,
       "resetBuffId": 3052441,
+      "onBuffAdd": "reset",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp"
+    }
+  },
+  {
+    "slotTemplateId": "wind_knight_x4",
+    "name": "青岚真实因子X4, 15s 内特殊攻击暴击提升",
+    "description": "15s 内玄冰上限 + 3",
+    "slot": {
+      "threshold": 360,
+      "resetBuffId": 3051431,
+      "onBuffAdd": "reset",
+      "onBuffChange": "noOp",
+      "onBuffRemove": "noOp"
+    }
+  },
+  {
+    "slotTemplateId": "wind_knight_x5",
+    "name": "青岚真实因子X5, 下一次追击身法提升幸运几率",
+    "description": "下一次追击身法提升幸运几率",
+    "slot": {
+      "threshold": 45,
+      "resetBuffId": 3051441,
       "onBuffAdd": "reset",
       "onBuffChange": "noOp",
       "onBuffRemove": "noOp"

@@ -312,6 +312,24 @@ const DESIGN_ONLY_SUFFIX_FALLBACKS: Record<string, MultiLangValue> = {
     id: "Monitor Pemain",
     design: "玩家身上监控",
   },
+  "体力显示-中枢管理": {
+    en: "Stamina Display - Core Control",
+    "zh-CN": "体力显示-中枢管理",
+    "zh-TW": "體力顯示-中樞管理",
+    design: "体力显示-中枢管理",
+  },
+  "体力层数": {
+    en: "Stamina Stacks",
+    "zh-CN": "体力层数",
+    "zh-TW": "體力層數",
+    design: "体力层数",
+  },
+  "静止状态下回体力": {
+    en: "Stamina Recovery While Stationary",
+    "zh-CN": "静止状态下回体力",
+    "zh-TW": "靜止狀態下回體力",
+    design: "静止状态下回体力",
+  },
 };
 
 export async function initializeBuffSearchRuntimeData(): Promise<void> {

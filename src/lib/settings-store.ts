@@ -362,13 +362,25 @@ export type MonsterOverlaySizes = {
   hatePanelScale: number;
 };
 
+export type BuffAlertRule = {
+  thresholdSeconds: number;
+  highlightColor: string;
+  flash: boolean;
+  flashIntervalMs?: number;
+  applyToProgress?: boolean;
+};
+
+export type BuffAlertMap = Record<string, BuffAlertRule>;
+
 export type MonsterMonitorConfig = {
   enabled: boolean;
   hateListEnabled: boolean;
   hateListMaxDisplay: number;
   monitoredBuffIds: number[];
   selfAppliedBuffIds: number[];
+  buffPriorityIds: number[];
   buffAliases: BuffAliasMap;
+  buffAlerts: BuffAlertMap;
   overlayPositions: MonsterOverlayPositions;
   overlaySizes: MonsterOverlaySizes;
   panelStyle: CustomPanelStyle;
@@ -438,6 +450,7 @@ export type CustomPanelGroup = {
   entries: InlineBuffEntry[];
   position: Point;
   scale: number;
+  style: CustomPanelStyle;
 };
 
 export type BuffGroup = {
@@ -466,6 +479,7 @@ export type SkillMonitorProfile = {
   monitoredBuffCategories?: BuffCategoryKey[];
   monitoredPanelAttrs: PanelAttrConfig[];
   buffPriorityIds: number[];
+  buffAlerts?: BuffAlertMap;
   buffDisplayMode: BuffDisplayMode;
   buffGroups: BuffGroup[];
   individualMonitorAllGroup?: BuffGroup | null;
@@ -473,6 +487,7 @@ export type SkillMonitorProfile = {
   customPanelGroups?: CustomPanelGroup[];
   inlineBuffEntries?: InlineBuffEntry[];
   panelAreaRowOrder?: PanelAreaRowRef[];
+  /** @deprecated Legacy shared style, kept only for migrating old custom panel groups. */
   customPanelStyle?: CustomPanelStyle;
   textBuffPanelStyle?: TextBuffPanelStyle;
   buffUptimeColors?: Record<string, string>;
@@ -499,6 +514,42 @@ export function ensureBuffAliases(
     const trimmed = alias.trim();
     if (!trimmed) continue;
     next[baseId] = trimmed;
+  }
+  return next;
+}
+
+export function createDefaultBuffAlertRule(): BuffAlertRule {
+  return {
+    thresholdSeconds: 5,
+    highlightColor: "#ef4444",
+    flash: true,
+    flashIntervalMs: 600,
+    applyToProgress: true,
+  };
+}
+
+export function ensureBuffAlerts(
+  buffAlerts: BuffAlertMap | null | undefined,
+): BuffAlertMap {
+  const next: BuffAlertMap = {};
+  for (const [baseId, rule] of Object.entries(buffAlerts ?? {})) {
+    if (!rule || typeof rule !== "object") continue;
+    const numericBaseId = Number(baseId);
+    if (!Number.isFinite(numericBaseId)) continue;
+
+    const thresholdSeconds = Number(rule.thresholdSeconds);
+    const flashIntervalMs = Number(rule.flashIntervalMs);
+    next[String(numericBaseId)] = {
+      thresholdSeconds: Number.isFinite(thresholdSeconds)
+        ? Math.max(1, Math.min(60, thresholdSeconds))
+        : 5,
+      highlightColor: rule.highlightColor || "#ef4444",
+      flash: Boolean(rule.flash),
+      flashIntervalMs: Number.isFinite(flashIntervalMs)
+        ? Math.max(100, flashIntervalMs)
+        : 600,
+      applyToProgress: rule.applyToProgress ?? true,
+    };
   }
   return next;
 }
@@ -560,7 +611,7 @@ function createDefaultOverlayVisibility(): OverlayVisibility {
   };
 }
 
-function createDefaultCustomPanelStyle(): CustomPanelStyle {
+export function createDefaultCustomPanelStyle(): CustomPanelStyle {
   return {
     gap: 6,
     columnGap: 12,
@@ -647,6 +698,7 @@ export function createDefaultCustomPanelGroup(
     entries: [],
     position: { x: 700 + (index - 1) * 40, y: 280 + (index - 1) * 40 },
     scale: 1,
+    style: createDefaultCustomPanelStyle(),
   };
 }
 
@@ -664,6 +716,7 @@ export function createDefaultSkillMonitorProfile(
     monitoredBuffCategories: [],
     monitoredPanelAttrs: AVAILABLE_PANEL_ATTRS.map((item) => ({ ...item })),
     buffPriorityIds: [],
+    buffAlerts: {},
     buffDisplayMode: "individual",
     buffGroups: [],
     individualMonitorAllGroup: null,
@@ -677,6 +730,8 @@ export function createDefaultSkillMonitorProfile(
     buffUptimeAliases: {},
     buffUptimeTrackingModes: {},
     buffUptimeActiveIndicators: {},
+    buffUptimeMinStacksEnabled: {},
+    buffUptimeMinStacks: {},
     buffUptimeTextStyle: createDefaultBuffUptimeTextStyle(),
     shieldDetailStyle: createDefaultShieldDetailStyle(),
     textBuffMaxVisible: 10,
@@ -773,7 +828,9 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     hateListMaxDisplay: 5,
     monitoredBuffIds: [],
     selfAppliedBuffIds: [],
+    buffPriorityIds: [],
     buffAliases: {},
+    buffAlerts: {},
     overlayPositions: createDefaultMonsterOverlayPositions(),
     overlaySizes: createDefaultMonsterOverlaySizes(),
     panelStyle: createDefaultCustomPanelStyle(),
@@ -831,8 +888,8 @@ const DEFAULT_GENERAL_SETTINGS: {
   showHoverDescriptions: true,
 };
 
-export const MODIFIER_REPORTS_RUNTIME_OPT_IN_VERSION = "1.0.6-beta.5";
-const MODIFIER_REPORTS_RESET_VERSION = "1.0.6-beta.5";
+export const MODIFIER_REPORTS_RUNTIME_OPT_IN_VERSION = "1.0.7-release-guard-2026-05-29";
+const MODIFIER_REPORTS_RESET_VERSION = "1.0.7-release-guard-2026-05-29";
 
 export const DEFAULT_CLASS_COLORS: Record<string, string> = {
   Stormblade: "#674598",
@@ -1132,7 +1189,8 @@ const DEFAULT_SETTINGS = {
     backgroundImage: "" as string,
     backgroundImageEnabled: false,
     backgroundImageMode: "cover" as "cover" | "contain",
-    backgroundImageContainColor: "rgba(0, 0, 0, 1)",
+    backgroundImageContainColor: "rgba(0, 0, 0, 0)",
+    backgroundImageOpacity: 100,
     // Custom font settings
     customFontSansEnabled: false,
     customFontSansUrl: "" as string,

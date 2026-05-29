@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { getClassIcon, tooltip } from "$lib/utils.svelte";
+  import { tooltip } from "$lib/utils.svelte";
+  import ClassSpecIcon from "$lib/components/class-spec-icon.svelte";
   import { SETTINGS } from "$lib/settings-store";
   import type { DeathRecord } from "$lib/api";
   import { formatClassSpecLabel } from "$lib/class-labels";
+  import { getDisplayIconSpecName } from "$lib/name-display";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import { uiT } from "$lib/i18n";
@@ -16,6 +18,7 @@
     onSelect,
     onBack,
     variant = "live",
+    isLocalPlayer = false,
   }: {
     playerName: string;
     className: string;
@@ -25,6 +28,7 @@
     onSelect: (deathTimestampMs: number) => void;
     onBack?: () => void;
     variant?: "live" | "history";
+    isLocalPlayer?: boolean;
   } = $props();
 
   const tableSettings = $derived(SETTINGS.live.tableCustomization.state);
@@ -45,6 +49,20 @@
     variant === "history"
       ? SETTINGS.history.general.state.abbreviationStyle
       : SETTINGS.live.general.state.abbreviationStyle,
+  );
+  const iconSpecName = $derived(
+    getDisplayIconSpecName({
+      classSpecName,
+      showYourNameSetting:
+        variant === "history"
+          ? SETTINGS.history.general.state.showYourName
+          : SETTINGS.live.general.state.showYourName,
+      showOthersNameSetting:
+        variant === "history"
+          ? SETTINGS.history.general.state.showOthersName
+          : SETTINGS.live.general.state.showOthersName,
+      isLocalPlayer,
+    }),
   );
   const t = uiT("dps/history", () => SETTINGS.live.general.state.language);
 
@@ -125,15 +143,13 @@
       </svg>
     </button>
     <div class="flex items-center gap-2">
-      <img
+      <ClassSpecIcon
         class="size-5 object-contain"
-        src={getClassIcon(className)}
+        {className}
+        classSpecName={iconSpecName}
         alt={t("detail.classIcon", "Class icon")}
-        {@attach tooltip(
-          () =>
-            formatClassSpecLabel(className, classSpecName) ||
-            t("detail.unknownClass", "Unknown Class"),
-        )}
+        tooltipText={formatClassSpecLabel(className, classSpecName) ||
+          t("detail.unknownClass", "Unknown Class")}
       />
       <h2 class="text-xl font-semibold text-foreground">{playerName}</h2>
       <span class="text-sm text-neutral-400">
