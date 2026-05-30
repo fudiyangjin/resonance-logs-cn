@@ -469,6 +469,20 @@ export type BuffGroup = {
   showLayer: boolean;
 };
 
+export type ModuleCalcRequirement = {
+  attrId: number | null;
+  value: number | null;
+};
+
+export type ModuleCalcProfileSettings = {
+  useGpu: boolean;
+  combinationSize: 4 | 5;
+  targetAttributes: number[];
+  excludeAttributes: number[];
+  minTotalValue: number;
+  minRequirements: ModuleCalcRequirement[];
+};
+
 export type SkillMonitorProfile = {
   name: string;
   selectedClass: string;
@@ -499,6 +513,7 @@ export type SkillMonitorProfile = {
   buffUptimeTextStyle?: BuffUptimeTextStyle;
   shieldDetailStyle?: ShieldDetailStyle;
   textBuffMaxVisible: number;
+  moduleCalc?: ModuleCalcProfileSettings;
   showTrueUptime?: boolean;
   showBuffUptimeActiveIndicator?: boolean;
   overlayPositions: OverlayPositions;
@@ -702,6 +717,52 @@ export function createDefaultCustomPanelGroup(
   };
 }
 
+function finiteNumberOrNull(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function finiteNumberArray(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => Number(item))
+    .filter((item) => Number.isFinite(item));
+}
+
+export function createDefaultModuleCalcProfileSettings(): ModuleCalcProfileSettings {
+  return {
+    useGpu: true,
+    combinationSize: 4,
+    targetAttributes: [],
+    excludeAttributes: [],
+    minTotalValue: 12,
+    minRequirements: [{ attrId: null, value: null }],
+  };
+}
+
+export function normalizeModuleCalcProfileSettings(
+  value: Partial<ModuleCalcProfileSettings> | null | undefined,
+): ModuleCalcProfileSettings {
+  const defaults = createDefaultModuleCalcProfileSettings();
+  const minRequirements = Array.isArray(value?.minRequirements)
+    ? value.minRequirements.map((item) => ({
+        attrId: finiteNumberOrNull(item?.attrId),
+        value: finiteNumberOrNull(item?.value),
+      }))
+    : defaults.minRequirements;
+
+  return {
+    useGpu: typeof value?.useGpu === "boolean" ? value.useGpu : defaults.useGpu,
+    combinationSize: value?.combinationSize === 5 ? 5 : 4,
+    targetAttributes: finiteNumberArray(value?.targetAttributes),
+    excludeAttributes: finiteNumberArray(value?.excludeAttributes),
+    minTotalValue: finiteNumberOrNull(value?.minTotalValue) ?? defaults.minTotalValue,
+    minRequirements:
+      minRequirements.length > 0 ? minRequirements : defaults.minRequirements,
+  };
+}
+
 export function createDefaultSkillMonitorProfile(
   name = "默认方案",
   classKey = "wind_knight",
@@ -735,6 +796,7 @@ export function createDefaultSkillMonitorProfile(
     buffUptimeTextStyle: createDefaultBuffUptimeTextStyle(),
     shieldDetailStyle: createDefaultShieldDetailStyle(),
     textBuffMaxVisible: 10,
+    moduleCalc: createDefaultModuleCalcProfileSettings(),
     showTrueUptime: true,
     showBuffUptimeActiveIndicator: true,
     overlayPositions: createDefaultOverlayPositions(),

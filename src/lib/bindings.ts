@@ -281,6 +281,21 @@ async deleteEncounters(ids: number[]) : Promise<Result<null, string>> {
 }
 },
 /**
+ * Deletes every non-favorited encounter and preserves favorites.
+ *
+ * # Returns
+ *
+ * * `Result<DeleteEncountersResult, String>` - Counts for deleted and preserved rows.
+ */
+async deleteAllNonFavoriteEncounters() : Promise<Result<DeleteEncountersResult, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_all_non_favorite_encounters") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Toggles the favorite status of an encounter.
  * 
  * # Arguments
@@ -701,6 +716,18 @@ export type CustomDefinitionsFile = { version: number; definitions: CustomDefini
 export type DamageSnapshot = { timestampMs: number; attackerUid: number; attackerMonsterTypeId: number | null; skillKey: number; value: number }
 export type DeathRecord = { victimUid: number; deathTimestampMs: number; recentDamages: DamageSnapshot[] }
 export type Device = { name: string; description: string | null }
+/**
+ * The result of a destructive encounter-delete operation.
+ */
+export type DeleteEncountersResult = {
+/**
+ * The number of non-favorited encounters that were deleted.
+ */
+deletedCount: number;
+/**
+ * The number of favorited encounters that were preserved.
+ */
+preservedFavoriteCount: number }
 export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; resetSourceConfigId?: number | null; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction; altFreeze?: AltFreezeConfig | null; thresholdModifier?: AttrModifier | null; freezeDurationModifier?: AttrModifier | null; resetSkillKeys?: number[] | null; onResetSkill?: CounterAction }
 /**
  * Filters for querying encounters.

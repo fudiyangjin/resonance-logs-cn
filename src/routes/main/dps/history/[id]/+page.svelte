@@ -2677,7 +2677,14 @@
     goto(`/main/dps/history/${encounterId}${qs ? `?${qs}` : ""}`);
   }
 
-  function backToHistory() {
+  function handleHistoryContextMenu(event: MouseEvent) {
+    if (!charId) return;
+
+    event.preventDefault();
+    backToEncounter();
+  }
+
+  function backToHistory(resetPage = false) {
 
     // Return to the history list while preserving list state.
     const sp = new URLSearchParams($page.url.searchParams);
@@ -2685,6 +2692,7 @@
     sp.delete("skillType");
     sp.delete("targetUid");
     sp.delete("deathTs");
+    if (resetPage) sp.set("page", "0");
     const qs = sp.toString();
     goto(`/main/dps/history${qs ? `?${qs}` : ""}`);
   }
@@ -2704,6 +2712,7 @@
   }
 
   function openDeleteModal() {
+    if (encounter?.isFavorite) return;
     showDeleteModal = true;
   }
 
@@ -2722,12 +2731,12 @@
   }
 
   async function confirmDeleteEncounter() {
-    if (!encounter) return;
+    if (!encounter || encounter.isFavorite) return;
     isDeleting = true;
     try {
       await commands.deleteEncounter(encounter.id);
       // Navigate back to history after deletion
-      backToHistory();
+      backToHistory(true);
     } catch (e) {
       console.error("Failed to delete encounter", e);
       alert(`${t("detail.deleteFailed", "删除战斗记录失败")}: ${e}`);
@@ -2842,6 +2851,8 @@
 
 </script>
 
+<svelte:window oncontextmenu={handleHistoryContextMenu} />
+
 <div class="">
   {#if error}
     <div class="text-red-400 mb-3">{error}</div>
@@ -2856,7 +2867,7 @@
             <div class="space-y-1 min-w-0 flex-1 h-full">
               <div class="flex flex-wrap items-center gap-1">
                 <button
-                  onclick={backToHistory}
+                  onclick={() => backToHistory()}
                   class="p-0.5 text-muted-foreground/70 hover:text-foreground transition-colors rounded shrink-0"
                   title={t("detail.backToHistory", "返回历史")}
                   aria-label={t("detail.backToHistory", "返回历史")}
@@ -2974,8 +2985,11 @@
 
               <button
                 onclick={openDeleteModal}
-                class="inline-flex items-center justify-center rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors p-2"
-                title={t("detail.deleteEncounterTitle", "删除该战斗记录")}
+                disabled={encounter.isFavorite}
+                class="inline-flex items-center justify-center rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors p-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-destructive/10"
+                title={encounter.isFavorite
+                  ? t("detail.deleteFavoriteDisabled", "Remove favorite before deleting")
+                  : t("detail.deleteEncounterTitle", "删除该战斗记录")}
                 aria-label={t("detail.deleteEncounterAria", "删除战斗记录")}
               >
                 <svg

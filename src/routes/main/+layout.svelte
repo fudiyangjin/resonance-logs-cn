@@ -237,6 +237,10 @@
     }
     showChangelog = false;
   }
+
+  function openChangelog() {
+    showChangelog = true;
+  }
 </script>
 
 <div class="relative isolate h-screen overflow-hidden text-foreground font-sans">
@@ -251,7 +255,7 @@
 
   <div class="relative z-20 flex h-full">
     <!-- Left Sidebar - Tool List -->
-    <ToolSidebar />
+    <ToolSidebar onOpenChangelog={openChangelog} />
 
     <!-- Right Content Area -->
     <main class="flex-1 flex flex-col overflow-hidden">

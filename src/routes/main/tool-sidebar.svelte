@@ -17,6 +17,12 @@
   import { SETTINGS } from "$lib/settings-store";
   import { TOOL_ROUTES } from "./routes.svelte";
 
+  let {
+    onOpenChangelog,
+  }: {
+    onOpenChangelog?: () => void;
+  } = $props();
+
   let languageMenuOpen = $state(false);
 
   const languageOptions = LOCALE_OPTIONS;
@@ -186,7 +192,15 @@
     </a>
 
     <div class="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-      <span>v{#await getVersion()}...{:then version}{formatAppVersion(version)}{/await}</span>
+      <button
+        type="button"
+        class="rounded px-1 py-0.5 transition-colors hover:bg-popover/60 hover:text-foreground"
+        onclick={() => onOpenChangelog?.()}
+        title={tShell("sidebar.openChangelog", "View changelog")}
+        aria-label={tShell("sidebar.openChangelog", "View changelog")}
+      >
+        v{#await getVersion()}...{:then version}{formatAppVersion(version)}{/await}
+      </button>
 
       <span aria-hidden="true" class="opacity-40">|</span>
 

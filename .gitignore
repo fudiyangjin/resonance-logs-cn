@@ -1,16 +1,42 @@
+# Dependencies
 node_modules/
-.svelte-kit/
-build/
 
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Svelte/Vite output and caches
+.svelte-kit/
+.vite/
+build/
+dist/
+vite.config.*.timestamp-*
+
+# Rust/Tauri build output. Keep the checked-in WinDivert debug files available.
 src-tauri/target/*
 !src-tauri/target/debug/
 
 src-tauri/target/debug/*
 !src-tauri/target/debug/WinDivert.dll
-!src-tauri/target/debug/Windivert64.sys
+!src-tauri/target/debug/WinDivert64.sys
 
+src-tauri/gen/
+src-tauri/target-check/
+src-tauri/target-codex-check/
+src-tauri/target-*/
+src-tauri/target_*/
+/target/
+/target-check/
+/target-codex-check/
+/target-*/
+/target_*/
+
+# Generated/dev-only exports
 DEV_exports/
 DEV_generated/
+src-tauri/DEV_exports/
+src-tauri/DEV_probes/
 
 # Local scratch/debug artifacts. These can contain machine-specific paths,
 # browser profile cache data, or temporary run logs.
@@ -19,12 +45,18 @@ DEV_generated/
 /svelte-check-report*.txt
 /tmp-*/
 /tmp-*.log
-/src-tauri/DEV_probes/
-/src-tauri/target-check/
-/src-tauri/target-codex-check/
-/src-tauri/target-*/
-/src-tauri/target_*/
-/target-check/
-/target-codex-check/
-/target-*/
-/target_*/
+tmp-edge-profile*/
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+*.pid
+*.stackdump
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

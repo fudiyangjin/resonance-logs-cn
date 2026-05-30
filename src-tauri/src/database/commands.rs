@@ -3,10 +3,12 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
 
 use diesel::prelude::*;
+use diesel::sqlite::SqliteConnection;
 use serde::{Deserialize, Serialize};
 
 use crate::database::PlayerNameEntry;
 use crate::database::db_exec;
+use crate::database::reindex_encounters;
 use crate::database::schema as sch;
 use crate::live::commands_models as lc;
 use crate::live::monster_registry;
@@ -76,6 +78,16 @@ pub struct RecentEncountersResult {
     pub rows: Vec<EncounterSummaryDto>,
     /// The total number of encounters.
     pub total_count: i64,
+}
+
+/// The result of a destructive encounter-delete operation.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteEncountersResult {
+    /// The number of non-favorited encounters that were deleted.
+    pub deleted_count: i64,
+    /// The number of favorited encounters that were preserved.
+    pub preserved_favorite_count: i64,
 }
 
 /// Filters for querying encounters.
@@ -800,6 +812,15 @@ fn invalidate_history_entity_summary_cache_many(encounter_ids: &[i32]) {
     };
     if let Ok(mut cache) = cache.lock() {
         cache.retain(|(cached_id, _)| !encounter_ids.contains(cached_id));
+    }
+}
+
+fn clear_history_entity_summary_cache() {
+    let Some(cache) = HISTORY_ENTITY_SUMMARY_CACHE.get() else {
+        return;
+    };
+    if let Ok(mut cache) = cache.lock() {
+        cache.clear();
     }
 }
 
@@ -1931,6 +1952,92 @@ pub fn get_encounter_modifier_entities_raw(
     Ok(rows)
 }
 
+fn delete_non_favorite_encounters_by_id(
+    conn: &mut SqliteConnection,
+    ids: &[i32],
+) -> Result<Vec<i32>, String> {
+    if ids.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    use sch::encounter_data::dsl as ed;
+    use sch::encounter_entity_summaries::dsl as es;
+    use sch::encounters::dsl as e;
+
+    conn.transaction::<Vec<i32>, diesel::result::Error, _>(|tx| {
+        let deletable_ids: Vec<i32> = e::encounters
+            .select(e::id)
+            .filter(e::id.eq_any(ids))
+            .filter(e::is_favorite.eq(0))
+            .load(tx)?;
+
+        if deletable_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        diesel::delete(
+            es::encounter_entity_summaries.filter(es::encounter_id.eq_any(&deletable_ids)),
+        )
+        .execute(tx)?;
+        diesel::delete(ed::encounter_data.filter(ed::encounter_id.eq_any(&deletable_ids)))
+            .execute(tx)?;
+        diesel::delete(e::encounters.filter(e::id.eq_any(&deletable_ids))).execute(tx)?;
+        Ok(deletable_ids)
+    })
+    .map_err(|error| error.to_string())
+}
+
+fn delete_all_non_favorite_encounters_impl(
+    conn: &mut SqliteConnection,
+) -> Result<Vec<i32>, String> {
+    use sch::encounter_data::dsl as ed;
+    use sch::encounter_entity_summaries::dsl as es;
+    use sch::encounters::dsl as e;
+
+    conn.transaction::<Vec<i32>, diesel::result::Error, _>(|tx| {
+        let deletable_ids: Vec<i32> = e::encounters
+            .select(e::id)
+            .filter(e::is_favorite.eq(0))
+            .load(tx)?;
+
+        if deletable_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        diesel::delete(
+            es::encounter_entity_summaries.filter(es::encounter_id.eq_any(&deletable_ids)),
+        )
+        .execute(tx)?;
+        diesel::delete(ed::encounter_data.filter(ed::encounter_id.eq_any(&deletable_ids)))
+            .execute(tx)?;
+        diesel::delete(e::encounters.filter(e::id.eq_any(&deletable_ids))).execute(tx)?;
+        Ok(deletable_ids)
+    })
+    .map_err(|error| error.to_string())
+}
+
+fn reindex_after_history_delete(
+    conn: &mut SqliteConnection,
+    deleted_ids: &[i32],
+    reason: &str,
+) -> Result<(), String> {
+    if deleted_ids.is_empty() {
+        return Ok(());
+    }
+
+    let remaining = reindex_encounters(conn)?;
+    crate::database::clear_encounter_data_cache();
+    clear_history_entity_summary_cache();
+    log::info!(
+        target: "app::db",
+        "history_delete_reindexed reason={} deleted={} next_encounter_id={}",
+        reason,
+        deleted_ids.len(),
+        remaining + 1
+    );
+    Ok(())
+}
+
 /// Deletes an encounter by its ID.
 ///
 /// # Arguments
@@ -1944,23 +2051,9 @@ pub fn get_encounter_modifier_entities_raw(
 #[specta::specta]
 pub fn delete_encounter(encounter_id: i32) -> Result<(), String> {
     with_db(move |conn| {
-        use sch::encounter_data::dsl as ed;
-        use sch::encounter_entity_summaries::dsl as es;
-        use sch::encounters::dsl as e;
-
-        conn.transaction::<(), diesel::result::Error, _>(|conn| {
-            diesel::delete(
-                es::encounter_entity_summaries.filter(es::encounter_id.eq(encounter_id)),
-            )
-            .execute(conn)?;
-            diesel::delete(ed::encounter_data.filter(ed::encounter_id.eq(encounter_id)))
-                .execute(conn)?;
-            diesel::delete(e::encounters.filter(e::id.eq(encounter_id))).execute(conn)?;
-            Ok(())
-        })
-        .map_err(|e| e.to_string())?;
-        crate::database::invalidate_encounter_data_cache(encounter_id);
-        invalidate_history_entity_summary_cache(encounter_id);
+        let ids = [encounter_id];
+        let deleted_ids = delete_non_favorite_encounters_by_id(conn, &ids)?;
+        reindex_after_history_delete(conn, &deleted_ids, "single")?;
         Ok(())
     })
 }
@@ -1977,20 +2070,36 @@ pub fn delete_encounter(encounter_id: i32) -> Result<(), String> {
 #[tauri::command]
 #[specta::specta]
 pub fn delete_encounters(ids: Vec<i32>) -> Result<(), String> {
-    let deleted_ids = ids.clone();
     with_db(move |conn| {
-        use sch::encounter_entity_summaries::dsl as es;
-        use sch::encounters::dsl as e;
-        conn.transaction::<(), diesel::result::Error, _>(|conn| {
-            diesel::delete(es::encounter_entity_summaries.filter(es::encounter_id.eq_any(&ids)))
-                .execute(conn)?;
-            diesel::delete(e::encounters.filter(e::id.eq_any(ids))).execute(conn)?;
-            Ok(())
-        })
-        .map_err(|er| er.to_string())?;
-        crate::database::invalidate_encounter_data_cache_many(&deleted_ids);
-        invalidate_history_entity_summary_cache_many(&deleted_ids);
+        let deleted_ids = delete_non_favorite_encounters_by_id(conn, &ids)?;
+        reindex_after_history_delete(conn, &deleted_ids, "selected")?;
         Ok(())
+    })
+}
+
+/// Deletes every non-favorited encounter and preserves favorites.
+///
+/// # Returns
+///
+/// * `Result<DeleteEncountersResult, String>` - Counts for deleted and preserved rows.
+#[tauri::command]
+#[specta::specta]
+pub fn delete_all_non_favorite_encounters() -> Result<DeleteEncountersResult, String> {
+    with_db(move |conn| {
+        use sch::encounters::dsl as e;
+
+        let preserved_favorite_count = e::encounters
+            .filter(e::is_favorite.eq(1))
+            .count()
+            .get_result::<i64>(conn)
+            .map_err(|error| error.to_string())?;
+        let deleted_ids = delete_all_non_favorite_encounters_impl(conn)?;
+        reindex_after_history_delete(conn, &deleted_ids, "all_non_favorites")?;
+
+        Ok(DeleteEncountersResult {
+            deleted_count: deleted_ids.len() as i64,
+            preserved_favorite_count,
+        })
     })
 }
 

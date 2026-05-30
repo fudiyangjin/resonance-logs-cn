@@ -59,7 +59,9 @@
 	// Multi-select state
 	let selectedIds = $state<Set<number>>(new Set());
 	let showDeleteModal = $state(false);
+	let showDeleteAllModal = $state(false);
 	let isDeleting = $state(false);
+	let isDeletingAll = $state(false);
 
 	// Derived: check if all visible items are selected
 	const allSelected = $derived(
@@ -105,6 +107,14 @@
 		showDeleteModal = false;
 	}
 
+	function openDeleteAllModal() {
+		showDeleteAllModal = true;
+	}
+
+	function closeDeleteAllModal() {
+		showDeleteAllModal = false;
+	}
+
 	async function confirmDeleteSelected() {
 		if (selectedIds.size === 0) return;
 		isDeleting = true;
@@ -114,7 +124,7 @@
 			if (res.status === "ok") {
 				selectedIds = new Set();
 				showDeleteModal = false;
-				await loadEncounters(page);
+				await loadEncounters(0);
 			} else {
 				errorMsg = `${t("list.deleteFailed", "Delete failed: ")}${res.error}`;
 			}
@@ -123,6 +133,25 @@
 			errorMsg = String(e);
 		} finally {
 			isDeleting = false;
+		}
+	}
+
+	async function confirmDeleteAllNonFavorites() {
+		isDeletingAll = true;
+		try {
+			const res = await commands.deleteAllNonFavoriteEncounters();
+			if (res.status === "ok") {
+				selectedIds = new Set();
+				showDeleteAllModal = false;
+				await loadEncounters(0);
+			} else {
+				errorMsg = `${t("list.deleteFailed", "Delete failed: ")}${res.error}`;
+			}
+		} catch (e) {
+			console.error("Delete all error", e);
+			errorMsg = String(e);
+		} finally {
+			isDeletingAll = false;
 		}
 	}
 
@@ -533,6 +562,18 @@
 				<span>{t("list.favoriteOnly", "仅收藏")}</span>
 			</button>
 
+			<button
+				onclick={openDeleteAllModal}
+				disabled={isDeletingAll || totalCount === 0}
+				class="flex items-center gap-2 px-3 py-1.5 rounded-md border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+				title={t("list.deleteAllNonFavoritesTitle", "Delete all non-favorited encounters")}
+			>
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+				</svg>
+				<span>{t("list.deleteAll", "Delete All")}</span>
+			</button>
+
 			{#if hasActiveFilters}
 				<button
 					onclick={clearAllFilters}
@@ -850,10 +891,13 @@
 				</div>
 			</div>
 
-			<p class="text-sm text-muted-foreground mb-6">
+			<p class="text-sm text-muted-foreground mb-2">
 				{selectedIds.size === 1
 					? t("list.confirmDeleteOne", "确认要永久删除这条战斗记录吗？所有关联数据（包括玩家统计、技能统计、死亡事件等）都会被删除。")
-					: t("list.confirmDeleteMany", "确认要永久删除这 {count} 条战斗记录吗？所有关联数据（包括玩家统计、技能统计、死亡事件等）都会被删除。")}
+					: t("list.confirmDeleteMany", "确认要永久删除这 {count} 条战斗记录吗？所有关联数据（包括玩家统计、技能统计、死亡事件等）都会被删除。").replace("{count}", String(selectedIds.size))}
+			</p>
+			<p class="text-xs text-muted-foreground/80 mb-6">
+				{t("list.deleteFavoritesPreserved", "Favorited encounters in this selection will be preserved.")}
 			</p>
 
 			<div class="flex justify-end gap-3">
@@ -869,6 +913,47 @@
 						{t("list.deleting", "Deleting...")}
 					{:else}
 						{t("list.delete", "删除")}
+					{/if}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if showDeleteAllModal}
+	<div class="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="delete-all-modal-title">
+		<button class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick={closeDeleteAllModal} aria-label={t("list.closeModal", "Close dialog")}></button>
+
+		<div class="relative z-10 w-full max-w-lg mx-4 p-6 rounded-xl border border-border bg-popover shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+			<div class="flex items-center gap-3 mb-4">
+				<div class="flex items-center justify-center w-10 h-10 rounded-full bg-destructive/10">
+					<svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+					</svg>
+				</div>
+				<div>
+					<h3 id="delete-all-modal-title" class="text-lg font-semibold text-foreground">{t("list.deleteAllNonFavorites", "Delete all non-favorited encounters")}</h3>
+					<p class="text-sm text-muted-foreground">{t("list.actionCannotUndo", "此操作无法撤销")}</p>
+				</div>
+			</div>
+
+			<p class="text-sm text-muted-foreground mb-6">
+				{t("list.confirmDeleteAllNonFavorites", "This permanently deletes every non-favorited encounter across all pages, not only the current page or filters. Favorited encounters will be preserved and renumbered.")}
+			</p>
+
+			<div class="flex justify-end gap-3">
+				<button onclick={closeDeleteAllModal} disabled={isDeletingAll} class="px-4 py-2 text-sm rounded-md border border-border bg-popover text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+					{t("common.cancel", "取消")}
+				</button>
+				<button onclick={confirmDeleteAllNonFavorites} disabled={isDeletingAll} class="flex items-center gap-2 px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+					{#if isDeletingAll}
+						<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+						{t("list.deleting", "Deleting...")}
+					{:else}
+						{t("list.deleteAll", "Delete All")}
 					{/if}
 				</button>
 			</div>

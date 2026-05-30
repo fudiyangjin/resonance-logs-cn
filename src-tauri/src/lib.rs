@@ -289,6 +289,7 @@ pub fn run() {
             database::commands::get_encounter_modifier_entities_raw,
             database::commands::delete_encounter,
             database::commands::delete_encounters,
+            database::commands::delete_all_non_favorite_encounters,
             database::commands::toggle_favorite_encounter,
             database::commands::get_recent_players_command,
             database::commands::get_player_name_command,

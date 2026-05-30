@@ -26,7 +26,16 @@
     ensureModuleCalcProgressListener,
   } from "$lib/stores/module-calc-store.svelte";
   import { resolveModuleCalcTranslation } from "$lib/i18n";
-  import { SETTINGS } from "$lib/settings-store";
+  import {
+    SETTINGS,
+    normalizeModuleCalcProfileSettings,
+    type ModuleCalcProfileSettings,
+  } from "$lib/settings-store";
+  import {
+    activeProfile,
+    clampedProfileIndex,
+    updateActiveProfile,
+  } from "$lib/skill-monitor-profile.svelte";
 
   const ATTR_OPTIONS_BASE = [
     { id: 1110, label: "力量加持" },
@@ -62,6 +71,43 @@
       ),
     })),
   );
+
+  let appliedProfileIndex = $state<number | null>(null);
+  let applyingProfileSettings = $state(false);
+
+  function cloneMinRequirements(
+    rows: ModuleCalcProfileSettings["minRequirements"],
+  ): ModuleCalcProfileSettings["minRequirements"] {
+    return rows.map((row) => ({
+      attrId: row.attrId ?? null,
+      value: row.value ?? null,
+    }));
+  }
+
+  function applyModuleCalcProfileSettings(settings: ModuleCalcProfileSettings) {
+    MODULE_CALC.useGpu = settings.useGpu;
+    MODULE_CALC.combinationSize = settings.combinationSize;
+    MODULE_CALC.targetAttributes = [...settings.targetAttributes];
+    MODULE_CALC.excludeAttributes = [...settings.excludeAttributes];
+    MODULE_CALC.minTotalValue = settings.minTotalValue;
+    MODULE_CALC.minRequirements = cloneMinRequirements(settings.minRequirements);
+    MODULE_CALC.solutions = [];
+    MODULE_CALC.error = null;
+    MODULE_CALC.detailOpen = false;
+    MODULE_CALC.detailSolution = null;
+    MODULE_CALC.progress = { value: 0, max: 0 };
+  }
+
+  function snapshotModuleCalcProfileSettings(): ModuleCalcProfileSettings {
+    return normalizeModuleCalcProfileSettings({
+      useGpu: MODULE_CALC.useGpu,
+      combinationSize: MODULE_CALC.combinationSize,
+      targetAttributes: [...MODULE_CALC.targetAttributes],
+      excludeAttributes: [...MODULE_CALC.excludeAttributes],
+      minTotalValue: MODULE_CALC.minTotalValue,
+      minRequirements: cloneMinRequirements(MODULE_CALC.minRequirements),
+    });
+  }
 
   async function refreshModules() {
     if (MODULE_CALC.loading) return;
@@ -157,6 +203,34 @@
     MODULE_CALC.detailSolution = sol;
     MODULE_CALC.detailOpen = true;
   }
+
+  $effect(() => {
+    const profileIndex = clampedProfileIndex();
+    const profile = activeProfile();
+    if (appliedProfileIndex === profileIndex) return;
+
+    applyingProfileSettings = true;
+    applyModuleCalcProfileSettings(
+      normalizeModuleCalcProfileSettings(profile?.moduleCalc),
+    );
+    appliedProfileIndex = profileIndex;
+    queueMicrotask(() => {
+      applyingProfileSettings = false;
+    });
+  });
+
+  $effect(() => {
+    const snapshot = snapshotModuleCalcProfileSettings();
+    if (applyingProfileSettings || appliedProfileIndex === null) return;
+
+    updateActiveProfile(
+      (profile) => ({
+        ...profile,
+        moduleCalc: snapshot,
+      }),
+      { createDefaultIfEmpty: true },
+    );
+  });
 
   onMount(async () => {
     refreshModules();
