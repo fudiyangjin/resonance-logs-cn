@@ -154,6 +154,7 @@
   const buffUptimeTrueColumnAdjust = $derived(ensureOverlaySizes(activeProfile).buffUptimeTrueColumnAdjust);
   const iconBuffStackCounterSize = $derived(ensureOverlaySizes(activeProfile).iconBuffStackCounterSize);
   const skillCdShowSlotOutline = $derived(ensureOverlaySizes(activeProfile).skillCdShowSlotOutline);
+  const skillCdShowEnhancedGlow = $derived(ensureOverlaySizes(activeProfile).skillCdShowEnhancedGlow);
   const textBuffPanelStyle = $derived.by(() => ensureTextBuffPanelStyle(activeProfile));
   const showSkillCdGroup = $derived(activeProfile.overlayVisibility?.showSkillCdGroup ?? true);
   const showSkillDurationGroup = $derived(activeProfile.overlayVisibility?.showSkillDurationGroup ?? true);
@@ -385,6 +386,7 @@
     return {
       skillCdGroupScale: current?.skillCdGroupScale ?? 1,
       skillCdShowSlotOutline: current?.skillCdShowSlotOutline ?? true,
+      skillCdShowEnhancedGlow: current?.skillCdShowEnhancedGlow ?? true,
       resourceGroupScale: current?.resourceGroupScale ?? 1,
       textBuffPanelScale: current?.textBuffPanelScale ?? 1,
       panelAttrGroupScale: current?.panelAttrGroupScale ?? 1,
@@ -820,6 +822,16 @@
       overlaySizes: {
         ...ensureOverlaySizes(profile),
         skillCdShowSlotOutline: value,
+      },
+    }));
+  }
+
+  function setSkillCdShowEnhancedGlow(value: boolean) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        skillCdShowEnhancedGlow: value,
       },
     }));
   }
@@ -1740,6 +1752,7 @@
       {filteredResonanceSkills}
       {selectedResonanceSkills}
       {skillCdShowSlotOutline}
+      {skillCdShowEnhancedGlow}
       {setSelectedClass}
       {toggleSkill}
       {isSelected}
@@ -1749,6 +1762,7 @@
       {clearSkillDurations}
       {setResonanceSearch}
       {setSkillCdShowSlotOutline}
+      {setSkillCdShowEnhancedGlow}
     />
   {:else if activeTab === "buff"}
     <TabBuffMonitor

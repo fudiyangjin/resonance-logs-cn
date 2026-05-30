@@ -27,6 +27,7 @@ type OverlayPositionKey = keyof Omit<
 type OverlaySizeKey = keyof Omit<
   typeof DEFAULT_OVERLAY_SIZES,
   | "skillCdShowSlotOutline"
+  | "skillCdShowEnhancedGlow"
   | "iconBuffStackCounterSize"
   | "iconBuffSizes"
   | "standaloneIconSizes"

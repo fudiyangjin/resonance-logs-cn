@@ -13,6 +13,7 @@ import {
 export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   skillCdGroupScale: 1,
   skillCdShowSlotOutline: true,
+  skillCdShowEnhancedGlow: true,
   resourceGroupScale: 1,
   textBuffPanelScale: 1,
   panelAttrGroupScale: 1,
@@ -145,6 +146,8 @@ export function ensureOverlaySizes(profile: SkillMonitorProfile): OverlaySizes {
       current?.skillCdGroupScale ?? DEFAULT_OVERLAY_SIZES.skillCdGroupScale,
     skillCdShowSlotOutline:
       current?.skillCdShowSlotOutline ?? DEFAULT_OVERLAY_SIZES.skillCdShowSlotOutline,
+    skillCdShowEnhancedGlow:
+      current?.skillCdShowEnhancedGlow ?? DEFAULT_OVERLAY_SIZES.skillCdShowEnhancedGlow,
     resourceGroupScale:
       current?.resourceGroupScale ?? DEFAULT_OVERLAY_SIZES.resourceGroupScale,
     textBuffPanelScale:

@@ -25,6 +25,7 @@
   const groupPos = $derived(getGroupPosition("skillCdGroup"));
   const groupScale = $derived(getGroupScale("skillCdGroupScale"));
   const showSlotOutline = $derived(getOverlaySizes().skillCdShowSlotOutline);
+  const showEnhancedGlow = $derived(getOverlaySizes().skillCdShowEnhancedGlow);
   const skillIds = $derived(monitoredSkillIds());
   const displays = $derived(displayMap());
   const classKey = $derived(selectedClassKey());
@@ -81,6 +82,7 @@
         class:empty={!skillId}
         class:on-cd={isOnCd}
         class:derived-active={isDerivedActive}
+        class:enhanced-glow={isDerivedActive && showEnhancedGlow}
       >
         {#if displaySkill?.imagePath}
           <img
@@ -152,14 +154,30 @@
     border-color: rgba(255, 255, 255, 0.1);
   }
 
-  .skill-cell.derived-active {
-    border-color: rgba(255, 216, 102, 0.85);
-    box-shadow: 0 0 8px rgba(255, 216, 102, 0.6);
+  .skill-cell.enhanced-glow {
+    border-color: rgba(255, 229, 84, 0.98);
+    box-shadow:
+      0 0 0 2px rgba(255, 205, 48, 0.9),
+      0 0 12px rgba(255, 214, 64, 0.92),
+      0 0 24px rgba(255, 156, 31, 0.72),
+      inset 0 0 12px rgba(255, 230, 96, 0.42);
   }
 
-  .skill-cd-grid.no-slot-outline .skill-cell,
-  .skill-cd-grid.no-slot-outline .skill-cell.empty,
-  .skill-cd-grid.no-slot-outline .skill-cell.derived-active {
+  .skill-cell.enhanced-glow::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    z-index: 5;
+    pointer-events: none;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 250, 170, 0.9);
+    box-shadow:
+      inset 0 0 8px rgba(255, 236, 120, 0.55),
+      0 0 6px rgba(255, 246, 150, 0.82);
+  }
+
+  .skill-cd-grid.no-slot-outline .skill-cell:not(.enhanced-glow),
+  .skill-cd-grid.no-slot-outline .skill-cell.empty {
     border-color: transparent;
     box-shadow: none;
   }
@@ -188,6 +206,7 @@
   .cd-overlay {
     position: absolute;
     inset: 0;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -206,6 +225,7 @@
 
   .charges-badge {
     position: absolute;
+    z-index: 4;
     right: 3px;
     bottom: 3px;
     padding: 1px 4px;

@@ -106,6 +106,7 @@ export type ResizeTarget =
       key: keyof Omit<
         OverlaySizes,
         | "skillCdShowSlotOutline"
+        | "skillCdShowEnhancedGlow"
         | "iconBuffStackCounterSize"
         | "iconBuffSizes"
         | "standaloneIconSizes"

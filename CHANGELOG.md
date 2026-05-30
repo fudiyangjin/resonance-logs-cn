@@ -32,6 +32,7 @@
 - Hardened update handling so Global ignores stale CN release payloads and only shows update prompts from `donneeee/resonance-logs-global`.
 - Prevented vertical resizing while Dynamic Live Window is enabled, so player-table overflow no longer leaves transparent dead click space below the meter.
 - Added a Fit Width background image mode that scales the image to meter width and reveals more of it as the live window grows downward.
+- Split Skill CD slot outlines from enhanced-skill glow, keeping the gold enhanced glow visible for skills such as Unbound Meteor even when static slot outlines are hidden.
 
 ## v1.0.7 - Global
 

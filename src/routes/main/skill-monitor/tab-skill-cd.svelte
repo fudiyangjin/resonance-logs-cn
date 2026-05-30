@@ -23,6 +23,7 @@
     filteredResonanceSkills: ResonanceSkillDefinition[];
     selectedResonanceSkills: ResonanceSkillDefinition[];
     skillCdShowSlotOutline: boolean;
+    skillCdShowEnhancedGlow: boolean;
     setSelectedClass: (classKey: string) => void;
     toggleSkill: (skillId: number) => void;
     isSelected: (skillId: number) => boolean;
@@ -32,6 +33,7 @@
     clearSkillDurations: () => void;
     setResonanceSearch: (value: string) => void;
     setSkillCdShowSlotOutline: (value: boolean) => void;
+    setSkillCdShowEnhancedGlow: (value: boolean) => void;
   }
 
   const t = uiT("overlay/skill-monitor/skill-cd", () => SETTINGS.live.general.state.language);
@@ -79,6 +81,7 @@
     filteredResonanceSkills,
     selectedResonanceSkills,
     skillCdShowSlotOutline,
+    skillCdShowEnhancedGlow,
     setSelectedClass,
     toggleSkill,
     isSelected,
@@ -88,6 +91,7 @@
     clearSkillDurations,
     setResonanceSearch,
     setSkillCdShowSlotOutline,
+    setSkillCdShowEnhancedGlow,
   }: Props = $props();
 
   onMount(() => {
@@ -289,19 +293,35 @@
           {t("overlayDisplayDescription", "Adjust how selected skill slots appear in the game overlay")}
         </p>
       </div>
-      <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-foreground">
-        <input
-          type="checkbox"
-          checked={skillCdShowSlotOutline}
-          onchange={(event) =>
-            setSkillCdShowSlotOutline((event.currentTarget as HTMLInputElement).checked)}
-        />
-        {t("showSlotOutline", "Show skill slot outline")}
-      </label>
+      <div class="flex flex-wrap gap-2">
+        <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-foreground">
+          <input
+            type="checkbox"
+            checked={skillCdShowSlotOutline}
+            onchange={(event) =>
+              setSkillCdShowSlotOutline((event.currentTarget as HTMLInputElement).checked)}
+          />
+          {t("showSlotOutline", "Show skill slot outline")}
+        </label>
+        <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-foreground">
+          <input
+            type="checkbox"
+            checked={skillCdShowEnhancedGlow}
+            onchange={(event) =>
+              setSkillCdShowEnhancedGlow((event.currentTarget as HTMLInputElement).checked)}
+          />
+          {t("showEnhancedGlow", "Show enhanced skill glow")}
+        </label>
+      </div>
     </div>
-    <p class="text-xs text-muted-foreground">
-      {t("showSlotOutlineDescription", "Adds the border and active-skill glow around tracked skill icons in the overlay.")}
-    </p>
+    <div class="space-y-1 text-xs text-muted-foreground">
+      <p>
+        {t("showSlotOutlineDescription", "Shows the static border around tracked skill slots in the overlay.")}
+      </p>
+      <p>
+        {t("showEnhancedGlowDescription", "Shows a vibrant gold glow when a tracked skill enters its enhanced state.")}
+      </p>
+    </div>
   </div>
 
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
