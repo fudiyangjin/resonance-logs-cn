@@ -19,6 +19,24 @@
   },
   {
     "Icon": "",
+    "Id": 10101,
+    "NameDesign": "哈比召唤添加buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 10102,
+    "NameDesign": "夏露露召唤添加buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 10103,
+    "NameDesign": "宠物喂食后表情",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 1101,
     "NameDesign": "水剑BUFF效果",
     "SpriteFile": null
@@ -3778,6 +3796,96 @@
     "Id": 2110154,
     "NameDesign": "风龙暴击伤害",
     "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 2110155,
+    "NameDesign": "陶洛斯0~4阶变身后蓝火",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 2110156,
+    "NameDesign": "陶洛斯5阶变身后金火",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 2110157,
+    "NameDesign": "变身结束回复战斗资源",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_icon65",
+    "Id": 2110161,
+    "NameDesign": "露西-变身",
+    "SpriteFile": "buff_icon65_-4919578134379371611.png"
+  },
+  {
+    "Icon": "buff_icon65",
+    "Id": 2110162,
+    "NameDesign": "纳兹-变身",
+    "SpriteFile": "buff_icon65_-4919578134379371611.png"
+  },
+  {
+    "Icon": "",
+    "Id": 2110163,
+    "NameDesign": "纳兹叠层计数",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_icon146",
+    "Id": 2110164,
+    "NameDesign": "纳兹龙之力buff",
+    "SpriteFile": "buff_icon146_-8128576016226591212.png"
+  },
+  {
+    "Icon": "buff_icon70",
+    "Id": 2110165,
+    "NameDesign": "纳兹龙之力5层消耗后添加全冷却缩减",
+    "SpriteFile": "buff_icon70_8797511657054326474.png"
+  },
+  {
+    "Icon": "",
+    "Id": 2110166,
+    "NameDesign": "露西找目标添加debuff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "debuff_icon_83",
+    "Id": 2110167,
+    "NameDesign": "斗志弱化",
+    "SpriteFile": "debuff_icon_83_7294890882074820842.png"
+  },
+  {
+    "Icon": "buff_icon135",
+    "Id": 2110168,
+    "NameDesign": "露西添加护盾",
+    "SpriteFile": "buff_icon135_1192987653471362194.png"
+  },
+  {
+    "Icon": "",
+    "Id": 2110169,
+    "NameDesign": "0~4阶变身后蓝火",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 2110170,
+    "NameDesign": "5阶变身后金火",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_icon65",
+    "Id": 2110171,
+    "NameDesign": "道具使用后设置体验露西",
+    "SpriteFile": "buff_icon65_-4919578134379371611.png"
+  },
+  {
+    "Icon": "buff_icon65",
+    "Id": 2110172,
+    "NameDesign": "道具使用后设置体验纳兹",
+    "SpriteFile": "buff_icon65_-4919578134379371611.png"
   },
   {
     "Icon": "",
@@ -20821,6 +20929,18 @@
   },
   {
     "Icon": "",
+    "Id": 680905,
+    "NameDesign": "",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 680906,
+    "NameDesign": "",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 681001,
     "NameDesign": "npc牵手",
     "SpriteFile": null
@@ -21301,6 +21421,24 @@
   },
   {
     "Icon": "",
+    "Id": 683107,
+    "NameDesign": "我是T",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683108,
+    "NameDesign": "我是N",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683109,
+    "NameDesign": "我是D",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 683110,
     "NameDesign": "副本通用难度标记-周本",
     "SpriteFile": null
@@ -21352,6 +21490,12 @@
     "Id": 683118,
     "NameDesign": "团结之力",
     "SpriteFile": "buff_talent_skill_300001_3928582440410015275.png"
+  },
+  {
+    "Icon": "",
+    "Id": 683119,
+    "NameDesign": "检测职业",
+    "SpriteFile": null
   },
   {
     "Icon": "",
@@ -21771,6 +21915,12 @@
     "Icon": "",
     "Id": 683193,
     "NameDesign": "载具-超大娜宝疾跑特效",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683194,
+    "NameDesign": "载具-永夜王权疾跑特效",
     "SpriteFile": null
   },
   {
@@ -22311,6 +22461,18 @@
     "Icon": "talent_passive_icon_general_sup_grassarea",
     "Id": 683859,
     "NameDesign": "娜宝-2技能表现(高定)",
+    "SpriteFile": "talent_passive_icon_general_sup_grassarea_-2699280676978229692.png"
+  },
+  {
+    "Icon": "toy_buff_general",
+    "Id": 683860,
+    "NameDesign": "吸血鬼-1技能加速冷却",
+    "SpriteFile": "toy_buff_general_-448119693827793626.png"
+  },
+  {
+    "Icon": "talent_passive_icon_general_sup_grassarea",
+    "Id": 683861,
+    "NameDesign": "吸血鬼-2技能表现",
     "SpriteFile": "talent_passive_icon_general_sup_grassarea_-2699280676978229692.png"
   },
   {
@@ -31086,6 +31248,66 @@
     "SpriteFile": "buff_red_hp_7631201784644749282.png"
   },
   {
+    "Icon": "buff_red_heal",
+    "Id": 829130,
+    "NameDesign": "伤口残留",
+    "SpriteFile": "buff_red_heal_8598422908290767674.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829131,
+    "NameDesign": "三环难度buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829132,
+    "NameDesign": "机械V型防护罩减伤",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829133,
+    "NameDesign": "运动会预警",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829134,
+    "NameDesign": "左旋",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829135,
+    "NameDesign": "右旋",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829136,
+    "NameDesign": "激光瞄准",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829137,
+    "NameDesign": "压团血点名",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829138,
+    "NameDesign": "压暗",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829139,
+    "NameDesign": "压暗",
+    "SpriteFile": null
+  },
+  {
     "Icon": "buff_blue_cd",
     "Id": 829201,
     "NameDesign": "延时轨道炮幻（玩家挂）",
@@ -31351,6 +31573,96 @@
   },
   {
     "Icon": "",
+    "Id": 829248,
+    "NameDesign": "机械守卫转身用目标点标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829249,
+    "NameDesign": "自爆进度条(三足机器人）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829250,
+    "NameDesign": "踩停圈(三足机器人）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829251,
+    "NameDesign": "巡航守卫buff（添加连线buff）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829252,
+    "NameDesign": "巡航守卫连线盾",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829253,
+    "NameDesign": "巡航静电debuff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829254,
+    "NameDesign": "运动会倒计时",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829255,
+    "NameDesign": "吸力连线一层",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829256,
+    "NameDesign": "吸力连线二层",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829257,
+    "NameDesign": "吸力连线3层",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829258,
+    "NameDesign": "吸力连线4层",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829259,
+    "NameDesign": "吸力连线5层",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829260,
+    "NameDesign": "板子消失后会复活标记（运动会用）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829261,
+    "NameDesign": "倒计时生成地板",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829262,
+    "NameDesign": "点名特效",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 829300,
     "NameDesign": "实体可见性测试buff",
     "SpriteFile": null
@@ -31485,6 +31797,24 @@
     "Icon": "",
     "Id": 829322,
     "NameDesign": "神之放逐aoe",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829323,
+    "NameDesign": "神之规诫·累刑宣告",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_icon_ray",
+    "Id": 829324,
+    "NameDesign": "累刑宣告",
+    "SpriteFile": "buff_icon_ray_8475430372570355973.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829325,
+    "NameDesign": "连结试炼",
     "SpriteFile": null
   },
   {
@@ -46303,6 +46633,12 @@
   },
   {
     "Icon": "",
+    "Id": 883510,
+    "NameDesign": "通用-禁止跳跃",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 883521,
     "NameDesign": "跳舞模板1（海底舞会逻辑）",
     "SpriteFile": null
@@ -46310,7 +46646,55 @@
   {
     "Icon": "",
     "Id": 883522,
-    "NameDesign": "玩家-跳舞和禁止跳跃1",
+    "NameDesign": "玩家-跳舞技能叠层计数",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 883523,
+    "NameDesign": "玩家-点名召唤跳舞机【随机】",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 883524,
+    "NameDesign": "玩家-允许释放跳舞技能【1】",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 883525,
+    "NameDesign": "玩家-允许释放跳舞技能【2】",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 883526,
+    "NameDesign": "玩家-允许释放跳舞技能【3】",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 883527,
+    "NameDesign": "娜宝-P3阶段随机AOE",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 883528,
+    "NameDesign": "娜宝-依次点名玩家分散buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 883529,
+    "NameDesign": "玩家-分散伤害点名",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 883530,
+    "NameDesign": "玩家-P3分散伤害判定",
     "SpriteFile": null
   },
   {
@@ -46329,6 +46713,12 @@
     "Icon": "",
     "Id": 883533,
     "NameDesign": "娜宝分身-天生buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 883534,
+    "NameDesign": "表现-跳舞网格",
     "SpriteFile": null
   },
   {
@@ -46802,7 +47192,7 @@
   {
     "Icon": "talent_passive_icon_sup_meleeconversion",
     "Id": 883719,
-    "NameDesign": "水球庇护buff",
+    "NameDesign": "交互水球环形圈",
     "SpriteFile": "talent_passive_icon_sup_meleeconversion_5095031411280052604.png"
   },
   {
@@ -46810,6 +47200,12 @@
     "Id": 883720,
     "NameDesign": "风通道水球-缩小可交互",
     "SpriteFile": null
+  },
+  {
+    "Icon": "talent_passive_icon_sup_meleeconversion",
+    "Id": 883721,
+    "NameDesign": "水球庇护buff",
+    "SpriteFile": "talent_passive_icon_sup_meleeconversion_5095031411280052604.png"
   },
   {
     "Icon": "",
@@ -50820,6 +51216,18 @@
     "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
   },
   {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 972049,
+    "NameDesign": "变身玩具-纳兹",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 972050,
+    "NameDesign": "变身玩具-露西",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
     "Icon": "",
     "Id": 973001,
     "NameDesign": "烟花筒释放-白色烟花",
@@ -51571,6 +51979,228 @@
   },
   {
     "Icon": "",
+    "Id": 974310,
+    "NameDesign": "妖尾联动-大世界裂缝",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974311,
+    "NameDesign": "妖尾联动-大世界裂缝",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974312,
+    "NameDesign": "妖尾联动-毒沼龙污染特效-表现用",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974313,
+    "NameDesign": "妖尾联动-毒沼龙污染特效-毒龙用",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974314,
+    "NameDesign": "妖尾联动-哈比出场屏幕效果",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974315,
+    "NameDesign": "妖尾联动-毒沼龙污染特效-大世界掉落",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974316,
+    "NameDesign": "妖尾联动-毒池空气墙",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974317,
+    "NameDesign": "妖尾联动-毒雾天生buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_fairytail_icon001",
+    "Id": 974318,
+    "NameDesign": "妖尾联动-灭龙之力",
+    "SpriteFile": "buff_fairytail_icon001_-5876292119678647741.png"
+  },
+  {
+    "Icon": "",
+    "Id": 974319,
+    "NameDesign": "妖尾联动-灭龙之力生效buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974320,
+    "NameDesign": "妖尾联动-毒龙技能-玩家传毒-7.5米半径",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974321,
+    "NameDesign": "妖尾联动-毒龙核心机制-上毒检测",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_icon92",
+    "Id": 974322,
+    "NameDesign": "妖尾联动-毒龙坠石召唤",
+    "SpriteFile": "buff_icon92_6549470345462852526.png"
+  },
+  {
+    "Icon": "",
+    "Id": 974323,
+    "NameDesign": "妖尾联动-毒龙毒雾弥漫",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974324,
+    "NameDesign": "妖尾联动-大世界阶段1污染怪",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974325,
+    "NameDesign": "妖尾联动-大世界阶段2污染怪",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974326,
+    "NameDesign": "妖尾联动-大世界阶段3污染怪",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974327,
+    "NameDesign": "妖尾联动-大世界阶段4污染怪",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974328,
+    "NameDesign": "妖尾联动-大世界阶段5污染怪",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974329,
+    "NameDesign": "妖尾联动-大世界阶段6污染怪",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974330,
+    "NameDesign": "妖尾联动-大世界阶段7污染怪",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974331,
+    "NameDesign": "妖尾联动-大世界阶段8污染怪",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974340,
+    "NameDesign": "妖尾联动-毒龙技能-玩家传毒-15米半径",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974341,
+    "NameDesign": "妖尾联动-大毒珠死后小毒珠",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_talent_skill_330301",
+    "Id": 974342,
+    "NameDesign": "妖尾联动-毒龙8分钟狂暴",
+    "SpriteFile": "buff_talent_skill_330301_1685661307899942034.png"
+  },
+  {
+    "Icon": "buff_fairytail_icon001",
+    "Id": 974343,
+    "NameDesign": "妖尾联动-露西的祝福",
+    "SpriteFile": "buff_fairytail_icon001_-5876292119678647741.png"
+  },
+  {
+    "Icon": "buff_fairytail_icon001",
+    "Id": 974344,
+    "NameDesign": "妖尾联动-妖尾众人的祝福",
+    "SpriteFile": "buff_fairytail_icon001_-5876292119678647741.png"
+  },
+  {
+    "Icon": "buff_icon73",
+    "Id": 974345,
+    "NameDesign": "妖尾联动-毒龙核心机制-上毒-普通难度",
+    "SpriteFile": "buff_icon73_-1048899459961577240.png"
+  },
+  {
+    "Icon": "buff_icon73",
+    "Id": 974346,
+    "NameDesign": "妖尾联动-毒龙核心机制-上毒-挑战难度",
+    "SpriteFile": "buff_icon73_-1048899459961577240.png"
+  },
+  {
+    "Icon": "",
+    "Id": 974347,
+    "NameDesign": "妖尾联动-普通难度检测",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974348,
+    "NameDesign": "妖尾联动-挑战难度检测",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974349,
+    "NameDesign": "妖尾联动-普通毒龙7分钟毒死",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974350,
+    "NameDesign": "污染怪出生特效",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974351,
+    "NameDesign": "妖尾联动-共鸣星元驱散毒气特效",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974352,
+    "NameDesign": "妖尾联动-普通毒龙进战上缓慢掉血buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974353,
+    "NameDesign": "妖尾联动-挑战毒龙进战上狂暴buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 974354,
+    "NameDesign": "妖尾联动-裂缝一小时移除",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 9801,
     "NameDesign": "男通用死亡轨道A",
     "SpriteFile": null
@@ -51784,6 +52414,24 @@
     "Id": 990201,
     "NameDesign": "姆克兵长攻击力加成BUFF",
     "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 990202,
+    "NameDesign": "溪谷尖兵-水护盾",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 990203,
+    "NameDesign": "溪谷尖兵-回血",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "debuff_icon_4",
+    "Id": 990204,
+    "NameDesign": "溪谷尖兵-冰冻",
+    "SpriteFile": "debuff_icon_4_-5684314934487765329.png"
   },
   {
     "Icon": "",
@@ -52603,6 +53251,30 @@
   },
   {
     "Icon": "",
+    "Id": 995140,
+    "NameDesign": "风雷核心隐身buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995141,
+    "NameDesign": "风球阻挡命中表现",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995142,
+    "NameDesign": "雷球阻挡命中表现",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995143,
+    "NameDesign": "斥力甩尾",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 995152,
     "NameDesign": "精英怪大风粒子虚拟体检测buff",
     "SpriteFile": null
@@ -52750,6 +53422,132 @@
     "Id": 995178,
     "NameDesign": "雷电增伤",
     "SpriteFile": "buff_blue_atk_-7930843873503020716.png"
+  },
+  {
+    "Icon": "debuff_icon_17",
+    "Id": 995179,
+    "NameDesign": "龙魂觉醒-全体玩家眩晕",
+    "SpriteFile": "debuff_icon_17_-4998991083182462306.png"
+  },
+  {
+    "Icon": "",
+    "Id": 995180,
+    "NameDesign": "龙魂觉醒-成功标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995181,
+    "NameDesign": "风雷俱灭-风核玩家",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995182,
+    "NameDesign": "风雷俱灭-雷核玩家",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995183,
+    "NameDesign": "风雷俱灭-打断龙魂觉醒",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995184,
+    "NameDesign": "雷核怪天生buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995185,
+    "NameDesign": "风核怪天生buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_blue_atk",
+    "Id": 995186,
+    "NameDesign": "雷核boss增益",
+    "SpriteFile": "buff_blue_atk_-7930843873503020716.png"
+  },
+  {
+    "Icon": "buff_blue_def",
+    "Id": 995187,
+    "NameDesign": "风核boss增益",
+    "SpriteFile": "buff_blue_def_-5154019358626773797.png"
+  },
+  {
+    "Icon": "",
+    "Id": 995188,
+    "NameDesign": "boss吸收核心-回血狂暴",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995189,
+    "NameDesign": "全体落雷",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995190,
+    "NameDesign": "风龙boss狂暴初始标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_talent_skill_330301",
+    "Id": 995191,
+    "NameDesign": "Boss硬狂暴计时器",
+    "SpriteFile": "buff_talent_skill_330301_1685661307899942034.png"
+  },
+  {
+    "Icon": "",
+    "Id": 995192,
+    "NameDesign": "阻挡雷球-雷电",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995193,
+    "NameDesign": "阻挡风球-风牢",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995194,
+    "NameDesign": "阻挡风球-免疫标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995195,
+    "NameDesign": "阻挡雷球-免疫标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995196,
+    "NameDesign": "可交互风核",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995197,
+    "NameDesign": "可交互雷核",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995198,
+    "NameDesign": "飞行风核连线",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995199,
+    "NameDesign": "飞行雷核连线",
+    "SpriteFile": null
   },
   {
     "Icon": "",

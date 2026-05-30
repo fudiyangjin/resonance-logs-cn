@@ -413,5 +413,35 @@
     "id": 3981,
     "NameDesign": "绝技！锁定射击",
     "Icon": "skill_aoyi_skill_icon_084.png"
+  },
+  {
+    "id": 3982,
+    "NameDesign": "奥义！星灵魔导士",
+    "Icon": "skill_aoyi_skill_icon_086.png"
+  },
+  {
+    "id": 3983,
+    "NameDesign": "奥义！灭龙魔导士",
+    "Icon": "skill_aoyi_skill_icon_085.png"
+  },
+  {
+    "id": 3984,
+    "NameDesign": "退出露西变身",
+    "Icon": "skill_aoyi_skill_icon_086.png"
+  },
+  {
+    "id": 3985,
+    "NameDesign": "退出纳兹变身",
+    "Icon": "skill_aoyi_skill_icon_085.png"
+  },
+  {
+    "id": 3986,
+    "NameDesign": "奥义！星灵魔导士",
+    "Icon": "skill_aoyi_skill_icon_086.png"
+  },
+  {
+    "id": 3987,
+    "NameDesign": "奥义！灭龙魔导士",
+    "Icon": "skill_aoyi_skill_icon_085.png"
   }
 ]

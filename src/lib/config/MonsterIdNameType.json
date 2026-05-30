@@ -1215,6 +1215,22 @@
     "Name": "悖与灾的机骸·始",
     "MonsterType": 2
   },
+  "103109": {
+    "Name": "机械幻象V型",
+    "MonsterType": 1
+  },
+  "103110": {
+    "Name": "对龙机像-炮管子右",
+    "MonsterType": 2
+  },
+  "103111": {
+    "Name": "对龙机像-炮管子左",
+    "MonsterType": 2
+  },
+  "10314": {
+    "Name": "隐身怪（机械守卫180度转身用）",
+    "MonsterType": 0
+  },
   "103200": {
     "Name": "悖与灾的机骸·继",
     "MonsterType": 2
@@ -1254,6 +1270,22 @@
   "103209": {
     "Name": "隐身怪（结局表演冲锋用）",
     "MonsterType": 0
+  },
+  "103210": {
+    "Name": "自巡航守卫",
+    "MonsterType": 1
+  },
+  "103211": {
+    "Name": "自巡航眼舱",
+    "MonsterType": 1
+  },
+  "103212": {
+    "Name": "自巡航眼舱",
+    "MonsterType": 1
+  },
+  "103213": {
+    "Name": "自巡航眼舱",
+    "MonsterType": 1
   },
   "103300": {
     "Name": "悖与灾的机骸·终",
@@ -1572,7 +1604,7 @@
     "MonsterType": 0
   },
   "11011": {
-    "Name": "哥布林护卫",
+    "Name": "哥布林守卫",
     "MonsterType": 0
   },
   "11012": {
@@ -2934,6 +2966,18 @@
   "1365": {
     "Name": "连线空模型",
     "MonsterType": 1
+  },
+  "1397": {
+    "Name": "雷核",
+    "MonsterType": 1
+  },
+  "1398": {
+    "Name": "风核",
+    "MonsterType": 0
+  },
+  "1399": {
+    "Name": "伊戈雷乌斯",
+    "MonsterType": 2
   },
   "1400": {
     "Name": "哥布林王·异种",
@@ -4989,6 +5033,14 @@
   },
   "3000079": {
     "Name": "圣堂之眼",
+    "MonsterType": 0
+  },
+  "3000080": {
+    "Name": "露西-共鸣",
+    "MonsterType": 0
+  },
+  "3000081": {
+    "Name": "纳兹-共鸣",
     "MonsterType": 0
   },
   "3002": {
@@ -9370,6 +9422,98 @@
   "69104": {
     "Name": "仪仗队娜宝-测试",
     "MonsterType": 0
+  },
+  "69200": {
+    "Name": "恶疫之鳞",
+    "MonsterType": 2
+  },
+  "69201": {
+    "Name": "恶疫黑石军团执令官",
+    "MonsterType": 1
+  },
+  "69202": {
+    "Name": "恶疫黑石军团先锋官",
+    "MonsterType": 1
+  },
+  "69203": {
+    "Name": "恶疫哥布林欺诈师",
+    "MonsterType": 1
+  },
+  "69204": {
+    "Name": "恶疫哥布林巫医",
+    "MonsterType": 1
+  },
+  "69205": {
+    "Name": "恶疫蓝脊巨蜥",
+    "MonsterType": 1
+  },
+  "69206": {
+    "Name": "恶疫忧郁卷心菜",
+    "MonsterType": 1
+  },
+  "69207": {
+    "Name": "恶疫冷酷卷心菜",
+    "MonsterType": 1
+  },
+  "69208": {
+    "Name": "恶疫翡翠角羊",
+    "MonsterType": 1
+  },
+  "69210": {
+    "Name": "恶疫冰暗巨蜥",
+    "MonsterType": 0
+  },
+  "69211": {
+    "Name": "恶疫哥布林战士",
+    "MonsterType": 0
+  },
+  "69212": {
+    "Name": "恶疫卷心菜杀手",
+    "MonsterType": 0
+  },
+  "69213": {
+    "Name": "恶疫黑石军团突击手",
+    "MonsterType": 0
+  },
+  "69214": {
+    "Name": "恶疫之种-1阶段大",
+    "MonsterType": 0
+  },
+  "69215": {
+    "Name": "恶疫之种-2阶段大",
+    "MonsterType": 0
+  },
+  "69216": {
+    "Name": "恶疫之种-2阶段小",
+    "MonsterType": 0
+  },
+  "69217": {
+    "Name": "毒雾",
+    "MonsterType": 0
+  },
+  "69220": {
+    "Name": "毒池空气墙",
+    "MonsterType": 0
+  },
+  "69230": {
+    "Name": "毒雾",
+    "MonsterType": 0
+  },
+  "69231": {
+    "Name": "毒珠",
+    "MonsterType": 0
+  },
+  "69232": {
+    "Name": "坠石",
+    "MonsterType": 0
+  },
+  "69233": {
+    "Name": "毒刃",
+    "MonsterType": 0
+  },
+  "69250": {
+    "Name": "恶疫之鳞",
+    "MonsterType": 2
   },
   "700001": {
     "Name": "虚蚀精魄",
