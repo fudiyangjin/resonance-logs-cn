@@ -7,10 +7,21 @@ import skillBreakdownDetailsData from "$parserData/generated/SkillBreakdownDetai
 import { lookupFirstSkillIconPath } from "$lib/skill-mappings";
 import { resolveStaticIconUrl } from "$lib/config/static-icon-resolver";
 
-const RECOUNT_GROUP_ICON_OVERRIDES: Record<string, string> = {
+const ICON_OVERRIDES_BY_RECOUNT_ID: Record<string, string> = {
+  // Great Crimson Lotus and Formless Flame Slash are proc rows; the generated
+  // damage rows do not carry the talent icon that actually enables them.
+  "248": "ui/atlas/talent_passive_3/shuangfu364",
+  "249": "ui/atlas/talent_passive_3/shuangfu327",
   // Generated row 238 includes the Flame Berserker basic attack icon before
   // the actual Unbound Meteor skill icon.
   "238": "ui/textures/skill_weapon_sf/weapon_sf-01_kx05",
+};
+
+const ICON_OVERRIDES_BY_DAMAGE_ID: Record<string, string> = {
+  "116230101": "ui/atlas/talent_passive_3/shuangfu364",
+  "23510703": "ui/atlas/talent_passive_3/shuangfu327",
+  "23510803": "ui/atlas/talent_passive_3/shuangfu327",
+  "23510903": "ui/atlas/talent_passive_3/shuangfu327",
 };
 
 export type RawSkillStatsLike = {
@@ -518,6 +529,9 @@ function resolveDamageAttrName(
 }
 
 function lookupDamageAttrIconPath(damageId: number | string): string | undefined {
+  const overrideIconPath = resolveStaticIconUrl(ICON_OVERRIDES_BY_DAMAGE_ID[String(damageId)]);
+  if (overrideIconPath) return overrideIconPath;
+
   const entry = damageAttrIdNames[String(damageId)];
   if (!entry || typeof entry === "string") return undefined;
 
@@ -565,6 +579,9 @@ export function lookupSkillBreakdownDetail(
 }
 
 export function lookupSkillBreakdownIconPath(skillId: number | string): string | undefined {
+  const overrideIconPath = resolveStaticIconUrl(ICON_OVERRIDES_BY_DAMAGE_ID[String(skillId)]);
+  if (overrideIconPath) return overrideIconPath;
+
   const detail = lookupSkillBreakdownDetail(skillId);
   const iconPath = resolveStaticIconUrl(
     detail?.IconPath,
@@ -589,7 +606,7 @@ export function lookupSkillBreakdownIconPath(skillId: number | string): string |
 
 export function lookupRecountGroupIconPath(recountId: number | string): string | undefined {
   const group = recountTable[String(recountId)];
-  const overrideIconPath = resolveStaticIconUrl(RECOUNT_GROUP_ICON_OVERRIDES[String(recountId)]);
+  const overrideIconPath = resolveStaticIconUrl(ICON_OVERRIDES_BY_RECOUNT_ID[String(recountId)]);
   if (overrideIconPath) return overrideIconPath;
 
   const iconPath = resolveStaticIconUrl(
