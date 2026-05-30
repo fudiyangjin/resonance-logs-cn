@@ -22,6 +22,7 @@
     resonanceSearch: string;
     filteredResonanceSkills: ResonanceSkillDefinition[];
     selectedResonanceSkills: ResonanceSkillDefinition[];
+    skillCdShowSlotOutline: boolean;
     setSelectedClass: (classKey: string) => void;
     toggleSkill: (skillId: number) => void;
     isSelected: (skillId: number) => boolean;
@@ -30,6 +31,7 @@
     clearSkills: () => void;
     clearSkillDurations: () => void;
     setResonanceSearch: (value: string) => void;
+    setSkillCdShowSlotOutline: (value: boolean) => void;
   }
 
   const t = uiT("overlay/skill-monitor/skill-cd", () => SETTINGS.live.general.state.language);
@@ -76,6 +78,7 @@
     resonanceSearch,
     filteredResonanceSkills,
     selectedResonanceSkills,
+    skillCdShowSlotOutline,
     setSelectedClass,
     toggleSkill,
     isSelected,
@@ -84,6 +87,7 @@
     clearSkills,
     clearSkillDurations,
     setResonanceSearch,
+    setSkillCdShowSlotOutline,
   }: Props = $props();
 
   onMount(() => {
@@ -277,6 +281,29 @@
 </script>
 
 <div class="space-y-6">
+  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 class="text-base font-semibold text-foreground">{t("overlayDisplay", "Overlay Display")}</h2>
+        <p class="text-xs text-muted-foreground">
+          {t("overlayDisplayDescription", "Adjust how selected skill slots appear in the game overlay")}
+        </p>
+      </div>
+      <label class="flex items-center gap-2 rounded border border-border/60 bg-muted/20 px-3 py-2 text-xs text-foreground">
+        <input
+          type="checkbox"
+          checked={skillCdShowSlotOutline}
+          onchange={(event) =>
+            setSkillCdShowSlotOutline((event.currentTarget as HTMLInputElement).checked)}
+        />
+        {t("showSlotOutline", "Show skill slot outline")}
+      </label>
+    </div>
+    <p class="text-xs text-muted-foreground">
+      {t("showSlotOutlineDescription", "Adds the border and active-skill glow around tracked skill icons in the overlay.")}
+    </p>
+  </div>
+
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
     <div>
       <h2 class="text-base font-semibold text-foreground">{t("classSelection", "职业选择")}</h2>

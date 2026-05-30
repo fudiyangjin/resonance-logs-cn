@@ -105,6 +105,7 @@ export type ResizeTarget =
       kind: "group";
       key: keyof Omit<
         OverlaySizes,
+        | "skillCdShowSlotOutline"
         | "iconBuffStackCounterSize"
         | "iconBuffSizes"
         | "standaloneIconSizes"

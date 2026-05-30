@@ -4,6 +4,7 @@
     displayMap,
     getGroupPosition,
     getGroupScale,
+    getOverlaySizes,
     getResourceValue,
     isEditing,
     monitoredSkillIds,
@@ -23,6 +24,7 @@
   const editing = $derived(isEditing());
   const groupPos = $derived(getGroupPosition("skillCdGroup"));
   const groupScale = $derived(getGroupScale("skillCdGroupScale"));
+  const showSlotOutline = $derived(getOverlaySizes().skillCdShowSlotOutline);
   const skillIds = $derived(monitoredSkillIds());
   const displays = $derived(displayMap());
   const classKey = $derived(selectedClassKey());
@@ -47,7 +49,7 @@
     <div class="group-tag">{t("overlay.skillCd", "Skill CD Area")}</div>
   {/if}
 
-  <div class="skill-cd-grid">
+  <div class="skill-cd-grid" class:no-slot-outline={!showSlotOutline}>
     {#each Array(10) as _, idx (idx)}
       {@const skillId = skillIds[idx]}
       {@const display = skillId ? displays.get(skillId) : undefined}
@@ -153,6 +155,13 @@
   .skill-cell.derived-active {
     border-color: rgba(255, 216, 102, 0.85);
     box-shadow: 0 0 8px rgba(255, 216, 102, 0.6);
+  }
+
+  .skill-cd-grid.no-slot-outline .skill-cell,
+  .skill-cd-grid.no-slot-outline .skill-cell.empty,
+  .skill-cd-grid.no-slot-outline .skill-cell.derived-active {
+    border-color: transparent;
+    box-shadow: none;
   }
 
   .skill-icon {

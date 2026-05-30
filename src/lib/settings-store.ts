@@ -308,6 +308,7 @@ export type OverlayPositions = {
 
 export type OverlaySizes = {
   skillCdGroupScale: number;
+  skillCdShowSlotOutline: boolean;
   resourceGroupScale: number;
   textBuffPanelScale: number;
   panelAttrGroupScale: number;
@@ -593,6 +594,7 @@ function createDefaultOverlayPositions(): OverlayPositions {
 function createDefaultOverlaySizes(): OverlaySizes {
   return {
     skillCdGroupScale: 1,
+    skillCdShowSlotOutline: true,
     resourceGroupScale: 1,
     textBuffPanelScale: 1,
     panelAttrGroupScale: 1,
