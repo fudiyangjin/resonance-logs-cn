@@ -1347,12 +1347,25 @@
                     bind:selected={
                       SETTINGS.accessibility.state.backgroundImageMode
                     }
-                    values={["cover", "contain"]}
+                    values={[
+                      {
+                        label: t("themes.general.imageMode.cover", "Cover"),
+                        value: "cover",
+                      },
+                      {
+                        label: t("themes.general.imageMode.contain", "Contain"),
+                        value: "contain",
+                      },
+                      {
+                        label: t("themes.general.imageMode.fitWidth", "Fit Width"),
+                        value: "fit-width",
+                      },
+                    ]}
                   />
-                  {#if SETTINGS.accessibility.state.backgroundImageMode === "contain"}
+                  {#if SETTINGS.accessibility.state.backgroundImageMode !== "cover"}
                     <SettingsColorAlpha
-                      label={t("themes.general.containFillColor", "留白填充颜色")}
-                      description={t("themes.general.containFillColorDescription", "当图片以“包含”方式适配时，周围留白的背景色")}
+                      label={t("themes.general.containFillColor", "空白区域填充颜色")}
+                      description={t("themes.general.containFillColorDescription", "当图片使用“包含”或“适应宽度”模式时，空白区域使用的背景色")}
                       value={SETTINGS.accessibility.state
                         .backgroundImageContainColor}
                       oninput={(value: string) => {

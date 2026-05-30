@@ -7685,7 +7685,7 @@
           "evidenceStatus": "configured-ready",
           "configStatus": "configured",
           "configuredName": "斧风狩猎",
-          "configuredImagePath": "/images/flame_berserker/skill/weapon_sf-01_skill02_01.png",
+          "configuredImagePath": "/images/flame_berserker/skill/weapon_sf-01_kx03.png",
           "generatedName": "Axe Wind",
           "generatedNames": {
             "en": "Axe Wind",
@@ -7787,7 +7787,7 @@
           "evidenceStatus": "configured-ready",
           "configStatus": "configured",
           "configuredName": "迷狂炎舞",
-          "configuredImagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_103.png",
+          "configuredImagePath": "/images/flame_berserker/skill/weapon_sf-01_kx04.png",
           "generatedName": "Wildfire Dance",
           "generatedNames": {
             "en": "Wildfire Dance",
@@ -7889,7 +7889,7 @@
           "evidenceStatus": "configured-ready",
           "configStatus": "configured",
           "configuredName": "无羁坠星",
-          "configuredImagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_104.png",
+          "configuredImagePath": "/images/flame_berserker/skill/weapon_sf-01_kx05.png",
           "generatedName": "Unbound Meteor",
           "generatedNames": {
             "en": "Unbound Meteor",
@@ -15472,12 +15472,16 @@
           "iconStatus": "exported",
           "staticImageStatus": "not-configured",
           "exportedPngFiles": [
+            "RecountTable/skill_aoyi_skill_icon_001.png",
             "skill_aoyi_icons/skill_aoyi_skill_icon_001.png",
+            "SkillBreakdownDetails/skill_aoyi_skill_icon_001.png",
             "SkillCooldowns/skill_aoyi_skill_icon_001.png",
             "skillnames/skill_aoyi_skill_icon_001.png"
           ],
           "iconAssetSources": [
+            "RecountTable",
             "skill_aoyi_icons",
+            "SkillBreakdownDetails",
             "SkillCooldowns",
             "skillnames"
           ],

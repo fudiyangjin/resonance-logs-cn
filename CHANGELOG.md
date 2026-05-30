@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.8 - Global
+## v1.0.9 - Global
 
 - Kept Skill CD hover cards inside the app window and widened them so longer descriptions are readable without clipping offscreen.
 - Replaced native `title` hover text with persistent app-rendered tooltips globally, so pressing keys such as Ctrl no longer dismisses hover text during screenshots.
@@ -25,10 +25,13 @@
 - Reduced noisy live Skill CD dev logging so large cooldown packets no longer dump hundreds of IDs/payload rows into normal app logs while the parser is active.
 - Fixed Windows CUDA native builds by moving the CMake CUDA scratch/build directory out of Cargo's long build-script hash path, preventing MSBuild FileTracker path failures and restoring the `module_optimizer_cuda` static library link.
 - Fixed Unbound Meteor recount icons so live/history skill rows use the actual Flame Berserker skill icon instead of the basic attack icon.
+- Corrected Twin Axe Skill CD selection icons for Axe Wind, Wildfire Dance, and Unbound Meteor to match their in-game skill icons.
 - Fixed Formless Flame Slash and Great Crimson Lotus proc icons so their recount and detail rows use the talent icons that enable them.
 - Corrected Formless Flame Slash proc icons to use the Wildfire Dance trigger talent icon.
 - Added a Skill CD overlay display option to hide tracked skill slot outlines and active-skill glow while keeping the current look enabled by default.
 - Hardened update handling so Global ignores stale CN release payloads and only shows update prompts from `donneeee/resonance-logs-global`.
+- Prevented vertical resizing while Dynamic Live Window is enabled, so player-table overflow no longer leaves transparent dead click space below the meter.
+- Added a Fit Width background image mode that scales the image to meter width and reveals more of it as the live window grows downward.
 
 ## v1.0.7 - Global
 

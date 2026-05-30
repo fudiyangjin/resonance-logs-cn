@@ -1,5 +1,5 @@
 <script lang="ts">
-  type BackgroundImageMode = "cover" | "contain";
+  type BackgroundImageMode = "cover" | "contain" | "fit-width";
 
   let {
     enabled = false,
@@ -19,14 +19,16 @@
   const normalizedOpacity = $derived(Math.max(0, Math.min(100, opacity)) / 100);
   const layerStyle = $derived.by(() => {
     if (!visible) return "";
+    const size = mode === "fit-width" ? "100% auto" : mode;
+    const position = mode === "fit-width" ? "top center" : "center";
 
     return [
       `opacity: ${normalizedOpacity}`,
       `background-image: url("${image}")`,
-      `background-size: ${mode}`,
-      "background-position: center",
+      `background-size: ${size}`,
+      `background-position: ${position}`,
       "background-repeat: no-repeat",
-      `background-color: ${mode === "contain" ? containColor : "transparent"}`,
+      `background-color: ${mode === "cover" ? "transparent" : containColor}`,
     ].join("; ");
   });
 </script>

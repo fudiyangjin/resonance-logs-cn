@@ -9,6 +9,8 @@
         "core:window:allow-unminimize",
         "core:window:allow-show",
         "core:window:allow-set-focus",
+        "core:window:allow-set-size",
+        "core:window:allow-set-size-constraints",
         "core:window:allow-hide",
         "core:window:allow-start-dragging",
         "core:window:allow-set-ignore-cursor-events",

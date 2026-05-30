@@ -64,7 +64,9 @@
   let resizeObserver: ResizeObserver | null = null;
   let dynamicResizeFrame = 0;
   let lastDynamicHeight = 0;
+  let dynamicHeightConstraint = 0;
   let dynamicWindowEnabled = $derived(SETTINGS.live.dynamicWindow.state.enabled === true);
+  const DYNAMIC_WINDOW_MIN_HEIGHT = 80;
 
   // Prevent concurrent setupEventListeners runs which can attach duplicate listeners
   let listenersSetupInProgress = false;
@@ -458,25 +460,64 @@ t("live.resumeToast", "战斗已继续"),
     }, 1000);
   }
 
+  async function clearDynamicWindowHeightConstraint() {
+    if (dynamicHeightConstraint <= 0 && lastDynamicHeight <= 0) return;
+    dynamicHeightConstraint = 0;
+    lastDynamicHeight = 0;
+
+    try {
+      await getCurrentWindow().setSizeConstraints(null);
+    } catch (error) {
+      console.warn("Failed to clear dynamic live window height constraint:", error);
+    }
+  }
+
+  async function applyDynamicWindowHeight(targetHeight: number) {
+    const liveWindow = getCurrentWindow();
+
+    try {
+      if (dynamicHeightConstraint > 0 && Math.abs(targetHeight - dynamicHeightConstraint) >= 2) {
+        await liveWindow.setSizeConstraints(null);
+        dynamicHeightConstraint = 0;
+      }
+
+      await liveWindow.setSize(
+        new LogicalSize(Math.ceil(window.innerWidth), targetHeight),
+      );
+      await liveWindow.setSizeConstraints({
+        minHeight: targetHeight,
+        maxHeight: targetHeight,
+      });
+      dynamicHeightConstraint = targetHeight;
+    } catch (error) {
+      console.warn("Failed to resize dynamic live window:", error);
+    }
+  }
+
   function scheduleDynamicResize() {
-    if (!dynamicWindowEnabled || !rootElement || typeof window === "undefined") return;
+    if (!dynamicWindowEnabled || !rootElement || typeof window === "undefined") {
+      void clearDynamicWindowHeightConstraint();
+      return;
+    }
     if (dynamicResizeFrame) cancelAnimationFrame(dynamicResizeFrame);
 
     dynamicResizeFrame = requestAnimationFrame(async () => {
       dynamicResizeFrame = 0;
-      if (!dynamicWindowEnabled || !rootElement) return;
+      if (!dynamicWindowEnabled || !rootElement) {
+        void clearDynamicWindowHeightConstraint();
+        return;
+      }
 
-      const targetHeight = Math.max(80, Math.ceil(rootElement.scrollHeight));
-      if (Math.abs(targetHeight - lastDynamicHeight) < 2) return;
+      const targetHeight = Math.max(DYNAMIC_WINDOW_MIN_HEIGHT, Math.ceil(rootElement.scrollHeight));
+      if (
+        Math.abs(targetHeight - lastDynamicHeight) < 2
+        && Math.abs(targetHeight - dynamicHeightConstraint) < 2
+      ) {
+        return;
+      }
       lastDynamicHeight = targetHeight;
 
-      try {
-        await getCurrentWindow().setSize(
-          new LogicalSize(Math.ceil(window.innerWidth), targetHeight),
-        );
-      } catch (error) {
-        console.warn("Failed to resize dynamic live window:", error);
-      }
+      await applyDynamicWindowHeight(targetHeight);
     });
   }
 
@@ -519,6 +560,7 @@ t("live.resumeToast", "战斗已继续"),
       isDestroyed = true;
       if (dynamicResizeFrame) cancelAnimationFrame(dynamicResizeFrame);
       clearAutoHideTimer();
+      void clearDynamicWindowHeightConstraint();
       resizeObserver?.disconnect();
       if (reconnectInterval) clearInterval(reconnectInterval);
       if (unlisten) unlisten();
@@ -549,7 +591,11 @@ t("live.resumeToast", "战斗已继续"),
     SETTINGS.live.tableCustomization.state.playerRowHeight;
     SETTINGS.live.tableCustomization.state.tableHeaderHeight;
     SETTINGS.live.headerCustomization.state.windowPadding;
-    scheduleDynamicResize();
+    if (dynamicWindowEnabled) {
+      scheduleDynamicResize();
+    } else {
+      void clearDynamicWindowHeightConstraint();
+    }
   });
 
 </script>

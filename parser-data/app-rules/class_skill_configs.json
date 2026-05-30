@@ -275,17 +275,17 @@
       {
         "skillId": 1612,
         "name": "斧风狩猎",
-        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill02_01.png"
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx03.png"
       },
       {
         "skillId": 1613,
         "name": "迷狂炎舞",
-        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_103.png"
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx04.png"
       },
       {
         "skillId": 1614,
         "name": "无羁坠星",
-        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_skill_104.png"
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx05.png"
       },
       {
         "skillId": 1615,

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Resonance Logs - Global",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "identifier": "com.resonance-logs-global",
   "build": {
     "beforeDevCommand": "npm run dev:tauri-static",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Resonance Logs - Global v1.0.8 - Live",
+        "title": "Resonance Logs - Global v1.0.9 - Live",
         "label": "live",
         "url": "/live/dps",
         "shadow": false,
@@ -24,7 +24,7 @@
         "skipTaskbar": true
       },
       {
-        "title": "Resonance Logs - Global v1.0.8 - Main",
+        "title": "Resonance Logs - Global v1.0.9 - Main",
         "label": "main",
         "url": "/main/dps",
         "width": 1200,
@@ -65,7 +65,7 @@
         "maximizable": false
       },
       {
-        "title": "Resonance Logs - Global v1.0.8 - Event Logger",
+        "title": "Resonance Logs - Global v1.0.9 - Event Logger",
         "label": "event-logger",
         "url": "/event-logger",
         "width": 1200,
