@@ -1018,14 +1018,29 @@ fn run_command_silently(cmd: &mut Command) -> std::io::Result<std::process::Exit
 use tauri_plugin_updater::UpdaterExt;
 
 #[cfg(windows)]
+const GLOBAL_UPDATE_DOWNLOAD_MARKER: &str = "github.com/donneeee/resonance-logs-global";
+
+#[cfg(windows)]
+fn is_global_update_download_url(download_url: &str) -> bool {
+    download_url
+        .to_ascii_lowercase()
+        .contains(GLOBAL_UPDATE_DOWNLOAD_MARKER)
+}
+
+#[cfg(windows)]
 async fn check_for_updates(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
     // Check only: frontend is responsible for reminding users to download manually.
     if let Some(update) = app.updater()?.check().await? {
         info!("Update available: {}", update.version);
+        let download_url = update.download_url.to_string();
+        if !is_global_update_download_url(&download_url) {
+            warn!("Ignoring update from unexpected release feed: {}", download_url);
+            return Ok(());
+        }
         let payload = json!({
             "version": update.version.to_string(),
             "body": update.body.unwrap_or_default(),
-            "downloadUrl": update.download_url.to_string(),
+            "downloadUrl": download_url,
         });
         if let Err(e) = app.emit("update-available", payload) {
             warn!("Failed to emit update-available event: {}", e);

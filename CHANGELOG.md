@@ -24,6 +24,8 @@
 - Restored Module Calculator filter memory through a separate lightweight per-profile Module Calculator settings store, avoiding shared skill-monitor profile writes that could kick live runtime sync while the calculator page is open.
 - Reduced noisy live Skill CD dev logging so large cooldown packets no longer dump hundreds of IDs/payload rows into normal app logs while the parser is active.
 - Fixed Windows CUDA native builds by moving the CMake CUDA scratch/build directory out of Cargo's long build-script hash path, preventing MSBuild FileTracker path failures and restoring the `module_optimizer_cuda` static library link.
+- Fixed Unbound Meteor recount icons so live/history skill rows use the actual Flame Berserker skill icon instead of the basic attack icon.
+- Hardened update handling so Global ignores stale CN release payloads and only shows update prompts from `donneeee/resonance-logs-global`.
 
 ## v1.0.7 - Global
 

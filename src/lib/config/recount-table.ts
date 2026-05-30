@@ -7,6 +7,12 @@ import skillBreakdownDetailsData from "$parserData/generated/SkillBreakdownDetai
 import { lookupFirstSkillIconPath } from "$lib/skill-mappings";
 import { resolveStaticIconUrl } from "$lib/config/static-icon-resolver";
 
+const RECOUNT_GROUP_ICON_OVERRIDES: Record<string, string> = {
+  // Generated row 238 includes the Flame Berserker basic attack icon before
+  // the actual Unbound Meteor skill icon.
+  "238": "ui/textures/skill_weapon_sf/weapon_sf-01_kx05",
+};
+
 export type RawSkillStatsLike = {
   totalValue: number;
   effectiveTotalValue?: number;
@@ -583,6 +589,9 @@ export function lookupSkillBreakdownIconPath(skillId: number | string): string |
 
 export function lookupRecountGroupIconPath(recountId: number | string): string | undefined {
   const group = recountTable[String(recountId)];
+  const overrideIconPath = resolveStaticIconUrl(RECOUNT_GROUP_ICON_OVERRIDES[String(recountId)]);
+  if (overrideIconPath) return overrideIconPath;
+
   const iconPath = resolveStaticIconUrl(
     group?.IconPath,
     ...(group?.IconPaths ?? []),

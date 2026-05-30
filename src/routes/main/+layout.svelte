@@ -134,6 +134,12 @@
     body: string;
     downloadUrl: string;
   };
+  const GLOBAL_UPDATE_DOWNLOAD_MARKER = "github.com/donneeee/resonance-logs-global";
+
+  function isGlobalUpdateInfo(update: UpdateInfo): boolean {
+    return update.downloadUrl.toLowerCase().includes(GLOBAL_UPDATE_DOWNLOAD_MARKER);
+  }
+
   let updateInfo = $state<UpdateInfo | null>(null);
   let updateUnlisten: UnlistenFn | null = null;
   let overlayToggleUnlisten: UnlistenFn | null = null;
@@ -185,6 +191,10 @@
     });
 
     listen<UpdateInfo>("update-available", (event) => {
+      if (!isGlobalUpdateInfo(event.payload)) {
+        console.warn("[updater] ignored unexpected update payload", event.payload.downloadUrl);
+        return;
+      }
       updateInfo = event.payload;
     }).then((unlisten) => {
       updateUnlisten = unlisten;
