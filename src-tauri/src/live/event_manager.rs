@@ -305,6 +305,100 @@ impl Default for EventManager {
 #[allow(dead_code)]
 pub type EventManagerMutex = RwLock<EventManager>;
 
+const ACTIVE_BOSS_MIN_SCENE_TOP_HP_RATIO_NUM: i64 = 1;
+const ACTIVE_BOSS_MIN_SCENE_TOP_HP_RATIO_DEN: i64 = 10;
+const BOSS_DISPLAY_TIER_RATIO_NUM: i64 = 1;
+const BOSS_DISPLAY_TIER_RATIO_DEN: i64 = 2;
+
+fn boss_max_hp(boss: &BossHealth) -> Option<i64> {
+    boss.max_hp.filter(|value| *value > 0)
+}
+
+fn boss_hp_is_damaged(boss: &BossHealth) -> bool {
+    matches!(
+        (boss.current_hp, boss.max_hp),
+        (Some(current_hp), Some(max_hp)) if max_hp > 0 && current_hp < max_hp
+    )
+}
+
+fn hp_at_least_ratio(value: i64, baseline: i64, numerator: i64, denominator: i64) -> bool {
+    if value <= 0 || baseline <= 0 || numerator <= 0 || denominator <= 0 {
+        return false;
+    }
+
+    i128::from(value) * i128::from(denominator) >= i128::from(baseline) * i128::from(numerator)
+}
+
+fn sort_boss_display(bosses: &mut [BossHealth]) {
+    bosses.sort_by(|left, right| {
+        boss_max_hp(right)
+            .unwrap_or(0)
+            .cmp(&boss_max_hp(left).unwrap_or(0))
+            .then_with(|| left.uid.cmp(&right.uid))
+    });
+}
+
+fn select_display_bosses(mut bosses: Vec<BossHealth>) -> Vec<BossHealth> {
+    sort_boss_display(&mut bosses);
+
+    if bosses.len() <= 1 {
+        return bosses;
+    }
+
+    let Some(scene_top_max_hp) = bosses.iter().filter_map(boss_max_hp).max() else {
+        return bosses;
+    };
+
+    let active_top_max_hp = bosses
+        .iter()
+        .filter(|boss| boss_hp_is_damaged(boss))
+        .filter_map(boss_max_hp)
+        .max()
+        .filter(|active_top_max_hp| {
+            hp_at_least_ratio(
+                *active_top_max_hp,
+                scene_top_max_hp,
+                ACTIVE_BOSS_MIN_SCENE_TOP_HP_RATIO_NUM,
+                ACTIVE_BOSS_MIN_SCENE_TOP_HP_RATIO_DEN,
+            )
+        });
+
+    let mut selected: Vec<BossHealth> = if let Some(active_top_max_hp) = active_top_max_hp {
+        bosses
+            .iter()
+            .filter(|boss| boss_hp_is_damaged(boss))
+            .filter(|boss| {
+                boss_max_hp(boss).map_or(false, |max_hp| {
+                    hp_at_least_ratio(
+                        max_hp,
+                        active_top_max_hp,
+                        BOSS_DISPLAY_TIER_RATIO_NUM,
+                        BOSS_DISPLAY_TIER_RATIO_DEN,
+                    )
+                })
+            })
+            .cloned()
+            .collect()
+    } else {
+        bosses
+            .iter()
+            .filter(|boss| boss_max_hp(boss) == Some(scene_top_max_hp))
+            .cloned()
+            .collect()
+    };
+
+    if selected.is_empty() {
+        selected = bosses
+            .iter()
+            .filter(|boss| boss_max_hp(boss) == Some(scene_top_max_hp))
+            .cloned()
+            .collect();
+    }
+
+    sort_boss_display(&mut selected);
+    selected
+}
+
 pub fn generate_live_data_payload(
     encounter: &Encounter,
     attr_store: &EntityAttrStore,
@@ -431,7 +525,7 @@ pub fn generate_live_data_payload(
         });
     }
 
-    let mut bosses: Vec<BossHealth> = encounter
+    let bosses: Vec<BossHealth> = encounter
         .entity_uid_to_entity
         .iter()
         .filter_map(|(&uid, entity)| {
@@ -475,7 +569,7 @@ pub fn generate_live_data_payload(
             })
         })
         .collect();
-    bosses.sort_by_key(|boss| boss.uid);
+    let bosses = select_display_bosses(bosses);
 
     LiveDataPayload {
         elapsed_ms,
@@ -498,6 +592,34 @@ pub fn generate_live_data_payload(
 mod tests {
     use super::*;
     use crate::live::opcodes_models::{AttrValue, Entity};
+
+    const TEST_BOSS_MONSTER_ID: i32 = 103;
+
+    fn boss_entity(name: &str) -> Entity {
+        let mut entity = Entity {
+            name: name.to_string(),
+            entity_type: EEntityType::EntMonster,
+            ..Default::default()
+        };
+        entity.set_monster_type(TEST_BOSS_MONSTER_ID);
+        entity.name = name.to_string();
+        entity
+    }
+
+    fn insert_boss(
+        encounter: &mut Encounter,
+        attr_store: &mut EntityAttrStore,
+        uid: i64,
+        name: &str,
+        current_hp: i64,
+        max_hp: i64,
+    ) {
+        encounter
+            .entity_uid_to_entity
+            .insert(uid, boss_entity(name));
+        attr_store.set_attr(uid, AttrType::CurrentHp, AttrValue::Int(current_hp));
+        attr_store.set_attr(uid, AttrType::MaxHp, AttrValue::Int(max_hp));
+    }
 
     #[test]
     fn live_payload_preserves_entity_season_strength_without_attr_store_value() {
@@ -566,5 +688,107 @@ mod tests {
 
         assert_eq!(payload.entities.len(), 1);
         assert_eq!(payload.entities[0].season_strength, 1234);
+    }
+
+    #[test]
+    fn live_payload_prefers_damaged_high_hp_boss_over_full_mechanics() {
+        let mut encounter = Encounter::default();
+        let mut attr_store = EntityAttrStore::default();
+
+        insert_boss(
+            &mut encounter,
+            &mut attr_store,
+            101,
+            "Divine Defense Tower",
+            163_800,
+            163_800,
+        );
+        insert_boss(
+            &mut encounter,
+            &mut attr_store,
+            102,
+            "Divine Defense Tower",
+            163_800,
+            163_800,
+        );
+        insert_boss(
+            &mut encounter,
+            &mut attr_store,
+            200,
+            "Bone-Xiolotl",
+            46_600_000,
+            56_600_000,
+        );
+
+        let payload = generate_live_data_payload(&encounter, &attr_store);
+
+        assert_eq!(payload.bosses.len(), 1);
+        assert_eq!(payload.bosses[0].uid, 200);
+        assert_eq!(payload.bosses[0].name, "Bone-Xiolotl");
+    }
+
+    #[test]
+    fn live_payload_keeps_comparable_damaged_twin_bosses() {
+        let mut encounter = Encounter::default();
+        let mut attr_store = EntityAttrStore::default();
+
+        insert_boss(
+            &mut encounter,
+            &mut attr_store,
+            201,
+            "Twin Boss A",
+            45_000_000,
+            50_000_000,
+        );
+        insert_boss(
+            &mut encounter,
+            &mut attr_store,
+            202,
+            "Twin Boss B",
+            42_000_000,
+            48_000_000,
+        );
+        insert_boss(
+            &mut encounter,
+            &mut attr_store,
+            301,
+            "Mechanic Add",
+            500_000,
+            1_000_000,
+        );
+
+        let payload = generate_live_data_payload(&encounter, &attr_store);
+        let displayed_uids: Vec<i64> = payload.bosses.iter().map(|boss| boss.uid).collect();
+
+        assert_eq!(displayed_uids, vec![201, 202]);
+    }
+
+    #[test]
+    fn live_payload_ignores_damaged_low_hp_mechanics_when_scene_boss_is_full() {
+        let mut encounter = Encounter::default();
+        let mut attr_store = EntityAttrStore::default();
+
+        insert_boss(
+            &mut encounter,
+            &mut attr_store,
+            101,
+            "Divine Defense Tower",
+            120_000,
+            163_800,
+        );
+        insert_boss(
+            &mut encounter,
+            &mut attr_store,
+            200,
+            "Bone-Xiolotl",
+            56_600_000,
+            56_600_000,
+        );
+
+        let payload = generate_live_data_payload(&encounter, &attr_store);
+
+        assert_eq!(payload.bosses.len(), 1);
+        assert_eq!(payload.bosses[0].uid, 200);
+        assert_eq!(payload.bosses[0].name, "Bone-Xiolotl");
     }
 }

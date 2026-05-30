@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.0.8 - Global
+
+- Kept Skill CD hover cards inside the app window and widened them so longer descriptions are readable without clipping offscreen.
+- Replaced native `title` hover text with persistent app-rendered tooltips globally, so pressing keys such as Ctrl no longer dismisses hover text during screenshots.
+- Added fallback descriptions for Rage Cleave variant IDs and a no-source notice for Lethal Shot when the game data exposes the skill name but no standalone tooltip text.
+- Localized the Shield Knight Shattered Illusion child buff damage row so Yumiko parses no longer show the raw `虚妄裁定-子BUFF技能` label in skill details.
+- Added an optional Dynamic Live Window setting under Settings > Themes > Live with enable/disable and a 5-20 visible-player cap; live tables grow to the cap and the player table becomes scrollable beyond it.
+- Added Live-only General settings to auto-hide the live window until damage is detected, show it when live damage appears, and hide it again after a configurable no-new-damage delay.
+- Localized the new live parser UI settings for Dynamic Live Window, Clear Meter on Scene Change, Auto-hide Live Window, and Auto-hide Delay across supported UI locales.
+- Moved the live Boss section onto its own header row in both classic and custom header layouts, widened the spacing between T.DMG and T.DPS, and filtered boss HP display to the active/top-HP boss tier so low-HP mechanics no longer crowd out the real encounter boss.
+- Localized design-only shield buff names used by the health/shield overlay, including Life Barrier Shield, so the live overlay follows the selected locale instead of showing raw Chinese design labels.
+- Hardened Module Calculator startup when the game/module data is unavailable, with separate refresh/calculation/GPU loading states, timeouts, and friendlier no-data errors.
+- Hardened Module Calculator against GPU driver probe hangs, falling back to CPU mode when GPU availability cannot be confirmed, and reduced generated-data build chunks by loading bundled skill names as a static JSON asset.
+- Deferred automatic Module Calculator GPU checks until module data is synced, added a manual GPU recheck for driver updates, and removed the native one-shot GPU probe cache so a stale or stuck first probe cannot poison later checks.
+- Stopped Module Calculator from auto-starting a module-data refresh on page open, kept remembered profile filters from touching transient refresh state, and added a refresh watchdog so a hung module-data read cannot leave the page stuck on "Checking module data...".
+- Changed Module Calculator Refresh Data to return a lightweight module status/count response instead of the full module list, so successful backend parses can update the UI without getting stuck after module deserialization.
+- Made Module Calculator Refresh Data recover from stale calculation state and show its current refresh phase in the Data Status card, with backend breadcrumbs for status request start, worker start, parse completion, and count readiness.
+- Hardened the Module Calculator status response parser so Refresh Data accepts camelCase, snake_case, or generated-result payloads and reports unexpected payloads visibly instead of silently leaving the UI at Not Synced.
+- Deduped Module Calculator profile persistence so synced module counts cannot trigger repeated settings writes, and decoupled Refresh Data from GPU probing so the refresh button only refreshes module status; GPU checks now run from the manual Check GPU action.
+- Reworked Module Calculator filter/profile memory to save from explicit control-change callbacks instead of a broad page-level reactive effect, keeping remembered filters out of the Refresh Data response path.
+- Temporarily disabled Module Calculator profile-backed filter memory while investigating the page-entry lock, so entering the tool and refreshing data no longer reads or writes the shared skill-monitor profile store.
+- Restored Module Calculator filter memory through a separate lightweight per-profile Module Calculator settings store, avoiding shared skill-monitor profile writes that could kick live runtime sync while the calculator page is open.
+- Reduced noisy live Skill CD dev logging so large cooldown packets no longer dump hundreds of IDs/payload rows into normal app logs while the parser is active.
+- Fixed Windows CUDA native builds by moving the CMake CUDA scratch/build directory out of Cargo's long build-script hash path, preventing MSBuild FileTracker path failures and restoring the `module_optimizer_cuda` static library link.
+
 ## v1.0.7 - Global
 
 - Updated package, Tauri, Rust crate, lockfile, and window-title metadata for the `1.0.7` release.

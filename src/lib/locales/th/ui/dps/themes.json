@@ -443,5 +443,12 @@
   "liveHeader.bossHealthLayout.vertical": "Vertical",
   "liveHeader.bossHealthLayout.horizontal": "Horizontal",
   "liveHeader.showDeathTab": "Show Death Tab",
-  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation."
+  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation.",
+  "dynamicLiveWindow.disabledDescription": "คงความสูงของหน้าต่างสดไว้ตามที่ปรับด้วยมือ",
+  "dynamicLiveWindow.enabled": "เปิดความสูงแบบไดนามิก",
+  "dynamicLiveWindow.enabledDescription": "หน้าต่างสดจะขยายสูงตามจำนวนแถวผู้เล่นที่มีอยู่ หลังจากถึงจำนวนผู้เล่นสูงสุดที่แสดงได้ ตารางผู้เล่นจะเลื่อนได้",
+  "dynamicLiveWindow.maxPlayerRows": "จำนวนผู้เล่นสูงสุดที่แสดง",
+  "dynamicLiveWindow.maxPlayerRows.description": "จำนวนแถวผู้เล่นที่แสดงก่อนที่ตารางผู้เล่นจะเลื่อนได้",
+  "dynamicLiveWindow.playersUnit": "คน",
+  "dynamicLiveWindow.title": "หน้าต่างสดแบบไดนามิก"
 }

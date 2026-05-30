@@ -56,5 +56,6 @@
   "shieldDetail.unknownShield": "Bouclier",
   "shieldDetail.hp": "HP",
   "shieldDetail.seconds": "{value}s",
-  "shieldDetail.entryTitle": "UUID: {uuid} - baseId: {baseId}"
+  "shieldDetail.entryTitle": "UUID: {uuid} - baseId: {baseId}",
+  "shieldDetail.resizeAria": "Redimensionner la zone santé et bouclier"
 }

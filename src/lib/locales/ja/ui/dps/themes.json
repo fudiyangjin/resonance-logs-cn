@@ -443,5 +443,12 @@
   "liveHeader.bossHealthLayout.vertical": "Vertical",
   "liveHeader.bossHealthLayout.horizontal": "Horizontal",
   "liveHeader.showDeathTab": "Show Death Tab",
-  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation."
+  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation.",
+  "dynamicLiveWindow.disabledDescription": "ライブウィンドウを手動で調整した高さのまま保ちます。",
+  "dynamicLiveWindow.enabled": "動的な高さを有効化",
+  "dynamicLiveWindow.enabledDescription": "ライブウィンドウはプレイヤー行数に合わせて高さが増えます。最大表示プレイヤー数を超えると、プレイヤー表はスクロール可能になります。",
+  "dynamicLiveWindow.maxPlayerRows": "最大表示プレイヤー数",
+  "dynamicLiveWindow.maxPlayerRows.description": "プレイヤー表がスクロール可能になる前に表示するプレイヤー行数。",
+  "dynamicLiveWindow.playersUnit": "人",
+  "dynamicLiveWindow.title": "動的ライブウィンドウ"
 }

@@ -61,5 +61,12 @@
   "tankedSkillColumns": "承伤（技能明细）列",
   "targetDummy.enemyElite": "精英敌方木桩",
   "targetDummy.guardianElite": "精英守护木桩",
-  "targetDummyMode": "打桩模式"
+  "targetDummyMode": "打桩模式",
+  "autoClearOnSceneChange": "切换场景时清空计量表",
+  "autoClearOnSceneChangeDescription": "当游戏切换场景或服务器时，自动保存并清空当前计量表。关闭此项可在场景切换后保留当前计量表。",
+  "autoHideLiveWindow": "自动隐藏实时窗口",
+  "autoHideLiveWindowDescription": "没有检测到新伤害时，延迟后隐藏实时计量表；一旦出现伤害会自动显示。",
+  "autoHideLiveWindowDelaySeconds": "自动隐藏延迟",
+  "autoHideLiveWindowDelaySecondsDescription": "没有检测到新伤害后，等待多少秒再隐藏实时计量表。设为 0 可立即隐藏。",
+  "secondsUnit": "秒"
 }

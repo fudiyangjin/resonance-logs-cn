@@ -16,9 +16,9 @@
   import { uiT } from "$lib/i18n";
 
   const SETTINGS_CATEGORY = "live";
-  // Collapsible section state - all collapsed by default
+  // Keep General open so live-window visibility controls are immediately visible.
   let expandedSections = $state({
-    general: false,
+    general: true,
     trainingDummy: false,
     dpsPlayers: false,
     dpsSkills: false,
@@ -66,6 +66,20 @@
       </button>
       {#if expandedSections.general}
         <div class="px-4 pb-3 space-y-1">
+          <SettingsSwitch
+            bind:checked={SETTINGS.live.general.state.autoHideLiveWindow}
+            label={t("autoHideLiveWindow", "Auto-hide Live Window")}
+            description={t("autoHideLiveWindowDescription", "Hide the live meter after the delay when no new damage is detected, then show it automatically as soon as damage appears.")}
+          />
+          <SettingsSlider
+            bind:value={SETTINGS.live.general.state.autoHideLiveWindowDelaySeconds}
+            label={t("autoHideLiveWindowDelaySeconds", "Auto-hide Delay")}
+            description={t("autoHideLiveWindowDelaySecondsDescription", "Seconds to wait after no new damage is detected before hiding the live meter. Set to 0 to hide immediately.")}
+            min={0}
+            max={60}
+            step={1}
+            unit={t("secondsUnit", "s")}
+          />
           <SettingsSelect
             bind:selected={SETTINGS.live.general.state.showYourName}
             values={[

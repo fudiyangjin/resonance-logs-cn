@@ -104,11 +104,40 @@ export function tooltip(getContent: () => string): Attachment {
       content: getContent(),
       theme: 'resonance',
       arrow: true,
+      appendTo: () => document.body,
       delay: [200, 80],
       duration: [120, 80],
       animation: 'fade',
+      hideOnClick: false,
       moveTransition: 'transform 120ms ease-out',
       placement: 'top',
+      maxWidth: 'min(420px, calc(100vw - 16px))',
+      zIndex: 1000,
+      popperOptions: {
+        modifiers: [
+          {
+            name: 'offset',
+            options: {
+              offset: [0, 6],
+            },
+          },
+          {
+            name: 'flip',
+            options: {
+              padding: 8,
+              fallbackPlacements: ['bottom', 'right', 'left'],
+            },
+          },
+          {
+            name: 'preventOverflow',
+            options: {
+              boundary: document.body,
+              rootBoundary: 'viewport',
+              padding: 8,
+            },
+          },
+        ],
+      },
     });
 
     // Keep content in sync with reactive source

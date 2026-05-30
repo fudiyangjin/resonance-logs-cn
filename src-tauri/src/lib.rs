@@ -46,6 +46,16 @@ const LEGACY_LOG_FILE_PREFIX: &str = "resonance-logs-cn_v";
 static HIDE_MAIN_WINDOW_TO_TRAY: AtomicBool = AtomicBool::new(false);
 
 #[cfg(debug_assertions)]
+fn trim_generated_bindings_whitespace(bindings: &str) -> String {
+    let mut trimmed = String::with_capacity(bindings.len());
+    for line in bindings.lines() {
+        trimmed.push_str(line.trim_end());
+        trimmed.push('\n');
+    }
+    trimmed
+}
+
+#[cfg(debug_assertions)]
 fn clean_generated_bindings(bindings_path: &Path) {
     const MARKER: &str = "/** tauri-specta globals **/";
     const CLEAN_GLOBALS: &str = r#"/** tauri-specta globals **/
@@ -63,21 +73,22 @@ export type Result<T, E> =
         return;
     };
 
-    if bindings.matches("__makeEvents__").count() != 1 {
-        return;
-    }
-
-    let Some(marker_index) = bindings.find(MARKER) else {
-        return;
+    let cleaned = if bindings.matches("__makeEvents__").count() == 1 {
+        if let Some(marker_index) = bindings.find(MARKER) {
+            let mut cleaned = String::with_capacity(marker_index + CLEAN_GLOBALS.len() + 2);
+            cleaned.push_str(bindings[..marker_index].trim_end());
+            cleaned.push_str("\n\n");
+            cleaned.push_str(CLEAN_GLOBALS);
+            cleaned.push('\n');
+            cleaned
+        } else {
+            bindings
+        }
+    } else {
+        bindings
     };
 
-    let mut cleaned = String::with_capacity(marker_index + CLEAN_GLOBALS.len() + 2);
-    cleaned.push_str(bindings[..marker_index].trim_end());
-    cleaned.push_str("\n\n");
-    cleaned.push_str(CLEAN_GLOBALS);
-    cleaned.push('\n');
-
-    let _ = std::fs::write(bindings_path, cleaned);
+    let _ = std::fs::write(bindings_path, trim_generated_bindings_whitespace(&cleaned));
 }
 
 #[tauri::command]
@@ -316,6 +327,7 @@ pub fn run() {
             debug_commands::create_diagnostics_bundle,
             module_optimizer::commands::check_gpu_support,
             module_optimizer::commands::get_latest_modules,
+            module_optimizer::commands::get_latest_module_status,
             module_optimizer::commands::optimize_latest_modules,
             translation_runtime::initialize_translation_runtime_files,
             translation_runtime::get_translation_runtime_status,

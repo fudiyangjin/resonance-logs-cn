@@ -213,12 +213,11 @@
   );
 
   // Check if we have any row 2 left content
-  const hasRow2Left = $derived(
-    h.showTotalDamage || h.showTotalDps || h.showBossHealth,
-  );
+  const hasRow2Left = $derived(h.showTotalDamage || h.showTotalDps);
 
   // Check if we have any row 2 content at all
   const hasRow2 = $derived(hasRow2Left || h.showNavigationTabs);
+  const hasBossRow = $derived(h.showBossHealth);
 
   // Check if we have any row 1 content at all
   const hasRow1 = $derived(hasRow1Left || hasRow1Right);
@@ -328,18 +327,18 @@
 
 {#snippet bossHealthItem()}
   {#if h.showBossHealth}
-    <div class="flex items-center gap-2 shrink-0">
+    <div class="flex min-w-0 items-start gap-2">
       <span
-        class="font-bold text-muted-foreground uppercase tracking-wider"
+        class="shrink-0 font-bold text-muted-foreground uppercase tracking-wider"
         style="font-size: {h.bossHealthLabelFontSize}px"
         {@attach tooltip(() => t("header.bossHealth", "Boss Health"))}>BOSS</span
       >
       {#if displayBosses.length > 0}
         <div
-          class="flex gap-1 overflow-hidden"
+          class="flex min-w-0 max-w-full gap-x-4 gap-y-1 overflow-hidden"
           class:flex-col={h.bossHealthLayout !== "horizontal"}
           class:flex-row={h.bossHealthLayout === "horizontal"}
-          class:flex-nowrap={h.bossHealthLayout === "horizontal"}
+          class:flex-wrap={h.bossHealthLayout === "horizontal"}
         >
           {#each displayBosses as boss (boss.uid)}
             {@const hpPercent =
@@ -347,9 +346,9 @@
                 ? Math.min(100, Math.max(0, (boss.currentHp / boss.maxHp) * 100))
                 : 0}
             {@const localizedBossName = localizeRawMonsterName(boss.name, boss.name)}
-            <div class="flex items-center gap-1 whitespace-nowrap">
+            <div class="flex min-w-0 items-center gap-1 whitespace-nowrap">
               <span
-                class="truncate text-foreground font-semibold tracking-tight"
+                class="min-w-0 truncate text-foreground font-semibold tracking-tight"
                 style="font-size: {h.bossHealthNameFontSize}px"
                 {@attach tooltip(() => localizedBossName)}>{localizedBossName} -</span
               >
@@ -575,12 +574,10 @@
       </div>
     {/each}
   </header>
-{:else if hasRow1 || hasRow2}
+{:else if hasRow1 || hasRow2 || hasBossRow}
   <header
     data-tauri-drag-region
-    class="grid w-full grid-cols-[1fr_auto] text-sm"
-    class:grid-rows-1={!hasRow2}
-    class:grid-rows-2={hasRow2}
+    class="grid w-full grid-cols-[1fr_auto] gap-y-2 text-sm"
     style="padding: {h.headerPadding}px; padding-bottom: {h.headerPadding +
       4}px"
   >
@@ -737,12 +734,12 @@
       </div>
     {/if}
 
-    <!-- Row 2, Col 1: Stats summary + Boss Health -->
+    <!-- Row 2, Col 1: Stats summary -->
     {#if hasRow2Left}
       <div
-        class="col-start-1 row-start-2 flex overflow-hidden items-center gap-5 min-w-0"
+        class="col-start-1 row-start-2 flex min-w-0 items-center overflow-hidden"
       >
-        <div class="flex overflow-hidden items-center gap-5">
+        <div class="flex items-center gap-8 overflow-hidden">
           {#if h.showTotalDamage}
             <div class="flex items-center gap-2 shrink-0">
               <span
@@ -780,63 +777,6 @@
             </div>
           {/if}
         </div>
-
-        {#if h.showBossHealth}
-          <div class="flex items-center gap-2 shrink-0">
-            <span
-              class="font-bold text-muted-foreground uppercase tracking-wider"
-              style="font-size: {h.bossHealthLabelFontSize}px"
-              {@attach tooltip(() => t("header.bossHealth", "Boss Health"))}>BOSS</span
-            >
-            <!-- Inline Boss Health Display -->
-            {#if displayBosses.length > 0}
-              <div
-                class="flex gap-1 overflow-hidden"
-                class:flex-col={h.bossHealthLayout !== "horizontal"}
-                class:flex-row={h.bossHealthLayout === "horizontal"}
-                class:flex-nowrap={h.bossHealthLayout === "horizontal"}
-              >
-                {#each displayBosses as boss (boss.uid)}
-                  {@const hpPercent =
-                    boss.maxHp && boss.currentHp !== null
-                      ? Math.min(
-                          100,
-                          Math.max(0, (boss.currentHp / boss.maxHp) * 100),
-                        )
-                      : 0}
-                  <div class="flex items-center gap-1 whitespace-nowrap">
-                    <span
-                      class="truncate text-foreground font-semibold tracking-tight"
-                      style="font-size: {h.bossHealthNameFontSize}px"
-                      {@attach tooltip(() => localizeRawMonsterName(boss.name, boss.name))}>{localizeRawMonsterName(boss.name, boss.name)} -</span
-                    >
-                    <span
-                      class="tabular-nums font-semibold text-foreground"
-                      style="font-size: {h.bossHealthValueFontSize}px"
-                    >
-                      <AbbreviatedNumber
-                        num={boss.currentHp !== null ? boss.currentHp : 0}
-                      />
-                      {#if boss.maxHp}
-                        <span> / <AbbreviatedNumber num={boss.maxHp} /></span>
-                        <span
-                          class="text-destructive ml-1"
-                          style="font-size: {h.bossHealthPercentFontSize}px"
-                          >({hpPercent.toFixed(1)}%)</span
-                        >
-                      {/if}
-                    </span>
-                  </div>
-                {/each}
-              </div>
-            {:else}
-              <span
-                class="text-neutral-500 font-medium italic"
-                style="font-size: {h.bossHealthNameFontSize}px">{t("header.noBoss", "No Boss")}</span
-              >
-            {/if}
-          </div>
-        {/if}
       </div>
     {/if}
 
@@ -893,6 +833,12 @@
             onclick={() => goto(resolve("/live/death"))}>DEATH</button
           >
         {/if}
+      </div>
+    {/if}
+
+    {#if hasBossRow}
+      <div class="col-span-2 row-start-3 min-w-0 overflow-hidden" data-tauri-drag-region>
+        {@render bossHealthItem()}
       </div>
     {/if}
   </header>

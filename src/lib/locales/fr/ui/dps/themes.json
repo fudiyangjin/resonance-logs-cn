@@ -443,5 +443,12 @@
   "liveHeader.bossHealthLayout.vertical": "Vertical",
   "liveHeader.bossHealthLayout.horizontal": "Horizontal",
   "liveHeader.showDeathTab": "Show Death Tab",
-  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation."
+  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation.",
+  "dynamicLiveWindow.disabledDescription": "Conserver la fenêtre live à la hauteur réglée manuellement.",
+  "dynamicLiveWindow.enabled": "Activer la hauteur dynamique",
+  "dynamicLiveWindow.enabledDescription": "La fenêtre live grandit pour afficher les lignes de joueurs. Après le nombre maximal de joueurs visibles, le tableau des joueurs devient défilable.",
+  "dynamicLiveWindow.maxPlayerRows": "Joueurs visibles max.",
+  "dynamicLiveWindow.maxPlayerRows.description": "Nombre de lignes de joueurs affichées avant que le tableau des joueurs devienne défilable.",
+  "dynamicLiveWindow.playersUnit": "joueurs",
+  "dynamicLiveWindow.title": "Fenêtre live dynamique"
 }

@@ -6,6 +6,7 @@
   import "../app.css";
   import { onMount } from "svelte";
   import { SETTINGS } from "$lib/settings-store";
+  import PersistentTitleTooltip from "$lib/components/persistent-title-tooltip.svelte";
   // Only allow warnings and errors to be printed to console in production builds
   if (typeof window !== "undefined" && import.meta.env.PROD) {
     // Keep warn and error; disable verbose logging
@@ -130,3 +131,4 @@
 })()}
 
 {@render children()}
+<PersistentTitleTooltip />

@@ -601,6 +601,7 @@
     backgroundImage: false,
     customFonts: false,
     liveDisplay: false,
+    dynamicLiveWindow: false,
     headerSettings: false,
     tableSettings: false,
     tableRowSettings: false,
@@ -1531,6 +1532,46 @@
                 description={SETTINGS.accessibility.state.clickthrough
                   ? t("liveWindowDisplay.clickthroughEnabledDescription", "已启用点击穿透 - 鼠标点击将穿透窗口")
                   : t("liveWindowDisplay.clickthroughMode.description", "启用点击穿透模式")}
+              />
+            </div>
+          {/if}
+        </div>
+
+        <!-- Dynamic Live Window Settings -->
+        <div
+          class="rounded-lg border bg-card/40 border-border/60 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+        >
+          <button
+            type="button"
+            class="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            onclick={() => toggleSection("dynamicLiveWindow")}
+          >
+            <h2 class="text-base font-semibold text-foreground">
+              {t("dynamicLiveWindow.title", "Dynamic Live Window")}
+            </h2>
+            <ChevronDown
+              class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.dynamicLiveWindow
+                ? 'rotate-180'
+                : ''}"
+            />
+          </button>
+          {#if expandedSections.dynamicLiveWindow}
+            <div class="px-4 pb-4 space-y-4">
+              <SettingsSwitch
+                bind:checked={SETTINGS.live.dynamicWindow.state.enabled}
+                label={t("dynamicLiveWindow.enabled", "Enable dynamic height")}
+                description={SETTINGS.live.dynamicWindow.state.enabled
+                  ? t("dynamicLiveWindow.enabledDescription", "The live window grows to fit player rows. After the max visible player count, the player table becomes scrollable.")
+                  : t("dynamicLiveWindow.disabledDescription", "Keep the live window at its manually resized height.")}
+              />
+              <SettingsSlider
+                bind:value={SETTINGS.live.dynamicWindow.state.maxPlayerRows}
+                label={t("dynamicLiveWindow.maxPlayerRows", "Max visible players")}
+                description={t("dynamicLiveWindow.maxPlayerRows.description", "Number of player rows shown before the player table becomes scrollable.")}
+                min={5}
+                max={20}
+                step={1}
+                unit={` ${t("dynamicLiveWindow.playersUnit", "players")}`}
               />
             </div>
           {/if}

@@ -1,4 +1,5 @@
 import damageAttrIdNamesData from "$parserData/generated/DamageAttrIdName.json";
+import buffNamesData from "$parserData/generated/BuffName.json";
 import effectSourcesData from "$parserData/generated/EffectSources.json";
 import recountTableData from "$parserData/generated/RecountTable.json";
 import seasonPhantomFactorsData from "$parserData/generated/SeasonPhantomFactors.json";
@@ -314,6 +315,16 @@ type DamageAttrNameEntry = string | {
   LinkedSkillEffectSkillTableParentIconPath?: string;
   LinkedSkillTableIconPath?: string;
   LinkedSkillTableParentIconPath?: string;
+  LinkedBuffIconFamilySourceId?: number | string;
+  LinkedBuffIconFamilySourceName?: string;
+};
+
+type BuffNameEntry = {
+  Id?: number | string;
+  Name?: string;
+  Names?: LocalizedTextMap;
+  NameDesign?: string;
+  DesignName?: string;
 };
 
 type SeasonPhantomFactorEntry = {
@@ -383,6 +394,11 @@ type EffectSourcesData = {
 
 const recountTable = recountTableData as Record<string, RecountEntry>;
 const damageAttrIdNames = damageAttrIdNamesData as Record<string, DamageAttrNameEntry>;
+const buffNamesById = new Map<string, BuffNameEntry>(
+  (buffNamesData as BuffNameEntry[])
+    .filter((entry) => entry.Id !== undefined)
+    .map((entry) => [String(entry.Id), entry]),
+);
 const skillBreakdownDetails = skillBreakdownDetailsData as Record<
   string,
   SkillBreakdownDetail
@@ -453,13 +469,45 @@ function perMinute(value: number, elapsedSecs: number): number {
   return (value / elapsedSecs) * 60;
 }
 
-function resolveDamageAttrName(entry: DamageAttrNameEntry | undefined): string | undefined {
+function isDesignOnlyTextMap(values: LocalizedTextMap | undefined): boolean {
+  if (!values) return false;
+  return Object.entries(values).every(([locale, value]) =>
+    locale === "design" || !value?.trim()
+  );
+}
+
+function resolveLinkedBuffFamilyName(
+  entry: DamageAttrNameEntry | undefined,
+  locale: string,
+): string | undefined {
+  if (!entry || typeof entry === "string") return undefined;
+  const familyId = entry.LinkedBuffIconFamilySourceId;
+  if (familyId === undefined || familyId === null) return undefined;
+  const familyEntry = buffNamesById.get(String(familyId));
+  const familyName = resolveLocalizedText(
+    familyEntry?.Names,
+    locale,
+    entry.LinkedBuffIconFamilySourceName ?? familyEntry?.Name ?? familyEntry?.NameDesign ?? "",
+  ).trim();
+  return familyName || undefined;
+}
+
+function resolveDamageAttrName(
+  entry: DamageAttrNameEntry | undefined,
+  locale = "en",
+): string | undefined {
   if (typeof entry === "string") return entry;
   if (!entry) return undefined;
-  return entry.Name
-    ?? entry.Names?.["en"]
-    ?? entry.Names?.["zh-CN"]
-    ?? entry.Names?.["design"]
+  const localized = resolveLocalizedText(
+    entry.Names,
+    locale,
+    entry.Name ?? entry.DamageName ?? "",
+  ).trim();
+  if (localized && !isDesignOnlyTextMap(entry.Names)) return localized;
+
+  return resolveLinkedBuffFamilyName(entry, locale)
+    ?? localized
+    ?? entry.Name
     ?? entry.DamageName;
 }
 
@@ -490,6 +538,18 @@ export function lookupChildDamageIdName(damageId: number): string {
   const individual = resolveDamageAttrName(damageAttrIdNames[String(damageId)]);
   if (individual) return individual;
   return lookupDamageIdName(damageId);
+}
+
+function lookupLocalizedDamageIdName(damageId: number | string, locale: string): string {
+  const damageIdNumber = Number(damageId);
+  if (Number.isFinite(damageIdNumber)) {
+    const recount = DAMAGE_TO_RECOUNT.get(damageIdNumber);
+    if (recount) {
+      const group = recountTable[String(recount.recountId)];
+      return resolveLocalizedText(group?.Names, locale, recount.recountName);
+    }
+  }
+  return resolveDamageAttrName(damageAttrIdNames[String(damageId)], locale) ?? `Unknown (${damageId})`;
 }
 
 export function lookupSkillBreakdownDetail(
@@ -1449,6 +1509,15 @@ export function resolveSkillBreakdownName(
     return resolveLocalizedText(row.names, locale, row.name);
   }
   const detail = row.details ?? lookupSkillBreakdownDetail(row.skillId);
+  const damageName = lookupLocalizedDamageIdName(row.skillId, locale);
+  if (
+    detail?.DisplayNames &&
+    isDesignOnlyTextMap(detail.DisplayNames) &&
+    damageName &&
+    damageName !== resolveLocalizedText(detail.DisplayNames, locale, row.name)
+  ) {
+    return damageName;
+  }
   return resolveOwnerQualifiedLocalizedText(
     detail?.DisplayNames,
     detail?.MonsterOwnerNames,
@@ -1529,21 +1598,29 @@ export function buildSkillBreakdownHoverText(
     ]).join("\n");
   }
 
+  const damageEntry = damageAttrIdNames[String(skillId)];
   const parentName = resolveLocalizedText(
     detail.ParentRecountNames,
     locale,
     detail.ParentRecountName ?? "",
   );
-  const damageName = resolveLocalizedText(
+  const rawDamageName = resolveLocalizedText(
     detail.DamageNames,
     locale,
     detail.DamageName ?? "",
   );
-  const linkedName = resolveLocalizedText(
+  const familyDamageName = resolveDamageAttrName(damageEntry, locale);
+  const damageName = detail.DamageNames && isDesignOnlyTextMap(detail.DamageNames) && familyDamageName
+    ? familyDamageName
+    : rawDamageName;
+  const rawLinkedName = resolveLocalizedText(
     detail.LinkedNames,
     locale,
     detail.LinkedName ?? "",
   );
+  const linkedName = detail.LinkedNames && isDesignOnlyTextMap(detail.LinkedNames)
+    ? resolveLinkedBuffFamilyName(damageEntry, locale) ?? rawLinkedName
+    : rawLinkedName;
   const detailName = resolveLocalizedText(
     detail.DisplayDetailNames,
     locale,

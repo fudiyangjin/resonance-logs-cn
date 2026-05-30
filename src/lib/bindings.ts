@@ -7,9 +7,9 @@
 export const commands = {
 /**
  * Enables blur on the live meter window.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `app` - A handle to the Tauri application instance.
  */
 async enableBlur() : Promise<void> {
@@ -17,9 +17,9 @@ async enableBlur() : Promise<void> {
 },
 /**
  * Disables blur on the live meter window.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `app` - A handle to the Tauri application instance.
  */
 async disableBlur() : Promise<void> {
@@ -27,13 +27,13 @@ async disableBlur() : Promise<void> {
 },
 /**
  * Resets the encounter.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `state_manager` - The state manager.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<(), String>` - An empty result.
  */
 async resetEncounter() : Promise<Result<null, string>> {
@@ -46,13 +46,13 @@ async resetEncounter() : Promise<Result<null, string>> {
 },
 /**
  * Toggles pausing the encounter.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `state_manager` - The state manager.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<(), String>` - An empty result.
  */
 async togglePauseEncounter() : Promise<Result<null, string>> {
@@ -89,14 +89,14 @@ async saveAndApplyMonitorRuntimeSnapshot(snapshot: MonitorRuntimeSnapshot) : Pro
 },
 /**
  * Gets a list of recent encounters.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `limit` - The maximum number of encounters to return.
  * * `offset` - The number of encounters to skip.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<RecentEncountersResult, String>` - A list of recent encounters.
  */
 async getRecentEncounters(limit: number, offset: number) : Promise<Result<RecentEncountersResult, string>> {
@@ -109,9 +109,9 @@ async getRecentEncounters(limit: number, offset: number) : Promise<Result<Recent
 },
 /**
  * Gets a list of unique scene names.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<SceneNamesResult, String>` - A list of unique scene names.
  */
 async getUniqueSceneNames() : Promise<Result<SceneNamesResult, string>> {
@@ -124,9 +124,9 @@ async getUniqueSceneNames() : Promise<Result<SceneNamesResult, string>> {
 },
 /**
  * Gets a list of unique boss names.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<BossNamesResult, String>` - A list of unique boss names.
  */
 async getUniqueBossNames() : Promise<Result<BossNamesResult, string>> {
@@ -139,15 +139,15 @@ async getUniqueBossNames() : Promise<Result<BossNamesResult, string>> {
 },
 /**
  * Gets a list of player names filtered by a prefix.
- * 
+ *
  * This will return up to 5 matching player names (to keep the UI responsive).
- * 
+ *
  * # Arguments
- * 
+ *
  * * `prefix` - The prefix to filter by.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<PlayerNamesResult, String>` - A list of player names.
  */
 async getPlayerNamesFiltered(prefix: string) : Promise<Result<PlayerNamesResult, string>> {
@@ -160,15 +160,15 @@ async getPlayerNamesFiltered(prefix: string) : Promise<Result<PlayerNamesResult,
 },
 /**
  * Gets a list of recent encounters filtered by the given criteria.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `limit` - The maximum number of encounters to return.
  * * `offset` - The number of encounters to skip.
  * * `filters` - The filters to apply.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<RecentEncountersResult, String>` - A list of recent encounters.
  */
 async getRecentEncountersFiltered(limit: number, offset: number, filters: EncounterFiltersDto | null) : Promise<Result<RecentEncountersResult, string>> {
@@ -181,13 +181,13 @@ async getRecentEncountersFiltered(limit: number, offset: number, filters: Encoun
 },
 /**
  * Gets an encounter by its ID.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `encounter_id` - The ID of the encounter.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<EncounterSummaryDto, String>` - The encounter summary.
  */
 async getEncounterById(encounterId: number) : Promise<Result<EncounterSummaryDto, string>> {
@@ -244,13 +244,13 @@ async getEncounterModifierEntitiesRaw(encounterId: number, entityUid: number) : 
 },
 /**
  * Deletes an encounter by its ID.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `encounter_id` - The ID of the encounter to delete.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<(), String>` - An empty result indicating success or failure.
  */
 async deleteEncounter(encounterId: number) : Promise<Result<null, string>> {
@@ -263,13 +263,13 @@ async deleteEncounter(encounterId: number) : Promise<Result<null, string>> {
 },
 /**
  * Deletes multiple encounters by ID.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `ids` - The IDs of the encounters to delete.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<(), String>` - An empty result indicating success or failure.
  */
 async deleteEncounters(ids: number[]) : Promise<Result<null, string>> {
@@ -297,14 +297,14 @@ async deleteAllNonFavoriteEncounters() : Promise<Result<DeleteEncountersResult, 
 },
 /**
  * Toggles the favorite status of an encounter.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `id` - The ID of the encounter.
  * * `is_favorite` - The new favorite status.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<(), String>` - An empty result indicating success or failure.
  */
 async toggleFavoriteEncounter(id: number, isFavorite: boolean) : Promise<Result<null, string>> {
@@ -317,13 +317,13 @@ async toggleFavoriteEncounter(id: number, isFavorite: boolean) : Promise<Result<
 },
 /**
  * A Tauri command to get a list of recent players.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `limit` - The maximum number of players to return.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<Vec<(i64, String)>, String>` - A list of recent players.
  */
 async getRecentPlayersCommand(limit: number) : Promise<Result<([number, string])[], string>> {
@@ -336,13 +336,13 @@ async getRecentPlayersCommand(limit: number) : Promise<Result<([number, string])
 },
 /**
  * A Tauri command to get the name of a player by their UID.
- * 
+ *
  * # Arguments
- * 
+ *
  * * `uid` - The UID of the player.
- * 
+ *
  * # Returns
- * 
+ *
  * * `Result<Option<String>, String>` - The name of the player, or `None` if not found.
  */
 async getPlayerNameCommand(uid: number) : Promise<Result<string | null, string>> {
@@ -500,7 +500,7 @@ async openLogDir() : Promise<Result<null, string>> {
 },
 /**
  * Creates a debug ZIP containing the most recent application log file and returns the path.
- * 
+ *
  * If `destination_path` is provided, the ZIP is written there. Otherwise it is created
  * in the app log directory.
  */
@@ -518,6 +518,14 @@ async checkGpuSupport() : Promise<GpuSupport> {
 async getLatestModules() : Promise<Result<ModuleInfo[], string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_latest_modules") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getLatestModuleStatus(minTotalValue: number | null) : Promise<Result<ModuleDataStatus, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_latest_module_status", { minTotalValue }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -684,7 +692,7 @@ export type AttrModifier = { attrId: number; basisPointsPerUnit?: number; maxRed
 /**
  * The result of a query for boss names.
  */
-export type BossNamesResult = { 
+export type BossNamesResult = {
 /**
  * A list of boss names.
  */
@@ -692,15 +700,15 @@ names: string[] }
 /**
  * A summary of a boss.
  */
-export type BossSummaryDto = { 
+export type BossSummaryDto = {
 /**
  * The name of the monster.
  */
-monsterName: string; 
+monsterName: string;
 /**
  * The maximum HP of the monster.
  */
-maxHp: number | null; 
+maxHp: number | null;
 /**
  * Whether the boss was defeated.
  */
@@ -715,7 +723,6 @@ export type CustomDefinitionsFile = { version: number; definitions: CustomDefini
  */
 export type DamageSnapshot = { timestampMs: number; attackerUid: number; attackerMonsterTypeId: number | null; skillKey: number; value: number }
 export type DeathRecord = { victimUid: number; deathTimestampMs: number; recentDamages: DamageSnapshot[] }
-export type Device = { name: string; description: string | null }
 /**
  * The result of a destructive encounter-delete operation.
  */
@@ -728,35 +735,36 @@ deletedCount: number;
  * The number of favorited encounters that were preserved.
  */
 preservedFavoriteCount: number }
+export type Device = { name: string; description: string | null }
 export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; resetSourceConfigId?: number | null; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction; altFreeze?: AltFreezeConfig | null; thresholdModifier?: AttrModifier | null; freezeDurationModifier?: AttrModifier | null; resetSkillKeys?: number[] | null; onResetSkill?: CounterAction }
 /**
  * Filters for querying encounters.
  */
-export type EncounterFiltersDto = { 
+export type EncounterFiltersDto = {
 /**
  * A list of boss names to filter by.
  */
-bossNames: string[] | null; 
+bossNames: string[] | null;
 /**
  * A list of encounter names to filter by.
  */
-encounterNames: string[] | null; 
+encounterNames: string[] | null;
 /**
  * A player name to filter by.
  */
-playerName: string | null; 
+playerName: string | null;
 /**
  * A list of player names to filter by.
  */
-playerNames: string[] | null; 
+playerNames: string[] | null;
 /**
  * The start date to filter by in milliseconds since the Unix epoch.
  */
-dateFromMs: number | null; 
+dateFromMs: number | null;
 /**
  * The end date to filter by in milliseconds since the Unix epoch.
  */
-dateToMs: number | null; 
+dateToMs: number | null;
 /**
  * Whether to filter by favorite encounters.
  */
@@ -764,59 +772,59 @@ isFavorite: boolean | null }
 /**
  * A summary of an encounter.
  */
-export type EncounterSummaryDto = { 
+export type EncounterSummaryDto = {
 /**
  * The ID of the encounter.
  */
-id: number; 
+id: number;
 /**
  * The start time of the encounter in milliseconds since the Unix epoch.
  */
-startedAtMs: number; 
+startedAtMs: number;
 /**
  * The end time of the encounter in milliseconds since the Unix epoch.
  */
-endedAtMs: number | null; 
+endedAtMs: number | null;
 /**
  * The total damage dealt in the encounter.
  */
-totalDmg: number; 
+totalDmg: number;
 /**
  * The total healing done in the encounter.
  */
-totalHeal: number; 
+totalHeal: number;
 /**
  * The ID of the scene where the encounter took place.
  */
-sceneId: number | null; 
+sceneId: number | null;
 /**
  * The name of the scene where the encounter took place.
  */
-sceneName: string | null; 
+sceneName: string | null;
 /**
  * The duration of the encounter in seconds.
  */
-duration: number; 
+duration: number;
 /**
  * The accumulated active combat duration in seconds.
  */
-activeCombatDuration: number | null; 
+activeCombatDuration: number | null;
 /**
  * The UID of the local player for this encounter.
  */
-localPlayerId: number | null; 
+localPlayerId: number | null;
 /**
  * A list of bosses in the encounter.
  */
-bosses: BossSummaryDto[]; 
+bosses: BossSummaryDto[];
 /**
  * A list of players in the encounter.
  */
-players: PlayerSummaryDto[]; 
+players: PlayerSummaryDto[];
 /**
  * The encounter ID on the remote website/server after successful upload.
  */
-remoteEncounterId: number | null; 
+remoteEncounterId: number | null;
 /**
  * Whether the encounter is favorited.
  */
@@ -834,6 +842,7 @@ export type ModifierReplayHitState = { timestampMs: number; skillKey: number; da
 export type ModifierReplaySourceState = { modifierBaseId: number; modifierSourceConfigId: number | null; modifierBuffLevel: number | null; modifierCount: number | null; modifierLayer: number; modifierHostUid: number; modifierSourceUid: number }
 export type ModifierSourceActorState = { uid: number; name: string; entityType: string; ownerUid: number | null; ownerName: string | null; sourceConfigIds: number[]; baseIds: number[] }
 export type ModifierWindowState = { buffUuid: number; baseId: number; buffLevel: number | null; partId: number | null; count: number | null; fightSourceType: number | null; sourceConfigId: number | null; layer: number; durationMs: number; startTimeMs: number; endTimeMs: number | null; hostUid: number; sourceUid: number }
+export type ModuleDataStatus = { moduleCount: number; filteredTotalValueCount: number }
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
@@ -843,7 +852,7 @@ export type PerTargetStats = { targetUid: number; targetName: string; totalValue
 /**
  * The result of a query for player names.
  */
-export type PlayerNamesResult = { 
+export type PlayerNamesResult = {
 /**
  * A list of player names.
  */
@@ -851,23 +860,23 @@ names: string[] }
 /**
  * A summary of a player in an encounter.
  */
-export type PlayerSummaryDto = { 
+export type PlayerSummaryDto = {
 /**
  * The player UID.
  */
-uid: number; 
+uid: number;
 /**
  * The player name.
  */
-name: string; 
+name: string;
 /**
  * The class ID of the player.
  */
-classId: number; 
+classId: number;
 /**
  * The class specialization enum value of the player.
  */
-classSpec: number; 
+classSpec: number;
 /**
  * The class specialization name of the player.
  */
@@ -877,11 +886,11 @@ export type RawSkillStats = { totalValue: number; effectiveTotalValue: number; h
 /**
  * The result of a query for recent encounters.
  */
-export type RecentEncountersResult = { 
+export type RecentEncountersResult = {
 /**
  * The rows of encounter summaries.
  */
-rows: EncounterSummaryDto[]; 
+rows: EncounterSummaryDto[];
 /**
  * The total number of encounters.
  */
@@ -889,7 +898,7 @@ totalCount: number }
 /**
  * The result of a query for scene names.
  */
-export type SceneNamesResult = { 
+export type SceneNamesResult = {
 /**
  * A list of scene names.
  */

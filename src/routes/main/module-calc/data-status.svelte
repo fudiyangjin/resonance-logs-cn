@@ -5,20 +5,42 @@
 
   let {
     moduleCount = null,
+    filteredModuleCount = null,
+    filteredModuleCountMinTotalValue = null,
     modules = [],
     minTotalValue = 12,
+    loading = false,
+    refreshStatusMessage = null,
+    statusMessage = null,
   }: {
     moduleCount: number | null;
+    filteredModuleCount?: number | null;
+    filteredModuleCountMinTotalValue?: number | null;
     modules: ModuleInfo[];
     minTotalValue: number;
+    loading?: boolean;
+    refreshStatusMessage?: string | null;
+    statusMessage?: string | null;
   } = $props();
 
-  const filteredModuleCount = $derived(
+  const localFilteredModuleCount = $derived(
     modules.filter(
       (module) =>
         module.parts.reduce((total, part) => total + part.value, 0) >= minTotalValue
     ).length
   );
+
+  const displayedFilteredModuleCount = $derived.by(() => {
+    if (
+      filteredModuleCount !== null &&
+      filteredModuleCountMinTotalValue === minTotalValue
+    ) {
+      return filteredModuleCount;
+    }
+
+    if (modules.length > 0) return localFilteredModuleCount;
+    return null;
+  });
 </script>
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-1">
@@ -57,13 +79,26 @@
       )}
     </span>
     <span class="ml-1">
-      {moduleCount === null
+      {moduleCount === null || displayedFilteredModuleCount === null
         ? resolveModuleCalcTranslation(
             "notSynced",
             SETTINGS.live.general.state.language,
             "未同步",
           )
-        : filteredModuleCount}
+        : displayedFilteredModuleCount}
     </span>
   </div>
+
+  {#if loading || refreshStatusMessage || statusMessage}
+    <div class="pt-2 text-xs leading-snug text-muted-foreground/80">
+      {refreshStatusMessage ??
+        (loading
+        ? resolveModuleCalcTranslation(
+            "checkingModuleData",
+            SETTINGS.live.general.state.language,
+            "Checking module data...",
+          )
+        : statusMessage)}
+    </div>
+  {/if}
 </div>

@@ -61,5 +61,12 @@
   "tankedSkillColumns": "Getankt-Spalten (Fertigkeitsdetails)",
   "targetDummy.enemyElite": "Elite-Feind-Trainingspuppe",
   "targetDummy.guardianElite": "Elite-Wächter-Trainingspuppe",
-  "targetDummyMode": "Trainingspuppenmodus"
+  "targetDummyMode": "Trainingspuppenmodus",
+  "autoClearOnSceneChange": "Meter bei Szenenwechsel leeren",
+  "autoClearOnSceneChangeDescription": "Speichert und leert den aktuellen Meter automatisch, wenn das Spiel die Szene oder den Server wechselt. Deaktivieren, um den aktuellen Meter über Szenenwechsel hinweg zu behalten.",
+  "autoHideLiveWindow": "Live-Fenster automatisch ausblenden",
+  "autoHideLiveWindowDescription": "Blendet den Live-Meter nach der Verzögerung aus, wenn kein neuer Schaden erkannt wird, und zeigt ihn automatisch wieder an, sobald Schaden erscheint.",
+  "autoHideLiveWindowDelaySeconds": "Verzögerung für automatisches Ausblenden",
+  "autoHideLiveWindowDelaySecondsDescription": "Sekunden ohne neuen Schaden, bevor der Live-Meter ausgeblendet wird. Auf 0 setzen, um sofort auszublenden.",
+  "secondsUnit": "s"
 }

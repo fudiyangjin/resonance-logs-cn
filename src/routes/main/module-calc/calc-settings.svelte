@@ -13,7 +13,16 @@
 
   let {
     combinationSize = $bindable<4 | 5>(4),
+    onsettingschange,
+  }: {
+    combinationSize: 4 | 5;
+    onsettingschange?: () => void;
   } = $props();
+
+  function setCombinationSize(size: 4 | 5) {
+    combinationSize = size;
+    onsettingschange?.();
+  }
 </script>
 
 <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3 h-full">
@@ -31,7 +40,7 @@
         type="button"
         variant={combinationSize === 4 ? "default" : "outline"}
         size="sm"
-        onclick={() => (combinationSize = 4)}
+        onclick={() => setCombinationSize(4)}
       >
         {t("modules4", "4 Modules")}
       </Button>
@@ -40,7 +49,7 @@
         type="button"
         variant={combinationSize === 5 ? "default" : "outline"}
         size="sm"
-        onclick={() => (combinationSize = 5)}
+        onclick={() => setCombinationSize(5)}
       >
         {t("modules5", "5 Modules")}
       </Button>

@@ -483,6 +483,10 @@ export type ModuleCalcProfileSettings = {
   minRequirements: ModuleCalcRequirement[];
 };
 
+export type ModuleCalcMemoryState = {
+  profileSettings: Record<string, ModuleCalcProfileSettings>;
+};
+
 export type SkillMonitorProfile = {
   name: string;
   selectedClass: string;
@@ -920,6 +924,8 @@ const DEFAULT_GENERAL_SETTINGS: {
   abbreviatedDecimalPlaces: number;
   eventUpdateRateMs: number;
   autoClearOnSceneChange: boolean;
+  autoHideLiveWindow: boolean;
+  autoHideLiveWindowDelaySeconds: number;
   modifierReportsEnabled: boolean;
   language: LocaleCode;
   skillIdDisplayMode: SkillIdDisplayMode;
@@ -944,6 +950,8 @@ const DEFAULT_GENERAL_SETTINGS: {
   abbreviatedDecimalPlaces: 1,
   eventUpdateRateMs: 200,
   autoClearOnSceneChange: true,
+  autoHideLiveWindow: false,
+  autoHideLiveWindowDelaySeconds: 5,
   modifierReportsEnabled: false,
   language: 'zh-CN',
   skillIdDisplayMode: 'off',
@@ -1078,6 +1086,11 @@ export const DEFAULT_LIVE_TABLE_SETTINGS = {
   // Note: glow always uses the detected class/spec color.
   // Row border customization
   rowBorderRadius: 0,
+};
+
+export const DEFAULT_LIVE_DYNAMIC_WINDOW_SETTINGS = {
+  enabled: false,
+  maxPlayerRows: 10,
 };
 
 // (Header preset constants removed - header defaults inlined into DEFAULT_SETTINGS)
@@ -1284,6 +1297,9 @@ const DEFAULT_SETTINGS = {
     autoUpload: true,
     marketUpload: true,
   },
+  moduleCalc: {
+    profileSettings: {} as Record<string, ModuleCalcProfileSettings>,
+  },
   skillMonitor: {
     enabled: false,
     overlayStartWithApp: false,
@@ -1341,6 +1357,7 @@ const DEFAULT_SETTINGS = {
     tankedPlayers: { ...DEFAULT_STATS },
     tankedSkillBreakdown: { ...DEFAULT_STATS },
     tableCustomization: { ...DEFAULT_LIVE_TABLE_SETTINGS },
+    dynamicWindow: { ...DEFAULT_LIVE_DYNAMIC_WINDOW_SETTINGS },
     headerCustomization: {
       headerLayoutMode: "classic" as HeaderLayoutMode,
       headerCustomLayout: cloneHeaderCustomLayout() as HeaderCustomLayout,
@@ -1417,6 +1434,11 @@ export const SETTINGS = {
     DEFAULT_SETTINGS.moduleSync,
     RUNE_STORE_OPTIONS,
   ),
+  moduleCalc: new RuneStore(
+    "moduleCalc",
+    DEFAULT_SETTINGS.moduleCalc,
+    RUNE_STORE_OPTIONS,
+  ),
   skillMonitor: new RuneStore(
     "skillMonitor",
     DEFAULT_SETTINGS.skillMonitor,
@@ -1487,6 +1509,11 @@ export const SETTINGS = {
     tableCustomization: new RuneStore(
       "liveTableCustomization",
       DEFAULT_SETTINGS.live.tableCustomization,
+      RUNE_STORE_OPTIONS,
+    ),
+    dynamicWindow: new RuneStore(
+      "liveDynamicWindow",
+      DEFAULT_SETTINGS.live.dynamicWindow,
       RUNE_STORE_OPTIONS,
     ),
     headerCustomization: new RuneStore(
@@ -1619,6 +1646,7 @@ export const settings = {
     accessibility: SETTINGS.accessibility.state,
     shortcuts: SETTINGS.shortcuts.state,
     moduleSync: SETTINGS.moduleSync.state,
+    moduleCalc: SETTINGS.moduleCalc.state,
     skillMonitor: SETTINGS.skillMonitor.state,
     customTriggers: SETTINGS.customTriggers.state,
     monsterMonitor: SETTINGS.monsterMonitor.state,
@@ -1639,6 +1667,7 @@ export const settings = {
         skills: SETTINGS.live.tanked.skills.state,
       },
       tableCustomization: SETTINGS.live.tableCustomization.state,
+      dynamicWindow: SETTINGS.live.dynamicWindow.state,
       headerCustomization: SETTINGS.live.headerCustomization.state,
       columnOrder: {
         dpsPlayers: SETTINGS.live.columnOrder.dpsPlayers.state,
@@ -1682,6 +1711,7 @@ export function normalizePersistedSettings(): void {
   mergeFlatDefaults(SETTINGS.appBehavior.state as MutableRecord, DEFAULT_SETTINGS.appBehavior);
   mergeFlatDefaults(SETTINGS.live.general.state as MutableRecord, DEFAULT_SETTINGS.live.general);
   mergeFlatDefaults(SETTINGS.live.tableCustomization.state as MutableRecord, DEFAULT_SETTINGS.live.tableCustomization);
+  mergeFlatDefaults(SETTINGS.live.dynamicWindow.state as MutableRecord, DEFAULT_SETTINGS.live.dynamicWindow);
   mergeFlatDefaults(SETTINGS.live.headerCustomization.state as MutableRecord, DEFAULT_SETTINGS.live.headerCustomization);
   mergeFlatDefaults(SETTINGS.live.dps.players.state as MutableRecord, DEFAULT_SETTINGS.live.dpsPlayers);
   mergeFlatDefaults(SETTINGS.live.dps.skillBreakdown.state as MutableRecord, DEFAULT_SETTINGS.live.dpsSkillBreakdown);

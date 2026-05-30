@@ -9,11 +9,15 @@ export type GpuSupport = { cuda_available: boolean; opencl_available: boolean };
 
 export interface ModuleCalcState {
   moduleCount: number | null;
+  filteredModuleCount: number | null;
+  filteredModuleCountMinTotalValue: number | null;
   modules: ModuleInfo[];
   solutions: ModuleSolution[];
 
   useGpu: boolean;
   gpuSupport: GpuSupport | null;
+  gpuChecking: boolean;
+  gpuError: string | null;
   combinationSize: 4 | 5;
 
   targetAttributes: number[];
@@ -22,6 +26,9 @@ export interface ModuleCalcState {
   minRequirements: MinReq[];
 
   loading: boolean;
+  refreshing: boolean;
+  calculating: boolean;
+  refreshStatusMessage: string | null;
   error: string | null;
 
   detailOpen: boolean;
@@ -32,11 +39,15 @@ export interface ModuleCalcState {
 
 export const MODULE_CALC = $state<ModuleCalcState>({
   moduleCount: null,
+  filteredModuleCount: null,
+  filteredModuleCountMinTotalValue: null,
   modules: [],
   solutions: [],
 
   useGpu: true,
   gpuSupport: null,
+  gpuChecking: false,
+  gpuError: null,
   combinationSize: 4,
 
   targetAttributes: [],
@@ -45,6 +56,9 @@ export const MODULE_CALC = $state<ModuleCalcState>({
   minRequirements: [{ attrId: null, value: null }],
 
   loading: false,
+  refreshing: false,
+  calculating: false,
+  refreshStatusMessage: null,
   error: null,
 
   detailOpen: false,
@@ -63,4 +77,3 @@ export async function ensureModuleCalcProgressListener() {
     MODULE_CALC.progress = { value: e.payload[0], max: e.payload[1] };
   });
 }
-

@@ -61,5 +61,12 @@
   "tankedSkillColumns": "Kolom Tanked (Detail Skill)",
   "targetDummy.enemyElite": "Dummy Musuh Elite",
   "targetDummy.guardianElite": "Dummy Guardian Elite",
-  "targetDummyMode": "Mode Target Dummy"
+  "targetDummyMode": "Mode Target Dummy",
+  "autoClearOnSceneChange": "Bersihkan Meter saat Scene Berubah",
+  "autoClearOnSceneChangeDescription": "Secara otomatis menyimpan dan membersihkan meter saat game berganti scene atau server. Matikan ini untuk mempertahankan meter saat ini setelah scene berubah.",
+  "autoHideLiveWindow": "Sembunyikan otomatis jendela live",
+  "autoHideLiveWindowDescription": "Sembunyikan meter live setelah jeda saat tidak ada damage baru yang terdeteksi, lalu tampilkan otomatis begitu damage muncul.",
+  "autoHideLiveWindowDelaySeconds": "Jeda sembunyi otomatis",
+  "autoHideLiveWindowDelaySecondsDescription": "Jumlah detik tanpa damage baru sebelum meter live disembunyikan. Atur ke 0 untuk langsung menyembunyikan.",
+  "secondsUnit": "d"
 }

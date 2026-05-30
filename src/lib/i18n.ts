@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { writable } from "svelte/store";
 
 import classLabelsData from "$parserData/generated/class-labels.json";
+import skillNamesUrl from "$parserData/generated/skillnames.json?url";
 import {
   getBundledTranslationTable,
   getLocaleManifest,
@@ -270,10 +271,18 @@ let bundledSkillNameTranslations: SkillTranslationTable | null = null;
 let skillNameTranslationInitPromise: Promise<void> | null = null;
 let skillNameTranslationsLoaded = false;
 
+async function fetchJsonAsset<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.status}`);
+  }
+  return await response.json() as T;
+}
+
 async function loadBundledSkillNameTranslations(): Promise<SkillTranslationTable> {
   if (!bundledSkillNameTranslations) {
-    const module = await import("$parserData/generated/skillnames.json");
-    bundledSkillNameTranslations = buildGeneratedSkillNameTranslations(module.default);
+    const source = await fetchJsonAsset<Record<string, unknown>>(skillNamesUrl);
+    bundledSkillNameTranslations = buildGeneratedSkillNameTranslations(source);
   }
 
   return bundledSkillNameTranslations;

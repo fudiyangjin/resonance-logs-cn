@@ -353,6 +353,11 @@ export type ModuleInfo = {
   parts: ModulePart[];
 };
 
+export type ModuleDataStatus = {
+  moduleCount: number;
+  filteredTotalValueCount: number;
+};
+
 export type ModuleSolution = {
   modules: ModuleInfo[];
   score: number;
@@ -382,6 +387,11 @@ export const onModuleCalcComplete = (
 
 export const getLatestModules = (): Promise<ModuleInfo[]> =>
   invoke("get_latest_modules");
+
+export const getLatestModuleStatus = (
+  minTotalValue: number | null = null,
+): Promise<ModuleDataStatus> =>
+  invoke("get_latest_module_status", { minTotalValue });
 
 export const optimizeLatestModules = (
   payload: OptimizeLatestPayload

@@ -227,7 +227,7 @@
     {#if editing}
       <div
         role="separator"
-        aria-label="Resize health and shield area"
+        aria-label={t("shieldDetail.resizeAria", "Resize health and shield area")}
         class="resize-handle"
         onpointerdown={(e) =>
           startResize(e, { kind: "group", key: "shieldDetailGroupScale" }, groupScale)}

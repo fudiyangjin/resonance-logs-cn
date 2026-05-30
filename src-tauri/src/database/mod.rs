@@ -297,24 +297,6 @@ fn remember_encounter_data_cache(
     cached_entities
 }
 
-pub fn invalidate_encounter_data_cache(encounter_id: i32) {
-    let Some(cache) = ENCOUNTER_DATA_CACHE.get() else {
-        return;
-    };
-    if let Ok(mut cache) = cache.lock() {
-        cache.retain(|(cached_id, _)| *cached_id != encounter_id);
-    }
-}
-
-pub fn invalidate_encounter_data_cache_many(encounter_ids: &[i32]) {
-    let Some(cache) = ENCOUNTER_DATA_CACHE.get() else {
-        return;
-    };
-    if let Ok(mut cache) = cache.lock() {
-        cache.retain(|(cached_id, _)| !encounter_ids.contains(cached_id));
-    }
-}
-
 pub fn clear_encounter_data_cache() {
     let Some(cache) = ENCOUNTER_DATA_CACHE.get() else {
         return;

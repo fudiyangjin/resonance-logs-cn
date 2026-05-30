@@ -61,5 +61,12 @@
   "tankedSkillColumns": "Columnas de daño recibido (Detalles de habilidad)",
   "targetDummy.enemyElite": "Muñeco enemigo élite",
   "targetDummy.guardianElite": "Muñeco guardián élite",
-  "targetDummyMode": "Modo de muñeco de entrenamiento"
+  "targetDummyMode": "Modo de muñeco de entrenamiento",
+  "autoClearOnSceneChange": "Borrar medidor al cambiar de escena",
+  "autoClearOnSceneChangeDescription": "Guarda y borra automáticamente el medidor actual cuando el juego cambia de escena o servidor. Desactívalo para mantener el medidor actual entre cambios de escena.",
+  "autoHideLiveWindow": "Ocultar automáticamente la ventana en vivo",
+  "autoHideLiveWindowDescription": "Oculta el medidor en vivo tras el retraso si no se detecta daño nuevo, y vuelve a mostrarlo automáticamente en cuanto aparece daño.",
+  "autoHideLiveWindowDelaySeconds": "Retraso de ocultación automática",
+  "autoHideLiveWindowDelaySecondsDescription": "Segundos que se esperan sin daño nuevo antes de ocultar el medidor en vivo. Usa 0 para ocultarlo inmediatamente.",
+  "secondsUnit": "s"
 }

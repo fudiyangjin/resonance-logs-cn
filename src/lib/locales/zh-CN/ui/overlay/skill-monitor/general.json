@@ -56,5 +56,6 @@
   "shieldDetail.unknownShield": "护盾",
   "shieldDetail.hp": "HP",
   "shieldDetail.seconds": "{value}s",
-  "shieldDetail.entryTitle": "UUID：{uuid} - baseId：{baseId}"
+  "shieldDetail.entryTitle": "UUID：{uuid} - baseId：{baseId}",
+  "shieldDetail.resizeAria": "调整生命与护盾区域大小"
 }

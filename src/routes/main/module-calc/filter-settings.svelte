@@ -27,15 +27,36 @@
     excludeAttributes = $bindable<number[]>([]),
     minTotalValue = $bindable(12),
     minRequirements = $bindable<MinReq[]>([{ attrId: null, value: null }]),
+    onsettingschange,
   }: {
     attributeOptions: AttrOption[];
     targetAttributes: number[];
     excludeAttributes: number[];
     minTotalValue: number;
     minRequirements: MinReq[];
+    onsettingschange?: () => void;
   } = $props();
 
   let isExpanded = $state(true);
+  let hasInitializedSettingsChange = false;
+
+  const filterSignature = $derived(
+    JSON.stringify({
+      targetAttributes,
+      excludeAttributes,
+      minTotalValue,
+      minRequirements,
+    }),
+  );
+
+  $effect(() => {
+    filterSignature;
+    if (!hasInitializedSettingsChange) {
+      hasInitializedSettingsChange = true;
+      return;
+    }
+    onsettingschange?.();
+  });
 
   function toggle(list: number[], id: number): number[] {
     return list.includes(id) ? list.filter((x) => x !== id) : [...list, id];

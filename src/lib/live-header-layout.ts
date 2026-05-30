@@ -144,7 +144,7 @@ export function normalizeHeaderLayout(
       ? source["rows"]
       : DEFAULT_HEADER_CUSTOM_LAYOUT.rows;
 
-  const rows = sourceRows
+  let rows = sourceRows
     .map((row, index): HeaderLayoutRow => {
       const sourceRow: Record<string, unknown> = isRecord(row) ? row : {};
       const sourceZones = getSourceZones(sourceRow);
@@ -186,6 +186,29 @@ export function normalizeHeaderLayout(
         zones: createZones({ start: missingComponents }),
       });
     }
+  }
+
+  if (allowedSet.has("bossHealth") && usedComponents.has("bossHealth")) {
+    rows = rows
+      .map((row) => ({
+        ...row,
+        zones: createZones({
+          start: row.zones.start.filter(
+            (componentId) => componentId !== "bossHealth",
+          ),
+          end: row.zones.end.filter(
+            (componentId) => componentId !== "bossHealth",
+          ),
+        }),
+      }))
+      .filter((row) =>
+        HEADER_LAYOUT_ZONE_IDS.some((zoneId) => row.zones[zoneId].length > 0),
+      );
+
+    rows.push({
+      id: "boss",
+      zones: createZones({ start: ["bossHealth"] }),
+    });
   }
 
   return {

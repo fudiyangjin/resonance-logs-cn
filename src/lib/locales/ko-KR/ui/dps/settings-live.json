@@ -61,5 +61,12 @@
   "tankedSkillColumns": "받은 피해 (스킬 상세) 열",
   "targetDummy.enemyElite": "정예 적 더미",
   "targetDummy.guardianElite": "정예 수호자 더미",
-  "targetDummyMode": "타겟 더미 모드"
+  "targetDummyMode": "타겟 더미 모드",
+  "autoClearOnSceneChange": "장면 변경 시 미터 지우기",
+  "autoClearOnSceneChangeDescription": "게임의 장면이나 서버가 바뀌면 현재 미터를 자동으로 저장하고 지웁니다. 장면이 바뀌어도 현재 미터를 유지하려면 끄세요.",
+  "autoHideLiveWindow": "라이브 창 자동 숨기기",
+  "autoHideLiveWindowDescription": "새 피해가 감지되지 않으면 지연 후 라이브 미터를 숨기고, 피해가 발생하면 자동으로 다시 보여줍니다.",
+  "autoHideLiveWindowDelaySeconds": "자동 숨김 지연",
+  "autoHideLiveWindowDelaySecondsDescription": "새 피해가 감지되지 않은 뒤 라이브 미터를 숨기기 전까지 기다릴 초 수입니다. 0으로 설정하면 즉시 숨깁니다.",
+  "secondsUnit": "초"
 }

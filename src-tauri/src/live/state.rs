@@ -28,7 +28,7 @@ use crate::live::training_dummy::{
 use blueprotobuf_lib::blueprotobuf;
 use blueprotobuf_lib::blueprotobuf::AoiSyncDelta;
 use blueprotobuf_lib::blueprotobuf::EEntityType;
-use log::{info, warn};
+use log::{debug, info, warn};
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
@@ -230,12 +230,16 @@ fn emit_skill_cd_update_if_needed(state: &mut AppState, payload: Vec<SkillCdStat
     if payload.is_empty() {
         return;
     }
-    info!(
-        "[skill-cd] emit update for {} skills (monitored={:?})",
+    debug!(
+        "[skill-cd] emit update for {} skills (monitored_count={})",
         payload.len(),
-        state.local_monitor.skill_cd_monitor.monitored_skill_ids
+        state
+            .local_monitor
+            .skill_cd_monitor
+            .monitored_skill_ids
+            .len()
     );
-    info!("[skill-cd] payload={:?}", payload);
+    debug!("[skill-cd] payload={:?}", payload);
     state.event_manager.emit_skill_cd_update(payload);
 }
 
@@ -2676,16 +2680,7 @@ impl AppStateManager {
         }
 
         if !result.skill_cds.is_empty() {
-            let ids: Vec<i32> = result
-                .skill_cds
-                .iter()
-                .filter_map(|cd| cd.skill_level_id)
-                .collect();
-            info!(
-                "[skill-cd] received {} cd entries, ids={:?}",
-                ids.len(),
-                ids
-            );
+            debug!("[skill-cd] received {} cd entries", result.skill_cds.len());
         }
 
         let mut counter_dirty = false;

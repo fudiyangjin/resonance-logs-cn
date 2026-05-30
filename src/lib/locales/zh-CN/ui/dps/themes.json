@@ -443,5 +443,12 @@
   "themes.script_string.line629.150074c2": "表格",
   "themes.script_string.line78.1cadb214": "亮色",
   "themes.script_string.line79.9d3df2c1": "适合白天使用的明亮主题",
-  "themes.tools": "工具"
+  "themes.tools": "工具",
+  "dynamicLiveWindow.disabledDescription": "保持实时窗口为手动调整的高度。",
+  "dynamicLiveWindow.enabled": "启用动态高度",
+  "dynamicLiveWindow.enabledDescription": "实时窗口会随玩家行数增高。达到最大可见玩家数后，玩家表格会变为可滚动。",
+  "dynamicLiveWindow.maxPlayerRows": "最大可见玩家数",
+  "dynamicLiveWindow.maxPlayerRows.description": "玩家表格变为可滚动前显示的玩家行数。",
+  "dynamicLiveWindow.playersUnit": "名玩家",
+  "dynamicLiveWindow.title": "动态实时窗口"
 }

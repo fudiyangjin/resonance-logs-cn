@@ -61,5 +61,12 @@
   "tankedSkillColumns": "Colunas de dano recebido (Detalhes das habilidades)",
   "targetDummy.enemyElite": "Boneco inimigo de elite",
   "targetDummy.guardianElite": "Boneco guardião de elite",
-  "targetDummyMode": "Modo de boneco de treino"
+  "targetDummyMode": "Modo de boneco de treino",
+  "autoClearOnSceneChange": "Limpar medidor ao mudar de cena",
+  "autoClearOnSceneChangeDescription": "Salva e limpa automaticamente o medidor atual quando o jogo muda de cena ou servidor. Desative para manter o medidor atual entre mudanças de cena.",
+  "autoHideLiveWindow": "Ocultar automaticamente a janela ao vivo",
+  "autoHideLiveWindowDescription": "Oculta o medidor ao vivo após o atraso quando nenhum dano novo é detectado, e volta a mostrá-lo automaticamente assim que dano aparece.",
+  "autoHideLiveWindowDelaySeconds": "Atraso para ocultar automaticamente",
+  "autoHideLiveWindowDelaySecondsDescription": "Segundos sem dano novo antes de ocultar o medidor ao vivo. Use 0 para ocultar imediatamente.",
+  "secondsUnit": "s"
 }

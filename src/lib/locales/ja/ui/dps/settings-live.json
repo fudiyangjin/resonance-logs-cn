@@ -61,5 +61,12 @@
   "tankedSkillColumns": "被ダメージ（スキル詳細）列",
   "targetDummy.enemyElite": "エリート敵ダミー",
   "targetDummy.guardianElite": "エリート守護者ダミー",
-  "targetDummyMode": "ターゲットダミーモード"
+  "targetDummyMode": "ターゲットダミーモード",
+  "autoClearOnSceneChange": "シーン変更時にメーターをクリア",
+  "autoClearOnSceneChangeDescription": "ゲームのシーンまたはサーバーが変わったとき、現在のメーターを自動保存してクリアします。シーン変更後も現在のメーターを維持する場合はオフにします。",
+  "autoHideLiveWindow": "ライブウィンドウを自動非表示",
+  "autoHideLiveWindowDescription": "新しいダメージが検出されない場合、遅延後にライブメーターを非表示にし、ダメージが発生すると自動で表示します。",
+  "autoHideLiveWindowDelaySeconds": "自動非表示の遅延",
+  "autoHideLiveWindowDelaySecondsDescription": "新しいダメージが検出されなくなってから、ライブメーターを非表示にするまでの秒数。0 にすると即時に非表示にします。",
+  "secondsUnit": "秒"
 }

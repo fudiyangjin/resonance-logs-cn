@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { Button } from "$lib/components/ui/button";
   import CalculatorIcon from "virtual:icons/lucide/calculator";
   import RefreshCw from "virtual:icons/lucide/refresh-cw";
@@ -15,7 +15,7 @@
   import ModuleDetail from "./module-detail.svelte";
 
   import {
-    getLatestModules,
+    getLatestModuleStatus,
     optimizeLatestModules,
     type ModuleSolution,
   } from "$lib/api";
@@ -31,11 +31,7 @@
     normalizeModuleCalcProfileSettings,
     type ModuleCalcProfileSettings,
   } from "$lib/settings-store";
-  import {
-    activeProfile,
-    clampedProfileIndex,
-    updateActiveProfile,
-  } from "$lib/skill-monitor-profile.svelte";
+  import { clampedProfileIndex } from "$lib/skill-monitor-profile.svelte";
 
   const ATTR_OPTIONS_BASE = [
     { id: 1110, label: "力量加持" },
@@ -74,6 +70,16 @@
 
   let appliedProfileIndex = $state<number | null>(null);
   let applyingProfileSettings = $state(false);
+  let savedModuleCalcProfileSignature: string | null = null;
+  let refreshRequestId = 0;
+  let gpuRequestId = 0;
+  let refreshTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  let profileSaveTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  const MODULE_REFRESH_TIMEOUT_MS = 8_000;
+  const GPU_REFRESH_TIMEOUT_MS = 5_000;
+  const CALCULATION_TIMEOUT_MS = 120_000;
+  const MODULE_CALC_PROFILE_MEMORY_ENABLED = true;
 
   function cloneMinRequirements(
     rows: ModuleCalcProfileSettings["minRequirements"],
@@ -84,15 +90,39 @@
     }));
   }
 
+  function moduleCalcProfileSignature(
+    settings: ModuleCalcProfileSettings,
+  ): string {
+    return JSON.stringify(settings);
+  }
+
+  function moduleCalcProfileMemoryKey(profileIndex: number): string {
+    return String(profileIndex);
+  }
+
+  function loadModuleCalcProfileSettings(
+    profileIndex: number,
+  ): ModuleCalcProfileSettings {
+    const profileSettings = SETTINGS.moduleCalc.state.profileSettings ?? {};
+    return normalizeModuleCalcProfileSettings(
+      profileSettings[moduleCalcProfileMemoryKey(profileIndex)],
+    );
+  }
+
   function applyModuleCalcProfileSettings(settings: ModuleCalcProfileSettings) {
-    MODULE_CALC.useGpu = settings.useGpu;
-    MODULE_CALC.combinationSize = settings.combinationSize;
-    MODULE_CALC.targetAttributes = [...settings.targetAttributes];
-    MODULE_CALC.excludeAttributes = [...settings.excludeAttributes];
-    MODULE_CALC.minTotalValue = settings.minTotalValue;
-    MODULE_CALC.minRequirements = cloneMinRequirements(settings.minRequirements);
+    const normalized = normalizeModuleCalcProfileSettings(settings);
+    savedModuleCalcProfileSignature = moduleCalcProfileSignature(normalized);
+    MODULE_CALC.useGpu = normalized.useGpu;
+    MODULE_CALC.combinationSize = normalized.combinationSize;
+    MODULE_CALC.targetAttributes = [...normalized.targetAttributes];
+    MODULE_CALC.excludeAttributes = [...normalized.excludeAttributes];
+    MODULE_CALC.minTotalValue = normalized.minTotalValue;
+    MODULE_CALC.filteredModuleCount = null;
+    MODULE_CALC.filteredModuleCountMinTotalValue = null;
+    MODULE_CALC.minRequirements = cloneMinRequirements(normalized.minRequirements);
     MODULE_CALC.solutions = [];
     MODULE_CALC.error = null;
+    MODULE_CALC.refreshStatusMessage = null;
     MODULE_CALC.detailOpen = false;
     MODULE_CALC.detailSolution = null;
     MODULE_CALC.progress = { value: 0, max: 0 };
@@ -109,32 +139,289 @@
     });
   }
 
-  async function refreshModules() {
-    if (MODULE_CALC.loading) return;
-    MODULE_CALC.loading = true;
-    MODULE_CALC.error = null;
+  function t(key: string, fallback: string): string {
+    return resolveModuleCalcTranslation(
+      key,
+      SETTINGS.live.general.state.language,
+      fallback,
+    );
+  }
+
+  function moduleDataUnavailableMessage(): string {
+    return t(
+      "moduleDataUnavailable",
+      "Module data is not synced yet. Open the game on a character with modules, then refresh data.",
+    );
+  }
+
+  function normalizeErrorMessage(error: unknown, fallback: string): string {
+    if (typeof error === "string") return error;
+    if (error instanceof Error && error.message.trim()) return error.message;
+    return fallback;
+  }
+
+  type ModuleStatusResponseShape = {
+    moduleCount?: unknown;
+    module_count?: unknown;
+    filteredTotalValueCount?: unknown;
+    filtered_total_value_count?: unknown;
+  };
+
+  function stringifyStatusPayload(payload: unknown): string {
     try {
-      MODULE_CALC.modules = await getLatestModules();
-      MODULE_CALC.moduleCount = MODULE_CALC.modules.length;
+      return JSON.stringify(payload);
+    } catch {
+      return String(payload);
+    }
+  }
+
+  function unwrapModuleStatusPayload(payload: unknown): unknown {
+    if (!payload || typeof payload !== "object") return payload;
+    const maybeResult = payload as { status?: unknown; data?: unknown };
+    if (maybeResult.status === "ok" && "data" in maybeResult) {
+      return maybeResult.data;
+    }
+    return payload;
+  }
+
+  function readModuleStatusNumber(
+    payload: ModuleStatusResponseShape,
+    camelKey: "moduleCount" | "filteredTotalValueCount",
+    snakeKey: "module_count" | "filtered_total_value_count",
+  ): number | null {
+    const value = payload[camelKey] ?? payload[snakeKey];
+    return typeof value === "number" && Number.isFinite(value) ? value : null;
+  }
+
+  function normalizeModuleStatusResponse(payload: unknown): {
+    moduleCount: number;
+    filteredTotalValueCount: number;
+  } {
+    const unwrapped = unwrapModuleStatusPayload(payload);
+    if (!unwrapped || typeof unwrapped !== "object") {
+      throw new Error(
+        `Unexpected module status response: ${stringifyStatusPayload(payload)}`,
+      );
+    }
+
+    const status = unwrapped as ModuleStatusResponseShape;
+    const moduleCount = readModuleStatusNumber(
+      status,
+      "moduleCount",
+      "module_count",
+    );
+    const filteredTotalValueCount = readModuleStatusNumber(
+      status,
+      "filteredTotalValueCount",
+      "filtered_total_value_count",
+    );
+
+    if (moduleCount === null || filteredTotalValueCount === null) {
+      throw new Error(
+        `Unexpected module status response: ${stringifyStatusPayload(payload)}`,
+      );
+    }
+
+    return { moduleCount, filteredTotalValueCount };
+  }
+
+  async function withTimeout<T>(
+    start: () => Promise<T>,
+    timeoutMs: number,
+    timeoutMessage: string,
+  ): Promise<T> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+    });
+
+    return Promise.race([start(), timeout]).finally(() => {
+      if (timeoutId) clearTimeout(timeoutId);
+    });
+  }
+
+  function clearModuleRefreshTimeout() {
+    if (!refreshTimeoutId) return;
+    clearTimeout(refreshTimeoutId);
+    refreshTimeoutId = null;
+  }
+
+  function clearModuleCalcProfileSaveTimeout() {
+    if (!profileSaveTimeoutId) return;
+    clearTimeout(profileSaveTimeoutId);
+    profileSaveTimeoutId = null;
+  }
+
+  function persistModuleCalcProfileSettings() {
+    if (!MODULE_CALC_PROFILE_MEMORY_ENABLED) return;
+    if (applyingProfileSettings || appliedProfileIndex === null) return;
+
+    const snapshot = snapshotModuleCalcProfileSettings();
+    const signature = moduleCalcProfileSignature(snapshot);
+    if (signature === savedModuleCalcProfileSignature) return;
+
+    savedModuleCalcProfileSignature = signature;
+    const profileIndex = appliedProfileIndex ?? clampedProfileIndex();
+    const key = moduleCalcProfileMemoryKey(profileIndex);
+    const profileSettings = SETTINGS.moduleCalc.state.profileSettings ?? {};
+    SETTINGS.moduleCalc.state.profileSettings = {
+      ...profileSettings,
+      [key]: snapshot,
+    };
+  }
+
+  function scheduleModuleCalcProfileSave() {
+    if (!MODULE_CALC_PROFILE_MEMORY_ENABLED) return;
+    clearModuleCalcProfileSaveTimeout();
+    profileSaveTimeoutId = setTimeout(() => {
+      profileSaveTimeoutId = null;
+      persistModuleCalcProfileSettings();
+    }, 100);
+  }
+
+  function resetTransientRequestState() {
+    ++refreshRequestId;
+    ++gpuRequestId;
+    clearModuleRefreshTimeout();
+    MODULE_CALC.refreshing = false;
+    MODULE_CALC.loading = false;
+    MODULE_CALC.calculating = false;
+    MODULE_CALC.gpuChecking = false;
+    MODULE_CALC.refreshStatusMessage = null;
+  }
+
+  function armModuleRefreshTimeout(requestId: number) {
+    clearModuleRefreshTimeout();
+    refreshTimeoutId = setTimeout(() => {
+      if (requestId !== refreshRequestId) return;
+      MODULE_CALC.modules = [];
+      MODULE_CALC.moduleCount = null;
+      MODULE_CALC.filteredModuleCount = null;
+      MODULE_CALC.filteredModuleCountMinTotalValue = null;
+      MODULE_CALC.error = moduleDataUnavailableMessage();
+      MODULE_CALC.refreshStatusMessage = t(
+        "moduleRefreshTimedOut",
+        "Module refresh timed out.",
+      );
+      MODULE_CALC.refreshing = false;
+      MODULE_CALC.loading = false;
+      MODULE_CALC.gpuChecking = false;
+      refreshTimeoutId = null;
+    }, MODULE_REFRESH_TIMEOUT_MS);
+  }
+
+  async function refreshModules(): Promise<boolean | undefined> {
+    if (MODULE_CALC.refreshing) {
+      return (MODULE_CALC.moduleCount ?? 0) > 0;
+    }
+    const requestId = ++refreshRequestId;
+    MODULE_CALC.refreshing = true;
+    MODULE_CALC.loading = true;
+    MODULE_CALC.calculating = false;
+    MODULE_CALC.error = null;
+    MODULE_CALC.refreshStatusMessage = t(
+      "checkingModuleData",
+      "Checking module data...",
+    );
+    armModuleRefreshTimeout(requestId);
+    try {
+      const minTotalValue = MODULE_CALC.minTotalValue;
+      MODULE_CALC.refreshStatusMessage = t(
+        "requestingModuleStatus",
+        "Requesting module status...",
+      );
+      const rawStatus = await withTimeout(
+        () => getLatestModuleStatus(minTotalValue),
+        MODULE_REFRESH_TIMEOUT_MS,
+        moduleDataUnavailableMessage(),
+      );
+      const status = normalizeModuleStatusResponse(rawStatus);
+      if (requestId !== refreshRequestId) return;
+      clearModuleRefreshTimeout();
+      MODULE_CALC.modules = [];
+      MODULE_CALC.moduleCount = status.moduleCount;
+      MODULE_CALC.filteredModuleCount = status.filteredTotalValueCount;
+      MODULE_CALC.filteredModuleCountMinTotalValue = minTotalValue;
+      MODULE_CALC.refreshStatusMessage = t(
+        "moduleDataSyncedWithCounts",
+        "Module data synced: {count} modules ({filtered} after filter).",
+      )
+        .replace("{count}", String(status.moduleCount))
+        .replace("{filtered}", String(status.filteredTotalValueCount));
+      if (status.moduleCount === 0) {
+        MODULE_CALC.error = moduleDataUnavailableMessage();
+      }
+      return status.moduleCount > 0;
     } catch (e) {
+      if (requestId !== refreshRequestId) return false;
+      clearModuleRefreshTimeout();
+      MODULE_CALC.modules = [];
+      MODULE_CALC.moduleCount = null;
+      MODULE_CALC.filteredModuleCount = null;
+      MODULE_CALC.filteredModuleCountMinTotalValue = null;
+      MODULE_CALC.error = normalizeErrorMessage(
+        e,
+        t("fetchModulesFailed", "Failed to fetch modules"),
+      );
+      MODULE_CALC.refreshStatusMessage = MODULE_CALC.error;
       MODULE_CALC.error =
-        (e as Error)?.message ??
+        MODULE_CALC.error ??
         resolveModuleCalcTranslation(
           "fetchModulesFailed",
           SETTINGS.live.general.state.language,
           "拉取模组失败",
         );
     } finally {
-      MODULE_CALC.loading = false;
+      if (requestId === refreshRequestId) {
+        clearModuleRefreshTimeout();
+        MODULE_CALC.refreshing = false;
+        MODULE_CALC.loading = false;
+      }
+    }
+    return false;
+  }
+
+  async function refreshGpuSupport(force = false) {
+    if (MODULE_CALC.gpuChecking || (MODULE_CALC.gpuSupport && !force)) return;
+    const requestId = ++gpuRequestId;
+    MODULE_CALC.gpuChecking = true;
+    if (force) {
+      MODULE_CALC.gpuSupport = null;
+    }
+    MODULE_CALC.gpuError = null;
+    try {
+      const gpuSupport = await withTimeout(
+        () => invoke<{ cuda_available: boolean; opencl_available: boolean }>("check_gpu_support"),
+        GPU_REFRESH_TIMEOUT_MS,
+        t("gpuCheckUnavailable", "GPU availability check timed out."),
+      );
+      if (requestId !== gpuRequestId) return;
+      MODULE_CALC.gpuSupport = gpuSupport;
+      if (!gpuSupport.cuda_available && !gpuSupport.opencl_available) {
+        MODULE_CALC.useGpu = false;
+      }
+    } catch (error) {
+      if (requestId !== gpuRequestId) return;
+      MODULE_CALC.gpuSupport = { cuda_available: false, opencl_available: false };
+      MODULE_CALC.useGpu = false;
+      MODULE_CALC.gpuError = normalizeErrorMessage(
+        error,
+        t("gpuCheckUnavailable", "GPU availability check failed."),
+      );
+    } finally {
+      if (requestId === gpuRequestId) {
+        MODULE_CALC.gpuChecking = false;
+      }
     }
   }
 
-  async function refreshGpuSupport() {
-    try {
-      MODULE_CALC.gpuSupport = await invoke("check_gpu_support");
-    } catch (_) {
-      MODULE_CALC.gpuSupport = null;
-    }
+  async function refreshModulesFromButton() {
+    MODULE_CALC.refreshStatusMessage = t(
+      "refreshButtonClicked",
+      "Refresh Data clicked.",
+    );
+    await refreshModules();
+    MODULE_CALC.gpuChecking = false;
   }
 
   function normalizeOptimizeErrorMessage(message: string): string {
@@ -152,7 +439,15 @@
   }
 
   async function runOptimize() {
-    if (MODULE_CALC.loading) return;
+    if (MODULE_CALC.refreshing || MODULE_CALC.calculating) return;
+    if ((MODULE_CALC.moduleCount ?? 0) < MODULE_CALC.combinationSize) {
+      MODULE_CALC.error = MODULE_CALC.moduleCount === null
+        ? moduleDataUnavailableMessage()
+        : t("requiresAtLeastModules", "Requires at least {count} modules")
+            .replace("{count}", String(MODULE_CALC.combinationSize));
+      return;
+    }
+    MODULE_CALC.calculating = true;
     MODULE_CALC.loading = true;
     MODULE_CALC.error = null;
     MODULE_CALC.progress = { value: 0, max: 0 };
@@ -172,7 +467,11 @@
         combinationSize: MODULE_CALC.combinationSize,
       };
 
-      MODULE_CALC.solutions = await optimizeLatestModules(payload);
+      MODULE_CALC.solutions = await withTimeout(
+        () => optimizeLatestModules(payload),
+        CALCULATION_TIMEOUT_MS,
+        t("calculationTimedOut", "Calculation timed out. Try fewer filters or CPU mode, then start again."),
+      );
       if (MODULE_CALC.solutions.length === 0) {
         MODULE_CALC.error = resolveModuleCalcTranslation(
           "noSolutions",
@@ -195,6 +494,7 @@
           ) + ": " + JSON.stringify(e);
       }
     } finally {
+      MODULE_CALC.calculating = false;
       MODULE_CALC.loading = false;
     }
   }
@@ -205,37 +505,28 @@
   }
 
   $effect(() => {
+    if (!MODULE_CALC_PROFILE_MEMORY_ENABLED) return;
+
     const profileIndex = clampedProfileIndex();
-    const profile = activeProfile();
     if (appliedProfileIndex === profileIndex) return;
 
     applyingProfileSettings = true;
-    applyModuleCalcProfileSettings(
-      normalizeModuleCalcProfileSettings(profile?.moduleCalc),
-    );
+    applyModuleCalcProfileSettings(loadModuleCalcProfileSettings(profileIndex));
     appliedProfileIndex = profileIndex;
     queueMicrotask(() => {
       applyingProfileSettings = false;
     });
   });
 
-  $effect(() => {
-    const snapshot = snapshotModuleCalcProfileSettings();
-    if (applyingProfileSettings || appliedProfileIndex === null) return;
-
-    updateActiveProfile(
-      (profile) => ({
-        ...profile,
-        moduleCalc: snapshot,
-      }),
-      { createDefaultIfEmpty: true },
-    );
+  onMount(async () => {
+    resetTransientRequestState();
+    await ensureModuleCalcProgressListener();
   });
 
-  onMount(async () => {
-    refreshModules();
-    refreshGpuSupport();
-    await ensureModuleCalcProgressListener();
+  onDestroy(() => {
+    clearModuleCalcProfileSaveTimeout();
+    persistModuleCalcProfileSettings();
+    resetTransientRequestState();
   });
 </script>
 
@@ -267,10 +558,12 @@
     <div class="flex items-center gap-2">
       <Button
         variant="outline"
-        onclick={refreshModules}
-        disabled={MODULE_CALC.loading}
+        onclick={() => {
+          void refreshModulesFromButton();
+        }}
+        disabled={MODULE_CALC.refreshing}
       >
-        {#if MODULE_CALC.loading}
+        {#if MODULE_CALC.refreshing}
           <Loader2 class="w-4 h-4 mr-2 animate-spin" />
         {:else}
           <RefreshCw class="w-4 h-4 mr-2" />
@@ -283,9 +576,9 @@
       </Button>
       <Button
         onclick={runOptimize}
-        disabled={MODULE_CALC.loading || (MODULE_CALC.moduleCount || 0) < MODULE_CALC.combinationSize}
+        disabled={MODULE_CALC.refreshing || MODULE_CALC.calculating || (MODULE_CALC.moduleCount || 0) < MODULE_CALC.combinationSize}
       >
-        {#if MODULE_CALC.loading}
+        {#if MODULE_CALC.calculating}
           <Loader2 class="w-4 h-4 mr-2 animate-spin" />
         {:else}
           <PlayIcon class="w-4 h-4 mr-2" />
@@ -311,15 +604,33 @@
   <div class="grid gap-4 md:grid-cols-3">
     <DataStatus
       moduleCount={MODULE_CALC.moduleCount}
+      filteredModuleCount={MODULE_CALC.filteredModuleCount}
+      filteredModuleCountMinTotalValue={MODULE_CALC.filteredModuleCountMinTotalValue}
       modules={MODULE_CALC.modules}
       minTotalValue={MODULE_CALC.minTotalValue}
+      loading={MODULE_CALC.refreshing}
+      refreshStatusMessage={MODULE_CALC.refreshStatusMessage}
+      statusMessage={MODULE_CALC.moduleCount === null && !MODULE_CALC.refreshing
+        ? moduleDataUnavailableMessage()
+        : null}
     />
     <CalcSettings
       bind:combinationSize={MODULE_CALC.combinationSize}
+      onsettingschange={scheduleModuleCalcProfileSave}
     />
     <GpuSettings
       bind:useGpu={MODULE_CALC.useGpu}
       bind:gpuSupport={MODULE_CALC.gpuSupport}
+      gpuChecking={MODULE_CALC.gpuChecking}
+      gpuError={MODULE_CALC.gpuError}
+      gpuCheckDeferred={!MODULE_CALC.gpuSupport}
+      recheckDisabled={MODULE_CALC.calculating}
+      onsettingschange={scheduleModuleCalcProfileSave}
+      onrecheck={() => {
+        if (!MODULE_CALC.calculating) {
+          refreshGpuSupport(true);
+        }
+      }}
     />
   </div>
 
@@ -329,6 +640,7 @@
     bind:excludeAttributes={MODULE_CALC.excludeAttributes}
     bind:minTotalValue={MODULE_CALC.minTotalValue}
     bind:minRequirements={MODULE_CALC.minRequirements}
+    onsettingschange={scheduleModuleCalcProfileSave}
   />
 
   <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3">
@@ -340,7 +652,7 @@
           "计算结果 (Top 10)",
         )}
       </div>
-      {#if MODULE_CALC.loading}
+      {#if MODULE_CALC.calculating}
         <div class="flex flex-col gap-1 w-64">
           <div
             class="flex items-center justify-end text-xs text-muted-foreground"

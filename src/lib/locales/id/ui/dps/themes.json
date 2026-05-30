@@ -443,5 +443,12 @@
   "liveHeader.bossHealthLayout.vertical": "Vertical",
   "liveHeader.bossHealthLayout.horizontal": "Horizontal",
   "liveHeader.showDeathTab": "Show Death Tab",
-  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation."
+  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation.",
+  "dynamicLiveWindow.disabledDescription": "Pertahankan jendela live pada tinggi yang diatur manual.",
+  "dynamicLiveWindow.enabled": "Aktifkan tinggi dinamis",
+  "dynamicLiveWindow.enabledDescription": "Jendela live bertambah tinggi untuk menampilkan baris pemain. Setelah jumlah pemain terlihat maksimum, tabel pemain dapat digulir.",
+  "dynamicLiveWindow.maxPlayerRows": "Pemain terlihat maksimum",
+  "dynamicLiveWindow.maxPlayerRows.description": "Jumlah baris pemain yang ditampilkan sebelum tabel pemain dapat digulir.",
+  "dynamicLiveWindow.playersUnit": "pemain",
+  "dynamicLiveWindow.title": "Jendela Live Dinamis"
 }

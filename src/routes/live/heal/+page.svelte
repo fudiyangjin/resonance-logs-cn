@@ -92,6 +92,17 @@
   // Table customization settings
   let tableSettings = $derived(SETTINGS.live.tableCustomization.state);
   let compactMode = $derived(tableSettings.compactMode);
+  let dynamicWindowSettings = $derived(SETTINGS.live.dynamicWindow.state);
+  let dynamicMaxPlayerRows = $derived(
+    Math.min(20, Math.max(5, Math.round(Number(dynamicWindowSettings.maxPlayerRows) || 10))),
+  );
+  let playerTableMaxHeight = $derived(
+    ((tableSettings.showTableHeader && !compactMode) ? tableSettings.tableHeaderHeight : 0)
+      + tableSettings.playerRowHeight * dynamicMaxPlayerRows,
+  );
+  let playerTableFrameStyle = $derived(
+    dynamicWindowSettings.enabled ? `max-height: ${playerTableMaxHeight}px;` : "",
+  );
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.live.general.state.abbreviatedDecimalPlaces ?? 1,
   );
@@ -133,7 +144,8 @@
 </script>
 
 <div
-  class="relative flex flex-col gap-2 overflow-hidden rounded-lg ring-1 ring-border/60 bg-card/30"
+  class="relative flex flex-col gap-2 {dynamicWindowSettings.enabled ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'} rounded-lg ring-1 ring-border/60 bg-card/30"
+  style={playerTableFrameStyle}
 >
   <table class="w-full border-collapse overflow-hidden">
     {#if tableSettings.showTableHeader && !compactMode}

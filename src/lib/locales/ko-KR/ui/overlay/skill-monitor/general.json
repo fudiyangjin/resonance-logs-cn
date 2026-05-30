@@ -56,5 +56,6 @@
   "shieldDetail.unknownShield": "보호막",
   "shieldDetail.hp": "HP",
   "shieldDetail.seconds": "{value}s",
-  "shieldDetail.entryTitle": "UUID: {uuid} - baseId: {baseId}"
+  "shieldDetail.entryTitle": "UUID: {uuid} - baseId: {baseId}",
+  "shieldDetail.resizeAria": "체력 및 보호막 영역 크기 조정"
 }

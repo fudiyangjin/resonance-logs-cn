@@ -3,7 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use diesel::prelude::*;
-use diesel::sql_types::{Binary, Double, Integer, Nullable, Text};
+use diesel::sql_types::{Binary, Integer, Nullable, Text};
 use resonance_logs_lib::live::opcodes_models::{Entity, Skill};
 use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -84,10 +84,6 @@ struct EncounterBlob {
     id: i32,
     #[diesel(sql_type = Nullable<Text>)]
     scene_name: Option<String>,
-    #[diesel(sql_type = Double)]
-    duration: f64,
-    #[diesel(sql_type = Nullable<Double>)]
-    active_combat_duration: Option<f64>,
     #[diesel(sql_type = Binary)]
     data: Vec<u8>,
 }
@@ -158,18 +154,8 @@ struct BreakdownEntry {
     badge: Option<String>,
     #[serde(default, rename = "SourceRole")]
     source_role: Option<String>,
-    #[serde(default, rename = "LinkedSource")]
-    linked_source: Option<String>,
-    #[serde(default, rename = "LinkedId")]
-    linked_id: Option<serde_json::Value>,
     #[serde(default, rename = "ParentRecountId")]
     parent_recount_id: Option<serde_json::Value>,
-    #[serde(default, rename = "ParentTalentId")]
-    parent_talent_id: Option<serde_json::Value>,
-    #[serde(default, rename = "DamageName")]
-    damage_name: Option<String>,
-    #[serde(default, rename = "DamageNames")]
-    damage_names: HashMap<String, String>,
     #[serde(default, rename = "UnderlyingSkillId")]
     underlying_skill_id: Option<serde_json::Value>,
     #[serde(default, rename = "UnderlyingRelatedSkillIds")]
@@ -393,7 +379,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db_label = db_path.to_string_lossy().to_string();
     let mut conn = diesel::sqlite::SqliteConnection::establish(&db_label)?;
     let encounters: Vec<EncounterBlob> = diesel::sql_query(
-        "SELECT e.id, e.scene_name, e.duration, e.active_combat_duration, ed.data
+        "SELECT e.id, e.scene_name, ed.data
          FROM encounters e
          INNER JOIN encounter_data ed ON ed.encounter_id = e.id
          WHERE e.ended_at_ms IS NOT NULL

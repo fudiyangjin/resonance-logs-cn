@@ -443,5 +443,12 @@
   "liveHeader.bossHealthLayout.vertical": "Vertical",
   "liveHeader.bossHealthLayout.horizontal": "Horizontal",
   "liveHeader.showDeathTab": "Show Death Tab",
-  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation."
+  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation.",
+  "dynamicLiveWindow.disabledDescription": "保持即時視窗為手動調整的高度。",
+  "dynamicLiveWindow.enabled": "啟用動態高度",
+  "dynamicLiveWindow.enabledDescription": "即時視窗會随玩家列數增高。達到最大可見玩家數後，玩家表格會變為可捲動。",
+  "dynamicLiveWindow.maxPlayerRows": "最大可見玩家數",
+  "dynamicLiveWindow.maxPlayerRows.description": "玩家表格變為可捲動前顯示的玩家列數。",
+  "dynamicLiveWindow.playersUnit": "名玩家",
+  "dynamicLiveWindow.title": "動態即時視窗"
 }

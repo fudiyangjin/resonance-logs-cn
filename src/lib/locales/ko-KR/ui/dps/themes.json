@@ -443,5 +443,12 @@
   "liveHeader.bossHealthLayout.vertical": "Vertical",
   "liveHeader.bossHealthLayout.horizontal": "Horizontal",
   "liveHeader.showDeathTab": "Show Death Tab",
-  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation."
+  "liveHeader.showDeathTab.description": "Add the death replay tab to the live navigation.",
+  "dynamicLiveWindow.disabledDescription": "라이브 창을 수동으로 조정한 높이로 유지합니다.",
+  "dynamicLiveWindow.enabled": "동적 높이 사용",
+  "dynamicLiveWindow.enabledDescription": "라이브 창은 플레이어 행 수에 맞춰 커집니다. 최대 표시 플레이어 수를 넘으면 플레이어 표가 스크롤 가능해집니다.",
+  "dynamicLiveWindow.maxPlayerRows": "최대 표시 플레이어 수",
+  "dynamicLiveWindow.maxPlayerRows.description": "플레이어 표가 스크롤 가능해지기 전에 표시할 플레이어 행 수입니다.",
+  "dynamicLiveWindow.playersUnit": "명",
+  "dynamicLiveWindow.title": "동적 라이브 창"
 }

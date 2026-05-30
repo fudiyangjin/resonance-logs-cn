@@ -27,9 +27,16 @@ const RAW_BOOTSTRAP_LOCALE_FILES = {
   }),
 } as Record<string, JsonValue>;
 
-const LAZY_BUNDLED_LOCALE_FILES = import.meta.glob("./locales/*/ui/**/*.json", {
-  import: "default",
-}) as Record<string, () => Promise<JsonValue>>;
+const LAZY_BUNDLED_LOCALE_FILES = import.meta.glob(
+  [
+    "./locales/*/ui/**/*.json",
+    "!./locales/en/ui/**/*.json",
+    "!./locales/zh-CN/ui/**/*.json",
+  ],
+  {
+    import: "default",
+  },
+) as Record<string, () => Promise<JsonValue>>;
 
 function normalizeBundledLocalePath(path: string): string {
   return path.replace(/^\.\/locales\//, "/src/lib/locales/");

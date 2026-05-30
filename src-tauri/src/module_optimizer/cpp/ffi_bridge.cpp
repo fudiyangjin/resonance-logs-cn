@@ -133,18 +133,14 @@ static ::std::int32_t test_opencl() {
 }
 
 GpuSupportInfo check_gpu_support_ffi() {
-    static GpuSupportInfo cached_info{};
-    static std::once_flag flag;
-
-    std::call_once(flag, [] {
-        cached_info.cuda_available = test_cuda() == 1;
+    GpuSupportInfo info{};
+    info.cuda_available = test_cuda() == 1;
 #ifdef USE_CUDA
-        ResetCudaDevice();
+    ResetCudaDevice();
 #endif
-        cached_info.opencl_available = test_opencl() == 1;
-    });
+    info.opencl_available = test_opencl() == 1;
 
-    return cached_info;
+    return info;
 }
 
 ::std::uint64_t create_progress_context_ffi() {

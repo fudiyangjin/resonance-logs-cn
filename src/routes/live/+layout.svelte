@@ -9,6 +9,7 @@
    * @packageDocumentation
    */
   import { onMount } from "svelte";
+  import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
   import { SETTINGS } from "$lib/settings-store";
   import { resolveUiTranslation } from "$lib/i18n";
   import {
@@ -20,6 +21,7 @@
     onTrainingDummyUpdate,
     onDeathReplay,
   } from "$lib/api";
+  import type { LiveDataPayload } from "$lib/api";
   import { applyCustomFonts } from "$lib/font-loader";
   import AppBackgroundLayer from "$lib/components/app-background-layer.svelte";
   import { writable } from "svelte/store";
@@ -56,8 +58,13 @@
   // let screenshotDiv: HTMLDivElement | undefined = $state();
 
   let notificationToast: NotificationToast;
+  let rootElement: HTMLElement | undefined = undefined;
   let mainElement: HTMLElement | undefined = undefined;
   let unlisten: (() => void) | null = null;
+  let resizeObserver: ResizeObserver | null = null;
+  let dynamicResizeFrame = 0;
+  let lastDynamicHeight = 0;
+  let dynamicWindowEnabled = $derived(SETTINGS.live.dynamicWindow.state.enabled === true);
 
   // Prevent concurrent setupEventListeners runs which can attach duplicate listeners
   let listenersSetupInProgress = false;
@@ -73,6 +80,148 @@
   const DISCONNECT_THRESHOLD = 5000;
   // Track if component is destroyed to prevent callbacks from firing after unmount
   let isDestroyed = false;
+  let autoHideRecentlyDamaged = false;
+  let autoHideLastObservedDamageTotal = 0;
+  let autoHideHiddenByFeature = false;
+  let autoHideOperation: Promise<void> = Promise.resolve();
+  let autoHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function damageNumber(value: unknown): number {
+    const numberValue = Number(value);
+    return Number.isFinite(numberValue) ? Math.max(0, numberValue) : 0;
+  }
+
+  function recordObservedDamageTotal(total: number): boolean {
+    const currentTotal = Math.max(0, total);
+    const hasNewDamage = currentTotal > autoHideLastObservedDamageTotal;
+    autoHideLastObservedDamageTotal = currentTotal;
+    return hasNewDamage;
+  }
+
+  function livePayloadDamageTotal(payload: LiveDataPayload): number {
+    const payloadTotal = Math.max(
+      damageNumber(payload.totalDmg),
+      damageNumber(payload.totalDmgBossOnly),
+    );
+    if (payloadTotal > 0) return payloadTotal;
+
+    return payload.entities.reduce(
+      (sum, entity) =>
+        sum +
+        damageNumber(entity.damage?.total) +
+        damageNumber(entity.damageBossOnly?.total) +
+        damageNumber(entity.taken?.total),
+      0,
+    );
+  }
+
+  function livePayloadHasDamageEvent(payload: LiveDataPayload): boolean {
+    return recordObservedDamageTotal(livePayloadDamageTotal(payload));
+  }
+
+  function headerHasDamageEvent(headerInfo: { totalDmg: number }): boolean {
+    return recordObservedDamageTotal(damageNumber(headerInfo.totalDmg));
+  }
+
+  function clearAutoHideTimer(): void {
+    if (!autoHideTimer) return;
+    clearTimeout(autoHideTimer);
+    autoHideTimer = null;
+  }
+
+  function autoHideDelayMs(): number {
+    const rawSeconds = Number(SETTINGS.live.general.state.autoHideLiveWindowDelaySeconds);
+    const seconds = Number.isFinite(rawSeconds) ? rawSeconds : 5;
+    return Math.max(0, Math.min(60, seconds)) * 1000;
+  }
+
+  async function hideLiveWindowForAutoHide(): Promise<void> {
+    if (isDestroyed || autoHideHiddenByFeature) return;
+
+    try {
+      await getCurrentWindow().hide();
+      autoHideHiddenByFeature = true;
+    } catch (error) {
+      console.warn("Failed to hide live window after auto-hide delay:", error);
+    }
+  }
+
+  function queueAutoHideAfterDelay(): void {
+    if (autoHideHiddenByFeature || autoHideTimer) return;
+
+    const delayMs = autoHideDelayMs();
+    if (delayMs <= 0) {
+      autoHideOperation = autoHideOperation
+        .catch(() => undefined)
+        .then(() => hideLiveWindowForAutoHide());
+      return;
+    }
+
+    autoHideTimer = setTimeout(() => {
+      autoHideTimer = null;
+      if (
+        isDestroyed ||
+        autoHideRecentlyDamaged ||
+        SETTINGS.live.general.state.autoHideLiveWindow !== true
+      ) {
+        return;
+      }
+
+      autoHideOperation = autoHideOperation
+        .catch(() => undefined)
+        .then(() => hideLiveWindowForAutoHide());
+    }, delayMs);
+  }
+
+  async function applyAutoHideLiveWindow(rescheduleDelay = false): Promise<void> {
+    const hasDamage = autoHideRecentlyDamaged;
+
+    if (isDestroyed || typeof window === "undefined") return;
+
+    const autoHideEnabled = SETTINGS.live.general.state.autoHideLiveWindow === true;
+    const liveWindow = getCurrentWindow();
+
+    try {
+      if (!autoHideEnabled) {
+        clearAutoHideTimer();
+        if (autoHideHiddenByFeature) {
+          autoHideHiddenByFeature = false;
+          await liveWindow.show();
+          await liveWindow.unminimize();
+        }
+        return;
+      }
+
+      if (hasDamage) {
+        clearAutoHideTimer();
+        if (autoHideHiddenByFeature) {
+          autoHideHiddenByFeature = false;
+          await liveWindow.show();
+          await liveWindow.unminimize();
+        }
+        return;
+      }
+
+      if (rescheduleDelay) {
+        clearAutoHideTimer();
+      }
+
+      queueAutoHideAfterDelay();
+    } catch (error) {
+      console.warn("Failed to sync auto-hide live window state:", error);
+    }
+  }
+
+  function syncAutoHideLiveWindow(
+    hasDamage = autoHideRecentlyDamaged,
+    rescheduleDelay = false,
+  ): Promise<void> {
+    autoHideRecentlyDamaged = hasDamage;
+    autoHideOperation = autoHideOperation
+      .catch(() => undefined)
+      .then(() => applyAutoHideLiveWindow(rescheduleDelay));
+    return autoHideOperation;
+  }
 
   async function setupEventListeners() {
     if (isDestroyed || isReconnecting || listenersSetupInProgress) return;
@@ -90,6 +239,7 @@
         if (isDestroyed) return;
         lastEventTime = Date.now();
         hadAnyEvent = true;
+        void syncAutoHideLiveWindow(livePayloadHasDamageEvent(event.payload));
         if (event.payload.fightStartTimestampMs > 0) {
           setLiveData(event.payload);
         } else if (event.payload.totalDmg === 0 && event.payload.totalHeal === 0) {
@@ -108,6 +258,8 @@
         if (isDestroyed) return;
         lastEventTime = Date.now();
         hadAnyEvent = true;
+        autoHideLastObservedDamageTotal = 0;
+        void syncAutoHideLiveWindow(false);
         clearMeterData();
         notificationToast?.showToast(
           "notice",
@@ -130,6 +282,7 @@ t("live.resetToast", "战斗记录已重置"),
         hadAnyEvent = true;
         const newPaused = event.payload.isPaused;
         const elapsedMs = event.payload.headerInfo.elapsedMs;
+        void syncAutoHideLiveWindow(headerHasDamageEvent(event.payload.headerInfo));
         // update the store regardless
         isPaused.set(newPaused);
         if (
@@ -175,6 +328,10 @@ t("live.resumeToast", "战斗已继续"),
         // Treat scene change as a keep-alive
         lastEventTime = Date.now();
         hadAnyEvent = true;
+        if (SETTINGS.live.general.state.autoClearOnSceneChange !== false) {
+          autoHideLastObservedDamageTotal = 0;
+          void syncAutoHideLiveWindow(false);
+        }
         // notificationToast?.showToast('notice', `Scene changed to ${event.payload.sceneName}`);
       });
 
@@ -301,6 +458,28 @@ t("live.resumeToast", "战斗已继续"),
     }, 1000);
   }
 
+  function scheduleDynamicResize() {
+    if (!dynamicWindowEnabled || !rootElement || typeof window === "undefined") return;
+    if (dynamicResizeFrame) cancelAnimationFrame(dynamicResizeFrame);
+
+    dynamicResizeFrame = requestAnimationFrame(async () => {
+      dynamicResizeFrame = 0;
+      if (!dynamicWindowEnabled || !rootElement) return;
+
+      const targetHeight = Math.max(80, Math.ceil(rootElement.scrollHeight));
+      if (Math.abs(targetHeight - lastDynamicHeight) < 2) return;
+      lastDynamicHeight = targetHeight;
+
+      try {
+        await getCurrentWindow().setSize(
+          new LogicalSize(Math.ceil(window.innerWidth), targetHeight),
+        );
+      } catch (error) {
+        console.warn("Failed to resize dynamic live window:", error);
+      }
+    });
+  }
+
   // Save scroll position before navigating away
   beforeNavigate(({ from }) => {
     if (mainElement && from?.url.pathname) {
@@ -328,15 +507,29 @@ t("live.resumeToast", "战斗已继续"),
 
   onMount(() => {
     isDestroyed = false;
+    autoHideLastObservedDamageTotal = 0;
+    void syncAutoHideLiveWindow(false);
     setupEventListeners();
     startReconnectCheck();
+    resizeObserver = new ResizeObserver(() => scheduleDynamicResize());
+    if (rootElement) resizeObserver.observe(rootElement);
+    scheduleDynamicResize();
 
     return () => {
       isDestroyed = true;
+      if (dynamicResizeFrame) cancelAnimationFrame(dynamicResizeFrame);
+      clearAutoHideTimer();
+      resizeObserver?.disconnect();
       if (reconnectInterval) clearInterval(reconnectInterval);
       if (unlisten) unlisten();
       cleanupStores();
     };
+  });
+
+  $effect(() => {
+    SETTINGS.live.general.state.autoHideLiveWindow;
+    SETTINGS.live.general.state.autoHideLiveWindowDelaySeconds;
+    void syncAutoHideLiveWindow(autoHideRecentlyDamaged, true);
   });
 
   $effect(() => {
@@ -350,12 +543,22 @@ t("live.resumeToast", "战斗已继续"),
     });
   });
 
+  $effect(() => {
+    SETTINGS.live.dynamicWindow.state.enabled;
+    SETTINGS.live.dynamicWindow.state.maxPlayerRows;
+    SETTINGS.live.tableCustomization.state.playerRowHeight;
+    SETTINGS.live.tableCustomization.state.tableHeaderHeight;
+    SETTINGS.live.headerCustomization.state.windowPadding;
+    scheduleDynamicResize();
+  });
+
 </script>
 
 <!-- flex flex-col min-h-screen → makes the page stretch full height and stack header, body, and footer. -->
 <!-- flex-1 on <main> → makes the body expand to fill leftover space, pushing the footer down. -->
 <div
-  class="relative isolate h-screen overflow-hidden rounded-xl text-[13px] text-foreground font-sans shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)]"
+  bind:this={rootElement}
+  class="relative isolate {dynamicWindowEnabled ? 'min-h-0' : 'h-screen'} overflow-hidden rounded-xl text-[13px] text-foreground font-sans shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)]"
   style="padding: {SETTINGS.live.headerCustomization.state.windowPadding}px"
   data-tauri-drag-region
 >
@@ -368,11 +571,11 @@ t("live.resumeToast", "战斗已继续"),
   />
   <div class="pointer-events-none absolute inset-0 z-10 bg-background-live"></div>
 
-  <div class="relative z-20 flex h-full flex-col">
+  <div class="relative z-20 flex {dynamicWindowEnabled ? 'h-auto' : 'h-full'} flex-col">
     <HeaderCustom />
     <main
       bind:this={mainElement}
-      class="flex-1 overflow-y-auto gap-4 rounded-lg bg-card/20"
+      class="{dynamicWindowEnabled ? 'overflow-hidden' : 'flex-1 overflow-y-auto'} gap-4 rounded-lg bg-card/20"
     >
       {@render children()}
     </main>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import { findAnySkillByBaseId, type ClassSkillConfig, type ResonanceSkillDefinition, type SkillDefinition } from "$lib/skill-mappings";
   import { SETTINGS } from "$lib/settings-store";
@@ -34,9 +34,37 @@
 
   const t = uiT("overlay/skill-monitor/skill-cd", () => SETTINGS.live.general.state.language);
   type SkillTooltipPlacement = "top" | "bottom";
+  type SkillTooltipAnchor = {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  };
+  type ActiveSkillTooltip = {
+    key: string;
+    placement: SkillTooltipPlacement;
+    anchor: SkillTooltipAnchor;
+    left: number;
+    top: number;
+    width: number;
+  };
 
   let skillTranslationRevision = $state(0);
-  let activeSkillTooltip = $state<{ key: string; placement: SkillTooltipPlacement } | null>(null);
+  let activeSkillTooltip = $state<ActiveSkillTooltip | null>(null);
+  let tooltipElement = $state<HTMLDivElement | undefined>(undefined);
+
+  const SKILL_TOOLTIP_MARGIN = 12;
+  const SKILL_TOOLTIP_GAP = 6;
+  const SKILL_TOOLTIP_WIDTH = 480;
+  const SKILL_NOTE_SOURCE_FALLBACKS = new Map<number, number>([
+    [1609, 1608],
+    [1610, 1608],
+    [1611, 1608],
+  ]);
+  const SKILL_NOTE_TEXT_FALLBACKS: Record<number, string> = {
+    2224:
+      "No standalone localized description was found in the extracted game data. This row is the enhanced Lethal Shot skill entry used by Marksman.",
+  };
 
   let {
     classConfigs,
@@ -62,12 +90,92 @@
     const unsubscribe = TRANSLATION_RUNTIME_REVISION.subscribe((value) => {
       skillTranslationRevision = value;
     });
+    const handleResize = () => {
+      void positionActiveSkillTooltip();
+    };
+    window.addEventListener("resize", handleResize);
     void initializeSkillNameTranslationData();
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      window.removeEventListener("resize", handleResize);
+    };
   });
 
-  function showSkillTooltip(key: string, placement: SkillTooltipPlacement = "bottom"): void {
-    activeSkillTooltip = { key, placement };
+  function anchorFromElement(element: HTMLElement): SkillTooltipAnchor {
+    const rect = element.getBoundingClientRect();
+    return {
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom,
+    };
+  }
+
+  async function positionActiveSkillTooltip(): Promise<void> {
+    await tick();
+    if (!activeSkillTooltip || !tooltipElement) return;
+
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const width = Math.min(SKILL_TOOLTIP_WIDTH, Math.max(220, viewportWidth - SKILL_TOOLTIP_MARGIN * 2));
+    const tooltipRect = tooltipElement.getBoundingClientRect();
+    const tooltipHeight = tooltipRect.height;
+    const anchor = activeSkillTooltip.anchor;
+
+    let left = Math.min(
+      Math.max(anchor.left, SKILL_TOOLTIP_MARGIN),
+      Math.max(SKILL_TOOLTIP_MARGIN, viewportWidth - width - SKILL_TOOLTIP_MARGIN),
+    );
+
+    const below = anchor.bottom + SKILL_TOOLTIP_GAP;
+    const above = anchor.top - tooltipHeight - SKILL_TOOLTIP_GAP;
+    const preferTop = activeSkillTooltip.placement === "top";
+    let top = preferTop ? above : below;
+
+    if (!preferTop && top + tooltipHeight + SKILL_TOOLTIP_MARGIN > viewportHeight && above >= SKILL_TOOLTIP_MARGIN) {
+      top = above;
+    } else if (preferTop && top < SKILL_TOOLTIP_MARGIN && below + tooltipHeight + SKILL_TOOLTIP_MARGIN <= viewportHeight) {
+      top = below;
+    }
+
+    top = Math.min(
+      Math.max(top, SKILL_TOOLTIP_MARGIN),
+      Math.max(SKILL_TOOLTIP_MARGIN, viewportHeight - tooltipHeight - SKILL_TOOLTIP_MARGIN),
+    );
+
+    activeSkillTooltip = {
+      ...activeSkillTooltip,
+      left,
+      top,
+      width,
+    };
+  }
+
+  function skillTooltipStyle(): string {
+    if (!activeSkillTooltip) return "";
+    return [
+      `left: ${activeSkillTooltip.left}px`,
+      `top: ${activeSkillTooltip.top}px`,
+      `width: ${activeSkillTooltip.width}px`,
+      `max-height: calc(100vh - ${SKILL_TOOLTIP_MARGIN * 2}px)`,
+    ].join("; ");
+  }
+
+  function showSkillTooltip(
+    key: string,
+    placement: SkillTooltipPlacement = "bottom",
+    anchor?: HTMLElement,
+  ): void {
+    if (!anchor) return;
+    activeSkillTooltip = {
+      key,
+      placement,
+      anchor: anchorFromElement(anchor),
+      left: SKILL_TOOLTIP_MARGIN,
+      top: SKILL_TOOLTIP_MARGIN,
+      width: SKILL_TOOLTIP_WIDTH,
+    };
+    void positionActiveSkillTooltip();
   }
 
   function hideSkillTooltip(key: string): void {
@@ -126,6 +234,20 @@
     return text.trim();
   }
 
+  function resolveSkillHoverNote(skillId: number): string {
+    const locale = SETTINGS.live.general.state.language;
+    const directNote = resolveSkillNote(skillId, locale).trim();
+    if (directNote) return directNote;
+
+    const sourceSkillId = SKILL_NOTE_SOURCE_FALLBACKS.get(skillId);
+    if (sourceSkillId !== undefined) {
+      const sourceNote = resolveSkillNote(sourceSkillId, locale).trim();
+      if (sourceNote) return sourceNote;
+    }
+
+    return SKILL_NOTE_TEXT_FALLBACKS[skillId] ?? "";
+  }
+
 
   function formatEffectDuration(durationMs: number | undefined): string {
     if (!durationMs || durationMs <= 0) return "--";
@@ -135,7 +257,7 @@
   function skillHoverTitle(skill: SkillDefinition, extra = ""): string {
     void skillTranslationRevision;
     const note = SETTINGS.live.general.state.showHoverDescriptions !== false
-      ? formatSkillHoverNote(resolveSkillNote(skill.skillId, SETTINGS.live.general.state.language))
+      ? formatSkillHoverNote(resolveSkillHoverNote(skill.skillId))
       : "";
     return [
       displaySkillName(skill),
@@ -210,9 +332,9 @@
               ? 'border-primary ring-1 ring-primary'
               : 'border-border/60 hover:border-border'}"
             aria-label={displaySkillName(skill)}
-            onmouseenter={() => showSkillTooltip(tooltipKey)}
+            onmouseenter={(event) => showSkillTooltip(tooltipKey, "bottom", event.currentTarget as HTMLElement)}
             onmouseleave={() => hideSkillTooltip(tooltipKey)}
-            onfocus={() => showSkillTooltip(tooltipKey)}
+            onfocus={(event) => showSkillTooltip(tooltipKey, "bottom", event.currentTarget as HTMLElement)}
             onblur={() => hideSkillTooltip(tooltipKey)}
             onclick={() => toggleSkill(skill.skillId)}
           >
@@ -240,7 +362,9 @@
           </button>
           {#if activeSkillTooltip?.key === tooltipKey}
             <div
-              class="pointer-events-none absolute left-0 z-[80] min-w-[220px] max-w-[620px] whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl {activeSkillTooltip.placement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}"
+              bind:this={tooltipElement}
+              class="pointer-events-none fixed z-[1000] overflow-y-auto whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl"
+              style={skillTooltipStyle()}
             >
               {tooltipTitle}
             </div>
@@ -284,9 +408,9 @@
                 ? 'border-primary ring-1 ring-primary'
                 : 'border-border/60 hover:border-border'}"
               aria-label={displaySkillName(skill)}
-              onmouseenter={() => showSkillTooltip(tooltipKey)}
+              onmouseenter={(event) => showSkillTooltip(tooltipKey, "bottom", event.currentTarget as HTMLElement)}
               onmouseleave={() => hideSkillTooltip(tooltipKey)}
-              onfocus={() => showSkillTooltip(tooltipKey)}
+              onfocus={(event) => showSkillTooltip(tooltipKey, "bottom", event.currentTarget as HTMLElement)}
               onblur={() => hideSkillTooltip(tooltipKey)}
               onclick={() => toggleSkillDuration(skill.skillId)}
             >
@@ -313,7 +437,9 @@
             </button>
             {#if activeSkillTooltip?.key === tooltipKey}
               <div
-                class="pointer-events-none absolute left-0 z-[80] min-w-[220px] max-w-[620px] whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl {activeSkillTooltip.placement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}"
+                bind:this={tooltipElement}
+                class="pointer-events-none fixed z-[1000] overflow-y-auto whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl"
+                style={skillTooltipStyle()}
               >
                 {tooltipTitle}
               </div>
@@ -360,9 +486,9 @@
                 ? 'border-primary ring-1 ring-primary'
                 : 'border-border/60 hover:border-border'}"
               aria-label={displaySkillName(skill)}
-              onmouseenter={() => showSkillTooltip(tooltipKey)}
+              onmouseenter={(event) => showSkillTooltip(tooltipKey, "bottom", event.currentTarget as HTMLElement)}
               onmouseleave={() => hideSkillTooltip(tooltipKey)}
-              onfocus={() => showSkillTooltip(tooltipKey)}
+              onfocus={(event) => showSkillTooltip(tooltipKey, "bottom", event.currentTarget as HTMLElement)}
               onblur={() => hideSkillTooltip(tooltipKey)}
               onclick={() => toggleSkill(skill.skillId)}
             >
@@ -380,7 +506,9 @@
             </button>
             {#if activeSkillTooltip?.key === tooltipKey}
               <div
-                class="pointer-events-none absolute left-0 z-[80] min-w-[220px] max-w-[620px] whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl {activeSkillTooltip.placement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}"
+                bind:this={tooltipElement}
+                class="pointer-events-none fixed z-[1000] overflow-y-auto whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl"
+                style={skillTooltipStyle()}
               >
                 {tooltipTitle}
               </div>
@@ -403,9 +531,9 @@
               type="button"
               class="relative h-full w-full cursor-pointer rounded-md border border-border/60 overflow-hidden bg-muted/20 hover:border-border hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
               aria-label={displaySkillName(skill)}
-              onmouseenter={() => showSkillTooltip(tooltipKey)}
+              onmouseenter={(event) => showSkillTooltip(tooltipKey, "bottom", event.currentTarget as HTMLElement)}
               onmouseleave={() => hideSkillTooltip(tooltipKey)}
-              onfocus={() => showSkillTooltip(tooltipKey)}
+              onfocus={(event) => showSkillTooltip(tooltipKey, "bottom", event.currentTarget as HTMLElement)}
               onblur={() => hideSkillTooltip(tooltipKey)}
               onclick={() => toggleSkill(skill.skillId)}
             >
@@ -423,7 +551,9 @@
             </button>
             {#if activeSkillTooltip?.key === tooltipKey}
               <div
-                class="pointer-events-none absolute left-0 z-[80] min-w-[220px] max-w-[620px] whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl {activeSkillTooltip.placement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}"
+                bind:this={tooltipElement}
+                class="pointer-events-none fixed z-[1000] overflow-y-auto whitespace-pre-line rounded-sm border border-white/80 bg-[#222] px-2 py-1.5 text-left text-xs leading-snug text-white shadow-2xl"
+                style={skillTooltipStyle()}
               >
                 {tooltipTitle}
               </div>

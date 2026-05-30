@@ -81,7 +81,14 @@
   "off": "Off",
   "on": "On",
   "gpuChecking": "Checking GPU availability...",
+  "gpuCheckUnavailable": "GPU availability unavailable.",
+  "gpuCheckDeferred": "GPU check is manual.",
+  "gpuDeferredDescription": "Use Check GPU to verify driver availability.",
+  "gpuRecheck": "Check GPU",
+  "checkingModuleData": "Checking module data...",
   "gpuDisabledDescription": "GPU-accelerated calculations are disabled.",
   "gpuEnabledDescription": "GPU-accelerated calculations are enabled.",
+  "moduleDataUnavailable": "Module data is not synced yet. Open the game on a character with modules, then refresh data.",
+  "calculationTimedOut": "Calculation timed out. Try fewer filters or CPU mode, then start again.",
   "requiresAtLeastModules": "Requires at least {count} modules"
 }

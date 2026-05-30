@@ -257,6 +257,7 @@ fn compile_cuda(cpp_dir: &Path, cccl_root: Option<&Path>) -> Option<PathBuf> {
     let build_result = std::panic::catch_unwind(|| {
         let mut config = cmake::Config::new(cpp_dir);
         config
+            .out_dir(short_cuda_cmake_out_dir(cpp_dir))
             // cxx-build is configured with /MD and optimization flags in every Cargo profile,
             // so the CUDA static library must use a matching MSVC runtime configuration.
             .profile("Release")
@@ -284,6 +285,27 @@ fn compile_cuda(cpp_dir: &Path, cccl_root: Option<&Path>) -> Option<PathBuf> {
         dst.display()
     );
     None
+}
+
+fn short_cuda_cmake_out_dir(cpp_dir: &Path) -> PathBuf {
+    let profile = env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
+    let target = env::var("TARGET").unwrap_or_else(|_| "host".to_string());
+    let target_dir = env::var_os("OUT_DIR")
+        .and_then(|out_dir| {
+            let out_dir = PathBuf::from(out_dir);
+            out_dir.ancestors().nth(4).map(Path::to_path_buf)
+        })
+        .unwrap_or_else(|| {
+            cpp_dir
+                .ancestors()
+                .nth(3)
+                .map(|manifest_dir| manifest_dir.join("target"))
+                .unwrap_or_else(|| PathBuf::from("target"))
+        });
+
+    target_dir
+        .join("cuda-cmake")
+        .join(format!("{target}-{profile}"))
 }
 
 fn emit_cuda_runtime_links() {

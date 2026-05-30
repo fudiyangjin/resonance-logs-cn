@@ -56,5 +56,6 @@
   "shieldDetail.unknownShield": "Escudo",
   "shieldDetail.hp": "HP",
   "shieldDetail.seconds": "{value}s",
-  "shieldDetail.entryTitle": "UUID: {uuid} - baseId: {baseId}"
+  "shieldDetail.entryTitle": "UUID: {uuid} - baseId: {baseId}",
+  "shieldDetail.resizeAria": "Cambiar tamaño del área de salud y escudo"
 }

@@ -56,5 +56,6 @@
   "shieldDetail.hp": "HP",
   "shieldDetail.seconds": "{value}s",
   "shieldDetail.entryTitle": "UUID: {uuid} - baseId: {baseId}",
+  "shieldDetail.resizeAria": "Resize health and shield area",
   "tab.buffUptime": "Buff Uptime"
 }

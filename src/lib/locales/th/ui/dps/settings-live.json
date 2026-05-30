@@ -61,5 +61,12 @@
   "tankedSkillColumns": "คอลัมน์รับดาเมจ (รายละเอียดสกิล)",
   "targetDummy.enemyElite": "Enemy Dummy ชั้นยอด",
   "targetDummy.guardianElite": "Guardian Dummy ชั้นยอด",
-  "targetDummyMode": "โหมด Target Dummy"
+  "targetDummyMode": "โหมด Target Dummy",
+  "autoClearOnSceneChange": "ล้างมิเตอร์เมื่อเปลี่ยนฉาก",
+  "autoClearOnSceneChangeDescription": "บันทึกและล้างมิเตอร์ปัจจุบันโดยอัตโนมัติเมื่อเกมเปลี่ยนฉากหรือเซิร์ฟเวอร์ ปิดตัวเลือกนี้เพื่อคงมิเตอร์ปัจจุบันไว้หลังจากเปลี่ยนฉาก",
+  "autoHideLiveWindow": "ซ่อนหน้าต่างสดอัตโนมัติ",
+  "autoHideLiveWindowDescription": "ซ่อนมิเตอร์สดหลังครบเวลาเมื่อไม่พบดาเมจใหม่ แล้วแสดงอัตโนมัติทันทีที่มีดาเมจ",
+  "autoHideLiveWindowDelaySeconds": "ดีเลย์ซ่อนอัตโนมัติ",
+  "autoHideLiveWindowDelaySecondsDescription": "จำนวนวินาทีที่รอหลังไม่พบดาเมจใหม่ก่อนซ่อนมิเตอร์สด ตั้งเป็น 0 เพื่อซ่อนทันที",
+  "secondsUnit": "วิ"
 }

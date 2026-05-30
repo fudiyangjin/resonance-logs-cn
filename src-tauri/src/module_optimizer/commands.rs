@@ -17,10 +17,24 @@ use std::{
     },
 };
 use tauri::{AppHandle, Emitter};
-use tokio::time::{Duration, sleep};
+use tokio::{
+    task,
+    time::{Duration, sleep, timeout},
+};
 
 const DEFAULT_MAX_SOLUTIONS: i32 = 10;
 const NORMALIZED_PROGRESS_MAX: u64 = 10_000;
+const GPU_SUPPORT_CHECK_TIMEOUT_SECS: u64 = 4;
+const MODULE_STATUS_TIMEOUT_SECS: u64 = 8;
+const MODULE_DATA_UNAVAILABLE: &str =
+    "Module data is not synced yet. Open the game on a character with modules, then refresh data.";
+
+#[derive(Debug, Clone, serde::Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ModuleDataStatus {
+    pub module_count: usize,
+    pub filtered_total_value_count: usize,
+}
 
 #[derive(Clone, Copy)]
 struct ProgressSource {
@@ -30,8 +44,13 @@ struct ProgressSource {
 
 #[tauri::command]
 #[specta::specta]
-pub fn check_gpu_support() -> GpuSupport {
-    check_gpu_support_internal()
+pub async fn check_gpu_support() -> GpuSupport {
+    check_gpu_support_with_timeout()
+        .await
+        .unwrap_or_else(|| GpuSupport {
+            cuda_available: false,
+            opencl_available: false,
+        })
 }
 
 fn load_latest_char_serialize() -> Result<CharSerialize, String> {
@@ -40,7 +59,10 @@ fn load_latest_char_serialize() -> Result<CharSerialize, String> {
             .select(dpd::vdata_bytes)
             .order(dpd::last_seen_ms.desc())
             .first(conn)
-            .map_err(|e| e.to_string())
+            .map_err(|e| match e {
+                diesel::result::Error::NotFound => MODULE_DATA_UNAVAILABLE.to_string(),
+                _ => e.to_string(),
+            })
     })?;
 
     log::info!(
@@ -51,15 +73,92 @@ fn load_latest_char_serialize() -> Result<CharSerialize, String> {
     if let Some(bytes) = vdata_bytes {
         CharSerialize::decode(bytes.as_slice()).map_err(|e| e.to_string())
     } else {
-        Err("No player data found".to_string())
+        Err(MODULE_DATA_UNAVAILABLE.to_string())
     }
 }
 
 #[tauri::command]
 #[specta::specta]
-pub fn get_latest_modules() -> Result<Vec<ModuleInfo>, String> {
-    let vdata = load_latest_char_serialize()?;
-    Ok(parse_modules_from_vdata(&vdata))
+pub async fn get_latest_modules() -> Result<Vec<ModuleInfo>, String> {
+    task::spawn_blocking(|| {
+        let vdata = load_latest_char_serialize()?;
+        Ok(parse_modules_from_vdata(&vdata))
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn get_latest_module_status(
+    min_total_value: Option<i32>,
+) -> Result<ModuleDataStatus, String> {
+    log::info!(
+        "module_status_request_start min_total_value={:?}",
+        min_total_value
+    );
+
+    let status_task = task::spawn_blocking(move || {
+        log::info!(
+            "module_status_worker_start min_total_value={:?}",
+            min_total_value
+        );
+        let vdata = load_latest_char_serialize()?;
+        let modules = parse_modules_from_vdata(&vdata);
+        log::info!(
+            "module_status_parse_complete module_count={}",
+            modules.len()
+        );
+        let filtered_total_value_count = modules
+            .iter()
+            .filter(|module| {
+                min_total_value.is_none_or(|min_value| {
+                    module.parts.iter().map(|part| part.value).sum::<i32>() >= min_value
+                })
+            })
+            .count();
+
+        log::info!(
+            "module_data_status_ready module_count={} filtered_total_value_count={} min_total_value={:?}",
+            modules.len(),
+            filtered_total_value_count,
+            min_total_value
+        );
+
+        Ok(ModuleDataStatus {
+            module_count: modules.len(),
+            filtered_total_value_count,
+        })
+    });
+
+    timeout(Duration::from_secs(MODULE_STATUS_TIMEOUT_SECS), status_task)
+        .await
+        .map_err(|_| MODULE_DATA_UNAVAILABLE.to_string())?
+        .map_err(|error| error.to_string())?
+}
+
+async fn check_gpu_support_with_timeout() -> Option<GpuSupport> {
+    let result = timeout(
+        Duration::from_secs(GPU_SUPPORT_CHECK_TIMEOUT_SECS),
+        task::spawn_blocking(check_gpu_support_internal),
+    )
+    .await;
+
+    match result {
+        Ok(Ok(support)) => Some(support),
+        Ok(Err(error)) => {
+            log::warn!(target: "app::module_optimizer", "gpu_support_check_failed error={}", error);
+            None
+        }
+        Err(_) => {
+            log::warn!(
+                target: "app::module_optimizer",
+                "gpu_support_check_timed_out timeout_secs={}",
+                GPU_SUPPORT_CHECK_TIMEOUT_SECS
+            );
+            None
+        }
+    }
 }
 
 fn aggregate_progress(sources: &[ProgressSource]) -> (u64, u64) {
@@ -176,7 +275,7 @@ pub async fn optimize_latest_modules(
         .map(|n| n.get() as i32)
         .unwrap_or(8);
 
-    let options = OptimizeOptions {
+    let mut options = OptimizeOptions {
         target_attributes,
         exclude_attributes,
         min_attr_requirements: min_attr_requirements.unwrap_or_default(),
@@ -187,10 +286,22 @@ pub async fn optimize_latest_modules(
     };
     let final_max_solutions = options.max_solutions.max(1) as usize;
 
-    let gpu_support = check_gpu_support_internal();
-    let use_parallel_gpu_hybrid = combination_size == 5
-        && options.use_gpu
-        && (gpu_support.cuda_available || gpu_support.opencl_available);
+    let gpu_support = if options.use_gpu {
+        check_gpu_support_with_timeout().await
+    } else {
+        None
+    };
+    let gpu_available = gpu_support
+        .as_ref()
+        .is_some_and(|support| support.cuda_available || support.opencl_available);
+    if options.use_gpu && !gpu_available {
+        log::warn!(
+            target: "app::module_optimizer",
+            "gpu_unavailable_falling_back_to_cpu"
+        );
+        options.use_gpu = false;
+    }
+    let use_parallel_gpu_hybrid = combination_size == 5 && options.use_gpu && gpu_available;
 
     let progress_handles = ProgressHandleOwner::new(if use_parallel_gpu_hybrid { 2 } else { 1 });
     let progress_sources = if use_parallel_gpu_hybrid {

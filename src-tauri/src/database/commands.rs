@@ -797,24 +797,6 @@ fn load_history_entity_summary_cache(encounter_id: i32) -> Option<Arc<Vec<lc::Hi
     Some(result)
 }
 
-fn invalidate_history_entity_summary_cache(encounter_id: i32) {
-    let Some(cache) = HISTORY_ENTITY_SUMMARY_CACHE.get() else {
-        return;
-    };
-    if let Ok(mut cache) = cache.lock() {
-        cache.retain(|(cached_id, _)| *cached_id != encounter_id);
-    }
-}
-
-fn invalidate_history_entity_summary_cache_many(encounter_ids: &[i32]) {
-    let Some(cache) = HISTORY_ENTITY_SUMMARY_CACHE.get() else {
-        return;
-    };
-    if let Ok(mut cache) = cache.lock() {
-        cache.retain(|(cached_id, _)| !encounter_ids.contains(cached_id));
-    }
-}
-
 fn clear_history_entity_summary_cache() {
     let Some(cache) = HISTORY_ENTITY_SUMMARY_CACHE.get() else {
         return;

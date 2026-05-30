@@ -61,5 +61,12 @@
   "tankedSkillColumns": "Colonnes encaissées (Détails des compétences)",
   "targetDummy.enemyElite": "Mannequin ennemi d’élite",
   "targetDummy.guardianElite": "Mannequin gardien d’élite",
-  "targetDummyMode": "Mode mannequin d’entraînement"
+  "targetDummyMode": "Mode mannequin d’entraînement",
+  "autoClearOnSceneChange": "Vider le compteur au changement de scène",
+  "autoClearOnSceneChangeDescription": "Enregistre et vide automatiquement le compteur actuel lorsque le jeu change de scène ou de serveur. Désactivez cette option pour garder le compteur actuel après un changement de scène.",
+  "autoHideLiveWindow": "Masquer automatiquement la fenêtre live",
+  "autoHideLiveWindowDescription": "Masque le compteur live après le délai si aucun nouveau dégât n'est détecté, puis le réaffiche automatiquement dès qu'un dégât apparaît.",
+  "autoHideLiveWindowDelaySeconds": "Délai de masquage automatique",
+  "autoHideLiveWindowDelaySecondsDescription": "Nombre de secondes à attendre sans nouveau dégât avant de masquer le compteur live. Mettez 0 pour masquer immédiatement.",
+  "secondsUnit": "s"
 }
