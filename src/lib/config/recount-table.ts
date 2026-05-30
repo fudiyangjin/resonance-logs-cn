@@ -11,7 +11,7 @@ const ICON_OVERRIDES_BY_RECOUNT_ID: Record<string, string> = {
   // Great Crimson Lotus and Formless Flame Slash are proc rows; the generated
   // damage rows do not carry the talent icon that actually enables them.
   "248": "ui/atlas/talent_passive_3/shuangfu364",
-  "249": "ui/atlas/talent_passive_3/shuangfu327",
+  "249": "ui/atlas/talent_passive_3/shuangfu362",
   // Generated row 238 includes the Flame Berserker basic attack icon before
   // the actual Unbound Meteor skill icon.
   "238": "ui/textures/skill_weapon_sf/weapon_sf-01_kx05",
@@ -19,9 +19,9 @@ const ICON_OVERRIDES_BY_RECOUNT_ID: Record<string, string> = {
 
 const ICON_OVERRIDES_BY_DAMAGE_ID: Record<string, string> = {
   "116230101": "ui/atlas/talent_passive_3/shuangfu364",
-  "23510703": "ui/atlas/talent_passive_3/shuangfu327",
-  "23510803": "ui/atlas/talent_passive_3/shuangfu327",
-  "23510903": "ui/atlas/talent_passive_3/shuangfu327",
+  "23510703": "ui/atlas/talent_passive_3/shuangfu362",
+  "23510803": "ui/atlas/talent_passive_3/shuangfu362",
+  "23510903": "ui/atlas/talent_passive_3/shuangfu362",
 };
 
 export type RawSkillStatsLike = {
