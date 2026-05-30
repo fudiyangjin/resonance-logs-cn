@@ -1310,9 +1310,6 @@ const DEFAULT_SETTINGS = {
     profiles: [createDefaultSkillMonitorProfile()] as SkillMonitorProfile[],
   },
   monsterMonitor: createDefaultMonsterMonitorConfig(),
-  trainingDummy: {
-    defaultMonsterId: 122 as 115 | 122,
-  },
   live: {
     general: { ...DEFAULT_GENERAL_SETTINGS },
     dpsPlayers: { ...DEFAULT_STATS },
@@ -1407,11 +1404,6 @@ export const SETTINGS = {
   monsterMonitor: new RuneStore(
     "monsterMonitor",
     DEFAULT_SETTINGS.monsterMonitor,
-    RUNE_STORE_OPTIONS,
-  ),
-  trainingDummy: new RuneStore(
-    "trainingDummy",
-    DEFAULT_SETTINGS.trainingDummy,
     RUNE_STORE_OPTIONS,
   ),
   live: {
@@ -1594,7 +1586,6 @@ export const settings = {
     moduleSync: SETTINGS.moduleSync.state,
     skillMonitor: SETTINGS.skillMonitor.state,
     monsterMonitor: SETTINGS.monsterMonitor.state,
-    trainingDummy: SETTINGS.trainingDummy.state,
     live: {
       general: SETTINGS.live.general.state,
       dps: {

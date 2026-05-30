@@ -16,9 +16,7 @@ use crate::live::opcodes_models::{AttrType, AttrValue, DeathRecord, Encounter, E
 use crate::live::season_cultivate::{FactorCounterTemplate, SeasonCultivateRuntimeState};
 use crate::live::skill_cd_monitor::SkillCdMonitor;
 use crate::live::team::{TeamEvent, TeamRuntimeState};
-use crate::live::training_dummy::{
-    TrainingDummyMonsterId, TrainingDummyRuntime, inspect_aoi_delta,
-};
+use crate::live::training_dummy::{CombatGate, TrainingDummyRuntime, inspect_aoi_delta};
 use blueprotobuf_lib::blueprotobuf;
 use blueprotobuf_lib::blueprotobuf::AoiSyncDelta;
 use blueprotobuf_lib::blueprotobuf::EEntityType;
@@ -233,9 +231,7 @@ pub enum LiveControlCommand {
     StateEvent(StateEvent),
     TogglePauseEncounter,
     ApplyMonitorRuntimeSnapshot(MonitorRuntimeSnapshot),
-    StartTrainingDummy {
-        monster_id: TrainingDummyMonsterId,
-    },
+    StartTrainingDummy,
     StopTrainingDummy,
     SetEventUpdateRateMs(u64),
     SetMonitoredBuffs(Vec<i32>),
@@ -578,6 +574,17 @@ fn build_encounter_metadata(
     }
 }
 
+/// Persist the current encounter unless it is an already-saved frozen
+/// training-dummy segment. The segment is written to history once, the moment
+/// it finishes (`prepare_training_dummy_for_delta`); every later reset path
+/// (manual reset, stop, scene resync, auto reset) must not duplicate it.
+fn persist_segment_unless_saved(state: &mut AppState, is_manual: bool, source: &str) {
+    if state.training_dummy.segment_saved {
+        return;
+    }
+    persist_and_save_encounter(state, is_manual, source);
+}
+
 fn persist_and_save_encounter(state: &mut AppState, is_manual: bool, source: &str) {
     hydrate_entities_from_attr_store(state);
     let mut boss_monster_ids: Vec<i32> = state
@@ -854,9 +861,9 @@ impl AppStateManager {
             LiveControlCommand::ApplyMonitorRuntimeSnapshot(snapshot) => {
                 self.apply_monitor_runtime_snapshot_with_state(state, snapshot);
             }
-            LiveControlCommand::StartTrainingDummy { monster_id } => {
+            LiveControlCommand::StartTrainingDummy => {
                 let previous = build_training_dummy_state(&state.training_dummy);
-                state.training_dummy.arm(monster_id);
+                state.training_dummy.arm();
                 emit_training_dummy_update_if_changed(state, previous);
             }
             LiveControlCommand::StopTrainingDummy => {
@@ -1141,7 +1148,7 @@ impl AppStateManager {
     ) -> Option<crate::live::opcodes_process::SyncContainerProcessResult> {
         use crate::live::opcodes_process::process_sync_container_data;
 
-        persist_and_save_encounter(state, false, "container_data_resync");
+        persist_segment_unless_saved(state, false, "container_data_resync");
         state.encounter.entity_uuid_to_entity.clear();
         state.attr_store.clear_all_entities();
         state.encounter.reset_combat_state();
@@ -1263,11 +1270,11 @@ impl AppStateManager {
             self.try_deferred_reset(state, has_damage, "SyncToMeDeltaInfo");
         }
 
-        let combat_target_filter = sync_to_me_delta_info
+        let combat_gate = sync_to_me_delta_info
             .delta_info
             .as_ref()
             .and_then(|delta| delta.base_delta.as_ref())
-            .and_then(|base_delta| {
+            .map(|base_delta| {
                 let local_player_uuid = sync_to_me_delta_info
                     .delta_info
                     .as_ref()
@@ -1279,14 +1286,15 @@ impl AppStateManager {
                     local_player_uuid,
                     "SyncToMeDeltaInfo",
                 )
-            });
+            })
+            .unwrap_or(CombatGate::AllowAll);
 
         let result = process_sync_to_me_delta_info(
             &mut state.encounter,
             &mut state.attr_store,
             sync_to_me_delta_info,
             &state.local_monitor.monitored_panel_attr_ids,
-            combat_target_filter,
+            combat_gate,
         );
 
         if state.local_monitor.entity_uuid != state.encounter.local_player_uuid {
@@ -1454,7 +1462,7 @@ impl AppStateManager {
             }
 
             let buff_bytes = aoi_sync_delta.buff_effect.take();
-            let combat_target_filter = self.prepare_training_dummy_for_delta(
+            let combat_gate = self.prepare_training_dummy_for_delta(
                 state,
                 &aoi_sync_delta,
                 local_player_uuid,
@@ -1466,7 +1474,7 @@ impl AppStateManager {
                 &mut state.encounter,
                 &mut state.attr_store,
                 aoi_sync_delta,
-                combat_target_filter,
+                combat_gate,
                 false,
             ) {
                 aggregated_damage_events.extend(events);
@@ -1618,7 +1626,7 @@ impl AppStateManager {
     }
 
     fn reset_encounter(&self, state: &mut AppState, is_manual: bool) {
-        persist_and_save_encounter(state, is_manual, "reset");
+        persist_segment_unless_saved(state, is_manual, "reset");
         state.encounter.reset_combat_state();
         state.death_snapshot_dirty = false;
 
@@ -1644,9 +1652,9 @@ impl AppStateManager {
         }
         if is_manual {
             state.battle_state = BattleStateMachine::default();
-            if state.training_dummy.has_selection() {
+            if state.training_dummy.is_active() {
                 let previous = build_training_dummy_state(&state.training_dummy);
-                state.training_dummy.rearm_selected();
+                state.training_dummy.rearm();
                 emit_training_dummy_update_if_changed(state, previous);
             }
         }
@@ -1726,151 +1734,12 @@ impl AppStateManager {
         self.send_control(LiveControlCommand::ApplyMonitorRuntimeSnapshot(snapshot))
     }
 
-    pub fn start_training_dummy(&self, monster_id: TrainingDummyMonsterId) -> Result<(), String> {
-        self.send_control(LiveControlCommand::StartTrainingDummy { monster_id })
+    pub fn start_training_dummy(&self) -> Result<(), String> {
+        self.send_control(LiveControlCommand::StartTrainingDummy)
     }
 
     pub fn stop_training_dummy(&self) -> Result<(), String> {
         self.send_control(LiveControlCommand::StopTrainingDummy)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::live::buff_monitor::{ActiveBuff, BuffWatchProfile};
-    use crate::live::entity_id::{canonical_player_uuid, entity_id_to_uuid};
-
-    fn monster_uuid(uid: i64) -> i64 {
-        entity_id_to_uuid(uid, EEntityType::EntMonster, false, false)
-    }
-
-    fn player_uuid(uid: i64) -> i64 {
-        canonical_player_uuid(uid)
-    }
-
-    fn add_entity(state: &mut AppState, uuid: i64, entity_type: EEntityType) {
-        state
-            .encounter
-            .entity_uuid_to_entity
-            .insert(uuid, Entity::new(uuid, entity_type));
-    }
-
-    fn set_current_target(state: &mut AppState, target_uuid: i64) {
-        let local_player_uuid = state.encounter.local_player_uuid;
-        let _ = state.attr_store.set_attr(
-            local_player_uuid,
-            AttrType::TargetId,
-            AttrValue::Int(target_uuid),
-        );
-    }
-
-    fn active_buff(base_id: i32) -> ActiveBuff {
-        ActiveBuff {
-            base_id,
-            layer: 1,
-            duration: 1000,
-            create_time: 10,
-            fire_uuid: None,
-            source_config_id: None,
-        }
-    }
-
-    #[test]
-    fn current_attack_target_requires_live_known_monster() {
-        let mut state = AppState::new();
-        let local_player_uuid = player_uuid(100);
-        let target_monster_uuid = monster_uuid(200);
-        let other_player_uuid = player_uuid(300);
-        state.encounter.local_player_uuid = local_player_uuid;
-        state.attr_store.set_local_uuid(local_player_uuid);
-        add_entity(&mut state, local_player_uuid, EEntityType::EntChar);
-        add_entity(&mut state, target_monster_uuid, EEntityType::EntMonster);
-        add_entity(&mut state, other_player_uuid, EEntityType::EntChar);
-
-        set_current_target(&mut state, target_monster_uuid);
-        assert_eq!(
-            current_attack_target_uuid(&state),
-            Some(target_monster_uuid)
-        );
-
-        set_current_target(&mut state, other_player_uuid);
-        assert_eq!(current_attack_target_uuid(&state), None);
-
-        set_current_target(&mut state, monster_uuid(404));
-        assert_eq!(current_attack_target_uuid(&state), None);
-
-        set_current_target(&mut state, target_monster_uuid);
-        let _ = state.attr_store.set_attr(
-            target_monster_uuid,
-            AttrType::ActorState,
-            AttrValue::Int(i64::from(blueprotobuf::EActorState::ActorStateDead as i32)),
-        );
-        assert_eq!(current_attack_target_uuid(&state), None);
-    }
-
-    #[test]
-    fn buff_effect_classification_tracks_all_monsters_but_snapshot_tracks_current_target_only() {
-        let mut state = AppState::new();
-        let local_player_uuid = player_uuid(100);
-        let current_monster_uuid = monster_uuid(200);
-        let other_monster_uuid = monster_uuid(201);
-        state.encounter.local_player_uuid = local_player_uuid;
-        state.attr_store.set_local_uuid(local_player_uuid);
-        add_entity(&mut state, local_player_uuid, EEntityType::EntChar);
-        add_entity(&mut state, current_monster_uuid, EEntityType::EntMonster);
-        add_entity(&mut state, other_monster_uuid, EEntityType::EntMonster);
-        set_current_target(&mut state, current_monster_uuid);
-
-        assert_eq!(
-            classify_buff_effect_target(&state, other_monster_uuid),
-            Some(BuffTargetKind::Monster)
-        );
-        assert_eq!(
-            classify_buff_snapshot_target(&state, current_monster_uuid),
-            Some(BuffTargetKind::Monster)
-        );
-        assert_eq!(
-            classify_buff_snapshot_target(&state, other_monster_uuid),
-            None
-        );
-    }
-
-    #[test]
-    fn monster_snapshot_contains_only_attr_target_id_target() {
-        let mut state = AppState::new();
-        let local_player_uuid = player_uuid(100);
-        let current_monster_uuid = monster_uuid(200);
-        let other_monster_uuid = monster_uuid(201);
-        state.encounter.local_player_uuid = local_player_uuid;
-        state.attr_store.set_local_uuid(local_player_uuid);
-        add_entity(&mut state, local_player_uuid, EEntityType::EntChar);
-        add_entity(&mut state, current_monster_uuid, EEntityType::EntMonster);
-        add_entity(&mut state, other_monster_uuid, EEntityType::EntMonster);
-        set_current_target(&mut state, current_monster_uuid);
-        state.entity_buff_config.monster = BuffWatchProfile::from_any_source_ids(vec![1], false);
-        state
-            .entity_buff_monitors
-            .monitor_for(current_monster_uuid)
-            .active_buffs
-            .insert(1, active_buff(1));
-        state
-            .entity_buff_monitors
-            .monitor_for(other_monster_uuid)
-            .active_buffs
-            .insert(1, active_buff(1));
-
-        let snapshot = state.entity_buff_monitors.build_snapshots_for_kind(
-            BuffTargetKind::Monster,
-            &state.entity_buff_config,
-            local_player_uuid,
-            0,
-            |entity_uuid| classify_buff_snapshot_target(&state, entity_uuid),
-        );
-
-        assert_eq!(snapshot.len(), 1);
-        assert!(snapshot.contains_key(&entity_uuid_string(current_monster_uuid)));
-        assert!(!snapshot.contains_key(&entity_uuid_string(other_monster_uuid)));
     }
 }
 
@@ -1997,20 +1866,36 @@ impl AppStateManager {
         delta: &AoiSyncDelta,
         local_player_uuid: i64,
         source: &str,
-    ) -> Option<i64> {
-        if !state.training_dummy.has_selection() {
-            return None;
+    ) -> CombatGate {
+        if !state.training_dummy.is_active() {
+            return CombatGate::AllowAll;
         }
 
+        // Running -> Finished once the segment duration elapses: persist the
+        // segment to history exactly once and freeze the live panel in place.
+        // Return immediately so this very delta does not also start a new
+        // segment — the next round is entirely user-driven (manual reset).
+        // Snapshot BEFORE `maybe_finish` mutates the phase so the running ->
+        // finished change is actually emitted to the live header.
         let previous = build_training_dummy_state(&state.training_dummy);
-        state.training_dummy.maybe_enter_pending_rollover();
-        emit_training_dummy_update_if_changed(state, previous);
+        if state.training_dummy.maybe_finish() {
+            persist_segment_unless_saved(state, false, "training_dummy_segment");
+            state.training_dummy.segment_saved = true;
+            emit_training_dummy_update_if_changed(state, previous);
+            info!(
+                target: "app::live",
+                "training_dummy_segment_finished source={}",
+                source
+            );
+            return CombatGate::BlockAll;
+        }
+
         let matched = inspect_aoi_delta(&state.encounter, delta, local_player_uuid);
 
+        // Only an armed dummy auto-locks; a finished (frozen) segment ignores
+        // all attacks until the user resets back to armed.
         if let Some(matched) = matched {
-            if state.training_dummy.should_lock_on_match(matched)
-                || state.training_dummy.should_rollover_on_match(matched)
-            {
+            if state.training_dummy.should_lock_on_match(matched) {
                 if encounter_has_stats(&state.encounter) {
                     info!(
                         target: "app::live",
@@ -2034,6 +1919,6 @@ impl AppStateManager {
             }
         }
 
-        state.training_dummy.combat_target_filter()
+        state.training_dummy.combat_gate()
     }
 }

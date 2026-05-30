@@ -63,9 +63,9 @@ async togglePauseEncounter() : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async startTrainingDummy(monsterId: number) : Promise<Result<null, string>> {
+async startTrainingDummy() : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("start_training_dummy", { monsterId }) };
+    return { status: "ok", data: await TAURI_INVOKE("start_training_dummy") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

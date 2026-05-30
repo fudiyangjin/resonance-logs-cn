@@ -306,7 +306,7 @@ export const enUSMessages = {
   "live.header.tooltip.bossHealth": "Boss Health",
   "live.header.trainingDummy.armed": "Training dummy armed",
   "live.header.trainingDummy.running": "Training dummy running",
-  "live.header.trainingDummy.pendingRollover": "Waiting for rollover",
+  "live.header.trainingDummy.finished": "Segment finished",
   "live.header.trainingDummy.enable": "Enable training dummy mode",
   "live.header.trainingDummy.disable": "Disable training dummy mode",
   "live.header.tooltip.resetEncounter": "Reset Encounter",
@@ -503,12 +503,6 @@ export const enUSMessages = {
   "settings.live.refreshRate": "Refresh Rate",
   "settings.live.refreshRateDescription":
     "Live stats refresh interval (50-2000ms). Lower values feel smoother but use more CPU.",
-  "settings.live.trainingDummy.title": "Training Dummy Mode",
-  "settings.live.trainingDummy.defaultTarget": "Default Dummy Target",
-  "settings.live.trainingDummy.defaultTargetDescription":
-    "The header training dummy button uses this default target directly",
-  "settings.live.trainingDummy.eliteEnemy": "Elite Enemy Dummy",
-  "settings.live.trainingDummy.eliteGuardian": "Elite Guardian Dummy",
   "settings.network.packetCapture": "Packet Capture",
   "settings.network.npcapMissing.prefix":
     "Npcap was not detected. Install it from ",

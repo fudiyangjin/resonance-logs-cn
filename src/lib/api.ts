@@ -36,11 +36,7 @@ export type HeaderInfo = {
   trainingDummy: TrainingDummyState;
 };
 
-export type TrainingDummyPhase =
-  | "idle"
-  | "armed"
-  | "running"
-  | "pendingRollover";
+export type TrainingDummyPhase = "idle" | "armed" | "running" | "finished";
 
 export type TrainingDummyState = {
   phase: TrainingDummyPhase;
@@ -340,9 +336,8 @@ export const resetEncounter = (): Promise<Result<null, string>> =>
   commands.resetEncounter();
 export const togglePauseEncounter = (): Promise<Result<null, string>> =>
   commands.togglePauseEncounter();
-export const startTrainingDummy = (
-  monsterId: number,
-): Promise<Result<null, string>> => commands.startTrainingDummy(monsterId);
+export const startTrainingDummy = (): Promise<Result<null, string>> =>
+  commands.startTrainingDummy();
 export const stopTrainingDummy = (): Promise<Result<null, string>> =>
   commands.stopTrainingDummy();
 export const enableBlur = (): Promise<void> => commands.enableBlur();

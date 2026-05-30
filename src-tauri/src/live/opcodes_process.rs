@@ -12,6 +12,7 @@ use crate::live::opcodes_models::{
     AttrType, AttrValue, DamageSnapshot, Encounter, Entity, PositionAttr, Skill, attr_type,
     damage_type_flag,
 };
+use crate::live::training_dummy::CombatGate;
 use blueprotobuf_lib::blueprotobuf;
 use blueprotobuf_lib::blueprotobuf::{Attr, EDamageType, EEntityType};
 use bytes::Buf;
@@ -466,7 +467,7 @@ pub fn process_sync_to_me_delta_info(
     attr_store: &mut EntityAttrStore,
     sync_to_me_delta_info: blueprotobuf::SyncToMeDeltaInfo,
     monitored_panel_attr_ids: &[i32],
-    combat_target_filter: Option<i64>,
+    combat_gate: CombatGate,
 ) -> SyncToMeDeltaResult {
     use crate::live::opcodes_models::attr_type::{ATTR_FIGHT_RESOURCES, ATTR_SKILL_ID};
 
@@ -522,13 +523,9 @@ pub fn process_sync_to_me_delta_info(
                 let _ = attr_store.set_temp_attr(id, value);
             }
         }
-        if let Some((damage_events, damage_taken_events)) = process_aoi_sync_delta(
-            encounter,
-            attr_store,
-            base_delta,
-            combat_target_filter,
-            true,
-        ) {
+        if let Some((damage_events, damage_taken_events)) =
+            process_aoi_sync_delta(encounter, attr_store, base_delta, combat_gate, true)
+        {
             result.local_damage_events = damage_events;
             result.local_damage_taken_events = damage_taken_events;
         }
@@ -705,13 +702,14 @@ pub fn process_aoi_sync_delta(
     encounter: &mut Encounter,
     attr_store: &mut EntityAttrStore,
     aoi_sync_delta: blueprotobuf::AoiSyncDelta,
-    combat_target_filter: Option<i64>,
+    combat_gate: CombatGate,
     collect_taken: bool,
 ) -> Option<(Vec<LocalDamageEvent>, Vec<LocalDamageTakenEvent>)> {
     let target_uuid = aoi_sync_delta.uuid?;
-    let allow_combat = match combat_target_filter {
-        Some(locked_target_uuid) => locked_target_uuid == target_uuid,
-        None => true,
+    let allow_combat = match combat_gate {
+        CombatGate::AllowAll => true,
+        CombatGate::Only(locked_target_uuid) => locked_target_uuid == target_uuid,
+        CombatGate::BlockAll => false,
     };
 
     // Process attributes

@@ -25,7 +25,6 @@
   // Collapsible section state - all collapsed by default
   let expandedSections = $state({
     general: false,
-    trainingDummy: false,
     dpsPlayers: false,
     dpsSkills: false,
     healPlayers: false,
@@ -235,46 +234,6 @@
             max={2000}
             step={50}
             unit="ms"
-          />
-        </div>
-      {/if}
-    </div>
-
-    <div
-      class="rounded-lg border bg-card/40 border-border/60 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
-    >
-      <button
-        type="button"
-        class="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
-        onclick={() => toggleSection("trainingDummy")}
-      >
-        <h2 class="text-base font-semibold text-foreground">
-          {t("settings.live.trainingDummy.title")}
-        </h2>
-        <ChevronDown
-          class="w-5 h-5 text-muted-foreground transition-transform duration-200 {expandedSections.trainingDummy
-            ? 'rotate-180'
-            : ''}"
-        />
-      </button>
-      {#if expandedSections.trainingDummy}
-        <div class="px-4 pb-3 space-y-1">
-          <SettingsSelect
-            bind:selected={SETTINGS.trainingDummy.state.defaultMonsterId}
-            values={[
-              {
-                label: t("settings.live.trainingDummy.eliteEnemy"),
-                value: 115,
-              },
-              {
-                label: t("settings.live.trainingDummy.eliteGuardian"),
-                value: 122,
-              },
-            ]}
-            label={t("settings.live.trainingDummy.defaultTarget")}
-            description={t(
-              "settings.live.trainingDummy.defaultTargetDescription",
-            )}
           />
         </div>
       {/if}

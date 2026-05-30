@@ -47,7 +47,6 @@
 
   // Get header settings
   const h = $derived(SETTINGS.live.headerCustomization.state);
-  const trainingDummySettings = $derived(SETTINGS.trainingDummy.state);
   const abbreviationStyle = $derived(
     SETTINGS.live.general.state.abbreviationStyle,
   );
@@ -184,8 +183,8 @@
         return t("live.header.trainingDummy.armed");
       case "running":
         return t("live.header.trainingDummy.running");
-      case "pendingRollover":
-        return t("live.header.trainingDummy.pendingRollover");
+      case "finished":
+        return t("live.header.trainingDummy.finished");
       default:
         return "";
     }
@@ -198,7 +197,7 @@
       if (isTrainingDummyActive) {
         await stopTrainingDummy();
       } else {
-        await startTrainingDummy(trainingDummySettings.defaultMonsterId);
+        await startTrainingDummy();
       }
     } finally {
       trainingDummyBusy = false;

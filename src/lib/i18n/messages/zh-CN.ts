@@ -256,7 +256,7 @@ export const zhCNMessages = {
   "live.header.tooltip.bossHealth": "Boss Health",
   "live.header.trainingDummy.armed": "打桩待命",
   "live.header.trainingDummy.running": "打桩中",
-  "live.header.trainingDummy.pendingRollover": "待切段",
+  "live.header.trainingDummy.finished": "打桩结束",
   "live.header.trainingDummy.enable": "开启打桩模式",
   "live.header.trainingDummy.disable": "关闭打桩模式",
   "live.header.tooltip.resetEncounter": "重置战斗记录",
@@ -444,12 +444,6 @@ export const zhCNMessages = {
   "settings.live.refreshRate": "刷新频率",
   "settings.live.refreshRateDescription":
     "实时统计刷新间隔（50-2000ms）。越低越流畅，但更耗 CPU。",
-  "settings.live.trainingDummy.title": "打桩模式",
-  "settings.live.trainingDummy.defaultTarget": "默认木桩目标",
-  "settings.live.trainingDummy.defaultTargetDescription":
-    "头部打桩按钮会直接使用这里的默认目标",
-  "settings.live.trainingDummy.eliteEnemy": "精英敌方木桩",
-  "settings.live.trainingDummy.eliteGuardian": "精英守护木桩",
   "settings.network.packetCapture": "抓包",
   "settings.network.npcapMissing.prefix": "未检测到 Npcap。请从 ",
   "settings.network.npcapMissing.suffix": " 安装 Npcap 以使用该功能。",

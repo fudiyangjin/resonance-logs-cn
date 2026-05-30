@@ -13,7 +13,23 @@ pub enum TrainingDummyPhase {
     Idle,
     Armed,
     Running,
-    PendingRollover,
+    Finished,
+}
+
+/// Controls which combat deltas are allowed to accumulate into the encounter.
+///
+/// Produced by [`TrainingDummyRuntime::combat_gate`] and threaded into the AOI
+/// delta processors. `BlockAll` is what freezes the live panel on a finished
+/// training-dummy segment: no damage, heal, or fight-timer progress is recorded.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum CombatGate {
+    /// Count every target's combat (default, non-training-dummy behaviour).
+    #[default]
+    AllowAll,
+    /// Count combat only for the locked target uuid.
+    Only(i64),
+    /// Drop all combat — used to freeze a finished segment in place.
+    BlockAll,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,74 +71,80 @@ pub struct TrainingDummyMatch {
 #[derive(Debug, Clone, Default)]
 pub struct TrainingDummyRuntime {
     pub phase: TrainingDummyPhase,
-    pub selected_monster_id: Option<TrainingDummyMonsterId>,
     pub locked_target_uuid: Option<i64>,
     pub rollover_ready_at: Option<Instant>,
+    /// Set once the finished (frozen) segment has been written to history, so
+    /// any later reset path skips persisting it a second time.
+    pub segment_saved: bool,
 }
 
 impl TrainingDummyRuntime {
-    pub fn arm(&mut self, monster_id: TrainingDummyMonsterId) {
+    /// Arm the dummy: wait for the first local-player hit on any supported
+    /// monster (115/122) to lock on. No target needs to be pre-selected.
+    pub fn arm(&mut self) {
         self.phase = TrainingDummyPhase::Armed;
-        self.selected_monster_id = Some(monster_id);
         self.locked_target_uuid = None;
         self.rollover_ready_at = None;
+        self.segment_saved = false;
     }
 
     pub fn clear(&mut self) {
         *self = Self::default();
     }
 
-    pub fn has_selection(&self) -> bool {
-        self.selected_monster_id.is_some()
+    /// Whether training-dummy mode is engaged at all (armed, running, or frozen).
+    pub fn is_active(&self) -> bool {
+        self.phase != TrainingDummyPhase::Idle
     }
 
-    pub fn rearm_selected(&mut self) {
-        if let Some(monster_id) = self.selected_monster_id {
-            self.arm(monster_id);
+    /// Re-arm after a manual reset, falling back to a full clear when inactive.
+    pub fn rearm(&mut self) {
+        if self.is_active() {
+            self.arm();
         } else {
             self.clear();
         }
     }
 
-    pub fn combat_target_filter(&self) -> Option<i64> {
+    pub fn combat_gate(&self) -> CombatGate {
         match self.phase {
-            TrainingDummyPhase::Running | TrainingDummyPhase::PendingRollover => {
-                self.locked_target_uuid
-            }
-            TrainingDummyPhase::Idle | TrainingDummyPhase::Armed => None,
+            TrainingDummyPhase::Idle | TrainingDummyPhase::Armed => CombatGate::AllowAll,
+            TrainingDummyPhase::Running => self
+                .locked_target_uuid
+                .map_or(CombatGate::AllowAll, CombatGate::Only),
+            TrainingDummyPhase::Finished => CombatGate::BlockAll,
         }
     }
 
-    pub fn maybe_enter_pending_rollover(&mut self) {
+    /// Advance `Running → Finished` once the segment duration has elapsed.
+    /// Returns `true` exactly on the transition so the caller can persist and
+    /// freeze the just-finished segment.
+    pub fn maybe_finish(&mut self) -> bool {
         if self.phase != TrainingDummyPhase::Running {
-            return;
+            return false;
         }
         if self
             .rollover_ready_at
             .is_some_and(|trigger_at| Instant::now() >= trigger_at)
         {
-            self.phase = TrainingDummyPhase::PendingRollover;
+            self.phase = TrainingDummyPhase::Finished;
+            return true;
         }
+        false
     }
 
+    /// Only an `Armed` dummy auto-locks. A `Finished` (frozen) segment ignores
+    /// all attacks — the user must manually reset back to `Armed` to continue.
     pub fn should_lock_on_match(&self, matched: TrainingDummyMatch) -> bool {
-        self.phase == TrainingDummyPhase::Armed
-            && self.selected_monster_id == Some(matched.monster_id)
-            && matched.has_local_player_damage
-    }
-
-    pub fn should_rollover_on_match(&self, matched: TrainingDummyMatch) -> bool {
-        self.phase == TrainingDummyPhase::PendingRollover
-            && self.locked_target_uuid == Some(matched.target_entity_uuid)
-            && matched.has_local_player_damage
+        self.phase == TrainingDummyPhase::Armed && matched.has_local_player_damage
     }
 
     pub fn lock_target(&mut self, matched: TrainingDummyMatch) {
         let now = Instant::now();
         self.phase = TrainingDummyPhase::Running;
-        self.selected_monster_id = Some(matched.monster_id);
         self.locked_target_uuid = Some(matched.target_entity_uuid);
         self.rollover_ready_at = Some(now + TRAINING_SEGMENT_DURATION);
+        self.segment_saved = false;
     }
 }
 
