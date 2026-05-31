@@ -1,4 +1,5 @@
 import buffNameData from "$parserData/generated/BuffName.json";
+import modifierDisplayTableData from "$parserData/generated/ModifierDisplayTable.json";
 import monsterNameData from "$parserData/generated/monsternames.json";
 import {
   DEFAULT_LOCALE,
@@ -63,6 +64,16 @@ type RawMonsterNameEntry = {
   NameDesign?: string | null;
   DesignName?: string | null;
   Names?: unknown;
+};
+
+type ModifierDisplaySourceEntry = {
+  sourceId?: string;
+  sourceName?: string;
+  sourceNames?: unknown;
+};
+
+type ModifierDisplayTableData = {
+  sourcesByRuleId?: Record<string, ModifierDisplaySourceEntry>;
 };
 
 type BuffSearchTranslationEntry = {
@@ -229,6 +240,37 @@ function buildMonsterOwnerNameMap(): Map<string, MultiLangValue> {
   return ownerNamesByToken;
 }
 
+function hasLocalizedName(value: MultiLangValue | undefined): boolean {
+  return SUPPORTED_LOCALES.some((locale) => Boolean(value?.[locale]?.trim()));
+}
+
+function buildModifierDisplayBuffSourceNameMap(): Map<number, MultiLangValue> {
+  const sourceNamesByBuffId = new Map<number, MultiLangValue>();
+  const modifierDisplayTable = modifierDisplayTableData as ModifierDisplayTableData;
+
+  for (const source of Object.values(modifierDisplayTable.sourcesByRuleId ?? {})) {
+    const match = /^buff-source:(\d+)$/.exec(source.sourceId ?? "");
+    if (!match) continue;
+
+    const buffId = Number(match[1]);
+    if (!Number.isFinite(buffId)) continue;
+
+    const names = collectMultiLangRecord(source.sourceNames);
+    const sourceName = source.sourceName?.trim();
+    if (sourceName && !names[PRIMARY_FALLBACK_LOCALE]) {
+      names[PRIMARY_FALLBACK_LOCALE] = sourceName;
+    }
+
+    if (!hasLocalizedName(names)) continue;
+
+    const existing = sourceNamesByBuffId.get(buffId) ?? {};
+    addMergedMultiLangValue(existing, names);
+    sourceNamesByBuffId.set(buffId, existing);
+  }
+
+  return sourceNamesByBuffId;
+}
+
 const BUFF_SEARCH_TRANSLATIONS: Record<string, BuffSearchTranslationEntry> = {};
 
 const BUFF_GENERATED_NAMES_BY_ID = new Map<number, MultiLangValue>();
@@ -237,6 +279,27 @@ const BUFF_SEARCH_INDEX_MAP = new Map<number, string[]>();
 const BUFF_ICON_FILE_BY_BASE_ID = BUFF_ICON_FILE_BY_ID as Record<string, string>;
 const BUFF_ICON_FILE_BY_STEM = new Map<string, string>();
 const MONSTER_OWNER_NAMES_BY_TOKEN = buildMonsterOwnerNameMap();
+const MODIFIER_DISPLAY_BUFF_SOURCE_NAMES_BY_ID = buildModifierDisplayBuffSourceNameMap();
+
+const BURN_EFFECT_NAMES: MultiLangValue = {
+  en: "Burn",
+  "zh-CN": "燃烧",
+  "zh-TW": "燃燒",
+  ja: "バーニング",
+  "ko-KR": "연소",
+  fr: "Brûlure",
+  de: "Verbrennung",
+  es: "Quemadura",
+  "pt-BR": "Queimadura",
+  th: "เผาไหม้",
+  id: "Burn",
+};
+
+const BUFF_ID_NAME_FALLBACKS: Record<number, MultiLangValue> = {
+  // 2208181 is a Burn damage/buff source row. The generated parent-recount
+  // bridge can incorrectly inherit Explosion, which is a separate TWAX proc.
+  2208181: BURN_EFFECT_NAMES,
+};
 
 const DESIGN_ONLY_BUFF_NAME_FALLBACKS: Record<string, MultiLangValue> = {
   "生命屏障": {
@@ -516,6 +579,20 @@ function findDesignFallbackNames(entry: RawBuffEntry): MultiLangValue | undefine
   return undefined;
 }
 
+function findBuffIdFallbackNames(entry: RawBuffEntry): MultiLangValue | undefined {
+  return BUFF_ID_NAME_FALLBACKS[entry.Id];
+}
+
+function findModifierDisplayFallbackNames(
+  entry: RawBuffEntry,
+  names: MultiLangValue,
+): MultiLangValue | undefined {
+  if (hasLocalizedName(names)) return undefined;
+
+  const sourceNames = MODIFIER_DISPLAY_BUFF_SOURCE_NAMES_BY_ID.get(entry.Id);
+  return hasLocalizedName(sourceNames) ? sourceNames : undefined;
+}
+
 function findDesignMonsterOwnerNames(entry: RawBuffEntry): MultiLangValue | undefined {
   for (const candidate of designNameCandidates(entry)) {
     for (const token of designOwnerTokens(candidate)) {
@@ -627,6 +704,8 @@ function composeOwnerQualifiedBuffNames(
 function enrichGeneratedBuffNames(entry: RawBuffEntry, names: MultiLangValue): MultiLangValue {
   const enriched: MultiLangValue = {};
   addMergedMultiLangValue(enriched, findDesignFallbackNames(entry));
+  addMergedMultiLangValue(enriched, findBuffIdFallbackNames(entry));
+  addMergedMultiLangValue(enriched, findModifierDisplayFallbackNames(entry, names));
   addMergedMultiLangValue(enriched, names, true);
   addMergedMultiLangValue(enriched, composeOwnerQualifiedBuffNames(entry, names), true);
   return enriched;

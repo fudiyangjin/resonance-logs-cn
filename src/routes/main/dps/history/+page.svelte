@@ -489,7 +489,8 @@
 	}
 
 	async function onView(enc: EncounterSummaryDto) {
-		goto(`/main/dps/history/${enc.id}${$pageStore.url.search}`);
+		const sp = buildHistorySearchParams({ page, pageSize });
+		goto(`/main/dps/history/${enc.id}?${sp.toString()}`);
 	}
 </script>
 

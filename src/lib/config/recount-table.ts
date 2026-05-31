@@ -320,9 +320,14 @@ type RecountEntry = {
 };
 
 type DamageAttrNameEntry = string | {
+  Id?: number | string;
   Name?: string;
   Names?: LocalizedTextMap;
   DamageName?: string;
+  LinkedId?: number | string;
+  LinkedSource?: string;
+  LinkedBuffId?: number | string;
+  BuffSourceId?: number | string;
   IconPath?: string;
   IconPaths?: string[];
   LinkedBaseSkillIconPath?: string;
@@ -430,6 +435,30 @@ const buffIdToEffectSourceIds = effectSources.buffIdToEffectSourceIds ?? {};
 const damageIdToEffectSourceIds = effectSources.damageIdToEffectSourceIds ?? {};
 const recountIdToEffectSourceIds = effectSources.recountIdToEffectSourceIds ?? {};
 
+const BURN_EFFECT_NAMES: LocalizedTextMap = {
+  en: "Burn",
+  "zh-CN": "燃烧",
+  "zh-TW": "燃燒",
+  ja: "バーニング",
+  "ko-KR": "연소",
+  fr: "Brûlure",
+  de: "Verbrennung",
+  es: "Quemadura",
+  "pt-BR": "Queimadura",
+  th: "เผาไหม้",
+  id: "Burn",
+};
+
+const EFFECT_SOURCE_NAME_OVERRIDES: Record<string, LocalizedTextMap> = {
+  // 2208181 is the Burn damage/buff source. It is linked to the Inferno
+  // Explosion family icon, but should not inherit Explosion as its row name.
+  "buff-source:2208181": BURN_EFFECT_NAMES,
+};
+
+const DAMAGE_ID_NAME_OVERRIDES: Record<string, LocalizedTextMap> = {
+  "2220818103": BURN_EFFECT_NAMES,
+};
+
 const DAMAGE_TO_RECOUNT = new Map<number, { recountId: number; recountName: string }>();
 
 for (const entry of Object.values(recountTable)) {
@@ -493,6 +522,89 @@ function isDesignOnlyTextMap(values: LocalizedTextMap | undefined): boolean {
   );
 }
 
+function isGeneratedPlaceholderText(value: string | undefined): boolean {
+  return /\b(?:Unmapped|Unknown|Active)\s+(?:Buff|Skill|Source|Item|Monster|Scene)\s+\d+\b/i
+    .test(value?.trim() ?? "");
+}
+
+function resolveNameOverride(
+  values: LocalizedTextMap | undefined,
+  locale: string,
+): string | undefined {
+  if (!values) return undefined;
+  const localized = resolveLocalizedText(values, locale, values["en"] ?? values["design"] ?? "").trim();
+  return localized || undefined;
+}
+
+function resolveDamageIdNameOverride(
+  damageId: number | string,
+  locale: string,
+): string | undefined {
+  return resolveNameOverride(DAMAGE_ID_NAME_OVERRIDES[String(damageId)], locale);
+}
+
+function resolveEffectSourceName(
+  sourceId: string,
+  locale: string,
+): string | undefined {
+  const overrideName = resolveNameOverride(EFFECT_SOURCE_NAME_OVERRIDES[sourceId], locale);
+  if (overrideName) return overrideName;
+
+  const source = effectSourcesById[sourceId];
+  const englishName = source?.sourceNames?.["en"]?.trim();
+  if (!source || !englishName || isGeneratedPlaceholderText(englishName)) {
+    return undefined;
+  }
+
+  const localized = resolveLocalizedText(
+    source.sourceNames,
+    locale,
+    source.sourceName ?? englishName,
+  ).trim();
+  return localized && !isGeneratedPlaceholderText(localized) ? localized : undefined;
+}
+
+function linkedBuffSourceIds(
+  entry: DamageAttrNameEntry | undefined,
+  detail?: SkillBreakdownDetail,
+): string[] {
+  const ids = new Set<string>();
+  const addBuffId = (value: number | string | undefined) => {
+    const numberValue = Number(value);
+    if (Number.isFinite(numberValue) && numberValue > 0) {
+      ids.add(`buff-source:${numberValue}`);
+    }
+  };
+
+  if (entry && typeof entry !== "string") {
+    addBuffId(entry.BuffSourceId);
+    addBuffId(entry.LinkedBuffId);
+    if (!entry.LinkedSource || entry.LinkedSource === "BuffName") {
+      addBuffId(entry.LinkedId);
+    }
+  }
+
+  addBuffId(detail?.BuffSourceId);
+  addBuffId(detail?.LinkedBuffId);
+  if (!detail?.LinkedSource || detail.LinkedSource === "BuffName") {
+    addBuffId(detail?.LinkedId);
+  }
+
+  return [...ids];
+}
+
+function resolveLinkedBuffSourceName(
+  entry: DamageAttrNameEntry | undefined,
+  locale: string,
+  detail?: SkillBreakdownDetail,
+): string | undefined {
+  for (const sourceId of linkedBuffSourceIds(entry, detail)) {
+    const sourceName = resolveEffectSourceName(sourceId, locale);
+    if (sourceName) return sourceName;
+  }
+  return undefined;
+}
+
 function resolveLinkedBuffFamilyName(
   entry: DamageAttrNameEntry | undefined,
   locale: string,
@@ -515,12 +627,20 @@ function resolveDamageAttrName(
 ): string | undefined {
   if (typeof entry === "string") return entry;
   if (!entry) return undefined;
+  const overrideName = entry.Id !== undefined
+    ? resolveDamageIdNameOverride(entry.Id, locale)
+    : undefined;
+  if (overrideName) return overrideName;
+
   const localized = resolveLocalizedText(
     entry.Names,
     locale,
     entry.Name ?? entry.DamageName ?? "",
   ).trim();
   if (localized && !isDesignOnlyTextMap(entry.Names)) return localized;
+
+  const linkedSourceName = resolveLinkedBuffSourceName(entry, locale);
+  if (linkedSourceName) return linkedSourceName;
 
   return resolveLinkedBuffFamilyName(entry, locale)
     ?? localized
@@ -548,7 +668,17 @@ function lookupDamageAttrIconPath(damageId: number | string): string | undefined
   );
 }
 
+function lookupSameIdRecountName(damageId: number | string, locale: string): string | undefined {
+  const group = recountTable[String(damageId)];
+  if (!group || isDesignOnlyTextMap(group.Names)) return undefined;
+  const name = resolveLocalizedText(group.Names, locale, group.RecountName).trim();
+  return name || undefined;
+}
+
 export function lookupDamageIdName(damageId: number): string {
+  const overrideName = resolveDamageIdNameOverride(damageId, "en");
+  if (overrideName) return overrideName;
+
   const recount = DAMAGE_TO_RECOUNT.get(damageId);
   if (recount) return recount.recountName;
   return resolveDamageAttrName(damageAttrIdNames[String(damageId)]) ?? `Unknown (${damageId})`;
@@ -561,6 +691,9 @@ export function lookupChildDamageIdName(damageId: number): string {
 }
 
 function lookupLocalizedDamageIdName(damageId: number | string, locale: string): string {
+  const overrideName = resolveDamageIdNameOverride(damageId, locale);
+  if (overrideName) return overrideName;
+
   const damageIdNumber = Number(damageId);
   if (Number.isFinite(damageIdNumber)) {
     const recount = DAMAGE_TO_RECOUNT.get(damageIdNumber);
@@ -569,7 +702,17 @@ function lookupLocalizedDamageIdName(damageId: number | string, locale: string):
       return resolveLocalizedText(group?.Names, locale, recount.recountName);
     }
   }
-  return resolveDamageAttrName(damageAttrIdNames[String(damageId)], locale) ?? `Unknown (${damageId})`;
+
+  const damageEntry = damageAttrIdNames[String(damageId)];
+  const sameIdRecountName = lookupSameIdRecountName(damageId, locale);
+  if (
+    sameIdRecountName
+    && (!damageEntry || typeof damageEntry === "string" || isDesignOnlyTextMap(damageEntry.Names))
+  ) {
+    return sameIdRecountName;
+  }
+
+  return resolveDamageAttrName(damageEntry, locale) ?? `Unknown (${damageId})`;
 }
 
 export function lookupSkillBreakdownDetail(
@@ -669,6 +812,312 @@ function resolveOwnerQualifiedLocalizedText(
   }
 
   return `${ownerName} - ${name}`;
+}
+
+const DESIGN_MONSTER_SKILL_ACTION_MARKERS = [
+  "砸地冲击",
+  "双拳重砸",
+  "持续治疗",
+  "疯狂射击",
+  "连踩地板",
+  "电能爆散",
+  "能量粒子",
+  "威慑吼叫",
+  "瞬步刺杀",
+  "火球术",
+  "普攻",
+  "连击",
+  "爪击",
+  "挥击",
+  "挥砍",
+  "戳刺",
+  "突刺",
+  "重斩",
+  "连斩",
+  "横扫",
+  "下砸",
+  "砸地",
+  "重砸",
+  "践踏",
+  "甩尾",
+  "吐息",
+  "喷火",
+  "射击",
+  "治疗",
+  "蓄力",
+  "冲锋",
+  "拳击",
+  "连拳",
+  "轰拳",
+  "拍击",
+  "重锤",
+  "锤击",
+  "地波",
+  "风刀阵",
+  "致死",
+  "印记",
+  "红光",
+  "前砍",
+  "乱舞",
+] as const;
+
+const DESIGN_MONSTER_SKILL_EXACT_LABELS: Record<string, LocalizedTextMap> = {
+  "普攻": { en: "Basic Attack" },
+  "普攻1": { en: "Basic Attack 1" },
+  "普攻2": { en: "Basic Attack 2" },
+  "普攻01": { en: "Basic Attack 1" },
+  "普攻02": { en: "Basic Attack 2" },
+  "普攻03": { en: "Basic Attack 3" },
+  "普攻04": { en: "Basic Attack 4" },
+  "普攻四连": { en: "Four-Hit Basic Attack" },
+  "普攻三连": { en: "Triple Basic Attack" },
+  "普攻4段": { en: "Four-Hit Basic Attack" },
+  "普攻-连拳": { en: "Basic Attack - Combo Punch" },
+  "12连发": { en: "12-Round Burst" },
+  "三连击": { en: "Triple Strike" },
+  "二连击": { en: "Double Strike" },
+  "爪击三连": { en: "Triple Claw Strike" },
+  "火焰兽人爪击三连": { en: "Triple Claw Strike" },
+  "火焰兽人砸地冲击": { en: "Ground Slam Shockwave" },
+  "火焰兽人三连击（激昂）": { en: "Enraged Triple Strike" },
+  "火焰兽人践踏": { en: "Stomp" },
+  "火焰兽人吐息": { en: "Breath" },
+  "火焰兽人前跳砸地": { en: "Forward Leap Ground Slam" },
+  "机兵陷阱直线喷火": { en: "Linear Flamethrower" },
+  "机兵旋转喷火": { en: "Spinning Flamethrower" },
+  "双拳重砸（扩散）": { en: "Double-Fist Slam (Spread)" },
+  "甩尾": { en: "Tail Swipe" },
+  "大机器人-步进移动": { en: "Step Movement" },
+  "遗留自动机像-三连击": { en: "Triple Strike" },
+  "遗留自动机像-拳击": { en: "Punch" },
+  "蜘蛛普攻01": { en: "Basic Attack 1" },
+  "蜘蛛普攻02": { en: "Basic Attack 2" },
+  "小刀哥布林二连击": { en: "Double Strike" },
+  "剑盾哥布林二连击": { en: "Double Strike" },
+  "剑盾哥布林戳刺": { en: "Stab" },
+  "巫师哥布林火球术": { en: "Fireball" },
+  "巫师哥布林持续治疗-英雄本": { en: "Heal over Time - Heroic" },
+  "哥布林王三连击": { en: "Triple Strike" },
+  "巨斧哥布林重斩": { en: "Heavy Slash" },
+  "巨斧哥布林二连斩": { en: "Double Slash" },
+  "巨斧哥布林挥砍-英雄本": { en: "Slash - Heroic" },
+  "巨斧哥布林回旋斩": { en: "Spinning Slash" },
+  "巨斧哥布林横扫": { en: "Sweep" },
+  "弩箭哥布林疯狂射击": { en: "Rapid Fire" },
+  "弩箭哥布林射击": { en: "Shot" },
+  "巨龙爪击": { en: "Dragon Claw Strike" },
+  "巨龙站桩吐息": { en: "Dragon Breath" },
+  "巨口吐息": { en: "Maw Breath" },
+  "混乱吐息-左": { en: "Chaos Breath - Left" },
+  "混乱吐息-右": { en: "Chaos Breath - Right" },
+  "赤玉地狐-赤火印记": { en: "Scarlet Flame Mark" },
+  "嗜血连喰": { en: "Bloodthirsty Devour Combo" },
+  "神秘人普攻2": { en: "Basic Attack 2" },
+  "幻祸娜宝-旗枪下砸": { en: "Banner Spear Downward Slam" },
+  "翡翠角羊-冲锋": { en: "Charge" },
+  "翡翠角羊-连踩地板": { en: "Repeated Floor Stomp" },
+  "翡翠角羊-蓄力轰拳": { en: "Charged Power Punch" },
+  "虚蚀连斩": { en: "Corrosion Combo Slash" },
+  "虚蚀人类挥击": { en: "Corrupted Human Swing" },
+  "吐息": { en: "Breath" },
+  "突刺": { en: "Thrust" },
+  "咬你一口": { en: "Bite" },
+  "钢铁月环": { en: "Steel Moon Ring" },
+  "奥尔维拉太刀普攻": { en: "Odachi Basic Attack" },
+  "三连突刺": { en: "Triple Thrust" },
+  "冲锋离子刃（右手）": { en: "Charging Ion Blade (Right Hand)" },
+  "动漫岛-旋转激光": { en: "Spinning Laser" },
+  "崩坏能量": { en: "Collapse Energy" },
+  "多戈尔曼地波aoe2": { en: "Ground Wave AoE 2" },
+  "多戈尔曼旋转锤击三连": { en: "Triple Spinning Hammer Strike" },
+  "载人机兵-激昂重锤": { en: "Enraged Heavy Hammer" },
+  "Type-Ω主战机-拍击": { en: "Smack" },
+  "炎角-普攻三连": { en: "Triple Basic Attack" },
+  "棒槌哥布林（虚蚀）三连击": { en: "Triple Strike" },
+  "威慑吼叫": { en: "Intimidating Roar" },
+  "领地致死": { en: "Domain Lethal Damage" },
+};
+
+const DESIGN_MONSTER_SKILL_TOKEN_LABELS: Array<[string, string]> = [
+  ["砸地冲击", "Ground Slam Shockwave"],
+  ["双拳重砸", "Double-Fist Slam"],
+  ["持续治疗", "Heal over Time"],
+  ["疯狂射击", "Rapid Fire"],
+  ["连踩地板", "Repeated Floor Stomp"],
+  ["电能爆散", "Electric Burst"],
+  ["能量粒子", "Energy Particles"],
+  ["威慑吼叫", "Intimidating Roar"],
+  ["瞬步刺杀", "Flash-Step Assassination"],
+  ["火球术", "Fireball"],
+  ["十二连发", "12-Round Burst"],
+  ["六连砸地", "Six-Hit Ground Slam"],
+  ["四连", "Four-Hit"],
+  ["三连", "Triple"],
+  ["二连", "Double"],
+  ["连发", "Burst"],
+  ["连击", "Strike"],
+  ["连斩", "Combo Slash"],
+  ["普攻", "Basic Attack"],
+  ["爪击", "Claw Strike"],
+  ["挥击", "Swing"],
+  ["挥砍", "Slash"],
+  ["戳刺", "Stab"],
+  ["突刺", "Thrust"],
+  ["重斩", "Heavy Slash"],
+  ["回旋斩", "Spinning Slash"],
+  ["横扫", "Sweep"],
+  ["下砸", "Downward Slam"],
+  ["砸地", "Ground Slam"],
+  ["重砸", "Heavy Slam"],
+  ["践踏", "Stomp"],
+  ["甩尾", "Tail Swipe"],
+  ["吐息", "Breath"],
+  ["喷火", "Flamethrower"],
+  ["旋转", "Spinning"],
+  ["直线", "Linear"],
+  ["射击", "Shot"],
+  ["治疗", "Heal"],
+  ["英雄本", "Heroic"],
+  ["蓄力", "Charged"],
+  ["冲锋", "Charge"],
+  ["拳击", "Punch"],
+  ["连拳", "Combo Punch"],
+  ["轰拳", "Power Punch"],
+  ["拍击", "Smack"],
+  ["重锤", "Heavy Hammer"],
+  ["锤击", "Hammer Strike"],
+  ["地波", "Ground Wave"],
+  ["风刀阵", "Wind Blade Field"],
+  ["崩坏能量", "Collapse Energy"],
+  ["致死", "Lethal Damage"],
+  ["领地", "Domain"],
+  ["印记", "Mark"],
+  ["赤火", "Scarlet Flame"],
+  ["红光", "Red Light"],
+  ["平击", "Flat Strike"],
+  ["前砍", "Forward Slash"],
+  ["刺杀", "Assassination"],
+  ["乱舞", "Flurry"],
+  ["超绝大招", "Ultimate"],
+  ["完整", "Complete"],
+  ["事件用", "Event"],
+  ["旗枪", "Banner Spear"],
+  ["月环", "Moon Ring"],
+  ["离子刃", "Ion Blade"],
+  ["右手", "Right Hand"],
+  ["左", "Left"],
+  ["右", "Right"],
+];
+
+function hasCjkText(value: string): boolean {
+  return /[\u3400-\u9fff]/.test(value);
+}
+
+function normalizeDesignMonsterSkillCandidate(value: string): string {
+  return value
+    .replaceAll("（", "(")
+    .replaceAll("）", ")")
+    .replaceAll("_", "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function trimDesignMonsterOwnerPrefix(value: string): string {
+  const normalized = normalizeDesignMonsterSkillCandidate(value);
+  const parts = normalized.split("-").map((part) => part.trim()).filter(Boolean);
+  const lastPart = parts[parts.length - 1];
+  if (lastPart && DESIGN_MONSTER_SKILL_ACTION_MARKERS.some((marker) => lastPart.includes(marker))) {
+    return lastPart;
+  }
+
+  let markerIndex = -1;
+  for (const marker of DESIGN_MONSTER_SKILL_ACTION_MARKERS) {
+    const index = normalized.indexOf(marker);
+    if (index > 0 && (markerIndex < 0 || index < markerIndex)) {
+      markerIndex = index;
+    }
+  }
+
+  return markerIndex > 0 ? normalized.slice(markerIndex) : normalized;
+}
+
+function translateDesignMonsterSkillCandidate(candidate: string, locale: string): string | undefined {
+  const normalized = normalizeDesignMonsterSkillCandidate(candidate);
+  const exact = DESIGN_MONSTER_SKILL_EXACT_LABELS[normalized];
+  if (exact) return resolveLocalizedText(exact, locale, normalized);
+
+  let translated = normalized
+    .replace(/普攻0?(\d+)/g, " Basic Attack $1 ")
+    .replace(/(\d+)连发/gi, " $1-Round Burst ")
+    .replace(/(\d+)连/g, " $1-Hit ");
+
+  for (const [token, label] of DESIGN_MONSTER_SKILL_TOKEN_LABELS) {
+    translated = translated.replaceAll(token, ` ${label} `);
+  }
+
+  translated = translated
+    .replaceAll("(", " (")
+    .replaceAll(")", ") ")
+    .replace(/\s*-\s*/g, " - ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!translated || translated === normalized || hasCjkText(translated)) return undefined;
+  return translated;
+}
+
+function translateDesignMonsterSkillName(designName: string | undefined, locale: string): string | undefined {
+  const trimmed = designName?.trim();
+  if (!trimmed || locale.toLowerCase().startsWith("zh")) return undefined;
+
+  const candidates: string[] = [];
+  for (const candidate of [trimmed, trimDesignMonsterOwnerPrefix(trimmed)]) {
+    if (candidate && !candidates.includes(candidate)) candidates.push(candidate);
+  }
+
+  for (const candidate of candidates) {
+    const translated = translateDesignMonsterSkillCandidate(candidate, locale);
+    if (translated) return translated;
+  }
+
+  return undefined;
+}
+
+function extractDesignDamageName(
+  entry: DamageAttrNameEntry | undefined,
+  detail: SkillBreakdownDetail | undefined,
+): string | undefined {
+  if (entry && typeof entry !== "string") {
+    const direct = entry.Names?.["design"]?.trim()
+      || entry.Name?.trim()
+      || entry.DamageName?.trim();
+    if (direct) return direct;
+  }
+
+  return detail?.DamageNames?.["design"]?.trim()
+    || detail?.UnderlyingSkillNames?.["design"]?.trim()
+    || detail?.LinkedNames?.["design"]?.trim()
+    || detail?.DamageName?.trim()
+    || detail?.UnderlyingSkillName?.trim()
+    || detail?.LinkedName?.trim();
+}
+
+export function lookupDeathReplaySkillName(damageId: number | string, locale: string): string {
+  const detail = lookupSkillBreakdownDetail(damageId);
+  const damageEntry = damageAttrIdNames[String(damageId)];
+  const designName = extractDesignDamageName(damageEntry, detail);
+  const translatedDesignName = detail?.MonsterOwnerNames
+    ? translateDesignMonsterSkillName(designName, locale)
+    : undefined;
+  if (translatedDesignName) return translatedDesignName;
+
+  const localized = lookupLocalizedDamageIdName(damageId, locale);
+  if (localized && !localized.startsWith("Unknown")) return localized;
+
+  const damageIdNumber = Number(damageId);
+  return Number.isFinite(damageIdNumber)
+    ? lookupDamageIdName(damageIdNumber)
+    : `Unknown (${damageId})`;
 }
 
 function toFiniteNumber(value: number | string | undefined): number | null {
@@ -1534,6 +1983,9 @@ export function resolveSkillBreakdownName(
   if (row.sourceRowKind === "factor") {
     return resolveLocalizedText(row.names, locale, row.name);
   }
+  const overrideName = resolveDamageIdNameOverride(row.skillId, locale);
+  if (overrideName) return overrideName;
+
   const detail = row.details ?? lookupSkillBreakdownDetail(row.skillId);
   const damageName = lookupLocalizedDamageIdName(row.skillId, locale);
   if (
@@ -1645,7 +2097,9 @@ export function buildSkillBreakdownHoverText(
     detail.LinkedName ?? "",
   );
   const linkedName = detail.LinkedNames && isDesignOnlyTextMap(detail.LinkedNames)
-    ? resolveLinkedBuffFamilyName(damageEntry, locale) ?? rawLinkedName
+    ? resolveLinkedBuffSourceName(damageEntry, locale, detail)
+      ?? resolveLinkedBuffFamilyName(damageEntry, locale)
+      ?? rawLinkedName
     : rawLinkedName;
   const detailName = resolveLocalizedText(
     detail.DisplayDetailNames,

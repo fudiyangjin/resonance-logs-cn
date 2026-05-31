@@ -111,6 +111,7 @@
     "compare:generated:config": "node scripts/compare-generated-config.mjs",
     "scan:game:attribution": "node scripts/scan-game-file-attribution-sources.mjs",
     "scan:game:index": "node scripts/index-whole-game-files.mjs",
+    "scan:game:localization-bridges": "node scripts/scan-game-localization-bridges.mjs",
     "lab:game-schema-map": "node scripts/extract-game-schema-source-map.mjs",
     "lab:game-formula-sources": "node scripts/analyze-game-formula-sources.mjs",
     "lab:opaque-buffs": "node scripts/analyze-opaque-buff-sources.mjs",
@@ -119,6 +120,7 @@
     "preview:skill-contrib": "node scripts/preview-skill-source-rows.mjs",
     "audit:modifier:sources": "node scripts/audit-modifier-source-labels.mjs",
     "audit:generated:locales": "node scripts/audit-generated-locale-coverage.mjs",
+    "audit:runtime:localization-gaps": "node scripts/audit-runtime-localization-gaps.mjs",
     "sync:modifier:dev-generated": "node scripts/sync-modifier-dev-generated.mjs"
   },
   "license": "AGPL-3.0-only",

@@ -6,7 +6,7 @@
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import { formatClassSpecLabel } from "$lib/class-labels";
   import { getDisplayIconSpecName } from "$lib/name-display";
-  import { lookupDamageIdName } from "$lib/config/recount-table";
+  import { lookupDeathReplaySkillName } from "$lib/config/recount-table";
   import { localizeMonsterName } from "$lib/monster-mappings";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import { uiT } from "$lib/i18n";
@@ -62,7 +62,8 @@
       isLocalPlayer,
     }),
   );
-  const t = uiT("dps/history", () => SETTINGS.live.general.state.language);
+  const language = $derived(SETTINGS.live.general.state.language);
+  const t = uiT("dps/history", () => language);
 
   const rows = $derived.by<DamageSnapshot[]>(() =>
     [...record.recentDamages].slice().reverse(),
@@ -95,11 +96,11 @@
 
   function resolveSkillName(snapshot: DamageSnapshot): string {
     const skillKey = Number(snapshot.skillKey);
-    const base = lookupDamageIdName(skillKey);
+    const base = lookupDeathReplaySkillName(skillKey, language);
     if (base && !base.startsWith("Unknown")) return base;
     if (snapshot.attackerMonsterTypeId != null) {
-      return t("detail.death.monsterSkillName", "{monsterName} - #{skillId}")
-        .replace("{monsterName}", resolveAttackerName(snapshot))
+      return t("detail.death.monsterSkill", "Monster {monsterId} - #{skillId}")
+        .replace("{monsterId}", resolveAttackerName(snapshot))
         .replace("{skillId}", String(skillKey));
     }
     return base || `Unknown (${skillKey})`;
