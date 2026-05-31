@@ -45,3 +45,5 @@ src-tauri/build_errors.log
 src-tauri/npcap_sdk/
 latest.json
 doc/html_doc
+latest.en-US.json
+latest.ja-JP.json

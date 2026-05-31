@@ -1,9 +1,20 @@
 <script lang="ts">
-  import { t } from "$lib/i18n/index.svelte";
-  import changelogRaw from "../../../CHANGELOG.md?raw";
+  import { getLocale, t, type AppLocale } from "$lib/i18n/index.svelte";
+  import enUSChangelog from "$lib/changelog/en-US.md?raw";
+  import jaJPChangelog from "$lib/changelog/ja-JP.md?raw";
+  import zhCNChangelog from "$lib/changelog/zh-CN.md?raw";
   import MarkdownContent from "./MarkdownContent.svelte";
 
   let { onclose }: { onclose?: () => void } = $props();
+
+  const changelogByLocale = {
+    "zh-CN": zhCNChangelog,
+    "en-US": enUSChangelog,
+    "ja-JP": jaJPChangelog,
+  } satisfies Record<AppLocale, string>;
+  const changelogRaw = $derived(
+    changelogByLocale[getLocale()] ?? zhCNChangelog,
+  );
 
   function close() {
     onclose?.();

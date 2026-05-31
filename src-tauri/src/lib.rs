@@ -301,13 +301,66 @@ mod debug_commands {
 // Updater helper: checks for updates and emits an event for frontend reminder.
 // This runs only on Windows builds (guarded where it is invoked).
 #[cfg(windows)]
+use crate::live::bootstrap_snapshot::{AppLocale, load_monitor_runtime_snapshot};
+#[cfg(windows)]
 use tauri_plugin_updater::UpdaterExt;
 
 #[cfg(windows)]
+const UPDATE_ENDPOINTS_ZH_CN: &[&str] = &[
+    "https://bptimer.cn/resonance-logs/latest.json",
+    "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json",
+];
+
+#[cfg(windows)]
+const UPDATE_ENDPOINTS_EN_US: &[&str] = &[
+    "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.en-US.json",
+    "https://bptimer.cn/resonance-logs/latest.en-US.json",
+    "https://bptimer.cn/resonance-logs/latest.json",
+    "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json",
+];
+
+#[cfg(windows)]
+const UPDATE_ENDPOINTS_JA_JP: &[&str] = &[
+    "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.ja-JP.json",
+    "https://bptimer.cn/resonance-logs/latest.ja-JP.json",
+    "https://bptimer.cn/resonance-logs/latest.json",
+    "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json",
+];
+
+#[cfg(windows)]
+fn update_endpoint_candidates(locale: AppLocale) -> &'static [&'static str] {
+    match locale {
+        AppLocale::ZhCn => UPDATE_ENDPOINTS_ZH_CN,
+        AppLocale::EnUs => UPDATE_ENDPOINTS_EN_US,
+        AppLocale::JaJp => UPDATE_ENDPOINTS_JA_JP,
+    }
+}
+
+#[cfg(windows)]
 async fn check_for_updates(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
+    let locale = load_monitor_runtime_snapshot(&app)
+        .map(|snapshot| snapshot.i18n.locale)
+        .unwrap_or_default();
+    let endpoint_candidates = update_endpoint_candidates(locale);
+    info!(
+        target: "app::startup",
+        "checking update manifests locale={} endpoints={}",
+        locale.as_str(),
+        endpoint_candidates.join(",")
+    );
+    let endpoints = endpoint_candidates
+        .iter()
+        .map(|endpoint| endpoint.parse())
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    let updater = app.updater_builder().endpoints(endpoints)?.build()?;
+
     // Check only: frontend is responsible for reminding users to download manually.
-    if let Some(update) = app.updater()?.check().await? {
-        info!("Update available: {}", update.version);
+    if let Some(update) = updater.check().await? {
+        info!(
+            "Update available: {} (locale={})",
+            update.version,
+            locale.as_str()
+        );
         let payload = json!({
             "version": update.version.to_string(),
             "body": update.body.unwrap_or_default(),

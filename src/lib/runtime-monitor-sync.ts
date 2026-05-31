@@ -231,6 +231,9 @@ function buildTeammateRuntimeSnapshot(): MonitorRuntimeSnapshot["teammate"] {
 
 export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
   return {
+    i18n: {
+      locale: SETTINGS.i18n.state.locale,
+    },
     live: {
       eventUpdateRateMs: SETTINGS.live.general.state.eventUpdateRateMs,
     },

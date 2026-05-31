@@ -451,6 +451,7 @@ export const zhCNMessages = {
   "settings.network.device": "网络设备",
   "settings.network.deviceDescription": "选择用于捕获流量的网卡。",
   "settings.network.deviceLoading": "正在加载设备...",
+  "settings.network.devicePlaceholder": "选择设备",
   "settings.network.restartHint":
     "更换网卡后需完全退出并重新启动应用，新设置才会生效。",
   "settings.shortcuts.clearHint": "右键可清除快捷键",

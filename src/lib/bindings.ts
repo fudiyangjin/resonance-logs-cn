@@ -378,6 +378,7 @@ async optimizeLatestModules(targetAttributes: number[], excludeAttributes: numbe
 /** user-defined types **/
 
 export type AltFreezeConfig = { conditionBuffId: number; freezeDurationMs: number }
+export type AppLocale = "zh-CN" | "en-US" | "ja-JP"
 export type AttrModifier = { attrId: number; basisPointsPerUnit?: number; maxReductionBasisPoints: number }
 /**
  * The result of a query for boss monster template IDs.
@@ -535,11 +536,12 @@ isFavorite: boolean }
 export type FactorCounterTemplate = { itemIds?: number[]; sources?: CounterSource[]; effectSlots?: EffectSlotConfig[] }
 export type GpuSupport = { cuda_available: boolean; opencl_available: boolean }
 export type HistoryEntityData = { entityUuid: string; displayUid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; seasonStrength: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }>; takenPerSource: PerSourceStats[]; dmgPerTarget: PerTargetStats[]; healPerTarget: PerTargetStats[]; deaths: DeathRecord[] }
+export type I18nRuntimeSnapshot = { locale: AppLocale }
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number }
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
-export type MonitorRuntimeSnapshot = { live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot }
+export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot }
 export type MonsterRuntimeSnapshot = { enabled: boolean; globalIds: number[]; selfAppliedIds: number[]; monitorAllSelfApplied: boolean }
 /**
  * Damage taken by a defender, aggregated by the attacking monster's template.

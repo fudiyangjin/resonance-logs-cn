@@ -1,16 +1,67 @@
 use crate::live::counter_tracker::CounterRule;
 use crate::live::season_cultivate::{FactorCounterTemplate, normalize_factor_templates};
 use log::{info, warn};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::path::PathBuf;
 use tauri::AppHandle;
 use tauri::Manager;
 
 const SNAPSHOT_FILE_NAME: &str = "monitorRuntime.json";
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, specta::Type)]
+pub enum AppLocale {
+    #[serde(rename = "zh-CN")]
+    ZhCn,
+    #[serde(rename = "en-US")]
+    EnUs,
+    #[serde(rename = "ja-JP")]
+    JaJp,
+}
+
+impl AppLocale {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::ZhCn => "zh-CN",
+            Self::EnUs => "en-US",
+            Self::JaJp => "ja-JP",
+        }
+    }
+
+    fn from_str(value: &str) -> Self {
+        match value {
+            "en-US" => Self::EnUs,
+            "ja-JP" => Self::JaJp,
+            "zh-CN" => Self::ZhCn,
+            _ => Self::default(),
+        }
+    }
+}
+
+impl Default for AppLocale {
+    fn default() -> Self {
+        Self::ZhCn
+    }
+}
+
+impl<'de> Deserialize<'de> for AppLocale {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = serde_json::Value::deserialize(deserializer)?;
+        Ok(value
+            .as_str()
+            .map(Self::from_str)
+            .unwrap_or_else(Self::default))
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MonitorRuntimeSnapshot {
+    #[serde(rename = "i18n")]
+    #[specta(rename = "i18n")]
+    pub i18n: I18nRuntimeSnapshot,
     pub live: LiveRuntimeSnapshot,
     pub skill: SkillRuntimeSnapshot,
     pub monster: MonsterRuntimeSnapshot,
@@ -20,6 +71,7 @@ pub struct MonitorRuntimeSnapshot {
 impl Default for MonitorRuntimeSnapshot {
     fn default() -> Self {
         Self {
+            i18n: I18nRuntimeSnapshot::default(),
             live: LiveRuntimeSnapshot::default(),
             skill: SkillRuntimeSnapshot::default(),
             monster: MonsterRuntimeSnapshot::default(),
@@ -99,6 +151,20 @@ impl MonitorRuntimeSnapshot {
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase", default)]
+pub struct I18nRuntimeSnapshot {
+    pub locale: AppLocale,
+}
+
+impl Default for I18nRuntimeSnapshot {
+    fn default() -> Self {
+        Self {
+            locale: AppLocale::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase", default)]
 pub struct LiveRuntimeSnapshot {
     pub event_update_rate_ms: u64,
 }
@@ -171,8 +237,9 @@ pub(crate) fn save_monitor_runtime_snapshot(
             Ok(_) => {
                 info!(
                     target: "app::startup",
-                    "saved monitor runtime snapshot to {} (event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={})",
+                    "saved monitor runtime snapshot to {} (locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={})",
                     path.display(),
+                    snapshot.i18n.locale.as_str(),
                     snapshot.live.event_update_rate_ms,
                     snapshot.skill.enabled,
                     snapshot.skill.monitored_skill_ids.len(),
@@ -236,8 +303,9 @@ pub(crate) fn load_monitor_runtime_snapshot(
             Ok(snapshot) => {
                 info!(
                     target: "app::startup",
-                    "loaded monitor runtime snapshot from {} (event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={})",
+                    "loaded monitor runtime snapshot from {} (locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={})",
                     path.display(),
+                    snapshot.i18n.locale.as_str(),
                     snapshot.live.event_update_rate_ms,
                     snapshot.skill.enabled,
                     snapshot.skill.monitored_skill_ids.len(),

@@ -989,6 +989,7 @@ impl AppStateManager {
         snapshot: MonitorRuntimeSnapshot,
     ) {
         let MonitorRuntimeSnapshot {
+            i18n: _,
             live,
             skill,
             monster,
