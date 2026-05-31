@@ -420,6 +420,14 @@ fn is_known_monster_entity(state: &AppState, entity_uuid: i64) -> bool {
         .is_some_and(|entity| entity.entity_type == EEntityType::EntMonster)
 }
 
+fn is_known_character_entity(state: &AppState, entity_uuid: i64) -> bool {
+    state
+        .encounter
+        .entity_uuid_to_entity
+        .get(&entity_uuid)
+        .is_some_and(|entity| entity.entity_type == EEntityType::EntChar)
+}
+
 fn current_attack_target_uuid(state: &AppState) -> Option<i64> {
     let local_player_uuid = state.encounter.local_player_uuid;
     if local_player_uuid == 0 {
@@ -452,7 +460,7 @@ fn classify_buff_effect_target(state: &AppState, target_uuid: i64) -> Option<Buf
     if is_known_monster_entity(state, target_uuid) {
         return Some(BuffTargetKind::Monster);
     }
-    if state.team.members.contains(&target_uuid) {
+    if is_known_character_entity(state, target_uuid) {
         return Some(BuffTargetKind::Teammate);
     }
     None

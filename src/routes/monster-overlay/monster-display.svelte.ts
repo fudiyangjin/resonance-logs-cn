@@ -188,6 +188,41 @@ function buildTeammateColumnDefinitions(
   return columns;
 }
 
+function toTeammateDisplayColumns(
+  columns: TeammateColumnDefinition[],
+): MonsterTeammateBuffColumn[] {
+  return columns.map((column) => ({
+    key: column.key,
+    buffIds: column.kind === "buff" ? [column.buffId] : [...column.buffIds],
+    label: column.label,
+    categoryKey: column.kind === "category" ? column.categoryKey : undefined,
+  }));
+}
+
+function filterInactiveTeammateColumns(
+  columns: MonsterTeammateBuffColumn[],
+  rows: MonsterTeammateBuffRow[],
+): {
+  columns: MonsterTeammateBuffColumn[];
+  rows: MonsterTeammateBuffRow[];
+} {
+  const activeColumnIndexes = columns
+    .map((_, index) => index)
+    .filter((index) => rows.some((row) => row.cells[index]?.hasBuff === true));
+
+  return {
+    columns: activeColumnIndexes.map((index) => columns[index]!),
+    rows: rows
+      .map((row) => {
+        const cells = activeColumnIndexes
+          .map((index) => row.cells[index])
+          .filter((cell) => cell !== undefined);
+        return { ...row, cells };
+      })
+      .filter((row) => row.cells.some((cell) => cell.hasBuff)),
+  };
+}
+
 function pickLatestBuff(
   buffMap: Map<number, BuffUpdateState>,
   buffIds: number[],
@@ -294,6 +329,7 @@ export function updateMonsterDisplay() {
   ) => resolveAlertState(alertMap[String(baseId)], remainingMs, durationMs);
   const selectedIds = selectedMonsterBuffIds();
   const teammateColumns = buildTeammateColumnDefinitions(aliases);
+  const fullTeammateDisplayColumns = toTeammateDisplayColumns(teammateColumns);
 
   const priorityIds = SETTINGS.monsterMonitor.state.buffPriorityIds ?? [];
   const priorityIndex = new Map<number, number>();
@@ -501,18 +537,19 @@ export function updateMonsterDisplay() {
   }
 
   monsterRuntime.bossSections = nextSections;
-  monsterRuntime.teammateColumns = teammateColumns.map((column) => ({
-    key: column.key,
-    buffIds: column.kind === "buff" ? [column.buffId] : [...column.buffIds],
-    label: column.label,
-    categoryKey: column.kind === "category" ? column.categoryKey : undefined,
-  }));
-  monsterRuntime.teammateRows =
-    nextTeammateRows.length > 0
-      ? nextTeammateRows
-      : monsterRuntime.isEditing
-        ? buildTeammatePlaceholderRows(monsterRuntime.teammateColumns)
-        : [];
+  if (nextTeammateRows.length > 0) {
+    const filteredTeammates = filterInactiveTeammateColumns(
+      fullTeammateDisplayColumns,
+      nextTeammateRows,
+    );
+    monsterRuntime.teammateColumns = filteredTeammates.columns;
+    monsterRuntime.teammateRows = filteredTeammates.rows;
+  } else {
+    monsterRuntime.teammateColumns = fullTeammateDisplayColumns;
+    monsterRuntime.teammateRows = monsterRuntime.isEditing
+      ? buildTeammatePlaceholderRows(fullTeammateDisplayColumns)
+      : [];
+  }
   monsterRuntime.hateSections = nextHateSections;
   monsterRuntime.rafId = requestAnimationFrame(updateMonsterDisplay);
 }
