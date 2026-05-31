@@ -901,10 +901,10 @@ pub mod class {
 
     pub fn get_class_spec_from_skill_id(skill_id: i32) -> ClassSpec {
         match skill_id {
-            1714 => ClassSpec::Iaido,
-            1737 => ClassSpec::Moonstrike,
+            1714 | 1728 | 1734 => ClassSpec::Iaido,
+            1715 | 1737 | 1738 => ClassSpec::Moonstrike,
 
-            120902 => ClassSpec::Icicle,
+            1242 | 120902 => ClassSpec::Icicle,
             1241 => ClassSpec::Frostbeam,
 
             1605 => ClassSpec::Voidflame,
@@ -914,7 +914,7 @@ pub mod class {
             1419 => ClassSpec::Skyward,
 
             1518 | 1541 | 21402 => ClassSpec::Smite,
-            20301 => ClassSpec::Lifebind,
+            1507 | 20301 => ClassSpec::Lifebind,
 
             1922 => ClassSpec::Earthfort,
             1930 => ClassSpec::Block,
@@ -922,13 +922,14 @@ pub mod class {
             220112 | 2203622 | 2233 | 2234 | 223300..=223399 | 223400..=223499 => {
                 ClassSpec::Falconry
             }
-            2292 | 1700820 | 1700825 | 1700827 => ClassSpec::Wildpack,
+            2222 => ClassSpec::Falconry,
+            2220 | 2292 | 1700820 | 1700825 | 1700827 => ClassSpec::Wildpack,
 
             2406 => ClassSpec::Shield,
             2405 => ClassSpec::Recovery,
 
-            2306 => ClassSpec::Dissonance,
-            2307 | 2361 | 55302 => ClassSpec::Concerto,
+            2306 | 2321 => ClassSpec::Dissonance,
+            2301 | 2307 | 2361 | 55302 => ClassSpec::Concerto,
             _ => ClassSpec::Unknown,
         }
     }
@@ -979,6 +980,78 @@ pub mod class {
             2_207_180 => ClassSpec::Concerto,
             _ => ClassSpec::Unknown,
         }
+    }
+
+    pub fn get_class_spec_from_passive_buff_id(passive_buff_id: i32) -> ClassSpec {
+        match passive_buff_id {
+            // Generated from TalentSpecOwnership.json high-confidence sourceBuffIds.
+            2_200_070 | 2_200_100 | 2_200_120 | 2_200_140 | 2_200_150 | 2_200_170 | 2_200_310
+            | 2_200_340 | 2_200_350 | 2_200_380 | 2_200_410 | 2_200_420 | 2_200_450 | 2_200_480
+            | 2_200_520 | 2_200_530 | 2_200_550 | 2_200_690 | 2_200_740 => ClassSpec::Iaido,
+            2_200_020 | 2_200_090 | 2_200_230 | 2_200_470 | 2_200_580 | 2_200_620 | 2_200_640
+            | 2_200_680 | 2_200_700 => ClassSpec::Moonstrike,
+
+            2_204_150 | 2_204_160 | 2_204_200 | 2_204_420 | 2_204_440 | 2_204_460 => {
+                ClassSpec::Icicle
+            }
+            2_204_050 | 2_204_060 | 2_204_070 | 2_204_110 | 2_204_230 | 2_204_290 | 2_204_320
+            | 2_204_370 | 2_204_450 | 2_204_470 | 2_204_500 | 2_204_530 | 2_204_540 | 2_204_580
+            | 2_204_590 | 2_204_600 | 2_204_610 | 2_204_640 | 2_204_660 => ClassSpec::Frostbeam,
+
+            2_208_040 | 2_208_140 | 2_208_160 | 2_208_200 | 2_208_230 | 2_208_240 | 2_208_250
+            | 2_208_280 => ClassSpec::Voidflame,
+            2_208_460 | 2_208_550 | 2_208_560 | 2_208_620 | 2_208_630 | 2_208_640 | 2_208_650
+            | 2_208_660 => ClassSpec::Blazecrimson,
+
+            2_205_070 | 2_205_080 | 2_205_100 | 2_205_380 | 2_205_400 | 2_205_420 | 2_205_470 => {
+                ClassSpec::Vanguard
+            }
+            2_205_150 | 2_205_180 | 2_205_210 | 2_205_360 | 2_205_390 | 2_205_580 | 2_205_600
+            | 2_205_620 | 2_205_640 | 2_205_670 | 2_205_680 => ClassSpec::Skyward,
+
+            2_202_080 | 2_202_100 | 2_202_120 | 2_202_140 | 2_202_320 | 2_202_440 | 2_202_450
+            | 2_202_470 | 2_202_500 | 2_202_510 | 2_202_520 | 2_202_560 | 2_202_580 => {
+                ClassSpec::Smite
+            }
+            2_202_050 | 2_202_060 | 2_202_180 | 2_202_200 | 2_202_210 | 2_202_230 | 2_202_300
+            | 2_202_420 | 2_202_530 | 2_202_620 | 2_202_630 | 2_202_640 | 2_202_650 | 2_202_710 => {
+                ClassSpec::Lifebind
+            }
+
+            2_201_160 | 2_201_180 | 2_201_240 | 2_201_540 => ClassSpec::Earthfort,
+            2_201_080 | 2_201_090 | 2_201_360 | 2_201_580 | 2_201_590 | 2_201_600 | 2_201_650
+            | 2_201_700 | 2_201_710 => ClassSpec::Block,
+
+            2_203_040 | 2_203_110 | 2_203_120 | 2_203_140 | 2_203_360 | 2_203_400 | 2_203_440
+            | 2_203_470 | 2_203_590 | 2_203_640 => ClassSpec::Wildpack,
+            2_203_200 | 2_203_220 | 2_203_560 => ClassSpec::Falconry,
+
+            2_206_120 | 2_206_370 | 2_206_420 | 2_206_460 | 2_206_490 => ClassSpec::Recovery,
+            2_206_240 | 2_206_540 | 2_206_560 => ClassSpec::Shield,
+
+            2_207_110 | 2_207_160 | 2_207_170 | 2_207_380 | 2_207_430 | 2_207_440 | 2_207_450 => {
+                ClassSpec::Dissonance
+            }
+            2_207_190 | 2_207_200 | 2_207_220 | 2_207_240 | 2_207_250 | 2_207_260 | 2_207_530
+            | 2_207_550 | 2_207_560 | 2_207_570 | 2_207_590 | 2_207_610 | 2_207_620 | 2_207_650 => {
+                ClassSpec::Concerto
+            }
+            _ => ClassSpec::Unknown,
+        }
+    }
+
+    pub fn get_class_spec_from_runtime_id(runtime_id: i32) -> ClassSpec {
+        for spec in [
+            get_class_spec_from_skill_id(runtime_id),
+            get_class_spec_from_selector_buff_id(runtime_id),
+            get_class_spec_from_passive_buff_id(runtime_id),
+        ] {
+            if spec != ClassSpec::Unknown {
+                return spec;
+            }
+        }
+
+        ClassSpec::Unknown
     }
 
     pub fn get_class_id_from_spec(class_spec: ClassSpec) -> i32 {
@@ -1117,6 +1190,102 @@ mod tests {
         );
         assert_eq!(
             class::get_class_spec_from_selector_buff_id(999_999),
+            class::ClassSpec::Unknown
+        );
+    }
+
+    #[test]
+    fn class_spec_from_skill_id_maps_cross_class_spec_pairs() {
+        assert_eq!(
+            class::get_class_spec_from_skill_id(1714),
+            class::ClassSpec::Iaido
+        );
+        assert_eq!(
+            class::get_class_spec_from_skill_id(1728),
+            class::ClassSpec::Iaido
+        );
+        assert_eq!(
+            class::get_class_spec_from_skill_id(1734),
+            class::ClassSpec::Iaido
+        );
+        assert_eq!(
+            class::get_class_spec_from_skill_id(1715),
+            class::ClassSpec::Moonstrike
+        );
+        assert_eq!(
+            class::get_class_spec_from_skill_id(1738),
+            class::ClassSpec::Moonstrike
+        );
+        assert_eq!(
+            class::get_class_spec_from_skill_id(1242),
+            class::ClassSpec::Icicle
+        );
+        assert_eq!(
+            class::get_class_spec_from_skill_id(1507),
+            class::ClassSpec::Lifebind
+        );
+        assert_eq!(
+            class::get_class_spec_from_skill_id(2220),
+            class::ClassSpec::Wildpack
+        );
+        assert_eq!(
+            class::get_class_spec_from_skill_id(2222),
+            class::ClassSpec::Falconry
+        );
+        assert_eq!(
+            class::get_class_spec_from_skill_id(2321),
+            class::ClassSpec::Dissonance
+        );
+        assert_eq!(
+            class::get_class_spec_from_skill_id(2301),
+            class::ClassSpec::Concerto
+        );
+    }
+
+    #[test]
+    fn class_spec_from_passive_buff_id_maps_high_confidence_ownership() {
+        assert_eq!(
+            class::get_class_spec_from_passive_buff_id(2_200_070),
+            class::ClassSpec::Iaido
+        );
+        assert_eq!(
+            class::get_class_spec_from_passive_buff_id(2_204_150),
+            class::ClassSpec::Icicle
+        );
+        assert_eq!(
+            class::get_class_spec_from_passive_buff_id(2_208_460),
+            class::ClassSpec::Blazecrimson
+        );
+        assert_eq!(
+            class::get_class_spec_from_passive_buff_id(2_203_200),
+            class::ClassSpec::Falconry
+        );
+        assert_eq!(
+            class::get_class_spec_from_passive_buff_id(2_207_190),
+            class::ClassSpec::Concerto
+        );
+        assert_eq!(
+            class::get_class_spec_from_passive_buff_id(999_999),
+            class::ClassSpec::Unknown
+        );
+    }
+
+    #[test]
+    fn class_spec_from_runtime_id_checks_skills_selectors_and_passives() {
+        assert_eq!(
+            class::get_class_spec_from_runtime_id(2220),
+            class::ClassSpec::Wildpack
+        );
+        assert_eq!(
+            class::get_class_spec_from_runtime_id(2_203_290),
+            class::ClassSpec::Falconry
+        );
+        assert_eq!(
+            class::get_class_spec_from_runtime_id(2_203_200),
+            class::ClassSpec::Falconry
+        );
+        assert_eq!(
+            class::get_class_spec_from_runtime_id(999_999),
             class::ClassSpec::Unknown
         );
     }

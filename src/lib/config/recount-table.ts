@@ -22,6 +22,9 @@ const ICON_OVERRIDES_BY_DAMAGE_ID: Record<string, string> = {
   "23510703": "ui/atlas/talent_passive_3/shuangfu362",
   "23510803": "ui/atlas/talent_passive_3/shuangfu362",
   "23510903": "ui/atlas/talent_passive_3/shuangfu362",
+  // Phantom Falcon AoE is linked through a design-only buff row, so use the
+  // talent icon that owns the proc.
+  "2220353101": "ui/atlas/talent_passive_11/gongjian1153",
 };
 
 export type RawSkillStatsLike = {
@@ -449,14 +452,77 @@ const BURN_EFFECT_NAMES: LocalizedTextMap = {
   id: "Burn",
 };
 
+const S2_SET_4B_SHIELD_NAMES: LocalizedTextMap = {
+  en: "S2 Set 4B Shield",
+  "zh-CN": "S2套装4B护盾",
+  "zh-TW": "S2套裝4B護盾",
+  ja: "S2セット4Bシールド",
+  "ko-KR": "S2 세트 4B 보호막",
+  fr: "Bouclier S2 Set 4B",
+  de: "S2-Set-4B-Schild",
+  es: "Escudo S2 Set 4B",
+  "pt-BR": "Escudo S2 Set 4B",
+  th: "โล่ S2 Set 4B",
+  id: "Perisai S2 Set 4B",
+};
+
+const MOONLIGHT_SOLACE_SHIELD_NAMES: LocalizedTextMap = {
+  en: "Moonlight Solace Shield",
+  "zh-CN": "苍月慰藉护盾",
+  "zh-TW": "蒼月慰藉護盾",
+  ja: "蒼月の慰めバリア",
+  "ko-KR": "창월의 위로 보호막",
+  fr: "Bouclier Réconfort du clair de Lune",
+  de: "Mondschein-Trost-Schild",
+  es: "Escudo Solaz Claroluna",
+  "pt-BR": "Escudo Consolo Lunar",
+  th: "โล่ Moonlight Solace",
+  id: "Shield Moonlight Solace",
+};
+
+const DRAGON_SCORCHING_GROUND_NAMES: LocalizedTextMap = {
+  en: "Dragon's Scorching Ground",
+  "zh-CN": "巨龙地板烫脚",
+  "zh-TW": "巨龍地板燙腳",
+  ja: "ドラゴンの灼熱地面",
+  "ko-KR": "용의 불타는 지면",
+  fr: "Sol brûlant du dragon",
+  de: "Drachen-Glutboden",
+  es: "Suelo abrasador del dragón",
+  "pt-BR": "Chão abrasador do dragão",
+  th: "พื้นแผดเผาของมังกร",
+  id: "Lantai Membara Naga",
+};
+
+const PHANTOM_FALCON_AOE_NAMES: LocalizedTextMap = {
+  en: "Phantom Falcon AoE",
+  "zh-CN": "幻影雄鹰AOE",
+  "zh-TW": "幻影雄鷹AOE",
+  ja: "Phantom Falcon AoE",
+  "ko-KR": "Phantom Falcon AoE",
+  fr: "Phantom Falcon AoE",
+  de: "Phantom Falcon AoE",
+  es: "Phantom Falcon AoE",
+  "pt-BR": "Phantom Falcon AoE",
+  th: "Phantom Falcon AoE",
+  id: "Phantom Falcon AoE",
+};
+
 const EFFECT_SOURCE_NAME_OVERRIDES: Record<string, LocalizedTextMap> = {
   // 2208181 is the Burn damage/buff source. It is linked to the Inferno
   // Explosion family icon, but should not inherit Explosion as its row name.
   "buff-source:2208181": BURN_EFFECT_NAMES,
+  "buff-source:2203531": PHANTOM_FALCON_AOE_NAMES,
+  "buff-source:2202705": MOONLIGHT_SOLACE_SHIELD_NAMES,
+  "buff-source:2404271": S2_SET_4B_SHIELD_NAMES,
 };
 
 const DAMAGE_ID_NAME_OVERRIDES: Record<string, LocalizedTextMap> = {
+  "11013510101": DRAGON_SCORCHING_GROUND_NAMES,
+  "2220353101": PHANTOM_FALCON_AOE_NAMES,
   "2220818103": BURN_EFFECT_NAMES,
+  "2220270501": MOONLIGHT_SOLACE_SHIELD_NAMES,
+  "2240427101": S2_SET_4B_SHIELD_NAMES,
 };
 
 const DAMAGE_TO_RECOUNT = new Map<number, { recountId: number; recountName: string }>();
@@ -854,6 +920,19 @@ const DESIGN_MONSTER_SKILL_ACTION_MARKERS = [
   "锤击",
   "地波",
   "风刀阵",
+  "连续下砸",
+  "蓄力重击",
+  "横冲直撞",
+  "跳跃重砸",
+  "集束弹",
+  "连斩虚拟体",
+  "电磁脉冲",
+  "强化脉冲",
+  "充能连击",
+  "坠击",
+  "跃击",
+  "挥拳",
+  "顺劈",
   "致死",
   "印记",
   "红光",
@@ -888,8 +967,21 @@ const DESIGN_MONSTER_SKILL_EXACT_LABELS: Record<string, LocalizedTextMap> = {
   "双拳重砸（扩散）": { en: "Double-Fist Slam (Spread)" },
   "甩尾": { en: "Tail Swipe" },
   "大机器人-步进移动": { en: "Step Movement" },
+  "遗留自动机像-蓄力重击": { en: "Charged Heavy Strike" },
   "遗留自动机像-三连击": { en: "Triple Strike" },
   "遗留自动机像-拳击": { en: "Punch" },
+  "遗留自动机像-挥拳": { en: "Punch" },
+  "遗留自动机像-过载": { en: "Overload" },
+  "遗留自动机像-跃击": { en: "Leaping Strike" },
+  "遗留自动机像-跳跃重砸": { en: "Leaping Heavy Slam" },
+  "遗留自动机像-溅射激光": { en: "Splash Laser" },
+  "遗留自动机像-电磁脉冲": { en: "Electromagnetic Pulse" },
+  "遗留自动机像-强化脉冲": { en: "Empowered Pulse" },
+  "遗留自动机像-能量倾泻": { en: "Energy Discharge" },
+  "遗留自动机像-能量轰击": { en: "Energy Bombardment" },
+  "遗留自动机像-能量轰击爆炸": { en: "Energy Bombardment Explosion" },
+  "遗留自动机像-引力砸击": { en: "Gravity Slam" },
+  "遗留自动机像-充能连击": { en: "Charged Combo" },
   "蜘蛛普攻01": { en: "Basic Attack 1" },
   "蜘蛛普攻02": { en: "Basic Attack 2" },
   "小刀哥布林二连击": { en: "Double Strike" },
@@ -906,6 +998,7 @@ const DESIGN_MONSTER_SKILL_EXACT_LABELS: Record<string, LocalizedTextMap> = {
   "弩箭哥布林疯狂射击": { en: "Rapid Fire" },
   "弩箭哥布林射击": { en: "Shot" },
   "巨龙爪击": { en: "Dragon Claw Strike" },
+  "巨龙地板烫脚": DRAGON_SCORCHING_GROUND_NAMES,
   "巨龙站桩吐息": { en: "Dragon Breath" },
   "巨口吐息": { en: "Maw Breath" },
   "混乱吐息-左": { en: "Chaos Breath - Left" },
@@ -914,6 +1007,7 @@ const DESIGN_MONSTER_SKILL_EXACT_LABELS: Record<string, LocalizedTextMap> = {
   "嗜血连喰": { en: "Bloodthirsty Devour Combo" },
   "神秘人普攻2": { en: "Basic Attack 2" },
   "幻祸娜宝-旗枪下砸": { en: "Banner Spear Downward Slam" },
+  "幻祸娜宝-弓箭爆裂": { en: "Plague Nappo - Arrow Burst" },
   "翡翠角羊-冲锋": { en: "Charge" },
   "翡翠角羊-连踩地板": { en: "Repeated Floor Stomp" },
   "翡翠角羊-蓄力轰拳": { en: "Charged Power Punch" },
@@ -931,18 +1025,145 @@ const DESIGN_MONSTER_SKILL_EXACT_LABELS: Record<string, LocalizedTextMap> = {
   "多戈尔曼地波aoe2": { en: "Ground Wave AoE 2" },
   "多戈尔曼旋转锤击三连": { en: "Triple Spinning Hammer Strike" },
   "载人机兵-激昂重锤": { en: "Enraged Heavy Hammer" },
+  "机甲A变身大招-蓄力重击": { en: "Mecha A Transform Ultimate - Charged Heavy Strike" },
+  "机甲B变身-连续下砸": { en: "Mecha B Transform - Repeated Downward Slam" },
+  "浮游炮激光跟踪（诅咒煌墓）": { en: "Floating Cannon Laser Tracking (Cursed Radiant Tomb)" },
+  "能量柱dummy": { en: "Energy Pillar" },
+  "Type-Ω主战机-拳击": { en: "Punch" },
+  "Type-Ω主战机-挥拳": { en: "Punch" },
+  "Type-Ω主战机-超载": { en: "Overload" },
+  "Type-Ω主战机-下砸": { en: "Downward Slam" },
+  "Type-Ω主战机-连续下砸": { en: "Repeated Downward Slam" },
+  "Type-Ω主战机-冲锋": { en: "Charge" },
+  "Type-Ω主战机-横冲直撞": { en: "Wild Charge" },
+  "Type-Ω主战机-坠击": { en: "Plunging Strike" },
+  "Type-Ω主战机-顺劈": { en: "Cleave" },
+  "Type-Ω主战机-跳跃重砸": { en: "Leaping Heavy Slam" },
   "Type-Ω主战机-拍击": { en: "Smack" },
+  "冲锋离子刃（左手）": { en: "Charging Ion Blade (Left Hand)" },
+  "集束弹": { en: "Cluster Shot" },
+  "集束弹（普攻）": { en: "Cluster Shot (Basic Attack)" },
+  "集束弹（离子刃）": { en: "Cluster Shot (Ion Blade)" },
+  "集束弹（顺劈）": { en: "Cluster Shot (Cleave)" },
+  "追击集束弹": { en: "Follow-up Cluster Shot" },
+  "连斩虚拟体-最小范围": { en: "Combo Slash Avatar - Minimum Range" },
+  "连斩虚拟体-中等范围": { en: "Combo Slash Avatar - Medium Range" },
+  "连斩虚拟体-最大范围": { en: "Combo Slash Avatar - Maximum Range" },
   "炎角-普攻三连": { en: "Triple Basic Attack" },
+  "监视者打击（玩家）": { en: "Watcher Strike (Player)" },
+  "野猪王踩地板": { en: "Floor Stomp" },
+  "野猪王-踩地板": { en: "Floor Stomp" },
+  "远程AOE地面伤害": { en: "Ranged Ground AoE" },
+  "野猪王-压团血": { en: "Raidwide Damage" },
+  "野猪王-雷球通电": { en: "Lightning Orb Charge" },
+  "野猪王-蓄力普攻3连": { en: "Charged Triple Basic Attack" },
+  "野猪王散落子弹": { en: "Scattered Bullets" },
+  "野猪王-普攻2右侧攻击": { en: "Basic Attack 2 - Right Side" },
+  "野猪王-普攻3左侧攻击": { en: "Basic Attack 3 - Left Side" },
+  "野猪吼叫": { en: "Boar Roar" },
+  "雷光野猪-普攻虚拟体": { en: "Blazing Boar - Basic Attack Avatar" },
+  "炎光全场aoe": { en: "Sunfire Arena AoE" },
+  "幻华全场aoe": { en: "Moonstrike Arena AoE" },
+  "召唤隐形npc技能": { en: "Summon Invisible NPC Skill" },
+  "领地共鸣伤害": { en: "Domain Resonance Damage" },
+  "陨石雨": { en: "Meteor Shower" },
+  "落雷虚拟体": { en: "Lightning Strike Avatar" },
+  "普通黑色肉山左勾拳": { en: "Left Hook" },
+  "普通棕色肉山右勾拳": { en: "Right Hook" },
+  "宠物-地狐咬": { en: "Fox Pet Bite" },
+  "检测炸团aoe": { en: "Explosion Check AoE" },
+  "虚蚀蒂娜_虚蚀重击": { en: "Corroded Tina - Heavy Strike" },
+  "殷红断狱-绯狱千斩点名": { en: "Scarlet Prison - Crimson Thousand Slashes Target" },
+  "巨龙分摊": { en: "Dragon Shared Damage" },
+  "神罚内上外下": { en: "Divine Punishment - Inner Up, Outer Down" },
+  "神罚内下外上": { en: "Divine Punishment - Inner Down, Outer Up" },
+  "肉鸽大秘境角羊平A": { en: "Caprahorn Basic Attack" },
+  "睡眠叠盾炸人": { en: "Sleep Shield Stack Explosion" },
+  "火焰兽人激昂": { en: "Enraged Flame Orc" },
+  "幻影湮灭虚拟体": { en: "Phantom Annihilation Avatar" },
+  "殷红断狱-顺劈": { en: "Scarlet Prison - Cleave" },
+  "绯红剑影惩罚爆炸P1": { en: "Crimson Sword Shadow Punishment Explosion P1" },
+  "机制-梦魇缠绕爆炸伤害": { en: "Mechanic - Nightmare Bind Explosion Damage" },
+  "跳圈烟圈": { en: "Jump Circle Smoke Ring" },
+  "光浪": { en: "Light Wave" },
+  "致死虚拟体": { en: "Lethal Damage Avatar" },
+  "机制-梦魇缠绕连线": { en: "Mechanic - Nightmare Bind Tether" },
+  "蜥蜴-披甲": { en: "Lizard - Armored" },
+  "幻祸娜宝-踩踏AOE": { en: "Plague Nappo - Stomp AoE" },
+  "领地分摊": { en: "Domain Shared Damage" },
+  "赤玉地狐-点名爆炸虚拟体": { en: "Scarlet Foxen - Targeted Explosion Avatar" },
+  "迷失地板（45扇形单片）": { en: "Lost Floor (45-Degree Fan Segment)" },
+  "全场aoe": { en: "Arena-Wide AoE" },
+  "幻祸娜宝-娜宝炸弹": { en: "Plague Nappo - Nappo Bomb" },
+  "娜宝飞扑": { en: "Nappo Pounce" },
+  "牛羊犯病": { en: "Caprahorn Frenzy" },
+  "光灵虚拟体": { en: "Light Spirit Avatar" },
+  "闪电打击-虚拟体": { en: "Lightning Strike Avatar" },
+  "愤怒践踏虚拟体": { en: "Angry Stomp Avatar" },
+  "炎光誓死守护-攻": { en: "Sunfire Deathsworn Guard - Attack" },
+  "死刑爆炸虚拟体": { en: "Execution Explosion Avatar" },
+  "奥义！引力奇点": { en: "Ultimate! Gravitational Singularity" },
+  "爬塔事件-自爆倒计时": { en: "Tower Event - Self-Destruct Countdown" },
+  "石头人-追逐战阶段叠层计数": { en: "Golem - Chase Phase Stack Count" },
+  "卷心菜特技-内外圈雷电": { en: "Cabbage Special - Inner/Outer Lightning" },
+  "紫电爆炸aoe": { en: "Violet Lightning Explosion AoE" },
+  "环形电弧": { en: "Ring Arc" },
+  "践踏踩空后全场冲击波": { en: "Arena Shockwave After Missed Stomp" },
+  "赤玉地狐-扫尾": { en: "Scarlet Foxen - Tail Sweep" },
+  "幻祸娜宝-跳跃AOE": { en: "Plague Nappo - Jump AoE" },
+  "太刀裂痕虚拟体": { en: "Katana Rift Avatar" },
+  "迷途分散圈": { en: "Lost Spread Circle" },
+  "迷途分摊圈": { en: "Lost Shared-Damage Circle" },
+  "召唤心魔": { en: "Summon Inner Demon" },
+  "召唤心魔E1": { en: "Summon Inner Demon E1" },
   "棒槌哥布林（虚蚀）三连击": { en: "Triple Strike" },
+  "生存小招-生命护盾": { en: "Survival Skill - Life Shield" },
+  "破": { en: "Break" },
+  "蓄气": { en: "Charge Up" },
+  "石头人直线地幔-延迟出": { en: "Golem Linear Mantle - Delayed" },
+  "地板延迟打击点蟹蛛毒球-以自己为中心的随机圆形范围": {
+    en: "Delayed Floor Strike - Spider Poison Orb Random Circle Around Self",
+  },
+  "污染区域": { en: "Contaminated Zone" },
+  "绯红剑影普通爆炸P1": { en: "Crimson Sword Shadow Normal Explosion P1" },
+  "肉山-幻蚀领域": { en: "Flesh Mound - Corrosion Field" },
+  "小刀哥布林二连击（火）": { en: "Knife Goblin Double Strike (Fire)" },
+  "砸死你": { en: "Crush You" },
+  "石头人落石": { en: "Golem Falling Rocks" },
+  "石头人落石-延迟出": { en: "Golem Falling Rocks - Delayed" },
+  "迷失地板（90扇形整）": { en: "Lost Floor (Full 90-Degree Fan)" },
+  "迷失地板（半场刀）": { en: "Lost Floor (Half-Arena Blade)" },
+  "幻象施法（有特效）": { en: "Illusion Cast (With Effect)" },
+  "迷失地板（矩形）": { en: "Lost Floor (Rectangle)" },
+  "填充攻击-双手斩": { en: "Filler Attack - Two-Handed Slash" },
+  "核心技能-缚魂之链-虚拟体": { en: "Core Skill - Soul Binding Chain Avatar" },
+  "鬼人化关闭标记buff": { en: "Demon Form End Marker Buff" },
+  "亡灵还魂-BOSS-结算全体伤害": { en: "Undead Revival - Boss - Final Raidwide Damage" },
+  "点名分摊-分雷劫": { en: "Targeted Share - Split Thunder Calamity" },
+  "对T致死-破影一击": { en: "Tank Lethal - Shadowbreak Strike" },
+  "核心技能-斩杀之匕-匕首虚拟体": { en: "Core Skill - Execution Dagger Avatar" },
   "威慑吼叫": { en: "Intimidating Roar" },
   "领地致死": { en: "Domain Lethal Damage" },
 };
 
 const DESIGN_MONSTER_SKILL_TOKEN_LABELS: Array<[string, string]> = [
+  ["连斩虚拟体", "Combo Slash Avatar"],
+  ["连续下砸", "Repeated Downward Slam"],
+  ["蓄力重击", "Charged Heavy Strike"],
   ["砸地冲击", "Ground Slam Shockwave"],
   ["双拳重砸", "Double-Fist Slam"],
   ["持续治疗", "Heal over Time"],
   ["疯狂射击", "Rapid Fire"],
+  ["电磁脉冲", "Electromagnetic Pulse"],
+  ["强化脉冲", "Empowered Pulse"],
+  ["充能连击", "Charged Combo"],
+  ["横冲直撞", "Wild Charge"],
+  ["跳跃重砸", "Leaping Heavy Slam"],
+  ["集束弹", "Cluster Shot"],
+  ["追击", "Follow-up"],
+  ["最小范围", "Minimum Range"],
+  ["中等范围", "Medium Range"],
+  ["最大范围", "Maximum Range"],
   ["连踩地板", "Repeated Floor Stomp"],
   ["电能爆散", "Electric Burst"],
   ["能量粒子", "Energy Particles"],
@@ -967,6 +1188,8 @@ const DESIGN_MONSTER_SKILL_TOKEN_LABELS: Array<[string, string]> = [
   ["回旋斩", "Spinning Slash"],
   ["横扫", "Sweep"],
   ["下砸", "Downward Slam"],
+  ["坠击", "Plunging Strike"],
+  ["跃击", "Leaping Strike"],
   ["砸地", "Ground Slam"],
   ["重砸", "Heavy Slam"],
   ["践踏", "Stomp"],
@@ -981,6 +1204,8 @@ const DESIGN_MONSTER_SKILL_TOKEN_LABELS: Array<[string, string]> = [
   ["蓄力", "Charged"],
   ["冲锋", "Charge"],
   ["拳击", "Punch"],
+  ["挥拳", "Punch"],
+  ["顺劈", "Cleave"],
   ["连拳", "Combo Punch"],
   ["轰拳", "Power Punch"],
   ["拍击", "Smack"],
@@ -1042,8 +1267,10 @@ function trimDesignMonsterOwnerPrefix(value: string): string {
 }
 
 function translateDesignMonsterSkillCandidate(candidate: string, locale: string): string | undefined {
+  const raw = candidate.trim();
   const normalized = normalizeDesignMonsterSkillCandidate(candidate);
-  const exact = DESIGN_MONSTER_SKILL_EXACT_LABELS[normalized];
+  const exact = DESIGN_MONSTER_SKILL_EXACT_LABELS[normalized]
+    ?? DESIGN_MONSTER_SKILL_EXACT_LABELS[raw];
   if (exact) return resolveLocalizedText(exact, locale, normalized);
 
   let translated = normalized
@@ -1102,17 +1329,30 @@ function extractDesignDamageName(
     || detail?.LinkedName?.trim();
 }
 
-export function lookupDeathReplaySkillName(damageId: number | string, locale: string): string {
+export function lookupDeathReplaySkillName(
+  damageId: number | string,
+  locale: string,
+  options: { isMonsterDamage?: boolean } = {},
+): string {
   const detail = lookupSkillBreakdownDetail(damageId);
   const damageEntry = damageAttrIdNames[String(damageId)];
   const designName = extractDesignDamageName(damageEntry, detail);
-  const translatedDesignName = detail?.MonsterOwnerNames
+  const shouldTryMonsterFallback = options.isMonsterDamage || detail?.MonsterOwnerNames;
+  const translatedDesignName = shouldTryMonsterFallback
     ? translateDesignMonsterSkillName(designName, locale)
     : undefined;
   if (translatedDesignName) return translatedDesignName;
 
   const localized = lookupLocalizedDamageIdName(damageId, locale);
-  if (localized && !localized.startsWith("Unknown")) return localized;
+  const localeAllowsCjk = locale.toLowerCase().startsWith("zh");
+  if (localized && !localized.startsWith("Unknown") && (localeAllowsCjk || !hasCjkText(localized))) {
+    return localized;
+  }
+
+  if (!shouldTryMonsterFallback) {
+    const fallbackDesignName = translateDesignMonsterSkillName(designName, locale);
+    if (fallbackDesignName) return fallbackDesignName;
+  }
 
   const damageIdNumber = Number(damageId);
   return Number.isFinite(damageIdNumber)

@@ -1034,7 +1034,10 @@ async fn check_for_updates(app: tauri::AppHandle) -> tauri_plugin_updater::Resul
         info!("Update available: {}", update.version);
         let download_url = update.download_url.to_string();
         if !is_global_update_download_url(&download_url) {
-            warn!("Ignoring update from unexpected release feed: {}", download_url);
+            warn!(
+                "Ignoring update from unexpected release feed: {}",
+                download_url
+            );
             return Ok(());
         }
         let payload = json!({

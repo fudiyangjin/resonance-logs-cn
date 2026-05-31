@@ -96,7 +96,9 @@
 
   function resolveSkillName(snapshot: DamageSnapshot): string {
     const skillKey = Number(snapshot.skillKey);
-    const base = lookupDeathReplaySkillName(skillKey, language);
+    const base = lookupDeathReplaySkillName(skillKey, language, {
+      isMonsterDamage: snapshot.attackerMonsterTypeId != null,
+    });
     if (base && !base.startsWith("Unknown")) return base;
     if (snapshot.attackerMonsterTypeId != null) {
       return t("detail.death.monsterSkill", "Monster {monsterId} - #{skillId}")

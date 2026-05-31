@@ -295,13 +295,67 @@ const BURN_EFFECT_NAMES: MultiLangValue = {
   id: "Burn",
 };
 
+const S2_SET_4B_DESIGN_NAME = "\u3010S2\u5957\u88c54B\u3011";
+const S2_SET_4B_SUB_BUFF_DESIGN_NAME = `${S2_SET_4B_DESIGN_NAME}-\u5b50BUFF`;
+
+const S2_SET_4B_NAMES: MultiLangValue = {
+  en: "S2 Set 4B",
+  "zh-CN": "S2套装4B",
+  "zh-TW": "S2套裝4B",
+  ja: "S2セット4B",
+  "ko-KR": "S2 세트 4B",
+  fr: "S2 Set 4B",
+  de: "S2-Set 4B",
+  es: "S2 Set 4B",
+  "pt-BR": "S2 Set 4B",
+  th: "S2 Set 4B",
+  id: "S2 Set 4B",
+  design: S2_SET_4B_DESIGN_NAME,
+};
+
+const S2_SET_4B_SHIELD_NAMES: MultiLangValue = {
+  en: "S2 Set 4B Shield",
+  "zh-CN": "S2套装4B护盾",
+  "zh-TW": "S2套裝4B護盾",
+  ja: "S2セット4Bシールド",
+  "ko-KR": "S2 세트 4B 보호막",
+  fr: "Bouclier S2 Set 4B",
+  de: "S2-Set-4B-Schild",
+  es: "Escudo S2 Set 4B",
+  "pt-BR": "Escudo S2 Set 4B",
+  th: "โล่ S2 Set 4B",
+  id: "Perisai S2 Set 4B",
+  design: S2_SET_4B_SUB_BUFF_DESIGN_NAME,
+};
+
+const MOONLIGHT_SOLACE_SHIELD_DESIGN_NAME = "蓝花花护盾";
+const MOONLIGHT_SOLACE_SHIELD_NAMES: MultiLangValue = {
+  en: "Moonlight Solace Shield",
+  "zh-CN": "苍月慰藉护盾",
+  "zh-TW": "蒼月慰藉護盾",
+  ja: "蒼月の慰めバリア",
+  "ko-KR": "창월의 위로 보호막",
+  fr: "Bouclier Réconfort du clair de Lune",
+  de: "Mondschein-Trost-Schild",
+  es: "Escudo Solaz Claroluna",
+  "pt-BR": "Escudo Consolo Lunar",
+  th: "โล่ Moonlight Solace",
+  id: "Shield Moonlight Solace",
+  design: MOONLIGHT_SOLACE_SHIELD_DESIGN_NAME,
+};
+
 const BUFF_ID_NAME_FALLBACKS: Record<number, MultiLangValue> = {
   // 2208181 is a Burn damage/buff source row. The generated parent-recount
   // bridge can incorrectly inherit Explosion, which is a separate TWAX proc.
   2208181: BURN_EFFECT_NAMES,
+  2202705: MOONLIGHT_SOLACE_SHIELD_NAMES,
+  2404271: S2_SET_4B_SHIELD_NAMES,
 };
 
 const DESIGN_ONLY_BUFF_NAME_FALLBACKS: Record<string, MultiLangValue> = {
+  [S2_SET_4B_DESIGN_NAME]: S2_SET_4B_NAMES,
+  [S2_SET_4B_SUB_BUFF_DESIGN_NAME]: S2_SET_4B_SHIELD_NAMES,
+  [MOONLIGHT_SOLACE_SHIELD_DESIGN_NAME]: MOONLIGHT_SOLACE_SHIELD_NAMES,
   "生命屏障": {
     en: "Life Barrier",
     "zh-CN": "生命屏障",

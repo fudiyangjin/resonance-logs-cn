@@ -121,6 +121,7 @@
     "audit:modifier:sources": "node scripts/audit-modifier-source-labels.mjs",
     "audit:generated:locales": "node scripts/audit-generated-locale-coverage.mjs",
     "audit:runtime:localization-gaps": "node scripts/audit-runtime-localization-gaps.mjs",
+    "audit:visible:localization": "node scripts/audit-visible-localization-surfaces.mjs",
     "sync:modifier:dev-generated": "node scripts/sync-modifier-dev-generated.mjs"
   },
   "license": "AGPL-3.0-only",

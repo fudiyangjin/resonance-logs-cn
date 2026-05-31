@@ -137,14 +137,32 @@
     return Math.max(0, Math.min(60, seconds)) * 1000;
   }
 
+  function configuredClickthroughEnabled(): boolean {
+    return SETTINGS.accessibility.state.clickthrough === true;
+  }
+
+  async function restoreLiveWindowCursorMode(
+    liveWindow = getCurrentWindow(),
+  ): Promise<void> {
+    try {
+      await liveWindow.setIgnoreCursorEvents(configuredClickthroughEnabled());
+    } catch (error) {
+      console.warn("Failed to restore live window clickthrough state:", error);
+    }
+  }
+
   async function hideLiveWindowForAutoHide(): Promise<void> {
     if (isDestroyed || autoHideHiddenByFeature) return;
 
+    const liveWindow = getCurrentWindow();
+
     try {
-      await getCurrentWindow().hide();
+      await liveWindow.setIgnoreCursorEvents(true);
+      await liveWindow.hide();
       autoHideHiddenByFeature = true;
     } catch (error) {
       console.warn("Failed to hide live window after auto-hide delay:", error);
+      await restoreLiveWindowCursorMode(liveWindow);
     }
   }
 
@@ -191,6 +209,7 @@
           await liveWindow.show();
           await liveWindow.unminimize();
         }
+        await restoreLiveWindowCursorMode(liveWindow);
         return;
       }
 
@@ -201,6 +220,7 @@
           await liveWindow.show();
           await liveWindow.unminimize();
         }
+        await restoreLiveWindowCursorMode(liveWindow);
         return;
       }
 
@@ -572,6 +592,19 @@ t("live.resumeToast", "战斗已继续"),
     SETTINGS.live.general.state.autoHideLiveWindow;
     SETTINGS.live.general.state.autoHideLiveWindowDelaySeconds;
     void syncAutoHideLiveWindow(autoHideRecentlyDamaged, true);
+  });
+
+  $effect(() => {
+    SETTINGS.accessibility.state.clickthrough;
+    if (autoHideHiddenByFeature) {
+      void getCurrentWindow()
+        .setIgnoreCursorEvents(true)
+        .catch((error) => {
+          console.warn("Failed to keep hidden live window clickthrough:", error);
+        });
+    } else {
+      void restoreLiveWindowCursorMode();
+    }
   });
 
   $effect(() => {

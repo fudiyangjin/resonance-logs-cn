@@ -6,8 +6,8 @@ use crate::live::damage_id;
 use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::opcodes_models::class::{
-    ClassSpec, get_class_id_from_spec, get_class_spec_from_selector_buff_id,
-    get_class_spec_from_skill_id, get_class_spec_from_talent_node_id,
+    ClassSpec, get_class_id_from_spec, get_class_spec_from_runtime_id,
+    get_class_spec_from_talent_node_id,
 };
 use crate::live::opcodes_models::{
     AttrType, AttrValue, Encounter, Entity, ObservedDamageHit, ObservedEffectSource,
@@ -643,7 +643,7 @@ fn push_profession_skill_spec(specs: &mut Vec<ClassSpec>, class_id: i32, skill_i
         return;
     }
 
-    let spec = get_class_spec_from_skill_id(skill_id);
+    let spec = get_class_spec_from_runtime_id(skill_id);
     if spec == ClassSpec::Unknown || get_class_id_from_spec(spec) != class_id {
         return;
     }
@@ -669,13 +669,9 @@ fn push_passive_skill_spec(specs: &mut Vec<ClassSpec>, skill_id: i32) {
         return;
     }
 
-    for spec in [
-        get_class_spec_from_skill_id(skill_id),
-        get_class_spec_from_selector_buff_id(skill_id),
-    ] {
-        if spec != ClassSpec::Unknown && !specs.contains(&spec) {
-            specs.push(spec);
-        }
+    let spec = get_class_spec_from_runtime_id(skill_id);
+    if spec != ClassSpec::Unknown && !specs.contains(&spec) {
+        specs.push(spec);
     }
 }
 
@@ -1699,7 +1695,7 @@ pub fn process_aoi_sync_delta(
                     ..Default::default()
                 });
 
-            let determined_spec = get_class_spec_from_skill_id(owner_id);
+            let determined_spec = get_class_spec_from_runtime_id(owner_id);
             if determined_spec != ClassSpec::Unknown {
                 attacker_entity.class_id = get_class_id_from_spec(determined_spec);
                 attacker_entity.class_spec = determined_spec;
