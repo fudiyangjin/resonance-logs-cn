@@ -1,0 +1,22 @@
+# Changelog Archive
+
+Archived release notes by version.
+
+| Version | Document |
+| ------ | ------------------------ |
+| v0.1.5 | [v0.1.5.md](./v0.1.5.md) |
+| v0.1.4 | [v0.1.4.md](./v0.1.4.md) |
+| v0.1.3 | [v0.1.3.md](./v0.1.3.md) |
+| v0.1.2 | [v0.1.2.md](./v0.1.2.md) |
+| v0.1.1 | [v0.1.1.md](./v0.1.1.md) |
+| v0.1.0 | [v0.1.0.md](./v0.1.0.md) |
+| v0.0.9 | [v0.0.9.md](./v0.0.9.md) |
+| v0.0.8 | [v0.0.8.md](./v0.0.8.md) |
+| v0.0.7 | [v0.0.7.md](./v0.0.7.md) |
+| v0.0.6 | [v0.0.6.md](./v0.0.6.md) |
+| v0.0.5 | [v0.0.5.md](./v0.0.5.md) |
+| v0.0.4 | [v0.0.4.md](./v0.0.4.md) |
+| v0.0.3 | [v0.0.3.md](./v0.0.3.md) |
+| v0.0.2 | [v0.0.2.md](./v0.0.2.md) |
+
+> Latest release notes: [CHANGELOG.md](../../CHANGELOG.md) at the project root.

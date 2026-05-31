@@ -1,47 +1,29 @@
-# Resonance Logs CN 文档
+# Resonance Logs 文档
 
-功能说明与常见问题索引。
+文档已按语言拆分，请在以下目录中选择：
 
-## 功能文档
+| 语言 | 源码目录 | 说明 |
+|------|----------|------|
+| 简体中文 | [zh-CN/](./zh-CN/README.md) | 默认文档 |
+| English | [en-US/](./en-US/README.md) | English documentation |
+| 日本語 | [ja-JP/](./ja-JP/README.md) | 日本語ドキュメント |
 
-### Buff 监控（实时监控）
+## 构建 HTML
 
-| 文档 | 说明 |
-|------|------|
-| [总览](./features/monitor/README.md) | 概述、方案、最佳实践、切图说明 |
-| [技能 CD](./features/monitor/skill-cd.md) | 职业技能勾选、技能变换 |
-| [Buff 监控](./features/monitor/buff.md) | 独立/分组、别名、快捷监听 |
-| [角色面板](./features/monitor/panel-attr.md) | 属性勾选、颜色、行顺序 |
-| [自定义监控](./features/monitor/custom-panel.md) | 普通区、因子区、计数器、进阶示例 |
-| [启用窗口](./features/monitor/overlay.md) | 浮窗模块、布局与显示格式 |
+```bash
+npm run doc:html
+```
 
-### DPS 检测
+该命令会将 `{{ui:key}}` 展开为应用内对应语言的菜单文案，并生成 HTML。
+输出目录：`doc/html_doc/`。请在浏览器中打开 `doc/html_doc/index.html` 查看完整文档。
 
-| 文档 | 说明 |
-|------|------|
-| [总览](./features/dps/README.md) | 概述、打桩模式、数据指标、重置逻辑 |
-| [主题](./features/dps/themes.md) | 颜色、紧凑模式、标题栏、活跃战斗时间 |
-| [历史记录](./features/dps/history.md) | 复盘、目标拆分、自动清理 |
-| [设置](./features/dps/settings.md) | 列显示、刷新频率、网络、快捷键 |
+### 维护说明
 
-### 怪物监控
+- **图片**：唯一源文件存放在 [shared/img/](./shared/img/)，不要在各语言目录下复制图片。`faq/*.md` 使用 `../../shared/img/...`，`features/*/*.md` 使用 `../../../shared/img/...`。
+- **菜单路径**：撰写时可写 `{{ui:routes.tools.dps}}` 等占位符，运行 `npm run doc:html` 时会替换为应用 i18n 文案。
 
-| 文档 | 说明 |
-|------|------|
-| [总览](./features/monster/README.md) | 概述、与实时监控区别、启用与遮罩操作 |
-| [Buff 监控](./features/monster/buff.md) | 全局 / 仅自身、优先级、告警、样式 |
-| [队友 Buff](./features/monster/teammate.md) | 队友 Buff、分类快捷、矩阵样式 |
-| [仇恨列表](./features/monster/hate.md) | 仇恨开关、人数上限、样式 |
-| [启用窗口](./features/monster/overlay.md) | 怪物遮罩三区显示开关 |
+单语言调试：
 
-## 版本更新
-
-| 文档 | 说明 |
-|------|------|
-| [版本归档](./changelog/) | 各版本更新说明存档 |
-
-## 其他
-
-| 文档 | 说明 |
-|------|------|
-| [常见问题 (FAQ)](./faq.md) | 分册索引：应用运行、DPS 与布局、实时监控等 |
+```bash
+node scripts/build-doc-html.cjs --locale=en-US
+```

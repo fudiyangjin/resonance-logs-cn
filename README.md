@@ -65,7 +65,11 @@ npm run tauri build
 
 ## 文档
 
-- [doc/](./doc/) - 功能说明与 [FAQ](./doc/faq.md)
+文档支持 **简体中文**、**English**、**日本語** 三种语言：
+
+- 源码：[doc/zh-CN/](./doc/zh-CN/README.md) · [doc/en-US/](./doc/en-US/README.md) · [doc/ja-JP/](./doc/ja-JP/README.md)
+- 首次使用请先阅读各语言的 [快速入门 / Getting Started / はじめに](./doc/zh-CN/getting-started.md)（Npcap 安装、网卡选择、**重启应用**）
+- 构建 HTML：`npm run doc:html` → 输出 [doc/html_doc/](./doc/html_doc/index.html)（含语言切换页）
 
 ## 下载
 
@@ -86,5 +90,6 @@ npm run tauri build
 ## 致谢
 
 - [resonance-logs](https://github.com/resonance-logs/resonance-logs) - 原始项目
+- [BPSR-ZDPS](https://github.com/Blue-Protocol-Source/BPSR-ZDPS) - ZDPS 项目（DPS 统计与相关功能参考）
 - [StarResonanceDamageCounter](https://github.com/dmlgzs/StarResonanceDamageCounter) - 伤害统计参考实现
 - [StarResonanceAutoMod](https://github.com/fudiyangjin/StarResonanceAutoMod) - 模组优化算法与构建参考

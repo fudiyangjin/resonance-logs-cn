@@ -93,6 +93,9 @@
             ? t("settings.network.deviceLoading")
             : t("settings.network.devicePlaceholder")}
         />
+        <p class="mt-3 text-xs text-muted-foreground leading-relaxed">
+          {t("settings.network.restartHint")}
+        </p>
       {/if}
     </div>
   </div>

@@ -511,6 +511,8 @@ export const jaJPMessages = {
     "トラフィックキャプチャに使用するネットワークアダプターを選択します。",
   "settings.network.deviceLoading": "デバイスを読み込み中...",
   "settings.network.devicePlaceholder": "デバイスを選択",
+  "settings.network.restartHint":
+    "ネットワークアダプタを変更した後は、アプリを完全に終了して再起動しないと新しい設定は反映されません。",
   "settings.shortcuts.clearHint": "右クリックでショートカットをクリア",
   "settings.shortcuts.pressKey": "キーを押してください",
   "settings.shortcuts.unbound": "未割り当て",

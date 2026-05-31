@@ -513,6 +513,8 @@ export const enUSMessages = {
     "Choose the network adapter used to capture traffic.",
   "settings.network.deviceLoading": "Loading devices...",
   "settings.network.devicePlaceholder": "Select device",
+  "settings.network.restartHint":
+    "Fully quit and restart the app after changing the network adapter for the new setting to take effect.",
   "settings.shortcuts.clearHint": "Right-click to clear a shortcut",
   "settings.shortcuts.pressKey": "Press a key",
   "settings.shortcuts.unbound": "Unbound",

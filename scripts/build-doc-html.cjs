@@ -1,20 +1,80 @@
 /**
- * 将 doc 目录下的 Markdown 文档转换为 HTML，输出到 doc/html_doc/
- * 用于打包给不熟悉 .md 的用户直接浏览器查看
+ * Build localized HTML docs from doc/{locale}/ Markdown sources.
  */
 const fs = require('fs');
 const path = require('path');
 const { marked } = require('marked');
 
+const LOCALES = ['zh-CN', 'en-US', 'ja-JP'];
 const DOC_DIR = path.join(__dirname, '..', 'doc');
 const OUT_DIR = path.join(DOC_DIR, 'html_doc');
+const SHARED_IMG = path.join(DOC_DIR, 'shared', 'img');
 
-/** @type {Record<string, { hubHref: string; hubLabel: string }>} */
-const FEATURE_HUBS = {
-  monitor: { hubHref: 'README.html', hubLabel: 'Buff 监控' },
-  dps: { hubHref: 'README.html', hubLabel: 'DPS 检测' },
-  monster: { hubHref: 'README.html', hubLabel: '怪物监控' },
+const localeArg = process.argv.find((a) => a.startsWith('--locale='));
+const ONLY_LOCALE = localeArg ? localeArg.split('=')[1] : null;
+const BUILD_LOCALES = ONLY_LOCALE ? [ONLY_LOCALE] : LOCALES;
+
+const MESSAGE_FILE_BY_LOCALE = {
+  'zh-CN': 'zh-CN.ts',
+  'en-US': 'en-US.ts',
+  'ja-JP': 'ja-JP.ts',
 };
+
+const FEATURE_HUBS = {
+  'zh-CN': {
+    monitor: { hubHref: 'README.html', hubLabel: 'Buff 监控' },
+    dps: { hubHref: 'README.html', hubLabel: 'DPS 检测' },
+    monster: { hubHref: 'README.html', hubLabel: '怪物监控' },
+  },
+  'en-US': {
+    monitor: { hubHref: 'README.html', hubLabel: 'Buff Monitor' },
+    dps: { hubHref: 'README.html', hubLabel: 'DPS Meter' },
+    monster: { hubHref: 'README.html', hubLabel: 'Monster Monitor' },
+  },
+  'ja-JP': {
+    monitor: { hubHref: 'README.html', hubLabel: 'Buff モニター' },
+    dps: { hubHref: 'README.html', hubLabel: 'DPS メーター' },
+    monster: { hubHref: 'README.html', hubLabel: 'モンスターモニター' },
+  },
+};
+
+const NAV_LABELS = {
+  'zh-CN': {
+    home: '文档首页',
+    siteTitle: 'Resonance Logs CN',
+    langSwitch: '语言',
+    localeNames: { 'zh-CN': '简体中文', 'en-US': 'English', 'ja-JP': '日本語' },
+  },
+  'en-US': {
+    home: 'Documentation Home',
+    siteTitle: 'Resonance Logs CN',
+    langSwitch: 'Language',
+    localeNames: { 'zh-CN': '简体中文', 'en-US': 'English', 'ja-JP': '日本語' },
+  },
+  'ja-JP': {
+    home: 'ドキュメントホーム',
+    siteTitle: 'Resonance Logs CN',
+    langSwitch: '言語',
+    localeNames: { 'zh-CN': '简体中文', 'en-US': 'English', 'ja-JP': '日本語' },
+  },
+};
+
+const LANDING = {
+  'zh-CN': {
+    title: 'Resonance Logs 文档',
+    intro: '请选择文档语言。首次使用建议从“快速入门”开始。',
+  },
+  'en-US': {
+    title: 'Resonance Logs Documentation',
+    intro: 'Choose a documentation language. Start with Getting Started if this is your first time.',
+  },
+  'ja-JP': {
+    title: 'Resonance Logs ドキュメント',
+    intro: 'ドキュメント言語を選択してください。初めての方は「はじめに」から始めてください。',
+  },
+};
+
+const messageCache = {};
 
 function escapeHtml(s) {
   return String(s)
@@ -26,81 +86,97 @@ function escapeHtml(s) {
 
 function extractTitle(md) {
   const m = md.match(/^#\s+(.+)$/m);
-  return m ? m[1].trim() : '文档';
+  return m ? m[1].trim() : 'Document';
 }
 
-/**
- * @param {string} outPath absolute path under OUT_DIR
- * @returns {string} relative href prefix to html_doc/index.html
- */
-function baseHrefToIndex(outPath) {
-  const rel = path.relative(OUT_DIR, path.dirname(outPath));
-  if (!rel || rel === '.') return '';
-  const depth = rel.split(path.sep).filter(Boolean).length;
-  return '../'.repeat(depth);
+function ensureDir(dir) {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
-/**
- * @param {string} mdPath
- * @param {string} outPath
- */
-function hubNavForFile(mdPath, outPath) {
-  const rel = path.relative(path.join(DOC_DIR, 'features'), mdPath).replace(/\\/g, '/');
+function copyDir(src, dest) {
+  if (!fs.existsSync(src)) return;
+  ensureDir(dest);
+  for (const name of fs.readdirSync(src)) {
+    const s = path.join(src, name);
+    const d = path.join(dest, name);
+    if (fs.statSync(s).isDirectory()) copyDir(s, d);
+    else fs.copyFileSync(s, d);
+  }
+}
+
+function parseMessagesFromTs(content) {
+  const messages = {};
+  const re = /"((?:\\.|[^"\\])+)":\s*"((?:\\.|[^"\\])*)"/g;
+  let m;
+  while ((m = re.exec(content)) !== null) {
+    messages[m[1]] = m[2]
+      .replace(/\\n/g, '\n')
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\');
+  }
+  return messages;
+}
+
+function loadMessages(locale) {
+  if (messageCache[locale]) return messageCache[locale];
+  const fileName = MESSAGE_FILE_BY_LOCALE[locale];
+  if (!fileName) throw new Error(`Unknown locale: ${locale}`);
+  const filePath = path.join(__dirname, '..', 'src', 'lib', 'i18n', 'messages', fileName);
+  messageCache[locale] = parseMessagesFromTs(fs.readFileSync(filePath, 'utf-8'));
+  return messageCache[locale];
+}
+
+function replaceUiPlaceholders(md, locale) {
+  const messages = loadMessages(locale);
+  return md.replace(/\{\{ui:([^}]+)\}\}/g, (_, key) => {
+    const trimmed = key.trim();
+    if (!(trimmed in messages)) {
+      console.warn(`  missing i18n key for ${locale}: ${trimmed}`);
+      return `[${trimmed}]`;
+    }
+    return messages[trimmed];
+  });
+}
+
+function indexHrefFrom(outPath, locale) {
+  const localeIndex = path.join(OUT_DIR, locale, 'index.html');
+  return path.relative(path.dirname(outPath), localeIndex).replace(/\\/g, '/');
+}
+
+function langSwitchLinks(outPath, locale, relOutPath) {
+  return BUILD_LOCALES.map((loc) => {
+    const label = NAV_LABELS[locale].localeNames[loc];
+    if (loc === locale) return `<a href="#" class="active">${escapeHtml(label)}</a>`;
+    const target = path.join(OUT_DIR, loc, relOutPath);
+    const href = path.relative(path.dirname(outPath), target).replace(/\\/g, '/');
+    return `<a href="${href}">${escapeHtml(label)}</a>`;
+  }).join(' / ');
+}
+
+function hubNavForFile(mdPath, outPath, locale) {
+  const localeDir = path.join(DOC_DIR, locale);
+  const rel = path.relative(path.join(localeDir, 'features'), mdPath).replace(/\\/g, '/');
   const parts = rel.split('/');
   if (parts.length < 2) return null;
   const module = parts[0];
-  const hub = FEATURE_HUBS[module];
+  const hub = FEATURE_HUBS[locale][module];
   if (!hub) return null;
 
-  const outDir = path.dirname(outPath);
-  const hubOut = path.join(outDir, hub.hubHref);
+  const hubOut = path.join(path.dirname(outPath), hub.hubHref);
   const fromOut = path.relative(path.dirname(outPath), hubOut).replace(/\\/g, '/');
   const isHubReadme = path.basename(mdPath).toLowerCase() === 'readme.md' && parts.length === 2;
-  if (isHubReadme) return { hubHref: fromOut, hubLabel: hub.hubLabel, isHub: true };
-  return { hubHref: fromOut, hubLabel: hub.hubLabel, isHub: false };
+  return { hubHref: fromOut, hubLabel: hub.hubLabel, isHub: isHubReadme };
 }
 
-function htmlTemplate(title, content, baseHref, hubNav) {
-  const indexLink = `${baseHref}index.html`;
-  let nav = `<a href="${indexLink}">← 文档首页</a>`;
-  if (hubNav && !hubNav.isHub) {
-    nav += ` · <a href="${hubNav.hubHref}">← ${escapeHtml(hubNav.hubLabel)}</a>`;
-  }
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(title)} - Resonance Logs CN</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 24px 16px; }
-    h1 { font-size: 1.75rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
-    h2 { font-size: 1.35rem; margin-top: 1.5em; }
-    h3 { font-size: 1.15rem; margin-top: 1.2em; }
-    a { color: #2563eb; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-    th, td { border: 1px solid #e5e7eb; padding: 8px 12px; text-align: left; }
-    th { background: #f9fafb; }
-    blockquote { margin: 1em 0; padding: 8px 16px; background: #fef3c7; border-left: 4px solid #f59e0b; }
-    pre { background: #f3f4f6; padding: 12px; overflow-x: auto; border-radius: 6px; }
-    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
-    pre code { background: none; padding: 0; }
-    img { max-width: 100%; height: auto; }
-    hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.5em 0; }
-    .nav { margin-bottom: 24px; font-size: 0.9rem; color: #6b7280; }
-  </style>
-</head>
-<body>
-  <nav class="nav">${nav}</nav>
-  <main>${content}</main>
-</body>
-</html>`;
+function imageRelFromSrc(src) {
+  if (!src.includes('img/')) return null;
+  return src
+    .replace(/^(\.\.\/)+(features\/)?(shared\/)?img\//, '')
+    .replace(/^.*\/img\//, '');
 }
 
 function rewriteLinks(html, outPath) {
-  return html
+  let result = html
     .replace(/href="([^"]+\.md)(#[^"]*)?"/g, (_, p1, p2 = '') => {
       let base = p1.replace(/\.md$/, '.html');
       if (/\/README\.html$/.test(base) || base === 'README.html') {
@@ -115,33 +191,81 @@ function rewriteLinks(html, outPath) {
       return `href="${base}${p2}"`;
     })
     .replace(/href="([^"]*\/changelog\/)"/g, 'href="$1index.html"');
+
+  result = result.replace(/src="([^"]+)"/g, (match, src) => {
+    const imgRel = imageRelFromSrc(src);
+    if (!imgRel) return match;
+
+    const target = path.join(OUT_DIR, 'shared', 'img', imgRel.replace(/\//g, path.sep));
+    const source = path.join(SHARED_IMG, imgRel.replace(/\//g, path.sep));
+    if (!fs.existsSync(source)) {
+      console.warn(`  missing image: ${imgRel}`);
+      return match;
+    }
+
+    const href = path.relative(path.dirname(outPath), target).replace(/\\/g, '/');
+    return `src="${href}"`;
+  });
+
+  return result;
 }
 
-function ensureDir(dir) {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
-function mdToOutPath(mdPath, subdir = '') {
-  const rel = path.relative(DOC_DIR, mdPath);
-  let outRel = rel.replace(/\.md$/i, '.html');
-  if (path.basename(mdPath).toLowerCase() === 'readme.md') {
-    outRel = path.join(path.dirname(outRel), 'index.html');
+function htmlTemplate(title, content, locale, outPath, hubNav, relOutPath) {
+  const labels = NAV_LABELS[locale];
+  const indexLink = indexHrefFrom(outPath, locale);
+  let nav = `<a href="${indexLink}">${labels.home}</a>`;
+  if (hubNav && !hubNav.isHub) {
+    nav += ` / <a href="${hubNav.hubHref}">${escapeHtml(hubNav.hubLabel)}</a>`;
   }
-  if (subdir) outRel = path.join(subdir, outRel);
-  return path.join(OUT_DIR, outRel);
+  nav += `<span class="lang-switch">${labels.langSwitch}: ${langSwitchLinks(outPath, locale, relOutPath)}</span>`;
+
+  return `<!DOCTYPE html>
+<html lang="${locale}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(title)} - ${escapeHtml(labels.siteTitle)}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", "Hiragino Sans", sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+    h1 { font-size: 1.75rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
+    h2 { font-size: 1.35rem; margin-top: 1.5em; }
+    h3 { font-size: 1.15rem; margin-top: 1.2em; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px 12px; text-align: left; }
+    th { background: #f9fafb; }
+    blockquote { margin: 1em 0; padding: 8px 16px; background: #fef3c7; border-left: 4px solid #f59e0b; }
+    pre { background: #f3f4f6; padding: 12px; overflow-x: auto; border-radius: 6px; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    pre code { background: none; padding: 0; }
+    img { max-width: 100%; height: auto; }
+    hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.5em 0; }
+    .nav { margin-bottom: 24px; font-size: 0.9rem; color: #6b7280; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+    .lang-switch { margin-left: auto; }
+    .lang-switch a.active { font-weight: 600; color: #111; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <nav class="nav">${nav}</nav>
+  <main>${content}</main>
+</body>
+</html>`;
 }
 
-function buildFile(mdPath, outPath) {
-  const md = fs.readFileSync(mdPath, 'utf-8');
+function buildFile(mdPath, outPath, locale) {
+  let md = fs.readFileSync(mdPath, 'utf-8');
+  md = replaceUiPlaceholders(md, locale);
   const html = marked.parse(md, { gfm: true });
   const title = extractTitle(md);
-  let processed = rewriteLinks(html, outPath);
-  const baseHref = baseHrefToIndex(outPath);
-  const hubNav = hubNavForFile(mdPath, outPath);
-  const full = htmlTemplate(title, processed, baseHref, hubNav);
+  const processed = rewriteLinks(html, outPath);
+  const relOutPath = path.relative(path.join(OUT_DIR, locale), outPath);
+  const hubNav = hubNavForFile(mdPath, outPath, locale);
+  const full = htmlTemplate(title, processed, locale, outPath, hubNav, relOutPath);
   ensureDir(path.dirname(outPath));
   fs.writeFileSync(outPath, full, 'utf-8');
-  console.log('  ✓', path.relative(OUT_DIR, outPath));
+  console.log(`  built [${locale}] ${path.relative(OUT_DIR, outPath)}`);
 }
 
 function collectMdFiles(dir, files = []) {
@@ -154,102 +278,140 @@ function collectMdFiles(dir, files = []) {
   return files;
 }
 
-function buildFeatureModule(moduleName) {
-  const moduleDir = path.join(DOC_DIR, 'features', moduleName);
+function buildFeatureModule(moduleName, locale) {
+  const localeDir = path.join(DOC_DIR, locale);
+  const moduleDir = path.join(localeDir, 'features', moduleName);
   if (!fs.existsSync(moduleDir)) return;
   const mdFiles = collectMdFiles(moduleDir).sort();
   for (const mdPath of mdFiles) {
-    const rel = path.relative(path.join(DOC_DIR, 'features'), mdPath);
+    const rel = path.relative(path.join(localeDir, 'features'), mdPath);
     const outPath = path.join(
       OUT_DIR,
+      locale,
       'features',
       rel.replace(/\.md$/i, '.html').replace(/README\.html$/i, 'index.html'),
     );
     if (path.basename(mdPath).toLowerCase() === 'readme.md') {
       const outDir = path.dirname(outPath);
-      buildFile(mdPath, path.join(outDir, 'index.html'));
-      buildFile(mdPath, path.join(outDir, 'README.html'));
+      buildFile(mdPath, path.join(outDir, 'index.html'), locale);
+      buildFile(mdPath, path.join(outDir, 'README.html'), locale);
       continue;
     }
-    buildFile(mdPath, outPath);
+    buildFile(mdPath, outPath, locale);
   }
 }
 
-function main() {
-  console.log('Building doc/html_doc ...\n');
-  ensureDir(OUT_DIR);
+function buildLocale(locale) {
+  const localeDir = path.join(DOC_DIR, locale);
+  if (!fs.existsSync(localeDir)) {
+    console.warn(`Skipping missing locale dir: ${locale}`);
+    return;
+  }
+
+  console.log(`\nBuilding ${locale} ...`);
+  const localeOut = path.join(OUT_DIR, locale);
+  ensureDir(localeOut);
 
   const rootBuild = [
-    [path.join(DOC_DIR, 'README.md'), path.join(OUT_DIR, 'index.html')],
-    [path.join(DOC_DIR, 'faq.md'), path.join(OUT_DIR, 'faq.html')],
+    [path.join(localeDir, 'README.md'), path.join(localeOut, 'index.html')],
+    [path.join(localeDir, 'getting-started.md'), path.join(localeOut, 'getting-started.html')],
+    [path.join(localeDir, 'faq.md'), path.join(localeOut, 'faq.html')],
   ];
 
   const rootChangelog = path.join(__dirname, '..', 'CHANGELOG.md');
   if (fs.existsSync(rootChangelog)) {
-    rootBuild.push([
-      rootChangelog,
-      path.join(OUT_DIR, 'changelog', 'latest.html'),
-    ]);
+    rootBuild.push([rootChangelog, path.join(localeOut, 'changelog', 'latest.html')]);
   }
 
   for (const [mdPath, outPath] of rootBuild) {
-    if (fs.existsSync(mdPath)) buildFile(mdPath, outPath);
+    if (fs.existsSync(mdPath)) buildFile(mdPath, outPath, locale);
   }
 
-  buildFeatureModule('monitor');
-  buildFeatureModule('dps');
-  buildFeatureModule('monster');
+  for (const module of ['monitor', 'dps', 'monster']) {
+    buildFeatureModule(module, locale);
+  }
 
-  const faqMdDir = path.join(DOC_DIR, 'faq');
+  const faqMdDir = path.join(localeDir, 'faq');
   if (fs.existsSync(faqMdDir)) {
-    ensureDir(path.join(OUT_DIR, 'faq'));
+    ensureDir(path.join(localeOut, 'faq'));
     for (const name of fs.readdirSync(faqMdDir)) {
       if (name.endsWith('.md')) {
-        buildFile(
-          path.join(faqMdDir, name),
-          path.join(OUT_DIR, 'faq', name.replace(/\.md$/, '.html')),
-        );
+        buildFile(path.join(faqMdDir, name), path.join(localeOut, 'faq', name.replace(/\.md$/, '.html')), locale);
       }
     }
   }
 
-  const changelogDir = path.join(DOC_DIR, 'changelog');
+  const changelogDir = path.join(localeDir, 'changelog');
   if (fs.existsSync(changelogDir)) {
-    ensureDir(path.join(OUT_DIR, 'changelog'));
+    ensureDir(path.join(localeOut, 'changelog'));
     const changelogIndex = path.join(changelogDir, 'README.md');
     if (fs.existsSync(changelogIndex)) {
-      buildFile(changelogIndex, path.join(OUT_DIR, 'changelog', 'index.html'));
+      buildFile(changelogIndex, path.join(localeOut, 'changelog', 'index.html'), locale);
     }
     for (const name of fs.readdirSync(changelogDir)) {
       if (name.endsWith('.md') && name !== 'README.md') {
-        const base = name.replace(/\.md$/, '');
-        buildFile(
-          path.join(changelogDir, name),
-          path.join(OUT_DIR, 'changelog', base + '.html'),
-        );
+        buildFile(path.join(changelogDir, name), path.join(localeOut, 'changelog', name.replace(/\.md$/, '.html')), locale);
       }
     }
   }
+}
 
-  const imgSrc = path.join(DOC_DIR, 'features', 'img');
-  const imgDest = path.join(OUT_DIR, 'features', 'img');
-  if (fs.existsSync(imgSrc)) {
-    copyDir(imgSrc, imgDest);
-    console.log('  ✓ features/img/ (copied)');
+function buildLandingPage() {
+  const links = BUILD_LOCALES.map((loc) => {
+    const labels = LANDING[loc] || LANDING['en-US'];
+    return `<li><a href="${loc}/index.html">${escapeHtml(labels.title)}</a></li>`;
+  }).join('\n');
+
+  const intro = escapeHtml(LANDING['zh-CN'].intro);
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resonance Logs Documentation</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 720px; margin: 48px auto; padding: 0 16px; line-height: 1.6; color: #333; }
+    h1 { text-align: center; }
+    ul { list-style: none; padding: 0; text-align: center; }
+    li { margin: 16px 0; }
+    a { color: #2563eb; font-size: 1.2rem; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    p { text-align: center; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <h1>Resonance Logs Documentation</h1>
+  <p>${intro}</p>
+  <ul>${links}</ul>
+</body>
+</html>`;
+  ensureDir(OUT_DIR);
+  fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf-8');
+  console.log('  built index.html');
+}
+
+function copySharedAssets() {
+  if (!fs.existsSync(SHARED_IMG)) return;
+  copyDir(SHARED_IMG, path.join(OUT_DIR, 'shared', 'img'));
+  console.log('  copied shared/img');
+}
+
+function main() {
+  console.log('Building doc/html_doc ...');
+  fs.rmSync(OUT_DIR, { recursive: true, force: true });
+  ensureDir(OUT_DIR);
+
+  for (const locale of BUILD_LOCALES) {
+    buildLocale(locale);
+  }
+
+  copySharedAssets();
+
+  if (!ONLY_LOCALE) {
+    buildLandingPage();
   }
 
   console.log('\nDone. Output: doc/html_doc/');
-}
-
-function copyDir(src, dest) {
-  if (!fs.existsSync(src)) return;
-  ensureDir(dest);
-  for (const name of fs.readdirSync(src)) {
-    const s = path.join(src, name);
-    const d = path.join(dest, name);
-    if (fs.statSync(s).isDirectory()) copyDir(s, d);
-    else fs.copyFileSync(s, d);
-  }
 }
 
 main();
