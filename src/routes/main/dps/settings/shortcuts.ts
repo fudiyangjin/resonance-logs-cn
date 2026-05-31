@@ -43,6 +43,14 @@ export const CUSTOM_TRIGGER_SHORTCUTS = [
   { id: "resetAllRuntimeState", labelKey: "hotkeys.shortcuts.resetAllRuntimeState", fallbackLabel: "Reset all runtime state" },
 ] as const;
 
+async function showLiveMeterWithoutFocus() {
+  const liveWindow = await WebviewWindow.getByLabel("live");
+  if (!liveWindow) return;
+  await liveWindow.setFocusable(false);
+  await liveWindow.show();
+  await liveWindow.unminimize();
+}
+
 export function normalizeShortcut(shortcutKey: string): string {
   return shortcutKey
     .trim()
@@ -108,8 +116,7 @@ export async function registerShortcut(
       case "showLiveMeter":
         await register(shortcutKey, async (event) => {
           if (event.state === "Pressed") {
-            const liveWindow = await WebviewWindow.getByLabel("live");
-            await liveWindow?.show();
+            await showLiveMeterWithoutFocus();
           }
         });
         return;
@@ -131,7 +138,7 @@ export async function registerShortcut(
             if (isVisible) {
               await liveWindow?.hide();
             } else {
-              await liveWindow?.show();
+              await showLiveMeterWithoutFocus();
             }
           }
         });

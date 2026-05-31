@@ -9,6 +9,7 @@
         "core:window:allow-unminimize",
         "core:window:allow-show",
         "core:window:allow-set-focus",
+        "core:window:allow-set-focusable",
         "core:window:allow-set-size",
         "core:window:allow-set-size-constraints",
         "core:window:allow-hide",

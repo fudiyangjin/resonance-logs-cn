@@ -100,6 +100,7 @@ fn toggle_game_overlay_window(app: tauri::AppHandle) -> Result<(), String> {
 
     let next_visible = !overlay_window.is_visible().map_err(|e| e.to_string())?;
     if next_visible {
+        let _ = overlay_window.set_focusable(false);
         let _ = overlay_window.set_ignore_cursor_events(true);
         overlay_window.show().map_err(|e| e.to_string())?;
         overlay_window.unminimize().map_err(|e| e.to_string())?;
@@ -130,6 +131,7 @@ fn toggle_game_overlay_edit_mode(app: tauri::AppHandle) -> Result<(), String> {
         return Err("Game overlay window not found".into());
     };
 
+    let _ = overlay_window.set_focusable(false);
     let _ = overlay_window.set_ignore_cursor_events(false);
 
     if !overlay_window.is_visible().map_err(|e| e.to_string())? {
@@ -139,9 +141,23 @@ fn toggle_game_overlay_edit_mode(app: tauri::AppHandle) -> Result<(), String> {
 
     app.emit("overlay-edit-toggle", json!({}))
         .map_err(|e| e.to_string())?;
-    let _ = overlay_window.set_focus();
 
     Ok(())
+}
+
+fn keep_passive_overlay_windows_non_focusable(app: &tauri::AppHandle) {
+    for label in [
+        WINDOW_LIVE_LABEL,
+        WINDOW_GAME_OVERLAY_LABEL,
+        WINDOW_MONSTER_OVERLAY_LABEL,
+    ] {
+        let Some(window) = app.get_webview_window(label) else {
+            continue;
+        };
+        if let Err(e) = window.set_focusable(false) {
+            warn!("failed to keep window {} non-focusable: {}", label, e);
+        }
+    }
 }
 
 #[tauri::command]
@@ -392,6 +408,7 @@ pub fn run() {
             log::info!(target: "app::startup", "starting app v{}", app.package_info().version);
             stop_windivert();
             remove_windivert();
+            keep_passive_overlay_windows_non_focusable(&app_handle);
 
             // Initialize database and background writer early to avoid startup races where
             // multiple background tasks/commands trigger migrations concurrently.
@@ -1274,17 +1291,25 @@ fn create_diagnostics_bundle(
 /// * `tauri::Result<()>` - An empty result indicating success or failure.
 fn setup_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
     fn show_window_and_disable_clickthrough(window: &tauri::WebviewWindow) {
+        let is_live_window = window.label() == WINDOW_LIVE_LABEL;
+        if is_live_window {
+            if let Err(e) = window.set_focusable(false) {
+                warn!("failed to set live window non-focusable: {}", e);
+            }
+        }
         if let Err(e) = window.show() {
             warn!("failed to show window {}: {}", window.label(), e);
         }
         if let Err(e) = window.unminimize() {
             warn!("failed to unminimize window {}: {}", window.label(), e);
         }
-        if let Err(e) = window.set_focus() {
-            warn!("failed to focus window {}: {}", window.label(), e);
+        if !is_live_window {
+            if let Err(e) = window.set_focus() {
+                warn!("failed to focus window {}: {}", window.label(), e);
+            }
         }
         // Always disable clickthrough when showing window from tray
-        if window.label() == WINDOW_LIVE_LABEL {
+        if is_live_window {
             if let Err(e) = window.set_ignore_cursor_events(false) {
                 warn!(
                     "failed to set ignore_cursor_events for {}: {}",
@@ -1347,8 +1372,8 @@ fn setup_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                 if let Err(e) = live_meter_window.unminimize() {
                     warn!("failed to unminimize live window: {}", e);
                 }
-                if let Err(e) = live_meter_window.set_focus() {
-                    warn!("failed to focus live window: {}", e);
+                if let Err(e) = live_meter_window.set_focusable(false) {
+                    warn!("failed to set live window non-focusable: {}", e);
                 }
                 if let Err(e) = live_meter_window.set_ignore_cursor_events(false) {
                     warn!("failed to set ignore_cursor_events for live window: {}", e);

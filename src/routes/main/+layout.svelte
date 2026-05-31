@@ -83,6 +83,7 @@
           if (lastOverlayVisibleState !== desiredOverlayVisible) {
             lastOverlayVisibleState = desiredOverlayVisible;
             if (desiredOverlayVisible) {
+              await overlayWindow.setFocusable(false);
               await overlayWindow.show();
               await overlayWindow.unminimize();
             } else {

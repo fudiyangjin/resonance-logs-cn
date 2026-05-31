@@ -145,6 +145,7 @@
     liveWindow = getCurrentWindow(),
   ): Promise<void> {
     try {
+      await liveWindow.setFocusable(false);
       await liveWindow.setIgnoreCursorEvents(configuredClickthroughEnabled());
     } catch (error) {
       console.warn("Failed to restore live window clickthrough state:", error);

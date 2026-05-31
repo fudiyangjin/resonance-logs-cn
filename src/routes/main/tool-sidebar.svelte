@@ -77,9 +77,9 @@
         if (isVisible) {
           await liveWindow.hide();
         } else {
+          await liveWindow.setFocusable(false);
           await liveWindow.show();
           await liveWindow.unminimize();
-          await liveWindow.setFocus();
         }
       }
     } catch (error) {

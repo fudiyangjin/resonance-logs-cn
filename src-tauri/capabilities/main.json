@@ -11,6 +11,7 @@
     "core:window:allow-is-visible",
     "core:window:allow-unminimize",
     "core:window:allow-set-focus",
+    "core:window:allow-set-focusable",
     "core:window:allow-set-ignore-cursor-events",
     "core:window:allow-set-always-on-top",
     "core:webview:allow-create-webview-window",

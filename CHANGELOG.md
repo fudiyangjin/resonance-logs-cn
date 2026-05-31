@@ -33,6 +33,9 @@
 - Prevented vertical resizing while Dynamic Live Window is enabled, so player-table overflow no longer leaves transparent dead click space below the meter.
 - Added a Fit Width background image mode that scales the image to meter width and reveals more of it as the live window grows downward.
 - Split Skill CD slot outlines from enhanced-skill glow, keeping the gold enhanced glow visible for skills such as Unbound Meteor even when static slot outlines are hidden.
+- Fixed Phantom Falcon AoE skill breakdown rows so they use the Phantom Falcon talent name/icon instead of a raw design label.
+- Localized additional Death Replay monster and mechanic damage rows found in saved encounter history, with audit tooling to scan current history chunks for visible localization gaps.
+- Kept passive live meter and overlay windows from stealing focus when shown through hotkeys, tray actions, or sidebar toggles, so controller input stays registered by the game.
 
 ## v1.0.7 - Global
 

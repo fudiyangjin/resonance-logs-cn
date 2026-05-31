@@ -21,6 +21,7 @@
         "minWidth": 410,
         "minHeight": 120,
         "alwaysOnTop": true,
+        "focusable": false,
         "skipTaskbar": true
       },
       {
@@ -46,6 +47,7 @@
         "height": 960,
         "visible": false,
         "resizable": true,
+        "focusable": false,
         "shadow": false,
         "maximizable": false
       },
@@ -61,6 +63,7 @@
         "height": 960,
         "visible": false,
         "resizable": true,
+        "focusable": false,
         "shadow": false,
         "maximizable": false
       },
