@@ -236,6 +236,19 @@ export function getSeasonCultivateFactorRuleMap(): Map<
   return map;
 }
 
+export function getSeasonCultivateFactorItemSlotTemplateMap(): Map<
+  number,
+  string
+> {
+  const map = new Map<number, string>();
+  for (const template of SLOT_TEMPLATES) {
+    for (const itemId of normalizeTemplateItemIds(template)) {
+      map.set(itemId, template.slotTemplateId);
+    }
+  }
+  return map;
+}
+
 export function getSeasonCultivateFactorEffectBuffIdMap(): Map<
   number,
   number[]

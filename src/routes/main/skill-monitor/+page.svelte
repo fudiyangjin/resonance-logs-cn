@@ -60,6 +60,7 @@
   import {
     ensureBuffGroup,
     ensureBuffGroups,
+    ensureFactorSlotLabels,
     ensureIndividualMonitorAllGroup,
     ensureOverlaySizes,
     ensurePanelAreaRowOrder,
@@ -177,6 +178,9 @@
   });
   const buffAlerts = $derived.by(() =>
     ensureBuffAlerts(activeProfile.buffAlerts),
+  );
+  const factorSlotLabels = $derived.by(() =>
+    ensureFactorSlotLabels(activeProfile.factorSlotLabels),
   );
   const alertEligibleBuffIds = $derived.by(() =>
     getAlertEligibleBuffIds(activeProfile),
@@ -890,6 +894,21 @@
     );
   }
 
+  function setFactorSlotLabel(slotTemplateId: string, name: string) {
+    const key = slotTemplateId.trim();
+    if (!key) return;
+    const trimmed = name.trim();
+    updateActiveProfile((profile) => {
+      const next = ensureFactorSlotLabels(profile.factorSlotLabels);
+      if (trimmed) {
+        next[key] = trimmed;
+      } else {
+        delete next[key];
+      }
+      return { ...profile, factorSlotLabels: next };
+    });
+  }
+
   function updateTextBuffPanelStyle(
     updater: (style: TextBuffPanelStyle) => TextBuffPanelStyle,
   ) {
@@ -1554,6 +1573,8 @@
       {inlineBuffSearch}
       {filteredInlineBuffSearchResults}
       {customPanelGroups}
+      {factorSlotLabels}
+      {setFactorSlotLabel}
       {setInlineBuffSearch}
       {addCustomPanelGroup}
       {removeCustomPanelGroup}

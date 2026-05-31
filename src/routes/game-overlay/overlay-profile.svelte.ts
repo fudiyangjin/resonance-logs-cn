@@ -10,7 +10,10 @@ import {
   clampedProfileIndex,
   updateActiveProfile,
 } from "$lib/skill-monitor-profile.svelte.js";
-import { ensurePanelAttrs } from "$lib/skill-monitor-normalize";
+import {
+  ensureFactorSlotLabels,
+  ensurePanelAttrs,
+} from "$lib/skill-monitor-normalize";
 import {
   expandBuffSelection,
   normalizeBuffCategoryKeys,
@@ -110,6 +113,9 @@ const _inlineBuffIds = $derived.by(
 const _resolvedUserCounterRules = $derived.by<CounterRulePreset[]>(() =>
   resolveUserCounterRulesToPresets(_activeProfile?.userCounterRules),
 );
+const _factorSlotLabels = $derived.by<Record<string, string>>(() =>
+  ensureFactorSlotLabels(_activeProfile?.factorSlotLabels),
+);
 
 export function activeProfileIndex() {
   return _activeProfileIndex;
@@ -193,6 +199,10 @@ export function inlineBuffIds() {
 
 export function resolvedUserCounterRules() {
   return _resolvedUserCounterRules;
+}
+
+export function factorSlotLabels() {
+  return _factorSlotLabels;
 }
 
 export { updateActiveProfile };

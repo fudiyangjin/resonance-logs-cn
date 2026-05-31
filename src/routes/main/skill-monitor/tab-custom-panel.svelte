@@ -27,6 +27,8 @@
     inlineBuffSearch: string;
     filteredInlineBuffSearchResults: BuffNameInfo[];
     customPanelGroups: CustomPanelGroup[];
+    factorSlotLabels: Record<string, string>;
+    setFactorSlotLabel: (slotTemplateId: string, name: string) => void;
     setInlineBuffSearch: (value: string) => void;
     addCustomPanelGroup: (kind?: CustomPanelGroupKind) => void;
     removeCustomPanelGroup: (groupId: string) => void;
@@ -63,6 +65,8 @@
     inlineBuffSearch,
     filteredInlineBuffSearchResults,
     customPanelGroups,
+    factorSlotLabels,
+    setFactorSlotLabel,
     setInlineBuffSearch,
     addCustomPanelGroup,
     removeCustomPanelGroup,
@@ -82,6 +86,7 @@
   let draftSourceRefs = $state<string[]>([]);
   let draftSlotRefs = $state<string[]>([]);
   let isCreatingUserRule = $state(false);
+  let factorSlotSearch = $state("");
 
   $effect(() => {
     if (customPanelGroups.length === 0) {
@@ -109,6 +114,29 @@
     draftRuleName.trim().length > 0 && draftSourceRefs.length > 0 && draftSlotRefs.length > 0,
   );
   const isSelectedManualGroup = $derived(selectedGroup?.kind !== "seasonCultivateFactor");
+  const customizedFactorSlots = $derived.by(() =>
+    Object.entries(factorSlotLabels)
+      .map(([slotTemplateId, label]) => ({
+        slotTemplateId,
+        label,
+        template: slotTemplateMap.get(slotTemplateId) ?? null,
+      }))
+      .sort((left, right) =>
+        (left.template?.name ?? left.slotTemplateId).localeCompare(
+          right.template?.name ?? right.slotTemplateId,
+        ),
+      ),
+  );
+  const filteredSlotTemplates = $derived.by(() => {
+    const keyword = factorSlotSearch.trim().toLowerCase();
+    if (!keyword) return [] as SlotTemplate[];
+    return slotTemplates.filter(
+      (template) =>
+        template.name.toLowerCase().includes(keyword) ||
+        template.description.toLowerCase().includes(keyword) ||
+        template.slotTemplateId.toLowerCase().includes(keyword),
+    );
+  });
 
   function getEntryLocation(
     sourceType: InlineBuffEntry["sourceType"],
@@ -700,6 +728,79 @@
           </div>
         </div>
       {/each}
+    </div>
+    {:else}
+    <div class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] space-y-4">
+      <div class="space-y-1">
+        <div class="text-sm font-medium text-foreground">{t("skillMonitor.customPanel.factorSlots.title")}</div>
+        <p class="text-xs text-muted-foreground">{t("skillMonitor.customPanel.factorSlots.description")}</p>
+      </div>
+
+      {#if customizedFactorSlots.length > 0}
+        <div class="space-y-2">
+          <div class="text-xs font-medium text-muted-foreground">{t("skillMonitor.customPanel.factorSlots.currentList")}</div>
+          {#each customizedFactorSlots as item (item.slotTemplateId)}
+            <div class="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
+              <div class="text-xs text-muted-foreground">
+                {t("skillMonitor.customPanel.factorSlots.defaultName", {
+                  name: item.template?.name ?? item.slotTemplateId,
+                })}
+              </div>
+              <div class="flex items-center gap-2">
+                <input
+                  class="flex-1 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  value={item.label}
+                  placeholder={t("skillMonitor.customPanel.factorSlots.customNamePlaceholder")}
+                  oninput={(event) =>
+                    setFactorSlotLabel(item.slotTemplateId, (event.currentTarget as HTMLInputElement).value)}
+                />
+                <button
+                  type="button"
+                  class="min-h-11 rounded-md border border-border/60 px-3 py-1.5 text-xs text-destructive transition-colors hover:bg-destructive/10 cursor-pointer"
+                  onclick={() => setFactorSlotLabel(item.slotTemplateId, "")}
+                >
+                  {t("skillMonitor.customPanel.factorSlots.clear")}
+                </button>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {/if}
+
+      <div class="space-y-2 border-t border-border/60 pt-4">
+        <div class="text-xs font-medium text-muted-foreground">{t("skillMonitor.customPanel.factorSlots.searchTitle")}</div>
+        <input
+          class="w-full sm:w-80 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          placeholder={t("skillMonitor.customPanel.factorSlots.searchPlaceholder")}
+          value={factorSlotSearch}
+          oninput={(event) => (factorSlotSearch = (event.currentTarget as HTMLInputElement).value)}
+        />
+        {#if factorSlotSearch.trim().length > 0}
+          {#if filteredSlotTemplates.length === 0}
+            <div class="rounded-lg border border-dashed border-border/60 bg-muted/10 px-3 py-6 text-center text-sm text-muted-foreground">
+              {t("skillMonitor.customPanel.factorSlots.noMatch")}
+            </div>
+          {:else}
+            <div class="grid grid-cols-1 gap-2">
+              {#each filteredSlotTemplates as template (template.slotTemplateId)}
+                <div class="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
+                  <div class="text-sm font-medium text-foreground">{template.name}</div>
+                  {#if template.description}
+                    <div class="text-xs text-muted-foreground">{template.description}</div>
+                  {/if}
+                  <input
+                    class="w-full rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    value={factorSlotLabels[template.slotTemplateId] ?? ""}
+                    placeholder={t("skillMonitor.customPanel.factorSlots.customNamePlaceholder")}
+                    oninput={(event) =>
+                      setFactorSlotLabel(template.slotTemplateId, (event.currentTarget as HTMLInputElement).value)}
+                  />
+                </div>
+              {/each}
+            </div>
+          {/if}
+        {/if}
+      </div>
     </div>
     {/if}
   {:else}

@@ -4,6 +4,7 @@ import {
   getCounterRules,
   getSeasonCultivateFactorConfiguredEffectBuffIds,
   getSeasonCultivateFactorEffectBuffIdMap,
+  getSeasonCultivateFactorItemSlotTemplateMap,
   getSeasonCultivateFactorRuleId,
   getSeasonCultivateFactorRuleMap,
   type CounterRulePreset,
@@ -40,6 +41,7 @@ import {
   buffDisplayMode,
   buffPriorityIds,
   customPanelGroups,
+  factorSlotLabels,
   expandedMonitoredBuffIds,
   enabledPanelAttrs,
   monitoredBuffCategories,
@@ -106,6 +108,10 @@ const _seasonCultivateFactorRuleMap = $derived.by(() =>
 
 const _seasonCultivateFactorEffectBuffIdMap = $derived.by(() =>
   getSeasonCultivateFactorEffectBuffIdMap(),
+);
+
+const _seasonCultivateFactorItemSlotTemplateMap = $derived.by(() =>
+  getSeasonCultivateFactorItemSlotTemplateMap(),
 );
 
 const _seasonCultivateFactorOwnedEffectBuffIds = $derived.by(() => {
@@ -289,12 +295,17 @@ const _buffSnapshot = $derived.by(() => {
         const ruleId = getSeasonCultivateFactorRuleId(itemId);
         const rule = _seasonCultivateFactorRuleMap.get(ruleId);
         if (!rule) continue;
+        const slotTemplateId =
+          _seasonCultivateFactorItemSlotTemplateMap.get(itemId);
+        const customLabel = slotTemplateId
+          ? factorSlotLabels()[slotTemplateId]
+          : undefined;
         const entry: InlineBuffEntry = {
           id: `season_cultivate_factor_${itemId}`,
           sourceType: "counter",
           sourceId: ruleId,
           counterSlotId: rule.effectSlots[0]?.slotId ?? 1,
-          label: rule.name,
+          label: customLabel || rule.name,
           format: "timer",
         };
         const row = getCustomPanelDisplayRow(

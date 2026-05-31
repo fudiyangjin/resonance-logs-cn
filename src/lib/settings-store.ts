@@ -707,6 +707,7 @@ export type SkillMonitorProfile = {
   individualMonitorAllGroup?: BuffGroup | null;
   userCounterRules?: UserCounterRule[];
   customPanelGroups?: CustomPanelGroup[];
+  factorSlotLabels?: Record<string, string>;
   inlineBuffEntries?: InlineBuffEntry[];
   panelAreaRowOrder?: PanelAreaRowRef[];
   /** @deprecated Legacy shared style, kept only for migrating old custom panel groups. */
@@ -915,6 +916,7 @@ export function createDefaultSkillMonitorProfile(
     individualMonitorAllGroup: null,
     userCounterRules: [],
     customPanelGroups: [],
+    factorSlotLabels: {},
     inlineBuffEntries: [],
     panelAreaRowOrder: [],
     textBuffPanelStyle: createDefaultTextBuffPanelStyle(),

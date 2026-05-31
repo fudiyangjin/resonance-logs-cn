@@ -181,6 +181,18 @@ export function ensureCustomPanelStyle(
   };
 }
 
+export function ensureFactorSlotLabels(
+  labels: Record<string, string> | null | undefined,
+): Record<string, string> {
+  const next: Record<string, string> = {};
+  for (const [slotTemplateId, label] of Object.entries(labels ?? {})) {
+    const trimmed = String(label ?? "").trim();
+    if (!trimmed) continue;
+    next[String(slotTemplateId)] = trimmed;
+  }
+  return next;
+}
+
 export function ensureTextBuffPanelStyle(
   profile: SkillMonitorProfile | null,
 ): TextBuffPanelStyle {
