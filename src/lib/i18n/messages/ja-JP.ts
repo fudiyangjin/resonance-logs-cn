@@ -911,6 +911,7 @@ export const jaJPMessages = {
   "skillMonitor.tabs.buff": "Buff モニター",
   "skillMonitor.tabs.panelAttr": "キャラクターパネル",
   "skillMonitor.tabs.customPanel": "カスタムモニター",
+  "skillMonitor.tabs.shieldDetail": "HP/シールドエリア",
   "skillMonitor.tabs.overlay": "ウィンドウを有効化",
   "skillMonitor.common.clear": "クリア",
   "skillMonitor.common.remove": "削除",
@@ -1118,6 +1119,22 @@ export const jaJPMessages = {
   "skillMonitor.customPanel.style.title": "現在のモニターエリアスタイル",
   "skillMonitor.customPanel.style.description":
     "選択したモニターエリアのテキストとプログレスバースタイルを調整。各エリアで個別設定可能。",
+  "skillMonitor.shieldDetail.title": "HP/シールドエリア",
+  "skillMonitor.shieldDetail.description":
+    "HP/シールドエリアの表示項目とバーのスタイルを設定します。プロファイルごとに保存されます。",
+  "skillMonitor.shieldDetail.display.title": "表示行",
+  "skillMonitor.shieldDetail.display.description":
+    "既存の行はデフォルトで表示されます。HP、合計シールド、シールド詳細を個別に制御できます。",
+  "skillMonitor.shieldDetail.style.title": "バースタイル",
+  "skillMonitor.shieldDetail.style.description":
+    "HP、シールド、回復シールドの色と、フォントサイズ、幅、間隔を調整します。",
+  "skillMonitor.shieldDetail.showHpBar": "HP 行を表示",
+  "skillMonitor.shieldDetail.showTotalShieldBar": "合計シールド行を表示",
+  "skillMonitor.shieldDetail.showShieldEntries": "シールド詳細を表示",
+  "skillMonitor.shieldDetail.barWidth": "バー幅: {value}px",
+  "skillMonitor.shieldDetail.hpColor": "HP 色",
+  "skillMonitor.shieldDetail.shieldColor": "シールド色",
+  "skillMonitor.shieldDetail.healShieldColor": "回復シールド色",
   "skillMonitor.overlay.title": "オーバーレイエリア表示",
   "skillMonitor.overlay.description":
     "スキル、持続時間スキル、リソースエリアの表示を制御。プロファイルごとに保存",

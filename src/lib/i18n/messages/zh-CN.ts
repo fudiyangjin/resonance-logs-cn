@@ -820,6 +820,7 @@ export const zhCNMessages = {
   "skillMonitor.tabs.buff": "Buff监控",
   "skillMonitor.tabs.panelAttr": "角色面板",
   "skillMonitor.tabs.customPanel": "自定义监控",
+  "skillMonitor.tabs.shieldDetail": "血量护盾区",
   "skillMonitor.tabs.overlay": "启用窗口",
   "skillMonitor.common.clear": "清空",
   "skillMonitor.common.remove": "移除",
@@ -1015,6 +1016,22 @@ export const zhCNMessages = {
   "skillMonitor.customPanel.style.title": "当前监控区样式",
   "skillMonitor.customPanel.style.description":
     "调整当前选中监控区的文字与进度条样式（每个监控区可独立设置）。",
+  "skillMonitor.shieldDetail.title": "血量护盾区",
+  "skillMonitor.shieldDetail.description":
+    "设置血量护盾区的显示项与条形样式，按方案保存。",
+  "skillMonitor.shieldDetail.display.title": "显示项",
+  "skillMonitor.shieldDetail.display.description":
+    "旧有内容默认显示，可分别控制 HP、总盾和单盾明细。",
+  "skillMonitor.shieldDetail.style.title": "条形样式",
+  "skillMonitor.shieldDetail.style.description":
+    "调整血量、护盾和奶转盾颜色，以及整体字号、宽度和间距。",
+  "skillMonitor.shieldDetail.showHpBar": "显示 HP 行",
+  "skillMonitor.shieldDetail.showTotalShieldBar": "显示总盾行",
+  "skillMonitor.shieldDetail.showShieldEntries": "显示单盾明细",
+  "skillMonitor.shieldDetail.barWidth": "条宽: {value}px",
+  "skillMonitor.shieldDetail.hpColor": "HP 颜色",
+  "skillMonitor.shieldDetail.shieldColor": "护盾颜色",
+  "skillMonitor.shieldDetail.healShieldColor": "奶转盾颜色",
   "skillMonitor.overlay.title": "Overlay 区域显示",
   "skillMonitor.overlay.description":
     "可分别控制技能区、持续时间技能区和资源区是否显示（按方案保存）",

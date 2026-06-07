@@ -4,6 +4,7 @@
   import TabBuffMonitor from "./tab-buff-monitor.svelte";
   import TabPanelAttr from "./tab-panel-attr.svelte";
   import TabCustomPanel from "./tab-custom-panel.svelte";
+  import TabShieldDetailStyle from "./tab-shield-detail-style.svelte";
   import TabOverlay from "./tab-overlay.svelte";
   import {
     expandBuffSelection,
@@ -35,6 +36,7 @@
     type CustomPanelStyle,
     type InlineBuffEntry,
     type PanelAreaRowRef,
+    type ShieldDetailStyle,
     type SkillMonitorProfile,
     type TextBuffPanelDisplayMode,
     type TextBuffPanelStyle,
@@ -66,6 +68,7 @@
     ensureOverlaySizes,
     ensurePanelAreaRowOrder,
     ensurePanelAttrs,
+    ensureShieldDetailStyle,
     ensureTextBuffPanelStyle,
   } from "$lib/skill-monitor-normalize";
   import {
@@ -91,7 +94,12 @@
   let inlineBuffSearch = $state("");
   let inlineBuffSearchResults = $state<BuffNameInfo[]>([]);
   let activeTab = $state<
-    "skill-cd" | "buff" | "panel-attr" | "custom-panel" | "overlay"
+    | "skill-cd"
+    | "buff"
+    | "panel-attr"
+    | "custom-panel"
+    | "shield-detail"
+    | "overlay"
   >("skill-cd");
   let attrSectionExpanded = $state(false);
   let buffAliasSectionExpanded = $state(false);
@@ -152,6 +160,9 @@
   );
   const textBuffPanelStyle = $derived.by(() =>
     ensureTextBuffPanelStyle(activeProfile),
+  );
+  const shieldDetailStyle = $derived.by(() =>
+    ensureShieldDetailStyle(activeProfile),
   );
   const buffDisplayMode = $derived(
     activeProfile.buffDisplayMode ?? "individual",
@@ -957,6 +968,47 @@
     }));
   }
 
+  function updateShieldDetailStyle(
+    updater: (style: ShieldDetailStyle) => ShieldDetailStyle,
+  ) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      shieldDetailStyle: updater(ensureShieldDetailStyle(profile)),
+    }));
+  }
+
+  function setShieldDetailStyleFlag(
+    key:
+      | "showHpBar"
+      | "showTotalShieldBar"
+      | "showShieldEntries",
+    value: boolean,
+  ) {
+    updateShieldDetailStyle((style) => ({ ...style, [key]: value }));
+  }
+
+  function setShieldDetailFontSize(value: number) {
+    const nextValue = Math.max(8, Math.min(28, Math.round(value)));
+    updateShieldDetailStyle((style) => ({ ...style, fontSize: nextValue }));
+  }
+
+  function setShieldDetailBarWidth(value: number) {
+    const nextValue = Math.max(60, Math.min(400, Math.round(value)));
+    updateShieldDetailStyle((style) => ({ ...style, barWidth: nextValue }));
+  }
+
+  function setShieldDetailGap(value: number) {
+    const nextValue = Math.max(0, Math.min(24, Math.round(value)));
+    updateShieldDetailStyle((style) => ({ ...style, gap: nextValue }));
+  }
+
+  function setShieldDetailColor(
+    key: "hpColor" | "shieldColor" | "healShieldColor",
+    value: string,
+  ) {
+    updateShieldDetailStyle((style) => ({ ...style, [key]: value }));
+  }
+
   function addCustomPanelEntry(
     groupId: string,
     sourceType: "buff" | "counter",
@@ -1442,6 +1494,16 @@
       <button
         type="button"
         class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
+        'shield-detail'
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => (activeTab = "shield-detail")}
+      >
+        {t("skillMonitor.tabs.shieldDetail")}
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
         'overlay'
           ? 'bg-primary text-primary-foreground border-primary'
           : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
@@ -1593,6 +1655,15 @@
       {removeCustomPanelEntry}
       {setCustomPanelEntryLabel}
       {moveCustomPanelEntry}
+    />
+  {:else if activeTab === "shield-detail"}
+    <TabShieldDetailStyle
+      {shieldDetailStyle}
+      {setShieldDetailStyleFlag}
+      {setShieldDetailFontSize}
+      {setShieldDetailBarWidth}
+      {setShieldDetailGap}
+      {setShieldDetailColor}
     />
   {:else}
     <TabOverlay

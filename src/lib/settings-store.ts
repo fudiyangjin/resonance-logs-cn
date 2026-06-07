@@ -574,6 +574,9 @@ export type ShieldDetailStyle = {
   fontSize: number;
   barWidth: number;
   gap: number;
+  showHpBar: boolean;
+  showTotalShieldBar: boolean;
+  showShieldEntries: boolean;
   hpColor: string;
   shieldColor: string;
   healShieldColor: string;

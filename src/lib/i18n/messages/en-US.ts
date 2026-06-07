@@ -913,6 +913,7 @@ export const enUSMessages = {
   "skillMonitor.tabs.buff": "Buff Monitor",
   "skillMonitor.tabs.panelAttr": "Character Panel",
   "skillMonitor.tabs.customPanel": "Custom Monitor",
+  "skillMonitor.tabs.shieldDetail": "HP/Shield Area",
   "skillMonitor.tabs.overlay": "Enable Window",
   "skillMonitor.common.clear": "Clear",
   "skillMonitor.common.remove": "Remove",
@@ -1120,6 +1121,22 @@ export const enUSMessages = {
   "skillMonitor.customPanel.style.title": "Current Monitor Area Style",
   "skillMonitor.customPanel.style.description":
     "Adjust text and progress bar styles for the selected monitor area. Each area can use its own settings.",
+  "skillMonitor.shieldDetail.title": "HP/Shield Area",
+  "skillMonitor.shieldDetail.description":
+    "Configure HP/shield area visibility and bar styles. Saved per profile.",
+  "skillMonitor.shieldDetail.display.title": "Visible Rows",
+  "skillMonitor.shieldDetail.display.description":
+    "Existing rows are shown by default. HP, total shield, and shield details can be controlled separately.",
+  "skillMonitor.shieldDetail.style.title": "Bar Style",
+  "skillMonitor.shieldDetail.style.description":
+    "Adjust HP, shield, and heal shield colors, plus font size, width, and spacing.",
+  "skillMonitor.shieldDetail.showHpBar": "Show HP row",
+  "skillMonitor.shieldDetail.showTotalShieldBar": "Show total shield row",
+  "skillMonitor.shieldDetail.showShieldEntries": "Show shield details",
+  "skillMonitor.shieldDetail.barWidth": "Bar width: {value}px",
+  "skillMonitor.shieldDetail.hpColor": "HP Color",
+  "skillMonitor.shieldDetail.shieldColor": "Shield Color",
+  "skillMonitor.shieldDetail.healShieldColor": "Heal Shield Color",
   "skillMonitor.overlay.title": "Overlay Area Visibility",
   "skillMonitor.overlay.description":
     "Control whether the skill, duration skill, and resource areas are shown. Saved per profile",
