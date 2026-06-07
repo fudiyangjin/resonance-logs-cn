@@ -9,8 +9,9 @@ import { t } from "$lib/i18n/index.svelte";
 import { uidFromEntityUuid, type EntityId } from "$lib/entity-id";
 import {
   SETTINGS,
-  ensureBuffAliases,
   ensureBuffAlerts,
+  getGlobalBuffAliases,
+  type TeammateBuffColumnKey,
 } from "$lib/settings-store";
 import type { BuffUpdateState, HateEntry } from "$lib/api";
 import {
@@ -31,13 +32,13 @@ import type {
 
 type TeammateColumnDefinition =
   | {
-      key: string;
+      key: TeammateBuffColumnKey;
       label: string;
       kind: "buff";
       buffId: number;
     }
   | {
-      key: string;
+      key: TeammateBuffColumnKey;
       label: string;
       kind: "category";
       categoryKey: BuffCategoryKey;
@@ -54,7 +55,7 @@ function selectedMonsterBuffIds() {
 }
 
 function buildPlaceholderRows(now: number): TextBuffDisplay[] {
-  const aliases = ensureBuffAliases(SETTINGS.monsterMonitor.state.buffAliases);
+  const aliases = getGlobalBuffAliases();
   const selectedIds = selectedMonsterBuffIds();
   const priorityIds = SETTINGS.monsterMonitor.state.buffPriorityIds ?? [];
 
@@ -166,7 +167,7 @@ function buildTeammatePlaceholderRows(
 }
 
 function buildTeammateColumnDefinitions(
-  aliases: ReturnType<typeof ensureBuffAliases>,
+  aliases: ReturnType<typeof getGlobalBuffAliases>,
 ): TeammateColumnDefinition[] {
   const state = SETTINGS.monsterMonitor.state;
   const teammateBuffIds = state.teammateBuffIds ?? [];
@@ -188,7 +189,30 @@ function buildTeammateColumnDefinitions(
     });
   }
 
-  return columns;
+  return orderTeammateColumns(columns, state.teammateBuffColumnOrder ?? []);
+}
+
+function orderTeammateColumns(
+  columns: TeammateColumnDefinition[],
+  order: TeammateBuffColumnKey[],
+): TeammateColumnDefinition[] {
+  const columnMap = new Map(columns.map((column) => [column.key, column]));
+  const ordered: TeammateColumnDefinition[] = [];
+  const used = new Set<TeammateBuffColumnKey>();
+
+  for (const key of order) {
+    const column = columnMap.get(key);
+    if (!column || used.has(key)) continue;
+    ordered.push(column);
+    used.add(key);
+  }
+
+  for (const column of columns) {
+    if (used.has(column.key)) continue;
+    ordered.push(column);
+  }
+
+  return ordered;
 }
 
 function toTeammateDisplayColumns(
@@ -323,7 +347,7 @@ function buildHateRows(
 
 export function updateMonsterDisplay() {
   const now = Date.now();
-  const aliases = ensureBuffAliases(SETTINGS.monsterMonitor.state.buffAliases);
+  const aliases = getGlobalBuffAliases();
   const alertMap = ensureBuffAlerts(SETTINGS.monsterMonitor.state.buffAlerts);
   const resolveAlert = (
     baseId: number,

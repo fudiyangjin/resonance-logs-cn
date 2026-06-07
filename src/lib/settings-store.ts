@@ -3,7 +3,10 @@
  * It uses `@tauri-store/svelte` to create persistent stores for user settings.
  */
 import { RuneStore } from "@tauri-store/svelte";
-import type { BuffCategoryKey } from "./config/buff-name-table";
+import type {
+  BuffAliasMap as ConfigBuffAliasMap,
+  BuffCategoryKey,
+} from "./config/buff-name-table";
 import type { AppLocale } from "./i18n/locales";
 import {
   cloneHeaderCustomLayout,
@@ -570,6 +573,16 @@ export type CustomPanelStyle = {
   progressOpacity: number;
 };
 
+export type TeammateBuffColumnKey =
+  | `buff:${number}`
+  | `category:${BuffCategoryKey}`;
+
+export type TeammatePanelStyle = CustomPanelStyle & {
+  rowHeight: number;
+  nameColumnWidth: number;
+  buffColumnWidth: number;
+};
+
 export type ShieldDetailStyle = {
   fontSize: number;
   barWidth: number;
@@ -619,6 +632,7 @@ export type MonsterMonitorConfig = {
   selfAppliedMonitorAll: boolean;
   teammateBuffIds: number[];
   teammateBuffCategories?: BuffCategoryKey[];
+  teammateBuffColumnOrder?: TeammateBuffColumnKey[];
   buffPriorityIds: number[];
   buffAliases: BuffAliasMap;
   buffAlerts: BuffAlertMap;
@@ -626,7 +640,7 @@ export type MonsterMonitorConfig = {
   overlaySizes: MonsterOverlaySizes;
   overlayVisibility: MonsterOverlayVisibility;
   panelStyle: CustomPanelStyle;
-  teammatePanelStyle: CustomPanelStyle;
+  teammatePanelStyle: TeammatePanelStyle;
   hatePanelStyle: CustomPanelStyle;
 };
 
@@ -645,7 +659,7 @@ export type TextBuffPanelStyle = {
 
 export type BuffDisplayMode = "individual" | "grouped";
 
-export type BuffAliasMap = Record<string, string>;
+export type BuffAliasMap = ConfigBuffAliasMap;
 
 export type InlineBuffFormat = "active" | "stacks_timer" | "timer";
 
@@ -735,6 +749,13 @@ export function ensureBuffAliases(
     next[baseId] = trimmed;
   }
   return next;
+}
+
+export function getGlobalBuffAliases(): BuffAliasMap {
+  return {
+    ...ensureBuffAliases(SETTINGS.monsterMonitor.state.buffAliases),
+    ...ensureBuffAliases(SETTINGS.skillMonitor.state.buffAliases),
+  };
 }
 
 export function createDefaultBuffAlertRule(): BuffAlertRule {
@@ -852,6 +873,70 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
   };
 }
 
+export function createDefaultTeammatePanelStyle(): TeammatePanelStyle {
+  return {
+    ...createDefaultCustomPanelStyle(),
+    rowHeight: 22,
+    nameColumnWidth: 128,
+    buffColumnWidth: 72,
+  };
+}
+
+export function ensureTeammatePanelStyle(
+  style: Partial<TeammatePanelStyle> | CustomPanelStyle | null | undefined,
+): TeammatePanelStyle {
+  const base = createDefaultTeammatePanelStyle();
+  return {
+    gap: Math.max(0, Math.min(24, Math.round(style?.gap ?? base.gap))),
+    columnGap: Math.max(
+      0,
+      Math.min(240, Math.round(style?.columnGap ?? base.columnGap)),
+    ),
+    fontSize: Math.max(
+      10,
+      Math.min(28, Math.round(style?.fontSize ?? base.fontSize)),
+    ),
+    nameColor: style?.nameColor ?? base.nameColor,
+    valueColor: style?.valueColor ?? base.valueColor,
+    progressColor: style?.progressColor ?? base.progressColor,
+    progressOpacity: Math.max(
+      0,
+      Math.min(1, Number(style?.progressOpacity ?? base.progressOpacity)),
+    ),
+    rowHeight: Math.max(
+      16,
+      Math.min(
+        48,
+        Math.round(
+          style && "rowHeight" in style ? (style.rowHeight ?? base.rowHeight) : base.rowHeight,
+        ),
+      ),
+    ),
+    nameColumnWidth: Math.max(
+      32,
+      Math.min(
+        240,
+        Math.round(
+          style && "nameColumnWidth" in style
+            ? (style.nameColumnWidth ?? base.nameColumnWidth)
+            : base.nameColumnWidth,
+        ),
+      ),
+    ),
+    buffColumnWidth: Math.max(
+      36,
+      Math.min(
+        140,
+        Math.round(
+          style && "buffColumnWidth" in style
+            ? (style.buffColumnWidth ?? base.buffColumnWidth)
+            : base.buffColumnWidth,
+        ),
+      ),
+    ),
+  };
+}
+
 function createDefaultTextBuffPanelStyle(): TextBuffPanelStyle {
   return {
     displayMode: "modern",
@@ -943,6 +1028,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     selfAppliedMonitorAll: false,
     teammateBuffIds: [],
     teammateBuffCategories: [],
+    teammateBuffColumnOrder: [],
     buffPriorityIds: [],
     buffAliases: {},
     buffAlerts: {},
@@ -950,7 +1036,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     overlaySizes: createDefaultMonsterOverlaySizes(),
     overlayVisibility: createDefaultMonsterOverlayVisibility(),
     panelStyle: createDefaultCustomPanelStyle(),
-    teammatePanelStyle: createDefaultCustomPanelStyle(),
+    teammatePanelStyle: createDefaultTeammatePanelStyle(),
     hatePanelStyle: createDefaultCustomPanelStyle(),
   };
 }

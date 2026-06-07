@@ -1222,6 +1222,9 @@ export const jaJPMessages = {
   "monsterMonitor.style.valueColor": "値の色",
   "monsterMonitor.style.progressColor": "プログレスバー色",
   "monsterMonitor.style.progressOpacity": "プログレスバー不透明度",
+  "monsterMonitor.style.rowHeight": "行の高さ",
+  "monsterMonitor.style.nameColumnWidth": "味方列の幅",
+  "monsterMonitor.style.buffColumnWidth": "Buff 列の幅",
   "monsterMonitor.hate.displayTitle": "ヘイトリスト表示",
   "monsterMonitor.hate.displayDescription":
     "モンスターヘイトパネルを個別に有効化し、スタイルを設定します。",

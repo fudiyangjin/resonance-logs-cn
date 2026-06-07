@@ -1224,6 +1224,9 @@ export const enUSMessages = {
   "monsterMonitor.style.valueColor": "Value Color",
   "monsterMonitor.style.progressColor": "Progress Bar Color",
   "monsterMonitor.style.progressOpacity": "Progress Bar Opacity",
+  "monsterMonitor.style.rowHeight": "Row Height",
+  "monsterMonitor.style.nameColumnWidth": "Teammate Column Width",
+  "monsterMonitor.style.buffColumnWidth": "Buff Column Width",
   "monsterMonitor.hate.displayTitle": "Hate List Display",
   "monsterMonitor.hate.displayDescription":
     "Enable the monster hate panel separately and configure its style.",

@@ -15,13 +15,30 @@
   import {
     SETTINGS,
     createDefaultBuffAlertRule,
-    ensureBuffAliases,
     ensureBuffAlerts,
+    ensureTeammatePanelStyle,
+    getGlobalBuffAliases,
+    type TeammateBuffColumnKey,
+    type TeammatePanelStyle,
     type BuffAlertRule,
   } from "$lib/settings-store";
 
   type SearchTarget = "global" | "self";
   type MonsterMonitorTab = "buff" | "teammate" | "hate" | "overlay";
+  type TeammateColumnItem =
+    | {
+        key: TeammateBuffColumnKey;
+        kind: "buff";
+        label: string;
+        buffId: number;
+        spriteFile?: string;
+      }
+    | {
+        key: TeammateBuffColumnKey;
+        kind: "category";
+        label: string;
+        categoryKey: BuffCategoryKey;
+      };
 
   const availableBuffDefinitions = getAvailableBuffDefinitions();
   const availableBuffMap = new Map<number, BuffDefinition>(
@@ -37,14 +54,14 @@
   let activeTab = $state<MonsterMonitorTab>("buff");
 
   const monsterMonitor = $derived(SETTINGS.monsterMonitor.state);
-  const buffAliases = $derived.by(() =>
-    ensureBuffAliases(monsterMonitor.buffAliases),
-  );
+  const buffAliases = $derived.by(() => getGlobalBuffAliases());
   const hatePanelStyle = $derived.by(
     () => monsterMonitor.hatePanelStyle ?? monsterMonitor.panelStyle,
   );
-  const teammatePanelStyle = $derived.by(
-    () => monsterMonitor.teammatePanelStyle ?? monsterMonitor.panelStyle,
+  const teammatePanelStyle = $derived.by(() =>
+    ensureTeammatePanelStyle(
+      monsterMonitor.teammatePanelStyle ?? monsterMonitor.panelStyle,
+    ),
   );
   const overlayVisibility = $derived.by(() => ({
     showMonsterBuffPanel:
@@ -68,15 +85,46 @@
       teammateBuffCategories.includes(category.key),
     ),
   );
-  const allConfiguredBuffIds = $derived.by(() =>
+  const monsterConfiguredBuffIds = $derived.by(() =>
     Array.from(new Set([...globalBuffIds, ...selfAppliedBuffIds])),
+  );
+  const allDisplayNameBuffIds = $derived.by(() =>
+    Array.from(
+      new Set([...globalBuffIds, ...selfAppliedBuffIds, ...teammateBuffIds]),
+    ),
+  );
+  const teammateColumnItems = $derived.by(() =>
+    orderTeammateColumnItems(
+      [
+        ...teammateBuffIds.map((buffId): TeammateColumnItem => {
+          const iconBuff = availableBuffMap.get(buffId);
+          const item: TeammateColumnItem = {
+            key: teammateBuffColumnKey(buffId),
+            kind: "buff",
+            label: buffName(buffId),
+            buffId,
+          };
+          if (iconBuff) item.spriteFile = iconBuff.spriteFile;
+          return item;
+        }),
+        ...selectedTeammateBuffCategories.map(
+          (category): TeammateColumnItem => ({
+            key: teammateCategoryColumnKey(category.key),
+            kind: "category",
+            label: category.label,
+            categoryKey: category.key,
+          }),
+        ),
+      ],
+      monsterMonitor.teammateBuffColumnOrder ?? [],
+    ),
   );
   const configuredAlertBuffIds = $derived.by(() =>
     Object.keys(buffAlerts)
       .map((baseId) => Number(baseId))
       .filter(
         (baseId) =>
-          Number.isFinite(baseId) && allConfiguredBuffIds.includes(baseId),
+          Number.isFinite(baseId) && monsterConfiguredBuffIds.includes(baseId),
       )
       .sort((a, b) => a - b),
   );
@@ -94,7 +142,7 @@
     if (prioritySearchKeyword.trim().length === 0) return [];
 
     const matching = searchBuffsByName(prioritySearchKeyword, buffAliases);
-    const combinedSet = new Set(allConfiguredBuffIds);
+    const combinedSet = new Set(monsterConfiguredBuffIds);
     const prioritySet = new Set(buffPriorityIds);
 
     return matching.filter(
@@ -108,10 +156,40 @@
 
     return matching.filter(
       (item) =>
-        allConfiguredBuffIds.includes(item.baseId) &&
+        monsterConfiguredBuffIds.includes(item.baseId) &&
         !configuredAlertBuffIds.includes(item.baseId),
     );
   });
+
+  function teammateBuffColumnKey(buffId: number): TeammateBuffColumnKey {
+    return `buff:${buffId}`;
+  }
+
+  function teammateCategoryColumnKey(
+    categoryKey: BuffCategoryKey,
+  ): TeammateBuffColumnKey {
+    return `category:${categoryKey}`;
+  }
+
+  function orderTeammateColumnItems(
+    items: TeammateColumnItem[],
+    order: TeammateBuffColumnKey[],
+  ): TeammateColumnItem[] {
+    const itemMap = new Map(items.map((item) => [item.key, item]));
+    const ordered: TeammateColumnItem[] = [];
+    const used = new Set<TeammateBuffColumnKey>();
+    for (const key of order) {
+      const item = itemMap.get(key);
+      if (!item || used.has(key)) continue;
+      ordered.push(item);
+      used.add(key);
+    }
+    for (const item of items) {
+      if (used.has(item.key)) continue;
+      ordered.push(item);
+    }
+    return ordered;
+  }
 
   function updateMonsterMonitor(
     updater: (
@@ -216,11 +294,16 @@
     updateMonsterMonitor((state) => {
       const current = state.teammateBuffIds;
       const exists = current.includes(buffId);
+      const teammateBuffIds = exists
+        ? current.filter((id) => id !== buffId)
+        : [...current, buffId];
       return {
         ...state,
-        teammateBuffIds: exists
-          ? current.filter((id) => id !== buffId)
-          : [...current, buffId],
+        teammateBuffIds,
+        teammateBuffColumnOrder: syncTeammateColumnOrder({
+          ...state,
+          teammateBuffIds,
+        }),
       };
     });
   }
@@ -229,40 +312,65 @@
     updateMonsterMonitor((state) => {
       const current = state.teammateBuffCategories ?? [];
       const exists = current.includes(categoryKey);
+      const teammateBuffCategories = exists
+        ? current.filter((key) => key !== categoryKey)
+        : [...current, categoryKey];
       return {
         ...state,
-        teammateBuffCategories: exists
-          ? current.filter((key) => key !== categoryKey)
-          : [...current, categoryKey],
+        teammateBuffCategories,
+        teammateBuffColumnOrder: syncTeammateColumnOrder({
+          ...state,
+          teammateBuffCategories,
+        }),
       };
     });
   }
 
   function removeTeammateBuff(buffId: number) {
-    updateMonsterMonitor((state) => ({
-      ...state,
-      teammateBuffIds: state.teammateBuffIds.filter((id) => id !== buffId),
-    }));
+    updateMonsterMonitor((state) => {
+      const teammateBuffIds = state.teammateBuffIds.filter(
+        (id) => id !== buffId,
+      );
+      return {
+        ...state,
+        teammateBuffIds,
+        teammateBuffColumnOrder: syncTeammateColumnOrder({
+          ...state,
+          teammateBuffIds,
+        }),
+      };
+    });
   }
 
   function removeTeammateBuffCategory(categoryKey: BuffCategoryKey) {
-    updateMonsterMonitor((state) => ({
-      ...state,
-      teammateBuffCategories: (state.teammateBuffCategories ?? []).filter(
-        (key) => key !== categoryKey,
-      ),
-    }));
+    updateMonsterMonitor((state) => {
+      const teammateBuffCategories = (
+        state.teammateBuffCategories ?? []
+      ).filter((key) => key !== categoryKey);
+      return {
+        ...state,
+        teammateBuffCategories,
+        teammateBuffColumnOrder: syncTeammateColumnOrder({
+          ...state,
+          teammateBuffCategories,
+        }),
+      };
+    });
   }
 
   function setAlias(buffId: number, alias: string) {
+    const nextGlobalAliases = { ...SETTINGS.skillMonitor.state.buffAliases };
+    const trimmed = alias.trim();
+    if (trimmed) {
+      nextGlobalAliases[String(buffId)] = trimmed;
+    } else {
+      delete nextGlobalAliases[String(buffId)];
+    }
+    SETTINGS.skillMonitor.state.buffAliases = nextGlobalAliases;
+
     updateMonsterMonitor((state) => {
       const nextAliases = { ...state.buffAliases };
-      const trimmed = alias.trim();
-      if (trimmed) {
-        nextAliases[buffId] = trimmed;
-      } else {
-        delete nextAliases[buffId];
-      }
+      delete nextAliases[String(buffId)];
       return {
         ...state,
         buffAliases: nextAliases,
@@ -296,17 +404,67 @@
     }));
   }
 
-  function updateTeammatePanelStyle<K extends keyof typeof teammatePanelStyle>(
+  function updateTeammatePanelStyle<K extends keyof TeammatePanelStyle>(
     key: K,
-    value: (typeof teammatePanelStyle)[K],
+    value: TeammatePanelStyle[K],
   ) {
     updateMonsterMonitor((state) => ({
       ...state,
-      teammatePanelStyle: {
+      teammatePanelStyle: ensureTeammatePanelStyle({
         ...(state.teammatePanelStyle ?? state.panelStyle),
         [key]: value,
-      },
+      }),
     }));
+  }
+
+  function getTeammateColumnKeys(
+    state: Pick<
+      typeof SETTINGS.monsterMonitor.state,
+      "teammateBuffIds" | "teammateBuffCategories"
+    >,
+  ): TeammateBuffColumnKey[] {
+    return [
+      ...(state.teammateBuffIds ?? []).map(teammateBuffColumnKey),
+      ...(state.teammateBuffCategories ?? []).map(teammateCategoryColumnKey),
+    ];
+  }
+
+  function syncTeammateColumnOrder(
+    state: Pick<
+      typeof SETTINGS.monsterMonitor.state,
+      | "teammateBuffIds"
+      | "teammateBuffCategories"
+      | "teammateBuffColumnOrder"
+    >,
+  ): TeammateBuffColumnKey[] {
+    const keys = getTeammateColumnKeys(state);
+    const keySet = new Set(keys);
+    const next: TeammateBuffColumnKey[] = [];
+    for (const key of state.teammateBuffColumnOrder ?? []) {
+      if (!keySet.has(key) || next.includes(key)) continue;
+      next.push(key);
+    }
+    for (const key of keys) {
+      if (!next.includes(key)) next.push(key);
+    }
+    return next;
+  }
+
+  function moveTeammateColumn(
+    key: TeammateBuffColumnKey,
+    direction: "up" | "down",
+  ) {
+    updateMonsterMonitor((state) => {
+      const order = syncTeammateColumnOrder(state);
+      const idx = order.indexOf(key);
+      if (idx === -1) return state;
+      const target = direction === "up" ? idx - 1 : idx + 1;
+      if (target < 0 || target >= order.length) return state;
+      const next = [...order];
+      next[idx] = order[target]!;
+      next[target] = key;
+      return { ...state, teammateBuffColumnOrder: next };
+    });
   }
 
   function toggleOverlayVisibility(key: keyof typeof overlayVisibility) {
@@ -843,9 +1001,9 @@
         </h2>
       </div>
 
-      {#if allConfiguredBuffIds.length > 0}
+      {#if allDisplayNameBuffIds.length > 0}
         <div class="grid gap-3">
-          {#each allConfiguredBuffIds as buffId (buffId)}
+          {#each allDisplayNameBuffIds as buffId (buffId)}
             <div
               class="grid gap-2 md:grid-cols-[220px_minmax(0,1fr)] md:items-center"
             >
@@ -1057,35 +1215,50 @@
             {t("monsterMonitor.teammate.groupTitle")}
           </div>
         </div>
-        {#if teammateBuffIds.length > 0 || selectedTeammateBuffCategories.length > 0}
-          <div class="flex flex-wrap gap-2">
-            {#each teammateBuffIds as buffId (buffId)}
-              {@const iconBuff = availableBuffMap.get(buffId)}
-              <button
-                type="button"
-                class="selected-buff"
-                onclick={() => removeTeammateBuff(buffId)}
-                title={t("monsterMonitor.buffGroups.removeTitle")}
-              >
-                {#if iconBuff}
+        {#if teammateColumnItems.length > 0}
+          <div class="space-y-2">
+            {#each teammateColumnItems as item, idx (item.key)}
+              <div class="teammate-order-row">
+                <span class="text-muted-foreground w-6 text-center text-xs">
+                  {idx + 1}
+                </span>
+                {#if item.kind === "buff" && item.spriteFile}
                   <img
-                    src={`/images/buff/${iconBuff.spriteFile}`}
-                    alt={buffName(buffId)}
+                    src={`/images/buff/${item.spriteFile}`}
+                    alt={item.label}
                     class="bg-muted/20 h-8 w-8 rounded object-contain"
                   />
                 {/if}
-                <span>{buffName(buffId)}</span>
-              </button>
-            {/each}
-            {#each selectedTeammateBuffCategories as category (category.key)}
-              <button
-                type="button"
-                class="selected-buff"
-                onclick={() => removeTeammateBuffCategory(category.key)}
-                title={t("monsterMonitor.buffGroups.removeTitle")}
-              >
-                <span>{category.label}</span>
-              </button>
+                <span class="text-foreground min-w-0 flex-1 truncate text-sm">
+                  {item.label}
+                </span>
+                <button
+                  type="button"
+                  class="order-button"
+                  onclick={() => moveTeammateColumn(item.key, "up")}
+                  disabled={idx === 0}
+                >
+                  {t("monsterMonitor.priority.moveUp")}
+                </button>
+                <button
+                  type="button"
+                  class="order-button"
+                  onclick={() => moveTeammateColumn(item.key, "down")}
+                  disabled={idx === teammateColumnItems.length - 1}
+                >
+                  {t("monsterMonitor.priority.moveDown")}
+                </button>
+                <button
+                  type="button"
+                  class="order-button danger"
+                  onclick={() =>
+                    item.kind === "buff"
+                      ? removeTeammateBuff(item.buffId)
+                      : removeTeammateBuffCategory(item.categoryKey)}
+                >
+                  {t("monsterMonitor.priority.remove")}
+                </button>
+              </div>
             {/each}
           </div>
         {:else}
@@ -1161,6 +1334,64 @@
           />
           <strong>{teammatePanelStyle.fontSize}px</strong>
         </label>
+
+        <label class="style-field">
+          <span>{t("monsterMonitor.style.rowHeight")}</span>
+          <input
+            type="range"
+            min="16"
+            max="48"
+            value={teammatePanelStyle.rowHeight}
+            oninput={(event) =>
+              updateTeammatePanelStyle(
+                "rowHeight",
+                Number.parseInt(
+                  (event.currentTarget as HTMLInputElement).value,
+                  10,
+                ),
+              )}
+          />
+          <strong>{teammatePanelStyle.rowHeight}px</strong>
+        </label>
+
+        <label class="style-field">
+          <span>{t("monsterMonitor.style.nameColumnWidth")}</span>
+          <input
+            type="range"
+            min="32"
+            max="240"
+            value={teammatePanelStyle.nameColumnWidth}
+            oninput={(event) =>
+              updateTeammatePanelStyle(
+                "nameColumnWidth",
+                Number.parseInt(
+                  (event.currentTarget as HTMLInputElement).value,
+                  10,
+                ),
+              )}
+          />
+          <strong>{teammatePanelStyle.nameColumnWidth}px</strong>
+        </label>
+
+        <label class="style-field">
+          <span>{t("monsterMonitor.style.buffColumnWidth")}</span>
+          <input
+            type="range"
+            min="36"
+            max="140"
+            value={teammatePanelStyle.buffColumnWidth}
+            oninput={(event) =>
+              updateTeammatePanelStyle(
+                "buffColumnWidth",
+                Number.parseInt(
+                  (event.currentTarget as HTMLInputElement).value,
+                  10,
+                ),
+              )}
+          />
+          <strong>{teammatePanelStyle.buffColumnWidth}px</strong>
+        </label>
+
       </div>
 
       <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -1480,6 +1711,48 @@
   .selected-buff:hover {
     border-color: rgba(96, 165, 250, 0.65);
     background: rgba(30, 41, 59, 0.55);
+  }
+
+  .teammate-order-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(15, 23, 42, 0.28);
+  }
+
+  .order-button {
+    flex: 0 0 auto;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    padding: 4px 8px;
+    color: var(--foreground, #fff);
+    font-size: 12px;
+    transition:
+      border-color 120ms ease,
+      background 120ms ease,
+      color 120ms ease;
+  }
+
+  .order-button:hover:not(:disabled) {
+    border-color: rgba(96, 165, 250, 0.65);
+    background: rgba(30, 41, 59, 0.55);
+  }
+
+  .order-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  .order-button.danger {
+    color: var(--destructive, #f87171);
+  }
+
+  .order-button.danger:hover:not(:disabled) {
+    border-color: rgba(248, 113, 113, 0.55);
+    background: rgba(127, 29, 29, 0.24);
   }
 
   .style-field,

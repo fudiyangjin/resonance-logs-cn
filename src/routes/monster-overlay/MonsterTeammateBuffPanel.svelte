@@ -51,6 +51,10 @@
         style:--buff-count={Math.max(displayColumns.length, 1)}
         style:--font-size={`${styleConfig.fontSize}px`}
         style:--column-gap={`${styleConfig.columnGap}px`}
+        style:--name-column-width={`${styleConfig.nameColumnWidth}px`}
+        style:--buff-column-width={`${styleConfig.buffColumnWidth}px`}
+        style:--row-height={`${styleConfig.rowHeight}px`}
+        style:color={styleConfig.nameColor}
       >
         <div class="teammate-header" aria-hidden="true"></div>
         {#each displayColumns as column (column.key)}
@@ -58,7 +62,10 @@
         {/each}
       </div>
 
-      <div class="matrix-body" style:gap={`${styleConfig.gap}px`}>
+      <div
+        class="matrix-body"
+        style:gap={`${styleConfig.gap}px`}
+      >
         {#each rows as row (row.teammateEntityUuid)}
           <div
             class="matrix-grid teammate-row"
@@ -66,8 +73,15 @@
             style:--buff-count={Math.max(displayColumns.length, 1)}
             style:--font-size={`${styleConfig.fontSize}px`}
             style:--column-gap={`${styleConfig.columnGap}px`}
+            style:--name-column-width={`${styleConfig.nameColumnWidth}px`}
+            style:--buff-column-width={`${styleConfig.buffColumnWidth}px`}
+            style:--row-height={`${styleConfig.rowHeight}px`}
           >
-            <div class="teammate-name" title={row.teammateName}>
+            <div
+              class="teammate-name"
+              title={row.teammateName}
+              style:color={styleConfig.nameColor}
+            >
               {row.teammateName}
             </div>
             {#each row.cells as cell (cell.key)}
@@ -139,16 +153,15 @@
   }
 
   .matrix-shell {
-    max-height: min(520px, calc(100vh - 80px));
-    overflow: auto;
+    overflow: visible;
     padding: 2px;
   }
 
   .matrix-grid {
     display: grid;
     grid-template-columns:
-      minmax(92px, 128px)
-      repeat(var(--buff-count), minmax(50px, 72px));
+      minmax(32px, var(--name-column-width))
+      repeat(var(--buff-count), minmax(36px, var(--buff-column-width)));
     column-gap: var(--column-gap);
     align-items: stretch;
     min-width: max-content;
@@ -174,7 +187,7 @@
 
   .teammate-header,
   .buff-header {
-    color: rgba(255, 255, 255, 0.88);
+    color: currentColor;
     font-size: max(10px, calc(var(--font-size) - 2px));
     font-weight: 700;
     line-height: 1.15;
@@ -201,9 +214,9 @@
 
   .teammate-name {
     min-width: 0;
+    height: var(--row-height);
     padding: 3px 6px;
     overflow: hidden;
-    color: rgba(255, 255, 255, 0.95);
     font-weight: 700;
     line-height: 1.2;
     text-overflow: ellipsis;
@@ -212,7 +225,7 @@
 
   .buff-cell {
     position: relative;
-    min-height: 22px;
+    min-height: var(--row-height);
     overflow: hidden;
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.08);

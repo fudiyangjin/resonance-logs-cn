@@ -1117,6 +1117,9 @@ export const zhCNMessages = {
   "monsterMonitor.style.valueColor": "数值颜色",
   "monsterMonitor.style.progressColor": "进度条颜色",
   "monsterMonitor.style.progressOpacity": "进度条透明度",
+  "monsterMonitor.style.rowHeight": "行高",
+  "monsterMonitor.style.nameColumnWidth": "队友列宽",
+  "monsterMonitor.style.buffColumnWidth": "Buff 列宽",
   "monsterMonitor.hate.displayTitle": "仇恨列表显示",
   "monsterMonitor.hate.displayDescription":
     "独立启用怪物仇恨面板，并单独配置它的样式。",

@@ -1,4 +1,4 @@
-import { SETTINGS } from "$lib/settings-store";
+import { SETTINGS, ensureTeammatePanelStyle } from "$lib/settings-store";
 import {
   createReferenceSession,
   disableSiblingReference,
@@ -100,9 +100,9 @@ export function hatePanelStyle() {
 }
 
 export function teammatePanelStyle() {
-  return (
+  return ensureTeammatePanelStyle(
     SETTINGS.monsterMonitor.state.teammatePanelStyle ??
-    SETTINGS.monsterMonitor.state.panelStyle
+      SETTINGS.monsterMonitor.state.panelStyle,
   );
 }
 
