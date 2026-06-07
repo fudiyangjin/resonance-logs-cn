@@ -202,13 +202,21 @@ pub(crate) fn should_overwrite_entity_type(existing: EEntityType, observed: EEnt
     true
 }
 
+#[derive(Debug, Default)]
+pub struct SyncNearEntitiesProcessResult {
+    pub initial_buff_snapshots: Vec<(i64, blueprotobuf::BuffInfoSync)>,
+}
+
 pub fn process_sync_near_entities(
     encounter: &mut Encounter,
     attr_store: &mut EntityAttrStore,
     sync_near_entities: blueprotobuf::SyncNearEntities,
-) -> Option<()> {
+) -> Option<SyncNearEntitiesProcessResult> {
+    let mut result = SyncNearEntitiesProcessResult::default();
+
     for pkt_entity in sync_near_entities.appear {
         let target_uuid = pkt_entity.uuid?;
+        let initial_buff_infos = pkt_entity.buff_infos;
         let target_entity_type = EEntityType::from(target_uuid);
         let target_entity = match encounter.entity_uuid_to_entity.entry(target_uuid) {
             Entry::Occupied(mut entry) => {
@@ -246,10 +254,16 @@ pub fn process_sync_near_entities(
             }
             _ => {}
         }
+
+        if let Some(buff_infos) = initial_buff_infos {
+            result
+                .initial_buff_snapshots
+                .push((target_uuid, buff_infos));
+        }
     }
 
     // Track party members for wipe detection (collect data first to avoid borrow issues)
-    Some(())
+    Some(result)
 }
 
 pub fn process_sync_container_data(

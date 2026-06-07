@@ -1140,14 +1140,29 @@ impl AppStateManager {
         sync_near_entities: blueprotobuf::SyncNearEntities,
     ) {
         use crate::live::opcodes_process::process_sync_near_entities;
-        if process_sync_near_entities(
+        let Some(result) = process_sync_near_entities(
             &mut state.encounter,
             &mut state.attr_store,
             sync_near_entities,
-        )
-        .is_none()
-        {
+        ) else {
             warn!("Error processing SyncNearEntities.. ignoring.");
+            return;
+        };
+
+        for (target_uuid, buff_infos) in result.initial_buff_snapshots {
+            let Some(kind) = classify_buff_effect_target(state, target_uuid) else {
+                continue;
+            };
+            if kind != BuffTargetKind::LocalPlayer
+                && !state.entity_buff_config.profile_for(kind).enabled
+            {
+                continue;
+            }
+
+            state
+                .entity_buff_monitors
+                .monitor_for(target_uuid)
+                .apply_buff_info_snapshot(&buff_infos);
         }
     }
 

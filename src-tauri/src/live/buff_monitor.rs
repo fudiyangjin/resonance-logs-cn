@@ -2,7 +2,7 @@ use crate::database::now_ms;
 use crate::live::commands_models::BuffUpdateState;
 use crate::live::entity_id::{EntityUuid, entity_uuid_string};
 use blueprotobuf_lib::blueprotobuf::{
-    BuffChange, BuffEffectSync, BuffInfo, EBuffEffectLogicPbType, EBuffEventType,
+    BuffChange, BuffEffectSync, BuffInfo, BuffInfoSync, EBuffEffectLogicPbType, EBuffEventType,
 };
 use prost::Message;
 use std::collections::{HashMap, HashSet};
@@ -160,6 +160,38 @@ pub struct BuffMonitor {
 impl BuffMonitor {
     pub(crate) fn new() -> Self {
         Self::default()
+    }
+
+    pub(crate) fn apply_buff_info_snapshot(&mut self, buff_info_sync: &BuffInfoSync) -> usize {
+        let now = now_ms();
+        let mut applied = 0;
+
+        for buff_info in &buff_info_sync.buff_infos {
+            let Some(buff_uuid) = buff_info.buff_uuid else {
+                continue;
+            };
+            let Some(base_id) = buff_info.base_id else {
+                continue;
+            };
+
+            self.active_buffs.insert(
+                buff_uuid,
+                ActiveBuff {
+                    base_id,
+                    layer: buff_info.layer.unwrap_or(1),
+                    duration: buff_info.duration.unwrap_or(0),
+                    create_time: buff_info.create_time.unwrap_or(now),
+                    fire_uuid: buff_info.fire_uuid.filter(|id| *id != 0),
+                    source_config_id: buff_info
+                        .fight_source_info
+                        .as_ref()
+                        .and_then(|info| info.source_config_id),
+                },
+            );
+            applied += 1;
+        }
+
+        applied
     }
 
     pub(crate) fn process_buff_effect_bytes(
