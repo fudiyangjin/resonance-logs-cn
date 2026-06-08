@@ -4,7 +4,12 @@ use bytes::Bytes;
 pub struct ParseError;
 
 pub const WORLD_NTF_SERVICE_ID: u64 = 1_664_308_034;
+pub const WORLD_CALL_SERVICE_ID: u64 = 103_198_054;
 pub const GRPC_TEAM_NTF_SERVICE_ID: u64 = 966_773_353;
+
+pub mod world_call_method {
+    pub const USE_SLOT: u32 = 0x3d002;
+}
 
 pub mod grpc_team_method {
     pub const NOTICE_UPDATE_TEAM_INFO: u32 = 0x1;
@@ -21,9 +26,17 @@ pub struct NotifyKey {
     pub method_id: u32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CallKey {
+    pub service_id: u64,
+    pub call_id: u32,
+    pub method_id: u32,
+}
+
 #[derive(Debug)]
 pub enum CaptureEvent {
     Notify { key: NotifyKey, payload: Bytes },
+    Call { key: CallKey, payload: Bytes },
 }
 
 #[non_exhaustive]
@@ -78,6 +91,7 @@ pub enum Pkt {
     // 0x45-0x47 skipped
     NotifyTimerList = 0x00000048,
     NotifyTimerUpdate = 0x00000049,
+    SyncServerSkillEnd = 0x00003005,
 }
 
 impl TryFrom<u32> for Pkt {
@@ -122,6 +136,7 @@ impl TryFrom<u32> for Pkt {
             0x00000044 => Ok(Pkt::SyncAllServerStateObject),
             0x00000048 => Ok(Pkt::NotifyTimerList),
             0x00000049 => Ok(Pkt::NotifyTimerUpdate),
+            0x00003005 => Ok(Pkt::SyncServerSkillEnd),
             _ => Err(ParseError),
         }
     }

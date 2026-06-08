@@ -2,9 +2,9 @@ use crate::database::now_ms;
 use crate::live::buff_monitor::{BuffChangeEvent, BuffChangeType};
 use crate::live::commands_models::{CounterUpdateState, FightResourceEntry, SlotUpdateState};
 use crate::live::entity_attr_store::EntityAttrStore;
-use crate::live::opcodes_models::{AttrType, AttrValue, PositionAttr};
+use crate::live::opcodes_models::PositionAttr;
 use crate::live::opcodes_process::{DamageTakenSource, LocalDamageEvent, LocalDamageTakenEvent};
-use blueprotobuf_lib::blueprotobuf::EActorState;
+use crate::live::skill_lifecycle::{SkillId, SkillLifecycleOutput};
 use log::info;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
@@ -226,7 +226,7 @@ pub(crate) struct BuffTickState {
 
 #[derive(Debug, Clone)]
 pub(crate) struct SkillCastTickState {
-    pub skill_base_id: i32,
+    pub skill_id: SkillId,
     pub is_active: bool,
     pub start_time_ms: i64,
     pub applied_ticks: u64,
@@ -236,8 +236,7 @@ pub(crate) struct SkillCastTickState {
 
 #[derive(Debug, Clone)]
 pub(crate) struct SkillCastCompleteState {
-    pub skill_base_ids: Vec<i32>,
-    pub active_skill_id: Option<i32>,
+    pub skill_ids: Vec<SkillId>,
     pub increment: u32,
 }
 
@@ -387,8 +386,8 @@ impl BuffCounterTracker {
                         skill_base_id,
                         tick_interval_ms,
                         increment,
-                    } => Some(SkillCastTickState {
-                        skill_base_id: *skill_base_id,
+                    } => SkillId::new(*skill_base_id).map(|skill_id| SkillCastTickState {
+                        skill_id,
                         is_active: false,
                         start_time_ms: 0,
                         applied_ticks: 0,
@@ -406,8 +405,10 @@ impl BuffCounterTracker {
                         skill_base_ids,
                         increment,
                     } => Some(SkillCastCompleteState {
-                        skill_base_ids: skill_base_ids.clone(),
-                        active_skill_id: None,
+                        skill_ids: skill_base_ids
+                            .iter()
+                            .filter_map(|id| SkillId::new(*id))
+                            .collect(),
                         increment: *increment,
                     }),
                     _ => None,
@@ -706,7 +707,34 @@ impl BuffCounterTracker {
         changed
     }
 
-    pub fn on_skill_cast(&mut self, skill_base_id: i32) -> bool {
+    pub fn on_skill_lifecycle_output(&mut self, output: SkillLifecycleOutput) -> bool {
+        match output {
+            SkillLifecycleOutput::CastStarted(skill_id) => self.on_skill_cast_started(skill_id),
+            SkillLifecycleOutput::DurationStarted(skill_id) => {
+                self.on_skill_duration_started(skill_id)
+            }
+            SkillLifecycleOutput::DurationEnded(skill_id) => self.on_skill_duration_ended(skill_id),
+            SkillLifecycleOutput::CastCompleted(skill_id) => self.on_skill_cast_completed(skill_id),
+        }
+    }
+
+    pub fn on_skill_cast_started(&mut self, skill_id: SkillId) -> bool {
+        self.apply_skill_cast_sources(skill_id)
+    }
+
+    pub fn on_skill_duration_started(&mut self, skill_id: SkillId) -> bool {
+        self.activate_skill_duration_ticks(skill_id, now_ms())
+    }
+
+    pub fn on_skill_duration_ended(&mut self, skill_id: SkillId) -> bool {
+        self.deactivate_skill_duration_ticks(skill_id)
+    }
+
+    pub fn on_skill_cast_completed(&mut self, skill_id: SkillId) -> bool {
+        self.apply_skill_complete(skill_id)
+    }
+
+    fn apply_skill_cast_sources(&mut self, skill_id: SkillId) -> bool {
         let mut changed = false;
         let (rules, states) = (&self.rules, &mut self.states);
         for rule in rules {
@@ -721,29 +749,51 @@ impl BuffCounterTracker {
                 else {
                     continue;
                 };
-                if skill_base_ids.contains(&skill_base_id) {
+                if skill_base_ids.contains(&skill_id.get()) {
                     changed |= add_increment_to_slots(state, *increment);
                 }
             }
+        }
+        changed
+    }
+
+    fn activate_skill_duration_ticks(&mut self, skill_id: SkillId, start_time_ms: i64) -> bool {
+        let mut changed = false;
+        for state in self.states.values_mut() {
             for tick_state in &mut state.skill_tick_states {
-                if tick_state.skill_base_id != skill_base_id {
-                    continue;
+                if tick_state.skill_id == skill_id {
+                    changed |= activate_skill_tick_state(tick_state, start_time_ms);
                 }
-                changed |= activate_skill_tick_state(tick_state);
             }
-            let mut complete_increment = 0u32;
-            for complete_state in &mut state.skill_complete_states {
-                if !complete_state.skill_base_ids.contains(&skill_base_id) {
-                    continue;
+        }
+        changed
+    }
+
+    fn deactivate_skill_duration_ticks(&mut self, skill_id: SkillId) -> bool {
+        let mut changed = false;
+        for state in self.states.values_mut() {
+            for tick_state in &mut state.skill_tick_states {
+                if tick_state.skill_id == skill_id && tick_state.is_active {
+                    tick_state.is_active = false;
+                    changed = true;
                 }
-                if complete_state.active_skill_id.is_some() {
-                    complete_increment =
-                        complete_increment.saturating_add(complete_state.increment);
-                }
-                complete_state.active_skill_id = Some(skill_base_id);
             }
-            if complete_increment > 0 {
-                changed |= add_increment_to_slots(state, complete_increment);
+        }
+        changed
+    }
+
+    fn apply_skill_complete(&mut self, skill_id: SkillId) -> bool {
+        let mut changed = false;
+        for state in self.states.values_mut() {
+            let increment = state
+                .skill_complete_states
+                .iter()
+                .filter(|complete_state| complete_state.skill_ids.contains(&skill_id))
+                .fold(0u32, |acc, complete_state| {
+                    acc.saturating_add(complete_state.increment)
+                });
+            if increment > 0 {
+                changed |= add_increment_to_slots(state, increment);
             }
         }
         changed
@@ -931,12 +981,6 @@ impl BuffCounterTracker {
                     continue;
                 }
 
-                if !matches_skill_duration_tick_state(attr_store, local_player_uuid, tick_state) {
-                    tick_state.is_active = false;
-                    changed = true;
-                    continue;
-                }
-
                 if now_ms < tick_state.start_time_ms {
                     continue;
                 }
@@ -951,22 +995,6 @@ impl BuffCounterTracker {
                     let multiplier = u32::try_from(new_ticks).unwrap_or(u32::MAX);
                     let increment_total = tick_state.increment.saturating_mul(multiplier);
                     pending_increment = pending_increment.saturating_add(increment_total);
-                }
-            }
-            for complete_state in &mut state.skill_complete_states {
-                let Some(active_id) = complete_state.active_skill_id else {
-                    continue;
-                };
-                let still_casting = is_actor_state_skill(attr_store, local_player_uuid)
-                    && attr_store
-                        .attr(local_player_uuid, AttrType::SkillId)
-                        .and_then(AttrValue::as_int)
-                        .and_then(|v| i32::try_from(v).ok())
-                        == Some(active_id);
-                if !still_casting {
-                    complete_state.active_skill_id = None;
-                    pending_increment = pending_increment.saturating_add(complete_state.increment);
-                    changed = true;
                 }
             }
 
@@ -1042,9 +1070,6 @@ impl BuffCounterTracker {
                 tick.is_active = false;
                 tick.start_time_ms = 0;
                 tick.applied_ticks = 0;
-            }
-            for complete in &mut state.skill_complete_states {
-                complete.active_skill_id = None;
             }
             for resource in &mut state.fight_resource_spent_states {
                 resource.previous_value = None;
@@ -1366,28 +1391,7 @@ fn matches_attr_condition(
         == Some(condition.required_value)
 }
 
-fn is_actor_state_skill(attr_store: &EntityAttrStore, local_player_uuid: i64) -> bool {
-    attr_store
-        .attr(local_player_uuid, AttrType::ActorState)
-        .and_then(AttrValue::as_int)
-        .is_some_and(|value| value == i64::from(EActorState::ActorStateSkill as i32))
-}
-
-fn matches_skill_duration_tick_state(
-    attr_store: &EntityAttrStore,
-    local_player_uuid: i64,
-    tick_state: &SkillCastTickState,
-) -> bool {
-    is_actor_state_skill(attr_store, local_player_uuid)
-        && attr_store
-            .attr(local_player_uuid, AttrType::SkillId)
-            .and_then(AttrValue::as_int)
-            .and_then(|value| i32::try_from(value).ok())
-            == Some(tick_state.skill_base_id)
-}
-
-fn activate_skill_tick_state(tick_state: &mut SkillCastTickState) -> bool {
-    let start_time_ms = now_ms();
+fn activate_skill_tick_state(tick_state: &mut SkillCastTickState, start_time_ms: i64) -> bool {
     let changed = !tick_state.is_active
         || tick_state.start_time_ms != start_time_ms
         || tick_state.applied_ticks != 0;

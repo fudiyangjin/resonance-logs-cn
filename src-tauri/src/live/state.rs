@@ -15,6 +15,9 @@ use crate::live::event_manager::EventManager;
 use crate::live::opcodes_models::{AttrType, AttrValue, DeathRecord, Encounter, Entity};
 use crate::live::season_cultivate::{FactorCounterTemplate, SeasonCultivateRuntimeState};
 use crate::live::skill_cd_monitor::SkillCdMonitor;
+use crate::live::skill_lifecycle::{
+    ClientSkillCast, ServerSkillEnd, SkillLifecycleOutput, SkillLifecycleRuntime,
+};
 use crate::live::team::{TeamEvent, TeamRuntimeState};
 use crate::live::training_dummy::{CombatGate, TrainingDummyRuntime, inspect_aoi_delta};
 use blueprotobuf_lib::blueprotobuf;
@@ -25,7 +28,7 @@ use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 
-const APPLY_EVENT_KIND_COUNT: usize = 11;
+const APPLY_EVENT_KIND_COUNT: usize = 13;
 const APPLY_EVENT_STATS_WINDOW: Duration = Duration::from_secs(20);
 const APPLY_EVENT_SLOW_THRESHOLD: Duration = Duration::from_millis(1);
 const APPLY_EVENT_KIND_NAMES: [&str; APPLY_EVENT_KIND_COUNT] = [
@@ -40,6 +43,8 @@ const APPLY_EVENT_KIND_NAMES: [&str; APPLY_EVENT_KIND_COUNT] = [
     "SyncNearDeltaInfo",
     "Team",
     "ResetEncounter",
+    "ClientSkillCast",
+    "ServerSkillEnd",
 ];
 
 /// Represents the possible events that can be handled by the state manager.
@@ -71,6 +76,10 @@ pub enum StateEvent {
         /// Whether this was a manual reset by the user (true) vs automatic (false).
         is_manual: bool,
     },
+    /// Client uplink skill cast request.
+    ClientSkillCast(ClientSkillCast),
+    /// Server notification that a skill has ended.
+    ServerSkillEnd(ServerSkillEnd),
 }
 
 impl StateEvent {
@@ -91,6 +100,8 @@ impl StateEvent {
             StateEvent::SyncNearDeltaInfo(_) => 8,
             StateEvent::Team(_) => 9,
             StateEvent::ResetEncounter { .. } => 10,
+            StateEvent::ClientSkillCast(_) => 11,
+            StateEvent::ServerSkillEnd(_) => 12,
         }
     }
 }
@@ -200,6 +211,7 @@ pub struct EntityMonitor {
     pub skill_cd_monitor: SkillCdMonitor,
     pub monitored_panel_attr_ids: Vec<i32>,
     pub fight_res_state: Option<FightResourceState>,
+    pub skill_lifecycle: SkillLifecycleRuntime,
     pub counter_tracker: BuffCounterTracker,
     pub factor_counter_tracker: BuffCounterTracker,
     pub season_cultivate: SeasonCultivateRuntimeState,
@@ -212,6 +224,7 @@ impl EntityMonitor {
             skill_cd_monitor: SkillCdMonitor::new(),
             monitored_panel_attr_ids: Vec::new(),
             fight_res_state: None,
+            skill_lifecycle: SkillLifecycleRuntime::default(),
             counter_tracker: BuffCounterTracker::default(),
             factor_counter_tracker: BuffCounterTracker::default(),
             season_cultivate: SeasonCultivateRuntimeState::default(),
@@ -221,6 +234,7 @@ impl EntityMonitor {
     fn clear_runtime_state(&mut self) {
         self.skill_cd_monitor.skill_cd_map.clear();
         self.fight_res_state = None;
+        self.skill_lifecycle.reset();
         self.counter_tracker.reset_counts();
         self.factor_counter_tracker.reset_counts();
     }
@@ -367,6 +381,25 @@ fn emit_season_cultivate_factor_counter_update(state: &mut AppState) {
 
 fn apply_factor_counter_rules(state: &mut AppState, rules: Vec<CounterRule>) {
     state.local_monitor.factor_counter_tracker.set_rules(rules);
+}
+
+fn apply_skill_lifecycle_outputs(
+    state: &mut AppState,
+    outputs: Vec<SkillLifecycleOutput>,
+) -> (bool, bool) {
+    let mut counter_dirty = false;
+    let mut factor_counter_dirty = false;
+    for output in outputs {
+        counter_dirty |= state
+            .local_monitor
+            .counter_tracker
+            .on_skill_lifecycle_output(output);
+        factor_counter_dirty |= state
+            .local_monitor
+            .factor_counter_tracker
+            .on_skill_lifecycle_output(output);
+    }
+    (counter_dirty, factor_counter_dirty)
 }
 
 fn hydrate_entities_from_attr_store(state: &mut AppState) {
@@ -821,7 +854,35 @@ impl AppStateManager {
                 state.pending_auto_reset = None;
                 self.reset_encounter(state, is_manual);
             }
+            StateEvent::ClientSkillCast(event) => {
+                let outputs = state
+                    .local_monitor
+                    .skill_lifecycle
+                    .on_client_skill_cast(event);
+                let (next_counter_dirty, next_factor_counter_dirty) =
+                    apply_skill_lifecycle_outputs(state, outputs);
+                counter_dirty |= next_counter_dirty;
+                factor_counter_dirty |= next_factor_counter_dirty;
+            }
+            StateEvent::ServerSkillEnd(event) => {
+                let outputs = state
+                    .local_monitor
+                    .skill_lifecycle
+                    .on_server_skill_end(event);
+                let (next_counter_dirty, next_factor_counter_dirty) =
+                    apply_skill_lifecycle_outputs(state, outputs);
+                counter_dirty |= next_counter_dirty;
+                factor_counter_dirty |= next_factor_counter_dirty;
+            }
         }
+        let outputs = state
+            .local_monitor
+            .skill_lifecycle
+            .on_actor_state_sample(&state.attr_store, state.encounter.local_player_uuid);
+        let (next_counter_dirty, next_factor_counter_dirty) =
+            apply_skill_lifecycle_outputs(state, outputs);
+        counter_dirty |= next_counter_dirty;
+        factor_counter_dirty |= next_factor_counter_dirty;
         if counter_dirty {
             emit_buff_counter_update_if_needed(
                 state,
@@ -1382,17 +1443,6 @@ impl AppStateManager {
                     &result.local_damage_taken_events,
                     state.encounter.local_player_uuid,
                 );
-        }
-
-        if let Some(skill_base_id) = result.attr_skill_id {
-            counter_dirty |= state
-                .local_monitor
-                .counter_tracker
-                .on_skill_cast(skill_base_id);
-            factor_counter_dirty |= state
-                .local_monitor
-                .factor_counter_tracker
-                .on_skill_cast(skill_base_id);
         }
 
         if !result.skill_cds.is_empty() {

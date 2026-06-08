@@ -1,13 +1,53 @@
+use crate::live::skill_lifecycle::{ClientSkillCast, ServerSkillEnd, SkillId};
 use crate::live::state::StateEvent;
 use crate::live::team::decode_team_event;
 use crate::packets;
-use crate::packets::opcodes::{CaptureEvent, GRPC_TEAM_NTF_SERVICE_ID, WORLD_NTF_SERVICE_ID};
+use crate::packets::opcodes::{
+    CaptureEvent, GRPC_TEAM_NTF_SERVICE_ID, WORLD_CALL_SERVICE_ID, WORLD_NTF_SERVICE_ID,
+    world_call_method,
+};
 use blueprotobuf_lib::blueprotobuf;
 use bytes::Bytes;
 use log::{debug, info, trace, warn};
 use prost::Message;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+fn decode_client_skill_cast(req: &blueprotobuf::UseSlotRequest) -> Option<ClientSkillCast> {
+    let is_skill_slot = req.use_type == Some(blueprotobuf::EUseSlotType::UseSlotTypeSkill as i32);
+    if !is_skill_slot {
+        return None;
+    }
+
+    let extra = req.extra_data.as_deref()?;
+    if extra.is_empty() {
+        return None;
+    }
+
+    let param = blueprotobuf::UseSkillParam::decode(extra).ok()?;
+    let skill_id = SkillId::new(param.skillid?)?;
+    Some(ClientSkillCast {
+        skill_id,
+        slot_id: req.slot_id,
+        begin_time_ms: param.begin_time,
+        target_uuid: param.target_uuid,
+    })
+}
+
+fn decode_use_slot_client_skill_cast(data: Bytes) -> Option<StateEvent> {
+    let use_slot = match blueprotobuf::UseSlot::decode(data) {
+        Ok(v) => v,
+        Err(e) => {
+            warn!("Error decoding UseSlot.. ignoring: {e}");
+            return None;
+        }
+    };
+    use_slot
+        .v_request
+        .as_ref()
+        .and_then(decode_client_skill_cast)
+        .map(StateEvent::ClientSkillCast)
+}
 
 /// Decodes packet payload into a state event.
 fn decode_state_event(op: packets::opcodes::Pkt, data: Bytes) -> Option<StateEvent> {
@@ -147,6 +187,18 @@ fn decode_state_event(op: packets::opcodes::Pkt, data: Bytes) -> Option<StateEve
                 None
             }
         },
+        packets::opcodes::Pkt::SyncServerSkillEnd => {
+            match blueprotobuf::SyncServerSkillEnd::decode(data) {
+                Ok(v) => v
+                    .skill_uuid
+                    .and_then(SkillId::new)
+                    .map(|skill_id| StateEvent::ServerSkillEnd(ServerSkillEnd { skill_id })),
+                Err(e) => {
+                    warn!("Error decoding SyncServerSkillEnd.. ignoring: {e}");
+                    None
+                }
+            }
+        }
         _ => {
             trace!("Unhandled packet opcode: {op:?}");
             None
@@ -173,6 +225,22 @@ pub fn decode_capture_event(event: CaptureEvent) -> Option<StateEvent> {
             trace!(
                 "Unhandled notify service_id={} method_id={}",
                 key.service_id, key.method_id
+            );
+            None
+        }
+        CaptureEvent::Call { key, payload } if key.service_id == WORLD_CALL_SERVICE_ID => {
+            match key.method_id {
+                world_call_method::USE_SLOT => decode_use_slot_client_skill_cast(payload),
+                method_id => {
+                    trace!("Unhandled World Call method_id={method_id}");
+                    None
+                }
+            }
+        }
+        CaptureEvent::Call { key, .. } => {
+            trace!(
+                "Unhandled call service_id={} method_id={} call_id={}",
+                key.service_id, key.method_id, key.call_id
             );
             None
         }
