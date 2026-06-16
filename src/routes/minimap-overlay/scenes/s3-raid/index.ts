@@ -31,5 +31,9 @@ function visibleEntities(
   entities: MinimapEntity[],
   arena: ReturnType<typeof arenaByPlayerY>,
 ): MinimapEntity[] {
-  return entities.filter((entity) => yInArena(entity.y, arena));
+  return entities.filter(
+    (entity) =>
+      yInArena(entity.y, arena) &&
+      (entity.kind === "local" || entity.kind === "teammate"),
+  );
 }

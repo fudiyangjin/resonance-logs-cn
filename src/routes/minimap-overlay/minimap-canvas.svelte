@@ -48,25 +48,10 @@
 
   function colorFor(entity: MinimapEntity): string {
     const colors = minimapSettings.entityColors;
-    switch (entity.kind) {
-      case "local":
-        return colors.local;
-      case "teammate":
-        return colors.teammate;
-      case "boss":
-        return colors.boss;
-      case "dummy":
-        return colors.dummy;
-      case "monster":
-        return colors.monster;
-      default:
-        return colors.other;
-    }
+    return entity.kind === "local" ? colors.local : colors.teammate;
   }
 
-  function radiusFor(entity: MinimapEntity): number {
-    if (entity.kind === "boss") return 7;
-    if (entity.kind === "dummy") return 3;
+  function radiusFor(): number {
     return 4;
   }
 
@@ -146,7 +131,7 @@
       }
 
       const [sx, sy] = project(entity.x, entity.z);
-      const r = radiusFor(entity);
+      const r = radiusFor();
       const dotColor =
         colorSlot === undefined ? colorFor(entity) : slotColor(colorSlot);
 
@@ -255,10 +240,6 @@
     void minimapSettings.hideNormalTeammates;
     void minimapSettings.entityColors.local;
     void minimapSettings.entityColors.teammate;
-    void minimapSettings.entityColors.boss;
-    void minimapSettings.entityColors.dummy;
-    void minimapSettings.entityColors.monster;
-    void minimapSettings.entityColors.other;
     if (typeof window === "undefined") return;
     const id = window.requestAnimationFrame(draw);
     return () => window.cancelAnimationFrame(id);

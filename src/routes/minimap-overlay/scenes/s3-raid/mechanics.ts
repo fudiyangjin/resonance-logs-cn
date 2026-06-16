@@ -1,51 +1,56 @@
 import type { MinimapBuffFact, MinimapEntity, MinimapSnapshot } from "$lib/api";
+import { t, type MessageKey } from "$lib/i18n/index.svelte";
 import type { MechanicRegion, MechanicRow } from "../../scene-types";
 import {
   FLOOR_CORNER_CELLS,
   FLOOR_EDGE_MID_CELLS,
-  RING_BANDS,
   cellRect,
   nearestFloorCell,
-  yInArena,
   type FloorCell,
   type S3RaidArena,
 } from "./arena";
 
-const text = {
-  ringInner: "电网内环",
-  ringMid: "电网中环",
-  ringOuter: "电网外环",
-  electricNet: "电网",
-  phaseCorner: "四角爆炸",
-  phaseEdge: "边中爆炸",
-  phase: "相位",
-  topLeft: "左上",
-  midLeft: "左中",
-  bottomLeft: "左下",
-  topRight: "右上",
-  midRight: "右中",
-  bottomRight: "右下",
-  phaseMirage: "相位映射·幻",
-  shareGroup: "分摊/衰减/分散",
-  mirageShareGroup: "幻想分摊/衰减/分散",
-  share: "分摊",
-  mirageShare: "幻想分摊",
-  decay: "衰减",
-  mirageDecay: "幻想衰减",
-  spread: "分散",
-  mirageSpread: "幻想分散",
-  causalJumpGroup: "神之刻度·因果折跃",
-  causalJump: "因果折跃弹射",
-  killMarkGroup: "累刎宣告",
-  killMarkMirageGroup: "累刎宣告·幻",
-  divineTrickKillMark: "神之诡谲·累刎宣告",
-  killMark: "累刎宣告",
-  divineTrickKillMarkMirage: "神之诡谲·累刎宣告·幻",
-  presetReturn: "神之刻度·预置的归途",
-  floorSuffix: "号地块",
-} as const;
-
-type RingSlot = keyof typeof RING_BANDS;
+const textKeys = {
+  phaseCorner: "minimap.s3Raid.phase.corner",
+  phaseEdge: "minimap.s3Raid.phase.edge",
+  phase: "minimap.s3Raid.phase.group",
+  topLeft: "minimap.s3Raid.floor.topLeft",
+  midLeft: "minimap.s3Raid.floor.midLeft",
+  bottomLeft: "minimap.s3Raid.floor.bottomLeft",
+  topRight: "minimap.s3Raid.floor.topRight",
+  midRight: "minimap.s3Raid.floor.midRight",
+  bottomRight: "minimap.s3Raid.floor.bottomRight",
+  phaseMirage: "minimap.s3Raid.phaseMirage",
+  shareGroup: "minimap.s3Raid.shareGroup",
+  mirageShareGroup: "minimap.s3Raid.mirageShareGroup",
+  share: "minimap.s3Raid.share",
+  mirageShare: "minimap.s3Raid.mirageShare",
+  decay: "minimap.s3Raid.decay",
+  mirageDecay: "minimap.s3Raid.mirageDecay",
+  spread: "minimap.s3Raid.spread",
+  mirageSpread: "minimap.s3Raid.mirageSpread",
+  causalJumpGroup: "minimap.s3Raid.causalJump.group",
+  causalJump: "minimap.s3Raid.causalJump.label",
+  killMarkGroup: "minimap.s3Raid.killMark.group",
+  killMarkMirageGroup: "minimap.s3Raid.killMark.mirageGroup",
+  divineTrickKillMark: "minimap.s3Raid.killMark.divineTrick",
+  killMark: "minimap.s3Raid.killMark.label",
+  divineTrickKillMarkMirage: "minimap.s3Raid.killMark.divineTrickMirage",
+  presetReturn: "minimap.s3Raid.presetReturn.group",
+  floorSuffix: "minimap.s3Raid.presetReturn.floorSuffix",
+  electromagneticPulseGroup: "minimap.s3Raid.electromagneticPulse.group",
+  electromagneticPulseA: "minimap.s3Raid.electromagneticPulse.a",
+  electromagneticPulseB: "minimap.s3Raid.electromagneticPulse.b",
+  electromagneticPulseC: "minimap.s3Raid.electromagneticPulse.c",
+  shareMirageGroup: "minimap.s3Raid.shareMirage.group",
+  normalDecayGroup: "minimap.s3Raid.normalDecay.group",
+  normalTarget: "minimap.s3Raid.normalDecay.normalTarget",
+  decayTarget: "minimap.s3Raid.normalDecay.decayTarget",
+  hitOrderGroup: "minimap.s3Raid.hitOrder.group",
+  hitOrder1: "minimap.s3Raid.hitOrder.mark1",
+  hitOrder2: "minimap.s3Raid.hitOrder.mark2",
+  hitOrder3: "minimap.s3Raid.hitOrder.mark3",
+} satisfies Record<string, MessageKey>;
 
 export type MechanicView = {
   regions: MechanicRegion[];
@@ -53,31 +58,36 @@ export type MechanicView = {
   entityColorSlots: Map<string, number>;
 };
 
-const ELECTRIC_NET_BY_SKILL: Record<number, { slot: RingSlot; label: string }> =
-  {
-    10310062: { slot: "inner", label: text.ringInner },
-    10310063: { slot: "mid", label: text.ringMid },
-    10310064: { slot: "outer", label: text.ringOuter },
-  };
-
 const PHASE_BUFFS: Record<
   number,
-  { cells: FloorCell[]; label: string; colorSlot: number }
+  { cells: FloorCell[]; labelKey: MessageKey; colorSlot: number }
 > = {
-  829214: { cells: FLOOR_EDGE_MID_CELLS, label: text.phaseEdge, colorSlot: 4 },
-  829215: { cells: FLOOR_CORNER_CELLS, label: text.phaseCorner, colorSlot: 3 },
+  829214: {
+    cells: FLOOR_EDGE_MID_CELLS,
+    labelKey: textKeys.phaseEdge,
+    colorSlot: 4,
+  },
+  829215: {
+    cells: FLOOR_CORNER_CELLS,
+    labelKey: textKeys.phaseCorner,
+    colorSlot: 3,
+  },
 };
 
 const PHASE_MAPPING: Record<
   number,
-  { cell: FloorCell; label: string; colorSlot: number }
+  { cell: FloorCell; labelKey: MessageKey; colorSlot: number }
 > = {
-  829327: { cell: "topLeft", label: text.topLeft, colorSlot: 0 },
-  829328: { cell: "midLeft", label: text.midLeft, colorSlot: 1 },
-  829329: { cell: "bottomLeft", label: text.bottomLeft, colorSlot: 2 },
-  829330: { cell: "topRight", label: text.topRight, colorSlot: 3 },
-  829331: { cell: "midRight", label: text.midRight, colorSlot: 4 },
-  829332: { cell: "bottomRight", label: text.bottomRight, colorSlot: 5 },
+  829327: { cell: "topLeft", labelKey: textKeys.topLeft, colorSlot: 0 },
+  829328: { cell: "midLeft", labelKey: textKeys.midLeft, colorSlot: 1 },
+  829329: { cell: "bottomLeft", labelKey: textKeys.bottomLeft, colorSlot: 2 },
+  829330: { cell: "topRight", labelKey: textKeys.topRight, colorSlot: 3 },
+  829331: { cell: "midRight", labelKey: textKeys.midRight, colorSlot: 4 },
+  829332: {
+    cell: "bottomRight",
+    labelKey: textKeys.bottomRight,
+    colorSlot: 5,
+  },
 };
 
 const PRESET_RETURN_COUNT_BUFFS: Record<number, number> = {
@@ -88,36 +98,106 @@ const PRESET_RETURN_COUNT_BUFFS: Record<number, number> = {
 
 const CALLOUT_BUFFS: Record<
   number,
-  { group: string; label: string; colorSlot: number }
+  { groupKey: MessageKey; labelKey: MessageKey; colorSlot: number }
 > = {
-  829304: { group: text.shareGroup, label: text.share, colorSlot: 0 },
-  829305: {
-    group: text.mirageShareGroup,
-    label: text.mirageShare,
-    colorSlot: 3,
-  },
-  829306: { group: text.shareGroup, label: text.decay, colorSlot: 1 },
-  829307: {
-    group: text.mirageShareGroup,
-    label: text.mirageDecay,
-    colorSlot: 4,
-  },
-  829308: { group: text.shareGroup, label: text.spread, colorSlot: 2 },
-  829309: {
-    group: text.mirageShareGroup,
-    label: text.mirageSpread,
-    colorSlot: 5,
-  },
-  829316: { group: text.causalJumpGroup, label: text.causalJump, colorSlot: 4 },
-  829323: {
-    group: text.killMarkGroup,
-    label: text.divineTrickKillMark,
+  829104: {
+    groupKey: textKeys.electromagneticPulseGroup,
+    labelKey: textKeys.electromagneticPulseA,
     colorSlot: 0,
   },
-  829324: { group: text.killMarkGroup, label: text.killMark, colorSlot: 1 },
+  829105: {
+    groupKey: textKeys.electromagneticPulseGroup,
+    labelKey: textKeys.electromagneticPulseB,
+    colorSlot: 1,
+  },
+  829106: {
+    groupKey: textKeys.electromagneticPulseGroup,
+    labelKey: textKeys.electromagneticPulseC,
+    colorSlot: 2,
+  },
+  829115: {
+    groupKey: textKeys.shareMirageGroup,
+    labelKey: textKeys.share,
+    colorSlot: 0,
+  },
+  829116: {
+    groupKey: textKeys.shareMirageGroup,
+    labelKey: textKeys.mirageShare,
+    colorSlot: 3,
+  },
+  829304: {
+    groupKey: textKeys.shareGroup,
+    labelKey: textKeys.share,
+    colorSlot: 0,
+  },
+  829305: {
+    groupKey: textKeys.mirageShareGroup,
+    labelKey: textKeys.mirageShare,
+    colorSlot: 3,
+  },
+  829306: {
+    groupKey: textKeys.shareGroup,
+    labelKey: textKeys.decay,
+    colorSlot: 1,
+  },
+  829307: {
+    groupKey: textKeys.mirageShareGroup,
+    labelKey: textKeys.mirageDecay,
+    colorSlot: 4,
+  },
+  829308: {
+    groupKey: textKeys.shareGroup,
+    labelKey: textKeys.spread,
+    colorSlot: 2,
+  },
+  829309: {
+    groupKey: textKeys.mirageShareGroup,
+    labelKey: textKeys.mirageSpread,
+    colorSlot: 5,
+  },
+  829316: {
+    groupKey: textKeys.causalJumpGroup,
+    labelKey: textKeys.causalJump,
+    colorSlot: 4,
+  },
+  829217: {
+    groupKey: textKeys.normalDecayGroup,
+    labelKey: textKeys.normalTarget,
+    colorSlot: 1,
+  },
+  829245: {
+    groupKey: textKeys.normalDecayGroup,
+    labelKey: textKeys.decayTarget,
+    colorSlot: 2,
+  },
+  829226: {
+    groupKey: textKeys.hitOrderGroup,
+    labelKey: textKeys.hitOrder1,
+    colorSlot: 0,
+  },
+  829227: {
+    groupKey: textKeys.hitOrderGroup,
+    labelKey: textKeys.hitOrder2,
+    colorSlot: 1,
+  },
+  829228: {
+    groupKey: textKeys.hitOrderGroup,
+    labelKey: textKeys.hitOrder3,
+    colorSlot: 2,
+  },
+  829323: {
+    groupKey: textKeys.killMarkGroup,
+    labelKey: textKeys.divineTrickKillMark,
+    colorSlot: 0,
+  },
+  829324: {
+    groupKey: textKeys.killMarkGroup,
+    labelKey: textKeys.killMark,
+    colorSlot: 1,
+  },
   829326: {
-    group: text.killMarkMirageGroup,
-    label: text.divineTrickKillMarkMirage,
+    groupKey: textKeys.killMarkMirageGroup,
+    labelKey: textKeys.divineTrickKillMarkMirage,
     colorSlot: 2,
   },
 };
@@ -130,17 +210,11 @@ export function buildMechanicView(
   const regions: MechanicRegion[] = [];
   const rows = new Map<string, MechanicRow>();
   const entityColorSlots = new Map<string, number>();
-  const visibleEntities = snapshot.entities.filter((entity) =>
-    yInArena(entity.y, arena),
-  );
   const entitiesByUuid = new Map(
     snapshot.entities.map((entity) => [entity.entityUuid, entity]),
   );
   const buffsByTarget = groupBuffsByTarget(snapshot.buffs);
 
-  if (arena !== "grid") {
-    addRingSkillRegions(visibleEntities, regions, rows);
-  }
   if (arena !== "ring") {
     addPhaseBuffs(
       snapshot,
@@ -194,34 +268,6 @@ function groupBuffsByTarget(
   return out;
 }
 
-function addRingSkillRegions(
-  entities: MinimapEntity[],
-  regions: MechanicRegion[],
-  rows: Map<string, MechanicRow>,
-) {
-  for (const entity of entities) {
-    const skillId = entity.currentSkillId ?? 0;
-    const mapping = ELECTRIC_NET_BY_SKILL[skillId];
-    if (!mapping) continue;
-    const [rInner, rOuter] = RING_BANDS[mapping.slot];
-    regions.push({
-      kind: "ring",
-      rInner,
-      rOuter,
-      colorSlot: 0,
-    });
-    upsertRow(rows, {
-      key: `ring:${skillId}`,
-      group: text.electricNet,
-      label: mapping.label,
-      colorSlot: 0,
-      createTimeMs: 0,
-      durationMs: 0,
-      targets: [],
-    });
-  }
-}
-
 function addPhaseBuffs(
   snapshot: MinimapSnapshot,
   entitiesByUuid: Map<string, MinimapEntity>,
@@ -244,8 +290,8 @@ function addPhaseBuffs(
     if (target) entityColorSlots.set(target.entityUuid, mapping.colorSlot);
     upsertRow(rows, {
       key: `phase:${buff.baseId}`,
-      group: text.phase,
-      label: mapping.label,
+      group: t(textKeys.phase),
+      label: t(mapping.labelKey),
       colorSlot: mapping.colorSlot,
       createTimeMs: buff.createTimeMs,
       durationMs: buff.durationMs,
@@ -274,8 +320,8 @@ function addPhaseMapping(
     if (target) entityColorSlots.set(target.entityUuid, mapping.colorSlot);
     upsertRow(rows, {
       key: `phaseMapping:${buff.baseId}`,
-      group: text.phaseMirage,
-      label: mapping.label,
+      group: t(textKeys.phaseMirage),
+      label: t(mapping.labelKey),
       colorSlot: mapping.colorSlot,
       createTimeMs: buff.createTimeMs,
       durationMs: buff.durationMs,
@@ -322,8 +368,8 @@ function addPresetReturn(
     if (target) entityColorSlots.set(target.entityUuid, colorSlot);
     upsertRow(rows, {
       key: `presetReturn:${count}:${cell ?? "unknown"}`,
-      group: text.presetReturn,
-      label: `${count}${text.floorSuffix}${cell ? "" : "?"}`,
+      group: t(textKeys.presetReturn),
+      label: `${count}${t(textKeys.floorSuffix)}${cell ? "" : "?"}`,
       colorSlot,
       createTimeMs: Math.min(linkBuff.createTimeMs, countBuff.createTimeMs),
       durationMs: Math.max(linkBuff.durationMs, countBuff.durationMs),
@@ -346,11 +392,11 @@ function addCalloutRows(
     if (target) entityColorSlots.set(target.entityUuid, mapping.colorSlot);
     upsertRow(rows, {
       key: `callout:${buff.baseId}:${buff.layer}`,
-      group: mapping.group,
+      group: t(mapping.groupKey),
       label:
         buff.baseId === 829324
-          ? `${mapping.label} x${buff.layer}`
-          : mapping.label,
+          ? `${t(mapping.labelKey)} x${buff.layer}`
+          : t(mapping.labelKey),
       colorSlot: mapping.colorSlot,
       createTimeMs: buff.createTimeMs,
       durationMs: buff.durationMs,

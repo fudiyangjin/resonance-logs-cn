@@ -14,12 +14,6 @@
 </script>
 
 <div class="space-y-6">
-  <div
-    class="border-border/60 bg-muted/20 text-muted-foreground rounded-lg border p-4 text-sm"
-  >
-    <p>{t("minimap.hint")}</p>
-  </div>
-
   <section
     class="border-border/60 bg-card/40 space-y-4 rounded-lg border p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
   >
@@ -104,22 +98,6 @@
       <SettingsColor
         bind:value={minimapSettings.entityColors.teammate}
         label={t("minimap.settings.colors.teammate")}
-      />
-      <SettingsColor
-        bind:value={minimapSettings.entityColors.boss}
-        label={t("minimap.settings.colors.boss")}
-      />
-      <SettingsColor
-        bind:value={minimapSettings.entityColors.dummy}
-        label={t("minimap.settings.colors.dummy")}
-      />
-      <SettingsColor
-        bind:value={minimapSettings.entityColors.monster}
-        label={t("minimap.settings.colors.monster")}
-      />
-      <SettingsColor
-        bind:value={minimapSettings.entityColors.other}
-        label={t("minimap.settings.colors.other")}
       />
     </div>
   </section>
