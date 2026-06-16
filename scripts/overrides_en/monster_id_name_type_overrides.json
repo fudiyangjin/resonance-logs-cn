@@ -687,6 +687,18 @@
     "Name": "Divine Defense Tower",
     "MonsterType": 1
   },
+  "103110": {
+    "MonsterType": 1
+  },
+  "103111": {
+    "MonsterType": 1
+  },
+  "103301": {
+    "MonsterType": 1
+  },
+  "103302": {
+    "MonsterType": 1
+  },
   "102403": {
     "Name": "Battle Mech 03"
   },

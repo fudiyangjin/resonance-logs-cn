@@ -1220,11 +1220,11 @@
     "Name": "机械幻象V型"
   },
   "103110": {
-    "MonsterType": 2,
+    "MonsterType": 1,
     "Name": "对龙机像-炮管子右"
   },
   "103111": {
-    "MonsterType": 2,
+    "MonsterType": 1,
     "Name": "对龙机像-炮管子左"
   },
   "10314": {
@@ -1292,11 +1292,11 @@
     "Name": "Dragonfighter Golem"
   },
   "103301": {
-    "MonsterType": 2,
+    "MonsterType": 1,
     "Name": "对龙机像-炮管子右"
   },
   "103302": {
-    "MonsterType": 2,
+    "MonsterType": 1,
     "Name": "对龙机像-炮管子左"
   },
   "103303": {

@@ -1220,12 +1220,12 @@
     "Name": "机械幻象V型"
   },
   "103110": {
-    "MonsterType": 2,
-    "Name": "对龙机像-炮管子右"
+    "Name": "对龙机像-炮管子右",
+    "MonsterType": 1
   },
   "103111": {
-    "MonsterType": 2,
-    "Name": "对龙机像-炮管子左"
+    "Name": "对龙机像-炮管子左",
+    "MonsterType": 1
   },
   "10314": {
     "MonsterType": 0,
@@ -1292,12 +1292,12 @@
     "Name": "悖与灾的机骸·终"
   },
   "103301": {
-    "MonsterType": 2,
-    "Name": "对龙机像-炮管子右"
+    "Name": "对龙机像-炮管子右",
+    "MonsterType": 2
   },
   "103302": {
-    "MonsterType": 2,
-    "Name": "对龙机像-炮管子左"
+    "Name": "对龙机像-炮管子左",
+    "MonsterType": 2
   },
   "103303": {
     "MonsterType": 1,
