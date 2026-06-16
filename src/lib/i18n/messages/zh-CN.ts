@@ -1091,6 +1091,7 @@ export const zhCNMessages = {
   "monsterMonitor.fantasy.title": "队友幻想",
   "monsterMonitor.fantasy.description": "队友释放的共鸣技能召唤怪物。",
   "monsterMonitor.fantasy.showAll": "显示全部队友幻想",
+  "monsterMonitor.fantasy.persistentDisplay": "永久展示队友幻想",
   "monsterMonitor.fantasy.placeholder": "搜索队友幻想名称或 MonsterId",
   "monsterMonitor.fantasy.emptySearch": "没有匹配的队友幻想",
   "monsterMonitor.fantasy.groupTitle": "队友幻想",

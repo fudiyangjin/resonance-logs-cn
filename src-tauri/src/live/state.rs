@@ -1273,6 +1273,7 @@ impl AppStateManager {
         state.sent_overlay_entity_uuids.clear();
         state.battle_state = BattleStateMachine::default();
         state.pending_auto_reset = None;
+        state.event_manager.emit_teammate_fantasy_clear();
         let previous = build_training_dummy_state(&state.training_dummy);
         state.training_dummy.clear();
         emit_training_dummy_update_if_changed(state, previous);

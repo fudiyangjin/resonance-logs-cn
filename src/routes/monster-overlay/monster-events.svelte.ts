@@ -5,11 +5,13 @@ import {
   onEntityIdentities,
   onHateListUpdate,
   onTeammateBuffUpdate,
+  onTeammateFantasyClear,
   onTeammateFantasyUpdate,
   type BuffUpdateState,
   type HateEntry,
   type TeammateFantasyState,
 } from "$lib/api";
+import { SETTINGS } from "$lib/settings-store";
 import {
   onGlobalPointerMove,
   onGlobalPointerUp,
@@ -34,17 +36,56 @@ function mapBossBuffs(buffs: BuffUpdateState[]) {
 
 const mapEntityBuffs = mapBossBuffs;
 
+function isSameFantasyEntry(
+  left: TeammateFantasyState,
+  right: TeammateFantasyState,
+) {
+  return (
+    left.summonUuid === right.summonUuid &&
+    left.monsterId === right.monsterId &&
+    left.remodelLevel === right.remodelLevel &&
+    left.summonerUuid === right.summonerUuid
+  );
+}
+
 function mergeFantasyEntries(entries: TeammateFantasyState[]) {
   const next = new Map(
     monsterRuntime.fantasyEntries.map((entry) => [entry.summonUuid, entry]),
   );
   for (const entry of entries) {
     const existing = next.get(entry.summonUuid);
-    if (!existing || entry.detectedAtMs >= existing.detectedAtMs) {
+    if (!existing) {
+      next.set(entry.summonUuid, entry);
+      continue;
+    }
+
+    if (isSameFantasyEntry(existing, entry)) {
+      if (SETTINGS.monsterMonitor.state.fantasyPersistentDisplay !== true) {
+        if (entry.detectedAtMs >= existing.detectedAtMs) {
+          next.set(entry.summonUuid, entry);
+        }
+        continue;
+      }
+
+      if (!existing.summonerName && entry.summonerName) {
+        next.set(entry.summonUuid, {
+          ...existing,
+          summonerName: entry.summonerName,
+        });
+      }
+      continue;
+    }
+
+    if (entry.detectedAtMs >= existing.detectedAtMs) {
       next.set(entry.summonUuid, entry);
     }
   }
   monsterRuntime.fantasyEntries = [...next.values()];
+}
+
+function clearFantasyEntries() {
+  monsterRuntime.fantasyEntries = [];
+  monsterRuntime.fantasyRows = [];
 }
 
 export function initMonsterOverlay() {
@@ -93,6 +134,9 @@ export function initMonsterOverlay() {
   });
   const unlistenTeammateFantasy = onTeammateFantasyUpdate((event) => {
     mergeFantasyEntries(event.payload.fantasies);
+  });
+  const unlistenTeammateFantasyClear = onTeammateFantasyClear(() => {
+    clearFantasyEntries();
   });
   const unlistenHateList = onHateListUpdate((event) => {
     const next = new Map<EntityId, HateEntry[]>();
@@ -145,6 +189,7 @@ export function initMonsterOverlay() {
     unlistenBossBuff.then((fn) => fn());
     unlistenTeammateBuff.then((fn) => fn());
     unlistenTeammateFantasy.then((fn) => fn());
+    unlistenTeammateFantasyClear.then((fn) => fn());
     unlistenHateList.then((fn) => fn());
     unlistenIdentities.then((fn) => fn());
     window.removeEventListener("pointermove", onGlobalPointerMove);

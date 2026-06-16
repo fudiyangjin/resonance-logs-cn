@@ -301,6 +301,14 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     TeammateFantasyUpdatePayload { fantasies },
                 );
             }
+            OutboundEvent::TeammateFantasyClear => {
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_MONSTER_OVERLAY_LABEL,
+                    "teammate-fantasy-clear",
+                    (),
+                );
+            }
             OutboundEvent::HateListUpdate(hate_lists) => {
                 safe_emit_to(
                     app_handle,

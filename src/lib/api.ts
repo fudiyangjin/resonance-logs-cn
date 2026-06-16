@@ -153,6 +153,8 @@ export type TeammateFantasyUpdatePayload = {
   fantasies: TeammateFantasyState[];
 };
 
+export type TeammateFantasyClearPayload = null;
+
 export type HateEntry = {
   entityUuid: string;
   hateVal: number;
@@ -376,6 +378,11 @@ export const onTeammateFantasyUpdate = (
   handler: (event: Event<TeammateFantasyUpdatePayload>) => void,
 ): Promise<UnlistenFn> =>
   listen<TeammateFantasyUpdatePayload>("teammate-fantasy-update", handler);
+
+export const onTeammateFantasyClear = (
+  handler: (event: Event<TeammateFantasyClearPayload>) => void,
+): Promise<UnlistenFn> =>
+  listen<TeammateFantasyClearPayload>("teammate-fantasy-clear", handler);
 
 export const onHateListUpdate = (
   handler: (event: Event<HateListUpdatePayload>) => void,

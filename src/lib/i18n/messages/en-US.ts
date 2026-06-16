@@ -1199,6 +1199,7 @@ export const enUSMessages = {
   "monsterMonitor.fantasy.description":
     "Resonance skill summoned monsters released by teammates.",
   "monsterMonitor.fantasy.showAll": "Show all teammate fantasies",
+  "monsterMonitor.fantasy.persistentDisplay": "Keep teammate fantasies visible",
   "monsterMonitor.fantasy.placeholder":
     "Search teammate fantasy name or MonsterId",
   "monsterMonitor.fantasy.emptySearch": "No matching teammate fantasies",

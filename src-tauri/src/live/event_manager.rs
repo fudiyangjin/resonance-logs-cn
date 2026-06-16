@@ -112,6 +112,7 @@ pub enum OutboundEvent {
     BossBuffUpdate(HashMap<String, Vec<BuffUpdateState>>),
     TeammateBuffUpdate(HashMap<String, Vec<BuffUpdateState>>),
     TeammateFantasyUpdate(Vec<TeammateFantasyState>),
+    TeammateFantasyClear,
     HateListUpdate(HashMap<String, Vec<HateEntry>>),
     EntityIdentityMap {
         player_names: HashMap<String, String>,
@@ -226,6 +227,11 @@ impl EventManager {
         }
         self.outbound_events
             .push(OutboundEvent::TeammateFantasyUpdate(fantasies));
+    }
+
+    pub fn emit_teammate_fantasy_clear(&mut self) {
+        self.outbound_events
+            .push(OutboundEvent::TeammateFantasyClear);
     }
 
     pub fn emit_hate_list_update(&mut self, hate_lists: HashMap<String, Vec<HateEntry>>) {

@@ -1184,6 +1184,7 @@ export const jaJPMessages = {
   "monsterMonitor.fantasy.description":
     "味方が発動した共鳴スキル召喚モンスター。",
   "monsterMonitor.fantasy.showAll": "すべての味方幻想を表示",
+  "monsterMonitor.fantasy.persistentDisplay": "味方幻想を固定表示",
   "monsterMonitor.fantasy.placeholder": "味方幻想名または MonsterId を検索",
   "monsterMonitor.fantasy.emptySearch": "一致する味方幻想がありません",
   "monsterMonitor.fantasy.groupTitle": "味方幻想",

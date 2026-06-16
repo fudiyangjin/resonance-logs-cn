@@ -1788,11 +1788,19 @@
         </h2>
       </div>
 
-      <div class="flex justify-start">
+      <div class="flex flex-wrap justify-start gap-4">
         <div class="min-w-[260px]">
           <SettingsSwitch
             label={t("monsterMonitor.fantasy.showAll")}
             bind:checked={SETTINGS.monsterMonitor.state.fantasyShowAll}
+          />
+        </div>
+        <div class="min-w-[260px]">
+          <SettingsSwitch
+            label={t("monsterMonitor.fantasy.persistentDisplay")}
+            bind:checked={
+              SETTINGS.monsterMonitor.state.fantasyPersistentDisplay
+            }
           />
         </div>
       </div>

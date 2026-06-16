@@ -323,22 +323,47 @@ function buildFantasyPlaceholderRows(): MonsterFantasyRow[] {
   ];
 }
 
+function sortFantasyEntries(
+  entries: TeammateFantasyState[],
+  persistentDisplay: boolean,
+) {
+  return [...entries].sort((left, right) => {
+    if (!persistentDisplay) {
+      return right.detectedAtMs - left.detectedAtMs;
+    }
+
+    return (
+      left.summonerUuid.localeCompare(right.summonerUuid) ||
+      left.summonUuid.localeCompare(right.summonUuid) ||
+      left.monsterId - right.monsterId ||
+      left.remodelLevel - right.remodelLevel
+    );
+  });
+}
+
 function buildFantasyRows(now: number): MonsterFantasyRow[] {
+  const state = SETTINGS.monsterMonitor.state;
+  const persistentDisplay = state.fantasyPersistentDisplay === true;
   const latestBySummon = new Map<EntityId, TeammateFantasyState>();
   for (const entry of monsterRuntime.fantasyEntries) {
-    if (entry.detectedAtMs + FANTASY_DISPLAY_TTL_MS <= now) continue;
+    if (
+      !persistentDisplay &&
+      entry.detectedAtMs + FANTASY_DISPLAY_TTL_MS <= now
+    ) {
+      continue;
+    }
     const existing = latestBySummon.get(entry.summonUuid);
     if (!existing || entry.detectedAtMs >= existing.detectedAtMs) {
       latestBySummon.set(entry.summonUuid, entry);
     }
   }
 
-  const activeEntries = [...latestBySummon.values()].sort(
-    (left, right) => right.detectedAtMs - left.detectedAtMs,
+  const activeEntries = sortFantasyEntries(
+    [...latestBySummon.values()],
+    persistentDisplay,
   );
   monsterRuntime.fantasyEntries = activeEntries;
 
-  const state = SETTINGS.monsterMonitor.state;
   const whitelist = new Set(state.fantasyWhitelistMonsterIds ?? []);
   const fantasyEntries = activeEntries.filter((entry) =>
     isResonanceFantasyMonsterId(entry.monsterId),

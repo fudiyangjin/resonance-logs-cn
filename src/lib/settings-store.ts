@@ -666,6 +666,7 @@ export type MonsterMonitorConfig = {
   fantasyWhitelistMonsterIds: number[];
   fantasyMonsterAliases: Record<string, string>;
   fantasyShowAll: boolean;
+  fantasyPersistentDisplay: boolean;
   buffPriorityIds: number[];
   buffAliases: BuffAliasMap;
   buffAlerts: BuffAlertMap;
@@ -1071,6 +1072,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     fantasyWhitelistMonsterIds: [],
     fantasyMonsterAliases: {},
     fantasyShowAll: false,
+    fantasyPersistentDisplay: false,
     buffPriorityIds: [],
     buffAliases: {},
     buffAlerts: {},
