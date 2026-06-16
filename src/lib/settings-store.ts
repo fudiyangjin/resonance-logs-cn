@@ -261,10 +261,6 @@ export type MinimapPanelRect = Point & {
 export type MinimapEntityColors = {
   local: string;
   teammate: string;
-  boss: string;
-  dummy: string;
-  monster: string;
-  other: string;
 };
 
 export type MinimapConfig = {
@@ -1089,17 +1085,13 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
 export function createDefaultMinimapConfig(): MinimapConfig {
   return {
     hideNormalTeammates: true,
-    showMapPanel: true,
-    showInfoPanel: true,
+    showMapPanel: false,
+    showInfoPanel: false,
     mapPanel: { x: 24, y: 24, width: 340, scale: 1 },
     infoPanel: { x: 384, y: 24, width: 300, scale: 1 },
     entityColors: {
       local: "#f8fafc",
       teammate: "#38bdf8",
-      boss: "#ef4444",
-      dummy: "#94a3b8",
-      monster: "#64748b",
-      other: "#475569",
     },
   };
 }
