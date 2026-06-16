@@ -10,6 +10,46 @@
     "Icon": "skill_aoyi_skill_icon_001.png"
   },
   {
+    "id": 3021,
+    "NameDesign": "雷霆天引",
+    "Icon": "skill_aoyi_skill_icon_014.png"
+  },
+  {
+    "id": 3022,
+    "NameDesign": "琉火咆哮",
+    "Icon": "skill_aoyi_skill_icon_017.png"
+  },
+  {
+    "id": 3023,
+    "NameDesign": "脉冲祝祷",
+    "Icon": "skill_aoyi_skill_icon_012.png"
+  },
+  {
+    "id": 3024,
+    "NameDesign": "地狱突刺",
+    "Icon": "skill_aoyi_skill_icon_047.png"
+  },
+  {
+    "id": 3025,
+    "NameDesign": "雷霆咆哮",
+    "Icon": "skill_aoyi_skill_icon_038.png"
+  },
+  {
+    "id": 3026,
+    "NameDesign": "静默潮汐",
+    "Icon": "skill_aoyi_skill_icon_049.png"
+  },
+  {
+    "id": 3027,
+    "NameDesign": "生命祈愿",
+    "Icon": "skill_aoyi_skill_icon_013.png"
+  },
+  {
+    "id": 3028,
+    "NameDesign": "佑世边界",
+    "Icon": "skill_aoyi_skill_icon_054.png"
+  },
+  {
     "id": 3901,
     "NameDesign": "奥義！炎の咆哮",
     "Icon": "skill_aoyi_skill_icon_017.png"

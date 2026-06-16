@@ -1327,6 +1327,14 @@
     "MonsterType": 2,
     "Name": "悖与灾的机骸·终"
   },
+  "103310": {
+    "MonsterType": 2,
+    "Name": "悖与灾的机骸·终幻象"
+  },
+  "103311": {
+    "MonsterType": 2,
+    "Name": "悖与灾的机骸·终幻象"
+  },
   "104": {
     "MonsterType": 0,
     "Name": "Ignisor"
@@ -2161,7 +2169,7 @@
   },
   "11229": {
     "MonsterType": 0,
-    "Name": "雷沫哥布林"
+    "Name": "紫沫哥布林"
   },
   "1123": {
     "MonsterType": 0,
@@ -4591,6 +4599,30 @@
     "MonsterType": 0,
     "Name": "Nitro Bzzar"
   },
+  "21001": {
+    "MonsterType": 0,
+    "Name": "自爆兵03型"
+  },
+  "21002": {
+    "MonsterType": 1,
+    "Name": "恶作剧炸弹"
+  },
+  "21003": {
+    "MonsterType": 1,
+    "Name": "虚蚀精魄"
+  },
+  "21004": {
+    "MonsterType": 1,
+    "Name": "捍卫者05型"
+  },
+  "21005": {
+    "MonsterType": 1,
+    "Name": "神秘幻象"
+  },
+  "21006": {
+    "MonsterType": 1,
+    "Name": "暗之水晶"
+  },
   "2101": {
     "MonsterType": 0,
     "Name": "Spirit Possession"
@@ -5734,6 +5766,38 @@
   "31004": {
     "MonsterType": 0,
     "Name": "Lyon"
+  },
+  "3110001": {
+    "MonsterType": 0,
+    "Name": "雷电食人魔-职责"
+  },
+  "3110002": {
+    "MonsterType": 0,
+    "Name": "火焰兽人-职责"
+  },
+  "3110003": {
+    "MonsterType": 0,
+    "Name": "姆克王-职责"
+  },
+  "3110004": {
+    "MonsterType": 0,
+    "Name": "铁牙-职责"
+  },
+  "3110005": {
+    "MonsterType": 0,
+    "Name": "金牙-职责"
+  },
+  "3110006": {
+    "MonsterType": 0,
+    "Name": "蜥蜴人王-职责"
+  },
+  "3110007": {
+    "MonsterType": 0,
+    "Name": "艾露娜-职责"
+  },
+  "3110008": {
+    "MonsterType": 0,
+    "Name": "法法菈-职责"
   },
   "31101": {
     "MonsterType": 2,
@@ -7547,6 +7611,90 @@
     "MonsterType": 2,
     "Name": "Johnny"
   },
+  "5100301": {
+    "MonsterType": 0,
+    "Name": "法法菈"
+  },
+  "5100302": {
+    "MonsterType": 0,
+    "Name": "博伊斯"
+  },
+  "5100303": {
+    "MonsterType": 0,
+    "Name": "被侵蚀的大鹫"
+  },
+  "5100304": {
+    "MonsterType": 0,
+    "Name": "法法菈"
+  },
+  "5100501": {
+    "MonsterType": 0,
+    "Name": "拦路的村民"
+  },
+  "5100502": {
+    "MonsterType": 0,
+    "Name": "拦路的村民"
+  },
+  "5100503": {
+    "MonsterType": 0,
+    "Name": "拦路的村民"
+  },
+  "5100601": {
+    "MonsterType": 0,
+    "Name": "青沫哥布林"
+  },
+  "5100602": {
+    "MonsterType": 0,
+    "Name": "雷沫哥布林"
+  },
+  "511031": {
+    "MonsterType": 1,
+    "Name": "幻祸精英哥布林"
+  },
+  "512011": {
+    "MonsterType": 0,
+    "Name": "哥布林战士"
+  },
+  "512012": {
+    "MonsterType": 0,
+    "Name": "哥布林祭祀"
+  },
+  "512013": {
+    "MonsterType": 1,
+    "Name": "哥布林巫医"
+  },
+  "512014": {
+    "MonsterType": 0,
+    "Name": "艾露娜"
+  },
+  "512015": {
+    "MonsterType": 0,
+    "Name": "法法菈"
+  },
+  "512021": {
+    "MonsterType": 0,
+    "Name": "暴烈野猪"
+  },
+  "512022": {
+    "MonsterType": 0,
+    "Name": "烈风野猪"
+  },
+  "512023": {
+    "MonsterType": 0,
+    "Name": "艾露娜"
+  },
+  "512031": {
+    "MonsterType": 0,
+    "Name": "地狐"
+  },
+  "512032": {
+    "MonsterType": 0,
+    "Name": "荒地狐"
+  },
+  "512033": {
+    "MonsterType": 0,
+    "Name": "艾露娜"
+  },
   "530101": {
     "MonsterType": 0,
     "Name": "Dark Mist Swordsman"
@@ -9302,6 +9450,42 @@
   "660303": {
     "MonsterType": 0,
     "Name": "Darya"
+  },
+  "660304": {
+    "MonsterType": 0,
+    "Name": "艾露娜"
+  },
+  "660305": {
+    "MonsterType": 0,
+    "Name": "斯莱特"
+  },
+  "660306": {
+    "MonsterType": 0,
+    "Name": "崔班"
+  },
+  "660307": {
+    "MonsterType": 0,
+    "Name": "莱拉亚"
+  },
+  "660308": {
+    "MonsterType": 0,
+    "Name": "阿斯特里斯士兵"
+  },
+  "660309": {
+    "MonsterType": 0,
+    "Name": "青沫哥布林"
+  },
+  "660310": {
+    "MonsterType": 0,
+    "Name": "雷沫哥布林"
+  },
+  "660311": {
+    "MonsterType": 1,
+    "Name": "哥布林贤者"
+  },
+  "660312": {
+    "MonsterType": 1,
+    "Name": "幻幻花"
   },
   "660401": {
     "MonsterType": 0,
