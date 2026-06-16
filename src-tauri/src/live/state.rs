@@ -895,14 +895,6 @@ impl AppStateManager {
                 factor_counter_dirty |= next_factor_counter_dirty;
             }
         }
-        let outputs = state
-            .local_monitor
-            .skill_lifecycle
-            .on_actor_state_sample(&state.attr_store, state.encounter.local_player_uuid);
-        let (next_counter_dirty, next_factor_counter_dirty) =
-            apply_skill_lifecycle_outputs(state, outputs);
-        counter_dirty |= next_counter_dirty;
-        factor_counter_dirty |= next_factor_counter_dirty;
         if counter_dirty {
             emit_buff_counter_update_if_needed(
                 state,
