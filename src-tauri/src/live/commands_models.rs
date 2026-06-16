@@ -380,6 +380,124 @@ pub struct HateEntry {
     pub hate_val: u32,
 }
 
+/// Classification of an entity rendered on the minimap.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum MinimapEntityKind {
+    /// The local player.
+    Local,
+    /// A teammate (party member that is not the local player).
+    Teammate,
+    /// A boss-tier monster.
+    Boss,
+    /// Any other monster.
+    Monster,
+    /// A non-monster dummy/mechanic helper entity.
+    Dummy,
+    /// Other renderable non-character entities.
+    Other,
+}
+
+/// Raw entity type exposed to the minimap as a reusable fact.
+#[derive(
+    specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default,
+)]
+#[serde(rename_all = "camelCase")]
+pub enum MinimapEntityType {
+    #[default]
+    Unknown,
+    Monster,
+    Npc,
+    SceneObject,
+    Zone,
+    Bullet,
+    ClientBullet,
+    Pet,
+    Char,
+    Dummy,
+    Drop,
+    Field,
+    Trap,
+    Collection,
+    StaticObject,
+    Vehicle,
+    Toy,
+    CommunityHouse,
+    HouseItem,
+    Other,
+}
+
+/// A single active buff fact currently known to the minimap.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct MinimapBuffFact {
+    /// Entity UUID carrying this buff.
+    pub target_entity_uuid: String,
+    /// Runtime buff instance id.
+    pub buff_uuid: i32,
+    /// Buff template id.
+    pub base_id: i32,
+    /// Current stack/layer.
+    pub layer: i32,
+    /// Buff creation time in the local time domain (server_clock_offset applied).
+    pub create_time_ms: i64,
+    /// Buff duration in milliseconds (0 if unknown/permanent).
+    pub duration_ms: i32,
+    /// Runtime source/caster entity when the server includes it.
+    pub fire_uuid: Option<String>,
+    /// Skill/buff config id that caused this buff, when available.
+    pub source_config_id: Option<i32>,
+}
+
+/// A single entity fact rendered/interpreted by the 2D minimap overlay.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct MinimapEntity {
+    /// Entity UUID as string (avoids JS bigint truncation, matching existing convention).
+    pub entity_uuid: String,
+    /// Raw entity type normalized for frontend use.
+    pub entity_type: MinimapEntityType,
+    /// What the entity is, used by the frontend to pick color/size.
+    pub kind: MinimapEntityKind,
+    /// Horizontal map coordinate.
+    pub x: f32,
+    /// Vertical game coordinate.
+    pub y: f32,
+    /// Depth map coordinate (game `z`, not vertical height).
+    pub z: f32,
+    /// Display name when known.
+    pub name: Option<String>,
+    /// Monster template id when the entity is a monster.
+    pub monster_id: Option<i32>,
+    /// Whether the entity is currently in the dead actor state.
+    pub is_dead: bool,
+    /// Skill the entity is currently casting (`ATTR_SKILL_ID`, attribute 100).
+    pub current_skill_id: Option<i32>,
+    /// Top-level summoner/owner UUID when present.
+    pub top_summoner_id: Option<String>,
+}
+
+/// One frame of minimap data for a single scene.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct MinimapSnapshot {
+    /// Current scene id.
+    pub scene_id: i32,
+    /// Local player UUID for frontend grouping and display.
+    pub local_player_uuid: String,
+    /// All tracked entities that currently have a known position.
+    pub entities: Vec<MinimapEntity>,
+    /// Active buff facts selected by the scene/mechanic extraction config.
+    pub buffs: Vec<MinimapBuffFact>,
+}
+
+/// Event payload wrapping a [`MinimapSnapshot`] for the minimap overlay window.
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct MinimapUpdatePayload {
+    pub snapshot: Option<MinimapSnapshot>,
+}
+
 #[derive(serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct HateListUpdatePayload {

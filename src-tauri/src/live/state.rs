@@ -141,6 +141,8 @@ pub struct AppState {
     pub death_snapshot_dirty: bool,
     /// Runtime state from GrpcTeamNtf packets, which can arrive on a separate TCP link.
     pub team: TeamRuntimeState,
+    /// Whether the minimap overlay currently has a live scene snapshot.
+    minimap_snapshot_active: bool,
     apply_event_timing: ApplyEventTimingStats,
 }
 
@@ -289,6 +291,7 @@ impl AppState {
             sent_overlay_entity_uuids: HashSet::new(),
             death_snapshot_dirty: false,
             team: TeamRuntimeState::default(),
+            minimap_snapshot_active: false,
             apply_event_timing: ApplyEventTimingStats::new(),
         }
     }
@@ -554,10 +557,12 @@ fn process_entity_buff_effect_bytes(
     target_uuid: i64,
     raw_bytes: &[u8],
 ) -> Option<(BuffTargetKind, crate::live::buff_monitor::BuffProcessResult)> {
-    let kind = classify_buff_effect_target(state, target_uuid)?;
-    if kind != BuffTargetKind::LocalPlayer && !state.entity_buff_config.profile_for(kind).enabled {
-        return None;
-    }
+    // Minimap scenes may need mechanic buffs from helper entities that are not
+    // part of the normal combat watch profiles.
+    let kind = classify_buff_effect_target(state, target_uuid).or_else(|| {
+        let scene_id = state.encounter.current_scene_id.unwrap_or_default();
+        (crate::live::minimap::scene::is_minimap_scene(scene_id)).then_some(BuffTargetKind::Monster)
+    })?;
 
     let result = state
         .entity_buff_monitors
@@ -716,6 +721,21 @@ impl AppStateManager {
         for event in events {
             self.apply_event(state, event);
         }
+    }
+
+    /// Queues a minimap snapshot for registered minimap scenes.
+    pub fn emit_minimap_if_active(&self, state: &mut AppState) {
+        let scene_id = state.encounter.current_scene_id.unwrap_or_default();
+        if !crate::live::minimap::scene::is_minimap_scene(scene_id) {
+            if state.minimap_snapshot_active {
+                state.event_manager.emit_minimap_update(None);
+                state.minimap_snapshot_active = false;
+            }
+            return;
+        }
+        let snapshot = crate::live::minimap::build_minimap_snapshot(state);
+        state.event_manager.emit_minimap_update(Some(snapshot));
+        state.minimap_snapshot_active = true;
     }
 
     pub fn drain_control_commands(
@@ -1238,15 +1258,6 @@ impl AppStateManager {
             .emit_teammate_fantasy_update(teammate_fantasies);
 
         for (target_uuid, buff_infos) in result.initial_buff_snapshots {
-            let Some(kind) = classify_buff_effect_target(state, target_uuid) else {
-                continue;
-            };
-            if kind != BuffTargetKind::LocalPlayer
-                && !state.entity_buff_config.profile_for(kind).enabled
-            {
-                continue;
-            }
-
             state
                 .entity_buff_monitors
                 .monitor_for(target_uuid)

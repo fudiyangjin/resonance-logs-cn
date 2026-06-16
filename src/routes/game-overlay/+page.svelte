@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import "../overlay-edit-theme.css";
   import CustomPanelGroup from "./CustomPanelGroup.svelte";
   import EditBanner from "./EditBanner.svelte";
   import GroupedBuffDisplay from "./GroupedBuffDisplay.svelte";
@@ -26,7 +27,7 @@
   onMount(initOverlay);
 </script>
 
-<div class="overlay-root" class:editing={editing} class:reference={referenceMode}>
+<div class="overlay-root" class:editing class:reference={referenceMode}>
   {#if editing}
     <EditBanner />
   {/if}
@@ -80,7 +81,7 @@
       linear-gradient(to right, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
     background-size: 20px 20px;
-    box-shadow: inset 0 0 0 3px rgba(255, 214, 102, 0.9);
+    box-shadow: inset 0 0 0 3px var(--overlay-edit-frame);
   }
 
   /* Reference mode: shown beneath monster-overlay during its editing as a
@@ -111,8 +112,8 @@
     font-size: 11px;
     font-weight: 700;
     color: #fff;
-    background: rgba(255, 140, 0, 0.75);
-    border: 1px solid rgba(255, 220, 170, 0.8);
+    background: var(--overlay-edit-tag-bg);
+    border: 1px solid var(--overlay-edit-tag-border);
   }
 
   :global(.resize-handle) {
@@ -122,7 +123,7 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: rgba(255, 140, 0, 0.95);
+    background: var(--overlay-edit-handle-bg);
     border: 2px solid rgba(255, 255, 255, 0.95);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     cursor: nwse-resize;

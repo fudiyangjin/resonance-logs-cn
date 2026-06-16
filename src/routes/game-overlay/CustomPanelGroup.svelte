@@ -93,9 +93,9 @@
   }
 
   .custom-panel-group.editable {
-    border: 2px solid rgba(102, 204, 255, 0.9);
+    border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
-    background: rgba(20, 36, 56, 0.45);
+    background: var(--overlay-edit-panel-bg);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     margin: -10px;
     padding: 8px;

@@ -288,7 +288,22 @@ pub fn process_sync_near_entities(
                     }
                 }
             }
-            _ => {}
+            EEntityType::EntDummy | EEntityType::EntBullet | EEntityType::EntSceneObject => {
+                process_mechanic_entity_attrs(
+                    target_entity,
+                    target_uuid,
+                    &attr_collection.attrs,
+                    attr_store,
+                );
+            }
+            _ => {
+                process_mechanic_entity_attrs(
+                    target_entity,
+                    target_uuid,
+                    &attr_collection.attrs,
+                    attr_store,
+                );
+            }
         }
 
         if let Some(buff_infos) = initial_buff_infos {
@@ -806,7 +821,12 @@ pub fn process_aoi_sync_delta(
     };
 
     // Process attributes
-    let target_entity_type = EEntityType::from(target_uuid);
+    let target_entity_type = encounter
+        .entity_uuid_to_entity
+        .get(&target_uuid)
+        .map(|entity| entity.entity_type)
+        .filter(|entity_type| *entity_type != EEntityType::EntErrType)
+        .unwrap_or_else(|| EEntityType::from(target_uuid));
     let mut target_entity = encounter
         .entity_uuid_to_entity
         .entry(target_uuid)
@@ -825,7 +845,22 @@ pub fn process_aoi_sync_delta(
                     attr_store,
                 );
             }
-            _ => {}
+            EEntityType::EntDummy | EEntityType::EntBullet | EEntityType::EntSceneObject => {
+                process_mechanic_entity_attrs(
+                    &mut target_entity,
+                    target_uuid,
+                    &attrs_collection.attrs,
+                    attr_store,
+                );
+            }
+            _ => {
+                process_mechanic_entity_attrs(
+                    &mut target_entity,
+                    target_uuid,
+                    &attrs_collection.attrs,
+                    attr_store,
+                );
+            }
         }
     }
 
@@ -1431,8 +1466,8 @@ fn process_player_attrs(target_uuid: i64, attrs: &[Attr], attr_store: &mut Entit
     }
 }
 
-fn process_monster_attrs(
-    monster_entity: &mut Entity,
+fn process_mechanic_entity_attrs(
+    target_entity: &mut Entity,
     target_uuid: i64,
     attrs: &[Attr],
     attr_store: &mut EntityAttrStore,
@@ -1446,7 +1481,7 @@ fn process_monster_attrs(
                 i32::try_from(decode_varint_i64_or_default(raw_bytes_opt)).ok()
             {
                 if monster_id > 0 {
-                    monster_entity.set_monster_type(monster_id);
+                    target_entity.set_monster_type(monster_id);
                     let _ = attr_store.set_attr(
                         target_uuid,
                         AttrType::MonsterId,
@@ -1471,9 +1506,29 @@ fn process_monster_attrs(
             continue;
         }
 
+        if attr_id == attr_type::ATTR_POS {
+            if let Some(position) = decode_position_attr(raw_bytes_opt) {
+                let _ = attr_store.set_attr(
+                    target_uuid,
+                    AttrType::Position,
+                    AttrValue::Position(position),
+                );
+            }
+            continue;
+        }
+
         if let Some(attr_type) = AttrType::from_id(attr_id) {
             let value = decode_varint_i64_or_default(raw_bytes_opt);
             let _ = attr_store.set_attr(target_uuid, attr_type, AttrValue::Int(value));
         }
     }
+}
+
+fn process_monster_attrs(
+    monster_entity: &mut Entity,
+    target_uuid: i64,
+    attrs: &[Attr],
+    attr_store: &mut EntityAttrStore,
+) {
+    process_mechanic_entity_attrs(monster_entity, target_uuid, attrs, attr_store);
 }

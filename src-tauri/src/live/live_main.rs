@@ -3,7 +3,7 @@ use crate::live::{
     commands_models::{
         BossBuffUpdatePayload, BuffCounterUpdatePayload, BuffUpdatePayload, DeathReplayPayload,
         EntityIdentityMapPayload, FightResourceUpdatePayload, HateListUpdatePayload,
-        PanelAttrUpdatePayload, SeasonCultivateFactorCounterUpdatePayload,
+        MinimapUpdatePayload, PanelAttrUpdatePayload, SeasonCultivateFactorCounterUpdatePayload,
         ShieldDetailUpdatePayload, SkillCdUpdatePayload, TeammateBuffUpdatePayload,
         TeammateFantasyUpdatePayload,
     },
@@ -181,6 +181,7 @@ pub async fn start(
                 }
 
                 state_manager.handle_events_batch_with_state(&mut state, batch_events);
+                state_manager.emit_minimap_if_active(&mut state);
                 state_manager.drain_control_commands(&mut state, &mut control_rx);
                 flush_outbound_events(&app_handle, &mut state);
 
@@ -391,6 +392,14 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     crate::WINDOW_LIVE_LABEL,
                     "death-replay",
                     DeathReplayPayload { records },
+                );
+            }
+            OutboundEvent::MinimapUpdate(snapshot) => {
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_MINIMAP_OVERLAY_LABEL,
+                    "minimap-update",
+                    MinimapUpdatePayload { snapshot },
                 );
             }
         }

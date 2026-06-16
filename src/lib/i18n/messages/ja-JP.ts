@@ -7,6 +7,7 @@ export const jaJPMessages = {
   "routes.tools.moduleCalc": "モジュール計算",
   "routes.tools.skillMonitor": "ライブモニター",
   "routes.tools.monsterMonitor": "モンスターモニター",
+  "routes.tools.minimap": "ミニマップ",
   "routes.dps.history": "履歴",
   "routes.dps.themes": "テーマ",
   "routes.dps.settings": "設定",
@@ -1383,4 +1384,43 @@ export const jaJPMessages = {
   "game.monster.unknown": "モンスター {id}",
   "game.buffCategory.food": "食事",
   "game.buffCategory.alchemy": "錬金",
+  "minimap.title": "ミニマップ",
+  "minimap.description":
+    "S3レイドのエンティティ位置を独立したオーバーレイで表示します。",
+  "minimap.actions.toggleOverlay": "ミニマップ窓の表示切替",
+  "minimap.actions.editLayout": "レイアウト編集",
+  "minimap.hint":
+    "S3レイドに入ってから窓を開くと、現在のエリアに応じてリングアリーナとグリッドが自動で切り替わります。",
+  "minimap.edit.title": "ミニマップレイアウト編集",
+  "minimap.edit.resetPosition": "位置をリセット",
+  "minimap.edit.resetSize": "サイズをリセット",
+  "minimap.edit.done": "完了",
+  "minimap.edit.dragHint": "ここをドラッグしてミニマップ窓を移動",
+  "minimap.panels.map": "マップパネル",
+  "minimap.panels.info": "ギミック通知",
+  "minimap.settings.display.title": "表示オプション",
+  "minimap.settings.display.description":
+    "戦闘中のミニマップ情報量を調整し、不要なノイズを減らします。",
+  "minimap.settings.hideNormalTeammates.label":
+    "自分とギミック対象の味方のみ表示",
+  "minimap.settings.hideNormalTeammates.description":
+    "有効にすると通常の味方位置は非表示になり、ギミック色やBuffの影響を受けた味方だけ自動表示されます。",
+  "minimap.overlay.title": "パネル表示",
+  "minimap.overlay.description":
+    "ミニマップ overlay で表示する独立パネルを制御します。",
+  "minimap.overlay.state.show": "表示",
+  "minimap.overlay.state.hide": "非表示",
+  "minimap.overlay.mapPanel": "マップパネル：{state}",
+  "minimap.overlay.infoPanel": "ギミック通知：{state}",
+  "minimap.overlay.help":
+    "パネル位置と幅はミニマップ窓のレイアウト編集モードで調整してください。",
+  "minimap.settings.colors.title": "エンティティ色",
+  "minimap.settings.colors.description":
+    "ギミック色がない場合の基本エンティティ色を設定します。ギミック通知は引き続き高コントラストのスロット色を使用します。",
+  "minimap.settings.colors.local": "自分",
+  "minimap.settings.colors.teammate": "味方",
+  "minimap.settings.colors.boss": "ボス",
+  "minimap.settings.colors.dummy": "ダミー",
+  "minimap.settings.colors.monster": "モンスター",
+  "minimap.settings.colors.other": "その他",
 };

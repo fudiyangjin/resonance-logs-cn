@@ -19,14 +19,13 @@
   const styleConfig = $derived(teammatePanelStyle());
   const panelPos = $derived(getTeammatePanelPosition());
   const panelScale = $derived(getTeammatePanelScale());
-  const displayColumns = $derived.by(
-    () =>
-      columns.length > 0
-        ? columns
-        : rows[0]?.cells.map((cell) => ({
-            key: cell.key,
-            label: cell.buffName,
-          })) ?? [],
+  const displayColumns = $derived.by(() =>
+    columns.length > 0
+      ? columns
+      : (rows[0]?.cells.map((cell) => ({
+          key: cell.key,
+          label: cell.buffName,
+        })) ?? []),
   );
 </script>
 
@@ -62,10 +61,7 @@
         {/each}
       </div>
 
-      <div
-        class="matrix-body"
-        style:gap={`${styleConfig.gap}px`}
-      >
+      <div class="matrix-body" style:gap={`${styleConfig.gap}px`}>
         {#each rows as row (row.teammateEntityUuid)}
           <div
             class="matrix-grid teammate-row"
@@ -144,9 +140,9 @@
   }
 
   .teammate-buff-panel.editable {
-    border: 2px solid rgba(45, 212, 191, 0.9);
+    border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
-    background: rgba(18, 52, 56, 0.48);
+    background: var(--overlay-edit-panel-bg);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     margin: -10px;
     padding: 8px;

@@ -33,7 +33,8 @@
   style:top={`${groupPos.y}px`}
   style:transform={`scale(${groupScale})`}
   style:transform-origin="top left"
-  onpointerdown={(e) => startDrag(e, { kind: "group", key: "skillCdGroup" }, groupPos)}
+  onpointerdown={(e) =>
+    startDrag(e, { kind: "group", key: "skillCdGroup" }, groupPos)}
 >
   {#if editing}
     <div class="group-tag">{t("gameOverlay.group.skillCd")}</div>
@@ -43,26 +44,31 @@
     {#each Array(10) as _, idx (idx)}
       {@const skillId = skillIds[idx]}
       {@const display = skillId ? displays.get(skillId) : undefined}
-      {@const skill = skillId ? findAnySkillByBaseId(classKey, skillId) : undefined}
+      {@const skill = skillId
+        ? findAnySkillByBaseId(classKey, skillId)
+        : undefined}
       {@const derivation = skillId
         ? findSkillDerivationBySource(classKey, skillId)
         : undefined}
       {@const isDerivedActive = derivation
         ? activeIds.has(derivation.triggerBuffBaseId)
         : false}
-      {@const displaySkill = isDerivedActive && derivation
-        ? { name: derivation.derivedName, imagePath: derivation.derivedImagePath }
-        : skill}
-      {@const effectiveDisplay = isDerivedActive && !derivation?.keepCdWhenDerived
-        ? undefined
-        : display}
+      {@const displaySkill =
+        isDerivedActive && derivation
+          ? {
+              name: derivation.derivedName,
+              imagePath: derivation.derivedImagePath,
+            }
+          : skill}
+      {@const effectiveDisplay =
+        isDerivedActive && !derivation?.keepCdWhenDerived ? undefined : display}
       {@const resourceBlocked = skill?.resourceRequirement
         ? getResourceValue(skill.resourceRequirement.resourceId) <
           skill.resourceRequirement.amount
         : false}
       {@const isOnCd = effectiveDisplay?.isActive ?? false}
       {@const isUnavailable = isOnCd || resourceBlocked}
-      {@const percent = isOnCd ? effectiveDisplay?.percent ?? 0 : 0}
+      {@const percent = isOnCd ? (effectiveDisplay?.percent ?? 0) : 0}
       {@const displayText = effectiveDisplay?.text ?? ""}
 
       <div
@@ -101,20 +107,16 @@
     <div
       class="resize-handle"
       onpointerdown={(e) =>
-        startResize(
-          e,
-          { kind: "group", key: "skillCdGroupScale" },
-          groupScale,
-        )}
+        startResize(e, { kind: "group", key: "skillCdGroupScale" }, groupScale)}
     ></div>
   {/if}
 </div>
 
 <style>
   .skill-group.editable {
-    border: 2px solid rgba(102, 204, 255, 0.9);
+    border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
-    background: rgba(20, 36, 56, 0.45);
+    background: var(--overlay-edit-panel-bg);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     margin: -10px;
     padding: 8px;

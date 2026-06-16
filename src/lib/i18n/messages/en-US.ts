@@ -9,6 +9,7 @@ export const enUSMessages = {
   "routes.tools.moduleCalc": "Module Calculator",
   "routes.tools.skillMonitor": "Live Monitor",
   "routes.tools.monsterMonitor": "Monster Monitor",
+  "routes.tools.minimap": "Minimap",
   "routes.dps.history": "History",
   "routes.dps.themes": "Themes",
   "routes.dps.settings": "Settings",
@@ -1397,4 +1398,43 @@ export const enUSMessages = {
   "game.monster.unknown": "Monster {id}",
   "game.buffCategory.food": "Food",
   "game.buffCategory.alchemy": "Alchemy",
+  "minimap.title": "Minimap",
+  "minimap.description":
+    "Live positions of S3 raid entities in a standalone overlay window.",
+  "minimap.actions.toggleOverlay": "Toggle Minimap Window",
+  "minimap.actions.editLayout": "Edit Layout",
+  "minimap.hint":
+    "Open the window after entering the S3 raid. The map switches automatically between the ring arena and floor grid based on your area.",
+  "minimap.edit.title": "Minimap Layout Edit",
+  "minimap.edit.resetPosition": "Reset Position",
+  "minimap.edit.resetSize": "Reset Size",
+  "minimap.edit.done": "Done",
+  "minimap.edit.dragHint": "Drag here to move the minimap window",
+  "minimap.panels.map": "Map Panel",
+  "minimap.panels.info": "Mechanic Calls",
+  "minimap.settings.display.title": "Display Options",
+  "minimap.settings.display.description":
+    "Control the minimap information density during combat and reduce noise.",
+  "minimap.settings.hideNormalTeammates.label":
+    "Only show self and teammates affected by mechanics",
+  "minimap.settings.hideNormalTeammates.description":
+    "When enabled, normal teammate points are hidden; teammates with mechanic colors or buffs are shown automatically.",
+  "minimap.overlay.title": "Panel Visibility",
+  "minimap.overlay.description":
+    "Control which independent panels are visible in the minimap overlay.",
+  "minimap.overlay.state.show": "Show",
+  "minimap.overlay.state.hide": "Hide",
+  "minimap.overlay.mapPanel": "Map Panel: {state}",
+  "minimap.overlay.infoPanel": "Mechanic Calls: {state}",
+  "minimap.overlay.help":
+    "Adjust panel position and width in the minimap window's layout edit mode.",
+  "minimap.settings.colors.title": "Entity Colors",
+  "minimap.settings.colors.description":
+    "Set base entity colors when no mechanic color override is active; mechanic callouts still use the high-contrast slot palette.",
+  "minimap.settings.colors.local": "Self",
+  "minimap.settings.colors.teammate": "Teammate",
+  "minimap.settings.colors.boss": "Boss",
+  "minimap.settings.colors.dummy": "Dummy",
+  "minimap.settings.colors.monster": "Monster",
+  "minimap.settings.colors.other": "Other",
 } satisfies typeof zhCNMessages;

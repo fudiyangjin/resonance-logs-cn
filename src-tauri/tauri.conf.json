@@ -61,6 +61,20 @@
                 "visible": false,
                 "resizable": true,
                 "shadow": false
+            },
+            {
+                "title": "Minimap Overlay",
+                "label": "minimap-overlay",
+                "url": "minimap-overlay",
+                "decorations": false,
+                "transparent": true,
+                "alwaysOnTop": true,
+                "skipTaskbar": true,
+                "width": 480,
+                "height": 560,
+                "visible": false,
+                "resizable": true,
+                "shadow": false
             }
         ],
         "security": {

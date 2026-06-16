@@ -1,0 +1,8 @@
+:root {
+  --overlay-edit-frame: rgba(255, 214, 102, 0.9);
+  --overlay-edit-tag-bg: rgba(255, 140, 0, 0.75);
+  --overlay-edit-tag-border: rgba(255, 220, 170, 0.8);
+  --overlay-edit-handle-bg: rgba(255, 140, 0, 0.95);
+  --overlay-edit-panel-border: rgba(255, 214, 102, 0.9);
+  --overlay-edit-panel-bg: rgba(56, 36, 20, 0.48);
+}

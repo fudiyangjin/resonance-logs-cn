@@ -24,15 +24,13 @@
   const now = $derived(overlayNow());
   const aliases = $derived(buffAliases());
 
-  const totalShield = $derived(
-    entries.reduce((sum, e) => sum + e.current, 0),
-  );
+  const totalShield = $derived(entries.reduce((sum, e) => sum + e.current, 0));
   const showHpRow = $derived(style.showHpBar && hp.max > 0);
-  const showTotalShieldRow = $derived(style.showTotalShieldBar && totalShield > 0);
-  const showEntryRows = $derived(style.showShieldEntries && entries.length > 0);
-  const hasData = $derived(
-    showHpRow || showTotalShieldRow || showEntryRows,
+  const showTotalShieldRow = $derived(
+    style.showTotalShieldBar && totalShield > 0,
   );
+  const showEntryRows = $derived(style.showShieldEntries && entries.length > 0);
+  const hasData = $derived(showHpRow || showTotalShieldRow || showEntryRows);
 
   // Track previous shield values to detect which buff was recently reduced
   let prevShieldMap = $state<Map<number, number>>(new Map());
@@ -65,7 +63,10 @@
 
   // Total shield bar layers (each layer = hp.max capacity)
   // Returns layers from bottom (lightest) to top (darkest for overflow)
-  function shieldLayers(total: number, maxHp: number): { pct: number; darken: number }[] {
+  function shieldLayers(
+    total: number,
+    maxHp: number,
+  ): { pct: number; darken: number }[] {
     if (maxHp <= 0 || total <= 0) return [];
     const layers: { pct: number; darken: number }[] = [];
     let remaining = total;
@@ -74,7 +75,10 @@
       const portion = Math.min(remaining, maxHp);
       const pct = (portion / maxHp) * 100;
       // darken increases per layer: 0, 0.25, 0.45, 0.6...
-      layers.push({ pct, darken: layerIndex === 0 ? 0 : 0.15 + layerIndex * 0.15 });
+      layers.push({
+        pct,
+        darken: layerIndex === 0 ? 0 : 0.15 + layerIndex * 0.15,
+      });
       remaining -= portion;
       layerIndex++;
       if (layerIndex > 10) break; // safety limit
@@ -98,14 +102,19 @@
     return displayType === 12 ? style.healShieldColor : style.shieldColor;
   }
 
-  function entryName(baseId: number, buffUuid: number, displayType: number): string {
+  function entryName(
+    baseId: number,
+    buffUuid: number,
+    displayType: number,
+  ): string {
     if (baseId > 0) {
       return resolveBuffDisplayName(baseId, aliases);
     }
     // base_id unknown, show buff_uuid so user can identify
-    const typeSuffix = displayType === 12
-      ? t("gameOverlay.shield.healShield")
-      : t("gameOverlay.shield.unknownShield");
+    const typeSuffix =
+      displayType === 12
+        ? t("gameOverlay.shield.healShield")
+        : t("gameOverlay.shield.unknownShield");
     return `${typeSuffix}#${buffUuid}`;
   }
 
@@ -127,13 +136,18 @@
     style:top={`${groupPos.y}px`}
     style:transform={`scale(${groupScale})`}
     style:transform-origin="top left"
-    onpointerdown={(e) => startDrag(e, { kind: "group", key: "shieldDetailGroup" }, groupPos)}
+    onpointerdown={(e) =>
+      startDrag(e, { kind: "group", key: "shieldDetailGroup" }, groupPos)}
   >
     {#if editing}
       <div class="group-tag">{t("gameOverlay.group.shieldDetail")}</div>
     {/if}
 
-    <div class="shield-detail-list" style:gap={`${style.gap}px`} style:font-size={`${style.fontSize}px`}>
+    <div
+      class="shield-detail-list"
+      style:gap={`${style.gap}px`}
+      style:font-size={`${style.fontSize}px`}
+    >
       <!-- HP bar (health only, red unfilled) -->
       {#if hasData}
         {#if showHpRow}
@@ -142,7 +156,11 @@
             <span class="row-label hp-label">{t("gameOverlay.shield.hp")}</span>
             <div class="bar-container" style:width={`${style.barWidth}px`}>
               <div class="bar-bg hp-bar-bg">
-                <div class="bar-fill" style:width={`${hpPercent}%`} style:background={style.hpColor}></div>
+                <div
+                  class="bar-fill"
+                  style:width={`${hpPercent}%`}
+                  style:background={style.hpColor}
+                ></div>
               </div>
               <span class="bar-text">
                 {formatNum(hp.current)} / {formatNum(hp.max)}
@@ -155,7 +173,9 @@
         {#if showTotalShieldRow}
           {@const layers = shieldLayers(totalShield, hp.max)}
           <div class="detail-row">
-            <span class="row-label hp-label">{t("gameOverlay.shield.shield")}</span>
+            <span class="row-label hp-label"
+              >{t("gameOverlay.shield.shield")}</span
+            >
             <div class="bar-container" style:width={`${style.barWidth}px`}>
               <div class="bar-bg">
                 {#each layers as layer, i}
@@ -178,7 +198,9 @@
               <span class="bar-text" style:z-index={layers.length + 2}>
                 {formatNum(totalShield)} / {formatNum(hp.max)}
                 {#if totalShield > hp.max}
-                  <span class="shield-val">({(totalShield / hp.max * 100).toFixed(0)}%)</span>
+                  <span class="shield-val"
+                    >({((totalShield / hp.max) * 100).toFixed(0)}%)</span
+                  >
                 {/if}
               </span>
             </div>
@@ -189,7 +211,11 @@
         {#if showEntryRows}
           {#each sortedEntries as entry (entry.buffUuid)}
             {@const pct = entryPct(entry.current, entry.maxShield)}
-            {@const name = entryName(entry.baseId, entry.buffUuid, entry.displayType)}
+            {@const name = entryName(
+              entry.baseId,
+              entry.buffUuid,
+              entry.displayType,
+            )}
             {@const timeText = remainingText(entry.expireTimeMs)}
             <div class="detail-row entry-row">
               <span
@@ -203,7 +229,11 @@
               </span>
               <div class="bar-container" style:width={`${style.barWidth}px`}>
                 <div class="bar-bg">
-                  <div class="bar-fill" style:width={`${pct}%`} style:background={entryColor(entry.displayType)}></div>
+                  <div
+                    class="bar-fill"
+                    style:width={`${pct}%`}
+                    style:background={entryColor(entry.displayType)}
+                  ></div>
                 </div>
                 <span class="bar-text">
                   {formatNum(entry.current)} / {formatNum(entry.maxShield)}
@@ -222,7 +252,11 @@
       <div
         class="resize-handle"
         onpointerdown={(e) =>
-          startResize(e, { kind: "group", key: "shieldDetailGroupScale" }, groupScale)}
+          startResize(
+            e,
+            { kind: "group", key: "shieldDetailGroupScale" },
+            groupScale,
+          )}
       ></div>
     {/if}
   </div>
@@ -230,9 +264,9 @@
 
 <style>
   .shield-detail-group.editable {
-    border: 2px solid rgba(102, 204, 255, 0.9);
+    border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
-    background: rgba(20, 36, 56, 0.45);
+    background: var(--overlay-edit-panel-bg);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     padding: 8px;
     min-width: 260px;
@@ -334,7 +368,7 @@
     bottom: -6px;
     width: 14px;
     height: 14px;
-    background: rgba(102, 204, 255, 0.9);
+    background: var(--overlay-edit-handle-bg);
     border-radius: 50%;
     cursor: nwse-resize;
   }

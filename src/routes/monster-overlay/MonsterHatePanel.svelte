@@ -28,7 +28,8 @@
     style:top={`${panelPos.y}px`}
     style:transform={`scale(${panelScale})`}
     style:transform-origin="top left"
-    onpointerdown={(event) => startMonsterDrag(event, { kind: "hatePanel" }, panelPos)}
+    onpointerdown={(event) =>
+      startMonsterDrag(event, { kind: "hatePanel" }, panelPos)}
   >
     {#if scaffold}
       <div class="group-tag">{t("monsterOverlay.hateGroupTag")}</div>
@@ -37,7 +38,9 @@
     <div class="section-list">
       {#each sections as section (section.bossEntityUuid)}
         <section class="boss-section" class:placeholder={section.isPlaceholder}>
-          <div class="boss-title">{t("monsterOverlay.hateSectionTitle", { title: section.title })}</div>
+          <div class="boss-title">
+            {t("monsterOverlay.hateSectionTitle", { title: section.title })}
+          </div>
           <div class="boss-rows" style:gap={`${styleConfig.gap}px`}>
             {#each section.rows as row (row.key)}
               <TextBuffRow
@@ -63,7 +66,8 @@
     {#if editing}
       <div
         class="resize-handle"
-        onpointerdown={(event) => startMonsterResize(event, { kind: "hatePanel" }, panelScale)}
+        onpointerdown={(event) =>
+          startMonsterResize(event, { kind: "hatePanel" }, panelScale)}
       ></div>
     {/if}
   </div>
@@ -76,9 +80,9 @@
   }
 
   .monster-hate-panel.editable {
-    border: 2px solid rgba(244, 114, 182, 0.9);
+    border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
-    background: rgba(52, 24, 42, 0.5);
+    background: var(--overlay-edit-panel-bg);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     margin: -10px;
     padding: 8px;

@@ -69,9 +69,9 @@
   }
 
   .fantasy-panel.editable {
-    border: 2px solid rgba(168, 85, 247, 0.9);
+    border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
-    background: rgba(36, 20, 58, 0.5);
+    background: var(--overlay-edit-panel-bg);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     margin: -10px;
     padding: 8px;

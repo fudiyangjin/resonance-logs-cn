@@ -253,6 +253,29 @@ export type Point = {
   y: number;
 };
 
+export type MinimapPanelRect = Point & {
+  width: number;
+  scale: number;
+};
+
+export type MinimapEntityColors = {
+  local: string;
+  teammate: string;
+  boss: string;
+  dummy: string;
+  monster: string;
+  other: string;
+};
+
+export type MinimapConfig = {
+  hideNormalTeammates: boolean;
+  showMapPanel: boolean;
+  showInfoPanel: boolean;
+  mapPanel: MinimapPanelRect;
+  infoPanel: MinimapPanelRect;
+  entityColors: MinimapEntityColors;
+};
+
 export type PanelAttrConfig = {
   attrId: number;
   label: string;
@@ -1061,6 +1084,24 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
   };
 }
 
+export function createDefaultMinimapConfig(): MinimapConfig {
+  return {
+    hideNormalTeammates: true,
+    showMapPanel: true,
+    showInfoPanel: true,
+    mapPanel: { x: 24, y: 24, width: 340, scale: 1 },
+    infoPanel: { x: 384, y: 24, width: 300, scale: 1 },
+    entityColors: {
+      local: "#f8fafc",
+      teammate: "#38bdf8",
+      boss: "#ef4444",
+      dummy: "#94a3b8",
+      monster: "#64748b",
+      other: "#475569",
+    },
+  };
+}
+
 const DEFAULT_GENERAL_SETTINGS = {
   showYourName: "Show Your Name",
   showOthersName: "Show Others' Name",
@@ -1424,6 +1465,7 @@ const DEFAULT_SETTINGS = {
     profiles: [createDefaultSkillMonitorProfile()] as SkillMonitorProfile[],
   },
   monsterMonitor: createDefaultMonsterMonitorConfig(),
+  minimap: createDefaultMinimapConfig(),
   live: {
     general: { ...DEFAULT_GENERAL_SETTINGS },
     dpsPlayers: { ...DEFAULT_STATS },
@@ -1518,6 +1560,11 @@ export const SETTINGS = {
   monsterMonitor: new RuneStore(
     "monsterMonitor",
     DEFAULT_SETTINGS.monsterMonitor,
+    RUNE_STORE_OPTIONS,
+  ),
+  minimap: new RuneStore(
+    "minimap",
+    DEFAULT_SETTINGS.minimap,
     RUNE_STORE_OPTIONS,
   ),
   live: {
@@ -1700,6 +1747,7 @@ export const settings = {
     moduleSync: SETTINGS.moduleSync.state,
     skillMonitor: SETTINGS.skillMonitor.state,
     monsterMonitor: SETTINGS.monsterMonitor.state,
+    minimap: SETTINGS.minimap.state,
     live: {
       general: SETTINGS.live.general.state,
       dps: {

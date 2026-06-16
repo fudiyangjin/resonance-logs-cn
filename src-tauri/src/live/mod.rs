@@ -10,6 +10,7 @@ pub mod entity_attr_store;
 pub mod entity_id;
 pub mod event_manager;
 pub mod live_main;
+pub mod minimap;
 pub mod monster_registry;
 pub mod opcodes_models;
 pub mod opcodes_process;

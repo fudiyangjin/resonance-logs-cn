@@ -30,6 +30,8 @@ pub const WINDOW_MAIN_LABEL: &str = "main";
 pub const WINDOW_GAME_OVERLAY_LABEL: &str = "game-overlay";
 /// The label for the monster overlay window.
 pub const WINDOW_MONSTER_OVERLAY_LABEL: &str = "monster-overlay";
+/// The label for the 2D minimap overlay window.
+pub const WINDOW_MINIMAP_OVERLAY_LABEL: &str = "minimap-overlay";
 const LIVE_CLICKTHROUGH_CHANGED_EVENT: &str = "live-clickthrough-changed";
 
 /// Keeps the non-blocking tracing appender worker alive for the lifetime of the process.

@@ -162,6 +162,72 @@ export type HateListUpdatePayload = {
   hateLists: Record<string, HateEntry[]>;
 };
 
+export type MinimapEntityKind =
+  | "local"
+  | "teammate"
+  | "boss"
+  | "monster"
+  | "dummy"
+  | "other";
+
+export type MinimapEntityType =
+  | "unknown"
+  | "monster"
+  | "npc"
+  | "sceneObject"
+  | "zone"
+  | "bullet"
+  | "clientBullet"
+  | "pet"
+  | "char"
+  | "dummy"
+  | "drop"
+  | "field"
+  | "trap"
+  | "collection"
+  | "staticObject"
+  | "vehicle"
+  | "toy"
+  | "communityHouse"
+  | "houseItem"
+  | "other";
+
+export type MinimapBuffFact = {
+  targetEntityUuid: string;
+  buffUuid: number;
+  baseId: number;
+  layer: number;
+  createTimeMs: number;
+  durationMs: number;
+  fireUuid?: string | null;
+  sourceConfigId?: number | null;
+};
+
+export type MinimapEntity = {
+  entityUuid: string;
+  entityType: MinimapEntityType;
+  kind: MinimapEntityKind;
+  x: number;
+  y: number;
+  z: number;
+  name?: string | null;
+  monsterId?: number | null;
+  isDead: boolean;
+  currentSkillId?: number | null;
+  topSummonerId?: string | null;
+};
+
+export type MinimapSnapshot = {
+  sceneId: number;
+  localPlayerUuid: string;
+  entities: MinimapEntity[];
+  buffs: MinimapBuffFact[];
+};
+
+export type MinimapUpdatePayload = {
+  snapshot: MinimapSnapshot | null;
+};
+
 export type EntityIdentityMapPayload = {
   playerNames: Record<string, string>;
   monsterIds: Record<string, number>;
@@ -315,6 +381,11 @@ export const onHateListUpdate = (
   handler: (event: Event<HateListUpdatePayload>) => void,
 ): Promise<UnlistenFn> =>
   listen<HateListUpdatePayload>("hate-list-update", handler);
+
+export const onMinimapUpdate = (
+  handler: (event: Event<MinimapUpdatePayload>) => void,
+): Promise<UnlistenFn> =>
+  listen<MinimapUpdatePayload>("minimap-update", handler);
 
 export const onEntityIdentities = (
   handler: (event: Event<EntityIdentityMapPayload>) => void,

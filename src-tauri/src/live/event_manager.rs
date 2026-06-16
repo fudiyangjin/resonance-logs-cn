@@ -1,8 +1,8 @@
 use crate::live::commands_models::{
     BossHealth, BuffUpdateState, CounterUpdateState, DeathRecord, FightResourceState, HateEntry,
-    HeaderInfo, LiveDataPayload, PanelAttrState, RawEntityData, ShieldDetailEntry, SkillCdState,
-    TeammateFantasyState, TrainingDummyState, build_taken_per_source, to_raw_combat_stats,
-    to_raw_skill_stats,
+    HeaderInfo, LiveDataPayload, MinimapSnapshot, PanelAttrState, RawEntityData, ShieldDetailEntry,
+    SkillCdState, TeammateFantasyState, TrainingDummyState, build_taken_per_source,
+    to_raw_combat_stats, to_raw_skill_stats,
 };
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::entity_id::{entity_uuid_string, uid_from_uuid};
@@ -131,6 +131,7 @@ pub enum OutboundEvent {
         entries: Vec<ShieldDetailEntry>,
     },
     DeathReplay(Vec<DeathRecord>),
+    MinimapUpdate(Option<MinimapSnapshot>),
 }
 
 impl EventManager {
@@ -185,6 +186,12 @@ impl EventManager {
     pub fn emit_training_dummy_update(&mut self, training_dummy: TrainingDummyState) {
         self.outbound_events
             .push(OutboundEvent::TrainingDummyUpdate(training_dummy));
+    }
+
+    /// Emits a minimap snapshot update for the minimap overlay window.
+    pub fn emit_minimap_update(&mut self, snapshot: Option<MinimapSnapshot>) {
+        self.outbound_events
+            .push(OutboundEvent::MinimapUpdate(snapshot));
     }
 
     /// Returns whether the `EventManager` should emit events.

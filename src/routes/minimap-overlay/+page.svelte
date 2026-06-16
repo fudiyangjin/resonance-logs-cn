@@ -1,45 +1,51 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { t } from "$lib/i18n/index.svelte";
   import { SETTINGS } from "$lib/settings-store";
   import "../overlay-edit-theme.css";
+  import DraggablePanel from "./draggable-panel.svelte";
   import EditBanner from "./EditBanner.svelte";
-  import MonsterBuffPanel from "./MonsterBuffPanel.svelte";
-  import MonsterFantasyPanel from "./MonsterFantasyPanel.svelte";
-  import MonsterHatePanel from "./MonsterHatePanel.svelte";
-  import MonsterTeammateBuffPanel from "./MonsterTeammateBuffPanel.svelte";
+  import MinimapCanvas from "./minimap-canvas.svelte";
+  import MinimapInfobar from "./minimap-infobar.svelte";
   import {
-    getMonsterOverlayVisibility,
-    initMonsterOverlay,
-    isMonsterEditing,
-    isMonsterReferenceMode,
-  } from "./monster-state.svelte.js";
+    isMinimapEditing,
+    minimapSnapshot,
+  } from "./minimap-runtime.svelte.js";
+  import { initMinimapOverlay } from "./minimap-events.svelte.js";
 
-  const editing = $derived(isMonsterEditing());
-  const referenceMode = $derived(isMonsterReferenceMode());
-  const visibility = $derived(getMonsterOverlayVisibility());
-  const hateEnabled = $derived(
-    SETTINGS.monsterMonitor.state.hateListEnabled && visibility.showHatePanel,
-  );
+  const editing = $derived(isMinimapEditing());
+  const snapshot = $derived(minimapSnapshot());
+  const minimapSettings = $derived(SETTINGS.minimap.state);
 
-  onMount(initMonsterOverlay);
+  onMount(() => initMinimapOverlay());
 </script>
 
-<div class="overlay-root" class:editing class:reference={referenceMode}>
+<div class="overlay-root" class:editing>
   {#if editing}
     <EditBanner />
   {/if}
 
-  {#if visibility.showMonsterBuffPanel}
-    <MonsterBuffPanel />
+  {#if minimapSettings.showMapPanel}
+    <DraggablePanel
+      rect={minimapSettings.mapPanel}
+      {editing}
+      title={t("minimap.panels.map")}
+      class="map-panel"
+      scaleMode="width"
+    >
+      <MinimapCanvas {snapshot} />
+    </DraggablePanel>
   {/if}
-  {#if visibility.showTeammateBuffPanel}
-    <MonsterTeammateBuffPanel />
-  {/if}
-  {#if hateEnabled}
-    <MonsterHatePanel />
-  {/if}
-  {#if visibility.showFantasyPanel}
-    <MonsterFantasyPanel />
+
+  {#if minimapSettings.showInfoPanel}
+    <DraggablePanel
+      rect={minimapSettings.infoPanel}
+      {editing}
+      title={t("minimap.panels.info")}
+      class="info-panel"
+    >
+      <MinimapInfobar {snapshot} />
+    </DraggablePanel>
   {/if}
 </div>
 
@@ -51,10 +57,11 @@
     overflow: hidden;
     background: transparent;
     user-select: none;
+    box-sizing: border-box;
   }
 
   .overlay-root.editing {
-    background-color: rgba(0, 0, 0, 0.18);
+    background-color: rgba(0, 0, 0, 0.22);
     background-image:
       linear-gradient(to right, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
@@ -62,16 +69,8 @@
     box-shadow: inset 0 0 0 3px var(--overlay-edit-frame);
   }
 
-  /* Reference mode: shown beneath game-overlay during its editing as a live
-     alignment reference. No grid; full opacity so it reads as the real overlay
-     (the layout scaffold carries its own placeholder styling). */
-  .overlay-root.reference {
-    opacity: 1;
-  }
-
   :global(.overlay-group) {
     position: absolute;
-    z-index: 20;
     pointer-events: auto;
   }
 
@@ -86,14 +85,14 @@
     top: -22px;
     left: 0;
     z-index: 1;
-    padding: 3px 7px;
-    border-radius: 6px;
     display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
+    padding: 3px 7px;
+    border: 1px solid var(--overlay-edit-tag-border);
+    border-radius: 6px;
     color: #fff;
     background: var(--overlay-edit-tag-bg);
-    border: 1px solid var(--overlay-edit-tag-border);
+    font-size: 11px;
+    font-weight: 700;
   }
 
   :global(.resize-handle) {
@@ -102,11 +101,15 @@
     bottom: -10px;
     width: 16px;
     height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.95);
     border-radius: 50%;
     background: var(--overlay-edit-handle-bg);
-    border: 2px solid rgba(255, 255, 255, 0.95);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     cursor: nwse-resize;
+  }
+
+  :global(.info-panel) {
+    min-width: 220px;
   }
 
   :global(html),

@@ -32,7 +32,8 @@
   style:top={`${groupPos.y}px`}
   style:transform={`scale(${groupScale})`}
   style:transform-origin="top left"
-  onpointerdown={(e) => startDrag(e, { kind: "group", key: "resourceGroup" }, groupPos)}
+  onpointerdown={(e) =>
+    startDrag(e, { kind: "group", key: "resourceGroup" }, groupPos)}
 >
   {#if editing}
     <div class="group-tag">{t("gameOverlay.group.resource")}</div>
@@ -45,19 +46,32 @@
         {@const max = Math.max(1, getResourceValue(res.maxId))}
         {@const curPrecise = getResourcePreciseValue(res.currentId)}
         {@const maxPrecise = Math.max(1, getResourcePreciseValue(res.maxId))}
-        {@const energyPercent = Math.min(100, Math.max(0, (curPrecise / maxPrecise) * 100))}
-        {@const effectiveBuffIds = res.buffBaseIds ?? (res.buffBaseId ? [res.buffBaseId] : [])}
+        {@const energyPercent = Math.min(
+          100,
+          Math.max(0, (curPrecise / maxPrecise) * 100),
+        )}
+        {@const effectiveBuffIds =
+          res.buffBaseIds ?? (res.buffBaseId ? [res.buffBaseId] : [])}
         {@const buffPercent = effectiveBuffIds.length
-          ? Math.max(0, ...effectiveBuffIds.map((id) => durationPercents.get(id) ?? 0))
+          ? Math.max(
+              0,
+              ...effectiveBuffIds.map((id) => durationPercents.get(id) ?? 0),
+            )
           : energyPercent}
         <div class="res-bar-container">
           <img src={res.imageOff} alt={res.label} class="res-bar-bg" />
-          <div class="res-bar-fill-mask" style:clip-path={`inset(0 ${100 - buffPercent}% 0 0)`}>
+          <div
+            class="res-bar-fill-mask"
+            style:clip-path={`inset(0 ${100 - buffPercent}% 0 0)`}
+          >
             <img src={res.imageOn} alt={res.label} class="res-bar-fill" />
           </div>
           <div class="res-energy-overlay">
             <div class="res-energy-track">
-              <div class="res-energy-fill" style:width={`${energyPercent}%`}></div>
+              <div
+                class="res-energy-fill"
+                style:width={`${energyPercent}%`}
+              ></div>
             </div>
           </div>
           <div class="res-text">{cur}/{max}</div>
@@ -71,7 +85,11 @@
         {@const max = Math.max(1, getResourceValue(res.maxId))}
         <div class="res-charges-container">
           {#each Array(max) as _, i}
-            <img src={i < cur ? res.imageOn : res.imageOff} alt={res.label} class="res-charge-icon" />
+            <img
+              src={i < cur ? res.imageOn : res.imageOff}
+              alt={res.label}
+              class="res-charge-icon"
+            />
           {/each}
         </div>
       {/each}
@@ -93,9 +111,9 @@
 
 <style>
   .resource-group.editable {
-    border: 2px solid rgba(102, 204, 255, 0.9);
+    border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
-    background: rgba(20, 36, 56, 0.45);
+    background: var(--overlay-edit-panel-bg);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
     margin: -10px;
     padding: 8px;

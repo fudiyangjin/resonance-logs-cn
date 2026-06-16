@@ -124,9 +124,9 @@
   }
 
   .icon-buff-cell.editable {
-    border: 2px solid rgba(102, 204, 255, 0.9);
+    border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 8px;
-    background: rgba(20, 36, 56, 0.55);
+    background: var(--overlay-edit-panel-bg);
     margin: -6px -4px;
     padding: 4px 2px;
   }
