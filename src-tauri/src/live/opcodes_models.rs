@@ -65,7 +65,7 @@ pub enum AttrType {
     TargetId,
     /// Legacy name kept only so old serialized attr maps can still deserialize.
     GuildId,
-    AttackPower,
+    Facing,
     DefensePower,
     GearTier,
     BaseStrength,
@@ -139,7 +139,7 @@ impl AttrType {
             attr_type::ATTR_ID => Some(AttrType::MonsterId),
             attr_type::ATTR_ACTOR_STATE => Some(AttrType::ActorState),
             attr_type::ATTR_TARGET_ID => Some(AttrType::TargetId),
-            attr_type::ATTR_ATTACK_POWER => Some(AttrType::AttackPower),
+            attr_type::ATTR_FACING => Some(AttrType::Facing),
             attr_type::ATTR_DEFENSE_POWER => Some(AttrType::DefensePower),
             attr_type::ATTR_POS => Some(AttrType::Position),
             attr_type::ATTR_GEAR_TIER => Some(AttrType::GearTier),
@@ -212,7 +212,7 @@ impl AttrType {
             AttrType::MonsterId => attr_type::ATTR_ID,
             AttrType::ActorState => attr_type::ATTR_ACTOR_STATE,
             AttrType::TargetId | AttrType::GuildId => attr_type::ATTR_TARGET_ID,
-            AttrType::AttackPower => attr_type::ATTR_ATTACK_POWER,
+            AttrType::Facing => attr_type::ATTR_FACING,
             AttrType::DefensePower => attr_type::ATTR_DEFENSE_POWER,
             AttrType::GearTier => attr_type::ATTR_GEAR_TIER,
             AttrType::BaseStrength => attr_type::ATTR_BASE_STRENGTH,
@@ -518,7 +518,7 @@ pub mod attr_type {
     pub const ATTR_SCENE_BASIC_ID: i32 = 0x155; // Scene basic ID (341)
     pub const ATTR_ACTOR_STATE: i32 = 0x0b; // Actor state, see EActorState
     pub const ATTR_TARGET_ID: i32 = 0x1e; // AttrTargetId: current attack target entity UUID
-    pub const ATTR_ATTACK_POWER: i32 = 0x32; // Attack stat
+    pub const ATTR_FACING: i32 = 0x32;
     pub const ATTR_DEFENSE_POWER: i32 = 0x33; // Defense stat
     pub const ATTR_POS: i32 = 0x34; // Position vector
     pub const ATTR_GEAR_TIER: i32 = 0x35; // Gear tier/grade
@@ -778,7 +778,7 @@ mod tests {
         assert_eq!(AttrType::from_id(0x01), Some(AttrType::Name));
         assert_eq!(AttrType::from_id(0x0b), Some(AttrType::ActorState));
         assert_eq!(AttrType::from_id(0x1e), Some(AttrType::TargetId));
-        assert_eq!(AttrType::from_id(0x32), Some(AttrType::AttackPower));
+        assert_eq!(AttrType::from_id(0x32), Some(AttrType::Facing));
         assert_eq!(AttrType::from_id(0x33), Some(AttrType::DefensePower));
         assert_eq!(AttrType::from_id(0x34), Some(AttrType::Position));
         assert_eq!(AttrType::from_id(0x35), Some(AttrType::GearTier));
@@ -799,7 +799,7 @@ mod tests {
         assert_eq!(AttrType::Name.to_id(), 0x01);
         assert_eq!(AttrType::ActorState.to_id(), 0x0b);
         assert_eq!(AttrType::TargetId.to_id(), 0x1e);
-        assert_eq!(AttrType::AttackPower.to_id(), 0x32);
+        assert_eq!(AttrType::Facing.to_id(), 0x32);
         assert_eq!(AttrType::DefensePower.to_id(), 0x33);
         assert_eq!(AttrType::Position.to_id(), 0x34);
         assert_eq!(AttrType::GearTier.to_id(), 0x35);

@@ -1,13 +1,13 @@
 pub(crate) struct SceneConfig {
     pub(crate) scene_ids: &'static [i32],
     pub(crate) mechanic_buff_ids: &'static [i32],
-    /// Entity template ids (attr `10` / `ATTR_ID`) worth pushing to the minimap
-    /// overlay for this scene, on top of team members. Matched across all entity
-    /// types since `monster_id_of` reads attr `10` for every entity.
     pub(crate) relevant_monster_ids: &'static [i32],
 }
 
-const SCENES: &[&SceneConfig] = &[&super::scenes::s3_raid::CONFIG];
+const SCENES: &[&SceneConfig] = &[
+    &super::scenes::s3_raid::CONFIG,
+    &super::scenes::s3_sea_ringed_reef::CONFIG,
+];
 
 #[inline]
 #[must_use]

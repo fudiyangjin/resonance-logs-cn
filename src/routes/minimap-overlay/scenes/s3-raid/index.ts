@@ -42,11 +42,16 @@ export const s3RaidScene: SceneDefinition = {
     return {
       worldHalfX: layout.worldHalfX,
       worldHalfZ: layout.worldHalfZ,
+      rotationQuarters: 0,
       layout: layout.shapes,
       regions: mechanicView.regions,
       rows: mechanicView.rows,
       entityColorSlots: mechanicView.entityColorSlots,
-      entities: visibleEntities(snapshot.entities, arena),
+      entities: visibleEntities(
+        snapshot.entities,
+        arena,
+        mechanicView.entityColorSlots,
+      ),
     };
   },
   resolveSkillRows({ skillCasts }) {
@@ -57,10 +62,13 @@ export const s3RaidScene: SceneDefinition = {
 function visibleEntities(
   entities: MinimapEntity[],
   arena: ReturnType<typeof arenaByPlayerY>,
+  entityColorSlots: Map<string, number>,
 ): MinimapEntity[] {
   return entities.filter(
     (entity) =>
       yInArena(entity.y, arena) &&
-      (entity.kind === "local" || entity.kind === "teammate"),
+      (entity.kind === "local" ||
+        entity.kind === "teammate" ||
+        entityColorSlots.has(entity.entityUuid)),
   );
 }

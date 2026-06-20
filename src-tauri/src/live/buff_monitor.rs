@@ -344,6 +344,10 @@ impl EntityBuffMonitors {
         self.monitors.clear();
     }
 
+    pub(crate) fn remove(&mut self, entity_uuid: EntityUuid) {
+        self.monitors.remove(&entity_uuid);
+    }
+
     pub(crate) fn monitor_for(&mut self, entity_uuid: EntityUuid) -> &mut BuffMonitor {
         self.monitors
             .entry(entity_uuid)

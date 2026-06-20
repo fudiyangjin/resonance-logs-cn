@@ -21,6 +21,7 @@ export const minimapRuntime = $state({
   lastSceneId: null as number | null,
   skillCastLog: [] as MinimapSkillCast[],
   playerNameCache: new SvelteMap<EntityId, string>(),
+  entityFirstSeenMs: new SvelteMap<string, number>(),
 });
 
 export function minimapSnapshot() {
@@ -41,6 +42,26 @@ export function minimapSkillCasts() {
 
 export function clearSkillCastLog() {
   minimapRuntime.skillCastLog = [];
+  minimapRuntime.entityFirstSeenMs.clear();
+}
+
+export function entityFirstSeen(entityUuid: string): number | undefined {
+  return minimapRuntime.entityFirstSeenMs.get(entityUuid);
+}
+
+/**
+ * Records the first-seen time for every entity in the snapshot (set-if-absent).
+ * Stale uuids are intentionally not pruned here: rows are only generated for
+ * entities present in the current snapshot, so retaining old entries is
+ * harmless and avoids resetting a countdown if an entity blinks out for a
+ * single frame. The whole map is cleared on scene change via clearSkillCastLog.
+ */
+export function updateEntityFirstSeen(snapshot: MinimapSnapshot, nowMs: number) {
+  for (const entity of snapshot.entities) {
+    if (!minimapRuntime.entityFirstSeenMs.has(entity.entityUuid)) {
+      minimapRuntime.entityFirstSeenMs.set(entity.entityUuid, nowMs);
+    }
+  }
 }
 
 export function consumeMinimapSkillCasts(skillCasts: MinimapSkillCast[]) {

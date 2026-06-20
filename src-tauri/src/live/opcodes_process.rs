@@ -4,7 +4,7 @@ use crate::live::commands_models::{HateEntry, ShieldDetailEntry};
 use crate::live::damage_id;
 use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
 use crate::live::entity_attr_store::EntityAttrStore;
-use crate::live::entity_id::{canonical_player_uuid, uid_from_uuid};
+use crate::live::entity_id::{EntityUuid, canonical_player_uuid, uid_from_uuid};
 use crate::live::opcodes_models::class::{
     ClassSpec, get_class_id_from_spec, get_class_spec_from_skill_id,
 };
@@ -221,6 +221,7 @@ pub struct TeammateFantasyDetection {
 pub struct SyncNearEntitiesProcessResult {
     pub initial_buff_snapshots: Vec<(i64, blueprotobuf::BuffInfoSync)>,
     pub teammate_fantasies: Vec<TeammateFantasyDetection>,
+    pub disappeared: Vec<EntityUuid>,
 }
 
 fn has_resonance_fantasy_marker(buff_infos: Option<&blueprotobuf::BuffInfoSync>) -> bool {
@@ -236,9 +237,13 @@ pub fn process_sync_near_entities(
     attr_store: &mut EntityAttrStore,
     sync_near_entities: blueprotobuf::SyncNearEntities,
 ) -> Option<SyncNearEntitiesProcessResult> {
-    let mut result = SyncNearEntitiesProcessResult::default();
+    let blueprotobuf::SyncNearEntities { appear, disappear } = sync_near_entities;
+    let mut result = SyncNearEntitiesProcessResult {
+        disappeared: Vec::with_capacity(disappear.len()),
+        ..Default::default()
+    };
 
-    for pkt_entity in sync_near_entities.appear {
+    for pkt_entity in appear {
         let target_uuid = pkt_entity.uuid?;
         let initial_buff_infos = pkt_entity.buff_infos;
         let target_entity_type = pkt_entity
@@ -317,6 +322,29 @@ pub fn process_sync_near_entities(
                 .initial_buff_snapshots
                 .push((target_uuid, buff_infos));
         }
+    }
+
+    for disappear_entity in disappear {
+        let Some(target_uuid) = disappear_entity.uuid else {
+            continue;
+        };
+        let target_entity_type = encounter
+            .entity_uuid_to_entity
+            .get(&target_uuid)
+            .map(|entity| entity.entity_type)
+            .unwrap_or_else(|| EEntityType::from(target_uuid));
+
+        if !matches!(
+            target_entity_type,
+            EEntityType::EntChar | EEntityType::EntMonster
+        ) {
+            encounter.entity_uuid_to_entity.remove(&target_uuid);
+            attr_store.remove_entity(target_uuid);
+        } else {
+            attr_store.clear_transient_attrs(target_uuid);
+        }
+
+        result.disappeared.push(target_uuid);
     }
 
     // Track party members for wipe detection (collect data first to avoid borrow issues)

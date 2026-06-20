@@ -1302,6 +1302,11 @@ impl AppStateManager {
                 .monitor_for(target_uuid)
                 .apply_buff_info_snapshot(&buff_infos);
         }
+
+        for target_uuid in result.disappeared {
+            state.entity_buff_monitors.remove(target_uuid);
+            state.sent_overlay_entity_uuids.remove(&target_uuid);
+        }
     }
 
     fn process_sync_container_data(

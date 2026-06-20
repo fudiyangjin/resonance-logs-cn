@@ -57,6 +57,10 @@ pub(crate) fn build_minimap_snapshot(state: &AppState) -> MinimapSnapshot {
             z: position.z,
             name,
             monster_id,
+            facing: attr_store
+                .attr(uuid, AttrType::Facing)
+                .and_then(AttrValue::as_int)
+                .map(|v| v as f32 / 100.0),
             is_dead: attr_store.is_dead(uuid),
             top_summoner_id,
         });

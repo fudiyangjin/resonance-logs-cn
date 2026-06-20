@@ -49,6 +49,7 @@ export type MechanicRow = {
 export type SceneView = {
   worldHalfX: number;
   worldHalfZ: number;
+  rotationQuarters: number;
   layout: LayoutShapes;
   regions: MechanicRegion[];
   rows: MechanicRow[];
@@ -73,6 +74,7 @@ export function emptySceneView(entities: MinimapEntity[] = []): SceneView {
   return {
     worldHalfX: 30,
     worldHalfZ: 27,
+    rotationQuarters: 0,
     layout: { lines: [], circles: [], squares: [] },
     regions: [],
     rows: [],

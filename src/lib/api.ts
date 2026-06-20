@@ -214,6 +214,7 @@ export type MinimapEntity = {
   z: number;
   name?: string | null;
   monsterId?: number | null;
+  facing?: number | null;
   isDead: boolean;
   topSummonerId?: string | null;
 };

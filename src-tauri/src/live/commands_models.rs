@@ -469,6 +469,8 @@ pub struct MinimapEntity {
     pub name: Option<String>,
     /// Monster template id when the entity is a monster.
     pub monster_id: Option<i32>,
+    /// Yaw facing in degrees when known (attr 0x32, stored as centidegrees).
+    pub facing: Option<f32>,
     /// Whether the entity is currently in the dead actor state.
     pub is_dead: bool,
     /// Top-level summoner/owner UUID when present.

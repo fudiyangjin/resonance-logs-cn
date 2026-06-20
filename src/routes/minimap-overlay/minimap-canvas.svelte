@@ -14,6 +14,9 @@
   let canvas: HTMLCanvasElement | null = $state(null);
 
   const PADDING = 10;
+  // Radius of the upward triangle drawn for every non-team entity. Larger than
+  // team-member circles so mechanic entities (orbs, etc.) read clearly.
+  const NON_TEAM_TRIANGLE_RADIUS = 10;
   const minimapSettings = $derived(SETTINGS.minimap.state);
 
   type Projector = (x: number, z: number) => [number, number];
@@ -31,19 +34,58 @@
     );
   });
 
-  const aspect = $derived(sceneView.worldHalfZ / sceneView.worldHalfX);
+  const aspect = $derived.by(() => {
+    const { halfForHeight, halfForWidth } = rotatedHalfExtents(sceneView);
+    return halfForHeight / halfForWidth;
+  });
+
+  function normalizedRotationQuarters(rotationQuarters: number): number {
+    return ((Math.trunc(rotationQuarters) % 4) + 4) % 4;
+  }
+
+  function rotatedHalfExtents(view: SceneView): {
+    halfForWidth: number;
+    halfForHeight: number;
+  } {
+    const isQuarterTurn =
+      normalizedRotationQuarters(view.rotationQuarters) % 2 === 1;
+    return {
+      halfForWidth: isQuarterTurn ? view.worldHalfX : view.worldHalfZ,
+      halfForHeight: isQuarterTurn ? view.worldHalfZ : view.worldHalfX,
+    };
+  }
+
+  function rotateMapPoint(x: number, z: number, rotationQuarters: number) {
+    switch (normalizedRotationQuarters(rotationQuarters)) {
+      case 1:
+        return { x: -z, z: x };
+      case 2:
+        return { x: -x, z: -z };
+      case 3:
+        return { x: z, z: -x };
+      default:
+        return { x, z };
+    }
+  }
 
   function makeProjector(
     w: number,
     h: number,
     view: SceneView,
   ): { project: Projector; scale: number } {
-    const scaleX = (w - PADDING * 2) / (view.worldHalfZ * 2);
-    const scaleY = (h - PADDING * 2) / (view.worldHalfX * 2);
+    const { halfForWidth, halfForHeight } = rotatedHalfExtents(view);
+    const scaleX = (w - PADDING * 2) / (halfForWidth * 2);
+    const scaleY = (h - PADDING * 2) / (halfForHeight * 2);
     const scale = Math.min(scaleX, scaleY);
     const cx = w / 2;
     const cy = h / 2;
-    return { project: (x, z) => [cx + -z * scale, cy - x * scale], scale };
+    return {
+      project: (x, z) => {
+        const point = rotateMapPoint(x, z, view.rotationQuarters);
+        return [cx - point.z * scale, cy - point.x * scale];
+      },
+      scale,
+    };
   }
 
   function colorFor(entity: MinimapEntity): string {
@@ -53,6 +95,26 @@
 
   function radiusFor(): number {
     return 4;
+  }
+
+  function isTeamMember(entity: MinimapEntity): boolean {
+    return entity.kind === "local" || entity.kind === "teammate";
+  }
+
+  // Upward-pointing triangle centered on (cx, cy), used for every non-team
+  // entity so it reads distinctly from team members' circles.
+  function drawTriangle(
+    ctx: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    r: number,
+  ) {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r);
+    ctx.lineTo(cx + r * 0.866, cy + r * 0.5);
+    ctx.lineTo(cx - r * 0.866, cy + r * 0.5);
+    ctx.closePath();
+    ctx.fill();
   }
 
   function draw() {
@@ -131,15 +193,15 @@
       }
 
       const [sx, sy] = project(entity.x, entity.z);
-      const r = radiusFor();
+      const team = isTeamMember(entity);
       const dotColor =
         colorSlot === undefined ? colorFor(entity) : slotColor(colorSlot);
 
       ctx.globalAlpha = entity.isDead
         ? 0.35
-        : entity.kind === "other"
-          ? 0.45
-          : 1;
+        : hasMechanic || entity.kind !== "other"
+          ? 1
+          : 0.45;
       if (hasMechanic) {
         ctx.shadowColor = dotColor;
         ctx.shadowBlur = 12;
@@ -147,16 +209,12 @@
         ctx.shadowBlur = 0;
       }
       ctx.fillStyle = dotColor;
-      ctx.beginPath();
-      ctx.arc(sx, sy, r, 0, Math.PI * 2);
-      ctx.fill();
-      if (hasMechanic) {
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = "rgba(248, 250, 252, 0.9)";
-        ctx.lineWidth = 2;
+      if (team) {
         ctx.beginPath();
-        ctx.arc(sx, sy, r + 3, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.arc(sx, sy, radiusFor(), 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        drawTriangle(ctx, sx, sy, NON_TEAM_TRIANGLE_RADIUS);
       }
     }
     ctx.globalAlpha = 1;

@@ -17,6 +17,12 @@ pub struct SkillCastEvent {
     pub timestamp_ms: i64,
 }
 
+/// View-state attributes that become stale once a stat-bearing entity leaves
+/// view. They are re-synced when the entity re-appears, so they are dropped on
+/// disappear while identity/stat attributes are preserved.
+const TRANSIENT_VIEW_ATTRS: &[AttrType] =
+    &[AttrType::CurrentHp, AttrType::MaxHp, AttrType::Position];
+
 #[derive(Debug, Default)]
 pub struct EntityAttrStore {
     attrs: HashMap<i64, HashMap<AttrType, AttrValue>>,
@@ -298,6 +304,25 @@ impl EntityAttrStore {
         self.shield_detail_dirty = true;
         self.death_events.clear();
         self.skill_cast_events.clear();
+    }
+
+    pub fn remove_entity(&mut self, uid: i64) {
+        self.attrs.remove(&uid);
+        self.hate_lists.remove(&uid);
+        self.fight_resource_ids.remove(&uid);
+    }
+
+    /// Drop transient view attributes (HP, position) and the hate list for a
+    /// stat-bearing entity (char/monster) that left view, while keeping its
+    /// identity and accumulated combat stats for settlement. The dropped values
+    /// are re-synced when the entity re-appears.
+    pub fn clear_transient_attrs(&mut self, uid: i64) {
+        if let Some(entity_attrs) = self.attrs.get_mut(&uid) {
+            for attr_type in TRANSIENT_VIEW_ATTRS {
+                entity_attrs.remove(attr_type);
+            }
+        }
+        self.hate_lists.remove(&uid);
     }
 
     pub fn drain_changes(&mut self) -> AttrChanges {

@@ -1,5 +1,7 @@
 import type { MinimapBuffFact, MinimapEntity, MinimapSnapshot } from "$lib/api";
 import { t, type MessageKey } from "$lib/i18n/index.svelte";
+import { overlayNow } from "../../../game-overlay/overlay-clock.svelte.js";
+import { entityFirstSeen } from "../../minimap-runtime.svelte.js";
 import type { MechanicRegion, MechanicRow } from "../../scene-types";
 import {
   FLOOR_CORNER_CELLS,
@@ -50,7 +52,15 @@ const textKeys = {
   hitOrder1: "minimap.s3Raid.hitOrder.mark1",
   hitOrder2: "minimap.s3Raid.hitOrder.mark2",
   hitOrder3: "minimap.s3Raid.hitOrder.mark3",
+  pinballGroup: "minimap.s3Raid.pinball.group",
+  pinballCast: "minimap.s3Raid.pinball.cast",
+  pinballBall: "minimap.s3Raid.pinball.ball",
 } satisfies Record<string, MessageKey>;
+
+const PINBALL_CAST_BUFF_ID = 829314;
+const PINBALL_BALL_MONSTER_ID = 10330051;
+const PINBALL_BALL_DURATION_MS = 6000;
+const PINBALL_COLOR_SLOT = 5;
 
 export type MechanicView = {
   regions: MechanicRegion[];
@@ -249,11 +259,47 @@ export function buildMechanicView(
     );
   }
 
+  // Pinball runs in any phase, so it lives outside the non-ring block.
+  addPinballRows(snapshot, rows, entityColorSlots);
+
   return {
     regions: dedupeRegions(regions),
     rows: [...rows.values()],
     entityColorSlots,
   };
+}
+
+function addPinballRows(
+  snapshot: MinimapSnapshot,
+  rows: Map<string, MechanicRow>,
+  entityColorSlots: Map<string, number>,
+) {
+  for (const buff of snapshot.buffs) {
+    if (buff.baseId !== PINBALL_CAST_BUFF_ID) continue;
+    upsertRow(rows, {
+      key: `pinball:cast:${PINBALL_CAST_BUFF_ID}`,
+      group: t(textKeys.pinballGroup),
+      label: t(textKeys.pinballCast),
+      colorSlot: PINBALL_COLOR_SLOT,
+      createTimeMs: buff.createTimeMs,
+      durationMs: buff.durationMs,
+      targets: [],
+    });
+  }
+
+  for (const entity of snapshot.entities) {
+    if (entity.monsterId !== PINBALL_BALL_MONSTER_ID) continue;
+    entityColorSlots.set(entity.entityUuid, PINBALL_COLOR_SLOT);
+    upsertRow(rows, {
+      key: `pinball:ball:${entity.entityUuid}`,
+      group: t(textKeys.pinballGroup),
+      label: t(textKeys.pinballBall),
+      colorSlot: PINBALL_COLOR_SLOT,
+      createTimeMs: entityFirstSeen(entity.entityUuid) ?? overlayNow(),
+      durationMs: PINBALL_BALL_DURATION_MS,
+      targets: [],
+    });
+  }
 }
 
 function groupBuffsByTarget(
