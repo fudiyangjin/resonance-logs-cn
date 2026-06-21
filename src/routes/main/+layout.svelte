@@ -7,6 +7,9 @@
   import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
   import { listen, type UnlistenFn } from "@tauri-apps/api/event";
   import { goto } from "$app/navigation";
+  import { onSceneChange } from "$lib/api";
+  import { isDailyScene } from "$lib/config/daily-scene-blacklist";
+  import { isSupportedMinimapScene } from "$lib/config/minimap-scene-support";
   import { SETTINGS } from '$lib/settings-store';
   import { applyCustomFonts } from "$lib/font-loader";
   import { applyLiveClickthrough } from "$lib/utils.svelte";
@@ -34,7 +37,10 @@
   let runtimeSnapshotInitialized = false;
   let lastOverlayVisibleState: boolean | null = null;
   let lastMonsterOverlayVisibleState: boolean | null = null;
+  let minimapAutoHidden = false;
+  let minimapWasVisible = false;
   let runtimeSyncTimer: ReturnType<typeof setTimeout> | null = null;
+  let currentSceneId = $state<number | null>(null);
 
   function queueRuntimeSnapshotSync(runtimeSnapshot: ReturnType<typeof buildMonitorRuntimeSnapshot>, runtimeSnapshotKey: string) {
     if (runtimeSyncTimer) {
@@ -64,14 +70,22 @@
       queueRuntimeSnapshotSync(runtimeSnapshot, runtimeSnapshotKey);
     }
 
+  });
+
+  $effect(() => {
     const enabled = SETTINGS.skillMonitor.state.enabled;
+    const autoHideInDailyScenes =
+      SETTINGS.skillMonitor.state.autoHideInDailyScenes ?? false;
+    const shouldShow =
+      enabled && !(autoHideInDailyScenes && isDailyScene(currentSceneId));
+
     void (async () => {
       try {
         const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
         if (overlayWindow) {
-          if (lastOverlayVisibleState !== enabled) {
-            lastOverlayVisibleState = enabled;
-            if (enabled) {
+          if (lastOverlayVisibleState !== shouldShow) {
+            lastOverlayVisibleState = shouldShow;
+            if (shouldShow) {
               await overlayWindow.show();
               await overlayWindow.unminimize();
             } else {
@@ -87,13 +101,18 @@
 
   $effect(() => {
     const enabled = SETTINGS.monsterMonitor.state.enabled;
+    const autoHideInDailyScenes =
+      SETTINGS.monsterMonitor.state.autoHideInDailyScenes ?? false;
+    const shouldShow =
+      enabled && !(autoHideInDailyScenes && isDailyScene(currentSceneId));
+
     void (async () => {
       try {
         const monsterOverlayWindow = await WebviewWindow.getByLabel("monster-overlay");
         if (monsterOverlayWindow) {
-          if (lastMonsterOverlayVisibleState !== enabled) {
-            lastMonsterOverlayVisibleState = enabled;
-            if (enabled) {
+          if (lastMonsterOverlayVisibleState !== shouldShow) {
+            lastMonsterOverlayVisibleState = shouldShow;
+            if (shouldShow) {
               await monsterOverlayWindow.show();
               await monsterOverlayWindow.unminimize();
             } else {
@@ -103,6 +122,41 @@
         }
       } catch (error) {
         console.error("[monster-monitor] failed to sync monster monitor state", error);
+      }
+    })();
+  });
+
+  $effect(() => {
+    const autoHideInDailyScenes =
+      SETTINGS.minimap.state.autoHideInDailyScenes ?? false;
+    const shouldAutoHide =
+      autoHideInDailyScenes &&
+      (isDailyScene(currentSceneId) || !isSupportedMinimapScene(currentSceneId));
+
+    void (async () => {
+      try {
+        const minimapOverlayWindow = await WebviewWindow.getByLabel("minimap-overlay");
+        if (!minimapOverlayWindow) return;
+
+        if (shouldAutoHide) {
+          if (minimapAutoHidden) return;
+          minimapWasVisible = await minimapOverlayWindow.isVisible();
+          if (minimapWasVisible) {
+            await minimapOverlayWindow.hide();
+          }
+          minimapAutoHidden = true;
+          return;
+        }
+
+        if (!minimapAutoHidden) return;
+        if (minimapWasVisible) {
+          await minimapOverlayWindow.show();
+          await minimapOverlayWindow.unminimize();
+        }
+        minimapAutoHidden = false;
+        minimapWasVisible = false;
+      } catch (error) {
+        console.error("[minimap] failed to sync auto hide state", error);
       }
     })();
   });
@@ -142,6 +196,7 @@
   let updateInfo = $state<UpdateInfo | null>(null);
   let updateUnlisten: UnlistenFn | null = null;
   let clickthroughUnlisten: UnlistenFn | null = null;
+  let sceneChangeUnlisten: UnlistenFn | null = null;
 
   async function revealMainWindowForNotice() {
     try {
@@ -185,6 +240,14 @@
       console.error("Failed to subscribe live-clickthrough-changed event", err);
     });
 
+    onSceneChange((event) => {
+      currentSceneId = event.payload.sceneId;
+    }).then((unlisten) => {
+      sceneChangeUnlisten = unlisten;
+    }).catch((err) => {
+      console.error("Failed to subscribe scene-change event", err);
+    });
+
     // Get app version and check changelog
     getVersion().then((v) => {
       currentVersion = v;
@@ -214,6 +277,10 @@
       if (clickthroughUnlisten) {
         clickthroughUnlisten();
         clickthroughUnlisten = null;
+      }
+      if (sceneChangeUnlisten) {
+        sceneChangeUnlisten();
+        sceneChangeUnlisten = null;
       }
     };
   });

@@ -271,6 +271,7 @@ export type MinimapLocalRing = {
 };
 
 export type MinimapConfig = {
+  autoHideInDailyScenes: boolean;
   hideNormalTeammates: boolean;
   showBoss: boolean;
   showMapPanel: boolean;
@@ -663,6 +664,7 @@ export type BuffAlertMap = Record<string, BuffAlertRule>;
 
 export type MonsterMonitorConfig = {
   enabled: boolean;
+  autoHideInDailyScenes: boolean;
   hateListEnabled: boolean;
   hateListMaxDisplay: number;
   monitoredBuffIds: number[];
@@ -1083,6 +1085,7 @@ export function createDefaultSkillMonitorProfile(
 export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
   return {
     enabled: false,
+    autoHideInDailyScenes: false,
     hateListEnabled: false,
     hateListMaxDisplay: 5,
     monitoredBuffIds: [],
@@ -1111,6 +1114,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
 
 export function createDefaultMinimapConfig(): MinimapConfig {
   return {
+    autoHideInDailyScenes: false,
     hideNormalTeammates: true,
     showBoss: false,
     showMapPanel: false,
@@ -1488,6 +1492,7 @@ const DEFAULT_SETTINGS = {
   },
   skillMonitor: {
     enabled: false,
+    autoHideInDailyScenes: false,
     activeProfileIndex: 0,
     buffAliases: {} as BuffAliasMap,
     profiles: [createDefaultSkillMonitorProfile()] as SkillMonitorProfile[],

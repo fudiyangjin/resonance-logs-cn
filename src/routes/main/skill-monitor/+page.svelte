@@ -79,6 +79,8 @@
 
   type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
 
+  SETTINGS.skillMonitor.state.autoHideInDailyScenes ??= false;
+
   const availableBuffs = getAvailableBuffDefinitions();
   const buffCategoryDefinitions = getBuffCategoryDefinitions();
   let buffSearch = $state("");
@@ -1466,6 +1468,11 @@
       bind:checked={SETTINGS.skillMonitor.state.enabled}
       label={t("skillMonitor.main.enabled.label")}
       description={t("skillMonitor.main.enabled.description")}
+    />
+    <SettingsSwitch
+      bind:checked={SETTINGS.skillMonitor.state.autoHideInDailyScenes}
+      label={t("skillMonitor.main.autoHideInDailyScenes.label")}
+      description={t("skillMonitor.main.autoHideInDailyScenes.description")}
     />
   </div>
 

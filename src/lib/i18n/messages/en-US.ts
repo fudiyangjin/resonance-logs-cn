@@ -910,6 +910,10 @@ export const enUSMessages = {
   "skillMonitor.main.enabled.label": "Enable Live Monitor",
   "skillMonitor.main.enabled.description":
     "Send monitor data to the overlay window in real time when enabled",
+  "skillMonitor.main.autoHideInDailyScenes.label":
+    "Auto Hide in Daily Scenes",
+  "skillMonitor.main.autoHideInDailyScenes.description":
+    "Automatically hide the skill overlay in daily scene blacklist entries and restore it after leaving.",
   "skillMonitor.tabs.skillCd": "Skill CD",
   "skillMonitor.tabs.buff": "Buff Monitor",
   "skillMonitor.tabs.panelAttr": "Character Panel",
@@ -1159,6 +1163,9 @@ export const enUSMessages = {
   "monsterMonitor.actions.toggleOverlay": "Toggle Monster Overlay",
   "monsterMonitor.actions.editLayout": "Edit Monster Layout",
   "monsterMonitor.enabled": "Enable Monster Monitor",
+  "monsterMonitor.autoHideInDailyScenes.label": "Auto Hide in Daily Scenes",
+  "monsterMonitor.autoHideInDailyScenes.description":
+    "Automatically hide the monster overlay in daily scene blacklist entries and restore it after leaving.",
   "monsterMonitor.tabs.buff": "Buff Monitor",
   "monsterMonitor.tabs.teammate": "Teammate Buffs",
   "monsterMonitor.tabs.hate": "Hate List",
@@ -1423,6 +1430,10 @@ export const enUSMessages = {
   "minimap.settings.display.title": "Display Options",
   "minimap.settings.display.description":
     "Control the minimap information density during combat and reduce noise.",
+  "minimap.settings.autoHideInDailyScenes.label":
+    "Auto Hide in Daily Scenes",
+  "minimap.settings.autoHideInDailyScenes.description":
+    "Automatically hide the minimap overlay in daily scene blacklist entries and restore its previous visibility after leaving.",
   "minimap.settings.hideNormalTeammates.label":
     "Only show self and teammates affected by mechanics",
   "minimap.settings.hideNormalTeammates.description":

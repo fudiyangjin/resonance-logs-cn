@@ -891,6 +891,10 @@ export const jaJPMessages = {
   "skillMonitor.main.enabled.label": "ライブモニターを有効化",
   "skillMonitor.main.enabled.description":
     "有効にすると、モニターデータをリアルタイムでオーバーレイウィンドウに送信",
+  "skillMonitor.main.autoHideInDailyScenes.label":
+    "日常シーンで自動的に非表示",
+  "skillMonitor.main.autoHideInDailyScenes.description":
+    "日常シーンのブラックリストに入るとスキルオーバーレイを自動的に非表示にし、離れると復元します。",
   "skillMonitor.tabs.skillCd": "スキル CD",
   "skillMonitor.tabs.buff": "Buff モニター",
   "skillMonitor.tabs.panelAttr": "キャラクターパネル",
@@ -1144,6 +1148,9 @@ export const jaJPMessages = {
   "monsterMonitor.actions.toggleOverlay": "モンスターオーバーレイの切替",
   "monsterMonitor.actions.editLayout": "モンスターレイアウトを編集",
   "monsterMonitor.enabled": "モンスターモニターを有効化",
+  "monsterMonitor.autoHideInDailyScenes.label": "日常シーンで自動的に非表示",
+  "monsterMonitor.autoHideInDailyScenes.description":
+    "日常シーンのブラックリストに入るとモンスターオーバーレイを自動的に非表示にし、離れると復元します。",
   "monsterMonitor.tabs.buff": "Buff モニター",
   "monsterMonitor.tabs.teammate": "味方 Buff",
   "monsterMonitor.tabs.hate": "ヘイトリスト",
@@ -1409,6 +1416,10 @@ export const jaJPMessages = {
   "minimap.settings.display.title": "表示オプション",
   "minimap.settings.display.description":
     "戦闘中のミニマップ情報量を調整し、不要なノイズを減らします。",
+  "minimap.settings.autoHideInDailyScenes.label":
+    "日常シーンで自動的に非表示",
+  "minimap.settings.autoHideInDailyScenes.description":
+    "日常シーンのブラックリストに入るとミニマップオーバーレイを自動的に非表示にし、離れると以前の表示状態を復元します。",
   "minimap.settings.hideNormalTeammates.label":
     "自分とギミック対象の味方のみ表示",
   "minimap.settings.hideNormalTeammates.description":

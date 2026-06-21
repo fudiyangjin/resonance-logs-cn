@@ -818,6 +818,9 @@ export const zhCNMessages = {
   "skillMonitor.layout.editOverlayLayout": "编辑遮罩布局",
   "skillMonitor.main.enabled.label": "启用实时监控",
   "skillMonitor.main.enabled.description": "开启后将实时推送监控数据到悬浮窗口",
+  "skillMonitor.main.autoHideInDailyScenes.label": "日常场景自动隐藏",
+  "skillMonitor.main.autoHideInDailyScenes.description":
+    "进入日常场景时自动隐藏技能遮罩，离开后恢复显示。",
   "skillMonitor.tabs.skillCd": "技能CD",
   "skillMonitor.tabs.buff": "Buff监控",
   "skillMonitor.tabs.panelAttr": "角色面板",
@@ -1052,6 +1055,9 @@ export const zhCNMessages = {
   "monsterMonitor.actions.toggleOverlay": "切换怪物遮罩",
   "monsterMonitor.actions.editLayout": "编辑怪物布局",
   "monsterMonitor.enabled": "启用怪物监控",
+  "monsterMonitor.autoHideInDailyScenes.label": "日常场景自动隐藏",
+  "monsterMonitor.autoHideInDailyScenes.description":
+    "进入日常场景黑名单时自动隐藏怪物遮罩，离开后恢复显示。",
   "monsterMonitor.tabs.buff": "Buff 监控",
   "monsterMonitor.tabs.teammate": "队友 Buff",
   "monsterMonitor.tabs.hate": "仇恨列表",
@@ -1308,6 +1314,9 @@ export const zhCNMessages = {
   "minimap.settings.display.title": "显示选项",
   "minimap.settings.display.description":
     "控制小地图在战斗中的信息密度，减少不必要的干扰。",
+  "minimap.settings.autoHideInDailyScenes.label": "日常场景自动隐藏",
+  "minimap.settings.autoHideInDailyScenes.description":
+    "进入日常场景黑名单时自动隐藏小地图遮罩，离开后恢复之前的显示状态。",
   "minimap.settings.hideNormalTeammates.label": "仅显示自己与被机制影响的队友",
   "minimap.settings.hideNormalTeammates.description":
     "开启后，普通队友点位会隐藏；当队友被机制颜色或 Buff 影响时会自动显示。",

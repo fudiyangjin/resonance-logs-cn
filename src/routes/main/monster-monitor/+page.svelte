@@ -60,6 +60,8 @@
   );
   const buffCategoryDefinitions = getBuffCategoryDefinitions();
 
+  SETTINGS.monsterMonitor.state.autoHideInDailyScenes ??= false;
+
   let searchKeyword = $state("");
   let teammateSearchKeyword = $state("");
   let fantasySearchKeyword = $state("");
@@ -760,11 +762,18 @@
 
 <div class="space-y-6">
   <section class="border-border/60 bg-card/60 space-y-4 rounded-xl border p-5">
-    <div class="flex justify-start">
+    <div class="flex flex-wrap justify-start gap-4">
       <div class="min-w-[220px]">
         <SettingsSwitch
           label={t("monsterMonitor.enabled")}
           bind:checked={SETTINGS.monsterMonitor.state.enabled}
+        />
+      </div>
+      <div class="min-w-[260px]">
+        <SettingsSwitch
+          label={t("monsterMonitor.autoHideInDailyScenes.label")}
+          description={t("monsterMonitor.autoHideInDailyScenes.description")}
+          bind:checked={SETTINGS.monsterMonitor.state.autoHideInDailyScenes}
         />
       </div>
     </div>

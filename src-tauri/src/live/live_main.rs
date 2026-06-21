@@ -257,14 +257,21 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                 scene_id,
                 dungeon_difficulty,
             } => {
+                let payload = SceneChangePayload {
+                    scene_id,
+                    dungeon_difficulty,
+                };
                 safe_emit_to(
                     app_handle,
                     crate::WINDOW_LIVE_LABEL,
                     "scene-change",
-                    SceneChangePayload {
-                        scene_id,
-                        dungeon_difficulty,
-                    },
+                    payload.clone(),
+                );
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_MAIN_LABEL,
+                    "scene-change",
+                    payload,
                 );
             }
             OutboundEvent::TrainingDummyUpdate(training_dummy) => {
