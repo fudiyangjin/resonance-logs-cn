@@ -4,6 +4,7 @@ import {
   resolveBuffDisplayName,
   type BuffCategoryKey,
 } from "$lib/config/buff-name-table";
+import { resolveDbmSkillName } from "$lib/config/dbm-table";
 import { resolveMonsterName } from "$lib/config/game-names";
 import { t } from "$lib/i18n/index.svelte";
 import { uidFromEntityUuid, type EntityId } from "$lib/entity-id";
@@ -20,6 +21,7 @@ import type {
 } from "$lib/api";
 import {
   buildBuffTextRow,
+  formatTimerText,
   resolveAlertState,
 } from "../game-overlay/overlay-utils";
 import type { TextBuffDisplay } from "../game-overlay/overlay-types";
@@ -415,6 +417,50 @@ function resolveMonsterSectionTitle(entityUuid: EntityId): string {
   });
 }
 
+function buildDbmRows(now: number): TextBuffDisplay[] {
+  const entries: { createTimeMs: number; row: TextBuffDisplay }[] = [];
+  for (const [baseSkillId, event] of monsterRuntime.bossDbmMap) {
+    const remainingMs = Math.max(
+      0,
+      event.createTimeMs + event.durationMs - now,
+    );
+    if (remainingMs <= 0) {
+      // Pulse expired: drop it so the map stays bounded across encounters.
+      monsterRuntime.bossDbmMap.delete(baseSkillId);
+      continue;
+    }
+    entries.push({
+      createTimeMs: event.createTimeMs,
+      row: {
+        key: `${event.baseSkillId}:${event.skillEffectId}`,
+        label: resolveDbmSkillName(event.skillEffectId, event.baseSkillId),
+        valueText: formatTimerText(remainingMs),
+        progressPercent: Math.min(
+          100,
+          Math.max(0, (remainingMs / event.durationMs) * 100),
+        ),
+        showProgress: true,
+      },
+    });
+  }
+  return entries
+    .sort((left, right) => left.createTimeMs - right.createTimeMs)
+    .map((entry) => entry.row);
+}
+
+function buildDbmPlaceholderRows(): TextBuffDisplay[] {
+  return [
+    {
+      key: "monster_dbm_preview",
+      label: t("monsterOverlay.placeholder.bossDbm"),
+      valueText: "12.0",
+      progressPercent: 60,
+      showProgress: true,
+      isPlaceholder: true,
+    },
+  ];
+}
+
 function buildHateRows(
   entries: HateEntry[],
   maxDisplay: number,
@@ -699,6 +745,11 @@ export function updateMonsterDisplay() {
     nextFantasyRows = buildFantasyPlaceholderRows();
   }
 
+  let nextDbmRows = buildDbmRows(now);
+  if (nextDbmRows.length === 0 && isMonsterLayoutScaffold()) {
+    nextDbmRows = buildDbmPlaceholderRows();
+  }
+
   monsterRuntime.bossSections = nextSections;
   if (nextTeammateRows.length > 0) {
     const filteredTeammates = filterInactiveTeammateColumns(
@@ -715,5 +766,6 @@ export function updateMonsterDisplay() {
   }
   monsterRuntime.hateSections = nextHateSections;
   monsterRuntime.fantasyRows = nextFantasyRows;
+  monsterRuntime.dbmRows = nextDbmRows;
   monsterRuntime.rafId = requestAnimationFrame(updateMonsterDisplay);
 }

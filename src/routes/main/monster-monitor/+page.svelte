@@ -27,7 +27,13 @@
   } from "$lib/settings-store";
 
   type SearchTarget = "global" | "self";
-  type MonsterMonitorTab = "buff" | "teammate" | "hate" | "fantasy" | "overlay";
+  type MonsterMonitorTab =
+    | "buff"
+    | "teammate"
+    | "hate"
+    | "fantasy"
+    | "bossDbm"
+    | "overlay";
   type FantasyMonsterOption = {
     monsterId: number;
     label: string;
@@ -70,6 +76,9 @@
   const fantasyPanelStyle = $derived.by(
     () => monsterMonitor.fantasyPanelStyle ?? monsterMonitor.panelStyle,
   );
+  const bossDbmPanelStyle = $derived.by(
+    () => monsterMonitor.bossDbmPanelStyle ?? monsterMonitor.panelStyle,
+  );
   const teammatePanelStyle = $derived.by(() =>
     ensureTeammatePanelStyle(
       monsterMonitor.teammatePanelStyle ?? monsterMonitor.panelStyle,
@@ -83,6 +92,8 @@
     showHatePanel: monsterMonitor.overlayVisibility?.showHatePanel ?? true,
     showFantasyPanel:
       monsterMonitor.overlayVisibility?.showFantasyPanel ?? false,
+    showBossDbmPanel:
+      monsterMonitor.overlayVisibility?.showBossDbmPanel ?? false,
   }));
   const globalBuffIds = $derived(monsterMonitor.monitoredBuffIds);
   const selfAppliedBuffIds = $derived(monsterMonitor.selfAppliedBuffIds);
@@ -536,6 +547,19 @@
     }));
   }
 
+  function updateBossDbmPanelStyle<K extends keyof CustomPanelStyle>(
+    key: K,
+    value: CustomPanelStyle[K],
+  ) {
+    updateMonsterMonitor((state) => ({
+      ...state,
+      bossDbmPanelStyle: {
+        ...(state.bossDbmPanelStyle ?? state.panelStyle),
+        [key]: value,
+      },
+    }));
+  }
+
   function updateTeammatePanelStyle<K extends keyof TeammatePanelStyle>(
     key: K,
     value: TeammatePanelStyle[K],
@@ -606,6 +630,8 @@
           state.overlayVisibility?.showTeammateBuffPanel ?? true,
         showHatePanel: state.overlayVisibility?.showHatePanel ?? true,
         showFantasyPanel: state.overlayVisibility?.showFantasyPanel ?? false,
+        showBossDbmPanel:
+          state.overlayVisibility?.showBossDbmPanel ?? false,
       };
       return {
         ...state,
@@ -793,6 +819,18 @@
         }}
       >
         {t("monsterMonitor.tabs.fantasy")}
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
+        'bossDbm'
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => {
+          activeTab = "bossDbm";
+        }}
+      >
+        {t("monsterMonitor.tabs.bossDbm")}
       </button>
       <button
         type="button"
@@ -1970,6 +2008,156 @@
         </label>
       </div>
     </section>
+  {:else if activeTab === "bossDbm"}
+    <section
+      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
+    >
+      <div class="space-y-1">
+        <h2 class="text-foreground text-base font-semibold">
+          {t("monsterMonitor.bossDbm.title")}
+        </h2>
+        <p class="text-muted-foreground text-sm">
+          {t("monsterMonitor.bossDbm.description")}
+        </p>
+      </div>
+
+      <div class="flex justify-start">
+        <div class="min-w-[220px]">
+          <button
+            type="button"
+            class="w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors {overlayVisibility.showBossDbmPanel
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+            onclick={() => toggleOverlayVisibility("showBossDbmPanel")}
+          >
+            {t("monsterMonitor.overlay.bossDbm", {
+              state: visibilityState(overlayVisibility.showBossDbmPanel),
+            })}
+          </button>
+        </div>
+      </div>
+
+      <div class="grid gap-4 lg:grid-cols-3">
+        <label class="style-field">
+          <span>{t("monsterMonitor.style.gap")}</span>
+          <input
+            type="range"
+            min="0"
+            max="24"
+            value={bossDbmPanelStyle.gap}
+            oninput={(event) =>
+              updateBossDbmPanelStyle(
+                "gap",
+                Number.parseInt(
+                  (event.currentTarget as HTMLInputElement).value,
+                  10,
+                ),
+              )}
+          />
+          <strong>{bossDbmPanelStyle.gap}px</strong>
+        </label>
+
+        <label class="style-field">
+          <span>{t("monsterMonitor.style.columnGap")}</span>
+          <input
+            type="range"
+            min="0"
+            max="240"
+            value={bossDbmPanelStyle.columnGap}
+            oninput={(event) =>
+              updateBossDbmPanelStyle(
+                "columnGap",
+                Number.parseInt(
+                  (event.currentTarget as HTMLInputElement).value,
+                  10,
+                ),
+              )}
+          />
+          <strong>{bossDbmPanelStyle.columnGap}px</strong>
+        </label>
+
+        <label class="style-field">
+          <span>{t("monsterMonitor.style.fontSize")}</span>
+          <input
+            type="range"
+            min="10"
+            max="28"
+            value={bossDbmPanelStyle.fontSize}
+            oninput={(event) =>
+              updateBossDbmPanelStyle(
+                "fontSize",
+                Number.parseInt(
+                  (event.currentTarget as HTMLInputElement).value,
+                  10,
+                ),
+              )}
+          />
+          <strong>{bossDbmPanelStyle.fontSize}px</strong>
+        </label>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <label class="color-field">
+          <span>{t("monsterMonitor.style.nameColor")}</span>
+          <input
+            type="color"
+            value={bossDbmPanelStyle.nameColor}
+            oninput={(event) =>
+              updateBossDbmPanelStyle(
+                "nameColor",
+                (event.currentTarget as HTMLInputElement).value,
+              )}
+          />
+        </label>
+
+        <label class="color-field">
+          <span>{t("monsterMonitor.style.valueColor")}</span>
+          <input
+            type="color"
+            value={bossDbmPanelStyle.valueColor}
+            oninput={(event) =>
+              updateBossDbmPanelStyle(
+                "valueColor",
+                (event.currentTarget as HTMLInputElement).value,
+              )}
+          />
+        </label>
+
+        <label class="color-field">
+          <span>{t("monsterMonitor.style.progressColor")}</span>
+          <input
+            type="color"
+            value={bossDbmPanelStyle.progressColor}
+            oninput={(event) =>
+              updateBossDbmPanelStyle(
+                "progressColor",
+                (event.currentTarget as HTMLInputElement).value,
+              )}
+          />
+        </label>
+
+        <label class="color-field">
+          <span>{t("monsterMonitor.style.progressOpacity")}</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={bossDbmPanelStyle.progressOpacity ?? 0.4}
+            oninput={(event) =>
+              updateBossDbmPanelStyle(
+                "progressOpacity",
+                Number((event.currentTarget as HTMLInputElement).value),
+              )}
+          />
+          <strong
+            >{Math.round(
+              (bossDbmPanelStyle.progressOpacity ?? 0.4) * 100,
+            )}%</strong
+          >
+        </label>
+      </div>
+    </section>
   {:else}
     <section
       class="border-border/60 bg-card/60 space-y-4 rounded-xl border p-5"
@@ -2032,6 +2220,18 @@
         >
           {t("monsterMonitor.overlay.fantasy", {
             state: visibilityState(overlayVisibility.showFantasyPanel),
+          })}
+        </button>
+
+        <button
+          type="button"
+          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {overlayVisibility.showBossDbmPanel
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+          onclick={() => toggleOverlayVisibility("showBossDbmPanel")}
+        >
+          {t("monsterMonitor.overlay.bossDbm", {
+            state: visibilityState(overlayVisibility.showBossDbmPanel),
           })}
         </button>
       </div>

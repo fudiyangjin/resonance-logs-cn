@@ -422,7 +422,7 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
             OutboundEvent::BossDbmUpdate(events) => {
                 safe_emit_to(
                     app_handle,
-                    crate::WINDOW_MINIMAP_OVERLAY_LABEL,
+                    crate::WINDOW_MONSTER_OVERLAY_LABEL,
                     "boss-dbm-update",
                     BossDbmUpdatePayload { events },
                 );

@@ -1,13 +1,12 @@
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { onBossDbmUpdate, onEntityIdentities, onMinimapUpdate } from "$lib/api";
+import { onEntityIdentities, onMinimapUpdate } from "$lib/api";
 import {
   initOverlayClock,
   overlayNow,
 } from "../game-overlay/overlay-clock.svelte.js";
 import {
   clearSkillCastLog,
-  consumeBossDbmEvents,
   consumeMinimapSkillCasts,
   minimapRuntime,
   updateEntityFirstSeen,
@@ -64,10 +63,6 @@ export function initMinimapOverlay() {
     consumeMinimapSkillCasts(skillCasts);
   });
 
-  const unlistenBossDbm = onBossDbmUpdate((event) => {
-    consumeBossDbmEvents(event.payload.events);
-  });
-
   const unlistenIdentities = onEntityIdentities((event) => {
     for (const [entityUuid, name] of Object.entries(
       event.payload.playerNames,
@@ -80,7 +75,6 @@ export function initMinimapOverlay() {
     stopClock();
     void unlistenEditToggle.then((fn) => fn());
     void unlistenMinimap.then((fn) => fn());
-    void unlistenBossDbm.then((fn) => fn());
     void unlistenIdentities.then((fn) => fn());
     minimapRuntime.cleanup = null;
     minimapRuntime.isMounted = false;

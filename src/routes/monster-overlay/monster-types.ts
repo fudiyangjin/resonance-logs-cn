@@ -63,13 +63,15 @@ export type MonsterDragTarget =
   | { kind: "buffPanel" }
   | { kind: "teammatePanel" }
   | { kind: "hatePanel" }
-  | { kind: "fantasyPanel" };
+  | { kind: "fantasyPanel" }
+  | { kind: "dbmPanel" };
 
 export type MonsterResizeTarget =
   | { kind: "buffPanel" }
   | { kind: "teammatePanel" }
   | { kind: "hatePanel" }
-  | { kind: "fantasyPanel" };
+  | { kind: "fantasyPanel" }
+  | { kind: "dbmPanel" };
 
 export type MonsterDragState = {
   target: MonsterDragTarget;

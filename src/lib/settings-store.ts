@@ -275,11 +275,8 @@ export type MinimapConfig = {
   showBoss: boolean;
   showMapPanel: boolean;
   showInfoPanel: boolean;
-  showBossDbmPanel: boolean;
   mapPanel: MinimapPanelRect;
   infoPanel: MinimapPanelRect;
-  bossDbmPanel: MinimapPanelRect;
-  bossDbmStyle: CustomPanelStyle;
   entityColors: MinimapEntityColors;
   localRing: MinimapLocalRing;
 };
@@ -635,6 +632,7 @@ export type MonsterOverlayPositions = {
   teammateBuffPanel: Point;
   hatePanel: Point;
   fantasyPanel: Point;
+  bossDbmPanel: Point;
 };
 
 export type MonsterOverlaySizes = {
@@ -642,6 +640,7 @@ export type MonsterOverlaySizes = {
   teammateBuffPanelScale: number;
   hatePanelScale: number;
   fantasyPanelScale: number;
+  bossDbmPanelScale: number;
 };
 
 export type MonsterOverlayVisibility = {
@@ -649,6 +648,7 @@ export type MonsterOverlayVisibility = {
   showTeammateBuffPanel: boolean;
   showHatePanel: boolean;
   showFantasyPanel: boolean;
+  showBossDbmPanel: boolean;
 };
 
 export type BuffAlertRule = {
@@ -685,6 +685,7 @@ export type MonsterMonitorConfig = {
   teammatePanelStyle: TeammatePanelStyle;
   hatePanelStyle: CustomPanelStyle;
   fantasyPanelStyle: CustomPanelStyle;
+  bossDbmPanelStyle: CustomPanelStyle;
 };
 
 export type TextBuffPanelDisplayMode = "modern" | "classic";
@@ -908,6 +909,7 @@ function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
     teammateBuffPanel: { x: 420, y: 40 },
     hatePanel: { x: 40, y: 300 },
     fantasyPanel: { x: 420, y: 300 },
+    bossDbmPanel: { x: 800, y: 40 },
   };
 }
 
@@ -917,6 +919,7 @@ function createDefaultMonsterOverlaySizes(): MonsterOverlaySizes {
     teammateBuffPanelScale: 1,
     hatePanelScale: 1,
     fantasyPanelScale: 1,
+    bossDbmPanelScale: 1,
   };
 }
 
@@ -926,6 +929,7 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
     showTeammateBuffPanel: true,
     showHatePanel: true,
     showFantasyPanel: false,
+    showBossDbmPanel: false,
   };
 }
 
@@ -1101,6 +1105,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     teammatePanelStyle: createDefaultTeammatePanelStyle(),
     hatePanelStyle: createDefaultCustomPanelStyle(),
     fantasyPanelStyle: createDefaultCustomPanelStyle(),
+    bossDbmPanelStyle: createDefaultBossDbmStyle(),
   };
 }
 
@@ -1110,11 +1115,8 @@ export function createDefaultMinimapConfig(): MinimapConfig {
     showBoss: false,
     showMapPanel: false,
     showInfoPanel: false,
-    showBossDbmPanel: false,
     mapPanel: { x: 24, y: 24, width: 340, scale: 1 },
     infoPanel: { x: 384, y: 24, width: 300, scale: 1 },
-    bossDbmPanel: { x: 384, y: 300, width: 300, scale: 1 },
-    bossDbmStyle: createDefaultBossDbmStyle(),
     entityColors: {
       local: "#f8fafc",
       teammate: "#38bdf8",

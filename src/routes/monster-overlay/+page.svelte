@@ -3,6 +3,7 @@
   import { SETTINGS } from "$lib/settings-store";
   import "../overlay-edit-theme.css";
   import EditBanner from "./EditBanner.svelte";
+  import MonsterBossDbmPanel from "./MonsterBossDbmPanel.svelte";
   import MonsterBuffPanel from "./MonsterBuffPanel.svelte";
   import MonsterFantasyPanel from "./MonsterFantasyPanel.svelte";
   import MonsterHatePanel from "./MonsterHatePanel.svelte";
@@ -40,6 +41,9 @@
   {/if}
   {#if visibility.showFantasyPanel}
     <MonsterFantasyPanel />
+  {/if}
+  {#if visibility.showBossDbmPanel}
+    <MonsterBossDbmPanel />
   {/if}
 </div>
 

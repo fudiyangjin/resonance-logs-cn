@@ -2,6 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   onBossBuffUpdate,
+  onBossDbmUpdate,
   onEntityIdentities,
   onHateListUpdate,
   onTeammateBuffUpdate,
@@ -130,6 +131,11 @@ export function initMonsterOverlay() {
     }
     monsterRuntime.bossHateMap = next;
   });
+  const unlistenBossDbm = onBossDbmUpdate((event) => {
+    for (const dbmEvent of event.payload.events) {
+      monsterRuntime.bossDbmMap.set(dbmEvent.baseSkillId, dbmEvent);
+    }
+  });
   const unlistenIdentities = onEntityIdentities((event) => {
     const nextPlayerNames = new Map(monsterRuntime.playerNameCache);
     for (const [entityUuid, name] of Object.entries(
@@ -162,11 +168,13 @@ export function initMonsterOverlay() {
     monsterRuntime.teammateBuffMap = new Map();
     monsterRuntime.bossHateMap = new Map();
     monsterRuntime.fantasyEntries = [];
+    monsterRuntime.bossDbmMap = new Map();
     monsterRuntime.bossSections = [];
     monsterRuntime.teammateColumns = [];
     monsterRuntime.teammateRows = [];
     monsterRuntime.hateSections = [];
     monsterRuntime.fantasyRows = [];
+    monsterRuntime.dbmRows = [];
     unlistenEditToggle.then((fn) => fn());
     unlistenReferenceToggle.then((fn) => fn());
     unlistenBossBuff.then((fn) => fn());
@@ -174,6 +182,7 @@ export function initMonsterOverlay() {
     unlistenTeammateFantasy.then((fn) => fn());
     unlistenTeammateFantasyClear.then((fn) => fn());
     unlistenHateList.then((fn) => fn());
+    unlistenBossDbm.then((fn) => fn());
     unlistenIdentities.then((fn) => fn());
     window.removeEventListener("pointermove", onGlobalPointerMove);
     window.removeEventListener("pointerup", onGlobalPointerUp);
