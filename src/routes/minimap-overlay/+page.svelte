@@ -3,6 +3,7 @@
   import { t } from "$lib/i18n/index.svelte";
   import { SETTINGS } from "$lib/settings-store";
   import "../overlay-edit-theme.css";
+  import BossDbmPanel from "./boss-dbm-panel.svelte";
   import DraggablePanel from "./draggable-panel.svelte";
   import EditBanner from "./EditBanner.svelte";
   import MinimapCanvas from "./minimap-canvas.svelte";
@@ -45,6 +46,17 @@
       class="info-panel"
     >
       <MinimapInfobar {snapshot} />
+    </DraggablePanel>
+  {/if}
+
+  {#if minimapSettings.showBossDbmPanel}
+    <DraggablePanel
+      rect={minimapSettings.bossDbmPanel}
+      {editing}
+      title={t("minimap.panels.bossDbm")}
+      class="boss-dbm-panel"
+    >
+      <BossDbmPanel />
     </DraggablePanel>
   {/if}
 </div>
@@ -109,6 +121,10 @@
   }
 
   :global(.info-panel) {
+    min-width: 220px;
+  }
+
+  :global(.boss-dbm-panel) {
     min-width: 220px;
   }
 

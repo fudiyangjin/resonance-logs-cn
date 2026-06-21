@@ -1,8 +1,9 @@
 use crate::live::commands_models::{
-    BossHealth, BuffUpdateState, CounterUpdateState, DeathRecord, FightResourceState, HateEntry,
-    HeaderInfo, LiveDataPayload, MinimapSkillCast, MinimapSnapshot, MinimapUpdatePayload,
-    PanelAttrState, RawEntityData, ShieldDetailEntry, SkillCdState, TeammateFantasyState,
-    TrainingDummyState, build_taken_per_source, to_raw_combat_stats, to_raw_skill_stats,
+    BossDbmEvent, BossHealth, BuffUpdateState, CounterUpdateState, DeathRecord, FightResourceState,
+    HateEntry, HeaderInfo, LiveDataPayload, MinimapSkillCast, MinimapSnapshot,
+    MinimapUpdatePayload, PanelAttrState, RawEntityData, ShieldDetailEntry, SkillCdState,
+    TeammateFantasyState, TrainingDummyState, build_taken_per_source, to_raw_combat_stats,
+    to_raw_skill_stats,
 };
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::entity_id::{entity_uuid_string, uid_from_uuid};
@@ -133,6 +134,7 @@ pub enum OutboundEvent {
     },
     DeathReplay(Vec<DeathRecord>),
     MinimapUpdate(MinimapUpdatePayload),
+    BossDbmUpdate(Vec<BossDbmEvent>),
 }
 
 impl EventManager {
@@ -200,6 +202,14 @@ impl EventManager {
                 snapshot,
                 skill_casts,
             }));
+    }
+
+    pub fn emit_boss_dbm_update(&mut self, events: Vec<BossDbmEvent>) {
+        if events.is_empty() {
+            return;
+        }
+        self.outbound_events
+            .push(OutboundEvent::BossDbmUpdate(events));
     }
 
     /// Returns whether the `EventManager` should emit events.

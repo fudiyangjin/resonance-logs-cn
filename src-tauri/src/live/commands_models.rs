@@ -356,6 +356,23 @@ pub struct TeammateBuffUpdatePayload {
     pub teammate_buffs: HashMap<String, Vec<BuffUpdateState>>,
 }
 
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct BossDbmEvent {
+    pub skill_effect_id: i32,
+    pub base_skill_id: i32,
+    pub duration_ms: i32,
+    pub create_time_ms: i64,
+    pub insertion: i32,
+    pub server_timestamp_ms: Option<i64>,
+}
+
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct BossDbmUpdatePayload {
+    pub events: Vec<BossDbmEvent>,
+}
+
 #[derive(serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TeammateFantasyState {

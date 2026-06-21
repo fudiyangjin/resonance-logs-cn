@@ -4,8 +4,9 @@ use crate::live::buff_monitor::{
     BuffTargetKind, BuffWatchProfile, EntityBuffMonitorConfig, EntityBuffMonitors,
 };
 use crate::live::commands_models::{
-    CounterUpdateState, FightResourceEntry, FightResourceState, MinimapSkillCast, PanelAttrState,
-    ShieldDetailEntry, SkillCdState, TeammateFantasyState, TrainingDummyState, to_death_record,
+    BossDbmEvent, CounterUpdateState, FightResourceEntry, FightResourceState, MinimapSkillCast,
+    PanelAttrState, ShieldDetailEntry, SkillCdState, TeammateFantasyState, TrainingDummyState,
+    to_death_record,
 };
 use crate::live::counter_tracker::{BuffCounterTracker, CounterRule};
 use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
@@ -28,12 +29,13 @@ use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 
-const APPLY_EVENT_KIND_COUNT: usize = 13;
+const APPLY_EVENT_KIND_COUNT: usize = 14;
 const APPLY_EVENT_STATS_WINDOW: Duration = Duration::from_secs(20);
 const APPLY_EVENT_SLOW_THRESHOLD: Duration = Duration::from_millis(1);
 const APPLY_EVENT_KIND_NAMES: [&str; APPLY_EVENT_KIND_COUNT] = [
     "EnterScene",
     "SyncNearEntities",
+    "SyncSceneEvents",
     "SyncContainerData",
     "SyncContainerDirtyData",
     "SyncServerTime",
@@ -47,6 +49,8 @@ const APPLY_EVENT_KIND_NAMES: [&str; APPLY_EVENT_KIND_COUNT] = [
     "ServerSkillEnd",
 ];
 
+const WORLD_EVENT_TYPE_BOSS_DBM: i32 = 29;
+
 /// Represents the possible events that can be handled by the state manager.
 #[derive(Debug, Clone)]
 pub enum StateEvent {
@@ -54,6 +58,8 @@ pub enum StateEvent {
     EnterScene(blueprotobuf::EnterScene),
     /// A sync near entities event.
     SyncNearEntities(blueprotobuf::SyncNearEntities),
+    /// A sync scene events packet.
+    SyncSceneEvents(blueprotobuf::SyncSceneEvents),
     /// A sync container data event.
     SyncContainerData(blueprotobuf::SyncContainerData),
     /// A sync container dirty data event.
@@ -91,17 +97,18 @@ impl StateEvent {
         match self {
             StateEvent::EnterScene(_) => 0,
             StateEvent::SyncNearEntities(_) => 1,
-            StateEvent::SyncContainerData(_) => 2,
-            StateEvent::SyncContainerDirtyData(_) => 3,
-            StateEvent::SyncServerTime(_) => 4,
-            StateEvent::SyncDungeonData(_) => 5,
-            StateEvent::SyncDungeonDirtyData(_) => 6,
-            StateEvent::SyncToMeDeltaInfo(_) => 7,
-            StateEvent::SyncNearDeltaInfo(_) => 8,
-            StateEvent::Team(_) => 9,
-            StateEvent::ResetEncounter { .. } => 10,
-            StateEvent::ClientSkillCast(_) => 11,
-            StateEvent::ServerSkillEnd(_) => 12,
+            StateEvent::SyncSceneEvents(_) => 2,
+            StateEvent::SyncContainerData(_) => 3,
+            StateEvent::SyncContainerDirtyData(_) => 4,
+            StateEvent::SyncServerTime(_) => 5,
+            StateEvent::SyncDungeonData(_) => 6,
+            StateEvent::SyncDungeonDirtyData(_) => 7,
+            StateEvent::SyncToMeDeltaInfo(_) => 8,
+            StateEvent::SyncNearDeltaInfo(_) => 9,
+            StateEvent::Team(_) => 10,
+            StateEvent::ResetEncounter { .. } => 11,
+            StateEvent::ClientSkillCast(_) => 12,
+            StateEvent::ServerSkillEnd(_) => 13,
         }
     }
 }
@@ -843,6 +850,9 @@ impl AppStateManager {
                 // Note: Player names are automatically stored in the database via UpsertEntity tasks
                 // No need to maintain a separate cache anymore
             }
+            StateEvent::SyncSceneEvents(data) => {
+                self.process_scene_events(state, data);
+            }
             StateEvent::SyncContainerData(data) => {
                 // store local_player copy
                 state.encounter.local_player = data.clone();
@@ -1307,6 +1317,53 @@ impl AppStateManager {
             state.entity_buff_monitors.remove(target_uuid);
             state.sent_overlay_entity_uuids.remove(&target_uuid);
         }
+    }
+
+    fn process_scene_events(
+        &self,
+        state: &mut AppState,
+        sync_scene_events: blueprotobuf::SyncSceneEvents,
+    ) {
+        let Some(event_data_list) = sync_scene_events.evt else {
+            return;
+        };
+
+        let received_at_ms = now_ms();
+        let mut dbm_events = Vec::new();
+        for event in event_data_list.events {
+            if event.event_type != Some(WORLD_EVENT_TYPE_BOSS_DBM) {
+                continue;
+            }
+
+            let Some(skill_effect_id) = event.int_params.first().copied() else {
+                warn!("BossDbm event missing skill effect id");
+                continue;
+            };
+            let Some(duration_sec) = event.int_params.get(1).copied() else {
+                warn!("BossDbm event missing duration");
+                continue;
+            };
+
+            let duration_ms = duration_sec.saturating_mul(1000);
+            if duration_ms <= 0 {
+                warn!(
+                    "BossDbm event has non-positive duration: skill_effect_id={}, duration_sec={}",
+                    skill_effect_id, duration_sec
+                );
+                continue;
+            }
+
+            dbm_events.push(BossDbmEvent {
+                skill_effect_id,
+                base_skill_id: skill_effect_id / 100,
+                duration_ms,
+                create_time_ms: received_at_ms,
+                insertion: event.int_params.get(2).copied().unwrap_or_default(),
+                server_timestamp_ms: event.long_params.first().copied(),
+            });
+        }
+
+        state.event_manager.emit_boss_dbm_update(dbm_events);
     }
 
     fn process_sync_container_data(

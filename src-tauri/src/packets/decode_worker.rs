@@ -71,6 +71,15 @@ fn decode_state_event(op: packets::opcodes::Pkt, data: Bytes) -> Option<StateEve
                 }
             }
         }
+        packets::opcodes::Pkt::SyncSceneEvents => {
+            match blueprotobuf::SyncSceneEvents::decode(data) {
+                Ok(v) => Some(StateEvent::SyncSceneEvents(v)),
+                Err(e) => {
+                    warn!("Error decoding SyncSceneEvents.. ignoring: {e}");
+                    None
+                }
+            }
+        }
         packets::opcodes::Pkt::SyncContainerData => {
             match blueprotobuf::SyncContainerData::decode(data) {
                 Ok(v) => Some(StateEvent::SyncContainerData(v)),

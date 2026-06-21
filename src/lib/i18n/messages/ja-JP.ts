@@ -1396,8 +1396,26 @@ export const jaJPMessages = {
   "minimap.edit.resetSize": "サイズをリセット",
   "minimap.edit.done": "完了",
   "minimap.edit.dragHint": "ここをドラッグしてミニマップ窓を移動",
+  "minimap.tabs.minimap": "ミニマップギミック",
+  "minimap.tabs.bossDbm": "Boss DBM",
   "minimap.panels.map": "マップパネル",
   "minimap.panels.info": "ギミック通知",
+  "minimap.panels.bossDbm": "Boss DBM",
+  "minimap.bossDbm.title": "Boss DBM",
+  "minimap.bossDbm.description":
+    "スキル名、カウントダウン、残り時間バー付きの Boss DBM 警告を表示します。",
+  "minimap.bossDbm.enableDescription":
+    "有効にすると、Boss DBM データを受信した時だけダンジョンギミック窓にこのパネルを表示します。データがない時は非表示です。",
+  "minimap.bossDbm.style.title": "Boss DBM スタイル",
+  "minimap.bossDbm.style.description":
+    "Boss DBM 警告バーの文字色、進捗バー色、間隔を調整します。",
+  "minimap.bossDbm.style.fontSize": "フォントサイズ",
+  "minimap.bossDbm.style.gap": "行間隔",
+  "minimap.bossDbm.style.columnGap": "名前と時間の間隔",
+  "minimap.bossDbm.style.nameColor": "スキル名の色",
+  "minimap.bossDbm.style.valueColor": "カウントダウン色",
+  "minimap.bossDbm.style.progressColor": "進捗バー色",
+  "minimap.bossDbm.style.progressOpacity": "進捗バー不透明度",
   "minimap.settings.display.title": "表示オプション",
   "minimap.settings.display.description":
     "戦闘中のミニマップ情報量を調整し、不要なノイズを減らします。",
@@ -1415,6 +1433,7 @@ export const jaJPMessages = {
   "minimap.overlay.state.hide": "非表示",
   "minimap.overlay.mapPanel": "マップパネル：{state}",
   "minimap.overlay.infoPanel": "ギミック通知：{state}",
+  "minimap.overlay.bossDbmPanel": "Boss DBM：{state}",
   "minimap.overlay.help":
     "パネル位置と幅はダンジョンギミック窓のレイアウト編集モードで調整してください。",
   "minimap.settings.colors.title": "プレイヤー色",

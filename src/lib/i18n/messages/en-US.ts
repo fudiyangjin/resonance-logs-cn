@@ -1410,8 +1410,26 @@ export const enUSMessages = {
   "minimap.edit.resetSize": "Reset Size",
   "minimap.edit.done": "Done",
   "minimap.edit.dragHint": "Drag here to move the minimap window",
+  "minimap.tabs.minimap": "Minimap Mechanics",
+  "minimap.tabs.bossDbm": "Boss DBM",
   "minimap.panels.map": "Map Panel",
   "minimap.panels.info": "Mechanic Calls",
+  "minimap.panels.bossDbm": "Boss DBM",
+  "minimap.bossDbm.title": "Boss DBM",
+  "minimap.bossDbm.description":
+    "Show Boss DBM warning bars with skill name, countdown, and remaining-time progress.",
+  "minimap.bossDbm.enableDescription":
+    "When enabled, the dungeon mechanics window shows this panel after Boss DBM data arrives. It stays hidden when there is no data.",
+  "minimap.bossDbm.style.title": "Boss DBM Style",
+  "minimap.bossDbm.style.description":
+    "Adjust text, progress bar colors, and spacing for Boss DBM warning bars.",
+  "minimap.bossDbm.style.fontSize": "Font Size",
+  "minimap.bossDbm.style.gap": "Row Gap",
+  "minimap.bossDbm.style.columnGap": "Name/Timer Gap",
+  "minimap.bossDbm.style.nameColor": "Skill Name Color",
+  "minimap.bossDbm.style.valueColor": "Countdown Color",
+  "minimap.bossDbm.style.progressColor": "Progress Color",
+  "minimap.bossDbm.style.progressOpacity": "Progress Opacity",
   "minimap.settings.display.title": "Display Options",
   "minimap.settings.display.description":
     "Control the minimap information density during combat and reduce noise.",
@@ -1429,6 +1447,7 @@ export const enUSMessages = {
   "minimap.overlay.state.hide": "Hide",
   "minimap.overlay.mapPanel": "Map Panel: {state}",
   "minimap.overlay.infoPanel": "Mechanic Calls: {state}",
+  "minimap.overlay.bossDbmPanel": "Boss DBM: {state}",
   "minimap.overlay.help":
     "Adjust panel position and width in the dungeon mechanics window's layout edit mode.",
   "minimap.settings.colors.title": "Player Colors",

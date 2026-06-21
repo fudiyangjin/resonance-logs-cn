@@ -1,9 +1,9 @@
 use crate::live::state::{AppState, AppStateManager, StateEvent};
 use crate::live::{
     commands_models::{
-        BossBuffUpdatePayload, BuffCounterUpdatePayload, BuffUpdatePayload, DeathReplayPayload,
-        EntityIdentityMapPayload, FightResourceUpdatePayload, HateListUpdatePayload,
-        PanelAttrUpdatePayload, SeasonCultivateFactorCounterUpdatePayload,
+        BossBuffUpdatePayload, BossDbmUpdatePayload, BuffCounterUpdatePayload, BuffUpdatePayload,
+        DeathReplayPayload, EntityIdentityMapPayload, FightResourceUpdatePayload,
+        HateListUpdatePayload, PanelAttrUpdatePayload, SeasonCultivateFactorCounterUpdatePayload,
         ShieldDetailUpdatePayload, SkillCdUpdatePayload, TeammateBuffUpdatePayload,
         TeammateFantasyUpdatePayload,
     },
@@ -417,6 +417,14 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     crate::WINDOW_MINIMAP_OVERLAY_LABEL,
                     "minimap-update",
                     payload,
+                );
+            }
+            OutboundEvent::BossDbmUpdate(events) => {
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_MINIMAP_OVERLAY_LABEL,
+                    "boss-dbm-update",
+                    BossDbmUpdatePayload { events },
                 );
             }
         }

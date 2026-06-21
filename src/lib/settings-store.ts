@@ -275,8 +275,11 @@ export type MinimapConfig = {
   showBoss: boolean;
   showMapPanel: boolean;
   showInfoPanel: boolean;
+  showBossDbmPanel: boolean;
   mapPanel: MinimapPanelRect;
   infoPanel: MinimapPanelRect;
+  bossDbmPanel: MinimapPanelRect;
+  bossDbmStyle: CustomPanelStyle;
   entityColors: MinimapEntityColors;
   localRing: MinimapLocalRing;
 };
@@ -889,6 +892,16 @@ export function createDefaultCustomPanelStyle(): CustomPanelStyle {
   };
 }
 
+export function createDefaultBossDbmStyle(): CustomPanelStyle {
+  return {
+    ...createDefaultCustomPanelStyle(),
+    columnGap: 8,
+    fontSize: 13,
+    progressColor: "#f59e0b",
+    progressOpacity: 0.38,
+  };
+}
+
 function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
   return {
     monsterBuffPanel: { x: 40, y: 40 },
@@ -1097,8 +1110,11 @@ export function createDefaultMinimapConfig(): MinimapConfig {
     showBoss: false,
     showMapPanel: false,
     showInfoPanel: false,
+    showBossDbmPanel: false,
     mapPanel: { x: 24, y: 24, width: 340, scale: 1 },
     infoPanel: { x: 384, y: 24, width: 300, scale: 1 },
+    bossDbmPanel: { x: 384, y: 300, width: 300, scale: 1 },
+    bossDbmStyle: createDefaultBossDbmStyle(),
     entityColors: {
       local: "#f8fafc",
       teammate: "#38bdf8",

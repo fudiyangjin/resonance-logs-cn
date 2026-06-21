@@ -1,6 +1,6 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { SvelteMap } from "svelte/reactivity";
-import type { MinimapSkillCast, MinimapSnapshot } from "$lib/api";
+import type { BossDbmEvent, MinimapSkillCast, MinimapSnapshot } from "$lib/api";
 import type { EntityId } from "$lib/entity-id";
 
 const MAX_SKILL_CAST_LOG = 64;
@@ -19,6 +19,7 @@ export const minimapRuntime = $state({
   isEditing: false,
   snapshot: null as MinimapSnapshot | null,
   lastSceneId: null as number | null,
+  bossDbmMap: new SvelteMap<number, BossDbmEvent>(),
   skillCastLog: [] as MinimapSkillCast[],
   playerNameCache: new SvelteMap<EntityId, string>(),
   entityFirstSeenMs: new SvelteMap<string, number>(),
@@ -40,6 +41,20 @@ export function minimapSkillCasts() {
   return minimapRuntime.skillCastLog;
 }
 
+export function minimapBossDbmEvents() {
+  return minimapRuntime.bossDbmMap;
+}
+
+export function consumeBossDbmEvents(events: BossDbmEvent[]) {
+  for (const event of events) {
+    minimapRuntime.bossDbmMap.set(event.baseSkillId, event);
+  }
+}
+
+export function removeBossDbmEvent(baseSkillId: number) {
+  minimapRuntime.bossDbmMap.delete(baseSkillId);
+}
+
 export function clearSkillCastLog() {
   minimapRuntime.skillCastLog = [];
   minimapRuntime.entityFirstSeenMs.clear();
@@ -56,7 +71,10 @@ export function entityFirstSeen(entityUuid: string): number | undefined {
  * harmless and avoids resetting a countdown if an entity blinks out for a
  * single frame. The whole map is cleared on scene change via clearSkillCastLog.
  */
-export function updateEntityFirstSeen(snapshot: MinimapSnapshot, nowMs: number) {
+export function updateEntityFirstSeen(
+  snapshot: MinimapSnapshot,
+  nowMs: number,
+) {
   for (const entity of snapshot.entities) {
     if (!minimapRuntime.entityFirstSeenMs.has(entity.entityUuid)) {
       minimapRuntime.entityFirstSeenMs.set(entity.entityUuid, nowMs);

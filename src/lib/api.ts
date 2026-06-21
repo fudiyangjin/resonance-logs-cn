@@ -140,6 +140,19 @@ export type TeammateBuffUpdatePayload = {
   teammateBuffs: Record<string, BuffUpdateState[]>;
 };
 
+export type BossDbmEvent = {
+  skillEffectId: number;
+  baseSkillId: number;
+  durationMs: number;
+  createTimeMs: number;
+  insertion: number;
+  serverTimestampMs?: number | null;
+};
+
+export type BossDbmUpdatePayload = {
+  events: BossDbmEvent[];
+};
+
 export type TeammateFantasyState = {
   summonUuid: string;
   summonerUuid: string;
@@ -378,6 +391,11 @@ export const onBossBuffUpdate = (
   handler: (event: Event<BossBuffUpdatePayload>) => void,
 ): Promise<UnlistenFn> =>
   listen<BossBuffUpdatePayload>("boss-buff-update", handler);
+
+export const onBossDbmUpdate = (
+  handler: (event: Event<BossDbmUpdatePayload>) => void,
+): Promise<UnlistenFn> =>
+  listen<BossDbmUpdatePayload>("boss-dbm-update", handler);
 
 export const onTeammateBuffUpdate = (
   handler: (event: Event<TeammateBuffUpdatePayload>) => void,

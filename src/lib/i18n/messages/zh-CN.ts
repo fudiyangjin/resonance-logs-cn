@@ -1295,8 +1295,26 @@ export const zhCNMessages = {
   "minimap.edit.resetSize": "重置尺寸",
   "minimap.edit.done": "完成",
   "minimap.edit.dragHint": "拖动此处移动小地图窗口",
+  "minimap.tabs.minimap": "小地图机制",
+  "minimap.tabs.bossDbm": "Boss DBM",
   "minimap.panels.map": "地图面板",
   "minimap.panels.info": "机制报幕",
+  "minimap.panels.bossDbm": "Boss DBM",
+  "minimap.bossDbm.title": "Boss DBM",
+  "minimap.bossDbm.description":
+    "显示 Boss 技能预警条，包含技能名、倒计时和剩余时间进度。",
+  "minimap.bossDbm.enableDescription":
+    "开启后，副本机制窗口会在收到 Boss DBM 数据时显示该面板；无数据时不会显示。",
+  "minimap.bossDbm.style.title": "Boss DBM 样式",
+  "minimap.bossDbm.style.description":
+    "调整 Boss DBM 预警条的文字、进度条颜色和间距。",
+  "minimap.bossDbm.style.fontSize": "字体大小",
+  "minimap.bossDbm.style.gap": "行间距",
+  "minimap.bossDbm.style.columnGap": "名称与倒计时间距",
+  "minimap.bossDbm.style.nameColor": "技能名颜色",
+  "minimap.bossDbm.style.valueColor": "倒计时颜色",
+  "minimap.bossDbm.style.progressColor": "进度条颜色",
+  "minimap.bossDbm.style.progressOpacity": "进度条不透明度",
   "minimap.settings.display.title": "显示选项",
   "minimap.settings.display.description":
     "控制小地图在战斗中的信息密度，减少不必要的干扰。",
@@ -1312,6 +1330,7 @@ export const zhCNMessages = {
   "minimap.overlay.state.hide": "隐藏",
   "minimap.overlay.mapPanel": "地图面板：{state}",
   "minimap.overlay.infoPanel": "机制报幕：{state}",
+  "minimap.overlay.bossDbmPanel": "Boss DBM：{state}",
   "minimap.overlay.help":
     "面板位置和宽度请在副本机制窗口的编辑布局模式中调整。",
   "minimap.settings.colors.title": "玩家颜色",
