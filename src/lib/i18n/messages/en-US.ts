@@ -1419,6 +1419,9 @@ export const enUSMessages = {
     "Only show self and teammates affected by mechanics",
   "minimap.settings.hideNormalTeammates.description":
     "When enabled, normal teammate points are hidden; teammates with mechanic colors or buffs are shown automatically.",
+  "minimap.settings.showBoss.label": "Show Boss Position",
+  "minimap.settings.showBoss.description":
+    "Show the current dungeon boss position on the minimap when enabled. Off by default to reduce noise.",
   "minimap.overlay.title": "Panel Visibility",
   "minimap.overlay.description":
     "Control which independent panels are visible in the dungeon mechanics overlay.",
@@ -1433,6 +1436,15 @@ export const enUSMessages = {
     "Set self and teammate colors when no mechanic color override is active; mechanic callouts still use the high-contrast slot palette.",
   "minimap.settings.colors.local": "Self",
   "minimap.settings.colors.teammate": "Teammate",
+  "minimap.settings.colors.boss": "Boss",
+  "minimap.settings.localRing.title": "Self Marker",
+  "minimap.settings.localRing.description":
+    "Draw an extra ring around your minimap dot so you can locate yourself even when mechanic colors override your marker.",
+  "minimap.settings.localRing.enabled.label": "Show self ring",
+  "minimap.settings.localRing.enabled.description":
+    "When enabled, an additional configurable outline is drawn around your own dot.",
+  "minimap.settings.localRing.color": "Ring Color",
+  "minimap.settings.localRing.width": "Ring Width",
   "minimap.s3Raid.phase.corner": "Corner Explosion",
   "minimap.s3Raid.phase.edge": "Edge-Mid Explosion",
   "minimap.s3Raid.phase.group": "Phase",

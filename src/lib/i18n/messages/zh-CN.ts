@@ -1303,6 +1303,9 @@ export const zhCNMessages = {
   "minimap.settings.hideNormalTeammates.label": "仅显示自己与被机制影响的队友",
   "minimap.settings.hideNormalTeammates.description":
     "开启后，普通队友点位会隐藏；当队友被机制颜色或 Buff 影响时会自动显示。",
+  "minimap.settings.showBoss.label": "显示 Boss 位置",
+  "minimap.settings.showBoss.description":
+    "开启后，在小地图中显示当前副本 Boss 的位置；默认关闭以减少干扰。",
   "minimap.overlay.title": "面板可见性",
   "minimap.overlay.description": "控制副本机制 overlay 中哪些独立面板可见。",
   "minimap.overlay.state.show": "显示",
@@ -1316,6 +1319,15 @@ export const zhCNMessages = {
     "设置无机制颜色覆盖时的自己与队友颜色；机制点名颜色仍使用专用高区分度色槽。",
   "minimap.settings.colors.local": "自己",
   "minimap.settings.colors.teammate": "队友",
+  "minimap.settings.colors.boss": "Boss",
+  "minimap.settings.localRing.title": "自身标记",
+  "minimap.settings.localRing.description":
+    "在自己的小地图圆点外叠加一圈同心圆，即使被机制点名变色也能快速定位自己。",
+  "minimap.settings.localRing.enabled.label": "显示自身同心圆",
+  "minimap.settings.localRing.enabled.description":
+    "开启后，自己的圆点外层会额外绘制一圈可配置描边。",
+  "minimap.settings.localRing.color": "同心圆颜色",
+  "minimap.settings.localRing.width": "同心圆线宽",
   "minimap.s3Raid.phase.corner": "四角爆炸",
   "minimap.s3Raid.phase.edge": "边中爆炸",
   "minimap.s3Raid.phase.group": "相位",

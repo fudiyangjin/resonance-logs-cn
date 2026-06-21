@@ -1405,6 +1405,9 @@ export const jaJPMessages = {
     "自分とギミック対象の味方のみ表示",
   "minimap.settings.hideNormalTeammates.description":
     "有効にすると通常の味方位置は非表示になり、ギミック色やBuffの影響を受けた味方だけ自動表示されます。",
+  "minimap.settings.showBoss.label": "Boss位置を表示",
+  "minimap.settings.showBoss.description":
+    "有効にすると、現在のダンジョンBossの位置をミニマップに表示します。ノイズを減らすため既定ではオフです。",
   "minimap.overlay.title": "パネル表示",
   "minimap.overlay.description":
     "ダンジョンギミック overlay で表示する独立パネルを制御します。",
@@ -1419,6 +1422,15 @@ export const jaJPMessages = {
     "ギミック色がない場合の自分と味方の色を設定します。ギミック通知は引き続き高コントラストのスロット色を使用します。",
   "minimap.settings.colors.local": "自分",
   "minimap.settings.colors.teammate": "味方",
+  "minimap.settings.colors.boss": "Boss",
+  "minimap.settings.localRing.title": "自分マーカー",
+  "minimap.settings.localRing.description":
+    "自分のミニマップ点の外側に追加の同心円を描画し、ギミック色で変わっても自分の位置を見つけやすくします。",
+  "minimap.settings.localRing.enabled.label": "自分の同心円を表示",
+  "minimap.settings.localRing.enabled.description":
+    "有効にすると、自分の点の外側に設定可能な輪郭を追加表示します。",
+  "minimap.settings.localRing.color": "同心円の色",
+  "minimap.settings.localRing.width": "同心円の線幅",
   "minimap.s3Raid.phase.corner": "四隅爆発",
   "minimap.s3Raid.phase.edge": "辺中央爆発",
   "minimap.s3Raid.phase.group": "フェーズ",

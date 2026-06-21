@@ -67,6 +67,7 @@ export function buildMatrixMechanicView(
           entityColorSlots.get(source.entityUuid) ??
           0)
         : 0;
+    entityColorSlots.set(target.entityUuid, sourceColorSlot);
 
     if (source && source.monsterId === MATRIX_MONSTER_ID) {
       const beamEnd = extendedBeamEnd(source, target);

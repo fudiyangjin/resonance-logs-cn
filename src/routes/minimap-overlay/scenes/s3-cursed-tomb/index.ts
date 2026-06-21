@@ -36,6 +36,7 @@ function visibleEntities(
       inBossArea(entity.x, entity.z) &&
       (entity.kind === "local" ||
         entity.kind === "teammate" ||
+        entity.kind === "boss" ||
         entityColorSlots.has(entity.entityUuid)),
   );
 }

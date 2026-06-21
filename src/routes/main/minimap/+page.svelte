@@ -1,10 +1,39 @@
 <script lang="ts">
-  import { SETTINGS } from "$lib/settings-store";
+  import { createDefaultMinimapConfig, SETTINGS } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
   import SettingsColor from "../dps/settings/settings-color.svelte";
+  import SettingsSlider from "../dps/settings/settings-slider.svelte";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
 
+  const defaultMinimapConfig = createDefaultMinimapConfig();
+
+  type LegacyMinimapConfig = typeof defaultMinimapConfig & {
+    showBoss?: boolean;
+    entityColors?: Partial<typeof defaultMinimapConfig.entityColors>;
+    localRing?: Partial<typeof defaultMinimapConfig.localRing>;
+  };
+
+  function ensureMinimapSettingsDefaults() {
+    const state = SETTINGS.minimap.state as LegacyMinimapConfig;
+    state.showBoss ??= defaultMinimapConfig.showBoss;
+    state.entityColors ??= { ...defaultMinimapConfig.entityColors };
+    state.entityColors.boss ??= defaultMinimapConfig.entityColors.boss;
+    state.localRing ??= { ...defaultMinimapConfig.localRing };
+    state.localRing.enabled ??= defaultMinimapConfig.localRing.enabled;
+    state.localRing.color ??= defaultMinimapConfig.localRing.color;
+    state.localRing.width ??= defaultMinimapConfig.localRing.width;
+  }
+
+  ensureMinimapSettingsDefaults();
+
   const minimapSettings = $derived(SETTINGS.minimap.state);
+
+  $effect(() => {
+    void minimapSettings.showBoss;
+    void minimapSettings.entityColors;
+    void minimapSettings.localRing;
+    ensureMinimapSettingsDefaults();
+  });
 
   function visibilityState(value: boolean): string {
     return value
@@ -31,6 +60,14 @@
       label={t("minimap.settings.hideNormalTeammates.label")}
       description={t("minimap.settings.hideNormalTeammates.description")}
     />
+
+    {#if minimapSettings.showBoss !== undefined}
+      <SettingsSwitch
+        bind:checked={minimapSettings.showBoss}
+        label={t("minimap.settings.showBoss.label")}
+        description={t("minimap.settings.showBoss.description")}
+      />
+    {/if}
   </section>
 
   <section
@@ -99,6 +136,49 @@
         bind:value={minimapSettings.entityColors.teammate}
         label={t("minimap.settings.colors.teammate")}
       />
+      {#if minimapSettings.entityColors.boss}
+        <SettingsColor
+          bind:value={minimapSettings.entityColors.boss}
+          label={t("minimap.settings.colors.boss")}
+        />
+      {/if}
     </div>
+  </section>
+
+  <section
+    class="border-border/60 bg-card/40 space-y-4 rounded-lg border p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+  >
+    <div>
+      <h2 class="text-foreground text-base font-semibold">
+        {t("minimap.settings.localRing.title")}
+      </h2>
+      <p class="text-muted-foreground text-xs">
+        {t("minimap.settings.localRing.description")}
+      </p>
+    </div>
+
+    {#if minimapSettings.localRing && minimapSettings.localRing.enabled !== undefined && minimapSettings.localRing.color && minimapSettings.localRing.width !== undefined}
+      <div class="space-y-4">
+        <SettingsSwitch
+          bind:checked={minimapSettings.localRing.enabled}
+          label={t("minimap.settings.localRing.enabled.label")}
+          description={t("minimap.settings.localRing.enabled.description")}
+        />
+        <div class="grid gap-2 lg:grid-cols-2">
+          <SettingsColor
+            bind:value={minimapSettings.localRing.color}
+            label={t("minimap.settings.localRing.color")}
+          />
+          <SettingsSlider
+            bind:value={minimapSettings.localRing.width}
+            label={t("minimap.settings.localRing.width")}
+            min={1}
+            max={6}
+            step={1}
+            unit="px"
+          />
+        </div>
+      </div>
+    {/if}
   </section>
 </div>

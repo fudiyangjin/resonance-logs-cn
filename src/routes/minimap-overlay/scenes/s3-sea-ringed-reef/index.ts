@@ -63,6 +63,7 @@ function visibleEntities(
       yInArena(entity.y, arena) &&
       (entity.kind === "local" ||
         entity.kind === "teammate" ||
+        entity.kind === "boss" ||
         entityColorSlots.has(entity.entityUuid)),
   );
 }

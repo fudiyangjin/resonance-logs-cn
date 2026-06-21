@@ -18,6 +18,9 @@
   // Radius of the upward triangle drawn for every non-team entity. Larger than
   // team-member circles so mechanic entities (orbs, etc.) read clearly.
   const NON_TEAM_TRIANGLE_RADIUS = 10;
+  const DEFAULT_BOSS_COLOR = "#ef4444";
+  const DEFAULT_LOCAL_RING_COLOR = "#ffffff";
+  const DEFAULT_LOCAL_RING_WIDTH = 2;
   const minimapSettings = $derived(SETTINGS.minimap.state);
 
   type Projector = (x: number, z: number) => [number, number];
@@ -91,6 +94,7 @@
 
   function colorFor(entity: MinimapEntity): string {
     const colors = minimapSettings.entityColors;
+    if (entity.kind === "boss") return colors.boss ?? DEFAULT_BOSS_COLOR;
     return entity.kind === "local" ? colors.local : colors.teammate;
   }
 
@@ -100,6 +104,31 @@
 
   function isTeamMember(entity: MinimapEntity): boolean {
     return entity.kind === "local" || entity.kind === "teammate";
+  }
+
+  function localRingWidth(): number {
+    const width = Number(
+      minimapSettings.localRing?.width ?? DEFAULT_LOCAL_RING_WIDTH,
+    );
+    return Number.isFinite(width) ? Math.max(1, Math.min(6, width)) : 2;
+  }
+
+  function shouldDrawLocalRing(): boolean {
+    return minimapSettings.localRing?.enabled !== false;
+  }
+
+  function drawLocalRing(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
+    if (!shouldDrawLocalRing()) return;
+
+    const width = localRingWidth();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle =
+      minimapSettings.localRing?.color ?? DEFAULT_LOCAL_RING_COLOR;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radiusFor() + width, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   // Upward-pointing triangle centered on (cx, cy), used for every non-team
@@ -183,6 +212,10 @@
     }
 
     for (const entity of view.entities) {
+      if (entity.kind === "boss" && minimapSettings.showBoss !== true) {
+        continue;
+      }
+
       const colorSlot = view.entityColorSlots.get(entity.entityUuid);
       const hasMechanic = colorSlot !== undefined;
       if (
@@ -214,6 +247,9 @@
         ctx.beginPath();
         ctx.arc(sx, sy, radiusFor(), 0, Math.PI * 2);
         ctx.fill();
+        if (entity.kind === "local") {
+          drawLocalRing(ctx, sx, sy);
+        }
       } else {
         drawTriangle(ctx, sx, sy, NON_TEAM_TRIANGLE_RADIUS);
       }
@@ -444,8 +480,13 @@
     void aspect;
     void sceneView;
     void minimapSettings.hideNormalTeammates;
+    void minimapSettings.showBoss;
     void minimapSettings.entityColors.local;
     void minimapSettings.entityColors.teammate;
+    void minimapSettings.entityColors.boss;
+    void minimapSettings.localRing?.enabled;
+    void minimapSettings.localRing?.color;
+    void minimapSettings.localRing?.width;
     if (typeof window === "undefined") return;
     const id = window.requestAnimationFrame(draw);
     return () => window.cancelAnimationFrame(id);
