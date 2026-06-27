@@ -7,6 +7,7 @@ const FACTOR_RULE_ID_BASE: i32 = 900_000_000;
 const CHAR_SERIALIZE_FIELD_SEASON_CULTIVATE: i32 = 101;
 const DIRTY_BEGIN: i32 = -2;
 const DIRTY_END: i32 = -3;
+const SEASON_CULTIVATE_FUNCTION_DEEP_SLEEP: i32 = 800_522;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -218,7 +219,10 @@ impl SeasonCultivateActiveItems for blueprotobuf::SeasonCultivateLineData {
     fn active_item_ids(&self) -> Vec<i32> {
         let mut result = Vec::new();
         for line_data in self.season_cultivate_line_map.values() {
-            for sub_type in line_data.cultivate_line_map.values() {
+            for (function_id, sub_type) in line_data.cultivate_line_map.iter() {
+                if *function_id != SEASON_CULTIVATE_FUNCTION_DEEP_SLEEP {
+                    continue;
+                }
                 for area in active_areas(sub_type) {
                     result.extend(
                         area.cultivate_middle_node_map
