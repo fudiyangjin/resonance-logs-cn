@@ -59,7 +59,7 @@
   function remainingText(row: MechanicRow): string {
     const ms = remainingMs(row);
     if (!Number.isFinite(ms)) return "--";
-    return `${Math.ceil(ms / 1000)}s`;
+    return `${Math.floor(ms / 1000)}s`;
   }
 
   function targetText(row: MechanicRow): string {
