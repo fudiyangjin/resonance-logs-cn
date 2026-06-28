@@ -554,6 +554,24 @@ pub struct HateListUpdatePayload {
     pub hate_lists: HashMap<String, Vec<HateEntry>>,
 }
 
+/// Stamina/resilience snapshot for a single monster target.
+/// `current` depletes from `max` as the monster is staggered; reaching 0
+/// means the stagger threshold has been hit.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct StunEntry {
+    pub boss_entity_uuid: String,
+    pub monster_id: i32,
+    pub current: i64,
+    pub max: i64,
+}
+
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct StunUpdatePayload {
+    pub entries: Vec<StunEntry>,
+}
+
 #[derive(serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct EntityIdentityMapPayload {

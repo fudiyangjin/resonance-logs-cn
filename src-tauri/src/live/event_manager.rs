@@ -2,8 +2,8 @@ use crate::live::commands_models::{
     BossDbmEvent, BossHealth, BuffUpdateState, CounterUpdateState, DeathRecord, FightResourceState,
     HateEntry, HeaderInfo, LiveDataPayload, MinimapSkillCast, MinimapSnapshot,
     MinimapUpdatePayload, PanelAttrState, RawEntityData, ShieldDetailEntry, SkillCdState,
-    TeammateFantasyState, TrainingDummyState, build_taken_per_source, to_raw_combat_stats,
-    to_raw_skill_stats,
+    StunEntry, TeammateFantasyState, TrainingDummyState, build_taken_per_source,
+    to_raw_combat_stats, to_raw_skill_stats,
 };
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::entity_id::{entity_uuid_string, uid_from_uuid};
@@ -114,6 +114,7 @@ pub enum OutboundEvent {
     TeammateFantasyUpdate(Vec<TeammateFantasyState>),
     TeammateFantasyClear,
     HateListUpdate(HashMap<String, Vec<HateEntry>>),
+    StunUpdate(Vec<StunEntry>),
     EntityIdentityMap {
         player_names: HashMap<String, String>,
         monster_ids: HashMap<String, i32>,
@@ -253,6 +254,11 @@ impl EventManager {
     pub fn emit_hate_list_update(&mut self, hate_lists: HashMap<String, Vec<HateEntry>>) {
         self.outbound_events
             .push(OutboundEvent::HateListUpdate(hate_lists));
+    }
+
+    pub fn emit_stun_update(&mut self, entries: Vec<StunEntry>) {
+        self.outbound_events
+            .push(OutboundEvent::StunUpdate(entries));
     }
 
     pub fn emit_entity_identity_map(

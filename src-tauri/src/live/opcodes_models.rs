@@ -117,6 +117,8 @@ pub enum AttrType {
     Lucky,
     CurrentHp,
     MaxHp,
+    MaxStunned,
+    CurrentStunned,
     MaxMp,
     Stamina,
     CurrentShield,
@@ -192,6 +194,8 @@ impl AttrType {
             attr_type::ATTR_LUCKY => Some(AttrType::Lucky),
             attr_type::ATTR_CURRENT_HP => Some(AttrType::CurrentHp),
             attr_type::ATTR_MAX_HP => Some(AttrType::MaxHp),
+            attr_type::ATTR_MAX_STUNNED => Some(AttrType::MaxStunned),
+            attr_type::ATTR_CURRENT_STUNNED => Some(AttrType::CurrentStunned),
             attr_type::ATTR_MAX_MP => Some(AttrType::MaxMp),
             attr_type::ATTR_STAMINA => Some(AttrType::Stamina),
             attr_type::ATTR_CURRENT_SHIELD => Some(AttrType::CurrentShield),
@@ -264,6 +268,8 @@ impl AttrType {
             AttrType::Lucky => attr_type::ATTR_LUCKY,
             AttrType::CurrentHp => attr_type::ATTR_CURRENT_HP,
             AttrType::MaxHp => attr_type::ATTR_MAX_HP,
+            AttrType::MaxStunned => attr_type::ATTR_MAX_STUNNED,
+            AttrType::CurrentStunned => attr_type::ATTR_CURRENT_STUNNED,
             AttrType::MaxMp => attr_type::ATTR_MAX_MP,
             AttrType::Stamina => attr_type::ATTR_STAMINA,
             AttrType::CurrentShield => attr_type::ATTR_CURRENT_SHIELD,
@@ -568,6 +574,8 @@ pub mod attr_type {
     pub const ATTR_LUCKY: i32 = 0x2b7a;
     pub const ATTR_CURRENT_HP: i32 = 0x2c2e;
     pub const ATTR_MAX_HP: i32 = 0x2c38;
+    pub const ATTR_MAX_STUNNED: i32 = 0x1ba; // 442, AttrMaxStunned (max stamina/resilience)
+    pub const ATTR_CURRENT_STUNNED: i32 = 0x1bb; // 443, AttrStunned (current stamina/resilience)
     pub const ATTR_MAX_MP: i32 = 0x2c39; // Maximum MP/energy
     pub const ATTR_STAMINA: i32 = 0x2c3c; // Current stamina/energy regen
     pub const ATTR_CURRENT_SHIELD: i32 = 0x2c3d; // Current shield/barrier value
@@ -801,6 +809,8 @@ mod tests {
         assert_eq!(AttrType::from_id(0x274c), Some(AttrType::RankLevel));
         assert_eq!(AttrType::from_id(0x2c2e), Some(AttrType::CurrentHp));
         assert_eq!(AttrType::from_id(0x2c38), Some(AttrType::MaxHp));
+        assert_eq!(AttrType::from_id(0x1ba), Some(AttrType::MaxStunned));
+        assert_eq!(AttrType::from_id(0x1bb), Some(AttrType::CurrentStunned));
         assert_eq!(AttrType::from_id(0x999999), None);
     }
 
@@ -821,6 +831,8 @@ mod tests {
         assert_eq!(AttrType::RankLevel.to_id(), 0x274c);
         assert_eq!(AttrType::CurrentHp.to_id(), 0x2c2e);
         assert_eq!(AttrType::MaxHp.to_id(), 0x2c38);
+        assert_eq!(AttrType::MaxStunned.to_id(), 0x1ba);
+        assert_eq!(AttrType::CurrentStunned.to_id(), 0x1bb);
     }
 
     #[test]

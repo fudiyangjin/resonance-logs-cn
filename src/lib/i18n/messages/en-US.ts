@@ -1169,6 +1169,7 @@ export const enUSMessages = {
   "monsterMonitor.tabs.buff": "Buff Monitor",
   "monsterMonitor.tabs.teammate": "Teammate Buffs",
   "monsterMonitor.tabs.hate": "Hate List",
+  "monsterMonitor.tabs.stun": "Stun Bar",
   "monsterMonitor.tabs.fantasy": "Teammate Fantasies",
   "monsterMonitor.tabs.bossDbm": "Boss DBM",
   "monsterMonitor.tabs.overlay": "Enable Window",
@@ -1256,12 +1257,18 @@ export const enUSMessages = {
   "monsterMonitor.hate.enabled": "Enable Hate List",
   "monsterMonitor.hate.maxDisplay": "Max Visible Characters",
   "monsterMonitor.hate.styleTitle": "Hate Panel Style",
+  "monsterMonitor.stun.displayTitle": "Stun Bar Display",
+  "monsterMonitor.stun.displayDescription":
+    "Show the stamina/stun bar (current/max) for the current attack target. Reaching zero means the monster is staggered and the bar is highlighted.",
+  "monsterMonitor.stun.enabled": "Enable Stun Bar",
+  "monsterMonitor.stun.styleTitle": "Stun Bar Panel Style",
   "monsterMonitor.overlay.title": "Overlay Area Visibility",
   "monsterMonitor.overlay.description":
     "Control each visible area in the monster monitor overlay.",
   "monsterMonitor.overlay.monsterBuff": "Monster Buff Area: {state}",
   "monsterMonitor.overlay.teammateBuff": "Teammate Buff Area: {state}",
   "monsterMonitor.overlay.hate": "Hate List Area: {state}",
+  "monsterMonitor.overlay.stun": "Stun Bar Area: {state}",
   "monsterMonitor.overlay.fantasy": "Teammate Fantasy Area: {state}",
   "monsterMonitor.overlay.bossDbm": "Boss DBM: {state}",
   "monsterMonitor.bossDbm.title": "Boss Mechanics (DBM)",
@@ -1272,6 +1279,8 @@ export const enUSMessages = {
   "monsterMonitor.overlay.help": "Click buttons to toggle visibility.",
   "monsterMonitor.overlay.hateDisabledHelp":
     "Enable the hate list on the Hate List tab before showing this area.",
+  "monsterMonitor.overlay.stunDisabledHelp":
+    "Enable the stun bar on the Stun Bar tab before showing this area.",
   "monsterMonitor.buffFallback": "Buff {id}",
   "monsterOverlay.edit.title":
     "Edit Mode - Drag to Adjust Monster Monitor Position",
@@ -1283,9 +1292,15 @@ export const enUSMessages = {
   "monsterOverlay.buffGroupTag": "Monster Buff Area",
   "monsterOverlay.teammateGroupTag": "Teammate Buff Area",
   "monsterOverlay.hateGroupTag": "Hate Area",
+  "monsterOverlay.stunGroupTag": "Stun Area",
   "monsterOverlay.fantasyGroupTag": "Teammate Fantasy Area",
   "monsterOverlay.bossDbmGroupTag": "Boss DBM 区",
   "monsterOverlay.hateSectionTitle": "{title} - Hate",
+  "monsterOverlay.stunSectionTitle": "{title} - Stun",
+  "monsterOverlay.stunLabel": "Stun",
+  "monsterOverlay.stunBroken": "Staggered",
+  "monsterOverlay.stunBrokenValue": "0 / {max}",
+  "monsterOverlay.placeholder.stun": "Stun Preview",
   "monsterOverlay.placeholder.selectBuff":
     "Select buffs on the Monster Monitor page",
   "monsterOverlay.placeholder.preview": "Preview",

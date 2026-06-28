@@ -1154,6 +1154,7 @@ export const jaJPMessages = {
   "monsterMonitor.tabs.buff": "Buff モニター",
   "monsterMonitor.tabs.teammate": "味方 Buff",
   "monsterMonitor.tabs.hate": "ヘイトリスト",
+  "monsterMonitor.tabs.stun": "スタンバーゲージ",
   "monsterMonitor.tabs.fantasy": "味方幻想",
   "monsterMonitor.tabs.bossDbm": "Boss DBM",
   "monsterMonitor.tabs.overlay": "ウィンドウを有効化",
@@ -1241,12 +1242,18 @@ export const jaJPMessages = {
   "monsterMonitor.hate.enabled": "ヘイトリストを有効化",
   "monsterMonitor.hate.maxDisplay": "最大表示キャラクター数",
   "monsterMonitor.hate.styleTitle": "ヘイトパネルスタイル",
+  "monsterMonitor.stun.displayTitle": "スタンバーゲージ表示",
+  "monsterMonitor.stun.displayDescription":
+    "現在の攻撃対象のスタンバーゲージ（現在/最大）を表示します。0 になるとスタン（ダウン）状態を示し、バーをハイライトします。",
+  "monsterMonitor.stun.enabled": "スタンバーゲージを有効化",
+  "monsterMonitor.stun.styleTitle": "スタンバーゲージパネルスタイル",
   "monsterMonitor.overlay.title": "オーバーレイエリア表示",
   "monsterMonitor.overlay.description":
     "モンスターモニターオーバーレイの各表示エリアを制御します。",
   "monsterMonitor.overlay.monsterBuff": "モンスター Buff エリア: {state}",
   "monsterMonitor.overlay.teammateBuff": "味方 Buff エリア: {state}",
   "monsterMonitor.overlay.hate": "ヘイトリストエリア: {state}",
+  "monsterMonitor.overlay.stun": "スタンバーゲージエリア: {state}",
   "monsterMonitor.overlay.fantasy": "味方幻想エリア: {state}",
   "monsterMonitor.overlay.bossDbm": "Boss DBM: {state}",
   "monsterMonitor.bossDbm.title": "Boss ギミック (DBM)",
@@ -1257,6 +1264,8 @@ export const jaJPMessages = {
   "monsterMonitor.overlay.help": "ボタンをクリックして表示を切替。",
   "monsterMonitor.overlay.hateDisabledHelp":
     "このエリアを表示する前に、ヘイトリストタブでヘイトリストを有効化してください。",
+  "monsterMonitor.overlay.stunDisabledHelp":
+    "このエリアを表示する前に、スタンバーゲージタブでスタンバーゲージを有効化してください。",
   "monsterMonitor.buffFallback": "Buff {id}",
   "monsterOverlay.edit.title":
     "編集モード - ドラッグでモンスターモニター位置を調整",
@@ -1268,9 +1277,15 @@ export const jaJPMessages = {
   "monsterOverlay.buffGroupTag": "モンスター Buff エリア",
   "monsterOverlay.teammateGroupTag": "味方 Buff エリア",
   "monsterOverlay.hateGroupTag": "ヘイトエリア",
+  "monsterOverlay.stunGroupTag": "スタンエリア",
   "monsterOverlay.fantasyGroupTag": "味方幻想エリア",
   "monsterOverlay.bossDbmGroupTag": "Boss DBM 区",
   "monsterOverlay.hateSectionTitle": "{title} - ヘイト",
+  "monsterOverlay.stunSectionTitle": "{title} - スタン",
+  "monsterOverlay.stunLabel": "スタン",
+  "monsterOverlay.stunBroken": "スタン中",
+  "monsterOverlay.stunBrokenValue": "0 / {max}",
+  "monsterOverlay.placeholder.stun": "スタンプレビュー",
   "monsterOverlay.placeholder.selectBuff":
     "モンスターモニターページで Buff を選択",
   "monsterOverlay.placeholder.preview": "プレビュー",

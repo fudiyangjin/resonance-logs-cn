@@ -31,6 +31,7 @@
     | "buff"
     | "teammate"
     | "hate"
+    | "stun"
     | "fantasy"
     | "bossDbm"
     | "overlay";
@@ -75,6 +76,9 @@
   const hatePanelStyle = $derived.by(
     () => monsterMonitor.hatePanelStyle ?? monsterMonitor.panelStyle,
   );
+  const stunPanelStyle = $derived.by(
+    () => monsterMonitor.stunPanelStyle ?? monsterMonitor.panelStyle,
+  );
   const fantasyPanelStyle = $derived.by(
     () => monsterMonitor.fantasyPanelStyle ?? monsterMonitor.panelStyle,
   );
@@ -92,6 +96,7 @@
     showTeammateBuffPanel:
       monsterMonitor.overlayVisibility?.showTeammateBuffPanel ?? true,
     showHatePanel: monsterMonitor.overlayVisibility?.showHatePanel ?? true,
+    showStunPanel: monsterMonitor.overlayVisibility?.showStunPanel ?? false,
     showFantasyPanel:
       monsterMonitor.overlayVisibility?.showFantasyPanel ?? false,
     showBossDbmPanel:
@@ -536,6 +541,19 @@
     }));
   }
 
+  function updateStunPanelStyle<K extends keyof typeof stunPanelStyle>(
+    key: K,
+    value: (typeof stunPanelStyle)[K],
+  ) {
+    updateMonsterMonitor((state) => ({
+      ...state,
+      stunPanelStyle: {
+        ...(state.stunPanelStyle ?? state.panelStyle),
+        [key]: value,
+      },
+    }));
+  }
+
   function updateFantasyPanelStyle<K extends keyof CustomPanelStyle>(
     key: K,
     value: CustomPanelStyle[K],
@@ -631,6 +649,7 @@
         showTeammateBuffPanel:
           state.overlayVisibility?.showTeammateBuffPanel ?? true,
         showHatePanel: state.overlayVisibility?.showHatePanel ?? true,
+        showStunPanel: state.overlayVisibility?.showStunPanel ?? false,
         showFantasyPanel: state.overlayVisibility?.showFantasyPanel ?? false,
         showBossDbmPanel:
           state.overlayVisibility?.showBossDbmPanel ?? false,
@@ -816,6 +835,18 @@
         }}
       >
         {t("monsterMonitor.tabs.hate")}
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
+        'stun'
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => {
+          activeTab = "stun";
+        }}
+      >
+        {t("monsterMonitor.tabs.stun")}
       </button>
       <button
         type="button"
@@ -1825,6 +1856,157 @@
         </label>
       </div>
     </section>
+  {:else if activeTab === "stun"}
+    <section
+      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
+    >
+      <div class="space-y-1">
+        <h2 class="text-foreground text-base font-semibold">
+          {t("monsterMonitor.stun.displayTitle")}
+        </h2>
+        <p class="text-muted-foreground text-sm">
+          {t("monsterMonitor.stun.displayDescription")}
+        </p>
+      </div>
+
+      <div class="flex justify-start">
+        <div class="min-w-[220px]">
+          <SettingsSwitch
+            label={t("monsterMonitor.stun.enabled")}
+            bind:checked={SETTINGS.monsterMonitor.state.stunListEnabled}
+          />
+        </div>
+      </div>
+    </section>
+
+    <section
+      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
+    >
+      <div class="space-y-1">
+        <h2 class="text-foreground text-base font-semibold">
+          {t("monsterMonitor.stun.styleTitle")}
+        </h2>
+      </div>
+
+      <div class="grid gap-4 lg:grid-cols-3">
+        <label class="style-field">
+          <span>{t("monsterMonitor.style.gap")}</span>
+          <input
+            type="range"
+            min="0"
+            max="24"
+            value={stunPanelStyle.gap}
+            oninput={(event) =>
+              updateStunPanelStyle(
+                "gap",
+                Number.parseInt(
+                  (event.currentTarget as HTMLInputElement).value,
+                  10,
+                ),
+              )}
+          />
+          <strong>{stunPanelStyle.gap}px</strong>
+        </label>
+
+        <label class="style-field">
+          <span>{t("monsterMonitor.style.columnGap")}</span>
+          <input
+            type="range"
+            min="0"
+            max="40"
+            value={stunPanelStyle.columnGap}
+            oninput={(event) =>
+              updateStunPanelStyle(
+                "columnGap",
+                Number.parseInt(
+                  (event.currentTarget as HTMLInputElement).value,
+                  10,
+                ),
+              )}
+          />
+          <strong>{stunPanelStyle.columnGap}px</strong>
+        </label>
+
+        <label class="style-field">
+          <span>{t("monsterMonitor.style.fontSize")}</span>
+          <input
+            type="range"
+            min="10"
+            max="28"
+            value={stunPanelStyle.fontSize}
+            oninput={(event) =>
+              updateStunPanelStyle(
+                "fontSize",
+                Number.parseInt(
+                  (event.currentTarget as HTMLInputElement).value,
+                  10,
+                ),
+              )}
+          />
+          <strong>{stunPanelStyle.fontSize}px</strong>
+        </label>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <label class="color-field">
+          <span>{t("monsterMonitor.style.nameColor")}</span>
+          <input
+            type="color"
+            value={stunPanelStyle.nameColor}
+            oninput={(event) =>
+              updateStunPanelStyle(
+                "nameColor",
+                (event.currentTarget as HTMLInputElement).value,
+              )}
+          />
+        </label>
+
+        <label class="color-field">
+          <span>{t("monsterMonitor.style.valueColor")}</span>
+          <input
+            type="color"
+            value={stunPanelStyle.valueColor}
+            oninput={(event) =>
+              updateStunPanelStyle(
+                "valueColor",
+                (event.currentTarget as HTMLInputElement).value,
+              )}
+          />
+        </label>
+
+        <label class="color-field">
+          <span>{t("monsterMonitor.style.progressColor")}</span>
+          <input
+            type="color"
+            value={stunPanelStyle.progressColor}
+            oninput={(event) =>
+              updateStunPanelStyle(
+                "progressColor",
+                (event.currentTarget as HTMLInputElement).value,
+              )}
+          />
+        </label>
+
+        <label class="color-field">
+          <span>{t("monsterMonitor.style.progressOpacity")}</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={stunPanelStyle.progressOpacity ?? 0.4}
+            oninput={(event) =>
+              updateStunPanelStyle(
+                "progressOpacity",
+                Number((event.currentTarget as HTMLInputElement).value),
+              )}
+          />
+          <strong
+            >{Math.round((stunPanelStyle.progressOpacity ?? 0.4) * 100)}%</strong
+          >
+        </label>
+      </div>
+    </section>
   {:else if activeTab === "fantasy"}
     <section
       class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
@@ -2216,6 +2398,21 @@
           {t("monsterMonitor.overlay.hate", {
             state: visibilityState(
               monsterMonitor.hateListEnabled && overlayVisibility.showHatePanel,
+            ),
+          })}
+        </button>
+
+        <button
+          type="button"
+          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 {overlayVisibility.showStunPanel
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+          disabled={!monsterMonitor.stunListEnabled}
+          onclick={() => toggleOverlayVisibility("showStunPanel")}
+        >
+          {t("monsterMonitor.overlay.stun", {
+            state: visibilityState(
+              monsterMonitor.stunListEnabled && overlayVisibility.showStunPanel,
             ),
           })}
         </button>

@@ -17,6 +17,7 @@ import {
 import type {
   BuffUpdateState,
   HateEntry,
+  StunEntry,
   TeammateFantasyState,
 } from "$lib/api";
 import {
@@ -24,7 +25,7 @@ import {
   formatTimerText,
   resolveAlertState,
 } from "../game-overlay/overlay-utils";
-import type { TextBuffDisplay } from "../game-overlay/overlay-types";
+import type { BuffAlertState, TextBuffDisplay } from "../game-overlay/overlay-types";
 import {
   isMonsterLayoutScaffold,
   monsterRuntime,
@@ -37,11 +38,14 @@ import type {
   MonsterBossBuffSection,
   MonsterFantasyRow,
   MonsterHateSection,
+  MonsterStunSection,
   MonsterTeammateBuffColumn,
   MonsterTeammateBuffRow,
 } from "./monster-types";
 
 const FANTASY_DISPLAY_TTL_MS = 5000;
+const STUN_BROKEN_HIGHLIGHT_COLOR = "#ff4d4f";
+const STUN_BROKEN_FLASH_INTERVAL_MS = 600;
 
 type TeammateColumnDefinition =
   | {
@@ -522,6 +526,49 @@ function buildHateRows(
     .slice(0, maxDisplay);
 }
 
+function buildStunRows(entry: StunEntry): TextBuffDisplay[] {
+  const { current, max } = entry;
+  if (max <= 0) return [];
+  const ratio = Math.min(1, Math.max(0, current / max));
+  const progressPercent = Math.round(ratio * 100);
+  const isBroken = current <= 0;
+  const alert: BuffAlertState | undefined = isBroken
+    ? {
+        highlightColor: STUN_BROKEN_HIGHLIGHT_COLOR,
+        flash: true,
+        flashIntervalMs: STUN_BROKEN_FLASH_INTERVAL_MS,
+        applyToProgress: true,
+      }
+    : undefined;
+  return [
+    {
+      key: `stun_${entry.bossEntityUuid}`,
+      label: isBroken
+        ? t("monsterOverlay.stunBroken")
+        : t("monsterOverlay.stunLabel"),
+      valueText: isBroken
+        ? t("monsterOverlay.stunBrokenValue", { max })
+        : `${current} / ${max}`,
+      progressPercent,
+      showProgress: true,
+      alert,
+    },
+  ];
+}
+
+function buildStunPlaceholderRows(): TextBuffDisplay[] {
+  return [
+    {
+      key: "stun_preview",
+      label: t("monsterOverlay.stunLabel"),
+      valueText: "1600 / 2000",
+      progressPercent: 80,
+      showProgress: true,
+      isPlaceholder: true,
+    },
+  ];
+}
+
 export function updateMonsterDisplay() {
   const now = Date.now();
   const aliases = getGlobalBuffAliases();
@@ -548,6 +595,7 @@ export function updateMonsterDisplay() {
   const nextSections: MonsterBossBuffSection[] = [];
   const nextTeammateRows: MonsterTeammateBuffRow[] = [];
   const nextHateSections: MonsterHateSection[] = [];
+  const nextStunSections: MonsterStunSection[] = [];
   let nextFantasyRows = buildFantasyRows(now);
 
   const sortedBossUids = Array.from(monsterRuntime.bossBuffMap.keys()).sort();
@@ -741,6 +789,36 @@ export function updateMonsterDisplay() {
     });
   }
 
+  if (SETTINGS.monsterMonitor.state.stunListEnabled) {
+    const sortedStunBossUids = Array.from(
+      monsterRuntime.bossStunMap.keys(),
+    ).sort();
+    for (const bossUid of sortedStunBossUids) {
+      const entry = monsterRuntime.bossStunMap.get(bossUid);
+      if (!entry) continue;
+      const stunRows = buildStunRows(entry);
+      if (stunRows.length === 0) continue;
+      nextStunSections.push({
+        bossEntityUuid: bossUid,
+        title: resolveMonsterSectionTitle(bossUid),
+        rows: stunRows,
+      });
+    }
+  }
+
+  if (
+    SETTINGS.monsterMonitor.state.stunListEnabled &&
+    nextStunSections.length === 0 &&
+    isMonsterLayoutScaffold()
+  ) {
+    nextStunSections.push({
+      bossEntityUuid: "0",
+      title: t("monsterOverlay.placeholder.target", { uid: 0 }),
+      rows: buildStunPlaceholderRows(),
+      isPlaceholder: true,
+    });
+  }
+
   if (nextFantasyRows.length === 0 && isMonsterLayoutScaffold()) {
     nextFantasyRows = buildFantasyPlaceholderRows();
   }
@@ -765,6 +843,7 @@ export function updateMonsterDisplay() {
       : [];
   }
   monsterRuntime.hateSections = nextHateSections;
+  monsterRuntime.stunSections = nextStunSections;
   monsterRuntime.fantasyRows = nextFantasyRows;
   monsterRuntime.dbmRows = nextDbmRows;
   monsterRuntime.rafId = requestAnimationFrame(updateMonsterDisplay);

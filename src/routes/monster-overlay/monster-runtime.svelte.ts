@@ -3,6 +3,7 @@ import type {
   BossDbmEvent,
   BuffUpdateState,
   HateEntry,
+  StunEntry,
   TeammateFantasyState,
 } from "$lib/api";
 import type { EntityId } from "$lib/entity-id";
@@ -12,6 +13,7 @@ import type {
   MonsterDragState,
   MonsterFantasyRow,
   MonsterHateSection,
+  MonsterStunSection,
   MonsterTeammateBuffColumn,
   MonsterTeammateBuffRow,
   MonsterResizeState,
@@ -28,12 +30,14 @@ export const monsterRuntime = $state({
   bossBuffMap: new Map<EntityId, Map<number, BuffUpdateState>>(),
   teammateBuffMap: new Map<EntityId, Map<number, BuffUpdateState>>(),
   bossHateMap: new Map<EntityId, HateEntry[]>(),
+  bossStunMap: new Map<EntityId, StunEntry>(),
   fantasyEntries: [] as TeammateFantasyState[],
   bossDbmMap: new Map<number, BossDbmEvent>(),
   bossSections: [] as MonsterBossBuffSection[],
   teammateColumns: [] as MonsterTeammateBuffColumn[],
   teammateRows: [] as MonsterTeammateBuffRow[],
   hateSections: [] as MonsterHateSection[],
+  stunSections: [] as MonsterStunSection[],
   fantasyRows: [] as MonsterFantasyRow[],
   dbmRows: [] as TextBuffDisplay[],
   isEditing: false,
@@ -50,6 +54,10 @@ export function monsterBossSections() {
 
 export function monsterHateSections() {
   return monsterRuntime.hateSections;
+}
+
+export function monsterStunSections() {
+  return monsterRuntime.stunSections;
 }
 
 export function monsterFantasyRows() {

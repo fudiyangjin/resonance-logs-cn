@@ -88,6 +88,14 @@ export function getHatePanelScale() {
   return getMonsterOverlaySizes().hatePanelScale;
 }
 
+export function getStunPanelPosition() {
+  return getMonsterOverlayPositions().stunPanel;
+}
+
+export function getStunPanelScale() {
+  return getMonsterOverlaySizes().stunPanelScale;
+}
+
 export function getFantasyPanelPosition() {
   return getMonsterOverlayPositions().fantasyPanel;
 }
@@ -118,6 +126,13 @@ export function dbmPanelStyle() {
 export function hatePanelStyle() {
   return (
     SETTINGS.monsterMonitor.state.hatePanelStyle ??
+    SETTINGS.monsterMonitor.state.panelStyle
+  );
+}
+
+export function stunPanelStyle() {
+  return (
+    SETTINGS.monsterMonitor.state.stunPanelStyle ??
     SETTINGS.monsterMonitor.state.panelStyle
   );
 }
@@ -186,6 +201,24 @@ export function setHatePanelScale(value: number) {
     overlaySizes: {
       ...getMonsterOverlaySizes(),
       hatePanelScale: clampPanelScale(value),
+    },
+  }));
+}
+
+export function setStunPanelPosition(nextPos: { x: number; y: number }) {
+  patchMonsterMonitor(() => ({
+    overlayPositions: {
+      ...getMonsterOverlayPositions(),
+      stunPanel: nextPos,
+    },
+  }));
+}
+
+export function setStunPanelScale(value: number) {
+  patchMonsterMonitor(() => ({
+    overlaySizes: {
+      ...getMonsterOverlaySizes(),
+      stunPanelScale: clampPanelScale(value),
     },
   }));
 }
@@ -299,6 +332,8 @@ export function onGlobalPointerMove(event: PointerEvent) {
       setTeammatePanelPosition(nextPos);
     } else if (monsterRuntime.dragState.target.kind === "hatePanel") {
       setHatePanelPosition(nextPos);
+    } else if (monsterRuntime.dragState.target.kind === "stunPanel") {
+      setStunPanelPosition(nextPos);
     } else if (monsterRuntime.dragState.target.kind === "dbmPanel") {
       setDbmPanelPosition(nextPos);
     } else {
@@ -316,6 +351,8 @@ export function onGlobalPointerMove(event: PointerEvent) {
       setTeammatePanelScale(monsterRuntime.resizeState.startValue + delta);
     } else if (monsterRuntime.resizeState.target.kind === "hatePanel") {
       setHatePanelScale(monsterRuntime.resizeState.startValue + delta);
+    } else if (monsterRuntime.resizeState.target.kind === "stunPanel") {
+      setStunPanelScale(monsterRuntime.resizeState.startValue + delta);
     } else if (monsterRuntime.resizeState.target.kind === "dbmPanel") {
       setDbmPanelScale(monsterRuntime.resizeState.startValue + delta);
     } else {

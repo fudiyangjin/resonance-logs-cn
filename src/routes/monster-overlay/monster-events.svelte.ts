@@ -5,11 +5,13 @@ import {
   onBossDbmUpdate,
   onEntityIdentities,
   onHateListUpdate,
+  onStunUpdate,
   onTeammateBuffUpdate,
   onTeammateFantasyClear,
   onTeammateFantasyUpdate,
   type BuffUpdateState,
   type HateEntry,
+  type StunEntry,
   type TeammateFantasyState,
 } from "$lib/api";
 import {
@@ -131,6 +133,13 @@ export function initMonsterOverlay() {
     }
     monsterRuntime.bossHateMap = next;
   });
+  const unlistenStun = onStunUpdate((event) => {
+    const next = new Map<EntityId, StunEntry>();
+    for (const entry of event.payload.entries) {
+      next.set(entry.bossEntityUuid, entry);
+    }
+    monsterRuntime.bossStunMap = next;
+  });
   const unlistenBossDbm = onBossDbmUpdate((event) => {
     for (const dbmEvent of event.payload.events) {
       monsterRuntime.bossDbmMap.set(dbmEvent.baseSkillId, dbmEvent);
@@ -167,12 +176,14 @@ export function initMonsterOverlay() {
     monsterRuntime.bossBuffMap = new Map();
     monsterRuntime.teammateBuffMap = new Map();
     monsterRuntime.bossHateMap = new Map();
+    monsterRuntime.bossStunMap = new Map();
     monsterRuntime.fantasyEntries = [];
     monsterRuntime.bossDbmMap = new Map();
     monsterRuntime.bossSections = [];
     monsterRuntime.teammateColumns = [];
     monsterRuntime.teammateRows = [];
     monsterRuntime.hateSections = [];
+    monsterRuntime.stunSections = [];
     monsterRuntime.fantasyRows = [];
     monsterRuntime.dbmRows = [];
     unlistenEditToggle.then((fn) => fn());
@@ -182,6 +193,7 @@ export function initMonsterOverlay() {
     unlistenTeammateFantasy.then((fn) => fn());
     unlistenTeammateFantasyClear.then((fn) => fn());
     unlistenHateList.then((fn) => fn());
+    unlistenStun.then((fn) => fn());
     unlistenBossDbm.then((fn) => fn());
     unlistenIdentities.then((fn) => fn());
     window.removeEventListener("pointermove", onGlobalPointerMove);

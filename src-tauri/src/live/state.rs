@@ -5,8 +5,8 @@ use crate::live::buff_monitor::{
 };
 use crate::live::commands_models::{
     BossDbmEvent, CounterUpdateState, FightResourceEntry, FightResourceState, MinimapSkillCast,
-    PanelAttrState, ShieldDetailEntry, SkillCdState, TeammateFantasyState, TrainingDummyState,
-    to_death_record,
+    PanelAttrState, ShieldDetailEntry, SkillCdState, StunEntry, TeammateFantasyState,
+    TrainingDummyState, to_death_record,
 };
 use crate::live::counter_tracker::{BuffCounterTracker, CounterRule};
 use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
@@ -2159,6 +2159,28 @@ impl AppStateManager {
         }
 
         state.event_manager.emit_hate_list_update(all_hate_lists);
+
+        let mut stun_entries = Vec::new();
+        if let Some(target_uuid) = current_target_uuid {
+            let max = state
+                .attr_store
+                .attr_int_by_id(target_uuid, attr_type::ATTR_MAX_STUNNED)
+                .unwrap_or(0);
+            let current = state
+                .attr_store
+                .attr_int_by_id(target_uuid, attr_type::ATTR_CURRENT_STUNNED)
+                .unwrap_or(0);
+            if max > 0 {
+                let monster_id = minimap_monster_id_of(state, target_uuid).unwrap_or(0);
+                stun_entries.push(StunEntry {
+                    boss_entity_uuid: entity_uuid_string(target_uuid),
+                    monster_id,
+                    current,
+                    max,
+                });
+            }
+        }
+        state.event_manager.emit_stun_update(stun_entries);
 
         if !player_names.is_empty() || !monster_ids.is_empty() {
             state

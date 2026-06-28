@@ -20,8 +20,13 @@ pub struct SkillCastEvent {
 /// View-state attributes that become stale once a stat-bearing entity leaves
 /// view. They are re-synced when the entity re-appears, so they are dropped on
 /// disappear while identity/stat attributes are preserved.
-const TRANSIENT_VIEW_ATTRS: &[AttrType] =
-    &[AttrType::CurrentHp, AttrType::MaxHp, AttrType::Position];
+const TRANSIENT_VIEW_ATTRS: &[AttrType] = &[
+    AttrType::CurrentHp,
+    AttrType::MaxHp,
+    AttrType::MaxStunned,
+    AttrType::CurrentStunned,
+    AttrType::Position,
+];
 
 #[derive(Debug, Default)]
 pub struct EntityAttrStore {

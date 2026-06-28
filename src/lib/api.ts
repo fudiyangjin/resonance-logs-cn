@@ -177,6 +177,17 @@ export type HateListUpdatePayload = {
   hateLists: Record<string, HateEntry[]>;
 };
 
+export type StunEntry = {
+  bossEntityUuid: string;
+  monsterId: number;
+  current: number;
+  max: number;
+};
+
+export type StunUpdatePayload = {
+  entries: StunEntry[];
+};
+
 export type MinimapEntityKind =
   | "local"
   | "teammate"
@@ -425,6 +436,10 @@ export const onHateListUpdate = (
   handler: (event: Event<HateListUpdatePayload>) => void,
 ): Promise<UnlistenFn> =>
   listen<HateListUpdatePayload>("hate-list-update", handler);
+
+export const onStunUpdate = (
+  handler: (event: Event<StunUpdatePayload>) => void,
+): Promise<UnlistenFn> => listen<StunUpdatePayload>("stun-update", handler);
 
 export const onMinimapUpdate = (
   handler: (event: Event<MinimapUpdatePayload>) => void,

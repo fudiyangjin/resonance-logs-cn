@@ -650,6 +650,7 @@ export type MonsterOverlayPositions = {
   hatePanel: Point;
   fantasyPanel: Point;
   bossDbmPanel: Point;
+  stunPanel: Point;
 };
 
 export type MonsterOverlaySizes = {
@@ -658,6 +659,7 @@ export type MonsterOverlaySizes = {
   hatePanelScale: number;
   fantasyPanelScale: number;
   bossDbmPanelScale: number;
+  stunPanelScale: number;
 };
 
 export type MonsterOverlayVisibility = {
@@ -666,6 +668,7 @@ export type MonsterOverlayVisibility = {
   showHatePanel: boolean;
   showFantasyPanel: boolean;
   showBossDbmPanel: boolean;
+  showStunPanel: boolean;
 };
 
 export type BuffAlertRule = {
@@ -683,6 +686,7 @@ export type MonsterMonitorConfig = {
   autoHideInDailyScenes: boolean;
   hateListEnabled: boolean;
   hateListMaxDisplay: number;
+  stunListEnabled: boolean;
   monitoredBuffIds: number[];
   selfAppliedBuffIds: number[];
   selfAppliedMonitorAll: boolean;
@@ -704,6 +708,7 @@ export type MonsterMonitorConfig = {
   hatePanelStyle: CustomPanelStyle;
   fantasyPanelStyle: CustomPanelStyle;
   bossDbmPanelStyle: CustomPanelStyle;
+  stunPanelStyle: CustomPanelStyle;
 };
 
 export type TextBuffPanelDisplayMode = "modern" | "classic";
@@ -921,6 +926,16 @@ export function createDefaultBossDbmStyle(): CustomPanelStyle {
   };
 }
 
+export function createDefaultStunPanelStyle(): CustomPanelStyle {
+  return {
+    ...createDefaultCustomPanelStyle(),
+    columnGap: 8,
+    fontSize: 13,
+    progressColor: "#60a5fa",
+    progressOpacity: 0.45,
+  };
+}
+
 function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
   return {
     monsterBuffPanel: { x: 40, y: 40 },
@@ -928,6 +943,7 @@ function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
     hatePanel: { x: 40, y: 300 },
     fantasyPanel: { x: 420, y: 300 },
     bossDbmPanel: { x: 800, y: 40 },
+    stunPanel: { x: 40, y: 460 },
   };
 }
 
@@ -938,6 +954,7 @@ function createDefaultMonsterOverlaySizes(): MonsterOverlaySizes {
     hatePanelScale: 1,
     fantasyPanelScale: 1,
     bossDbmPanelScale: 1,
+    stunPanelScale: 1,
   };
 }
 
@@ -948,6 +965,7 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
     showHatePanel: true,
     showFantasyPanel: false,
     showBossDbmPanel: false,
+    showStunPanel: false,
   };
 }
 
@@ -1104,6 +1122,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     autoHideInDailyScenes: false,
     hateListEnabled: false,
     hateListMaxDisplay: 5,
+    stunListEnabled: false,
     monitoredBuffIds: [],
     selfAppliedBuffIds: [],
     selfAppliedMonitorAll: false,
@@ -1125,6 +1144,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     hatePanelStyle: createDefaultCustomPanelStyle(),
     fantasyPanelStyle: createDefaultCustomPanelStyle(),
     bossDbmPanelStyle: createDefaultBossDbmStyle(),
+    stunPanelStyle: createDefaultStunPanelStyle(),
   };
 }
 

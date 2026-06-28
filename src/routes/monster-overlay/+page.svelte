@@ -7,6 +7,7 @@
   import MonsterBuffPanel from "./MonsterBuffPanel.svelte";
   import MonsterFantasyPanel from "./MonsterFantasyPanel.svelte";
   import MonsterHatePanel from "./MonsterHatePanel.svelte";
+  import MonsterStunPanel from "./MonsterStunPanel.svelte";
   import MonsterTeammateBuffPanel from "./MonsterTeammateBuffPanel.svelte";
   import {
     getMonsterOverlayVisibility,
@@ -20,6 +21,9 @@
   const visibility = $derived(getMonsterOverlayVisibility());
   const hateEnabled = $derived(
     SETTINGS.monsterMonitor.state.hateListEnabled && visibility.showHatePanel,
+  );
+  const stunEnabled = $derived(
+    SETTINGS.monsterMonitor.state.stunListEnabled && visibility.showStunPanel,
   );
 
   onMount(initMonsterOverlay);
@@ -38,6 +42,9 @@
   {/if}
   {#if hateEnabled}
     <MonsterHatePanel />
+  {/if}
+  {#if stunEnabled}
+    <MonsterStunPanel />
   {/if}
   {#if visibility.showFantasyPanel}
     <MonsterFantasyPanel />
