@@ -41,6 +41,10 @@
   },
   {
     "ruleId": 11,
-    "name": "Healing Bot Cooldown"
+    "name": "N20-Healing Bot Cooldown"
+  },
+  {
+    "ruleId": 12,
+    "name": "N20-Tina ATK Down Cooldown"
   }
 ]

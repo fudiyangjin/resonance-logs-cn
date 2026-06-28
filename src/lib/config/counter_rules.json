@@ -294,7 +294,7 @@
   },
   {
     "ruleId": 11,
-    "name": "治疗机器人冷却",
+    "name": "N20-治疗机器人冷却",
     "sources": [],
     "effectSlots": [
       {
@@ -306,6 +306,25 @@
         "onBuffChange": "noOp",
         "onBuffRemove": "noOp",
         "freezeDurationMs": 45000,
+        "dungeonStartFreezeMs": 30000,
+        "onFreezeExpire": "noOp"
+      }
+    ]
+  },
+  {
+    "ruleId": 12,
+    "name": "N20-蒂娜降攻冷却",
+    "sources": [],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": null,
+        "resetBuffId": 873621,
+        "resetBuffTarget": "anyTeam",
+        "onBuffAdd": "freeze",
+        "onBuffChange": "noOp",
+        "onBuffRemove": "noOp",
+        "freezeDurationMs": 60000,
         "dungeonStartFreezeMs": 30000,
         "onFreezeExpire": "noOp"
       }
