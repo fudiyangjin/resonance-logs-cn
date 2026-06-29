@@ -443,5 +443,64 @@
         "imagePath": "/images/beat_performer/skill/weapon_jt-01_tg02_-7726600810236144266.png"
       }
     ]
+  },
+  "verdant_oracle": {
+    "classKey": "verdant_oracle",
+    "className": "森语者",
+    "classId": 5,
+    "defaultMonitoredBuffIds": [510072, 2202131, 2202252],
+    "derivations": [
+      {
+        "sourceSkillId": 1520,
+        "derivedSkillId": 1520,
+        "triggerBuffBaseId": 2202131,
+        "derivedName": "灌注",
+        "derivedImagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx01_-777893832486412878.png",
+        "keepCdWhenDerived": true
+      },
+      {
+        "sourceSkillId": 1541,
+        "derivedSkillId": 1541,
+        "triggerBuffBaseId": 2202252,
+        "derivedName": "狂野绽放",
+        "derivedImagePath": "/images/verdant_oracle/skill/weapon_fh-01_tg01_01_1821960491715709623.png",
+        "keepCdWhenDerived": true
+      }
+    ],
+    "skills": [
+      {
+        "skillId": 1519,
+        "name": "不羁之种",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx09_-3065777601516650668.png",
+        "maxCharges": 2
+      },
+      {
+        "skillId": 1531,
+        "name": "自然庇护",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx08_-5368673168487156305.png",
+        "maxCharges": 2
+      },
+      {
+        "skillId": 1520,
+        "name": "灌注",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx01_-777893832486412878.png"
+      },
+      {
+        "skillId": 1541,
+        "name": "狂野绽放",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_tg01_2955740106852191547.png",
+        "maxCharges": 2
+      },
+      {
+        "skillId": 1523,
+        "name": "再生脉冲",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx05_-6309963487019551284.png"
+      },
+      {
+        "skillId": 1509,
+        "name": "繁盛·希望结界",
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_ult_5377337143300028519.png"
+      }
+    ]
   }
 }

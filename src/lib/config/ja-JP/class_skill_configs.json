@@ -192,5 +192,30 @@
         "derivedName": "癒しのビート"
       }
     ]
+  },
+  "verdant_oracle": {
+    "className": "ヴァーダントオラクル",
+    "skills": [
+      { "skillId": 1519, "name": "不羁の種" },
+      { "skillId": 1531, "name": "自然の加護" },
+      { "skillId": 1520, "name": "注入" },
+      { "skillId": 1541, "name": "ワイルドブルーム" },
+      { "skillId": 1523, "name": "再生パルス" },
+      { "skillId": 1509, "name": "繁栄・希望結界" }
+    ],
+    "derivations": [
+      {
+        "sourceSkillId": 1520,
+        "derivedSkillId": 1520,
+        "triggerBuffBaseId": 2202131,
+        "derivedName": "二重注入"
+      },
+      {
+        "sourceSkillId": 1541,
+        "derivedSkillId": 1541,
+        "triggerBuffBaseId": 2202252,
+        "derivedName": "ワイルドブルーム"
+      }
+    ]
   }
 }

@@ -192,5 +192,30 @@
         "derivedName": "Healing Beat"
       }
     ]
+  },
+  "verdant_oracle": {
+    "className": "Verdant Oracle",
+    "skills": [
+      { "skillId": 1519, "name": "Untamed Seed" },
+      { "skillId": 1531, "name": "Nature's Aegis" },
+      { "skillId": 1520, "name": "Infusion" },
+      { "skillId": 1541, "name": "Wild Bloom" },
+      { "skillId": 1523, "name": "Regenerating Pulse" },
+      { "skillId": 1509, "name": "Flourish · Hope Sanctum" }
+    ],
+    "derivations": [
+      {
+        "sourceSkillId": 1520,
+        "derivedSkillId": 1520,
+        "triggerBuffBaseId": 2202131,
+        "derivedName": "Double Infusion"
+      },
+      {
+        "sourceSkillId": 1541,
+        "derivedSkillId": 1541,
+        "triggerBuffBaseId": 2202252,
+        "derivedName": "Wild Bloom"
+      }
+    ]
   }
 }
