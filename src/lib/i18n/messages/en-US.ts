@@ -991,11 +991,11 @@ export const enUSMessages = {
   "skillMonitor.buff.status.aliased": "Alias set",
   "skillMonitor.buff.title": "Buff Monitor",
   "skillMonitor.buff.description":
-    "Search all buffs by name, including icon and text-only buffs",
+    "Search all buffs by name or ID, including icon and text-only buffs",
   "skillMonitor.buff.selectedSummary":
     "Selected buffs {buffCount} / categories {categoryCount}",
-  "skillMonitor.buff.placeholder": "Search buff name",
-  "skillMonitor.buff.searchPrompt": "Enter a keyword to search buffs",
+  "skillMonitor.buff.placeholder": "Search buff name or ID",
+  "skillMonitor.buff.searchPrompt": "Enter a name or ID to search buffs",
   "skillMonitor.buff.selectedTitle": "Selected Buffs",
   "skillMonitor.buff.alias.title": "Buff Alias Settings",
   "skillMonitor.buff.alias.configuredCount": "{count} aliases set",
@@ -1192,9 +1192,9 @@ export const enUSMessages = {
   "monsterMonitor.buffSearch.self": "Search and Add Self-Applied",
   "monsterMonitor.buffSearch.global": "Search and Add Global Monitor",
   "monsterMonitor.buffSearch.placeholderSelf":
-    "Search monster buffs to add as self-applied",
+    "Search monster buffs by name or ID to add as self-applied",
   "monsterMonitor.buffSearch.placeholderGlobal":
-    "Search monster buffs to add to global monitor",
+    "Search monster buffs by name or ID to add to global monitor",
   "monsterMonitor.buffSearch.empty": "No matching monster buffs",
   "monsterMonitor.buffSearch.status.addedGlobal": "Added globally",
   "monsterMonitor.buffSearch.status.currentSelf": "Currently self-applied",
@@ -1215,7 +1215,8 @@ export const enUSMessages = {
   "monsterMonitor.buffGroups.removeTitle": "Click to remove",
   "monsterMonitor.buffGroups.empty": "No buffs selected",
   "monsterMonitor.teammate.title": "Teammate Buff Monitor",
-  "monsterMonitor.teammate.placeholder": "Search and add teammate buffs",
+  "monsterMonitor.teammate.placeholder":
+    "Search teammate buffs by name or ID",
   "monsterMonitor.teammate.emptySearch": "No matching teammate buffs",
   "monsterMonitor.teammate.groupTitle": "Monitored Teammate Buffs",
   "monsterMonitor.teammate.styleTitle": "Teammate Buff Matrix Style",

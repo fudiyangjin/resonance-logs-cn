@@ -893,11 +893,11 @@ export const zhCNMessages = {
   "skillMonitor.buff.status.aliased": "已设别名",
   "skillMonitor.buff.title": "Buff 监控",
   "skillMonitor.buff.description":
-    "统一通过 Buff 名称搜索（含有图标/无图标 Buff）",
+    "统一通过 Buff 名称或 ID 搜索（含有图标/无图标 Buff）",
   "skillMonitor.buff.selectedSummary":
     "已选 Buff {buffCount} / 分类 {categoryCount}",
-  "skillMonitor.buff.placeholder": "搜索 Buff 名称",
-  "skillMonitor.buff.searchPrompt": "请输入关键词搜索 Buff",
+  "skillMonitor.buff.placeholder": "搜索 Buff 名称或 ID",
+  "skillMonitor.buff.searchPrompt": "请输入名称或 ID 搜索 Buff",
   "skillMonitor.buff.selectedTitle": "已选 Buff",
   "skillMonitor.buff.alias.title": "Buff 别名设置",
   "skillMonitor.buff.alias.configuredCount": "已设置别名 {count}",
@@ -1084,9 +1084,9 @@ export const zhCNMessages = {
   "monsterMonitor.buffSearch.self": "搜索加入仅自身施加",
   "monsterMonitor.buffSearch.global": "搜索加入全局监控",
   "monsterMonitor.buffSearch.placeholderSelf":
-    "搜索要加入仅自身施加的 Boss Buff",
+    "按名称或 ID 搜索要加入仅自身施加的 Boss Buff",
   "monsterMonitor.buffSearch.placeholderGlobal":
-    "搜索要加入全局监控的 Boss Buff",
+    "按名称或 ID 搜索要加入全局监控的 Boss Buff",
   "monsterMonitor.buffSearch.empty": "没有匹配的 Boss Buff",
   "monsterMonitor.buffSearch.status.addedGlobal": "已加全局",
   "monsterMonitor.buffSearch.status.currentSelf": "当前在仅自身",
@@ -1107,7 +1107,7 @@ export const zhCNMessages = {
   "monsterMonitor.buffGroups.removeTitle": "点击移除",
   "monsterMonitor.buffGroups.empty": "尚未选择 Buff",
   "monsterMonitor.teammate.title": "队友 Buff 监控",
-  "monsterMonitor.teammate.placeholder": "搜索并添加队友 Buff",
+  "monsterMonitor.teammate.placeholder": "按名称或 ID 搜索队友 Buff",
   "monsterMonitor.teammate.emptySearch": "没有匹配的队友 Buff",
   "monsterMonitor.teammate.groupTitle": "已监控队友 Buff",
   "monsterMonitor.teammate.styleTitle": "队友 Buff 矩阵样式",

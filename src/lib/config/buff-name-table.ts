@@ -236,6 +236,20 @@ function getMatchRank(
   return null;
 }
 
+function getIdMatchRank(
+  baseId: number,
+  normalizedKeyword: string,
+): number | null {
+  const normalizedIdKeyword = normalizedKeyword.replace(/^#/, "");
+  if (!/^\d+$/.test(normalizedIdKeyword)) return null;
+
+  const baseIdText = String(baseId);
+  if (baseIdText === normalizedIdKeyword) return 0;
+  if (baseIdText.startsWith(normalizedIdKeyword)) return 2;
+  if (baseIdText.includes(normalizedIdKeyword)) return 5;
+  return null;
+}
+
 export function lookupBuffMeta(
   baseId: number,
   locale = getLocale(),
@@ -343,9 +357,11 @@ export function searchBuffsByName(
 
   for (const meta of getBuffCatalog(locale).metaMap.values()) {
     const alias = normalizedAliases[String(meta.baseId)] ?? null;
+    const idRank = getIdMatchRank(meta.baseId, normalizedKeyword);
     const aliasRank = getMatchRank(alias, normalizedKeyword, 1, 2);
     const defaultRank = getMatchRank(meta.defaultName, normalizedKeyword, 3, 4);
     const rank = Math.min(
+      idRank ?? Number.POSITIVE_INFINITY,
       aliasRank ?? Number.POSITIVE_INFINITY,
       defaultRank ?? Number.POSITIVE_INFINITY,
     );

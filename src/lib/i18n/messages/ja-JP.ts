@@ -973,11 +973,11 @@ export const jaJPMessages = {
   "skillMonitor.buff.status.aliased": "別名設定済み",
   "skillMonitor.buff.title": "Buff モニター",
   "skillMonitor.buff.description":
-    "アイコン付き/テキストのみの Buff を含め、名前ですべての Buff を検索",
+    "アイコン付き/テキストのみの Buff を含め、名前または ID ですべての Buff を検索",
   "skillMonitor.buff.selectedSummary":
     "選択 Buff {buffCount} / カテゴリ {categoryCount}",
-  "skillMonitor.buff.placeholder": "Buff 名を検索",
-  "skillMonitor.buff.searchPrompt": "キーワードを入力して Buff を検索",
+  "skillMonitor.buff.placeholder": "Buff 名または ID を検索",
+  "skillMonitor.buff.searchPrompt": "名前または ID を入力して Buff を検索",
   "skillMonitor.buff.selectedTitle": "選択した Buff",
   "skillMonitor.buff.alias.title": "Buff 別名設定",
   "skillMonitor.buff.alias.configuredCount": "{count} 件の別名を設定",
@@ -1177,9 +1177,9 @@ export const jaJPMessages = {
   "monsterMonitor.buffSearch.self": "検索して自己付与を追加",
   "monsterMonitor.buffSearch.global": "検索してグローバルモニターを追加",
   "monsterMonitor.buffSearch.placeholderSelf":
-    "自己付与として追加するモンスター Buff を検索",
+    "自己付与として追加するモンスター Buff を名前または ID で検索",
   "monsterMonitor.buffSearch.placeholderGlobal":
-    "グローバルモニターに追加するモンスター Buff を検索",
+    "グローバルモニターに追加するモンスター Buff を名前または ID で検索",
   "monsterMonitor.buffSearch.empty": "一致するモンスター Buff がありません",
   "monsterMonitor.buffSearch.status.addedGlobal": "グローバルに追加済み",
   "monsterMonitor.buffSearch.status.currentSelf": "現在は自己付与",
@@ -1200,7 +1200,7 @@ export const jaJPMessages = {
   "monsterMonitor.buffGroups.removeTitle": "クリックで削除",
   "monsterMonitor.buffGroups.empty": "Buff が選択されていません",
   "monsterMonitor.teammate.title": "味方 Buff モニター",
-  "monsterMonitor.teammate.placeholder": "味方 Buff を検索して追加",
+  "monsterMonitor.teammate.placeholder": "味方 Buff を名前または ID で検索",
   "monsterMonitor.teammate.emptySearch": "一致する味方 Buff がありません",
   "monsterMonitor.teammate.groupTitle": "モニター中の味方 Buff",
   "monsterMonitor.teammate.styleTitle": "味方 Buff マトリクススタイル",
