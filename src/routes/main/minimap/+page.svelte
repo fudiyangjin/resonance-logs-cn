@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { createDefaultMinimapConfig, SETTINGS } from "$lib/settings-store";
+  import {
+    createDefaultMinimapConfig,
+    SETTINGS,
+  } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
   import SettingsColor from "../dps/settings/settings-color.svelte";
   import SettingsSlider from "../dps/settings/settings-slider.svelte";
@@ -9,21 +12,30 @@
 
   type LegacyMinimapConfig = typeof defaultMinimapConfig & {
     autoHideInDailyScenes?: boolean;
+    hideAllTeammates?: boolean;
     showBoss?: boolean;
     showMarkers?: boolean;
     entityColors?: Partial<typeof defaultMinimapConfig.entityColors>;
+    entitySizes?: Partial<typeof defaultMinimapConfig.entitySizes>;
     markerColors?: Partial<typeof defaultMinimapConfig.markerColors>;
     localRing?: Partial<typeof defaultMinimapConfig.localRing>;
     localFacing?: Partial<typeof defaultMinimapConfig.localFacing>;
+    infoPanelStyle?: Partial<typeof defaultMinimapConfig.infoPanelStyle>;
   };
 
   function ensureMinimapSettingsDefaults() {
     const state = SETTINGS.minimap.state as LegacyMinimapConfig;
     state.autoHideInDailyScenes ??= defaultMinimapConfig.autoHideInDailyScenes;
+    state.hideAllTeammates ??= defaultMinimapConfig.hideAllTeammates;
     state.showBoss ??= defaultMinimapConfig.showBoss;
     state.showMarkers ??= defaultMinimapConfig.showMarkers;
     state.entityColors ??= { ...defaultMinimapConfig.entityColors };
     state.entityColors.boss ??= defaultMinimapConfig.entityColors.boss;
+    state.entitySizes ??= { ...defaultMinimapConfig.entitySizes };
+    state.entitySizes.local ??= defaultMinimapConfig.entitySizes.local;
+    state.entitySizes.teammate ??= defaultMinimapConfig.entitySizes.teammate;
+    state.entitySizes.boss ??= defaultMinimapConfig.entitySizes.boss;
+    state.entitySizes.other ??= defaultMinimapConfig.entitySizes.other;
     state.markerColors ??= { ...defaultMinimapConfig.markerColors };
     state.markerColors.m1 ??= defaultMinimapConfig.markerColors.m1;
     state.markerColors.m2 ??= defaultMinimapConfig.markerColors.m2;
@@ -37,6 +49,9 @@
     state.localRing.width ??= defaultMinimapConfig.localRing.width;
     state.localFacing ??= { ...defaultMinimapConfig.localFacing };
     state.localFacing.enabled ??= defaultMinimapConfig.localFacing.enabled;
+    state.infoPanelStyle ??= { ...defaultMinimapConfig.infoPanelStyle };
+    state.infoPanelStyle.backgroundOpacity ??=
+      defaultMinimapConfig.infoPanelStyle.backgroundOpacity;
   }
 
   ensureMinimapSettingsDefaults();
@@ -48,9 +63,11 @@
     void minimapSettings.showMarkers;
     void minimapSettings.autoHideInDailyScenes;
     void minimapSettings.entityColors;
+    void minimapSettings.entitySizes;
     void minimapSettings.markerColors;
     void minimapSettings.localRing;
     void minimapSettings.localFacing;
+    void minimapSettings.infoPanelStyle;
     ensureMinimapSettingsDefaults();
   });
 
@@ -84,6 +101,12 @@
       bind:checked={minimapSettings.hideNormalTeammates}
       label={t("minimap.settings.hideNormalTeammates.label")}
       description={t("minimap.settings.hideNormalTeammates.description")}
+    />
+
+    <SettingsSwitch
+      bind:checked={minimapSettings.hideAllTeammates}
+      label={t("minimap.settings.hideAllTeammates.label")}
+      description={t("minimap.settings.hideAllTeammates.description")}
     />
 
     {#if minimapSettings.showBoss !== undefined}
@@ -138,6 +161,31 @@
         {t("minimap.overlay.help")}
       </p>
     </div>
+
+    <div class="space-y-3 border-t border-border/40 pt-3">
+      <label class="text-muted-foreground block text-xs">
+        {t("overlay.style.backgroundOpacity", {
+          value: Math.round(
+            (minimapSettings.infoPanelStyle?.backgroundOpacity ?? 0.76) * 100,
+          ),
+        })}
+        <input
+          class="mt-1 w-full"
+          type="range"
+          min="0"
+          max="1"
+          step="0.02"
+          value={minimapSettings.infoPanelStyle?.backgroundOpacity ?? 0.76}
+          oninput={(event) =>
+            (minimapSettings.infoPanelStyle = {
+              ...minimapSettings.infoPanelStyle,
+              backgroundOpacity: Number(
+                (event.currentTarget as HTMLInputElement).value,
+              ),
+            })}
+        />
+      </label>
+    </div>
   </section>
 
   <section
@@ -168,6 +216,56 @@
         />
       {/if}
     </div>
+  </section>
+
+  <section
+    class="border-border/60 bg-card/40 space-y-4 rounded-lg border p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+  >
+    <div>
+      <h2 class="text-foreground text-base font-semibold">
+        {t("minimap.settings.sizes.title")}
+      </h2>
+      <p class="text-muted-foreground text-xs">
+        {t("minimap.settings.sizes.description")}
+      </p>
+    </div>
+
+    {#if minimapSettings.entitySizes}
+      <div class="grid gap-2 lg:grid-cols-2">
+        <SettingsSlider
+          bind:value={minimapSettings.entitySizes.local}
+          label={t("minimap.settings.sizes.local")}
+          min={1}
+          max={20}
+          step={1}
+          unit="px"
+        />
+        <SettingsSlider
+          bind:value={minimapSettings.entitySizes.teammate}
+          label={t("minimap.settings.sizes.teammate")}
+          min={1}
+          max={20}
+          step={1}
+          unit="px"
+        />
+        <SettingsSlider
+          bind:value={minimapSettings.entitySizes.boss}
+          label={t("minimap.settings.sizes.boss")}
+          min={1}
+          max={24}
+          step={1}
+          unit="px"
+        />
+        <SettingsSlider
+          bind:value={minimapSettings.entitySizes.other}
+          label={t("minimap.settings.sizes.other")}
+          min={1}
+          max={24}
+          step={1}
+          unit="px"
+        />
+      </div>
+    {/if}
   </section>
 
   <section

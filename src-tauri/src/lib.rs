@@ -13,7 +13,10 @@ use std::sync::OnceLock;
 
 use tauri::menu::MenuBuilder;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{Emitter, LogicalPosition, LogicalSize, Manager, Position, Size, Window, WindowEvent};
+use tauri::{
+    Emitter, LogicalPosition, LogicalSize, Manager, PhysicalPosition, Position, Size, Window,
+    WindowEvent,
+};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 // NOTE: the updater extension trait is imported next to the helper that uses it
 // and is cfg-gated to avoid unused-import warnings on builds that don't enable
@@ -679,6 +682,37 @@ fn show_window_and_focus(window: &tauri::WebviewWindow) {
     }
 }
 
+fn center_window_on_primary_monitor(window: &tauri::WebviewWindow) {
+    let label = window.label();
+    let monitor = match window.primary_monitor() {
+        Ok(Some(monitor)) => monitor,
+        Ok(None) => {
+            warn!("no primary monitor found while centering {}", label);
+            return;
+        }
+        Err(e) => {
+            warn!("failed to query primary monitor for {}: {}", label, e);
+            return;
+        }
+    };
+    let win_size = match window.outer_size() {
+        Ok(size) => size,
+        Err(e) => {
+            warn!("failed to read size of {}: {}", label, e);
+            return;
+        }
+    };
+
+    let monitor_pos = monitor.position();
+    let monitor_size = monitor.size();
+    let x = monitor_pos.x + (monitor_size.width as i32 - win_size.width as i32) / 2;
+    let y = monitor_pos.y + (monitor_size.height as i32 - win_size.height as i32) / 2;
+
+    if let Err(e) = window.set_position(Position::Physical(PhysicalPosition { x, y })) {
+        warn!("failed to center {}: {}", label, e);
+    }
+}
+
 fn disable_live_clickthrough(app: &tauri::AppHandle, window: &tauri::WebviewWindow) {
     if let Err(e) = window.set_ignore_cursor_events(false) {
         warn!(
@@ -710,7 +744,7 @@ fn setup_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
         .text("show-settings", "Show Settings")
         .separator()
         .text("show-live", "Show Live Meter")
-        .text("reset", "Reset Window")
+        .text("reset", "Reset All Windows")
         .text("clickthrough", "Disable Clickthrough")
         .separator()
         .text("quit", "Quit")
@@ -753,6 +787,16 @@ fn setup_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                     warn!("failed to set position for live window: {}", e);
                 }
                 show_window_and_focus(&live_meter_window);
+
+                for label in [
+                    WINDOW_GAME_OVERLAY_LABEL,
+                    WINDOW_MONSTER_OVERLAY_LABEL,
+                    WINDOW_MINIMAP_OVERLAY_LABEL,
+                ] {
+                    if let Some(window) = tray_app.get_webview_window(label) {
+                        center_window_on_primary_monitor(&window);
+                    }
+                }
             }
             "clickthrough" => {
                 let Some(live_meter_window) = tray_app.get_webview_window(WINDOW_LIVE_LABEL) else {

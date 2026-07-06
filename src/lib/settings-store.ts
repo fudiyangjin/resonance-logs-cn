@@ -274,6 +274,13 @@ export type MinimapLocalFacing = {
   enabled: boolean;
 };
 
+export type MinimapEntitySizes = {
+  local: number;
+  teammate: number;
+  boss: number;
+  other: number;
+};
+
 export type MinimapMarkerColors = {
   m1: string;
   m2: string;
@@ -283,9 +290,14 @@ export type MinimapMarkerColors = {
   m6: string;
 };
 
+export type MinimapInfoPanelStyle = {
+  backgroundOpacity: number;
+};
+
 export type MinimapConfig = {
   autoHideInDailyScenes: boolean;
   hideNormalTeammates: boolean;
+  hideAllTeammates: boolean;
   showBoss: boolean;
   showMarkers: boolean;
   showMapPanel: boolean;
@@ -293,9 +305,11 @@ export type MinimapConfig = {
   mapPanel: MinimapPanelRect;
   infoPanel: MinimapPanelRect;
   entityColors: MinimapEntityColors;
+  entitySizes: MinimapEntitySizes;
   markerColors: MinimapMarkerColors;
   localRing: MinimapLocalRing;
   localFacing: MinimapLocalFacing;
+  infoPanelStyle: MinimapInfoPanelStyle;
 };
 
 export type PanelAttrConfig = {
@@ -598,6 +612,7 @@ export type OverlaySizes = {
   panelAttrGap: number;
   panelAttrFontSize: number;
   panelAttrColumnGap: number;
+  panelAttrTextStyle: OverlayTextStyle;
   iconBuffSizes: Record<number, number>;
   skillDurationSizes: Record<number, number>;
   categoryIconSizes?: Partial<Record<BuffCategoryKey, number>>;
@@ -612,6 +627,12 @@ export type OverlayVisibility = {
   showShieldDetailGroup: boolean;
 };
 
+export type OverlayTextStyle = {
+  textShadowEnabled: boolean;
+  backgroundEnabled: boolean;
+  backgroundOpacity: number;
+};
+
 export type CustomPanelStyle = {
   gap: number;
   columnGap: number;
@@ -620,7 +641,7 @@ export type CustomPanelStyle = {
   valueColor: string;
   progressColor: string;
   progressOpacity: number;
-};
+} & OverlayTextStyle;
 
 export type TeammateBuffColumnKey =
   | `buff:${number}`
@@ -642,7 +663,7 @@ export type ShieldDetailStyle = {
   hpColor: string;
   shieldColor: string;
   healShieldColor: string;
-};
+} & OverlayTextStyle;
 
 export type MonsterOverlayPositions = {
   monsterBuffPanel: Point;
@@ -695,6 +716,7 @@ export type MonsterMonitorConfig = {
   teammateBuffColumnOrder?: TeammateBuffColumnKey[];
   fantasyWhitelistMonsterIds: number[];
   fantasyMonsterAliases: Record<string, string>;
+  dbmAliases: Record<string, string>;
   fantasyShowAll: boolean;
   fantasyPersistentDisplay: boolean;
   buffPriorityIds: number[];
@@ -722,7 +744,7 @@ export type TextBuffPanelStyle = {
   valueColor: string;
   progressColor: string;
   progressOpacity: number;
-};
+} & OverlayTextStyle;
 
 export type BuffDisplayMode = "individual" | "grouped";
 
@@ -800,6 +822,9 @@ export type SkillMonitorProfile = {
   customPanelStyle?: CustomPanelStyle;
   textBuffPanelStyle?: TextBuffPanelStyle;
   shieldDetailStyle?: ShieldDetailStyle;
+  /** Shared text style applied to overlay groups without a dedicated style
+   * config (skill Cd, resource, panel attr, buff icon/duration groups). */
+  overlayTextStyle?: OverlayTextStyle;
   textBuffMaxVisible: number;
   overlayPositions: OverlayPositions;
   overlaySizes: OverlaySizes;
@@ -814,6 +839,18 @@ export function ensureBuffAliases(
     const trimmed = alias.trim();
     if (!trimmed) continue;
     next[baseId] = trimmed;
+  }
+  return next;
+}
+
+export function ensureDbmAliases(
+  dbmAliases: Record<string, string> | null | undefined,
+): Record<string, string> {
+  const next: Record<string, string> = {};
+  for (const [id, alias] of Object.entries(dbmAliases ?? {})) {
+    const trimmed = alias.trim();
+    if (!trimmed) continue;
+    next[id] = trimmed;
   }
   return next;
 }
@@ -887,6 +924,7 @@ function createDefaultOverlaySizes(): OverlaySizes {
     panelAttrGap: 4,
     panelAttrFontSize: 14,
     panelAttrColumnGap: 12,
+    panelAttrTextStyle: createDefaultOverlayTextStyle(),
     iconBuffSizes: {},
     skillDurationSizes: {},
     categoryIconSizes: {},
@@ -904,6 +942,28 @@ function createDefaultOverlayVisibility(): OverlayVisibility {
   };
 }
 
+export function createDefaultOverlayTextStyle(): OverlayTextStyle {
+  return {
+    textShadowEnabled: true,
+    backgroundEnabled: false,
+    backgroundOpacity: 0.76,
+  };
+}
+
+export function ensureOverlayTextStyle(
+  style: Partial<OverlayTextStyle> | null | undefined,
+): OverlayTextStyle {
+  const base = createDefaultOverlayTextStyle();
+  return {
+    textShadowEnabled: style?.textShadowEnabled ?? base.textShadowEnabled,
+    backgroundEnabled: style?.backgroundEnabled ?? base.backgroundEnabled,
+    backgroundOpacity: Math.max(
+      0,
+      Math.min(1, Number(style?.backgroundOpacity ?? base.backgroundOpacity)),
+    ),
+  };
+}
+
 export function createDefaultCustomPanelStyle(): CustomPanelStyle {
   return {
     gap: 6,
@@ -913,6 +973,7 @@ export function createDefaultCustomPanelStyle(): CustomPanelStyle {
     valueColor: "#ffffff",
     progressColor: "#ffffff",
     progressOpacity: 0.4,
+    ...createDefaultOverlayTextStyle(),
   };
 }
 
@@ -999,6 +1060,7 @@ export function ensureTeammatePanelStyle(
       0,
       Math.min(1, Number(style?.progressOpacity ?? base.progressOpacity)),
     ),
+    ...ensureOverlayTextStyle(style),
     rowHeight: Math.max(
       16,
       Math.min(
@@ -1045,6 +1107,7 @@ function createDefaultTextBuffPanelStyle(): TextBuffPanelStyle {
     valueColor: "#ffffff",
     progressColor: "#ffffff",
     progressOpacity: 0.4,
+    ...createDefaultOverlayTextStyle(),
   };
 }
 
@@ -1109,6 +1172,7 @@ export function createDefaultSkillMonitorProfile(
     inlineBuffEntries: [],
     panelAreaRowOrder: [],
     textBuffPanelStyle: createDefaultTextBuffPanelStyle(),
+    overlayTextStyle: createDefaultOverlayTextStyle(),
     textBuffMaxVisible: 10,
     overlayPositions: createDefaultOverlayPositions(),
     overlaySizes: createDefaultOverlaySizes(),
@@ -1131,6 +1195,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     teammateBuffColumnOrder: [],
     fantasyWhitelistMonsterIds: [],
     fantasyMonsterAliases: {},
+    dbmAliases: {},
     fantasyShowAll: false,
     fantasyPersistentDisplay: false,
     buffPriorityIds: [],
@@ -1152,6 +1217,7 @@ export function createDefaultMinimapConfig(): MinimapConfig {
   return {
     autoHideInDailyScenes: false,
     hideNormalTeammates: true,
+    hideAllTeammates: false,
     showBoss: false,
     showMarkers: false,
     showMapPanel: false,
@@ -1162,6 +1228,12 @@ export function createDefaultMinimapConfig(): MinimapConfig {
       local: "#f8fafc",
       teammate: "#38bdf8",
       boss: "#ef4444",
+    },
+    entitySizes: {
+      local: 4,
+      teammate: 4,
+      boss: 10,
+      other: 10,
     },
     markerColors: {
       m1: "#facc15",
@@ -1178,6 +1250,9 @@ export function createDefaultMinimapConfig(): MinimapConfig {
     },
     localFacing: {
       enabled: false,
+    },
+    infoPanelStyle: {
+      backgroundOpacity: 0.76,
     },
   };
 }
@@ -1515,6 +1590,7 @@ const DEFAULT_SETTINGS = {
     customFontMonoEnabled: false,
     customFontMonoUrl: "" as string,
     customFontMonoName: "" as string,
+    customFontApplyToOverlay: false,
   },
   shortcuts: {
     showLiveMeter: "",

@@ -9,6 +9,10 @@
     startResize,
   } from "./overlay-state.svelte.js";
   import { t } from "$lib/i18n/index.svelte";
+  import {
+    overlayPanelBackground,
+    overlayTextShadow,
+  } from "$lib/overlay-text-style";
 
   const editing = $derived(isEditing());
   const scaffold = $derived(isLayoutScaffold());
@@ -28,14 +32,23 @@
 {#each groups as group, groupIndex (group.id)}
   {@const rows = rowsByGroup.get(group.id) ?? []}
   {@const styleConfig = group.style}
+  {@const backgroundVar = overlayPanelBackground(
+    styleConfig.backgroundEnabled,
+    styleConfig.backgroundOpacity,
+  )}
   {#if rows.length > 0 || scaffold}
     <div
       class="overlay-group custom-panel-group"
       class:editable={editing}
+      class:has-background={backgroundVar !== undefined}
       style:left={`${group.position.x}px`}
       style:top={`${group.position.y}px`}
       style:transform={`scale(${group.scale})`}
       style:transform-origin="top left"
+      style:--overlay-text-shadow={overlayTextShadow(
+        styleConfig.textShadowEnabled,
+      )}
+      style:background={backgroundVar}
       onpointerdown={(e) =>
         startDrag(
           e,
@@ -90,6 +103,12 @@
 <style>
   .custom-panel-group {
     min-width: 220px;
+  }
+
+  .custom-panel-group.has-background {
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
   }
 
   .custom-panel-group.editable {

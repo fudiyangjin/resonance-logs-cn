@@ -6,6 +6,9 @@ export type SeaRingedReefMechanicView = {
   regions: MechanicRegion[];
   rows: MechanicRow[];
   entityColorSlots: Map<string, number>;
+  /** Per-entity safe-zone status for the wave-cross mechanic. Empty outside
+   * the boss wave phase (e.g. matrix arena). */
+  waveSafeStatus: Map<string, boolean>;
 };
 
 const MATRIX_MONSTER_ID = 4639;
@@ -99,6 +102,7 @@ export function buildMatrixMechanicView(
     regions,
     rows: [...rows.values()],
     entityColorSlots,
+    waveSafeStatus: new Map(),
   };
 }
 

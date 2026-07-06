@@ -8,6 +8,9 @@ import {
   type ShieldDetailStyle,
   type SkillMonitorProfile,
   type TextBuffPanelStyle,
+  createDefaultCustomPanelStyle,
+  createDefaultOverlayTextStyle,
+  ensureOverlayTextStyle,
 } from "$lib/settings-store";
 
 export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
@@ -20,6 +23,7 @@ export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   panelAttrGap: 4,
   panelAttrFontSize: 14,
   panelAttrColumnGap: 12,
+  panelAttrTextStyle: createDefaultOverlayTextStyle(),
   iconBuffSizes: {},
   skillDurationSizes: {},
   categoryIconSizes: {},
@@ -157,9 +161,26 @@ export function ensureOverlaySizes(profile: SkillMonitorProfile): OverlaySizes {
       0,
       240,
     ),
+    panelAttrTextStyle: ensureOverlayTextStyle(current?.panelAttrTextStyle),
     iconBuffSizes: current?.iconBuffSizes ?? {},
     skillDurationSizes: current?.skillDurationSizes ?? {},
     categoryIconSizes: current?.categoryIconSizes ?? {},
+  };
+}
+
+export function normalizeCustomPanelStyle(
+  style: CustomPanelStyle | null | undefined,
+): CustomPanelStyle {
+  const base = createDefaultCustomPanelStyle();
+  return {
+    gap: clampRounded(style?.gap ?? base.gap, 0, 24),
+    columnGap: clampRounded(style?.columnGap ?? base.columnGap, 0, 240),
+    fontSize: clampRounded(style?.fontSize ?? base.fontSize, 10, 28),
+    nameColor: style?.nameColor ?? base.nameColor,
+    valueColor: style?.valueColor ?? base.valueColor,
+    progressColor: style?.progressColor ?? base.progressColor,
+    progressOpacity: clampDecimal(style?.progressOpacity ?? base.progressOpacity, 0, 1),
+    ...ensureOverlayTextStyle(style),
   };
 }
 
@@ -169,16 +190,7 @@ export function ensureCustomPanelStyle(
     | null
     | undefined,
 ): CustomPanelStyle {
-  const current = source?.customPanelStyle;
-  return {
-    gap: clampRounded(current?.gap ?? 6, 0, 24),
-    columnGap: clampRounded(current?.columnGap ?? 12, 0, 240),
-    fontSize: clampRounded(current?.fontSize ?? 14, 10, 28),
-    nameColor: current?.nameColor ?? "#ffffff",
-    valueColor: current?.valueColor ?? "#ffffff",
-    progressColor: current?.progressColor ?? "#ffffff",
-    progressOpacity: clampDecimal(current?.progressOpacity ?? 0.4, 0, 1),
-  };
+  return normalizeCustomPanelStyle(source?.customPanelStyle);
 }
 
 export function ensureFactorSlotLabels(
@@ -206,6 +218,7 @@ export function ensureTextBuffPanelStyle(
     valueColor: current?.valueColor ?? "#ffffff",
     progressColor: current?.progressColor ?? "#ffffff",
     progressOpacity: clampDecimal(current?.progressOpacity ?? 0.4, 0, 1),
+    ...ensureOverlayTextStyle(current),
   };
 }
 
@@ -223,5 +236,6 @@ export function ensureShieldDetailStyle(
     hpColor: current?.hpColor ?? "#4ade80",
     shieldColor: current?.shieldColor ?? "#60a5fa",
     healShieldColor: current?.healShieldColor ?? "#fde68a",
+    ...ensureOverlayTextStyle(current),
   };
 }

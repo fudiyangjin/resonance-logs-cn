@@ -4,32 +4,18 @@
   import SwordsIcon from "virtual:icons/lucide/swords";
   import ExternalLinkIcon from "virtual:icons/lucide/external-link";
   import PlayIcon from "virtual:icons/lucide/play";
+  import PauseIcon from "virtual:icons/lucide/pause";
   import PenSquareIcon from "virtual:icons/lucide/pen-square";
   import ProfileSwitcher from "./profile-switcher.svelte";
   import { t } from "$lib/i18n/index.svelte";
+  import {
+    isOverlayWindowVisible,
+    toggleOverlayWindow,
+  } from "$lib/overlay-window-visibility.svelte";
 
   let { children } = $props();
 
-  async function toggleOverlayWindow() {
-    try {
-      const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
-      if (overlayWindow !== null) {
-        const isVisible = await overlayWindow.isVisible();
-
-        if (isVisible) {
-          await overlayWindow.hide();
-        } else {
-          await overlayWindow.show();
-          await overlayWindow.unminimize();
-          await overlayWindow.setFocus();
-        }
-      } else {
-        console.warn("Game overlay window not found");
-      }
-    } catch (err) {
-      console.error("Failed to toggle overlay window:", err);
-    }
-  }
+  const overlayVisible = $derived(isOverlayWindowVisible("game-overlay"));
 
   async function toggleOverlayEditMode() {
     try {
@@ -60,10 +46,17 @@
     <div class="flex items-center gap-2">
       <button
         type="button"
-        class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors shadow-sm"
-        onclick={toggleOverlayWindow}
+        aria-pressed={overlayVisible}
+        class="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm shadow-sm transition-colors {overlayVisible
+          ? 'border border-border/60 bg-muted/30 text-foreground hover:bg-muted/50'
+          : 'bg-primary text-primary-foreground hover:bg-primary/90'}"
+        onclick={() => toggleOverlayWindow("game-overlay")}
       >
-        <PlayIcon class="w-4 h-4" />
+        {#if overlayVisible}
+          <PauseIcon class="w-4 h-4" />
+        {:else}
+          <PlayIcon class="w-4 h-4" />
+        {/if}
         <span>{t("skillMonitor.layout.toggleOverlayWindow")}</span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>

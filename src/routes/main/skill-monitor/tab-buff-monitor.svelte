@@ -12,10 +12,12 @@
     BuffAlertRule,
     BuffDisplayMode,
     BuffGroup,
+    OverlayTextStyle,
     TextBuffPanelDisplayMode,
     TextBuffPanelStyle,
   } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
+  import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
 
   type BuffGroupUpdateHandler = (
     updater: (curr: BuffGroup) => BuffGroup,
@@ -65,6 +67,13 @@
     setTextBuffPanelValueColor: (value: string) => void;
     setTextBuffPanelProgressColor: (value: string) => void;
     setTextBuffPanelProgressOpacity: (value: number) => void;
+    setTextBuffPanelTextShadowEnabled: (value: boolean) => void;
+    setTextBuffPanelBackgroundEnabled: (value: boolean) => void;
+    setTextBuffPanelBackgroundOpacity: (value: number) => void;
+    overlayTextStyle: OverlayTextStyle;
+    setOverlayTextShadowEnabled: (value: boolean) => void;
+    setOverlayBackgroundEnabled: (value: boolean) => void;
+    setOverlayBackgroundOpacity: (value: number) => void;
 
     globalPrioritySearch: string;
     globalPrioritySearchResults: BuffNameInfo[];
@@ -163,6 +172,13 @@
     setTextBuffPanelValueColor,
     setTextBuffPanelProgressColor,
     setTextBuffPanelProgressOpacity,
+    setTextBuffPanelTextShadowEnabled,
+    setTextBuffPanelBackgroundEnabled,
+    setTextBuffPanelBackgroundOpacity,
+    overlayTextStyle,
+    setOverlayTextShadowEnabled,
+    setOverlayBackgroundEnabled,
+    setOverlayBackgroundOpacity,
     globalPrioritySearch,
     globalPrioritySearchResults,
     setGlobalPrioritySearch,
@@ -812,6 +828,27 @@
             )}
         />
       </label>
+    </div>
+    <OverlayTextStyleFields
+      textShadowEnabled={textBuffPanelStyle.textShadowEnabled}
+      backgroundEnabled={textBuffPanelStyle.backgroundEnabled}
+      backgroundOpacity={textBuffPanelStyle.backgroundOpacity}
+      onTextShadowEnabled={setTextBuffPanelTextShadowEnabled}
+      onBackgroundEnabled={setTextBuffPanelBackgroundEnabled}
+      onBackgroundOpacity={setTextBuffPanelBackgroundOpacity}
+    />
+    <div class="border-t border-border/40 pt-3">
+      <div class="text-muted-foreground mb-2 text-xs font-medium">
+        {t("skillMonitor.overlay.sharedTextStyle")}
+      </div>
+      <OverlayTextStyleFields
+        textShadowEnabled={overlayTextStyle.textShadowEnabled}
+        backgroundEnabled={overlayTextStyle.backgroundEnabled}
+        backgroundOpacity={overlayTextStyle.backgroundOpacity}
+        onTextShadowEnabled={setOverlayTextShadowEnabled}
+        onBackgroundEnabled={setOverlayBackgroundEnabled}
+        onBackgroundOpacity={setOverlayBackgroundOpacity}
+      />
     </div>
   </div>
 

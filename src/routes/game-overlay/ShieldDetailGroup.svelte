@@ -14,6 +14,10 @@
     startResize,
     overlayNow,
   } from "./overlay-state.svelte.js";
+  import {
+    overlayPanelBackground,
+    overlayTextShadow,
+  } from "$lib/overlay-text-style";
 
   const editing = $derived(isEditing());
   const groupPos = $derived(getGroupPosition("shieldDetailGroup"));
@@ -31,6 +35,11 @@
   );
   const showEntryRows = $derived(style.showShieldEntries && entries.length > 0);
   const hasData = $derived(showHpRow || showTotalShieldRow || showEntryRows);
+
+  const textShadowVar = $derived(overlayTextShadow(style.textShadowEnabled));
+  const backgroundVar = $derived(
+    overlayPanelBackground(style.backgroundEnabled, style.backgroundOpacity),
+  );
 
   // Track previous shield values to detect which buff was recently reduced
   let prevShieldMap = $state<Map<number, number>>(new Map());
@@ -132,10 +141,13 @@
   <div
     class="overlay-group shield-detail-group"
     class:editable={editing}
+    class:has-background={backgroundVar !== undefined}
     style:left={`${groupPos.x}px`}
     style:top={`${groupPos.y}px`}
     style:transform={`scale(${groupScale})`}
     style:transform-origin="top left"
+    style:--overlay-text-shadow={textShadowVar}
+    style:background={backgroundVar}
     onpointerdown={(e) =>
       startDrag(e, { kind: "group", key: "shieldDetailGroup" }, groupPos)}
   >
@@ -263,6 +275,12 @@
 {/if}
 
 <style>
+  .shield-detail-group.has-background {
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+  }
+
   .shield-detail-group.editable {
     border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
@@ -291,7 +309,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    text-shadow: var(--overlay-text-shadow, 0 0 4px rgba(0, 0, 0, 0.8));
     flex-shrink: 0;
     text-align: right;
   }
@@ -340,7 +358,7 @@
     align-items: center;
     justify-content: center;
     color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+    text-shadow: var(--overlay-text-shadow, 0 0 4px rgba(0, 0, 0, 0.9));
     font-size: 0.85em;
     line-height: 1;
     white-space: nowrap;
@@ -356,7 +374,7 @@
     color: rgba(220, 220, 255, 0.85);
     font-size: 0.85em;
     white-space: nowrap;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    text-shadow: var(--overlay-text-shadow, 0 0 4px rgba(0, 0, 0, 0.8));
     flex-shrink: 0;
     min-width: 32px;
     text-align: right;

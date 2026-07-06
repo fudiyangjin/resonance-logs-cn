@@ -25,3 +25,9 @@ export function getLocaleFallbackChain(value: unknown): AppLocale[] {
   const locale = normalizeLocale(value);
   return [locale, ...FALLBACK_LOCALES[locale]];
 }
+
+export const LOCALE_NATIVE_NAMES: Record<AppLocale, string> = {
+  "zh-CN": "简体中文",
+  "en-US": "English",
+  "ja-JP": "日本語",
+};

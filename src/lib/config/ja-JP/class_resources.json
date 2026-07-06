@@ -54,5 +54,19 @@
       "maxId": 12047,
       "label": "雷印"
     }
+  ],
+  "verdant_oracle": [
+    {
+      "type": "bar",
+      "currentId": 15001,
+      "maxId": 15007,
+      "label": "Energy"
+    },
+    {
+      "type": "charges",
+      "currentId": 15011,
+      "maxId": 15017,
+      "label": "Flower"
+    }
   ]
 }

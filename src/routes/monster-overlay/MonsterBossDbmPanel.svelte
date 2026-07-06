@@ -2,6 +2,10 @@
   import TextBuffRow from "$lib/components/TextBuffRow.svelte";
   import { t } from "$lib/i18n/index.svelte";
   import {
+    overlayPanelBackground,
+    overlayTextShadow,
+  } from "$lib/overlay-text-style";
+  import {
     dbmPanelStyle,
     getDbmPanelPosition,
     getDbmPanelScale,
@@ -24,10 +28,18 @@
   <div
     class="overlay-group monster-boss-dbm-panel"
     class:editable={editing}
+    class:has-background={styleConfig.backgroundEnabled === true}
     style:left={`${panelPos.x}px`}
     style:top={`${panelPos.y}px`}
     style:transform={`scale(${panelScale})`}
     style:transform-origin="top left"
+    style:--overlay-text-shadow={overlayTextShadow(
+      styleConfig.textShadowEnabled,
+    )}
+    style:background={overlayPanelBackground(
+      styleConfig.backgroundEnabled,
+      styleConfig.backgroundOpacity,
+    )}
     onpointerdown={(event) =>
       startMonsterDrag(event, { kind: "dbmPanel" }, panelPos)}
   >
@@ -67,6 +79,12 @@
   .monster-boss-dbm-panel {
     min-width: 200px;
     max-width: 360px;
+  }
+
+  .monster-boss-dbm-panel.has-background {
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
   }
 
   .monster-boss-dbm-panel.editable {

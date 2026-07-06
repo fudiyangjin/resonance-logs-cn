@@ -437,7 +437,11 @@ function buildDbmRows(now: number): TextBuffDisplay[] {
       createTimeMs: event.createTimeMs,
       row: {
         key: `${event.baseSkillId}:${event.skillEffectId}`,
-        label: resolveDbmSkillName(event.skillEffectId, event.baseSkillId),
+        label: resolveDbmSkillName(
+          event.skillEffectId,
+          event.baseSkillId,
+          SETTINGS.monsterMonitor.state.dbmAliases,
+        ),
         valueText: formatTimerText(remainingMs),
         progressPercent: Math.min(
           100,

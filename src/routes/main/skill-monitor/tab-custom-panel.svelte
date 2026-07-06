@@ -8,6 +8,7 @@
     InlineBuffEntry,
     UserCounterRule,
   } from "$lib/settings-store";
+  import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
   import {
     getCounterDisplayLabel,
     type CounterDisplayLabelInput,
@@ -265,6 +266,24 @@
     }));
   }
 
+  function setSelectedGroupTextShadowEnabled(value: boolean) {
+    updateSelectedGroupStyle((style) => ({ ...style, textShadowEnabled: value }));
+  }
+
+  function setSelectedGroupBackgroundEnabled(value: boolean) {
+    updateSelectedGroupStyle((style) => ({
+      ...style,
+      backgroundEnabled: value,
+    }));
+  }
+
+  function setSelectedGroupBackgroundOpacity(value: number) {
+    updateSelectedGroupStyle((style) => ({
+      ...style,
+      backgroundOpacity: Math.max(0, Math.min(1, value)),
+    }));
+  }
+
   function getUserRuleSourceNames(rule: UserCounterRule): string {
     return rule.sourceRefs
       .map((ref) => sourceTemplateMap.get(ref)?.name ?? ref)
@@ -456,6 +475,14 @@
             />
           </label>
         </div>
+        <OverlayTextStyleFields
+          textShadowEnabled={selectedGroup.style.textShadowEnabled}
+          backgroundEnabled={selectedGroup.style.backgroundEnabled}
+          backgroundOpacity={selectedGroup.style.backgroundOpacity}
+          onTextShadowEnabled={setSelectedGroupTextShadowEnabled}
+          onBackgroundEnabled={setSelectedGroupBackgroundEnabled}
+          onBackgroundOpacity={setSelectedGroupBackgroundOpacity}
+        />
       </div>
     </div>
 

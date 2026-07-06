@@ -1,8 +1,13 @@
 <script lang="ts">
   import ChevronDown from "virtual:icons/lucide/chevron-down";
-  import type { PanelAttrConfig, PanelAreaRowRef } from "$lib/settings-store";
+  import type {
+    OverlayTextStyle,
+    PanelAttrConfig,
+    PanelAreaRowRef,
+  } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
   import { resolvePanelAttrLabel } from "$lib/i18n/panel-attrs";
+  import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
 
   interface Props {
     attrSectionExpanded: boolean;
@@ -10,6 +15,7 @@
     panelAttrGap: number;
     panelAttrFontSize: number;
     panelAttrColumnGap: number;
+    panelAttrTextStyle: OverlayTextStyle;
     panelAreaRowOrder: PanelAreaRowRef[];
     setAttrSectionExpanded: (expanded: boolean) => void;
     setPanelAttrEnabled: (attrId: number, enabled: boolean) => void;
@@ -17,6 +23,9 @@
     setPanelAttrGap: (value: number) => void;
     setPanelAttrFontSize: (value: number) => void;
     setPanelAttrColumnGap: (value: number) => void;
+    setPanelAttrTextShadowEnabled: (value: boolean) => void;
+    setPanelAttrBackgroundEnabled: (value: boolean) => void;
+    setPanelAttrBackgroundOpacity: (value: number) => void;
     movePanelAreaRow: (row: PanelAreaRowRef, direction: "up" | "down") => void;
   }
 
@@ -26,6 +35,7 @@
     panelAttrGap,
     panelAttrFontSize,
     panelAttrColumnGap,
+    panelAttrTextStyle,
     panelAreaRowOrder,
     setAttrSectionExpanded,
     setPanelAttrEnabled,
@@ -33,6 +43,9 @@
     setPanelAttrGap,
     setPanelAttrFontSize,
     setPanelAttrColumnGap,
+    setPanelAttrTextShadowEnabled,
+    setPanelAttrBackgroundEnabled,
+    setPanelAttrBackgroundOpacity,
     movePanelAreaRow,
   }: Props = $props();
 
@@ -146,6 +159,20 @@
               setPanelAttrColumnGap(Number((event.currentTarget as HTMLInputElement).value))}
           />
         </label>
+      </div>
+
+      <div class="space-y-3 border-t border-border/40 pt-3">
+        <div class="text-sm font-medium text-foreground">
+          {t("skillMonitor.panelAttr.textStyle")}
+        </div>
+        <OverlayTextStyleFields
+          textShadowEnabled={panelAttrTextStyle.textShadowEnabled}
+          backgroundEnabled={panelAttrTextStyle.backgroundEnabled}
+          backgroundOpacity={panelAttrTextStyle.backgroundOpacity}
+          onTextShadowEnabled={setPanelAttrTextShadowEnabled}
+          onBackgroundEnabled={setPanelAttrBackgroundEnabled}
+          onBackgroundOpacity={setPanelAttrBackgroundOpacity}
+        />
       </div>
 
       <div class="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">

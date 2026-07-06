@@ -107,6 +107,6 @@
     color: #ffffff;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+    text-shadow: var(--overlay-text-shadow, 0 0 3px rgba(0, 0, 0, 0.9));
   }
 </style>

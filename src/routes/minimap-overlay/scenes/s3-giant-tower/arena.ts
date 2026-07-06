@@ -30,7 +30,7 @@ export function arenaLayout(): SceneLayout {
   return {
     worldHalfX: WORLD_HALF_X,
     worldHalfZ: WORLD_HALF_Z,
-    rotationQuarters: 3,
+    rotationQuarters: 1,
     shapes: {
       lines: ARENA_LINES,
       circles: [PORTAL_RADIUS],

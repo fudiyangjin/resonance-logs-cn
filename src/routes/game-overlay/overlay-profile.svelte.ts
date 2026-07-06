@@ -1,7 +1,9 @@
 import {
   SETTINGS,
   ensureBuffAliases,
+  ensureOverlayTextStyle,
   type InlineBuffEntry,
+  type OverlayTextStyle,
   type ShieldDetailStyle,
   type TextBuffPanelStyle,
 } from "$lib/settings-store";
@@ -89,6 +91,9 @@ const _textBuffPanelStyle = $derived.by<TextBuffPanelStyle>(() =>
 const _shieldDetailStyle = $derived.by<ShieldDetailStyle>(() =>
   ensureShieldDetailStyle(_activeProfile),
 );
+const _overlayTextStyle = $derived.by<OverlayTextStyle>(() =>
+  ensureOverlayTextStyle(_activeProfile?.overlayTextStyle),
+);
 const _monitoredPanelAttrs = $derived.by(() => ensurePanelAttrs(_activeProfile));
 const _enabledPanelAttrs = $derived.by(() =>
   _monitoredPanelAttrs.filter((item) => item.enabled),
@@ -175,6 +180,10 @@ export function textBuffPanelStyle() {
 
 export function shieldDetailStyle() {
   return _shieldDetailStyle;
+}
+
+export function overlayTextStyle() {
+  return _overlayTextStyle;
 }
 
 export function monitoredPanelAttrs() {

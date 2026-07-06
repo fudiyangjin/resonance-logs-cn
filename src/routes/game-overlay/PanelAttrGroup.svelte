@@ -1,6 +1,10 @@
 <script lang="ts">
   import { resolvePanelAttrLabel } from "$lib/i18n/panel-attrs";
   import { t } from "$lib/i18n/index.svelte";
+  import {
+    overlayPanelBackground,
+    overlayTextShadow,
+  } from "$lib/overlay-text-style";
   import { formatAttrValue } from "./overlay-utils";
   import {
     getGroupPosition,
@@ -19,16 +23,25 @@
   const groupScale = $derived(getGroupScale("panelAttrGroupScale"));
   const sizes = $derived(getOverlaySizes());
   const attrs = $derived(panelAttrMap());
+
+  const textStyle = $derived(sizes.panelAttrTextStyle);
+  const textShadowVar = $derived(overlayTextShadow(textStyle.textShadowEnabled));
+  const backgroundVar = $derived(
+    overlayPanelBackground(textStyle.backgroundEnabled, textStyle.backgroundOpacity),
+  );
 </script>
 
 {#if rows.length > 0}
   <div
     class="overlay-group panel-attr-group"
     class:editable={editing}
+    class:has-background={backgroundVar !== undefined}
     style:left={`${groupPos.x}px`}
     style:top={`${groupPos.y}px`}
     style:transform={`scale(${groupScale})`}
     style:transform-origin="top left"
+    style:--overlay-text-shadow={textShadowVar}
+    style:background={backgroundVar}
     onpointerdown={(e) =>
       startDrag(e, { kind: "group", key: "panelAttrGroup" }, groupPos)}
   >
@@ -72,6 +85,12 @@
 {/if}
 
 <style>
+  .panel-attr-group.has-background {
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+  }
+
   .panel-attr-group.editable {
     border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
@@ -98,12 +117,12 @@
   .panel-attr-label {
     font-weight: 600;
     line-height: 1;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+    text-shadow: var(--overlay-text-shadow, 0 0 4px rgba(0, 0, 0, 0.9));
   }
 
   .panel-attr-value {
     font-weight: 700;
     line-height: 1;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+    text-shadow: var(--overlay-text-shadow, 0 0 4px rgba(0, 0, 0, 0.9));
   }
 </style>

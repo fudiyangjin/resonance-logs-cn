@@ -62,6 +62,12 @@ export type MechanicRegion =
       label?: string;
     };
 
+export type MechanicRowTargetStatus = {
+  name: string;
+  isLocal: boolean;
+  safe: boolean;
+};
+
 export type MechanicRow = {
   key: string;
   group: string;
@@ -71,6 +77,7 @@ export type MechanicRow = {
   durationMs: number;
   targets: string[];
   hideTimer?: boolean;
+  targetStatus?: MechanicRowTargetStatus[];
 };
 
 export type SceneView = {
@@ -84,6 +91,7 @@ export type SceneView = {
   entities: MinimapEntity[];
   /** Player markers, in the same local coordinate space as `entities`. */
   markers: MinimapMarker[];
+  entitySafeStatus?: Map<string, boolean>;
 };
 
 export type SceneDefinition = {

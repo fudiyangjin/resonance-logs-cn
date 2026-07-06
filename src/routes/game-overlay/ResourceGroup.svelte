@@ -84,13 +84,43 @@
         {@const cur = getResourceValue(res.currentId)}
         {@const max = Math.max(1, getResourceValue(res.maxId))}
         <div class="res-charges-container">
-          {#each Array(max) as _, i}
-            <img
-              src={i < cur ? res.imageOn : res.imageOff}
-              alt={res.label}
-              class="res-charge-icon"
-            />
-          {/each}
+          {#if res.compactAbove !== undefined}
+            {@const compactCur = Math.max(0, cur)}
+            {@const compactMultiplierPrefix =
+              res.compactMultiplierPrefix ?? "*"}
+            {#if compactCur <= 0}
+              <img
+                src={res.imageOff}
+                alt={res.label}
+                class="res-charge-icon"
+              />
+            {:else if compactCur > res.compactAbove}
+              <img
+                src={res.imageOn}
+                alt={res.label}
+                class="res-charge-icon"
+              />
+              <span class="res-charge-multiplier"
+                >{compactMultiplierPrefix}{compactCur}</span
+              >
+            {:else}
+              {#each Array(compactCur) as _}
+                <img
+                  src={res.imageOn}
+                  alt={res.label}
+                  class="res-charge-icon"
+                />
+              {/each}
+            {/if}
+          {:else}
+            {#each Array(max) as _, i}
+              <img
+                src={i < cur ? res.imageOn : res.imageOff}
+                alt={res.label}
+                class="res-charge-icon"
+              />
+            {/each}
+          {/if}
         </div>
       {/each}
     </div>
@@ -145,6 +175,59 @@
 
   .resources-panel[data-class="flame_berserker"] .res-energy-overlay {
     padding: 17px 62px 0 22px;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] {
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] .resources-row {
+    justify-content: flex-start;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] .res-bar-container {
+    margin-top: 20px;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] .res-energy-overlay {
+    padding: 0 29px 1px 43px;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] .res-energy-track {
+    height: 6px;
+    border-radius: 1px;
+    background: transparent;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] .res-energy-fill {
+    border-radius: 1px;
+    box-shadow: none;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] .res-text {
+    top: -19px;
+    left: 15px;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] .sharpness-row {
+    align-self: flex-start;
+    margin-top: -5px;
+    margin-left: 15px;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] .res-charges-container {
+    align-items: center;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] .res-charge-icon {
+    height: 22px;
+  }
+
+  .resources-panel[data-class="verdant_oracle"] .res-charge-multiplier {
+    margin-left: 4px;
+    font-size: 18px;
+    line-height: 22px;
   }
 
   .res-bar-container {
@@ -204,7 +287,7 @@
     font-size: 14px;
     font-weight: 700;
     color: #ffffff;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
+    text-shadow: var(--overlay-text-shadow, 1px 1px 2px rgba(0, 0, 0, 0.9));
   }
 
   .res-charges-container {
@@ -215,5 +298,14 @@
   .res-charge-icon {
     height: 24px;
     width: auto;
+  }
+
+  .res-charge-multiplier {
+    margin-left: 2px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 24px;
+    text-shadow: var(--overlay-text-shadow, 1px 1px 2px rgba(0, 0, 0, 0.9));
   }
 </style>

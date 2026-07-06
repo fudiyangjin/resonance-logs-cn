@@ -15,9 +15,6 @@
   let canvas: HTMLCanvasElement | null = $state(null);
 
   const PADDING = 10;
-  // Radius of the upward triangle drawn for every non-team entity. Larger than
-  // team-member circles so mechanic entities (orbs, etc.) read clearly.
-  const NON_TEAM_TRIANGLE_RADIUS = 10;
   const DEFAULT_BOSS_COLOR = "#ef4444";
   const DEFAULT_LOCAL_RING_COLOR = "#ffffff";
   const DEFAULT_LOCAL_RING_WIDTH = 2;
@@ -98,8 +95,17 @@
     return entity.kind === "local" ? colors.local : colors.teammate;
   }
 
-  function radiusFor(): number {
-    return 4;
+  function radiusFor(kind: MinimapEntity["kind"]): number {
+    const sizes = minimapSettings.entitySizes;
+    const raw =
+      kind === "boss"
+        ? sizes?.boss
+        : kind === "teammate"
+          ? sizes?.teammate
+          : kind === "local"
+            ? sizes?.local
+            : sizes?.other;
+    return Number.isFinite(raw) ? Math.max(1, Math.min(40, raw as number)) : 4;
   }
 
   function isTeamMember(entity: MinimapEntity): boolean {
@@ -127,7 +133,7 @@
       minimapSettings.localRing?.color ?? DEFAULT_LOCAL_RING_COLOR;
     ctx.lineWidth = width;
     ctx.beginPath();
-    ctx.arc(cx, cy, radiusFor() + width, 0, Math.PI * 2);
+    ctx.arc(cx, cy, radiusFor("local") + width, 0, Math.PI * 2);
     ctx.stroke();
   }
 
@@ -161,7 +167,7 @@
     const heading = Math.atan2(dy, dx);
 
     const base =
-      radiusFor() + (shouldDrawLocalRing() ? localRingWidth() : 0) + 3;
+      radiusFor("local") + (shouldDrawLocalRing() ? localRingWidth() : 0) + 3;
     const length = 7;
     const halfWidth = 4;
 
@@ -266,7 +272,16 @@
       }
 
       const colorSlot = view.entityColorSlots.get(entity.entityUuid);
-      const hasMechanic = colorSlot !== undefined;
+      const team = isTeamMember(entity);
+      const safeStatus = view.entitySafeStatus?.get(entity.entityUuid);
+      const hasSafeStatus = safeStatus !== undefined && team;
+      const hasMechanic = colorSlot !== undefined || hasSafeStatus;
+      if (
+        minimapSettings.hideAllTeammates &&
+        entity.kind === "teammate"
+      ) {
+        continue;
+      }
       if (
         minimapSettings.hideNormalTeammates &&
         entity.kind === "teammate" &&
@@ -276,9 +291,13 @@
       }
 
       const [sx, sy] = project(entity.x, entity.z);
-      const team = isTeamMember(entity);
-      const dotColor =
-        colorSlot === undefined ? colorFor(entity) : slotColor(colorSlot);
+      const dotColor = hasSafeStatus
+        ? safeStatus
+          ? slotColor(1) // green = inside safe zone
+          : slotColor(3) // red = outside safe zone
+        : colorSlot === undefined
+          ? colorFor(entity)
+          : slotColor(colorSlot);
 
       ctx.globalAlpha = entity.isDead
         ? 0.35
@@ -294,14 +313,14 @@
       ctx.fillStyle = dotColor;
       if (team) {
         ctx.beginPath();
-        ctx.arc(sx, sy, radiusFor(), 0, Math.PI * 2);
+        ctx.arc(sx, sy, radiusFor(entity.kind), 0, Math.PI * 2);
         ctx.fill();
         if (entity.kind === "local") {
           drawLocalRing(ctx, sx, sy);
           drawLocalFacing(ctx, sx, sy, entity, project, colorFor(entity));
         }
       } else {
-        drawTriangle(ctx, sx, sy, NON_TEAM_TRIANGLE_RADIUS);
+        drawTriangle(ctx, sx, sy, radiusFor(entity.kind));
       }
     }
     ctx.globalAlpha = 1;
@@ -576,6 +595,7 @@
     void aspect;
     void sceneView;
     void minimapSettings.hideNormalTeammates;
+    void minimapSettings.hideAllTeammates;
     void minimapSettings.showBoss;
     void minimapSettings.showMarkers;
     void minimapSettings.markerColors;
@@ -586,6 +606,10 @@
     void minimapSettings.localRing?.color;
     void minimapSettings.localRing?.width;
     void minimapSettings.localFacing?.enabled;
+    void minimapSettings.entitySizes?.local;
+    void minimapSettings.entitySizes?.teammate;
+    void minimapSettings.entitySizes?.boss;
+    void minimapSettings.entitySizes?.other;
     if (typeof window === "undefined") return;
     const id = window.requestAnimationFrame(draw);
     return () => window.cancelAnimationFrame(id);

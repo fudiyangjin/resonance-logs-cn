@@ -74,5 +74,26 @@
       "imageOn": "/images/stormblade/res/main_thunder_on_2474287416440235716.png",
       "imageOff": "/images/stormblade/res/main_thunder_off_2990056487819530159.png"
     }
+  ],
+  "verdant_oracle": [
+    {
+      "type": "bar",
+      "label": "Energy",
+      "currentId": 15001,
+      "maxId": 15007,
+      "imageOn": "/images/verdant_oracle/res/main_milk_on_-6438914932416398825.png",
+      "imageOff": "/images/verdant_oracle/res/main_milk_off_4796191381738099048.png",
+      "buffBaseId": 2202751
+    },
+    {
+      "type": "charges",
+      "label": "Flower",
+      "currentId": 15011,
+      "maxId": 15017,
+      "imageOn": "/images/verdant_oracle/res/main_flor_on_-6071445455345585444.png",
+      "imageOff": "/images/verdant_oracle/res/main_flor_off_5581354605487572302.png",
+      "compactAbove": 2,
+      "compactMultiplierPrefix": "x"
+    }
   ]
 }

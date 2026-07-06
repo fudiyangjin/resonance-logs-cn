@@ -27,10 +27,43 @@ function lookupDbmEntry(id: number): DbmTableEntry | undefined {
 export function resolveDbmSkillName(
   skillEffectId: number,
   baseSkillId: number,
+  aliases?: Record<string, string>,
 ): string {
+  const fallbackId = baseSkillId * 100 + 1;
+  const alias =
+    aliases?.[String(skillEffectId)] ?? aliases?.[String(fallbackId)];
+  if (alias?.trim()) return alias;
   return (
     lookupDbmEntry(skillEffectId)?.Content ??
-    lookupDbmEntry(baseSkillId * 100 + 1)?.Content ??
+    lookupDbmEntry(fallbackId)?.Content ??
     `#${skillEffectId}`
   );
+}
+
+export type DbmSearchItem = { id: number; name: string };
+
+export function lookupDbmDefaultName(id: number): string | undefined {
+  const name = lookupDbmEntry(id)?.Content;
+  return name?.trim() ? name : undefined;
+}
+
+export function searchDbmEntries(keyword: string): DbmSearchItem[] {
+  const kw = keyword.trim().toLowerCase();
+  if (!kw) return [];
+  const seen = new Set<number>();
+  const items: DbmSearchItem[] = [];
+  for (const locale of getLocaleFallbackChain(getLocale())) {
+    const table = DBM_TABLE_BY_LOCALE[locale];
+    for (const entry of Object.values(table)) {
+      if (!entry?.Content?.trim()) continue;
+      const id = entry.Id;
+      if (seen.has(id)) continue;
+      const name = entry.Content.trim();
+      if (`${id}`.includes(kw) || name.toLowerCase().includes(kw)) {
+        seen.add(id);
+        items.push({ id, name });
+      }
+    }
+  }
+  return items.sort((a, b) => a.id - b.id).slice(0, 60);
 }

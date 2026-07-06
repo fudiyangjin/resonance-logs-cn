@@ -211,9 +211,11 @@
     padding: 2px 5px;
     border-radius: 4px;
     background: rgba(0, 0, 0, 0.55);
-    text-shadow:
+    text-shadow: var(
+      --overlay-text-shadow,
       0 1px 3px rgba(0, 0, 0, 1),
-      0 0 6px rgba(0, 0, 0, 0.8);
+      0 0 6px rgba(0, 0, 0, 0.8)
+    );
   }
 
   /* Usable but recharging: thin bottom progress bar, icon stays bright */
@@ -248,7 +250,7 @@
     padding: 1px 4px;
     border-radius: 3px;
     background: rgba(0, 0, 0, 0.5);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 1);
+    text-shadow: var(--overlay-text-shadow, 0 1px 2px rgba(0, 0, 0, 1));
     white-space: nowrap;
   }
 

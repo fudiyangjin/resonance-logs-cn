@@ -41,6 +41,8 @@
     type TextBuffPanelDisplayMode,
     type TextBuffPanelStyle,
     type UserCounterRule,
+    type OverlayTextStyle,
+    ensureOverlayTextStyle,
   } from "$lib/settings-store";
   import {
     findResonanceSkill,
@@ -142,6 +144,9 @@
   const panelAttrColumnGap = $derived(
     ensureOverlaySizes(activeProfile).panelAttrColumnGap,
   );
+  const panelAttrTextStyle = $derived(
+    ensureOverlaySizes(activeProfile).panelAttrTextStyle,
+  );
   const showSkillCdGroup = $derived(
     activeProfile.overlayVisibility?.showSkillCdGroup ?? false,
   );
@@ -165,6 +170,9 @@
   );
   const shieldDetailStyle = $derived.by(() =>
     ensureShieldDetailStyle(activeProfile),
+  );
+  const overlayTextStyle = $derived.by(() =>
+    ensureOverlayTextStyle(activeProfile.overlayTextStyle),
   );
   const buffDisplayMode = $derived(
     activeProfile.buffDisplayMode ?? "individual",
@@ -718,6 +726,33 @@
     }));
   }
 
+  function updatePanelAttrTextStyle(
+    updater: (style: OverlayTextStyle) => OverlayTextStyle,
+  ) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlaySizes: {
+        ...ensureOverlaySizes(profile),
+        panelAttrTextStyle: updater(ensureOverlaySizes(profile).panelAttrTextStyle),
+      },
+    }));
+  }
+
+  function setPanelAttrTextShadowEnabled(value: boolean) {
+    updatePanelAttrTextStyle((style) => ({ ...style, textShadowEnabled: value }));
+  }
+
+  function setPanelAttrBackgroundEnabled(value: boolean) {
+    updatePanelAttrTextStyle((style) => ({ ...style, backgroundEnabled: value }));
+  }
+
+  function setPanelAttrBackgroundOpacity(value: number) {
+    updatePanelAttrTextStyle((style) => ({
+      ...style,
+      backgroundOpacity: Math.max(0, Math.min(1, value)),
+    }));
+  }
+
   function setInlineBuffSearch(value: string) {
     inlineBuffSearch = value;
   }
@@ -981,6 +1016,48 @@
     }));
   }
 
+  function setTextBuffPanelTextShadowEnabled(value: boolean) {
+    updateTextBuffPanelStyle((style) => ({ ...style, textShadowEnabled: value }));
+  }
+
+  function setTextBuffPanelBackgroundEnabled(value: boolean) {
+    updateTextBuffPanelStyle((style) => ({
+      ...style,
+      backgroundEnabled: value,
+    }));
+  }
+
+  function setTextBuffPanelBackgroundOpacity(value: number) {
+    updateTextBuffPanelStyle((style) => ({
+      ...style,
+      backgroundOpacity: Math.max(0, Math.min(1, value)),
+    }));
+  }
+
+  function updateOverlayTextStyle(
+    updater: (style: OverlayTextStyle) => OverlayTextStyle,
+  ) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      overlayTextStyle: updater(ensureOverlayTextStyle(profile?.overlayTextStyle)),
+    }));
+  }
+
+  function setOverlayTextShadowEnabled(value: boolean) {
+    updateOverlayTextStyle((style) => ({ ...style, textShadowEnabled: value }));
+  }
+
+  function setOverlayBackgroundEnabled(value: boolean) {
+    updateOverlayTextStyle((style) => ({ ...style, backgroundEnabled: value }));
+  }
+
+  function setOverlayBackgroundOpacity(value: number) {
+    updateOverlayTextStyle((style) => ({
+      ...style,
+      backgroundOpacity: Math.max(0, Math.min(1, value)),
+    }));
+  }
+
   function updateShieldDetailStyle(
     updater: (style: ShieldDetailStyle) => ShieldDetailStyle,
   ) {
@@ -1020,6 +1097,24 @@
     value: string,
   ) {
     updateShieldDetailStyle((style) => ({ ...style, [key]: value }));
+  }
+
+  function setShieldDetailTextShadowEnabled(value: boolean) {
+    updateShieldDetailStyle((style) => ({ ...style, textShadowEnabled: value }));
+  }
+
+  function setShieldDetailBackgroundEnabled(value: boolean) {
+    updateShieldDetailStyle((style) => ({
+      ...style,
+      backgroundEnabled: value,
+    }));
+  }
+
+  function setShieldDetailBackgroundOpacity(value: number) {
+    updateShieldDetailStyle((style) => ({
+      ...style,
+      backgroundOpacity: Math.max(0, Math.min(1, value)),
+    }));
   }
 
   function addCustomPanelEntry(
@@ -1607,6 +1702,13 @@
       {setTextBuffPanelValueColor}
       {setTextBuffPanelProgressColor}
       {setTextBuffPanelProgressOpacity}
+      {setTextBuffPanelTextShadowEnabled}
+      {setTextBuffPanelBackgroundEnabled}
+      {setTextBuffPanelBackgroundOpacity}
+      {overlayTextStyle}
+      {setOverlayTextShadowEnabled}
+      {setOverlayBackgroundEnabled}
+      {setOverlayBackgroundOpacity}
       {globalPrioritySearch}
       {globalPrioritySearchResults}
       {setGlobalPrioritySearch}
@@ -1658,6 +1760,10 @@
       {setPanelAttrFontSize}
       {setPanelAttrColumnGap}
       {movePanelAreaRow}
+      {panelAttrTextStyle}
+      {setPanelAttrTextShadowEnabled}
+      {setPanelAttrBackgroundEnabled}
+      {setPanelAttrBackgroundOpacity}
     />
   {:else if activeTab === "custom-panel"}
     <TabCustomPanel
@@ -1695,6 +1801,9 @@
       {setShieldDetailBarWidth}
       {setShieldDetailGap}
       {setShieldDetailColor}
+      {setShieldDetailTextShadowEnabled}
+      {setShieldDetailBackgroundEnabled}
+      {setShieldDetailBackgroundOpacity}
     />
   {:else}
     <TabOverlay

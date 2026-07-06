@@ -35,6 +35,7 @@ export const s3SeaRingedReefScene: SceneDefinition = {
       ),
       rows: mechanicView.rows,
       entityColorSlots: mechanicView.entityColorSlots,
+      entitySafeStatus: mechanicView.waveSafeStatus,
       entities: visibleEntities(
         snapshot.entities,
         arena,

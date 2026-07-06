@@ -10,14 +10,12 @@
   import ShortcutsSettings from "./shortcuts.svelte";
   import HistorySettings from "./history.svelte";
   import DebugSettings from "./debug.svelte";
-  import LanguageSettings from "./language.svelte";
 
   const settingsTabs = [
     { id: "live", labelKey: "settings.tabs.live" },
     { id: "network", labelKey: "settings.tabs.network" },
     { id: "shortcuts", labelKey: "settings.tabs.shortcuts" },
     { id: "history", labelKey: "settings.tabs.history" },
-    { id: "language", labelKey: "settings.tabs.language" },
     { id: "debug", labelKey: "settings.tabs.debug" },
   ] satisfies Array<{ id: string; labelKey: MessageKey }>;
 
@@ -44,10 +42,6 @@
 
     <Tabs.Content value="history">
       <HistorySettings />
-    </Tabs.Content>
-
-    <Tabs.Content value="language">
-      <LanguageSettings />
     </Tabs.Content>
 
     <Tabs.Content value="debug">

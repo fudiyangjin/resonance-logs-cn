@@ -1,9 +1,16 @@
 import type {
   OverlayPositions,
-  OverlaySizes,
   PanelAttrConfig,
 } from "$lib/settings-store";
 import type { BuffCategoryKey } from "$lib/config/buff-name-table";
+
+export type OverlayScaleKey =
+  | "skillCdGroupScale"
+  | "resourceGroupScale"
+  | "textBuffPanelScale"
+  | "panelAttrGroupScale"
+  | "customPanelGroupScale"
+  | "shieldDetailGroupScale";
 
 export type SkillDisplay = {
   isActive: boolean;
@@ -32,6 +39,7 @@ export type IconBuffDisplay = {
   categoryKey?: BuffCategoryKey;
   isPlaceholder?: boolean;
   specialImages?: string[];
+  specialDisplayStyle?: "woodCounter";
   alert?: BuffAlertState | undefined;
 };
 
@@ -93,10 +101,7 @@ export type DragState = {
 export type ResizeTarget =
   | {
       kind: "group";
-      key: keyof Omit<
-        OverlaySizes,
-        "iconBuffSizes" | "skillDurationSizes" | "categoryIconSizes"
-      >;
+      key: OverlayScaleKey;
     }
   | { kind: "customPanelGroup"; groupId: string }
   | { kind: "iconBuff"; baseId: number }

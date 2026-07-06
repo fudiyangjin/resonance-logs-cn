@@ -25,8 +25,8 @@ export type SceneLayout = {
 
 const MATRIX_RADIUS = 16;
 const MATRIX_HALF = 24;
-const BOSS_HALF_X = 55;
-const BOSS_HALF_Z = 45;
+const BOSS_HALF_X = 33; // 39 * 5/6 — crop unreachable wall border
+const BOSS_HALF_Z = 27; // 32 * 5/6 — crop unreachable wall border
 
 const MATRIX_LINES = buildRadialLines(MATRIX_RADIUS, 8);
 const BOSS_LINES = [

@@ -15,6 +15,10 @@ export const RESOURCE_SCALES_BY_CLASS: Record<string, Record<number, number>> = 
     13011: 100,
     13017: 100,
   },
+  verdant_oracle: {
+    15001: 100,
+    15007: 100,
+  },
 };
 
 export const DEFAULT_RESOURCE_VALUES_BY_CLASS: Record<
@@ -25,6 +29,7 @@ export const DEFAULT_RESOURCE_VALUES_BY_CLASS: Record<
   frost_mage: { 12001: 0, 12007: 125, 12021: 0, 12027: 4 },
   stormblade: { 12051: 0, 12057: 400, 12041: 0, 12047: 6 },
   flame_berserker: { 13011: 0, 13017: 100, 13001: 0, 13007: 7 },
+  verdant_oracle: { 15001: 0, 15007: 100, 15011: 0, 15017: 2 },
 };
 
 export const DEFAULT_OVERLAY_POSITIONS: OverlayPositions = {

@@ -12,12 +12,18 @@
     type BuffNameInfo,
   } from "$lib/config/buff-name-table";
   import { resolveMonsterName } from "$lib/config/game-names";
+  import {
+    searchDbmEntries,
+    lookupDbmDefaultName,
+    type DbmSearchItem,
+  } from "$lib/config/dbm-table";
   import { getGameData } from "$lib/i18n/game-data";
   import { t } from "$lib/i18n/index.svelte";
   import {
     SETTINGS,
     createDefaultBuffAlertRule,
     ensureBuffAlerts,
+    ensureDbmAliases,
     ensureTeammatePanelStyle,
     getGlobalBuffAliases,
     type CustomPanelStyle,
@@ -25,6 +31,8 @@
     type TeammatePanelStyle,
     type BuffAlertRule,
   } from "$lib/settings-store";
+  import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
+  import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
 
   type SearchTarget = "global" | "self";
   type MonsterMonitorTab =
@@ -68,22 +76,42 @@
   let fantasySearchKeyword = $state("");
   let prioritySearchKeyword = $state("");
   let alertSearchKeyword = $state("");
+  let dbmSearchKeyword = $state("");
   let searchTarget = $state<SearchTarget>("self");
   let activeTab = $state<MonsterMonitorTab>("buff");
 
   const monsterMonitor = $derived(SETTINGS.monsterMonitor.state);
   const buffAliases = $derived.by(() => getGlobalBuffAliases());
-  const hatePanelStyle = $derived.by(
-    () => monsterMonitor.hatePanelStyle ?? monsterMonitor.panelStyle,
+  const dbmAliases = $derived.by(() => ensureDbmAliases(monsterMonitor.dbmAliases));
+  const dbmSearchResults = $derived.by(() =>
+    dbmSearchKeyword.trim().length > 0
+      ? searchDbmEntries(dbmSearchKeyword).filter(
+          (item) => !dbmAliases[String(item.id)],
+        )
+      : ([] as DbmSearchItem[]),
   );
-  const stunPanelStyle = $derived.by(
-    () => monsterMonitor.stunPanelStyle ?? monsterMonitor.panelStyle,
+  const monsterPanelStyle = $derived.by(() =>
+    normalizeCustomPanelStyle(monsterMonitor.panelStyle),
   );
-  const fantasyPanelStyle = $derived.by(
-    () => monsterMonitor.fantasyPanelStyle ?? monsterMonitor.panelStyle,
+  const hatePanelStyle = $derived.by(() =>
+    normalizeCustomPanelStyle(
+      monsterMonitor.hatePanelStyle ?? monsterMonitor.panelStyle,
+    ),
   );
-  const bossDbmPanelStyle = $derived.by(
-    () => monsterMonitor.bossDbmPanelStyle ?? monsterMonitor.panelStyle,
+  const stunPanelStyle = $derived.by(() =>
+    normalizeCustomPanelStyle(
+      monsterMonitor.stunPanelStyle ?? monsterMonitor.panelStyle,
+    ),
+  );
+  const fantasyPanelStyle = $derived.by(() =>
+    normalizeCustomPanelStyle(
+      monsterMonitor.fantasyPanelStyle ?? monsterMonitor.panelStyle,
+    ),
+  );
+  const bossDbmPanelStyle = $derived.by(() =>
+    normalizeCustomPanelStyle(
+      monsterMonitor.bossDbmPanelStyle ?? monsterMonitor.panelStyle,
+    ),
   );
   const teammatePanelStyle = $derived.by(() =>
     ensureTeammatePanelStyle(
@@ -493,6 +521,27 @@
         fantasyMonsterAliases,
       };
     });
+  }
+
+  function setDbmAlias(id: number, alias: string) {
+    updateMonsterMonitor((state) => {
+      const nextDbmAliases = { ...(state.dbmAliases ?? {}) };
+      const trimmed = alias.trim();
+      if (trimmed) {
+        nextDbmAliases[String(id)] = trimmed;
+      } else {
+        delete nextDbmAliases[String(id)];
+      }
+      return {
+        ...state,
+        dbmAliases: nextDbmAliases,
+      };
+    });
+  }
+
+  function addDbmAlias(id: number) {
+    const initial = lookupDbmDefaultName(id) ?? `#${id}`;
+    setDbmAlias(id, initial);
   }
 
   function setAlias(buffId: number, alias: string) {
@@ -1273,7 +1322,7 @@
             type="range"
             min="0"
             max="24"
-            value={monsterMonitor.panelStyle.gap}
+            value={monsterPanelStyle.gap}
             oninput={(event) =>
               updatePanelStyle(
                 "gap",
@@ -1283,7 +1332,7 @@
                 ),
               )}
           />
-          <strong>{monsterMonitor.panelStyle.gap}px</strong>
+          <strong>{monsterPanelStyle.gap}px</strong>
         </label>
 
         <label class="style-field">
@@ -1292,7 +1341,7 @@
             type="range"
             min="0"
             max="40"
-            value={monsterMonitor.panelStyle.columnGap}
+            value={monsterPanelStyle.columnGap}
             oninput={(event) =>
               updatePanelStyle(
                 "columnGap",
@@ -1302,7 +1351,7 @@
                 ),
               )}
           />
-          <strong>{monsterMonitor.panelStyle.columnGap}px</strong>
+          <strong>{monsterPanelStyle.columnGap}px</strong>
         </label>
 
         <label class="style-field">
@@ -1311,7 +1360,7 @@
             type="range"
             min="10"
             max="28"
-            value={monsterMonitor.panelStyle.fontSize}
+            value={monsterPanelStyle.fontSize}
             oninput={(event) =>
               updatePanelStyle(
                 "fontSize",
@@ -1321,7 +1370,7 @@
                 ),
               )}
           />
-          <strong>{monsterMonitor.panelStyle.fontSize}px</strong>
+          <strong>{monsterPanelStyle.fontSize}px</strong>
         </label>
       </div>
 
@@ -1330,7 +1379,7 @@
           <span>{t("monsterMonitor.style.nameColor")}</span>
           <input
             type="color"
-            value={monsterMonitor.panelStyle.nameColor}
+            value={monsterPanelStyle.nameColor}
             oninput={(event) =>
               updatePanelStyle(
                 "nameColor",
@@ -1343,7 +1392,7 @@
           <span>{t("monsterMonitor.style.valueColor")}</span>
           <input
             type="color"
-            value={monsterMonitor.panelStyle.valueColor}
+            value={monsterPanelStyle.valueColor}
             oninput={(event) =>
               updatePanelStyle(
                 "valueColor",
@@ -1356,7 +1405,7 @@
           <span>{t("monsterMonitor.style.progressColor")}</span>
           <input
             type="color"
-            value={monsterMonitor.panelStyle.progressColor}
+            value={monsterPanelStyle.progressColor}
             oninput={(event) =>
               updatePanelStyle(
                 "progressColor",
@@ -1372,7 +1421,7 @@
             min="0"
             max="1"
             step="0.05"
-            value={monsterMonitor.panelStyle.progressOpacity ?? 0.4}
+            value={monsterPanelStyle.progressOpacity}
             oninput={(event) =>
               updatePanelStyle(
                 "progressOpacity",
@@ -1380,12 +1429,18 @@
               )}
           />
           <strong
-            >{Math.round(
-              (monsterMonitor.panelStyle.progressOpacity ?? 0.4) * 100,
-            )}%</strong
+            >{Math.round(monsterPanelStyle.progressOpacity * 100)}%</strong
           >
         </label>
       </div>
+      <OverlayTextStyleFields
+        textShadowEnabled={monsterPanelStyle.textShadowEnabled}
+        backgroundEnabled={monsterPanelStyle.backgroundEnabled}
+        backgroundOpacity={monsterPanelStyle.backgroundOpacity}
+        onTextShadowEnabled={(v) => updatePanelStyle("textShadowEnabled", v)}
+        onBackgroundEnabled={(v) => updatePanelStyle("backgroundEnabled", v)}
+        onBackgroundOpacity={(v) => updatePanelStyle("backgroundOpacity", v)}
+      />
     </section>
   {:else if activeTab === "teammate"}
     <section
@@ -1666,7 +1721,7 @@
             min="0"
             max="1"
             step="0.05"
-            value={teammatePanelStyle.progressOpacity ?? 0.4}
+            value={teammatePanelStyle.progressOpacity}
             oninput={(event) =>
               updateTeammatePanelStyle(
                 "progressOpacity",
@@ -1674,12 +1729,20 @@
               )}
           />
           <strong
-            >{Math.round(
-              (teammatePanelStyle.progressOpacity ?? 0.4) * 100,
-            )}%</strong
+            >{Math.round(teammatePanelStyle.progressOpacity * 100)}%</strong
           >
         </label>
       </div>
+      <OverlayTextStyleFields
+        textShadowEnabled={teammatePanelStyle.textShadowEnabled}
+        backgroundEnabled={teammatePanelStyle.backgroundEnabled}
+        backgroundOpacity={teammatePanelStyle.backgroundOpacity}
+        onTextShadowEnabled={(v) => updateTeammatePanelStyle("textShadowEnabled", v)}
+        onBackgroundEnabled={(v) =>
+          updateTeammatePanelStyle("backgroundEnabled", v)}
+        onBackgroundOpacity={(v) =>
+          updateTeammatePanelStyle("backgroundOpacity", v)}
+      />
     </section>
   {:else if activeTab === "hate"}
     <section
@@ -1841,7 +1904,7 @@
             min="0"
             max="1"
             step="0.05"
-            value={hatePanelStyle.progressOpacity ?? 0.4}
+            value={hatePanelStyle.progressOpacity}
             oninput={(event) =>
               updateHatePanelStyle(
                 "progressOpacity",
@@ -1849,12 +1912,18 @@
               )}
           />
           <strong
-            >{Math.round(
-              (hatePanelStyle.progressOpacity ?? 0.4) * 100,
-            )}%</strong
+            >{Math.round(hatePanelStyle.progressOpacity * 100)}%</strong
           >
         </label>
       </div>
+      <OverlayTextStyleFields
+        textShadowEnabled={hatePanelStyle.textShadowEnabled}
+        backgroundEnabled={hatePanelStyle.backgroundEnabled}
+        backgroundOpacity={hatePanelStyle.backgroundOpacity}
+        onTextShadowEnabled={(v) => updateHatePanelStyle("textShadowEnabled", v)}
+        onBackgroundEnabled={(v) => updateHatePanelStyle("backgroundEnabled", v)}
+        onBackgroundOpacity={(v) => updateHatePanelStyle("backgroundOpacity", v)}
+      />
     </section>
   {:else if activeTab === "stun"}
     <section
@@ -1994,18 +2063,26 @@
             min="0"
             max="1"
             step="0.05"
-            value={stunPanelStyle.progressOpacity ?? 0.4}
+            value={stunPanelStyle.progressOpacity}
             oninput={(event) =>
               updateStunPanelStyle(
                 "progressOpacity",
                 Number((event.currentTarget as HTMLInputElement).value),
               )}
           />
-          <strong
-            >{Math.round((stunPanelStyle.progressOpacity ?? 0.4) * 100)}%</strong
+            <strong
+            >{Math.round(stunPanelStyle.progressOpacity * 100)}%</strong
           >
         </label>
       </div>
+      <OverlayTextStyleFields
+        textShadowEnabled={stunPanelStyle.textShadowEnabled}
+        backgroundEnabled={stunPanelStyle.backgroundEnabled}
+        backgroundOpacity={stunPanelStyle.backgroundOpacity}
+        onTextShadowEnabled={(v) => updateStunPanelStyle("textShadowEnabled", v)}
+        onBackgroundEnabled={(v) => updateStunPanelStyle("backgroundEnabled", v)}
+        onBackgroundOpacity={(v) => updateStunPanelStyle("backgroundOpacity", v)}
+      />
     </section>
   {:else if activeTab === "fantasy"}
     <section
@@ -2198,6 +2275,17 @@
           />
         </label>
       </div>
+      <OverlayTextStyleFields
+        textShadowEnabled={fantasyPanelStyle.textShadowEnabled}
+        backgroundEnabled={fantasyPanelStyle.backgroundEnabled}
+        backgroundOpacity={fantasyPanelStyle.backgroundOpacity}
+        onTextShadowEnabled={(v) =>
+          updateFantasyPanelStyle("textShadowEnabled", v)}
+        onBackgroundEnabled={(v) =>
+          updateFantasyPanelStyle("backgroundEnabled", v)}
+        onBackgroundOpacity={(v) =>
+          updateFantasyPanelStyle("backgroundOpacity", v)}
+      />
     </section>
   {:else if activeTab === "bossDbm"}
     <section
@@ -2211,23 +2299,95 @@
           {t("monsterMonitor.bossDbm.description")}
         </p>
       </div>
+    </section>
 
-      <div class="flex justify-start">
-        <div class="min-w-[220px]">
-          <button
-            type="button"
-            class="w-full rounded-lg border px-3 py-2 text-sm font-medium transition-colors {overlayVisibility.showBossDbmPanel
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-            onclick={() => toggleOverlayVisibility("showBossDbmPanel")}
-          >
-            {t("monsterMonitor.overlay.bossDbm", {
-              state: visibilityState(overlayVisibility.showBossDbmPanel),
-            })}
-          </button>
-        </div>
+    <section
+      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
+    >
+      <div class="space-y-1">
+        <h2 class="text-foreground text-base font-semibold">
+          {t("monsterMonitor.bossDbm.alias.title")}
+        </h2>
+        <p class="text-muted-foreground text-sm">
+          {t("monsterMonitor.bossDbm.alias.description")}
+        </p>
       </div>
 
+      <div class="space-y-3">
+        <input
+          type="text"
+          bind:value={dbmSearchKeyword}
+          placeholder={t("monsterMonitor.bossDbm.alias.searchPlaceholder")}
+          class="border-border bg-background focus:border-primary w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+        />
+
+        {#if dbmSearchKeyword.trim().length > 0}
+          {#if dbmSearchResults.length > 0}
+            <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+              {#each dbmSearchResults as item (item.id)}
+                <button
+                  type="button"
+                  class="border-border/60 bg-muted/20 hover:bg-muted/40 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors"
+                  onclick={() => addDbmAlias(item.id)}
+                >
+                  <span class="min-w-0 truncate">{item.name}</span>
+                  <span class="text-muted-foreground shrink-0 text-xs">
+                    {item.id}
+                  </span>
+                </button>
+              {/each}
+            </div>
+          {:else}
+            <p class="text-muted-foreground text-sm">
+              {t("monsterMonitor.bossDbm.alias.emptySearch")}
+            </p>
+          {/if}
+        {/if}
+      </div>
+
+      <div class="space-y-2">
+        {#if Object.keys(dbmAliases).length > 0}
+          <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+            {#each Object.entries(dbmAliases) as [id, alias] (id)}
+              <div class="teammate-order-row">
+                <span class="text-muted-foreground shrink-0 text-xs">
+                  {id}
+                </span>
+                <span class="text-muted-foreground min-w-0 flex-1 truncate text-xs">
+                  {lookupDbmDefaultName(Number(id)) ?? `#${id}`}
+                </span>
+                <input
+                  type="text"
+                  value={alias}
+                  class="border-border/60 bg-background/60 text-foreground min-w-0 w-28 rounded-md border px-2 py-1 text-sm outline-none transition-colors focus:border-primary"
+                  oninput={(event) =>
+                    setDbmAlias(
+                      Number(id),
+                      (event.currentTarget as HTMLInputElement).value,
+                    )}
+                />
+                <button
+                  type="button"
+                  class="order-button danger"
+                  title={t("monsterMonitor.bossDbm.alias.remove")}
+                  onclick={() => setDbmAlias(Number(id), "")}
+                >
+                  {t("monsterMonitor.bossDbm.alias.remove")}
+                </button>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <p class="text-muted-foreground text-sm">
+            {t("monsterMonitor.bossDbm.alias.empty")}
+          </p>
+        {/if}
+      </div>
+    </section>
+
+    <section
+      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
+    >
       <div class="grid gap-4 lg:grid-cols-3">
         <label class="style-field">
           <span>{t("monsterMonitor.style.gap")}</span>
@@ -2334,7 +2494,7 @@
             min="0"
             max="1"
             step="0.05"
-            value={bossDbmPanelStyle.progressOpacity ?? 0.4}
+            value={bossDbmPanelStyle.progressOpacity}
             oninput={(event) =>
               updateBossDbmPanelStyle(
                 "progressOpacity",
@@ -2342,12 +2502,21 @@
               )}
           />
           <strong
-            >{Math.round(
-              (bossDbmPanelStyle.progressOpacity ?? 0.4) * 100,
-            )}%</strong
+            >{Math.round(bossDbmPanelStyle.progressOpacity * 100)}%</strong
           >
         </label>
       </div>
+      <OverlayTextStyleFields
+        textShadowEnabled={bossDbmPanelStyle.textShadowEnabled}
+        backgroundEnabled={bossDbmPanelStyle.backgroundEnabled}
+        backgroundOpacity={bossDbmPanelStyle.backgroundOpacity}
+        onTextShadowEnabled={(v) =>
+          updateBossDbmPanelStyle("textShadowEnabled", v)}
+        onBackgroundEnabled={(v) =>
+          updateBossDbmPanelStyle("backgroundEnabled", v)}
+        onBackgroundOpacity={(v) =>
+          updateBossDbmPanelStyle("backgroundOpacity", v)}
+      />
     </section>
   {:else}
     <section

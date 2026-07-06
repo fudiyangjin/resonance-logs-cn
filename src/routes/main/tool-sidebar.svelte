@@ -3,16 +3,38 @@
    * @file Tool sidebar component for the toolbox layout.
    * Displays the list of available tools in the left panel.
    */
-  import { t } from "$lib/i18n/index.svelte";
+  import { t, setLocale } from "$lib/i18n/index.svelte";
   import { page } from "$app/state";
+  import { onMount } from "svelte";
   import { TOOL_ROUTES } from "./routes.svelte";
   import { getVersion } from "@tauri-apps/api/app";
+  import {
+    APP_LOCALES,
+    LOCALE_NATIVE_NAMES,
+    type AppLocale,
+  } from "$lib/i18n/locales";
+  import { SETTINGS } from "$lib/settings-store";
+  import * as Popover from "$lib/components/ui/popover/index.js";
+  import ChevronDown from "virtual:icons/lucide/chevron-down";
+  import Languages from "virtual:icons/lucide/languages";
 
   // Check if current path matches or starts with the tool path
   function isActiveRoute(toolPath: string): boolean {
     const pathname = page.url.pathname;
     return pathname === toolPath || pathname.startsWith(toolPath + "/");
   }
+
+  function selectLocale(locale: AppLocale) {
+    SETTINGS.i18n.state.locale = locale;
+    setLocale(locale);
+  }
+
+  let appVersion = $state("");
+  onMount(() => {
+    getVersion()
+      .then((v) => (appVersion = v))
+      .catch((err) => console.error("Failed to get app version", err));
+  });
 </script>
 
 <aside
@@ -48,12 +70,38 @@
     {/each}
   </nav>
 
-  <!-- Footer with version -->
-  <div class="p-3 border-t border-border/50 space-y-3">
-    <div class="text-center text-xs text-muted-foreground">
-      v{#await getVersion()}{t(
-          "toolbox.versionLoading",
-        )}{:then version}{version}{/await}
+  <!-- Footer with version + language switcher -->
+  <div class="p-3 border-t border-border/50">
+    <div class="flex flex-col items-center gap-1.5 text-xs text-muted-foreground">
+      <span>v{appVersion || t("toolbox.versionLoading")}</span>
+      <div class="flex items-center gap-1.5">
+        <span class="opacity-60">language:</span>
+        <Popover.Root>
+          <Popover.Trigger
+            class="group inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-border/60 bg-popover/50 cursor-pointer transition-colors hover:bg-muted hover:border-border hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            <Languages class="w-3.5 h-3.5 opacity-70" />
+            {LOCALE_NATIVE_NAMES[SETTINGS.i18n.state.locale]}
+            <ChevronDown
+              class="w-3 h-3 opacity-60 transition-transform duration-200 group-data-[state=open]:rotate-180"
+            />
+          </Popover.Trigger>
+          <Popover.Content class="w-36 p-1" align="center" side="top" sideOffset={6}>
+            {#each APP_LOCALES as locale (locale)}
+              <button
+                type="button"
+                onclick={() => selectLocale(locale)}
+                class="w-full text-left px-2 py-1.5 rounded text-xs transition-colors {SETTINGS
+                  .i18n.state.locale === locale
+                  ? 'bg-muted text-foreground font-medium'
+                  : 'text-muted-foreground hover:bg-popover/70 hover:text-foreground'}"
+              >
+                {LOCALE_NATIVE_NAMES[locale]}
+              </button>
+            {/each}
+          </Popover.Content>
+        </Popover.Root>
+      </div>
     </div>
   </div>
 </aside>

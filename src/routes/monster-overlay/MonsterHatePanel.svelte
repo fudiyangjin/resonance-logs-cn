@@ -2,6 +2,10 @@
   import TextBuffRow from "$lib/components/TextBuffRow.svelte";
   import { t } from "$lib/i18n/index.svelte";
   import {
+    overlayPanelBackground,
+    overlayTextShadow,
+  } from "$lib/overlay-text-style";
+  import {
     getHatePanelPosition,
     getHatePanelScale,
     hatePanelStyle,
@@ -24,10 +28,18 @@
   <div
     class="overlay-group monster-hate-panel"
     class:editable={editing}
+    class:has-background={styleConfig.backgroundEnabled === true}
     style:left={`${panelPos.x}px`}
     style:top={`${panelPos.y}px`}
     style:transform={`scale(${panelScale})`}
     style:transform-origin="top left"
+    style:--overlay-text-shadow={overlayTextShadow(
+      styleConfig.textShadowEnabled,
+    )}
+    style:background={overlayPanelBackground(
+      styleConfig.backgroundEnabled,
+      styleConfig.backgroundOpacity,
+    )}
     onpointerdown={(event) =>
       startMonsterDrag(event, { kind: "hatePanel" }, panelPos)}
   >
@@ -79,6 +91,12 @@
     max-width: 320px;
   }
 
+  .monster-hate-panel.has-background {
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+  }
+
   .monster-hate-panel.editable {
     border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
@@ -109,7 +127,7 @@
     font-size: 12px;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.92);
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+    text-shadow: var(--overlay-text-shadow, 0 0 4px rgba(0, 0, 0, 0.9));
   }
 
   .boss-rows {

@@ -16,7 +16,12 @@ import {
   iconDisplayBuffs,
   skillDurationDisplays,
 } from "./overlay-display.svelte.js";
-import type { DragTarget, IconBuffDisplay, ResizeTarget } from "./overlay-types";
+import type {
+  DragTarget,
+  IconBuffDisplay,
+  OverlayScaleKey,
+  ResizeTarget,
+} from "./overlay-types";
 import {
   ensureBuffGroups,
   ensureCustomPanelGroups,
@@ -29,10 +34,7 @@ type OverlayPositionKey = keyof Omit<
   typeof DEFAULT_OVERLAY_POSITIONS,
   "iconBuffPositions" | "skillDurationPositions" | "categoryIconPositions"
 >;
-type OverlaySizeKey = keyof Omit<
-  typeof DEFAULT_OVERLAY_SIZES,
-  "iconBuffSizes" | "skillDurationSizes" | "categoryIconSizes"
->;
+type OverlaySizeKey = OverlayScaleKey;
 
 function clampGroupScale(value: number) {
   return Math.max(0.5, Math.min(2.5, value));

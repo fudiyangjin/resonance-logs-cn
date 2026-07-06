@@ -32,6 +32,7 @@
   const hasSpecialImages = $derived(
     Boolean(buff.specialImages && buff.specialImages.length > 0),
   );
+  const specialDisplayStyle = $derived(buff.specialDisplayStyle);
   const alert = $derived(buff.alert);
 </script>
 
@@ -63,13 +64,27 @@
 
   <div
     class="buff-icon-wrap"
+    class:special-wood-counter-wrap={specialDisplayStyle === "woodCounter"}
     style:width={`${iconSize}px`}
     style:height={`${iconSize}px`}
   >
     {#if hasSpecialImages}
-      {#each buff.specialImages ?? [] as imgSrc (imgSrc)}
-        <img src={imgSrc} alt={buff.name} class="special-buff-icon" />
-      {/each}
+      {#if specialDisplayStyle === "woodCounter"}
+        {@const digitSrc = buff.specialImages?.[0]}
+        <div class="special-wood-counter">
+          {#if digitSrc}
+            <img
+              src={digitSrc}
+              alt={buff.name}
+              class="special-wood-counter-digit"
+            />
+          {/if}
+        </div>
+      {:else}
+        {#each buff.specialImages ?? [] as imgSrc (imgSrc)}
+          <img src={imgSrc} alt={buff.name} class="special-buff-icon" />
+        {/each}
+      {/if}
     {:else}
       <img
         src={`/images/buff/${buff.spriteFile}`}
@@ -134,7 +149,7 @@
   .buff-name-label {
     font-size: 10px;
     color: #ffffff;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+    text-shadow: var(--overlay-text-shadow, 0 0 3px rgba(0, 0, 0, 0.9));
     line-height: 1;
     max-width: 52px;
     text-align: center;
@@ -163,7 +178,7 @@
     font-size: 12px;
     font-weight: 600;
     color: #ffffff;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+    text-shadow: var(--overlay-text-shadow, 0 0 3px rgba(0, 0, 0, 0.9));
     line-height: 1;
   }
 
@@ -187,6 +202,31 @@
     height: 100%;
     object-fit: contain;
     filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.9));
+  }
+
+  .buff-icon-wrap.special-wood-counter-wrap {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .special-wood-counter {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 0 3px rgba(12, 42, 12, 0.9));
+  }
+
+  .special-wood-counter-digit {
+    position: relative;
+    z-index: 1;
+    width: auto;
+    height: 72%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.9));
   }
 
   @keyframes buff-alert-flash {

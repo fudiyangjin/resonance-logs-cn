@@ -4,6 +4,7 @@ Archived release notes by version.
 
 | Version | Document |
 | ------ | ------------------------ |
+| v0.1.9 | [v0.1.9.md](./v0.1.9.md) |
 | v0.1.8 | [v0.1.8.md](./v0.1.8.md) |
 | v0.1.7 | [v0.1.7.md](./v0.1.7.md) |
 | v0.1.6 | [v0.1.6.md](./v0.1.6.md) |

@@ -5,14 +5,24 @@ import type {
   MinimapSnapshot,
 } from "$lib/api";
 import { t, type MessageKey } from "$lib/i18n/index.svelte";
-import type { MechanicRegion, MechanicRow } from "../../../scene-types";
+import type {
+  MechanicRegion,
+  MechanicRow,
+  MechanicRowTargetStatus,
+} from "../../../scene-types";
 import { arenaBounds, arenaCenter, type S3SeaRingedReefArena } from "../arena";
 import type { SeaRingedReefMechanicView } from "./matrix";
 
 const ICE_WAVE_MONSTER_ID = 3340219;
 const WATER_WAVE_MONSTER_ID = 3340220;
-const WAVE_BAND_HALF_WIDTH = 3.5;
-const INTERSECTION_HALF_SIZE = 5;
+// Each wave band is 4 units wide. The two perpendicular bands overlap in a
+// 4x4 square at their intersection — that overlap is the safe zone.
+const WAVE_BAND_HALF_WIDTH = 2;
+const SAFE_HALF = WAVE_BAND_HALF_WIDTH;
+// Player collision radius. A player is only "safe" when the entire circle
+// fits inside the safe rect, so we shrink the rect by this radius. Touching
+// the edge counts as dangerous (strict <).
+const PLAYER_RADIUS = 0.25;
 
 // Boss-phase orbs (attr `10` / monsterId): players must track their positions.
 const ICE_BALL_MONSTER_ID = 4604;
@@ -24,7 +34,7 @@ const ORB_COLOR_SLOTS: Record<number, number> = {
 
 const PIZZA_INDICATOR_SKILL_ID = 3340245;
 const PIZZA_HALF_ANGLE = 45; // each sector spans 90 degrees
-const PIZZA_OUTER_RADIUS = 22.5; // min(boss halfX 55, halfZ 45) / 2
+const PIZZA_OUTER_RADIUS = 20; // min(boss halfX 33, halfZ 27) / 2
 const PIZZA_ORANGE_BUFF_ID = 883633; // "标记-Rock橙色板子"
 const PIZZA_PURPLE_BUFF_ID = 883634; // "标记-Rock紫色板子"
 const PIZZA_PURPLE_DIAGONAL_OFFSET = 90; // purple danger diagonal is rotated 90deg
@@ -40,6 +50,7 @@ const textKeys = {
   iceWave: "minimap.s3SeaRingedReef.boss.iceWave",
   waterWave: "minimap.s3SeaRingedReef.boss.waterWave",
   crossSafe: "minimap.s3SeaRingedReef.boss.crossSafe",
+  singleWaveSafe: "minimap.s3SeaRingedReef.boss.singleWaveSafe",
   vertical: "minimap.s3SeaRingedReef.boss.vertical",
   horizontal: "minimap.s3SeaRingedReef.boss.horizontal",
   pizzaGroup: "minimap.s3SeaRingedReef.boss.pizzaGroup",
@@ -72,6 +83,7 @@ export function buildBossMechanicView(
   const regions: MechanicRegion[] = [];
   const rows: MechanicRow[] = [];
   const entityColorSlots = new Map<string, number>();
+  const waveSafeStatus = new Map<string, boolean>();
   const entitiesByUuid = new Map(
     snapshot.entities.map((entity) => [entity.entityUuid, entity]),
   );
@@ -83,7 +95,7 @@ export function buildBossMechanicView(
     entityColorSlots,
     displayName,
   );
-  addWaveSafeRegions(snapshot, arena, regions, rows);
+  addWaveSafeRegions(snapshot, arena, regions, rows, displayName, waveSafeStatus);
   addOrbMarkers(snapshot, entityColorSlots);
   addPizzaDangerRegions(
     skillCasts,
@@ -98,6 +110,7 @@ export function buildBossMechanicView(
     regions,
     rows,
     entityColorSlots,
+    waveSafeStatus,
   };
 }
 
@@ -289,17 +302,36 @@ function addWaveSafeRegions(
   arena: S3SeaRingedReefArena,
   regions: MechanicRegion[],
   rows: MechanicRow[],
+  displayName: (entity: MinimapEntity) => string,
+  waveSafeStatus: Map<string, boolean>,
 ) {
   const waves = latestWaves(snapshot.entities);
   if (waves.length === 0) return;
 
   const center = arenaCenter(arena);
   const bounds = arenaBounds(arena);
+  const innerHalf = Math.max(0, SAFE_HALF - PLAYER_RADIUS);
+
+  const localPlayer = snapshot.entities.find(
+    (entity) => entity.entityUuid === snapshot.localPlayerUuid,
+  );
 
   for (const wave of waves) {
     const axisLabelKey =
       wave.axis === "vertical" ? textKeys.vertical : textKeys.horizontal;
-    regions.push(waveRegion(wave, center, bounds));
+
+    const axisCoord =
+      wave.axis === "vertical" ? wave.entity.x : wave.entity.z;
+    const playerCoord =
+      wave.axis === "vertical" ? localPlayer?.x : localPlayer?.z;
+    const inBand =
+      localPlayer !== undefined &&
+      !localPlayer.isDead &&
+      playerCoord !== undefined &&
+      Math.abs(playerCoord - axisCoord) < innerHalf;
+
+    regions.push(waveRegion(wave, center, bounds, inBand ? 1 : 3));
+
     rows.push({
       key: `wave:${wave.key}:${wave.entity.entityUuid}`,
       group: t(textKeys.waveGroup),
@@ -314,26 +346,75 @@ function addWaveSafeRegions(
 
   const vertical = waves.find((wave) => wave.axis === "vertical");
   const horizontal = waves.find((wave) => wave.axis === "horizontal");
-  if (!vertical || !horizontal) return;
 
-  regions.push({
-    kind: "rect",
-    x: vertical.entity.x,
-    z: horizontal.entity.z,
-    halfX: INTERSECTION_HALF_SIZE,
-    halfZ: INTERSECTION_HALF_SIZE,
-    colorSlot: 1,
-  });
-  rows.push({
-    key: `wave:cross:${vertical.entity.entityUuid}:${horizontal.entity.entityUuid}`,
-    group: t(textKeys.waveGroup),
-    label: t(textKeys.crossSafe),
-    colorSlot: 1,
-    createTimeMs: 0,
-    durationMs: 0,
-    targets: [],
-    hideTimer: true,
-  });
+  // The wave bands are SAFE lanes (not danger). A player is safe when their
+  // whole collision circle (radius PLAYER_RADIUS) fits inside a band, so we
+  // test against the band shrunk by the radius. Strict <: touching the edge
+  // counts as dangerous.
+  // - Both waves: the overlap square of the two perpendicular safe bands
+  //   (the cross center) is the only spot safe from both.
+  // - Only one wave: inside that wave's band is safe; outside is danger.
+  // `innerHalf` is computed above (shared with the per-wave band coloring).
+
+  let safePredicate: ((entity: MinimapEntity) => boolean) | null = null;
+  let safeRow: MechanicRow | null = null;
+
+  if (vertical && horizontal) {
+    const cx = vertical.entity.x;
+    const cz = horizontal.entity.z;
+    safePredicate = (entity) =>
+      Math.abs(entity.x - cx) < innerHalf &&
+      Math.abs(entity.z - cz) < innerHalf;
+    safeRow = {
+      key: `wave:cross:${vertical.entity.entityUuid}:${horizontal.entity.entityUuid}`,
+      group: t(textKeys.waveGroup),
+      label: t(textKeys.crossSafe),
+      colorSlot: 1,
+      createTimeMs: 0,
+      durationMs: 0,
+      targets: [],
+      hideTimer: true,
+    };
+  } else {
+    const wave = vertical ?? horizontal ?? null;
+    if (wave) {
+      const axisCoord = vertical ? wave.entity.x : wave.entity.z;
+      safePredicate = (entity) =>
+        Math.abs((vertical ? entity.x : entity.z) - axisCoord) < innerHalf;
+      safeRow = {
+        key: `wave:single:${wave.key}:${wave.entity.entityUuid}`,
+        group: t(textKeys.waveGroup),
+        label: `${t(wave.labelKey)}：${t(textKeys.singleWaveSafe)}`,
+        colorSlot: 1,
+        createTimeMs: 0,
+        durationMs: 0,
+        targets: [],
+        hideTimer: true,
+      };
+    }
+  }
+
+  if (safePredicate && safeRow) {
+    const teamEntities = snapshot.entities.filter(
+      (entity) =>
+        (entity.kind === "local" || entity.kind === "teammate") &&
+        !entity.isDead,
+    );
+
+    const targetStatus: MechanicRowTargetStatus[] = teamEntities
+      .map((entity) => {
+        const safe = safePredicate!(entity);
+        waveSafeStatus.set(entity.entityUuid, safe);
+        return {
+          name: displayName(entity),
+          isLocal: entity.entityUuid === snapshot.localPlayerUuid,
+          safe,
+        };
+      })
+      .sort((a, b) => Number(b.isLocal) - Number(a.isLocal));
+
+    rows.push({ ...safeRow, targetStatus });
+  }
 }
 
 function latestWaves(entities: MinimapEntity[]): WaveLine[] {
@@ -388,6 +469,7 @@ function waveRegion(
   wave: WaveLine,
   center: { x: number; z: number },
   bounds: { halfX: number; halfZ: number },
+  displayColorSlot: number,
 ): MechanicRegion {
   if (wave.axis === "vertical") {
     return {
@@ -396,7 +478,7 @@ function waveRegion(
       z: center.z,
       halfX: WAVE_BAND_HALF_WIDTH,
       halfZ: bounds.halfZ,
-      colorSlot: wave.colorSlot,
+      colorSlot: displayColorSlot,
     };
   }
 
@@ -406,6 +488,6 @@ function waveRegion(
     z: wave.entity.z,
     halfX: bounds.halfX,
     halfZ: WAVE_BAND_HALF_WIDTH,
-    colorSlot: wave.colorSlot,
+    colorSlot: displayColorSlot,
   };
 }
