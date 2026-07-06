@@ -4,7 +4,7 @@
    * It sets up the left sidebar with tool list and right content area.
    */
   import { setupShortcuts } from "./dps/settings/shortcuts";
-  import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
+  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
   import { listen, type UnlistenFn } from "@tauri-apps/api/event";
   import { goto } from "$app/navigation";
   import { onSceneChange } from "$lib/api";
@@ -16,11 +16,16 @@
   import { applyCustomFonts } from "$lib/font-loader";
   import { applyLiveClickthrough } from "$lib/utils.svelte";
   import {
+    isOverlayWindowVisible,
+    refreshOverlayWindowVisibility,
+    setOverlayWindowVisible,
+  } from "$lib/overlay-window-visibility.svelte";
+  import {
     buildMonitorRuntimeSnapshot,
     createMonitorRuntimeSnapshotSignature,
     saveAndApplyMonitorRuntimeSnapshot,
   } from "$lib/runtime-monitor-sync";
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import ToolSidebar from "./tool-sidebar.svelte";
   import ChangelogModal from '$lib/components/ChangelogModal.svelte';
   import UpdateModal from '$lib/components/UpdateModal.svelte';
@@ -37,9 +42,6 @@
 
   let lastRuntimeSnapshotKey = "";
   let runtimeSnapshotInitialized = false;
-  let lastOverlayVisibleState: boolean | null = null;
-  let lastMonsterOverlayVisibleState: boolean | null = null;
-  let lastMinimapOverlayVisibleState: boolean | null = null;
   let runtimeSyncTimer: ReturnType<typeof setTimeout> | null = null;
   let currentSceneId = $state<number | null>(null);
 
@@ -81,22 +83,11 @@
       enabled && !(autoHideInDailyScenes && isDailyScene(currentSceneId));
 
     void (async () => {
-      try {
-        const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
-        if (overlayWindow) {
-          if (lastOverlayVisibleState !== shouldShow) {
-            lastOverlayVisibleState = shouldShow;
-            if (shouldShow) {
-              await overlayWindow.show();
-              await overlayWindow.unminimize();
-            } else {
-              await overlayWindow.hide();
-            }
-          }
-        }
-      } catch (error) {
-        console.error("[skill-monitor] failed to sync monitor state", error);
-      }
+      // Read via untrack() so this effect only reacts to setting/scene changes,
+      // not to visibility changes it (or the toggle buttons) makes itself -
+      // otherwise a manual toggle would immediately be "corrected" back.
+      if (untrack(() => isOverlayWindowVisible("game-overlay")) === shouldShow) return;
+      await setOverlayWindowVisible("game-overlay", shouldShow);
     })();
   });
 
@@ -108,22 +99,8 @@
       enabled && !(autoHideInDailyScenes && isDailyScene(currentSceneId));
 
     void (async () => {
-      try {
-        const monsterOverlayWindow = await WebviewWindow.getByLabel("monster-overlay");
-        if (monsterOverlayWindow) {
-          if (lastMonsterOverlayVisibleState !== shouldShow) {
-            lastMonsterOverlayVisibleState = shouldShow;
-            if (shouldShow) {
-              await monsterOverlayWindow.show();
-              await monsterOverlayWindow.unminimize();
-            } else {
-              await monsterOverlayWindow.hide();
-            }
-          }
-        }
-      } catch (error) {
-        console.error("[monster-monitor] failed to sync monster monitor state", error);
-      }
+      if (untrack(() => isOverlayWindowVisible("monster-overlay")) === shouldShow) return;
+      await setOverlayWindowVisible("monster-overlay", shouldShow);
     })();
   });
 
@@ -137,26 +114,9 @@
       isSupportedMinimapScene(currentSceneId);
 
     void (async () => {
-      try {
-        if (!shouldControl) {
-          lastMinimapOverlayVisibleState = null;
-          return;
-        }
-
-        const minimapOverlayWindow = await WebviewWindow.getByLabel("minimap-overlay");
-        if (!minimapOverlayWindow) return;
-
-        if (lastMinimapOverlayVisibleState === shouldShow) return;
-        lastMinimapOverlayVisibleState = shouldShow;
-        if (shouldShow) {
-          await minimapOverlayWindow.show();
-          await minimapOverlayWindow.unminimize();
-        } else {
-          await minimapOverlayWindow.hide();
-        }
-      } catch (error) {
-        console.error("[minimap] failed to sync auto hide state", error);
-      }
+      if (!shouldControl) return;
+      if (untrack(() => isOverlayWindowVisible("minimap-overlay")) === shouldShow) return;
+      await setOverlayWindowVisible("minimap-overlay", shouldShow);
     })();
   });
 
@@ -213,6 +173,10 @@
   }
 
   onMount(() => {
+    // "live" has no auto-hide effect to seed its initial visibility (unlike the
+    // other overlays, which sync above), so refresh it explicitly.
+    void refreshOverlayWindowVisibility("live");
+
     // Set up navigation listener
     const appWebview = getCurrentWebviewWindow();
     appWebview.listen<string>("navigate", (event) => {

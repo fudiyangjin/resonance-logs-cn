@@ -5,29 +5,16 @@
   import MapIcon from "virtual:icons/lucide/map";
   import PenSquareIcon from "virtual:icons/lucide/pen-square";
   import PlayIcon from "virtual:icons/lucide/play";
+  import PauseIcon from "virtual:icons/lucide/pause";
   import { t } from "$lib/i18n/index.svelte";
+  import {
+    isOverlayWindowVisible,
+    toggleOverlayWindow,
+  } from "$lib/overlay-window-visibility.svelte";
 
   let { children } = $props();
 
-  async function toggleMinimapOverlayWindow() {
-    try {
-      const overlayWindow = await WebviewWindow.getByLabel("minimap-overlay");
-      if (overlayWindow !== null) {
-        const isVisible = await overlayWindow.isVisible();
-        if (isVisible) {
-          await overlayWindow.hide();
-        } else {
-          await overlayWindow.show();
-          await overlayWindow.unminimize();
-          await overlayWindow.setFocus();
-        }
-      } else {
-        console.warn("Minimap overlay window not found");
-      }
-    } catch (error) {
-      console.error("Failed to toggle minimap overlay window:", error);
-    }
-  }
+  const overlayVisible = $derived(isOverlayWindowVisible("minimap-overlay"));
 
   async function toggleMinimapOverlayEditMode() {
     try {
@@ -60,10 +47,17 @@
     <div class="flex items-center gap-2">
       <button
         type="button"
-        class="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm transition-colors"
-        onclick={toggleMinimapOverlayWindow}
+        aria-pressed={overlayVisible}
+        class="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm transition-colors {overlayVisible
+          ? 'border border-border/60 bg-muted/30 text-foreground hover:bg-muted/50'
+          : 'bg-primary text-primary-foreground hover:bg-primary/90'}"
+        onclick={() => toggleOverlayWindow("minimap-overlay")}
       >
-        <PlayIcon class="h-4 w-4" />
+        {#if overlayVisible}
+          <PauseIcon class="h-4 w-4" />
+        {:else}
+          <PlayIcon class="h-4 w-4" />
+        {/if}
         <span>{t("minimap.actions.toggleOverlay")}</span>
         <ExternalLinkIcon class="h-3.5 w-3.5 opacity-70" />
       </button>

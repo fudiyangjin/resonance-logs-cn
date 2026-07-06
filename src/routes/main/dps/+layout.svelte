@@ -5,13 +5,19 @@
    */
   import { page } from "$app/state";
   import { t } from "$lib/i18n/index.svelte";
-  import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
   import { DPS_SUB_ROUTES } from "../routes.svelte";
   import ActivityIcon from "virtual:icons/lucide/activity";
   import ExternalLinkIcon from "virtual:icons/lucide/external-link";
   import PlayIcon from "virtual:icons/lucide/play";
+  import PauseIcon from "virtual:icons/lucide/pause";
+  import {
+    isOverlayWindowVisible,
+    toggleOverlayWindow,
+  } from "$lib/overlay-window-visibility.svelte";
 
   let { children } = $props();
+
+  const liveVisible = $derived(isOverlayWindowVisible("live"));
 
   // Check if current path matches the tab
   function isActiveTab(tabPath: string): boolean {
@@ -29,27 +35,6 @@
     page.url.pathname === "/main/dps" || page.url.pathname === "/main/dps/",
   );
 
-  async function toggleLiveWindow() {
-    try {
-      const liveWindow = await WebviewWindow.getByLabel("live");
-      if (liveWindow !== null) {
-        const isVisible = await liveWindow.isVisible();
-
-        if (isVisible) {
-          await liveWindow.hide();
-        } else {
-          // Show first, then unminimize and focus
-          await liveWindow.show();
-          await liveWindow.unminimize();
-          await liveWindow.setFocus();
-        }
-      } else {
-        console.warn("Live window not found");
-      }
-    } catch (err) {
-      console.error("Failed to toggle live window:", err);
-    }
-  }
 </script>
 
 <div class="space-y-6">
@@ -70,10 +55,17 @@
     <!-- Launch Live Window Button -->
     <button
       type="button"
-      class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors shadow-sm"
-      onclick={toggleLiveWindow}
+      aria-pressed={liveVisible}
+      class="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm shadow-sm transition-colors {liveVisible
+        ? 'border border-border/60 bg-muted/30 text-foreground hover:bg-muted/50'
+        : 'bg-primary text-primary-foreground hover:bg-primary/90'}"
+      onclick={() => toggleOverlayWindow("live")}
     >
-      <PlayIcon class="w-4 h-4" />
+      {#if liveVisible}
+        <PauseIcon class="w-4 h-4" />
+      {:else}
+        <PlayIcon class="w-4 h-4" />
+      {/if}
       <span>{t("dps.live.toggle")}</span>
       <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
     </button>

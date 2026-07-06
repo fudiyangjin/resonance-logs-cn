@@ -4,6 +4,10 @@ import {
   setClickthroughPreference,
   toggleClickthroughPreference,
 } from "$lib/utils.svelte";
+import {
+  setOverlayWindowVisible,
+  toggleOverlayWindow,
+} from "$lib/overlay-window-visibility.svelte";
 import { emit } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { register, unregisterAll } from "@tauri-apps/plugin-global-shortcut";
@@ -22,8 +26,7 @@ export async function registerShortcut(cmdId: string, shortcutKey: string) {
         await register(shortcutKey, async (event) => {
           if (event.state === "Pressed") {
             console.log(`Triggered ${cmdId}`);
-            const liveWindow = await WebviewWindow.getByLabel("live");
-            await liveWindow?.show();
+            await setOverlayWindowVisible("live", true);
           }
         });
         break;
@@ -32,8 +35,7 @@ export async function registerShortcut(cmdId: string, shortcutKey: string) {
         await register(shortcutKey, async (event) => {
           if (event.state === "Pressed") {
             console.log(`Triggered ${cmdId}`);
-            const liveWindow = await WebviewWindow.getByLabel("live");
-            await liveWindow?.hide();
+            await setOverlayWindowVisible("live", false);
           }
         });
         break;
@@ -42,13 +44,7 @@ export async function registerShortcut(cmdId: string, shortcutKey: string) {
         await register(shortcutKey, async (event) => {
           if (event.state === "Pressed") {
             console.log(`Triggered ${cmdId}`);
-            const liveWindow = await WebviewWindow.getByLabel("live");
-            const isVisible = await liveWindow?.isVisible();
-            if (isVisible) {
-              await liveWindow?.hide();
-            } else {
-              await liveWindow?.show();
-            }
+            await toggleOverlayWindow("live");
           }
         });
         break;
@@ -56,18 +52,7 @@ export async function registerShortcut(cmdId: string, shortcutKey: string) {
       case "toggleOverlayWindow":
         await register(shortcutKey, async (event) => {
           if (event.state === "Pressed") {
-            const overlayWindow = await WebviewWindow.getByLabel("game-overlay");
-            if (!overlayWindow) {
-              return;
-            }
-            const isVisible = await overlayWindow.isVisible();
-            if (isVisible) {
-              await overlayWindow.hide();
-            } else {
-              await overlayWindow.show();
-              await overlayWindow.unminimize();
-              await overlayWindow.setFocus();
-            }
+            await toggleOverlayWindow("game-overlay");
           }
         });
         break;
