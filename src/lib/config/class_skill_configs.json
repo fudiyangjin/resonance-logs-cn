@@ -448,23 +448,21 @@
     "classKey": "verdant_oracle",
     "className": "森语者",
     "classId": 5,
-    "defaultMonitoredBuffIds": [510072, 2202131, 2202252],
+    "defaultMonitoredBuffIds": [510072, 2202131, 2202251, 2202252],
     "derivations": [
       {
         "sourceSkillId": 1520,
         "derivedSkillId": 1520,
         "triggerBuffBaseId": 2202131,
         "derivedName": "灌注",
-        "derivedImagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx01_-777893832486412878.png",
-        "keepCdWhenDerived": true
+        "derivedImagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx01_-777893832486412878.png"
       },
       {
         "sourceSkillId": 1541,
         "derivedSkillId": 1541,
         "triggerBuffBaseId": 2202252,
         "derivedName": "狂野绽放",
-        "derivedImagePath": "/images/verdant_oracle/skill/weapon_fh-01_tg01_01_1821960491715709623.png",
-        "keepCdWhenDerived": true
+        "derivedImagePath": "/images/verdant_oracle/skill/weapon_fh-01_tg01_01_1821960491715709623.png"
       }
     ],
     "skills": [
@@ -483,18 +481,21 @@
       {
         "skillId": 1520,
         "name": "灌注",
-        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx01_-777893832486412878.png"
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx01_-777893832486412878.png",
+        "resourceRequirement": { "resourceId": 15001, "amount": 30 }
       },
       {
         "skillId": 1541,
         "name": "狂野绽放",
         "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_tg01_2955740106852191547.png",
-        "maxCharges": 2
+        "maxCharges": 2,
+        "resourceRequirement": { "resourceId": 15001, "amount": 20 }
       },
       {
         "skillId": 1523,
         "name": "再生脉冲",
-        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx05_-6309963487019551284.png"
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx05_-6309963487019551284.png",
+        "resourceRequirement": { "resourceId": 15001, "amount": 40 }
       },
       {
         "skillId": 1509,

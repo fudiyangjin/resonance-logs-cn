@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { createDefaultMinimapConfig, SETTINGS } from "$lib/settings-store";
+  import {
+    createDefaultMinimapConfig,
+    SETTINGS,
+  } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
   import SettingsColor from "../dps/settings/settings-color.svelte";
   import SettingsSlider from "../dps/settings/settings-slider.svelte";
@@ -17,6 +20,7 @@
     markerColors?: Partial<typeof defaultMinimapConfig.markerColors>;
     localRing?: Partial<typeof defaultMinimapConfig.localRing>;
     localFacing?: Partial<typeof defaultMinimapConfig.localFacing>;
+    infoPanelStyle?: Partial<typeof defaultMinimapConfig.infoPanelStyle>;
   };
 
   function ensureMinimapSettingsDefaults() {
@@ -45,6 +49,9 @@
     state.localRing.width ??= defaultMinimapConfig.localRing.width;
     state.localFacing ??= { ...defaultMinimapConfig.localFacing };
     state.localFacing.enabled ??= defaultMinimapConfig.localFacing.enabled;
+    state.infoPanelStyle ??= { ...defaultMinimapConfig.infoPanelStyle };
+    state.infoPanelStyle.backgroundOpacity ??=
+      defaultMinimapConfig.infoPanelStyle.backgroundOpacity;
   }
 
   ensureMinimapSettingsDefaults();
@@ -60,6 +67,7 @@
     void minimapSettings.markerColors;
     void minimapSettings.localRing;
     void minimapSettings.localFacing;
+    void minimapSettings.infoPanelStyle;
     ensureMinimapSettingsDefaults();
   });
 
@@ -152,6 +160,31 @@
       <p class="text-muted-foreground text-xs">
         {t("minimap.overlay.help")}
       </p>
+    </div>
+
+    <div class="space-y-3 border-t border-border/40 pt-3">
+      <label class="text-muted-foreground block text-xs">
+        {t("overlay.style.backgroundOpacity", {
+          value: Math.round(
+            (minimapSettings.infoPanelStyle?.backgroundOpacity ?? 0.76) * 100,
+          ),
+        })}
+        <input
+          class="mt-1 w-full"
+          type="range"
+          min="0"
+          max="1"
+          step="0.02"
+          value={minimapSettings.infoPanelStyle?.backgroundOpacity ?? 0.76}
+          oninput={(event) =>
+            (minimapSettings.infoPanelStyle = {
+              ...minimapSettings.infoPanelStyle,
+              backgroundOpacity: Number(
+                (event.currentTarget as HTMLInputElement).value,
+              ),
+            })}
+        />
+      </label>
     </div>
   </section>
 

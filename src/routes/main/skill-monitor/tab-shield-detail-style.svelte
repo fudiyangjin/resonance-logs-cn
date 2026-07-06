@@ -1,6 +1,9 @@
 <script lang="ts">
-  import type { ShieldDetailStyle } from "$lib/settings-store";
+  import type {
+    ShieldDetailStyle,
+  } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
+  import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
 
   interface Props {
     shieldDetailStyle: ShieldDetailStyle;
@@ -18,6 +21,9 @@
       key: "hpColor" | "shieldColor" | "healShieldColor",
       value: string,
     ) => void;
+    setShieldDetailTextShadowEnabled: (value: boolean) => void;
+    setShieldDetailBackgroundEnabled: (value: boolean) => void;
+    setShieldDetailBackgroundOpacity: (value: number) => void;
   }
 
   let {
@@ -27,6 +33,9 @@
     setShieldDetailBarWidth,
     setShieldDetailGap,
     setShieldDetailColor,
+    setShieldDetailTextShadowEnabled,
+    setShieldDetailBackgroundEnabled,
+    setShieldDetailBackgroundOpacity,
   }: Props = $props();
 </script>
 
@@ -158,5 +167,13 @@
         />
       </label>
     </div>
+    <OverlayTextStyleFields
+      textShadowEnabled={shieldDetailStyle.textShadowEnabled}
+      backgroundEnabled={shieldDetailStyle.backgroundEnabled}
+      backgroundOpacity={shieldDetailStyle.backgroundOpacity}
+      onTextShadowEnabled={setShieldDetailTextShadowEnabled}
+      onBackgroundEnabled={setShieldDetailBackgroundEnabled}
+      onBackgroundOpacity={setShieldDetailBackgroundOpacity}
+    />
   </div>
 </div>

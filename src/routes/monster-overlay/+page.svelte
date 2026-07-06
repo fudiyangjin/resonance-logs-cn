@@ -15,10 +15,15 @@
     isMonsterEditing,
     isMonsterReferenceMode,
   } from "./monster-state.svelte.js";
+  import {
+    overlayCustomFontFamily,
+    setupOverlayCustomFonts,
+  } from "$lib/overlay-custom-font.svelte";
 
   const editing = $derived(isMonsterEditing());
   const referenceMode = $derived(isMonsterReferenceMode());
   const visibility = $derived(getMonsterOverlayVisibility());
+  const fontFamilyVar = $derived(overlayCustomFontFamily());
   const hateEnabled = $derived(
     SETTINGS.monsterMonitor.state.hateListEnabled && visibility.showHatePanel,
   );
@@ -26,10 +31,16 @@
     SETTINGS.monsterMonitor.state.stunListEnabled && visibility.showStunPanel,
   );
 
+  setupOverlayCustomFonts();
   onMount(initMonsterOverlay);
 </script>
 
-<div class="overlay-root" class:editing class:reference={referenceMode}>
+<div
+  class="overlay-root"
+  class:editing
+  class:reference={referenceMode}
+  style:font-family={fontFamilyVar}
+>
   {#if editing}
     <EditBanner />
   {/if}

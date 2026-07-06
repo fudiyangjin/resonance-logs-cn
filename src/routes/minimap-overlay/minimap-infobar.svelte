@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { MinimapEntity, MinimapSnapshot } from "$lib/api";
   import { t } from "$lib/i18n/index.svelte";
+  import { SETTINGS } from "$lib/settings-store";
   import { overlayNow } from "../game-overlay/overlay-clock.svelte.js";
   import {
     minimapPlayerNames,
@@ -11,6 +12,15 @@
   import type { MechanicRow } from "./scene-types";
 
   let { snapshot }: { snapshot: MinimapSnapshot | null } = $props();
+
+  const infoPanelStyle = $derived(SETTINGS.minimap.state.infoPanelStyle);
+  const backgroundVar = $derived.by(() => {
+    const opacity = Math.max(
+      0,
+      Math.min(1, Number(infoPanelStyle?.backgroundOpacity ?? 0.76)),
+    );
+    return `rgba(15, 23, 42, ${opacity})`;
+  });
 
   type SkillGroup = { group: string; rows: MechanicRow[] };
 
@@ -68,7 +78,7 @@
   }
 </script>
 
-<div class="infobar">
+<div class="infobar" style:background={backgroundVar}>
   {#if groups.length === 0}
     <p class="empty">无机制</p>
   {:else}
@@ -124,7 +134,6 @@
     padding: 10px;
     color: #e2e8f0;
     font-size: 12px;
-    background: rgba(15, 23, 42, 0.76);
     border: 1px solid rgba(148, 163, 184, 0.24);
     border-radius: 14px;
     box-shadow:

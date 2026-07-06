@@ -686,6 +686,9 @@ export const zhCNMessages = {
   "themes.fonts.title": "自定义字体",
   "themes.fonts.description":
     "导入自定义字体以替换默认字体。字体文件格式应为 .woff2, .woff, .ttf, 或 .otf。",
+  "themes.fonts.applyToOverlay": "应用到悬浮窗",
+  "themes.fonts.applyToOverlayDescription":
+    "开启后,自定义无衬线字体将应用于技能、怪物、小地图悬浮窗;关闭时悬浮窗使用系统默认字体。",
   "themes.fonts.sansTitle": "无衬线字体（UI 文本）",
   "themes.fonts.defaultSans": "默认：Inter Variable",
   "themes.fonts.enableSans": "启用自定义无衬线字体",
@@ -973,6 +976,9 @@ export const zhCNMessages = {
   "skillMonitor.style.valueColor": "数值颜色",
   "skillMonitor.style.progressColor": "进度条颜色",
   "skillMonitor.style.progressOpacity": "进度条透明度: {value}%",
+  "overlay.style.textShadow": "文字阴影",
+  "overlay.style.background": "背景遮罩",
+  "overlay.style.backgroundOpacity": "遮罩浓度: {value}%",
   "skillMonitor.panelAttr.title": "角色面板",
   "skillMonitor.panelAttr.enabledSummary": "已启用属性 {enabled}/{total}",
   "skillMonitor.panelAttr.displayColor": "显示颜色",
@@ -1062,6 +1068,8 @@ export const zhCNMessages = {
   "skillMonitor.overlay.resource": "资源监控区：{state}",
   "skillMonitor.overlay.panelAttr": "角色属性区：{state}",
   "skillMonitor.overlay.panelAttrGroupTag": "角色属性区",
+  "skillMonitor.overlay.sharedTextStyle": "其他覆盖层文字（技能/资源/Buff 图标）",
+  "skillMonitor.panelAttr.textStyle": "文字样式",
   "skillMonitor.overlay.customPanel": "自定义监控区：{state}",
   "skillMonitor.overlay.shieldDetail": "血量护盾区：{state}",
   "skillMonitor.overlay.help": "点击按钮切换显示状态（按方案保存）",

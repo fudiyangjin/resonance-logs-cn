@@ -290,6 +290,10 @@ export type MinimapMarkerColors = {
   m6: string;
 };
 
+export type MinimapInfoPanelStyle = {
+  backgroundOpacity: number;
+};
+
 export type MinimapConfig = {
   autoHideInDailyScenes: boolean;
   hideNormalTeammates: boolean;
@@ -305,6 +309,7 @@ export type MinimapConfig = {
   markerColors: MinimapMarkerColors;
   localRing: MinimapLocalRing;
   localFacing: MinimapLocalFacing;
+  infoPanelStyle: MinimapInfoPanelStyle;
 };
 
 export type PanelAttrConfig = {
@@ -607,6 +612,7 @@ export type OverlaySizes = {
   panelAttrGap: number;
   panelAttrFontSize: number;
   panelAttrColumnGap: number;
+  panelAttrTextStyle: OverlayTextStyle;
   iconBuffSizes: Record<number, number>;
   skillDurationSizes: Record<number, number>;
   categoryIconSizes?: Partial<Record<BuffCategoryKey, number>>;
@@ -621,6 +627,12 @@ export type OverlayVisibility = {
   showShieldDetailGroup: boolean;
 };
 
+export type OverlayTextStyle = {
+  textShadowEnabled: boolean;
+  backgroundEnabled: boolean;
+  backgroundOpacity: number;
+};
+
 export type CustomPanelStyle = {
   gap: number;
   columnGap: number;
@@ -629,7 +641,7 @@ export type CustomPanelStyle = {
   valueColor: string;
   progressColor: string;
   progressOpacity: number;
-};
+} & OverlayTextStyle;
 
 export type TeammateBuffColumnKey =
   | `buff:${number}`
@@ -651,7 +663,7 @@ export type ShieldDetailStyle = {
   hpColor: string;
   shieldColor: string;
   healShieldColor: string;
-};
+} & OverlayTextStyle;
 
 export type MonsterOverlayPositions = {
   monsterBuffPanel: Point;
@@ -731,7 +743,7 @@ export type TextBuffPanelStyle = {
   valueColor: string;
   progressColor: string;
   progressOpacity: number;
-};
+} & OverlayTextStyle;
 
 export type BuffDisplayMode = "individual" | "grouped";
 
@@ -809,6 +821,9 @@ export type SkillMonitorProfile = {
   customPanelStyle?: CustomPanelStyle;
   textBuffPanelStyle?: TextBuffPanelStyle;
   shieldDetailStyle?: ShieldDetailStyle;
+  /** Shared text style applied to overlay groups without a dedicated style
+   * config (skill Cd, resource, panel attr, buff icon/duration groups). */
+  overlayTextStyle?: OverlayTextStyle;
   textBuffMaxVisible: number;
   overlayPositions: OverlayPositions;
   overlaySizes: OverlaySizes;
@@ -896,6 +911,7 @@ function createDefaultOverlaySizes(): OverlaySizes {
     panelAttrGap: 4,
     panelAttrFontSize: 14,
     panelAttrColumnGap: 12,
+    panelAttrTextStyle: createDefaultOverlayTextStyle(),
     iconBuffSizes: {},
     skillDurationSizes: {},
     categoryIconSizes: {},
@@ -913,6 +929,28 @@ function createDefaultOverlayVisibility(): OverlayVisibility {
   };
 }
 
+export function createDefaultOverlayTextStyle(): OverlayTextStyle {
+  return {
+    textShadowEnabled: true,
+    backgroundEnabled: false,
+    backgroundOpacity: 0.76,
+  };
+}
+
+export function ensureOverlayTextStyle(
+  style: Partial<OverlayTextStyle> | null | undefined,
+): OverlayTextStyle {
+  const base = createDefaultOverlayTextStyle();
+  return {
+    textShadowEnabled: style?.textShadowEnabled ?? base.textShadowEnabled,
+    backgroundEnabled: style?.backgroundEnabled ?? base.backgroundEnabled,
+    backgroundOpacity: Math.max(
+      0,
+      Math.min(1, Number(style?.backgroundOpacity ?? base.backgroundOpacity)),
+    ),
+  };
+}
+
 export function createDefaultCustomPanelStyle(): CustomPanelStyle {
   return {
     gap: 6,
@@ -922,6 +960,7 @@ export function createDefaultCustomPanelStyle(): CustomPanelStyle {
     valueColor: "#ffffff",
     progressColor: "#ffffff",
     progressOpacity: 0.4,
+    ...createDefaultOverlayTextStyle(),
   };
 }
 
@@ -1008,6 +1047,7 @@ export function ensureTeammatePanelStyle(
       0,
       Math.min(1, Number(style?.progressOpacity ?? base.progressOpacity)),
     ),
+    ...ensureOverlayTextStyle(style),
     rowHeight: Math.max(
       16,
       Math.min(
@@ -1054,6 +1094,7 @@ function createDefaultTextBuffPanelStyle(): TextBuffPanelStyle {
     valueColor: "#ffffff",
     progressColor: "#ffffff",
     progressOpacity: 0.4,
+    ...createDefaultOverlayTextStyle(),
   };
 }
 
@@ -1118,6 +1159,7 @@ export function createDefaultSkillMonitorProfile(
     inlineBuffEntries: [],
     panelAreaRowOrder: [],
     textBuffPanelStyle: createDefaultTextBuffPanelStyle(),
+    overlayTextStyle: createDefaultOverlayTextStyle(),
     textBuffMaxVisible: 10,
     overlayPositions: createDefaultOverlayPositions(),
     overlaySizes: createDefaultOverlaySizes(),
@@ -1194,6 +1236,9 @@ export function createDefaultMinimapConfig(): MinimapConfig {
     },
     localFacing: {
       enabled: false,
+    },
+    infoPanelStyle: {
+      backgroundOpacity: 0.76,
     },
   };
 }
@@ -1531,6 +1576,7 @@ const DEFAULT_SETTINGS = {
     customFontMonoEnabled: false,
     customFontMonoUrl: "" as string,
     customFontMonoName: "" as string,
+    customFontApplyToOverlay: false,
   },
   shortcuts: {
     showLiveMeter: "",

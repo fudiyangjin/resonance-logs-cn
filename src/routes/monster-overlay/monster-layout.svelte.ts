@@ -1,4 +1,8 @@
-import { SETTINGS, ensureTeammatePanelStyle } from "$lib/settings-store";
+import {
+  SETTINGS,
+  ensureTeammatePanelStyle,
+} from "$lib/settings-store";
+import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
 import {
   createReferenceSession,
   disableSiblingReference,
@@ -113,27 +117,27 @@ export function getDbmPanelScale() {
 }
 
 export function monsterPanelStyle() {
-  return SETTINGS.monsterMonitor.state.panelStyle;
+  return normalizeCustomPanelStyle(SETTINGS.monsterMonitor.state.panelStyle);
 }
 
 export function dbmPanelStyle() {
-  return (
+  return normalizeCustomPanelStyle(
     SETTINGS.monsterMonitor.state.bossDbmPanelStyle ??
-    SETTINGS.monsterMonitor.state.panelStyle
+      SETTINGS.monsterMonitor.state.panelStyle,
   );
 }
 
 export function hatePanelStyle() {
-  return (
+  return normalizeCustomPanelStyle(
     SETTINGS.monsterMonitor.state.hatePanelStyle ??
-    SETTINGS.monsterMonitor.state.panelStyle
+      SETTINGS.monsterMonitor.state.panelStyle,
   );
 }
 
 export function stunPanelStyle() {
-  return (
+  return normalizeCustomPanelStyle(
     SETTINGS.monsterMonitor.state.stunPanelStyle ??
-    SETTINGS.monsterMonitor.state.panelStyle
+      SETTINGS.monsterMonitor.state.panelStyle,
   );
 }
 
@@ -145,9 +149,9 @@ export function teammatePanelStyle() {
 }
 
 export function fantasyPanelStyle() {
-  return (
+  return normalizeCustomPanelStyle(
     SETTINGS.monsterMonitor.state.fantasyPanelStyle ??
-    SETTINGS.monsterMonitor.state.panelStyle
+      SETTINGS.monsterMonitor.state.panelStyle,
   );
 }
 

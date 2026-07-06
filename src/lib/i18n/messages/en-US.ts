@@ -763,6 +763,9 @@ export const enUSMessages = {
   "themes.fonts.title": "Custom Fonts",
   "themes.fonts.description":
     "Import custom fonts to replace the defaults. Font files should be .woff2, .woff, .ttf, or .otf.",
+  "themes.fonts.applyToOverlay": "Apply to overlays",
+  "themes.fonts.applyToOverlayDescription":
+    "When enabled, the custom sans-serif font is applied to the skill, monster, and minimap overlays. When disabled, overlays use the system default font.",
   "themes.fonts.sansTitle": "Sans-serif Font (UI Text)",
   "themes.fonts.defaultSans": "Default: Inter Variable",
   "themes.fonts.enableSans": "Enable Custom Sans-serif Font",
@@ -1075,6 +1078,9 @@ export const enUSMessages = {
   "skillMonitor.style.valueColor": "Value Color",
   "skillMonitor.style.progressColor": "Progress Color",
   "skillMonitor.style.progressOpacity": "Progress opacity: {value}%",
+  "overlay.style.textShadow": "Text shadow",
+  "overlay.style.background": "Background mask",
+  "overlay.style.backgroundOpacity": "Mask opacity: {value}%",
   "skillMonitor.panelAttr.title": "Character Panel",
   "skillMonitor.panelAttr.enabledSummary":
     "{enabled}/{total} attributes enabled",
@@ -1168,6 +1174,8 @@ export const enUSMessages = {
   "skillMonitor.overlay.resource": "Resource Monitor Area: {state}",
   "skillMonitor.overlay.panelAttr": "Character Attribute Area: {state}",
   "skillMonitor.overlay.panelAttrGroupTag": "Character Attribute Area",
+  "skillMonitor.overlay.sharedTextStyle": "Other overlay text (skills/resources/buff icons)",
+  "skillMonitor.panelAttr.textStyle": "Text style",
   "skillMonitor.overlay.customPanel": "Custom Monitor Area: {state}",
   "skillMonitor.overlay.shieldDetail": "HP/Shield Area: {state}",
   "skillMonitor.overlay.help":

@@ -123,10 +123,12 @@
     justify-content: space-between;
     min-width: 0;
     padding: 2px 6px;
-    text-shadow:
+    text-shadow: var(
+      --overlay-text-shadow,
       0 0 3px rgba(0, 0, 0, 1),
       0 0 6px rgba(0, 0, 0, 0.7),
-      0 1px 2px rgba(0, 0, 0, 0.9);
+      0 1px 2px rgba(0, 0, 0, 0.9)
+    );
   }
 
   .text-buff-name {

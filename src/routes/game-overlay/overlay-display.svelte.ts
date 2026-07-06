@@ -9,6 +9,7 @@ import {
   getSeasonCultivateFactorRuleId,
   getSeasonCultivateFactorRuleMap,
   type CounterRulePreset,
+  type SpecialBuffDisplay,
 } from "$lib/skill-mappings";
 import {
   getBuffCategoryLabel,
@@ -65,6 +66,40 @@ import {
 } from "./overlay-runtime.svelte.js";
 import type { InlineBuffEntry } from "$lib/settings-store";
 import { overlayNow } from "./overlay-clock.svelte.js";
+
+type ResolvedSpecialBuffDisplay = Pick<
+  IconBuffDisplay,
+  "specialDisplayStyle" | "specialImages"
+>;
+
+function resolveSpecialBuffDisplay(
+  config: SpecialBuffDisplay | undefined,
+  layer: number,
+): ResolvedSpecialBuffDisplay {
+  if (!config) return {};
+
+  if (config.displayStyle === "woodCounter") {
+    const digitImages = config.digitImages ?? [];
+    if (digitImages.length === 0) return {};
+    const digitIndex = Math.min(
+      digitImages.length - 1,
+      Math.max(0, Math.floor(Number.isFinite(layer) ? layer : 0)),
+    );
+    const digitImage = digitImages[digitIndex];
+    return digitImage
+      ? { specialDisplayStyle: "woodCounter", specialImages: [digitImage] }
+      : {};
+  }
+
+  const layerImages = config.layerImages ?? [];
+  if (layerImages.length === 0) return {};
+  const layerIdx = Math.min(
+    layerImages.length - 1,
+    Math.max(0, Math.floor((Number.isFinite(layer) ? layer : 1) - 1)),
+  );
+  const specialImages = layerImages[layerIdx] ?? [];
+  return specialImages.length > 0 ? { specialImages } : {};
+}
 
 const _normalizedBuffGroups = $derived.by(() => {
   const profile = activeProfile();
@@ -193,17 +228,10 @@ const _buffSnapshot = $derived.by(() => {
     const name = resolveBuffDisplayName(baseId, currentBuffAliases);
     const timeText = formatTimerText(remaining);
     const alert = resolveAlert(baseId, remaining, buff.durationMs);
-    const specialConfig = _specialBuffConfigMap.get(baseId);
-    const specialImages = specialConfig
-      ? (() => {
-          const layer = Math.max(1, buff.layer);
-          const layerIdx = Math.min(
-            specialConfig.layerImages.length - 1,
-            layer - 1,
-          );
-          return specialConfig.layerImages[layerIdx] ?? [];
-        })()
-      : [];
+    const specialDisplay = resolveSpecialBuffDisplay(
+      _specialBuffConfigMap.get(baseId),
+      buff.layer,
+    );
 
     if (definition?.spriteFile) {
       nextIconBuffs.push({
@@ -212,7 +240,7 @@ const _buffSnapshot = $derived.by(() => {
         spriteFile: definition.spriteFile,
         text: timeText,
         layer: buff.layer,
-        ...(specialImages.length > 0 ? { specialImages } : {}),
+        ...(specialDisplay.specialImages ? specialDisplay : {}),
         ...(alert ? { alert } : {}),
       });
     } else {
@@ -237,11 +265,10 @@ const _buffSnapshot = $derived.by(() => {
       if (iconIds.has(baseId) || textIds.has(`buff_${baseId}`)) continue;
       const definition = buffDefinitionsMap.get(baseId);
       const name = resolveBuffDisplayName(baseId, currentBuffAliases);
-      const specialConfig = _specialBuffConfigMap.get(baseId);
-      const placeholderSpecialImages =
-        specialConfig && specialConfig.layerImages.length > 0
-          ? (specialConfig.layerImages[0] ?? [])
-          : [];
+      const placeholderSpecialDisplay = resolveSpecialBuffDisplay(
+        _specialBuffConfigMap.get(baseId),
+        0,
+      );
       if (definition?.spriteFile) {
         nextIconBuffs.push({
           baseId,
@@ -250,8 +277,8 @@ const _buffSnapshot = $derived.by(() => {
           text: "--",
           layer: 1,
           isPlaceholder: true,
-          ...(placeholderSpecialImages.length > 0
-            ? { specialImages: placeholderSpecialImages }
+          ...(placeholderSpecialDisplay.specialImages
+            ? placeholderSpecialDisplay
             : {}),
         });
       } else {

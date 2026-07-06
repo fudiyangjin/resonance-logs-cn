@@ -10,5 +10,23 @@
         ]
       ]
     }
+  ],
+  "verdant_oracle": [
+    {
+      "buffBaseId": 2202251,
+      "displayStyle": "woodCounter",
+      "digitImages": [
+        "/images/verdant_oracle/res/fightres_numberwood_00_-3507073145721128145.png",
+        "/images/verdant_oracle/res/fightres_numberwood_01_6180950672037793211.png",
+        "/images/verdant_oracle/res/fightres_numberwood_02_-8139921653067917231.png",
+        "/images/verdant_oracle/res/fightres_numberwood_03_7916997566240614485.png",
+        "/images/verdant_oracle/res/fightres_numberwood_04_-352858200672413306.png",
+        "/images/verdant_oracle/res/fightres_numberwood_05_-6853346575736420549.png",
+        "/images/verdant_oracle/res/fightres_numberwood_06_5585562876021491641.png",
+        "/images/verdant_oracle/res/fightres_numberwood_07_-1358614589849049292.png",
+        "/images/verdant_oracle/res/fightres_numberwood_08_6277839518724903978.png",
+        "/images/verdant_oracle/res/fightres_numberwood_09_3990044789584849354.png"
+      ]
+    }
   ]
 }

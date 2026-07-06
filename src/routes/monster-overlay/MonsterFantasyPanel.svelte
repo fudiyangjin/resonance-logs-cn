@@ -1,6 +1,10 @@
 <script lang="ts">
   import { t } from "$lib/i18n/index.svelte";
   import {
+    overlayPanelBackground,
+    overlayTextShadow,
+  } from "$lib/overlay-text-style";
+  import {
     fantasyPanelStyle,
     getFantasyPanelPosition,
     getFantasyPanelScale,
@@ -23,10 +27,18 @@
   <div
     class="overlay-group fantasy-panel"
     class:editable={editing}
+    class:has-background={styleConfig.backgroundEnabled === true}
     style:left={`${panelPos.x}px`}
     style:top={`${panelPos.y}px`}
     style:transform={`scale(${panelScale})`}
     style:transform-origin="top left"
+    style:--overlay-text-shadow={overlayTextShadow(
+      styleConfig.textShadowEnabled,
+    )}
+    style:background={overlayPanelBackground(
+      styleConfig.backgroundEnabled,
+      styleConfig.backgroundOpacity,
+    )}
     onpointerdown={(event) =>
       startMonsterDrag(event, { kind: "fantasyPanel" }, panelPos)}
   >
@@ -68,6 +80,12 @@
     max-width: 560px;
   }
 
+  .fantasy-panel.has-background {
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+  }
+
   .fantasy-panel.editable {
     border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
@@ -96,9 +114,11 @@
     font-size: var(--font-size);
     font-weight: 700;
     line-height: 1.25;
-    text-shadow:
+    text-shadow: var(
+      --overlay-text-shadow,
       0 0 3px rgba(0, 0, 0, 0.95),
-      0 1px 2px rgba(0, 0, 0, 0.95);
+      0 1px 2px rgba(0, 0, 0, 0.95)
+    );
     background: rgba(0, 0, 0, 0.22);
   }
 

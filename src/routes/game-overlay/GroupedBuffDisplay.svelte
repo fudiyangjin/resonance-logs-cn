@@ -75,6 +75,6 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: #fff;
     font-size: 12px;
-    text-shadow: 0 0 2px rgba(0, 0, 0, 0.9);
+    text-shadow: var(--overlay-text-shadow, 0 0 2px rgba(0, 0, 0, 0.9));
   }
 </style>

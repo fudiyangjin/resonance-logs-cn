@@ -1427,6 +1427,14 @@
                 {t("themes.fonts.description")}
               </p>
 
+              <SettingsSwitch
+                bind:checked={
+                  SETTINGS.accessibility.state.customFontApplyToOverlay
+                }
+                label={t("themes.fonts.applyToOverlay")}
+                description={t("themes.fonts.applyToOverlayDescription")}
+              />
+
               <!-- Sans-serif Font -->
               <div class="space-y-2 pt-2 border-t border-border/30">
                 <h3 class="text-sm font-semibold text-foreground">

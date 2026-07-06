@@ -16,18 +16,37 @@
     initOverlay,
     isEditing,
     isReferenceMode,
+    overlayTextStyle,
     overlayVisibility,
   } from "./overlay-state.svelte.js";
+  import { overlayTextShadow } from "$lib/overlay-text-style";
+  import {
+    overlayCustomFontFamily,
+    setupOverlayCustomFonts,
+  } from "$lib/overlay-custom-font.svelte";
 
   const editing = $derived(isEditing());
   const referenceMode = $derived(isReferenceMode());
   const visibility = $derived(overlayVisibility());
   const displayMode = $derived(buffDisplayMode());
+  const sharedTextStyle = $derived(overlayTextStyle());
+  const sharedTextShadowVar = $derived(
+    overlayTextShadow(sharedTextStyle.textShadowEnabled),
+  );
+  const sharedFontFamilyVar = $derived(overlayCustomFontFamily());
+
+  setupOverlayCustomFonts();
 
   onMount(initOverlay);
 </script>
 
-<div class="overlay-root" class:editing class:reference={referenceMode}>
+<div
+  class="overlay-root"
+  class:editing
+  class:reference={referenceMode}
+  style:--overlay-text-shadow={sharedTextShadowVar}
+  style:font-family={sharedFontFamilyVar}
+>
   {#if editing}
     <EditBanner />
   {/if}

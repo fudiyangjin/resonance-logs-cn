@@ -46,11 +46,15 @@ export type ResourceDefinition = {
   imageOff: string;
   buffBaseId?: number;
   buffBaseIds?: number[];
+  compactAbove?: number;
+  compactMultiplierPrefix?: string;
 };
 
 export type SpecialBuffDisplay = {
   buffBaseId: number;
-  layerImages: string[][];
+  layerImages?: string[][];
+  digitImages?: string[];
+  displayStyle?: "woodCounter";
 };
 
 export type ResourceRequirement = {

@@ -12,15 +12,21 @@
     minimapSnapshot,
   } from "./minimap-runtime.svelte.js";
   import { initMinimapOverlay } from "./minimap-events.svelte.js";
+  import {
+    overlayCustomFontFamily,
+    setupOverlayCustomFonts,
+  } from "$lib/overlay-custom-font.svelte";
 
   const editing = $derived(isMinimapEditing());
   const snapshot = $derived(minimapSnapshot());
   const minimapSettings = $derived(SETTINGS.minimap.state);
+  const fontFamilyVar = $derived(overlayCustomFontFamily());
 
+  setupOverlayCustomFonts();
   onMount(() => initMinimapOverlay());
 </script>
 
-<div class="overlay-root" class:editing>
+<div class="overlay-root" class:editing style:font-family={fontFamilyVar}>
   {#if editing}
     <EditBanner />
   {/if}

@@ -745,6 +745,9 @@ export const jaJPMessages = {
   "themes.fonts.title": "カスタムフォント",
   "themes.fonts.description":
     "デフォルトを置き換えるカスタムフォントをインポートします。フォントファイルは .woff2、.woff、.ttf、.otf 形式である必要があります。",
+  "themes.fonts.applyToOverlay": "オーバーレイに適用",
+  "themes.fonts.applyToOverlayDescription":
+    "オンにすると、カスタムサンセリフフォントがスキル、モンスター、ミニマップのオーバーレイに適用されます。オフの場合、オーバーレイはシステム既定のフォントを使用します。",
   "themes.fonts.sansTitle": "サンセリフフォント（UI テキスト）",
   "themes.fonts.defaultSans": "デフォルト: Inter Variable",
   "themes.fonts.enableSans": "カスタムサンセリフフォントを有効化",
@@ -1058,6 +1061,9 @@ export const jaJPMessages = {
   "skillMonitor.style.valueColor": "値の色",
   "skillMonitor.style.progressColor": "プログレス色",
   "skillMonitor.style.progressOpacity": "プログレス不透明度: {value}%",
+  "overlay.style.textShadow": "テキストの影",
+  "overlay.style.background": "背景マスク",
+  "overlay.style.backgroundOpacity": "マスク濃度: {value}%",
   "skillMonitor.panelAttr.title": "キャラクターパネル",
   "skillMonitor.panelAttr.enabledSummary": "{enabled}/{total} 属性を有効化",
   "skillMonitor.panelAttr.displayColor": "表示色",
@@ -1153,6 +1159,8 @@ export const jaJPMessages = {
   "skillMonitor.overlay.resource": "リソースモニターエリア: {state}",
   "skillMonitor.overlay.panelAttr": "キャラクター属性エリア: {state}",
   "skillMonitor.overlay.panelAttrGroupTag": "キャラクター属性エリア",
+  "skillMonitor.overlay.sharedTextStyle": "その他オーバーレイ文字（スキル/リソース/Buffアイコン）",
+  "skillMonitor.panelAttr.textStyle": "テキストスタイル",
   "skillMonitor.overlay.customPanel": "カスタムモニターエリア: {state}",
   "skillMonitor.overlay.shieldDetail": "HP/シールドエリア: {state}",
   "skillMonitor.overlay.help":
