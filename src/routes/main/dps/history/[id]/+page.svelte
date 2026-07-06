@@ -47,6 +47,7 @@
   } from "$lib/components/death-replay/death-player-list.svelte";
   import DeathList from "$lib/components/death-replay/death-list.svelte";
   import DeathReplayDetail from "$lib/components/death-replay/death-replay-detail.svelte";
+  import { normalizeHistoryEntities } from "$lib/death-replay-compat";
 
   type HistorySkillType = "dps" | "heal" | "tanked" | "death";
 
@@ -734,7 +735,7 @@
         (encounterRes.data as { localPlayerId?: number | null })
           .localPlayerId ?? "",
       );
-      rawEntities = entitiesRes.data;
+      rawEntities = normalizeHistoryEntities(entitiesRes.data);
       const durationSeconds =
         encounterRes.data.duration > 0
           ? Math.max(1, encounterRes.data.duration)

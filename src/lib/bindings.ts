@@ -432,13 +432,29 @@ skillKey: number;
  */
 value: number }
 /**
+ * A single active buff copied at the moment a death replay record is created.
+ */
+export type DeathBuffSnapshot = { baseId: number; buffUuid: number; layer: number; durationMs: number; createTimeMs: number; sourceEntityUuid: string | null; sourceConfigId: number | null }
+/**
+ * Active buffs for one attacker that contributed to a death replay window.
+ */
+export type DeathParticipantBuffSnapshot = { 
+/**
+ * Attacker entity UUID, serialized as a string for JS safety. None for unknown sources.
+ */
+entityUuid: string | null; 
+/**
+ * Monster type id of the attacker, if the attacker is a monster. None otherwise.
+ */
+monsterTypeId: number | null; buffs?: DeathBuffSnapshot[] }
+/**
  * A death replay record, capturing the damage taken within the window leading up to a death.
  */
 export type DeathRecord = { victimEntityUuid: string; deathTimestampMs: number; 
 /**
  * Damage snapshots in chronological order (oldest first).
  */
-recentDamages: DamageSnapshot[] }
+recentDamages?: DamageSnapshot[]; victimBuffs?: DeathBuffSnapshot[]; participantBuffs?: DeathParticipantBuffSnapshot[] }
 export type Device = { name: string; description: string | null }
 export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; resetSourceConfigId?: number | null; resetBuffTarget?: ResetBuffTarget; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction; altFreeze?: AltFreezeConfig | null; thresholdModifier?: AttrModifier | null; freezeDurationModifier?: AttrModifier | null; resetSkillKeys?: number[] | null; onResetSkill?: CounterAction; dungeonStartFreezeMs?: number | null }
 /**

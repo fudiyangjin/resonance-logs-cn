@@ -1,7 +1,7 @@
 use crate::database::{EncounterMetadata, PlayerNameEntry, now_ms, save_encounter};
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
 use crate::live::buff_monitor::{
-    BuffTargetKind, BuffWatchProfile, EntityBuffMonitorConfig, EntityBuffMonitors,
+    ActiveBuff, BuffTargetKind, BuffWatchProfile, EntityBuffMonitorConfig, EntityBuffMonitors,
 };
 use crate::live::commands_models::{
     BossDbmEvent, CounterUpdateState, FightResourceEntry, FightResourceState, MinimapSkillCast,
@@ -13,7 +13,10 @@ use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::entity_id::entity_uuid_string;
 use crate::live::event_manager::EventManager;
-use crate::live::opcodes_models::{AttrType, AttrValue, DeathRecord, Encounter, Entity, attr_type};
+use crate::live::opcodes_models::{
+    AttrType, AttrValue, DeathBuffSnapshot, DeathParticipantBuffSnapshot, DeathRecord, Encounter,
+    Entity, attr_type,
+};
 use crate::live::season_cultivate::{FactorCounterTemplate, SeasonCultivateRuntimeState};
 use crate::live::skill_cd_monitor::SkillCdMonitor;
 use crate::live::skill_lifecycle::{
@@ -523,6 +526,74 @@ fn classify_buff_snapshot_target(state: &AppState, target_uuid: i64) -> Option<B
         return Some(BuffTargetKind::Teammate);
     }
     None
+}
+
+fn active_buff_to_death_snapshot(
+    buff_uuid: i32,
+    buff: &ActiveBuff,
+    server_clock_offset: i64,
+) -> DeathBuffSnapshot {
+    DeathBuffSnapshot {
+        base_id: buff.base_id,
+        buff_uuid,
+        layer: buff.layer,
+        duration_ms: buff.duration,
+        create_time_ms: buff.create_time.saturating_add(server_clock_offset),
+        source_entity_uuid: buff.fire_uuid,
+        source_config_id: buff.source_config_id,
+    }
+}
+
+fn death_buff_snapshot_for_entity(state: &AppState, entity_uuid: i64) -> Vec<DeathBuffSnapshot> {
+    let Some(monitor) = state.entity_buff_monitors.monitors.get(&entity_uuid) else {
+        return Vec::new();
+    };
+
+    let mut buffs: Vec<_> = monitor
+        .active_buffs
+        .iter()
+        .map(|(&buff_uuid, buff)| {
+            active_buff_to_death_snapshot(buff_uuid, buff, state.server_clock_offset)
+        })
+        .collect();
+    buffs.sort_by_key(|buff| (buff.create_time_ms, buff.base_id, buff.buff_uuid));
+    buffs
+}
+
+fn death_participant_buff_snapshots(
+    state: &AppState,
+    damages: &[crate::live::opcodes_models::DamageSnapshot],
+) -> Vec<DeathParticipantBuffSnapshot> {
+    let mut seen_entities = HashSet::new();
+    let mut seen_monsters_without_entity = HashSet::new();
+    let mut participants = Vec::new();
+
+    for damage in damages {
+        if let Some(entity_uuid) = damage.attacker_entity_uuid {
+            if !seen_entities.insert(entity_uuid) {
+                continue;
+            }
+            participants.push(DeathParticipantBuffSnapshot {
+                entity_uuid: Some(entity_uuid),
+                monster_type_id: damage.attacker_monster_type_id,
+                buffs: death_buff_snapshot_for_entity(state, entity_uuid),
+            });
+            continue;
+        }
+
+        if let Some(monster_type_id) = damage.attacker_monster_type_id {
+            if !seen_monsters_without_entity.insert(monster_type_id) {
+                continue;
+            }
+            participants.push(DeathParticipantBuffSnapshot {
+                entity_uuid: None,
+                monster_type_id: Some(monster_type_id),
+                buffs: Vec::new(),
+            });
+        }
+    }
+
+    participants
 }
 
 fn minimap_monster_id_of(state: &AppState, entity_uuid: i64) -> Option<i32> {
@@ -1904,19 +1975,35 @@ impl AppStateManager {
         }
 
         for death in changes.death_events {
+            let Some(recent_damages) = state
+                .encounter
+                .entity_uuid_to_entity
+                .get_mut(&death.entity_uuid)
+                .map(|entity| {
+                    entity.recent_taken_events.drain(..).collect::<Vec<_>>()
+                })
+            else {
+                continue;
+            };
+
+            if recent_damages.is_empty() {
+                continue;
+            }
+
+            let victim_buffs = death_buff_snapshot_for_entity(state, death.entity_uuid);
+            let participant_buffs = death_participant_buff_snapshots(state, &recent_damages);
+
             if let Some(entity) = state
                 .encounter
                 .entity_uuid_to_entity
                 .get_mut(&death.entity_uuid)
             {
-                let recent_damages: Vec<_> = entity.recent_taken_events.drain(..).collect();
-                if recent_damages.is_empty() {
-                    continue;
-                }
                 entity.deaths.push(DeathRecord {
                     victim_entity_uuid: death.entity_uuid,
                     death_timestamp_ms: death.timestamp_ms,
                     recent_damages,
+                    victim_buffs,
+                    participant_buffs,
                 });
                 state.death_snapshot_dirty = true;
             }

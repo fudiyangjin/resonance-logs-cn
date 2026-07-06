@@ -890,6 +890,11 @@ export const jaJPMessages = {
   "components.deathReplay.relativeSeconds.zero": "0秒",
   "components.deathReplay.relativeSeconds.value": "{seconds}秒",
   "components.deathReplay.monsterSkillFallback": "{monsterName} · #{skillKey}",
+  "components.deathReplay.buff.victim": "自身 Buff スナップショット",
+  "components.deathReplay.buff.none": "Buff なし",
+  "components.deathReplay.buff.id": "Buff ID: {id}",
+  "components.deathReplay.buff.layer": "スタック: {layer}",
+  "components.deathReplay.buff.remaining": "{seconds}s",
   "live.death.replay.notFound":
     "選択した死亡記録が見つかりません。リセットされた可能性があります。",
   "live.death.replay.backToList": "一覧に戻る",
