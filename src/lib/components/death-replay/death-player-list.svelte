@@ -85,7 +85,7 @@
         for (const death of entry.deaths) {
           const t = Number(death.deathTimestampMs);
           if (t > latest) latest = t;
-          for (const dmg of death.recentDamages) {
+          for (const dmg of death.recentDamages ?? []) {
             totalTaken += Number(dmg.value);
           }
         }

@@ -61,14 +61,15 @@
         (a, b) => Number(b.deathTimestampMs) - Number(a.deathTimestampMs),
       )
       .map((record) => {
+        const recentDamages = record.recentDamages ?? [];
         let totalTaken = 0;
-        for (const dmg of record.recentDamages) {
+        for (const dmg of recentDamages) {
           totalTaken += Number(dmg.value);
         }
         return {
           record,
           totalTaken,
-          hitCount: record.recentDamages.length,
+          hitCount: recentDamages.length,
         };
       }),
   );

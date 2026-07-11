@@ -912,6 +912,11 @@ export const enUSMessages = {
   "components.deathReplay.relativeSeconds.zero": "0s",
   "components.deathReplay.relativeSeconds.value": "{seconds}s",
   "components.deathReplay.monsterSkillFallback": "{monsterName} · #{skillKey}",
+  "components.deathReplay.buff.victim": "Victim Buff Snapshot",
+  "components.deathReplay.buff.none": "No buffs",
+  "components.deathReplay.buff.id": "Buff ID: {id}",
+  "components.deathReplay.buff.layer": "Stacks: {layer}",
+  "components.deathReplay.buff.remaining": "{seconds}s",
   "live.death.replay.notFound":
     "The selected death record was not found. It may have been reset.",
   "live.death.replay.backToList": "Back to list",

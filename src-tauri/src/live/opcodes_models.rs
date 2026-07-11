@@ -383,12 +383,38 @@ pub struct DamageSnapshot {
     pub value: u128,
 }
 
+/// A single active buff copied at the moment a death replay record is created.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeathBuffSnapshot {
+    pub base_id: i32,
+    pub buff_uuid: i32,
+    pub layer: i32,
+    pub duration_ms: i32,
+    pub create_time_ms: i64,
+    pub source_entity_uuid: Option<EntityUuid>,
+    pub source_config_id: Option<i32>,
+}
+
+/// Active buffs for one attacker that contributed to a death replay window.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeathParticipantBuffSnapshot {
+    pub entity_uuid: Option<EntityUuid>,
+    pub monster_type_id: Option<i32>,
+    #[serde(default)]
+    pub buffs: Vec<DeathBuffSnapshot>,
+}
+
 /// Runtime death replay record. Keep UUIDs numeric inside Rust; convert to strings only at API boundaries.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeathRecord {
     pub victim_entity_uuid: EntityUuid,
     pub death_timestamp_ms: u128,
+    #[serde(default)]
     pub recent_damages: Vec<DamageSnapshot>,
+    #[serde(default)]
+    pub victim_buffs: Vec<DeathBuffSnapshot>,
+    #[serde(default)]
+    pub participant_buffs: Vec<DeathParticipantBuffSnapshot>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -428,6 +454,7 @@ pub struct Entity {
     /// Rolling 2s window of damage taken events; used to build death-replay snapshots.
     #[serde(skip)]
     pub recent_taken_events: VecDeque<DamageSnapshot>,
+    #[serde(default)]
     pub deaths: Vec<DeathRecord>,
 }
 
@@ -856,5 +883,36 @@ mod tests {
         let json = serde_json::to_string(&attr_type).unwrap();
         let deserialized: AttrType = serde_json::from_str(&json).unwrap();
         assert_eq!(attr_type, deserialized);
+    }
+
+    #[test]
+    fn death_record_deserializes_legacy_payload_without_buff_snapshots() {
+        #[derive(Serialize)]
+        struct LegacyDeathRecord {
+            victim_entity_uuid: EntityUuid,
+            death_timestamp_ms: u128,
+            recent_damages: Vec<DamageSnapshot>,
+        }
+
+        let legacy = LegacyDeathRecord {
+            victim_entity_uuid: 42,
+            death_timestamp_ms: 1_000,
+            recent_damages: vec![DamageSnapshot {
+                timestamp_ms: 900,
+                attacker_entity_uuid: None,
+                attacker_monster_type_id: None,
+                skill_key: 123,
+                value: 456,
+            }],
+        };
+
+        let encoded = rmp_serde::to_vec(&legacy).unwrap();
+        let decoded: DeathRecord = rmp_serde::from_slice(&encoded).unwrap();
+
+        assert_eq!(decoded.victim_entity_uuid, legacy.victim_entity_uuid);
+        assert_eq!(decoded.death_timestamp_ms, legacy.death_timestamp_ms);
+        assert_eq!(decoded.recent_damages.len(), 1);
+        assert!(decoded.victim_buffs.is_empty());
+        assert!(decoded.participant_buffs.is_empty());
     }
 }

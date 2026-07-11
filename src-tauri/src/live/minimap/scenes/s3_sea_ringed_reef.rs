@@ -3,8 +3,8 @@ use super::super::scene::SceneConfig;
 const SCENE_IDS: &[i32] = &[6563, 6564, 6565];
 
 const MECHANIC_BUFF_IDS: &[i32] = &[
-    883707, 883708, 883709, 883710, 883714, 883601, 883602, 883603, 883605, 883631, 522602,
-    883633, 883634,
+    883707, 883708, 883709, 883710, 883714, 883601, 883602, 883603, 883605, 883631, 522602, 883633,
+    883634,
 ];
 
 // Entity template ids worth pushing on top of team members: Nabo, its sound

@@ -1,4 +1,5 @@
 import type { DeathRecord, LiveDataPayload, TrainingDummyState } from "$lib/api";
+import { normalizeDeathRecords } from "$lib/death-replay-compat";
 
 let liveData = $state<LiveDataPayload | null>(null);
 let trainingDummyState = $state<TrainingDummyState | null>(null);
@@ -26,7 +27,7 @@ export function getTrainingDummyState() {
  * so the store always mirrors the latest authoritative state from Rust.
  */
 export function setDeathRecords(records: DeathRecord[]) {
-  deathRecords = records ?? [];
+  deathRecords = normalizeDeathRecords(records);
 }
 
 export function getDeathRecords() {

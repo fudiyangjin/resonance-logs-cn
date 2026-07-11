@@ -1,7 +1,9 @@
 use crate::live::opcodes_models::SkillTargetStats;
 use crate::live::opcodes_models::{CombatStats, Skill};
 use crate::live::opcodes_models::{
-    DamageSnapshot as RuntimeDamageSnapshot, DeathRecord as RuntimeDeathRecord,
+    DamageSnapshot as RuntimeDamageSnapshot, DeathBuffSnapshot as RuntimeDeathBuffSnapshot,
+    DeathParticipantBuffSnapshot as RuntimeDeathParticipantBuffSnapshot,
+    DeathRecord as RuntimeDeathRecord,
 };
 use crate::live::training_dummy::TrainingDummyPhase;
 use std::collections::HashMap;
@@ -702,6 +704,31 @@ pub struct DamageSnapshot {
     pub value: u128,
 }
 
+/// A single active buff copied at the moment a death replay record is created.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct DeathBuffSnapshot {
+    pub base_id: i32,
+    pub buff_uuid: i32,
+    pub layer: i32,
+    pub duration_ms: i32,
+    pub create_time_ms: i64,
+    pub source_entity_uuid: Option<String>,
+    pub source_config_id: Option<i32>,
+}
+
+/// Active buffs for one attacker that contributed to a death replay window.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct DeathParticipantBuffSnapshot {
+    /// Attacker entity UUID, serialized as a string for JS safety. None for unknown sources.
+    pub entity_uuid: Option<String>,
+    /// Monster type id of the attacker, if the attacker is a monster. None otherwise.
+    pub monster_type_id: Option<i32>,
+    #[serde(default)]
+    pub buffs: Vec<DeathBuffSnapshot>,
+}
+
 /// A death replay record, capturing the damage taken within the window leading up to a death.
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -709,7 +736,12 @@ pub struct DeathRecord {
     pub victim_entity_uuid: String,
     pub death_timestamp_ms: u128,
     /// Damage snapshots in chronological order (oldest first).
+    #[serde(default)]
     pub recent_damages: Vec<DamageSnapshot>,
+    #[serde(default)]
+    pub victim_buffs: Vec<DeathBuffSnapshot>,
+    #[serde(default)]
+    pub participant_buffs: Vec<DeathParticipantBuffSnapshot>,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
@@ -728,6 +760,28 @@ pub fn to_damage_snapshot(snapshot: &RuntimeDamageSnapshot) -> DamageSnapshot {
     }
 }
 
+pub fn to_death_buff_snapshot(snapshot: &RuntimeDeathBuffSnapshot) -> DeathBuffSnapshot {
+    DeathBuffSnapshot {
+        base_id: snapshot.base_id,
+        buff_uuid: snapshot.buff_uuid,
+        layer: snapshot.layer,
+        duration_ms: snapshot.duration_ms,
+        create_time_ms: snapshot.create_time_ms,
+        source_entity_uuid: snapshot.source_entity_uuid.map(|uuid| uuid.to_string()),
+        source_config_id: snapshot.source_config_id,
+    }
+}
+
+pub fn to_death_participant_buff_snapshot(
+    snapshot: &RuntimeDeathParticipantBuffSnapshot,
+) -> DeathParticipantBuffSnapshot {
+    DeathParticipantBuffSnapshot {
+        entity_uuid: snapshot.entity_uuid.map(|uuid| uuid.to_string()),
+        monster_type_id: snapshot.monster_type_id,
+        buffs: snapshot.buffs.iter().map(to_death_buff_snapshot).collect(),
+    }
+}
+
 pub fn to_death_record(record: &RuntimeDeathRecord) -> DeathRecord {
     DeathRecord {
         victim_entity_uuid: record.victim_entity_uuid.to_string(),
@@ -736,6 +790,16 @@ pub fn to_death_record(record: &RuntimeDeathRecord) -> DeathRecord {
             .recent_damages
             .iter()
             .map(to_damage_snapshot)
+            .collect(),
+        victim_buffs: record
+            .victim_buffs
+            .iter()
+            .map(to_death_buff_snapshot)
+            .collect(),
+        participant_buffs: record
+            .participant_buffs
+            .iter()
+            .map(to_death_participant_buff_snapshot)
             .collect(),
     }
 }

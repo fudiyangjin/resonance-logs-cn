@@ -1,9 +1,22 @@
 <script lang="ts">
   import { getClassIcon, tooltip } from "$lib/utils.svelte";
-  import { SETTINGS } from "$lib/settings-store";
-  import type { DamageSnapshot, DeathRecord } from "$lib/api";
+  import {
+    getGlobalBuffAliases,
+    SETTINGS,
+    type BuffAliasMap,
+  } from "$lib/settings-store";
+  import type {
+    DamageSnapshot,
+    DeathBuffSnapshot,
+    DeathParticipantBuffSnapshot,
+    DeathRecord,
+  } from "$lib/api";
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import { formatClassSpecLabel } from "$lib/class-labels";
+  import {
+    lookupBuffMeta,
+    resolveBuffDisplayName,
+  } from "$lib/config/buff-name-table";
   import { resolveMonsterName } from "$lib/config/game-names";
   import { lookupDamageIdName } from "$lib/config/recount-table";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
@@ -45,15 +58,69 @@
       ? SETTINGS.history.general.state.abbreviationStyle
       : SETTINGS.live.general.state.abbreviationStyle,
   );
+  const buffAliases = $derived.by<BuffAliasMap>(() => getGlobalBuffAliases());
 
   // Reverse so that the fatal hit (0s) sits at the top and older hits descend (-0.2s, -0.5s, ...).
   const rows = $derived.by<DamageSnapshot[]>(() =>
-    [...record.recentDamages].slice().reverse(),
+    [...(record.recentDamages ?? [])].slice().reverse(),
+  );
+  const victimBuffs = $derived(record.victimBuffs ?? []);
+  const participantBuffs = $derived(record.participantBuffs ?? []);
+  const participantDisplay = $derived.by(() => {
+    const cards: Array<{
+      key: string;
+      title: string;
+      buffs: DeathBuffSnapshot[];
+    }> = [
+      {
+        key: "victim",
+        title: t("components.deathReplay.buff.victim"),
+        buffs: victimBuffs,
+      },
+    ];
+    const monsterNameCounts = new Map<string, number>();
+    const monsterNameIndexes = new Map<string, number>();
+    const attackerNameByEntityUuid = new Map<string, string>();
+    const attackerNameByMonsterTypeId = new Map<number, string>();
+
+    for (const participant of participantBuffs) {
+      if (participant.monsterTypeId == null) continue;
+      const name = resolveParticipantBaseTitle(participant);
+      monsterNameCounts.set(name, (monsterNameCounts.get(name) ?? 0) + 1);
+    }
+
+    for (const [index, participant] of participantBuffs.entries()) {
+      const title = resolveParticipantTitle(
+        participant,
+        monsterNameCounts,
+        monsterNameIndexes,
+      );
+      cards.push({
+        key: getParticipantKey(participant, index),
+        title,
+        buffs: participant.buffs ?? [],
+      });
+
+      if (participant.entityUuid) {
+        attackerNameByEntityUuid.set(participant.entityUuid, title);
+      } else if (participant.monsterTypeId != null) {
+        attackerNameByMonsterTypeId.set(
+          Number(participant.monsterTypeId),
+          title,
+        );
+      }
+    }
+
+    return { cards, attackerNameByEntityUuid, attackerNameByMonsterTypeId };
+  });
+  const buffSnapshotCards = $derived(participantDisplay.cards);
+  const hasBuffSnapshots = $derived(
+    buffSnapshotCards.length > 1 || (buffSnapshotCards[0]?.buffs.length ?? 0) > 0,
   );
 
   const maxValue = $derived.by(() => {
     let maxV = 0;
-    for (const d of record.recentDamages) {
+    for (const d of record.recentDamages ?? []) {
       const v = Number(d.value);
       if (v > maxV) maxV = v;
     }
@@ -84,6 +151,24 @@
   }
 
   function resolveAttackerName(snapshot: DamageSnapshot): string {
+    if (snapshot.attackerEntityUuid) {
+      const participantName = participantDisplay.attackerNameByEntityUuid.get(
+        snapshot.attackerEntityUuid,
+      );
+      if (participantName) return participantName;
+    }
+
+    if (
+      snapshot.attackerEntityUuid == null &&
+      snapshot.attackerMonsterTypeId != null
+    ) {
+      const participantName =
+        participantDisplay.attackerNameByMonsterTypeId.get(
+          Number(snapshot.attackerMonsterTypeId),
+        );
+      if (participantName) return participantName;
+    }
+
     if (snapshot.attackerMonsterTypeId != null) {
       return resolveMonsterName(Number(snapshot.attackerMonsterTypeId));
     }
@@ -124,7 +209,110 @@
     if (maxValue <= 0) return 0;
     return (value / maxValue) * 100;
   }
+
+  function resolveBuffName(buff: DeathBuffSnapshot): string {
+    const baseId = Number(buff.baseId);
+    const name = resolveBuffDisplayName(baseId, buffAliases);
+    return name === `#${baseId}` ? String(baseId) : name;
+  }
+
+  function resolveBuffIcon(buff: DeathBuffSnapshot): string | null {
+    return lookupBuffMeta(Number(buff.baseId))?.spriteFile ?? null;
+  }
+
+  function resolveBuffTooltip(buff: DeathBuffSnapshot): string {
+    return `${buff.baseId}: ${resolveBuffName(buff)}`;
+  }
+
+  function getParticipantKey(
+    participant: DeathParticipantBuffSnapshot,
+    index: number,
+  ): string {
+    return (
+      participant.entityUuid ??
+      `monster:${participant.monsterTypeId ?? "unknown"}:${index}`
+    );
+  }
+
+  function resolveParticipantBaseTitle(
+    participant: DeathParticipantBuffSnapshot,
+  ): string {
+    if (participant.monsterTypeId != null) {
+      return resolveMonsterName(Number(participant.monsterTypeId));
+    }
+
+    if (participant.entityUuid) {
+      return t("components.deathReplay.attackerUid", {
+        uid: uidFromEntityUuid(participant.entityUuid),
+      });
+    }
+
+    return t("components.deathReplay.unknownSource");
+  }
+
+  function resolveParticipantTitle(
+    participant: DeathParticipantBuffSnapshot,
+    monsterNameCounts: Map<string, number>,
+    monsterNameIndexes: Map<string, number>,
+  ): string {
+    const title = resolveParticipantBaseTitle(participant);
+    if (participant.monsterTypeId == null) return title;
+    if ((monsterNameCounts.get(title) ?? 0) <= 1) return title;
+
+    const nextIndex = (monsterNameIndexes.get(title) ?? 0) + 1;
+    monsterNameIndexes.set(title, nextIndex);
+    return `${title} #${nextIndex}`;
+  }
 </script>
+
+{#snippet buffSnapshotCard(title: string, buffs: DeathBuffSnapshot[])}
+  <section
+    class="min-w-0 rounded border border-border/50 bg-background/50 p-2"
+  >
+    <div class="mb-2 truncate text-xs font-medium text-foreground">
+      {title}
+    </div>
+    {#if buffs.length === 0}
+      <div class="text-xs text-muted-foreground/70">
+        {t("components.deathReplay.buff.none")}
+      </div>
+    {:else}
+      <div class="flex flex-wrap gap-1.5">
+        {#each buffs as buff (`${buff.buffUuid}-${buff.baseId}`)}
+          {@const icon = resolveBuffIcon(buff)}
+          <div
+            class="flex max-w-44 items-center gap-1.5 rounded border border-border/50 bg-card/70 px-1.5 py-1 text-xs text-muted-foreground"
+            {@attach tooltip(() => resolveBuffTooltip(buff))}
+          >
+            {#if icon}
+              <img
+                class="size-4 shrink-0 rounded-sm object-contain"
+                src={`/images/buff/${icon}`}
+                alt={resolveBuffName(buff)}
+              />
+            {/if}
+            <span class="min-w-0 truncate">{resolveBuffName(buff)}</span>
+            {#if buff.layer > 1}
+              <span class="shrink-0 tabular-nums">x{buff.layer}</span>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </section>
+{/snippet}
+
+{#snippet buffSnapshotsPanel()}
+  {#if hasBuffSnapshots}
+    <div
+      class="mb-2 grid grid-cols-1 gap-2 rounded border border-border/50 bg-card/20 p-2"
+    >
+      {#each buffSnapshotCards as card (card.key)}
+        {@render buffSnapshotCard(card.title, card.buffs)}
+      {/each}
+    </div>
+  {/if}
+{/snippet}
 
 {#if variant === "history"}
   <div class="mb-2 flex items-center gap-3">
@@ -167,11 +355,13 @@
       </span>
       <span class="text-sm text-neutral-400">
         {t("components.deathReplay.hitCountText", {
-          count: formatNumber(record.recentDamages.length),
+          count: formatNumber(rows.length),
         })}
       </span>
     </div>
   </div>
+
+  {@render buffSnapshotsPanel()}
 
   <div class="overflow-x-auto rounded border border-border/60 bg-card/30">
     <table class="w-full border-collapse">
@@ -264,6 +454,7 @@
 {:else}
   <!-- Live: compact skill-row rendering aligned with DPS/HEAL (no sticky header; right-click to go back). -->
   <div class="relative flex flex-col">
+    {@render buffSnapshotsPanel()}
     <table class="w-full border-collapse">
       <tbody>
         {#if rows.length === 0}

@@ -12,6 +12,8 @@ import type {
   RawSkillStats as BindingRawSkillStats,
   HistoryEntityData as BindingRawEntityData,
   DamageSnapshot as BindingDamageSnapshot,
+  DeathBuffSnapshot as BindingDeathBuffSnapshot,
+  DeathParticipantBuffSnapshot as BindingDeathParticipantBuffSnapshot,
   DeathRecord as BindingDeathRecord,
 } from "./bindings";
 
@@ -363,6 +365,9 @@ export type SceneChangePayload = {
 };
 
 export type DamageSnapshot = BindingDamageSnapshot;
+export type DeathBuffSnapshot = BindingDeathBuffSnapshot;
+export type DeathParticipantBuffSnapshot =
+  BindingDeathParticipantBuffSnapshot;
 export type DeathRecord = BindingDeathRecord;
 
 export type DeathReplayPayload = {
