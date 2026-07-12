@@ -20,6 +20,7 @@ A feature-rich companion application for **Star Resonance** with DPS analysis, o
 | 🇨🇳 [README_CN.md](README_CN.md)         | Simplified Chinese documentation |
 | 📝 [CHANGELOG.md](CHANGELOG.md)           | Project changelog                |
 | 🍴 [CHANGELOG_FORK.md](CHANGELOG_FORK.md) | Fork-specific changes            |
+| 🍴 [TODO.md](TODO.md) | ToDo List            |
 
 ---
 
