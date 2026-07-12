@@ -1,8 +1,8 @@
-# <img src="app-logo.png" width="64" align="center"> Resonance Logs Documentation
+# <img src="app-logo.png" width="64" align="center"> Star Resonance DPS meter & Dungeon/Raid BDM & Skill/Buff Trackers Overlay
 
 <div align="center">
 
-# Resonance Logs Documentation
+# <img src="src-tauri/icons/icon.ico" width="64" align="center"> Resonance Logs Documentation
 
 A feature-rich companion application for **Star Resonance** with DPS analysis, overlays, combat logging, minimap support, dungeon mechanic guides, and more.
 
