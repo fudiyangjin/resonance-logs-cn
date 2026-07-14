@@ -79,7 +79,8 @@ export const enUSMessages = {
     "Search and add forbidden damage by mechanic / damage name. When any member takes one during the current combat segment, a red triangle appears after their name in the DPS / Heal / Tanked lists, so you can tell mid-run whether the challenge has failed.",
   "challengeWatch.presets.title": "Challenge presets (one-click)",
   "challengeWatch.preset.n17Fuyoupao": "N17-Tomb Blaze · Drone Cannon",
-  "challengeWatch.searchPlaceholder": "Search by mechanic / damage name, e.g. \"Drone Cannon\"",
+  "challengeWatch.searchPlaceholder":
+    'Search by mechanic / damage name, e.g. "Drone Cannon"',
   "challengeWatch.searchNoResults": "No matching damage names found",
   "challengeWatch.searchCount": "{count} matches",
   "challengeWatch.groupCount": "{count} damages",
@@ -933,8 +934,7 @@ export const enUSMessages = {
   "skillMonitor.main.enabled.label": "Enable Live Monitor",
   "skillMonitor.main.enabled.description":
     "Send monitor data to the overlay window in real time when enabled",
-  "skillMonitor.main.autoHideInDailyScenes.label":
-    "Auto Hide in Daily Scenes",
+  "skillMonitor.main.autoHideInDailyScenes.label": "Auto Hide in Daily Scenes",
   "skillMonitor.main.autoHideInDailyScenes.description":
     "Automatically hide the skill overlay in daily scene blacklist entries and restore it after leaving.",
   "skillMonitor.tabs.skillCd": "Skill CD",
@@ -1044,6 +1044,16 @@ export const enUSMessages = {
   "skillMonitor.buff.alert.highlightColor": "Highlight Color",
   "skillMonitor.buff.alert.flash": "Flash",
   "skillMonitor.buff.alert.remove": "Remove Alert",
+  "skillMonitor.buff.voice.title": "Voice Broadcast",
+  "skillMonitor.buff.voice.description":
+    "Configure voice broadcasts for monitored buffs on gain / x seconds remaining / expiry",
+  "skillMonitor.buff.voice.addPlaceholder":
+    "Search monitored buffs to add voice broadcast",
+  "skillMonitor.buff.voice.emptySearch":
+    "No buffs available to add (must be monitored and not yet configured)",
+  "skillMonitor.buff.voice.empty": "No voice broadcasts configured yet",
+  "skillMonitor.buff.voice.configuredCount": "{count} configured",
+  "skillMonitor.buff.voice.remove": "Remove broadcast",
   "skillMonitor.buff.category.title": "Category Quick Monitor",
   "skillMonitor.buff.category.selectedTitle": "Selected Categories",
   "skillMonitor.buff.category.empty": "No categories selected",
@@ -1139,10 +1149,15 @@ export const enUSMessages = {
   "skillMonitor.customPanel.rule.placeholder": "Example: Iai + Tick Energy",
   "skillMonitor.customPanel.rule.sources": "Select Sources",
   "skillMonitor.customPanel.rule.slots": "Select Slots",
+  "skillMonitor.customPanel.rule.voiceTitle": "Voice Broadcast",
   "skillMonitor.customPanel.counter.title": "Add Counter",
   "skillMonitor.customPanel.counter.description":
     "Counter slots are globally unique and can only belong to one monitor area. Preset and custom rules are shown together.",
   "skillMonitor.customPanel.counter.add": "Click to Add",
+  "skillMonitor.customPanel.counter.voiceConfigure":
+    "Configure voice broadcast",
+  "skillMonitor.customPanel.counter.voiceConfigured":
+    "Voice broadcast configured",
   "skillMonitor.customPanel.entries.title": "Current Group Entries",
   "skillMonitor.customPanel.entries.empty":
     "No entries in the current monitor area",
@@ -1179,7 +1194,8 @@ export const enUSMessages = {
   "skillMonitor.overlay.resource": "Resource Monitor Area: {state}",
   "skillMonitor.overlay.panelAttr": "Character Attribute Area: {state}",
   "skillMonitor.overlay.panelAttrGroupTag": "Character Attribute Area",
-  "skillMonitor.overlay.sharedTextStyle": "Other overlay text (skills/resources/buff icons)",
+  "skillMonitor.overlay.sharedTextStyle":
+    "Other overlay text (skills/resources/buff icons)",
   "skillMonitor.panelAttr.textStyle": "Text style",
   "skillMonitor.overlay.customPanel": "Custom Monitor Area: {state}",
   "skillMonitor.overlay.shieldDetail": "HP/Shield Area: {state}",
@@ -1228,8 +1244,7 @@ export const enUSMessages = {
   "monsterMonitor.buffGroups.removeTitle": "Click to remove",
   "monsterMonitor.buffGroups.empty": "No buffs selected",
   "monsterMonitor.teammate.title": "Teammate Buff Monitor",
-  "monsterMonitor.teammate.placeholder":
-    "Search teammate buffs by name or ID",
+  "monsterMonitor.teammate.placeholder": "Search teammate buffs by name or ID",
   "monsterMonitor.teammate.emptySearch": "No matching teammate buffs",
   "monsterMonitor.teammate.groupTitle": "Monitored Teammate Buffs",
   "monsterMonitor.teammate.styleTitle": "Teammate Buff Matrix Style",
@@ -1266,6 +1281,19 @@ export const enUSMessages = {
   "monsterMonitor.alert.highlightColor": "Highlight Color",
   "monsterMonitor.alert.flash": "Flash",
   "monsterMonitor.alert.remove": "Remove Alert",
+  "monsterMonitor.buffVoice.title": "Buff Voice Broadcast",
+  "monsterMonitor.buffVoice.description":
+    "Choose monitored monster buffs and configure broadcasts for gain, expiring, and loss events.",
+  "monsterMonitor.buffVoice.addPlaceholder":
+    "Search monster buffs to add voice broadcast",
+  "monsterMonitor.buffVoice.emptySearch":
+    "No buffs available; add one to monster monitoring or enable monitor-all for self-applied buffs.",
+  "monsterMonitor.buffVoice.empty":
+    "No monster buff voice broadcasts configured yet",
+  "monsterMonitor.buffVoice.configuredCount": "{count} configured",
+  "monsterMonitor.buffVoice.remove": "Remove broadcast",
+  "monsterMonitor.buffVoice.scope.anySource": "Global",
+  "monsterMonitor.buffVoice.scope.localPlayerSource": "Self-applied",
   "monsterMonitor.alias.title": "Display Names",
   "monsterMonitor.alias.empty":
     "Select monster buffs to monitor first, then set aliases here.",
@@ -1311,6 +1339,8 @@ export const enUSMessages = {
   "monsterMonitor.bossDbm.alias.empty":
     "No aliases set yet. Search above and add a skill first.",
   "monsterMonitor.bossDbm.alias.remove": "Remove",
+  "monsterMonitor.bossDbm.voice.title": "Voice Broadcast",
+  "monsterMonitor.buff.title": "Target Buffs",
   "monsterMonitor.overlay.state.show": "Show",
   "monsterMonitor.overlay.state.hide": "Hide",
   "monsterMonitor.overlay.help": "Click buttons to toggle visibility.",
@@ -1482,8 +1512,7 @@ export const enUSMessages = {
   "minimap.settings.display.title": "Display Options",
   "minimap.settings.display.description":
     "Control the minimap information density during combat and reduce noise.",
-  "minimap.settings.autoHideInDailyScenes.label":
-    "Auto Hide in Daily Scenes",
+  "minimap.settings.autoHideInDailyScenes.label": "Auto Hide in Daily Scenes",
   "minimap.settings.autoHideInDailyScenes.description":
     "Automatically hide the minimap overlay in daily scene blacklist entries and restore its previous visibility after leaving.",
   "minimap.settings.hideNormalTeammates.label":
@@ -1531,6 +1560,11 @@ export const enUSMessages = {
   "minimap.settings.localFacing.label": "Show facing indicator",
   "minimap.settings.localFacing.description":
     "When enabled, a small arrow pointing in your current facing direction is drawn on your own marker.",
+  "minimap.settings.voiceCues.title": "Mechanic voice callouts",
+  "minimap.settings.voiceCues.description":
+    "Bind voice callouts to mechanics already supported on each map; expand a cue to configure it the same way as buff/boss cues.",
+  "minimap.settings.voiceCues.empty":
+    "No mechanic voice callouts are wired up for any map yet.",
   "minimap.settings.sizes.title": "Entity sizes",
   "minimap.settings.sizes.description":
     "Display radius (px) of each entity type on the minimap.",
@@ -1641,4 +1675,180 @@ export const enUSMessages = {
   "minimap.s3TinaMindrealm.pizzaGroup": "Pizza Danger Zone",
   "minimap.s3TinaMindrealm.pizzaSlow": "Pizza · Slow Wave",
   "minimap.s3TinaMindrealm.pizzaFast": "Pizza · Fast Wave",
+
+  "routes.tools.voice": "Voice",
+
+  "voice.title": "Voice Broadcasting",
+  "voice.description":
+    "Offline voice cloning and fixed-phrase broadcasting; playback never reloads the model",
+
+  "voice.tabs.overview": "Overview & Playback",
+  "voice.tabs.model": "Model & Voices",
+  "voice.tabs.phrases": "Phrase Library",
+
+  "voice.overview.playback.title": "Playback Settings",
+  "voice.overview.playback.description":
+    "Control the master switch, volume, and queue policy for voice broadcasting",
+  "voice.overview.enabled": "Enable voice broadcasting",
+  "voice.overview.enabledDescription":
+    "When disabled, no trigger rule will play any voice",
+  "voice.overview.volume": "Volume: {value}%",
+  "voice.overview.queuePolicy": "Playback queue policy",
+  "voice.overview.queue.drop": "Drop low-priority cues when the queue is full",
+  "voice.overview.queue.interrupt":
+    "Higher priority interrupts current playback",
+  "voice.overview.stopPlayback": "Stop playback",
+  "voice.backend.title": "Voice generation acceleration",
+  "voice.backend.auto": "Auto",
+  "voice.backend.cpu": "CPU",
+  "voice.backend.vulkan": "Vulkan",
+  "voice.backend.ready": "Available",
+  "voice.backend.missing": "Unavailable or not installed",
+  "voice.backend.recommended": "Recommended",
+  "voice.overview.status.title": "Status overview",
+  "voice.overview.status.refresh": "Refresh",
+  "voice.overview.status.model": "Model",
+  "voice.overview.status.modelMissing": "Not installed",
+  "voice.overview.status.sidecar": "Generation engine",
+  "voice.overview.status.sidecarReady": "Available",
+  "voice.overview.status.sidecarMissing": "qwen3-tts-sidecar missing",
+  "voice.overview.status.profiles": "Voice profiles",
+  "voice.overview.status.phrases": "Phrases",
+  "voice.overview.status.generating": "Generating audio, please wait…",
+
+  "voice.model.title": "Voice model",
+  "voice.model.description":
+    "The model is downloaded and managed separately from the app installer",
+  "voice.model.installed": "Installed",
+  "voice.model.notInstalled": "No model installed",
+  "voice.model.remove": "Remove",
+  "voice.model.manifestPlaceholder": "Model manifest URL",
+  "voice.model.install": "Download & install",
+  "voice.model.downloading": "Downloading…",
+  "voice.model.verifying": "Verifying…",
+  "voice.model.cancel": "Cancel",
+  "voice.model.cancelling": "Cancelling…",
+  "voice.model.verifyIntegrity": "Verify integrity",
+  "voice.model.verifyingIntegrity": "Verifying integrity…",
+  "voice.model.verifySuccess": "Model integrity verified",
+  "voice.model.verifyFailed": "Model integrity verification failed",
+  "voice.operation.conflict":
+    "Another voice operation is in progress. Try again later.",
+  "voice.model.import.title": "Manually import a converted model (fallback)",
+  "voice.model.import.versionPlaceholder": "Model version",
+  "voice.model.import.action": "Choose files & import",
+  "voice.model.import.dialogTitle": "Select model files",
+  "voice.model.profiles.title": "Voice profiles",
+  "voice.model.finetuned.title": "User fine-tuned voice",
+  "voice.model.finetuned.description":
+    "References a GGUF package exported by EasyFinetuning. External model files are not copied or deleted.",
+  "voice.model.finetuned.dialogTitle": "Select fine-tuned voice package",
+  "voice.model.finetuned.import": "Import",
+  "voice.model.finetuned.replace": "Replace",
+  "voice.model.finetuned.relink": "Relink",
+  "voice.model.finetuned.remove": "Remove reference",
+  "voice.model.finetuned.verify": "Check integrity",
+  "voice.model.finetuned.verifySuccess":
+    "The deployment package passed integrity checks.",
+  "voice.model.finetuned.ready": "Ready",
+  "voice.model.finetuned.missing": "Path missing",
+  "voice.model.finetuned.modified": "File modified",
+  "voice.model.finetuned.empty": "No user fine-tuned voice is configured.",
+  "voice.model.finetuned.replaceConfirm":
+    "Replace fine-tuned voice “{old}”\n{oldPath}\nwith “{next}”\n{nextPath}\n? Existing audio will be retained and marked stale.",
+  "voice.model.finetuned.removeConfirm":
+    "Remove the fine-tuned voice reference? External model files will not be deleted.",
+  "voice.model.profiles.description":
+    "Saved voice profiles (speaker embeddings) reusable when generating phrases",
+  "voice.model.profiles.embeddingDim": "Dimension: {dim}",
+  "voice.model.profiles.empty":
+    'No voice profiles yet - create one from "Create new voice" in the Phrase Library',
+
+  "voice.phrases.title": "Phrase library",
+  "voice.phrases.description":
+    'Manage fixed broadcast text, e.g. "mechanism incoming" or "buff ended"',
+  "voice.phrases.namePlaceholder": "Phrase name",
+  "voice.phrases.textPlaceholder": "Broadcast text",
+  "voice.phrases.add": "Add phrase",
+  "voice.phrases.edit": "Edit",
+  "voice.phrases.save": "Save",
+  "voice.phrases.cancelEdit": "Cancel",
+  "voice.phrases.tryPlay": "Preview",
+  "voice.phrases.empty": "No phrases yet - add one above",
+  "voice.phrases.asset.active": "Active",
+  "voice.phrases.asset.stale": "Needs regeneration",
+  "voice.phrases.asset.confirm": "Use this take",
+  "voice.phrases.asset.empty": "No generated audio yet",
+  "voice.language.zhCN": "Chinese",
+  "voice.language.enUS": "English",
+  "voice.language.jaJP": "Japanese",
+
+  "voice.phrases.generate.title": "Batch generate",
+  "voice.phrases.generate.description":
+    "Pick a voice source and phrases, then preview and confirm the result",
+  "voice.phrases.generate.modelRequired":
+    'Install the voice model in "Model & Voices" first',
+  "voice.phrases.generate.useExisting": "Use existing voice",
+  "voice.phrases.generate.createNew": "Create new voice",
+  "voice.phrases.generate.pickProfile": "Select voice profile",
+  "voice.phrases.generate.cloneSource": "Cloned voice",
+  "voice.phrases.generate.finetunedSource": "Fine-tuned voice",
+  "voice.phrases.generate.finetunedUnavailable":
+    "The fine-tuned voice is not configured, missing, or modified. Repair it on the Model page.",
+  "voice.phrases.generate.newProfileName": "New voice name",
+  "voice.phrases.generate.pickReference": "Select reference audio (WAV)",
+  "voice.phrases.generate.pickReferenceTitle": "Select reference audio",
+  "voice.phrases.generate.keepReference": "Keep the reference audio file",
+  "voice.phrases.generate.selectedCount": "{count} phrase(s) selected",
+  "voice.phrases.generate.selectAll": "Select all",
+  "voice.phrases.generate.selectNone": "Select none",
+  "voice.phrases.generate.start": "Start generating",
+  "voice.phrases.generate.generating": "Generating…",
+  "voice.phrases.generate.cancel": "Cancel generation",
+  "voice.phrases.generate.cancelling": "Cancelling…",
+  "voice.phrases.generate.cancelled": "Generation cancelled",
+  "voice.phrases.generate.stage": "{stage}: {status}",
+  "voice.phrases.generate.summary": "{completed} completed, {failed} failed",
+
+  "voice.binding.event.gained": "Broadcast on gain",
+  "voice.binding.event.expiring": "Broadcast x seconds before expiry",
+  "voice.binding.event.lost": "Broadcast on expiry",
+  "voice.binding.event.threshold": "Broadcast on reaching target",
+  "voice.binding.event.onCast": "Broadcast on trigger",
+  "voice.binding.source.auto": "Auto-generated",
+  "voice.binding.source.custom": "Custom text",
+  "voice.binding.source.phrase": "Phrase library reference",
+  "voice.binding.autoPreview": "Will broadcast: {text}",
+  "voice.binding.customPlaceholder": "Enter custom broadcast text",
+  "voice.binding.pickPhrase": "Select phrase",
+  "voice.binding.secondsBefore": "{seconds}s before",
+  "voice.binding.tryPlay": "Preview",
+  "voice.binding.pendingGeneration": "Pending generation",
+  "voice.binding.playFailed":
+    "Playback failed, check the voice model installation",
+
+  "voice.tabs.bindings": "Broadcast Overview",
+  "voice.bindings.description":
+    "Aggregated read-only view of all voice bindings configured across buff monitoring, custom counters, and boss mechanics",
+  "voice.bindings.empty":
+    "No voice bindings configured yet. Configure them inline on the Buff Monitor / Counter / Boss Mechanics pages",
+  "voice.bindings.column.subject": "Subject",
+  "voice.bindings.column.event": "Event",
+  "voice.bindings.column.source": "Source",
+  "voice.bindings.column.status": "Status",
+  "voice.bindings.status.ready": "Ready",
+  "voice.bindings.status.pending": "Pending",
+  "voice.bindings.navigate.buff": "Go to Buff Monitor",
+  "voice.bindings.navigate.counter": "Go to Counters",
+  "voice.bindings.navigate.dbm": "Go to Boss Mechanics",
+  "voice.bindings.navigate.monsterBuff": "Go to Monster Monitor",
+  "voice.bindings.navigate.minimap": "Go to Dungeon Mechanics",
+  "voice.bindings.generateMissing": "Generate missing voices",
+  "voice.bindings.generateMissing.generating": "Generating…",
+  "voice.bindings.generateMissing.needProfile":
+    'Install a model and select a voice in "Model & Voices" first',
+  "voice.bindings.generateMissing.none": "No pending voices to generate",
+  "voice.bindings.generateMissing.summary":
+    "Submitted {count} voice(s) for generation",
+  "voice.bindings.tryPlay": "Preview",
 } satisfies typeof zhCNMessages;

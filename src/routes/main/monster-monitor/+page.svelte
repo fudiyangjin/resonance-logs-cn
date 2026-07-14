@@ -1,6 +1,9 @@
 <script lang="ts">
+  import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import BuffSearchResultGrid from "$lib/components/BuffSearchResultGrid.svelte";
+  import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
+  import type { MonsterBuffSourceScope } from "$lib/bindings";
   import {
     getBuffCategoryDefinitions,
     getAvailableBuffDefinitions,
@@ -23,6 +26,7 @@
     SETTINGS,
     createDefaultBuffAlertRule,
     ensureBuffAlerts,
+    ensureBuffVoiceConfigs,
     ensureDbmAliases,
     ensureTeammatePanelStyle,
     getGlobalBuffAliases,
@@ -32,6 +36,7 @@
     type BuffAlertRule,
   } from "$lib/settings-store";
   import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
+  import { resolveMonsterBuffSourceScope } from "$lib/voice-binding-compile.svelte.js";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
 
   type SearchTarget = "global" | "self";
@@ -76,13 +81,26 @@
   let fantasySearchKeyword = $state("");
   let prioritySearchKeyword = $state("");
   let alertSearchKeyword = $state("");
+  let voiceBuffSearch = $state("");
+  let voiceBuffSectionExpanded = $state(false);
+  let voiceEditingBuffId = $state<number | null>(null);
   let dbmSearchKeyword = $state("");
+  let dbmVoiceExpandedIds = $state<string[]>([]);
+
+  function toggleDbmVoiceExpanded(id: string) {
+    dbmVoiceExpandedIds = dbmVoiceExpandedIds.includes(id)
+      ? dbmVoiceExpandedIds.filter((existing) => existing !== id)
+      : [...dbmVoiceExpandedIds, id];
+  }
+
   let searchTarget = $state<SearchTarget>("self");
   let activeTab = $state<MonsterMonitorTab>("buff");
 
   const monsterMonitor = $derived(SETTINGS.monsterMonitor.state);
   const buffAliases = $derived.by(() => getGlobalBuffAliases());
-  const dbmAliases = $derived.by(() => ensureDbmAliases(monsterMonitor.dbmAliases));
+  const dbmAliases = $derived.by(() =>
+    ensureDbmAliases(monsterMonitor.dbmAliases),
+  );
   const dbmSearchResults = $derived.by(() =>
     dbmSearchKeyword.trim().length > 0
       ? searchDbmEntries(dbmSearchKeyword).filter(
@@ -142,6 +160,9 @@
   const buffPriorityIds = $derived(monsterMonitor.buffPriorityIds ?? []);
   const buffAlerts = $derived.by(() =>
     ensureBuffAlerts(monsterMonitor.buffAlerts),
+  );
+  const monsterBuffVoiceConfigs = $derived.by(() =>
+    ensureBuffVoiceConfigs(monsterMonitor.monsterBuffVoiceConfigs),
   );
   const selectedTeammateBuffCategories = $derived.by(() =>
     buffCategoryDefinitions.filter((category) =>
@@ -263,6 +284,27 @@
         !configuredAlertBuffIds.includes(item.baseId),
     );
   });
+  const configuredVoiceBuffIds = $derived.by(() =>
+    Object.keys(monsterBuffVoiceConfigs)
+      .map((baseId) => Number(baseId))
+      .filter(
+        (baseId) =>
+          Number.isInteger(baseId) &&
+          resolveMonsterBuffSourceScope(baseId) !== null,
+      )
+      .sort((a, b) => a - b),
+  );
+  const voiceBuffSearchResults = $derived.by(() => {
+    if (voiceBuffSearch.trim().length === 0) return [];
+    const seen = new Set<number>();
+    const configured = new Set(configuredVoiceBuffIds);
+    return searchBuffsByName(voiceBuffSearch, buffAliases).filter((item) => {
+      if (seen.has(item.baseId) || configured.has(item.baseId)) return false;
+      if (!resolveMonsterBuffSourceScope(item.baseId)) return false;
+      seen.add(item.baseId);
+      return true;
+    });
+  });
 
   function teammateBuffColumnKey(buffId: number): TeammateBuffColumnKey {
     return `buff:${buffId}`;
@@ -338,6 +380,69 @@
     return nextAlerts;
   }
 
+  function removeVoiceIfUnmonitored(
+    state: typeof SETTINGS.monsterMonitor.state,
+    buffId: number,
+    monitoredBuffIds: number[],
+    selfAppliedBuffIds: number[],
+  ) {
+    const current = ensureBuffVoiceConfigs(state.monsterBuffVoiceConfigs);
+    const stillMonitored =
+      monitoredBuffIds.includes(buffId) ||
+      selfAppliedBuffIds.includes(buffId) ||
+      state.selfAppliedMonitorAll;
+    if (stillMonitored) return current;
+    const next = { ...current };
+    delete next[String(buffId)];
+    return next;
+  }
+
+  function setSelfAppliedMonitorAll(enabled: boolean) {
+    updateMonsterMonitor((state) => {
+      if (enabled) return { ...state, selfAppliedMonitorAll: true };
+      const explicitlyMonitored = new Set([
+        ...state.monitoredBuffIds,
+        ...state.selfAppliedBuffIds,
+      ]);
+      const monsterBuffVoiceConfigs = Object.fromEntries(
+        Object.entries(
+          ensureBuffVoiceConfigs(state.monsterBuffVoiceConfigs),
+        ).filter(([buffId]) => explicitlyMonitored.has(Number(buffId))),
+      );
+      return {
+        ...state,
+        selfAppliedMonitorAll: false,
+        monsterBuffVoiceConfigs,
+      };
+    });
+    if (
+      !enabled &&
+      voiceEditingBuffId !== null &&
+      !resolveMonsterBuffSourceScope(voiceEditingBuffId)
+    ) {
+      voiceEditingBuffId = null;
+    }
+  }
+
+  function removeMonsterBuffVoiceBinding(buffId: number) {
+    updateMonsterMonitor((state) => {
+      const next = {
+        ...ensureBuffVoiceConfigs(state.monsterBuffVoiceConfigs),
+      };
+      delete next[String(buffId)];
+      return { ...state, monsterBuffVoiceConfigs: next };
+    });
+    if (voiceEditingBuffId === buffId) voiceEditingBuffId = null;
+  }
+
+  function monsterBuffVoiceScopeLabel(
+    sourceScope: MonsterBuffSourceScope,
+  ): string {
+    return sourceScope === "localPlayerSource"
+      ? t("monsterMonitor.buffVoice.scope.localPlayerSource")
+      : t("monsterMonitor.buffVoice.scope.anySource");
+  }
+
   function toggleSelectedBuff(buffId: number) {
     updateMonsterMonitor((state) => {
       const nextGlobal = state.monitoredBuffIds.filter((id) => id !== buffId);
@@ -367,6 +472,12 @@
         monitoredBuffIds,
         selfAppliedBuffIds,
       );
+      const monsterBuffVoiceConfigs = removeVoiceIfUnmonitored(
+        state,
+        buffId,
+        monitoredBuffIds,
+        selfAppliedBuffIds,
+      );
 
       return {
         ...state,
@@ -374,8 +485,15 @@
         selfAppliedBuffIds,
         buffPriorityIds,
         buffAlerts,
+        monsterBuffVoiceConfigs,
       };
     });
+    if (
+      voiceEditingBuffId === buffId &&
+      !resolveMonsterBuffSourceScope(buffId)
+    ) {
+      voiceEditingBuffId = null;
+    }
   }
 
   function removeBuff(target: SearchTarget, buffId: number) {
@@ -401,6 +519,12 @@
         nextMonitored,
         nextSelfApplied,
       );
+      const monsterBuffVoiceConfigs = removeVoiceIfUnmonitored(
+        state,
+        buffId,
+        nextMonitored,
+        nextSelfApplied,
+      );
 
       return {
         ...state,
@@ -408,8 +532,15 @@
         selfAppliedBuffIds: nextSelfApplied,
         buffPriorityIds: nextPriorityIds,
         buffAlerts,
+        monsterBuffVoiceConfigs,
       };
     });
+    if (
+      voiceEditingBuffId === buffId &&
+      !resolveMonsterBuffSourceScope(buffId)
+    ) {
+      voiceEditingBuffId = null;
+    }
   }
 
   function toggleTeammateBuff(buffId: number) {
@@ -700,8 +831,7 @@
         showHatePanel: state.overlayVisibility?.showHatePanel ?? true,
         showStunPanel: state.overlayVisibility?.showStunPanel ?? false,
         showFantasyPanel: state.overlayVisibility?.showFantasyPanel ?? false,
-        showBossDbmPanel:
-          state.overlayVisibility?.showBossDbmPanel ?? false,
+        showBossDbmPanel: state.overlayVisibility?.showBossDbmPanel ?? false,
       };
       return {
         ...state,
@@ -1010,7 +1140,8 @@
           <SettingsSwitch
             label={t("monsterMonitor.buffGroups.self.monitorAll")}
             description={t("monsterMonitor.buffGroups.self.monitorAllDesc")}
-            bind:checked={SETTINGS.monsterMonitor.state.selfAppliedMonitorAll}
+            checked={monsterMonitor.selfAppliedMonitorAll}
+            onCheckedChange={setSelfAppliedMonitorAll}
           />
           {#if monsterMonitor.selfAppliedMonitorAll}
             <div class="text-muted-foreground text-xs">
@@ -1268,6 +1399,136 @@
     </section>
 
     <section
+      class="border-border/60 bg-card/60 overflow-hidden rounded-xl border"
+    >
+      <button
+        type="button"
+        class="hover:bg-muted/30 flex w-full items-center justify-between gap-3 px-5 py-4 transition-colors"
+        onclick={() => {
+          voiceBuffSectionExpanded = !voiceBuffSectionExpanded;
+        }}
+      >
+        <div class="min-w-0 text-left">
+          <h2 class="text-foreground text-base font-semibold">
+            {t("monsterMonitor.buffVoice.title")}
+          </h2>
+          <p class="text-muted-foreground text-xs">
+            {t("monsterMonitor.buffVoice.description")}
+          </p>
+        </div>
+        <div class="flex shrink-0 items-center gap-3">
+          <span class="text-muted-foreground text-xs">
+            {t("monsterMonitor.buffVoice.configuredCount", {
+              count: configuredVoiceBuffIds.length,
+            })}
+          </span>
+          <ChevronDownIcon
+            class="text-muted-foreground h-5 w-5 transition-transform duration-200 {voiceBuffSectionExpanded
+              ? 'rotate-180'
+              : ''}"
+          />
+        </div>
+      </button>
+
+      {#if voiceBuffSectionExpanded}
+        <div class="space-y-4 px-5 pb-5">
+          <input
+            class="border-border/60 bg-muted/30 text-foreground placeholder:text-muted-foreground focus:ring-primary/50 w-full rounded border px-3 py-2 text-sm focus:ring-2 focus:outline-none sm:w-72"
+            placeholder={t("monsterMonitor.buffVoice.addPlaceholder")}
+            value={voiceBuffSearch}
+            oninput={(event) => {
+              voiceBuffSearch = (event.currentTarget as HTMLInputElement).value;
+            }}
+          />
+          {#if voiceBuffSearch.trim().length > 0}
+            <BuffSearchResultGrid
+              items={voiceBuffSearchResults}
+              {availableBuffMap}
+              onSelect={(buffId) => {
+                voiceEditingBuffId = buffId;
+                voiceBuffSearch = "";
+              }}
+              emptyMessage={t("monsterMonitor.buffVoice.emptySearch")}
+              minColumnWidth={180}
+            />
+          {/if}
+
+          {#if voiceEditingBuffId !== null && !configuredVoiceBuffIds.includes(voiceEditingBuffId)}
+            {@const editingScope =
+              resolveMonsterBuffSourceScope(voiceEditingBuffId)}
+            {#if editingScope}
+              <div
+                class="border-border/60 bg-muted/20 space-y-2 rounded-lg border p-3"
+              >
+                <div class="flex items-center gap-2">
+                  <span
+                    class="text-foreground min-w-0 truncate text-sm font-medium"
+                  >
+                    {buffName(voiceEditingBuffId)}
+                  </span>
+                  <span
+                    class="bg-primary/10 text-primary shrink-0 rounded px-1.5 py-0.5 text-[11px]"
+                  >
+                    {monsterBuffVoiceScopeLabel(editingScope)}
+                  </span>
+                </div>
+                <VoiceBindingControl
+                  subject={{
+                    kind: "monsterBuff",
+                    buffId: voiceEditingBuffId,
+                    sourceScope: editingScope,
+                  }}
+                />
+              </div>
+            {/if}
+          {/if}
+
+          <div class="space-y-2">
+            {#each configuredVoiceBuffIds as buffId (buffId)}
+              {@const sourceScope = resolveMonsterBuffSourceScope(buffId)}
+              {#if sourceScope}
+                <div
+                  class="border-border/60 bg-muted/20 space-y-2 rounded-lg border p-3"
+                >
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex min-w-0 items-center gap-2">
+                      <span
+                        class="text-foreground min-w-0 truncate text-sm font-medium"
+                      >
+                        {buffName(buffId)}
+                      </span>
+                      <span
+                        class="bg-primary/10 text-primary shrink-0 rounded px-1.5 py-0.5 text-[11px]"
+                      >
+                        {monsterBuffVoiceScopeLabel(sourceScope)}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      class="border-border/60 text-destructive hover:bg-destructive/10 shrink-0 rounded border px-2 py-1 text-xs"
+                      onclick={() => removeMonsterBuffVoiceBinding(buffId)}
+                    >
+                      {t("monsterMonitor.buffVoice.remove")}
+                    </button>
+                  </div>
+                  <VoiceBindingControl
+                    subject={{ kind: "monsterBuff", buffId, sourceScope }}
+                  />
+                </div>
+              {/if}
+            {:else}
+              {#if voiceEditingBuffId === null}
+                <div class="text-muted-foreground text-xs">
+                  {t("monsterMonitor.buffVoice.empty")}
+                </div>
+              {/if}
+            {/each}
+          </div>
+        </div>
+      {/if}
+    </section>
+
+    <section
       class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
     >
       <div class="space-y-1">
@@ -1428,8 +1689,7 @@
                 Number((event.currentTarget as HTMLInputElement).value),
               )}
           />
-          <strong
-            >{Math.round(monsterPanelStyle.progressOpacity * 100)}%</strong
+          <strong>{Math.round(monsterPanelStyle.progressOpacity * 100)}%</strong
           >
         </label>
       </div>
@@ -1737,7 +1997,8 @@
         textShadowEnabled={teammatePanelStyle.textShadowEnabled}
         backgroundEnabled={teammatePanelStyle.backgroundEnabled}
         backgroundOpacity={teammatePanelStyle.backgroundOpacity}
-        onTextShadowEnabled={(v) => updateTeammatePanelStyle("textShadowEnabled", v)}
+        onTextShadowEnabled={(v) =>
+          updateTeammatePanelStyle("textShadowEnabled", v)}
         onBackgroundEnabled={(v) =>
           updateTeammatePanelStyle("backgroundEnabled", v)}
         onBackgroundOpacity={(v) =>
@@ -1911,18 +2172,19 @@
                 Number((event.currentTarget as HTMLInputElement).value),
               )}
           />
-          <strong
-            >{Math.round(hatePanelStyle.progressOpacity * 100)}%</strong
-          >
+          <strong>{Math.round(hatePanelStyle.progressOpacity * 100)}%</strong>
         </label>
       </div>
       <OverlayTextStyleFields
         textShadowEnabled={hatePanelStyle.textShadowEnabled}
         backgroundEnabled={hatePanelStyle.backgroundEnabled}
         backgroundOpacity={hatePanelStyle.backgroundOpacity}
-        onTextShadowEnabled={(v) => updateHatePanelStyle("textShadowEnabled", v)}
-        onBackgroundEnabled={(v) => updateHatePanelStyle("backgroundEnabled", v)}
-        onBackgroundOpacity={(v) => updateHatePanelStyle("backgroundOpacity", v)}
+        onTextShadowEnabled={(v) =>
+          updateHatePanelStyle("textShadowEnabled", v)}
+        onBackgroundEnabled={(v) =>
+          updateHatePanelStyle("backgroundEnabled", v)}
+        onBackgroundOpacity={(v) =>
+          updateHatePanelStyle("backgroundOpacity", v)}
       />
     </section>
   {:else if activeTab === "stun"}
@@ -2070,18 +2332,19 @@
                 Number((event.currentTarget as HTMLInputElement).value),
               )}
           />
-            <strong
-            >{Math.round(stunPanelStyle.progressOpacity * 100)}%</strong
-          >
+          <strong>{Math.round(stunPanelStyle.progressOpacity * 100)}%</strong>
         </label>
       </div>
       <OverlayTextStyleFields
         textShadowEnabled={stunPanelStyle.textShadowEnabled}
         backgroundEnabled={stunPanelStyle.backgroundEnabled}
         backgroundOpacity={stunPanelStyle.backgroundOpacity}
-        onTextShadowEnabled={(v) => updateStunPanelStyle("textShadowEnabled", v)}
-        onBackgroundEnabled={(v) => updateStunPanelStyle("backgroundEnabled", v)}
-        onBackgroundOpacity={(v) => updateStunPanelStyle("backgroundOpacity", v)}
+        onTextShadowEnabled={(v) =>
+          updateStunPanelStyle("textShadowEnabled", v)}
+        onBackgroundEnabled={(v) =>
+          updateStunPanelStyle("backgroundEnabled", v)}
+        onBackgroundOpacity={(v) =>
+          updateStunPanelStyle("backgroundOpacity", v)}
       />
     </section>
   {:else if activeTab === "fantasy"}
@@ -2347,33 +2610,59 @@
 
       <div class="space-y-2">
         {#if Object.keys(dbmAliases).length > 0}
-          <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          <div class="space-y-2">
             {#each Object.entries(dbmAliases) as [id, alias] (id)}
-              <div class="teammate-order-row">
-                <span class="text-muted-foreground shrink-0 text-xs">
-                  {id}
-                </span>
-                <span class="text-muted-foreground min-w-0 flex-1 truncate text-xs">
-                  {lookupDbmDefaultName(Number(id)) ?? `#${id}`}
-                </span>
-                <input
-                  type="text"
-                  value={alias}
-                  class="border-border/60 bg-background/60 text-foreground min-w-0 w-28 rounded-md border px-2 py-1 text-sm outline-none transition-colors focus:border-primary"
-                  oninput={(event) =>
-                    setDbmAlias(
-                      Number(id),
-                      (event.currentTarget as HTMLInputElement).value,
-                    )}
-                />
+              <div
+                class="border-border/60 bg-muted/20 space-y-2 rounded-lg border p-3"
+              >
+                <div class="teammate-order-row">
+                  <span class="text-muted-foreground shrink-0 text-xs">
+                    {id}
+                  </span>
+                  <span
+                    class="text-muted-foreground min-w-0 flex-1 truncate text-xs"
+                  >
+                    {lookupDbmDefaultName(Number(id)) ?? `#${id}`}
+                  </span>
+                  <input
+                    type="text"
+                    value={alias}
+                    class="border-border/60 bg-background/60 text-foreground min-w-0 w-28 rounded-md border px-2 py-1 text-sm outline-none transition-colors focus:border-primary"
+                    oninput={(event) =>
+                      setDbmAlias(
+                        Number(id),
+                        (event.currentTarget as HTMLInputElement).value,
+                      )}
+                  />
+                  <button
+                    type="button"
+                    class="order-button danger"
+                    title={t("monsterMonitor.bossDbm.alias.remove")}
+                    onclick={() => setDbmAlias(Number(id), "")}
+                  >
+                    {t("monsterMonitor.bossDbm.alias.remove")}
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  class="order-button danger"
-                  title={t("monsterMonitor.bossDbm.alias.remove")}
-                  onclick={() => setDbmAlias(Number(id), "")}
+                  class="flex w-full items-center justify-between gap-2 text-xs text-muted-foreground hover:text-foreground"
+                  onclick={() => toggleDbmVoiceExpanded(id)}
                 >
-                  {t("monsterMonitor.bossDbm.alias.remove")}
+                  <span>{t("monsterMonitor.bossDbm.voice.title")}</span>
+                  <ChevronDownIcon
+                    class="h-3.5 w-3.5 shrink-0 transition-transform duration-200 {dbmVoiceExpandedIds.includes(
+                      id,
+                    )
+                      ? 'rotate-180'
+                      : ''}"
+                  />
                 </button>
+                {#if dbmVoiceExpandedIds.includes(id)}
+                  <VoiceBindingControl
+                    subject={{ kind: "dbm", baseSkillId: Number(id) }}
+                  />
+                {/if}
               </div>
             {/each}
           </div>
@@ -2501,8 +2790,7 @@
                 Number((event.currentTarget as HTMLInputElement).value),
               )}
           />
-          <strong
-            >{Math.round(bossDbmPanelStyle.progressOpacity * 100)}%</strong
+          <strong>{Math.round(bossDbmPanelStyle.progressOpacity * 100)}%</strong
           >
         </label>
       </div>

@@ -1,9 +1,10 @@
 <script lang="ts">
-  import {
-    createDefaultMinimapConfig,
-    SETTINGS,
-  } from "$lib/settings-store";
+  import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
+  import { createDefaultMinimapConfig, SETTINGS } from "$lib/settings-store";
+  import { resolveSceneName } from "$lib/config/game-names";
   import { t } from "$lib/i18n/index.svelte";
+  import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
+  import { allMinimapVoiceCueSeasonGroups } from "../../minimap-overlay/scene-registry";
   import SettingsColor from "../dps/settings/settings-color.svelte";
   import SettingsSlider from "../dps/settings/settings-slider.svelte";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
@@ -75,6 +76,28 @@
     return value
       ? t("minimap.overlay.state.show")
       : t("minimap.overlay.state.hide");
+  }
+
+  const initialVoiceCueSeasonGroups = allMinimapVoiceCueSeasonGroups();
+  const voiceCueSeasonGroups = $derived(allMinimapVoiceCueSeasonGroups());
+
+  let expandedCueIds = $state<string[]>([]);
+  let expandedVoiceSeasons = $state<number[]>(
+    initialVoiceCueSeasonGroups[0]
+      ? [initialVoiceCueSeasonGroups[0].season]
+      : [],
+  );
+
+  function toggleVoiceCueExpanded(cueId: string) {
+    expandedCueIds = expandedCueIds.includes(cueId)
+      ? expandedCueIds.filter((existing) => existing !== cueId)
+      : [...expandedCueIds, cueId];
+  }
+
+  function toggleVoiceSeasonExpanded(season: number) {
+    expandedVoiceSeasons = expandedVoiceSeasons.includes(season)
+      ? expandedVoiceSeasons.filter((existing) => existing !== season)
+      : [...expandedVoiceSeasons, season];
   }
 </script>
 
@@ -358,6 +381,86 @@
           />
         </div>
       </div>
+    {/if}
+  </section>
+
+  <section
+    class="border-border/60 bg-card/40 space-y-4 rounded-lg border p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+  >
+    <div>
+      <h2 class="text-foreground text-base font-semibold">
+        {t("minimap.settings.voiceCues.title")}
+      </h2>
+      <p class="text-muted-foreground text-xs">
+        {t("minimap.settings.voiceCues.description")}
+      </p>
+    </div>
+
+    {#if voiceCueSeasonGroups.length > 0}
+      <div class="space-y-4">
+        {#each voiceCueSeasonGroups as seasonGroup (seasonGroup.season)}
+          <div class="border-border/60 overflow-hidden rounded-lg border">
+            <button
+              type="button"
+              class="bg-muted/20 text-foreground flex w-full items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold hover:bg-muted/30"
+              aria-expanded={expandedVoiceSeasons.includes(seasonGroup.season)}
+              onclick={() => toggleVoiceSeasonExpanded(seasonGroup.season)}
+            >
+              <span>S{seasonGroup.season}</span>
+              <ChevronDownIcon
+                class="h-4 w-4 shrink-0 transition-transform duration-200 {expandedVoiceSeasons.includes(
+                  seasonGroup.season,
+                )
+                  ? 'rotate-180'
+                  : ''}"
+              />
+            </button>
+            {#if expandedVoiceSeasons.includes(seasonGroup.season)}
+              <div class="divide-border/50 divide-y border-t border-border/50">
+                {#each seasonGroup.scenes as group (group.scene.id)}
+                  <section class="space-y-2 p-3">
+                    <h3 class="text-foreground text-sm font-semibold">
+                      {resolveSceneName(group.scene.sceneIds[0])}
+                    </h3>
+                    <div class="space-y-2">
+                      {#each group.cues as cue (cue.id)}
+                        <div
+                          class="border-border/50 bg-background/40 space-y-2 rounded border p-2.5"
+                        >
+                          <button
+                            type="button"
+                            class="flex w-full items-center justify-between gap-2 text-xs text-muted-foreground hover:text-foreground"
+                            aria-expanded={expandedCueIds.includes(cue.id)}
+                            onclick={() => toggleVoiceCueExpanded(cue.id)}
+                          >
+                            <span>{t(cue.labelKey)}</span>
+                            <ChevronDownIcon
+                              class="h-3.5 w-3.5 shrink-0 transition-transform duration-200 {expandedCueIds.includes(
+                                cue.id,
+                              )
+                                ? 'rotate-180'
+                                : ''}"
+                            />
+                          </button>
+                          {#if expandedCueIds.includes(cue.id)}
+                            <VoiceBindingControl
+                              subject={{ kind: "minimapCue", cueId: cue.id }}
+                            />
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                  </section>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    {:else}
+      <p class="text-muted-foreground text-sm">
+        {t("minimap.settings.voiceCues.empty")}
+      </p>
     {/if}
   </section>
 </div>

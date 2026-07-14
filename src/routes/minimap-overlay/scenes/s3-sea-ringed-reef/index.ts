@@ -7,15 +7,35 @@ import {
   yInArena,
   type S3SeaRingedReefArena,
 } from "./arena";
-import { buildBossMechanicView } from "./mechanics/boss";
+import {
+  buildBossMechanicView,
+  resolveBossVoiceCues,
+  S3_SEA_RINGED_REEF_BOSS_VOICE_CUES,
+} from "./mechanics/boss";
 import {
   buildMatrixMechanicView,
+  resolveMatrixVoiceCues,
+  S3_SEA_RINGED_REEF_MATRIX_VOICE_CUES,
   type SeaRingedReefMechanicView,
 } from "./mechanics/matrix";
 
 export const s3SeaRingedReefScene: SceneDefinition = {
   id: "s3-sea-ringed-reef",
+  season: 3,
   sceneIds: [6563, 6564, 6565],
+  voiceCues: [
+    ...S3_SEA_RINGED_REEF_MATRIX_VOICE_CUES,
+    ...S3_SEA_RINGED_REEF_BOSS_VOICE_CUES,
+  ],
+  resolveVoiceCues(snapshot, skillCasts) {
+    const localPlayer =
+      snapshot.entities.find(
+        (entity) => entity.entityUuid === snapshot.localPlayerUuid,
+      ) ?? null;
+    return arenaByPlayerY(localPlayer?.y) === "matrix"
+      ? resolveMatrixVoiceCues(snapshot)
+      : resolveBossVoiceCues(snapshot, skillCasts);
+  },
   resolveView(snapshot, displayName, skillCasts = []) {
     const localPlayer =
       snapshot.entities.find(
@@ -23,7 +43,12 @@ export const s3SeaRingedReefScene: SceneDefinition = {
       ) ?? null;
     const arena = arenaByPlayerY(localPlayer?.y);
     const layout = arenaLayout(arena);
-    const mechanicView = buildMechanicView(snapshot, displayName, arena, skillCasts);
+    const mechanicView = buildMechanicView(
+      snapshot,
+      displayName,
+      arena,
+      skillCasts,
+    );
 
     return {
       worldHalfX: layout.worldHalfX,

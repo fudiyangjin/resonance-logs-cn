@@ -1,0 +1,2226 @@
+
+################################################################################
+ QWEN3-TTS MODEL INSPECTION REPORT
+################################################################################
+
+This report documents all tensors, shapes, and architecture details
+for GGUF conversion planning.
+
+
+################################################################################
+ TTS BASE MODEL (Qwen3-TTS-12Hz-0.6B-Base)
+################################################################################
+
+
+================================================================================
+ CONFIG: TTS Base
+================================================================================
+
+{
+  "architectures": [
+    "Qwen3TTSForConditionalGeneration"
+  ],
+  "assistant_token_id": 77091,
+  "im_end_token_id": 151645,
+  "im_start_token_id": 151644,
+  "tts_bos_token_id": 151672,
+  "tts_eos_token_id": 151673,
+  "tts_pad_token_id": 151671,
+  "model_type": "qwen3_tts",
+  "tokenizer_type": "qwen3_tts_tokenizer_12hz",
+  "tts_model_size": "0b6",
+  "tts_model_type": "base",
+  "speaker_encoder_config": {
+    "enc_dim": 1024,
+    "sample_rate": 24000
+  },
+  "talker_config": {
+    "attention_bias": false,
+    "attention_dropout": 0,
+    "code_predictor_config": {
+      "_name_or_path": "",
+      "add_cross_attention": false,
+      "architectures": null,
+      "attention_bias": false,
+      "attention_dropout": 0,
+      "bad_words_ids": null,
+      "begin_suppress_tokens": null,
+      "bos_token_id": null,
+      "chunk_size_feed_forward": 0,
+      "cross_attention_hidden_size": null,
+      "decoder_start_token_id": null,
+      "diversity_penalty": 0.0,
+      "do_sample": false,
+      "early_stopping": false,
+      "encoder_no_repeat_ngram_size": 0,
+      "eos_token_id": null,
+      "exponential_decay_length_penalty": null,
+      "finetuning_task": null,
+      "forced_bos_token_id": null,
+      "forced_eos_token_id": null,
+      "head_dim": 128,
+      "hidden_act": "silu",
+      "hidden_size": 1024,
+      "id2label": {
+        "0": "LABEL_0",
+        "1": "LABEL_1"
+      },
+      "initializer_range": 0.02,
+      "intermediate_size": 3072,
+      "is_decoder": false,
+      "is_encoder_decoder": false,
+      "label2id": {
+        "LABEL_0": 0,
+        "LABEL_1": 1
+      },
+      "layer_types": [
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention"
+      ],
+      "length_penalty": 1.0,
+      "max_length": 20,
+      "max_position_embeddings": 65536,
+      "max_window_layers": 28,
+      "min_length": 0,
+      "model_type": "qwen3_tts_talker_code_predictor",
+      "no_repeat_ngram_size": 0,
+      "num_attention_heads": 16,
+      "num_beam_groups": 1,
+      "num_beams": 1,
+      "num_code_groups": 16,
+      "num_hidden_layers": 5,
+      "num_key_value_heads": 8,
+      "num_return_sequences": 1,
+      "output_attentions": false,
+      "output_hidden_states": false,
+      "output_scores": false,
+      "pad_token_id": null,
+      "prefix": null,
+      "problem_type": null,
+      "pruned_heads": {},
+      "remove_invalid_values": false,
+      "repetition_penalty": 1.0,
+      "return_dict": true,
+      "return_dict_in_generate": false,
+      "rms_norm_eps": 1e-06,
+      "rope_scaling": null,
+      "rope_theta": 1000000,
+      "sep_token_id": null,
+      "sliding_window": null,
+      "suppress_tokens": null,
+      "task_specific_params": null,
+      "temperature": 1.0,
+      "tf_legacy_loss": false,
+      "tie_encoder_decoder": false,
+      "tie_word_embeddings": false,
+      "tokenizer_class": null,
+      "top_k": 50,
+      "top_p": 1.0,
+      "dtype": null,
+      "torchscript": false,
+      "typical_p": 1.0,
+      "use_bfloat16": false,
+      "use_cache": true,
+      "use_sliding_window": false,
+      "vocab_size": 2048
+    },
+    "codec_bos_id": 2149,
+    "codec_eos_token_id": 2150,
+    "codec_think_id": 2154,
+    "codec_language_id": {
+      "chinese": 2055,
+      "english": 2050,
+      "german": 2053,
+      "italian": 2070,
+      "portuguese": 2071,
+      "spanish": 2054,
+      "japanese": 2058,
+      "korean": 2064,
+      "french": 2061,
+      "russian": 2069
+    },
+    "codec_nothink_id": 2155,
+    "codec_pad_id": 2148,
+    "codec_think_bos_id": 2156,
+    "codec_think_eos_id": 2157,
+    "spk_id": {},
+    "spk_is_dialect": {},
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 1024,
+    "initializer_range": 0.02,
+    "intermediate_size": 3072,
+    "max_position_embeddings": 32768,
+    "model_type": "qwen3_tts_talker",
+    "num_attention_heads": 16,
+    "num_code_groups": 16,
+    "num_hidden_layers": 28,
+    "num_key_value_heads": 8,
+    "position_id_per_seconds": 13,
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": {
+      "interleaved": true,
+      "mrope_section": [
+        24,
+        20,
+        20
+      ],
+      "rope_type": "default",
+      "type": "default"
+    },
+    "rope_theta": 1000000,
+    "sliding_window": null,
+    "text_hidden_size": 2048,
+    "text_vocab_size": 151936,
+    "use_cache": true,
+    "use_sliding_window": false,
+    "vocab_size": 3072
+  },
+  "transformers_version": "4.57.3"
+}
+
+--------------------------------------------------------------------------------
+ ARCHITECTURE ANALYSIS: TTS Base
+--------------------------------------------------------------------------------
+
+Architecture: ['Qwen3TTSForConditionalGeneration']
+Model Type: qwen3_tts
+
+--- Talker (Main TTS Transformer) ---
+  Hidden Size: 1024
+  Intermediate Size: 3072
+  Num Hidden Layers: 28
+  Num Attention Heads: 16
+  Num KV Heads: 8
+  Head Dim: 128
+  Vocab Size: 3072
+  Text Vocab Size: 151936
+  Text Hidden Size: 2048
+  Num Code Groups (Codebooks): 16
+  RMS Norm Eps: 1e-06
+  RoPE Theta: 1000000
+  Max Position Embeddings: 32768
+  Hidden Act: silu
+  RoPE Scaling: {'interleaved': True, 'mrope_section': [24, 20, 20], 'rope_type': 'default', 'type': 'default'}
+
+--- Code Predictor (Delay Pattern Transformer) ---
+  Hidden Size: 1024
+  Intermediate Size: 3072
+  Num Hidden Layers: 5
+  Num Attention Heads: 16
+  Num KV Heads: 8
+  Head Dim: 128
+  Vocab Size: 2048
+  Num Code Groups: 16
+  Layer Types: ['full_attention', 'full_attention', 'full_attention', 'full_attention', 'full_attention']
+
+--- Speaker Encoder ---
+  Enc Dim: 1024
+  Sample Rate: 24000
+
+================================================================================
+ TENSORS: TTS Base Main
+================================================================================
+
+Total tensors: 478
+
+Tensor Name                                                            Shape                     Dtype          
+--------------------------------------------------------------------------------------------------------------
+speaker_encoder.asp.conv.bias                                          (1536,)                   torch.bfloat16 
+speaker_encoder.asp.conv.weight                                        (1536, 128, 1)            torch.bfloat16 
+speaker_encoder.asp.tdnn.conv.bias                                     (128,)                    torch.bfloat16 
+speaker_encoder.asp.tdnn.conv.weight                                   (128, 4608, 1)            torch.bfloat16 
+speaker_encoder.blocks.0.conv.bias                                     (512,)                    torch.bfloat16 
+speaker_encoder.blocks.0.conv.weight                                   (512, 128, 5)             torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.0.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.0.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.1.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.1.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.2.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.2.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.3.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.3.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.4.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.4.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.5.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.5.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.6.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.1.res2net_block.blocks.6.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.1.se_block.conv1.bias                           (128,)                    torch.bfloat16 
+speaker_encoder.blocks.1.se_block.conv1.weight                         (128, 512, 1)             torch.bfloat16 
+speaker_encoder.blocks.1.se_block.conv2.bias                           (512,)                    torch.bfloat16 
+speaker_encoder.blocks.1.se_block.conv2.weight                         (512, 128, 1)             torch.bfloat16 
+speaker_encoder.blocks.1.tdnn1.conv.bias                               (512,)                    torch.bfloat16 
+speaker_encoder.blocks.1.tdnn1.conv.weight                             (512, 512, 1)             torch.bfloat16 
+speaker_encoder.blocks.1.tdnn2.conv.bias                               (512,)                    torch.bfloat16 
+speaker_encoder.blocks.1.tdnn2.conv.weight                             (512, 512, 1)             torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.0.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.0.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.1.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.1.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.2.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.2.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.3.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.3.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.4.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.4.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.5.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.5.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.6.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.2.res2net_block.blocks.6.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.2.se_block.conv1.bias                           (128,)                    torch.bfloat16 
+speaker_encoder.blocks.2.se_block.conv1.weight                         (128, 512, 1)             torch.bfloat16 
+speaker_encoder.blocks.2.se_block.conv2.bias                           (512,)                    torch.bfloat16 
+speaker_encoder.blocks.2.se_block.conv2.weight                         (512, 128, 1)             torch.bfloat16 
+speaker_encoder.blocks.2.tdnn1.conv.bias                               (512,)                    torch.bfloat16 
+speaker_encoder.blocks.2.tdnn1.conv.weight                             (512, 512, 1)             torch.bfloat16 
+speaker_encoder.blocks.2.tdnn2.conv.bias                               (512,)                    torch.bfloat16 
+speaker_encoder.blocks.2.tdnn2.conv.weight                             (512, 512, 1)             torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.0.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.0.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.1.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.1.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.2.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.2.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.3.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.3.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.4.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.4.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.5.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.5.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.6.conv.bias              (64,)                     torch.bfloat16 
+speaker_encoder.blocks.3.res2net_block.blocks.6.conv.weight            (64, 64, 3)               torch.bfloat16 
+speaker_encoder.blocks.3.se_block.conv1.bias                           (128,)                    torch.bfloat16 
+speaker_encoder.blocks.3.se_block.conv1.weight                         (128, 512, 1)             torch.bfloat16 
+speaker_encoder.blocks.3.se_block.conv2.bias                           (512,)                    torch.bfloat16 
+speaker_encoder.blocks.3.se_block.conv2.weight                         (512, 128, 1)             torch.bfloat16 
+speaker_encoder.blocks.3.tdnn1.conv.bias                               (512,)                    torch.bfloat16 
+speaker_encoder.blocks.3.tdnn1.conv.weight                             (512, 512, 1)             torch.bfloat16 
+speaker_encoder.blocks.3.tdnn2.conv.bias                               (512,)                    torch.bfloat16 
+speaker_encoder.blocks.3.tdnn2.conv.weight                             (512, 512, 1)             torch.bfloat16 
+speaker_encoder.fc.bias                                                (1024,)                   torch.bfloat16 
+speaker_encoder.fc.weight                                              (1024, 3072, 1)           torch.bfloat16 
+speaker_encoder.mfa.conv.bias                                          (1536,)                   torch.bfloat16 
+speaker_encoder.mfa.conv.weight                                        (1536, 1536, 1)           torch.bfloat16 
+talker.code_predictor.lm_head.0.weight                                 (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.1.weight                                 (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.10.weight                                (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.11.weight                                (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.12.weight                                (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.13.weight                                (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.14.weight                                (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.2.weight                                 (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.3.weight                                 (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.4.weight                                 (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.5.weight                                 (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.6.weight                                 (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.7.weight                                 (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.8.weight                                 (2048, 1024)              torch.bfloat16 
+talker.code_predictor.lm_head.9.weight                                 (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.0.weight                   (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.1.weight                   (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.10.weight                  (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.11.weight                  (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.12.weight                  (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.13.weight                  (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.14.weight                  (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.2.weight                   (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.3.weight                   (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.4.weight                   (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.5.weight                   (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.6.weight                   (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.7.weight                   (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.8.weight                   (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.codec_embedding.9.weight                   (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.0.input_layernorm.weight            (1024,)                   torch.bfloat16 
+talker.code_predictor.model.layers.0.mlp.down_proj.weight              (1024, 3072)              torch.bfloat16 
+talker.code_predictor.model.layers.0.mlp.gate_proj.weight              (3072, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.0.mlp.up_proj.weight                (3072, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.0.post_attention_layernorm.weight   (1024,)                   torch.bfloat16 
+talker.code_predictor.model.layers.0.self_attn.k_norm.weight           (128,)                    torch.bfloat16 
+talker.code_predictor.model.layers.0.self_attn.k_proj.weight           (1024, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.0.self_attn.o_proj.weight           (1024, 2048)              torch.bfloat16 
+talker.code_predictor.model.layers.0.self_attn.q_norm.weight           (128,)                    torch.bfloat16 
+talker.code_predictor.model.layers.0.self_attn.q_proj.weight           (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.0.self_attn.v_proj.weight           (1024, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.1.input_layernorm.weight            (1024,)                   torch.bfloat16 
+talker.code_predictor.model.layers.1.mlp.down_proj.weight              (1024, 3072)              torch.bfloat16 
+talker.code_predictor.model.layers.1.mlp.gate_proj.weight              (3072, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.1.mlp.up_proj.weight                (3072, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.1.post_attention_layernorm.weight   (1024,)                   torch.bfloat16 
+talker.code_predictor.model.layers.1.self_attn.k_norm.weight           (128,)                    torch.bfloat16 
+talker.code_predictor.model.layers.1.self_attn.k_proj.weight           (1024, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.1.self_attn.o_proj.weight           (1024, 2048)              torch.bfloat16 
+talker.code_predictor.model.layers.1.self_attn.q_norm.weight           (128,)                    torch.bfloat16 
+talker.code_predictor.model.layers.1.self_attn.q_proj.weight           (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.1.self_attn.v_proj.weight           (1024, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.2.input_layernorm.weight            (1024,)                   torch.bfloat16 
+talker.code_predictor.model.layers.2.mlp.down_proj.weight              (1024, 3072)              torch.bfloat16 
+talker.code_predictor.model.layers.2.mlp.gate_proj.weight              (3072, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.2.mlp.up_proj.weight                (3072, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.2.post_attention_layernorm.weight   (1024,)                   torch.bfloat16 
+talker.code_predictor.model.layers.2.self_attn.k_norm.weight           (128,)                    torch.bfloat16 
+talker.code_predictor.model.layers.2.self_attn.k_proj.weight           (1024, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.2.self_attn.o_proj.weight           (1024, 2048)              torch.bfloat16 
+talker.code_predictor.model.layers.2.self_attn.q_norm.weight           (128,)                    torch.bfloat16 
+talker.code_predictor.model.layers.2.self_attn.q_proj.weight           (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.2.self_attn.v_proj.weight           (1024, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.3.input_layernorm.weight            (1024,)                   torch.bfloat16 
+talker.code_predictor.model.layers.3.mlp.down_proj.weight              (1024, 3072)              torch.bfloat16 
+talker.code_predictor.model.layers.3.mlp.gate_proj.weight              (3072, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.3.mlp.up_proj.weight                (3072, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.3.post_attention_layernorm.weight   (1024,)                   torch.bfloat16 
+talker.code_predictor.model.layers.3.self_attn.k_norm.weight           (128,)                    torch.bfloat16 
+talker.code_predictor.model.layers.3.self_attn.k_proj.weight           (1024, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.3.self_attn.o_proj.weight           (1024, 2048)              torch.bfloat16 
+talker.code_predictor.model.layers.3.self_attn.q_norm.weight           (128,)                    torch.bfloat16 
+talker.code_predictor.model.layers.3.self_attn.q_proj.weight           (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.3.self_attn.v_proj.weight           (1024, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.4.input_layernorm.weight            (1024,)                   torch.bfloat16 
+talker.code_predictor.model.layers.4.mlp.down_proj.weight              (1024, 3072)              torch.bfloat16 
+talker.code_predictor.model.layers.4.mlp.gate_proj.weight              (3072, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.4.mlp.up_proj.weight                (3072, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.4.post_attention_layernorm.weight   (1024,)                   torch.bfloat16 
+talker.code_predictor.model.layers.4.self_attn.k_norm.weight           (128,)                    torch.bfloat16 
+talker.code_predictor.model.layers.4.self_attn.k_proj.weight           (1024, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.4.self_attn.o_proj.weight           (1024, 2048)              torch.bfloat16 
+talker.code_predictor.model.layers.4.self_attn.q_norm.weight           (128,)                    torch.bfloat16 
+talker.code_predictor.model.layers.4.self_attn.q_proj.weight           (2048, 1024)              torch.bfloat16 
+talker.code_predictor.model.layers.4.self_attn.v_proj.weight           (1024, 1024)              torch.bfloat16 
+talker.code_predictor.model.norm.weight                                (1024,)                   torch.bfloat16 
+talker.codec_head.weight                                               (3072, 1024)              torch.bfloat16 
+talker.model.codec_embedding.weight                                    (3072, 1024)              torch.bfloat16 
+talker.model.layers.0.input_layernorm.weight                           (1024,)                   torch.bfloat16 
+talker.model.layers.0.mlp.down_proj.weight                             (1024, 3072)              torch.bfloat16 
+talker.model.layers.0.mlp.gate_proj.weight                             (3072, 1024)              torch.bfloat16 
+talker.model.layers.0.mlp.up_proj.weight                               (3072, 1024)              torch.bfloat16 
+talker.model.layers.0.post_attention_layernorm.weight                  (1024,)                   torch.bfloat16 
+talker.model.layers.0.self_attn.k_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.0.self_attn.k_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.0.self_attn.o_proj.weight                          (1024, 2048)              torch.bfloat16 
+talker.model.layers.0.self_attn.q_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.0.self_attn.q_proj.weight                          (2048, 1024)              torch.bfloat16 
+talker.model.layers.0.self_attn.v_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.1.input_layernorm.weight                           (1024,)                   torch.bfloat16 
+talker.model.layers.1.mlp.down_proj.weight                             (1024, 3072)              torch.bfloat16 
+talker.model.layers.1.mlp.gate_proj.weight                             (3072, 1024)              torch.bfloat16 
+talker.model.layers.1.mlp.up_proj.weight                               (3072, 1024)              torch.bfloat16 
+talker.model.layers.1.post_attention_layernorm.weight                  (1024,)                   torch.bfloat16 
+talker.model.layers.1.self_attn.k_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.1.self_attn.k_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.1.self_attn.o_proj.weight                          (1024, 2048)              torch.bfloat16 
+talker.model.layers.1.self_attn.q_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.1.self_attn.q_proj.weight                          (2048, 1024)              torch.bfloat16 
+talker.model.layers.1.self_attn.v_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.10.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.10.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.10.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.10.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.10.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.10.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.10.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.10.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.10.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.10.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.10.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.11.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.11.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.11.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.11.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.11.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.11.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.11.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.11.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.11.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.11.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.11.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.12.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.12.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.12.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.12.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.12.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.12.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.12.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.12.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.12.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.12.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.12.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.13.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.13.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.13.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.13.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.13.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.13.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.13.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.13.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.13.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.13.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.13.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.14.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.14.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.14.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.14.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.14.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.14.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.14.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.14.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.14.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.14.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.14.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.15.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.15.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.15.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.15.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.15.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.15.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.15.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.15.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.15.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.15.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.15.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.16.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.16.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.16.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.16.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.16.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.16.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.16.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.16.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.16.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.16.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.16.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.17.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.17.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.17.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.17.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.17.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.17.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.17.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.17.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.17.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.17.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.17.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.18.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.18.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.18.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.18.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.18.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.18.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.18.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.18.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.18.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.18.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.18.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.19.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.19.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.19.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.19.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.19.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.19.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.19.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.19.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.19.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.19.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.19.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.2.input_layernorm.weight                           (1024,)                   torch.bfloat16 
+talker.model.layers.2.mlp.down_proj.weight                             (1024, 3072)              torch.bfloat16 
+talker.model.layers.2.mlp.gate_proj.weight                             (3072, 1024)              torch.bfloat16 
+talker.model.layers.2.mlp.up_proj.weight                               (3072, 1024)              torch.bfloat16 
+talker.model.layers.2.post_attention_layernorm.weight                  (1024,)                   torch.bfloat16 
+talker.model.layers.2.self_attn.k_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.2.self_attn.k_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.2.self_attn.o_proj.weight                          (1024, 2048)              torch.bfloat16 
+talker.model.layers.2.self_attn.q_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.2.self_attn.q_proj.weight                          (2048, 1024)              torch.bfloat16 
+talker.model.layers.2.self_attn.v_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.20.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.20.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.20.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.20.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.20.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.20.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.20.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.20.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.20.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.20.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.20.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.21.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.21.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.21.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.21.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.21.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.21.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.21.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.21.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.21.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.21.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.21.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.22.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.22.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.22.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.22.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.22.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.22.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.22.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.22.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.22.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.22.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.22.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.23.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.23.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.23.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.23.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.23.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.23.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.23.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.23.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.23.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.23.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.23.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.24.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.24.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.24.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.24.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.24.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.24.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.24.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.24.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.24.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.24.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.24.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.25.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.25.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.25.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.25.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.25.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.25.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.25.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.25.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.25.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.25.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.25.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.26.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.26.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.26.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.26.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.26.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.26.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.26.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.26.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.26.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.26.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.26.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.27.input_layernorm.weight                          (1024,)                   torch.bfloat16 
+talker.model.layers.27.mlp.down_proj.weight                            (1024, 3072)              torch.bfloat16 
+talker.model.layers.27.mlp.gate_proj.weight                            (3072, 1024)              torch.bfloat16 
+talker.model.layers.27.mlp.up_proj.weight                              (3072, 1024)              torch.bfloat16 
+talker.model.layers.27.post_attention_layernorm.weight                 (1024,)                   torch.bfloat16 
+talker.model.layers.27.self_attn.k_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.27.self_attn.k_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.27.self_attn.o_proj.weight                         (1024, 2048)              torch.bfloat16 
+talker.model.layers.27.self_attn.q_norm.weight                         (128,)                    torch.bfloat16 
+talker.model.layers.27.self_attn.q_proj.weight                         (2048, 1024)              torch.bfloat16 
+talker.model.layers.27.self_attn.v_proj.weight                         (1024, 1024)              torch.bfloat16 
+talker.model.layers.3.input_layernorm.weight                           (1024,)                   torch.bfloat16 
+talker.model.layers.3.mlp.down_proj.weight                             (1024, 3072)              torch.bfloat16 
+talker.model.layers.3.mlp.gate_proj.weight                             (3072, 1024)              torch.bfloat16 
+talker.model.layers.3.mlp.up_proj.weight                               (3072, 1024)              torch.bfloat16 
+talker.model.layers.3.post_attention_layernorm.weight                  (1024,)                   torch.bfloat16 
+talker.model.layers.3.self_attn.k_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.3.self_attn.k_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.3.self_attn.o_proj.weight                          (1024, 2048)              torch.bfloat16 
+talker.model.layers.3.self_attn.q_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.3.self_attn.q_proj.weight                          (2048, 1024)              torch.bfloat16 
+talker.model.layers.3.self_attn.v_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.4.input_layernorm.weight                           (1024,)                   torch.bfloat16 
+talker.model.layers.4.mlp.down_proj.weight                             (1024, 3072)              torch.bfloat16 
+talker.model.layers.4.mlp.gate_proj.weight                             (3072, 1024)              torch.bfloat16 
+talker.model.layers.4.mlp.up_proj.weight                               (3072, 1024)              torch.bfloat16 
+talker.model.layers.4.post_attention_layernorm.weight                  (1024,)                   torch.bfloat16 
+talker.model.layers.4.self_attn.k_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.4.self_attn.k_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.4.self_attn.o_proj.weight                          (1024, 2048)              torch.bfloat16 
+talker.model.layers.4.self_attn.q_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.4.self_attn.q_proj.weight                          (2048, 1024)              torch.bfloat16 
+talker.model.layers.4.self_attn.v_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.5.input_layernorm.weight                           (1024,)                   torch.bfloat16 
+talker.model.layers.5.mlp.down_proj.weight                             (1024, 3072)              torch.bfloat16 
+talker.model.layers.5.mlp.gate_proj.weight                             (3072, 1024)              torch.bfloat16 
+talker.model.layers.5.mlp.up_proj.weight                               (3072, 1024)              torch.bfloat16 
+talker.model.layers.5.post_attention_layernorm.weight                  (1024,)                   torch.bfloat16 
+talker.model.layers.5.self_attn.k_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.5.self_attn.k_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.5.self_attn.o_proj.weight                          (1024, 2048)              torch.bfloat16 
+talker.model.layers.5.self_attn.q_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.5.self_attn.q_proj.weight                          (2048, 1024)              torch.bfloat16 
+talker.model.layers.5.self_attn.v_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.6.input_layernorm.weight                           (1024,)                   torch.bfloat16 
+talker.model.layers.6.mlp.down_proj.weight                             (1024, 3072)              torch.bfloat16 
+talker.model.layers.6.mlp.gate_proj.weight                             (3072, 1024)              torch.bfloat16 
+talker.model.layers.6.mlp.up_proj.weight                               (3072, 1024)              torch.bfloat16 
+talker.model.layers.6.post_attention_layernorm.weight                  (1024,)                   torch.bfloat16 
+talker.model.layers.6.self_attn.k_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.6.self_attn.k_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.6.self_attn.o_proj.weight                          (1024, 2048)              torch.bfloat16 
+talker.model.layers.6.self_attn.q_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.6.self_attn.q_proj.weight                          (2048, 1024)              torch.bfloat16 
+talker.model.layers.6.self_attn.v_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.7.input_layernorm.weight                           (1024,)                   torch.bfloat16 
+talker.model.layers.7.mlp.down_proj.weight                             (1024, 3072)              torch.bfloat16 
+talker.model.layers.7.mlp.gate_proj.weight                             (3072, 1024)              torch.bfloat16 
+talker.model.layers.7.mlp.up_proj.weight                               (3072, 1024)              torch.bfloat16 
+talker.model.layers.7.post_attention_layernorm.weight                  (1024,)                   torch.bfloat16 
+talker.model.layers.7.self_attn.k_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.7.self_attn.k_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.7.self_attn.o_proj.weight                          (1024, 2048)              torch.bfloat16 
+talker.model.layers.7.self_attn.q_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.7.self_attn.q_proj.weight                          (2048, 1024)              torch.bfloat16 
+talker.model.layers.7.self_attn.v_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.8.input_layernorm.weight                           (1024,)                   torch.bfloat16 
+talker.model.layers.8.mlp.down_proj.weight                             (1024, 3072)              torch.bfloat16 
+talker.model.layers.8.mlp.gate_proj.weight                             (3072, 1024)              torch.bfloat16 
+talker.model.layers.8.mlp.up_proj.weight                               (3072, 1024)              torch.bfloat16 
+talker.model.layers.8.post_attention_layernorm.weight                  (1024,)                   torch.bfloat16 
+talker.model.layers.8.self_attn.k_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.8.self_attn.k_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.8.self_attn.o_proj.weight                          (1024, 2048)              torch.bfloat16 
+talker.model.layers.8.self_attn.q_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.8.self_attn.q_proj.weight                          (2048, 1024)              torch.bfloat16 
+talker.model.layers.8.self_attn.v_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.9.input_layernorm.weight                           (1024,)                   torch.bfloat16 
+talker.model.layers.9.mlp.down_proj.weight                             (1024, 3072)              torch.bfloat16 
+talker.model.layers.9.mlp.gate_proj.weight                             (3072, 1024)              torch.bfloat16 
+talker.model.layers.9.mlp.up_proj.weight                               (3072, 1024)              torch.bfloat16 
+talker.model.layers.9.post_attention_layernorm.weight                  (1024,)                   torch.bfloat16 
+talker.model.layers.9.self_attn.k_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.9.self_attn.k_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.layers.9.self_attn.o_proj.weight                          (1024, 2048)              torch.bfloat16 
+talker.model.layers.9.self_attn.q_norm.weight                          (128,)                    torch.bfloat16 
+talker.model.layers.9.self_attn.q_proj.weight                          (2048, 1024)              torch.bfloat16 
+talker.model.layers.9.self_attn.v_proj.weight                          (1024, 1024)              torch.bfloat16 
+talker.model.norm.weight                                               (1024,)                   torch.bfloat16 
+talker.model.text_embedding.weight                                     (151936, 2048)            torch.bfloat16 
+talker.text_projection.linear_fc1.bias                                 (2048,)                   torch.bfloat16 
+talker.text_projection.linear_fc1.weight                               (2048, 2048)              torch.bfloat16 
+talker.text_projection.linear_fc2.bias                                 (1024,)                   torch.bfloat16 
+talker.text_projection.linear_fc2.weight                               (1024, 2048)              torch.bfloat16 
+
+--------------------------------------------------------------------------------
+ TENSOR CATEGORIES: TTS Base Main
+--------------------------------------------------------------------------------
+
+
+speaker_encoder.asp (4 tensors):
+  - speaker_encoder.asp.conv.bias
+  - speaker_encoder.asp.conv.weight
+  - speaker_encoder.asp.tdnn.conv.bias
+  - speaker_encoder.asp.tdnn.conv.weight
+
+speaker_encoder.blocks (68 tensors):
+  - speaker_encoder.blocks.0.conv.bias
+  - speaker_encoder.blocks.0.conv.weight
+  - speaker_encoder.blocks.1.res2net_block.blocks.0.conv.bias
+  - speaker_encoder.blocks.1.res2net_block.blocks.0.conv.weight
+  - speaker_encoder.blocks.1.res2net_block.blocks.1.conv.bias
+  ... and 63 more
+
+speaker_encoder.fc (2 tensors):
+  - speaker_encoder.fc.bias
+  - speaker_encoder.fc.weight
+
+speaker_encoder.mfa (2 tensors):
+  - speaker_encoder.mfa.conv.bias
+  - speaker_encoder.mfa.conv.weight
+
+talker.code_predictor (86 tensors):
+  - talker.code_predictor.lm_head.0.weight
+  - talker.code_predictor.lm_head.1.weight
+  - talker.code_predictor.lm_head.10.weight
+  - talker.code_predictor.lm_head.11.weight
+  - talker.code_predictor.lm_head.12.weight
+  ... and 81 more
+
+talker.codec_head (1 tensors):
+  - talker.codec_head.weight
+
+talker.model (311 tensors):
+  - talker.model.codec_embedding.weight
+  - talker.model.layers.0.input_layernorm.weight
+  - talker.model.layers.0.mlp.down_proj.weight
+  - talker.model.layers.0.mlp.gate_proj.weight
+  - talker.model.layers.0.mlp.up_proj.weight
+  ... and 306 more
+
+talker.text_projection (4 tensors):
+  - talker.text_projection.linear_fc1.bias
+  - talker.text_projection.linear_fc1.weight
+  - talker.text_projection.linear_fc2.bias
+  - talker.text_projection.linear_fc2.weight
+
+================================================================================
+ CONFIG: TTS Base Speech Tokenizer
+================================================================================
+
+{
+  "architectures": [
+    "Qwen3TTSTokenizerV2Model"
+  ],
+  "model_type": "qwen3_tts_tokenizer_12hz",
+  "encoder_valid_num_quantizers": 16,
+  "input_sample_rate": 24000,
+  "output_sample_rate": 24000,
+  "decode_upsample_rate": 1920,
+  "encode_downsample_rate": 1920,
+  "decoder_config": {
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "latent_dim": 1024,
+    "codebook_dim": 512,
+    "codebook_size": 2048,
+    "decoder_dim": 1536,
+    "hidden_act": "silu",
+    "hidden_size": 512,
+    "intermediate_size": 1024,
+    "layer_scale_initial_scale": 0.01,
+    "max_position_embeddings": 8000,
+    "head_dim": 64,
+    "num_attention_heads": 16,
+    "num_hidden_layers": 8,
+    "num_key_value_heads": 16,
+    "num_quantizers": 16,
+    "num_semantic_quantizers": 1,
+    "rms_norm_eps": 1e-05,
+    "rope_theta": 10000,
+    "semantic_codebook_size": 4096,
+    "sliding_window": 72,
+    "upsample_rates": [
+      8,
+      5,
+      4,
+      3
+    ],
+    "upsampling_ratios": [
+      2,
+      2
+    ],
+    "vector_quantization_hidden_dimension": 512
+  },
+  "encoder_config": {
+    "_frame_rate": 12.5,
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "audio_channels": 1,
+    "codebook_dim": 256,
+    "codebook_size": 2048,
+    "compress": 2,
+    "dilation_growth_rate": 2,
+    "dtype": "float32",
+    "head_dim": 64,
+    "hidden_act": "gelu",
+    "hidden_size": 512,
+    "initializer_range": 0.02,
+    "intermediate_size": 2048,
+    "kernel_size": 7,
+    "last_kernel_size": 3,
+    "layer_scale_initial_scale": 0.01,
+    "max_position_embeddings": 8000,
+    "norm_eps": 1e-05,
+    "normalize": false,
+    "num_attention_heads": 8,
+    "num_filters": 64,
+    "num_hidden_layers": 8,
+    "num_key_value_heads": 8,
+    "num_quantizers": 32,
+    "num_residual_layers": 1,
+    "num_semantic_quantizers": 1,
+    "pad_mode": "constant",
+    "residual_kernel_size": 3,
+    "rope_theta": 10000.0,
+    "sampling_rate": 24000,
+    "sliding_window": 250,
+    "transformers_version": "4.57.0.dev0",
+    "trim_right_ratio": 1.0,
+    "upsample_groups": 512,
+    "upsampling_ratios": [
+      8,
+      6,
+      5,
+      4
+    ],
+    "use_cache": false,
+    "use_causal_conv": true,
+    "use_conv_shortcut": false,
+    "use_streaming": false,
+    "vector_quantization_hidden_dimension": 256
+  },
+  "transformers_version": "4.57.3"
+}
+
+--------------------------------------------------------------------------------
+ ARCHITECTURE ANALYSIS: TTS Base Speech Tokenizer
+--------------------------------------------------------------------------------
+
+Architecture: ['Qwen3TTSTokenizerV2Model']
+Model Type: qwen3_tts_tokenizer_12hz
+
+--- Tokenizer Encoder (Audio -> Codes) ---
+  Frame Rate: 12.5
+  Hidden Size: 512
+  Intermediate Size: 2048
+  Num Hidden Layers: 8
+  Num Attention Heads: 8
+  Num KV Heads: 8
+  Head Dim: 64
+  Codebook Size: 2048
+  Codebook Dim: 256
+  Num Quantizers: 32
+  Num Semantic Quantizers: 1
+  Sampling Rate: 24000
+  Upsampling Ratios: [8, 6, 5, 4]
+  Num Filters: 64
+  Kernel Size: 7
+  Use Causal Conv: True
+
+--- Tokenizer Decoder (Codes -> Audio, Vocoder) ---
+  Latent Dim: 1024
+  Decoder Dim: 1536
+  Hidden Size: 512
+  Intermediate Size: 1024
+  Num Hidden Layers: 8
+  Num Attention Heads: 16
+  Num KV Heads: 16
+  Head Dim: 64
+  Codebook Size: 2048
+  Codebook Dim: 512
+  Semantic Codebook Size: 4096
+  Num Quantizers: 16
+  Num Semantic Quantizers: 1
+  Upsample Rates: [8, 5, 4, 3]
+  Upsampling Ratios: [2, 2]
+  Sliding Window: 72
+  VQ Hidden Dim: 512
+
+--- Tokenizer Global ---
+  Valid Num Quantizers: 16
+  Input Sample Rate: 24000
+  Output Sample Rate: 24000
+  Encode Downsample Rate: 1920
+  Decode Upsample Rate: 1920
+
+================================================================================
+ TENSORS: TTS Base Speech Tokenizer
+================================================================================
+
+Total tensors: 496
+
+Tensor Name                                                            Shape                     Dtype          
+--------------------------------------------------------------------------------------------------------------
+decoder.decoder.0.conv.bias                                            (1536,)                   torch.float32  
+decoder.decoder.0.conv.weight                                          (1536, 1024, 7)           torch.float32  
+decoder.decoder.1.block.0.alpha                                        (1536,)                   torch.float32  
+decoder.decoder.1.block.0.beta                                         (1536,)                   torch.float32  
+decoder.decoder.1.block.1.conv.bias                                    (768,)                    torch.float32  
+decoder.decoder.1.block.1.conv.weight                                  (1536, 768, 16)           torch.float32  
+decoder.decoder.1.block.2.act1.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.2.act1.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.2.act2.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.2.act2.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.2.conv1.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.2.conv1.conv.weight                            (768, 768, 7)             torch.float32  
+decoder.decoder.1.block.2.conv2.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.2.conv2.conv.weight                            (768, 768, 1)             torch.float32  
+decoder.decoder.1.block.3.act1.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.3.act1.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.3.act2.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.3.act2.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.3.conv1.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.3.conv1.conv.weight                            (768, 768, 7)             torch.float32  
+decoder.decoder.1.block.3.conv2.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.3.conv2.conv.weight                            (768, 768, 1)             torch.float32  
+decoder.decoder.1.block.4.act1.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.4.act1.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.4.act2.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.4.act2.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.4.conv1.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.4.conv1.conv.weight                            (768, 768, 7)             torch.float32  
+decoder.decoder.1.block.4.conv2.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.4.conv2.conv.weight                            (768, 768, 1)             torch.float32  
+decoder.decoder.2.block.0.alpha                                        (768,)                    torch.float32  
+decoder.decoder.2.block.0.beta                                         (768,)                    torch.float32  
+decoder.decoder.2.block.1.conv.bias                                    (384,)                    torch.float32  
+decoder.decoder.2.block.1.conv.weight                                  (768, 384, 10)            torch.float32  
+decoder.decoder.2.block.2.act1.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.2.act1.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.2.act2.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.2.act2.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.2.conv1.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.2.conv1.conv.weight                            (384, 384, 7)             torch.float32  
+decoder.decoder.2.block.2.conv2.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.2.conv2.conv.weight                            (384, 384, 1)             torch.float32  
+decoder.decoder.2.block.3.act1.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.3.act1.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.3.act2.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.3.act2.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.3.conv1.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.3.conv1.conv.weight                            (384, 384, 7)             torch.float32  
+decoder.decoder.2.block.3.conv2.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.3.conv2.conv.weight                            (384, 384, 1)             torch.float32  
+decoder.decoder.2.block.4.act1.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.4.act1.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.4.act2.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.4.act2.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.4.conv1.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.4.conv1.conv.weight                            (384, 384, 7)             torch.float32  
+decoder.decoder.2.block.4.conv2.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.4.conv2.conv.weight                            (384, 384, 1)             torch.float32  
+decoder.decoder.3.block.0.alpha                                        (384,)                    torch.float32  
+decoder.decoder.3.block.0.beta                                         (384,)                    torch.float32  
+decoder.decoder.3.block.1.conv.bias                                    (192,)                    torch.float32  
+decoder.decoder.3.block.1.conv.weight                                  (384, 192, 8)             torch.float32  
+decoder.decoder.3.block.2.act1.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.2.act1.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.2.act2.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.2.act2.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.2.conv1.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.2.conv1.conv.weight                            (192, 192, 7)             torch.float32  
+decoder.decoder.3.block.2.conv2.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.2.conv2.conv.weight                            (192, 192, 1)             torch.float32  
+decoder.decoder.3.block.3.act1.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.3.act1.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.3.act2.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.3.act2.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.3.conv1.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.3.conv1.conv.weight                            (192, 192, 7)             torch.float32  
+decoder.decoder.3.block.3.conv2.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.3.conv2.conv.weight                            (192, 192, 1)             torch.float32  
+decoder.decoder.3.block.4.act1.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.4.act1.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.4.act2.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.4.act2.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.4.conv1.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.4.conv1.conv.weight                            (192, 192, 7)             torch.float32  
+decoder.decoder.3.block.4.conv2.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.4.conv2.conv.weight                            (192, 192, 1)             torch.float32  
+decoder.decoder.4.block.0.alpha                                        (192,)                    torch.float32  
+decoder.decoder.4.block.0.beta                                         (192,)                    torch.float32  
+decoder.decoder.4.block.1.conv.bias                                    (96,)                     torch.float32  
+decoder.decoder.4.block.1.conv.weight                                  (192, 96, 6)              torch.float32  
+decoder.decoder.4.block.2.act1.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.2.act1.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.2.act2.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.2.act2.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.2.conv1.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.2.conv1.conv.weight                            (96, 96, 7)               torch.float32  
+decoder.decoder.4.block.2.conv2.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.2.conv2.conv.weight                            (96, 96, 1)               torch.float32  
+decoder.decoder.4.block.3.act1.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.3.act1.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.3.act2.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.3.act2.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.3.conv1.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.3.conv1.conv.weight                            (96, 96, 7)               torch.float32  
+decoder.decoder.4.block.3.conv2.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.3.conv2.conv.weight                            (96, 96, 1)               torch.float32  
+decoder.decoder.4.block.4.act1.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.4.act1.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.4.act2.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.4.act2.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.4.conv1.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.4.conv1.conv.weight                            (96, 96, 7)               torch.float32  
+decoder.decoder.4.block.4.conv2.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.4.conv2.conv.weight                            (96, 96, 1)               torch.float32  
+decoder.decoder.5.alpha                                                (96,)                     torch.float32  
+decoder.decoder.5.beta                                                 (96,)                     torch.float32  
+decoder.decoder.6.conv.bias                                            (1,)                      torch.float32  
+decoder.decoder.6.conv.weight                                          (1, 96, 7)                torch.float32  
+decoder.pre_conv.conv.bias                                             (1024,)                   torch.float32  
+decoder.pre_conv.conv.weight                                           (1024, 512, 3)            torch.float32  
+decoder.pre_transformer.input_proj.bias                                (512,)                    torch.float32  
+decoder.pre_transformer.input_proj.weight                              (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.0.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.0.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.0.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.0.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.0.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.0.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.0.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.0.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.0.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.0.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.0.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.1.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.1.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.1.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.1.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.1.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.1.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.1.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.1.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.1.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.1.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.1.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.2.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.2.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.2.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.2.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.2.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.2.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.2.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.2.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.2.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.2.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.2.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.3.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.3.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.3.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.3.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.3.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.3.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.3.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.3.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.3.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.3.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.3.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.4.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.4.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.4.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.4.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.4.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.4.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.4.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.4.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.4.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.4.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.4.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.5.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.5.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.5.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.5.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.5.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.5.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.5.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.5.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.5.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.5.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.5.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.6.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.6.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.6.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.6.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.6.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.6.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.6.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.6.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.6.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.6.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.6.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.7.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.7.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.7.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.7.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.7.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.7.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.7.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.7.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.7.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.7.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.7.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.norm.weight                                    (512,)                    torch.float32  
+decoder.pre_transformer.output_proj.bias                               (1024,)                   torch.float32  
+decoder.pre_transformer.output_proj.weight                             (1024, 512)               torch.float32  
+decoder.quantizer.rvq_first.input_proj.weight                          (256, 512, 1)             torch.float32  
+decoder.quantizer.rvq_first.output_proj.weight                         (512, 256, 1)             torch.float32  
+decoder.quantizer.rvq_first.vq.layers.0._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_first.vq.layers.0._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.input_proj.weight                           (256, 512, 1)             torch.float32  
+decoder.quantizer.rvq_rest.output_proj.weight                          (512, 256, 1)             torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.0._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.0._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.1._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.1._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.10._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.10._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.11._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.11._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.12._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.12._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.13._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.13._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.14._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.14._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.2._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.2._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.3._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.3._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.4._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.4._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.5._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.5._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.6._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.6._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.7._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.7._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.8._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.8._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.9._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.9._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.upsample.0.0.conv.bias                                         (1024,)                   torch.float32  
+decoder.upsample.0.0.conv.weight                                       (1024, 1024, 2)           torch.float32  
+decoder.upsample.0.1.dwconv.conv.bias                                  (1024,)                   torch.float32  
+decoder.upsample.0.1.dwconv.conv.weight                                (1024, 1, 7)              torch.float32  
+decoder.upsample.0.1.gamma                                             (1024,)                   torch.float32  
+decoder.upsample.0.1.norm.bias                                         (1024,)                   torch.float32  
+decoder.upsample.0.1.norm.weight                                       (1024,)                   torch.float32  
+decoder.upsample.0.1.pwconv1.bias                                      (4096,)                   torch.float32  
+decoder.upsample.0.1.pwconv1.weight                                    (4096, 1024)              torch.float32  
+decoder.upsample.0.1.pwconv2.bias                                      (1024,)                   torch.float32  
+decoder.upsample.0.1.pwconv2.weight                                    (1024, 4096)              torch.float32  
+decoder.upsample.1.0.conv.bias                                         (1024,)                   torch.float32  
+decoder.upsample.1.0.conv.weight                                       (1024, 1024, 2)           torch.float32  
+decoder.upsample.1.1.dwconv.conv.bias                                  (1024,)                   torch.float32  
+decoder.upsample.1.1.dwconv.conv.weight                                (1024, 1, 7)              torch.float32  
+decoder.upsample.1.1.gamma                                             (1024,)                   torch.float32  
+decoder.upsample.1.1.norm.bias                                         (1024,)                   torch.float32  
+decoder.upsample.1.1.norm.weight                                       (1024,)                   torch.float32  
+decoder.upsample.1.1.pwconv1.bias                                      (4096,)                   torch.float32  
+decoder.upsample.1.1.pwconv1.weight                                    (4096, 1024)              torch.float32  
+decoder.upsample.1.1.pwconv2.bias                                      (1024,)                   torch.float32  
+decoder.upsample.1.1.pwconv2.weight                                    (1024, 4096)              torch.float32  
+encoder.downsample.conv.weight                                         (512, 512, 4)             torch.float32  
+encoder.encoder.layers.0.conv.bias                                     (64,)                     torch.float32  
+encoder.encoder.layers.0.conv.weight                                   (64, 1, 7)                torch.float32  
+encoder.encoder.layers.1.block.1.conv.bias                             (32,)                     torch.float32  
+encoder.encoder.layers.1.block.1.conv.weight                           (32, 64, 3)               torch.float32  
+encoder.encoder.layers.1.block.3.conv.bias                             (64,)                     torch.float32  
+encoder.encoder.layers.1.block.3.conv.weight                           (64, 32, 1)               torch.float32  
+encoder.encoder.layers.10.block.1.conv.bias                            (256,)                    torch.float32  
+encoder.encoder.layers.10.block.1.conv.weight                          (256, 512, 3)             torch.float32  
+encoder.encoder.layers.10.block.3.conv.bias                            (512,)                    torch.float32  
+encoder.encoder.layers.10.block.3.conv.weight                          (512, 256, 1)             torch.float32  
+encoder.encoder.layers.12.conv.bias                                    (1024,)                   torch.float32  
+encoder.encoder.layers.12.conv.weight                                  (1024, 512, 16)           torch.float32  
+encoder.encoder.layers.14.conv.bias                                    (512,)                    torch.float32  
+encoder.encoder.layers.14.conv.weight                                  (512, 1024, 3)            torch.float32  
+encoder.encoder.layers.3.conv.bias                                     (128,)                    torch.float32  
+encoder.encoder.layers.3.conv.weight                                   (128, 64, 8)              torch.float32  
+encoder.encoder.layers.4.block.1.conv.bias                             (64,)                     torch.float32  
+encoder.encoder.layers.4.block.1.conv.weight                           (64, 128, 3)              torch.float32  
+encoder.encoder.layers.4.block.3.conv.bias                             (128,)                    torch.float32  
+encoder.encoder.layers.4.block.3.conv.weight                           (128, 64, 1)              torch.float32  
+encoder.encoder.layers.6.conv.bias                                     (256,)                    torch.float32  
+encoder.encoder.layers.6.conv.weight                                   (256, 128, 10)            torch.float32  
+encoder.encoder.layers.7.block.1.conv.bias                             (128,)                    torch.float32  
+encoder.encoder.layers.7.block.1.conv.weight                           (128, 256, 3)             torch.float32  
+encoder.encoder.layers.7.block.3.conv.bias                             (256,)                    torch.float32  
+encoder.encoder.layers.7.block.3.conv.weight                           (256, 128, 1)             torch.float32  
+encoder.encoder.layers.9.conv.bias                                     (512,)                    torch.float32  
+encoder.encoder.layers.9.conv.weight                                   (512, 256, 12)            torch.float32  
+encoder.encoder_transformer.layers.0.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.0.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.0.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.0.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.0.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.0.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.0.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.0.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.0.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.0.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.0.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.0.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.1.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.1.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.1.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.1.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.1.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.1.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.2.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.2.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.2.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.2.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.2.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.2.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.3.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.3.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.3.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.3.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.3.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.3.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.4.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.4.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.4.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.4.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.4.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.4.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.5.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.5.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.5.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.5.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.5.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.5.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.6.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.6.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.6.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.6.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.6.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.6.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.7.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.7.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.7.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.7.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.7.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.7.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.input_proj.weight (256, 512, 1)             torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.1.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.1.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.1.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.10.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.10.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.10.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.11.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.11.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.11.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.12.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.12.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.12.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.13.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.13.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.13.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.14.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.14.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.14.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.15.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.15.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.15.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.16.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.16.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.16.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.17.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.17.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.17.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.18.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.18.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.18.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.19.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.19.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.19.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.2.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.2.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.2.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.20.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.20.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.20.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.21.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.21.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.21.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.22.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.22.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.22.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.23.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.23.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.23.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.24.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.24.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.24.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.25.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.25.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.25.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.26.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.26.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.26.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.27.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.27.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.27.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.28.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.28.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.28.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.29.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.29.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.29.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.3.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.3.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.3.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.30.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.30.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.30.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.4.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.4.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.4.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.5.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.5.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.5.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.6.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.6.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.6.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.7.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.7.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.7.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.8.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.8.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.8.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.9.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.9.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.9.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.output_proj.weight (512, 256, 1)             torch.float32  
+encoder.quantizer.semantic_residual_vector_quantizer.input_proj.weight (256, 512, 1)             torch.float32  
+encoder.quantizer.semantic_residual_vector_quantizer.layers.0.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.semantic_residual_vector_quantizer.layers.0.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.semantic_residual_vector_quantizer.layers.0.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.semantic_residual_vector_quantizer.output_proj.weight (512, 256, 1)             torch.float32  
+
+--------------------------------------------------------------------------------
+ TENSOR CATEGORIES: TTS Base Speech Tokenizer
+--------------------------------------------------------------------------------
+
+
+decoder.decoder (118 tensors):
+  - decoder.decoder.0.conv.bias
+  - decoder.decoder.0.conv.weight
+  - decoder.decoder.1.block.0.alpha
+  - decoder.decoder.1.block.0.beta
+  - decoder.decoder.1.block.1.conv.bias
+  ... and 113 more
+
+decoder.pre_conv (2 tensors):
+  - decoder.pre_conv.conv.bias
+  - decoder.pre_conv.conv.weight
+
+decoder.pre_transformer (93 tensors):
+  - decoder.pre_transformer.input_proj.bias
+  - decoder.pre_transformer.input_proj.weight
+  - decoder.pre_transformer.layers.0.input_layernorm.weight
+  - decoder.pre_transformer.layers.0.mlp.down_proj.weight
+  - decoder.pre_transformer.layers.0.mlp.gate_proj.weight
+  ... and 88 more
+
+decoder.quantizer (36 tensors):
+  - decoder.quantizer.rvq_first.input_proj.weight
+  - decoder.quantizer.rvq_first.output_proj.weight
+  - decoder.quantizer.rvq_first.vq.layers.0._codebook.cluster_usage
+  - decoder.quantizer.rvq_first.vq.layers.0._codebook.embedding_sum
+  - decoder.quantizer.rvq_rest.input_proj.weight
+  ... and 31 more
+
+decoder.upsample (22 tensors):
+  - decoder.upsample.0.0.conv.bias
+  - decoder.upsample.0.0.conv.weight
+  - decoder.upsample.0.1.dwconv.conv.bias
+  - decoder.upsample.0.1.dwconv.conv.weight
+  - decoder.upsample.0.1.gamma
+  ... and 17 more
+
+encoder.downsample (1 tensors):
+  - encoder.downsample.conv.weight
+
+encoder.encoder (28 tensors):
+  - encoder.encoder.layers.0.conv.bias
+  - encoder.encoder.layers.0.conv.weight
+  - encoder.encoder.layers.1.block.1.conv.bias
+  - encoder.encoder.layers.1.block.1.conv.weight
+  - encoder.encoder.layers.1.block.3.conv.bias
+  ... and 23 more
+
+encoder.encoder_transformer (96 tensors):
+  - encoder.encoder_transformer.layers.0.input_layernorm.bias
+  - encoder.encoder_transformer.layers.0.input_layernorm.weight
+  - encoder.encoder_transformer.layers.0.mlp.fc1.weight
+  - encoder.encoder_transformer.layers.0.mlp.fc2.weight
+  - encoder.encoder_transformer.layers.0.mlp_layer_scale.scale
+  ... and 91 more
+
+encoder.quantizer (100 tensors):
+  - encoder.quantizer.acoustic_residual_vector_quantizer.input_proj.weight
+  - encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.cluster_usage
+  - encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.embed_sum
+  - encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.initialized
+  - encoder.quantizer.acoustic_residual_vector_quantizer.layers.1.codebook.cluster_usage
+  ... and 95 more
+
+################################################################################
+ STANDALONE TOKENIZER (Qwen3-TTS-Tokenizer-12Hz)
+################################################################################
+
+
+================================================================================
+ CONFIG: Standalone Tokenizer
+================================================================================
+
+{
+  "architectures": [
+    "Qwen3TTSTokenizerV2Model"
+  ],
+  "model_type": "qwen3_tts_tokenizer_12hz",
+  "encoder_valid_num_quantizers": 16,
+  "input_sample_rate": 24000,
+  "output_sample_rate": 24000,
+  "decode_upsample_rate": 1920,
+  "encode_downsample_rate": 1920,
+  "decoder_config": {
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "latent_dim": 1024,
+    "codebook_dim": 512,
+    "codebook_size": 2048,
+    "decoder_dim": 1536,
+    "hidden_act": "silu",
+    "hidden_size": 512,
+    "intermediate_size": 1024,
+    "layer_scale_initial_scale": 0.01,
+    "max_position_embeddings": 8000,
+    "head_dim": 64,
+    "num_attention_heads": 16,
+    "num_hidden_layers": 8,
+    "num_key_value_heads": 16,
+    "num_quantizers": 16,
+    "num_semantic_quantizers": 1,
+    "rms_norm_eps": 1e-05,
+    "rope_theta": 10000,
+    "semantic_codebook_size": 4096,
+    "sliding_window": 72,
+    "upsample_rates": [
+      8,
+      5,
+      4,
+      3
+    ],
+    "upsampling_ratios": [
+      2,
+      2
+    ],
+    "vector_quantization_hidden_dimension": 512
+  },
+  "encoder_config": {
+    "_frame_rate": 12.5,
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "audio_channels": 1,
+    "codebook_dim": 256,
+    "codebook_size": 2048,
+    "compress": 2,
+    "dilation_growth_rate": 2,
+    "dtype": "float32",
+    "head_dim": 64,
+    "hidden_act": "gelu",
+    "hidden_size": 512,
+    "initializer_range": 0.02,
+    "intermediate_size": 2048,
+    "kernel_size": 7,
+    "last_kernel_size": 3,
+    "layer_scale_initial_scale": 0.01,
+    "max_position_embeddings": 8000,
+    "norm_eps": 1e-05,
+    "normalize": false,
+    "num_attention_heads": 8,
+    "num_filters": 64,
+    "num_hidden_layers": 8,
+    "num_key_value_heads": 8,
+    "num_quantizers": 32,
+    "num_residual_layers": 1,
+    "num_semantic_quantizers": 1,
+    "pad_mode": "constant",
+    "residual_kernel_size": 3,
+    "rope_theta": 10000.0,
+    "sampling_rate": 24000,
+    "sliding_window": 250,
+    "transformers_version": "4.57.0.dev0",
+    "trim_right_ratio": 1.0,
+    "upsample_groups": 512,
+    "upsampling_ratios": [
+      8,
+      6,
+      5,
+      4
+    ],
+    "use_cache": false,
+    "use_causal_conv": true,
+    "use_conv_shortcut": false,
+    "use_streaming": false,
+    "vector_quantization_hidden_dimension": 256
+  },
+  "transformers_version": "4.57.3"
+}
+
+--------------------------------------------------------------------------------
+ ARCHITECTURE ANALYSIS: Standalone Tokenizer
+--------------------------------------------------------------------------------
+
+Architecture: ['Qwen3TTSTokenizerV2Model']
+Model Type: qwen3_tts_tokenizer_12hz
+
+--- Tokenizer Encoder (Audio -> Codes) ---
+  Frame Rate: 12.5
+  Hidden Size: 512
+  Intermediate Size: 2048
+  Num Hidden Layers: 8
+  Num Attention Heads: 8
+  Num KV Heads: 8
+  Head Dim: 64
+  Codebook Size: 2048
+  Codebook Dim: 256
+  Num Quantizers: 32
+  Num Semantic Quantizers: 1
+  Sampling Rate: 24000
+  Upsampling Ratios: [8, 6, 5, 4]
+  Num Filters: 64
+  Kernel Size: 7
+  Use Causal Conv: True
+
+--- Tokenizer Decoder (Codes -> Audio, Vocoder) ---
+  Latent Dim: 1024
+  Decoder Dim: 1536
+  Hidden Size: 512
+  Intermediate Size: 1024
+  Num Hidden Layers: 8
+  Num Attention Heads: 16
+  Num KV Heads: 16
+  Head Dim: 64
+  Codebook Size: 2048
+  Codebook Dim: 512
+  Semantic Codebook Size: 4096
+  Num Quantizers: 16
+  Num Semantic Quantizers: 1
+  Upsample Rates: [8, 5, 4, 3]
+  Upsampling Ratios: [2, 2]
+  Sliding Window: 72
+  VQ Hidden Dim: 512
+
+--- Tokenizer Global ---
+  Valid Num Quantizers: 16
+  Input Sample Rate: 24000
+  Output Sample Rate: 24000
+  Encode Downsample Rate: 1920
+  Decode Upsample Rate: 1920
+
+================================================================================
+ TENSORS: Standalone Tokenizer
+================================================================================
+
+Total tensors: 496
+
+Tensor Name                                                            Shape                     Dtype          
+--------------------------------------------------------------------------------------------------------------
+decoder.decoder.0.conv.bias                                            (1536,)                   torch.float32  
+decoder.decoder.0.conv.weight                                          (1536, 1024, 7)           torch.float32  
+decoder.decoder.1.block.0.alpha                                        (1536,)                   torch.float32  
+decoder.decoder.1.block.0.beta                                         (1536,)                   torch.float32  
+decoder.decoder.1.block.1.conv.bias                                    (768,)                    torch.float32  
+decoder.decoder.1.block.1.conv.weight                                  (1536, 768, 16)           torch.float32  
+decoder.decoder.1.block.2.act1.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.2.act1.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.2.act2.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.2.act2.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.2.conv1.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.2.conv1.conv.weight                            (768, 768, 7)             torch.float32  
+decoder.decoder.1.block.2.conv2.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.2.conv2.conv.weight                            (768, 768, 1)             torch.float32  
+decoder.decoder.1.block.3.act1.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.3.act1.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.3.act2.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.3.act2.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.3.conv1.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.3.conv1.conv.weight                            (768, 768, 7)             torch.float32  
+decoder.decoder.1.block.3.conv2.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.3.conv2.conv.weight                            (768, 768, 1)             torch.float32  
+decoder.decoder.1.block.4.act1.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.4.act1.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.4.act2.alpha                                   (768,)                    torch.float32  
+decoder.decoder.1.block.4.act2.beta                                    (768,)                    torch.float32  
+decoder.decoder.1.block.4.conv1.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.4.conv1.conv.weight                            (768, 768, 7)             torch.float32  
+decoder.decoder.1.block.4.conv2.conv.bias                              (768,)                    torch.float32  
+decoder.decoder.1.block.4.conv2.conv.weight                            (768, 768, 1)             torch.float32  
+decoder.decoder.2.block.0.alpha                                        (768,)                    torch.float32  
+decoder.decoder.2.block.0.beta                                         (768,)                    torch.float32  
+decoder.decoder.2.block.1.conv.bias                                    (384,)                    torch.float32  
+decoder.decoder.2.block.1.conv.weight                                  (768, 384, 10)            torch.float32  
+decoder.decoder.2.block.2.act1.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.2.act1.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.2.act2.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.2.act2.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.2.conv1.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.2.conv1.conv.weight                            (384, 384, 7)             torch.float32  
+decoder.decoder.2.block.2.conv2.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.2.conv2.conv.weight                            (384, 384, 1)             torch.float32  
+decoder.decoder.2.block.3.act1.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.3.act1.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.3.act2.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.3.act2.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.3.conv1.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.3.conv1.conv.weight                            (384, 384, 7)             torch.float32  
+decoder.decoder.2.block.3.conv2.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.3.conv2.conv.weight                            (384, 384, 1)             torch.float32  
+decoder.decoder.2.block.4.act1.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.4.act1.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.4.act2.alpha                                   (384,)                    torch.float32  
+decoder.decoder.2.block.4.act2.beta                                    (384,)                    torch.float32  
+decoder.decoder.2.block.4.conv1.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.4.conv1.conv.weight                            (384, 384, 7)             torch.float32  
+decoder.decoder.2.block.4.conv2.conv.bias                              (384,)                    torch.float32  
+decoder.decoder.2.block.4.conv2.conv.weight                            (384, 384, 1)             torch.float32  
+decoder.decoder.3.block.0.alpha                                        (384,)                    torch.float32  
+decoder.decoder.3.block.0.beta                                         (384,)                    torch.float32  
+decoder.decoder.3.block.1.conv.bias                                    (192,)                    torch.float32  
+decoder.decoder.3.block.1.conv.weight                                  (384, 192, 8)             torch.float32  
+decoder.decoder.3.block.2.act1.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.2.act1.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.2.act2.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.2.act2.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.2.conv1.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.2.conv1.conv.weight                            (192, 192, 7)             torch.float32  
+decoder.decoder.3.block.2.conv2.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.2.conv2.conv.weight                            (192, 192, 1)             torch.float32  
+decoder.decoder.3.block.3.act1.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.3.act1.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.3.act2.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.3.act2.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.3.conv1.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.3.conv1.conv.weight                            (192, 192, 7)             torch.float32  
+decoder.decoder.3.block.3.conv2.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.3.conv2.conv.weight                            (192, 192, 1)             torch.float32  
+decoder.decoder.3.block.4.act1.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.4.act1.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.4.act2.alpha                                   (192,)                    torch.float32  
+decoder.decoder.3.block.4.act2.beta                                    (192,)                    torch.float32  
+decoder.decoder.3.block.4.conv1.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.4.conv1.conv.weight                            (192, 192, 7)             torch.float32  
+decoder.decoder.3.block.4.conv2.conv.bias                              (192,)                    torch.float32  
+decoder.decoder.3.block.4.conv2.conv.weight                            (192, 192, 1)             torch.float32  
+decoder.decoder.4.block.0.alpha                                        (192,)                    torch.float32  
+decoder.decoder.4.block.0.beta                                         (192,)                    torch.float32  
+decoder.decoder.4.block.1.conv.bias                                    (96,)                     torch.float32  
+decoder.decoder.4.block.1.conv.weight                                  (192, 96, 6)              torch.float32  
+decoder.decoder.4.block.2.act1.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.2.act1.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.2.act2.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.2.act2.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.2.conv1.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.2.conv1.conv.weight                            (96, 96, 7)               torch.float32  
+decoder.decoder.4.block.2.conv2.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.2.conv2.conv.weight                            (96, 96, 1)               torch.float32  
+decoder.decoder.4.block.3.act1.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.3.act1.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.3.act2.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.3.act2.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.3.conv1.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.3.conv1.conv.weight                            (96, 96, 7)               torch.float32  
+decoder.decoder.4.block.3.conv2.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.3.conv2.conv.weight                            (96, 96, 1)               torch.float32  
+decoder.decoder.4.block.4.act1.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.4.act1.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.4.act2.alpha                                   (96,)                     torch.float32  
+decoder.decoder.4.block.4.act2.beta                                    (96,)                     torch.float32  
+decoder.decoder.4.block.4.conv1.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.4.conv1.conv.weight                            (96, 96, 7)               torch.float32  
+decoder.decoder.4.block.4.conv2.conv.bias                              (96,)                     torch.float32  
+decoder.decoder.4.block.4.conv2.conv.weight                            (96, 96, 1)               torch.float32  
+decoder.decoder.5.alpha                                                (96,)                     torch.float32  
+decoder.decoder.5.beta                                                 (96,)                     torch.float32  
+decoder.decoder.6.conv.bias                                            (1,)                      torch.float32  
+decoder.decoder.6.conv.weight                                          (1, 96, 7)                torch.float32  
+decoder.pre_conv.conv.bias                                             (1024,)                   torch.float32  
+decoder.pre_conv.conv.weight                                           (1024, 512, 3)            torch.float32  
+decoder.pre_transformer.input_proj.bias                                (512,)                    torch.float32  
+decoder.pre_transformer.input_proj.weight                              (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.0.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.0.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.0.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.0.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.0.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.0.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.0.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.0.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.0.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.0.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.0.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.1.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.1.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.1.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.1.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.1.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.1.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.1.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.1.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.1.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.1.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.1.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.2.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.2.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.2.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.2.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.2.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.2.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.2.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.2.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.2.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.2.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.2.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.3.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.3.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.3.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.3.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.3.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.3.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.3.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.3.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.3.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.3.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.3.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.4.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.4.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.4.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.4.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.4.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.4.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.4.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.4.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.4.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.4.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.4.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.5.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.5.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.5.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.5.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.5.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.5.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.5.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.5.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.5.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.5.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.5.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.6.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.6.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.6.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.6.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.6.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.6.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.6.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.6.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.6.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.6.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.6.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.layers.7.input_layernorm.weight                (512,)                    torch.float32  
+decoder.pre_transformer.layers.7.mlp.down_proj.weight                  (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.7.mlp.gate_proj.weight                  (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.7.mlp.up_proj.weight                    (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.7.mlp_layer_scale.scale                 (512,)                    torch.float32  
+decoder.pre_transformer.layers.7.post_attention_layernorm.weight       (512,)                    torch.float32  
+decoder.pre_transformer.layers.7.self_attn.k_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.7.self_attn.o_proj.weight               (512, 1024)               torch.float32  
+decoder.pre_transformer.layers.7.self_attn.q_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.7.self_attn.v_proj.weight               (1024, 512)               torch.float32  
+decoder.pre_transformer.layers.7.self_attn_layer_scale.scale           (512,)                    torch.float32  
+decoder.pre_transformer.norm.weight                                    (512,)                    torch.float32  
+decoder.pre_transformer.output_proj.bias                               (1024,)                   torch.float32  
+decoder.pre_transformer.output_proj.weight                             (1024, 512)               torch.float32  
+decoder.quantizer.rvq_first.input_proj.weight                          (256, 512, 1)             torch.float32  
+decoder.quantizer.rvq_first.output_proj.weight                         (512, 256, 1)             torch.float32  
+decoder.quantizer.rvq_first.vq.layers.0._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_first.vq.layers.0._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.input_proj.weight                           (256, 512, 1)             torch.float32  
+decoder.quantizer.rvq_rest.output_proj.weight                          (512, 256, 1)             torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.0._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.0._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.1._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.1._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.10._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.10._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.11._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.11._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.12._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.12._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.13._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.13._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.14._codebook.cluster_usage        (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.14._codebook.embedding_sum        (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.2._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.2._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.3._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.3._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.4._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.4._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.5._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.5._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.6._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.6._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.7._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.7._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.8._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.8._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.9._codebook.cluster_usage         (2048,)                   torch.float32  
+decoder.quantizer.rvq_rest.vq.layers.9._codebook.embedding_sum         (2048, 256)               torch.float32  
+decoder.upsample.0.0.conv.bias                                         (1024,)                   torch.float32  
+decoder.upsample.0.0.conv.weight                                       (1024, 1024, 2)           torch.float32  
+decoder.upsample.0.1.dwconv.conv.bias                                  (1024,)                   torch.float32  
+decoder.upsample.0.1.dwconv.conv.weight                                (1024, 1, 7)              torch.float32  
+decoder.upsample.0.1.gamma                                             (1024,)                   torch.float32  
+decoder.upsample.0.1.norm.bias                                         (1024,)                   torch.float32  
+decoder.upsample.0.1.norm.weight                                       (1024,)                   torch.float32  
+decoder.upsample.0.1.pwconv1.bias                                      (4096,)                   torch.float32  
+decoder.upsample.0.1.pwconv1.weight                                    (4096, 1024)              torch.float32  
+decoder.upsample.0.1.pwconv2.bias                                      (1024,)                   torch.float32  
+decoder.upsample.0.1.pwconv2.weight                                    (1024, 4096)              torch.float32  
+decoder.upsample.1.0.conv.bias                                         (1024,)                   torch.float32  
+decoder.upsample.1.0.conv.weight                                       (1024, 1024, 2)           torch.float32  
+decoder.upsample.1.1.dwconv.conv.bias                                  (1024,)                   torch.float32  
+decoder.upsample.1.1.dwconv.conv.weight                                (1024, 1, 7)              torch.float32  
+decoder.upsample.1.1.gamma                                             (1024,)                   torch.float32  
+decoder.upsample.1.1.norm.bias                                         (1024,)                   torch.float32  
+decoder.upsample.1.1.norm.weight                                       (1024,)                   torch.float32  
+decoder.upsample.1.1.pwconv1.bias                                      (4096,)                   torch.float32  
+decoder.upsample.1.1.pwconv1.weight                                    (4096, 1024)              torch.float32  
+decoder.upsample.1.1.pwconv2.bias                                      (1024,)                   torch.float32  
+decoder.upsample.1.1.pwconv2.weight                                    (1024, 4096)              torch.float32  
+encoder.downsample.conv.weight                                         (512, 512, 4)             torch.float32  
+encoder.encoder.layers.0.conv.bias                                     (64,)                     torch.float32  
+encoder.encoder.layers.0.conv.weight                                   (64, 1, 7)                torch.float32  
+encoder.encoder.layers.1.block.1.conv.bias                             (32,)                     torch.float32  
+encoder.encoder.layers.1.block.1.conv.weight                           (32, 64, 3)               torch.float32  
+encoder.encoder.layers.1.block.3.conv.bias                             (64,)                     torch.float32  
+encoder.encoder.layers.1.block.3.conv.weight                           (64, 32, 1)               torch.float32  
+encoder.encoder.layers.10.block.1.conv.bias                            (256,)                    torch.float32  
+encoder.encoder.layers.10.block.1.conv.weight                          (256, 512, 3)             torch.float32  
+encoder.encoder.layers.10.block.3.conv.bias                            (512,)                    torch.float32  
+encoder.encoder.layers.10.block.3.conv.weight                          (512, 256, 1)             torch.float32  
+encoder.encoder.layers.12.conv.bias                                    (1024,)                   torch.float32  
+encoder.encoder.layers.12.conv.weight                                  (1024, 512, 16)           torch.float32  
+encoder.encoder.layers.14.conv.bias                                    (512,)                    torch.float32  
+encoder.encoder.layers.14.conv.weight                                  (512, 1024, 3)            torch.float32  
+encoder.encoder.layers.3.conv.bias                                     (128,)                    torch.float32  
+encoder.encoder.layers.3.conv.weight                                   (128, 64, 8)              torch.float32  
+encoder.encoder.layers.4.block.1.conv.bias                             (64,)                     torch.float32  
+encoder.encoder.layers.4.block.1.conv.weight                           (64, 128, 3)              torch.float32  
+encoder.encoder.layers.4.block.3.conv.bias                             (128,)                    torch.float32  
+encoder.encoder.layers.4.block.3.conv.weight                           (128, 64, 1)              torch.float32  
+encoder.encoder.layers.6.conv.bias                                     (256,)                    torch.float32  
+encoder.encoder.layers.6.conv.weight                                   (256, 128, 10)            torch.float32  
+encoder.encoder.layers.7.block.1.conv.bias                             (128,)                    torch.float32  
+encoder.encoder.layers.7.block.1.conv.weight                           (128, 256, 3)             torch.float32  
+encoder.encoder.layers.7.block.3.conv.bias                             (256,)                    torch.float32  
+encoder.encoder.layers.7.block.3.conv.weight                           (256, 128, 1)             torch.float32  
+encoder.encoder.layers.9.conv.bias                                     (512,)                    torch.float32  
+encoder.encoder.layers.9.conv.weight                                   (512, 256, 12)            torch.float32  
+encoder.encoder_transformer.layers.0.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.0.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.0.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.0.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.0.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.0.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.0.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.0.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.0.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.0.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.0.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.0.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.1.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.1.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.1.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.1.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.1.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.1.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.1.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.2.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.2.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.2.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.2.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.2.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.2.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.2.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.3.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.3.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.3.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.3.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.3.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.3.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.3.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.4.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.4.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.4.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.4.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.4.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.4.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.4.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.5.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.5.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.5.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.5.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.5.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.5.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.5.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.6.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.6.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.6.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.6.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.6.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.6.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.6.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.input_layernorm.bias              (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.input_layernorm.weight            (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.mlp.fc1.weight                    (2048, 512)               torch.float32  
+encoder.encoder_transformer.layers.7.mlp.fc2.weight                    (512, 2048)               torch.float32  
+encoder.encoder_transformer.layers.7.mlp_layer_scale.scale             (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.post_attention_layernorm.bias     (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.post_attention_layernorm.weight   (512,)                    torch.float32  
+encoder.encoder_transformer.layers.7.self_attn.k_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.7.self_attn.o_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.7.self_attn.q_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.7.self_attn.v_proj.weight           (512, 512)                torch.float32  
+encoder.encoder_transformer.layers.7.self_attn_layer_scale.scale       (512,)                    torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.input_proj.weight (256, 512, 1)             torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.1.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.1.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.1.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.10.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.10.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.10.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.11.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.11.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.11.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.12.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.12.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.12.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.13.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.13.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.13.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.14.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.14.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.14.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.15.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.15.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.15.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.16.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.16.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.16.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.17.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.17.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.17.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.18.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.18.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.18.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.19.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.19.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.19.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.2.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.2.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.2.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.20.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.20.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.20.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.21.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.21.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.21.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.22.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.22.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.22.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.23.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.23.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.23.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.24.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.24.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.24.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.25.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.25.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.25.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.26.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.26.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.26.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.27.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.27.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.27.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.28.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.28.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.28.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.29.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.29.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.29.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.3.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.3.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.3.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.30.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.30.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.30.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.4.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.4.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.4.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.5.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.5.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.5.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.6.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.6.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.6.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.7.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.7.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.7.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.8.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.8.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.8.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.9.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.9.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.layers.9.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.acoustic_residual_vector_quantizer.output_proj.weight (512, 256, 1)             torch.float32  
+encoder.quantizer.semantic_residual_vector_quantizer.input_proj.weight (256, 512, 1)             torch.float32  
+encoder.quantizer.semantic_residual_vector_quantizer.layers.0.codebook.cluster_usage (2048,)                   torch.float32  
+encoder.quantizer.semantic_residual_vector_quantizer.layers.0.codebook.embed_sum (2048, 256)               torch.float32  
+encoder.quantizer.semantic_residual_vector_quantizer.layers.0.codebook.initialized (1,)                      torch.float32  
+encoder.quantizer.semantic_residual_vector_quantizer.output_proj.weight (512, 256, 1)             torch.float32  
+
+--------------------------------------------------------------------------------
+ TENSOR CATEGORIES: Standalone Tokenizer
+--------------------------------------------------------------------------------
+
+
+decoder.decoder (118 tensors):
+  - decoder.decoder.0.conv.bias
+  - decoder.decoder.0.conv.weight
+  - decoder.decoder.1.block.0.alpha
+  - decoder.decoder.1.block.0.beta
+  - decoder.decoder.1.block.1.conv.bias
+  ... and 113 more
+
+decoder.pre_conv (2 tensors):
+  - decoder.pre_conv.conv.bias
+  - decoder.pre_conv.conv.weight
+
+decoder.pre_transformer (93 tensors):
+  - decoder.pre_transformer.input_proj.bias
+  - decoder.pre_transformer.input_proj.weight
+  - decoder.pre_transformer.layers.0.input_layernorm.weight
+  - decoder.pre_transformer.layers.0.mlp.down_proj.weight
+  - decoder.pre_transformer.layers.0.mlp.gate_proj.weight
+  ... and 88 more
+
+decoder.quantizer (36 tensors):
+  - decoder.quantizer.rvq_first.input_proj.weight
+  - decoder.quantizer.rvq_first.output_proj.weight
+  - decoder.quantizer.rvq_first.vq.layers.0._codebook.cluster_usage
+  - decoder.quantizer.rvq_first.vq.layers.0._codebook.embedding_sum
+  - decoder.quantizer.rvq_rest.input_proj.weight
+  ... and 31 more
+
+decoder.upsample (22 tensors):
+  - decoder.upsample.0.0.conv.bias
+  - decoder.upsample.0.0.conv.weight
+  - decoder.upsample.0.1.dwconv.conv.bias
+  - decoder.upsample.0.1.dwconv.conv.weight
+  - decoder.upsample.0.1.gamma
+  ... and 17 more
+
+encoder.downsample (1 tensors):
+  - encoder.downsample.conv.weight
+
+encoder.encoder (28 tensors):
+  - encoder.encoder.layers.0.conv.bias
+  - encoder.encoder.layers.0.conv.weight
+  - encoder.encoder.layers.1.block.1.conv.bias
+  - encoder.encoder.layers.1.block.1.conv.weight
+  - encoder.encoder.layers.1.block.3.conv.bias
+  ... and 23 more
+
+encoder.encoder_transformer (96 tensors):
+  - encoder.encoder_transformer.layers.0.input_layernorm.bias
+  - encoder.encoder_transformer.layers.0.input_layernorm.weight
+  - encoder.encoder_transformer.layers.0.mlp.fc1.weight
+  - encoder.encoder_transformer.layers.0.mlp.fc2.weight
+  - encoder.encoder_transformer.layers.0.mlp_layer_scale.scale
+  ... and 91 more
+
+encoder.quantizer (100 tensors):
+  - encoder.quantizer.acoustic_residual_vector_quantizer.input_proj.weight
+  - encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.cluster_usage
+  - encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.embed_sum
+  - encoder.quantizer.acoustic_residual_vector_quantizer.layers.0.codebook.initialized
+  - encoder.quantizer.acoustic_residual_vector_quantizer.layers.1.codebook.cluster_usage
+  ... and 95 more
+
+################################################################################
+ SUMMARY
+################################################################################
+
+TTS Base Main Model: 478 tensors
+TTS Base Speech Tokenizer: 496 tensors
+Standalone Tokenizer: 496 tensors
+
+--- Key Architecture Parameters ---
+TTS Talker: 28 layers, 1024 hidden, 16 heads, 16 codebooks
+Code Predictor: 5 layers, 1024 hidden, 16 codebooks
+Tokenizer Encoder: 8 layers, 512 hidden, 32 quantizers
+Tokenizer Decoder: 8 layers, 1536 decoder dim, 16 quantizers

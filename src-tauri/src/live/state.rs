@@ -24,6 +24,8 @@ use crate::live::skill_lifecycle::{
 };
 use crate::live::team::{TeamEvent, TeamRuntimeState};
 use crate::live::training_dummy::{CombatGate, TrainingDummyRuntime, inspect_aoi_delta};
+use crate::voice::models::{MonsterBuffSourceScope, VoiceRule};
+use crate::voice::rules::{VoiceBuffScope, VoiceRuleTracker};
 use blueprotobuf_lib::blueprotobuf;
 use blueprotobuf_lib::blueprotobuf::AoiSyncDelta;
 use blueprotobuf_lib::blueprotobuf::EEntityType;
@@ -156,6 +158,15 @@ pub struct AppState {
     /// Whether the minimap overlay currently has a live scene snapshot.
     minimap_snapshot_active: bool,
     apply_event_timing: ApplyEventTimingStats,
+    /// Active voice broadcast rules (trigger -> phrase), hot-synced from settings.
+    pub voice_rules: Vec<VoiceRule>,
+    /// Edge-detection + cooldown state for the voice rule engine.
+    pub voice_rule_tracker: VoiceRuleTracker,
+    /// The attack target uuid the monster voice-buff scope was last
+    /// evaluated against, so a target switch can reset that scope's edge
+    /// baseline instead of misreading the new target's buffs as a burst of
+    /// gained/lost edges.
+    voice_monster_target_uuid: Option<i64>,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -279,6 +290,7 @@ pub enum LiveControlCommand {
     SetMonitoredSkills(Vec<i32>),
     SetBuffCounterRules(Vec<CounterRule>),
     SetSeasonCultivateFactorTemplates(Vec<FactorCounterTemplate>),
+    SetVoiceRules(Vec<VoiceRule>),
 }
 
 impl AppState {
@@ -306,6 +318,9 @@ impl AppState {
             pending_minimap_skill_casts: Vec::new(),
             minimap_snapshot_active: false,
             apply_event_timing: ApplyEventTimingStats::new(),
+            voice_rules: Vec::new(),
+            voice_rule_tracker: VoiceRuleTracker::new(),
+            voice_monster_target_uuid: None,
         }
     }
 
@@ -526,6 +541,175 @@ fn classify_buff_snapshot_target(state: &AppState, target_uuid: i64) -> Option<B
         return Some(BuffTargetKind::Teammate);
     }
     None
+}
+
+#[derive(Debug, Default)]
+struct VoiceBuffFacts {
+    buff_ids: HashSet<i32>,
+    expiry_by_base_id: HashMap<i32, i64>,
+    non_expiring_base_ids: HashSet<i32>,
+}
+
+type VoiceBuffSnapshot = (HashSet<i32>, Vec<(i32, i64)>);
+
+impl VoiceBuffFacts {
+    fn with_capacity(capacity: usize) -> Self {
+        Self {
+            buff_ids: HashSet::with_capacity(capacity),
+            expiry_by_base_id: HashMap::with_capacity(capacity),
+            non_expiring_base_ids: HashSet::new(),
+        }
+    }
+
+    fn record(&mut self, buff: &ActiveBuff, server_clock_offset: i64) {
+        self.buff_ids.insert(buff.base_id);
+        if buff.duration <= 0 {
+            self.non_expiring_base_ids.insert(buff.base_id);
+            self.expiry_by_base_id.remove(&buff.base_id);
+            return;
+        }
+        if self.non_expiring_base_ids.contains(&buff.base_id) {
+            return;
+        }
+        let expires_at_ms = buff
+            .create_time
+            .saturating_add(server_clock_offset)
+            .saturating_add(i64::from(buff.duration));
+        self.expiry_by_base_id
+            .entry(buff.base_id)
+            .and_modify(|existing| *existing = (*existing).max(expires_at_ms))
+            .or_insert(expires_at_ms);
+    }
+
+    fn into_snapshot(self) -> VoiceBuffSnapshot {
+        (self.buff_ids, self.expiry_by_base_id.into_iter().collect())
+    }
+}
+
+/// Borrows `entity_uuid`'s active-buff monitor (if any) to build the buff-id
+/// snapshot and per-base-id expiry facts the voice rule engine needs, without
+/// cloning `ActiveBuff` (which owns a `Vec<i32>` of effect ids the rule
+/// engine never reads).
+fn collect_buff_snapshot_and_expiry(state: &AppState, entity_uuid: i64) -> VoiceBuffSnapshot {
+    let Some(monitor) = state.entity_buff_monitors.monitors.get(&entity_uuid) else {
+        return (HashSet::new(), Vec::new());
+    };
+    let mut facts = VoiceBuffFacts::with_capacity(monitor.active_buffs.len());
+    for buff in monitor.active_buffs.values() {
+        facts.record(buff, state.server_clock_offset);
+    }
+    facts.into_snapshot()
+}
+
+fn collect_monster_buff_snapshots(
+    state: &AppState,
+    entity_uuid: i64,
+    local_player_uuid: i64,
+) -> (VoiceBuffSnapshot, VoiceBuffSnapshot) {
+    let Some(monitor) = state.entity_buff_monitors.monitors.get(&entity_uuid) else {
+        return ((HashSet::new(), Vec::new()), (HashSet::new(), Vec::new()));
+    };
+    collect_monster_buff_snapshots_from_buffs(
+        monitor.active_buffs.values(),
+        monitor.active_buffs.len(),
+        state.server_clock_offset,
+        local_player_uuid,
+    )
+}
+
+fn collect_monster_buff_snapshots_from_buffs<'a>(
+    buffs: impl Iterator<Item = &'a ActiveBuff>,
+    capacity: usize,
+    server_clock_offset: i64,
+    local_player_uuid: i64,
+) -> (VoiceBuffSnapshot, VoiceBuffSnapshot) {
+    let mut any_source = VoiceBuffFacts::with_capacity(capacity);
+    let mut local_player_source = VoiceBuffFacts::with_capacity(capacity);
+    for buff in buffs {
+        any_source.record(buff, server_clock_offset);
+        if buff.fire_uuid == Some(local_player_uuid) {
+            local_player_source.record(buff, server_clock_offset);
+        }
+    }
+    (
+        any_source.into_snapshot(),
+        local_player_source.into_snapshot(),
+    )
+}
+
+fn evaluate_voice_buff_scope(
+    state: &mut AppState,
+    scope: VoiceBuffScope,
+    event_time_ms: i64,
+    snapshot: VoiceBuffSnapshot,
+) {
+    let (buff_ids, expiry_facts) = snapshot;
+    let cues = state.voice_rule_tracker.on_buff_scope_snapshot(
+        scope,
+        &state.voice_rules,
+        event_time_ms,
+        buff_ids,
+    );
+    state.event_manager.emit_voice_cues(cues);
+    state.voice_rule_tracker.sync_buff_expiry(
+        scope,
+        &state.voice_rules,
+        event_time_ms,
+        &expiry_facts,
+    );
+}
+
+fn evaluate_voice_buff_rules(state: &mut AppState, local_player_uuid: i64, event_time_ms: i64) {
+    if state.voice_rules.is_empty() {
+        return;
+    }
+    let snapshot = collect_buff_snapshot_and_expiry(state, local_player_uuid);
+    evaluate_voice_buff_scope(state, VoiceBuffScope::LocalPlayer, event_time_ms, snapshot);
+}
+
+/// Mirrors `evaluate_voice_buff_rules` for the player's current attack
+/// target (a monster), resetting the scope's edge baseline whenever the
+/// target changes so switching targets never reads as a burst of
+/// gained/lost buffs.
+fn evaluate_voice_monster_buff_rules(state: &mut AppState, event_time_ms: i64) {
+    if state.voice_rules.is_empty() {
+        return;
+    }
+    let target_uuid = current_attack_target_uuid(state);
+    if state.voice_monster_target_uuid != target_uuid {
+        state.voice_monster_target_uuid = target_uuid;
+        for source_scope in [
+            MonsterBuffSourceScope::AnySource,
+            MonsterBuffSourceScope::LocalPlayerSource,
+        ] {
+            let scope = VoiceBuffScope::MonsterTarget(source_scope);
+            state.voice_rule_tracker.reset_scope_edges(scope);
+            state.voice_rule_tracker.sync_buff_expiry(
+                scope,
+                &state.voice_rules,
+                event_time_ms,
+                &[],
+            );
+        }
+    }
+    let Some(target_uuid) = target_uuid else {
+        return;
+    };
+
+    let (any_source, local_player_source) =
+        collect_monster_buff_snapshots(state, target_uuid, state.encounter.local_player_uuid);
+    evaluate_voice_buff_scope(
+        state,
+        VoiceBuffScope::MonsterTarget(MonsterBuffSourceScope::AnySource),
+        event_time_ms,
+        any_source,
+    );
+    evaluate_voice_buff_scope(
+        state,
+        VoiceBuffScope::MonsterTarget(MonsterBuffSourceScope::LocalPlayerSource),
+        event_time_ms,
+        local_player_source,
+    );
 }
 
 fn active_buff_to_death_snapshot(
@@ -853,19 +1037,6 @@ impl AppStateManager {
         state.minimap_snapshot_active = true;
     }
 
-    pub fn drain_control_commands(
-        &self,
-        state: &mut AppState,
-        control_rx: &mut UnboundedReceiver<LiveControlCommand>,
-    ) {
-        loop {
-            let Ok(command) = control_rx.try_recv() else {
-                break;
-            };
-            self.apply_control_command(state, command);
-        }
-    }
-
     pub fn send_state_event(&self, event: StateEvent) -> Result<(), String> {
         self.send_control(LiveControlCommand::StateEvent(event))
     }
@@ -1020,16 +1191,28 @@ impl AppStateManager {
             }
         }
         if counter_dirty {
-            emit_buff_counter_update_if_needed(
-                state,
-                state
-                    .local_monitor
-                    .counter_tracker
-                    .build_payload(&state.attr_store, state.encounter.local_player_uuid),
-            );
+            let counter_payload = state
+                .local_monitor
+                .counter_tracker
+                .build_payload(&state.attr_store, state.encounter.local_player_uuid);
+            if !state.voice_rules.is_empty() {
+                let cues = state.voice_rule_tracker.sync_counter_state(
+                    &state.voice_rules,
+                    tick_now_ms,
+                    &counter_payload,
+                );
+                state.event_manager.emit_voice_cues(cues);
+            }
+            emit_buff_counter_update_if_needed(state, counter_payload);
         }
         if factor_counter_dirty {
             emit_season_cultivate_factor_counter_update(state);
+        }
+        if !state.voice_rules.is_empty() {
+            let due_cues = state
+                .voice_rule_tracker
+                .poll_due(&state.voice_rules, tick_now_ms);
+            state.event_manager.emit_voice_cues(due_cues);
         }
         self.apply_attr_store_changes(state);
         record_apply_event_elapsed(
@@ -1178,6 +1361,14 @@ impl AppStateManager {
                     emit_season_cultivate_factor_counter_update(state);
                 }
             }
+            LiveControlCommand::SetVoiceRules(rules) => {
+                state.voice_rules = rules;
+                // Settings changed: forget prior buff-edge state so the next
+                // snapshot isn't misread as a burst of newly gained buffs,
+                // and drop any timers armed against now-stale rule ids.
+                state.voice_rule_tracker.reset_buff_edges();
+                state.voice_rule_tracker.reset_scheduled_cues();
+            }
         }
     }
 
@@ -1192,6 +1383,7 @@ impl AppStateManager {
             skill,
             monster,
             teammate,
+            voice,
         } = snapshot;
 
         info!(
@@ -1290,6 +1482,7 @@ impl AppStateManager {
                 monitor_all: teammate.monitor_all,
             },
         );
+        self.apply_control_command(state, LiveControlCommand::SetVoiceRules(voice.rules));
     }
 
     // all scene id extraction logic is here (its pretty rough)
@@ -1386,6 +1579,9 @@ impl AppStateManager {
                 .entity_buff_monitors
                 .monitor_for(target_uuid)
                 .apply_buff_info_snapshot(&buff_infos);
+            if target_uuid == state.encounter.local_player_uuid && target_uuid != 0 {
+                evaluate_voice_buff_rules(state, target_uuid, detected_at_ms);
+            }
         }
 
         for target_uuid in result.disappeared {
@@ -1436,6 +1632,33 @@ impl AppStateManager {
                 insertion: event.int_params.get(2).copied().unwrap_or_default(),
                 server_timestamp_ms: event.long_params.first().copied(),
             });
+        }
+
+        if !state.voice_rules.is_empty() && !dbm_events.is_empty() {
+            let base_skill_ids: Vec<i32> = dbm_events.iter().map(|e| e.base_skill_id).collect();
+            let cues = state.voice_rule_tracker.on_boss_dbm_events(
+                &state.voice_rules,
+                received_at_ms,
+                &base_skill_ids,
+            );
+            state.event_manager.emit_voice_cues(cues);
+
+            let expiry_facts: Vec<(i32, i64)> = dbm_events
+                .iter()
+                .map(|event| {
+                    (
+                        event.base_skill_id,
+                        event
+                            .create_time_ms
+                            .saturating_add(i64::from(event.duration_ms)),
+                    )
+                })
+                .collect();
+            state.voice_rule_tracker.sync_boss_dbm_expiry(
+                &state.voice_rules,
+                received_at_ms,
+                &expiry_facts,
+            );
         }
 
         state.event_manager.emit_boss_dbm_update(dbm_events);
@@ -1711,6 +1934,7 @@ impl AppStateManager {
             if let Some((BuffTargetKind::LocalPlayer, buff_process_result)) =
                 process_entity_buff_effect_bytes(state, local_player_uuid, &raw_bytes)
             {
+                evaluate_voice_buff_rules(state, local_player_uuid, now_ms());
                 let payload = state
                     .entity_buff_monitors
                     .monitors
@@ -1828,23 +2052,30 @@ impl AppStateManager {
                 if let Some((kind, buff_process_result)) =
                     process_entity_buff_effect_bytes(state, target_uuid, &raw_bytes)
                 {
-                    if matches!(kind, BuffTargetKind::LocalPlayer | BuffTargetKind::Teammate) {
-                        counter_dirty |= state
-                            .local_monitor
-                            .counter_tracker
-                            .on_external_team_buff_changes(
-                                &buff_process_result.changes,
-                                &state.attr_store,
-                                local_player_uuid,
-                            );
-                        factor_counter_dirty |= state
-                            .local_monitor
-                            .factor_counter_tracker
-                            .on_external_team_buff_changes(
-                                &buff_process_result.changes,
-                                &state.attr_store,
-                                local_player_uuid,
-                            );
+                    match kind {
+                        BuffTargetKind::LocalPlayer | BuffTargetKind::Teammate => {
+                            counter_dirty |= state
+                                .local_monitor
+                                .counter_tracker
+                                .on_external_team_buff_changes(
+                                    &buff_process_result.changes,
+                                    &state.attr_store,
+                                    local_player_uuid,
+                                );
+                            factor_counter_dirty |= state
+                                .local_monitor
+                                .factor_counter_tracker
+                                .on_external_team_buff_changes(
+                                    &buff_process_result.changes,
+                                    &state.attr_store,
+                                    local_player_uuid,
+                                );
+                        }
+                        BuffTargetKind::Monster => {
+                            if current_attack_target_uuid(state) == Some(target_uuid) {
+                                evaluate_voice_monster_buff_rules(state, now_ms());
+                            }
+                        }
                     }
                 }
             }
@@ -1979,9 +2210,7 @@ impl AppStateManager {
                 .encounter
                 .entity_uuid_to_entity
                 .get_mut(&death.entity_uuid)
-                .map(|entity| {
-                    entity.recent_taken_events.drain(..).collect::<Vec<_>>()
-                })
+                .map(|entity| entity.recent_taken_events.drain(..).collect::<Vec<_>>())
             else {
                 continue;
             };
@@ -2035,6 +2264,9 @@ impl AppStateManager {
         state.encounter.reset_combat_state();
         state.death_snapshot_dirty = false;
         state.pending_minimap_skill_casts.clear();
+        state.voice_rule_tracker.reset_buff_edges();
+        state.voice_rule_tracker.reset_scheduled_cues();
+        state.voice_monster_target_uuid = None;
 
         if state.event_manager.should_emit_events() {
             state.event_manager.emit_encounter_reset();
@@ -2146,6 +2378,75 @@ impl AppStateManager {
 
     pub fn stop_training_dummy(&self) -> Result<(), String> {
         self.send_control(LiveControlCommand::StopTrainingDummy)
+    }
+}
+
+#[cfg(test)]
+mod voice_buff_fact_tests {
+    use super::*;
+
+    fn active_buff(
+        base_id: i32,
+        duration: i32,
+        create_time: i64,
+        fire_uuid: Option<i64>,
+    ) -> ActiveBuff {
+        ActiveBuff {
+            base_id,
+            layer: 1,
+            duration,
+            create_time,
+            fire_uuid,
+            source_config_id: None,
+            effect_ids: Vec::new(),
+        }
+    }
+
+    fn expiry_map(snapshot: &VoiceBuffSnapshot) -> HashMap<i32, i64> {
+        snapshot.1.iter().copied().collect()
+    }
+
+    #[test]
+    fn monster_snapshots_filter_local_player_before_aggregation() {
+        let buffs = [
+            active_buff(42, 20_000, 1_000, Some(200)),
+            active_buff(42, 10_000, 1_000, Some(100)),
+            active_buff(99, 5_000, 1_000, None),
+        ];
+
+        let (any_source, local_player_source) =
+            collect_monster_buff_snapshots_from_buffs(buffs.iter(), buffs.len(), 500, 100);
+
+        assert_eq!(any_source.0, HashSet::from([42, 99]));
+        assert_eq!(local_player_source.0, HashSet::from([42]));
+        assert_eq!(expiry_map(&any_source).get(&42), Some(&21_500));
+        assert_eq!(expiry_map(&local_player_source).get(&42), Some(&11_500));
+        assert!(!local_player_source.0.contains(&99));
+    }
+
+    #[test]
+    fn permanent_instance_suppresses_aggregate_expiry() {
+        let buffs = [
+            active_buff(42, 10_000, 1_000, Some(100)),
+            active_buff(42, 0, 1_000, Some(200)),
+        ];
+
+        let (any_source, local_player_source) =
+            collect_monster_buff_snapshots_from_buffs(buffs.iter(), buffs.len(), 0, 100);
+
+        assert!(!expiry_map(&any_source).contains_key(&42));
+        assert_eq!(expiry_map(&local_player_source).get(&42), Some(&11_000));
+    }
+
+    #[test]
+    fn server_clock_offset_is_applied_to_expiry() {
+        let buff = active_buff(42, 5_000, 10_000, Some(100));
+        let mut facts = VoiceBuffFacts::with_capacity(1);
+
+        facts.record(&buff, 750);
+        let snapshot = facts.into_snapshot();
+
+        assert_eq!(expiry_map(&snapshot).get(&42), Some(&15_750));
     }
 }
 
@@ -2274,6 +2575,11 @@ impl AppStateManager {
                 .event_manager
                 .emit_entity_identity_map(player_names, monster_ids);
         }
+        evaluate_voice_buff_rules(state, local_player_uuid, now_ms());
+        // Also re-evaluated here (not just on new buff packets) so an
+        // attack-target switch with no accompanying buff delta still resets
+        // the monster scope's edge baseline promptly.
+        evaluate_voice_monster_buff_rules(state, now_ms());
         if let Some(local_buffs) = local_buff_snapshot
             .get(&entity_uuid_string(local_player_uuid))
             .cloned()

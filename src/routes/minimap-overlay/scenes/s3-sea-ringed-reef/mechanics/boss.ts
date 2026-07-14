@@ -9,7 +9,14 @@ import type {
   MechanicRegion,
   MechanicRow,
   MechanicRowTargetStatus,
+  MinimapVoiceCueDef,
+  MinimapVoiceCueFire,
 } from "../../../scene-types";
+import {
+  entityInstanceKey,
+  resolveBuffVoiceCues,
+  skillCastInstanceKey,
+} from "../../../voice-cue-utils";
 import { arenaBounds, arenaCenter, type S3SeaRingedReefArena } from "../arena";
 import type { SeaRingedReefMechanicView } from "./matrix";
 
@@ -64,6 +71,69 @@ const DUAL_BUFFS: Record<number, { labelKey: MessageKey; colorSlot: number }> =
     883603: { labelKey: textKeys.waterDual, colorSlot: 4 },
   };
 
+const voiceCueIds = {
+  dual: "s3-sea-ringed-reef.dual",
+  wave: "s3-sea-ringed-reef.wave",
+  pizza: "s3-sea-ringed-reef.pizza",
+} as const;
+
+export const S3_SEA_RINGED_REEF_BOSS_VOICE_CUES: MinimapVoiceCueDef[] = [
+  {
+    id: voiceCueIds.dual,
+    labelKey: textKeys.dualGroup,
+    autoText: "双响颜色点名",
+  },
+  {
+    id: voiceCueIds.wave,
+    labelKey: textKeys.waveGroup,
+    autoText: "冰海浪安全区",
+  },
+  {
+    id: voiceCueIds.pizza,
+    labelKey: textKeys.pizzaGroup,
+    autoText: "披萨危险区",
+  },
+];
+
+const DUAL_VOICE_CUES = Object.fromEntries(
+  Object.keys(DUAL_BUFFS).map((buffId) => [buffId, voiceCueIds.dual]),
+);
+
+export function resolveBossVoiceCues(
+  snapshot: MinimapSnapshot,
+  skillCasts: MinimapSkillCast[],
+): MinimapVoiceCueFire[] {
+  const entitiesByUuid = new Map(
+    snapshot.entities.map((entity) => [entity.entityUuid, entity]),
+  );
+  const fires = resolveBuffVoiceCues(snapshot, DUAL_VOICE_CUES, "localTarget");
+  for (const entity of snapshot.entities) {
+    if (
+      entity.monsterId !== ICE_WAVE_MONSTER_ID &&
+      entity.monsterId !== WATER_WAVE_MONSTER_ID
+    ) {
+      continue;
+    }
+    fires.push({
+      cueId: voiceCueIds.wave,
+      instanceKey: entityInstanceKey(entity),
+    });
+  }
+  for (const cast of skillCasts) {
+    if (
+      cast.skillId !== PIZZA_INDICATOR_SKILL_ID ||
+      !entitiesByUuid.has(cast.entityUuid)
+    ) {
+      continue;
+    }
+    fires.push({
+      cueId: voiceCueIds.pizza,
+      instanceKey: skillCastInstanceKey(cast),
+    });
+  }
+  return fires;
+}
+
 type WaveAxis = "vertical" | "horizontal";
 
 type WaveLine = {
@@ -95,7 +165,14 @@ export function buildBossMechanicView(
     entityColorSlots,
     displayName,
   );
-  addWaveSafeRegions(snapshot, arena, regions, rows, displayName, waveSafeStatus);
+  addWaveSafeRegions(
+    snapshot,
+    arena,
+    regions,
+    rows,
+    displayName,
+    waveSafeStatus,
+  );
   addOrbMarkers(snapshot, entityColorSlots);
   addPizzaDangerRegions(
     skillCasts,
@@ -195,9 +272,7 @@ function addPizzaDangerRegions(
   // Only one indicator is alive at a time (rounds are 15-19s apart, lifecycle
   // ~7.6s). If stale casts survive in the log, the entity-presence filter above
   // already dropped them; pick the newest just in case.
-  const indicator = indicators.reduce((a, b) =>
-    a.timeMs >= b.timeMs ? a : b,
-  );
+  const indicator = indicators.reduce((a, b) => (a.timeMs >= b.timeMs ? a : b));
 
   const facing = indicator.entity.facing;
   if (facing === null || facing === undefined || !Number.isFinite(facing)) {
@@ -320,8 +395,7 @@ function addWaveSafeRegions(
     const axisLabelKey =
       wave.axis === "vertical" ? textKeys.vertical : textKeys.horizontal;
 
-    const axisCoord =
-      wave.axis === "vertical" ? wave.entity.x : wave.entity.z;
+    const axisCoord = wave.axis === "vertical" ? wave.entity.x : wave.entity.z;
     const playerCoord =
       wave.axis === "vertical" ? localPlayer?.x : localPlayer?.z;
     const inBand =

@@ -6,6 +6,7 @@ import ActivityIcon from "virtual:icons/lucide/activity";
 import CalculatorIcon from "virtual:icons/lucide/calculator";
 import HourglassIcon from "virtual:icons/lucide/hourglass";
 import MapIcon from "virtual:icons/lucide/map";
+import MicIcon from "virtual:icons/lucide/mic";
 import PaletteIcon from "virtual:icons/lucide/palette";
 import SettingsIcon from "virtual:icons/lucide/settings";
 import ShieldAlertIcon from "virtual:icons/lucide/shield-alert";
@@ -34,6 +35,10 @@ export const TOOL_ROUTES = {
   "/main/minimap": {
     labelKey: "routes.tools.minimap",
     icon: MapIcon,
+  },
+  "/main/voice": {
+    labelKey: "routes.tools.voice",
+    icon: MicIcon,
   },
 } satisfies Record<string, RouteDefinition>;
 

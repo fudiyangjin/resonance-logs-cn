@@ -1,11 +1,18 @@
 import type { MinimapEntity, MinimapMarker } from "$lib/api";
 import type { MechanicRegion, SceneDefinition } from "../../scene-types";
 import { arenaLayout, inBossArea, toArenaLocal, yInArena } from "./arena";
-import { buildMechanicView } from "./mechanics";
+import {
+  buildMechanicView,
+  resolveTinaMindrealmVoiceCues,
+  S3_TINA_MINDREALM_VOICE_CUES,
+} from "./mechanics";
 
 export const s3TinaMindrealmScene: SceneDefinition = {
   id: "s3-tina-mindrealm",
+  season: 3,
   sceneIds: [1631, 1632, 1633],
+  voiceCues: S3_TINA_MINDREALM_VOICE_CUES,
+  resolveVoiceCues: resolveTinaMindrealmVoiceCues,
   resolveView(snapshot, displayName, skillCasts = []) {
     void skillCasts;
     const layout = arenaLayout();

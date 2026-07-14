@@ -7,7 +7,16 @@ import type {
 import { t, type MessageKey } from "$lib/i18n/index.svelte";
 import { overlayNow } from "../../../game-overlay/overlay-clock.svelte.js";
 import { entityFirstSeen } from "../../minimap-runtime.svelte.js";
-import type { MechanicRegion, MechanicRow } from "../../scene-types";
+import type {
+  MechanicRegion,
+  MechanicRow,
+  MinimapVoiceCueDef,
+  MinimapVoiceCueFire,
+} from "../../scene-types";
+import {
+  resolveBuffVoiceCues,
+  resolveSkillVoiceCues,
+} from "../../voice-cue-utils";
 import { arenaWorldRect, type ArenaPoint } from "./arena";
 
 export type CursedTombMechanicView = {
@@ -131,6 +140,88 @@ const CHARGE_SKILLS: Record<
   3390123: { hand: "left", labelKey: textKeys.cloneLeft },
   3390124: { hand: "right", labelKey: textKeys.cloneRight },
 };
+
+const voiceCueIds = {
+  tower: "s3-cursed-tomb.tower",
+  energy: "s3-cursed-tomb.energy",
+  chargeTarget: "s3-cursed-tomb.chargeTarget",
+  chargeClone: "s3-cursed-tomb.chargeClone",
+  puzzle: "s3-cursed-tomb.puzzle",
+} as const;
+
+export const S3_CURSED_TOMB_VOICE_CUES: MinimapVoiceCueDef[] = [
+  {
+    id: voiceCueIds.tower,
+    labelKey: textKeys.towerGroup,
+    autoText: "蓝塔激活",
+  },
+  {
+    id: voiceCueIds.energy,
+    labelKey: textKeys.energyGroup,
+    autoText: "能量柱点名",
+  },
+  {
+    id: voiceCueIds.chargeTarget,
+    labelKey: textKeys.chargeTargetGroup,
+    autoText: "半场冲锋点名",
+  },
+  {
+    id: voiceCueIds.chargeClone,
+    labelKey: textKeys.cloneGroup,
+    autoText: "冲锋分身",
+  },
+  {
+    id: voiceCueIds.puzzle,
+    labelKey: textKeys.puzzleGroup,
+    autoText: "拼图点名",
+  },
+];
+
+const LOCAL_CALLOUT_VOICE_CUES: Record<number, string> = {
+  884129: voiceCueIds.energy,
+  884141: voiceCueIds.energy,
+  884162: voiceCueIds.chargeTarget,
+  884163: voiceCueIds.chargeTarget,
+  884168: voiceCueIds.chargeTarget,
+  884169: voiceCueIds.puzzle,
+  884170: voiceCueIds.puzzle,
+};
+
+const CHARGE_SKILL_VOICE_CUES = Object.fromEntries(
+  Object.keys(CHARGE_SKILLS).map((skillId) => [
+    skillId,
+    voiceCueIds.chargeClone,
+  ]),
+);
+
+export function resolveCursedTombVoiceCues(
+  snapshot: MinimapSnapshot,
+  skillCasts: MinimapSkillCast[],
+): MinimapVoiceCueFire[] {
+  const fires = [
+    ...resolveBuffVoiceCues(snapshot, LOCAL_CALLOUT_VOICE_CUES, "localTarget"),
+    ...resolveSkillVoiceCues(skillCasts, CHARGE_SKILL_VOICE_CUES),
+  ];
+  const buffsByTarget = groupBuffsByTarget(snapshot.buffs);
+  const activatingTimes = snapshot.entities
+    .filter(
+      (entity) =>
+        entity.monsterId != null &&
+        TOWER_MONSTER_IDS.has(entity.monsterId) &&
+        towerState(buffsByTarget.get(entity.entityUuid) ?? []) ===
+          TowerState.Activating,
+    )
+    .map((entity) =>
+      towerCreateTimeMs(entity, buffsByTarget.get(entity.entityUuid) ?? []),
+    );
+  if (activatingTimes.length > 0) {
+    fires.push({
+      cueId: voiceCueIds.tower,
+      instanceKey: `tower:${Math.min(...activatingTimes)}`,
+    });
+  }
+  return fires;
+}
 
 export function buildMechanicView(
   snapshot: MinimapSnapshot,

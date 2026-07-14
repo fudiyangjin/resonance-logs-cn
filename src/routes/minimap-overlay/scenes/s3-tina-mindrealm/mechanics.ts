@@ -2,7 +2,13 @@ import type { MinimapEntity, MinimapSnapshot } from "$lib/api";
 import { t, type MessageKey } from "$lib/i18n/index.svelte";
 import { entityFirstSeen } from "../../minimap-runtime.svelte.js";
 import { overlayNow } from "../../../game-overlay/overlay-clock.svelte.js";
-import type { MechanicRegion, MechanicRow } from "../../scene-types";
+import type {
+  MechanicRegion,
+  MechanicRow,
+  MinimapVoiceCueDef,
+  MinimapVoiceCueFire,
+} from "../../scene-types";
+import { resolveBuffVoiceCues } from "../../voice-cue-utils";
 import { PIZZA_OUTER_RADIUS } from "./arena";
 
 export type TinaMindrealmMechanicView = {
@@ -67,6 +73,58 @@ const PIZZA_MONSTER_IDS: Record<
   },
 };
 
+const voiceCueIds = {
+  pizza: "s3-tina-mindrealm.pizza",
+  heavyWound: "s3-tina-mindrealm.heavyWound",
+  redBind: "s3-tina-mindrealm.redBind",
+  wudiSlash: "s3-tina-mindrealm.wudiSlash",
+} as const;
+
+export const S3_TINA_MINDREALM_VOICE_CUES: MinimapVoiceCueDef[] = [
+  {
+    id: voiceCueIds.pizza,
+    labelKey: textKeys.pizzaGroup,
+    autoText: "披萨危险区",
+  },
+  {
+    id: voiceCueIds.heavyWound,
+    labelKey: textKeys.heavyWound,
+    autoText: "重伤点名",
+  },
+  {
+    id: voiceCueIds.redBind,
+    labelKey: textKeys.redBind,
+    autoText: "红光束缚点名",
+  },
+  {
+    id: voiceCueIds.wudiSlash,
+    labelKey: textKeys.wudiSlash,
+    autoText: "无敌斩点名",
+  },
+];
+
+export function resolveTinaMindrealmVoiceCues(
+  snapshot: MinimapSnapshot,
+): MinimapVoiceCueFire[] {
+  const fires = resolveBuffVoiceCues(
+    snapshot,
+    {
+      510571: voiceCueIds.heavyWound,
+      841519: voiceCueIds.redBind,
+      [WUDI_SLASH_BUFF_ID]: voiceCueIds.wudiSlash,
+    },
+    "localTarget",
+  );
+  const activePizza = activePizzaDummies(snapshot.entities);
+  if (activePizza.length > 0) {
+    fires.push({
+      cueId: voiceCueIds.pizza,
+      instanceKey: `pizza:${Math.min(...activePizza.map((entry) => entry.firstSeen))}`,
+    });
+  }
+  return fires;
+}
+
 export function buildMechanicView(
   snapshot: MinimapSnapshot,
   displayName: (entity: MinimapEntity) => string,
@@ -80,7 +138,13 @@ export function buildMechanicView(
 
   addBossMarker(snapshot.entities, entityColorSlots);
   addPizzaDangerRegions(snapshot.entities, regions, rows, entityColorSlots);
-  addWudiSlashRows(snapshot, entitiesByUuid, rows, entityColorSlots, displayName);
+  addWudiSlashRows(
+    snapshot,
+    entitiesByUuid,
+    rows,
+    entityColorSlots,
+    displayName,
+  );
   addBuffRows(snapshot, entitiesByUuid, rows, entityColorSlots, displayName);
 
   return {
@@ -107,21 +171,8 @@ function addPizzaDangerRegions(
   rows: Map<string, MechanicRow>,
   entityColorSlots: Map<string, number>,
 ) {
-  const dummies = entities
-    .filter((entity) => entity.monsterId != null && PIZZA_MONSTER_IDS[entity.monsterId])
-    .map((entity) => ({
-      entity,
-      mapping: PIZZA_MONSTER_IDS[entity.monsterId!]!,
-      firstSeen: entityFirstSeen(entity.entityUuid) ?? overlayNow(),
-    }));
-  if (dummies.length === 0) return;
-
-  // A new batch arriving cancels the previous batch's drawing: keep only the
-  // dummies whose first-seen time is within tolerance of the newest one.
-  const maxFirstSeen = Math.max(...dummies.map((entry) => entry.firstSeen));
-  const active = dummies.filter(
-    (entry) => maxFirstSeen - entry.firstSeen <= PIZZA_BATCH_TOLERANCE_MS,
-  );
+  const active = activePizzaDummies(entities);
+  if (active.length === 0) return;
 
   const activeWaves = new Set<number>();
   for (const { entity, mapping } of active) {
@@ -149,6 +200,24 @@ function addPizzaDangerRegions(
       hideTimer: true,
     });
   }
+}
+
+function activePizzaDummies(entities: MinimapEntity[]) {
+  const dummies = entities
+    .filter(
+      (entity) =>
+        entity.monsterId != null && PIZZA_MONSTER_IDS[entity.monsterId],
+    )
+    .map((entity) => ({
+      entity,
+      mapping: PIZZA_MONSTER_IDS[entity.monsterId!]!,
+      firstSeen: entityFirstSeen(entity.entityUuid) ?? overlayNow(),
+    }));
+  if (dummies.length === 0) return [];
+  const maxFirstSeen = Math.max(...dummies.map((entry) => entry.firstSeen));
+  return dummies.filter(
+    (entry) => maxFirstSeen - entry.firstSeen <= PIZZA_BATCH_TOLERANCE_MS,
+  );
 }
 
 function pizzaSectorRegion(

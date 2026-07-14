@@ -26,6 +26,8 @@
     createDefaultCustomPanelGroup,
     ensureBuffAliases,
     ensureBuffAlerts,
+    ensureBuffVoiceConfigs,
+    ensureCounterVoiceConfigs,
     SETTINGS,
     type BuffAlertMap,
     type BuffAlertRule,
@@ -60,6 +62,7 @@
   } from "$lib/skill-mappings";
   import {
     activeProfileOrDefault,
+    clampedProfileIndex,
     updateActiveProfile as updateSharedActiveProfile,
   } from "$lib/skill-monitor-profile.svelte.js";
   import {
@@ -108,6 +111,8 @@
   let attrSectionExpanded = $state(false);
   let buffAliasSectionExpanded = $state(false);
   let buffAlertSectionExpanded = $state(false);
+  let voiceBuffSectionExpanded = $state(false);
+  let voiceBuffSearch = $state("");
   let buffAliasSearch = $state("");
   let buffAliasSearchResults = $state<BuffNameInfo[]>([]);
   let buffAliasEditingBuffId = $state<number | null>(null);
@@ -119,6 +124,7 @@
   const buffAliases = $derived.by(() =>
     ensureBuffAliases(SETTINGS.skillMonitor.state.buffAliases),
   );
+  const activeProfileIndex = $derived.by(() => clampedProfileIndex());
   const activeProfile = $derived.by(() => activeProfileOrDefault());
   const selectedClassKey = $derived(activeProfile.selectedClass);
   const classSkills = $derived(getSkillsByClass(selectedClassKey));
@@ -210,6 +216,23 @@
   const alertSearchResults = $derived.by(() =>
     searchBuffsByName(alertSearch, buffAliases),
   );
+  const configuredVoiceBuffIds = $derived.by(() => {
+    const eligible = new Set(alertEligibleBuffIds);
+    return Object.keys(ensureBuffVoiceConfigs(activeProfile.buffVoiceConfigs))
+      .map((id) => Number(id))
+      .filter((id) => Number.isFinite(id) && eligible.has(id))
+      .sort((a, b) => a - b);
+  });
+  const voiceBuffSearchResults = $derived.by(() => {
+    const ids: number[] = [];
+    return searchBuffsByName(voiceBuffSearch, buffAliases).filter((item) => {
+      if (ids.includes(item.baseId)) return false;
+      if (!alertEligibleBuffIds.includes(item.baseId)) return false;
+      if (configuredVoiceBuffIds.includes(item.baseId)) return false;
+      ids.push(item.baseId);
+      return true;
+    });
+  });
   const textBuffMaxVisible = $derived(
     Math.max(1, Math.min(20, activeProfile.textBuffMaxVisible ?? 10)),
   );
@@ -407,6 +430,22 @@
 
   function setAlertSearch(value: string) {
     alertSearch = value;
+  }
+
+  function setVoiceBuffSearch(value: string) {
+    voiceBuffSearch = value;
+  }
+
+  function setVoiceBuffSectionExpanded(expanded: boolean) {
+    voiceBuffSectionExpanded = expanded;
+  }
+
+  function removeVoiceBuffBinding(buffId: number) {
+    updateActiveProfile((profile) => {
+      const next = { ...ensureBuffVoiceConfigs(profile.buffVoiceConfigs) };
+      delete next[String(buffId)];
+      return { ...profile, buffVoiceConfigs: next };
+    });
   }
 
   function getBuffDisplayName(buffId: number): string {
@@ -733,17 +772,25 @@
       ...profile,
       overlaySizes: {
         ...ensureOverlaySizes(profile),
-        panelAttrTextStyle: updater(ensureOverlaySizes(profile).panelAttrTextStyle),
+        panelAttrTextStyle: updater(
+          ensureOverlaySizes(profile).panelAttrTextStyle,
+        ),
       },
     }));
   }
 
   function setPanelAttrTextShadowEnabled(value: boolean) {
-    updatePanelAttrTextStyle((style) => ({ ...style, textShadowEnabled: value }));
+    updatePanelAttrTextStyle((style) => ({
+      ...style,
+      textShadowEnabled: value,
+    }));
   }
 
   function setPanelAttrBackgroundEnabled(value: boolean) {
-    updatePanelAttrTextStyle((style) => ({ ...style, backgroundEnabled: value }));
+    updatePanelAttrTextStyle((style) => ({
+      ...style,
+      backgroundEnabled: value,
+    }));
   }
 
   function setPanelAttrBackgroundOpacity(value: number) {
@@ -834,7 +881,9 @@
           group.kind === "manual"
             ? group.entries.filter(
                 (entry) =>
-                  !(entry.sourceType === "counter" && entry.sourceId === ruleId),
+                  !(
+                    entry.sourceType === "counter" && entry.sourceId === ruleId
+                  ),
               )
             : [],
       })),
@@ -878,6 +927,9 @@
                   ),
                 ),
               }
+            : {}),
+          ...(updates.voice !== undefined
+            ? { voice: ensureCounterVoiceConfigs(updates.voice) }
             : {}),
         };
       }),
@@ -1017,7 +1069,10 @@
   }
 
   function setTextBuffPanelTextShadowEnabled(value: boolean) {
-    updateTextBuffPanelStyle((style) => ({ ...style, textShadowEnabled: value }));
+    updateTextBuffPanelStyle((style) => ({
+      ...style,
+      textShadowEnabled: value,
+    }));
   }
 
   function setTextBuffPanelBackgroundEnabled(value: boolean) {
@@ -1039,7 +1094,9 @@
   ) {
     updateActiveProfile((profile) => ({
       ...profile,
-      overlayTextStyle: updater(ensureOverlayTextStyle(profile?.overlayTextStyle)),
+      overlayTextStyle: updater(
+        ensureOverlayTextStyle(profile?.overlayTextStyle),
+      ),
     }));
   }
 
@@ -1068,10 +1125,7 @@
   }
 
   function setShieldDetailStyleFlag(
-    key:
-      | "showHpBar"
-      | "showTotalShieldBar"
-      | "showShieldEntries",
+    key: "showHpBar" | "showTotalShieldBar" | "showShieldEntries",
     value: boolean,
   ) {
     updateShieldDetailStyle((style) => ({ ...style, [key]: value }));
@@ -1100,7 +1154,10 @@
   }
 
   function setShieldDetailTextShadowEnabled(value: boolean) {
-    updateShieldDetailStyle((style) => ({ ...style, textShadowEnabled: value }));
+    updateShieldDetailStyle((style) => ({
+      ...style,
+      textShadowEnabled: value,
+    }));
   }
 
   function setShieldDetailBackgroundEnabled(value: boolean) {
@@ -1125,7 +1182,9 @@
   ) {
     updateActiveProfile((profile) => {
       const groups = ensureCustomPanelGroups(profile);
-      if (!groups.some((group) => group.id === groupId && group.kind === "manual")) {
+      if (
+        !groups.some((group) => group.id === groupId && group.kind === "manual")
+      ) {
         return profile;
       }
       if (
@@ -1659,92 +1718,101 @@
       {setResonanceSearch}
     />
   {:else if activeTab === "buff"}
-    <TabBuffMonitor
-      {buffSearch}
-      {filteredBuffs}
-      {monitoredBuffIds}
-      {monitoredBuffCategories}
-      {expandedSelectedBuffIds}
-      {selectedBuffs}
-      {selectedBuffCategories}
-      {availableBuffs}
-      {buffCategoryDefinitions}
-      {availableBuffMap}
-      {buffAliasSectionExpanded}
-      {setBuffAliasSectionExpanded}
-      {buffAliasSearch}
-      {setBuffAliasSearch}
-      {buffAliasSearchResults}
-      {buffAliasEditingBuffId}
-      {setBuffAliasEditingBuffId}
-      {configuredBuffAliasIds}
-      {getBuffDisplayName}
-      {getBuffDefaultName}
-      {getBuffAlias}
-      {setBuffAlias}
-      {resetBuffAlias}
-      {isBuffSelected}
-      {isBuffCategorySelected}
-      {toggleBuff}
-      {toggleBuffCategory}
-      {clearBuffs}
-      {setBuffSearch}
-      {buffDisplayMode}
-      {setBuffDisplayMode}
-      {textBuffMaxVisible}
-      {setTextBuffMaxVisible}
-      {textBuffPanelStyle}
-      {setTextBuffPanelDisplayMode}
-      {setTextBuffPanelGap}
-      {setTextBuffPanelFontSize}
-      {setTextBuffPanelColumnGap}
-      {setTextBuffPanelNameColor}
-      {setTextBuffPanelValueColor}
-      {setTextBuffPanelProgressColor}
-      {setTextBuffPanelProgressOpacity}
-      {setTextBuffPanelTextShadowEnabled}
-      {setTextBuffPanelBackgroundEnabled}
-      {setTextBuffPanelBackgroundOpacity}
-      {overlayTextStyle}
-      {setOverlayTextShadowEnabled}
-      {setOverlayBackgroundEnabled}
-      {setOverlayBackgroundOpacity}
-      {globalPrioritySearch}
-      {globalPrioritySearchResults}
-      {setGlobalPrioritySearch}
-      {buffPriorityIds}
-      {toggleGlobalPriority}
-      {moveGlobalPriority}
-      {buffAlerts}
-      {buffAlertSectionExpanded}
-      {setBuffAlertSectionExpanded}
-      {alertSearch}
-      {alertSearchResults}
-      {alertEligibleBuffIds}
-      {setAlertSearch}
-      {upsertBuffAlert}
-      {removeBuffAlert}
-      {individualMonitorAllGroup}
-      {addIndividualMonitorAll}
-      {removeIndividualMonitorAll}
-      {updateIndividualMonitorAllGroup}
-      {buffGroups}
-      {addBuffGroup}
-      {removeBuffGroup}
-      {updateBuffGroup}
-      {getGroupSearchKeyword}
-      {setGroupSearchKeyword}
-      {getGroupSearchResults}
-      {getGroupPrioritySearchKeyword}
-      {setGroupPrioritySearchKeyword}
-      {getGroupPrioritySearchResults}
-      {getGroupPriorityIds}
-      {toggleBuffCategoryInGroup}
-      {hasCompleteBuffCategoryInGroup}
-      {toggleBuffInGroup}
-      {togglePriorityInGroup}
-      {moveGroupPriority}
-    />
+    {#key activeProfileIndex}
+      <TabBuffMonitor
+        {buffSearch}
+        {filteredBuffs}
+        {monitoredBuffIds}
+        {monitoredBuffCategories}
+        {expandedSelectedBuffIds}
+        {selectedBuffs}
+        {selectedBuffCategories}
+        {availableBuffs}
+        {buffCategoryDefinitions}
+        {availableBuffMap}
+        {buffAliasSectionExpanded}
+        {setBuffAliasSectionExpanded}
+        {buffAliasSearch}
+        {setBuffAliasSearch}
+        {buffAliasSearchResults}
+        {buffAliasEditingBuffId}
+        {setBuffAliasEditingBuffId}
+        {configuredBuffAliasIds}
+        {getBuffDisplayName}
+        {getBuffDefaultName}
+        {getBuffAlias}
+        {setBuffAlias}
+        {resetBuffAlias}
+        {isBuffSelected}
+        {isBuffCategorySelected}
+        {toggleBuff}
+        {toggleBuffCategory}
+        {clearBuffs}
+        {setBuffSearch}
+        {buffDisplayMode}
+        {setBuffDisplayMode}
+        {textBuffMaxVisible}
+        {setTextBuffMaxVisible}
+        {textBuffPanelStyle}
+        {setTextBuffPanelDisplayMode}
+        {setTextBuffPanelGap}
+        {setTextBuffPanelFontSize}
+        {setTextBuffPanelColumnGap}
+        {setTextBuffPanelNameColor}
+        {setTextBuffPanelValueColor}
+        {setTextBuffPanelProgressColor}
+        {setTextBuffPanelProgressOpacity}
+        {setTextBuffPanelTextShadowEnabled}
+        {setTextBuffPanelBackgroundEnabled}
+        {setTextBuffPanelBackgroundOpacity}
+        {overlayTextStyle}
+        {setOverlayTextShadowEnabled}
+        {setOverlayBackgroundEnabled}
+        {setOverlayBackgroundOpacity}
+        {globalPrioritySearch}
+        {globalPrioritySearchResults}
+        {setGlobalPrioritySearch}
+        {buffPriorityIds}
+        {toggleGlobalPriority}
+        {moveGlobalPriority}
+        {buffAlerts}
+        {buffAlertSectionExpanded}
+        {setBuffAlertSectionExpanded}
+        {alertSearch}
+        {alertSearchResults}
+        {alertEligibleBuffIds}
+        {setAlertSearch}
+        {upsertBuffAlert}
+        {removeBuffAlert}
+        {voiceBuffSectionExpanded}
+        {setVoiceBuffSectionExpanded}
+        {voiceBuffSearch}
+        {setVoiceBuffSearch}
+        {voiceBuffSearchResults}
+        {configuredVoiceBuffIds}
+        {removeVoiceBuffBinding}
+        {individualMonitorAllGroup}
+        {addIndividualMonitorAll}
+        {removeIndividualMonitorAll}
+        {updateIndividualMonitorAllGroup}
+        {buffGroups}
+        {addBuffGroup}
+        {removeBuffGroup}
+        {updateBuffGroup}
+        {getGroupSearchKeyword}
+        {setGroupSearchKeyword}
+        {getGroupSearchResults}
+        {getGroupPrioritySearchKeyword}
+        {setGroupPrioritySearchKeyword}
+        {getGroupPrioritySearchResults}
+        {getGroupPriorityIds}
+        {toggleBuffCategoryInGroup}
+        {hasCompleteBuffCategoryInGroup}
+        {toggleBuffInGroup}
+        {togglePriorityInGroup}
+        {moveGroupPriority}
+      />
+    {/key}
   {:else if activeTab === "panel-attr"}
     <TabPanelAttr
       {attrSectionExpanded}

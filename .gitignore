@@ -43,6 +43,12 @@ openspec/
 specs/
 src-tauri/build_errors.log
 src-tauri/npcap_sdk/
+src-tauri/binaries/*.exe
+src-tauri/binaries/*.pdb
+/src-tauri/native/qwen3-tts/build*/
+/src-tauri/native/qwen3-tts/out/
+/src-tauri/native/qwen3-tts/models/
+/src-tauri/native/qwen3-tts/.cache/
 latest.json
 doc/html_doc
 latest.en-US.json

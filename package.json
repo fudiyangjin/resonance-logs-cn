@@ -11,7 +11,12 @@
     "build:stop-windivert": "sc stop windivert 2>NUL & npm run build",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "test": "vitest run",
+    "bindings": "cargo run --manifest-path src-tauri/Cargo.toml --bin export_bindings",
     "tauri": "tauri",
+    "voice:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-voice-sidecar.ps1 -Variant Cpu",
+    "voice:build:vulkan": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-voice-sidecar.ps1 -Variant Vulkan",
+    "tauri:build:release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-voice-release.ps1",
     "doc:html": "node scripts/build-doc-html.cjs",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint ."
@@ -71,7 +76,8 @@
     "typescript-eslint": "^8.44.1",
     "unplugin-icons": "^22.4.2",
     "vite": "^7.1.7",
-    "vite-plugin-devtools-json": "^1.0.0"
+    "vite-plugin-devtools-json": "^1.0.0",
+    "vitest": "^4.1.10"
   },
   "overrides": {
     "cookie": "^0.7.0"

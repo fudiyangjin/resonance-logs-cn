@@ -1,11 +1,18 @@
 import type { MinimapEntity, MinimapMarker } from "$lib/api";
 import type { SceneDefinition } from "../../scene-types";
 import { arenaLayout, inBossArea, toArenaLocal, yInArena } from "./arena";
-import { buildMechanicView } from "./mechanics";
+import {
+  buildMechanicView,
+  resolveGiantTowerVoiceCues,
+  S3_GIANT_TOWER_VOICE_CUES,
+} from "./mechanics";
 
 export const s3GiantTowerScene: SceneDefinition = {
   id: "s3-giant-tower",
+  season: 3,
   sceneIds: [1150, 1151, 1152],
+  voiceCues: S3_GIANT_TOWER_VOICE_CUES,
+  resolveVoiceCues: resolveGiantTowerVoiceCues,
   resolveView(snapshot, displayName, skillCasts = []) {
     const layout = arenaLayout();
     const mechanicView = buildMechanicView(snapshot, displayName, skillCasts);

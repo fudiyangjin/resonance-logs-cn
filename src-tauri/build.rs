@@ -19,6 +19,15 @@ fn main() {
     if let Ok(url) = env::var("TRACKING_API_URL") {
         println!("cargo:rustc-env=TRACKING_API_URL={}", url);
     }
+    for key in [
+        "VOICE_MODEL_MANIFEST_URL",
+        "VOICE_MODEL_MANIFEST_PUBLIC_KEY",
+    ] {
+        println!("cargo:rerun-if-env-changed={key}");
+        if let Ok(value) = env::var(key) {
+            println!("cargo:rustc-env={key}={value}");
+        }
+    }
 
     // Build module_optimizer C++ code
     build_module_optimizer();
@@ -165,23 +174,15 @@ fn candidate_cuda_homes() -> Vec<PathBuf> {
 }
 
 fn find_cuda_home() -> Option<PathBuf> {
-    for path in candidate_cuda_homes() {
-        if path.join("include").exists() {
-            return Some(path);
-        }
-    }
-
-    None
+    candidate_cuda_homes()
+        .into_iter()
+        .find(|path| path.join("include").exists())
 }
 
 fn find_cuda_lib_dir(cuda_home: &Path) -> Option<PathBuf> {
-    for candidate in [cuda_home.join("lib/x64"), cuda_home.join("lib")] {
-        if candidate.exists() {
-            return Some(candidate);
-        }
-    }
-
-    None
+    [cuda_home.join("lib/x64"), cuda_home.join("lib")]
+        .into_iter()
+        .find(|candidate| candidate.exists())
 }
 
 fn find_opencl() -> Option<PathBuf> {
@@ -304,14 +305,14 @@ fn compile_cuda(cpp_dir: &Path, cccl_root: Option<&Path>) -> Option<PathBuf> {
 }
 
 fn emit_cuda_runtime_links() {
-    if let Some(cuda_home) = find_cuda_home() {
-        if let Some(lib_dir) = find_cuda_lib_dir(&cuda_home) {
-            println!(
-                "cargo:warning=Linking CUDA runtime from: {}",
-                lib_dir.display()
-            );
-            println!("cargo:rustc-link-search=native={}", lib_dir.display());
-        }
+    if let Some(cuda_home) = find_cuda_home()
+        && let Some(lib_dir) = find_cuda_lib_dir(&cuda_home)
+    {
+        println!(
+            "cargo:warning=Linking CUDA runtime from: {}",
+            lib_dir.display()
+        );
+        println!("cargo:rustc-link-search=native={}", lib_dir.display());
     }
 
     println!("cargo:rustc-link-lib=cudart_static");

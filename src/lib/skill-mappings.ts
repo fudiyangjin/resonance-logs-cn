@@ -14,7 +14,10 @@ import type {
 } from "$lib/bindings";
 import { getLocale, type AppLocale } from "$lib/i18n/index.svelte";
 import { APP_LOCALES } from "$lib/i18n/locales";
-import type { UserCounterRule } from "$lib/settings-store";
+import {
+  ensureCounterVoiceConfigs,
+  type UserCounterRule,
+} from "$lib/settings-store";
 
 export type SkillDisplayInfo = {
   skillId: number;
@@ -173,8 +176,7 @@ export type SkillDerivation = {
   keepCdWhenDerived?: boolean;
 };
 
-const RESONANCE_SKILL_ICONS =
-  resonanceSkillIconsRaw as ResonanceSkillIconRaw[];
+const RESONANCE_SKILL_ICONS = resonanceSkillIconsRaw as ResonanceSkillIconRaw[];
 
 export const RESONANCE_SKILLS: ResonanceSkillDefinition[] =
   buildResonanceSkills(RESONANCE_SKILL_ICONS, new Map());
@@ -287,12 +289,10 @@ function derivationKey(
 }
 
 function resourceKey(
-  item: Pick<
-    Partial<ResourceDefinition>,
-    "type" | "currentId" | "maxId"
-  >,
+  item: Pick<Partial<ResourceDefinition>, "type" | "currentId" | "maxId">,
 ): string | null {
-  const type = item.type === "bar" || item.type === "charges" ? item.type : null;
+  const type =
+    item.type === "bar" || item.type === "charges" ? item.type : null;
   const currentId = numberKey(item.currentId);
   const maxId = numberKey(item.maxId);
   if (!type || currentId === null || maxId === null) return null;
@@ -444,7 +444,9 @@ function buildLocalizedClassConfig(
   };
 }
 
-function getClassConfigMap(locale = getLocale()): Record<string, ClassSkillConfig> {
+function getClassConfigMap(
+  locale = getLocale(),
+): Record<string, ClassSkillConfig> {
   const cached = CLASS_CONFIGS_BY_LOCALE.get(locale);
   if (cached) return cached;
 
@@ -572,10 +574,7 @@ export function getSourceTemplates(locale = getLocale()): SourceTemplate[] {
     return {
       ...template,
       name: localizedText(override?.name, template.name),
-      description: localizedText(
-        override?.description,
-        template.description,
-      ),
+      description: localizedText(override?.description, template.description),
     };
   });
   SOURCE_TEMPLATES_BY_LOCALE.set(locale, localized);
@@ -592,10 +591,7 @@ export function getSlotTemplates(locale = getLocale()): SlotTemplate[] {
     return {
       ...template,
       name: localizedText(override?.name, template.name),
-      description: localizedText(
-        override?.description,
-        template.description,
-      ),
+      description: localizedText(override?.description, template.description),
     };
   });
   SLOT_TEMPLATES_BY_LOCALE.set(locale, localized);
@@ -609,9 +605,7 @@ export function getSeasonCultivateFactorRuleId(itemId: number): number {
 function normalizeTemplateItemIds(item: { itemIds: number[] }): number[] {
   return Array.from(
     new Set(
-      item.itemIds.filter(
-        (itemId) => Number.isInteger(itemId) && itemId > 0,
-      ),
+      item.itemIds.filter((itemId) => Number.isInteger(itemId) && itemId > 0),
     ),
   ).sort((left, right) => left - right);
 }
@@ -629,7 +623,9 @@ function normalizeTemplateEffectBuffIds(item: {
   return result;
 }
 
-function resolveSourceTemplateSources(template: SourceTemplate): CounterSource[] {
+function resolveSourceTemplateSources(
+  template: SourceTemplate,
+): CounterSource[] {
   return Array.isArray(template.source) ? template.source : [template.source];
 }
 
@@ -815,6 +811,7 @@ export function ensureUserCounterRules(
         ),
       ),
     ),
+    voice: ensureCounterVoiceConfigs(rule.voice),
   }));
 }
 

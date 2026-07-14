@@ -1,8 +1,26 @@
-import type { MinimapBuffFact, MinimapEntity, MinimapSkillCast, MinimapSnapshot } from "$lib/api";
+import type {
+  MinimapBuffFact,
+  MinimapEntity,
+  MinimapSkillCast,
+  MinimapSnapshot,
+} from "$lib/api";
 import { t, type MessageKey } from "$lib/i18n/index.svelte";
 import { overlayNow } from "../../../game-overlay/overlay-clock.svelte.js";
-import { electromagneticRingResetMs, entityFirstSeen } from "../../minimap-runtime.svelte.js";
-import type { MechanicRegion, MechanicRow } from "../../scene-types";
+import {
+  electromagneticRingResetMs,
+  entityFirstSeen,
+} from "../../minimap-runtime.svelte.js";
+import type {
+  MechanicRegion,
+  MechanicRow,
+  MinimapVoiceCueDef,
+  MinimapVoiceCueFire,
+} from "../../scene-types";
+import {
+  buffInstanceKey,
+  resolveBuffVoiceCues,
+  resolveSkillVoiceCues,
+} from "../../voice-cue-utils";
 import {
   FLOOR_CORNER_CELLS,
   FLOOR_EDGE_MID_CELLS,
@@ -84,6 +102,104 @@ const ELECTROMAGNETIC_RING_SKILLS: Record<
 const ELECTROMAGNETIC_RING_MONSTER_IDS = new Set([
   10310062, 10310063, 10310064,
 ]);
+
+const voiceCueIds = {
+  phase: "s3-raid.phase",
+  phaseMirage: "s3-raid.phaseMirage",
+  share: "s3-raid.share",
+  mirageShare: "s3-raid.mirageShare",
+  causalJump: "s3-raid.causalJump",
+  killMark: "s3-raid.killMark",
+  killMarkMirage: "s3-raid.killMarkMirage",
+  presetReturn: "s3-raid.presetReturn",
+  electromagneticPulse: "s3-raid.electromagneticPulse",
+  shareMirage: "s3-raid.shareMirage",
+  normalDecay: "s3-raid.normalDecay",
+  hitOrder: "s3-raid.hitOrder",
+  pinball: "s3-raid.pinball",
+  ringInner: "s3-raid.electromagneticRing.inner",
+  ringMid: "s3-raid.electromagneticRing.mid",
+  ringOuter: "s3-raid.electromagneticRing.outer",
+} as const;
+
+export const S3_RAID_VOICE_CUES: MinimapVoiceCueDef[] = [
+  { id: voiceCueIds.phase, labelKey: textKeys.phase, autoText: "相位变化" },
+  {
+    id: voiceCueIds.phaseMirage,
+    labelKey: textKeys.phaseMirage,
+    autoText: "相位映射",
+  },
+  {
+    id: voiceCueIds.share,
+    labelKey: textKeys.shareGroup,
+    autoText: "分摊衰减分散",
+  },
+  {
+    id: voiceCueIds.mirageShare,
+    labelKey: textKeys.mirageShareGroup,
+    autoText: "幻想分摊衰减分散",
+  },
+  {
+    id: voiceCueIds.causalJump,
+    labelKey: textKeys.causalJumpGroup,
+    autoText: "因果折跃",
+  },
+  {
+    id: voiceCueIds.killMark,
+    labelKey: textKeys.killMarkGroup,
+    autoText: "累刎宣告",
+  },
+  {
+    id: voiceCueIds.killMarkMirage,
+    labelKey: textKeys.killMarkMirageGroup,
+    autoText: "幻想累刎宣告",
+  },
+  {
+    id: voiceCueIds.presetReturn,
+    labelKey: textKeys.presetReturn,
+    autoText: "预置的归途",
+  },
+  {
+    id: voiceCueIds.electromagneticPulse,
+    labelKey: textKeys.electromagneticPulseGroup,
+    autoText: "电磁脉冲点名",
+  },
+  {
+    id: voiceCueIds.shareMirage,
+    labelKey: textKeys.shareMirageGroup,
+    autoText: "分摊幻分摊",
+  },
+  {
+    id: voiceCueIds.normalDecay,
+    labelKey: textKeys.normalDecayGroup,
+    autoText: "普通衰减点名",
+  },
+  {
+    id: voiceCueIds.hitOrder,
+    labelKey: textKeys.hitOrderGroup,
+    autoText: "打击顺序",
+  },
+  {
+    id: voiceCueIds.pinball,
+    labelKey: textKeys.pinballGroup,
+    autoText: "弹球",
+  },
+  {
+    id: voiceCueIds.ringInner,
+    labelKey: "minimap.s3Raid.electromagneticRing.inner",
+    autoText: "内",
+  },
+  {
+    id: voiceCueIds.ringMid,
+    labelKey: "minimap.s3Raid.electromagneticRing.mid",
+    autoText: "中",
+  },
+  {
+    id: voiceCueIds.ringOuter,
+    labelKey: "minimap.s3Raid.electromagneticRing.outer",
+    autoText: "外",
+  },
+];
 
 export type MechanicView = {
   regions: MechanicRegion[];
@@ -234,6 +350,82 @@ const CALLOUT_BUFFS: Record<
     colorSlot: 2,
   },
 };
+
+const PHASE_VOICE_CUES = Object.fromEntries(
+  Object.keys(PHASE_BUFFS).map((buffId) => [buffId, voiceCueIds.phase]),
+);
+
+const PHASE_MAPPING_VOICE_CUES = Object.fromEntries(
+  Object.keys(PHASE_MAPPING).map((buffId) => [buffId, voiceCueIds.phaseMirage]),
+);
+
+const LOCAL_CALLOUT_VOICE_CUES: Record<number, string> = {
+  829104: voiceCueIds.electromagneticPulse,
+  829105: voiceCueIds.electromagneticPulse,
+  829106: voiceCueIds.electromagneticPulse,
+  829115: voiceCueIds.shareMirage,
+  829116: voiceCueIds.shareMirage,
+  829304: voiceCueIds.share,
+  829305: voiceCueIds.mirageShare,
+  829306: voiceCueIds.share,
+  829307: voiceCueIds.mirageShare,
+  829308: voiceCueIds.share,
+  829309: voiceCueIds.mirageShare,
+  829316: voiceCueIds.causalJump,
+  829217: voiceCueIds.normalDecay,
+  829245: voiceCueIds.normalDecay,
+  829226: voiceCueIds.hitOrder,
+  829227: voiceCueIds.hitOrder,
+  829228: voiceCueIds.hitOrder,
+  829323: voiceCueIds.killMark,
+  829324: voiceCueIds.killMark,
+  829326: voiceCueIds.killMarkMirage,
+};
+
+const RING_SKILL_VOICE_CUES: Record<number, string> = {
+  10310062: voiceCueIds.ringInner,
+  10310063: voiceCueIds.ringMid,
+  10310064: voiceCueIds.ringOuter,
+};
+
+export function resolveRaidVoiceCues(
+  snapshot: MinimapSnapshot,
+  skillCasts: MinimapSkillCast[],
+): MinimapVoiceCueFire[] {
+  const fires = [
+    ...resolveBuffVoiceCues(snapshot, PHASE_VOICE_CUES, "global"),
+    ...resolveBuffVoiceCues(snapshot, PHASE_MAPPING_VOICE_CUES, "localTarget"),
+    ...resolveBuffVoiceCues(snapshot, LOCAL_CALLOUT_VOICE_CUES, "localTarget"),
+    ...resolveBuffVoiceCues(
+      snapshot,
+      { [PINBALL_CAST_BUFF_ID]: voiceCueIds.pinball },
+      "global",
+    ),
+  ];
+
+  const hasRingEntity = snapshot.entities.some((entity) =>
+    ELECTROMAGNETIC_RING_MONSTER_IDS.has(entity.monsterId ?? 0),
+  );
+  if (hasRingEntity) {
+    fires.push(...resolveSkillVoiceCues(skillCasts, RING_SKILL_VOICE_CUES));
+  }
+
+  const localBuffs = snapshot.buffs.filter(
+    (buff) => buff.targetEntityUuid === snapshot.localPlayerUuid,
+  );
+  const linkBuff = localBuffs.find((buff) => buff.baseId === 829318);
+  const countBuff = localBuffs.find(
+    (buff) => PRESET_RETURN_COUNT_BUFFS[buff.baseId] !== undefined,
+  );
+  if (linkBuff && countBuff) {
+    fires.push({
+      cueId: voiceCueIds.presetReturn,
+      instanceKey: `${buffInstanceKey(linkBuff)}:${buffInstanceKey(countBuff)}`,
+    });
+  }
+
+  return fires;
+}
 
 export function buildMechanicView(
   snapshot: MinimapSnapshot,

@@ -12,7 +12,7 @@
     isDailyScene,
     isSupportedMinimapScene,
   } from "$lib/config/daily-scene-blacklist";
-  import { SETTINGS } from '$lib/settings-store';
+  import { SETTINGS } from "$lib/settings-store";
   import { applyCustomFonts } from "$lib/font-loader";
   import { applyLiveClickthrough } from "$lib/utils.svelte";
   import {
@@ -25,10 +25,14 @@
     createMonitorRuntimeSnapshotSignature,
     saveAndApplyMonitorRuntimeSnapshot,
   } from "$lib/runtime-monitor-sync";
-  import { onMount, untrack } from 'svelte';
+  import { onMount, untrack } from "svelte";
+  import {
+    ensureVoiceListeners,
+    refreshVoiceStatus,
+  } from "$lib/stores/voice-store.svelte";
   import ToolSidebar from "./tool-sidebar.svelte";
-  import ChangelogModal from '$lib/components/ChangelogModal.svelte';
-  import UpdateModal from '$lib/components/UpdateModal.svelte';
+  import ChangelogModal from "$lib/components/ChangelogModal.svelte";
+  import UpdateModal from "$lib/components/UpdateModal.svelte";
   import { getVersion } from "@tauri-apps/api/app";
   import AppBackgroundLayer from "$lib/components/app-background-layer.svelte";
 
@@ -45,7 +49,10 @@
   let runtimeSyncTimer: ReturnType<typeof setTimeout> | null = null;
   let currentSceneId = $state<number | null>(null);
 
-  function queueRuntimeSnapshotSync(runtimeSnapshot: ReturnType<typeof buildMonitorRuntimeSnapshot>, runtimeSnapshotKey: string) {
+  function queueRuntimeSnapshotSync(
+    runtimeSnapshot: ReturnType<typeof buildMonitorRuntimeSnapshot>,
+    runtimeSnapshotKey: string,
+  ) {
     if (runtimeSyncTimer) {
       clearTimeout(runtimeSyncTimer);
     }
@@ -55,7 +62,10 @@
           lastRuntimeSnapshotKey = runtimeSnapshotKey;
           await saveAndApplyMonitorRuntimeSnapshot(runtimeSnapshot);
         } catch (error) {
-          console.error("[runtime-monitor] failed to sync runtime snapshot", error);
+          console.error(
+            "[runtime-monitor] failed to sync runtime snapshot",
+            error,
+          );
         }
       })();
     }, 50);
@@ -63,7 +73,8 @@
 
   $effect(() => {
     const runtimeSnapshot = buildMonitorRuntimeSnapshot();
-    const runtimeSnapshotKey = createMonitorRuntimeSnapshotSignature(runtimeSnapshot);
+    const runtimeSnapshotKey =
+      createMonitorRuntimeSnapshotSignature(runtimeSnapshot);
 
     if (!runtimeSnapshotInitialized) {
       runtimeSnapshotInitialized = true;
@@ -72,7 +83,6 @@
     } else if (runtimeSnapshotKey !== lastRuntimeSnapshotKey) {
       queueRuntimeSnapshotSync(runtimeSnapshot, runtimeSnapshotKey);
     }
-
   });
 
   $effect(() => {
@@ -86,7 +96,8 @@
       // Read via untrack() so this effect only reacts to setting/scene changes,
       // not to visibility changes it (or the toggle buttons) makes itself -
       // otherwise a manual toggle would immediately be "corrected" back.
-      if (untrack(() => isOverlayWindowVisible("game-overlay")) === shouldShow) return;
+      if (untrack(() => isOverlayWindowVisible("game-overlay")) === shouldShow)
+        return;
       await setOverlayWindowVisible("game-overlay", shouldShow);
     })();
   });
@@ -99,7 +110,10 @@
       enabled && !(autoHideInDailyScenes && isDailyScene(currentSceneId));
 
     void (async () => {
-      if (untrack(() => isOverlayWindowVisible("monster-overlay")) === shouldShow) return;
+      if (
+        untrack(() => isOverlayWindowVisible("monster-overlay")) === shouldShow
+      )
+        return;
       await setOverlayWindowVisible("monster-overlay", shouldShow);
     })();
   });
@@ -115,7 +129,10 @@
 
     void (async () => {
       if (!shouldControl) return;
-      if (untrack(() => isOverlayWindowVisible("minimap-overlay")) === shouldShow) return;
+      if (
+        untrack(() => isOverlayWindowVisible("minimap-overlay")) === shouldShow
+      )
+        return;
       await setOverlayWindowVisible("minimap-overlay", shouldShow);
     })();
   });
@@ -146,7 +163,7 @@
   let navigateUnlisten: (() => void) | null = null;
 
   let showChangelog = $state(false);
-  let currentVersion = $state('');
+  let currentVersion = $state("");
   type UpdateInfo = {
     version: string;
     body: string;
@@ -177,51 +194,72 @@
     // other overlays, which sync above), so refresh it explicitly.
     void refreshOverlayWindowVisibility("live");
 
+    // The inline voice-binding controls (buff monitor / counter editor / DBM
+    // table) need the phrase catalog for their "短语库引用" picker, so load
+    // it app-wide instead of only when the user visits the voice page.
+    void (async () => {
+      await ensureVoiceListeners();
+      await refreshVoiceStatus();
+    })();
+
     // Set up navigation listener
     const appWebview = getCurrentWebviewWindow();
-    appWebview.listen<string>("navigate", (event) => {
-      const route = event.payload;
-      goto(route);
-    }).then((unlisten) => {
-      navigateUnlisten = unlisten;
-    });
+    appWebview
+      .listen<string>("navigate", (event) => {
+        const route = event.payload;
+        goto(route);
+      })
+      .then((unlisten) => {
+        navigateUnlisten = unlisten;
+      });
 
     listen<UpdateInfo>("update-available", (event) => {
       updateInfo = event.payload;
       void revealMainWindowForNotice();
-    }).then((unlisten) => {
-      updateUnlisten = unlisten;
-    }).catch((err) => {
-      console.error("Failed to subscribe update-available event", err);
-    });
+    })
+      .then((unlisten) => {
+        updateUnlisten = unlisten;
+      })
+      .catch((err) => {
+        console.error("Failed to subscribe update-available event", err);
+      });
 
     listen<boolean>("live-clickthrough-changed", (event) => {
       SETTINGS.accessibility.state.clickthrough = event.payload;
-    }).then((unlisten) => {
-      clickthroughUnlisten = unlisten;
-    }).catch((err) => {
-      console.error("Failed to subscribe live-clickthrough-changed event", err);
-    });
+    })
+      .then((unlisten) => {
+        clickthroughUnlisten = unlisten;
+      })
+      .catch((err) => {
+        console.error(
+          "Failed to subscribe live-clickthrough-changed event",
+          err,
+        );
+      });
 
     onSceneChange((event) => {
       currentSceneId = event.payload.sceneId;
-    }).then((unlisten) => {
-      sceneChangeUnlisten = unlisten;
-    }).catch((err) => {
-      console.error("Failed to subscribe scene-change event", err);
-    });
+    })
+      .then((unlisten) => {
+        sceneChangeUnlisten = unlisten;
+      })
+      .catch((err) => {
+        console.error("Failed to subscribe scene-change event", err);
+      });
 
     // Get app version and check changelog
-    getVersion().then((v) => {
-      currentVersion = v;
-      // Compare persisted last-seen version with current app version
-      if ((SETTINGS.appVersion.state as any).value !== v) {
-        showChangelog = true;
-        void revealMainWindowForNotice();
-      }
-    }).catch((err) => {
-      console.error('Failed to get app version', err);
-    });
+    getVersion()
+      .then((v) => {
+        currentVersion = v;
+        // Compare persisted last-seen version with current app version
+        if ((SETTINGS.appVersion.state as any).value !== v) {
+          showChangelog = true;
+          void revealMainWindowForNotice();
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to get app version", err);
+      });
 
     // Cleanup on unmount
     return () => {
@@ -253,7 +291,7 @@
     try {
       (SETTINGS.appVersion.state as any).value = currentVersion;
     } catch (e) {
-      console.error('Failed to set appVersion setting', e);
+      console.error("Failed to set appVersion setting", e);
     }
     showChangelog = false;
   }
