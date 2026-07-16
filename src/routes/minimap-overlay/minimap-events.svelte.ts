@@ -6,12 +6,17 @@ import {
   overlayNow,
 } from "../game-overlay/overlay-clock.svelte.js";
 import {
+  handleMinimapVoiceCues,
+  resetMinimapVoiceCues,
+} from "./minimap-voice.svelte.js";
+import {
   clearSkillCastLog,
   consumeMinimapSkillCasts,
   minimapRuntime,
   updateElectromagneticRingCycle,
   updateEntityFirstSeen,
 } from "./minimap-runtime.svelte.js";
+import { resolveScene } from "./scene-registry";
 import { setMinimapEditMode } from "./minimap-state.svelte.js";
 
 /**
@@ -52,15 +57,27 @@ export function initMinimapOverlay() {
         minimapRuntime.lastSceneId !== snapshot.sceneId
       ) {
         clearSkillCastLog();
+        resetMinimapVoiceCues();
       }
       minimapRuntime.lastSceneId = snapshot.sceneId;
       minimapRuntime.snapshot = snapshot;
       updateEntityFirstSeen(snapshot, overlayNow());
       updateElectromagneticRingCycle(snapshot, overlayNow());
+      // Uses this tick's fresh skill-cast delta (not the accumulated log
+      // resolveView reads), so each qualifying mechanic occurrence is seen
+      // by resolveVoiceCues exactly once.
+      const fires = resolveScene(snapshot.sceneId)?.resolveVoiceCues?.(
+        snapshot,
+        skillCasts,
+      );
+      if (fires && fires.length > 0) {
+        handleMinimapVoiceCues(fires);
+      }
     } else if (skillCasts.length === 0) {
       minimapRuntime.snapshot = null;
       minimapRuntime.lastSceneId = null;
       clearSkillCastLog();
+      resetMinimapVoiceCues();
     }
     consumeMinimapSkillCasts(skillCasts);
   });

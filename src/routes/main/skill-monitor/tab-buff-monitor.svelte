@@ -1,6 +1,7 @@
 <script lang="ts">
   import ChevronDown from "virtual:icons/lucide/chevron-down";
   import BuffSearchResultGrid from "$lib/components/BuffSearchResultGrid.svelte";
+  import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
   import type {
     BuffCategoryDefinition,
     BuffCategoryKey,
@@ -90,6 +91,14 @@
     setAlertSearch: (value: string) => void;
     upsertBuffAlert: (buffId: number, patch: Partial<BuffAlertRule>) => void;
     removeBuffAlert: (buffId: number) => void;
+
+    voiceBuffSectionExpanded: boolean;
+    setVoiceBuffSectionExpanded: (expanded: boolean) => void;
+    voiceBuffSearch: string;
+    setVoiceBuffSearch: (value: string) => void;
+    voiceBuffSearchResults: BuffNameInfo[];
+    configuredVoiceBuffIds: number[];
+    removeVoiceBuffBinding: (buffId: number) => void;
 
     individualMonitorAllGroup: BuffGroup | null;
     addIndividualMonitorAll: () => void;
@@ -194,6 +203,13 @@
     setAlertSearch,
     upsertBuffAlert,
     removeBuffAlert,
+    voiceBuffSectionExpanded,
+    setVoiceBuffSectionExpanded,
+    voiceBuffSearch,
+    setVoiceBuffSearch,
+    voiceBuffSearchResults,
+    configuredVoiceBuffIds,
+    removeVoiceBuffBinding,
     individualMonitorAllGroup,
     addIndividualMonitorAll,
     removeIndividualMonitorAll,
@@ -272,6 +288,22 @@
       ids.push(item.baseId);
       return true;
     });
+  }
+
+  // Transient: which buff's binding panel is expanded via the "add" search.
+  // Nothing is persisted until the user enables at least one event inside
+  // `VoiceBindingControl`, so there's no separate "confirm add" step.
+  let voiceEditingBuffId = $state<number | null>(null);
+  const pendingVoiceBuffId = $derived(
+    voiceEditingBuffId !== null &&
+      !configuredVoiceBuffIds.includes(voiceEditingBuffId)
+      ? voiceEditingBuffId
+      : null,
+  );
+
+  function removeConfiguredVoiceBuff(buffId: number) {
+    removeVoiceBuffBinding(buffId);
+    if (voiceEditingBuffId === buffId) voiceEditingBuffId = null;
   }
 </script>
 
@@ -1037,6 +1069,100 @@
             <div class="text-muted-foreground text-xs">
               {t("skillMonitor.buff.alert.empty")}
             </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
+  </div>
+
+  <div
+    class="border-border/60 bg-card/40 rounded-lg border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+  >
+    <button
+      type="button"
+      class="hover:bg-muted/30 flex w-full items-center justify-between gap-3 px-4 py-3 transition-colors"
+      onclick={() => setVoiceBuffSectionExpanded(!voiceBuffSectionExpanded)}
+    >
+      <div class="min-w-0 text-left">
+        <h2 class="text-foreground text-base font-semibold">
+          {t("skillMonitor.buff.voice.title")}
+        </h2>
+        <p class="text-muted-foreground text-xs">
+          {t("skillMonitor.buff.voice.description")}
+        </p>
+      </div>
+      <div class="flex shrink-0 items-center gap-3">
+        <span class="text-muted-foreground text-xs">
+          {t("skillMonitor.buff.voice.configuredCount", {
+            count: configuredVoiceBuffIds.length,
+          })}
+        </span>
+        <ChevronDown
+          class="text-muted-foreground h-5 w-5 transition-transform duration-200 {voiceBuffSectionExpanded
+            ? 'rotate-180'
+            : ''}"
+        />
+      </div>
+    </button>
+
+    {#if voiceBuffSectionExpanded}
+      <div class="space-y-4 px-4 pb-4">
+        <input
+          class="border-border/60 bg-muted/30 text-foreground placeholder:text-muted-foreground focus:ring-primary/50 w-full rounded border px-3 py-2 text-sm focus:ring-2 focus:outline-none sm:w-72"
+          placeholder={t("skillMonitor.buff.voice.addPlaceholder")}
+          value={voiceBuffSearch}
+          oninput={(event) =>
+            setVoiceBuffSearch((event.currentTarget as HTMLInputElement).value)}
+        />
+        {#if voiceBuffSearch.trim().length > 0}
+          <BuffSearchResultGrid
+            items={voiceBuffSearchResults}
+            {availableBuffMap}
+            onSelect={(buffId) => {
+              voiceEditingBuffId = buffId;
+              setVoiceBuffSearch("");
+            }}
+            emptyMessage={t("skillMonitor.buff.voice.emptySearch")}
+            minColumnWidth={180}
+          />
+        {/if}
+        {#if pendingVoiceBuffId !== null}
+          <div
+            class="border-border/60 bg-muted/20 space-y-2 rounded border p-3"
+          >
+            <div class="text-foreground truncate text-sm font-medium">
+              {getBuffDisplayName(pendingVoiceBuffId)}
+            </div>
+            <VoiceBindingControl
+              subject={{ kind: "buff", buffId: pendingVoiceBuffId }}
+            />
+          </div>
+        {/if}
+        <div class="space-y-2">
+          {#each configuredVoiceBuffIds as buffId (buffId)}
+            <div
+              class="border-border/60 bg-muted/20 space-y-2 rounded border p-3"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-foreground min-w-0 truncate text-sm">
+                  {getBuffDisplayName(buffId)}
+                </span>
+                <button
+                  type="button"
+                  class="border-border/60 text-destructive hover:bg-destructive/10 rounded border px-2 py-1 text-xs"
+                  onclick={() => removeConfiguredVoiceBuff(buffId)}
+                >
+                  {t("skillMonitor.buff.voice.remove")}
+                </button>
+              </div>
+              <VoiceBindingControl subject={{ kind: "buff", buffId }} />
+            </div>
+          {:else}
+            {#if pendingVoiceBuffId === null}
+              <div class="text-muted-foreground text-xs">
+                {t("skillMonitor.buff.voice.empty")}
+              </div>
+            {/if}
           {/each}
         </div>
       </div>

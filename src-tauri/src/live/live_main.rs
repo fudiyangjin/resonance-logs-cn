@@ -71,6 +71,49 @@ fn log_queue_depth_if_needed(
 const DECODE_CHANNEL_CAP: usize = 4096;
 const MINIMAP_EMIT_INTERVAL: Duration = Duration::from_millis(50);
 
+/// Hot-syncs `VoiceService` playback settings (enabled/volume/queue policy)
+/// whenever a runtime snapshot control command carries an updated `voice`
+/// section. Cheap: only reads a few `Copy` fields off the snapshot, never
+/// clones it.
+fn sync_voice_runtime_settings(
+    app_handle: &AppHandle,
+    command: &crate::live::state::LiveControlCommand,
+) {
+    if let crate::live::state::LiveControlCommand::ApplyMonitorRuntimeSnapshot(snapshot) = command
+        && let Some(voice_service) = app_handle.try_state::<crate::voice::VoiceService>()
+    {
+        voice_service.apply_runtime_settings(
+            snapshot.voice.enabled,
+            snapshot.voice.volume,
+            snapshot.voice.queue_policy,
+        );
+    }
+}
+
+fn apply_control_command_synced(
+    state_manager: &AppStateManager,
+    app_handle: &AppHandle,
+    state: &mut AppState,
+    command: crate::live::state::LiveControlCommand,
+) {
+    sync_voice_runtime_settings(app_handle, &command);
+    state_manager.apply_control_command(state, command);
+}
+
+fn drain_control_commands_synced(
+    state_manager: &AppStateManager,
+    app_handle: &AppHandle,
+    state: &mut AppState,
+    control_rx: &mut UnboundedReceiver<crate::live::state::LiveControlCommand>,
+) {
+    loop {
+        let Ok(command) = control_rx.try_recv() else {
+            break;
+        };
+        apply_control_command_synced(state_manager, app_handle, state, command);
+    }
+}
+
 /// Starts the live meter.
 ///
 /// This function captures packets, processes them, and emits events to the frontend.
@@ -96,7 +139,15 @@ pub async fn start(
     if let Some(snapshot) =
         crate::live::bootstrap_snapshot::load_monitor_runtime_snapshot(&app_handle)
     {
+        let voice_settings = snapshot.voice.clone();
         state_manager.apply_monitor_runtime_snapshot_with_state(&mut state, snapshot);
+        if let Some(voice_service) = app_handle.try_state::<crate::voice::VoiceService>() {
+            voice_service.apply_runtime_settings(
+                voice_settings.enabled,
+                voice_settings.volume,
+                voice_settings.queue_policy,
+            );
+        }
     }
 
     // Throttling for events - rate is read dynamically from state each iteration
@@ -128,8 +179,8 @@ pub async fn start(
             biased;
 
             Some(command) = control_rx.recv() => {
-                state_manager.apply_control_command(&mut state, command);
-                state_manager.drain_control_commands(&mut state, &mut control_rx);
+                apply_control_command_synced(&state_manager, &app_handle, &mut state, command);
+                drain_control_commands_synced(&state_manager, &app_handle, &mut state, &mut control_rx);
                 flush_outbound_events(&app_handle, &mut state);
             }
             event = state_rx.recv() => match event {
@@ -183,7 +234,7 @@ pub async fn start(
                 }
 
                 state_manager.handle_events_batch_with_state(&mut state, batch_events);
-                state_manager.drain_control_commands(&mut state, &mut control_rx);
+                drain_control_commands_synced(&state_manager, &app_handle, &mut state, &mut control_rx);
                 flush_outbound_events(&app_handle, &mut state);
 
                 let emit_rate_ms = state.event_update_rate_ms;
@@ -441,6 +492,13 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                     "boss-dbm-update",
                     BossDbmUpdatePayload { events },
                 );
+            }
+            OutboundEvent::VoiceCue(intents) => {
+                if let Some(voice_service) = app_handle.try_state::<crate::voice::VoiceService>() {
+                    for intent in intents {
+                        voice_service.enqueue_cue(intent);
+                    }
+                }
             }
         }
     }

@@ -6,7 +6,16 @@ import type {
 } from "$lib/api";
 import { t, type MessageKey } from "$lib/i18n/index.svelte";
 import { overlayNow } from "../../../game-overlay/overlay-clock.svelte.js";
-import type { MechanicRow } from "../../scene-types";
+import type {
+  MechanicRow,
+  MinimapVoiceCueDef,
+  MinimapVoiceCueFire,
+} from "../../scene-types";
+import {
+  entityInstanceKey,
+  resolveBuffVoiceCues,
+  skillCastInstanceKey,
+} from "../../voice-cue-utils";
 
 const textKeys = {
   portalGroup: "minimap.s3GiantTower.portal.group",
@@ -28,6 +37,60 @@ const COLOR_SLOT_GRAVITY_BLAST = 3;
 
 const STICKY_BOMB_BUFF_ID = 821076;
 const COLOR_SLOT_STICKY = 5;
+
+const voiceCueIds = {
+  portal: "s3-giant-tower.portal",
+  gravity: "s3-giant-tower.gravity",
+  sticky: "s3-giant-tower.sticky",
+} as const;
+
+export const S3_GIANT_TOWER_VOICE_CUES: MinimapVoiceCueDef[] = [
+  {
+    id: voiceCueIds.portal,
+    labelKey: textKeys.portalGroup,
+    autoText: "正确传送门出现",
+  },
+  {
+    id: voiceCueIds.gravity,
+    labelKey: textKeys.gravityGroup,
+    autoText: "引力雷爆",
+  },
+  {
+    id: voiceCueIds.sticky,
+    labelKey: textKeys.stickyGroup,
+    autoText: "粘着弹点名",
+  },
+];
+
+export function resolveGiantTowerVoiceCues(
+  snapshot: MinimapSnapshot,
+  skillCasts: MinimapSkillCast[],
+): MinimapVoiceCueFire[] {
+  const entitiesByUuid = new Map(
+    snapshot.entities.map((entity) => [entity.entityUuid, entity]),
+  );
+  const fires = resolveBuffVoiceCues(
+    snapshot,
+    { [STICKY_BOMB_BUFF_ID]: voiceCueIds.sticky },
+    "localTarget",
+  );
+  for (const entity of snapshot.entities) {
+    if (entity.monsterId !== CORRECT_PORTAL_MONSTER_ID) continue;
+    fires.push({
+      cueId: voiceCueIds.portal,
+      instanceKey: entityInstanceKey(entity),
+    });
+  }
+  for (const cast of skillCasts) {
+    if (cast.skillId !== GRAVITY_BLAST_SKILL_ID) continue;
+    if (entitiesByUuid.get(cast.entityUuid)?.kind !== "boss") continue;
+    fires.push({
+      cueId: voiceCueIds.gravity,
+      instanceKey: skillCastInstanceKey(cast),
+    });
+  }
+  return fires;
+}
 
 export type MechanicView = {
   rows: MechanicRow[];

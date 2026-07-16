@@ -366,8 +366,7 @@ export type SceneChangePayload = {
 
 export type DamageSnapshot = BindingDamageSnapshot;
 export type DeathBuffSnapshot = BindingDeathBuffSnapshot;
-export type DeathParticipantBuffSnapshot =
-  BindingDeathParticipantBuffSnapshot;
+export type DeathParticipantBuffSnapshot = BindingDeathParticipantBuffSnapshot;
 export type DeathRecord = BindingDeathRecord;
 
 export type DeathReplayPayload = {
@@ -553,3 +552,42 @@ export const getLatestModules = (): Promise<ModuleInfo[]> =>
 export const optimizeLatestModules = (
   payload: OptimizeLatestPayload,
 ): Promise<ModuleSolution[]> => invoke("optimize_latest_modules", payload);
+
+// -- Voice (offline TTS broadcasting) event payloads --------------------
+// These mirror `voice::model_manager::ModelDownloadProgress` and
+// `voice::models::VoiceGenerationProgress` on the Rust side. They are not
+// part of `bindings.ts` because event payloads aren't reachable from a
+// `#[tauri::command]` return type in this project's specta setup.
+
+export type VoiceModelDownloadProgressPayload =
+  | { kind: "fileStart"; name: string; totalBytes: number }
+  | {
+      kind: "fileProgress";
+      name: string;
+      downloadedBytes: number;
+      totalBytes: number;
+    }
+  | { kind: "fileVerifying"; name: string }
+  | { kind: "fileDone"; name: string }
+  | { kind: "allDone"; modelVersion: string }
+  | { kind: "error"; error: string }
+  | { kind: "cancelled" };
+
+export const onVoiceModelDownloadProgress = (
+  handler: (event: Event<VoiceModelDownloadProgressPayload>) => void,
+): Promise<UnlistenFn> =>
+  listen<VoiceModelDownloadProgressPayload>(
+    "voice-model-download-progress",
+    handler,
+  );
+
+export type VoiceGenerationProgressPayload =
+  | { kind: "stage"; stage: string; status: string; error: string | null }
+  | { kind: "item"; id: string; status: string; error: string | null }
+  | { kind: "finished"; completed: number; failed: number }
+  | { kind: "fatal"; error: string };
+
+export const onVoiceGenerationProgress = (
+  handler: (event: Event<VoiceGenerationProgressPayload>) => void,
+): Promise<UnlistenFn> =>
+  listen<VoiceGenerationProgressPayload>("voice-generation-progress", handler);

@@ -10,6 +10,7 @@
         "core:event:default",
         "dialog:default",
         "dialog:allow-save",
+        "dialog:allow-open",
         "svelte:default",
         "global-shortcut:default",
         "opener:default",

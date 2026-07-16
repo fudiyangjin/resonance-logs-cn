@@ -787,8 +787,8 @@ mod tests {
 
     #[test]
     fn attr_value_float_conversion() {
-        let val = AttrValue::Float(3.14);
-        assert_eq!(val.as_float(), Some(3.14));
+        let val = AttrValue::Float(3.125);
+        assert_eq!(val.as_float(), Some(3.125));
         assert_eq!(val.as_int(), None);
     }
 

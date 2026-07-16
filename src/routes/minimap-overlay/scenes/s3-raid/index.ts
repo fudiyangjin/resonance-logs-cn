@@ -1,11 +1,18 @@
 import type { MinimapEntity } from "$lib/api";
 import type { SceneDefinition } from "../../scene-types";
 import { arenaByPlayerY, arenaLayout, yInArena } from "./arena";
-import { buildMechanicView } from "./mechanics";
+import {
+  buildMechanicView,
+  resolveRaidVoiceCues,
+  S3_RAID_VOICE_CUES,
+} from "./mechanics";
 
 export const s3RaidScene: SceneDefinition = {
   id: "s3-raid",
+  season: 3,
   sceneIds: [13021, 13022, 13023],
+  voiceCues: S3_RAID_VOICE_CUES,
+  resolveVoiceCues: resolveRaidVoiceCues,
   resolveView(snapshot, displayName, skillCasts = []) {
     const localPlayer =
       snapshot.entities.find(

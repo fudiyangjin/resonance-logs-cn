@@ -4,6 +4,7 @@ import type {
   MinimapSkillCast,
   MinimapSnapshot,
 } from "$lib/api";
+import type { MessageKey } from "$lib/i18n/index.svelte";
 
 export type MapLine = {
   x1: number;
@@ -94,8 +95,33 @@ export type SceneView = {
   entitySafeStatus?: Map<string, boolean>;
 };
 
+/**
+ * A voice-bindable mechanic cue a scene can fire, as listed on the minimap
+ * settings page for the user to bind a phrase to.
+ */
+export type MinimapVoiceCueDef = {
+  /** Unique across all scenes, e.g. "s3-raid.electromagneticRing". */
+  id: string;
+  labelKey: MessageKey;
+  /** Default spoken text offered when the binding source is "auto". */
+  autoText: string;
+};
+
+/** One occurrence of a registered voice cue, produced by `resolveVoiceCues`. */
+export type MinimapVoiceCueFire = {
+  cueId: string;
+  /**
+   * Distinguishes concurrent/rapid occurrences of the same cue so the
+   * player's `fireOnce` dedup doesn't collapse two genuinely separate
+   * instances (e.g. a per-cast key combining skill id and cast time).
+   */
+  instanceKey: string;
+};
+
 export type SceneDefinition = {
   id: string;
+  /** Content season used to group scene settings, e.g. 3 for S3. */
+  season: number;
   sceneIds: readonly number[];
   resolveView: (
     snapshot: MinimapSnapshot,
@@ -106,6 +132,19 @@ export type SceneDefinition = {
     skillCasts: MinimapSkillCast[];
     displayName: (entity: MinimapEntity) => string;
   }) => MechanicRow[];
+  /** Every voice cue this scene can fire, for the settings page to enumerate. */
+  voiceCues?: MinimapVoiceCueDef[];
+  /**
+   * Called on every `minimap-update` tick with that tick's fresh skill-cast
+   * delta (not the accumulated log `resolveView` receives), so each
+   * qualifying mechanic occurrence appears here exactly once. Kept separate
+   * from `resolveView` so cue-firing side effects never leak into the pure
+   * render-view computation.
+   */
+  resolveVoiceCues?: (
+    snapshot: MinimapSnapshot,
+    skillCasts: MinimapSkillCast[],
+  ) => MinimapVoiceCueFire[];
 };
 
 export function emptySceneView(

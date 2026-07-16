@@ -1,6 +1,12 @@
 import type { MinimapEntity, MinimapSnapshot } from "$lib/api";
 import { t, type MessageKey } from "$lib/i18n/index.svelte";
-import type { MechanicRegion, MechanicRow } from "../../../scene-types";
+import type {
+  MechanicRegion,
+  MechanicRow,
+  MinimapVoiceCueDef,
+  MinimapVoiceCueFire,
+} from "../../../scene-types";
+import { resolveBuffVoiceCues } from "../../../voice-cue-utils";
 
 export type SeaRingedReefMechanicView = {
   regions: MechanicRegion[];
@@ -34,6 +40,26 @@ const RUNE_BUFFS: Record<number, { labelKey: MessageKey; colorSlot: number }> =
     883710: { labelKey: textKeys.runeD, colorSlot: 0 },
   };
 
+export const MATRIX_CALLOUT_VOICE_CUE_ID = "s3-sea-ringed-reef.matrixCallout";
+
+export const S3_SEA_RINGED_REEF_MATRIX_VOICE_CUES: MinimapVoiceCueDef[] = [
+  {
+    id: MATRIX_CALLOUT_VOICE_CUE_ID,
+    labelKey: textKeys.calloutGroup,
+    autoText: "矩阵机关点名",
+  },
+];
+
+export function resolveMatrixVoiceCues(
+  snapshot: MinimapSnapshot,
+): MinimapVoiceCueFire[] {
+  return resolveBuffVoiceCues(
+    snapshot,
+    { [CALLOUT_BUFF_ID]: MATRIX_CALLOUT_VOICE_CUE_ID },
+    "localTarget",
+  );
+}
+
 export function buildMatrixMechanicView(
   snapshot: MinimapSnapshot,
   displayName: (entity: MinimapEntity) => string,
@@ -63,7 +89,9 @@ export function buildMatrixMechanicView(
     const target = entitiesByUuid.get(buff.targetEntityUuid);
     if (!target) continue;
 
-    const source = buff.fireUuid ? entitiesByUuid.get(buff.fireUuid) : undefined;
+    const source = buff.fireUuid
+      ? entitiesByUuid.get(buff.fireUuid)
+      : undefined;
     const sourceColorSlot =
       source && source.monsterId === MATRIX_MONSTER_ID
         ? (matrixColorByUuid.get(source.entityUuid) ??

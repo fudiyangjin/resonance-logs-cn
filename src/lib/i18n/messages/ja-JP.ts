@@ -77,11 +77,13 @@ export const jaJPMessages = {
     "メカニック／ダメージ名で検索して禁止ダメージを追加します。現在の戦闘区間でいずれかのメンバーが受けると、DPS／ヒール／被ダメのリストで名前の後ろに赤い三角が表示され、途中でチャレンジ失敗を判断できます。",
   "challengeWatch.presets.title": "チャレンジプリセット（ワンクリック）",
   "challengeWatch.preset.n17Fuyoupao": "N17-墓煌・浮遊砲",
-  "challengeWatch.searchPlaceholder": "メカニック／ダメージ名で検索（例：浮遊砲）",
+  "challengeWatch.searchPlaceholder":
+    "メカニック／ダメージ名で検索（例：浮遊砲）",
   "challengeWatch.searchNoResults": "一致するダメージ名が見つかりません",
   "challengeWatch.searchCount": "{count} 件一致",
   "challengeWatch.groupCount": "ダメージ {count} 件",
-  "challengeWatch.searchMore": "先頭 {shown} 件のみ表示、検索を絞り込んでください",
+  "challengeWatch.searchMore":
+    "先頭 {shown} 件のみ表示、検索を絞り込んでください",
   "challengeWatch.configuredTitle": "禁止中のダメージ",
   "challengeWatch.empty": "禁止ダメージは未追加です",
   "challengeWatch.remove": "削除",
@@ -914,8 +916,7 @@ export const jaJPMessages = {
   "skillMonitor.main.enabled.label": "ライブモニターを有効化",
   "skillMonitor.main.enabled.description":
     "有効にすると、モニターデータをリアルタイムでオーバーレイウィンドウに送信",
-  "skillMonitor.main.autoHideInDailyScenes.label":
-    "日常シーンで自動的に非表示",
+  "skillMonitor.main.autoHideInDailyScenes.label": "日常シーンで自動的に非表示",
   "skillMonitor.main.autoHideInDailyScenes.description":
     "日常シーンのブラックリストに入るとスキルオーバーレイを自動的に非表示にし、離れると復元します。",
   "skillMonitor.tabs.skillCd": "スキル CD",
@@ -1027,6 +1028,16 @@ export const jaJPMessages = {
   "skillMonitor.buff.alert.highlightColor": "ハイライト色",
   "skillMonitor.buff.alert.flash": "点滅",
   "skillMonitor.buff.alert.remove": "アラートを削除",
+  "skillMonitor.buff.voice.title": "音声読み上げ",
+  "skillMonitor.buff.voice.description":
+    "監視中のバフに対して、獲得時／残り x 秒／終了時の音声読み上げを設定します",
+  "skillMonitor.buff.voice.addPlaceholder":
+    "監視中のバフを検索して音声読み上げを追加",
+  "skillMonitor.buff.voice.emptySearch":
+    "追加できるバフがありません（監視中で未設定のものが必要です）",
+  "skillMonitor.buff.voice.empty": "まだ音声読み上げが設定されていません",
+  "skillMonitor.buff.voice.configuredCount": "{count} 件設定済み",
+  "skillMonitor.buff.voice.remove": "読み上げを削除",
   "skillMonitor.buff.category.title": "カテゴリクイックモニター",
   "skillMonitor.buff.category.selectedTitle": "選択したカテゴリ",
   "skillMonitor.buff.category.empty": "カテゴリが選択されていません",
@@ -1123,10 +1134,13 @@ export const jaJPMessages = {
   "skillMonitor.customPanel.rule.placeholder": "例: 居合 + Tick エネルギー",
   "skillMonitor.customPanel.rule.sources": "Source を選択",
   "skillMonitor.customPanel.rule.slots": "Slot を選択",
+  "skillMonitor.customPanel.rule.voiceTitle": "音声読み上げ",
   "skillMonitor.customPanel.counter.title": "カウンターを追加",
   "skillMonitor.customPanel.counter.description":
     "カウンタースロットはグローバルに一意で、1つのモニターエリアにのみ所属可能。プリセットとカスタムルールを一緒に表示。",
   "skillMonitor.customPanel.counter.add": "クリックで追加",
+  "skillMonitor.customPanel.counter.voiceConfigure": "音声読み上げを設定",
+  "skillMonitor.customPanel.counter.voiceConfigured": "音声読み上げ設定済み",
   "skillMonitor.customPanel.entries.title": "現在のグループエントリ",
   "skillMonitor.customPanel.entries.empty":
     "現在のモニターエリアにエントリがありません",
@@ -1164,7 +1178,8 @@ export const jaJPMessages = {
   "skillMonitor.overlay.resource": "リソースモニターエリア: {state}",
   "skillMonitor.overlay.panelAttr": "キャラクター属性エリア: {state}",
   "skillMonitor.overlay.panelAttrGroupTag": "キャラクター属性エリア",
-  "skillMonitor.overlay.sharedTextStyle": "その他オーバーレイ文字（スキル/リソース/Buffアイコン）",
+  "skillMonitor.overlay.sharedTextStyle":
+    "その他オーバーレイ文字（スキル/リソース/Buffアイコン）",
   "skillMonitor.panelAttr.textStyle": "テキストスタイル",
   "skillMonitor.overlay.customPanel": "カスタムモニターエリア: {state}",
   "skillMonitor.overlay.shieldDetail": "HP/シールドエリア: {state}",
@@ -1250,6 +1265,19 @@ export const jaJPMessages = {
   "monsterMonitor.alert.highlightColor": "ハイライト色",
   "monsterMonitor.alert.flash": "点滅",
   "monsterMonitor.alert.remove": "アラートを削除",
+  "monsterMonitor.buffVoice.title": "バフ音声読み上げ",
+  "monsterMonitor.buffVoice.description":
+    "監視中のモンスターバフから選び、獲得・終了前・終了時の読み上げを設定します。",
+  "monsterMonitor.buffVoice.addPlaceholder":
+    "モンスターバフを検索して音声読み上げを追加",
+  "monsterMonitor.buffVoice.emptySearch":
+    "追加できるバフがありません。先に監視へ追加するか、自身付与の全監視を有効にしてください。",
+  "monsterMonitor.buffVoice.empty":
+    "モンスターバフの音声読み上げはまだ設定されていません",
+  "monsterMonitor.buffVoice.configuredCount": "{count} 件設定済み",
+  "monsterMonitor.buffVoice.remove": "読み上げを削除",
+  "monsterMonitor.buffVoice.scope.anySource": "全体",
+  "monsterMonitor.buffVoice.scope.localPlayerSource": "自身付与のみ",
   "monsterMonitor.alias.title": "表示名",
   "monsterMonitor.alias.empty":
     "先にモニターするモンスター Buff を選択し、ここで別名を設定してください。",
@@ -1291,10 +1319,13 @@ export const jaJPMessages = {
   "monsterMonitor.bossDbm.alias.description":
     "Boss スキルを検索して既定のスキル名を上書きするカスタム表示名を設定します。",
   "monsterMonitor.bossDbm.alias.searchPlaceholder": "スキル名または ID を検索",
-  "monsterMonitor.bossDbm.alias.emptySearch": "一致する Boss スキルがありません。",
+  "monsterMonitor.bossDbm.alias.emptySearch":
+    "一致する Boss スキルがありません。",
   "monsterMonitor.bossDbm.alias.empty":
     "別名が未設定です。上部で検索してスキルを追加してください。",
   "monsterMonitor.bossDbm.alias.remove": "削除",
+  "monsterMonitor.bossDbm.voice.title": "音声読み上げ",
+  "monsterMonitor.buff.title": "対象バフ",
   "monsterMonitor.overlay.state.show": "表示",
   "monsterMonitor.overlay.state.hide": "非表示",
   "monsterMonitor.overlay.help": "ボタンをクリックして表示を切替。",
@@ -1467,8 +1498,7 @@ export const jaJPMessages = {
   "minimap.settings.display.title": "表示オプション",
   "minimap.settings.display.description":
     "戦闘中のミニマップ情報量を調整し、不要なノイズを減らします。",
-  "minimap.settings.autoHideInDailyScenes.label":
-    "日常シーンで自動的に非表示",
+  "minimap.settings.autoHideInDailyScenes.label": "日常シーンで自動的に非表示",
   "minimap.settings.autoHideInDailyScenes.description":
     "日常シーンのブラックリストに入るとミニマップオーバーレイを自動的に非表示にし、離れると以前の表示状態を復元します。",
   "minimap.settings.hideNormalTeammates.label":
@@ -1516,6 +1546,11 @@ export const jaJPMessages = {
   "minimap.settings.localFacing.label": "向きを表示",
   "minimap.settings.localFacing.description":
     "有効にすると、自分のマーカーに現在の向きを指す小さな矢印を描画します。",
+  "minimap.settings.voiceCues.title": "ギミック音声通知",
+  "minimap.settings.voiceCues.description":
+    "各マップで対応済みのギミックに音声通知を割り当てます。展開してBuff/ボスと同じ方法で設定できます。",
+  "minimap.settings.voiceCues.empty":
+    "現在、音声通知に対応したギミックはどのマップにもありません。",
   "minimap.settings.sizes.title": "エンティティサイズ",
   "minimap.settings.sizes.description":
     "ミニマップ上の各エンティティの表示半径(px)",
@@ -1625,4 +1660,179 @@ export const jaJPMessages = {
   "minimap.s3TinaMindrealm.pizzaGroup": "ピザ危険域",
   "minimap.s3TinaMindrealm.pizzaSlow": "ピザ・遅い波",
   "minimap.s3TinaMindrealm.pizzaFast": "ピザ・速い波",
+
+  "routes.tools.voice": "音声読み上げ",
+
+  "voice.title": "音声読み上げ",
+  "voice.description":
+    "オフライン音声クローンと固定フレーズ読み上げ。再生時にモデルを再読み込みしません",
+
+  "voice.tabs.overview": "概要と再生",
+  "voice.tabs.model": "モデルと音声",
+  "voice.tabs.phrases": "フレーズ集",
+
+  "voice.overview.playback.title": "再生設定",
+  "voice.overview.playback.description":
+    "音声読み上げの総合スイッチ、音量、キュー戦略を設定します",
+  "voice.overview.enabled": "音声読み上げを有効化",
+  "voice.overview.enabledDescription":
+    "無効にするとすべてのトリガールールが再生されません",
+  "voice.overview.volume": "音量：{value}%",
+  "voice.overview.queuePolicy": "再生キュー戦略",
+  "voice.overview.queue.drop": "キューが満杯の場合は低優先度を破棄",
+  "voice.overview.queue.interrupt": "高優先度は現在の再生を中断できます",
+  "voice.overview.stopPlayback": "再生停止",
+  "voice.backend.title": "音声生成アクセラレーション",
+  "voice.backend.auto": "自動",
+  "voice.backend.cpu": "CPU",
+  "voice.backend.vulkan": "Vulkan",
+  "voice.backend.ready": "利用可能",
+  "voice.backend.missing": "利用不可または未インストール",
+  "voice.backend.recommended": "推奨",
+  "voice.overview.status.title": "状態概要",
+  "voice.overview.status.refresh": "更新",
+  "voice.overview.status.model": "モデル",
+  "voice.overview.status.modelMissing": "未インストール",
+  "voice.overview.status.sidecar": "生成エンジン",
+  "voice.overview.status.sidecarReady": "利用可能",
+  "voice.overview.status.sidecarMissing": "qwen3-tts-sidecar が見つかりません",
+  "voice.overview.status.profiles": "音声プロファイル数",
+  "voice.overview.status.phrases": "フレーズ数",
+  "voice.overview.status.generating": "音声を生成中です…",
+
+  "voice.model.title": "音声モデル",
+  "voice.model.description":
+    "モデルはアプリ本体とは別に単独でダウンロード・管理されます",
+  "voice.model.installed": "インストール済み",
+  "voice.model.notInstalled": "モデルが未インストールです",
+  "voice.model.remove": "削除",
+  "voice.model.manifestPlaceholder": "モデル manifest の URL",
+  "voice.model.install": "ダウンロードしてインストール",
+  "voice.model.downloading": "ダウンロード中…",
+  "voice.model.verifying": "検証中…",
+  "voice.model.cancel": "キャンセル",
+  "voice.model.cancelling": "キャンセル中…",
+  "voice.model.verifyIntegrity": "整合性を検証",
+  "voice.model.verifyingIntegrity": "整合性を検証中…",
+  "voice.model.verifySuccess": "モデルの整合性を確認しました",
+  "voice.model.verifyFailed": "モデルの整合性検証に失敗しました",
+  "voice.operation.conflict":
+    "別の音声操作を実行中です。完了後に再試行してください。",
+  "voice.model.import.title": "変換済みモデルを手動でインポート（代替手段）",
+  "voice.model.import.versionPlaceholder": "モデルバージョン",
+  "voice.model.import.action": "ファイルを選んでインポート",
+  "voice.model.import.dialogTitle": "モデルファイルを選択",
+  "voice.model.profiles.title": "音声プロファイル",
+  "voice.model.finetuned.title": "ユーザー微調整音声",
+  "voice.model.finetuned.description":
+    "EasyFinetuning が出力した GGUF パッケージを参照します。外部モデルはコピーも削除もされません。",
+  "voice.model.finetuned.dialogTitle": "微調整音声パッケージを選択",
+  "voice.model.finetuned.import": "インポート",
+  "voice.model.finetuned.replace": "置換",
+  "voice.model.finetuned.relink": "再リンク",
+  "voice.model.finetuned.remove": "参照を削除",
+  "voice.model.finetuned.verify": "整合性を確認",
+  "voice.model.finetuned.verifySuccess":
+    "デプロイパッケージの整合性確認に成功しました。",
+  "voice.model.finetuned.ready": "使用可能",
+  "voice.model.finetuned.missing": "パスがありません",
+  "voice.model.finetuned.modified": "ファイルが変更されました",
+  "voice.model.finetuned.empty": "ユーザー微調整音声は設定されていません。",
+  "voice.model.finetuned.replaceConfirm":
+    "微調整音声「{old}」\n{oldPath}\nを「{next}」\n{nextPath}\nに置き換えますか？既存の音声は保持され、古い状態としてマークされます。",
+  "voice.model.finetuned.removeConfirm":
+    "微調整音声の参照を削除しますか？外部モデルファイルは削除されません。",
+  "voice.model.profiles.description":
+    "保存済みの音声（speaker embedding）で、フレーズ生成時に再利用できます",
+  "voice.model.profiles.embeddingDim": "次元数：{dim}",
+  "voice.model.profiles.empty":
+    "音声プロファイルがありません。「フレーズ集」で新しい音声を作成してください",
+
+  "voice.phrases.title": "フレーズ集",
+  "voice.phrases.description":
+    "「機構が来た」「バフ終了」などの固定読み上げテキストを管理します",
+  "voice.phrases.namePlaceholder": "フレーズ名",
+  "voice.phrases.textPlaceholder": "読み上げテキスト",
+  "voice.phrases.add": "フレーズを追加",
+  "voice.phrases.edit": "編集",
+  "voice.phrases.save": "保存",
+  "voice.phrases.cancelEdit": "キャンセル",
+  "voice.phrases.tryPlay": "試聴",
+  "voice.phrases.empty": "フレーズがありません。上で追加してください",
+  "voice.phrases.asset.active": "使用中",
+  "voice.phrases.asset.stale": "再生成が必要",
+  "voice.phrases.asset.confirm": "これを使用",
+  "voice.phrases.asset.empty": "まだ音声が生成されていません",
+  "voice.language.zhCN": "中国語",
+  "voice.language.enUS": "英語",
+  "voice.language.jaJP": "日本語",
+
+  "voice.phrases.generate.title": "一括生成",
+  "voice.phrases.generate.description":
+    "音声ソースとフレーズを選んで生成し、試聴後に確定できます",
+  "voice.phrases.generate.modelRequired":
+    "先に「モデルと音声」でモデルをインストールしてください",
+  "voice.phrases.generate.useExisting": "既存の音声を使用",
+  "voice.phrases.generate.createNew": "新しい音声を作成",
+  "voice.phrases.generate.pickProfile": "音声プロファイルを選択",
+  "voice.phrases.generate.cloneSource": "クローン音声",
+  "voice.phrases.generate.finetunedSource": "微調整音声",
+  "voice.phrases.generate.finetunedUnavailable":
+    "微調整音声が未設定、見つからない、または変更されています。モデルページで修復してください。",
+  "voice.phrases.generate.newProfileName": "新しい音声名",
+  "voice.phrases.generate.pickReference": "参照音声（WAV）を選択",
+  "voice.phrases.generate.pickReferenceTitle": "参照音声を選択",
+  "voice.phrases.generate.keepReference": "参照音声ファイルを保持する",
+  "voice.phrases.generate.selectedCount": "{count} 件のフレーズを選択中",
+  "voice.phrases.generate.selectAll": "すべて選択",
+  "voice.phrases.generate.selectNone": "選択を解除",
+  "voice.phrases.generate.start": "生成開始",
+  "voice.phrases.generate.generating": "生成中…",
+  "voice.phrases.generate.cancel": "生成をキャンセル",
+  "voice.phrases.generate.cancelling": "キャンセル中…",
+  "voice.phrases.generate.cancelled": "生成をキャンセルしました",
+  "voice.phrases.generate.stage": "{stage}：{status}",
+  "voice.phrases.generate.summary": "完了 {completed} 件、失敗 {failed} 件",
+
+  "voice.binding.event.gained": "獲得時に読み上げ",
+  "voice.binding.event.expiring": "残り x 秒で読み上げ",
+  "voice.binding.event.lost": "終了時に読み上げ",
+  "voice.binding.event.threshold": "目標達成時に読み上げ",
+  "voice.binding.event.onCast": "発生時に読み上げ",
+  "voice.binding.source.auto": "自動生成",
+  "voice.binding.source.custom": "カスタムテキスト",
+  "voice.binding.source.phrase": "フレーズ集から参照",
+  "voice.binding.autoPreview": "読み上げ内容：{text}",
+  "voice.binding.customPlaceholder": "カスタムの読み上げテキストを入力",
+  "voice.binding.pickPhrase": "フレーズを選択",
+  "voice.binding.secondsBefore": "{seconds} 秒前",
+  "voice.binding.tryPlay": "試聴",
+  "voice.binding.pendingGeneration": "生成待ち",
+  "voice.binding.playFailed":
+    "再生に失敗しました。音声モデルがインストールされているか確認してください",
+
+  "voice.tabs.bindings": "読み上げ総覧",
+  "voice.bindings.description":
+    "バフ監視・カスタムカウンター・ボス機構で設定された全ての音声バインディングを一覧表示します（読み取り専用）",
+  "voice.bindings.empty":
+    "音声バインディングがまだ設定されていません。バフ監視／カウンター／ボス機構ページでインラインに設定してください",
+  "voice.bindings.column.subject": "対象",
+  "voice.bindings.column.event": "イベント",
+  "voice.bindings.column.source": "ソース",
+  "voice.bindings.column.status": "状態",
+  "voice.bindings.status.ready": "準備完了",
+  "voice.bindings.status.pending": "生成待ち",
+  "voice.bindings.navigate.buff": "バフ監視へ",
+  "voice.bindings.navigate.counter": "カウンターへ",
+  "voice.bindings.navigate.dbm": "ボス機構へ",
+  "voice.bindings.navigate.monsterBuff": "モンスター監視へ",
+  "voice.bindings.navigate.minimap": "ダンジョンギミックへ",
+  "voice.bindings.generateMissing": "不足分の音声を一括生成",
+  "voice.bindings.generateMissing.generating": "生成中…",
+  "voice.bindings.generateMissing.needProfile":
+    "先に「モデルと音声」でモデルをインストールし、音声を選択してください",
+  "voice.bindings.generateMissing.none": "生成待ちの音声はありません",
+  "voice.bindings.generateMissing.summary":
+    "{count} 件の音声生成を送信しました",
+  "voice.bindings.tryPlay": "試聴",
 };

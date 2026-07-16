@@ -1,11 +1,18 @@
 import type { MinimapEntity, MinimapMarker } from "$lib/api";
 import type { MechanicRegion, SceneDefinition } from "../../scene-types";
 import { arenaLayout, inBossArea, toArenaLocal, yInArena } from "./arena";
-import { buildMechanicView } from "./mechanics";
+import {
+  buildMechanicView,
+  resolveCursedTombVoiceCues,
+  S3_CURSED_TOMB_VOICE_CUES,
+} from "./mechanics";
 
 export const s3CursedTombScene: SceneDefinition = {
   id: "s3-cursed-tomb",
+  season: 3,
   sceneIds: [6513, 6514, 6515],
+  voiceCues: S3_CURSED_TOMB_VOICE_CUES,
+  resolveVoiceCues: resolveCursedTombVoiceCues,
   resolveView(snapshot, displayName, skillCasts = []) {
     const layout = arenaLayout();
     const mechanicView = buildMechanicView(snapshot, displayName, skillCasts);

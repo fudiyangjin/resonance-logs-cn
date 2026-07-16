@@ -246,6 +246,183 @@ export const DEFAULT_LIVE_SORT_SETTINGS = {
   tankedSkills: { sortKey: "totalDmg", sortDesc: true },
 };
 
+export type VoiceTriggerKind = "buffGained" | "buffLost" | "bossDbm";
+
+export type VoiceTriggerSetting =
+  | { kind: "buffGained"; buffId: number }
+  | { kind: "buffLost"; buffId: number }
+  | { kind: "bossDbm"; baseSkillId: number };
+
+export type VoiceRuleSetting = {
+  id: string;
+  enabled: boolean;
+  trigger: VoiceTriggerSetting;
+  phraseId: string;
+  priority: number;
+  cooldownMs: number;
+};
+
+export type VoiceQueuePolicySetting =
+  | "dropLowPriority"
+  | "interruptForHigherPriority";
+
+export type VoiceGenerationBackendSetting = "auto" | "cpu" | "vulkan";
+export type VoiceSourceSetting = "clone" | "fineTuned";
+
+export type VoicePhraseSetting = {
+  id: string;
+  name: string;
+  text: string;
+  language: "zhCn" | "enUs" | "jaJp";
+};
+
+export type VoiceSettingsConfig = {
+  enabled: boolean;
+  volume: number;
+  queuePolicy: VoiceQueuePolicySetting;
+  rules: VoiceRuleSetting[];
+  selectedProfileId: string | null;
+  selectedSource: VoiceSourceSetting;
+  generationBackend: VoiceGenerationBackendSetting;
+};
+
+export function createDefaultVoiceSettings(): VoiceSettingsConfig {
+  return {
+    enabled: false,
+    volume: 1,
+    queuePolicy: "dropLowPriority",
+    rules: [],
+    selectedProfileId: null,
+    selectedSource: "clone",
+    generationBackend: "auto",
+  };
+}
+
+/**
+ * Where a voice binding's spoken text comes from. `auto` derives a template
+ * phrase from the subject's display name (see `voice-binding-compile.ts`);
+ * `custom` lets the user type their own short line; `phrase` points at an
+ * existing entry in the phrase library for reuse across bindings.
+ */
+export type VoicePhraseBinding =
+  | { source: "auto" }
+  | { source: "custom"; text: string }
+  | { source: "phrase"; phraseId: string };
+
+export function createDefaultVoicePhraseBinding(): VoicePhraseBinding {
+  return { source: "auto" };
+}
+
+/** A single trigger (e.g. "buff gained") toggled on/off with its phrase. */
+export type VoiceEventConfig = {
+  enabled: boolean;
+  phrase: VoicePhraseBinding;
+};
+
+/** Like `VoiceEventConfig`, but for triggers that fire ahead of an expiry. */
+export type VoiceExpiringEventConfig = VoiceEventConfig & {
+  secondsBefore: number;
+};
+
+export function createDefaultVoiceEventConfig(): VoiceEventConfig {
+  return { enabled: false, phrase: createDefaultVoicePhraseBinding() };
+}
+
+export function createDefaultVoiceExpiringEventConfig(
+  secondsBefore = 5,
+): VoiceExpiringEventConfig {
+  return { ...createDefaultVoiceEventConfig(), secondsBefore };
+}
+
+/** Voice bindings for a single monitored buff: gained / about to expire / lost. */
+export type BuffVoiceConfig = {
+  gained?: VoiceEventConfig;
+  expiring?: VoiceExpiringEventConfig;
+  lost?: VoiceEventConfig;
+};
+
+export type BuffVoiceConfigMap = Record<string, BuffVoiceConfig>;
+
+export function ensureBuffVoiceConfigs(
+  configs: BuffVoiceConfigMap | null | undefined,
+): BuffVoiceConfigMap {
+  const next: BuffVoiceConfigMap = {};
+  for (const [buffId, config] of Object.entries(configs ?? {})) {
+    if (config.gained || config.expiring || config.lost) {
+      next[buffId] = config;
+    }
+  }
+  return next;
+}
+
+/** Voice bindings for one slot of a counter rule. */
+export type CounterSlotVoiceConfig = {
+  threshold?: VoiceEventConfig;
+  expiring?: VoiceExpiringEventConfig;
+};
+
+export type CounterVoiceConfigMap = Record<string, CounterSlotVoiceConfig>;
+export type PresetCounterVoiceConfigMap = Record<string, CounterVoiceConfigMap>;
+
+export function ensureCounterVoiceConfigs(
+  configs: CounterVoiceConfigMap | null | undefined,
+): CounterVoiceConfigMap {
+  const next: CounterVoiceConfigMap = {};
+  for (const [slotId, config] of Object.entries(configs ?? {})) {
+    const parsedSlotId = Number(slotId);
+    if (!Number.isInteger(parsedSlotId) || parsedSlotId <= 0 || !config) {
+      continue;
+    }
+    if (config.threshold || config.expiring) {
+      next[slotId] = config;
+    }
+  }
+  return next;
+}
+
+export function ensurePresetCounterVoiceConfigs(
+  configs: PresetCounterVoiceConfigMap | null | undefined,
+): PresetCounterVoiceConfigMap {
+  const next: PresetCounterVoiceConfigMap = {};
+  for (const [ruleId, slotConfigs] of Object.entries(configs ?? {})) {
+    const parsedRuleId = Number(ruleId);
+    if (!Number.isInteger(parsedRuleId) || parsedRuleId <= 0) continue;
+    const normalized = ensureCounterVoiceConfigs(slotConfigs);
+    if (Object.keys(normalized).length > 0) {
+      next[ruleId] = normalized;
+    }
+  }
+  return next;
+}
+
+export function hasEnabledCounterVoiceConfig(
+  configs: CounterVoiceConfigMap | null | undefined,
+): boolean {
+  return Object.values(ensureCounterVoiceConfigs(configs)).some(
+    (config) => config.threshold?.enabled || config.expiring?.enabled,
+  );
+}
+
+/** Voice bindings for one boss DBM mechanic: on cast / about to expire. */
+export type DbmVoiceConfig = {
+  onCast?: VoiceEventConfig;
+  expiring?: VoiceExpiringEventConfig;
+};
+
+export type DbmVoiceConfigMap = Record<string, DbmVoiceConfig>;
+
+export function ensureDbmVoiceConfigs(
+  configs: DbmVoiceConfigMap | null | undefined,
+): DbmVoiceConfigMap {
+  const next: DbmVoiceConfigMap = {};
+  for (const [baseSkillId, config] of Object.entries(configs ?? {})) {
+    if (config.onCast || config.expiring) {
+      next[baseSkillId] = config;
+    }
+  }
+  return next;
+}
+
 export type ShortcutSettingId = keyof typeof DEFAULT_SETTINGS.shortcuts;
 
 export type Point = {
@@ -310,7 +487,26 @@ export type MinimapConfig = {
   localRing: MinimapLocalRing;
   localFacing: MinimapLocalFacing;
   infoPanelStyle: MinimapInfoPanelStyle;
+  /**
+   * Voice bindings for scene-specific mechanic cues (see
+   * `SceneDefinition.voiceCues` in the minimap overlay), keyed by cue id.
+   * Each cue has a single on-trigger event, unlike buffs/DBM which also
+   * support expiring/lost.
+   */
+  mechanicVoiceConfigs?: MechanicVoiceConfigMap;
 };
+
+export type MechanicVoiceConfigMap = Record<string, VoiceEventConfig>;
+
+export function ensureMechanicVoiceConfigs(
+  configs: MechanicVoiceConfigMap | null | undefined,
+): MechanicVoiceConfigMap {
+  const next: MechanicVoiceConfigMap = {};
+  for (const [cueId, config] of Object.entries(configs ?? {})) {
+    if (config) next[cueId] = config;
+  }
+  return next;
+}
 
 export type PanelAttrConfig = {
   attrId: number;
@@ -717,6 +913,15 @@ export type MonsterMonitorConfig = {
   fantasyWhitelistMonsterIds: number[];
   fantasyMonsterAliases: Record<string, string>;
   dbmAliases: Record<string, string>;
+  /** Keyed by boss DBM base skill id (as a string). */
+  dbmVoiceConfigs?: DbmVoiceConfigMap;
+  /**
+   * Voice bindings for the current attack target's buffs, keyed by buff
+   * base id (as a string). Same shape as the skill-monitor profile's
+   * `buffVoiceConfigs` (gained/expiring/lost); reuses `BuffVoiceConfigMap`
+   * since the two are otherwise unrelated settings scopes.
+   */
+  monsterBuffVoiceConfigs?: BuffVoiceConfigMap;
   fantasyShowAll: boolean;
   fantasyPersistentDisplay: boolean;
   buffPriorityIds: number[];
@@ -767,6 +972,8 @@ export type UserCounterRule = {
   name: string;
   sourceRefs: string[];
   slotRefs: string[];
+  /** Keyed by 1-based slot index (as a string), matching `slotRefs` order. */
+  voice?: CounterVoiceConfigMap;
 };
 
 export type PanelAreaRowRef = { type: "attr"; attrId: number };
@@ -810,6 +1017,10 @@ export type SkillMonitorProfile = {
   monitoredPanelAttrs: PanelAttrConfig[];
   buffPriorityIds: number[];
   buffAlerts?: BuffAlertMap;
+  /** Keyed by buff base id (as a string). */
+  buffVoiceConfigs?: BuffVoiceConfigMap;
+  /** Voice overrides for immutable counter presets, keyed by rule id. */
+  presetCounterVoiceConfigs?: PresetCounterVoiceConfigMap;
   buffDisplayMode: BuffDisplayMode;
   buffGroups: BuffGroup[];
   individualMonitorAllGroup?: BuffGroup | null;
@@ -1163,6 +1374,8 @@ export function createDefaultSkillMonitorProfile(
     })),
     buffPriorityIds: [],
     buffAlerts: {},
+    buffVoiceConfigs: {},
+    presetCounterVoiceConfigs: {},
     buffDisplayMode: "individual",
     buffGroups: [],
     individualMonitorAllGroup: null,
@@ -1196,6 +1409,8 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     fantasyWhitelistMonsterIds: [],
     fantasyMonsterAliases: {},
     dbmAliases: {},
+    dbmVoiceConfigs: {},
+    monsterBuffVoiceConfigs: {},
     fantasyShowAll: false,
     fantasyPersistentDisplay: false,
     buffPriorityIds: [],
@@ -1254,6 +1469,7 @@ export function createDefaultMinimapConfig(): MinimapConfig {
     infoPanelStyle: {
       backgroundOpacity: 0.76,
     },
+    mechanicVoiceConfigs: {},
   };
 }
 
@@ -1623,6 +1839,7 @@ const DEFAULT_SETTINGS = {
   },
   monsterMonitor: createDefaultMonsterMonitorConfig(),
   minimap: createDefaultMinimapConfig(),
+  voice: createDefaultVoiceSettings(),
   challengeWatch: {
     forbiddenDamageIds: [] as number[],
   },
@@ -1727,6 +1944,7 @@ export const SETTINGS = {
     DEFAULT_SETTINGS.minimap,
     RUNE_STORE_OPTIONS,
   ),
+  voice: new RuneStore("voice", DEFAULT_SETTINGS.voice, RUNE_STORE_OPTIONS),
   challengeWatch: new RuneStore(
     "challengeWatch",
     DEFAULT_SETTINGS.challengeWatch,
@@ -1913,6 +2131,7 @@ export const settings = {
     skillMonitor: SETTINGS.skillMonitor.state,
     monsterMonitor: SETTINGS.monsterMonitor.state,
     minimap: SETTINGS.minimap.state,
+    voice: SETTINGS.voice.state,
     challengeWatch: SETTINGS.challengeWatch.state,
     live: {
       general: SETTINGS.live.general.state,

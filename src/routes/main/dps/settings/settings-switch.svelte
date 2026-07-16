@@ -3,10 +3,12 @@
     label = "",
     description = "",
     checked = $bindable(false),
+    onCheckedChange,
   }: {
     label: string;
     description?: string | undefined;
     checked: boolean | undefined;
+    onCheckedChange?: (checked: boolean) => void;
   } = $props();
 
   // If checked is undefined, give it a default (e.g. false)
@@ -15,11 +17,15 @@
   }
 </script>
 
-<label class="flex items-center gap-3 py-2.5 px-3 rounded-md hover:bg-popover/50 cursor-pointer transition-colors group">
+<label
+  class="flex items-center gap-3 py-2.5 px-3 rounded-md hover:bg-popover/50 cursor-pointer transition-colors group"
+>
   <div class="relative flex items-center justify-center shrink-0">
     <input
       type="checkbox"
       bind:checked
+      onchange={(event) =>
+        onCheckedChange?.((event.currentTarget as HTMLInputElement).checked)}
       class="peer appearance-none w-5 h-5 border-2 border-border rounded bg-popover cursor-pointer transition-all
              checked:bg-primary checked:border-primary
              hover:border-border/80 checked:hover:border-primary/80
@@ -38,9 +44,15 @@
     </svg>
   </div>
   <div class="flex-1 min-w-0">
-  <div class="text-sm font-medium text-foreground group-hover:text-foreground transition-colors">{label}</div>
+    <div
+      class="text-sm font-medium text-foreground group-hover:text-foreground transition-colors"
+    >
+      {label}
+    </div>
     {#if description}
-  <div class="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</div>
+      <div class="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+        {description}
+      </div>
     {/if}
   </div>
 </label>

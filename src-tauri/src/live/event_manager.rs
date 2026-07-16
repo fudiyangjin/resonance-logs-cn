@@ -135,6 +135,9 @@ pub enum OutboundEvent {
     DeathReplay(Vec<DeathRecord>),
     MinimapUpdate(MinimapUpdatePayload),
     BossDbmUpdate(Vec<BossDbmEvent>),
+    /// Resolved voice cues from the rule engine. Not emitted to the frontend;
+    /// drained by the live loop and forwarded straight to `VoiceService`.
+    VoiceCue(Vec<crate::voice::models::VoiceCueIntent>),
 }
 
 impl EventManager {
@@ -210,6 +213,13 @@ impl EventManager {
         }
         self.outbound_events
             .push(OutboundEvent::BossDbmUpdate(events));
+    }
+
+    pub fn emit_voice_cues(&mut self, cues: Vec<crate::voice::models::VoiceCueIntent>) {
+        if cues.is_empty() {
+            return;
+        }
+        self.outbound_events.push(OutboundEvent::VoiceCue(cues));
     }
 
     /// Returns whether the `EventManager` should emit events.

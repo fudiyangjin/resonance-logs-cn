@@ -26,7 +26,7 @@ Search by keyword, pick from the result grid; buffs already on the other list sh
 - Show when present on the monster—**any** applier (Boss mechanics, raid debuffs, etc.).
 - Selected buffs removable by click.
 
-A buff can be on self-only, global, or both (search shows current assignment); removing from both lists also clears its **priority** and **alert** config.
+A buff belongs to either self-only or global monitoring. Choosing the other mode moves it there. Removing it from monitoring also clears its **priority**, **alert**, and **voice broadcast** config.
 
 ## Buff Priority
 
@@ -40,6 +40,14 @@ Per **monitored monster buff**:
 
 - Highlight when remaining time **≤ set seconds** (color, optional blink)
 - Only for buffs in self-only or global lists
+
+## Buff Voice Broadcast
+
+Use the standalone **Buff Voice Broadcast** section to search monitored buffs and configure gain, expiring, and loss broadcasts. Each entry is labeled Global or Self-applied.
+
+- **Self-applied** tracks only instances whose caster is your character; matching buffs from teammates do not trigger or extend your cue.
+- **Global** tracks aggregate presence: the first instance counts as gained, the last instance disappearing counts as lost, and expiry uses the last instance's timer.
+- With monitor-all self-applied enabled, the full buff dictionary is searchable, but each voice binding remains opt-in.
 
 ## Display Names
 

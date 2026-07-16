@@ -1,5 +1,6 @@
 use crate::live::counter_tracker::CounterRule;
 use crate::live::season_cultivate::{FactorCounterTemplate, normalize_factor_templates};
+use crate::voice::models::VoiceRuntimeSnapshot;
 use log::{info, warn};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::path::PathBuf;
@@ -66,6 +67,7 @@ pub struct MonitorRuntimeSnapshot {
     pub skill: SkillRuntimeSnapshot,
     pub monster: MonsterRuntimeSnapshot,
     pub teammate: TeammateRuntimeSnapshot,
+    pub voice: VoiceRuntimeSnapshot,
 }
 
 impl Default for MonitorRuntimeSnapshot {
@@ -76,6 +78,7 @@ impl Default for MonitorRuntimeSnapshot {
             skill: SkillRuntimeSnapshot::default(),
             monster: MonsterRuntimeSnapshot::default(),
             teammate: TeammateRuntimeSnapshot::default(),
+            voice: VoiceRuntimeSnapshot::default(),
         }
     }
 }
@@ -143,6 +146,16 @@ impl MonitorRuntimeSnapshot {
             self.teammate.local_player_source_ids.clear();
             self.teammate.target_self_source_ids.clear();
             self.teammate.monitor_all = false;
+        }
+
+        self.voice.volume = self.voice.volume.clamp(0.0, 1.0);
+        self.voice.rules.sort_by(|a, b| a.id.cmp(&b.id));
+        self.voice.rules.dedup_by(|a, b| a.id == b.id);
+        for rule in &mut self.voice.rules {
+            rule.cooldown_ms = rule.cooldown_ms.min(600_000);
+        }
+        if !self.voice.enabled {
+            self.voice.rules.clear();
         }
 
         Ok(self)
