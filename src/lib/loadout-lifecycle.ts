@@ -3,6 +3,7 @@ import type { Loadout } from "./settings-store";
 export type ProfilesToCollect = {
   skillProfileId: string | null;
   monsterProfileId: string | null;
+  liveProfileId: string | null;
 };
 
 export function profilesToCollectAfterLoadoutRemoval(
@@ -20,5 +21,10 @@ export function profilesToCollectAfterLoadoutRemoval(
     )
       ? null
       : removed.monsterProfileId,
+    liveProfileId: remaining.some(
+      (item) => item.liveProfileId === removed.liveProfileId,
+    )
+      ? null
+      : removed.liveProfileId,
   };
 }

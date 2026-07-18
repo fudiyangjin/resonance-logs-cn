@@ -22,6 +22,7 @@ export const jaJPMessages = {
   "loadout.page.deleteConfirm": "このロードアウトを削除しますか？",
   "loadout.page.skillProfileLabel": "スキル監視プロファイル",
   "loadout.page.monsterProfileLabel": "モンスター監視プロファイル",
+  "loadout.page.liveProfileLabel": "リアルタイム計測プロファイル",
   "loadout.page.presetsTitle": "プリセット",
   "loadout.page.presetsDescription":
     "クラス別に完全なロードアウト（スキル監視＋モンスター監視）をすばやく作成できます。作成後は自由に調整できます",
@@ -54,6 +55,7 @@ export const jaJPMessages = {
   "routes.tools.skillMonitor": "ライブモニター",
   "routes.tools.monsterMonitor": "モンスターモニター",
   "routes.tools.minimap": "ダンジョンギミック",
+  "routes.tools.appSettings": "アプリ設定",
   "routes.dps.history": "履歴",
   "routes.dps.themes": "テーマ",
   "routes.dps.settings": "設定",
@@ -118,6 +120,19 @@ export const jaJPMessages = {
   "settings.tabs.history": "履歴",
   "settings.tabs.debug": "デバッグ",
   "settings.tabs.language": "言語",
+  "settings.scope.live":
+    "リアルタイム計測の設定は現在のリアルタイム計測プロファイルに保存され、構成のエクスポート時に一緒に出力されます。",
+  "settings.scope.history":
+    "履歴統計は端末ごとの設定であり、エクスポートには含まれません。",
+  "appSettings.title": "アプリ設定",
+  "appSettings.description":
+    "アプリ全体の設定：パケットキャプチャ・グローバルショートカット・言語・診断。これらは構成のエクスポートに含まれません。",
+  "appSettings.tabs.general": "一般",
+  "appSettings.tabs.network": "ネットワーク",
+  "appSettings.tabs.shortcuts": "ショートカット",
+  "appSettings.tabs.diagnostics": "診断",
+  "appSettings.language.title": "言語",
+  "appSettings.language.description": "インターフェースの表示言語を切り替えます。",
   "challengeWatch.title": "チャレンジ監視（禁止ダメージ）",
   "challengeWatch.description":
     "メカニック／ダメージ名で検索して禁止ダメージを追加します。現在の戦闘区間でいずれかのメンバーが受けると、DPS／ヒール／被ダメのリストで名前の後ろに赤い三角が表示され、途中でチャレンジ失敗を判断できます。",
@@ -1254,6 +1269,17 @@ export const jaJPMessages = {
   "monsterMonitor.profile.renamePrompt": "新しいプロファイル名を入力",
   "monsterMonitor.profile.deleteConfirm":
     "このモンスター監視プロファイルを削除しますか？参照しているロードアウトは先頭のプロファイルにフォールバックします。",
+  "live.defaults.defaultProfileName": "デフォルトプロファイル",
+  "live.defaults.profileName": "プロファイル {index}",
+  "live.profile.title": "リアルタイム計測プロファイル",
+  "live.profile.pickerDescription":
+    "現在のロードアウトが参照するリアルタイム計測プロファイル。ここで切り替え・管理できます。構成の組み合わせは「構成」ページへ。",
+  "live.profile.new": "新規プロファイル",
+  "live.profile.rename": "名前変更",
+  "live.profile.delete": "削除",
+  "live.profile.renamePrompt": "新しいプロファイル名を入力",
+  "live.profile.deleteConfirm":
+    "このリアルタイム計測プロファイルを削除しますか？参照しているロードアウトは先頭のプロファイルにフォールバックします。",
   "monsterMonitor.enabled": "モンスターモニターを有効化",
   "monsterMonitor.autoHideInDailyScenes.label": "日常シーンで自動的に非表示",
   "monsterMonitor.autoHideInDailyScenes.description":

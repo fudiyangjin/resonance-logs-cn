@@ -26,6 +26,7 @@
     saveAndApplyMonitorRuntimeSnapshot,
   } from "$lib/runtime-monitor-sync";
   import { onMount, untrack } from "svelte";
+  import { activeProfileOrDefault } from "$lib/skill-monitor-profile.svelte.js";
   import {
     ensureVoiceListeners,
     refreshVoiceStatus,
@@ -92,9 +93,9 @@
   });
 
   $effect(() => {
-    const enabled = SETTINGS.skillMonitor.state.enabled;
-    const autoHideInDailyScenes =
-      SETTINGS.skillMonitor.state.autoHideInDailyScenes ?? false;
+    const profile = activeProfileOrDefault();
+    const enabled = profile.enabled;
+    const autoHideInDailyScenes = profile.autoHideInDailyScenes ?? false;
     const shouldShow =
       enabled && !(autoHideInDailyScenes && isDailyScene(currentSceneId));
 

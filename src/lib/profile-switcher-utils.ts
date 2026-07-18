@@ -1,6 +1,6 @@
 import { t } from "$lib/i18n/index.svelte";
 
-export type MonitorProfileKind = "skill" | "monster";
+export type MonitorProfileKind = "skill" | "monster" | "live";
 
 export function profileDisplayName(
   kind: MonitorProfileKind,
@@ -14,7 +14,12 @@ export function profileDisplayName(
       ? t("skillMonitor.defaults.defaultProfileName")
       : t("skillMonitor.defaults.profileName", { index: index + 1 });
   }
+  if (kind === "monster") {
+    return index === 0
+      ? t("monsterMonitor.defaults.defaultProfileName")
+      : t("monsterMonitor.defaults.profileName", { index: index + 1 });
+  }
   return index === 0
-    ? t("monsterMonitor.defaults.defaultProfileName")
-    : t("monsterMonitor.defaults.profileName", { index: index + 1 });
+    ? t("live.defaults.defaultProfileName")
+    : t("live.defaults.profileName", { index: index + 1 });
 }

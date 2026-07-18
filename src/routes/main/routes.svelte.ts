@@ -4,6 +4,7 @@
 import type { MessageKey } from "$lib/i18n/index.svelte";
 import ActivityIcon from "virtual:icons/lucide/activity";
 import CalculatorIcon from "virtual:icons/lucide/calculator";
+import CogIcon from "virtual:icons/lucide/cog";
 import HourglassIcon from "virtual:icons/lucide/hourglass";
 import LayersIcon from "virtual:icons/lucide/layers";
 import MapIcon from "virtual:icons/lucide/map";
@@ -44,6 +45,10 @@ export const TOOL_ROUTES = {
   "/main/voice": {
     labelKey: "routes.tools.voice",
     icon: MicIcon,
+  },
+  "/main/app-settings": {
+    labelKey: "routes.tools.appSettings",
+    icon: CogIcon,
   },
 } satisfies Record<string, RouteDefinition>;
 

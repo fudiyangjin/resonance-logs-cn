@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createDefaultLoadoutsState,
+  createDefaultLiveMeterProfileData,
   createDefaultMonitoringSettingsState,
   createDefaultMonsterMonitorProfile,
   createDefaultSkillMonitorProfile,
@@ -10,8 +11,13 @@ import {
   canAttemptMonitoringRecovery,
   isMonitoringRecoveryAuthority,
   migrateLegacyMonitoringState,
+  migrateMonitoringStateIncrementally,
   reconcileMonitoringState,
 } from "./settings-migrations";
+
+function defaultLiveProfileData() {
+  return createDefaultLiveMeterProfileData();
+}
 
 describe("monitoring recovery coordination", () => {
   it("allows only the main window to coordinate recovery", () => {
@@ -41,6 +47,7 @@ describe("monitoring settings reconciliation", () => {
         name: "Broken",
         skillProfileId: "missing",
         monsterProfileId: "missing",
+        liveProfileId: "missing",
         starterPlaceholder: false,
       },
     ];
@@ -71,6 +78,7 @@ describe("monitoring settings reconciliation", () => {
         name: "Second",
         skillProfileId: state.skillMonitor.profiles[0]!.id,
         monsterProfileId: second.id,
+        liveProfileId: state.liveMeter.profiles[0]!.id,
         starterPlaceholder: false,
       },
     ];
@@ -89,11 +97,14 @@ describe("legacy monitoring migration", () => {
     const second = createDefaultSkillMonitorProfile("Second");
     base.skillMonitor.profiles.push(second);
 
-    const migrated = migrateLegacyMonitoringState({
-      skillMonitor: { ...base.skillMonitor, activeProfileIndex: 1 },
-      monsterMonitor: base.monsterMonitor,
-      loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
-    });
+    const migrated = migrateLegacyMonitoringState(
+      {
+        skillMonitor: { ...base.skillMonitor, activeProfileIndex: 1 },
+        monsterMonitor: base.monsterMonitor,
+        loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
+      },
+      defaultLiveProfileData(),
+    );
 
     expect(migrated.schemaVersion).toBe(CURRENT_MONITORING_SCHEMA_VERSION);
     expect(migrated.loadouts.items).toHaveLength(2);
@@ -103,11 +114,14 @@ describe("legacy monitoring migration", () => {
 
   it("keeps the first-run prompt for untouched fresh defaults", () => {
     const base = createDefaultMonitoringSettingsState();
-    const migrated = migrateLegacyMonitoringState({
-      skillMonitor: { ...base.skillMonitor, activeProfileIndex: 0 },
-      monsterMonitor: base.monsterMonitor,
-      loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
-    });
+    const migrated = migrateLegacyMonitoringState(
+      {
+        skillMonitor: { ...base.skillMonitor, activeProfileIndex: 0 },
+        monsterMonitor: base.monsterMonitor,
+        loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
+      },
+      defaultLiveProfileData(),
+    );
 
     expect(migrated.loadouts.firstRunPromptDismissed).toBe(false);
     expect(migrated.loadouts.items[0]!.starterPlaceholder).toBe(true);
@@ -170,11 +184,14 @@ describe("legacy monitoring migration", () => {
   ])("does not mark configured legacy %s as a starter", (_name, mutate) => {
     const base = createDefaultMonitoringSettingsState();
     mutate(base);
-    const migrated = migrateLegacyMonitoringState({
-      skillMonitor: { ...base.skillMonitor, activeProfileIndex: 0 },
-      monsterMonitor: base.monsterMonitor,
-      loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
-    });
+    const migrated = migrateLegacyMonitoringState(
+      {
+        skillMonitor: { ...base.skillMonitor, activeProfileIndex: 0 },
+        monsterMonitor: base.monsterMonitor,
+        loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
+      },
+      defaultLiveProfileData(),
+    );
 
     expect(migrated.loadouts.firstRunPromptDismissed).toBe(true);
     expect(migrated.loadouts.items[0]!.starterPlaceholder).toBe(false);
@@ -194,16 +211,20 @@ describe("legacy monitoring migration", () => {
         name: "Only",
         skillProfileId: firstSkill.id,
         monsterProfileId: firstMonster.id,
+        liveProfileId: base.liveMeter.profiles[0]!.id,
         starterPlaceholder: false,
       },
     ];
     base.loadouts.activeId = "loadout";
 
-    const migrated = migrateLegacyMonitoringState({
-      skillMonitor: base.skillMonitor,
-      monsterMonitor: base.monsterMonitor,
-      loadouts: { ...base.loadouts, schemaVersion: 1 },
-    });
+    const migrated = migrateLegacyMonitoringState(
+      {
+        skillMonitor: base.skillMonitor,
+        monsterMonitor: base.monsterMonitor,
+        loadouts: { ...base.loadouts, schemaVersion: 1 },
+      },
+      defaultLiveProfileData(),
+    );
 
     expect(
       migrated.skillMonitor.profiles.some((item) => item.id === orphanSkill.id),
@@ -221,11 +242,14 @@ describe("legacy monitoring migration", () => {
     configured.dbmAliases = { "101": "Mechanic" };
     base.monsterMonitor.profiles.push(configured);
 
-    const migrated = migrateLegacyMonitoringState({
-      skillMonitor: { ...base.skillMonitor, activeProfileIndex: 0 },
-      monsterMonitor: base.monsterMonitor,
-      loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
-    });
+    const migrated = migrateLegacyMonitoringState(
+      {
+        skillMonitor: { ...base.skillMonitor, activeProfileIndex: 0 },
+        monsterMonitor: base.monsterMonitor,
+        loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
+      },
+      defaultLiveProfileData(),
+    );
 
     expect(migrated.monsterMonitor.profiles).toHaveLength(2);
     expect(
@@ -234,5 +258,133 @@ describe("legacy monitoring migration", () => {
       )?.dbmAliases,
     ).toEqual({ "101": "Mechanic" });
     expect(migrated.loadouts.items[0]!.starterPlaceholder).toBe(false);
+  });
+
+  it.each([
+    [true, true],
+    [false, false],
+  ])(
+    "preserves schema zero global skill flags (%s, %s)",
+    (enabled, autoHideInDailyScenes) => {
+      const base = createDefaultMonitoringSettingsState();
+      const second = createDefaultSkillMonitorProfile("Second");
+      base.skillMonitor.profiles.push(second);
+      for (const profile of base.skillMonitor.profiles) {
+        delete (profile as Partial<typeof profile>).enabled;
+        delete (profile as Partial<typeof profile>).autoHideInDailyScenes;
+      }
+
+      const migrated = migrateLegacyMonitoringState(
+        {
+          skillMonitor: {
+            ...base.skillMonitor,
+            enabled,
+            autoHideInDailyScenes,
+            activeProfileIndex: 0,
+          },
+          monsterMonitor: base.monsterMonitor,
+          loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
+        },
+        defaultLiveProfileData(),
+      );
+
+      expect(
+        migrated.skillMonitor.profiles.every(
+          (profile) => profile.enabled === enabled,
+        ),
+      ).toBe(true);
+      expect(
+        migrated.skillMonitor.profiles.every(
+          (profile) => profile.autoHideInDailyScenes === autoHideInDailyScenes,
+        ),
+      ).toBe(true);
+    },
+  );
+
+  it("seeds schema zero live profiles from the legacy live stores", () => {
+    const base = createDefaultMonitoringSettingsState();
+    const liveProfileData = defaultLiveProfileData();
+    liveProfileData.general.eventUpdateRateMs = 733;
+    liveProfileData.tableCustomization.playerRowHeight = 47;
+    liveProfileData.headerCustomization.windowPadding = 21;
+    liveProfileData.columnOrder.dpsPlayers.order = ["dps", "name"];
+    liveProfileData.sorting.dpsPlayers = {
+      sortKey: "name",
+      sortDesc: false,
+    };
+
+    const migrated = migrateLegacyMonitoringState(
+      {
+        skillMonitor: { ...base.skillMonitor, activeProfileIndex: 0 },
+        monsterMonitor: base.monsterMonitor,
+        loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
+      },
+      liveProfileData,
+    );
+
+    const profile = migrated.liveMeter.profiles[0]!;
+    expect(profile.general.eventUpdateRateMs).toBe(733);
+    expect(profile.tableCustomization.playerRowHeight).toBe(47);
+    expect(profile.headerCustomization.windowPadding).toBe(21);
+    expect(profile.columnOrder.dpsPlayers.order).toEqual(["dps", "name"]);
+    expect(profile.sorting.dpsPlayers).toEqual({
+      sortKey: "name",
+      sortDesc: false,
+    });
+    expect(migrated.loadouts.items[0]!.liveProfileId).toBe(profile.id);
+  });
+});
+
+describe("incremental monitoring migration", () => {
+  it("uses the legacy live stores and preserves schema one resources", () => {
+    const state = createDefaultMonitoringSettingsState();
+    state.schemaVersion = 1;
+    const orphanSkill = createDefaultSkillMonitorProfile("Orphan skill");
+    const orphanMonster = createDefaultMonsterMonitorProfile("Orphan monster");
+    state.skillMonitor.profiles.push(orphanSkill);
+    state.monsterMonitor.profiles.push(orphanMonster);
+    const originalLoadoutId = "existing-loadout";
+    state.loadouts.items = [
+      {
+        id: originalLoadoutId,
+        name: "Existing",
+        skillProfileId: state.skillMonitor.profiles[0]!.id,
+        monsterProfileId: state.monsterMonitor.profiles[0]!.id,
+        liveProfileId: state.liveMeter.profiles[0]!.id,
+        starterPlaceholder: false,
+      },
+    ];
+    state.loadouts.activeId = originalLoadoutId;
+    state.liveMeter.profiles[0]!.general.eventUpdateRateMs = 111;
+
+    const liveProfileData = defaultLiveProfileData();
+    liveProfileData.general.eventUpdateRateMs = 922;
+    liveProfileData.tableCustomization.skillRowHeight = 38;
+
+    const migrated = migrateMonitoringStateIncrementally(
+      state,
+      liveProfileData,
+    );
+
+    expect(migrated.schemaVersion).toBe(CURRENT_MONITORING_SCHEMA_VERSION);
+    expect(migrated.loadouts.activeId).toBe(originalLoadoutId);
+    expect(migrated.loadouts.items[0]!.id).toBe(originalLoadoutId);
+    expect(
+      migrated.skillMonitor.profiles.some(
+        (profile) => profile.id === orphanSkill.id,
+      ),
+    ).toBe(true);
+    expect(
+      migrated.monsterMonitor.profiles.some(
+        (profile) => profile.id === orphanMonster.id,
+      ),
+    ).toBe(true);
+    expect(migrated.liveMeter.profiles[0]!.general.eventUpdateRateMs).toBe(922);
+    expect(
+      migrated.liveMeter.profiles[0]!.tableCustomization.skillRowHeight,
+    ).toBe(38);
+    expect(migrated.loadouts.items[0]!.liveProfileId).toBe(
+      migrated.liveMeter.profiles[0]!.id,
+    );
   });
 });

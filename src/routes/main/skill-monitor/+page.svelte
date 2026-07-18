@@ -84,8 +84,6 @@
 
   type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
 
-  SETTINGS.skillMonitor.state.autoHideInDailyScenes ??= false;
-
   const availableBuffs = getAvailableBuffDefinitions();
   const buffCategoryDefinitions = getBuffCategoryDefinitions();
   let buffSearch = $state("");
@@ -1619,12 +1617,19 @@
     class="border-border/60 bg-card/40 space-y-2 rounded-lg border p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
   >
     <SettingsSwitch
-      bind:checked={SETTINGS.skillMonitor.state.enabled}
+      checked={activeProfile.enabled}
+      onCheckedChange={(value) =>
+        updateActiveProfile((profile) => ({ ...profile, enabled: value }))}
       label={t("skillMonitor.main.enabled.label")}
       description={t("skillMonitor.main.enabled.description")}
     />
     <SettingsSwitch
-      bind:checked={SETTINGS.skillMonitor.state.autoHideInDailyScenes}
+      checked={activeProfile.autoHideInDailyScenes ?? false}
+      onCheckedChange={(value) =>
+        updateActiveProfile((profile) => ({
+          ...profile,
+          autoHideInDailyScenes: value,
+        }))}
       label={t("skillMonitor.main.autoHideInDailyScenes.label")}
       description={t("skillMonitor.main.autoHideInDailyScenes.description")}
     />

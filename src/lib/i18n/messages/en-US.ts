@@ -24,6 +24,7 @@ export const enUSMessages = {
   "loadout.page.deleteConfirm": "Delete this loadout?",
   "loadout.page.skillProfileLabel": "Skill monitor profile",
   "loadout.page.monsterProfileLabel": "Monster monitor profile",
+  "loadout.page.liveProfileLabel": "Live meter profile",
   "loadout.page.presetsTitle": "Presets",
   "loadout.page.presetsDescription":
     "Quickly create a complete loadout (skill monitor + monster monitor) per class, then fine-tune it yourself",
@@ -56,6 +57,7 @@ export const enUSMessages = {
   "routes.tools.skillMonitor": "Live Monitor",
   "routes.tools.monsterMonitor": "Monster Monitor",
   "routes.tools.minimap": "Dungeon Mechanics",
+  "routes.tools.appSettings": "App Settings",
   "routes.dps.history": "History",
   "routes.dps.themes": "Themes",
   "routes.dps.settings": "Settings",
@@ -120,6 +122,19 @@ export const enUSMessages = {
   "settings.tabs.history": "History",
   "settings.tabs.debug": "Debug",
   "settings.tabs.language": "Language",
+  "settings.scope.live":
+    "Live meter settings are saved with the active live meter profile and travel with the loadout when exported.",
+  "settings.scope.history":
+    "History stats are a per-machine preference and are not included in exports.",
+  "appSettings.title": "App Settings",
+  "appSettings.description":
+    "Application-level configuration: packet capture, global shortcuts, language and diagnostics. These do not travel with exported loadouts.",
+  "appSettings.tabs.general": "General",
+  "appSettings.tabs.network": "Network",
+  "appSettings.tabs.shortcuts": "Shortcuts",
+  "appSettings.tabs.diagnostics": "Diagnostics",
+  "appSettings.language.title": "Language",
+  "appSettings.language.description": "Switch the interface display language.",
   "challengeWatch.title": "Challenge Watch (Forbidden Damage)",
   "challengeWatch.description":
     "Search and add forbidden damage by mechanic / damage name. When any member takes one during the current combat segment, a red triangle appears after their name in the DPS / Heal / Tanked lists, so you can tell mid-run whether the challenge has failed.",
@@ -1270,6 +1285,17 @@ export const enUSMessages = {
   "monsterMonitor.profile.renamePrompt": "Enter a new profile name",
   "monsterMonitor.profile.deleteConfirm":
     "Delete this monster-monitor profile? Loadouts referencing it will fall back to the first profile.",
+  "live.defaults.defaultProfileName": "Default profile",
+  "live.defaults.profileName": "Profile {index}",
+  "live.profile.title": "Live Meter Profile",
+  "live.profile.pickerDescription":
+    "The live-meter sub-profile referenced by the active loadout. Switch or manage it here; for more loadout combinations visit the Loadouts page.",
+  "live.profile.new": "New profile",
+  "live.profile.rename": "Rename",
+  "live.profile.delete": "Delete",
+  "live.profile.renamePrompt": "Enter a new profile name",
+  "live.profile.deleteConfirm":
+    "Delete this live-meter profile? Loadouts referencing it will fall back to the first profile.",
   "monsterMonitor.enabled": "Enable Monster Monitor",
   "monsterMonitor.autoHideInDailyScenes.label": "Auto Hide in Daily Scenes",
   "monsterMonitor.autoHideInDailyScenes.description":

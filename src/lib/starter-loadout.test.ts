@@ -12,6 +12,7 @@ function starterLoadout(): Loadout {
     name: "Default",
     skillProfileId: "skill",
     monsterProfileId: "monster",
+    liveProfileId: "live",
     starterPlaceholder: true,
   };
 }

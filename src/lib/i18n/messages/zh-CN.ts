@@ -22,6 +22,7 @@ export const zhCNMessages = {
   "loadout.page.deleteConfirm": "确定要删除该总方案吗？",
   "loadout.page.skillProfileLabel": "技能监控子方案",
   "loadout.page.monsterProfileLabel": "怪物监控子方案",
+  "loadout.page.liveProfileLabel": "实时计量子方案",
   "loadout.page.presetsTitle": "预置方案",
   "loadout.page.presetsDescription":
     "按职业快速创建一套完整的总方案（技能监控 + 怪物监控），之后可自行调整",
@@ -53,6 +54,7 @@ export const zhCNMessages = {
   "routes.tools.skillMonitor": "实时监控",
   "routes.tools.monsterMonitor": "怪物监控",
   "routes.tools.minimap": "副本机制",
+  "routes.tools.appSettings": "应用设置",
   "routes.dps.history": "历史",
   "routes.dps.themes": "主题",
   "routes.dps.settings": "设置",
@@ -115,6 +117,17 @@ export const zhCNMessages = {
   "settings.tabs.history": "历史",
   "settings.tabs.debug": "调试",
   "settings.tabs.language": "语言",
+  "settings.scope.live": "实时计量设置随当前实时计量方案保存，可随总方案导出分享。",
+  "settings.scope.history": "历史统计设置为本机配置，不随方案导出。",
+  "appSettings.title": "应用设置",
+  "appSettings.description":
+    "应用级配置：网络抓包、全局快捷键、语言与诊断。这些设置不随方案导出。",
+  "appSettings.tabs.general": "通用",
+  "appSettings.tabs.network": "网络",
+  "appSettings.tabs.shortcuts": "快捷键",
+  "appSettings.tabs.diagnostics": "诊断",
+  "appSettings.language.title": "语言",
+  "appSettings.language.description": "切换界面显示语言。",
   "challengeWatch.title": "挑战监控（禁用伤害）",
   "challengeWatch.description":
     "按机制/伤害名称搜索并添加禁用伤害。当任意成员在当前战斗段受到这些伤害时，会在 DPS/治疗/承伤 列表中其名字后显示红色三角警告，便于中途判断挑战是否失败。",
@@ -1158,6 +1171,17 @@ export const zhCNMessages = {
   "monsterMonitor.profile.renamePrompt": "请输入新的方案名称",
   "monsterMonitor.profile.deleteConfirm":
     "确定要删除该怪物监控方案吗？引用它的总方案将回退到第一个方案。",
+  "live.defaults.defaultProfileName": "默认方案",
+  "live.defaults.profileName": "方案 {index}",
+  "live.profile.title": "实时计量方案",
+  "live.profile.pickerDescription":
+    "当前总方案引用的实时计量子方案，可在此切换或管理；更多方案组合请前往「监控方案」页",
+  "live.profile.new": "新建方案",
+  "live.profile.rename": "重命名",
+  "live.profile.delete": "删除方案",
+  "live.profile.renamePrompt": "请输入新的方案名称",
+  "live.profile.deleteConfirm":
+    "确定要删除该实时计量方案吗？引用它的总方案将回退到第一个方案。",
   "monsterMonitor.enabled": "启用怪物监控",
   "monsterMonitor.autoHideInDailyScenes.label": "日常场景自动隐藏",
   "monsterMonitor.autoHideInDailyScenes.description":

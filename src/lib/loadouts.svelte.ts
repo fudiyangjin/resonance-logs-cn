@@ -25,6 +25,12 @@ import {
   removeMonsterProfileById,
   switchMonsterProfile,
 } from "./monster-monitor-profile.svelte.js";
+import {
+  createLiveProfile,
+  getLiveProfileSnapshot,
+  removeLiveProfileById,
+  switchLiveProfile,
+} from "./live-meter-profile.svelte.js";
 import type { LoadoutPreset } from "./config/loadout-presets";
 import type { LoadoutExport } from "./loadout-import";
 import { profilesToCollectAfterLoadoutRemoval } from "./loadout-lifecycle";
@@ -53,12 +59,13 @@ export function findLoadout(id: string): Loadout | undefined {
   return SETTINGS.loadouts.state.items.find((item) => item.id === id);
 }
 
-/** Switches the active loadout, materializing its monster profile into the mirror. */
+/** Switches the active loadout, materializing its monster + live profiles into the mirror. */
 export function switchLoadout(id: string): void {
   const target = findLoadout(id);
   if (!target) return;
   SETTINGS.loadouts.state.activeId = target.id;
   switchMonsterProfile(target.monsterProfileId);
+  switchLiveProfile(target.liveProfileId);
 }
 
 function ensureUniqueLoadoutName(baseName: string): string {
@@ -80,6 +87,7 @@ export function createLoadout(options?: {
   name?: string;
   skillProfileId?: string;
   monsterProfileId?: string;
+  liveProfileId?: string;
   activate?: boolean;
 }): string {
   const skillState = SETTINGS.skillMonitor.state;
@@ -92,6 +100,7 @@ export function createLoadout(options?: {
     })();
   const monsterProfileId =
     options?.monsterProfileId ?? createMonsterProfile("");
+  const liveProfileId = options?.liveProfileId ?? createLiveProfile("");
 
   const id = generateProfileId("loadout");
   const name = ensureUniqueLoadoutName(
@@ -102,6 +111,7 @@ export function createLoadout(options?: {
     name,
     skillProfileId,
     monsterProfileId,
+    liveProfileId,
     starterPlaceholder: false,
   };
   SETTINGS.loadouts.state.items = [...SETTINGS.loadouts.state.items, loadout];
@@ -144,17 +154,23 @@ export function duplicateLoadout(id: string): string | null {
   const newMonsterProfileId = duplicateMonsterProfileFor(
     source.monsterProfileId,
   );
+  const newLiveProfileId = duplicateLiveProfileFor(source.liveProfileId);
 
   return createLoadout({
     name: t("loadout.defaults.copyName", { name: source.name }),
     skillProfileId: newSkillProfile.id,
     monsterProfileId: newMonsterProfileId,
+    liveProfileId: newLiveProfileId,
     activate: false,
   });
 }
 
 function duplicateMonsterProfileFor(sourceProfileId: string): string {
   return createMonsterProfile("", getMonsterProfileSnapshot(sourceProfileId));
+}
+
+function duplicateLiveProfileFor(sourceProfileId: string): string {
+  return createLiveProfile("", getLiveProfileSnapshot(sourceProfileId));
 }
 
 /** Removes a loadout. Always keeps at least one loadout around. */
@@ -186,6 +202,10 @@ export function removeLoadout(id: string): void {
   if (profilesToCollect.monsterProfileId) {
     removeMonsterProfileById(profilesToCollect.monsterProfileId);
   }
+
+  if (profilesToCollect.liveProfileId) {
+    removeLiveProfileById(profilesToCollect.liveProfileId);
+  }
 }
 
 export function setLoadoutSkillProfile(
@@ -211,6 +231,21 @@ export function setLoadoutMonsterProfile(
   );
   if (state.activeId === loadoutId) {
     switchMonsterProfile(monsterProfileId);
+  }
+}
+
+export function setLoadoutLiveProfile(
+  loadoutId: string,
+  liveProfileId: string,
+): void {
+  const state = SETTINGS.loadouts.state;
+  state.items = state.items.map((item) =>
+    item.id === loadoutId
+      ? { ...item, liveProfileId, starterPlaceholder: false }
+      : item,
+  );
+  if (state.activeId === loadoutId) {
+    switchLiveProfile(liveProfileId);
   }
 }
 
@@ -251,6 +286,24 @@ export function removeSkillProfileEverywhere(skillProfileId: string): void {
       ? { ...item, skillProfileId: fallbackId, starterPlaceholder: false }
       : item,
   );
+}
+
+/** Removes a live-meter profile, re-pointing any loadouts that referenced it. */
+export function removeLiveProfileEverywhere(liveProfileId: string): void {
+  const fallbackId = removeLiveProfileById(liveProfileId);
+  if (!fallbackId) return;
+  const state = SETTINGS.loadouts.state;
+  state.items = state.items.map((item) =>
+    item.liveProfileId === liveProfileId
+      ? { ...item, liveProfileId: fallbackId, starterPlaceholder: false }
+      : item,
+  );
+  if (
+    findLoadout(state.activeId)?.liveProfileId === fallbackId &&
+    SETTINGS.monitoring.state.liveMeter.mirroredProfileId !== fallbackId
+  ) {
+    switchLiveProfile(fallbackId);
+  }
 }
 
 /** Creates a brand-new loadout (with its own fresh profiles) from a built-in preset. */
@@ -326,7 +379,8 @@ export function exportLoadout(id: string): LoadoutExport | null {
     (profile) => profile.id === loadout.skillProfileId,
   );
   const monsterProfile = getMonsterProfileSnapshot(loadout.monsterProfileId);
-  if (!skillProfile || !monsterProfile) return null;
+  const liveProfile = getLiveProfileSnapshot(loadout.liveProfileId);
+  if (!skillProfile || !monsterProfile || !liveProfile) return null;
 
   return {
     kind: "resonance-logs-loadout",
@@ -334,6 +388,7 @@ export function exportLoadout(id: string): LoadoutExport | null {
     name: loadout.name,
     skillProfile: omitProfileId(skillProfile),
     monsterProfile: omitProfileId(monsterProfile),
+    liveProfile: omitProfileId(liveProfile),
   };
 }
 
@@ -352,10 +407,16 @@ export function importLoadout(data: LoadoutExport): string {
     data.monsterProfile,
   );
 
+  const liveProfileId = createLiveProfile(
+    data.liveProfile?.name ?? "",
+    data.liveProfile,
+  );
+
   return createLoadout({
     name: data.name,
     skillProfileId: skillProfile.id,
     monsterProfileId,
+    liveProfileId,
     activate: false,
   });
 }

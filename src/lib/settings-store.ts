@@ -1010,6 +1010,8 @@ export type BuffGroup = {
 export type SkillMonitorProfile = {
   id: string;
   name: string;
+  enabled: boolean;
+  autoHideInDailyScenes: boolean;
   selectedClass: string;
   monitoredSkillIds: number[];
   monitoredSkillDurationIds: number[];
@@ -1392,6 +1394,8 @@ export function createDefaultSkillMonitorProfile(
   return {
     id: generateProfileId("skill"),
     name,
+    enabled: false,
+    autoHideInDailyScenes: false,
     selectedClass: classKey,
     monitoredSkillIds: [],
     monitoredSkillDurationIds: [],
@@ -1459,12 +1463,13 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
 
 /**
  * The subset of `MonsterMonitorConfig` that varies per monster-monitor
- * profile. Excludes the fields that stay global regardless of which
- * profile is active (on/off switch, daily-scene auto-hide, buff aliases).
+ * profile. Excludes only the fields that stay global regardless of which
+ * profile is active (buff aliases). The on/off switch and daily-scene
+ * auto-hide are per-profile so they travel with exported loadouts.
  */
 export type MonsterMonitorProfileData = Omit<
   MonsterMonitorConfig,
-  "enabled" | "autoHideInDailyScenes" | "buffAliases"
+  "buffAliases"
 >;
 
 export type MonsterMonitorProfile = MonsterMonitorProfileData & {
@@ -1488,14 +1493,14 @@ export type MonsterMonitorState = MonsterMonitorConfig & {
 };
 
 export type SkillMonitorState = {
-  enabled: boolean;
-  autoHideInDailyScenes: boolean;
   buffAliases: BuffAliasMap;
   profiles: SkillMonitorProfile[];
 };
 
 /** Field names that belong to a monster-monitor profile (mirror <-> profile sync). */
 export const MONSTER_PROFILE_FIELD_KEYS = [
+  "enabled",
+  "autoHideInDailyScenes",
   "hateListEnabled",
   "hateListMaxDisplay",
   "stunListEnabled",
@@ -1542,10 +1547,7 @@ void _monsterProfileFieldKeysExhaustive;
 export function createDefaultMonsterMonitorProfile(
   name = "",
 ): MonsterMonitorProfile {
-  const { enabled, autoHideInDailyScenes, buffAliases, ...profileData } =
-    createDefaultMonsterMonitorConfig();
-  void enabled;
-  void autoHideInDailyScenes;
+  const { buffAliases, ...profileData } = createDefaultMonsterMonitorConfig();
   void buffAliases;
   return {
     ...profileData,
@@ -1573,8 +1575,6 @@ export function createDefaultMonsterMonitorState(): MonsterMonitorState {
   void id;
   void name;
   return {
-    enabled: false,
-    autoHideInDailyScenes: false,
     buffAliases: {},
     ...profileData,
     mirroredProfileId: profile.id,
@@ -1587,6 +1587,7 @@ export type Loadout = {
   name: string;
   skillProfileId: string;
   monsterProfileId: string;
+  liveProfileId: string;
   /** True only for the untouched system-created first-run placeholder. */
   starterPlaceholder: boolean;
 };
@@ -1606,24 +1607,165 @@ export function createDefaultLoadoutsState(): LoadoutsState {
   };
 }
 
+export type LiveMeterColumnOrderState = {
+  dpsPlayers: { order: string[] };
+  dpsSkills: { order: string[] };
+  healPlayers: { order: string[] };
+  healSkills: { order: string[] };
+  tankedPlayers: { order: string[] };
+  tankedSkills: { order: string[] };
+};
+
+export type LiveMeterSortingState = {
+  dpsPlayers: { sortKey: string; sortDesc: boolean };
+  dpsSkills: { sortKey: string; sortDesc: boolean };
+  healPlayers: { sortKey: string; sortDesc: boolean };
+  healSkills: { sortKey: string; sortDesc: boolean };
+  tankedPlayers: { sortKey: string; sortDesc: boolean };
+  tankedSkills: { sortKey: string; sortDesc: boolean };
+};
+
+/**
+ * The subset of live-meter settings that varies per loadout. The live-meter
+ * profile is "mirrored" onto the individual live RuneStores (see
+ * `live-meter-profile.svelte.ts`) so every existing consumer of
+ * `SETTINGS.live.*.state.*` keeps working unchanged; only switching loadouts
+ * needs to go through the mirror module.
+ */
+export type LiveMeterProfileData = {
+  general: typeof DEFAULT_SETTINGS.live.general;
+  dpsPlayers: typeof DEFAULT_SETTINGS.live.dpsPlayers;
+  dpsSkillBreakdown: typeof DEFAULT_SETTINGS.live.dpsSkillBreakdown;
+  healPlayers: typeof DEFAULT_SETTINGS.live.healPlayers;
+  healSkillBreakdown: typeof DEFAULT_SETTINGS.live.healSkillBreakdown;
+  tankedPlayers: typeof DEFAULT_SETTINGS.live.tankedPlayers;
+  tankedSkillBreakdown: typeof DEFAULT_SETTINGS.live.tankedSkillBreakdown;
+  tableCustomization: typeof DEFAULT_SETTINGS.live.tableCustomization;
+  headerCustomization: typeof DEFAULT_SETTINGS.live.headerCustomization;
+  columnOrder: LiveMeterColumnOrderState;
+  sorting: LiveMeterSortingState;
+};
+
+export type LiveMeterProfile = LiveMeterProfileData & {
+  id: string;
+  name: string;
+};
+
+export type LiveMeterState = {
+  /** Id of the profile currently materialized into the live RuneStores. */
+  mirroredProfileId: string;
+  profiles: LiveMeterProfile[];
+};
+
+export function createDefaultLiveMeterProfileData(): LiveMeterProfileData {
+  return {
+    general: { ...DEFAULT_GENERAL_SETTINGS },
+    dpsPlayers: { ...DEFAULT_STATS },
+    dpsSkillBreakdown: { ...DEFAULT_STATS },
+    healPlayers: { ...DEFAULT_STATS },
+    healSkillBreakdown: { ...DEFAULT_STATS },
+    tankedPlayers: { ...DEFAULT_LIVE_TANKED_PLAYER_STATS },
+    tankedSkillBreakdown: { ...DEFAULT_LIVE_TANKED_SKILL_STATS },
+    tableCustomization: { ...DEFAULT_LIVE_TABLE_SETTINGS },
+    headerCustomization: {
+      windowPadding: 12,
+      headerPadding: 8,
+      headerLayoutMode: "classic" as HeaderLayoutMode,
+      headerCustomLayout: cloneHeaderCustomLayout() as HeaderCustomLayout,
+      showTimer: true,
+      showActiveTimer: false,
+      showSceneName: true,
+      showResetButton: true,
+      showPauseButton: true,
+      showBossOnlyButton: true,
+      showSettingsButton: true,
+      showMinimizeButton: true,
+      showHeaderControl: true,
+      showTotalDamage: true,
+      showTotalDps: true,
+      showBossHealth: true,
+      showNavigationTabs: true,
+      showDeathTab: false,
+      timerLabelFontSize: 12,
+      timerFontSize: 18,
+      activeTimerFontSize: 18,
+      sceneNameFontSize: 14,
+      resetButtonSize: 20,
+      resetButtonPadding: 8,
+      pauseButtonSize: 20,
+      pauseButtonPadding: 8,
+      bossOnlyButtonSize: 20,
+      bossOnlyButtonPadding: 8,
+      settingsButtonSize: 20,
+      settingsButtonPadding: 8,
+      minimizeButtonSize: 20,
+      minimizeButtonPadding: 8,
+      totalDamageLabelFontSize: 14,
+      totalDamageValueFontSize: 18,
+      totalDpsLabelFontSize: 14,
+      totalDpsValueFontSize: 18,
+      bossHealthLayout: "vertical" as "vertical" | "horizontal",
+      bossHealthLabelFontSize: 14,
+      bossHealthNameFontSize: 14,
+      bossHealthValueFontSize: 14,
+      bossHealthPercentFontSize: 14,
+      navTabFontSize: 11,
+      navTabPaddingX: 14,
+      navTabPaddingY: 6,
+    },
+    columnOrder: {
+      dpsPlayers: { order: [...DEFAULT_DPS_PLAYER_COLUMN_ORDER] },
+      dpsSkills: { order: [...DEFAULT_DPS_SKILL_COLUMN_ORDER] },
+      healPlayers: { order: [...DEFAULT_HEAL_PLAYER_COLUMN_ORDER] },
+      healSkills: { order: [...DEFAULT_HEAL_SKILL_COLUMN_ORDER] },
+      tankedPlayers: { order: [...DEFAULT_TANKED_PLAYER_COLUMN_ORDER] },
+      tankedSkills: { order: [...DEFAULT_TANKED_SKILL_COLUMN_ORDER] },
+    },
+    sorting: {
+      dpsPlayers: { ...DEFAULT_LIVE_SORT_SETTINGS.dpsPlayers },
+      dpsSkills: { ...DEFAULT_LIVE_SORT_SETTINGS.dpsSkills },
+      healPlayers: { ...DEFAULT_LIVE_SORT_SETTINGS.healPlayers },
+      healSkills: { ...DEFAULT_LIVE_SORT_SETTINGS.healSkills },
+      tankedPlayers: { ...DEFAULT_LIVE_SORT_SETTINGS.tankedPlayers },
+      tankedSkills: { ...DEFAULT_LIVE_SORT_SETTINGS.tankedSkills },
+    },
+  };
+}
+
+export function createDefaultLiveMeterProfile(name = ""): LiveMeterProfile {
+  return {
+    ...createDefaultLiveMeterProfileData(),
+    id: generateProfileId("live"),
+    name,
+  };
+}
+
+export function createDefaultLiveMeterState(): LiveMeterState {
+  const profile = createDefaultLiveMeterProfile();
+  return {
+    mirroredProfileId: profile.id,
+    profiles: [profile],
+  };
+}
+
 export type MonitoringSettingsState = {
   schemaVersion: number;
   skillMonitor: SkillMonitorState;
   monsterMonitor: MonsterMonitorState;
   loadouts: LoadoutsState;
+  liveMeter: LiveMeterState;
 };
 
 export function createDefaultMonitoringSettingsState(): MonitoringSettingsState {
   return {
     schemaVersion: 0,
     skillMonitor: {
-      enabled: false,
-      autoHideInDailyScenes: false,
       buffAliases: {},
       profiles: [createDefaultSkillMonitorProfile()],
     },
     monsterMonitor: createDefaultMonsterMonitorState(),
     loadouts: createDefaultLoadoutsState(),
+    liveMeter: createDefaultLiveMeterState(),
   };
 }
 
@@ -2104,6 +2246,11 @@ const DEFAULT_SETTINGS = {
 
 // We need flattened settings for every update to be able to auto-detect new changes
 const RUNE_STORE_OPTIONS = { autoStart: true, saveOnChange: true };
+const LIVE_RUNE_STORE_OPTIONS = {
+  autoStart: false,
+  saveOnChange: false,
+  saveOnExit: false,
+} as const;
 const monitoringStore = new RuneStore(
   "monitoring",
   DEFAULT_SETTINGS.monitoring,
@@ -2144,6 +2291,8 @@ export const SETTINGS = {
   monsterMonitor: monitoringSection("monsterMonitor"),
   /** @deprecated Read/write through SETTINGS.monitoring.state.loadouts. */
   loadouts: monitoringSection("loadouts"),
+  /** @deprecated Read/write through SETTINGS.monitoring.state.liveMeter. */
+  liveMeter: monitoringSection("liveMeter"),
   minimap: new RuneStore(
     "minimap",
     DEFAULT_SETTINGS.minimap,
@@ -2159,85 +2308,85 @@ export const SETTINGS = {
     general: new RuneStore(
       "liveGeneral",
       DEFAULT_SETTINGS.live.general,
-      RUNE_STORE_OPTIONS,
+      LIVE_RUNE_STORE_OPTIONS,
     ),
     dps: {
       players: new RuneStore(
         "liveDpsPlayers",
         DEFAULT_SETTINGS.live.dpsPlayers,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       skillBreakdown: new RuneStore(
         "liveDpsSkillBreakdown",
         DEFAULT_SETTINGS.live.dpsSkillBreakdown,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
     },
     heal: {
       players: new RuneStore(
         "liveHealPlayers",
         DEFAULT_SETTINGS.live.healPlayers,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       skillBreakdown: new RuneStore(
         "liveHealSkillBreakdown",
         DEFAULT_SETTINGS.live.healSkillBreakdown,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
     },
     tanked: {
       players: new RuneStore(
         "liveTankedPlayers",
         DEFAULT_SETTINGS.live.tankedPlayers,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       skills: new RuneStore(
         "liveTankedSkills",
         DEFAULT_SETTINGS.live.tankedSkillBreakdown,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
     },
     tableCustomization: new RuneStore(
       "liveTableCustomization",
       DEFAULT_SETTINGS.live.tableCustomization,
-      RUNE_STORE_OPTIONS,
+      LIVE_RUNE_STORE_OPTIONS,
     ),
     headerCustomization: new RuneStore(
       "liveHeaderCustomization",
       DEFAULT_SETTINGS.live.headerCustomization,
-      RUNE_STORE_OPTIONS,
+      LIVE_RUNE_STORE_OPTIONS,
     ),
     // Column order settings
     columnOrder: {
       dpsPlayers: new RuneStore(
         "liveDpsPlayersColumnOrder",
         { order: DEFAULT_DPS_PLAYER_COLUMN_ORDER },
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       dpsSkills: new RuneStore(
         "liveDpsSkillsColumnOrder",
         { order: DEFAULT_DPS_SKILL_COLUMN_ORDER },
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       healPlayers: new RuneStore(
         "liveHealPlayersColumnOrder",
         { order: DEFAULT_HEAL_PLAYER_COLUMN_ORDER },
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       healSkills: new RuneStore(
         "liveHealSkillsColumnOrder",
         { order: DEFAULT_HEAL_SKILL_COLUMN_ORDER },
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       tankedPlayers: new RuneStore(
         "liveTankedPlayersColumnOrder",
         { order: DEFAULT_TANKED_PLAYER_COLUMN_ORDER },
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       tankedSkills: new RuneStore(
         "liveTankedSkillsColumnOrder",
         { order: DEFAULT_TANKED_SKILL_COLUMN_ORDER },
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
     },
     // Sort settings
@@ -2245,32 +2394,32 @@ export const SETTINGS = {
       dpsPlayers: new RuneStore(
         "liveDpsPlayersSorting",
         DEFAULT_LIVE_SORT_SETTINGS.dpsPlayers,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       dpsSkills: new RuneStore(
         "liveDpsSkillsSorting",
         DEFAULT_LIVE_SORT_SETTINGS.dpsSkills,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       healPlayers: new RuneStore(
         "liveHealPlayersSorting",
         DEFAULT_LIVE_SORT_SETTINGS.healPlayers,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       healSkills: new RuneStore(
         "liveHealSkillsSorting",
         DEFAULT_LIVE_SORT_SETTINGS.healSkills,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       tankedPlayers: new RuneStore(
         "liveTankedPlayersSorting",
         DEFAULT_LIVE_SORT_SETTINGS.tankedPlayers,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
       tankedSkills: new RuneStore(
         "liveTankedSkillsSorting",
         DEFAULT_LIVE_SORT_SETTINGS.tankedSkills,
-        RUNE_STORE_OPTIONS,
+        LIVE_RUNE_STORE_OPTIONS,
       ),
     },
   },
@@ -2325,6 +2474,34 @@ export const SETTINGS = {
     RUNE_STORE_OPTIONS,
   ),
 };
+
+const LIVE_METER_STORES = [
+  SETTINGS.live.general,
+  SETTINGS.live.dps.players,
+  SETTINGS.live.dps.skillBreakdown,
+  SETTINGS.live.heal.players,
+  SETTINGS.live.heal.skillBreakdown,
+  SETTINGS.live.tanked.players,
+  SETTINGS.live.tanked.skills,
+  SETTINGS.live.tableCustomization,
+  SETTINGS.live.headerCustomization,
+  SETTINGS.live.columnOrder.dpsPlayers,
+  SETTINGS.live.columnOrder.dpsSkills,
+  SETTINGS.live.columnOrder.healPlayers,
+  SETTINGS.live.columnOrder.healSkills,
+  SETTINGS.live.columnOrder.tankedPlayers,
+  SETTINGS.live.columnOrder.tankedSkills,
+  SETTINGS.live.sorting.dpsPlayers,
+  SETTINGS.live.sorting.dpsSkills,
+  SETTINGS.live.sorting.healPlayers,
+  SETTINGS.live.sorting.healSkills,
+  SETTINGS.live.sorting.tankedPlayers,
+  SETTINGS.live.sorting.tankedSkills,
+] as const;
+
+export async function startLiveMeterStores(): Promise<void> {
+  await Promise.all(LIVE_METER_STORES.map((store) => store.start()));
+}
 
 // Create flattened settings object for backwards compatibility
 export const settings = {

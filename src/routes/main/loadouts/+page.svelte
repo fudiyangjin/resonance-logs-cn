@@ -25,6 +25,7 @@
     listLoadouts,
     removeLoadout,
     renameLoadout,
+    setLoadoutLiveProfile,
     setLoadoutMonsterProfile,
     setLoadoutSkillProfile,
     switchLoadout,
@@ -39,6 +40,7 @@
   const active = $derived(activeLoadout());
   const skillProfiles = $derived(SETTINGS.skillMonitor.state.profiles);
   const monsterProfiles = $derived(SETTINGS.monsterMonitor.state.profiles);
+  const liveProfiles = $derived(SETTINGS.monitoring.state.liveMeter.profiles);
   const presets = $derived(buildLoadoutPresets(getLocale()));
 
   // Dialog states
@@ -69,6 +71,15 @@
     return index === 0
       ? t("monsterMonitor.defaults.defaultProfileName")
       : t("monsterMonitor.defaults.profileName", { index: index + 1 });
+  }
+
+  function liveProfileName(id: string, index: number): string {
+    const profile = liveProfiles.find((p) => p.id === id);
+    const trimmed = profile?.name?.trim();
+    if (trimmed) return trimmed;
+    return index === 0
+      ? t("live.defaults.defaultProfileName")
+      : t("live.defaults.profileName", { index: index + 1 });
   }
 
   function handleNewLoadout() {
@@ -299,7 +310,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
             <label class="text-muted-foreground flex flex-col gap-1 text-xs">
               {t("loadout.page.skillProfileLabel")}
               <select
@@ -332,6 +343,24 @@
                 {#each monsterProfiles as profile, idx (profile.id)}
                   <option value={profile.id}
                     >{monsterProfileName(profile.id, idx)}</option
+                  >
+                {/each}
+              </select>
+            </label>
+            <label class="text-muted-foreground flex flex-col gap-1 text-xs">
+              {t("loadout.page.liveProfileLabel")}
+              <select
+                class="border-border/60 bg-muted/30 text-foreground focus:ring-primary/50 rounded border px-2.5 py-1.5 text-sm focus:ring-2 focus:outline-none"
+                value={loadout.liveProfileId}
+                onchange={(event) =>
+                  setLoadoutLiveProfile(
+                    loadout.id,
+                    (event.currentTarget as HTMLSelectElement).value,
+                  )}
+              >
+                {#each liveProfiles as profile, idx (profile.id)}
+                  <option value={profile.id}
+                    >{liveProfileName(profile.id, idx)}</option
                   >
                 {/each}
               </select>

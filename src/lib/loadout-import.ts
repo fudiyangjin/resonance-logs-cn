@@ -1,10 +1,12 @@
 import * as v from "valibot";
 import {
   createDefaultCustomPanelGroup,
+  createDefaultLiveMeterProfileData,
   createDefaultMonsterMonitorProfile,
   createDefaultSkillMonitorProfile,
   deepCloneSettings,
   omitProfileId,
+  type LiveMeterProfile,
   type MonsterMonitorProfile,
   type SkillMonitorProfile,
 } from "./settings-store";
@@ -16,6 +18,7 @@ export type LoadoutExport = {
   name: string;
   skillProfile: Omit<SkillMonitorProfile, "id">;
   monsterProfile: Omit<MonsterMonitorProfile, "id">;
+  liveProfile: Omit<LiveMeterProfile, "id">;
 };
 
 export type LoadoutParseResult =
@@ -288,6 +291,8 @@ const defaultMonster = omitProfileId(createDefaultMonsterMonitorProfile());
 
 const skillProfileSchema = v.object({
   name: v.string(),
+  enabled: v.optional(v.boolean(), false),
+  autoHideInDailyScenes: v.optional(v.boolean(), false),
   selectedClass: v.string(),
   monitoredSkillIds: numberArraySchema,
   monitoredSkillDurationIds: numberArraySchema,
@@ -365,6 +370,8 @@ const teammateColumnSchema = v.pipe(
 
 const monsterProfileSchema = v.object({
   name: v.string(),
+  enabled: v.optional(v.boolean(), false),
+  autoHideInDailyScenes: v.optional(v.boolean(), false),
   hateListEnabled: v.boolean(),
   hateListMaxDisplay: finiteNumberSchema,
   stunListEnabled: v.boolean(),
@@ -406,12 +413,152 @@ const monsterProfileSchema = v.object({
   stunPanelStyle: customPanelStyleSchema,
 });
 
+const liveGeneralSchema = v.object({
+  showYourName: v.optional(
+    v.union([v.string(), v.boolean()]),
+    "Show Your Name",
+  ),
+  showOthersName: v.optional(
+    v.union([v.string(), v.boolean()]),
+    "Show Others' Name",
+  ),
+  showYourAbilityScore: v.optional(v.boolean(), true),
+  showOthersAbilityScore: v.optional(v.boolean(), true),
+  showYourSeasonStrength: v.optional(v.boolean(), false),
+  showOthersSeasonStrength: v.optional(v.boolean(), false),
+  relativeToTopDPSPlayer: v.optional(v.boolean(), true),
+  relativeToTopDPSSkill: v.optional(v.boolean(), true),
+  relativeToTopHealPlayer: v.optional(v.boolean(), true),
+  relativeToTopHealSkill: v.optional(v.boolean(), true),
+  relativeToTopTankedPlayer: v.optional(v.boolean(), true),
+  relativeToTopTankedSkill: v.optional(v.boolean(), true),
+  shortenAbilityScore: v.optional(v.boolean(), true),
+  shortenDps: v.optional(v.boolean(), true),
+  shortenTps: v.optional(v.boolean(), true),
+  abbreviationStyle: v.optional(v.picklist(["western", "cn"]), "western"),
+  abbreviatedDecimalPlaces: v.optional(finiteNumberSchema, 1),
+  eventUpdateRateMs: v.optional(finiteNumberSchema, 200),
+});
+
+const liveStatsSchema = v.record(v.string(), v.boolean());
+
+const liveColumnOrderEntrySchema = v.object({
+  order: v.array(v.string()),
+});
+
+const liveSortingEntrySchema = v.object({
+  sortKey: v.string(),
+  sortDesc: v.boolean(),
+});
+
+const defaultLive = createDefaultLiveMeterProfileData();
+
+const liveProfileSchema = v.object({
+  name: v.string(),
+  general: v.optional(liveGeneralSchema, defaultClone(defaultLive.general)),
+  dpsPlayers: v.optional(liveStatsSchema, defaultClone(defaultLive.dpsPlayers)),
+  dpsSkillBreakdown: v.optional(
+    liveStatsSchema,
+    defaultClone(defaultLive.dpsSkillBreakdown),
+  ),
+  healPlayers: v.optional(
+    liveStatsSchema,
+    defaultClone(defaultLive.healPlayers),
+  ),
+  healSkillBreakdown: v.optional(
+    liveStatsSchema,
+    defaultClone(defaultLive.healSkillBreakdown),
+  ),
+  tankedPlayers: v.optional(
+    liveStatsSchema,
+    defaultClone(defaultLive.tankedPlayers),
+  ),
+  tankedSkillBreakdown: v.optional(
+    liveStatsSchema,
+    defaultClone(defaultLive.tankedSkillBreakdown),
+  ),
+  tableCustomization: v.optional(
+    v.record(v.string(), v.any()),
+    defaultClone(defaultLive.tableCustomization),
+  ),
+  headerCustomization: v.optional(
+    v.record(v.string(), v.any()),
+    defaultClone(defaultLive.headerCustomization),
+  ),
+  columnOrder: v.optional(
+    v.object({
+      dpsPlayers: v.optional(
+        liveColumnOrderEntrySchema,
+        defaultClone(defaultLive.columnOrder.dpsPlayers),
+      ),
+      dpsSkills: v.optional(
+        liveColumnOrderEntrySchema,
+        defaultClone(defaultLive.columnOrder.dpsSkills),
+      ),
+      healPlayers: v.optional(
+        liveColumnOrderEntrySchema,
+        defaultClone(defaultLive.columnOrder.healPlayers),
+      ),
+      healSkills: v.optional(
+        liveColumnOrderEntrySchema,
+        defaultClone(defaultLive.columnOrder.healSkills),
+      ),
+      tankedPlayers: v.optional(
+        liveColumnOrderEntrySchema,
+        defaultClone(defaultLive.columnOrder.tankedPlayers),
+      ),
+      tankedSkills: v.optional(
+        liveColumnOrderEntrySchema,
+        defaultClone(defaultLive.columnOrder.tankedSkills),
+      ),
+    }),
+    defaultClone(defaultLive.columnOrder),
+  ),
+  sorting: v.optional(
+    v.object({
+      dpsPlayers: v.optional(
+        liveSortingEntrySchema,
+        defaultClone(defaultLive.sorting.dpsPlayers),
+      ),
+      dpsSkills: v.optional(
+        liveSortingEntrySchema,
+        defaultClone(defaultLive.sorting.dpsSkills),
+      ),
+      healPlayers: v.optional(
+        liveSortingEntrySchema,
+        defaultClone(defaultLive.sorting.healPlayers),
+      ),
+      healSkills: v.optional(
+        liveSortingEntrySchema,
+        defaultClone(defaultLive.sorting.healSkills),
+      ),
+      tankedPlayers: v.optional(
+        liveSortingEntrySchema,
+        defaultClone(defaultLive.sorting.tankedPlayers),
+      ),
+      tankedSkills: v.optional(
+        liveSortingEntrySchema,
+        defaultClone(defaultLive.sorting.tankedSkills),
+      ),
+    }),
+    defaultClone(defaultLive.sorting),
+  ),
+});
+
 const loadoutExportSchema = v.object({
   kind: v.literal("resonance-logs-loadout"),
   version: v.literal(1),
   name: v.pipe(v.string(), v.trim(), v.minLength(1)),
   skillProfile: skillProfileSchema,
   monsterProfile: monsterProfileSchema,
+  liveProfile: v.optional(
+    liveProfileSchema,
+    () =>
+      deepCloneSettings({
+        ...createDefaultLiveMeterProfileData(),
+        name: "",
+      }) as Omit<LiveMeterProfile, "id">,
+  ),
 });
 
 export function parseLoadoutExport(data: unknown): LoadoutParseResult {
@@ -422,5 +569,5 @@ export function parseLoadoutExport(data: unknown): LoadoutParseResult {
       issues: result.issues.map((issue) => issue.message),
     };
   }
-  return { success: true, output: result.output as LoadoutExport };
+  return { success: true, output: result.output as unknown as LoadoutExport };
 }

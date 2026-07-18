@@ -76,8 +76,8 @@ function stripUiOnlyCounterRuleFields(rule: {
 }
 
 function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
-  const skillMonitorEnabled = SETTINGS.skillMonitor.state.enabled;
   const profile = getActiveProfile();
+  const skillMonitorEnabled = profile?.enabled ?? false;
   const selectedClass = profile?.selectedClass ?? "wind_knight";
   const monitoredSkillIds = profile?.monitoredSkillIds ?? [];
   const monitoredSkillDurationIds = profile?.monitoredSkillDurationIds ?? [];

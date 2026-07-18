@@ -6,11 +6,17 @@ import { commands } from "./bindings";
 import {
   SETTINGS,
   createDefaultLoadoutsState,
+  createDefaultLiveMeterProfileData,
+  createDefaultLiveMeterState,
   createDefaultMonsterMonitorState,
   createDefaultSkillMonitorProfile,
   deepCloneSettings,
   extractMonsterProfileData,
   generateProfileId,
+  startLiveMeterStores,
+  type LiveMeterProfile,
+  type LiveMeterProfileData,
+  type LiveMeterState,
   type Loadout,
   type LoadoutsState,
   type MonitoringSettingsState,
@@ -22,7 +28,7 @@ import {
 import { t } from "$lib/i18n/index.svelte";
 import { isPristineLegacyMonitoring } from "./starter-loadout";
 
-export const CURRENT_MONITORING_SCHEMA_VERSION = 1;
+export const CURRENT_MONITORING_SCHEMA_VERSION = 2;
 
 const READY_EVENT = "monitoring-settings-ready";
 const ERROR_EVENT = "monitoring-settings-error";
@@ -72,6 +78,10 @@ function waitForRemoteInitialization(
 }
 
 type LegacySkillMonitorState = SkillMonitorState & {
+  // Pre-v2 global flags that now live per-profile. Kept on the legacy shape
+  // so old persisted stores can still be read during migration.
+  enabled?: boolean;
+  autoHideInDailyScenes?: boolean;
   activeProfileIndex?: number;
 };
 
@@ -110,6 +120,8 @@ function normalizeSkillProfiles(
   const seen = new Set<string>();
   return fallback.map((profile) => ({
     ...profile,
+    enabled: profile.enabled ?? false,
+    autoHideInDailyScenes: profile.autoHideInDailyScenes ?? false,
     id: nextUniqueId(profile.id, "skill", seen),
   }));
 }
@@ -131,6 +143,8 @@ function normalizeMonsterProfiles(
   const seen = new Set<string>();
   return fallback.map((profile) => ({
     ...profile,
+    enabled: profile.enabled ?? false,
+    autoHideInDailyScenes: profile.autoHideInDailyScenes ?? false,
     id: nextUniqueId(profile.id, "monster", seen),
   }));
 }
@@ -167,6 +181,7 @@ function defaultLoadoutName(
 function buildDefaultLoadouts(
   skillProfiles: SkillMonitorProfile[],
   monsterProfileId: string,
+  liveProfileId: string,
   activeProfileIndex = 0,
   starterPlaceholder = false,
 ): LoadoutsState {
@@ -175,6 +190,7 @@ function buildDefaultLoadouts(
     name: defaultLoadoutName(profile, index),
     skillProfileId: profile.id,
     monsterProfileId,
+    liveProfileId,
     starterPlaceholder: starterPlaceholder && skillProfiles.length === 1,
   }));
   const activeIndex = Math.min(
@@ -192,11 +208,14 @@ function normalizeLoadouts(
   state: LoadoutsState,
   skillProfiles: SkillMonitorProfile[],
   monsterProfiles: MonsterMonitorProfile[],
+  liveProfiles: LiveMeterProfile[],
 ): LoadoutsState {
   const skillIds = new Set(skillProfiles.map((profile) => profile.id));
   const monsterIds = new Set(monsterProfiles.map((profile) => profile.id));
+  const liveIds = new Set(liveProfiles.map((profile) => profile.id));
   const fallbackSkillId = skillProfiles[0]!.id;
   const fallbackMonsterId = monsterProfiles[0]!.id;
+  const fallbackLiveId = liveProfiles[0]!.id;
   const seen = new Set<string>();
   const items = (Array.isArray(state.items) ? state.items : []).map(
     (item, index): Loadout => ({
@@ -208,11 +227,18 @@ function normalizeLoadouts(
       monsterProfileId: monsterIds.has(item.monsterProfileId)
         ? item.monsterProfileId
         : fallbackMonsterId,
+      liveProfileId: liveIds.has(item.liveProfileId)
+        ? item.liveProfileId
+        : fallbackLiveId,
       starterPlaceholder: Boolean(item.starterPlaceholder),
     }),
   );
   if (items.length === 0) {
-    return buildDefaultLoadouts(skillProfiles, fallbackMonsterId);
+    return buildDefaultLoadouts(
+      skillProfiles,
+      fallbackMonsterId,
+      fallbackLiveId,
+    );
   }
   return {
     activeId: items.some((item) => item.id === state.activeId)
@@ -221,6 +247,42 @@ function normalizeLoadouts(
     items,
     firstRunPromptDismissed: Boolean(state.firstRunPromptDismissed),
   };
+}
+
+function normalizeLiveProfiles(
+  state: LiveMeterState | null | undefined,
+): LiveMeterState {
+  if (!state || !Array.isArray(state.profiles) || state.profiles.length === 0) {
+    return createDefaultLiveMeterState();
+  }
+  const seen = new Set<string>();
+  const profiles = state.profiles.map((profile) => ({
+    ...createDefaultLiveMeterProfileData(),
+    ...profile,
+    id: nextUniqueId(profile.id, "live", seen),
+  }));
+  const mirroredId = profiles.some((p) => p.id === state.mirroredProfileId)
+    ? state.mirroredProfileId
+    : profiles[0]!.id;
+  return { mirroredProfileId: mirroredId, profiles };
+}
+
+/**
+ * Points the live-meter mirror at the active loadout's live profile. The
+ * actual mirror stores (`SETTINGS.live.*`) are separate RuneStores and get
+ * synced separately (see `applyActiveLiveProfileToMirror` in
+ * `live-meter-profile.svelte.ts`), because they can't be reached through the
+ * cloned `MonitoringSettingsState` the way monster's mirror fields can.
+ */
+function reconcileLiveMirror(state: MonitoringSettingsState): void {
+  const active = state.loadouts.items.find(
+    (item) => item.id === state.loadouts.activeId,
+  );
+  const target =
+    state.liveMeter.profiles.find(
+      (profile) => profile.id === active?.liveProfileId,
+    ) ?? state.liveMeter.profiles[0]!;
+  state.liveMeter.mirroredProfileId = target.id;
 }
 
 function reconcileMonsterMirror(state: MonitoringSettingsState): void {
@@ -259,22 +321,41 @@ export function reconcileMonitoringState(
   state.monsterMonitor.profiles = normalizeMonsterProfiles(
     state.monsterMonitor,
   );
+  state.liveMeter = normalizeLiveProfiles(state.liveMeter);
   state.loadouts = normalizeLoadouts(
     state.loadouts,
     state.skillMonitor.profiles,
     state.monsterMonitor.profiles,
+    state.liveMeter.profiles,
   );
   reconcileMonsterMirror(state);
+  reconcileLiveMirror(state);
   state.schemaVersion = CURRENT_MONITORING_SCHEMA_VERSION;
   return state;
 }
 
 export function migrateLegacyMonitoringState(
   sources: LegacyMonitoringSources,
+  liveProfileData: LiveMeterProfileData,
 ): MonitoringSettingsState {
   const skillMonitor = deepCloneSettings(sources.skillMonitor);
   const monsterMonitor = deepCloneSettings(sources.monsterMonitor);
-  skillMonitor.profiles = normalizeSkillProfiles(skillMonitor.profiles);
+  const legacySkillEnabled = skillMonitor.enabled ?? false;
+  const legacySkillAutoHide = skillMonitor.autoHideInDailyScenes ?? false;
+  delete skillMonitor.enabled;
+  delete skillMonitor.autoHideInDailyScenes;
+  const legacySkillProfiles =
+    skillMonitor.profiles.length > 0
+      ? skillMonitor.profiles
+      : [createDefaultSkillMonitorProfile()];
+  skillMonitor.profiles = normalizeSkillProfiles(
+    legacySkillProfiles.map((profile) => ({
+      ...profile,
+      enabled: profile.enabled ?? legacySkillEnabled,
+      autoHideInDailyScenes:
+        profile.autoHideInDailyScenes ?? legacySkillAutoHide,
+    })),
+  );
 
   const hasExistingLoadouts = sources.loadouts.items.length > 0;
   const pristineLegacyMonitoring =
@@ -291,14 +372,26 @@ export function migrateLegacyMonitoringState(
       (profile) => profile.id === monsterMonitor.mirroredProfileId,
     )?.id ?? monsterMonitor.profiles[0]!.id;
 
+  const liveProfile: LiveMeterProfile = {
+    ...deepCloneSettings(liveProfileData),
+    id: generateProfileId("live"),
+    name: "",
+  };
+
   const loadouts = hasExistingLoadouts
     ? deepCloneSettings(sources.loadouts)
     : buildDefaultLoadouts(
         skillMonitor.profiles,
         activeMonsterProfileId,
+        liveProfile.id,
         sources.skillMonitor.activeProfileIndex ?? 0,
         pristineLegacyMonitoring,
       );
+  // Legacy loadouts predate liveProfileId; point them all at the new profile.
+  loadouts.items = loadouts.items.map((item) => ({
+    ...item,
+    liveProfileId: item.liveProfileId ?? liveProfile.id,
+  }));
   if (!hasExistingLoadouts && !pristineLegacyMonitoring) {
     loadouts.firstRunPromptDismissed = true;
   }
@@ -309,6 +402,7 @@ export function migrateLegacyMonitoringState(
     skillMonitor,
     monsterMonitor,
     loadouts,
+    liveMeter: { mirroredProfileId: liveProfile.id, profiles: [liveProfile] },
   });
 }
 
@@ -318,6 +412,92 @@ function applyMonitoringState(next: MonitoringSettingsState): void {
   target.skillMonitor = deepCloneSettings(next.skillMonitor);
   target.monsterMonitor = deepCloneSettings(next.monsterMonitor);
   target.loadouts = deepCloneSettings(next.loadouts);
+  target.liveMeter = deepCloneSettings(next.liveMeter);
+}
+
+type V1MonitoringState = MonitoringSettingsState & {
+  skillMonitor: SkillMonitorState & {
+    enabled?: boolean;
+    autoHideInDailyScenes?: boolean;
+  };
+};
+
+/**
+ * In-place migration from monitoring schema v1 to v2. v1 kept the skill/
+ * monster on/off switches and daily-scene auto-hide as global fields and had
+ * no live-meter profile; v2 moves those flags onto each profile and
+ * introduces a live-meter profile that every existing loadout shares.
+ */
+export function migrateMonitoringStateIncrementally(
+  input: MonitoringSettingsState,
+  liveProfileData: LiveMeterProfileData,
+): MonitoringSettingsState {
+  const state = deepCloneSettings(input) as V1MonitoringState;
+  const legacySkillEnabled = state.skillMonitor.enabled ?? false;
+  const legacySkillAutoHide = state.skillMonitor.autoHideInDailyScenes ?? false;
+  delete state.skillMonitor.enabled;
+  delete state.skillMonitor.autoHideInDailyScenes;
+
+  state.skillMonitor.profiles = state.skillMonitor.profiles.map((profile) => ({
+    ...profile,
+    enabled: profile.enabled ?? legacySkillEnabled,
+    autoHideInDailyScenes: profile.autoHideInDailyScenes ?? legacySkillAutoHide,
+  }));
+
+  // Monster profiles already carry enabled/autoHideInDailyScenes through the
+  // mirror in v1; normalize any that are missing them.
+  state.monsterMonitor.profiles = state.monsterMonitor.profiles.map(
+    (profile) => ({
+      ...profile,
+      enabled: profile.enabled ?? state.monsterMonitor.enabled ?? false,
+      autoHideInDailyScenes:
+        profile.autoHideInDailyScenes ??
+        state.monsterMonitor.autoHideInDailyScenes ??
+        false,
+    }),
+  );
+
+  // Schema v1 had no live-meter profile. Ignore any default `liveMeter`
+  // injected by the current store shape and seed from the legacy live stores.
+  const liveProfile: LiveMeterProfile = {
+    ...deepCloneSettings(liveProfileData),
+    id: generateProfileId("live"),
+    name: "",
+  };
+  state.liveMeter = {
+    mirroredProfileId: liveProfile.id,
+    profiles: [liveProfile],
+  };
+
+  state.loadouts.items = state.loadouts.items.map((item) => ({
+    ...item,
+    liveProfileId: item.liveProfileId ?? liveProfile.id,
+  }));
+
+  return reconcileMonitoringState(state);
+}
+
+/** Pushes the active loadout's live-meter profile into the live RuneStores. */
+async function syncLiveMirrorToActiveLoadout(): Promise<void> {
+  const { applyActiveLiveProfileToMirror } = await import(
+    "./live-meter-profile.svelte.js"
+  );
+  applyActiveLiveProfileToMirror();
+}
+
+async function readLiveMirrorSnapshot(): Promise<LiveMeterProfileData> {
+  const { extractLiveProfileData } = await import(
+    "./live-meter-profile.svelte.js"
+  );
+  return extractLiveProfileData();
+}
+
+async function startLivePersistence(): Promise<void> {
+  const { startLiveProfilePersistence } = await import(
+    "./live-meter-profile.svelte.js"
+  );
+  startLiveProfilePersistence();
+  await tick();
 }
 
 function createLegacyStores() {
@@ -353,7 +533,9 @@ function createLegacyStores() {
   };
 }
 
-async function migrateAsMainWindow(): Promise<void> {
+async function migrateAsMainWindow(
+  liveProfileData: LiveMeterProfileData,
+): Promise<void> {
   try {
     const result = await commands.backupSettingsStores();
     if (result.status === "error") throw new Error(String(result.error));
@@ -368,11 +550,14 @@ async function migrateAsMainWindow(): Promise<void> {
       legacy.monsterMonitor.start(),
       legacy.loadouts.start(),
     ]);
-    const migrated = migrateLegacyMonitoringState({
-      skillMonitor: legacy.skillMonitor.state,
-      monsterMonitor: legacy.monsterMonitor.state,
-      loadouts: legacy.loadouts.state,
-    });
+    const migrated = migrateLegacyMonitoringState(
+      {
+        skillMonitor: legacy.skillMonitor.state,
+        monsterMonitor: legacy.monsterMonitor.state,
+        loadouts: legacy.loadouts.state,
+      },
+      liveProfileData,
+    );
     applyMonitoringState(migrated);
     await tick();
     await SETTINGS.monitoring.saveNow();
@@ -486,6 +671,8 @@ export function initializeMonitoringSettings(): Promise<MonitoringInitialization
     );
 
     try {
+      await startLiveMeterStores();
+      const legacyLiveProfileData = await readLiveMirrorSnapshot();
       try {
         await SETTINGS.monitoring.start();
         if (
@@ -496,17 +683,42 @@ export function initializeMonitoringSettings(): Promise<MonitoringInitialization
             SETTINGS.monitoring.state,
           );
           applyMonitoringState(reconciled);
+          await syncLiveMirrorToActiveLoadout();
           await tick();
           await SETTINGS.monitoring.saveNow();
           if (isMainWindow) {
+            await startLivePersistence();
             await emit(READY_EVENT, deepCloneSettings(reconciled));
           }
           sessionStorage.removeItem(RECOVERY_ATTEMPTED_SESSION_KEY);
           return { status: "ready" };
         }
 
-        if (isMainWindow) {
-          await migrateAsMainWindow();
+        // Already a consolidated monitoring store (schemaVersion >= 1) but
+        // behind the current schema: run incremental migrations in place
+        // rather than re-reading the pre-consolidation legacy stores.
+        if (SETTINGS.monitoring.state.schemaVersion >= 1) {
+          if (isMainWindow) {
+            const migrated = migrateMonitoringStateIncrementally(
+              SETTINGS.monitoring.state,
+              legacyLiveProfileData,
+            );
+            applyMonitoringState(migrated);
+            await syncLiveMirrorToActiveLoadout();
+            await tick();
+            await SETTINGS.monitoring.saveNow();
+            await startLivePersistence();
+            await emit(
+              READY_EVENT,
+              deepCloneSettings(SETTINGS.monitoring.state),
+            );
+            sessionStorage.removeItem(RECOVERY_ATTEMPTED_SESSION_KEY);
+            return { status: "ready" };
+          }
+        } else if (isMainWindow) {
+          await migrateAsMainWindow(legacyLiveProfileData);
+          await syncLiveMirrorToActiveLoadout();
+          await startLivePersistence();
           await emit(READY_EVENT, deepCloneSettings(SETTINGS.monitoring.state));
           sessionStorage.removeItem(RECOVERY_ATTEMPTED_SESSION_KEY);
           return { status: "ready" };
@@ -527,6 +739,7 @@ export function initializeMonitoringSettings(): Promise<MonitoringInitialization
         };
       }
       applyMonitoringState(remote);
+      await syncLiveMirrorToActiveLoadout();
       await tick();
       sessionStorage.removeItem(RECOVERY_ATTEMPTED_SESSION_KEY);
       return { status: "ready" };

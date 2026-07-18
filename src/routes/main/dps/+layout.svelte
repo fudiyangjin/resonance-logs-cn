@@ -14,6 +14,7 @@
     isOverlayWindowVisible,
     toggleOverlayWindow,
   } from "$lib/overlay-window-visibility.svelte";
+  import LiveProfileSwitcher from "./profile-switcher.svelte";
 
   let { children } = $props();
 
@@ -34,7 +35,6 @@
   let isBasePath = $derived(
     page.url.pathname === "/main/dps" || page.url.pathname === "/main/dps/",
   );
-
 </script>
 
 <div class="space-y-6">
@@ -42,13 +42,13 @@
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div
-        class="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary"
+        class="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg"
       >
-        <ActivityIcon class="w-5 h-5" />
+        <ActivityIcon class="h-5 w-5" />
       </div>
       <div>
-        <h1 class="text-xl font-bold text-foreground">{t("dps.title")}</h1>
-        <p class="text-sm text-muted-foreground">{t("dps.description")}</p>
+        <h1 class="text-foreground text-xl font-bold">{t("dps.title")}</h1>
+        <p class="text-muted-foreground text-sm">{t("dps.description")}</p>
       </div>
     </div>
 
@@ -56,39 +56,44 @@
     <button
       type="button"
       aria-pressed={liveVisible}
-      class="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm shadow-sm transition-colors {liveVisible
-        ? 'border border-border/60 bg-muted/30 text-foreground hover:bg-muted/50'
+      class="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm transition-colors {liveVisible
+        ? 'border-border/60 bg-muted/30 text-foreground hover:bg-muted/50 border'
         : 'bg-primary text-primary-foreground hover:bg-primary/90'}"
       onclick={() => toggleOverlayWindow("live")}
     >
       {#if liveVisible}
-        <PauseIcon class="w-4 h-4" />
+        <PauseIcon class="h-4 w-4" />
       {:else}
-        <PlayIcon class="w-4 h-4" />
+        <PlayIcon class="h-4 w-4" />
       {/if}
       <span>{t("dps.live.toggle")}</span>
-      <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
+      <ExternalLinkIcon class="h-3.5 w-3.5 opacity-70" />
     </button>
   </div>
 
   <!-- Tabs Navigation -->
-  <div class="border-b border-border/60">
-    <nav class="flex gap-1 -mb-px">
+  <div class="border-border/60 border-b">
+    <nav class="-mb-px flex gap-1">
       {#each Object.entries(DPS_SUB_ROUTES) as [href, route] (href)}
         <a
           {href}
-          class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors {isActiveTab(
+          class="flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors {isActiveTab(
             href,
           )
             ? 'border-primary text-foreground'
-            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}"
+            : 'text-muted-foreground hover:text-foreground hover:border-border border-transparent'}"
         >
-          <route.icon class="w-4 h-4" />
+          <route.icon class="h-4 w-4" />
           <span>{t(route.labelKey)}</span>
         </a>
       {/each}
     </nav>
   </div>
+
+  <!-- Live profile switcher: settings/themes tabs edit the active live profile (mirror). -->
+  {#if isActiveTab("/main/dps/settings") || isActiveTab("/main/dps/themes")}
+    <LiveProfileSwitcher />
+  {/if}
 
   <!-- Tab Content -->
   <div class="min-h-0">
@@ -98,7 +103,7 @@
         <p class="text-muted-foreground mb-4">{t("dps.default.prompt")}</p>
         <a
           href={getDefaultTabPath()}
-          class="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-sm font-medium transition-colors"
+          class="bg-muted hover:bg-muted/80 text-foreground rounded-lg px-4 py-2 text-sm font-medium transition-colors"
         >
           {t("dps.default.history")}
         </a>
