@@ -28,8 +28,8 @@ use tokio_util::sync::CancellationToken;
 use error::{VoiceError, VoiceResult};
 use generator::SidecarRunner;
 use model_manager::{
-    InstallReceipt, ModelDownloader, ModelStore, ModelValidationFingerprint,
-    ModelValidationSnapshot,
+    InstallReceipt, ModelDownloadSource, ModelDownloader, ModelStore,
+    ModelValidationFingerprint, ModelValidationSnapshot,
 };
 use models::{
     EngineBackend, EngineState, FineTunedVoiceMeta, FineTunedVoiceState, ModelState,
@@ -780,7 +780,7 @@ impl VoiceService {
         Ok(())
     }
 
-    pub async fn install_official_model(&self) -> VoiceResult<()> {
+    pub async fn install_official_model(&self, source: ModelDownloadSource) -> VoiceResult<()> {
         let _guard = self
             .inner
             .operation
@@ -801,6 +801,7 @@ impl VoiceService {
                 &self.inner.http_client,
                 &self.inner.voice_root,
                 &manifest,
+                source,
                 &cancel,
             )
             .await?;

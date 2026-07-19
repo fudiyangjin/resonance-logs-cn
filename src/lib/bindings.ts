@@ -451,9 +451,9 @@ async voiceGetStatus(forceRefresh: boolean) : Promise<Result<VoiceStatus, VoiceC
     else return { status: "error", error: e  as any };
 }
 },
-async voiceInstallModel() : Promise<Result<null, VoiceCommandError>> {
+async voiceInstallModel(source: ModelDownloadSource) : Promise<Result<null, VoiceCommandError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("voice_install_model") };
+    return { status: "ok", data: await TAURI_INVOKE("voice_install_model", { source }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -806,6 +806,7 @@ export type GpuSupport = { cuda_available: boolean; opencl_available: boolean }
 export type HistoryEntityData = { entityUuid: string; displayUid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; seasonStrength: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }>; takenPerSource: PerSourceStats[]; dmgPerTarget: PerTargetStats[]; healPerTarget: PerTargetStats[]; deaths: DeathRecord[] }
 export type I18nRuntimeSnapshot = { locale: AppLocale }
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number }
+export type ModelDownloadSource = "auto" | "huggingFace" | "hfMirror"
 export type ModelState = { kind: "notInstalled" } | { kind: "installing" } | { kind: "ready"; version: string } | { kind: "corrupt"; version: string; reason: string }
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }

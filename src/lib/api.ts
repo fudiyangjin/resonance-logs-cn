@@ -560,15 +560,25 @@ export const optimizeLatestModules = (
 // `#[tauri::command]` return type in this project's specta setup.
 
 export type VoiceModelDownloadProgressPayload =
-  | { kind: "fileStart"; name: string; totalBytes: number }
+  | {
+      kind: "fileStart";
+      name: string;
+      totalBytes: number;
+      source: "huggingFace" | "hfMirror";
+    }
   | {
       kind: "fileProgress";
       name: string;
       downloadedBytes: number;
       totalBytes: number;
+      source: "huggingFace" | "hfMirror";
     }
-  | { kind: "fileVerifying"; name: string }
-  | { kind: "fileDone"; name: string }
+  | {
+      kind: "fileVerifying";
+      name: string;
+      source: "huggingFace" | "hfMirror";
+    }
+  | { kind: "fileDone"; name: string; source: "huggingFace" | "hfMirror" }
   | { kind: "allDone"; modelVersion: string }
   | { kind: "error"; error: string }
   | { kind: "cancelled" };

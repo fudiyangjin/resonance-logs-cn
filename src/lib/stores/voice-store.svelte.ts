@@ -62,6 +62,7 @@ export interface VoiceState {
 
   downloadActive: boolean;
   downloadFileName: string | null;
+  downloadSource: "huggingFace" | "hfMirror" | null;
   downloadedBytes: number;
   totalBytes: number;
   downloadPhase: VoiceDownloadPhase;
@@ -83,6 +84,7 @@ export const VOICE = $state<VoiceState>({
 
   downloadActive: false,
   downloadFileName: null,
+  downloadSource: null,
   downloadedBytes: 0,
   totalBytes: 0,
   downloadPhase: "idle",
@@ -159,6 +161,7 @@ function handleDownloadProgress(payload: VoiceModelDownloadProgressPayload) {
     case "fileStart":
       VOICE.downloadActive = true;
       VOICE.downloadFileName = payload.name;
+      VOICE.downloadSource = payload.source;
       VOICE.downloadedBytes = 0;
       VOICE.totalBytes = payload.totalBytes;
       VOICE.downloadPhase = "downloading";
@@ -166,6 +169,7 @@ function handleDownloadProgress(payload: VoiceModelDownloadProgressPayload) {
       break;
     case "fileProgress":
       VOICE.downloadFileName = payload.name;
+      VOICE.downloadSource = payload.source;
       VOICE.downloadedBytes = payload.downloadedBytes;
       VOICE.totalBytes = payload.totalBytes;
       break;
@@ -176,16 +180,19 @@ function handleDownloadProgress(payload: VoiceModelDownloadProgressPayload) {
       break;
     case "allDone":
       VOICE.downloadActive = false;
+      VOICE.downloadSource = null;
       VOICE.downloadPhase = "done";
       void refreshVoiceStatus();
       break;
     case "error":
       VOICE.downloadActive = false;
+      VOICE.downloadSource = null;
       VOICE.downloadPhase = "error";
       VOICE.downloadError = payload.error;
       break;
     case "cancelled":
       VOICE.downloadActive = false;
+      VOICE.downloadSource = null;
       VOICE.downloadPhase = "cancelled";
       break;
   }

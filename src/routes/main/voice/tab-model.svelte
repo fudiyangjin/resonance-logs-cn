@@ -16,6 +16,10 @@
     VOICE,
     voiceErrorMessage,
   } from "$lib/stores/voice-store.svelte";
+  import {
+    SETTINGS,
+    type VoiceModelDownloadSource,
+  } from "$lib/settings-store";
 
   let manualModelVersion = $state("");
   let installing = $state(false);
@@ -91,9 +95,17 @@
     installing = true;
     localError = null;
     try {
+      const configuredSource =
+        SETTINGS.voice.state.modelDownloadSource as VoiceModelDownloadSource;
+      const source =
+        configuredSource === "auto"
+          ? SETTINGS.i18n.state.locale === "zh-CN"
+            ? "hfMirror"
+            : "huggingFace"
+          : configuredSource;
       const res = await runVoiceOperation(
         { kind: "installingModel", cancelling: false },
-        () => commands.voiceInstallModel(),
+        () => commands.voiceInstallModel(source),
       );
       if (res.status === "error") {
         localError = voiceErrorMessage(res.error);
@@ -370,6 +382,24 @@
     {/if}
 
     <div>
+      <label class="text-muted-foreground mb-1 block text-xs" for="voice-model-source">
+        {t("voice.model.downloadSource")}
+      </label>
+      <select
+        id="voice-model-source"
+        class="border-border/60 bg-background text-foreground rounded border px-3 py-2 text-sm"
+        value={SETTINGS.voice.state.modelDownloadSource}
+        disabled={operationActive || installing || VOICE.downloadActive}
+        onchange={(event) => {
+          SETTINGS.voice.state.modelDownloadSource = (
+            event.currentTarget as HTMLSelectElement
+          ).value as VoiceModelDownloadSource;
+        }}
+      >
+        <option value="auto">{t("voice.model.downloadSourceAuto")}</option>
+        <option value="huggingFace">{t("voice.model.downloadSourceHuggingFace")}</option>
+        <option value="hfMirror">{t("voice.model.downloadSourceMirror")}</option>
+      </select>
       <button
         type="button"
         class="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium disabled:opacity-50"
@@ -401,6 +431,10 @@
         </div>
         <div class="flex items-center justify-between">
           <span class="text-muted-foreground text-xs">
+            {VOICE.downloadSource === "hfMirror"
+              ? t("voice.model.downloadSourceMirror")
+              : t("voice.model.downloadSourceHuggingFace")}
+            ·
             {VOICE.downloadPhase === "verifying"
               ? t("voice.model.verifying")
               : t("voice.model.downloading")}

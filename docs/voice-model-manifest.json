@@ -1,0 +1,21 @@
+{
+  "manifest": {
+    "modelVersion": "qwen3-tts-0.6b-q8_0-11f12ba6add0fc708be86c51b384a76489fe2608",
+    "minAppVersion": "0.1.0",
+    "files": [
+      {
+        "name": "qwen3-tts-0.6b-q8_0.gguf",
+        "url": "https://huggingface.co/badlogicgames/qwen3-tts-0.6b-q8_0-gguf/resolve/11f12ba6add0fc708be86c51b384a76489fe2608/qwen3-tts-0.6b-q8_0.gguf",
+        "sizeBytes": 1342925920,
+        "sha256": "c6ed09d25e6ce06d5804233fcce3f0c62661cc12ab5549bc25edf3d61f0dd4f8"
+      },
+      {
+        "name": "qwen3-tts-tokenizer-f16.gguf",
+        "url": "https://huggingface.co/badlogicgames/qwen3-tts-0.6b-q8_0-gguf/resolve/11f12ba6add0fc708be86c51b384a76489fe2608/qwen3-tts-tokenizer-f16.gguf",
+        "sizeBytes": 341157120,
+        "sha256": "d1ad9660bd99343f4851d5a4b17e31f65648feb3559f6ea062ae6575e5cd9d90"
+      }
+    ]
+  },
+  "signature": "Zp8TqYRWJfQupda3J0ZcjBCQOifVIAbBsO795gCVguTLKwNGqeeL/3IIsGU+E1oxZduSaftdJj+3pto/cbiABw=="
+}

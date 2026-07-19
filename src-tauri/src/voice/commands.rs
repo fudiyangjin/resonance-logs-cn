@@ -7,6 +7,7 @@ use specta::Type;
 use tauri::State;
 
 use super::error::{VoiceCommandError, VoiceError};
+use super::model_manager::ModelDownloadSource;
 use super::models::{
     FineTunedVoiceMeta, ModelState, VoiceGenerationBackend, VoiceLanguage, VoicePhraseMeta,
     VoiceStatus,
@@ -111,9 +112,12 @@ pub async fn voice_get_status(
 
 #[tauri::command]
 #[specta::specta]
-pub async fn voice_install_model(voice: State<'_, VoiceService>) -> CommandResult<()> {
+pub async fn voice_install_model(
+    voice: State<'_, VoiceService>,
+    source: ModelDownloadSource,
+) -> CommandResult<()> {
     voice
-        .install_official_model()
+        .install_official_model(source)
         .await
         .map_err(VoiceCommandError::from)
 }

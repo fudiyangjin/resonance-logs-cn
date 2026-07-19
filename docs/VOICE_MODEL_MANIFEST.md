@@ -1,15 +1,24 @@
 # Voice model manifest
 
-Release builds require two environment variables:
+Release builds may override the embedded signed manifest with two environment variables:
 
-- `VOICE_MODEL_MANIFEST_URL`: absolute HTTPS URL of the signed manifest.
+- `VOICE_MODEL_MANIFEST_URL`: absolute HTTPS URL of a signed manifest.
 - `VOICE_MODEL_MANIFEST_PUBLIC_KEY`: standard Base64 encoding of the raw
   32-byte Ed25519 verifying key.
 
-Debug builds without these variables use a manifest compiled into the
-application. It pins revision `11f12ba6add0fc708be86c51b384a76489fe2608` of
+When either variable is absent, all builds use the signed manifest embedded
+from `docs/voice-model-manifest.json` and
+`docs/voice-model-manifest.public-key`. It pins revision
+`11f12ba6add0fc708be86c51b384a76489fe2608` of
 `badlogicgames/qwen3-tts-0.6b-q8_0-gguf`, including the exact file sizes and
-SHA-256 values. Setting both variables overrides this development default.
+SHA-256 values. Setting both variables overrides this embedded default.
+
+The downloader keeps Hugging Face as the canonical source and derives an
+equivalent `hf-mirror.com` URL only for Hugging Face file URLs. The selected
+source is controlled by the voice model setting: automatic mode prefers the
+mirror for `zh-CN` and Hugging Face elsewhere, with the other source used as a
+fallback. ModelScope's original safetensors checkpoints are not compatible
+with the GGUF sidecar and are not used by this release path.
 
 The endpoint returns an envelope with this shape:
 

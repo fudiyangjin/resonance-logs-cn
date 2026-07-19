@@ -269,6 +269,7 @@ export type VoiceQueuePolicySetting =
 
 export type VoiceGenerationBackendSetting = "auto" | "cpu" | "vulkan";
 export type VoiceSourceSetting = "clone" | "fineTuned";
+export type VoiceModelDownloadSource = "auto" | "huggingFace" | "hfMirror";
 
 export type VoicePhraseSetting = {
   id: string;
@@ -285,6 +286,7 @@ export type VoiceSettingsConfig = {
   selectedProfileId: string | null;
   selectedSource: VoiceSourceSetting;
   generationBackend: VoiceGenerationBackendSetting;
+  modelDownloadSource: VoiceModelDownloadSource;
 };
 
 export function createDefaultVoiceSettings(): VoiceSettingsConfig {
@@ -296,6 +298,7 @@ export function createDefaultVoiceSettings(): VoiceSettingsConfig {
     selectedProfileId: null,
     selectedSource: "clone",
     generationBackend: "auto",
+    modelDownloadSource: "auto",
   };
 }
 

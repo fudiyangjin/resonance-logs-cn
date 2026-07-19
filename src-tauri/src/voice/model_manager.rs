@@ -30,10 +30,11 @@ const Q8_TRANSFORMER_FILE: &str = "qwen3-tts-0.6b-q8_0.gguf";
 const F16_TRANSFORMER_FILE: &str = "qwen3-tts-0.6b-f16.gguf";
 const TOKENIZER_FILE: &str = "qwen3-tts-tokenizer-f16.gguf";
 const TRANSFORMER_FILES_BY_PRIORITY: [&str; 2] = [Q8_TRANSFORMER_FILE, F16_TRANSFORMER_FILE];
-#[cfg(debug_assertions)]
-const DEVELOPMENT_MODEL_REVISION: &str = "11f12ba6add0fc708be86c51b384a76489fe2608";
-#[cfg(debug_assertions)]
-const DEVELOPMENT_MODEL_REPOSITORY: &str = "badlogicgames/qwen3-tts-0.6b-q8_0-gguf";
+const HUGGINGFACE_HOST: &str = "huggingface.co";
+const HF_MIRROR_HOST: &str = "hf-mirror.com";
+const EMBEDDED_MANIFEST: &str = include_str!("../../../docs/voice-model-manifest.json");
+const EMBEDDED_MANIFEST_PUBLIC_KEY: &str =
+    include_str!("../../../docs/voice-model-manifest.public-key");
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -73,6 +74,31 @@ pub struct ValidatedModelManifest {
     pub model_version: ModelVersion,
     pub files: Vec<ValidatedManifestFile>,
     pub manifest_sha256: String,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Type, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum ModelDownloadSource {
+    Auto,
+    HuggingFace,
+    HfMirror,
+}
+
+impl ModelDownloadSource {
+    fn ordered(self) -> [Self; 2] {
+        match self {
+            Self::HfMirror => [Self::HfMirror, Self::HuggingFace],
+            Self::Auto | Self::HuggingFace => [Self::HuggingFace, Self::HfMirror],
+        }
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Auto => "auto",
+            Self::HuggingFace => "huggingFace",
+            Self::HfMirror => "hfMirror",
+        }
+    }
 }
 
 impl ValidatedModelManifest {
@@ -187,17 +213,21 @@ pub enum ModelDownloadProgress {
     FileStart {
         name: String,
         total_bytes: u64,
+        source: ModelDownloadSource,
     },
     FileProgress {
         name: String,
         downloaded_bytes: u64,
         total_bytes: u64,
+        source: ModelDownloadSource,
     },
     FileVerifying {
         name: String,
+        source: ModelDownloadSource,
     },
     FileDone {
         name: String,
+        source: ModelDownloadSource,
     },
     AllDone {
         model_version: String,
@@ -222,6 +252,7 @@ pub trait ModelDownloader: Send + Sync {
         client: &reqwest::Client,
         voice_root: &Path,
         manifest: &ValidatedModelManifest,
+        source: ModelDownloadSource,
         cancel: &CancellationToken,
     ) -> VoiceResult<InstallReceipt>;
 }
@@ -245,9 +276,10 @@ impl ModelDownloader for SignedHttpModelDownloader {
         client: &reqwest::Client,
         voice_root: &Path,
         manifest: &ValidatedModelManifest,
+        source: ModelDownloadSource,
         cancel: &CancellationToken,
     ) -> VoiceResult<InstallReceipt> {
-        install_manifest(app_handle, client, voice_root, manifest, cancel).await
+        install_manifest(app_handle, client, voice_root, manifest, source, cancel).await
     }
 }
 
@@ -303,17 +335,45 @@ fn emit<R: Runtime>(app_handle: &AppHandle<R>, progress: ModelDownloadProgress) 
     }
 }
 
+fn file_url_for_source(
+    file: &ValidatedManifestFile,
+    source: ModelDownloadSource,
+) -> VoiceResult<reqwest::Url> {
+    if source != ModelDownloadSource::HfMirror {
+        return Ok(file.url.clone());
+    }
+    if file.url.scheme() != "https" || file.url.host_str() != Some(HUGGINGFACE_HOST) {
+        return Err(VoiceError::Security(format!(
+            "cannot derive HF-Mirror URL from {}",
+            file.url
+        )));
+    }
+    let mut mirror = file.url.clone();
+    mirror
+        .set_host(Some(HF_MIRROR_HOST))
+        .map_err(|_| VoiceError::Security("failed to construct HF-Mirror URL".to_string()))?;
+    Ok(mirror)
+}
+
+fn source_part_path(dest_path: &Path, source: ModelDownloadSource) -> PathBuf {
+    let suffix = match source {
+        ModelDownloadSource::Auto => "auto",
+        ModelDownloadSource::HuggingFace => "huggingface",
+        ModelDownloadSource::HfMirror => "hf-mirror",
+    };
+    let file_name = dest_path
+        .file_name()
+        .map(|name| name.to_string_lossy())
+        .unwrap_or_else(|| std::borrow::Cow::Borrowed("model"));
+    dest_path.with_file_name(format!("{file_name}.{suffix}.part"))
+}
+
 pub async fn fetch_official_manifest(
     client: &reqwest::Client,
     cancel: &CancellationToken,
 ) -> VoiceResult<ValidatedModelManifest> {
     let Some(url) = configured_manifest_url()? else {
-        #[cfg(debug_assertions)]
-        return development_manifest();
-        #[cfg(not(debug_assertions))]
-        return Err(VoiceError::Internal(
-            "official voice model manifest is not configured for this build".to_string(),
-        ));
+        return embedded_manifest();
     };
     let public_key = configured_manifest_public_key()?;
     let response = tokio::select! {
@@ -366,6 +426,12 @@ pub async fn fetch_official_manifest(
     verify_signed_manifest(envelope, &public_key)
 }
 
+fn embedded_manifest() -> VoiceResult<ValidatedModelManifest> {
+    let envelope: SignedModelManifest = serde_json::from_str(EMBEDDED_MANIFEST)
+        .map_err(|source| VoiceError::json("parse embedded voice model manifest", source))?;
+    verify_signed_manifest(envelope, &configured_manifest_public_key()?)
+}
+
 fn append_manifest_chunk(bytes: &mut Vec<u8>, chunk: &[u8]) -> VoiceResult<()> {
     if bytes.len().saturating_add(chunk.len()) > MAX_MANIFEST_BYTES {
         return Err(VoiceError::Security(
@@ -393,45 +459,11 @@ fn configured_manifest_url() -> VoiceResult<Option<reqwest::Url>> {
     Ok(Some(url))
 }
 
-#[cfg(debug_assertions)]
-fn development_manifest() -> VoiceResult<ValidatedModelManifest> {
-    let base_url = format!(
-        "https://huggingface.co/{DEVELOPMENT_MODEL_REPOSITORY}/resolve/{DEVELOPMENT_MODEL_REVISION}"
-    );
-    let manifest = ModelManifest {
-        model_version: format!("qwen3-tts-0.6b-q8_0-{DEVELOPMENT_MODEL_REVISION}"),
-        min_app_version: Some(env!("CARGO_PKG_VERSION").to_string()),
-        files: vec![
-            ModelManifestFile {
-                name: Q8_TRANSFORMER_FILE.to_string(),
-                url: format!("{base_url}/{Q8_TRANSFORMER_FILE}"),
-                size_bytes: 1_342_925_920,
-                sha256: "c6ed09d25e6ce06d5804233fcce3f0c62661cc12ab5549bc25edf3d61f0dd4f8"
-                    .to_string(),
-            },
-            ModelManifestFile {
-                name: TOKENIZER_FILE.to_string(),
-                url: format!("{base_url}/{TOKENIZER_FILE}"),
-                size_bytes: 341_157_120,
-                sha256: "d1ad9660bd99343f4851d5a4b17e31f65648feb3559f6ea062ae6575e5cd9d90"
-                    .to_string(),
-            },
-        ],
-    };
-    let canonical = serde_json::to_vec(&manifest)
-        .map_err(|source| VoiceError::json("serialize development model manifest", source))?;
-    validate_manifest(manifest, hex::encode(Sha256::digest(canonical)))
-}
-
 fn configured_manifest_public_key() -> VoiceResult<VerifyingKey> {
     let encoded = option_env!("VOICE_MODEL_MANIFEST_PUBLIC_KEY")
         .map(str::to_owned)
         .or_else(|| std::env::var("VOICE_MODEL_MANIFEST_PUBLIC_KEY").ok())
-        .ok_or_else(|| {
-            VoiceError::Internal(
-                "voice model manifest public key is not configured for this build".to_string(),
-            )
-        })?;
+        .unwrap_or_else(|| EMBEDDED_MANIFEST_PUBLIC_KEY.trim().to_string());
     let bytes = BASE64
         .decode(encoded.trim())
         .map_err(|error| VoiceError::validation("manifestPublicKey", error.to_string()))?;
@@ -542,6 +574,7 @@ pub async fn install_manifest<R: Runtime>(
     client: &reqwest::Client,
     voice_root: &Path,
     manifest: &ValidatedModelManifest,
+    source: ModelDownloadSource,
     cancel: &CancellationToken,
 ) -> VoiceResult<InstallReceipt> {
     let model_dir = model_dir(voice_root, &manifest.model_version);
@@ -566,37 +599,16 @@ pub async fn install_manifest<R: Runtime>(
             continue;
         }
 
-        emit(
-            app_handle,
-            ModelDownloadProgress::FileStart {
-                name: file.name.as_str().to_string(),
-                total_bytes: file.size_bytes,
-            },
-        );
-        if let Err(error) = download_with_resume(app_handle, client, file, &dest_path, cancel).await
+        if let Err(error) =
+            download_file_with_sources(client, file, &dest_path, source, cancel, |progress| {
+                emit(app_handle, progress)
+            })
+            .await
         {
             if matches!(error, VoiceError::Cancelled(_)) {
                 emit(app_handle, ModelDownloadProgress::Cancelled);
-            } else {
-                emit(
-                    app_handle,
-                    ModelDownloadProgress::Error {
-                        error: error.to_string(),
-                    },
-                );
+                return Err(error);
             }
-            return Err(error);
-        }
-        emit(
-            app_handle,
-            ModelDownloadProgress::FileVerifying {
-                name: file.name.as_str().to_string(),
-            },
-        );
-        if !verify_sha256_async(dest_path.clone(), file.sha256.as_str().to_string()).await? {
-            let _ = tokio::fs::remove_file(&dest_path).await;
-            let error =
-                VoiceError::Security(format!("SHA-256 mismatch for {}", file.name.as_str()));
             emit(
                 app_handle,
                 ModelDownloadProgress::Error {
@@ -605,12 +617,6 @@ pub async fn install_manifest<R: Runtime>(
             );
             return Err(error);
         }
-        emit(
-            app_handle,
-            ModelDownloadProgress::FileDone {
-                name: file.name.as_str().to_string(),
-            },
-        );
     }
 
     let receipt = InstallReceipt {
@@ -639,33 +645,86 @@ pub async fn install_manifest<R: Runtime>(
     Ok(receipt)
 }
 
-async fn download_with_resume<R: Runtime>(
-    app_handle: &AppHandle<R>,
+async fn download_file_with_sources<F>(
     client: &reqwest::Client,
     file: &ValidatedManifestFile,
     dest_path: &Path,
+    source: ModelDownloadSource,
     cancel: &CancellationToken,
-) -> VoiceResult<()> {
-    download_with_resume_inner(client, file, dest_path, cancel, |progress| {
-        emit(app_handle, progress);
-    })
-    .await
+    mut emit_progress: F,
+) -> VoiceResult<ModelDownloadSource>
+where
+    F: FnMut(ModelDownloadProgress),
+{
+    let mut source_errors = Vec::new();
+    for attempt_source in source.ordered() {
+        let url = match file_url_for_source(file, attempt_source) {
+            Ok(url) => url,
+            Err(error) => {
+                source_errors.push(format!("{}: {error}", attempt_source.as_str()));
+                continue;
+            }
+        };
+        emit_progress(ModelDownloadProgress::FileStart {
+            name: file.name.as_str().to_string(),
+            total_bytes: file.size_bytes,
+            source: attempt_source,
+        });
+        if let Err(error) = download_with_resume_inner(
+            client,
+            file,
+            url,
+            dest_path,
+            attempt_source,
+            cancel,
+            |progress| emit_progress(progress),
+        )
+        .await
+        {
+            if matches!(error, VoiceError::Cancelled(_)) {
+                return Err(error);
+            }
+            source_errors.push(format!("{}: {error}", attempt_source.as_str()));
+            continue;
+        }
+        emit_progress(ModelDownloadProgress::FileVerifying {
+            name: file.name.as_str().to_string(),
+            source: attempt_source,
+        });
+        if verify_sha256_async(dest_path.to_path_buf(), file.sha256.as_str().to_string()).await? {
+            emit_progress(ModelDownloadProgress::FileDone {
+                name: file.name.as_str().to_string(),
+                source: attempt_source,
+            });
+            return Ok(attempt_source);
+        }
+        let _ = tokio::fs::remove_file(dest_path).await;
+        source_errors.push(format!(
+            "{}: SHA-256 mismatch for {}",
+            attempt_source.as_str(),
+            file.name.as_str()
+        ));
+    }
+    Err(VoiceError::Security(format!(
+        "all model download sources failed for {}: {}",
+        file.name.as_str(),
+        source_errors.join("; ")
+    )))
 }
 
 async fn download_with_resume_inner<F>(
     client: &reqwest::Client,
     file: &ValidatedManifestFile,
+    url: reqwest::Url,
     dest_path: &Path,
+    source: ModelDownloadSource,
     cancel: &CancellationToken,
     mut emit_progress: F,
 ) -> VoiceResult<()>
 where
     F: FnMut(ModelDownloadProgress),
 {
-    let part_path = dest_path.with_extension(match dest_path.extension() {
-        Some(extension) => format!("{}.part", extension.to_string_lossy()),
-        None => "part".to_string(),
-    });
+    let part_path = source_part_path(dest_path, source);
     let mut existing_len = tokio::fs::metadata(&part_path)
         .await
         .map_or(0, |metadata| metadata.len());
@@ -679,7 +738,7 @@ where
         ));
     }
 
-    let mut request = client.get(file.url.clone());
+    let mut request = client.get(url);
     if existing_len > 0 {
         request = request.header("Range", format!("bytes={existing_len}-"));
     }
@@ -692,6 +751,13 @@ where
             source,
         })?,
     };
+    if source == ModelDownloadSource::HfMirror
+        && response.url().host_str() == Some(HUGGINGFACE_HOST)
+    {
+        return Err(VoiceError::Process(
+            "HF-Mirror redirected to Hugging Face".to_string(),
+        ));
+    }
     if !response.status().is_success() {
         return Err(VoiceError::Process(format!(
             "download of {} returned HTTP {}",
@@ -776,6 +842,7 @@ where
                 name: file.name.as_str().to_string(),
                 downloaded_bytes: downloaded,
                 total_bytes: file.size_bytes,
+                source,
             });
         }
     }
@@ -798,6 +865,7 @@ where
         name: file.name.as_str().to_string(),
         downloaded_bytes: downloaded,
         total_bytes: file.size_bytes,
+        source,
     });
     Ok(())
 }
@@ -1344,19 +1412,96 @@ mod tests {
         assert!(append_manifest_chunk(&mut bytes, &[2]).is_err());
     }
 
+    #[test]
+    fn derives_mirror_url_only_from_huggingface() {
+        let file = test_manifest_file(
+            reqwest::Url::parse(
+                "https://huggingface.co/badlogicgames/model/resolve/main/model.gguf?download=1",
+            )
+            .unwrap(),
+            1,
+        );
+        let mirror = file_url_for_source(&file, ModelDownloadSource::HfMirror).unwrap();
+        assert_eq!(mirror.host_str(), Some(HF_MIRROR_HOST));
+        assert_eq!(
+            mirror.path(),
+            "/badlogicgames/model/resolve/main/model.gguf"
+        );
+        assert_eq!(mirror.query(), Some("download=1"));
+
+        let non_hf = test_manifest_file(
+            reqwest::Url::parse("https://example.com/model.gguf").unwrap(),
+            1,
+        );
+        assert!(file_url_for_source(&non_hf, ModelDownloadSource::HfMirror).is_err());
+    }
+
+    #[test]
+    fn source_order_prefers_requested_source() {
+        assert_eq!(
+            ModelDownloadSource::HfMirror.ordered(),
+            [
+                ModelDownloadSource::HfMirror,
+                ModelDownloadSource::HuggingFace
+            ]
+        );
+        assert_eq!(
+            ModelDownloadSource::HuggingFace.ordered(),
+            [
+                ModelDownloadSource::HuggingFace,
+                ModelDownloadSource::HfMirror
+            ]
+        );
+        assert_eq!(
+            ModelDownloadSource::Auto.ordered(),
+            [
+                ModelDownloadSource::HuggingFace,
+                ModelDownloadSource::HfMirror
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn source_fallback_uses_huggingface_when_mirror_url_is_unavailable() {
+        let response =
+            b"HTTP/1.1 200 OK\r\nContent-Length: 3\r\nConnection: close\r\n\r\nabc".to_vec();
+        let (url, server) = serve_once(response, None);
+        let directory = tempfile::tempdir().unwrap();
+        let destination = directory.path().join(Q8_TRANSFORMER_FILE);
+        let mut file = test_manifest_file(url.clone(), 3);
+        file.sha256 = Sha256Hex::parse(hex::encode(Sha256::digest(b"abc"))).unwrap();
+
+        let used = download_file_with_sources(
+            &reqwest::Client::new(),
+            &file,
+            &destination,
+            ModelDownloadSource::HfMirror,
+            &CancellationToken::new(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+        server.join().unwrap();
+
+        assert_eq!(used, ModelDownloadSource::HuggingFace);
+        assert_eq!(std::fs::read(destination).unwrap(), b"abc");
+    }
+
     #[tokio::test]
     async fn resumable_download_requests_and_appends_from_existing_offset() {
         let response = b"HTTP/1.1 206 Partial Content\r\nContent-Length: 3\r\nContent-Range: bytes 3-5/6\r\nConnection: close\r\n\r\ndef".to_vec();
         let (url, server) = serve_once(response, Some("Range: bytes=3-"));
         let directory = tempfile::tempdir().unwrap();
         let destination = directory.path().join(Q8_TRANSFORMER_FILE);
-        let partial = destination.with_extension("gguf.part");
+        let partial = source_part_path(&destination, ModelDownloadSource::HuggingFace);
         std::fs::write(&partial, b"abc").unwrap();
 
         download_with_resume_inner(
             &reqwest::Client::new(),
-            &test_manifest_file(url, 6),
+            &test_manifest_file(url.clone(), 6),
+            url.clone(),
             &destination,
+            ModelDownloadSource::HuggingFace,
             &CancellationToken::new(),
             |_| {},
         )
@@ -1378,8 +1523,10 @@ mod tests {
 
         let error = download_with_resume_inner(
             &reqwest::Client::new(),
-            &test_manifest_file(url, 4),
+            &test_manifest_file(url.clone(), 4),
+            url.clone(),
             &destination,
+            ModelDownloadSource::HuggingFace,
             &CancellationToken::new(),
             |_| {},
         )
@@ -1401,8 +1548,10 @@ mod tests {
 
         let error = download_with_resume_inner(
             &reqwest::Client::new(),
-            &test_manifest_file(url, 1),
+            &test_manifest_file(url.clone(), 1),
+            url.clone(),
             &destination,
+            ModelDownloadSource::HuggingFace,
             &cancel,
             |_| {},
         )
@@ -1575,23 +1724,21 @@ mod tests {
         );
     }
 
-    #[cfg(debug_assertions)]
     #[test]
-    fn development_manifest_is_pinned_and_complete() {
-        let manifest = development_manifest().unwrap();
+    fn embedded_manifest_is_signed_and_complete() {
+        let manifest = embedded_manifest().unwrap();
         assert!(
             manifest
                 .model_version
                 .as_str()
-                .contains(DEVELOPMENT_MODEL_REVISION)
+                .contains("11f12ba6add0fc708be86c51b384a76489fe2608")
         );
         assert_eq!(manifest.files.len(), 2);
-        assert!(
-            manifest
-                .files
-                .iter()
-                .all(|file| file.url.as_str().contains(DEVELOPMENT_MODEL_REVISION))
-        );
+        assert!(manifest.files.iter().all(|file| {
+            file.url
+                .as_str()
+                .contains("11f12ba6add0fc708be86c51b384a76489fe2608")
+        }));
         assert_eq!(
             manifest.primary_model_sha256().as_deref(),
             Some("c6ed09d25e6ce06d5804233fcce3f0c62661cc12ab5549bc25edf3d61f0dd4f8")

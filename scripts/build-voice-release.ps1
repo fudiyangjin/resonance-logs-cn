@@ -3,15 +3,8 @@ param()
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path $PSScriptRoot -Parent
 
-foreach ($name in @(
-    "VOICE_MODEL_MANIFEST_URL",
-    "VOICE_MODEL_MANIFEST_PUBLIC_KEY"
-)) {
-    $value = [Environment]::GetEnvironmentVariable($name)
-    if ([string]::IsNullOrWhiteSpace($value)) {
-        throw "$name must be configured before creating a release installer"
-    }
-}
+# Release builds use the signed manifest embedded in the application by default.
+# The environment variables remain optional overrides for future hosted manifests.
 
 & (Join-Path $PSScriptRoot "build-voice-sidecar.ps1") -Configuration Release -Variant Cpu
 if ($LASTEXITCODE -ne 0) {
@@ -24,7 +17,11 @@ if ($LASTEXITCODE -ne 0) {
 
 Push-Location $repoRoot
 try {
-    & npm exec tauri build -- --config src-tauri/tauri.release.conf.json
+    $tauriCli = Join-Path $repoRoot "node_modules/.bin/tauri.cmd"
+    if (-not (Test-Path -LiteralPath $tauriCli)) {
+        throw "local Tauri CLI is missing: $tauriCli"
+    }
+    & $tauriCli build --config src-tauri/tauri.release.conf.json
     if ($LASTEXITCODE -ne 0) {
         throw "Tauri release build failed with exit code $LASTEXITCODE"
     }
