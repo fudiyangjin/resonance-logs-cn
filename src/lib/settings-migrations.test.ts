@@ -110,6 +110,41 @@ describe("monitoring settings reconciliation", () => {
     expect(repaired.skillMonitor.buffIconOverrides).toEqual({});
   });
 
+  it("defaults fantasy cast icons off and preserves an explicit opt-in", () => {
+    expect(createDefaultLiveMeterProfileData().general.showFantasyCastIcons).toBe(
+      false,
+    );
+
+    const state = createDefaultMonitoringSettingsState();
+    const legacy = state.liveMeter.profiles[0]!;
+    delete (legacy.general as Partial<typeof legacy.general>)
+      .showFantasyCastIcons;
+
+    const enabled = {
+      ...createDefaultLiveMeterProfileData(),
+      id: "live-enabled",
+      name: "Enabled",
+    };
+    enabled.general.showFantasyCastIcons = true;
+
+    const invalid = {
+      ...createDefaultLiveMeterProfileData(),
+      id: "live-invalid",
+      name: "Invalid",
+    };
+    (invalid.general as unknown as Record<string, unknown>)[
+      "showFantasyCastIcons"
+    ] = "true";
+    state.liveMeter.profiles = [legacy, enabled, invalid];
+
+    const repaired = reconcileMonitoringState(state);
+    expect(
+      repaired.liveMeter.profiles.map(
+        (profile) => profile.general.showFantasyCastIcons,
+      ),
+    ).toEqual([false, true, false]);
+  });
+
   it("materializes the active loadout monster profile into the mirror", () => {
     const state = createDefaultMonitoringSettingsState();
     const first = state.monsterMonitor.profiles[0]!;

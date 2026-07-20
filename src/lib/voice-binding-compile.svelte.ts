@@ -35,6 +35,7 @@ import {
   ensureDbmVoiceConfigs,
   ensureMechanicVoiceConfigs,
   getGlobalBuffAliases,
+  resolveVoicePriority,
   SETTINGS,
   type BuffVoiceConfig,
   type DbmVoiceConfig,
@@ -50,8 +51,6 @@ import {
 } from "$lib/voice-binding-counter";
 import { allMinimapVoiceCues } from "../routes/minimap-overlay/scene-registry";
 
-const DEFAULT_PRIORITY = 150;
-const EXPIRING_PRIORITY = 180;
 const DEFAULT_COOLDOWN_MS = 2000;
 
 // ---------------------------------------------------------------------------
@@ -310,6 +309,73 @@ export function resolvedPhraseIdOf(
   return resolved[cacheKey]?.phraseId ?? null;
 }
 
+/** Total phrases a tier-placeholder binding compiles to: tiers 0-5 plus the placeholder-stripped fallback. */
+export const TIERED_PHRASE_COUNT = TIER_LEVELS.length + 1;
+
+/**
+ * Already-resolved per-tier variant phrase ids for a custom binding using
+ * the fantasy tier placeholder (empty for every other binding). Read-only
+ * cache lookup - safe to call from `$derived` (unlike `ensureTieredPhraseId`,
+ * which kicks off upserts on cache misses).
+ */
+export function resolvedTierPhraseIdsOf(
+  key: string,
+  binding: VoicePhraseBinding,
+): string[] {
+  if (binding.source !== "custom" || !hasTierPlaceholder(binding.text)) {
+    return [];
+  }
+  const ids: string[] = [];
+  for (const tier of TIER_LEVELS) {
+    const id = resolved[`custom:${key}:tier${tier}`]?.phraseId;
+    if (id) ids.push(id);
+  }
+  return ids;
+}
+
+/**
+ * Resolves every phrase id behind `binding`, awaiting upserts for
+ * tier-placeholder variants that haven't landed in the cache yet (cache keys
+ * match the compile pass, so no duplicate phrases get created). For custom
+ * text with the placeholder this returns up to 7 ids (fallback + tiers 0-5);
+ * everything else returns the single already-resolved id (or nothing).
+ * Meant for event handlers like the overview's batch generation, not for
+ * the reactive compile path.
+ */
+export async function materializeBindingPhraseIds(
+  key: string,
+  binding: VoicePhraseBinding,
+): Promise<string[]> {
+  if (binding.source === "phrase") {
+    const id = binding.phraseId.trim();
+    return id ? [id] : [];
+  }
+  if (binding.source !== "custom" || !hasTierPlaceholder(binding.text)) {
+    const id = resolvedPhraseIdOf(key, binding);
+    return id ? [id] : [];
+  }
+
+  const rawText = binding.text;
+  const variants = [
+    { cacheKey: `custom:${key}`, text: expandTierPlaceholder(rawText, null) },
+    ...TIER_LEVELS.map((tier) => ({
+      cacheKey: `custom:${key}:tier${tier}`,
+      text: expandTierPlaceholder(rawText, tier),
+    })),
+  ];
+  const ids: string[] = [];
+  for (const variant of variants) {
+    if (!variant.text) continue;
+    const cached = resolved[variant.cacheKey];
+    const phraseId =
+      cached?.text === variant.text
+        ? cached.phraseId
+        : await upsertPhrase(variant.cacheKey, variant.text);
+    if (phraseId) ids.push(phraseId);
+  }
+  return ids;
+}
+
 /**
  * Resolves `binding` to a phrase id and immediately plays it through the
  * test-trigger pipeline, awaiting phrase creation for auto/custom text
@@ -360,7 +426,6 @@ function compileEvent(
   trigger: VoiceTrigger,
   config: VoiceEventConfig | undefined,
   autoText: string,
-  priority: number,
 ): VoiceRule | null {
   if (!config?.enabled) return null;
   const phraseId = ensurePhraseId(ruleId, config.phrase, autoText);
@@ -370,7 +435,7 @@ function compileEvent(
     enabled: true,
     trigger,
     phraseId,
-    priority,
+    priority: resolveVoicePriority(config.priority),
     cooldownMs: DEFAULT_COOLDOWN_MS,
   };
 }
@@ -387,7 +452,6 @@ function compileTieredEvent(
   trigger: VoiceTrigger,
   config: VoiceEventConfig | undefined,
   autoText: string,
-  priority: number,
 ): VoiceRule | null {
   if (!config?.enabled) return null;
   const resolution = ensureTieredPhraseId(ruleId, config.phrase, autoText);
@@ -398,7 +462,7 @@ function compileTieredEvent(
     trigger,
     phraseId: resolution.phraseId,
     phraseIdByTier: resolution.phraseIdByTier ?? null,
-    priority,
+    priority: resolveVoicePriority(config.priority),
     cooldownMs: DEFAULT_COOLDOWN_MS,
   };
 }
@@ -418,7 +482,7 @@ function compileExpiringEvent(
     enabled: true,
     trigger,
     phraseId,
-    priority: EXPIRING_PRIORITY,
+    priority: resolveVoicePriority(config.priority),
     cooldownMs: DEFAULT_COOLDOWN_MS,
   };
 }
@@ -439,7 +503,6 @@ function compileBuffVoiceRules(): VoiceRule[] {
       { kind: "buffGained", buffId },
       config.gained,
       buffAutoText(name, "gained"),
-      DEFAULT_PRIORITY,
     );
     if (gained) rules.push(gained);
 
@@ -448,7 +511,6 @@ function compileBuffVoiceRules(): VoiceRule[] {
       { kind: "buffLost", buffId },
       config.lost,
       buffAutoText(name, "lost"),
-      DEFAULT_PRIORITY,
     );
     if (lost) rules.push(lost);
 
@@ -481,7 +543,6 @@ function compileMonsterBuffVoiceRules(): VoiceRule[] {
       { kind: "monsterBuffGained", buffId, sourceScope },
       config.gained,
       monsterBuffAutoText(name, "gained"),
-      DEFAULT_PRIORITY,
     );
     if (gained) rules.push(gained);
 
@@ -490,7 +551,6 @@ function compileMonsterBuffVoiceRules(): VoiceRule[] {
       { kind: "monsterBuffLost", buffId, sourceScope },
       config.lost,
       monsterBuffAutoText(name, "lost"),
-      DEFAULT_PRIORITY,
     );
     if (lost) rules.push(lost);
 
@@ -528,7 +588,6 @@ function compileCounterVoiceRules(): VoiceRule[] {
           { kind: "counterThreshold", ruleId: rule.ruleId, slotId },
           config.threshold,
           counterAutoText(label, "threshold"),
-          DEFAULT_PRIORITY,
         );
         if (threshold) rules.push(threshold);
       }
@@ -567,7 +626,6 @@ function compileDbmVoiceRules(): VoiceRule[] {
       { kind: "bossDbm", baseSkillId },
       config.onCast,
       dbmAutoText(name, "onCast"),
-      DEFAULT_PRIORITY,
     );
     if (onCast) rules.push(onCast);
 
@@ -632,7 +690,11 @@ function migrateLegacyVoiceRules(): void {
       source: "phrase",
       phraseId: rule.phraseId,
     };
-    const event: VoiceEventConfig = { enabled: rule.enabled, phrase };
+    const event: VoiceEventConfig = {
+      enabled: rule.enabled,
+      phrase,
+      priority: resolveVoicePriority(rule.priority),
+    };
     if (rule.trigger.kind === "buffGained") {
       const key = String(rule.trigger.buffId);
       buffPatch[key] = { ...buffPatch[key], gained: event };
@@ -689,6 +751,9 @@ export type VoiceBindingOverviewEntry = {
     | "voice.binding.event.onCast";
   binding: VoicePhraseBinding;
   phraseId: string | null;
+  /** Per-tier (0-5) variant phrase ids for tier-placeholder custom text; empty otherwise. */
+  tierPhraseIds: string[];
+  priority: number;
   navigateTo: "buff" | "monsterBuff" | "counter" | "dbm" | "minimap";
   monsterBuffSourceScope?: MonsterBuffSourceScope;
 };
@@ -709,6 +774,8 @@ function pushOverviewEntry(
     eventLabelKey,
     binding: config.phrase,
     phraseId: resolvedPhraseIdOf(id, config.phrase),
+    tierPhraseIds: resolvedTierPhraseIdsOf(id, config.phrase),
+    priority: resolveVoicePriority(config.priority),
     navigateTo,
     ...(monsterBuffSourceScope ? { monsterBuffSourceScope } : {}),
   });

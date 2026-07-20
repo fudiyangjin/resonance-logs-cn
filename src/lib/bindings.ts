@@ -929,16 +929,7 @@ export type VoiceRule = { id: string; enabled: boolean; trigger: VoiceTrigger; p
 /**
  * 0 = lowest, 255 = highest. Higher priority can interrupt lower priority playback.
  */
-priority: number; cooldownMs: number;
-/**
- * Per-tier phrase variants (fantasy remodel level 0-5), for a
- * `BuffGained`/`BuffLost`/`MonsterBuffGained`/`MonsterBuffLost` rule
- * whose custom text used the `${阶数}` placeholder. When the buff that
- * (un)triggers the rule was applied by a known fantasy summon, its tier
- * selects a variant from this map; falls back to `phrase_id` when the
- * map is absent/empty or has no entry for the observed tier.
- */
-phraseIdByTier?: Partial<{ [key in number]: string }> | null }
+priority: number; cooldownMs: number; phraseIdByTier?: Partial<{ [key in number]: string }> | null }
 /**
  * Persisted + hot-synced runtime settings for the voice feature, embedded as
  * a sub-section of `MonitorRuntimeSnapshot` alongside skill/monster/teammate.

@@ -4,6 +4,7 @@ import {
   createDefaultMonsterMonitorProfile,
   createDefaultSkillMonitorProfile,
   omitProfileId,
+  resolveVoicePriority,
 } from "./settings-store";
 import { parseLoadoutExport } from "./loadout-import";
 
@@ -204,10 +205,12 @@ describe("parseLoadoutExport", () => {
         gained: {
           enabled: true,
           phrase: { source: "custom", text: "Ready" },
+          priority: 150,
         },
         expiring: {
           enabled: true,
           phrase: { source: "phrase", phraseId: "phrase-1" },
+          priority: 200,
           secondsBefore: 2.5,
         },
       },
@@ -218,6 +221,7 @@ describe("parseLoadoutExport", () => {
           expiring: {
             enabled: true,
             phrase: { source: "auto" },
+            priority: 50,
             secondsBefore: 3,
           },
         },
@@ -229,6 +233,7 @@ describe("parseLoadoutExport", () => {
         onCast: {
           enabled: true,
           phrase: { source: "phrase", phraseId: "phrase-2" },
+          priority: 100,
         },
       },
     };
@@ -237,6 +242,7 @@ describe("parseLoadoutExport", () => {
         lost: {
           enabled: true,
           phrase: { source: "custom", text: "Gone" },
+          priority: 150,
         },
       },
     };
@@ -244,13 +250,42 @@ describe("parseLoadoutExport", () => {
     const parsed = parseLoadoutExport(data);
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
+    expect(
+      parsed.output.skillProfile.buffVoiceConfigs?.["101"]?.gained?.priority,
+    ).toBe(150);
+    expect(
+      parsed.output.monsterProfile.dbmVoiceConfigs?.["301"]?.onCast?.priority,
+    ).toBe(100);
     const roundTrip = parseLoadoutExport(
       JSON.parse(JSON.stringify(parsed.output)),
     );
     expect(roundTrip).toEqual(parsed);
   });
 
-  it("defaults liveProfile.challengeWatch/appearance for pre-existing exports", () => {
+  it("keeps omitted voice priorities compatible and resolves them as lowest", () => {
+    const data = validExport();
+    const skill = data["skillProfile"] as Record<string, unknown>;
+    skill["buffVoiceConfigs"] = {
+      "101": {
+        gained: {
+          enabled: true,
+          phrase: { source: "auto" },
+        },
+      },
+    };
+
+    const parsed = parseLoadoutExport(data);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    const priority =
+      parsed.output.skillProfile.buffVoiceConfigs?.["101"]?.gained?.priority;
+    expect(priority).toBeUndefined();
+    expect(resolveVoicePriority(priority)).toBe(0);
+    expect(resolveVoicePriority(-10)).toBe(0);
+    expect(resolveVoicePriority(999)).toBe(255);
+  });
+
+  it("defaults new live profile fields for pre-existing exports", () => {
     // Older exports predate the challengeWatch/appearance fields entirely —
     // `liveProfile` itself may even be absent (falls back to defaults).
     const result = parseLoadoutExport(validExport());
@@ -261,6 +296,7 @@ describe("parseLoadoutExport", () => {
       defaults.challengeWatch,
     );
     expect(result.output.liveProfile.appearance).toEqual(defaults.appearance);
+    expect(result.output.liveProfile.general.showFantasyCastIcons).toBe(false);
   });
 
   it("preserves an explicit liveProfile.challengeWatch/appearance payload", () => {
@@ -271,6 +307,10 @@ describe("parseLoadoutExport", () => {
         id: "unused",
         name: "Live",
       }),
+      general: {
+        ...createDefaultLiveMeterProfileData().general,
+        showFantasyCastIcons: true,
+      },
       challengeWatch: { forbiddenDamageIds: [123, 456] },
       appearance: {
         ...createDefaultLiveMeterProfileData().appearance,
@@ -289,6 +329,7 @@ describe("parseLoadoutExport", () => {
       Warrior: "#abcdef",
     });
     expect(result.output.liveProfile.appearance.useClassSpecColors).toBe(true);
+    expect(result.output.liveProfile.general.showFantasyCastIcons).toBe(true);
     expect(parseLoadoutExport(result.output).success).toBe(true);
   });
 });

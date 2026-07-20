@@ -287,11 +287,20 @@ function normalizeLiveProfiles(
     return createDefaultLiveMeterState();
   }
   const seen = new Set<string>();
-  const profiles = state.profiles.map((profile) => ({
-    ...createDefaultLiveMeterProfileData(),
-    ...profile,
-    id: nextUniqueId(profile.id, "live", seen),
-  }));
+  const profiles = state.profiles.map((profile) => {
+    const defaults = createDefaultLiveMeterProfileData();
+    return {
+      ...defaults,
+      ...profile,
+      general: {
+        ...defaults.general,
+        ...profile.general,
+        showFantasyCastIcons:
+          profile.general?.showFantasyCastIcons === true,
+      },
+      id: nextUniqueId(profile.id, "live", seen),
+    };
+  });
   const mirroredId = profiles.some((p) => p.id === state.mirroredProfileId)
     ? state.mirroredProfileId
     : profiles[0]!.id;

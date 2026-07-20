@@ -159,6 +159,11 @@
             description={t("settings.common.seasonStrength.othersDescription")}
           />
           <SettingsSwitch
+            bind:checked={SETTINGS.live.general.state.showFantasyCastIcons}
+            label={t("settings.live.fantasyCastIcons")}
+            description={t("settings.live.fantasyCastIconsDescription")}
+          />
+          <SettingsSwitch
             bind:checked={SETTINGS.live.general.state.relativeToTopDPSPlayer}
             label={t("settings.common.relative.dpsPlayer")}
             description={t("settings.common.relative.dpsPlayerDescription")}

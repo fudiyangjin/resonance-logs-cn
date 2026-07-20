@@ -6,17 +6,23 @@
    * too much space with a full party.
    */
   import { getFantasyCasts } from "$lib/stores/fantasy-cast-store.svelte";
+  import { SETTINGS } from "$lib/settings-store";
   import { tooltip } from "$lib/utils.svelte";
   import { t } from "$lib/i18n/index.svelte";
 
   let { entityUuid, size = 16 }: { entityUuid: string; size?: number } =
     $props();
 
-  let casts = $derived(getFantasyCasts(entityUuid));
+  const showFantasyCastIcons = $derived(
+    SETTINGS.live.general.state.showFantasyCastIcons === true,
+  );
+  const casts = $derived(
+    showFantasyCastIcons ? getFantasyCasts(entityUuid) : [],
+  );
 </script>
 
 {#if casts.length > 0}
-  <span class="inline-flex items-center gap-1 shrink-0">
+  <span class="inline-flex shrink-0 items-center gap-1">
     {#each casts as cast (cast.id)}
       <img
         src={cast.iconPath}

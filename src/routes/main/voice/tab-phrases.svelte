@@ -25,6 +25,10 @@
     VOICE,
     voiceErrorMessage,
   } from "$lib/stores/voice-store.svelte";
+  import {
+    classifyOrphanPhrases,
+    collectReferencedVoiceKeys,
+  } from "$lib/voice-phrase-gc";
 
   const status = $derived(VOICE.status);
   const phrases = $derived(status?.catalog.phrases ?? []);
@@ -160,6 +164,60 @@
       }
     } finally {
       deletingId = null;
+    }
+  }
+
+  // Orphan = auto-managed phrase (auto:voice:* / custom:voice:*) whose rule
+  // key is no longer referenced by any binding in ANY loadout profile.
+  // Manually created phrases never match the managed name pattern.
+  const orphanPhrases = $derived(
+    classifyOrphanPhrases(
+      phrases,
+      collectReferencedVoiceKeys({
+        skillProfiles: SETTINGS.skillMonitor.state.profiles,
+        monsterConfigs: [
+          SETTINGS.monsterMonitor.state,
+          ...SETTINGS.monsterMonitor.state.profiles,
+        ],
+        mechanicVoiceConfigs: SETTINGS.minimap.state.mechanicVoiceConfigs,
+      }),
+    ),
+  );
+
+  let gcConfirmOpen = $state(false);
+  let gcRunning = $state(false);
+  let gcMessage = $state<string | null>(null);
+
+  async function cleanupOrphanPhrases() {
+    if (gcRunning) return;
+    // Snapshot: the derived list recomputes as the catalog refreshes after
+    // each delete.
+    const targets = [...orphanPhrases];
+    gcRunning = true;
+    gcMessage = null;
+    localError = null;
+    let removed = 0;
+    let failed = 0;
+    try {
+      for (const phrase of targets) {
+        const res = await runVoiceOperation({ kind: "updatingCatalog" }, () =>
+          commands.voiceDeletePhrase(phrase.id),
+        );
+        if (res.status === "error") {
+          failed += 1;
+          localError = voiceErrorMessage(res.error);
+        } else {
+          removed += 1;
+          selectedPhraseIds.delete(phrase.id);
+        }
+      }
+      gcMessage =
+        failed > 0
+          ? t("voice.phrases.gc.failed", { count: removed, failed })
+          : t("voice.phrases.gc.done", { count: removed });
+    } finally {
+      gcRunning = false;
+      gcConfirmOpen = false;
     }
   }
 
@@ -340,6 +398,51 @@
       </button>
     </div>
 
+    <div class="space-y-2">
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="border-border/60 hover:bg-muted/40 flex items-center gap-1.5 rounded border px-3 py-1.5 text-xs disabled:opacity-50"
+          disabled={operationActive || gcRunning || orphanPhrases.length === 0}
+          onclick={() => (gcConfirmOpen = !gcConfirmOpen)}
+        >
+          <Trash2Icon class="h-3.5 w-3.5" />
+          {t("voice.phrases.gc.button", { count: orphanPhrases.length })}
+        </button>
+        {#if gcMessage}
+          <span class="text-muted-foreground text-xs">{gcMessage}</span>
+        {/if}
+      </div>
+
+      {#if gcConfirmOpen}
+        <div
+          class="border-border/60 bg-background/50 space-y-2 rounded-lg border p-3 text-xs"
+        >
+          <p class="text-muted-foreground">
+            {t("voice.phrases.gc.confirm", { count: orphanPhrases.length })}
+          </p>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded px-3 py-1.5 font-medium disabled:opacity-50"
+              disabled={operationActive || gcRunning}
+              onclick={cleanupOrphanPhrases}
+            >
+              {t("voice.phrases.gc.confirmAction")}
+            </button>
+            <button
+              type="button"
+              class="border-border/60 hover:bg-muted/40 rounded border px-3 py-1.5"
+              disabled={gcRunning}
+              onclick={() => (gcConfirmOpen = false)}
+            >
+              {t("voice.phrases.gc.cancel")}
+            </button>
+          </div>
+        </div>
+      {/if}
+    </div>
+
     {#if phrases.length > 0}
       <div class="space-y-2">
         {#each phrases as phrase (phrase.id)}
@@ -399,7 +502,9 @@
               </button>
             {:else}
               <div class="min-w-0 flex-1">
-                <div class="text-foreground flex items-center gap-1.5 truncate text-sm font-medium">
+                <div
+                  class="text-foreground flex items-center gap-1.5 truncate text-sm font-medium"
+                >
                   {phrase.name}
                   <span class="text-muted-foreground text-xs"
                     >({languageLabel(phrase.language)})</span
@@ -547,14 +652,18 @@
 
         {#if selectedSource === "fineTuned"}
           {#if fineTunedState?.kind === "ready"}
-            <div class="border-border/60 bg-muted/30 rounded border px-3 py-2 text-sm">
+            <div
+              class="border-border/60 bg-muted/30 rounded border px-3 py-2 text-sm"
+            >
               {fineTunedState.voice.displayName}
               <span class="text-muted-foreground ml-2 text-xs">
                 {fineTunedState.voice.speakerName}
               </span>
             </div>
           {:else}
-            <div class="border-destructive/40 bg-destructive/10 text-destructive rounded border px-3 py-2 text-xs">
+            <div
+              class="border-destructive/40 bg-destructive/10 text-destructive rounded border px-3 py-2 text-xs"
+            >
               {t("voice.phrases.generate.finetunedUnavailable")}
             </div>
           {/if}
@@ -562,14 +671,22 @@
           <div class="flex gap-2">
             <button
               type="button"
-              class="flex-1 rounded border px-3 py-2 text-xs {profileMode === 'existing' ? 'border-primary bg-primary/10' : 'border-border/60'}"
+              class="flex-1 rounded border px-3 py-2 text-xs {profileMode ===
+              'existing'
+                ? 'border-primary bg-primary/10'
+                : 'border-border/60'}"
               onclick={() => (profileMode = "existing")}
-            >{t("voice.phrases.generate.useExisting")}</button>
+              >{t("voice.phrases.generate.useExisting")}</button
+            >
             <button
               type="button"
-              class="flex-1 rounded border px-3 py-2 text-xs {profileMode === 'new' ? 'border-primary bg-primary/10' : 'border-border/60'}"
+              class="flex-1 rounded border px-3 py-2 text-xs {profileMode ===
+              'new'
+                ? 'border-primary bg-primary/10'
+                : 'border-border/60'}"
               onclick={() => (profileMode = "new")}
-            >{t("voice.phrases.generate.createNew")}</button>
+              >{t("voice.phrases.generate.createNew")}</button
+            >
           </div>
 
           {#if profileMode === "existing"}
@@ -582,7 +699,8 @@
                   (event.currentTarget as HTMLSelectElement).value || null;
               }}
             >
-              <option value="">{t("voice.phrases.generate.pickProfile")}</option>
+              <option value="">{t("voice.phrases.generate.pickProfile")}</option
+              >
               {#each profiles as profile (profile.id)}
                 <option value={profile.id}>{profile.name || profile.id}</option>
               {/each}
@@ -595,7 +713,8 @@
                 value={newProfileName}
                 disabled={operationActive}
                 oninput={(event) => {
-                  newProfileName = (event.currentTarget as HTMLInputElement).value;
+                  newProfileName = (event.currentTarget as HTMLInputElement)
+                    .value;
                 }}
               />
               <button
@@ -608,7 +727,11 @@
               </button>
             </div>
             <label class="text-foreground flex items-center gap-2 text-xs">
-              <input type="checkbox" bind:checked={keepReference} disabled={operationActive} />
+              <input
+                type="checkbox"
+                bind:checked={keepReference}
+                disabled={operationActive}
+              />
               {t("voice.phrases.generate.keepReference")}
             </label>
           {/if}

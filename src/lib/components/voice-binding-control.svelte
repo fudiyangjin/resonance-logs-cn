@@ -10,8 +10,12 @@
    * only need to pass which subject this instance represents.
    */
   import PlayIcon from "virtual:icons/lucide/play";
-  import { t } from "$lib/i18n/index.svelte";
-  import type { VoicePhraseBinding } from "$lib/settings-store";
+  import { t, type MessageKey } from "$lib/i18n/index.svelte";
+  import {
+    resolveVoicePriority,
+    VOICE_PRIORITY_TIERS,
+    type VoicePhraseBinding,
+  } from "$lib/settings-store";
   import { VOICE } from "$lib/stores/voice-store.svelte";
   import { previewPhraseBinding } from "$lib/voice-binding-compile.svelte.js";
   import {
@@ -27,6 +31,14 @@
   const phrases = $derived(VOICE.status?.catalog.phrases ?? []);
 
   let previewingKey = $state<string | null>(null);
+
+  const PRIORITY_LABEL_KEYS = {
+    default: "voice.binding.priority.default",
+    low: "voice.binding.priority.low",
+    medium: "voice.binding.priority.medium",
+    high: "voice.binding.priority.high",
+    urgent: "voice.binding.priority.urgent",
+  } satisfies Record<(typeof VOICE_PRIORITY_TIERS)[number]["id"], MessageKey>;
 
   async function tryPlay(
     key: string,
@@ -60,6 +72,10 @@
     {@const config = event.config}
     {@const enabled = config?.enabled ?? false}
     {@const binding = config?.phrase ?? { source: "auto" }}
+    {@const priority = config?.priority}
+    {@const hasKnownPriority = VOICE_PRIORITY_TIERS.some(
+      (tier) => tier.value === priority,
+    )}
     {@const seconds =
       event.expiring && config && "secondsBefore" in config
         ? config.secondsBefore
@@ -95,6 +111,32 @@
             <option value="custom">{t("voice.binding.source.custom")}</option>
             <option value="phrase">{t("voice.binding.source.phrase")}</option>
           </select>
+
+          <label class="flex items-center gap-1 text-xs text-muted-foreground">
+            <span>{t("voice.binding.priority")}</span>
+            <select
+              class="border-border/60 bg-muted/30 text-foreground rounded border px-1.5 py-1 text-xs"
+              value={priority ?? ""}
+              onchange={(ev) => {
+                const value = (ev.currentTarget as HTMLSelectElement).value;
+                updateSubjectEvent(subject, event.eventKind, {
+                  priority:
+                    value === ""
+                      ? undefined
+                      : resolveVoicePriority(Number(value)),
+                });
+              }}
+            >
+              {#if priority !== undefined && !hasKnownPriority}
+                <option value={priority}>{priority}</option>
+              {/if}
+              {#each VOICE_PRIORITY_TIERS as tier (tier.id)}
+                <option value={tier.value ?? ""}>
+                  {t(PRIORITY_LABEL_KEYS[tier.id])}
+                </option>
+              {/each}
+            </select>
+          </label>
 
           {#if event.expiring}
             <input

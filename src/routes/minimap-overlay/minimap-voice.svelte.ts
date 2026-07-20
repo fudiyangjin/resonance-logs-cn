@@ -10,7 +10,11 @@
  * `minimap-events.svelte.ts`.
  */
 import { commands } from "$lib/bindings";
-import { ensureMechanicVoiceConfigs, SETTINGS } from "$lib/settings-store";
+import {
+  ensureMechanicVoiceConfigs,
+  resolveVoicePriority,
+  SETTINGS,
+} from "$lib/settings-store";
 import {
   ensurePhraseId,
   minimapCueEventKey,
@@ -19,9 +23,6 @@ import { findMinimapVoiceCue } from "./scene-registry";
 import type { MinimapVoiceCueFire } from "./scene-types";
 import { MinimapVoiceCueDeduper } from "./minimap-voice-dedupe";
 
-/** Same priority band as boss DBM/buff cues; minimap mechanics are just as
- * time-critical as a boss telegraph. */
-const MINIMAP_CUE_PRIORITY = 160;
 const cueDeduper = new MinimapVoiceCueDeduper();
 
 /** Clears all dedup state. Call on scene change (a `cueId` from a
@@ -52,7 +53,10 @@ async function playCue(cueId: string): Promise<void> {
   );
   if (!phraseId) return;
 
-  await commands.voiceEnqueuePhrase(phraseId, MINIMAP_CUE_PRIORITY);
+  await commands.voiceEnqueuePhrase(
+    phraseId,
+    resolveVoicePriority(config.priority),
+  );
 }
 
 /**

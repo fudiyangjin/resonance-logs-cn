@@ -575,6 +575,9 @@ export const jaJPMessages = {
   "settings.common.columns.tankedSkills": "被ダメージ（スキル詳細）列",
   "settings.common.columns.orderHint":
     "矢印で並べ替え、スイッチで表示/非表示を切り替えます。",
+  "settings.live.fantasyCastIcons": "幻想アイコンを表示",
+  "settings.live.fantasyCastIconsDescription":
+    "プレイヤー名の横に最近使用した幻想のアイコンを表示します。",
   "settings.live.refreshRate": "更新レート",
   "settings.live.refreshRateDescription":
     "ライブ統計の更新間隔（50-2000ms）。低いほど滑らかですが CPU 使用量が増えます。",
@@ -1891,6 +1894,13 @@ export const jaJPMessages = {
   "voice.phrases.generateOne": "生成",
   "voice.phrases.regenerateOne": "再生成",
   "voice.phrases.rowGenerateHint": "先に下で音声ソースを選択してください",
+  "voice.phrases.gc.button": "未参照フレーズを整理 ({count})",
+  "voice.phrases.gc.confirm":
+    "どのプロファイルからも参照されていない自動生成フレーズ {count} 件と音声を削除します。この操作は取り消せません。これらを使うプロファイルを再インポートするとフレーズは自動再作成されますが、音声は再生成が必要です。",
+  "voice.phrases.gc.confirmAction": "整理を実行",
+  "voice.phrases.gc.cancel": "キャンセル",
+  "voice.phrases.gc.done": "未参照フレーズを {count} 件削除しました",
+  "voice.phrases.gc.failed": "{count} 件削除、{failed} 件の削除に失敗しました",
   "voice.language.zhCN": "中国語",
   "voice.language.enUS": "英語",
   "voice.language.jaJP": "日本語",
@@ -1930,6 +1940,12 @@ export const jaJPMessages = {
   "voice.binding.source.auto": "自動生成",
   "voice.binding.source.custom": "カスタムテキスト",
   "voice.binding.source.phrase": "フレーズ集から参照",
+  "voice.binding.priority": "優先度",
+  "voice.binding.priority.default": "デフォルト（最低）",
+  "voice.binding.priority.low": "低",
+  "voice.binding.priority.medium": "中",
+  "voice.binding.priority.high": "高",
+  "voice.binding.priority.urgent": "緊急",
   "voice.binding.autoPreview": "読み上げ内容：{text}",
   "voice.binding.customPlaceholder": "カスタムの読み上げテキストを入力",
   "voice.binding.tierPlaceholderHint":
@@ -1949,9 +1965,11 @@ export const jaJPMessages = {
   "voice.bindings.column.subject": "対象",
   "voice.bindings.column.event": "イベント",
   "voice.bindings.column.source": "ソース",
+  "voice.bindings.column.priority": "優先度",
   "voice.bindings.column.status": "状態",
   "voice.bindings.status.ready": "準備完了",
   "voice.bindings.status.pending": "生成待ち",
+  "voice.bindings.status.partial": "生成済み {done}/{total}",
   "voice.bindings.navigate.buff": "バフ監視へ",
   "voice.bindings.navigate.counter": "カウンターへ",
   "voice.bindings.navigate.dbm": "ボス機構へ",

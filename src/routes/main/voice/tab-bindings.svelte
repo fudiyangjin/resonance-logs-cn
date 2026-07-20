@@ -12,10 +12,17 @@
   import SparklesIcon from "virtual:icons/lucide/sparkles";
   import { commands, type VoiceGenerateRequestDto } from "$lib/bindings";
   import { t, type MessageKey } from "$lib/i18n/index.svelte";
-  import { SETTINGS, type VoicePhraseBinding } from "$lib/settings-store";
+  import {
+    SETTINGS,
+    VOICE_PRIORITY_TIERS,
+    type VoicePhraseBinding,
+  } from "$lib/settings-store";
   import { runVoiceGeneration, VOICE } from "$lib/stores/voice-store.svelte";
   import {
+    hasTierPlaceholder,
     listVoiceBindingOverview,
+    materializeBindingPhraseIds,
+    TIERED_PHRASE_COUNT,
     type VoiceBindingOverviewEntry,
   } from "$lib/voice-binding-compile.svelte.js";
 
@@ -36,9 +43,49 @@
     phrase: "voice.binding.source.phrase",
   };
 
+  const PRIORITY_LABEL_KEYS = {
+    default: "voice.binding.priority.default",
+    low: "voice.binding.priority.low",
+    medium: "voice.binding.priority.medium",
+    high: "voice.binding.priority.high",
+    urgent: "voice.binding.priority.urgent",
+  } satisfies Record<(typeof VOICE_PRIORITY_TIERS)[number]["id"], MessageKey>;
+
+  function priorityLabel(priority: number): string {
+    const tier = VOICE_PRIORITY_TIERS.find(
+      (candidate) => (candidate.value ?? 0) === priority,
+    );
+    return tier ? t(PRIORITY_LABEL_KEYS[tier.id]) : String(priority);
+  }
+
+  function usesTierPlaceholder(entry: VoiceBindingOverviewEntry): boolean {
+    return (
+      entry.binding.source === "custom" &&
+      hasTierPlaceholder(entry.binding.text)
+    );
+  }
+
+  function entryPhraseIds(entry: VoiceBindingOverviewEntry): string[] {
+    return [entry.phraseId, ...entry.tierPhraseIds].filter(
+      (id): id is string => !!id,
+    );
+  }
+
+  /** How many phrases this entry compiles to (7 for tier-placeholder text). */
+  function expectedPhraseCount(entry: VoiceBindingOverviewEntry): number {
+    return usesTierPlaceholder(entry) ? TIERED_PHRASE_COUNT : 1;
+  }
+
+  function readyPhraseCount(entry: VoiceBindingOverviewEntry): number {
+    return entryPhraseIds(entry).filter(
+      (id) => !!phrasesById.get(id)?.activeAssetId,
+    ).length;
+  }
+
   function isReady(entry: VoiceBindingOverviewEntry): boolean {
-    if (!entry.phraseId) return false;
-    return !!phrasesById.get(entry.phraseId)?.activeAssetId;
+    const ids = entryPhraseIds(entry);
+    if (ids.length < expectedPhraseCount(entry)) return false;
+    return ids.every((id) => !!phrasesById.get(id)?.activeAssetId);
   }
 
   const groups = $derived.by(() => {
@@ -121,13 +168,18 @@
 
   async function generateMissing() {
     generateMessage = null;
-    const phraseIds = Array.from(
-      new Set(
-        entries
-          .filter((e) => e.phraseId && !isReady(e))
-          .map((e) => e.phraseId!),
-      ),
-    );
+    // Materialize every phrase behind each pending entry (tier-placeholder
+    // text expands to 7 phrases, upserted here if not cached yet), then
+    // submit the ones that still lack audio.
+    const missingIds: string[] = [];
+    for (const entry of entries) {
+      if (isReady(entry)) continue;
+      const ids = await materializeBindingPhraseIds(entry.id, entry.binding);
+      missingIds.push(
+        ...ids.filter((id) => !phrasesById.get(id)?.activeAssetId),
+      );
+    }
+    const phraseIds = Array.from(new Set(missingIds));
     if (phraseIds.length === 0) {
       generateMessage = t("voice.bindings.generateMissing.none");
       return;
@@ -226,6 +278,9 @@
                   >{t("voice.bindings.column.source")}</th
                 >
                 <th class="px-3 py-2 font-medium"
+                  >{t("voice.bindings.column.priority")}</th
+                >
+                <th class="px-3 py-2 font-medium"
                   >{t("voice.bindings.column.status")}</th
                 >
                 <th class="px-3 py-2 font-medium"></th>
@@ -234,6 +289,8 @@
             <tbody class="divide-border/40 divide-y">
               {#each group.items as entry (entry.id)}
                 {@const ready = isReady(entry)}
+                {@const doneCount = readyPhraseCount(entry)}
+                {@const totalCount = expectedPhraseCount(entry)}
                 <tr class="hover:bg-muted/10">
                   <td class="px-3 py-2 font-medium text-foreground">
                     <div class="flex items-center gap-2">
@@ -257,12 +314,24 @@
                   <td class="px-3 py-2 text-muted-foreground">
                     {t(SOURCE_LABEL_KEYS[entry.binding.source])}
                   </td>
+                  <td class="px-3 py-2 text-muted-foreground">
+                    {priorityLabel(entry.priority)}
+                  </td>
                   <td class="px-3 py-2">
                     {#if ready}
                       <span
                         class="rounded bg-emerald-500/15 px-1.5 py-0.5 text-emerald-500"
                       >
                         {t("voice.bindings.status.ready")}
+                      </span>
+                    {:else if doneCount > 0}
+                      <span
+                        class="bg-amber-500/15 text-amber-500 rounded px-1.5 py-0.5"
+                      >
+                        {t("voice.bindings.status.partial", {
+                          done: doneCount,
+                          total: totalCount,
+                        })}
                       </span>
                     {:else}
                       <span

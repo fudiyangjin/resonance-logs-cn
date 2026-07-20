@@ -528,6 +528,9 @@ export const zhCNMessages = {
   "settings.common.columns.tankedSkills": "承伤（技能明细）列",
   "settings.common.columns.orderHint":
     "使用箭头调整顺序；用开关控制显示/隐藏。",
+  "settings.live.fantasyCastIcons": "显示幻想图标",
+  "settings.live.fantasyCastIconsDescription":
+    "在玩家名称旁显示最近释放的幻想图标。",
   "settings.live.refreshRate": "刷新频率",
   "settings.live.refreshRateDescription":
     "实时统计刷新间隔（50-2000ms）。越低越流畅，但更耗 CPU。",
@@ -1766,6 +1769,13 @@ export const zhCNMessages = {
   "voice.phrases.generateOne": "生成",
   "voice.phrases.regenerateOne": "重新生成",
   "voice.phrases.rowGenerateHint": "请先在下方选择音色来源",
+  "voice.phrases.gc.button": "清理未引用短语 ({count})",
+  "voice.phrases.gc.confirm":
+    "将删除 {count} 条自动生成但未被任何方案引用的短语及其音频。此操作不可撤销；若之后重新导入含这些播报的方案，短语会自动重建，但音频需要重新生成。",
+  "voice.phrases.gc.confirmAction": "确认清理",
+  "voice.phrases.gc.cancel": "取消",
+  "voice.phrases.gc.done": "已清理 {count} 条未引用短语",
+  "voice.phrases.gc.failed": "已清理 {count} 条，{failed} 条删除失败",
   "voice.language.zhCN": "中文",
   "voice.language.enUS": "英文",
   "voice.language.jaJP": "日文",
@@ -1804,6 +1814,12 @@ export const zhCNMessages = {
   "voice.binding.source.auto": "自动生成",
   "voice.binding.source.custom": "自定义文本",
   "voice.binding.source.phrase": "短语库引用",
+  "voice.binding.priority": "优先级",
+  "voice.binding.priority.default": "默认（最低）",
+  "voice.binding.priority.low": "低",
+  "voice.binding.priority.medium": "中",
+  "voice.binding.priority.high": "高",
+  "voice.binding.priority.urgent": "紧急",
   "voice.binding.autoPreview": "将播报：{text}",
   "voice.binding.customPlaceholder": "输入自定义播报文本",
   "voice.binding.tierPlaceholderHint":
@@ -1822,9 +1838,11 @@ export const zhCNMessages = {
   "voice.bindings.column.subject": "对象",
   "voice.bindings.column.event": "事件",
   "voice.bindings.column.source": "来源",
+  "voice.bindings.column.priority": "优先级",
   "voice.bindings.column.status": "状态",
   "voice.bindings.status.ready": "已就绪",
   "voice.bindings.status.pending": "待生成",
+  "voice.bindings.status.partial": "已生成 {done}/{total}",
   "voice.bindings.navigate.buff": "前往 Buff 监控",
   "voice.bindings.navigate.counter": "前往计数器",
   "voice.bindings.navigate.dbm": "前往 Boss 机制",

@@ -589,6 +589,9 @@ export const enUSMessages = {
     "Damage Taken (Skill Details) Columns",
   "settings.common.columns.orderHint":
     "Use arrows to reorder; use switches to show/hide.",
+  "settings.live.fantasyCastIcons": "Show Fantasy Icons",
+  "settings.live.fantasyCastIconsDescription":
+    "Show recently cast fantasy icons next to player names.",
   "settings.live.refreshRate": "Refresh Rate",
   "settings.live.refreshRateDescription":
     "Live stats refresh interval (50-2000ms). Lower values feel smoother but use more CPU.",
@@ -1904,6 +1907,14 @@ export const enUSMessages = {
   "voice.phrases.generateOne": "Generate",
   "voice.phrases.regenerateOne": "Regenerate",
   "voice.phrases.rowGenerateHint": "Pick a voice source below first",
+  "voice.phrases.gc.button": "Clean up unreferenced phrases ({count})",
+  "voice.phrases.gc.confirm":
+    "This deletes {count} auto-generated phrases (and their audio) that are no longer referenced by any loadout. This cannot be undone; re-importing a loadout that uses them will recreate the phrases, but the audio must be regenerated.",
+  "voice.phrases.gc.confirmAction": "Clean up",
+  "voice.phrases.gc.cancel": "Cancel",
+  "voice.phrases.gc.done": "Removed {count} unreferenced phrases",
+  "voice.phrases.gc.failed":
+    "Removed {count} phrases, {failed} failed to delete",
   "voice.language.zhCN": "Chinese",
   "voice.language.enUS": "English",
   "voice.language.jaJP": "Japanese",
@@ -1943,6 +1954,12 @@ export const enUSMessages = {
   "voice.binding.source.auto": "Auto-generated",
   "voice.binding.source.custom": "Custom text",
   "voice.binding.source.phrase": "Phrase library reference",
+  "voice.binding.priority": "Priority",
+  "voice.binding.priority.default": "Default (lowest)",
+  "voice.binding.priority.low": "Low",
+  "voice.binding.priority.medium": "Medium",
+  "voice.binding.priority.high": "High",
+  "voice.binding.priority.urgent": "Urgent",
   "voice.binding.autoPreview": "Will broadcast: {text}",
   "voice.binding.customPlaceholder": "Enter custom broadcast text",
   "voice.binding.tierPlaceholderHint":
@@ -1962,9 +1979,11 @@ export const enUSMessages = {
   "voice.bindings.column.subject": "Subject",
   "voice.bindings.column.event": "Event",
   "voice.bindings.column.source": "Source",
+  "voice.bindings.column.priority": "Priority",
   "voice.bindings.column.status": "Status",
   "voice.bindings.status.ready": "Ready",
   "voice.bindings.status.pending": "Pending",
+  "voice.bindings.status.partial": "Generated {done}/{total}",
   "voice.bindings.navigate.buff": "Go to Buff Monitor",
   "voice.bindings.navigate.counter": "Go to Counters",
   "voice.bindings.navigate.dbm": "Go to Boss Mechanics",

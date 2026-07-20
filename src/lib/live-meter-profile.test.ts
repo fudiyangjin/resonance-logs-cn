@@ -17,6 +17,7 @@ import {
 
 let originalMonitoring: MonitoringSettingsState;
 let originalEventUpdateRateMs: number;
+let originalShowFantasyCastIcons: boolean;
 let originalPlayerRowHeight: number;
 let originalForbiddenDamageIds: number[];
 let originalClassColors: Record<string, string>;
@@ -53,6 +54,7 @@ function configureTwoLiveProfiles(): void {
     name: "B",
   };
   second.general.eventUpdateRateMs = 200;
+  second.general.showFantasyCastIcons = true;
   second.tableCustomization.playerRowHeight = 42;
   second.challengeWatch = { forbiddenDamageIds: [222] };
   second.appearance = {
@@ -89,6 +91,8 @@ function configureTwoLiveProfiles(): void {
 beforeEach(() => {
   originalMonitoring = deepCloneSettings(SETTINGS.monitoring.state);
   originalEventUpdateRateMs = SETTINGS.live.general.state.eventUpdateRateMs;
+  originalShowFantasyCastIcons =
+    SETTINGS.live.general.state.showFantasyCastIcons;
   originalPlayerRowHeight =
     SETTINGS.live.tableCustomization.state.playerRowHeight;
   originalForbiddenDamageIds = [
@@ -106,6 +110,8 @@ beforeEach(() => {
 afterEach(() => {
   stopLiveProfilePersistence();
   SETTINGS.live.general.state.eventUpdateRateMs = originalEventUpdateRateMs;
+  SETTINGS.live.general.state.showFantasyCastIcons =
+    originalShowFantasyCastIcons;
   SETTINGS.live.tableCustomization.state.playerRowHeight =
     originalPlayerRowHeight;
   SETTINGS.challengeWatch.state.forbiddenDamageIds = originalForbiddenDamageIds;
@@ -211,5 +217,15 @@ describe("live meter profile persistence", () => {
         (profile) => profile.id === "live-a",
       )!.appearance.useClassSpecColors,
     ).toBe(false);
+  });
+
+  it("keeps fantasy icon visibility isolated between live profiles", () => {
+    expect(SETTINGS.live.general.state.showFantasyCastIcons).toBe(false);
+
+    switchLiveProfile("live-b");
+    expect(SETTINGS.live.general.state.showFantasyCastIcons).toBe(true);
+
+    switchLiveProfile("live-a");
+    expect(SETTINGS.live.general.state.showFantasyCastIcons).toBe(false);
   });
 });
