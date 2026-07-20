@@ -410,6 +410,7 @@ export const enUSMessages = {
   "live.table.skill": "Skill",
   "live.table.classIconAlt": "Class icon",
   "live.player.unknownClass": "Unknown class",
+  "live.player.fantasyCastTooltip": "{name} · Tier {level}",
   "live.empty.noBoss": "No Boss",
   "live.notifications.encounterReset": "Encounter records reset",
   "live.notifications.encounterPaused": "Encounter paused",
@@ -1362,7 +1363,6 @@ export const enUSMessages = {
   "monsterMonitor.fantasy.description":
     "Resonance skill summoned monsters released by teammates.",
   "monsterMonitor.fantasy.showAll": "Show all teammate fantasies",
-  "monsterMonitor.fantasy.persistentDisplay": "Keep teammate fantasies visible",
   "monsterMonitor.fantasy.placeholder":
     "Search teammate fantasy name or MonsterId",
   "monsterMonitor.fantasy.emptySearch": "No matching teammate fantasies",
@@ -1509,6 +1509,7 @@ export const enUSMessages = {
     "Create buff groups on the Skill Monitor page first",
   "gameOverlay.timer.infinite": "∞",
   "gameOverlay.timer.empty": "--",
+  "gameOverlay.buff.fantasyTierSuffix": "{name} | Tier {level}",
   "gameOverlay.timer.seconds": "{value}s",
   "gameOverlay.timer.minutes": "{value}m",
   "gameOverlay.timer.hours": "{value}h",
@@ -1944,6 +1945,8 @@ export const enUSMessages = {
   "voice.binding.source.phrase": "Phrase library reference",
   "voice.binding.autoPreview": "Will broadcast: {text}",
   "voice.binding.customPlaceholder": "Enter custom broadcast text",
+  "voice.binding.tierPlaceholderHint":
+    'Use ${remodelLevel} (or ${阶数}) to insert the fantasy tier, e.g. "Tina Tier ${remodelLevel} active" becomes "Tina Tier 5 active" at tier 5',
   "voice.binding.pickPhrase": "Select phrase",
   "voice.binding.secondsBefore": "{seconds}s before",
   "voice.binding.tryPlay": "Preview",

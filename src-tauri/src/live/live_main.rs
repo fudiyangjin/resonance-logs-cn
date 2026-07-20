@@ -361,17 +361,30 @@ fn flush_outbound_events(app_handle: &AppHandle, state: &mut AppState) {
                 );
             }
             OutboundEvent::TeammateFantasyUpdate(fantasies) => {
+                let payload = TeammateFantasyUpdatePayload { fantasies };
                 safe_emit_to(
                     app_handle,
                     crate::WINDOW_MONSTER_OVERLAY_LABEL,
                     "teammate-fantasy-update",
-                    TeammateFantasyUpdatePayload { fantasies },
+                    payload.clone(),
+                );
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_LIVE_LABEL,
+                    "teammate-fantasy-update",
+                    payload,
                 );
             }
             OutboundEvent::TeammateFantasyClear => {
                 safe_emit_to(
                     app_handle,
                     crate::WINDOW_MONSTER_OVERLAY_LABEL,
+                    "teammate-fantasy-clear",
+                    (),
+                );
+                safe_emit_to(
+                    app_handle,
+                    crate::WINDOW_LIVE_LABEL,
                     "teammate-fantasy-clear",
                     (),
                 );

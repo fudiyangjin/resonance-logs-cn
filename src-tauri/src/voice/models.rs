@@ -2,6 +2,8 @@
 //! runtime rule definitions, and the JSON contracts used to talk to the
 //! `qwen3-tts-sidecar` batch process.
 
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
@@ -298,6 +300,8 @@ pub struct VoiceRule {
     /// 0 = lowest, 255 = highest. Higher priority can interrupt lower priority playback.
     pub priority: u8,
     pub cooldown_ms: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub phrase_id_by_tier: Option<HashMap<u8, String>>,
 }
 
 /// A resolved intent to play a specific phrase, produced by the rule engine and

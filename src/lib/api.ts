@@ -130,6 +130,8 @@ export type BuffUpdateState = {
   layer: number;
   durationMs: number;
   createTimeMs: number;
+  /** Remodel level (0-5 tier) of the fantasy source that applied this buff, if known. */
+  sourceRemodelLevel: number | null;
 };
 
 export type BuffUpdatePayload = {

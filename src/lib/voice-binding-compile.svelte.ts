@@ -55,6 +55,38 @@ const EXPIRING_PRIORITY = 180;
 const DEFAULT_COOLDOWN_MS = 2000;
 
 // ---------------------------------------------------------------------------
+// Fantasy tier placeholder (`${阶数}` / `${remodelLevel}`) for custom
+// buff/monsterBuff gained/lost text. Expands into one phrase per remodel
+// level (0-5) plus a placeholder-stripped fallback, so the Rust rule engine
+// (`VoiceRule::phrase_id_by_tier`) can pick the variant matching the tier of
+// the fantasy summon that actually applied/removed the buff.
+// ---------------------------------------------------------------------------
+
+const TIER_LEVELS = [0, 1, 2, 3, 4, 5] as const;
+/** Tier used to render the "试听" preview for text containing the placeholder. */
+const PREVIEW_TIER = 5;
+
+function tierPlaceholderPattern(): RegExp {
+  return /\$\{(?:remodelLevel|阶数)\}/g;
+}
+
+export function hasTierPlaceholder(text: string): boolean {
+  return /\$\{(?:remodelLevel|阶数)\}/.test(text);
+}
+
+/** Replaces the placeholder with `{tier}阶` (or removes it when `tier` is null, for the no-tier-known fallback), collapsing any resulting double spaces. */
+export function expandTierPlaceholder(
+  text: string,
+  tier: number | null,
+): string {
+  const replacement = tier === null ? "" : `${tier}阶`;
+  return text
+    .replace(tierPlaceholderPattern(), replacement)
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+// ---------------------------------------------------------------------------
 // Subject labels, per-event rule-id keys, and auto-generated preview text.
 // Shared between the compile pass below and `voice-binding-control.svelte`,
 // so a binding's live preview always matches what actually gets spoken.
@@ -214,6 +246,56 @@ export function ensurePhraseId(
   return cached?.text === text ? cached.phraseId : (cached?.phraseId ?? null);
 }
 
+export type TieredPhraseResolution = {
+  /** Fallback phrase, used when the triggering buff's fantasy tier is unknown or has no variant below. */
+  phraseId: string;
+  /** Per-tier (0-5) variant phrase ids, present only once each has resolved. */
+  phraseIdByTier?: Record<number, string>;
+};
+
+/**
+ * Like `ensurePhraseId`, but for buff/monsterBuff gained/lost bindings that
+ * may use the fantasy tier placeholder. Non-custom bindings (and custom text
+ * without the placeholder) behave exactly like `ensurePhraseId`. Custom text
+ * with the placeholder instead resolves (and, on cache miss, kicks off
+ * upserts for) up to 7 phrases: one per remodel level 0-5, plus a fallback
+ * with the placeholder segment stripped for when the tier can't be
+ * determined at runtime.
+ */
+export function ensureTieredPhraseId(
+  key: string,
+  binding: VoicePhraseBinding,
+  autoText: string,
+): TieredPhraseResolution | null {
+  if (binding.source !== "custom" || !hasTierPlaceholder(binding.text)) {
+    const phraseId = ensurePhraseId(key, binding, autoText);
+    return phraseId ? { phraseId } : null;
+  }
+
+  const rawText = binding.text;
+  const fallbackPhraseId = ensurePhraseId(
+    key,
+    { source: "custom", text: expandTierPlaceholder(rawText, null) },
+    autoText,
+  );
+  if (!fallbackPhraseId) return null;
+
+  const phraseIdByTier: Record<number, string> = {};
+  for (const tier of TIER_LEVELS) {
+    const tierPhraseId = ensurePhraseId(
+      `${key}:tier${tier}`,
+      { source: "custom", text: expandTierPlaceholder(rawText, tier) },
+      autoText,
+    );
+    if (tierPhraseId) phraseIdByTier[tier] = tierPhraseId;
+  }
+
+  return {
+    phraseId: fallbackPhraseId,
+    ...(Object.keys(phraseIdByTier).length > 0 ? { phraseIdByTier } : {}),
+  };
+}
+
 /**
  * The catalog phrase id backing `binding`, if one has been resolved yet
  * (`null` for an unset phrase reference, empty custom text, or an
@@ -245,9 +327,22 @@ export async function previewPhraseBinding(
     if (id) await commands.voiceTestTrigger(id);
     return;
   }
-  const text = (binding.source === "custom" ? binding.text : autoText).trim();
-  if (!text) return;
-  const cacheKey = `${binding.source}:${key}`;
+  const rawText = (
+    binding.source === "custom" ? binding.text : autoText
+  ).trim();
+  if (!rawText) return;
+  // Custom text with the tier placeholder has no single phrase (it compiles
+  // to a fallback + per-tier variants), so preview it expanded with an
+  // example tier under a dedicated cache key, separate from the ones the
+  // compile pass uses for the real per-tier phrases.
+  const usesTierPlaceholder =
+    binding.source === "custom" && hasTierPlaceholder(rawText);
+  const text = usesTierPlaceholder
+    ? expandTierPlaceholder(rawText, PREVIEW_TIER)
+    : rawText;
+  const cacheKey = usesTierPlaceholder
+    ? `${binding.source}:${key}:previewTier${PREVIEW_TIER}`
+    : `${binding.source}:${key}`;
   const cached = resolved[cacheKey];
   const phraseId =
     cached?.text === text
@@ -275,6 +370,34 @@ function compileEvent(
     enabled: true,
     trigger,
     phraseId,
+    priority,
+    cooldownMs: DEFAULT_COOLDOWN_MS,
+  };
+}
+
+/**
+ * Like `compileEvent`, but for buff/monsterBuff gained/lost triggers, which
+ * are the only ones the Rust rule engine resolves a fantasy tier for. Uses
+ * `ensureTieredPhraseId` so custom text with the `${阶数}` placeholder
+ * compiles to a rule carrying `phraseIdByTier` variants alongside the
+ * placeholder-stripped fallback `phraseId`.
+ */
+function compileTieredEvent(
+  ruleId: string,
+  trigger: VoiceTrigger,
+  config: VoiceEventConfig | undefined,
+  autoText: string,
+  priority: number,
+): VoiceRule | null {
+  if (!config?.enabled) return null;
+  const resolution = ensureTieredPhraseId(ruleId, config.phrase, autoText);
+  if (!resolution) return null;
+  return {
+    id: ruleId,
+    enabled: true,
+    trigger,
+    phraseId: resolution.phraseId,
+    phraseIdByTier: resolution.phraseIdByTier ?? null,
     priority,
     cooldownMs: DEFAULT_COOLDOWN_MS,
   };
@@ -311,7 +434,7 @@ function compileBuffVoiceRules(): VoiceRule[] {
     const name = buffSubjectLabel(buffId);
     const seconds = config.expiring?.secondsBefore ?? 5;
 
-    const gained = compileEvent(
+    const gained = compileTieredEvent(
       buffEventKey(buffId, "gained"),
       { kind: "buffGained", buffId },
       config.gained,
@@ -320,7 +443,7 @@ function compileBuffVoiceRules(): VoiceRule[] {
     );
     if (gained) rules.push(gained);
 
-    const lost = compileEvent(
+    const lost = compileTieredEvent(
       buffEventKey(buffId, "lost"),
       { kind: "buffLost", buffId },
       config.lost,
@@ -353,7 +476,7 @@ function compileMonsterBuffVoiceRules(): VoiceRule[] {
     const name = buffSubjectLabel(buffId);
     const seconds = config.expiring?.secondsBefore ?? 5;
 
-    const gained = compileEvent(
+    const gained = compileTieredEvent(
       monsterBuffEventKey(sourceScope, buffId, "gained"),
       { kind: "monsterBuffGained", buffId, sourceScope },
       config.gained,
@@ -362,7 +485,7 @@ function compileMonsterBuffVoiceRules(): VoiceRule[] {
     );
     if (gained) rules.push(gained);
 
-    const lost = compileEvent(
+    const lost = compileTieredEvent(
       monsterBuffEventKey(sourceScope, buffId, "lost"),
       { kind: "monsterBuffLost", buffId, sourceScope },
       config.lost,

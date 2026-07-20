@@ -1,6 +1,7 @@
 use crate::database::now_ms;
 use crate::live::commands_models::BuffUpdateState;
 use crate::live::entity_id::{EntityUuid, entity_uuid_string};
+use crate::live::fantasy_registry::FantasyRegistry;
 use blueprotobuf_lib::blueprotobuf::{
     BuffChange, BuffEffectLogicPlayEffect, BuffEffectSync, BuffInfo, BuffInfoSync,
     EBuffEffectLogicPbType, EBuffEventType,
@@ -343,6 +344,7 @@ impl BuffMonitor {
         local_player_uuid: EntityUuid,
         profile: &BuffWatchProfile,
         server_clock_offset: i64,
+        fantasy_registry: &FantasyRegistry,
     ) -> Vec<BuffUpdateState> {
         self.active_buffs
             .values()
@@ -352,6 +354,8 @@ impl BuffMonitor {
                 layer: buff.layer,
                 duration_ms: buff.duration,
                 create_time_ms: buff.create_time.saturating_add(server_clock_offset),
+                source_remodel_level: fantasy_registry
+                    .resolve_remodel_level(buff.fire_uuid, buff.source_config_id),
             })
             .collect()
     }
@@ -387,6 +391,7 @@ impl EntityBuffMonitors {
         config: &EntityBuffMonitorConfig,
         local_player_uuid: EntityUuid,
         server_clock_offset: i64,
+        fantasy_registry: &FantasyRegistry,
         mut classify: F,
     ) -> HashMap<String, Vec<BuffUpdateState>>
     where
@@ -409,6 +414,7 @@ impl EntityBuffMonitors {
                 local_player_uuid,
                 profile,
                 server_clock_offset,
+                fantasy_registry,
             );
             if !buffs.is_empty() {
                 snapshots.insert(entity_uuid_string(entity_uuid), buffs);

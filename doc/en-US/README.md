@@ -47,6 +47,12 @@ Feature guides and FAQ index.
 |------|------|
 | [Overview](./features/minimap/README.md) | Minimap mechanics, mechanic calls, supported dungeons, examples |
 
+### Voice Announcements
+
+| Document | Description |
+|------|------|
+| [Guide](./features/voice/README.md) | Model install, voices & phrases, feature-page bindings, overview, FAQ |
+
 ## Changelog
 
 | Document | Description |

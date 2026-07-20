@@ -20,6 +20,8 @@
     onPauseEncounter,
     onTrainingDummyUpdate,
     onDeathReplay,
+    onTeammateFantasyUpdate,
+    onTeammateFantasyClear,
   } from "$lib/api";
   import { applyCustomFonts } from "$lib/font-loader";
   import { applyLiveClickthrough } from "$lib/utils.svelte";
@@ -40,6 +42,10 @@
     clearMeterData,
     cleanupStores,
   } from "$lib/stores/live-meter-store.svelte";
+  import {
+    mergeFantasyCasts,
+    clearFantasyCasts,
+  } from "$lib/stores/fantasy-cast-store.svelte";
   import HeaderCustom from "./header-custom.svelte";
 
   import NotificationToast from "./notification-toast.svelte";
@@ -228,6 +234,43 @@
         return;
       }
 
+      const teammateFantasyUnlisten = await onTeammateFantasyUpdate((event) => {
+        if (isDestroyed) return;
+        mergeFantasyCasts(event.payload.fantasies);
+      });
+
+      if (isDestroyed) {
+        playersUnlisten();
+        resetUnlisten();
+        encounterUnlisten();
+        sceneChangeUnlisten();
+        trainingDummyUnlisten();
+        deathReplayUnlisten();
+        pauseUnlisten();
+        teammateFantasyUnlisten();
+        listenersSetupInProgress = false;
+        return;
+      }
+
+      const teammateFantasyClearUnlisten = await onTeammateFantasyClear(() => {
+        if (isDestroyed) return;
+        clearFantasyCasts();
+      });
+
+      if (isDestroyed) {
+        playersUnlisten();
+        resetUnlisten();
+        encounterUnlisten();
+        sceneChangeUnlisten();
+        trainingDummyUnlisten();
+        deathReplayUnlisten();
+        pauseUnlisten();
+        teammateFantasyUnlisten();
+        teammateFantasyClearUnlisten();
+        listenersSetupInProgress = false;
+        return;
+      }
+
       console.log("Scene change listener set up");
 
       // Combine all unlisten functions
@@ -252,6 +295,12 @@
         } catch {}
         try {
           pauseUnlisten();
+        } catch {}
+        try {
+          teammateFantasyUnlisten();
+        } catch {}
+        try {
+          teammateFantasyClearUnlisten();
         } catch {}
       };
 
@@ -342,6 +391,7 @@
         clickthroughUnlisten = null;
       }
       cleanupStores();
+      clearFantasyCasts();
     };
   });
 

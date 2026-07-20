@@ -37,6 +37,7 @@ import {
   getResourcePreciseValue as getResourcePreciseValueValue,
   getResourceValue as getResourceValueValue,
   resolveAlertState,
+  withFantasyTierSuffix,
 } from "./overlay-utils";
 import { ensureBuffAlerts } from "$lib/settings-store";
 import {
@@ -230,7 +231,10 @@ const _buffSnapshot = $derived.by(() => {
     if (factorOwnedEffectBuffIds.has(baseId)) continue;
 
     const definition = buffDefinitionsMap.get(baseId);
-    const name = resolveBuffDisplayName(baseId, currentBuffAliases);
+    const name = withFantasyTierSuffix(
+      resolveBuffDisplayName(baseId, currentBuffAliases),
+      buff,
+    );
     const timeText = formatTimerText(remaining);
     const alert = resolveAlert(baseId, remaining, buff.durationMs);
     const iconSrc = resolveBuffIconSrc(
@@ -322,6 +326,7 @@ const _buffSnapshot = $derived.by(() => {
             durationMs: 0,
             createTimeMs: now,
             layer: 1,
+            sourceRemodelLevel: null,
           },
           now,
           true,
@@ -417,6 +422,7 @@ const _buffSnapshot = $derived.by(() => {
             durationMs: 0,
             createTimeMs: now,
             layer: 1,
+            sourceRemodelLevel: null,
           },
           now,
           true,

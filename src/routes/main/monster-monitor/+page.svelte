@@ -2388,14 +2388,6 @@
             bind:checked={SETTINGS.monsterMonitor.state.fantasyShowAll}
           />
         </div>
-        <div class="min-w-[260px]">
-          <SettingsSwitch
-            label={t("monsterMonitor.fantasy.persistentDisplay")}
-            bind:checked={
-              SETTINGS.monsterMonitor.state.fantasyPersistentDisplay
-            }
-          />
-        </div>
       </div>
 
       <div class="space-y-3">

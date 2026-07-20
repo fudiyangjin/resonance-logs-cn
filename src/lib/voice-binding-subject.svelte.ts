@@ -70,6 +70,13 @@ export type VoiceBindingEventDef = {
   expiring: boolean;
   config: VoiceEventConfig | VoiceExpiringEventConfig | undefined;
   autoText: (secondsBefore: number) => string;
+  /**
+   * Whether custom text for this event may use the `${阶数}` / `${remodelLevel}`
+   * fantasy-tier placeholder. Only buff/monsterBuff gained/lost triggers
+   * carry a resolvable tier (from the fantasy summon that applied/removed
+   * the buff); other event kinds ignore the placeholder if present.
+   */
+  supportsTierPlaceholder: boolean;
 };
 
 function defaultEventConfig(
@@ -109,6 +116,7 @@ export function subjectEvents(
         expiring: false,
         config: config.gained,
         autoText: () => buffAutoText(name, "gained"),
+        supportsTierPlaceholder: true,
       },
       {
         key: buffEventKey(subject.buffId, "expiring"),
@@ -117,6 +125,7 @@ export function subjectEvents(
         expiring: true,
         config: config.expiring,
         autoText: (s) => buffAutoText(name, "expiring", s),
+        supportsTierPlaceholder: false,
       },
       {
         key: buffEventKey(subject.buffId, "lost"),
@@ -125,6 +134,7 @@ export function subjectEvents(
         expiring: false,
         config: config.lost,
         autoText: () => buffAutoText(name, "lost"),
+        supportsTierPlaceholder: true,
       },
     ];
   }
@@ -143,6 +153,7 @@ export function subjectEvents(
         expiring: false,
         config: config.gained,
         autoText: () => monsterBuffAutoText(name, "gained"),
+        supportsTierPlaceholder: true,
       },
       {
         key: monsterBuffEventKey(
@@ -155,6 +166,7 @@ export function subjectEvents(
         expiring: true,
         config: config.expiring,
         autoText: (s) => monsterBuffAutoText(name, "expiring", s),
+        supportsTierPlaceholder: false,
       },
       {
         key: monsterBuffEventKey(subject.sourceScope, subject.buffId, "lost"),
@@ -163,6 +175,7 @@ export function subjectEvents(
         expiring: false,
         config: config.lost,
         autoText: () => monsterBuffAutoText(name, "lost"),
+        supportsTierPlaceholder: true,
       },
     ];
   }
@@ -181,6 +194,7 @@ export function subjectEvents(
         expiring: false,
         config,
         autoText: () => cue?.autoText ?? "",
+        supportsTierPlaceholder: false,
       },
     ];
   }
@@ -200,6 +214,7 @@ export function subjectEvents(
         expiring: false,
         config: config.threshold,
         autoText: () => counterAutoText(label, "threshold"),
+        supportsTierPlaceholder: false,
       });
     }
     if (counterSlotSupportsExpiry(slot)) {
@@ -210,6 +225,7 @@ export function subjectEvents(
         expiring: true,
         config: config.expiring,
         autoText: (s) => counterAutoText(label, "expiring", s),
+        supportsTierPlaceholder: false,
       });
     }
     return events;
@@ -228,6 +244,7 @@ export function subjectEvents(
       expiring: false,
       config: config.onCast,
       autoText: () => dbmAutoText(name, "onCast"),
+      supportsTierPlaceholder: false,
     },
     {
       key: dbmEventKey(subject.baseSkillId, "expiring"),
@@ -236,6 +253,7 @@ export function subjectEvents(
       expiring: true,
       config: config.expiring,
       autoText: (s) => dbmAutoText(name, "expiring", s),
+      supportsTierPlaceholder: false,
     },
   ];
 }

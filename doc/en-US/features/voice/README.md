@@ -24,11 +24,31 @@ Using the most common entry, **Live Monitor → Buff Monitor**: expand the **Voi
 2. Enable trigger events: **On gain** / **N seconds remaining** / **On expire**.
 3. Pick a text source per event:
    - **Auto**: default line from the buff name + event type (previewable)
-   - **Custom text**: hand-written announcement, e.g. "Tina's cooldown is over"
+   - **Custom text**: hand-written announcement, e.g. "Tina's cooldown is over"; fantasy-related buffs can also use a tier placeholder (see below)
    - **Phrase library**: reuse an existing phrase
 4. Use **Preview** to verify; if it reports pending audio, the line hasn't been synthesized yet — see "Generating Announcement Audio" below.
 
 > The top-right corner shows how many announcements are configured in the section; use **Remove announcement** to delete one.
+
+### Fantasy tier in custom text
+
+Some fantasy-applied buffs come from a resonance fantasy with remodel **tiers 0–5**. To include the tier in the announcement, put a placeholder in the **On gain / On expire** custom text ("N seconds remaining" is not supported):
+
+| Placeholder | Notes |
+|-------------|--------|
+| `${remodelLevel}` | Preferred in English docs |
+| `${阶数}` | Same meaning (Chinese form) |
+
+Example: custom text `Tina Tier ${remodelLevel} active` → at tier 5 plays as `Tina Tier 5 active`.
+
+Notes:
+
+- Only **Buff Monitor** and **Monster Buff Monitor** **On gain / On expire** support this. Counters, Boss DBM, dungeon mechanics, and "N seconds remaining" do not expand tiers.
+- When configured, the app generates **one phrase per tier 0–5** plus a fallback with the placeholder stripped (used when the tier cannot be resolved). Phrases are created on demand — not pre-built for every buff.
+- **Preview** expands the placeholder with tier 5 as an example; live playback picks the variant matching the resolved fantasy tier, or the fallback if unknown.
+- After editing custom text, check **Bindings Overview** and **Generate missing audio**.
+
+Overlay buff names can also show as `Name | Tier n` when the source fantasy tier is known (independent of voice settings).
 
 ### Other configuration routes
 
@@ -121,5 +141,6 @@ Loadouts include live-monitor and monster-monitor settings; voice bindings are s
 | Fine-tuned voice unavailable | Relocate the deploy folder and run integrity check |
 | No mechanic cues listed | Current map has no voice cues wired yet |
 | Operation busy | Wait for download/generation to finish, or cancel and retry |
+| Used `${remodelLevel}` but no tier is spoken | Confirm the event is On gain / On expire with custom text; generate tier variants in Bindings Overview; some fantasy buffs are applied by the player rather than the summon entity, so the tier may not resolve yet and the fallback line is used |
 
 See `docs/VOICE_MODEL_MANIFEST.md` for manifest / release details (developers).

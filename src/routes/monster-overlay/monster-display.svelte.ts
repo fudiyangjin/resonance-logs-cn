@@ -100,6 +100,7 @@ function buildPlaceholderRows(now: number): TextBuffDisplay[] {
           durationMs: 0,
           createTimeMs: now,
           layer: 1,
+          sourceRemodelLevel: null,
         },
         now,
         true,
@@ -333,32 +334,15 @@ function buildFantasyPlaceholderRows(): MonsterFantasyRow[] {
   ];
 }
 
-function sortFantasyEntries(
-  entries: TeammateFantasyState[],
-  persistentDisplay: boolean,
-) {
-  return [...entries].sort((left, right) => {
-    if (!persistentDisplay) {
-      return right.detectedAtMs - left.detectedAtMs;
-    }
-
-    return (
-      left.summonerUuid.localeCompare(right.summonerUuid) ||
-      left.monsterId - right.monsterId ||
-      left.remodelLevel - right.remodelLevel
-    );
-  });
+function sortFantasyEntries(entries: TeammateFantasyState[]) {
+  return [...entries].sort((left, right) => right.detectedAtMs - left.detectedAtMs);
 }
 
 function buildFantasyRows(now: number): MonsterFantasyRow[] {
   const state = SETTINGS.monsterMonitor.state;
-  const persistentDisplay = state.fantasyPersistentDisplay === true;
   const latestByFantasy = new Map<string, TeammateFantasyState>();
   for (const entry of monsterRuntime.fantasyEntries) {
-    if (
-      !persistentDisplay &&
-      entry.detectedAtMs + FANTASY_DISPLAY_TTL_MS <= now
-    ) {
+    if (entry.detectedAtMs + FANTASY_DISPLAY_TTL_MS <= now) {
       continue;
     }
     const key = fantasyEntryKey(entry);
@@ -379,10 +363,7 @@ function buildFantasyRows(now: number): MonsterFantasyRow[] {
     }
   }
 
-  const activeEntries = sortFantasyEntries(
-    [...latestByFantasy.values()],
-    persistentDisplay,
-  );
+  const activeEntries = sortFantasyEntries([...latestByFantasy.values()]);
   monsterRuntime.fantasyEntries = activeEntries;
 
   const whitelist = new Set(state.fantasyWhitelistMonsterIds ?? []);

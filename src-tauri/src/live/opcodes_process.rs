@@ -215,6 +215,7 @@ pub struct TeammateFantasyDetection {
     pub summoner_uuid: i64,
     pub monster_id: i32,
     pub remodel_level: i64,
+    pub marker_source_config_id: Option<i32>,
 }
 
 #[derive(Debug, Default)]
@@ -224,12 +225,13 @@ pub struct SyncNearEntitiesProcessResult {
     pub disappeared: Vec<EntityUuid>,
 }
 
-fn has_resonance_fantasy_marker(buff_infos: Option<&blueprotobuf::BuffInfoSync>) -> bool {
-    buff_infos.is_some_and(|sync| {
-        sync.buff_infos
-            .iter()
-            .any(|buff| buff.base_id == Some(RESONANCE_FANTASY_MARKER_BUFF_ID))
-    })
+fn resonance_fantasy_marker(
+    buff_infos: Option<&blueprotobuf::BuffInfoSync>,
+) -> Option<&blueprotobuf::BuffInfo> {
+    buff_infos?
+        .buff_infos
+        .iter()
+        .find(|buff| buff.base_id == Some(RESONANCE_FANTASY_MARKER_BUFF_ID))
 }
 
 pub fn process_sync_near_entities(
@@ -289,11 +291,15 @@ pub fn process_sync_near_entities(
                     &attr_collection.attrs,
                     attr_store,
                 );
-                if has_resonance_fantasy_marker(initial_buff_infos.as_ref()) {
+                if let Some(marker) = resonance_fantasy_marker(initial_buff_infos.as_ref()) {
+                    let marker_source_config_id = marker
+                        .fight_source_info
+                        .as_ref()
+                        .and_then(|source| source.source_config_id);
                     if let Some(detection) = collect_teammate_fantasy_detection(
                         attr_store,
                         target_uuid,
-                        attr_store.local_player_uuid(),
+                        marker_source_config_id,
                     ) {
                         result.teammate_fantasies.push(detection);
                     }
@@ -354,12 +360,12 @@ pub fn process_sync_near_entities(
 fn collect_teammate_fantasy_detection(
     attr_store: &EntityAttrStore,
     target_uuid: i64,
-    local_player_uuid: i64,
+    marker_source_config_id: Option<i32>,
 ) -> Option<TeammateFantasyDetection> {
     let summoner_uuid = attr_store
         .attr(target_uuid, AttrType::TopSummonerId)
         .and_then(AttrValue::as_int)?;
-    if summoner_uuid == 0 || summoner_uuid == local_player_uuid {
+    if summoner_uuid == 0 {
         return None;
     }
 
@@ -378,11 +384,12 @@ fn collect_teammate_fantasy_detection(
 
     info!(
         target: "app::live",
-        "CollectTeammateFantasyDetection: summon_uuid=0x{:x} summoner_uuid=0x{:x} monster_id={} remodel_level={}",
+        "CollectTeammateFantasyDetection: summon_uuid=0x{:x} summoner_uuid=0x{:x} monster_id={} remodel_level={} marker_source_config_id={:?}",
         target_uuid,
         summoner_uuid,
         monster_id,
-        remodel_level
+        remodel_level,
+        marker_source_config_id
     );
 
     Some(TeammateFantasyDetection {
@@ -390,6 +397,7 @@ fn collect_teammate_fantasy_detection(
         summoner_uuid,
         monster_id,
         remodel_level,
+        marker_source_config_id,
     })
 }
 

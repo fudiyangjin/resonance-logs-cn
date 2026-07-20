@@ -144,6 +144,11 @@
                 },
               })}
           />
+          {#if event.supportsTierPlaceholder}
+            <p class="text-muted-foreground text-[11px]">
+              {t("voice.binding.tierPlaceholderHint")}
+            </p>
+          {/if}
         {:else}
           <select
             class="border-border/60 bg-muted/30 text-foreground w-full rounded border px-2 py-1 text-xs"

@@ -26,6 +26,11 @@ pub enum VoiceBuffScope {
 #[derive(Debug, Default)]
 pub struct VoiceRuleTracker {
     last_buff_ids: HashMap<VoiceBuffScope, HashSet<i32>>,
+    /// Fantasy remodel level (0-5 tier) of the summon that applied each
+    /// base id present in the matching scope's last snapshot, mirroring
+    /// `last_buff_ids`. Consulted by `try_fire` to pick a per-tier phrase
+    /// variant (`VoiceRule::phrase_id_by_tier`) for buff gained/lost cues.
+    last_tier_by_scope: HashMap<VoiceBuffScope, HashMap<i32, u8>>,
     last_fire_ms: HashMap<String, i64>,
     scheduler: CueScheduler,
     /// Whether a `(ruleId, slotId)` counter threshold was crossed the last
@@ -43,6 +48,7 @@ impl VoiceRuleTracker {
     /// emits no cues.
     pub fn reset_buff_edges(&mut self) {
         self.last_buff_ids.clear();
+        self.last_tier_by_scope.clear();
     }
 
     /// Returns edge tracking for a single scope to an uninitialized state
@@ -50,6 +56,7 @@ impl VoiceRuleTracker {
     /// baselines untouched.
     pub fn reset_scope_edges(&mut self, scope: VoiceBuffScope) {
         self.last_buff_ids.remove(&scope);
+        self.last_tier_by_scope.remove(&scope);
     }
 
     /// Clears all pending scheduled cues and counter-threshold edge state.
@@ -70,20 +77,28 @@ impl VoiceRuleTracker {
         rules: &[VoiceRule],
         now_ms: i64,
         current_buff_ids: HashSet<i32>,
+        current_tier_by_base_id: HashMap<i32, u8>,
     ) -> Vec<VoiceCueIntent> {
         let previous_buff_ids = self.last_buff_ids.insert(scope, current_buff_ids);
+        let previous_tier_by_base_id = self
+            .last_tier_by_scope
+            .insert(scope, current_tier_by_base_id)
+            .unwrap_or_default();
         let Some(previous_buff_ids) = previous_buff_ids else {
             return Vec::new();
         };
-        // Just inserted above, so `scope` is guaranteed present.
-        let current_buff_ids = &self.last_buff_ids[&scope];
+        // Just inserted above, so `scope` is guaranteed present. Cloned
+        // (rather than borrowed) since the loop below needs `&mut self` to
+        // fire cues.
+        let current_buff_ids = self.last_buff_ids[&scope].clone();
+        let current_tier_by_base_id = self.last_tier_by_scope[&scope].clone();
 
         let gained: Vec<i32> = current_buff_ids
             .difference(&previous_buff_ids)
             .copied()
             .collect();
         let lost: Vec<i32> = previous_buff_ids
-            .difference(current_buff_ids)
+            .difference(&current_buff_ids)
             .copied()
             .collect();
         if gained.is_empty() && lost.is_empty() {
@@ -95,31 +110,43 @@ impl VoiceRuleTracker {
             if !rule.enabled {
                 continue;
             }
-            let matched = match (scope, &rule.trigger) {
-                (VoiceBuffScope::LocalPlayer, VoiceTrigger::BuffGained { buff_id }) => {
-                    gained.contains(buff_id)
-                }
-                (VoiceBuffScope::LocalPlayer, VoiceTrigger::BuffLost { buff_id }) => {
-                    lost.contains(buff_id)
-                }
+            // Gained edges resolve their tier against the just-updated
+            // (current) map; lost edges use the pre-update (previous) map,
+            // since the buff (and its fantasy source) is no longer present
+            // in the current snapshot.
+            let (matched, tier) = match (scope, &rule.trigger) {
+                (VoiceBuffScope::LocalPlayer, VoiceTrigger::BuffGained { buff_id }) => (
+                    gained.contains(buff_id),
+                    current_tier_by_base_id.get(buff_id).copied(),
+                ),
+                (VoiceBuffScope::LocalPlayer, VoiceTrigger::BuffLost { buff_id }) => (
+                    lost.contains(buff_id),
+                    previous_tier_by_base_id.get(buff_id).copied(),
+                ),
                 (
                     VoiceBuffScope::MonsterTarget(scope),
                     VoiceTrigger::MonsterBuffGained {
                         buff_id,
                         source_scope,
                     },
-                ) if scope == *source_scope => gained.contains(buff_id),
+                ) if scope == *source_scope => (
+                    gained.contains(buff_id),
+                    current_tier_by_base_id.get(buff_id).copied(),
+                ),
                 (
                     VoiceBuffScope::MonsterTarget(scope),
                     VoiceTrigger::MonsterBuffLost {
                         buff_id,
                         source_scope,
                     },
-                ) if scope == *source_scope => lost.contains(buff_id),
-                _ => false,
+                ) if scope == *source_scope => (
+                    lost.contains(buff_id),
+                    previous_tier_by_base_id.get(buff_id).copied(),
+                ),
+                _ => (false, None),
             };
             if matched {
-                self.try_fire(rule, now_ms, &mut intents);
+                self.try_fire(rule, now_ms, tier, &mut intents);
             }
         }
         intents
@@ -145,7 +172,7 @@ impl VoiceRuleTracker {
                 continue;
             };
             if base_skill_ids.contains(&base_skill_id) {
-                self.try_fire(rule, now_ms, &mut intents);
+                self.try_fire(rule, now_ms, None, &mut intents);
             }
         }
         intents
@@ -246,7 +273,7 @@ impl VoiceRuleTracker {
                         .unwrap_or(false);
                     self.counter_threshold_armed.insert(key, crossed);
                     if crossed && !was_armed {
-                        self.try_fire(rule, now_ms, &mut intents);
+                        self.try_fire(rule, now_ms, None, &mut intents);
                     }
                 }
                 VoiceTrigger::CounterExpiring {
@@ -282,7 +309,7 @@ impl VoiceRuleTracker {
             if !rule.enabled {
                 continue;
             }
-            self.try_fire(rule, now_ms, &mut intents);
+            self.try_fire(rule, now_ms, None, &mut intents);
         }
         intents
     }
@@ -315,16 +342,31 @@ impl VoiceRuleTracker {
         self.scheduler.schedule(&rule.id, fire_at_ms);
     }
 
-    fn try_fire(&mut self, rule: &VoiceRule, now_ms: i64, intents: &mut Vec<VoiceCueIntent>) {
+    /// `tier` is the fantasy remodel level (0-5) associated with the buff
+    /// that (un)triggered this fire, when known; selects a variant from
+    /// `rule.phrase_id_by_tier`, falling back to `rule.phrase_id` when
+    /// absent, unmapped for this tier, or not tier-driven (e.g. `BossDbm`,
+    /// `CounterThreshold`, and all `*Expiring` triggers).
+    fn try_fire(
+        &mut self,
+        rule: &VoiceRule,
+        now_ms: i64,
+        tier: Option<u8>,
+        intents: &mut Vec<VoiceCueIntent>,
+    ) {
         if let Some(&last) = self.last_fire_ms.get(&rule.id)
             && now_ms.saturating_sub(last) < rule.cooldown_ms as i64
         {
             return;
         }
         self.last_fire_ms.insert(rule.id.clone(), now_ms);
+        let phrase_id = tier
+            .and_then(|tier| rule.phrase_id_by_tier.as_ref()?.get(&tier))
+            .cloned()
+            .unwrap_or_else(|| rule.phrase_id.clone());
         intents.push(VoiceCueIntent {
             rule_id: rule.id.clone(),
-            phrase_id: rule.phrase_id.clone(),
+            phrase_id,
             priority: rule.priority,
             triggered_at_ms: now_ms,
         });
@@ -343,7 +385,32 @@ mod tests {
             phrase_id: phrase_id.to_string(),
             priority: 100,
             cooldown_ms,
+            phrase_id_by_tier: None,
         }
+    }
+
+    fn rule_with_tiers(
+        id: &str,
+        trigger: VoiceTrigger,
+        phrase_id: &str,
+        phrase_id_by_tier: HashMap<u8, String>,
+    ) -> VoiceRule {
+        VoiceRule {
+            phrase_id_by_tier: Some(phrase_id_by_tier),
+            ..rule(id, trigger, phrase_id, 0)
+        }
+    }
+
+    /// `on_buff_scope_snapshot` without any fantasy tier facts, for tests
+    /// that don't care about tier-variant selection.
+    fn snapshot(
+        tracker: &mut VoiceRuleTracker,
+        scope: VoiceBuffScope,
+        rules: &[VoiceRule],
+        now_ms: i64,
+        current_buff_ids: HashSet<i32>,
+    ) -> Vec<VoiceCueIntent> {
+        tracker.on_buff_scope_snapshot(scope, rules, now_ms, current_buff_ids, HashMap::new())
     }
 
     #[test]
@@ -356,11 +423,17 @@ mod tests {
             0,
         )];
 
-        let intents =
-            tracker.on_buff_scope_snapshot(VoiceBuffScope::LocalPlayer, &rules, 0, HashSet::new());
+        let intents = snapshot(
+            &mut tracker,
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            0,
+            HashSet::new(),
+        );
         assert!(intents.is_empty());
 
-        let intents = tracker.on_buff_scope_snapshot(
+        let intents = snapshot(
+            &mut tracker,
             VoiceBuffScope::LocalPlayer,
             &rules,
             1,
@@ -370,7 +443,8 @@ mod tests {
         assert_eq!(intents[0].phrase_id, "p1");
 
         // Same buff still present next tick: no re-fire (not a new edge).
-        let intents = tracker.on_buff_scope_snapshot(
+        let intents = snapshot(
+            &mut tracker,
             VoiceBuffScope::LocalPlayer,
             &rules,
             10,
@@ -384,9 +458,20 @@ mod tests {
         let mut tracker = VoiceRuleTracker::new();
         let rules = vec![rule("r1", VoiceTrigger::BuffLost { buff_id: 7 }, "p1", 0)];
 
-        tracker.on_buff_scope_snapshot(VoiceBuffScope::LocalPlayer, &rules, 0, HashSet::from([7]));
-        let intents =
-            tracker.on_buff_scope_snapshot(VoiceBuffScope::LocalPlayer, &rules, 10, HashSet::new());
+        snapshot(
+            &mut tracker,
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            0,
+            HashSet::from([7]),
+        );
+        let intents = snapshot(
+            &mut tracker,
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            10,
+            HashSet::new(),
+        );
         assert_eq!(intents.len(), 1);
     }
 
@@ -410,13 +495,15 @@ mod tests {
         )];
 
         // Establish baselines for both scopes independently.
-        tracker.on_buff_scope_snapshot(
+        snapshot(
+            &mut tracker,
             VoiceBuffScope::LocalPlayer,
             &local_rules,
             0,
             HashSet::new(),
         );
-        tracker.on_buff_scope_snapshot(
+        snapshot(
+            &mut tracker,
             VoiceBuffScope::MonsterTarget(MonsterBuffSourceScope::AnySource),
             &monster_rules,
             0,
@@ -425,7 +512,8 @@ mod tests {
 
         // Local player gains buff 42: only the local rule should fire, even
         // though a monster rule for the same base id exists.
-        let intents = tracker.on_buff_scope_snapshot(
+        let intents = snapshot(
+            &mut tracker,
             VoiceBuffScope::LocalPlayer,
             &local_rules,
             1,
@@ -434,7 +522,8 @@ mod tests {
         assert_eq!(intents.len(), 1);
         assert_eq!(intents[0].phrase_id, "p1");
 
-        let intents = tracker.on_buff_scope_snapshot(
+        let intents = snapshot(
+            &mut tracker,
             VoiceBuffScope::MonsterTarget(MonsterBuffSourceScope::AnySource),
             &monster_rules,
             1,
@@ -465,27 +554,40 @@ mod tests {
             0,
         )];
 
-        tracker.on_buff_scope_snapshot(
+        snapshot(
+            &mut tracker,
             VoiceBuffScope::LocalPlayer,
             &local_rules,
             0,
             HashSet::from([1]),
         );
         let monster_scope = VoiceBuffScope::MonsterTarget(MonsterBuffSourceScope::AnySource);
-        tracker.on_buff_scope_snapshot(monster_scope, &monster_rules, 0, HashSet::new());
+        snapshot(
+            &mut tracker,
+            monster_scope,
+            &monster_rules,
+            0,
+            HashSet::new(),
+        );
 
         // Simulate an attack-target switch: only the monster scope resets.
         tracker.reset_scope_edges(monster_scope);
 
         // Monster scope baseline was cleared, so this snapshot establishes a
         // new baseline rather than firing a gained edge.
-        let intents =
-            tracker.on_buff_scope_snapshot(monster_scope, &monster_rules, 1, HashSet::from([42]));
+        let intents = snapshot(
+            &mut tracker,
+            monster_scope,
+            &monster_rules,
+            1,
+            HashSet::from([42]),
+        );
         assert!(intents.is_empty());
 
         // Local player scope's baseline (established before the monster
         // reset) is untouched: losing buff 1 still fires the lost edge.
-        let intents = tracker.on_buff_scope_snapshot(
+        let intents = snapshot(
+            &mut tracker,
             VoiceBuffScope::LocalPlayer,
             &local_rules,
             2,
@@ -530,24 +632,19 @@ mod tests {
             ),
         ];
 
-        tracker.on_buff_scope_snapshot(any_scope, &rules, 0, HashSet::new());
-        tracker.on_buff_scope_snapshot(local_scope, &rules, 0, HashSet::new());
+        snapshot(&mut tracker, any_scope, &rules, 0, HashSet::new());
+        snapshot(&mut tracker, local_scope, &rules, 0, HashSet::new());
 
-        let any_cues = tracker.on_buff_scope_snapshot(any_scope, &rules, 1, HashSet::from([42]));
+        let any_cues = snapshot(&mut tracker, any_scope, &rules, 1, HashSet::from([42]));
         assert_eq!(any_cues.len(), 1);
         assert_eq!(any_cues[0].phrase_id, "any-phrase");
 
-        let local_cues =
-            tracker.on_buff_scope_snapshot(local_scope, &rules, 2, HashSet::from([42]));
+        let local_cues = snapshot(&mut tracker, local_scope, &rules, 2, HashSet::from([42]));
         assert_eq!(local_cues.len(), 1);
         assert_eq!(local_cues[0].phrase_id, "local-phrase");
 
-        assert!(
-            tracker
-                .on_buff_scope_snapshot(any_scope, &rules, 3, HashSet::from([42]))
-                .is_empty()
-        );
-        let local_lost = tracker.on_buff_scope_snapshot(local_scope, &rules, 4, HashSet::new());
+        assert!(snapshot(&mut tracker, any_scope, &rules, 3, HashSet::from([42])).is_empty());
+        let local_lost = snapshot(&mut tracker, local_scope, &rules, 4, HashSet::new());
         assert_eq!(local_lost.len(), 1);
         assert_eq!(local_lost[0].phrase_id, "local-lost-phrase");
     }
@@ -627,13 +724,15 @@ mod tests {
         let mut tracker = VoiceRuleTracker::new();
         let mut r = rule("r1", VoiceTrigger::BuffGained { buff_id: 1 }, "p1", 0);
         r.enabled = false;
-        tracker.on_buff_scope_snapshot(
+        snapshot(
+            &mut tracker,
             VoiceBuffScope::LocalPlayer,
             &[r.clone()],
             0,
             HashSet::new(),
         );
-        let intents = tracker.on_buff_scope_snapshot(
+        let intents = snapshot(
+            &mut tracker,
             VoiceBuffScope::LocalPlayer,
             &[r],
             1,
@@ -651,18 +750,34 @@ mod tests {
             "p1",
             0,
         )];
-        tracker.on_buff_scope_snapshot(VoiceBuffScope::LocalPlayer, &rules, 0, HashSet::new());
+        snapshot(
+            &mut tracker,
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            0,
+            HashSet::new(),
+        );
         assert_eq!(
-            tracker
-                .on_buff_scope_snapshot(VoiceBuffScope::LocalPlayer, &rules, 1, HashSet::from([42]))
-                .len(),
+            snapshot(
+                &mut tracker,
+                VoiceBuffScope::LocalPlayer,
+                &rules,
+                1,
+                HashSet::from([42])
+            )
+            .len(),
             1
         );
         tracker.reset_buff_edges();
         assert!(
-            tracker
-                .on_buff_scope_snapshot(VoiceBuffScope::LocalPlayer, &rules, 2, HashSet::from([42]))
-                .is_empty()
+            snapshot(
+                &mut tracker,
+                VoiceBuffScope::LocalPlayer,
+                &rules,
+                2,
+                HashSet::from([42])
+            )
+            .is_empty()
         );
     }
 
@@ -820,12 +935,122 @@ mod tests {
     fn complete_empty_snapshot_fires_lost() {
         let mut tracker = VoiceRuleTracker::new();
         let rules = vec![rule("r1", VoiceTrigger::BuffLost { buff_id: 7 }, "p1", 0)];
-        tracker.on_buff_scope_snapshot(VoiceBuffScope::LocalPlayer, &rules, 0, HashSet::from([7]));
+        snapshot(
+            &mut tracker,
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            0,
+            HashSet::from([7]),
+        );
         assert_eq!(
-            tracker
-                .on_buff_scope_snapshot(VoiceBuffScope::LocalPlayer, &rules, 1, HashSet::new())
-                .len(),
+            snapshot(
+                &mut tracker,
+                VoiceBuffScope::LocalPlayer,
+                &rules,
+                1,
+                HashSet::new()
+            )
+            .len(),
             1
         );
+    }
+
+    #[test]
+    fn buff_gained_selects_phrase_variant_by_fantasy_tier() {
+        let mut tracker = VoiceRuleTracker::new();
+        let rules = vec![rule_with_tiers(
+            "r1",
+            VoiceTrigger::BuffGained { buff_id: 42 },
+            "p1-fallback",
+            HashMap::from([(5u8, "p1-tier5".to_string()), (3u8, "p1-tier3".to_string())]),
+        )];
+
+        tracker.on_buff_scope_snapshot(
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            0,
+            HashSet::new(),
+            HashMap::new(),
+        );
+        // Gained with a known tier variant: use it.
+        let intents = tracker.on_buff_scope_snapshot(
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            1,
+            HashSet::from([42]),
+            HashMap::from([(42, 5u8)]),
+        );
+        assert_eq!(intents.len(), 1);
+        assert_eq!(intents[0].phrase_id, "p1-tier5");
+    }
+
+    #[test]
+    fn buff_gained_falls_back_to_base_phrase_for_unmapped_tier() {
+        let mut tracker = VoiceRuleTracker::new();
+        let rules = vec![rule_with_tiers(
+            "r1",
+            VoiceTrigger::BuffGained { buff_id: 42 },
+            "p1-fallback",
+            HashMap::from([(5u8, "p1-tier5".to_string())]),
+        )];
+
+        tracker.on_buff_scope_snapshot(
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            0,
+            HashSet::new(),
+            HashMap::new(),
+        );
+        // Gained but with a tier absent from the map (e.g. tier 2): fall
+        // back to the base phrase rather than dropping the cue.
+        let intents = tracker.on_buff_scope_snapshot(
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            1,
+            HashSet::from([42]),
+            HashMap::from([(42, 2u8)]),
+        );
+        assert_eq!(intents.len(), 1);
+        assert_eq!(intents[0].phrase_id, "p1-fallback");
+
+        // Not applied by any known fantasy summon at all: also falls back.
+        let intents = tracker.on_buff_scope_snapshot(
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            2,
+            HashSet::new(),
+            HashMap::new(),
+        );
+        assert!(intents.is_empty(), "no edge yet since buff wasn't removed");
+    }
+
+    #[test]
+    fn buff_lost_selects_phrase_variant_by_tier_held_before_removal() {
+        let mut tracker = VoiceRuleTracker::new();
+        let rules = vec![rule_with_tiers(
+            "r1",
+            VoiceTrigger::BuffLost { buff_id: 42 },
+            "p1-fallback",
+            HashMap::from([(5u8, "p1-tier5-lost".to_string())]),
+        )];
+
+        tracker.on_buff_scope_snapshot(
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            0,
+            HashSet::from([42]),
+            HashMap::from([(42, 5u8)]),
+        );
+        // Buff removed: the current snapshot no longer carries a tier for
+        // it, so the lost cue must fall back to the *previous* tier map.
+        let intents = tracker.on_buff_scope_snapshot(
+            VoiceBuffScope::LocalPlayer,
+            &rules,
+            1,
+            HashSet::new(),
+            HashMap::new(),
+        );
+        assert_eq!(intents.len(), 1);
+        assert_eq!(intents[0].phrase_id, "p1-tier5-lost");
     }
 }

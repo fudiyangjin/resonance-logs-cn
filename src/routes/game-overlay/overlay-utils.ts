@@ -178,6 +178,21 @@ export function resolveAlertState(
   };
 }
 
+/**
+ * Appends the fantasy (resonance echo) tier that applied this buff, e.g.
+ * "冷却缩减" -> "冷却缩减 | 5阶", when `buff.sourceRemodelLevel` is known.
+ */
+export function withFantasyTierSuffix(
+  name: string,
+  buff: BuffUpdateState,
+): string {
+  if (buff.sourceRemodelLevel == null) return name;
+  return t("gameOverlay.buff.fantasyTierSuffix", {
+    name,
+    level: buff.sourceRemodelLevel,
+  });
+}
+
 export function buildBuffTextRow(
   key: string,
   label: string,
@@ -258,7 +273,7 @@ export function getCustomPanelDisplayRow(
     if (!buff) return null;
     return buildBuffTextRow(
       `inline_buff_${entry.id}`,
-      resolveBuffName(entry.sourceId),
+      withFantasyTierSuffix(resolveBuffName(entry.sourceId), buff),
       buff,
       now,
       false,

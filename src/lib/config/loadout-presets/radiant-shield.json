@@ -669,7 +669,6 @@
       "textShadowEnabled": true,
       "valueColor": "#f8fafc"
     },
-    "fantasyPersistentDisplay": false,
     "fantasyShowAll": true,
     "fantasyWhitelistMonsterIds": [3000025, 3000033, 3000041, 3000053, 3000069],
     "hateListEnabled": true,

@@ -6,6 +6,9 @@ node_modules
 .env
 .env.*
 !.env.example
+
+# Private signing keys — never commit
+/secrets/
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 /.idea

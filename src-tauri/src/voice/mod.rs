@@ -28,8 +28,8 @@ use tokio_util::sync::CancellationToken;
 use error::{VoiceError, VoiceResult};
 use generator::SidecarRunner;
 use model_manager::{
-    InstallReceipt, ModelDownloadSource, ModelDownloader, ModelStore,
-    ModelValidationFingerprint, ModelValidationSnapshot,
+    InstallReceipt, ModelDownloadSource, ModelDownloader, ModelStore, ModelValidationFingerprint,
+    ModelValidationSnapshot,
 };
 use models::{
     EngineBackend, EngineState, FineTunedVoiceMeta, FineTunedVoiceState, ModelState,
@@ -1575,7 +1575,11 @@ fn generation_sampling_params(source: &VoiceAssetSource) -> (Option<f32>, Option
 /// dropped so the caller can remove their WAV files afterwards.
 fn reconcile_single_asset_per_phrase(catalog: &mut models::VoiceCatalog) -> Vec<(String, String)> {
     let mut removed = Vec::new();
-    let phrase_ids: Vec<String> = catalog.phrases.iter().map(|phrase| phrase.id.clone()).collect();
+    let phrase_ids: Vec<String> = catalog
+        .phrases
+        .iter()
+        .map(|phrase| phrase.id.clone())
+        .collect();
     for phrase_id in phrase_ids {
         let mut candidate_indices: Vec<usize> = catalog
             .assets
@@ -1602,7 +1606,9 @@ fn reconcile_single_asset_per_phrase(catalog: &mut models::VoiceCatalog) -> Vec<
                     .find(|&index| catalog.assets[index].id == active_id)
             })
             .or_else(|| candidate_indices.last().copied());
-        let Some(keep_index) = keep_index else { continue };
+        let Some(keep_index) = keep_index else {
+            continue;
+        };
         let keep_id = catalog.assets[keep_index].id.clone();
         for &index in &candidate_indices {
             let asset_id = &catalog.assets[index].id;
@@ -1632,7 +1638,9 @@ fn reconcile_single_asset_per_phrase(catalog: &mut models::VoiceCatalog) -> Vec<
 fn remove_asset_files_best_effort(voice_root: &Path, assets: &[(String, String)]) {
     for (phrase_id, asset_id) in assets {
         let path = catalog::asset_wav_path(voice_root, phrase_id, asset_id);
-        if path.exists() && let Err(error) = std::fs::remove_file(&path) {
+        if path.exists()
+            && let Err(error) = std::fs::remove_file(&path)
+        {
             warn!(
                 target: "app::voice",
                 "failed to remove replaced voice asset {}: {error}",
@@ -1825,7 +1833,10 @@ mod tests {
 
         let removed = reconcile_single_asset_per_phrase(&mut catalog);
 
-        assert_eq!(removed, vec![("phrase-1".to_string(), "asset-new".to_string())]);
+        assert_eq!(
+            removed,
+            vec![("phrase-1".to_string(), "asset-new".to_string())]
+        );
         assert_eq!(catalog.assets.len(), 1);
         assert_eq!(catalog.assets[0].id, "asset-old");
         assert_eq!(

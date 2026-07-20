@@ -938,7 +938,6 @@ export type MonsterMonitorConfig = {
    */
   monsterBuffVoiceConfigs?: BuffVoiceConfigMap;
   fantasyShowAll: boolean;
-  fantasyPersistentDisplay: boolean;
   buffPriorityIds: number[];
   buffAliases: BuffAliasMap;
   buffAlerts: BuffAlertMap;
@@ -1460,7 +1459,6 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     dbmVoiceConfigs: {},
     monsterBuffVoiceConfigs: {},
     fantasyShowAll: false,
-    fantasyPersistentDisplay: false,
     buffPriorityIds: [],
     buffAliases: {},
     buffAlerts: {},
@@ -1534,7 +1532,6 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "dbmVoiceConfigs",
   "monsterBuffVoiceConfigs",
   "fantasyShowAll",
-  "fantasyPersistentDisplay",
   "buffPriorityIds",
   "buffAlerts",
   "overlayPositions",

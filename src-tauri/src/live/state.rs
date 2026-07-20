@@ -13,6 +13,7 @@ use crate::live::dungeon_log::{BattleStateMachine, EncounterResetReason};
 use crate::live::entity_attr_store::EntityAttrStore;
 use crate::live::entity_id::entity_uuid_string;
 use crate::live::event_manager::EventManager;
+use crate::live::fantasy_registry::FantasyRegistry;
 use crate::live::opcodes_models::{
     AttrType, AttrValue, DeathBuffSnapshot, DeathParticipantBuffSnapshot, DeathRecord, Encounter,
     Entity, attr_type,
@@ -167,6 +168,9 @@ pub struct AppState {
     /// baseline instead of misreading the new target's buffs as a burst of
     /// gained/lost edges.
     voice_monster_target_uuid: Option<i64>,
+    /// Detected fantasy summons indexed both by summon uuid and by the
+    /// summoner/source-skill pair used by character-attributed buffs.
+    pub fantasy_registry: FantasyRegistry,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -321,6 +325,7 @@ impl AppState {
             voice_rules: Vec::new(),
             voice_rule_tracker: VoiceRuleTracker::new(),
             voice_monster_target_uuid: None,
+            fantasy_registry: FantasyRegistry::default(),
         }
     }
 
@@ -548,9 +553,10 @@ struct VoiceBuffFacts {
     buff_ids: HashSet<i32>,
     expiry_by_base_id: HashMap<i32, i64>,
     non_expiring_base_ids: HashSet<i32>,
+    tier_by_base_id: HashMap<i32, u8>,
 }
 
-type VoiceBuffSnapshot = (HashSet<i32>, Vec<(i32, i64)>);
+type VoiceBuffSnapshot = (HashSet<i32>, HashMap<i32, u8>, Vec<(i32, i64)>);
 
 impl VoiceBuffFacts {
     fn with_capacity(capacity: usize) -> Self {
@@ -558,11 +564,23 @@ impl VoiceBuffFacts {
             buff_ids: HashSet::with_capacity(capacity),
             expiry_by_base_id: HashMap::with_capacity(capacity),
             non_expiring_base_ids: HashSet::new(),
+            tier_by_base_id: HashMap::new(),
         }
     }
 
-    fn record(&mut self, buff: &ActiveBuff, server_clock_offset: i64) {
+    fn record(
+        &mut self,
+        buff: &ActiveBuff,
+        server_clock_offset: i64,
+        fantasy_registry: &FantasyRegistry,
+    ) {
         self.buff_ids.insert(buff.base_id);
+        if let Some(tier) = fantasy_registry
+            .resolve_remodel_level(buff.fire_uuid, buff.source_config_id)
+            .and_then(|level| u8::try_from(level).ok())
+        {
+            self.tier_by_base_id.insert(buff.base_id, tier);
+        }
         if buff.duration <= 0 {
             self.non_expiring_base_ids.insert(buff.base_id);
             self.expiry_by_base_id.remove(&buff.base_id);
@@ -582,7 +600,11 @@ impl VoiceBuffFacts {
     }
 
     fn into_snapshot(self) -> VoiceBuffSnapshot {
-        (self.buff_ids, self.expiry_by_base_id.into_iter().collect())
+        (
+            self.buff_ids,
+            self.tier_by_base_id,
+            self.expiry_by_base_id.into_iter().collect(),
+        )
     }
 }
 
@@ -592,11 +614,11 @@ impl VoiceBuffFacts {
 /// engine never reads).
 fn collect_buff_snapshot_and_expiry(state: &AppState, entity_uuid: i64) -> VoiceBuffSnapshot {
     let Some(monitor) = state.entity_buff_monitors.monitors.get(&entity_uuid) else {
-        return (HashSet::new(), Vec::new());
+        return (HashSet::new(), HashMap::new(), Vec::new());
     };
     let mut facts = VoiceBuffFacts::with_capacity(monitor.active_buffs.len());
     for buff in monitor.active_buffs.values() {
-        facts.record(buff, state.server_clock_offset);
+        facts.record(buff, state.server_clock_offset, &state.fantasy_registry);
     }
     facts.into_snapshot()
 }
@@ -607,13 +629,17 @@ fn collect_monster_buff_snapshots(
     local_player_uuid: i64,
 ) -> (VoiceBuffSnapshot, VoiceBuffSnapshot) {
     let Some(monitor) = state.entity_buff_monitors.monitors.get(&entity_uuid) else {
-        return ((HashSet::new(), Vec::new()), (HashSet::new(), Vec::new()));
+        return (
+            (HashSet::new(), HashMap::new(), Vec::new()),
+            (HashSet::new(), HashMap::new(), Vec::new()),
+        );
     };
     collect_monster_buff_snapshots_from_buffs(
         monitor.active_buffs.values(),
         monitor.active_buffs.len(),
         state.server_clock_offset,
         local_player_uuid,
+        &state.fantasy_registry,
     )
 }
 
@@ -622,13 +648,14 @@ fn collect_monster_buff_snapshots_from_buffs<'a>(
     capacity: usize,
     server_clock_offset: i64,
     local_player_uuid: i64,
+    fantasy_registry: &FantasyRegistry,
 ) -> (VoiceBuffSnapshot, VoiceBuffSnapshot) {
     let mut any_source = VoiceBuffFacts::with_capacity(capacity);
     let mut local_player_source = VoiceBuffFacts::with_capacity(capacity);
     for buff in buffs {
-        any_source.record(buff, server_clock_offset);
+        any_source.record(buff, server_clock_offset, fantasy_registry);
         if buff.fire_uuid == Some(local_player_uuid) {
-            local_player_source.record(buff, server_clock_offset);
+            local_player_source.record(buff, server_clock_offset, fantasy_registry);
         }
     }
     (
@@ -643,12 +670,13 @@ fn evaluate_voice_buff_scope(
     event_time_ms: i64,
     snapshot: VoiceBuffSnapshot,
 ) {
-    let (buff_ids, expiry_facts) = snapshot;
+    let (buff_ids, tier_by_base_id, expiry_facts) = snapshot;
     let cues = state.voice_rule_tracker.on_buff_scope_snapshot(
         scope,
         &state.voice_rules,
         event_time_ms,
         buff_ids,
+        tier_by_base_id,
     );
     state.event_manager.emit_voice_cues(cues);
     state.voice_rule_tracker.sync_buff_expiry(
@@ -1552,6 +1580,13 @@ impl AppStateManager {
             .teammate_fantasies
             .into_iter()
             .map(|fantasy| {
+                state.fantasy_registry.register_summon(
+                    fantasy.summon_uuid,
+                    fantasy.summoner_uuid,
+                    fantasy.monster_id,
+                    fantasy.remodel_level,
+                    fantasy.marker_source_config_id,
+                );
                 let summoner_entity = state
                     .encounter
                     .entity_uuid_to_entity
@@ -1682,6 +1717,7 @@ impl AppStateManager {
         state.pending_auto_reset = None;
         state.pending_minimap_skill_casts.clear();
         state.encounter.markers.clear();
+        state.fantasy_registry.clear();
         state.event_manager.emit_teammate_fantasy_clear();
         let previous = build_training_dummy_state(&state.training_dummy);
         state.training_dummy.clear();
@@ -1945,6 +1981,7 @@ impl AppStateManager {
                             local_player_uuid,
                             &state.entity_buff_config.local_player,
                             state.server_clock_offset,
+                            &state.fantasy_registry,
                         )
                     })
                     .unwrap_or_default();
@@ -2403,7 +2440,7 @@ mod voice_buff_fact_tests {
     }
 
     fn expiry_map(snapshot: &VoiceBuffSnapshot) -> HashMap<i32, i64> {
-        snapshot.1.iter().copied().collect()
+        snapshot.2.iter().copied().collect()
     }
 
     #[test]
@@ -2414,8 +2451,13 @@ mod voice_buff_fact_tests {
             active_buff(99, 5_000, 1_000, None),
         ];
 
-        let (any_source, local_player_source) =
-            collect_monster_buff_snapshots_from_buffs(buffs.iter(), buffs.len(), 500, 100);
+        let (any_source, local_player_source) = collect_monster_buff_snapshots_from_buffs(
+            buffs.iter(),
+            buffs.len(),
+            500,
+            100,
+            &FantasyRegistry::default(),
+        );
 
         assert_eq!(any_source.0, HashSet::from([42, 99]));
         assert_eq!(local_player_source.0, HashSet::from([42]));
@@ -2431,8 +2473,13 @@ mod voice_buff_fact_tests {
             active_buff(42, 0, 1_000, Some(200)),
         ];
 
-        let (any_source, local_player_source) =
-            collect_monster_buff_snapshots_from_buffs(buffs.iter(), buffs.len(), 0, 100);
+        let (any_source, local_player_source) = collect_monster_buff_snapshots_from_buffs(
+            buffs.iter(),
+            buffs.len(),
+            0,
+            100,
+            &FantasyRegistry::default(),
+        );
 
         assert!(!expiry_map(&any_source).contains_key(&42));
         assert_eq!(expiry_map(&local_player_source).get(&42), Some(&11_000));
@@ -2443,10 +2490,48 @@ mod voice_buff_fact_tests {
         let buff = active_buff(42, 5_000, 10_000, Some(100));
         let mut facts = VoiceBuffFacts::with_capacity(1);
 
-        facts.record(&buff, 750);
+        facts.record(&buff, 750, &FantasyRegistry::default());
         let snapshot = facts.into_snapshot();
 
         assert_eq!(expiry_map(&snapshot).get(&42), Some(&15_750));
+    }
+
+    #[test]
+    fn record_resolves_tier_from_fantasy_registry_via_fire_uuid() {
+        let buff = active_buff(42, 5_000, 1_000, Some(100));
+        let mut fantasy_registry = FantasyRegistry::default();
+        fantasy_registry.register_summon(100, 1, 3_000_010, 5, None);
+        let mut facts = VoiceBuffFacts::with_capacity(1);
+
+        facts.record(&buff, 0, &fantasy_registry);
+        let snapshot = facts.into_snapshot();
+
+        assert_eq!(snapshot.1.get(&42), Some(&5));
+    }
+
+    #[test]
+    fn record_resolves_tier_when_character_applies_fantasy_buff() {
+        let mut buff = active_buff(2_110_103, 20_000, 1_000, Some(335_969_124_992));
+        buff.source_config_id = Some(3_944);
+        let mut fantasy_registry = FantasyRegistry::default();
+        fantasy_registry.register_summon(100, 335_969_124_992, 3_000_038, 5, None);
+        let mut facts = VoiceBuffFacts::with_capacity(1);
+
+        facts.record(&buff, 0, &fantasy_registry);
+        let snapshot = facts.into_snapshot();
+
+        assert_eq!(snapshot.1.get(&2_110_103), Some(&5));
+    }
+
+    #[test]
+    fn record_leaves_tier_unset_when_fire_uuid_is_unknown() {
+        let buff = active_buff(42, 5_000, 1_000, Some(999));
+        let mut facts = VoiceBuffFacts::with_capacity(1);
+
+        facts.record(&buff, 0, &FantasyRegistry::default());
+        let snapshot = facts.into_snapshot();
+
+        assert!(snapshot.1.is_empty());
     }
 }
 
@@ -2483,6 +2568,7 @@ impl AppStateManager {
             &state.entity_buff_config,
             local_player_uuid,
             state.server_clock_offset,
+            &state.fantasy_registry,
             classify,
         );
         let boss_buff_snapshot = state.entity_buff_monitors.build_snapshots_for_kind(
@@ -2490,6 +2576,7 @@ impl AppStateManager {
             &state.entity_buff_config,
             local_player_uuid,
             state.server_clock_offset,
+            &state.fantasy_registry,
             classify,
         );
         let teammate_buff_snapshot = state.entity_buff_monitors.build_snapshots_for_kind(
@@ -2497,6 +2584,7 @@ impl AppStateManager {
             &state.entity_buff_config,
             local_player_uuid,
             state.server_clock_offset,
+            &state.fantasy_registry,
             classify,
         );
         let current_target_uuid = current_attack_target_uuid(state);

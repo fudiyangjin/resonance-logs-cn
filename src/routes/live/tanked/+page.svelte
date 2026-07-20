@@ -19,6 +19,7 @@
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
   import { formatNumber, t } from "$lib/i18n/index.svelte";
+  import FantasyCastIcons from "../fantasy-cast-icons.svelte";
 
   let liveData = $derived(getLiveData());
   let forbiddenIds = $derived(
@@ -192,6 +193,10 @@
                     suffixFontSize={tableSettings.abbreviatedFontSize}
                     suffixColor={customThemeColors.tableAbbreviatedColor}
                     textColor={customThemeColors.tableTextColor}
+                  />
+                  <FantasyCastIcons
+                    entityUuid={player.entityUuid}
+                    size={tableSettings.playerIconSize}
                   />
                 </div>
                 <span
@@ -369,6 +374,10 @@
                 {#if player.forbiddenHit}
                   <ChallengeWarningIcon ids={player.forbiddenHitIds} />
                 {/if}
+                <FantasyCastIcons
+                  entityUuid={player.entityUuid}
+                  size={tableSettings.playerIconSize}
+                />
               </div>
             </td>
             {#each visiblePlayerColumns as col (col.key)}

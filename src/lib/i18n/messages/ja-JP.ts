@@ -391,6 +391,7 @@ export const jaJPMessages = {
   "live.table.skill": "スキル",
   "live.table.classIconAlt": "クラスアイコン",
   "live.player.unknownClass": "不明なクラス",
+  "live.player.fantasyCastTooltip": "{name}・{level}階",
   "live.empty.noBoss": "ボスなし",
   "live.notifications.encounterReset": "エンカウント記録をリセットしました",
   "live.notifications.encounterPaused": "エンカウントを一時停止しました",
@@ -1349,7 +1350,6 @@ export const jaJPMessages = {
   "monsterMonitor.fantasy.description":
     "味方が発動した共鳴スキル召喚モンスター。",
   "monsterMonitor.fantasy.showAll": "すべての味方幻想を表示",
-  "monsterMonitor.fantasy.persistentDisplay": "味方幻想を固定表示",
   "monsterMonitor.fantasy.placeholder": "味方幻想名または MonsterId を検索",
   "monsterMonitor.fantasy.emptySearch": "一致する味方幻想がありません",
   "monsterMonitor.fantasy.groupTitle": "味方幻想",
@@ -1498,6 +1498,7 @@ export const jaJPMessages = {
     "先にスキルモニターページで Buff グループを作成してください",
   "gameOverlay.timer.infinite": "∞",
   "gameOverlay.timer.empty": "--",
+  "gameOverlay.buff.fantasyTierSuffix": "{name} | {level}階",
   "gameOverlay.timer.seconds": "{value}秒",
   "gameOverlay.timer.minutes": "{value}分",
   "gameOverlay.timer.hours": "{value}時間",
@@ -1931,6 +1932,8 @@ export const jaJPMessages = {
   "voice.binding.source.phrase": "フレーズ集から参照",
   "voice.binding.autoPreview": "読み上げ内容：{text}",
   "voice.binding.customPlaceholder": "カスタムの読み上げテキストを入力",
+  "voice.binding.tierPlaceholderHint":
+    "${阶数}（または ${remodelLevel}）でファンタジーの階級を挿入できます。例:「ティナ${阶数}が発効」は5階のとき「ティナ5阶が発効」と読み上げられます",
   "voice.binding.pickPhrase": "フレーズを選択",
   "voice.binding.secondsBefore": "{seconds} 秒前",
   "voice.binding.tryPlay": "試聴",

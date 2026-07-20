@@ -399,7 +399,6 @@ const monsterProfileSchema = v.object({
     defaultClone(defaultMonster.monsterBuffVoiceConfigs ?? {}),
   ),
   fantasyShowAll: v.boolean(),
-  fantasyPersistentDisplay: v.boolean(),
   buffPriorityIds: numberArraySchema,
   buffAlerts: buffAlertMapSchema,
   overlayPositions: monsterOverlayPositionsSchema,
