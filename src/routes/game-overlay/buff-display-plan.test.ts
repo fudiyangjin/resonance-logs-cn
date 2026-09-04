@@ -111,7 +111,7 @@ describe("runtime factor display plan", () => {
     expect(plan.ownedBuffIds.has(211)).toBe(false);
   });
 
-  it("keeps every dedicated source out of ordinary display", () => {
+  it("yields ordinary display only to sources rendered live elsewhere", () => {
     const value = profile(false);
     value.monitoredBuffIds = [1, 2, 3, 4];
     value.customPanelGroups = [
@@ -135,6 +135,7 @@ describe("runtime factor display plan", () => {
     ];
     value.buffCoverageEntries = [
       { id: "coverage_3", buffId: 3, label: "", showInLive: false },
+      { id: "coverage_5", buffId: 5, label: "", showInLive: true },
     ];
     const configured = buildConfiguredBuffPlan(value);
     const factor = {
@@ -152,8 +153,9 @@ describe("runtime factor display plan", () => {
 
     expect(shouldDisplayOrdinaryBuff(configured, factor, 1)).toBe(true);
     expect(shouldDisplayOrdinaryBuff(configured, factor, 2)).toBe(false);
-    expect(shouldDisplayOrdinaryBuff(configured, factor, 3)).toBe(false);
+    expect(shouldDisplayOrdinaryBuff(configured, factor, 3)).toBe(true);
     expect(shouldDisplayOrdinaryBuff(configured, factor, 4)).toBe(false);
+    expect(shouldDisplayOrdinaryBuff(configured, factor, 5)).toBe(false);
     expect(
       shouldDisplayOrdinaryBuff(
         { ...configured, monitorAll: true },
@@ -163,7 +165,7 @@ describe("runtime factor display plan", () => {
     ).toBe(true);
     expect(
       shouldDisplayOrdinaryBuff({ ...configured, monitorAll: true }, factor, 3),
-    ).toBe(false);
+    ).toBe(true);
 
     const restored = buildConfiguredBuffPlan({
       ...value,

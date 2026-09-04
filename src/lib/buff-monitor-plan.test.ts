@@ -60,7 +60,8 @@ describe("configured buff monitor plan", () => {
     expect([...plan.customBuffIds]).toEqual([2]);
     expect([...plan.coverageBuffIds]).toEqual([3, 4]);
     expect([...plan.liveCoverageBuffIds]).toEqual([3]);
-    expect(buildPublishedBuffIds(plan)).toEqual([1, 2, 3]);
+    expect([...plan.liveOwnedBuffIds]).toEqual([2, 3]);
+    expect(buildPublishedBuffIds(plan)).toEqual([1, 2, 3, 4]);
     expect(buildBuffTimelineIds(plan)).toEqual([3, 4]);
   });
 
@@ -126,6 +127,19 @@ describe("configured buff monitor plan", () => {
     expect([...plan.coverageBuffIds]).toEqual([42]);
     expect(buildPublishedBuffIds(plan)).toEqual([]);
     expect(buildBuffTimelineIds(plan)).toEqual([]);
+  });
+
+  it("keeps history-only coverage buffs out of publication", () => {
+    const value = profile();
+    value.buffCoverageEntries = [
+      { id: "coverage", buffId: 42, label: "", showInLive: false },
+    ];
+
+    const plan = buildConfiguredBuffPlan(value);
+
+    expect([...plan.liveOwnedBuffIds]).toEqual([]);
+    expect(buildPublishedBuffIds(plan)).toEqual([]);
+    expect(buildBuffTimelineIds(plan)).toEqual([42]);
   });
 
   it("publishes factor display candidates only when a factor panel exists", () => {

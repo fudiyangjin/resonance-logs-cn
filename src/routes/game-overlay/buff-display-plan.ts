@@ -86,8 +86,7 @@ export function shouldDisplayOrdinaryBuff(
   baseId: number,
 ): boolean {
   if (
-    configured.customBuffIds.has(baseId) ||
-    configured.coverageBuffIds.has(baseId) ||
+    configured.liveOwnedBuffIds.has(baseId) ||
     factor.ownedBuffIds.has(baseId)
   ) {
     return false;

@@ -34,8 +34,11 @@ export type ConfiguredBuffPlan = {
   monitorAll: boolean;
   normalDisplayIds: ReadonlySet<number>;
   customBuffIds: ReadonlySet<number>;
+  /** History timeline whitelist; recorded regardless of live display. */
   coverageBuffIds: ReadonlySet<number>;
   liveCoverageBuffIds: ReadonlySet<number>;
+  /** Rendered live by another area; the ordinary monitor area yields to these. */
+  liveOwnedBuffIds: ReadonlySet<number>;
   factorDisplayCandidateIds: ReadonlySet<number>;
   factorPublishedIds: ReadonlySet<number>;
   linkedBuffIds: ReadonlySet<number>;
@@ -58,6 +61,7 @@ export function buildConfiguredBuffPlan(
       customBuffIds: EMPTY_IDS,
       coverageBuffIds: EMPTY_IDS,
       liveCoverageBuffIds: EMPTY_IDS,
+      liveOwnedBuffIds: EMPTY_IDS,
       factorDisplayCandidateIds: EMPTY_IDS,
       factorPublishedIds: EMPTY_IDS,
       linkedBuffIds: EMPTY_IDS,
@@ -106,6 +110,10 @@ export function buildConfiguredBuffPlan(
       .filter((entry) => entry.showInLive)
       .map((entry) => entry.buffId),
   );
+  const liveOwnedBuffIds = new Set<number>([
+    ...customBuffIds,
+    ...liveCoverageBuffIds,
+  ]);
   const monitorAll =
     (profile.buffDisplayMode === "grouped" &&
       buffGroups.some((group) => group.monitorAll)) ||
@@ -119,6 +127,7 @@ export function buildConfiguredBuffPlan(
     customBuffIds,
     coverageBuffIds,
     liveCoverageBuffIds,
+    liveOwnedBuffIds,
     factorDisplayCandidateIds: hasFactorPanel
       ? FACTOR_DISPLAY_CANDIDATE_IDS
       : EMPTY_IDS,
@@ -138,13 +147,8 @@ export function buildConfiguredBuffPlan(
 export function buildPublishedBuffIds(plan: ConfiguredBuffPlan): number[] {
   if (!plan.enabled || plan.monitorAll) return [];
 
-  const result = new Set<number>();
-  for (const id of plan.normalDisplayIds) {
-    if (plan.customBuffIds.has(id) || plan.coverageBuffIds.has(id)) continue;
-    result.add(id);
-  }
-  addIds(result, plan.customBuffIds);
-  addIds(result, plan.liveCoverageBuffIds);
+  const result = new Set<number>(plan.normalDisplayIds);
+  addIds(result, plan.liveOwnedBuffIds);
   addIds(result, plan.factorPublishedIds);
   addIds(result, plan.linkedBuffIds);
   return sortedIds(result);
