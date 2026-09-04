@@ -1341,19 +1341,19 @@
   },
   "103401": {
     "MonsterType": 0,
-    "Name": "转盘内环"
+    "Name": ""
   },
   "103402": {
     "MonsterType": 0,
-    "Name": "转盘中环"
+    "Name": ""
   },
   "103403": {
     "MonsterType": 0,
-    "Name": "转盘外环"
+    "Name": ""
   },
   "103404": {
     "MonsterType": 0,
-    "Name": "光矛（隐身怪）"
+    "Name": ""
   },
   "103410": {
     "MonsterType": 2,
@@ -1362,6 +1362,22 @@
   "103420": {
     "MonsterType": 2,
     "Name": "拉普西斯"
+  },
+  "103421": {
+    "MonsterType": 0,
+    "Name": ""
+  },
+  "103422": {
+    "MonsterType": 0,
+    "Name": ""
+  },
+  "103423": {
+    "MonsterType": 0,
+    "Name": ""
+  },
+  "103424": {
+    "MonsterType": 1,
+    "Name": ""
   },
   "103500": {
     "MonsterType": 2,
@@ -1389,11 +1405,11 @@
   },
   "103506": {
     "MonsterType": 1,
-    "Name": "扬升（隐身怪）"
+    "Name": ""
   },
   "103507": {
     "MonsterType": 1,
-    "Name": "场景中央占位（隐身怪）"
+    "Name": ""
   },
   "103508": {
     "MonsterType": 1,
@@ -1401,19 +1417,27 @@
   },
   "103509": {
     "MonsterType": 1,
-    "Name": "漩涡"
+    "Name": ""
   },
   "103510": {
     "MonsterType": 2,
-    "Name": "拉普西斯·极昼"
+    "Name": ""
   },
   "103511": {
     "MonsterType": 1,
     "Name": "光之塑形"
   },
+  "103512": {
+    "MonsterType": 1,
+    "Name": ""
+  },
+  "103513": {
+    "MonsterType": 1,
+    "Name": ""
+  },
   "103520": {
     "MonsterType": 2,
-    "Name": "拉普西斯·极昼"
+    "Name": ""
   },
   "103600": {
     "MonsterType": 2,
@@ -1421,27 +1445,27 @@
   },
   "103601": {
     "MonsterType": 2,
-    "Name": "拉普西斯·极夜"
+    "Name": ""
   },
   "103602": {
     "MonsterType": 0,
-    "Name": "拉普西斯控制-光球"
+    "Name": ""
   },
   "103603": {
     "MonsterType": 0,
-    "Name": "拉普西斯控制-暗球"
+    "Name": ""
   },
   "103604": {
     "MonsterType": 1,
-    "Name": "枭兽"
+    "Name": ""
   },
   "103610": {
     "MonsterType": 2,
-    "Name": "拉普西斯·极夜"
+    "Name": ""
   },
   "103620": {
     "MonsterType": 2,
-    "Name": "拉普西斯·极夜"
+    "Name": ""
   },
   "104": {
     "MonsterType": 0,
@@ -2339,6 +2363,86 @@
     "MonsterType": 0,
     "Name": "紫沫ゴブリン (AI)"
   },
+  "11242": {
+    "MonsterType": 0,
+    "Name": "肉山"
+  },
+  "11243": {
+    "MonsterType": 0,
+    "Name": "肉山"
+  },
+  "11244": {
+    "MonsterType": 1,
+    "Name": "肉山"
+  },
+  "11245": {
+    "MonsterType": 2,
+    "Name": "肉山"
+  },
+  "11246": {
+    "MonsterType": 0,
+    "Name": "鵎鵼"
+  },
+  "11247": {
+    "MonsterType": 0,
+    "Name": "鵎鵼"
+  },
+  "11248": {
+    "MonsterType": 1,
+    "Name": "鵎鵼"
+  },
+  "11249": {
+    "MonsterType": 2,
+    "Name": "鵎鵼"
+  },
+  "11250": {
+    "MonsterType": 0,
+    "Name": "地狐"
+  },
+  "11251": {
+    "MonsterType": 0,
+    "Name": "地狐"
+  },
+  "11252": {
+    "MonsterType": 1,
+    "Name": "地狐"
+  },
+  "11253": {
+    "MonsterType": 2,
+    "Name": "地狐"
+  },
+  "11254": {
+    "MonsterType": 0,
+    "Name": "布雷泽"
+  },
+  "11255": {
+    "MonsterType": 0,
+    "Name": "布雷泽"
+  },
+  "11256": {
+    "MonsterType": 1,
+    "Name": "布雷泽"
+  },
+  "11257": {
+    "MonsterType": 2,
+    "Name": "布雷泽"
+  },
+  "11258": {
+    "MonsterType": 0,
+    "Name": "蟹蛛"
+  },
+  "11259": {
+    "MonsterType": 0,
+    "Name": "蟹蛛"
+  },
+  "11260": {
+    "MonsterType": 1,
+    "Name": "蟹蛛"
+  },
+  "11261": {
+    "MonsterType": 2,
+    "Name": "蟹蛛"
+  },
   "113": {
     "MonsterType": 1,
     "Name": "タータ"
@@ -2722,6 +2826,10 @@
   "1226": {
     "MonsterType": 0,
     "Name": "バトルゴーレム03型"
+  },
+  "123": {
+    "MonsterType": 2,
+    "Name": "精英守护木桩"
   },
   "1230": {
     "MonsterType": 2,
@@ -6641,7 +6749,7 @@
   },
   "33962": {
     "MonsterType": 0,
-    "Name": "化光眷属"
+    "Name": ""
   },
   "34000": {
     "MonsterType": 2,
@@ -6793,7 +6901,7 @@
   },
   "34037": {
     "MonsterType": 0,
-    "Name": "大师道中传送"
+    "Name": ""
   },
   "35000": {
     "MonsterType": 2,
@@ -10511,9 +10619,33 @@
     "MonsterType": 0,
     "Name": "渓谷の弩兵 (AI)"
   },
-  "663401": {
+  "663001": {
+    "MonsterType": 0,
+    "Name": "回想体·约书亚"
+  },
+  "663002": {
     "MonsterType": 0,
     "Name": "博伊斯"
+  },
+  "663201": {
+    "MonsterType": 0,
+    "Name": "洛塔尔"
+  },
+  "663202": {
+    "MonsterType": 0,
+    "Name": "博伊斯"
+  },
+  "663203": {
+    "MonsterType": 0,
+    "Name": "博伊斯"
+  },
+  "663204": {
+    "MonsterType": 0,
+    "Name": "伽雷斯"
+  },
+  "663401": {
+    "MonsterType": 0,
+    "Name": ""
   },
   "663402": {
     "MonsterType": 1,
@@ -10521,7 +10653,7 @@
   },
   "663403": {
     "MonsterType": 0,
-    "Name": "博伊斯"
+    "Name": ""
   },
   "663404": {
     "MonsterType": 0,
@@ -10542,6 +10674,102 @@
   "663408": {
     "MonsterType": 0,
     "Name": "残影"
+  },
+  "663409": {
+    "MonsterType": 0,
+    "Name": ""
+  },
+  "663410": {
+    "MonsterType": 0,
+    "Name": "回想体·约书亚"
+  },
+  "663411": {
+    "MonsterType": 0,
+    "Name": "回想体·洛塔尔"
+  },
+  "663412": {
+    "MonsterType": 0,
+    "Name": "回想体·克劳斯"
+  },
+  "663413": {
+    "MonsterType": 0,
+    "Name": "反幻想·博伊斯"
+  },
+  "663414": {
+    "MonsterType": 0,
+    "Name": "回想体·约书亚"
+  },
+  "663415": {
+    "MonsterType": 0,
+    "Name": "回想体·洛塔尔"
+  },
+  "663416": {
+    "MonsterType": 0,
+    "Name": "回想体·克劳斯"
+  },
+  "663601": {
+    "MonsterType": 0,
+    "Name": "姆克弩手"
+  },
+  "663701": {
+    "MonsterType": 0,
+    "Name": "姆克弩手"
+  },
+  "663801": {
+    "MonsterType": 0,
+    "Name": "姆克弩手"
+  },
+  "663802": {
+    "MonsterType": 1,
+    "Name": "溪谷斗技者"
+  },
+  "663901": {
+    "MonsterType": 0,
+    "Name": "姆克弩手"
+  },
+  "663902": {
+    "MonsterType": 2,
+    "Name": "溪谷尖兵"
+  },
+  "664001": {
+    "MonsterType": 1,
+    "Name": "红色的哥布林？"
+  },
+  "664101": {
+    "MonsterType": 0,
+    "Name": "山贼"
+  },
+  "665201": {
+    "MonsterType": 0,
+    "Name": "姆克弩手"
+  },
+  "665202": {
+    "MonsterType": 0,
+    "Name": "不明人员"
+  },
+  "665203": {
+    "MonsterType": 0,
+    "Name": "姆克弩手"
+  },
+  "665204": {
+    "MonsterType": 0,
+    "Name": "弗吉妮娅"
+  },
+  "665301": {
+    "MonsterType": 0,
+    "Name": "深谷鱼人"
+  },
+  "665302": {
+    "MonsterType": 0,
+    "Name": "溪岸鱼人"
+  },
+  "665303": {
+    "MonsterType": 1,
+    "Name": "暗河之鳍"
+  },
+  "665304": {
+    "MonsterType": 2,
+    "Name": "涧流的异影"
   },
   "69001": {
     "MonsterType": 1,
@@ -11928,39 +12156,39 @@
     "Name": "バトルゴーレム03型"
   },
   "80001": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "嵐のキングゴブリン"
   },
   "80002": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "フロストオーガ"
   },
   "80003": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "サンダーオーガ"
   },
   "80004": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "フレイムオーガ"
   },
   "80005": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "キングムーク"
   },
   "80006": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "猛る金色"
   },
   "80007": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ムークボス"
   },
   "80008": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ゴーストカニクモ"
   },
   "80009": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ヴェノミーンの巣"
   },
   "8001": {
@@ -11968,43 +12196,43 @@
     "Name": "シンスター"
   },
   "80010": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "鉄牙"
   },
   "80011": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ゴブリンウォーロード"
   },
   "80012": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "猛る獣"
   },
   "80013": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "炎角 (AI)"
   },
   "80014": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "バジリスク"
   },
   "80015": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ボス・捕食カニクモ"
   },
   "80016": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ボス・外道王"
   },
   "80017": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ボス・峠の牙"
   },
   "80018": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ボス・嗜血のフラッフ"
   },
   "80019": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ボス・空洞センチネル"
   },
   "8002": {
@@ -12012,23 +12240,23 @@
     "Name": "シンスターの助手"
   },
   "80020": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ボス・夢現の宿主 (AI)"
   },
   "80021": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ボス・渓谷の尖兵 (AI)"
   },
   "80022": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ボス・貝拾いの異教徒 (AI)"
   },
   "80023": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ボス・流浪の旅人 (AI)"
   },
   "80024": {
-    "MonsterType": 1,
+    "MonsterType": 2,
     "Name": "ボス・谷川の異影 (AI)"
   },
   "8003": {

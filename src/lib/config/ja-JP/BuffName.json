@@ -4068,10 +4068,10 @@
     "SpriteFile": null
   },
   {
-    "Icon": "buff_abnormal_icon_01",
+    "Icon": "debuff_icon_70",
     "Id": 2110100,
     "NameDesign": "回復禁止",
-    "SpriteFile": "buff_abnormal_icon_01_8866330207186446735.png"
+    "SpriteFile": "debuff_icon_70_-3626952039811249868.png"
   },
   {
     "Icon": "buff_talent_skill_310401",
@@ -4602,10 +4602,10 @@
     "SpriteFile": null
   },
   {
-    "Icon": "buff_abnormal_icon_01",
+    "Icon": "debuff_icon_70",
     "Id": 2110305,
     "NameDesign": "鉄歯の重傷 (AI)",
-    "SpriteFile": "buff_abnormal_icon_01_8866330207186446735.png"
+    "SpriteFile": "debuff_icon_70_-3626952039811249868.png"
   },
   {
     "Icon": "buff_icon09",
@@ -5328,10 +5328,10 @@
     "SpriteFile": "taidao153_-3820244644097162364.png"
   },
   {
-    "Icon": "",
+    "Icon": "buff_icon28",
     "Id": 2200551,
     "NameDesign": "瞬斬効果 (AI)",
-    "SpriteFile": "taidao153_-3820244644097162364.png"
+    "SpriteFile": "buff_icon28_-8445955062110365862.png"
   },
   {
     "Icon": "",
@@ -6811,6 +6811,12 @@
   },
   {
     "Icon": "",
+    "Id": 2202511,
+    "NameDesign": "自然庇护霸体-庇护迅捷",
+    "SpriteFile": "fahuan547_969106134143339723.png"
+  },
+  {
+    "Icon": "",
     "Id": 2202520,
     "NameDesign": "波動回帰",
     "SpriteFile": "fahuan548_-3923477589100837086.png"
@@ -6873,6 +6879,12 @@
     "Icon": "",
     "Id": 2202582,
     "NameDesign": "崩壊!ブーム〜緑の衝撃 (AI)",
+    "SpriteFile": "fahuan554_3454146171493669825.png"
+  },
+  {
+    "Icon": "",
+    "Id": 2202583,
+    "NameDesign": "鹿增伤-绿意冲击",
     "SpriteFile": "fahuan554_3454146171493669825.png"
   },
   {
@@ -6967,6 +6979,12 @@
   },
   {
     "Icon": "",
+    "Id": 2202691,
+    "NameDesign": "三色启示-冷却",
+    "SpriteFile": "fahuan565_8858565807237953882.png"
+  },
+  {
+    "Icon": "",
     "Id": 2202700,
     "NameDesign": "花株開放 - 花時輪舞 (AI)",
     "SpriteFile": "fahuan566_-3917635024218789857.png"
@@ -7035,6 +7053,36 @@
     "Icon": "",
     "Id": 2202711,
     "NameDesign": "プリキュア (AI)",
+    "SpriteFile": "fahuan567_-422092813257201281.png"
+  },
+  {
+    "Icon": "",
+    "Id": 2202712,
+    "NameDesign": "新-花株产生BUFF-蓓蕾生花",
+    "SpriteFile": "fahuan567_-422092813257201281.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 2202713,
+    "NameDesign": "红色花株【洞察启示】-新-蓓蕾生花",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_abnormal_green_icon",
+    "Id": 2202714,
+    "NameDesign": "黄色花株【虔诚启示】-新-蓓蕾生花",
+    "SpriteFile": "buff_abnormal_green_icon_-1700399986040854037.png"
+  },
+  {
+    "Icon": "buff_blue_def",
+    "Id": 2202715,
+    "NameDesign": "蓝色花株【慰藉启示】-新-蓓蕾生花",
+    "SpriteFile": "buff_blue_def_-5154019358626773797.png"
+  },
+  {
+    "Icon": "",
+    "Id": 2202716,
+    "NameDesign": "花株生成倒计时-蓓蕾生花",
     "SpriteFile": "fahuan567_-422092813257201281.png"
   },
   {
@@ -8623,6 +8671,12 @@
   },
   {
     "Icon": "",
+    "Id": 2205212,
+    "NameDesign": "追击身法-刹那连击",
+    "SpriteFile": "talent_passive_icon_general_dps_ruthless_-8955585685760905934.png"
+  },
+  {
+    "Icon": "",
     "Id": 2205220,
     "NameDesign": "戦闘熟練",
     "SpriteFile": "talent_passive_icon_sup_melee02_-5148266489743418661.png"
@@ -9676,6 +9730,12 @@
     "Id": 2206680,
     "NameDesign": "衆生裁決 - 裁決追撃・1人 (AI)",
     "SpriteFile": "jiandun1228_-2637363237474792725.png"
+  },
+  {
+    "Icon": "",
+    "Id": 2206690,
+    "NameDesign": "神圣壁垒-光盾",
+    "SpriteFile": "jiandun1217_-4732894723976089037.png"
   },
   {
     "Icon": "",
@@ -16614,6 +16674,12 @@
     "SpriteFile": null
   },
   {
+    "Icon": "buff_icon18",
+    "Id": 3052551,
+    "NameDesign": "S4-水旋涡幸运翻倍",
+    "SpriteFile": "buff_icon18_-7909625903203653417.png"
+  },
+  {
     "Icon": "",
     "Id": 3052560,
     "NameDesign": "S4 アイス・アザー・ラッキー (AI)",
@@ -18631,6 +18697,12 @@
   },
   {
     "Icon": "",
+    "Id": 3056461,
+    "NameDesign": "再生脉冲暴击",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 3056470,
     "NameDesign": "自然保護盾の数は+{X}で、1%の幸運によりプラス1%となる。 (AI)",
     "SpriteFile": null
@@ -18693,6 +18765,12 @@
     "Icon": "",
     "Id": 3056550,
     "NameDesign": "特殊攻撃により再生ベルを得られる。 (AI)",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 3056551,
+    "NameDesign": "获得再生蓓蕾提升精通",
     "SpriteFile": null
   },
   {
@@ -19251,6 +19329,12 @@
     "Icon": "",
     "Id": 3057571,
     "NameDesign": "アンコール倍率は真*10 (AI)",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 3057572,
+    "NameDesign": "安可倍率真正*10",
     "SpriteFile": null
   },
   {
@@ -21492,6 +21576,18 @@
     "SpriteFile": null
   },
   {
+    "Icon": "",
+    "Id": 44902,
+    "NameDesign": "雷切造成伤害减少",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 44903,
+    "NameDesign": "雷切天生BUFF",
+    "SpriteFile": null
+  },
+  {
     "Icon": "buff_icon_fire",
     "Id": 4501,
     "NameDesign": "燃焼",
@@ -22815,6 +22911,12 @@
     "Icon": "",
     "Id": 5009219,
     "NameDesign": "骑士的黄昏-回想体材质",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 5009220,
+    "NameDesign": "美味之梦-变身虾菇",
     "SpriteFile": null
   },
   {
@@ -24313,6 +24415,12 @@
   },
   {
     "Icon": "",
+    "Id": 55362,
+    "NameDesign": "协奏-歌携带BUFF",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 55390,
     "NameDesign": "炎の音符 (AI)",
     "SpriteFile": null
@@ -24561,6 +24669,18 @@
     "Icon": "",
     "Id": 55432,
     "NameDesign": "冷酷な征伐ダメージバッフ (AI)",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 55433,
+    "NameDesign": "圣光守卫-免死",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 55434,
+    "NameDesign": "防盾大招引力BUFF",
     "SpriteFile": null
   },
   {
@@ -25320,6 +25440,30 @@
     "SpriteFile": null
   },
   {
+    "Icon": "buff_icon19",
+    "Id": 681862,
+    "NameDesign": "试炼之路-冰魔协奏BUFF",
+    "SpriteFile": "buff_icon19_1961513453251932056.png"
+  },
+  {
+    "Icon": "buff_icon125",
+    "Id": 681863,
+    "NameDesign": "试炼之路-冰魔愈合BUFF",
+    "SpriteFile": "buff_icon125_-2222945160737973152.png"
+  },
+  {
+    "Icon": "buff_icon39",
+    "Id": 681864,
+    "NameDesign": "试炼之路-冰魔愈合BUFF-提示",
+    "SpriteFile": "buff_icon39_-2075577057251651464.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 681865,
+    "NameDesign": "试炼之路-冰魔愈合BUFF-冷却",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
     "Icon": "",
     "Id": 681901,
     "NameDesign": "石化",
@@ -25947,6 +26091,18 @@
     "Icon": "",
     "Id": 683199,
     "NameDesign": "装備 - 魔法少女スキューバ進級疾走特効 (AI)",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683200,
+    "NameDesign": "载具-埃及豹疾跑特效",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683201,
+    "NameDesign": "载具-埃及豹进阶疾跑特效",
     "SpriteFile": null
   },
   {
@@ -26595,6 +26751,60 @@
     "Icon": "",
     "Id": 683869,
     "NameDesign": "今夜は星を乗せて出発する (AI)",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683870,
+    "NameDesign": "引梦至彼岸-基础光翼被动",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683871,
+    "NameDesign": "引梦至彼岸-高阶光翼被动",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683872,
+    "NameDesign": "引梦至彼岸-基础光翼",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683873,
+    "NameDesign": "引梦至彼岸-高阶光翼",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683874,
+    "NameDesign": "引梦至彼岸-定时器",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_icon143",
+    "Id": 683875,
+    "NameDesign": "引梦至彼岸-充能",
+    "SpriteFile": "buff_icon143_2393506001794201813.png"
+  },
+  {
+    "Icon": "",
+    "Id": 683876,
+    "NameDesign": "引梦至彼岸-定时器",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_icon143",
+    "Id": 683877,
+    "NameDesign": "引梦至彼岸-充能",
+    "SpriteFile": "buff_icon143_2393506001794201813.png"
+  },
+  {
+    "Icon": "",
+    "Id": 683878,
+    "NameDesign": "引梦至彼岸-加速",
     "SpriteFile": null
   },
   {
@@ -29853,6 +30063,12 @@
     "Icon": "",
     "Id": 702217,
     "NameDesign": "S4大师5冲分词缀",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 702218,
+    "NameDesign": "S4宝藏交互物天生buff",
     "SpriteFile": null
   },
   {
@@ -35382,10 +35598,10 @@
     "SpriteFile": "debuff_icon_15_3206684648307170155.png"
   },
   {
-    "Icon": "buff_red_heal",
+    "Icon": "debuff_icon_70",
     "Id": 828153,
     "NameDesign": "蝕花の傷病",
-    "SpriteFile": "buff_red_heal_8598422908290767674.png"
+    "SpriteFile": "debuff_icon_70_-3626952039811249868.png"
   },
   {
     "Icon": "",
@@ -36642,6 +36858,66 @@
     "SpriteFile": "buff_red_atk_3284302867017518745.png"
   },
   {
+    "Icon": "buff_icon_ray",
+    "Id": 829476,
+    "NameDesign": "雷电侵蚀",
+    "SpriteFile": "buff_icon_ray_8475430372570355973.png"
+  },
+  {
+    "Icon": "buff_red_def",
+    "Id": 829477,
+    "NameDesign": "减防40%，后续叠加10%",
+    "SpriteFile": "buff_red_def_2516734868688990745.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829478,
+    "NameDesign": "大师雷核罩",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829479,
+    "NameDesign": "大师16风核爆",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829480,
+    "NameDesign": "关卡难度7判断",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829481,
+    "NameDesign": "全体单落雷",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829482,
+    "NameDesign": "化光者加速30%",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_red_heal",
+    "Id": 829483,
+    "NameDesign": "辉耀枯竭-重伤",
+    "SpriteFile": "buff_red_heal_8598422908290767674.png"
+  },
+  {
+    "Icon": "debuff_icon_38",
+    "Id": 829484,
+    "NameDesign": "减速10%buff,可叠加",
+    "SpriteFile": "debuff_icon_38_-2226594174090587312.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829485,
+    "NameDesign": "追人化光者施加减速",
+    "SpriteFile": null
+  },
+  {
     "Icon": "",
     "Id": 829501,
     "NameDesign": "光矢召喚(主T掛) (AI)",
@@ -36804,6 +37080,84 @@
     "SpriteFile": null
   },
   {
+    "Icon": "debuff_icon_25",
+    "Id": 829528,
+    "NameDesign": "普攻叠加",
+    "SpriteFile": "debuff_icon_25_-5659180789514151824.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829529,
+    "NameDesign": "普攻生效（nightmare）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829530,
+    "NameDesign": "金石生芽（主要）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "debuff_icon_28",
+    "Id": 829531,
+    "NameDesign": "死刑易伤（nightmare）",
+    "SpriteFile": "debuff_icon_28_-5142706194340085026.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829532,
+    "NameDesign": "拉普西斯主控",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "debuff_icon_1",
+    "Id": 829533,
+    "NameDesign": "光矛爆炸扣血debuff（nightmare）",
+    "SpriteFile": "debuff_icon_1_4052755569664284285.png"
+  },
+  {
+    "Icon": "debuff_icon_28",
+    "Id": 829534,
+    "NameDesign": "谒彼诸天_中心伤害扩散（nightmare）",
+    "SpriteFile": "debuff_icon_28_-5142706194340085026.png"
+  },
+  {
+    "Icon": "debuff_icon_58",
+    "Id": 829535,
+    "NameDesign": "谒彼诸天_易伤（nightmare）",
+    "SpriteFile": "debuff_icon_58_663319592272416756.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829536,
+    "NameDesign": "谒彼诸天_主要",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829537,
+    "NameDesign": "喻形成殇_点名",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829538,
+    "NameDesign": "逐光人形材质",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_red_hp",
+    "Id": 829539,
+    "NameDesign": "追人连线（raid)",
+    "SpriteFile": "buff_red_hp_7631201784644749282.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829540,
+    "NameDesign": "全范围光新星补充特效",
+    "SpriteFile": null
+  },
+  {
     "Icon": "",
     "Id": 829601,
     "NameDesign": "BOSS-ラプシースP2の天然標識(唯一) (AI)",
@@ -36908,7 +37262,7 @@
   {
     "Icon": "",
     "Id": 829618,
-    "NameDesign": "玩家-天光打击点名",
+    "NameDesign": "耀斑球-天光打击点名",
     "SpriteFile": null
   },
   {
@@ -37077,6 +37431,78 @@
     "Icon": "",
     "Id": 829646,
     "NameDesign": "BOSS-苍穹机制正攻标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829647,
+    "NameDesign": "BOSS-裁决阶段连线拉人（噩梦）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829648,
+    "NameDesign": "BOSS-强力引力（噩梦）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829649,
+    "NameDesign": "玩家-法阵分摊点名",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "debuff_icon_32",
+    "Id": 829650,
+    "NameDesign": "玩家-法阵分摊易伤",
+    "SpriteFile": "debuff_icon_32_-2339710342798626022.png"
+  },
+  {
+    "Icon": "debuff_icon_3",
+    "Id": 829651,
+    "NameDesign": "玩家-光焰叠层dot（伤害）",
+    "SpriteFile": "debuff_icon_3_-4321067131542861947.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829652,
+    "NameDesign": "标记-光之塑形和召唤法阵",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829653,
+    "NameDesign": "天光打击效果",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "debuff_icon_83",
+    "Id": 829654,
+    "NameDesign": "玩家-死刑换Tbuff",
+    "SpriteFile": "debuff_icon_83_7294890882074820842.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829655,
+    "NameDesign": "剑盾幻象-斥力推开玩家",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829656,
+    "NameDesign": "标记-剑盾幻象天生buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829657,
+    "NameDesign": "BOSS-查找玩家先后点名分摊",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829658,
+    "NameDesign": "BOSS-漩涡阶段进度条",
     "SpriteFile": null
   },
   {
@@ -38736,10 +39162,10 @@
     "SpriteFile": "buff_icon_ray_8475430372570355973.png"
   },
   {
-    "Icon": "buff_abnormal_icon_01",
+    "Icon": "debuff_icon_70",
     "Id": 831994,
     "NameDesign": "塔防-重伤",
-    "SpriteFile": "buff_abnormal_icon_01_8866330207186446735.png"
+    "SpriteFile": "debuff_icon_70_-3626952039811249868.png"
   },
   {
     "Icon": "debuff_icon_64",
@@ -43220,7 +43646,7 @@
   {
     "Icon": "",
     "Id": 852260,
-    "NameDesign": "博伊斯后日谈-变身博伊斯（拿长枪版）",
+    "NameDesign": "博伊斯后日谈3-变身博伊斯（拿长枪版）（战斗动作）",
     "SpriteFile": null
   },
   {
@@ -43288,6 +43714,144 @@
     "Id": 852271,
     "NameDesign": "博伊斯后日谈2-克劳斯战吼眩晕（可被击飞）",
     "SpriteFile": "debuff_icon_17_-4998991083182462306.png"
+  },
+  {
+    "Icon": "",
+    "Id": 852272,
+    "NameDesign": "博伊斯后日谈3-实验用滤镜",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852273,
+    "NameDesign": "博伊斯后日谈3-镜子（小）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852274,
+    "NameDesign": "博伊斯日后谈3-博伊斯开场无敌并释放演出技能",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852275,
+    "NameDesign": "博伊斯后日谈3-小幻影出生特效和连线",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852276,
+    "NameDesign": "博伊斯后日谈3-我是博伊斯：连线用标记兼锁血",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852277,
+    "NameDesign": "博伊斯后日谈3-博伊斯开局幻影存活时锁血加护盾",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852278,
+    "NameDesign": "博伊斯后日谈3-小幻影锁血7秒",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852279,
+    "NameDesign": "博伊斯后日谈3-博伊斯第一次被击破血量检测",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852280,
+    "NameDesign": "博伊斯后日谈3-博伊斯复活超级回血加锁血",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852281,
+    "NameDesign": "博伊斯后日谈3-博伊斯第一次被击破后释放复活技能",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852282,
+    "NameDesign": "博伊斯后日谈3-开场玩家不能移动9秒",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852283,
+    "NameDesign": "博伊斯后日谈3-让伽雷斯释放极十字斩",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852284,
+    "NameDesign": "博伊斯后日谈3-让博伊斯被击晕",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852285,
+    "NameDesign": "博伊斯后日谈3-镜子破碎",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852286,
+    "NameDesign": "博伊斯后日谈3-第二次三个小幻影无敌",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852287,
+    "NameDesign": "博伊斯后日谈3-可以放绝招了！",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852290,
+    "NameDesign": "回想体·约书亚-血量检测",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852291,
+    "NameDesign": "回想体·约书亚-开局对话",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852292,
+    "NameDesign": "回想体·约书亚-40%血量对话",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852293,
+    "NameDesign": "回响体·约书亚-虚弱表演",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852294,
+    "NameDesign": "回响体·约书亚-锁血效果1",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852295,
+    "NameDesign": "回响体·约书亚-锁血效果2",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 852296,
+    "NameDesign": "博伊斯助战-冰柱冻结",
+    "SpriteFile": null
   },
   {
     "Icon": "",
@@ -50611,6 +51175,12 @@
   },
   {
     "Icon": "",
+    "Id": 881964,
+    "NameDesign": "勇气风环攻击判定BUFF",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 882100,
     "NameDesign": "氷彗星嵐5連 (AI)",
     "SpriteFile": null
@@ -56997,6 +57567,54 @@
     "Icon": "",
     "Id": 884862,
     "NameDesign": "大师传送开boss标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 885001,
+    "NameDesign": "NPC不进仇恨 不可选中 不能被伤害",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 885002,
+    "NameDesign": "进入播放对话",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 885003,
+    "NameDesign": "40播放对话",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 885004,
+    "NameDesign": "20播放对话",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 885005,
+    "NameDesign": "锁血60",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 885006,
+    "NameDesign": "锁血40",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 885007,
+    "NameDesign": "锁血20",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 885008,
+    "NameDesign": "BUFF中转",
     "SpriteFile": null
   },
   {
