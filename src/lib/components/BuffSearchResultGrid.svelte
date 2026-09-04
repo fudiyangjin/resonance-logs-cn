@@ -15,6 +15,7 @@
     getIconSrc?: (buffId: number) => string | null;
     emptyMessage?: string;
     minColumnWidth?: number;
+    pageSize?: number;
   }
 
   let {
@@ -27,11 +28,28 @@
     getIconSrc = () => null,
     emptyMessage,
     minColumnWidth = 180,
+    pageSize = 50,
   }: Props = $props();
 
   const effectiveEmptyMessage = $derived(
     emptyMessage ?? t("components.buffSearchResultGrid.empty"),
   );
+
+  let visibleCount = $state(pageSize);
+  // Plain (non-reactive) reference marker: writing it cannot re-trigger the
+  // effect, and the effect only reads `items`, so it cannot self-trigger.
+  let previousItems: BuffNameInfo[] | null = null;
+
+  // items arrives as a fresh array per search; reset before the DOM updates
+  // so an expanded list never renders once under a new keyword.
+  $effect.pre(() => {
+    if (items === previousItems) return;
+    previousItems = items;
+    visibleCount = pageSize;
+  });
+
+  const visibleItems = $derived(items.slice(0, visibleCount));
+  const remainingCount = $derived(items.length - visibleCount);
 </script>
 
 {#if items.length > 0}
@@ -39,7 +57,7 @@
     class="grid gap-3"
     style:grid-template-columns={`repeat(auto-fill, minmax(${minColumnWidth}px, 1fr))`}
   >
-    {#each items as item (item.baseId)}
+    {#each visibleItems as item (item.baseId)}
       {@const iconBuff = availableBuffMap.get(item.baseId)}
       {@const resolvedIconSrc = getIconSrc(item.baseId)}
       {@const selected = isSelected(item.baseId)}
@@ -51,7 +69,9 @@
           defaultName,
           id: item.baseId,
         })
-        : t("components.buffSearchResultGrid.subtitle.idOnly", { id: item.baseId })}
+        : item.inCatalog
+          ? t("components.buffSearchResultGrid.subtitle.idOnly", { id: item.baseId })
+          : t("components.buffSearchResultGrid.subtitle.idOnlyUncatalogued", { id: item.baseId })}
       <button
         type="button"
         class={`group relative flex items-start gap-3 rounded-lg border bg-card/40 p-3 text-left transition-all ${selected
@@ -103,6 +123,17 @@
       </button>
     {/each}
   </div>
+  {#if remainingCount > 0}
+    <button
+      type="button"
+      class="mt-3 w-full rounded border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+      onclick={() => (visibleCount += pageSize)}
+    >
+      {t("components.buffSearchResultGrid.showMore", {
+        remaining: remainingCount,
+      })}
+    </button>
+  {/if}
 {:else}
   <div class="text-xs text-muted-foreground">{effectiveEmptyMessage}</div>
 {/if}

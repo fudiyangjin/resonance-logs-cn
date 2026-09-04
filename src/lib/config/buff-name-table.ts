@@ -20,6 +20,7 @@ export type BuffNameInfo = {
   baseId: number;
   name: string;
   hasSpriteFile: boolean;
+  inCatalog: boolean;
 };
 
 export type BuffMeta = {
@@ -250,6 +251,18 @@ function getIdMatchRank(
   return null;
 }
 
+// Buff ids are positive i32 on the wire; keep the same bounds as the
+// loadout schema in loadout-import.ts so any id users can persist is
+// searchable here.
+function parseExactBuffId(normalizedKeyword: string): number | null {
+  const digits = normalizedKeyword.replace(/^#/, "");
+  if (!/^\d+$/.test(digits)) return null;
+  const baseId = Number(digits);
+  if (!Number.isSafeInteger(baseId) || baseId <= 0 || baseId > 2_147_483_647)
+    return null;
+  return baseId;
+}
+
 export function lookupBuffMeta(
   baseId: number,
   locale = getLocale(),
@@ -340,6 +353,7 @@ export function resolveBuffNameInfo(
     baseId,
     name: resolveBuffDisplayName(baseId, aliases, locale),
     hasSpriteFile: meta?.hasSpriteFile ?? false,
+    inCatalog: meta !== undefined,
   };
 }
 
@@ -367,6 +381,15 @@ export function searchBuffsByName(
     );
     if (!Number.isFinite(rank)) continue;
     matches.push({ baseId: meta.baseId, rank });
+  }
+
+  // Exact-id passthrough: buffs whose NameDesign is empty (or that are not
+  // in BuffName.json at all) are skipped by buildBuffCatalog, so the catalog
+  // loop above can never surface them. Synthesize a rank-0 match so they can
+  // still be searched and added to monitor lists by id.
+  const exactId = parseExactBuffId(normalizedKeyword);
+  if (exactId !== null && !getBuffCatalog(locale).metaMap.has(exactId)) {
+    matches.push({ baseId: exactId, rank: 0 });
   }
 
   matches.sort((a, b) => a.rank - b.rank || a.baseId - b.baseId);

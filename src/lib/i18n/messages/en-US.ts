@@ -1091,6 +1091,10 @@ export const enUSMessages = {
   "components.buffSearchResultGrid.subtitle.defaultWithId":
     "{defaultName} · ID {id}",
   "components.buffSearchResultGrid.subtitle.idOnly": "ID {id}",
+  "components.buffSearchResultGrid.subtitle.idOnlyUncatalogued":
+    "ID {id} · Not in catalog",
+  "components.buffSearchResultGrid.showMore":
+    "Show more ({remaining} remaining)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
   "skillMonitor.layout.title": "Live Monitor",
   "skillMonitor.layout.description":

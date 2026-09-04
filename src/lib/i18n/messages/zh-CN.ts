@@ -991,6 +991,9 @@ export const zhCNMessages = {
   "components.buffSearchResultGrid.subtitle.defaultWithId":
     "{defaultName} · ID {id}",
   "components.buffSearchResultGrid.subtitle.idOnly": "ID {id}",
+  "components.buffSearchResultGrid.subtitle.idOnlyUncatalogued":
+    "ID {id} · 未收录",
+  "components.buffSearchResultGrid.showMore": "显示更多(还有 {remaining} 条)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
   "skillMonitor.layout.title": "实时监控",
   "skillMonitor.layout.description": "自定义监控技能CD, 战斗资源等",

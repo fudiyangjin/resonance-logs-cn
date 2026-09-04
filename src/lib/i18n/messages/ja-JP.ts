@@ -1072,6 +1072,9 @@ export const jaJPMessages = {
   "components.buffSearchResultGrid.subtitle.defaultWithId":
     "{defaultName} · ID {id}",
   "components.buffSearchResultGrid.subtitle.idOnly": "ID {id}",
+  "components.buffSearchResultGrid.subtitle.idOnlyUncatalogued":
+    "ID {id} · 未収録",
+  "components.buffSearchResultGrid.showMore": "さらに表示(残り {remaining} 件)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
   "skillMonitor.layout.title": "ライブモニター",
   "skillMonitor.layout.description":
