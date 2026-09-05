@@ -34,6 +34,9 @@ export const DEFAULT_STATS = {
   luckyDmgRate: false,
   hits: false,
   hitsPerMinute: false,
+  avgDmg: false,
+  maxDmg: false,
+  minDmg: false,
   property: true,
   damageMode: true,
 };
@@ -54,6 +57,9 @@ export const DEFAULT_LIVE_TANKED_PLAYER_STATS = {
 
 export const DEFAULT_LIVE_TANKED_SKILL_STATS = {
   ...DEFAULT_LIVE_TANKED_PLAYER_STATS,
+  avgDmg: false,
+  maxDmg: false,
+  minDmg: false,
   property: true,
   damageMode: true,
 };
@@ -73,6 +79,9 @@ export const DEFAULT_HISTORY_STATS = {
   luckyDmgRate: false,
   hits: false,
   hitsPerMinute: false,
+  avgDmg: false,
+  maxDmg: false,
+  minDmg: false,
   property: true,
   damageMode: true,
 };
@@ -103,6 +112,9 @@ export const DEFAULT_HISTORY_TANKED_SKILL_STATS = {
   luckyBlockRate: false,
   hits: false,
   hitsPerMinute: false,
+  avgDmg: false,
+  maxDmg: false,
+  minDmg: false,
   property: true,
   damageMode: true,
 };
@@ -119,6 +131,9 @@ export const DEFAULT_HISTORY_HEAL_STATS = {
   luckyDmgRate: false,
   hitsHeal: false,
   hitsPerMinute: false,
+  avgDmg: false,
+  maxDmg: false,
+  minDmg: false,
 };
 
 // Default column order for live tables (keys from column-data.ts)
@@ -150,6 +165,9 @@ export const DEFAULT_DPS_SKILL_COLUMN_ORDER = [
   "luckyDmgRate",
   "hits",
   "hitsPerMinute",
+  "avgDmg",
+  "maxDmg",
+  "minDmg",
 ];
 export const DEFAULT_HEAL_PLAYER_COLUMN_ORDER = [
   "totalDmg",
@@ -176,6 +194,9 @@ export const DEFAULT_HEAL_SKILL_COLUMN_ORDER = [
   "luckyDmgRate",
   "hits",
   "hitsPerMinute",
+  "avgDmg",
+  "maxDmg",
+  "minDmg",
 ];
 export const DEFAULT_TANKED_PLAYER_COLUMN_ORDER = [
   "totalDmg",
@@ -206,6 +227,9 @@ export const DEFAULT_TANKED_SKILL_COLUMN_ORDER = [
   "luckyBlockRate",
   "hits",
   "hitsPerMinute",
+  "avgDmg",
+  "maxDmg",
+  "minDmg",
   "property",
   "damageMode",
 ];
@@ -251,6 +275,18 @@ export function normalizeTankedPlayerColumnOrder(
   order: readonly string[] | undefined,
 ) {
   return normalizeColumnOrder(order, DEFAULT_TANKED_PLAYER_COLUMN_ORDER);
+}
+
+export function normalizeDpsSkillColumnOrder(
+  order: readonly string[] | undefined,
+) {
+  return normalizeColumnOrder(order, DEFAULT_DPS_SKILL_COLUMN_ORDER);
+}
+
+export function normalizeHealSkillColumnOrder(
+  order: readonly string[] | undefined,
+) {
+  return normalizeColumnOrder(order, DEFAULT_HEAL_SKILL_COLUMN_ORDER);
 }
 
 export function normalizeTankedSkillColumnOrder(

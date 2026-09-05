@@ -114,6 +114,8 @@
       return row.raw.effectiveTotalValue;
     }
     if (key === "hits" || key === "hitsPerMinute") return row.raw.hits;
+    if (key === "maxDmg") return row.raw.extrema?.max ?? "0";
+    if (key === "minDmg") return row.raw.extrema?.min ?? "0";
     return null;
   }
 
@@ -194,6 +196,9 @@
         luckyBlockRate: group.luckyBlockRate,
         hits: group.hits,
         hitsPerMinute: group.hitsPerMinute,
+        avgDmg: group.avgDmg,
+        maxDmg: group.maxDmg,
+        minDmg: group.minDmg,
         property: null,
         damageMode: null,
         raw: group.raw,
@@ -441,12 +446,12 @@
                 class="relative z-10 px-2 py-1 text-right"
                 style="color: {customThemeColors.tableTextColor};"
               >
-                {#if col.key === "totalDmg" || col.key === "effectiveTotal"}
-                  {#if shortenValues}
+                {#if col.key === "totalDmg" || col.key === "effectiveTotal" || col.key === "avgDmg" || col.key === "maxDmg" || col.key === "minDmg"}
+                  {#if (col.key === "maxDmg" && skill.maxDmg === null) || (col.key === "minDmg" && skill.minDmg === null)}
+                    <span class="text-muted-foreground/50">-</span>
+                  {:else if shortenValues}
                     <AbbreviatedNumber
-                      num={col.key === "totalDmg"
-                        ? skill.totalDmg
-                        : skill.effectiveTotal}
+                      num={columnValue(skill, col.key)}
                       decimalPlaces={abbreviatedDecimalPlaces}
                       {abbreviationStyle}
                       suffixFontSize={tableSettings.skillAbbreviatedFontSize}

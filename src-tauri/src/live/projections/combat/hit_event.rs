@@ -1,6 +1,8 @@
 //! Shared hit stat-accounting primitives.
 
-use crate::live::projections::combat::stats::{CombatStats, Skill, SkillTargetStats};
+use crate::live::projections::combat::stats::{
+    observe_extrema, CombatStats, Skill, SkillTargetStats,
+};
 
 /// A single accounting delta shared by all aggregation maps.
 ///
@@ -79,6 +81,7 @@ pub fn apply_to_skill(
     skill.hits += 1;
     skill.total_value += d.value;
     skill.effective_total_value += d.effective;
+    observe_extrema(&mut skill.extrema, d.value);
 }
 
 /// Apply one hit to a per-skill-per-target [`SkillTargetStats`] accumulator.

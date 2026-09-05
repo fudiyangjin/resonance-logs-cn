@@ -42,6 +42,52 @@ pub struct SkillTargetStats {
     pub trigger_hits: u128,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HitExtrema {
+    pub min: u128,
+    pub max: u128,
+}
+
+impl HitExtrema {
+    #[must_use]
+    pub const fn single(value: u128) -> Self {
+        Self {
+            min: value,
+            max: value,
+        }
+    }
+
+    pub fn observe(&mut self, value: u128) {
+        self.min = self.min.min(value);
+        self.max = self.max.max(value);
+    }
+
+    #[must_use]
+    pub fn merged(self, other: Self) -> Self {
+        Self {
+            min: self.min.min(other.min),
+            max: self.max.max(other.max),
+        }
+    }
+}
+
+pub fn observe_extrema(extrema: &mut Option<HitExtrema>, value: u128) {
+    match extrema {
+        Some(current) => current.observe(value),
+        None => *extrema = Some(HitExtrema::single(value)),
+    }
+}
+
+pub fn merge_extrema(target: &mut Option<HitExtrema>, other: Option<HitExtrema>) {
+    let Some(other) = other else {
+        return;
+    };
+    *target = Some(match *target {
+        Some(current) => current.merged(other),
+        None => other,
+    });
+}
+
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Skill {
     pub total_value: u128,
@@ -61,6 +107,8 @@ pub struct Skill {
     pub block_hits: u128,
     #[serde(default)]
     pub lucky_block_hits: u128,
+    #[serde(default)]
+    pub extrema: Option<HitExtrema>,
 }
 
 pub mod class {
@@ -211,6 +259,7 @@ pub mod class {
 #[cfg(test)]
 mod tests {
     use super::class::ClassSpec;
+    use super::{HitExtrema, merge_extrema, observe_extrema};
 
     #[test]
     fn class_spec_from_i32_roundtrips_all_discriminants() {
@@ -243,5 +292,29 @@ mod tests {
         }
         assert_eq!(ClassSpec::from_i32(-1), ClassSpec::Unknown);
         assert_eq!(ClassSpec::from_i32(19), ClassSpec::Unknown);
+    }
+
+    #[test]
+    fn hit_extrema_observe_and_merge_are_monotonic() {
+        let mut extrema = HitExtrema::single(50);
+        extrema.observe(10);
+        extrema.observe(80);
+        extrema.observe(80);
+        assert_eq!(extrema, HitExtrema { min: 10, max: 80 });
+        assert_eq!(
+            extrema.merged(HitExtrema::single(5)),
+            HitExtrema { min: 5, max: 80 }
+        );
+        assert_eq!(
+            extrema.merged(HitExtrema::single(90)),
+            HitExtrema { min: 10, max: 90 }
+        );
+
+        let mut observed = None;
+        observe_extrema(&mut observed, 40);
+        observe_extrema(&mut observed, 12);
+        merge_extrema(&mut observed, Some(HitExtrema::single(99)));
+        merge_extrema(&mut observed, None);
+        assert_eq!(observed, Some(HitExtrema { min: 12, max: 99 }));
     }
 }

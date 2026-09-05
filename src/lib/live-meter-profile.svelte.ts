@@ -17,6 +17,9 @@ import {
   deepCloneSettings,
   mergeLiveHeaderCustomization,
   normalizeDeathReplayColumnOrder,
+  normalizeDpsSkillColumnOrder,
+  normalizeHealSkillColumnOrder,
+  normalizeTankedSkillColumnOrder,
   generateProfileId,
   type LiveMeterProfile,
   type LiveMeterProfileData,
@@ -249,15 +252,19 @@ function applyProfileData(data: LiveMeterProfileData): void {
   );
   stores.columnOrder.dpsPlayers.state.order =
     cloned.columnOrder.dpsPlayers.order;
-  stores.columnOrder.dpsSkills.state.order = cloned.columnOrder.dpsSkills.order;
+  stores.columnOrder.dpsSkills.state.order = normalizeDpsSkillColumnOrder(
+    cloned.columnOrder.dpsSkills.order,
+  );
   stores.columnOrder.healPlayers.state.order =
     cloned.columnOrder.healPlayers.order;
-  stores.columnOrder.healSkills.state.order =
-    cloned.columnOrder.healSkills.order;
+  stores.columnOrder.healSkills.state.order = normalizeHealSkillColumnOrder(
+    cloned.columnOrder.healSkills.order,
+  );
   stores.columnOrder.tankedPlayers.state.order =
     cloned.columnOrder.tankedPlayers.order;
-  stores.columnOrder.tankedSkills.state.order =
-    cloned.columnOrder.tankedSkills.order;
+  stores.columnOrder.tankedSkills.state.order = normalizeTankedSkillColumnOrder(
+    cloned.columnOrder.tankedSkills.order,
+  );
   stores.columnOrder.deathReplay.state.order = normalizeDeathReplayColumnOrder(
     cloned.columnOrder.deathReplay?.order,
   );

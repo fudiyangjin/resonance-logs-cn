@@ -3,11 +3,11 @@
 use std::collections::HashMap;
 
 use crate::live::projections::combat::hit_event::{
-    StatDelta, apply_to_combat_stats, apply_to_skill, apply_to_target_stats,
+    apply_to_combat_stats, apply_to_skill, apply_to_target_stats, StatDelta,
 };
-use crate::live::projections::combat::stats::class::{ClassSpec, get_class_spec_from_skill_id};
+use crate::live::projections::combat::stats::class::{get_class_spec_from_skill_id, ClassSpec};
 use crate::live::projections::combat::stats::{
-    CombatStats, Skill, SkillTargetStats, damage_type_flag,
+    damage_type_flag, merge_extrema, CombatStats, Skill, SkillTargetStats,
 };
 use crate::live::runtime::events::{DomainHit, EntityKind, HitKind};
 
@@ -416,6 +416,7 @@ fn apply_skill_saturating(
     saturated |= add_saturating(&mut skill.trigger_hits, increment.trigger_hits);
     saturated |= add_saturating(&mut skill.block_hits, increment.block_hits);
     saturated |= add_saturating(&mut skill.lucky_block_hits, increment.lucky_block_hits);
+    merge_extrema(&mut skill.extrema, increment.extrema);
     saturated
 }
 
@@ -509,6 +510,7 @@ fn add_saturating(target: &mut u128, value: u128) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::live::projections::combat::stats::HitExtrema;
     use crate::live::runtime::events::{EntityRef, EntityUuid, HitChannel};
 
     fn entity(uuid: i64) -> EntityRef {
@@ -741,6 +743,42 @@ mod tests {
         assert_eq!(
             accumulator.entities[&10].damage_skills[&17_140_101].total_value,
             u128::MAX
+        );
+        assert_eq!(
+            accumulator.entities[&10].damage_skills[&17_140_101].extrema,
+            Some(HitExtrema {
+                min: u128::MAX,
+                max: u128::MAX,
+            })
+        );
+    }
+
+    #[test]
+    fn overflow_path_merges_skill_extrema_instead_of_adding() {
+        let mut first = hit(true, HitKind::Damage);
+        first.amount = 50;
+        first.hp_loss = 0;
+        first.shield_loss = 0;
+        let first_fact = CombatHitFact::from_domain(&first).expect("first damage fact");
+
+        let mut overflow = hit(true, HitKind::Damage);
+        overflow.amount = u128::MAX;
+        overflow.hp_loss = 0;
+        overflow.shield_loss = 0;
+        let overflow_fact = CombatHitFact::from_domain(&overflow).expect("overflow damage fact");
+
+        let mut accumulator = CombatAccumulator::default();
+        assert!(!accumulator.apply(&first_fact));
+        assert!(accumulator.apply(&overflow_fact));
+
+        let skill = &accumulator.entities[&10].damage_skills[&17_140_101];
+        assert_eq!(skill.total_value, u128::MAX);
+        assert_eq!(
+            skill.extrema,
+            Some(HitExtrema {
+                min: 50,
+                max: u128::MAX,
+            })
         );
     }
 }

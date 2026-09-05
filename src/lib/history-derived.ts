@@ -95,6 +95,7 @@ function historySkillStats(skill: EncounterSkillData): RawSkillStats {
     triggerHits: skill.stats.triggerHits,
     blockHits: skill.stats.blockedHits,
     luckyBlockHits: skill.stats.luckyBlockHits,
+    extrema: skill.stats.extrema ?? null,
   };
 }
 

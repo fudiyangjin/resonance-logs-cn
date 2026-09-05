@@ -23,6 +23,9 @@ export const DPS_SKILL_COLUMN_KEYS = [
   "luckyDmgRate",
   "hits",
   "hitsPerMinute",
+  "avgDmg",
+  "maxDmg",
+  "minDmg",
 ] as const;
 
 export type DpsPlayerColumnKey = (typeof DPS_PLAYER_COLUMN_KEYS)[number];

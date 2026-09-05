@@ -13,6 +13,9 @@ import {
   mergeLiveHeaderCustomization,
   normalizeHistorySettings,
   normalizeDeathReplayColumnOrder,
+  normalizeDpsSkillColumnOrder,
+  normalizeHealSkillColumnOrder,
+  normalizeTankedSkillColumnOrder,
   createDefaultMonsterMonitorState,
   createDefaultSkillMonitorProfile,
   deepCloneSettings,
@@ -329,6 +332,21 @@ function normalizeLiveProfiles(
       columnOrder: {
         ...defaults.columnOrder,
         ...profile.columnOrder,
+        dpsSkills: {
+          order: normalizeDpsSkillColumnOrder(
+            profile.columnOrder?.dpsSkills?.order,
+          ),
+        },
+        healSkills: {
+          order: normalizeHealSkillColumnOrder(
+            profile.columnOrder?.healSkills?.order,
+          ),
+        },
+        tankedSkills: {
+          order: normalizeTankedSkillColumnOrder(
+            profile.columnOrder?.tankedSkills?.order,
+          ),
+        },
         deathReplay: {
           order: normalizeDeathReplayColumnOrder(
             profile.columnOrder?.deathReplay?.order,

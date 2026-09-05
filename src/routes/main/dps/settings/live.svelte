@@ -10,7 +10,10 @@
     DEFAULT_LIVE_TANKED_PLAYER_STATS,
     DEFAULT_LIVE_TANKED_SKILL_STATS,
     DEFAULT_DEATH_REPLAY_COLUMNS,
+    DEFAULT_STATS,
     normalizeTankedPlayerColumnOrder,
+    normalizeDpsSkillColumnOrder,
+    normalizeHealSkillColumnOrder,
     normalizeTankedSkillColumnOrder,
     normalizeDeathReplayColumnOrder,
   } from "$lib/settings-store";
@@ -79,6 +82,16 @@
     }
   }
 
+  const dpsSkillColumnOrder = $derived(
+    normalizeDpsSkillColumnOrder(
+      SETTINGS.live.columnOrder.dpsSkills.state.order,
+    ),
+  );
+  const healSkillColumnOrder = $derived(
+    normalizeHealSkillColumnOrder(
+      SETTINGS.live.columnOrder.healSkills.state.order,
+    ),
+  );
   const tankedPlayerColumnOrder = $derived(
     normalizeTankedPlayerColumnOrder(
       SETTINGS.live.columnOrder.tankedPlayers.state.order,
@@ -96,6 +109,20 @@
   );
 
   $effect(() => {
+    for (const key of dpsSkillColumnOrder) {
+      const typedKey = key as keyof typeof DEFAULT_STATS;
+      if (typedKey in DEFAULT_STATS) {
+        SETTINGS.live.dps.skillBreakdown.state[typedKey] ??=
+          DEFAULT_STATS[typedKey];
+      }
+    }
+    for (const key of healSkillColumnOrder) {
+      const typedKey = key as keyof typeof DEFAULT_STATS;
+      if (typedKey in DEFAULT_STATS) {
+        SETTINGS.live.heal.skillBreakdown.state[typedKey] ??=
+          DEFAULT_STATS[typedKey];
+      }
+    }
     for (const key of tankedPlayerColumnOrder) {
       const typedKey = key as keyof typeof DEFAULT_LIVE_TANKED_PLAYER_STATS;
       SETTINGS.live.tanked.players.state[typedKey] ??=
@@ -481,7 +508,7 @@
               resetLabel={t("settings.common.columns.resetName")}
             />
           </div>
-          {#each SETTINGS.live.columnOrder.dpsSkills.state.order as colKey, idx (colKey)}
+          {#each dpsSkillColumnOrder as colKey, idx (colKey)}
             {@const col = liveDpsSkillColumns.find((c) => c.key === colKey)}
             {#if col}
               <div
@@ -493,9 +520,7 @@
                     class="hover:bg-muted/50 rounded px-1 text-xs disabled:opacity-30"
                     disabled={idx === 0}
                     onclick={() => {
-                      const arr = [
-                        ...SETTINGS.live.columnOrder.dpsSkills.state.order,
-                      ];
+                      const arr = [...dpsSkillColumnOrder];
                       const prev = arr[idx - 1];
                       const curr = arr[idx];
                       if (prev !== undefined && curr !== undefined) {
@@ -507,13 +532,9 @@
                   <button
                     type="button"
                     class="hover:bg-muted/50 rounded px-1 text-xs disabled:opacity-30"
-                    disabled={idx ===
-                      SETTINGS.live.columnOrder.dpsSkills.state.order.length -
-                        1}
+                    disabled={idx === dpsSkillColumnOrder.length - 1}
                     onclick={() => {
-                      const arr = [
-                        ...SETTINGS.live.columnOrder.dpsSkills.state.order,
-                      ];
+                      const arr = [...dpsSkillColumnOrder];
                       const curr = arr[idx];
                       const next = arr[idx + 1];
                       if (curr !== undefined && next !== undefined) {
@@ -657,7 +678,7 @@
           <p class="text-muted-foreground mb-2 text-xs">
             {t("settings.common.columns.orderHint")}
           </p>
-          {#each SETTINGS.live.columnOrder.healSkills.state.order as colKey, idx (colKey)}
+          {#each healSkillColumnOrder as colKey, idx (colKey)}
             {@const col = liveHealSkillColumns.find((c) => c.key === colKey)}
             {#if col}
               <div
@@ -669,9 +690,7 @@
                     class="hover:bg-muted/50 rounded px-1 text-xs disabled:opacity-30"
                     disabled={idx === 0}
                     onclick={() => {
-                      const arr = [
-                        ...SETTINGS.live.columnOrder.healSkills.state.order,
-                      ];
+                      const arr = [...healSkillColumnOrder];
                       const prev = arr[idx - 1];
                       const curr = arr[idx];
                       if (prev !== undefined && curr !== undefined) {
@@ -683,13 +702,9 @@
                   <button
                     type="button"
                     class="hover:bg-muted/50 rounded px-1 text-xs disabled:opacity-30"
-                    disabled={idx ===
-                      SETTINGS.live.columnOrder.healSkills.state.order.length -
-                        1}
+                    disabled={idx === healSkillColumnOrder.length - 1}
                     onclick={() => {
-                      const arr = [
-                        ...SETTINGS.live.columnOrder.healSkills.state.order,
-                      ];
+                      const arr = [...healSkillColumnOrder];
                       const curr = arr[idx];
                       const next = arr[idx + 1];
                       if (curr !== undefined && next !== undefined) {

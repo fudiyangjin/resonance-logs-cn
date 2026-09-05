@@ -181,6 +181,24 @@ export const historyDpsSkillColumns = [
     descriptionKey: "columns.description.dps.skill.hitsPerMinute",
     format: formatDecimal,
   }),
+  createColumn({
+    key: "avgDmg",
+    labelKey: "columns.dps.avgDmg",
+    descriptionKey: "columns.description.dps.skill.avgDmg",
+    format: formatInteger,
+  }),
+  createColumn({
+    key: "maxDmg",
+    labelKey: "columns.dps.maxDmg",
+    descriptionKey: "columns.description.dps.skill.maxDmg",
+    format: formatInteger,
+  }),
+  createColumn({
+    key: "minDmg",
+    labelKey: "columns.dps.minDmg",
+    descriptionKey: "columns.description.dps.skill.minDmg",
+    format: formatInteger,
+  }),
 ] as const;
 
 export const historyHealPlayerColumns = [
@@ -460,6 +478,24 @@ export const liveTankedSkillColumns = [
     format: formatDecimal,
   }),
   createColumn({
+    key: "avgDmg",
+    labelKey: "columns.tanked.avgTaken",
+    descriptionKey: "columns.description.tanked.skill.avgTaken",
+    format: formatInteger,
+  }),
+  createColumn({
+    key: "maxDmg",
+    labelKey: "columns.tanked.maxTaken",
+    descriptionKey: "columns.description.tanked.skill.maxTaken",
+    format: formatInteger,
+  }),
+  createColumn({
+    key: "minDmg",
+    labelKey: "columns.tanked.minTaken",
+    descriptionKey: "columns.description.tanked.skill.minTaken",
+    format: formatInteger,
+  }),
+  createColumn({
     key: "property",
     labelKey: "columns.skill.property",
     descriptionKey: "columns.description.skill.property",
@@ -610,6 +646,24 @@ export const historyTankedSkillColumns = [
     format: formatDecimal,
   }),
   createColumn({
+    key: "avgDmg",
+    labelKey: "columns.tanked.avgTaken",
+    descriptionKey: "columns.description.tanked.skill.avgTaken",
+    format: formatInteger,
+  }),
+  createColumn({
+    key: "maxDmg",
+    labelKey: "columns.tanked.maxTaken",
+    descriptionKey: "columns.description.tanked.skill.maxTaken",
+    format: formatInteger,
+  }),
+  createColumn({
+    key: "minDmg",
+    labelKey: "columns.tanked.minTaken",
+    descriptionKey: "columns.description.tanked.skill.minTaken",
+    format: formatInteger,
+  }),
+  createColumn({
     key: "property",
     labelKey: "columns.skill.property",
     descriptionKey: "columns.description.skill.property",
@@ -689,6 +743,24 @@ export const historyHealSkillColumns = [
     labelKey: "columns.heal.hitsPerMinute",
     descriptionKey: "columns.description.heal.skill.hitsPerMinute",
     format: formatDecimal,
+  }),
+  createColumn({
+    key: "avgDmg",
+    labelKey: "columns.heal.avgHeal",
+    descriptionKey: "columns.description.heal.skill.avgHeal",
+    format: formatInteger,
+  }),
+  createColumn({
+    key: "maxDmg",
+    labelKey: "columns.heal.maxHeal",
+    descriptionKey: "columns.description.heal.skill.maxHeal",
+    format: formatInteger,
+  }),
+  createColumn({
+    key: "minDmg",
+    labelKey: "columns.heal.minHeal",
+    descriptionKey: "columns.description.heal.skill.minHeal",
+    format: formatInteger,
   }),
 ] as const;
 

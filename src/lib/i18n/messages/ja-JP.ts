@@ -233,6 +233,9 @@ export const jaJPMessages = {
   "columns.dps.luckyDmgRate": "ラッキーダメ %",
   "columns.dps.hits": "命中数",
   "columns.dps.hitsPerMinute": "命中/分",
+  "columns.dps.avgDmg": "平均ダメージ",
+  "columns.dps.maxDmg": "最大ダメージ",
+  "columns.dps.minDmg": "最小ダメージ",
   "columns.heal.total": "回復",
   "columns.heal.hps": "HPS",
   "columns.heal.effectiveTotal": "実効回復",
@@ -244,6 +247,9 @@ export const jaJPMessages = {
   "columns.heal.luckyHealRate": "ラッキー回復 %",
   "columns.heal.hits": "回数",
   "columns.heal.hitsPerMinute": "回数/分",
+  "columns.heal.avgHeal": "平均回復",
+  "columns.heal.maxHeal": "最大回復",
+  "columns.heal.minHeal": "最小回復",
   "columns.tanked.total": "被ダメージ",
   "columns.tanked.tps": "DTPS",
   "columns.tanked.tankedPct": "割合 %",
@@ -255,6 +261,9 @@ export const jaJPMessages = {
   "columns.tanked.luckyBlockRate": "ラッキーブロック %",
   "columns.tanked.hits": "被命中数",
   "columns.tanked.hitsPerMinute": "被命中/分",
+  "columns.tanked.avgTaken": "平均被ダメ",
+  "columns.tanked.maxTaken": "最大被ダメ",
+  "columns.tanked.minTaken": "最小被ダメ",
   "columns.skill.property": "属性",
   "columns.skill.damageMode": "物理/魔法",
   "columns.description.dps.player.totalDmg":
@@ -288,6 +297,9 @@ export const jaJPMessages = {
     "スキルのダメージのうちラッキーヒットだった割合を表示",
   "columns.description.dps.skill.hits": "スキルの総命中数を表示",
   "columns.description.dps.skill.hitsPerMinute": "スキルの分間命中数を表示",
+  "columns.description.dps.skill.avgDmg": "スキルの1回あたり平均ダメージを表示",
+  "columns.description.dps.skill.maxDmg": "スキルの単発最大ダメージを表示",
+  "columns.description.dps.skill.minDmg": "スキルの単発最小ダメージを表示",
   "columns.description.heal.player.total": "プレイヤーが行った総回復量を表示",
   "columns.description.heal.player.hps": "プレイヤーの秒間回復量（HPS）を表示",
   "columns.description.heal.player.effectiveTotal":
@@ -320,6 +332,9 @@ export const jaJPMessages = {
     "スキルの回復のうちラッキーヒットだった割合を表示",
   "columns.description.heal.skill.hits": "スキルの総回復回数を表示",
   "columns.description.heal.skill.hitsPerMinute": "スキルの分間回復回数を表示",
+  "columns.description.heal.skill.avgHeal": "スキルの1回あたり平均回復量を表示",
+  "columns.description.heal.skill.maxHeal": "スキルの単発最大回復量を表示",
+  "columns.description.heal.skill.minHeal": "スキルの単発最小回復量を表示",
   "columns.description.tanked.player.total":
     "プレイヤーが受けた総ダメージを表示",
   "columns.description.tanked.player.tps":
@@ -361,6 +376,12 @@ export const jaJPMessages = {
     "このスキルから受けた総被命中数を表示",
   "columns.description.tanked.skill.hitsPerMinute":
     "このスキルからの分間被命中数を表示",
+  "columns.description.tanked.skill.avgTaken":
+    "このスキルからの1回あたり平均被ダメージを表示",
+  "columns.description.tanked.skill.maxTaken":
+    "このスキルからの単発最大被ダメージを表示",
+  "columns.description.tanked.skill.minTaken":
+    "このスキルからの単発最小被ダメージを表示",
   "columns.description.skill.property": "スキルダメージの属性",
   "columns.description.skill.damageMode": "物理または魔法ダメージタイプ",
   "live.headerLayout.component.timer": "タイマー",

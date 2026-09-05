@@ -1,5 +1,5 @@
 use crate::live::projections::combat::accumulator::CombatSourceStats;
-use crate::live::projections::combat::stats::{CombatStats, Skill};
+use crate::live::projections::combat::stats::{CombatStats, HitExtrema, Skill};
 use std::collections::HashMap;
 
 /// Wall-clock anchors for the live header timer. Interpolation happens in
@@ -363,6 +363,13 @@ impl Default for RawCombatStats {
     }
 }
 
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RawHitExtrema {
+    pub min: String,
+    pub max: String,
+}
+
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RawSkillStats {
@@ -378,6 +385,8 @@ pub struct RawSkillStats {
     pub trigger_hits: String,
     pub block_hits: String,
     pub lucky_block_hits: String,
+    #[serde(default)]
+    pub extrema: Option<RawHitExtrema>,
 }
 
 impl Default for RawSkillStats {
@@ -395,6 +404,7 @@ impl Default for RawSkillStats {
             trigger_hits: zero_decimal(),
             block_hits: zero_decimal(),
             lucky_block_hits: zero_decimal(),
+            extrema: None,
         }
     }
 }
@@ -440,6 +450,13 @@ pub fn to_raw_combat_stats(stats: &CombatStats) -> RawCombatStats {
     }
 }
 
+pub fn to_raw_hit_extrema(extrema: Option<HitExtrema>) -> Option<RawHitExtrema> {
+    extrema.map(|extrema| RawHitExtrema {
+        min: extrema.min.to_string(),
+        max: extrema.max.to_string(),
+    })
+}
+
 pub fn to_raw_skill_stats(skill: &Skill) -> RawSkillStats {
     RawSkillStats {
         total_value: skill.total_value.to_string(),
@@ -454,6 +471,7 @@ pub fn to_raw_skill_stats(skill: &Skill) -> RawSkillStats {
         trigger_hits: skill.trigger_hits.to_string(),
         block_hits: skill.block_hits.to_string(),
         lucky_block_hits: skill.lucky_block_hits.to_string(),
+        extrema: to_raw_hit_extrema(skill.extrema),
     }
 }
 

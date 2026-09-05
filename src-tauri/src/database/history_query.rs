@@ -6,7 +6,7 @@ use std::ops::Range;
 use diesel::sqlite::SqliteConnection;
 use serde::{Deserialize, Serialize};
 
-use crate::live::ipc::models::DeathRecord;
+use crate::live::ipc::models::{DeathRecord, RawHitExtrema, to_raw_hit_extrema};
 use crate::live::projections::combat::accumulator::{
     CombatAccumulator, CombatHitFact, CombatMetric, CombatSourceStats, CombatTargetStats,
     CombatantStats,
@@ -63,6 +63,8 @@ pub struct EncounterStatsData {
     pub trigger_hits: String,
     pub blocked_hits: String,
     pub lucky_block_hits: String,
+    #[serde(default)]
+    pub extrema: Option<RawHitExtrema>,
 }
 
 impl Default for EncounterStatsData {
@@ -78,6 +80,7 @@ impl Default for EncounterStatsData {
             trigger_hits: "0".to_string(),
             blocked_hits: "0".to_string(),
             lucky_block_hits: "0".to_string(),
+            extrema: None,
         }
     }
 }
@@ -1035,6 +1038,7 @@ fn skill_stats_data(skill: &Skill) -> EncounterStatsData {
         trigger_hits: skill.trigger_hits.to_string(),
         blocked_hits: skill.block_hits.to_string(),
         lucky_block_hits: skill.lucky_block_hits.to_string(),
+        extrema: to_raw_hit_extrema(skill.extrema),
     }
 }
 
@@ -1050,6 +1054,7 @@ fn combat_stats_data(stats: &CombatStats) -> EncounterStatsData {
         trigger_hits: stats.trigger_hits.to_string(),
         blocked_hits: stats.block_hits.to_string(),
         lucky_block_hits: stats.lucky_block_hits.to_string(),
+        extrema: None,
     }
 }
 
@@ -1065,6 +1070,7 @@ fn target_stats_data(stats: &SkillTargetStats) -> EncounterStatsData {
         trigger_hits: stats.trigger_hits.to_string(),
         blocked_hits: "0".to_string(),
         lucky_block_hits: "0".to_string(),
+        extrema: None,
     }
 }
 
@@ -1674,9 +1680,17 @@ mod tests {
             })
             .cloned()
             .collect::<Vec<_>>();
-        replay_chunks(1, 0, &snapshot, &intersecting, range.start, range.end, false)
-            .map(|(range, _)| range)
-            .expect("replay range")
+        replay_chunks(
+            1,
+            0,
+            &snapshot,
+            &intersecting,
+            range.start,
+            range.end,
+            false,
+        )
+        .map(|(range, _)| range)
+        .expect("replay range")
     }
 
     #[test]
@@ -1707,9 +1721,16 @@ mod tests {
         let mut snapshot = seed.finish_detail(1, empty_summary(1));
         snapshot.last_sequence = 3;
 
-        let (range, _) =
-            replay_chunks(1, 0, &snapshot, &[context_chunk, combat_chunk], 0, 500, false)
-                .expect("range replay");
+        let (range, _) = replay_chunks(
+            1,
+            0,
+            &snapshot,
+            &[context_chunk, combat_chunk],
+            0,
+            500,
+            false,
+        )
+        .expect("range replay");
 
         assert_eq!(range.entities[0].name.as_deref(), Some("final"));
     }

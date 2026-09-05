@@ -13,6 +13,11 @@ import {
   type IpcDecimal,
 } from "$lib/ipc-decimal";
 
+export type HitExtremaLike = {
+  min: IpcDecimal;
+  max: IpcDecimal;
+};
+
 export type RawSkillStatsLike = {
   totalValue: IpcDecimal;
   effectiveTotalValue: IpcDecimal;
@@ -26,6 +31,7 @@ export type RawSkillStatsLike = {
   triggerHits?: IpcDecimal;
   blockHits?: IpcDecimal;
   luckyBlockHits?: IpcDecimal;
+  extrema?: HitExtremaLike | null;
 };
 
 export type SkillDisplayRow = {
@@ -45,6 +51,9 @@ export type SkillDisplayRow = {
   luckyBlockRate: number;
   hits: number;
   hitsPerMinute: number;
+  avgDmg: number;
+  maxDmg: number | null;
+  minDmg: number | null;
   property: number | null;
   damageMode: number | null;
   raw: RawSkillStatsLike;
@@ -66,6 +75,9 @@ export type RecountGroup = {
   luckyBlockRate: number;
   hits: number;
   hitsPerMinute: number;
+  avgDmg: number;
+  maxDmg: number | null;
+  minDmg: number | null;
   skills: SkillDisplayRow[];
   raw: RawSkillStatsLike;
 };
@@ -156,10 +168,36 @@ function triggerHits(stats: RawSkillStatsLike): bigint {
     : ipcBigInt(stats.triggerHits);
 }
 
+function displayExtrema(
+  extrema: HitExtremaLike | null | undefined,
+): { min: number; max: number } | null {
+  if (!extrema) return null;
+  return {
+    min: ipcNumber(extrema.min),
+    max: ipcNumber(extrema.max),
+  };
+}
+
+function mergeHitExtrema(
+  current: HitExtremaLike | null,
+  next: HitExtremaLike | null | undefined,
+): HitExtremaLike | null {
+  if (!next) return current;
+  const nextMin = ipcBigInt(next.min);
+  const nextMax = ipcBigInt(next.max);
+  if (!current) return { min: nextMin, max: nextMax };
+  const currentMin = ipcBigInt(current.min);
+  const currentMax = ipcBigInt(current.max);
+  return {
+    min: currentMin < nextMin ? currentMin : nextMin,
+    max: currentMax > nextMax ? currentMax : nextMax,
+  };
+}
+
 export function aggregateRawSkillStats(
   statsList: Iterable<RawSkillStatsLike>,
 ): RawSkillStatsLike {
-  const total = {
+  const total: RawSkillStatsLike = {
     totalValue: 0n,
     effectiveTotalValue: 0n,
     hits: 0n,
@@ -170,18 +208,25 @@ export function aggregateRawSkillStats(
     triggerHits: 0n,
     blockHits: 0n,
     luckyBlockHits: 0n,
+    extrema: null,
   };
   for (const stats of statsList) {
-    total.totalValue += ipcBigInt(stats.totalValue);
-    total.effectiveTotalValue += ipcBigInt(stats.effectiveTotalValue);
-    total.hits += ipcBigInt(stats.hits);
-    total.critHits += ipcBigInt(stats.critHits);
-    total.critTotalValue += ipcBigInt(stats.critTotalValue);
-    total.luckyHits += ipcBigInt(stats.luckyHits);
-    total.luckyTotalValue += ipcBigInt(stats.luckyTotalValue);
-    total.triggerHits += triggerHits(stats);
-    total.blockHits += ipcBigInt(stats.blockHits);
-    total.luckyBlockHits += ipcBigInt(stats.luckyBlockHits);
+    total.totalValue = ipcBigInt(total.totalValue) + ipcBigInt(stats.totalValue);
+    total.effectiveTotalValue =
+      ipcBigInt(total.effectiveTotalValue) +
+      ipcBigInt(stats.effectiveTotalValue);
+    total.hits = ipcBigInt(total.hits) + ipcBigInt(stats.hits);
+    total.critHits = ipcBigInt(total.critHits) + ipcBigInt(stats.critHits);
+    total.critTotalValue =
+      ipcBigInt(total.critTotalValue) + ipcBigInt(stats.critTotalValue);
+    total.luckyHits = ipcBigInt(total.luckyHits) + ipcBigInt(stats.luckyHits);
+    total.luckyTotalValue =
+      ipcBigInt(total.luckyTotalValue) + ipcBigInt(stats.luckyTotalValue);
+    total.triggerHits = ipcBigInt(total.triggerHits) + triggerHits(stats);
+    total.blockHits = ipcBigInt(total.blockHits) + ipcBigInt(stats.blockHits);
+    total.luckyBlockHits =
+      ipcBigInt(total.luckyBlockHits) + ipcBigInt(stats.luckyBlockHits);
+    total.extrema = mergeHitExtrema(total.extrema ?? null, stats.extrema);
   }
   return total;
 }
@@ -224,6 +269,7 @@ export function buildSkillDisplayRow(
   const effectiveTotal = ipcBigInt(stats.effectiveTotalValue);
   const hits = ipcBigInt(stats.hits);
   const effectiveTriggerHits = triggerHits(stats);
+  const extrema = displayExtrema(stats.extrema);
   return {
     skillId,
     name: lookupDamageIdName(skillId, locale),
@@ -240,6 +286,9 @@ export function buildSkillDisplayRow(
     luckyBlockRate: rate(stats.luckyBlockHits, hits),
     hits: ipcNumber(hits),
     hitsPerMinute: ipcRatio(hits, elapsedMs, 60_000),
+    avgDmg: ipcRatio(totalDmg, hits, 1),
+    maxDmg: extrema?.max ?? null,
+    minDmg: extrema?.min ?? null,
     property: stats.property ?? null,
     damageMode: stats.damageMode ?? null,
     raw: stats,
@@ -294,6 +343,9 @@ export function groupSkillsByRecount(
         luckyBlockRate: 0,
         hits: 0,
         hitsPerMinute: 0,
+        avgDmg: 0,
+        maxDmg: null,
+        minDmg: null,
         skills: [],
         raw: aggregateRawSkillStats([]),
       };
@@ -321,6 +373,10 @@ export function groupSkillsByRecount(
     group.blockRate = rate(raw.blockHits, raw.hits);
     group.luckyBlockRate = rate(raw.luckyBlockHits, raw.hits);
     group.hitsPerMinute = ipcRatio(raw.hits, elapsedMs, 60_000);
+    group.avgDmg = ipcRatio(raw.totalValue, raw.hits, 1);
+    const extrema = displayExtrema(raw.extrema);
+    group.maxDmg = extrema?.max ?? null;
+    group.minDmg = extrema?.min ?? null;
     const nameCount = new Map<string, number>();
     for (const skill of group.skills) {
       nameCount.set(skill.name, (nameCount.get(skill.name) ?? 0) + 1);

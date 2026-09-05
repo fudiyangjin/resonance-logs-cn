@@ -667,7 +667,7 @@ export type EncounterRangeData = { encounterId: number; qualityFlags: HistoryQua
 damageHits?: EncounterDamageHitsData[]; markers: EncounterMarkerData[] }
 export type EncounterSkillData = { skillId: string; metric: HistoryMetric; property: number | null; damageMode: number | null; stats: EncounterStatsData }
 export type EncounterSourceBreakdownData = { sourceMonsterId: number | null; stats: EncounterStatsData; skills: EncounterSkillData[] }
-export type EncounterStatsData = { total: string; effectiveTotal: string; hits: string; criticalHits: string; criticalTotal: string; luckyHits: string; luckyTotal: string; triggerHits: string; blockedHits: string; luckyBlockHits: string }
+export type EncounterStatsData = { total: string; effectiveTotal: string; hits: string; criticalHits: string; criticalTotal: string; luckyHits: string; luckyTotal: string; triggerHits: string; blockedHits: string; luckyBlockHits: string; extrema?: RawHitExtrema | null }
 export type EncounterSummaryDto = { id: number; startedAtMs: number; endedAtMs: number | null; totalDmg: string; totalHeal: string; sceneId: number | null; dungeonDifficulty: number | null; duration: number; activeCombatDuration: number | null; localPlayerId: number | null; bosses: BossSummaryDto[]; players: PlayerSummaryDto[]; remoteEncounterId: number | null; isFavorite: boolean; detailAvailable: boolean; displayIndex: number }
 export type EncounterTargetBreakdownData = { targetEntityId: string; targetDisplayUid: number; targetName: string | null; targetMonsterId: number | null; isBoss: boolean; stats: EncounterStatsData; skills: EncounterSkillData[] }
 export type EncounterTotalsData = { damage: string; bossDamage: string; healing: string; effectiveHealing: string; damageTaken: string }
@@ -744,20 +744,7 @@ export type LiveFantasyPayload = { revision: number; teammateFantasies: Teammate
 export type LiveMonsterPayload = { revision: number; bossBuffs: Partial<{ [key in string]: BuffUpdateState[] }>; teammateBuffs: Partial<{ [key in string]: BuffUpdateState[] }>; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [key in string]: HateEntry[] }>; stun: StunEntry[]; hp: HpEntry[]; playerNames: Partial<{ [key in string]: string }>; monsterIds: Partial<{ [key in string]: number }> }
 export type LivePullWindow = "live" | "hud-overlay"
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number; trainingWindowMs: number; trainingLockPolicy: TrainingLockPolicy }
-/**
- * Scene topic payload (`live-scene`). Besides the scene id this low-frequency
- * channel also carries the local player's profession / talent branch, which
- * `main` uses to drive spec-linked loadout auto-switching.
- */
-export type LiveScenePayload = { revision: number; sceneId: number | null; dungeonDifficulty: number | null;
-/**
- * Local player's current profession id (`cur_profession_id`).
- */
-localClassId: number | null;
-/**
- * Local player's active talent branch (`TalentStageTable` cfg id).
- */
-localTalentStageCfgId: number | null }
+export type LiveScenePayload = { revision: number; sceneId: number | null; dungeonDifficulty: number | null; localClassId: number | null; localTalentStageCfgId: number | null }
 /**
  * Skill CD / panel attrs / fight resource / shields / counters
  * (`live-status`). Published on the same 50ms cadence as the other overlay
@@ -977,7 +964,8 @@ export type PlayerNamesResult = { names: string[] }
 export type PlayerSummaryDto = { name: string; classId: number }
 export type RawCombatStats = { total: string; effectiveTotal: string; hits: string; critHits: string; critTotal: string; luckyHits: string; luckyTotal: string; triggerHits: string; blockHits: string; luckyBlockHits: string }
 export type RawEntityData = { entityUuid: string; displayUid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; seasonStrength: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }>; takenPerSource: PerSourceStats[] }
-export type RawSkillStats = { totalValue: string; effectiveTotalValue: string; hits: string; critHits: string; critTotalValue: string; luckyHits: string; luckyTotalValue: string; property: number | null; damageMode: number | null; triggerHits: string; blockHits: string; luckyBlockHits: string }
+export type RawHitExtrema = { min: string; max: string }
+export type RawSkillStats = { totalValue: string; effectiveTotalValue: string; hits: string; critHits: string; critTotalValue: string; luckyHits: string; luckyTotalValue: string; property: number | null; damageMode: number | null; triggerHits: string; blockHits: string; luckyBlockHits: string; extrema?: RawHitExtrema | null }
 export type RecentEncountersResult = { rows: EncounterSummaryDto[]; totalCount: number }
 export type ResetBuffTarget = "selfPlayer" | "anyTeam"
 export type SceneIdsResult = { ids: number[] }

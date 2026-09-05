@@ -232,6 +232,9 @@ export const enUSMessages = {
   "columns.dps.luckyDmgRate": "Lucky Dmg %",
   "columns.dps.hits": "Hits",
   "columns.dps.hitsPerMinute": "Hits/Min",
+  "columns.dps.avgDmg": "Avg Dmg",
+  "columns.dps.maxDmg": "Max Dmg",
+  "columns.dps.minDmg": "Min Dmg",
   "columns.heal.total": "Healing",
   "columns.heal.hps": "HPS",
   "columns.heal.effectiveTotal": "Effective Healing",
@@ -243,6 +246,9 @@ export const enUSMessages = {
   "columns.heal.luckyHealRate": "Lucky Heal %",
   "columns.heal.hits": "Count",
   "columns.heal.hitsPerMinute": "Count/Min",
+  "columns.heal.avgHeal": "Avg Heal",
+  "columns.heal.maxHeal": "Max Heal",
+  "columns.heal.minHeal": "Min Heal",
   "columns.tanked.total": "Damage Taken",
   "columns.tanked.tps": "DTPS",
   "columns.tanked.tankedPct": "Share %",
@@ -254,6 +260,9 @@ export const enUSMessages = {
   "columns.tanked.luckyBlockRate": "Lucky Block %",
   "columns.tanked.hits": "Hits Taken",
   "columns.tanked.hitsPerMinute": "Hits Taken/Min",
+  "columns.tanked.avgTaken": "Avg Taken",
+  "columns.tanked.maxTaken": "Max Taken",
+  "columns.tanked.minTaken": "Min Taken",
   "columns.skill.property": "Element",
   "columns.skill.damageMode": "Phys/Mag",
   "columns.description.dps.player.totalDmg":
@@ -293,6 +302,12 @@ export const enUSMessages = {
   "columns.description.dps.skill.hits": "Shows the skill's total hit count",
   "columns.description.dps.skill.hitsPerMinute":
     "Shows the skill's hits per minute",
+  "columns.description.dps.skill.avgDmg":
+    "Shows the skill's average damage per hit",
+  "columns.description.dps.skill.maxDmg":
+    "Shows the skill's largest single-hit damage",
+  "columns.description.dps.skill.minDmg":
+    "Shows the skill's smallest single-hit damage",
   "columns.description.heal.player.total":
     "Shows total healing done by the player",
   "columns.description.heal.player.hps":
@@ -336,6 +351,12 @@ export const enUSMessages = {
     "Shows the skill's total healing count",
   "columns.description.heal.skill.hitsPerMinute":
     "Shows the skill's healing count per minute",
+  "columns.description.heal.skill.avgHeal":
+    "Shows the skill's average healing per hit",
+  "columns.description.heal.skill.maxHeal":
+    "Shows the skill's largest single-hit heal",
+  "columns.description.heal.skill.minHeal":
+    "Shows the skill's smallest single-hit heal",
   "columns.description.tanked.player.total":
     "Shows total damage taken by the player",
   "columns.description.tanked.player.tps":
@@ -380,6 +401,12 @@ export const enUSMessages = {
     "Shows the total hits taken from this skill",
   "columns.description.tanked.skill.hitsPerMinute":
     "Shows hits taken per minute from this skill",
+  "columns.description.tanked.skill.avgTaken":
+    "Shows the average damage taken per hit from this skill",
+  "columns.description.tanked.skill.maxTaken":
+    "Shows the largest single hit taken from this skill",
+  "columns.description.tanked.skill.minTaken":
+    "Shows the smallest single hit taken from this skill",
   "columns.description.skill.property": "The skill damage element",
   "columns.description.skill.damageMode": "Physical or magical damage type",
   "live.headerLayout.component.timer": "Timer",

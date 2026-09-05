@@ -1,6 +1,10 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { settings, SETTINGS } from "$lib/settings-store";
+  import {
+    settings,
+    SETTINGS,
+    normalizeDpsSkillColumnOrder,
+  } from "$lib/settings-store";
   import { liveCombatStore } from "$lib/stores/live-topics.svelte";
   import { computePlayerRows } from "$lib/live-derived";
   import {
@@ -58,7 +62,11 @@
 
   let sortKey = $derived(SETTINGS.live.sorting.dpsSkills.state.sortKey);
   let sortDesc = $derived(SETTINGS.live.sorting.dpsSkills.state.sortDesc);
-  let columnOrder = $derived(SETTINGS.live.columnOrder.dpsSkills.state.order);
+  let columnOrder = $derived(
+    normalizeDpsSkillColumnOrder(
+      SETTINGS.live.columnOrder.dpsSkills.state.order,
+    ),
+  );
 
   function handleSort(key: string) {
     if (SETTINGS.live.sorting.dpsSkills.state.sortKey === key) {

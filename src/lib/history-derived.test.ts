@@ -31,6 +31,7 @@ function stats(partial: Partial<EncounterStatsData> = {}): EncounterStatsData {
     triggerHits: "0",
     blockedHits: "0",
     luckyBlockHits: "0",
+    extrema: null,
     ...partial,
   };
 }

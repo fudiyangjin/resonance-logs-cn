@@ -444,7 +444,9 @@
             <td
               class="text-muted-foreground relative z-10 px-3 py-3 text-right text-sm"
             >
-              {#if (col.key === "totalDmg" || col.key === "dps" || col.key === "effectiveTotal" || col.key === "effectiveDps") && shortenNumbers}
+              {#if (col.key === "maxDmg" && item.row.maxDmg === null) || (col.key === "minDmg" && item.row.minDmg === null)}
+                <span class="text-muted-foreground/50">-</span>
+              {:else if (col.key === "totalDmg" || col.key === "dps" || col.key === "effectiveTotal" || col.key === "effectiveDps" || col.key === "avgDmg" || col.key === "maxDmg" || col.key === "minDmg") && shortenNumbers}
                 <AbbreviatedNumber
                   num={skillCellValue(item, col.key)}
                   decimalPlaces={abbreviatedDecimalPlaces}

@@ -33,6 +33,9 @@ describe("DPS column labels", () => {
     expect(normalized.live.players.columns.totalDmg).toBe("");
     expect("unknown" in normalized.live.players.columns).toBe(false);
     expect(normalized.history.skills.columns.hits).toBe("");
+    expect(normalized.history.skills.columns.avgDmg).toBe("");
+    expect(normalized.history.skills.columns.maxDmg).toBe("");
+    expect(normalized.history.skills.columns.minDmg).toBe("");
   });
 
   it("falls back for empty overrides and trims custom labels", () => {
