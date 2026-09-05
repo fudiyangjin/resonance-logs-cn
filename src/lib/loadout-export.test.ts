@@ -81,11 +81,13 @@ function resetWithLegacyLoadout(): { loadoutId: string } {
     monsterProfileId: monsterProfile.id,
     liveProfileId: liveProfile.id,
     starterPlaceholder: false,
+    linkedTalentStageCfgId: null,
   };
   state.loadouts = {
     activeId: loadout.id,
     items: [loadout],
     firstRunPromptDismissed: true,
+    autoSwitchBySpec: true,
   };
   Object.assign(SETTINGS.monitoring.state, state);
   applyActiveLiveProfileToMirror();

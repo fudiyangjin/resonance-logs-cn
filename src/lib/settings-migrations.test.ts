@@ -7,6 +7,7 @@ import {
   createDefaultMonsterMonitorProfile,
   createDefaultSkillMonitorProfile,
   startAccessibilityStore,
+  type Loadout,
 } from "./settings-store";
 import {
   CURRENT_MONITORING_SCHEMA_VERSION,
@@ -70,6 +71,7 @@ describe("monitoring settings reconciliation", () => {
         monsterProfileId: "missing",
         liveProfileId: "missing",
         starterPlaceholder: false,
+        linkedTalentStageCfgId: null,
       },
     ];
     state.loadouts.activeId = "missing";
@@ -160,6 +162,30 @@ describe("monitoring settings reconciliation", () => {
     ).toMatchObject({ textShadowEnabled: true, backgroundEnabled: false });
   });
 
+  it("defaults spec auto-switch on and loadout spec bindings to null for legacy states", () => {
+    const state = createDefaultMonitoringSettingsState();
+    state.loadouts.items = [
+      {
+        id: "loadout",
+        name: "Legacy",
+        skillProfileId: state.skillMonitor.profiles[0]!.id,
+        monsterProfileId: state.monsterMonitor.profiles[0]!.id,
+        liveProfileId: state.liveMeter.profiles[0]!.id,
+        starterPlaceholder: false,
+        linkedTalentStageCfgId: null,
+      },
+    ];
+    state.loadouts.activeId = "loadout";
+    // Simulate a store persisted before the spec-linkage fields existed.
+    delete (state.loadouts as Partial<typeof state.loadouts>).autoSwitchBySpec;
+    delete (state.loadouts.items[0] as Partial<Loadout>).linkedTalentStageCfgId;
+
+    const repaired = reconcileMonitoringState(state);
+
+    expect(repaired.loadouts.autoSwitchBySpec).toBe(true);
+    expect(repaired.loadouts.items[0]!.linkedTalentStageCfgId).toBeNull();
+  });
+
   it("materializes the active loadout monster profile into the mirror", () => {
     const state = createDefaultMonitoringSettingsState();
     const first = state.monsterMonitor.profiles[0]!;
@@ -174,6 +200,7 @@ describe("monitoring settings reconciliation", () => {
         monsterProfileId: second.id,
         liveProfileId: state.liveMeter.profiles[0]!.id,
         starterPlaceholder: false,
+        linkedTalentStageCfgId: null,
       },
     ];
     state.loadouts.activeId = "loadout";
@@ -307,6 +334,7 @@ describe("legacy monitoring migration", () => {
         monsterProfileId: firstMonster.id,
         liveProfileId: base.liveMeter.profiles[0]!.id,
         starterPlaceholder: false,
+        linkedTalentStageCfgId: null,
       },
     ];
     base.loadouts.activeId = "loadout";
@@ -446,6 +474,7 @@ describe("incremental monitoring migration", () => {
         monsterProfileId: state.monsterMonitor.profiles[0]!.id,
         liveProfileId: state.liveMeter.profiles[0]!.id,
         starterPlaceholder: false,
+        linkedTalentStageCfgId: null,
       },
     ];
     state.loadouts.activeId = originalLoadoutId;

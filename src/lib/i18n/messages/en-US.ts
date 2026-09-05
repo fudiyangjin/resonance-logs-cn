@@ -25,6 +25,12 @@ export const enUSMessages = {
   "loadout.page.skillProfileLabel": "Skill monitor profile",
   "loadout.page.monsterProfileLabel": "Monster monitor profile",
   "loadout.page.liveProfileLabel": "DPS settings profile",
+  "loadout.page.linkedSpecLabel": "Linked spec",
+  "loadout.page.linkedSpecNone": "None",
+  "loadout.autoSwitch.toggle": "Auto-switch by spec",
+  "loadout.autoSwitch.detected": "Detected",
+  "loadout.autoSwitch.unknown": "Unknown",
+  "loadout.autoSwitch.switched": "Switched to \"{name}\"",
   "loadout.page.presetsTitle": "Presets",
   "loadout.page.presetsDescription":
     "Apply a curated loadout with skill, monster, and DPS settings",

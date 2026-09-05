@@ -402,6 +402,9 @@ impl ProjectionSet {
                 minimap_changed |= self.minimap.apply(envelope);
                 reported |= TopicMask::SCENE;
             }
+            DomainEvent::LocalTalentChanged { .. } => {
+                reported |= TopicMask::SCENE;
+            }
             DomainEvent::PauseChanged { is_paused } => {
                 combat_changed |= self.combat.set_paused(
                     *is_paused,
@@ -629,6 +632,7 @@ impl ProjectionSet {
                 Topic::Scene => TopicPublication::Scene(self.presentation.take_scene_payload(
                     entities.current_scene_id(),
                     entities.current_difficulty(),
+                    entities.local_talent(),
                 )),
             });
         }
@@ -1261,7 +1265,7 @@ mod tests {
                 1,
                 &entities,
             ),
-            TopicMask::EMPTY
+            TopicMask::MONSTER
         );
 
         // Plain bystanders dirty nothing.
@@ -1426,6 +1430,39 @@ mod tests {
             .apply(&envelope, &entities, &mut scheduler)
             .unwrap();
         assert_eq!(projections.dirty_mask(), TopicMask::MINIMAP);
+
+        drop(projections);
+        join.join().expect("history writer stops after disconnect");
+    }
+
+    #[test]
+    fn local_talent_change_dirties_only_the_scene_topic() {
+        use crate::live::runtime::events::LocalTalent;
+
+        let (writer, join) = HistoryWriterHandle::start().expect("history writer starts");
+        let mut projections = ProjectionSet::new(writer);
+        let entities = EntityContext::new();
+        let mut scheduler = DeadlineScheduler::new();
+        let mut dirty = projections.dirty_mask();
+        dirty.remove(ALL_TOPICS);
+        projections.dirty = dirty;
+
+        let envelope = test_envelope(
+            1,
+            1_000,
+            1,
+            DomainEvent::LocalTalentChanged {
+                previous: LocalTalent::default(),
+                current: LocalTalent {
+                    profession_id: Some(4),
+                    talent_stage_cfg_id: Some(108),
+                },
+            },
+        );
+        projections
+            .apply(&envelope, &entities, &mut scheduler)
+            .unwrap();
+        assert_eq!(projections.dirty_mask(), TopicMask::SCENE);
 
         drop(projections);
         join.join().expect("history writer stops after disconnect");

@@ -8,10 +8,10 @@ use super::events::{
     AttributeValue, BuffEvent, BuffState, BuffTransition, BuffWireKind, DeathBuffCheckpoint,
     DomainEnvelope, DomainEvent, DomainHit, EntityIdentity, EntityIdentityPatch, EntityKind,
     EntityRef, EntityRoles, EntityUuid, EventMeta, FantasyState, FantasyTransition, FieldPatch,
-    GameTimerKey, GameTimerState, HateEntry, LOCAL_PLAYER, MonoTimeMs, ObservationOrigin,
-    ObservedBuff, ObservedBuffChange, PassiveSkillObservation, Position, ProtocolBatch,
-    ProtocolObservation, ResolvedShieldDetail, SegmentId, ShieldDetail, SkillCooldownState,
-    SkillPhase,
+    GameTimerKey, GameTimerState, HateEntry, LOCAL_PLAYER, LocalTalent, MonoTimeMs,
+    ObservationOrigin, ObservedBuff, ObservedBuffChange, PassiveSkillObservation, Position,
+    ProtocolBatch, ProtocolObservation, ResolvedShieldDetail, SegmentId, ShieldDetail,
+    SkillCooldownState, SkillPhase,
 };
 use super::fantasy_registry::{
     FantasyRegistry, is_resonance_fantasy_monster_id, resolve_fantasy_skill_id,
@@ -130,6 +130,7 @@ pub struct EntityContext {
     active_season_items: HashSet<i32>,
     active_season_id: i32,
     active_season_template_ids: Vec<i32>,
+    local_talent: LocalTalent,
     current_scene_id: Option<i32>,
     current_difficulty: Option<i32>,
     dungeon_flow_state: Option<i32>,
@@ -178,6 +179,7 @@ impl EntityContext {
         self.active_season_items.clear();
         self.active_season_id = 0;
         self.active_season_template_ids.clear();
+        self.local_talent = LocalTalent::default();
         self.dungeon_flow_state = None;
         self.progress_state = None;
         self.pending_deaths.clear();
@@ -257,6 +259,11 @@ impl EntityContext {
     #[must_use]
     pub fn local_player(&self) -> Option<EntityRef> {
         self.local_player.and_then(|uuid| self.entity_ref(uuid))
+    }
+
+    #[must_use]
+    pub(crate) fn local_talent(&self) -> LocalTalent {
+        self.local_talent
     }
 
     #[must_use]
@@ -521,9 +528,38 @@ impl EntityContext {
                     return;
                 }
                 self.local_player = uuid;
+                self.local_talent = LocalTalent::default();
                 self.emit(
                     meta,
                     DomainEvent::LocalPlayerChanged { previous, current },
+                    out,
+                );
+            }
+            ProtocolObservation::LocalTalentChanged(raw) => {
+                let profession_id = raw.profession_id.or_else(|| {
+                    self.local_player
+                        .and_then(|uuid| self.entities.get(&uuid))
+                        .and_then(|entity| entity.identity.profession_id)
+                });
+                let current = LocalTalent {
+                    profession_id,
+                    talent_stage_cfg_id: raw.talent_stage_cfg_id,
+                };
+                if current == self.local_talent {
+                    return;
+                }
+                let previous = std::mem::replace(&mut self.local_talent, current);
+                log::info!(
+                    target: "app::live",
+                    "local_talent changed profession_id={:?}->{:?} talent_stage_cfg_id={:?}->{:?}",
+                    previous.profession_id,
+                    current.profession_id,
+                    previous.talent_stage_cfg_id,
+                    current.talent_stage_cfg_id,
+                );
+                self.emit(
+                    meta,
+                    DomainEvent::LocalTalentChanged { previous, current },
                     out,
                 );
             }
@@ -2138,6 +2174,130 @@ mod tests {
         assert!(matches!(events[1].event, DomainEvent::SceneChanged { .. }));
         assert!(!context.entity(monster).unwrap().is_present);
         assert!(context.entity(local).unwrap().is_present);
+    }
+
+    fn talent_events(events: &[DomainEnvelope]) -> Vec<(LocalTalent, LocalTalent)> {
+        events
+            .iter()
+            .filter_map(|envelope| match envelope.event {
+                DomainEvent::LocalTalentChanged { previous, current } => Some((previous, current)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn local_talent_emits_only_on_real_changes() {
+        let mut context = EntityContext::new();
+        let talent = LocalTalent {
+            profession_id: Some(4),
+            talent_stage_cfg_id: Some(108),
+        };
+
+        let first = context.reduce_batch(batch(
+            1,
+            vec![ProtocolObservation::LocalTalentChanged(talent)],
+        ));
+        let second = context.reduce_batch(batch(
+            2,
+            vec![ProtocolObservation::LocalTalentChanged(talent)],
+        ));
+
+        assert_eq!(
+            talent_events(&first),
+            vec![(LocalTalent::default(), talent)]
+        );
+        assert!(talent_events(&second).is_empty());
+        assert_eq!(context.local_talent(), talent);
+    }
+
+    #[test]
+    fn local_talent_falls_back_to_local_identity_profession() {
+        // Dirty-only sessions (app started after login) never see the
+        // snapshot's cur_profession_id; the published class must come from
+        // the local entity's identity instead.
+        let mut context = EntityContext::new();
+        let local = EntityUuid(10);
+        context.reduce_batch(batch(
+            1,
+            vec![
+                ProtocolObservation::EntityAppeared {
+                    uuid: local,
+                    kind: EntityKind::Character,
+                },
+                ProtocolObservation::LocalPlayerChanged { uuid: Some(local) },
+                ProtocolObservation::IdentityUpdated {
+                    uuid: local,
+                    patch: EntityIdentityPatch {
+                        profession_id: FieldPatch::Set(4),
+                        ..Default::default()
+                    },
+                },
+            ],
+        ));
+
+        let events = context.reduce_batch(batch(
+            2,
+            vec![ProtocolObservation::LocalTalentChanged(LocalTalent {
+                profession_id: None,
+                talent_stage_cfg_id: Some(108),
+            })],
+        ));
+
+        assert_eq!(
+            talent_events(&events),
+            vec![(
+                LocalTalent::default(),
+                LocalTalent {
+                    profession_id: Some(4),
+                    talent_stage_cfg_id: Some(108),
+                },
+            )]
+        );
+    }
+
+    #[test]
+    fn local_player_change_resets_talent_so_the_same_value_reemits() {
+        // Account switch to a character with the same class/spec: the talent
+        // cache is reset alongside the player, so the new account's snapshot
+        // still registers as a change and the frontend re-evaluates.
+        let mut context = EntityContext::new();
+        let talent = LocalTalent {
+            profession_id: Some(4),
+            talent_stage_cfg_id: Some(108),
+        };
+        context.reduce_batch(batch(
+            1,
+            vec![
+                ProtocolObservation::EntityAppeared {
+                    uuid: EntityUuid(10),
+                    kind: EntityKind::Character,
+                },
+                ProtocolObservation::LocalPlayerChanged {
+                    uuid: Some(EntityUuid(10)),
+                },
+                ProtocolObservation::LocalTalentChanged(talent),
+            ],
+        ));
+
+        let events = context.reduce_batch(batch(
+            2,
+            vec![
+                ProtocolObservation::EntityAppeared {
+                    uuid: EntityUuid(20),
+                    kind: EntityKind::Character,
+                },
+                ProtocolObservation::LocalPlayerChanged {
+                    uuid: Some(EntityUuid(20)),
+                },
+                ProtocolObservation::LocalTalentChanged(talent),
+            ],
+        ));
+
+        assert_eq!(
+            talent_events(&events),
+            vec![(LocalTalent::default(), talent)]
+        );
     }
 
     #[test]

@@ -65125,6 +65125,27 @@ impl serde::Serialize for ProfessionList {
         if !self.talent_list.is_empty() {
             len += 1;
         }
+        if self.reset_profession_list_flag.is_some() {
+            len += 1;
+        }
+        if self.total_attack_mark.is_some() {
+            len += 1;
+        }
+        if self.total_guard_mark.is_some() {
+            len += 1;
+        }
+        if self.total_heal_mark.is_some() {
+            len += 1;
+        }
+        if self.reset_talent_mark_item_flag.is_some() {
+            len += 1;
+        }
+        if self.reset_talent_mark_item_pop_up_notice.is_some() {
+            len += 1;
+        }
+        if self.pick_profession_id.is_some() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("blueprotobuf_package.ProfessionList", len)?;
         if let Some(v) = self.cur_profession_id.as_ref() {
             struct_ser.serialize_field("CurProfessionId", v)?;
@@ -65147,6 +65168,27 @@ impl serde::Serialize for ProfessionList {
         if !self.talent_list.is_empty() {
             struct_ser.serialize_field("TalentList", &self.talent_list)?;
         }
+        if let Some(v) = self.reset_profession_list_flag.as_ref() {
+            struct_ser.serialize_field("ResetProfessionListFlag", v)?;
+        }
+        if let Some(v) = self.total_attack_mark.as_ref() {
+            struct_ser.serialize_field("TotalAttackMark", v)?;
+        }
+        if let Some(v) = self.total_guard_mark.as_ref() {
+            struct_ser.serialize_field("TotalGuardMark", v)?;
+        }
+        if let Some(v) = self.total_heal_mark.as_ref() {
+            struct_ser.serialize_field("TotalHealMark", v)?;
+        }
+        if let Some(v) = self.reset_talent_mark_item_flag.as_ref() {
+            struct_ser.serialize_field("ResetTalentMarkItemFlag", v)?;
+        }
+        if let Some(v) = self.reset_talent_mark_item_pop_up_notice.as_ref() {
+            struct_ser.serialize_field("ResetTalentMarkItemPopUpNotice", v)?;
+        }
+        if let Some(v) = self.pick_profession_id.as_ref() {
+            struct_ser.serialize_field("PickProfessionId", v)?;
+        }
         struct_ser.end()
     }
 }
@@ -65165,6 +65207,13 @@ impl<'de> serde::Deserialize<'de> for ProfessionList {
             "TotalTalentPoints",
             "TotalTalentResetCount",
             "TalentList",
+            "ResetProfessionListFlag",
+            "TotalAttackMark",
+            "TotalGuardMark",
+            "TotalHealMark",
+            "ResetTalentMarkItemFlag",
+            "ResetTalentMarkItemPopUpNotice",
+            "PickProfessionId",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -65176,6 +65225,13 @@ impl<'de> serde::Deserialize<'de> for ProfessionList {
             TotalTalentPoints,
             TotalTalentResetCount,
             TalentList,
+            ResetProfessionListFlag,
+            TotalAttackMark,
+            TotalGuardMark,
+            TotalHealMark,
+            ResetTalentMarkItemFlag,
+            ResetTalentMarkItemPopUpNotice,
+            PickProfessionId,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -65204,6 +65260,13 @@ impl<'de> serde::Deserialize<'de> for ProfessionList {
                             "TotalTalentPoints" => Ok(GeneratedField::TotalTalentPoints),
                             "TotalTalentResetCount" => Ok(GeneratedField::TotalTalentResetCount),
                             "TalentList" => Ok(GeneratedField::TalentList),
+                            "ResetProfessionListFlag" => Ok(GeneratedField::ResetProfessionListFlag),
+                            "TotalAttackMark" => Ok(GeneratedField::TotalAttackMark),
+                            "TotalGuardMark" => Ok(GeneratedField::TotalGuardMark),
+                            "TotalHealMark" => Ok(GeneratedField::TotalHealMark),
+                            "ResetTalentMarkItemFlag" => Ok(GeneratedField::ResetTalentMarkItemFlag),
+                            "ResetTalentMarkItemPopUpNotice" => Ok(GeneratedField::ResetTalentMarkItemPopUpNotice),
+                            "PickProfessionId" => Ok(GeneratedField::PickProfessionId),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -65230,6 +65293,13 @@ impl<'de> serde::Deserialize<'de> for ProfessionList {
                 let mut total_talent_points__ = None;
                 let mut total_talent_reset_count__ = None;
                 let mut talent_list__ = None;
+                let mut reset_profession_list_flag__ = None;
+                let mut total_attack_mark__ = None;
+                let mut total_guard_mark__ = None;
+                let mut total_heal_mark__ = None;
+                let mut reset_talent_mark_item_flag__ = None;
+                let mut reset_talent_mark_item_pop_up_notice__ = None;
+                let mut pick_profession_id__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::CurProfessionId => {
@@ -65292,6 +65362,62 @@ impl<'de> serde::Deserialize<'de> for ProfessionList {
                                     .into_iter().map(|(k,v)| (k.0, v)).collect()
                             );
                         }
+                        GeneratedField::ResetProfessionListFlag => {
+                            if reset_profession_list_flag__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("ResetProfessionListFlag"));
+                            }
+                            reset_profession_list_flag__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::TotalAttackMark => {
+                            if total_attack_mark__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("TotalAttackMark"));
+                            }
+                            total_attack_mark__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::TotalGuardMark => {
+                            if total_guard_mark__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("TotalGuardMark"));
+                            }
+                            total_guard_mark__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::TotalHealMark => {
+                            if total_heal_mark__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("TotalHealMark"));
+                            }
+                            total_heal_mark__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::ResetTalentMarkItemFlag => {
+                            if reset_talent_mark_item_flag__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("ResetTalentMarkItemFlag"));
+                            }
+                            reset_talent_mark_item_flag__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::ResetTalentMarkItemPopUpNotice => {
+                            if reset_talent_mark_item_pop_up_notice__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("ResetTalentMarkItemPopUpNotice"));
+                            }
+                            reset_talent_mark_item_pop_up_notice__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::PickProfessionId => {
+                            if pick_profession_id__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("PickProfessionId"));
+                            }
+                            pick_profession_id__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
                     }
                 }
                 Ok(ProfessionList {
@@ -65302,6 +65428,13 @@ impl<'de> serde::Deserialize<'de> for ProfessionList {
                     total_talent_points: total_talent_points__,
                     total_talent_reset_count: total_talent_reset_count__,
                     talent_list: talent_list__.unwrap_or_default(),
+                    reset_profession_list_flag: reset_profession_list_flag__,
+                    total_attack_mark: total_attack_mark__,
+                    total_guard_mark: total_guard_mark__,
+                    total_heal_mark: total_heal_mark__,
+                    reset_talent_mark_item_flag: reset_talent_mark_item_flag__,
+                    reset_talent_mark_item_pop_up_notice: reset_talent_mark_item_pop_up_notice__,
+                    pick_profession_id: pick_profession_id__,
                 })
             }
         }
@@ -65515,6 +65648,18 @@ impl serde::Serialize for ProfessionTalentInfo {
         if self.talent_stage_cfg_id.is_some() {
             len += 1;
         }
+        if self.talent_ilegal_reset_count.is_some() {
+            len += 1;
+        }
+        if self.used_attack_mark.is_some() {
+            len += 1;
+        }
+        if self.used_guard_mark.is_some() {
+            len += 1;
+        }
+        if self.used_heal_mark.is_some() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("blueprotobuf_package.ProfessionTalentInfo", len)?;
         if let Some(v) = self.used_talent_points.as_ref() {
             struct_ser.serialize_field("UsedTalentPoints", v)?;
@@ -65524,6 +65669,18 @@ impl serde::Serialize for ProfessionTalentInfo {
         }
         if let Some(v) = self.talent_stage_cfg_id.as_ref() {
             struct_ser.serialize_field("TalentStageCfgId", v)?;
+        }
+        if let Some(v) = self.talent_ilegal_reset_count.as_ref() {
+            struct_ser.serialize_field("TalentIlegalResetCount", v)?;
+        }
+        if let Some(v) = self.used_attack_mark.as_ref() {
+            struct_ser.serialize_field("UsedAttackMark", v)?;
+        }
+        if let Some(v) = self.used_guard_mark.as_ref() {
+            struct_ser.serialize_field("UsedGuardMark", v)?;
+        }
+        if let Some(v) = self.used_heal_mark.as_ref() {
+            struct_ser.serialize_field("UsedHealMark", v)?;
         }
         struct_ser.end()
     }
@@ -65538,6 +65695,10 @@ impl<'de> serde::Deserialize<'de> for ProfessionTalentInfo {
             "UsedTalentPoints",
             "TalentNodeIds",
             "TalentStageCfgId",
+            "TalentIlegalResetCount",
+            "UsedAttackMark",
+            "UsedGuardMark",
+            "UsedHealMark",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -65545,6 +65706,10 @@ impl<'de> serde::Deserialize<'de> for ProfessionTalentInfo {
             UsedTalentPoints,
             TalentNodeIds,
             TalentStageCfgId,
+            TalentIlegalResetCount,
+            UsedAttackMark,
+            UsedGuardMark,
+            UsedHealMark,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -65569,6 +65734,10 @@ impl<'de> serde::Deserialize<'de> for ProfessionTalentInfo {
                             "UsedTalentPoints" => Ok(GeneratedField::UsedTalentPoints),
                             "TalentNodeIds" => Ok(GeneratedField::TalentNodeIds),
                             "TalentStageCfgId" => Ok(GeneratedField::TalentStageCfgId),
+                            "TalentIlegalResetCount" => Ok(GeneratedField::TalentIlegalResetCount),
+                            "UsedAttackMark" => Ok(GeneratedField::UsedAttackMark),
+                            "UsedGuardMark" => Ok(GeneratedField::UsedGuardMark),
+                            "UsedHealMark" => Ok(GeneratedField::UsedHealMark),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -65591,6 +65760,10 @@ impl<'de> serde::Deserialize<'de> for ProfessionTalentInfo {
                 let mut used_talent_points__ = None;
                 let mut talent_node_ids__ = None;
                 let mut talent_stage_cfg_id__ = None;
+                let mut talent_ilegal_reset_count__ = None;
+                let mut used_attack_mark__ = None;
+                let mut used_guard_mark__ = None;
+                let mut used_heal_mark__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::UsedTalentPoints => {
@@ -65614,7 +65787,39 @@ impl<'de> serde::Deserialize<'de> for ProfessionTalentInfo {
                             if talent_stage_cfg_id__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("TalentStageCfgId"));
                             }
-                            talent_stage_cfg_id__ = 
+                            talent_stage_cfg_id__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::TalentIlegalResetCount => {
+                            if talent_ilegal_reset_count__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("TalentIlegalResetCount"));
+                            }
+                            talent_ilegal_reset_count__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::UsedAttackMark => {
+                            if used_attack_mark__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("UsedAttackMark"));
+                            }
+                            used_attack_mark__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::UsedGuardMark => {
+                            if used_guard_mark__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("UsedGuardMark"));
+                            }
+                            used_guard_mark__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::UsedHealMark => {
+                            if used_heal_mark__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("UsedHealMark"));
+                            }
+                            used_heal_mark__ =
                                 map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
                             ;
                         }
@@ -65624,6 +65829,10 @@ impl<'de> serde::Deserialize<'de> for ProfessionTalentInfo {
                     used_talent_points: used_talent_points__,
                     talent_node_ids: talent_node_ids__.unwrap_or_default(),
                     talent_stage_cfg_id: talent_stage_cfg_id__,
+                    talent_ilegal_reset_count: talent_ilegal_reset_count__,
+                    used_attack_mark: used_attack_mark__,
+                    used_guard_mark: used_guard_mark__,
+                    used_heal_mark: used_heal_mark__,
                 })
             }
         }

@@ -90,6 +90,7 @@ export function createLoadout(options?: {
   skillProfileId?: string;
   monsterProfileId?: string;
   liveProfileId?: string;
+  linkedTalentStageCfgId?: number | null;
   activate?: boolean;
 }): string {
   const skillState = SETTINGS.skillMonitor.state;
@@ -115,6 +116,7 @@ export function createLoadout(options?: {
     monsterProfileId,
     liveProfileId,
     starterPlaceholder: false,
+    linkedTalentStageCfgId: options?.linkedTalentStageCfgId ?? null,
   };
   SETTINGS.loadouts.state.items = [...SETTINGS.loadouts.state.items, loadout];
 
@@ -251,6 +253,25 @@ export function setLoadoutLiveProfile(
   }
 }
 
+/**
+ * Binds a loadout to a talent branch. A cfg id may be held by at most one
+ * loadout, so binding clears any other holder; `null` unbinds.
+ */
+export function setLoadoutLinkedTalentStage(
+  loadoutId: string,
+  cfgId: number | null,
+): void {
+  SETTINGS.loadouts.state.items = SETTINGS.loadouts.state.items.map((item) => {
+    if (item.id === loadoutId) {
+      return { ...item, linkedTalentStageCfgId: cfgId };
+    }
+    if (cfgId !== null && item.linkedTalentStageCfgId === cfgId) {
+      return { ...item, linkedTalentStageCfgId: null };
+    }
+    return item;
+  });
+}
+
 /** Removes a monster profile, re-pointing any loadouts that referenced it. */
 export function removeMonsterProfileEverywhere(monsterProfileId: string): void {
   const fallbackId = removeMonsterProfileById(monsterProfileId);
@@ -354,6 +375,7 @@ function materializeLoadout(
     skillProfileId: skillProfile.id,
     monsterProfileId,
     liveProfileId,
+    linkedTalentStageCfgId: data.linkedTalentStageCfgId ?? null,
     activate,
   });
 }
@@ -406,6 +428,7 @@ export function exportLoadout(id: string): LoadoutExport | null {
     kind: "resonance-logs-loadout",
     version: 1,
     name: loadout.name,
+    linkedTalentStageCfgId: loadout.linkedTalentStageCfgId,
     skillProfile: omitProfileId(
       normalizeSkillProfile(deepCloneSettings(skillProfile)),
     ),

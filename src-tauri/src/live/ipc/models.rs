@@ -60,6 +60,8 @@ pub struct LiveScenePayload {
     pub revision: u64,
     pub scene_id: Option<i32>,
     pub dungeon_difficulty: Option<i32>,
+    pub local_class_id: Option<i32>,
+    pub local_talent_stage_cfg_id: Option<i32>,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]

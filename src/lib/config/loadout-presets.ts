@@ -28,6 +28,8 @@ type PresetDefinition = {
   labels: Record<AppLocale, PresetLabel>;
   iconPath: string;
   palette: readonly [string, string, string];
+  /** Talent branch this preset's loadout auto-binds to on creation. */
+  talentStageCfgId: number;
   source: unknown;
 };
 
@@ -41,6 +43,7 @@ const PRESET_DEFINITIONS: PresetDefinition[] = [
     },
     iconPath: "/images/class_specs/Shield.png",
     palette: ["#fde68a", "#67e8f9", "#4ade80"],
+    talentStageCfgId: 123,
     source: radiantShieldSource,
   },
   {
@@ -52,6 +55,7 @@ const PRESET_DEFINITIONS: PresetDefinition[] = [
     },
     iconPath: "/images/class_specs/Recovery.png",
     palette: ["#93c5fd", "#60a5fa", "#fde68a"],
+    talentStageCfgId: 122,
     source: recoverySource,
   },
   {
@@ -63,6 +67,7 @@ const PRESET_DEFINITIONS: PresetDefinition[] = [
     },
     iconPath: "/images/class_specs/Block.png",
     palette: ["#fed7aa", "#fb923c", "#a3a3a3"],
+    talentStageCfgId: 114,
     source: blockSource,
   },
   {
@@ -74,6 +79,7 @@ const PRESET_DEFINITIONS: PresetDefinition[] = [
     },
     iconPath: "/images/class_specs/Earthfort.png",
     palette: ["#e6c25a", "#d97706", "#4ade80"],
+    talentStageCfgId: 113,
     source: earthfortSource,
   },
   {
@@ -85,6 +91,7 @@ const PRESET_DEFINITIONS: PresetDefinition[] = [
     },
     iconPath: "/images/class_specs/Smite.png",
     palette: ["#d9f99d", "#a3e635", "#fde68a"],
+    talentStageCfgId: 110,
     source: smiteSource,
   },
   {
@@ -96,6 +103,7 @@ const PRESET_DEFINITIONS: PresetDefinition[] = [
     },
     iconPath: "/images/class_specs/Concerto.png",
     palette: ["#fecdd3", "#fb7185", "#fbbf24"],
+    talentStageCfgId: 120,
     source: concertoSource,
   },
 ];
@@ -107,7 +115,15 @@ const PARSED_PRESETS = PRESET_DEFINITIONS.map((definition) => {
       `Invalid built-in loadout preset "${definition.id}": ${parsed.issues.join(", ")}`,
     );
   }
-  return { definition, data: parsed.output };
+  // Selecting a preset grants its spec binding automatically; the JSON
+  // sources stay schema-clean and the linkage lives next to the labels.
+  return {
+    definition,
+    data: {
+      ...parsed.output,
+      linkedTalentStageCfgId: definition.talentStageCfgId,
+    },
+  };
 });
 
 export function buildLoadoutPresets(locale: AppLocale): LoadoutPreset[] {

@@ -14,6 +14,7 @@ function starterLoadout(): Loadout {
     monsterProfileId: "monster",
     liveProfileId: "live",
     starterPlaceholder: true,
+    linkedTalentStageCfgId: null,
   };
 }
 

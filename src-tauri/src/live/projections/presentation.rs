@@ -7,7 +7,7 @@ use crate::live::ipc::models::{
     LiveStatusPayload, TeammateFantasyState, TrainingDummyPhase, TrainingDummyState,
 };
 use crate::live::projections::entity_monitor::EntityMonitorSnapshot;
-use crate::live::runtime::events::SegmentId;
+use crate::live::runtime::events::{LocalTalent, SegmentId};
 use crate::live::runtime::segment::{IdleMode, RecordingMode, SegmentState};
 
 /// A live, in-progress combat payload paired with the segment it belongs to.
@@ -202,9 +202,10 @@ impl PresentationProjection {
         &mut self,
         scene_id: Option<i32>,
         dungeon_difficulty: Option<i32>,
+        local_talent: LocalTalent,
     ) -> LiveScenePayload {
         self.scene_revision = self.scene_revision.saturating_add(1);
-        self.scene_payload(scene_id, dungeon_difficulty)
+        self.scene_payload(scene_id, dungeon_difficulty, local_talent)
     }
 
     /// Read-only scene payload for command-side bootstrap.
@@ -214,8 +215,9 @@ impl PresentationProjection {
         &self,
         scene_id: Option<i32>,
         dungeon_difficulty: Option<i32>,
+        local_talent: LocalTalent,
     ) -> LiveScenePayload {
-        self.scene_payload(scene_id, dungeon_difficulty)
+        self.scene_payload(scene_id, dungeon_difficulty, local_talent)
     }
 
     fn combat_payload(
@@ -329,11 +331,14 @@ impl PresentationProjection {
         &self,
         scene_id: Option<i32>,
         dungeon_difficulty: Option<i32>,
+        local_talent: LocalTalent,
     ) -> LiveScenePayload {
         LiveScenePayload {
             revision: self.scene_revision,
             scene_id,
             dungeon_difficulty,
+            local_class_id: local_talent.profession_id,
+            local_talent_stage_cfg_id: local_talent.talent_stage_cfg_id,
         }
     }
 }
@@ -411,12 +416,18 @@ mod tests {
     #[test]
     fn peek_scene_does_not_advance_revision() {
         let mut presentation = PresentationProjection::default();
-        let first = presentation.take_scene_payload(Some(101), Some(2));
+        let talent = LocalTalent {
+            profession_id: Some(4),
+            talent_stage_cfg_id: Some(108),
+        };
+        let first = presentation.take_scene_payload(Some(101), Some(2), talent);
         assert_eq!(first.revision, 1);
         assert_eq!(first.scene_id, Some(101));
-        let peeked = presentation.peek_scene_payload(Some(101), Some(2));
+        assert_eq!(first.local_class_id, Some(4));
+        assert_eq!(first.local_talent_stage_cfg_id, Some(108));
+        let peeked = presentation.peek_scene_payload(Some(101), Some(2), talent);
         assert_eq!(peeked.revision, 1);
-        let second = presentation.take_scene_payload(Some(101), Some(2));
+        let second = presentation.take_scene_payload(Some(101), Some(2), talent);
         assert_eq!(second.revision, 2);
     }
 

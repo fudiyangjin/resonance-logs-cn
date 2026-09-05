@@ -23,6 +23,12 @@ export const jaJPMessages = {
   "loadout.page.skillProfileLabel": "スキル監視プロファイル",
   "loadout.page.monsterProfileLabel": "モンスター監視プロファイル",
   "loadout.page.liveProfileLabel": "DPS 設定プロファイル",
+  "loadout.page.linkedSpecLabel": "連携スペック",
+  "loadout.page.linkedSpecNone": "連携なし",
+  "loadout.autoSwitch.toggle": "スペックで自動切替",
+  "loadout.autoSwitch.detected": "現在の検出",
+  "loadout.autoSwitch.unknown": "不明",
+  "loadout.autoSwitch.switched": "「{name}」に自動切替しました",
   "loadout.page.presetsTitle": "プリセット",
   "loadout.page.presetsDescription":
     "スキル・モンスター・DPS 設定を含む構成済みロードアウトを適用します",

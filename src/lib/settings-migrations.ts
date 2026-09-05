@@ -239,6 +239,7 @@ function buildDefaultLoadouts(
     monsterProfileId,
     liveProfileId,
     starterPlaceholder: starterPlaceholder && skillProfiles.length === 1,
+    linkedTalentStageCfgId: null,
   }));
   const activeIndex = Math.min(
     Math.max(Number.isFinite(activeProfileIndex) ? activeProfileIndex : 0, 0),
@@ -278,6 +279,11 @@ function normalizeLoadouts(
         ? item.liveProfileId
         : fallbackLiveId,
       starterPlaceholder: Boolean(item.starterPlaceholder),
+      linkedTalentStageCfgId:
+        typeof item.linkedTalentStageCfgId === "number" &&
+        Number.isFinite(item.linkedTalentStageCfgId)
+          ? item.linkedTalentStageCfgId
+          : null,
     }),
   );
   if (items.length === 0) {
@@ -293,6 +299,7 @@ function normalizeLoadouts(
       : items[0]!.id,
     items,
     firstRunPromptDismissed: Boolean(state.firstRunPromptDismissed),
+    autoSwitchBySpec: state.autoSwitchBySpec ?? true,
   };
 }
 

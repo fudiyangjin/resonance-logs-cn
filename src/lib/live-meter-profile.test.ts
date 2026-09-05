@@ -81,6 +81,7 @@ function configureTwoLiveProfiles(): void {
   SETTINGS.monitoring.state.loadouts = {
     activeId: "loadout-a",
     firstRunPromptDismissed: true,
+    autoSwitchBySpec: true,
     items: [
       {
         id: "loadout-a",
@@ -89,6 +90,7 @@ function configureTwoLiveProfiles(): void {
         monsterProfileId,
         liveProfileId: first.id,
         starterPlaceholder: false,
+        linkedTalentStageCfgId: null,
       },
     ],
   };

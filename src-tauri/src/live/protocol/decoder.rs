@@ -18,9 +18,9 @@ use crate::live::protocol::{COUNTER_PASSIVE_SKILL_IDS, MARKER_SKILL_ID_BASE};
 use crate::live::runtime::events::{
     AttributeValue, BatchId, BossMechanicObservation, CaptureEnvelope, EntityIdentityPatch,
     EntityKind, EntityUuid, FieldPatch, GameTimerKey, GameTimerState, HateEntry, HitChannel,
-    HitKind, LOCAL_PLAYER, MonoTimeMs, ObservationOrigin, ObservedBuff, ObservedBuffChange,
-    ObservedHit, PacketDirection, PassiveSkillObservation, Position, ProtocolBatch,
-    ProtocolObservation, ShieldDetail, SkillCooldownState, SkillPhase,
+    HitKind, LOCAL_PLAYER, LocalTalent, MonoTimeMs, ObservationOrigin, ObservedBuff,
+    ObservedBuffChange, ObservedHit, PacketDirection, PassiveSkillObservation, Position,
+    ProtocolBatch, ProtocolObservation, ShieldDetail, SkillCooldownState, SkillPhase,
 };
 use crate::packets::opcodes::{
     GRPC_TEAM_NTF_SERVICE_ID, MATCH_NTF_SERVICE_ID, Pkt, WORLD_CALL_SERVICE_ID,
@@ -39,6 +39,7 @@ const ATTR_SHIELD_DISPLAY: i32 = 60_050;
 const WORLD_EVENT_TYPE_BOSS_DBM: i32 = 29;
 const RESONANCE_FANTASY_MARKER_BUFF_ID: i32 = 2_199_999;
 const CHAR_SERIALIZE_FIELD_SEASON_CULTIVATE: i32 = 101;
+const CHAR_SERIALIZE_FIELD_PROFESSION_LIST: i32 = 61;
 const DIRTY_BEGIN: i32 = -2;
 const DIRTY_END: i32 = -3;
 const SEASON_CULTIVATE_FUNCTION_DEEP_SLEEP: i32 = 800_522;
@@ -80,6 +81,10 @@ enum TeamWireEvent {
 pub struct ProtocolDecoder {
     /// Baseline the `SyncContainerDirtyData` wire format patches in place.
     season_data: Option<blueprotobuf::SeasonCultivateLineData>,
+    /// Same dirty-wire baseline role as `season_data`, for
+    /// `CharSerialize.profession_list` (field 61). Kept independently so
+    /// profession/talent deltas still merge when no season snapshot exists.
+    profession_list: Option<blueprotobuf::ProfessionList>,
     /// `captured_wall_ms - server_ms`, used to project buff create times.
     server_clock_offset_ms: Option<i64>,
 }
@@ -891,12 +896,14 @@ impl ProtocolDecoder {
     ) -> Vec<ProtocolObservation> {
         let mut observations = vec![ProtocolObservation::ContainerReset];
         self.season_data = None;
-        let Some(data) = message.v_data else {
+        self.profession_list = None;
+        let Some(mut data) = message.v_data else {
             observations.push(ProtocolObservation::SeasonCultivateSnapshot {
                 season_id: 0,
                 active_template_ids: Vec::new(),
                 active_item_ids: Vec::new(),
             });
+            observations.push(ProtocolObservation::LocalTalentChanged(LocalTalent::default()));
             return observations;
         };
         if let Some(char_id) = data.char_id {
@@ -914,14 +921,19 @@ impl ProtocolDecoder {
             if let Some(name) = data.char_base.as_ref().and_then(|base| base.name.clone()) {
                 patch.name = FieldPatch::Set(name);
             }
-            if let Some(profession_id) = data
-                .profession_list
+            let profession_list = data.profession_list.take();
+            if let Some(profession_id) = profession_list
                 .as_ref()
                 .and_then(|list| list.cur_profession_id)
             {
                 patch.profession_id = FieldPatch::Set(profession_id);
             }
             observations.push(ProtocolObservation::IdentityUpdated { uuid, patch });
+            let talent = profession_list
+                .as_ref()
+                .map_or_else(LocalTalent::default, local_talent);
+            self.profession_list = profession_list;
+            observations.push(ProtocolObservation::LocalTalentChanged(talent));
             if let Some(fight_point) = data.char_base.as_ref().and_then(|base| base.fight_point) {
                 observations.push(integer_attribute(
                     uuid,
@@ -965,29 +977,60 @@ impl ProtocolDecoder {
         let Some(bytes) = message.v_data.and_then(|stream| stream.buffer) else {
             return Vec::new();
         };
-        let Some(season) = self.season_data.as_mut() else {
-            return Vec::new();
+
+        // Season and profession sections are independent: either may be absent
+        // from a given dirty blob, and the season baseline may not exist yet
+        // while profession deltas (e.g. a respec) still need to merge.
+        let previous_items = self
+            .season_data
+            .as_ref()
+            .map(|season| {
+                season_cultivate_state(season)
+                    .active_item_ids
+                    .into_iter()
+                    .collect::<BTreeSet<_>>()
+            })
+            .unwrap_or_default();
+
+        let mut reader = DirtyReader::new(&bytes);
+        let touched = match merge_char_serialize_dirty(
+            &mut reader,
+            self.season_data.as_mut(),
+            self.profession_list.get_or_insert_with(Default::default),
+        ) {
+            Ok(touched) => touched,
+            Err(error) => {
+                log::warn!(target: "app::live", "container_dirty_merge_failed error={error:?}");
+                return Vec::new();
+            }
         };
 
-        let previous_items = season_cultivate_state(season)
-            .active_item_ids
-            .into_iter()
-            .collect::<BTreeSet<_>>();
-        let next = match apply_season_dirty_and_collect_state(season, &bytes) {
-            Ok(state) => state,
-            Err(_) => return Vec::new(),
-        };
-        let next_items = next
-            .active_item_ids
-            .iter()
-            .copied()
-            .collect::<BTreeSet<_>>();
-        vec![ProtocolObservation::SeasonCultivateDelta {
-            season_id: next.season_id,
-            active_template_ids: next.active_template_ids,
-            activated_item_ids: next_items.difference(&previous_items).copied().collect(),
-            deactivated_item_ids: previous_items.difference(&next_items).copied().collect(),
-        }]
+        let mut observations = Vec::new();
+        if touched.season && let Some(season) = self.season_data.as_ref() {
+            let next = season_cultivate_state(season);
+            let next_items = next
+                .active_item_ids
+                .iter()
+                .copied()
+                .collect::<BTreeSet<_>>();
+            observations.push(ProtocolObservation::SeasonCultivateDelta {
+                season_id: next.season_id,
+                active_template_ids: next.active_template_ids,
+                activated_item_ids: next_items.difference(&previous_items).copied().collect(),
+                deactivated_item_ids: previous_items
+                    .difference(&next_items)
+                    .copied()
+                    .collect(),
+            });
+        }
+        if touched.profession {
+            let talent = self
+                .profession_list
+                .as_ref()
+                .map_or_else(LocalTalent::default, local_talent);
+            observations.push(ProtocolObservation::LocalTalentChanged(talent));
+        }
+        observations
     }
 }
 
@@ -1292,13 +1335,24 @@ fn season_cultivate_state(data: &blueprotobuf::SeasonCultivateLineData) -> Seaso
     }
 }
 
-fn apply_season_dirty_and_collect_state(
-    data: &mut blueprotobuf::SeasonCultivateLineData,
-    bytes: &[u8],
-) -> DirtyResult<SeasonCultivateState> {
-    let mut reader = DirtyReader::new(bytes);
-    merge_char_serialize_dirty(&mut reader, data)?;
-    Ok(season_cultivate_state(data))
+/// Which `CharSerialize` sections a dirty blob actually touched.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+struct CharSerializeDirtyTouched {
+    season: bool,
+    profession: bool,
+}
+
+/// Local talent state derived from a (possibly partially merged)
+/// `ProfessionList`: the current profession plus its active talent branch.
+fn local_talent(list: &blueprotobuf::ProfessionList) -> LocalTalent {
+    let profession_id = list.cur_profession_id;
+    let talent_stage_cfg_id = profession_id
+        .and_then(|id| list.talent_list.get(&id))
+        .and_then(|info| info.talent_stage_cfg_id);
+    LocalTalent {
+        profession_id,
+        talent_stage_cfg_id,
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1333,6 +1387,16 @@ impl<'a> DirtyReader<'a> {
         ]);
         self.offset += 4;
         Ok(value)
+    }
+
+    fn i64(&mut self) -> DirtyResult<i64> {
+        if self.offset + 8 > self.data.len() {
+            return Err(DirtyParseError::UnexpectedEnd);
+        }
+        let mut bytes = [0u8; 8];
+        bytes.copy_from_slice(&self.data[self.offset..self.offset + 8]);
+        self.offset += 8;
+        Ok(i64::from_le_bytes(bytes))
     }
 
     fn bool(&mut self) -> DirtyResult<bool> {
@@ -1405,25 +1469,38 @@ fn skip_object(reader: &mut DirtyReader<'_>) -> DirtyResult<()> {
 
 fn merge_char_serialize_dirty(
     reader: &mut DirtyReader<'_>,
-    data: &mut blueprotobuf::SeasonCultivateLineData,
-) -> DirtyResult<()> {
+    season_data: Option<&mut blueprotobuf::SeasonCultivateLineData>,
+    profession_list: &mut blueprotobuf::ProfessionList,
+) -> DirtyResult<CharSerializeDirtyTouched> {
+    let mut season_data = season_data;
+    let mut touched = CharSerializeDirtyTouched::default();
     let Some(end) = read_object_header(reader)? else {
-        return Ok(());
+        return Ok(touched);
     };
     while reader.offset < end {
         let field_id = reader.i32()?;
         if field_id <= 0 {
             return Err(DirtyParseError::InvalidFieldId(field_id));
         }
-        if field_id == CHAR_SERIALIZE_FIELD_SEASON_CULTIVATE {
-            merge_season_cultivate_line_data(reader, data)?;
-        } else if reader.peek_i32()? == DIRTY_BEGIN {
-            skip_object(reader)?;
-        } else {
-            reader.skip_to(end)?;
+        match field_id {
+            CHAR_SERIALIZE_FIELD_SEASON_CULTIVATE => {
+                if let Some(season) = season_data.as_deref_mut() {
+                    merge_season_cultivate_line_data(reader, season)?;
+                    touched.season = true;
+                } else {
+                    skip_object(reader)?;
+                }
+            }
+            CHAR_SERIALIZE_FIELD_PROFESSION_LIST => {
+                merge_profession_list(reader, profession_list)?;
+                touched.profession = true;
+            }
+            _ if reader.peek_i32()? == DIRTY_BEGIN => skip_object(reader)?,
+            _ => reader.skip_to(end)?,
         }
     }
-    finish_object(reader, end)
+    finish_object(reader, end)?;
+    Ok(touched)
 }
 
 fn merge_season_cultivate_line_data(
@@ -1614,6 +1691,164 @@ fn merge_i32_object_map<T>(
         merge_value(reader, entry)?;
     }
     Ok(())
+}
+
+/// Same map header semantics as [`merge_i32_object_map`], for maps whose
+/// values are scalars instead of nested dirty objects.
+fn merge_i32_value_map<T>(
+    reader: &mut DirtyReader<'_>,
+    map: &mut HashMap<i32, T>,
+    read_value: fn(&mut DirtyReader<'_>) -> DirtyResult<T>,
+) -> DirtyResult<()> {
+    let first = reader.i32()?;
+    if first == -4 {
+        return Ok(());
+    }
+    let (update_count, remove_count, add_count) = if first == -1 {
+        (reader.i32()?, 0, 0)
+    } else {
+        (first, reader.i32()?, reader.i32()?)
+    };
+    for _ in 0..update_count {
+        let key = reader.i32()?;
+        map.insert(key, read_value(reader)?);
+    }
+    for _ in 0..remove_count {
+        map.remove(&reader.i32()?);
+    }
+    for _ in 0..add_count {
+        let key = reader.i32()?;
+        map.insert(key, read_value(reader)?);
+    }
+    Ok(())
+}
+
+/// `ProfessionList` dirty merge. Every tag the message defines must be
+/// handled (or explicitly consumed) because the dirty-wire format has no
+/// per-field length prefix: falling through to `skip_to(end)` would drop
+/// every field after the first unknown scalar. Tags 11-17 exist on the wire
+/// (resetProfessionListFlag, total*Mark, resetTalentMark*, pickProfessionId)
+/// but are not in the local proto, so they are read and discarded.
+fn merge_profession_list(
+    reader: &mut DirtyReader<'_>,
+    data: &mut blueprotobuf::ProfessionList,
+) -> DirtyResult<()> {
+    let Some(end) = read_object_header(reader)? else {
+        return Ok(());
+    };
+    while reader.offset < end {
+        match reader.i32()? {
+            1 => data.cur_profession_id = Some(reader.i32()?),
+            3 => data.cur_assist_professions = parse_repeated_i32(reader)?,
+            4 => merge_i32_object_map(
+                reader,
+                &mut data.profession_list,
+                merge_profession_info,
+                blueprotobuf::ProfessionInfo::default,
+            )?,
+            7 => merge_i32_object_map(
+                reader,
+                &mut data.aoyi_skill_info_map,
+                merge_profession_skill_info,
+                blueprotobuf::ProfessionSkillInfo::default,
+            )?,
+            8 => data.total_talent_points = Some(u32::try_from(reader.i32()?).unwrap_or(0)),
+            9 => {
+                data.total_talent_reset_count = Some(u32::try_from(reader.i32()?).unwrap_or(0));
+            }
+            10 => merge_i32_object_map(
+                reader,
+                &mut data.talent_list,
+                merge_profession_talent_info,
+                blueprotobuf::ProfessionTalentInfo::default,
+            )?,
+            11 => data.reset_profession_list_flag = Some(reader.i32()?),
+            12 => data.total_attack_mark = Some(u32::try_from(reader.i32()?).unwrap_or(0)),
+            13 => data.total_guard_mark = Some(u32::try_from(reader.i32()?).unwrap_or(0)),
+            14 => data.total_heal_mark = Some(u32::try_from(reader.i32()?).unwrap_or(0)),
+            15 => data.reset_talent_mark_item_flag = Some(reader.i32()?),
+            16 => data.reset_talent_mark_item_pop_up_notice = Some(reader.i32()?),
+            17 => data.pick_profession_id = Some(reader.i32()?),
+            _ => reader.skip_to(end)?,
+        }
+    }
+    finish_object(reader, end)
+}
+
+fn merge_profession_talent_info(
+    reader: &mut DirtyReader<'_>,
+    data: &mut blueprotobuf::ProfessionTalentInfo,
+) -> DirtyResult<()> {
+    let Some(end) = read_object_header(reader)? else {
+        return Ok(());
+    };
+    while reader.offset < end {
+        match reader.i32()? {
+            1 => data.used_talent_points = Some(u32::try_from(reader.i32()?).unwrap_or(0)),
+            2 => {
+                data.talent_node_ids = parse_repeated_i32(reader)?
+                    .into_iter()
+                    .map(|id| u32::try_from(id).unwrap_or(0))
+                    .collect();
+            }
+            // Proto tag 3 does not exist; the stage is field 4.
+            4 => data.talent_stage_cfg_id = Some(reader.i32()?),
+            5 => data.talent_ilegal_reset_count = Some(reader.i32()?),
+            6 => data.used_attack_mark = Some(reader.i32()?),
+            7 => data.used_guard_mark = Some(reader.i32()?),
+            8 => data.used_heal_mark = Some(reader.i32()?),
+            _ => reader.skip_to(end)?,
+        }
+    }
+    finish_object(reader, end)
+}
+
+fn merge_profession_info(
+    reader: &mut DirtyReader<'_>,
+    data: &mut blueprotobuf::ProfessionInfo,
+) -> DirtyResult<()> {
+    let Some(end) = read_object_header(reader)? else {
+        return Ok(());
+    };
+    while reader.offset < end {
+        match reader.i32()? {
+            1 => data.profession_id = Some(reader.i32()?),
+            2 => data.level = Some(reader.i32()?),
+            3 => data.experience = Some(reader.i64()?),
+            4 => merge_i32_object_map(
+                reader,
+                &mut data.skill_info_map,
+                merge_profession_skill_info,
+                blueprotobuf::ProfessionSkillInfo::default,
+            )?,
+            6 => data.active_skill_ids = parse_repeated_i32(reader)?,
+            7 => merge_i32_value_map(reader, &mut data.slot_skill_info_map, |r| r.i32())?,
+            8 => data.use_skin_id = Some(reader.i32()?),
+            _ => reader.skip_to(end)?,
+        }
+    }
+    finish_object(reader, end)
+}
+
+fn merge_profession_skill_info(
+    reader: &mut DirtyReader<'_>,
+    data: &mut blueprotobuf::ProfessionSkillInfo,
+) -> DirtyResult<()> {
+    let Some(end) = read_object_header(reader)? else {
+        return Ok(());
+    };
+    while reader.offset < end {
+        match reader.i32()? {
+            1 => data.skill_id = Some(reader.i32()?),
+            2 => data.level = Some(reader.i32()?),
+            3 => data.replace_skill_ids = parse_repeated_i32(reader)?,
+            4 => data.remodel_level = Some(reader.i32()?),
+            5 => data.cur_skill_skin = Some(reader.i32()?),
+            6 => merge_i32_value_map(reader, &mut data.active_skill_skins, |r| r.bool())?,
+            _ => reader.skip_to(end)?,
+        }
+    }
+    finish_object(reader, end)
 }
 
 fn parse_repeated_i32(reader: &mut DirtyReader<'_>) -> DirtyResult<Vec<i32>> {
@@ -3311,6 +3546,176 @@ mod tests {
             Some(777),
         );
         assert_eq!(area.activate_effect_score, Some(42));
+    }
+
+    #[test]
+    fn profession_dirty_merge_updates_talent_stage_cfg_id() {
+        let talent_patch = map_single_update(4, &single_field_update(4, 108));
+        let mut profession_body = Vec::new();
+        profession_body.extend_from_slice(&10i32.to_le_bytes());
+        profession_body.extend_from_slice(&talent_patch);
+        let char_body = dirty_object(profession_body);
+
+        let mut list = blueprotobuf::ProfessionList {
+            cur_profession_id: Some(4),
+            ..Default::default()
+        };
+        let mut reader = DirtyReader::new(&char_body);
+        merge_profession_list(&mut reader, &mut list).expect("valid patch");
+
+        let talent = local_talent(&list);
+        assert_eq!(talent.profession_id, Some(4));
+        assert_eq!(talent.talent_stage_cfg_id, Some(108));
+    }
+
+    #[test]
+    fn profession_dirty_merge_applies_every_tag_regardless_of_order() {
+        // Same regression class as the cultivate-area guard: the dirty wire
+        // has no per-field length, so every tag must be consumed explicitly
+        // or the fields after the first unknown scalar are silently dropped.
+        let mut body = Vec::new();
+        // 16: reset_talent_mark_item_pop_up_notice, a scalar we store but
+        // never read; it must still be consumed so later fields parse.
+        body.extend_from_slice(&16i32.to_le_bytes());
+        body.extend_from_slice(&7i32.to_le_bytes());
+        // 1: cur_profession_id.
+        body.extend_from_slice(&1i32.to_le_bytes());
+        body.extend_from_slice(&4i32.to_le_bytes());
+        // 3: cur_assist_professions.
+        body.extend_from_slice(&3i32.to_le_bytes());
+        body.extend_from_slice(&2i32.to_le_bytes());
+        body.extend_from_slice(&5i32.to_le_bytes());
+        body.extend_from_slice(&6i32.to_le_bytes());
+        // 8/9: u32 scalars.
+        body.extend_from_slice(&8i32.to_le_bytes());
+        body.extend_from_slice(&30i32.to_le_bytes());
+        body.extend_from_slice(&9i32.to_le_bytes());
+        body.extend_from_slice(&2i32.to_le_bytes());
+        // 10: talent_list map with the stage under tag 4.
+        body.extend_from_slice(&10i32.to_le_bytes());
+        body.extend_from_slice(&map_single_update(4, &single_field_update(4, 107)));
+        // 4: profession_list map with level + experience (i64).
+        let mut info_body = Vec::new();
+        info_body.extend_from_slice(&2i32.to_le_bytes());
+        info_body.extend_from_slice(&60i32.to_le_bytes());
+        info_body.extend_from_slice(&3i32.to_le_bytes());
+        info_body.extend_from_slice(&123_456_i64.to_le_bytes());
+        body.extend_from_slice(&4i32.to_le_bytes());
+        body.extend_from_slice(&map_single_update(4, &dirty_object(info_body)));
+        let patch = dirty_object(body);
+
+        let mut list = blueprotobuf::ProfessionList::default();
+        let mut reader = DirtyReader::new(&patch);
+        merge_profession_list(&mut reader, &mut list).expect("valid patch");
+
+        assert_eq!(list.cur_profession_id, Some(4));
+        assert_eq!(list.cur_assist_professions, vec![5, 6]);
+        assert_eq!(list.reset_talent_mark_item_pop_up_notice, Some(7));
+        assert_eq!(list.total_talent_points, Some(30));
+        assert_eq!(list.total_talent_reset_count, Some(2));
+        assert_eq!(
+            list.talent_list
+                .get(&4)
+                .and_then(|info| info.talent_stage_cfg_id),
+            Some(107),
+        );
+        let info = list.profession_list.get(&4).expect("profession entry");
+        assert_eq!(info.level, Some(60));
+        assert_eq!(info.experience, Some(123_456));
+    }
+
+    #[test]
+    fn container_delta_merges_profession_without_a_season_snapshot() {
+        // A respec dirty blob arrives with no season section and before any
+        // season snapshot was ever captured: it must still merge and emit.
+        let talent_patch = map_single_update(4, &single_field_update(4, 108));
+        let mut profession_body = Vec::new();
+        profession_body.extend_from_slice(&1i32.to_le_bytes());
+        profession_body.extend_from_slice(&4i32.to_le_bytes());
+        profession_body.extend_from_slice(&10i32.to_le_bytes());
+        profession_body.extend_from_slice(&talent_patch);
+        let mut char_body = Vec::new();
+        char_body.extend_from_slice(&CHAR_SERIALIZE_FIELD_PROFESSION_LIST.to_le_bytes());
+        char_body.extend_from_slice(&dirty_object(profession_body));
+        let blob = dirty_object(char_body);
+
+        let mut decoder = ProtocolDecoder::new();
+        let message = blueprotobuf::SyncContainerDirtyData {
+            v_data: Some(blueprotobuf::BufferStream {
+                buffer: Some(blob),
+            }),
+        };
+        let observations = decoder.decode_container_delta(message);
+
+        assert_eq!(
+            observations,
+            vec![ProtocolObservation::LocalTalentChanged(LocalTalent {
+                profession_id: Some(4),
+                talent_stage_cfg_id: Some(108),
+            })]
+        );
+    }
+
+    #[test]
+    fn container_snapshot_announces_local_talent() {
+        let container = blueprotobuf::SyncContainerData {
+            v_data: Some(blueprotobuf::CharSerialize {
+                char_id: Some(42),
+                profession_list: Some(blueprotobuf::ProfessionList {
+                    cur_profession_id: Some(4),
+                    talent_list: HashMap::from([(
+                        4,
+                        blueprotobuf::ProfessionTalentInfo {
+                            talent_stage_cfg_id: Some(108),
+                            ..Default::default()
+                        },
+                    )]),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+        };
+        let mut decoder = ProtocolDecoder::new();
+
+        let batch = decoder.decode(notify(1, Pkt::SyncContainerData, &container));
+
+        assert!(batch.observations.iter().any(|observation| matches!(
+            observation,
+            ProtocolObservation::LocalTalentChanged(LocalTalent {
+                profession_id: Some(4),
+                talent_stage_cfg_id: Some(108),
+            })
+        )));
+    }
+
+    #[test]
+    fn talent_stage_cfg_id_uses_proto_wire_tag_4() {
+        // Regression lock: the struct roundtrip tests above cannot catch a
+        // wrong prost tag (encode and decode would share the mistake). The
+        // official proto declares talentStageCfgId = 4, i.e. wire key 0x20.
+        use prost::Message as _;
+        let encoded = blueprotobuf::ProfessionTalentInfo {
+            talent_stage_cfg_id: Some(108),
+            ..Default::default()
+        }
+        .encode_to_vec();
+        assert_eq!(encoded, vec![0x20, 108]);
+    }
+
+    #[test]
+    fn container_snapshot_without_v_data_resets_local_talent() {
+        let container = blueprotobuf::SyncContainerData { v_data: None };
+        let mut decoder = ProtocolDecoder::new();
+
+        let batch = decoder.decode(notify(1, Pkt::SyncContainerData, &container));
+
+        assert!(batch.observations.iter().any(|observation| matches!(
+            observation,
+            ProtocolObservation::LocalTalentChanged(LocalTalent {
+                profession_id: None,
+                talent_stage_cfg_id: None,
+            })
+        )));
     }
 
     fn identity_patch_for_monster_id(kind: EntityKind, monster_id: i32) -> EntityIdentityPatch {

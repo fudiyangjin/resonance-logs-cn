@@ -15,6 +15,7 @@ function loadout(
     monsterProfileId,
     liveProfileId,
     starterPlaceholder: false,
+    linkedTalentStageCfgId: null,
   };
 }
 

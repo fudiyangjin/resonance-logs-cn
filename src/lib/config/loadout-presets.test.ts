@@ -22,11 +22,13 @@ function resetWithStarterLoadout(): void {
     monsterProfileId: monsterProfile.id,
     liveProfileId: liveProfile.id,
     starterPlaceholder: true,
+    linkedTalentStageCfgId: null,
   };
   state.loadouts = {
     activeId: starter.id,
     items: [starter],
     firstRunPromptDismissed: false,
+    autoSwitchBySpec: true,
   };
   Object.assign(SETTINGS.monitoring.state, state);
 }

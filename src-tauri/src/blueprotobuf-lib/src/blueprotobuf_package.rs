@@ -2880,6 +2880,20 @@ pub struct ProfessionList {
     pub total_talent_reset_count: ::core::option::Option<u32>,
     #[prost(map = "int32, message", tag = "10")]
     pub talent_list: ::std::collections::HashMap<i32, ProfessionTalentInfo>,
+    #[prost(int32, optional, tag = "11")]
+    pub reset_profession_list_flag: ::core::option::Option<i32>,
+    #[prost(uint32, optional, tag = "12")]
+    pub total_attack_mark: ::core::option::Option<u32>,
+    #[prost(uint32, optional, tag = "13")]
+    pub total_guard_mark: ::core::option::Option<u32>,
+    #[prost(uint32, optional, tag = "14")]
+    pub total_heal_mark: ::core::option::Option<u32>,
+    #[prost(int32, optional, tag = "15")]
+    pub reset_talent_mark_item_flag: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "16")]
+    pub reset_talent_mark_item_pop_up_notice: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "17")]
+    pub pick_profession_id: ::core::option::Option<i32>,
 }
 #[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
 pub struct ProfessionInfo {
@@ -2919,8 +2933,16 @@ pub struct ProfessionTalentInfo {
     pub used_talent_points: ::core::option::Option<u32>,
     #[prost(uint32, repeated, tag = "2")]
     pub talent_node_ids: ::prost::alloc::vec::Vec<u32>,
-    #[prost(int32, optional, tag = "3")]
+    #[prost(int32, optional, tag = "4")]
     pub talent_stage_cfg_id: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "5")]
+    pub talent_ilegal_reset_count: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "6")]
+    pub used_attack_mark: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "7")]
+    pub used_guard_mark: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "8")]
+    pub used_heal_mark: ::core::option::Option<i32>,
 }
 #[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
 pub struct TrialRoad {

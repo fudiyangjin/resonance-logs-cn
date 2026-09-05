@@ -39,11 +39,15 @@
   import UpdateModal from "$lib/components/UpdateModal.svelte";
   import {
     dismissFirstRunPrompt,
+    findLoadout,
     shouldShowFirstRunPrompt,
+    switchLoadout,
   } from "$lib/loadouts.svelte.js";
+  import { resolveAutoSwitchTarget } from "$lib/loadout-auto-switch";
+  import { t } from "$lib/i18n/index.svelte";
   import { getVersion } from "@tauri-apps/api/app";
   import AppBackgroundLayer from "$lib/components/app-background-layer.svelte";
-  import { Toaster } from "svelte-sonner";
+  import { Toaster, toast } from "svelte-sonner";
 
   let { children } = $props();
 
@@ -293,6 +297,31 @@
   $effect(() => {
     const snapshot = liveSceneStore.data;
     if (snapshot) currentSceneId = snapshot.sceneId;
+  });
+
+  // Subscribe to a single primitive: `$derived` dedupes identical numbers,
+  // so scene changes and other scene-topic revisions never re-run the effect.
+  const localTalentStageCfgId = $derived(
+    liveSceneStore.data?.localTalentStageCfgId ?? null,
+  );
+
+  $effect(() => {
+    const stageId = localTalentStageCfgId;
+    if (stageId === null) return;
+    // Settings are read untracked: a manual loadout switch must not be
+    // reverted by this effect — only an actual spec change may trigger it.
+    untrack(() => {
+      const state = SETTINGS.loadouts.state;
+      if (!state.autoSwitchBySpec) return;
+      const targetId = resolveAutoSwitchTarget(state.items, state.activeId, stageId);
+      if (!targetId) return;
+      switchLoadout(targetId);
+      toast.info(
+        t("loadout.autoSwitch.switched", {
+          name: findLoadout(targetId)?.name ?? "",
+        }),
+      );
+    });
   });
 
   function handleClose() {

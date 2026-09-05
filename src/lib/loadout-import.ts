@@ -20,6 +20,8 @@ export type LoadoutExport = {
   kind: "resonance-logs-loadout";
   version: 1;
   name: string;
+  /** Talent branch this loadout is bound to; absent/`null` means unbound. */
+  linkedTalentStageCfgId?: number | null;
   skillProfile: Omit<SkillMonitorProfile, "id">;
   monsterProfile: Omit<MonsterMonitorProfile, "id">;
   liveProfile: Omit<LiveMeterProfile, "id">;
@@ -782,6 +784,9 @@ const loadoutExportSchema = v.object({
   kind: v.literal("resonance-logs-loadout"),
   version: v.literal(1),
   name: v.pipe(v.string(), v.trim(), v.minLength(1)),
+  // Optional with a `null` default: exports predate the spec-binding field,
+  // and an unbound loadout is the natural reading of a missing key.
+  linkedTalentStageCfgId: v.optional(v.nullable(finiteNumberSchema), null),
   skillProfile: skillProfileSchema,
   monsterProfile: monsterProfileSchema,
   liveProfile: v.optional(

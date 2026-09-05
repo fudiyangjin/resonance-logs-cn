@@ -23,6 +23,12 @@ export const zhCNMessages = {
   "loadout.page.skillProfileLabel": "技能监控子方案",
   "loadout.page.monsterProfileLabel": "怪物监控子方案",
   "loadout.page.liveProfileLabel": "DPS 设置子方案",
+  "loadout.page.linkedSpecLabel": "关联专精",
+  "loadout.page.linkedSpecNone": "不关联",
+  "loadout.autoSwitch.toggle": "按专精自动切换",
+  "loadout.autoSwitch.detected": "当前检测",
+  "loadout.autoSwitch.unknown": "未知",
+  "loadout.autoSwitch.switched": "已自动切换到「{name}」",
   "loadout.page.presetsTitle": "预置方案",
   "loadout.page.presetsDescription":
     "选择一套已配置的完整方案，快速应用技能、怪物与 DPS 设置",

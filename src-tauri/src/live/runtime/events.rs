@@ -467,6 +467,12 @@ pub struct HateEntry {
     pub value: u32,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct LocalTalent {
+    pub profession_id: Option<i32>,
+    pub talent_stage_cfg_id: Option<i32>,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProtocolObservation {
     ContainerReset,
@@ -601,6 +607,8 @@ pub enum ProtocolObservation {
         activated_item_ids: Vec<i32>,
         deactivated_item_ids: Vec<i32>,
     },
+
+    LocalTalentChanged(LocalTalent),
     PassiveSkillObserved(PassiveSkillObservation),
     BossMechanicStarted(BossMechanicObservation),
     GameTimerSnapshot {
@@ -856,6 +864,11 @@ pub enum DomainEvent {
         active_template_ids: Vec<i32>,
         active_item_ids: Vec<i32>,
         is_baseline: bool,
+    },
+
+    LocalTalentChanged {
+        previous: LocalTalent,
+        current: LocalTalent,
     },
     PassiveSkillObserved {
         entity: EntityRef,

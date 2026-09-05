@@ -25,6 +25,7 @@
     listLoadouts,
     removeLoadout,
     renameLoadout,
+    setLoadoutLinkedTalentStage,
     setLoadoutLiveProfile,
     setLoadoutMonsterProfile,
     setLoadoutSkillProfile,
@@ -32,6 +33,13 @@
   } from "$lib/loadouts.svelte.js";
   import { parseLoadoutExport } from "$lib/loadout-import";
   import { buildLoadoutPresets } from "$lib/config/loadout-presets";
+  import {
+    TALENT_STAGE_SPECS,
+    talentStageIconPath,
+    talentStageOptions,
+  } from "$lib/config/talent-stages";
+  import { formatClassSpecLabel } from "$lib/class-labels";
+  import { liveSceneStore } from "$lib/stores/live-topics.svelte";
   import { toast } from "svelte-sonner";
   import NameInputDialog from "$lib/components/NameInputDialog.svelte";
   import ConfirmDialog from "$lib/components/ConfirmDialog.svelte";
@@ -43,6 +51,24 @@
   const monsterProfiles = $derived(SETTINGS.monsterMonitor.state.profiles);
   const liveProfiles = $derived(SETTINGS.monitoring.state.liveMeter.profiles);
   const presets = $derived(buildLoadoutPresets(getLocale()));
+  const specOptions = talentStageOptions();
+  const specGroups = $derived.by(() => {
+    const groups = new Map<string, typeof specOptions>();
+    for (const option of specOptions) {
+      const list = groups.get(option.className) ?? [];
+      list.push(option);
+      groups.set(option.className, list);
+    }
+    return [...groups.entries()];
+  });
+  const detectedSpecLabel = $derived.by(() => {
+    const stageId = liveSceneStore.data?.localTalentStageCfgId ?? null;
+    if (stageId === null) return t("loadout.autoSwitch.unknown");
+    const specName = TALENT_STAGE_SPECS[stageId];
+    if (!specName) return t("loadout.autoSwitch.unknown");
+    const className = specOptions.find((o) => o.specName === specName)?.className ?? "";
+    return formatClassSpecLabel(className, specName);
+  });
 
   // Dialog states
   let nameDialogOpen = $state(false);
@@ -116,6 +142,11 @@
   function handleApplyPreset(preset: (typeof presets)[number]) {
     createLoadoutFromPreset(preset);
     toast.success(t("loadout.page.presetApplied", { name: preset.name }));
+  }
+
+  function handleLinkedSpecChange(loadoutId: string, event: Event) {
+    const value = (event.currentTarget as HTMLSelectElement).value;
+    setLoadoutLinkedTalentStage(loadoutId, value === "" ? null : Number(value));
   }
 
   async function handleExport(id: string) {
@@ -241,6 +272,24 @@
   </div>
 
   <div
+    class="border-border/60 bg-card/40 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+  >
+    <label class="flex cursor-pointer items-center gap-2.5">
+      <input
+        type="checkbox"
+        class="accent-primary h-4 w-4"
+        bind:checked={SETTINGS.loadouts.state.autoSwitchBySpec}
+      />
+      <span class="text-foreground text-sm font-medium">
+        {t("loadout.autoSwitch.toggle")}
+      </span>
+    </label>
+    <span class="text-muted-foreground text-sm">
+      {t("loadout.autoSwitch.detected")}: <span class="text-foreground">{detectedSpecLabel}</span>
+    </span>
+  </div>
+
+  <div
     class="border-border/60 bg-card/40 overflow-hidden rounded-lg border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
   >
     <div class="px-4 pt-4">
@@ -267,6 +316,14 @@
               <span class="text-foreground truncate font-medium"
                 >{loadout.name}</span
               >
+              {#if loadout.linkedTalentStageCfgId !== null && talentStageIconPath(loadout.linkedTalentStageCfgId)}
+                <img
+                  src={talentStageIconPath(loadout.linkedTalentStageCfgId)}
+                  alt=""
+                  title={TALENT_STAGE_SPECS[loadout.linkedTalentStageCfgId] ?? ""}
+                  class="h-5 w-5 shrink-0 rounded-sm object-contain"
+                />
+              {/if}
             </div>
             <div class="flex shrink-0 items-center gap-1.5">
               {#if !isActive}
@@ -313,7 +370,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+          <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
             <label class="text-muted-foreground flex flex-col gap-1 text-xs">
               {t("loadout.page.skillProfileLabel")}
               <select
@@ -365,6 +422,30 @@
                   <option value={profile.id}
                     >{liveProfileName(profile.id, idx)}</option
                   >
+                {/each}
+              </select>
+            </label>
+            <label class="text-muted-foreground flex flex-col gap-1 text-xs">
+              {t("loadout.page.linkedSpecLabel")}
+              <select
+                class="border-border/60 bg-muted/30 text-foreground focus:ring-primary/50 rounded border px-2.5 py-1.5 text-sm focus:ring-2 focus:outline-none"
+                value={loadout.linkedTalentStageCfgId === null
+                  ? ""
+                  : String(loadout.linkedTalentStageCfgId)}
+                onchange={(event) => handleLinkedSpecChange(loadout.id, event)}
+              >
+                <option value="">{t("loadout.page.linkedSpecNone")}</option>
+                {#each specGroups as [className, options] (className)}
+                  <optgroup label={formatClassSpecLabel(className)}>
+                    {#each options as option (option.cfgId)}
+                      <option value={String(option.cfgId)}
+                        >{formatClassSpecLabel(
+                          option.className,
+                          option.specName,
+                        )}</option
+                      >
+                    {/each}
+                  </optgroup>
                 {/each}
               </select>
             </label>

@@ -1755,6 +1755,12 @@ export type Loadout = {
   liveProfileId: string;
   /** True only for the untouched system-created first-run placeholder. */
   starterPlaceholder: boolean;
+  /**
+   * Talent branch (`TalentStageTable` cfg id) this loadout is bound to. When
+   * spec auto-switch is enabled, entering this spec switches to this loadout.
+   * At most one loadout may hold a given cfg id; `null` means unbound.
+   */
+  linkedTalentStageCfgId: number | null;
 };
 
 export type LoadoutsState = {
@@ -1762,6 +1768,8 @@ export type LoadoutsState = {
   items: Loadout[];
   /** Whether the new-user "pick a starter preset" prompt has been shown/dismissed. */
   firstRunPromptDismissed: boolean;
+  /** Automatically switch loadouts when the detected talent spec changes. */
+  autoSwitchBySpec: boolean;
 };
 
 export function createDefaultLoadoutsState(): LoadoutsState {
@@ -1769,6 +1777,7 @@ export function createDefaultLoadoutsState(): LoadoutsState {
     activeId: "",
     items: [],
     firstRunPromptDismissed: false,
+    autoSwitchBySpec: true,
   };
 }
 
