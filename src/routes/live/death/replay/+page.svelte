@@ -5,8 +5,8 @@
   import DeathReplayDetail from "$lib/components/death-replay/death-replay-detail.svelte";
   import { t } from "$lib/i18n/index.svelte";
 
-  const entityUuid = $derived(page.url.searchParams.get("entityUuid") ?? "");
-  const deathTs = $derived(Number(page.url.searchParams.get("deathTs") ?? "-1"));
+  const entityUuid = page.url.searchParams.get("entityUuid") ?? "";
+  const deathTs = Number(page.url.searchParams.get("deathTs") ?? "-1");
 
   const liveData = $derived(liveCombatStore.data?.combat ?? null);
   const deathRecords = $derived(liveDeathsStore.data?.deaths ?? []);

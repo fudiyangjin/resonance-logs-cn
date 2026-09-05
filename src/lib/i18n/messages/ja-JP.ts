@@ -695,6 +695,7 @@ export const jaJPMessages = {
   "settings.shortcuts.toggleBossHp": "ボス HP 表示の切替",
   "settings.shortcuts.toggleOverlayEdit": "オーバーレイ編集モードの切替",
   "settings.shortcuts.toggleOverlayWindow": "ライブモニターの切替",
+  "settings.shortcuts.toggleMinimizeAll": "DPS/オーバーレイウィンドウの最小化・復元",
   "settings.debug.title": "デバッグ",
   "settings.debug.logFiles": "ログファイル",
   "settings.debug.logFilesDescription": "アプリのログフォルダを開く",

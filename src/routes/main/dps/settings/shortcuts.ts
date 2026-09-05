@@ -6,10 +6,11 @@ import {
 } from "$lib/utils.svelte";
 import {
   setOverlayWindowVisible,
+  toggleHudDomainWithRestore,
   toggleHudEditing,
+  toggleMinimizeMonitorWindows,
   toggleOverlayWindow,
 } from "$lib/overlay-window-visibility.svelte";
-import { toggleHudDomainEnabled } from "$lib/hud-domain-rules.svelte";
 import { register, unregisterAll } from "@tauri-apps/plugin-global-shortcut";
 
 export async function setupShortcuts() {
@@ -54,7 +55,7 @@ export async function registerShortcut(cmdId: string, shortcutKey: string) {
           if (event.state === "Pressed") {
             // Flips the persisted switch, same as the toolbox button, so the
             // scene resolver cannot undo it on the next scene change.
-            toggleHudDomainEnabled("game");
+            await toggleHudDomainWithRestore("game");
           }
         });
         break;
@@ -120,6 +121,14 @@ export async function registerShortcut(cmdId: string, shortcutKey: string) {
         await register(shortcutKey, async (event) => {
           if (event.state === "Pressed") {
             await toggleHudEditing();
+          }
+        });
+        break;
+
+      case "toggleMinimizeAll":
+        await register(shortcutKey, async (event) => {
+          if (event.state === "Pressed") {
+            await toggleMinimizeMonitorWindows();
           }
         });
         break;

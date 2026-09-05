@@ -88,7 +88,7 @@
     mainKey = getKeyName(e);
   }
 
-  function handleKeyUp(e: KeyboardEvent) {
+  async function handleKeyUp(e: KeyboardEvent) {
     e.preventDefault();
     const modKey = normalizeModifier(e.key);
 
@@ -109,7 +109,8 @@
 
       const cmd = inputs.find((c) => c.id === editingId);
       if (cmd) {
-        unregister(SETTINGS.shortcuts.state[cmd.id]);
+        const previous = SETTINGS.shortcuts.state[cmd.id];
+        if (previous) await unregister(previous);
         SETTINGS.shortcuts.state[cmd.id] = shortcutKey;
         registerShortcut(cmd.id, shortcutKey);
       }
@@ -174,6 +175,10 @@
     {
       id: "toggleOverlayWindow",
       labelKey: "settings.shortcuts.toggleOverlayWindow",
+    },
+    {
+      id: "toggleMinimizeAll",
+      labelKey: "settings.shortcuts.toggleMinimizeAll",
     },
   ] satisfies ShortcutInput[];
 </script>

@@ -191,7 +191,7 @@
             </td>
           </tr>
         {:else}
-          {#each rows as row, idx (`${row.record.victimEntityUuid}-${row.record.deathTimestampMs}`)}
+          {#each rows as row, idx (idx)}
             {@const rel = formatRelative(
               ipcNumber(row.record.deathTimestampMs),
             )}
@@ -259,7 +259,7 @@
             </td>
           </tr>
         {:else}
-          {#each rows as row, idx (`${row.record.victimEntityUuid}-${row.record.deathTimestampMs}`)}
+          {#each rows as row, idx (idx)}
             {@const rel = formatRelative(
               ipcNumber(row.record.deathTimestampMs),
             )}

@@ -643,6 +643,7 @@ export const zhCNMessages = {
   "settings.shortcuts.toggleBossHp": "切换 Boss 血量显示",
   "settings.shortcuts.toggleOverlayEdit": "切换遮罩编辑模式",
   "settings.shortcuts.toggleOverlayWindow": "开关实时监控",
+  "settings.shortcuts.toggleMinimizeAll": "一键最小化/弹出 DPS 与遮罩窗口",
   "settings.debug.title": "调试",
   "settings.debug.logFiles": "日志文件",
   "settings.debug.logFilesDescription": "打开应用日志所在文件夹",

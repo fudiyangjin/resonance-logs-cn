@@ -4,7 +4,7 @@
   import { liveCombatStore, liveDeathsStore } from "$lib/stores/live-topics.svelte";
   import DeathList from "$lib/components/death-replay/death-list.svelte";
 
-  const entityUuid = $derived(page.url.searchParams.get("entityUuid") ?? "");
+  const entityUuid = page.url.searchParams.get("entityUuid") ?? "";
 
   const liveData = $derived(liveCombatStore.data?.combat ?? null);
   const deathRecords = $derived(liveDeathsStore.data?.deaths ?? []);

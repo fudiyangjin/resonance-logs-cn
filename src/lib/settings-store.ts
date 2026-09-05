@@ -2461,6 +2461,7 @@ const DEFAULT_SETTINGS = {
     hardReset: "",
     toggleBossHp: "",
     toggleOverlayEdit: "",
+    toggleMinimizeAll: "",
   },
   moduleSync: {
     enabled: false,

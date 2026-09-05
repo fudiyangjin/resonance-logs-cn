@@ -214,7 +214,7 @@
             </td>
           </tr>
         {:else}
-          {#each sortedRows as row (row.entry.entityUuid)}
+          {#each sortedRows as row, idx (idx)}
             {@const info = resolveDisplayName(row.entry)}
             <tr
               class="relative border-t border-border/40 hover:bg-muted/60 transition-colors cursor-pointer"
@@ -328,7 +328,7 @@
           </thead>
         {/if}
         <tbody>
-          {#each sortedRows as row (row.entry.entityUuid)}
+          {#each sortedRows as row, idx (idx)}
             {@const info = resolveDisplayName(row.entry)}
             {#if compactMode}
               <tr

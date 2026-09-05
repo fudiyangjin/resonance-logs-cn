@@ -114,12 +114,10 @@
   const participantBuffs = $derived(record.participantBuffs ?? []);
   const participantDisplay = $derived.by(() => {
     const cards: Array<{
-      key: string;
       title: string;
       buffs: DeathBuffSnapshot[];
     }> = [
       {
-        key: "victim",
         title: t("components.deathReplay.buff.victim"),
         buffs: victimBuffs,
       },
@@ -135,14 +133,13 @@
       monsterNameCounts.set(name, (monsterNameCounts.get(name) ?? 0) + 1);
     }
 
-    for (const [index, participant] of participantBuffs.entries()) {
+    for (const participant of participantBuffs) {
       const title = resolveParticipantTitle(
         participant,
         monsterNameCounts,
         monsterNameIndexes,
       );
       cards.push({
-        key: getParticipantKey(participant, index),
         title,
         buffs: participant.buffs ?? [],
       });
@@ -287,16 +284,6 @@
     return `${buff.baseId}: ${resolveBuffName(buff)}`;
   }
 
-  function getParticipantKey(
-    participant: DeathParticipantBuffSnapshot,
-    index: number,
-  ): string {
-    return (
-      participant.entityUuid ??
-      `monster:${participant.monsterTypeId ?? "unknown"}:${index}`
-    );
-  }
-
   function resolveParticipantBaseTitle(
     participant: DeathParticipantBuffSnapshot,
   ): string {
@@ -347,7 +334,7 @@
       </div>
     {:else}
       <div class="flex flex-wrap gap-1.5">
-        {#each buffs as buff (`${buff.buffUuid}-${buff.baseId}`)}
+        {#each buffs as buff, idx (idx)}
           {@const icon = resolveBuffIcon(buff)}
           <div
             class="flex max-w-44 items-center gap-1.5 rounded border border-border/50 bg-card/70 px-1.5 py-1 text-xs text-muted-foreground"
@@ -393,7 +380,7 @@
       </button>
       {#if buffSnapshotsOpen}
         <div class="grid grid-cols-1 gap-2 border-t border-border/40 p-2">
-          {#each buffSnapshotCards as card (card.key)}
+          {#each buffSnapshotCards as card, idx (idx)}
             {@render buffSnapshotCard(card.title, card.buffs)}
           {/each}
         </div>

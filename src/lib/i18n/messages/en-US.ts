@@ -712,6 +712,7 @@ export const enUSMessages = {
   "settings.shortcuts.toggleBossHp": "Toggle Boss Health",
   "settings.shortcuts.toggleOverlayEdit": "Toggle Overlay Edit Mode",
   "settings.shortcuts.toggleOverlayWindow": "Toggle Live Monitor",
+  "settings.shortcuts.toggleMinimizeAll": "Minimize/Restore DPS & Overlay Windows",
   "settings.debug.title": "Debug",
   "settings.debug.logFiles": "Log Files",
   "settings.debug.logFilesDescription": "Open the app log folder",
