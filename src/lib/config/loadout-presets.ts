@@ -11,6 +11,7 @@ import blockSource from "./loadout-presets/block.json";
 import earthfortSource from "./loadout-presets/earthfort.json";
 import smiteSource from "./loadout-presets/smite.json";
 import lifebindSource from "./loadout-presets/lifebind.json";
+import vanguardSource from "./loadout-presets/vanguard.json";
 import concertoSource from "./loadout-presets/concerto.json";
 
 export type LoadoutPreset = {
@@ -106,6 +107,18 @@ const PRESET_DEFINITIONS: PresetDefinition[] = [
     palette: ["#bbf7d0", "#4ade80", "#fde68a"],
     talentStageCfgId: 111,
     source: lifebindSource,
+  },
+  {
+    id: "vanguard",
+    labels: {
+      "zh-CN": { name: "重装", subtitle: "青岚骑士 · 重装专精" },
+      "en-US": { name: "Vanguard", subtitle: "Wind Knight · Vanguard" },
+      "ja-JP": { name: "烈風", subtitle: "ゲイルランサー · 烈風特化" },
+    },
+    iconPath: "/images/class_specs/Vanguard.png",
+    palette: ["#4ddff6", "#0099c6", "#fde68a"],
+    talentStageCfgId: 107,
+    source: vanguardSource,
   },
   {
     id: "concerto",

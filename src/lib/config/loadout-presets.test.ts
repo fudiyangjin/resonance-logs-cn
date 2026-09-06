@@ -36,7 +36,7 @@ function resetWithStarterLoadout(): void {
 describe("built-in loadout presets", () => {
   beforeEach(resetWithStarterLoadout);
 
-  it("exposes the seven built-in class presets", () => {
+  it("exposes the eight built-in class presets", () => {
     const presets = buildLoadoutPresets("zh-CN");
     expect(presets.map((preset) => [preset.id, preset.name])).toEqual([
       ["radiant-shield", "光盾"],
@@ -45,6 +45,7 @@ describe("built-in loadout presets", () => {
       ["earthfort", "岩盾"],
       ["smite", "惩击"],
       ["lifebind", "愈合"],
+      ["vanguard", "重装"],
       ["concerto", "协奏"],
     ]);
     for (const preset of presets) {
@@ -84,6 +85,15 @@ describe("built-in loadout presets", () => {
     expect(lifebind.data.linkedTalentStageCfgId).toBe(111);
     expect(lifebind.data.skillProfile.selectedClass).toBe("verdant_oracle");
     expect(lifebind.data.skillProfile.monitoredBuffIds).toContain(2302421);
+
+    const vanguard = presets.find((preset) => preset.id === "vanguard")!;
+    expect(vanguard).toMatchObject({
+      subtitle: "青岚骑士 · 重装专精",
+      iconPath: "/images/class_specs/Vanguard.png",
+    });
+    expect(vanguard.data.linkedTalentStageCfgId).toBe(107);
+    expect(vanguard.data.skillProfile.selectedClass).toBe("wind_knight");
+    expect(vanguard.data.skillProfile.monitoredBuffIds).toContain(2302421);
   });
 
   it("tracks attribute-resonance coverage on every preset", () => {
