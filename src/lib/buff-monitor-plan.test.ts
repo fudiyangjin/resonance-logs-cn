@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 
 import {
   buildBuffTimelineIds,
@@ -156,6 +156,63 @@ describe("configured buff monitor plan", () => {
     );
     expect(buildPublishedBuffIds(withFactor)).toEqual(
       [...withFactor.factorPublishedIds].sort((left, right) => left - right),
+    );
+  });
+
+  it("lets the resource panel own flower rotation buffs only while it is shown", () => {
+    const flowerIds = [2202713, 2202714, 2202715, 2202716];
+
+    const shown = profile();
+    shown.selectedClass = "verdant_oracle";
+    shown.overlayVisibility = {
+      ...shown.overlayVisibility,
+      showResourceGroup: true,
+    };
+    const shownPlan = buildConfiguredBuffPlan(shown);
+    for (const id of flowerIds) {
+      expect(shownPlan.liveOwnedBuffIds.has(id)).toBe(true);
+    }
+    expect(buildPublishedBuffIds(shownPlan)).toEqual(
+      expect.arrayContaining(flowerIds),
+    );
+
+    const hidden = profile();
+    hidden.selectedClass = "verdant_oracle";
+    hidden.overlayVisibility = {
+      ...hidden.overlayVisibility,
+      showResourceGroup: false,
+    };
+    const hiddenPlan = buildConfiguredBuffPlan(hidden);
+    for (const id of flowerIds) {
+      expect(hiddenPlan.liveOwnedBuffIds.has(id)).toBe(false);
+    }
+
+    const sectionHidden = profile();
+    sectionHidden.selectedClass = "verdant_oracle";
+    sectionHidden.overlayVisibility = {
+      ...sectionHidden.overlayVisibility,
+      showResourceGroup: true,
+    };
+    sectionHidden.resourceSectionLayouts = {
+      "flowerRotation:2202716": {
+        position: { x: 0, y: 0 },
+        scale: 1,
+        visible: false,
+      },
+    };
+    const sectionHiddenPlan = buildConfiguredBuffPlan(sectionHidden);
+    for (const id of flowerIds) {
+      expect(sectionHiddenPlan.liveOwnedBuffIds.has(id)).toBe(false);
+    }
+
+    const otherClass = profile();
+    otherClass.selectedClass = "wind_knight";
+    otherClass.overlayVisibility = {
+      ...otherClass.overlayVisibility,
+      showResourceGroup: true,
+    };
+    expect([...buildConfiguredBuffPlan(otherClass).liveOwnedBuffIds]).toEqual(
+      [],
     );
   });
 });

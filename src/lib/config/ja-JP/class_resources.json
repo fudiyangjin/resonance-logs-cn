@@ -67,6 +67,11 @@
       "currentId": 15011,
       "maxId": 15017,
       "label": "Flower"
+    },
+    {
+      "type": "flowerRotation",
+      "countdownBuffId": 2202716,
+      "label": "花株"
     }
   ]
 }

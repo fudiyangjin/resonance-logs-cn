@@ -1157,6 +1157,12 @@ export type CustomPanelGroup = {
   style: CustomPanelStyle;
 };
 
+export type ResourceSectionLayout = {
+  position: Point;
+  scale: number;
+  visible: boolean;
+};
+
 export type BuffGroup = {
   id: string;
   name: string;
@@ -1195,6 +1201,10 @@ export type SkillMonitorProfile = {
   individualMonitorAllGroup?: BuffGroup | null;
   userCounterRules?: UserCounterRule[];
   customPanelGroups?: CustomPanelGroup[];
+  /** Per-resource-section layout overrides keyed by resource section key
+   * (see `getResourceSectionKey`). Missing keys fall back to the legacy
+   * `resourceGroup` position/scale. */
+  resourceSectionLayouts?: Record<string, ResourceSectionLayout>;
   factorSlotLabels?: Record<string, string>;
   inlineBuffEntries?: InlineBuffEntry[];
   buffCoverageEntries?: BuffCoverageEntry[];

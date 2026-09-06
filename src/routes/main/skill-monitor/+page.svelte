@@ -8,6 +8,10 @@
   import TabShieldDetailStyle from "./tab-shield-detail-style.svelte";
   import TabOverlay from "./tab-overlay.svelte";
   import {
+    ensureResourceSections,
+    updateResourceSectionLayout,
+  } from "$lib/resource-sections";
+  import {
     expandBuffSelection,
     getAvailableBuffDefinitions,
     getBuffCategoryDefinitions,
@@ -58,6 +62,7 @@
     getCounterRules,
     getClassConfigs,
     getDurationSkillsByClass,
+    getResourceCountdownBuffIds,
     getSlotTemplates,
     getSourceTemplates,
     getSkillsByClass,
@@ -438,7 +443,17 @@
       .flatMap((group) => group.entries)
       .filter((entry) => entry.sourceType === "buff")
       .map((entry) => entry.sourceId);
-    return uniqueIds([...expandedIds, ...groupBuffIds, ...customPanelBuffIds]);
+    // Countdown buffs drawn by the class resource panel (flower rotation)
+    // can carry an alert rule even though they never sit in a buff group.
+    const resourceCountdownIds = getResourceCountdownBuffIds(
+      profile.selectedClass,
+    );
+    return uniqueIds([
+      ...expandedIds,
+      ...groupBuffIds,
+      ...customPanelBuffIds,
+      ...resourceCountdownIds,
+    ]);
   }
 
   function filterBuffAlertsForProfile(
@@ -787,6 +802,26 @@
         [key]: checked,
       },
     }));
+  }
+
+  const resourceSections = $derived(
+    ensureResourceSections(activeProfile).map((section) => ({
+      key: section.key,
+      label: section.definition.label,
+      visible: section.layout.visible,
+    })),
+  );
+
+  function toggleResourceSectionVisibility(key: string) {
+    updateActiveProfile((profile) => {
+      const current = ensureResourceSections(profile).find(
+        (section) => section.key === key,
+      );
+      if (!current) return profile;
+      return updateResourceSectionLayout(profile, key, {
+        visible: !current.layout.visible,
+      });
+    });
   }
 
   function toggleOverlaySectionVisibility(
@@ -2170,6 +2205,8 @@
       {showCustomPanelGroup}
       {showShieldDetailGroup}
       {showBuffCoverageGroup}
+      {resourceSections}
+      {toggleResourceSectionVisibility}
       {toggleOverlaySectionVisibility}
     />
   {/if}

@@ -397,6 +397,11 @@ function hasActiveHudTimeline(): boolean {
     ) {
       return true;
     }
+    // Cells owned by the resource panel (e.g. flower rotation countdown)
+    // register their own timelines instead of going through the buff areas.
+    if (hasRegisteredHudTimeline()) {
+      return true;
+    }
   }
 
   if (interests.monster) {

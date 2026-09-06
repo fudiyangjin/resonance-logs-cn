@@ -9,6 +9,8 @@
     showCustomPanelGroup: boolean;
     showShieldDetailGroup: boolean;
     showBuffCoverageGroup: boolean;
+    resourceSections: { key: string; label: string; visible: boolean }[];
+    toggleResourceSectionVisibility: (key: string) => void;
     toggleOverlaySectionVisibility: (
       key:
         | "showSkillCdGroup"
@@ -29,6 +31,8 @@
     showCustomPanelGroup,
     showShieldDetailGroup,
     showBuffCoverageGroup,
+    resourceSections,
+    toggleResourceSectionVisibility,
     toggleOverlaySectionVisibility,
   }: Props = $props();
 
@@ -114,4 +118,27 @@
       {t("skillMonitor.overlay.help")}
     </p>
   </div>
+  {#if showResourceGroup && resourceSections.length > 0}
+    <div class="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+      <h3 class="text-sm font-medium text-foreground">
+        {t("skillMonitor.overlay.resourceSections")}
+      </h3>
+      <div class="flex flex-wrap gap-2">
+        {#each resourceSections as section (section.key)}
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors {section.visible
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+            onclick={() => toggleResourceSectionVisibility(section.key)}
+          >
+            {section.label}：{visibilityState(section.visible)}
+          </button>
+        {/each}
+      </div>
+      <p class="text-xs text-muted-foreground">
+        {t("skillMonitor.overlay.resourceSectionsHelp")}
+      </p>
+    </div>
+  {/if}
 </div>

@@ -9,6 +9,10 @@ import {
 } from "./overlay-profile.svelte.js";
 import { overlayRuntime } from "./overlay-runtime.svelte.js";
 import {
+  resetResourceSectionLayouts,
+  updateResourceSectionLayout,
+} from "$lib/resource-sections";
+import {
   iconDisplayBuffs,
   skillDurationDisplays,
 } from "./overlay-display.svelte.js";
@@ -314,6 +318,28 @@ export function setCustomPanelGroupScale(groupId: string, value: number) {
   );
 }
 
+export function setResourceSectionPosition(
+  key: string,
+  nextPos: { x: number; y: number },
+) {
+  updateActiveProfile((profile) =>
+    updateResourceSectionLayout(profile, key, { position: nextPos }),
+  );
+}
+
+export function setResourceSectionScale(key: string, value: number) {
+  const nextValue = clampGroupScale(value);
+  updateActiveProfile((profile) =>
+    updateResourceSectionLayout(profile, key, { scale: nextValue }),
+  );
+}
+
+export function setResourceSectionVisible(key: string, visible: boolean) {
+  updateActiveProfile((profile) =>
+    updateResourceSectionLayout(profile, key, { visible }),
+  );
+}
+
 export function setIndividualAllGroupPosition(nextPos: {
   x: number;
   y: number;
@@ -388,9 +414,11 @@ export function onGlobalPointerMove(e: PointerEvent) {
       e.clientX -
       overlayRuntime.resizeState.startX +
       (e.clientY - overlayRuntime.resizeState.startY);
+    const targetKind = overlayRuntime.resizeState.target.kind;
     const isIconSize =
-      overlayRuntime.resizeState.target.kind !== "group" &&
-      overlayRuntime.resizeState.target.kind !== "customPanelGroup";
+      targetKind !== "group" &&
+      targetKind !== "customPanelGroup" &&
+      targetKind !== "resourceSection";
     overlayRuntime.resizeState.nextValue = isIconSize
       ? clampIconSize(overlayRuntime.resizeState.startValue + delta / 2)
       : clampGroupScale(overlayRuntime.resizeState.startValue + delta / 300);
@@ -487,6 +515,8 @@ function commitDragPreview() {
     setGroupPosition(drag.target.key, nextPos);
   } else if (drag.target.kind === "customPanelGroup") {
     setCustomPanelGroupPosition(drag.target.groupId, nextPos);
+  } else if (drag.target.kind === "resourceSection") {
+    setResourceSectionPosition(drag.target.key, nextPos);
   } else if (drag.target.kind === "individualAllGroup") {
     setIndividualAllGroupPosition(nextPos);
   } else if (drag.target.kind === "buffGroup") {
@@ -508,6 +538,8 @@ function commitResizePreview() {
     setGroupScale(resize.target.key, nextValue);
   } else if (resize.target.kind === "customPanelGroup") {
     setCustomPanelGroupScale(resize.target.groupId, nextValue);
+  } else if (resize.target.kind === "resourceSection") {
+    setResourceSectionScale(resize.target.key, nextValue);
   } else if (resize.target.kind === "individualAllGroup") {
     setIndividualAllGroupIconSize(nextValue);
   } else if (resize.target.kind === "buffGroup") {
@@ -525,6 +557,10 @@ export function resetOverlaySizes() {
   updateActiveProfile((profile) => ({
     ...profile,
     overlaySizes: { ...DEFAULT_OVERLAY_SIZES },
+    resourceSectionLayouts: resetResourceSectionLayouts(
+      profile.resourceSectionLayouts,
+      ["scale"],
+    ),
     customPanelGroups: ensureCustomPanelGroups(profile).map((group) => ({
       ...group,
       scale: 1,
@@ -537,6 +573,10 @@ export function resetOverlayPositions() {
   updateActiveProfile((profile) => ({
     ...profile,
     overlayPositions: { ...DEFAULT_OVERLAY_POSITIONS },
+    resourceSectionLayouts: resetResourceSectionLayouts(
+      profile.resourceSectionLayouts,
+      ["position"],
+    ),
     customPanelGroups: ensureCustomPanelGroups(profile).map((group, index) => ({
       ...group,
       position: {

@@ -1428,6 +1428,9 @@ export const jaJPMessages = {
   "skillMonitor.overlay.buffCoverage": "バフ稼働率エリア: {state}",
   "skillMonitor.overlay.help":
     "ボタンをクリックして表示を切替。プロファイルごとに保存",
+  "skillMonitor.overlay.resourceSections": "リソース区分",
+  "skillMonitor.overlay.resourceSectionsHelp":
+    "現在の職業の各リソース区分は個別に表示/非表示でき、オーバーレイ編集モードで独立してドラッグ・拡縮できます",
   "monsterMonitor.title": "モンスターモニター",
   "monsterMonitor.description":
     "現在のターゲットモンスターの Buff と関連データをモニター",
@@ -1662,6 +1665,7 @@ export const jaJPMessages = {
     "スキルモニターページで稼働率バフを追加してください",
   "gameOverlay.groupedBuff.empty":
     "先にスキルモニターページで Buff グループを作成してください",
+  "gameOverlay.flower.next": "次",
   "gameOverlay.timer.infinite": "∞",
   "gameOverlay.timer.empty": "--",
   "gameOverlay.buff.fantasyTierSuffix": "{name} | {level}階",

@@ -94,6 +94,30 @@
       "imageOff": "/images/verdant_oracle/res/main_flor_off_5581354605487572302.png",
       "compactAbove": 2,
       "compactMultiplierPrefix": "x"
+    },
+    {
+      "type": "flowerRotation",
+      "label": "花株",
+      "countdownBuffId": 2202716,
+      "nominalDurationMs": 45000,
+      "backgroundImage": "/images/verdant_oracle/res/fighters_flower_bg_8247055124109851030.png",
+      "petals": [
+        {
+          "color": "red",
+          "buffBaseId": 2202713,
+          "image": "/images/verdant_oracle/res/fightres_flower_1_606828007964362943.png"
+        },
+        {
+          "color": "yellow",
+          "buffBaseId": 2202714,
+          "image": "/images/verdant_oracle/res/fightres_flower_2_-4446899572714430816.png"
+        },
+        {
+          "color": "blue",
+          "buffBaseId": 2202715,
+          "image": "/images/verdant_oracle/res/fightres_flower_3_-8688416634657841847.png"
+        }
+      ]
     }
   ]
 }

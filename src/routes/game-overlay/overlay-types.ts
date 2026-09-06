@@ -89,6 +89,7 @@ export type DragTarget =
       >;
     }
   | { kind: "customPanelGroup"; groupId: string }
+  | { kind: "resourceSection"; key: string }
   | { kind: "iconBuff"; baseId: number }
   | { kind: "skillDuration"; skillId: number }
   | { kind: "categoryIcon"; categoryKey: BuffCategoryKey }
@@ -110,6 +111,7 @@ export type ResizeTarget =
       key: OverlayScaleKey;
     }
   | { kind: "customPanelGroup"; groupId: string }
+  | { kind: "resourceSection"; key: string }
   | { kind: "iconBuff"; baseId: number }
   | { kind: "skillDuration"; skillId: number }
   | { kind: "categoryIcon"; categoryKey: BuffCategoryKey }

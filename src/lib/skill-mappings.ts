@@ -42,7 +42,7 @@ export type ClassSkillConfig = {
   defaultMonitoredBuffIds?: number[];
 };
 
-export type ResourceDefinition = {
+export type GaugeResourceDefinition = {
   type: "bar" | "charges";
   label: string;
   currentId: number;
@@ -54,6 +54,32 @@ export type ResourceDefinition = {
   compactAbove?: number;
   compactMultiplierPrefix?: string;
 };
+
+export type FlowerColor = "red" | "yellow" | "blue";
+
+export type FlowerPetalDefinition = {
+  color: FlowerColor;
+  buffBaseId: number;
+  image: string;
+};
+
+/**
+ * Multi-buff composite: a background canvas with one stackable petal image
+ * per flower buff, plus the regeneration countdown buff. `petals` order is
+ * the rotation order.
+ */
+export type FlowerRotationResourceDefinition = {
+  type: "flowerRotation";
+  label: string;
+  countdownBuffId: number;
+  nominalDurationMs: number;
+  backgroundImage: string;
+  petals: FlowerPetalDefinition[];
+};
+
+export type ResourceDefinition =
+  | GaugeResourceDefinition
+  | FlowerRotationResourceDefinition;
 
 export type SpecialBuffDisplay = {
   buffBaseId: number;
@@ -346,15 +372,29 @@ function derivationKey(
   return `${sourceSkillId}:${derivedSkillId}:${triggerBuffBaseId}`;
 }
 
-function resourceKey(
-  item: Pick<Partial<ResourceDefinition>, "type" | "currentId" | "maxId">,
-): string | null {
+function resourceKey(item: {
+  type?: string;
+  currentId?: number;
+  maxId?: number;
+  countdownBuffId?: number;
+}): string | null {
+  if (item.type === "flowerRotation") {
+    const countdownBuffId = numberKey(item.countdownBuffId);
+    return countdownBuffId === null
+      ? null
+      : `flowerRotation:${countdownBuffId}`;
+  }
   const type =
     item.type === "bar" || item.type === "charges" ? item.type : null;
   const currentId = numberKey(item.currentId);
   const maxId = numberKey(item.maxId);
   if (!type || currentId === null || maxId === null) return null;
   return `${type}:${currentId}:${maxId}`;
+}
+
+/** Stable identity of a class resource entry, used for per-section overlay layout. */
+export function getResourceSectionKey(item: ResourceDefinition): string {
+  return resourceKey(item) ?? `${item.type}:${item.label}`;
 }
 
 function counterRuleSlotLabel(
@@ -994,6 +1034,36 @@ export function findResourcesByClass(
   locale = getLocale(),
 ): ResourceDefinition[] {
   return getClassResourceMap(locale)[classKey] || [];
+}
+
+export function findFlowerRotationResources(
+  classKey: string,
+  locale = getLocale(),
+): FlowerRotationResourceDefinition[] {
+  return findResourcesByClass(classKey, locale).filter(
+    (resource): resource is FlowerRotationResourceDefinition =>
+      resource.type === "flowerRotation",
+  );
+}
+
+/**
+ * Buff ids rendered live by the class resource panel (locale independent).
+ * The ordinary buff area yields to these so a flower is never drawn twice.
+ */
+export function getResourceOwnedBuffIds(classKey: string): number[] {
+  const result: number[] = [];
+  for (const resource of CLASS_RESOURCES[classKey] ?? []) {
+    if (resource.type !== "flowerRotation") continue;
+    result.push(resource.countdownBuffId);
+    for (const petal of resource.petals) result.push(petal.buffBaseId);
+  }
+  return result;
+}
+
+export function getResourceCountdownBuffIds(classKey: string): number[] {
+  return (CLASS_RESOURCES[classKey] ?? []).flatMap((resource) =>
+    resource.type === "flowerRotation" ? [resource.countdownBuffId] : [],
+  );
 }
 
 export function findSpecialBuffDisplays(

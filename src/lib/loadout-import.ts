@@ -259,6 +259,12 @@ const customPanelGroupSchema = v.object({
   style: customPanelStyleSchema,
 });
 
+const resourceSectionLayoutSchema = v.object({
+  position: pointSchema,
+  scale: finiteNumberSchema,
+  visible: v.boolean(),
+});
+
 const userCounterRuleSchema = v.object({
   ruleId: finiteNumberSchema,
   name: v.string(),
@@ -400,6 +406,10 @@ const skillProfileSchema = v.object({
   customPanelGroups: v.optional(
     v.array(customPanelGroupSchema),
     defaultClone(defaultSkill.customPanelGroups ?? []),
+  ),
+  resourceSectionLayouts: v.optional(
+    v.record(v.string(), resourceSectionLayoutSchema),
+    defaultClone(defaultSkill.resourceSectionLayouts ?? {}),
   ),
   factorSlotLabels: v.optional(
     stringRecordSchema,

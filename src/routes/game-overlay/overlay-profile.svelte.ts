@@ -7,6 +7,7 @@ import {
   type TextBuffPanelStyle,
 } from "$lib/settings-store";
 import { buildConfiguredBuffPlan } from "$lib/buff-monitor-plan";
+import { ensureResourceSections } from "$lib/resource-sections";
 import { ensureBuffIconOverrides } from "$lib/buff-icons";
 import {
   activeProfile as sharedActiveProfile,
@@ -115,6 +116,9 @@ const _enabledPanelAttrs = $derived.by(() =>
 const _customPanelGroups = $derived.by(
   () => _configuredBuffPlan.customPanelGroups,
 );
+const _resourceSections = $derived.by(() =>
+  ensureResourceSections(_activeProfile),
+);
 const _resolvedUserCounterRules = $derived.by<CounterRulePreset[]>(() =>
   resolveUserCounterRulesToPresets(_activeProfile?.userCounterRules),
 );
@@ -212,6 +216,10 @@ export function enabledPanelAttrs() {
 
 export function customPanelGroups() {
   return _customPanelGroups;
+}
+
+export function resourceSections() {
+  return _resourceSections;
 }
 
 export function resolvedUserCounterRules() {

@@ -1321,6 +1321,9 @@ export const zhCNMessages = {
   "skillMonitor.overlay.shieldDetail": "血量护盾区：{state}",
   "skillMonitor.overlay.buffCoverage": "Buff覆盖率区：{state}",
   "skillMonitor.overlay.help": "点击按钮切换显示状态（按方案保存）",
+  "skillMonitor.overlay.resourceSections": "资源分区",
+  "skillMonitor.overlay.resourceSectionsHelp":
+    "当前职业的每个资源分区可单独显示/隐藏，并在覆盖层编辑模式下独立拖动和缩放",
   "monsterMonitor.title": "怪物监控",
   "monsterMonitor.description": "监控 Boss buff 等数据",
   "monsterMonitor.actions.toggleOverlay": "开关怪物监控",
@@ -1542,6 +1545,7 @@ export const zhCNMessages = {
   "gameOverlay.coverage.count": "{value}次",
   "gameOverlay.coverage.empty": "请先在技能监控页添加覆盖率监听 Buff",
   "gameOverlay.groupedBuff.empty": "请先在技能监控页创建 Buff 分组",
+  "gameOverlay.flower.next": "下一朵",
   "gameOverlay.timer.infinite": "∞",
   "gameOverlay.timer.empty": "--",
   "gameOverlay.buff.fantasyTierSuffix": "{name} | {level}阶",

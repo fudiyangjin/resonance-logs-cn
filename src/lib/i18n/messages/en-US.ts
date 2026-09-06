@@ -1450,6 +1450,9 @@ export const enUSMessages = {
   "skillMonitor.overlay.buffCoverage": "Buff Coverage Area: {state}",
   "skillMonitor.overlay.help":
     "Click a button to toggle visibility. Saved per profile",
+  "skillMonitor.overlay.resourceSections": "Resource sections",
+  "skillMonitor.overlay.resourceSectionsHelp":
+    "Each resource section of the current class can be shown/hidden separately and dragged/scaled independently in overlay edit mode",
   "monsterMonitor.title": "Monster Monitor",
   "monsterMonitor.description":
     "Monitor current target monster buffs and related data",
@@ -1682,6 +1685,7 @@ export const enUSMessages = {
     "Add coverage buffs in the skill monitor page first",
   "gameOverlay.groupedBuff.empty":
     "Create buff groups on the Skill Monitor page first",
+  "gameOverlay.flower.next": "Next",
   "gameOverlay.timer.infinite": "∞",
   "gameOverlay.timer.empty": "--",
   "gameOverlay.buff.fantasyTierSuffix": "{name} | Tier {level}",

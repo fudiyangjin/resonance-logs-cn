@@ -1,5 +1,6 @@
 import { ensureCustomPanelGroups } from "$lib/custom-panel-utils";
 import { expandBuffSelection } from "$lib/config/buff-name-table";
+import { isFlowerSectionVisible } from "$lib/resource-sections";
 import {
   ensureBuffCoverageEntries,
   ensureBuffGroups,
@@ -7,6 +8,7 @@ import {
 } from "$lib/skill-monitor-normalize";
 import {
   getDefaultMonitoredBuffIds,
+  getResourceOwnedBuffIds,
   getSeasonCultivateFactorConfiguredEffectBuffIds,
   getSeasonNodeBuffIds,
   getSeasonNodeTrackedBuffIds,
@@ -110,9 +112,16 @@ export function buildConfiguredBuffPlan(
       .filter((entry) => entry.showInLive)
       .map((entry) => entry.buffId),
   );
+  // The flower rotation section renders these itself; only claim them while
+  // that section is actually shown so hiding it restores the ordinary buff
+  // behaviour.
+  const resourceOwnedBuffIds = isFlowerSectionVisible(profile)
+    ? validIdSet(getResourceOwnedBuffIds(profile.selectedClass))
+    : EMPTY_IDS;
   const liveOwnedBuffIds = new Set<number>([
     ...customBuffIds,
     ...liveCoverageBuffIds,
+    ...resourceOwnedBuffIds,
   ]);
   const monitorAll =
     (profile.buffDisplayMode === "grouped" &&

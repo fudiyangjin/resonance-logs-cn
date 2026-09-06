@@ -4,7 +4,7 @@
   import GroupedBuffDisplay from "../game-overlay/GroupedBuffDisplay.svelte";
   import IndividualBuffDisplay from "../game-overlay/IndividualBuffDisplay.svelte";
   import PanelAttrGroup from "../game-overlay/PanelAttrGroup.svelte";
-  import ResourceGroup from "../game-overlay/ResourceGroup.svelte";
+  import ResourceSections from "../game-overlay/ResourceSections.svelte";
   import ShieldDetailGroup from "../game-overlay/ShieldDetailGroup.svelte";
   import SkillCdGroup from "../game-overlay/SkillCdGroup.svelte";
   import SkillDurationDisplay from "../game-overlay/SkillDurationDisplay.svelte";
@@ -32,7 +32,7 @@
     <SkillDurationDisplay />
   {/if}
   {#if visibility.showResourceGroup}
-    <ResourceGroup />
+    <ResourceSections />
   {/if}
   {#if visibility.showPanelAttrGroup}
     <PanelAttrGroup />
