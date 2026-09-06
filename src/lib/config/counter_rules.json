@@ -402,5 +402,29 @@
         "onBuffRemove": "noOp"
       }
     ]
+  },
+  {
+    "ruleId": 16,
+    "name": "森语S4-灵感X6苍月慰藉",
+    "sources": [
+      {
+        "skillCast": {
+          "skillBaseIds": [1507],
+          "increment": 1
+        }
+      }
+    ],
+    "effectSlots": [
+      {
+        "slotId": 1,
+        "threshold": 5,
+        "displayMode": "remainingToThreshold",
+        "resetBuffId": 2202715,
+        "resetSourceConfigId": 3056510,
+        "onBuffAdd": "reset",
+        "onBuffChange": "reset",
+        "onBuffRemove": "noOp"
+      }
+    ]
   }
 ]
