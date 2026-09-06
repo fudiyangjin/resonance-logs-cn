@@ -235,6 +235,11 @@
         "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx05.png"
       },
       {
+        "skillId": 1615,
+        "name": "荒川之寂灭",
+        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx06.png"
+      },
+      {
         "skillId": 1616,
         "name": "如川流华斩",
         "maxCharges": 2,

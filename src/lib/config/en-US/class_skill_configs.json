@@ -91,6 +91,7 @@
       { "skillId": 1613, "name": "Wildfire Dance" },
       { "skillId": 1617, "name": "Endless Flamefiend" },
       { "skillId": 1614, "name": "Unbound Meteor" },
+      { "skillId": 1615, "name": "Harukawa Annihilation" },
       { "skillId": 1616, "name": "Flowing Splendor Slash" }
     ],
     "derivations": [
