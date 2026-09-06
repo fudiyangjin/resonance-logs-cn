@@ -30,6 +30,11 @@
     "icon": "/images/marksman/skill/weapon_gj-01_kx02_-8721967237189344326.png"
   },
   {
+    "skillId": 2238,
+    "name": "爆炸射击",
+    "icon": "/images/marksman/skill/weapon_gj-01_kx08_-6570599884307306030.png"
+  },
+  {
     "skillId": 1923,
     "name": "砂岩守护",
     "icon": "/images/heavy_guardian/skill/weapon_wr-01_kx06_2700380891417243473.png"
@@ -75,6 +80,11 @@
     "icon": "/images/flame_berserker/skill/weapon_sf-01_kx08.png"
   },
   {
+    "skillId": 1621,
+    "name": "炎魔天落杀",
+    "icon": "/images/flame_berserker/skill/weapon_sf-01_kx05.png"
+  },
+  {
     "skillId": 1243,
     "name": "冰之灌注",
     "icon": "/images/frost_mage/skill/weapon_mz-01_kx01_-8852182945774833470.png"
@@ -93,5 +103,10 @@
     "skillId": 1731,
     "name": "千雷闪影之意",
     "icon": "/images/stormblade/skill/weapon_tdl-01_kx08_1310086718716380591.png"
+  },
+  {
+    "skillId": 1737,
+    "name": "神罚之镰",
+    "icon": "/images/stormblade/skill/weapon_tdl-01_tf01_5544459437439574016.png"
   }
 ]

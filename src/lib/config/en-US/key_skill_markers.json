@@ -5,8 +5,11 @@
   { "skillId": 1420, "name": "Windborne Grace" },
   { "skillId": 1431, "name": "Sharp Impact" },
   { "skillId": 1617, "name": "Endless Flamefiend" },
+  { "skillId": 1621, "name": "Hellfire Meteor" },
   { "skillId": 1243, "name": "Ice Infusion" },
   { "skillId": 1240, "name": "Frozen Gale" },
   { "skillId": 1730, "name": "Infinite Thunder" },
-  { "skillId": 1731, "name": "Thousand Thunder Flashes" }
+  { "skillId": 1731, "name": "Thousand Thunder Flashes" },
+  { "skillId": 1737, "name": "Divine Sickle" },
+  { "skillId": 2238, "name": "Blast Shot" }
 ]
