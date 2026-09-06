@@ -10,6 +10,7 @@ import recoverySource from "./loadout-presets/recovery.json";
 import blockSource from "./loadout-presets/block.json";
 import earthfortSource from "./loadout-presets/earthfort.json";
 import smiteSource from "./loadout-presets/smite.json";
+import lifebindSource from "./loadout-presets/lifebind.json";
 import concertoSource from "./loadout-presets/concerto.json";
 
 export type LoadoutPreset = {
@@ -93,6 +94,18 @@ const PRESET_DEFINITIONS: PresetDefinition[] = [
     palette: ["#d9f99d", "#a3e635", "#fde68a"],
     talentStageCfgId: 110,
     source: smiteSource,
+  },
+  {
+    id: "lifebind",
+    labels: {
+      "zh-CN": { name: "愈合", subtitle: "森语者 · 愈合专精" },
+      "en-US": { name: "Lifebind", subtitle: "Verdant Oracle · Lifebind" },
+      "ja-JP": { name: "森癒", subtitle: "ヴァーダントオラクル · 森癒特化" },
+    },
+    iconPath: "/images/class_specs/Lifebind.png",
+    palette: ["#bbf7d0", "#4ade80", "#fde68a"],
+    talentStageCfgId: 111,
+    source: lifebindSource,
   },
   {
     id: "concerto",

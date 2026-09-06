@@ -459,7 +459,47 @@
     "monitoredSkillDurationIds": [],
     "monitoredSkillIds": [],
     "name": "光盾-buff",
+    "buffCoverageEntries": [
+      {
+        "id": "coverage_preset_2207261",
+        "buffId": 2207261,
+        "label": "",
+        "showInLive": false
+      },
+      {
+        "id": "coverage_preset_2207651",
+        "buffId": 2207651,
+        "label": "",
+        "showInLive": false
+      },
+      {
+        "id": "coverage_preset_2110034",
+        "buffId": 2110034,
+        "label": "",
+        "showInLive": false
+      }
+    ],
+    "buffCoverageStyle": {
+      "backgroundEnabled": false,
+      "backgroundOpacity": 0.76,
+      "fontSize": 13,
+      "gap": 4,
+      "nameColor": "#e5e7eb",
+      "progressColor": "#34d399",
+      "progressOpacity": 0.4,
+      "showCount": true,
+      "showName": true,
+      "showProgress": true,
+      "showRemaining": true,
+      "showStateDot": true,
+      "textShadowEnabled": true,
+      "valueColor": "#6ee7b7"
+    },
     "overlayPositions": {
+      "buffCoverageGroup": {
+        "x": 1103,
+        "y": 565
+      },
       "categoryIconPositions": {
         "alchemy": {
           "x": 423,
@@ -547,6 +587,7 @@
       }
     },
     "overlaySizes": {
+      "buffCoverageGroupScale": 1,
       "categoryIconSizes": {},
       "customPanelGroupScale": 1,
       "iconBuffSizes": {
@@ -579,6 +620,7 @@
       "textShadowEnabled": true
     },
     "overlayVisibility": {
+      "showBuffCoverageGroup": true,
       "showCustomPanelGroup": true,
       "showPanelAttrGroup": true,
       "showResourceGroup": false,

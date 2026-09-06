@@ -36,7 +36,7 @@ function resetWithStarterLoadout(): void {
 describe("built-in loadout presets", () => {
   beforeEach(resetWithStarterLoadout);
 
-  it("exposes the six built-in class presets", () => {
+  it("exposes the seven built-in class presets", () => {
     const presets = buildLoadoutPresets("zh-CN");
     expect(presets.map((preset) => [preset.id, preset.name])).toEqual([
       ["radiant-shield", "光盾"],
@@ -44,6 +44,7 @@ describe("built-in loadout presets", () => {
       ["block", "格挡"],
       ["earthfort", "岩盾"],
       ["smite", "惩击"],
+      ["lifebind", "愈合"],
       ["concerto", "协奏"],
     ]);
     for (const preset of presets) {
@@ -74,6 +75,42 @@ describe("built-in loadout presets", () => {
 
     const smite = presets.find((preset) => preset.id === "smite")!;
     expect(smite.data.skillProfile.selectedClass).toBe("verdant_oracle");
+
+    const lifebind = presets.find((preset) => preset.id === "lifebind")!;
+    expect(lifebind).toMatchObject({
+      subtitle: "森语者 · 愈合专精",
+      iconPath: "/images/class_specs/Lifebind.png",
+    });
+    expect(lifebind.data.linkedTalentStageCfgId).toBe(111);
+    expect(lifebind.data.skillProfile.selectedClass).toBe("verdant_oracle");
+    expect(lifebind.data.skillProfile.monitoredBuffIds).toContain(2302421);
+  });
+
+  it("tracks attribute-resonance coverage on every preset", () => {
+    const coverageBuffIds = [2207261, 2207651, 2110034];
+    for (const preset of buildLoadoutPresets("zh-CN")) {
+      const profile = preset.data.skillProfile;
+      expect(
+        profile.buffCoverageEntries?.map((entry) => entry.buffId),
+        preset.id,
+      ).toEqual(coverageBuffIds);
+      expect(profile.overlayVisibility.showBuffCoverageGroup).toBe(true);
+
+      const liveById = new Map(
+        profile.buffCoverageEntries?.map((entry) => [
+          entry.buffId,
+          entry.showInLive,
+        ]),
+      );
+      if (preset.id === "concerto") {
+        expect(liveById.get(2207261)).toBe(true);
+        expect(liveById.get(2207651)).toBe(true);
+      } else {
+        expect(liveById.get(2207261)).toBe(false);
+        expect(liveById.get(2207651)).toBe(false);
+      }
+      expect(liveById.get(2110034)).toBe(false);
+    }
   });
 
   it("never ships all-white panel styles in any preset", () => {
