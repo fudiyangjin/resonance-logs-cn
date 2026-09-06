@@ -48,6 +48,12 @@
         "derivedName": "龍砲"
       },
       {
+        "sourceSkillId": 1401,
+        "derivedSkillId": 1411,
+        "triggerBuffBaseId": 2205301,
+        "derivedName": "疾馳鋒刃"
+      },
+      {
         "sourceSkillId": 1430,
         "derivedSkillId": 1430,
         "triggerBuffBaseId": 31901,

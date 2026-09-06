@@ -48,6 +48,12 @@
         "derivedName": "Drake Cannon"
       },
       {
+        "sourceSkillId": 1401,
+        "derivedSkillId": 1411,
+        "triggerBuffBaseId": 2205301,
+        "derivedName": "Swift Blade"
+      },
+      {
         "sourceSkillId": 1430,
         "derivedSkillId": 1430,
         "triggerBuffBaseId": 31901,
