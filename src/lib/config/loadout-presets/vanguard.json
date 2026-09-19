@@ -1,6 +1,6 @@
 {
   "kind": "resonance-logs-loadout",
-  "version": 1,
+  "version": 2,
   "name": "重装",
   "skillProfile": {
     "name": "重装-buff",
@@ -832,7 +832,6 @@
     },
     "fantasyShowAll": true,
     "fantasyWhitelistMonsterIds": [3000025, 3000033, 3000041, 3000053, 3000069],
-    "hateListEnabled": true,
     "hateListMaxDisplay": 5,
     "hatePanelStyle": {
       "gap": 6,
@@ -846,7 +845,6 @@
       "backgroundEnabled": false,
       "backgroundOpacity": 0.76
     },
-    "hpListEnabled": false,
     "hpPanelStyle": {
       "gap": 6,
       "columnGap": 8,
@@ -924,7 +922,6 @@
     },
     "selfAppliedBuffIds": [],
     "selfAppliedMonitorAll": false,
-    "stunListEnabled": false,
     "stunPanelStyle": {
       "gap": 6,
       "columnGap": 8,

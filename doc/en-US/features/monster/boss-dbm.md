@@ -16,7 +16,7 @@ Shows **Boss mechanic warning bars** on the monster overlay: skill name plus rem
 ## Enable the Panel
 
 1. Turn on **Enable Monster Monitor** at the page top.
-2. On the **Boss DBM** tab, click **Boss DBM: Show**, or enable the same toggle under **Enable Window**.
+2. Under **Enable Window**, set **Boss DBM Area** to show.
 3. Use top bar **Toggle Monster Overlay** to show the in-game window.
 
 **Boss DBM** is off by default to avoid overlapping buff/threat areas.

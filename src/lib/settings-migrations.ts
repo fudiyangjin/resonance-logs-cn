@@ -42,8 +42,9 @@ import { t } from "$lib/i18n/index.svelte";
 import { normalizeMonsterProfileStyles } from "./monster-monitor-profile.svelte.js";
 import { normalizeSkillProfile } from "./skill-monitor-normalize";
 import { isPristineLegacyMonitoring } from "./starter-loadout";
+import { migrateLegacyMonsterPanels } from "./monster-panel-migration";
 
-export const CURRENT_MONITORING_SCHEMA_VERSION = 5;
+export const CURRENT_MONITORING_SCHEMA_VERSION = 6;
 
 const READY_EVENT = "monitoring-settings-ready";
 const ERROR_EVENT = "monitoring-settings-error";
@@ -415,6 +416,9 @@ export function reconcileMonitoringState(
   input: MonitoringSettingsState,
 ): MonitoringSettingsState {
   const state = deepCloneSettings(input);
+  if (state.schemaVersion < 6) {
+    state.monsterMonitor = migrateMonsterPanelState(state.monsterMonitor);
+  }
   state.skillMonitor.buffIconOverrides = ensureBuffIconOverrides(
     state.skillMonitor.buffIconOverrides,
   );
@@ -442,7 +446,7 @@ export function migrateLegacyMonitoringState(
   liveProfileData: LiveMeterProfileData,
 ): MonitoringSettingsState {
   const skillMonitor = deepCloneSettings(sources.skillMonitor);
-  const monsterMonitor = deepCloneSettings(sources.monsterMonitor);
+  let monsterMonitor = deepCloneSettings(sources.monsterMonitor);
   const legacySkillEnabled = skillMonitor.enabled ?? false;
   const legacySkillAutoHide = skillMonitor.autoHideInDailyScenes ?? false;
   delete skillMonitor.enabled;
@@ -464,6 +468,7 @@ export function migrateLegacyMonitoringState(
   const pristineLegacyMonitoring =
     !hasExistingLoadouts &&
     isPristineLegacyMonitoring(skillMonitor, monsterMonitor);
+  monsterMonitor = migrateMonsterPanelState(monsterMonitor);
   if (!hasExistingLoadouts) {
     monsterMonitor.profiles = materializeLegacyMonsterMirror(monsterMonitor);
   } else {
@@ -507,6 +512,33 @@ export function migrateLegacyMonitoringState(
     loadouts,
     liveMeter: { mirroredProfileId: liveProfile.id, profiles: [liveProfile] },
   });
+}
+
+/** Convert raw mirrors and slots before extraction can discard legacy flags. */
+function migrateMonsterPanelState(
+  state: MonsterMonitorState,
+): MonsterMonitorState {
+  return {
+    ...migrateLegacyMonsterPanels(state),
+    profiles: (state.profiles ?? []).map(migrateLegacyMonsterPanels),
+  };
+}
+
+/** The legacy store must supply legacy defaults until its data is converted. */
+function createLegacyMonsterMonitorState(): MonsterMonitorState {
+  const state = createDefaultMonsterMonitorState();
+  const flags = {
+    hateListEnabled: false,
+    stunListEnabled: false,
+    hpListEnabled: false,
+  };
+  Object.assign(state, flags);
+  state.overlayVisibility.showHatePanel = true;
+  for (const profile of state.profiles) {
+    Object.assign(profile, flags);
+    profile.overlayVisibility.showHatePanel = true;
+  }
+  return state;
 }
 
 function applyMonitoringState(next: MonitoringSettingsState): void {
@@ -740,7 +772,7 @@ function createLegacyStores() {
     ),
     monsterMonitor: new RuneStore<MonsterMonitorState>(
       "monsterMonitor",
-      createDefaultMonsterMonitorState(),
+      createLegacyMonsterMonitorState(),
       options,
     ),
     loadouts: new RuneStore<LegacyLoadoutsState>(

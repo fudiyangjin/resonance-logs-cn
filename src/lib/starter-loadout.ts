@@ -9,6 +9,10 @@ import {
   type SkillMonitorProfile,
   type SkillMonitorState,
 } from "./settings-store";
+import {
+  LEGACY_MONSTER_PANEL_KEYS,
+  type LegacyMonsterPanelFlags,
+} from "./monster-panel-migration";
 
 function jsonSettingsEqual(left: unknown, right: unknown): boolean {
   if (Object.is(left, right)) return true;
@@ -83,6 +87,16 @@ export function isDefaultMonsterMonitorProfile(
   profile: MonsterMonitorProfile,
 ): boolean {
   const defaults = createDefaultMonsterMonitorState().profiles[0]!;
+  // Compare legacy settings against their original defaults, before collapsing
+  // the switches. Otherwise a user's hidden custom setup could become a starter.
+  if (LEGACY_MONSTER_PANEL_KEYS.some((key) => key in profile)) {
+    Object.assign(defaults, {
+      hateListEnabled: false,
+      stunListEnabled: false,
+      hpListEnabled: false,
+    });
+    defaults.overlayVisibility.showHatePanel = true;
+  }
   const defaultsWithoutId = omitProfileId(defaults);
   return jsonSettingsEqual(
     normalizeWithDefaults(omitProfileId(profile), defaultsWithoutId),
@@ -127,6 +141,14 @@ export function isPristineLegacyMonitoring(
     id: "mirror",
     name: monsterMonitor.profiles[0]?.name ?? "",
   };
+  for (const key of LEGACY_MONSTER_PANEL_KEYS) {
+    if (key in monsterMonitor) {
+      (mirrorProfile as MonsterMonitorProfile & LegacyMonsterPanelFlags)[key] =
+        (monsterMonitor as MonsterMonitorState & LegacyMonsterPanelFlags)[
+          key
+        ] ?? false;
+    }
+  }
   return isDefaultMonsterMonitorProfile(mirrorProfile);
 }
 

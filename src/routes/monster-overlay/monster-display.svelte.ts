@@ -66,6 +66,7 @@ import type {
   MonsterTeammateBuffColumn,
   MonsterTeammateBuffRow,
 } from "./monster-types";
+import { getMonsterOverlayVisibility } from "./monster-layout.svelte.js";
 import { latestBuffsByCategory } from "./monster-teammate-projection";
 
 const FANTASY_DISPLAY_TTL_MS = 5000;
@@ -1003,7 +1004,7 @@ function buildBossDisplay(now: number): {
 
 function buildHateDisplay(): MonsterHateSection[] {
   const nextHateSections: MonsterHateSection[] = [];
-  if (SETTINGS.monsterMonitor.state.hateListEnabled) {
+  if (getMonsterOverlayVisibility().showHatePanel) {
     const hateLists = monsterHateLists();
     const sortedHateBossUids = Array.from(hateLists.keys()).sort();
     const maxDisplay = SETTINGS.monsterMonitor.state.hateListMaxDisplay ?? 5;
@@ -1020,7 +1021,7 @@ function buildHateDisplay(): MonsterHateSection[] {
   }
 
   if (
-    SETTINGS.monsterMonitor.state.hateListEnabled &&
+    getMonsterOverlayVisibility().showHatePanel &&
     nextHateSections.length === 0 &&
     isMonsterLayoutScaffold()
   ) {
@@ -1037,7 +1038,7 @@ function buildHateDisplay(): MonsterHateSection[] {
 
 function buildStunDisplay(): MonsterStunSection[] {
   const nextStunSections: MonsterStunSection[] = [];
-  if (SETTINGS.monsterMonitor.state.stunListEnabled) {
+  if (getMonsterOverlayVisibility().showStunPanel) {
     const stunEntries = monsterStunEntries();
     const sortedStunBossUids = Array.from(stunEntries.keys()).sort();
     for (const bossUid of sortedStunBossUids) {
@@ -1054,7 +1055,7 @@ function buildStunDisplay(): MonsterStunSection[] {
   }
 
   if (
-    SETTINGS.monsterMonitor.state.stunListEnabled &&
+    getMonsterOverlayVisibility().showStunPanel &&
     nextStunSections.length === 0 &&
     isMonsterLayoutScaffold()
   ) {
@@ -1071,7 +1072,7 @@ function buildStunDisplay(): MonsterStunSection[] {
 
 function buildHpDisplay(): MonsterHpSection[] {
   const sections: MonsterHpSection[] = [];
-  if (SETTINGS.monsterMonitor.state.hpListEnabled) {
+  if (getMonsterOverlayVisibility().showHpPanel) {
     for (const [bossUid, entry] of Array.from(
       monsterHpEntries().entries(),
     ).sort()) {
@@ -1085,7 +1086,7 @@ function buildHpDisplay(): MonsterHpSection[] {
     }
   }
   if (
-    SETTINGS.monsterMonitor.state.hpListEnabled &&
+    getMonsterOverlayVisibility().showHpPanel &&
     sections.length === 0 &&
     isMonsterLayoutScaffold()
   ) {

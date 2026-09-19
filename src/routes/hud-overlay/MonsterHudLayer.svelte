@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { SETTINGS } from "$lib/settings-store";
   import MonsterBossDbmPanel from "../monster-overlay/MonsterBossDbmPanel.svelte";
   import MonsterBuffPanel from "../monster-overlay/MonsterBuffPanel.svelte";
   import MonsterEntityDurationPanel from "../monster-overlay/MonsterEntityDurationPanel.svelte";
@@ -11,15 +10,6 @@
   import { getMonsterOverlayVisibility } from "../monster-overlay/monster-state.svelte.js";
 
   const visibility = $derived(getMonsterOverlayVisibility());
-  const hateEnabled = $derived(
-    SETTINGS.monsterMonitor.state.hateListEnabled && visibility.showHatePanel,
-  );
-  const stunEnabled = $derived(
-    SETTINGS.monsterMonitor.state.stunListEnabled && visibility.showStunPanel,
-  );
-  const hpEnabled = $derived(
-    SETTINGS.monsterMonitor.state.hpListEnabled && visibility.showHpPanel,
-  );
 </script>
 
 <div class="hud-layer">
@@ -29,13 +19,13 @@
   {#if visibility.showTeammateBuffPanel}
     <MonsterTeammateBuffPanel />
   {/if}
-  {#if hateEnabled}
+  {#if visibility.showHatePanel}
     <MonsterHatePanel />
   {/if}
-  {#if stunEnabled}
+  {#if visibility.showStunPanel}
     <MonsterStunPanel />
   {/if}
-  {#if hpEnabled}
+  {#if visibility.showHpPanel}
     <MonsterHpPanel />
   {/if}
   {#if visibility.showFantasyPanel}

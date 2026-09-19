@@ -12,7 +12,7 @@ import { parseLoadoutExport } from "./loadout-import";
 function validExport(): Record<string, unknown> {
   return {
     kind: "resonance-logs-loadout",
-    version: 1,
+    version: 2,
     name: "Test",
     skillProfile: omitProfileId(createDefaultSkillMonitorProfile("Test")),
     monsterProfile: omitProfileId(createDefaultMonsterMonitorProfile("Test")),
@@ -20,11 +20,11 @@ function validExport(): Record<string, unknown> {
 }
 
 describe("parseLoadoutExport", () => {
-  it("accepts and normalizes a valid version 1 export", () => {
+  it("accepts and normalizes a valid version 2 export", () => {
     const result = parseLoadoutExport(validExport());
     expect(result.success).toBe(true);
     if (!result.success) return;
-    expect(result.output.version).toBe(1);
+    expect(result.output.version).toBe(2);
     expect(result.output.skillProfile.selectedClass).toBe("wind_knight");
   });
 
@@ -33,7 +33,7 @@ describe("parseLoadoutExport", () => {
     delete missing["version"];
     expect(parseLoadoutExport(missing).success).toBe(false);
 
-    const future = { ...validExport(), version: 2 };
+    const future = { ...validExport(), version: 3 };
     expect(parseLoadoutExport(future).success).toBe(false);
   });
 

@@ -1057,10 +1057,7 @@ export type EntityDurationEntry = {
 export type MonsterMonitorConfig = {
   enabled: boolean;
   autoHideInDailyScenes: boolean;
-  hateListEnabled: boolean;
   hateListMaxDisplay: number;
-  stunListEnabled: boolean;
-  hpListEnabled: boolean;
   monitoredBuffIds: number[];
   selfAppliedBuffIds: number[];
   selfAppliedMonitorAll: boolean;
@@ -1499,7 +1496,7 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
   return {
     showMonsterBuffPanel: true,
     showTeammateBuffPanel: true,
-    showHatePanel: true,
+    showHatePanel: false,
     showFantasyPanel: false,
     showBossDbmPanel: false,
     showStunPanel: false,
@@ -1661,10 +1658,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
   return {
     enabled: false,
     autoHideInDailyScenes: false,
-    hateListEnabled: false,
     hateListMaxDisplay: 5,
-    stunListEnabled: false,
-    hpListEnabled: false,
     monitoredBuffIds: [],
     selfAppliedBuffIds: [],
     selfAppliedMonitorAll: false,
@@ -1738,10 +1732,7 @@ export type SkillMonitorState = {
 export const MONSTER_PROFILE_FIELD_KEYS = [
   "enabled",
   "autoHideInDailyScenes",
-  "hateListEnabled",
   "hateListMaxDisplay",
-  "stunListEnabled",
-  "hpListEnabled",
   "monitoredBuffIds",
   "selfAppliedBuffIds",
   "selfAppliedMonitorAll",

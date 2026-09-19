@@ -426,7 +426,7 @@ export function exportLoadout(id: string): LoadoutExport | null {
   // process is running.
   return {
     kind: "resonance-logs-loadout",
-    version: 1,
+    version: 2,
     name: loadout.name,
     linkedTalentStageCfgId: loadout.linkedTalentStageCfgId,
     skillProfile: omitProfileId(

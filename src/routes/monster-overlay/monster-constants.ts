@@ -28,7 +28,7 @@ export const DEFAULT_MONSTER_OVERLAY_SIZES: MonsterOverlaySizes = {
 export const DEFAULT_MONSTER_OVERLAY_VISIBILITY = {
   showMonsterBuffPanel: true,
   showTeammateBuffPanel: true,
-  showHatePanel: true,
+  showHatePanel: false,
   showFantasyPanel: false,
   showBossDbmPanel: false,
   showStunPanel: false,

@@ -1579,19 +1579,16 @@ export const enUSMessages = {
   "monsterMonitor.style.buffColumnWidth": "Buff Column Width",
   "monsterMonitor.hate.displayTitle": "Hate List Display",
   "monsterMonitor.hate.displayDescription":
-    "Enable the monster hate panel separately and configure its style.",
-  "monsterMonitor.hate.enabled": "Enable Hate List",
+    "Configure the monster hate panel's player limit and style. Control its visibility in Enable Window.",
   "monsterMonitor.hate.maxDisplay": "Max Visible Characters",
   "monsterMonitor.hate.styleTitle": "Hate Panel Style",
   "monsterMonitor.stun.displayTitle": "Stun Bar Display",
   "monsterMonitor.stun.displayDescription":
     "Show the stamina/stun bar (current/max) for the current attack target. Reaching zero means the monster is staggered and the bar is highlighted.",
-  "monsterMonitor.stun.enabled": "Enable Stun Bar",
   "monsterMonitor.stun.styleTitle": "Stun Bar Panel Style",
   "monsterMonitor.hp.displayTitle": "HP Bar Display",
   "monsterMonitor.hp.displayDescription":
     "Show the health bar (current/max) for the current attack target.",
-  "monsterMonitor.hp.enabled": "Enable HP Bar",
   "monsterMonitor.hp.styleTitle": "HP Bar Panel Style",
   "monsterMonitor.overlay.title": "Overlay Area Visibility",
   "monsterMonitor.overlay.description":
@@ -1641,10 +1638,6 @@ export const enUSMessages = {
   "monsterMonitor.overlay.state.show": "Show",
   "monsterMonitor.overlay.state.hide": "Hide",
   "monsterMonitor.overlay.help": "Click buttons to toggle visibility.",
-  "monsterMonitor.overlay.hateDisabledHelp":
-    "Enable the hate list on the Hate List tab before showing this area.",
-  "monsterMonitor.overlay.stunDisabledHelp":
-    "Enable the stun bar on the Stun Bar tab before showing this area.",
   "monsterMonitor.buffFallback": "Buff {id}",
   "monsterOverlay.edit.title":
     "Edit Mode - Drag to Adjust Monster Monitor Position",

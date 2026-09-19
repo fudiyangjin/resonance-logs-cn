@@ -36,6 +36,6 @@ On training dummies, behavior matches Boss fights as long as the dummy is locked
 
 ## Why are there no Boss DBM bars?
 
-1. **Boss DBM area not enabled**: Set **Boss DBM area** to show on the **Boss DBM** or **Enable Window** tab (off by default).
+1. **Boss DBM area not enabled**: Set **Boss DBM area** to show on the **Enable Window** tab (off by default).
 2. **Monster monitor or overlay off**: Confirm **Enable Monster Monitor** and **Toggle Monster Overlay**.
 3. **No DBM events**: Not every Boss skill emits DBM; the area stays hidden when empty (edit mode shows a preview placeholder).

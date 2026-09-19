@@ -180,7 +180,7 @@
       monsterMonitor.overlayVisibility?.showMonsterBuffPanel ?? true,
     showTeammateBuffPanel:
       monsterMonitor.overlayVisibility?.showTeammateBuffPanel ?? true,
-    showHatePanel: monsterMonitor.overlayVisibility?.showHatePanel ?? true,
+    showHatePanel: monsterMonitor.overlayVisibility?.showHatePanel ?? false,
     showStunPanel: monsterMonitor.overlayVisibility?.showStunPanel ?? false,
     showHpPanel: monsterMonitor.overlayVisibility?.showHpPanel ?? false,
     showFantasyPanel:
@@ -946,7 +946,7 @@
           state.overlayVisibility?.showMonsterBuffPanel ?? true,
         showTeammateBuffPanel:
           state.overlayVisibility?.showTeammateBuffPanel ?? true,
-        showHatePanel: state.overlayVisibility?.showHatePanel ?? true,
+        showHatePanel: state.overlayVisibility?.showHatePanel ?? false,
         showStunPanel: state.overlayVisibility?.showStunPanel ?? false,
         showHpPanel: state.overlayVisibility?.showHpPanel ?? false,
         showFantasyPanel: state.overlayVisibility?.showFantasyPanel ?? false,
@@ -2181,15 +2181,6 @@
         </p>
       </div>
 
-      <div class="flex justify-start">
-        <div class="min-w-[220px]">
-          <SettingsSwitch
-            label={t("monsterMonitor.hate.enabled")}
-            bind:checked={SETTINGS.monsterMonitor.state.hateListEnabled}
-          />
-        </div>
-      </div>
-
       <div class="grid gap-4 lg:grid-cols-3">
         <label class="style-field">
           <span>{t("monsterMonitor.hate.maxDisplay")}</span>
@@ -2362,15 +2353,6 @@
           {t("monsterMonitor.stun.displayDescription")}
         </p>
       </div>
-
-      <div class="flex justify-start">
-        <div class="min-w-[220px]">
-          <SettingsSwitch
-            label={t("monsterMonitor.stun.enabled")}
-            bind:checked={SETTINGS.monsterMonitor.state.stunListEnabled}
-          />
-        </div>
-      </div>
     </section>
 
     <section
@@ -2521,15 +2503,6 @@
         <p class="text-muted-foreground text-sm">
           {t("monsterMonitor.hp.displayDescription")}
         </p>
-      </div>
-
-      <div class="flex justify-start">
-        <div class="min-w-[220px]">
-          <SettingsSwitch
-            label={t("monsterMonitor.hp.enabled")}
-            bind:checked={SETTINGS.monsterMonitor.state.hpListEnabled}
-          />
-        </div>
       </div>
     </section>
 
@@ -3170,45 +3143,36 @@
 
         <button
           type="button"
-          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 {overlayVisibility.showHatePanel
+          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {overlayVisibility.showHatePanel
             ? 'bg-primary text-primary-foreground border-primary'
             : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-          disabled={!monsterMonitor.hateListEnabled}
           onclick={() => toggleOverlayVisibility("showHatePanel")}
         >
           {t("monsterMonitor.overlay.hate", {
-            state: visibilityState(
-              monsterMonitor.hateListEnabled && overlayVisibility.showHatePanel,
-            ),
+            state: visibilityState(overlayVisibility.showHatePanel),
           })}
         </button>
 
         <button
           type="button"
-          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 {overlayVisibility.showStunPanel
+          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {overlayVisibility.showStunPanel
             ? 'bg-primary text-primary-foreground border-primary'
             : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-          disabled={!monsterMonitor.stunListEnabled}
           onclick={() => toggleOverlayVisibility("showStunPanel")}
         >
           {t("monsterMonitor.overlay.stun", {
-            state: visibilityState(
-              monsterMonitor.stunListEnabled && overlayVisibility.showStunPanel,
-            ),
+            state: visibilityState(overlayVisibility.showStunPanel),
           })}
         </button>
         <button
           type="button"
-          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 {overlayVisibility.showHpPanel
+          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {overlayVisibility.showHpPanel
             ? 'bg-primary text-primary-foreground border-primary'
             : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-          disabled={!monsterMonitor.hpListEnabled}
           onclick={() => toggleOverlayVisibility("showHpPanel")}
         >
           {t("monsterMonitor.overlay.hp", {
-            state: visibilityState(
-              monsterMonitor.hpListEnabled && overlayVisibility.showHpPanel,
-            ),
+            state: visibilityState(overlayVisibility.showHpPanel),
           })}
         </button>
 
@@ -3250,9 +3214,7 @@
       </div>
 
       <p class="text-muted-foreground text-xs">
-        {monsterMonitor.hateListEnabled
-          ? t("monsterMonitor.overlay.help")
-          : t("monsterMonitor.overlay.hateDisabledHelp")}
+        {t("monsterMonitor.overlay.help")}
       </p>
     </section>
   {/if}

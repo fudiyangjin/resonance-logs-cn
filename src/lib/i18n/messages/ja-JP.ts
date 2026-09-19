@@ -1557,19 +1557,16 @@ export const jaJPMessages = {
   "monsterMonitor.style.buffColumnWidth": "Buff 列の幅",
   "monsterMonitor.hate.displayTitle": "ヘイトリスト表示",
   "monsterMonitor.hate.displayDescription":
-    "モンスターヘイトパネルを個別に有効化し、スタイルを設定します。",
-  "monsterMonitor.hate.enabled": "ヘイトリストを有効化",
+    "ヘイトパネルの表示人数とスタイルを設定します。表示は「ウィンドウを有効化」で切り替えます。",
   "monsterMonitor.hate.maxDisplay": "最大表示キャラクター数",
   "monsterMonitor.hate.styleTitle": "ヘイトパネルスタイル",
   "monsterMonitor.stun.displayTitle": "スタンバーゲージ表示",
   "monsterMonitor.stun.displayDescription":
     "現在の攻撃対象のスタンバーゲージ（現在/最大）を表示します。0 になるとスタン（ダウン）状態を示し、バーをハイライトします。",
-  "monsterMonitor.stun.enabled": "スタンバーゲージを有効化",
   "monsterMonitor.stun.styleTitle": "スタンバーゲージパネルスタイル",
   "monsterMonitor.hp.displayTitle": "HP バー表示",
   "monsterMonitor.hp.displayDescription":
     "現在の攻撃対象の HP バー（現在/最大）を表示します。",
-  "monsterMonitor.hp.enabled": "HP バーを有効化",
   "monsterMonitor.hp.styleTitle": "HP バーパネルスタイル",
   "monsterMonitor.overlay.title": "オーバーレイエリア表示",
   "monsterMonitor.overlay.description":
@@ -1620,10 +1617,6 @@ export const jaJPMessages = {
   "monsterMonitor.overlay.state.show": "表示",
   "monsterMonitor.overlay.state.hide": "非表示",
   "monsterMonitor.overlay.help": "ボタンをクリックして表示を切替。",
-  "monsterMonitor.overlay.hateDisabledHelp":
-    "このエリアを表示する前に、ヘイトリストタブでヘイトリストを有効化してください。",
-  "monsterMonitor.overlay.stunDisabledHelp":
-    "このエリアを表示する前に、スタンバーゲージタブでスタンバーゲージを有効化してください。",
   "monsterMonitor.buffFallback": "Buff {id}",
   "monsterOverlay.edit.title":
     "編集モード - ドラッグでモンスターモニター位置を調整",

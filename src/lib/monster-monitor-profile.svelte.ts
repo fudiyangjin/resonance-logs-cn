@@ -189,7 +189,6 @@ export function normalizeMonsterProfileStyles<
   const defaults = createDefaultMonsterMonitorProfile();
   return {
     ...profile,
-    hpListEnabled: profile.hpListEnabled ?? defaults.hpListEnabled,
     overlayPositions: {
       ...defaults.overlayPositions,
       ...profile.overlayPositions,

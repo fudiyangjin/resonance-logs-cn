@@ -18,10 +18,11 @@ import { normalizeDpsColumnLabels } from "./column-labels";
 import { ensureEntityDurationEntries } from "./entity-duration-entries";
 import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
 import { ensureShieldDetailStyle } from "./skill-monitor-normalize";
+import { migrateLegacyMonsterPanels } from "./monster-panel-migration";
 
 export type LoadoutExport = {
   kind: "resonance-logs-loadout";
-  version: 1;
+  version: 2;
   name: string;
   /** Talent branch this loadout is bound to; absent/`null` means unbound. */
   linkedTalentStageCfgId?: number | null;
@@ -500,10 +501,7 @@ const monsterProfileSchema = v.object({
   name: v.string(),
   enabled: v.optional(v.boolean(), false),
   autoHideInDailyScenes: v.optional(v.boolean(), false),
-  hateListEnabled: v.boolean(),
   hateListMaxDisplay: finiteNumberSchema,
-  stunListEnabled: v.boolean(),
-  hpListEnabled: v.optional(v.boolean(), false),
   monitoredBuffIds: numberArraySchema,
   selfAppliedBuffIds: numberArraySchema,
   selfAppliedMonitorAll: v.boolean(),
@@ -827,9 +825,9 @@ const liveProfileSchema = v.object({
   ),
 });
 
-const loadoutExportSchema = v.object({
+const currentLoadoutExportSchema = v.object({
   kind: v.literal("resonance-logs-loadout"),
-  version: v.literal(1),
+  version: v.literal(2),
   name: v.pipe(v.string(), v.trim(), v.minLength(1)),
   // Optional with a `null` default: exports predate the spec-binding field,
   // and an unbound loadout is the natural reading of a missing key.
@@ -846,6 +844,30 @@ const loadoutExportSchema = v.object({
   ),
 });
 
+const legacyMonsterProfileSchema = v.pipe(
+  v.object({
+    ...monsterProfileSchema.entries,
+    hateListEnabled: v.optional(v.boolean(), false),
+    stunListEnabled: v.optional(v.boolean(), false),
+    hpListEnabled: v.optional(v.boolean(), false),
+    overlayVisibility: v.object({
+      ...monsterOverlayVisibilitySchema.entries,
+      showHatePanel: v.optional(v.boolean(), true),
+      showStunPanel: v.optional(v.boolean(), false),
+    }),
+  }),
+  v.transform(migrateLegacyMonsterPanels),
+);
+
+const loadoutExportSchema = v.variant("version", [
+  currentLoadoutExportSchema,
+  v.object({
+    ...currentLoadoutExportSchema.entries,
+    version: v.literal(1),
+    monsterProfile: legacyMonsterProfileSchema,
+  }),
+]);
+
 export function parseLoadoutExport(data: unknown): LoadoutParseResult {
   const result = v.safeParse(loadoutExportSchema, data);
   if (!result.success) {
@@ -859,7 +881,10 @@ export function parseLoadoutExport(data: unknown): LoadoutParseResult {
       }),
     };
   }
-  const output = result.output as unknown as LegacyAwareLoadoutExport;
+  const output = {
+    ...result.output,
+    version: 2,
+  } as unknown as LegacyAwareLoadoutExport;
   migrateLegacyLoadoutExport(output);
   return { success: true, output: output as unknown as LoadoutExport };
 }

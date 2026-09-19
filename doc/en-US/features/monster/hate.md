@@ -6,8 +6,8 @@ Shows **threat order** for your **current main attack target** in the overlay (w
 
 ## Enable Threat List
 
-- Turn on **Enable Threat List** for threat data to parse and show in the overlay.
-- If disabled, **Threat List Area** in [Enable Overlay](./overlay.md) cannot be enabled (enable here first).
+- Set **Threat List Area** to show in [Enable Overlay](./overlay.md) to enable the area; it is off by default.
+- This tab configures the player limit and styling, with no additional enable switch.
 
 ## Display Count
 

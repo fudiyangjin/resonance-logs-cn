@@ -190,7 +190,8 @@ describe("monitoring settings reconciliation", () => {
     const state = createDefaultMonitoringSettingsState();
     const first = state.monsterMonitor.profiles[0]!;
     const second = createDefaultMonsterMonitorProfile("Second");
-    second.hateListEnabled = true;
+    state.schemaVersion = CURRENT_MONITORING_SCHEMA_VERSION;
+    second.overlayVisibility.showHatePanel = true;
     state.monsterMonitor.profiles.push(second);
     state.loadouts.items = [
       {
@@ -208,7 +209,7 @@ describe("monitoring settings reconciliation", () => {
 
     const repaired = reconcileMonitoringState(state);
     expect(repaired.monsterMonitor.mirroredProfileId).toBe(second.id);
-    expect(repaired.monsterMonitor.hateListEnabled).toBe(true);
+    expect(repaired.monsterMonitor.overlayVisibility.showHatePanel).toBe(true);
   });
 });
 
@@ -299,7 +300,8 @@ describe("legacy monitoring migration", () => {
     [
       "monster config",
       (base: ReturnType<typeof createDefaultMonitoringSettingsState>) => {
-        base.monsterMonitor.hateListEnabled = true;
+        Object.assign(base.monsterMonitor, { hateListEnabled: true });
+        base.monsterMonitor.overlayVisibility.showHatePanel = true;
       },
     ],
   ])("does not mark configured legacy %s as a starter", (_name, mutate) => {

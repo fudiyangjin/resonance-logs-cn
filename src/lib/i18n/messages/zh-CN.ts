@@ -1445,19 +1445,16 @@ export const zhCNMessages = {
   "monsterMonitor.style.buffColumnWidth": "Buff 列宽",
   "monsterMonitor.hate.displayTitle": "仇恨列表显示",
   "monsterMonitor.hate.displayDescription":
-    "独立启用怪物仇恨面板，并单独配置它的样式。",
-  "monsterMonitor.hate.enabled": "启用仇恨列表",
+    "配置怪物仇恨面板的显示人数和样式；区域显示在「启用窗口」中控制。",
   "monsterMonitor.hate.maxDisplay": "最多显示角色数",
   "monsterMonitor.hate.styleTitle": "仇恨面板样式",
   "monsterMonitor.stun.displayTitle": "韧性条显示",
   "monsterMonitor.stun.displayDescription":
     "显示当前攻击主目标的韧性条（当前/最大）。韧性归零表示已破韧并会高亮提示。",
-  "monsterMonitor.stun.enabled": "启用韧性条",
   "monsterMonitor.stun.styleTitle": "韧性条面板样式",
   "monsterMonitor.hp.displayTitle": "生命条显示",
   "monsterMonitor.hp.displayDescription":
     "显示当前攻击主目标的生命条（当前/最大）。",
-  "monsterMonitor.hp.enabled": "启用生命条",
   "monsterMonitor.hp.styleTitle": "生命条面板样式",
   "monsterMonitor.overlay.title": "Overlay 区域显示",
   "monsterMonitor.overlay.description": "分别控制怪物监控遮罩中的显示区域。",
@@ -1505,10 +1502,6 @@ export const zhCNMessages = {
   "monsterMonitor.overlay.state.show": "显示",
   "monsterMonitor.overlay.state.hide": "隐藏",
   "monsterMonitor.overlay.help": "点击按钮切换显示状态。",
-  "monsterMonitor.overlay.hateDisabledHelp":
-    "仇恨列表区需要先在“仇恨列表”页签启用。",
-  "monsterMonitor.overlay.stunDisabledHelp":
-    "韧性条区需要先在“韧性条”页签启用。",
   "monsterMonitor.buffFallback": "Buff {id}",
   "monsterOverlay.edit.title": "编辑模式 - 可拖拽调整怪物监控位置",
   "monsterOverlay.edit.resetPosition": "重置位置",
