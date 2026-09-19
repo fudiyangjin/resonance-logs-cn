@@ -19,6 +19,7 @@ import {
   type MonsterMonitorProfile,
   type MonsterMonitorProfileData,
 } from "./settings-store";
+import { ensureEntityDurationEntries } from "./entity-duration-entries";
 import { normalizeCustomPanelStyle } from "./skill-monitor-normalize";
 
 export function listMonsterProfiles(): MonsterMonitorProfile[] {
@@ -206,6 +207,12 @@ export function normalizeMonsterProfileStyles<
     stunPanelStyle: normalizeCustomPanelStyle(profile.stunPanelStyle),
     hpPanelStyle: normalizeCustomPanelStyle(
       profile.hpPanelStyle ?? defaults.hpPanelStyle,
+    ),
+    entityDurationEntries: ensureEntityDurationEntries(
+      profile.entityDurationEntries,
+    ),
+    entityDurationPanelStyle: normalizeCustomPanelStyle(
+      profile.entityDurationPanelStyle ?? defaults.entityDurationPanelStyle,
     ),
   };
 }

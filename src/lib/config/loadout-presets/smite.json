@@ -215,18 +215,9 @@
     "factorSlotLabels": {},
     "individualMonitorAllGroup": null,
     "inlineBuffEntries": [],
-    "monitoredBuffCategories": [
-      "food",
-      "alchemy"
-    ],
+    "monitoredBuffCategories": ["food", "alchemy"],
     "monitoredBuffIds": [
-      2302421,
-      3003411,
-      55333,
-      3003052,
-      2202081,
-      2202251,
-      2202331
+      2302421, 3003411, 55333, 3003052, 2202081, 2202251, 2202331
     ],
     "monitoredPanelAttrs": [
       {
@@ -496,7 +487,6 @@
         "label": "13180"
       }
     ],
-    "monitoredSkillDurationIds": [],
     "monitoredSkillIds": [],
     "name": "惩击-buff",
     "buffCoverageEntries": [
@@ -628,7 +618,6 @@
         "x": 40,
         "y": 40
       },
-      "skillDurationPositions": {},
       "specialBuffGroup": {
         "x": 360,
         "y": 220
@@ -666,7 +655,6 @@
       "resourceGroupScale": 1,
       "shieldDetailGroupScale": 1.55,
       "skillCdGroupScale": 1,
-      "skillDurationSizes": {},
       "textBuffPanelScale": 1
     },
     "overlayTextStyle": {
@@ -680,8 +668,7 @@
       "showPanelAttrGroup": true,
       "showResourceGroup": false,
       "showShieldDetailGroup": true,
-      "showSkillCdGroup": false,
-      "showSkillDurationGroup": true
+      "showSkillCdGroup": false
     },
     "panelAreaRowOrder": [
       {
@@ -794,13 +781,7 @@
       "valueColor": "#f8fafc"
     },
     "fantasyShowAll": true,
-    "fantasyWhitelistMonsterIds": [
-      3000025,
-      3000033,
-      3000041,
-      3000053,
-      3000069
-    ],
+    "fantasyWhitelistMonsterIds": [3000025, 3000033, 3000041, 3000053, 3000069],
     "hateListEnabled": true,
     "hateListMaxDisplay": 5,
     "hatePanelStyle": {
@@ -815,12 +796,7 @@
       "textShadowEnabled": true,
       "valueColor": "#f8fafc"
     },
-    "monitoredBuffIds": [
-      501712,
-      501706,
-      501710,
-      2110099
-    ],
+    "monitoredBuffIds": [501712, 501706, 501710, 2110099],
     "monsterBuffVoiceConfigs": {},
     "name": "惩击-怪物",
     "overlayPositions": {
@@ -877,9 +853,7 @@
       "textShadowEnabled": true,
       "valueColor": "#f8fafc"
     },
-    "selfAppliedBuffIds": [
-      21424
-    ],
+    "selfAppliedBuffIds": [21424],
     "selfAppliedMonitorAll": false,
     "stunListEnabled": false,
     "stunPanelStyle": {
@@ -894,14 +868,8 @@
       "textShadowEnabled": true,
       "valueColor": "#f8fafc"
     },
-    "teammateBuffCategories": [
-      "food",
-      "alchemy"
-    ],
-    "teammateBuffColumnOrder": [
-      "category:food",
-      "category:alchemy"
-    ],
+    "teammateBuffCategories": ["food", "alchemy"],
+    "teammateBuffColumnOrder": ["category:food", "category:alchemy"],
     "teammateBuffIds": [],
     "teammatePanelStyle": {
       "backgroundEnabled": false,
@@ -980,13 +948,8 @@
     },
     "challengeWatch": {
       "forbiddenDamageIds": [
-        110098100102,
-        110098110103,
-        110098130103,
-        110098140102,
-        110098140104,
-        110098140107,
-        120016180102
+        110098100102, 110098110103, 110098130103, 110098140102, 110098140104,
+        110098140107, 120016180102
       ]
     },
     "columnOrder": {
@@ -1168,21 +1131,14 @@
                 "totalDamage",
                 "controlButtons"
               ],
-              "start": [
-                "timer",
-                "sceneName"
-              ]
+              "start": ["timer", "sceneName"]
             }
           },
           {
             "id": "custom-1777172416319",
             "zones": {
-              "end": [
-                "navigationTabs"
-              ],
-              "start": [
-                "bossHealth"
-              ]
+              "end": ["navigationTabs"],
+              "start": ["bossHealth"]
             }
           }
         ]

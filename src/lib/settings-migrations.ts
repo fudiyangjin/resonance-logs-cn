@@ -36,12 +36,14 @@ import {
   type SkillMonitorState,
 } from "./settings-store";
 import { normalizeDpsColumnLabels } from "./column-labels";
+import { ensureEntityDurationEntries } from "./entity-duration-entries";
+import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
 import { t } from "$lib/i18n/index.svelte";
 import { normalizeMonsterProfileStyles } from "./monster-monitor-profile.svelte.js";
 import { normalizeSkillProfile } from "./skill-monitor-normalize";
 import { isPristineLegacyMonitoring } from "./starter-loadout";
 
-export const CURRENT_MONITORING_SCHEMA_VERSION = 4;
+export const CURRENT_MONITORING_SCHEMA_VERSION = 5;
 
 const READY_EVENT = "monitoring-settings-ready";
 const ERROR_EVENT = "monitoring-settings-error";
@@ -531,7 +533,9 @@ type V1MonitoringState = MonitoringSettingsState & {
  * existing loadout shares. v3 moves the (until then still global)
  * challenge-watch forbidden-damage list and appearance colors onto each
  * live-meter profile too. v4 adds the formerly-global history settings so
- * they switch and travel with the same profile.
+ * they switch and travel with the same profile. v5 removes the skill-monitor
+ * "duration skills" and re-expresses them as monster-monitor entity-duration
+ * entries on the loadout's monster profile.
  */
 export function migrateMonitoringStateIncrementally(
   input: MonitoringSettingsState,
@@ -612,7 +616,82 @@ export function migrateMonitoringStateIncrementally(
     }));
   }
 
+  if (fromSchemaVersion < 5) {
+    migrateSkillDurationIdsToEntityDuration(state);
+  }
+
   return reconcileMonitoringState(state);
+}
+
+type LegacySkillDurationProfile = Omit<
+  SkillMonitorProfile,
+  | "monitoredSkillDurationIds"
+  | "overlayPositions"
+  | "overlaySizes"
+  | "overlayVisibility"
+> & {
+  monitoredSkillDurationIds?: number[];
+  overlayPositions?: Record<string, unknown> & {
+    skillDurationPositions?: unknown;
+  };
+  overlaySizes?: Record<string, unknown> & { skillDurationSizes?: unknown };
+  overlayVisibility?: Record<string, unknown> & {
+    showSkillDurationGroup?: unknown;
+  };
+};
+
+/**
+ * Schema v5: every loadout whose skill profile still lists legacy duration
+ * skills gets matching entity-duration entries on its monster profile. The
+ * mirror is updated alongside the slot because `reconcileMonsterMirror`
+ * flushes mirror over slot before re-copying. Legacy fields are removed from
+ * every skill profile afterwards.
+ */
+function migrateSkillDurationIdsToEntityDuration(
+  state: MonitoringSettingsState,
+): void {
+  const skillProfiles = state.skillMonitor
+    .profiles as unknown as LegacySkillDurationProfile[];
+  const skillById = new Map(
+    skillProfiles.map((profile) => [profile.id, profile]),
+  );
+
+  for (const loadout of state.loadouts.items) {
+    const skillIds = skillById.get(
+      loadout.skillProfileId,
+    )?.monitoredSkillDurationIds;
+    if (!skillIds?.length) continue;
+    const index = state.monsterMonitor.profiles.findIndex(
+      (profile) => profile.id === loadout.monsterProfileId,
+    );
+    if (index === -1) continue;
+    const profile = state.monsterMonitor.profiles[index]!;
+    const existing = ensureEntityDurationEntries(profile.entityDurationEntries);
+    const added = entriesFromLegacySkillDurationIds(skillIds, existing);
+    if (added.length === 0) continue;
+    state.monsterMonitor.profiles[index] = {
+      ...profile,
+      entityDurationEntries: [...existing, ...added],
+    };
+  }
+
+  // v4 mirrors never carried this field (or carry an injected empty default);
+  // re-seed it from the mirrored slot so reconciliation does not wipe the slot.
+  const mirrored = state.monsterMonitor.profiles.find(
+    (profile) => profile.id === state.monsterMonitor.mirroredProfileId,
+  );
+  if (mirrored) {
+    state.monsterMonitor.entityDurationEntries = deepCloneSettings(
+      ensureEntityDurationEntries(mirrored.entityDurationEntries),
+    );
+  }
+
+  for (const profile of skillProfiles) {
+    delete profile.monitoredSkillDurationIds;
+    delete profile.overlayPositions?.skillDurationPositions;
+    delete profile.overlaySizes?.skillDurationSizes;
+    delete profile.overlayVisibility?.showSkillDurationGroup;
+  }
 }
 
 /** Pushes the active loadout's live-meter profile into the live RuneStores. */

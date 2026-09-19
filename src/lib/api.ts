@@ -40,6 +40,7 @@ import type {
   TeammateFantasyState,
   TrainingDummyPhase,
   TrainingDummyState,
+  WatchedEntityState,
 } from "./bindings";
 
 export type {
@@ -73,6 +74,7 @@ export type {
   TeammateFantasyState,
   TrainingDummyPhase,
   TrainingDummyState,
+  WatchedEntityState,
 };
 
 export type CounterSlotState = SlotUpdateState;

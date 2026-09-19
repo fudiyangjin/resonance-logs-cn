@@ -9,9 +9,9 @@ If CD display is incomplete because you opened the app mid-fight, [change zone t
 - **Class selection**: Sets the class monitored by the current profile; the skill list updates with class (bound to [profiles](../README.md#profiles)).
 - **Skill selection**: Select up to **10** skills (overlay ~2 rows × 5 columns) for cooldown and remaining time; clear all and reselect in one click.
 
-## Duration Skills
+## Duration Skills (moved)
 
-Some skills have **active duration** in addition to CD (ground effects, channeled skills, etc.). Select them separately under **Duration Skills**; independent from the skill CD list above. Shown in the **Skill Duration** area of the overlay (see [Enable Overlay](./overlay.md)).
+**Duration Skills** (e.g. Scythe Cart) have been removed from Live Monitor. They are now timed by the in-game entity appearing / disappearing; configure them under **Monster Monitor → Entity Duration** (see [Entity Duration](../monster/entity-duration.md)). A Scythe Cart selected in an older profile is migrated automatically on upgrade.
 
 ## Resonance Skills
 

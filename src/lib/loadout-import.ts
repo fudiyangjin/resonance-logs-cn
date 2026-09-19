@@ -9,11 +9,14 @@ import {
   MAX_BUFF_COVERAGE_ENTRIES,
   omitProfileId,
   normalizeHistorySettings,
+  type EntityDurationEntry,
   type LiveMeterProfile,
   type MonsterMonitorProfile,
   type SkillMonitorProfile,
 } from "./settings-store";
 import { normalizeDpsColumnLabels } from "./column-labels";
+import { ensureEntityDurationEntries } from "./entity-duration-entries";
+import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
 import { ensureShieldDetailStyle } from "./skill-monitor-normalize";
 
 export type LoadoutExport = {
@@ -292,7 +295,6 @@ const overlayPositionsSchema = v.object({
   shieldDetailGroup: pointSchema,
   buffCoverageGroup: v.optional(pointSchema, { x: 360, y: 550 }),
   iconBuffPositions: v.record(numericKeySchema, pointSchema),
-  skillDurationPositions: v.record(numericKeySchema, pointSchema),
   categoryIconPositions: v.optional(categoryPointRecordSchema, {}),
 });
 
@@ -314,13 +316,11 @@ const overlaySizesSchema = v.object({
     defaultClone(overlayTextStyleDefaults),
   ),
   iconBuffSizes: numberRecordSchema,
-  skillDurationSizes: numberRecordSchema,
   categoryIconSizes: v.optional(categoryNumberRecordSchema, {}),
 });
 
 const overlayVisibilitySchema = v.object({
   showSkillCdGroup: v.boolean(),
-  showSkillDurationGroup: v.boolean(),
   showResourceGroup: v.boolean(),
   showPanelAttrGroup: v.boolean(),
   showCustomPanelGroup: v.boolean(),
@@ -342,6 +342,10 @@ const monsterOverlayPositionsSchema = v.object({
     pointSchema,
     defaultClone(defaultMonster.overlayPositions.hpPanel),
   ),
+  entityDurationPanel: v.optional(
+    pointSchema,
+    defaultClone(defaultMonster.overlayPositions.entityDurationPanel),
+  ),
 });
 
 const monsterOverlaySizesSchema = v.object({
@@ -355,6 +359,10 @@ const monsterOverlaySizesSchema = v.object({
     finiteNumberSchema,
     defaultMonster.overlaySizes.hpPanelScale,
   ),
+  entityDurationPanelScale: v.optional(
+    finiteNumberSchema,
+    defaultMonster.overlaySizes.entityDurationPanelScale,
+  ),
 });
 
 const monsterOverlayVisibilitySchema = v.object({
@@ -365,7 +373,29 @@ const monsterOverlayVisibilitySchema = v.object({
   showBossDbmPanel: v.boolean(),
   showStunPanel: v.boolean(),
   showHpPanel: v.optional(v.boolean(), false),
+  showEntityDurationPanel: v.optional(v.boolean(), true),
 });
+
+const entityDurationEntrySchema = v.object({
+  id: v.optional(v.string(), ""),
+  monsterId: positiveI32Schema,
+  label: v.optional(v.string(), ""),
+  durationMs: v.optional(finiteNumberSchema),
+  scope: v.optional(v.picklist(["self", "any"]), "self"),
+  presetKey: v.optional(v.string()),
+});
+
+const entityDurationEntriesSchema = v.optional(
+  v.pipe(
+    v.array(entityDurationEntrySchema),
+    v.transform((entries) =>
+      ensureEntityDurationEntries(
+        entries as readonly Partial<EntityDurationEntry>[],
+      ),
+    ),
+  ),
+  () => [],
+);
 
 const skillProfileSchema = v.object({
   name: v.string(),
@@ -373,7 +403,9 @@ const skillProfileSchema = v.object({
   autoHideInDailyScenes: v.optional(v.boolean(), false),
   selectedClass: v.string(),
   monitoredSkillIds: numberArraySchema,
-  monitoredSkillDurationIds: numberArraySchema,
+  // Legacy (pre-entity-duration) exports; mapped onto the monster profile's
+  // entity-duration entries after parsing and then dropped.
+  monitoredSkillDurationIds: v.optional(numberArraySchema, () => []),
   monitoredBuffIds: numberArraySchema,
   monitoredBuffCategories: v.optional(
     v.array(categorySchema),
@@ -510,6 +542,11 @@ const monsterProfileSchema = v.object({
   hpPanelStyle: v.optional(
     customPanelStyleSchema,
     defaultClone(defaultMonster.hpPanelStyle),
+  ),
+  entityDurationEntries: entityDurationEntriesSchema,
+  entityDurationPanelStyle: v.optional(
+    customPanelStyleSchema,
+    defaultClone(defaultMonster.entityDurationPanelStyle),
   ),
 });
 
@@ -822,5 +859,32 @@ export function parseLoadoutExport(data: unknown): LoadoutParseResult {
       }),
     };
   }
-  return { success: true, output: result.output as unknown as LoadoutExport };
+  const output = result.output as unknown as LegacyAwareLoadoutExport;
+  migrateLegacyLoadoutExport(output);
+  return { success: true, output: output as unknown as LoadoutExport };
+}
+
+type LegacyAwareLoadoutExport = Omit<LoadoutExport, "skillProfile"> & {
+  skillProfile: Omit<
+    LoadoutExport["skillProfile"],
+    "monitoredSkillDurationIds"
+  > & {
+    monitoredSkillDurationIds?: number[];
+  };
+};
+
+/**
+ * Maps legacy skill-monitor duration skills (e.g. 1719 镰车) onto the monster
+ * profile's entity-duration entries and strips the legacy key.
+ */
+function migrateLegacyLoadoutExport(output: LegacyAwareLoadoutExport): void {
+  const legacyIds = output.skillProfile.monitoredSkillDurationIds;
+  delete output.skillProfile.monitoredSkillDurationIds;
+  if (!legacyIds?.length) return;
+  const existing = ensureEntityDurationEntries(
+    output.monsterProfile.entityDurationEntries,
+  );
+  const added = entriesFromLegacySkillDurationIds(legacyIds, existing);
+  if (added.length === 0) return;
+  output.monsterProfile.entityDurationEntries = [...existing, ...added];
 }

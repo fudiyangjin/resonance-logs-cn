@@ -30,7 +30,7 @@ export const enUSMessages = {
   "loadout.autoSwitch.toggle": "Auto-switch by spec",
   "loadout.autoSwitch.detected": "Detected",
   "loadout.autoSwitch.unknown": "Unknown",
-  "loadout.autoSwitch.switched": "Switched to \"{name}\"",
+  "loadout.autoSwitch.switched": 'Switched to "{name}"',
   "loadout.page.presetsTitle": "Presets",
   "loadout.page.presetsDescription":
     "Apply a curated loadout with skill, monster, and DPS settings",
@@ -745,7 +745,8 @@ export const enUSMessages = {
   "settings.shortcuts.toggleBossHp": "Toggle Boss Health",
   "settings.shortcuts.toggleOverlayEdit": "Toggle Overlay Edit Mode",
   "settings.shortcuts.toggleOverlayWindow": "Toggle Live Monitor",
-  "settings.shortcuts.toggleMinimizeAll": "Minimize/Restore DPS & Overlay Windows",
+  "settings.shortcuts.toggleMinimizeAll":
+    "Minimize/Restore DPS & Overlay Windows",
   "settings.debug.title": "Debug",
   "settings.debug.logFiles": "Log Files",
   "settings.debug.logFilesDescription": "Open the app log folder",
@@ -1211,12 +1212,6 @@ export const enUSMessages = {
   "skillMonitor.skillCd.skills.title": "Skill Selection",
   "skillMonitor.skillCd.skills.description":
     "Monitor up to 10 skills (2 rows x 5 columns)",
-  "skillMonitor.skillCd.duration.title": "Duration Skills",
-  "skillMonitor.skillCd.duration.description":
-    "Selected skills appear as separate icons in the overlay and start a frontend countdown after triggering",
-  "skillMonitor.skillCd.duration.titleWithDuration": "{name} {duration}",
-  "skillMonitor.skillCd.duration.empty":
-    "This class has no duration skills configured yet",
   "skillMonitor.skillCd.resonance.title": "Resonance Skills",
   "skillMonitor.skillCd.resonance.description":
     "Search for resonance skills. They share the 10 monitor slots with normal skills",
@@ -1438,7 +1433,6 @@ export const enUSMessages = {
   "skillMonitor.overlay.description":
     "Control whether the skill, duration skill, and resource areas are shown. Saved per profile",
   "skillMonitor.overlay.skillCd": "Skill CD Area: {state}",
-  "skillMonitor.overlay.skillDuration": "Skill Duration Area: {state}",
   "skillMonitor.overlay.resource": "Resource Monitor Area: {state}",
   "skillMonitor.overlay.panelAttr": "Character Attribute Area: {state}",
   "skillMonitor.overlay.panelAttrGroupTag": "Character Attribute Area",
@@ -1491,6 +1485,7 @@ export const enUSMessages = {
   "monsterMonitor.tabs.hp": "HP Bar",
   "monsterMonitor.tabs.fantasy": "Teammate Fantasies",
   "monsterMonitor.tabs.bossDbm": "Boss DBM",
+  "monsterMonitor.tabs.entityDuration": "Entity Duration",
   "monsterMonitor.tabs.overlay": "Enable Window",
   "monsterMonitor.buffSearch.title": "Buff Search and Selection",
   "monsterMonitor.buffSearch.self": "Search and Add Self-Applied",
@@ -1608,6 +1603,28 @@ export const enUSMessages = {
   "monsterMonitor.overlay.hp": "HP Bar Area: {state}",
   "monsterMonitor.overlay.fantasy": "Teammate Fantasy Area: {state}",
   "monsterMonitor.overlay.bossDbm": "Boss DBM: {state}",
+  "monsterMonitor.overlay.entityDuration": "Entity Duration: {state}",
+  "monsterMonitor.entityDuration.title": "Entity Duration",
+  "monsterMonitor.entityDuration.description":
+    "Watches nearby entities by id (e.g. Scythe Cart). The countdown starts when the entity appears and the row disappears with it. Use a preset or enter any entity id.",
+  "monsterMonitor.entityDuration.presetsTitle": "Presets",
+  "monsterMonitor.entityDuration.presetAdded": "Added",
+  "monsterMonitor.entityDuration.manualTitle": "Add Manually",
+  "monsterMonitor.entityDuration.monsterId": "Entity ID",
+  "monsterMonitor.entityDuration.label": "Label",
+  "monsterMonitor.entityDuration.durationSeconds": "Duration (seconds)",
+  "monsterMonitor.entityDuration.durationHint":
+    "Leave empty for no countdown; the row shows ∞ until the entity disappears",
+  "monsterMonitor.entityDuration.scope": "Caster Scope",
+  "monsterMonitor.entityDuration.scope.self": "Self only",
+  "monsterMonitor.entityDuration.scope.any": "Anyone",
+  "monsterMonitor.entityDuration.add": "Add",
+  "monsterMonitor.entityDuration.invalidId":
+    "Enter a valid positive integer entity id",
+  "monsterMonitor.entityDuration.listTitle": "Watch List",
+  "monsterMonitor.entityDuration.empty": "No entity watches yet.",
+  "monsterMonitor.entityDuration.styleTitle": "Panel Style",
+  "monsterMonitor.entityDuration.noDuration": "No countdown",
   "monsterMonitor.bossDbm.title": "Boss Mechanics (DBM)",
   "monsterMonitor.bossDbm.description":
     "Show Boss mechanic warning bars with skill name and countdown. Toggle visibility under Enable Window.",
@@ -1643,6 +1660,7 @@ export const enUSMessages = {
   "monsterOverlay.hpGroupTag": "HP Area",
   "monsterOverlay.fantasyGroupTag": "Teammate Fantasy Area",
   "monsterOverlay.bossDbmGroupTag": "Boss DBM 区",
+  "monsterOverlay.entityDurationGroupTag": "Entity Duration",
   "monsterOverlay.hateSectionTitle": "{title} - Hate",
   "monsterOverlay.stunSectionTitle": "{title} - Stun",
   "monsterOverlay.hpSectionTitle": "{title} - HP",
@@ -1656,6 +1674,7 @@ export const enUSMessages = {
     "Select buffs on the Monster Monitor page",
   "monsterOverlay.placeholder.preview": "Preview",
   "monsterOverlay.placeholder.bossDbm": "Mechanic Preview",
+  "monsterOverlay.placeholder.entityDuration": "Entity Duration Preview",
   "monsterOverlay.placeholder.target": "Target {uid}",
   "monsterOverlay.placeholder.teammate": "Teammate Preview",
   "monsterOverlay.placeholder.fantasy": "Fantasy Preview",

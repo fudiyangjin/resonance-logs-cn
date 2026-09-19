@@ -1,20 +1,21 @@
 //! Incremental DTO projection for live skill/entity monitoring.
 
+use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
 use crate::live::ipc::models::{
     BossDbmEvent, BuffUpdateState, FightResourceEntry, FightResourceState,
     HateEntry as HateEntryDto, HpEntry, PanelAttrState, ShieldDetailEntry, SkillCdState, StunEntry,
-    TeammateFantasyState,
+    TeammateFantasyState, WatchedEntityState,
 };
 use crate::live::ipc::topic::TopicMask;
 use crate::live::projections::skill_cd;
 use crate::live::protocol::attrs as attr_type;
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
-    AttributeValue, BuffState, DomainEnvelope, DomainEvent, EntityRef, EntityUuid,
-    FantasyTransition, TimerKey, TimerScope,
+    AttributeValue, BuffState, DomainEnvelope, DomainEvent, EntityIdentity, EntityRef, EntityUuid,
+    FantasyTransition, TimerKey, TimerScope, wall_now_ms,
 };
 use crate::live::runtime::scheduler::{DeadlineScheduler, TimerTask};
 
@@ -42,6 +43,16 @@ pub struct EntityMonitorSnapshot {
     pub hp: Vec<HpEntry>,
     pub player_names: HashMap<String, String>,
     pub monster_ids: HashMap<String, i32>,
+    pub watched_entities: Vec<WatchedEntityState>,
+}
+
+/// A present entity whose `monster_id` is on the entity-duration watch list.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct WatchedEntityRecord {
+    entity: EntityRef,
+    monster_id: i32,
+    owner: Option<EntityUuid>,
+    detected_at_ms: i64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -148,6 +159,8 @@ pub struct EntityMonitorProjection {
     hp_values: HashMap<EntityUuid, (i64, i64)>,
     player_names: HashMap<EntityUuid, String>,
     monster_ids: HashMap<EntityUuid, i32>,
+    watched_entity_ids: HashSet<i32>,
+    watched_entities: HashMap<EntityUuid, WatchedEntityRecord>,
 }
 
 impl EntityMonitorProjection {
@@ -163,6 +176,7 @@ impl EntityMonitorProjection {
         self.hp_values.clear();
         self.player_names.clear();
         self.monster_ids.clear();
+        self.watched_entities.clear();
     }
 
     pub fn start_segment(&mut self, started_at_wall_ms: i64) {
@@ -192,6 +206,18 @@ impl EntityMonitorProjection {
         self.monitored_panel_attr_ids
             .extend(config.skill.monitored_panel_attr_ids.iter().copied());
         self.buff_filter = BuffPublishFilter::from_snapshot(config);
+        self.watched_entity_ids.clear();
+        self.watched_entity_ids
+            .extend(config.monster.watched_entity_ids.iter().copied());
+        let watched = &self.watched_entity_ids;
+        self.watched_entities
+            .retain(|_, record| watched.contains(&record.monster_id));
+        // Seed from entities already in the scene so a newly watched id shows
+        // up immediately instead of waiting for its next identity update.
+        let now = wall_now_ms();
+        for state in entities.entities().filter(|state| state.is_present) {
+            self.sync_watched_entity(state.entity, &state.identity, true, now);
+        }
         self.panel_attrs
             .retain(|attr_id, _| self.monitored_panel_attr_ids.contains(attr_id));
         if let Some(local) = self
@@ -241,6 +267,8 @@ impl EntityMonitorProjection {
                         self.monster_ids.remove(&key);
                     }
                 }
+                let is_present = entities.entity(key).is_some_and(|state| state.is_present);
+                self.sync_watched_entity(*entity, current, is_present, envelope.occurred_at_ms);
                 let mut mask = TopicMask::MONSTER;
                 for fantasy in &mut self.recent_fantasies {
                     if fantasy.key.summoner == entity.uuid {
@@ -250,10 +278,24 @@ impl EntityMonitorProjection {
                 }
                 mask
             }
-            DomainEvent::EntityAppeared { .. } => {
+            DomainEvent::EntityAppeared { entity, .. } => {
                 self.local_player = entities.local_player();
                 self.sync_current_target(entities);
-                TopicMask::EMPTY
+                // Identity may have arrived before the appearance; re-sync so
+                // the watched record reflects the now-present entity.
+                let changed = entities.entity(entity.uuid).is_some_and(|state| {
+                    self.sync_watched_entity(
+                        *entity,
+                        &state.identity,
+                        state.is_present,
+                        envelope.occurred_at_ms,
+                    )
+                });
+                if changed {
+                    TopicMask::MONSTER
+                } else {
+                    TopicMask::EMPTY
+                }
             }
             DomainEvent::EntityDisappeared { entity } => {
                 if self
@@ -540,6 +582,26 @@ impl EntityMonitorProjection {
             .into_iter()
             .collect::<Vec<_>>();
 
+        let mut watched_records = self.watched_entities.values().copied().collect::<Vec<_>>();
+        watched_records
+            .sort_unstable_by_key(|record| (record.detected_at_ms, record.entity.uuid.0));
+        let watched_entities = watched_records
+            .into_iter()
+            .map(|record| WatchedEntityState {
+                entity_uuid: record.entity.uuid.0.to_string(),
+                monster_id: record.monster_id,
+                owner_uuid: record.owner.map(|owner| owner.0.to_string()),
+                owner_name: record
+                    .owner
+                    .and_then(|owner| entities.entity(owner))
+                    .and_then(|state| state.identity.name.clone()),
+                owner_is_local_player: record
+                    .owner
+                    .is_some_and(|owner| entities.roles(owner).is_local_player),
+                detected_at_ms: record.detected_at_ms,
+            })
+            .collect();
+
         let mut skill_cds = self.skill_cds.values().cloned().collect::<Vec<_>>();
         // Ascending received_at so frontend last-wins map keeps the newest entry
         // when multiple level IDs share the same base skill id.
@@ -593,6 +655,7 @@ impl EntityMonitorProjection {
                 .iter()
                 .map(|(entity, monster_id)| (entity.0.to_string(), *monster_id))
                 .collect(),
+            watched_entities,
         }
     }
 
@@ -607,7 +670,55 @@ impl EntityMonitorProjection {
         self.fight_resource_received_at = 0;
     }
 
+    /// Keeps the watched-entity record for `entity` in sync with its identity
+    /// and presence. Returns whether the published view changed.
+    /// `detected_at_ms` is consumed only when a record is created or a reused
+    /// uuid comes back with a new generation.
+    fn sync_watched_entity(
+        &mut self,
+        entity: EntityRef,
+        identity: &EntityIdentity,
+        is_present: bool,
+        detected_at_ms: i64,
+    ) -> bool {
+        let watched_id = identity
+            .monster_id
+            .filter(|monster_id| is_present && self.watched_entity_ids.contains(monster_id));
+        let Some(monster_id) = watched_id else {
+            return self.watched_entities.remove(&entity.uuid).is_some();
+        };
+        match self.watched_entities.entry(entity.uuid) {
+            Entry::Vacant(slot) => {
+                slot.insert(WatchedEntityRecord {
+                    entity,
+                    monster_id,
+                    owner: identity.owner_uuid,
+                    detected_at_ms,
+                });
+                true
+            }
+            Entry::Occupied(mut slot) => {
+                let record = slot.get_mut();
+                if record.entity.generation != entity.generation {
+                    *record = WatchedEntityRecord {
+                        entity,
+                        monster_id,
+                        owner: identity.owner_uuid,
+                        detected_at_ms,
+                    };
+                    return true;
+                }
+                let changed =
+                    record.owner != identity.owner_uuid || record.monster_id != monster_id;
+                record.owner = identity.owner_uuid;
+                record.monster_id = monster_id;
+                changed
+            }
+        }
+    }
+
     fn remove_entity(&mut self, entity: EntityUuid) {
+        self.watched_entities.remove(&entity);
         self.active_fantasies.remove(&entity);
         self.hate_lists.remove(&entity);
         self.stun_values.remove(&entity);
@@ -2211,5 +2322,326 @@ mod tests {
         );
         assert!(projection.snapshot(&entities).boss_mechanics.is_empty());
         assert!(scheduler.is_empty());
+    }
+
+    mod watched_entities {
+        use super::*;
+        use crate::live::runtime::events::{EntityIdentityPatch, EntityKind, FieldPatch};
+
+        const SCYTHE_CART: i32 = 179_901;
+
+        fn watched_config(ids: &[i32]) -> MonitorRuntimeSnapshot {
+            let mut config = MonitorRuntimeSnapshot::default();
+            config.monster.enabled = true;
+            config.monster.watched_entity_ids.extend_from_slice(ids);
+            config
+        }
+
+        fn setup() -> (EntityMonitorProjection, EntityContext, DeadlineScheduler) {
+            let mut projection = EntityMonitorProjection::default();
+            let mut entities = EntityContext::default();
+            let mut scheduler = DeadlineScheduler::default();
+            seed_local_player(&mut projection, &mut entities, &mut scheduler);
+            projection.apply_config(&watched_config(&[SCYTHE_CART]), &entities);
+            (projection, entities, scheduler)
+        }
+
+        fn appear(uuid: EntityUuid) -> ProtocolObservation {
+            ProtocolObservation::EntityAppeared {
+                uuid,
+                kind: EntityKind::Monster,
+            }
+        }
+
+        fn identity(
+            uuid: EntityUuid,
+            monster_id: Option<i32>,
+            owner: Option<EntityUuid>,
+        ) -> ProtocolObservation {
+            ProtocolObservation::IdentityUpdated {
+                uuid,
+                patch: EntityIdentityPatch {
+                    monster_id: monster_id.map_or(FieldPatch::Unchanged, FieldPatch::Set),
+                    owner_uuid: owner.map_or(FieldPatch::Unchanged, FieldPatch::Set),
+                    ..Default::default()
+                },
+            }
+        }
+
+        fn summon(uuid: EntityUuid, owner: Option<EntityUuid>) -> Vec<ProtocolObservation> {
+            vec![appear(uuid), identity(uuid, Some(SCYTHE_CART), owner)]
+        }
+
+        fn watched(
+            projection: &EntityMonitorProjection,
+            entities: &EntityContext,
+        ) -> Vec<WatchedEntityState> {
+            projection.snapshot(entities).watched_entities
+        }
+
+        #[test]
+        fn watched_entity_with_identity_and_owner_is_published_with_batch_time() {
+            let (mut projection, mut entities, mut scheduler) = setup();
+            let cart = EntityUuid(500);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                summon(cart, Some(local_ref().uuid)),
+            );
+            let rows = watched(&projection, &entities);
+            assert_eq!(rows.len(), 1);
+            let row = &rows[0];
+            assert_eq!(row.entity_uuid, "500");
+            assert_eq!(row.monster_id, SCYTHE_CART);
+            assert_eq!(row.owner_uuid.as_deref(), Some("10"));
+            assert!(row.owner_is_local_player);
+            assert_eq!(row.detected_at_ms, 2_000);
+        }
+
+        #[test]
+        fn owner_arriving_in_later_patch_updates_record_without_resetting_detected_at() {
+            let (mut projection, mut entities, mut scheduler) = setup();
+            let cart = EntityUuid(500);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                summon(cart, None),
+            );
+            let before = watched(&projection, &entities);
+            assert_eq!(before.len(), 1);
+            assert!(before[0].owner_uuid.is_none());
+            assert!(!before[0].owner_is_local_player);
+
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                3,
+                vec![identity(cart, None, Some(local_ref().uuid))],
+            );
+            let after = watched(&projection, &entities);
+            assert_eq!(after.len(), 1);
+            assert!(after[0].owner_is_local_player);
+            assert_eq!(after[0].detected_at_ms, 2_000);
+        }
+
+        #[test]
+        fn identity_before_appearance_is_tracked_when_entity_appears() {
+            let (mut projection, mut entities, mut scheduler) = setup();
+            let cart = EntityUuid(500);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                vec![identity(cart, Some(SCYTHE_CART), Some(local_ref().uuid))],
+            );
+            assert!(watched(&projection, &entities).is_empty());
+
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                3,
+                vec![appear(cart)],
+            );
+            let rows = watched(&projection, &entities);
+            assert_eq!(rows.len(), 1);
+            assert_eq!(rows[0].detected_at_ms, 3_000);
+        }
+
+        #[test]
+        fn watched_entity_disappearance_removes_record() {
+            let (mut projection, mut entities, mut scheduler) = setup();
+            let cart = EntityUuid(500);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                summon(cart, Some(local_ref().uuid)),
+            );
+            assert_eq!(watched(&projection, &entities).len(), 1);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                3,
+                vec![ProtocolObservation::EntityDisappeared { uuid: cart }],
+            );
+            assert!(watched(&projection, &entities).is_empty());
+        }
+
+        #[test]
+        fn same_uuid_reappearance_starts_a_new_record() {
+            let (mut projection, mut entities, mut scheduler) = setup();
+            let cart = EntityUuid(500);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                summon(cart, Some(local_ref().uuid)),
+            );
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                3,
+                vec![ProtocolObservation::EntityDisappeared { uuid: cart }],
+            );
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                4,
+                summon(cart, Some(local_ref().uuid)),
+            );
+            let rows = watched(&projection, &entities);
+            assert_eq!(rows.len(), 1);
+            assert_eq!(rows[0].detected_at_ms, 4_000);
+        }
+
+        #[test]
+        fn unwatched_monster_id_is_ignored() {
+            let (mut projection, mut entities, mut scheduler) = setup();
+            let other = EntityUuid(600);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                vec![
+                    appear(other),
+                    identity(other, Some(12_345), Some(local_ref().uuid)),
+                ],
+            );
+            assert!(watched(&projection, &entities).is_empty());
+        }
+
+        #[test]
+        fn apply_config_narrowing_prunes_records_and_widening_seeds_present_entities() {
+            let (mut projection, mut entities, mut scheduler) = setup();
+            let cart = EntityUuid(500);
+            let other = EntityUuid(600);
+            let mut observations = summon(cart, Some(local_ref().uuid));
+            observations.push(appear(other));
+            observations.push(identity(other, Some(12_345), None));
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                observations,
+            );
+            assert_eq!(watched(&projection, &entities).len(), 1);
+
+            projection.apply_config(&watched_config(&[]), &entities);
+            assert!(watched(&projection, &entities).is_empty());
+
+            projection.apply_config(&watched_config(&[SCYTHE_CART, 12_345]), &entities);
+            let rows = watched(&projection, &entities);
+            let mut ids = rows.iter().map(|row| row.monster_id).collect::<Vec<_>>();
+            ids.sort_unstable();
+            assert_eq!(ids, vec![12_345, SCYTHE_CART]);
+        }
+
+        #[test]
+        fn owner_role_and_name_resolve_local_player_and_stranger() {
+            let (mut projection, mut entities, mut scheduler) = setup();
+            let stranger = EntityUuid(20);
+            let mine = EntityUuid(500);
+            let theirs = EntityUuid(501);
+            let mut observations = vec![
+                ProtocolObservation::EntityAppeared {
+                    uuid: stranger,
+                    kind: EntityKind::Character,
+                },
+                ProtocolObservation::IdentityUpdated {
+                    uuid: stranger,
+                    patch: EntityIdentityPatch {
+                        name: FieldPatch::Set("Rin".to_string()),
+                        ..Default::default()
+                    },
+                },
+            ];
+            observations.extend(summon(mine, Some(local_ref().uuid)));
+            observations.extend(summon(theirs, Some(stranger)));
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                observations,
+            );
+            let rows = watched(&projection, &entities);
+            assert_eq!(rows.len(), 2);
+            let mine_row = rows
+                .iter()
+                .find(|row| row.entity_uuid == "500")
+                .expect("own cart");
+            let theirs_row = rows
+                .iter()
+                .find(|row| row.entity_uuid == "501")
+                .expect("stranger cart");
+            assert!(mine_row.owner_is_local_player);
+            assert!(!theirs_row.owner_is_local_player);
+            assert_eq!(theirs_row.owner_name.as_deref(), Some("Rin"));
+            assert_eq!(theirs_row.owner_uuid.as_deref(), Some("20"));
+        }
+
+        #[test]
+        fn scene_change_despawns_watched_entities() {
+            let (mut projection, mut entities, mut scheduler) = setup();
+            let cart = EntityUuid(500);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                summon(cart, Some(local_ref().uuid)),
+            );
+            assert_eq!(watched(&projection, &entities).len(), 1);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                3,
+                vec![ProtocolObservation::SceneChanged {
+                    scene_id: 77,
+                    difficulty: None,
+                }],
+            );
+            assert!(watched(&projection, &entities).is_empty());
+        }
+
+        #[test]
+        fn reset_runtime_clears_watched_entities_but_keeps_watch_set() {
+            let (mut projection, mut entities, mut scheduler) = setup();
+            let cart = EntityUuid(500);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                summon(cart, Some(local_ref().uuid)),
+            );
+            projection.reset_runtime(&mut scheduler);
+            assert!(watched(&projection, &entities).is_empty());
+
+            let cart2 = EntityUuid(502);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                3,
+                summon(cart2, None),
+            );
+            assert_eq!(watched(&projection, &entities).len(), 1);
+        }
     }
 }

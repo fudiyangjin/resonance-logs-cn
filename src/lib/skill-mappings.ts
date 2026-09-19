@@ -27,7 +27,6 @@ export type SkillDisplayInfo = {
   imagePath: string;
   maxCharges?: number;
   maxValidCdTime?: number;
-  effectDurationMs?: number;
   resourceRequirement?: ResourceRequirement;
 };
 
@@ -1008,15 +1007,6 @@ export function getSkillsByClass(
   locale = getLocale(),
 ): SkillDefinition[] {
   return getClassConfigMap(locale)[classKey]?.skills ?? [];
-}
-
-export function getDurationSkillsByClass(
-  classKey: string,
-  locale = getLocale(),
-): SkillDefinition[] {
-  return getSkillsByClass(classKey, locale).filter(
-    (skill) => skill.effectDurationMs !== undefined,
-  );
 }
 
 export function findSkillById(

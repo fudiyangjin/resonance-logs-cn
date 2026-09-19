@@ -142,10 +142,13 @@ impl MonitorRuntimeSnapshot {
 
         dedup_and_sort_i32(&mut self.monster.global_ids);
         dedup_and_sort_i32(&mut self.monster.self_applied_ids);
+        self.monster.watched_entity_ids.retain(|id| *id > 0);
+        dedup_and_sort_i32(&mut self.monster.watched_entity_ids);
         if !self.monster.enabled {
             self.monster.global_ids.clear();
             self.monster.self_applied_ids.clear();
             self.monster.monitor_all_self_applied = false;
+            self.monster.watched_entity_ids.clear();
         }
 
         dedup_and_sort_i32(&mut self.teammate.any_source_ids);
@@ -228,6 +231,7 @@ pub struct MonsterRuntimeSnapshot {
     pub global_ids: Vec<i32>,
     pub self_applied_ids: Vec<i32>,
     pub monitor_all_self_applied: bool,
+    pub watched_entity_ids: Vec<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default)]
@@ -267,7 +271,7 @@ pub(crate) fn save_monitor_runtime_snapshot(
             Ok(_) => {
                 info!(
                     target: "app::startup",
-                    "saved monitor runtime snapshot to {} (locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={})",
+                    "saved monitor runtime snapshot to {} (locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} monster_watched_entities={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={})",
                     path.display(),
                     snapshot.i18n.locale.as_str(),
                     snapshot.live.event_update_rate_ms,
@@ -279,6 +283,7 @@ pub(crate) fn save_monitor_runtime_snapshot(
                     snapshot.monster.enabled,
                     snapshot.monster.global_ids.len(),
                     snapshot.monster.self_applied_ids.len(),
+                    snapshot.monster.watched_entity_ids.len(),
                     snapshot.teammate.enabled,
                     snapshot.teammate.any_source_ids.len(),
                     snapshot.teammate.local_player_source_ids.len(),
@@ -355,7 +360,7 @@ pub(crate) fn load_monitor_runtime_snapshot(
             Ok(snapshot) => {
                 info!(
                     target: "app::startup",
-                    "loaded monitor runtime snapshot from {} (locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={})",
+                    "loaded monitor runtime snapshot from {} (locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} monster_watched_entities={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={})",
                     path.display(),
                     snapshot.i18n.locale.as_str(),
                     snapshot.live.event_update_rate_ms,
@@ -367,6 +372,7 @@ pub(crate) fn load_monitor_runtime_snapshot(
                     snapshot.monster.enabled,
                     snapshot.monster.global_ids.len(),
                     snapshot.monster.self_applied_ids.len(),
+                    snapshot.monster.watched_entity_ids.len(),
                     snapshot.teammate.enabled,
                     snapshot.teammate.any_source_ids.len(),
                     snapshot.teammate.local_player_source_ids.len(),
@@ -409,6 +415,30 @@ fn dedup_and_sort_i32(values: &mut Vec<i32>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn watched_entity_ids_are_deduplicated_and_cleared_when_monster_disabled() {
+        let mut snapshot = MonitorRuntimeSnapshot::default();
+        snapshot.monster.enabled = true;
+        snapshot.monster.watched_entity_ids = vec![179_901, 0, -5, 42, 179_901];
+        let normalized = snapshot
+            .clone()
+            .normalize()
+            .expect("watched ids snapshot is valid");
+        assert_eq!(normalized.monster.watched_entity_ids, vec![42, 179_901]);
+
+        snapshot.monster.enabled = false;
+        let disabled = snapshot.normalize().expect("disabled snapshot is valid");
+        assert!(disabled.monster.watched_entity_ids.is_empty());
+    }
+
+    #[test]
+    fn legacy_monster_snapshot_without_watched_ids_deserializes_to_empty() {
+        let monster: MonsterRuntimeSnapshot =
+            serde_json::from_str(r#"{"enabled":true,"globalIds":[1],"selfAppliedIds":[]}"#)
+                .expect("legacy monster snapshot parses");
+        assert!(monster.watched_entity_ids.is_empty());
+    }
 
     #[test]
     fn normalize_defaults_training_window_to_183s() {

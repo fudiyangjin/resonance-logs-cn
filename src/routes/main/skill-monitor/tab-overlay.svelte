@@ -3,7 +3,6 @@
 
   interface Props {
     showSkillCdGroup: boolean;
-    showSkillDurationGroup: boolean;
     showResourceGroup: boolean;
     showPanelAttrGroup: boolean;
     showCustomPanelGroup: boolean;
@@ -14,7 +13,6 @@
     toggleOverlaySectionVisibility: (
       key:
         | "showSkillCdGroup"
-        | "showSkillDurationGroup"
         | "showResourceGroup"
         | "showPanelAttrGroup"
         | "showCustomPanelGroup"
@@ -25,7 +23,6 @@
 
   let {
     showSkillCdGroup,
-    showSkillDurationGroup,
     showResourceGroup,
     showPanelAttrGroup,
     showCustomPanelGroup,
@@ -58,15 +55,6 @@
         onclick={() => toggleOverlaySectionVisibility("showSkillCdGroup")}
       >
         {t("skillMonitor.overlay.skillCd", { state: visibilityState(showSkillCdGroup) })}
-      </button>
-      <button
-        type="button"
-        class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {showSkillDurationGroup
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => toggleOverlaySectionVisibility("showSkillDurationGroup")}
-      >
-        {t("skillMonitor.overlay.skillDuration", { state: visibilityState(showSkillDurationGroup) })}
       </button>
       <button
         type="button"

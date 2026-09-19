@@ -13,8 +13,11 @@ import {
   SETTINGS,
   ensureBuffAlerts,
   getGlobalBuffAliases,
+  type EntityDurationEntry,
   type TeammateBuffColumnKey,
 } from "$lib/settings-store";
+import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
+import { buildEntityDurationRows } from "./monster-entity-duration";
 import type {
   HateEntry,
   HpEntry,
@@ -47,6 +50,7 @@ import {
   monsterRuntime,
   monsterStunEntries,
   monsterTeammateBuffs,
+  monsterWatchedEntities,
 } from "./monster-runtime.svelte.js";
 import {
   fantasyEntryKey,
@@ -71,11 +75,14 @@ export const MONSTER_TEAMMATE_DEADLINE_SOURCE = "hud-overlay:monster-teammate";
 export const MONSTER_BOSS_DEADLINE_SOURCE = "hud-overlay:monster-boss";
 export const MONSTER_FANTASY_DEADLINE_SOURCE = "hud-overlay:monster-fantasy";
 export const MONSTER_DBM_DEADLINE_SOURCE = "hud-overlay:monster-dbm";
+export const MONSTER_ENTITY_DURATION_DEADLINE_SOURCE =
+  "hud-overlay:monster-entity-duration";
 export const MONSTER_PROJECTION_DEADLINE_SOURCES = [
   MONSTER_TEAMMATE_DEADLINE_SOURCE,
   MONSTER_BOSS_DEADLINE_SOURCE,
   MONSTER_FANTASY_DEADLINE_SOURCE,
   MONSTER_DBM_DEADLINE_SOURCE,
+  MONSTER_ENTITY_DURATION_DEADLINE_SOURCE,
 ] as const;
 
 type TeammateDisplay = {
@@ -1122,6 +1129,72 @@ function buildDbmDisplay(now: number): {
   return { rows, nextDeadlineMs: deadlines.value() };
 }
 
+function entityDurationEntryLabel(entry: EntityDurationEntry): string {
+  const label = entry.label.trim();
+  return label || resolveMonsterName(entry.monsterId);
+}
+
+function buildEntityDurationPlaceholderRows(
+  entries: readonly EntityDurationEntry[],
+): TextBuffDisplay[] {
+  if (entries.length === 0) {
+    return [
+      {
+        key: "monster_entity_duration_preview",
+        label: t("monsterOverlay.placeholder.entityDuration"),
+        valueText: "12.0",
+        progressPercent: 60,
+        showProgress: true,
+        isPlaceholder: true,
+      },
+    ];
+  }
+  return entries.slice(0, 3).map((entry) => ({
+    key: `monster_entity_duration_preview_${entry.id}`,
+    label: entityDurationEntryLabel(entry),
+    valueText:
+      entry.durationMs === undefined
+        ? formatTimerText(Number.POSITIVE_INFINITY)
+        : "12.0",
+    progressPercent: entry.durationMs === undefined ? 0 : 60,
+    showProgress: entry.durationMs !== undefined,
+    isPlaceholder: true,
+  }));
+}
+
+function buildEntityDurationDisplay(now: number): {
+  rows: TextBuffDisplay[];
+  nextDeadlineMs: number | null;
+} {
+  const entries = ensureEntityDurationEntries(
+    SETTINGS.monsterMonitor.state.entityDurationEntries,
+  );
+  const playerNames = monsterPlayerNames();
+  const built = buildEntityDurationRows({
+    entries,
+    watched: monsterWatchedEntities(),
+    now,
+    resolveEntryLabel: entityDurationEntryLabel,
+    resolveOwnerName: (entity) => {
+      if (entity.ownerName) return entity.ownerName;
+      if (!entity.ownerUuid) return "";
+      return (
+        playerNames.get(entity.ownerUuid) ??
+        t("monsterOverlay.entity.uid", {
+          uid: uidFromEntityUuid(entity.ownerUuid),
+        })
+      );
+    },
+    formatRemaining: formatTimerText,
+    infiniteText: formatTimerText(Number.POSITIVE_INFINITY),
+  });
+  let rows = built.rows;
+  if (rows.length === 0 && isMonsterLayoutScaffold()) {
+    rows = buildEntityDurationPlaceholderRows(entries);
+  }
+  return { rows, nextDeadlineMs: built.nextDeadlineMs };
+}
+
 const globalBuffAliasesProjection = $derived.by(() => getGlobalBuffAliases());
 
 const teammateColumnProjection = $derived.by(() => {
@@ -1174,6 +1247,11 @@ const dbmDisplayProjection = $derived.by(() => {
   return buildDbmDisplay(Date.now());
 });
 
+const entityDurationDisplayProjection = $derived.by(() => {
+  void hudProjectionRevision(MONSTER_ENTITY_DURATION_DEADLINE_SOURCE);
+  return buildEntityDurationDisplay(Date.now());
+});
+
 function assignRuntime<
   K extends
     | "bossSections"
@@ -1183,7 +1261,8 @@ function assignRuntime<
     | "stunSections"
     | "hpSections"
     | "fantasyRows"
-    | "dbmRows",
+    | "dbmRows"
+    | "entityDurationRows",
 >(key: K, value: (typeof monsterRuntime)[K]) {
   if (untrack(() => monsterRuntime[key]) !== value) {
     monsterRuntime[key] = value;
@@ -1203,6 +1282,7 @@ export function updateMonsterDisplay() {
   assignRuntime("hpSections", hpDisplayProjection);
   assignRuntime("fantasyRows", fantasyDisplayProjection.rows);
   assignRuntime("dbmRows", dbmDisplayProjection.rows);
+  assignRuntime("entityDurationRows", entityDurationDisplayProjection.rows);
 }
 
 export function syncMonsterProjectionDeadlines() {
@@ -1222,6 +1302,10 @@ export function syncMonsterProjectionDeadlines() {
     MONSTER_DBM_DEADLINE_SOURCE,
     dbmDisplayProjection.nextDeadlineMs,
   );
+  setHudProjectionDeadline(
+    MONSTER_ENTITY_DURATION_DEADLINE_SOURCE,
+    entityDurationDisplayProjection.nextDeadlineMs,
+  );
 }
 
 export function clearMonsterProjectionDeadlines() {
@@ -1236,6 +1320,7 @@ export function nextMonsterProjectionDeadline(): number | null {
     bossDisplayProjection.nextDeadlineMs,
     fantasyDisplayProjection.nextDeadlineMs,
     dbmDisplayProjection.nextDeadlineMs,
+    entityDurationDisplayProjection.nextDeadlineMs,
   ].filter((value): value is number => value !== null);
   return candidates.length > 0 ? Math.min(...candidates) : null;
 }

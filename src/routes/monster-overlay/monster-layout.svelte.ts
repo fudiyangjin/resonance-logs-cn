@@ -111,6 +111,21 @@ export function getDbmPanelScale() {
   return getMonsterOverlaySizes().bossDbmPanelScale;
 }
 
+export function getEntityDurationPanelPosition() {
+  return getMonsterOverlayPositions().entityDurationPanel;
+}
+
+export function getEntityDurationPanelScale() {
+  return getMonsterOverlaySizes().entityDurationPanelScale;
+}
+
+export function entityDurationPanelStyle() {
+  return normalizeCustomPanelStyle(
+    SETTINGS.monsterMonitor.state.entityDurationPanelStyle ??
+      SETTINGS.monsterMonitor.state.panelStyle,
+  );
+}
+
 export function monsterPanelStyle() {
   return normalizeCustomPanelStyle(SETTINGS.monsterMonitor.state.panelStyle);
 }
@@ -283,6 +298,27 @@ export function setDbmPanelScale(value: number) {
   }));
 }
 
+export function setEntityDurationPanelPosition(nextPos: {
+  x: number;
+  y: number;
+}) {
+  patchMonsterMonitor(() => ({
+    overlayPositions: {
+      ...getMonsterOverlayPositions(),
+      entityDurationPanel: nextPos,
+    },
+  }));
+}
+
+export function setEntityDurationPanelScale(value: number) {
+  patchMonsterMonitor(() => ({
+    overlaySizes: {
+      ...getMonsterOverlaySizes(),
+      entityDurationPanelScale: clampPanelScale(value),
+    },
+  }));
+}
+
 export function startMonsterDrag(
   event: PointerEvent,
   target: MonsterDragTarget,
@@ -416,6 +452,8 @@ function commitDragPreview() {
     setHpPanelPosition(nextPos);
   } else if (drag.target.kind === "dbmPanel") {
     setDbmPanelPosition(nextPos);
+  } else if (drag.target.kind === "entityDurationPanel") {
+    setEntityDurationPanelPosition(nextPos);
   } else {
     setFantasyPanelPosition(nextPos);
   }
@@ -437,6 +475,8 @@ function commitResizePreview() {
     setHpPanelScale(nextValue);
   } else if (resize.target.kind === "dbmPanel") {
     setDbmPanelScale(nextValue);
+  } else if (resize.target.kind === "entityDurationPanel") {
+    setEntityDurationPanelScale(nextValue);
   } else {
     setFantasyPanelScale(nextValue);
   }

@@ -928,7 +928,6 @@ export type OverlayPositions = {
   shieldDetailGroup: Point;
   buffCoverageGroup: Point;
   iconBuffPositions: Record<number, Point>;
-  skillDurationPositions: Record<number, Point>;
   categoryIconPositions?: Partial<Record<BuffCategoryKey, Point>>;
 };
 
@@ -945,13 +944,11 @@ export type OverlaySizes = {
   panelAttrColumnGap: number;
   panelAttrTextStyle: OverlayTextStyle;
   iconBuffSizes: Record<number, number>;
-  skillDurationSizes: Record<number, number>;
   categoryIconSizes?: Partial<Record<BuffCategoryKey, number>>;
 };
 
 export type OverlayVisibility = {
   showSkillCdGroup: boolean;
-  showSkillDurationGroup: boolean;
   showResourceGroup: boolean;
   showPanelAttrGroup: boolean;
   showCustomPanelGroup: boolean;
@@ -1005,6 +1002,7 @@ export type MonsterOverlayPositions = {
   bossDbmPanel: Point;
   stunPanel: Point;
   hpPanel: Point;
+  entityDurationPanel: Point;
 };
 
 export type MonsterOverlaySizes = {
@@ -1015,6 +1013,7 @@ export type MonsterOverlaySizes = {
   bossDbmPanelScale: number;
   stunPanelScale: number;
   hpPanelScale: number;
+  entityDurationPanelScale: number;
 };
 
 export type MonsterOverlayVisibility = {
@@ -1025,6 +1024,7 @@ export type MonsterOverlayVisibility = {
   showBossDbmPanel: boolean;
   showStunPanel: boolean;
   showHpPanel: boolean;
+  showEntityDurationPanel: boolean;
 };
 
 export type BuffAlertRule = {
@@ -1036,6 +1036,23 @@ export type BuffAlertRule = {
 };
 
 export type BuffAlertMap = Record<string, BuffAlertRule>;
+
+/** Who must have summoned a watched entity for it to be displayed. */
+export type EntityDurationScope = "self" | "any";
+
+/**
+ * One monster-monitor "entity duration" watch: when an entity with
+ * `monsterId` appears nearby, a countdown of `durationMs` starts; the row
+ * disappears when the entity does. No `durationMs` shows an open-ended row.
+ */
+export type EntityDurationEntry = {
+  id: string;
+  monsterId: number;
+  label: string;
+  durationMs?: number;
+  scope: EntityDurationScope;
+  presetKey?: string;
+};
 
 export type MonsterMonitorConfig = {
   enabled: boolean;
@@ -1076,6 +1093,8 @@ export type MonsterMonitorConfig = {
   bossDbmPanelStyle: CustomPanelStyle;
   stunPanelStyle: CustomPanelStyle;
   hpPanelStyle: CustomPanelStyle;
+  entityDurationEntries: EntityDurationEntry[];
+  entityDurationPanelStyle: CustomPanelStyle;
 };
 
 export type TextBuffPanelDisplayMode = "modern" | "classic";
@@ -1186,7 +1205,6 @@ export type SkillMonitorProfile = {
   autoHideInDailyScenes: boolean;
   selectedClass: string;
   monitoredSkillIds: number[];
-  monitoredSkillDurationIds: number[];
   monitoredBuffIds: number[];
   monitoredBuffCategories?: BuffCategoryKey[];
   monitoredPanelAttrs: PanelAttrConfig[];
@@ -1328,7 +1346,6 @@ function createDefaultOverlayPositions(): OverlayPositions {
     shieldDetailGroup: { x: 40, y: 550 },
     buffCoverageGroup: { x: 360, y: 550 },
     iconBuffPositions: {},
-    skillDurationPositions: {},
     categoryIconPositions: {},
   };
 }
@@ -1347,7 +1364,6 @@ function createDefaultOverlaySizes(): OverlaySizes {
     panelAttrColumnGap: 12,
     panelAttrTextStyle: createDefaultOverlayTextStyle(),
     iconBuffSizes: {},
-    skillDurationSizes: {},
     categoryIconSizes: {},
   };
 }
@@ -1355,7 +1371,6 @@ function createDefaultOverlaySizes(): OverlaySizes {
 function createDefaultOverlayVisibility(): OverlayVisibility {
   return {
     showSkillCdGroup: false,
-    showSkillDurationGroup: true,
     showResourceGroup: false,
     showPanelAttrGroup: true,
     showCustomPanelGroup: true,
@@ -1426,6 +1441,14 @@ export function createDefaultBossDbmStyle(): CustomPanelStyle {
   };
 }
 
+export function createDefaultEntityDurationPanelStyle(): CustomPanelStyle {
+  return {
+    ...createDefaultCustomPanelStyle(),
+    columnGap: 8,
+    fontSize: 13,
+  };
+}
+
 export function createDefaultStunPanelStyle(): CustomPanelStyle {
   return {
     ...createDefaultCustomPanelStyle(),
@@ -1455,6 +1478,7 @@ function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
     bossDbmPanel: { x: 800, y: 40 },
     stunPanel: { x: 40, y: 460 },
     hpPanel: { x: 40, y: 560 },
+    entityDurationPanel: { x: 800, y: 300 },
   };
 }
 
@@ -1467,6 +1491,7 @@ function createDefaultMonsterOverlaySizes(): MonsterOverlaySizes {
     bossDbmPanelScale: 1,
     stunPanelScale: 1,
     hpPanelScale: 1,
+    entityDurationPanelScale: 1,
   };
 }
 
@@ -1479,6 +1504,7 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
     showBossDbmPanel: false,
     showStunPanel: false,
     showHpPanel: false,
+    showEntityDurationPanel: true,
   };
 }
 
@@ -1602,7 +1628,6 @@ export function createDefaultSkillMonitorProfile(
     autoHideInDailyScenes: false,
     selectedClass: classKey,
     monitoredSkillIds: [],
-    monitoredSkillDurationIds: [],
     monitoredBuffIds: [],
     monitoredBuffCategories: [],
     monitoredPanelAttrs: AVAILABLE_PANEL_ATTRS.map((item) => ({
@@ -1665,6 +1690,8 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     bossDbmPanelStyle: createDefaultBossDbmStyle(),
     stunPanelStyle: createDefaultStunPanelStyle(),
     hpPanelStyle: createDefaultHpPanelStyle(),
+    entityDurationEntries: [],
+    entityDurationPanelStyle: createDefaultEntityDurationPanelStyle(),
   };
 }
 
@@ -1739,6 +1766,8 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "bossDbmPanelStyle",
   "stunPanelStyle",
   "hpPanelStyle",
+  "entityDurationEntries",
+  "entityDurationPanelStyle",
 ] as const satisfies readonly (keyof MonsterMonitorProfileData)[];
 
 // Compile-time exhaustiveness guard: if a field is added to

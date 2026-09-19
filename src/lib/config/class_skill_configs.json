@@ -3,7 +3,10 @@
     "classKey": "wind_knight",
     "className": "青岚骑士",
     "classId": 4,
-    "defaultMonitoredBuffIds": [510072, 2205561, 31201, 2205211, 2205401, 2205134, 2205421, 2205521, 2205301, 31901],
+    "defaultMonitoredBuffIds": [
+      510072, 2205561, 31201, 2205211, 2205401, 2205134, 2205421, 2205521,
+      2205301, 31901
+    ],
     "derivations": [
       {
         "sourceSkillId": 1425,
@@ -251,7 +254,9 @@
     "classKey": "stormblade",
     "className": "雷影剑士",
     "classId": 1,
-    "defaultMonitoredBuffIds": [510072, 2200601, 2200431, 2200641, 2200121, 2200051, 2200231, 43201, 43101],
+    "defaultMonitoredBuffIds": [
+      510072, 2200601, 2200431, 2200641, 2200121, 2200051, 2200231, 43201, 43101
+    ],
     "derivations": [
       {
         "sourceSkillId": 1701,
@@ -343,8 +348,7 @@
       {
         "skillId": 1719,
         "name": "镰车",
-        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx04_7614798060604092699.png",
-        "effectDurationMs": 35000
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx04_7614798060604092699.png"
       },
       {
         "skillId": 1717,

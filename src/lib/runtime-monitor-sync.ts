@@ -10,6 +10,7 @@ import {
 } from "$lib/buff-monitor-plan";
 import { expandBuffSelection } from "$lib/config/buff-name-table";
 import { activeProfile as getActiveProfile } from "$lib/skill-monitor-profile.svelte.js";
+import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
 import { SETTINGS } from "$lib/settings-store";
 import {
   getCounterRules,
@@ -56,11 +57,7 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
   const buffPlan = buildConfiguredBuffPlan(profile);
   const skillMonitorEnabled = buffPlan.enabled;
   const monitoredSkillIds = profile?.monitoredSkillIds ?? [];
-  const monitoredSkillDurationIds = profile?.monitoredSkillDurationIds ?? [];
-  const mergedSkillIds = uniqueSortedNumbers([
-    ...monitoredSkillIds,
-    ...monitoredSkillDurationIds,
-  ]);
+  const mergedSkillIds = uniqueSortedNumbers(monitoredSkillIds);
   const monitoredPanelAttrs = profile?.monitoredPanelAttrs ?? [];
   const customPanelEntries = buffPlan.manualEntries;
   const hasSeasonCultivateFactorGroup =
@@ -151,6 +148,7 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
       globalIds: [],
       selfAppliedIds: [],
       monitorAllSelfApplied: false,
+      watchedEntityIds: [],
     };
   }
 
@@ -163,6 +161,11 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
       SETTINGS.monsterMonitor.state.selfAppliedBuffIds,
     ),
     monitorAllSelfApplied: SETTINGS.monsterMonitor.state.selfAppliedMonitorAll,
+    watchedEntityIds: uniqueSortedNumbers(
+      ensureEntityDurationEntries(
+        SETTINGS.monsterMonitor.state.entityDurationEntries,
+      ).map((entry) => entry.monsterId),
+    ),
   };
 }
 

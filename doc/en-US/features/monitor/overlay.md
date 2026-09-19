@@ -18,7 +18,6 @@ Enable **Enable Live Monitor** below first so data is pushed to the overlay.
 Toggle each area on this page (saved per profile). Common modules:
 
 - **Skill CD**
-- **Skill Duration**
 - **Resources**
 - **Character Attributes** (see [Character Panel](./panel-attr.md))
 - **Custom Panel** (see [Custom Monitor](./custom-panel.md))

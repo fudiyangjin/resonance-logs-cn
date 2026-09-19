@@ -20,6 +20,7 @@ Independent from **Live Monitor** (your skill CD, your buffs, etc.): config live
 | [Teammate Buffs](./teammate.md) | Teammate Buffs | Teammate-applied buffs, category shortcuts, matrix styling |
 | [Threat List](./hate.md) | Hate List | Threat panel toggle, player limit, styling |
 | [Boss DBM](./boss-dbm.md) | Boss DBM | Boss mechanic warning bars, styling, layout |
+| [Entity Duration](./entity-duration.md) | Entity Duration | Timers driven by entity appear / disappear (e.g. Scythe Cart), presets, manual entries, caster scope |
 | [Enable Overlay](./overlay.md) | Enable Window | Monster overlay area display toggles |
 
 ## Enable & Top Bar

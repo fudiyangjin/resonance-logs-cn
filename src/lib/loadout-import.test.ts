@@ -418,6 +418,48 @@ describe("parseLoadoutExport", () => {
     ).toMatchObject(textStyleDefaults);
   });
 
+  it("maps legacy duration skills onto entity-duration entries", () => {
+    const data = validExport();
+    const skill = data["skillProfile"] as Record<string, unknown>;
+    skill["monitoredSkillDurationIds"] = [1719];
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    delete monster["entityDurationEntries"];
+    delete monster["entityDurationPanelStyle"];
+
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect("monitoredSkillDurationIds" in result.output.skillProfile).toBe(
+      false,
+    );
+    expect(result.output.monsterProfile.entityDurationEntries).toHaveLength(1);
+    expect(result.output.monsterProfile.entityDurationEntries[0]).toMatchObject(
+      { monsterId: 179901, durationMs: 35000, scope: "self" },
+    );
+    expect(result.output.monsterProfile.entityDurationPanelStyle).toBeTruthy();
+  });
+
+  it("normalizes imported entity-duration entries", () => {
+    const data = validExport();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    monster["entityDurationEntries"] = [
+      { monsterId: 5, label: " a ", scope: "any", durationMs: 1 },
+      { monsterId: 5, label: "dup" },
+      { id: "x", monsterId: 6, label: "b" },
+    ];
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const entries = result.output.monsterProfile.entityDurationEntries;
+    expect(entries.map((entry) => entry.monsterId)).toEqual([5, 6]);
+    expect(entries[0]).toMatchObject({
+      label: "a",
+      scope: "any",
+      durationMs: 100,
+    });
+    expect("durationMs" in entries[1]!).toBe(false);
+  });
+
   it("includes the field path in validation issues", () => {
     const data = validExport();
     const skill = data["skillProfile"] as Record<string, unknown>;

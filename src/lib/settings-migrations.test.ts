@@ -250,9 +250,9 @@ describe("legacy monitoring migration", () => {
 
   it.each([
     [
-      "duration skill",
+      "monitored skill",
       (base: ReturnType<typeof createDefaultMonitoringSettingsState>) => {
-        base.skillMonitor.profiles[0]!.monitoredSkillDurationIds = [101];
+        base.skillMonitor.profiles[0]!.monitoredSkillIds = [101];
       },
     ],
     [
@@ -598,7 +598,7 @@ describe("incremental monitoring migration", () => {
       liveProfileData,
     );
 
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(CURRENT_MONITORING_SCHEMA_VERSION);
     for (const profile of migrated.liveMeter.profiles) {
       expect(profile.history.general.timelineLaneH).toBe(68);
       expect(profile.history.general.shortenDps).toBe(false);
@@ -607,6 +607,89 @@ describe("incremental monitoring migration", () => {
     expect(
       migrated.liveMeter.profiles[0]!.columnLabels.history.players.first,
     ).toBe("队员");
+  });
+
+  it("migrates legacy duration skills onto the loadout monster profile at schema five", () => {
+    const state = createDefaultMonitoringSettingsState();
+    state.schemaVersion = 4;
+    const skill = state.skillMonitor.profiles[0]!;
+    const monster = state.monsterMonitor.profiles[0]!;
+    (
+      skill as unknown as { monitoredSkillDurationIds: number[] }
+    ).monitoredSkillDurationIds = [1719, 9999];
+    state.monsterMonitor.mirroredProfileId = monster.id;
+    state.loadouts.items = [
+      {
+        id: "loadout",
+        name: "L",
+        skillProfileId: skill.id,
+        monsterProfileId: monster.id,
+        liveProfileId: state.liveMeter.profiles[0]!.id,
+        starterPlaceholder: false,
+        linkedTalentStageCfgId: null,
+      } as Loadout,
+    ];
+
+    const migrated = migrateMonitoringStateIncrementally(
+      state,
+      defaultLiveProfileData(),
+    );
+
+    const slot = migrated.monsterMonitor.profiles.find(
+      (profile) => profile.id === monster.id,
+    )!;
+    expect(slot.entityDurationEntries).toHaveLength(1);
+    expect(slot.entityDurationEntries[0]).toMatchObject({
+      monsterId: 179901,
+      durationMs: 35000,
+      scope: "self",
+      presetKey: "stormblade_scythe_cart",
+    });
+    expect(migrated.monsterMonitor.entityDurationEntries).toEqual(
+      slot.entityDurationEntries,
+    );
+    expect(
+      (
+        migrated.skillMonitor.profiles[0] as unknown as {
+          monitoredSkillDurationIds?: number[];
+        }
+      ).monitoredSkillDurationIds ?? [],
+    ).toEqual([]);
+    expect(migrated.schemaVersion).toBe(CURRENT_MONITORING_SCHEMA_VERSION);
+  });
+
+  it("does not duplicate an existing entity-duration entry during schema five migration", () => {
+    const state = createDefaultMonitoringSettingsState();
+    state.schemaVersion = 4;
+    const skill = state.skillMonitor.profiles[0]!;
+    const monster = state.monsterMonitor.profiles[0]!;
+    (
+      skill as unknown as { monitoredSkillDurationIds: number[] }
+    ).monitoredSkillDurationIds = [1719];
+    monster.entityDurationEntries = [
+      { id: "keep", monsterId: 179901, label: "mine", scope: "any" },
+    ];
+    state.loadouts.items = [
+      {
+        id: "loadout",
+        name: "L",
+        skillProfileId: skill.id,
+        monsterProfileId: monster.id,
+        liveProfileId: state.liveMeter.profiles[0]!.id,
+        starterPlaceholder: false,
+        linkedTalentStageCfgId: null,
+      } as Loadout,
+    ];
+
+    const migrated = migrateMonitoringStateIncrementally(
+      state,
+      defaultLiveProfileData(),
+    );
+    const slot = migrated.monsterMonitor.profiles.find(
+      (profile) => profile.id === monster.id,
+    )!;
+    expect(slot.entityDurationEntries).toHaveLength(1);
+    expect(slot.entityDurationEntries[0]?.id).toBe("keep");
   });
 
   it("does not overwrite profile-specific history after schema four", () => {

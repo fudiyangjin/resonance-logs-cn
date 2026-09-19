@@ -77,7 +77,8 @@ export type MonsterDragTarget =
   | { kind: "stunPanel" }
   | { kind: "hpPanel" }
   | { kind: "fantasyPanel" }
-  | { kind: "dbmPanel" };
+  | { kind: "dbmPanel" }
+  | { kind: "entityDurationPanel" };
 
 export type MonsterResizeTarget =
   | { kind: "buffPanel" }
@@ -86,7 +87,8 @@ export type MonsterResizeTarget =
   | { kind: "stunPanel" }
   | { kind: "hpPanel" }
   | { kind: "fantasyPanel" }
-  | { kind: "dbmPanel" };
+  | { kind: "dbmPanel" }
+  | { kind: "entityDurationPanel" };
 
 export type MonsterDragState = {
   target: MonsterDragTarget;

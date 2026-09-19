@@ -40,7 +40,7 @@ describe("starter loadout replacement", () => {
 
   it("detects nested skill and monster configuration changes", () => {
     const skill = createDefaultSkillMonitorProfile();
-    skill.monitoredSkillDurationIds = [101];
+    skill.monitoredSkillIds = [101];
     expect(
       isReplaceableStarterLoadout(
         starterLoadout(),

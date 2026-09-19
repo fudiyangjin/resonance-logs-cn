@@ -12,10 +12,7 @@ import {
   resetResourceSectionLayouts,
   updateResourceSectionLayout,
 } from "$lib/resource-sections";
-import {
-  iconDisplayBuffs,
-  skillDurationDisplays,
-} from "./overlay-display.svelte.js";
+import { iconDisplayBuffs } from "./overlay-display.svelte.js";
 import type {
   DragTarget,
   IconBuffDisplay,
@@ -32,7 +29,7 @@ import {
 
 type OverlayPositionKey = keyof Omit<
   typeof DEFAULT_OVERLAY_POSITIONS,
-  "iconBuffPositions" | "skillDurationPositions" | "categoryIconPositions"
+  "iconBuffPositions" | "categoryIconPositions"
 >;
 type OverlaySizeKey = OverlayScaleKey;
 
@@ -137,22 +134,6 @@ export function getIconBuffPosition(baseId: number) {
   };
 }
 
-export function getSkillDurationPosition(skillId: number, fallbackIndex = 0) {
-  const positions = getOverlayPositions();
-  const cached = positions.skillDurationPositions[skillId];
-  if (cached) return cached;
-  const idx = skillDurationDisplays().findIndex(
-    (skill) => skill.skillId === skillId,
-  );
-  const resolvedIndex = idx >= 0 ? idx : fallbackIndex;
-  return {
-    x: DEFAULT_OVERLAY_POSITIONS.specialBuffGroup.x + (resolvedIndex % 6) * 60,
-    y:
-      DEFAULT_OVERLAY_POSITIONS.specialBuffGroup.y +
-      Math.floor(resolvedIndex / 6) * 72,
-  };
-}
-
 export function getCategoryIconPosition(
   categoryKey: BuffCategoryKey,
   fallbackIndex = 0,
@@ -192,10 +173,6 @@ export function getIconBuffSize(baseId: number): number {
   return getOverlaySizes().iconBuffSizes[baseId] ?? 44;
 }
 
-export function getSkillDurationSize(skillId: number): number {
-  return getOverlaySizes().skillDurationSizes[skillId] ?? 44;
-}
-
 export function getCategoryIconSize(categoryKey: BuffCategoryKey): number {
   return getOverlaySizes().categoryIconSizes?.[categoryKey] ?? 44;
 }
@@ -214,17 +191,6 @@ export function setIconBuffSize(baseId: number, value: number) {
     iconBuffSizes: {
       ...sizes.iconBuffSizes,
       [baseId]: nextValue,
-    },
-  }));
-}
-
-export function setSkillDurationSize(skillId: number, value: number) {
-  const nextValue = clampIconSize(value);
-  updateOverlaySizes((sizes) => ({
-    ...sizes,
-    skillDurationSizes: {
-      ...sizes.skillDurationSizes,
-      [skillId]: nextValue,
     },
   }));
 }
@@ -248,19 +214,6 @@ export function setIconBuffPosition(
     iconBuffPositions: {
       ...positions.iconBuffPositions,
       [baseId]: nextPos,
-    },
-  }));
-}
-
-export function setSkillDurationPosition(
-  skillId: number,
-  nextPos: { x: number; y: number },
-) {
-  updateOverlayPositions((positions) => ({
-    ...positions,
-    skillDurationPositions: {
-      ...positions.skillDurationPositions,
-      [skillId]: nextPos,
     },
   }));
 }
@@ -523,8 +476,6 @@ function commitDragPreview() {
     setBuffGroupPosition(drag.target.groupId, nextPos);
   } else if (drag.target.kind === "categoryIcon") {
     setCategoryIconPosition(drag.target.categoryKey, nextPos);
-  } else if (drag.target.kind === "skillDuration") {
-    setSkillDurationPosition(drag.target.skillId, nextPos);
   } else {
     setIconBuffPosition(drag.target.baseId, nextPos);
   }
@@ -546,8 +497,6 @@ function commitResizePreview() {
     setBuffGroupIconSize(resize.target.groupId, nextValue);
   } else if (resize.target.kind === "categoryIcon") {
     setCategoryIconSize(resize.target.categoryKey, nextValue);
-  } else if (resize.target.kind === "skillDuration") {
-    setSkillDurationSize(resize.target.skillId, nextValue);
   } else {
     setIconBuffSize(resize.target.baseId, nextValue);
   }

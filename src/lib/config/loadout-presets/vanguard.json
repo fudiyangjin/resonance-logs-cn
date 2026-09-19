@@ -8,14 +8,8 @@
     "autoHideInDailyScenes": false,
     "selectedClass": "wind_knight",
     "monitoredSkillIds": [],
-    "monitoredSkillDurationIds": [],
-    "monitoredBuffIds": [
-      2302421
-    ],
-    "monitoredBuffCategories": [
-      "food",
-      "alchemy"
-    ],
+    "monitoredBuffIds": [2302421],
+    "monitoredBuffCategories": ["food", "alchemy"],
     "monitoredPanelAttrs": [
       {
         "attrId": 11720,
@@ -705,7 +699,6 @@
           "y": 782
         }
       },
-      "skillDurationPositions": {},
       "categoryIconPositions": {
         "alchemy": {
           "x": 423,
@@ -742,12 +735,10 @@
         "2206011": 79,
         "2206542": 78
       },
-      "skillDurationSizes": {},
       "categoryIconSizes": {}
     },
     "overlayVisibility": {
       "showSkillCdGroup": false,
-      "showSkillDurationGroup": true,
       "showResourceGroup": false,
       "showPanelAttrGroup": true,
       "showCustomPanelGroup": true,
@@ -840,13 +831,7 @@
       "backgroundOpacity": 0.76
     },
     "fantasyShowAll": true,
-    "fantasyWhitelistMonsterIds": [
-      3000025,
-      3000033,
-      3000041,
-      3000053,
-      3000069
-    ],
+    "fantasyWhitelistMonsterIds": [3000025, 3000033, 3000041, 3000053, 3000069],
     "hateListEnabled": true,
     "hateListMaxDisplay": 5,
     "hatePanelStyle": {
@@ -874,12 +859,7 @@
       "backgroundEnabled": false,
       "backgroundOpacity": 0.76
     },
-    "monitoredBuffIds": [
-      501712,
-      501706,
-      501710,
-      2110099
-    ],
+    "monitoredBuffIds": [501712, 501706, 501710, 2110099],
     "monsterBuffVoiceConfigs": {},
     "name": "重装-怪物",
     "overlayPositions": {
@@ -957,14 +937,8 @@
       "backgroundEnabled": false,
       "backgroundOpacity": 0.76
     },
-    "teammateBuffCategories": [
-      "food",
-      "alchemy"
-    ],
-    "teammateBuffColumnOrder": [
-      "category:food",
-      "category:alchemy"
-    ],
+    "teammateBuffCategories": ["food", "alchemy"],
+    "teammateBuffColumnOrder": ["category:food", "category:alchemy"],
     "teammateBuffIds": [],
     "teammatePanelStyle": {
       "gap": 6,
@@ -1043,13 +1017,8 @@
     },
     "challengeWatch": {
       "forbiddenDamageIds": [
-        110098100102,
-        110098110103,
-        110098130103,
-        110098140102,
-        110098140104,
-        110098140107,
-        120016180102
+        110098100102, 110098110103, 110098130103, 110098140102, 110098140104,
+        110098140107, 120016180102
       ]
     },
     "columnLabels": {
@@ -1338,21 +1307,14 @@
                 "totalDamage",
                 "controlButtons"
               ],
-              "start": [
-                "timer",
-                "sceneName"
-              ]
+              "start": ["timer", "sceneName"]
             }
           },
           {
             "id": "custom-1777172416319",
             "zones": {
-              "end": [
-                "navigationTabs"
-              ],
-              "start": [
-                "bossHealth"
-              ]
+              "end": ["navigationTabs"],
+              "start": ["bossHealth"]
             }
           }
         ]

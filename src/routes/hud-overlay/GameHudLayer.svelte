@@ -7,7 +7,6 @@
   import ResourceSections from "../game-overlay/ResourceSections.svelte";
   import ShieldDetailGroup from "../game-overlay/ShieldDetailGroup.svelte";
   import SkillCdGroup from "../game-overlay/SkillCdGroup.svelte";
-  import SkillDurationDisplay from "../game-overlay/SkillDurationDisplay.svelte";
   import TextBuffPanel from "../game-overlay/TextBuffPanel.svelte";
   import {
     buffDisplayMode,
@@ -27,9 +26,6 @@
 <div class="hud-layer" style:--overlay-text-shadow={sharedTextShadowVar}>
   {#if visibility.showSkillCdGroup}
     <SkillCdGroup />
-  {/if}
-  {#if visibility.showSkillDurationGroup}
-    <SkillDurationDisplay />
   {/if}
   {#if visibility.showResourceGroup}
     <ResourceSections />

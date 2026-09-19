@@ -224,6 +224,8 @@ pub struct LiveMonsterPayload {
     pub hp: Vec<HpEntry>,
     pub player_names: HashMap<String, String>,
     pub monster_ids: HashMap<String, i32>,
+    #[serde(default)]
+    pub watched_entities: Vec<WatchedEntityState>,
 }
 
 /// Fantasy cast icons shared by live + monster overlay (`live-fantasy`).
@@ -538,6 +540,19 @@ pub struct BossDbmEvent {
     pub create_time_ms: i64,
     pub insertion: i32,
     pub server_timestamp_ms: Option<i64>,
+}
+
+/// One live entity tracked by the monster-monitor entity-duration panel.
+/// Owner name/role are resolved at publish time from the entity context.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WatchedEntityState {
+    pub entity_uuid: String,
+    pub monster_id: i32,
+    pub owner_uuid: Option<String>,
+    pub owner_name: Option<String>,
+    pub owner_is_local_player: bool,
+    pub detected_at_ms: i64,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]

@@ -10,11 +10,7 @@ import {
   liveStatusStore,
 } from "$lib/stores/live-topics.svelte";
 import type { BuffDefinition } from "$lib/config/buff-name-table";
-import type {
-  DragState,
-  ResizeState,
-  SkillDurationState,
-} from "./overlay-types";
+import type { DragState, ResizeState } from "./overlay-types";
 
 function latestBuffsByBaseId(buffs: BuffUpdateState[]) {
   const result = new Map<number, BuffUpdateState>();
@@ -74,7 +70,6 @@ export const overlayRuntime = $state({
   cleanup: null as (() => void) | null,
   isInitialized: false,
   isMounted: false,
-  skillDurationMap: new Map<number, SkillDurationState>(),
   buffDefinitions: new Map<number, BuffDefinition>(),
   isEditing: false,
   dragState: null as DragState | null,
@@ -151,10 +146,6 @@ export function buffDefinitions() {
 
 export function isEditing() {
   return overlayRuntime.isEditing;
-}
-
-export function skillDurationMap() {
-  return overlayRuntime.skillDurationMap;
 }
 
 // Whether to render configured-but-inactive placeholders while editing.

@@ -74,7 +74,6 @@ export function ensureOverlayPositions(
     buffCoverageGroup:
       current?.buffCoverageGroup ?? DEFAULT_OVERLAY_POSITIONS.buffCoverageGroup,
     iconBuffPositions: current?.iconBuffPositions ?? {},
-    skillDurationPositions: current?.skillDurationPositions ?? {},
     categoryIconPositions: current?.categoryIconPositions ?? {},
   };
 }
@@ -86,9 +85,6 @@ export function ensureOverlayVisibility(
   return {
     showSkillCdGroup:
       current?.showSkillCdGroup ?? DEFAULT_OVERLAY_VISIBILITY.showSkillCdGroup,
-    showSkillDurationGroup:
-      current?.showSkillDurationGroup ??
-      DEFAULT_OVERLAY_VISIBILITY.showSkillDurationGroup,
     showResourceGroup:
       current?.showResourceGroup ??
       DEFAULT_OVERLAY_VISIBILITY.showResourceGroup,

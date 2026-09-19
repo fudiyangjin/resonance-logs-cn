@@ -34,6 +34,7 @@
     ensureTeammatePanelStyle,
     getGlobalBuffAliases,
     type CustomPanelStyle,
+    type EntityDurationEntry,
     type TeammateBuffColumnKey,
     type TeammatePanelStyle,
     type BuffAlertRule,
@@ -41,6 +42,21 @@
   import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
   import { resolveMonsterBuffSourceScope } from "$lib/voice-binding-compile.svelte.js";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
+  import TabEntityDuration from "./tab-entity-duration.svelte";
+  import {
+    createEntryFromEntityDurationPreset,
+    getEntityDurationPresets,
+    type EntityDurationPreset,
+  } from "$lib/config/entity-duration-presets";
+  import {
+    createEntityDurationEntry,
+    ensureEntityDurationEntries,
+    moveEntityDurationEntry,
+    patchEntityDurationEntry,
+    type EntityDurationEntryInput,
+    type EntityDurationEntryPatch,
+  } from "$lib/entity-duration-entries";
+  import { getLocale } from "$lib/i18n/index.svelte";
 
   type SearchTarget = "global" | "self";
   type MonsterMonitorTab =
@@ -51,6 +67,7 @@
     | "hp"
     | "fantasy"
     | "bossDbm"
+    | "entityDuration"
     | "overlay";
   type FantasyMonsterOption = {
     monsterId: number;
@@ -142,6 +159,17 @@
       monsterMonitor.bossDbmPanelStyle ?? monsterMonitor.panelStyle,
     ),
   );
+  const entityDurationPanelStyle = $derived.by(() =>
+    normalizeCustomPanelStyle(
+      monsterMonitor.entityDurationPanelStyle ?? monsterMonitor.panelStyle,
+    ),
+  );
+  const entityDurationEntries = $derived.by(() =>
+    ensureEntityDurationEntries(monsterMonitor.entityDurationEntries),
+  );
+  const entityDurationPresets = $derived.by(() =>
+    getEntityDurationPresets(getLocale()),
+  );
   const teammatePanelStyle = $derived.by(() =>
     ensureTeammatePanelStyle(
       monsterMonitor.teammatePanelStyle ?? monsterMonitor.panelStyle,
@@ -159,6 +187,8 @@
       monsterMonitor.overlayVisibility?.showFantasyPanel ?? false,
     showBossDbmPanel:
       monsterMonitor.overlayVisibility?.showBossDbmPanel ?? false,
+    showEntityDurationPanel:
+      monsterMonitor.overlayVisibility?.showEntityDurationPanel ?? true,
   }));
   const globalBuffIds = $derived(monsterMonitor.monitoredBuffIds);
   const selfAppliedBuffIds = $derived(monsterMonitor.selfAppliedBuffIds);
@@ -770,6 +800,71 @@
     }));
   }
 
+  function updateEntityDurationPanelStyle<K extends keyof CustomPanelStyle>(
+    key: K,
+    value: CustomPanelStyle[K],
+  ) {
+    updateMonsterMonitor((state) => ({
+      ...state,
+      entityDurationPanelStyle: {
+        ...(state.entityDurationPanelStyle ?? state.panelStyle),
+        [key]: value,
+      },
+    }));
+  }
+
+  function setEntityDurationEntries(
+    next: readonly Partial<EntityDurationEntry>[],
+  ) {
+    updateMonsterMonitor((state) => ({
+      ...state,
+      entityDurationEntries: ensureEntityDurationEntries(next),
+    }));
+  }
+
+  function addEntityDurationPreset(preset: EntityDurationPreset) {
+    if (entityDurationEntries.some((e) => e.monsterId === preset.monsterId)) {
+      return;
+    }
+    setEntityDurationEntries([
+      ...entityDurationEntries,
+      createEntryFromEntityDurationPreset(preset),
+    ]);
+  }
+
+  function addEntityDurationEntry(input: EntityDurationEntryInput) {
+    if (entityDurationEntries.some((e) => e.monsterId === input.monsterId)) {
+      return;
+    }
+    setEntityDurationEntries([
+      ...entityDurationEntries,
+      createEntityDurationEntry(input),
+    ]);
+  }
+
+  function updateEntityDurationEntry(
+    id: string,
+    patch: EntityDurationEntryPatch,
+  ) {
+    setEntityDurationEntries(
+      entityDurationEntries.map((entry) =>
+        entry.id === id ? patchEntityDurationEntry(entry, patch) : entry,
+      ),
+    );
+  }
+
+  function moveEntityDurationEntryById(id: string, direction: "up" | "down") {
+    setEntityDurationEntries(
+      moveEntityDurationEntry(entityDurationEntries, id, direction),
+    );
+  }
+
+  function removeEntityDurationEntry(id: string) {
+    setEntityDurationEntries(
+      entityDurationEntries.filter((entry) => entry.id !== id),
+    );
+  }
+
   function updateBossDbmPanelStyle<K extends keyof CustomPanelStyle>(
     key: K,
     value: CustomPanelStyle[K],
@@ -856,6 +951,8 @@
         showHpPanel: state.overlayVisibility?.showHpPanel ?? false,
         showFantasyPanel: state.overlayVisibility?.showFantasyPanel ?? false,
         showBossDbmPanel: state.overlayVisibility?.showBossDbmPanel ?? false,
+        showEntityDurationPanel:
+          state.overlayVisibility?.showEntityDurationPanel ?? true,
       };
       return {
         ...state,
@@ -1096,6 +1193,18 @@
         }}
       >
         {t("monsterMonitor.tabs.bossDbm")}
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
+        'entityDuration'
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => {
+          activeTab = "entityDuration";
+        }}
+      >
+        {t("monsterMonitor.tabs.entityDuration")}
       </button>
       <button
         type="button"
@@ -3009,6 +3118,18 @@
           updateBossDbmPanelStyle("backgroundOpacity", v)}
       />
     </section>
+  {:else if activeTab === "entityDuration"}
+    <TabEntityDuration
+      entries={entityDurationEntries}
+      presets={entityDurationPresets}
+      panelStyle={entityDurationPanelStyle}
+      addPreset={addEntityDurationPreset}
+      addEntry={addEntityDurationEntry}
+      updateEntry={updateEntityDurationEntry}
+      moveEntry={moveEntityDurationEntryById}
+      removeEntry={removeEntityDurationEntry}
+      updatePanelStyle={updateEntityDurationPanelStyle}
+    />
   {:else}
     <section
       class="border-border/60 bg-card/60 space-y-4 rounded-xl border p-5"
@@ -3112,6 +3233,18 @@
         >
           {t("monsterMonitor.overlay.bossDbm", {
             state: visibilityState(overlayVisibility.showBossDbmPanel),
+          })}
+        </button>
+
+        <button
+          type="button"
+          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {overlayVisibility.showEntityDurationPanel
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+          onclick={() => toggleOverlayVisibility("showEntityDurationPanel")}
+        >
+          {t("monsterMonitor.overlay.entityDuration", {
+            state: visibilityState(overlayVisibility.showEntityDurationPanel),
           })}
         </button>
       </div>

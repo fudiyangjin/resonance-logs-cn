@@ -294,6 +294,7 @@ impl PresentationProjection {
             hp: monitored.hp.clone(),
             player_names: monitored.player_names.clone(),
             monster_ids: monitored.monster_ids.clone(),
+            watched_entities: monitored.watched_entities.clone(),
         }
     }
 

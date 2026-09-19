@@ -1,6 +1,5 @@
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { untrack } from "svelte";
 import { getAvailableBuffDefinitions } from "$lib/config/buff-name-table";
 import {
   HUD_EDIT_REQUEST_EVENT,
@@ -14,12 +13,10 @@ import {
   hudOverlaySession,
   type HudInterests,
 } from "$lib/stores/live-window-sessions.svelte";
-import { liveStatusStore } from "$lib/stores/live-topics.svelte";
 import {
   hasRegisteredHudTimeline,
   setOverlayClockActive,
 } from "$lib/hud-temporal.svelte.js";
-import { findAnySkillByBaseId } from "$lib/skill-mappings";
 import {
   ensureBuffGroups,
   ensureCustomPanelGroups,
@@ -31,18 +28,14 @@ import {
 } from "../game-overlay/overlay-utils";
 import {
   activeProfile,
-  monitoredSkillDurationIds,
-  selectedClassKey,
   updateActiveProfile,
 } from "../game-overlay/overlay-profile.svelte.js";
 import { overlayRuntime } from "../game-overlay/overlay-runtime.svelte.js";
 import {
   displayMap,
   iconDisplayBuffs,
-  skillDurationDisplays,
   textBuffs,
 } from "../game-overlay/overlay-display.svelte.js";
-import { reconcileSkillDurationStates } from "../game-overlay/skill-duration-state";
 import {
   onGlobalPointerMove as onGamePointerMove,
   onGlobalPointerUp as onGamePointerUp,
@@ -166,26 +159,6 @@ export function initHudOverlay(): () => void {
     });
   });
 
-  const stopGameRuntime = $effect.root(() => {
-    $effect(() => {
-      if (!isHudEditing() && !isHudDomainVisible("game")) {
-        overlayRuntime.skillDurationMap = new Map();
-        return;
-      }
-      const status = liveStatusStore.data;
-      if (!status) return;
-      const classKey = selectedClassKey();
-      overlayRuntime.skillDurationMap = reconcileSkillDurationStates({
-        current: untrack(() => overlayRuntime.skillDurationMap),
-        skillCds: status.skillCds,
-        monitoredSkillIds: new Set(monitoredSkillDurationIds()),
-        durationMsForSkill: (skillId) =>
-          findAnySkillByBaseId(classKey, skillId)?.effectDurationMs,
-        fallbackStartedAtMs: Date.now(),
-      });
-    });
-  });
-
   const stopMonsterProjection = $effect.root(() => {
     $effect(() => {
       if (!isHudEditing() && !isHudDomainVisible("monster")) {
@@ -218,7 +191,6 @@ export function initHudOverlay(): () => void {
 
   hudRuntime.cleanup = () => {
     stopInterests();
-    stopGameRuntime();
     stopMonsterProjection();
     stopClockLifecycle();
     clearMonsterProjectionDeadlines();
@@ -335,25 +307,20 @@ function ensureActiveProfileDefaults(): void {
   if (
     !profile ||
     (profile.overlayPositions &&
-      profile.overlayPositions.skillDurationPositions !== undefined &&
       profile.overlaySizes &&
-      profile.overlaySizes.skillDurationSizes !== undefined &&
       profile.overlayVisibility &&
-      profile.overlayVisibility.showSkillDurationGroup !== undefined &&
       profile.buffDisplayMode &&
       profile.buffGroups &&
       profile.customPanelGroups &&
       !profile.customPanelGroups.some((group) => !group.style || !group.kind) &&
       profile.textBuffPanelStyle &&
-      profile.textBuffMaxVisible &&
-      profile.monitoredSkillDurationIds !== undefined)
+      profile.textBuffMaxVisible)
   ) {
     return;
   }
 
   updateActiveProfile((current) => ({
     ...current,
-    monitoredSkillDurationIds: current.monitoredSkillDurationIds ?? [],
     overlayPositions: ensureOverlayPositions(current),
     overlaySizes: ensureOverlaySizes(current),
     overlayVisibility: ensureOverlayVisibility(current),
@@ -380,6 +347,7 @@ function clearMonsterDisplay(): void {
   monsterRuntime.hpSections = [];
   monsterRuntime.fantasyRows = [];
   monsterRuntime.dbmRows = [];
+  monsterRuntime.entityDurationRows = [];
 }
 
 function hasActiveHudTimeline(): boolean {
@@ -391,7 +359,7 @@ function hasActiveHudTimeline(): boolean {
       return true;
     }
     if (
-      [...iconDisplayBuffs(), ...skillDurationDisplays(), ...textBuffs()].some(
+      [...iconDisplayBuffs(), ...textBuffs()].some(
         (row) => row.temporal && row.temporal.deadlineMs > now,
       )
     ) {
@@ -408,6 +376,7 @@ function hasActiveHudTimeline(): boolean {
     const timedRows = [
       ...monsterRuntime.bossSections.flatMap((section) => section.rows),
       ...monsterRuntime.dbmRows,
+      ...monsterRuntime.entityDurationRows,
       ...monsterRuntime.teammateRows.flatMap((row) => row.cells),
     ];
     if (

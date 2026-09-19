@@ -45,22 +45,6 @@ export type IconBuffDisplay = {
   temporal?: HudTemporalValue | undefined;
 };
 
-export type SkillDurationState = {
-  skillId: number;
-  startedAtMs: number;
-  durationMs: number;
-  beginTime: number;
-};
-
-export type SkillDurationDisplay = {
-  skillId: number;
-  name: string;
-  imagePath?: string;
-  text: string;
-  isPlaceholder?: boolean;
-  temporal?: HudTemporalValue | undefined;
-};
-
 export type TextBuffRowDisplay = {
   key: string;
   label: string;
@@ -85,13 +69,12 @@ export type DragTarget =
       kind: "group";
       key: keyof Omit<
         OverlayPositions,
-        "iconBuffPositions" | "skillDurationPositions" | "categoryIconPositions"
+        "iconBuffPositions" | "categoryIconPositions"
       >;
     }
   | { kind: "customPanelGroup"; groupId: string }
   | { kind: "resourceSection"; key: string }
   | { kind: "iconBuff"; baseId: number }
-  | { kind: "skillDuration"; skillId: number }
   | { kind: "categoryIcon"; categoryKey: BuffCategoryKey }
   | { kind: "buffGroup"; groupId: string }
   | { kind: "individualAllGroup" };
@@ -113,7 +96,6 @@ export type ResizeTarget =
   | { kind: "customPanelGroup"; groupId: string }
   | { kind: "resourceSection"; key: string }
   | { kind: "iconBuff"; baseId: number }
-  | { kind: "skillDuration"; skillId: number }
   | { kind: "categoryIcon"; categoryKey: BuffCategoryKey }
   | { kind: "buffGroup"; groupId: string }
   | { kind: "individualAllGroup" };

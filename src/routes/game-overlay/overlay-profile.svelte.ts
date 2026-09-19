@@ -58,9 +58,6 @@ const _buffIconOverrides = $derived.by(() =>
 const _monitoredSkillIds = $derived.by(
   () => _activeProfile?.monitoredSkillIds ?? [],
 );
-const _monitoredSkillDurationIds = $derived.by(
-  () => _activeProfile?.monitoredSkillDurationIds ?? [],
-);
 const _monitoredBuffIds = $derived.by(
   () => _activeProfile?.monitoredBuffIds ?? [],
 );
@@ -152,10 +149,6 @@ export function buffIconOverrides() {
 
 export function monitoredSkillIds() {
   return _monitoredSkillIds;
-}
-
-export function monitoredSkillDurationIds() {
-  return _monitoredSkillDurationIds;
 }
 
 export function monitoredBuffIds() {

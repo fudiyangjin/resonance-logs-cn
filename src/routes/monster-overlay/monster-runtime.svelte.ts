@@ -6,6 +6,7 @@ import type {
   HpEntry,
   StunEntry,
   TeammateFantasyState,
+  WatchedEntityState,
 } from "$lib/api";
 import {
   liveFantasyStore,
@@ -108,6 +109,10 @@ const _bossDbmMap = $derived.by(() => {
   return result;
 });
 
+const _watchedEntityCache = $derived.by(
+  (): WatchedEntityState[] => liveMonsterStore.data?.watchedEntities ?? [],
+);
+
 export const monsterRuntime = $state({
   currentWindow: null as ReturnType<typeof getCurrentWindow> | null,
   cleanup: null as (() => void) | null,
@@ -121,6 +126,7 @@ export const monsterRuntime = $state({
   hpSections: [] as MonsterHpSection[],
   fantasyRows: [] as MonsterFantasyRow[],
   dbmRows: [] as TextBuffDisplay[],
+  entityDurationRows: [] as TextBuffDisplay[],
   isEditing: false,
   dragState: null as MonsterDragState | null,
   resizeState: null as MonsterResizeState | null,
@@ -185,6 +191,14 @@ export function monsterFantasyRows() {
 
 export function monsterDbmRows() {
   return monsterRuntime.dbmRows;
+}
+
+export function monsterWatchedEntities(): WatchedEntityState[] {
+  return _watchedEntityCache;
+}
+
+export function monsterEntityDurationRows() {
+  return monsterRuntime.entityDurationRows;
 }
 
 export function monsterTeammateRows() {

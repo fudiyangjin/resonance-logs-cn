@@ -1,7 +1,10 @@
 import type { OverlayPositions, OverlayVisibility } from "$lib/settings-store";
 export { DEFAULT_OVERLAY_SIZES } from "$lib/skill-monitor-normalize";
 
-export const RESOURCE_SCALES_BY_CLASS: Record<string, Record<number, number>> = {
+export const RESOURCE_SCALES_BY_CLASS: Record<
+  string,
+  Record<number, number>
+> = {
   wind_knight: {
     14011: 100,
     14017: 100,
@@ -42,13 +45,11 @@ export const DEFAULT_OVERLAY_POSITIONS: OverlayPositions = {
   shieldDetailGroup: { x: 40, y: 550 },
   buffCoverageGroup: { x: 360, y: 550 },
   iconBuffPositions: {},
-  skillDurationPositions: {},
   categoryIconPositions: {},
 };
 
 export const DEFAULT_OVERLAY_VISIBILITY: OverlayVisibility = {
   showSkillCdGroup: false,
-  showSkillDurationGroup: true,
   showResourceGroup: false,
   showPanelAttrGroup: true,
   showCustomPanelGroup: true,

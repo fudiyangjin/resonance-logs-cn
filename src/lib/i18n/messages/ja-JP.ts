@@ -722,7 +722,8 @@ export const jaJPMessages = {
   "settings.shortcuts.toggleBossHp": "ボス HP 表示の切替",
   "settings.shortcuts.toggleOverlayEdit": "オーバーレイ編集モードの切替",
   "settings.shortcuts.toggleOverlayWindow": "ライブモニターの切替",
-  "settings.shortcuts.toggleMinimizeAll": "DPS/オーバーレイウィンドウの最小化・復元",
+  "settings.shortcuts.toggleMinimizeAll":
+    "DPS/オーバーレイウィンドウの最小化・復元",
   "settings.debug.title": "デバッグ",
   "settings.debug.logFiles": "ログファイル",
   "settings.debug.logFilesDescription": "アプリのログフォルダを開く",
@@ -1185,12 +1186,6 @@ export const jaJPMessages = {
   "skillMonitor.skillCd.skills.title": "スキル選択",
   "skillMonitor.skillCd.skills.description":
     "最大10スキルをモニター（2行 x 5列）",
-  "skillMonitor.skillCd.duration.title": "持続時間スキル",
-  "skillMonitor.skillCd.duration.description":
-    "選択したスキルはオーバーレイに個別アイコンとして表示され、発動後にフロントエンドでカウントダウンを開始",
-  "skillMonitor.skillCd.duration.titleWithDuration": "{name} {duration}",
-  "skillMonitor.skillCd.duration.empty":
-    "このクラスにはまだ持続時間スキルが設定されていません",
   "skillMonitor.skillCd.resonance.title": "共鳴スキル",
   "skillMonitor.skillCd.resonance.description":
     "共鳴スキルを検索します。通常スキルと10個のモニタースロットを共有",
@@ -1416,7 +1411,6 @@ export const jaJPMessages = {
   "skillMonitor.overlay.description":
     "スキル、持続時間スキル、リソースエリアの表示を制御。プロファイルごとに保存",
   "skillMonitor.overlay.skillCd": "スキル CD エリア: {state}",
-  "skillMonitor.overlay.skillDuration": "スキル持続エリア: {state}",
   "skillMonitor.overlay.resource": "リソースモニターエリア: {state}",
   "skillMonitor.overlay.panelAttr": "キャラクター属性エリア: {state}",
   "skillMonitor.overlay.panelAttrGroupTag": "キャラクター属性エリア",
@@ -1469,6 +1463,7 @@ export const jaJPMessages = {
   "monsterMonitor.tabs.hp": "HP バー",
   "monsterMonitor.tabs.fantasy": "味方幻想",
   "monsterMonitor.tabs.bossDbm": "Boss DBM",
+  "monsterMonitor.tabs.entityDuration": "エンティティ持続",
   "monsterMonitor.tabs.overlay": "ウィンドウを有効化",
   "monsterMonitor.buffSearch.title": "Buff 検索と選択",
   "monsterMonitor.buffSearch.self": "検索して自己付与を追加",
@@ -1586,6 +1581,28 @@ export const jaJPMessages = {
   "monsterMonitor.overlay.hp": "HP バーエリア: {state}",
   "monsterMonitor.overlay.fantasy": "味方幻想エリア: {state}",
   "monsterMonitor.overlay.bossDbm": "Boss DBM: {state}",
+  "monsterMonitor.overlay.entityDuration": "エンティティ持続エリア：{state}",
+  "monsterMonitor.entityDuration.title": "エンティティ持続時間",
+  "monsterMonitor.entityDuration.description":
+    "指定した ID のエンティティ（鎌車など）を監視します。出現でカウントダウン開始、消失で終了。プリセットまたは任意の ID を入力できます。",
+  "monsterMonitor.entityDuration.presetsTitle": "プリセット",
+  "monsterMonitor.entityDuration.presetAdded": "追加済み",
+  "monsterMonitor.entityDuration.manualTitle": "手動追加",
+  "monsterMonitor.entityDuration.monsterId": "エンティティ ID",
+  "monsterMonitor.entityDuration.label": "表示名",
+  "monsterMonitor.entityDuration.durationSeconds": "持続時間（秒）",
+  "monsterMonitor.entityDuration.durationHint":
+    "空欄の場合はカウントダウンなし。消失まで ∞ を表示します",
+  "monsterMonitor.entityDuration.scope": "発動者の範囲",
+  "monsterMonitor.entityDuration.scope.self": "自分のみ",
+  "monsterMonitor.entityDuration.scope.any": "全員",
+  "monsterMonitor.entityDuration.add": "追加",
+  "monsterMonitor.entityDuration.invalidId":
+    "有効な正の整数のエンティティ ID を入力してください",
+  "monsterMonitor.entityDuration.listTitle": "監視リスト",
+  "monsterMonitor.entityDuration.empty": "エンティティ監視はまだありません。",
+  "monsterMonitor.entityDuration.styleTitle": "パネルスタイル",
+  "monsterMonitor.entityDuration.noDuration": "カウントダウンなし",
   "monsterMonitor.bossDbm.title": "Boss ギミック (DBM)",
   "monsterMonitor.bossDbm.description":
     "スキル名とカウントダウン付きの Boss ギミック警告バーを表示します。「ウィンドウを有効化」で表示を切り替えます。",
@@ -1622,6 +1639,7 @@ export const jaJPMessages = {
   "monsterOverlay.hpGroupTag": "HP エリア",
   "monsterOverlay.fantasyGroupTag": "味方幻想エリア",
   "monsterOverlay.bossDbmGroupTag": "Boss DBM 区",
+  "monsterOverlay.entityDurationGroupTag": "エンティティ持続エリア",
   "monsterOverlay.hateSectionTitle": "{title} - ヘイト",
   "monsterOverlay.stunSectionTitle": "{title} - スタン",
   "monsterOverlay.hpSectionTitle": "{title} - HP",
@@ -1635,6 +1653,7 @@ export const jaJPMessages = {
     "モンスターモニターページで Buff を選択",
   "monsterOverlay.placeholder.preview": "プレビュー",
   "monsterOverlay.placeholder.bossDbm": "ギミックプレビュー",
+  "monsterOverlay.placeholder.entityDuration": "エンティティ持続プレビュー",
   "monsterOverlay.placeholder.target": "ターゲット {uid}",
   "monsterOverlay.placeholder.teammate": "味方プレビュー",
   "monsterOverlay.placeholder.fantasy": "幻想プレビュー",

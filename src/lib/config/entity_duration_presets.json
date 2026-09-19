@@ -1,0 +1,14 @@
+[
+  {
+    "key": "stormblade_scythe_cart",
+    "monsterId": 179901,
+    "durationMs": 35000,
+    "scope": "self",
+    "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx04_7614798060604092699.png",
+    "label": {
+      "zh-CN": "镰车",
+      "en-US": "Scythe Cart",
+      "ja-JP": "鎌車"
+    }
+  }
+]

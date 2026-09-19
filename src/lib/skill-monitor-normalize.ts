@@ -31,7 +31,6 @@ export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   panelAttrColumnGap: 12,
   panelAttrTextStyle: createDefaultOverlayTextStyle(),
   iconBuffSizes: {},
-  skillDurationSizes: {},
   categoryIconSizes: {},
 };
 
@@ -172,7 +171,6 @@ export function ensureOverlaySizes(profile: SkillMonitorProfile): OverlaySizes {
     ),
     panelAttrTextStyle: ensureOverlayTextStyle(current?.panelAttrTextStyle),
     iconBuffSizes: current?.iconBuffSizes ?? {},
-    skillDurationSizes: current?.skillDurationSizes ?? {},
     categoryIconSizes: current?.categoryIconSizes ?? {},
   };
 }
