@@ -9,19 +9,13 @@
   import {
     getGroupPosition,
     getGroupScale,
-    GAME_PROJECTION_DEADLINE_SOURCE,
     isEditing,
     isLayoutScaffold,
     limitedTextBuffs,
-    nextOverlayProjectionDeadline,
     startDrag,
     startResize,
     textBuffPanelStyle,
   } from "./overlay-state.svelte.js";
-  import {
-    clearHudProjectionDeadline,
-    setHudProjectionDeadline,
-  } from "$lib/hud-temporal.svelte.js";
 
   const editing = $derived(isEditing());
   const scaffold = $derived(isLayoutScaffold());
@@ -34,18 +28,11 @@
     overlayTextShadow(styleConfig.textShadowEnabled),
   );
   const backgroundVar = $derived(
-    overlayPanelBackground(styleConfig.backgroundEnabled, styleConfig.backgroundOpacity),
+    overlayPanelBackground(
+      styleConfig.backgroundEnabled,
+      styleConfig.backgroundOpacity,
+    ),
   );
-
-  $effect(() => {
-    setHudProjectionDeadline(
-      GAME_PROJECTION_DEADLINE_SOURCE,
-      nextOverlayProjectionDeadline(),
-    );
-    return () => {
-      clearHudProjectionDeadline(GAME_PROJECTION_DEADLINE_SOURCE);
-    };
-  });
 </script>
 
 {#if buffs.length > 0 || scaffold}

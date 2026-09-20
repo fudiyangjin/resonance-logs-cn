@@ -1,11 +1,13 @@
 <script lang="ts">
   import type { GaugeResourceDefinition } from "$lib/skill-mappings";
   import {
-    buffDurationPercents,
+    buffMap,
+    overlayNow,
     getResourcePreciseValue,
     getResourceValue,
     selectedClassKey,
   } from "./overlay-state.svelte.js";
+  import { getBuffRemainPercent } from "./overlay-utils";
 
   let { resource }: { resource: GaugeResourceDefinition } = $props();
 
@@ -17,13 +19,23 @@
     const maxPrecise = Math.max(1, getResourcePreciseValue(resource.maxId));
     return Math.min(100, Math.max(0, (curPrecise / maxPrecise) * 100));
   });
+  const buffIds = $derived(
+    resource.buffBaseIds ?? (resource.buffBaseId ? [resource.buffBaseId] : []),
+  );
+  const timedBuffs = $derived(
+    buffIds.flatMap((id) => {
+      const buff = buffMap().get(id);
+      return buff && buff.durationMs > 0 ? [buff] : [];
+    }),
+  );
   const buffPercent = $derived.by(() => {
-    const ids =
-      resource.buffBaseIds ??
-      (resource.buffBaseId ? [resource.buffBaseId] : []);
-    if (ids.length === 0) return energyPercent;
-    const percents = buffDurationPercents();
-    return Math.max(0, ...ids.map((id) => percents.get(id) ?? 0));
+    if (buffIds.length === 0) return energyPercent;
+    if (timedBuffs.length === 0) return 0;
+    const now = overlayNow();
+    return Math.max(
+      0,
+      ...timedBuffs.map((buff) => getBuffRemainPercent(buff, now)),
+    );
   });
 </script>
 

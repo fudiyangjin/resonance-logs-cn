@@ -31,10 +31,7 @@ import type {
   PanelAttrConfig,
   SkillMonitorProfile,
 } from "$lib/settings-store";
-import {
-  findAnySkillByBaseId,
-  type CounterRulePreset,
-} from "$lib/skill-mappings";
+import type { CounterRulePreset, SkillDefinition } from "$lib/skill-mappings";
 import {
   DEFAULT_OVERLAY_POSITIONS,
   DEFAULT_OVERLAY_VISIBILITY,
@@ -48,7 +45,11 @@ import type {
   SkillDisplay,
   TextBuffDisplay,
 } from "./overlay-types";
-import type { HudTemporalValue } from "$lib/hud-temporal.svelte.js";
+import {
+  remainingUntilMs,
+  remainingProgressPercent,
+  type HudTemporalValue,
+} from "$lib/hud-temporal.svelte.js";
 
 type BuffAlertResolver = (baseId: number) => BuffAlertRule | undefined;
 
@@ -120,7 +121,7 @@ export function getBuffRemainingMs(
   if (!buff) return 0;
   if (buff.durationMs <= 0) return Number.POSITIVE_INFINITY;
   const end = buff.createTimeMs + buff.durationMs;
-  return Math.max(0, end - now);
+  return remainingUntilMs(end, now);
 }
 
 export function isBuffActive(
@@ -155,9 +156,9 @@ export function getBuffRemainPercent(
   now: number,
 ): number {
   if (!buff || buff.durationMs <= 0) return 0;
-  return Math.max(
-    0,
-    Math.min(100, (getBuffRemainingMs(buff, now) / buff.durationMs) * 100),
+  return remainingProgressPercent(
+    getBuffRemainingMs(buff, now),
+    buff.durationMs,
   );
 }
 
@@ -339,18 +340,15 @@ export function getCustomPanelDisplayRow(
     fixedFreezeUntilMs !== undefined &&
     fixedFreezeUntilMs > now
   ) {
-    const fixedRemainingMs = Math.max(0, fixedFreezeUntilMs - now);
+    const fixedRemainingMs = remainingUntilMs(fixedFreezeUntilMs, now);
     const freezeDurationMs =
       selectedSlot.effectiveFreezeDurationMs ??
       selectedSlot.freezeDurationMs ??
       0;
-    const progressPercent =
-      freezeDurationMs > 0
-        ? Math.max(
-            0,
-            Math.min(100, (fixedRemainingMs / freezeDurationMs) * 100),
-          )
-        : 0;
+    const progressPercent = remainingProgressPercent(
+      fixedRemainingMs,
+      freezeDurationMs,
+    );
     return {
       key: `inline_counter_${entry.id}`,
       label: entry.label,
@@ -423,12 +421,10 @@ export function buildPanelAreaRows(
 }
 
 export function computeDisplay(
-  selectedClassKey: string,
-  skillId: number,
   cd: SkillCdState,
   now: number,
+  skill: SkillDefinition | undefined,
 ): SkillDisplay | null {
-  const skill = findAnySkillByBaseId(selectedClassKey, skillId);
   const cdAccelerateRate = Math.max(0, cd.cdAccelerateRate ?? 0);
   const elapsed = Math.max(0, now - cd.receivedAt);
   const baseDuration = cd.duration > 0 ? Math.max(1, cd.duration) : 1;

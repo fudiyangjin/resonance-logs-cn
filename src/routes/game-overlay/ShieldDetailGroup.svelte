@@ -2,6 +2,7 @@
   import { resolveBuffDisplayName } from "$lib/config/buff-name-table";
   import { formatNumber, t } from "$lib/i18n/index.svelte";
   import { untrack } from "svelte";
+  import { remainingUntilMs } from "$lib/hud-temporal.svelte.js";
   import {
     buffAliases,
     getGroupPosition,
@@ -129,7 +130,7 @@
 
   function remainingText(expireTimeMs: number): string {
     if (expireTimeMs <= 0) return "";
-    const remaining = Math.max(0, expireTimeMs - now);
+    const remaining = remainingUntilMs(expireTimeMs, now);
     if (remaining <= 0) return "";
     return t("gameOverlay.timer.seconds", {
       value: (remaining / 1000).toFixed(1),

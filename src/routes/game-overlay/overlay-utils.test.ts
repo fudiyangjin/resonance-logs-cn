@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { BuffUpdateState } from "$lib/bindings";
+import type { BuffUpdateState, SkillCdState } from "$lib/bindings";
+import type { SkillDefinition } from "$lib/skill-mappings";
 import {
   buildBuffTextRow,
+  computeDisplay,
   formatTimerText,
   getBuffRemainingMs,
   isBuffActive,
@@ -18,6 +20,85 @@ function buff(overrides: Partial<BuffUpdateState> = {}): BuffUpdateState {
     ...overrides,
   };
 }
+
+describe("skill cooldown calculation with cached definitions", () => {
+  const skill: SkillDefinition = { skillId: 1, name: "Skill", imagePath: "" };
+  function cd(overrides: Partial<SkillCdState> = {}): SkillCdState {
+    return {
+      skillLevelId: 100,
+      beginTime: 0,
+      duration: 10_000,
+      skillCdType: 0,
+      validCdTime: 0,
+      receivedAt: 100_000,
+      calculatedDuration: 10_000,
+      cdAccelerateRate: 0,
+      ...overrides,
+    };
+  }
+
+  it("preserves cooldown reduction, elapsed acceleration, and readiness", () => {
+    const value = cd({
+      calculatedDuration: 5_000,
+      validCdTime: 2_000,
+      cdAccelerateRate: 1,
+    });
+    expect(computeDisplay(value, 101_000, skill)).toMatchObject({
+      isActive: true,
+      percent: 0.4,
+      text: "2.0",
+      usable: false,
+    });
+    expect(computeDisplay(value, 102_000, skill)).toMatchObject({
+      isActive: false,
+      percent: 0,
+      text: "",
+      usable: true,
+    });
+  });
+
+  it("preserves each charge boundary while recharging usable skills", () => {
+    const value = cd({
+      skillCdType: 1,
+      calculatedDuration: 5_000,
+      cdAccelerateRate: 1,
+    });
+    const chargedSkill = { ...skill, maxCharges: 3 };
+    expect(computeDisplay(value, 102_500, chargedSkill)).toMatchObject({
+      chargesAvailable: 1,
+      maxCharges: 3,
+      percent: 1,
+      usable: true,
+      isActive: true,
+    });
+    expect(computeDisplay(value, 103_000, chargedSkill)).toMatchObject({
+      chargesAvailable: 1,
+      percent: 0.8,
+      text: "4.0",
+    });
+    expect(computeDisplay(value, 107_500, chargedSkill)).toMatchObject({
+      chargesAvailable: 3,
+      percent: 0,
+      text: "",
+      usable: true,
+      isActive: false,
+    });
+  });
+
+  it("keeps server-driven resource charging independent of elapsed time", () => {
+    const value = cd({ duration: -1, skillCdType: 1, validCdTime: 40 });
+    const resourceSkill = { ...skill, maxValidCdTime: 100 };
+    expect(computeDisplay(value, 200_000, resourceSkill)).toEqual(
+      computeDisplay(value, 100_000, resourceSkill),
+    );
+    expect(computeDisplay(value, 200_000, resourceSkill)).toMatchObject({
+      percent: 0.6,
+      text: "40%",
+      usable: false,
+    });
+    expect(computeDisplay(value, 200_000, undefined)).toBeNull();
+  });
+});
 
 describe("buff display membership", () => {
   it("hides a finite buff after its estimated deadline", () => {

@@ -245,7 +245,7 @@ class HudOverlayPullSession implements WindowPullSession {
   });
 
   #started = false;
-  #active = false;
+  #active = $state(false);
   #epoch: number | null = null;
   #snapshotRevision: number | null = null;
   #skillCastCursor: number | null = null;
@@ -255,6 +255,10 @@ class HudOverlayPullSession implements WindowPullSession {
     minimap: false,
   };
   #handler: HudMinimapFrameHandler | null = null;
+
+  get active(): boolean {
+    return this.#active;
+  }
 
   start(): void {
     if (this.#started) return;
@@ -365,9 +369,7 @@ class HudOverlayPullSession implements WindowPullSession {
   #activeTopics(): ResettableTopicStore[] {
     return [
       ...(this.#interests.game ? [liveStatusStore, liveBuffsStore] : []),
-      ...(this.#interests.monster
-        ? [liveMonsterStore, liveFantasyStore]
-        : []),
+      ...(this.#interests.monster ? [liveMonsterStore, liveFantasyStore] : []),
     ];
   }
 

@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
   import { t } from "$lib/i18n/index.svelte";
   import {
-    createHudTimelineHandle,
     hudTemporalProgressPercent,
+    remainingUntilMs,
   } from "$lib/hud-temporal.svelte.js";
   import { readFlowerSnapshot } from "$lib/flower-rotation";
   import { ensureBuffAlerts, type BuffAlertRule } from "$lib/settings-store";
@@ -31,8 +30,6 @@
     blue: "#42a5f5",
   };
 
-  const timeline = createHudTimelineHandle();
-
   const scaffold = $derived(isLayoutScaffold());
   const snapshot = $derived(readFlowerSnapshot(buffMap(), resource));
   const deadlineMs = $derived(snapshot.deadlineMs);
@@ -46,7 +43,7 @@
 
   const remainingMs = $derived.by(() => {
     if (deadlineMs === null) return scaffold ? resource.nominalDurationMs : 0;
-    return Math.max(0, deadlineMs - overlayNow());
+    return remainingUntilMs(deadlineMs, overlayNow());
   });
   const timeText = $derived(formatTimerText(remainingMs));
   const progressPercent = $derived.by(() => {
@@ -70,7 +67,7 @@
   );
 
   const nextColor = $derived(
-    scaffold ? resource.petals[0]?.color ?? null : flowerCycle().nextColor,
+    scaffold ? (resource.petals[0]?.color ?? null) : flowerCycle().nextColor,
   );
 
   // The rotation pointer is history dependent, so it cannot be a $derived.
@@ -80,11 +77,6 @@
     const current = snapshot;
     observeFlowerRotation(current, resource);
   });
-
-  $effect(() => {
-    timeline.setActive(deadlineMs !== null && deadlineMs > overlayNow());
-  });
-  onDestroy(() => timeline.dispose());
 </script>
 
 {#if visible}
@@ -168,8 +160,8 @@
   }
 
   .flower-rotation.alert-flash .flower-canvas {
-    animation: flower-alert-flash var(--alert-flash-duration, 600ms)
-      ease-in-out infinite alternate;
+    animation: flower-alert-flash var(--alert-flash-duration, 600ms) ease-in-out
+      infinite alternate;
   }
 
   .flower-meta {

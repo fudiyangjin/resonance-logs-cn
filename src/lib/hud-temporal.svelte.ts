@@ -1,3 +1,4 @@
+import { untrack } from "svelte";
 import { createDeadlineScheduler } from "./hud-scheduler.svelte.js";
 
 const CLOCK_INTERVAL_MS = 100;
@@ -26,7 +27,6 @@ let overlayClockCleanup: (() => void) | null = null;
 
 const projectionRevisions = $state<Record<string, number>>({});
 const projectionDeadlines = new Map<string, number>();
-const activeTimelines = $state({ count: 0 });
 let projectionScheduler: ReturnType<typeof createDeadlineScheduler> | null =
   null;
 
@@ -46,6 +46,7 @@ function clearOverlayClockTimer() {
 
 function scheduleNextOverlayClockTick() {
   clearOverlayClockTimer();
+  if (!overlayClockCleanup || document.visibilityState === "hidden") return;
   const now = Date.now();
   const remainder = now % CLOCK_INTERVAL_MS;
   const delay =
@@ -66,18 +67,13 @@ function nearestProjectionDeadline(): number | null {
 
 function rescheduleProjectionDeadline() {
   if (typeof window === "undefined") return;
+  if (!overlayClockCleanup || document.visibilityState === "hidden") {
+    projectionScheduler?.cancel();
+    return;
+  }
   projectionScheduler ??= createDeadlineScheduler(
     (firedDeadlineMs) => {
-      const cutoff = Math.max(Date.now(), firedDeadlineMs);
-      const expiredSources: string[] = [];
-      for (const [source, deadlineMs] of projectionDeadlines) {
-        if (deadlineMs > cutoff) continue;
-        projectionDeadlines.delete(source);
-        expiredSources.push(source);
-      }
-      for (const source of expiredSources) {
-        projectionRevisions[source] = (projectionRevisions[source] ?? 0) + 1;
-      }
+      expireProjectionDeadlines(Math.max(Date.now(), firedDeadlineMs));
       rescheduleProjectionDeadline();
     },
     {
@@ -89,6 +85,18 @@ function rescheduleProjectionDeadline() {
   projectionScheduler.schedule(nearestProjectionDeadline());
 }
 
+function expireProjectionDeadlines(nowMs: number) {
+  // Lifecycle effects must not subscribe to the revisions they invalidate.
+  untrack(() => {
+    for (const [source, deadlineMs] of projectionDeadlines) {
+      if (deadlineMs > nowMs) continue;
+      projectionDeadlines.delete(source);
+      projectionRevisions[source] = (projectionRevisions[source] ?? 0) + 1;
+    }
+  });
+}
+
+/** Reactive display time. Only countdown leaves should subscribe to ticks. */
 export function overlayNow() {
   return overlayClock.nowMs;
 }
@@ -107,29 +115,37 @@ export function initOverlayClock() {
   }
 
   const resyncOverlayClock = () => {
+    if (document.visibilityState === "hidden") return;
     refreshOverlayClockNow();
+    expireProjectionDeadlines(Date.now());
+    rescheduleProjectionDeadline();
     scheduleNextOverlayClockTick();
   };
   const handleVisibilityChange = () => {
-    if (document.visibilityState === "visible") {
+    if (document.visibilityState === "hidden") {
+      clearOverlayClockTimer();
+      projectionScheduler?.cancel();
+    } else {
       resyncOverlayClock();
     }
   };
 
-  resyncOverlayClock();
   window.addEventListener("focus", resyncOverlayClock);
   window.addEventListener("pageshow", resyncOverlayClock);
   document.addEventListener("visibilitychange", handleVisibilityChange);
 
-  overlayClockCleanup = () => {
+  const cleanup = () => {
+    if (overlayClockCleanup !== cleanup) return;
+    overlayClockCleanup = null;
     clearOverlayClockTimer();
+    projectionScheduler?.cancel();
     window.removeEventListener("focus", resyncOverlayClock);
     window.removeEventListener("pageshow", resyncOverlayClock);
     document.removeEventListener("visibilitychange", handleVisibilityChange);
-    overlayClockCleanup = null;
   };
-
-  return overlayClockCleanup;
+  overlayClockCleanup = cleanup;
+  resyncOverlayClock();
+  return cleanup;
 }
 
 export function setOverlayClockActive(active: boolean) {
@@ -138,28 +154,6 @@ export function setOverlayClockActive(active: boolean) {
     return;
   }
   overlayClockCleanup?.();
-}
-
-export function createHudTimelineHandle() {
-  let active = false;
-  let disposed = false;
-  return {
-    setActive(nextActive: boolean) {
-      if (disposed || active === nextActive) return;
-      active = nextActive;
-      activeTimelines.count += nextActive ? 1 : -1;
-    },
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      if (active) activeTimelines.count -= 1;
-      active = false;
-    },
-  };
-}
-
-export function hasRegisteredHudTimeline() {
-  return activeTimelines.count > 0;
 }
 
 export function hudProjectionRevision(source: string) {
@@ -187,20 +181,29 @@ export function hudTemporalRemainingMs(
   temporal: HudTemporalValue,
   nowMs: number,
 ) {
-  return Math.max(0, temporal.deadlineMs - nowMs);
+  return remainingUntilMs(temporal.deadlineMs, nowMs);
+}
+
+/** Wall-clock deadlines also cover timers with no known total duration. */
+export function remainingUntilMs(deadlineMs: number, nowMs: number) {
+  return Math.max(0, deadlineMs - nowMs);
+}
+
+export function remainingProgressPercent(
+  remainingMs: number,
+  durationMs: number,
+) {
+  if (durationMs <= 0) return 0;
+  return Math.max(0, Math.min(100, (remainingMs / durationMs) * 100));
 }
 
 export function hudTemporalProgressPercent(
   temporal: HudTemporalValue,
   nowMs: number,
 ) {
-  if (temporal.durationMs <= 0) return 0;
-  return Math.max(
-    0,
-    Math.min(
-      100,
-      (hudTemporalRemainingMs(temporal, nowMs) / temporal.durationMs) * 100,
-    ),
+  return remainingProgressPercent(
+    hudTemporalRemainingMs(temporal, nowMs),
+    temporal.durationMs,
   );
 }
 

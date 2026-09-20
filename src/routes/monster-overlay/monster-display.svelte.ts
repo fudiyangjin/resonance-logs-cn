@@ -35,6 +35,8 @@ import type {
 import {
   clearHudProjectionDeadline,
   hudProjectionRevision,
+  hudTemporalProgressPercent,
+  hudTemporalRemainingMs,
   setHudProjectionDeadline,
   type HudTemporalValue,
 } from "$lib/hud-temporal.svelte.js";
@@ -558,10 +560,11 @@ function resolveMonsterSectionTitle(entityUuid: EntityId): string {
 function buildDbmRows(now: number): TextBuffDisplay[] {
   const entries: { createTimeMs: number; row: TextBuffDisplay }[] = [];
   for (const event of monsterBossMechanics().values()) {
-    const remainingMs = Math.max(
-      0,
-      event.createTimeMs + event.durationMs - now,
-    );
+    const temporal = {
+      deadlineMs: event.createTimeMs + event.durationMs,
+      durationMs: event.durationMs,
+    };
+    const remainingMs = hudTemporalRemainingMs(temporal, now);
     if (remainingMs <= 0) {
       continue;
     }
@@ -575,15 +578,9 @@ function buildDbmRows(now: number): TextBuffDisplay[] {
           SETTINGS.monsterMonitor.state.dbmAliases,
         ),
         valueText: formatTimerText(remainingMs),
-        progressPercent: Math.min(
-          100,
-          Math.max(0, (remainingMs / event.durationMs) * 100),
-        ),
+        progressPercent: hudTemporalProgressPercent(temporal, now),
         showProgress: true,
-        temporal: {
-          deadlineMs: event.createTimeMs + event.durationMs,
-          durationMs: event.durationMs,
-        },
+        temporal,
       },
     });
   }

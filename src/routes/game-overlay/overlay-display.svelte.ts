@@ -1,4 +1,5 @@
 import {
+  findAnySkillByBaseId,
   findSpecialBuffDisplays,
   getCounterDisplayLabel,
   getCounterRules,
@@ -26,7 +27,6 @@ import {
   computeDisplay,
   formatTimerText,
   getBuffRemainingMs,
-  getBuffRemainPercent,
   getBuffTemporalValue,
   getCustomPanelDisplayRow,
   isBuffActive,
@@ -53,6 +53,7 @@ import {
   enabledPanelAttrs,
   monitoredBuffCategories,
   monitoredBuffIds,
+  monitoredSkillIds,
   resolvedUserCounterRules,
   selectedClassKey,
   textBuffMaxVisible,
@@ -505,13 +506,29 @@ const _buffSnapshot = $derived.by(() => {
   };
 });
 
+// Resolve static skill metadata only when the class or visible slots change.
+const _skillDefinitions = $derived.by(() => {
+  const classKey = selectedClassKey();
+  return new Map(
+    monitoredSkillIds()
+      .slice(0, 10)
+      .filter(Boolean)
+      .map(
+        (skillId) =>
+          [skillId, findAnySkillByBaseId(classKey, skillId)] as const,
+      ),
+  );
+});
+
 const _displayMap = $derived.by(() => {
   const now = overlayNow();
-  const classKey = selectedClassKey();
+  const cds = cdMap();
   const nextDisplayMap = new Map<number, SkillDisplay>();
 
-  for (const [skillId, cd] of cdMap()) {
-    const display = computeDisplay(classKey, skillId, cd, now);
+  for (const [skillId, skill] of _skillDefinitions) {
+    const cd = cds.get(skillId);
+    if (!cd) continue;
+    const display = computeDisplay(cd, now, skill);
     if (display) {
       nextDisplayMap.set(skillId, display);
     }
@@ -520,16 +537,6 @@ const _displayMap = $derived.by(() => {
 });
 
 const _activeBuffIds = $derived.by(() => _buffSnapshot.activeBuffIds);
-const _buffDurationPercents = $derived.by(() => {
-  const now = overlayNow();
-  const result = new Map<number, number>();
-  for (const [baseId, buff] of buffMap()) {
-    if (buff.durationMs > 0) {
-      result.set(baseId, getBuffRemainPercent(buff, now));
-    }
-  }
-  return result;
-});
 const _iconDisplayBuffs = $derived.by(() => _buffSnapshot.iconDisplayBuffs);
 const _textBuffs = $derived.by(() => _buffSnapshot.textBuffs);
 const _customPanelRowsByGroup = $derived.by(
@@ -661,8 +668,8 @@ export function activeBuffIds() {
   return _activeBuffIds;
 }
 
-export function buffDurationPercents() {
-  return _buffDurationPercents;
+export function skillDefinitions() {
+  return _skillDefinitions;
 }
 
 export function displayMap() {

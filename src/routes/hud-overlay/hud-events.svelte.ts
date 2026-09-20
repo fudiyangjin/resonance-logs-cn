@@ -14,7 +14,8 @@ import {
   type HudInterests,
 } from "$lib/stores/live-window-sessions.svelte";
 import {
-  hasRegisteredHudTimeline,
+  clearHudProjectionDeadline,
+  setHudProjectionDeadline,
   setOverlayClockActive,
 } from "$lib/hud-temporal.svelte.js";
 import {
@@ -32,9 +33,8 @@ import {
 } from "../game-overlay/overlay-profile.svelte.js";
 import { overlayRuntime } from "../game-overlay/overlay-runtime.svelte.js";
 import {
-  displayMap,
-  iconDisplayBuffs,
-  textBuffs,
+  GAME_PROJECTION_DEADLINE_SOURCE,
+  nextOverlayProjectionDeadline,
 } from "../game-overlay/overlay-display.svelte.js";
 import {
   onGlobalPointerMove as onGamePointerMove,
@@ -159,9 +159,38 @@ export function initHudOverlay(): () => void {
     });
   });
 
+  const stopClockLifecycle = $effect.root(() => {
+    $effect(() => {
+      setOverlayClockActive(
+        hudOverlaySession.active && (isHudEditing() || hasVisibleHudDomain()),
+      );
+    });
+    return () => setOverlayClockActive(false);
+  });
+
+  const stopGameProjection = $effect.root(() => {
+    $effect(() => {
+      if (
+        !hudOverlaySession.active ||
+        (!isHudEditing() && !isHudDomainVisible("game"))
+      ) {
+        clearHudProjectionDeadline(GAME_PROJECTION_DEADLINE_SOURCE);
+        return;
+      }
+      setHudProjectionDeadline(
+        GAME_PROJECTION_DEADLINE_SOURCE,
+        nextOverlayProjectionDeadline(),
+      );
+    });
+    return () => clearHudProjectionDeadline(GAME_PROJECTION_DEADLINE_SOURCE);
+  });
+
   const stopMonsterProjection = $effect.root(() => {
     $effect(() => {
-      if (!isHudEditing() && !isHudDomainVisible("monster")) {
+      if (
+        !hudOverlaySession.active ||
+        (!isHudEditing() && !isHudDomainVisible("monster"))
+      ) {
         clearMonsterDisplay();
         clearMonsterProjectionDeadlines();
         return;
@@ -169,13 +198,6 @@ export function initHudOverlay(): () => void {
       updateMonsterDisplay();
       syncMonsterProjectionDeadlines();
     });
-  });
-
-  const stopClockLifecycle = $effect.root(() => {
-    $effect(() => {
-      setOverlayClockActive(hasActiveHudTimeline());
-    });
-    return () => setOverlayClockActive(false);
   });
 
   const handlePointerMove = (event: PointerEvent) => {
@@ -191,6 +213,7 @@ export function initHudOverlay(): () => void {
 
   hudRuntime.cleanup = () => {
     stopInterests();
+    stopGameProjection();
     stopMonsterProjection();
     stopClockLifecycle();
     clearMonsterProjectionDeadlines();
@@ -348,43 +371,4 @@ function clearMonsterDisplay(): void {
   monsterRuntime.fantasyRows = [];
   monsterRuntime.dbmRows = [];
   monsterRuntime.entityDurationRows = [];
-}
-
-function hasActiveHudTimeline(): boolean {
-  const interests = currentHudInterests();
-  const now = Date.now();
-
-  if (interests.game) {
-    if ([...displayMap().values()].some((display) => display.isActive)) {
-      return true;
-    }
-    if (
-      [...iconDisplayBuffs(), ...textBuffs()].some(
-        (row) => row.temporal && row.temporal.deadlineMs > now,
-      )
-    ) {
-      return true;
-    }
-    // Cells owned by the resource panel (e.g. flower rotation countdown)
-    // register their own timelines instead of going through the buff areas.
-    if (hasRegisteredHudTimeline()) {
-      return true;
-    }
-  }
-
-  if (interests.monster) {
-    const timedRows = [
-      ...monsterRuntime.bossSections.flatMap((section) => section.rows),
-      ...monsterRuntime.dbmRows,
-      ...monsterRuntime.entityDurationRows,
-      ...monsterRuntime.teammateRows.flatMap((row) => row.cells),
-    ];
-    if (
-      timedRows.some((row) => row.temporal && row.temporal.deadlineMs > now)
-    ) {
-      return true;
-    }
-  }
-
-  return interests.minimap && hasRegisteredHudTimeline();
 }

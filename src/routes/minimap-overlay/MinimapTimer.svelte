@@ -1,29 +1,18 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
-  import { createHudTimelineHandle } from "$lib/hud-temporal.svelte.js";
+  import { remainingUntilMs } from "$lib/hud-temporal.svelte.js";
   import { overlayNow } from "../game-overlay/overlay-clock.svelte.js";
   import type { MechanicRow } from "./scene-types";
 
   let { row }: { row: MechanicRow } = $props();
-  const timeline = createHudTimelineHandle();
 
   const remainingText = $derived.by(() => {
     if (row.durationMs <= 0 || row.createTimeMs <= 0) return "--";
-    const remainingMs = Math.max(
-      0,
-      row.createTimeMs + row.durationMs - overlayNow(),
+    const remainingMs = remainingUntilMs(
+      row.createTimeMs + row.durationMs,
+      overlayNow(),
     );
     return `${Math.floor(remainingMs / 1000)}s`;
   });
-
-  $effect(() => {
-    timeline.setActive(
-      row.durationMs > 0 &&
-        row.createTimeMs > 0 &&
-        row.createTimeMs + row.durationMs > overlayNow(),
-    );
-  });
-  onDestroy(() => timeline.dispose());
 </script>
 
 <span class="time">{remainingText}</span>

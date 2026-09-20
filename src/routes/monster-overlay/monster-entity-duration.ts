@@ -12,6 +12,10 @@ import type {
   EntityDurationScope,
 } from "$lib/settings-store";
 import type { TextBuffDisplay } from "../game-overlay/overlay-types";
+import {
+  hudTemporalProgressPercent,
+  hudTemporalRemainingMs,
+} from "$lib/hud-temporal.svelte.js";
 
 export function matchesEntityDurationScope(
   scope: EntityDurationScope,
@@ -81,7 +85,8 @@ export function buildEntityDurationRows(
     }
 
     const deadlineMs = entity.detectedAtMs + entry.durationMs;
-    const remainingMs = deadlineMs - input.now;
+    const temporal = { deadlineMs, durationMs: entry.durationMs };
+    const remainingMs = hudTemporalRemainingMs(temporal, input.now);
     if (remainingMs <= 0) continue;
     if (nextDeadlineMs === null || deadlineMs < nextDeadlineMs) {
       nextDeadlineMs = deadlineMs;
@@ -92,12 +97,9 @@ export function buildEntityDurationRows(
         key,
         label,
         valueText: input.formatRemaining(remainingMs),
-        progressPercent: Math.min(
-          100,
-          Math.max(0, (remainingMs / entry.durationMs) * 100),
-        ),
+        progressPercent: hudTemporalProgressPercent(temporal, input.now),
         showProgress: true,
-        temporal: { deadlineMs, durationMs: entry.durationMs },
+        temporal,
       },
     });
   }

@@ -9,13 +9,11 @@
     isEditing,
     monitoredSkillIds,
     selectedClassKey,
+    skillDefinitions,
     startDrag,
     startResize,
   } from "./overlay-state.svelte.js";
-  import {
-    findActiveSkillDerivation,
-    findAnySkillByBaseId,
-  } from "$lib/skill-mappings";
+  import { findActiveSkillDerivation } from "$lib/skill-mappings";
 
   const editing = $derived(isEditing());
   const groupPos = $derived(getGroupPosition("skillCdGroup"));
@@ -23,6 +21,7 @@
   const skillIds = $derived(monitoredSkillIds());
   const displays = $derived(displayMap());
   const classKey = $derived(selectedClassKey());
+  const skills = $derived(skillDefinitions());
   const activeIds = $derived(activeBuffIds());
 </script>
 
@@ -44,9 +43,7 @@
     {#each Array(10) as _, idx (idx)}
       {@const skillId = skillIds[idx]}
       {@const display = skillId ? displays.get(skillId) : undefined}
-      {@const skill = skillId
-        ? findAnySkillByBaseId(classKey, skillId)
-        : undefined}
+      {@const skill = skillId ? skills.get(skillId) : undefined}
       {@const derivation = skillId
         ? findActiveSkillDerivation(classKey, skillId, activeIds)
         : undefined}
@@ -93,14 +90,21 @@
         {/if}
 
         {#if chargesText}
-          {@const isFull = chargesAvailable !== undefined && maxCharges !== undefined && chargesAvailable >= maxCharges}
-          {@const hasCharges = chargesAvailable !== undefined && chargesAvailable > 0}
+          {@const isFull =
+            chargesAvailable !== undefined &&
+            maxCharges !== undefined &&
+            chargesAvailable >= maxCharges}
+          {@const hasCharges =
+            chargesAvailable !== undefined && chargesAvailable > 0}
           <div
             class="charges-badge"
             class:charges-full={isFull}
             class:charges-partial={hasCharges && !isFull}
-            class:charges-empty={chargesAvailable !== undefined && chargesAvailable === 0}
-          >{chargesText}</div>
+            class:charges-empty={chargesAvailable !== undefined &&
+              chargesAvailable === 0}
+          >
+            {chargesText}
+          </div>
         {/if}
 
         {#if isUnavailable && isOnCd}
