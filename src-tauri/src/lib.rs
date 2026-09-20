@@ -116,6 +116,7 @@ fn api_builder() -> Builder<tauri::Wry> {
         voice::commands::voice_test_trigger,
         voice::commands::voice_enqueue_phrase,
         voice::commands::voice_upsert_phrase,
+        voice::commands::voice_import_phrase_audio,
         voice::commands::voice_stop_playback,
     ])
 }

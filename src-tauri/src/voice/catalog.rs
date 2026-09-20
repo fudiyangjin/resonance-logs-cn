@@ -44,10 +44,6 @@ pub fn assets_dir(voice_root: &Path) -> PathBuf {
     voice_root.join("assets")
 }
 
-pub fn staging_dir(voice_root: &Path) -> PathBuf {
-    voice_root.join("staging")
-}
-
 /// Holds app-owned validation state for the configured fine-tuned voice. The
 /// package itself lives wherever the user picked it, which may be read-only or
 /// removable media, so nothing is ever written back into it.
@@ -184,6 +180,9 @@ fn validate_catalog(catalog: &VoiceCatalog) -> VoiceResult<()> {
                 Sha256Hex::parse(model_sha256.clone())?;
             }
             super::models::VoiceAssetSource::BundledPrompt { .. } => {}
+            super::models::VoiceAssetSource::Imported { sha256, .. } => {
+                Sha256Hex::parse(sha256.clone())?;
+            }
         }
         ModelVersion::parse(asset.model_version.clone())?;
     }

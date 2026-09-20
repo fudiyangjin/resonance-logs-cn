@@ -2094,6 +2094,20 @@ export const jaJPMessages = {
   "voice.phrases.status.ready": "生成済み",
   "voice.phrases.status.stale": "再生成が必要",
   "voice.phrases.status.pending": "未生成",
+  "voice.phrases.status.imported": "インポート済み",
+  "voice.phrases.import.newButton": "音声をインポート",
+  "voice.phrases.import.newHint":
+    "左側にフレーズ名を入力し、音声ファイル（wav/mp3/flac/ogg/m4a）を選んで新しいフレーズを作成します",
+  "voice.phrases.import.rowButton": "音声をインポート",
+  "voice.phrases.import.rowHint":
+    "このフレーズの現在の音声を音声ファイルで置き換えます",
+  "voice.phrases.import.pickTitle": "音声ファイルを選択",
+  "voice.phrases.import.nameRequired":
+    "音声をインポートする前にフレーズ名を入力してください",
+  "voice.phrases.import.renamedExisting":
+    "この音声は以前にインポート済みのため、既存フレーズの名称を更新しました",
+  "voice.phrases.import.notGeneratable":
+    "インポート済みの音声は音声生成の対象外です",
   "voice.phrases.generateOne": "生成",
   "voice.phrases.regenerateOne": "再生成",
   "voice.phrases.rowGenerateHint": "先に下で音声ソースを選択してください",

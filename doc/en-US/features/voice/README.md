@@ -129,6 +129,16 @@ Fine-tuned results (Japanese voice):
 
 If a fine-tuned voice's path goes missing or its files change, use **Relocate** and **Integrity check** on the **Model & Voices** page.
 
+### Method 4: Import existing audio
+
+If you would rather not use TTS, import any audio clip straight into the phrase library and reference it from any binding via **Phrase library reference**.
+
+1. On the **Phrases** page, enter a phrase name and click **Import audio**, then pick a wav / mp3 / flac / ogg / m4a file (≤ 50 MiB, 0.2–30 s long).
+2. You can also click **Import audio** on an existing phrase row to replace that phrase's current audio with a file.
+3. Imported clips are converted to the app's internal mono 24 kHz WAV and show the **Imported** status.
+
+Imported phrases are excluded from voice generation, and renaming or editing their text never flags them as "Needs regeneration". A new phrase's id is derived from the file's content hash, so importing the same clip on another machine yields the same id and loadouts referencing it resolve automatically.
+
 ## Playback & Queue
 
 - With **Enable voice announcements** off, no rule plays audio.

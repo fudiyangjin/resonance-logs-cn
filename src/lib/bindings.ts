@@ -482,6 +482,18 @@ async voiceUpsertPhrase(name: string, text: string, language: VoiceLanguage) : P
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Imports an arbitrary audio file (wav/mp3/flac/ogg/m4a) as the active
+ * asset of a new or existing phrase.
+ */
+async voiceImportPhraseAudio(target: VoiceImportTargetDto, sourcePath: string) : Promise<Result<VoicePhraseMeta, VoiceCommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("voice_import_phrase_audio", { target, sourcePath }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async voiceStopPlayback() : Promise<void> {
     await TAURI_INVOKE("voice_stop_playback");
 }
@@ -1070,7 +1082,13 @@ export type VoiceAssetSource = { kind: "cloneProfile"; profileId: string } | { k
 /**
  * A final, ready-to-play WAV shipped with the application.
  */
-{ kind: "bundledPrompt"; key: string; locale: VoicePresetLocale; revision: number }
+{ kind: "bundledPrompt"; key: string; locale: VoicePresetLocale; revision: number } |
+/**
+ * A user-supplied audio clip imported through the phrase library and
+ * normalized to the catalog WAV format. Never regenerated and never
+ * marked stale by phrase text/model changes.
+ */
+{ kind: "imported"; sha256: string; originalFileName: string }
 export type VoiceBackendInventory = { cpu: VoiceBackendStatus; vulkan: VoiceBackendStatus; recommended: EngineBackend }
 export type VoiceBackendStatus = { backend: EngineBackend; engine: EngineState; componentVersion: string | null; updateAvailable: boolean }
 /**
@@ -1080,6 +1098,7 @@ export type VoiceCatalog = { schemaVersion: number; profiles: VoiceProfileMeta[]
 export type VoiceCommandError = { code: string; message: string; retriable: boolean }
 export type VoiceGenerateRequestDto = { source: VoiceSourceSelectionDto; phraseIds: string[]; backendPreference?: VoiceGenerationBackend }
 export type VoiceGenerationBackend = "auto" | "cpu" | "vulkan"
+export type VoiceImportTargetDto = { kind: "newPhrase"; name: string } | { kind: "existingPhrase"; phraseId: string }
 export type VoiceLanguage = "zhCn" | "enUs" | "jaJp"
 export type VoiceOperationState = { kind: "idle" } | { kind: "installingModel"; cancelling: boolean } | { kind: "importingModel" } | { kind: "verifyingModel" } | { kind: "removingModel" } | { kind: "generating"; cancelling: boolean } | { kind: "updatingCatalog" }
 /**

@@ -152,7 +152,7 @@ fn bundled_source(key: &str, locale: VoicePresetLocale) -> VoiceAssetSource {
     }
 }
 
-fn is_bundled_source(source: &VoiceAssetSource) -> bool {
+fn is_replaceable_by_bundled(source: &VoiceAssetSource) -> bool {
     matches!(source, VoiceAssetSource::BundledPrompt { .. })
 }
 
@@ -213,8 +213,18 @@ pub(crate) fn sync_phrase(catalog: &mut VoiceCatalog, phrase_id: &str) -> Prompt
         .as_deref()
         .and_then(|active_id| catalog.assets.iter().find(|asset| asset.id == active_id));
 
+    // Imported audio is an explicit user choice that a bundled prompt must
+    // never displace, regardless of what the phrase text happens to match.
+    if active_asset.is_some_and(|asset| matches!(asset.source, VoiceAssetSource::Imported { .. })) {
+        return PromptCatalogSync {
+            changed: false,
+            removed_user_assets: Vec::new(),
+        };
+    }
+
     if matching.is_some()
-        && active_asset.is_some_and(|asset| !is_bundled_source(&asset.source) && !asset.stale)
+        && active_asset
+            .is_some_and(|asset| !is_replaceable_by_bundled(&asset.source) && !asset.stale)
     {
         return PromptCatalogSync {
             changed: false,
@@ -262,7 +272,7 @@ pub(crate) fn sync_phrase(catalog: &mut VoiceCatalog, phrase_id: &str) -> Prompt
                 .iter()
                 .filter(|asset| asset.phrase_id == phrase_id)
             {
-                if !is_bundled_source(&asset.source) {
+                if !is_replaceable_by_bundled(&asset.source) {
                     removed_user_assets.push((asset.phrase_id.clone(), asset.id.clone()));
                 }
             }
@@ -285,12 +295,14 @@ pub(crate) fn sync_phrase(catalog: &mut VoiceCatalog, phrase_id: &str) -> Prompt
             let bundled_ids: Vec<String> = catalog
                 .assets
                 .iter()
-                .filter(|asset| asset.phrase_id == phrase_id && is_bundled_source(&asset.source))
+                .filter(|asset| {
+                    asset.phrase_id == phrase_id && is_replaceable_by_bundled(&asset.source)
+                })
                 .map(|asset| asset.id.clone())
                 .collect();
-            catalog
-                .assets
-                .retain(|asset| asset.phrase_id != phrase_id || !is_bundled_source(&asset.source));
+            catalog.assets.retain(|asset| {
+                asset.phrase_id != phrase_id || !is_replaceable_by_bundled(&asset.source)
+            });
             if old_active_id
                 .as_ref()
                 .is_some_and(|active| bundled_ids.contains(active))
@@ -467,5 +479,40 @@ mod tests {
                 ..
             }
         ));
+    }
+
+    #[test]
+    fn imported_asset_survives_prompt_sync() {
+        let mut catalog = VoiceCatalog::default();
+        seed_catalog(&mut catalog, 123);
+        let phrase_id = catalog.phrases[0].id.clone();
+        catalog.assets.retain(|asset| asset.phrase_id != phrase_id);
+        catalog.assets.push(VoiceAssetMeta {
+            id: "imported".into(),
+            phrase_id: phrase_id.clone(),
+            source: VoiceAssetSource::Imported {
+                sha256: "c".repeat(64),
+                original_file_name: "clip.mp3".into(),
+            },
+            ..VoiceAssetMeta::default()
+        });
+        catalog.phrases[0].active_asset_id = Some("imported".into());
+
+        let sync = sync_phrase(&mut catalog, &phrase_id);
+
+        assert!(!sync.changed);
+        assert!(sync.removed_user_assets.is_empty());
+        assert_eq!(
+            catalog.phrases[0].active_asset_id.as_deref(),
+            Some("imported")
+        );
+        assert_eq!(
+            catalog
+                .assets
+                .iter()
+                .filter(|asset| asset.phrase_id == phrase_id)
+                .count(),
+            1
+        );
     }
 }

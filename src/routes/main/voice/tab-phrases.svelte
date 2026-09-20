@@ -2,6 +2,7 @@
   import { open } from "@tauri-apps/plugin-dialog";
   import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
   import ChevronRightIcon from "virtual:icons/lucide/chevron-right";
+  import FileAudioIcon from "virtual:icons/lucide/file-audio";
   import PlayIcon from "virtual:icons/lucide/play";
   import PlusIcon from "virtual:icons/lucide/plus";
   import RefreshCwIcon from "virtual:icons/lucide/refresh-cw";
@@ -13,6 +14,7 @@
     commands,
     type VoiceAssetMeta,
     type VoiceGenerateRequestDto,
+    type VoiceImportTargetDto,
     type VoiceLanguage,
     type VoicePhraseMeta,
   } from "$lib/bindings";
@@ -73,7 +75,9 @@
   const selectedPhraseIds = new SvelteSet<string>();
 
   $effect(() => {
-    const validPhraseIds = new Set(phrases.map((phrase) => phrase.id));
+    const validPhraseIds = new Set(
+      phrases.filter(isGeneratable).map((phrase) => phrase.id),
+    );
     for (const phraseId of selectedPhraseIds) {
       if (!validPhraseIds.has(phraseId)) selectedPhraseIds.delete(phraseId);
     }
@@ -91,12 +95,89 @@
     return assets.find((a) => a.id === phrase.activeAssetId) ?? null;
   }
 
-  type PhraseStatus = "ready" | "stale" | "pending";
+  type PhraseStatus = "ready" | "stale" | "pending" | "imported";
 
   function phraseStatus(phrase: VoicePhraseMeta): PhraseStatus {
     const asset = activeAssetOf(phrase);
     if (!asset) return "pending";
+    if (asset.source.kind === "imported") return "imported";
     return asset.stale ? "stale" : "ready";
+  }
+
+  /** Imported clips have no text to synthesize, so they never join a batch. */
+  function isGeneratable(phrase: VoicePhraseMeta): boolean {
+    return phraseStatus(phrase) !== "imported";
+  }
+
+  const AUDIO_FILTERS = [
+    { name: "Audio", extensions: ["wav", "mp3", "flac", "ogg", "m4a"] },
+  ];
+
+  let importingId = $state<string | null>(null);
+  let importMessage = $state<string | null>(null);
+
+  async function pickAudioFile(): Promise<string | null> {
+    const selected = await open({
+      title: t("voice.phrases.import.pickTitle"),
+      multiple: false,
+      filters: AUDIO_FILTERS,
+    });
+    return typeof selected === "string" ? selected : null;
+  }
+
+  async function runImport(
+    target: VoiceImportTargetDto,
+    sourcePath: string,
+  ): Promise<VoicePhraseMeta | null> {
+    const res = await runVoiceOperation({ kind: "updatingCatalog" }, () =>
+      commands.voiceImportPhraseAudio(target, sourcePath),
+    );
+    if (res.status === "error") {
+      localError = voiceErrorMessage(res.error);
+      return null;
+    }
+    return res.data;
+  }
+
+  async function importAsNewPhrase() {
+    if (importingId || operationActive) return;
+    const name = newName.trim();
+    if (!name) {
+      localError = t("voice.phrases.import.nameRequired");
+      return;
+    }
+    const sourcePath = await pickAudioFile();
+    if (!sourcePath) return;
+    importingId = "__new__";
+    localError = null;
+    importMessage = null;
+    try {
+      const knownIds = new Set(phrases.map((phrase) => phrase.id));
+      const created = await runImport({ kind: "newPhrase", name }, sourcePath);
+      if (created) {
+        newName = "";
+        // Same clip imported before: the backend renamed the existing phrase.
+        if (knownIds.has(created.id)) {
+          importMessage = t("voice.phrases.import.renamedExisting");
+        }
+      }
+    } finally {
+      importingId = null;
+    }
+  }
+
+  async function importForPhrase(phraseId: string) {
+    if (importingId || operationActive) return;
+    const sourcePath = await pickAudioFile();
+    if (!sourcePath) return;
+    importingId = phraseId;
+    localError = null;
+    importMessage = null;
+    try {
+      await runImport({ kind: "existingPhrase", phraseId }, sourcePath);
+    } finally {
+      importingId = null;
+    }
   }
 
   async function createPhrase() {
@@ -234,7 +315,9 @@
 
   function selectAllPhrases() {
     selectedPhraseIds.clear();
-    for (const phrase of phrases) selectedPhraseIds.add(phrase.id);
+    for (const phrase of phrases) {
+      if (isGeneratable(phrase)) selectedPhraseIds.add(phrase.id);
+    }
   }
 
   function clearPhraseSelection() {
@@ -327,7 +410,9 @@
               };
     const request: VoiceGenerateRequestDto = {
       source,
-      phraseIds: Array.from(selectedPhraseIds),
+      phraseIds: phrases
+        .filter((phrase) => selectedPhraseIds.has(phrase.id) && isGeneratable(phrase))
+        .map((phrase) => phrase.id),
       backendPreference: SETTINGS.voice.state.generationBackend,
     };
     const summary = await runVoiceGeneration(request);
@@ -411,7 +496,20 @@
         <PlusIcon class="h-4 w-4" />
         {t("voice.phrases.add")}
       </button>
+      <button
+        type="button"
+        class="border-border/60 hover:bg-muted/40 flex items-center justify-center gap-1.5 rounded border px-3 py-2 text-sm font-medium disabled:opacity-50"
+        disabled={operationActive || creating || importingId !== null}
+        title={t("voice.phrases.import.newHint")}
+        onclick={importAsNewPhrase}
+      >
+        <FileAudioIcon class="h-4 w-4" />
+        {t("voice.phrases.import.newButton")}
+      </button>
     </div>
+    {#if importMessage}
+      <p class="text-muted-foreground text-xs">{importMessage}</p>
+    {/if}
 
     <div class="space-y-2">
       <div class="flex items-center gap-2">
@@ -469,7 +567,10 @@
             <input
               type="checkbox"
               checked={selectedPhraseIds.has(phrase.id)}
-              disabled={operationActive}
+              disabled={operationActive || state === "imported"}
+              title={state === "imported"
+                ? t("voice.phrases.import.notGeneratable")
+                : undefined}
               onchange={() => togglePhraseSelection(phrase.id)}
             />
 
@@ -539,6 +640,18 @@
                     >
                       {t("voice.phrases.status.stale")}
                     </span>
+                  {:else if state === "imported"}
+                    <span
+                      class="shrink-0 rounded bg-sky-500/15 px-1.5 py-0.5 text-[11px] font-normal text-sky-500"
+                      title={activeAsset?.source.kind === "imported"
+                        ? activeAsset.source.originalFileName
+                        : undefined}
+                    >
+                      {t("voice.phrases.status.imported")}
+                      {#if activeAsset}
+                        · {activeAsset.durationSec.toFixed(1)}s
+                      {/if}
+                    </span>
                   {:else}
                     <span
                       class="bg-muted/50 text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-[11px] font-normal"
@@ -563,23 +676,36 @@
                 </button>
               {/if}
 
+              {#if state !== "imported"}
+                <button
+                  type="button"
+                  class="border-border/60 hover:bg-muted/40 flex items-center gap-1 rounded border px-2 py-1 text-xs disabled:opacity-50"
+                  disabled={!canRegenerateRow || regeneratingId === phrase.id}
+                  title={!rowSourceReady
+                    ? t("voice.phrases.rowGenerateHint")
+                    : undefined}
+                  onclick={() => regeneratePhrase(phrase.id)}
+                >
+                  <RefreshCwIcon
+                    class="h-3.5 w-3.5 {regeneratingId === phrase.id
+                      ? 'animate-spin'
+                      : ''}"
+                  />
+                  {state === "pending"
+                    ? t("voice.phrases.generateOne")
+                    : t("voice.phrases.regenerateOne")}
+                </button>
+              {/if}
+
               <button
                 type="button"
                 class="border-border/60 hover:bg-muted/40 flex items-center gap-1 rounded border px-2 py-1 text-xs disabled:opacity-50"
-                disabled={!canRegenerateRow || regeneratingId === phrase.id}
-                title={!rowSourceReady
-                  ? t("voice.phrases.rowGenerateHint")
-                  : undefined}
-                onclick={() => regeneratePhrase(phrase.id)}
+                disabled={operationActive || importingId !== null}
+                title={t("voice.phrases.import.rowHint")}
+                onclick={() => importForPhrase(phrase.id)}
               >
-                <RefreshCwIcon
-                  class="h-3.5 w-3.5 {regeneratingId === phrase.id
-                    ? 'animate-spin'
-                    : ''}"
-                />
-                {state === "pending"
-                  ? t("voice.phrases.generateOne")
-                  : t("voice.phrases.regenerateOne")}
+                <FileAudioIcon class="h-3.5 w-3.5" />
+                {t("voice.phrases.import.rowButton")}
               </button>
 
               <button

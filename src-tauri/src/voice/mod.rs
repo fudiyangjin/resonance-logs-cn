@@ -6,6 +6,7 @@ pub mod commands;
 pub mod error;
 pub mod finetuned;
 pub mod generator;
+pub mod import;
 pub mod model_manager;
 pub mod models;
 pub mod player;
@@ -66,11 +67,11 @@ impl CueAudioRef {
                 key: key.clone(),
                 locale: *locale,
             },
-            VoiceAssetSource::CloneProfile { .. } | VoiceAssetSource::FineTuned { .. } => {
-                Self::CatalogAsset {
-                    asset_id: asset.id.clone(),
-                }
-            }
+            VoiceAssetSource::CloneProfile { .. }
+            | VoiceAssetSource::FineTuned { .. }
+            | VoiceAssetSource::Imported { .. } => Self::CatalogAsset {
+                asset_id: asset.id.clone(),
+            },
         }
     }
 }
@@ -121,6 +122,19 @@ pub enum VoiceSourceSelection {
 
 pub struct GenerateItemRequest {
     pub phrase_id: PhraseId,
+}
+
+/// Where an imported audio clip should land in the phrase library.
+pub enum ImportTarget {
+    /// Create (or, for an already-imported identical clip, rename) a phrase
+    /// whose id is derived from the clip hash.
+    NewPhrase { name: String },
+    /// Replace the active asset of an existing phrase.
+    ExistingPhrase { phrase_id: PhraseId },
+}
+
+fn imported_phrase_id(sha256: &str) -> String {
+    format!("imported_{}", &sha256[..sha256.len().min(24)])
 }
 
 pub struct GenerateRequest {
@@ -501,6 +515,12 @@ impl VoiceService {
         text: String,
         language: VoiceLanguage,
     ) -> VoiceResult<VoicePhraseMeta> {
+        // Hold the guard across lookup + write so two concurrent upserts of
+        // the same name cannot both observe "missing" and create duplicates.
+        let _guard = self
+            .inner
+            .operation
+            .try_begin(VoiceOperationState::UpdatingCatalog)?;
         let existing_id = self
             .inner
             .catalog
@@ -510,9 +530,126 @@ impl VoiceService {
             .find(|phrase| phrase.name == name)
             .map(|phrase| phrase.id.clone());
         match existing_id {
-            Some(id) => self.update_phrase(PhraseId::parse(id)?, name, text, language),
-            None => self.create_phrase(name, text, language),
+            Some(id) => self.update_phrase_inner(PhraseId::parse(id)?, name, text, language),
+            None => self.create_phrase_inner(name, text, language),
         }
+    }
+
+    /// Imports an arbitrary audio file as the active asset of a phrase.
+    /// The clip is normalized to the catalog WAV format; the phrase id for a
+    /// new phrase is derived from the file hash so the same clip imported on
+    /// another machine resolves to the same id.
+    pub fn import_phrase_audio(
+        &self,
+        target: ImportTarget,
+        source_path: &Path,
+    ) -> VoiceResult<VoicePhraseMeta> {
+        let _guard = self
+            .inner
+            .operation
+            .try_begin(VoiceOperationState::UpdatingCatalog)?;
+        if let ImportTarget::NewPhrase { name } = &target {
+            validate_label("name", name, 120)?;
+        }
+        let clip = import::decode_and_normalize(source_path)?;
+        let original_file_name = source_path
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_default();
+
+        let mut catalog = self.inner.catalog.lock().clone();
+        let phrase_id = match target {
+            ImportTarget::ExistingPhrase { phrase_id } => {
+                if !catalog
+                    .phrases
+                    .iter()
+                    .any(|phrase| phrase.id == phrase_id.as_str())
+                {
+                    return Err(VoiceError::not_found("voice phrase", phrase_id.to_string()));
+                }
+                phrase_id
+            }
+            ImportTarget::NewPhrase { name } => {
+                let id = PhraseId::parse(imported_phrase_id(&clip.sha256))?;
+                match catalog
+                    .phrases
+                    .iter_mut()
+                    .find(|phrase| phrase.id == id.as_str())
+                {
+                    // Same clip imported twice: idempotently rename.
+                    Some(existing) => {
+                        existing.name = name;
+                        existing.updated_at_ms = now_ms();
+                    }
+                    None => catalog.phrases.push(VoicePhraseMeta {
+                        id: id.as_str().to_string(),
+                        name,
+                        text: original_file_name.clone(),
+                        language: VoiceLanguage::default(),
+                        active_asset_id: None,
+                        updated_at_ms: now_ms(),
+                    }),
+                }
+                id
+            }
+        };
+
+        let asset_id = new_id("asset");
+        let wav_path =
+            catalog::asset_wav_path(&self.inner.voice_root, phrase_id.as_str(), &asset_id);
+        import::write_pcm16_wav(&wav_path, &clip.samples, import::IMPORT_SAMPLE_RATE)?;
+        let wav = match audio::read_wav_info(&wav_path) {
+            Ok(wav) => wav,
+            Err(error) => {
+                remove_asset_files_best_effort(
+                    &self.inner.voice_root,
+                    &[(phrase_id.as_str().to_string(), asset_id)],
+                );
+                return Err(error);
+            }
+        };
+
+        let replaced: Vec<(String, String)> = catalog
+            .assets
+            .iter()
+            .filter(|asset| asset.phrase_id == phrase_id.as_str())
+            .map(|asset| (asset.phrase_id.clone(), asset.id.clone()))
+            .collect();
+        catalog
+            .assets
+            .retain(|asset| asset.phrase_id != phrase_id.as_str());
+        catalog.assets.push(VoiceAssetMeta {
+            id: asset_id.clone(),
+            phrase_id: phrase_id.as_str().to_string(),
+            source: VoiceAssetSource::Imported {
+                sha256: clip.sha256.clone(),
+                original_file_name,
+            },
+            model_version: models::IMPORTED_MODEL_VERSION.to_string(),
+            params_fingerprint: clip.sha256,
+            created_at_ms: now_ms(),
+            duration_sec: wav.duration_sec,
+            sample_rate: wav.sample_rate as i32,
+            stale: false,
+        });
+        let phrase = catalog
+            .phrases
+            .iter_mut()
+            .find(|phrase| phrase.id == phrase_id.as_str())
+            .expect("import target phrase exists in catalog");
+        phrase.active_asset_id = Some(asset_id.clone());
+        phrase.updated_at_ms = now_ms();
+        let phrase = phrase.clone();
+
+        if let Err(error) = self.commit_catalog(catalog) {
+            remove_asset_files_best_effort(
+                &self.inner.voice_root,
+                &[(phrase_id.as_str().to_string(), asset_id)],
+            );
+            return Err(error);
+        }
+        remove_asset_files_best_effort(&self.inner.voice_root, &replaced);
+        Ok(phrase)
     }
 
     pub fn test_trigger(&self, phrase_id: &PhraseId) -> VoiceResult<()> {
@@ -780,6 +917,21 @@ impl VoiceService {
         expected_sha256: &str,
         replace_existing: bool,
     ) -> VoiceResult<FineTunedVoiceMeta> {
+        let _guard = self
+            .inner
+            .operation
+            .try_begin(VoiceOperationState::UpdatingCatalog)?;
+        self.set_fine_tuned_voice_inner(package_path, expected_sha256, replace_existing)
+    }
+
+    /// Catalog write without the operation guard; callers must already hold
+    /// `UpdatingCatalog`.
+    fn set_fine_tuned_voice_inner(
+        &self,
+        package_path: &Path,
+        expected_sha256: &str,
+        replace_existing: bool,
+    ) -> VoiceResult<FineTunedVoiceMeta> {
         let candidate = self.inspect_fine_tuned_package(package_path)?;
         if candidate.model_sha256 != expected_sha256.to_ascii_lowercase() {
             return Err(VoiceError::Security(
@@ -812,6 +964,10 @@ impl VoiceService {
         package_path: &Path,
         expected_sha256: &str,
     ) -> VoiceResult<FineTunedVoiceMeta> {
+        let _guard = self
+            .inner
+            .operation
+            .try_begin(VoiceOperationState::UpdatingCatalog)?;
         let current = self
             .inner
             .catalog
@@ -824,10 +980,14 @@ impl VoiceService {
                 "fine-tuned voice identity mismatch".to_string(),
             ));
         }
-        self.set_fine_tuned_voice(package_path, expected_sha256, true)
+        self.set_fine_tuned_voice_inner(package_path, expected_sha256, true)
     }
 
     pub fn remove_fine_tuned_voice(&self) -> VoiceResult<()> {
+        let _guard = self
+            .inner
+            .operation
+            .try_begin(VoiceOperationState::UpdatingCatalog)?;
         let mut catalog = self.inner.catalog.lock().clone();
         if let Some(previous) = catalog.fine_tuned_voice.take() {
             mark_fine_tuned_assets_stale(&mut catalog, &previous.model_sha256);
@@ -976,6 +1136,7 @@ impl VoiceService {
         updated_catalog
             .profiles
             .retain(|profile| profile.id != profile_id.as_str());
+        mark_clone_profile_assets_stale(&mut updated_catalog, profile_id.as_str());
         let directory = catalog::profile_dir(&self.inner.voice_root, profile_id.as_str());
         drop(catalog);
         if directory.exists() {
@@ -996,6 +1157,17 @@ impl VoiceService {
             .inner
             .operation
             .try_begin(VoiceOperationState::UpdatingCatalog)?;
+        self.create_phrase_inner(name, text, language)
+    }
+
+    /// Catalog write without the operation guard; callers must already hold
+    /// `UpdatingCatalog`.
+    fn create_phrase_inner(
+        &self,
+        name: String,
+        text: String,
+        language: VoiceLanguage,
+    ) -> VoiceResult<VoicePhraseMeta> {
         validate_label("name", &name, 120)?;
         validate_label("text", &text, 1000)?;
         let id = new_id("phrase");
@@ -1031,6 +1203,18 @@ impl VoiceService {
             .inner
             .operation
             .try_begin(VoiceOperationState::UpdatingCatalog)?;
+        self.update_phrase_inner(id, name, text, language)
+    }
+
+    /// Catalog write without the operation guard; callers must already hold
+    /// `UpdatingCatalog`.
+    fn update_phrase_inner(
+        &self,
+        id: PhraseId,
+        name: String,
+        text: String,
+        language: VoiceLanguage,
+    ) -> VoiceResult<VoicePhraseMeta> {
         validate_label("name", &name, 120)?;
         validate_label("text", &text, 1000)?;
         let mut updated_catalog = self.inner.catalog.lock().clone();
@@ -1047,10 +1231,12 @@ impl VoiceService {
         phrase.language = language;
         phrase.updated_at_ms = now_ms();
         if content_changed {
+            // Imported / bundled audio is not derived from the text, so a
+            // text edit never invalidates it.
             for asset in updated_catalog
                 .assets
                 .iter_mut()
-                .filter(|asset| asset.phrase_id == id.as_str())
+                .filter(|asset| asset.phrase_id == id.as_str() && !asset.source.is_external())
             {
                 asset.stale = true;
             }
@@ -1260,6 +1446,19 @@ impl VoiceService {
         } = resolved;
 
         let catalog_snapshot = self.inner.catalog.lock().clone();
+        // Reject imported phrases up front so a mixed batch fails before any
+        // item is synthesized, instead of after the sidecar already ran.
+        for item in &request.items {
+            if phrase_has_imported_audio(&catalog_snapshot, item.phrase_id.as_str()) {
+                return Err(VoiceError::validation(
+                    "phraseIds",
+                    format!(
+                        "phrase {} uses imported audio and cannot be generated",
+                        item.phrase_id
+                    ),
+                ));
+            }
+        }
         let fingerprint_source = match &asset_source {
             VoiceAssetSource::CloneProfile { profile_id } => format!("clone:{profile_id}"),
             VoiceAssetSource::FineTuned {
@@ -1272,6 +1471,11 @@ impl VoiceService {
                 locale,
                 revision,
             } => format!("bundled-prompt:{key}:{locale:?}:{revision}"),
+            VoiceAssetSource::Imported { .. } => {
+                return Err(VoiceError::Internal(
+                    "imported audio is not a generation source".to_string(),
+                ));
+            }
         };
         let (temperature, top_k) = generation_sampling_params(&asset_source);
         let mut sidecar_items = Vec::with_capacity(request.items.len());
@@ -1368,7 +1572,9 @@ impl VoiceService {
         }
         let resolved_profile_id = match &asset_source {
             VoiceAssetSource::CloneProfile { profile_id } => Some(profile_id.clone()),
-            VoiceAssetSource::FineTuned { .. } | VoiceAssetSource::BundledPrompt { .. } => None,
+            VoiceAssetSource::FineTuned { .. }
+            | VoiceAssetSource::BundledPrompt { .. }
+            | VoiceAssetSource::Imported { .. } => None,
         };
         // A phrase keeps at most one asset: the freshly generated take
         // becomes active immediately and replaces whatever used to be
@@ -1865,6 +2071,34 @@ fn remove_asset_files_best_effort(voice_root: &Path, assets: &[(String, String)]
     }
 }
 
+fn mark_clone_profile_assets_stale(catalog: &mut models::VoiceCatalog, profile_id: &str) {
+    for asset in &mut catalog.assets {
+        if matches!(
+            &asset.source,
+            VoiceAssetSource::CloneProfile { profile_id: asset_profile }
+                if asset_profile == profile_id
+        ) {
+            asset.stale = true;
+        }
+    }
+}
+
+fn phrase_has_imported_audio(catalog: &models::VoiceCatalog, phrase_id: &str) -> bool {
+    let Some(active_id) = catalog
+        .phrases
+        .iter()
+        .find(|phrase| phrase.id == phrase_id)
+        .and_then(|phrase| phrase.active_asset_id.as_deref())
+    else {
+        return false;
+    };
+    catalog.assets.iter().any(|asset| {
+        asset.id == active_id
+            && asset.phrase_id == phrase_id
+            && matches!(asset.source, VoiceAssetSource::Imported { .. })
+    })
+}
+
 fn mark_fine_tuned_assets_stale(catalog: &mut models::VoiceCatalog, model_sha256: &str) {
     for asset in &mut catalog.assets {
         if matches!(
@@ -2018,6 +2252,57 @@ mod tests {
         assert!(catalog.assets[0].stale);
         assert!(!catalog.assets[1].stale);
         assert!(!catalog.assets[2].stale);
+    }
+
+    #[test]
+    fn deleting_a_clone_profile_only_stales_its_own_assets() {
+        let mut catalog = models::VoiceCatalog::default();
+        catalog.assets = vec![
+            VoiceAssetMeta {
+                source: VoiceAssetSource::CloneProfile {
+                    profile_id: "profile-1".into(),
+                },
+                ..VoiceAssetMeta::default()
+            },
+            VoiceAssetMeta {
+                source: VoiceAssetSource::CloneProfile {
+                    profile_id: "profile-2".into(),
+                },
+                ..VoiceAssetMeta::default()
+            },
+            VoiceAssetMeta {
+                source: VoiceAssetSource::Imported {
+                    sha256: "c".repeat(64),
+                    original_file_name: "clip.mp3".into(),
+                },
+                ..VoiceAssetMeta::default()
+            },
+        ];
+
+        mark_clone_profile_assets_stale(&mut catalog, "profile-1");
+
+        assert!(catalog.assets[0].stale);
+        assert!(!catalog.assets[1].stale);
+        assert!(!catalog.assets[2].stale);
+    }
+
+    #[test]
+    fn imported_phrase_detection_requires_active_imported_asset() {
+        let mut catalog = models::VoiceCatalog::default();
+        catalog.phrases = vec![phrase_stub("p1", Some("a1")), phrase_stub("p2", Some("a2"))];
+        catalog.assets = vec![
+            VoiceAssetMeta {
+                source: VoiceAssetSource::Imported {
+                    sha256: "c".repeat(64),
+                    original_file_name: "clip.mp3".into(),
+                },
+                ..asset_stub("a1", "p1", 0)
+            },
+            asset_stub("a2", "p2", 0),
+        ];
+        assert!(phrase_has_imported_audio(&catalog, "p1"));
+        assert!(!phrase_has_imported_audio(&catalog, "p2"));
+        assert!(!phrase_has_imported_audio(&catalog, "missing"));
     }
 
     fn phrase_stub(id: &str, active_asset_id: Option<&str>) -> VoicePhraseMeta {

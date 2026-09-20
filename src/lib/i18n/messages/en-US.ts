@@ -2116,6 +2116,20 @@ export const enUSMessages = {
   "voice.phrases.status.ready": "Generated",
   "voice.phrases.status.stale": "Needs regeneration",
   "voice.phrases.status.pending": "Not generated",
+  "voice.phrases.status.imported": "Imported",
+  "voice.phrases.import.newButton": "Import audio",
+  "voice.phrases.import.newHint":
+    "Enter a phrase name on the left, then pick an audio file (wav/mp3/flac/ogg/m4a) to create a phrase from it",
+  "voice.phrases.import.rowButton": "Import audio",
+  "voice.phrases.import.rowHint":
+    "Replace this phrase's current audio with an audio file",
+  "voice.phrases.import.pickTitle": "Choose an audio file",
+  "voice.phrases.import.nameRequired":
+    "Enter a phrase name before importing audio",
+  "voice.phrases.import.renamedExisting":
+    "This clip was imported before; the existing phrase was renamed",
+  "voice.phrases.import.notGeneratable":
+    "Imported audio is excluded from voice generation",
   "voice.phrases.generateOne": "Generate",
   "voice.phrases.regenerateOne": "Regenerate",
   "voice.phrases.rowGenerateHint": "Pick a voice source below first",

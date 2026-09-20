@@ -163,6 +163,26 @@ pub enum VoiceAssetSource {
         locale: super::presets::VoicePresetLocale,
         revision: u32,
     },
+    /// A user-supplied audio clip imported through the phrase library and
+    /// normalized to the catalog WAV format. Never regenerated and never
+    /// marked stale by phrase text/model changes.
+    Imported {
+        sha256: String,
+        #[specta(rename = "originalFileName")]
+        original_file_name: String,
+    },
+}
+
+/// `model_version` recorded on imported assets (no TTS model involved).
+pub const IMPORTED_MODEL_VERSION: &str = "imported";
+
+impl VoiceAssetSource {
+    /// True for audio that did not come out of the TTS pipeline: imported
+    /// clips and bundled prompts. External audio is never regenerated and
+    /// never goes stale when the phrase text, language or model changes.
+    pub fn is_external(&self) -> bool {
+        matches!(self, Self::Imported { .. } | Self::BundledPrompt { .. })
+    }
 }
 
 impl Default for VoiceAssetSource {

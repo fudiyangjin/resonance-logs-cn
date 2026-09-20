@@ -15,8 +15,8 @@ use super::models::{
 use super::presets::VoicePresetLocale;
 use super::types::{AssetId, ModelVersion, PhraseId, ProfileId};
 use super::{
-    GenerateItemRequest, GenerateRequest, GenerationSummary, ProfileSelection, ProfileSelectionNew,
-    VoiceService, VoiceSourceSelection,
+    GenerateItemRequest, GenerateRequest, GenerationSummary, ImportTarget, ProfileSelection,
+    ProfileSelectionNew, VoiceService, VoiceSourceSelection,
 };
 
 type CommandResult<T> = Result<T, VoiceCommandError>;
@@ -269,6 +269,44 @@ pub fn voice_update_phrase(
             language,
         )
         .map_err(VoiceCommandError::from)
+}
+
+#[derive(Debug, Clone, Deserialize, Type)]
+#[serde(
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    tag = "kind"
+)]
+pub enum VoiceImportTargetDto {
+    NewPhrase {
+        name: String,
+    },
+    ExistingPhrase {
+        #[specta(rename = "phraseId")]
+        phrase_id: String,
+    },
+}
+
+/// Imports an arbitrary audio file (wav/mp3/flac/ogg/m4a) as the active
+/// asset of a new or existing phrase.
+#[tauri::command]
+#[specta::specta]
+pub async fn voice_import_phrase_audio(
+    voice: State<'_, VoiceService>,
+    target: VoiceImportTargetDto,
+    source_path: String,
+) -> CommandResult<VoicePhraseMeta> {
+    let target = match target {
+        VoiceImportTargetDto::NewPhrase { name } => ImportTarget::NewPhrase { name },
+        VoiceImportTargetDto::ExistingPhrase { phrase_id } => ImportTarget::ExistingPhrase {
+            phrase_id: PhraseId::parse(phrase_id).map_err(VoiceCommandError::from)?,
+        },
+    };
+    let service = voice.inner().clone();
+    run_blocking_voice_operation("audio import", move || {
+        service.import_phrase_audio(target, PathBuf::from(source_path).as_path())
+    })
+    .await
 }
 
 #[tauri::command]

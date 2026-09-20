@@ -1960,6 +1960,17 @@ export const zhCNMessages = {
   "voice.phrases.status.ready": "已生成",
   "voice.phrases.status.stale": "需重新生成",
   "voice.phrases.status.pending": "未生成",
+  "voice.phrases.status.imported": "已导入",
+  "voice.phrases.import.newButton": "导入音频",
+  "voice.phrases.import.newHint":
+    "在左侧填写短句名称后，选择一段音频（wav/mp3/flac/ogg/m4a）作为新短句",
+  "voice.phrases.import.rowButton": "导入音频",
+  "voice.phrases.import.rowHint": "用一段音频文件替换该短句当前的语音",
+  "voice.phrases.import.pickTitle": "选择音频文件",
+  "voice.phrases.import.nameRequired": "请先填写短句名称，再导入音频",
+  "voice.phrases.import.renamedExisting":
+    "这段音频之前已导入过，已更新该短句的名称",
+  "voice.phrases.import.notGeneratable": "已导入的音频不参与语音生成",
   "voice.phrases.generateOne": "生成",
   "voice.phrases.regenerateOne": "重新生成",
   "voice.phrases.rowGenerateHint": "请先在下方选择音色来源",
