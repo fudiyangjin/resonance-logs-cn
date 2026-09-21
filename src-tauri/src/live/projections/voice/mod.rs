@@ -12,14 +12,17 @@ use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
     BuffState, BuffTransition, DomainEnvelope, DomainEvent, MonoTimeMs, TimerKey, TimerScope,
 };
-use crate::live::runtime::scheduler::{DeadlineScheduler, TimerTask};
+use crate::live::runtime::scheduler::DeadlineScheduler;
 use crate::voice::models::{
     AlertKind, MonsterBuffSourceScope, VoiceCueIntent, VoiceEvent, VoiceRule, VoiceSubject,
     VoiceTrigger,
 };
 
+mod deadline;
 #[cfg(test)]
 mod tests;
+
+use deadline::DeadlineTracker;
 
 /// Lookup key derived from a [`VoiceSubject`] with scope details stripped:
 /// the buff aggregates are keyed per base id, and the source scope is
@@ -61,15 +64,6 @@ impl VoiceBuffScope {
             Self::LocalPlayer => 0,
             Self::MonsterAnySource => 1,
             Self::MonsterLocalPlayerSource => 2,
-        }
-    }
-
-    const fn from_timer_subject(subject: u64) -> Option<Self> {
-        match subject {
-            0 => Some(Self::LocalPlayer),
-            1 => Some(Self::MonsterAnySource),
-            2 => Some(Self::MonsterLocalPlayerSource),
-            _ => None,
         }
     }
 
@@ -152,7 +146,8 @@ pub struct VoiceProjection {
     /// only timer-bearing rules instead of scanning `rules`.
     buff_expiry_rules: Vec<usize>,
     buff_aggregates: BuffAggregates,
-    boss_expiries: HashMap<TimerKey, MonoTimeMs>,
+    /// Every armed voice timer, keyed by its scheduler key.
+    deadlines: DeadlineTracker,
     rule_set: u64,
     last_fire_ms: HashMap<usize, i64>,
     counter_crossed: HashMap<(i32, i32), bool>,
@@ -175,7 +170,7 @@ impl VoiceProjection {
             scheduler.invalidate_scope(TimerScope::RuleSet(self.rule_set));
         }
         self.buff_aggregates.clear();
-        self.boss_expiries.clear();
+        self.deadlines.clear();
         self.last_fire_ms.clear();
         self.counter_crossed.clear();
     }
@@ -190,7 +185,7 @@ impl VoiceProjection {
         if self.rule_set != 0 {
             scheduler.invalidate_scope(TimerScope::RuleSet(self.rule_set));
         }
-        self.boss_expiries.clear();
+        self.deadlines.clear();
         self.rule_set = self.rule_set.wrapping_add(1).max(1);
         self.rules.clone_from(&config.voice.rules);
         self.rebuild_rule_indexes();
@@ -365,21 +360,22 @@ impl VoiceProjection {
                 }
                 VoiceEvent::ExpiringIn { seconds_before } => {
                     let key = counter_voice_key(self.rule_set, index, rule_id, slot_id);
-                    scheduler.cancel(key);
-                    if let Some(expiry_wall) = counters
+                    // Freeze windows are wall-clock; convert the remaining
+                    // time onto the monotonic axis the scheduler runs on.
+                    let expires = counters
                         .slot_state(CounterNamespace::Normal, rule_id, slot_id)
                         .and_then(|slot| slot.freeze_until_ms)
-                    {
-                        let remaining = expiry_wall.saturating_sub(now_ms).max(0) as u64;
-                        schedule_voice(
-                            key,
-                            self.rule_set,
-                            now_mono.saturating_add(remaining),
-                            seconds_before,
-                            now_mono,
-                            scheduler,
-                        );
-                    }
+                        .map(|expiry_wall| {
+                            now_mono.saturating_add(expiry_wall.saturating_sub(now_ms).max(0) as u64)
+                        });
+                    self.deadlines.sync(
+                        key,
+                        TimerScope::RuleSet(self.rule_set),
+                        expires,
+                        seconds_before,
+                        now_mono,
+                        scheduler,
+                    );
                 }
                 _ => {}
             }
@@ -486,7 +482,7 @@ impl VoiceProjection {
         self.matched_rules = matched;
     }
 
-    fn sync_buff_expiries(&self, now: MonoTimeMs, scheduler: &mut DeadlineScheduler) {
+    fn sync_buff_expiries(&mut self, now: MonoTimeMs, scheduler: &mut DeadlineScheduler) {
         for &index in &self.buff_expiry_rules {
             let Some(rule) = self.rules.get(index) else {
                 continue;
@@ -495,15 +491,19 @@ impl VoiceProjection {
                 continue;
             };
             let key = buff_voice_key(self.rule_set, index, scope, base_id);
-            scheduler.cancel(key);
-            let expiry = self
+            let expires = self
                 .buff_aggregates
                 .get(&scope)
                 .and_then(|buffs| buffs.get(&base_id))
                 .and_then(|aggregate| aggregate.expires_mono_ms);
-            if let Some(expiry) = expiry {
-                schedule_voice(key, self.rule_set, expiry, seconds_before, now, scheduler);
-            }
+            self.deadlines.sync(
+                key,
+                TimerScope::RuleSet(self.rule_set),
+                expires,
+                seconds_before,
+                now,
+                scheduler,
+            );
         }
     }
 
@@ -517,26 +517,29 @@ impl VoiceProjection {
         scheduler: &mut DeadlineScheduler,
     ) {
         let key = boss_voice_key(self.rule_set, index, base_skill_id);
-        scheduler.cancel(key);
-        self.boss_expiries.remove(&key);
-
-        let deadline = expires.saturating_sub(u64::from(seconds_before).saturating_mul(1_000));
-        if deadline < now {
-            return;
-        }
-        scheduler.schedule(
+        // A mechanic re-fire always restarts the timer, even to the same
+        // deadline; cancelling first defeats the same-deadline short-cut
+        // only when the deadline is unchanged, which is a no-op anyway.
+        self.deadlines.sync(
             key,
             TimerScope::RuleSet(self.rule_set),
-            deadline,
-            TimerTask::VoiceExpiry,
+            Some(expires),
+            seconds_before,
+            now,
+            scheduler,
         );
-        self.boss_expiries.insert(key, deadline);
     }
 
     fn cancel_boss_expiries(&mut self, scheduler: &mut DeadlineScheduler) {
-        for (key, _) in self.boss_expiries.drain() {
-            scheduler.cancel(key);
-        }
+        self.deadlines.cancel_where(
+            |key| {
+                matches!(
+                    key,
+                    TimerKey::VoiceExpiry { subject, .. } if *subject == BOSS_DBM_TIMER_SUBJECT
+                )
+            },
+            scheduler,
+        );
     }
 
     fn on_deadline(
@@ -549,8 +552,7 @@ impl VoiceProjection {
         let TimerKey::VoiceExpiry {
             rule_set,
             rule_handle,
-            subject,
-            instance,
+            ..
         } = key
         else {
             return;
@@ -561,46 +563,14 @@ impl VoiceProjection {
         let Ok(index) = usize::try_from(rule_handle) else {
             return;
         };
-        let Some(rule) = self.rules.get(index) else {
+        if index >= self.rules.len() {
             return;
-        };
-
-        if let Some((scope, base_id, seconds_before)) = buff_expiry_rule(&rule.trigger) {
-            if VoiceBuffScope::from_timer_subject(subject) != Some(scope)
-                || timer_instance_base_id(instance) != base_id
-            {
-                return;
-            }
-            let expected_deadline = self
-                .buff_aggregates
-                .get(&scope)
-                .and_then(|buffs| buffs.get(&base_id))
-                .and_then(|aggregate| aggregate.expires_mono_ms)
-                .map(|expiry| {
-                    expiry.saturating_sub(u64::from(seconds_before).saturating_mul(1_000))
-                });
-            if expected_deadline != Some(scheduled_for) || fired_at < scheduled_for {
-                return;
-            }
-        } else if let VoiceTrigger {
-            subject: VoiceSubject::BossDbm { base_skill_id },
-            event: VoiceEvent::ExpiringIn { .. },
-        } = &rule.trigger
-        {
-            if subject != BOSS_DBM_TIMER_SUBJECT
-                || timer_instance_base_id(instance) != *base_skill_id
-            {
-                return;
-            }
-            let Some(expected_deadline) = self.boss_expiries.get(&key).copied() else {
-                return;
-            };
-            if expected_deadline != scheduled_for || fired_at < scheduled_for {
-                return;
-            }
-            self.boss_expiries.remove(&key);
         }
-
+        // The tracker is the single source of truth for what is armed: a
+        // stale or superseded delivery does not match its recorded deadline.
+        if !self.deadlines.confirm(key, scheduled_for, fired_at) {
+            return;
+        }
         self.fire_rule(index, now_ms, None);
     }
 
@@ -763,10 +733,6 @@ fn counter_voice_key(rule_set: u64, index: usize, rule_id: i32, slot_id: i32) ->
     )
 }
 
-fn timer_instance_base_id(instance: u64) -> i32 {
-    instance as u32 as i32
-}
-
 fn voice_key(rule_set: u64, index: usize, subject: u64, instance: u64) -> TimerKey {
     TimerKey::VoiceExpiry {
         rule_set,
@@ -774,24 +740,4 @@ fn voice_key(rule_set: u64, index: usize, subject: u64, instance: u64) -> TimerK
         subject,
         instance,
     }
-}
-
-fn schedule_voice(
-    key: TimerKey,
-    rule_set: u64,
-    expires: MonoTimeMs,
-    seconds_before: u32,
-    now: MonoTimeMs,
-    scheduler: &mut DeadlineScheduler,
-) {
-    let deadline = expires.saturating_sub(u64::from(seconds_before).saturating_mul(1_000));
-    if deadline < now {
-        return;
-    }
-    scheduler.schedule(
-        key,
-        TimerScope::RuleSet(rule_set),
-        deadline,
-        TimerTask::VoiceExpiry,
-    );
 }

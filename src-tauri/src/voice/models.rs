@@ -327,15 +327,15 @@ impl VoiceTrigger {
     pub fn validate(&self) -> Result<(), String> {
         use VoiceEvent as E;
         use VoiceSubject as S;
-        let ok = match (&self.subject, &self.event) {
-            (S::Buff { .. } | S::MonsterBuff { .. }, E::Started | E::Ended | E::ExpiringIn { .. }) => {
-                true
-            }
-            (S::BossDbm { .. }, E::Started | E::ExpiringIn { .. }) => true,
-            (S::Counter { .. }, E::Threshold | E::ExpiringIn { .. }) => true,
-            (S::Alert { .. }, E::Started) => true,
-            _ => false,
-        };
+        let ok = matches!(
+            (&self.subject, &self.event),
+            (
+                S::Buff { .. } | S::MonsterBuff { .. },
+                E::Started | E::Ended | E::ExpiringIn { .. }
+            ) | (S::BossDbm { .. }, E::Started | E::ExpiringIn { .. })
+                | (S::Counter { .. }, E::Threshold | E::ExpiringIn { .. })
+                | (S::Alert { .. }, E::Started)
+        );
         if ok {
             Ok(())
         } else {

@@ -318,11 +318,15 @@ fn permanent_aggregate_cancels_existing_expiry_timer() {
 
 #[test]
 fn expired_lead_time_is_not_scheduled() {
+    let mut projection = VoiceProjection {
+        rule_set: 1,
+        ..Default::default()
+    };
     let mut scheduler = DeadlineScheduler::new();
-    schedule_voice(
+    projection.deadlines.sync(
         buff_voice_key(1, 0, VoiceBuffScope::LocalPlayer, 77),
-        1,
-        MonoTimeMs(2_000),
+        TimerScope::RuleSet(1),
+        Some(MonoTimeMs(2_000)),
         1,
         MonoTimeMs(1_001),
         &mut scheduler,
@@ -348,8 +352,8 @@ fn boss_expiry_refreshes_by_rule_and_base_skill() {
         &mut scheduler,
     );
     assert_eq!(
-        projection.boss_expiries,
-        HashMap::from([(key, MonoTimeMs(11_000))])
+        projection.deadlines.armed_deadline(key),
+        Some(MonoTimeMs(11_000))
     );
     assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(11_000)));
 
@@ -363,9 +367,10 @@ fn boss_expiry_refreshes_by_rule_and_base_skill() {
     );
 
     assert_eq!(
-        projection.boss_expiries,
-        HashMap::from([(key, MonoTimeMs(9_000))])
+        projection.deadlines.armed_deadline(key),
+        Some(MonoTimeMs(9_000))
     );
+    assert_eq!(projection.deadlines.len(), 1);
     assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(9_000)));
 }
 
@@ -385,17 +390,62 @@ fn scene_change_cancels_only_boss_expiries() {
         &mut scheduler,
     );
     let buff_key = buff_voice_key(1, 3, VoiceBuffScope::LocalPlayer, 88);
-    scheduler.schedule(
+    projection.deadlines.sync(
         buff_key,
         TimerScope::RuleSet(1),
-        MonoTimeMs(4_000),
-        TimerTask::VoiceExpiry,
+        Some(MonoTimeMs(4_000)),
+        0,
+        MonoTimeMs(1_000),
+        &mut scheduler,
     );
 
     projection.cancel_boss_expiries(&mut scheduler);
 
-    assert!(projection.boss_expiries.is_empty());
+    assert_eq!(projection.deadlines.len(), 1);
+    assert_eq!(
+        projection.deadlines.armed_deadline(buff_key),
+        Some(MonoTimeMs(4_000))
+    );
     assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(4_000)));
+}
+
+#[test]
+fn deadline_delivery_fires_rule_once_and_rejects_superseded_schedule() {
+    let mut projection = projection_with(vec![rule(
+        "dbm-expiring",
+        trigger(VoiceSubject::BossDbm { base_skill_id: 9 }, expiring(0)),
+        "soon",
+        0,
+    )]);
+    let entities = EntityContext::new();
+    let mut scheduler = DeadlineScheduler::new();
+    let key = boss_voice_key(1, 0, 9);
+    projection.sync_boss_expiry(0, 9, MonoTimeMs(5_000), 0, MonoTimeMs(1_000), &mut scheduler);
+    projection.sync_boss_expiry(0, 9, MonoTimeMs(6_000), 0, MonoTimeMs(1_000), &mut scheduler);
+
+    let stale = DomainEvent::DeadlineReached {
+        key,
+        scheduled_for: MonoTimeMs(5_000),
+        fired_at: MonoTimeMs(5_000),
+        kind: key.kind(),
+        scope: TimerScope::RuleSet(1),
+        generation: 0,
+    };
+    projection.apply(&domain_event(5, stale), &entities, &mut scheduler);
+    assert!(projection.take_cues().is_empty());
+
+    let live = DomainEvent::DeadlineReached {
+        key,
+        scheduled_for: MonoTimeMs(6_000),
+        fired_at: MonoTimeMs(6_000),
+        kind: key.kind(),
+        scope: TimerScope::RuleSet(1),
+        generation: 0,
+    };
+    projection.apply(&domain_event(6, live.clone()), &entities, &mut scheduler);
+    assert_eq!(fired_phrases(&mut projection), vec!["soon".to_string()]);
+    projection.apply(&domain_event(7, live), &entities, &mut scheduler);
+    assert!(projection.take_cues().is_empty());
 }
 
 // The cases below were migrated from the retired `voice::rules`
