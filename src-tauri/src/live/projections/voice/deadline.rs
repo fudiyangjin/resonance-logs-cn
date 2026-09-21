@@ -37,10 +37,12 @@ impl DeadlineTracker {
     /// * `expires == None` cancels any pending timer.
     /// * An unchanged deadline is a no-op, preserving the scheduler's
     ///   same-deadline insertion order.
-    /// * A deadline already `< now` is never scheduled. If a timer for
-    ///   `key` is armed and is itself already due, it is left alone so the
-    ///   next `drain_due` still delivers it — a packet processed just
-    ///   before the drain must not swallow the cue.
+    /// * A deadline already `<= now` (what `drain_due(now)` would pop) is
+    ///   never scheduled, so re-syncing right after a timer fired cannot
+    ///   re-arm the same moment. If a timer for `key` is armed and is itself
+    ///   already due, it is left alone so the next `drain_due` still
+    ///   delivers it — a packet processed just before the drain must not
+    ///   swallow the cue.
     pub(super) fn sync(
         &mut self,
         key: TimerKey,
@@ -59,15 +61,15 @@ impl DeadlineTracker {
                 SyncOutcome::Cancelled
             }
             (Some(old), Some(new)) if old == new => SyncOutcome::Unchanged,
-            (Some(old), Some(new)) if new < now => {
-                if old < now {
+            (Some(old), Some(new)) if new <= now => {
+                if old <= now {
                     SyncOutcome::Unchanged
                 } else {
                     self.cancel(key, scheduler);
                     SyncOutcome::CollapsedToPast
                 }
             }
-            (None, Some(new)) if new < now => SyncOutcome::Unchanged,
+            (None, Some(new)) if new <= now => SyncOutcome::Unchanged,
             (_, Some(new)) => {
                 scheduler.schedule(key, scope, new, TimerTask::VoiceExpiry);
                 self.armed.insert(key, new);

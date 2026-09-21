@@ -729,6 +729,19 @@ export type EngineDevice = { backend: EngineBackend; name: string; type: EngineD
 export type EngineDeviceType = "cpu" | "discreteGpu" | "integratedGpu" | "accelerator" | "unknown"
 export type EngineProbe = { engine: string; protocolVersion: number; sourceCommit: string; buildType: string; variant: string; stub: boolean; compiledBackends: EngineBackend[]; devices: EngineDevice[]; supportedLanguages: VoiceLanguage[] }
 export type EngineState = { kind: "missing" } | { kind: "ready"; probe: EngineProbe } | { kind: "incompatible"; reason: string } | { kind: "error"; message: string }
+/**
+ * Whose summons an entity-duration voice rule observes. Mirrors the
+ * frontend `EntityDurationScope` (`"self" | "any"`).
+ */
+export type EntityOwnerScope =
+/**
+ * Only entities owned by the local player.
+ */
+"self" |
+/**
+ * Every entity with the monster id, regardless of owner.
+ */
+"any"
 export type FactorCounterTemplate = { itemIds?: number[]; sources?: CounterSource[]; effectSlots?: EffectSlotConfig[] }
 export type FightResourceEntry = { id: number; value: number }
 export type FightResourceState = {
@@ -1003,7 +1016,7 @@ export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRunt
  * Which caster population a monster-buff voice rule observes.
  */
 export type MonsterBuffSourceScope = "anySource" | "localPlayerSource"
-export type MonsterRuntimeSnapshot = { enabled: boolean; globalIds: number[]; selfAppliedIds: number[]; monitorAllSelfApplied: boolean; watchedEntityIds: number[] }
+export type MonsterRuntimeSnapshot = { enabled: boolean; globalIds: number[]; selfAppliedIds: number[]; monitorAllSelfApplied: boolean; watchedEntities: WatchedEntitySpec[] }
 export type PanelAttrState = { attrId: number; value: number }
 /**
  * Damage taken by a defender, aggregated by the attacking monster's template.
@@ -1263,6 +1276,18 @@ export type VoiceSubject =
  */
 { kind: "monsterBuff"; buffId: number; sourceScope: MonsterBuffSourceScope } |
 /**
+ * One of the local player's skills, by base skill id
+ * (`skill_level_id / 100`). `Started` = cast, `Ended` = cooldown ready,
+ * `ExpiringIn` = ready in N seconds.
+ */
+{ kind: "skill"; skillId: number } |
+/**
+ * A watched entity (by monster id) from the entity-duration list.
+ * `Started` = appeared, `Ended` = gone, `ExpiringIn` = configured
+ * duration runs out in N seconds.
+ */
+{ kind: "entity"; monsterId: number; scope: EntityOwnerScope } |
+/**
  * A boss "DBM" mechanic world event with this base skill id.
  */
 { kind: "bossDbm"; baseSkillId: number } |
@@ -1278,6 +1303,13 @@ export type VoiceSubject =
  * Which real-time game event should trigger a voice cue.
  */
 export type VoiceTrigger = { subject: VoiceSubject; event: VoiceEvent }
+/**
+ * One entity-duration watch entry. `monster_id` decides which entities are
+ * tracked; `duration_ms` (the configured lifetime) and `scope` are only
+ * consumed by the voice projection to time "expiring" cues, mirroring the
+ * HUD which filters by scope and counts down from detection on its own.
+ */
+export type WatchedEntitySpec = { monsterId: number; durationMs?: number | null; scope?: EntityOwnerScope }
 /**
  * One live entity tracked by the monster-monitor entity-duration panel.
  * Owner name/role are resolved at publish time from the entity context.

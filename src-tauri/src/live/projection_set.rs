@@ -85,6 +85,9 @@ pub struct ProjectionSet {
     history: HistoryProjection,
     presentation: PresentationProjection,
     counter_side_effect_dirty: bool,
+    /// Set whenever `entity_monitor` reports a change; `end_batch` then lets
+    /// the voice projection re-read cooldowns / watched entities once.
+    entity_monitor_side_effect_dirty: bool,
     dirty: TopicMask,
 }
 
@@ -102,6 +105,7 @@ impl ProjectionSet {
             history: HistoryProjection::new(history_writer),
             presentation: PresentationProjection::default(),
             counter_side_effect_dirty: false,
+            entity_monitor_side_effect_dirty: false,
             dirty: ALL_TOPICS,
         }
     }
@@ -126,7 +130,8 @@ impl ProjectionSet {
                 scheduler,
             )
             .map_err(|error| error.to_string())?;
-        self.entity_monitor.apply_config(config.as_ref(), entities);
+        self.entity_monitor
+            .apply_config(config.as_ref(), entities, now_mono);
         {
             let combat = &self.combat;
             let current_offset = combat
@@ -145,14 +150,15 @@ impl ProjectionSet {
             }
         }
         self.counter_side_effect_dirty = true;
+        self.entity_monitor_side_effect_dirty = true;
         self.dirty |= SEGMENT_TOPICS;
         Ok(())
     }
 
-    /// Replaces the voice rule set. Counter-derived deadlines are re-armed
-    /// right away rather than via `counter_side_effect_dirty`: the dirty
-    /// flag only flushes at the end of a *batch*, and an idle runtime may
-    /// not see one for a long time after the user edits a rule.
+    /// Replaces the voice rule set. Counter- and entity-monitor-derived
+    /// deadlines are re-armed right away rather than via the dirty flags:
+    /// those only flush at the end of a *batch*, and an idle runtime may not
+    /// see one for a long time after the user edits a rule.
     pub fn apply_voice_config(
         &mut self,
         config: &VoiceRuntimeSnapshot,
@@ -165,6 +171,14 @@ impl ProjectionSet {
             .apply_config(config, entities, now_mono, scheduler);
         self.voice
             .apply_counters(&self.counter, now_wall_ms, now_mono, scheduler);
+        self.voice.apply_entity_monitor(
+            &self.entity_monitor,
+            entities,
+            now_wall_ms,
+            now_mono,
+            scheduler,
+        );
+        self.entity_monitor_side_effect_dirty = false;
     }
 
     pub fn begin_batch(&mut self, batch_id: crate::live::runtime::events::BatchId) {
@@ -231,13 +245,13 @@ impl ProjectionSet {
                 return Ok(());
             }
             DomainEvent::EntityAppeared { .. } => {
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);
                 minimap_changed |= self.minimap.apply(envelope);
             }
             DomainEvent::EntityDisappeared { entity } => {
                 combat_changed |= self.combat.remove_entity(*entity);
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.death.apply(envelope);
                 self.voice.apply(envelope, entities, scheduler);
                 minimap_changed |= self.minimap.apply(envelope);
@@ -258,7 +272,7 @@ impl ProjectionSet {
                 current,
             } => {
                 combat_changed |= self.combat.observe_identity(*entity, current, entities);
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);
                 minimap_changed |= self.minimap.apply(envelope);
                 self.history.apply(
@@ -292,7 +306,7 @@ impl ProjectionSet {
                 if let AttributeValue::Int(value) = current {
                     combat_changed |= self.combat.observe_attribute(*entity, *attr_id, *value);
                 }
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.history.apply(
                     envelope,
                     entities,
@@ -308,7 +322,7 @@ impl ProjectionSet {
             | DomainEvent::BuffChanged(_)
             | DomainEvent::SkillLifecycleChanged { .. }
             | DomainEvent::PassiveSkillObserved { .. } => {
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 minimap_changed |= self.minimap.apply(envelope);
                 if matches!(
                     envelope.event,
@@ -356,13 +370,13 @@ impl ProjectionSet {
             | DomainEvent::FantasyChanged { .. }
             | DomainEvent::GameTimerSnapshot { .. }
             | DomainEvent::GameTimerChanged(_) => {
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 if matches!(envelope.event, DomainEvent::FantasyChanged { .. }) {
                     minimap_changed |= self.minimap.apply(envelope);
                 }
             }
             DomainEvent::BossMechanicStarted(_) => {
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);
             }
             DomainEvent::MatchmakingPopped
@@ -372,7 +386,7 @@ impl ProjectionSet {
             }
             DomainEvent::DeathOccurred { victim, .. } => {
                 combat_changed |= self.combat.observe_death(*victim);
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);
                 let replay = self.death.apply(envelope);
                 if replay.is_some() {
@@ -413,7 +427,7 @@ impl ProjectionSet {
                 ..
             } => {
                 combat_changed |= self.combat.set_scene(*scene_id, *difficulty);
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);
                 minimap_changed |= self.minimap.apply(envelope);
                 reported |= TopicMask::SCENE;
@@ -444,11 +458,11 @@ impl ProjectionSet {
                 }
             }
             DomainEvent::DeadlineReached { .. } => {
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);
             }
             DomainEvent::AttackTargetChanged { .. } => {
-                reported |= self.entity_monitor.apply(envelope, entities, scheduler);
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);
             }
             DomainEvent::HitResolved(_)
@@ -502,6 +516,7 @@ impl ProjectionSet {
 
     pub fn end_batch(
         &mut self,
+        entities: &EntityContext,
         now_wall_ms: i64,
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
@@ -509,6 +524,7 @@ impl ProjectionSet {
         let changed = self.counter.end_batch();
         self.mark_counter_change(changed);
         self.flush_counter_side_effects(now_wall_ms, now_mono, scheduler);
+        self.flush_entity_monitor_side_effects(entities, now_wall_ms, now_mono, scheduler);
     }
 
     /// Removes the voice cues matched since the last drain, for the caller to
@@ -549,6 +565,7 @@ impl ProjectionSet {
         self.timeline.reset_runtime();
         self.voice.reset_runtime(scheduler);
         self.counter_side_effect_dirty = true;
+        self.entity_monitor_side_effect_dirty = true;
         self.dirty = ALL_TOPICS;
     }
 
@@ -822,6 +839,39 @@ impl ProjectionSet {
             .apply_counters(&self.counter, now_wall_ms, now_mono, scheduler);
         self.counter_side_effect_dirty = false;
         self.dirty |= TopicMask::STATUS;
+    }
+
+    fn apply_entity_monitor(
+        &mut self,
+        envelope: &DomainEnvelope,
+        entities: &EntityContext,
+        scheduler: &mut DeadlineScheduler,
+    ) -> TopicMask {
+        let reported = self.entity_monitor.apply(envelope, entities, scheduler);
+        if !reported.is_empty() {
+            self.entity_monitor_side_effect_dirty = true;
+        }
+        reported
+    }
+
+    fn flush_entity_monitor_side_effects(
+        &mut self,
+        entities: &EntityContext,
+        now_wall_ms: i64,
+        now_mono: MonoTimeMs,
+        scheduler: &mut DeadlineScheduler,
+    ) {
+        if !self.entity_monitor_side_effect_dirty {
+            return;
+        }
+        self.voice.apply_entity_monitor(
+            &self.entity_monitor,
+            entities,
+            now_wall_ms,
+            now_mono,
+            scheduler,
+        );
+        self.entity_monitor_side_effect_dirty = false;
     }
 }
 

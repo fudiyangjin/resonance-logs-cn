@@ -208,8 +208,12 @@ impl LiveCore {
             }
             Ok(())
         })();
-        self.projections
-            .end_batch(meta.captured_wall_ms, packet_mono, &mut self.scheduler);
+        self.projections.end_batch(
+            &self.entities,
+            meta.captured_wall_ms,
+            packet_mono,
+            &mut self.scheduler,
+        );
         self.flush_voice_cues();
         result?;
 
@@ -451,8 +455,12 @@ impl LiveCore {
             }
             Ok(())
         })();
-        self.projections
-            .end_batch(meta.captured_wall_ms, meta.mono_ms(), &mut self.scheduler);
+        self.projections.end_batch(
+            &self.entities,
+            meta.captured_wall_ms,
+            meta.mono_ms(),
+            &mut self.scheduler,
+        );
         self.flush_voice_cues();
         result?;
         self.request_publications(meta.mono_ms(), changed);
@@ -572,7 +580,7 @@ impl LiveCore {
             Ok(())
         })();
         self.projections
-            .end_batch(fired_wall_ms, horizon, &mut self.scheduler);
+            .end_batch(&self.entities, fired_wall_ms, horizon, &mut self.scheduler);
         self.flush_voice_cues();
         result?;
         self.request_publications(horizon, force_publication);

@@ -420,8 +420,22 @@ fn deadline_delivery_fires_rule_once_and_rejects_superseded_schedule() {
     let entities = EntityContext::new();
     let mut scheduler = DeadlineScheduler::new();
     let key = boss_voice_key(1, 0, 9);
-    projection.sync_boss_expiry(0, 9, MonoTimeMs(5_000), 0, MonoTimeMs(1_000), &mut scheduler);
-    projection.sync_boss_expiry(0, 9, MonoTimeMs(6_000), 0, MonoTimeMs(1_000), &mut scheduler);
+    projection.sync_boss_expiry(
+        0,
+        9,
+        MonoTimeMs(5_000),
+        0,
+        MonoTimeMs(1_000),
+        &mut scheduler,
+    );
+    projection.sync_boss_expiry(
+        0,
+        9,
+        MonoTimeMs(6_000),
+        0,
+        MonoTimeMs(1_000),
+        &mut scheduler,
+    );
 
     let stale = DomainEvent::DeadlineReached {
         key,
@@ -504,8 +518,18 @@ fn fired_phrases(projection: &mut VoiceProjection) -> Vec<String> {
 #[test]
 fn alert_events_fire_only_their_matching_voice_rules() {
     let mut projection = projection_with(vec![
-        rule("match", alert(AlertKind::MatchmakingPopped), "match-phrase", 0),
-        rule("ready", alert(AlertKind::ReadyCheckStarted), "ready-phrase", 0),
+        rule(
+            "match",
+            alert(AlertKind::MatchmakingPopped),
+            "match-phrase",
+            0,
+        ),
+        rule(
+            "ready",
+            alert(AlertKind::ReadyCheckStarted),
+            "ready-phrase",
+            0,
+        ),
         rule("vote", alert(AlertKind::TeamVoteStarted), "vote-phrase", 0),
     ]);
     let entities = EntityContext::new();
@@ -560,7 +584,12 @@ fn edge(scope: VoiceBuffScope, base_id: i32, gained: bool) -> BuffEdge {
 #[test]
 fn local_and_monster_scopes_do_not_cross_talk() {
     let mut projection = projection_with(vec![
-        rule("local", trigger(local_buff(42), VoiceEvent::Started), "p1", 0),
+        rule(
+            "local",
+            trigger(local_buff(42), VoiceEvent::Started),
+            "p1",
+            0,
+        ),
         rule(
             "monster",
             trigger(
@@ -636,7 +665,12 @@ fn monster_source_scopes_do_not_cross_talk() {
 #[test]
 fn gained_and_lost_triggers_only_match_their_own_direction() {
     let mut projection = projection_with(vec![
-        rule("gained", trigger(local_buff(42), VoiceEvent::Started), "on", 0),
+        rule(
+            "gained",
+            trigger(local_buff(42), VoiceEvent::Started),
+            "on",
+            0,
+        ),
         rule("lost", trigger(local_buff(42), VoiceEvent::Ended), "off", 0),
     ]);
 
@@ -843,6 +877,601 @@ fn boss_started_and_expiring_rules_share_one_subject_lookup() {
     assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(8_000)));
 }
 
+// ---------------------------------------------------------------------------
+// Phase 3: skill cast / cooldown-ready / entity-duration subjects, driven
+// through the entity monitor exactly as `ProjectionSet` does at batch end.
+// ---------------------------------------------------------------------------
+
+mod entity_monitor_bridge {
+    use super::*;
+    use crate::live::bootstrap_snapshot::{MonitorRuntimeSnapshot, WatchedEntitySpec};
+    use crate::live::projections::entity_monitor::EntityMonitorProjection;
+    use crate::live::runtime::events::SkillCooldownState;
+
+    const LOCAL: EntityUuid = EntityUuid(1);
+    const OTHER_PLAYER: EntityUuid = EntityUuid(2);
+    const SCYTHE_CART: i32 = 179_901;
+    const SKILL: i32 = 1420;
+    const RESOURCE_SKILL: i32 = 1431;
+
+    struct Harness {
+        entities: EntityContext,
+        monitor: EntityMonitorProjection,
+        voice: VoiceProjection,
+        scheduler: DeadlineScheduler,
+    }
+
+    impl Harness {
+        /// Local player (uuid 1) is present; `rules` are already active.
+        fn new(rules: Vec<VoiceRule>, specs: Vec<WatchedEntitySpec>) -> Self {
+            let mut entities = local_context();
+            entities.apply_batch(batch(
+                1,
+                vec![ProtocolObservation::EntityAppeared {
+                    uuid: OTHER_PLAYER,
+                    kind: EntityKind::Character,
+                }],
+            ));
+            let mut monitor = EntityMonitorProjection::default();
+            let mut scheduler = DeadlineScheduler::new();
+            let local = entities.local_player();
+            monitor.apply(
+                &domain_event(
+                    1,
+                    DomainEvent::LocalPlayerChanged {
+                        previous: None,
+                        current: local,
+                    },
+                ),
+                &entities,
+                &mut scheduler,
+            );
+            let mut config = MonitorRuntimeSnapshot::default();
+            config.monster.enabled = true;
+            config.monster.watched_entities = specs;
+            monitor.apply_config(&config, &entities, MonoTimeMs(100));
+            let mut voice = projection_with(rules);
+            voice.apply_entity_monitor(&monitor, &entities, 100, MonoTimeMs(100), &mut scheduler);
+            Self {
+                entities,
+                monitor,
+                voice,
+                scheduler,
+            }
+        }
+
+        /// Mirrors `ProjectionSet::apply` + `end_batch` for one batch at
+        /// `sequence` (mono = wall = sequence * 100 ms).
+        fn step(&mut self, sequence: u64, observations: Vec<ProtocolObservation>) {
+            let events = self.entities.apply_batch(batch(sequence, observations));
+            let mut dirty = false;
+            for event in &events {
+                dirty |= !self
+                    .monitor
+                    .apply(event, &self.entities, &mut self.scheduler)
+                    .is_empty();
+                self.voice.apply(event, &self.entities, &mut self.scheduler);
+            }
+            if dirty {
+                self.flush(sequence);
+            }
+        }
+
+        fn flush(&mut self, sequence: u64) {
+            self.voice.apply_entity_monitor(
+                &self.monitor,
+                &self.entities,
+                sequence as i64 * 100,
+                MonoTimeMs(sequence * 100),
+                &mut self.scheduler,
+            );
+        }
+
+        /// Delivers every timer due at `sequence` and flushes like the
+        /// runtime's deadline batch does.
+        fn drain(&mut self, sequence: u64) {
+            let now = MonoTimeMs(sequence * 100);
+            for due in self.scheduler.drain_due(now) {
+                let event = DomainEvent::DeadlineReached {
+                    key: due.key,
+                    scheduled_for: due.scheduled_for,
+                    fired_at: now,
+                    kind: due.kind,
+                    scope: due.scope,
+                    generation: due.generation,
+                };
+                self.voice.apply(
+                    &domain_event(sequence, event),
+                    &self.entities,
+                    &mut self.scheduler,
+                );
+            }
+            self.flush(sequence);
+        }
+
+        fn fired(&mut self) -> Vec<String> {
+            fired_phrases(&mut self.voice)
+        }
+    }
+
+    fn skill(skill_id: i32, event: VoiceEvent) -> VoiceTrigger {
+        trigger(VoiceSubject::Skill { skill_id }, event)
+    }
+
+    fn entity(monster_id: i32, scope: EntityOwnerScope, event: VoiceEvent) -> VoiceTrigger {
+        trigger(VoiceSubject::Entity { monster_id, scope }, event)
+    }
+
+    /// The local player's own casts reach the domain as the authoritative
+    /// `LocalSkillRequested` (-> `CastStarted`); everyone else's, and the
+    /// local echo, arrive as `SkillLifecycleChanged` observations.
+    fn cast(caster: EntityUuid, skill_id: i32, phase: SkillPhase) -> ProtocolObservation {
+        if caster == LOCAL && phase == SkillPhase::CastStarted {
+            return ProtocolObservation::LocalSkillRequested {
+                skill_id,
+                target_uuid: None,
+            };
+        }
+        ProtocolObservation::SkillLifecycleChanged {
+            caster_uuid: caster,
+            skill_id,
+            phase,
+            target_uuid: None,
+        }
+    }
+
+    fn cooldown(skill_id: i32, duration: i32, valid: i32) -> ProtocolObservation {
+        ProtocolObservation::SkillCooldownUpdated {
+            entity_uuid: LOCAL,
+            cooldowns: vec![SkillCooldownState {
+                skill_level_id: skill_id * 100 + 1,
+                begin_time: Some(0),
+                duration: Some(duration),
+                cooldown_type: Some(0),
+                valid_time: Some(valid),
+            }],
+        }
+    }
+
+    fn resource_slot(skill_id: i32, valid: i32) -> ProtocolObservation {
+        ProtocolObservation::SkillCooldownUpdated {
+            entity_uuid: LOCAL,
+            cooldowns: vec![SkillCooldownState {
+                skill_level_id: skill_id * 100 + 1,
+                begin_time: Some(0),
+                duration: Some(-1),
+                cooldown_type: Some(1),
+                valid_time: Some(valid),
+            }],
+        }
+    }
+
+    fn summon(uuid: EntityUuid, owner: EntityUuid) -> Vec<ProtocolObservation> {
+        vec![
+            ProtocolObservation::EntityAppeared {
+                uuid,
+                kind: EntityKind::Monster,
+            },
+            ProtocolObservation::IdentityUpdated {
+                uuid,
+                patch: EntityIdentityPatch {
+                    monster_id: FieldPatch::Set(SCYTHE_CART),
+                    owner_uuid: FieldPatch::Set(owner),
+                    ..Default::default()
+                },
+            },
+        ]
+    }
+
+    fn spec(duration_ms: Option<u64>, scope: EntityOwnerScope) -> WatchedEntitySpec {
+        WatchedEntitySpec {
+            monster_id: SCYTHE_CART,
+            duration_ms,
+            scope,
+        }
+    }
+
+    #[test]
+    fn local_cast_started_fires_once_and_other_phases_or_casters_do_not() {
+        let mut h = Harness::new(
+            vec![rule("cast", skill(SKILL, VoiceEvent::Started), "cast", 0)],
+            vec![],
+        );
+        h.step(2, vec![cast(LOCAL, SKILL, SkillPhase::CastStarted)]);
+        assert_eq!(h.fired(), vec!["cast".to_string()]);
+
+        h.step(3, vec![cast(LOCAL, SKILL, SkillPhase::DurationStarted)]);
+        h.step(4, vec![cast(LOCAL, SKILL, SkillPhase::Completed)]);
+        h.step(5, vec![cast(OTHER_PLAYER, SKILL, SkillPhase::CastStarted)]);
+        h.step(6, vec![cast(LOCAL, SKILL + 1, SkillPhase::CastStarted)]);
+        assert!(h.fired().is_empty());
+    }
+
+    #[test]
+    fn cooldown_ready_and_ready_in_fire_from_one_deadline_each() {
+        let mut h = Harness::new(
+            vec![
+                rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0),
+                rule("soon", skill(SKILL, expiring(3)), "soon", 0),
+            ],
+            vec![],
+        );
+        // 10 s cooldown received at t = 200 ms: ready at 10 200, "soon" at 7 200.
+        h.step(2, vec![cooldown(SKILL, 10_000, 0)]);
+        assert!(h.fired().is_empty());
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(7_200)));
+
+        h.drain(72);
+        assert_eq!(h.fired(), vec!["soon".to_string()]);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(10_200)));
+
+        h.drain(102);
+        assert_eq!(h.fired(), vec!["ready".to_string()]);
+        assert!(h.scheduler.is_empty());
+
+        // Idle flushes after the deadline never re-announce.
+        h.flush(110);
+        h.flush(120);
+        assert!(h.fired().is_empty());
+    }
+
+    #[test]
+    fn repeated_cooldown_packet_is_idempotent_and_reduction_reschedules() {
+        let mut h = Harness::new(
+            vec![rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0)],
+            vec![],
+        );
+        h.step(2, vec![cooldown(SKILL, 10_000, 0)]);
+        let key = skill_voice_key(1, 0, SKILL);
+        assert_eq!(
+            h.voice.deadlines.armed_deadline(key),
+            Some(MonoTimeMs(10_200))
+        );
+
+        // Same packet again (server echo) keeps the same deadline.
+        h.step(3, vec![cooldown(SKILL, 10_000, 100)]);
+        assert_eq!(
+            h.voice.deadlines.armed_deadline(key),
+            Some(MonoTimeMs(10_200))
+        );
+        assert_eq!(h.voice.deadlines.len(), 1);
+
+        // Server reports most of the cooldown already elapsed: pull in.
+        h.step(4, vec![cooldown(SKILL, 10_000, 8_000)]);
+        assert_eq!(
+            h.voice.deadlines.armed_deadline(key),
+            Some(MonoTimeMs(2_400))
+        );
+        h.drain(24);
+        assert_eq!(h.fired(), vec!["ready".to_string()]);
+    }
+
+    #[test]
+    fn packet_that_is_already_ready_fires_edge_and_cancels_timer() {
+        let mut h = Harness::new(
+            vec![rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0)],
+            vec![],
+        );
+        h.step(2, vec![cooldown(SKILL, 10_000, 0)]);
+        assert_eq!(h.voice.deadlines.len(), 1);
+
+        // Cooldown fully refunded: no timer, announced right away.
+        h.step(3, vec![cooldown(SKILL, 10_000, 10_000)]);
+        assert_eq!(h.fired(), vec!["ready".to_string()]);
+        assert!(h.scheduler.is_empty());
+
+        // Still ready on the next packet: no second cue.
+        h.step(4, vec![cooldown(SKILL, 10_000, 10_000)]);
+        assert!(h.fired().is_empty());
+
+        // A skill with no cooldown is ready on first sight, which is not an
+        // edge; only a not-ready -> ready transition speaks.
+        h.step(5, vec![cooldown(SKILL + 1, 0, 0)]);
+        assert!(h.fired().is_empty());
+        assert!(h.scheduler.is_empty());
+    }
+
+    #[test]
+    fn resource_slot_fires_on_threshold_edge_without_timer() {
+        let mut h = Harness::new(
+            vec![rule(
+                "ready",
+                skill(RESOURCE_SKILL, VoiceEvent::Ended),
+                "ready",
+                0,
+            )],
+            vec![],
+        );
+        // SkillChargeTable: 1431 has maxValidCdTime 10 000.
+        h.step(2, vec![resource_slot(RESOURCE_SKILL, 2_000)]);
+        h.step(3, vec![resource_slot(RESOURCE_SKILL, 6_000)]);
+        assert!(h.fired().is_empty());
+        assert!(h.scheduler.is_empty());
+
+        h.step(4, vec![resource_slot(RESOURCE_SKILL, 10_000)]);
+        assert_eq!(h.fired(), vec!["ready".to_string()]);
+
+        h.step(5, vec![resource_slot(RESOURCE_SKILL, 10_000)]);
+        assert!(h.fired().is_empty());
+
+        // Spent and refilled: announces again.
+        h.step(6, vec![resource_slot(RESOURCE_SKILL, 0)]);
+        h.step(7, vec![resource_slot(RESOURCE_SKILL, 10_000)]);
+        assert_eq!(h.fired(), vec!["ready".to_string()]);
+    }
+
+    fn charged_cooldown(skill_id: i32, duration: i32, valid: i32) -> ProtocolObservation {
+        ProtocolObservation::SkillCooldownUpdated {
+            entity_uuid: LOCAL,
+            cooldowns: vec![SkillCooldownState {
+                skill_level_id: skill_id * 100 + 1,
+                begin_time: Some(0),
+                duration: Some(duration),
+                cooldown_type: Some(1),
+                valid_time: Some(valid),
+            }],
+        }
+    }
+
+    #[test]
+    fn multi_charge_announces_first_charge_only() {
+        // SkillChargeTable: 1420 has maxCharges 2.
+        let mut h = Harness::new(
+            vec![rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0)],
+            vec![],
+        );
+        // Both charges spent at t = 200 ms; one charge back at 6 200.
+        h.step(2, vec![charged_cooldown(SKILL, 6_000, 0)]);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(6_200)));
+        h.drain(62);
+        assert_eq!(h.fired(), vec!["ready".to_string()]);
+
+        // 1 -> 2 has no timer and a "one charge left" packet is no edge.
+        assert!(h.scheduler.is_empty());
+        h.drain(122);
+        h.step(123, vec![charged_cooldown(SKILL, 6_000, 6_500)]);
+        assert!(h.fired().is_empty());
+        assert!(h.scheduler.is_empty());
+
+        // Spend both again: a fresh 0 -> 1 deadline.
+        h.step(130, vec![charged_cooldown(SKILL, 6_000, 0)]);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(19_000)));
+    }
+
+    #[test]
+    fn local_player_change_cancels_cooldown_timers() {
+        let mut h = Harness::new(
+            vec![rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0)],
+            vec![],
+        );
+        h.step(2, vec![cooldown(SKILL, 10_000, 0)]);
+        assert_eq!(h.voice.deadlines.len(), 1);
+
+        h.step(
+            3,
+            vec![ProtocolObservation::LocalPlayerChanged {
+                uuid: Some(OTHER_PLAYER),
+            }],
+        );
+        assert!(h.voice.deadlines.len() == 0);
+        assert!(h.scheduler.is_empty());
+        h.drain(110);
+        assert!(h.fired().is_empty());
+    }
+
+    #[test]
+    fn entity_appear_expire_and_disappear_fire_in_order() {
+        let mut h = Harness::new(
+            vec![
+                rule(
+                    "up",
+                    entity(SCYTHE_CART, EntityOwnerScope::Any, VoiceEvent::Started),
+                    "up",
+                    0,
+                ),
+                rule(
+                    "soon",
+                    entity(SCYTHE_CART, EntityOwnerScope::Any, expiring(5)),
+                    "soon",
+                    0,
+                ),
+                rule(
+                    "gone",
+                    entity(SCYTHE_CART, EntityOwnerScope::Any, VoiceEvent::Ended),
+                    "gone",
+                    0,
+                ),
+            ],
+            vec![spec(Some(15_000), EntityOwnerScope::Any)],
+        );
+        let cart = EntityUuid(500);
+        // Detected at 200 ms, lifetime 15 s -> "soon" at 10 200.
+        h.step(2, summon(cart, LOCAL));
+        assert_eq!(h.fired(), vec!["up".to_string()]);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(10_200)));
+
+        h.drain(102);
+        assert_eq!(h.fired(), vec!["soon".to_string()]);
+
+        h.step(
+            150,
+            vec![ProtocolObservation::EntityDisappeared { uuid: cart }],
+        );
+        assert_eq!(h.fired(), vec!["gone".to_string()]);
+        assert!(h.scheduler.is_empty());
+    }
+
+    #[test]
+    fn entity_destroyed_early_cancels_expiring_and_fires_gone_only() {
+        let mut h = Harness::new(
+            vec![
+                rule(
+                    "soon",
+                    entity(SCYTHE_CART, EntityOwnerScope::Any, expiring(5)),
+                    "soon",
+                    0,
+                ),
+                rule(
+                    "gone",
+                    entity(SCYTHE_CART, EntityOwnerScope::Any, VoiceEvent::Ended),
+                    "gone",
+                    0,
+                ),
+            ],
+            vec![spec(Some(15_000), EntityOwnerScope::Any)],
+        );
+        let cart = EntityUuid(500);
+        h.step(2, summon(cart, LOCAL));
+        assert_eq!(h.voice.deadlines.len(), 1);
+
+        h.step(
+            30,
+            vec![ProtocolObservation::EntityDisappeared { uuid: cart }],
+        );
+        assert_eq!(h.fired(), vec!["gone".to_string()]);
+        assert!(h.scheduler.is_empty());
+        h.drain(200);
+        assert!(h.fired().is_empty());
+    }
+
+    #[test]
+    fn concurrent_instances_aggregate_edges_but_keep_separate_expiries() {
+        let mut h = Harness::new(
+            vec![
+                rule(
+                    "up",
+                    entity(SCYTHE_CART, EntityOwnerScope::Any, VoiceEvent::Started),
+                    "up",
+                    0,
+                ),
+                rule(
+                    "soon",
+                    entity(SCYTHE_CART, EntityOwnerScope::Any, expiring(0)),
+                    "soon",
+                    0,
+                ),
+                rule(
+                    "gone",
+                    entity(SCYTHE_CART, EntityOwnerScope::Any, VoiceEvent::Ended),
+                    "gone",
+                    0,
+                ),
+            ],
+            vec![spec(Some(10_000), EntityOwnerScope::Any)],
+        );
+        h.step(2, summon(EntityUuid(500), LOCAL));
+        h.step(40, summon(EntityUuid(501), OTHER_PLAYER));
+        // Second instance is not a new "appeared"; both timers are armed.
+        assert_eq!(h.fired(), vec!["up".to_string()]);
+        assert_eq!(h.voice.deadlines.len(), 2);
+
+        h.drain(102);
+        assert_eq!(h.fired(), vec!["soon".to_string()]);
+        h.drain(140);
+        assert_eq!(h.fired(), vec!["soon".to_string()]);
+
+        h.step(
+            150,
+            vec![ProtocolObservation::EntityDisappeared {
+                uuid: EntityUuid(500),
+            }],
+        );
+        assert!(h.fired().is_empty());
+        h.step(
+            151,
+            vec![ProtocolObservation::EntityDisappeared {
+                uuid: EntityUuid(501),
+            }],
+        );
+        assert_eq!(h.fired(), vec!["gone".to_string()]);
+    }
+
+    #[test]
+    fn self_scope_ignores_other_players_summons() {
+        let mut h = Harness::new(
+            vec![
+                rule(
+                    "mine",
+                    entity(
+                        SCYTHE_CART,
+                        EntityOwnerScope::LocalPlayer,
+                        VoiceEvent::Started,
+                    ),
+                    "mine",
+                    0,
+                ),
+                rule(
+                    "mine-soon",
+                    entity(SCYTHE_CART, EntityOwnerScope::LocalPlayer, expiring(0)),
+                    "mine-soon",
+                    0,
+                ),
+            ],
+            vec![
+                spec(Some(10_000), EntityOwnerScope::LocalPlayer),
+                spec(Some(30_000), EntityOwnerScope::Any),
+            ],
+        );
+        h.step(2, summon(EntityUuid(501), OTHER_PLAYER));
+        assert!(h.fired().is_empty());
+        assert!(h.scheduler.is_empty());
+
+        // Self-scope rule uses the self-scope entry's duration (10 s).
+        h.step(3, summon(EntityUuid(500), LOCAL));
+        assert_eq!(h.fired(), vec!["mine".to_string()]);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(10_300)));
+    }
+
+    #[test]
+    fn changing_duration_rearms_existing_entities_and_entities_present_at_config_are_not_announced()
+    {
+        let mut h = Harness::new(
+            vec![
+                rule(
+                    "up",
+                    entity(SCYTHE_CART, EntityOwnerScope::Any, VoiceEvent::Started),
+                    "up",
+                    0,
+                ),
+                rule(
+                    "soon",
+                    entity(SCYTHE_CART, EntityOwnerScope::Any, expiring(0)),
+                    "soon",
+                    0,
+                ),
+            ],
+            vec![spec(Some(10_000), EntityOwnerScope::Any)],
+        );
+        h.step(2, summon(EntityUuid(500), LOCAL));
+        assert_eq!(h.fired(), vec!["up".to_string()]);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(10_200)));
+
+        // User edits the lifetime to 20 s: the live cart's cue moves.
+        let mut config = MonitorRuntimeSnapshot::default();
+        config.monster.enabled = true;
+        config.monster.watched_entities = vec![spec(Some(20_000), EntityOwnerScope::Any)];
+        h.monitor
+            .apply_config(&config, &h.entities, MonoTimeMs(500));
+        h.flush(5);
+        assert!(h.fired().is_empty());
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(20_200)));
+
+        // Re-applying the voice rules while the cart is up must not replay
+        // "appeared", but the expiry is re-armed under the new rule set.
+        let snapshot = VoiceRuntimeSnapshot {
+            enabled: true,
+            volume: 1.0,
+            queue_policy: Default::default(),
+            rules: h.voice.rules.clone(),
+        };
+        h.voice
+            .apply_config(&snapshot, &h.entities, MonoTimeMs(600), &mut h.scheduler);
+        h.flush(6);
+        assert!(h.fired().is_empty());
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(20_200)));
+    }
+}
+
 #[test]
 fn normalize_drops_unsupported_subject_event_pairs() {
     use crate::voice::models::VoiceRuntimeSnapshot;
@@ -884,10 +1513,49 @@ fn normalize_drops_unsupported_subject_event_pairs() {
                 "p",
                 0,
             ),
+            rule(
+                "bad-skill",
+                trigger(
+                    VoiceSubject::Skill { skill_id: 1420 },
+                    VoiceEvent::Threshold,
+                ),
+                "p",
+                0,
+            ),
+            rule(
+                "bad-entity",
+                trigger(
+                    VoiceSubject::Entity {
+                        monster_id: 179_901,
+                        scope: EntityOwnerScope::Any,
+                    },
+                    VoiceEvent::Threshold,
+                ),
+                "p",
+                0,
+            ),
+            rule(
+                "ok-skill",
+                trigger(VoiceSubject::Skill { skill_id: 1420 }, VoiceEvent::Ended),
+                "p",
+                0,
+            ),
+            rule(
+                "ok-entity",
+                trigger(
+                    VoiceSubject::Entity {
+                        monster_id: 179_901,
+                        scope: EntityOwnerScope::LocalPlayer,
+                    },
+                    expiring(5),
+                ),
+                "p",
+                0,
+            ),
         ],
     };
     snapshot.normalize();
     assert_eq!(snapshot.volume, 1.0);
     let ids: Vec<&str> = snapshot.rules.iter().map(|rule| rule.id.as_str()).collect();
-    assert_eq!(ids, vec!["ok"]);
+    assert_eq!(ids, vec!["ok", "ok-entity", "ok-skill"]);
 }

@@ -2,6 +2,7 @@ use crate::live::counter::engine::CounterRule;
 use crate::live::counter::season_cultivate::{FactorCounterTemplate, normalize_factor_templates};
 use crate::live::runtime::segment::{TRAINING_WINDOW_MS, TrainingLockPolicy};
 use crate::live::store_file::{load_store_json, save_store_json};
+use crate::voice::models::EntityOwnerScope;
 use log::{info, warn};
 use serde::{Deserialize, Deserializer, Serialize};
 use tauri::AppHandle;
@@ -138,13 +139,25 @@ impl MonitorRuntimeSnapshot {
 
         dedup_and_sort_i32(&mut self.monster.global_ids);
         dedup_and_sort_i32(&mut self.monster.self_applied_ids);
-        self.monster.watched_entity_ids.retain(|id| *id > 0);
-        dedup_and_sort_i32(&mut self.monster.watched_entity_ids);
+        self.monster
+            .watched_entities
+            .retain(|spec| spec.monster_id > 0);
+        for spec in &mut self.monster.watched_entities {
+            spec.duration_ms = spec.duration_ms.filter(|duration| *duration > 0);
+        }
+        // Same (monster_id, scope) with different durations is a frontend
+        // contradiction; keep the first so the outcome is deterministic.
+        self.monster
+            .watched_entities
+            .sort_by_key(|spec| (spec.monster_id, spec.scope));
+        self.monster
+            .watched_entities
+            .dedup_by_key(|spec| (spec.monster_id, spec.scope));
         if !self.monster.enabled {
             self.monster.global_ids.clear();
             self.monster.self_applied_ids.clear();
             self.monster.monitor_all_self_applied = false;
-            self.monster.watched_entity_ids.clear();
+            self.monster.watched_entities.clear();
         }
 
         dedup_and_sort_i32(&mut self.teammate.any_source_ids);
@@ -210,6 +223,20 @@ pub struct SkillRuntimeSnapshot {
     pub buff_timeline_ids: Vec<i32>,
 }
 
+/// One entity-duration watch entry. `monster_id` decides which entities are
+/// tracked; `duration_ms` (the configured lifetime) and `scope` are only
+/// consumed by the voice projection to time "expiring" cues, mirroring the
+/// HUD which filters by scope and counts down from detection on its own.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WatchedEntitySpec {
+    pub monster_id: i32,
+    #[serde(default)]
+    pub duration_ms: Option<u64>,
+    #[serde(default)]
+    pub scope: EntityOwnerScope,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MonsterRuntimeSnapshot {
@@ -217,7 +244,18 @@ pub struct MonsterRuntimeSnapshot {
     pub global_ids: Vec<i32>,
     pub self_applied_ids: Vec<i32>,
     pub monitor_all_self_applied: bool,
-    pub watched_entity_ids: Vec<i32>,
+    pub watched_entities: Vec<WatchedEntitySpec>,
+}
+
+impl MonsterRuntimeSnapshot {
+    /// Distinct monster ids across all watch entries (admission set).
+    pub fn watched_monster_ids(&self) -> impl Iterator<Item = i32> + '_ {
+        let mut seen = std::collections::HashSet::new();
+        self.watched_entities
+            .iter()
+            .map(|spec| spec.monster_id)
+            .filter(move |id| seen.insert(*id))
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default)]
@@ -243,7 +281,7 @@ fn describe_snapshot(snapshot: &MonitorRuntimeSnapshot) -> String {
         snapshot.monster.enabled,
         snapshot.monster.global_ids.len(),
         snapshot.monster.self_applied_ids.len(),
-        snapshot.monster.watched_entity_ids.len(),
+        snapshot.monster.watched_entities.len(),
         snapshot.teammate.enabled,
         snapshot.teammate.any_source_ids.len(),
         snapshot.teammate.local_player_source_ids.len(),
@@ -301,28 +339,73 @@ fn dedup_and_sort_i32(values: &mut Vec<i32>) {
 mod tests {
     use super::*;
 
-    #[test]
-    fn watched_entity_ids_are_deduplicated_and_cleared_when_monster_disabled() {
-        let mut snapshot = MonitorRuntimeSnapshot::default();
-        snapshot.monster.enabled = true;
-        snapshot.monster.watched_entity_ids = vec![179_901, 0, -5, 42, 179_901];
-        let normalized = snapshot
-            .clone()
-            .normalize()
-            .expect("watched ids snapshot is valid");
-        assert_eq!(normalized.monster.watched_entity_ids, vec![42, 179_901]);
-
-        snapshot.monster.enabled = false;
-        let disabled = snapshot.normalize().expect("disabled snapshot is valid");
-        assert!(disabled.monster.watched_entity_ids.is_empty());
+    fn spec(
+        monster_id: i32,
+        duration_ms: Option<u64>,
+        scope: EntityOwnerScope,
+    ) -> WatchedEntitySpec {
+        WatchedEntitySpec {
+            monster_id,
+            duration_ms,
+            scope,
+        }
     }
 
     #[test]
-    fn legacy_monster_snapshot_without_watched_ids_deserializes_to_empty() {
-        let monster: MonsterRuntimeSnapshot =
-            serde_json::from_str(r#"{"enabled":true,"globalIds":[1],"selfAppliedIds":[]}"#)
-                .expect("legacy monster snapshot parses");
-        assert!(monster.watched_entity_ids.is_empty());
+    fn watched_entities_are_deduplicated_by_id_and_scope_and_cleared_when_monster_disabled() {
+        let mut snapshot = MonitorRuntimeSnapshot::default();
+        snapshot.monster.enabled = true;
+        snapshot.monster.watched_entities = vec![
+            spec(179_901, Some(15_000), EntityOwnerScope::Any),
+            spec(0, None, EntityOwnerScope::Any),
+            spec(-5, None, EntityOwnerScope::Any),
+            spec(42, Some(0), EntityOwnerScope::LocalPlayer),
+            // Same id, other scope: a distinct voice subject, kept.
+            spec(179_901, Some(20_000), EntityOwnerScope::LocalPlayer),
+            // Exact duplicate key: first wins.
+            spec(179_901, Some(99_000), EntityOwnerScope::Any),
+        ];
+        let normalized = snapshot
+            .clone()
+            .normalize()
+            .expect("watched specs snapshot is valid");
+        assert_eq!(
+            normalized.monster.watched_entities,
+            vec![
+                spec(42, None, EntityOwnerScope::LocalPlayer),
+                spec(179_901, Some(20_000), EntityOwnerScope::LocalPlayer),
+                spec(179_901, Some(15_000), EntityOwnerScope::Any),
+            ]
+        );
+        assert_eq!(
+            normalized.monster.watched_monster_ids().collect::<Vec<_>>(),
+            vec![42, 179_901]
+        );
+
+        snapshot.monster.enabled = false;
+        let disabled = snapshot.normalize().expect("disabled snapshot is valid");
+        assert!(disabled.monster.watched_entities.is_empty());
+    }
+
+    #[test]
+    fn legacy_monster_snapshot_with_watched_ids_deserializes_to_empty_specs() {
+        let monster: MonsterRuntimeSnapshot = serde_json::from_str(
+            r#"{"enabled":true,"globalIds":[1],"selfAppliedIds":[],"watchedEntityIds":[7]}"#,
+        )
+        .expect("legacy monster snapshot parses");
+        assert!(monster.watched_entities.is_empty());
+
+        let spec: WatchedEntitySpec =
+            serde_json::from_str(r#"{"monsterId":7,"durationMs":15000,"scope":"self"}"#)
+                .expect("spec parses");
+        assert_eq!(
+            spec,
+            WatchedEntitySpec {
+                monster_id: 7,
+                duration_ms: Some(15_000),
+                scope: EntityOwnerScope::LocalPlayer,
+            }
+        );
     }
 
     #[test]

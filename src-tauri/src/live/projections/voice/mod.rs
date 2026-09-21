@@ -3,25 +3,35 @@
 //! Rules are keyed by their [`VoiceSubject`] (minus scope details) so every
 //! engine path does one map lookup and then filters the handful of rules on
 //! that subject by event / scope.
+//!
+//! Two trigger paradigms only: *edges* (buff gained/lost, cast, counter
+//! threshold, entity appeared/gone, skill ready) and *deadlines* (N seconds
+//! before a buff / mechanic / counter freeze / cooldown / entity lifetime
+//! runs out). Skill and entity state is not tracked here; it is read from
+//! the sibling [`EntityMonitorProjection`] at the end of each batch.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::live::counter::engine::{CounterEngine, CounterNamespace};
+use crate::live::projections::entity_monitor::{
+    EntityMonitorProjection, SkillCdRecord, WatchedEntityRecord,
+};
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
-    BuffState, BuffTransition, DomainEnvelope, DomainEvent, MonoTimeMs, TimerKey, TimerScope,
+    BuffState, BuffTransition, DomainEnvelope, DomainEvent, MonoTimeMs, SkillPhase, TimerKey,
+    TimerScope,
 };
 use crate::live::runtime::scheduler::DeadlineScheduler;
 use crate::voice::models::{
-    AlertKind, MonsterBuffSourceScope, VoiceCueIntent, VoiceEvent, VoiceRule, VoiceRuntimeSnapshot,
-    VoiceSubject, VoiceTrigger,
+    AlertKind, EntityOwnerScope, MonsterBuffSourceScope, VoiceCueIntent, VoiceEvent, VoiceRule,
+    VoiceRuntimeSnapshot, VoiceSubject, VoiceTrigger,
 };
 
 mod deadline;
 #[cfg(test)]
 mod tests;
 
-use deadline::DeadlineTracker;
+use deadline::{DeadlineTracker, SyncOutcome};
 
 /// Lookup key derived from a [`VoiceSubject`] with scope details stripped:
 /// the buff aggregates are keyed per base id, and the source scope is
@@ -30,6 +40,8 @@ use deadline::DeadlineTracker;
 enum SubjectKey {
     Buff(i32),
     MonsterBuff(i32),
+    Skill(i32),
+    Entity(i32),
     BossDbm(i32),
     Counter { rule_id: i32, slot_id: i32 },
     Alert(AlertKind),
@@ -40,6 +52,8 @@ impl SubjectKey {
         match subject {
             VoiceSubject::Buff { buff_id } => Self::Buff(*buff_id),
             VoiceSubject::MonsterBuff { buff_id, .. } => Self::MonsterBuff(*buff_id),
+            VoiceSubject::Skill { skill_id } => Self::Skill(*skill_id),
+            VoiceSubject::Entity { monster_id, .. } => Self::Entity(*monster_id),
             VoiceSubject::BossDbm { base_skill_id } => Self::BossDbm(*base_skill_id),
             VoiceSubject::Counter { rule_id, slot_id } => Self::Counter {
                 rule_id: *rule_id,
@@ -144,12 +158,25 @@ pub struct VoiceProjection {
     /// Handles of enabled buff `ExpiringIn` rules, so expiry syncing touches
     /// only timer-bearing rules instead of scanning `rules`.
     buff_expiry_rules: Vec<usize>,
+    /// Handles of enabled `Skill` / `Entity` rules that read the entity
+    /// monitor (everything but `Skill/Started`, which is event-driven).
+    entity_monitor_rules: Vec<usize>,
     buff_aggregates: BuffAggregates,
     /// Every armed voice timer, keyed by its scheduler key.
     deadlines: DeadlineTracker,
     rule_set: u64,
     last_fire_ms: HashMap<usize, i64>,
     counter_crossed: HashMap<(i32, i32), bool>,
+    /// Last observed readiness per local skill id; `Skill/Ended` fires on
+    /// the `false -> true` edge (resource slots have no deadline at all).
+    skill_ready: HashMap<i32, bool>,
+    /// `(monster_id, scope)` pairs with at least one present watched entity
+    /// at the last flush; `Entity/Started|Ended` fire on set differences.
+    entity_presence: BTreeSet<(i32, EntityOwnerScope)>,
+    /// `false` until the first flush after (re)configuration, which seeds
+    /// `entity_presence` silently — entities already on the field are not
+    /// announced as "appeared".
+    entity_presence_seeded: bool,
     /// Cues matched during this batch, drained by [`Self::take_cues`].
     pending_cues: Vec<VoiceCueIntent>,
     /// Scratch buffer for rule handles, reused across edge evaluation so a
@@ -172,6 +199,13 @@ impl VoiceProjection {
         self.deadlines.clear();
         self.last_fire_ms.clear();
         self.counter_crossed.clear();
+        self.clear_entity_monitor_state();
+    }
+
+    fn clear_entity_monitor_state(&mut self) {
+        self.skill_ready.clear();
+        self.entity_presence.clear();
+        self.entity_presence_seeded = false;
     }
 
     pub fn apply_config(
@@ -190,6 +224,7 @@ impl VoiceProjection {
         self.rebuild_rule_indexes();
         self.last_fire_ms.clear();
         self.counter_crossed.clear();
+        self.clear_entity_monitor_state();
         self.buff_aggregates = collect_buff_aggregates(entities);
         self.sync_buff_expiries(now_mono, scheduler);
     }
@@ -201,6 +236,7 @@ impl VoiceProjection {
         self.rules_by_subject.clear();
         self.counter_rules.clear();
         self.buff_expiry_rules.clear();
+        self.entity_monitor_rules.clear();
         for (index, rule) in self.rules.iter().enumerate() {
             if !rule.enabled {
                 continue;
@@ -216,6 +252,12 @@ impl VoiceProjection {
                     }
                 }
                 VoiceSubject::Counter { .. } => self.counter_rules.push(index),
+                VoiceSubject::Skill { .. } => {
+                    if rule.trigger.event != VoiceEvent::Started {
+                        self.entity_monitor_rules.push(index);
+                    }
+                }
+                VoiceSubject::Entity { .. } => self.entity_monitor_rules.push(index),
                 VoiceSubject::BossDbm { .. } | VoiceSubject::Alert { .. } => {}
             }
         }
@@ -277,6 +319,25 @@ impl VoiceProjection {
                 self.sync_buff_expiries(envelope.meta.mono_ms(), scheduler);
             }
             DomainEvent::SceneChanged { .. } => self.cancel_boss_expiries(scheduler),
+            // The local player's casts arrive exactly once per cast as the
+            // authoritative `CastStarted` (`Observed` echoes are dropped by
+            // the entity context), so no dedup is needed here.
+            DomainEvent::SkillLifecycleChanged {
+                caster,
+                skill_id,
+                phase: SkillPhase::CastStarted,
+                ..
+            } if entities.local_player() == Some(*caster) => {
+                let matched = self.take_matched(SubjectKey::Skill(*skill_id));
+                for &index in &matched {
+                    if self.rules.get(index).map(|rule| &rule.trigger.event)
+                        == Some(&VoiceEvent::Started)
+                    {
+                        self.fire_rule(index, envelope.occurred_at_ms, None);
+                    }
+                }
+                self.matched_rules = matched;
+            }
             DomainEvent::BossMechanicStarted(mechanic) => {
                 let matched = self.take_matched(SubjectKey::BossDbm(mechanic.base_skill_id));
                 for &index in &matched {
@@ -365,7 +426,8 @@ impl VoiceProjection {
                         .slot_state(CounterNamespace::Normal, rule_id, slot_id)
                         .and_then(|slot| slot.freeze_until_ms)
                         .map(|expiry_wall| {
-                            now_mono.saturating_add(expiry_wall.saturating_sub(now_ms).max(0) as u64)
+                            now_mono
+                                .saturating_add(expiry_wall.saturating_sub(now_ms).max(0) as u64)
                         });
                     self.deadlines.sync(
                         key,
@@ -380,6 +442,209 @@ impl VoiceProjection {
             }
         }
         self.counter_rules = counter_rules;
+    }
+
+    /// Sibling read of the entity monitor at the end of a batch (and right
+    /// after a config change): re-arms skill-ready / entity-expiry deadlines
+    /// and fires readiness and presence edges.
+    pub fn apply_entity_monitor(
+        &mut self,
+        monitor: &EntityMonitorProjection,
+        entities: &EntityContext,
+        now_ms: i64,
+        now_mono: MonoTimeMs,
+        scheduler: &mut DeadlineScheduler,
+    ) {
+        if self.entity_monitor_rules.is_empty() {
+            return;
+        }
+        // Last-wins per base skill id, like the HUD: several level ids can
+        // share a base id and the newest packet describes the live state.
+        let mut latest_cds: HashMap<i32, &SkillCdRecord> = HashMap::new();
+        for record in monitor.skill_cooldowns() {
+            latest_cds
+                .entry(record.skill_id())
+                .and_modify(|current| {
+                    if record.received_mono_ms >= current.received_mono_ms {
+                        *current = record;
+                    }
+                })
+                .or_insert(record);
+        }
+        let watched: Vec<&WatchedEntityRecord> = monitor.watched_entities().collect();
+        let owner_is_local = |record: &WatchedEntityRecord| {
+            record
+                .owner
+                .is_some_and(|owner| entities.roles(owner).is_local_player)
+        };
+        let scope_matches = |record: &WatchedEntityRecord, scope: EntityOwnerScope| match scope {
+            EntityOwnerScope::Any => true,
+            EntityOwnerScope::LocalPlayer => owner_is_local(record),
+        };
+
+        let rule_set = self.rule_set;
+        let scope = TimerScope::RuleSet(rule_set);
+        let entity_monitor_rules = std::mem::take(&mut self.entity_monitor_rules);
+        let mut collapsed_ready = Vec::new();
+        for &index in &entity_monitor_rules {
+            let Some(trigger) = self.rules.get(index).map(|rule| rule.trigger.clone()) else {
+                continue;
+            };
+            match trigger.subject {
+                VoiceSubject::Skill { skill_id } => {
+                    let seconds_before = match trigger.event {
+                        VoiceEvent::Ended => 0,
+                        VoiceEvent::ExpiringIn { seconds_before } => seconds_before,
+                        _ => continue,
+                    };
+                    let deadline = latest_cds
+                        .get(&skill_id)
+                        .and_then(|record| record.readiness().ready_deadline);
+                    let outcome = self.deadlines.sync(
+                        skill_voice_key(rule_set, index, skill_id),
+                        scope,
+                        deadline,
+                        seconds_before,
+                        now_mono,
+                        scheduler,
+                    );
+                    // A cooldown-reduction packet can make a skill ready
+                    // before its armed deadline: still announce it.
+                    if outcome == SyncOutcome::CollapsedToPast && trigger.event == VoiceEvent::Ended
+                    {
+                        collapsed_ready.push((index, skill_id));
+                    }
+                }
+                VoiceSubject::Entity {
+                    monster_id,
+                    scope: owner_scope,
+                } => {
+                    let VoiceEvent::ExpiringIn { seconds_before } = trigger.event else {
+                        continue;
+                    };
+                    let duration_ms = monitor
+                        .watched_specs()
+                        .iter()
+                        .find(|spec| spec.monster_id == monster_id && spec.scope == owner_scope)
+                        .and_then(|spec| spec.duration_ms);
+                    // One timer per entity instance so a second cart summoned
+                    // while the first is still up gets its own cue.
+                    let mut live_instances = HashSet::new();
+                    if let Some(duration_ms) = duration_ms {
+                        for record in watched
+                            .iter()
+                            .filter(|record| record.monster_id == monster_id)
+                            .filter(|record| scope_matches(record, owner_scope))
+                        {
+                            let instance = record.entity.uuid.0 as u64;
+                            live_instances.insert(instance);
+                            self.deadlines.sync(
+                                entity_voice_key(rule_set, index, instance),
+                                scope,
+                                Some(record.detected_mono_ms.saturating_add(duration_ms)),
+                                seconds_before,
+                                now_mono,
+                                scheduler,
+                            );
+                        }
+                    }
+                    self.deadlines.cancel_where(
+                        |key| {
+                            matches!(
+                                key,
+                                TimerKey::VoiceExpiry { rule_handle, subject, instance, .. }
+                                    if *subject == ENTITY_TIMER_SUBJECT
+                                        && *rule_handle == index as u64
+                                        && !live_instances.contains(instance)
+                            )
+                        },
+                        scheduler,
+                    );
+                }
+                _ => {}
+            }
+        }
+        self.entity_monitor_rules = entity_monitor_rules;
+        for (index, skill_id) in collapsed_ready {
+            self.skill_ready.insert(skill_id, true);
+            self.fire_rule(index, now_ms, None);
+        }
+
+        // Readiness edges: the only path for resource slots, and the path for
+        // packets that already say "ready" (cooldown reduction, server
+        // refresh). Time-driven readiness is announced by the deadline
+        // itself (`on_deadline`), so a record whose deadline has passed keeps
+        // whatever state the timer left behind instead of re-firing.
+        let mut ready_skills = Vec::new();
+        for (skill_id, record) in &latest_cds {
+            let readiness = record.readiness();
+            let ready_now = readiness.ready
+                || readiness
+                    .ready_deadline
+                    .is_some_and(|deadline| deadline <= now_mono);
+            match self.skill_ready.get(skill_id).copied() {
+                // First sight is never an edge.
+                None => {
+                    self.skill_ready.insert(*skill_id, ready_now);
+                }
+                Some(true) if !ready_now => {
+                    self.skill_ready.insert(*skill_id, false);
+                }
+                Some(false) if readiness.ready => {
+                    self.skill_ready.insert(*skill_id, true);
+                    ready_skills.push(*skill_id);
+                }
+                Some(_) => {}
+            }
+        }
+        self.skill_ready
+            .retain(|skill_id, _| latest_cds.contains_key(skill_id));
+        for skill_id in ready_skills {
+            let matched = self.take_matched(SubjectKey::Skill(skill_id));
+            for &index in &matched {
+                if self.rules.get(index).map(|rule| &rule.trigger.event) == Some(&VoiceEvent::Ended)
+                {
+                    self.fire_rule(index, now_ms, None);
+                }
+            }
+            self.matched_rules = matched;
+        }
+
+        // Presence edges, aggregated per (monster_id, scope) so several
+        // instances announce one "appeared" and one "gone".
+        let mut current = BTreeSet::new();
+        for record in &watched {
+            current.insert((record.monster_id, EntityOwnerScope::Any));
+            if owner_is_local(record) {
+                current.insert((record.monster_id, EntityOwnerScope::LocalPlayer));
+            }
+        }
+        if self.entity_presence_seeded {
+            let previous = std::mem::take(&mut self.entity_presence);
+            for &(monster_id, owner_scope) in previous.symmetric_difference(&current) {
+                let appeared = current.contains(&(monster_id, owner_scope));
+                let matched = self.take_matched(SubjectKey::Entity(monster_id));
+                for &index in &matched {
+                    let Some(trigger) = self.rules.get(index).map(|rule| &rule.trigger) else {
+                        continue;
+                    };
+                    let VoiceSubject::Entity { scope, .. } = trigger.subject else {
+                        continue;
+                    };
+                    let wanted = match trigger.event {
+                        VoiceEvent::Started => appeared,
+                        VoiceEvent::Ended => !appeared,
+                        _ => false,
+                    };
+                    if scope == owner_scope && wanted {
+                        self.fire_rule(index, now_ms, None);
+                    }
+                }
+                self.matched_rules = matched;
+            }
+        }
+        self.entity_presence = current;
+        self.entity_presence_seeded = true;
     }
 
     /// Rebuilds the buff aggregates from `entities`, fires any resulting
@@ -551,7 +816,8 @@ impl VoiceProjection {
         let TimerKey::VoiceExpiry {
             rule_set,
             rule_handle,
-            ..
+            subject,
+            instance,
         } = key
         else {
             return;
@@ -569,6 +835,11 @@ impl VoiceProjection {
         // stale or superseded delivery does not match its recorded deadline.
         if !self.deadlines.confirm(key, scheduled_for, fired_at) {
             return;
+        }
+        // A `Skill/Ended` deadline *is* the readiness edge; record it so the
+        // next cooldown packet that still says "ready" does not re-fire.
+        if subject == SKILL_TIMER_SUBJECT && self.rules[index].trigger.event == VoiceEvent::Ended {
+            self.skill_ready.insert(instance as u32 as i32, true);
         }
         self.fire_rule(index, now_ms, None);
     }
@@ -713,6 +984,23 @@ fn buff_voice_key(rule_set: u64, index: usize, scope: VoiceBuffScope, base_id: i
 /// scopes (0-2).
 const BOSS_DBM_TIMER_SUBJECT: u64 = 3;
 const COUNTER_TIMER_SUBJECT: u64 = 4;
+const SKILL_TIMER_SUBJECT: u64 = 5;
+const ENTITY_TIMER_SUBJECT: u64 = 6;
+
+fn skill_voice_key(rule_set: u64, index: usize, skill_id: i32) -> TimerKey {
+    voice_key(
+        rule_set,
+        index,
+        SKILL_TIMER_SUBJECT,
+        u64::from(skill_id as u32),
+    )
+}
+
+/// `instance` is the watched entity's uuid, so concurrent instances of the
+/// same monster id each carry their own expiry timer.
+fn entity_voice_key(rule_set: u64, index: usize, instance: u64) -> TimerKey {
+    voice_key(rule_set, index, ENTITY_TIMER_SUBJECT, instance)
+}
 
 fn boss_voice_key(rule_set: u64, index: usize, base_skill_id: i32) -> TimerKey {
     voice_key(

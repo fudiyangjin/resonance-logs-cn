@@ -245,6 +245,21 @@ pub enum MonsterBuffSourceScope {
     LocalPlayerSource,
 }
 
+/// Whose summons an entity-duration voice rule observes. Mirrors the
+/// frontend `EntityDurationScope` (`"self" | "any"`).
+#[derive(
+    Debug, Clone, Copy, Serialize, Deserialize, Type, PartialEq, Eq, PartialOrd, Ord, Hash, Default,
+)]
+#[serde(rename_all = "camelCase")]
+pub enum EntityOwnerScope {
+    /// Only entities owned by the local player.
+    #[serde(rename = "self")]
+    LocalPlayer,
+    /// Every entity with the monster id, regardless of owner.
+    #[default]
+    Any,
+}
+
 /// Game-wide alerts that can carry a voice cue.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Type, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
@@ -275,6 +290,21 @@ pub enum VoiceSubject {
         buff_id: i32,
         #[serde(rename = "sourceScope")]
         source_scope: MonsterBuffSourceScope,
+    },
+    /// One of the local player's skills, by base skill id
+    /// (`skill_level_id / 100`). `Started` = cast, `Ended` = cooldown ready,
+    /// `ExpiringIn` = ready in N seconds.
+    Skill {
+        #[serde(rename = "skillId")]
+        skill_id: i32,
+    },
+    /// A watched entity (by monster id) from the entity-duration list.
+    /// `Started` = appeared, `Ended` = gone, `ExpiringIn` = configured
+    /// duration runs out in N seconds.
+    Entity {
+        #[serde(rename = "monsterId")]
+        monster_id: i32,
+        scope: EntityOwnerScope,
     },
     /// A boss "DBM" mechanic world event with this base skill id.
     BossDbm {
@@ -330,7 +360,7 @@ impl VoiceTrigger {
         let ok = matches!(
             (&self.subject, &self.event),
             (
-                S::Buff { .. } | S::MonsterBuff { .. },
+                S::Buff { .. } | S::MonsterBuff { .. } | S::Skill { .. } | S::Entity { .. },
                 E::Started | E::Ended | E::ExpiringIn { .. }
             ) | (S::BossDbm { .. }, E::Started | E::ExpiringIn { .. })
                 | (S::Counter { .. }, E::Threshold | E::ExpiringIn { .. })

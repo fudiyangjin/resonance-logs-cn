@@ -3,7 +3,7 @@
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
+use crate::live::bootstrap_snapshot::{MonitorRuntimeSnapshot, WatchedEntitySpec};
 use crate::live::ipc::models::{
     BossDbmEvent, BuffUpdateState, FightResourceEntry, FightResourceState,
     HateEntry as HateEntryDto, HpEntry, PanelAttrState, ShieldDetailEntry, SkillCdState, StunEntry,
@@ -48,11 +48,13 @@ pub struct EntityMonitorSnapshot {
 
 /// A present entity whose `monster_id` is on the entity-duration watch list.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct WatchedEntityRecord {
-    entity: EntityRef,
-    monster_id: i32,
-    owner: Option<EntityUuid>,
-    detected_at_ms: i64,
+pub struct WatchedEntityRecord {
+    pub entity: EntityRef,
+    pub monster_id: i32,
+    pub owner: Option<EntityUuid>,
+    pub detected_at_ms: i64,
+    /// Monotonic twin of `detected_at_ms`, for scheduling expiry cues.
+    pub detected_mono_ms: MonoTimeMs,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -197,6 +199,7 @@ pub struct EntityMonitorProjection {
     player_names: HashMap<EntityUuid, String>,
     monster_ids: HashMap<EntityUuid, i32>,
     watched_entity_ids: HashSet<i32>,
+    watched_specs: Vec<WatchedEntitySpec>,
     watched_entities: HashMap<EntityUuid, WatchedEntityRecord>,
 }
 
@@ -235,7 +238,12 @@ impl EntityMonitorProjection {
             .collect()
     }
 
-    pub fn apply_config(&mut self, config: &MonitorRuntimeSnapshot, entities: &EntityContext) {
+    pub fn apply_config(
+        &mut self,
+        config: &MonitorRuntimeSnapshot,
+        entities: &EntityContext,
+        now_mono: MonoTimeMs,
+    ) {
         self.local_player = entities.local_player();
         self.current_target = entities.current_attack_target();
         self.rebuild_current_target_details(entities);
@@ -243,9 +251,11 @@ impl EntityMonitorProjection {
         self.monitored_panel_attr_ids
             .extend(config.skill.monitored_panel_attr_ids.iter().copied());
         self.buff_filter = BuffPublishFilter::from_snapshot(config);
+        self.watched_specs
+            .clone_from(&config.monster.watched_entities);
         self.watched_entity_ids.clear();
         self.watched_entity_ids
-            .extend(config.monster.watched_entity_ids.iter().copied());
+            .extend(config.monster.watched_monster_ids());
         let watched = &self.watched_entity_ids;
         self.watched_entities
             .retain(|_, record| watched.contains(&record.monster_id));
@@ -253,7 +263,7 @@ impl EntityMonitorProjection {
         // up immediately instead of waiting for its next identity update.
         let now = wall_now_ms();
         for state in entities.entities().filter(|state| state.is_present) {
-            self.sync_watched_entity(state.entity, &state.identity, true, now);
+            self.sync_watched_entity(state.entity, &state.identity, true, now, now_mono);
         }
         self.panel_attrs
             .retain(|attr_id, _| self.monitored_panel_attr_ids.contains(attr_id));
@@ -305,7 +315,13 @@ impl EntityMonitorProjection {
                     }
                 }
                 let is_present = entities.entity(key).is_some_and(|state| state.is_present);
-                self.sync_watched_entity(*entity, current, is_present, envelope.occurred_at_ms);
+                self.sync_watched_entity(
+                    *entity,
+                    current,
+                    is_present,
+                    envelope.occurred_at_ms,
+                    envelope.meta.mono_ms(),
+                );
                 let mut mask = TopicMask::MONSTER;
                 for fantasy in &mut self.recent_fantasies {
                     if fantasy.key.summoner == entity.uuid {
@@ -326,6 +342,7 @@ impl EntityMonitorProjection {
                         &state.identity,
                         state.is_present,
                         envelope.occurred_at_ms,
+                        envelope.meta.mono_ms(),
                     )
                 });
                 if changed {
@@ -726,6 +743,7 @@ impl EntityMonitorProjection {
         identity: &EntityIdentity,
         is_present: bool,
         detected_at_ms: i64,
+        detected_mono_ms: MonoTimeMs,
     ) -> bool {
         let watched_id = identity
             .monster_id
@@ -740,6 +758,7 @@ impl EntityMonitorProjection {
                     monster_id,
                     owner: identity.owner_uuid,
                     detected_at_ms,
+                    detected_mono_ms,
                 });
                 true
             }
@@ -751,6 +770,7 @@ impl EntityMonitorProjection {
                         monster_id,
                         owner: identity.owner_uuid,
                         detected_at_ms,
+                        detected_mono_ms,
                     };
                     return true;
                 }
@@ -920,6 +940,16 @@ impl EntityMonitorProjection {
     /// Local-player cooldown records, for sibling projections (voice).
     pub(crate) fn skill_cooldowns(&self) -> impl Iterator<Item = &SkillCdRecord> {
         self.skill_cds.values()
+    }
+
+    /// The entity-duration watch entries currently configured.
+    pub(crate) fn watched_specs(&self) -> &[WatchedEntitySpec] {
+        &self.watched_specs
+    }
+
+    /// Present entities on the watch list, for sibling projections (voice).
+    pub(crate) fn watched_entities(&self) -> impl Iterator<Item = &WatchedEntityRecord> {
+        self.watched_entities.values()
     }
 
     #[cfg(test)]
@@ -1511,10 +1541,10 @@ mod tests {
 
         let mut config = MonitorRuntimeSnapshot::default();
         config.skill.monitor_all_buff = true;
-        projection.apply_config(&config, &entities);
+        projection.apply_config(&config, &entities, MonoTimeMs(0));
         assert_eq!(projection.snapshot(&entities).local_buffs.len(), 1);
 
-        projection.apply_config(&MonitorRuntimeSnapshot::default(), &entities);
+        projection.apply_config(&MonitorRuntimeSnapshot::default(), &entities, MonoTimeMs(0));
         assert!(projection.snapshot(&entities).local_buffs.is_empty());
     }
 
@@ -1556,7 +1586,7 @@ mod tests {
         let mut config = MonitorRuntimeSnapshot::default();
         config.skill.monitored_buff_ids.push(77);
         config.skill.buff_timeline_ids.push(88);
-        projection.apply_config(&config, &entities);
+        projection.apply_config(&config, &entities, MonoTimeMs(0));
 
         let local_buffs = &projection.snapshot(&entities).local_buffs;
         assert_eq!(local_buffs.len(), 1);
@@ -1571,7 +1601,7 @@ mod tests {
         seed_local_player(&mut projection, &mut entities, &mut scheduler);
         let mut config = MonitorRuntimeSnapshot::default();
         config.skill.monitored_buff_ids.push(77);
-        projection.apply_config(&config, &entities);
+        projection.apply_config(&config, &entities, MonoTimeMs(0));
 
         let mut unwatched = observed_buff(1, EntityUuid(10));
         unwatched.base_id = 88;
@@ -1638,7 +1668,7 @@ mod tests {
 
         let mut config = MonitorRuntimeSnapshot::default();
         config.skill.monitor_all_buff = true;
-        projection.apply_config(&config, &entities);
+        projection.apply_config(&config, &entities, MonoTimeMs(0));
 
         // A remodel tier on the source identity alone never tags the buff:
         // only a marker-observed fantasy registration does.
@@ -1782,7 +1812,7 @@ mod tests {
         let mut config = MonitorRuntimeSnapshot::default();
         config.monster.global_ids.push(77);
         config.teammate.any_source_ids.push(77);
-        projection.apply_config(&config, &entities);
+        projection.apply_config(&config, &entities, MonoTimeMs(0));
 
         let snapshot = projection.snapshot(&entities);
         assert_eq!(snapshot.boss_buffs.len(), 1);
@@ -1895,7 +1925,7 @@ mod tests {
 
         let mut config = MonitorRuntimeSnapshot::default();
         config.monster.self_applied_ids.push(77);
-        projection.apply_config(&config, &entities);
+        projection.apply_config(&config, &entities, MonoTimeMs(0));
 
         // Only the buff whose raw source is the local player matches
         // self-applied; summon/fantasy sources and teammates do not.
@@ -1941,7 +1971,7 @@ mod tests {
         );
         let mut config = MonitorRuntimeSnapshot::default();
         config.monster.global_ids.push(77);
-        projection.apply_config(&config, &entities);
+        projection.apply_config(&config, &entities, MonoTimeMs(0));
         assert_eq!(projection.snapshot(&entities).boss_buffs.len(), 1);
 
         apply_observations(
@@ -1990,7 +2020,7 @@ mod tests {
         );
         let mut config = MonitorRuntimeSnapshot::default();
         config.monster.global_ids.push(77);
-        projection.apply_config(&config, &entities);
+        projection.apply_config(&config, &entities, MonoTimeMs(0));
         assert_eq!(projection.snapshot(&entities).boss_buffs.len(), 1);
 
         apply_observations(
@@ -2392,7 +2422,14 @@ mod tests {
         fn watched_config(ids: &[i32]) -> MonitorRuntimeSnapshot {
             let mut config = MonitorRuntimeSnapshot::default();
             config.monster.enabled = true;
-            config.monster.watched_entity_ids.extend_from_slice(ids);
+            config
+                .monster
+                .watched_entities
+                .extend(ids.iter().map(|monster_id| WatchedEntitySpec {
+                    monster_id: *monster_id,
+                    duration_ms: None,
+                    scope: Default::default(),
+                }));
             config
         }
 
@@ -2401,7 +2438,7 @@ mod tests {
             let mut entities = EntityContext::default();
             let mut scheduler = DeadlineScheduler::default();
             seed_local_player(&mut projection, &mut entities, &mut scheduler);
-            projection.apply_config(&watched_config(&[SCYTHE_CART]), &entities);
+            projection.apply_config(&watched_config(&[SCYTHE_CART]), &entities, MonoTimeMs(0));
             (projection, entities, scheduler)
         }
 
@@ -2599,10 +2636,14 @@ mod tests {
             );
             assert_eq!(watched(&projection, &entities).len(), 1);
 
-            projection.apply_config(&watched_config(&[]), &entities);
+            projection.apply_config(&watched_config(&[]), &entities, MonoTimeMs(0));
             assert!(watched(&projection, &entities).is_empty());
 
-            projection.apply_config(&watched_config(&[SCYTHE_CART, 12_345]), &entities);
+            projection.apply_config(
+                &watched_config(&[SCYTHE_CART, 12_345]),
+                &entities,
+                MonoTimeMs(0),
+            );
             let rows = watched(&projection, &entities);
             let mut ids = rows.iter().map(|row| row.monster_id).collect::<Vec<_>>();
             ids.sort_unstable();
