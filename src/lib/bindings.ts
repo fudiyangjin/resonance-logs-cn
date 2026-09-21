@@ -509,6 +509,22 @@ async voiceStopPlayback() : Promise<void> {
 
 /** user-defined types **/
 
+/**
+ * Game-wide alerts that can carry a voice cue.
+ */
+export type AlertKind =
+/**
+ * The matchmaking queue popped and is waiting for acceptance.
+ */
+"matchmakingPopped" |
+/**
+ * The party leader started a ready check.
+ */
+"readyCheckStarted" |
+/**
+ * A team activity vote started.
+ */
+"teamVoteStarted"
 export type AltFreezeConfig = { conditionBuffId: number; freezeDurationMs: number }
 export type AppLocale = "zh-CN" | "en-US" | "ja-JP"
 export type AttrModifier = { attrId: number; basisPointsPerUnit?: number; maxReductionBasisPoints: number }
@@ -1096,6 +1112,26 @@ export type VoiceBackendStatus = { backend: EngineBackend; engine: EngineState; 
  */
 export type VoiceCatalog = { schemaVersion: number; profiles: VoiceProfileMeta[]; phrases: VoicePhraseMeta[]; assets: VoiceAssetMeta[]; installedModelVersion: string | null; installedModelSha256: string | null; fineTunedVoice: FineTunedVoiceMeta | null }
 export type VoiceCommandError = { code: string; message: string; retriable: boolean }
+/**
+ * *When* a voice rule fires relative to its subject.
+ */
+export type VoiceEvent =
+/**
+ * Buff gained / mechanic fired / alert raised.
+ */
+{ kind: "started" } |
+/**
+ * Buff lost (all layers).
+ */
+{ kind: "ended" } |
+/**
+ * The subject's timer will run out in `seconds_before` seconds.
+ */
+{ kind: "expiringIn"; secondsBefore: number } |
+/**
+ * A counter slot reached its effective threshold.
+ */
+{ kind: "threshold" }
 export type VoiceGenerateRequestDto = { source: VoiceSourceSelectionDto; phraseIds: string[]; backendPreference?: VoiceGenerationBackend }
 export type VoiceGenerationBackend = "auto" | "cpu" | "vulkan"
 export type VoiceImportTargetDto = { kind: "newPhrase"; name: string } | { kind: "existingPhrase"; phraseId: string }
@@ -1159,8 +1195,7 @@ export type VoiceRule = { id: string; enabled: boolean; trigger: VoiceTrigger; p
  */
 priority: number; cooldownMs: number; phraseIdByTier?: Partial<{ [key in number]: string }> | null }
 /**
- * Persisted + hot-synced runtime settings for the voice feature, embedded as
- * a sub-section of `MonitorRuntimeSnapshot` alongside skill/monster/teammate.
+ * Persisted + hot-synced runtime settings for the voice feature.
  */
 export type VoiceRuntimeSnapshot = { enabled: boolean; volume: number; queuePolicy: VoiceQueuePolicy; rules: VoiceRule[] }
 export type VoiceSourceSelectionDto = { mode: "cloneNew"; name: string; referenceWavPath: string; keepReference?: boolean } | { mode: "cloneExisting"; profileId: string } |
@@ -1174,65 +1209,36 @@ export type VoiceSourceSelectionDto = { mode: "cloneNew"; name: string; referenc
  */
 export type VoiceStatus = { catalog: VoiceCatalog; model: ModelState; operation: VoiceOperationState; generation: GenerationState; engine: EngineState; backends: VoiceBackendInventory; fineTunedVoice: FineTunedVoiceState }
 /**
- * Which real-time game event should trigger a voice cue.
+ * *What* a voice rule observes. Combined with a [`VoiceEvent`] this forms a
+ * [`VoiceTrigger`]; not every pairing is meaningful, see
+ * [`VoiceTrigger::validate`].
  */
-export type VoiceTrigger =
+export type VoiceSubject =
 /**
- * The local player gains a buff with this base id.
+ * A buff (by base id) on the local player.
  */
-{ kind: "buffGained"; buffId: number } |
+{ kind: "buff"; buffId: number } |
 /**
- * The local player loses (all layers of) a buff with this base id.
+ * A buff (by base id) on the current attack target, filtered by who
+ * applied it.
  */
-{ kind: "buffLost"; buffId: number } |
+{ kind: "monsterBuff"; buffId: number; sourceScope: MonsterBuffSourceScope } |
 /**
- * The local player's buff with this base id will expire in
- * `seconds_before` seconds (fires once per buff instance).
- */
-{ kind: "buffExpiring"; buffId: number; secondsBefore: number } |
-/**
- * The current attack target (monster) gains a buff with this base id.
- */
-{ kind: "monsterBuffGained"; buffId: number; sourceScope: MonsterBuffSourceScope } |
-/**
- * The current attack target (monster) loses (all layers of) a buff
- * with this base id.
- */
-{ kind: "monsterBuffLost"; buffId: number; sourceScope: MonsterBuffSourceScope } |
-/**
- * The current attack target's buff with this base id will expire in
- * `seconds_before` seconds (fires once per buff instance).
- */
-{ kind: "monsterBuffExpiring"; buffId: number; secondsBefore: number; sourceScope: MonsterBuffSourceScope } |
-/**
- * A boss "DBM" mechanic world event fires with this base skill id.
+ * A boss "DBM" mechanic world event with this base skill id.
  */
 { kind: "bossDbm"; baseSkillId: number } |
 /**
- * A boss "DBM" mechanic's timer will expire in `seconds_before` seconds.
+ * One effect slot of a counter rule.
  */
-{ kind: "bossDbmExpiring"; baseSkillId: number; secondsBefore: number } |
+{ kind: "counter"; ruleId: number; slotId: number } |
 /**
- * A counter rule's slot count reaches its effective threshold.
+ * A game-wide alert.
  */
-{ kind: "counterThreshold"; ruleId: number; slotId: number } |
+{ kind: "alert"; alert: AlertKind }
 /**
- * A counter rule's slot freeze window will expire in
- * `seconds_before` seconds.
+ * Which real-time game event should trigger a voice cue.
  */
-{ kind: "counterExpiring"; ruleId: number; slotId: number; secondsBefore: number } |
-/**
- * The matchmaking queue popped and is waiting for acceptance.
- */
-{ kind: "matchmakingPopped" } |
-/**
- * The party leader started a ready check.
- */
-{ kind: "readyCheckStarted" } |
-/**
- * A team activity vote started.
- */
-{ kind: "teamVoteStarted" }
+export type VoiceTrigger = { subject: VoiceSubject; event: VoiceEvent }
 /**
  * One live entity tracked by the monster-monitor entity-duration panel.
  * Owner name/role are resolved at publish time from the entity context.

@@ -161,15 +161,7 @@ impl MonitorRuntimeSnapshot {
             self.teammate.monitor_all = false;
         }
 
-        self.voice.volume = self.voice.volume.clamp(0.0, 1.0);
-        self.voice.rules.sort_by(|a, b| a.id.cmp(&b.id));
-        self.voice.rules.dedup_by(|a, b| a.id == b.id);
-        for rule in &mut self.voice.rules {
-            rule.cooldown_ms = rule.cooldown_ms.min(600_000);
-        }
-        if !self.voice.enabled {
-            self.voice.rules.clear();
-        }
+        self.voice.normalize();
 
         Ok(self)
     }

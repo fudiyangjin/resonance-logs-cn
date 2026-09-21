@@ -19,9 +19,11 @@
 import { SvelteSet } from "svelte/reactivity";
 import {
   commands,
+  type AlertKind,
   type MonsterBuffSourceScope,
   type VoiceLanguage,
   type VoiceRule,
+  type VoiceSubject,
   type VoiceTrigger,
 } from "$lib/bindings";
 import { resolveBuffDisplayName } from "$lib/config/buff-name-table";
@@ -552,9 +554,11 @@ function compileBuffVoiceRules(): VoiceRule[] {
     const name = buffSubjectLabel(buffId);
     const seconds = config.expiring?.secondsBefore ?? 5;
 
+    const subject: VoiceSubject = { kind: "buff", buffId };
+
     const gained = compileTieredEvent(
       buffEventKey(buffId, "gained"),
-      { kind: "buffGained", buffId },
+      { subject, event: { kind: "started" } },
       config.gained,
       buffAutoText(name, "gained"),
     );
@@ -562,7 +566,7 @@ function compileBuffVoiceRules(): VoiceRule[] {
 
     const lost = compileTieredEvent(
       buffEventKey(buffId, "lost"),
-      { kind: "buffLost", buffId },
+      { subject, event: { kind: "ended" } },
       config.lost,
       buffAutoText(name, "lost"),
     );
@@ -570,7 +574,7 @@ function compileBuffVoiceRules(): VoiceRule[] {
 
     const expiring = compileExpiringEvent(
       buffEventKey(buffId, "expiring"),
-      { kind: "buffExpiring", buffId, secondsBefore: seconds },
+      { subject, event: { kind: "expiringIn", secondsBefore: seconds } },
       config.expiring,
       (s) => buffAutoText(name, "expiring", s),
     );
@@ -592,9 +596,11 @@ function compileMonsterBuffVoiceRules(): VoiceRule[] {
     const name = buffSubjectLabel(buffId);
     const seconds = config.expiring?.secondsBefore ?? 5;
 
+    const subject: VoiceSubject = { kind: "monsterBuff", buffId, sourceScope };
+
     const gained = compileTieredEvent(
       monsterBuffEventKey(sourceScope, buffId, "gained"),
-      { kind: "monsterBuffGained", buffId, sourceScope },
+      { subject, event: { kind: "started" } },
       config.gained,
       monsterBuffAutoText(name, "gained"),
     );
@@ -602,7 +608,7 @@ function compileMonsterBuffVoiceRules(): VoiceRule[] {
 
     const lost = compileTieredEvent(
       monsterBuffEventKey(sourceScope, buffId, "lost"),
-      { kind: "monsterBuffLost", buffId, sourceScope },
+      { subject, event: { kind: "ended" } },
       config.lost,
       monsterBuffAutoText(name, "lost"),
     );
@@ -610,12 +616,7 @@ function compileMonsterBuffVoiceRules(): VoiceRule[] {
 
     const expiring = compileExpiringEvent(
       monsterBuffEventKey(sourceScope, buffId, "expiring"),
-      {
-        kind: "monsterBuffExpiring",
-        buffId,
-        secondsBefore: seconds,
-        sourceScope,
-      },
+      { subject, event: { kind: "expiringIn", secondsBefore: seconds } },
       config.expiring,
       (s) => monsterBuffAutoText(name, "expiring", s),
     );
@@ -635,11 +636,16 @@ function compileCounterVoiceRules(): VoiceRule[] {
       if (!config) continue;
       const label = counterSlotLabel(rule, slotId);
       const seconds = config.expiring?.secondsBefore ?? 5;
+      const subject: VoiceSubject = {
+        kind: "counter",
+        ruleId: rule.ruleId,
+        slotId,
+      };
 
       if (counterSlotSupportsThreshold(slot)) {
         const threshold = compileEvent(
           counterEventKey(rule.ruleId, slotId, "threshold"),
-          { kind: "counterThreshold", ruleId: rule.ruleId, slotId },
+          { subject, event: { kind: "threshold" } },
           config.threshold,
           counterAutoText(label, "threshold"),
         );
@@ -649,12 +655,7 @@ function compileCounterVoiceRules(): VoiceRule[] {
       if (counterSlotSupportsExpiry(slot)) {
         const expiring = compileExpiringEvent(
           counterEventKey(rule.ruleId, slotId, "expiring"),
-          {
-            kind: "counterExpiring",
-            ruleId: rule.ruleId,
-            slotId,
-            secondsBefore: seconds,
-          },
+          { subject, event: { kind: "expiringIn", secondsBefore: seconds } },
           config.expiring,
           (s) => counterAutoText(label, "expiring", s),
         );
@@ -674,10 +675,11 @@ function compileDbmVoiceRules(): VoiceRule[] {
     if (!Number.isInteger(baseSkillId)) continue;
     const name = dbmSubjectLabel(baseSkillId);
     const seconds = config.expiring?.secondsBefore ?? 5;
+    const subject: VoiceSubject = { kind: "bossDbm", baseSkillId };
 
     const onCast = compileEvent(
       dbmEventKey(baseSkillId, "onCast"),
-      { kind: "bossDbm", baseSkillId },
+      { subject, event: { kind: "started" } },
       config.onCast,
       dbmAutoText(name, "onCast"),
     );
@@ -685,7 +687,7 @@ function compileDbmVoiceRules(): VoiceRule[] {
 
     const expiring = compileExpiringEvent(
       dbmEventKey(baseSkillId, "expiring"),
-      { kind: "bossDbmExpiring", baseSkillId, secondsBefore: seconds },
+      { subject, event: { kind: "expiringIn", secondsBefore: seconds } },
       config.expiring,
       (s) => dbmAutoText(name, "expiring", s),
     );
@@ -701,17 +703,17 @@ function compileAlertVoiceRules(): VoiceRule[] {
   const language = voiceLanguageForAppLocale();
   const definitions: Array<{
     kind: GameAlertKind;
-    trigger: VoiceTrigger;
+    alert: AlertKind;
   }> = [
-    { kind: "matchReady", trigger: { kind: "matchmakingPopped" } },
-    { kind: "readyCheck", trigger: { kind: "readyCheckStarted" } },
-    { kind: "teamVote", trigger: { kind: "teamVoteStarted" } },
+    { kind: "matchReady", alert: "matchmakingPopped" },
+    { kind: "readyCheck", alert: "readyCheckStarted" },
+    { kind: "teamVote", alert: "teamVoteStarted" },
   ];
 
-  return definitions.flatMap(({ kind, trigger }) => {
+  return definitions.flatMap(({ kind, alert }) => {
     const rule = compileEvent(
       alertEventKey(kind),
-      trigger,
+      { subject: { kind: "alert", alert }, event: { kind: "started" } },
       configs[kind],
       alertAutoText(kind),
       language,

@@ -245,88 +245,114 @@ pub enum MonsterBuffSourceScope {
     LocalPlayerSource,
 }
 
-/// Which real-time game event should trigger a voice cue.
-#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq, Hash)]
-#[serde(rename_all = "camelCase", tag = "kind")]
-pub enum VoiceTrigger {
-    /// The local player gains a buff with this base id.
-    BuffGained {
-        #[serde(rename = "buffId")]
-        buff_id: i32,
-    },
-    /// The local player loses (all layers of) a buff with this base id.
-    BuffLost {
-        #[serde(rename = "buffId")]
-        buff_id: i32,
-    },
-    /// The local player's buff with this base id will expire in
-    /// `seconds_before` seconds (fires once per buff instance).
-    BuffExpiring {
-        #[serde(rename = "buffId")]
-        buff_id: i32,
-        #[serde(rename = "secondsBefore")]
-        seconds_before: u32,
-    },
-    /// The current attack target (monster) gains a buff with this base id.
-    MonsterBuffGained {
-        #[serde(rename = "buffId")]
-        buff_id: i32,
-        #[serde(rename = "sourceScope")]
-        source_scope: MonsterBuffSourceScope,
-    },
-    /// The current attack target (monster) loses (all layers of) a buff
-    /// with this base id.
-    MonsterBuffLost {
-        #[serde(rename = "buffId")]
-        buff_id: i32,
-        #[serde(rename = "sourceScope")]
-        source_scope: MonsterBuffSourceScope,
-    },
-    /// The current attack target's buff with this base id will expire in
-    /// `seconds_before` seconds (fires once per buff instance).
-    MonsterBuffExpiring {
-        #[serde(rename = "buffId")]
-        buff_id: i32,
-        #[serde(rename = "secondsBefore")]
-        seconds_before: u32,
-        #[serde(rename = "sourceScope")]
-        source_scope: MonsterBuffSourceScope,
-    },
-    /// A boss "DBM" mechanic world event fires with this base skill id.
-    BossDbm {
-        #[serde(rename = "baseSkillId")]
-        base_skill_id: i32,
-    },
-    /// A boss "DBM" mechanic's timer will expire in `seconds_before` seconds.
-    BossDbmExpiring {
-        #[serde(rename = "baseSkillId")]
-        base_skill_id: i32,
-        #[serde(rename = "secondsBefore")]
-        seconds_before: u32,
-    },
-    /// A counter rule's slot count reaches its effective threshold.
-    CounterThreshold {
-        #[serde(rename = "ruleId")]
-        rule_id: i32,
-        #[serde(rename = "slotId")]
-        slot_id: i32,
-    },
-    /// A counter rule's slot freeze window will expire in
-    /// `seconds_before` seconds.
-    CounterExpiring {
-        #[serde(rename = "ruleId")]
-        rule_id: i32,
-        #[serde(rename = "slotId")]
-        slot_id: i32,
-        #[serde(rename = "secondsBefore")]
-        seconds_before: u32,
-    },
+/// Game-wide alerts that can carry a voice cue.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Type, PartialEq, Eq, Hash)]
+#[serde(rename_all = "camelCase")]
+pub enum AlertKind {
     /// The matchmaking queue popped and is waiting for acceptance.
     MatchmakingPopped,
     /// The party leader started a ready check.
     ReadyCheckStarted,
     /// A team activity vote started.
     TeamVoteStarted,
+}
+
+/// *What* a voice rule observes. Combined with a [`VoiceEvent`] this forms a
+/// [`VoiceTrigger`]; not every pairing is meaningful, see
+/// [`VoiceTrigger::validate`].
+#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq, Hash)]
+#[serde(rename_all = "camelCase", tag = "kind")]
+pub enum VoiceSubject {
+    /// A buff (by base id) on the local player.
+    Buff {
+        #[serde(rename = "buffId")]
+        buff_id: i32,
+    },
+    /// A buff (by base id) on the current attack target, filtered by who
+    /// applied it.
+    MonsterBuff {
+        #[serde(rename = "buffId")]
+        buff_id: i32,
+        #[serde(rename = "sourceScope")]
+        source_scope: MonsterBuffSourceScope,
+    },
+    /// A boss "DBM" mechanic world event with this base skill id.
+    BossDbm {
+        #[serde(rename = "baseSkillId")]
+        base_skill_id: i32,
+    },
+    /// One effect slot of a counter rule.
+    Counter {
+        #[serde(rename = "ruleId")]
+        rule_id: i32,
+        #[serde(rename = "slotId")]
+        slot_id: i32,
+    },
+    /// A game-wide alert.
+    Alert { alert: AlertKind },
+}
+
+/// *When* a voice rule fires relative to its subject.
+#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq, Hash)]
+#[serde(rename_all = "camelCase", tag = "kind")]
+pub enum VoiceEvent {
+    /// Buff gained / mechanic fired / alert raised.
+    Started,
+    /// Buff lost (all layers).
+    Ended,
+    /// The subject's timer will run out in `seconds_before` seconds.
+    ExpiringIn {
+        #[serde(rename = "secondsBefore")]
+        seconds_before: u32,
+    },
+    /// A counter slot reached its effective threshold.
+    Threshold,
+}
+
+/// Which real-time game event should trigger a voice cue.
+#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq, Hash)]
+#[serde(rename_all = "camelCase")]
+pub struct VoiceTrigger {
+    pub subject: VoiceSubject,
+    pub event: VoiceEvent,
+}
+
+impl VoiceTrigger {
+    pub const fn new(subject: VoiceSubject, event: VoiceEvent) -> Self {
+        Self { subject, event }
+    }
+
+    /// Rejects (subject, event) pairs that no engine path can ever fire, so
+    /// they are dropped at config time instead of silently never playing.
+    pub fn validate(&self) -> Result<(), String> {
+        use VoiceEvent as E;
+        use VoiceSubject as S;
+        let ok = match (&self.subject, &self.event) {
+            (S::Buff { .. } | S::MonsterBuff { .. }, E::Started | E::Ended | E::ExpiringIn { .. }) => {
+                true
+            }
+            (S::BossDbm { .. }, E::Started | E::ExpiringIn { .. }) => true,
+            (S::Counter { .. }, E::Threshold | E::ExpiringIn { .. }) => true,
+            (S::Alert { .. }, E::Started) => true,
+            _ => false,
+        };
+        if ok {
+            Ok(())
+        } else {
+            Err(format!(
+                "unsupported voice trigger: {:?} does not support {:?}",
+                self.subject, self.event
+            ))
+        }
+    }
+
+    /// Lead time for `ExpiringIn` triggers; `None` for edge triggers.
+    pub fn seconds_before(&self) -> Option<u32> {
+        match self.event {
+            VoiceEvent::ExpiringIn { seconds_before } => Some(seconds_before),
+            _ => None,
+        }
+    }
 }
 
 /// A user-defined rule mapping a trigger to a phrase to play.
@@ -496,8 +522,7 @@ pub enum VoiceGenerationProgress {
     },
 }
 
-/// Persisted + hot-synced runtime settings for the voice feature, embedded as
-/// a sub-section of `MonitorRuntimeSnapshot` alongside skill/monster/teammate.
+/// Persisted + hot-synced runtime settings for the voice feature.
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct VoiceRuntimeSnapshot {
@@ -505,6 +530,32 @@ pub struct VoiceRuntimeSnapshot {
     pub volume: f32,
     pub queue_policy: VoiceQueuePolicy,
     pub rules: Vec<VoiceRule>,
+}
+
+pub const MAX_VOICE_RULE_COOLDOWN_MS: u64 = 600_000;
+
+impl VoiceRuntimeSnapshot {
+    /// Canonicalizes the snapshot: clamps volume, sorts/dedups rules by id,
+    /// caps cooldowns, drops rules whose trigger can never fire (with a
+    /// warning) and clears rules entirely when voice is disabled.
+    pub fn normalize(&mut self) {
+        self.volume = self.volume.clamp(0.0, 1.0);
+        self.rules.sort_by(|a, b| a.id.cmp(&b.id));
+        self.rules.dedup_by(|a, b| a.id == b.id);
+        self.rules.retain(|rule| match rule.trigger.validate() {
+            Ok(()) => true,
+            Err(reason) => {
+                log::warn!(target: "app::voice", "dropping voice rule {}: {reason}", rule.id);
+                false
+            }
+        });
+        for rule in &mut self.rules {
+            rule.cooldown_ms = rule.cooldown_ms.min(MAX_VOICE_RULE_COOLDOWN_MS);
+        }
+        if !self.enabled {
+            self.rules.clear();
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq)]
