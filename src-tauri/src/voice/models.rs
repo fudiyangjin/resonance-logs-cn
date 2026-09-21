@@ -386,7 +386,7 @@ impl VoiceTrigger {
 }
 
 /// A user-defined rule mapping a trigger to a phrase to play.
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct VoiceRule {
     pub id: String,

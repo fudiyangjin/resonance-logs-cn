@@ -823,6 +823,7 @@ fn counter_rules_stay_silent_when_no_slot_matches() {
     // No configured counter rule means no slot state, so the threshold
     // reads as uncrossed and the rule must not fire.
     projection.apply_counters(
+        VoiceSyncReason::Runtime,
         &CounterEngine::new(),
         1_000,
         MonoTimeMs(1_000),
@@ -931,7 +932,14 @@ mod entity_monitor_bridge {
             config.monster.watched_entities = specs;
             monitor.apply_config(&config, &entities, MonoTimeMs(100));
             let mut voice = projection_with(rules);
-            voice.apply_entity_monitor(&monitor, &entities, 100, MonoTimeMs(100), &mut scheduler);
+            voice.apply_entity_monitor(
+                VoiceSyncReason::Runtime,
+                &monitor,
+                &entities,
+                100,
+                MonoTimeMs(100),
+                &mut scheduler,
+            );
             Self {
                 entities,
                 monitor,
@@ -959,6 +967,7 @@ mod entity_monitor_bridge {
 
         fn flush(&mut self, sequence: u64) {
             self.voice.apply_entity_monitor(
+                VoiceSyncReason::Runtime,
                 &self.monitor,
                 &self.entities,
                 sequence as i64 * 100,
@@ -1211,6 +1220,42 @@ mod entity_monitor_bridge {
                 valid_time: Some(valid),
             }],
         }
+    }
+
+    #[test]
+    fn configuration_silently_rebases_readiness_before_subsequent_game_edges() {
+        let mut h = Harness::new(
+            vec![rule(
+                "ready",
+                skill(RESOURCE_SKILL, VoiceEvent::Ended),
+                "ready",
+                0,
+            )],
+            vec![],
+        );
+        h.step(2, vec![resource_slot(RESOURCE_SKILL, 0)]);
+        // Change the input without doing a runtime voice flush, like a config
+        // recalculation of the monitor's current readiness.
+        let events = h
+            .entities
+            .apply_batch(batch(3, vec![resource_slot(RESOURCE_SKILL, 10_000)]));
+        for event in events {
+            h.monitor.apply(&event, &h.entities, &mut h.scheduler);
+        }
+        h.voice.apply_entity_monitor(
+            VoiceSyncReason::Configuration,
+            &h.monitor,
+            &h.entities,
+            300,
+            MonoTimeMs(300),
+            &mut h.scheduler,
+        );
+        assert!(h.fired().is_empty());
+        h.flush(4);
+        assert!(h.fired().is_empty());
+        h.step(5, vec![resource_slot(RESOURCE_SKILL, 0)]);
+        h.step(6, vec![resource_slot(RESOURCE_SKILL, 10_000)]);
+        assert_eq!(h.fired(), ["ready"]);
     }
 
     #[test]
@@ -1558,4 +1603,121 @@ fn normalize_drops_unsupported_subject_event_pairs() {
     assert_eq!(snapshot.volume, 1.0);
     let ids: Vec<&str> = snapshot.rules.iter().map(|rule| rule.id.as_str()).collect();
     assert_eq!(ids, vec!["ok", "ok-entity", "ok-skill"]);
+}
+
+#[test]
+fn playback_settings_preserve_boss_timer_cooldown_and_rule_generation() {
+    let entities = EntityContext::new();
+    let mut scheduler = DeadlineScheduler::new();
+    let mut projection = VoiceProjection::default();
+    let mut config = VoiceRuntimeSnapshot {
+        enabled: true,
+        rules: vec![
+            rule(
+                "boss",
+                trigger(VoiceSubject::BossDbm { base_skill_id: 9 }, expiring(0)),
+                "soon",
+                0,
+            ),
+            rule(
+                "alert",
+                alert(AlertKind::MatchmakingPopped),
+                "alert",
+                10_000,
+            ),
+        ],
+        ..Default::default()
+    };
+    assert!(projection.apply_config(&config, &entities, MonoTimeMs(100), &mut scheduler));
+    projection.sync_boss_expiry(1, 9, MonoTimeMs(5_000), 0, MonoTimeMs(100), &mut scheduler);
+    projection.fire_alert(AlertKind::MatchmakingPopped, 100);
+    assert_eq!(fired_phrases(&mut projection), ["alert"]);
+    let generation = projection.rule_set;
+    config.volume = 0.25;
+    config.queue_policy = crate::voice::models::VoiceQueuePolicy::InterruptForHigherPriority;
+    // The input order differs from normalized order: it is still the same rules.
+    assert!(!projection.apply_config(&config, &entities, MonoTimeMs(200), &mut scheduler));
+    assert_eq!(projection.rule_set, generation);
+    assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(5_000)));
+    projection.fire_alert(AlertKind::MatchmakingPopped, 200);
+    assert!(projection.take_cues().is_empty());
+    let due = scheduler.drain_due(MonoTimeMs(5_000)).pop().unwrap();
+    projection.on_deadline(due.key, due.scheduled_for, MonoTimeMs(5_000), 5_000);
+    assert_eq!(fired_phrases(&mut projection), ["soon"]);
+    config.enabled = false;
+    assert!(projection.apply_config(&config, &entities, MonoTimeMs(6_000), &mut scheduler));
+    assert!(projection.rules.is_empty());
+}
+
+#[test]
+fn counter_threshold_config_baseline_is_silent_but_later_edge_fires() {
+    use crate::live::counter::engine::{CounterRule, EffectSlotConfig};
+    let mut counters = CounterEngine::new();
+    let mut scheduler = DeadlineScheduler::new();
+    let slot: EffectSlotConfig = serde_json::from_value(
+        serde_json::json!({ "slotId": 1, "threshold": 0, "resetBuffId": 0 }),
+    )
+    .unwrap();
+    let config = CounterRule {
+        rule_id: 7,
+        sources: vec![],
+        effect_slots: vec![slot],
+    };
+    counters
+        .apply_config(
+            CounterNamespace::Normal,
+            vec![config.clone()],
+            &mut scheduler,
+        )
+        .unwrap();
+    let mut projection = projection_with(vec![rule(
+        "threshold",
+        trigger(
+            VoiceSubject::Counter {
+                rule_id: 7,
+                slot_id: 1,
+            },
+            VoiceEvent::Threshold,
+        ),
+        "threshold",
+        0,
+    )]);
+    projection.apply_counters(
+        VoiceSyncReason::Configuration,
+        &counters,
+        100,
+        MonoTimeMs(100),
+        &mut scheduler,
+    );
+    assert_eq!(projection.counter_crossed.get(&(7, 1)), Some(&true));
+    assert!(projection.take_cues().is_empty());
+    projection.apply_counters(
+        VoiceSyncReason::Runtime,
+        &counters,
+        200,
+        MonoTimeMs(200),
+        &mut scheduler,
+    );
+    assert!(projection.take_cues().is_empty());
+    counters
+        .apply_config(CounterNamespace::Normal, vec![], &mut scheduler)
+        .unwrap();
+    projection.apply_counters(
+        VoiceSyncReason::Runtime,
+        &counters,
+        300,
+        MonoTimeMs(300),
+        &mut scheduler,
+    );
+    counters
+        .apply_config(CounterNamespace::Normal, vec![config], &mut scheduler)
+        .unwrap();
+    projection.apply_counters(
+        VoiceSyncReason::Runtime,
+        &counters,
+        400,
+        MonoTimeMs(400),
+        &mut scheduler,
+    );
+    assert_eq!(fired_phrases(&mut projection), ["threshold"]);
 }

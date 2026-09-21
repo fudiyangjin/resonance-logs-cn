@@ -150,9 +150,13 @@ impl VoiceService {
     }
 
     pub fn apply_runtime_settings(&self, enabled: bool, volume: f32, policy: VoiceQueuePolicy) {
-        self.inner.player.set_enabled(enabled);
-        self.inner.player.set_volume(volume.clamp(0.0, 1.0));
-        self.inner.player.set_queue_policy(policy);
+        self.inner
+            .player
+            .apply_settings(super::player::PlaybackSettings {
+                enabled,
+                volume,
+                policy,
+            });
     }
 
     /// Persists `updated` to disk, then swaps it in as the in-memory

@@ -4,9 +4,11 @@
 //! is not meant to hop threads) and exposes a bounded command channel so the
 //! live event loop can `enqueue` cues without ever waiting on audio I/O.
 
+use parking_lot::Mutex;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::sync::mpsc::{Receiver, SyncSender, TryRecvError, TrySendError, sync_channel};
 use std::time::Duration;
 
@@ -46,27 +48,45 @@ pub struct QueuedCue {
     pub wav_path: Option<PathBuf>,
 }
 
-enum PlayerCommand {
-    Enqueue(QueuedCue),
-    SetEnabled(bool),
-    SetVolume(f32),
-    SetQueuePolicy(VoiceQueuePolicy),
-    StopAll,
-    Shutdown,
+/// Published atomically as one coherent settings snapshot.
+#[derive(Debug, Clone, Copy)]
+pub struct PlaybackSettings {
+    pub enabled: bool,
+    pub volume: f32,
+    pub policy: VoiceQueuePolicy,
 }
 
-/// Handle owned by `VoiceService`; cheap to clone-share via `Arc` since it only
-/// wraps a channel sender.
+impl Default for PlaybackSettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            volume: 1.0,
+            policy: VoiceQueuePolicy::default(),
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+struct ControlState {
+    settings: PlaybackSettings,
+    stop_epoch: u64,
+    shutdown: bool,
+}
+
+struct PlaybackMessage {
+    cue: QueuedCue,
+    epoch: u64,
+}
+
 #[derive(Clone)]
 pub struct PlayerHandle {
-    tx: SyncSender<PlayerCommand>,
+    tx: SyncSender<PlaybackMessage>,
+    control: Arc<Mutex<ControlState>>,
 }
 
 pub trait PlaybackSink: Send + Sync {
     fn enqueue(&self, cue: QueuedCue);
-    fn set_enabled(&self, enabled: bool);
-    fn set_volume(&self, volume: f32);
-    fn set_queue_policy(&self, policy: VoiceQueuePolicy);
+    fn apply_settings(&self, settings: PlaybackSettings);
     fn stop_all(&self);
     fn shutdown(&self);
 }
@@ -74,21 +94,30 @@ pub trait PlaybackSink: Send + Sync {
 impl PlayerHandle {
     pub fn spawn() -> VoiceResult<Self> {
         let (tx, rx) = sync_channel(COMMAND_CHANNEL_CAPACITY);
+        let control = Arc::new(Mutex::new(ControlState::default()));
+        let worker_control = Arc::clone(&control);
         std::thread::Builder::new()
             .name("voice-playback".into())
-            .spawn(move || run_worker(rx))
+            .spawn(move || run_worker(rx, worker_control, RodioOutput::open_default()))
             .map_err(|error| {
                 VoiceError::Internal(format!("failed to spawn voice playback thread: {error}"))
             })?;
-        Ok(Self { tx })
+        Ok(Self { tx, control })
     }
 
-    /// Never blocks: the send only fails if the worker thread has exited.
     pub fn enqueue(&self, cue: QueuedCue) {
-        match self.tx.try_send(PlayerCommand::Enqueue(cue)) {
+        let epoch = {
+            let control = self.control.lock();
+            if !control.settings.enabled || control.shutdown {
+                return;
+            }
+            control.stop_epoch
+        };
+        // A stop racing this send makes the message stale, even if it arrives late.
+        match self.tx.try_send(PlaybackMessage { cue, epoch }) {
             Ok(()) => {}
             Err(TrySendError::Full(_)) => {
-                warn!(target: "app::voice", "playback command queue is full; dropping cue");
+                warn!(target: "app::voice", "playback queue is full; dropping cue");
             }
             Err(TrySendError::Disconnected(_)) => {
                 warn!(target: "app::voice", "playback worker is not running; dropping cue");
@@ -96,39 +125,22 @@ impl PlayerHandle {
         }
     }
 
-    pub fn set_enabled(&self, enabled: bool) {
-        self.send_control(PlayerCommand::SetEnabled(enabled), "enabled setting");
-    }
-
-    pub fn set_volume(&self, volume: f32) {
-        self.send_control(PlayerCommand::SetVolume(volume), "volume setting");
-    }
-
-    pub fn set_queue_policy(&self, policy: VoiceQueuePolicy) {
-        self.send_control(PlayerCommand::SetQueuePolicy(policy), "queue policy");
+    pub fn apply_settings(&self, mut settings: PlaybackSettings) {
+        settings.volume = settings.volume.clamp(0.0, 1.0);
+        let mut control = self.control.lock();
+        if control.settings.enabled && !settings.enabled {
+            control.stop_epoch = control.stop_epoch.wrapping_add(1);
+        }
+        control.settings = settings;
     }
 
     pub fn stop_all(&self) {
-        self.send_control(PlayerCommand::StopAll, "stop command");
+        let mut control = self.control.lock();
+        control.stop_epoch = control.stop_epoch.wrapping_add(1);
     }
 
     pub fn shutdown(&self) {
-        self.send_control(PlayerCommand::Shutdown, "shutdown command");
-    }
-
-    /// Never blocks the caller (the live event loop): a saturated channel
-    /// drops the setting change with a warning instead of stalling. The
-    /// next settings sync re-sends the full state anyway.
-    fn send_control(&self, command: PlayerCommand, description: &str) {
-        match self.tx.try_send(command) {
-            Ok(()) => {}
-            Err(TrySendError::Full(_)) => {
-                warn!(target: "app::voice", "playback command queue is full; dropping {description}");
-            }
-            Err(TrySendError::Disconnected(_)) => {
-                warn!(target: "app::voice", "playback worker is not running; dropping {description}");
-            }
-        }
+        self.control.lock().shutdown = true;
     }
 }
 
@@ -136,23 +148,12 @@ impl PlaybackSink for PlayerHandle {
     fn enqueue(&self, cue: QueuedCue) {
         PlayerHandle::enqueue(self, cue);
     }
-
-    fn set_enabled(&self, enabled: bool) {
-        PlayerHandle::set_enabled(self, enabled);
+    fn apply_settings(&self, settings: PlaybackSettings) {
+        PlayerHandle::apply_settings(self, settings);
     }
-
-    fn set_volume(&self, volume: f32) {
-        PlayerHandle::set_volume(self, volume);
-    }
-
-    fn set_queue_policy(&self, policy: VoiceQueuePolicy) {
-        PlayerHandle::set_queue_policy(self, policy);
-    }
-
     fn stop_all(&self) {
         PlayerHandle::stop_all(self);
     }
-
     fn shutdown(&self) {
         PlayerHandle::shutdown(self);
     }
@@ -257,6 +258,7 @@ struct WorkerState<O: CueOutput> {
     volume: f32,
     policy: VoiceQueuePolicy,
     playing_priority: Option<u8>,
+    stop_epoch: u64,
 }
 
 impl<O: CueOutput> WorkerState<O> {
@@ -264,10 +266,11 @@ impl<O: CueOutput> WorkerState<O> {
         Self {
             output,
             queue: Vec::with_capacity(MAX_QUEUE_LEN),
-            enabled: true,
+            enabled: false,
             volume: 1.0,
             policy: VoiceQueuePolicy::default(),
             playing_priority: None,
+            stop_epoch: 0,
         }
     }
 
@@ -353,52 +356,84 @@ impl<O: CueOutput> WorkerState<O> {
     }
 }
 
-fn run_worker(rx: Receiver<PlayerCommand>) {
-    let mut state = WorkerState::new(RodioOutput::open_default());
+fn run_worker<O: CueOutput>(
+    rx: Receiver<PlaybackMessage>,
+    control: Arc<Mutex<ControlState>>,
+    output: O,
+) {
+    let mut state = WorkerState::new(output);
     loop {
-        match rx.recv_timeout(POLL_INTERVAL) {
-            Ok(command) => {
-                if !apply_command(&mut state, command) {
+        if !sync_control(&mut state, &control) {
+            return;
+        }
+        let received = rx.recv_timeout(POLL_INTERVAL);
+        if !sync_control(&mut state, &control) {
+            return;
+        }
+        match received {
+            Ok(message) => {
+                if !apply_message(&mut state, &control, message) {
                     return;
                 }
-                // Drain any additional buffered commands before re-polling so bursts
-                // (e.g. rapid setting changes) don't each incur a full poll interval.
-                loop {
+                // Bound each drain so sustained traffic cannot postpone control checks.
+                for _ in 1..COMMAND_CHANNEL_CAPACITY {
                     match rx.try_recv() {
-                        Ok(command) => {
-                            if !apply_command(&mut state, command) {
+                        Ok(message) => {
+                            if !apply_message(&mut state, &control, message) {
                                 return;
                             }
                         }
                         Err(TryRecvError::Empty) => break,
-                        Err(TryRecvError::Disconnected) => return,
+                        Err(TryRecvError::Disconnected) => {
+                            state.stop_all();
+                            return;
+                        }
                     }
                 }
             }
             Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
-            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => return,
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+                state.stop_all();
+                return;
+            }
+        }
+        if !sync_control(&mut state, &control) {
+            return;
         }
         state.advance_queue_if_idle();
     }
 }
 
-/// Returns false when the worker should exit.
-fn apply_command<O: CueOutput>(state: &mut WorkerState<O>, command: PlayerCommand) -> bool {
-    match command {
-        PlayerCommand::Enqueue(cue) => state.handle_enqueue(cue),
-        PlayerCommand::SetEnabled(enabled) => {
-            state.enabled = enabled;
-            if !enabled {
-                state.stop_all();
-            }
-        }
-        PlayerCommand::SetVolume(volume) => {
-            state.volume = volume.clamp(0.0, 1.0);
-            state.output.set_volume(state.volume);
-        }
-        PlayerCommand::SetQueuePolicy(policy) => state.policy = policy,
-        PlayerCommand::StopAll => state.stop_all(),
-        PlayerCommand::Shutdown => return false,
+/// Copy under a short lock; all output operations happen after releasing it.
+fn sync_control<O: CueOutput>(state: &mut WorkerState<O>, control: &Mutex<ControlState>) -> bool {
+    let current = *control.lock();
+    if current.shutdown {
+        state.stop_all();
+        return false;
+    }
+    if current.stop_epoch != state.stop_epoch {
+        state.stop_all();
+        state.stop_epoch = current.stop_epoch;
+    }
+    state.enabled = current.settings.enabled;
+    state.policy = current.settings.policy;
+    if state.volume != current.settings.volume {
+        state.volume = current.settings.volume;
+        state.output.set_volume(state.volume);
+    }
+    true
+}
+
+fn apply_message<O: CueOutput>(
+    state: &mut WorkerState<O>,
+    control: &Mutex<ControlState>,
+    message: PlaybackMessage,
+) -> bool {
+    if !sync_control(state, control) {
+        return false;
+    }
+    if message.epoch == state.stop_epoch {
+        state.handle_enqueue(message.cue);
     }
     true
 }
@@ -448,7 +483,14 @@ mod tests {
     #[test]
     fn full_command_channel_drops_new_cue() {
         let (tx, rx) = sync_channel(1);
-        let handle = PlayerHandle { tx };
+        let handle = PlayerHandle {
+            tx,
+            control: Arc::new(Mutex::new(ControlState::default())),
+        };
+        handle.apply_settings(PlaybackSettings {
+            enabled: true,
+            ..Default::default()
+        });
         let first = QueuedCue {
             rule_id: "first".to_string(),
             priority: 1,
@@ -463,26 +505,124 @@ mod tests {
         handle.enqueue(first);
         handle.enqueue(second);
 
-        let PlayerCommand::Enqueue(received) = rx.try_recv().unwrap() else {
-            panic!("expected queued cue");
-        };
+        let received = rx.try_recv().unwrap().cue;
         assert_eq!(received.rule_id, "first");
         assert!(rx.try_recv().is_err());
     }
 
     #[test]
-    fn full_command_channel_does_not_block_settings() {
-        let (tx, _rx) = sync_channel(1);
-        let handle = PlayerHandle { tx };
-        handle.set_volume(0.5);
-        // Channel is now full; these must return instead of blocking forever.
-        handle.set_enabled(false);
-        handle.set_queue_policy(VoiceQueuePolicy::InterruptForHigherPriority);
+    fn controls_survive_full_channel_and_new_epoch_cues_survive_stop() {
+        let (tx, rx) = sync_channel(1);
+        let handle = PlayerHandle {
+            tx,
+            control: Arc::new(Mutex::new(ControlState::default())),
+        };
+        handle.apply_settings(PlaybackSettings {
+            enabled: true,
+            ..Default::default()
+        });
+        let mut state = WorkerState::new(FakeOutput::default());
+        handle.enqueue(cue("old", 1));
+        handle.stop_all();
+        assert!(apply_message(
+            &mut state,
+            &handle.control,
+            rx.try_recv().unwrap()
+        ));
+        assert!(state.output.started.is_empty());
+        handle.enqueue(cue("new", 1));
+        assert!(apply_message(
+            &mut state,
+            &handle.control,
+            rx.try_recv().unwrap()
+        ));
+        assert_eq!(state.output.started, ["new"]);
+        handle.enqueue(cue("stale", 1));
+        handle.apply_settings(PlaybackSettings::default());
+        handle.apply_settings(PlaybackSettings {
+            enabled: true,
+            volume: 0.25,
+            ..Default::default()
+        });
+        assert!(apply_message(
+            &mut state,
+            &handle.control,
+            rx.try_recv().unwrap()
+        ));
+        assert!(!state.output.busy);
+        assert!(state.queue.is_empty());
+        assert_eq!(state.volume, 0.25);
+        handle.enqueue(cue("pending", 1));
+        handle.shutdown();
+        assert!(!sync_control(&mut state, &handle.control));
+        handle.enqueue(cue("rejected", 1));
+        assert_eq!(rx.try_recv().unwrap().cue.rule_id, "pending");
+        assert!(rx.try_recv().is_err());
+    }
+
+    #[test]
+    fn worker_observes_stop_between_messages_and_shutdown_under_sustained_traffic() {
+        struct BusyProducer {
+            handle: PlayerHandle,
+            starts: Arc<Mutex<Vec<String>>>,
+        }
+        impl CueOutput for BusyProducer {
+            fn is_busy(&self) -> bool {
+                false
+            }
+            fn set_volume(&mut self, _: f32) {}
+            fn stop(&mut self) {}
+            fn start(&mut self, current: &QueuedCue, _: f32) {
+                let count = {
+                    let mut starts = self.starts.lock();
+                    starts.push(current.rule_id.clone());
+                    starts.len()
+                };
+                if count == 1 {
+                    self.handle.stop_all();
+                    self.handle.enqueue(cue("new", 1));
+                } else if count < 40 {
+                    // The worker never gets an empty channel until it sees shutdown.
+                    for _ in 0..COMMAND_CHANNEL_CAPACITY {
+                        self.handle.enqueue(cue("new", 1));
+                    }
+                } else {
+                    self.handle.shutdown();
+                }
+            }
+        }
+        let (tx, rx) = sync_channel(COMMAND_CHANNEL_CAPACITY);
+        let control = Arc::new(Mutex::new(ControlState::default()));
+        let handle = PlayerHandle {
+            tx,
+            control: Arc::clone(&control),
+        };
+        handle.apply_settings(PlaybackSettings {
+            enabled: true,
+            ..Default::default()
+        });
+        for _ in 0..COMMAND_CHANNEL_CAPACITY {
+            handle.enqueue(cue("old", 1));
+        }
+        let starts = Arc::new(Mutex::new(Vec::new()));
+        run_worker(
+            rx,
+            control,
+            BusyProducer {
+                handle,
+                starts: Arc::clone(&starts),
+            },
+        );
+        let starts = starts.lock();
+        assert_eq!(starts.len(), 40);
+        assert_eq!(starts[0], "old");
+        assert!(starts[1..].iter().all(|id| id == "new"));
     }
 
     #[test]
     fn dequeues_by_priority_then_arrival_order() {
         let mut state = WorkerState::new(FakeOutput::default());
+        state.enabled = true;
         state.handle_enqueue(cue("playing", 1));
         state.handle_enqueue(cue("low-a", 1));
         state.handle_enqueue(cue("high", 5));
@@ -504,6 +644,7 @@ mod tests {
     #[test]
     fn idle_worker_does_not_let_new_cue_overtake_pending_higher_one() {
         let mut state = WorkerState::new(FakeOutput::default());
+        state.enabled = true;
         state.handle_enqueue(cue("first", 1));
         state.handle_enqueue(cue("pending-high", 9));
         // Sound ends, but the poll tick has not run yet when a new cue lands.
@@ -515,6 +656,7 @@ mod tests {
     #[test]
     fn interrupt_policy_replaces_output_and_clears_queue() {
         let mut state = WorkerState::new(FakeOutput::default());
+        state.enabled = true;
         state.policy = VoiceQueuePolicy::InterruptForHigherPriority;
         state.handle_enqueue(cue("playing", 1));
         state.handle_enqueue(cue("queued", 1));
@@ -528,6 +670,7 @@ mod tests {
     #[test]
     fn full_queue_sheds_lowest_priority_and_refuses_lower_newcomer() {
         let mut state = WorkerState::new(FakeOutput::default());
+        state.enabled = true;
         state.handle_enqueue(cue("playing", 5));
         for i in 0..MAX_QUEUE_LEN {
             state.handle_enqueue(cue(&format!("q{i}"), 5));
@@ -544,8 +687,9 @@ mod tests {
     #[test]
     fn first_cue_and_rebuilt_output_start_at_configured_volume() {
         let mut state = WorkerState::new(FakeOutput::default());
+        state.enabled = true;
         state.policy = VoiceQueuePolicy::InterruptForHigherPriority;
-        assert!(apply_command(&mut state, PlayerCommand::SetVolume(0.25)));
+        state.volume = 0.25;
 
         // First cue after startup: output is created lazily inside `start`.
         state.handle_enqueue(cue("first", 1));
@@ -562,9 +706,14 @@ mod tests {
     #[test]
     fn disabling_stops_and_clears() {
         let mut state = WorkerState::new(FakeOutput::default());
+        state.enabled = true;
         state.handle_enqueue(cue("playing", 1));
         state.handle_enqueue(cue("queued", 1));
-        assert!(apply_command(&mut state, PlayerCommand::SetEnabled(false)));
+        let control = Mutex::new(ControlState {
+            stop_epoch: 1,
+            ..Default::default()
+        });
+        assert!(sync_control(&mut state, &control));
         assert!(state.queue.is_empty());
         assert_eq!(state.playing_priority, None);
         state.handle_enqueue(cue("ignored", 1));

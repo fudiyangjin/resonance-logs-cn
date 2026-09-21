@@ -15,17 +15,13 @@ import {
   TIER_LEVELS,
   type ManagedPhraseVariant,
 } from "./phrase-key";
-import { currentPhraseIndex, upsertManagedPhrase } from "./sync.svelte";
+import { upsertManagedPhrase } from "./sync.svelte";
 
 async function resolveManaged(
   name: string,
   text: string,
   language: VoiceLanguage,
 ): Promise<string | null> {
-  const cached = currentPhraseIndex()[name];
-  if (cached && cached.text === text && cached.language === language) {
-    return cached.phraseId;
-  }
   return upsertManagedPhrase(name, text, language);
 }
 

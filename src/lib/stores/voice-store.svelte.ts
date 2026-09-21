@@ -12,6 +12,7 @@ import {
   type VoiceCommandError,
   type VoiceGenerateRequestDto,
   type VoiceOperationState,
+  type VoicePhraseMeta,
   type VoiceStatus,
 } from "$lib/bindings";
 import { SvelteSet } from "svelte/reactivity";
@@ -58,6 +59,7 @@ export interface VoiceState {
   status: VoiceStatus | null;
   statusLoading: boolean;
   error: string | null;
+  phraseError: string | null;
   operation: VoiceOperationState;
 
   downloadActive: boolean;
@@ -80,6 +82,7 @@ export const VOICE = $state<VoiceState>({
   status: null,
   statusLoading: false,
   error: null,
+  phraseError: null,
   operation: { kind: "idle" },
 
   downloadActive: false,
@@ -100,9 +103,34 @@ export const VOICE = $state<VoiceState>({
 
 let listenersReady: Promise<void> | null = null;
 let refreshInFlight: Promise<boolean> | null = null;
+let refreshSequence = 0;
+let catalogRevision = 0;
+let refreshQueued = false;
+let operationRevision = 0;
+let localOperations = $state(0);
+
+/** Merge only backend-confirmed facts, never a requested text or language. */
+export function mergeVoicePhrase(phrase: VoicePhraseMeta): void {
+  if (!VOICE.status) throw new Error("voice catalog has not been initialized");
+  const phrases = VOICE.status.catalog.phrases;
+  const index = phrases.findIndex((entry) => entry.id === phrase.id);
+  if (index < 0) phrases.push(phrase);
+  else phrases[index] = phrase;
+  catalogRevision++;
+}
+
+export function ensureVoiceCatalog(): Promise<boolean> {
+  return VOICE.status ? Promise.resolve(true) : refreshVoiceStatus();
+}
+
+/** Coalesce catalog reconciliation after a batch of successful mutations. */
+export function requestVoiceCatalogRefresh(): void {
+  if (refreshInFlight) refreshQueued = true;
+  else void refreshVoiceStatus();
+}
 
 export function voiceOperationActive(): boolean {
-  return VOICE.operation.kind !== "idle";
+  return localOperations > 0 || VOICE.operation.kind !== "idle";
 }
 
 /** Drops a selected clone profile that no longer exists in the catalog. */
@@ -211,31 +239,55 @@ function handleGenerationProgress(payload: VoiceGenerationProgressPayload) {
   }
 }
 
-export async function refreshVoiceStatus(force = false): Promise<boolean> {
+export function refreshVoiceStatus(force = false): Promise<boolean> {
   if (!force && refreshInFlight) return refreshInFlight;
-  refreshInFlight = (async () => {
-    VOICE.statusLoading = true;
+  const sequence = ++refreshSequence;
+  const revision = catalogRevision;
+  const operationAtStart = operationRevision;
+  VOICE.statusLoading = true;
+  const pending = (async () => {
     try {
       const result = await commands.voiceGetStatus(force);
-      if (result.status === "ok") {
-        VOICE.status = result.data;
-        VOICE.operation = result.data.operation;
-        applyReconciledVoiceSettings(result.data.catalog);
-        VOICE.error = null;
-        return true;
-      } else {
+      if (sequence !== refreshSequence) return false;
+      if (result.status !== "ok") {
         VOICE.error = voiceErrorMessage(result.error);
         return false;
       }
-    } catch (e) {
-      VOICE.error = voiceErrorMessage(e);
+      if (revision === catalogRevision) {
+        VOICE.status = result.data;
+        applyReconciledVoiceSettings(result.data.catalog);
+      } else {
+        // The status command snapshots its catalog before probing the engine.
+        // A successful edit during that await is newer than this response.
+        if (VOICE.status)
+          VOICE.status = { ...result.data, catalog: VOICE.status.catalog };
+        refreshQueued = true;
+      }
+      if (
+        operationAtStart === operationRevision &&
+        revision === catalogRevision &&
+        localOperations === 0
+      ) {
+        VOICE.operation = result.data.operation;
+      }
+      VOICE.error = null;
+      return VOICE.status !== null;
+    } catch (error) {
+      if (sequence === refreshSequence) VOICE.error = voiceErrorMessage(error);
       return false;
     } finally {
-      VOICE.statusLoading = false;
-      refreshInFlight = null;
+      if (sequence === refreshSequence) {
+        VOICE.statusLoading = false;
+        refreshInFlight = null;
+        if (refreshQueued) {
+          refreshQueued = false;
+          void refreshVoiceStatus();
+        }
+      }
     }
   })();
-  return refreshInFlight;
+  refreshInFlight = pending;
+  return pending;
 }
 
 export async function runVoiceOperation<T>(
@@ -243,14 +295,22 @@ export async function runVoiceOperation<T>(
   task: () => Promise<Result<T, VoiceCommandError>>,
 ): Promise<Result<T, VoiceCommandError>> {
   const optimistic = VOICE.operation.kind === "idle";
+  localOperations++;
+  operationRevision++;
   if (optimistic) VOICE.operation = operation;
   try {
-    return await task();
+    const result = await task();
+    if (result.status === "ok") catalogRevision++;
+    return result;
   } finally {
+    // Publish idle only after the operation and its catalog refresh finish.
     if (refreshInFlight) await refreshInFlight;
     const refreshed = await refreshVoiceStatus();
-    if (!refreshed && optimistic && VOICE.operation.kind === operation.kind) {
-      VOICE.operation = { kind: "idle" };
+    localOperations--;
+    operationRevision++;
+    if (localOperations === 0) {
+      if (refreshed && VOICE.status) VOICE.operation = VOICE.status.operation;
+      else if (optimistic) VOICE.operation = { kind: "idle" };
     }
   }
 }

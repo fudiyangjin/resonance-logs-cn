@@ -121,10 +121,14 @@ export const skillAdapter: VoiceSubjectAdapter<
   },
   readyWithoutPhrase: () => false,
   enumerate: (view) =>
-    skillConfigIds(view.skillProfile?.skillVoiceConfigs).map((skillId) => ({
-      kind: "skill",
-      skillId,
-    })),
+    skillConfigIds(view.skillProfile?.skillVoiceConfigs)
+      .filter((skillId) =>
+        view.skillProfile?.monitoredSkillIds.includes(skillId),
+      )
+      .map((skillId) => ({
+        kind: "skill",
+        skillId,
+      })),
   read: (view, subject, eventKind) => {
     if (!isSkillEventKind(eventKind)) return undefined;
     const configs = ensureSkillVoiceConfigs(

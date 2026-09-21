@@ -18,7 +18,7 @@ use super::error::{VoiceError, VoiceResult};
 pub const IMPORT_SAMPLE_RATE: u32 = 24_000;
 pub const MAX_IMPORT_FILE_BYTES: u64 = 50 * 1024 * 1024;
 pub const MIN_IMPORT_DURATION_SEC: f64 = 0.2;
-pub const MAX_IMPORT_DURATION_SEC: f64 = 30.0;
+pub const MAX_IMPORT_DURATION_SEC: u32 = 30;
 
 const IMPORT_PATH_FIELD: &str = "importPath";
 
@@ -67,16 +67,8 @@ pub fn decode_and_normalize(path: &Path) -> VoiceResult<ImportedClip> {
             format!("unsupported or corrupt audio: {e}"),
         )
     })?;
-    let samples = normalize(decoder);
+    let samples = normalize(decoder)?;
     let duration_sec = samples.len() as f64 / f64::from(IMPORT_SAMPLE_RATE);
-    if !(MIN_IMPORT_DURATION_SEC..=MAX_IMPORT_DURATION_SEC).contains(&duration_sec) {
-        return Err(VoiceError::validation(
-            IMPORT_PATH_FIELD,
-            format!(
-                "audio duration {duration_sec:.2}s out of allowed range [{MIN_IMPORT_DURATION_SEC}, {MAX_IMPORT_DURATION_SEC}]"
-            ),
-        ));
-    }
     Ok(ImportedClip {
         samples,
         duration_sec,
@@ -91,53 +83,62 @@ pub fn decode_and_normalize(path: &Path) -> VoiceResult<ImportedClip> {
 /// `UniformSourceIterator` would instead rebuild its converter at every
 /// decoder span (one per compressed packet), resetting the interpolation
 /// phase and leaving audible discontinuities at packet boundaries.
-fn normalize<S>(source: S) -> Vec<i16>
+fn normalize<S>(mut source: S) -> VoiceResult<Vec<i16>>
 where
     S: Source<Item = f32>,
 {
     let channels = usize::from(source.channels().get());
     let source_rate = source.sample_rate().get();
-    let interleaved: Vec<f32> = source.collect();
-    let mono = downmix_mono(&interleaved, channels);
-    resample_linear(&mono, source_rate, IMPORT_SAMPLE_RATE)
-        .into_iter()
+    let limit = u64::from(source_rate)
+        .checked_mul(u64::from(MAX_IMPORT_DURATION_SEC))
+        .and_then(|frames| usize::try_from(frames).ok())
+        .ok_or_else(|| VoiceError::validation(IMPORT_PATH_FIELD, "audio frame limit overflow"))?;
+    let invalid = |message| VoiceError::validation(IMPORT_PATH_FIELD, message);
+    let mut mono = Vec::new();
+    // Keep only mono frames. Check each decoded sample, including packet boundaries.
+    'frames: loop {
+        let mut sum = 0.0;
+        for channel in 0..channels {
+            let sample = source.next();
+            if source.sample_rate().get() != source_rate
+                || usize::from(source.channels().get()) != channels
+            {
+                return Err(invalid("audio format changed during decoding"));
+            }
+            let Some(sample) = sample else {
+                if channel != 0 {
+                    return Err(invalid("incomplete audio channel frame"));
+                }
+                break 'frames;
+            };
+            if mono.len() == limit {
+                return Err(invalid("audio duration exceeds 30 seconds"));
+            }
+            sum += sample;
+        }
+        mono.push(sum / channels as f32);
+    }
+    if mono.len() as f64 / f64::from(source_rate) < MIN_IMPORT_DURATION_SEC {
+        return Err(invalid("audio duration is shorter than 0.2 seconds"));
+    }
+    Ok(resample_linear(&mono, source_rate, IMPORT_SAMPLE_RATE)
         .map(|sample| (sample.clamp(-1.0, 1.0) * f32::from(i16::MAX)).round() as i16)
-        .collect()
+        .collect())
 }
 
-fn downmix_mono(interleaved: &[f32], channels: usize) -> Vec<f32> {
-    if channels <= 1 {
-        return interleaved.to_vec();
-    }
-    let scale = 1.0 / channels as f32;
-    interleaved
-        .chunks_exact(channels)
-        .map(|frame| frame.iter().sum::<f32>() * scale)
-        .collect()
-}
-
-/// Single-pass linear interpolation over the entire clip, so the phase is
-/// continuous from the first sample to the last.
-fn resample_linear(input: &[f32], from_rate: u32, to_rate: u32) -> Vec<f32> {
-    if input.is_empty() {
-        return Vec::new();
-    }
-    if from_rate == to_rate {
-        return input.to_vec();
-    }
+/// Continuous interpolation, quantized without an intermediate resampled buffer.
+fn resample_linear(input: &[f32], from_rate: u32, to_rate: u32) -> impl Iterator<Item = f32> + '_ {
     let out_len = ((input.len() as u64 * u64::from(to_rate)) / u64::from(from_rate)) as usize;
     let step = f64::from(from_rate) / f64::from(to_rate);
-    let last = input.len() - 1;
-    (0..out_len)
-        .map(|i| {
-            let pos = i as f64 * step;
-            let idx = (pos as usize).min(last);
-            let frac = (pos - idx as f64) as f32;
-            let a = input[idx];
-            let b = input[(idx + 1).min(last)];
-            a + (b - a) * frac
-        })
-        .collect()
+    (0..out_len).map(move |i| {
+        let last = input.len() - 1;
+        let pos = i as f64 * step;
+        let idx = (pos as usize).min(last);
+        let frac = (pos - idx as f64) as f32;
+        let a = input[idx];
+        let b = input[(idx + 1).min(last)];
+        a + (b - a) * frac
+    })
 }
 
 fn hash_file(path: &Path) -> VoiceResult<String> {
@@ -223,7 +224,7 @@ mod tests {
 
     #[test]
     fn normalize_downmixes_and_resamples() {
-        let samples = normalize(sine(48_000, 2, 1.0));
+        let samples = normalize(sine(48_000, 2, 1.0)).unwrap();
         let duration = samples.len() as f64 / f64::from(IMPORT_SAMPLE_RATE);
         assert!((duration - 1.0).abs() < 0.01, "duration {duration}");
         assert!(samples.iter().any(|s| *s > 10_000));
@@ -234,7 +235,7 @@ mod tests {
     fn resampled_sine_is_continuous_across_the_whole_clip() {
         // 3 s at 48 kHz stereo is well past rodio's 32768-sample span size,
         // so any per-span phase reset would show up as a jump here.
-        let samples = normalize(sine(48_000, 2, 3.0));
+        let samples = normalize(sine(48_000, 2, 3.0)).unwrap();
         // 440 Hz at amplitude 0.5 sampled at 24 kHz: max slope per sample is
         // 0.5 * 2π * 440 / 24000 ≈ 0.0576 → ~1887 PCM16 units; allow slack.
         let max_step = 2_400;
@@ -248,21 +249,21 @@ mod tests {
     #[test]
     fn resample_linear_handles_identity_and_ratio() {
         let input: Vec<f32> = (0..10).map(|i| i as f32).collect();
-        assert_eq!(resample_linear(&input, 100, 100), input);
-        let half = resample_linear(&input, 100, 50);
+        assert_eq!(resample_linear(&input, 100, 100).collect::<Vec<_>>(), input);
+        let half: Vec<_> = resample_linear(&input, 100, 50).collect();
         assert_eq!(half.len(), 5);
         assert_eq!(half, vec![0.0, 2.0, 4.0, 6.0, 8.0]);
-        let double = resample_linear(&input, 50, 100);
+        let double: Vec<_> = resample_linear(&input, 50, 100).collect();
         assert_eq!(double.len(), 20);
         assert!((double[1] - 0.5).abs() < 1e-6);
-        assert!(resample_linear(&[], 50, 100).is_empty());
+        assert!(resample_linear(&[], 50, 100).next().is_none());
     }
 
     #[test]
     fn wav_roundtrip_is_readable_by_catalog_reader_and_importer() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("clip.wav");
-        let samples = normalize(sine(44_100, 1, 0.5));
+        let samples = normalize(sine(44_100, 1, 0.5)).unwrap();
         write_pcm16_wav(&path, &samples, IMPORT_SAMPLE_RATE).unwrap();
 
         let info = crate::voice::audio::read_wav_info(&path).unwrap();
@@ -276,16 +277,109 @@ mod tests {
         assert_eq!(clip.sha256.len(), 64);
     }
 
+    struct CountingSource {
+        remaining: usize,
+        reads: std::rc::Rc<std::cell::Cell<usize>>,
+        channels: u16,
+        rate: u32,
+        change_at: Option<usize>,
+        change_channels: bool,
+    }
+
+    impl Iterator for CountingSource {
+        type Item = f32;
+        fn next(&mut self) -> Option<f32> {
+            if self.remaining == 0 {
+                return None;
+            }
+            self.remaining -= 1;
+            self.reads.set(self.reads.get() + 1);
+            Some(0.25)
+        }
+    }
+    impl Source for CountingSource {
+        fn current_span_len(&self) -> Option<usize> {
+            None
+        }
+        fn channels(&self) -> std::num::NonZeroU16 {
+            NonZero::new(
+                self.channels
+                    + u16::from(
+                        self.change_channels
+                            && self.change_at.is_some_and(|n| self.reads.get() >= n),
+                    ),
+            )
+            .unwrap()
+        }
+        fn sample_rate(&self) -> std::num::NonZeroU32 {
+            NonZero::new(
+                self.rate
+                    + u32::from(
+                        !self.change_channels
+                            && self.change_at.is_some_and(|n| self.reads.get() >= n),
+                    ),
+            )
+            .unwrap()
+        }
+        fn total_duration(&self) -> Option<std::time::Duration> {
+            None
+        }
+    }
+
+    #[test]
+    fn duration_limit_is_exact_and_stops_after_one_extra_sample() {
+        for channels in [1, 2, 6] {
+            let limit = 100 * 30 * usize::from(channels);
+            for excess in [0, 1, 10_000] {
+                let reads = std::rc::Rc::new(std::cell::Cell::new(0));
+                let source = CountingSource {
+                    remaining: limit + excess,
+                    reads: reads.clone(),
+                    channels,
+                    rate: 100,
+                    change_at: None,
+                    change_channels: false,
+                };
+                let result = normalize(source);
+                if excess == 0 {
+                    assert_eq!(result.unwrap().len(), 30 * IMPORT_SAMPLE_RATE as usize);
+                } else {
+                    assert!(matches!(result, Err(VoiceError::Validation { .. })));
+                }
+                assert_eq!(reads.get(), limit + usize::from(excess != 0));
+            }
+        }
+    }
+
+    #[test]
+    fn rejects_partial_frames_and_format_changes_and_short_audio() {
+        for (remaining, channels, change_at, change_channels) in [
+            (101, 2, None, false),
+            (100, 1, Some(50), false),
+            (100, 1, Some(50), true),
+            (19, 1, None, false),
+        ] {
+            let source = CountingSource {
+                remaining,
+                reads: Default::default(),
+                channels,
+                rate: 100,
+                change_at,
+                change_channels,
+            };
+            assert!(matches!(
+                normalize(source),
+                Err(VoiceError::Validation { .. })
+            ));
+        }
+        assert_eq!(normalize(sine(100, 1, 0.2)).unwrap().len(), 4_800);
+    }
+
     #[test]
     fn rejects_out_of_range_duration_and_garbage() {
         let dir = tempfile::tempdir().unwrap();
         let short = dir.path().join("short.wav");
-        write_pcm16_wav(
-            &short,
-            &normalize(sine(24_000, 1, 0.05)),
-            IMPORT_SAMPLE_RATE,
-        )
-        .unwrap();
+        write_pcm16_wav(&short, &vec![0; 1_200], IMPORT_SAMPLE_RATE).unwrap();
         assert!(matches!(
             decode_and_normalize(&short),
             Err(VoiceError::Validation { .. })

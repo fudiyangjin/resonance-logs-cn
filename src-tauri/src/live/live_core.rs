@@ -82,13 +82,17 @@ impl LiveCore {
         let mut scheduler = DeadlineScheduler::new();
         let mut entities = EntityContext::new();
         let mut projections = ProjectionSet::new(history_writer);
-        projections.apply_config(Arc::clone(&config), &entities, now, &mut scheduler)?;
+        projections.apply_config(
+            Arc::clone(&config),
+            &entities,
+            wall_now,
+            now,
+            &mut scheduler,
+        )?;
         projections.apply_voice_config(&initial_voice, &entities, wall_now, now, &mut scheduler);
         entities.set_watched_skill_ids(watched_skill_ids(&config));
-        // Seed the player before any cue can be produced: without this the
-        // worker keeps its `enabled=true, volume=1.0` defaults until the main
-        // window's first sync, and a cold start straight into a dungeon
-        // would play HUD cues at full volume even with voice switched off.
+        // The worker starts disabled. Publish persisted settings before any
+        // cue can be produced, including cold starts without the main window.
         sync_voice_service_settings(&app, &initial_voice);
 
         let mut core = Self {
@@ -380,6 +384,7 @@ impl LiveCore {
         self.projections.apply_config(
             Arc::clone(&config),
             &self.entities,
+            self.wall_at(now),
             now,
             &mut self.scheduler,
         )?;

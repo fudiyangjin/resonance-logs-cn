@@ -147,6 +147,11 @@ pub async fn save_and_apply_voice_runtime_snapshot(
     runtime: tauri::State<'_, LiveRuntimeHandle>,
 ) -> Result<(), String> {
     snapshot.normalize();
-    save_voice_runtime_snapshot(&app_handle, &snapshot)?;
+    let snapshot = tokio::task::spawn_blocking(move || {
+        save_voice_runtime_snapshot(&app_handle, &snapshot)?;
+        Ok::<_, String>(snapshot)
+    })
+    .await
+    .map_err(|error| format!("voice snapshot save task failed: {error}"))??;
     runtime.apply_voice_config(snapshot).await
 }

@@ -19,7 +19,7 @@ use crate::live::projections::history::HistoryProjection;
 use crate::live::projections::minimap::MinimapProjection;
 use crate::live::projections::presentation::{ActiveCombat, PresentationProjection};
 use crate::live::projections::timeline::TimelineProjection;
-use crate::live::projections::voice::VoiceProjection;
+use crate::live::projections::voice::{VoiceProjection, VoiceSyncReason};
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
     AttributeValue, DomainEnvelope, DomainEvent, EntityKind, MonoTimeMs, SegmentReason,
@@ -114,6 +114,7 @@ impl ProjectionSet {
         &mut self,
         config: std::sync::Arc<MonitorRuntimeSnapshot>,
         entities: &EntityContext,
+        now_wall_ms: i64,
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
     ) -> Result<(), String> {
@@ -151,6 +152,13 @@ impl ProjectionSet {
         }
         self.counter_side_effect_dirty = true;
         self.entity_monitor_side_effect_dirty = true;
+        self.flush_voice_inputs(
+            VoiceSyncReason::Configuration,
+            entities,
+            now_wall_ms,
+            now_mono,
+            scheduler,
+        );
         self.dirty |= SEGMENT_TOPICS;
         Ok(())
     }
@@ -167,18 +175,20 @@ impl ProjectionSet {
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
     ) {
-        self.voice
-            .apply_config(config, entities, now_mono, scheduler);
-        self.voice
-            .apply_counters(&self.counter, now_wall_ms, now_mono, scheduler);
-        self.voice.apply_entity_monitor(
-            &self.entity_monitor,
-            entities,
-            now_wall_ms,
-            now_mono,
-            scheduler,
-        );
-        self.entity_monitor_side_effect_dirty = false;
+        if self
+            .voice
+            .apply_config(config, entities, now_mono, scheduler)
+        {
+            self.counter_side_effect_dirty = true;
+            self.entity_monitor_side_effect_dirty = true;
+            self.flush_voice_inputs(
+                VoiceSyncReason::Configuration,
+                entities,
+                now_wall_ms,
+                now_mono,
+                scheduler,
+            );
+        }
     }
 
     pub fn begin_batch(&mut self, batch_id: crate::live::runtime::events::BatchId) {
@@ -523,8 +533,13 @@ impl ProjectionSet {
     ) {
         let changed = self.counter.end_batch();
         self.mark_counter_change(changed);
-        self.flush_counter_side_effects(now_wall_ms, now_mono, scheduler);
-        self.flush_entity_monitor_side_effects(entities, now_wall_ms, now_mono, scheduler);
+        self.flush_voice_inputs(
+            VoiceSyncReason::Runtime,
+            entities,
+            now_wall_ms,
+            now_mono,
+            scheduler,
+        );
     }
 
     /// Removes the voice cues matched since the last drain, for the caller to
@@ -826,8 +841,21 @@ impl ProjectionSet {
         self.dirty |= TopicMask::STATUS;
     }
 
+    fn flush_voice_inputs(
+        &mut self,
+        reason: VoiceSyncReason,
+        entities: &EntityContext,
+        now_wall_ms: i64,
+        now_mono: MonoTimeMs,
+        scheduler: &mut DeadlineScheduler,
+    ) {
+        self.flush_counter_side_effects(reason, now_wall_ms, now_mono, scheduler);
+        self.flush_entity_monitor_side_effects(reason, entities, now_wall_ms, now_mono, scheduler);
+    }
+
     fn flush_counter_side_effects(
         &mut self,
+        reason: VoiceSyncReason,
         now_wall_ms: i64,
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
@@ -836,7 +864,7 @@ impl ProjectionSet {
             return;
         }
         self.voice
-            .apply_counters(&self.counter, now_wall_ms, now_mono, scheduler);
+            .apply_counters(reason, &self.counter, now_wall_ms, now_mono, scheduler);
         self.counter_side_effect_dirty = false;
         self.dirty |= TopicMask::STATUS;
     }
@@ -856,6 +884,7 @@ impl ProjectionSet {
 
     fn flush_entity_monitor_side_effects(
         &mut self,
+        reason: VoiceSyncReason,
         entities: &EntityContext,
         now_wall_ms: i64,
         now_mono: MonoTimeMs,
@@ -865,6 +894,7 @@ impl ProjectionSet {
             return;
         }
         self.voice.apply_entity_monitor(
+            reason,
             &self.entity_monitor,
             entities,
             now_wall_ms,
@@ -919,6 +949,207 @@ mod tests {
         BatchId, DomainHit, EntityRef, EntityUuid, EventMeta, HitChannel, HitKind, SegmentId,
     };
     use crate::live::runtime::segment::{IdleMode, TRAINING_WINDOW_MS};
+
+    #[test]
+    fn monitor_config_immediately_reschedules_and_silently_rebases_voice() {
+        use crate::live::bootstrap_snapshot::WatchedEntitySpec;
+        use crate::live::runtime::events::{
+            EntityIdentityPatch, FieldPatch, ProtocolBatch, ProtocolObservation,
+        };
+        use crate::voice::models::{
+            EntityOwnerScope, VoiceEvent, VoiceRule, VoiceSubject, VoiceTrigger,
+        };
+        use std::sync::Arc;
+        let (writer, join) = HistoryWriterHandle::start().unwrap();
+        let mut projections = ProjectionSet::new(writer);
+        let mut entities = EntityContext::new();
+        let mut scheduler = DeadlineScheduler::new();
+        let meta = EventMeta {
+            batch_id: BatchId(1),
+            capture_sequence: 1,
+            stream_id: 1,
+            stream_epoch: 1,
+            captured_wall_ms: 100,
+            captured_mono_ns: 100_000_000,
+            source_time_ms: None,
+        };
+        entities.apply_batch(ProtocolBatch {
+            meta: meta.clone(),
+            observations: vec![
+                ProtocolObservation::EntityAppeared {
+                    uuid: EntityUuid(500),
+                    kind: EntityKind::Monster,
+                },
+                ProtocolObservation::IdentityUpdated {
+                    uuid: EntityUuid(500),
+                    patch: EntityIdentityPatch {
+                        monster_id: FieldPatch::Set(179901),
+                        ..Default::default()
+                    },
+                },
+            ],
+        });
+        let spec = WatchedEntitySpec {
+            monster_id: 179901,
+            scope: EntityOwnerScope::Any,
+            duration_ms: Some(10_000),
+        };
+        let mut config = MonitorRuntimeSnapshot::default();
+        config.monster.enabled = true;
+        config.monster.watched_entities = vec![spec.clone()];
+        projections
+            .apply_config(
+                Arc::new(config.clone()),
+                &entities,
+                100,
+                MonoTimeMs(100),
+                &mut scheduler,
+            )
+            .unwrap();
+        let rules = [
+            VoiceEvent::Started,
+            VoiceEvent::Ended,
+            VoiceEvent::ExpiringIn { seconds_before: 0 },
+        ]
+        .into_iter()
+        .enumerate()
+        .map(|(i, event)| VoiceRule {
+            id: i.to_string(),
+            enabled: true,
+            trigger: VoiceTrigger::new(
+                VoiceSubject::Entity {
+                    monster_id: 179901,
+                    scope: EntityOwnerScope::Any,
+                },
+                event,
+            ),
+            phrase_id: i.to_string(),
+            priority: 0,
+            cooldown_ms: 0,
+            phrase_id_by_tier: None,
+        })
+        .collect();
+        projections.apply_voice_config(
+            &VoiceRuntimeSnapshot {
+                enabled: true,
+                rules,
+                ..Default::default()
+            },
+            &entities,
+            100,
+            MonoTimeMs(100),
+            &mut scheduler,
+        );
+        assert!(projections.take_voice_cues().is_empty());
+        assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(10_100)));
+
+        config.monster.watched_entities[0].duration_ms = Some(20_000);
+        projections
+            .apply_config(
+                Arc::new(config.clone()),
+                &entities,
+                500,
+                MonoTimeMs(500),
+                &mut scheduler,
+            )
+            .unwrap();
+        // No end_batch or new packet between config and this assertion.
+        assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(20_100)));
+        assert!(!projections.entity_monitor_side_effect_dirty);
+        assert!(!projections.counter_side_effect_dirty);
+        assert!(projections.take_voice_cues().is_empty());
+
+        config.monster.watched_entities[0].duration_ms = Some(1);
+        projections
+            .apply_config(
+                Arc::new(config.clone()),
+                &entities,
+                600,
+                MonoTimeMs(600),
+                &mut scheduler,
+            )
+            .unwrap();
+        assert!(scheduler.is_empty());
+        assert!(projections.take_voice_cues().is_empty());
+        config.monster.watched_entities.clear();
+        projections
+            .apply_config(
+                Arc::new(config.clone()),
+                &entities,
+                700,
+                MonoTimeMs(700),
+                &mut scheduler,
+            )
+            .unwrap();
+        assert!(scheduler.is_empty());
+        assert!(projections.take_voice_cues().is_empty());
+
+        config.monster.watched_entities.push(WatchedEntitySpec {
+            duration_ms: Some(30_000),
+            ..spec
+        });
+        projections
+            .apply_config(
+                Arc::new(config.clone()),
+                &entities,
+                800,
+                MonoTimeMs(800),
+                &mut scheduler,
+            )
+            .unwrap();
+        assert!(!scheduler.is_empty());
+        assert!(projections.take_voice_cues().is_empty());
+        config.monster.watched_entities.clear();
+        projections
+            .apply_config(
+                Arc::new(config.clone()),
+                &entities,
+                900,
+                MonoTimeMs(900),
+                &mut scheduler,
+            )
+            .unwrap();
+        assert!(
+            scheduler.is_empty(),
+            "removing watch cancels the future deadline immediately"
+        );
+        config.monster.watched_entities.push(WatchedEntitySpec {
+            duration_ms: Some(30_000),
+            ..spec
+        });
+        projections
+            .apply_config(
+                Arc::new(config),
+                &entities,
+                1_000,
+                MonoTimeMs(1_000),
+                &mut scheduler,
+            )
+            .unwrap();
+        let events = entities.apply_batch(ProtocolBatch {
+            meta,
+            observations: vec![ProtocolObservation::EntityDisappeared {
+                uuid: EntityUuid(500),
+            }],
+        });
+        for event in events {
+            projections
+                .apply(&event, &entities, &mut scheduler)
+                .unwrap();
+        }
+        projections.end_batch(&entities, 1_100, MonoTimeMs(1_100), &mut scheduler);
+        assert_eq!(
+            projections
+                .take_voice_cues()
+                .iter()
+                .map(|cue| cue.rule_id.as_str())
+                .collect::<Vec<_>>(),
+            ["1"]
+        );
+        assert!(scheduler.is_empty());
+        drop(projections);
+        join.join().unwrap();
+    }
 
     #[test]
     fn command_peek_does_not_consume_pending_publication() {

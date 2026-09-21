@@ -89,6 +89,7 @@ export type OverviewGroupMeta = {
 export type SkillProfileVoiceSlice = Pick<
   SkillMonitorProfile,
   | "selectedClass"
+  | "monitoredSkillIds"
   | "buffVoiceConfigs"
   | "skillVoiceConfigs"
   | "userCounterRules"

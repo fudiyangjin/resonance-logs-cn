@@ -11,6 +11,7 @@ import {
   phraseRequests,
   type PhraseIndex,
 } from "./compile";
+import { collectReferencedVoiceKeys } from "./gc";
 import { listVoiceBindingOverview } from "./overview";
 import type { VoiceBindingView } from "./subject-types";
 
@@ -51,6 +52,7 @@ describe("collectBindings + phraseRequests", () => {
     const bindings = collectBindings(
       view({
         skillProfile: {
+          monitoredSkillIds: [990001],
           selectedClass: "wind_knight",
           buffVoiceConfigs: {
             "101": {
@@ -203,6 +205,7 @@ describe("compileVoiceRules", () => {
   const fullView = view({
     locale: "en-US",
     skillProfile: {
+      monitoredSkillIds: [990001],
       selectedClass: "wind_knight",
       buffVoiceConfigs: {
         "101": {
@@ -250,6 +253,42 @@ describe("compileVoiceRules", () => {
       { id: "s3-raid:bomb", labelKey: "voice.alerts.title", autoText: "炸弹" },
     ],
     mechanicVoiceConfigs: { "s3-raid:bomb": auto() },
+  });
+
+  it("suspends unmonitored skills while retaining configuration and GC references", () => {
+    const profile = fullView.skillProfile!;
+    const dormant = {
+      ...fullView,
+      skillProfile: { ...profile, monitoredSkillIds: [] as number[] },
+    };
+    const before = compileVoiceRules(collectBindings(fullView), index);
+    expect(
+      compileVoiceRules(collectBindings(dormant), index).some(
+        (r) => r.trigger.subject.kind === "skill",
+      ),
+    ).toBe(false);
+    expect(
+      phraseRequests(collectBindings(dormant)).some((r) =>
+        r.name.includes(":skill:"),
+      ),
+    ).toBe(false);
+    expect(
+      listVoiceBindingOverview(dormant, index).some(
+        (r) => r.navigateTo === "skill",
+      ),
+    ).toBe(false);
+    expect(
+      collectReferencedVoiceKeys({
+        skillProfiles: [dormant.skillProfile],
+        monsterConfigs: [],
+        mechanicVoiceConfigs: {},
+      }).has("voice:skill:990001:cast"),
+    ).toBe(true);
+    expect(dormant.skillProfile.skillVoiceConfigs).toBe(
+      profile.skillVoiceConfigs,
+    );
+    dormant.skillProfile.monitoredSkillIds = [990001];
+    expect(compileVoiceRules(collectBindings(dormant), index)).toEqual(before);
   });
 
   it("produces the expected rule literals", () => {
@@ -419,6 +458,7 @@ describe("compileVoiceRules", () => {
       collectBindings(
         view({
           skillProfile: {
+            monitoredSkillIds: [990001],
             selectedClass: "wind_knight",
             presetCounterVoiceConfigs: {
               [String(preset.ruleId)]: {

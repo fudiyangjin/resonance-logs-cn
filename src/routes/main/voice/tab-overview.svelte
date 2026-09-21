@@ -12,10 +12,7 @@
     type VoiceGenerationBackendSetting,
     type VoiceQueuePolicySetting,
   } from "$lib/settings-store";
-  import {
-    refreshVoiceStatus,
-    VOICE,
-  } from "$lib/stores/voice-store.svelte";
+  import { refreshVoiceStatus, VOICE } from "$lib/stores/voice-store.svelte";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
 
   const voice = $derived(SETTINGS.voice.state);
@@ -224,11 +221,11 @@
       </button>
     </div>
 
-    {#if VOICE.error}
+    {#if VOICE.error || VOICE.phraseError}
       <div
         class="border-destructive/40 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-xs"
       >
-        {VOICE.error}
+        {VOICE.error || VOICE.phraseError}
       </div>
     {/if}
 

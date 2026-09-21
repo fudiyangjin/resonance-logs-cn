@@ -33,6 +33,26 @@ mod tests;
 
 use deadline::{DeadlineTracker, SyncOutcome};
 
+/// Configuration refreshes establish a baseline without emitting game edges.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum VoiceSyncReason {
+    Configuration,
+    Runtime,
+}
+
+impl VoiceSyncReason {
+    fn expiry(
+        self,
+        expires: Option<MonoTimeMs>,
+        seconds_before: u32,
+        now: MonoTimeMs,
+    ) -> Option<MonoTimeMs> {
+        expires.filter(|at| {
+            self == Self::Runtime || at.saturating_sub(u64::from(seconds_before) * 1_000) > now
+        })
+    }
+}
+
 /// Lookup key derived from a [`VoiceSubject`] with scope details stripped:
 /// the buff aggregates are keyed per base id, and the source scope is
 /// checked when matching an edge against the candidate rules.
@@ -214,19 +234,26 @@ impl VoiceProjection {
         entities: &EntityContext,
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
-    ) {
+    ) -> bool {
+        let mut effective = config.clone();
+        effective.normalize();
+        effective.rules.retain(|rule| rule.enabled);
+        if self.rules == effective.rules {
+            return false;
+        }
         if self.rule_set != 0 {
             scheduler.invalidate_scope(TimerScope::RuleSet(self.rule_set));
         }
         self.deadlines.clear();
         self.rule_set = self.rule_set.wrapping_add(1).max(1);
-        self.rules.clone_from(&config.rules);
+        self.rules = effective.rules;
         self.rebuild_rule_indexes();
         self.last_fire_ms.clear();
         self.counter_crossed.clear();
         self.clear_entity_monitor_state();
         self.buff_aggregates = collect_buff_aggregates(entities);
         self.sync_buff_expiries(now_mono, scheduler);
+        true
     }
 
     /// Rebuilds the trigger lookup indexes from `rules`. Every path that
@@ -384,6 +411,7 @@ impl VoiceProjection {
 
     pub fn apply_counters(
         &mut self,
+        reason: VoiceSyncReason,
         counters: &CounterEngine,
         now_ms: i64,
         now_mono: MonoTimeMs,
@@ -414,7 +442,7 @@ impl VoiceProjection {
                         .counter_crossed
                         .insert((rule_id, slot_id), crossed)
                         .unwrap_or(false);
-                    if crossed && !previous {
+                    if reason == VoiceSyncReason::Runtime && crossed && !previous {
                         self.fire_rule(index, now_ms, None);
                     }
                 }
@@ -432,7 +460,7 @@ impl VoiceProjection {
                     self.deadlines.sync(
                         key,
                         TimerScope::RuleSet(self.rule_set),
-                        expires,
+                        reason.expiry(expires, seconds_before, now_mono),
                         seconds_before,
                         now_mono,
                         scheduler,
@@ -449,6 +477,7 @@ impl VoiceProjection {
     /// and fires readiness and presence edges.
     pub fn apply_entity_monitor(
         &mut self,
+        reason: VoiceSyncReason,
         monitor: &EntityMonitorProjection,
         entities: &EntityContext,
         now_ms: i64,
@@ -503,14 +532,16 @@ impl VoiceProjection {
                     let outcome = self.deadlines.sync(
                         skill_voice_key(rule_set, index, skill_id),
                         scope,
-                        deadline,
+                        reason.expiry(deadline, seconds_before, now_mono),
                         seconds_before,
                         now_mono,
                         scheduler,
                     );
                     // A cooldown-reduction packet can make a skill ready
                     // before its armed deadline: still announce it.
-                    if outcome == SyncOutcome::CollapsedToPast && trigger.event == VoiceEvent::Ended
+                    if reason == VoiceSyncReason::Runtime
+                        && outcome == SyncOutcome::CollapsedToPast
+                        && trigger.event == VoiceEvent::Ended
                     {
                         collapsed_ready.push((index, skill_id));
                     }
@@ -541,7 +572,11 @@ impl VoiceProjection {
                             self.deadlines.sync(
                                 entity_voice_key(rule_set, index, instance),
                                 scope,
-                                Some(record.detected_mono_ms.saturating_add(duration_ms)),
+                                reason.expiry(
+                                    Some(record.detected_mono_ms.saturating_add(duration_ms)),
+                                    seconds_before,
+                                    now_mono,
+                                ),
                                 seconds_before,
                                 now_mono,
                                 scheduler,
@@ -582,6 +617,10 @@ impl VoiceProjection {
                 || readiness
                     .ready_deadline
                     .is_some_and(|deadline| deadline <= now_mono);
+            if reason == VoiceSyncReason::Configuration {
+                self.skill_ready.insert(*skill_id, ready_now);
+                continue;
+            }
             match self.skill_ready.get(skill_id).copied() {
                 // First sight is never an edge.
                 None => {
@@ -619,7 +658,7 @@ impl VoiceProjection {
                 current.insert((record.monster_id, EntityOwnerScope::LocalPlayer));
             }
         }
-        if self.entity_presence_seeded {
+        if reason == VoiceSyncReason::Runtime && self.entity_presence_seeded {
             let previous = std::mem::take(&mut self.entity_presence);
             for &(monster_id, owner_scope) in previous.symmetric_difference(&current) {
                 let appeared = current.contains(&(monster_id, owner_scope));

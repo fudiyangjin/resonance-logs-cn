@@ -13,12 +13,8 @@
  * `enabled` / `volume` / `queuePolicy` changes are never held hostage by a
  * long-running generation.
  */
-import { SvelteSet } from "svelte/reactivity";
-import {
-  commands,
-  type VoiceLanguage,
-  type VoiceRuntimeSnapshot,
-} from "$lib/bindings";
+import { untrack } from "svelte";
+import { commands, type VoiceLanguage } from "$lib/bindings";
 import { saveAndApplyVoiceRuntimeSnapshot } from "$lib/runtime-monitor-sync";
 import {
   ensureBuffVoiceConfigs,
@@ -34,99 +30,61 @@ import {
   activeProfile,
   updateActiveProfile,
 } from "$lib/skill-monitor-profile.svelte.js";
-import { VOICE } from "$lib/stores/voice-store.svelte";
+import {
+  VOICE,
+  ensureVoiceCatalog,
+  mergeVoicePhrase,
+  requestVoiceCatalogRefresh,
+  voiceOperationActive,
+  voiceErrorMessage,
+} from "$lib/stores/voice-store.svelte";
+import { createPhraseResolver } from "./phrase-resolver";
+import { createVoiceSnapshotSync } from "./snapshot-sync";
 import {
   collectBindings,
   compileVoiceRules,
-  isResolved,
   phraseRequests,
   type PhraseIndex,
-  type PhraseRequest,
   type ResolvedPhrase,
 } from "./compile";
 import { mergeVoiceConfigPatch } from "./subject-types";
 import { buildVoiceBindingView } from "./view";
 
-const SYNC_DEBOUNCE_MS = 50;
+const phraseIndex = $derived.by(() => {
+  const index: Record<string, ResolvedPhrase> = {};
+  for (const phrase of VOICE.status?.catalog.phrases ?? []) {
+    index[phrase.name] = {
+      phraseId: phrase.id,
+      text: phrase.text,
+      language: phrase.language,
+    };
+  }
+  return index;
+});
 
-const phraseIndex = $state<Record<string, ResolvedPhrase>>({});
-/** `${name}|${text}|${language}` of requests the backend rejected for good. */
-const unretriable = new SvelteSet<string>();
-
-/** Read-only view of the materialized phrases (reactive when read in runes). */
 export function currentPhraseIndex(): PhraseIndex {
   return phraseIndex;
 }
 
-function requestKey(request: PhraseRequest): string {
-  return `${request.name}|${request.text}|${request.language}`;
-}
+const resolver = createPhraseResolver({
+  ensureCatalog: ensureVoiceCatalog,
+  index: currentPhraseIndex,
+  upsert: ({ name, text, language }) =>
+    commands.voiceUpsertPhrase(name, text, language),
+  merge: mergeVoicePhrase,
+  refresh: requestVoiceCatalogRefresh,
+  reportError: (error) => {
+    VOICE.phraseError = error ? voiceErrorMessage(error) : null;
+  },
+});
 
-/**
- * Upserts one managed phrase and records the outcome. Shared with the
- * preview path so previews and compiled rules resolve to the same phrase.
- */
-export async function upsertManagedPhrase(
+/** Interactive retries and background sync share pending IPC and confirmed data. */
+export function upsertManagedPhrase(
   name: string,
   text: string,
   language: VoiceLanguage,
 ): Promise<string | null> {
-  const result = await commands.voiceUpsertPhrase(name, text, language);
-  if (result.status !== "ok") {
-    // Validation / security errors won't clear on their own; Conflict and IO
-    // errors are retried on the next effect run.
-    if (!result.error.retriable) {
-      unretriable.add(requestKey({ name, text, language }));
-    }
-    return null;
-  }
-  phraseIndex[name] = { phraseId: result.data.id, text, language };
-  return result.data.id;
-}
-
-let inFlight: Promise<void> | null = null;
-let queued: PhraseRequest[] = [];
-
-function materialize(requests: PhraseRequest[]): void {
-  queued = requests;
-  if (inFlight) return;
-  inFlight = (async () => {
-    try {
-      // `queued` is re-read per iteration so a newer effect run can replace
-      // the outstanding list mid-flight instead of racing a second chain.
-      while (queued.length > 0) {
-        const request = queued[0]!;
-        queued = queued.slice(1);
-        try {
-          await upsertManagedPhrase(
-            request.name,
-            request.text,
-            request.language,
-          );
-        } catch (error) {
-          console.error("[voice-sync] upsert failed", request.name, error);
-        }
-      }
-    } finally {
-      inFlight = null;
-    }
-  })();
-}
-
-let lastSnapshotKey = "";
-let syncTimer: ReturnType<typeof setTimeout> | null = null;
-
-function queueSnapshot(snapshot: VoiceRuntimeSnapshot): void {
-  const key = JSON.stringify(snapshot);
-  if (key === lastSnapshotKey) return;
-  lastSnapshotKey = key;
-  if (syncTimer) clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => {
-    syncTimer = null;
-    void saveAndApplyVoiceRuntimeSnapshot(snapshot).catch((error) => {
-      console.error("[voice-sync] failed to apply voice snapshot", error);
-    });
-  }, SYNC_DEBOUNCE_MS);
+  return resolver.resolve({ name, text, language });
 }
 
 let legacyMigrationDone = false;
@@ -196,41 +154,43 @@ function migrateLegacyVoiceRules(): void {
 
 /** Must be called during component initialisation (it creates effects). */
 export function startVoiceRuntimeSync(): () => void {
+  const snapshots = createVoiceSnapshotSync(
+    saveAndApplyVoiceRuntimeSnapshot,
+    (error) => {
+      console.error("[voice-sync] failed to apply voice snapshot", error);
+    },
+  );
   $effect(() => {
     migrateLegacyVoiceRules();
+  });
 
+  $effect(() => {
     const voice = SETTINGS.voice.state;
-    const view = buildVoiceBindingView();
-    const bindings = collectBindings(view);
-    const catalogPhraseIds: ReadonlySet<string> = new SvelteSet(
-      (VOICE.status?.catalog.phrases ?? []).map((phrase) => phrase.id),
-    );
-
-    const missing = phraseRequests(bindings).filter(
-      (request) =>
-        !isResolved(phraseIndex, catalogPhraseIds, request) &&
-        !unretriable.has(requestKey(request)),
-    );
-    if (missing.length > 0) materialize(missing);
-
-    queueSnapshot({
+    const bindings = collectBindings(buildVoiceBindingView());
+    const index = phraseIndex;
+    const missing = phraseRequests(bindings).filter((request) => {
+      const known = index[request.name];
+      return (
+        known?.text !== request.text || known.language !== request.language
+      );
+    });
+    const busy = voiceOperationActive();
+    const snapshot = {
       enabled: voice.enabled,
       volume: voice.volume,
       queuePolicy: voice.queuePolicy,
-      rules: voice.enabled ? compileVoiceRules(bindings, phraseIndex) : [],
+      rules: voice.enabled ? compileVoiceRules(bindings, index) : [],
+    };
+    untrack(() => {
+      resolver.sync(missing, busy);
+      snapshots.queue(snapshot);
     });
   });
 
-  // Once the backend is idle again, anything rejected earlier may be
-  // retried (the catalog or model state that caused it may have changed).
-  $effect(() => {
-    if (VOICE.operation.kind === "idle") unretriable.clear();
-  });
-
-  return () => {
-    if (syncTimer) {
-      clearTimeout(syncTimer);
-      syncTimer = null;
-    }
+  const cleanup = () => {
+    resolver.cancelBackground();
+    snapshots.dispose();
   };
+  $effect(() => cleanup);
+  return cleanup;
 }
