@@ -23,7 +23,7 @@ pub struct WavInfo {
 /// `RIFF....WAVEfmt <fmt-chunk>...data<size>`. Rejects anything that isn't a
 /// canonical PCM/IEEE-float WAV container.
 pub fn read_wav_info(path: &Path) -> VoiceResult<WavInfo> {
-    let mut file = std::fs::File::open(path).map_err(|e| VoiceError::io_at("open", &path, e))?;
+    let mut file = std::fs::File::open(path).map_err(|e| VoiceError::io_at("open", path, e))?;
 
     let mut riff_header = [0u8; 12];
     file.read_exact(&mut riff_header)
@@ -151,7 +151,7 @@ fn skip_bytes(file: &mut std::fs::File, mut remaining: u64) -> VoiceResult<()> {
 /// copies it into the controlled voice directory tree only if it passes.
 pub fn validate_and_copy_reference_wav(source: &Path, dest: &Path) -> VoiceResult<WavInfo> {
     let metadata =
-        std::fs::metadata(source).map_err(|e| VoiceError::io_at("inspect", &source, e))?;
+        std::fs::metadata(source).map_err(|e| VoiceError::io_at("inspect", source, e))?;
     if metadata.len() > MAX_REFERENCE_WAV_BYTES {
         return Err(VoiceError::validation(
             "referenceWavPath",
@@ -177,7 +177,7 @@ pub fn validate_and_copy_reference_wav(source: &Path, dest: &Path) -> VoiceResul
     }
 
     if let Some(parent) = dest.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| VoiceError::io_at("create", &parent, e))?;
+        std::fs::create_dir_all(parent).map_err(|e| VoiceError::io_at("create", parent, e))?;
     }
     std::fs::copy(source, dest).map_err(|e| {
         VoiceError::io(

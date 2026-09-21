@@ -192,7 +192,7 @@ fn write_persisted_fingerprint(
     fingerprint: &ValidationFingerprint,
 ) -> VoiceResult<()> {
     std::fs::create_dir_all(state_dir)
-        .map_err(|error| VoiceError::io_at("create", &state_dir, error))?;
+        .map_err(|error| VoiceError::io_at("create", state_dir, error))?;
     let bytes = serde_json::to_vec_pretty(fingerprint)
         .map_err(|source| VoiceError::json("serialize verified fine-tuned fingerprint", source))?;
     let temporary = state_dir.join(format!("{VERIFIED_FINGERPRINT_FILE}.tmp"));
@@ -350,10 +350,10 @@ fn validate_manifest(manifest: &PackageManifest) -> VoiceResult<()> {
 }
 
 fn validate_gguf_magic(path: &Path) -> VoiceResult<()> {
-    let mut file = File::open(path).map_err(|error| VoiceError::io_at("open", &path, error))?;
+    let mut file = File::open(path).map_err(|error| VoiceError::io_at("open", path, error))?;
     let mut magic = [0_u8; 4];
     file.read_exact(&mut magic)
-        .map_err(|error| VoiceError::io_at("read", &path, error))?;
+        .map_err(|error| VoiceError::io_at("read", path, error))?;
     if &magic != b"GGUF" {
         return Err(VoiceError::validation(
             "transformer.file",
@@ -364,13 +364,13 @@ fn validate_gguf_magic(path: &Path) -> VoiceResult<()> {
 }
 
 fn hash_file(path: &Path) -> VoiceResult<String> {
-    let mut file = File::open(path).map_err(|error| VoiceError::io_at("open", &path, error))?;
+    let mut file = File::open(path).map_err(|error| VoiceError::io_at("open", path, error))?;
     let mut hasher = Sha256::new();
     let mut buffer = [0_u8; 1 << 16];
     loop {
         let count = file
             .read(&mut buffer)
-            .map_err(|error| VoiceError::io_at("read", &path, error))?;
+            .map_err(|error| VoiceError::io_at("read", path, error))?;
         if count == 0 {
             break;
         }

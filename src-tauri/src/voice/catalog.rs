@@ -256,7 +256,7 @@ fn quarantine_voice_root(voice_root: &Path, schema_version: u32) -> VoiceResult<
         )
     })?;
     std::fs::create_dir_all(voice_root)
-        .map_err(|error| VoiceError::io_at("recreate", &voice_root, error))?;
+        .map_err(|error| VoiceError::io_at("recreate", voice_root, error))?;
     warn!(
         target: "app::voice",
         "moved legacy voice data schema v{schema_version} to {}",

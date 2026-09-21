@@ -859,7 +859,7 @@ where
     drop(output);
     tokio::fs::rename(&part_path, dest_path)
         .await
-        .map_err(|error| VoiceError::io_at("finalize", &dest_path, error))?;
+        .map_err(|error| VoiceError::io_at("finalize", dest_path, error))?;
     emit_progress(ModelDownloadProgress::FileProgress {
         name: file.name.as_str().to_string(),
         downloaded_bytes: downloaded,
@@ -878,13 +878,13 @@ pub async fn verify_sha256_async(path: PathBuf, expected: String) -> VoiceResult
 pub fn verify_sha256(path: &Path, expected_hex: &str) -> VoiceResult<bool> {
     let expected = Sha256Hex::parse(expected_hex.to_string())?;
     let mut file =
-        std::fs::File::open(path).map_err(|error| VoiceError::io_at("open", &path, error))?;
+        std::fs::File::open(path).map_err(|error| VoiceError::io_at("open", path, error))?;
     let mut hasher = Sha256::new();
     let mut buffer = [0_u8; 1 << 16];
     loop {
         let count = file
             .read(&mut buffer)
-            .map_err(|error| VoiceError::io_at("read", &path, error))?;
+            .map_err(|error| VoiceError::io_at("read", path, error))?;
         if count == 0 {
             break;
         }
@@ -1276,13 +1276,13 @@ fn write_receipt_blocking(model_dir: &Path, receipt: &InstallReceipt) -> VoiceRe
 
 fn hash_file(path: &Path) -> VoiceResult<String> {
     let mut file =
-        std::fs::File::open(path).map_err(|error| VoiceError::io_at("open", &path, error))?;
+        std::fs::File::open(path).map_err(|error| VoiceError::io_at("open", path, error))?;
     let mut hasher = Sha256::new();
     let mut buffer = [0_u8; 1 << 16];
     loop {
         let count = file
             .read(&mut buffer)
-            .map_err(|error| VoiceError::io_at("read", &path, error))?;
+            .map_err(|error| VoiceError::io_at("read", path, error))?;
         if count == 0 {
             break;
         }
