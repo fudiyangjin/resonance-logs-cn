@@ -175,8 +175,7 @@ struct PendingDirectory {
 
 impl PendingDirectory {
     fn create(path: PathBuf) -> VoiceResult<Self> {
-        std::fs::create_dir(&path)
-            .map_err(|error| VoiceError::io(format!("create {}", path.display()), error))?;
+        std::fs::create_dir(&path).map_err(|error| VoiceError::io_at("create", &path, error))?;
         Ok(Self {
             path,
             committed: false,
@@ -580,7 +579,7 @@ pub async fn install_manifest<R: Runtime>(
     let model_dir = model_dir(voice_root, &manifest.model_version);
     tokio::fs::create_dir_all(&model_dir)
         .await
-        .map_err(|error| VoiceError::io(format!("create {}", model_dir.display()), error))?;
+        .map_err(|error| VoiceError::io_at("create", &model_dir, error))?;
 
     for file in &manifest.files {
         if cancel.is_cancelled() {
@@ -795,17 +794,17 @@ where
         .truncate(false)
         .open(&part_path)
         .await
-        .map_err(|error| VoiceError::io(format!("open {}", part_path.display()), error))?;
+        .map_err(|error| VoiceError::io_at("open", &part_path, error))?;
     if resumed {
         output
             .seek(std::io::SeekFrom::Start(existing_len))
             .await
-            .map_err(|error| VoiceError::io(format!("seek {}", part_path.display()), error))?;
+            .map_err(|error| VoiceError::io_at("seek", &part_path, error))?;
     } else {
         output
             .set_len(0)
             .await
-            .map_err(|error| VoiceError::io(format!("truncate {}", part_path.display()), error))?;
+            .map_err(|error| VoiceError::io_at("truncate", &part_path, error))?;
     }
 
     let mut stream = std::pin::pin!(response.bytes_stream());
@@ -835,7 +834,7 @@ where
         output
             .write_all(&chunk)
             .await
-            .map_err(|error| VoiceError::io(format!("write {}", part_path.display()), error))?;
+            .map_err(|error| VoiceError::io_at("write", &part_path, error))?;
         if last_emit.elapsed() >= std::time::Duration::from_millis(200) {
             last_emit = std::time::Instant::now();
             emit_progress(ModelDownloadProgress::FileProgress {
@@ -856,11 +855,11 @@ where
     output
         .flush()
         .await
-        .map_err(|error| VoiceError::io(format!("flush {}", part_path.display()), error))?;
+        .map_err(|error| VoiceError::io_at("flush", &part_path, error))?;
     drop(output);
     tokio::fs::rename(&part_path, dest_path)
         .await
-        .map_err(|error| VoiceError::io(format!("finalize {}", dest_path.display()), error))?;
+        .map_err(|error| VoiceError::io_at("finalize", &dest_path, error))?;
     emit_progress(ModelDownloadProgress::FileProgress {
         name: file.name.as_str().to_string(),
         downloaded_bytes: downloaded,
@@ -878,14 +877,14 @@ pub async fn verify_sha256_async(path: PathBuf, expected: String) -> VoiceResult
 
 pub fn verify_sha256(path: &Path, expected_hex: &str) -> VoiceResult<bool> {
     let expected = Sha256Hex::parse(expected_hex.to_string())?;
-    let mut file = std::fs::File::open(path)
-        .map_err(|error| VoiceError::io(format!("open {}", path.display()), error))?;
+    let mut file =
+        std::fs::File::open(path).map_err(|error| VoiceError::io_at("open", &path, error))?;
     let mut hasher = Sha256::new();
     let mut buffer = [0_u8; 1 << 16];
     loop {
         let count = file
             .read(&mut buffer)
-            .map_err(|error| VoiceError::io(format!("read {}", path.display()), error))?;
+            .map_err(|error| VoiceError::io_at("read", &path, error))?;
         if count == 0 {
             break;
         }
@@ -902,7 +901,7 @@ pub fn manual_import(
     let sources = validate_manual_import_sources(source_files)?;
     let models_dir = super::catalog::models_dir(voice_root);
     std::fs::create_dir_all(&models_dir)
-        .map_err(|error| VoiceError::io(format!("create {}", models_dir.display()), error))?;
+        .map_err(|error| VoiceError::io_at("create", &models_dir, error))?;
 
     let model_dir = model_dir(voice_root, model_version);
     let operation_id = format!("{}-{}", std::process::id(), timestamp_ms());
@@ -930,7 +929,7 @@ pub fn manual_import(
             )
         })?;
         let size_bytes = std::fs::metadata(&destination)
-            .map_err(|error| VoiceError::io(format!("inspect {}", destination.display()), error))?
+            .map_err(|error| VoiceError::io_at("inspect", &destination, error))?
             .len();
         let sha256 = hash_file(&destination)?;
         files.push(InstallReceiptFile {
@@ -1089,8 +1088,7 @@ pub fn inspect_model(
     expected_version: &ModelVersion,
 ) -> VoiceResult<ModelValidationSnapshot> {
     let path = model_dir.join(INSTALL_RECEIPT_FILE);
-    let bytes = std::fs::read(&path)
-        .map_err(|error| VoiceError::io(format!("read {}", path.display()), error))?;
+    let bytes = std::fs::read(&path).map_err(|error| VoiceError::io_at("read", &path, error))?;
     let receipt_sha256 = hex::encode(Sha256::digest(&bytes));
     let receipt: InstallReceipt = serde_json::from_slice(&bytes)
         .map_err(|source| VoiceError::json(format!("parse {}", path.display()), source))?;
@@ -1118,7 +1116,7 @@ pub fn inspect_model(
         }
         let file_path = model_dir.join(name.as_str());
         let metadata = std::fs::metadata(&file_path)
-            .map_err(|error| VoiceError::io(format!("inspect {}", file_path.display()), error))?;
+            .map_err(|error| VoiceError::io_at("inspect", &file_path, error))?;
         if !metadata.is_file() || metadata.len() != file.size_bytes {
             return Err(VoiceError::Security(format!(
                 "model file size mismatch: {}",
@@ -1181,7 +1179,7 @@ fn write_persisted_fingerprint_blocking(
         .map_err(|source| VoiceError::json("serialize verified model fingerprint", source))?;
     let temporary = model_dir.join(format!("{VERIFIED_FINGERPRINT_FILE}.tmp"));
     std::fs::write(&temporary, bytes)
-        .map_err(|error| VoiceError::io(format!("write {}", temporary.display()), error))?;
+        .map_err(|error| VoiceError::io_at("write", &temporary, error))?;
     std::fs::rename(&temporary, model_dir.join(VERIFIED_FINGERPRINT_FILE))
         .map_err(|error| VoiceError::io("finalize verified model fingerprint", error))
 }
@@ -1245,7 +1243,7 @@ pub fn remove_model(voice_root: &Path, model_version: &ModelVersion) -> VoiceRes
     let model_dir = model_dir(voice_root, model_version);
     if model_dir.exists() {
         std::fs::remove_dir_all(&model_dir)
-            .map_err(|error| VoiceError::io(format!("remove {}", model_dir.display()), error))?;
+            .map_err(|error| VoiceError::io_at("remove", &model_dir, error))?;
     }
     Ok(())
 }
@@ -1260,7 +1258,7 @@ async fn write_receipt(model_dir: &Path, receipt: &InstallReceipt) -> VoiceResul
     let temporary = model_dir.join(format!("{INSTALL_RECEIPT_FILE}.tmp"));
     tokio::fs::write(&temporary, bytes)
         .await
-        .map_err(|error| VoiceError::io(format!("write {}", temporary.display()), error))?;
+        .map_err(|error| VoiceError::io_at("write", &temporary, error))?;
     tokio::fs::rename(&temporary, model_dir.join(INSTALL_RECEIPT_FILE))
         .await
         .map_err(|error| VoiceError::io("finalize model install receipt", error))
@@ -1271,20 +1269,20 @@ fn write_receipt_blocking(model_dir: &Path, receipt: &InstallReceipt) -> VoiceRe
         .map_err(|source| VoiceError::json("serialize model install receipt", source))?;
     let temporary = model_dir.join(format!("{INSTALL_RECEIPT_FILE}.tmp"));
     std::fs::write(&temporary, bytes)
-        .map_err(|error| VoiceError::io(format!("write {}", temporary.display()), error))?;
+        .map_err(|error| VoiceError::io_at("write", &temporary, error))?;
     std::fs::rename(&temporary, model_dir.join(INSTALL_RECEIPT_FILE))
         .map_err(|error| VoiceError::io("finalize model install receipt", error))
 }
 
 fn hash_file(path: &Path) -> VoiceResult<String> {
-    let mut file = std::fs::File::open(path)
-        .map_err(|error| VoiceError::io(format!("open {}", path.display()), error))?;
+    let mut file =
+        std::fs::File::open(path).map_err(|error| VoiceError::io_at("open", &path, error))?;
     let mut hasher = Sha256::new();
     let mut buffer = [0_u8; 1 << 16];
     loop {
         let count = file
             .read(&mut buffer)
-            .map_err(|error| VoiceError::io(format!("read {}", path.display()), error))?;
+            .map_err(|error| VoiceError::io_at("read", &path, error))?;
         if count == 0 {
             break;
         }

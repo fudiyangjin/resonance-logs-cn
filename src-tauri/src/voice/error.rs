@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use serde::Serialize;
 use specta::Type;
 use thiserror::Error;
@@ -63,6 +65,16 @@ impl VoiceError {
     pub fn io(context: impl Into<String>, source: std::io::Error) -> Self {
         Self::Io {
             context: context.into(),
+            source,
+        }
+    }
+
+    /// IO failure of `op` ("open", "write", ...) on `path`; the common shape
+    /// of almost every IO error in this module, so callers don't each build
+    /// the same `format!("{op} {}", path.display())` context.
+    pub fn io_at(op: &'static str, path: impl AsRef<Path>, source: std::io::Error) -> Self {
+        Self::Io {
+            context: format!("{op} {}", path.as_ref().display()),
             source,
         }
     }

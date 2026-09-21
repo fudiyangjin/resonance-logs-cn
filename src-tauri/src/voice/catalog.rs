@@ -27,8 +27,7 @@ pub fn voice_root_dir(app_handle: &tauri::AppHandle) -> VoiceResult<PathBuf> {
         .app_local_data_dir()
         .map_err(|e| VoiceError::Internal(format!("failed to resolve app_local_data_dir: {e}")))?;
     let root = base.join("voice");
-    std::fs::create_dir_all(&root)
-        .map_err(|e| VoiceError::io(format!("create directory {}", root.display()), e))?;
+    std::fs::create_dir_all(&root).map_err(|e| VoiceError::io_at("create directory", &root, e))?;
     Ok(root)
 }
 
@@ -144,8 +143,7 @@ pub fn save_catalog(voice_root: &Path, catalog: &VoiceCatalog) -> VoiceResult<()
     let tmp_path = voice_root.join(format!("{CATALOG_FILE_NAME}.tmp.{}", std::process::id()));
     let bytes = serde_json::to_vec_pretty(catalog)
         .map_err(|e| VoiceError::json("serialize voice catalog", e))?;
-    std::fs::write(&tmp_path, &bytes)
-        .map_err(|e| VoiceError::io(format!("write {}", tmp_path.display()), e))?;
+    std::fs::write(&tmp_path, &bytes).map_err(|e| VoiceError::io_at("write", &tmp_path, e))?;
     atomic_rename(&tmp_path, &path)
 }
 
@@ -258,7 +256,7 @@ fn quarantine_voice_root(voice_root: &Path, schema_version: u32) -> VoiceResult<
         )
     })?;
     std::fs::create_dir_all(voice_root)
-        .map_err(|error| VoiceError::io(format!("recreate {}", voice_root.display()), error))?;
+        .map_err(|error| VoiceError::io_at("recreate", &voice_root, error))?;
     warn!(
         target: "app::voice",
         "moved legacy voice data schema v{schema_version} to {}",

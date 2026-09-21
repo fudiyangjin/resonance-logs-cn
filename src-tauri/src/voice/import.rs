@@ -40,8 +40,7 @@ pub struct ImportedClip {
 /// `Validation` for oversized, undecodable or out-of-range-duration input;
 /// `Io` for filesystem failures.
 pub fn decode_and_normalize(path: &Path) -> VoiceResult<ImportedClip> {
-    let metadata = std::fs::metadata(path)
-        .map_err(|e| VoiceError::io(format!("inspect {}", path.display()), e))?;
+    let metadata = std::fs::metadata(path).map_err(|e| VoiceError::io_at("inspect", &path, e))?;
     if !metadata.is_file() {
         return Err(VoiceError::validation(
             IMPORT_PATH_FIELD,
@@ -61,8 +60,7 @@ pub fn decode_and_normalize(path: &Path) -> VoiceResult<ImportedClip> {
 
     let sha256 = hash_file(path)?;
 
-    let file =
-        File::open(path).map_err(|e| VoiceError::io(format!("open {}", path.display()), e))?;
+    let file = File::open(path).map_err(|e| VoiceError::io_at("open", &path, e))?;
     let decoder = Decoder::new(BufReader::new(file)).map_err(|e| {
         VoiceError::validation(
             IMPORT_PATH_FIELD,
@@ -143,14 +141,13 @@ fn resample_linear(input: &[f32], from_rate: u32, to_rate: u32) -> Vec<f32> {
 }
 
 fn hash_file(path: &Path) -> VoiceResult<String> {
-    let mut file =
-        File::open(path).map_err(|e| VoiceError::io(format!("open {}", path.display()), e))?;
+    let mut file = File::open(path).map_err(|e| VoiceError::io_at("open", &path, e))?;
     let mut hasher = Sha256::new();
     let mut buf = [0u8; 64 * 1024];
     loop {
         let read = file
             .read(&mut buf)
-            .map_err(|e| VoiceError::io(format!("read {}", path.display()), e))?;
+            .map_err(|e| VoiceError::io_at("read", &path, e))?;
         if read == 0 {
             break;
         }
@@ -162,13 +159,11 @@ fn hash_file(path: &Path) -> VoiceResult<String> {
 /// Writes `samples` as a canonical 44-byte-header mono PCM16 RIFF/WAVE file.
 pub fn write_pcm16_wav(path: &Path, samples: &[i16], sample_rate: u32) -> VoiceResult<()> {
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| VoiceError::io(format!("create {}", parent.display()), e))?;
+        std::fs::create_dir_all(parent).map_err(|e| VoiceError::io_at("create", &parent, e))?;
     }
-    let file =
-        File::create(path).map_err(|e| VoiceError::io(format!("create {}", path.display()), e))?;
+    let file = File::create(path).map_err(|e| VoiceError::io_at("create", &path, e))?;
     let mut out = BufWriter::new(file);
-    let write_err = |e| VoiceError::io(format!("write {}", path.display()), e);
+    let write_err = |e| VoiceError::io_at("write", &path, e);
 
     let channels: u16 = 1;
     let bits_per_sample: u16 = 16;
