@@ -16,7 +16,7 @@ import {
 } from "$lib/bindings";
 import { SvelteSet } from "svelte/reactivity";
 import { t } from "$lib/i18n/index.svelte";
-import { SETTINGS, type VoiceRuleSetting } from "$lib/settings-store";
+import { SETTINGS } from "$lib/settings-store";
 
 export function voiceErrorMessage(error: VoiceCommandError | unknown): string {
   if (
@@ -105,40 +105,24 @@ export function voiceOperationActive(): boolean {
   return VOICE.operation.kind !== "idle";
 }
 
-export function reconcileVoiceSettings(
+/** Drops a selected clone profile that no longer exists in the catalog. */
+export function reconcileSelectedProfile(
   catalog: VoiceCatalog,
-  rules: VoiceRuleSetting[],
   selectedProfileId: string | null,
-): { rules: VoiceRuleSetting[]; selectedProfileId: string | null } {
-  const phraseIds = new SvelteSet(catalog.phrases.map((phrase) => phrase.id));
+): string | null {
   const profileIds = new SvelteSet(
     catalog.profiles.map((profile) => profile.id),
   );
-  return {
-    rules: rules.filter((rule) => phraseIds.has(rule.phraseId)),
-    selectedProfileId:
-      selectedProfileId && profileIds.has(selectedProfileId)
-        ? selectedProfileId
-        : null,
-  };
+  return selectedProfileId && profileIds.has(selectedProfileId)
+    ? selectedProfileId
+    : null;
 }
 
 function applyReconciledVoiceSettings(catalog: VoiceCatalog) {
-  const currentRules = SETTINGS.voice.state.rules;
   const currentProfileId = SETTINGS.voice.state.selectedProfileId;
-  const reconciled = reconcileVoiceSettings(
-    catalog,
-    currentRules,
-    currentProfileId,
-  );
-  if (
-    reconciled.rules.length !== currentRules.length ||
-    reconciled.rules.some((rule, index) => rule.id !== currentRules[index]?.id)
-  ) {
-    SETTINGS.voice.state.rules = reconciled.rules;
-  }
-  if (reconciled.selectedProfileId !== currentProfileId) {
-    SETTINGS.voice.state.selectedProfileId = reconciled.selectedProfileId;
+  const reconciled = reconcileSelectedProfile(catalog, currentProfileId);
+  if (reconciled !== currentProfileId) {
+    SETTINGS.voice.state.selectedProfileId = reconciled;
   }
 }
 

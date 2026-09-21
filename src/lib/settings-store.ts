@@ -311,13 +311,13 @@ export const DEFAULT_LIVE_SORT_SETTINGS = {
   tankedSkills: { sortKey: "totalDmg", sortDesc: true },
 };
 
-export type VoiceTriggerKind = "buffGained" | "buffLost" | "bossDbm";
-
+/** @deprecated Legacy hand-authored rule shape; migrated into inline bindings on startup. */
 export type VoiceTriggerSetting =
   | { kind: "buffGained"; buffId: number }
   | { kind: "buffLost"; buffId: number }
   | { kind: "bossDbm"; baseSkillId: number };
 
+/** @deprecated See `VoiceTriggerSetting`. */
 export type VoiceRuleSetting = {
   id: string;
   enabled: boolean;
@@ -341,18 +341,12 @@ export type VoiceGenerationBackendSetting = "auto" | "cpu" | "vulkan";
 export type VoiceSourceSetting = "preset" | "clone" | "fineTuned";
 export type VoiceModelDownloadSource = "auto" | "huggingFace" | "hfMirror";
 
-export type VoicePhraseSetting = {
-  id: string;
-  name: string;
-  text: string;
-  language: "zhCn" | "enUs" | "jaJp";
-};
-
 export type VoiceSettingsConfig = {
   enabled: boolean;
   volume: number;
   queuePolicy: VoiceQueuePolicySetting;
-  rules: VoiceRuleSetting[];
+  /** @deprecated Drained by the one-shot legacy migration in `$lib/voice/sync.svelte.ts`. */
+  rules?: VoiceRuleSetting[];
   alertConfigs?: GameAlertVoiceConfigMap;
   selectedProfileId: string | null;
   selectedSource: VoiceSourceSetting;
@@ -365,7 +359,6 @@ export function createDefaultVoiceSettings(): VoiceSettingsConfig {
     enabled: false,
     volume: 1,
     queuePolicy: "dropLowPriority",
-    rules: [],
     alertConfigs: {},
     selectedProfileId: null,
     selectedSource: "preset",
@@ -376,7 +369,7 @@ export function createDefaultVoiceSettings(): VoiceSettingsConfig {
 
 /**
  * Where a voice binding's spoken text comes from. `auto` derives a template
- * phrase from the subject's display name (see `voice-binding-compile.ts`);
+ * phrase from the subject's display name (see `$lib/voice/subjects/*`);
  * `custom` lets the user type their own short line; `phrase` points at an
  * existing entry in the phrase library for reuse across bindings.
  */

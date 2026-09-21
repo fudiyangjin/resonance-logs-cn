@@ -5,7 +5,9 @@
  * scene's `resolveVoiceCues` (entity presence, skill-cast matching, etc. -
  * whatever that scene's mechanic logic already tracks). This module only
  * handles the generic part shared by every cue: deduplicating repeated
- * instances, resolving the bound phrase, and calling `voiceEnqueuePhrase`.
+ * instances and enqueueing the bound phrase. Phrase references play by id;
+ * auto/custom bindings play by managed name, so the HUD window needs no
+ * phrase-id cache of its own (the main window materializes the phrases).
  * Driven from pulled minimap frames in `minimap-events.svelte.ts`.
  */
 import { commands } from "$lib/bindings";
@@ -14,11 +16,8 @@ import {
   resolveVoicePriority,
   SETTINGS,
 } from "$lib/settings-store";
-import {
-  ensurePhraseId,
-  minimapCueEventKey,
-} from "$lib/voice-binding-compile.svelte.js";
-import { findMinimapVoiceCue } from "./scene-registry";
+import { managedPhraseName } from "$lib/voice/phrase-key";
+import { minimapCueRuleKey } from "$lib/voice/subjects/minimap-cue";
 import type { MinimapVoiceCueFire } from "./scene-types";
 import { MinimapVoiceCueDeduper } from "./minimap-voice-dedupe";
 
@@ -43,18 +42,19 @@ async function playCue(cueId: string): Promise<void> {
     SETTINGS.minimap.state.mechanicVoiceConfigs,
   )[cueId];
   if (!config?.enabled) return;
+  const priority = resolveVoicePriority(config.priority);
 
-  const autoText = findMinimapVoiceCue(cueId)?.autoText ?? "";
-  const phraseId = ensurePhraseId(
-    minimapCueEventKey(cueId),
-    config.phrase,
-    autoText,
-  );
-  if (!phraseId) return;
-
-  await commands.voiceEnqueuePhrase(
-    phraseId,
-    resolveVoicePriority(config.priority),
+  if (config.phrase.source === "phrase") {
+    const phraseId = config.phrase.phraseId.trim();
+    if (phraseId) await commands.voiceEnqueuePhrase(phraseId, priority);
+    return;
+  }
+  await commands.voiceEnqueuePhraseByName(
+    managedPhraseName({
+      source: config.phrase.source,
+      ruleKey: minimapCueRuleKey(cueId),
+    }),
+    priority,
   );
 }
 

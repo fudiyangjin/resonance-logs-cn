@@ -23,6 +23,8 @@ export type VoiceBindingOverviewEntry = {
   subjectLabel: string;
   eventLabelKey: MessageKey;
   binding: VoicePhraseBinding;
+  /** Auto text for `binding.source === "auto"` (seconds already substituted). */
+  autoText: string;
   phraseId: string | null;
   language: VoiceLanguage;
   /** True when the app bundle already contains playable audio for this binding. */
@@ -43,6 +45,7 @@ export function overviewEntryOf(
     subjectLabel: binding.subjectLabel,
     eventLabelKey: `voice.binding.event.${binding.eventKind}`,
     binding: binding.phrase,
+    autoText: binding.autoText,
     phraseId: resolvePhraseId(binding, index),
     language: binding.language,
     bundledFallback: binding.bundledFallback,

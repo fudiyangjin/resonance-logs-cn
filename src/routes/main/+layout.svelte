@@ -24,11 +24,10 @@
   } from "$lib/overlay-window-visibility.svelte";
   import {
     buildMonitorRuntimeSnapshot,
-    buildVoiceRuntimeSnapshot,
     createMonitorRuntimeSnapshotSignature,
     saveAndApplyMonitorRuntimeSnapshot,
-    saveAndApplyVoiceRuntimeSnapshot,
   } from "$lib/runtime-monitor-sync";
+  import { startVoiceRuntimeSync } from "$lib/voice/sync.svelte";
   import { onMount, untrack } from "svelte";
   import { initBuffIconDir } from "$lib/buff-icon-dir.svelte";
   import {
@@ -100,23 +99,10 @@
     }
   });
 
-  // Voice rules sync on their own lane so a volume change never re-applies
-  // the (much heavier) monitor snapshot, and vice versa.
-  let lastVoiceSnapshotKey = "";
-  let voiceSyncTimer: ReturnType<typeof setTimeout> | null = null;
-
-  $effect(() => {
-    const voiceSnapshot = buildVoiceRuntimeSnapshot();
-    const voiceSnapshotKey = createMonitorRuntimeSnapshotSignature(voiceSnapshot);
-    if (voiceSnapshotKey === lastVoiceSnapshotKey) return;
-    lastVoiceSnapshotKey = voiceSnapshotKey;
-    if (voiceSyncTimer) clearTimeout(voiceSyncTimer);
-    voiceSyncTimer = setTimeout(() => {
-      void saveAndApplyVoiceRuntimeSnapshot(voiceSnapshot).catch((error) => {
-        console.error("[runtime-monitor] failed to sync voice snapshot", error);
-      });
-    }, 50);
-  });
+  // Voice bindings sync on their own lane (phrase materialization + debounced
+  // ApplyVoiceConfig) so a volume change never re-applies the monitor
+  // snapshot, and vice versa.
+  const stopVoiceRuntimeSync = startVoiceRuntimeSync();
 
   // The three HUD domains share one physical overlay window, so their
   // visibility is resolved by one shared rule instead of three hand-rolled
@@ -299,10 +285,7 @@
         clearTimeout(runtimeSyncTimer);
         runtimeSyncTimer = null;
       }
-      if (voiceSyncTimer) {
-        clearTimeout(voiceSyncTimer);
-        voiceSyncTimer = null;
-      }
+      stopVoiceRuntimeSync();
       if (navigateUnlisten) {
         navigateUnlisten();
         navigateUnlisten = null;

@@ -18,10 +18,6 @@ import {
   getSeasonCultivateFactorTemplates,
   resolveUserCounterRulesToPresets,
 } from "$lib/skill-mappings";
-import {
-  compileVoiceRules,
-  prepareMinimapVoicePhrases,
-} from "$lib/voice-binding-compile.svelte.js";
 import { getEnabledCounterVoiceRuleIds } from "$lib/voice-binding-counter";
 
 function uniqueSortedNumbers(values: number[]): number[] {
@@ -197,30 +193,6 @@ function buildTeammateRuntimeSnapshot(): MonitorRuntimeSnapshot["teammate"] {
   };
 }
 
-/**
- * Voice rules travel on their own IPC lane (`saveAndApplyVoiceRuntimeSnapshot`),
- * so a volume tweak no longer re-applies the whole monitor snapshot.
- */
-export function buildVoiceRuntimeSnapshot(): VoiceRuntimeSnapshot {
-  const voice = SETTINGS.voice.state;
-  prepareMinimapVoicePhrases();
-  if (!voice.enabled) {
-    return {
-      enabled: false,
-      volume: voice.volume,
-      queuePolicy: voice.queuePolicy,
-      rules: [],
-    };
-  }
-
-  return {
-    enabled: true,
-    volume: voice.volume,
-    queuePolicy: voice.queuePolicy,
-    rules: compileVoiceRules(),
-  };
-}
-
 export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
   return {
     i18n: {
@@ -238,11 +210,15 @@ export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
 }
 
 export function createMonitorRuntimeSnapshotSignature(
-  snapshot: MonitorRuntimeSnapshot | VoiceRuntimeSnapshot,
+  snapshot: MonitorRuntimeSnapshot,
 ): string {
   return JSON.stringify(snapshot);
 }
 
+/**
+ * Voice rules travel on their own IPC lane so a volume tweak never
+ * re-applies the whole monitor snapshot; see `$lib/voice/sync.svelte.ts`.
+ */
 export async function saveAndApplyVoiceRuntimeSnapshot(
   snapshot: VoiceRuntimeSnapshot,
 ): Promise<void> {

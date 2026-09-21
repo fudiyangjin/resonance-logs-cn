@@ -40,7 +40,7 @@
     type BuffAlertRule,
   } from "$lib/settings-store";
   import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
-  import { resolveMonsterBuffSourceScope } from "$lib/voice-binding-compile.svelte.js";
+  import { resolveMonsterBuffSourceScope as resolveScopeIn } from "$lib/voice/subjects/monster-buff";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
   import TabEntityDuration from "./tab-entity-duration.svelte";
   import {
@@ -117,6 +117,8 @@
   let activeTab = $state<MonsterMonitorTab>("buff");
 
   const monsterMonitor = $derived(SETTINGS.monsterMonitor.state);
+  const resolveMonsterBuffSourceScope = (buffId: number) =>
+    resolveScopeIn(monsterMonitor, buffId);
   const buffAliases = $derived.by(() => getGlobalBuffAliases());
   const buffIconOverrides = $derived.by(() =>
     ensureBuffIconOverrides(SETTINGS.skillMonitor.state.buffIconOverrides),

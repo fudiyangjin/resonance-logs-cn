@@ -20,12 +20,14 @@
   import { runVoiceGeneration, VOICE } from "$lib/stores/voice-store.svelte";
   import { presetSourceForLocale } from "$lib/voice-preset-source";
   import {
-    hasTierPlaceholder,
     listVoiceBindingOverview,
-    materializeBindingPhraseIds,
-    TIERED_PHRASE_COUNT,
+    overviewGroups,
     type VoiceBindingOverviewEntry,
-  } from "$lib/voice-binding-compile.svelte.js";
+  } from "$lib/voice/overview";
+  import { hasTierPlaceholder, TIERED_PHRASE_COUNT } from "$lib/voice/phrase-key";
+  import { materializeBindingPhraseIds } from "$lib/voice/preview.svelte";
+  import { currentPhraseIndex } from "$lib/voice/sync.svelte";
+  import { buildVoiceBindingView } from "$lib/voice/view";
 
   const operationActive = $derived(VOICE.operation.kind !== "idle");
   const generating = $derived(
@@ -33,7 +35,9 @@
       VOICE.generationPhase === "cancelling",
   );
 
-  const entries = $derived(listVoiceBindingOverview());
+  const entries = $derived(
+    listVoiceBindingOverview(buildVoiceBindingView(), currentPhraseIndex()),
+  );
   const phrasesById = $derived(
     new Map((VOICE.status?.catalog.phrases ?? []).map((p) => [p.id, p])),
   );
@@ -98,66 +102,19 @@
     return ids.every((id) => !!phrasesById.get(id)?.activeAssetId);
   }
 
-  const groups = $derived.by(() => {
-    const buff = entries.filter((e) => e.navigateTo === "buff");
-    const monsterBuff = entries.filter((e) => e.navigateTo === "monsterBuff");
-    const counter = entries.filter((e) => e.navigateTo === "counter");
-    const dbm = entries.filter((e) => e.navigateTo === "dbm");
-    const minimap = entries.filter((e) => e.navigateTo === "minimap");
-    const alerts = entries.filter((e) => e.navigateTo === "alerts");
-    return [
-      {
-        navigateTo: "buff" as const,
-        titleKey: "skillMonitor.buff.title" as const,
-        navigateKey: "voice.bindings.navigate.buff" as const,
-        items: buff,
-      },
-      {
-        navigateTo: "monsterBuff" as const,
-        titleKey: "monsterMonitor.buff.title" as const,
-        navigateKey: "voice.bindings.navigate.monsterBuff" as const,
-        items: monsterBuff,
-      },
-      {
-        navigateTo: "counter" as const,
-        titleKey: "skillMonitor.customPanel.rule.title" as const,
-        navigateKey: "voice.bindings.navigate.counter" as const,
-        items: counter,
-      },
-      {
-        navigateTo: "dbm" as const,
-        titleKey: "monsterMonitor.bossDbm.title" as const,
-        navigateKey: "voice.bindings.navigate.dbm" as const,
-        items: dbm,
-      },
-      {
-        navigateTo: "minimap" as const,
-        titleKey: "minimap.settings.voiceCues.title" as const,
-        navigateKey: "voice.bindings.navigate.minimap" as const,
-        items: minimap,
-      },
-      {
-        navigateTo: "alerts" as const,
-        titleKey: "voice.alerts.title" as const,
-        navigateKey: "voice.bindings.navigate.alerts" as const,
-        items: alerts,
-      },
-    ].filter((group) => group.items.length > 0);
-  });
+  const groups = $derived(
+    overviewGroups()
+      .map((meta) => ({
+        navigateTo: meta.group,
+        titleKey: meta.titleKey,
+        navigateKey: meta.navigateKey,
+        route: meta.route,
+        items: entries.filter((e) => e.navigateTo === meta.group),
+      }))
+      .filter((group) => group.items.length > 0),
+  );
 
   const pendingCount = $derived(entries.filter((e) => !isReady(e)).length);
-
-  function navigate(target: VoiceBindingOverviewEntry["navigateTo"]) {
-    if (target === "minimap") {
-      void goto("/main/minimap");
-    } else if (target === "alerts") {
-      void goto("/main/voice?tab=alerts");
-    } else if (target === "dbm" || target === "monsterBuff") {
-      void goto("/main/monster-monitor");
-    } else {
-      void goto("/main/skill-monitor");
-    }
-  }
 
   let generateMessage = $state<string | null>(null);
   let previewingId = $state<string | null>(null);
@@ -199,6 +156,7 @@
       const ids = await materializeBindingPhraseIds(
         entry.id,
         entry.binding,
+        entry.autoText,
         entry.language,
       );
       missingIds.push(
@@ -284,7 +242,7 @@
           <button
             type="button"
             class="border-border/60 hover:bg-muted/40 rounded border px-2 py-1 text-xs"
-            onclick={() => navigate(group.navigateTo)}
+            onclick={() => void goto(group.route)}
           >
             {t(group.navigateKey)}
           </button>

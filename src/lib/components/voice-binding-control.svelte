@@ -18,7 +18,7 @@
     type VoicePhraseBinding,
   } from "$lib/settings-store";
   import { VOICE } from "$lib/stores/voice-store.svelte";
-  import { previewPhraseBinding } from "$lib/voice-binding-compile.svelte.js";
+  import { previewPhraseBinding } from "$lib/voice/preview.svelte";
   import {
     subjectEvents,
     updateSubjectEvent,

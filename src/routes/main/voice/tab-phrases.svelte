@@ -32,7 +32,7 @@
   import {
     classifyOrphanPhrases,
     collectReferencedVoiceKeys,
-  } from "$lib/voice-phrase-gc";
+  } from "$lib/voice/gc";
 
   const status = $derived(VOICE.status);
   const phrases = $derived(status?.catalog.phrases ?? []);
