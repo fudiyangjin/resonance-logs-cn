@@ -104,6 +104,19 @@ async saveAndApplyMonitorRuntimeSnapshot(snapshot: MonitorRuntimeSnapshot) : Pro
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Persists and hot-applies the voice rule set independently of the
+ * monitor snapshot. Rules with unsupported (subject, event) pairs are
+ * dropped by `normalize()` with a warning rather than rejecting the sync.
+ */
+async saveAndApplyVoiceRuntimeSnapshot(snapshot: VoiceRuntimeSnapshot) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_and_apply_voice_runtime_snapshot", { snapshot }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getUniqueSceneIds() : Promise<Result<SceneIdsResult, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_unique_scene_ids") };
@@ -464,6 +477,18 @@ async voiceTestTrigger(phraseId: string) : Promise<Result<null, VoiceCommandErro
 async voiceEnqueuePhrase(phraseId: string, priority: number) : Promise<Result<null, VoiceCommandError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("voice_enqueue_phrase", { phraseId, priority }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Plays the phrase with managed name `name` through the production cue
+ * path. Returns whether a phrase with that name existed.
+ */
+async voiceEnqueuePhraseByName(name: string, priority: number) : Promise<Result<boolean, VoiceCommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("voice_enqueue_phrase_by_name", { name, priority }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -973,7 +998,7 @@ export type ModelState = { kind: "notInstalled" } | { kind: "installing" } | { k
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
-export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot; voice: VoiceRuntimeSnapshot }
+export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot }
 /**
  * Which caster population a monster-buff voice rule observes.
  */

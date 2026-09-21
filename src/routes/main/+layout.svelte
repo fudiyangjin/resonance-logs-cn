@@ -24,8 +24,10 @@
   } from "$lib/overlay-window-visibility.svelte";
   import {
     buildMonitorRuntimeSnapshot,
+    buildVoiceRuntimeSnapshot,
     createMonitorRuntimeSnapshotSignature,
     saveAndApplyMonitorRuntimeSnapshot,
+    saveAndApplyVoiceRuntimeSnapshot,
   } from "$lib/runtime-monitor-sync";
   import { onMount, untrack } from "svelte";
   import { initBuffIconDir } from "$lib/buff-icon-dir.svelte";
@@ -96,6 +98,24 @@
     } else if (runtimeSnapshotKey !== lastRuntimeSnapshotKey) {
       queueRuntimeSnapshotSync(runtimeSnapshot, runtimeSnapshotKey);
     }
+  });
+
+  // Voice rules sync on their own lane so a volume change never re-applies
+  // the (much heavier) monitor snapshot, and vice versa.
+  let lastVoiceSnapshotKey = "";
+  let voiceSyncTimer: ReturnType<typeof setTimeout> | null = null;
+
+  $effect(() => {
+    const voiceSnapshot = buildVoiceRuntimeSnapshot();
+    const voiceSnapshotKey = createMonitorRuntimeSnapshotSignature(voiceSnapshot);
+    if (voiceSnapshotKey === lastVoiceSnapshotKey) return;
+    lastVoiceSnapshotKey = voiceSnapshotKey;
+    if (voiceSyncTimer) clearTimeout(voiceSyncTimer);
+    voiceSyncTimer = setTimeout(() => {
+      void saveAndApplyVoiceRuntimeSnapshot(voiceSnapshot).catch((error) => {
+        console.error("[runtime-monitor] failed to sync voice snapshot", error);
+      });
+    }, 50);
   });
 
   // The three HUD domains share one physical overlay window, so their
@@ -278,6 +298,10 @@
       if (runtimeSyncTimer) {
         clearTimeout(runtimeSyncTimer);
         runtimeSyncTimer = null;
+      }
+      if (voiceSyncTimer) {
+        clearTimeout(voiceSyncTimer);
+        voiceSyncTimer = null;
       }
       if (navigateUnlisten) {
         navigateUnlisten();

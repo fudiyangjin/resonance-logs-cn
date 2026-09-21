@@ -5,6 +5,7 @@ use std::time::Duration;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
+use crate::voice::models::VoiceRuntimeSnapshot;
 const CONTROL_CAPACITY: usize = 64;
 const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -13,6 +14,8 @@ pub enum RuntimeCommand {
     ManualReset,
     TogglePause,
     ApplyMonitorConfig(MonitorRuntimeSnapshot),
+    /// Already normalized by the command handler; applying it cannot fail.
+    ApplyVoiceConfig(VoiceRuntimeSnapshot),
     StartTraining,
     StopTraining,
     Shutdown {
@@ -45,6 +48,10 @@ impl LiveRuntimeHandle {
     ) -> Result<(), String> {
         self.send(RuntimeCommand::ApplyMonitorConfig(snapshot))
             .await
+    }
+
+    pub async fn apply_voice_config(&self, snapshot: VoiceRuntimeSnapshot) -> Result<(), String> {
+        self.send(RuntimeCommand::ApplyVoiceConfig(snapshot)).await
     }
 
     pub async fn start_training(&self) -> Result<(), String> {

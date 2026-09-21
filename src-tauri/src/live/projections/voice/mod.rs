@@ -6,7 +6,6 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
 use crate::live::counter::engine::{CounterEngine, CounterNamespace};
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
@@ -14,8 +13,8 @@ use crate::live::runtime::events::{
 };
 use crate::live::runtime::scheduler::DeadlineScheduler;
 use crate::voice::models::{
-    AlertKind, MonsterBuffSourceScope, VoiceCueIntent, VoiceEvent, VoiceRule, VoiceSubject,
-    VoiceTrigger,
+    AlertKind, MonsterBuffSourceScope, VoiceCueIntent, VoiceEvent, VoiceRule, VoiceRuntimeSnapshot,
+    VoiceSubject, VoiceTrigger,
 };
 
 mod deadline;
@@ -177,7 +176,7 @@ impl VoiceProjection {
 
     pub fn apply_config(
         &mut self,
-        config: &MonitorRuntimeSnapshot,
+        config: &VoiceRuntimeSnapshot,
         entities: &EntityContext,
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
@@ -187,7 +186,7 @@ impl VoiceProjection {
         }
         self.deadlines.clear();
         self.rule_set = self.rule_set.wrapping_add(1).max(1);
-        self.rules.clone_from(&config.voice.rules);
+        self.rules.clone_from(&config.rules);
         self.rebuild_rule_indexes();
         self.last_fire_ms.clear();
         self.counter_crossed.clear();

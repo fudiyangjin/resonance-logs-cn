@@ -6,6 +6,8 @@ use crate::live::ipc::models::{
 };
 use crate::live::ipc::publisher::LivePublicationCache;
 use crate::live::runtime_handle::LiveRuntimeHandle;
+use crate::live::voice_runtime_config::save_voice_runtime_snapshot;
+use crate::voice::models::VoiceRuntimeSnapshot;
 use tauri::Manager;
 use window_vibrancy::{apply_blur, clear_blur};
 
@@ -132,4 +134,19 @@ pub async fn save_and_apply_monitor_runtime_snapshot(
     let snapshot = snapshot.normalize()?;
     save_monitor_runtime_snapshot(&app_handle, &snapshot)?;
     runtime.apply_monitor_config(snapshot).await
+}
+
+/// Persists and hot-applies the voice rule set independently of the
+/// monitor snapshot. Rules with unsupported (subject, event) pairs are
+/// dropped by `normalize()` with a warning rather than rejecting the sync.
+#[tauri::command]
+#[specta::specta]
+pub async fn save_and_apply_voice_runtime_snapshot(
+    mut snapshot: VoiceRuntimeSnapshot,
+    app_handle: tauri::AppHandle,
+    runtime: tauri::State<'_, LiveRuntimeHandle>,
+) -> Result<(), String> {
+    snapshot.normalize();
+    save_voice_runtime_snapshot(&app_handle, &snapshot)?;
+    runtime.apply_voice_config(snapshot).await
 }

@@ -2,6 +2,7 @@ import {
   commands,
   type CounterRule,
   type MonitorRuntimeSnapshot,
+  type VoiceRuntimeSnapshot,
 } from "$lib/bindings";
 import {
   buildBuffTimelineIds,
@@ -196,7 +197,11 @@ function buildTeammateRuntimeSnapshot(): MonitorRuntimeSnapshot["teammate"] {
   };
 }
 
-function buildVoiceRuntimeSnapshot(): MonitorRuntimeSnapshot["voice"] {
+/**
+ * Voice rules travel on their own IPC lane (`saveAndApplyVoiceRuntimeSnapshot`),
+ * so a volume tweak no longer re-applies the whole monitor snapshot.
+ */
+export function buildVoiceRuntimeSnapshot(): VoiceRuntimeSnapshot {
   const voice = SETTINGS.voice.state;
   prepareMinimapVoicePhrases();
   if (!voice.enabled) {
@@ -229,14 +234,22 @@ export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
     skill: buildSkillRuntimeSnapshot(),
     monster: buildMonsterRuntimeSnapshot(),
     teammate: buildTeammateRuntimeSnapshot(),
-    voice: buildVoiceRuntimeSnapshot(),
   };
 }
 
 export function createMonitorRuntimeSnapshotSignature(
-  snapshot: MonitorRuntimeSnapshot,
+  snapshot: MonitorRuntimeSnapshot | VoiceRuntimeSnapshot,
 ): string {
   return JSON.stringify(snapshot);
+}
+
+export async function saveAndApplyVoiceRuntimeSnapshot(
+  snapshot: VoiceRuntimeSnapshot,
+): Promise<void> {
+  const result = await commands.saveAndApplyVoiceRuntimeSnapshot(snapshot);
+  if (result.status === "error") {
+    throw new Error(String(result.error));
+  }
 }
 
 export async function saveAndApplyMonitorRuntimeSnapshot(

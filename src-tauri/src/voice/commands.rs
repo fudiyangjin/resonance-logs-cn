@@ -376,6 +376,18 @@ pub fn voice_enqueue_phrase(
     Ok(())
 }
 
+/// Plays the phrase with managed name `name` through the production cue
+/// path. Returns whether a phrase with that name existed.
+#[tauri::command]
+#[specta::specta]
+pub fn voice_enqueue_phrase_by_name(
+    voice: State<'_, VoiceService>,
+    name: String,
+    priority: u8,
+) -> CommandResult<bool> {
+    Ok(voice.enqueue_phrase_by_name(&name, priority))
+}
+
 /// Creates-or-updates a phrase by `name`, used by the frontend voice
 /// binding compiler so "auto"/"custom" bindings resolve to a stable phrase
 /// id without the user visiting the phrase library manually.

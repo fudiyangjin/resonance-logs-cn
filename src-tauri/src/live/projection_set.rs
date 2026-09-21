@@ -26,7 +26,7 @@ use crate::live::runtime::events::{
 };
 use crate::live::runtime::scheduler::{DeadlineScheduler, DueTimer};
 use crate::live::runtime::segment::SegmentState;
-use crate::voice::models::VoiceCueIntent;
+use crate::voice::models::{VoiceCueIntent, VoiceRuntimeSnapshot};
 
 /// Topics served by [`EntityMonitorProjection::snapshot`].
 const MONITORED_TOPICS: TopicMask = TopicMask::STATUS
@@ -127,8 +127,6 @@ impl ProjectionSet {
             )
             .map_err(|error| error.to_string())?;
         self.entity_monitor.apply_config(config.as_ref(), entities);
-        self.voice
-            .apply_config(&config, entities, now_mono, scheduler);
         {
             let combat = &self.combat;
             let current_offset = combat
@@ -149,6 +147,24 @@ impl ProjectionSet {
         self.counter_side_effect_dirty = true;
         self.dirty |= SEGMENT_TOPICS;
         Ok(())
+    }
+
+    /// Replaces the voice rule set. Counter-derived deadlines are re-armed
+    /// right away rather than via `counter_side_effect_dirty`: the dirty
+    /// flag only flushes at the end of a *batch*, and an idle runtime may
+    /// not see one for a long time after the user edits a rule.
+    pub fn apply_voice_config(
+        &mut self,
+        config: &VoiceRuntimeSnapshot,
+        entities: &EntityContext,
+        now_wall_ms: i64,
+        now_mono: MonoTimeMs,
+        scheduler: &mut DeadlineScheduler,
+    ) {
+        self.voice
+            .apply_config(config, entities, now_mono, scheduler);
+        self.voice
+            .apply_counters(&self.counter, now_wall_ms, now_mono, scheduler);
     }
 
     pub fn begin_batch(&mut self, batch_id: crate::live::runtime::events::BatchId) {

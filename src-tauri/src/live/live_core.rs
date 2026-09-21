@@ -24,6 +24,7 @@ use crate::live::runtime::events::{
 use crate::live::runtime::scheduler::{DeadlineScheduler, TimerTask};
 use crate::live::runtime::segment::{CombatGate, SegmentController, SegmentState};
 use crate::live::runtime_handle::RuntimeCommand;
+use crate::voice::models::VoiceRuntimeSnapshot;
 
 #[derive(Debug, Default)]
 pub struct Publications {
@@ -72,14 +73,23 @@ impl LiveCore {
         app: AppHandle,
         history_writer: HistoryWriterHandle,
         initial_config: MonitorRuntimeSnapshot,
+        mut initial_voice: VoiceRuntimeSnapshot,
     ) -> Result<Self, String> {
         let config = Arc::new(initial_config.normalize()?);
+        initial_voice.normalize();
         let now = monotonic_now_ms();
+        let wall_now = wall_now_ms();
         let mut scheduler = DeadlineScheduler::new();
         let mut entities = EntityContext::new();
         let mut projections = ProjectionSet::new(history_writer);
         projections.apply_config(Arc::clone(&config), &entities, now, &mut scheduler)?;
+        projections.apply_voice_config(&initial_voice, &entities, wall_now, now, &mut scheduler);
         entities.set_watched_skill_ids(watched_skill_ids(&config));
+        // Seed the player before any cue can be produced: without this the
+        // worker keeps its `enabled=true, volume=1.0` defaults until the main
+        // window's first sync, and a cold start straight into a dungeon
+        // would play HUD cues at full volume even with voice switched off.
+        sync_voice_service_settings(&app, &initial_voice);
 
         let mut core = Self {
             app,
@@ -93,7 +103,7 @@ impl LiveCore {
             next_synthetic_batch: u64::MAX,
             clock_anchor: ClockAnchor {
                 mono: now,
-                wall_ms: wall_now_ms(),
+                wall_ms: wall_now,
             },
             live_publish_interval_ms: config.live.event_update_rate_ms,
             publish: [PublishSchedule::default(); Topic::COUNT],
@@ -265,6 +275,10 @@ impl LiveCore {
                 self.apply_config(config)?;
                 Ok(LiveCoreFlow::Continue)
             }
+            RuntimeCommand::ApplyVoiceConfig(snapshot) => {
+                self.apply_voice_config(snapshot)?;
+                Ok(LiveCoreFlow::Continue)
+            }
             RuntimeCommand::StartTraining => {
                 let now = self.refresh_clock();
                 self.drain_due_through(now)?;
@@ -367,15 +381,30 @@ impl LiveCore {
         )?;
         self.entities
             .set_watched_skill_ids(watched_skill_ids(&config));
+        self.flush_voice_cues();
+        self.request_publications(now, true);
+        Ok(())
+    }
+
+    /// Applies a pre-normalized voice snapshot. Only the deadline drain can
+    /// fail here (history persistence), same as every other command; the
+    /// voice-specific part is infallible so a bad rule can never take the
+    /// runtime down — validation happens in the Tauri command instead.
+    fn apply_voice_config(&mut self, mut snapshot: VoiceRuntimeSnapshot) -> Result<(), String> {
+        snapshot.normalize();
+        let now = self.refresh_clock();
+        self.drain_due_through(now)?;
+        let now_wall = self.wall_at(now);
+        self.projections.apply_voice_config(
+            &snapshot,
+            &self.entities,
+            now_wall,
+            now,
+            &mut self.scheduler,
+        );
         // Playback settings are a service concern, not projection state: sync
         // them here so `VoiceProjection` stays free of the Tauri handle.
-        if let Some(service) = self.app.try_state::<crate::voice::VoiceService>() {
-            service.apply_runtime_settings(
-                config.voice.enabled,
-                config.voice.volume,
-                config.voice.queue_policy,
-            );
-        }
+        sync_voice_service_settings(&self.app, &snapshot);
         self.flush_voice_cues();
         self.request_publications(now, true);
         Ok(())
@@ -782,6 +811,12 @@ fn nonnegative_int_attr(entity: &EntityState, attr_id: i32) -> Option<u128> {
         return None;
     };
     u128::try_from(*value).ok()
+}
+
+fn sync_voice_service_settings(app: &AppHandle, snapshot: &VoiceRuntimeSnapshot) {
+    if let Some(service) = app.try_state::<crate::voice::VoiceService>() {
+        service.apply_runtime_settings(snapshot.enabled, snapshot.volume, snapshot.queue_policy);
+    }
 }
 
 fn watched_skill_ids(config: &MonitorRuntimeSnapshot) -> HashSet<i32> {

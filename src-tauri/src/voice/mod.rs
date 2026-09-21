@@ -505,6 +505,33 @@ impl VoiceService {
         });
     }
 
+    /// Like [`Self::enqueue_phrase`] but resolves the phrase by its managed
+    /// `name` (e.g. `auto:voice:minimap:...`), so HUD windows can play a
+    /// binding without keeping their own phrase-id cache in sync with the
+    /// main window. Returns `false` (and plays nothing) when no phrase has
+    /// that name yet — the main window has not materialized it.
+    pub fn enqueue_phrase_by_name(&self, name: &str, priority: u8) -> bool {
+        let phrase_id = {
+            let catalog = self.inner.catalog.lock();
+            catalog
+                .phrases
+                .iter()
+                .find(|phrase| phrase.name == name)
+                .map(|phrase| phrase.id.clone())
+        };
+        let Some(phrase_id) = phrase_id else {
+            warn!(target: "app::voice", "no phrase named {name:?}; dropping cue");
+            return false;
+        };
+        self.enqueue_cue(VoiceCueIntent {
+            rule_id: format!("frontend_{name}"),
+            phrase_id,
+            priority,
+            triggered_at_ms: now_ms(),
+        });
+        true
+    }
+
     /// Creates a phrase named `name` if none exists yet, otherwise updates
     /// its text/language in place. Used by the frontend binding compiler so
     /// "auto" and "custom" phrase bindings resolve to a stable phrase id

@@ -17,7 +17,9 @@ use crate::live::ipc::topic::Topic;
 use crate::live::live_core::{LiveCore, LiveCoreFlow, Publications};
 use crate::live::runtime::events::{MonoTimeMs, monotonic_now_ms};
 use crate::live::runtime_handle::RuntimeCommand;
+use crate::live::voice_runtime_config::load_voice_runtime_snapshot;
 use crate::packets;
+use crate::voice::models::VoiceRuntimeSnapshot;
 use crate::packets::packet_capture::CaptureMethod;
 use crate::packets::packet_process::CAPTURE_PIPELINE_FENCE;
 
@@ -35,7 +37,16 @@ pub async fn start(
         info!(target: "app::live", "monitor runtime snapshot missing; using defaults");
         MonitorRuntimeSnapshot::default()
     });
-    let mut core = match LiveCore::new(app.clone(), history_writer.clone(), initial_config) {
+    let initial_voice = load_voice_runtime_snapshot(&app).unwrap_or_else(|| {
+        info!(target: "app::live", "voice runtime snapshot missing; voice stays off until the main window syncs");
+        VoiceRuntimeSnapshot::default()
+    });
+    let mut core = match LiveCore::new(
+        app.clone(),
+        history_writer.clone(),
+        initial_config,
+        initial_voice,
+    ) {
         Ok(core) => core,
         Err(error) => {
             error!(target: "app::live", "live_core_start_failed error={error}");
