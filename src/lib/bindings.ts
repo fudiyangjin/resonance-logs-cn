@@ -1082,7 +1082,21 @@ calculatedDuration: number;
 /**
  * Cooldown accelerate rate for this skill
  */
-cdAccelerateRate: number }
+cdAccelerateRate: number;
+/**
+ * Wall-clock moment the skill becomes usable again (`None` when it is
+ * usable now or readiness is not time-driven). Mirrors the voice
+ * projection's ready deadline so HUD and announcements agree.
+ */
+readyAtMs?: number | null;
+/**
+ * Multi-charge capacity from `meter-data/SkillChargeTable.json`.
+ */
+maxCharges?: number | null;
+/**
+ * Resource-slot capacity from `meter-data/SkillChargeTable.json`.
+ */
+maxValidCdTime?: number | null }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[]; seasonCultivateFactorTemplates: FactorCounterTemplate[];
 /**
  * Coverage watch list: these buff ids are tracked for live coverage on

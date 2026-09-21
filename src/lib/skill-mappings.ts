@@ -25,8 +25,6 @@ export type SkillDisplayInfo = {
   skillId: number;
   name: string;
   imagePath: string;
-  maxCharges?: number;
-  maxValidCdTime?: number;
   resourceRequirement?: ResourceRequirement;
 };
 
@@ -96,8 +94,6 @@ type ResonanceSkillIconRaw = {
   id: number;
   NameDesign: string;
   Icon: string;
-  maxCharges?: number;
-  maxValidCdTime?: number;
 };
 
 export type ResonanceSkillDefinition = SkillDisplayInfo;
@@ -628,12 +624,6 @@ function buildResonanceSkills(
       skillId: skill.id,
       name: localizedText(override?.NameDesign, skill.NameDesign),
       imagePath: `/images/resonance_skill/${skill.Icon}`,
-      ...(skill.maxCharges !== undefined
-        ? { maxCharges: skill.maxCharges }
-        : {}),
-      ...(skill.maxValidCdTime !== undefined
-        ? { maxValidCdTime: skill.maxValidCdTime }
-        : {}),
     };
   });
 }

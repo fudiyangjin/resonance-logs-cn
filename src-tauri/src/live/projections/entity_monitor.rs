@@ -15,7 +15,7 @@ use crate::live::protocol::attrs as attr_type;
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
     AttributeValue, BuffState, DomainEnvelope, DomainEvent, EntityIdentity, EntityRef, EntityUuid,
-    FantasyTransition, TimerKey, TimerScope, wall_now_ms,
+    FantasyTransition, MonoTimeMs, TimerKey, TimerScope, wall_now_ms,
 };
 use crate::live::runtime::scheduler::{DeadlineScheduler, TimerTask};
 
@@ -137,12 +137,49 @@ impl BuffPublishFilter {
     }
 }
 
+/// One local-player cooldown entry plus the monotonic receipt time the
+/// scheduler needs (the DTO's `received_at` is wall clock, for the HUD).
+#[derive(Debug, Clone)]
+pub struct SkillCdRecord {
+    pub state: SkillCdState,
+    pub received_mono_ms: MonoTimeMs,
+}
+
+impl SkillCdRecord {
+    #[must_use]
+    pub fn skill_id(&self) -> i32 {
+        self.state.skill_level_id / 100
+    }
+
+    /// Readiness from the current `state`, using the bundled charge table.
+    #[must_use]
+    pub fn readiness(&self) -> skill_cd::CooldownReadiness {
+        skill_cd::ready_deadline(
+            &self.state,
+            self.received_mono_ms,
+            skill_cd::skill_charge(self.skill_id()),
+        )
+    }
+
+    /// Re-derives the DTO's readiness / charge fields after `state`'s
+    /// duration inputs changed.
+    fn refresh_derived(&mut self) {
+        let charge = skill_cd::skill_charge(self.skill_id());
+        self.state.max_charges = charge.and_then(|charge| charge.max_charges);
+        self.state.max_valid_cd_time = charge.and_then(|charge| charge.max_valid_cd_time);
+        self.state.ready_at_ms = self.readiness().ready_deadline.map(|deadline| {
+            let offset = deadline.0.saturating_sub(self.received_mono_ms.0);
+            self.state.received_at.saturating_add(offset as i64)
+        });
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct EntityMonitorProjection {
     buff_filter: BuffPublishFilter,
     local_player: Option<EntityRef>,
     current_target: Option<EntityRef>,
-    skill_cds: HashMap<i32, SkillCdState>,
+    skill_cds: HashMap<i32, SkillCdRecord>,
     monitored_panel_attr_ids: HashSet<i32>,
     panel_attrs: HashMap<i32, i32>,
     shield_current_hp: i64,
@@ -376,9 +413,8 @@ impl EntityMonitorProjection {
                     // the local interpolation clock on each upsert.
                     let (calculated_duration, cd_accelerate_rate) =
                         self.calculate_duration(cooldown.skill_level_id, duration, entities);
-                    self.skill_cds.insert(
-                        cooldown.skill_level_id,
-                        SkillCdState {
+                    let mut record = SkillCdRecord {
+                        state: SkillCdState {
                             skill_level_id: cooldown.skill_level_id,
                             begin_time,
                             duration,
@@ -387,8 +423,14 @@ impl EntityMonitorProjection {
                             received_at: envelope.occurred_at_ms,
                             calculated_duration,
                             cd_accelerate_rate,
+                            ready_at_ms: None,
+                            max_charges: None,
+                            max_valid_cd_time: None,
                         },
-                    );
+                        received_mono_ms: envelope.meta.mono_ms(),
+                    };
+                    record.refresh_derived();
+                    self.skill_cds.insert(cooldown.skill_level_id, record);
                 }
                 TopicMask::STATUS
             }
@@ -602,7 +644,11 @@ impl EntityMonitorProjection {
             })
             .collect();
 
-        let mut skill_cds = self.skill_cds.values().cloned().collect::<Vec<_>>();
+        let mut skill_cds = self
+            .skill_cds
+            .values()
+            .map(|record| record.state.clone())
+            .collect::<Vec<_>>();
         // Ascending received_at so frontend last-wins map keeps the newest entry
         // when multiple level IDs share the same base skill id.
         skill_cds.sort_unstable_by_key(|cd| cd.received_at);
@@ -850,7 +896,8 @@ impl EntityMonitorProjection {
         };
         let (attr_skill_cd, attr_skill_cd_pct, attr_cd_accelerate_pct, temp_attrs) =
             cd_inputs(entities, local.uuid);
-        for cd in self.skill_cds.values_mut() {
+        for record in self.skill_cds.values_mut() {
+            let cd = &mut record.state;
             if cd.duration > 0 {
                 let (calculated_duration, cd_accelerate_rate) = skill_cd::calculate_skill_cd(
                     cd.duration as f32,
@@ -866,7 +913,13 @@ impl EntityMonitorProjection {
                 cd.calculated_duration = cd.duration;
                 cd.cd_accelerate_rate = 0.0;
             }
+            record.refresh_derived();
         }
+    }
+
+    /// Local-player cooldown records, for sibling projections (voice).
+    pub(crate) fn skill_cooldowns(&self) -> impl Iterator<Item = &SkillCdRecord> {
+        self.skill_cds.values()
     }
 
     #[cfg(test)]
@@ -1981,15 +2034,21 @@ mod tests {
 
         projection.skill_cds.insert(
             1,
-            SkillCdState {
-                skill_level_id: 1,
-                begin_time: 1,
-                duration: 1,
-                skill_cd_type: 0,
-                valid_cd_time: 1,
-                received_at: 1,
-                calculated_duration: 1,
-                cd_accelerate_rate: 0.0,
+            SkillCdRecord {
+                state: SkillCdState {
+                    skill_level_id: 1,
+                    begin_time: 1,
+                    duration: 1,
+                    skill_cd_type: 0,
+                    valid_cd_time: 1,
+                    received_at: 1,
+                    calculated_duration: 1,
+                    cd_accelerate_rate: 0.0,
+                    ready_at_ms: None,
+                    max_charges: None,
+                    max_valid_cd_time: None,
+                },
+                received_mono_ms: MonoTimeMs(1),
             },
         );
         projection.panel_attrs.insert(1, 1);

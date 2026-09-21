@@ -7,10 +7,140 @@ use std::fs;
 use std::sync::LazyLock;
 
 use crate::live::damage_id::locate_meter_data_file;
+use crate::live::ipc::models::SkillCdState;
+use crate::live::runtime::events::MonoTimeMs;
 
 const TEMP_ATTR_TABLE_RELATIVE: &str = "meter-data/TempAttrTable.json";
 const SKILL_EFFECT_TABLE_RELATIVE: &str = "meter-data/SkillEffectTable.json";
+const SKILL_CHARGE_TABLE_RELATIVE: &str = "meter-data/SkillChargeTable.json";
 const TAG_NO_CD_REDUCE: i32 = 103;
+
+/// Charge semantics of a skill, keyed by base skill id (`skill_level_id / 100`).
+///
+/// `max_charges > 1` marks a multi-charge skill whose cooldown refills one
+/// charge per `calculated_duration`; `max_valid_cd_time` marks a resource
+/// slot (`duration == -1 && cd_type == 1`) that is usable once the server's
+/// `valid_cd_time` reaches it.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkillCharge {
+    #[serde(default)]
+    pub max_charges: Option<u8>,
+    #[serde(default)]
+    pub max_valid_cd_time: Option<i32>,
+}
+
+static SKILL_CHARGES: LazyLock<HashMap<i32, SkillCharge>> = LazyLock::new(|| {
+    load_skill_charges().unwrap_or_else(|err| {
+        warn!("[skill-cd] failed to load SkillChargeTable.json: {}", err);
+        HashMap::new()
+    })
+});
+
+#[must_use]
+pub fn skill_charge(skill_id: i32) -> Option<&'static SkillCharge> {
+    SKILL_CHARGES.get(&skill_id)
+}
+
+/// When a cooldown entry becomes usable, derived from the server packet plus
+/// the local interpolation clock (mirrors the HUD's `computeDisplay`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CooldownReadiness {
+    /// Usable at the moment the packet was received.
+    pub ready: bool,
+    /// The moment the skill turns usable (`None` when it already is, or when
+    /// readiness is not time-driven, e.g. resource slots).
+    pub ready_deadline: Option<MonoTimeMs>,
+    /// Charges available at receipt for multi-charge skills.
+    pub charges_available: Option<u8>,
+}
+
+/// Readiness of `state` received at `received_mono`.
+///
+/// Branches, in order (same as the HUD):
+/// - resource slot (`duration == -1 && cd_type == 1`): edge only — ready once
+///   `valid_cd_time >= max_valid_cd_time`; without a configured maximum the
+///   slot is treated as never ready and never announced.
+/// - multi-charge (`cd_type == 1 && duration > 0 && max_charges > 1`): the
+///   deadline marks the 0 -> 1 charge transition only, so a skill that still
+///   has a charge left never re-announces "ready" when the next one refills.
+/// - plain cooldown: `calculated_duration <= 0` is ready with no timer,
+///   otherwise the remaining scaled time divided by the accelerate factor.
+#[must_use]
+pub fn ready_deadline(
+    state: &SkillCdState,
+    received_mono: MonoTimeMs,
+    charge: Option<&SkillCharge>,
+) -> CooldownReadiness {
+    let accelerate = f64::from(state.cd_accelerate_rate).max(0.0);
+    let speed = 1.0 + accelerate;
+    let base_duration = if state.duration > 0 {
+        f64::from(state.duration.max(1))
+    } else {
+        1.0
+    };
+    let reduced_duration = if state.duration > 0 {
+        f64::from(state.calculated_duration.max(0))
+    } else {
+        0.0
+    };
+    let valid_cd_scale = if state.duration > 0 {
+        reduced_duration / base_duration
+    } else {
+        1.0
+    };
+    let scaled_valid = f64::from(state.valid_cd_time) * valid_cd_scale;
+    let deadline_after = |remaining_ms: f64| -> Option<MonoTimeMs> {
+        (remaining_ms > 0.0)
+            .then(|| received_mono.saturating_add((remaining_ms / speed).ceil() as u64))
+    };
+
+    if state.duration == -1 && state.skill_cd_type == 1 {
+        let ready = charge
+            .and_then(|charge| charge.max_valid_cd_time)
+            .is_some_and(|max| max > 0 && state.valid_cd_time >= max);
+        return CooldownReadiness {
+            ready,
+            ready_deadline: None,
+            charges_available: None,
+        };
+    }
+
+    let max_charges = charge
+        .and_then(|charge| charge.max_charges)
+        .unwrap_or(1)
+        .max(1);
+    if state.skill_cd_type == 1 && state.duration > 0 && max_charges > 1 {
+        let charge_duration = f64::from(state.calculated_duration.max(1));
+        let max_vct = f64::from(max_charges) * charge_duration;
+        let current_vct = scaled_valid.min(max_vct);
+        let charges_available = ((current_vct / charge_duration).floor() as u8).min(max_charges);
+        let ready = charges_available >= 1;
+        return CooldownReadiness {
+            ready,
+            ready_deadline: if ready {
+                None
+            } else {
+                deadline_after(charge_duration - current_vct)
+            },
+            charges_available: Some(charges_available),
+        };
+    }
+
+    if reduced_duration <= 0.0 {
+        return CooldownReadiness {
+            ready: true,
+            ready_deadline: None,
+            charges_available: None,
+        };
+    }
+    let remaining = reduced_duration - scaled_valid;
+    CooldownReadiness {
+        ready: remaining <= 0.0,
+        ready_deadline: deadline_after(remaining),
+        charges_available: None,
+    }
+}
 
 #[derive(Debug, Clone, Deserialize)]
 struct RawTempAttrDef {
@@ -171,6 +301,17 @@ fn load_cd_temp_attr_defs() -> Result<HashMap<i32, CdTempAttrDef>, Box<dyn std::
     Ok(result)
 }
 
+fn load_skill_charges() -> Result<HashMap<i32, SkillCharge>, Box<dyn std::error::Error>> {
+    let path = locate_meter_data_file(SKILL_CHARGE_TABLE_RELATIVE)
+        .ok_or_else(|| format!("{SKILL_CHARGE_TABLE_RELATIVE} not found in known locations"))?;
+    let contents = fs::read_to_string(path)?;
+    let raw_map: HashMap<String, SkillCharge> = serde_json::from_str(&contents)?;
+    Ok(raw_map
+        .into_iter()
+        .filter_map(|(key, value)| key.parse::<i32>().ok().map(|id| (id, value)))
+        .collect())
+}
+
 fn load_skill_effect_tags() -> Result<HashMap<i32, Vec<i32>>, Box<dyn std::error::Error>> {
     let path = locate_meter_data_file(SKILL_EFFECT_TABLE_RELATIVE)
         .ok_or_else(|| format!("{SKILL_EFFECT_TABLE_RELATIVE} not found in known locations"))?;
@@ -192,6 +333,103 @@ mod tests {
 
     fn empty_tables() -> (HashMap<i32, CdTempAttrDef>, HashMap<i32, Vec<i32>>) {
         (HashMap::new(), HashMap::new())
+    }
+
+    fn cd_state(
+        duration: i32,
+        cd_type: i32,
+        valid: i32,
+        calculated: i32,
+        rate: f32,
+    ) -> SkillCdState {
+        SkillCdState {
+            skill_level_id: 142_001,
+            begin_time: 0,
+            duration,
+            skill_cd_type: cd_type,
+            valid_cd_time: valid,
+            received_at: 1_000,
+            calculated_duration: calculated,
+            cd_accelerate_rate: rate,
+            ready_at_ms: None,
+            max_charges: None,
+            max_valid_cd_time: None,
+        }
+    }
+
+    const RECEIVED: MonoTimeMs = MonoTimeMs(50_000);
+
+    #[test]
+    fn plain_cooldown_deadline_scales_valid_time_and_accelerate() {
+        // base 10s reduced to 8s, server says 2.5s already elapsed (scaled to
+        // 2s), accelerate 25% -> remaining 6s / 1.25 = 4.8s.
+        let readiness = ready_deadline(&cd_state(10_000, 0, 2_500, 8_000, 0.25), RECEIVED, None);
+        assert!(!readiness.ready);
+        assert_eq!(readiness.ready_deadline, Some(MonoTimeMs(54_800)));
+        assert_eq!(readiness.charges_available, None);
+    }
+
+    #[test]
+    fn plain_cooldown_with_non_positive_duration_is_ready_without_timer() {
+        let readiness = ready_deadline(&cd_state(10_000, 0, 0, 0, 0.0), RECEIVED, None);
+        assert!(readiness.ready);
+        assert_eq!(readiness.ready_deadline, None);
+
+        let elapsed = ready_deadline(&cd_state(10_000, 0, 10_000, 10_000, 0.0), RECEIVED, None);
+        assert!(elapsed.ready);
+        assert_eq!(elapsed.ready_deadline, None);
+    }
+
+    #[test]
+    fn resource_slot_is_edge_only() {
+        let charge = SkillCharge {
+            max_charges: None,
+            max_valid_cd_time: Some(10_000),
+        };
+        let filling = ready_deadline(&cd_state(-1, 1, 4_000, -1, 0.0), RECEIVED, Some(&charge));
+        assert!(!filling.ready);
+        assert_eq!(filling.ready_deadline, None);
+
+        let full = ready_deadline(&cd_state(-1, 1, 10_000, -1, 0.0), RECEIVED, Some(&charge));
+        assert!(full.ready);
+        assert_eq!(full.ready_deadline, None);
+
+        // No configured maximum: never announced.
+        let unknown = ready_deadline(&cd_state(-1, 1, 10_000, -1, 0.0), RECEIVED, None);
+        assert!(!unknown.ready);
+        assert_eq!(unknown.ready_deadline, None);
+    }
+
+    #[test]
+    fn multi_charge_deadline_marks_first_charge_only() {
+        let charge = SkillCharge {
+            max_charges: Some(2),
+            max_valid_cd_time: None,
+        };
+        // Both charges spent: next charge in 6s at 1x.
+        let empty = ready_deadline(&cd_state(6_000, 1, 0, 6_000, 0.0), RECEIVED, Some(&charge));
+        assert!(!empty.ready);
+        assert_eq!(empty.charges_available, Some(0));
+        assert_eq!(empty.ready_deadline, Some(MonoTimeMs(56_000)));
+
+        // One charge left: ready now, and the 1 -> 2 refill sets no deadline.
+        let one = ready_deadline(
+            &cd_state(6_000, 1, 6_500, 6_000, 0.0),
+            RECEIVED,
+            Some(&charge),
+        );
+        assert!(one.ready);
+        assert_eq!(one.charges_available, Some(1));
+        assert_eq!(one.ready_deadline, None);
+
+        // max_charges <= 1 falls through to the plain branch.
+        let single = SkillCharge {
+            max_charges: Some(1),
+            max_valid_cd_time: None,
+        };
+        let plain = ready_deadline(&cd_state(6_000, 1, 0, 6_000, 0.0), RECEIVED, Some(&single));
+        assert_eq!(plain.charges_available, None);
+        assert_eq!(plain.ready_deadline, Some(MonoTimeMs(56_000)));
     }
 
     #[test]

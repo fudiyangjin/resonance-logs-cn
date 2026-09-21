@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import type { BuffUpdateState, SkillCdState } from "$lib/bindings";
-import type { SkillDefinition } from "$lib/skill-mappings";
 import {
   buildBuffTextRow,
   computeDisplay,
@@ -22,7 +21,6 @@ function buff(overrides: Partial<BuffUpdateState> = {}): BuffUpdateState {
 }
 
 describe("skill cooldown calculation with cached definitions", () => {
-  const skill: SkillDefinition = { skillId: 1, name: "Skill", imagePath: "" };
   function cd(overrides: Partial<SkillCdState> = {}): SkillCdState {
     return {
       skillLevelId: 100,
@@ -33,6 +31,9 @@ describe("skill cooldown calculation with cached definitions", () => {
       receivedAt: 100_000,
       calculatedDuration: 10_000,
       cdAccelerateRate: 0,
+      readyAtMs: null,
+      maxCharges: null,
+      maxValidCdTime: null,
       ...overrides,
     };
   }
@@ -43,13 +44,13 @@ describe("skill cooldown calculation with cached definitions", () => {
       validCdTime: 2_000,
       cdAccelerateRate: 1,
     });
-    expect(computeDisplay(value, 101_000, skill)).toMatchObject({
+    expect(computeDisplay(value, 101_000)).toMatchObject({
       isActive: true,
       percent: 0.4,
       text: "2.0",
       usable: false,
     });
-    expect(computeDisplay(value, 102_000, skill)).toMatchObject({
+    expect(computeDisplay(value, 102_000)).toMatchObject({
       isActive: false,
       percent: 0,
       text: "",
@@ -62,21 +63,21 @@ describe("skill cooldown calculation with cached definitions", () => {
       skillCdType: 1,
       calculatedDuration: 5_000,
       cdAccelerateRate: 1,
+      maxCharges: 3,
     });
-    const chargedSkill = { ...skill, maxCharges: 3 };
-    expect(computeDisplay(value, 102_500, chargedSkill)).toMatchObject({
+    expect(computeDisplay(value, 102_500)).toMatchObject({
       chargesAvailable: 1,
       maxCharges: 3,
       percent: 1,
       usable: true,
       isActive: true,
     });
-    expect(computeDisplay(value, 103_000, chargedSkill)).toMatchObject({
+    expect(computeDisplay(value, 103_000)).toMatchObject({
       chargesAvailable: 1,
       percent: 0.8,
       text: "4.0",
     });
-    expect(computeDisplay(value, 107_500, chargedSkill)).toMatchObject({
+    expect(computeDisplay(value, 107_500)).toMatchObject({
       chargesAvailable: 3,
       percent: 0,
       text: "",
@@ -86,17 +87,25 @@ describe("skill cooldown calculation with cached definitions", () => {
   });
 
   it("keeps server-driven resource charging independent of elapsed time", () => {
-    const value = cd({ duration: -1, skillCdType: 1, validCdTime: 40 });
-    const resourceSkill = { ...skill, maxValidCdTime: 100 };
-    expect(computeDisplay(value, 200_000, resourceSkill)).toEqual(
-      computeDisplay(value, 100_000, resourceSkill),
+    const value = cd({
+      duration: -1,
+      skillCdType: 1,
+      validCdTime: 40,
+      maxValidCdTime: 100,
+    });
+    expect(computeDisplay(value, 200_000)).toEqual(
+      computeDisplay(value, 100_000),
     );
-    expect(computeDisplay(value, 200_000, resourceSkill)).toMatchObject({
+    expect(computeDisplay(value, 200_000)).toMatchObject({
       percent: 0.6,
       text: "40%",
       usable: false,
     });
-    expect(computeDisplay(value, 200_000, undefined)).toBeNull();
+    // Capacity comes from the backend charge table; without it the slot
+    // has no display.
+    expect(
+      computeDisplay(cd({ ...value, maxValidCdTime: null }), 200_000),
+    ).toBeNull();
   });
 });
 

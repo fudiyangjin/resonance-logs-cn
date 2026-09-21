@@ -31,7 +31,7 @@ import type {
   PanelAttrConfig,
   SkillMonitorProfile,
 } from "$lib/settings-store";
-import type { CounterRulePreset, SkillDefinition } from "$lib/skill-mappings";
+import type { CounterRulePreset } from "$lib/skill-mappings";
 import {
   DEFAULT_OVERLAY_POSITIONS,
   DEFAULT_OVERLAY_VISIBILITY,
@@ -420,10 +420,14 @@ export function buildPanelAreaRows(
   return result;
 }
 
+/**
+ * Charge capacity (`maxCharges` / `maxValidCdTime`) rides on the cooldown
+ * packet itself (`meter-data/SkillChargeTable.json` via the backend), so the
+ * HUD and the voice projection derive readiness from one source.
+ */
 export function computeDisplay(
   cd: SkillCdState,
   now: number,
-  skill: SkillDefinition | undefined,
 ): SkillDisplay | null {
   const cdAccelerateRate = Math.max(0, cd.cdAccelerateRate ?? 0);
   const elapsed = Math.max(0, now - cd.receivedAt);
@@ -435,10 +439,10 @@ export function computeDisplay(
   const progressed = scaledValidCdTime + elapsed * (1 + cdAccelerateRate);
 
   if (cd.duration === -1 && cd.skillCdType === 1) {
-    if (!skill?.maxValidCdTime) return null;
+    if (!cd.maxValidCdTime) return null;
     const chargePercent = Math.max(
       0,
-      Math.min(1, cd.validCdTime / skill.maxValidCdTime),
+      Math.min(1, cd.validCdTime / cd.maxValidCdTime),
     );
     return {
       isActive: chargePercent < 1,
@@ -449,7 +453,7 @@ export function computeDisplay(
   }
 
   if (cd.skillCdType === 1 && cd.duration > 0) {
-    const maxCharges = Math.max(1, skill?.maxCharges ?? 1);
+    const maxCharges = Math.max(1, cd.maxCharges ?? 1);
     if (maxCharges > 1) {
       const chargeDuration = Math.max(1, cd.calculatedDuration);
       const maxVct = maxCharges * chargeDuration;

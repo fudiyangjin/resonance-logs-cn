@@ -518,6 +518,17 @@ pub struct SkillCdState {
     pub calculated_duration: i32,
     /// Cooldown accelerate rate for this skill
     pub cd_accelerate_rate: f32,
+    /// Wall-clock moment the skill becomes usable again (`None` when it is
+    /// usable now or readiness is not time-driven). Mirrors the voice
+    /// projection's ready deadline so HUD and announcements agree.
+    #[serde(default)]
+    pub ready_at_ms: Option<i64>,
+    /// Multi-charge capacity from `meter-data/SkillChargeTable.json`.
+    #[serde(default)]
+    pub max_charges: Option<u8>,
+    /// Resource-slot capacity from `meter-data/SkillChargeTable.json`.
+    #[serde(default)]
+    pub max_valid_cd_time: Option<i32>,
 }
 
 /// Represents a buff update state.

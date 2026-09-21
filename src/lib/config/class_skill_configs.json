@@ -62,8 +62,7 @@
       {
         "skillId": 1420,
         "name": "风姿卓绝",
-        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx01_-8358011576239105760.png",
-        "maxCharges": 2
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx01_-8358011576239105760.png"
       },
       {
         "skillId": 1426,
@@ -94,8 +93,7 @@
       {
         "skillId": 1425,
         "name": "飞鸟投",
-        "imagePath": "/images/wind_knight/skill/weapon_cq_skill_02ex_-5338755465175740072.png",
-        "maxCharges": 2
+        "imagePath": "/images/wind_knight/skill/weapon_cq_skill_02ex_-5338755465175740072.png"
       },
       {
         "skillId": 1424,
@@ -126,8 +124,7 @@
       {
         "skillId": 1431,
         "name": "锐利冲击",
-        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx08_-5400252487671298175.png",
-        "maxValidCdTime": 10000
+        "imagePath": "/images/wind_knight/skill/weapon_cq-01_kx08_-5400252487671298175.png"
       }
     ]
   },
@@ -150,14 +147,12 @@
       {
         "skillId": 1239,
         "name": "陨星风暴",
-        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx07_-8948074613709733940.png",
-        "maxCharges": 2
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx07_-8948074613709733940.png"
       },
       {
         "skillId": 1211,
         "name": "清滝绕珠",
-        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx05_-3747281467355150039.png",
-        "maxCharges": 2
+        "imagePath": "/images/frost_mage/skill/weapon_mz-01_kx05_-3747281467355150039.png"
       },
       {
         "skillId": 1242,
@@ -244,9 +239,7 @@
       },
       {
         "skillId": 1616,
-        "name": "如川流华斩",
-        "maxCharges": 2,
-        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx07.png"
+        "name": "如川流华斩",        "imagePath": "/images/flame_berserker/skill/weapon_sf-01_kx07.png"
       }
     ]
   },
@@ -312,8 +305,7 @@
       {
         "skillId": 1730,
         "name": "无穷雷霆之力",
-        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx07_5011786851491862633.png",
-        "maxCharges": 2
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx07_5011786851491862633.png"
       },
       {
         "skillId": 1731,
@@ -368,8 +360,7 @@
       {
         "skillId": 1705,
         "name": "超高出力",
-        "imagePath": "/images/stormblade/skill/weapon_tdl-01_skill_101_1_924013895986459687.png",
-        "maxCharges": 5
+        "imagePath": "/images/stormblade/skill/weapon_tdl-01_skill_101_1_924013895986459687.png"
       },
       {
         "skillId": 1724,
@@ -437,8 +428,7 @@
       {
         "skillId": 2308,
         "name": "聚合乐章",
-        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx01_6790195387100573474.png",
-        "maxCharges": 2
+        "imagePath": "/images/beat_performer/skill/weapon_jt-01_kx01_6790195387100573474.png"
       },
       {
         "skillId": 2309,
@@ -492,14 +482,12 @@
       {
         "skillId": 1519,
         "name": "不羁之种",
-        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx09_-3065777601516650668.png",
-        "maxCharges": 2
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx09_-3065777601516650668.png"
       },
       {
         "skillId": 1531,
         "name": "自然庇护",
-        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx08_-5368673168487156305.png",
-        "maxCharges": 2
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_kx08_-5368673168487156305.png"
       },
       {
         "skillId": 1520,
@@ -510,9 +498,7 @@
       {
         "skillId": 1541,
         "name": "狂野绽放",
-        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_tg01_2955740106852191547.png",
-        "maxCharges": 2,
-        "resourceRequirement": { "resourceId": 15001, "amount": 20 }
+        "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_tg01_2955740106852191547.png",        "resourceRequirement": { "resourceId": 15001, "amount": 20 }
       },
       {
         "skillId": 1523,

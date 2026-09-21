@@ -525,10 +525,10 @@ const _displayMap = $derived.by(() => {
   const cds = cdMap();
   const nextDisplayMap = new Map<number, SkillDisplay>();
 
-  for (const [skillId, skill] of _skillDefinitions) {
+  for (const skillId of _skillDefinitions.keys()) {
     const cd = cds.get(skillId);
     if (!cd) continue;
-    const display = computeDisplay(cd, now, skill);
+    const display = computeDisplay(cd, now);
     if (display) {
       nextDisplayMap.set(skillId, display);
     }
