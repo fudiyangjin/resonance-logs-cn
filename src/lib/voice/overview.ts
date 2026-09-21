@@ -1,0 +1,88 @@
+import type { MonsterBuffSourceScope, VoiceLanguage } from "$lib/bindings";
+import type { MessageKey } from "$lib/i18n/index.svelte";
+import {
+  resolveVoicePriority,
+  type VoicePhraseBinding,
+} from "$lib/settings-store";
+import {
+  collectBindings,
+  resolvePhraseId,
+  resolveTierPhraseIds,
+  type PhraseIndex,
+  type VoiceBinding,
+} from "./compile";
+import { byKind } from "./registry";
+import type {
+  OverviewGroup,
+  OverviewGroupMeta,
+  VoiceBindingView,
+} from "./subject-types";
+
+export type VoiceBindingOverviewEntry = {
+  id: string;
+  subjectLabel: string;
+  eventLabelKey: MessageKey;
+  binding: VoicePhraseBinding;
+  phraseId: string | null;
+  language: VoiceLanguage;
+  /** True when the app bundle already contains playable audio for this binding. */
+  bundledFallback: boolean;
+  /** Per-tier (0-5) variant phrase ids for tier-placeholder custom text; empty otherwise. */
+  tierPhraseIds: string[];
+  priority: number;
+  navigateTo: OverviewGroup;
+  monsterBuffSourceScope?: MonsterBuffSourceScope;
+};
+
+export function overviewEntryOf(
+  binding: VoiceBinding,
+  index: PhraseIndex,
+): VoiceBindingOverviewEntry {
+  return {
+    id: binding.ruleKey,
+    subjectLabel: binding.subjectLabel,
+    eventLabelKey: `voice.binding.event.${binding.eventKind}`,
+    binding: binding.phrase,
+    phraseId: resolvePhraseId(binding, index),
+    language: binding.language,
+    bundledFallback: binding.bundledFallback,
+    tierPhraseIds: Object.values(resolveTierPhraseIds(binding, index)),
+    priority: resolveVoicePriority(binding.config.priority),
+    navigateTo: binding.group,
+    ...(binding.subject.kind === "monsterBuff"
+      ? { monsterBuffSourceScope: binding.subject.sourceScope }
+      : {}),
+  };
+}
+
+/**
+ * Every enabled binding (whether or not its phrase has resolved yet), for
+ * the read-only "播报总览" tab so pending entries stay visible.
+ */
+export function listVoiceBindingOverview(
+  view: VoiceBindingView,
+  index: PhraseIndex,
+): VoiceBindingOverviewEntry[] {
+  return collectBindings(view).map((binding) =>
+    overviewEntryOf(binding, index),
+  );
+}
+
+/** Group metadata (title / navigation) in display order. */
+export function overviewGroups(): readonly OverviewGroupMeta[] {
+  return (
+    ["buff", "monsterBuff", "counter", "dbm", "minimap", "alerts"] as const
+  ).map((group) => {
+    const kind = (
+      {
+        buff: "buff",
+        monsterBuff: "monsterBuff",
+        counter: "counterSlot",
+        dbm: "dbm",
+        minimap: "minimapCue",
+        alerts: "gameAlert",
+      } as const
+    )[group];
+    return byKind(kind).overview;
+  });
+}
