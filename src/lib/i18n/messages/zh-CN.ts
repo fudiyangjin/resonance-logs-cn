@@ -1105,6 +1105,10 @@ export const zhCNMessages = {
   "skillMonitor.skillCd.resonance.noneSelected": "未选择共鸣技能",
   "skillMonitor.skillCd.preview.title": "监控预览",
   "skillMonitor.skillCd.preview.description": "按选择顺序排列",
+  "skillMonitor.skillCd.voice.title": "语音播报",
+  "skillMonitor.skillCd.voice.description":
+    "为已监控的技能设置释放、就绪与提前就绪播报。充能类技能只在第一层充能回复时播报就绪。",
+  "skillMonitor.skillCd.voice.empty": "先在上方选择要监控的技能。",
   "skillMonitor.buff.status.selected": "已选择",
   "skillMonitor.buff.status.editing": "编辑中",
   "skillMonitor.buff.status.aliased": "已设别名",
@@ -1486,6 +1490,9 @@ export const zhCNMessages = {
   "monsterMonitor.entityDuration.empty": "尚未添加任何实体监控。",
   "monsterMonitor.entityDuration.styleTitle": "面板样式",
   "monsterMonitor.entityDuration.noDuration": "无倒计时",
+  "monsterMonitor.entityDuration.voice.title": "语音播报",
+  "monsterMonitor.entityDuration.voice.hint":
+    "「剩 x 秒播报」需要先设置持续时间；修改持续时间后，已存在的实体按新时长重新计时。",
   "monsterMonitor.bossDbm.title": "Boss 机制 (DBM)",
   "monsterMonitor.bossDbm.description":
     "显示 Boss 技能机制预警条，包含技能名与倒计时。可在“启用窗口”页签中切换该面板显示。",
@@ -2019,6 +2026,11 @@ export const zhCNMessages = {
   "voice.binding.event.lost": "失效时播报",
   "voice.binding.event.threshold": "达到目标时播报",
   "voice.binding.event.onCast": "触发时播报",
+  "voice.binding.event.cast": "释放时播报",
+  "voice.binding.event.ready": "就绪时播报",
+  "voice.binding.event.readyIn": "就绪前 x 秒播报",
+  "voice.binding.event.appeared": "出现时播报",
+  "voice.binding.event.gone": "消失时播报",
   "voice.binding.source.auto": "自动生成",
   "voice.binding.source.preset": "预置",
   "voice.binding.source.custom": "自定义文本",
@@ -2077,6 +2089,8 @@ export const zhCNMessages = {
   "voice.bindings.navigate.monsterBuff": "前往怪物监控",
   "voice.bindings.navigate.minimap": "前往副本机制",
   "voice.bindings.navigate.alerts": "前往匹配提醒",
+  "voice.bindings.navigate.skill": "前往技能 CD",
+  "voice.bindings.navigate.entity": "前往实体持续时间",
   "voice.bindings.generateMissing": "一键生成缺失语音",
   "voice.bindings.generateMissing.generating": "正在生成…",
   "voice.bindings.generateMissing.needProfile":

@@ -12,6 +12,7 @@ function emptyView(): VoiceBindingView {
       selfAppliedBuffIds: [],
       selfAppliedMonitorAll: false,
       dbmAliases: {},
+      entityDurationEntries: [],
     },
     mechanicVoiceConfigs: {},
     alertConfigs: {},
@@ -33,13 +34,24 @@ describe("VOICE_SUBJECT_ADAPTERS", () => {
       (adapter) => adapter.overview.group,
     );
     expect([...groups].sort()).toEqual(
-      ["alerts", "buff", "counter", "dbm", "minimap", "monsterBuff"].sort(),
+      [
+        "alerts",
+        "buff",
+        "counter",
+        "dbm",
+        "entity",
+        "minimap",
+        "monsterBuff",
+        "skill",
+      ].sort(),
     );
     expect(overviewGroups().map((group) => group.group)).toEqual([
       "buff",
+      "skill",
       "monsterBuff",
       "counter",
       "dbm",
+      "entity",
       "minimap",
       "alerts",
     ]);
@@ -99,6 +111,24 @@ describe("ruleKey golden values", () => {
     const s = { kind: "dbm", baseSkillId: 8801 } as const;
     expect(a.ruleKey(s, "onCast")).toBe("voice:dbm:8801:onCast");
     expect(a.ruleKey(s, "expiring")).toBe("voice:dbm:8801:expiring");
+  });
+
+  it("skill", () => {
+    const a = byKind("skill");
+    const s = { kind: "skill", skillId: 1420 } as const;
+    expect(a.ruleKey(s, "cast")).toBe("voice:skill:1420:cast");
+    expect(a.ruleKey(s, "ready")).toBe("voice:skill:1420:ready");
+    expect(a.ruleKey(s, "readyIn")).toBe("voice:skill:1420:readyIn");
+  });
+
+  it("entity", () => {
+    const a = byKind("entity");
+    const s = { kind: "entity", monsterId: 179901, scope: "self" } as const;
+    expect(a.ruleKey(s, "appeared")).toBe("voice:entity:179901:self:appeared");
+    expect(a.ruleKey(s, "expiring")).toBe("voice:entity:179901:self:expiring");
+    expect(a.ruleKey({ ...s, scope: "any" }, "gone")).toBe(
+      "voice:entity:179901:any:gone",
+    );
   });
 
   it("minimapCue", () => {
@@ -163,6 +193,76 @@ describe("auto text golden values", () => {
       "大招",
       "大招还有4秒",
     ]);
+  });
+
+  it("skill events map to cast / ready / ready-in triggers", () => {
+    const a = byKind("skill");
+    const subject = { kind: "skill", skillId: 990001 } as const;
+    const events = a.events(emptyView(), subject);
+    expect(events.map((e) => [e.eventKind, e.expiring, e.autoText(3)])).toEqual(
+      [
+        ["cast", false, "#990001已释放"],
+        ["ready", false, "#990001已就绪"],
+        ["readyIn", true, "#990001还有3秒就绪"],
+      ],
+    );
+    expect(a.trigger(subject, "ready", 0)).toEqual({
+      subject: { kind: "skill", skillId: 990001 },
+      event: { kind: "ended" },
+    });
+    expect(a.trigger(subject, "gained", 0)).toBeNull();
+  });
+
+  it("entity exposes expiring only with a duration and sleeps without its entry", () => {
+    const a = byKind("entity");
+    const subject = {
+      kind: "entity",
+      monsterId: 179901,
+      scope: "self",
+    } as const;
+    const withDuration = emptyView();
+    withDuration.monster.entityDurationEntries = [
+      {
+        id: "e",
+        monsterId: 179901,
+        label: "镰车",
+        durationMs: 35_000,
+        scope: "self",
+      },
+    ];
+    withDuration.monster.entityVoiceConfigs = {
+      "179901:self": {
+        appeared: { enabled: true, phrase: { source: "auto" } },
+      },
+    };
+    expect(a.label(withDuration, subject)).toBe("镰车");
+    expect(
+      a.events(withDuration, subject).map((e) => [e.eventKind, e.autoText(5)]),
+    ).toEqual([
+      ["appeared", "镰车已出现"],
+      ["expiring", "镰车还有5秒消失"],
+      ["gone", "镰车已消失"],
+    ]);
+    expect(a.enumerate(withDuration)).toEqual([subject]);
+
+    const openEnded = emptyView();
+    openEnded.monster.entityDurationEntries = [
+      { id: "e", monsterId: 179901, label: "", scope: "any" },
+    ];
+    openEnded.monster.entityVoiceConfigs =
+      withDuration.monster.entityVoiceConfigs;
+    const anySubject = { ...subject, scope: "any" as const };
+    expect(a.label(openEnded, anySubject)).toBe("#179901");
+    expect(a.events(openEnded, anySubject).map((e) => e.eventKind)).toEqual([
+      "appeared",
+      "gone",
+    ]);
+    // The binding is keyed to scope=self; the entry is now scope=any.
+    expect(a.enumerate(openEnded)).toEqual([]);
+    expect(a.trigger(anySubject, "expiring", 4)).toEqual({
+      subject: { kind: "entity", monsterId: 179901, scope: "any" },
+      event: { kind: "expiringIn", secondsBefore: 4 },
+    });
   });
 
   it("alerts follow the UI locale and are playable from bundled prompts", () => {

@@ -34,6 +34,7 @@ function view(overrides: Partial<VoiceBindingView> = {}): VoiceBindingView {
       selfAppliedBuffIds: [],
       selfAppliedMonitorAll: false,
       dbmAliases: {},
+      entityDurationEntries: [],
     },
     mechanicVoiceConfigs: {},
     alertConfigs: {},
@@ -50,6 +51,7 @@ describe("collectBindings + phraseRequests", () => {
     const bindings = collectBindings(
       view({
         skillProfile: {
+          selectedClass: "wind_knight",
           buffVoiceConfigs: {
             "101": {
               gained: auto(),
@@ -106,6 +108,7 @@ describe("collectBindings + phraseRequests", () => {
           selfAppliedBuffIds: [],
           selfAppliedMonitorAll: false,
           dbmAliases: {},
+          entityDurationEntries: [],
           monsterBuffVoiceConfigs: {
             "55": {
               gained: {
@@ -170,16 +173,49 @@ describe("compileVoiceRules", () => {
       text: "炸弹",
       language: "zhCn",
     },
+    "auto:voice:skill:990001:cast": {
+      phraseId: "P-sk-cast",
+      text: "#990001已释放",
+      language: "zhCn",
+    },
+    "auto:voice:skill:990001:readyIn": {
+      phraseId: "P-sk-in",
+      text: "#990001还有2秒就绪",
+      language: "zhCn",
+    },
+    "auto:voice:entity:179901:self:appeared": {
+      phraseId: "P-en-up",
+      text: "镰车已出现",
+      language: "zhCn",
+    },
+    "auto:voice:entity:179901:self:expiring": {
+      phraseId: "P-en-exp",
+      text: "镰车还有5秒消失",
+      language: "zhCn",
+    },
+    "auto:voice:entity:179901:self:gone": {
+      phraseId: "P-en-gone",
+      text: "镰车已消失",
+      language: "zhCn",
+    },
   };
 
   const fullView = view({
     locale: "en-US",
     skillProfile: {
+      selectedClass: "wind_knight",
       buffVoiceConfigs: {
         "101": {
           gained: auto(200),
           expiring: expiring(3.4),
           lost: custom("${阶数}狂暴没了"),
+        },
+      },
+      skillVoiceConfigs: {
+        "990001": {
+          cast: auto(),
+          ready: { enabled: false, phrase: { source: "auto" } },
+          readyIn: expiring(2),
         },
       },
     },
@@ -188,8 +224,26 @@ describe("compileVoiceRules", () => {
       selfAppliedBuffIds: [],
       selfAppliedMonitorAll: false,
       dbmAliases: { "8801": "大招" },
+      entityDurationEntries: [
+        {
+          id: "e1",
+          monsterId: 179901,
+          label: "镰车",
+          durationMs: 35_000,
+          scope: "self",
+        },
+      ],
       monsterBuffVoiceConfigs: { "55": { gained: custom("x") } },
       dbmVoiceConfigs: { "8801": { onCast: auto(), expiring: expiring(5) } },
+      entityVoiceConfigs: {
+        "179901:self": {
+          appeared: auto(),
+          expiring: expiring(5),
+          gone: auto(),
+        },
+        // Re-scoped / removed entries are dormant until re-added.
+        "179901:any": { appeared: auto() },
+      },
     },
     alertConfigs: { matchReady: auto() },
     minimapCues: [
@@ -236,6 +290,28 @@ describe("compileVoiceRules", () => {
         cooldownMs: 2000,
       },
       {
+        id: "voice:skill:990001:cast",
+        enabled: true,
+        trigger: {
+          subject: { kind: "skill", skillId: 990001 },
+          event: { kind: "started" },
+        },
+        phraseId: "P-sk-cast",
+        priority: 0,
+        cooldownMs: 2000,
+      },
+      {
+        id: "voice:skill:990001:readyIn",
+        enabled: true,
+        trigger: {
+          subject: { kind: "skill", skillId: 990001 },
+          event: { kind: "expiringIn", secondsBefore: 2 },
+        },
+        phraseId: "P-sk-in",
+        priority: 0,
+        cooldownMs: 2000,
+      },
+      {
         id: "voice:monsterBuff:anySource:55:gained",
         enabled: true,
         trigger: {
@@ -269,6 +345,39 @@ describe("compileVoiceRules", () => {
           event: { kind: "expiringIn", secondsBefore: 5 },
         },
         phraseId: "P-dbm-exp",
+        priority: 0,
+        cooldownMs: 2000,
+      },
+      {
+        id: "voice:entity:179901:self:appeared",
+        enabled: true,
+        trigger: {
+          subject: { kind: "entity", monsterId: 179901, scope: "self" },
+          event: { kind: "started" },
+        },
+        phraseId: "P-en-up",
+        priority: 0,
+        cooldownMs: 2000,
+      },
+      {
+        id: "voice:entity:179901:self:expiring",
+        enabled: true,
+        trigger: {
+          subject: { kind: "entity", monsterId: 179901, scope: "self" },
+          event: { kind: "expiringIn", secondsBefore: 5 },
+        },
+        phraseId: "P-en-exp",
+        priority: 0,
+        cooldownMs: 2000,
+      },
+      {
+        id: "voice:entity:179901:self:gone",
+        enabled: true,
+        trigger: {
+          subject: { kind: "entity", monsterId: 179901, scope: "self" },
+          event: { kind: "ended" },
+        },
+        phraseId: "P-en-gone",
         priority: 0,
         cooldownMs: 2000,
       },
@@ -310,6 +419,7 @@ describe("compileVoiceRules", () => {
       collectBindings(
         view({
           skillProfile: {
+            selectedClass: "wind_knight",
             presetCounterVoiceConfigs: {
               [String(preset.ruleId)]: {
                 [String(slot.slotId)]: { threshold: auto() },

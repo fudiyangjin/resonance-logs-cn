@@ -168,9 +168,29 @@ const dbmVoiceConfigSchema = v.object({
   expiring: v.optional(voiceExpiringEventSchema),
 });
 
+const skillVoiceConfigSchema = v.object({
+  cast: v.optional(voiceEventSchema),
+  ready: v.optional(voiceEventSchema),
+  readyIn: v.optional(voiceExpiringEventSchema),
+});
+
+const entityVoiceConfigSchema = v.object({
+  appeared: v.optional(voiceEventSchema),
+  expiring: v.optional(voiceExpiringEventSchema),
+  gone: v.optional(voiceEventSchema),
+});
+
 const buffVoiceConfigMapSchema = v.record(
   numericKeySchema,
   buffVoiceConfigSchema,
+);
+const skillVoiceConfigMapSchema = v.record(
+  numericKeySchema,
+  skillVoiceConfigSchema,
+);
+const entityVoiceConfigMapSchema = v.record(
+  v.pipe(v.string(), v.regex(/^\d+:(?:self|any)$/)),
+  entityVoiceConfigSchema,
 );
 const counterVoiceConfigMapSchema = v.record(
   numericKeySchema,
@@ -422,6 +442,10 @@ const skillProfileSchema = v.object({
     buffVoiceConfigMapSchema,
     defaultClone(defaultSkill.buffVoiceConfigs ?? {}),
   ),
+  skillVoiceConfigs: v.optional(
+    skillVoiceConfigMapSchema,
+    defaultClone(defaultSkill.skillVoiceConfigs ?? {}),
+  ),
   presetCounterVoiceConfigs: v.optional(
     presetCounterVoiceConfigMapSchema,
     defaultClone(defaultSkill.presetCounterVoiceConfigs ?? {}),
@@ -524,6 +548,10 @@ const monsterProfileSchema = v.object({
   monsterBuffVoiceConfigs: v.optional(
     buffVoiceConfigMapSchema,
     defaultClone(defaultMonster.monsterBuffVoiceConfigs ?? {}),
+  ),
+  entityVoiceConfigs: v.optional(
+    entityVoiceConfigMapSchema,
+    defaultClone(defaultMonster.entityVoiceConfigs ?? {}),
   ),
   fantasyShowAll: v.boolean(),
   buffPriorityIds: numberArraySchema,

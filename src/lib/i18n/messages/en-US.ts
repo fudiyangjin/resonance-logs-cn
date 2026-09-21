@@ -1222,6 +1222,10 @@ export const enUSMessages = {
   "skillMonitor.skillCd.resonance.noneSelected": "No resonance skills selected",
   "skillMonitor.skillCd.preview.title": "Monitor Preview",
   "skillMonitor.skillCd.preview.description": "Ordered by selection",
+  "skillMonitor.skillCd.voice.title": "Voice Broadcast",
+  "skillMonitor.skillCd.voice.description":
+    "Announce casts, cooldown ready and ready-in for monitored skills. Charge skills only announce ready when the first charge returns.",
+  "skillMonitor.skillCd.voice.empty": "Select skills to monitor above first.",
   "skillMonitor.buff.status.selected": "Selected",
   "skillMonitor.buff.status.editing": "Editing",
   "skillMonitor.buff.status.aliased": "Alias set",
@@ -1622,6 +1626,9 @@ export const enUSMessages = {
   "monsterMonitor.entityDuration.empty": "No entity watches yet.",
   "monsterMonitor.entityDuration.styleTitle": "Panel Style",
   "monsterMonitor.entityDuration.noDuration": "No countdown",
+  "monsterMonitor.entityDuration.voice.title": "Voice Broadcast",
+  "monsterMonitor.entityDuration.voice.hint":
+    '"Broadcast x seconds before" requires a duration; changing the duration re-times entities that already exist.',
   "monsterMonitor.bossDbm.title": "Boss Mechanics (DBM)",
   "monsterMonitor.bossDbm.description":
     "Show Boss mechanic warning bars with skill name and countdown. Toggle visibility under Enable Window.",
@@ -2180,6 +2187,11 @@ export const enUSMessages = {
   "voice.binding.event.lost": "Broadcast on expiry",
   "voice.binding.event.threshold": "Broadcast on reaching target",
   "voice.binding.event.onCast": "Broadcast on trigger",
+  "voice.binding.event.cast": "Broadcast on cast",
+  "voice.binding.event.ready": "Broadcast when ready",
+  "voice.binding.event.readyIn": "Broadcast x seconds before ready",
+  "voice.binding.event.appeared": "Broadcast on appear",
+  "voice.binding.event.gone": "Broadcast on disappear",
   "voice.binding.source.auto": "Auto-generated",
   "voice.binding.source.preset": "Preset",
   "voice.binding.source.custom": "Custom text",
@@ -2241,6 +2253,8 @@ export const enUSMessages = {
   "voice.bindings.navigate.monsterBuff": "Go to Monster Monitor",
   "voice.bindings.navigate.minimap": "Go to Dungeon Mechanics",
   "voice.bindings.navigate.alerts": "Go to Match Alerts",
+  "voice.bindings.navigate.skill": "Go to Skill CD",
+  "voice.bindings.navigate.entity": "Go to Entity Duration",
   "voice.bindings.generateMissing": "Generate missing voices",
   "voice.bindings.generateMissing.generating": "Generating…",
   "voice.bindings.generateMissing.needProfile":

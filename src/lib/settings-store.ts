@@ -532,6 +532,77 @@ export function ensureDbmVoiceConfigs(
   return next;
 }
 
+/** Voice bindings for one monitored skill of the local player. */
+export type SkillVoiceConfig = {
+  /** Fires on every cast start. */
+  cast?: VoiceEventConfig;
+  /** Fires when the cooldown ends (first charge back for charge skills). */
+  ready?: VoiceEventConfig;
+  /** Fires `secondsBefore` the cooldown ends. */
+  readyIn?: VoiceExpiringEventConfig;
+};
+
+/** Keyed by base skill id (as a string). */
+export type SkillVoiceConfigMap = Record<string, SkillVoiceConfig>;
+
+export function ensureSkillVoiceConfigs(
+  configs: SkillVoiceConfigMap | null | undefined,
+): SkillVoiceConfigMap {
+  const next: SkillVoiceConfigMap = {};
+  for (const [skillId, config] of Object.entries(configs ?? {})) {
+    if (!config) continue;
+    if (config.cast || config.ready || config.readyIn) {
+      next[skillId] = config;
+    }
+  }
+  return next;
+}
+
+/** Voice bindings for one entity-duration watch entry. */
+export type EntityVoiceConfig = {
+  appeared?: VoiceEventConfig;
+  /** Only meaningful when the entry has a configured duration. */
+  expiring?: VoiceExpiringEventConfig;
+  gone?: VoiceEventConfig;
+};
+
+/**
+ * Keyed by `"{monsterId}:{scope}"` (see `entityVoiceConfigKey`), matching
+ * the backend subject one-to-one so exports stay stable when the entry's
+ * scope changes.
+ */
+export type EntityVoiceConfigMap = Record<string, EntityVoiceConfig>;
+
+export function entityVoiceConfigKey(
+  monsterId: number,
+  scope: EntityDurationScope,
+): string {
+  return `${monsterId}:${scope}`;
+}
+
+export function parseEntityVoiceConfigKey(
+  key: string,
+): { monsterId: number; scope: EntityDurationScope } | null {
+  const match = /^(\d+):(self|any)$/.exec(key);
+  if (!match) return null;
+  const monsterId = Number(match[1]);
+  if (!Number.isSafeInteger(monsterId) || monsterId <= 0) return null;
+  return { monsterId, scope: match[2] as EntityDurationScope };
+}
+
+export function ensureEntityVoiceConfigs(
+  configs: EntityVoiceConfigMap | null | undefined,
+): EntityVoiceConfigMap {
+  const next: EntityVoiceConfigMap = {};
+  for (const [key, config] of Object.entries(configs ?? {})) {
+    if (!config || !parseEntityVoiceConfigKey(key)) continue;
+    if (config.appeared || config.expiring || config.gone) {
+      next[key] = config;
+    }
+  }
+  return next;
+}
+
 export type ShortcutSettingId = keyof typeof DEFAULT_SETTINGS.shortcuts;
 
 export type Point = {
@@ -1069,6 +1140,8 @@ export type MonsterMonitorConfig = {
    * since the two are otherwise unrelated settings scopes.
    */
   monsterBuffVoiceConfigs?: BuffVoiceConfigMap;
+  /** Voice bindings for entity-duration entries, keyed `"{monsterId}:{scope}"`. */
+  entityVoiceConfigs?: EntityVoiceConfigMap;
   fantasyShowAll: boolean;
   buffPriorityIds: number[];
   buffAliases: BuffAliasMap;
@@ -1202,6 +1275,8 @@ export type SkillMonitorProfile = {
   buffAlerts?: BuffAlertMap;
   /** Keyed by buff base id (as a string). */
   buffVoiceConfigs?: BuffVoiceConfigMap;
+  /** Keyed by base skill id (as a string); cast / ready / ready-in bindings. */
+  skillVoiceConfigs?: SkillVoiceConfigMap;
   /** Voice overrides for immutable counter presets, keyed by rule id. */
   presetCounterVoiceConfigs?: PresetCounterVoiceConfigMap;
   buffDisplayMode: BuffDisplayMode;
@@ -1627,6 +1702,7 @@ export function createDefaultSkillMonitorProfile(
     buffPriorityIds: [],
     buffAlerts: {},
     buffVoiceConfigs: {},
+    skillVoiceConfigs: {},
     presetCounterVoiceConfigs: {},
     buffDisplayMode: "individual",
     buffGroups: [],
@@ -1663,6 +1739,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     dbmAliases: {},
     dbmVoiceConfigs: {},
     monsterBuffVoiceConfigs: {},
+    entityVoiceConfigs: {},
     fantasyShowAll: false,
     buffPriorityIds: [],
     buffAliases: {},
@@ -1737,6 +1814,7 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "dbmAliases",
   "dbmVoiceConfigs",
   "monsterBuffVoiceConfigs",
+  "entityVoiceConfigs",
   "fantasyShowAll",
   "buffPriorityIds",
   "buffAlerts",

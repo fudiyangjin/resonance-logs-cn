@@ -66,6 +66,42 @@ describe("collectReferencedVoiceKeys", () => {
     expect(orphans).toEqual(["custom:voice:buff:303:gained"]);
   });
 
+  it("keeps skill and entity bindings across every event and entity scope", () => {
+    const sources: VoicePhraseGcSources = {
+      ...emptySources(),
+      skillProfiles: [
+        { skillVoiceConfigs: { "1420": { cast: eventConfig() } } },
+      ],
+      monsterConfigs: [
+        {
+          entityVoiceConfigs: {
+            "179901:self": { expiring: expiringConfig() },
+          },
+        },
+      ],
+    };
+    const keys = collectReferencedVoiceKeys(sources);
+    expect(keys.has("voice:skill:1420:cast")).toBe(true);
+    expect(keys.has("voice:skill:1420:ready")).toBe(true);
+    expect(keys.has("voice:skill:1420:readyIn")).toBe(true);
+    expect(keys.has("voice:entity:179901:self:appeared")).toBe(true);
+    expect(keys.has("voice:entity:179901:any:gone")).toBe(true);
+    expect(
+      orphanNames(
+        [
+          phrase("auto:voice:skill:1420:ready"),
+          phrase("auto:voice:skill:1425:ready"),
+          phrase("auto:voice:entity:179901:any:expiring"),
+          phrase("auto:voice:entity:179902:self:gone"),
+        ],
+        sources,
+      ),
+    ).toEqual([
+      "auto:voice:skill:1425:ready",
+      "auto:voice:entity:179902:self:gone",
+    ]);
+  });
+
   it("keeps all events of a configured subject even if only one is set", () => {
     const sources: VoicePhraseGcSources = {
       ...emptySources(),

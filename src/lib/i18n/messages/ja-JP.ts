@@ -1197,6 +1197,11 @@ export const jaJPMessages = {
     "共鳴スキルが選択されていません",
   "skillMonitor.skillCd.preview.title": "モニタープレビュー",
   "skillMonitor.skillCd.preview.description": "選択順に並べ替え",
+  "skillMonitor.skillCd.voice.title": "音声読み上げ",
+  "skillMonitor.skillCd.voice.description":
+    "監視中のスキルに発動・クールダウン完了・完了前の読み上げを設定します。チャージ系スキルは最初のチャージが戻ったときのみ完了を読み上げます。",
+  "skillMonitor.skillCd.voice.empty":
+    "先に上で監視するスキルを選択してください。",
   "skillMonitor.buff.status.selected": "選択済み",
   "skillMonitor.buff.status.editing": "編集中",
   "skillMonitor.buff.status.aliased": "別名設定済み",
@@ -1600,6 +1605,9 @@ export const jaJPMessages = {
   "monsterMonitor.entityDuration.empty": "エンティティ監視はまだありません。",
   "monsterMonitor.entityDuration.styleTitle": "パネルスタイル",
   "monsterMonitor.entityDuration.noDuration": "カウントダウンなし",
+  "monsterMonitor.entityDuration.voice.title": "音声読み上げ",
+  "monsterMonitor.entityDuration.voice.hint":
+    "「残り x 秒で読み上げ」には持続時間の設定が必要です。持続時間を変更すると、既存のエンティティは新しい時間で再計時されます。",
   "monsterMonitor.bossDbm.title": "Boss ギミック (DBM)",
   "monsterMonitor.bossDbm.description":
     "スキル名とカウントダウン付きの Boss ギミック警告バーを表示します。「ウィンドウを有効化」で表示を切り替えます。",
@@ -2157,6 +2165,11 @@ export const jaJPMessages = {
   "voice.binding.event.lost": "終了時に読み上げ",
   "voice.binding.event.threshold": "目標達成時に読み上げ",
   "voice.binding.event.onCast": "発生時に読み上げ",
+  "voice.binding.event.cast": "発動時に読み上げ",
+  "voice.binding.event.ready": "完了時に読み上げ",
+  "voice.binding.event.readyIn": "完了 x 秒前に読み上げ",
+  "voice.binding.event.appeared": "出現時に読み上げ",
+  "voice.binding.event.gone": "消滅時に読み上げ",
   "voice.binding.source.auto": "自動生成",
   "voice.binding.source.preset": "プリセット",
   "voice.binding.source.custom": "カスタムテキスト",
@@ -2218,6 +2231,8 @@ export const jaJPMessages = {
   "voice.bindings.navigate.monsterBuff": "モンスター監視へ",
   "voice.bindings.navigate.minimap": "ダンジョンギミックへ",
   "voice.bindings.navigate.alerts": "マッチ通知へ",
+  "voice.bindings.navigate.skill": "スキルCDへ",
+  "voice.bindings.navigate.entity": "エンティティ持続時間へ",
   "voice.bindings.generateMissing": "不足分の音声を一括生成",
   "voice.bindings.generateMissing.generating": "生成中…",
   "voice.bindings.generateMissing.needProfile":

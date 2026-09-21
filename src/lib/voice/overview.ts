@@ -74,14 +74,25 @@ export function listVoiceBindingOverview(
 /** Group metadata (title / navigation) in display order. */
 export function overviewGroups(): readonly OverviewGroupMeta[] {
   return (
-    ["buff", "monsterBuff", "counter", "dbm", "minimap", "alerts"] as const
+    [
+      "buff",
+      "skill",
+      "monsterBuff",
+      "counter",
+      "dbm",
+      "entity",
+      "minimap",
+      "alerts",
+    ] as const
   ).map((group) => {
     const kind = (
       {
         buff: "buff",
+        skill: "skill",
         monsterBuff: "monsterBuff",
         counter: "counterSlot",
         dbm: "dbm",
+        entity: "entity",
         minimap: "minimapCue",
         alerts: "gameAlert",
       } as const

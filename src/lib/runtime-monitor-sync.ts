@@ -145,7 +145,7 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
       globalIds: [],
       selfAppliedIds: [],
       monitorAllSelfApplied: false,
-      watchedEntityIds: [],
+      watchedEntities: [],
     };
   }
 
@@ -158,11 +158,15 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
       SETTINGS.monsterMonitor.state.selfAppliedBuffIds,
     ),
     monitorAllSelfApplied: SETTINGS.monsterMonitor.state.selfAppliedMonitorAll,
-    watchedEntityIds: uniqueSortedNumbers(
-      ensureEntityDurationEntries(
-        SETTINGS.monsterMonitor.state.entityDurationEntries,
-      ).map((entry) => entry.monsterId),
-    ),
+    watchedEntities: ensureEntityDurationEntries(
+      SETTINGS.monsterMonitor.state.entityDurationEntries,
+    )
+      .map((entry) => ({
+        monsterId: entry.monsterId,
+        durationMs: entry.durationMs ?? null,
+        scope: entry.scope,
+      }))
+      .sort((a, b) => a.monsterId - b.monsterId),
   };
 }
 

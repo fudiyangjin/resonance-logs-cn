@@ -57,14 +57,22 @@ All voice rules are configured inline on feature pages, not created in Bindings 
 | Where | Typical events |
 |----------|----------|
 | Live Monitor → Buff Monitor | Gained / Lost / N seconds remaining |
+| Live Monitor → Skill CD | On cast / Ready / N seconds before ready |
 | Live Monitor → Custom Monitor (counters) | Reached target |
 | Monster Monitor → Buff Monitor | Gained / Lost / N seconds remaining |
 | Monster Monitor → Boss DBM | On cast / trigger |
+| Monster Monitor → Entity Duration | Appeared / N seconds remaining / Gone |
 | Dungeon Mechanics → Mechanic voice cues | Supported mechanic warnings per map |
+
+Notes on Skill CD and Entity Duration:
+
+- Skill cues only cover the local player, and the skill must be in the Skill CD monitor list. Charge skills announce **Ready** only when the **first charge** returns; later charges are silent, and "N seconds before ready" follows the same rule.
+- "N seconds remaining" for an entity requires a configured duration; open-ended entries only offer Appeared / Gone. An entity destroyed early only announces Gone.
+- Changing an entry's duration re-times entities that already exist. Entity bindings are keyed by monster id + scope (Self / Any), so switching the scope requires configuring the binding again.
 
 ### Bindings Overview
 
-**Voice → Bindings Overview** is a read-only summary of everything above (grouped by Buff Monitor, monster buffs, counters, boss mechanics, dungeon mechanics):
+**Voice → Bindings Overview** is a read-only summary of everything above (grouped by Buff Monitor, Skill CD, monster buffs, counters, boss mechanics, entity duration, dungeon mechanics):
 
 - For **Pending** items, install a model and select a voice first, then **Generate missing audio**.
 - Use "Go to …" links to edit bindings on the original page.

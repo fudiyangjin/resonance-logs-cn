@@ -5,6 +5,7 @@
  * functions so the registry can be unit-tested without Svelte runes.
  */
 import type {
+  EntityOwnerScope,
   MonsterBuffSourceScope,
   VoiceLanguage,
   VoiceTrigger,
@@ -26,8 +27,12 @@ import type { MinimapVoiceCueDef } from "../../routes/minimap-overlay/scene-type
 export type VoiceBindingSubject =
   | { kind: "buff"; buffId: number }
   | { kind: "monsterBuff"; buffId: number; sourceScope: MonsterBuffSourceScope }
+  /** One of the local player's monitored skills (base skill id). */
+  | { kind: "skill"; skillId: number }
   | { kind: "counterSlot"; ruleId: number; slotId: number }
   | { kind: "dbm"; baseSkillId: number }
+  /** An entity-duration watch entry; `scope` mirrors `EntityDurationScope`. */
+  | { kind: "entity"; monsterId: number; scope: EntityOwnerScope }
   | { kind: "minimapCue"; cueId: string }
   | { kind: "gameAlert"; alertKind: GameAlertKind };
 
@@ -38,7 +43,12 @@ export type VoiceBindingEventKind =
   | "expiring"
   | "lost"
   | "threshold"
-  | "onCast";
+  | "onCast"
+  | "cast"
+  | "ready"
+  | "readyIn"
+  | "appeared"
+  | "gone";
 
 export type VoiceEventConfigAny = VoiceEventConfig | VoiceExpiringEventConfig;
 
@@ -61,9 +71,11 @@ export type VoiceEventSpec = {
 
 export type OverviewGroup =
   | "buff"
+  | "skill"
   | "monsterBuff"
   | "counter"
   | "dbm"
+  | "entity"
   | "minimap"
   | "alerts";
 
@@ -76,7 +88,11 @@ export type OverviewGroupMeta = {
 
 export type SkillProfileVoiceSlice = Pick<
   SkillMonitorProfile,
-  "buffVoiceConfigs" | "userCounterRules" | "presetCounterVoiceConfigs"
+  | "selectedClass"
+  | "buffVoiceConfigs"
+  | "skillVoiceConfigs"
+  | "userCounterRules"
+  | "presetCounterVoiceConfigs"
 >;
 
 export type MonsterVoiceSlice = Pick<
@@ -87,6 +103,8 @@ export type MonsterVoiceSlice = Pick<
   | "monitoredBuffIds"
   | "selfAppliedBuffIds"
   | "selfAppliedMonitorAll"
+  | "entityDurationEntries"
+  | "entityVoiceConfigs"
 >;
 
 /**
@@ -114,7 +132,10 @@ export type VoiceBindingWriter = {
     patch: (
       current: MonsterVoiceSlice,
     ) => Partial<
-      Pick<MonsterVoiceSlice, "monsterBuffVoiceConfigs" | "dbmVoiceConfigs">
+      Pick<
+        MonsterVoiceSlice,
+        "monsterBuffVoiceConfigs" | "dbmVoiceConfigs" | "entityVoiceConfigs"
+      >
     >,
   ): void;
   updateMechanicVoiceConfigs(

@@ -35,9 +35,9 @@ export type VoiceBindingEventDef = {
 };
 
 function defaultEventConfig(
-  eventKind: VoiceBindingEventKind,
+  expiring: boolean,
 ): VoiceEventConfig | VoiceExpiringEventConfig {
-  return eventKind === "expiring"
+  return expiring
     ? createDefaultVoiceExpiringEventConfig()
     : createDefaultVoiceEventConfig();
 }
@@ -79,9 +79,13 @@ export function updateSubjectEvent(
   patch: Partial<VoiceEventConfig & VoiceExpiringEventConfig>,
 ): void {
   const adapter = adapterFor(subject);
-  const current = adapter.read(buildVoiceBindingView(), subject, eventKind);
+  const view = buildVoiceBindingView();
+  const current = adapter.read(view, subject, eventKind);
+  const expiring =
+    adapter.events(view, subject).find((spec) => spec.eventKind === eventKind)
+      ?.expiring ?? false;
   adapter.write(SETTINGS_WRITER, subject, eventKind, {
-    ...(current ?? defaultEventConfig(eventKind)),
+    ...(current ?? defaultEventConfig(expiring)),
     ...patch,
   });
 }

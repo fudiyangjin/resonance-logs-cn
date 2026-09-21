@@ -1,4 +1,6 @@
 <script lang="ts">
+  import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
+  import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
   import type { EntityDurationPreset } from "$lib/config/entity-duration-presets";
   import {
     isValidEntityId,
@@ -45,6 +47,13 @@
   let manualSecondsText = $state("");
   let manualScope = $state<EntityDurationScope>("self");
   let manualIdInvalid = $state(false);
+  let voiceExpandedIds = $state<string[]>([]);
+
+  function toggleVoiceExpanded(id: string) {
+    voiceExpandedIds = voiceExpandedIds.includes(id)
+      ? voiceExpandedIds.filter((existing) => existing !== id)
+      : [...voiceExpandedIds, id];
+  }
 
   const monitoredIds = $derived(new Set(entries.map((e) => e.monsterId)));
 
@@ -288,6 +297,34 @@
           >
             {t("monsterMonitor.priority.remove")}
           </button>
+          <button
+            type="button"
+            class="text-muted-foreground hover:text-foreground flex basis-full items-center justify-between gap-2 px-1 text-xs"
+            onclick={() => toggleVoiceExpanded(entry.id)}
+          >
+            <span>{t("monsterMonitor.entityDuration.voice.title")}</span>
+            <ChevronDownIcon
+              class="h-3.5 w-3.5 shrink-0 transition-transform duration-200 {voiceExpandedIds.includes(
+                entry.id,
+              )
+                ? 'rotate-180'
+                : ''}"
+            />
+          </button>
+          {#if voiceExpandedIds.includes(entry.id)}
+            <div class="basis-full space-y-2">
+              <p class="text-muted-foreground px-1 text-xs">
+                {t("monsterMonitor.entityDuration.voice.hint")}
+              </p>
+              <VoiceBindingControl
+                subject={{
+                  kind: "entity",
+                  monsterId: entry.monsterId,
+                  scope: entry.scope,
+                }}
+              />
+            </div>
+          {/if}
         </div>
       {/each}
     </div>

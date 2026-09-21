@@ -41,6 +41,9 @@ export const SETTINGS_WRITER: VoiceBindingWriter = {
     if (next.dbmVoiceConfigs !== undefined) {
       state.dbmVoiceConfigs = next.dbmVoiceConfigs;
     }
+    if (next.entityVoiceConfigs !== undefined) {
+      state.entityVoiceConfigs = next.entityVoiceConfigs;
+    }
   },
   updateMechanicVoiceConfigs(update) {
     SETTINGS.minimap.state.mechanicVoiceConfigs = update(

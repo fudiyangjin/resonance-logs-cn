@@ -30,12 +30,15 @@ import { byKind } from "./registry";
 
 export type VoicePhraseGcSkillSource = Pick<
   SkillMonitorProfile,
-  "buffVoiceConfigs" | "userCounterRules" | "presetCounterVoiceConfigs"
+  | "buffVoiceConfigs"
+  | "skillVoiceConfigs"
+  | "userCounterRules"
+  | "presetCounterVoiceConfigs"
 >;
 
 export type VoicePhraseGcMonsterSource = Pick<
   MonsterMonitorConfig,
-  "dbmVoiceConfigs" | "monsterBuffVoiceConfigs"
+  "dbmVoiceConfigs" | "monsterBuffVoiceConfigs" | "entityVoiceConfigs"
 >;
 
 export type VoicePhraseGcSources = {
@@ -58,17 +61,24 @@ export function collectReferencedVoiceKeys(
   const add = (list: string[]) => list.forEach((key) => keys.add(key));
 
   for (const profile of sources.skillProfiles) {
-    add(byKind("buff").gcKeys(profile));
-    add(byKind("counterSlot").gcKeys(profile));
+    // The skill adapters only read their own config maps; `selectedClass`
+    // is irrelevant to GC and may be absent from these sources.
+    const slice = profile as Parameters<
+      ReturnType<typeof byKind<"buff">>["gcKeys"]
+    >[0];
+    add(byKind("buff").gcKeys(slice));
+    add(byKind("skill").gcKeys(slice));
+    add(byKind("counterSlot").gcKeys(slice));
   }
   for (const config of sources.monsterConfigs) {
-    // dbm/monsterBuff only read their own maps; the other slice fields are
-    // irrelevant to GC and may legitimately be absent from these sources.
+    // dbm/monsterBuff/entity only read their own maps; the other slice
+    // fields are irrelevant to GC and may legitimately be absent here.
     const slice = config as Parameters<
       ReturnType<typeof byKind<"dbm">>["gcKeys"]
     >[0];
     add(byKind("dbm").gcKeys(slice));
     add(byKind("monsterBuff").gcKeys(slice));
+    add(byKind("entity").gcKeys(slice));
   }
   add(byKind("minimapCue").gcKeys(sources.mechanicVoiceConfigs));
   add(byKind("gameAlert").gcKeys(undefined));
