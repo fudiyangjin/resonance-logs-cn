@@ -8,10 +8,8 @@
 
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Write};
-use std::num::NonZero;
 use std::path::Path;
 
-use rodio::source::UniformSourceIterator;
 use rodio::{Decoder, Source};
 use sha2::{Digest, Sha256};
 
@@ -90,14 +88,57 @@ pub fn decode_and_normalize(path: &Path) -> VoiceResult<ImportedClip> {
 
 /// Downmixes to mono, resamples to [`IMPORT_SAMPLE_RATE`] and quantizes to
 /// PCM16. Generic over the source so tests can feed synthetic signals.
+///
+/// The whole clip is decoded first and resampled in a single pass. rodio's
+/// `UniformSourceIterator` would instead rebuild its converter at every
+/// decoder span (one per compressed packet), resetting the interpolation
+/// phase and leaving audible discontinuities at packet boundaries.
 fn normalize<S>(source: S) -> Vec<i16>
 where
     S: Source<Item = f32>,
 {
-    let mono = NonZero::new(1u16).expect("1 is non-zero");
-    let rate = NonZero::new(IMPORT_SAMPLE_RATE).expect("sample rate is non-zero");
-    UniformSourceIterator::new(source, mono, rate)
+    let channels = usize::from(source.channels().get());
+    let source_rate = source.sample_rate().get();
+    let interleaved: Vec<f32> = source.collect();
+    let mono = downmix_mono(&interleaved, channels);
+    resample_linear(&mono, source_rate, IMPORT_SAMPLE_RATE)
+        .into_iter()
         .map(|sample| (sample.clamp(-1.0, 1.0) * f32::from(i16::MAX)).round() as i16)
+        .collect()
+}
+
+fn downmix_mono(interleaved: &[f32], channels: usize) -> Vec<f32> {
+    if channels <= 1 {
+        return interleaved.to_vec();
+    }
+    let scale = 1.0 / channels as f32;
+    interleaved
+        .chunks_exact(channels)
+        .map(|frame| frame.iter().sum::<f32>() * scale)
+        .collect()
+}
+
+/// Single-pass linear interpolation over the entire clip, so the phase is
+/// continuous from the first sample to the last.
+fn resample_linear(input: &[f32], from_rate: u32, to_rate: u32) -> Vec<f32> {
+    if input.is_empty() {
+        return Vec::new();
+    }
+    if from_rate == to_rate {
+        return input.to_vec();
+    }
+    let out_len = ((input.len() as u64 * u64::from(to_rate)) / u64::from(from_rate)) as usize;
+    let step = f64::from(from_rate) / f64::from(to_rate);
+    let last = input.len() - 1;
+    (0..out_len)
+        .map(|i| {
+            let pos = i as f64 * step;
+            let idx = (pos as usize).min(last);
+            let frac = (pos - idx as f64) as f32;
+            let a = input[idx];
+            let b = input[(idx + 1).min(last)];
+            a + (b - a) * frac
+        })
         .collect()
 }
 
@@ -166,6 +207,7 @@ pub fn write_pcm16_wav(path: &Path, samples: &[i16], sample_rate: u32) -> VoiceR
 mod tests {
     use super::*;
     use rodio::buffer::SamplesBuffer;
+    use std::num::NonZero;
 
     fn sine(rate: u32, channels: u16, seconds: f32) -> SamplesBuffer {
         let frames = (rate as f32 * seconds) as usize;
@@ -191,6 +233,34 @@ mod tests {
         assert!((duration - 1.0).abs() < 0.01, "duration {duration}");
         assert!(samples.iter().any(|s| *s > 10_000));
         assert!(samples.iter().all(|s| s.unsigned_abs() <= 16_384 + 64));
+    }
+
+    #[test]
+    fn resampled_sine_is_continuous_across_the_whole_clip() {
+        // 3 s at 48 kHz stereo is well past rodio's 32768-sample span size,
+        // so any per-span phase reset would show up as a jump here.
+        let samples = normalize(sine(48_000, 2, 3.0));
+        // 440 Hz at amplitude 0.5 sampled at 24 kHz: max slope per sample is
+        // 0.5 * 2π * 440 / 24000 ≈ 0.0576 → ~1887 PCM16 units; allow slack.
+        let max_step = 2_400;
+        for (i, pair) in samples.windows(2).enumerate() {
+            let step = (i32::from(pair[1]) - i32::from(pair[0])).abs();
+            assert!(step <= max_step, "discontinuity at sample {i}: step {step}");
+        }
+        assert!((samples.len() as f64 / f64::from(IMPORT_SAMPLE_RATE) - 3.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn resample_linear_handles_identity_and_ratio() {
+        let input: Vec<f32> = (0..10).map(|i| i as f32).collect();
+        assert_eq!(resample_linear(&input, 100, 100), input);
+        let half = resample_linear(&input, 100, 50);
+        assert_eq!(half.len(), 5);
+        assert_eq!(half, vec![0.0, 2.0, 4.0, 6.0, 8.0]);
+        let double = resample_linear(&input, 50, 100);
+        assert_eq!(double.len(), 20);
+        assert!((double[1] - 0.5).abs() < 1e-6);
+        assert!(resample_linear(&[], 50, 100).is_empty());
     }
 
     #[test]

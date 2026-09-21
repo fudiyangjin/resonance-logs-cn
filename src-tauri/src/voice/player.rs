@@ -163,9 +163,12 @@ impl PlaybackSink for PlayerHandle {
 trait CueOutput {
     /// True while a sound is still playing.
     fn is_busy(&self) -> bool;
+    /// Applies `volume` to the currently open output, if any.
     fn set_volume(&mut self, volume: f32);
-    /// Starts `cue` immediately. Must not block.
-    fn start(&mut self, cue: &QueuedCue);
+    /// Starts `cue` immediately at `volume`. Must not block. The volume is
+    /// passed explicitly because the underlying output may be (re)created
+    /// lazily here, after any earlier `set_volume` call has been lost.
+    fn start(&mut self, cue: &QueuedCue, volume: f32);
     /// Stops whatever is playing and discards any pending sound.
     fn stop(&mut self);
 }
@@ -204,7 +207,7 @@ impl CueOutput for RodioOutput {
         }
     }
 
-    fn start(&mut self, cue: &QueuedCue) {
+    fn start(&mut self, cue: &QueuedCue, volume: f32) {
         let Some(device_sink) = &self.device_sink else {
             if !self.warned_no_device {
                 self.warned_no_device = true;
@@ -212,9 +215,13 @@ impl CueOutput for RodioOutput {
             }
             return;
         };
-        let player = self
-            .player
-            .get_or_insert_with(|| Player::connect_new(device_sink.mixer()));
+        let player = self.player.get_or_insert_with(|| {
+            // A fresh rodio Player defaults to volume 1.0; apply the
+            // configured volume before any sound is appended.
+            let player = Player::connect_new(device_sink.mixer());
+            player.set_volume(volume);
+            player
+        });
         match &cue.wav_path {
             Some(wav_path) => match File::open(wav_path) {
                 Ok(file) => match Decoder::new(BufReader::new(file)) {
@@ -313,8 +320,7 @@ impl<O: CueOutput> WorkerState<O> {
     }
 
     fn play_now(&mut self, cue: QueuedCue) {
-        self.output.set_volume(self.volume);
-        self.output.start(&cue);
+        self.output.start(&cue, self.volume);
         self.playing_priority = Some(cue.priority);
     }
 
@@ -405,6 +411,8 @@ mod tests {
     struct FakeOutput {
         busy: bool,
         started: Vec<String>,
+        /// Volume passed to each `start`, parallel to `started`.
+        start_volumes: Vec<f32>,
         stops: usize,
     }
 
@@ -413,8 +421,9 @@ mod tests {
             self.busy
         }
         fn set_volume(&mut self, _volume: f32) {}
-        fn start(&mut self, cue: &QueuedCue) {
+        fn start(&mut self, cue: &QueuedCue, volume: f32) {
             self.started.push(cue.rule_id.clone());
+            self.start_volumes.push(volume);
             self.busy = true;
         }
         fn stop(&mut self) {
@@ -530,6 +539,24 @@ mod tests {
         state.handle_enqueue(cue("higher", 9));
         assert_eq!(state.queue.len(), MAX_QUEUE_LEN);
         assert!(state.queue.iter().any(|c| c.rule_id == "higher"));
+    }
+
+    #[test]
+    fn first_cue_and_rebuilt_output_start_at_configured_volume() {
+        let mut state = WorkerState::new(FakeOutput::default());
+        state.policy = VoiceQueuePolicy::InterruptForHigherPriority;
+        assert!(apply_command(&mut state, PlayerCommand::SetVolume(0.25)));
+
+        // First cue after startup: output is created lazily inside `start`.
+        state.handle_enqueue(cue("first", 1));
+        // Interrupt discards the output; the replacement must not reset to 1.0.
+        state.handle_enqueue(cue("urgent", 200));
+        // Explicit stop, then a fresh cue once idle.
+        state.stop_all();
+        state.handle_enqueue(cue("after-stop", 1));
+
+        assert_eq!(state.output.started, vec!["first", "urgent", "after-stop"]);
+        assert_eq!(state.output.start_volumes, vec![0.25, 0.25, 0.25]);
     }
 
     #[test]
