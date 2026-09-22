@@ -4,7 +4,7 @@ Corresponds to **Live Monitor → Character Panel**.
 
 Shows character stats in the overlay (attack speed, crit rate, intelligence, haste, luck, etc.) for in-combat reference.
 
-If attributes are incomplete or lagging, it is usually incremental sync—[change zone once](../README.md#buff-monitor) per the overview, then check again.
+If attributes are incomplete or lagging, it is usually incremental sync—[change zone once](./README.md#buff-monitor) per the overview, then check again.
 
 ## Enable Attributes
 

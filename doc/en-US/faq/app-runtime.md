@@ -8,6 +8,8 @@
 
 ### First launch on 0.0.7 prompts to clean the database?
 
+> This section only concerns historical migrations from 0.0.2 / 0.0.3. New installations do not need this legacy database cleanup.
+
 If you previously used 0.0.2 or 0.0.3, you must manually clean the old database when upgrading to 0.0.7 for the first time, or you may encounter issues:
 
 1. Close the app

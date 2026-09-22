@@ -12,6 +12,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vitest run",
+    "test:updater-release": "node --test scripts/generate-update-manifests.test.mjs",
     "bindings": "cargo run --manifest-path src-tauri/Cargo.toml --bin export_bindings",
     "tauri": "tauri",
     "voice:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-voice-sidecar.ps1 -Variant Cpu",

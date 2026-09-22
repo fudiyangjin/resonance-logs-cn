@@ -2,11 +2,11 @@
 
 Corresponds to **Live Monitor → Skill CD**.
 
-If CD display is incomplete because you opened the app mid-fight, [change zone to sync](../README.md#buff-monitor) first (see overview).
+If CD display is incomplete because you opened the app mid-fight, [change zone to sync](./README.md#buff-monitor) first (see overview).
 
 ## Class & Skill CD
 
-- **Class selection**: Sets the class monitored by the current profile; the skill list updates with class (bound to [profiles](../README.md#profiles)).
+- **Class selection**: Sets the class monitored by the current profile; the skill list updates with class (bound to [profiles](./README.md#profiles)).
 - **Skill selection**: Select up to **10** skills (overlay ~2 rows × 5 columns) for cooldown and remaining time; clear all and reselect in one click.
 
 ## Duration Skills (moved)

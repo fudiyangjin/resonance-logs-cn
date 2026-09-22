@@ -1,31 +1,36 @@
 # Getting Started
 
-Follow these steps on first launch. See [App Runtime FAQ](./faq/app-runtime.md#packet-capture) for details.
+Follow these steps to see your first combat data. This guide applies to the current release; see the [App Runtime FAQ](./faq/app-runtime.md) for older-version migrations.
 
-## 1. Select your language
+## 1. Download and install
 
-Open **DPS Meter → Settings → Language** and choose a language that **matches your game client** (English, Japanese, or Chinese). This ensures buff and skill names display correctly.
+Install the latest Resonance Logs CN release for Windows x64. Keep your user settings directory when upgrading. Choose the language matching your game client in **DPS Meter → Settings → Language**.
 
-## 2. Install Npcap
+## 2. Choose a capture method
 
-This app uses **Npcap** to capture network traffic on Windows. Install [Npcap](https://npcap.com/) first (Windows 10 or later).
+Open **DPS Meter → Settings → Network**. Choose one of the two supported methods.
 
-## 3. Select a network adapter
+| Method | Preparation | When to use |
+| --- | --- | --- |
+| WinDivert | Built-in driver; run the app as administrator | No separate Npcap installation |
+| Npcap | Install [Npcap](https://npcap.com/) and select an adapter | Capture on a specific adapter, or when WinDivert is unavailable |
 
-Go to **DPS Meter → Settings → Network** and pick the adapter that carries your game traffic under **Network Device**.
+## 3. Configure capture
 
-- Prefer your real Ethernet or Wi-Fi adapter
-- Avoid Loopback, VirtualBox, VMware, and similar virtual adapters
-- Temporarily disable VPN or proxy if capture fails
+**WinDivert**: select this method and run the app as administrator. If the driver is blocked, consult the [capture troubleshooting guide](./faq/app-runtime.md).
 
-## 4. Restart the application
+**Npcap**: under **Network Device**, choose the real Ethernet or Wi-Fi adapter carrying game traffic. Avoid Loopback, VirtualBox and VMware adapters. If using a VPN or proxy, check which adapter actually carries the traffic.
 
-> **Important**: After changing the network adapter—or after selecting one for the first time—you **must fully quit and restart the app** before the new adapter takes effect. Saving settings alone is not enough; capture may still use the previous device or show no data.
+## 4. Fully quit and restart
 
-## 5. Launch the game and verify
+> **Important**: changing the capture method or network adapter requires a full restart. Closing the main window may only hide it to the system tray; exit from the tray before restarting.
 
-1. Restart this app (if you just changed the network adapter)
-2. Launch the game and enter a combat-capable scene
-3. Open the live window under **DPS Meter** and confirm damage data appears
+## 5. Verify combat data
 
-If you still see no data, see [No data / capture not working?](./faq/app-runtime.md#no-data--capture-not-working).
+1. Start the game and enter an area where you can fight.
+2. Open the **DPS Meter** live window and attack a target.
+3. Confirm that your character and damage appear. If you started the app mid-session, change zone once to synchronize state.
+
+## 6. Troubleshoot missing data
+
+Check that the game is running, the correct capture method is selected, the driver or adapter is configured, and the app has restarted. See the [App Runtime FAQ](./faq/app-runtime.md) for the full checklist.

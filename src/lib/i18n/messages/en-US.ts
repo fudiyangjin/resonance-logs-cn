@@ -5,6 +5,13 @@ export const enUSMessages = {
   "toolbox.subtitle": "Toolbox",
   "toolbox.section.tools": "Tools",
   "toolbox.versionLoading": "Loading...",
+  "updater.available": "Update available",
+  "updater.hint":
+    "Version {version}: click to download in the background, then update and restart automatically",
+  "updater.downloading": "Downloading {progress}",
+  "updater.verifying": "Verifying",
+  "updater.installing": "Updating",
+  "updater.retry": "Update failed, retry",
   "loadout.sidebar.label": "Current Loadout",
   "loadout.sidebar.empty": "No loadout",
   "loadout.sidebar.manage": "Manage loadouts",
@@ -193,14 +200,6 @@ export const enUSMessages = {
   "components.playerAutocomplete.noPlayers": "No players found",
   "components.bossAutocomplete.placeholder": "Filter by boss name...",
   "components.dialog.close": "Close",
-  "components.updateModal.closeAria": "Close update dialog",
-  "components.updateModal.title": "New Version Available",
-  "components.updateModal.versionLine":
-    "Current version v{currentVersion}, latest version v{latestVersion}",
-  "components.updateModal.empty": "No release notes for this version.",
-  "components.updateModal.footer":
-    "If GitHub is slow, you can get the latest installer from the QQ group (1084866292) or Discord (discord.gg/RHeX47wvDU). If you'd like to help provide translations, contact us on Discord.",
-  "components.updateModal.download": "Download on GitHub",
   "components.changelogModal.closeAria": "Close changelog dialog",
   "components.changelogModal.title": "Changelog",
   "components.changelogModal.subtitle":

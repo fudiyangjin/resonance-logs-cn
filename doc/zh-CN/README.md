@@ -6,7 +6,7 @@
 
 | 文档 | 说明 |
 |------|------|
-| [快速入门](./getting-started.md) | Npcap 安装、网卡选择、重启应用、验证抓包 |
+| [快速入门](./getting-started.md) | 安装应用、选择 WinDivert 或 Npcap、配置、重启、验证与排查 |
 
 ## 功能文档
 
@@ -39,6 +39,7 @@
 | [队友 Buff](./features/monster/teammate.md) | 队友 Buff、分类快捷、矩阵样式 |
 | [仇恨列表](./features/monster/hate.md) | 仇恨开关、人数上限、样式 |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss 技能机制预警条、样式与布局 |
+| [实体持续](./features/monster/entity-duration.md) | 按实体出现 / 消失计时、范围与预设 |
 | [启用窗口](./features/monster/overlay.md) | 怪物遮罩各区域显示开关 |
 
 ### 副本机制

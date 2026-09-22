@@ -6,7 +6,7 @@
 
 | ドキュメント | 説明 |
 |------|------|
-| [はじめに](./getting-started.md) | Npcap のインストール、NIC 選択、アプリの再起動、キャプチャの確認 |
+| [はじめに](./getting-started.md) | インストール、WinDivert または Npcap の選択、設定、再起動、確認と対処 |
 
 ## 機能ドキュメント
 
@@ -39,6 +39,7 @@
 | [味方 Buff](./features/monster/teammate.md) | 味方 Buff、分類ショートカット、マトリクススタイル |
 | [ヘイトリスト](./features/monster/hate.md) | ヘイトのオン/オフ、表示人数上限、スタイル |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss ギミック警告バー、スタイル、レイアウト |
+| [エンティティ持続](./features/monster/entity-duration.md) | 出現 / 消滅による計時、範囲とプリセット |
 | [ウィンドウを有効化](./features/monster/overlay.md) | モンスターオーバーレイ各エリアの表示切替 |
 
 ### ダンジョンギミック

@@ -28,4 +28,4 @@ Archived release notes by version.
 | v0.0.3 | [v0.0.3.md](./v0.0.3.md) |
 | v0.0.2 | [v0.0.2.md](./v0.0.2.md) |
 
-> Latest release notes: [CHANGELOG.md](../../CHANGELOG.md) at the project root.
+> Latest release notes: [CHANGELOG.md](./v0.2.4.md) at the project root.

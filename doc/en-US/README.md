@@ -6,7 +6,7 @@ Feature guides and FAQ index.
 
 | Document | Description |
 |------|------|
-| [Getting Started](./getting-started.md) | Npcap install, adapter selection, restart app, verify capture |
+| [Getting Started](./getting-started.md) | Install, choose WinDivert or Npcap, configure, restart, verify and troubleshoot |
 
 ## Feature Guides
 
@@ -39,6 +39,7 @@ Feature guides and FAQ index.
 | [Teammate Buffs](./features/monster/teammate.md) | Teammate buffs, category shortcuts, matrix styling |
 | [Threat List](./features/monster/hate.md) | Threat toggle, player limit, styling |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss mechanic warning bars, styling, layout |
+| [Entity Duration](./features/monster/entity-duration.md) | Entity timers, scope and presets |
 | [Enable Overlay](./features/monster/overlay.md) | Monster overlay area display toggles |
 
 ### Dungeon Mechanics

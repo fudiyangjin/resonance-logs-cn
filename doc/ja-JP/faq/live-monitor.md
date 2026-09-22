@@ -19,7 +19,7 @@
 - **因子エネルギーなどのカウンター名**：因子区の **因子表示名** で検索・設定。
 - **因子 Buff 効果の名称**：[Buff監視 → Buffエイリアス設定](../features/monitor/buff.md#buff-エイリアス) で設定。
 
-詳細は [カスタム監視 · 因子区](../features/monitor/custom-panel.md#因子区因子区を新規作成) を参照。
+詳細は [カスタム監視 · 因子区](../features/monitor/custom-panel.md) を参照。
 
 ### 食事 / 錬金 Buff を一括で監視するには？
 

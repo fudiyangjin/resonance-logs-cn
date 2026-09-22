@@ -19,7 +19,12 @@
   import Languages from "virtual:icons/lucide/languages";
   import LayersIcon from "virtual:icons/lucide/layers";
   import SettingsIcon from "virtual:icons/lucide/settings";
-  import { activeLoadout, listLoadouts, switchLoadout } from "$lib/loadouts.svelte.js";
+  import UpdateIndicator from "$lib/components/UpdateIndicator.svelte";
+  import {
+    activeLoadout,
+    listLoadouts,
+    switchLoadout,
+  } from "$lib/loadouts.svelte.js";
 
   // Check if current path matches or starts with the tool path
   function isActiveRoute(toolPath: string): boolean {
@@ -56,7 +61,9 @@
 
   <!-- Global loadout switcher -->
   <div class="px-3 py-3 border-b border-border/50">
-    <p class="px-1 pb-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+    <p
+      class="px-1 pb-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wider"
+    >
       {t("loadout.sidebar.label")}
     </p>
     <div class="flex items-center gap-1.5">
@@ -74,7 +81,12 @@
             class="w-3 h-3 opacity-60 transition-transform duration-200 group-data-[state=open]:rotate-180 shrink-0"
           />
         </Popover.Trigger>
-        <Popover.Content class="w-52 p-1" align="start" side="bottom" sideOffset={6}>
+        <Popover.Content
+          class="w-52 p-1"
+          align="start"
+          side="bottom"
+          sideOffset={6}
+        >
           {#each loadouts as loadout (loadout.id)}
             <button
               type="button"
@@ -123,8 +135,15 @@
 
   <!-- Footer with version + language switcher -->
   <div class="p-3 border-t border-border/50">
-    <div class="flex flex-col items-center gap-1.5 text-xs text-muted-foreground">
-      <span>v{appVersion || t("toolbox.versionLoading")}</span>
+    <div
+      class="flex flex-col items-center gap-1.5 text-xs text-muted-foreground"
+    >
+      <div class="flex w-full items-center justify-center gap-1.5">
+        <span class="shrink-0"
+          >v{appVersion || t("toolbox.versionLoading")}</span
+        >
+        <UpdateIndicator />
+      </div>
       <div class="flex items-center gap-1.5">
         <span class="opacity-60">language:</span>
         <Popover.Root>
@@ -137,7 +156,12 @@
               class="w-3 h-3 opacity-60 transition-transform duration-200 group-data-[state=open]:rotate-180"
             />
           </Popover.Trigger>
-          <Popover.Content class="w-36 p-1" align="center" side="top" sideOffset={6}>
+          <Popover.Content
+            class="w-36 p-1"
+            align="center"
+            side="top"
+            sideOffset={6}
+          >
             {#each APP_LOCALES as locale (locale)}
               <button
                 type="button"

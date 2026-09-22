@@ -7,6 +7,20 @@
 
 
 export const commands = {
+async getUpdateStatus() : Promise<UpdateStatus> {
+    return await TAURI_INVOKE("get_update_status");
+},
+async checkForUpdates() : Promise<UpdateStatus> {
+    return await TAURI_INVOKE("check_for_updates");
+},
+async startUpdate() : Promise<Result<UpdateStatus, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("start_update") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async pullLiveWindowFrame(request: LiveWindowFrameRequest) : Promise<Result<LiveWindowFrame, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("pull_live_window_frame", { request }) };
@@ -1133,6 +1147,8 @@ export type TickAttrCondition = { attrId: number; requiredValue: number }
 export type TrainingDummyPhase = "idle" | "armed" | "running" | "finished"
 export type TrainingDummyState = { phase: TrainingDummyPhase }
 export type TrainingLockPolicy = "eliteDummies" | "firstMonster"
+export type UpdatePhase = "idle" | "checking" | "upToDate" | "available" | "downloading" | "verifying" | "installing" | "failed"
+export type UpdateStatus = { revision: number; phase: UpdatePhase; version: string | null; downloadedBytes: number; totalBytes: number | null; error: string | null }
 /**
  * A single generated take (WAV) for a phrase, using a specific profile/model/params.
  */

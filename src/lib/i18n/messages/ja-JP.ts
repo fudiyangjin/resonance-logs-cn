@@ -3,6 +3,13 @@ export const jaJPMessages = {
   "toolbox.subtitle": "ツールボックス",
   "toolbox.section.tools": "ツール",
   "toolbox.versionLoading": "読み込み中...",
+  "updater.available": "更新あり",
+  "updater.hint":
+    "新バージョン v{version}：クリックするとバックグラウンドでダウンロードし、自動更新して再起動します",
+  "updater.downloading": "ダウンロード中 {progress}",
+  "updater.verifying": "検証中",
+  "updater.installing": "更新中",
+  "updater.retry": "更新失敗・再試行",
   "loadout.sidebar.label": "現在のロードアウト",
   "loadout.sidebar.empty": "ロードアウトなし",
   "loadout.sidebar.manage": "ロードアウト管理",
@@ -193,15 +200,6 @@ export const jaJPMessages = {
   "components.playerAutocomplete.noPlayers": "プレイヤーが見つかりません",
   "components.bossAutocomplete.placeholder": "ボス名でフィルター...",
   "components.dialog.close": "閉じる",
-  "components.updateModal.closeAria": "更新ダイアログを閉じる",
-  "components.updateModal.title": "新しいバージョンが利用可能です",
-  "components.updateModal.versionLine":
-    "現在のバージョン v{currentVersion}、最新バージョン v{latestVersion}",
-  "components.updateModal.empty":
-    "このバージョンのリリースノートはありません。",
-  "components.updateModal.footer":
-    "GitHub のダウンロードが遅い場合は、QQ グループ（1084866292）または Discord（discord.gg/RHeX47wvDU）から最新インストーラーを入手できます。翻訳の提供をご希望の場合は Discord よりご連絡ください。",
-  "components.updateModal.download": "GitHub でダウンロード",
   "components.changelogModal.closeAria": "更新履歴ダイアログを閉じる",
   "components.changelogModal.title": "更新履歴",
   "components.changelogModal.subtitle":

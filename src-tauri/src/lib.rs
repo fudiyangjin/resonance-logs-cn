@@ -3,6 +3,7 @@ mod build_app;
 mod live;
 pub mod module_optimizer;
 mod packets;
+mod updater;
 #[cfg(windows)]
 mod titlebar_guard;
 pub mod voice;
@@ -25,9 +26,6 @@ use tauri::{
     WindowEvent,
 };
 use tauri_plugin_window_state::{AppHandleExt, StateFlags, WindowExt};
-// NOTE: the updater extension trait is imported next to the helper that uses it
-// and is cfg-gated to avoid unused-import warnings on builds that don't enable
-// the updater plugin.
 use tauri_specta::{Builder, collect_commands};
 mod database;
 mod hud_layout;
@@ -59,6 +57,9 @@ pub(crate) struct ExitOnClose(AtomicBool);
 /// This function sets up and runs the Tauri application.
 fn api_builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new().commands(collect_commands![
+        updater::get_update_status,
+        updater::check_for_updates,
+        updater::start_update,
         live::ipc::commands::pull_live_window_frame,
         live::ipc::commands::pull_hud_frame,
         live::ipc::commands::set_live_pull_active,
@@ -167,6 +168,7 @@ pub fn run() {
         .manage(publication_cache.clone())
         .manage(history_writer.clone())
         .manage(ExitOnClose::default())
+        .manage(updater::UpdateService::default())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -215,13 +217,7 @@ pub fn run() {
 
             #[cfg(windows)]
             {
-                let update_check_app_handle = app_handle.clone();
-                tauri::async_runtime::spawn(async move {
-                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-                    if let Err(e) = check_for_updates(update_check_app_handle).await {
-                        warn!(target: "app::startup", "Updater check failed: {}", e);
-                    }
-                });
+                updater::schedule_startup_check(app_handle.clone());
             }
 
             // Install panic hook to create a crash dump file when the app panics.
@@ -681,83 +677,6 @@ mod debug_commands {
             _ => info!(target: "app::live", "[frontend] {message}"),
         }
     }
-}
-
-// Updater helper: checks for updates and emits an event for frontend reminder.
-// This runs only on Windows builds (guarded where it is invoked).
-#[cfg(windows)]
-use crate::live::bootstrap_snapshot::{AppLocale, load_monitor_runtime_snapshot};
-#[cfg(windows)]
-use tauri_plugin_updater::UpdaterExt;
-
-#[cfg(windows)]
-const UPDATE_ENDPOINTS_ZH_CN: &[&str] = &[
-    "https://bptimer.cn/resonance-logs/latest.json",
-    "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json",
-];
-
-#[cfg(windows)]
-const UPDATE_ENDPOINTS_EN_US: &[&str] = &[
-    "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.en-US.json",
-    "https://bptimer.cn/resonance-logs/latest.en-US.json",
-    "https://bptimer.cn/resonance-logs/latest.json",
-    "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json",
-];
-
-#[cfg(windows)]
-const UPDATE_ENDPOINTS_JA_JP: &[&str] = &[
-    "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.ja-JP.json",
-    "https://bptimer.cn/resonance-logs/latest.ja-JP.json",
-    "https://bptimer.cn/resonance-logs/latest.json",
-    "https://github.com/fudiyangjin/resonance-logs-cn/releases/latest/download/latest.json",
-];
-
-#[cfg(windows)]
-fn update_endpoint_candidates(locale: AppLocale) -> &'static [&'static str] {
-    match locale {
-        AppLocale::ZhCn => UPDATE_ENDPOINTS_ZH_CN,
-        AppLocale::EnUs => UPDATE_ENDPOINTS_EN_US,
-        AppLocale::JaJp => UPDATE_ENDPOINTS_JA_JP,
-    }
-}
-
-#[cfg(windows)]
-async fn check_for_updates(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
-    let locale = load_monitor_runtime_snapshot(&app)
-        .map(|snapshot| snapshot.i18n.locale)
-        .unwrap_or_default();
-    let endpoint_candidates = update_endpoint_candidates(locale);
-    info!(
-        target: "app::startup",
-        "checking update manifests locale={} endpoints={}",
-        locale.as_str(),
-        endpoint_candidates.join(",")
-    );
-    let endpoints = endpoint_candidates
-        .iter()
-        .map(|endpoint| endpoint.parse())
-        .collect::<std::result::Result<Vec<_>, _>>()?;
-    let updater = app.updater_builder().endpoints(endpoints)?.build()?;
-
-    // Check only: frontend is responsible for reminding users to download manually.
-    if let Some(update) = updater.check().await? {
-        info!(
-            "Update available: {} (locale={})",
-            update.version,
-            locale.as_str()
-        );
-        let payload = json!({
-            "version": update.version.to_string(),
-            "body": update.body.unwrap_or_default(),
-            "downloadUrl": update.download_url.to_string(),
-        });
-        if let Err(e) = app.emit("update-available", payload) {
-            warn!("Failed to emit update-available event: {}", e);
-        }
-    } else {
-        info!("No update available");
-    }
-    Ok(())
 }
 
 /// Sets up the logging for the application.

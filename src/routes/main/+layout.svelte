@@ -37,7 +37,6 @@
   import ToolSidebar from "./tool-sidebar.svelte";
   import ChangelogModal from "$lib/components/ChangelogModal.svelte";
   import FirstRunLoadoutModal from "$lib/components/FirstRunLoadoutModal.svelte";
-  import UpdateModal from "$lib/components/UpdateModal.svelte";
   import {
     dismissFirstRunPrompt,
     findLoadout,
@@ -169,13 +168,6 @@
   let showChangelog = $state(false);
   let showFirstRunPrompt = $state(false);
   let currentVersion = $state("");
-  type UpdateInfo = {
-    version: string;
-    body: string;
-    downloadUrl: string;
-  };
-  let updateInfo = $state<UpdateInfo | null>(null);
-  let updateUnlisten: UnlistenFn | null = null;
   let clickthroughUnlisten: UnlistenFn | null = null;
 
   async function revealMainWindowForNotice() {
@@ -239,17 +231,6 @@
         navigateUnlisten = unlisten;
       });
 
-    listen<UpdateInfo>("update-available", (event) => {
-      updateInfo = event.payload;
-      void revealMainWindowForNotice();
-    })
-      .then((unlisten) => {
-        updateUnlisten = unlisten;
-      })
-      .catch((err) => {
-        console.error("Failed to subscribe update-available event", err);
-      });
-
     listen<boolean>("live-clickthrough-changed", (event) => {
       SETTINGS.accessibility.state.clickthrough = event.payload;
     })
@@ -289,10 +270,6 @@
       if (navigateUnlisten) {
         navigateUnlisten();
         navigateUnlisten = null;
-      }
-      if (updateUnlisten) {
-        updateUnlisten();
-        updateUnlisten = null;
       }
       if (clickthroughUnlisten) {
         clickthroughUnlisten();
@@ -379,17 +356,7 @@
       <ChangelogModal onclose={handleClose} />
     {/if}
 
-    {#if !showChangelog && updateInfo}
-      <UpdateModal
-        info={updateInfo}
-        {currentVersion}
-        onclose={() => {
-          updateInfo = null;
-        }}
-      />
-    {/if}
-
-    {#if !showChangelog && !updateInfo && showFirstRunPrompt}
+    {#if !showChangelog && showFirstRunPrompt}
       <FirstRunLoadoutModal
         onclose={() => {
           dismissFirstRunPrompt();

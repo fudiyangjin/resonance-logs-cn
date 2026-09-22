@@ -3,6 +3,12 @@ export const zhCNMessages = {
   "toolbox.subtitle": "工具箱",
   "toolbox.section.tools": "工具",
   "toolbox.versionLoading": "加载中...",
+  "updater.available": "发现新版",
+  "updater.hint": "新版本 v{version}：点击后后台下载，完成后自动更新并重启",
+  "updater.downloading": "下载中 {progress}",
+  "updater.verifying": "正在校验",
+  "updater.installing": "正在更新",
+  "updater.retry": "更新失败，重试",
   "loadout.sidebar.label": "当前总方案",
   "loadout.sidebar.empty": "无方案",
   "loadout.sidebar.manage": "管理方案",
@@ -187,14 +193,6 @@ export const zhCNMessages = {
   "components.playerAutocomplete.noPlayers": "未找到玩家",
   "components.bossAutocomplete.placeholder": "按首领名称筛选...",
   "components.dialog.close": "关闭",
-  "components.updateModal.closeAria": "关闭更新弹窗",
-  "components.updateModal.title": "发现新版本",
-  "components.updateModal.versionLine":
-    "当前版本 v{currentVersion}，最新版本 v{latestVersion}",
-  "components.updateModal.empty": "该版本暂无更新说明。",
-  "components.updateModal.footer":
-    "若 GitHub 下载较慢，也可前往 QQ 群（1084866292）或 Discord（discord.gg/RHeX47wvDU）获取最新版本安装包。",
-  "components.updateModal.download": "前往 GitHub 下载",
   "components.changelogModal.closeAria": "关闭更新日志弹窗",
   "components.changelogModal.title": "更新日志",
   "components.changelogModal.subtitle":

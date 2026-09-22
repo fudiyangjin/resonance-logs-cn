@@ -19,7 +19,7 @@ Some in-game buff names are unclear (e.g. `[热枕]`). Under **Live Monitor → 
 - **Factor energy bar names**: Set in the factor zone’s **Factor Display Name** search.
 - **Factor buff effect names**: Set under **Buff Monitor → Buff Alias Settings**.
 
-See [Custom Monitor · Factor Zone](../features/monitor/custom-panel.md#factor-zone-new-factor-zone).
+See [Custom Monitor · Factor Zone](../features/monitor/custom-panel.md).
 
 ### How do I quickly monitor all food / alchemy buffs?
 

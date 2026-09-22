@@ -92,6 +92,7 @@ windows = { version = "0.61", features = [
 ] }
 
 [dev-dependencies]
+tauri = { version = "2.11", features = ["test"] }
 rand = "0.9.2"
 tempfile = "3.20"
 
