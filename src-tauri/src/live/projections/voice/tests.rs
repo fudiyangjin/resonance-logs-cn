@@ -1077,6 +1077,14 @@ mod entity_monitor_bridge {
             monster_id: SCYTHE_CART,
             duration_ms,
             scope,
+            merge: false,
+        }
+    }
+
+    fn merged_spec(duration_ms: u64, scope: EntityOwnerScope) -> WatchedEntitySpec {
+        WatchedEntitySpec {
+            merge: true,
+            ..spec(Some(duration_ms), scope)
         }
     }
 
@@ -1514,6 +1522,124 @@ mod entity_monitor_bridge {
         h.flush(6);
         assert!(h.fired().is_empty());
         assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(20_200)));
+    }
+
+    fn remove(uuid: i64) -> Vec<ProtocolObservation> {
+        vec![ProtocolObservation::EntityDisappeared {
+            uuid: EntityUuid(uuid),
+        }]
+    }
+
+    #[test]
+    fn merged_near_simultaneous_instances_cue_expiring_once() {
+        let mut h = Harness::new(
+            vec![rule(
+                "soon",
+                entity(SCYTHE_CART, EntityOwnerScope::LocalPlayer, expiring(5)),
+                "soon",
+                0,
+            )],
+            vec![merged_spec(35_000, EntityOwnerScope::LocalPlayer)],
+        );
+        // Detected at 200 / 500 ms: the second cart takes over the row at
+        // 35 200 with 0.3 s left, so only the first one can cue.
+        h.step(2, summon(EntityUuid(500), LOCAL));
+        h.step(5, summon(EntityUuid(501), LOCAL));
+        assert_eq!(h.voice.deadlines.len(), 1);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(30_200)));
+
+        h.drain(302);
+        assert_eq!(h.fired(), vec!["soon".to_string()]);
+        h.drain(360);
+        assert!(h.fired().is_empty());
+
+        // The shown cart leaving after its cue must not re-cue the other.
+        h.step(400, remove(500));
+        assert!(h.fired().is_empty());
+        assert!(h.scheduler.is_empty());
+    }
+
+    #[test]
+    fn merged_later_instance_takes_over_with_its_own_cue() {
+        let mut h = Harness::new(
+            vec![rule(
+                "soon",
+                entity(SCYTHE_CART, EntityOwnerScope::LocalPlayer, expiring(2)),
+                "soon",
+                0,
+            )],
+            vec![merged_spec(10_000, EntityOwnerScope::LocalPlayer)],
+        );
+        // Expiries 10 200 and 16 000: the later cart takes over with 5.8 s
+        // left, above the 2 s lead, so both cue.
+        h.step(2, summon(EntityUuid(500), LOCAL));
+        h.step(60, summon(EntityUuid(501), LOCAL));
+        assert_eq!(h.voice.deadlines.len(), 2);
+
+        h.drain(82);
+        assert_eq!(h.fired(), vec!["soon".to_string()]);
+        h.drain(140);
+        assert_eq!(h.fired(), vec!["soon".to_string()]);
+    }
+
+    #[test]
+    fn merged_first_instance_gone_early_hands_cue_to_next() {
+        let mut h = Harness::new(
+            vec![rule(
+                "soon",
+                entity(SCYTHE_CART, EntityOwnerScope::LocalPlayer, expiring(5)),
+                "soon",
+                0,
+            )],
+            vec![merged_spec(35_000, EntityOwnerScope::LocalPlayer)],
+        );
+        h.step(2, summon(EntityUuid(500), LOCAL));
+        h.step(5, summon(EntityUuid(501), LOCAL));
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(30_200)));
+
+        h.step(100, remove(500));
+        assert_eq!(h.voice.deadlines.len(), 1);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(30_500)));
+        h.drain(305);
+        assert_eq!(h.fired(), vec!["soon".to_string()]);
+    }
+
+    #[test]
+    fn merged_presence_edges_fire_once() {
+        let mut h = Harness::new(
+            vec![
+                rule(
+                    "up",
+                    entity(
+                        SCYTHE_CART,
+                        EntityOwnerScope::LocalPlayer,
+                        VoiceEvent::Started,
+                    ),
+                    "up",
+                    0,
+                ),
+                rule(
+                    "gone",
+                    entity(
+                        SCYTHE_CART,
+                        EntityOwnerScope::LocalPlayer,
+                        VoiceEvent::Ended,
+                    ),
+                    "gone",
+                    0,
+                ),
+            ],
+            vec![merged_spec(35_000, EntityOwnerScope::LocalPlayer)],
+        );
+        h.step(2, summon(EntityUuid(500), LOCAL));
+        assert_eq!(h.fired(), vec!["up".to_string()]);
+        h.step(5, summon(EntityUuid(501), LOCAL));
+        assert!(h.fired().is_empty());
+
+        h.step(10, remove(500));
+        assert!(h.fired().is_empty());
+        h.step(11, remove(501));
+        assert_eq!(h.fired(), vec!["gone".to_string()]);
     }
 }
 

@@ -2,11 +2,11 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import type {
   BossDbmEvent,
   BuffUpdateState,
+  EntityDurationTrackState,
   HateEntry,
   HpEntry,
   StunEntry,
   TeammateFantasyState,
-  WatchedEntityState,
 } from "$lib/api";
 import {
   liveFantasyStore,
@@ -109,8 +109,9 @@ const _bossDbmMap = $derived.by(() => {
   return result;
 });
 
-const _watchedEntityCache = $derived.by(
-  (): WatchedEntityState[] => liveMonsterStore.data?.watchedEntities ?? [],
+const _entityDurationTrackCache = $derived.by(
+  (): EntityDurationTrackState[] =>
+    liveMonsterStore.data?.entityDurationTracks ?? [],
 );
 
 export const monsterRuntime = $state({
@@ -193,8 +194,8 @@ export function monsterDbmRows() {
   return monsterRuntime.dbmRows;
 }
 
-export function monsterWatchedEntities(): WatchedEntityState[] {
-  return _watchedEntityCache;
+export function monsterEntityDurationTracks(): EntityDurationTrackState[] {
+  return _entityDurationTrackCache;
 }
 
 export function monsterEntityDurationRows() {

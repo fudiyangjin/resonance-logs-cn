@@ -260,6 +260,17 @@ pub enum EntityOwnerScope {
     Any,
 }
 
+impl EntityOwnerScope {
+    /// The serialized name, as the frontend spells it.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::LocalPlayer => "self",
+            Self::Any => "any",
+        }
+    }
+}
+
 /// Game-wide alerts that can carry a voice cue.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Type, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]

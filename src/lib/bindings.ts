@@ -744,6 +744,26 @@ export type EngineDeviceType = "cpu" | "discreteGpu" | "integratedGpu" | "accele
 export type EngineProbe = { engine: string; protocolVersion: number; sourceCommit: string; buildType: string; variant: string; stub: boolean; compiledBackends: EngineBackend[]; devices: EngineDevice[]; supportedLanguages: VoiceLanguage[] }
 export type EngineState = { kind: "missing" } | { kind: "ready"; probe: EngineProbe } | { kind: "incompatible"; reason: string } | { kind: "error"; message: string }
 /**
+ * One row of the monster-monitor entity-duration panel: a single watched
+ * entity, or, for a merged entry, every entity of one caster with the
+ * monster id. The owner name is resolved at publish time from the entity
+ * context.
+ */
+export type EntityDurationTrackState = {
+/**
+ * Stable row key, unique across entries.
+ */
+key: string; monsterId: number; scope: EntityOwnerScope; ownerUuid: string | null; ownerName: string | null;
+/**
+ * Configured lifetime; `None` renders an open-ended row.
+ */
+durationMs: number | null;
+/**
+ * Wall-clock expiry of every member, ascending; empty without a
+ * duration. The row counts down to the first one still in the future.
+ */
+deadlinesMs: number[] }
+/**
  * Whose summons an entity-duration voice rule observes. Mirrors the
  * frontend `EntityDurationScope` (`"self" | "any"`).
  */
@@ -821,7 +841,11 @@ export type LiveFantasyPayload = { revision: number; teammateFantasies: Teammate
 /**
  * Monster overlay topic (`live-monster`), 50ms throttle.
  */
-export type LiveMonsterPayload = { revision: number; bossBuffs: Partial<{ [key in string]: BuffUpdateState[] }>; teammateBuffs: Partial<{ [key in string]: BuffUpdateState[] }>; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [key in string]: HateEntry[] }>; stun: StunEntry[]; hp: HpEntry[]; playerNames: Partial<{ [key in string]: string }>; monsterIds: Partial<{ [key in string]: number }>; watchedEntities?: WatchedEntityState[] }
+export type LiveMonsterPayload = { revision: number; bossBuffs: Partial<{ [key in string]: BuffUpdateState[] }>; teammateBuffs: Partial<{ [key in string]: BuffUpdateState[] }>; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [key in string]: HateEntry[] }>; stun: StunEntry[]; hp: HpEntry[]; playerNames: Partial<{ [key in string]: string }>; monsterIds: Partial<{ [key in string]: number }>;
+/**
+ * Entity-duration panel rows, already in display order.
+ */
+entityDurationTracks?: EntityDurationTrackState[] }
 export type LivePullWindow = "live" | "hud-overlay"
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number; trainingWindowMs: number; trainingLockPolicy: TrainingLockPolicy }
 export type LiveScenePayload = { revision: number; sceneId: number | null; dungeonDifficulty: number | null; localClassId: number | null; localTalentStageCfgId: number | null }
@@ -1321,16 +1345,17 @@ export type VoiceSubject =
 export type VoiceTrigger = { subject: VoiceSubject; event: VoiceEvent }
 /**
  * One entity-duration watch entry. `monster_id` decides which entities are
- * tracked; `duration_ms` (the configured lifetime) and `scope` are only
- * consumed by the voice projection to time "expiring" cues, mirroring the
- * HUD which filters by scope and counts down from detection on its own.
+ * tracked; `scope` and `merge` decide how they fold into display tracks,
+ * and `duration_ms` (the configured lifetime) times their countdowns. The
+ * HUD payload and the voice projection both read those tracks (see
+ * `projections::entity_duration`).
  */
-export type WatchedEntitySpec = { monsterId: number; durationMs?: number | null; scope?: EntityOwnerScope }
+export type WatchedEntitySpec = { monsterId: number; durationMs?: number | null; scope?: EntityOwnerScope;
 /**
- * One live entity tracked by the monster-monitor entity-duration panel.
- * Owner name/role are resolved at publish time from the entity context.
+ * Fold each caster's entities with this id into one track that counts
+ * down to the soonest expiry.
  */
-export type WatchedEntityState = { entityUuid: string; monsterId: number; ownerUuid: string | null; ownerName: string | null; ownerIsLocalPlayer: boolean; detectedAtMs: number }
+merge?: boolean }
 
 /** tauri-specta globals **/
 

@@ -1618,6 +1618,9 @@ export const enUSMessages = {
   "monsterMonitor.entityDuration.scope": "Caster Scope",
   "monsterMonitor.entityDuration.scope.self": "Self only",
   "monsterMonitor.entityDuration.scope.any": "Anyone",
+  "monsterMonitor.entityDuration.merge": "Merge same ID",
+  "monsterMonitor.entityDuration.mergeHint":
+    "One row per caster for entities with this ID, showing the one that expires soonest",
   "monsterMonitor.entityDuration.add": "Add",
   "monsterMonitor.entityDuration.invalidId":
     "Enter a valid positive integer entity id",

@@ -1596,6 +1596,9 @@ export const jaJPMessages = {
   "monsterMonitor.entityDuration.scope": "発動者の範囲",
   "monsterMonitor.entityDuration.scope.self": "自分のみ",
   "monsterMonitor.entityDuration.scope.any": "全員",
+  "monsterMonitor.entityDuration.merge": "同じ ID をまとめる",
+  "monsterMonitor.entityDuration.mergeHint":
+    "同じ発動者の同じ ID の実体を 1 行にまとめ、残り時間が最も短いものを表示します",
   "monsterMonitor.entityDuration.add": "追加",
   "monsterMonitor.entityDuration.invalidId":
     "有効な正の整数のエンティティ ID を入力してください",

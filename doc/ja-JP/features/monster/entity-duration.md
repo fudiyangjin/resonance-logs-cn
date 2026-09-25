@@ -13,10 +13,11 @@
 
 - スキルの再使用で古いエンティティが消えて新しいエンティティが生成されると、古い行は削除され、新しい行で計時し直します
 - マップを移動するとエンティティは消滅し、項目も一緒に削除されます
+- **{{ui:monsterMonitor.entityDuration.merge}}** にチェックを入れると、同じ発動者の同じ ID のエンティティが 1 行にまとまります。残り時間が最も短いものをカウントダウンし、それが終わると次のものに切り替わり、すべて終了または消滅するとその行が削除されます
 
 ## プリセット
 
-**{{ui:monsterMonitor.entityDuration.presetsTitle}}** には現在 **鎌車**（ID 179903、35 秒、自分のみ）が組み込まれており、クリックするだけで追加できます。
+**{{ui:monsterMonitor.entityDuration.presetsTitle}}** には現在 **鎌車**（ID 179903、35 秒、自分のみ、同じ ID をまとめる）が組み込まれており、クリックするだけで追加できます。
 
 ## 手動追加
 
@@ -26,14 +27,16 @@
 | **{{ui:monsterMonitor.entityDuration.label}}** | パネルに表示する名前。空欄の場合はゲーム内の名前を使用 |
 | **{{ui:monsterMonitor.entityDuration.durationSeconds}}** | カウントダウンの長さ。空欄の場合は `∞` を表示し、エンティティが消えるまで続く |
 | **{{ui:monsterMonitor.entityDuration.scope}}** | **{{ui:monsterMonitor.entityDuration.scope.self}}**：自分が出したものだけを表示。**{{ui:monsterMonitor.entityDuration.scope.any}}**：全員分を表示し、名前は「名前-発動者」になる |
+| **{{ui:monsterMonitor.entityDuration.merge}}** | 1 回の発動で同じ ID のエンティティが複数生成される場合にチェック。発動者ごとに 1 行にまとめ、残り時間が最も短いものを表示する。**{{ui:monsterMonitor.entityDuration.scope.any}}** の場合は発動者ごとに 1 行 |
 
-エンティティ ID ごとに 1 件のみ保持され、最大 32 件です。**{{ui:monsterMonitor.entityDuration.listTitle}}** で編集、並べ替え、削除ができます。
+エンティティ ID ごとに 1 件のみ保持され、最大 32 件です。**{{ui:monsterMonitor.entityDuration.listTitle}}** で編集、並べ替え、削除、まとめ表示の切り替えができます。
 
 ## 音声読み上げ
 
 **出現時 / 残り x 秒 / 消滅時** の 3 種類のイベントを設定できます：
 
 - 「残り x 秒」には、その項目に持続時間が設定されている必要があります
+- まとめ表示の場合、「残り x 秒」はオーバーレイのカウントダウンに従います。同時に出現したエンティティは 1 回だけ読み上げ、あとから行を引き継いだエンティティは残りが x 秒より多い場合のみもう一度読み上げます
 - エンティティが早めに消滅した場合は「消滅」だけが読み上げられます
 - 持続時間を変更すると、フィールド上の既存のエンティティは新しい長さで計時し直されます
 - 音声の割り当ては「エンティティ ID + 発動者の範囲」ごとに記録されるため、範囲を変更したら設定し直す必要があります
@@ -47,7 +50,7 @@
 #### ステップ 1：プリセットを追加する
 
 1. **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.entityDuration}}** を開きます。
-2. **{{ui:monsterMonitor.entityDuration.presetsTitle}}** で **鎌車**（ID 179903、35 秒、自分のみ）をクリックします。
+2. **{{ui:monsterMonitor.entityDuration.presetsTitle}}** で **鎌車**（ID 179903、35 秒、自分のみ、同じ ID をまとめる）をクリックします。鎌車は 1 回の発動でエンティティが 2 つ生成されますが、プリセットでは **{{ui:monsterMonitor.entityDuration.merge}}** が最初から有効なので、オーバーレイには 1 行だけ表示されます。
 
 #### ステップ 2：通知を設定する
 

@@ -15,6 +15,7 @@ import type {
   DeathBuffSnapshot,
   DeathParticipantBuffSnapshot,
   DeathRecord,
+  EntityDurationTrackState,
   FightResourceEntry,
   FightResourceState,
   HateEntry,
@@ -40,7 +41,6 @@ import type {
   TeammateFantasyState,
   TrainingDummyPhase,
   TrainingDummyState,
-  WatchedEntityState,
 } from "./bindings";
 
 export type {
@@ -52,6 +52,7 @@ export type {
   DeathBuffSnapshot,
   DeathParticipantBuffSnapshot,
   DeathRecord,
+  EntityDurationTrackState,
   FightResourceEntry,
   FightResourceState,
   HateEntry,
@@ -74,7 +75,6 @@ export type {
   TeammateFantasyState,
   TrainingDummyPhase,
   TrainingDummyState,
-  WatchedEntityState,
 };
 
 export type CounterSlotState = SlotUpdateState;

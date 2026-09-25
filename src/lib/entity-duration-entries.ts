@@ -48,6 +48,7 @@ export type EntityDurationEntryInput = {
   label: string;
   durationMs?: number;
   scope: EntityDurationScope;
+  merge?: boolean;
   presetKey?: string;
 };
 
@@ -63,6 +64,7 @@ function buildEntry(
     label: input.label.trim(),
     scope: ensureEntityDurationScope(input.scope),
     ...(durationMs !== undefined ? { durationMs } : {}),
+    ...(input.merge === true ? { merge: true } : {}),
     ...(presetKey ? { presetKey } : {}),
   };
 }
@@ -100,6 +102,7 @@ export function ensureEntityDurationEntries(
       monsterId: raw.monsterId,
       label: typeof raw.label === "string" ? raw.label : "",
       scope: ensureEntityDurationScope(raw.scope),
+      merge: raw.merge === true,
       ...(raw.durationMs !== undefined ? { durationMs: raw.durationMs } : {}),
       ...(typeof raw.presetKey === "string"
         ? { presetKey: raw.presetKey }
@@ -115,6 +118,7 @@ export type EntityDurationEntryPatch = {
   label?: string;
   scope?: EntityDurationScope;
   durationMs?: number | null;
+  merge?: boolean;
 };
 
 export function patchEntityDurationEntry(
@@ -125,6 +129,7 @@ export function patchEntityDurationEntry(
     monsterId: entry.monsterId,
     label: patch.label ?? entry.label,
     scope: patch.scope ?? entry.scope,
+    merge: patch.merge ?? entry.merge === true,
     ...(entry.presetKey ? { presetKey: entry.presetKey } : {}),
   };
   if (patch.durationMs === undefined) {

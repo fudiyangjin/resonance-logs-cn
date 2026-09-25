@@ -1108,6 +1108,8 @@ export type EntityDurationScope = "self" | "any";
  * One monster-monitor "entity duration" watch: when an entity with
  * `monsterId` appears nearby, a countdown of `durationMs` starts; the row
  * disappears when the entity does. No `durationMs` shows an open-ended row.
+ * `merge` folds each caster's entities with the id into one row that counts
+ * down to the soonest expiry.
  */
 export type EntityDurationEntry = {
   id: string;
@@ -1115,6 +1117,7 @@ export type EntityDurationEntry = {
   label: string;
   durationMs?: number;
   scope: EntityDurationScope;
+  merge?: boolean;
   presetKey?: string;
 };
 

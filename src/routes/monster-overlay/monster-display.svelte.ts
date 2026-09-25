@@ -44,6 +44,7 @@ import {
   isMonsterLayoutScaffold,
   monsterBossBuffs,
   monsterBossMechanics,
+  monsterEntityDurationTracks,
   monsterFantasyEntries,
   monsterHateLists,
   monsterHpEntries,
@@ -52,7 +53,6 @@ import {
   monsterRuntime,
   monsterStunEntries,
   monsterTeammateBuffs,
-  monsterWatchedEntities,
 } from "./monster-runtime.svelte.js";
 import {
   fantasyEntryKey,
@@ -1170,16 +1170,16 @@ function buildEntityDurationDisplay(now: number): {
   const playerNames = monsterPlayerNames();
   const built = buildEntityDurationRows({
     entries,
-    watched: monsterWatchedEntities(),
+    tracks: monsterEntityDurationTracks(),
     now,
     resolveEntryLabel: entityDurationEntryLabel,
-    resolveOwnerName: (entity) => {
-      if (entity.ownerName) return entity.ownerName;
-      if (!entity.ownerUuid) return "";
+    resolveOwnerName: (track) => {
+      if (track.ownerName) return track.ownerName;
+      if (!track.ownerUuid) return "";
       return (
-        playerNames.get(entity.ownerUuid) ??
+        playerNames.get(track.ownerUuid) ??
         t("monsterOverlay.entity.uid", {
-          uid: uidFromEntityUuid(entity.ownerUuid),
+          uid: uidFromEntityUuid(track.ownerUuid),
         })
       );
     },

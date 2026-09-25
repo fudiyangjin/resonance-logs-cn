@@ -1,37 +1,28 @@
 /**
  * @file Pure row builder for the monster-monitor entity-duration panel.
  *
- * Input is the configured watch list plus the live `watchedEntities` from
- * the monster topic; output is a list of `TextBuffRow`-shaped rows (label,
- * countdown text, progress) and the nearest future deadline so the HUD can
- * schedule its next re-projection.
+ * The backend already folds watched entities into display tracks (scope,
+ * merging and order); this layer resolves labels and picks the countdown
+ * each row shows: the first member deadline still in the future. It also
+ * reports the nearest deadline so the HUD schedules its next re-projection,
+ * which is also when a merged row hands over to its next member.
  */
-import type { WatchedEntityState } from "$lib/api";
-import type {
-  EntityDurationEntry,
-  EntityDurationScope,
-} from "$lib/settings-store";
+import type { EntityDurationTrackState } from "$lib/api";
+import type { EntityDurationEntry } from "$lib/settings-store";
 import type { TextBuffDisplay } from "../game-overlay/overlay-types";
 import {
   hudTemporalProgressPercent,
   hudTemporalRemainingMs,
 } from "$lib/hud-temporal.svelte.js";
 
-export function matchesEntityDurationScope(
-  scope: EntityDurationScope,
-  entity: Pick<WatchedEntityState, "ownerIsLocalPlayer">,
-): boolean {
-  return scope === "any" || entity.ownerIsLocalPlayer;
-}
-
 export type EntityDurationRowsInput = {
   entries: readonly EntityDurationEntry[];
-  watched: readonly WatchedEntityState[];
+  tracks: readonly EntityDurationTrackState[];
   now: number;
   /** Display label for an entry (falls back when the entry label is empty). */
   resolveEntryLabel: (entry: EntityDurationEntry) => string;
   /** Caster name for the `-<name>` suffix; empty string when unknown. */
-  resolveOwnerName: (entity: WatchedEntityState) => string;
+  resolveOwnerName: (track: EntityDurationTrackState) => string;
   formatRemaining: (remainingMs: number) => string;
   /** Text for rows without a configured duration (e.g. `∞`). */
   infiniteText: string;
@@ -41,10 +32,6 @@ export type EntityDurationRowsOutput = {
   rows: TextBuffDisplay[];
   nextDeadlineMs: number | null;
 };
-
-export function entityDurationRowKey(entityUuid: string): string {
-  return `entity_duration_${entityUuid}`;
-}
 
 export function buildEntityDurationRows(
   input: EntityDurationRowsInput,
@@ -56,58 +43,51 @@ export function buildEntityDurationRows(
     }
   }
 
-  const candidates: { detectedAtMs: number; row: TextBuffDisplay }[] = [];
+  const rows: TextBuffDisplay[] = [];
   let nextDeadlineMs: number | null = null;
 
-  for (const entity of input.watched) {
-    const entry = entriesByMonsterId.get(entity.monsterId);
-    if (!entry || !matchesEntityDurationScope(entry.scope, entity)) continue;
+  for (const track of input.tracks) {
+    // A scope mismatch is a track published before the entry was edited.
+    const entry = entriesByMonsterId.get(track.monsterId);
+    if (!entry || entry.scope !== track.scope) continue;
 
     let label = input.resolveEntryLabel(entry);
-    if (entry.scope === "any") {
-      const ownerName = input.resolveOwnerName(entity);
+    if (track.scope === "any") {
+      const ownerName = input.resolveOwnerName(track);
       if (ownerName) label = `${label}-${ownerName}`;
     }
-    const key = entityDurationRowKey(entity.entityUuid);
+    const key = `entity_duration_${track.key}`;
 
-    if (entry.durationMs === undefined) {
-      candidates.push({
-        detectedAtMs: entity.detectedAtMs,
-        row: {
-          key,
-          label,
-          valueText: input.infiniteText,
-          progressPercent: 0,
-          showProgress: false,
-        },
+    if (track.durationMs === null) {
+      rows.push({
+        key,
+        label,
+        valueText: input.infiniteText,
+        progressPercent: 0,
+        showProgress: false,
       });
       continue;
     }
 
-    const deadlineMs = entity.detectedAtMs + entry.durationMs;
-    const temporal = { deadlineMs, durationMs: entry.durationMs };
-    const remainingMs = hudTemporalRemainingMs(temporal, input.now);
-    if (remainingMs <= 0) continue;
+    const deadlineMs = track.deadlinesMs.find(
+      (deadline) => deadline > input.now,
+    );
+    if (deadlineMs === undefined) continue;
     if (nextDeadlineMs === null || deadlineMs < nextDeadlineMs) {
       nextDeadlineMs = deadlineMs;
     }
-    candidates.push({
-      detectedAtMs: entity.detectedAtMs,
-      row: {
-        key,
-        label,
-        valueText: input.formatRemaining(remainingMs),
-        progressPercent: hudTemporalProgressPercent(temporal, input.now),
-        showProgress: true,
-        temporal,
-      },
+    const temporal = { deadlineMs, durationMs: track.durationMs };
+    rows.push({
+      key,
+      label,
+      valueText: input.formatRemaining(
+        hudTemporalRemainingMs(temporal, input.now),
+      ),
+      progressPercent: hudTemporalProgressPercent(temporal, input.now),
+      showProgress: true,
+      temporal,
     });
   }
 
-  candidates.sort(
-    (left, right) =>
-      left.detectedAtMs - right.detectedAtMs ||
-      left.row.key.localeCompare(right.row.key),
-  );
-  return { rows: candidates.map((c) => c.row), nextDeadlineMs };
+  return { rows, nextDeadlineMs };
 }

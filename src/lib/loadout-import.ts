@@ -403,6 +403,7 @@ const entityDurationEntrySchema = v.object({
   label: v.optional(v.string(), ""),
   durationMs: v.optional(finiteNumberSchema),
   scope: v.optional(v.picklist(["self", "any"]), "self"),
+  merge: v.optional(v.boolean()),
   presetKey: v.optional(v.string()),
 });
 

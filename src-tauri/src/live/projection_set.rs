@@ -993,6 +993,7 @@ mod tests {
             monster_id: 179901,
             scope: EntityOwnerScope::Any,
             duration_ms: Some(10_000),
+            merge: false,
         };
         let mut config = MonitorRuntimeSnapshot::default();
         config.monster.enabled = true;

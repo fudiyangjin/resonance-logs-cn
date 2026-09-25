@@ -4,6 +4,7 @@
     "monsterId": 179903,
     "durationMs": 35000,
     "scope": "self",
+    "merge": true,
     "imagePath": "/images/stormblade/skill/weapon_tdl-01_kx04_7614798060604092699.png",
     "label": {
       "zh-CN": "镰车",

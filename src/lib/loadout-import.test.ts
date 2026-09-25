@@ -443,7 +443,7 @@ describe("parseLoadoutExport", () => {
     const data = validExport();
     const monster = data["monsterProfile"] as Record<string, unknown>;
     monster["entityDurationEntries"] = [
-      { monsterId: 5, label: " a ", scope: "any", durationMs: 1 },
+      { monsterId: 5, label: " a ", scope: "any", durationMs: 1, merge: true },
       { monsterId: 5, label: "dup" },
       { id: "x", monsterId: 6, label: "b" },
     ];
@@ -456,8 +456,10 @@ describe("parseLoadoutExport", () => {
       label: "a",
       scope: "any",
       durationMs: 100,
+      merge: true,
     });
     expect("durationMs" in entries[1]!).toBe(false);
+    expect("merge" in entries[1]!).toBe(false);
   });
 
   it("includes the field path in validation issues", () => {

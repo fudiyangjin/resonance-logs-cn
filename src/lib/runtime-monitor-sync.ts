@@ -165,6 +165,7 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
         monsterId: entry.monsterId,
         durationMs: entry.durationMs ?? null,
         scope: entry.scope,
+        merge: entry.merge === true,
       }))
       .sort((a, b) => a.monsterId - b.monsterId),
   };

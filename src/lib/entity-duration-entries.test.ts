@@ -77,6 +77,19 @@ describe("ensureEntityDurationEntries", () => {
     expect(result[2]?.scope).toBe("self");
   });
 
+  it("keeps merge only when it is literally true", () => {
+    const result = ensureEntityDurationEntries([
+      entry({ monsterId: 1, merge: true }),
+      entry({ monsterId: 2, merge: false }),
+      entry({ monsterId: 3, merge: "yes" as never }),
+      entry({ monsterId: 4 }),
+    ]);
+    expect(result[0]?.merge).toBe(true);
+    for (const normalized of result.slice(1)) {
+      expect("merge" in normalized).toBe(false);
+    }
+  });
+
   it("truncates to the entry limit", () => {
     const many = Array.from(
       { length: MAX_ENTITY_DURATION_ENTRIES + 5 },
@@ -114,6 +127,15 @@ describe("patchEntityDurationEntry", () => {
     expect(
       patchEntityDurationEntry(base, { durationMs: 7_000, scope: "any" }),
     ).toMatchObject({ durationMs: 7_000, scope: "any", id: base.id });
+  });
+
+  it("toggles merge and keeps it across unrelated patches", () => {
+    const base = entry({ monsterId: 1 });
+    const merged = patchEntityDurationEntry(base, { merge: true });
+    expect(merged.merge).toBe(true);
+    expect(patchEntityDurationEntry(merged, { label: "b" }).merge).toBe(true);
+    const unmerged = patchEntityDurationEntry(merged, { merge: false });
+    expect("merge" in unmerged).toBe(false);
   });
 });
 

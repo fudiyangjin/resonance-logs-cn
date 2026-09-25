@@ -13,9 +13,7 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::live::counter::engine::{CounterEngine, CounterNamespace};
-use crate::live::projections::entity_monitor::{
-    EntityMonitorProjection, SkillCdRecord, WatchedEntityRecord,
-};
+use crate::live::projections::entity_monitor::{EntityMonitorProjection, SkillCdRecord};
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
     BuffState, BuffTransition, DomainEnvelope, DomainEvent, MonoTimeMs, SkillPhase, TimerKey,
@@ -500,16 +498,8 @@ impl VoiceProjection {
                 })
                 .or_insert(record);
         }
-        let watched: Vec<&WatchedEntityRecord> = monitor.watched_entities().collect();
-        let owner_is_local = |record: &WatchedEntityRecord| {
-            record
-                .owner
-                .is_some_and(|owner| entities.roles(owner).is_local_player)
-        };
-        let scope_matches = |record: &WatchedEntityRecord, scope: EntityOwnerScope| match scope {
-            EntityOwnerScope::Any => true,
-            EntityOwnerScope::LocalPlayer => owner_is_local(record),
-        };
+        // The same tracks the HUD renders, so cues follow what is on screen.
+        let tracks = monitor.entity_duration().tracks(entities);
 
         let rule_set = self.rule_set;
         let scope = TimerScope::RuleSet(rule_set);
@@ -553,30 +543,21 @@ impl VoiceProjection {
                     let VoiceEvent::ExpiringIn { seconds_before } = trigger.event else {
                         continue;
                     };
-                    let duration_ms = monitor
-                        .watched_specs()
-                        .iter()
-                        .find(|spec| spec.monster_id == monster_id && spec.scope == owner_scope)
-                        .and_then(|spec| spec.duration_ms);
-                    // One timer per entity instance so a second cart summoned
-                    // while the first is still up gets its own cue.
+                    let lead_ms = u64::from(seconds_before).saturating_mul(1_000);
+                    // One timer per audible entity: every entity of an
+                    // unmerged entry, and in a merged track only those whose
+                    // countdown reaches the lead while it is the one shown.
                     let mut live_instances = HashSet::new();
-                    if let Some(duration_ms) = duration_ms {
-                        for record in watched
-                            .iter()
-                            .filter(|record| record.monster_id == monster_id)
-                            .filter(|record| scope_matches(record, owner_scope))
-                        {
-                            let instance = record.entity.uuid.0 as u64;
+                    for track in tracks.iter().filter(|track| {
+                        track.spec.monster_id == monster_id && track.spec.scope == owner_scope
+                    }) {
+                        for (entity, expires) in track.audible_expiries(lead_ms) {
+                            let instance = entity.0 as u64;
                             live_instances.insert(instance);
                             self.deadlines.sync(
                                 entity_voice_key(rule_set, index, instance),
                                 scope,
-                                reason.expiry(
-                                    Some(record.detected_mono_ms.saturating_add(duration_ms)),
-                                    seconds_before,
-                                    now_mono,
-                                ),
+                                reason.expiry(Some(expires), seconds_before, now_mono),
                                 seconds_before,
                                 now_mono,
                                 scheduler,
@@ -650,14 +631,11 @@ impl VoiceProjection {
         }
 
         // Presence edges, aggregated per (monster_id, scope) so several
-        // instances announce one "appeared" and one "gone".
-        let mut current = BTreeSet::new();
-        for record in &watched {
-            current.insert((record.monster_id, EntityOwnerScope::Any));
-            if owner_is_local(record) {
-                current.insert((record.monster_id, EntityOwnerScope::LocalPlayer));
-            }
-        }
+        // instances or tracks announce one "appeared" and one "gone".
+        let current = tracks
+            .iter()
+            .map(|track| (track.spec.monster_id, track.spec.scope))
+            .collect::<BTreeSet<_>>();
         if reason == VoiceSyncReason::Runtime && self.entity_presence_seeded {
             let previous = std::mem::take(&mut self.entity_presence);
             for &(monster_id, owner_scope) in previous.symmetric_difference(&current) {

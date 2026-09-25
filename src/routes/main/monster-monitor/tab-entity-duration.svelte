@@ -46,6 +46,7 @@
   let manualLabel = $state("");
   let manualSecondsText = $state("");
   let manualScope = $state<EntityDurationScope>("self");
+  let manualMerge = $state(false);
   let manualIdInvalid = $state(false);
   let voiceExpandedIds = $state<string[]>([]);
 
@@ -77,6 +78,7 @@
       monsterId: id,
       label: manualLabel,
       scope: manualScope,
+      merge: manualMerge,
       ...(durationMs !== undefined ? { durationMs } : {}),
     });
     manualIdText = "";
@@ -142,6 +144,9 @@
             · {preset.scope === "any"
               ? t("monsterMonitor.entityDuration.scope.any")
               : t("monsterMonitor.entityDuration.scope.self")}
+            {#if preset.merge}
+              · {t("monsterMonitor.entityDuration.merge")}
+            {/if}
           </span>
         </span>
         {#if added}
@@ -202,6 +207,13 @@
       </select>
     </label>
   </div>
+  <label class="text-foreground flex items-center gap-2 text-xs">
+    <input type="checkbox" bind:checked={manualMerge} />
+    {t("monsterMonitor.entityDuration.merge")}
+    <span class="text-muted-foreground"
+      >{t("monsterMonitor.entityDuration.mergeHint")}</span
+    >
+  </label>
   <p class="text-muted-foreground text-xs">
     {t("monsterMonitor.entityDuration.durationHint")}
   </p>
@@ -274,6 +286,20 @@
               >{t("monsterMonitor.entityDuration.scope.any")}</option
             >
           </select>
+          <label
+            class="text-foreground flex shrink-0 items-center gap-2 text-xs"
+            title={t("monsterMonitor.entityDuration.mergeHint")}
+          >
+            <input
+              type="checkbox"
+              checked={entry.merge === true}
+              onchange={(event) =>
+                updateEntry(entry.id, {
+                  merge: (event.currentTarget as HTMLInputElement).checked,
+                })}
+            />
+            {t("monsterMonitor.entityDuration.merge")}
+          </label>
           <button
             type="button"
             class="order-button"

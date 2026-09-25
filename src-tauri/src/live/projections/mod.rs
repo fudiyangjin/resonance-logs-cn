@@ -1,6 +1,7 @@
 pub mod buff_timeline;
 pub mod combat;
 pub mod death;
+pub mod entity_duration;
 pub mod entity_monitor;
 pub mod history;
 pub mod minimap;

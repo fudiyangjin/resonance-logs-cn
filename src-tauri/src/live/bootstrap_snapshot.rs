@@ -224,9 +224,10 @@ pub struct SkillRuntimeSnapshot {
 }
 
 /// One entity-duration watch entry. `monster_id` decides which entities are
-/// tracked; `duration_ms` (the configured lifetime) and `scope` are only
-/// consumed by the voice projection to time "expiring" cues, mirroring the
-/// HUD which filters by scope and counts down from detection on its own.
+/// tracked; `scope` and `merge` decide how they fold into display tracks,
+/// and `duration_ms` (the configured lifetime) times their countdowns. The
+/// HUD payload and the voice projection both read those tracks (see
+/// `projections::entity_duration`).
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct WatchedEntitySpec {
@@ -235,6 +236,8 @@ pub struct WatchedEntitySpec {
     pub duration_ms: Option<u64>,
     #[serde(default)]
     pub scope: EntityOwnerScope,
+    #[serde(default)]
+    pub merge: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default)]
@@ -348,6 +351,7 @@ mod tests {
             monster_id,
             duration_ms,
             scope,
+            merge: false,
         }
     }
 
@@ -404,8 +408,13 @@ mod tests {
                 monster_id: 7,
                 duration_ms: Some(15_000),
                 scope: EntityOwnerScope::LocalPlayer,
+                merge: false,
             }
         );
+        let merged: WatchedEntitySpec =
+            serde_json::from_str(r#"{"monsterId":7,"scope":"any","merge":true}"#)
+                .expect("merged spec parses");
+        assert!(merged.merge);
     }
 
     #[test]

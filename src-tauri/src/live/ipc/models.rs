@@ -1,5 +1,6 @@
 use crate::live::projections::combat::accumulator::CombatSourceStats;
 use crate::live::projections::combat::stats::{CombatStats, HitExtrema, Skill};
+use crate::voice::models::EntityOwnerScope;
 use std::collections::HashMap;
 
 /// Wall-clock anchors for the live header timer. Interpolation happens in
@@ -225,7 +226,7 @@ pub struct LiveMonsterPayload {
     pub player_names: HashMap<String, String>,
     pub monster_ids: HashMap<String, i32>,
     #[serde(default)]
-    pub watched_entities: Vec<WatchedEntityState>,
+    pub entity_duration_tracks: Vec<EntityDurationTrackState>,
 }
 
 /// Fantasy cast icons shared by live + monster overlay (`live-fantasy`).
@@ -553,17 +554,20 @@ pub struct BossDbmEvent {
     pub server_timestamp_ms: Option<i64>,
 }
 
-/// One live entity tracked by the monster-monitor entity-duration panel.
-/// Owner name/role are resolved at publish time from the entity context.
+/// One row of the monster-monitor entity-duration panel: a single watched
+/// entity, or, for a merged entry, every entity of one caster with the
+/// monster id. The owner name is resolved at publish time from the entity
+/// context.
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct WatchedEntityState {
-    pub entity_uuid: String,
+pub struct EntityDurationTrackState {
+    pub key: String,
     pub monster_id: i32,
+    pub scope: EntityOwnerScope,
     pub owner_uuid: Option<String>,
     pub owner_name: Option<String>,
-    pub owner_is_local_player: bool,
-    pub detected_at_ms: i64,
+    pub duration_ms: Option<u64>,
+    pub deadlines_ms: Vec<i64>,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]

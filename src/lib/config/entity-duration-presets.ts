@@ -14,6 +14,7 @@ type RawPreset = {
   monsterId: number;
   durationMs?: number;
   scope?: string;
+  merge?: boolean;
   imagePath?: string;
   label: Partial<Record<AppLocale, string>>;
 };
@@ -24,6 +25,8 @@ export type EntityDurationPreset = {
   label: string;
   durationMs?: number;
   scope: EntityDurationScope;
+  /** Entries created from the preset merge same-id entities per caster. */
+  merge: boolean;
   imagePath?: string;
 };
 
@@ -43,6 +46,7 @@ function toPreset(raw: RawPreset, locale: AppLocale): EntityDurationPreset {
     monsterId: raw.monsterId,
     label: resolveLabel(raw, locale),
     scope: ensureEntityDurationScope(raw.scope),
+    merge: raw.merge === true,
     ...(raw.durationMs !== undefined ? { durationMs: raw.durationMs } : {}),
     ...(raw.imagePath ? { imagePath: raw.imagePath } : {}),
   };
@@ -73,6 +77,7 @@ export function createEntryFromEntityDurationPreset(
     monsterId: preset.monsterId,
     label: preset.label,
     scope: preset.scope,
+    merge: preset.merge,
     presetKey: preset.key,
     ...(preset.durationMs !== undefined
       ? { durationMs: preset.durationMs }

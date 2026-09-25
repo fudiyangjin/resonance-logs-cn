@@ -1482,6 +1482,9 @@ export const zhCNMessages = {
   "monsterMonitor.entityDuration.scope": "释放者范围",
   "monsterMonitor.entityDuration.scope.self": "仅自己",
   "monsterMonitor.entityDuration.scope.any": "任何人",
+  "monsterMonitor.entityDuration.merge": "合并同 ID",
+  "monsterMonitor.entityDuration.mergeHint":
+    "同一释放者的多个同 ID 实体合并为一行，显示剩余最短的一个",
   "monsterMonitor.entityDuration.add": "添加",
   "monsterMonitor.entityDuration.invalidId": "请输入有效的正整数实体 ID",
   "monsterMonitor.entityDuration.listTitle": "监控列表",
