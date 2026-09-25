@@ -642,7 +642,7 @@ describe("incremental monitoring migration", () => {
     )!;
     expect(slot.entityDurationEntries).toHaveLength(1);
     expect(slot.entityDurationEntries[0]).toMatchObject({
-      monsterId: 179901,
+      monsterId: 179903,
       durationMs: 35000,
       scope: "self",
       presetKey: "stormblade_scythe_cart",
@@ -669,7 +669,7 @@ describe("incremental monitoring migration", () => {
       skill as unknown as { monitoredSkillDurationIds: number[] }
     ).monitoredSkillDurationIds = [1719];
     monster.entityDurationEntries = [
-      { id: "keep", monsterId: 179901, label: "mine", scope: "any" },
+      { id: "keep", monsterId: 179903, label: "mine", scope: "any" },
     ];
     state.loadouts.items = [
       {

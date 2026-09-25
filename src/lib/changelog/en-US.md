@@ -4,7 +4,7 @@
 
 ### Overlay Monitoring
 
-- Added **Entity Duration** to Monster Monitor (Monster Monitor → Entity Duration): times nearby entities by id (e.g. Scythe Cart 179901) with presets / manual entries and a caster scope (self only / anyone). The timer starts when the entity appears and ends when it disappears
+- Added **Entity Duration** to Monster Monitor (Monster Monitor → Entity Duration): times nearby entities by id (e.g. Scythe Cart 179903) with presets / manual entries and a caster scope (self only / anyone). The timer starts when the entity appears and ends when it disappears
 - Removed **Duration Skills** from Live Monitor; a selected Scythe Cart is migrated automatically to Monster Monitor → Entity Duration
 
 # Changelog v0.2.4

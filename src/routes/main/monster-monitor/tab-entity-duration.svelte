@@ -168,7 +168,7 @@
         inputmode="numeric"
         class={inputClass}
         bind:value={manualIdText}
-        placeholder="179901"
+        placeholder="179903"
       />
     </label>
     <label class="flex flex-col gap-1 text-xs">

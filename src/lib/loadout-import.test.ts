@@ -434,7 +434,7 @@ describe("parseLoadoutExport", () => {
     );
     expect(result.output.monsterProfile.entityDurationEntries).toHaveLength(1);
     expect(result.output.monsterProfile.entityDurationEntries[0]).toMatchObject(
-      { monsterId: 179901, durationMs: 35000, scope: "self" },
+      { monsterId: 179903, durationMs: 35000, scope: "self" },
     );
     expect(result.output.monsterProfile.entityDurationPanelStyle).toBeTruthy();
   });

@@ -16,7 +16,7 @@ These skills spawn a separate entity on the field, which carries an **entity ID*
 
 ## Presets
 
-**{{ui:monsterMonitor.entityDuration.presetsTitle}}** currently includes the built-in **Scythe Cart** (ID 179901, 35 seconds, self only); click it to add.
+**{{ui:monsterMonitor.entityDuration.presetsTitle}}** currently includes the built-in **Scythe Cart** (ID 179903, 35 seconds, self only); click it to add.
 
 ## Adding manually
 
@@ -47,7 +47,7 @@ Three events can be configured: **on appear / x seconds left / on disappear**:
 #### Step 1: Add the preset
 
 1. Open **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.entityDuration}}**.
-2. In **{{ui:monsterMonitor.entityDuration.presetsTitle}}**, click **Scythe Cart** (ID 179901, 35 seconds, self only).
+2. In **{{ui:monsterMonitor.entityDuration.presetsTitle}}**, click **Scythe Cart** (ID 179903, 35 seconds, self only).
 
 #### Step 2: Configure the reminder
 

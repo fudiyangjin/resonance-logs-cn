@@ -16,7 +16,7 @@
 
 ## プリセット
 
-**{{ui:monsterMonitor.entityDuration.presetsTitle}}** には現在 **鎌車**（ID 179901、35 秒、自分のみ）が組み込まれており、クリックするだけで追加できます。
+**{{ui:monsterMonitor.entityDuration.presetsTitle}}** には現在 **鎌車**（ID 179903、35 秒、自分のみ）が組み込まれており、クリックするだけで追加できます。
 
 ## 手動追加
 
@@ -47,7 +47,7 @@
 #### ステップ 1：プリセットを追加する
 
 1. **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.entityDuration}}** を開きます。
-2. **{{ui:monsterMonitor.entityDuration.presetsTitle}}** で **鎌車**（ID 179901、35 秒、自分のみ）をクリックします。
+2. **{{ui:monsterMonitor.entityDuration.presetsTitle}}** で **鎌車**（ID 179903、35 秒、自分のみ）をクリックします。
 
 #### ステップ 2：通知を設定する
 

@@ -16,7 +16,7 @@
 
 ## 预设
 
-**{{ui:monsterMonitor.entityDuration.presetsTitle}}** 中目前内置 **镰车**（ID 179901，35 秒，仅自己），点击即可添加。
+**{{ui:monsterMonitor.entityDuration.presetsTitle}}** 中目前内置 **镰车**（ID 179903，35 秒，仅自己），点击即可添加。
 
 ## 手动添加
 
@@ -47,7 +47,7 @@
 #### 第 1 步：添加预设
 
 1. 打开 **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.entityDuration}}**。
-2. 在 **{{ui:monsterMonitor.entityDuration.presetsTitle}}** 中点击 **镰车**（ID 179901，35 秒，仅自己）。
+2. 在 **{{ui:monsterMonitor.entityDuration.presetsTitle}}** 中点击 **镰车**（ID 179903，35 秒，仅自己）。
 
 #### 第 2 步：配置提醒
 
