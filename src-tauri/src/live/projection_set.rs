@@ -153,7 +153,7 @@ impl ProjectionSet {
         self.counter_side_effect_dirty = true;
         self.entity_monitor_side_effect_dirty = true;
         self.flush_voice_inputs(
-            VoiceSyncReason::Configuration,
+            VoiceSyncReason::Baseline,
             entities,
             now_wall_ms,
             now_mono,
@@ -177,12 +177,12 @@ impl ProjectionSet {
     ) {
         if self
             .voice
-            .apply_config(config, entities, now_mono, scheduler)
+            .apply_config(config, entities, now_wall_ms, now_mono, scheduler)
         {
             self.counter_side_effect_dirty = true;
             self.entity_monitor_side_effect_dirty = true;
             self.flush_voice_inputs(
-                VoiceSyncReason::Configuration,
+                VoiceSyncReason::Baseline,
                 entities,
                 now_wall_ms,
                 now_mono,

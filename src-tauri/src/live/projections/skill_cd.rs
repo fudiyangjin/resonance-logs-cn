@@ -42,103 +42,157 @@ pub fn skill_charge(skill_id: i32) -> Option<&'static SkillCharge> {
     SKILL_CHARGES.get(&skill_id)
 }
 
-/// When a cooldown entry becomes usable, derived from the server packet plus
-/// the local interpolation clock (mirrors the HUD's `computeDisplay`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct CooldownReadiness {
-    /// Usable at the moment the packet was received.
-    pub ready: bool,
-    /// The moment the skill turns usable (`None` when it already is, or when
-    /// readiness is not time-driven, e.g. resource slots).
-    pub ready_deadline: Option<MonoTimeMs>,
-    /// Charges available at receipt for multi-charge skills.
-    pub charges_available: Option<u8>,
-}
-
-/// Readiness of `state` received at `received_mono`.
+/// The charges of one cooldown packet over time, interpolated on the
+/// monotonic clock with the HUD's `computeDisplay` math: how many charges
+/// are usable at receipt, and when each missing charge refills. A plain
+/// cooldown is a one-charge timeline.
 ///
 /// Branches, in order (same as the HUD):
-/// - resource slot (`duration == -1 && cd_type == 1`): edge only — ready once
-///   `valid_cd_time >= max_valid_cd_time`; without a configured maximum the
-///   slot is treated as never ready and never announced.
-/// - multi-charge (`cd_type == 1 && duration > 0 && max_charges > 1`): the
-///   deadline marks the 0 -> 1 charge transition only, so a skill that still
-///   has a charge left never re-announces "ready" when the next one refills.
-/// - plain cooldown: `calculated_duration <= 0` is ready with no timer,
-///   otherwise the remaining scaled time divided by the accelerate factor.
-#[must_use]
-pub fn ready_deadline(
-    state: &SkillCdState,
-    received_mono: MonoTimeMs,
-    charge: Option<&SkillCharge>,
-) -> CooldownReadiness {
-    let accelerate = f64::from(state.cd_accelerate_rate).max(0.0);
-    let speed = 1.0 + accelerate;
-    let base_duration = if state.duration > 0 {
-        f64::from(state.duration.max(1))
-    } else {
-        1.0
-    };
-    let reduced_duration = if state.duration > 0 {
-        f64::from(state.calculated_duration.max(0))
-    } else {
-        0.0
-    };
-    let valid_cd_scale = if state.duration > 0 {
-        reduced_duration / base_duration
-    } else {
-        1.0
-    };
-    let scaled_valid = f64::from(state.valid_cd_time) * valid_cd_scale;
-    let deadline_after = |remaining_ms: f64| -> Option<MonoTimeMs> {
-        (remaining_ms > 0.0)
-            .then(|| received_mono.saturating_add((remaining_ms / speed).ceil() as u64))
-    };
+/// - resource slot (`duration == -1 && cd_type == 1`): one charge, usable
+///   once `valid_cd_time >= max_valid_cd_time`. Only a new packet moves it,
+///   and without a configured maximum it never becomes usable.
+/// - multi-charge (`cd_type == 1 && duration > 0 && max_charges > 1`):
+///   `valid_cd_time` is the charge pool, one charge per
+///   `calculated_duration`.
+/// - plain cooldown: `calculated_duration <= 0` is usable with no timer,
+///   otherwise the remaining scaled time runs at the accelerate factor.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CooldownTimeline {
+    anchor: MonoTimeMs,
+    /// Charges usable at `anchor`.
+    charges: u8,
+    capacity: u8,
+    /// `None` when only a new packet can add charges.
+    refill: Option<RefillRate>,
+}
 
-    if state.duration == -1 && state.skill_cd_type == 1 {
-        let ready = charge
-            .and_then(|charge| charge.max_valid_cd_time)
-            .is_some_and(|max| max > 0 && state.valid_cd_time >= max);
-        return CooldownReadiness {
-            ready,
-            ready_deadline: None,
-            charges_available: None,
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct RefillRate {
+    /// Scaled cooldown progress at the anchor.
+    progress_ms: f64,
+    /// Scaled cooldown per charge.
+    charge_ms: f64,
+    /// Scaled cooldown elapsed per real millisecond (`1 + accelerate`).
+    speed: f64,
+}
+
+impl CooldownTimeline {
+    /// Timeline of `state` received at `received_mono`.
+    #[must_use]
+    pub fn new(
+        state: &SkillCdState,
+        received_mono: MonoTimeMs,
+        charge: Option<&SkillCharge>,
+    ) -> Self {
+        let speed = 1.0 + f64::from(state.cd_accelerate_rate).max(0.0);
+        let base_duration = if state.duration > 0 {
+            f64::from(state.duration.max(1))
+        } else {
+            1.0
         };
+        let reduced_duration = if state.duration > 0 {
+            f64::from(state.calculated_duration.max(0))
+        } else {
+            0.0
+        };
+        let valid_cd_scale = if state.duration > 0 {
+            reduced_duration / base_duration
+        } else {
+            1.0
+        };
+        let scaled_valid = f64::from(state.valid_cd_time) * valid_cd_scale;
+
+        if state.duration == -1 && state.skill_cd_type == 1 {
+            let full = charge
+                .and_then(|charge| charge.max_valid_cd_time)
+                .is_some_and(|max| max > 0 && state.valid_cd_time >= max);
+            return Self::packet_driven(received_mono, u8::from(full));
+        }
+
+        let max_charges = charge
+            .and_then(|charge| charge.max_charges)
+            .unwrap_or(1)
+            .max(1);
+        if state.skill_cd_type == 1 && state.duration > 0 && max_charges > 1 {
+            let charge_ms = f64::from(state.calculated_duration.max(1));
+            let progress_ms = scaled_valid.min(f64::from(max_charges) * charge_ms);
+            return Self::time_driven(received_mono, max_charges, progress_ms, charge_ms, speed);
+        }
+
+        if reduced_duration <= 0.0 {
+            return Self::packet_driven(received_mono, 1);
+        }
+        Self::time_driven(received_mono, 1, scaled_valid, reduced_duration, speed)
     }
 
-    let max_charges = charge
-        .and_then(|charge| charge.max_charges)
-        .unwrap_or(1)
-        .max(1);
-    if state.skill_cd_type == 1 && state.duration > 0 && max_charges > 1 {
-        let charge_duration = f64::from(state.calculated_duration.max(1));
-        let max_vct = f64::from(max_charges) * charge_duration;
-        let current_vct = scaled_valid.min(max_vct);
-        let charges_available = ((current_vct / charge_duration).floor() as u8).min(max_charges);
-        let ready = charges_available >= 1;
-        return CooldownReadiness {
-            ready,
-            ready_deadline: if ready {
-                None
-            } else {
-                deadline_after(charge_duration - current_vct)
-            },
-            charges_available: Some(charges_available),
-        };
+    fn packet_driven(anchor: MonoTimeMs, charges: u8) -> Self {
+        Self {
+            anchor,
+            charges,
+            capacity: 1,
+            refill: None,
+        }
     }
 
-    if reduced_duration <= 0.0 {
-        return CooldownReadiness {
-            ready: true,
-            ready_deadline: None,
-            charges_available: None,
-        };
+    fn time_driven(
+        anchor: MonoTimeMs,
+        capacity: u8,
+        progress_ms: f64,
+        charge_ms: f64,
+        speed: f64,
+    ) -> Self {
+        Self {
+            anchor,
+            charges: ((progress_ms / charge_ms).floor() as u8).min(capacity),
+            capacity,
+            refill: Some(RefillRate {
+                progress_ms,
+                charge_ms,
+                speed,
+            }),
+        }
     }
-    let remaining = reduced_duration - scaled_valid;
-    CooldownReadiness {
-        ready: remaining <= 0.0,
-        ready_deadline: deadline_after(remaining),
-        charges_available: None,
+
+    /// Moments the missing charges refill, earliest first. Each one is
+    /// computed on its own, so rounding never accumulates.
+    fn refills(self) -> impl Iterator<Item = MonoTimeMs> {
+        let Self {
+            anchor,
+            charges,
+            capacity,
+            refill,
+        } = self;
+        refill.into_iter().flat_map(move |rate| {
+            (charges.saturating_add(1)..=capacity).map(move |level| {
+                let remaining_ms = f64::from(level) * rate.charge_ms - rate.progress_ms;
+                anchor.saturating_add((remaining_ms / rate.speed).ceil() as u64)
+            })
+        })
+    }
+
+    /// Charges usable at `now`.
+    #[must_use]
+    pub fn charges_at(self, now: MonoTimeMs) -> u8 {
+        self.refills()
+            .take_while(|at| *at <= now)
+            .fold(self.charges, |charges, _| charges.saturating_add(1))
+    }
+
+    /// The first refill strictly after `now`, if a charge is still missing
+    /// then.
+    #[must_use]
+    pub fn next_refill_after(self, now: MonoTimeMs) -> Option<MonoTimeMs> {
+        self.refills().find(|at| *at > now)
+    }
+
+    /// When the skill becomes usable again (`None` when it is usable at
+    /// receipt, or when only a new packet can make it usable).
+    #[must_use]
+    pub fn ready_at(self) -> Option<MonoTimeMs> {
+        if self.charges > 0 {
+            return None;
+        }
+        self.refills().next()
     }
 }
 
@@ -359,77 +413,121 @@ mod tests {
 
     const RECEIVED: MonoTimeMs = MonoTimeMs(50_000);
 
+    const TWO_CHARGES: SkillCharge = SkillCharge {
+        max_charges: Some(2),
+        max_valid_cd_time: None,
+    };
+
+    fn at(offset_ms: u64) -> MonoTimeMs {
+        MonoTimeMs(RECEIVED.0 + offset_ms)
+    }
+
     #[test]
-    fn plain_cooldown_deadline_scales_valid_time_and_accelerate() {
+    fn plain_cooldown_refill_scales_valid_time_and_accelerate() {
         // base 10s reduced to 8s, server says 2.5s already elapsed (scaled to
         // 2s), accelerate 25% -> remaining 6s / 1.25 = 4.8s.
-        let readiness = ready_deadline(&cd_state(10_000, 0, 2_500, 8_000, 0.25), RECEIVED, None);
-        assert!(!readiness.ready);
-        assert_eq!(readiness.ready_deadline, Some(MonoTimeMs(54_800)));
-        assert_eq!(readiness.charges_available, None);
+        let timeline =
+            CooldownTimeline::new(&cd_state(10_000, 0, 2_500, 8_000, 0.25), RECEIVED, None);
+        assert_eq!(timeline.charges_at(RECEIVED), 0);
+        assert_eq!(timeline.ready_at(), Some(at(4_800)));
+        assert_eq!(timeline.next_refill_after(RECEIVED), Some(at(4_800)));
+        assert_eq!(timeline.charges_at(at(4_800)), 1);
+        assert_eq!(timeline.next_refill_after(at(4_800)), None);
     }
 
     #[test]
     fn plain_cooldown_with_non_positive_duration_is_ready_without_timer() {
-        let readiness = ready_deadline(&cd_state(10_000, 0, 0, 0, 0.0), RECEIVED, None);
-        assert!(readiness.ready);
-        assert_eq!(readiness.ready_deadline, None);
+        let timeline = CooldownTimeline::new(&cd_state(10_000, 0, 0, 0, 0.0), RECEIVED, None);
+        assert_eq!(timeline.charges_at(RECEIVED), 1);
+        assert_eq!(timeline.ready_at(), None);
+        assert_eq!(timeline.next_refill_after(RECEIVED), None);
 
-        let elapsed = ready_deadline(&cd_state(10_000, 0, 10_000, 10_000, 0.0), RECEIVED, None);
-        assert!(elapsed.ready);
-        assert_eq!(elapsed.ready_deadline, None);
+        let elapsed =
+            CooldownTimeline::new(&cd_state(10_000, 0, 10_000, 10_000, 0.0), RECEIVED, None);
+        assert_eq!(elapsed.charges_at(RECEIVED), 1);
+        assert_eq!(elapsed.ready_at(), None);
     }
 
     #[test]
-    fn resource_slot_is_edge_only() {
+    fn resource_slot_only_moves_with_packets() {
         let charge = SkillCharge {
             max_charges: None,
             max_valid_cd_time: Some(10_000),
         };
-        let filling = ready_deadline(&cd_state(-1, 1, 4_000, -1, 0.0), RECEIVED, Some(&charge));
-        assert!(!filling.ready);
-        assert_eq!(filling.ready_deadline, None);
+        let filling =
+            CooldownTimeline::new(&cd_state(-1, 1, 4_000, -1, 0.0), RECEIVED, Some(&charge));
+        assert_eq!(filling.charges_at(at(60_000)), 0);
+        assert_eq!(filling.next_refill_after(RECEIVED), None);
+        assert_eq!(filling.ready_at(), None);
 
-        let full = ready_deadline(&cd_state(-1, 1, 10_000, -1, 0.0), RECEIVED, Some(&charge));
-        assert!(full.ready);
-        assert_eq!(full.ready_deadline, None);
+        let full =
+            CooldownTimeline::new(&cd_state(-1, 1, 10_000, -1, 0.0), RECEIVED, Some(&charge));
+        assert_eq!(full.charges_at(RECEIVED), 1);
 
-        // No configured maximum: never announced.
-        let unknown = ready_deadline(&cd_state(-1, 1, 10_000, -1, 0.0), RECEIVED, None);
-        assert!(!unknown.ready);
-        assert_eq!(unknown.ready_deadline, None);
+        // No configured maximum: never usable, so never announced.
+        let unknown = CooldownTimeline::new(&cd_state(-1, 1, 10_000, -1, 0.0), RECEIVED, None);
+        assert_eq!(unknown.charges_at(at(60_000)), 0);
     }
 
     #[test]
-    fn multi_charge_deadline_marks_first_charge_only() {
-        let charge = SkillCharge {
-            max_charges: Some(2),
-            max_valid_cd_time: None,
-        };
-        // Both charges spent: next charge in 6s at 1x.
-        let empty = ready_deadline(&cd_state(6_000, 1, 0, 6_000, 0.0), RECEIVED, Some(&charge));
-        assert!(!empty.ready);
-        assert_eq!(empty.charges_available, Some(0));
-        assert_eq!(empty.ready_deadline, Some(MonoTimeMs(56_000)));
-
-        // One charge left: ready now, and the 1 -> 2 refill sets no deadline.
-        let one = ready_deadline(
-            &cd_state(6_000, 1, 6_500, 6_000, 0.0),
+    fn multi_charge_refills_every_missing_charge() {
+        // Capture 1790300898228, skill 1420: the second cast came 5 522 ms
+        // after the first, leaving a 5 522 ms pool at 30 000 ms per charge.
+        let empty = CooldownTimeline::new(
+            &cd_state(30_000, 1, 5_522, 30_000, 0.0),
             RECEIVED,
-            Some(&charge),
+            Some(&TWO_CHARGES),
         );
-        assert!(one.ready);
-        assert_eq!(one.charges_available, Some(1));
-        assert_eq!(one.ready_deadline, None);
+        assert_eq!(empty.charges_at(RECEIVED), 0);
+        assert_eq!(empty.ready_at(), Some(at(24_478)));
+        assert_eq!(empty.next_refill_after(RECEIVED), Some(at(24_478)));
+        assert_eq!(empty.charges_at(at(24_478)), 1);
+        assert_eq!(empty.next_refill_after(at(24_478)), Some(at(54_478)));
+        assert_eq!(empty.charges_at(at(54_478)), 2);
+        assert_eq!(empty.next_refill_after(at(54_478)), None);
+
+        // The first cast from full leaves one charge and refills the other.
+        let one = CooldownTimeline::new(
+            &cd_state(30_000, 1, 30_000, 30_000, 0.0),
+            RECEIVED,
+            Some(&TWO_CHARGES),
+        );
+        assert_eq!(one.charges_at(RECEIVED), 1);
+        assert_eq!(one.ready_at(), None);
+        assert_eq!(one.next_refill_after(RECEIVED), Some(at(30_000)));
 
         // max_charges <= 1 falls through to the plain branch.
         let single = SkillCharge {
             max_charges: Some(1),
             max_valid_cd_time: None,
         };
-        let plain = ready_deadline(&cd_state(6_000, 1, 0, 6_000, 0.0), RECEIVED, Some(&single));
-        assert_eq!(plain.charges_available, None);
-        assert_eq!(plain.ready_deadline, Some(MonoTimeMs(56_000)));
+        let plain =
+            CooldownTimeline::new(&cd_state(6_000, 1, 0, 6_000, 0.0), RECEIVED, Some(&single));
+        assert_eq!(plain.next_refill_after(RECEIVED), Some(at(6_000)));
+        assert_eq!(plain.charges_at(at(6_000)), 1);
+    }
+
+    #[test]
+    fn charges_at_and_next_refill_agree_at_boundaries() {
+        let three = SkillCharge {
+            max_charges: Some(3),
+            max_valid_cd_time: None,
+        };
+        // Reduced to 90% with 30% accelerate: fractional refill offsets.
+        let timeline = CooldownTimeline::new(
+            &cd_state(7_000, 1, 1_234, 6_300, 0.3),
+            RECEIVED,
+            Some(&three),
+        );
+        let mut now = RECEIVED;
+        let mut charges = timeline.charges_at(now);
+        while let Some(refill) = timeline.next_refill_after(now) {
+            assert_eq!(timeline.charges_at(MonoTimeMs(refill.0 - 1)), charges);
+            charges += 1;
+            assert_eq!(timeline.charges_at(refill), charges);
+            now = refill;
+        }
+        assert_eq!(charges, 3);
     }
 
     #[test]

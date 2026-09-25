@@ -749,20 +749,7 @@ export type EngineState = { kind: "missing" } | { kind: "ready"; probe: EnginePr
  * monster id. The owner name is resolved at publish time from the entity
  * context.
  */
-export type EntityDurationTrackState = {
-/**
- * Stable row key, unique across entries.
- */
-key: string; monsterId: number; scope: EntityOwnerScope; ownerUuid: string | null; ownerName: string | null;
-/**
- * Configured lifetime; `None` renders an open-ended row.
- */
-durationMs: number | null;
-/**
- * Wall-clock expiry of every member, ascending; empty without a
- * duration. The row counts down to the first one still in the future.
- */
-deadlinesMs: number[] }
+export type EntityDurationTrackState = { key: string; monsterId: number; scope: EntityOwnerScope; ownerUuid: string | null; ownerName: string | null; durationMs: number | null; deadlinesMs: number[] }
 /**
  * Whose summons an entity-duration voice rule observes. Mirrors the
  * frontend `EntityDurationScope` (`"self" | "any"`).
@@ -841,11 +828,7 @@ export type LiveFantasyPayload = { revision: number; teammateFantasies: Teammate
 /**
  * Monster overlay topic (`live-monster`), 50ms throttle.
  */
-export type LiveMonsterPayload = { revision: number; bossBuffs: Partial<{ [key in string]: BuffUpdateState[] }>; teammateBuffs: Partial<{ [key in string]: BuffUpdateState[] }>; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [key in string]: HateEntry[] }>; stun: StunEntry[]; hp: HpEntry[]; playerNames: Partial<{ [key in string]: string }>; monsterIds: Partial<{ [key in string]: number }>;
-/**
- * Entity-duration panel rows, already in display order.
- */
-entityDurationTracks?: EntityDurationTrackState[] }
+export type LiveMonsterPayload = { revision: number; bossBuffs: Partial<{ [key in string]: BuffUpdateState[] }>; teammateBuffs: Partial<{ [key in string]: BuffUpdateState[] }>; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [key in string]: HateEntry[] }>; stun: StunEntry[]; hp: HpEntry[]; playerNames: Partial<{ [key in string]: string }>; monsterIds: Partial<{ [key in string]: number }>; entityDurationTracks?: EntityDurationTrackState[] }
 export type LivePullWindow = "live" | "hud-overlay"
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number; trainingWindowMs: number; trainingLockPolicy: TrainingLockPolicy }
 export type LiveScenePayload = { revision: number; sceneId: number | null; dungeonDifficulty: number | null; localClassId: number | null; localTalentStageCfgId: number | null }
@@ -1136,8 +1119,8 @@ calculatedDuration: number;
 cdAccelerateRate: number;
 /**
  * Wall-clock moment the skill becomes usable again (`None` when it is
- * usable now or readiness is not time-driven). Mirrors the voice
- * projection's ready deadline so HUD and announcements agree.
+ * usable now or readiness is not time-driven). Taken from the same
+ * charge timeline the voice projection announces refills from.
  */
 readyAtMs?: number | null;
 /**
@@ -1317,8 +1300,9 @@ export type VoiceSubject =
 { kind: "monsterBuff"; buffId: number; sourceScope: MonsterBuffSourceScope } |
 /**
  * One of the local player's skills, by base skill id
- * (`skill_level_id / 100`). `Started` = cast, `Ended` = cooldown ready,
- * `ExpiringIn` = ready in N seconds.
+ * (`skill_level_id / 100`). `Started` = cast, `Ended` = a charge is
+ * ready (every refill counts), `ExpiringIn` = the next charge is ready
+ * in N seconds.
  */
 { kind: "skill"; skillId: number } |
 /**
@@ -1350,12 +1334,7 @@ export type VoiceTrigger = { subject: VoiceSubject; event: VoiceEvent }
  * HUD payload and the voice projection both read those tracks (see
  * `projections::entity_duration`).
  */
-export type WatchedEntitySpec = { monsterId: number; durationMs?: number | null; scope?: EntityOwnerScope;
-/**
- * Fold each caster's entities with this id into one track that counts
- * down to the soonest expiry.
- */
-merge?: boolean }
+export type WatchedEntitySpec = { monsterId: number; durationMs?: number | null; scope?: EntityOwnerScope; merge?: boolean }
 
 /** tauri-specta globals **/
 

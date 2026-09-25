@@ -303,8 +303,9 @@ pub enum VoiceSubject {
         source_scope: MonsterBuffSourceScope,
     },
     /// One of the local player's skills, by base skill id
-    /// (`skill_level_id / 100`). `Started` = cast, `Ended` = cooldown ready,
-    /// `ExpiringIn` = ready in N seconds.
+    /// (`skill_level_id / 100`). `Started` = cast, `Ended` = a charge is
+    /// ready (every refill counts), `ExpiringIn` = the next charge is ready
+    /// in N seconds.
     Skill {
         #[serde(rename = "skillId")]
         skill_id: i32,

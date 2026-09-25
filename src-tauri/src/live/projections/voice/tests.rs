@@ -299,7 +299,12 @@ fn permanent_aggregate_cancels_existing_expiry_timer() {
     };
     projection.rebuild_rule_indexes();
     let mut scheduler = DeadlineScheduler::new();
-    projection.sync_buff_expiries(MonoTimeMs(1_000), &mut scheduler);
+    projection.sync_buff_expiries(
+        VoiceSyncReason::Runtime,
+        1_000,
+        MonoTimeMs(1_000),
+        &mut scheduler,
+    );
     assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(4_000)));
 
     projection.buff_aggregates.insert(
@@ -312,8 +317,14 @@ fn permanent_aggregate_cancels_existing_expiry_timer() {
             },
         )]),
     );
-    projection.sync_buff_expiries(MonoTimeMs(2_000), &mut scheduler);
+    projection.sync_buff_expiries(
+        VoiceSyncReason::Runtime,
+        2_000,
+        MonoTimeMs(2_000),
+        &mut scheduler,
+    );
     assert!(scheduler.is_empty());
+    assert!(projection.take_cues().is_empty());
 }
 
 #[test]
@@ -323,14 +334,155 @@ fn expired_lead_time_is_not_scheduled() {
         ..Default::default()
     };
     let mut scheduler = DeadlineScheduler::new();
-    projection.deadlines.sync(
+    let outcome = projection.deadlines.sync(
         buff_voice_key(1, 0, VoiceBuffScope::LocalPlayer, 77),
-        TimerScope::RuleSet(1),
         Some(MonoTimeMs(2_000)),
         1,
         MonoTimeMs(1_001),
+        VoiceSyncReason::Runtime,
         &mut scheduler,
     );
+    assert_eq!(outcome, SyncOutcome::Unchanged);
+    assert!(scheduler.is_empty());
+}
+
+/// Buff 77 on the local player (uuid 1), counted from the batch's clock.
+fn local_buff_applied(instance_id: i64, duration_ms: u64) -> ObservedBuff {
+    ObservedBuff {
+        instance_id,
+        base_id: 77,
+        layer: 1,
+        source_uuid: Some(EntityUuid(1)),
+        source_config_id: None,
+        duration_ms: Some(duration_ms),
+        started_wall_ms: None,
+        expires_wall_ms: None,
+        started_mono_ms: None,
+        expires_mono_ms: None,
+        effect_ids: Arc::from([]),
+    }
+}
+
+fn apply_observations(
+    projection: &mut VoiceProjection,
+    entities: &mut EntityContext,
+    scheduler: &mut DeadlineScheduler,
+    sequence: u64,
+    observations: Vec<ProtocolObservation>,
+) {
+    for event in entities.apply_batch(batch(sequence, observations)) {
+        projection.apply(&event, entities, scheduler);
+    }
+}
+
+/// A local buff with 10 s left and a "5 s left" rule, gained at 200 ms: the
+/// cue is armed for 5 200 ms.
+fn buff_expiring_in_five_seconds() -> (VoiceProjection, EntityContext, DeadlineScheduler) {
+    let mut projection = projection_with(vec![rule(
+        "soon",
+        trigger(local_buff(77), expiring(5)),
+        "soon",
+        0,
+    )]);
+    let mut entities = local_context();
+    let mut scheduler = DeadlineScheduler::new();
+    apply_observations(
+        &mut projection,
+        &mut entities,
+        &mut scheduler,
+        2,
+        vec![ProtocolObservation::BuffChanged {
+            target_uuid: EntityUuid(1),
+            change: ObservedBuffChange::Applied {
+                buff: local_buff_applied(10, 10_000),
+            },
+        }],
+    );
+    assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(5_200)));
+    (projection, entities, scheduler)
+}
+
+fn shorten_local_buff(duration_ms: u64) -> ProtocolObservation {
+    ProtocolObservation::BuffChanged {
+        target_uuid: EntityUuid(1),
+        change: ObservedBuffChange::Delta {
+            instance_id: 10,
+            layer: None,
+            duration_ms: Some(duration_ms),
+            create_time: None,
+            effect_ids: None,
+        },
+    }
+}
+
+#[test]
+fn buff_shortened_inside_lead_fires_expiring_immediately() {
+    let (mut projection, mut entities, mut scheduler) = buff_expiring_in_five_seconds();
+
+    // At 1 000 ms the server leaves 3 s: the 5 s mark is gone, the buff is not.
+    apply_observations(
+        &mut projection,
+        &mut entities,
+        &mut scheduler,
+        10,
+        vec![shorten_local_buff(3_000)],
+    );
+    assert_eq!(fired_phrases(&mut projection), ["soon"]);
+    assert!(scheduler.is_empty());
+
+    // Further updates inside the same window stay quiet.
+    apply_observations(
+        &mut projection,
+        &mut entities,
+        &mut scheduler,
+        20,
+        vec![shorten_local_buff(1_500)],
+    );
+    assert!(projection.take_cues().is_empty());
+}
+
+#[test]
+fn buff_expiry_pulled_past_its_moment_stays_silent() {
+    let (mut projection, _entities, mut scheduler) = buff_expiring_in_five_seconds();
+
+    // Seen at 1 000 ms, the aggregate already ran out at 900 ms: nothing is
+    // left to warn about, and the "lost" edge speaks when it goes.
+    projection.buff_aggregates.insert(
+        VoiceBuffScope::LocalPlayer,
+        HashMap::from([(
+            77,
+            BuffAggregate {
+                expires_mono_ms: Some(MonoTimeMs(900)),
+                fantasy_tier: None,
+            },
+        )]),
+    );
+    projection.sync_buff_expiries(
+        VoiceSyncReason::Runtime,
+        1_000,
+        MonoTimeMs(1_000),
+        &mut scheduler,
+    );
+    assert!(projection.take_cues().is_empty());
+    assert!(scheduler.is_empty());
+}
+
+#[test]
+fn buff_snapshot_inside_lead_rebuilds_silently() {
+    let (mut projection, mut entities, mut scheduler) = buff_expiring_in_five_seconds();
+
+    // A full snapshot at 1 000 ms with 3 s left is a baseline, not an update.
+    apply_observations(
+        &mut projection,
+        &mut entities,
+        &mut scheduler,
+        10,
+        vec![ProtocolObservation::BuffSnapshot {
+            target_uuid: EntityUuid(1),
+            buffs: vec![local_buff_applied(10, 3_000)],
+        }],
+    );
+    assert!(projection.take_cues().is_empty());
     assert!(scheduler.is_empty());
 }
 
@@ -343,7 +495,7 @@ fn boss_expiry_refreshes_by_rule_and_base_skill() {
     let mut scheduler = DeadlineScheduler::new();
     let key = boss_voice_key(1, 2, 77);
 
-    projection.sync_boss_expiry(
+    let armed = projection.sync_boss_expiry(
         2,
         77,
         MonoTimeMs(16_000),
@@ -351,13 +503,14 @@ fn boss_expiry_refreshes_by_rule_and_base_skill() {
         MonoTimeMs(1_000),
         &mut scheduler,
     );
+    assert_eq!(armed, SyncOutcome::Armed);
     assert_eq!(
         projection.deadlines.armed_deadline(key),
         Some(MonoTimeMs(11_000))
     );
     assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(11_000)));
 
-    projection.sync_boss_expiry(
+    let moved = projection.sync_boss_expiry(
         2,
         77,
         MonoTimeMs(14_000),
@@ -365,6 +518,7 @@ fn boss_expiry_refreshes_by_rule_and_base_skill() {
         MonoTimeMs(4_000),
         &mut scheduler,
     );
+    assert_eq!(moved, SyncOutcome::Armed);
 
     assert_eq!(
         projection.deadlines.armed_deadline(key),
@@ -375,13 +529,47 @@ fn boss_expiry_refreshes_by_rule_and_base_skill() {
 }
 
 #[test]
+fn boss_refire_inside_lead_fires_expiring_immediately() {
+    let mut projection = projection_with(vec![rule(
+        "dbm-soon",
+        trigger(VoiceSubject::BossDbm { base_skill_id: 9 }, expiring(5)),
+        "soon",
+        0,
+    )]);
+    let entities = EntityContext::new();
+    let mut scheduler = DeadlineScheduler::new();
+    let mechanic = |expires_mono_ms: u64| {
+        DomainEvent::BossMechanicStarted(crate::live::runtime::events::BossMechanicObservation {
+            base_skill_id: 9,
+            skill_effect_id: 0,
+            insertion: 0,
+            server_timestamp_ms: None,
+            duration_ms: 0,
+            expires_mono_ms: MonoTimeMs(expires_mono_ms),
+        })
+    };
+    // Due at 16 s: the "5 s left" cue is armed for 11 s.
+    projection.apply(
+        &domain_event(1, mechanic(16_000)),
+        &entities,
+        &mut scheduler,
+    );
+    assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(11_000)));
+
+    // Re-fired at 2 s with 3 s to go: announced on the spot.
+    projection.apply(&domain_event(2, mechanic(5_000)), &entities, &mut scheduler);
+    assert_eq!(fired_phrases(&mut projection), ["soon"]);
+    assert!(scheduler.is_empty());
+}
+
+#[test]
 fn scene_change_cancels_only_boss_expiries() {
     let mut projection = VoiceProjection {
         rule_set: 1,
         ..Default::default()
     };
     let mut scheduler = DeadlineScheduler::new();
-    projection.sync_boss_expiry(
+    let boss = projection.sync_boss_expiry(
         2,
         77,
         MonoTimeMs(10_000),
@@ -390,14 +578,15 @@ fn scene_change_cancels_only_boss_expiries() {
         &mut scheduler,
     );
     let buff_key = buff_voice_key(1, 3, VoiceBuffScope::LocalPlayer, 88);
-    projection.deadlines.sync(
+    let buff = projection.deadlines.sync(
         buff_key,
-        TimerScope::RuleSet(1),
         Some(MonoTimeMs(4_000)),
         0,
         MonoTimeMs(1_000),
+        VoiceSyncReason::Runtime,
         &mut scheduler,
     );
+    assert_eq!((boss, buff), (SyncOutcome::Armed, SyncOutcome::Armed));
 
     projection.cancel_boss_expiries(&mut scheduler);
 
@@ -420,7 +609,7 @@ fn deadline_delivery_fires_rule_once_and_rejects_superseded_schedule() {
     let entities = EntityContext::new();
     let mut scheduler = DeadlineScheduler::new();
     let key = boss_voice_key(1, 0, 9);
-    projection.sync_boss_expiry(
+    let first = projection.sync_boss_expiry(
         0,
         9,
         MonoTimeMs(5_000),
@@ -428,7 +617,7 @@ fn deadline_delivery_fires_rule_once_and_rejects_superseded_schedule() {
         MonoTimeMs(1_000),
         &mut scheduler,
     );
-    projection.sync_boss_expiry(
+    let moved = projection.sync_boss_expiry(
         0,
         9,
         MonoTimeMs(6_000),
@@ -436,6 +625,7 @@ fn deadline_delivery_fires_rule_once_and_rejects_superseded_schedule() {
         MonoTimeMs(1_000),
         &mut scheduler,
     );
+    assert_eq!((first, moved), (SyncOutcome::Armed, SyncOutcome::Armed));
 
     let stale = DomainEvent::DeadlineReached {
         key,
@@ -799,7 +989,13 @@ fn baseline_buff_snapshot_rebaselines_without_firing() {
 
     // A container resync arrives as a Baseline transition: it must seed the
     // aggregate silently, exactly like the retired tracker's reset did.
-    projection.refresh_buff_aggregates(&entities, false, 100, MonoTimeMs(100), &mut scheduler);
+    projection.refresh_buff_aggregates(
+        &entities,
+        VoiceSyncReason::Baseline,
+        100,
+        MonoTimeMs(100),
+        &mut scheduler,
+    );
     assert!(projection.take_cues().is_empty());
     assert!(projection.buff_aggregates[&VoiceBuffScope::LocalPlayer].contains_key(&77));
 }
@@ -1138,29 +1334,63 @@ mod entity_monitor_bridge {
             vec![rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0)],
             vec![],
         );
+        // "Ready" rides the per-skill refill wakeup, not a per-rule cue.
         h.step(2, vec![cooldown(SKILL, 10_000, 0)]);
-        let key = skill_voice_key(1, 0, SKILL);
-        assert_eq!(
-            h.voice.deadlines.armed_deadline(key),
-            Some(MonoTimeMs(10_200))
-        );
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(10_200)));
+        assert_eq!(h.voice.deadlines.len(), 0);
 
-        // Same packet again (server echo) keeps the same deadline.
+        // Same packet again (server echo) keeps the same wakeup.
         h.step(3, vec![cooldown(SKILL, 10_000, 100)]);
-        assert_eq!(
-            h.voice.deadlines.armed_deadline(key),
-            Some(MonoTimeMs(10_200))
-        );
-        assert_eq!(h.voice.deadlines.len(), 1);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(10_200)));
+        assert_eq!(h.scheduler.len(), 1);
 
         // Server reports most of the cooldown already elapsed: pull in.
         h.step(4, vec![cooldown(SKILL, 10_000, 8_000)]);
-        assert_eq!(
-            h.voice.deadlines.armed_deadline(key),
-            Some(MonoTimeMs(2_400))
-        );
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(2_400)));
+        assert_eq!(h.scheduler.len(), 1);
         h.drain(24);
         assert_eq!(h.fired(), vec!["ready".to_string()]);
+        assert!(h.scheduler.is_empty());
+    }
+
+    #[test]
+    fn cooldown_reduction_across_lead_fires_ready_in_immediately() {
+        let mut h = Harness::new(
+            vec![
+                rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0),
+                rule("soon", skill(SKILL, expiring(5)), "soon", 0),
+            ],
+            vec![],
+        );
+        // 10 s cooldown at 200 ms: "soon" armed for 5 200, ready at 10 200.
+        h.step(2, vec![cooldown(SKILL, 10_000, 0)]);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(5_200)));
+
+        // At 3 000 ms a reduction leaves 2 s: past the 5 s mark, so speak now.
+        h.step(30, vec![cooldown(SKILL, 10_000, 8_000)]);
+        assert_eq!(h.fired(), ["soon"]);
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(5_000)));
+
+        h.drain(50);
+        assert_eq!(h.fired(), ["ready"]);
+        assert!(h.scheduler.is_empty());
+    }
+
+    #[test]
+    fn cooldown_reset_announces_ready_only() {
+        let mut h = Harness::new(
+            vec![
+                rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0),
+                rule("soon", skill(SKILL, expiring(5)), "soon", 0),
+            ],
+            vec![],
+        );
+        h.step(2, vec![cooldown(SKILL, 10_000, 0)]);
+
+        // A full refund at 3 000 ms: ready at once, and "5 s left" is moot.
+        h.step(30, vec![cooldown(SKILL, 10_000, 10_000)]);
+        assert_eq!(h.fired(), ["ready"]);
+        assert!(h.scheduler.is_empty());
     }
 
     #[test]
@@ -1170,7 +1400,7 @@ mod entity_monitor_bridge {
             vec![],
         );
         h.step(2, vec![cooldown(SKILL, 10_000, 0)]);
-        assert_eq!(h.voice.deadlines.len(), 1);
+        assert_eq!(h.scheduler.len(), 1);
 
         // Cooldown fully refunded: no timer, announced right away.
         h.step(3, vec![cooldown(SKILL, 10_000, 10_000)]);
@@ -1251,7 +1481,7 @@ mod entity_monitor_bridge {
             h.monitor.apply(&event, &h.entities, &mut h.scheduler);
         }
         h.voice.apply_entity_monitor(
-            VoiceSyncReason::Configuration,
+            VoiceSyncReason::Baseline,
             &h.monitor,
             &h.entities,
             300,
@@ -1267,38 +1497,54 @@ mod entity_monitor_bridge {
     }
 
     #[test]
-    fn multi_charge_announces_first_charge_only() {
-        // SkillChargeTable: 1420 has maxCharges 2.
+    fn multi_charge_announces_every_refill() {
+        // SkillChargeTable: 1420 has maxCharges 2. Mirrors capture
+        // 1790300898228: a cast from full, then another 5.5 s later.
         let mut h = Harness::new(
-            vec![rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0)],
+            vec![
+                rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0),
+                rule("soon", skill(SKILL, expiring(5)), "soon", 0),
+            ],
             vec![],
         );
-        // Both charges spent at t = 200 ms; one charge back at 6 200.
-        h.step(2, vec![charged_cooldown(SKILL, 6_000, 0)]);
-        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(6_200)));
-        h.drain(62);
-        assert_eq!(h.fired(), vec!["ready".to_string()]);
+        // The first cast at 200 ms leaves one charge; the other is back at
+        // 30 200.
+        h.step(2, vec![charged_cooldown(SKILL, 30_000, 30_000)]);
+        assert!(h.fired().is_empty());
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(25_200)));
 
-        // 1 -> 2 has no timer and a "one charge left" packet is no edge.
+        // The second cast at 5 700 ms spends it with 5 500 ms banked: the same
+        // moment now brings back the first charge, and the next one follows.
+        h.step(57, vec![charged_cooldown(SKILL, 30_000, 5_500)]);
+        assert!(h.fired().is_empty());
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(25_200)));
+
+        for (soon, ready) in [(252, 302), (552, 602)] {
+            h.drain(soon);
+            assert_eq!(h.fired(), ["soon"]);
+            h.drain(ready);
+            assert_eq!(h.fired(), ["ready"]);
+        }
         assert!(h.scheduler.is_empty());
-        h.drain(122);
-        h.step(123, vec![charged_cooldown(SKILL, 6_000, 6_500)]);
+
+        // A later packet that still reads full is no edge.
+        h.step(700, vec![charged_cooldown(SKILL, 30_000, 60_000)]);
         assert!(h.fired().is_empty());
         assert!(h.scheduler.is_empty());
-
-        // Spend both again: a fresh 0 -> 1 deadline.
-        h.step(130, vec![charged_cooldown(SKILL, 6_000, 0)]);
-        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(19_000)));
     }
 
     #[test]
     fn local_player_change_cancels_cooldown_timers() {
         let mut h = Harness::new(
-            vec![rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0)],
+            vec![
+                rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0),
+                rule("soon", skill(SKILL, expiring(3)), "soon", 0),
+            ],
             vec![],
         );
         h.step(2, vec![cooldown(SKILL, 10_000, 0)]);
         assert_eq!(h.voice.deadlines.len(), 1);
+        assert_eq!(h.scheduler.len(), 2);
 
         h.step(
             3,
@@ -1306,7 +1552,8 @@ mod entity_monitor_bridge {
                 uuid: Some(OTHER_PLAYER),
             }],
         );
-        assert!(h.voice.deadlines.len() == 0);
+        assert_eq!(h.voice.deadlines.len(), 0);
+        assert!(h.voice.skills.is_empty());
         assert!(h.scheduler.is_empty());
         h.drain(110);
         assert!(h.fired().is_empty());
@@ -1517,8 +1764,13 @@ mod entity_monitor_bridge {
             queue_policy: Default::default(),
             rules: h.voice.rules.clone(),
         };
-        h.voice
-            .apply_config(&snapshot, &h.entities, MonoTimeMs(600), &mut h.scheduler);
+        h.voice.apply_config(
+            &snapshot,
+            &h.entities,
+            600,
+            MonoTimeMs(600),
+            &mut h.scheduler,
+        );
         h.flush(6);
         assert!(h.fired().is_empty());
         assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(20_200)));
@@ -1754,24 +2006,32 @@ fn playback_settings_preserve_boss_timer_cooldown_and_rule_generation() {
         ],
         ..Default::default()
     };
-    assert!(projection.apply_config(&config, &entities, MonoTimeMs(100), &mut scheduler));
-    projection.sync_boss_expiry(1, 9, MonoTimeMs(5_000), 0, MonoTimeMs(100), &mut scheduler);
+    assert!(projection.apply_config(&config, &entities, 100, MonoTimeMs(100), &mut scheduler));
+    let armed =
+        projection.sync_boss_expiry(1, 9, MonoTimeMs(5_000), 0, MonoTimeMs(100), &mut scheduler);
+    assert_eq!(armed, SyncOutcome::Armed);
     projection.fire_alert(AlertKind::MatchmakingPopped, 100);
     assert_eq!(fired_phrases(&mut projection), ["alert"]);
     let generation = projection.rule_set;
     config.volume = 0.25;
     config.queue_policy = crate::voice::models::VoiceQueuePolicy::InterruptForHigherPriority;
     // The input order differs from normalized order: it is still the same rules.
-    assert!(!projection.apply_config(&config, &entities, MonoTimeMs(200), &mut scheduler));
+    assert!(!projection.apply_config(&config, &entities, 200, MonoTimeMs(200), &mut scheduler));
     assert_eq!(projection.rule_set, generation);
     assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(5_000)));
     projection.fire_alert(AlertKind::MatchmakingPopped, 200);
     assert!(projection.take_cues().is_empty());
     let due = scheduler.drain_due(MonoTimeMs(5_000)).pop().unwrap();
-    projection.on_deadline(due.key, due.scheduled_for, MonoTimeMs(5_000), 5_000);
+    projection.on_deadline(
+        due.key,
+        due.scheduled_for,
+        MonoTimeMs(5_000),
+        5_000,
+        &mut scheduler,
+    );
     assert_eq!(fired_phrases(&mut projection), ["soon"]);
     config.enabled = false;
-    assert!(projection.apply_config(&config, &entities, MonoTimeMs(6_000), &mut scheduler));
+    assert!(projection.apply_config(&config, &entities, 6_000, MonoTimeMs(6_000), &mut scheduler));
     assert!(projection.rules.is_empty());
 }
 
@@ -1809,7 +2069,7 @@ fn counter_threshold_config_baseline_is_silent_but_later_edge_fires() {
         0,
     )]);
     projection.apply_counters(
-        VoiceSyncReason::Configuration,
+        VoiceSyncReason::Baseline,
         &counters,
         100,
         MonoTimeMs(100),

@@ -142,10 +142,10 @@ impl SkillCdRecord {
         self.state.skill_level_id / 100
     }
 
-    /// Readiness from the current `state`, using the bundled charge table.
+    /// Charge timeline of the current `state`, using the bundled charge table.
     #[must_use]
-    pub fn readiness(&self) -> skill_cd::CooldownReadiness {
-        skill_cd::ready_deadline(
+    pub fn timeline(&self) -> skill_cd::CooldownTimeline {
+        skill_cd::CooldownTimeline::new(
             &self.state,
             self.received_mono_ms,
             skill_cd::skill_charge(self.skill_id()),
@@ -158,8 +158,8 @@ impl SkillCdRecord {
         let charge = skill_cd::skill_charge(self.skill_id());
         self.state.max_charges = charge.and_then(|charge| charge.max_charges);
         self.state.max_valid_cd_time = charge.and_then(|charge| charge.max_valid_cd_time);
-        self.state.ready_at_ms = self.readiness().ready_deadline.map(|deadline| {
-            let offset = deadline.0.saturating_sub(self.received_mono_ms.0);
+        self.state.ready_at_ms = self.timeline().ready_at().map(|ready_at| {
+            let offset = ready_at.0.saturating_sub(self.received_mono_ms.0);
             self.state.received_at.saturating_add(offset as i64)
         });
     }

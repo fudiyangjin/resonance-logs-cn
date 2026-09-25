@@ -25,7 +25,7 @@ In the **{{ui:skillMonitor.skillCd.voice.title}}** section, you can set up three
 | **When ready** | The cooldown ends |
 | **x seconds before ready** | The cooldown is about to end, so you can get ready |
 
-Charge-based skills are only announced when the **first charge** comes back; later charges are not announced again. Announcements require a model to be installed and enabled in [Voice](../voice/README.md).
+For charge-based skills, **every charge that comes back** counts as the cooldown ending, so "When ready" and "x seconds before ready" play for each charge. Announcements require a model to be installed and enabled in [Voice](../voice/README.md).
 
 > [!NOTE]
 > "Duration skills" (such as Scythe Cart) that used to be configured here have moved to [Monster Monitor · Entity Duration](../monster/entity-duration.md). Old profiles are migrated automatically.

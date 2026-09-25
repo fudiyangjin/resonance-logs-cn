@@ -5,15 +5,19 @@
 //! that subject by event / scope.
 //!
 //! Two trigger paradigms only: *edges* (buff gained/lost, cast, counter
-//! threshold, entity appeared/gone, skill ready) and *deadlines* (N seconds
-//! before a buff / mechanic / counter freeze / cooldown / entity lifetime
-//! runs out). Skill and entity state is not tracked here; it is read from
-//! the sibling [`EntityMonitorProjection`] at the end of each batch.
+//! threshold, entity appeared/gone, skill charge refilled) and *deadlines*
+//! (N seconds before a buff / mechanic / counter freeze / skill refill /
+//! entity lifetime runs out). A deadline that a live update pulls into the
+//! past is announced right away (see [`DeadlineTracker::sync`]). Entity
+//! state is read from the sibling [`EntityMonitorProjection`] at the end of
+//! each batch; skill cooldowns are copied from it as charge timelines so
+//! refills that no packet reports can be evaluated on the voice's own
+//! wakeups (see [`skill`]).
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::live::counter::engine::{CounterEngine, CounterNamespace};
-use crate::live::projections::entity_monitor::{EntityMonitorProjection, SkillCdRecord};
+use crate::live::projections::entity_monitor::EntityMonitorProjection;
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
     BuffState, BuffTransition, DomainEnvelope, DomainEvent, MonoTimeMs, SkillPhase, TimerKey,
@@ -26,29 +30,23 @@ use crate::voice::models::{
 };
 
 mod deadline;
+mod skill;
 #[cfg(test)]
 mod tests;
 
 use deadline::{DeadlineTracker, SyncOutcome};
+use skill::{SkillRules, SkillTrack};
 
-/// Configuration refreshes establish a baseline without emitting game edges.
+/// Whether a sync follows live game updates or re-establishes state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum VoiceSyncReason {
-    Configuration,
+    /// Configuration changes, snapshots and context switches (another local
+    /// player or attack target): state is rebuilt silently, so no edge fires
+    /// and no cue is announced late.
+    Baseline,
+    /// Live game updates: edges fire, and a pending cue that an update
+    /// pulls into the past is announced right away.
     Runtime,
-}
-
-impl VoiceSyncReason {
-    fn expiry(
-        self,
-        expires: Option<MonoTimeMs>,
-        seconds_before: u32,
-        now: MonoTimeMs,
-    ) -> Option<MonoTimeMs> {
-        expires.filter(|at| {
-            self == Self::Runtime || at.saturating_sub(u64::from(seconds_before) * 1_000) > now
-        })
-    }
 }
 
 /// Lookup key derived from a [`VoiceSubject`] with scope details stripped:
@@ -176,18 +174,21 @@ pub struct VoiceProjection {
     /// Handles of enabled buff `ExpiringIn` rules, so expiry syncing touches
     /// only timer-bearing rules instead of scanning `rules`.
     buff_expiry_rules: Vec<usize>,
-    /// Handles of enabled `Skill` / `Entity` rules that read the entity
-    /// monitor (everything but `Skill/Started`, which is event-driven).
-    entity_monitor_rules: Vec<usize>,
+    /// Enabled cooldown rules per local skill id (`Skill/Started` is a cast
+    /// edge and needs no cooldown state).
+    skill_rules: HashMap<i32, SkillRules>,
+    /// Handles of enabled `Entity` rules, which read the entity monitor's
+    /// duration tracks.
+    entity_rules: Vec<usize>,
     buff_aggregates: BuffAggregates,
-    /// Every armed voice timer, keyed by its scheduler key.
+    /// Every armed voice cue timer, keyed by its scheduler key.
     deadlines: DeadlineTracker,
     rule_set: u64,
     last_fire_ms: HashMap<usize, i64>,
     counter_crossed: HashMap<(i32, i32), bool>,
-    /// Last observed readiness per local skill id; `Skill/Ended` fires on
-    /// the `false -> true` edge (resource slots have no deadline at all).
-    skill_ready: HashMap<i32, bool>,
+    /// Cooldown timeline and last seen charges of every watched skill that
+    /// has a cooldown record; a rise in charges fires `Skill/Ended`.
+    skills: HashMap<i32, SkillTrack>,
     /// `(monster_id, scope)` pairs with at least one present watched entity
     /// at the last flush; `Entity/Started|Ended` fire on set differences.
     entity_presence: BTreeSet<(i32, EntityOwnerScope)>,
@@ -221,7 +222,7 @@ impl VoiceProjection {
     }
 
     fn clear_entity_monitor_state(&mut self) {
-        self.skill_ready.clear();
+        self.skills.clear();
         self.entity_presence.clear();
         self.entity_presence_seeded = false;
     }
@@ -230,6 +231,7 @@ impl VoiceProjection {
         &mut self,
         config: &VoiceRuntimeSnapshot,
         entities: &EntityContext,
+        now_ms: i64,
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
     ) -> bool {
@@ -250,7 +252,7 @@ impl VoiceProjection {
         self.counter_crossed.clear();
         self.clear_entity_monitor_state();
         self.buff_aggregates = collect_buff_aggregates(entities);
-        self.sync_buff_expiries(now_mono, scheduler);
+        self.sync_buff_expiries(VoiceSyncReason::Baseline, now_ms, now_mono, scheduler);
         true
     }
 
@@ -261,7 +263,8 @@ impl VoiceProjection {
         self.rules_by_subject.clear();
         self.counter_rules.clear();
         self.buff_expiry_rules.clear();
-        self.entity_monitor_rules.clear();
+        self.skill_rules.clear();
+        self.entity_rules.clear();
         for (index, rule) in self.rules.iter().enumerate() {
             if !rule.enabled {
                 continue;
@@ -277,12 +280,25 @@ impl VoiceProjection {
                     }
                 }
                 VoiceSubject::Counter { .. } => self.counter_rules.push(index),
-                VoiceSubject::Skill { .. } => {
-                    if rule.trigger.event != VoiceEvent::Started {
-                        self.entity_monitor_rules.push(index);
+                // "Ready in 0 s" is the refill itself, so it rides the edge.
+                VoiceSubject::Skill { skill_id } => match rule.trigger.event {
+                    VoiceEvent::Ended | VoiceEvent::ExpiringIn { seconds_before: 0 } => {
+                        self.skill_rules
+                            .entry(*skill_id)
+                            .or_default()
+                            .ready
+                            .push(index);
                     }
-                }
-                VoiceSubject::Entity { .. } => self.entity_monitor_rules.push(index),
+                    VoiceEvent::ExpiringIn { seconds_before } => {
+                        self.skill_rules
+                            .entry(*skill_id)
+                            .or_default()
+                            .ready_in
+                            .push((index, seconds_before));
+                    }
+                    VoiceEvent::Started | VoiceEvent::Threshold => {}
+                },
+                VoiceSubject::Entity { .. } => self.entity_rules.push(index),
                 VoiceSubject::BossDbm { .. } | VoiceSubject::Alert { .. } => {}
             }
         }
@@ -317,10 +333,14 @@ impl VoiceProjection {
                 if !buff.target_roles.is_local_player && !buff.target_roles.is_current_target {
                     return;
                 }
-                let emit_edges = buff.transition != BuffTransition::Baseline;
+                let reason = if buff.transition == BuffTransition::Baseline {
+                    VoiceSyncReason::Baseline
+                } else {
+                    VoiceSyncReason::Runtime
+                };
                 self.refresh_buff_aggregates(
                     entities,
-                    emit_edges,
+                    reason,
                     envelope.occurred_at_ms,
                     envelope.meta.mono_ms(),
                     scheduler,
@@ -329,19 +349,26 @@ impl VoiceProjection {
             DomainEvent::EntityDisappeared { .. } => {
                 self.refresh_buff_aggregates(
                     entities,
-                    true,
+                    VoiceSyncReason::Runtime,
                     envelope.occurred_at_ms,
                     envelope.meta.mono_ms(),
                     scheduler,
                 );
             }
+            // These swap *whose* buffs are watched rather than changing a
+            // buff, so they rebuild silently.
             DomainEvent::EntityAppeared { .. }
             | DomainEvent::IdentityChanged { .. }
             | DomainEvent::LocalPlayerChanged { .. }
             | DomainEvent::AttackTargetChanged { .. }
             | DomainEvent::DeathOccurred { .. } => {
-                self.replace_buff_aggregates(collect_buff_aggregates(entities), false);
-                self.sync_buff_expiries(envelope.meta.mono_ms(), scheduler);
+                self.refresh_buff_aggregates(
+                    entities,
+                    VoiceSyncReason::Baseline,
+                    envelope.occurred_at_ms,
+                    envelope.meta.mono_ms(),
+                    scheduler,
+                );
             }
             DomainEvent::SceneChanged { .. } => self.cancel_boss_expiries(scheduler),
             // The local player's casts arrive exactly once per cast as the
@@ -374,7 +401,7 @@ impl VoiceProjection {
                             self.fire_rule(index, envelope.occurred_at_ms, None);
                         }
                         Some(VoiceEvent::ExpiringIn { seconds_before }) => {
-                            self.sync_boss_expiry(
+                            let outcome = self.sync_boss_expiry(
                                 index,
                                 mechanic.base_skill_id,
                                 mechanic.expires_mono_ms,
@@ -382,6 +409,9 @@ impl VoiceProjection {
                                 envelope.meta.mono_ms(),
                                 scheduler,
                             );
+                            if outcome == SyncOutcome::FireNow {
+                                self.fire_rule(index, envelope.occurred_at_ms, None);
+                            }
                         }
                         _ => {}
                     }
@@ -402,7 +432,13 @@ impl VoiceProjection {
                 scheduled_for,
                 fired_at,
                 ..
-            } => self.on_deadline(*key, *scheduled_for, *fired_at, envelope.occurred_at_ms),
+            } => self.on_deadline(
+                *key,
+                *scheduled_for,
+                *fired_at,
+                envelope.occurred_at_ms,
+                scheduler,
+            ),
             _ => {}
         }
     }
@@ -455,14 +491,17 @@ impl VoiceProjection {
                             now_mono
                                 .saturating_add(expiry_wall.saturating_sub(now_ms).max(0) as u64)
                         });
-                    self.deadlines.sync(
+                    let outcome = self.deadlines.sync(
                         key,
-                        TimerScope::RuleSet(self.rule_set),
-                        reason.expiry(expires, seconds_before, now_mono),
+                        expires,
                         seconds_before,
                         now_mono,
+                        reason,
                         scheduler,
                     );
+                    if outcome == SyncOutcome::FireNow {
+                        self.fire_rule(index, now_ms, None);
+                    }
                 }
                 _ => {}
             }
@@ -471,8 +510,8 @@ impl VoiceProjection {
     }
 
     /// Sibling read of the entity monitor at the end of a batch (and right
-    /// after a config change): re-arms skill-ready / entity-expiry deadlines
-    /// and fires readiness and presence edges.
+    /// after a config change): re-evaluates watched skill cooldowns,
+    /// re-arms entity-expiry deadlines and fires presence edges.
     pub fn apply_entity_monitor(
         &mut self,
         reason: VoiceSyncReason,
@@ -482,153 +521,67 @@ impl VoiceProjection {
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
     ) {
-        if self.entity_monitor_rules.is_empty() {
-            return;
+        if !self.skill_rules.is_empty() {
+            self.sync_skills(reason, monitor, now_ms, now_mono, scheduler);
         }
-        // Last-wins per base skill id, like the HUD: several level ids can
-        // share a base id and the newest packet describes the live state.
-        let mut latest_cds: HashMap<i32, &SkillCdRecord> = HashMap::new();
-        for record in monitor.skill_cooldowns() {
-            latest_cds
-                .entry(record.skill_id())
-                .and_modify(|current| {
-                    if record.received_mono_ms >= current.received_mono_ms {
-                        *current = record;
-                    }
-                })
-                .or_insert(record);
+        if self.entity_rules.is_empty() {
+            return;
         }
         // The same tracks the HUD renders, so cues follow what is on screen.
         let tracks = monitor.entity_duration().tracks(entities);
 
         let rule_set = self.rule_set;
-        let scope = TimerScope::RuleSet(rule_set);
-        let entity_monitor_rules = std::mem::take(&mut self.entity_monitor_rules);
-        let mut collapsed_ready = Vec::new();
-        for &index in &entity_monitor_rules {
-            let Some(trigger) = self.rules.get(index).map(|rule| rule.trigger.clone()) else {
+        let entity_rules = std::mem::take(&mut self.entity_rules);
+        for &index in &entity_rules {
+            let Some(VoiceTrigger {
+                subject:
+                    VoiceSubject::Entity {
+                        monster_id,
+                        scope: owner_scope,
+                    },
+                event: VoiceEvent::ExpiringIn { seconds_before },
+            }) = self.rules.get(index).map(|rule| rule.trigger.clone())
+            else {
                 continue;
             };
-            match trigger.subject {
-                VoiceSubject::Skill { skill_id } => {
-                    let seconds_before = match trigger.event {
-                        VoiceEvent::Ended => 0,
-                        VoiceEvent::ExpiringIn { seconds_before } => seconds_before,
-                        _ => continue,
-                    };
-                    let deadline = latest_cds
-                        .get(&skill_id)
-                        .and_then(|record| record.readiness().ready_deadline);
+            let lead_ms = u64::from(seconds_before).saturating_mul(1_000);
+            // One timer per audible entity: every entity of an unmerged
+            // entry, and in a merged track only those whose countdown reaches
+            // the lead while it is the one shown.
+            let mut live_instances = HashSet::new();
+            for track in tracks.iter().filter(|track| {
+                track.spec.monster_id == monster_id && track.spec.scope == owner_scope
+            }) {
+                for (entity, expires) in track.audible_expiries(lead_ms) {
+                    let instance = entity.0 as u64;
+                    live_instances.insert(instance);
                     let outcome = self.deadlines.sync(
-                        skill_voice_key(rule_set, index, skill_id),
-                        scope,
-                        reason.expiry(deadline, seconds_before, now_mono),
+                        entity_voice_key(rule_set, index, instance),
+                        Some(expires),
                         seconds_before,
                         now_mono,
+                        reason,
                         scheduler,
                     );
-                    // A cooldown-reduction packet can make a skill ready
-                    // before its armed deadline: still announce it.
-                    if reason == VoiceSyncReason::Runtime
-                        && outcome == SyncOutcome::CollapsedToPast
-                        && trigger.event == VoiceEvent::Ended
-                    {
-                        collapsed_ready.push((index, skill_id));
+                    if outcome == SyncOutcome::FireNow {
+                        self.fire_rule(index, now_ms, None);
                     }
                 }
-                VoiceSubject::Entity {
-                    monster_id,
-                    scope: owner_scope,
-                } => {
-                    let VoiceEvent::ExpiringIn { seconds_before } = trigger.event else {
-                        continue;
-                    };
-                    let lead_ms = u64::from(seconds_before).saturating_mul(1_000);
-                    // One timer per audible entity: every entity of an
-                    // unmerged entry, and in a merged track only those whose
-                    // countdown reaches the lead while it is the one shown.
-                    let mut live_instances = HashSet::new();
-                    for track in tracks.iter().filter(|track| {
-                        track.spec.monster_id == monster_id && track.spec.scope == owner_scope
-                    }) {
-                        for (entity, expires) in track.audible_expiries(lead_ms) {
-                            let instance = entity.0 as u64;
-                            live_instances.insert(instance);
-                            self.deadlines.sync(
-                                entity_voice_key(rule_set, index, instance),
-                                scope,
-                                reason.expiry(Some(expires), seconds_before, now_mono),
-                                seconds_before,
-                                now_mono,
-                                scheduler,
-                            );
-                        }
-                    }
-                    self.deadlines.cancel_where(
-                        |key| {
-                            matches!(
-                                key,
-                                TimerKey::VoiceExpiry { rule_handle, subject, instance, .. }
-                                    if *subject == ENTITY_TIMER_SUBJECT
-                                        && *rule_handle == index as u64
-                                        && !live_instances.contains(instance)
-                            )
-                        },
-                        scheduler,
-                    );
-                }
-                _ => {}
             }
+            self.deadlines.cancel_where(
+                |key| {
+                    matches!(
+                        key,
+                        TimerKey::VoiceExpiry { rule_handle, subject, instance, .. }
+                            if *subject == ENTITY_TIMER_SUBJECT
+                                && *rule_handle == index as u64
+                                && !live_instances.contains(instance)
+                    )
+                },
+                scheduler,
+            );
         }
-        self.entity_monitor_rules = entity_monitor_rules;
-        for (index, skill_id) in collapsed_ready {
-            self.skill_ready.insert(skill_id, true);
-            self.fire_rule(index, now_ms, None);
-        }
-
-        // Readiness edges: the only path for resource slots, and the path for
-        // packets that already say "ready" (cooldown reduction, server
-        // refresh). Time-driven readiness is announced by the deadline
-        // itself (`on_deadline`), so a record whose deadline has passed keeps
-        // whatever state the timer left behind instead of re-firing.
-        let mut ready_skills = Vec::new();
-        for (skill_id, record) in &latest_cds {
-            let readiness = record.readiness();
-            let ready_now = readiness.ready
-                || readiness
-                    .ready_deadline
-                    .is_some_and(|deadline| deadline <= now_mono);
-            if reason == VoiceSyncReason::Configuration {
-                self.skill_ready.insert(*skill_id, ready_now);
-                continue;
-            }
-            match self.skill_ready.get(skill_id).copied() {
-                // First sight is never an edge.
-                None => {
-                    self.skill_ready.insert(*skill_id, ready_now);
-                }
-                Some(true) if !ready_now => {
-                    self.skill_ready.insert(*skill_id, false);
-                }
-                Some(false) if readiness.ready => {
-                    self.skill_ready.insert(*skill_id, true);
-                    ready_skills.push(*skill_id);
-                }
-                Some(_) => {}
-            }
-        }
-        self.skill_ready
-            .retain(|skill_id, _| latest_cds.contains_key(skill_id));
-        for skill_id in ready_skills {
-            let matched = self.take_matched(SubjectKey::Skill(skill_id));
-            for &index in &matched {
-                if self.rules.get(index).map(|rule| &rule.trigger.event) == Some(&VoiceEvent::Ended)
-                {
-                    self.fire_rule(index, now_ms, None);
-                }
-            }
-            self.matched_rules = matched;
-        }
+        self.entity_rules = entity_rules;
 
         // Presence edges, aggregated per (monster_id, scope) so several
         // instances or tracks announce one "appeared" and one "gone".
@@ -665,19 +618,22 @@ impl VoiceProjection {
     }
 
     /// Rebuilds the buff aggregates from `entities`, fires any resulting
-    /// gained/lost edges, and re-arms expiry timers. Shared by the buff and
-    /// entity-departure paths so both stay in lockstep.
+    /// gained/lost edges (runtime only), and re-syncs expiry timers. Shared
+    /// by every buff-affecting path so they all stay in lockstep.
     fn refresh_buff_aggregates(
         &mut self,
         entities: &EntityContext,
-        emit_edges: bool,
+        reason: VoiceSyncReason,
         now_ms: i64,
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
     ) {
-        let edges = self.replace_buff_aggregates(collect_buff_aggregates(entities), emit_edges);
+        let edges = self.replace_buff_aggregates(
+            collect_buff_aggregates(entities),
+            reason == VoiceSyncReason::Runtime,
+        );
         self.fire_buff_edges(&edges, now_ms);
-        self.sync_buff_expiries(now_mono, scheduler);
+        self.sync_buff_expiries(reason, now_ms, now_mono, scheduler);
     }
 
     fn replace_buff_aggregates(
@@ -763,12 +719,22 @@ impl VoiceProjection {
         self.matched_rules = matched;
     }
 
-    fn sync_buff_expiries(&mut self, now: MonoTimeMs, scheduler: &mut DeadlineScheduler) {
-        for &index in &self.buff_expiry_rules {
-            let Some(rule) = self.rules.get(index) else {
-                continue;
-            };
-            let Some((scope, base_id, seconds_before)) = buff_expiry_rule(&rule.trigger) else {
+    fn sync_buff_expiries(
+        &mut self,
+        reason: VoiceSyncReason,
+        now_ms: i64,
+        now: MonoTimeMs,
+        scheduler: &mut DeadlineScheduler,
+    ) {
+        // Handles are stable between `apply_config` calls, so the index list
+        // is moved out and restored rather than cloned per sync.
+        let buff_expiry_rules = std::mem::take(&mut self.buff_expiry_rules);
+        for &index in &buff_expiry_rules {
+            let Some((scope, base_id, seconds_before)) = self
+                .rules
+                .get(index)
+                .and_then(|rule| buff_expiry_rule(&rule.trigger))
+            else {
                 continue;
             };
             let key = buff_voice_key(self.rule_set, index, scope, base_id);
@@ -777,17 +743,18 @@ impl VoiceProjection {
                 .get(&scope)
                 .and_then(|buffs| buffs.get(&base_id))
                 .and_then(|aggregate| aggregate.expires_mono_ms);
-            self.deadlines.sync(
-                key,
-                TimerScope::RuleSet(self.rule_set),
-                expires,
-                seconds_before,
-                now,
-                scheduler,
-            );
+            let outcome = self
+                .deadlines
+                .sync(key, expires, seconds_before, now, reason, scheduler);
+            if outcome == SyncOutcome::FireNow {
+                self.fire_rule(index, now_ms, None);
+            }
         }
+        self.buff_expiry_rules = buff_expiry_rules;
     }
 
+    /// A mechanic re-fire re-aims the timer at the new expiry; one that lands
+    /// inside the lead window is for the caller to announce right away.
     fn sync_boss_expiry(
         &mut self,
         index: usize,
@@ -796,19 +763,16 @@ impl VoiceProjection {
         seconds_before: u32,
         now: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
-    ) {
+    ) -> SyncOutcome {
         let key = boss_voice_key(self.rule_set, index, base_skill_id);
-        // A mechanic re-fire always restarts the timer, even to the same
-        // deadline; cancelling first defeats the same-deadline short-cut
-        // only when the deadline is unchanged, which is a no-op anyway.
         self.deadlines.sync(
             key,
-            TimerScope::RuleSet(self.rule_set),
             Some(expires),
             seconds_before,
             now,
+            VoiceSyncReason::Runtime,
             scheduler,
-        );
+        )
     }
 
     fn cancel_boss_expiries(&mut self, scheduler: &mut DeadlineScheduler) {
@@ -829,6 +793,7 @@ impl VoiceProjection {
         scheduled_for: MonoTimeMs,
         fired_at: MonoTimeMs,
         now_ms: i64,
+        scheduler: &mut DeadlineScheduler,
     ) {
         let TimerKey::VoiceExpiry {
             rule_set,
@@ -842,6 +807,20 @@ impl VoiceProjection {
         if rule_set != self.rule_set {
             return;
         }
+        // A refill wakeup carries no cue of its own: re-reading the skill's
+        // timeline at the refill fires the charge edge and re-aims its lead
+        // cues, so a stale or repeated delivery is harmless.
+        if subject == SKILL_REFILL_TIMER_SUBJECT {
+            let skill_id = instance as u32 as i32;
+            self.evaluate_skill(
+                skill_id,
+                VoiceSyncReason::Runtime,
+                now_ms,
+                fired_at,
+                scheduler,
+            );
+            return;
+        }
         let Ok(index) = usize::try_from(rule_handle) else {
             return;
         };
@@ -852,11 +831,6 @@ impl VoiceProjection {
         // stale or superseded delivery does not match its recorded deadline.
         if !self.deadlines.confirm(key, scheduled_for, fired_at) {
             return;
-        }
-        // A `Skill/Ended` deadline *is* the readiness edge; record it so the
-        // next cooldown packet that still says "ready" does not re-fire.
-        if subject == SKILL_TIMER_SUBJECT && self.rules[index].trigger.event == VoiceEvent::Ended {
-            self.skill_ready.insert(instance as u32 as i32, true);
         }
         self.fire_rule(index, now_ms, None);
     }
@@ -1003,7 +977,9 @@ const BOSS_DBM_TIMER_SUBJECT: u64 = 3;
 const COUNTER_TIMER_SUBJECT: u64 = 4;
 const SKILL_TIMER_SUBJECT: u64 = 5;
 const ENTITY_TIMER_SUBJECT: u64 = 6;
+const SKILL_REFILL_TIMER_SUBJECT: u64 = 7;
 
+/// A `Skill/ExpiringIn` rule's lead cue before the skill's next refill.
 fn skill_voice_key(rule_set: u64, index: usize, skill_id: i32) -> TimerKey {
     voice_key(
         rule_set,
@@ -1011,6 +987,17 @@ fn skill_voice_key(rule_set: u64, index: usize, skill_id: i32) -> TimerKey {
         SKILL_TIMER_SUBJECT,
         u64::from(skill_id as u32),
     )
+}
+
+/// The wakeup at a skill's next charge refill. It belongs to the skill, not
+/// to a rule, so its handle can never match a rule index.
+fn skill_refill_key(rule_set: u64, skill_id: i32) -> TimerKey {
+    TimerKey::VoiceExpiry {
+        rule_set,
+        rule_handle: u64::MAX,
+        subject: SKILL_REFILL_TIMER_SUBJECT,
+        instance: u64::from(skill_id as u32),
+    }
 }
 
 /// `instance` is the watched entity's uuid, so concurrent instances of the

@@ -51,7 +51,8 @@ Everywhere you can bind announcements:
 
 A few things to note:
 
-- Skill announcements only cover your own character, and the skill must first be added to the Skill CD monitor. For skills with multiple charges, "ready" is announced only when the **first charge** comes back.
+- Skill announcements only cover your own character, and the skill must first be added to the Skill CD monitor. For skills with multiple charges, "ready" is announced **every time a charge comes back**, and "x seconds before ready" applies to each charge too.
+- "x seconds left" and "x seconds before ready": if an update (a cooldown reduction, a shortened buff, a re-triggered mechanic) makes the remaining time jump below x seconds, the announcement plays right away. Nothing is played if it has already ended (the skill is ready, the buff has expired). If the remaining time is already below x seconds when it first appears, nothing is announced.
 - The "x seconds left" event for an entity requires a duration to be set for the entry; if the entity disappears early, only "disappear" is announced.
 - Entity announcements are stored by "entity ID + scope". If you change the scope (Self only / Any), you need to configure them again.
 
