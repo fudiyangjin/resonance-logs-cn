@@ -18,7 +18,6 @@
     "voice:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-voice-sidecar.ps1 -Variant Cpu",
     "voice:build:vulkan": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-voice-sidecar.ps1 -Variant Vulkan",
     "tauri:build:release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-voice-release.ps1",
-    "doc:html": "node scripts/build-doc-html.cjs",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint ."
   },

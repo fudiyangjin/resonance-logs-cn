@@ -1,31 +1,33 @@
 # FAQ · Live Monitor
 
-**Detailed guides**: [Buff Monitor Overview](../features/monitor/README.md) · [Skill CD](../features/monitor/skill-cd.md) · [Buff Monitor](../features/monitor/buff.md) · [Character Panel](../features/monitor/panel-attr.md) · [Custom Monitor](../features/monitor/custom-panel.md) · [Enable Overlay](../features/monitor/overlay.md)
+Related guides: [Live Monitor](../features/monitor/README.md) · [Skill CD](../features/monitor/skill-cd.md) · [Buff Monitor](../features/monitor/buff.md) · [Custom Monitor](../features/monitor/custom-panel.md) · [Enable Window & Layout](../features/monitor/overlay.md)
 
-## Buff / Skill CD
+### Skill CDs or attributes are incomplete — what do I do?
 
-### I opened the app mid-fight and CD or attributes are incomplete—what do I do?
+The game only pushes data that changes, so if you open the app mid-session it can't get the full state. **Change zones once** to fix it.
 
-If you start the app while already in-game, skill CD, buffs, and character panel attributes may be incomplete. The game only sends **incremental updates**, so the app cannot reconstruct the full current state. **Change zone once** (e.g. enter/leave instance, change area, teleport) to trigger a full attribute sync; display should then recover.
+### How do I show factor energy and season nodes?
 
-### What are buff aliases for?
+You don't need to configure counters manually. In **{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.customPanel}}**, click **{{ui:skillMonitor.customPanel.newFactor}}**. The app creates a factor config area or season node area for the current season and automatically shows the factors and nodes you have equipped. See [Factor Config Area](../features/monitor/custom-panel.md#factor-zone) and [Example: Show factor energy and season nodes automatically](../features/monitor/custom-panel.md#example-automatically-show-factor-energy-and-season-nodes).
 
-Some in-game buff names are unclear (e.g. `[热枕]`). Under **Live Monitor → Buff Monitor → Buff Alias Settings**, set a clearer display name (e.g. “Life Fluctuation”). Aliases apply **globally** and do not change when switching profiles.
+### I can't make sense of a Buff's name — can I change it?
 
-### What is a “true factor”? Where do I configure it?
+Yes. Set an alias in **{{ui:skillMonitor.buff.alias.title}}** in Buff Monitor. See [Names and icons](../features/monitor/buff.md#names-and-icons).
 
-“True factor” indicates whether the corresponding season progression factor is active (commonly `0` / `1`). Recommended: **Live Monitor → Custom Monitor → New Factor Zone** to show factor energy and buff effects automatically—no manual counter rules needed.
+### I don't know what the Buff I want to monitor is called?
 
-- **Factor energy bar names**: Set in the factor zone’s **Factor Display Name** search.
-- **Factor buff effect names**: Set under **Buff Monitor → Buff Alias Settings**.
+First turn on "Monitor All Buffs"; the overlay then shows every Buff on you. Once you've confirmed the name, add it to the exact monitoring list, then turn "Monitor All Buffs" off again.
 
-See [Custom Monitor · Factor Zone](../features/monitor/custom-panel.md).
+### How do I monitor all food or alchemy Buffs at once?
 
-### How do I quickly monitor all food / alchemy buffs?
+Use [Category Quick Monitor](../features/monitor/buff.md#category-quick-watch).
 
-- **Standalone mode**: Use **Category Quick Listen** to monitor all food or alchemy buffs at once
-- **Grouped mode**: In Buff Monitor, use the **Food** / **Alchemy** shortcut buttons for one-click setup
+### The overlay doesn't appear?
 
-### I am not sure of a buff name—how do I find what to monitor?
+1. Make sure the Live Monitor switch at the top of the page is on.
+2. In **{{ui:skillMonitor.tabs.overlay}}**, make sure the relevant area is set to show.
+3. The overlay may be off-screen: right-click the tray icon and choose **Reset All Windows**.
 
-Buff config names can be messy. Enable **Monitor All** first; the overlay lists all buffs so you can match effects to names, then add the exact buffs you want.
+### After changing class, the overlay still shows the previous class?
+
+The overlay content follows your current [loadout](../features/app/loadouts.md). Switch loadouts, or turn on **{{ui:loadout.autoSwitch.toggle}}**; see [Example: Switch loadouts automatically when changing spec](../features/app/loadouts.md#example-switch-loadouts-automatically-when-changing-spec).

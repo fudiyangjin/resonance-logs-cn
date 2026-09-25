@@ -1,25 +1,14 @@
 # Character Panel
 
-Corresponds to **Live Monitor → Character Panel**.
+**{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.panelAttr}}** shows your live attributes in the overlay, such as attack speed, crit rate, intelligence, haste and luck, so you can check how Buffs change your attributes during combat.
 
-Shows character stats in the overlay (attack speed, crit rate, intelligence, haste, luck, etc.) for in-combat reference.
+## Settings
 
-If attributes are incomplete or lagging, it is usually incremental sync—[change zone once](./README.md#buff-monitor) per the overview, then check again.
+- **Enabled attributes**: check the attributes to show; the top shows "x / total attributes enabled".
+- **{{ui:skillMonitor.panelAttr.displayColor}}**: each attribute can have its own color.
+- **{{ui:skillMonitor.panelAttr.rowOrder}}**: move up / down to change the order in the overlay.
+- **{{ui:skillMonitor.panelAttr.textStyle}}**: row spacing, font size, and spacing between name and value.
 
-## Enable Attributes
+If attributes are incomplete or clearly lagging, change scenes once to restore a full sync.
 
-- Check attributes to monitor; the top shows “enabled x / total”
-- Unchecked attributes do not appear in the overlay
-
-## Display Colors
-
-- Each enabled attribute can have its own **display color** for distinction in the overlay
-
-## Layout
-
-- **Row spacing**, **font size**, **name–value spacing**: Adjust on the Character Panel page
-- **Row order**: Move enabled attributes up/down in the overlay
-
-## Overlay Display
-
-Under **Live Monitor → Enable Overlay**, toggle the **Character Attributes** area with other modules in [Enable Overlay](./overlay.md).
+Whether this area is shown in the overlay is controlled by **Character Attribute Area** in [Enable Window](./overlay.md).

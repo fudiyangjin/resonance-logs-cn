@@ -1,42 +1,41 @@
-﻿# Buff Monitor
+# Live Monitor
 
-Guides for skill CD, buff tracking, custom panels, and related features.
+**{{ui:routes.tools.skillMonitor}}** lays a transparent overlay (the live monitor overlay) on top of the game screen, showing **your own** skill CDs, resources, Buffs, factors, character attributes and shields.
 
-## Overview
+![Live monitor overlay](../../../shared/img/monitor/buff_4.png)
 
-Live monitor includes:
+## What you can do with it
 
-- **Skill CD**: Track skill cooldowns
-- **Buff Monitor**: Track duration, stacks, etc. for selected buffs
-- **Character Panel**: Stats such as attack speed, crit rate, intelligence
-- **Custom Monitor**: Standard zones, factor zones, counters, and buff progress bars
-- **Enable Overlay**: Overlay module toggles and layout editing
+- Keep track of key skill cooldowns without looking at the skill bar, with a voice reminder when a CD comes back;
+- Keep an eye on whether burst Buffs, Fantasy boosts, and food / potions are still active;
+- Automatically show the **factor energy and season node effects** you currently have equipped;
+- See attributes such as attack speed and crit in real time, along with shield absorption;
+- Track the coverage of your own key boosts.
 
-> **⚠️ Opening mid-fight**: If you open the app while already in-game, skill CD and character panel attributes may be incomplete. The game only sends **incremental updates**, so the app cannot fetch the full current state. **Change zone** (switch scene/map) once to trigger a full attribute sync; display will then recover.
+## Top switches
 
-## Sub-guides
+These are visible at the top of the page on every tab:
 
-| Document | UI location | Description |
-|------|----------|------|
-| [Skill CD](./skill-cd.md) | Live Monitor → Skill CD | Class skill selection, skill transforms |
-| [Buff Monitor](./buff.md) | Live Monitor → Buff Monitor | Standalone/grouped, aliases, quick listen |
-| [Character Panel](./panel-attr.md) | Live Monitor → Character Panel | Attribute selection, colors, row order |
-| [Custom Monitor](./custom-panel.md) | Live Monitor → Custom Monitor | Standard zones, factor zones, counters, advanced examples |
-| [Enable Overlay](./overlay.md) | Live Monitor → Enable Overlay | Overlay toggles, modules, layout editing |
+| Switch | What it does |
+| --- | --- |
+| **{{ui:skillMonitor.main.enabled.label}}** | Master switch; when off, the overlay no longer receives data |
+| **{{ui:skillMonitor.main.autoHideInDailyScenes.label}}** | Hides the overlay automatically in daily scenes such as the main city, and brings it back when you enter a combat scene |
+| **{{ui:skillMonitor.layout.toggleOverlayWindow}}** | Shows / hides the overlay |
+| **{{ui:skillMonitor.layout.editOverlayLayout}}** | Enters layout editing, where you drag and resize each area |
 
-## Enable & Profiles
+## Page layout
 
-- **Enable Live Monitor**: Master switch at the top; when off, no data is pushed to the overlay.
-- Top bar **Toggle Overlay** / **Edit Overlay Layout**: See [Enable Overlay](./overlay.md).
+| Tab | Shown in the overlay | Docs | Examples |
+| --- | --- | --- | --- |
+| **{{ui:skillMonitor.tabs.skillCd}}** | Skill cooldown icons | [Skill CD](./skill-cd.md) | — |
+| **{{ui:skillMonitor.tabs.buff}}** | Your own Buff icons or progress bars | [Buff Monitor](./buff.md) | [Voice reminder when Tina's CD is ready](./buff.md#example-voice-reminder-when-tinas-cd-is-ready) |
+| **{{ui:skillMonitor.tabs.panelAttr}}** | Character attribute values | [Character Panel](./panel-attr.md) | — |
+| **{{ui:skillMonitor.tabs.customPanel}}** | Factor zone, season node zone, and freely combined Buffs and counters | [Custom Monitor](./custom-panel.md) | [Show factor energy and season nodes](./custom-panel.md#example-automatically-show-factor-energy-and-season-nodes) · [Track Absolute Luck with a preset counter](./custom-panel.md#example-track-flamehorns-absolute-luck-with-a-preset-counter) |
+| **{{ui:skillMonitor.tabs.shieldDetail}}** | HP and shield bars | [HP/Shield Area](./shield.md) | — |
+| **{{ui:skillMonitor.tabs.buffCoverage}}** | Boost coverage | [Buff Coverage](./buff-coverage.md) | [Review your team's boost coverage](./buff-coverage.md#example-review-your-teams-boost-coverage) |
+| **{{ui:skillMonitor.tabs.overlay}}** | Controls whether each of the areas above is shown | [Enable Window & Layout](./overlay.md) | — |
 
-## Profiles
+All settings are saved in the **skill monitor profile** of the current loadout, so switching loadouts swaps the whole setup at once. See [Loadouts](../app/loadouts.md).
 
-- Create different **profiles** for different classes or playstyles
-- Each profile has its own skill CD, buff list, layout, etc.
-- Switch profiles to swap the entire monitor setup
-
-## Best Practices
-
-After configuration, use **`Ctrl+\`** for **UI-less mode**: the main window hides and only overlays show skill CD, resources, buffs, etc. Place overlays at screen edges or in peripheral vision so you can track cooldowns and resources without looking down—even on large screens.
-
-![Best practices](../../../shared/img/monitor/buff_4.png)
+> [!WARNING]
+> If you open the app partway through a play session, skill CDs, attributes and factors may be incomplete, because the game only pushes data that changes. **Change scenes once** to get a full sync.

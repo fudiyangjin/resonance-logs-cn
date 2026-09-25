@@ -1,11 +1,13 @@
 # FAQ
 
-Common questions organized by feature module for easy lookup and future updates.
+Frequently asked questions, grouped by feature. If you can't find an answer, feel free to report it on [GitHub Issues](https://github.com/fudiyangjin/resonance-logs-cn/issues) and attach the debug archive generated in **{{ui:routes.tools.appSettings}} → {{ui:appSettings.tabs.diagnostics}}**.
 
-| Document | Description |
-|------|------|
-| [App Runtime](./faq/app-runtime.md) | Install, WinDivert / Npcap, network adapter, restart, logs, share config |
-| [DPS & Layout](./faq/dps-layout.md) | DPS vs true DPS, history cleanup, layout/theme/column settings |
-| [Live Monitor](./faq/live-monitor.md) | Buff / skill CD, aliases, quick listen |
-| [Monster Monitor](./faq/monster-monitor.md) | Main-target buffs, threat, vs live monitor |
-| [Module Calculator](./faq/module-calc.md) | Module-related FAQ (to be expanded) |
+| Category | Common questions |
+| --- | --- |
+| [Installation & Packet Capture](./faq/app-runtime.md) | No data, WinDivert blocked, upgrading, sharing config, tray |
+| [DPS & Layout](./faq/dps-layout.md) | True DPS, history cleanup, transparent window, title bar, column settings |
+| [Live Monitor](./faq/live-monitor.md) | Incomplete display, factor area, Buff aliases, overlay not showing |
+| [Monster Monitor](./faq/monster-monitor.md) | Target Buffs not showing, Boss DBM, summon timers |
+| [Module Calculator](./faq/module-calc.md) | Read failures, no solutions, slow calculation |
+
+For Voice Announcements questions, see [Voice Announcements · FAQ](./features/voice/README.md#faq).

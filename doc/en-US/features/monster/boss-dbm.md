@@ -1,57 +1,65 @@
-# Boss DBM (Monster Monitor)
+# Boss DBM
 
-Corresponds to **Monster Monitor → Boss DBM** tab.
+**{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.bossDbm}}** automatically pops up a **warning bar** (skill name + countdown + progress bar) in the monster overlay when the Boss uses a mechanic skill, much like a DBM addon.
 
-Shows **Boss mechanic warning bars** on the monster overlay: skill name plus remaining countdown, similar to a DBM addon timer bar.
+## Turning it on
 
-## What It Does
+1. Make sure **{{ui:monsterMonitor.enabled}}** is on.
+2. In **{{ui:monsterMonitor.tabs.overlay}}**, turn on **Boss DBM Area** (off by default).
+3. Click **{{ui:monsterMonitor.actions.editLayout}}** and drag the warning area to a prominent spot near the top center of the screen. Placeholder bars are shown in edit mode, so you can position it outside of combat.
 
-- Data comes from in-game **Boss DBM scene events** (`SyncSceneEvents`), parsed and pushed to the monster overlay.
-- Skill names resolve via the built-in **DBM table** (`DbmTable.json`); unknown entries show as `#skillEffectId`.
-- Multiple active mechanics sort by trigger time; each row includes a progress bar for remaining time.
-- **No manual skill list**: bars appear when the Boss fires DBM-tagged mechanics and disappear when they end.
+You **don't** need to add the skills to watch manually: bars appear automatically when the Boss uses a DBM-tagged mechanic and disappear when it ends. When several are active at once, they are sorted by time.
 
-> Boss DBM complements [Buff Monitor](./buff.md): buffs for specific debuffs/stacks; DBM for unified Boss cast countdown bars.
+## Skill aliases
 
-## Enable the Panel
+Default skill names come from game data; entries that are not in the table show as `#skillEffectId`. In **{{ui:monsterMonitor.bossDbm.alias.title}}**, search for a Boss skill and enter whatever your party calls it, for example renaming a cast to "Stack" or "Dodge circles".
 
-1. Turn on **Enable Monster Monitor** at the page top.
-2. Under **Enable Window**, set **Boss DBM Area** to show.
-3. Use top bar **Toggle Monster Overlay** to show the in-game window.
+## Voice announcements
 
-**Boss DBM** is off by default to avoid overlapping buff/threat areas.
+In **{{ui:monsterMonitor.bossDbm.voice.title}}**, set an **on trigger** announcement for a skill so you hear an alert as soon as the Boss starts casting.
 
-## Styling
+## Style
 
-On the **Boss DBM** tab, adjust styles for the **Boss DBM area** (separate from monster buff styling):
+The Boss DBM area has its own style: row spacing, column spacing, font size, name / value colors, progress bar color and opacity.
 
-| Setting | Description |
-|----|------|
-| Row gap | Vertical spacing between warning bars |
-| Column gap | Horizontal spacing between name and timer |
-| Font size | Text size |
-| Name / value colors | Skill name and countdown colors |
-| Progress color / opacity | Remaining-time bar appearance |
+## Boss DBM and other features
 
-## Layout Editing
+| Feature | What it shows |
+| --- | --- |
+| **Boss DBM** | Unified countdown bars for Boss skills, in any fight with DBM events |
+| [Target Buffs](./buff.md) | Duration and stacks of a specific Buff on the target |
+| [Dungeon Mechanics](../minimap/README.md) | Positioning map and callout feed for supported dungeons |
 
-With **Edit Monster Layout** on the top bar:
+All three can be on at the same time.
 
-- Drag the **Boss DBM area** to reposition
-- Drag the corner handle to scale
-- A **mechanic preview** placeholder appears when no live mechanics exist, for pre-placement
+## Examples
 
-Use **Reset Position** / **Reset Size** in edit mode when available.
+### Example: Give a Boss skill an alias and add a voice warning
 
-## FAQ
+**Scenario**: A Boss's ultimate has a very long name, and everyone in your party just calls it "Stack". You want the overlay to show "Stack" when the Boss casts it, and a voice to call it out.
 
-**No Boss DBM bars?**
+#### Step 1: Turn on the Boss DBM area
 
-1. Confirm **Boss DBM area** is set to show.
-2. Confirm **Enable Monster Monitor** and **Toggle Monster Overlay** are on.
-3. The current Boss must emit DBM events; some dummies or skills without DBM tags show nothing.
-4. If you started the app mid-fight, **change zone** once to resync (same as live monitor).
+1. **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.overlay}}**, turn on **Boss DBM Area**.
+2. **{{ui:monsterMonitor.actions.editLayout}}**, drag the warning area to the top center of the screen.
 
-**Use with dungeon mechanics overlay?**
+#### Step 2: Set the skill alias
 
-Yes—Boss DBM uses the monster overlay; dungeon mechanics use a separate window. See [Dungeon Mechanics overview](../minimap/README.md).
+1. Open **{{ui:monsterMonitor.tabs.bossDbm}}** and search for the skill in **{{ui:monsterMonitor.bossDbm.alias.title}}**.
+2. Enter "Stack" as the display name.
+
+If the search finds nothing, fight the Boss once first: for entries shown as `#number` in the overlay, the number is the skill effect ID, which you can search for.
+
+#### Step 3: Configure the voice
+
+1. In **{{ui:monsterMonitor.bossDbm.voice.title}}**, add the skill and choose the **on trigger** event.
+2. Choose custom text and enter "Stack, move in".
+3. Go to **{{ui:routes.tools.voice}} → {{ui:voice.tabs.bindings}}** and click **{{ui:voice.bindings.generateMissing}}**.
+4. Ultimate warnings matter, so set this announcement's priority to **High** so it isn't blocked by ordinary announcements. See [Playback and priority](../voice/playback.md#priority-and-queue).
+
+#### Result
+
+When the Boss starts casting, "Stack" and a countdown appear in the warning area, and you hear the voice alert at the same time.
+
+> [!TIP]
+> If this dungeon is on the supported list in [Dungeon Mechanics](../minimap/dungeons.md), you can also turn on the mechanics minimap: Boss DBM tells you "when", the minimap tells you "where to stand".

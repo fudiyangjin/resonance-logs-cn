@@ -1,41 +1,35 @@
 # FAQ · Monster Monitor
 
-**Detailed guides**: [Monster Monitor Overview](../features/monster/README.md) · [Buff Monitor](../features/monster/buff.md) · [Teammate Buffs](../features/monster/teammate.md) · [Threat List](../features/monster/hate.md) · [Boss DBM](../features/monster/boss-dbm.md) · [Enable Overlay](../features/monster/overlay.md)
+Related guides: [Monster Monitor](../features/monster/README.md) · [Target Buffs](../features/monster/buff.md) · [Boss DBM](../features/monster/boss-dbm.md) · [Entity Duration](../features/monster/entity-duration.md) · [Enable Window](../features/monster/overlay.md)
 
-## How are monster buffs different from live monitor buffs?
+### What's the difference between Monster Monitor and Live Monitor?
 
-- **Live monitor**: **Your** buffs, skill CD, etc., on the **game overlay**.
-- **Monster monitor**: Buffs on **your current main attack target**, teammate buffs on that target, and the threat list, on the **monster overlay**.
+- **Live Monitor**: shows **your own** skill CDs, Buffs and attributes.
+- **Monster Monitor**: shows Buffs, threat, stun, Boss skill warnings and more on **your current attack target**.
 
-The two configs are independent—use monster monitor when tracking boss mechanics.
+The two are configured independently and use separate overlays.
 
-## Which monster’s buffs does the overlay show?
+### Which monster does the overlay show?
 
-It follows your character’s **main attack target** automatically—no config file or monster template ID needed.
+Your **current attack target**. It follows automatically when you switch targets; you don't need to specify a monster ID. The old `ExtraBuffMonitoredMonsters.json` is deprecated, and editing it has no effect.
 
-- When you switch to another target, monster buff and threat areas update accordingly.
-- Legacy `ExtraBuffMonitoredMonsters.json` is **deprecated**; adding or removing that file has no effect.
+### No Buffs show up on a training dummy or trash mob?
 
-## Why do I see no buffs on dummies / trash mobs?
+1. The dummy isn't your current attack target: deal damage to it first.
+2. Monster Monitor or its overlay isn't on: make sure **{{ui:monsterMonitor.enabled}}** is enabled and you've clicked **{{ui:monsterMonitor.actions.toggleOverlay}}**.
+3. You haven't added the Buffs you want to see: add them in **{{ui:monsterMonitor.tabs.buff}}**, or first turn on "monitor all" to look up their names.
+4. The target is already dead: its data stops updating, so switch to another target.
 
-Common causes:
+### No Boss DBM warnings show up?
 
-1. **Dummy is not your attack target**: You must damage or select the dummy you want; the overlay only shows data for your current target.
-2. **Monster monitor not enabled**: Confirm **Enable Monster Monitor** at the top and **Toggle Monster Overlay** to show the window.
-3. **Buffs not configured**: On the **Buff Monitor** tab, add buffs to **Self only** or **Global**, or enable **Monitor all buffs applied by this character** to discover names first.
-4. **Target is dead**: Buffs and threat stop updating when the monster dies—switch target or wait for the next one.
+1. The **Boss DBM area** is off by default; turn it on in **{{ui:monsterMonitor.tabs.overlay}}**.
+2. Make sure both Monster Monitor and its overlay are on.
+3. Not every Boss skill has a warning event; when there are no events the area stays hidden (in edit layout mode you can see a placeholder).
 
-On training dummies, behavior matches Boss fights as long as the dummy is locked as your attack target.
+### What's the difference between Boss DBM and Buff Monitor?
 
-## What is Boss DBM? How is it different from buff monitor?
+Boss DBM automatically shows Boss casts and phase skills, with no monitor entries to add. Buff Monitor needs you to add Buffs to a list first and is used to track the duration and stacks of specific Buffs. See [Boss DBM](../features/monster/boss-dbm.md).
 
-**Boss DBM** shows Boss mechanic warning bars (skill name + countdown) on the monster overlay from in-game Boss DBM events—**no manual buff list needed**. See [Boss DBM](../features/monster/boss-dbm.md).
+### How do I see how much time a summon has left?
 
-- **Buff monitor**: Track specific buff duration/stacks; add entries to the monitor list first.
-- **Boss DBM**: Automatic timer bars for Boss casts/phases.
-
-## Why are there no Boss DBM bars?
-
-1. **Boss DBM area not enabled**: Set **Boss DBM area** to show on the **Enable Window** tab (off by default).
-2. **Monster monitor or overlay off**: Confirm **Enable Monster Monitor** and **Toggle Monster Overlay**.
-3. **No DBM events**: Not every Boss skill emits DBM; the area stays hidden when empty (edit mode shows a preview placeholder).
+Use [Entity Duration](../features/monster/entity-duration.md). Common summons have presets, such as the [Scythe Cart](../features/monster/entity-duration.md#example-show-the-scythe-carts-remaining-time).

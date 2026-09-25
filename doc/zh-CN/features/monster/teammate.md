@@ -1,28 +1,10 @@
 # 队友 Buff
 
-对应 **怪物监控 → 队友 Buff** Tab。
+**{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.teammate}}** 以矩阵形式显示：**每位队友**在当前目标身上挂了哪些 Buff。适合指挥或辅助确认全队的 Debuff 是否到位。
 
-展示**队友施加到当前攻击主目标**上的 Buff（与 Buff 监控 Tab 中「本角色施加」相对）。主目标切换时，队友 Buff 区会跟随更新。适合观察团辅、队友 debuff 等在 Boss 或木桩上的分布。
+## 设置
 
-## 添加方式
+- 搜索 Buff 加入 **{{ui:monsterMonitor.teammate.groupTitle}}**，也可以按分类快捷添加；
+- **{{ui:monsterMonitor.teammate.styleTitle}}**：**{{ui:monsterMonitor.style.rowHeight}}**、**{{ui:monsterMonitor.style.nameColumnWidth}}**、**{{ui:monsterMonitor.style.buffColumnWidth}}** 以及颜色。
 
-### 搜索单个 Buff
-
-在搜索框输入名称，从结果中选择加入 **已监控队友 Buff** 列表。
-
-### 分类快捷
-
-提供与 Buff 目录一致的**分类按钮**（如食物、炼金等，以界面显示为准），可一键整类加入或点击已选分类标签移除。
-
-## 已监控列表
-
-已选的单个 Buff 与已选分类会一并显示；点击标签可移除。
-
-## 队友 Buff 矩阵样式
-
-独立于怪物 Buff 区的样式设置，控制 **队友 Buff 区** 浮窗表现：
-
-- 行间距、列间距、字号
-- 名称 / 数值 / 进度条颜色与透明度
-
-在 [启用窗口](./overlay.md) 中可开关 **队友 Buff 区** 是否显示。
+浮窗中是否显示由 [启用窗口](./overlay.md) 的 **队友 Buff 区** 控制。

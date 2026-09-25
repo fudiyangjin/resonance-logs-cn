@@ -1,45 +1,68 @@
 # Entity Duration
 
-Corresponds to the **Monster Monitor → Entity Duration** tab.
+**{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.entityDuration}}** times **entities on the field** such as summons and ground devices: the countdown starts when the entity appears and the row is removed when it disappears. Rows are shown in the **Entity Duration Area** of the monster overlay.
 
-Times summons, ground devices and similar objects by the **appearance / disappearance of their in-game entity**, shown as text rows (label + countdown + progress bar) in the **Entity Duration Area** of the **monster overlay**. Typical use: the Stormblade **Scythe Cart**.
+Typical uses: persistent summons such as the Scythe Cart, and ground zones that need to be recast.
 
-> This replaces the former **Duration Skills** section of Live Monitor. A Scythe Cart selected in an older profile is migrated automatically into a "self only" entry.
+> [!NOTE]
+> This feature replaces the former "Duration Skills" in Live Monitor. A Scythe Cart selected in an old profile is migrated automatically into a "self only" entry.
 
 ## How it works
 
-- The game spawns a dedicated entity for these skills; the entity carries a **monster template id** (Scythe Cart = `179901`) and its **caster**.
-- The timer starts when the entity **appears** nearby and the row is removed when it **disappears** (destroyed, expired, zone change). It does not depend on skill cooldown packets or on recording the cast time.
-- Recasting a skill that destroys the old entity and spawns a new one removes the old row and starts a fresh one.
-- Data is only pushed to the overlay while the **Monster Monitor master switch** is on.
+These skills spawn a separate entity on the field, which carries an **entity ID** (monster template ID) and a **caster**. The app watches for the entity appearing and disappearing:
+
+- When recasting the skill makes the old entity disappear and a new one spawn, the old row is removed and a new row starts timing;
+- Entities disappear when you change maps, and their rows are removed along with them.
 
 ## Presets
 
-Built-in presets are listed on the page (currently **Scythe Cart**: id 179901, 35 s, self only). Click to add; the button is disabled once that id exists.
+**{{ui:monsterMonitor.entityDuration.presetsTitle}}** currently includes the built-in **Scythe Cart** (ID 179901, 35 seconds, self only); click it to add.
 
-## Manual entry
-
-Fill in the fields and click **Add**:
+## Adding manually
 
 | Field | Description |
-|------|------|
-| **Entity ID** | Positive integer monster template id; invalid values show an error |
-| **Label** | Name shown on the panel; falls back to the monster table name when empty |
-| **Duration (s)** | Countdown length; **leave empty for no countdown**, the row shows `∞` until the entity disappears |
-| **Caster scope** | **Self only**: entities you cast; **Anyone**: everyone's entities, labelled `<label>-<caster>` |
+| --- | --- |
+| **{{ui:monsterMonitor.entityDuration.monsterId}}** | Entity ID, a positive integer |
+| **{{ui:monsterMonitor.entityDuration.label}}** | Name shown on the panel; the in-game name is used when left empty |
+| **{{ui:monsterMonitor.entityDuration.durationSeconds}}** | Countdown length; when left empty, `∞` is shown until the entity disappears |
+| **{{ui:monsterMonitor.entityDuration.scope}}** | **{{ui:monsterMonitor.entityDuration.scope.self}}**: only shows the ones you cast; **{{ui:monsterMonitor.entityDuration.scope.any}}**: shows everyone's, with the name becoming "name-caster" |
 
-One entry per entity id, up to 32 entries.
+Only one entry is kept per entity ID, up to 32 entries. You can edit, reorder or delete them in **{{ui:monsterMonitor.entityDuration.listTitle}}**.
 
-## Entry list
+## Voice announcements
 
-Edit label, seconds (clear to switch to `∞`) and scope inline; move entries up / down or remove them.
+Three events can be configured: **on appear / x seconds left / on disappear**:
 
-## Styling
+- "x seconds left" requires the entry to have a duration;
+- If the entity disappears early, only "disappear" is announced;
+- After you change the duration, entities already on the field restart timing with the new length;
+- Voice bindings are stored per "entity ID + caster scope", so changing the scope means configuring them again.
 
-The **Style** block matches the custom panel: row gap, column gap, font size, name / value / progress colours and opacity, text shadow, background.
+## Examples
 
-## Overlay
+### Example: Show the Scythe Cart's remaining time
 
-- Enable the **Entity Duration Area** in [Enable Overlay](./overlay.md) (on by default).
-- **Edit Monster Layout** in the top bar lets you drag and resize the area; placeholder rows are shown while editing.
-- The panel is not rendered when no entity matches.
+**Scenario**: You need to recast your Scythe Cart before it expires, so you want the overlay to show how long your own Scythe Cart has left and remind you when 5 seconds remain.
+
+#### Step 1: Add the preset
+
+1. Open **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.entityDuration}}**.
+2. In **{{ui:monsterMonitor.entityDuration.presetsTitle}}**, click **Scythe Cart** (ID 179901, 35 seconds, self only).
+
+#### Step 2: Configure the reminder
+
+In the voice announcements, check **x seconds left** for the Scythe Cart, enter 5 seconds, and set the text to "Scythe Cart ending".
+
+#### Step 3: Check the display
+
+1. In **{{ui:monsterMonitor.tabs.overlay}}**, make sure **Entity Duration Area** is shown.
+2. Use **{{ui:monsterMonitor.actions.editLayout}}** to adjust its position.
+3. Cast the Scythe Cart once; "Scythe Cart" and a countdown appear in the Entity Duration Area.
+
+#### Watching teammates' Scythe Carts
+
+If you also want to see teammates' Scythe Carts, adding the same ID again manually won't work (only one entry is kept per ID). Instead, change the existing entry's **{{ui:monsterMonitor.entityDuration.scope}}** to **{{ui:monsterMonitor.entityDuration.scope.any}}**, and each row will be shown as "Scythe Cart-caster". After changing the scope, the voice has to be configured again.
+
+#### Other entities
+
+For summons or ground devices without a preset, just enter the entity ID and duration in **{{ui:monsterMonitor.entityDuration.manualTitle}}**. If you don't know how long it lasts, leave the duration empty; it shows `∞` until the entity disappears.

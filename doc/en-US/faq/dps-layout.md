@@ -1,69 +1,49 @@
-﻿# FAQ · DPS & Layout
+# FAQ · DPS & Layout
 
-**Detailed guides**: [DPS Overview](../features/dps/README.md) · [Themes](../features/dps/themes.md) · [History](../features/dps/history.md) · [Settings](../features/dps/settings.md)
+Related guides: [DPS Meter](../features/dps/README.md) · [History](../features/dps/history.md) · [Themes & Appearance](../features/dps/themes.md) · [Display Settings](../features/dps/settings.md)
 
-## DPS
+## Data
 
-### What is the difference between DPS and true DPS?
+### What's the difference between DPS and true DPS?
 
-- **DPS**: Total damage ÷ total combat duration
-- **True DPS (TDPS)**: Total damage ÷ global **active combat time** (excludes long idle gaps such as downtime or running)
+- **DPS**: total damage ÷ total combat duration.
+- **True DPS (TDPS)**: total damage ÷ active combat time, excluding gaps such as long pauses in attacking or running around.
 
-### Are history records cleaned up automatically?
+To see the active time, turn on **{{ui:themes.header.showActiveTimer}}** in **{{ui:routes.dps.themes}} → {{ui:themes.tabs.live}} → {{ui:themes.header.title}}**.
 
-When history exceeds 200 entries, the next app launch automatically removes older records by time and resets the sequence.
+### When is the data cleared automatically?
 
----
+See [When combat is split and when it is reset](../features/dps/README.md#when-fights-are-split-and-reset). To clear it manually, click the reset button in the title bar or press the [shortcut](../features/app/README.md#shortcuts).
 
-## Layout & Appearance (where to change things)
+### Is history cleaned up automatically?
 
-### How do I make the Live window “transparent”?
+When there are more than 200 entries, older records are deleted by time on the next launch. Add important records to your favorites; see [History](../features/dps/history.md#history-list).
 
-Use **Background (Live)** under theme colors:
+## Appearance
 
-1. Open **DPS Meter → Themes → General** (first tab).
-2. Expand **Theme Colors → Custom Color Theme**.
-3. Find **Background (Live)** and lower the color **opacity**.
+### How do I make the DPS window transparent?
+
+Go to **{{ui:routes.tools.dps}} → {{ui:routes.dps.themes}} → {{ui:themes.tabs.general}}**, expand **{{ui:themes.section.customColorTheme}}**, and lower the opacity of **Background (Live)**.
 
 ![Background opacity](../../shared/img/faq/faq_2.png)
 
----
+For the full walkthrough, see [Example: A transparent, minimal DPS window](../features/dps/themes.md#example-a-transparent-minimal-dps-window).
 
-### Custom colors
+### The title bar is too crowded — how do I slim it down?
 
-- **Full-page palette (including Live window)**: Still under **Themes → General → Theme Colors**. Adjust main window background, **Live window background**, text, buttons, borders, **table text**, **K/M/% suffix colors**, tooltips, and more—each supports opacity.
-- **Class / specialization bar colors**: Same page, **Class & Specialization Colors**, for coloring table rows by class/spec.
-- **Table row highlights**: **Themes → General → Player Table Settings / Skill Table Settings**—row height, font, headers, **row highlight opacity**, **skill row highlight opacity**, etc. (controls how solid the colored bars look).
-- You can also start from a theme preset and tweak from there.
+In **{{ui:themes.tabs.live}} → {{ui:themes.header.title}}**, turn off the items and buttons you don't need, or switch to the free layout to spread them over multiple rows. See [Title bar settings](../features/dps/themes.md#header-settings).
 
-![Theme color presets](../../shared/img/faq/faq_3.png)
+### How do I change which columns the tables show?
 
----
+- Live window: **{{ui:routes.dps.settings}} → {{ui:settings.tabs.live}}**.
+- History details: **{{ui:routes.dps.settings}} → {{ui:settings.tabs.history}}**.
 
-### Title bar (top strip of the Live window)
+The two column settings are independent. Every column can be toggled, reordered and given a custom header. See [Display Settings](../features/dps/settings.md).
 
-Path: **DPS Meter → Themes → Live → Title Bar Settings**.
+### I can't click the window after enabling click-through?
 
-Adjust for example: **overall window padding**, **title bar padding**; whether to show **combat timer**, **active combat time**, **scene name**, **total damage / total DPS**, **Boss HP**; **Reset / Pause / Boss only / Settings / Minimize** buttons; and **footer DPS · Healing · Damage taken** tabs with **font size**. Turn off what you do not need for a cleaner bar.
+Use the **{{ui:settings.shortcuts.toggleClickthrough}}** shortcut, or right-click the tray icon and choose **Disable Clickthrough**.
 
-On the same page, **Live Window Display Settings** includes **click-through mode**: when enabled, the mouse passes through the Live window to the game behind it.
+### The main window's colors don't match the DPS window?
 
-![Title bar settings](../../shared/img/faq/faq_4.png)
-
----
-
-### Which fields (columns) appear in Live?
-
-Path: **DPS Meter → Settings → Live**.
-
-- **General**: Display your name / others as name, class, or combined; ability score / season strength; whether bars are relative to **session top**; abbreviate DPS/HPS, etc.
-- **DPS (Player) columns / DPS (Skill) columns / Healing (Player) / … / Damage taken …**: Use toggles in each section to show or hide **columns in the Live table**.
-- In the same area, **Move up / Move down** adjusts **column order** (Live window only).
-
----
-
-### Which fields (columns) appear in history details?
-
-Path: **DPS Meter → Settings → History**.
-
-Same structure as Live: **General** (name, score, bar baseline, abbreviation style, etc.) plus **DPS (Player) / DPS (Skill detail) / Healing / Damage taken …** toggles for columns when you open a history entry. Live and history column settings are **independent**—trim each to taste.
+They're configured separately: the DPS window in [Themes & Appearance](../features/dps/themes.md), and the main window in [App Settings · Appearance](../features/app/README.md#appearance).

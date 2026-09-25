@@ -1,67 +1,102 @@
-# Resonance Logs CN 文档
+# Resonance Logs CN 使用文档
 
-功能说明与常见问题索引。
+Resonance Logs CN 是《星痕共鸣》的战斗辅助工具：统计伤害与治疗、监控技能 CD 和 Buff、预警 Boss 机制、用语音提醒关键时机，并帮你计算模组搭配。
 
-## 快速入门
+> [!TIP]
+> 第一次使用？从 [快速入门](./getting-started/README.md) 开始。跟着 [例：第一次打本前的准备](./getting-started/README.md#例第一次打本前的准备) 走一遍，10 分钟就能上手。
 
-| 文档 | 说明 |
-|------|------|
-| [快速入门](./getting-started.md) | 安装应用、选择 WinDivert 或 Npcap、配置、重启、验证与排查 |
+## 开始使用
+
+| 文档 | 你能了解到 |
+| --- | --- |
+| [快速入门](./getting-started/README.md) | 安装、设置抓包方式、确认有数据 |
+| [界面导览](./getting-started/interface.md) | 主窗口各页面和浮窗分别做什么 |
+
+## 我想……
+
+| 场景 | 看这里 |
+| --- | --- |
+| 看队伍里每个人打了多少伤害 | [DPS 检测](./features/dps/README.md) |
+| 打桩测一轮固定时长的输出 | [例：用打桩模式测一轮 3 分钟输出](./features/dps/README.md#例用打桩模式测一轮-3-分钟输出) |
+| 战斗结束后复盘输出空窗 | [例：用时间轴找出输出空窗](./features/dps/history.md#例用时间轴找出输出空窗) |
+| 在屏幕上看自己的技能 CD 和 Buff | [实时监控](./features/monitor/README.md) |
+| 自动显示因子能量与赛季节点 | [例：自动显示因子能量与赛季节点](./features/monitor/custom-panel.md#例自动显示因子能量与赛季节点) |
+| 盯住 Boss 身上的易伤、看 Boss 读条 | [怪物监控](./features/monster/README.md) |
+| 团本里看机制站位 | [副本机制](./features/minimap/README.md) |
+| 技能转好、Boss 放大招时听到语音 | [语音播报](./features/voice/README.md) |
+| 从一堆模组里找出最优组合 | [模组计算](./features/module-calc/README.md) |
+| 换职业时自动切换整套配置 | [例：切专精时自动换方案](./features/app/loadouts.md#例切专精时自动换方案) |
 
 ## 功能文档
 
-### Buff 监控（实时监控）
-
-| 文档 | 说明 |
-|------|------|
-| [总览](./features/monitor/README.md) | 概述、方案、最佳实践、切图说明 |
-| [技能 CD](./features/monitor/skill-cd.md) | 职业技能勾选、技能变换 |
-| [Buff 监控](./features/monitor/buff.md) | 独立/分组、别名、快捷监听 |
-| [角色面板](./features/monitor/panel-attr.md) | 属性勾选、颜色、行顺序 |
-| [自定义监控](./features/monitor/custom-panel.md) | 普通区、因子区、计数器、进阶示例 |
-| [启用窗口](./features/monitor/overlay.md) | 浮窗模块、布局与显示格式 |
-
 ### DPS 检测
 
-| 文档 | 说明 |
-|------|------|
-| [总览](./features/dps/README.md) | 概述、打桩模式、数据指标、重置逻辑 |
-| [主题](./features/dps/themes.md) | 颜色、紧凑模式、标题栏、活跃战斗时间 |
-| [历史记录](./features/dps/history.md) | 复盘、目标拆分、自动清理 |
-| [设置](./features/dps/settings.md) | 列显示、刷新频率、网络、快捷键 |
+| 文档 | 说明 | 例 |
+| --- | --- | --- |
+| [DPS 检测](./features/dps/README.md) | 实时统计、打桩模式、战斗切分与重置 | [打桩测输出](./features/dps/README.md#例用打桩模式测一轮-3-分钟输出) |
+| [历史记录](./features/dps/history.md) | 历史列表、技能明细、时间轴 | [时间轴复盘](./features/dps/history.md#例用时间轴找出输出空窗) |
+| [挑战监控](./features/dps/challenge.md) | 挑战本的受击与失误统计 | [挑战本受击](./features/dps/challenge.md#例挑战本中看谁吃了浮游炮) |
+| [主题与外观](./features/dps/themes.md) | 配色、透明度、标题栏、紧凑模式 | [极简透明窗口](./features/dps/themes.md#例透明的极简-dps-窗口) |
+| [显示设置](./features/dps/settings.md) | 实时和历史表格的列设置 | — |
+
+### 实时监控
+
+| 文档 | 说明 | 例 |
+| --- | --- | --- |
+| [实时监控](./features/monitor/README.md) | 功能总览与使用流程 | — |
+| [技能 CD](./features/monitor/skill-cd.md) | 选择要监控的技能 | — |
+| [Buff 监控](./features/monitor/buff.md) | 精确监控、分类快捷监听、别名 | [蒂娜 CD 语音提醒](./features/monitor/buff.md#例蒂娜-cd-转好时语音提醒) |
+| [Buff 覆盖率](./features/monitor/buff-coverage.md) | 统计增益在战斗中的覆盖时间 | [覆盖率复盘](./features/monitor/buff-coverage.md#例复盘队伍的增益覆盖率) |
+| [角色面板](./features/monitor/panel-attr.md) | 实时显示属性 | — |
+| [血量护盾区](./features/monitor/shield.md) | 自身血量与护盾 | — |
+| [自定义监控](./features/monitor/custom-panel.md) | 普通区、因子配置区、赛季节点区、计数器 | [因子区](./features/monitor/custom-panel.md#例自动显示因子能量与赛季节点) · [预设计数器](./features/monitor/custom-panel.md#例用预设计数器盯炎角的绝对幸运) |
+| [启用窗口与布局](./features/monitor/overlay.md) | 浮窗区域开关与布局编辑 | — |
 
 ### 怪物监控
 
-| 文档 | 说明 |
-|------|------|
-| [总览](./features/monster/README.md) | 概述、与实时监控区别、启用与遮罩操作 |
-| [Buff 监控](./features/monster/buff.md) | 全局 / 仅自身、优先级、告警、样式 |
-| [队友 Buff](./features/monster/teammate.md) | 队友 Buff、分类快捷、矩阵样式 |
-| [仇恨列表](./features/monster/hate.md) | 仇恨开关、人数上限、样式 |
-| [Boss DBM](./features/monster/boss-dbm.md) | Boss 技能机制预警条、样式与布局 |
-| [实体持续](./features/monster/entity-duration.md) | 按实体出现 / 消失计时、范围与预设 |
-| [启用窗口](./features/monster/overlay.md) | 怪物遮罩各区域显示开关 |
+| 文档 | 说明 | 例 |
+| --- | --- | --- |
+| [怪物监控](./features/monster/README.md) | 功能总览，与实时监控的区别 | — |
+| [目标 Buff](./features/monster/buff.md) | 目标身上的 Buff 与告警 | [盯易伤](./features/monster/buff.md#例盯住自己挂的易伤快掉时提醒) |
+| [队友 Buff](./features/monster/teammate.md) | 队友身上的 Buff | — |
+| [韧性、生命与队友幻想](./features/monster/status.md) | 目标状态条 | — |
+| [仇恨列表](./features/monster/hate.md) | 目标的仇恨排行 | — |
+| [Boss DBM](./features/monster/boss-dbm.md) | Boss 技能预警条 | [Boss 技能语音预警](./features/monster/boss-dbm.md#例给-boss-技能起别名并语音预警) |
+| [实体持续](./features/monster/entity-duration.md) | 召唤物等实体的存在时间 | [镰车剩余时间](./features/monster/entity-duration.md#例显示镰车剩余时间) |
+| [启用窗口](./features/monster/overlay.md) | 怪物浮窗各区域开关 | — |
 
 ### 副本机制
 
-| 文档 | 说明 |
-|------|------|
-| [总览](./features/minimap/README.md) | 小地图机制、机制报幕、已支持副本与示例 |
+| 文档 | 说明 | 例 |
+| --- | --- | --- |
+| [副本机制](./features/minimap/README.md) | 小地图浮窗、显示选项、机制语音 | [团本开荒前的小地图设置](./features/minimap/README.md#例团本开荒前的小地图设置) |
+| [已支持副本](./features/minimap/dungeons.md) | 各副本的机制说明 | — |
 
 ### 语音播报
 
+| 文档 | 说明 | 例 |
+| --- | --- | --- |
+| [语音播报](./features/voice/README.md) | 快速开始、在功能页绑定播报 | — |
+| [音色与短句](./features/voice/voices.md) | 预置、克隆、微调音色，导入音频 | [自定义音效](./features/voice/voices.md#例用自己的音效提醒-boss-大招) |
+| [播放与提醒](./features/voice/playback.md) | 音量、优先级、占位符、匹配提醒 | [匹配成功提醒](./features/voice/playback.md#例挂机排本时听到匹配成功) |
+
+### 模组计算
+
+| 文档 | 说明 | 例 |
+| --- | --- | --- |
+| [模组计算](./features/module-calc/README.md) | 读取模组、计算最优组合、筛选 | [找智力 + 暴击的最优组合](./features/module-calc/README.md#例为输出职业找智力--暴击的最优组合) |
+
+### 应用与方案
+
+| 文档 | 说明 | 例 |
+| --- | --- | --- |
+| [应用设置](./features/app/README.md) | 通用、外观、网络、快捷键、诊断 | [战斗中用快捷键](./features/app/README.md#例用快捷键在战斗中调整浮窗) |
+| [监控方案](./features/app/loadouts.md) | 方案管理、按专精切换、导入导出 | [切专精换方案](./features/app/loadouts.md#例切专精时自动换方案) · [分享方案](./features/app/loadouts.md#例把方案分享给队友) |
+| [更新、托盘与配置恢复](./features/app/update.md) | 自动更新、托盘菜单、配置恢复 | — |
+
+## 常见问题与更新
+
 | 文档 | 说明 |
-|------|------|
-| [指导手册](./features/voice/README.md) | 模型安装、音色与短句、业务页绑定、播报总览与常见问题 |
-
-## 版本更新
-
-| 文档 | 说明 |
-|------|------|
-| [版本归档](./changelog/) | 各版本更新说明存档 |
-
-## 其他
-
-| 文档 | 说明 |
-|------|------|
-| [常见问题 (FAQ)](./faq.md) | 分册索引：应用运行、DPS 与布局、实时监控等 |
+| --- | --- |
+| [常见问题](./faq.md) | 按功能分类的问题解答 |
+| [版本更新](./changelog/README.md) | 各版本的更新说明 |

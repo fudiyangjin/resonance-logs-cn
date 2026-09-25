@@ -1,83 +1,102 @@
 # Dungeon Mechanics
 
-Corresponds to **Dungeon Mechanics** in the toolbox—a standalone in-game overlay for real-time positioning, callouts, and mechanic warnings in supported dungeons.
+In supported dungeons, **{{ui:routes.tools.minimap}}** shows a top-down minimap and a mechanic callout feed over the game: who is targeted, where to stand, and how many seconds until the next mechanic, all at a glance.
 
-Independent from **Monster Monitor** and **Live Monitor**: uses the **minimap overlay** window and activates automatically only in adapted dungeon scenes.
+![Cursed Tomb mechanics minimap](../../../shared/img/minimap/s3_minimap_1.png)
 
-## Overview
+## What it helps you with
 
-The overlay has two independently toggled panels:
+- **Positioning**: The minimap draws you, your teammates, the Boss, and mechanic-related points and zones (safe zones, danger sectors, tethers).
+- **Callouts**: Teammates targeted by a mechanic are colored accordingly, and the callout feed lists the targets and countdowns at the same time.
+- **Audio alerts**: Bind voice to mechanic warnings so you know it's your turn without watching the screen.
 
-| Panel | Description |
-|------|------|
-| **Map Panel** | Top-down minimap: you, teammates, Boss, and mechanic-related points; colors, regions, and lines mark stacks, safe zones, danger halves, etc. |
-| **Mechanic Calls** | Text list: active mechanic names, callout targets, and countdown timers |
+When you enter a supported dungeon, the app automatically loads the matching mechanic parser for that scene; in other scenes the overlay shows no mechanic content. For the supported dungeons and the mechanics each one shows, see [Supported dungeons](./dungeons.md).
 
-When you enter a supported dungeon, the app loads the matching parser by scene ID. Leaving the dungeon or entering an unsupported scene clears mechanic content.
+## Turning on the overlay
 
-## Enable & Top Bar
+1. Open **{{ui:routes.tools.minimap}} → {{ui:minimap.tabs.minimap}}**.
+2. Turn on **{{ui:minimap.settings.enabled.label}}**, or click **{{ui:minimap.actions.toggleOverlay}}** at the top of the page; both are the same switch.
+3. Click **{{ui:minimap.actions.editLayout}}**, drag and resize the two panels, then click **{{ui:minimap.edit.done}}**.
 
-On the **Dungeon Mechanics** page top bar:
+The overlay consists of two panels, which can be toggled separately in **{{ui:minimap.overlay.title}}**:
 
-- **Toggle Dungeon Mechanics Window**: Show or hide the in-game overlay.
-- **Edit Layout**: Drag and resize the map panel and mechanic calls panel.
+| Panel | Content |
+| --- | --- |
+| **{{ui:minimap.panels.map}}** | Top-down minimap: players, Boss, markers and mechanic zones |
+| **{{ui:minimap.panels.info}}** | Text list: names of active mechanics, targets and remaining time |
 
-## Display Options
+## Display options
 
-| Option | Description |
-|------|------|
-| **Auto-hide in daily scenes** | Hides the overlay in daily-scene blacklist entries; restores prior visibility when leaving |
-| **Show only self and mechanic-affected teammates** | Hides normal teammate dots; callouts and mechanic buff colors reveal affected players |
-| **Show Boss position** | Marks Boss on the minimap (off by default to reduce clutter) |
+| Option | Effect |
+| --- | --- |
+| **{{ui:minimap.settings.autoHideInDailyScenes.label}}** | Hides automatically when you return to the main city or other daily scenes, and restores when you leave |
+| **{{ui:minimap.settings.hideNormalTeammates.label}}** | Normally shows only you; a teammate appears automatically as soon as they are targeted or colored by a mechanic. The cleanest view |
+| **{{ui:minimap.settings.hideAllTeammates.label}}** | Never shows teammates, not even when targeted; only you remain. Takes precedence over the previous option |
+| **{{ui:minimap.settings.showBoss.label}}** | Marks the Boss position on the map; off by default |
+| **{{ui:minimap.settings.showMarkers.label}}** | Shows party markers 1–6 (colored numbers); off by default |
 
-## Player Colors & Self Marker
+> [!TIP]
+> The first time you run a dungeon, show all teammates first; once you know the mechanics, turn on **{{ui:minimap.settings.hideNormalTeammates.label}}** to see only the points relevant to you.
 
-- **Player colors**: Default dot colors for you and teammates when no mechanic override applies.
-- **Self ring**: Concentric ring around your dot so you stay easy to find even when recolored by a mechanic (color and width configurable).
+## Making yourself easier to find
 
-## Panel Visibility
+When a mechanic targets you, your dot changes color and can easily get lost among your teammates. You can combine:
 
-Toggle **Map Panel** and **Mechanic Calls** separately in settings. Position and width are adjusted in overlay **Edit Layout** mode.
+- **{{ui:minimap.settings.localRing.title}}**: turn on **{{ui:minimap.settings.localRing.enabled.label}}** to draw an outline ring around your dot; its color and line width are adjustable.
+- **{{ui:minimap.settings.localFacing.label}}**: draws a small arrow on your marker pointing in the direction you are facing, making it easy to judge your facing.
+- **{{ui:minimap.settings.sizes.title}}**: make **{{ui:minimap.settings.sizes.local}}** a bit larger than your teammates.
 
-## Supported Dungeons
+## Colors and death style
 
-| Dungeon | Scene IDs | Mechanics (summary) |
-|------|---------|----------|
-| **Cursed Tomb** | 6513 / 6514 / 6515 | Blue tower activation, energy pillar callouts, half-arena charges, charge clones, etc. |
-| **Sea-Ringed Reef** | 6563 / 6564 / 6565 | Matrix rune traps (mid-run), Boss dual-tone colors, ice/wave safe zones and cross lines, etc. |
-| **Forgotten Dreamwild** | 13021 / 13022 / 13023 | Phase tiles, stack/decay/spread, causal jump, kill marks, electromagnetic ring sequence, pinball, etc. |
-| **S3 Giant Tower** | 1150 / 1151 / 1152 | Correct portal color callout |
-| **Tina's Mind Realm (S3)** | 1631 / 1632 / 1633 | Pizza danger sectors, Heavy Wound / Red-Light Bind / Wudi-Slash mark mechanic bar |
+- **{{ui:minimap.settings.colors.title}}**: sets the colors of **{{ui:minimap.settings.colors.local}}**, **{{ui:minimap.settings.colors.teammate}}**, **{{ui:minimap.settings.colors.boss}}** and **{{ui:minimap.settings.colors.marker1}}**–6 when no mechanic coloring applies. Mechanic targeting always uses dedicated high-contrast colors and is not affected by these.
+- **{{ui:minimap.settings.deadStyle.title}}**: how you or a teammate are shown after dying; you can switch to an × marker and set its color and opacity. The death style overrides mechanic targeting colors.
 
-> Mechanic labels match in-overlay text. Normal / Hard / Master difficulties share the same parser with different scene IDs.
+## Mechanic voice announcements
+
+**{{ui:minimap.settings.voiceCues.title}}** lists the mechanics in the current dungeon that can be announced. Once expanded, they are configured the same way as Buff and Boss mechanic announcements: choose an event, write the text, generate the voice. If the current map has no announceable mechanics yet, this list is empty. For general voice settings, see [Voice announcements](../voice/README.md).
+
+## How it differs from Boss DBM
+
+| | Dungeon Mechanics | [Monster Monitor · Boss DBM](../monster/boss-dbm.md) |
+| --- | --- | --- |
+| Question it answers | Where to stand, who is targeted | When the Boss uses which skill |
+| What it shows | Minimap + callout feed | Skill name + countdown |
+| Where it works | Supported dungeons only | Any fight with Boss skill events |
+
+Both can be on at the same time; place them in different parts of the screen so they complement each other.
 
 ## Examples
 
-### Cursed Tomb
+### Example: Minimap setup before a raid's first clear
 
-Map panel marks tower progress, energy pillars, and charge-related points; mechanic calls show phase and timers.
+**Scenario**: Your group is running "Forgotten Dreamwilds" for the first time, with lots of mechanics and frequent callouts. You want the minimap to show only what's relevant to you, to find yourself instantly when targeted, and to get voice alerts.
 
-![Cursed Tomb mechanics example](../../../shared/img/minimap/s3_minimap_1.png)
+#### Step 1: Turn on and place the overlay
 
-### Sea-Ringed Reef · Matrix (mid-run)
+1. **{{ui:routes.tools.minimap}} → {{ui:minimap.tabs.minimap}}**, turn on **{{ui:minimap.settings.enabled.label}}**.
+2. **{{ui:minimap.actions.editLayout}}**: place **{{ui:minimap.panels.map}}** on one side of the screen where it doesn't cover your character, and **{{ui:minimap.panels.info}}** below it. Click **{{ui:minimap.edit.done}}** when finished.
 
-Rune colors, trap callouts, and teammate positions during the matrix phase.
+#### Step 2: Reduce clutter
 
-![Sea-Ringed Reef mid-run example](../../../shared/img/minimap/s3_minimap_2.png)
+- Turn on **{{ui:minimap.settings.hideNormalTeammates.label}}**: teammates who aren't targeted are hidden.
+- Turn on **{{ui:minimap.settings.autoHideInDailyScenes.label}}**: hides automatically when you return to town.
+- If your group uses markers for calls, turn on **{{ui:minimap.settings.showMarkers.label}}**.
 
-### Sea-Ringed Reef · Boss
+#### Step 3: Make yourself stand out
 
-Dual-tone colors, ice/wave safe zones, and cross intersection markers during the Boss fight.
+1. Turn on **{{ui:minimap.settings.localRing.enabled.label}}**, pick a **{{ui:minimap.settings.localRing.color}}** that clearly differs from the mechanic colors (such as white), and make the line a bit thicker.
+2. Turn on **{{ui:minimap.settings.localFacing.label}}**.
+3. In **{{ui:minimap.settings.sizes.title}}**, increase **{{ui:minimap.settings.sizes.local}}**.
 
-![Sea-Ringed Reef Boss example](../../../shared/img/minimap/s3_minimap_3.png)
+#### Step 4: Voice alerts when targeted
 
-## vs Monster Monitor Boss DBM
+1. Enter the dungeon (or just expand **{{ui:minimap.settings.voiceCues.title}}**) and find the mechanics you want alerts for, such as **{{ui:minimap.s3Raid.shareGroup}}** and **{{ui:minimap.s3Raid.killMark.group}}**.
+2. Write short text for each mechanic, for example "Stack" or "Go to corner".
+3. Go to **{{ui:routes.tools.voice}} → {{ui:voice.tabs.bindings}}** and click **{{ui:voice.bindings.generateMissing}}**.
 
-| Item | Dungeon Mechanics | Monster Monitor · Boss DBM |
-|------|----------|---------------------|
-| Overlay | Minimap overlay | Monster overlay |
-| Main info | Position map + mechanic calls | Boss skill warning bars (name + countdown) |
-| Scope | Adapted dungeons | Any fight with Boss DBM events |
-| Settings | Dungeon Mechanics page | Monster Monitor → Boss DBM |
+> [!TIP]
+> The shorter the text, the faster the announcement. Several mechanics may happen at once, so set the deadliest ones to high priority. See [Priority and queue](../voice/playback.md#priority-and-queue).
 
-Both can run together in different screen areas.
+#### Step 5: Pair it with Boss DBM
+
+In [Monster Monitor](../monster/README.md), turn on the Boss DBM area and place it near the top center of the screen. The minimap tells you where to stand, and Boss DBM tells you how many seconds are left. See [Example: Give a Boss skill an alias and add a voice warning](../monster/boss-dbm.md#example-give-a-boss-skill-an-alias-and-add-a-voice-warning).

@@ -1,41 +1,52 @@
 # Monster Monitor
 
-Corresponds to **Monster Monitor** in the toolbox—separate in-game overlay for buffs on your **current main attack target**, related teammate buffs, and the threat list.
+**{{ui:routes.tools.monsterMonitor}}** uses a separate **monster overlay** to show information about your **current attack target**: the Buffs / Debuffs on it, effects applied by teammates, threat, stun value, HP, plus Boss skill warnings and the remaining time of entities on the field.
 
-Independent from **Live Monitor** (your skill CD, your buffs, etc.): config lives under **Monster Monitor**, shown on the **monster overlay**, not mixed with Live Monitor profiles.
+## What you can use it for
 
-## Overview
+- Check whether the vulnerability and damage-amp effects you put on the Boss are still up, with a highlight when they are about to expire;
+- See whether your teammates' Debuffs are all applied;
+- Tanks can check the threat ranking, and DPS can see how much stun value is left before the Boss breaks;
+- Pop up a DBM warning bar with a voice alert when the Boss starts casting;
+- Show the remaining time of summons and ground devices (such as the Scythe Cart).
 
-- **Current main attack target**: **Monster buffs** and **threat list** follow your character’s **attack target** automatically (in-game target ID)—no `ExtraBuffMonitoredMonsters.json` (deprecated).
-- **When it switches**: Attacking another monster updates display; on death or lost target, buffs/threat clear until a new main target exists.
-- **Dummies / trash**: Any unit that can be your attack target and syncs from the game works like a Boss—you must **target the dummy** (damage or select it), not merely stand near one.
+## Follows your current target
 
-> If buff names are hard to read, set **Display Name** aliases on monitored entries in each tab.
+The overlay switches automatically with your character's **attack target**; you don't need to specify a monster in advance:
 
-## Sub-guides
+- Attack or select another monster and the overlay switches to it;
+- When the target dies or is lost, the related content is cleared until you have a new target;
+- Training dummies and trash mobs work too, as long as they are your current attack target.
 
-| Document | Tab | Description |
-|------|----------|------|
-| [Buff Monitor](./buff.md) | Buff Monitor | Global / self-only, priority, alerts, styling |
-| [Teammate Buffs](./teammate.md) | Teammate Buffs | Teammate-applied buffs, category shortcuts, matrix styling |
-| [Threat List](./hate.md) | Hate List | Threat panel toggle, player limit, styling |
-| [Boss DBM](./boss-dbm.md) | Boss DBM | Boss mechanic warning bars, styling, layout |
-| [Entity Duration](./entity-duration.md) | Entity Duration | Timers driven by entity appear / disappear (e.g. Scythe Cart), presets, manual entries, caster scope |
-| [Enable Overlay](./overlay.md) | Enable Window | Monster overlay area display toggles |
+## Top switches and sub-profiles
 
-## Enable & Top Bar
+| Switch | Effect |
+| --- | --- |
+| **{{ui:monsterMonitor.enabled}}** | Master switch |
+| **{{ui:monsterMonitor.autoHideInDailyScenes.label}}** | Automatically hides the overlay in daily scenes |
+| **{{ui:monsterMonitor.actions.toggleOverlay}}** | Shows / hides the monster overlay |
+| **{{ui:monsterMonitor.actions.editLayout}}** | Drag and resize each area; placeholder previews are shown when there is no live data |
 
-- **Enable Monster Monitor**: Master switch at top; when off, no data to monster overlay.
-- **Toggle Monster Overlay**: Show or hide in-game **Monster Monitor** overlay.
-- **Edit Monster Layout**: Drag and resize areas on the overlay (monster buff, teammate buff, threat list, Boss DBM, etc.).
+Monster Monitor has its own **configuration sub-profiles** (create, rename, delete), and the main loadout references one of them. See [Loadouts](../app/loadouts.md).
 
-Monster Monitor supports multiple **configuration profiles**. The active loadout references one of them; switching the loadout or selecting another profile on the Monster Monitor page switches its buff, threat, DBM, voice-announcement, and layout settings together. The master switch, auto-hide in daily scenes, and buff aliases remain global and do not change with profiles.
+## Page layout
 
-## vs Live Monitor
+| Tab | Documentation | Examples |
+| --- | --- | --- |
+| **{{ui:monsterMonitor.tabs.buff}}** | [Target Buffs](./buff.md) | [Watch the vulnerability you applied](./buff.md#example-watch-the-vulnerability-you-applied-and-get-alerted-before-it-drops) |
+| **{{ui:monsterMonitor.tabs.teammate}}** | [Teammate Buffs](./teammate.md) | — |
+| **{{ui:monsterMonitor.tabs.hate}}** | [Threat List](./hate.md) | — |
+| **{{ui:monsterMonitor.tabs.stun}}** / **{{ui:monsterMonitor.tabs.hp}}** / **{{ui:monsterMonitor.tabs.fantasy}}** | [Stun, HP and Teammate Fantasies](./status.md) | — |
+| **{{ui:monsterMonitor.tabs.bossDbm}}** | [Boss DBM](./boss-dbm.md) | [Give a Boss skill an alias and a voice warning](./boss-dbm.md#example-give-a-boss-skill-an-alias-and-add-a-voice-warning) |
+| **{{ui:monsterMonitor.tabs.entityDuration}}** | [Entity Duration](./entity-duration.md) | [Show the Scythe Cart's remaining time](./entity-duration.md#example-show-the-scythe-carts-remaining-time) |
+| **{{ui:monsterMonitor.tabs.overlay}}** | [Enable Window](./overlay.md) | — |
 
-| Item | Live Monitor | Monster Monitor |
-|------|----------|----------|
-| Overlay | Game overlay | Monster overlay |
-| Main focus | Your skills, your buffs, stats, etc. | Main-target buffs, teammate buffs, threat |
-| Profiles | Multiple profiles referenced and switched by loadouts | Multiple profiles referenced and switched by loadouts |
-| Buff scope | Player-related | On monster + teammates on monster |
+## How it differs from Live Monitor
+
+| | Live Monitor | Monster Monitor |
+| --- | --- | --- |
+| Who it watches | You | Your current target |
+| Typical content | Skill CDs, your own Buffs, factors, stats | Target Debuffs, threat, stun, Boss skills |
+| Overlay | Live Monitor overlay | Monster overlay |
+
+Their settings are independent of each other, and both can be on at the same time.

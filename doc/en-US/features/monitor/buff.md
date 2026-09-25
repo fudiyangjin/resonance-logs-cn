@@ -1,117 +1,129 @@
-﻿# Buff Monitor
+# Buff Monitor
 
-Corresponds to **Live Monitor → Buff Monitor**.
+**{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.buff}}** monitors the Buffs **on yourself**: duration and stacks, alerts when they are about to end, and voice reminders when they are gained or lost.
 
-## Standalone Mode / Grouped Mode
+> [!TIP]
+> Want to watch Debuffs on the boss instead (for example, a vulnerability you applied)? That belongs to [Monster Monitor · Buff Monitor](../monster/buff.md).
 
-- **Standalone mode**: Each buff displays separately with its own icon size and position
+## Adding Buffs
 
-![Standalone mode](../../../shared/img/monitor/buff_2.png)
+Type a **name or ID** in the search box and click a result to add it to **{{ui:skillMonitor.buff.selectedTitle}}**. Results are paginated when there are many; even if an ID is not in the built-in table, you can still add it directly by ID.
 
-- **Grouped mode**: Multiple buffs in one group with unified layout
+Not sure what a Buff is called? Turn on **{{ui:skillMonitor.buff.all.title}}** first, and the overlay will show every Buff you currently have. Once you find the one you want, add it precisely, then turn "Monitor All" off.
+
+### Category quick watch
+
+**{{ui:skillMonitor.buff.category.title}}** lets you watch all **Food** or **Alchemy** Buffs at once, which is handy for checking whether you have eaten and taken potions before entering a dungeon.
+
+## Display modes
+
+Choose one of the two in **{{ui:skillMonitor.buff.display.title}}**:
+
+| Mode | Characteristics |
+| --- | --- |
+| **{{ui:skillMonitor.buff.display.individual}}** | Each Buff gets its own icon that can be moved and resized separately |
+| **{{ui:skillMonitor.buff.display.grouped}}** | Several Buffs go into one group and are laid out together in rows and columns |
+
+![Individual mode](../../../shared/img/monitor/buff_2.png)
 
 ![Grouped mode](../../../shared/img/monitor/buff_1.png)
 
-## Special Buffs
+### Grouped mode
 
-Some buffs change display by **stack count** (e.g. different icons at 1 vs 2 stacks)—these are **special buffs**. Add them like normal buffs; the overlay switches icons by stack automatically.
+In **{{ui:skillMonitor.buff.group.title}}**:
 
-**Usage:**
+- **{{ui:skillMonitor.buff.group.new}}** / **{{ui:skillMonitor.buff.group.delete}}**; pick Buffs for each group separately, or set it to **{{ui:skillMonitor.buff.group.monitorAll}}**;
+- Add or remove the Food and Alchemy categories for a group in one click;
+- Each group can set icon size, rows and columns, spacing, and whether to show the name, remaining time and stacks;
+- **{{ui:skillMonitor.buff.group.previewTitle}}** lets you check the result first.
 
-1. Under **Live Monitor → Buff Monitor**, add the target buff (search by name)
-2. If configured as a special buff, icons update with stacks—no extra setup
+### Buffs without icons
 
-**Currently supported special buffs:**
+Buffs without an icon are shown as a line of text plus a progress bar. You can choose **{{ui:skillMonitor.buff.display.modernText}}** or **{{ui:skillMonitor.buff.display.classicText}}**, and limit how many are shown at most.
 
-| Class | Buff Name | Effect |
-|------|-----------|----------|
-| Qinglan Knight | Pursuit Footwork | 1 stack: single icon; 2 stacks: dual-icon combo for stack distinction |
+### Buffs that change with stacks
 
-## Common Buff Reference
+Some Buffs change their icon automatically with the stack count. For example, Wind Knight's "Chasing Step" shows a single icon at 1 stack and a double icon at 2 stacks, with no extra setup needed.
 
-Searchable names below are in the config tables. Player buffs go under **Live Monitor → Buff Monitor**; monster debuffs / amp go under **Monster Monitor → Buff Monitor** (see [Monster Buff](../monster/buff.md)).
+## Names and icons
 
-### Class
+| Setting | What it does | Scope |
+| --- | --- | --- |
+| **{{ui:skillMonitor.buff.alias.title}}** | Gives an alias to a Buff with an unclear name, for example showing "[热枕]" as "Life Fluctuation" | Global, does not change with profiles |
+| **{{ui:skillMonitor.buff.icon.title}}** | Picks a custom image as the Buff's icon | Global |
 
-| Class | Buff Name | Notes |
-|------|-----------|------|
-| Qinglan Knight | Pursuit Footwork | Special buff: different icons at 1 / 2 stacks (see Special Buffs above) |
+Buff aliases are also used as the display names of Buff effects in the [factor zone](./custom-panel.md#factor-zone).
 
-> More class buffs will be added later.
+Buffs that come from a Fantasy are shown as "Name | Tier n" when the Fantasy's tier can be detected.
 
-### Common Fantasies (player buffs)
+## Priority
 
-Search these under **Live Monitor → Buff Monitor**:
+- **{{ui:skillMonitor.buff.priority.globalTitle}}**: display order in individual mode;
+- **{{ui:skillMonitor.buff.priority.groupTitle}}**: order within each group in grouped mode.
 
-| Fantasy | Buff ID | Search name | Notes |
-|---------|---------|-------------|-------|
-| Bandit Chief | 2110065 | Fiery Battle Will (Bandit Chief) | Damage amp on players |
-| Tata | 2110061 | Heart of Flames (Tata) | Death-save on players |
-| Tina | 2110034 | Lower CD | Cooldown reduction on players |
-| Basilisk | 2110125 | Highland Blood (Basilisk) | Damage amp on players |
-| Catagriff | 2110140 | Mechanical Power (Catagriff) | Damage amp on players |
+## Countdown alerts
 
-### Common Fantasies (monster debuffs / amp)
+**{{ui:skillMonitor.buff.alert.title}}** sets a threshold for a Buff: when the remaining time is ≤ the set number of seconds, it is highlighted in the chosen color, optionally **flashing**. Good for watching boosts that are about to drop.
 
-Search under **Monster Monitor → Buff Monitor**:
+## Voice announcements
 
-| Fantasy | Buff ID | Search name | Notes |
-|---------|---------|-------------|-------|
-| Poison Hive | 2110099 | Venom Vulnerability (Poison Hive) | Vulnerability on monsters |
-| Lorola | 2110111 | Enchantment (Lorola) | Damage amp on monsters |
-| Lorola | 2110135 | Enchantment Stacks (Lorola) | Stacking amp on monsters |
+In the **{{ui:skillMonitor.buff.voice.title}}** section, search for a monitored Buff and add a rule. You can choose three events, **on gain / x seconds left / on expiry**, and the text can be generated automatically, written yourself, or taken from the phrase library. See [Voice](../voice/README.md#binding-announcements-on-feature-pages) for details.
 
-### Fantasy CD
+![Buff voice announcement settings](../../../shared/img/voice/voice_1.png)
 
-After using a fantasy, a CD buff blocks re-applying the same kind for a while:
+## Common Buff reference
 
-| Fantasy / effect | Buff ID | Search name |
-|------------------|---------|--------------|
-| Catagriff | 2110049 | Mechanical Failure (Catagriff CD) |
-| Tina | 2110056 | Time Stasis (Tina CD) |
-| Tata | 2110055 | Exhausted: Flame Devour (Tata CD) |
-| Revive | 2110057 | Weakened: Wish Sealed (Revive CD) |
-| Basilisk | 2110050 | Element Stasis (Basilisk CD) |
+You can type the search names in the table below directly into the search box:
 
-## Buff Aliases
+| Type | Fantasy | Search name | Buff ID |
+| --- | --- | --- | --- |
+| Boost | Bandit Chief | Fiery Battle Will (Bandit Chief) | 2110065 |
+| Boost | Tata | Heart of Flames (Tata) | 2110061 |
+| Boost | Tina | Lower CD | 2110034 |
+| Boost | Basilisk | Highland Blood (Basilisk) | 2110125 |
+| Boost | Catagriff | Mechanical Power (Catagriff) | 2110140 |
+| Fantasy CD | Catagriff | Mechanical Failure (Catagriff CD) | 2110049 |
+| Fantasy CD | Tina | Time Stasis (Tina CD) | 2110056 |
+| Fantasy CD | Tata | Exhausted: Flame Devour (Tata CD) | 2110055 |
+| Fantasy CD | Revive type | Weakened: Wish Sealed (Revive CD) | 2110057 |
+| Fantasy CD | Basilisk | Element Stasis (Basilisk CD) | 2110050 |
 
-Some in-game buff names are unclear. Set aliases under **Buff Monitor → Buff Alias Settings**:
+For vulnerabilities and damage boosts placed on monsters (such as Venom Vulnerability (Poison Hive) and Enchantment (Lorola)), see [Monster Monitor · Buff Monitor](../monster/buff.md#common-debuff-reference).
 
-- Search original name (e.g. `[热枕]`)
-- Set display name (e.g. “Life Fluctuation”)
+## Examples
 
-Aliases apply **globally** and do not change when switching profiles.
+### Example: Voice reminder when Tina's CD is ready
 
-## How do I find buffs to monitor?
+**Scenario**: You are the one who uses Tina for the party. You want the overlay to show Tina's cooldown and to hear "Tina CD is ready" when the CD ends, so you do not have to keep watching it.
 
-If names are unclear, in **grouped mode** enable **Monitor All** on a group; when the overlay lists all buffs, match effects to names, then add exact buffs to your list.
+#### Step 1: Monitor the Tina CD Buff
 
-## Category Quick Listen
+After you use Tina, a Buff representing the cooldown stays on you.
 
-- **Food**: Monitor all food buffs at once
-- **Alchemy**: Monitor all alchemy buffs at once
+1. Open **{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.buff}}**.
+2. Search for **Time Stasis (Tina CD)** (ID 2110056) and add it to the selected Buffs.
+3. You can also add **Lower CD** (ID 2110034) to see whether the boost from Tina is still active.
 
-Use under **Buff Monitor → Category Quick Listen**, or shortcut buttons in grouped mode.
+#### Step 2: Give it a recognizable name (optional)
 
-## Buff Priority
+In **{{ui:skillMonitor.buff.alias.title}}**, search for "Time Stasis (Tina CD)" and set its alias to "Tina".
 
-- **Global buff priority**: In standalone mode, controls display order in the global list.
-- **Within-group priority**: In grouped mode, each group has its own priority order.
+#### Step 3: Highlight it when it is about to end
 
-## Buff Countdown Alerts
+In **{{ui:skillMonitor.buff.alert.title}}**, add an alert for it: highlight in green and flash when ≤ 5 seconds remain, reminding you to get ready to use it.
 
-For monitored buffs, set **remaining time alerts**: highlight color (optional blink) when below N seconds—useful for buffs about to expire.
+#### Step 4: Voice reminder on expiry
 
-## Monitor All Buffs (Standalone Mode)
+1. First make sure a model is installed in [Voice](../voice/README.md) and **{{ui:voice.overview.enabled}}** is on.
+2. Go back to **{{ui:skillMonitor.tabs.buff}}**, expand **{{ui:skillMonitor.buff.voice.title}}**, then search for and add "Time Stasis (Tina CD)".
+3. Check **Broadcast on expiry**, choose **Custom text** for the text, and enter "Tina CD is ready".
+4. Click **Preview**; if it says the audio is waiting to be generated, go to **{{ui:routes.tools.voice}} → {{ui:voice.tabs.bindings}}** and click **{{ui:voice.bindings.generateMissing}}**.
 
-In standalone mode, **Monitor All Buffs** shows every buff currently received (good for name discovery); similar to grouped **Group · Monitor All** but different layout logic.
+![Buff voice announcement settings](../../../shared/img/voice/voice_1.png)
 
-## Buff Group Management (Grouped Mode)
+Sample generated with a fine-tuned Japanese voice:
 
-- **Create / delete groups**, select buffs per group or enable **Monitor All**.
-- Groups can quickly **add Food / Alchemy** categories or **remove** added categories.
-- Per group: **icon size, rows, columns, spacing**, show name, remaining time, stacks.
+<audio controls src="../../../shared/audio/voice/ja_01_tina_cd.wav"></audio>
 
-## Buffs Without Icons
-
-Buffs without icons show as a **single-row progress bar**; choose **new no-icon style** or **legacy no-icon style**, and limit **max display count**. Adjust name/value/bar colors under buff display mode settings.
+> [!TIP]
+> Want the announcement to include Tina's tier? Put `${remodelLevel}` (or `${阶数}`) in the text, e.g. "Tina ${remodelLevel} ready"; when announced, the placeholder is automatically replaced with the Fantasy's current tier (e.g. tier 5). See [Voice · Fantasy tier placeholder](../voice/playback.md#fantasy-tier-placeholder).

@@ -1,31 +1,20 @@
-# Enable Overlay (Monster Overlay)
+# Enable Window
 
-Corresponds to **Monster Monitor → Enable Window** tab.
+**{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.overlay}}** controls which areas are shown in the monster overlay.
 
-Toggle areas in the **monster overlay** (saved across restarts).
+| Area | Default | Content |
+| --- | --- | --- |
+| **Monster Buff Area** | Shown | [Target Buffs](./buff.md) |
+| **Teammate Buff Area** | Shown | [Teammate Buffs](./teammate.md) |
+| **Hate List Area** | Hidden | [Threat List](./hate.md) |
+| **Stun Bar Area** | Hidden | [Stun bar](./status.md#stun-bar) |
+| **HP Bar Area** | Hidden | [HP bar](./status.md#hp-bar) |
+| **Teammate Fantasy Area** | Shown | [Teammate fantasies](./status.md#teammate-fantasies) |
+| **Boss DBM Area** | Hidden | [Boss DBM](./boss-dbm.md) |
+| **Entity Duration Area** | Shown | [Entity Duration](./entity-duration.md) |
 
-## Display Areas
+Click a button to toggle its visibility.
 
-| Area | Description |
-|------|------|
-| **Monster Buff Area** | Self-only / global buffs from [Buff Monitor](./buff.md) |
-| **Teammate Buff Area** | Buffs and categories from [Teammate Buffs](./teammate.md) |
-| **Threat List Area** | Threat order from [Threat List](./hate.md) |
-| **Stagger Area** | Monster stagger and break state |
-| **HP Area** | Monster health |
-| **Teammate Fantasy Area** | Teammate fantasy summon display |
-| **Boss DBM Area** | [Boss DBM](./boss-dbm.md) mechanic warning bars |
-| **Entity Duration Area** | Countdown text rows for entities configured in [Entity Duration](./entity-duration.md) (e.g. Scythe Cart) |
+## Edit layout
 
-Click buttons to toggle **show / hide**. Enable each area here; no additional switch in the feature tab is required. Threat, stagger, and HP areas are off by default.
-
-## Layout Editing
-
-On **Monster Monitor** top bar, click **Edit Monster Layout** on the in-game overlay to:
-
-- Drag each area
-- Resize areas
-
-In edit mode, use **Reset Position** / **Reset Size** if provided.
-
-Top bar **Toggle Monster Overlay** shows/hides the whole overlay—use with per-area toggles above.
+After clicking **{{ui:monsterMonitor.actions.editLayout}}** at the top, every area can be dragged and resized, and placeholder previews are shown when there is no live data. In edit mode you can use **Reset Position** and **Reset Size**.

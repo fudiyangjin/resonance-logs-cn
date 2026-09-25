@@ -1,28 +1,31 @@
-﻿# Skill CD
+# Skill CD
 
-Corresponds to **Live Monitor → Skill CD**.
+**{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.skillCd}}** shows the skills you pick as icons in the overlay, with their remaining cooldown in real time.
 
-If CD display is incomplete because you opened the app mid-fight, [change zone to sync](./README.md#buff-monitor) first (see overview).
+## Choosing skills
 
-## Class & Skill CD
+1. Pick a class in **{{ui:skillMonitor.skillCd.class.title}}**; that class's skills are listed below.
+2. In **{{ui:skillMonitor.skillCd.skills.title}}**, check the skills to monitor, up to **10** (about 2 rows × 5 columns in the overlay).
+3. **{{ui:skillMonitor.skillCd.resonance.title}}** are not listed automatically; add them by searching for their name in the search box.
+4. **{{ui:skillMonitor.skillCd.preview.title}}** shows how they will be arranged in the overlay, in the order you checked them.
 
-- **Class selection**: Sets the class monitored by the current profile; the skill list updates with class (bound to [profiles](./README.md#profiles)).
-- **Skill selection**: Select up to **10** skills (overlay ~2 rows × 5 columns) for cooldown and remaining time; clear all and reselect in one click.
+## Skill transforms
 
-## Duration Skills (moved)
+Some skills turn into another form under certain Buffs, and the CD icon and name switch along with them automatically. For example, Wind Knight's "Falcon Toss" shows as "Azure Sever" under a specific Buff, and Frost Mage's "Blizzard" shows as "Instant Blizzard" under the no-cast-time Buff.
 
-**Duration Skills** (e.g. Scythe Cart) have been removed from Live Monitor. They are now timed by the in-game entity appearing / disappearing; configure them under **Monster Monitor → Entity Duration** (see [Entity Duration](../monster/entity-duration.md)). A Scythe Cart selected in an older profile is migrated automatically on upgrade.
+![Skill transforms](../../../shared/img/monitor/cd_1.png)
 
-## Resonance Skills
+## Voice announcements
 
-**Resonance skills** are added by search by name—they are not listed automatically by class. Manage the selected list separately; useful for special resonance skills.
+In the **{{ui:skillMonitor.skillCd.voice.title}}** section, you can set up three events for monitored skills:
 
-## Monitor Preview
+| Event | When |
+| --- | --- |
+| **On cast** | The skill goes on cooldown |
+| **When ready** | The cooldown ends |
+| **x seconds before ready** | The cooldown is about to end, so you can get ready |
 
-**Monitor Preview** on the page shows icon layout in current selection order—adjust order here before checking in-game.
+Charge-based skills are only announced when the **first charge** comes back; later charges are not announced again. Announcements require a model to be installed and enabled in [Voice](../voice/README.md).
 
-## Skill Transforms
-
-Some skills change form when certain buffs are active; the skill CD bar switches icon and name automatically. For example, Qinglan Knight’s “Flying Bird Throw” may show as “Extreme · Wind Cut” with a specific buff; Ice Mage’s “Ice Storm” may show as “Instant-cast Ice Storm” with a no-cast-time buff.
-
-![Skill transform example](../../../shared/img/monitor/cd_1.png)
+> [!NOTE]
+> "Duration skills" (such as Scythe Cart) that used to be configured here have moved to [Monster Monitor · Entity Duration](../monster/entity-duration.md). Old profiles are migrated automatically.

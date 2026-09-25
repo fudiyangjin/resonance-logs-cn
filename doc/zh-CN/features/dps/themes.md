@@ -1,45 +1,113 @@
-﻿# 主题
+# 主题与外观
 
-对应 **DPS检测 → 主题**。
+**{{ui:routes.tools.dps}} → {{ui:routes.dps.themes}}** 决定实时 DPS 窗口「长什么样」：配色、大小、表格样式和标题栏布局。页面分为 **{{ui:themes.tabs.general}}**、**{{ui:themes.tabs.live}}**、**{{ui:themes.tabs.presets}}** 三个标签。
 
-DPS 界面支持**高度自定义**，可在此调整外观与布局。
+![主题页](../../../shared/img/dps/dps_4.png)
 
-![主题页示意](../../../shared/img/dps/dps_4.png)
+> [!TIP]
+> 最快的方法是先在 **{{ui:themes.tabs.presets}}** 中选一个颜色预设和尺寸预设，再在其他标签里微调。
 
-- **颜色主题**：提供多种预设（如暗色、亮色、粉、绿、抹茶、彩虹等），也可自定义各项颜色
-- **尺寸与布局**：调整表格、表头、字体大小、内边距等
-- **计时器与按钮**：选择是否显示活跃战斗时间、重置/暂停/Boss 筛选等按钮
-- **列显示与排序**：在 [设置](./settings.md) 中勾选或隐藏玩家/技能列的各项指标
+## 预设
 
-通过预设与自定义搭配，可按个人习惯打造专属的 DPS 显示风格。
+### 颜色预设
 
-## 活跃战斗时间
+| 预设 | 风格 |
+| --- | --- |
+| **{{ui:themes.preset.color.dark.name}}** | 默认深色，适合大多数场景 |
+| **{{ui:themes.preset.color.light.name}}** | 浅色背景 |
+| **{{ui:themes.preset.color.pink.name}}** / **{{ui:themes.preset.color.green.name}}** / **{{ui:themes.preset.color.matcha.name}}** | 柔和配色 |
+| **{{ui:themes.preset.color.rainbow.name}}** | 彩色渐变行 |
 
-- **秒伤**：按整场战斗的挂钟时间计算
-- **真秒伤**：按「有实际伤害发生的活跃时间」计算
+颜色预设作用于**当前总方案**的实时窗口。
 
-设置路径：**DPS检测 → 主题 → 实时 → 标题栏设置 → 显示活跃战斗时间**。
+![颜色预设](../../../shared/img/faq/faq_3.png)
+
+### 尺寸预设
+
+| 预设 | 效果 |
+| --- | --- |
+| **{{ui:themes.preset.size.compact.name}}** | 无内边距、不显示标题栏，只剩表格本身 |
+| **{{ui:themes.preset.size.small.name}}** / **{{ui:themes.preset.size.medium.name}}** / **{{ui:themes.preset.size.large.name}}** | 行高、字号、图标逐级放大 |
+
+## 颜色
+
+在 **{{ui:themes.tabs.general}} → {{ui:themes.section.colorThemes}}** 中：
+
+- **{{ui:themes.section.customColorTheme}}**：逐项修改背景、**背景（实时）**、文字、按钮、边框、表格文字、K/M/% 后缀、提示框等颜色，每一项都支持透明度。
+- **{{ui:themes.section.classSpecColors}}**：表格中按职业 / 专精着色的颜色。
+
+把 **背景（实时）** 的透明度调低就能得到半透明窗口，见 [例：透明的极简 DPS 窗口](#例透明的极简-dps-窗口)。
+
+![调整背景透明度](../../../shared/img/faq/faq_2.png)
+
+> [!NOTE]
+> 这里的颜色只影响 DPS 窗口。主窗口自身的配色、背景图和字体在 [应用设置 · 外观](../app/README.md#外观) 中设置。
+
+## 表格
+
+**{{ui:themes.table.playerSettings}}** 与 **{{ui:themes.skillTable.settings}}** 控制每一行的外观：
+
+- 行高、字体大小、图标大小；
+- 行高亮模式（渐变带下划线 / 渐变 / 纯色）、**{{ui:themes.table.rowGlowOpacity}}**、行圆角；
+- 表头是否显示、高度、字号和颜色；
+- K/M/% 后缀的字号。
 
 ## 紧凑模式
 
-紧凑模式适合只想保留核心数据的实时 DPS 窗口。开启后会精简实时列表的展示内容，主要显示玩家、职业、战力、赛季强度、总伤、秒伤、真秒伤和占比等信息，减少表头与多余列占用的空间。
+开启 **{{ui:themes.compact.enable}}** 后，玩家表格和技能表格都会隐藏表头，每行只显示总量（秒伤）与占比，并按总量降序排列。DPS 面板括号中可以选择显示 **{{ui:themes.compact.option.dps}}** 还是 **{{ui:themes.compact.option.tdps}}**。
 
-设置入口：**DPS检测 → 主题 → 通用 → 紧凑模式**。
+![紧凑模式](../../../shared/img/dps/dps_5.png)
 
-如果你的 live 界面只需要查看总伤、秒伤和占比，建议开启紧凑模式。战力和赛季强度需要先在对应设置中填写，未设置时不会显示完整信息。
+## 标题栏设置
 
-![live 紧凑模式例图](../../../shared/img/dps/dps_5.png)
+**{{ui:themes.tabs.live}} → {{ui:themes.header.title}}** 管理窗口顶部那一条：
 
-## 标题栏自由布局
+- **布局模式**：**{{ui:themes.header.layoutMode.classic}}** 保持固定两行；**{{ui:themes.header.layoutMode.custom}}** 可以把计时器、场景名称、打桩状态、总伤害、总 DPS、Boss 血量、导航标签、控制按钮自由分配到多行，并调整顺序与间距。
+- **Boss 血量**：可选 **{{ui:themes.header.bossHealthLayout.vertical}}** 或 **{{ui:themes.header.bossHealthLayout.horizontal}}**，横向适合窄窗口让血量独占一行。
+- **按钮**：分别控制重置、暂停、**{{ui:themes.header.showHeaderControl}}**、设置、最小化按钮。
+- **计时**：**{{ui:themes.header.showActiveTimer}}** 会在计时器旁显示真秒伤使用的活跃时间。
+- **导航标签**：可以关闭 **{{ui:themes.header.showDeathTab}}**，不影响死亡数据本身。
+- 各项字号、窗口与标题栏内边距。
 
-标题栏支持自由布局，可单独控制标题栏内各区域的排布方式，例如计时器、Boss 血量、按钮区等内容的位置和顺序。
+![标题栏自由布局](../../../shared/img/dps/dps_6.png)
 
-设置入口：**DPS检测 → 主题 → 实时 → 标题栏设置**。
+![标题栏设置](../../../shared/img/faq/faq_4.png)
 
-在标题栏设置中也可以调整 Boss 血量展示方式，包含横向展示选项，适合需要在窄窗口中保留 Boss 血量信息的布局。
+## 点击穿透
 
-可勾选 **显示打桩按钮**，在 Live 窗口头部显示准星按钮以开启/关闭 [打桩模式](./README.md#打桩模式使用说明)。
+**{{ui:themes.tabs.live}} → 实时窗口显示设置 → {{ui:themes.liveDisplay.clickthrough}}** 开启后，鼠标会穿过 DPS 窗口点到背后的游戏。需要再次操作窗口时，用 [快捷键](../app/README.md#快捷键) 或托盘菜单 **Disable Clickthrough** 关闭。
 
-![标题栏自由布局例图](../../../shared/img/dps/dps_6.png)
+## 例
 
-更多设置项路径见 [设置入口](./settings.md)。
+### 例：透明的极简 DPS 窗口
+
+**场景**：你只想在屏幕角落看到一个半透明的小窗口，显示每个人的秒伤和占比，不要标题栏和表头，也不要挡住游戏操作。
+
+#### 第 1 步：套用尺寸预设
+
+**{{ui:routes.tools.dps}} → {{ui:routes.dps.themes}} → {{ui:themes.tabs.presets}}**，尺寸选择 **{{ui:themes.preset.size.compact.name}}**：去掉内边距和标题栏，只剩表格。
+
+#### 第 2 步：开启紧凑模式
+
+**{{ui:themes.tabs.general}} → {{ui:themes.compact.title}}**，开启 **{{ui:themes.compact.enable}}**，括号类型选 **{{ui:themes.compact.option.tdps}}**。每行只剩名字、真秒伤和占比。
+
+![紧凑模式](../../../shared/img/dps/dps_5.png)
+
+#### 第 3 步：让背景变透明
+
+**{{ui:themes.tabs.general}} → {{ui:themes.section.colorThemes}} → {{ui:themes.section.customColorTheme}}**，找到 **背景（实时）**，把透明度调到 30%～50%。
+
+![调整背景透明度](../../../shared/img/faq/faq_2.png)
+
+如果文字在亮色场景中看不清，可以适当提高 **{{ui:themes.table.rowGlowOpacity}}**，让彩色条更实。
+
+#### 第 4 步：开启点击穿透
+
+**{{ui:themes.tabs.live}} → 实时窗口显示设置 → {{ui:themes.liveDisplay.clickthrough}}**。之后鼠标会直接穿过窗口。
+
+> [!IMPORTANT]
+> 开启点击穿透后就无法用鼠标拖动或重置窗口了。建议先在 [应用设置 · 快捷键](../app/README.md#快捷键) 中绑定「切换点击穿透」和「重置战斗」，需要时用快捷键操作。
+
+#### 想恢复原样
+
+在 **{{ui:themes.tabs.presets}}** 中重新选择 **{{ui:themes.preset.size.medium.name}}** 和 **{{ui:themes.preset.color.dark.name}}** 即可。

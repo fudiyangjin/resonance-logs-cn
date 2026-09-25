@@ -1,173 +1,77 @@
 # Voice Announcements
 
-Corresponds to **Voice** in the toolbox. Clone or fine-tune a voice offline, maintain fixed phrases, and play **pre-generated** audio when buffs or mechanics trigger (playback does not reload the model).
+**{{ui:routes.tools.voice}}** can alert you by voice at key moments: Tina's CD is ready, a vulnerability debuff is about to fall off, the Boss is about to use its big attack, a match has been found and needs confirming... so you don't have to keep staring at the overlays.
 
-Usage splits into two parts:
+All voice audio is generated and stored locally, offline. During combat the app only plays audio that has already been generated. It does not run the model, so it has no effect on game performance.
 
-1. **General configuration flow**: enable events and pick text on buff / mechanic pages — decides *when* and *what* to announce.
-2. **Generating announcement audio**: pick a voice source (preset / zero-shot cloning / fine-tuning) and synthesize the text into local audio.
+## How it works
 
-## General Configuration Flow
+Voice announcements take two steps:
 
-### Prerequisites
+1. **Decide when to announce and what to say**: on feature pages such as Buff, Skill CD and Monster Monitor, bind an announcement line to an event.
+2. **Turn the text into sound**: choose a voice and generate audio for those lines. You can use the built-in preset voice, clone a character's voice, or import ready-made audio directly. See [Voices and phrases](./voices.md).
 
-1. Open **Voice → Model & Voices**, download/install the voice model (or manually import a converted model).
-2. Open **Overview & Playback**, enable **Enable voice announcements**, then adjust volume, queue policy, and generation backend (Auto / CPU / Vulkan).
+## Quick start
 
-### Configure announcements on the Buff page
+1. Open **{{ui:routes.tools.voice}} → {{ui:voice.tabs.model}}** and click **{{ui:voice.model.install}}** to install the voice model. The download source defaults to **{{ui:voice.model.downloadSourceAuto}}**; you normally don't need to change it.
+2. In **{{ui:voice.tabs.overview}}**, turn on **{{ui:voice.overview.enabled}}** and adjust the volume.
+3. Bind an announcement on a feature page (see below).
+4. Go back to **{{ui:voice.tabs.bindings}}** and click **{{ui:voice.bindings.generateMissing}}**. By default this uses the preset voice for your UI language, so no preparation is needed.
+5. Click **{{ui:voice.bindings.tryPlay}}** to listen. If it sounds right, you're ready to play.
 
-Using the most common entry, **Live Monitor → Buff Monitor**: expand the **Voice** section under a monitored buff and add rules for it.
+> [!TIP]
+> Leave **{{ui:voice.backend.title}}** at **{{ui:voice.backend.auto}}**. Generation is much faster if your graphics card supports Vulkan. If it shows **{{ui:voice.backend.missing}}**, install the Vulkan runtime and click **{{ui:voice.overview.status.refresh}}**, or switch to CPU.
 
-![Configuring announcements on the buff page](../../../shared/img/voice/voice_1.png)
+## Binding announcements on feature pages
 
-1. Click **Search monitored buffs and add a voice announcement** to add the buff to the list.
-2. Enable trigger events: **On gain** / **N seconds remaining** / **On expire**.
-3. Pick a text source per event:
-   - **Auto**: default line from the buff name + event type (previewable)
-   - **Custom text**: hand-written announcement, e.g. "Tina's cooldown is over"; fantasy-related buffs can also use a tier placeholder (see below)
-   - **Phrase library**: reuse an existing phrase
-4. Use **Preview** to verify; if it reports pending audio, the line hasn't been synthesized yet — see "Generating Announcement Audio" below.
+Announcement rules are configured in place on each feature page. Taking the most common one, **{{ui:routes.tools.skillMonitor}} → Buff Monitor**, as an example: expand the voice announcement section below the monitored buffs.
 
-> The top-right corner shows how many announcements are configured in the section; use **Remove announcement** to delete one.
+![Configuring announcements in the Buff Monitor](../../../shared/img/voice/voice_1.png)
 
-### Fantasy tier in custom text
+1. Search for a monitored buff and add it to the announcement list.
+2. Tick the events: **{{ui:voice.binding.event.gained}}**, **{{ui:voice.binding.event.expiring}}**, **{{ui:voice.binding.event.lost}}**.
+3. Choose a text source for each event:
+   - **{{ui:voice.binding.source.auto}}**: generated automatically from the name and event, for example "Tina expired".
+   - **{{ui:voice.binding.source.custom}}**: write your own, for example "Tina's ready". Fantasy buffs can also include the tier; see [Fantasy tier placeholder](./playback.md#fantasy-tier-placeholder).
+   - **{{ui:voice.binding.source.phrase}}**: pick an existing phrase from the phrase library, including audio you imported yourself.
+4. Set **{{ui:voice.binding.priority}}** if needed, then click **{{ui:voice.binding.tryPlay}}**. If it shows **{{ui:voice.binding.pendingGeneration}}**, the audio hasn't been generated yet.
 
-Some fantasy-applied buffs come from a resonance fantasy with remodel **tiers 0–5**. To include the tier in the announcement, put a placeholder in the **On gain / On expire** custom text ("N seconds remaining" is not supported):
+Everywhere you can bind announcements:
 
-| Placeholder | Notes |
-|-------------|--------|
-| `${remodelLevel}` | Preferred in English docs |
-| `${阶数}` | Same meaning (Chinese form) |
+| Location | Available events | Examples |
+| --- | --- | --- |
+| [Live Monitor · Buff](../monitor/buff.md) | On gain / x seconds left / On expiry | [Voice reminder when Tina's CD is ready](../monitor/buff.md#example-voice-reminder-when-tinas-cd-is-ready) |
+| [Live Monitor · Skill CD](../monitor/skill-cd.md) | On cast / On ready / x seconds before ready | — |
+| [Live Monitor · Custom panel counters](../monitor/custom-panel.md) | On reaching target | — |
+| [Monster Monitor · Buff](../monster/buff.md) | On gain / x seconds left / On expiry | [Watch the vulnerability you applied](../monster/buff.md#example-watch-the-vulnerability-you-applied-and-get-alerted-before-it-drops) |
+| [Monster Monitor · Boss DBM](../monster/boss-dbm.md) | On trigger | [Give a Boss skill an alias and a voice warning](../monster/boss-dbm.md#example-give-a-boss-skill-an-alias-and-add-a-voice-warning) · [Warn with your own sound effect](./voices.md#example-warn-about-a-bosss-big-attack-with-your-own-sound-effect) |
+| [Monster Monitor · Entity duration](../monster/entity-duration.md) | On appear / x seconds left / On disappear | [Show the Scythe Cart's remaining time](../monster/entity-duration.md#example-show-the-scythe-carts-remaining-time) |
+| [Dungeon Mechanics · Mechanic voice announcements](../minimap/README.md#mechanic-voice-announcements) | The mechanics supported for each dungeon | [Minimap setup before a raid's first clear](../minimap/README.md#example-minimap-setup-before-a-raids-first-clear) |
+| [{{ui:voice.tabs.alerts}}](./playback.md#match-alerts) | Match found / Ready check / Dungeon vote | [Hear "match found" while queueing AFK](./playback.md#example-hear-match-found-while-queueing-afk) |
 
-Example: custom text `Tina Tier ${remodelLevel} active` → at tier 5 plays as `Tina Tier 5 active`.
+A few things to note:
 
-Notes:
+- Skill announcements only cover your own character, and the skill must first be added to the Skill CD monitor. For skills with multiple charges, "ready" is announced only when the **first charge** comes back.
+- The "x seconds left" event for an entity requires a duration to be set for the entry; if the entity disappears early, only "disappear" is announced.
+- Entity announcements are stored by "entity ID + scope". If you change the scope (Self only / Any), you need to configure them again.
 
-- Only **Buff Monitor** and **Monster Buff Monitor** **On gain / On expire** support this. Counters, Boss DBM, dungeon mechanics, and "N seconds remaining" do not expand tiers.
-- When configured, the app generates **one phrase per tier 0–5** plus a fallback with the placeholder stripped (used when the tier cannot be resolved). Phrases are created on demand — not pre-built for every buff.
-- **Preview** expands the placeholder with tier 5 as an example; live playback picks the variant matching the resolved fantasy tier, or the fallback if unknown.
-- After editing custom text, check **Bindings Overview** and **Generate missing audio**.
+## Announcement overview
 
-Overlay buff names can also show as `Name | Tier n` when the source fantasy tier is known (independent of voice settings).
+**{{ui:voice.tabs.bindings}}** collects the announcements from every feature page, grouped by source, and shows each one's target, event, text source, priority and status. It is view-only; you cannot create announcements here:
 
-### Other configuration routes
+- When the status is **{{ui:voice.bindings.status.pending}}**, click **{{ui:voice.bindings.generateMissing}}**.
+- Click "Go to…" to jump to the corresponding feature page and edit it.
 
-All voice rules are configured inline on feature pages, not created in Bindings Overview:
-
-| Where | Typical events |
-|----------|----------|
-| Live Monitor → Buff Monitor | Gained / Lost / N seconds remaining |
-| Live Monitor → Skill CD | On cast / Ready / N seconds before ready |
-| Live Monitor → Custom Monitor (counters) | Reached target |
-| Monster Monitor → Buff Monitor | Gained / Lost / N seconds remaining |
-| Monster Monitor → Boss DBM | On cast / trigger |
-| Monster Monitor → Entity Duration | Appeared / N seconds remaining / Gone |
-| Dungeon Mechanics → Mechanic voice cues | Supported mechanic warnings per map |
-
-Notes on Skill CD and Entity Duration:
-
-- Skill cues only cover the local player, and the skill must be in the Skill CD monitor list. Charge skills announce **Ready** only when the **first charge** returns; later charges are silent, and "N seconds before ready" follows the same rule.
-- "N seconds remaining" for an entity requires a configured duration; open-ended entries only offer Appeared / Gone. An entity destroyed early only announces Gone.
-- Changing an entry's duration re-times entities that already exist. Entity bindings are keyed by monster id + scope (Self / Any), so switching the scope requires configuring the binding again.
-
-### Bindings Overview
-
-**Voice → Bindings Overview** is a read-only summary of everything above (grouped by Buff Monitor, Skill CD, monster buffs, counters, boss mechanics, entity duration, dungeon mechanics):
-
-- For **Pending** items, install a model and select a voice first, then **Generate missing audio**.
-- Use "Go to …" links to edit bindings on the original page.
-
-## Generating Announcement Audio
-
-Once text is configured, it must be synthesized into audio. There are three voice sources: **preset voice** (works out of the box), **zero-shot cloning** (quick and easy), and **fine-tuning** (higher quality ceiling).
-
-### Method 1: Preset voice (out of the box)
-
-Once a model is installed, you can generate right away without preparing any reference audio: in **Phrase Library → Batch generate**, choose **Preset voice** (selected by default) and click **Start generation**.
-
-- The voice is picked automatically from the **current UI language** (Simplified Chinese / English / Japanese), independent of the language of the phrase text itself — even with the UI in English, announcing a Chinese phrase still uses the English-locale preset voice.
-- The first time a given UI locale's preset voice is used, the app automatically extracts and saves a voice profile from the bundled reference audio in the background; later generations for the same locale and installed model reuse it without re-extracting.
-- Switching the UI language and generating again automatically switches to the new language's preset voice.
-- You can still switch to **Cloned voice** or **Fine-tuned voice** below at any time if you prefer a specific voice — the preset is only a zero-setup default, not a restriction on manual choice.
-
-### Method 2: Zero-shot voice cloning
-
-In **Phrase Library → Batch generate**, choose **Clone voice** — no training needed, a single reference clip is enough:
-
-![Batch generation with cloned voice](../../../shared/img/voice/voice_2.png)
-
-1. Choose **Use existing voice** (reuse a saved voice profile), or **Create new voice**:
-   - Enter a name and pick a reference audio file (WAV);
-   - Optionally keep the reference file.
-2. Select the phrases to generate (Select all supported), then **Start generation** — audio takes effect immediately.
-
-**Reference audio tips**: use a **5–10 second clean vocal clip** of the character — single speaker, clear, no background music, no reverb. The cleaner the reference, the closer the clone.
-
-Phrase status meanings:
-
-- **Ready**: playable
-- **Stale**: voice or text changed; regenerate required
-- **Pending**: no valid audio yet
-
-> First generation may be slow; once done, triggers only play local audio without reloading the model.
-
-### Method 3: Fine-tuned voice (advanced)
-
-Zero-shot cloning relies on a few seconds of reference audio, so similarity and stability are limited. For higher fidelity, **fine-tune** a dedicated model on the target character's speech, then reference the exported folder as a **Fine-tuned voice** on the **Model & Voices** page.
-
-Rough pipeline:
-
-1. **Get source material**: download Bilibili videos with [bilibilidownloadtool](https://github.com/NANblogink/bilibilidownloadtool).
-2. **Extract audio**: convert to lossless PCM WAV with FFmpeg (keep the original sample rate; don't compress to MP3 first).
-3. **Separate vocals**: use [Ultimate Vocal Remover](https://github.com/Anjok07/ultimatevocalremovergui) to strip background music and export the `Vocals` stem, then listen through the result.
-4. **Build the dataset**: split on silence, resample to 24 kHz, transcribe with ASR, and proofread the text manually.
-5. **Train**: generate audio codes and a speaker embedding, then fine-tune Qwen3-TTS 0.6B CustomVoice (running in Docker is recommended; prebuilt image `ghcr.io/mozi1924/qwen3-tts-easyfinetuning`).
-6. **Export and deploy**: export a GGUF deploy folder and reference it in-app as a fine-tuned voice.
-
-Data and environment requirements:
-
-- Only use voice data you own or are authorized to use, and keep one dataset to a single target speaker.
-- Aim for **10–30 minutes** of clean speech; less data works, but similarity and stability suffer.
-- Training wants an NVIDIA GPU (≥ 16 GB VRAM); on Windows, WSL2 + Docker Desktop is recommended.
-
-Fine-tuned results (Japanese voice):
-
-- Tina cooldown reminder: <audio controls src="../../../shared/audio/voice/ja_01_tina_cd.wav"></audio> [ja_01_tina_cd.wav](../../../shared/audio/voice/ja_01_tina_cd.wav)
-- N20 healing reminder: <audio controls src="../../../shared/audio/voice/ja_02_n20_healbot.wav"></audio> [ja_02_n20_healbot.wav](../../../shared/audio/voice/ja_02_n20_healbot.wav)
-
-If a fine-tuned voice's path goes missing or its files change, use **Relocate** and **Integrity check** on the **Model & Voices** page.
-
-### Method 4: Import existing audio
-
-If you would rather not use TTS, import any audio clip straight into the phrase library and reference it from any binding via **Phrase library reference**.
-
-1. On the **Phrases** page, enter a phrase name and click **Import audio**, then pick a wav / mp3 / flac / ogg / m4a file (≤ 50 MiB, 0.2–30 s long).
-2. You can also click **Import audio** on an existing phrase row to replace that phrase's current audio with a file.
-3. Imported clips are converted to the app's internal mono 24 kHz WAV and show the **Imported** status.
-
-Imported phrases are excluded from voice generation, and renaming or editing their text never flags them as "Needs regeneration". A new phrase's id is derived from the file's content hash, so importing the same clip on another machine yields the same id and loadouts referencing it resolve automatically.
-
-## Playback & Queue
-
-- With **Enable voice announcements** off, no rule plays audio.
-- Queue policies:
-  - **Drop low priority when full**: avoid backlog during busy moments
-  - **Higher priority can interrupt**: critical mechanics can preempt playback
-- **Stop playback** is always available.
-
-## Relation to Loadouts
-
-Loadouts include live-monitor and monster-monitor settings; voice bindings are stored with those profiles. After switching or importing a loadout, check Bindings Overview that audio is still **Ready** (regeneration may be needed on another machine).
+> [!NOTE]
+> Voice bindings are saved with their respective monitor profiles. After switching or importing a [loadout](../app/loadouts.md), check the announcement overview to make sure everything is **{{ui:voice.bindings.status.ready}}**. On a new computer you usually need to generate once more.
 
 ## FAQ
 
-| Symptom | Suggestion |
-|------|----------|
-| Preview fails | Confirm the model is installed and the phrase/binding has generated audio |
-| Backend shows unavailable | Install Vulkan runtime, then **Refresh**; or switch to CPU / Auto |
-| Fine-tuned voice unavailable | Relocate the deploy folder and run integrity check |
-| No mechanic cues listed | Current map has no voice cues wired yet |
-| Operation busy | Wait for download/generation to finish, or cancel and retry |
-| Used `${remodelLevel}` but no tier is spoken | Confirm the event is On gain / On expire with custom text; generate tier variants in Bindings Overview; some fantasy buffs are applied by the player rather than the summon entity, so the tier may not resolve yet and the fallback line is used |
-
-See `docs/VOICE_MODEL_MANIFEST.md` for manifest / release details (developers).
+| Symptom | Solution |
+| --- | --- |
+| Preview says playback failed | Make sure the model is installed and this line already has generated audio |
+| Generation acceleration shows as unavailable | Install the Vulkan runtime and click **{{ui:voice.overview.status.refresh}}**, or switch to CPU / Auto |
+| Says another voice operation is in progress | Wait for the current download or generation to finish, or cancel it and try again |
+| No announceable items on the Dungeon Mechanics page | Mechanic voice has not been added for the current dungeon yet |
+| Wrote `${remodelLevel}` but the tier isn't announced | See [Fantasy tier placeholder](./playback.md#fantasy-tier-placeholder) |
+| Fine-tuned voice unavailable | See [Method 3: Fine-tuned voice (advanced)](./voices.md#method-3-fine-tuned-voice-advanced) |

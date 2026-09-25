@@ -68,8 +68,7 @@ npm run tauri build
 文档支持 **简体中文**、**English**、**日本語** 三种语言：
 
 - 源码：[doc/zh-CN/](./doc/zh-CN/README.md) · [doc/en-US/](./doc/en-US/README.md) · [doc/ja-JP/](./doc/ja-JP/README.md)
-- 首次使用请先阅读各语言的 [快速入门 / Getting Started / はじめに](./doc/zh-CN/getting-started.md)（Npcap 安装、网卡选择、**重启应用**）
-- 构建 HTML：`npm run doc:html` → 输出 [doc/html_doc/](./doc/html_doc/index.html)（含语言切换页）
+- 首次使用请先阅读各语言的 [快速入门 / Getting Started / はじめに](./doc/zh-CN/getting-started/README.md)（Npcap 安装、网卡选择、**重启应用**）
 
 ## 下载
 

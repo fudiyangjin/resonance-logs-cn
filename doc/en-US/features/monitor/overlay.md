@@ -1,35 +1,37 @@
-# Enable Overlay
+# Enable Window & Layout
 
-Corresponds to **Live Monitor → Enable Window** tab.
+**{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.overlay}}** decides which areas are shown in the live monitor overlay. Every switch is **saved per profile**, so different class profiles can show different areas.
 
-Controls display of each area in the in-game transparent overlay (game overlay), used with layout editing. Toggle state is **saved per profile**.
+## Overlay areas
 
-## Top Bar Actions
+| Area | Content source |
+| --- | --- |
+| **Skill CD Area** | [Skill CD](./skill-cd.md) |
+| **Resource Monitor Area** | Energy, stacks and other resources of the current class |
+| **Character Attribute Area** | [Character Panel](./panel-attr.md) |
+| **Custom Monitor Area** | [Custom Monitor](./custom-panel.md); each monitor area is a separate area |
+| **HP/Shield Area** | [HP/Shield Area](./shield.md) |
+| **Buff Coverage Area** | [Buff Coverage](./buff-coverage.md) |
 
-On the **Live Monitor** top bar (visible on any tab):
+Buff icons (each Buff in individual mode, each group in grouped mode) appear in the overlay as separate areas; whether they are shown depends on what you select in [Buff Monitor](./buff.md).
 
-- **Toggle Overlay Window**: Show or hide the in-game overlay.
-- **Edit Overlay Layout**: Enter layout mode—drag and resize each area (including each **custom monitor zone** separately).
+### Resource sections
 
-Enable **Enable Live Monitor** below first so data is pushed to the overlay.
+**{{ui:skillMonitor.overlay.resourceSections}}** splits the current class's resources into several small blocks, each of which can be **shown / hidden and dragged separately**. For example, the "three healing flowers" countdown of the Verdant Oracle's Lifebind specialization is a separate section.
 
-## Overlay Modules
+![Healing flowers countdown in the resource area](../../../shared/img/changelog/v0.2.4_1.gif)
 
-Toggle each area on this page (saved per profile). Common modules:
+### Text style
 
-- **Skill CD**
-- **Resources**
-- **Character Attributes** (see [Character Panel](./panel-attr.md))
-- **Custom Panel** (see [Custom Monitor](./custom-panel.md))
-- **Shield Details**
+**{{ui:skillMonitor.overlay.sharedTextStyle}}** adjusts the text size and color on skill, resource and Buff icons all at once.
 
-## Overlay Position
+## Editing the layout
 
-All modules (skill CD, resources, buff panel, character panel, custom panel, etc.) can be dragged to reposition.
+1. Click **{{ui:skillMonitor.layout.editOverlayLayout}}** at the top of the page; a border appears around each area in the overlay.
+2. Drag an area to move it, and drag its edges or corners to resize it.
+3. Exit editing when you are done; the overlay goes back to click-through.
 
-## Display Format
+> [!TIP]
+> Once you are happy with the layout, you can use the game's own hide-UI feature to put away the game UI and keep only the overlay, placing skill CDs and resources near your character in your peripheral vision. You can bind the hotkey **Minimize/Restore DPS & Overlay Windows** to put away all overlays at once when you need a screenshot or during cutscenes. See [Example: Hide all overlays with one key](../app/README.md#example-adjust-overlays-in-combat-with-shortcuts).
 
-- Buff duration supports formats such as grouped and hours
-- Toggle show name, remaining time, stacks
-
-After setup, see [Overview · Best Practices](./README.md#best-practices) and use `Ctrl+\` UI-less mode to place overlays in peripheral vision.
+![Best practice](../../../shared/img/monitor/buff_4.png)

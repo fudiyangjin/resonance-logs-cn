@@ -1,75 +1,77 @@
-# Buff Monitor (Monster)
+# Target Buffs
 
-Corresponds to **Monster Monitor → Buff Monitor** tab.
+**{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.buff}}** configures which Buffs on the target are shown in the monster Buff area.
 
-Configure which buffs to show on your **current main attack target** (which monster updates automatically from in-game target). Search list uses **Boss Buff** config—not the Live Monitor player buff list.
+## Two monitoring modes
 
-## Common Fantasy Buffs (on monsters)
+Choose how to add a Buff before searching:
 
-These debuffs / amp effects are on **monsters**. Search and add them here (player fantasy buffs: [Live Monitor · Buff](../monitor/buff.md#common-buff-reference)):
+| Mode | Shown when | Best for |
+| --- | --- | --- |
+| **{{ui:monsterMonitor.buffSearch.self}}** | Only Buffs **you** applied to the target | Vulnerability and DoTs you are responsible for keeping up |
+| **{{ui:monsterMonitor.buffSearch.global}}** | The target has it, no matter who applied it | The Boss's own mechanic Buffs, Debuffs shared by the whole party |
 
-| Fantasy | Buff ID | Search name | Notes |
-|---------|---------|-------------|-------|
-| Poison Hive | 2110099 | Venom Vulnerability (Poison Hive) | Vulnerability |
-| Lorola | 2110111 | Enchantment (Lorola) | Damage amp |
-| Lorola | 2110135 | Enchantment Stacks (Lorola) | Stacking amp |
+A Buff can belong to only one of the two; adding it with the other mode moves it automatically.
 
-Fantasy CDs and player fantasy buffs (Bandit Chief / Tata / Tina / Basilisk / Catagriff, etc.) are listed in the Live Monitor buff doc.
+**{{ui:monsterMonitor.buffGroups.self.monitorAll}}**: when on, the overlay lists every Buff you apply. Handy for finding out the names first and then trimming the list.
 
-## Buff Search & Selection
+## Priority, alerts and display names
 
-Choose how to add before searching:
+| Setting | Effect |
+| --- | --- |
+| **{{ui:monsterMonitor.priority.title}}** | When space is limited, Buffs higher in the list are shown first |
+| **{{ui:monsterMonitor.alert.title}}** | Highlights when the remaining time is ≤ the set number of seconds, optionally blinking |
+| **{{ui:monsterMonitor.alias.title}}** | Sets an alias for a monitored Buff in the overlay |
+| **{{ui:monsterMonitor.style.panelTitle}}** | Row / column spacing, font size, name / value / progress bar colors and opacity |
 
-| Mode | Meaning |
-|------|------|
-| **Search add self-only** | Only buffs **your character** applied to the monster |
-| **Search add global** | Show buff on monster regardless of who applied it |
+When you remove a Buff from monitoring, its priority, alert and voice settings are cleaned up as well.
 
-Search by keyword, pick from the result grid; buffs already on the other list show status (e.g. “currently global”).
+## Voice announcements
 
-## Self-Only
+In **{{ui:monsterMonitor.buffVoice.title}}** you can set **on gain / x seconds left / on expiry** announcements for monitored Buffs. Each entry shows its source scope:
 
-- Track only buffs you apply to the monster.
-- **Monitor all buffs applied by this character**: Lists all your buffs on the monster—useful to match in-game names then trim the list; individual selections below can be ignored when this is on.
-- Selected buffs show as icon chips—click to remove.
+- **{{ui:monsterMonitor.buffVoice.scope.localPlayerSource}}**: judged strictly by the instance you applied; a Buff of the same name applied by a teammate will not trigger or extend your announcement;
+- **{{ui:monsterMonitor.buffVoice.scope.anySource}}**: judged by whether the Buff exists at all; when several players apply it, the first instance to appear counts as gained and the last one to disappear counts as expired.
 
-## Global Monitor
+## Common Debuff reference
 
-- Show when present on the monster—**any** applier (Boss mechanics, raid debuffs, etc.).
-- Selected buffs removable by click.
+| Fantasy | Search name | Buff ID | Effect |
+| --- | --- | --- | --- |
+| Poison Hive | Venom Vulnerability (Poison Hive) | 2110099 | Monster vulnerability |
+| Lorola | Enchantment (Lorola) | 2110111 | Monster damage amp |
+| Lorola | Enchantment Stacks (Lorola) | 2110135 | Stacking damage amp |
 
-A buff belongs to either self-only or global monitoring. Choosing the other mode moves it there. Removing it from monitoring also clears its **priority**, **alert**, and **voice broadcast** config.
+For player-side buffs and fantasy CDs, see [Live Monitor · Buff Monitor](../monitor/buff.md#common-buff-reference).
 
-## Buff Priority
+## Examples
 
-When many monster buffs compete for overlay space, set **display order**—buffs higher in the list show first.
+### Example: Watch the vulnerability you applied and get alerted before it drops
 
-Add buffs to self-only or global first, then search-add to the priority list; move up/down or remove.
+**Scenario**: You bring Poison Hive and are responsible for keeping "Venom Vulnerability (Poison Hive)" on the Boss. You want to see its remaining time in the overlay, get a highlight when it is about to end, and hear a voice reminder to reapply it when it drops.
 
-## Buff Countdown Alerts
+#### Step 1: Add it as self-applied
 
-Per **monitored monster buff**:
+1. Open **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.buff}}**.
+2. Choose **{{ui:monsterMonitor.buffSearch.self}}**, search for **Venom Vulnerability (Poison Hive)** (ID 2110099) and add it.
 
-- Highlight when remaining time **≤ set seconds** (color, optional blink)
-- Only for buffs in self-only or global lists
+Self-applied is the right choice because you only care about your own instance; if two people in the party bring Poison Hive, with global you couldn't tell whose it is.
 
-## Buff Voice Broadcast
+#### Step 2: Set an alert
 
-Use the standalone **Buff Voice Broadcast** section to search monitored buffs and configure gain, expiring, and loss broadcasts. Each entry is labeled Global or Self-applied.
+In **{{ui:monsterMonitor.alert.title}}**, add an alert for "Venom Vulnerability (Poison Hive)": highlight in red when ≤ 3 seconds remain, with blinking on.
 
-- **Self-applied** tracks only instances whose caster is your character; matching buffs from teammates do not trigger or extend your cue.
-- **Global** tracks aggregate presence: the first instance counts as gained, the last instance disappearing counts as lost, and expiry uses the last instance's timer.
-- With monitor-all self-applied enabled, the full buff dictionary is searchable, but each voice binding remains opt-in.
+#### Step 3: Voice reminder on expiry
 
-## Display Names
+In **{{ui:monsterMonitor.buffVoice.title}}**, add "Venom Vulnerability (Poison Hive)", check **on expiry**, and set the text to "Reapply vulnerability". Make sure [Voice announcements](../voice/README.md) are on and the audio has been generated.
 
-Set **overlay aliases** for monitored buffs (left column = game default). Editable entries appear after buffs are on a monitor list.
+#### Step 4: Open the overlay and position it
 
-## Text Panel Style (Monster Buff Area)
+1. Make sure **{{ui:monsterMonitor.enabled}}** is on, then click **{{ui:monsterMonitor.actions.toggleOverlay}}**.
+2. **{{ui:monsterMonitor.actions.editLayout}}**, drag the monster Buff area near the Boss HP bar.
 
-Adjust monster buff area text and progress bar appearance:
+#### Check it
 
-- Row spacing, column spacing, font size
-- Name color, value color, bar color and opacity
+Apply Poison Hive to a dummy in the training ground once. The dummy must be your **current attack target**, otherwise the overlay won't show its Buffs.
 
-Teammate buff and threat styling: [Teammate Buffs](./teammate.md), [Threat List](./hate.md).
+> [!TIP]
+> Not sure what your Debuff is called? Turn on **{{ui:monsterMonitor.buffGroups.self.monitorAll}}** first, hit a dummy and see what shows up in the overlay, then add exactly that.

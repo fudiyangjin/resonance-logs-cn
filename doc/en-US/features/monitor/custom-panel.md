@@ -1,119 +1,165 @@
-﻿# Custom Monitor
+# Custom Monitor
 
-Corresponds to **Live Monitor → Custom Monitor** tab.
+**{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.customPanel}}** lets you create several **text monitor areas** in the overlay. Each area is a separate list that can be dragged, resized and styled on its own.
 
-Create multiple **text monitor zones** showing buffs or counters as progress bars in the overlay. Each buff or counter slot is **globally unique** across all zones (cannot duplicate in multiple zones).
+![Custom monitor areas](../../../shared/img/monitor/buff_3.png)
 
-![Custom panel example](../../../shared/img/monitor/buff_3.png)
+## Three kinds of monitor areas
 
-## Standard Custom Zones vs Factor Zones
+| Type | How to create | Content | Needs setup? |
+| --- | --- | --- | --- |
+| **{{ui:skillMonitor.customPanel.kind.factor}}** | **{{ui:skillMonitor.customPanel.newFactor}}** (S3 and earlier seasons) | Energy and Buff effects of your currently equipped factors | No, generated automatically |
+| **{{ui:skillMonitor.customPanel.kind.seasonNode}}** | **{{ui:skillMonitor.customPanel.newFactor}}** (from S4) | Buff effects of activated season nodes | No, generated automatically |
+| **{{ui:skillMonitor.customPanel.kind.manual}}** | **{{ui:skillMonitor.customPanel.new}}** | Buffs and counters you pick by hand | Yes |
 
-| Type | How to create | Purpose |
-|------|----------|------|
-| **Standard custom zone** | **New Monitor Area** | Manually add buffs, preset/custom counters, free combination |
-| **Factor zone** | **New Factor Area** | Auto-show **season progression factor** progress for the current character—no manual Sources/Slots setup |
+When you click **{{ui:skillMonitor.customPanel.newFactor}}**, the app decides which kind to create based on the current season: from S4 it creates a season node zone; in earlier seasons it creates a factor zone.
 
-### Factor Zone (New Factor Area)
+> [!IMPORTANT]
+> To see when factors or nodes trigger, **just create a factor zone**. You no longer need to combine Sources and Slots by hand with "Custom counter rules" as in older versions.
 
-After **New Factor Area**, the app generates overlay entries from the character’s equipped factor paths, typically including (depends on loadout):
+## Factor zone
 
-- **True Factor A / B energy** (counter progress)
-- **True Factor A / B buff effects** (linked buff duration, etc.)
+Once created, the app generates entries automatically from the factors you currently have equipped. Common ones are:
 
-**Sync & changes:**
+- **True Factor A / B energy**: count progress;
+- **True Factor A / B Buff effect**: the Buff duration after the factor triggers.
 
-- After **zone change**, a full data sync runs; when you **switch factor paths** or **change equipped factors** in-game, the factor zone updates without recreating the zone.
-- Factor zones **cannot** manually “Add Buff / Counter” like standard zones; entries are maintained automatically.
+Entries are maintained entirely by the system:
 
-**Display names:**
+- They are synced as a whole once when you change maps; after that, when you switch factor paths or change the loaded factors in game, the entries update automatically;
+- You **cannot** manually add Buffs or counters to a factor zone.
 
-- **Factor energy counters**: With the factor zone selected, search slots in **Factor Display Names** (name / description) and set custom names; saved per slot template and kept across profile switches.
-- **Factor buff effects**: Rename under [Buff Monitor → Buff Alias Settings](./buff.md#buff-aliases) (aliases are global).
+**Changing display names:**
 
-Factor zones support **Monitor Area Name**, **style** (row spacing, font, colors, etc.) like standard zones, and the custom monitor zone toggle in [Enable Overlay](./overlay.md).
+| Entry | Where to change it |
+| --- | --- |
+| Count-type entries such as energy | With the factor zone selected, search for the slot (name / description) in **{{ui:skillMonitor.customPanel.factorSlots.title}}** and enter a custom display name. It is saved per slot template and still applies after switching profiles |
+| Buff effect entries | [Buff Monitor · Buff Alias Settings](./buff.md#names-and-icons) (global) |
 
-## Standard Custom Zones
+## Season node zone
 
-### Zones & Style
+From S4, **{{ui:skillMonitor.customPanel.newFactor}}** creates a season node zone: it shows the Buff effects of activated nodes, which appear automatically once a node is activated, **with no display names to set up**.
 
-- Each standard zone is an **independent text area** in the overlay—drag and resize separately (see [Enable Overlay](./overlay.md) · **Edit Overlay Layout**).
-- **Monitor Area Name** and **Current Monitor Area Style** (row spacing, font size, name–value spacing, name/value/bar colors and opacity) are saved per zone.
+![S4 season node zone](../../../shared/img/changelog/v0.2.1_1.png)
 
-### Counters
+## Manual zone
 
-State machines linked to buffs and damage types for special triggers not maintained as buffs, for example:
+Click **{{ui:skillMonitor.customPanel.new}}** to create one, then put things in it:
 
-- Fantasy Impact counter
-- Transcend trigger counter
+- **{{ui:skillMonitor.customPanel.addBuff}}**: pick from the Buff search; added only to the current monitor area;
+- **{{ui:skillMonitor.customPanel.counter.title}}**: choose a counter slot from the preset rules or your own custom rules;
+- **{{ui:skillMonitor.customPanel.hideWhenZero}}**: the counter takes no space while it is 0;
+- **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}**: announce when the count reaches its target.
 
-Configure via **Add Counter** with a standard zone selected. Counter slots are globally unique; preset and custom rules are listed together.
+In **{{ui:skillMonitor.customPanel.entries.title}}** you can change display names, reorder entries or remove them.
 
-### Add Buff
+> [!NOTE]
+> The same Buff or counter slot can appear only once across **all** monitor areas. Items already used by another area are shown as "Already in xxx".
 
-Adds only to the **current** standard zone’s text area; pick from the buff search grid (buffs used in other zones cannot be added again).
+### Built-in preset counters
 
-### Current Zone Entries
+Some triggers do not show up as Buffs and need counting instead (for example "triggers once every few hits" or "internal cooldown"). The app includes the following presets, which you can pick directly when adding a counter:
 
-Added buffs / counters can have display names adjusted (counters), reordered (move up/down), or removed.
+| Category | Presets |
+| --- | --- |
+| General / class | Transcendence Trigger Count, Heart of Stone Trigger Count, Frenzied Cleave Combo Count, Bash Pursuit Count, Granite Fury Pursuit Count, Judgment Pursuit Count - Light Shield, Judgment Pursuit Count - Defense Shield |
+| Fantasia Impact | Fantasia Impact Stacks - 30 - Frost Mage, Fantasia Impact Stacks - 30 - Beat Performer |
+| Specialization passive | Flamehorn - Passive |
+| Module / set | N20-Healing Bot Cooldown, N20-Tina ATK Down Cooldown |
+| S4 | Vanguard S4 - Auto Dragon Cannon, Vanguard S4 - Extra Phantom Spiral, Ray S4 - Frost Infusion 4-Piece, Verdant S4 - Inspiration X6 Moonlight Solace |
 
-## Custom Counter Rules
+### Custom counter rules
 
-Besides built-in presets, write **custom counter rules**: specify game events as **Sources** to advance the count, and **Slots (effect positions)** to show progress or state on the panel. Entry: **Live Monitor → Custom Monitor → Custom Counter Rules**.
+When the presets are not enough, you can build your own in **{{ui:skillMonitor.customPanel.rule.title}}**:
 
-**Typical flow:**
+1. **{{ui:skillMonitor.customPanel.rule.new}}**;
+2. In **{{ui:skillMonitor.customPanel.rule.sources}}**, choose the event sources that advance the count (multiple allowed);
+3. In **{{ui:skillMonitor.customPanel.rule.slots}}**, choose the slots to show on the panel (multiple allowed);
+4. Fill in **{{ui:skillMonitor.customPanel.rule.name}}** and save;
+5. Go back to a manual zone and use **{{ui:skillMonitor.customPanel.counter.title}}** to select the rule you just saved.
 
-1. **New Rule**, select or add **Sources** (multiple allowed).
-2. In **Slots**, choose slots to bind on the custom panel (multiple allowed), matching rule logic.
-3. Enter a **Rule Name** and save.
-4. In a standard zone, **Add Counter** and select the Slot for the saved rule; put related **buff tracking** and **counters** in the **same overlay area** for at-a-glance comparison.
+This is a feature for advanced users; most users can simply use the presets or a factor zone.
 
-## Advanced Examples
+## Monitor area style
 
-### Crimson Flow (Dual-Axe Factor)
+Each monitor area can set its own **{{ui:skillMonitor.customPanel.style.title}}**: row spacing, font size, spacing between name and value, and the colors and opacity of the name / value / progress bar.
 
-Example using dual-axe factor sources for counting and specific slots for factor energy and trigger progress.
+## Examples
 
-**1. Configure Sources & Slots and save**
+### Example: Automatically show factor energy and season nodes
 
-- Click **New Rule**.
-- **Sources**: select **Dual-Axe X9**, **Dual-Axe X8** (count sources).
+**Scenario**: During combat you want to see at any time how much factor energy you have built up and when factor effects or season node Buffs trigger, without having to figure out how to configure counter rules.
 
-![Crimson flow rule: Sources Dual-Axe X9, X8](../../../shared/img/monitor/buff_7.png)
+#### Step 1: Create a factor zone
 
-- **Slots**: select **Dual-Axe X4**, **Dual-Axe X5**, enter rule name, save.
+1. Open **{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.customPanel}}**.
+2. Click **{{ui:skillMonitor.customPanel.newFactor}}**.
+3. Give it a name in **{{ui:skillMonitor.customPanel.groupName}}**, for example "Factors".
 
-![Crimson flow rule: Slots Dual-Axe X4, X5 and save](../../../shared/img/monitor/buff_8.png)
+Depending on the current season, the new area will be:
 
-**2. Layout: factor trigger buff and energy counter in one zone**
+- **S3 and earlier**: {{ui:skillMonitor.customPanel.kind.factor}}, listing the energy and Buff effects of your equipped factors;
+- **From S4**: {{ui:skillMonitor.customPanel.kind.seasonNode}}, listing the Buff effects of activated nodes.
 
-In overlay or custom panel layout, place **factor trigger buffs** and **factor energy counters** in the **same display area** to see trigger status and energy/progress together.
+#### Step 2: Change maps once
 
-![Factor trigger buff and energy counter in same zone](../../../shared/img/monitor/buff_10.png)
+The entries come from the full character data synced by the game. After creating the zone, teleport or enter and leave a dungeon once, and the factor zone fills up. After that, when you change factors or switch paths in game, the entries update automatically, with no need to recreate the zone.
 
-**3. Overlay result**
+![S4 season node zone](../../../shared/img/changelog/v0.2.1_1.png)
 
-Overall display after setup:
+#### Step 3: Give entries recognizable names (factor zone only)
 
-![Crimson flow custom rule monitor example](../../../shared/img/monitor/buff_9.png)
+The default names may be internal descriptions; you can change them to whatever you are used to:
 
-### Preset Monitor: Flame Horn – Passive
+- **Energy entries**: search for the slot in **{{ui:skillMonitor.customPanel.factorSlots.title}}** and enter, for example, "A Energy" as the custom display name.
+- **Buff effect entries**: go to **{{ui:skillMonitor.tabs.buff}} → {{ui:skillMonitor.buff.alias.title}}**, search for the Buff and set an alias, for example "A Trigger".
 
-Built-in **Flame Horn – Passive** preset for observing passive and “Absolute Luck” state without configuring counters and slots from scratch.
+Names in the season node zone come straight from the node Buffs, so there is nothing to set.
 
-**Rule highlights:**
+#### Step 4: Adjust style and position
 
-- **Slot 1 (damage specialization counter)**: Counts completed casts; shows “casts until threshold” for **Absolute Luck** trigger opportunities.
-- **Slot 2 (Absolute Luck CD)**: Cooldown progress linked to passive buff; **steady ~15 s**, ~**5 s** when active buff conditions apply (e.g. after using active skill).
+1. In **{{ui:skillMonitor.customPanel.style.title}}**, increase the font size and set the progress bar color.
+2. Click **{{ui:skillMonitor.layout.editOverlayLayout}}** at the top of the page and drag the factor zone next to your skill CDs.
 
-**Recommended usage:**
+#### Advanced: view it alongside other Buffs
 
-1. In **Custom Counter Rules**, use or save **Flame Horn – Passive**, then **Add Counter** in a custom panel for **Slot 1** and **Slot 2**.
-2. Also add **Flame Horn – Passive – Luck** (Absolute Luck buff) in [Buff Monitor](./buff.md) and place both counters in the **same display area** to see buff, count, and CD together.
+You cannot add entries to a factor zone by hand. If you also want to watch a particular burst Buff, create a manual zone with **{{ui:skillMonitor.customPanel.new}}** to hold that Buff, then place the two areas right next to each other in the layout.
 
-Overlay example:
+### Example: Track Flamehorn's Absolute Luck with a preset counter
 
-![Flame Horn passive preset monitor display](../../../shared/img/monitor/buff_5.png)
+**Scenario**: You play the Flamehorn specialization and want to see, all at once in the overlay, "how many more casts until Absolute Luck triggers", "the internal cooldown of Absolute Luck", and the Absolute Luck Buff itself.
 
-Typical settings in **Custom Panel / Counter Rules**:
+This information does not fully show up as Buffs, so it needs counters. The app includes a **Flamehorn - Passive** preset, so you do not have to write the rule yourself.
 
-![Flame Horn passive preset settings](../../../shared/img/monitor/buff_6.png)
+#### Step 1: Create a manual zone
+
+**{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.customPanel}} → {{ui:skillMonitor.customPanel.new}}**, and name it "Flamehorn".
+
+#### Step 2: Add the two counter slots
+
+In **{{ui:skillMonitor.customPanel.counter.title}}**, find **Flamehorn - Passive** and add these in turn:
+
+| Slot | Meaning |
+| --- | --- |
+| **Slot 1** | Counts completed skill casts and shows how many more are needed to trigger Absolute Luck |
+| **Slot 2** | Absolute Luck's cooldown: about 15 seconds normally, about 5 seconds while a specific active Buff is in effect |
+
+![Flamehorn - Passive preset settings](../../../shared/img/monitor/buff_6.png)
+
+#### Step 3: Put the Luck Buff in the same area
+
+In the same monitor area, use **{{ui:skillMonitor.customPanel.addBuff}}**, search for **Absolute Luck** and add it. With the three pieces of information side by side, you can read the rhythm at a glance.
+
+#### Result
+
+![Flamehorn - Passive in the overlay](../../../shared/img/monitor/buff_5.png)
+
+#### Other presets
+
+The same approach works for the other built-in presets, for example:
+
+- **N20-Tina ATK Down Cooldown**, **N20-Healing Bot Cooldown**: track the internal cooldowns of N20 module effects;
+- S4 set effects such as **Vanguard S4 - Auto Dragon Cannon** and **Ray S4 - Frost Infusion 4-Piece**;
+- **Transcendence Trigger Count**, **Fantasia Impact Stacks - 30 - Frost Mage**, and so on.
+
+For the full list, see [Built-in preset counters](#built-in-preset-counters) above. Any counter can use **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}** to give a voice reminder when it reaches its target.

@@ -1,28 +1,10 @@
 # 味方 Buff
 
-**モンスターモニター → 味方 Buff** タブに対応。
+**{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.teammate}}** では、**味方ごとに**現在のターゲットへどの Buff を付与しているかをマトリクス形式で表示します。指揮役やサポート役がパーティ全体の Debuff がそろっているか確認するのに向いています。
 
-**味方が現在攻撃メインターゲットに付与した** Buff を表示（Buff 監視タブの「自キャラ付与」と対）。メインターゲット切り替え時、味方 Buff エリアも更新。Boss やダミー上のパーティ支援、味方 debuff 分布の観察に適しています。
+## 設定
 
-## 追加方法
+- Buff を検索して **{{ui:monsterMonitor.teammate.groupTitle}}** に追加します。カテゴリ単位でまとめて追加することもできます
+- **{{ui:monsterMonitor.teammate.styleTitle}}**：**{{ui:monsterMonitor.style.rowHeight}}**、**{{ui:monsterMonitor.style.nameColumnWidth}}**、**{{ui:monsterMonitor.style.buffColumnWidth}}**、および色
 
-### 単一 Buff を検索
-
-検索ボックスに名称入力し、結果から **監視中の味方 Buff** リストへ追加。
-
-### カテゴリショートカット
-
-Buff カタログと一致する**カテゴリボタン**（食物、炼金など、画面表示に準ずる）でカテゴリ一括追加、または選択済みカテゴリタグクリックで削除。
-
-## 監視リスト
-
-選択した単一 Buff と選択カテゴリを一覧表示。タグクリックで削除。
-
-## 味方 Buff マトリックススタイル
-
-モンスター Buff エリアとは独立したスタイル設定。**味方 Buff エリア**のオーバーレイ表示を制御：
-
-- 行間、列間、フォントサイズ
-- 名称 / 数値 / プログレスバーの色と透明度
-
-[ウィンドウを有効化](./overlay.md) で **味方 Buff エリア** の表示を切り替え可能。
+オーバーレイに表示するかどうかは、[ウィンドウを有効化](./overlay.md) の **味方 Buff エリア** で切り替えます。

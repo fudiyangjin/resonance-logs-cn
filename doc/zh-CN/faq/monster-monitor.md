@@ -1,41 +1,35 @@
-# FAQ · 怪物监控
+# 常见问题 · 怪物监控
 
-**详细说明**：[怪物监控总览](../features/monster/README.md) · [Buff 监控](../features/monster/buff.md) · [队友 Buff](../features/monster/teammate.md) · [仇恨列表](../features/monster/hate.md) · [Boss DBM](../features/monster/boss-dbm.md) · [启用窗口](../features/monster/overlay.md)
+相关说明：[怪物监控](../features/monster/README.md) · [目标 Buff](../features/monster/buff.md) · [Boss DBM](../features/monster/boss-dbm.md) · [实体持续](../features/monster/entity-duration.md) · [启用窗口](../features/monster/overlay.md)
 
-## 怪物 Buff 和实时监控的 Buff 有什么区别？
+### 怪物监控和实时监控有什么区别？
 
-- **实时监控**：看的是**你自己**身上的 Buff、技能 CD 等，用「游戏遮罩」浮窗。
-- **怪物监控**：看的是**你当前攻击主目标**身上的 Buff、队友施加到该目标的 Buff、仇恨列表，用「怪物遮罩」浮窗。
+- **实时监控**：看**你自己**的技能 CD、Buff、属性。
+- **怪物监控**：看**你当前攻击目标**身上的 Buff、仇恨、韧性、Boss 技能预警等。
 
-两边配置互不影响，需要盯 Boss 机制时请用怪物监控。
+两边配置互不影响，使用不同的浮窗。
 
-## 浮窗显示哪只怪物的 Buff？
+### 浮窗显示的是哪只怪？
 
-按你角色当前的**攻击主目标**自动切换，无需配置文件指定怪物模板 ID。
+你的**当前攻击目标**，切换目标后自动跟随，不需要指定怪物 ID。旧版的 `ExtraBuffMonitoredMonsters.json` 已经废弃，修改它不会生效。
 
-- 切换目标打另一只怪时，怪物 Buff 区与仇恨会跟着变。
-- 旧版 `ExtraBuffMonitoredMonsters.json` **已废弃**，增删该文件不再生效。
+### 木桩或小怪上看不到 Buff？
 
-## 为什么木桩 / 小怪上看不到 Buff？
+1. 木桩不是当前攻击目标：先对它造成伤害。
+2. 怪物监控或浮窗没打开：确认 **{{ui:monsterMonitor.enabled}}** 已开启，并点了 **{{ui:monsterMonitor.actions.toggleOverlay}}**。
+3. 没有添加要看的 Buff：在 **{{ui:monsterMonitor.tabs.buff}}** 中加入，或先开启「监控全部」查找名称。
+4. 目标已经死亡：数据停止更新，换一个目标。
 
-常见原因：
+### 看不到 Boss DBM 预警？
 
-1. **木桩不是当前攻击目标**：须对你想查看的木桩造成伤害或将其选为目标，浮窗才会显示该单位的数据。
-2. **未启用怪物监控**：确认页顶 **启用怪物监控** 已打开，并已 **切换怪物遮罩** 显示浮窗。
-3. **未配置要看的 Buff**：在 **Buff 监控** Tab 将对应 Buff 加入「仅自身」或「全局」列表（或开启「监控本角色施加的全部 Buff」先找名称）。
-4. **目标已死亡**：怪物死亡后 Buff / 仇恨会停止更新，需换目标或等下一只。
+1. **Boss DBM 区** 默认关闭，在 **{{ui:monsterMonitor.tabs.overlay}}** 中打开。
+2. 确认怪物监控和浮窗都已打开。
+3. 不是所有 Boss 技能都有预警事件，没有事件时该区域不显示（编辑布局模式下能看到占位）。
 
-打桩时只要木桩被锁定为你的攻击目标，行为与打 Boss 相同。
+### Boss DBM 和 Buff 监控有什么区别？
 
-## Boss DBM 是什么？和 Buff 监控有什么区别？
+Boss DBM 自动显示 Boss 读条和阶段技能，不需要添加监控项；Buff 监控需要先加入列表，用于盯特定 Buff 的时间和层数。见 [Boss DBM](../features/monster/boss-dbm.md)。
 
-**Boss DBM** 在怪物遮罩中显示 Boss 技能机制预警条（技能名 + 倒计时），数据来自游戏内 Boss DBM 事件，**无需像 Buff 一样手动添加监控项**。详见 [Boss DBM](../features/monster/boss-dbm.md)。
+### 召唤物的剩余时间怎么看？
 
-- **Buff 监控**：盯特定 Buff 的持续时间、层数，须先加入监控列表。
-- **Boss DBM**：Boss 读条 / 阶段技能自动弹出计时条，适合统一看机制时间轴。
-
-## 为什么看不到 Boss DBM 预警条？
-
-1. **Boss DBM 区未开启**：在 **启用窗口** Tab 将 **Boss DBM 区** 设为显示（默认关闭）。
-2. **怪物监控或遮罩未打开**：确认 **启用怪物监控** 与 **切换怪物遮罩**。
-3. **当前技能无 DBM 事件**：并非所有 Boss 技能都会推送 DBM；无条目时浮窗不显示该区域（编辑模式下可见占位预览）。
+用 [实体持续](../features/monster/entity-duration.md)，常见召唤物有预设，例如 [镰车](../features/monster/entity-duration.md#例显示镰车剩余时间)。
