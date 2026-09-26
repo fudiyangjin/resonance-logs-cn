@@ -4,10 +4,12 @@ import { s3RaidScene } from "./scenes/s3-raid";
 import { s3SeaRingedReefScene } from "./scenes/s3-sea-ringed-reef";
 import { s3TinaMindrealmScene } from "./scenes/s3-tina-mindrealm";
 import { s4WastelandCourtScene } from "./scenes/s4-wasteland-court";
+import { s4SkyEndRaidScene } from "./scenes/s4-sky-end-raid";
 import type { MinimapVoiceCueDef, SceneDefinition } from "./scene-types";
 
 const SCENES: readonly SceneDefinition[] = [
   s4WastelandCourtScene,
+  s4SkyEndRaidScene,
   s3RaidScene,
   s3SeaRingedReefScene,
   s3CursedTombScene,
@@ -17,6 +19,10 @@ const SCENES: readonly SceneDefinition[] = [
 
 export function resolveScene(sceneId: number): SceneDefinition | null {
   return SCENES.find((scene) => scene.sceneIds.includes(sceneId)) ?? null;
+}
+
+export function registeredMinimapSceneIds(): number[] {
+  return SCENES.flatMap((scene) => [...scene.sceneIds]);
 }
 
 export type MinimapVoiceCueSceneGroup = {

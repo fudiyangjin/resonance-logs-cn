@@ -13,6 +13,7 @@ const SCENES: &[&MinimapSceneConfig] = &[
     &super::scenes::s3_sea_ringed_reef::CONFIG,
     &super::scenes::s3_tina_mindrealm::CONFIG,
     &super::scenes::s4_wasteland_court::CONFIG,
+    &super::scenes::s4_sky_end_raid::CONFIG,
 ];
 
 #[must_use]
@@ -32,6 +33,14 @@ mod tests {
         assert!(scene_config(6563).is_some());
         assert!(scene_config(13023).is_some());
         assert!(scene_config(6615).is_some());
+        assert!(std::ptr::eq(
+            scene_config(13031).unwrap(),
+            scene_config(13032).unwrap()
+        ));
+        assert!(std::ptr::eq(
+            scene_config(13032).unwrap(),
+            scene_config(13033).unwrap()
+        ));
         assert!(scene_config(6613).is_none());
         assert!(scene_config(0).is_none());
     }

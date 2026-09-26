@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { isSupportedMinimapScene } from "./config/daily-scene-blacklist";
+import { registeredMinimapSceneIds } from "../routes/minimap-overlay/scene-registry";
 import {
   domainRequiresSupportedScene,
   resolveSceneVisibility,
@@ -50,6 +52,12 @@ describe("resolveSceneVisibility", () => {
         input({ sceneId: PLAIN_SCENE, autoHideInDailyScenes: true }),
       ),
     ).toBe(true);
+  });
+
+  it("treats every registered minimap scene as supported", () => {
+    for (const sceneId of registeredMinimapSceneIds()) {
+      expect(isSupportedMinimapScene(sceneId)).toBe(true);
+    }
   });
 
   it("requires a registered scene when the domain has per-scene content", () => {

@@ -17,6 +17,9 @@ const SUPPORTED_MINIMAP_SCENE_IDS = [
   1632,
   1633,
   6615,
+  13031,
+  13032,
+  13033,
 ] as const;
 
 export const DAILY_SCENE_BLACKLIST: ReadonlySet<number> = new Set(

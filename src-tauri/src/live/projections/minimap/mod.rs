@@ -26,6 +26,9 @@ struct MinimapEntityState {
     name: Option<String>,
     monster_id: Option<i32>,
     facing: Option<f32>,
+    current_hp: Option<i64>,
+    max_hp: Option<i64>,
+    target_entity: Option<EntityUuid>,
     is_dead: bool,
     owner: Option<EntityUuid>,
     is_boss: bool,
@@ -41,6 +44,9 @@ impl MinimapEntityState {
             name: None,
             monster_id: None,
             facing: None,
+            current_hp: None,
+            max_hp: None,
+            target_entity: None,
             is_dead: false,
             owner: None,
             is_boss: false,
@@ -94,11 +100,19 @@ impl MinimapProjection {
                 let casts_before = self.pending_skill_casts.len();
                 self.pending_skill_casts
                     .retain(|cast| cast.entity_uuid != entity_uuid);
+                let mut targets_cleared = false;
+                for (uuid, state) in &mut self.entities {
+                    if state.target_entity == Some(entity.uuid) {
+                        state.target_entity = None;
+                        targets_cleared |= self.visible_entities.contains(uuid);
+                    }
+                }
                 state_taken
                     || visible_taken
                     || self.buffs.len() != buffs_before
                     || self.markers.len() != markers_before
                     || self.pending_skill_casts.len() != casts_before
+                    || targets_cleared
             }
             DomainEvent::IdentityChanged {
                 entity, current, ..
@@ -140,15 +154,44 @@ impl MinimapProjection {
                 attr_id,
                 current: AttributeValue::Int(value),
                 ..
-            } if *attr_id == attr_type::ATTR_FACING => {
+            } if matches!(
+                *attr_id,
+                attr_type::ATTR_FACING
+                    | attr_type::ATTR_CURRENT_HP
+                    | attr_type::ATTR_MAX_HP
+                    | attr_type::ATTR_TARGET_ID
+            ) =>
+            {
                 let state = self
                     .entities
                     .entry(entity.uuid)
                     .or_insert_with(|| MinimapEntityState::new(*entity, EntityKind::Unknown));
-                let next = *value as f32 / 100.0;
-                let changed = state.facing != Some(next);
-                state.facing = Some(next);
-                changed
+                let changed = match *attr_id {
+                    attr_type::ATTR_FACING => {
+                        let next = *value as f32 / 100.0;
+                        let changed = state.facing != Some(next);
+                        state.facing = Some(next);
+                        changed
+                    }
+                    attr_type::ATTR_CURRENT_HP => {
+                        let changed = state.current_hp != Some(*value);
+                        state.current_hp = Some(*value);
+                        changed && state.monster_id.is_some()
+                    }
+                    attr_type::ATTR_MAX_HP => {
+                        let changed = state.max_hp != Some(*value);
+                        state.max_hp = Some(*value);
+                        changed && state.monster_id.is_some()
+                    }
+                    attr_type::ATTR_TARGET_ID => {
+                        let next = (*value > 0).then_some(EntityUuid(*value));
+                        let changed = state.target_entity != next;
+                        state.target_entity = next;
+                        changed
+                    }
+                    _ => false,
+                };
+                changed && self.visible_entities.contains(&entity.uuid)
             }
             DomainEvent::DeathOccurred { victim, .. } => {
                 if let Some(state) = self.entities.get_mut(&victim.uuid)
@@ -300,6 +343,11 @@ impl MinimapProjection {
                             name: state.name.clone(),
                             monster_id: state.monster_id,
                             facing: state.facing,
+                            current_hp: state.monster_id.and(state.current_hp),
+                            max_hp: state.monster_id.and(state.max_hp),
+                            target_entity_uuid: state
+                                .target_entity
+                                .map(|target| target.0.to_string()),
                             is_dead: state.is_dead,
                             top_summoner_id: state.owner.map(|owner| owner.0.to_string()),
                         })
@@ -514,6 +562,25 @@ mod tests {
                 attr_id: 0,
                 previous: None,
                 current: Position { x, y: 0.0, z },
+                is_baseline: false,
+            },
+        )
+    }
+
+    fn integer_attribute(
+        sequence: u64,
+        entity: EntityRef,
+        attr_id: i32,
+        value: i64,
+    ) -> DomainEnvelope {
+        envelope(
+            sequence,
+            10_000 + sequence as i64,
+            DomainEvent::AttributeChanged {
+                entity,
+                attr_id,
+                previous: None,
+                current: AttributeValue::Int(value),
                 is_baseline: false,
             },
         )
@@ -752,6 +819,165 @@ mod tests {
         assert!(snapshot.buffs.is_empty());
         assert!(snapshot.markers.is_empty());
         assert!(payload.skill_casts.is_empty());
+    }
+
+    #[test]
+    fn tracks_entity_hp_and_target_attributes_and_clears_disappeared_targets() {
+        let mut projection = MinimapProjection::default();
+        projection.apply(&scene(1, 13032));
+        add_positioned_entity(
+            &mut projection,
+            10,
+            LOCAL,
+            EntityKind::Character,
+            None,
+            false,
+        );
+        add_positioned_entity(
+            &mut projection,
+            20,
+            CONFIGURED_MONSTER,
+            EntityKind::Monster,
+            Some(103404),
+            false,
+        );
+        projection.apply(&envelope(
+            30,
+            10_030,
+            DomainEvent::LocalPlayerChanged {
+                previous: None,
+                current: Some(LOCAL),
+            },
+        ));
+        projection.apply(&integer_attribute(
+            31,
+            CONFIGURED_MONSTER,
+            attr_type::ATTR_CURRENT_HP,
+            42,
+        ));
+        projection.apply(&integer_attribute(
+            32,
+            CONFIGURED_MONSTER,
+            attr_type::ATTR_MAX_HP,
+            100,
+        ));
+        projection.apply(&integer_attribute(
+            33,
+            CONFIGURED_MONSTER,
+            attr_type::ATTR_TARGET_ID,
+            1,
+        ));
+
+        let entity = projection
+            .take_payload()
+            .snapshot
+            .expect("registered scene should publish a snapshot")
+            .entities
+            .into_iter()
+            .find(|entity| entity.entity_uuid == "3")
+            .expect("configured entity should be visible");
+        assert_eq!(entity.current_hp, Some(42));
+        assert_eq!(entity.max_hp, Some(100));
+        assert_eq!(entity.target_entity_uuid.as_deref(), Some("1"));
+
+        projection.apply(&integer_attribute(
+            34,
+            CONFIGURED_MONSTER,
+            attr_type::ATTR_TARGET_ID,
+            0,
+        ));
+        let entity = projection
+            .take_payload()
+            .snapshot
+            .expect("registered scene should publish a snapshot")
+            .entities
+            .into_iter()
+            .find(|entity| entity.entity_uuid == "3")
+            .expect("configured entity should be visible");
+        assert_eq!(entity.target_entity_uuid, None);
+
+        projection.apply(&envelope(
+            35,
+            10_035,
+            DomainEvent::EntityDisappeared { entity: LOCAL },
+        ));
+        assert!(
+            projection
+                .take_payload()
+                .snapshot
+                .expect("registered scene should publish a snapshot")
+                .entities
+                .iter()
+                .all(|entity| entity.target_entity_uuid.is_none())
+        );
+    }
+
+    #[test]
+    fn hp_changes_only_report_for_visible_monsters() {
+        let mut projection = MinimapProjection::default();
+        projection.apply(&scene(1, 13032));
+        add_positioned_entity(
+            &mut projection,
+            10,
+            LOCAL,
+            EntityKind::Character,
+            None,
+            false,
+        );
+        projection.apply(&envelope(
+            20,
+            10_020,
+            DomainEvent::LocalPlayerChanged {
+                previous: None,
+                current: Some(LOCAL),
+            },
+        ));
+        add_positioned_entity(
+            &mut projection,
+            30,
+            CONFIGURED_MONSTER,
+            EntityKind::Monster,
+            Some(103404),
+            false,
+        );
+        add_positioned_entity(
+            &mut projection,
+            40,
+            UNRELATED_MONSTER,
+            EntityKind::Monster,
+            Some(1),
+            false,
+        );
+        projection.take_payload();
+
+        assert!(!projection.apply(&integer_attribute(
+            50,
+            LOCAL,
+            attr_type::ATTR_CURRENT_HP,
+            10,
+        )));
+        assert!(!projection.apply(&integer_attribute(
+            51,
+            UNRELATED_MONSTER,
+            attr_type::ATTR_CURRENT_HP,
+            10,
+        )));
+        assert!(projection.apply(&integer_attribute(
+            52,
+            CONFIGURED_MONSTER,
+            attr_type::ATTR_CURRENT_HP,
+            10,
+        )));
+
+        let local = projection
+            .take_payload()
+            .snapshot
+            .expect("registered scene should publish a snapshot")
+            .entities
+            .into_iter()
+            .find(|entity| entity.entity_uuid == "1")
+            .expect("local player should be visible");
+        assert_eq!(local.current_hp, None);
     }
 
     #[test]

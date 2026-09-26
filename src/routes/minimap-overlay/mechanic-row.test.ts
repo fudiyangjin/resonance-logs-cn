@@ -18,6 +18,9 @@ function entity(uuid: string, name: string): MinimapEntity {
     name,
     monsterId: null,
     facing: null,
+    currentHp: null,
+    maxHp: null,
+    targetEntityUuid: null,
     isDead: false,
     topSummonerId: null,
   };

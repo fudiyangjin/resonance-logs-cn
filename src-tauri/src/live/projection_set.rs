@@ -1707,39 +1707,72 @@ mod tests {
         let mut projections = ProjectionSet::new(writer);
         let entities = EntityContext::new();
         let mut scheduler = DeadlineScheduler::new();
+        let local = EntityRef {
+            uuid: EntityUuid(1),
+            generation: 0,
+        };
+        let envelope = |sequence: u64, event: DomainEvent| {
+            let meta = EventMeta {
+                batch_id: BatchId(1),
+                capture_sequence: sequence,
+                stream_id: 1,
+                stream_epoch: 1,
+                captured_wall_ms: 1_000,
+                captured_mono_ns: 1_000_000,
+                source_time_ms: None,
+            };
+            DomainEnvelope {
+                sequence,
+                batch_id: meta.batch_id,
+                occurred_at_ms: 1_000,
+                meta,
+                event_index: 0,
+                segment_id: Some(SegmentId(1)),
+                event,
+            }
+        };
+        // Facing only reaches the snapshot for entities the minimap shows.
+        projections.minimap.apply(&envelope(
+            1,
+            DomainEvent::SceneChanged {
+                previous_scene_id: None,
+                scene_id: 13032,
+                difficulty: None,
+            },
+        ));
+        projections.minimap.apply(&envelope(
+            2,
+            DomainEvent::EntityAppeared {
+                entity: local,
+                kind: EntityKind::Character,
+            },
+        ));
+        projections.minimap.apply(&envelope(
+            3,
+            DomainEvent::LocalPlayerChanged {
+                previous: None,
+                current: Some(local),
+            },
+        ));
         let mut dirty = projections.dirty_mask();
         dirty.remove(ALL_TOPICS);
         projections.dirty = dirty;
 
-        let meta = EventMeta {
-            batch_id: BatchId(1),
-            capture_sequence: 1,
-            stream_id: 1,
-            stream_epoch: 1,
-            captured_wall_ms: 1_000,
-            captured_mono_ns: 1_000_000,
-            source_time_ms: None,
-        };
-        let envelope = DomainEnvelope {
-            sequence: 1,
-            batch_id: meta.batch_id,
-            occurred_at_ms: 1_000,
-            meta,
-            event_index: 0,
-            segment_id: Some(SegmentId(1)),
-            event: DomainEvent::AttributeChanged {
-                entity: EntityRef {
-                    uuid: EntityUuid(1),
-                    generation: 0,
-                },
-                attr_id: attr_type::ATTR_FACING,
-                previous: None,
-                current: AttributeValue::Int(0),
-                is_baseline: false,
-            },
-        };
         projections
-            .apply(&envelope, &entities, &mut scheduler)
+            .apply(
+                &envelope(
+                    4,
+                    DomainEvent::AttributeChanged {
+                        entity: local,
+                        attr_id: attr_type::ATTR_FACING,
+                        previous: None,
+                        current: AttributeValue::Int(0),
+                        is_baseline: false,
+                    },
+                ),
+                &entities,
+                &mut scheduler,
+            )
             .unwrap();
         assert_eq!(projections.dirty_mask(), TopicMask::MINIMAP);
 

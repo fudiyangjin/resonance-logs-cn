@@ -24,6 +24,9 @@ function entity(entityUuid: string, name: string): MinimapEntity {
     name,
     monsterId: null,
     facing: null,
+    currentHp: null,
+    maxHp: null,
+    targetEntityUuid: null,
     topSummonerId: null,
     isDead: false,
   };
@@ -45,6 +48,9 @@ function mechanicEntity(
     name: null,
     monsterId,
     facing: null,
+    currentHp: null,
+    maxHp: null,
+    targetEntityUuid: null,
     topSummonerId: null,
     isDead: false,
   };

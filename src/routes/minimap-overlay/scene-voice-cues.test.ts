@@ -21,6 +21,9 @@ function entity(
     name: null,
     monsterId: monsterId ?? null,
     facing: null,
+    currentHp: null,
+    maxHp: null,
+    targetEntityUuid: null,
     topSummonerId: null,
     isDead: false,
   };
@@ -45,8 +48,9 @@ describe("S3 voice cue registry", () => {
 
     expect(groups).toHaveLength(2);
     expect(groups[0]?.season).toBe(4);
-    expect(groups[0]?.scenes).toHaveLength(1);
+    expect(groups[0]?.scenes).toHaveLength(2);
     expect(groups[0]?.scenes[0]?.scene.id).toBe("s4-wasteland-court");
+    expect(groups[0]?.scenes[1]?.scene.id).toBe("s4-sky-end-raid");
     expect(groups[1]?.season).toBe(3);
     expect(groups[1]?.scenes).toHaveLength(5);
     expect(

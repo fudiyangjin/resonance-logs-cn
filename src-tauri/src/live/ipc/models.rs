@@ -683,6 +683,15 @@ pub struct MinimapEntity {
     pub monster_id: Option<i32>,
     /// Yaw facing in degrees when known (attr 0x32, stored as centidegrees).
     pub facing: Option<f32>,
+    /// Current HP when the entity publishes the HP attribute.
+    #[serde(default)]
+    pub current_hp: Option<i64>,
+    /// Maximum HP when the entity publishes the HP attribute.
+    #[serde(default)]
+    pub max_hp: Option<i64>,
+    /// UUID of the entity currently targeted by this entity, when known.
+    #[serde(default)]
+    pub target_entity_uuid: Option<String>,
     /// Whether the entity is currently in the dead actor state.
     pub is_dead: bool,
     /// Top-level summoner/owner UUID when present.
