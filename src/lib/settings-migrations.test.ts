@@ -216,15 +216,11 @@ describe("monitoring settings reconciliation", () => {
     const on = { enabled: true, phrase: { source: "auto" as const } };
     const state = createDefaultMonitoringSettingsState();
     state.schemaVersion = CURRENT_MONITORING_SCHEMA_VERSION;
+    // Skill bindings form their own list: the cooldown HUD selection
+    // neither keeps nor drops them.
     const first = state.skillMonitor.profiles[0]!;
     first.monitoredSkillIds = [1420];
     first.skillVoiceConfigs = { "1420": { cast: on }, "1421": { cast: on } };
-    // Another loadout's profile monitors 1421: that must not keep the first
-    // profile's binding for it, nor lose its own.
-    const second = createDefaultSkillMonitorProfile("Second");
-    second.monitoredSkillIds = [1421];
-    second.skillVoiceConfigs = { "1421": { cast: on } };
-    state.skillMonitor.profiles.push(second);
 
     // The mirror holds a DBM binding without its entry; a stored profile
     // holds an entity binding under its pre-rekey key.
@@ -237,17 +233,46 @@ describe("monitoring settings reconciliation", () => {
     state.monsterMonitor.profiles.push(stored);
 
     const repaired = reconcileMonitoringState(state);
-    expect(
-      repaired.skillMonitor.profiles.map(
-        (profile) => profile.skillVoiceConfigs,
-      ),
-    ).toEqual([{ "1420": { cast: on } }, { "1421": { cast: on } }]);
+    expect(repaired.skillMonitor.profiles[0]!.skillVoiceConfigs).toEqual({
+      "1420": { cast: on },
+      "1421": { cast: on },
+    });
     expect(repaired.monsterMonitor.dbmVoiceConfigs).toEqual({});
     expect(
       repaired.monsterMonitor.profiles.find((p) => p.id === stored.id)!
         .entityVoiceConfigs,
     ).toEqual({ "179901": { appeared: on } });
     expect(reconcileMonitoringState(repaired)).toEqual(repaired);
+  });
+
+  it("drops the skill voice bindings that were silent before schema seven, once and per profile", () => {
+    const on = { enabled: true, phrase: { source: "auto" as const } };
+    const state = createDefaultMonitoringSettingsState();
+    state.schemaVersion = 6;
+    // Before schema seven a skill binding only played while its skill was
+    // monitored: 1421 was silent in the first profile, and another profile
+    // monitoring 1421 must not change that, nor lose its own binding.
+    const first = state.skillMonitor.profiles[0]!;
+    first.monitoredSkillIds = [1420];
+    first.skillVoiceConfigs = { "1420": { cast: on }, "1421": { cast: on } };
+    const second = createDefaultSkillMonitorProfile("Second");
+    second.monitoredSkillIds = [1421];
+    second.skillVoiceConfigs = { "1421": { cast: on } };
+    state.skillMonitor.profiles.push(second);
+
+    const migrated = reconcileMonitoringState(state);
+    expect(
+      migrated.skillMonitor.profiles.map(
+        (profile) => profile.skillVoiceConfigs,
+      ),
+    ).toEqual([{ "1420": { cast: on } }, { "1421": { cast: on } }]);
+
+    // From schema seven on, un-monitoring a skill keeps its binding.
+    migrated.skillMonitor.profiles[0]!.monitoredSkillIds = [];
+    expect(
+      reconcileMonitoringState(migrated).skillMonitor.profiles[0]!
+        .skillVoiceConfigs,
+    ).toEqual({ "1420": { cast: on } });
   });
 
   it("keeps DBM voice bindings that had no DBM entry before schema seven by adding the entry", () => {

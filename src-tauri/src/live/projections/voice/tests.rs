@@ -1385,6 +1385,44 @@ mod entity_monitor_bridge {
     }
 
     #[test]
+    fn skill_cues_do_not_depend_on_the_skill_cd_monitor_list() {
+        // Arrange: voice rules on SKILL while the cooldown HUD monitors only
+        // another skill. A skill needs no HUD slot to be voiced.
+        let mut h = Harness::new(
+            vec![
+                rule("cast", skill(SKILL, VoiceEvent::Started), "cast", 0),
+                rule("soon", skill(SKILL, expiring(3)), "soon", 0),
+                rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0),
+            ],
+            vec![],
+        );
+        let mut config = MonitorRuntimeSnapshot::default();
+        config.skill.enabled = true;
+        config.skill.monitored_skill_ids = vec![SKILL + 1];
+        h.monitor
+            .apply_config(&config, &h.entities, MonoTimeMs(100));
+
+        // Act: a cast, then a 10 s cooldown received at t = 200 ms.
+        h.step(
+            2,
+            vec![
+                cast(LOCAL, SKILL, SkillPhase::CastStarted),
+                cooldown(SKILL, 10_000, 0),
+            ],
+        );
+        let cast_cues = h.fired();
+        h.drain(72);
+        let ready_in_cues = h.fired();
+        h.drain(102);
+        let ready_cues = h.fired();
+
+        // Assert: every cue fires as it would for a monitored skill.
+        assert_eq!(cast_cues, vec!["cast".to_string()]);
+        assert_eq!(ready_in_cues, vec!["soon".to_string()]);
+        assert_eq!(ready_cues, vec!["ready".to_string()]);
+    }
+
+    #[test]
     fn repeated_cooldown_packet_is_idempotent_and_reduction_reschedules() {
         let mut h = Harness::new(
             vec![rule("ready", skill(SKILL, VoiceEvent::Ended), "ready", 0)],

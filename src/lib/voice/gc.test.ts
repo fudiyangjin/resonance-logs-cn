@@ -38,7 +38,7 @@ function view(overrides: Partial<VoiceBindingView> = {}): VoiceBindingView {
 
 function skillView(profile: Partial<SkillProfileVoiceSlice>) {
   return view({
-    skillProfile: { monitoredSkillIds: [], selectedClass: "", ...profile },
+    skillProfile: { selectedClass: "", ...profile },
   });
 }
 
@@ -146,16 +146,31 @@ describe("collectVoicePhraseRefs", () => {
     expect([...refs.phraseIds]).toEqual(["picked"]);
   });
 
-  it("drops bindings without a subject, like an unmonitored skill", () => {
-    const configs = { "990001": { cast: bound(AUTO) } };
-    const monitored = collectVoicePhraseRefs([
-      skillView({ monitoredSkillIds: [990001], skillVoiceConfigs: configs }),
+  it("drops bindings without a subject, like an entity binding without its entry", () => {
+    const entityVoiceConfigs = { "179901": { appeared: bound(AUTO) } };
+    const withEntry = collectVoicePhraseRefs([
+      view({
+        monster: {
+          ...EMPTY_MONSTER,
+          entityDurationEntries: [
+            { id: "e", monsterId: 179901, label: "镰车", scope: "self" },
+          ],
+          entityVoiceConfigs,
+        },
+      }),
     ]);
-    const unmonitored = collectVoicePhraseRefs([
-      skillView({ monitoredSkillIds: [], skillVoiceConfigs: configs }),
+    const withoutEntry = collectVoicePhraseRefs([
+      view({ monster: { ...EMPTY_MONSTER, entityVoiceConfigs } }),
     ]);
-    expect(monitored.names.size).toBe(1);
-    expect(unmonitored.names.size).toBe(0);
+    expect(withEntry.names.size).toBe(1);
+    expect(withoutEntry.names.size).toBe(0);
+  });
+
+  it("keeps the phrases of skill bindings: skills form their own list", () => {
+    const refs = collectVoicePhraseRefs([
+      skillView({ skillVoiceConfigs: { "990001": { cast: bound(AUTO) } } }),
+    ]);
+    expect(refs.names.size).toBe(1);
   });
 
   it("keeps the base, tier and preview phrases of tier-placeholder text", () => {

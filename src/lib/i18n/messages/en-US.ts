@@ -1207,7 +1207,7 @@ export const enUSMessages = {
     "Delete this skill-monitor profile? Loadouts referencing it will fall back to the first profile.",
   "skillMonitor.skillCd.class.title": "Class Selection",
   "skillMonitor.skillCd.class.description":
-    "Supports the currently configured class skill profiles",
+    "Supports the currently configured class skill profiles. Switching class clears this loadout's selected skills and skill voice broadcasts",
   "skillMonitor.skillCd.skills.title": "Skill Selection",
   "skillMonitor.skillCd.skills.description":
     "Monitor up to 10 skills (2 rows x 5 columns)",
@@ -1223,8 +1223,11 @@ export const enUSMessages = {
   "skillMonitor.skillCd.preview.description": "Ordered by selection",
   "skillMonitor.skillCd.voice.title": "Voice Broadcast",
   "skillMonitor.skillCd.voice.description":
-    "Announce casts, cooldown ready and ready-in for monitored skills. Charge skills only announce ready when the first charge returns.",
-  "skillMonitor.skillCd.voice.empty": "Select skills to monitor above first.",
+    "Announce casts, cooldown ready and ready-in for class or resonance skills, without adding them to the cooldown monitor above. Charge skills announce ready for every charge that returns.",
+  "skillMonitor.skillCd.voice.empty":
+    "No voice broadcasts configured yet. Click a skill above to add one.",
+  "skillMonitor.skillCd.voice.configuredCount": "{count} configured",
+  "skillMonitor.skillCd.voice.classSkills": "Class Skills",
   "skillMonitor.buff.status.selected": "Selected",
   "skillMonitor.buff.status.editing": "Editing",
   "skillMonitor.buff.status.aliased": "Alias set",

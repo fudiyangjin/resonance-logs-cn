@@ -27,7 +27,10 @@ import type { MinimapVoiceCueDef } from "../../routes/minimap-overlay/scene-type
 export type VoiceBindingSubject =
   | { kind: "buff"; buffId: number }
   | { kind: "monsterBuff"; buffId: number; sourceScope: MonsterBuffSourceScope }
-  /** One of the local player's monitored skills (base skill id). */
+  /**
+   * One of the local player's skills (base skill id), from the profile's own
+   * skill voice list; the cooldown HUD list plays no part.
+   */
   | { kind: "skill"; skillId: number }
   | { kind: "counterSlot"; ruleId: number; slotId: number }
   | { kind: "dbm"; baseSkillId: number }
@@ -89,7 +92,6 @@ export type OverviewGroupMeta = {
 export type SkillProfileVoiceSlice = Pick<
   SkillMonitorProfile,
   | "selectedClass"
-  | "monitoredSkillIds"
   | "buffVoiceConfigs"
   | "skillVoiceConfigs"
   | "userCounterRules"

@@ -2,14 +2,15 @@
  * @file Which voice bindings still have a subject to speak for.
  *
  * A binding exists exactly as long as its subject is associated in the
- * profile that holds it — the skill it watches is monitored, the entity
- * entry exists, the target buff sits in a monitor list, the DBM entry is
- * listed, the counter slot resolves, the minimap cue is registered — and
- * only for events that apply (an entity entry without a duration has no
- * "expiring"). These pure functions are the single judge: the adapters'
- * `enumerate` / `events` (what compiles), the prune functions below (what a
- * write deletes) and the phrase GC (what audio is still needed) all ask
- * them, so the three can never disagree.
+ * profile that holds it — the entity entry exists, the target buff sits in
+ * a monitor list, the DBM entry is listed, the counter slot resolves, the
+ * minimap cue is registered — and only for events that apply (an entity
+ * entry without a duration has no "expiring"). Local buff and skill
+ * bindings form their own lists (a skill needs no cooldown HUD slot to be
+ * voiced), so they are always associated. These pure functions are the
+ * single judge: the adapters' `enumerate` / `events` (what compiles), the
+ * prune functions below (what a write deletes) and the phrase GC (what
+ * audio is still needed) all ask them, so the three can never disagree.
  *
  * Pruning happens inside the settings write that removes an association,
  * never from an `$effect`, and always one profile at a time: switching
@@ -62,13 +63,6 @@ const ENTITY_EVENTS_WITHOUT_DURATION: readonly EntityEventKind[] = [
 // Pruning runs on persisted data during startup reconciliation, where a
 // throw would send the whole monitoring store into recovery: list fields
 // are read defensively.
-
-export function isSkillAssociated(
-  slice: Pick<SkillProfileVoiceSlice, "monitoredSkillIds">,
-  skillId: number,
-): boolean {
-  return slice.monitoredSkillIds?.includes(skillId) === true;
-}
 
 /**
  * Which caster population a target-buff binding observes, derived from
@@ -203,15 +197,13 @@ function pruneCounterSlots(
 
 /**
  * `profile` without the voice bindings whose subject it no longer
- * associates; the same object when nothing changed. Local buff bindings
- * form their own list and are always associated.
+ * associates; the same object when nothing changed. Local buff and skill
+ * bindings form their own lists and are always associated, so only
+ * counter bindings can lose their subject here.
  */
 export function pruneSkillProfileVoice<P extends SkillProfileVoiceSlice>(
   profile: P,
 ): P {
-  const skillVoiceConfigs = pruneRecord(profile.skillVoiceConfigs, (key, c) =>
-    isSkillAssociated(profile, Number(key)) ? c : null,
-  );
   const counters = counterAssociations(profile);
   const presetCounterVoiceConfigs = pruneRecord(
     profile.presetCounterVoiceConfigs,
@@ -235,7 +227,6 @@ export function pruneSkillProfileVoice<P extends SkillProfileVoiceSlice>(
     },
   );
   if (
-    skillVoiceConfigs === profile.skillVoiceConfigs &&
     presetCounterVoiceConfigs === profile.presetCounterVoiceConfigs &&
     !userRulesChanged
   ) {
@@ -243,7 +234,6 @@ export function pruneSkillProfileVoice<P extends SkillProfileVoiceSlice>(
   }
   return {
     ...profile,
-    skillVoiceConfigs,
     presetCounterVoiceConfigs,
     userCounterRules,
   };

@@ -1,8 +1,7 @@
 <script lang="ts">
-  import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
-  import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
   import { findAnySkillByBaseId, type ClassSkillConfig, type ResonanceSkillDefinition, type SkillDefinition } from "$lib/skill-mappings";
   import { t } from "$lib/i18n/index.svelte";
+  import SkillVoiceSection from "./skill-voice-section.svelte";
 
   interface Props {
     classConfigs: ClassSkillConfig[];
@@ -33,14 +32,6 @@
     clearSkills,
     setResonanceSearch,
   }: Props = $props();
-
-  let voiceExpandedSkillIds = $state<number[]>([]);
-
-  function toggleVoiceExpanded(skillId: number) {
-    voiceExpandedSkillIds = voiceExpandedSkillIds.includes(skillId)
-      ? voiceExpandedSkillIds.filter((existing) => existing !== skillId)
-      : [...voiceExpandedSkillIds, skillId];
-  }
 </script>
 
 <div class="space-y-6">
@@ -228,41 +219,5 @@
     </div>
   </div>
 
-  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
-    <div>
-      <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.skillCd.voice.title")}</h2>
-      <p class="text-xs text-muted-foreground">{t("skillMonitor.skillCd.voice.description")}</p>
-    </div>
-    {#if monitoredSkillIds.length === 0}
-      <p class="text-xs text-muted-foreground">{t("skillMonitor.skillCd.voice.empty")}</p>
-    {:else}
-      <div class="space-y-2">
-        {#each monitoredSkillIds as skillId (skillId)}
-          {@const skill = findAnySkillByBaseId(selectedClassKey, skillId)}
-          {@const expanded = voiceExpandedSkillIds.includes(skillId)}
-          <div class="border-border/60 bg-muted/20 space-y-2 rounded-lg border p-3">
-            <button
-              type="button"
-              class="flex w-full items-center gap-3 text-left text-xs text-muted-foreground hover:text-foreground"
-              onclick={() => toggleVoiceExpanded(skillId)}
-            >
-              {#if skill?.imagePath}
-                <img src={skill.imagePath} alt="" class="h-8 w-8 shrink-0 rounded-md object-cover" />
-              {/if}
-              <span class="text-foreground min-w-0 flex-1 truncate text-sm font-medium">
-                {skill?.name || `#${skillId}`}
-              </span>
-              <span class="shrink-0 text-xs">#{skillId}</span>
-              <ChevronDownIcon
-                class="h-3.5 w-3.5 shrink-0 transition-transform duration-200 {expanded ? 'rotate-180' : ''}"
-              />
-            </button>
-            {#if expanded}
-              <VoiceBindingControl subject={{ kind: "skill", skillId }} />
-            {/if}
-          </div>
-        {/each}
-      </div>
-    {/if}
-  </div>
+  <SkillVoiceSection {selectedClassKey} {classSkills} />
 </div>

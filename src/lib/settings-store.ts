@@ -532,13 +532,16 @@ export function ensureDbmVoiceConfigs(
   return next;
 }
 
-/** Voice bindings for one monitored skill of the local player. */
+/**
+ * Voice bindings for one skill of the local player. The profile's skill
+ * voice list is independent of the cooldown HUD list (`monitoredSkillIds`).
+ */
 export type SkillVoiceConfig = {
   /** Fires on every cast start. */
   cast?: VoiceEventConfig;
-  /** Fires when the cooldown ends (first charge back for charge skills). */
+  /** Fires when the cooldown ends (every charge back for charge skills). */
   ready?: VoiceEventConfig;
-  /** Fires `secondsBefore` the cooldown ends. */
+  /** Fires `secondsBefore` the cooldown ends (or the next charge is back). */
   readyIn?: VoiceExpiringEventConfig;
 };
 

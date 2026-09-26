@@ -1180,7 +1180,7 @@ export const jaJPMessages = {
     "このスキル監視プロファイルを削除しますか？参照しているロードアウトは先頭のプロファイルにフォールバックします。",
   "skillMonitor.skillCd.class.title": "クラス選択",
   "skillMonitor.skillCd.class.description":
-    "現在設定されているクラススキルプロファイルに対応",
+    "現在設定されているクラススキルプロファイルに対応。クラスを切り替えると、このロードアウトで選択したスキルとスキル音声読み上げがクリアされます",
   "skillMonitor.skillCd.skills.title": "スキル選択",
   "skillMonitor.skillCd.skills.description":
     "最大10スキルをモニター（2行 x 5列）",
@@ -1197,9 +1197,11 @@ export const jaJPMessages = {
   "skillMonitor.skillCd.preview.description": "選択順に並べ替え",
   "skillMonitor.skillCd.voice.title": "音声読み上げ",
   "skillMonitor.skillCd.voice.description":
-    "監視中のスキルに発動・クールダウン完了・完了前の読み上げを設定します。チャージ系スキルは最初のチャージが戻ったときのみ完了を読み上げます。",
+    "クラススキルや共鳴スキルに発動・クールダウン完了・完了前の読み上げを設定します。上のクールダウン監視に追加する必要はありません。チャージ系スキルはチャージが1つ戻るたびに完了を読み上げます。",
   "skillMonitor.skillCd.voice.empty":
-    "先に上で監視するスキルを選択してください。",
+    "まだ音声読み上げが設定されていません。上のスキルをクリックして追加してください。",
+  "skillMonitor.skillCd.voice.configuredCount": "{count} 件設定済み",
+  "skillMonitor.skillCd.voice.classSkills": "クラススキル",
   "skillMonitor.buff.status.selected": "選択済み",
   "skillMonitor.buff.status.editing": "編集中",
   "skillMonitor.buff.status.aliased": "別名設定済み",

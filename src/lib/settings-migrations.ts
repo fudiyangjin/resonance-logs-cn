@@ -434,6 +434,30 @@ function adoptDbmVoiceEntries<M extends MonsterVoiceSlice>(monster: M): M {
   return { ...monster, dbmAliases: aliases };
 }
 
+/**
+ * Schema v7: a skill voice binding used to play only while its skill was
+ * monitored on the cooldown HUD; the others sat silent in storage. Skill
+ * bindings now form their own list, so the silent ones are dropped once
+ * instead of starting to speak.
+ */
+function dropSilentSkillVoice(
+  profile: SkillMonitorProfile,
+): SkillMonitorProfile {
+  const configs = profile.skillVoiceConfigs;
+  if (!configs) return profile;
+  const monitored = new Set(
+    Array.isArray(profile.monitoredSkillIds) ? profile.monitoredSkillIds : [],
+  );
+  const kept = Object.fromEntries(
+    Object.entries(configs).filter(([skillId]) =>
+      monitored.has(Number(skillId)),
+    ),
+  );
+  return Object.keys(kept).length === Object.keys(configs).length
+    ? profile
+    : { ...profile, skillVoiceConfigs: kept };
+}
+
 function adoptAllDbmVoiceEntries(
   state: MonsterMonitorState,
 ): MonsterMonitorState {
@@ -462,9 +486,14 @@ export function reconcileMonitoringState(
   // that holds them: prune each profile (and the monster mirror) on its
   // own. This also re-keys entity bindings written before they were keyed
   // by monster id. Idempotent, so every window can run it.
+  const dropSilentSkills = state.schemaVersion < 7;
   state.skillMonitor.profiles = normalizeSkillProfiles(
     state.skillMonitor.profiles,
-  ).map((profile) => pruneSkillProfileVoice(profile));
+  ).map((profile) =>
+    pruneSkillProfileVoice(
+      dropSilentSkills ? dropSilentSkillVoice(profile) : profile,
+    ),
+  );
   state.monsterMonitor.profiles = normalizeMonsterProfiles(
     state.monsterMonitor,
   ).map((profile) => pruneMonsterVoice(profile));

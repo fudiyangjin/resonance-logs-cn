@@ -334,10 +334,14 @@
   }
 
   function setSelectedClass(classKey: string) {
+    if (classKey === selectedClassKey) return;
+    // A new class starts from empty skill lists: the cooldown HUD selection
+    // and this profile's skill voice list alike.
     updateActiveProfile((profile) => ({
       ...profile,
       selectedClass: classKey,
       monitoredSkillIds: [],
+      skillVoiceConfigs: {},
     }));
   }
 
@@ -1949,20 +1953,22 @@
   </div>
 
   {#if activeTab === "skill-cd"}
-    <TabSkillCd
-      {classConfigs}
-      {selectedClassKey}
-      {classSkills}
-      {monitoredSkillIds}
-      {resonanceSearch}
-      {filteredResonanceSkills}
-      {selectedResonanceSkills}
-      {setSelectedClass}
-      {toggleSkill}
-      {isSelected}
-      {clearSkills}
-      {setResonanceSearch}
-    />
+    {#key activeProfile.id}
+      <TabSkillCd
+        {classConfigs}
+        {selectedClassKey}
+        {classSkills}
+        {monitoredSkillIds}
+        {resonanceSearch}
+        {filteredResonanceSkills}
+        {selectedResonanceSkills}
+        {setSelectedClass}
+        {toggleSkill}
+        {isSelected}
+        {clearSkills}
+        {setResonanceSearch}
+      />
+    {/key}
   {:else if activeTab === "buff"}
     {#key activeProfileIndex}
       <TabBuffMonitor

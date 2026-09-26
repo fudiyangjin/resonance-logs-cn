@@ -104,7 +104,6 @@ describe("collectBindings + phraseRequests", () => {
     const bindings = collectBindings(
       view({
         skillProfile: {
-          monitoredSkillIds: [990001],
           selectedClass: "wind_knight",
           buffVoiceConfigs: {
             "101": {
@@ -185,7 +184,6 @@ describe("collectBindings + phraseRequests", () => {
   it("includes switched-off events only on request", () => {
     const disabled = view({
       skillProfile: {
-        monitoredSkillIds: [],
         selectedClass: "",
         buffVoiceConfigs: {
           "101": { gained: { enabled: false, phrase: { source: "auto" } } },
@@ -205,7 +203,6 @@ describe("compileVoiceRules", () => {
   const fullView = view({
     locale: "en-US",
     skillProfile: {
-      monitoredSkillIds: [990001],
       selectedClass: "wind_knight",
       buffVoiceConfigs: {
         "101": {
@@ -281,26 +278,28 @@ describe("compileVoiceRules", () => {
     expect(names).toContain("auto:voice:alert:matchReady");
   });
 
-  it("compiles nothing for a skill that is not monitored", () => {
+  it("compiles skill bindings whatever the cooldown HUD monitors", () => {
     const profile = fullView.skillProfile!;
-    const unmonitored = {
-      ...fullView,
-      skillProfile: { ...profile, monitoredSkillIds: [] as number[] },
-    };
-    const bindings = collectBindings(unmonitored);
-    expect(
-      compileVoiceRules(bindings, index).some(
+    // A stored profile carries its HUD selection; voice must not read it.
+    const skillRules = (monitoredSkillIds: number[]) => {
+      const withHud = {
+        ...fullView,
+        skillProfile: { ...profile, monitoredSkillIds },
+      };
+      return compileVoiceRules(collectBindings(withHud), index).filter(
         (r) => r.trigger.subject.kind === "skill",
-      ),
-    ).toBe(false);
+      );
+    };
+    expect(skillRules([]).map((r) => r.id)).toEqual([
+      "voice:skill:990001:cast",
+      "voice:skill:990001:readyIn",
+    ]);
+    expect(skillRules([990001])).toEqual(skillRules([]));
     expect(
-      phraseRequests(bindings).some((r) => r.name.includes(":skill:")),
-    ).toBe(false);
-    expect(
-      listVoiceBindingOverview(unmonitored, index).some(
-        (r) => r.navigateTo === "skill",
-      ),
-    ).toBe(false);
+      listVoiceBindingOverview(fullView, index)
+        .filter((r) => r.navigateTo === "skill")
+        .map((r) => r.id),
+    ).toEqual(["voice:skill:990001:cast", "voice:skill:990001:readyIn"]);
   });
 
   it("produces the expected rule literals", () => {
@@ -513,7 +512,6 @@ describe("compileVoiceRules", () => {
     const bindings = collectBindings(
       view({
         skillProfile: {
-          monitoredSkillIds: [990001],
           selectedClass: "wind_knight",
           presetCounterVoiceConfigs: {
             [String(preset.ruleId)]: {

@@ -5,7 +5,6 @@ import {
   type SkillVoiceConfigMap,
 } from "$lib/settings-store";
 import { findAnySkillByBaseId } from "$lib/skill-mappings";
-import { isSkillAssociated } from "../association";
 import {
   mergeVoiceConfigPatch,
   type VoiceBindingEventKind,
@@ -95,6 +94,10 @@ function writeSkillConfig(
 
 type SkillSubject = Extract<VoiceBindingSubject, { kind: "skill" }>;
 
+/**
+ * Skill bindings form their own list, like local buffs, so they are always
+ * associated: voicing a skill does not need its cooldown on the HUD.
+ */
 export const skillAdapter: VoiceSubjectAdapter<SkillSubject> = {
   kind: "skill",
   runtime: "backend",
@@ -112,13 +115,11 @@ export const skillAdapter: VoiceSubjectAdapter<SkillSubject> = {
     return skillEventSpecs((event, s) => skillAutoText(name, event, s));
   },
   readyWithoutPhrase: () => false,
-  enumerate: (view) => {
-    const profile = view.skillProfile;
-    if (!profile) return [];
-    return skillConfigIds(profile.skillVoiceConfigs)
-      .filter((skillId) => isSkillAssociated(profile, skillId))
-      .map((skillId) => ({ kind: "skill", skillId }));
-  },
+  enumerate: (view) =>
+    skillConfigIds(view.skillProfile?.skillVoiceConfigs).map((skillId) => ({
+      kind: "skill",
+      skillId,
+    })),
   read: (view, subject, eventKind) => {
     if (!isSkillEventKind(eventKind)) return undefined;
     const configs = ensureSkillVoiceConfigs(

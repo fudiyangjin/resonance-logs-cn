@@ -28,7 +28,7 @@ const soon: VoiceExpiringEventConfig = { ...on, secondsBefore: 5 };
 function skillProfile(
   overrides: Partial<SkillProfileVoiceSlice> = {},
 ): SkillProfileVoiceSlice {
-  return { monitoredSkillIds: [], selectedClass: "", ...overrides };
+  return { selectedClass: "", ...overrides };
 }
 
 function monster(
@@ -58,27 +58,27 @@ function entry(
 }
 
 describe("pruneSkillProfileVoice", () => {
-  it("drops skill bindings of skills the profile no longer monitors", () => {
+  it("keeps skill and local buff bindings: they form their own lists", () => {
+    // No cooldown HUD selection at all: voicing a skill does not need one.
     const profile = skillProfile({
-      monitoredSkillIds: [1420],
       skillVoiceConfigs: { "1420": { cast: on }, "1421": { ready: off } },
       buffVoiceConfigs: { "101": { gained: on } },
     });
-    const pruned = pruneSkillProfileVoice(profile);
-    expect(pruned.skillVoiceConfigs).toEqual({ "1420": { cast: on } });
-    // Local buff bindings are their own list.
-    expect(pruned.buffVoiceConfigs).toBe(profile.buffVoiceConfigs);
+    expect(pruneSkillProfileVoice(profile)).toBe(profile);
   });
 
   it("returns the profile itself when nothing is dissociated, and is idempotent", () => {
-    const profile = skillProfile({
-      monitoredSkillIds: [1420],
-      skillVoiceConfigs: { "1420": { cast: on } },
-    });
+    const skillVoiceConfigs = { "1420": { cast: on } };
+    const profile = skillProfile({ skillVoiceConfigs });
     expect(pruneSkillProfileVoice(profile)).toBe(profile);
     const pruned = pruneSkillProfileVoice(
-      skillProfile({ skillVoiceConfigs: { "1420": { cast: on } } }),
+      skillProfile({
+        skillVoiceConfigs,
+        presetCounterVoiceConfigs: { "999999": { "1": { threshold: on } } },
+      }),
     );
+    expect(pruned.presetCounterVoiceConfigs).toEqual({});
+    expect(pruned.skillVoiceConfigs).toBe(skillVoiceConfigs);
     expect(pruneSkillProfileVoice(pruned)).toBe(pruned);
   });
 

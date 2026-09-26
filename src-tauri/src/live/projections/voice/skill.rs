@@ -7,6 +7,10 @@
 //! whether time or a packet (a cooldown refund) caused it; a per-skill
 //! refill wakeup, owned by the deadline tracker like every other voice
 //! timer, re-derives the timelines when no packet comes.
+//!
+//! A skill is watched when a voice rule names it. The skill CD HUD's
+//! monitored list plays no part: [`EntityMonitorProjection::skill_cooldowns`]
+//! records every local cooldown, so a voice-only skill behaves the same.
 
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;

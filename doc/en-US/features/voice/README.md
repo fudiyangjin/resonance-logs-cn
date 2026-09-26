@@ -51,11 +51,11 @@ Everywhere you can bind announcements:
 
 A few things to note:
 
-- Skill announcements only cover your own character, and the skill must first be added to the Skill CD monitor. For skills with multiple charges, "ready" is announced **every time a charge comes back**, and "x seconds before ready" applies to each charge too.
+- Skill announcements only cover your own character; the skill doesn't need to be in the Skill CD monitor. For skills with multiple charges, "ready" is announced **every time a charge comes back**, and "x seconds before ready" applies to each charge too.
 - "x seconds left" and "x seconds before ready": if an update (a cooldown reduction, a shortened buff, a re-triggered mechanic) makes the remaining time jump below x seconds, the announcement plays right away. Nothing is played if it has already ended (the skill is ready, the buff has expired). If the remaining time is already below x seconds when it first appears, nothing is announced.
 - The "x seconds left" event for an entity requires a duration to be set for the entry; if the entity disappears early, only "disappear" is announced.
 - Entity announcements are stored by entity ID, so changing the scope (Self only / Any) keeps them. Turning off **{{ui:monsterMonitor.enabled}}** only hides the overlay; entity announcements keep working.
-- An announcement lives as long as its target: un-monitoring a skill, deleting an entity or DBM entry, or removing a buff from the monitor lists deletes its announcement settings too. This only affects the current profile; announcements for the same target in other profiles are untouched.
+- An announcement lives as long as its target: deleting an entity or DBM entry, or removing a buff from the monitor lists deletes its announcement settings too. Skill announcements have their own list, which is cleared when you switch class on the Skill CD page. This only affects the current profile; announcements for the same target in other profiles are untouched.
 
 ## Announcement overview
 

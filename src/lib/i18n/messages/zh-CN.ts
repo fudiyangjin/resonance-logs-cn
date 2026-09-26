@@ -1091,7 +1091,8 @@ export const zhCNMessages = {
   "skillMonitor.profile.deleteConfirm":
     "确定要删除该技能监控方案吗？引用它的总方案将回退到第一个方案。",
   "skillMonitor.skillCd.class.title": "职业选择",
-  "skillMonitor.skillCd.class.description": "支持当前已配置的职业技能方案",
+  "skillMonitor.skillCd.class.description":
+    "支持当前已配置的职业技能方案；切换职业会清空当前方案已选的技能和技能语音播报",
   "skillMonitor.skillCd.skills.title": "技能选择",
   "skillMonitor.skillCd.skills.description": "最多监控 10 个技能（2行 x 5列）",
   "skillMonitor.skillCd.resonance.title": "共鸣技能",
@@ -1105,8 +1106,10 @@ export const zhCNMessages = {
   "skillMonitor.skillCd.preview.description": "按选择顺序排列",
   "skillMonitor.skillCd.voice.title": "语音播报",
   "skillMonitor.skillCd.voice.description":
-    "为已监控的技能设置释放、就绪与提前就绪播报。充能类技能只在第一层充能回复时播报就绪。",
-  "skillMonitor.skillCd.voice.empty": "先在上方选择要监控的技能。",
+    "为职业技能或共鸣技能设置释放、就绪与提前就绪播报，无需加入上方的 CD 监控。充能类技能每恢复一层都会播报就绪。",
+  "skillMonitor.skillCd.voice.empty": "尚未配置语音播报，点击上方技能添加。",
+  "skillMonitor.skillCd.voice.configuredCount": "已配置 {count}",
+  "skillMonitor.skillCd.voice.classSkills": "职业技能",
   "skillMonitor.buff.status.selected": "已选择",
   "skillMonitor.buff.status.editing": "编辑中",
   "skillMonitor.buff.status.aliased": "已设别名",
