@@ -8,6 +8,7 @@ import {
   collectBindings,
   resolvePhraseId,
   resolveTierPhraseIds,
+  type BindingPhrase,
   type PhraseIndex,
   type VoiceBinding,
 } from "./compile";
@@ -25,12 +26,18 @@ export type VoiceBindingOverviewEntry = {
   binding: VoicePhraseBinding;
   /** Auto text for `binding.source === "auto"` (seconds already substituted). */
   autoText: string;
+  /**
+   * The binding's own phrase, `null` until it exists. Status is exact: a
+   * binding whose edited text still plays the previous audio is pending.
+   */
   phraseId: string | null;
   language: VoiceLanguage;
   /** True when the app bundle already contains playable audio for this binding. */
   bundledFallback: boolean;
   /** Per-tier (0-5) variant phrase ids for tier-placeholder custom text; empty otherwise. */
   tierPhraseIds: string[];
+  /** The managed phrases the binding compiles to (empty for a picked phrase). */
+  phrases: readonly BindingPhrase[];
   priority: number;
   navigateTo: OverviewGroup;
   monsterBuffSourceScope?: MonsterBuffSourceScope;
@@ -46,10 +53,11 @@ export function overviewEntryOf(
     eventLabelKey: `voice.binding.event.${binding.eventKind}`,
     binding: binding.phrase,
     autoText: binding.autoText,
-    phraseId: resolvePhraseId(binding, index),
+    phraseId: resolvePhraseId(binding, index, "exact"),
     language: binding.language,
     bundledFallback: binding.bundledFallback,
-    tierPhraseIds: Object.values(resolveTierPhraseIds(binding, index)),
+    tierPhraseIds: Object.values(resolveTierPhraseIds(binding, index, "exact")),
+    phrases: binding.phrases,
     priority: resolveVoicePriority(binding.config.priority),
     navigateTo: binding.group,
     ...(binding.subject.kind === "monsterBuff"

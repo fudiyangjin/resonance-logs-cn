@@ -43,9 +43,11 @@ export function alertRuleKey(kind: GameAlertKind): string {
  * prompt audio for the `auto` binding in every UI language, so an auto
  * binding is playable even before any phrase is generated.
  */
-export const gameAlertAdapter: VoiceSubjectAdapter<GameAlertSubject, void> = {
+export const gameAlertAdapter: VoiceSubjectAdapter<GameAlertSubject> = {
   kind: "gameAlert",
   runtime: "backend",
+  // `auto` names must match the bundled prompts `prompts.rs` seeds.
+  fixedPhraseName: true,
   overview: {
     group: "alerts",
     titleKey: "voice.alerts.title",
@@ -94,6 +96,4 @@ export const gameAlertAdapter: VoiceSubjectAdapter<GameAlertSubject, void> = {
   // Bundled prompts exist per UI language, so alerts follow the app locale
   // while every other subject stays on the Chinese TTS voice.
   language: (view) => voiceLanguageForLocale(view.locale),
-  // Bundled prompt phrases are always kept, configured or not.
-  gcKeys: () => GAME_ALERT_KINDS.map(alertRuleKey),
 };

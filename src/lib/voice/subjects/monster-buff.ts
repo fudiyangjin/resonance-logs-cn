@@ -1,12 +1,10 @@
-import type { MonsterBuffSourceScope } from "$lib/bindings";
 import { ensureBuffVoiceConfigs } from "$lib/settings-store";
+import { resolveMonsterBuffSourceScope } from "../association";
 import type {
-  MonsterVoiceSlice,
   VoiceBindingSubject,
   VoiceSubjectAdapter,
 } from "../subject-types";
 import {
-  BUFF_EVENTS,
   buffConfigIds,
   buffEventSpecs,
   buffLabel,
@@ -16,27 +14,7 @@ import {
   type BuffEventKind,
 } from "./buff";
 
-const MONSTER_BUFF_SCOPES: readonly MonsterBuffSourceScope[] = [
-  "localPlayerSource",
-  "anySource",
-];
-
-/**
- * Which caster population a target-buff binding observes, derived from
- * where the buff sits in the monster monitor's lists. `null` when the buff
- * is monitored nowhere (the binding is then dormant).
- */
-export function resolveMonsterBuffSourceScope(
-  monitor: Pick<
-    MonsterVoiceSlice,
-    "monitoredBuffIds" | "selfAppliedBuffIds" | "selfAppliedMonitorAll"
-  >,
-  buffId: number,
-): MonsterBuffSourceScope | null {
-  if (monitor.selfAppliedBuffIds.includes(buffId)) return "localPlayerSource";
-  if (monitor.monitoredBuffIds.includes(buffId)) return "anySource";
-  return monitor.selfAppliedMonitorAll ? "localPlayerSource" : null;
-}
+export { resolveMonsterBuffSourceScope } from "../association";
 
 export function monsterBuffAutoText(
   name: string,
@@ -55,10 +33,7 @@ export function monsterBuffAutoText(
 
 type MonsterBuffSubject = Extract<VoiceBindingSubject, { kind: "monsterBuff" }>;
 
-export const monsterBuffAdapter: VoiceSubjectAdapter<
-  MonsterBuffSubject,
-  MonsterVoiceSlice
-> = {
+export const monsterBuffAdapter: VoiceSubjectAdapter<MonsterBuffSubject> = {
   kind: "monsterBuff",
   runtime: "backend",
   overview: {
@@ -111,15 +86,4 @@ export const monsterBuffAdapter: VoiceSubjectAdapter<
       secondsBefore,
     ),
   language: () => "zhCn",
-  // The scope in the key depends on each profile's monitored lists at
-  // compile time; keep both scopes rather than re-deriving per profile.
-  gcKeys: (slice) =>
-    Object.keys(slice.monsterBuffVoiceConfigs ?? {}).flatMap((buffIdText) =>
-      MONSTER_BUFF_SCOPES.flatMap((scope) =>
-        BUFF_EVENTS.map(
-          (event) =>
-            `voice:monsterBuff:${scope}:${Number(buffIdText)}:${event}`,
-        ),
-      ),
-    ),
 };

@@ -66,6 +66,16 @@ pub enum VoiceLanguage {
 }
 
 impl VoiceLanguage {
+    /// The serialized name, as the frontend spells it.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::ZhCn => "zhCn",
+            Self::EnUs => "enUs",
+            Self::JaJp => "jaJp",
+        }
+    }
+
     pub fn sidecar_id(self) -> i32 {
         match self {
             Self::ZhCn => 2055,
@@ -422,6 +432,11 @@ pub struct VoiceCueIntent {
     pub phrase_id: String,
     pub priority: u8,
     pub triggered_at_ms: i64,
+    /// How long the cue stays worth playing: a lead cue ("N seconds left")
+    /// is stale once the moment it warns about has come. `None` never
+    /// expires (edges, and zero-lead cues that *are* that moment).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub valid_for_ms: Option<u64>,
 }
 
 /// Playback queue policy when the queue is full or a higher priority cue arrives.

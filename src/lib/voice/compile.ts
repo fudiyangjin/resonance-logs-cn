@@ -9,11 +9,10 @@ import {
   type VoicePhraseBinding,
 } from "$lib/settings-store";
 import {
-  expandTierPlaceholder,
+  bindingPhrases,
   hasTierPlaceholder,
-  managedPhraseName,
-  TIER_LEVELS,
-  type ManagedPhraseVariant,
+  managedSlotOf,
+  type BindingPhrase,
 } from "./phrase-key";
 import { VOICE_SUBJECT_ADAPTERS } from "./registry";
 import type {
@@ -24,10 +23,16 @@ import type {
   VoiceEventConfigAny,
 } from "./subject-types";
 
+export {
+  bindingPhrases,
+  type BindingPhrase,
+  type BindingPhraseInput,
+} from "./phrase-key";
+
 export const DEFAULT_COOLDOWN_MS = 2000;
 const DEFAULT_SECONDS_BEFORE = 5;
 
-/** One enabled (subject, event) pair with everything needed downstream. */
+/** One configured (subject, event) pair with everything needed downstream. */
 export type VoiceBinding = {
   ruleKey: string;
   subject: VoiceBindingSubject;
@@ -44,6 +49,8 @@ export type VoiceBinding = {
   /** Custom text using the fantasy tier placeholder compiles to tier variants. */
   tiered: boolean;
   bundledFallback: boolean;
+  /** The managed phrases this binding speaks through (no preview variant). */
+  phrases: readonly BindingPhrase[];
 };
 
 export type PhraseRequest = {
@@ -56,6 +63,9 @@ export type ResolvedPhrase = {
   phraseId: string;
   text: string;
   language: VoiceLanguage;
+  /** The phrase has an active asset to play. */
+  hasAudio?: boolean;
+  updatedAtMs?: number;
 };
 
 /** Managed phrase name -> what the backend last confirmed for it. */
@@ -67,8 +77,16 @@ export function secondsBeforeOf(config: VoiceEventConfigAny): number {
   return Math.max(1, Math.round(raw));
 }
 
-/** All enabled bindings visible in `view`, in registry order. */
-export function collectBindings(view: VoiceBindingView): VoiceBinding[] {
+export type CollectOptions = {
+  /** Include switched-off events too (GC keeps their phrases). */
+  includeDisabled?: boolean;
+};
+
+/** The configured bindings visible in `view`, in registry order. */
+export function collectBindings(
+  view: VoiceBindingView,
+  { includeDisabled = false }: CollectOptions = {},
+): VoiceBinding[] {
   const bindings: VoiceBinding[] = [];
   for (const adapter of VOICE_SUBJECT_ADAPTERS) {
     for (const subject of adapter.enumerate(view)) {
@@ -78,17 +96,19 @@ export function collectBindings(view: VoiceBindingView): VoiceBinding[] {
       const language = adapter.language(view);
       for (const spec of specs) {
         const config = adapter.read(view, subject, spec.eventKind);
-        if (!config?.enabled) continue;
+        if (!config || (!includeDisabled && !config.enabled)) continue;
         const seconds = secondsBeforeOf(config);
+        const ruleKey = adapter.ruleKey(subject, spec.eventKind);
+        const autoText = spec.autoText(seconds);
         bindings.push({
-          ruleKey: adapter.ruleKey(subject, spec.eventKind),
+          ruleKey,
           subject,
           eventKind: spec.eventKind,
           group: adapter.overview.group,
           subjectLabel,
           config,
           phrase: config.phrase,
-          autoText: spec.autoText(seconds),
+          autoText,
           language,
           trigger:
             adapter.runtime === "backend"
@@ -103,6 +123,14 @@ export function collectBindings(view: VoiceBindingView): VoiceBinding[] {
             subject,
             spec.eventKind,
           ),
+          phrases: bindingPhrases({
+            ruleKey,
+            phrase: config.phrase,
+            autoText,
+            language,
+            supportsTier: spec.supportsTierPlaceholder,
+            fixedName: adapter.fixedPhraseName === true,
+          }),
         });
       }
     }
@@ -110,120 +138,99 @@ export function collectBindings(view: VoiceBindingView): VoiceBinding[] {
   return bindings;
 }
 
-/** The managed text a binding speaks (`null` for phrase references / empty text). */
-export function bindingText(binding: VoiceBinding): string | null {
-  if (binding.phrase.source === "phrase") return null;
-  const text = (
-    binding.phrase.source === "custom" ? binding.phrase.text : binding.autoText
-  ).trim();
-  return text || null;
-}
-
-export function bindingPhraseName(
-  binding: VoiceBinding,
-  variant?: ManagedPhraseVariant,
-): string | null {
-  if (binding.phrase.source === "phrase") return null;
-  return managedPhraseName({
-    source: binding.phrase.source,
-    ruleKey: binding.ruleKey,
-    ...(variant ? { variant } : {}),
-  });
-}
-
-/**
- * Every catalog phrase the bindings need, deduplicated by name. Tiered
- * bindings expand to the placeholder-stripped fallback plus tiers 0-5.
- */
+/** Every catalog phrase the bindings need, deduplicated by name. */
 export function phraseRequests(
   bindings: readonly VoiceBinding[],
 ): PhraseRequest[] {
   const byName = new Map<string, PhraseRequest>();
-  const push = (name: string | null, text: string, language: VoiceLanguage) => {
-    if (!name || !text || byName.has(name)) return;
-    byName.set(name, { name, text, language });
-  };
   for (const binding of bindings) {
-    const text = bindingText(binding);
-    if (!text) continue;
-    if (!binding.tiered) {
-      push(bindingPhraseName(binding), text, binding.language);
-      continue;
-    }
-    push(
-      bindingPhraseName(binding),
-      expandTierPlaceholder(text, null),
-      binding.language,
-    );
-    for (const tier of TIER_LEVELS) {
-      push(
-        bindingPhraseName(binding, { kind: "tier", tier }),
-        expandTierPlaceholder(text, tier),
-        binding.language,
-      );
+    for (const { name, text, language } of binding.phrases) {
+      if (!byName.has(name)) byName.set(name, { name, text, language });
     }
   }
   return [...byName.values()];
 }
 
 /**
- * Whether `request` already has a usable phrase: the index knows the name,
- * the stored text/language match, and the phrase still exists in the
- * catalog (`catalogPhraseIds`), so GC'd or hand-deleted phrases are
- * re-created instead of compiling into dangling ids.
+ * How to resolve a phrase name: `exact` (status views) finds that phrase or
+ * nothing; `playable` (compiled rules) falls back, while the phrase does not
+ * exist yet, to the newest phrase of the same binding slot that has audio —
+ * so an edited text keeps its old voice until the new phrase lands. The
+ * backend applies the same rule while a landed phrase still lacks audio.
  */
-export function isResolved(
+export type PhraseResolution = "exact" | "playable";
+
+const playableBySlotCache = new WeakMap<
+  PhraseIndex,
+  ReadonlyMap<string, ResolvedPhrase>
+>();
+
+/** Newest phrase with audio per binding slot, built once per index. */
+function playableBySlot(
   index: PhraseIndex,
-  catalogPhraseIds: ReadonlySet<string>,
-  request: PhraseRequest,
-): boolean {
-  const entry = index[request.name];
-  return (
-    entry !== undefined &&
-    entry.text === request.text &&
-    entry.language === request.language &&
-    catalogPhraseIds.has(entry.phraseId)
-  );
+): ReadonlyMap<string, ResolvedPhrase> {
+  const cached = playableBySlotCache.get(index);
+  if (cached) return cached;
+  const bySlot = new Map<string, ResolvedPhrase>();
+  for (const [name, phrase] of Object.entries(index)) {
+    if (!phrase.hasAudio) continue;
+    const slot = managedSlotOf(name);
+    if (!slot) continue;
+    const newest = bySlot.get(slot);
+    if (!newest || (phrase.updatedAtMs ?? 0) > (newest.updatedAtMs ?? 0)) {
+      bySlot.set(slot, phrase);
+    }
+  }
+  playableBySlotCache.set(index, bySlot);
+  return bySlot;
 }
 
-/**
- * Phrase id a binding compiles to. Matches the pre-registry behaviour: a
- * stale index entry (text changed, upsert pending) keeps the old id so the
- * previous audio keeps playing until the new one lands.
- */
+function phraseIdFor(
+  name: string,
+  index: PhraseIndex,
+  resolution: PhraseResolution,
+): string | null {
+  const exact = index[name];
+  if (exact) return exact.phraseId;
+  if (resolution === "exact") return null;
+  const slot = managedSlotOf(name);
+  return slot ? (playableBySlot(index).get(slot)?.phraseId ?? null) : null;
+}
+
+/** Phrase id a binding compiles to (its base phrase). */
 export function resolvePhraseId(
   binding: VoiceBinding,
   index: PhraseIndex,
+  resolution: PhraseResolution = "playable",
 ): string | null {
   if (binding.phrase.source === "phrase")
     return binding.phrase.phraseId.trim() || null;
-  if (!bindingText(binding)) return null;
-  const name = bindingPhraseName(binding);
-  return name ? (index[name]?.phraseId ?? null) : null;
+  const base = binding.phrases.find((phrase) => !phrase.variant);
+  return base ? phraseIdFor(base.name, index, resolution) : null;
 }
 
 export function resolveTierPhraseIds(
   binding: VoiceBinding,
   index: PhraseIndex,
+  resolution: PhraseResolution = "playable",
 ): Record<number, string> {
   const byTier: Record<number, string> = {};
-  if (!binding.tiered) return byTier;
-  for (const tier of TIER_LEVELS) {
-    const name = bindingPhraseName(binding, { kind: "tier", tier });
-    const id = name ? index[name]?.phraseId : undefined;
-    if (id) byTier[tier] = id;
+  for (const phrase of binding.phrases) {
+    if (phrase.variant?.kind !== "tier") continue;
+    const id = phraseIdFor(phrase.name, index, resolution);
+    if (id) byTier[phrase.variant.tier] = id;
   }
   return byTier;
 }
 
-/** Backend rules for every binding with a trigger and a resolved phrase. */
+/** Backend rules for every enabled binding with a trigger and a phrase. */
 export function compileVoiceRules(
   bindings: readonly VoiceBinding[],
   index: PhraseIndex,
 ): VoiceRule[] {
   const rules: VoiceRule[] = [];
   for (const binding of bindings) {
-    if (!binding.trigger) continue;
+    if (!binding.trigger || !binding.config.enabled) continue;
     const phraseId = resolvePhraseId(binding, index);
     if (!phraseId) continue;
     const rule: VoiceRule = {

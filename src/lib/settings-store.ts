@@ -567,27 +567,31 @@ export type EntityVoiceConfig = {
 };
 
 /**
- * Keyed by `"{monsterId}:{scope}"` (see `entityVoiceConfigKey`), matching
- * the backend subject one-to-one so exports stay stable when the entry's
- * scope changes.
+ * Keyed by the watch entry's monster id (`entityVoiceConfigKey`): entries
+ * are unique per monster id, so the binding follows its entry when the
+ * entry's scope changes. Settings written before that used
+ * `"{monsterId}:{scope}"`; voice pruning re-keys those on the next write.
  */
 export type EntityVoiceConfigMap = Record<string, EntityVoiceConfig>;
 
-export function entityVoiceConfigKey(
-  monsterId: number,
-  scope: EntityDurationScope,
-): string {
-  return `${monsterId}:${scope}`;
+export function entityVoiceConfigKey(monsterId: number): string {
+  return String(monsterId);
 }
 
+/**
+ * Parses a canonical (`"179901"`) or pre-rekey (`"179901:self"`) key; the
+ * latter carries the scope it was written for.
+ */
 export function parseEntityVoiceConfigKey(
   key: string,
-): { monsterId: number; scope: EntityDurationScope } | null {
-  const match = /^(\d+):(self|any)$/.exec(key);
+): { monsterId: number; scope?: EntityDurationScope } | null {
+  const match = /^(\d+)(?::(self|any))?$/.exec(key);
   if (!match) return null;
   const monsterId = Number(match[1]);
   if (!Number.isSafeInteger(monsterId) || monsterId <= 0) return null;
-  return { monsterId, scope: match[2] as EntityDurationScope };
+  return match[2]
+    ? { monsterId, scope: match[2] as EntityDurationScope }
+    : { monsterId };
 }
 
 export function ensureEntityVoiceConfigs(

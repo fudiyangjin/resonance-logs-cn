@@ -87,6 +87,7 @@ const bindings = mock("export const commands = globalThis.voiceTest.commands;");
 const settingsModule = mock(`
   export const SETTINGS = globalThis.voiceTest.settings;
   export const ensureBuffVoiceConfigs = x => x;
+  export const ensureDbmAliases = x => x ?? {};
   export const ensureDbmVoiceConfigs = x => x;
   export const resolveVoicePriority = x => x;
 `);
@@ -102,6 +103,12 @@ const store = await import(storeUrl);
 const syncUrl = await moduleAt("./sync.svelte.ts", {
   "$lib/bindings": bindings,
   "$lib/settings-store": settingsModule,
+  "$lib/config/dbm-table": mock(
+    "export const lookupDbmDefaultName = () => undefined;",
+  ),
+  "$lib/monster-monitor-profile.svelte.js": mock(
+    "export const updateMonsterMonitor = () => {};",
+  ),
   "$lib/runtime-monitor-sync": mock(
     "export async function saveAndApplyVoiceRuntimeSnapshot(s) { globalThis.voiceTest.snapshots.push(s); }",
   ),

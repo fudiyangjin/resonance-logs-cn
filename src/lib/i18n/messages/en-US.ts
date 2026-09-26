@@ -2144,7 +2144,7 @@ export const enUSMessages = {
   "voice.phrases.rowGenerateHint": "Pick a voice source below first",
   "voice.phrases.gc.button": "Clean up unreferenced phrases ({count})",
   "voice.phrases.gc.confirm":
-    "This deletes {count} auto-generated phrases (and their audio) that are no longer referenced by any loadout. This cannot be undone; re-importing a loadout that uses them will recreate the phrases, but the audio must be regenerated.",
+    "This deletes {count} auto-generated phrases (and their audio) that no binding in any loadout uses any more. Imported audio is never included; delete it one by one. This cannot be undone; re-enabling a binding with the same text recreates its phrase, but the audio must be regenerated.",
   "voice.phrases.gc.confirmAction": "Clean up",
   "voice.phrases.gc.cancel": "Cancel",
   "voice.phrases.gc.done": "Removed {count} unreferenced phrases",

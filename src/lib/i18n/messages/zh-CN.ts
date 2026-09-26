@@ -1984,7 +1984,7 @@ export const zhCNMessages = {
   "voice.phrases.rowGenerateHint": "请先在下方选择音色来源",
   "voice.phrases.gc.button": "清理未引用短语 ({count})",
   "voice.phrases.gc.confirm":
-    "将删除 {count} 条自动生成但未被任何方案引用的短语及其音频。此操作不可撤销；若之后重新导入含这些播报的方案，短语会自动重建，但音频需要重新生成。",
+    "将删除 {count} 条自动生成、已不被任何方案的播报使用的短语及其音频（导入的音频不在此列，需逐条手动删除）。此操作不可撤销；之后重新启用相同文本的播报时，短语会自动重建，但音频需要重新生成。",
   "voice.phrases.gc.confirmAction": "确认清理",
   "voice.phrases.gc.cancel": "取消",
   "voice.phrases.gc.done": "已清理 {count} 条未引用短语",

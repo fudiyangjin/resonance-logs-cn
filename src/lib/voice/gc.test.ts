@@ -1,277 +1,300 @@
 import { describe, expect, it } from "vitest";
-import type { VoicePhraseMeta } from "$lib/bindings";
 import type {
-  VoiceEventConfig,
-  VoiceExpiringEventConfig,
-} from "$lib/settings-store";
-import {
-  classifyOrphanPhrases,
-  collectReferencedVoiceKeys,
-  managedBaseKeyOf,
-  type VoicePhraseGcSources,
-} from "./gc";
+  VoiceAssetMeta,
+  VoiceAssetSource,
+  VoiceLanguage,
+  VoicePhraseMeta,
+} from "$lib/bindings";
+import type { VoiceEventConfig, VoicePhraseBinding } from "$lib/settings-store";
+import { classifyOrphanPhrases, collectVoicePhraseRefs } from "./gc";
+import { bindingPhrases, contentHash, managedPhraseName } from "./phrase-key";
+import type {
+  MonsterVoiceSlice,
+  SkillProfileVoiceSlice,
+  VoiceBindingView,
+} from "./subject-types";
 
-function eventConfig(): VoiceEventConfig {
-  return { enabled: true, phrase: { source: "auto" } };
-}
+const EMPTY_MONSTER: MonsterVoiceSlice = {
+  monitoredBuffIds: [],
+  selfAppliedBuffIds: [],
+  selfAppliedMonitorAll: false,
+  dbmAliases: {},
+  entityDurationEntries: [],
+};
 
-function expiringConfig(): VoiceExpiringEventConfig {
-  return { ...eventConfig(), secondsBefore: 5 };
-}
-
-function phrase(name: string): VoicePhraseMeta {
+function view(overrides: Partial<VoiceBindingView> = {}): VoiceBindingView {
   return {
-    id: `id-${name}`,
-    name,
-    text: name,
-    language: "zhCn",
-    activeAssetId: null,
-    updatedAtMs: 0,
+    skillProfile: null,
+    monster: EMPTY_MONSTER,
+    mechanicVoiceConfigs: {},
+    alertConfigs: {},
+    minimapCues: [],
+    buffAliases: { "101": "狂暴" },
+    locale: "zh-CN",
+    t: (key) => key,
+    ...overrides,
   };
 }
 
-function emptySources(): VoicePhraseGcSources {
-  return { skillProfiles: [], monsterConfigs: [], mechanicVoiceConfigs: {} };
+function skillView(profile: Partial<SkillProfileVoiceSlice>) {
+  return view({
+    skillProfile: { monitoredSkillIds: [], selectedClass: "", ...profile },
+  });
+}
+
+function bound(phrase: VoicePhraseBinding, enabled = true): VoiceEventConfig {
+  return { enabled, phrase };
+}
+
+const AUTO = { source: "auto" } as const;
+const custom = (text: string) => ({ source: "custom", text }) as const;
+
+/** Name of the managed phrase speaking `text` for a buff 101 event. */
+function buffName(
+  source: "auto" | "custom",
+  event: string,
+  text: string,
+  variant?: { kind: "tier" | "previewTier"; tier: number },
+): string {
+  return managedPhraseName({
+    source,
+    ruleKey: `voice:buff:101:${event}`,
+    ...(variant ? { variant } : {}),
+    hash: contentHash(text, "zhCn"),
+  });
+}
+
+let nextId = 0;
+function phrase(
+  name: string,
+  options: {
+    text?: string;
+    language?: VoiceLanguage;
+    audio?: VoiceAssetSource["kind"] | null;
+    updatedAtMs?: number;
+  } = {},
+): { phrase: VoicePhraseMeta; asset: VoiceAssetMeta | null } {
+  const id = `phrase-${nextId++}`;
+  const audio = options.audio === undefined ? "cloneProfile" : options.audio;
+  const asset: VoiceAssetMeta | null = audio
+    ? {
+        id: `asset-${id}`,
+        phraseId: id,
+        source:
+          audio === "imported"
+            ? { kind: "imported", sha256: "", originalFileName: "" }
+            : { kind: "cloneProfile", profileId: "p" },
+        modelVersion: "",
+        paramsFingerprint: "",
+        createdAtMs: 0,
+        durationSec: 1,
+        sampleRate: 24_000,
+        stale: false,
+      }
+    : null;
+  return {
+    phrase: {
+      id,
+      name,
+      text: options.text ?? name,
+      language: options.language ?? "zhCn",
+      activeAssetId: asset?.id ?? null,
+      updatedAtMs: options.updatedAtMs ?? 0,
+    },
+    asset,
+  };
 }
 
 function orphanNames(
-  phrases: VoicePhraseMeta[],
-  sources: VoicePhraseGcSources,
+  entries: ReturnType<typeof phrase>[],
+  views: VoiceBindingView[],
 ): string[] {
   return classifyOrphanPhrases(
-    phrases,
-    collectReferencedVoiceKeys(sources),
-  ).map((item) => item.name);
+    entries.map((entry) => entry.phrase),
+    entries.flatMap((entry) => (entry.asset ? [entry.asset] : [])),
+    collectVoicePhraseRefs(views),
+  ).map((orphan) => orphan.name);
 }
 
-describe("collectReferencedVoiceKeys", () => {
-  it("keeps phrases referenced by any profile, not just the active one", () => {
-    // Profile A (active) references buff 101, profile B references buff 202;
-    // both live in the profiles array, so both must be kept.
-    const sources: VoicePhraseGcSources = {
-      ...emptySources(),
-      skillProfiles: [
-        { buffVoiceConfigs: { "101": { gained: eventConfig() } } },
-        { buffVoiceConfigs: { "202": { lost: eventConfig() } } },
-      ],
-    };
-    const orphans = orphanNames(
-      [
-        phrase("custom:voice:buff:101:gained"),
-        phrase("custom:voice:buff:202:lost"),
-        phrase("custom:voice:buff:303:gained"),
-      ],
-      sources,
-    );
-    expect(orphans).toEqual(["custom:voice:buff:303:gained"]);
-  });
-
-  it("keeps skill and entity bindings across every event and entity scope", () => {
-    const sources: VoicePhraseGcSources = {
-      ...emptySources(),
-      skillProfiles: [
-        { skillVoiceConfigs: { "1420": { cast: eventConfig() } } },
-      ],
-      monsterConfigs: [
-        {
-          entityVoiceConfigs: {
-            "179901:self": { expiring: expiringConfig() },
-          },
-        },
-      ],
-    };
-    const keys = collectReferencedVoiceKeys(sources);
-    expect(keys.has("voice:skill:1420:cast")).toBe(true);
-    expect(keys.has("voice:skill:1420:ready")).toBe(true);
-    expect(keys.has("voice:skill:1420:readyIn")).toBe(true);
-    expect(keys.has("voice:entity:179901:self:appeared")).toBe(true);
-    expect(keys.has("voice:entity:179901:any:gone")).toBe(true);
-    expect(
-      orphanNames(
-        [
-          phrase("auto:voice:skill:1420:ready"),
-          phrase("auto:voice:skill:1425:ready"),
-          phrase("auto:voice:entity:179901:any:expiring"),
-          phrase("auto:voice:entity:179902:self:gone"),
-        ],
-        sources,
-      ),
-    ).toEqual([
-      "auto:voice:skill:1425:ready",
-      "auto:voice:entity:179902:self:gone",
+describe("collectVoicePhraseRefs", () => {
+  it("keeps what every profile speaks: loadouts with different texts keep their own audio", () => {
+    const a = skillView({
+      buffVoiceConfigs: { "101": { gained: bound(custom("狂暴来了")) } },
+    });
+    const b = skillView({
+      buffVoiceConfigs: { "101": { gained: bound(custom("开狂暴")) } },
+    });
+    const refs = collectVoicePhraseRefs([a, b]);
+    expect([...refs.names]).toEqual([
+      buffName("custom", "gained", "狂暴来了"),
+      buffName("custom", "gained", "开狂暴"),
     ]);
   });
 
-  it("keeps all events of a configured subject even if only one is set", () => {
-    const sources: VoicePhraseGcSources = {
-      ...emptySources(),
-      skillProfiles: [
-        { buffVoiceConfigs: { "101": { gained: eventConfig() } } },
-      ],
-    };
-    const keys = collectReferencedVoiceKeys(sources);
-    expect(keys.has("voice:buff:101:gained")).toBe(true);
-    expect(keys.has("voice:buff:101:expiring")).toBe(true);
-    expect(keys.has("voice:buff:101:lost")).toBe(true);
-  });
-
-  it("counts both user counter rules and preset counter configs", () => {
-    const sources: VoicePhraseGcSources = {
-      ...emptySources(),
-      skillProfiles: [
-        {
-          userCounterRules: [
-            {
-              ruleId: 7,
-              name: "rule",
-              sourceRefs: [],
-              slotRefs: [],
-              voice: { "1": { threshold: eventConfig() } },
-            },
-          ],
-          presetCounterVoiceConfigs: {
-            "9": { "2": { expiring: expiringConfig() } },
+  it("counts switched-off events and phrases picked by id", () => {
+    const refs = collectVoicePhraseRefs([
+      skillView({
+        buffVoiceConfigs: {
+          "101": {
+            gained: bound(AUTO, false),
+            lost: bound({ source: "phrase", phraseId: " picked " }),
           },
         },
-      ],
-    };
-    const keys = collectReferencedVoiceKeys(sources);
-    expect(keys.has("voice:counter:7:1:threshold")).toBe(true);
-    expect(keys.has("voice:counter:7:1:expiring")).toBe(true);
-    expect(keys.has("voice:counter:9:2:threshold")).toBe(true);
-    expect(keys.has("voice:counter:9:2:expiring")).toBe(true);
+      }),
+    ]);
+    expect([...refs.names]).toEqual([buffName("auto", "gained", "狂暴已生效")]);
+    expect([...refs.phraseIds]).toEqual(["picked"]);
   });
 
-  it("keeps both monster-buff source scopes for a configured buff", () => {
-    const sources: VoicePhraseGcSources = {
-      ...emptySources(),
-      monsterConfigs: [
-        { monsterBuffVoiceConfigs: { "55": { gained: eventConfig() } } },
-      ],
-    };
-    const keys = collectReferencedVoiceKeys(sources);
-    expect(keys.has("voice:monsterBuff:localPlayerSource:55:gained")).toBe(
-      true,
-    );
-    expect(keys.has("voice:monsterBuff:anySource:55:gained")).toBe(true);
+  it("drops bindings without a subject, like an unmonitored skill", () => {
+    const configs = { "990001": { cast: bound(AUTO) } };
+    const monitored = collectVoicePhraseRefs([
+      skillView({ monitoredSkillIds: [990001], skillVoiceConfigs: configs }),
+    ]);
+    const unmonitored = collectVoicePhraseRefs([
+      skillView({ monitoredSkillIds: [], skillVoiceConfigs: configs }),
+    ]);
+    expect(monitored.names.size).toBe(1);
+    expect(unmonitored.names.size).toBe(0);
   });
 
-  it("collects dbm and minimap cue keys", () => {
-    const sources: VoicePhraseGcSources = {
-      skillProfiles: [],
-      monsterConfigs: [
-        { dbmVoiceConfigs: { "8801": { onCast: eventConfig() } } },
-      ],
-      mechanicVoiceConfigs: { "s3-raid:bomb": eventConfig() },
-    };
-    const keys = collectReferencedVoiceKeys(sources);
-    expect(keys.has("voice:dbm:8801:onCast")).toBe(true);
-    expect(keys.has("voice:dbm:8801:expiring")).toBe(true);
-    expect(keys.has("voice:minimapCue:s3-raid:bomb")).toBe(true);
-  });
-
-  it("always keeps bundled alert prompt keys", () => {
-    const keys = collectReferencedVoiceKeys(emptySources());
-
-    expect(keys.has("voice:alert:matchReady")).toBe(true);
-    expect(keys.has("voice:alert:readyCheck")).toBe(true);
-    expect(keys.has("voice:alert:teamVote")).toBe(true);
-  });
-
-  it("treats disabled configs as referenced", () => {
-    const sources: VoicePhraseGcSources = {
-      ...emptySources(),
-      skillProfiles: [
-        {
-          buffVoiceConfigs: {
-            "101": {
-              gained: { enabled: false, phrase: { source: "auto" } },
-            },
-          },
-        },
-      ],
-    };
-    expect(
-      collectReferencedVoiceKeys(sources).has("voice:buff:101:gained"),
-    ).toBe(true);
-  });
-});
-
-describe("managedBaseKeyOf", () => {
-  it("strips tier and preview suffixes", () => {
-    expect(managedBaseKeyOf("custom:voice:buff:101:gained")).toBe(
-      "voice:buff:101:gained",
-    );
-    expect(managedBaseKeyOf("custom:voice:buff:101:gained:tier3")).toBe(
-      "voice:buff:101:gained",
-    );
-    expect(managedBaseKeyOf("custom:voice:buff:101:gained:previewTier5")).toBe(
-      "voice:buff:101:gained",
-    );
-    expect(managedBaseKeyOf("auto:voice:dbm:8801:onCast")).toBe(
-      "voice:dbm:8801:onCast",
-    );
-  });
-
-  it("returns null for manually created phrase names", () => {
-    expect(managedBaseKeyOf("机制来了")).toBeNull();
-    expect(managedBaseKeyOf("my-phrase")).toBeNull();
-    expect(managedBaseKeyOf("voice:buff:101:gained")).toBeNull();
-    expect(managedBaseKeyOf("auto:something-else")).toBeNull();
+  it("keeps the base, tier and preview phrases of tier-placeholder text", () => {
+    const text = "${阶数}狂暴没了";
+    const refs = collectVoicePhraseRefs([
+      skillView({
+        buffVoiceConfigs: { "101": { lost: bound(custom(text)) } },
+      }),
+    ]);
+    const expected = bindingPhrases({
+      ruleKey: "voice:buff:101:lost",
+      phrase: custom(text),
+      autoText: "",
+      language: "zhCn",
+      supportsTier: true,
+      includePreview: true,
+    }).map((entry) => entry.name);
+    expect(expected).toHaveLength(8);
+    expect([...refs.names]).toEqual(expected);
   });
 });
 
 describe("classifyOrphanPhrases", () => {
-  it("keeps or removes tier/preview variants together with the base key", () => {
-    const sources: VoicePhraseGcSources = {
-      ...emptySources(),
-      skillProfiles: [
-        { buffVoiceConfigs: { "101": { gained: eventConfig() } } },
-      ],
-    };
-    const orphans = orphanNames(
-      [
-        phrase("custom:voice:buff:101:gained"),
-        phrase("custom:voice:buff:101:gained:tier0"),
-        phrase("custom:voice:buff:101:gained:tier5"),
-        phrase("custom:voice:buff:101:gained:previewTier5"),
-        phrase("custom:voice:buff:999:gained:tier2"),
-        phrase("custom:voice:buff:999:gained:previewTier5"),
-      ],
-      sources,
-    );
-    expect(orphans).toEqual([
-      "custom:voice:buff:999:gained:tier2",
-      "custom:voice:buff:999:gained:previewTier5",
-    ]);
+  const current = skillView({
+    buffVoiceConfigs: { "101": { gained: bound(custom("狂暴来了")) } },
   });
 
-  it("judges auto and custom prefixes by the same base key", () => {
-    // Both prefixes map to the same base key: while the binding exists, the
-    // stale counterpart from an auto/custom switch is also kept (over-keep is
-    // the safe direction); once the binding is gone, both become orphans.
-    const referenced: VoicePhraseGcSources = {
-      ...emptySources(),
-      skillProfiles: [
-        { buffVoiceConfigs: { "101": { gained: eventConfig() } } },
-      ],
-    };
-    const catalog = [
-      phrase("auto:voice:buff:101:gained"),
-      phrase("custom:voice:buff:101:gained"),
-    ];
-    expect(orphanNames(catalog, referenced)).toEqual([]);
-    expect(orphanNames(catalog, emptySources())).toEqual([
+  it("orphans the previous text and the other source once the current phrase has audio", () => {
+    expect(
+      orphanNames(
+        [
+          phrase(buffName("custom", "gained", "狂暴来了")),
+          phrase(buffName("custom", "gained", "旧文本")),
+          phrase(buffName("auto", "gained", "狂暴已生效")),
+          phrase("auto:voice:buff:101:gained"),
+        ],
+        [current],
+      ),
+    ).toEqual([
+      buffName("custom", "gained", "旧文本"),
+      buffName("auto", "gained", "狂暴已生效"),
       "auto:voice:buff:101:gained",
-      "custom:voice:buff:101:gained",
     ]);
   });
 
-  it("never selects manually created phrases", () => {
-    const orphans = orphanNames(
-      [phrase("机制来了"), phrase("custom:voice:buff:1:gained")],
-      emptySources(),
+  it("protects the newest same-slot phrase with audio while the current one has none", () => {
+    const older = phrase(buffName("custom", "gained", "更旧"), {
+      updatedAtMs: 1,
+    });
+    const newer = phrase(buffName("auto", "gained", "狂暴已生效"), {
+      updatedAtMs: 2,
+    });
+    const silent = phrase(buffName("custom", "gained", "没音频"), {
+      audio: null,
+      updatedAtMs: 3,
+    });
+    const pending = phrase(buffName("custom", "gained", "狂暴来了"), {
+      audio: null,
+    });
+    // Current phrase still silent: the newest voiced sibling keeps playing.
+    expect(orphanNames([older, newer, silent, pending], [current])).toEqual([
+      older.phrase.name,
+      silent.phrase.name,
+    ]);
+    // Current phrase not even created yet: same.
+    expect(orphanNames([older, newer], [current])).toEqual([older.phrase.name]);
+  });
+
+  it("orphans tier variants of an old text but keeps the current ones", () => {
+    const text = "${阶数}狂暴没了";
+    const view = skillView({
+      buffVoiceConfigs: { "101": { lost: bound(custom(text)) } },
+    });
+    const needed = bindingPhrases({
+      ruleKey: "voice:buff:101:lost",
+      phrase: custom(text),
+      autoText: "",
+      language: "zhCn",
+      supportsTier: true,
+      includePreview: true,
+    }).map((entry) => phrase(entry.name));
+    const stale = phrase(
+      buffName("custom", "lost", "2阶旧文本", { kind: "tier", tier: 2 }),
     );
-    expect(orphans).toEqual(["custom:voice:buff:1:gained"]);
+    expect(orphanNames([...needed, stale], [view])).toEqual([
+      stale.phrase.name,
+    ]);
+  });
+
+  it("never orphans imported audio, picked phrases, alert prompts or hand-made phrases", () => {
+    const imported = phrase(buffName("custom", "expiring", "导入的"), {
+      audio: "imported",
+    });
+    const picked = phrase(buffName("custom", "lost", "被选用的"));
+    const view = skillView({
+      buffVoiceConfigs: {
+        "101": {
+          lost: bound({ source: "phrase", phraseId: picked.phrase.id }),
+        },
+      },
+    });
+    expect(
+      orphanNames(
+        [
+          imported,
+          picked,
+          phrase("auto:voice:alert:matchReady"),
+          phrase("custom:voice:alert:readyCheck"),
+          phrase("机制来了"),
+          phrase("custom:voice:buff:9:gained~0f03554a"),
+        ],
+        [view],
+      ),
+    ).toEqual(["custom:voice:buff:9:gained~0f03554a"]);
+  });
+
+  it("keeps phrases of every monster profile view", () => {
+    const entityView = (label: string) =>
+      view({
+        monster: {
+          ...EMPTY_MONSTER,
+          entityDurationEntries: [
+            { id: "e", monsterId: 179901, label, scope: "self" },
+          ],
+          entityVoiceConfigs: { "179901": { appeared: bound(AUTO) } },
+        },
+      });
+    const name = (text: string) =>
+      managedPhraseName({
+        source: "auto",
+        ruleKey: "voice:entity:179901:appeared",
+        hash: contentHash(text, "zhCn"),
+      });
+    const catalog = [phrase(name("镰车已出现")), phrase(name("镰刀车已出现"))];
+    expect(
+      orphanNames(catalog, [entityView("镰车"), entityView("镰刀车")]),
+    ).toEqual([]);
+    expect(orphanNames(catalog, [entityView("镰车")])).toEqual([
+      name("镰刀车已出现"),
+    ]);
   });
 });

@@ -15,9 +15,12 @@
  */
 import { untrack } from "svelte";
 import { commands, type VoiceLanguage } from "$lib/bindings";
+import { lookupDbmDefaultName } from "$lib/config/dbm-table";
+import { updateMonsterMonitor } from "$lib/monster-monitor-profile.svelte.js";
 import { saveAndApplyVoiceRuntimeSnapshot } from "$lib/runtime-monitor-sync";
 import {
   ensureBuffVoiceConfigs,
+  ensureDbmAliases,
   ensureDbmVoiceConfigs,
   resolveVoicePriority,
   SETTINGS,
@@ -57,6 +60,8 @@ const phraseIndex = $derived.by(() => {
       phraseId: phrase.id,
       text: phrase.text,
       language: phrase.language,
+      hasAudio: phrase.activeAssetId != null,
+      updatedAtMs: phrase.updatedAtMs,
     };
   }
   return index;
@@ -143,10 +148,22 @@ function migrateLegacyVoiceRules(): void {
     }));
   }
   if (Object.keys(dbmPatch).length > 0) {
-    SETTINGS.monsterMonitor.state.dbmVoiceConfigs = mergeVoiceConfigPatch(
-      ensureDbmVoiceConfigs(SETTINGS.monsterMonitor.state.dbmVoiceConfigs),
-      dbmPatch,
-    );
+    // A DBM binding lives as long as its DBM entry (`association.ts`).
+    updateMonsterMonitor((state) => ({
+      dbmAliases: {
+        ...Object.fromEntries(
+          Object.keys(dbmPatch).map((id) => [
+            id,
+            lookupDbmDefaultName(Number(id)) ?? `#${id}`,
+          ]),
+        ),
+        ...ensureDbmAliases(state.dbmAliases),
+      },
+      dbmVoiceConfigs: mergeVoiceConfigPatch(
+        ensureDbmVoiceConfigs(state.dbmVoiceConfigs),
+        dbmPatch,
+      ),
+    }));
   }
   SETTINGS.voice.state.rules = [];
   legacyMigrationDone = true;

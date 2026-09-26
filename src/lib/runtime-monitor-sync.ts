@@ -139,13 +139,25 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
 
 function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
   const enabled = SETTINGS.monsterMonitor.state.enabled;
+  // Entity voice bindings speak whether or not the monster HUD is on, so the
+  // watch list always goes down; the backend hides the HUD tracks itself.
+  const watchedEntities = ensureEntityDurationEntries(
+    SETTINGS.monsterMonitor.state.entityDurationEntries,
+  )
+    .map((entry) => ({
+      monsterId: entry.monsterId,
+      durationMs: entry.durationMs ?? null,
+      scope: entry.scope,
+      merge: entry.merge === true,
+    }))
+    .sort((a, b) => a.monsterId - b.monsterId);
   if (!enabled) {
     return {
       enabled: false,
       globalIds: [],
       selfAppliedIds: [],
       monitorAllSelfApplied: false,
-      watchedEntities: [],
+      watchedEntities,
     };
   }
 
@@ -158,16 +170,7 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
       SETTINGS.monsterMonitor.state.selfAppliedBuffIds,
     ),
     monitorAllSelfApplied: SETTINGS.monsterMonitor.state.selfAppliedMonitorAll,
-    watchedEntities: ensureEntityDurationEntries(
-      SETTINGS.monsterMonitor.state.entityDurationEntries,
-    )
-      .map((entry) => ({
-        monsterId: entry.monsterId,
-        durationMs: entry.durationMs ?? null,
-        scope: entry.scope,
-        merge: entry.merge === true,
-      }))
-      .sort((a, b) => a.monsterId - b.monsterId),
+    watchedEntities,
   };
 }
 

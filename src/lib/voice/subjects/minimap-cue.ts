@@ -1,7 +1,5 @@
-import {
-  ensureMechanicVoiceConfigs,
-  type MechanicVoiceConfigMap,
-} from "$lib/settings-store";
+import type { VoiceLanguage } from "$lib/bindings";
+import { ensureMechanicVoiceConfigs } from "$lib/settings-store";
 import type {
   VoiceBindingSubject,
   VoiceSubjectAdapter,
@@ -13,16 +11,16 @@ export function minimapCueRuleKey(cueId: string): string {
   return `voice:minimapCue:${cueId}`;
 }
 
+/** Cue phrases are spoken by the Chinese voice (the HUD names them too). */
+export const MINIMAP_CUE_LANGUAGE: VoiceLanguage = "zhCn";
+
 /**
  * Minimap mechanic cues are judged and played by the HUD itself
  * (`minimap-voice.svelte.ts`), so this adapter only owns configuration,
  * naming and the overview; `runtime: "frontend"` keeps it out of the
  * compiled rule set.
  */
-export const minimapCueAdapter: VoiceSubjectAdapter<
-  MinimapCueSubject,
-  MechanicVoiceConfigMap | null | undefined
-> = {
+export const minimapCueAdapter: VoiceSubjectAdapter<MinimapCueSubject> = {
   kind: "minimapCue",
   runtime: "frontend",
   overview: {
@@ -69,6 +67,5 @@ export const minimapCueAdapter: VoiceSubjectAdapter<
     }));
   },
   trigger: () => null,
-  language: () => "zhCn",
-  gcKeys: (slice) => Object.keys(slice ?? {}).map(minimapCueRuleKey),
+  language: () => MINIMAP_CUE_LANGUAGE,
 };

@@ -4,9 +4,9 @@ import {
   type DbmVoiceConfig,
   type DbmVoiceConfigMap,
 } from "$lib/settings-store";
+import { dbmEntryIds } from "../association";
 import {
   mergeVoiceConfigPatch,
-  type MonsterVoiceSlice,
   type VoiceBindingEventKind,
   type VoiceBindingSubject,
   type VoiceBindingView,
@@ -14,7 +14,6 @@ import {
 } from "../subject-types";
 
 export type DbmEventKind = "onCast" | "expiring";
-const DBM_EVENTS: readonly DbmEventKind[] = ["onCast", "expiring"];
 
 function isDbmEventKind(kind: VoiceBindingEventKind): kind is DbmEventKind {
   return kind === "onCast" || kind === "expiring";
@@ -48,7 +47,7 @@ function writeDbmConfig(
 
 type DbmSubject = Extract<VoiceBindingSubject, { kind: "dbm" }>;
 
-export const dbmAdapter: VoiceSubjectAdapter<DbmSubject, MonsterVoiceSlice> = {
+export const dbmAdapter: VoiceSubjectAdapter<DbmSubject> = {
   kind: "dbm",
   runtime: "backend",
   overview: {
@@ -80,11 +79,14 @@ export const dbmAdapter: VoiceSubjectAdapter<DbmSubject, MonsterVoiceSlice> = {
     ];
   },
   readyWithoutPhrase: () => false,
-  enumerate: (view) =>
-    Object.keys(ensureDbmVoiceConfigs(view.monster.dbmVoiceConfigs))
+  // The DBM list is the alias list: a binding lives as long as its entry.
+  enumerate: (view) => {
+    const entries = dbmEntryIds(view.monster);
+    return Object.keys(ensureDbmVoiceConfigs(view.monster.dbmVoiceConfigs))
       .map(Number)
-      .filter((id) => Number.isInteger(id))
-      .map((baseSkillId) => ({ kind: "dbm", baseSkillId })),
+      .filter((id) => Number.isInteger(id) && entries.has(id))
+      .map((baseSkillId) => ({ kind: "dbm", baseSkillId }));
+  },
   read: (view, subject, eventKind) => {
     if (!isDbmEventKind(eventKind)) return undefined;
     const configs = ensureDbmVoiceConfigs(view.monster.dbmVoiceConfigs);
@@ -119,8 +121,4 @@ export const dbmAdapter: VoiceSubjectAdapter<DbmSubject, MonsterVoiceSlice> = {
     }
   },
   language: () => "zhCn",
-  gcKeys: (slice) =>
-    Object.keys(slice.dbmVoiceConfigs ?? {}).flatMap((idText) =>
-      DBM_EVENTS.map((event) => `voice:dbm:${Number(idText)}:${event}`),
-    ),
 };

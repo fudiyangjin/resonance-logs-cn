@@ -12,6 +12,7 @@ import {
   resolveCounterVoiceRules,
   type ResolvedCounterVoiceRule,
 } from "$lib/voice-binding-counter";
+import type { CounterEventKind } from "../association";
 import {
   mergeVoiceConfigPatch,
   type SkillProfileVoiceSlice,
@@ -21,8 +22,7 @@ import {
   type VoiceSubjectAdapter,
 } from "../subject-types";
 
-export type CounterEventKind = "threshold" | "expiring";
-const COUNTER_EVENTS: readonly CounterEventKind[] = ["threshold", "expiring"];
+export type { CounterEventKind } from "../association";
 
 function isCounterEventKind(
   kind: VoiceBindingEventKind,
@@ -53,10 +53,7 @@ function ruleFor(
   );
 }
 
-export const counterSlotAdapter: VoiceSubjectAdapter<
-  CounterSubject,
-  SkillProfileVoiceSlice
-> = {
+export const counterSlotAdapter: VoiceSubjectAdapter<CounterSubject> = {
   kind: "counterSlot",
   runtime: "backend",
   overview: {
@@ -178,28 +175,4 @@ export const counterSlotAdapter: VoiceSubjectAdapter<
     }
   },
   language: () => "zhCn",
-  gcKeys: (slice) => {
-    const keys: string[] = [];
-    for (const rule of slice.userCounterRules ?? []) {
-      for (const slotIdText of Object.keys(rule.voice ?? {})) {
-        for (const event of COUNTER_EVENTS) {
-          keys.push(
-            `voice:counter:${rule.ruleId}:${Number(slotIdText)}:${event}`,
-          );
-        }
-      }
-    }
-    for (const [ruleIdText, slotConfigs] of Object.entries(
-      slice.presetCounterVoiceConfigs ?? {},
-    )) {
-      for (const slotIdText of Object.keys(slotConfigs ?? {})) {
-        for (const event of COUNTER_EVENTS) {
-          keys.push(
-            `voice:counter:${Number(ruleIdText)}:${Number(slotIdText)}:${event}`,
-          );
-        }
-      }
-    }
-    return keys;
-  },
 };

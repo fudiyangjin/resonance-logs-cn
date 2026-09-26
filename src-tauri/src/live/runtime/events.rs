@@ -420,9 +420,7 @@ pub enum TimerKey {
     },
     VoiceExpiry {
         rule_set: u64,
-        rule_handle: u64,
-        subject: u64,
-        instance: u64,
+        timer: VoiceTimer,
     },
     BossDbmExpiry {
         base_skill_id: i32,
@@ -458,7 +456,38 @@ impl TimerKey {
 pub enum TimerScope {
     Runtime,
     RuleSet(u64),
+    Voice(u64),
     Segment(SegmentId),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum VoiceBuffScope {
+    LocalPlayer,
+    MonsterAnySource,
+    MonsterLocalPlayerSource,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct VoiceRuleHandle(pub u32);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum VoiceLeadSubject {
+    Buff { scope: VoiceBuffScope, base_id: i32 },
+    BossDbm { base_skill_id: i32 },
+    CounterFreeze { rule_id: i32, slot_id: i32 },
+    SkillReady { skill_id: i32 },
+    Entity { entity: EntityUuid },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum VoiceTimer {
+    Lead {
+        rule: VoiceRuleHandle,
+        subject: VoiceLeadSubject,
+    },
+    SkillRefill {
+        skill_id: i32,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

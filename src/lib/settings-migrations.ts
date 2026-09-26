@@ -19,6 +19,7 @@ import {
   createDefaultMonsterMonitorState,
   createDefaultSkillMonitorProfile,
   deepCloneSettings,
+  ensureDbmAliases,
   extractMonsterProfileData,
   generateProfileId,
   startAccessibilityStore,
@@ -36,6 +37,7 @@ import {
   type SkillMonitorState,
 } from "./settings-store";
 import { normalizeDpsColumnLabels } from "./column-labels";
+import { lookupDbmDefaultName } from "./config/dbm-table";
 import { ensureEntityDurationEntries } from "./entity-duration-entries";
 import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
 import { t } from "$lib/i18n/index.svelte";
@@ -43,8 +45,10 @@ import { normalizeMonsterProfileStyles } from "./monster-monitor-profile.svelte.
 import { normalizeSkillProfile } from "./skill-monitor-normalize";
 import { isPristineLegacyMonitoring } from "./starter-loadout";
 import { migrateLegacyMonsterPanels } from "./monster-panel-migration";
+import { pruneMonsterVoice, pruneSkillProfileVoice } from "./voice/association";
+import type { MonsterVoiceSlice } from "./voice/subject-types";
 
-export const CURRENT_MONITORING_SCHEMA_VERSION = 6;
+export const CURRENT_MONITORING_SCHEMA_VERSION = 7;
 
 const READY_EVENT = "monitoring-settings-ready";
 const ERROR_EVENT = "monitoring-settings-error";
@@ -412,6 +416,35 @@ function reconcileMonsterMirror(state: MonitoringSettingsState): void {
   monsterState.mirroredProfileId = target.id;
 }
 
+/**
+ * Schema v7: DBM voice bindings used to compile without a DBM entry (the
+ * DBM list is the alias map), so no page showed them. A binding now needs
+ * its entry (`voice/association.ts`); each one gets a default-named entry
+ * instead of being pruned, so what played keeps playing and can be removed.
+ */
+function adoptDbmVoiceEntries<M extends MonsterVoiceSlice>(monster: M): M {
+  const aliases = ensureDbmAliases(monster.dbmAliases);
+  const orphans = Object.keys(monster.dbmVoiceConfigs ?? {}).filter(
+    (id) => Number.isInteger(Number(id)) && !aliases[id],
+  );
+  if (orphans.length === 0) return monster;
+  for (const id of orphans) {
+    aliases[id] = lookupDbmDefaultName(Number(id)) ?? `#${id}`;
+  }
+  return { ...monster, dbmAliases: aliases };
+}
+
+function adoptAllDbmVoiceEntries(
+  state: MonsterMonitorState,
+): MonsterMonitorState {
+  return {
+    ...adoptDbmVoiceEntries(state),
+    profiles: (state.profiles ?? []).map((profile) =>
+      adoptDbmVoiceEntries(profile),
+    ),
+  };
+}
+
 export function reconcileMonitoringState(
   input: MonitoringSettingsState,
 ): MonitoringSettingsState {
@@ -419,15 +452,23 @@ export function reconcileMonitoringState(
   if (state.schemaVersion < 6) {
     state.monsterMonitor = migrateMonsterPanelState(state.monsterMonitor);
   }
+  if (state.schemaVersion < 7) {
+    state.monsterMonitor = adoptAllDbmVoiceEntries(state.monsterMonitor);
+  }
   state.skillMonitor.buffIconOverrides = ensureBuffIconOverrides(
     state.skillMonitor.buffIconOverrides,
   );
+  // Voice bindings live exactly as long as their subject in the profile
+  // that holds them: prune each profile (and the monster mirror) on its
+  // own. This also re-keys entity bindings written before they were keyed
+  // by monster id. Idempotent, so every window can run it.
   state.skillMonitor.profiles = normalizeSkillProfiles(
     state.skillMonitor.profiles,
-  );
+  ).map((profile) => pruneSkillProfileVoice(profile));
   state.monsterMonitor.profiles = normalizeMonsterProfiles(
     state.monsterMonitor,
-  );
+  ).map((profile) => pruneMonsterVoice(profile));
+  Object.assign(state.monsterMonitor, pruneMonsterVoice(state.monsterMonitor));
   state.liveMeter = normalizeLiveProfiles(state.liveMeter);
   state.loadouts = normalizeLoadouts(
     state.loadouts,
@@ -468,7 +509,9 @@ export function migrateLegacyMonitoringState(
   const pristineLegacyMonitoring =
     !hasExistingLoadouts &&
     isPristineLegacyMonitoring(skillMonitor, monsterMonitor);
-  monsterMonitor = migrateMonsterPanelState(monsterMonitor);
+  monsterMonitor = adoptAllDbmVoiceEntries(
+    migrateMonsterPanelState(monsterMonitor),
+  );
   if (!hasExistingLoadouts) {
     monsterMonitor.profiles = materializeLegacyMonsterMirror(monsterMonitor);
   } else {

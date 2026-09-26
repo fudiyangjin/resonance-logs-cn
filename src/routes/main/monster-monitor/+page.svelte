@@ -39,8 +39,9 @@
     type TeammatePanelStyle,
     type BuffAlertRule,
   } from "$lib/settings-store";
+  import { updateMonsterMonitor } from "$lib/monster-monitor-profile.svelte.js";
   import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
-  import { resolveMonsterBuffSourceScope as resolveScopeIn } from "$lib/voice/subjects/monster-buff";
+  import { resolveMonsterBuffSourceScope as resolveScopeIn } from "$lib/voice/association";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
   import TabEntityDuration from "./tab-entity-duration.svelte";
   import {
@@ -397,17 +398,6 @@
     return ordered;
   }
 
-  function updateMonsterMonitor(
-    updater: (
-      state: typeof SETTINGS.monsterMonitor.state,
-    ) => Partial<typeof SETTINGS.monsterMonitor.state>,
-  ) {
-    Object.assign(
-      SETTINGS.monsterMonitor.state,
-      updater(SETTINGS.monsterMonitor.state),
-    );
-  }
-
   function removeAlertIfUnmonitored(
     state: typeof SETTINGS.monsterMonitor.state,
     buffId: number,
@@ -422,41 +412,10 @@
     return nextAlerts;
   }
 
-  function removeVoiceIfUnmonitored(
-    state: typeof SETTINGS.monsterMonitor.state,
-    buffId: number,
-    monitoredBuffIds: number[],
-    selfAppliedBuffIds: number[],
-  ) {
-    const current = ensureBuffVoiceConfigs(state.monsterBuffVoiceConfigs);
-    const stillMonitored =
-      monitoredBuffIds.includes(buffId) ||
-      selfAppliedBuffIds.includes(buffId) ||
-      state.selfAppliedMonitorAll;
-    if (stillMonitored) return current;
-    const next = { ...current };
-    delete next[String(buffId)];
-    return next;
-  }
-
+  // Voice bindings of buffs a change leaves unmonitored are dropped by
+  // `updateMonsterMonitor` itself (`pruneMonsterVoice`).
   function setSelfAppliedMonitorAll(enabled: boolean) {
-    updateMonsterMonitor((state) => {
-      if (enabled) return { ...state, selfAppliedMonitorAll: true };
-      const explicitlyMonitored = new Set([
-        ...state.monitoredBuffIds,
-        ...state.selfAppliedBuffIds,
-      ]);
-      const monsterBuffVoiceConfigs = Object.fromEntries(
-        Object.entries(
-          ensureBuffVoiceConfigs(state.monsterBuffVoiceConfigs),
-        ).filter(([buffId]) => explicitlyMonitored.has(Number(buffId))),
-      );
-      return {
-        ...state,
-        selfAppliedMonitorAll: false,
-        monsterBuffVoiceConfigs,
-      };
-    });
+    updateMonsterMonitor(() => ({ selfAppliedMonitorAll: enabled }));
     if (
       !enabled &&
       voiceEditingBuffId !== null &&
@@ -514,12 +473,6 @@
         monitoredBuffIds,
         selfAppliedBuffIds,
       );
-      const monsterBuffVoiceConfigs = removeVoiceIfUnmonitored(
-        state,
-        buffId,
-        monitoredBuffIds,
-        selfAppliedBuffIds,
-      );
 
       return {
         ...state,
@@ -527,7 +480,6 @@
         selfAppliedBuffIds,
         buffPriorityIds,
         buffAlerts,
-        monsterBuffVoiceConfigs,
       };
     });
     if (
@@ -561,12 +513,6 @@
         nextMonitored,
         nextSelfApplied,
       );
-      const monsterBuffVoiceConfigs = removeVoiceIfUnmonitored(
-        state,
-        buffId,
-        nextMonitored,
-        nextSelfApplied,
-      );
 
       return {
         ...state,
@@ -574,7 +520,6 @@
         selfAppliedBuffIds: nextSelfApplied,
         buffPriorityIds: nextPriorityIds,
         buffAlerts,
-        monsterBuffVoiceConfigs,
       };
     });
     if (
@@ -696,25 +641,40 @@
     });
   }
 
-  function setDbmAlias(id: number, alias: string) {
-    updateMonsterMonitor((state) => {
-      const nextDbmAliases = { ...(state.dbmAliases ?? {}) };
-      const trimmed = alias.trim();
-      if (trimmed) {
-        nextDbmAliases[String(id)] = trimmed;
-      } else {
-        delete nextDbmAliases[String(id)];
-      }
-      return {
-        ...state,
-        dbmAliases: nextDbmAliases,
-      };
-    });
+  function defaultDbmEntryName(id: number): string {
+    return lookupDbmDefaultName(id) ?? `#${id}`;
   }
 
-  function addDbmAlias(id: number) {
-    const initial = lookupDbmDefaultName(id) ?? `#${id}`;
-    setDbmAlias(id, initial);
+  /** The DBM list is the alias map, so an empty name never removes an entry. */
+  function renameDbmEntry(id: number, alias: string) {
+    const trimmed = alias.trim();
+    if (!trimmed) return;
+    updateMonsterMonitor((state) => ({
+      dbmAliases: { ...(state.dbmAliases ?? {}), [String(id)]: trimmed },
+    }));
+  }
+
+  /** A name left empty falls back to the default one. */
+  function commitDbmEntryName(id: number, input: HTMLInputElement) {
+    if (input.value.trim()) return;
+    input.value = defaultDbmEntryName(id);
+    renameDbmEntry(id, input.value);
+  }
+
+  /** Removes a DBM entry; its voice binding goes in the same write. */
+  function removeDbmEntry(id: number) {
+    updateMonsterMonitor((state) => {
+      const dbmAliases = { ...(state.dbmAliases ?? {}) };
+      delete dbmAliases[String(id)];
+      return { dbmAliases };
+    });
+    dbmVoiceExpandedIds = dbmVoiceExpandedIds.filter(
+      (existing) => existing !== String(id),
+    );
+  }
+
+  function addDbmEntry(id: number) {
+    renameDbmEntry(id, defaultDbmEntryName(id));
   }
 
   function setAlias(buffId: number, alias: string) {
@@ -2878,7 +2838,7 @@
                 <button
                   type="button"
                   class="border-border/60 bg-muted/20 hover:bg-muted/40 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors"
-                  onclick={() => addDbmAlias(item.id)}
+                  onclick={() => addDbmEntry(item.id)}
                 >
                   <span class="min-w-0 truncate">{item.name}</span>
                   <span class="text-muted-foreground shrink-0 text-xs">
@@ -2909,23 +2869,22 @@
                   <span
                     class="text-muted-foreground min-w-0 flex-1 truncate text-xs"
                   >
-                    {lookupDbmDefaultName(Number(id)) ?? `#${id}`}
+                    {defaultDbmEntryName(Number(id))}
                   </span>
                   <input
                     type="text"
                     value={alias}
                     class="border-border/60 bg-background/60 text-foreground min-w-0 w-28 rounded-md border px-2 py-1 text-sm outline-none transition-colors focus:border-primary"
                     oninput={(event) =>
-                      setDbmAlias(
-                        Number(id),
-                        (event.currentTarget as HTMLInputElement).value,
-                      )}
+                      renameDbmEntry(Number(id), event.currentTarget.value)}
+                    onchange={(event) =>
+                      commitDbmEntryName(Number(id), event.currentTarget)}
                   />
                   <button
                     type="button"
                     class="order-button danger"
                     title={t("monsterMonitor.bossDbm.alias.remove")}
-                    onclick={() => setDbmAlias(Number(id), "")}
+                    onclick={() => removeDbmEntry(Number(id))}
                   >
                     {t("monsterMonitor.bossDbm.alias.remove")}
                   </button>

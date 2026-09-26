@@ -18,12 +18,28 @@ import {
   generateProfileId,
   type MonsterMonitorProfile,
   type MonsterMonitorProfileData,
+  type MonsterMonitorState,
 } from "./settings-store";
 import { ensureEntityDurationEntries } from "./entity-duration-entries";
 import { normalizeCustomPanelStyle } from "./skill-monitor-normalize";
+import { pruneMonsterVoice } from "./voice/association";
 
 export function listMonsterProfiles(): MonsterMonitorProfile[] {
   return SETTINGS.monsterMonitor.state.profiles;
+}
+
+/**
+ * The write path for edits of the live mirror (the active profile): merges
+ * `update(state)` and, in the same write, drops the voice bindings whose
+ * subject the change dissociated — a removed entity entry or DBM entry, a
+ * buff no monitor list holds any more. Profile switches copy whole profiles
+ * instead and prune nothing.
+ */
+export function updateMonsterMonitor(
+  update: (state: MonsterMonitorState) => Partial<MonsterMonitorState>,
+): void {
+  const state = SETTINGS.monsterMonitor.state;
+  Object.assign(state, pruneMonsterVoice({ ...state, ...update(state) }));
 }
 
 export function activeMonsterProfileId(): string {
@@ -128,11 +144,12 @@ export function createMonsterProfile(
         void _name;
         return rest;
       })();
-  const profile: MonsterMonitorProfile = {
+  // Imported / preset data may carry bindings without a subject.
+  const profile: MonsterMonitorProfile = pruneMonsterVoice({
     ...base,
     id: generateProfileId("monster"),
     name,
-  };
+  });
   state.profiles = [...state.profiles, profile];
   return profile.id;
 }

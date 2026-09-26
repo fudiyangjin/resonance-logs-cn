@@ -153,11 +153,13 @@ impl MonitorRuntimeSnapshot {
         self.monster
             .watched_entities
             .dedup_by_key(|spec| (spec.monster_id, spec.scope));
+        // The watch list survives a disabled monster monitor: entity voice
+        // cues do not follow the HUD toggle, and the entity monitor hides the
+        // tracks from the HUD payload on its own.
         if !self.monster.enabled {
             self.monster.global_ids.clear();
             self.monster.self_applied_ids.clear();
             self.monster.monitor_all_self_applied = false;
-            self.monster.watched_entities.clear();
         }
 
         dedup_and_sort_i32(&mut self.teammate.any_source_ids);
@@ -356,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn watched_entities_are_deduplicated_by_id_and_scope_and_cleared_when_monster_disabled() {
+    fn watched_entities_are_deduplicated_by_id_and_scope_and_kept_when_monster_disabled() {
         let mut snapshot = MonitorRuntimeSnapshot::default();
         snapshot.monster.enabled = true;
         snapshot.monster.watched_entities = vec![
@@ -386,9 +388,13 @@ mod tests {
             vec![42, 179_901]
         );
 
+        // Voice cues keep working with the monster monitor switched off.
         snapshot.monster.enabled = false;
         let disabled = snapshot.normalize().expect("disabled snapshot is valid");
-        assert!(disabled.monster.watched_entities.is_empty());
+        assert_eq!(
+            disabled.monster.watched_entities,
+            normalized.monster.watched_entities
+        );
     }
 
     #[test]

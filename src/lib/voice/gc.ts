@@ -1,109 +1,121 @@
 /**
- * @file Garbage collection for auto-managed voice phrases.
+ * @file Garbage collection of auto-managed voice phrases.
  *
- * Binding-driven phrases (names like `custom:voice:buff:101:gained`) are
- * only ever upserted, never deleted: removing a binding, switching
- * auto/custom, or editing the `${阶数}` placeholder all leave orphan phrases
- * (and their generated audio) in the catalog. This module classifies those
- * orphans so the phrase-library tab can offer a one-click cleanup.
+ * A managed phrase (`auto:` / `custom:voice:*`) is needed while a binding
+ * in *some* profile speaks through it — every skill profile, every monster
+ * profile, and the global minimap and alert bindings, switched-off events
+ * included — because phrase names are shared across loadouts. Bindings only
+ * exist while their subject is associated (`association.ts`), so
+ * un-monitoring a skill or removing an entity entry turns its phrases into
+ * orphans here, and the phrase library deletes them in one click. Until
+ * then, re-adding the binding with the same text reuses the audio.
  *
- * Safety rules:
- * - Phrase names are shared across ALL monitor profiles (loadouts), so the
- *   keep-set must be built from every profile in settings, never just the
- *   active one.
- * - Keep-set is intentionally over-inclusive (all events per configured
- *   subject, both monster-buff source scopes, disabled configs included):
- *   keeping an extra phrase is harmless, deleting a referenced one loses
- *   generated audio. This is why GC goes through each adapter's `gcKeys`
- *   over raw settings slices instead of `enumerate` / `events`.
- * - Only names matching the managed `auto:voice:*` / `custom:voice:*`
- *   pattern are ever considered; manually created phrases are untouched.
+ * Never orphans: hand-made phrases (non-managed names), phrases a binding
+ * picked from the library by id, phrases whose active audio was imported
+ * (the user deletes those one by one), bundled alert prompts, and the
+ * phrase a binding currently falls back to while its own audio is pending.
  */
-import type { VoicePhraseMeta } from "$lib/bindings";
-import type {
-  MechanicVoiceConfigMap,
-  MonsterMonitorConfig,
-  SkillMonitorProfile,
-} from "$lib/settings-store";
-import { parseManagedPhraseName } from "./phrase-key";
-import { byKind } from "./registry";
+import type { VoiceAssetMeta, VoicePhraseMeta } from "$lib/bindings";
+import { collectBindings } from "./compile";
+import {
+  bindingPhrases,
+  managedSlotOf,
+  parseManagedPhraseName,
+} from "./phrase-key";
+import type { VoiceBindingView } from "./subject-types";
 
-export type VoicePhraseGcSkillSource = Pick<
-  SkillMonitorProfile,
-  | "buffVoiceConfigs"
-  | "skillVoiceConfigs"
-  | "userCounterRules"
-  | "presetCounterVoiceConfigs"
->;
+/** Rule keys of bundled prompts, which the backend re-seeds anyway. */
+const BUNDLED_RULE_KEY_PREFIX = "voice:alert:";
 
-export type VoicePhraseGcMonsterSource = Pick<
-  MonsterMonitorConfig,
-  "dbmVoiceConfigs" | "monsterBuffVoiceConfigs" | "entityVoiceConfigs"
->;
-
-export type VoicePhraseGcSources = {
-  /** Every skill-monitor profile (all loadouts, not just the active one). */
-  skillProfiles: readonly VoicePhraseGcSkillSource[];
-  /** Every monster-monitor profile plus the live mirror state. */
-  monsterConfigs: readonly VoicePhraseGcMonsterSource[];
-  /** Global minimap mechanic bindings (not loadout-scoped). */
-  mechanicVoiceConfigs: MechanicVoiceConfigMap | null | undefined;
+/** What the phrase library must keep. */
+export type VoicePhraseRefs = {
+  /** Managed phrase names some binding speaks through. */
+  names: ReadonlySet<string>;
+  /** Phrase ids some binding picked from the library. */
+  phraseIds: ReadonlySet<string>;
 };
 
 /**
- * Base rule keys (the `voice:...` part of managed phrase names) referenced
- * by any binding across all provided sources.
+ * The phrases referenced by the bindings of `views`: one view per profile
+ * plus one for the global bindings (see `buildVoiceGcViews`).
  */
-export function collectReferencedVoiceKeys(
-  sources: VoicePhraseGcSources,
-): Set<string> {
-  const keys = new Set<string>();
-  const add = (list: string[]) => list.forEach((key) => keys.add(key));
-
-  for (const profile of sources.skillProfiles) {
-    // The skill adapters only read their own config maps; `selectedClass`
-    // is irrelevant to GC and may be absent from these sources.
-    const slice = profile as Parameters<
-      ReturnType<typeof byKind<"buff">>["gcKeys"]
-    >[0];
-    add(byKind("buff").gcKeys(slice));
-    add(byKind("skill").gcKeys(slice));
-    add(byKind("counterSlot").gcKeys(slice));
+export function collectVoicePhraseRefs(
+  views: readonly VoiceBindingView[],
+): VoicePhraseRefs {
+  const names = new Set<string>();
+  const phraseIds = new Set<string>();
+  for (const view of views) {
+    for (const binding of collectBindings(view, { includeDisabled: true })) {
+      if (binding.phrase.source === "phrase") {
+        const id = binding.phrase.phraseId.trim();
+        if (id) phraseIds.add(id);
+        continue;
+      }
+      // Tier text also keeps the "试听" variant the binding control makes.
+      const phrases = binding.tiered
+        ? bindingPhrases({
+            ruleKey: binding.ruleKey,
+            phrase: binding.phrase,
+            autoText: binding.autoText,
+            language: binding.language,
+            supportsTier: true,
+            includePreview: true,
+          })
+        : binding.phrases;
+      for (const phrase of phrases) names.add(phrase.name);
+    }
   }
-  for (const config of sources.monsterConfigs) {
-    // dbm/monsterBuff/entity only read their own maps; the other slice
-    // fields are irrelevant to GC and may legitimately be absent here.
-    const slice = config as Parameters<
-      ReturnType<typeof byKind<"dbm">>["gcKeys"]
-    >[0];
-    add(byKind("dbm").gcKeys(slice));
-    add(byKind("monsterBuff").gcKeys(slice));
-    add(byKind("entity").gcKeys(slice));
-  }
-  add(byKind("minimapCue").gcKeys(sources.mechanicVoiceConfigs));
-  add(byKind("gameAlert").gcKeys(undefined));
-
-  return keys;
+  return { names, phraseIds };
 }
 
 /**
- * The base rule key of an auto-managed phrase name, or `null` for phrases
- * the user created manually (whose names don't follow the managed pattern).
- */
-export function managedBaseKeyOf(name: string): string | null {
-  return parseManagedPhraseName(name)?.ruleKey ?? null;
-}
-
-/**
- * Managed phrases whose base key is not referenced by any binding. Pure -
- * safe to call from `$derived`.
+ * Managed phrases nothing needs any more. Pure - safe to call from
+ * `$derived`.
  */
 export function classifyOrphanPhrases(
   phrases: readonly VoicePhraseMeta[],
-  keepKeys: ReadonlySet<string>,
+  assets: readonly VoiceAssetMeta[],
+  refs: VoicePhraseRefs,
 ): VoicePhraseMeta[] {
+  const assetById = new Map(assets.map((asset) => [asset.id, asset]));
+  const hasAudio = (phrase: VoicePhraseMeta) =>
+    !!phrase.activeAssetId && assetById.has(phrase.activeAssetId);
+  const byName = new Map(phrases.map((phrase) => [phrase.name, phrase]));
+
+  // A needed phrase that is missing or still silent plays the newest
+  // phrase of its slot that has audio: that one is in use too.
+  const fallbackIds = new Set<string>();
+  for (const name of refs.names) {
+    const current = byName.get(name);
+    if (current && hasAudio(current)) continue;
+    const slot = managedSlotOf(name);
+    if (!slot) continue;
+    let fallback: VoicePhraseMeta | undefined;
+    for (const phrase of phrases) {
+      if (phrase === current || !hasAudio(phrase)) continue;
+      if (managedSlotOf(phrase.name) !== slot) continue;
+      if (!fallback || phrase.updatedAtMs > fallback.updatedAtMs) {
+        fallback = phrase;
+      }
+    }
+    if (fallback) fallbackIds.add(fallback.id);
+  }
+
   return phrases.filter((phrase) => {
-    const baseKey = managedBaseKeyOf(phrase.name);
-    return baseKey !== null && !keepKeys.has(baseKey);
+    const parsed = parseManagedPhraseName(phrase.name);
+    if (!parsed || parsed.ruleKey.startsWith(BUNDLED_RULE_KEY_PREFIX)) {
+      return false;
+    }
+    if (
+      refs.names.has(phrase.name) ||
+      refs.phraseIds.has(phrase.id) ||
+      fallbackIds.has(phrase.id)
+    ) {
+      return false;
+    }
+    const asset = phrase.activeAssetId
+      ? assetById.get(phrase.activeAssetId)
+      : undefined;
+    return asset?.source.kind !== "imported";
   });
 }

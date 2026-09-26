@@ -7,12 +7,18 @@ import type {
 import {
   collectBindings,
   compileVoiceRules,
-  isResolved,
   phraseRequests,
   type PhraseIndex,
+  type ResolvedPhrase,
+  type VoiceBinding,
 } from "./compile";
-import { collectReferencedVoiceKeys } from "./gc";
 import { listVoiceBindingOverview } from "./overview";
+import {
+  contentHash,
+  managedPhraseName,
+  parseManagedPhraseName,
+  type ManagedPhraseName,
+} from "./phrase-key";
 import type { VoiceBindingView } from "./subject-types";
 
 function auto(priority?: number): VoiceEventConfig {
@@ -25,6 +31,52 @@ function custom(text: string): VoiceEventConfig {
 
 function expiring(secondsBefore: number): VoiceExpiringEventConfig {
   return { ...auto(), secondsBefore };
+}
+
+/** The content-addressed name of `text` (Chinese) for a binding slot. */
+function nameOf(
+  source: ManagedPhraseName["source"],
+  ruleKey: string,
+  text: string,
+  variant?: ManagedPhraseName["variant"],
+): string {
+  return managedPhraseName({
+    source,
+    ruleKey,
+    ...(variant ? { variant } : {}),
+    hash: contentHash(text, "zhCn"),
+  });
+}
+
+/** `voice:buff:101:lost:tier2` for any name of that binding slot. */
+function slotKey(name: string): string {
+  const parsed = parseManagedPhraseName(name)!;
+  const variant = parsed.variant
+    ? `:${parsed.variant.kind}${parsed.variant.tier}`
+    : "";
+  return `${parsed.ruleKey}${variant}`;
+}
+
+/**
+ * A catalog index in which the phrase each binding asks for exists as
+ * `ids[slot]` (slots without an id are missing from the catalog).
+ */
+function indexOf(
+  bindings: readonly VoiceBinding[],
+  ids: Record<string, string>,
+): PhraseIndex {
+  const index: Record<string, ResolvedPhrase> = {};
+  for (const request of phraseRequests(bindings)) {
+    const phraseId = ids[slotKey(request.name)];
+    if (!phraseId) continue;
+    index[request.name] = {
+      phraseId,
+      text: request.text,
+      language: request.language,
+      hasAudio: true,
+    };
+  }
+  return index;
 }
 
 function view(overrides: Partial<VoiceBindingView> = {}): VoiceBindingView {
@@ -85,17 +137,20 @@ describe("collectBindings + phraseRequests", () => {
 
     expect(phraseRequests(bindings)).toEqual([
       {
-        name: "auto:voice:buff:101:gained",
+        name: nameOf("auto", "voice:buff:101:gained", "狂暴已生效"),
         text: "狂暴已生效",
         language: "zhCn",
       },
       {
-        name: "custom:voice:buff:101:lost",
+        name: nameOf("custom", "voice:buff:101:lost", "狂暴没了"),
         text: "狂暴没了",
         language: "zhCn",
       },
       ...[0, 1, 2, 3, 4, 5].map((tier) => ({
-        name: `custom:voice:buff:101:lost:tier${tier}`,
+        name: nameOf("custom", "voice:buff:101:lost", `${tier}阶狂暴没了`, {
+          kind: "tier",
+          tier,
+        }),
         text: `${tier}阶狂暴没了`,
         language: "zhCn" as const,
       })),
@@ -126,82 +181,27 @@ describe("collectBindings + phraseRequests", () => {
     expect(bindings).toHaveLength(2);
     expect(phraseRequests(bindings)).toEqual([]);
   });
+
+  it("includes switched-off events only on request", () => {
+    const disabled = view({
+      skillProfile: {
+        monitoredSkillIds: [],
+        selectedClass: "",
+        buffVoiceConfigs: {
+          "101": { gained: { enabled: false, phrase: { source: "auto" } } },
+        },
+      },
+    });
+    expect(collectBindings(disabled)).toEqual([]);
+    expect(
+      collectBindings(disabled, { includeDisabled: true }).map(
+        (b) => b.ruleKey,
+      ),
+    ).toEqual(["voice:buff:101:gained"]);
+  });
 });
 
 describe("compileVoiceRules", () => {
-  const index: PhraseIndex = {
-    "auto:voice:buff:101:gained": {
-      phraseId: "P-gained",
-      text: "狂暴已生效",
-      language: "zhCn",
-    },
-    "auto:voice:buff:101:expiring": {
-      phraseId: "P-exp",
-      text: "狂暴还有3秒失效",
-      language: "zhCn",
-    },
-    "custom:voice:buff:101:lost": {
-      phraseId: "P-lost",
-      text: "狂暴没了",
-      language: "zhCn",
-    },
-    "custom:voice:buff:101:lost:tier2": {
-      phraseId: "P-lost-2",
-      text: "2阶狂暴没了",
-      language: "zhCn",
-    },
-    "custom:voice:monsterBuff:anySource:55:gained": {
-      phraseId: "P-mb",
-      text: "x",
-      language: "zhCn",
-    },
-    "auto:voice:dbm:8801:onCast": {
-      phraseId: "P-dbm",
-      text: "大招",
-      language: "zhCn",
-    },
-    "auto:voice:dbm:8801:expiring": {
-      phraseId: "P-dbm-exp",
-      text: "大招还有5秒",
-      language: "zhCn",
-    },
-    "auto:voice:alert:matchReady": {
-      phraseId: "P-alert",
-      text: "voice.alerts.autoText.matchReady",
-      language: "enUs",
-    },
-    "auto:voice:minimapCue:s3-raid:bomb": {
-      phraseId: "P-cue",
-      text: "炸弹",
-      language: "zhCn",
-    },
-    "auto:voice:skill:990001:cast": {
-      phraseId: "P-sk-cast",
-      text: "#990001已释放",
-      language: "zhCn",
-    },
-    "auto:voice:skill:990001:readyIn": {
-      phraseId: "P-sk-in",
-      text: "#990001还有2秒就绪",
-      language: "zhCn",
-    },
-    "auto:voice:entity:179901:self:appeared": {
-      phraseId: "P-en-up",
-      text: "镰车已出现",
-      language: "zhCn",
-    },
-    "auto:voice:entity:179901:self:expiring": {
-      phraseId: "P-en-exp",
-      text: "镰车还有5秒消失",
-      language: "zhCn",
-    },
-    "auto:voice:entity:179901:self:gone": {
-      phraseId: "P-en-gone",
-      text: "镰车已消失",
-      language: "zhCn",
-    },
-  };
-
   const fullView = view({
     locale: "en-US",
     skillProfile: {
@@ -239,13 +239,11 @@ describe("compileVoiceRules", () => {
       monsterBuffVoiceConfigs: { "55": { gained: custom("x") } },
       dbmVoiceConfigs: { "8801": { onCast: auto(), expiring: expiring(5) } },
       entityVoiceConfigs: {
-        "179901:self": {
+        "179901": {
           appeared: auto(),
           expiring: expiring(5),
           gone: auto(),
         },
-        // Re-scoped / removed entries are dormant until re-added.
-        "179901:any": { appeared: auto() },
       },
     },
     alertConfigs: { matchReady: auto() },
@@ -254,45 +252,59 @@ describe("compileVoiceRules", () => {
     ],
     mechanicVoiceConfigs: { "s3-raid:bomb": auto() },
   });
+  const fullBindings = collectBindings(fullView);
+  const index = indexOf(fullBindings, {
+    "voice:buff:101:gained": "P-gained",
+    "voice:buff:101:expiring": "P-exp",
+    "voice:buff:101:lost": "P-lost",
+    "voice:buff:101:lost:tier2": "P-lost-2",
+    "voice:monsterBuff:anySource:55:gained": "P-mb",
+    "voice:dbm:8801:onCast": "P-dbm",
+    "voice:dbm:8801:expiring": "P-dbm-exp",
+    "voice:alert:matchReady": "P-alert",
+    "voice:minimapCue:s3-raid:bomb": "P-cue",
+    "voice:skill:990001:cast": "P-sk-cast",
+    "voice:skill:990001:readyIn": "P-sk-in",
+    "voice:entity:179901:appeared": "P-en-up",
+    "voice:entity:179901:expiring": "P-en-exp",
+    "voice:entity:179901:gone": "P-en-gone",
+  });
 
-  it("suspends unmonitored skills while retaining configuration and GC references", () => {
+  it("names phrases by their spoken text; bundled alert prompts keep fixed names", () => {
+    const names = phraseRequests(fullBindings).map((request) => request.name);
+    expect(names).toContain(
+      nameOf("auto", "voice:entity:179901:expiring", "镰车还有5秒消失"),
+    );
+    expect(names).toContain(
+      nameOf("auto", "voice:buff:101:expiring", "狂暴还有3秒失效"),
+    );
+    expect(names).toContain("auto:voice:alert:matchReady");
+  });
+
+  it("compiles nothing for a skill that is not monitored", () => {
     const profile = fullView.skillProfile!;
-    const dormant = {
+    const unmonitored = {
       ...fullView,
       skillProfile: { ...profile, monitoredSkillIds: [] as number[] },
     };
-    const before = compileVoiceRules(collectBindings(fullView), index);
+    const bindings = collectBindings(unmonitored);
     expect(
-      compileVoiceRules(collectBindings(dormant), index).some(
+      compileVoiceRules(bindings, index).some(
         (r) => r.trigger.subject.kind === "skill",
       ),
     ).toBe(false);
     expect(
-      phraseRequests(collectBindings(dormant)).some((r) =>
-        r.name.includes(":skill:"),
-      ),
+      phraseRequests(bindings).some((r) => r.name.includes(":skill:")),
     ).toBe(false);
     expect(
-      listVoiceBindingOverview(dormant, index).some(
+      listVoiceBindingOverview(unmonitored, index).some(
         (r) => r.navigateTo === "skill",
       ),
     ).toBe(false);
-    expect(
-      collectReferencedVoiceKeys({
-        skillProfiles: [dormant.skillProfile],
-        monsterConfigs: [],
-        mechanicVoiceConfigs: {},
-      }).has("voice:skill:990001:cast"),
-    ).toBe(true);
-    expect(dormant.skillProfile.skillVoiceConfigs).toBe(
-      profile.skillVoiceConfigs,
-    );
-    dormant.skillProfile.monitoredSkillIds = [990001];
-    expect(compileVoiceRules(collectBindings(dormant), index)).toEqual(before);
   });
 
   it("produces the expected rule literals", () => {
-    const rules = compileVoiceRules(collectBindings(fullView), index);
+    const rules = compileVoiceRules(fullBindings, index);
     expect(rules).toEqual([
       {
         id: "voice:buff:101:gained",
@@ -388,7 +400,7 @@ describe("compileVoiceRules", () => {
         cooldownMs: 2000,
       },
       {
-        id: "voice:entity:179901:self:appeared",
+        id: "voice:entity:179901:appeared",
         enabled: true,
         trigger: {
           subject: { kind: "entity", monsterId: 179901, scope: "self" },
@@ -399,7 +411,7 @@ describe("compileVoiceRules", () => {
         cooldownMs: 2000,
       },
       {
-        id: "voice:entity:179901:self:expiring",
+        id: "voice:entity:179901:expiring",
         enabled: true,
         trigger: {
           subject: { kind: "entity", monsterId: 179901, scope: "self" },
@@ -410,7 +422,7 @@ describe("compileVoiceRules", () => {
         cooldownMs: 2000,
       },
       {
-        id: "voice:entity:179901:self:gone",
+        id: "voice:entity:179901:gone",
         enabled: true,
         trigger: {
           subject: { kind: "entity", monsterId: 179901, scope: "self" },
@@ -434,18 +446,62 @@ describe("compileVoiceRules", () => {
     ]);
   });
 
-  it("keeps the stale phrase id while a text change is pending, drops unresolved ones", () => {
-    const stale: PhraseIndex = {
-      "auto:voice:buff:101:gained": {
-        phraseId: "P-old",
-        text: "旧文本",
-        language: "zhCn",
-      },
+  it("plays the slot's newest voiced phrase until the current text's phrase exists", () => {
+    const phrase = (
+      phraseId: string,
+      text: string,
+      hasAudio: boolean,
+      updatedAtMs: number,
+    ): ResolvedPhrase => ({
+      phraseId,
+      text,
+      language: "zhCn",
+      hasAudio,
+      updatedAtMs,
+    });
+    const gained = (text: string) =>
+      nameOf("custom", "voice:buff:101:gained", text);
+    const pending: PhraseIndex = {
+      [gained("旧")]: phrase("P-old", "旧", true, 2),
+      [gained("更旧")]: phrase("P-older", "更旧", true, 1),
+      [gained("无声")]: phrase("P-silent", "无声", false, 3),
+      // Newer, but of another slot: only stands in for its own binding.
+      [nameOf("custom", "voice:buff:101:lost", "旧")]: phrase(
+        "P-lost-old",
+        "旧",
+        true,
+        9,
+      ),
     };
-    const rules = compileVoiceRules(collectBindings(fullView), stale);
-    expect(rules.map((r) => [r.id, r.phraseId])).toEqual([
+    const rulesOf = (catalog: PhraseIndex) =>
+      compileVoiceRules(fullBindings, catalog).map((r) => [r.id, r.phraseId]);
+    expect(rulesOf(pending)).toEqual([
       ["voice:buff:101:gained", "P-old"],
+      ["voice:buff:101:lost", "P-lost-old"],
     ]);
+    // The status view stays exact: the binding is pending.
+    const gainedEntry = (catalog: PhraseIndex) =>
+      listVoiceBindingOverview(fullView, catalog).find(
+        (entry) => entry.id === "voice:buff:101:gained",
+      )!;
+    expect(gainedEntry(pending).phraseId).toBeNull();
+
+    // Once it exists it compiles, audio or not (the backend falls back
+    // while it is silent).
+    const landed: PhraseIndex = {
+      ...pending,
+      [nameOf("auto", "voice:buff:101:gained", "狂暴已生效")]: phrase(
+        "P-new",
+        "狂暴已生效",
+        false,
+        4,
+      ),
+    };
+    expect(rulesOf(landed)).toEqual([
+      ["voice:buff:101:gained", "P-new"],
+      ["voice:buff:101:lost", "P-lost-old"],
+    ]);
+    expect(gainedEntry(landed).phraseId).toBe("P-new");
   });
 
   it("includes preset counter slots when configured", () => {
@@ -454,21 +510,22 @@ describe("compileVoiceRules", () => {
     )!;
     const slot = preset.effectSlots.find((s) => s.threshold !== null)!;
     const key = `voice:counter:${preset.ruleId}:${slot.slotId}:threshold`;
-    const rules = compileVoiceRules(
-      collectBindings(
-        view({
-          skillProfile: {
-            monitoredSkillIds: [990001],
-            selectedClass: "wind_knight",
-            presetCounterVoiceConfigs: {
-              [String(preset.ruleId)]: {
-                [String(slot.slotId)]: { threshold: auto() },
-              },
+    const bindings = collectBindings(
+      view({
+        skillProfile: {
+          monitoredSkillIds: [990001],
+          selectedClass: "wind_knight",
+          presetCounterVoiceConfigs: {
+            [String(preset.ruleId)]: {
+              [String(slot.slotId)]: { threshold: auto() },
             },
           },
-        }),
-      ),
-      { [`auto:${key}`]: { phraseId: "P-c", text: "t", language: "zhCn" } },
+        },
+      }),
+    );
+    const rules = compileVoiceRules(
+      bindings,
+      indexOf(bindings, { [key]: "P-c" }),
     );
     expect(rules).toEqual([
       {
@@ -501,33 +558,12 @@ describe("compileVoiceRules", () => {
     });
     const lost = entries.find((e) => e.id === "voice:buff:101:lost")!;
     expect(lost.tierPhraseIds).toEqual(["P-lost-2"]);
+    expect(lost.phrases).toHaveLength(7);
     const mb = entries.find(
       (e) => e.id === "voice:monsterBuff:anySource:55:gained",
     )!;
     expect(mb.monsterBuffSourceScope).toBe("anySource");
     const alert = entries.find((e) => e.id === "voice:alert:matchReady")!;
     expect(alert).toMatchObject({ bundledFallback: true, language: "enUs" });
-  });
-});
-
-describe("isResolved", () => {
-  const request = {
-    name: "auto:voice:buff:1:gained",
-    text: "a",
-    language: "zhCn" as const,
-  };
-  const index: PhraseIndex = {
-    [request.name]: { phraseId: "P", text: "a", language: "zhCn" },
-  };
-  it("requires matching text/language and a live catalog phrase", () => {
-    expect(isResolved(index, new Set(["P"]), request)).toBe(true);
-    expect(isResolved(index, new Set(), request)).toBe(false);
-    expect(isResolved(index, new Set(["P"]), { ...request, text: "b" })).toBe(
-      false,
-    );
-    expect(
-      isResolved(index, new Set(["P"]), { ...request, language: "enUs" }),
-    ).toBe(false);
-    expect(isResolved({}, new Set(["P"]), request)).toBe(false);
   });
 });

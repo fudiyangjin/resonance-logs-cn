@@ -5,9 +5,9 @@ import {
   type SkillVoiceConfigMap,
 } from "$lib/settings-store";
 import { findAnySkillByBaseId } from "$lib/skill-mappings";
+import { isSkillAssociated } from "../association";
 import {
   mergeVoiceConfigPatch,
-  type SkillProfileVoiceSlice,
   type VoiceBindingEventKind,
   type VoiceBindingSubject,
   type VoiceBindingView,
@@ -16,11 +16,6 @@ import {
 } from "../subject-types";
 
 export type SkillEventKind = "cast" | "ready" | "readyIn";
-export const SKILL_EVENTS: readonly SkillEventKind[] = [
-  "cast",
-  "ready",
-  "readyIn",
-];
 
 export function isSkillEventKind(
   kind: VoiceBindingEventKind,
@@ -100,10 +95,7 @@ function writeSkillConfig(
 
 type SkillSubject = Extract<VoiceBindingSubject, { kind: "skill" }>;
 
-export const skillAdapter: VoiceSubjectAdapter<
-  SkillSubject,
-  SkillProfileVoiceSlice
-> = {
+export const skillAdapter: VoiceSubjectAdapter<SkillSubject> = {
   kind: "skill",
   runtime: "backend",
   overview: {
@@ -120,15 +112,13 @@ export const skillAdapter: VoiceSubjectAdapter<
     return skillEventSpecs((event, s) => skillAutoText(name, event, s));
   },
   readyWithoutPhrase: () => false,
-  enumerate: (view) =>
-    skillConfigIds(view.skillProfile?.skillVoiceConfigs)
-      .filter((skillId) =>
-        view.skillProfile?.monitoredSkillIds.includes(skillId),
-      )
-      .map((skillId) => ({
-        kind: "skill",
-        skillId,
-      })),
+  enumerate: (view) => {
+    const profile = view.skillProfile;
+    if (!profile) return [];
+    return skillConfigIds(profile.skillVoiceConfigs)
+      .filter((skillId) => isSkillAssociated(profile, skillId))
+      .map((skillId) => ({ kind: "skill", skillId }));
+  },
   read: (view, subject, eventKind) => {
     if (!isSkillEventKind(eventKind)) return undefined;
     const configs = ensureSkillVoiceConfigs(
@@ -168,8 +158,4 @@ export const skillAdapter: VoiceSubjectAdapter<
     }
   },
   language: () => "zhCn",
-  gcKeys: (slice) =>
-    Object.keys(slice.skillVoiceConfigs ?? {}).flatMap((idText) =>
-      SKILL_EVENTS.map((event) => `voice:skill:${Number(idText)}:${event}`),
-    ),
 };

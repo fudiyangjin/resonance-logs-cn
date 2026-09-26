@@ -54,7 +54,8 @@ A few things to note:
 - Skill announcements only cover your own character, and the skill must first be added to the Skill CD monitor. For skills with multiple charges, "ready" is announced **every time a charge comes back**, and "x seconds before ready" applies to each charge too.
 - "x seconds left" and "x seconds before ready": if an update (a cooldown reduction, a shortened buff, a re-triggered mechanic) makes the remaining time jump below x seconds, the announcement plays right away. Nothing is played if it has already ended (the skill is ready, the buff has expired). If the remaining time is already below x seconds when it first appears, nothing is announced.
 - The "x seconds left" event for an entity requires a duration to be set for the entry; if the entity disappears early, only "disappear" is announced.
-- Entity announcements are stored by "entity ID + scope". If you change the scope (Self only / Any), you need to configure them again.
+- Entity announcements are stored by entity ID, so changing the scope (Self only / Any) keeps them. Turning off **{{ui:monsterMonitor.enabled}}** only hides the overlay; entity announcements keep working.
+- An announcement lives as long as its target: un-monitoring a skill, deleting an entity or DBM entry, or removing a buff from the monitor lists deletes its announcement settings too. This only affects the current profile; announcements for the same target in other profiles are untouched.
 
 ## Announcement overview
 
@@ -64,7 +65,7 @@ A few things to note:
 - Click "Go to…" to jump to the corresponding feature page and edit it.
 
 > [!NOTE]
-> Voice bindings are saved with their respective monitor profiles. After switching or importing a [loadout](../app/loadouts.md), check the announcement overview to make sure everything is **{{ui:voice.bindings.status.ready}}**. On a new computer you usually need to generate once more.
+> Voice bindings are saved with their respective monitor profiles. After switching or importing a [loadout](../app/loadouts.md), check the announcement overview to make sure everything is **{{ui:voice.bindings.status.ready}}**. On a new computer you usually need to generate once more. When profiles use different text for the same target, each keeps its own audio, so switching back and forth needs no regeneration.
 
 ## FAQ
 

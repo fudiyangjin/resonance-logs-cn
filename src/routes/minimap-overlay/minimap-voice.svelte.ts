@@ -16,8 +16,12 @@ import {
   resolveVoicePriority,
   SETTINGS,
 } from "$lib/settings-store";
-import { managedPhraseName } from "$lib/voice/phrase-key";
-import { minimapCueRuleKey } from "$lib/voice/subjects/minimap-cue";
+import { bindingPhrases } from "$lib/voice/phrase-key";
+import {
+  MINIMAP_CUE_LANGUAGE,
+  minimapCueRuleKey,
+} from "$lib/voice/subjects/minimap-cue";
+import { findMinimapVoiceCue } from "./scene-registry";
 import type { MinimapVoiceCueFire } from "./scene-types";
 import { MinimapVoiceCueDeduper } from "./minimap-voice-dedupe";
 
@@ -49,13 +53,16 @@ async function playCue(cueId: string): Promise<void> {
     if (phraseId) await commands.voiceEnqueuePhrase(phraseId, priority);
     return;
   }
-  await commands.voiceEnqueuePhraseByName(
-    managedPhraseName({
-      source: config.phrase.source,
-      ruleKey: minimapCueRuleKey(cueId),
-    }),
-    priority,
-  );
+  // Same name the main window materializes (`bindingPhrases`); the backend
+  // falls back to the cue's previous text while this one has no audio.
+  const [phrase] = bindingPhrases({
+    ruleKey: minimapCueRuleKey(cueId),
+    phrase: config.phrase,
+    autoText: findMinimapVoiceCue(cueId)?.autoText ?? "",
+    language: MINIMAP_CUE_LANGUAGE,
+    supportsTier: false,
+  });
+  if (phrase) await commands.voiceEnqueuePhraseByName(phrase.name, priority);
 }
 
 /**

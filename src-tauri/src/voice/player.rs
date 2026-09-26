@@ -10,7 +10,7 @@ use std::io::BufReader;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, SyncSender, TryRecvError, TrySendError, sync_channel};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use log::warn;
 use rodio::source::SineWave;
@@ -46,6 +46,16 @@ pub struct QueuedCue {
     pub rule_id: String,
     pub priority: u8,
     pub wav_path: Option<PathBuf>,
+    /// When the cue stops being worth playing (a lead cue whose moment has
+    /// come); a cue still waiting in the queue by then is dropped. `None`
+    /// never expires.
+    pub stale_at: Option<Instant>,
+}
+
+impl QueuedCue {
+    fn is_stale(&self, now: Instant) -> bool {
+        self.stale_at.is_some_and(|stale_at| now >= stale_at)
+    }
 }
 
 /// Published atomically as one coherent settings snapshot.
@@ -279,7 +289,7 @@ impl<O: CueOutput> WorkerState<O> {
     }
 
     fn handle_enqueue(&mut self, cue: QueuedCue) {
-        if !self.enabled {
+        if !self.enabled || cue.is_stale(Instant::now()) {
             return;
         }
 
@@ -327,8 +337,11 @@ impl<O: CueOutput> WorkerState<O> {
         self.playing_priority = Some(cue.priority);
     }
 
-    /// Highest priority first; ties resolve to the oldest arrival.
+    /// Highest priority first; ties resolve to the oldest arrival. Cues that
+    /// went stale while waiting are dropped first.
     fn pop_next(&mut self) -> Option<QueuedCue> {
+        let now = Instant::now();
+        self.queue.retain(|cue| !cue.is_stale(now));
         let idx = self
             .queue
             .iter()
@@ -472,6 +485,21 @@ mod tests {
             rule_id: rule_id.to_string(),
             priority,
             wav_path: None,
+            stale_at: None,
+        }
+    }
+
+    /// A lead cue whose moment is `offset` away (negative: already passed).
+    fn lead_cue(rule_id: &str, priority: u8, offset_ms: i64) -> QueuedCue {
+        let now = Instant::now();
+        let magnitude = Duration::from_millis(offset_ms.unsigned_abs());
+        QueuedCue {
+            stale_at: if offset_ms >= 0 {
+                now.checked_add(magnitude)
+            } else {
+                now.checked_sub(magnitude)
+            },
+            ..cue(rule_id, priority)
         }
     }
 
@@ -495,11 +523,13 @@ mod tests {
             rule_id: "first".to_string(),
             priority: 1,
             wav_path: Some(PathBuf::from("first.wav")),
+            stale_at: None,
         };
         let second = QueuedCue {
             rule_id: "second".to_string(),
             priority: 2,
             wav_path: Some(PathBuf::from("second.wav")),
+            stale_at: None,
         };
 
         handle.enqueue(first);
@@ -639,6 +669,23 @@ mod tests {
         assert!(state.queue.is_empty());
         finish_current(&mut state);
         assert_eq!(state.playing_priority, None);
+    }
+
+    #[test]
+    fn stale_lead_cues_are_dropped_on_arrival_and_while_waiting() {
+        let mut state = WorkerState::new(FakeOutput::default());
+        state.enabled = true;
+        // Arrives after the moment it warns about: never played.
+        state.handle_enqueue(lead_cue("late", 5, -1));
+        assert!(state.output.started.is_empty());
+
+        state.handle_enqueue(cue("playing", 1));
+        state.handle_enqueue(lead_cue("expires-while-queued", 9, 5));
+        state.handle_enqueue(lead_cue("still-valid", 1, 60_000));
+        std::thread::sleep(Duration::from_millis(20));
+        finish_current(&mut state);
+        assert_eq!(state.output.started, vec!["playing", "still-valid"]);
+        assert!(state.queue.is_empty());
     }
 
     #[test]

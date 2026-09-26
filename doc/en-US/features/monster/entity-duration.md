@@ -39,7 +39,8 @@ Three events can be configured: **on appear / x seconds left / on disappear**:
 - With merging on, "x seconds left" follows the countdown on the overlay: entities that appear together are announced once, and an entity that takes over the row later is announced again only if it still has more than x seconds left;
 - If the entity disappears early, only "disappear" is announced;
 - After you change the duration, entities already on the field restart timing with the new length;
-- Voice bindings are stored per "entity ID + caster scope", so changing the scope means configuring them again.
+- Voice bindings are stored per entity ID, so they keep working when you change the caster scope; deleting the entry deletes them too;
+- With **{{ui:monsterMonitor.enabled}}** off, the overlay no longer shows entities, but their voice announcements keep working.
 
 ## Examples
 

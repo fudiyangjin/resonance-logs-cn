@@ -192,8 +192,9 @@ impl EntityDurationWatch {
         }
     }
 
-    pub fn remove(&mut self, entity: EntityUuid) {
-        self.records.remove(&entity);
+    /// Returns whether `entity` was watched.
+    pub fn remove(&mut self, entity: EntityUuid) -> bool {
+        self.records.remove(&entity).is_some()
     }
 
     /// Forgets every present entity; the watch entries stay.

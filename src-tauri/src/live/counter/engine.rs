@@ -454,6 +454,9 @@ const SEASON_NODE_BUFF_MIN_ID: i32 = 4;
 pub struct CounterEngine {
     namespaces: [NamespaceState; 2],
     next_rule_set: u64,
+    /// Bumped by every operation that reports a change, so readers of
+    /// [`Self::slot_state`] can skip work when nothing moved.
+    revision: u64,
     local_player: Option<EntityRef>,
     attrs: HashMap<i32, i64>,
     paused: bool,
@@ -487,7 +490,20 @@ impl CounterEngine {
             scheduler.invalidate_scope(TimerScope::RuleSet(previous_rule_set));
         }
         self.namespaces[index] = compiled;
-        Ok(true)
+        Ok(self.note_change(true))
+    }
+
+    /// Change counter for everything [`Self::slot_state`] reads.
+    #[must_use]
+    pub const fn revision(&self) -> u64 {
+        self.revision
+    }
+
+    fn note_change(&mut self, changed: bool) -> bool {
+        if changed {
+            self.revision = self.revision.wrapping_add(1);
+        }
+        changed
     }
 
     pub fn apply_factor_templates(
@@ -502,14 +518,25 @@ impl CounterEngine {
     }
 
     pub fn begin_batch(&mut self, batch_id: BatchId) -> bool {
-        self.namespaces
+        let changed = self
+            .namespaces
             .iter_mut()
             .fold(false, |changed, namespace| {
                 namespace.begin_batch(batch_id) | changed
-            })
+            });
+        self.note_change(changed)
     }
 
     pub fn apply_event(
+        &mut self,
+        envelope: &DomainEnvelope,
+        scheduler: &mut DeadlineScheduler,
+    ) -> Result<bool, CounterConfigError> {
+        let changed = self.apply_event_inner(envelope, scheduler)?;
+        Ok(self.note_change(changed))
+    }
+
+    fn apply_event_inner(
         &mut self,
         envelope: &DomainEnvelope,
         scheduler: &mut DeadlineScheduler,
@@ -694,9 +721,11 @@ impl CounterEngine {
     }
 
     pub fn end_batch(&mut self) -> bool {
-        self.namespaces
+        let changed = self
+            .namespaces
             .iter_mut()
-            .fold(false, |changed, namespace| namespace.end_batch() | changed)
+            .fold(false, |changed, namespace| namespace.end_batch() | changed);
+        self.note_change(changed)
     }
 
     pub fn on_due(
@@ -705,10 +734,12 @@ impl CounterEngine {
         fired_at: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
     ) -> bool {
-        self.namespaces
+        let changed = self
+            .namespaces
             .iter_mut()
             .find(|namespace| namespace.rule_set_matches(due.key))
-            .is_some_and(|namespace| namespace.on_due(due, fired_at, &self.attrs, scheduler))
+            .is_some_and(|namespace| namespace.on_due(due, fired_at, &self.attrs, scheduler));
+        self.note_change(changed)
     }
 
     /// Old-pipeline `reset_counts` parity: called on container resync

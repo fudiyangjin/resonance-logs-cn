@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { overviewGroups } from "./overview";
 import { byKind, VOICE_SUBJECT_ADAPTERS } from "./registry";
 import type { VoiceBindingView } from "./subject-types";
-import { resolveMonsterBuffSourceScope } from "./subjects/monster-buff";
+import { resolveMonsterBuffSourceScope } from "./association";
 
 function emptyView(): VoiceBindingView {
   return {
@@ -121,13 +121,13 @@ describe("ruleKey golden values", () => {
     expect(a.ruleKey(s, "readyIn")).toBe("voice:skill:1420:readyIn");
   });
 
-  it("entity", () => {
+  it("entity (scope-less: re-scoping an entry keeps its phrases)", () => {
     const a = byKind("entity");
     const s = { kind: "entity", monsterId: 179901, scope: "self" } as const;
-    expect(a.ruleKey(s, "appeared")).toBe("voice:entity:179901:self:appeared");
-    expect(a.ruleKey(s, "expiring")).toBe("voice:entity:179901:self:expiring");
+    expect(a.ruleKey(s, "appeared")).toBe("voice:entity:179901:appeared");
+    expect(a.ruleKey(s, "expiring")).toBe("voice:entity:179901:expiring");
     expect(a.ruleKey({ ...s, scope: "any" }, "gone")).toBe(
-      "voice:entity:179901:any:gone",
+      "voice:entity:179901:gone",
     );
   });
 
@@ -213,7 +213,7 @@ describe("auto text golden values", () => {
     expect(a.trigger(subject, "gained", 0)).toBeNull();
   });
 
-  it("entity exposes expiring only with a duration and sleeps without its entry", () => {
+  it("entity exposes expiring only with a duration and follows its entry", () => {
     const a = byKind("entity");
     const subject = {
       kind: "entity",
@@ -231,7 +231,7 @@ describe("auto text golden values", () => {
       },
     ];
     withDuration.monster.entityVoiceConfigs = {
-      "179901:self": {
+      "179901": {
         appeared: { enabled: true, phrase: { source: "auto" } },
       },
     };
@@ -249,16 +249,31 @@ describe("auto text golden values", () => {
     openEnded.monster.entityDurationEntries = [
       { id: "e", monsterId: 179901, label: "", scope: "any" },
     ];
-    openEnded.monster.entityVoiceConfigs =
-      withDuration.monster.entityVoiceConfigs;
+    // Keyed by the watch scope, as bindings were before one entry per
+    // monster id owned them.
+    openEnded.monster.entityVoiceConfigs = {
+      "179901:self": {
+        appeared: { enabled: true, phrase: { source: "auto" } },
+      },
+    };
     const anySubject = { ...subject, scope: "any" as const };
     expect(a.label(openEnded, anySubject)).toBe("#179901");
     expect(a.events(openEnded, anySubject).map((e) => e.eventKind)).toEqual([
       "appeared",
       "gone",
     ]);
-    // The binding is keyed to scope=self; the entry is now scope=any.
-    expect(a.enumerate(openEnded)).toEqual([]);
+    // Re-scoping the entry keeps the binding; the subject takes its scope.
+    expect(a.enumerate(openEnded)).toEqual([anySubject]);
+    expect(a.read(openEnded, anySubject, "appeared")).toEqual({
+      enabled: true,
+      phrase: { source: "auto" },
+    });
+
+    // Without its entry the binding has no subject.
+    const removed = emptyView();
+    removed.monster.entityVoiceConfigs =
+      withDuration.monster.entityVoiceConfigs;
+    expect(a.enumerate(removed)).toEqual([]);
     expect(a.trigger(anySubject, "expiring", 4)).toEqual({
       subject: { kind: "entity", monsterId: 179901, scope: "any" },
       event: { kind: "expiringIn", secondsBefore: 4 },

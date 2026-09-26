@@ -211,6 +211,67 @@ describe("monitoring settings reconciliation", () => {
     expect(repaired.monsterMonitor.mirroredProfileId).toBe(second.id);
     expect(repaired.monsterMonitor.overlayVisibility.showHatePanel).toBe(true);
   });
+
+  it("prunes voice bindings per profile, never across profiles, idempotently", () => {
+    const on = { enabled: true, phrase: { source: "auto" as const } };
+    const state = createDefaultMonitoringSettingsState();
+    state.schemaVersion = CURRENT_MONITORING_SCHEMA_VERSION;
+    const first = state.skillMonitor.profiles[0]!;
+    first.monitoredSkillIds = [1420];
+    first.skillVoiceConfigs = { "1420": { cast: on }, "1421": { cast: on } };
+    // Another loadout's profile monitors 1421: that must not keep the first
+    // profile's binding for it, nor lose its own.
+    const second = createDefaultSkillMonitorProfile("Second");
+    second.monitoredSkillIds = [1421];
+    second.skillVoiceConfigs = { "1421": { cast: on } };
+    state.skillMonitor.profiles.push(second);
+
+    // The mirror holds a DBM binding without its entry; a stored profile
+    // holds an entity binding under its pre-rekey key.
+    state.monsterMonitor.dbmVoiceConfigs = { "8801": { onCast: on } };
+    const stored = createDefaultMonsterMonitorProfile("Stored");
+    stored.entityDurationEntries = [
+      { id: "e", monsterId: 179901, label: "", scope: "self" },
+    ];
+    stored.entityVoiceConfigs = { "179901:self": { appeared: on } };
+    state.monsterMonitor.profiles.push(stored);
+
+    const repaired = reconcileMonitoringState(state);
+    expect(
+      repaired.skillMonitor.profiles.map(
+        (profile) => profile.skillVoiceConfigs,
+      ),
+    ).toEqual([{ "1420": { cast: on } }, { "1421": { cast: on } }]);
+    expect(repaired.monsterMonitor.dbmVoiceConfigs).toEqual({});
+    expect(
+      repaired.monsterMonitor.profiles.find((p) => p.id === stored.id)!
+        .entityVoiceConfigs,
+    ).toEqual({ "179901": { appeared: on } });
+    expect(reconcileMonitoringState(repaired)).toEqual(repaired);
+  });
+
+  it("keeps DBM voice bindings that had no DBM entry before schema seven by adding the entry", () => {
+    const on = { enabled: true, phrase: { source: "auto" as const } };
+    const state = createDefaultMonitoringSettingsState();
+    state.schemaVersion = 6;
+    const stored = createDefaultMonsterMonitorProfile("Stored");
+    stored.dbmVoiceConfigs = { "8802": { onCast: on } };
+    state.monsterMonitor.profiles.push(stored);
+    state.monsterMonitor.dbmAliases = { "8801": "  " };
+    state.monsterMonitor.dbmVoiceConfigs = { "8801": { onCast: on } };
+
+    const migrated = reconcileMonitoringState(state);
+    expect(Object.keys(migrated.monsterMonitor.dbmAliases)).toEqual(["8801"]);
+    expect(migrated.monsterMonitor.dbmAliases["8801"]!.trim()).not.toBe("");
+    expect(migrated.monsterMonitor.dbmVoiceConfigs).toEqual({
+      "8801": { onCast: on },
+    });
+    const storedMigrated = migrated.monsterMonitor.profiles.find(
+      (profile) => profile.id === stored.id,
+    )!;
+    expect(Object.keys(storedMigrated.dbmAliases)).toEqual(["8802"]);
+    expect(storedMigrated.dbmVoiceConfigs).toEqual({ "8802": { onCast: on } });
+  });
 });
 
 describe("legacy monitoring migration", () => {

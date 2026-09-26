@@ -32,6 +32,8 @@ export type VoiceBindingEventDef = {
   autoSourceLabelKey?: MessageKey;
   /** Whether custom text may use the `${阶数}` / `${remodelLevel}` placeholder. */
   supportsTierPlaceholder: boolean;
+  /** Bundled-prompt subjects keep fixed phrase names (see `phrase-key.ts`). */
+  fixedPhraseName: boolean;
 };
 
 function defaultEventConfig(
@@ -65,6 +67,7 @@ export function subjectEvents(
       ? { autoSourceLabelKey: spec.autoSourceLabelKey }
       : {}),
     supportsTierPlaceholder: spec.supportsTierPlaceholder,
+    fixedPhraseName: adapter.fixedPhraseName === true,
   }));
 }
 

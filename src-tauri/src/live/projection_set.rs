@@ -19,7 +19,7 @@ use crate::live::projections::history::HistoryProjection;
 use crate::live::projections::minimap::MinimapProjection;
 use crate::live::projections::presentation::{ActiveCombat, PresentationProjection};
 use crate::live::projections::timeline::TimelineProjection;
-use crate::live::projections::voice::{VoiceProjection, VoiceSyncReason};
+use crate::live::projections::voice::{VoiceInputs, VoiceProjection, VoiceSyncReason};
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
     AttributeValue, DomainEnvelope, DomainEvent, EntityKind, MonoTimeMs, SegmentReason,
@@ -84,10 +84,6 @@ pub struct ProjectionSet {
     voice: VoiceProjection,
     history: HistoryProjection,
     presentation: PresentationProjection,
-    counter_side_effect_dirty: bool,
-    /// Set whenever `entity_monitor` reports a change; `end_batch` then lets
-    /// the voice projection re-read cooldowns / watched entities once.
-    entity_monitor_side_effect_dirty: bool,
     dirty: TopicMask,
 }
 
@@ -104,8 +100,6 @@ impl ProjectionSet {
             voice: VoiceProjection::default(),
             history: HistoryProjection::new(history_writer),
             presentation: PresentationProjection::default(),
-            counter_side_effect_dirty: false,
-            entity_monitor_side_effect_dirty: false,
             dirty: ALL_TOPICS,
         }
     }
@@ -150,9 +144,7 @@ impl ProjectionSet {
                 }
             }
         }
-        self.counter_side_effect_dirty = true;
-        self.entity_monitor_side_effect_dirty = true;
-        self.flush_voice_inputs(
+        self.sync_voice(
             VoiceSyncReason::Baseline,
             entities,
             now_wall_ms,
@@ -163,10 +155,9 @@ impl ProjectionSet {
         Ok(())
     }
 
-    /// Replaces the voice rule set. Counter- and entity-monitor-derived
-    /// deadlines are re-armed right away rather than via the dirty flags:
-    /// those only flush at the end of a *batch*, and an idle runtime may not
-    /// see one for a long time after the user edits a rule.
+    /// Replaces the voice rule set. Every derived deadline is re-armed right
+    /// away rather than at the next batch end: an idle runtime may not see a
+    /// batch for a long time after the user edits a rule.
     pub fn apply_voice_config(
         &mut self,
         config: &VoiceRuntimeSnapshot,
@@ -179,9 +170,7 @@ impl ProjectionSet {
             .voice
             .apply_config(config, entities, now_wall_ms, now_mono, scheduler)
         {
-            self.counter_side_effect_dirty = true;
-            self.entity_monitor_side_effect_dirty = true;
-            self.flush_voice_inputs(
+            self.sync_voice(
                 VoiceSyncReason::Baseline,
                 entities,
                 now_wall_ms,
@@ -533,7 +522,7 @@ impl ProjectionSet {
     ) {
         let changed = self.counter.end_batch();
         self.mark_counter_change(changed);
-        self.flush_voice_inputs(
+        self.sync_voice(
             VoiceSyncReason::Runtime,
             entities,
             now_wall_ms,
@@ -555,7 +544,6 @@ impl ProjectionSet {
         self.buff_timeline.clear();
         self.combat.clear_segment();
         self.death.start_segment();
-        self.counter_side_effect_dirty = false;
         self.dirty |= SEGMENT_TOPICS;
     }
 
@@ -579,8 +567,6 @@ impl ProjectionSet {
         self.minimap.reset_runtime();
         self.timeline.reset_runtime();
         self.voice.reset_runtime(scheduler);
-        self.counter_side_effect_dirty = true;
-        self.entity_monitor_side_effect_dirty = true;
         self.dirty = ALL_TOPICS;
     }
 
@@ -735,7 +721,6 @@ impl ProjectionSet {
                 self.history.persist_buff(edge, entities, 0)?;
             }
         }
-        self.counter_side_effect_dirty = true;
         self.dirty |= SEGMENT_TOPICS;
         Ok(())
     }
@@ -828,20 +813,20 @@ impl ProjectionSet {
         )?;
 
         self.combat.clear_segment();
-        self.counter_side_effect_dirty = false;
         self.dirty |= TopicMask::COMBAT | TopicMask::STATUS | TopicMask::BUFFS;
         Ok(())
     }
 
     fn mark_counter_change(&mut self, changed: bool) {
-        if !changed {
-            return;
+        if changed {
+            self.dirty |= TopicMask::STATUS;
         }
-        self.counter_side_effect_dirty = true;
-        self.dirty |= TopicMask::STATUS;
     }
 
-    fn flush_voice_inputs(
+    /// Lets the voice projection re-derive whatever its inputs changed. The
+    /// inputs carry their own revisions, so nothing here can drop or clear
+    /// a pending re-derivation.
+    fn sync_voice(
         &mut self,
         reason: VoiceSyncReason,
         entities: &EntityContext,
@@ -849,24 +834,13 @@ impl ProjectionSet {
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
     ) {
-        self.flush_counter_side_effects(reason, now_wall_ms, now_mono, scheduler);
-        self.flush_entity_monitor_side_effects(reason, entities, now_wall_ms, now_mono, scheduler);
-    }
-
-    fn flush_counter_side_effects(
-        &mut self,
-        reason: VoiceSyncReason,
-        now_wall_ms: i64,
-        now_mono: MonoTimeMs,
-        scheduler: &mut DeadlineScheduler,
-    ) {
-        if !self.counter_side_effect_dirty {
-            return;
-        }
+        let inputs = VoiceInputs {
+            entities,
+            monitor: &self.entity_monitor,
+            counters: &self.counter,
+        };
         self.voice
-            .apply_counters(reason, &self.counter, now_wall_ms, now_mono, scheduler);
-        self.counter_side_effect_dirty = false;
-        self.dirty |= TopicMask::STATUS;
+            .sync_inputs(reason, &inputs, now_wall_ms, now_mono, scheduler);
     }
 
     fn apply_entity_monitor(
@@ -875,33 +849,7 @@ impl ProjectionSet {
         entities: &EntityContext,
         scheduler: &mut DeadlineScheduler,
     ) -> TopicMask {
-        let reported = self.entity_monitor.apply(envelope, entities, scheduler);
-        if !reported.is_empty() {
-            self.entity_monitor_side_effect_dirty = true;
-        }
-        reported
-    }
-
-    fn flush_entity_monitor_side_effects(
-        &mut self,
-        reason: VoiceSyncReason,
-        entities: &EntityContext,
-        now_wall_ms: i64,
-        now_mono: MonoTimeMs,
-        scheduler: &mut DeadlineScheduler,
-    ) {
-        if !self.entity_monitor_side_effect_dirty {
-            return;
-        }
-        self.voice.apply_entity_monitor(
-            reason,
-            &self.entity_monitor,
-            entities,
-            now_wall_ms,
-            now_mono,
-            scheduler,
-        );
-        self.entity_monitor_side_effect_dirty = false;
+        self.entity_monitor.apply(envelope, entities, scheduler)
     }
 }
 
@@ -1056,8 +1004,6 @@ mod tests {
             .unwrap();
         // No end_batch or new packet between config and this assertion.
         assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(20_100)));
-        assert!(!projections.entity_monitor_side_effect_dirty);
-        assert!(!projections.counter_side_effect_dirty);
         assert!(projections.take_voice_cues().is_empty());
 
         config.monster.watched_entities[0].duration_ms = Some(1);
@@ -1148,6 +1094,74 @@ mod tests {
             ["1"]
         );
         assert!(scheduler.is_empty());
+        drop(projections);
+        join.join().unwrap();
+    }
+
+    #[test]
+    fn counter_change_reaches_voice_even_when_the_display_is_cleared_in_the_same_batch() {
+        use crate::live::counter::engine::{CounterRule, EffectSlotConfig};
+        use crate::voice::models::{VoiceEvent, VoiceRule, VoiceSubject, VoiceTrigger};
+        let (writer, join) = HistoryWriterHandle::start().unwrap();
+        let mut projections = ProjectionSet::new(writer);
+        let entities = EntityContext::new();
+        let mut scheduler = DeadlineScheduler::new();
+        projections.apply_voice_config(
+            &VoiceRuntimeSnapshot {
+                enabled: true,
+                rules: vec![VoiceRule {
+                    id: "threshold".to_string(),
+                    enabled: true,
+                    trigger: VoiceTrigger::new(
+                        VoiceSubject::Counter {
+                            rule_id: 7,
+                            slot_id: 1,
+                        },
+                        VoiceEvent::Threshold,
+                    ),
+                    phrase_id: "threshold".to_string(),
+                    priority: 0,
+                    cooldown_ms: 0,
+                    phrase_id_by_tier: None,
+                }],
+                ..Default::default()
+            },
+            &entities,
+            100,
+            MonoTimeMs(100),
+            &mut scheduler,
+        );
+        assert!(projections.take_voice_cues().is_empty());
+
+        // The slot reaches its target mid-batch, and a segment boundary in
+        // the same batch clears the display — which used to also clear the
+        // flag that told voice to look at the counters.
+        let slot: EffectSlotConfig = serde_json::from_value(
+            serde_json::json!({ "slotId": 1, "threshold": 0, "resetBuffId": 0 }),
+        )
+        .unwrap();
+        projections
+            .counter
+            .apply_config(
+                CounterNamespace::Normal,
+                vec![CounterRule {
+                    rule_id: 7,
+                    sources: vec![],
+                    effect_slots: vec![slot],
+                }],
+                &mut scheduler,
+            )
+            .unwrap();
+        projections.clear_display();
+        projections.end_batch(&entities, 200, MonoTimeMs(200), &mut scheduler);
+        assert_eq!(
+            projections
+                .take_voice_cues()
+                .iter()
+                .map(|cue| cue.rule_id.as_str())
+                .collect::<Vec<_>>(),
+            ["threshold"]
+        );
         drop(projections);
         join.join().unwrap();
     }

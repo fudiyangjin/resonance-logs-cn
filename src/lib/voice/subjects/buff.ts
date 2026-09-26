@@ -7,7 +7,6 @@ import {
 } from "$lib/settings-store";
 import {
   mergeVoiceConfigPatch,
-  type SkillProfileVoiceSlice,
   type VoiceBindingEventKind,
   type VoiceBindingSubject,
   type VoiceBindingView,
@@ -16,11 +15,6 @@ import {
 } from "../subject-types";
 
 export type BuffEventKind = "gained" | "expiring" | "lost";
-export const BUFF_EVENTS: readonly BuffEventKind[] = [
-  "gained",
-  "expiring",
-  "lost",
-];
 
 export function isBuffEventKind(
   kind: VoiceBindingEventKind,
@@ -117,10 +111,8 @@ export function writeBuffConfig(
 
 type BuffSubject = Extract<VoiceBindingSubject, { kind: "buff" }>;
 
-export const buffAdapter: VoiceSubjectAdapter<
-  BuffSubject,
-  SkillProfileVoiceSlice
-> = {
+/** Local buff bindings form their own list, so they are always associated. */
+export const buffAdapter: VoiceSubjectAdapter<BuffSubject> = {
   kind: "buff",
   runtime: "backend",
   overview: {
@@ -165,8 +157,4 @@ export const buffAdapter: VoiceSubjectAdapter<
       secondsBefore,
     ),
   language: () => "zhCn",
-  gcKeys: (slice) =>
-    Object.keys(slice.buffVoiceConfigs ?? {}).flatMap((buffIdText) =>
-      BUFF_EVENTS.map((event) => `voice:buff:${Number(buffIdText)}:${event}`),
-    ),
 };

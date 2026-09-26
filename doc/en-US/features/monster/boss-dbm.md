@@ -18,6 +18,8 @@ Default skill names come from game data; entries that are not in the table show 
 
 In **{{ui:monsterMonitor.bossDbm.voice.title}}**, set an **on trigger** announcement for a skill so you hear an alert as soon as the Boss starts casting.
 
+Deleting an entry from the alias list also deletes its voice announcement. If you clear an alias and leave the field, the default name comes back; the entry and its announcement are kept.
+
 ## Style
 
 The Boss DBM area has its own style: row spacing, column spacing, font size, name / value colors, progress bar color and opacity.

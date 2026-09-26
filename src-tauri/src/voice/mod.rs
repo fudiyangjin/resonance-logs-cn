@@ -14,6 +14,7 @@ pub mod model_lifecycle;
 pub mod model_manager;
 pub mod models;
 mod operation;
+pub(crate) mod phrase_name;
 pub mod phrases;
 mod playback;
 pub mod player;

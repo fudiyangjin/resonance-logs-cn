@@ -4,6 +4,7 @@ import {
   type SkillMonitorProfile,
 } from "$lib/settings-store";
 import { activeLoadout } from "$lib/loadouts.svelte.js";
+import { pruneSkillProfileVoice } from "$lib/voice/association";
 
 function resolveActiveIndex(profiles: SkillMonitorProfile[]): number {
   if (profiles.length === 0) return -1;
@@ -40,6 +41,11 @@ export function activeProfileOrDefault(): SkillMonitorProfile {
   return _activeProfile ?? createDefaultSkillMonitorProfile();
 }
 
+/**
+ * The write path for the active skill profile. Voice bindings whose subject
+ * the update dissociated (an unmonitored skill, a removed counter rule) go
+ * in the same write — only this profile's, never another loadout's.
+ */
 export function updateActiveProfile(
   updater: (profile: SkillMonitorProfile) => SkillMonitorProfile,
   options?: { createDefaultIfEmpty?: boolean },
@@ -55,6 +61,6 @@ export function updateActiveProfile(
   const index = resolveActiveIndex(profiles);
   const resolvedIndex = index === -1 ? 0 : index;
   state.profiles = profiles.map((profile, i) =>
-    i === resolvedIndex ? updater(profile) : profile,
+    i === resolvedIndex ? pruneSkillProfileVoice(updater(profile)) : profile,
   );
 }

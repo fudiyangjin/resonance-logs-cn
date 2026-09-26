@@ -24,7 +24,6 @@
     overviewGroups,
     type VoiceBindingOverviewEntry,
   } from "$lib/voice/overview";
-  import { hasTierPlaceholder, TIERED_PHRASE_COUNT } from "$lib/voice/phrase-key";
   import { materializeBindingPhraseIds } from "$lib/voice/preview.svelte";
   import { currentPhraseIndex } from "$lib/voice/sync.svelte";
   import { buildVoiceBindingView } from "$lib/voice/view";
@@ -70,13 +69,6 @@
     return SOURCE_LABEL_KEYS[entry.binding.source];
   }
 
-  function usesTierPlaceholder(entry: VoiceBindingOverviewEntry): boolean {
-    return (
-      entry.binding.source === "custom" &&
-      hasTierPlaceholder(entry.binding.text)
-    );
-  }
-
   function entryPhraseIds(entry: VoiceBindingOverviewEntry): string[] {
     return [entry.phraseId, ...entry.tierPhraseIds].filter(
       (id): id is string => !!id,
@@ -85,7 +77,9 @@
 
   /** How many phrases this entry compiles to (7 for tier-placeholder text). */
   function expectedPhraseCount(entry: VoiceBindingOverviewEntry): number {
-    return usesTierPlaceholder(entry) ? TIERED_PHRASE_COUNT : 1;
+    return entry.binding.source === "phrase"
+      ? 1
+      : Math.max(1, entry.phrases.length);
   }
 
   function readyPhraseCount(entry: VoiceBindingOverviewEntry): number {
@@ -154,10 +148,8 @@
     for (const entry of entries) {
       if (isReady(entry)) continue;
       const ids = await materializeBindingPhraseIds(
-        entry.id,
         entry.binding,
-        entry.autoText,
-        entry.language,
+        entry.phrases,
       );
       missingIds.push(
         ...ids.filter((id) => !phrasesById.get(id)?.activeAssetId),

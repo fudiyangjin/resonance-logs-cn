@@ -3,6 +3,7 @@
 //! it to the player worker.
 
 use std::path::PathBuf;
+use std::time::{Duration, Instant};
 
 use log::warn;
 
@@ -12,7 +13,7 @@ use super::now_ms;
 use super::player::QueuedCue;
 use super::service::VoiceService;
 use super::types::{AssetId, PhraseId};
-use super::{catalog, models, presets, prompts};
+use super::{catalog, models, phrase_name, presets, prompts};
 
 pub(super) const PREVIEW_RULE_ID: &str = "__preview__";
 
@@ -45,6 +46,29 @@ impl CueAudioRef {
             },
         }
     }
+}
+
+/// Audio `phrase_id` may play, in preference order: its own active asset,
+/// then — for a content-addressed managed phrase — the newest phrases of
+/// the same binding slot that have one.
+fn playable_candidates(
+    catalog: &models::VoiceCatalog,
+    phrase_id: &str,
+) -> Vec<(String, CueAudioRef)> {
+    let own = catalog_audio_ref(catalog, phrase_id).map(|audio| (phrase_id.to_string(), audio));
+    let slot = catalog
+        .phrases
+        .iter()
+        .find(|phrase| phrase.id == phrase_id)
+        .and_then(|phrase| phrase_name::managed_slot(&phrase.name));
+    let siblings = slot
+        .map(|slot| phrase_name::slot_siblings(catalog, slot, Some(phrase_id)))
+        .unwrap_or_default();
+    own.into_iter()
+        .chain(siblings.into_iter().filter_map(|phrase| {
+            catalog_audio_ref(catalog, &phrase.id).map(|audio| (phrase.id.clone(), audio))
+        }))
+        .collect()
 }
 
 pub(super) fn catalog_audio_ref(
@@ -98,13 +122,29 @@ impl VoiceService {
         self.audio_ref_wav_path(phrase_id, self.cue_audio_ref(phrase_id)?)
     }
 
+    /// Like [`Self::cue_wav_path`], but while the phrase has no playable
+    /// audio yet it falls back to the newest phrase of the same binding slot
+    /// that has, so an edited text or a freshly switched loadout keeps its
+    /// previous voice until the new audio is generated.
+    fn playable_wav_path(&self, phrase_id: &str) -> Option<PathBuf> {
+        // Only candidate references are taken under the lock; the file
+        // checks happen after it is released.
+        let candidates = {
+            let catalog = self.inner.catalog.lock();
+            playable_candidates(&catalog, phrase_id)
+        };
+        candidates
+            .into_iter()
+            .find_map(|(phrase_id, audio)| self.audio_ref_wav_path(&phrase_id, audio))
+    }
+
     /// Resolves `intent.phrase_id` to a generated or bundled WAV and enqueues playback.
     /// Never drops the cue silently: if the phrase is missing, has no
-    /// playable asset, or the asset file is gone from
-    /// disk, a short built-in fallback tone plays instead so a
-    /// misconfigured or pending rule is still noticeable.
+    /// playable asset (and no same-slot predecessor has one), or the asset
+    /// file is gone from disk, a short built-in fallback tone plays instead
+    /// so a misconfigured or pending rule is still noticeable.
     pub fn enqueue_cue(&self, intent: VoiceCueIntent) {
-        let wav_path = self.cue_wav_path(&intent.phrase_id);
+        let wav_path = self.playable_wav_path(&intent.phrase_id);
         if wav_path.is_none() {
             warn!(
                 target: "app::voice",
@@ -116,6 +156,9 @@ impl VoiceService {
             rule_id: intent.rule_id,
             priority: intent.priority,
             wav_path,
+            stale_at: intent
+                .valid_for_ms
+                .and_then(|ms| Instant::now().checked_add(Duration::from_millis(ms))),
         });
     }
 
@@ -130,14 +173,16 @@ impl VoiceService {
             phrase_id: phrase_id.as_str().to_string(),
             priority,
             triggered_at_ms: now_ms(),
+            valid_for_ms: None,
         });
     }
 
     /// Like [`Self::enqueue_phrase`] but resolves the phrase by its managed
-    /// `name` (e.g. `auto:voice:minimap:...`), so HUD windows can play a
-    /// binding without keeping their own phrase-id cache in sync with the
-    /// main window. Returns `false` (and plays nothing) when no phrase has
-    /// that name yet — the main window has not materialized it.
+    /// `name` (e.g. `auto:voice:minimapCue:...~h8`), so HUD windows can play
+    /// a binding without keeping their own phrase-id cache in sync with the
+    /// main window. Until the main window has materialized that name, the
+    /// newest phrase of the same binding slot stands in; returns `false`
+    /// (and plays nothing) when there is neither.
     pub fn enqueue_phrase_by_name(&self, name: &str, priority: u8) -> bool {
         let phrase_id = {
             let catalog = self.inner.catalog.lock();
@@ -145,6 +190,12 @@ impl VoiceService {
                 .phrases
                 .iter()
                 .find(|phrase| phrase.name == name)
+                .or_else(|| {
+                    let slot = phrase_name::managed_slot(name)?;
+                    phrase_name::slot_siblings(&catalog, slot, None)
+                        .into_iter()
+                        .next()
+                })
                 .map(|phrase| phrase.id.clone())
         };
         let Some(phrase_id) = phrase_id else {
@@ -156,6 +207,7 @@ impl VoiceService {
             phrase_id,
             priority,
             triggered_at_ms: now_ms(),
+            valid_for_ms: None,
         });
         true
     }
@@ -171,6 +223,7 @@ impl VoiceService {
             rule_id: PREVIEW_RULE_ID.to_string(),
             priority: TEST_TRIGGER_PRIORITY,
             wav_path: Some(wav_path),
+            stale_at: None,
         });
         Ok(())
     }
@@ -193,6 +246,7 @@ impl VoiceService {
             rule_id: PREVIEW_RULE_ID.to_string(),
             priority: PREVIEW_PRIORITY,
             wav_path: Some(wav_path),
+            stale_at: None,
         });
         Ok(())
     }
@@ -206,6 +260,62 @@ impl VoiceService {
 mod tests {
     use super::*;
     use crate::voice::test_support::*;
+
+    fn named(id: &str, name: &str, audio: bool, updated_at_ms: i64) -> models::VoicePhraseMeta {
+        let asset = format!("{id}-asset");
+        models::VoicePhraseMeta {
+            name: name.to_string(),
+            updated_at_ms,
+            ..phrase_stub(id, audio.then_some(asset.as_str()))
+        }
+    }
+
+    #[test]
+    fn phrase_without_audio_falls_back_to_the_newest_same_slot_phrase_with_audio() {
+        let phrases = vec![
+            named(
+                "current",
+                "custom:voice:skill:1420:ready~aaaaaaaa",
+                false,
+                30,
+            ),
+            named("older", "auto:voice:skill:1420:ready~bbbbbbbb", true, 10),
+            named("newer", "custom:voice:skill:1420:ready~cccccccc", true, 20),
+            named(
+                "pending",
+                "custom:voice:skill:1420:ready~dddddddd",
+                false,
+                25,
+            ),
+            named("other", "custom:voice:skill:9:ready~eeeeeeee", true, 99),
+            named("hand-made", "机制来了", false, 1),
+        ];
+        let assets = phrases
+            .iter()
+            .filter_map(|phrase| phrase.active_asset_id.as_deref())
+            .map(|asset| {
+                let phrase_id = asset.trim_end_matches("-asset");
+                asset_stub(asset, phrase_id, 0)
+            })
+            .collect();
+        let catalog = models::VoiceCatalog {
+            phrases,
+            assets,
+            ..Default::default()
+        };
+
+        let ids = |phrase_id: &str| {
+            playable_candidates(&catalog, phrase_id)
+                .into_iter()
+                .map(|(id, _)| id)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(ids("current"), ["newer", "older"]);
+        // A phrase with audio plays its own first.
+        assert_eq!(ids("older"), ["older", "newer"]);
+        // Hand-made phrases have no slot to fall back within.
+        assert!(ids("hand-made").is_empty());
+    }
 
     #[test]
     fn catalog_audio_ref_distinguishes_bundled_and_generated_assets() {

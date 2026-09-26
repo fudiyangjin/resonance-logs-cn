@@ -1,4 +1,4 @@
-import type { EntityOwnerScope, VoiceSubject } from "$lib/bindings";
+import type { VoiceSubject } from "$lib/bindings";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
 import {
   ensureEntityVoiceConfigs,
@@ -9,6 +9,11 @@ import {
   type EntityVoiceConfigMap,
 } from "$lib/settings-store";
 import {
+  entityVoiceConfigFor,
+  entityVoiceEvents,
+  type EntityEventKind,
+} from "../association";
+import {
   mergeVoiceConfigPatch,
   type MonsterVoiceSlice,
   type VoiceBindingEventKind,
@@ -18,13 +23,7 @@ import {
   type VoiceSubjectAdapter,
 } from "../subject-types";
 
-export type EntityEventKind = "appeared" | "expiring" | "gone";
-export const ENTITY_EVENTS: readonly EntityEventKind[] = [
-  "appeared",
-  "expiring",
-  "gone",
-];
-const ENTITY_SCOPES: readonly EntityOwnerScope[] = ["self", "any"];
+export type { EntityEventKind } from "../association";
 
 export function isEntityEventKind(
   kind: VoiceBindingEventKind,
@@ -37,11 +36,10 @@ type EntitySubject = Extract<VoiceBindingSubject, { kind: "entity" }>;
 /** The watch entry a subject belongs to; `undefined` once it was removed. */
 export function entityEntryOf(
   view: VoiceBindingView,
-  subject: EntitySubject,
+  subject: Pick<EntitySubject, "monsterId">,
 ): EntityDurationEntry | undefined {
   return ensureEntityDurationEntries(view.monster.entityDurationEntries).find(
-    (entry) =>
-      entry.monsterId === subject.monsterId && entry.scope === subject.scope,
+    (entry) => entry.monsterId === subject.monsterId,
   );
 }
 
@@ -67,59 +65,68 @@ export function entityAutoText(
   }
 }
 
-/**
- * `expiring` needs a configured duration to count down from; entries
- * without one (open-ended rows) only expose appear / gone.
- */
-export function entityEventSpecs(
-  autoText: (event: EntityEventKind, seconds: number) => string,
-  hasDuration: boolean,
-): readonly VoiceEventSpec[] {
-  const specs: VoiceEventSpec[] = [
-    {
-      eventKind: "appeared",
-      labelKey: "voice.binding.event.appeared",
-      expiring: false,
-      supportsTierPlaceholder: false,
-      autoText: () => autoText("appeared", 0),
-    },
-  ];
-  if (hasDuration) {
-    specs.push({
-      eventKind: "expiring",
-      labelKey: "voice.binding.event.expiring",
-      expiring: true,
-      supportsTierPlaceholder: false,
-      autoText: (s) => autoText("expiring", s),
-    });
-  }
-  specs.push({
+const ENTITY_EVENT_SPECS: Record<
+  EntityEventKind,
+  Omit<VoiceEventSpec, "autoText">
+> = {
+  appeared: {
+    eventKind: "appeared",
+    labelKey: "voice.binding.event.appeared",
+    expiring: false,
+    supportsTierPlaceholder: false,
+  },
+  expiring: {
+    eventKind: "expiring",
+    labelKey: "voice.binding.event.expiring",
+    expiring: true,
+    supportsTierPlaceholder: false,
+  },
+  gone: {
     eventKind: "gone",
     labelKey: "voice.binding.event.gone",
     expiring: false,
     supportsTierPlaceholder: false,
-    autoText: () => autoText("gone", 0),
-  });
-  return specs;
+  },
+};
+
+/** Specs of `events`; `expiring` only exists for entries with a duration. */
+export function entityEventSpecs(
+  autoText: (event: EntityEventKind, seconds: number) => string,
+  events: readonly EntityEventKind[],
+): readonly VoiceEventSpec[] {
+  return events.map((event) => ({
+    ...ENTITY_EVENT_SPECS[event],
+    autoText: (seconds: number) => autoText(event, seconds),
+  }));
 }
 
+/**
+ * Writes one event under the canonical key, starting from the entry's
+ * effective config so events still stored under a pre-rekey key carry over.
+ */
 function writeEntityConfig(
-  configs: EntityVoiceConfigMap | null | undefined,
+  current: Pick<
+    MonsterVoiceSlice,
+    "entityVoiceConfigs" | "entityDurationEntries"
+  >,
   subject: EntitySubject,
   eventKind: EntityEventKind,
   next: EntityVoiceConfig[EntityEventKind],
 ): EntityVoiceConfigMap {
-  return mergeVoiceConfigPatch(ensureEntityVoiceConfigs(configs), {
-    [entityVoiceConfigKey(subject.monsterId, subject.scope)]: {
+  const configs = ensureEntityVoiceConfigs(current.entityVoiceConfigs);
+  const entry =
+    ensureEntityDurationEntries(current.entityDurationEntries).find(
+      (candidate) => candidate.monsterId === subject.monsterId,
+    ) ?? subject;
+  return mergeVoiceConfigPatch(configs, {
+    [entityVoiceConfigKey(subject.monsterId)]: {
+      ...entityVoiceConfigFor(configs, entry),
       [eventKind]: next,
     },
   });
 }
 
-export const entityAdapter: VoiceSubjectAdapter<
-  EntitySubject,
-  MonsterVoiceSlice
-> = {
+export const entityAdapter: VoiceSubjectAdapter<EntitySubject> = {
   kind: "entity",
   runtime: "backend",
   overview: {
@@ -128,43 +135,50 @@ export const entityAdapter: VoiceSubjectAdapter<
     navigateKey: "voice.bindings.navigate.entity",
     route: "/main/monster-monitor",
   },
+  // Scope-less: re-scoping the entry keeps the binding's phrases (the
+  // backend renamed pre-rekey names, `phrase_name.rs::current_rule_name`).
   ruleKey: (subject, eventKind) =>
-    `voice:entity:${subject.monsterId}:${subject.scope}:${eventKind}`,
+    `voice:entity:${subject.monsterId}:${eventKind}`,
   label: entityLabel,
   events: (view, subject) => {
+    const entry = entityEntryOf(view, subject);
+    if (!entry) return [];
     const name = entityLabel(view, subject);
-    const hasDuration = entityEntryOf(view, subject)?.durationMs !== undefined;
     return entityEventSpecs(
       (event, s) => entityAutoText(name, event, s),
-      hasDuration,
+      entityVoiceEvents(entry),
     );
   },
   readyWithoutPhrase: () => false,
-  // Bindings whose entry was removed (or re-scoped) stay in settings but
-  // are dormant: the backend only tracks entities from the watch list.
-  enumerate: (view) =>
-    Object.keys(ensureEntityVoiceConfigs(view.monster.entityVoiceConfigs))
-      .map(parseEntityVoiceConfigKey)
-      .flatMap((parsed) =>
-        parsed ? [{ kind: "entity" as const, ...parsed }] : [],
-      )
-      .filter((subject) => entityEntryOf(view, subject) !== undefined),
+  // A binding lives exactly as long as its watch entry; the subject takes
+  // the entry's current scope.
+  enumerate: (view) => {
+    const configs = ensureEntityVoiceConfigs(view.monster.entityVoiceConfigs);
+    const monsterIds = new Set(
+      Object.keys(configs).flatMap((key) => {
+        const parsed = parseEntityVoiceConfigKey(key);
+        return parsed ? [parsed.monsterId] : [];
+      }),
+    );
+    return ensureEntityDurationEntries(view.monster.entityDurationEntries)
+      .filter((entry) => monsterIds.has(entry.monsterId))
+      .map((entry) => ({
+        kind: "entity" as const,
+        monsterId: entry.monsterId,
+        scope: entry.scope,
+      }));
+  },
   read: (view, subject, eventKind) => {
     if (!isEntityEventKind(eventKind)) return undefined;
-    const configs = ensureEntityVoiceConfigs(view.monster.entityVoiceConfigs);
-    return configs[entityVoiceConfigKey(subject.monsterId, subject.scope)]?.[
+    const entry = entityEntryOf(view, subject) ?? subject;
+    return entityVoiceConfigFor(view.monster.entityVoiceConfigs, entry)?.[
       eventKind
     ];
   },
   write: (writer, subject, eventKind, next) => {
     if (!isEntityEventKind(eventKind)) return;
     writer.patchMonster((current) => ({
-      entityVoiceConfigs: writeEntityConfig(
-        current.entityVoiceConfigs,
-        subject,
-        eventKind,
-        next,
-      ),
+      entityVoiceConfigs: writeEntityConfig(current, subject, eventKind, next),
     }));
   },
   trigger: (subject, eventKind, secondsBefore) => {
@@ -188,15 +202,4 @@ export const entityAdapter: VoiceSubjectAdapter<
     }
   },
   language: () => "zhCn",
-  gcKeys: (slice) =>
-    Object.keys(slice.entityVoiceConfigs ?? {}).flatMap((key) => {
-      const parsed = parseEntityVoiceConfigKey(key);
-      if (!parsed) return [];
-      // Keep both scopes: re-scoping an entry must not orphan its audio.
-      return ENTITY_SCOPES.flatMap((scope) =>
-        ENTITY_EVENTS.map(
-          (event) => `voice:entity:${parsed.monsterId}:${scope}:${event}`,
-        ),
-      );
-    }),
 };

@@ -85,7 +85,15 @@ Each phrase in the **{{ui:voice.tabs.phrases}}** has a status:
 
 You can also **{{ui:voice.phrases.add}}** by hand to write frequently used lines, then reuse them on several feature pages by referencing them from the phrase library.
 
-Deleting announcements or changing their text leaves behind auto-generated phrases that nothing uses anymore. Click **Clean up unreferenced phrases** to delete them all at once. The cleanup checks every loadout (not just the current one) and only deletes auto-generated phrases that no loadout references; phrases you created by hand are never deleted.
+Auto-generated phrases are told apart by their **text**: if one announcement uses different text in different loadouts, each text keeps its own audio, and announcements with the same text share one. After you change the text, the announcement keeps playing its previous audio until audio for the new text is generated.
+
+Deleting announcements, un-monitoring their targets or changing their text turns the old auto-generated phrases into unreferenced phrases. They are not deleted automatically: if you set up an announcement with the same text again before cleaning up, it reuses the audio that was already generated. Click **Clean up unreferenced phrases** to delete them all at once; the confirmation lists the phrases that will be deleted. The cleanup checks every loadout (not just the current one) and never deletes:
+
+- phrases still used by any loadout, including events that are switched off;
+- phrases picked with **{{ui:voice.binding.source.phrase}}** on a feature page;
+- old phrases still playing in place of new text whose audio is not generated yet;
+- phrases with imported audio (delete those one by one in the list);
+- phrases you created by hand, and the bundled prompts.
 
 ## Examples
 

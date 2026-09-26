@@ -11,7 +11,6 @@
    */
   import PlayIcon from "virtual:icons/lucide/play";
   import { t, type MessageKey } from "$lib/i18n/index.svelte";
-  import { type VoiceLanguage } from "$lib/bindings";
   import {
     resolveVoicePriority,
     VOICE_PRIORITY_TIERS,
@@ -22,6 +21,7 @@
   import {
     subjectEvents,
     updateSubjectEvent,
+    type VoiceBindingEventDef,
     type VoiceBindingEventKind,
     type VoiceBindingSubject,
   } from "$lib/voice-binding-subject.svelte.js";
@@ -42,14 +42,20 @@
   } satisfies Record<(typeof VOICE_PRIORITY_TIERS)[number]["id"], MessageKey>;
 
   async function tryPlay(
-    key: string,
+    event: VoiceBindingEventDef,
     binding: VoicePhraseBinding,
     autoText: string,
-    language?: VoiceLanguage,
   ) {
-    previewingKey = key;
+    previewingKey = event.key;
     try {
-      await previewPhraseBinding(key, binding, autoText, language);
+      await previewPhraseBinding({
+        ruleKey: event.key,
+        phrase: binding,
+        autoText,
+        language: event.language ?? "zhCn",
+        supportsTier: event.supportsTierPlaceholder,
+        fixedName: event.fixedPhraseName,
+      });
     } finally {
       previewingKey = null;
     }
@@ -164,8 +170,7 @@
             type="button"
             class="border-border/60 hover:bg-muted/40 ml-auto flex items-center gap-1 rounded border px-2 py-1 text-xs disabled:opacity-50"
             disabled={previewingKey === event.key}
-            onclick={() =>
-              tryPlay(event.key, binding, autoText, event.language)}
+            onclick={() => tryPlay(event, binding, autoText)}
           >
             <PlayIcon class="h-3 w-3" />
             {t("voice.binding.tryPlay")}

@@ -2122,7 +2122,7 @@ export const jaJPMessages = {
   "voice.phrases.rowGenerateHint": "先に下で音声ソースを選択してください",
   "voice.phrases.gc.button": "未参照フレーズを整理 ({count})",
   "voice.phrases.gc.confirm":
-    "どのプロファイルからも参照されていない自動生成フレーズ {count} 件と音声を削除します。この操作は取り消せません。これらを使うプロファイルを再インポートするとフレーズは自動再作成されますが、音声は再生成が必要です。",
+    "どのプロファイルの読み上げにも使われていない自動生成フレーズ {count} 件と音声を削除します（インポートした音声は対象外で、個別に削除してください）。この操作は取り消せません。同じテキストの読み上げを再び有効にするとフレーズは自動再作成されますが、音声は再生成が必要です。",
   "voice.phrases.gc.confirmAction": "整理を実行",
   "voice.phrases.gc.cancel": "キャンセル",
   "voice.phrases.gc.done": "未参照フレーズを {count} 件削除しました",

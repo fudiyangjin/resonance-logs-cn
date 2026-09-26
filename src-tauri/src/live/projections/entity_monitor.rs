@@ -165,9 +165,35 @@ impl SkillCdRecord {
     }
 }
 
+/// Change counters for the state sibling projections derive from, so a
+/// consumer (voice) re-reads a part only when it actually moved.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct MonitorRevisions {
+    /// Local-player cooldown records.
+    pub skill_cds: u64,
+    /// Watched entities and anything that regroups their tracks (watch
+    /// entries, the local player that owner scopes compare against).
+    pub watched_entities: u64,
+    /// Live boss mechanics.
+    pub boss_mechanics: u64,
+}
+
+/// A live boss mechanic: the HUD DTO plus the monotonic expiry voice cues
+/// are scheduled against.
+#[derive(Debug, Clone)]
+struct BossMechanicRecord {
+    event: BossDbmEvent,
+    expires_mono_ms: MonoTimeMs,
+}
+
 #[derive(Debug, Default)]
 pub struct EntityMonitorProjection {
     buff_filter: BuffPublishFilter,
+    revisions: MonitorRevisions,
+    /// The monster monitor is switched off: watched entities are still
+    /// tracked (voice cues do not follow the HUD toggle), only the HUD
+    /// payload hides them.
+    entity_duration_hidden: bool,
     local_player: Option<EntityRef>,
     current_target: Option<EntityRef>,
     skill_cds: HashMap<i32, SkillCdRecord>,
@@ -181,7 +207,7 @@ pub struct EntityMonitorProjection {
     fight_resource_received_at: i64,
     active_fantasies: HashMap<EntityUuid, FantasyCastKey>,
     recent_fantasies: VecDeque<RecentFantasy>,
-    boss_mechanics: HashMap<i32, BossDbmEvent>,
+    boss_mechanics: HashMap<i32, BossMechanicRecord>,
     hate_lists: HashMap<EntityUuid, Vec<HateEntryDto>>,
     stun_values: HashMap<EntityUuid, (i64, i64)>,
     hp_values: HashMap<EntityUuid, (i64, i64)>,
@@ -204,6 +230,7 @@ impl EntityMonitorProjection {
         self.player_names.clear();
         self.monster_ids.clear();
         self.entity_duration.clear();
+        bump(&mut self.revisions.watched_entities);
     }
 
     pub fn start_segment(&mut self, started_at_wall_ms: i64) {
@@ -238,8 +265,10 @@ impl EntityMonitorProjection {
         self.monitored_panel_attr_ids
             .extend(config.skill.monitored_panel_attr_ids.iter().copied());
         self.buff_filter = BuffPublishFilter::from_snapshot(config);
+        self.entity_duration_hidden = !config.monster.enabled;
         self.entity_duration
             .apply_config(&config.monster, entities, now_mono);
+        bump(&mut self.revisions.watched_entities);
         self.panel_attrs
             .retain(|attr_id, _| self.monitored_panel_attr_ids.contains(attr_id));
         if let Some(local) = self
@@ -267,6 +296,8 @@ impl EntityMonitorProjection {
                 self.local_player = entities.local_player();
                 self.clear_local_runtime();
                 self.sync_current_target(entities);
+                // Owner scopes compare casters against the local player.
+                bump(&mut self.revisions.watched_entities);
                 TopicMask::STATUS | TopicMask::MONSTER
             }
             DomainEvent::IdentityChanged {
@@ -290,13 +321,15 @@ impl EntityMonitorProjection {
                     }
                 }
                 let is_present = entities.entity(key).is_some_and(|state| state.is_present);
-                self.entity_duration.sync(
+                if self.entity_duration.sync(
                     *entity,
                     current,
                     is_present,
                     envelope.occurred_at_ms,
                     envelope.meta.mono_ms(),
-                );
+                ) {
+                    bump(&mut self.revisions.watched_entities);
+                }
                 let mut mask = TopicMask::MONSTER;
                 for fantasy in &mut self.recent_fantasies {
                     if fantasy.key.summoner == entity.uuid {
@@ -321,6 +354,7 @@ impl EntityMonitorProjection {
                     )
                 });
                 if changed {
+                    bump(&mut self.revisions.watched_entities);
                     TopicMask::MONSTER
                 } else {
                     TopicMask::EMPTY
@@ -332,6 +366,7 @@ impl EntityMonitorProjection {
                     .is_some_and(|local| local.uuid == entity.uuid)
                 {
                     self.clear_local_runtime();
+                    bump(&mut self.revisions.watched_entities);
                 }
                 let had_monster_state = self.hate_lists.contains_key(&entity.uuid)
                     || self.stun_values.contains_key(&entity.uuid)
@@ -424,6 +459,7 @@ impl EntityMonitorProjection {
                     record.refresh_derived();
                     self.skill_cds.insert(cooldown.skill_level_id, record);
                 }
+                bump(&mut self.revisions.skill_cds);
                 TopicMask::STATUS
             }
             DomainEvent::ShieldDetailsUpdated { entity, entries }
@@ -528,13 +564,16 @@ impl EntityMonitorProjection {
             DomainEvent::BossMechanicStarted(mechanic) => {
                 self.boss_mechanics.insert(
                     mechanic.base_skill_id,
-                    BossDbmEvent {
-                        skill_effect_id: mechanic.skill_effect_id,
-                        base_skill_id: mechanic.base_skill_id,
-                        duration_ms: mechanic.duration_ms.min(i32::MAX as u64) as i32,
-                        create_time_ms: envelope.occurred_at_ms,
-                        insertion: mechanic.insertion,
-                        server_timestamp_ms: mechanic.server_timestamp_ms,
+                    BossMechanicRecord {
+                        event: BossDbmEvent {
+                            skill_effect_id: mechanic.skill_effect_id,
+                            base_skill_id: mechanic.base_skill_id,
+                            duration_ms: mechanic.duration_ms.min(i32::MAX as u64) as i32,
+                            create_time_ms: envelope.occurred_at_ms,
+                            insertion: mechanic.insertion,
+                            server_timestamp_ms: mechanic.server_timestamp_ms,
+                        },
+                        expires_mono_ms: mechanic.expires_mono_ms,
                     },
                 );
                 scheduler.schedule(
@@ -543,11 +582,14 @@ impl EntityMonitorProjection {
                     mechanic.expires_mono_ms,
                     TimerTask::BossDbmExpiry,
                 );
+                bump(&mut self.revisions.boss_mechanics);
                 TopicMask::MONSTER
             }
             DomainEvent::DeadlineReached { key, .. } => {
                 if let TimerKey::BossDbmExpiry { base_skill_id } = key {
-                    self.boss_mechanics.remove(base_skill_id);
+                    if self.boss_mechanics.remove(base_skill_id).is_some() {
+                        bump(&mut self.revisions.boss_mechanics);
+                    }
                     TopicMask::MONSTER
                 } else {
                     TopicMask::EMPTY
@@ -650,7 +692,11 @@ impl EntityMonitorProjection {
                 received_at: self.fight_resource_received_at,
             }),
             teammate_fantasies: self.displayed_fantasies(),
-            boss_mechanics: self.boss_mechanics.values().cloned().collect(),
+            boss_mechanics: self
+                .boss_mechanics
+                .values()
+                .map(|record| record.event.clone())
+                .collect(),
             hate_lists: self
                 .current_target
                 .and_then(|target| {
@@ -673,12 +719,17 @@ impl EntityMonitorProjection {
                 .iter()
                 .map(|(entity, monster_id)| (entity.0.to_string(), *monster_id))
                 .collect(),
-            entity_duration_tracks: self.entity_duration.track_states(entities),
+            entity_duration_tracks: if self.entity_duration_hidden {
+                Vec::new()
+            } else {
+                self.entity_duration.track_states(entities)
+            },
         }
     }
 
     fn clear_local_runtime(&mut self) {
         self.skill_cds.clear();
+        bump(&mut self.revisions.skill_cds);
         self.panel_attrs.clear();
         self.shield_current_hp = 0;
         self.shield_max_hp = 0;
@@ -689,7 +740,9 @@ impl EntityMonitorProjection {
     }
 
     fn remove_entity(&mut self, entity: EntityUuid) {
-        self.entity_duration.remove(entity);
+        if self.entity_duration.remove(entity) {
+            bump(&mut self.revisions.watched_entities);
+        }
         self.active_fantasies.remove(&entity);
         self.hate_lists.remove(&entity);
         self.stun_values.remove(&entity);
@@ -703,6 +756,7 @@ impl EntityMonitorProjection {
             scheduler.cancel(boss_deadline_key(base_skill_id));
         }
         self.boss_mechanics.clear();
+        bump(&mut self.revisions.boss_mechanics);
     }
 
     /// Re-reads the current attack target from the context, returning whether
@@ -840,6 +894,12 @@ impl EntityMonitorProjection {
             }
             record.refresh_derived();
         }
+        bump(&mut self.revisions.skill_cds);
+    }
+
+    /// Change counters of the state below, for sibling projections (voice).
+    pub(crate) const fn revisions(&self) -> MonitorRevisions {
+        self.revisions
     }
 
     /// Local-player cooldown records, for sibling projections (voice).
@@ -850,6 +910,14 @@ impl EntityMonitorProjection {
     /// The entity-duration watch list, for sibling projections (voice).
     pub(crate) fn entity_duration(&self) -> &EntityDurationWatch {
         &self.entity_duration
+    }
+
+    /// When the live mechanic `base_skill_id` expires, for sibling
+    /// projections (voice).
+    pub(crate) fn boss_mechanic_expiry(&self, base_skill_id: i32) -> Option<MonoTimeMs> {
+        self.boss_mechanics
+            .get(&base_skill_id)
+            .map(|record| record.expires_mono_ms)
     }
 
     #[cfg(test)]
@@ -1008,6 +1076,10 @@ fn int_attr(attributes: &HashMap<i32, AttributeValue>, attr_id: i32) -> f32 {
 
 fn boss_deadline_key(base_skill_id: i32) -> TimerKey {
     TimerKey::BossDbmExpiry { base_skill_id }
+}
+
+fn bump(revision: &mut u64) {
+    *revision = revision.wrapping_add(1);
 }
 
 #[cfg(test)]

@@ -153,7 +153,6 @@ export type VoiceBindingWriter = {
 
 export interface VoiceSubjectAdapter<
   S extends VoiceBindingSubject = VoiceBindingSubject,
-  Slice = unknown,
 > {
   readonly kind: S["kind"];
   /** `frontend` subjects never compile to a backend rule (the HUD plays them). */
@@ -169,7 +168,15 @@ export interface VoiceSubjectAdapter<
     subject: S,
     eventKind: VoiceBindingEventKind,
   ): boolean;
-  /** Configured subjects (disabled included) visible in `view`. */
+  /**
+   * Bundled-prompt subjects whose managed phrases keep fixed names instead
+   * of content-addressed ones (see `phrase-key.ts`).
+   */
+  readonly fixedPhraseName?: boolean;
+  /**
+   * Subjects of `view` that carry a binding and are associated (see
+   * `association.ts`); `events` then lists only the events that apply.
+   */
   enumerate(view: VoiceBindingView): S[];
   read(
     view: VoiceBindingView,
@@ -188,12 +195,6 @@ export interface VoiceSubjectAdapter<
     secondsBefore: number,
   ): VoiceTrigger | null;
   language(view: VoiceBindingView): VoiceLanguage;
-  /**
-   * GC keep-set for one raw settings slice. Deliberately over-inclusive:
-   * every configured subject x every event x every scope, disabled
-   * included, regardless of the current monitor lists.
-   */
-  gcKeys(slice: Slice): string[];
 }
 
 export function mergeVoiceConfigPatch<T extends object>(

@@ -333,13 +333,19 @@ fn take_sequence(sequence: &mut u64) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::live::runtime::events::{VoiceLeadSubject, VoiceRuleHandle, VoiceTimer};
+
+    fn voice_timer(id: u64) -> VoiceTimer {
+        VoiceTimer::Lead {
+            rule: VoiceRuleHandle(u32::try_from(id).expect("small test handle")),
+            subject: VoiceLeadSubject::BossDbm { base_skill_id: 20 },
+        }
+    }
 
     fn voice_key(id: u64) -> TimerKey {
         TimerKey::VoiceExpiry {
             rule_set: 1,
-            rule_handle: id,
-            subject: 10,
-            instance: 20,
+            timer: voice_timer(id),
         }
     }
 
@@ -471,9 +477,7 @@ mod tests {
         let a2 = voice_key(2);
         let b = TimerKey::VoiceExpiry {
             rule_set: 2,
-            rule_handle: 1,
-            subject: 10,
-            instance: 20,
+            timer: voice_timer(1),
         };
         scheduler.schedule(a1, a_scope, MonoTimeMs(10), TimerTask::VoiceExpiry);
         scheduler.schedule(a2, a_scope, MonoTimeMs(10), TimerTask::VoiceExpiry);

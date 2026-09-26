@@ -29,10 +29,8 @@
     voiceErrorMessage,
   } from "$lib/stores/voice-store.svelte";
   import { presetSourceForLocale } from "$lib/voice-preset-source";
-  import {
-    classifyOrphanPhrases,
-    collectReferencedVoiceKeys,
-  } from "$lib/voice/gc";
+  import { classifyOrphanPhrases, collectVoicePhraseRefs } from "$lib/voice/gc";
+  import { buildVoiceGcViews } from "$lib/voice/view";
 
   const status = $derived(VOICE.status);
   const phrases = $derived(status?.catalog.phrases ?? []);
@@ -250,20 +248,14 @@
     }
   }
 
-  // Orphan = auto-managed phrase (auto:voice:* / custom:voice:*) whose rule
-  // key is no longer referenced by any binding in ANY loadout profile.
-  // Manually created phrases never match the managed name pattern.
+  // Orphan = auto-managed phrase (auto:voice:* / custom:voice:*) that no
+  // binding of ANY loadout profile speaks through any more (`$lib/voice/gc`).
+  // Hand-made phrases, phrases picked by id and imported audio never are.
   const orphanPhrases = $derived(
     classifyOrphanPhrases(
       phrases,
-      collectReferencedVoiceKeys({
-        skillProfiles: SETTINGS.skillMonitor.state.profiles,
-        monsterConfigs: [
-          SETTINGS.monsterMonitor.state,
-          ...SETTINGS.monsterMonitor.state.profiles,
-        ],
-        mechanicVoiceConfigs: SETTINGS.minimap.state.mechanicVoiceConfigs,
-      }),
+      assets,
+      collectVoicePhraseRefs(buildVoiceGcViews()),
     ),
   );
 
@@ -534,6 +526,15 @@
           <p class="text-muted-foreground">
             {t("voice.phrases.gc.confirm", { count: orphanPhrases.length })}
           </p>
+          <ul
+            class="border-border/40 max-h-40 space-y-0.5 overflow-y-auto rounded border p-2"
+          >
+            {#each orphanPhrases as phrase (phrase.id)}
+              <li class="text-foreground truncate" title={phrase.name}>
+                {phrase.text || phrase.name}
+              </li>
+            {/each}
+          </ul>
           <div class="flex gap-2">
             <button
               type="button"

@@ -26,7 +26,7 @@ use super::operation::{
 };
 use super::phrases::{reconcile_single_asset_per_phrase, remove_asset_files_best_effort};
 use super::player::{PlaybackSink, PlayerHandle};
-use super::{catalog, finetuned, generator, model_manager, models, prompts};
+use super::{catalog, finetuned, generator, model_manager, models, phrase_name, prompts};
 
 pub(super) struct VoiceServiceInner {
     pub(super) app_handle: AppHandle,
@@ -111,9 +111,12 @@ impl VoiceService {
         // unconfirmed takes don't linger forever with no way to clean them
         // up from the UI.
         let mut removed_assets = reconcile_single_asset_per_phrase(&mut catalog_data);
+        // Managed phrases are named by their content now; renaming the old
+        // ones keeps every binding whose text did not change on its audio.
+        let renamed = phrase_name::migrate_to_content_names(&mut catalog_data);
         let prompt_sync = prompts::seed_catalog(&mut catalog_data, now_ms());
         removed_assets.extend(prompt_sync.removed_user_assets);
-        if prompt_sync.changed || !removed_assets.is_empty() {
+        if prompt_sync.changed || renamed > 0 || !removed_assets.is_empty() {
             catalog::save_catalog(&voice_root, &catalog_data)?;
             remove_asset_files_best_effort(&voice_root, &removed_assets);
         }

@@ -37,6 +37,7 @@ import type { LoadoutExport } from "./loadout-import";
 import { profilesToCollectAfterLoadoutRemoval } from "./loadout-lifecycle";
 import { normalizeSkillProfile } from "./skill-monitor-normalize";
 import { isReplaceableStarterLoadout } from "./starter-loadout";
+import { pruneSkillProfileVoice } from "./voice/association";
 import { t } from "$lib/i18n/index.svelte";
 
 const _activeLoadout = $derived.by<Loadout | null>(() => {
@@ -354,11 +355,12 @@ function materializeLoadout(
   activate: boolean,
 ): string {
   const skillState = SETTINGS.skillMonitor.state;
-  const skillProfile: SkillMonitorProfile = {
-    // Each created loadout owns all nested profile data.
+  // Each created loadout owns all nested profile data; imported / preset
+  // data may carry voice bindings without a subject.
+  const skillProfile: SkillMonitorProfile = pruneSkillProfileVoice({
     ...deepCloneSettings(data.skillProfile),
     id: generateProfileId("skill"),
-  };
+  });
   skillState.profiles = [...skillState.profiles, skillProfile];
 
   const monsterProfileId = createMonsterProfile(
