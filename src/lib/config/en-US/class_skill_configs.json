@@ -230,5 +230,69 @@
         "derivedName": "Wild Bloom"
       }
     ]
+  },
+  "shield_knight": {
+    "className": "Shield Knight",
+    "skills": [
+      { "skillId": 2407, "name": "Radiant Infusion" },
+      { "skillId": 2420, "name": "Radiance" },
+      { "skillId": 2419, "name": "Zeal Crusade" },
+      { "skillId": 2415, "name": "Aegis Ward" },
+      { "skillId": 2425, "name": "Shield Toss" },
+      { "skillId": 2421, "name": "Sacred Blade" },
+      { "skillId": 2410, "name": "Judgment" },
+      { "skillId": 2412, "name": "Reckoning" },
+      { "skillId": 2409, "name": "Divine Circle" },
+      { "skillId": 2405, "name": "Valor Bash" },
+      { "skillId": 2406, "name": "Vanguard Strike" }
+    ],
+    "derivations": [
+      {
+        "sourceSkillId": 2412,
+        "derivedSkillId": 2413,
+        "triggerBuffBaseId": 2206421,
+        "derivedName": "Inferno Reckon"
+      }
+    ]
+  },
+  "heavy_guardian": {
+    "className": "Heavy Guardian",
+    "skills": [
+      { "skillId": 1907, "name": "Cracking Echo" },
+      { "skillId": 1938, "name": "Brave Bastion" },
+      { "skillId": 1936, "name": "Stoneform" },
+      { "skillId": 1926, "name": "Sandgrip" },
+      { "skillId": 1927, "name": "Sandshroud" },
+      { "skillId": 1924, "name": "Star Shatter" },
+      { "skillId": 1925, "name": "Rage Burst" },
+      { "skillId": 1922, "name": "Shield Bash" },
+      { "skillId": 1930, "name": "Countercrush" },
+      { "skillId": 1937, "name": "Granite Fury" },
+      { "skillId": 1923, "name": "Sandward" }
+    ],
+    "derivations": [
+      {
+        "sourceSkillId": 1925,
+        "derivedSkillId": 1944,
+        "triggerBuffBaseId": 2201512,
+        "derivedName": "Terra Sunder"
+      }
+    ]
+  },
+  "marksman": {
+    "className": "Marksman",
+    "skills": [
+      { "skillId": 2209, "name": "Luminary Bolt" },
+      { "skillId": 2237, "name": "Wildcall" },
+      { "skillId": 2231, "name": "Focus" },
+      { "skillId": 2234, "name": "Radiance Barrage" },
+      { "skillId": 2235, "name": "Deter Shot" },
+      { "skillId": 2230, "name": "Torrent Volley" },
+      { "skillId": 2232, "name": "Arrow Rain" },
+      { "skillId": 2238, "name": "Blast Shot" },
+      { "skillId": 2233, "name": "Powerdraw" },
+      { "skillId": 2222, "name": "Double Arrow" },
+      { "skillId": 2220, "name": "Storm Arrow" }
+    ]
   }
 }

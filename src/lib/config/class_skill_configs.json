@@ -512,5 +512,209 @@
         "imagePath": "/images/verdant_oracle/skill/weapon_fh-01_ult_5377337143300028519.png"
       }
     ]
+  },
+  "shield_knight": {
+    "classKey": "shield_knight",
+    "className": "神盾骑士",
+    "classId": 12,
+    "derivations": [
+      {
+        "sourceSkillId": 2412,
+        "derivedSkillId": 2413,
+        "triggerBuffBaseId": 2206421,
+        "derivedName": "炽热清算",
+        "derivedImagePath": "/images/shield_knight/skill/weapon_jd-01_kx04_ex_778798243429291418.png"
+      }
+    ],
+    "skills": [
+      {
+        "skillId": 2407,
+        "name": "凛威·圣光灌注",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_ult_01_-8907906034734542263.png"
+      },
+      {
+        "skillId": 2420,
+        "name": "光明决心",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx08_3933276002928830685.png"
+      },
+      {
+        "skillId": 2419,
+        "name": "冷酷征伐",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx07_6648625417100449388.png"
+      },
+      {
+        "skillId": 2415,
+        "name": "圣光守卫",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx06_3980803170877479368.png"
+      },
+      {
+        "skillId": 2425,
+        "name": "投掷盾牌",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx01_690141429852347533.png"
+      },
+      {
+        "skillId": 2421,
+        "name": "圣剑",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx09_2700937844174562957.png"
+      },
+      {
+        "skillId": 2410,
+        "name": "裁决",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx03_2732677483216541835.png"
+      },
+      {
+        "skillId": 2412,
+        "name": "清算",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx04_5683706259466441767.png"
+      },
+      {
+        "skillId": 2409,
+        "name": "圣环",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_kx02_2443604969782919177.png"
+      },
+      {
+        "skillId": 2405,
+        "name": "英勇盾击",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_tg01_-8383665090541245509.png"
+      },
+      {
+        "skillId": 2406,
+        "name": "先锋打击",
+        "imagePath": "/images/shield_knight/skill/weapon_jd-01_tg02_-6802049860399826653.png"
+      }
+    ]
+  },
+  "heavy_guardian": {
+    "classKey": "heavy_guardian",
+    "className": "巨刃守护者",
+    "classId": 9,
+    "derivations": [
+      {
+        "sourceSkillId": 1925,
+        "derivedSkillId": 1944,
+        "triggerBuffBaseId": 2201512,
+        "derivedName": "怒爆",
+        "derivedImagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx03_01_-6174580264722295806.png"
+      }
+    ],
+    "skills": [
+      {
+        "skillId": 1907,
+        "name": "岩御·崩裂回环",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_ult_-3650474920866972306.png"
+      },
+      {
+        "skillId": 1938,
+        "name": "勇者壁垒",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx08_1959893658930417921.png"
+      },
+      {
+        "skillId": 1936,
+        "name": "巨岩躯体",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx04_615789575634243887.png"
+      },
+      {
+        "skillId": 1926,
+        "name": "砂岩之握",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx05_4188871788809645051.png"
+      },
+      {
+        "skillId": 1927,
+        "name": "砂石斗篷",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx02_2314813405527916033.png"
+      },
+      {
+        "skillId": 1924,
+        "name": "碎星冲",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx01_-981982055443352497.png"
+      },
+      {
+        "skillId": 1925,
+        "name": "怒爆",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx03_-3161919261785332843.png"
+      },
+      {
+        "skillId": 1922,
+        "name": "护盾猛击",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_tg02_8079734215068901140.png"
+      },
+      {
+        "skillId": 1930,
+        "name": "格挡冲击",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_tg01_01_1218573782310801813.png"
+      },
+      {
+        "skillId": 1937,
+        "name": "岩怒之击",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx07_7563557158961009559.png"
+      },
+      {
+        "skillId": 1923,
+        "name": "砂岩守护",
+        "imagePath": "/images/heavy_guardian/skill/weapon_wr-01_kx06_2700380891417243473.png"
+      }
+    ]
+  },
+  "marksman": {
+    "classKey": "marksman",
+    "className": "神射手",
+    "classId": 11,
+    "skills": [
+      {
+        "skillId": 2209,
+        "name": "锐眼·光能巨箭",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_ult_-7582180839649827365.png"
+      },
+      {
+        "skillId": 2237,
+        "name": "狂野呼唤",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx07_6963879478276471836.png"
+      },
+      {
+        "skillId": 2231,
+        "name": "精神凝聚",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx02_-8721967237189344326.png"
+      },
+      {
+        "skillId": 2234,
+        "name": "光能轰炸",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx04_-547550312812423798.png"
+      },
+      {
+        "skillId": 2235,
+        "name": "威慑射击",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx06_-2317352080954752334.png"
+      },
+      {
+        "skillId": 2230,
+        "name": "怒涛射击",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx01_9110525689613223507.png"
+      },
+      {
+        "skillId": 2232,
+        "name": "箭雨",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx03_6262789116367131374.png"
+      },
+      {
+        "skillId": 2238,
+        "name": "爆炸射击",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx08_-6570599884307306030.png"
+      },
+      {
+        "skillId": 2233,
+        "name": "聚能射击",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_kx05_1375303907558458536.png"
+      },
+      {
+        "skillId": 2222,
+        "name": "二连矢",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_tg02_-5171720677613707706.png"
+      },
+      {
+        "skillId": 2220,
+        "name": "暴风箭矢",
+        "imagePath": "/images/marksman/skill/weapon_gj-01_tg01_-5987276715958096216.png"
+      }
+    ]
   }
 }

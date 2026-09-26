@@ -230,5 +230,69 @@
         "derivedName": "ワイルドブルーム"
       }
     ]
+  },
+  "shield_knight": {
+    "className": "シールドファイター",
+    "skills": [
+      { "skillId": 2407, "name": "光凛・レイディアントフォース" },
+      { "skillId": 2420, "name": "セイクリッドオース" },
+      { "skillId": 2419, "name": "コンクエスト" },
+      { "skillId": 2415, "name": "ホーリーガード" },
+      { "skillId": 2425, "name": "シールドスロー" },
+      { "skillId": 2421, "name": "ホーリーソード" },
+      { "skillId": 2410, "name": "ジャッジメント" },
+      { "skillId": 2412, "name": "レコニング" },
+      { "skillId": 2409, "name": "ホーリーリング" },
+      { "skillId": 2405, "name": "ブレイヴバッシュ" },
+      { "skillId": 2406, "name": "グローイングガード" }
+    ],
+    "derivations": [
+      {
+        "sourceSkillId": 2412,
+        "derivedSkillId": 2413,
+        "triggerBuffBaseId": 2206421,
+        "derivedName": "ブレイズレコニング"
+      }
+    ]
+  },
+  "heavy_guardian": {
+    "className": "ヘヴィガーディアン",
+    "skills": [
+      { "skillId": 1907, "name": "岩堅・崩裂の廻刃" },
+      { "skillId": 1938, "name": "勇壮砦壁" },
+      { "skillId": 1936, "name": "巨岩の身体" },
+      { "skillId": 1926, "name": "砂岩の握り" },
+      { "skillId": 1927, "name": "砂塵外套" },
+      { "skillId": 1924, "name": "砕星衝" },
+      { "skillId": 1925, "name": "憤怒の剛撃" },
+      { "skillId": 1922, "name": "砕刃の猛撃" },
+      { "skillId": 1930, "name": "護刃の衝撃" },
+      { "skillId": 1937, "name": "岩塊撃" },
+      { "skillId": 1923, "name": "堅石守護" }
+    ],
+    "derivations": [
+      {
+        "sourceSkillId": 1925,
+        "derivedSkillId": 1944,
+        "triggerBuffBaseId": 2201512,
+        "derivedName": "地崩の山摧"
+      }
+    ]
+  },
+  "marksman": {
+    "className": "ディバインアーチャー",
+    "skills": [
+      { "skillId": 2209, "name": "鋭眼・ディバインボルト" },
+      { "skillId": 2237, "name": "ワイルドコール" },
+      { "skillId": 2231, "name": "メンタルフォーカス" },
+      { "skillId": 2234, "name": "エナジーショット" },
+      { "skillId": 2235, "name": "ディスラプトショット" },
+      { "skillId": 2230, "name": "レイジショット" },
+      { "skillId": 2232, "name": "アローレイン" },
+      { "skillId": 2238, "name": "ブラストショット" },
+      { "skillId": 2233, "name": "チャージショット" },
+      { "skillId": 2222, "name": "ストライクボルト" },
+      { "skillId": 2220, "name": "ハウリングボルト" }
+    ]
   }
 }
