@@ -366,6 +366,18 @@
     "SpriteFile": "buff_food_up_-2204692683451143968.png"
   },
   {
+    "Icon": "",
+    "Id": 2010023,
+    "NameDesign": "罗罗拉-月露莓蜜糕",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_food_up",
+    "Id": 2010024,
+    "NameDesign": "罗罗拉-月露莓蜜糕",
+    "SpriteFile": "buff_food_up_-2204692683451143968.png"
+  },
+  {
     "Icon": "buff_abnormal_green_icon_link",
     "Id": 2010031,
     "NameDesign": "Power of Unity",
@@ -15937,6 +15949,12 @@
   },
   {
     "Icon": "",
+    "Id": 3051271,
+    "NameDesign": "风怒状态攻速加100%",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 3051280,
     "NameDesign": "Wind Knight - Skyfall Recharge",
     "SpriteFile": null
@@ -25465,6 +25483,12 @@
   },
   {
     "Icon": "",
+    "Id": 681866,
+    "NameDesign": "GM测试BUFF-无限召唤",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 681901,
     "NameDesign": "Petrified",
     "SpriteFile": null
@@ -26103,6 +26127,18 @@
     "Icon": "",
     "Id": 683201,
     "NameDesign": "载具-埃及豹进阶疾跑特效",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683202,
+    "NameDesign": "载具-月亮船疾跑特效",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 683203,
+    "NameDesign": "载具-月亮船进阶疾跑特效",
     "SpriteFile": null
   },
   {
@@ -36818,7 +36854,7 @@
   {
     "Icon": "buff_red_hp",
     "Id": 829439,
-    "NameDesign": "光人连线tag（raid)",
+    "NameDesign": "中心伤害标记",
     "SpriteFile": "buff_red_hp_7631201784644749282.png"
   },
   {
@@ -36890,7 +36926,7 @@
   {
     "Icon": "",
     "Id": 829481,
-    "NameDesign": "全体单落雷",
+    "NameDesign": "俯冲全体落雷",
     "SpriteFile": null
   },
   {
@@ -36915,6 +36951,30 @@
     "Icon": "",
     "Id": 829485,
     "NameDesign": "追人化光者施加减速",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829486,
+    "NameDesign": "龙卷风命中判断",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829487,
+    "NameDesign": "成就三-天光审判命中判断",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829488,
+    "NameDesign": "成就三-天光审判成功判定",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829489,
+    "NameDesign": "成就四-圣裁追猎时间判断",
     "SpriteFile": null
   },
   {
@@ -36954,15 +37014,15 @@
     "SpriteFile": null
   },
   {
-    "Icon": "",
+    "Icon": "buff_icon123",
     "Id": 829507,
-    "NameDesign": "boss符文2（boss随机给自己挂）",
-    "SpriteFile": null
+    "NameDesign": "转盘阶段伤害（nightmare）",
+    "SpriteFile": "buff_icon123_-1760136086545391503.png"
   },
   {
     "Icon": "",
     "Id": 829508,
-    "NameDesign": "boss符文3（boss随机给自己挂）",
+    "NameDesign": "转盘阶段主控（challenge）",
     "SpriteFile": null
   },
   {
@@ -37148,7 +37208,7 @@
   {
     "Icon": "buff_red_hp",
     "Id": 829539,
-    "NameDesign": "追人连线（raid)",
+    "NameDesign": "逐光人形连线（nightmare）",
     "SpriteFile": "buff_red_hp_7631201784644749282.png"
   },
   {
@@ -37156,6 +37216,54 @@
     "Id": 829540,
     "NameDesign": "全范围光新星补充特效",
     "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829541,
+    "NameDesign": "转盘内圈",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829542,
+    "NameDesign": "转盘中圈",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829543,
+    "NameDesign": "转盘外圈",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829544,
+    "NameDesign": "头标符文（challenge）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829545,
+    "NameDesign": "转盘激活",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "debuff_icon_58",
+    "Id": 829546,
+    "NameDesign": "充能间隔",
+    "SpriteFile": "debuff_icon_58_663319592272416756.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829547,
+    "NameDesign": "孑然虔影控制（challenge）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "debuff_icon_63",
+    "Id": 829548,
+    "NameDesign": "锁定_黄",
+    "SpriteFile": "debuff_icon_63_-8405196673851005166.png"
   },
   {
     "Icon": "",
@@ -37507,6 +37615,30 @@
   },
   {
     "Icon": "",
+    "Id": 829659,
+    "NameDesign": "耀斑球-延迟15秒让自己降落",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829660,
+    "NameDesign": "枭兽-天生buff",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829661,
+    "NameDesign": "BOSS-挑战难度标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 829662,
+    "NameDesign": "枭兽-法阵召唤物技能结束移除自己",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 829701,
     "NameDesign": "Rapsis III – Native Buff (AI)",
     "SpriteFile": null
@@ -37623,6 +37755,30 @@
     "Icon": "",
     "Id": 829723,
     "NameDesign": "机制期间不被攻击",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_abnormal_icon",
+    "Id": 829724,
+    "NameDesign": "缓慢",
+    "SpriteFile": "buff_abnormal_icon_-7224232056957210398.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829725,
+    "NameDesign": "追踪球目标BUFF",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "debuff_icon_11",
+    "Id": 829726,
+    "NameDesign": "光之闪耀",
+    "SpriteFile": "debuff_icon_11_2684529493061038434.png"
+  },
+  {
+    "Icon": "",
+    "Id": 829727,
+    "NameDesign": "光暗成就判定",
     "SpriteFile": null
   },
   {
@@ -43645,6 +43801,12 @@
   },
   {
     "Icon": "",
+    "Id": 852257,
+    "NameDesign": "千梦织灵-角羊发光特效",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 852260,
     "NameDesign": "博伊斯后日谈3-变身博伊斯（拿长枪版）（战斗动作）",
     "SpriteFile": null
@@ -45123,6 +45285,60 @@
     "Icon": "",
     "Id": 866301,
     "NameDesign": "Behind the Waters (AI)",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_hideseek_icon12",
+    "Id": 866302,
+    "NameDesign": "龙血_显示",
+    "SpriteFile": "buff_hideseek_icon12_-2385457419463855088.png"
+  },
+  {
+    "Icon": "buff_passive_icon_general_tank_unrelent",
+    "Id": 866303,
+    "NameDesign": "龙血_生效",
+    "SpriteFile": "buff_passive_icon_general_tank_unrelent_-6182961673509941929.png"
+  },
+  {
+    "Icon": "",
+    "Id": 866304,
+    "NameDesign": "词缀：龙血",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "debuff_icon_77",
+    "Id": 866305,
+    "NameDesign": "传花_主要",
+    "SpriteFile": "debuff_icon_77_1771580495997482720.png"
+  },
+  {
+    "Icon": "",
+    "Id": 866306,
+    "NameDesign": "词缀：传花",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 866307,
+    "NameDesign": "传花_主控",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_talent_skill_330301",
+    "Id": 866308,
+    "NameDesign": "传花_标记",
+    "SpriteFile": "buff_talent_skill_330301_1685661307899942034.png"
+  },
+  {
+    "Icon": "debuff_icon_26",
+    "Id": 866309,
+    "NameDesign": "词缀：坏梦",
+    "SpriteFile": "debuff_icon_26_-5029207101154716445.png"
+  },
+  {
+    "Icon": "",
+    "Id": 866310,
+    "NameDesign": "坏梦_效果",
     "SpriteFile": null
   },
   {
@@ -50262,9 +50478,15 @@
     "SpriteFile": null
   },
   {
-    "Icon": "",
+    "Icon": "debuff_icon_29",
     "Id": 881692,
-    "NameDesign": "",
+    "NameDesign": "虚蚀衰减附加",
+    "SpriteFile": "debuff_icon_29_7720327367084371277.png"
+  },
+  {
+    "Icon": "",
+    "Id": 881693,
+    "NameDesign": "虚蚀地板附加",
     "SpriteFile": null
   },
   {
@@ -57193,6 +57415,36 @@
   },
   {
     "Icon": "",
+    "Id": 884674,
+    "NameDesign": "玩家-伴生暗影阶段标记（挑战成就）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 884675,
+    "NameDesign": "玩家-伴生暗影被击（挑战成就）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 884676,
+    "NameDesign": "BOSS-赫鲁加之影计时（挑战成就）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 884677,
+    "NameDesign": "玩家-满层幽影标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 884678,
+    "NameDesign": "法法菈助战-命中目标计数（挑战成就）",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
     "Id": 884800,
     "NameDesign": "Death penalty buff (AI)",
     "SpriteFile": null
@@ -60913,6 +61165,30 @@
   },
   {
     "Icon": "",
+    "Id": 972051,
+    "NameDesign": "使用玩具-罗罗拉烟花",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 972052,
+    "NameDesign": "卡尼曼丰收祭玩具·罗罗拉烟花冲天炮",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 972053,
+    "NameDesign": "卡尼曼丰收祭幻形玩具-面包随机",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 972054,
+    "NameDesign": "卡尼曼丰收祭幻形玩具-水果随机",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "",
     "Id": 973001,
     "NameDesign": "Fireworks released - White fireworks (AI)",
     "SpriteFile": null
@@ -60963,6 +61239,12 @@
     "Icon": "",
     "Id": 973009,
     "NameDesign": "Smokey Shower (AI)",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 973010,
+    "NameDesign": "烟花筒释放-罗罗拉烟花",
     "SpriteFile": null
   },
   {
@@ -61354,6 +61636,72 @@
     "Id": 973110,
     "NameDesign": "Christmas toy - skill effect - static (AI)",
     "SpriteFile": "buff_icon123_-1760136086545391503.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 973111,
+    "NameDesign": "卡尼曼玩具-罗罗拉冲天炮",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 973112,
+    "NameDesign": "卡尼曼丰收祭玩具-烟花罗罗拉冲天炮-升空",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 973113,
+    "NameDesign": "卡尼曼丰收祭玩具-罗罗拉冲天炮-爆炸",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 973114,
+    "NameDesign": "卡尼曼丰收祭幻形玩具-羊角面包",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 973115,
+    "NameDesign": "卡尼曼丰收祭幻形玩具-法棍面包",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 973116,
+    "NameDesign": "卡尼曼丰收祭幻形玩具-大列巴",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 973117,
+    "NameDesign": "卡尼曼丰收祭幻形玩具-凤梨串串",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 973118,
+    "NameDesign": "卡尼曼丰收祭幻形玩具-芭蕉串串",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 973119,
+    "NameDesign": "卡尼曼丰收祭幻形玩具-一盆椰子",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "buff_talent_skill_370101",
+    "Id": 973120,
+    "NameDesign": "卡尼曼丰收祭幻形玩具-半只大西瓜",
+    "SpriteFile": "buff_talent_skill_370101_200823560598363666.png"
+  },
+  {
+    "Icon": "",
+    "Id": 973121,
+    "NameDesign": "冲天炮缓落免坠落伤害",
+    "SpriteFile": null
   },
   {
     "Icon": "",
@@ -62721,6 +63069,30 @@
     "Icon": "",
     "Id": 995024,
     "NameDesign": "Three - Flying Particles (AI)",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995025,
+    "NameDesign": "全体落雷命中判断-成就四",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995030,
+    "NameDesign": "雷核大师15免疫判断",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995031,
+    "NameDesign": "大师雷核罩-B",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 995032,
+    "NameDesign": "雷核大师15免疫判断-B",
     "SpriteFile": null
   },
   {
@@ -68463,6 +68835,90 @@
     "Icon": "",
     "Id": 999125,
     "NameDesign": "Carniman rescue-player treatment transfer (AI)",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999130,
+    "NameDesign": "源初BUFF标记词条",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999131,
+    "NameDesign": "额外技能标记词条",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999132,
+    "NameDesign": "稀有度3标记词条",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999133,
+    "NameDesign": "职业词条标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999134,
+    "NameDesign": "一般词条标记",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999135,
+    "NameDesign": "巨大宝箱专用奖励",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999136,
+    "NameDesign": "稀有度4标记词条",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999137,
+    "NameDesign": "boss专用，受击时减少自身1%的血量，扣到死",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999138,
+    "NameDesign": "boss专用，受击时减少自身1%的血量，扣到50%",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999139,
+    "NameDesign": "挑战模式boss材质",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999140,
+    "NameDesign": "肉鸽-挑战模式穿越特效",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999141,
+    "NameDesign": "肉鸽本-传送阵离开",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999142,
+    "NameDesign": "肉鸽本-祭坛开启成功表现",
+    "SpriteFile": null
+  },
+  {
+    "Icon": "",
+    "Id": 999960,
+    "NameDesign": "肉鸽本-怪潮等级",
     "SpriteFile": null
   },
   {

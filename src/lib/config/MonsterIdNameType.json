@@ -1379,6 +1379,18 @@
     "MonsterType": 1,
     "Name": ""
   },
+  "103425": {
+    "MonsterType": 0,
+    "Name": "S4raid 内环"
+  },
+  "103426": {
+    "MonsterType": 0,
+    "Name": "S4raid 中环"
+  },
+  "103427": {
+    "MonsterType": 0,
+    "Name": "S4raid 外环"
+  },
   "103500": {
     "MonsterType": 2,
     "Name": "拉普西斯·极昼"
@@ -1435,6 +1447,14 @@
     "MonsterType": 1,
     "Name": "拉普西斯02光人-剑盾"
   },
+  "103514": {
+    "MonsterType": 1,
+    "Name": "黑金雄鹰"
+  },
+  "103515": {
+    "MonsterType": 1,
+    "Name": "枭兽"
+  },
   "103520": {
     "MonsterType": 2,
     "Name": "拉普西斯·极昼"
@@ -1462,6 +1482,10 @@
   "103610": {
     "MonsterType": 2,
     "Name": "拉普西斯·极夜"
+  },
+  "103611": {
+    "MonsterType": 2,
+    "Name": "S4Riad-拉普西斯（三阶段）"
   },
   "103620": {
     "MonsterType": 2,
@@ -10739,6 +10763,70 @@
     "MonsterType": 0,
     "Name": "山贼"
   },
+  "664601": {
+    "MonsterType": 0,
+    "Name": "小刀哥布林"
+  },
+  "664602": {
+    "MonsterType": 0,
+    "Name": "弩箭哥布林"
+  },
+  "664603": {
+    "MonsterType": 0,
+    "Name": "巫妖哥布林"
+  },
+  "664604": {
+    "MonsterType": 0,
+    "Name": "剑盾哥布林"
+  },
+  "664605": {
+    "MonsterType": 1,
+    "Name": "巫师哥布林"
+  },
+  "664701": {
+    "MonsterType": 0,
+    "Name": "四足作战用机"
+  },
+  "664702": {
+    "MonsterType": 0,
+    "Name": "四足作战用机"
+  },
+  "664703": {
+    "MonsterType": 0,
+    "Name": "四足作战用机"
+  },
+  "664704": {
+    "MonsterType": 0,
+    "Name": "四足作战用机"
+  },
+  "664705": {
+    "MonsterType": 0,
+    "Name": "三足眼舱"
+  },
+  "664706": {
+    "MonsterType": 1,
+    "Name": "圣堂之眼"
+  },
+  "664707": {
+    "MonsterType": 1,
+    "Name": "三足重型眼舱"
+  },
+  "664708": {
+    "MonsterType": 0,
+    "Name": "机像Ⅰ型"
+  },
+  "664709": {
+    "MonsterType": 1,
+    "Name": "机像Ⅱ型"
+  },
+  "664710": {
+    "MonsterType": 2,
+    "Name": "窥梦之眼"
+  },
+  "664711": {
+    "MonsterType": 0,
+    "Name": "罗罗拉"
+  },
   "665201": {
     "MonsterType": 0,
     "Name": "姆克弩手"
@@ -11114,6 +11202,10 @@
   "700111": {
     "MonsterType": 1,
     "Name": "溯光灵体"
+  },
+  "700112": {
+    "MonsterType": 1,
+    "Name": ""
   },
   "70012": {
     "MonsterType": 0,
@@ -13910,6 +14002,150 @@
   "920570": {
     "MonsterType": 2,
     "Name": "弥妄裁定者·终式"
+  },
+  "9300001": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·焚林之厄"
+  },
+  "9300011": {
+    "MonsterType": 0,
+    "Name": "梦魇·山火蟹蛛"
+  },
+  "9300012": {
+    "MonsterType": 0,
+    "Name": "梦魇·坠岩蟹蛛"
+  },
+  "9300013": {
+    "MonsterType": 1,
+    "Name": "魁梦魇·掠食蟹蛛"
+  },
+  "9300021": {
+    "MonsterType": 0,
+    "Name": "梦魇·泥流肉山"
+  },
+  "9300022": {
+    "MonsterType": 0,
+    "Name": "梦魇·沙暴肉山"
+  },
+  "9300023": {
+    "MonsterType": 1,
+    "Name": "魁梦魇·夜伏多戈尔曼"
+  },
+  "9300031": {
+    "MonsterType": 0,
+    "Name": "梦魇·毁田山猪"
+  },
+  "9300032": {
+    "MonsterType": 0,
+    "Name": "梦魇·夜袭山猪"
+  },
+  "9300033": {
+    "MonsterType": 1,
+    "Name": "魁梦魇·疫瘴之牙"
+  },
+  "9300041": {
+    "MonsterType": 0,
+    "Name": "梦魇·噬踵毛球"
+  },
+  "9300042": {
+    "MonsterType": 0,
+    "Name": "梦魇·针刺毛球"
+  },
+  "9300043": {
+    "MonsterType": 1,
+    "Name": "魁梦魇·啃骨毛球"
+  },
+  "9300051": {
+    "MonsterType": 0,
+    "Name": "梦魇·窥伺浮瞳"
+  },
+  "9300052": {
+    "MonsterType": 0,
+    "Name": "梦魇·冷视浮瞳"
+  },
+  "9300053": {
+    "MonsterType": 1,
+    "Name": "魁梦魇·觊觎之视"
+  },
+  "9300061": {
+    "MonsterType": 0,
+    "Name": "梦魇·劫路绿匪"
+  },
+  "9300062": {
+    "MonsterType": 0,
+    "Name": "梦魇·山林盗匪"
+  },
+  "9300063": {
+    "MonsterType": 1,
+    "Name": "魁梦魇·猎命匪首"
+  },
+  "9300071": {
+    "MonsterType": 0,
+    "Name": "梦魇·失乡无面人"
+  },
+  "9300072": {
+    "MonsterType": 0,
+    "Name": "梦魇·空席无面人"
+  },
+  "9300073": {
+    "MonsterType": 1,
+    "Name": "魁梦魇·无归执令人"
+  },
+  "9300102": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·缚心自困之患"
+  },
+  "9300103": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·故土尽焚之创"
+  },
+  "9300104": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·窥梦之眼"
+  },
+  "9300105": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·失窃之惧"
+  },
+  "9300106": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·孤立受敌之厄"
+  },
+  "9300107": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·庞然巨物之恐"
+  },
+  "9300108": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·绝粮之患"
+  },
+  "9300109": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·理智裂解之灾"
+  },
+  "9300110": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·复足之惧"
+  },
+  "9300111": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·不可阻之灾"
+  },
+  "9300112": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·幽闭之恐"
+  },
+  "9300113": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·飓风摧居之祸"
+  },
+  "9300114": {
+    "MonsterType": 2,
+    "Name": "梦魇主宰·沉沼之痛"
+  },
+  "9300200": {
+    "MonsterType": 2,
+    "Name": "巨大宝箱"
   },
   "9999": {
     "MonsterType": 0,

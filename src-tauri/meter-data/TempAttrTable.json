@@ -3803,6 +3803,21 @@
     "AttrDesc": "全子弹大小",
     "AttrIcon": ""
   },
+  "90261": {
+    "Id": 90261,
+    "Name": "激怒持续时间",
+    "Desc": "激怒持续时间",
+    "AttrType": 502,
+    "LogicType": 4,
+    "AttrParams": [
+      2201311
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 10000,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
   "90300": {
     "Id": 90300,
     "Name": "【光明决心】充能上限变化",
@@ -4811,6 +4826,36 @@
     "AttrDesc": "全子弹大小",
     "AttrIcon": ""
   },
+  "92109": {
+    "Id": 92109,
+    "Name": "【载具】引梦至彼岸",
+    "Desc": "【载具】引梦至彼岸充能上限提升",
+    "AttrType": 352,
+    "LogicType": 1,
+    "AttrParams": [
+      4751
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 6,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "92110": {
+    "Id": 92110,
+    "Name": "【载具】引梦至彼岸高定",
+    "Desc": "【载具】引梦至彼岸高定充能上限提升",
+    "AttrType": 352,
+    "LogicType": 1,
+    "AttrParams": [
+      4753
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 6,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
   "93000": {
     "Id": 93000,
     "Name": "【黯影堡垒】限制虚蚀层数",
@@ -5222,6 +5267,21 @@
     ],
     "LowerLimit": 0,
     "UpperLimit": 99999,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "98012": {
+    "Id": 98012,
+    "Name": "木桩幻想禁止",
+    "Desc": "木桩幻想禁止",
+    "AttrType": 509,
+    "LogicType": 1,
+    "AttrParams": [
+      3995
+    ],
+    "LowerLimit": -1,
+    "UpperLimit": 1,
     "IsSyncClient": true,
     "AttrDesc": "全子弹大小",
     "AttrIcon": ""
@@ -5952,6 +6012,21 @@
     ],
     "LowerLimit": -2,
     "UpperLimit": 99999,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "99046": {
+    "Id": 99046,
+    "Name": "灭烬时针dot",
+    "Desc": "灭烬时针dot",
+    "AttrType": 503,
+    "LogicType": 4,
+    "AttrParams": [
+      829533
+    ],
+    "LowerLimit": -4,
+    "UpperLimit": 0,
     "IsSyncClient": true,
     "AttrDesc": "全子弹大小",
     "AttrIcon": ""

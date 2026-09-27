@@ -644,19 +644,39 @@
     "CountCDTime": 10,
     "Content": "圣裁追猎"
   },
+  "3395166": {
+    "Id": 3395166,
+    "CountCDTime": 10,
+    "Content": "灭烬时针"
+  },
   "340000501": {
     "Id": 340000501,
     "CountCDTime": 18,
     "Content": "冰华万象"
+  },
+  "3395177": {
+    "Id": 3395177,
+    "CountCDTime": 15,
+    "Content": "心如永昼，谒彼诸天"
   },
   "340002301": {
     "Id": 340002301,
     "CountCDTime": 18,
     "Content": "暴风雪"
   },
+  "3395178": {
+    "Id": 3395178,
+    "CountCDTime": 15,
+    "Content": "名启归愿，信者皆苦"
+  },
   "340002501": {
     "Id": 340002501,
     "CountCDTime": 20,
     "Content": "冰之狂想曲"
+  },
+  "3395179": {
+    "Id": 3395179,
+    "CountCDTime": 15,
+    "Content": "影似澄炼，喻形成殇"
   }
 }

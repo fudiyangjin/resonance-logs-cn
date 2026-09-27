@@ -52,7 +52,8 @@
   {
     "id": 3898,
     "NameDesign": "Stunt! Frostwind Vortex (AI)",
-    "Icon": "skill_aoyi_skill_icon_099.png"
+    "Icon": "skill_aoyi_skill_icon_099.png",
+    "maxCharges": 2
   },
   {
     "id": 3899,
@@ -167,7 +168,8 @@
   {
     "id": 3923,
     "NameDesign": "Arcane! Furious Hammer",
-    "Icon": "skill_aoyi_skill_icon_005.png"
+    "Icon": "skill_aoyi_skill_icon_005.png",
+    "maxCharges": 2
   },
   {
     "id": 3924,
@@ -292,7 +294,8 @@
   {
     "id": 3948,
     "NameDesign": "Arcane! Divine Reliance",
-    "Icon": "skill_aoyi_skill_icon_052.png"
+    "Icon": "skill_aoyi_skill_icon_052.png",
+    "maxCharges": 2
   },
   {
     "id": 3949,
@@ -302,7 +305,8 @@
   {
     "id": 3950,
     "NameDesign": "Arcane! Allscape Sublimation",
-    "Icon": "skill_aoyi_skill_icon_055.png"
+    "Icon": "skill_aoyi_skill_icon_055.png",
+    "maxCharges": 2
   },
   {
     "id": 3951,
@@ -392,12 +396,14 @@
   {
     "id": 3968,
     "NameDesign": "Arcane! Void Corruption Blade",
-    "Icon": "skill_aoyi_skill_icon_071.png"
+    "Icon": "skill_aoyi_skill_icon_071.png",
+    "maxCharges": 2
   },
   {
     "id": 3969,
     "NameDesign": "Arcane! Rift Recoil",
-    "Icon": "skill_aoyi_skill_icon_072.png"
+    "Icon": "skill_aoyi_skill_icon_072.png",
+    "maxCharges": 2
   },
   {
     "id": 3970,
@@ -492,22 +498,26 @@
   {
     "id": 3988,
     "NameDesign": "Arcane! Sacred Flame Dragon Breath (AI)",
-    "Icon": "skill_aoyi_skill_icon_087.png"
+    "Icon": "skill_aoyi_skill_icon_087.png",
+    "maxCharges": 2
   },
   {
     "id": 3989,
     "NameDesign": "Arcane! Twin-Star Duel (AI)",
-    "Icon": "skill_aoyi_skill_icon_088.png"
+    "Icon": "skill_aoyi_skill_icon_088.png",
+    "maxCharges": 2
   },
   {
     "id": 3990,
     "NameDesign": "Arcane! Stone-Rending Storm (AI)",
-    "Icon": "skill_aoyi_skill_icon_089.png"
+    "Icon": "skill_aoyi_skill_icon_089.png",
+    "maxCharges": 2
   },
   {
     "id": 3991,
     "NameDesign": "Arcane! Endbringer Incarnation (AI)",
-    "Icon": "skill_aoyi_skill_icon_090.png"
+    "Icon": "skill_aoyi_skill_icon_090.png",
+    "maxCharges": 2
   },
   {
     "id": 3992,
@@ -542,11 +552,13 @@
   {
     "id": 3998,
     "NameDesign": "Stunt! Fin Hammer Smash (AI)",
-    "Icon": "skill_aoyi_skill_icon_097.png"
+    "Icon": "skill_aoyi_skill_icon_097.png",
+    "maxCharges": 3
   },
   {
     "id": 3999,
     "NameDesign": "Stunt! Explosive Water Bomb (AI)",
-    "Icon": "skill_aoyi_skill_icon_098.png"
+    "Icon": "skill_aoyi_skill_icon_098.png",
+    "maxCharges": 1
   }
 ]

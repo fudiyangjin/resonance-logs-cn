@@ -12,9 +12,11 @@
   "10020": "Performance Test Scene 1",
   "10021": "Performance Test Scene 2",
   "10030": "Zone Test Scene (AI)",
+  "101": "沐光林道",
   "1011": "Unstable - Tina's Mindrealm",
+  "102": "绯染的树林",
   "1021": "Unstable - Tina's Mindrealm",
-  "103": "沙漠",
+  "103": "流金沙湾",
   "1031": "Normal - Tina's Mindrealm",
   "1032": "Hard - Tina's Mindrealm",
   "1033": "Master - Tina's Mindrealm",
@@ -701,6 +703,7 @@
   "9206": "Hard - Delusion Grove",
   "9207": "Nightmare - Delusion Grove",
   "93": "Moonshadow Wilds",
+  "9300": "千梦织灵·异梦净除",
   "94": "Stray Starway",
   "95": "Sunset Wilds (AI)"
 }
