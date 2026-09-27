@@ -1816,7 +1816,7 @@ export const jaJPMessages = {
   "game.damage.unknown": "不明（{id}）",
   "game.damageProperty.generic": "汎用",
   "game.damageProperty.fire": "火",
-  "game.damageProperty.water": "水",
+  "game.damageProperty.water": "氷",
   "game.damageProperty.thunder": "雷",
   "game.damageProperty.wood": "森",
   "game.damageProperty.wind": "風",
