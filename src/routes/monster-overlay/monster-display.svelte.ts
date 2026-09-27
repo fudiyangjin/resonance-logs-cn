@@ -8,6 +8,7 @@ import { untrack } from "svelte";
 import { resolveDbmSkillName } from "$lib/config/dbm-table";
 import { resolveMonsterName } from "$lib/config/game-names";
 import { t } from "$lib/i18n/index.svelte";
+import { abbreviateNumber, type AbbreviationStyle } from "$lib/number-format";
 import { uidFromEntityUuid, type EntityId } from "$lib/entity-id";
 import {
   SETTINGS,
@@ -703,7 +704,22 @@ function buildStunPlaceholderRows(): TextBuffDisplay[] {
   ];
 }
 
-function buildHpRows(entry: HpEntry): TextBuffDisplay[] {
+function formatHpPair(
+  current: number,
+  max: number,
+  style: AbbreviationStyle,
+  decimalPlaces: number,
+): string {
+  const currentText = abbreviateNumber(current, decimalPlaces, style);
+  const maxText = abbreviateNumber(max, decimalPlaces, style);
+  return `${currentText} / ${maxText}`;
+}
+
+function buildHpRows(
+  entry: HpEntry,
+  style: AbbreviationStyle,
+  decimalPlaces: number,
+): TextBuffDisplay[] {
   if (entry.max <= 0) return [];
   const ratio = Math.min(1, Math.max(0, entry.current / entry.max));
   return [
@@ -711,20 +727,23 @@ function buildHpRows(entry: HpEntry): TextBuffDisplay[] {
       key: `hp_${entry.bossEntityUuid}`,
       label: t("monsterOverlay.hpLabel"),
       metaText: `${Math.round(ratio * 100)}%`,
-      valueText: `${entry.current} / ${entry.max}`,
+      valueText: formatHpPair(entry.current, entry.max, style, decimalPlaces),
       progressPercent: Math.round(ratio * 100),
       showProgress: true,
     },
   ];
 }
 
-function buildHpPlaceholderRows(): TextBuffDisplay[] {
+function buildHpPlaceholderRows(
+  style: AbbreviationStyle,
+  decimalPlaces: number,
+): TextBuffDisplay[] {
   return [
     {
       key: "hp_preview",
       label: t("monsterOverlay.hpLabel"),
       metaText: "80%",
-      valueText: "80000 / 100000",
+      valueText: formatHpPair(80_000, 100_000, style, decimalPlaces),
       progressPercent: 80,
       showProgress: true,
       isPlaceholder: true,
@@ -932,7 +951,10 @@ function buildTeammateDisplay(
   return {
     columns: fullTeammateDisplayColumns,
     rows: isMonsterLayoutScaffold()
-      ? buildTeammatePlaceholderRows(fullTeammateDisplayColumns, deadRowPlacement)
+      ? buildTeammatePlaceholderRows(
+          fullTeammateDisplayColumns,
+          deadRowPlacement,
+        )
       : [],
     nextDeadlineMs: deadlines.value(),
   };
@@ -1072,13 +1094,16 @@ function buildStunDisplay(): MonsterStunSection[] {
   return nextStunSections;
 }
 
-function buildHpDisplay(): MonsterHpSection[] {
+function buildHpDisplay(
+  style: AbbreviationStyle,
+  decimalPlaces: number,
+): MonsterHpSection[] {
   const sections: MonsterHpSection[] = [];
   if (getMonsterOverlayVisibility().showHpPanel) {
     for (const [bossUid, entry] of Array.from(
       monsterHpEntries().entries(),
     ).sort()) {
-      const rows = buildHpRows(entry);
+      const rows = buildHpRows(entry, style, decimalPlaces);
       if (rows.length > 0)
         sections.push({
           bossEntityUuid: bossUid,
@@ -1095,7 +1120,7 @@ function buildHpDisplay(): MonsterHpSection[] {
     sections.push({
       bossEntityUuid: "0",
       title: t("monsterOverlay.placeholder.target", { uid: 0 }),
-      rows: buildHpPlaceholderRows(),
+      rows: buildHpPlaceholderRows(style, decimalPlaces),
       isPlaceholder: true,
     });
   }
@@ -1244,7 +1269,16 @@ const hateDisplayProjection = $derived.by(() => buildHateDisplay());
 
 const stunDisplayProjection = $derived.by(() => buildStunDisplay());
 
-const hpDisplayProjection = $derived.by(() => buildHpDisplay());
+const hpAbbreviationStyle = $derived(
+  SETTINGS.live.general.state.abbreviationStyle,
+);
+const hpAbbreviatedDecimalPlaces = $derived(
+  SETTINGS.live.general.state.abbreviatedDecimalPlaces ?? 1,
+);
+
+const hpDisplayProjection = $derived.by(() =>
+  buildHpDisplay(hpAbbreviationStyle, hpAbbreviatedDecimalPlaces),
+);
 
 const fantasyDisplayProjection = $derived.by(() => {
   void hudProjectionRevision(MONSTER_FANTASY_DEADLINE_SOURCE);
