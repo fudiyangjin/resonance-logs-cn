@@ -12,5 +12,7 @@
   { "skillId": 1730, "name": "Infinite Thunder" },
   { "skillId": 1731, "name": "Thousand Thunder Flashes" },
   { "skillId": 1737, "name": "Divine Sickle" },
-  { "skillId": 2238, "name": "Blast Shot" }
+  { "skillId": 2238, "name": "Blast Shot" },
+  { "skillId": 2235, "name": "Deter Shot" },
+  { "skillId": 2209, "name": "Luminary Bolt" }
 ]

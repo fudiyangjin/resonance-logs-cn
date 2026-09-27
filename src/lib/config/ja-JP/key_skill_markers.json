@@ -12,5 +12,7 @@
   { "skillId": 1730, "name": "無限雷" },
   { "skillId": 1731, "name": "千雷閃" },
   { "skillId": 1737, "name": "神鎌" },
-  { "skillId": 2238, "name": "爆裂射撃" }
+  { "skillId": 2238, "name": "爆裂射撃" },
+  { "skillId": 2235, "name": "ディスラプトショット" },
+  { "skillId": 2209, "name": "鋭眼・ディバインボルト" }
 ]

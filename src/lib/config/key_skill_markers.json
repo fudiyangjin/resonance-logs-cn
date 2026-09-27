@@ -35,6 +35,16 @@
     "icon": "/images/marksman/skill/weapon_gj-01_kx08_-6570599884307306030.png"
   },
   {
+    "skillId": 2235,
+    "name": "威慑射击",
+    "icon": "/images/marksman/skill/weapon_gj-01_kx06_-2317352080954752334.png"
+  },
+  {
+    "skillId": 2209,
+    "name": "锐眼·光能巨箭",
+    "icon": "/images/marksman/skill/weapon_gj-01_ult_-7582180839649827365.png"
+  },
+  {
     "skillId": 1923,
     "name": "砂岩守护",
     "icon": "/images/heavy_guardian/skill/weapon_wr-01_kx06_2700380891417243473.png"
