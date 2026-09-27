@@ -20,13 +20,11 @@ const catalog: FactorDisplayCatalog = {
       templateId: 20,
       name: "active",
       displayBuffs: [{ buffId: 201 }, { buffId: 202 }],
-      suppressRules: [{ whenBuffActive: 202, hide: [201] }],
     },
     {
       templateId: 21,
       name: "inactive",
       displayBuffs: [{ buffId: 211 }],
-      suppressRules: [{ whenBuffActive: 211, hide: [201] }],
     },
   ],
 };
@@ -93,7 +91,7 @@ describe("runtime factor display plan", () => {
     expect([...plan.ownedBuffIds]).toEqual([101, 102]);
   });
 
-  it("scopes S4 rows and suppression rules to active templates", () => {
+  it("scopes S4 rows to active templates", () => {
     const configured = buildConfiguredBuffPlan(profile());
     const plan = buildRuntimeFactorPlan(
       configured,
@@ -107,7 +105,6 @@ describe("runtime factor display plan", () => {
 
     expect(plan.mode).toBe("node");
     expect(plan.nodeBuffs.map((entry) => entry.buffId)).toEqual([201, 202]);
-    expect(plan.suppressRules).toEqual([{ whenBuffActive: 202, hide: [201] }]);
     expect(plan.ownedBuffIds.has(211)).toBe(false);
   });
 

@@ -172,18 +172,10 @@ export type SeasonNodeDisplayBuff = {
   buffId: number;
 };
 
-/** Hides `hide` buffs while `whenBuffActive` is active, e.g. the individual
- * 属性交响 stacks once 完美交响 (perfect symphony) is up. */
-export type SeasonNodeSuppressRule = {
-  whenBuffActive: number;
-  hide: number[];
-};
-
 export type SeasonNodeTemplate = {
   templateId: number;
   name: string;
   displayBuffs: SeasonNodeDisplayBuff[];
-  suppressRules: SeasonNodeSuppressRule[];
 };
 
 export type SeasonNodeBuffConfig = {
@@ -723,21 +715,8 @@ export function getSeasonNodeBuffIds(): number[] {
   ).sort((left, right) => left - right);
 }
 
-/** Every S4+ buff needed by the frontend projection. In addition to rows,
- * suppression predicates must be published so their active state is known. */
-export function getSeasonNodeTrackedBuffIds(): number[] {
-  return Array.from(
-    new Set(
-      SEASON_NODE_BUFF_CONFIG.templates.flatMap((template) => [
-        ...template.displayBuffs.map((buff) => buff.buffId),
-        ...template.suppressRules.map((rule) => rule.whenBuffActive),
-      ]),
-    ),
-  ).sort((left, right) => left - right);
-}
-
 /** Resolves only currently equipped S4+ templates. Unlocked-but-unequipped
- * templates must not contribute rows or suppression rules. */
+ * templates must not contribute rows. */
 export function resolveActiveSeasonNodeTemplates(
   activeTemplateIds: ReadonlySet<number>,
   templates: readonly SeasonNodeTemplate[] = SEASON_NODE_BUFF_CONFIG.templates,

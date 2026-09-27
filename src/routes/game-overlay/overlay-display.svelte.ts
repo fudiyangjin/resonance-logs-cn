@@ -168,16 +168,8 @@ function buildSeasonNodeRows(
   currentBuffAliases: BuffAliasMap,
   resolveAlert: (baseId: number) => BuffAlertRule | undefined,
 ): CustomPanelDisplayRow[] {
-  const hiddenBuffIds = new Set<number>();
-  for (const rule of factorPlan.suppressRules) {
-    if (isBuffActive(currentBuffMap.get(rule.whenBuffActive), now)) {
-      for (const buffId of rule.hide) hiddenBuffIds.add(buffId);
-    }
-  }
-
   const nextRows: CustomPanelDisplayRow[] = [];
   for (const buff of factorPlan.nodeBuffs) {
-    if (hiddenBuffIds.has(buff.buffId)) continue;
     const entry: InlineBuffEntry = {
       id: `season_node_buff_${buff.buffId}`,
       sourceType: "buff",

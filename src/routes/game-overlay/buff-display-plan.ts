@@ -6,7 +6,6 @@ import {
   resolveActiveSeasonNodeTemplates,
   resolveSeasonPanelMode,
   SEASON_NODE_BUFF_CONFIG,
-  type SeasonNodeSuppressRule,
   type SeasonNodeTemplate,
   type SeasonPanelMode,
 } from "$lib/skill-mappings";
@@ -28,7 +27,6 @@ export type RuntimeFactorPlan = {
   ownedBuffIds: ReadonlySet<number>;
   legacyItems: readonly LegacyFactorItemPlan[];
   nodeBuffs: readonly SeasonNodeBuffPlan[];
-  suppressRules: readonly SeasonNodeSuppressRule[];
 };
 
 export type RuntimeFactorContext = {
@@ -54,7 +52,6 @@ const EMPTY_FACTOR_PLAN: RuntimeFactorPlan = {
   ownedBuffIds: new Set<number>(),
   legacyItems: [],
   nodeBuffs: [],
-  suppressRules: [],
 };
 
 export function buildRuntimeFactorPlan(
@@ -71,7 +68,6 @@ export function buildRuntimeFactorPlan(
       ownedBuffIds: configured.factorDisplayCandidateIds,
       legacyItems: [],
       nodeBuffs: [],
-      suppressRules: [],
     };
   }
   if (mode === "factor") {
@@ -123,7 +119,6 @@ function buildLegacyFactorPlan(
     ownedBuffIds,
     legacyItems,
     nodeBuffs: [],
-    suppressRules: [],
   };
 }
 
@@ -133,13 +128,11 @@ function buildSeasonNodePlan(
 ): RuntimeFactorPlan {
   const ownedBuffIds = new Set<number>();
   const nodeBuffs: SeasonNodeBuffPlan[] = [];
-  const suppressRules: SeasonNodeSuppressRule[] = [];
 
   for (const template of resolveActiveSeasonNodeTemplates(
     activeTemplateIds,
     catalog.nodeTemplates,
   )) {
-    suppressRules.push(...template.suppressRules);
     for (const buff of template.displayBuffs) {
       if (ownedBuffIds.has(buff.buffId)) continue;
       ownedBuffIds.add(buff.buffId);
@@ -155,6 +148,5 @@ function buildSeasonNodePlan(
     ownedBuffIds,
     legacyItems: [],
     nodeBuffs,
-    suppressRules,
   };
 }

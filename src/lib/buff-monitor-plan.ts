@@ -11,7 +11,6 @@ import {
   getResourceOwnedBuffIds,
   getSeasonCultivateFactorConfiguredEffectBuffIds,
   getSeasonNodeBuffIds,
-  getSeasonNodeTrackedBuffIds,
 } from "$lib/skill-mappings";
 import type {
   BuffCoverageEntry,
@@ -26,10 +25,7 @@ const FACTOR_DISPLAY_CANDIDATE_IDS: ReadonlySet<number> = new Set([
   ...getSeasonCultivateFactorConfiguredEffectBuffIds(),
   ...getSeasonNodeBuffIds(),
 ]);
-const FACTOR_PUBLISHED_IDS: ReadonlySet<number> = new Set([
-  ...FACTOR_DISPLAY_CANDIDATE_IDS,
-  ...getSeasonNodeTrackedBuffIds(),
-]);
+const FACTOR_PUBLISHED_IDS = FACTOR_DISPLAY_CANDIDATE_IDS;
 
 export type ConfiguredBuffPlan = {
   enabled: boolean;

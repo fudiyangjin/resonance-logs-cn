@@ -18,8 +18,7 @@
         {
           "buffId": 3005001
         }
-      ],
-      "suppressRules": []
+      ]
     },
     {
       "templateId": 10,
@@ -28,8 +27,7 @@
         {
           "buffId": 3005102
         }
-      ],
-      "suppressRules": []
+      ]
     },
     {
       "templateId": 11,
@@ -44,8 +42,7 @@
         {
           "buffId": 3005361
         }
-      ],
-      "suppressRules": []
+      ]
     },
     {
       "templateId": 12,
@@ -54,8 +51,7 @@
         {
           "buffId": 3005501
         }
-      ],
-      "suppressRules": []
+      ]
     },
     {
       "templateId": 13,
@@ -91,8 +87,7 @@
         {
           "buffId": 3003033
         }
-      ],
-      "suppressRules": []
+      ]
     },
     {
       "templateId": 14,
@@ -104,8 +99,7 @@
         {
           "buffId": 3005902
         }
-      ],
-      "suppressRules": []
+      ]
     },
     {
       "templateId": 15,
@@ -132,19 +126,6 @@
         {
           "buffId": 3006192
         }
-      ],
-      "suppressRules": [
-        {
-          "whenBuffActive": 3006192,
-          "hide": [
-            3006101,
-            3006102,
-            3006103,
-            3006104,
-            3006105,
-            3006181
-          ]
-        }
       ]
     },
     {
@@ -160,8 +141,7 @@
         {
           "buffId": 3002541
         }
-      ],
-      "suppressRules": []
+      ]
     }
   ]
 }
