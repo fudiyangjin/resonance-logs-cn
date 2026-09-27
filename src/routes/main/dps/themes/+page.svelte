@@ -671,7 +671,7 @@
           {/if}
         </div>
 
-        <!-- Compact Mode (applies to both player and skill tables) -->
+        <!-- Compact Mode (player tables; detail pages optional) -->
         <div
           class="rounded-lg border bg-card/40 border-border/60 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
         >
@@ -702,6 +702,13 @@
                 description={t("themes.compact.enableDescription")}
               />
               {#if SETTINGS.live.tableCustomization.state.compactMode}
+                <SettingsSwitch
+                  bind:checked={
+                    SETTINGS.live.tableCustomization.state.compactIncludeDetails
+                  }
+                  label={t("themes.compact.includeDetails")}
+                  description={t("themes.compact.includeDetailsDescription")}
+                />
                 <SettingsSelect
                   bind:selected={
                     SETTINGS.live.tableCustomization.state.compactDpsKey

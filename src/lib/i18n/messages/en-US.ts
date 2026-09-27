@@ -864,10 +864,13 @@ export const enUSMessages = {
   "themes.classSpec.specDescription": "Customize each spec color.",
   "themes.compact.title": "Compact Mode",
   "themes.compact.description":
-    "Compact mode applies to both player tables and skill detail tables. It hides headers, shows only total (per-second) and share per row, and sorts by total descending.",
+    "Compact mode applies to player tables by default, and can optionally apply to detail pages too. It hides headers, shows only total (per-second) and share per row, and sorts by total descending.",
   "themes.compact.enable": "Enable Compact Mode",
   "themes.compact.enableDescription":
-    "Applies to damage, healing, damage taken, and their skill detail pages",
+    "Applies to the player lists of damage, healing, damage taken, and deaths",
+  "themes.compact.includeDetails": "Also Compact Detail Pages",
+  "themes.compact.includeDetailsDescription":
+    "When on, skill details and damage-taken monster details opened from a player also use compact rows; when off they show the full table",
   "themes.compact.dpsKey": "Compact DPS Value",
   "themes.compact.dpsKeyDescription":
     "DPS panel only: choose whether parentheses show DPS or true DPS",

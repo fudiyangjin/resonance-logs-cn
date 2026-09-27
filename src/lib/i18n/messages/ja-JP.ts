@@ -840,10 +840,13 @@ export const jaJPMessages = {
   "themes.classSpec.specDescription": "各スペックの色をカスタマイズします。",
   "themes.compact.title": "コンパクトモード",
   "themes.compact.description":
-    "コンパクトモードはプレイヤーテーブルとスキル詳細テーブルの両方に適用されます。ヘッダーを非表示にし、各行に合計（秒間）と割合のみを表示し、合計の降順で並べます。",
+    "コンパクトモードは既定でプレイヤーテーブルにのみ適用され、詳細ページにも適用できます。ヘッダーを非表示にし、各行に合計（秒間）と割合のみを表示し、合計の降順で並べます。",
   "themes.compact.enable": "コンパクトモードを有効化",
   "themes.compact.enableDescription":
-    "ダメージ、回復、被ダメージとそれぞれのスキル詳細ページに適用",
+    "ダメージ、回復、被ダメージ、死亡のプレイヤー一覧に適用",
+  "themes.compact.includeDetails": "詳細ページにもコンパクトモードを適用",
+  "themes.compact.includeDetailsDescription":
+    "オンにすると、プレイヤーから開いたスキル詳細と被ダメージのモンスター詳細もコンパクト表示になります。オフの場合は通常のテーブルを表示します",
   "themes.compact.dpsKey": "コンパクト DPS 値",
   "themes.compact.dpsKeyDescription":
     "DPS パネルのみ: 括弧内に DPS または True DPS を表示するか選択",

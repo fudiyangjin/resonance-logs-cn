@@ -777,10 +777,13 @@ export const zhCNMessages = {
   "themes.classSpec.specDescription": "自定义各专精的颜色。",
   "themes.compact.title": "紧凑模式",
   "themes.compact.description":
-    "紧凑模式同时作用于玩家表格和技能详情表格。隐藏表头，每行仅展示总量(秒伤)与占比，按总量降序排列。",
+    "紧凑模式默认只作用于玩家列表，可选让明细页也使用。隐藏表头，每行仅展示总量(秒伤)与占比，按总量降序排列。",
   "themes.compact.enable": "启用紧凑模式",
   "themes.compact.enableDescription":
-    "适用于伤害、治疗、承伤及各自的技能详情页",
+    "适用于伤害、治疗、承伤、死亡页的玩家列表",
+  "themes.compact.includeDetails": "明细页也使用紧凑模式",
+  "themes.compact.includeDetailsDescription":
+    "开启后，点进玩家后的技能明细和承伤怪物明细也使用紧凑样式；关闭时显示完整表格",
   "themes.compact.dpsKey": "DPS 紧凑秒伤类型",
   "themes.compact.dpsKeyDescription":
     "仅在 DPS 面板生效：括号内展示秒伤还是真秒伤",

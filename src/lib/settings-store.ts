@@ -2401,6 +2401,8 @@ export const DEFAULT_FONT_SIZES = {
 export const DEFAULT_LIVE_TABLE_SETTINGS = {
   // Compact mode - shows single-line rows with only total(rate) + pct, no header
   compactMode: false,
+  // Only takes effect when compactMode is on; extends compact rows to skill/monster detail pages
+  compactIncludeDetails: false,
   // Which secondary value to show inside the parentheses for DPS compact view
   compactDpsKey: "dps" as "dps" | "tdps",
 

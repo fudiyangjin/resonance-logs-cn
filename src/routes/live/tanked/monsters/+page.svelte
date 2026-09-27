@@ -88,7 +88,9 @@
   });
 
   let tableSettings = $derived(SETTINGS.live.tableCustomization.state);
-  let compactMode = $derived(tableSettings.compactMode);
+  const compactMode = $derived(
+    tableSettings.compactMode && tableSettings.compactIncludeDetails,
+  );
   let abbreviatedDecimalPlaces = $derived(
     SETTINGS.live.general.state.abbreviatedDecimalPlaces ?? 1,
   );
