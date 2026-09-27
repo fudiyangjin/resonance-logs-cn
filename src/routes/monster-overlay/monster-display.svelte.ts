@@ -14,11 +14,16 @@ import {
   ensureBuffAlerts,
   getGlobalBuffAliases,
   type EntityDurationEntry,
-  type TeammateBuffColumnKey,
+  type TeammateDeadRowPlacement,
 } from "$lib/settings-store";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
+import {
+  orderedTeammateColumns,
+  type TeammateColumnRef,
+} from "$lib/teammate-buff-columns";
 import { buildEntityDurationRows } from "./monster-entity-duration";
 import type {
+  BuffUpdateState,
   HateEntry,
   HpEntry,
   StunEntry,
@@ -44,6 +49,7 @@ import {
   isMonsterLayoutScaffold,
   monsterBossBuffs,
   monsterBossMechanics,
+  monsterDeadTeammates,
   monsterEntityDurationTracks,
   monsterFantasyEntries,
   monsterHateLists,
@@ -68,8 +74,14 @@ import type {
   MonsterTeammateBuffColumn,
   MonsterTeammateBuffRow,
 } from "./monster-types";
-import { getMonsterOverlayVisibility } from "./monster-layout.svelte.js";
-import { latestBuffsByCategory } from "./monster-teammate-projection";
+import {
+  getMonsterOverlayVisibility,
+  teammatePanelStyle,
+} from "./monster-layout.svelte.js";
+import {
+  latestBuffsByCategory,
+  orderTeammateUuids,
+} from "./monster-teammate-projection";
 
 const FANTASY_DISPLAY_TTL_MS = 5000;
 const STUN_BROKEN_HIGHLIGHT_COLOR = "#ff4d4f";
@@ -146,7 +158,11 @@ function reuseTeammateRow(
   const cellsUnchanged =
     cells.length === previous.cells.length &&
     cells.every((cell, index) => cell === previous.cells[index]);
-  if (cellsUnchanged && previous.teammateName === next.teammateName) {
+  if (
+    cellsUnchanged &&
+    previous.teammateName === next.teammateName &&
+    previous.isDead === next.isDead
+  ) {
     return previous;
   }
   return { ...next, cells };
@@ -199,19 +215,14 @@ export function resetMonsterTeammateDisplayStabilizer(): void {
 }
 
 type TeammateColumnDefinition =
-  | {
-      key: TeammateBuffColumnKey;
+  | (Extract<TeammateColumnRef, { kind: "buff" }> & { label: string })
+  | (Extract<TeammateColumnRef, { kind: "category" }> & {
       label: string;
-      kind: "buff";
-      buffId: number;
-    }
-  | {
-      key: TeammateBuffColumnKey;
-      label: string;
-      kind: "category";
-      categoryKey: BuffCategoryKey;
       buffIds: number[];
-    };
+    });
+
+/** Shared by teammates with no watched buffs (dead rows). */
+const NO_TEAMMATE_BUFFS: ReadonlyMap<number, BuffUpdateState> = new Map();
 
 type TeammateColumnProjection = {
   definitions: TeammateColumnDefinition[];
@@ -308,8 +319,13 @@ function buildHatePlaceholderRows(): TextBuffDisplay[] {
   ];
 }
 
+/**
+ * Edit-mode preview: one living teammate with sample cells and one dead
+ * teammate with empty cells, placed like real dead rows.
+ */
 function buildTeammatePlaceholderRows(
   columns: MonsterTeammateBuffColumn[],
+  deadRowPlacement: TeammateDeadRowPlacement,
 ): MonsterTeammateBuffRow[] {
   const effectiveColumns =
     columns.length > 0
@@ -322,72 +338,53 @@ function buildTeammatePlaceholderRows(
           },
         ];
 
-  return [
-    {
-      teammateEntityUuid: "teammate_preview_1",
-      teammateName: t("monsterOverlay.placeholder.teammate"),
-      isPlaceholder: true,
-      cells: effectiveColumns.map((column, index) => ({
-        key: `teammate_preview_cell_${index + 1}`,
-        buffId: column.buffIds[0] ?? 0,
-        buffName: column.label,
-        valueText: index === 0 ? "12s" : "--",
-        metaText: index === 0 ? "x2" : undefined,
-        progressPercent: index === 0 ? 60 : 0,
-        hasBuff: true,
-        categoryKey: "categoryKey" in column ? column.categoryKey : undefined,
-      })),
-    },
-  ];
+  const living: MonsterTeammateBuffRow = {
+    teammateEntityUuid: "teammate_preview_1",
+    teammateName: t("monsterOverlay.placeholder.teammate"),
+    isDead: false,
+    isPlaceholder: true,
+    cells: effectiveColumns.map((column, index) => ({
+      key: `teammate_preview_cell_${index + 1}`,
+      buffId: column.buffIds[0] ?? 0,
+      buffName: column.label,
+      valueText: index === 0 ? "12s" : "--",
+      metaText: index === 0 ? "x2" : undefined,
+      progressPercent: index === 0 ? 60 : 0,
+      hasBuff: true,
+      categoryKey: "categoryKey" in column ? column.categoryKey : undefined,
+    })),
+  };
+  const dead: MonsterTeammateBuffRow = {
+    teammateEntityUuid: "teammate_preview_2",
+    teammateName: t("monsterOverlay.placeholder.deadTeammate"),
+    isDead: true,
+    isPlaceholder: true,
+    cells: effectiveColumns.map((column, index) => ({
+      key: `teammate_preview_dead_cell_${index + 1}`,
+      buffId: column.buffIds[0] ?? 0,
+      buffName: column.label,
+      valueText: "",
+      progressPercent: 0,
+      hasBuff: false,
+      categoryKey: "categoryKey" in column ? column.categoryKey : undefined,
+    })),
+  };
+  return deadRowPlacement === "first" ? [dead, living] : [living, dead];
 }
 
 function buildTeammateColumnDefinitions(
   aliases: ReturnType<typeof getGlobalBuffAliases>,
 ): TeammateColumnDefinition[] {
-  const state = SETTINGS.monsterMonitor.state;
-  const teammateBuffIds = state.teammateBuffIds ?? [];
-  const teammateBuffCategories = state.teammateBuffCategories ?? [];
-  const columns: TeammateColumnDefinition[] = teammateBuffIds.map((buffId) => ({
-    key: `buff:${buffId}`,
-    label: resolveBuffDisplayName(buffId, aliases),
-    kind: "buff",
-    buffId,
-  }));
-
-  for (const categoryKey of teammateBuffCategories) {
-    columns.push({
-      key: `category:${categoryKey}`,
-      label: getBuffCategoryLabel(categoryKey),
-      kind: "category",
-      categoryKey,
-      buffIds: getBuffIdsByCategory(categoryKey),
-    });
-  }
-
-  return orderTeammateColumns(columns, state.teammateBuffColumnOrder ?? []);
-}
-
-function orderTeammateColumns(
-  columns: TeammateColumnDefinition[],
-  order: TeammateBuffColumnKey[],
-): TeammateColumnDefinition[] {
-  const columnMap = new Map(columns.map((column) => [column.key, column]));
-  const ordered: TeammateColumnDefinition[] = [];
-  const used = new Set<TeammateBuffColumnKey>();
-
-  for (const key of order) {
-    const column = columnMap.get(key);
-    if (!column || used.has(key)) continue;
-    ordered.push(column);
-    used.add(key);
-  }
-
-  for (const column of columns) {
-    if (used.has(column.key)) continue;
-    ordered.push(column);
-  }
-
-  return ordered;
+  return orderedTeammateColumns(SETTINGS.monsterMonitor.state).map(
+    (column): TeammateColumnDefinition =>
+      column.kind === "buff"
+        ? { ...column, label: resolveBuffDisplayName(column.buffId, aliases) }
+        : {
+            ...column,
+            label: getBuffCategoryLabel(column.categoryKey),
+            buffIds: getBuffIdsByCategory(column.categoryKey),
+          },
+  );
 }
 
 function toTeammateDisplayColumns(
@@ -421,7 +418,7 @@ function filterInactiveTeammateColumns(
           .filter((cell) => cell !== undefined);
         return { ...row, cells };
       })
-      .filter((row) => row.cells.some((cell) => cell.hasBuff)),
+      .filter((row) => row.isDead || row.cells.some((cell) => cell.hasBuff)),
   };
 }
 
@@ -773,6 +770,7 @@ function buildTeammateDisplay(
   now: number,
   columnProjection: TeammateColumnProjection,
   aliases: ReturnType<typeof getGlobalBuffAliases>,
+  deadRowPlacement: TeammateDeadRowPlacement,
 ): {
   columns: MonsterTeammateBuffColumn[];
   rows: MonsterTeammateBuffRow[];
@@ -786,7 +784,12 @@ function buildTeammateDisplay(
   const nextTeammateRows: MonsterTeammateBuffRow[] = [];
   const deadlines = createDeadlineTracker(now);
   const teammateBuffs = monsterTeammateBuffs();
-  const sortedTeammateUuids = Array.from(teammateBuffs.keys()).sort();
+  const deadTeammates = monsterDeadTeammates();
+  const teammateUuids = orderTeammateUuids(
+    [...teammateBuffs.keys(), ...deadTeammates],
+    deadTeammates,
+    deadRowPlacement,
+  );
 
   for (const buffs of teammateBuffs.values()) {
     for (const buff of buffs.values()) {
@@ -796,8 +799,9 @@ function buildTeammateDisplay(
     }
   }
 
-  for (const teammateUuid of sortedTeammateUuids) {
-    const buffMap = teammateBuffs.get(teammateUuid) ?? new Map();
+  for (const teammateUuid of teammateUuids) {
+    const buffMap = teammateBuffs.get(teammateUuid) ?? NO_TEAMMATE_BUFFS;
+    const isDead = deadTeammates.has(teammateUuid);
     const latestByCategory = latestBuffsByCategory(
       buffMap,
       columnProjection.categoryKeysByBuffId,
@@ -903,12 +907,13 @@ function buildTeammateDisplay(
       };
     });
 
-    if (!cells.some((cell) => cell.hasBuff)) continue;
+    if (!isDead && !cells.some((cell) => cell.hasBuff)) continue;
 
     nextTeammateRows.push({
       teammateEntityUuid: teammateUuid,
       teammateName: resolveEntityDisplayName(teammateUuid),
       cells,
+      isDead,
     });
   }
 
@@ -927,7 +932,7 @@ function buildTeammateDisplay(
   return {
     columns: fullTeammateDisplayColumns,
     rows: isMonsterLayoutScaffold()
-      ? buildTeammatePlaceholderRows(fullTeammateDisplayColumns)
+      ? buildTeammatePlaceholderRows(fullTeammateDisplayColumns, deadRowPlacement)
       : [],
     nextDeadlineMs: deadlines.value(),
   };
@@ -1215,12 +1220,18 @@ const teammateColumnProjection = $derived.by(() => {
   };
 });
 
+// A primitive, so panel style edits (sizes, colors) do not rebuild the rows.
+const teammateDeadRowPlacement = $derived(
+  teammatePanelStyle().deadRowPlacement,
+);
+
 const teammateDisplayProjection = $derived.by(() => {
   void hudProjectionRevision(MONSTER_TEAMMATE_DEADLINE_SOURCE);
   return buildTeammateDisplay(
     Date.now(),
     teammateColumnProjection,
     globalBuffAliasesProjection,
+    teammateDeadRowPlacement,
   );
 });
 

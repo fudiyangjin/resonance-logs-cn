@@ -165,6 +165,11 @@ export function teammatePanelStyle() {
   );
 }
 
+/** Raw per-column color overrides; validated where they are resolved. */
+export function teammateBuffColumnStyles() {
+  return SETTINGS.monsterMonitor.state.teammateBuffColumnStyles;
+}
+
 export function fantasyPanelStyle() {
   return normalizeCustomPanelStyle(
     SETTINGS.monsterMonitor.state.fantasyPanelStyle ??

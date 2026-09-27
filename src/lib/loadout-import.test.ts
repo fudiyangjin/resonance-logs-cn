@@ -462,6 +462,29 @@ describe("parseLoadoutExport", () => {
     expect("merge" in entries[1]!).toBe(false);
   });
 
+  it("fills dead-teammate defaults missing from an older monster profile", () => {
+    const data = validExport();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    const teammatePanelStyle = monster["teammatePanelStyle"] as Record<
+      string,
+      unknown
+    >;
+    delete teammatePanelStyle["deadNameColor"];
+    delete teammatePanelStyle["deadRowPlacement"];
+    delete monster["teammateBuffColumnStyles"];
+
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.output.monsterProfile.teammatePanelStyle.deadNameColor).toBe(
+      "#ef4444",
+    );
+    expect(
+      result.output.monsterProfile.teammatePanelStyle.deadRowPlacement,
+    ).toBe("last");
+    expect(result.output.monsterProfile.teammateBuffColumnStyles).toEqual({});
+  });
+
   it("includes the field path in validation issues", () => {
     const data = validExport();
     const skill = data["skillProfile"] as Record<string, unknown>;

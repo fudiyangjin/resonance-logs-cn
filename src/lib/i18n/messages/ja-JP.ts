@@ -1530,6 +1530,7 @@ export const jaJPMessages = {
   "monsterMonitor.teammate.emptySearch": "一致する味方 Buff がありません",
   "monsterMonitor.teammate.groupTitle": "モニター中の味方 Buff",
   "monsterMonitor.teammate.styleTitle": "味方 Buff マトリクススタイル",
+  "monsterMonitor.teammate.columnColorReset": "リセット",
   "monsterMonitor.fantasy.title": "味方幻想",
   "monsterMonitor.fantasy.description":
     "味方が発動した共鳴スキル召喚モンスター。",
@@ -1589,6 +1590,11 @@ export const jaJPMessages = {
   "monsterMonitor.style.rowHeight": "行の高さ",
   "monsterMonitor.style.nameColumnWidth": "味方列の幅",
   "monsterMonitor.style.buffColumnWidth": "Buff 列の幅",
+  "monsterMonitor.style.deadNameColor": "死亡時の名前の色",
+  "monsterMonitor.style.deadRowPlacement": "死亡した味方の位置",
+  "monsterMonitor.style.deadRowPlacement.last": "末尾に移動",
+  "monsterMonitor.style.deadRowPlacement.first": "先頭に移動",
+  "monsterMonitor.style.deadRowPlacement.keep": "移動しない",
   "monsterMonitor.hate.displayTitle": "ヘイトリスト表示",
   "monsterMonitor.hate.displayDescription":
     "ヘイトパネルの表示人数とスタイルを設定します。表示は「ウィンドウを有効化」で切り替えます。",
@@ -1689,6 +1695,7 @@ export const jaJPMessages = {
   "monsterOverlay.placeholder.entityDuration": "エンティティ持続プレビュー",
   "monsterOverlay.placeholder.target": "ターゲット {uid}",
   "monsterOverlay.placeholder.teammate": "味方プレビュー",
+  "monsterOverlay.placeholder.deadTeammate": "死亡した味方プレビュー",
   "monsterOverlay.placeholder.fantasy": "幻想プレビュー",
   "monsterOverlay.placeholder.buffName": "サンプル Buff",
   "monsterOverlay.entity.uid": "UID {uid}",

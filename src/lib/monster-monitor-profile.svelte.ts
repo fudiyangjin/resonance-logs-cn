@@ -22,6 +22,10 @@ import {
 } from "./settings-store";
 import { ensureEntityDurationEntries } from "./entity-duration-entries";
 import { normalizeCustomPanelStyle } from "./skill-monitor-normalize";
+import {
+  ensureTeammateBuffColumnStyles,
+  syncTeammateColumnOrder,
+} from "./teammate-buff-columns";
 import { pruneMonsterVoice } from "./voice/association";
 
 export function listMonsterProfiles(): MonsterMonitorProfile[] {
@@ -195,7 +199,8 @@ export function currentMirroredProfileData(): MonsterMonitorProfileData {
 
 /**
  * Backfills the text-style fields (text shadow, background) on every panel
- * style of a monster-monitor profile. Only the currently-mirrored profile
+ * style of a monster-monitor profile, and keeps only the teammate column
+ * styles of configured columns. Only the currently-mirrored profile
  * gets refreshed from the live overlay editors; other profiles (and
  * profiles restored from an old export) can still be missing fields added
  * after they were created. Pure/idempotent, like `normalizeSkillProfile`.
@@ -217,6 +222,10 @@ export function normalizeMonsterProfileStyles<
     },
     panelStyle: normalizeCustomPanelStyle(profile.panelStyle),
     teammatePanelStyle: ensureTeammatePanelStyle(profile.teammatePanelStyle),
+    teammateBuffColumnStyles: ensureTeammateBuffColumnStyles(
+      profile.teammateBuffColumnStyles,
+      syncTeammateColumnOrder(profile),
+    ),
     hatePanelStyle: normalizeCustomPanelStyle(profile.hatePanelStyle),
     fantasyPanelStyle: normalizeCustomPanelStyle(profile.fantasyPanelStyle),
     bossDbmPanelStyle: normalizeCustomPanelStyle(profile.bossDbmPanelStyle),

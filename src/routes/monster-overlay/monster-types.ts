@@ -53,6 +53,8 @@ export type MonsterTeammateBuffRow = {
   teammateEntityUuid: EntityId;
   teammateName: string;
   cells: MonsterTeammateBuffCell[];
+  /** Dead rows stay even without buffs, drawn in the dead name color. */
+  isDead: boolean;
   isPlaceholder?: boolean;
 };
 

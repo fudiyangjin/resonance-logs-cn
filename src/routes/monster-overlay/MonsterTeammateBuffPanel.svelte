@@ -6,6 +6,10 @@
     overlayTextShadow,
   } from "$lib/overlay-text-style";
   import {
+    resolveTeammateColumnColors,
+    type TeammateColumnColors,
+  } from "$lib/teammate-buff-columns";
+  import {
     getTeammatePanelPosition,
     getTeammatePanelScale,
     isMonsterEditing,
@@ -14,6 +18,7 @@
     monsterTeammateRows,
     startMonsterDrag,
     startMonsterResize,
+    teammateBuffColumnStyles,
     teammatePanelStyle,
   } from "./monster-state.svelte.js";
   import MonsterTeammateBuffCell from "./MonsterTeammateBuffCell.svelte";
@@ -33,6 +38,18 @@
           label: cell.buffName,
         })) ?? []),
   );
+  const panelColors: TeammateColumnColors = $derived({
+    progressColor: styleConfig.progressColor,
+    valueColor: styleConfig.valueColor,
+  });
+  // Resolved per column here rather than in the display projection, so a
+  // color edit re-renders cells without rebuilding the rows.
+  const columnColors = $derived.by(() => {
+    const styles = teammateBuffColumnStyles();
+    return displayColumns.map((column) =>
+      resolveTeammateColumnColors(styles, column.key, panelColors),
+    );
+  });
   const teammateNowMs = $derived(Math.floor(overlayNow() / 1000) * 1000);
 </script>
 
@@ -59,17 +76,18 @@
       <div class="group-tag">{t("monsterOverlay.teammateGroupTag")}</div>
     {/if}
 
-    <div class="matrix-shell">
-      <div
-        class="matrix-grid matrix-header"
-        style:--buff-count={Math.max(displayColumns.length, 1)}
-        style:--font-size={`${styleConfig.fontSize}px`}
-        style:--column-gap={`${styleConfig.columnGap}px`}
-        style:--name-column-width={`${styleConfig.nameColumnWidth}px`}
-        style:--buff-column-width={`${styleConfig.buffColumnWidth}px`}
-        style:--row-height={`${styleConfig.rowHeight}px`}
-        style:color={styleConfig.nameColor}
-      >
+    <div
+      class="matrix-shell"
+      style:--buff-count={Math.max(displayColumns.length, 1)}
+      style:--font-size={`${styleConfig.fontSize}px`}
+      style:--column-gap={`${styleConfig.columnGap}px`}
+      style:--name-column-width={`${styleConfig.nameColumnWidth}px`}
+      style:--buff-column-width={`${styleConfig.buffColumnWidth}px`}
+      style:--row-height={`${styleConfig.rowHeight}px`}
+      style:--name-color={styleConfig.nameColor}
+      style:--dead-name-color={styleConfig.deadNameColor}
+    >
+      <div class="matrix-grid matrix-header">
         <div class="teammate-header" aria-hidden="true"></div>
         {#each displayColumns as column (column.key)}
           <div class="buff-header" title={column.label}>{column.label}</div>
@@ -81,27 +99,22 @@
           <div
             class="matrix-grid teammate-row"
             class:placeholder={row.isPlaceholder}
-            style:--buff-count={Math.max(displayColumns.length, 1)}
-            style:--font-size={`${styleConfig.fontSize}px`}
-            style:--column-gap={`${styleConfig.columnGap}px`}
-            style:--name-column-width={`${styleConfig.nameColumnWidth}px`}
-            style:--buff-column-width={`${styleConfig.buffColumnWidth}px`}
-            style:--row-height={`${styleConfig.rowHeight}px`}
           >
             <div
               class="teammate-name"
+              class:dead={row.isDead}
               title={row.teammateName}
-              style:color={styleConfig.nameColor}
             >
               {row.teammateName}
             </div>
-            {#each row.cells as cell (cell.key)}
+            {#each row.cells as cell, index (cell.key)}
+              {@const colors = columnColors[index] ?? panelColors}
               <MonsterTeammateBuffCell
                 {cell}
                 nowMs={teammateNowMs}
-                progressColor={styleConfig.progressColor}
+                progressColor={colors.progressColor}
                 progressOpacity={styleConfig.progressOpacity ?? 0.4}
-                valueColor={styleConfig.valueColor}
+                valueColor={colors.valueColor}
               />
             {/each}
           </div>
@@ -161,6 +174,7 @@
     top: 0;
     z-index: 2;
     margin-bottom: 2px;
+    color: var(--name-color);
   }
 
   .teammate-header,
@@ -206,9 +220,14 @@
     height: var(--row-height);
     padding: 3px 6px;
     overflow: hidden;
+    color: var(--name-color);
     font-weight: 700;
     line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .teammate-name.dead {
+    color: var(--dead-name-color);
   }
 </style>

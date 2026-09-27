@@ -32,6 +32,7 @@ pub struct EntityMonitorSnapshot {
     pub local_buffs: Vec<BuffUpdateState>,
     pub boss_buffs: HashMap<String, Vec<BuffUpdateState>>,
     pub teammate_buffs: HashMap<String, Vec<BuffUpdateState>>,
+    pub dead_teammates: Vec<String>,
     pub skill_cds: Vec<SkillCdState>,
     pub panel_attrs: Vec<PanelAttrState>,
     pub shield_current_hp: i64,
@@ -143,6 +144,13 @@ impl BuffPublishFilter {
             || self.teammate_any_source_ids.contains(&base_id)
             || (local_player_applied && self.teammate_local_source_ids.contains(&base_id))
             || (target_self_applied && self.teammate_self_source_ids.contains(&base_id))
+    }
+
+    fn has_teammate_watches(&self) -> bool {
+        self.monitor_all_teammate
+            || !self.teammate_any_source_ids.is_empty()
+            || !self.teammate_local_source_ids.is_empty()
+            || !self.teammate_self_source_ids.is_empty()
     }
 }
 
@@ -409,9 +417,23 @@ impl EntityMonitorProjection {
             DomainEvent::AttributeChanged {
                 entity,
                 attr_id,
+                previous,
                 current: AttributeValue::Int(value),
                 ..
-            } => self.apply_integer_attribute(*entity, *attr_id, *value, entities),
+            } => {
+                let mut mask = self.apply_integer_attribute(*entity, *attr_id, *value, entities);
+                if *attr_id == attr_type::ATTR_ACTOR_STATE
+                    && self.is_teammate_death_edge(*entity, previous.as_ref(), *value, entities)
+                {
+                    mask |= TopicMask::MONSTER;
+                }
+                mask
+            }
+            DomainEvent::TeamMembershipChanged { .. }
+                if self.buff_filter.has_teammate_watches() =>
+            {
+                TopicMask::MONSTER
+            }
             DomainEvent::TempAttributeChanged { entity, .. }
                 if self.local_player == Some(*entity) =>
             {
@@ -692,6 +714,7 @@ impl EntityMonitorProjection {
             local_buffs,
             boss_buffs,
             teammate_buffs,
+            dead_teammates: self.dead_teammates(entities),
             skill_cds,
             panel_attrs,
             shield_current_hp: self.shield_current_hp,
@@ -746,6 +769,40 @@ impl EntityMonitorProjection {
                 self.entity_duration.track_states(entities)
             },
         }
+    }
+
+    fn is_teammate_death_edge(
+        &self,
+        entity: EntityRef,
+        previous: Option<&AttributeValue>,
+        current: i64,
+        entities: &EntityContext,
+    ) -> bool {
+        if is_dead_actor_state(previous) == (current == attr_type::ACTOR_STATE_DEAD)
+            || !self.buff_filter.has_teammate_watches()
+        {
+            return false;
+        }
+        let roles = entities.roles(entity.uuid);
+        roles.is_team_member && !roles.is_local_player
+    }
+
+    fn dead_teammates(&self, entities: &EntityContext) -> Vec<String> {
+        if !self.buff_filter.has_teammate_watches() {
+            return Vec::new();
+        }
+        let local = entities.local_player().map(|entity| entity.uuid);
+        let mut dead: Vec<EntityUuid> = entities
+            .team_members()
+            .filter(|uuid| Some(*uuid) != local)
+            .filter(|uuid| {
+                entities
+                    .entity(*uuid)
+                    .is_some_and(|state| state.is_present && state.is_dead)
+            })
+            .collect();
+        dead.sort_unstable();
+        dead.into_iter().map(|uuid| uuid.0.to_string()).collect()
     }
 
     fn clear_local_runtime(&mut self) {
@@ -1106,6 +1163,10 @@ fn cd_inputs(entities: &EntityContext, uuid: EntityUuid) -> (f32, f32, f32, Hash
     )
 }
 
+fn is_dead_actor_state(value: Option<&AttributeValue>) -> bool {
+    matches!(value, Some(AttributeValue::Int(state)) if *state == attr_type::ACTOR_STATE_DEAD)
+}
+
 fn integer_attr(attributes: &HashMap<i32, AttributeValue>, attr_id: i32) -> i64 {
     match attributes.get(&attr_id) {
         Some(AttributeValue::Int(value)) => *value,
@@ -1220,14 +1281,14 @@ mod tests {
         scheduler: &mut DeadlineScheduler,
         sequence: u64,
         observations: Vec<ProtocolObservation>,
-    ) {
+    ) -> TopicMask {
         let events = entities.apply_batch(ProtocolBatch {
             meta: meta(sequence, sequence as i64 * 1_000),
             observations,
         });
-        for event in events {
-            projection.apply(&event, entities, scheduler);
-        }
+        events.iter().fold(TopicMask::EMPTY, |mask, event| {
+            mask | projection.apply(event, entities, scheduler)
+        })
     }
 
     fn seed_local_player(
@@ -3001,6 +3062,196 @@ mod tests {
                 summon(cart2, None),
             );
             assert_eq!(tracks(&projection, &entities).len(), 1);
+        }
+    }
+
+    mod dead_teammates {
+        use super::*;
+        use crate::live::runtime::events::EntityKind;
+
+        const LOCAL: EntityUuid = EntityUuid(10);
+        /// Any non-dead `EActorState`; only `ACTOR_STATE_DEAD` is special.
+        const ALIVE: i64 = 1;
+        const BUSY: i64 = 2;
+
+        struct Harness {
+            projection: EntityMonitorProjection,
+            entities: EntityContext,
+            scheduler: DeadlineScheduler,
+            sequence: u64,
+        }
+
+        impl Harness {
+            /// The local player in a party with `members`, every one in range,
+            /// while the teammate matrix watches a buff when `watching`.
+            fn new(members: &[EntityUuid], strangers: &[EntityUuid], watching: bool) -> Self {
+                let mut harness = Self {
+                    projection: EntityMonitorProjection::default(),
+                    entities: EntityContext::new(),
+                    scheduler: DeadlineScheduler::new(),
+                    sequence: 0,
+                };
+                if watching {
+                    harness.watch_teammates();
+                }
+                let mut observations = vec![
+                    appeared(LOCAL),
+                    ProtocolObservation::LocalPlayerChanged { uuid: Some(LOCAL) },
+                ];
+                observations.extend(members.iter().chain(strangers).map(|uuid| appeared(*uuid)));
+                observations.push(ProtocolObservation::TeamMembersUpdated {
+                    members: std::iter::once(LOCAL)
+                        .chain(members.iter().copied())
+                        .collect(),
+                });
+                harness.apply(observations);
+                harness
+            }
+
+            fn watch_teammates(&mut self) {
+                let mut config = MonitorRuntimeSnapshot::default();
+                config.teammate.any_source_ids.push(77);
+                self.projection.apply_config(
+                    &config,
+                    Arc::default(),
+                    &self.entities,
+                    MonoTimeMs(0),
+                );
+            }
+
+            fn apply(&mut self, observations: Vec<ProtocolObservation>) -> TopicMask {
+                self.sequence += 1;
+                apply_observations(
+                    &mut self.projection,
+                    &mut self.entities,
+                    &mut self.scheduler,
+                    self.sequence,
+                    observations,
+                )
+            }
+
+            fn dead_teammates(&self) -> Vec<String> {
+                self.projection.snapshot(&self.entities).dead_teammates
+            }
+        }
+
+        fn appeared(uuid: EntityUuid) -> ProtocolObservation {
+            ProtocolObservation::EntityAppeared {
+                uuid,
+                kind: EntityKind::Character,
+            }
+        }
+
+        fn actor_state(
+            uuid: EntityUuid,
+            state: i64,
+            origin: ObservationOrigin,
+        ) -> ProtocolObservation {
+            ProtocolObservation::AttributeUpdated {
+                uuid,
+                attr_id: attr_type::ATTR_ACTOR_STATE,
+                value: AttributeValue::Int(state),
+                origin,
+            }
+        }
+
+        fn died(uuid: EntityUuid) -> ProtocolObservation {
+            actor_state(uuid, attr_type::ACTOR_STATE_DEAD, ObservationOrigin::Delta)
+        }
+
+        #[test]
+        fn lists_only_in_range_dead_party_members_in_ascending_order() {
+            let (first, second, alive, departed, stranger) = (
+                EntityUuid(20),
+                EntityUuid(30),
+                EntityUuid(40),
+                EntityUuid(50),
+                EntityUuid(60),
+            );
+            let mut harness = Harness::new(&[second, first, alive, departed], &[stranger], true);
+            harness.apply(vec![
+                died(second),
+                died(first),
+                died(LOCAL),
+                died(departed),
+                died(stranger),
+            ]);
+            harness.apply(vec![ProtocolObservation::EntityDisappeared {
+                uuid: departed,
+            }]);
+
+            assert_eq!(
+                harness.dead_teammates(),
+                vec![first.0.to_string(), second.0.to_string()]
+            );
+        }
+
+        #[test]
+        fn corpse_first_seen_in_a_snapshot_is_published() {
+            let teammate = EntityUuid(20);
+            let mut harness = Harness::new(&[], &[], true);
+            harness.apply(vec![ProtocolObservation::TeamMembersUpdated {
+                members: vec![teammate],
+            }]);
+            harness.apply(vec![appeared(teammate)]);
+
+            // A snapshot corpse raises no `DeathOccurred`; only the ActorState
+            // flip can mark the matrix dirty.
+            let mask = harness.apply(vec![actor_state(
+                teammate,
+                attr_type::ACTOR_STATE_DEAD,
+                ObservationOrigin::Snapshot,
+            )]);
+
+            assert!(mask.contains(TopicMask::MONSTER));
+            assert_eq!(harness.dead_teammates(), vec![teammate.0.to_string()]);
+        }
+
+        #[test]
+        fn revival_marks_monster_but_living_state_changes_and_strangers_do_not() {
+            let (teammate, stranger) = (EntityUuid(20), EntityUuid(60));
+            let mut harness = Harness::new(&[teammate], &[stranger], true);
+            harness.apply(vec![died(teammate), died(stranger)]);
+            assert_eq!(harness.dead_teammates(), vec![teammate.0.to_string()]);
+
+            let revived =
+                harness.apply(vec![actor_state(teammate, ALIVE, ObservationOrigin::Delta)]);
+            assert!(revived.contains(TopicMask::MONSTER));
+            assert!(harness.dead_teammates().is_empty());
+
+            let busy = harness.apply(vec![actor_state(teammate, BUSY, ObservationOrigin::Delta)]);
+            assert!(!busy.contains(TopicMask::MONSTER));
+
+            let stranger_revived =
+                harness.apply(vec![actor_state(stranger, ALIVE, ObservationOrigin::Delta)]);
+            assert!(!stranger_revived.contains(TopicMask::MONSTER));
+        }
+
+        #[test]
+        fn nothing_is_published_while_the_teammate_matrix_is_unused() {
+            let teammate = EntityUuid(20);
+            let mut harness = Harness::new(&[teammate], &[], false);
+            harness.apply(vec![died(teammate)]);
+            assert!(harness.dead_teammates().is_empty());
+
+            let revived =
+                harness.apply(vec![actor_state(teammate, ALIVE, ObservationOrigin::Delta)]);
+            assert!(!revived.contains(TopicMask::MONSTER));
+        }
+
+        #[test]
+        fn roster_changes_mark_monster_only_while_teammates_are_watched() {
+            let mut harness = Harness::new(&[], &[], false);
+            let unwatched = harness.apply(vec![ProtocolObservation::TeamMembersUpdated {
+                members: vec![EntityUuid(20)],
+            }]);
+            assert!(!unwatched.contains(TopicMask::MONSTER));
+
+            harness.watch_teammates();
+            let watched = harness.apply(vec![ProtocolObservation::TeamMembersUpdated {
+                members: vec![EntityUuid(30)],
+            }]);
+            assert!(watched.contains(TopicMask::MONSTER));
         }
     }
 }

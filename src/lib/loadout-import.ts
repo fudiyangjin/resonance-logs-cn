@@ -5,10 +5,12 @@ import {
   createDefaultMonsterMonitorProfile,
   createDefaultOverlayTextStyle,
   createDefaultSkillMonitorProfile,
+  createDefaultTeammatePanelStyle,
   deepCloneSettings,
   MAX_BUFF_COVERAGE_ENTRIES,
   omitProfileId,
   normalizeHistorySettings,
+  TEAMMATE_DEAD_ROW_PLACEMENTS,
   type EntityDurationEntry,
   type InlineBuffFormat,
   type LiveMeterProfile,
@@ -108,6 +110,9 @@ const customPanelStyleSchema = v.object({
   ...overlayTextStyleEntries,
 });
 
+// The dead-teammate fields postdate the teammate style; optional for the
+// same reason as the text-style trio above.
+const teammatePanelStyleDefaults = createDefaultTeammatePanelStyle();
 const teammatePanelStyleSchema = v.object({
   gap: finiteNumberSchema,
   columnGap: finiteNumberSchema,
@@ -120,6 +125,14 @@ const teammatePanelStyleSchema = v.object({
   rowHeight: finiteNumberSchema,
   nameColumnWidth: finiteNumberSchema,
   buffColumnWidth: finiteNumberSchema,
+  deadNameColor: v.optional(
+    v.string(),
+    teammatePanelStyleDefaults.deadNameColor,
+  ),
+  deadRowPlacement: v.optional(
+    v.picklist(TEAMMATE_DEAD_ROW_PLACEMENTS),
+    teammatePanelStyleDefaults.deadRowPlacement,
+  ),
 });
 
 const textBuffPanelStyleSchema = v.object({
@@ -538,6 +551,10 @@ const teammateColumnSchema = v.pipe(
   v.string(),
   v.regex(/^(?:buff:\d+|category:(?:food|alchemy))$/),
 );
+const teammateColumnStyleSchema = v.object({
+  progressColor: v.optional(v.string()),
+  valueColor: v.optional(v.string()),
+});
 
 const monsterProfileSchema = v.object({
   name: v.string(),
@@ -555,6 +572,10 @@ const monsterProfileSchema = v.object({
   teammateBuffColumnOrder: v.optional(
     v.array(teammateColumnSchema),
     defaultClone(defaultMonster.teammateBuffColumnOrder ?? []),
+  ),
+  teammateBuffColumnStyles: v.optional(
+    v.record(teammateColumnSchema, teammateColumnStyleSchema),
+    defaultClone(defaultMonster.teammateBuffColumnStyles ?? {}),
   ),
   fantasyWhitelistMonsterIds: numberArraySchema,
   fantasyMonsterAliases: numericStringRecordSchema,

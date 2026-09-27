@@ -234,6 +234,10 @@ impl EntityContext {
         self.entities.values()
     }
 
+    pub(crate) fn team_members(&self) -> impl Iterator<Item = EntityUuid> {
+        self.team_members.iter().copied()
+    }
+
     #[must_use]
     pub(crate) fn active_buffs(&self, uuid: EntityUuid) -> impl Iterator<Item = &BuffState> {
         self.entities

@@ -1048,10 +1048,28 @@ export type TeammateBuffColumnKey =
   | `buff:${number}`
   | `category:${BuffCategoryKey}`;
 
+/** Per-column overrides of the matrix colors; unset keeps the panel color. */
+export type TeammateBuffColumnStyle = {
+  progressColor?: string;
+  valueColor?: string;
+};
+
+export type TeammateBuffColumnStyleMap = Partial<
+  Record<TeammateBuffColumnKey, TeammateBuffColumnStyle>
+>;
+
+/** Where dead teammates' rows go relative to the living ones. */
+export const TEAMMATE_DEAD_ROW_PLACEMENTS = ["last", "first", "keep"] as const;
+
+export type TeammateDeadRowPlacement =
+  (typeof TEAMMATE_DEAD_ROW_PLACEMENTS)[number];
+
 export type TeammatePanelStyle = CustomPanelStyle & {
   rowHeight: number;
   nameColumnWidth: number;
   buffColumnWidth: number;
+  deadNameColor: string;
+  deadRowPlacement: TeammateDeadRowPlacement;
 };
 
 export type ShieldDetailStyle = {
@@ -1139,6 +1157,8 @@ export type MonsterMonitorConfig = {
   teammateBuffIds: number[];
   teammateBuffCategories?: BuffCategoryKey[];
   teammateBuffColumnOrder?: TeammateBuffColumnKey[];
+  /** Pruned to the configured columns whenever a column is removed. */
+  teammateBuffColumnStyles?: TeammateBuffColumnStyleMap;
   fantasyWhitelistMonsterIds: number[];
   fantasyMonsterAliases: Record<string, string>;
   dbmAliases: Record<string, string>;
@@ -1601,7 +1621,15 @@ export function createDefaultTeammatePanelStyle(): TeammatePanelStyle {
     rowHeight: 22,
     nameColumnWidth: 128,
     buffColumnWidth: 72,
+    deadNameColor: "#ef4444",
+    deadRowPlacement: "last",
   };
+}
+
+export function isTeammateDeadRowPlacement(
+  value: unknown,
+): value is TeammateDeadRowPlacement {
+  return (TEAMMATE_DEAD_ROW_PLACEMENTS as readonly unknown[]).includes(value);
 }
 
 export function ensureTeammatePanelStyle(
@@ -1659,6 +1687,15 @@ export function ensureTeammatePanelStyle(
         ),
       ),
     ),
+    deadNameColor:
+      (style && "deadNameColor" in style ? style.deadNameColor : undefined) ||
+      base.deadNameColor,
+    deadRowPlacement:
+      style &&
+      "deadRowPlacement" in style &&
+      isTeammateDeadRowPlacement(style.deadRowPlacement)
+        ? style.deadRowPlacement
+        : base.deadRowPlacement,
   };
 }
 
@@ -1756,6 +1793,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     teammateBuffIds: [],
     teammateBuffCategories: [],
     teammateBuffColumnOrder: [],
+    teammateBuffColumnStyles: {},
     fantasyWhitelistMonsterIds: [],
     fantasyMonsterAliases: {},
     dbmAliases: {},
@@ -1834,6 +1872,7 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "teammateBuffIds",
   "teammateBuffCategories",
   "teammateBuffColumnOrder",
+  "teammateBuffColumnStyles",
   "fantasyWhitelistMonsterIds",
   "fantasyMonsterAliases",
   "dbmAliases",

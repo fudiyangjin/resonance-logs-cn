@@ -1553,6 +1553,7 @@ export const enUSMessages = {
   "monsterMonitor.teammate.emptySearch": "No matching teammate buffs",
   "monsterMonitor.teammate.groupTitle": "Monitored Teammate Buffs",
   "monsterMonitor.teammate.styleTitle": "Teammate Buff Matrix Style",
+  "monsterMonitor.teammate.columnColorReset": "Reset",
   "monsterMonitor.fantasy.title": "Teammate Fantasies",
   "monsterMonitor.fantasy.description":
     "Resonance skill summoned monsters released by teammates.",
@@ -1612,6 +1613,11 @@ export const enUSMessages = {
   "monsterMonitor.style.rowHeight": "Row Height",
   "monsterMonitor.style.nameColumnWidth": "Teammate Column Width",
   "monsterMonitor.style.buffColumnWidth": "Buff Column Width",
+  "monsterMonitor.style.deadNameColor": "Dead Name Color",
+  "monsterMonitor.style.deadRowPlacement": "Dead Teammate Position",
+  "monsterMonitor.style.deadRowPlacement.last": "Move to Bottom",
+  "monsterMonitor.style.deadRowPlacement.first": "Move to Top",
+  "monsterMonitor.style.deadRowPlacement.keep": "Keep in Place",
   "monsterMonitor.hate.displayTitle": "Hate List Display",
   "monsterMonitor.hate.displayDescription":
     "Configure the monster hate panel's player limit and style. Control its visibility in Enable Window.",
@@ -1711,6 +1717,7 @@ export const enUSMessages = {
   "monsterOverlay.placeholder.entityDuration": "Entity Duration Preview",
   "monsterOverlay.placeholder.target": "Target {uid}",
   "monsterOverlay.placeholder.teammate": "Teammate Preview",
+  "monsterOverlay.placeholder.deadTeammate": "Dead Teammate Preview",
   "monsterOverlay.placeholder.fantasy": "Fantasy Preview",
   "monsterOverlay.placeholder.buffName": "Sample Buff",
   "monsterOverlay.entity.uid": "UID {uid}",

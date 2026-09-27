@@ -219,6 +219,10 @@ pub struct LiveMonsterPayload {
     pub revision: u64,
     pub boss_buffs: HashMap<String, Vec<BuffUpdateState>>,
     pub teammate_buffs: HashMap<String, Vec<BuffUpdateState>>,
+    /// Entity UUIDs of non-local party members that are in range and dead,
+    /// ascending. Empty while no teammate buff is monitored.
+    #[serde(default)]
+    pub dead_teammates: Vec<String>,
     pub boss_mechanics: Vec<BossDbmEvent>,
     pub hate_lists: HashMap<String, Vec<HateEntry>>,
     pub stun: Vec<StunEntry>,

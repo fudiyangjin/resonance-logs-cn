@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { BuffUpdateState } from "$lib/api";
-import { latestBuffsByCategory } from "./monster-teammate-projection";
+import {
+  latestBuffsByCategory,
+  orderTeammateUuids,
+} from "./monster-teammate-projection";
 
 function buff(baseId: number, createTimeMs: number): BuffUpdateState {
   return {
@@ -48,5 +51,42 @@ describe("latestBuffsByCategory", () => {
     );
 
     expect(result.size).toBe(0);
+  });
+});
+
+describe("orderTeammateUuids", () => {
+  it("sorts by code unit and moves dead uuids last", () => {
+    expect(
+      orderTeammateUuids(["9", "10", "2"], new Set(["9"]), "last"),
+    ).toEqual(["10", "2", "9"]);
+  });
+
+  it("moves dead uuids first without changing their relative order", () => {
+    expect(
+      orderTeammateUuids(["9", "10", "2"], new Set(["9", "2"]), "first"),
+    ).toEqual(["2", "9", "10"]);
+  });
+
+  it("leaves dead uuids in the stable order when placement is keep", () => {
+    expect(
+      orderTeammateUuids(["9", "10", "2"], new Set(["10"]), "keep"),
+    ).toEqual(["10", "2", "9"]);
+  });
+
+  it("collapses duplicate uuids", () => {
+    expect(orderTeammateUuids(["b", "a", "b"], new Set(), "last")).toEqual([
+      "a",
+      "b",
+    ]);
+  });
+
+  it("keeps a dead uuid that is not a buff-map key", () => {
+    expect(
+      orderTeammateUuids(
+        ["living", "dead-only"],
+        new Set(["dead-only"]),
+        "last",
+      ),
+    ).toEqual(["living", "dead-only"]);
   });
 });

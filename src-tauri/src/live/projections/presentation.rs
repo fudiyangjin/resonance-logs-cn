@@ -288,6 +288,7 @@ impl PresentationProjection {
             revision: self.monster_revision,
             boss_buffs: monitored.boss_buffs.clone(),
             teammate_buffs: monitored.teammate_buffs.clone(),
+            dead_teammates: monitored.dead_teammates.clone(),
             boss_mechanics: monitored.boss_mechanics.clone(),
             hate_lists: monitored.hate_lists.clone(),
             stun: monitored.stun.clone(),

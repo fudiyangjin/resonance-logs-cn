@@ -74,6 +74,10 @@ const _bossBuffMap = $derived.by(() =>
 const _teammateBuffMap = $derived.by(() =>
   entityBuffMap(liveMonsterStore.data?.teammateBuffs ?? {}),
 );
+const _deadTeammateSet = $derived.by(
+  (): ReadonlySet<EntityId> =>
+    new Set(liveMonsterStore.data?.deadTeammates ?? []),
+);
 const _bossHateMap = $derived.by(
   () =>
     new Map<EntityId, HateEntry[]>(
@@ -148,6 +152,11 @@ export function monsterBossBuffs() {
 
 export function monsterTeammateBuffs() {
   return _teammateBuffMap;
+}
+
+/** Teammates in range that are dead; their rows stay even without buffs. */
+export function monsterDeadTeammates() {
+  return _deadTeammateSet;
 }
 
 export function monsterHateLists() {

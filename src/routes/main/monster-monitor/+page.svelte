@@ -6,6 +6,7 @@
   import type { MonsterBuffSourceScope } from "$lib/bindings";
   import {
     getBuffCategoryDefinitions,
+    getBuffCategoryLabel,
     getAvailableBuffDefinitions,
     lookupBuffMeta,
     lookupDefaultBuffName,
@@ -33,17 +34,28 @@
     ensureDbmAliases,
     ensureTeammatePanelStyle,
     getGlobalBuffAliases,
+    isTeammateDeadRowPlacement,
     type CustomPanelStyle,
     type EntityDurationEntry,
     type TeammateBuffColumnKey,
+    type TeammateBuffColumnStyle,
     type TeammatePanelStyle,
     type BuffAlertRule,
   } from "$lib/settings-store";
+  import {
+    orderedTeammateColumns,
+    patchTeammateColumns,
+    resolveTeammateColumnColors,
+    syncTeammateColumnOrder,
+    withTeammateBuffColumnStyle,
+    type TeammateColumnRef,
+  } from "$lib/teammate-buff-columns";
   import { updateMonsterMonitor } from "$lib/monster-monitor-profile.svelte.js";
   import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
   import { resolveMonsterBuffSourceScope as resolveScopeIn } from "$lib/voice/association";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
   import TabEntityDuration from "./tab-entity-duration.svelte";
+  import TeammateColumnColors from "./teammate-column-colors.svelte";
   import {
     createEntryFromEntityDurationPreset,
     getEntityDurationPresets,
@@ -75,19 +87,7 @@
     label: string;
     rawName: string;
   };
-  type TeammateColumnItem =
-    | {
-        key: TeammateBuffColumnKey;
-        kind: "buff";
-        label: string;
-        buffId: number;
-      }
-    | {
-        key: TeammateBuffColumnKey;
-        kind: "category";
-        label: string;
-        categoryKey: BuffCategoryKey;
-      };
+  type TeammateColumnItem = TeammateColumnRef & { label: string };
 
   const availableBuffDefinitions = getAvailableBuffDefinitions();
   const availableBuffMap = new Map<number, BuffDefinition>(
@@ -209,11 +209,6 @@
   const monsterBuffVoiceConfigs = $derived.by(() =>
     ensureBuffVoiceConfigs(monsterMonitor.monsterBuffVoiceConfigs),
   );
-  const selectedTeammateBuffCategories = $derived.by(() =>
-    buffCategoryDefinitions.filter((category) =>
-      teammateBuffCategories.includes(category.key),
-    ),
-  );
   const monsterConfiguredBuffIds = $derived.by(() =>
     Array.from(new Set([...globalBuffIds, ...selfAppliedBuffIds])),
   );
@@ -223,29 +218,23 @@
     ),
   );
   const teammateColumnItems = $derived.by(() =>
-    orderTeammateColumnItems(
-      [
-        ...teammateBuffIds.map((buffId): TeammateColumnItem => {
-          const item: TeammateColumnItem = {
-            key: teammateBuffColumnKey(buffId),
-            kind: "buff",
-            label: buffName(buffId),
-            buffId,
-          };
-          return item;
-        }),
-        ...selectedTeammateBuffCategories.map(
-          (category): TeammateColumnItem => ({
-            key: teammateCategoryColumnKey(category.key),
-            kind: "category",
-            label: category.label,
-            categoryKey: category.key,
-          }),
-        ),
-      ],
-      monsterMonitor.teammateBuffColumnOrder ?? [],
+    orderedTeammateColumns(monsterMonitor).map(
+      (column): TeammateColumnItem => ({
+        ...column,
+        label:
+          column.kind === "buff"
+            ? buffName(column.buffId)
+            : getBuffCategoryLabel(column.categoryKey),
+      }),
     ),
   );
+  const teammateColumnStyles = $derived(
+    monsterMonitor.teammateBuffColumnStyles,
+  );
+  const teammatePanelColors = $derived({
+    progressColor: teammatePanelStyle.progressColor,
+    valueColor: teammatePanelStyle.valueColor,
+  });
   const configuredAlertBuffIds = $derived.by(() =>
     Object.keys(buffAlerts)
       .map((baseId) => Number(baseId))
@@ -349,16 +338,6 @@
     });
   });
 
-  function teammateBuffColumnKey(buffId: number): TeammateBuffColumnKey {
-    return `buff:${buffId}`;
-  }
-
-  function teammateCategoryColumnKey(
-    categoryKey: BuffCategoryKey,
-  ): TeammateBuffColumnKey {
-    return `category:${categoryKey}`;
-  }
-
   function stripFantasySuffix(name: string): string {
     const index = name.indexOf("-");
     return (index >= 0 ? name.slice(0, index) : name).trim() || name;
@@ -376,26 +355,6 @@
     const alias =
       monsterMonitor.fantasyMonsterAliases?.[String(monsterId)]?.trim();
     return alias || defaultFantasyMonsterLabel(monsterId);
-  }
-
-  function orderTeammateColumnItems(
-    items: TeammateColumnItem[],
-    order: TeammateBuffColumnKey[],
-  ): TeammateColumnItem[] {
-    const itemMap = new Map(items.map((item) => [item.key, item]));
-    const ordered: TeammateColumnItem[] = [];
-    const used = new Set<TeammateBuffColumnKey>();
-    for (const key of order) {
-      const item = itemMap.get(key);
-      if (!item || used.has(key)) continue;
-      ordered.push(item);
-      used.add(key);
-    }
-    for (const item of items) {
-      if (used.has(item.key)) continue;
-      ordered.push(item);
-    }
-    return ordered;
   }
 
   function removeAlertIfUnmonitored(
@@ -533,69 +492,55 @@
   function toggleTeammateBuff(buffId: number) {
     updateMonsterMonitor((state) => {
       const current = state.teammateBuffIds;
-      const exists = current.includes(buffId);
-      const teammateBuffIds = exists
-        ? current.filter((id) => id !== buffId)
-        : [...current, buffId];
-      return {
-        ...state,
-        teammateBuffIds,
-        teammateBuffColumnOrder: syncTeammateColumnOrder({
-          ...state,
-          teammateBuffIds,
-        }),
-      };
+      return patchTeammateColumns(state, {
+        teammateBuffIds: current.includes(buffId)
+          ? current.filter((id) => id !== buffId)
+          : [...current, buffId],
+      });
     });
   }
 
   function toggleTeammateBuffCategory(categoryKey: BuffCategoryKey) {
     updateMonsterMonitor((state) => {
       const current = state.teammateBuffCategories ?? [];
-      const exists = current.includes(categoryKey);
-      const teammateBuffCategories = exists
-        ? current.filter((key) => key !== categoryKey)
-        : [...current, categoryKey];
-      return {
-        ...state,
-        teammateBuffCategories,
-        teammateBuffColumnOrder: syncTeammateColumnOrder({
-          ...state,
-          teammateBuffCategories,
-        }),
-      };
+      return patchTeammateColumns(state, {
+        teammateBuffCategories: current.includes(categoryKey)
+          ? current.filter((key) => key !== categoryKey)
+          : [...current, categoryKey],
+      });
     });
   }
 
   function removeTeammateBuff(buffId: number) {
-    updateMonsterMonitor((state) => {
-      const teammateBuffIds = state.teammateBuffIds.filter(
-        (id) => id !== buffId,
-      );
-      return {
-        ...state,
-        teammateBuffIds,
-        teammateBuffColumnOrder: syncTeammateColumnOrder({
-          ...state,
-          teammateBuffIds,
-        }),
-      };
-    });
+    updateMonsterMonitor((state) =>
+      patchTeammateColumns(state, {
+        teammateBuffIds: state.teammateBuffIds.filter((id) => id !== buffId),
+      }),
+    );
   }
 
   function removeTeammateBuffCategory(categoryKey: BuffCategoryKey) {
-    updateMonsterMonitor((state) => {
-      const teammateBuffCategories = (
-        state.teammateBuffCategories ?? []
-      ).filter((key) => key !== categoryKey);
-      return {
-        ...state,
-        teammateBuffCategories,
-        teammateBuffColumnOrder: syncTeammateColumnOrder({
-          ...state,
-          teammateBuffCategories,
-        }),
-      };
-    });
+    updateMonsterMonitor((state) =>
+      patchTeammateColumns(state, {
+        teammateBuffCategories: (state.teammateBuffCategories ?? []).filter(
+          (key) => key !== categoryKey,
+        ),
+      }),
+    );
+  }
+
+  /** `null` resets the column to the panel colors. */
+  function updateTeammateColumnStyle(
+    key: TeammateBuffColumnKey,
+    patch: TeammateBuffColumnStyle | null,
+  ) {
+    updateMonsterMonitor((state) => ({
+      teammateBuffColumnStyles: withTeammateBuffColumnStyle(
+        state.teammateBuffColumnStyles,
+        key,
+        patch,
+      ),
+    }));
   }
 
   function addFantasyMonster(monsterId: number) {
@@ -851,37 +796,6 @@
         [key]: value,
       }),
     }));
-  }
-
-  function getTeammateColumnKeys(
-    state: Pick<
-      typeof SETTINGS.monsterMonitor.state,
-      "teammateBuffIds" | "teammateBuffCategories"
-    >,
-  ): TeammateBuffColumnKey[] {
-    return [
-      ...(state.teammateBuffIds ?? []).map(teammateBuffColumnKey),
-      ...(state.teammateBuffCategories ?? []).map(teammateCategoryColumnKey),
-    ];
-  }
-
-  function syncTeammateColumnOrder(
-    state: Pick<
-      typeof SETTINGS.monsterMonitor.state,
-      "teammateBuffIds" | "teammateBuffCategories" | "teammateBuffColumnOrder"
-    >,
-  ): TeammateBuffColumnKey[] {
-    const keys = getTeammateColumnKeys(state);
-    const keySet = new Set(keys);
-    const next: TeammateBuffColumnKey[] = [];
-    for (const key of state.teammateBuffColumnOrder ?? []) {
-      if (!keySet.has(key) || next.includes(key)) continue;
-      next.push(key);
-    }
-    for (const key of keys) {
-      if (!next.includes(key)) next.push(key);
-    }
-    return next;
   }
 
   function moveTeammateColumn(
@@ -1898,6 +1812,17 @@
                 <span class="text-foreground min-w-0 flex-1 truncate text-sm">
                   {item.label}
                 </span>
+                <TeammateColumnColors
+                  colors={resolveTeammateColumnColors(
+                    teammateColumnStyles,
+                    item.key,
+                    teammatePanelColors,
+                  )}
+                  customized={teammateColumnStyles?.[item.key] !== undefined}
+                  onChange={(patch) =>
+                    updateTeammateColumnStyle(item.key, patch)}
+                  onReset={() => updateTeammateColumnStyle(item.key, null)}
+                />
                 <button
                   type="button"
                   class="order-button"
@@ -2057,6 +1982,31 @@
           />
           <strong>{teammatePanelStyle.buffColumnWidth}px</strong>
         </label>
+
+        <label class="style-field">
+          <span>{t("monsterMonitor.style.deadRowPlacement")}</span>
+          <select
+            class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-sm"
+            value={teammatePanelStyle.deadRowPlacement}
+            onchange={(event) => {
+              const placement = (event.currentTarget as HTMLSelectElement)
+                .value;
+              if (isTeammateDeadRowPlacement(placement)) {
+                updateTeammatePanelStyle("deadRowPlacement", placement);
+              }
+            }}
+          >
+            <option value="last"
+              >{t("monsterMonitor.style.deadRowPlacement.last")}</option
+            >
+            <option value="first"
+              >{t("monsterMonitor.style.deadRowPlacement.first")}</option
+            >
+            <option value="keep"
+              >{t("monsterMonitor.style.deadRowPlacement.keep")}</option
+            >
+          </select>
+        </label>
       </div>
 
       <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -2068,6 +2018,19 @@
             oninput={(event) =>
               updateTeammatePanelStyle(
                 "nameColor",
+                (event.currentTarget as HTMLInputElement).value,
+              )}
+          />
+        </label>
+
+        <label class="color-field">
+          <span>{t("monsterMonitor.style.deadNameColor")}</span>
+          <input
+            type="color"
+            value={teammatePanelStyle.deadNameColor}
+            oninput={(event) =>
+              updateTeammatePanelStyle(
+                "deadNameColor",
                 (event.currentTarget as HTMLInputElement).value,
               )}
           />
@@ -3202,6 +3165,7 @@
 
   .teammate-order-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
     padding: 8px;
