@@ -46,7 +46,8 @@ S4 以降、**{{ui:skillMonitor.customPanel.newFactor}}** で作成されるの�
 
 **{{ui:skillMonitor.customPanel.new}}** をクリックして作成し、中身を追加します：
 
-- **{{ui:skillMonitor.customPanel.addBuff}}**：Buff 検索から選択し、現在のモニターエリアにだけ追加します；
+- **{{ui:skillMonitor.customPanel.addBuff}}**：Buff 検索から選択し、現在のモニターエリアにだけ追加します。[複合 Buff](./buff.md#複合-buff) も選べます；
+- **{{ui:skillMonitor.customPanel.entries.stateOnly}}**：Buff の行を常に表示し、有効 / 無効だけを示します（時間は表示しません）；
 - **{{ui:skillMonitor.customPanel.counter.title}}**：プリセットルールまたは自作のカスタムルールからカウンタースロットを選びます；
 - **{{ui:skillMonitor.customPanel.hideWhenZero}}**：カウンターが 0 のときは場所を取りません；
 - **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}**：カウントが目標に達したときに読み上げます。
@@ -54,7 +55,7 @@ S4 以降、**{{ui:skillMonitor.customPanel.newFactor}}** で作成されるの�
 **{{ui:skillMonitor.customPanel.entries.title}}** では、表示名の変更、並び替え、削除ができます。
 
 > [!NOTE]
-> 同じ Buff やカウンタースロットは、**すべての**モニターエリアを通して 1 回しか使えません。ほかのエリアで使用中の項目には「すでに xxx に存在」と表示されます。
+> 同じ Buff やカウンタースロットは、**すべての**カスタムモニターエリアを通して 1 回しか使えません。ほかのエリアで使用中の項目には「すでに xxx に存在」と表示されます。Buff モニターとバフ稼働率はこの制限を受けず、ここに置いた Buff もそれらのエリアで通常どおり表示されます。
 
 ### 組み込みプリセットカウンター
 

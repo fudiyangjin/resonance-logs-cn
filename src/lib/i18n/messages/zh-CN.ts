@@ -1016,6 +1016,9 @@ export const zhCNMessages = {
   "components.buffSearchResultGrid.subtitle.idOnly": "ID {id}",
   "components.buffSearchResultGrid.subtitle.idOnlyUncatalogued":
     "ID {id} · 未收录",
+  "components.buffSearchResultGrid.subtitle.composite": "组合 Buff",
+  "components.buffSearchResultGrid.subtitle.compositeThreshold":
+    "组合 Buff · {total} 选 {count}",
   "components.buffSearchResultGrid.showMore": "显示更多(还有 {remaining} 条)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
   "skillMonitor.layout.title": "实时监控",
@@ -1122,6 +1125,29 @@ export const zhCNMessages = {
   "skillMonitor.buff.placeholder": "搜索 Buff 名称或 ID",
   "skillMonitor.buff.searchPrompt": "请输入名称或 ID 搜索 Buff",
   "skillMonitor.buff.selectedTitle": "已选 Buff",
+  "skillMonitor.buff.composite.title": "组合 Buff",
+  "skillMonitor.buff.composite.description":
+    "多个 Buff 同时存在（或其中至少几个）时生效，可像普通 Buff 一样用于各监控区、覆盖率和语音（全局设置）",
+  "skillMonitor.buff.composite.empty": "还没有组合 Buff",
+  "skillMonitor.buff.composite.references": "被 {count} 个方案引用",
+  "skillMonitor.buff.composite.edit": "编辑",
+  "skillMonitor.buff.composite.new": "新建组合",
+  "skillMonitor.buff.composite.namePlaceholder": "组合名称",
+  "skillMonitor.buff.composite.members": "成员 {count}/{max}（至少 2 个）",
+  "skillMonitor.buff.composite.removeMember": "点击移除",
+  "skillMonitor.buff.composite.memberPlaceholder": "搜索并添加成员 Buff",
+  "skillMonitor.buff.composite.icon": "图标",
+  "skillMonitor.buff.composite.iconNone": "无（以文字显示）",
+  "skillMonitor.buff.composite.condition": "生效条件",
+  "skillMonitor.buff.composite.conditionAll": "全部 {count} 个同时存在",
+  "skillMonitor.buff.composite.conditionAtLeast":
+    "{total} 个中至少 {count} 个同时存在",
+  "skillMonitor.buff.composite.hint":
+    "满足生效条件时显示，持续到同时存在的成员少于所需数量为止（要求全部时即最先结束的成员）。层数：要求全部时为成员的最小层数，否则为当前存在的成员数。成员 Buff 自身的显示不受影响。",
+  "skillMonitor.buff.composite.save": "保存组合",
+  "skillMonitor.buff.composite.deleteTitle": "删除组合「{name}」？",
+  "skillMonitor.buff.composite.deleteDescription":
+    "会同时从 {count} 个方案中移除对它的引用（监控区、覆盖率、告警、语音）。",
   "skillMonitor.buff.alias.title": "Buff 别名设置",
   "skillMonitor.buff.alias.configuredCount": "已设置别名 {count}",
   "skillMonitor.buff.alias.placeholder": "搜索任意 Buff 后设置别名",
@@ -1284,6 +1310,7 @@ export const zhCNMessages = {
   "skillMonitor.customPanel.entries.sourceCounter": "来源：计数器 - {name}",
   "skillMonitor.customPanel.entries.sourceBuff": "来源：Buff - {name}",
   "skillMonitor.customPanel.entries.labelPlaceholder": "显示名称",
+  "skillMonitor.customPanel.entries.stateOnly": "仅显示是否激活（不显示时间）",
   "skillMonitor.customPanel.hideWhenZero": "计数为 0 时隐藏",
   "skillMonitor.customPanel.empty":
     "还没有任何自定义监控区。先点击上方“新建监控区”，再向其中添加 Buff 或计数器。",
@@ -1571,6 +1598,8 @@ export const zhCNMessages = {
   "gameOverlay.timer.infinite": "∞",
   "gameOverlay.timer.empty": "--",
   "gameOverlay.buff.fantasyTierSuffix": "{name} | {level}阶",
+  "gameOverlay.buff.stateActive": "激活",
+  "gameOverlay.buff.stateInactive": "未激活",
   "gameOverlay.timer.seconds": "{value}s",
   "gameOverlay.timer.minutes": "{value}m",
   "gameOverlay.timer.hours": "{value}h",

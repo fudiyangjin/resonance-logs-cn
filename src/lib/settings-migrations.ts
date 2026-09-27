@@ -3,6 +3,10 @@ import { emit, listen } from "@tauri-apps/api/event";
 import { RuneStore } from "@tauri-store/svelte";
 import { tick } from "svelte";
 import { commands } from "./bindings";
+import {
+  ensureBuffComposites,
+  pruneUnknownCompositeRefs,
+} from "./buff-composites";
 import { ensureBuffIconOverrides } from "./buff-icons";
 import {
   SETTINGS,
@@ -482,16 +486,26 @@ export function reconcileMonitoringState(
   state.skillMonitor.buffIconOverrides = ensureBuffIconOverrides(
     state.skillMonitor.buffIconOverrides,
   );
+  state.skillMonitor.buffComposites = ensureBuffComposites(
+    state.skillMonitor.buffComposites,
+  );
+  const compositeIds = new Set(
+    state.skillMonitor.buffComposites.map((composite) => composite.id),
+  );
   // Voice bindings live exactly as long as their subject in the profile
   // that holds them: prune each profile (and the monster mirror) on its
   // own. This also re-keys entity bindings written before they were keyed
-  // by monster id. Idempotent, so every window can run it.
+  // by monster id. References to composites that no longer exist go the
+  // same way. Idempotent, so every window can run it.
   const dropSilentSkills = state.schemaVersion < 7;
   state.skillMonitor.profiles = normalizeSkillProfiles(
     state.skillMonitor.profiles,
   ).map((profile) =>
     pruneSkillProfileVoice(
-      dropSilentSkills ? dropSilentSkillVoice(profile) : profile,
+      pruneUnknownCompositeRefs(
+        dropSilentSkills ? dropSilentSkillVoice(profile) : profile,
+        compositeIds,
+      ),
     ),
   );
   state.monsterMonitor.profiles = normalizeMonsterProfiles(
@@ -837,6 +851,7 @@ function createLegacyStores() {
         autoHideInDailyScenes: false,
         buffAliases: {},
         buffIconOverrides: {},
+        buffComposites: [],
         profiles: [createDefaultSkillMonitorProfile()],
         activeProfileIndex: 0,
       },

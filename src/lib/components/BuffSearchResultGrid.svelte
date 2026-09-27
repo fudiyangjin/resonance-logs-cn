@@ -64,7 +64,14 @@
       {@const disabled = isDisabled(item.baseId)}
       {@const statusLabel = getStatusLabel(item.baseId)}
       {@const defaultName = iconBuff?.name ?? null}
-      {@const subtitle = defaultName && defaultName !== item.name
+      {@const subtitle = item.composite
+        ? item.composite.minActive < item.composite.memberCount
+          ? t("components.buffSearchResultGrid.subtitle.compositeThreshold", {
+              count: item.composite.minActive,
+              total: item.composite.memberCount,
+            })
+          : t("components.buffSearchResultGrid.subtitle.composite")
+        : defaultName && defaultName !== item.name
         ? t("components.buffSearchResultGrid.subtitle.defaultWithId", {
           defaultName,
           id: item.baseId,

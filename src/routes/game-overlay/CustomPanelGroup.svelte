@@ -79,7 +79,7 @@
             progressOpacity={styleConfig.progressOpacity}
             fontSize={styleConfig.fontSize}
             columnGap={styleConfig.columnGap}
-            placeholder={row.isPlaceholder}
+            placeholder={row.isPlaceholder || row.inactive}
             alert={row.alert}
             temporal={row.temporal}
           />

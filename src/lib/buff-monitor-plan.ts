@@ -21,25 +21,34 @@ import type {
 } from "$lib/settings-store";
 
 const EMPTY_IDS: ReadonlySet<number> = new Set<number>();
-const FACTOR_DISPLAY_CANDIDATE_IDS: ReadonlySet<number> = new Set([
+/** Every buff the factor / season-node panel can render. Resolved statically
+ * so keeping them out of the monitor-all catch-all never depends on runtime
+ * season or factor-slot data. */
+const FACTOR_CANDIDATE_IDS: ReadonlySet<number> = new Set([
   ...getSeasonCultivateFactorConfiguredEffectBuffIds(),
   ...getSeasonNodeBuffIds(),
 ]);
-const FACTOR_PUBLISHED_IDS = FACTOR_DISPLAY_CANDIDATE_IDS;
 
+/**
+ * Buff routing for one skill-monitor profile.
+ *
+ * Publication and display are independent: `publishedIds` is the union of
+ * every area's demand and never implies display. Each area renders only the
+ * ids it declares; the monitor-all catch-all is the only place that
+ * subtracts, and only what another rendered area already shows.
+ */
 export type ConfiguredBuffPlan = {
   enabled: boolean;
   monitorAll: boolean;
-  normalDisplayIds: ReadonlySet<number>;
-  customBuffIds: ReadonlySet<number>;
+  /** Ids the ordinary icon/text area renders in the active display mode. */
+  ordinaryIds: ReadonlySet<number>;
+  /** Ids the monitor-all catch-all leaves out: the ordinary selection plus
+   * everything declared by another area that is currently rendered. */
+  catchAllExcludedIds: ReadonlySet<number>;
+  /** Backend publication whitelist; empty while the profile is disabled. */
+  publishedIds: readonly number[];
   /** History timeline whitelist; recorded regardless of live display. */
-  coverageBuffIds: ReadonlySet<number>;
-  liveCoverageBuffIds: ReadonlySet<number>;
-  /** Rendered live by another area; the ordinary monitor area yields to these. */
-  liveOwnedBuffIds: ReadonlySet<number>;
-  factorDisplayCandidateIds: ReadonlySet<number>;
-  factorPublishedIds: ReadonlySet<number>;
-  linkedBuffIds: ReadonlySet<number>;
+  timelineIds: readonly number[];
   hasFactorPanel: boolean;
   coverageEntries: readonly BuffCoverageEntry[];
   customPanelGroups: readonly CustomPanelGroup[];
@@ -55,14 +64,10 @@ export function buildConfiguredBuffPlan(
     return {
       enabled: false,
       monitorAll: false,
-      normalDisplayIds: EMPTY_IDS,
-      customBuffIds: EMPTY_IDS,
-      coverageBuffIds: EMPTY_IDS,
-      liveCoverageBuffIds: EMPTY_IDS,
-      liveOwnedBuffIds: EMPTY_IDS,
-      factorDisplayCandidateIds: EMPTY_IDS,
-      factorPublishedIds: EMPTY_IDS,
-      linkedBuffIds: EMPTY_IDS,
+      ordinaryIds: EMPTY_IDS,
+      catchAllExcludedIds: EMPTY_IDS,
+      publishedIds: [],
+      timelineIds: [],
       hasFactorPanel: false,
       coverageEntries: [],
       customPanelGroups: [],
@@ -82,7 +87,7 @@ export function buildConfiguredBuffPlan(
   const hasFactorPanel = customPanelGroups.some(
     (group) => group.kind === "seasonCultivateFactor",
   );
-  const normalDisplayIds =
+  const ordinaryIds =
     profile.buffDisplayMode === "grouped"
       ? validIdSet(
           buffGroups
@@ -100,25 +105,31 @@ export function buildConfiguredBuffPlan(
       .filter((entry) => entry.sourceType === "buff")
       .map((entry) => entry.sourceId),
   );
-  const coverageBuffIds = validIdSet(
-    coverageEntries.map((entry) => entry.buffId),
-  );
-  const liveCoverageBuffIds = validIdSet(
+  const factorIds = hasFactorPanel ? FACTOR_CANDIDATE_IDS : EMPTY_IDS;
+  const liveCoverageIds = validIdSet(
     coverageEntries
       .filter((entry) => entry.showInLive)
       .map((entry) => entry.buffId),
   );
-  // The flower rotation section renders these itself; only claim them while
-  // that section is actually shown so hiding it restores the ordinary buff
-  // behaviour.
-  const resourceOwnedBuffIds = isFlowerSectionVisible(profile)
+  // The flower rotation section draws these itself; only while it is shown,
+  // so hiding it restores the ordinary behaviour.
+  const flowerIds = isFlowerSectionVisible(profile)
     ? validIdSet(getResourceOwnedBuffIds(profile.selectedClass))
     : EMPTY_IDS;
-  const liveOwnedBuffIds = new Set<number>([
-    ...customBuffIds,
-    ...liveCoverageBuffIds,
-    ...resourceOwnedBuffIds,
-  ]);
+  // Same defaults as `ensureOverlayVisibility`.
+  const showCustomPanels =
+    profile.overlayVisibility?.showCustomPanelGroup ?? true;
+  const showCoverage =
+    profile.overlayVisibility?.showBuffCoverageGroup ?? false;
+
+  const catchAllExcludedIds = new Set<number>(ordinaryIds);
+  if (showCustomPanels) {
+    addIds(catchAllExcludedIds, customBuffIds);
+    addIds(catchAllExcludedIds, factorIds);
+  }
+  if (showCoverage) addIds(catchAllExcludedIds, liveCoverageIds);
+  addIds(catchAllExcludedIds, flowerIds);
+
   const monitorAll =
     (profile.buffDisplayMode === "grouped" &&
       buffGroups.some((group) => group.monitorAll)) ||
@@ -128,18 +139,23 @@ export function buildConfiguredBuffPlan(
   return {
     enabled: profile.enabled,
     monitorAll,
-    normalDisplayIds,
-    customBuffIds,
-    coverageBuffIds,
-    liveCoverageBuffIds,
-    liveOwnedBuffIds,
-    factorDisplayCandidateIds: hasFactorPanel
-      ? FACTOR_DISPLAY_CANDIDATE_IDS
-      : EMPTY_IDS,
-    factorPublishedIds: hasFactorPanel ? FACTOR_PUBLISHED_IDS : EMPTY_IDS,
-    linkedBuffIds: validIdSet(
-      getDefaultMonitoredBuffIds(profile.selectedClass),
-    ),
+    ordinaryIds,
+    catchAllExcludedIds,
+    publishedIds: profile.enabled
+      ? sortedIds(
+          new Set([
+            ...ordinaryIds,
+            ...customBuffIds,
+            ...factorIds,
+            ...liveCoverageIds,
+            ...flowerIds,
+            ...validIdSet(getDefaultMonitoredBuffIds(profile.selectedClass)),
+          ]),
+        )
+      : [],
+    timelineIds: profile.enabled
+      ? sortedIds(validIdSet(coverageEntries.map((entry) => entry.buffId)))
+      : [],
     hasFactorPanel,
     coverageEntries,
     customPanelGroups,
@@ -149,24 +165,27 @@ export function buildConfiguredBuffPlan(
   };
 }
 
-export function buildPublishedBuffIds(plan: ConfiguredBuffPlan): number[] {
-  if (!plan.enabled || plan.monitorAll) return [];
-
-  const result = new Set<number>(plan.normalDisplayIds);
-  addIds(result, plan.liveOwnedBuffIds);
-  addIds(result, plan.factorPublishedIds);
-  addIds(result, plan.linkedBuffIds);
-  return sortedIds(result);
+/** Whether the ordinary icon/text area shows `baseId`: always when selected
+ * there explicitly; under monitor-all, any real buff that no other rendered
+ * area already shows. */
+export function isOrdinaryBuff(
+  plan: ConfiguredBuffPlan,
+  baseId: number,
+): boolean {
+  if (plan.ordinaryIds.has(baseId)) return true;
+  return plan.monitorAll && baseId > 0 && !plan.catchAllExcludedIds.has(baseId);
 }
 
-export function buildBuffTimelineIds(plan: ConfiguredBuffPlan): number[] {
-  return plan.enabled ? sortedIds(plan.coverageBuffIds) : [];
-}
-
+/** Non-zero i32 ids; negative ids are reserved for composite buffs. */
 function validIdSet(values: Iterable<number>): ReadonlySet<number> {
   const result = new Set<number>();
   for (const value of values) {
-    if (Number.isSafeInteger(value) && value > 0 && value <= 2_147_483_647) {
+    if (
+      Number.isSafeInteger(value) &&
+      value !== 0 &&
+      value >= -2_147_483_648 &&
+      value <= 2_147_483_647
+    ) {
       result.add(value);
     }
   }

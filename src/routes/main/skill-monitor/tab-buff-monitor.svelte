@@ -19,6 +19,7 @@
   } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
   import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
+  import BuffCompositeSection from "./buff-composite-section.svelte";
 
   type BuffGroupUpdateHandler = (
     updater: (curr: BuffGroup) => BuffGroup,
@@ -541,6 +542,12 @@
       </div>
     </div>
   </div>
+
+  <BuffCompositeSection
+    {availableBuffMap}
+    {getBuffDisplayName}
+    {getBuffIconPreviewSrc}
+  />
 
   <div
     class="border-border/60 bg-card/40 rounded-lg border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"

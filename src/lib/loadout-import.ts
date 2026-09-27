@@ -10,6 +10,7 @@ import {
   omitProfileId,
   normalizeHistorySettings,
   type EntityDurationEntry,
+  type InlineBuffFormat,
   type LiveMeterProfile,
   type MonsterMonitorProfile,
   type SkillMonitorProfile,
@@ -44,12 +45,25 @@ const positiveI32Schema = v.pipe(
     "buff id must be a positive 32-bit integer",
   ),
 );
+/** A buff id: a game buff (positive) or a composite buff (negative). */
+const buffIdSchema = v.pipe(
+  finiteNumberSchema,
+  v.check(
+    (value) =>
+      Number.isSafeInteger(value) &&
+      value !== 0 &&
+      value >= -2_147_483_648 &&
+      value <= 2_147_483_647,
+    "buff id must be a non-zero 32-bit integer",
+  ),
+);
 const numericKeySchema = v.pipe(v.string(), v.regex(/^\d+$/));
+/** Record key holding a buff id; negative for composite buffs. */
+const buffKeySchema = v.pipe(v.string(), v.regex(/^-?\d+$/));
 const numberArraySchema = v.array(finiteNumberSchema);
 const stringArraySchema = v.array(v.string());
 const stringRecordSchema = v.record(v.string(), v.string());
 const numericStringRecordSchema = v.record(numericKeySchema, v.string());
-const numberRecordSchema = v.record(numericKeySchema, finiteNumberSchema);
 
 function defaultClone<T>(value: T): () => T {
   return () => deepCloneSettings(value);
@@ -180,10 +194,7 @@ const entityVoiceConfigSchema = v.object({
   gone: v.optional(voiceEventSchema),
 });
 
-const buffVoiceConfigMapSchema = v.record(
-  numericKeySchema,
-  buffVoiceConfigSchema,
-);
+const buffVoiceConfigMapSchema = v.record(buffKeySchema, buffVoiceConfigSchema);
 const skillVoiceConfigMapSchema = v.record(
   numericKeySchema,
   skillVoiceConfigSchema,
@@ -212,7 +223,7 @@ const buffAlertRuleSchema = v.object({
   flashIntervalMs: v.optional(finiteNumberSchema),
   applyToProgress: v.optional(v.boolean()),
 });
-const buffAlertMapSchema = v.record(numericKeySchema, buffAlertRuleSchema);
+const buffAlertMapSchema = v.record(buffKeySchema, buffAlertRuleSchema);
 
 const panelAttrSchema = v.object({
   attrId: finiteNumberSchema,
@@ -245,12 +256,18 @@ const inlineBuffEntrySchema = v.object({
   counterSlotId: v.optional(finiteNumberSchema),
   hideWhenZero: v.optional(v.boolean()),
   label: v.string(),
-  format: v.picklist(["active", "stacks_timer", "timer"]),
+  format: v.pipe(
+    // `stacks_timer` is accepted from older exports and folded into `timer`.
+    v.picklist(["active", "stacks_timer", "timer"]),
+    v.transform(
+      (format): InlineBuffFormat => (format === "active" ? "active" : "timer"),
+    ),
+  ),
 });
 
 const buffCoverageEntrySchema = v.object({
   id: v.string(),
-  buffId: positiveI32Schema,
+  buffId: buffIdSchema,
   label: v.string(),
   showInLive: v.optional(v.boolean(), true),
 });
@@ -315,7 +332,7 @@ const overlayPositionsSchema = v.object({
   customPanelGroup: pointSchema,
   shieldDetailGroup: pointSchema,
   buffCoverageGroup: v.optional(pointSchema, { x: 360, y: 550 }),
-  iconBuffPositions: v.record(numericKeySchema, pointSchema),
+  iconBuffPositions: v.record(buffKeySchema, pointSchema),
   categoryIconPositions: v.optional(categoryPointRecordSchema, {}),
 });
 
@@ -336,7 +353,7 @@ const overlaySizesSchema = v.object({
     overlayTextStyleSchema,
     defaultClone(overlayTextStyleDefaults),
   ),
-  iconBuffSizes: numberRecordSchema,
+  iconBuffSizes: v.record(buffKeySchema, finiteNumberSchema),
   categoryIconSizes: v.optional(categoryNumberRecordSchema, {}),
 });
 

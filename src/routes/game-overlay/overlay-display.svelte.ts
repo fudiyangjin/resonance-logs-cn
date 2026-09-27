@@ -43,6 +43,7 @@ import {
 import {
   activeProfile,
   buffAliases,
+  buffComposites,
   buffDisplayMode,
   buffIconOverrides,
   buffPriorityIds,
@@ -73,9 +74,10 @@ import {
 import type { InlineBuffEntry } from "$lib/settings-store";
 import { overlayNow } from "./overlay-clock.svelte.js";
 import { hudProjectionRevision } from "$lib/hud-temporal.svelte.js";
+import { isOrdinaryBuff } from "$lib/buff-monitor-plan";
+import { buffIconSourceId } from "$lib/buff-composites";
 import {
   buildRuntimeFactorPlan,
-  shouldDisplayOrdinaryBuff,
   type RuntimeFactorPlan,
 } from "./buff-display-plan";
 
@@ -154,7 +156,7 @@ const _seasonCultivateFactorRuleMap = $derived.by(() =>
 );
 
 const _runtimeFactorPlan = $derived.by(() =>
-  buildRuntimeFactorPlan(configuredBuffPlan(), {
+  buildRuntimeFactorPlan(configuredBuffPlan().hasFactorPanel, {
     seasonId: seasonCultivateSeasonId(),
     slotItemIds: seasonCultivateFactorSlotItemIds(),
     activeTemplateIds: seasonActiveTemplateIds(),
@@ -199,6 +201,7 @@ const _buffSnapshot = $derived.by(() => {
   const explicitSelectedBuffIds = monitoredBuffIds();
   const priorityIds = buffPriorityIds();
   const buffDefinitionsMap = buffDefinitions();
+  const composites = buffComposites();
   const iconOverrides = buffIconOverrides();
   const iconDirUrl = buffIconDirUrlPrefix();
   const panelGroups = customPanelGroups();
@@ -228,18 +231,18 @@ const _buffSnapshot = $derived.by(() => {
     } else {
       continue;
     }
-    if (!shouldDisplayOrdinaryBuff(configuredPlan, factorPlan, baseId)) {
-      continue;
-    }
+    if (!isOrdinaryBuff(configuredPlan, baseId)) continue;
 
     if (
       buff.durationMs <= 0 &&
       buff.layer <= 1 &&
-      !configuredPlan.normalDisplayIds.has(baseId)
+      !configuredPlan.ordinaryIds.has(baseId)
     )
       continue;
 
-    const definition = buffDefinitionsMap.get(baseId);
+    const definition = buffDefinitionsMap.get(
+      buffIconSourceId(baseId, composites),
+    );
     const name = withFantasyTierSuffix(
       resolveBuffDisplayName(baseId, currentBuffAliases),
       buff,
@@ -298,11 +301,11 @@ const _buffSnapshot = $derived.by(() => {
     const iconIds = new Set(nextIconBuffs.map((buff) => buff.baseId));
     const textIds = new Set(nextTextBuffs.map((buff) => buff.key));
     for (const baseId of explicitSelectedBuffIds) {
-      if (!shouldDisplayOrdinaryBuff(configuredPlan, factorPlan, baseId)) {
-        continue;
-      }
+      if (!isOrdinaryBuff(configuredPlan, baseId)) continue;
       if (iconIds.has(baseId) || textIds.has(`buff_${baseId}`)) continue;
-      const definition = buffDefinitionsMap.get(baseId);
+      const definition = buffDefinitionsMap.get(
+        buffIconSourceId(baseId, composites),
+      );
       const name = resolveBuffDisplayName(baseId, currentBuffAliases);
       const iconSrc = resolveBuffIconSrc(
         baseId,
@@ -538,21 +541,15 @@ const _groupedIconBuffs = $derived.by(() => {
   if (buffDisplayMode() !== "grouped")
     return new Map<string, IconBuffDisplay[]>();
   const groups = _normalizedBuffGroups;
+  const { catchAllExcludedIds } = configuredBuffPlan();
   const iconBuffs = _iconDisplayBuffs.filter(
     (buff) => !(buff.specialImages && buff.specialImages.length > 0),
   );
-  const selectedBySpecificGroups = new Set<number>();
-  for (const group of groups) {
-    if (group.monitorAll) continue;
-    for (const buffId of group.buffIds) {
-      selectedBySpecificGroups.add(buffId);
-    }
-  }
   const result = new Map<string, IconBuffDisplay[]>();
   for (const group of groups) {
     const maxVisible = Math.max(1, group.columns * group.rows);
     const entries = group.monitorAll
-      ? iconBuffs.filter((buff) => !selectedBySpecificGroups.has(buff.baseId))
+      ? iconBuffs.filter((buff) => !catchAllExcludedIds.has(buff.baseId))
       : iconBuffs.filter((buff) => group.buffIds.includes(buff.baseId));
     result.set(group.id, entries.slice(0, maxVisible));
   }
@@ -616,10 +613,10 @@ const _individualModeIconBuffs = $derived.by(() => {
 const _individualAllGroupBuffs = $derived.by(() => {
   if (buffDisplayMode() !== "individual" || !_individualMonitorAllGroup)
     return [];
-  const selected = new Set(expandedMonitoredBuffIds());
+  const { catchAllExcludedIds } = configuredBuffPlan();
   return _iconDisplayBuffs.filter(
     (buff) =>
-      !selected.has(buff.baseId) &&
+      !catchAllExcludedIds.has(buff.baseId) &&
       !(buff.specialImages && buff.specialImages.length > 0),
   );
 });
@@ -735,7 +732,7 @@ function getBuffPrioritySorter(priorityIds: number[]) {
 }
 
 function getTextBuffBaseId(row: TextBuffDisplay): number {
-  const match = /^buff_(\d+)$/.exec(row.key);
+  const match = /^buff_(-?\d+)$/.exec(row.key);
   const baseId = match?.[1];
   return baseId ? Number.parseInt(baseId, 10) : Number.MAX_SAFE_INTEGER;
 }

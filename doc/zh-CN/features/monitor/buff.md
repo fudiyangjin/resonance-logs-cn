@@ -11,6 +11,9 @@
 
 不确定 Buff 叫什么？先开启 **{{ui:skillMonitor.buff.all.title}}**，浮窗会显示你当前获得的所有 Buff；找到目标后再精确添加，最后关闭「监控全部」。
 
+> [!NOTE]
+> 在哪里设置就在哪里显示：同一个 Buff 可以同时放在这里、[自定义监控](./custom-panel.md) 和 [Buff 覆盖率](./buff-coverage.md)，各区域互不影响。**{{ui:skillMonitor.buff.all.title}}** 只显示其他已开启区域没有显示的 Buff，赛季因子 / 节点区可能用到的 Buff 也不会混进来。
+
 ### 分类快捷监听
 
 **{{ui:skillMonitor.buff.category.title}}** 可以一次性监听所有 **食物** 或 **炼金** Buff，出本前检查吃没吃药很方便。
@@ -55,6 +58,17 @@
 Buff 别名同时用于 [因子区](./custom-panel.md#因子配置区) 中 Buff 效果的显示名。
 
 来源为幻想的 Buff，在能识别幻想阶数时会显示为「名称 | n阶」。
+
+## 组合 Buff
+
+有些效果要几个 Buff 同时存在才算触发。在 **{{ui:skillMonitor.buff.composite.title}}** 中新建组合：填写名称，搜索并加入 2~8 个成员 Buff，设置 **{{ui:skillMonitor.buff.composite.condition}}**，还可以选一个成员的图标（不选则以文字显示）。
+
+- **{{ui:skillMonitor.buff.composite.condition}}** 默认要求全部成员同时存在，也可以改为至少 k 个同时存在（k 可以是 1，即任意一个）；
+- 组合持续到同时存在的成员少于所需数量为止。要求全部时，剩余时间就是最先结束的成员；例如 5 选 3、当前 4 个成员分别剩 10、8、6、4 秒时，组合剩 6 秒；
+- 层数：要求全部时取成员中最小的层数；设置了至少 k 个时显示当前存在的成员数；
+- 保存后，组合可以像普通 Buff 一样在本页、[自定义监控](./custom-panel.md)、[Buff 覆盖率](./buff-coverage.md)、倒计时告警和语音播报中搜索添加，搜索结果会标注「组合 Buff」；
+- 监听组合不影响成员 Buff 自己的显示；
+- 组合和别名一样是全局设置，不随方案导出。导入的方案如果引用了本机没有的组合，这些引用会被自动移除；删除组合时，也会从所有方案中移除对它的引用。
 
 ## 优先级
 

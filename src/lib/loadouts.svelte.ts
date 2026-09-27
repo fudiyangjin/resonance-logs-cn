@@ -32,6 +32,7 @@ import {
   removeLiveProfileById,
   switchLiveProfile,
 } from "./live-meter-profile.svelte.js";
+import { pruneUnknownCompositeRefs } from "./buff-composites";
 import type { LoadoutPreset } from "./config/loadout-presets";
 import type { LoadoutExport } from "./loadout-import";
 import { profilesToCollectAfterLoadoutRemoval } from "./loadout-lifecycle";
@@ -356,11 +357,17 @@ function materializeLoadout(
 ): string {
   const skillState = SETTINGS.skillMonitor.state;
   // Each created loadout owns all nested profile data; imported / preset
-  // data may carry voice bindings without a subject.
-  const skillProfile: SkillMonitorProfile = pruneSkillProfileVoice({
-    ...deepCloneSettings(data.skillProfile),
-    id: generateProfileId("skill"),
-  });
+  // data may carry voice bindings without a subject, and references to
+  // composite buffs this install does not define (they are not exported).
+  const skillProfile: SkillMonitorProfile = pruneSkillProfileVoice(
+    pruneUnknownCompositeRefs(
+      {
+        ...deepCloneSettings(data.skillProfile),
+        id: generateProfileId("skill"),
+      },
+      new Set(skillState.buffComposites.map((composite) => composite.id)),
+    ),
+  );
   skillState.profiles = [...skillState.profiles, skillProfile];
 
   const monsterProfileId = createMonsterProfile(

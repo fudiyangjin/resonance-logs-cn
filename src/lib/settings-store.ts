@@ -3,6 +3,7 @@
  * It uses `@tauri-store/svelte` to create persistent stores for user settings.
  */
 import { RuneStore } from "@tauri-store/svelte";
+import { buffCompositeAliases, type BuffComposite } from "./buff-composites";
 import type { BuffIconOverrideMap } from "./buff-icons";
 import type {
   BuffAliasMap as ConfigBuffAliasMap,
@@ -1187,7 +1188,9 @@ export type BuffDisplayMode = "individual" | "grouped";
 
 export type BuffAliasMap = ConfigBuffAliasMap;
 
-export type InlineBuffFormat = "active" | "stacks_timer" | "timer";
+/** How a custom-panel buff entry renders: `timer` counts down while the buff
+ * is active; `active` always shows the row with the active state only. */
+export type InlineBuffFormat = "timer" | "active";
 
 export type InlineBuffEntry = {
   id: string;
@@ -1342,7 +1345,16 @@ export function ensureDbmAliases(
 
 export function getGlobalBuffAliases(): BuffAliasMap {
   return {
+    ...buffCompositeAliases(SETTINGS.skillMonitor.state.buffComposites ?? []),
     ...ensureBuffAliases(SETTINGS.monsterMonitor.state.buffAliases),
+    ...ensureBuffAliases(SETTINGS.skillMonitor.state.buffAliases),
+  };
+}
+
+/** Skill-monitor display names: user aliases over composite names. */
+export function getSkillBuffDisplayAliases(): BuffAliasMap {
+  return {
+    ...buffCompositeAliases(SETTINGS.skillMonitor.state.buffComposites ?? []),
     ...ensureBuffAliases(SETTINGS.skillMonitor.state.buffAliases),
   };
 }
@@ -1805,6 +1817,9 @@ export type SkillMonitorState = {
   /** Player-customized buff icons (base id -> file name). Global; never
    * exported with loadouts, same as `buffAliases`. */
   buffIconOverrides: BuffIconOverrideMap;
+  /** Composite buffs, referenced from profiles by their negative ids.
+   * Global; never exported with loadouts, same as `buffAliases`. */
+  buffComposites: BuffComposite[];
   profiles: SkillMonitorProfile[];
 };
 
@@ -2122,6 +2137,7 @@ export function createDefaultMonitoringSettingsState(): MonitoringSettingsState 
     skillMonitor: {
       buffAliases: {},
       buffIconOverrides: {},
+      buffComposites: [],
       profiles: [createDefaultSkillMonitorProfile()],
     },
     monsterMonitor: createDefaultMonsterMonitorState(),

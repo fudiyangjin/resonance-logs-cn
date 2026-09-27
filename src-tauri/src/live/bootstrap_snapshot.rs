@@ -67,11 +67,13 @@ pub struct MonitorRuntimeSnapshot {
     pub skill: SkillRuntimeSnapshot,
     pub monster: MonsterRuntimeSnapshot,
     pub teammate: TeammateRuntimeSnapshot,
+    pub buff_composites: Vec<BuffCompositeSpec>,
 }
 
 impl Default for MonitorRuntimeSnapshot {
     fn default() -> Self {
         Self {
+            buff_composites: Vec::new(),
             i18n: I18nRuntimeSnapshot::default(),
             live: LiveRuntimeSnapshot::default(),
             skill: SkillRuntimeSnapshot::default(),
@@ -90,10 +92,22 @@ impl MonitorRuntimeSnapshot {
         if self.skill.monitored_skill_ids.len() > 10 {
             return Err("最多监控10个技能".to_string());
         }
+        normalize_buff_composites(&mut self.buff_composites)?;
+        // Negative ids name composites; one that is no longer defined is
+        // dropped rather than failing the whole snapshot.
+        let composites = &self.buff_composites;
+        let is_known_buff = |id: &i32| {
+            *id > 0
+                || composites
+                    .binary_search_by_key(id, |composite| composite.id)
+                    .is_ok()
+        };
+        self.skill.monitored_buff_ids.retain(is_known_buff);
         dedup_and_sort_i32(&mut self.skill.monitored_buff_ids);
-        if self.skill.buff_timeline_ids.iter().any(|id| *id <= 0) {
-            return Err("buff覆盖率ID必须为正整数".to_string());
+        if self.skill.buff_timeline_ids.contains(&0) {
+            return Err("buff覆盖率ID无效".to_string());
         }
+        self.skill.buff_timeline_ids.retain(is_known_buff);
         dedup_and_sort_i32(&mut self.skill.buff_timeline_ids);
         if self.skill.buff_timeline_ids.len() > MAX_BUFF_COVERAGE_ENTRIES {
             return Err(format!("buff覆盖率最多监控{MAX_BUFF_COVERAGE_ENTRIES}项"));
@@ -177,6 +191,57 @@ impl MonitorRuntimeSnapshot {
 }
 
 pub const MAX_BUFF_COVERAGE_ENTRIES: usize = 32;
+/// Most composite buffs one configuration may define.
+pub const MAX_BUFF_COMPOSITES: usize = 64;
+/// Most member buffs one composite may combine.
+pub const MAX_BUFF_COMPOSITE_MEMBERS: usize = 8;
+
+/// A composite buff: present on an entity while at least `min_active` of its
+/// member buffs are (every member when unset), then published and tracked
+/// under its own negative `id` like any other buff (see
+/// [`crate::live::projections::buff_presence`]).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BuffCompositeSpec {
+    pub id: i32,
+    pub member_ids: Vec<i32>,
+    #[serde(default)]
+    pub min_active: Option<u32>,
+}
+
+/// Validates composite definitions and sorts them by id, so lookups can
+/// binary-search. A threshold that requires every member is dropped, so
+/// "all members" has a single spelling.
+fn normalize_buff_composites(composites: &mut [BuffCompositeSpec]) -> Result<(), String> {
+    if composites.len() > MAX_BUFF_COMPOSITES {
+        return Err(format!("组合buff最多{MAX_BUFF_COMPOSITES}个"));
+    }
+    for composite in composites.iter_mut() {
+        dedup_and_sort_i32(&mut composite.member_ids);
+        let member_count = composite.member_ids.len();
+        let valid_members = (2..=MAX_BUFF_COMPOSITE_MEMBERS).contains(&member_count)
+            && composite.member_ids.iter().all(|id| *id > 0);
+        if composite.id >= 0 || !valid_members {
+            return Err(format!(
+                "组合buff需为负数ID且包含2~{MAX_BUFF_COMPOSITE_MEMBERS}个有效成员"
+            ));
+        }
+        if let Some(min_active) = composite.min_active {
+            let min_active = usize::try_from(min_active).unwrap_or(usize::MAX);
+            if !(1..=member_count).contains(&min_active) {
+                return Err("组合buff生效数量需在1到成员数之间".to_string());
+            }
+            if min_active == member_count {
+                composite.min_active = None;
+            }
+        }
+    }
+    composites.sort_unstable_by_key(|composite| composite.id);
+    if composites.windows(2).any(|pair| pair[0].id == pair[1].id) {
+        return Err("组合buff ID重复".to_string());
+    }
+    Ok(())
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase", default)]
@@ -275,7 +340,7 @@ pub struct TeammateRuntimeSnapshot {
 
 fn describe_snapshot(snapshot: &MonitorRuntimeSnapshot) -> String {
     format!(
-        "locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} monster_watched_entities={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={}",
+        "locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} monster_watched_entities={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={} buff_composites={}",
         snapshot.i18n.locale.as_str(),
         snapshot.live.event_update_rate_ms,
         snapshot.skill.enabled,
@@ -290,7 +355,8 @@ fn describe_snapshot(snapshot: &MonitorRuntimeSnapshot) -> String {
         snapshot.teammate.enabled,
         snapshot.teammate.any_source_ids.len(),
         snapshot.teammate.local_player_source_ids.len(),
-        snapshot.teammate.target_self_source_ids.len()
+        snapshot.teammate.target_self_source_ids.len(),
+        snapshot.buff_composites.len()
     )
 }
 
@@ -488,6 +554,101 @@ mod tests {
         invalid.skill.enabled = true;
         invalid.skill.buff_timeline_ids = vec![0];
         assert!(invalid.normalize().is_err());
+    }
+
+    fn composite(id: i32, member_ids: Vec<i32>) -> BuffCompositeSpec {
+        BuffCompositeSpec {
+            id,
+            member_ids,
+            min_active: None,
+        }
+    }
+
+    fn threshold(id: i32, member_ids: Vec<i32>, min_active: u32) -> BuffCompositeSpec {
+        BuffCompositeSpec {
+            min_active: Some(min_active),
+            ..composite(id, member_ids)
+        }
+    }
+
+    #[test]
+    fn composite_thresholds_stay_within_the_member_count() {
+        let snapshot = with_composites(vec![
+            threshold(-1, vec![1, 2, 3], 2),
+            threshold(-2, vec![1, 2, 3], 3),
+        ]);
+        let normalized = snapshot.normalize().expect("thresholds are valid");
+        // Requiring every member is spelled without a threshold.
+        assert_eq!(
+            normalized.buff_composites,
+            vec![
+                composite(-2, vec![1, 2, 3]),
+                threshold(-1, vec![1, 2, 3], 2)
+            ]
+        );
+
+        for invalid in [threshold(-1, vec![1, 2], 0), threshold(-1, vec![1, 2], 3)] {
+            assert!(with_composites(vec![invalid]).normalize().is_err());
+        }
+    }
+
+    #[test]
+    fn composite_threshold_deserializes_as_optional() {
+        let spec: BuffCompositeSpec = serde_json::from_str(r#"{"id":-1,"memberIds":[1,2]}"#)
+            .expect("specs without a threshold still deserialize");
+        assert_eq!(spec.min_active, None);
+    }
+
+    fn with_composites(buff_composites: Vec<BuffCompositeSpec>) -> MonitorRuntimeSnapshot {
+        MonitorRuntimeSnapshot {
+            buff_composites,
+            ..MonitorRuntimeSnapshot::default()
+        }
+    }
+
+    #[test]
+    fn composites_are_validated_and_sorted_by_id() {
+        let snapshot = with_composites(vec![
+            composite(-1, vec![3, 1, 3]),
+            composite(-9, vec![5, 6]),
+        ]);
+        let normalized = snapshot.normalize().expect("composites are valid");
+        assert_eq!(
+            normalized.buff_composites,
+            vec![composite(-9, vec![5, 6]), composite(-1, vec![1, 3])]
+        );
+
+        for invalid in [
+            vec![composite(1, vec![1, 2])],
+            vec![composite(-1, vec![1, 1])],
+            vec![composite(-1, vec![1, -2])],
+            vec![composite(-1, (1..=9).collect())],
+            vec![composite(-1, vec![1, 2]), composite(-1, vec![3, 4])],
+        ] {
+            assert!(with_composites(invalid).normalize().is_err());
+        }
+    }
+
+    #[test]
+    fn composite_ids_pass_only_while_defined() {
+        let mut snapshot = with_composites(vec![composite(-1, vec![1, 2])]);
+        snapshot.skill.enabled = true;
+        snapshot.skill.monitored_buff_ids = vec![5, -2, -1];
+        snapshot.skill.buff_timeline_ids = vec![-3, -1];
+
+        let normalized = snapshot.normalize().expect("composite ids are valid");
+
+        assert_eq!(normalized.skill.monitored_buff_ids, vec![-1, 5]);
+        assert_eq!(normalized.skill.buff_timeline_ids, vec![-1]);
+    }
+
+    #[test]
+    fn composites_survive_a_disabled_skill_monitor() {
+        let snapshot = with_composites(vec![composite(-1, vec![1, 2])]);
+
+        let normalized = snapshot.normalize().expect("composites are valid");
+
+        assert_eq!(normalized.buff_composites.len(), 1);
     }
 
     #[test]

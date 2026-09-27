@@ -20,6 +20,7 @@
     lookupDefaultBuffName,
     normalizeBuffCategoryKeys,
     resolveBuffDisplayName,
+    searchBuffCandidates,
     searchBuffsByName,
     type BuffCategoryKey,
     type BuffCategoryDefinition,
@@ -34,6 +35,7 @@
     ensureBuffAlerts,
     ensureBuffVoiceConfigs,
     ensureCounterVoiceConfigs,
+    getSkillBuffDisplayAliases,
     MAX_BUFF_COVERAGE_ENTRIES,
     SETTINGS,
     type BuffAlertMap,
@@ -46,6 +48,7 @@
     type CustomPanelGroupKind,
     type CustomPanelStyle,
     type InlineBuffEntry,
+    type InlineBuffFormat,
     type PanelAreaRowRef,
     type ShieldDetailStyle,
     type SkillMonitorProfile,
@@ -96,6 +99,7 @@
   import { toast } from "svelte-sonner";
   import { commands } from "$lib/bindings";
   import { ensureBuffIconOverrides, resolveBuffIconSrc } from "$lib/buff-icons";
+  import { buffIconSourceId, ensureBuffComposites } from "$lib/buff-composites";
   import { buffIconDirUrlPrefix } from "$lib/buff-icon-dir.svelte";
 
   type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
@@ -103,17 +107,12 @@
   const availableBuffs = getAvailableBuffDefinitions();
   const buffCategoryDefinitions = getBuffCategoryDefinitions();
   let buffSearch = $state("");
-  let buffSearchResults = $state<BuffNameInfo[]>([]);
   let globalPrioritySearch = $state("");
-  let globalPrioritySearchResults = $state<BuffNameInfo[]>([]);
   let alertSearch = $state("");
   let groupSearchKeyword = $state<Record<string, string>>({});
-  let groupSearchResults = $state<Record<string, BuffNameInfo[]>>({});
   let groupPrioritySearchKeyword = $state<Record<string, string>>({});
-  let groupPrioritySearchResults = $state<Record<string, BuffNameInfo[]>>({});
   let resonanceSearch = $state("");
   let inlineBuffSearch = $state("");
-  let inlineBuffSearchResults = $state<BuffNameInfo[]>([]);
   let activeTab = $state<
     | "skill-cd"
     | "buff"
@@ -124,29 +123,50 @@
     | "overlay"
   >("skill-cd");
   let coverageBuffSearch = $state("");
-  let coverageBuffSearchResults = $state<BuffNameInfo[]>([]);
   let attrSectionExpanded = $state(false);
   let buffAliasSectionExpanded = $state(false);
   let buffAlertSectionExpanded = $state(false);
   let voiceBuffSectionExpanded = $state(false);
   let voiceBuffSearch = $state("");
   let buffAliasSearch = $state("");
-  let buffAliasSearchResults = $state<BuffNameInfo[]>([]);
   let buffAliasEditingBuffId = $state<number | null>(null);
   let buffIconSectionExpanded = $state(false);
   let buffIconSearch = $state("");
-  let buffIconSearchResults = $state<BuffNameInfo[]>([]);
   let buffIconEditingBuffId = $state<number | null>(null);
 
   const classConfigs = $derived(getClassConfigs());
   const counterRules = $derived(getCounterRules());
   const sourceTemplates = $derived(getSourceTemplates());
   const slotTemplates = $derived(getSlotTemplates());
+  /** The user's own aliases, edited by the alias section. */
   const buffAliases = $derived.by(() =>
     ensureBuffAliases(SETTINGS.skillMonitor.state.buffAliases),
   );
+  /** Names shown everywhere else: aliases over composite names. */
+  const buffDisplayAliases = $derived.by(() => getSkillBuffDisplayAliases());
+  const buffComposites = $derived.by(() =>
+    ensureBuffComposites(SETTINGS.skillMonitor.state.buffComposites),
+  );
   const buffIconOverrides = $derived.by(() =>
     ensureBuffIconOverrides(SETTINGS.skillMonitor.state.buffIconOverrides),
+  );
+  // Pickers that add buffs to monitor lists also offer composite buffs; the
+  // alias and icon editors list game buffs only.
+  const buffSearchResults = $derived(searchBuffs(buffSearch));
+  const globalPrioritySearchResults = $derived(
+    searchBuffs(globalPrioritySearch),
+  );
+  const groupSearchResults = $derived(searchByGroup(groupSearchKeyword));
+  const groupPrioritySearchResults = $derived(
+    searchByGroup(groupPrioritySearchKeyword),
+  );
+  const inlineBuffSearchResults = $derived(searchBuffs(inlineBuffSearch));
+  const coverageBuffSearchResults = $derived(searchBuffs(coverageBuffSearch));
+  const buffAliasSearchResults = $derived(
+    searchBuffsByName(buffAliasSearch, buffAliases),
+  );
+  const buffIconSearchResults = $derived(
+    searchBuffsByName(buffIconSearch, buffAliases),
   );
   const activeProfileIndex = $derived.by(() => clampedProfileIndex());
   const activeProfile = $derived.by(() => activeProfileOrDefault());
@@ -245,9 +265,7 @@
   const alertEligibleBuffIds = $derived.by(() =>
     getAlertEligibleBuffIds(activeProfile),
   );
-  const alertSearchResults = $derived.by(() =>
-    searchBuffsByName(alertSearch, buffAliases),
-  );
+  const alertSearchResults = $derived(searchBuffs(alertSearch));
   const configuredVoiceBuffIds = $derived.by(() => {
     const eligible = new Set(alertEligibleBuffIds);
     return Object.keys(ensureBuffVoiceConfigs(activeProfile.buffVoiceConfigs))
@@ -257,7 +275,7 @@
   });
   const voiceBuffSearchResults = $derived.by(() => {
     const ids: number[] = [];
-    return searchBuffsByName(voiceBuffSearch, buffAliases).filter((item) => {
+    return searchBuffs(voiceBuffSearch).filter((item) => {
       if (ids.includes(item.baseId)) return false;
       if (!alertEligibleBuffIds.includes(item.baseId)) return false;
       if (configuredVoiceBuffIds.includes(item.baseId)) return false;
@@ -472,7 +490,22 @@
   }
 
   function getBuffDisplayName(buffId: number): string {
-    return resolveBuffDisplayName(buffId, buffAliases);
+    return resolveBuffDisplayName(buffId, buffDisplayAliases);
+  }
+
+  function searchBuffs(keyword: string): BuffNameInfo[] {
+    return searchBuffCandidates(keyword, buffDisplayAliases, buffComposites);
+  }
+
+  function searchByGroup(
+    keywords: Record<string, string>,
+  ): Record<string, BuffNameInfo[]> {
+    return Object.fromEntries(
+      Object.entries(keywords).map(([groupId, keyword]) => [
+        groupId,
+        searchBuffs(keyword),
+      ]),
+    );
   }
 
   function getBuffDefaultName(buffId: number): string {
@@ -508,7 +541,7 @@
   function getBuffIconPreviewSrc(buffId: number): string | null {
     return resolveBuffIconSrc(
       buffId,
-      lookupBuffMeta(buffId)?.spriteFile,
+      lookupBuffMeta(buffIconSourceId(buffId, buffComposites))?.spriteFile,
       buffIconOverrides,
       buffIconDirUrlPrefix(),
     );
@@ -699,36 +732,6 @@
       map.set(buff.baseId, buff);
     }
     return map;
-  });
-
-  $effect(() => {
-    buffSearchResults = searchBuffsByName(buffSearch, buffAliases);
-  });
-
-  $effect(() => {
-    globalPrioritySearchResults = searchBuffsByName(
-      globalPrioritySearch,
-      buffAliases,
-    );
-  });
-
-  $effect(() => {
-    inlineBuffSearchResults = searchBuffsByName(inlineBuffSearch, buffAliases);
-  });
-
-  $effect(() => {
-    coverageBuffSearchResults = searchBuffsByName(
-      coverageBuffSearch,
-      buffAliases,
-    );
-  });
-
-  $effect(() => {
-    buffAliasSearchResults = searchBuffsByName(buffAliasSearch, buffAliases);
-  });
-
-  $effect(() => {
-    buffIconSearchResults = searchBuffsByName(buffIconSearch, buffAliases);
   });
 
   function setBuffAliasSearch(value: string) {
@@ -1524,6 +1527,16 @@
     }));
   }
 
+  function setCustomPanelEntryFormat(
+    groupId: string,
+    entryId: string,
+    format: InlineBuffFormat,
+  ) {
+    updateCustomPanelEntry(groupId, entryId, (entry) =>
+      entry.sourceType === "buff" ? { ...entry, format } : entry,
+    );
+  }
+
   function movePanelAreaRow(row: PanelAreaRowRef, direction: "up" | "down") {
     updateActiveProfile((profile) => {
       const current = ensurePanelAreaRowOrder(profile);
@@ -1644,15 +1657,9 @@
     const nextKeyword = { ...groupSearchKeyword };
     delete nextKeyword[groupId];
     groupSearchKeyword = nextKeyword;
-    const nextResults = { ...groupSearchResults };
-    delete nextResults[groupId];
-    groupSearchResults = nextResults;
     const nextPriorityKeyword = { ...groupPrioritySearchKeyword };
     delete nextPriorityKeyword[groupId];
     groupPrioritySearchKeyword = nextPriorityKeyword;
-    const nextPriorityResults = { ...groupPrioritySearchResults };
-    delete nextPriorityResults[groupId];
-    groupPrioritySearchResults = nextPriorityResults;
   }
 
   function addIndividualMonitorAll() {
@@ -1695,15 +1702,6 @@
 
   function setGroupSearchKeyword(groupId: string, value: string) {
     groupSearchKeyword = { ...groupSearchKeyword, [groupId]: value };
-    const keyword = value.trim();
-    if (!keyword) {
-      groupSearchResults = { ...groupSearchResults, [groupId]: [] };
-      return;
-    }
-    groupSearchResults = {
-      ...groupSearchResults,
-      [groupId]: searchBuffsByName(keyword, buffAliases),
-    };
   }
 
   function getGroupSearchKeyword(groupId: string) {
@@ -1714,18 +1712,6 @@
     groupPrioritySearchKeyword = {
       ...groupPrioritySearchKeyword,
       [groupId]: value,
-    };
-    const keyword = value.trim();
-    if (!keyword) {
-      groupPrioritySearchResults = {
-        ...groupPrioritySearchResults,
-        [groupId]: [],
-      };
-      return;
-    }
-    groupPrioritySearchResults = {
-      ...groupPrioritySearchResults,
-      [groupId]: searchBuffsByName(keyword, buffAliases),
     };
   }
 
@@ -2123,6 +2109,7 @@
       {removeCustomPanelEntry}
       {setCustomPanelEntryLabel}
       {setCustomPanelEntryHideWhenZero}
+      {setCustomPanelEntryFormat}
       {moveCustomPanelEntry}
     />
   {:else if activeTab === "shield-detail"}

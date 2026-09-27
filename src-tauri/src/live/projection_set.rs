@@ -1,5 +1,7 @@
 //! Concrete, statically routed live projections.
 
+use std::sync::Arc;
+
 use crate::database::commands::{EncounterSummaryDto, PlayerSummaryDto};
 use crate::database::event_journal::{FinalizeEncounterMetadata, RecordingEncounter};
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
@@ -10,6 +12,7 @@ use crate::live::ipc::models::{
     LiveMonsterPayload, LiveScenePayload, LiveStatusPayload, MinimapUpdatePayload,
 };
 use crate::live::ipc::topic::{Topic, TopicMask};
+use crate::live::projections::buff_presence::BuffCompositeCatalog;
 use crate::live::projections::buff_timeline::BuffTimelineProjection;
 use crate::live::projections::combat::accumulator::CombatHitFact;
 use crate::live::projections::combat::projection::CombatProjection;
@@ -106,12 +109,15 @@ impl ProjectionSet {
 
     pub fn apply_config(
         &mut self,
-        config: std::sync::Arc<MonitorRuntimeSnapshot>,
+        config: Arc<MonitorRuntimeSnapshot>,
         entities: &EntityContext,
         now_wall_ms: i64,
         now_mono: MonoTimeMs,
         scheduler: &mut DeadlineScheduler,
     ) -> Result<(), String> {
+        // Parsed once and shared, so publication, coverage and voice read
+        // the same composite definitions.
+        let buff_composites = Arc::new(BuffCompositeCatalog::from_specs(&config.buff_composites));
         self.counter
             .apply_config(
                 CounterNamespace::Normal,
@@ -125,8 +131,12 @@ impl ProjectionSet {
                 scheduler,
             )
             .map_err(|error| error.to_string())?;
-        self.entity_monitor
-            .apply_config(config.as_ref(), entities, now_mono);
+        self.entity_monitor.apply_config(
+            config.as_ref(),
+            Arc::clone(&buff_composites),
+            entities,
+            now_mono,
+        );
         {
             let combat = &self.combat;
             let current_offset = combat
@@ -134,6 +144,7 @@ impl ProjectionSet {
                 .map(|_| combat.segment_offset_ms(now_mono));
             let edges = self.buff_timeline.apply_config(
                 &config.skill.buff_timeline_ids,
+                Arc::clone(&buff_composites),
                 entities,
                 current_offset,
                 |mono| combat.segment_offset_ms(mono),
@@ -144,6 +155,8 @@ impl ProjectionSet {
                 }
             }
         }
+        self.voice
+            .set_buff_composites(buff_composites, entities, now_wall_ms, now_mono, scheduler);
         self.sync_voice(
             VoiceSyncReason::Baseline,
             entities,
@@ -340,12 +353,20 @@ impl ProjectionSet {
                         .state
                         .expires_mono_ms
                         .map(|mono| self.combat.segment_offset_ms(mono));
-                    let edges = self.buff_timeline.apply_buff(
+                    let mut edges = self.buff_timeline.apply_buff(
                         event,
                         target_is_character,
                         offset,
                         expires_offset,
                     );
+                    let combat = &self.combat;
+                    edges.extend(self.buff_timeline.apply_composites(
+                        event,
+                        target_is_character,
+                        entities,
+                        offset,
+                        |mono| combat.segment_offset_ms(mono),
+                    ));
                     if !edges.is_empty() {
                         reported |= TopicMask::BUFFS;
                         for edge in edges {
@@ -2008,7 +2029,7 @@ mod tests {
 
         projections
             .buff_timeline
-            .apply_config(&[BASE], &entities, None, |_| 0);
+            .apply_config(&[BASE], Arc::default(), &entities, None, |_| 0);
         projections
             .combat
             .start_segment(SegmentId(1), MonoTimeMs(0), 0);

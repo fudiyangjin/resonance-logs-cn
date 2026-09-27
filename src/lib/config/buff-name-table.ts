@@ -1,3 +1,4 @@
+import type { BuffComposite } from "$lib/buff-composites";
 import { getLocale, t, type AppLocale } from "$lib/i18n/index.svelte";
 import {
   getGameData,
@@ -21,6 +22,8 @@ export type BuffNameInfo = {
   name: string;
   hasSpriteFile: boolean;
   inCatalog: boolean;
+  /** Set for composite buffs: how many of the members must be active. */
+  composite?: { minActive: number; memberCount: number };
 };
 
 export type BuffMeta = {
@@ -403,4 +406,49 @@ export function searchBuffsByName(
   return visibleMatches.map((match) =>
     resolveBuffNameInfo(match.baseId, normalizedAliases, locale),
   );
+}
+
+/**
+ * Search for pickers that also offer composite buffs: composites whose name
+ * or member names match `keyword` come first, then catalog buffs.
+ */
+export function searchBuffCandidates(
+  keyword: string,
+  aliases: BuffAliasMap | undefined,
+  composites: readonly BuffComposite[],
+  locale = getLocale(),
+): BuffNameInfo[] {
+  const normalizedKeyword = normalizeText(keyword);
+  if (!normalizedKeyword) return [];
+
+  const matchedComposites: BuffNameInfo[] = [];
+  for (const composite of composites) {
+    const texts = [
+      composite.name,
+      ...composite.memberIds.map((memberId) =>
+        resolveBuffDisplayName(memberId, aliases, locale),
+      ),
+    ];
+    if (
+      !texts.some((text) => normalizeText(text).includes(normalizedKeyword))
+    ) {
+      continue;
+    }
+    matchedComposites.push({
+      baseId: composite.id,
+      name: resolveBuffDisplayName(composite.id, aliases, locale),
+      hasSpriteFile:
+        composite.iconBuffId !== undefined &&
+        (lookupBuffMeta(composite.iconBuffId, locale)?.hasSpriteFile ?? false),
+      inCatalog: true,
+      composite: {
+        minActive: composite.minActive ?? composite.memberIds.length,
+        memberCount: composite.memberIds.length,
+      },
+    });
+  }
+  return [
+    ...matchedComposites,
+    ...searchBuffsByName(keyword, aliases, null, locale),
+  ];
 }

@@ -10,12 +10,18 @@
 //! clears `EntityContext::active_buffs` before the disappearance event is
 //! observed here, and it never reads `started_*` timestamps (refreshes
 //! re-anchor them).
+//!
+//! Whitelisted composite buffs (negative ids) live in the same table; they
+//! are re-derived from the entity table whenever one of their members
+//! changes, so history replay and coverage treat them like any buff.
 
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 use crate::database::history_codec::{HistoryBuff, HistoryBuffEdge};
 use crate::live::active_window::{ActiveWindowAdvance, BuffCoverageTracker};
 use crate::live::ipc::models::BuffCoverageEntry;
+use crate::live::projections::buff_presence::BuffCompositeCatalog;
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{BuffEvent, BuffTransition, EntityKind, MonoTimeMs};
 
@@ -31,6 +37,7 @@ pub struct BuffTimelineProjection {
     whitelist: HashSet<i32>,
     /// Configured entry order; drives the HUD coverage row order.
     hud_order: Vec<i32>,
+    composites: Arc<BuffCompositeCatalog>,
     tracker: BuffCoverageTracker,
     /// entity id -> base id -> merged presence.
     open: HashMap<i64, HashMap<i32, OpenBuff>>,
@@ -41,10 +48,12 @@ impl BuffTimelineProjection {
     pub fn apply_config(
         &mut self,
         ids: &[i32],
+        composites: Arc<BuffCompositeCatalog>,
         entities: &EntityContext,
         current_offset_ms: Option<u64>,
         mut expires_offset: impl FnMut(MonoTimeMs) -> u64,
     ) -> Vec<HistoryBuff> {
+        self.composites = composites;
         self.whitelist = ids.iter().copied().collect();
         self.hud_order.clear();
         for id in ids.iter().copied() {
@@ -235,6 +244,70 @@ impl BuffTimelineProjection {
         edges
     }
 
+    /// Re-derives the whitelisted composites that `event`'s buff belongs to
+    /// from the entity table, which already reflects the event. Buffs outside
+    /// every composite return after one lookup.
+    pub fn apply_composites(
+        &mut self,
+        event: &BuffEvent,
+        target_is_character: bool,
+        entities: &EntityContext,
+        offset_ms: u64,
+        mut expires_offset: impl FnMut(MonoTimeMs) -> u64,
+    ) -> Vec<HistoryBuff> {
+        if !self.segment_active || !(event.target_roles.is_local_player || target_is_character) {
+            return Vec::new();
+        }
+        let target = event.state.target.uuid;
+        let entity_id = target.0;
+        let mut sink = EdgeSink {
+            tracker: &mut self.tracker,
+            edges: Vec::new(),
+            at: offset_ms,
+            local_id: event.target_roles.is_local_player.then_some(entity_id),
+        };
+        for composite in self.composites.with_member(event.state.base_id) {
+            if !self.whitelist.contains(&composite.id) {
+                continue;
+            }
+            let next = entities
+                .entity(target)
+                .and_then(|state| composite.presence(state.active_buffs.values()))
+                .map(|presence| OpenBuff {
+                    instances: HashSet::new(),
+                    layer: presence.layer,
+                    expires_hint_ms: presence.expires_mono_ms().map(&mut expires_offset),
+                });
+            let previous = self
+                .open
+                .get(&entity_id)
+                .and_then(|buffs| buffs.get(&composite.id));
+            sink.diff(
+                (entity_id, composite.id),
+                previous,
+                next.as_ref(),
+                HistoryBuffEdge::Applied,
+            );
+            match next {
+                Some(next) => {
+                    self.open
+                        .entry(entity_id)
+                        .or_default()
+                        .insert(composite.id, next);
+                }
+                None => {
+                    if let Some(buffs) = self.open.get_mut(&entity_id) {
+                        buffs.remove(&composite.id);
+                        if buffs.is_empty() {
+                            self.open.remove(&entity_id);
+                        }
+                    }
+                }
+            }
+        }
+        sink.edges
+    }
+
     /// Synthesizes close edges when an entity leaves visibility; the entity
     /// context has already cleared its buff table at this point.
     pub fn on_entity_disappeared(&mut self, entity_id: i64, offset_ms: u64) -> Vec<HistoryBuff> {
@@ -340,56 +413,45 @@ impl BuffTimelineProjection {
                     open.expires_hint_ms = hint;
                 }
             }
+            for composite in self
+                .composites
+                .iter()
+                .filter(|composite| self.whitelist.contains(&composite.id))
+            {
+                if let Some(presence) = composite.presence(state.active_buffs.values()) {
+                    merged.insert(
+                        composite.id,
+                        OpenBuff {
+                            instances: HashSet::new(),
+                            layer: presence.layer,
+                            expires_hint_ms: presence.expires_mono_ms().map(&mut *expires_offset),
+                        },
+                    );
+                }
+            }
             if !merged.is_empty() {
                 next_open.insert(entity_id, merged);
             }
         }
 
         let previous_open = std::mem::take(&mut self.open);
-        let mut edges = Vec::new();
+        let mut sink = EdgeSink {
+            tracker: &mut self.tracker,
+            edges: Vec::new(),
+            at,
+            local_id,
+        };
         for (entity_id, previous_buffs) in &previous_open {
             for (base_id, previous) in previous_buffs {
                 let next = next_open
                     .get(entity_id)
                     .and_then(|buffs| buffs.get(base_id));
-                let key = (*entity_id, *base_id);
-                match next {
-                    None => {
-                        if Some(*entity_id) == local_id {
-                            self.tracker.set_off(key, at);
-                        }
-                        edges.push(HistoryBuff {
-                            entity_id: *entity_id,
-                            base_id: *base_id,
-                            edge: HistoryBuffEdge::Removed,
-                            layer: previous.layer,
-                            expires_offset_ms: None,
-                        });
-                    }
-                    Some(next) => {
-                        if next.expires_hint_ms != previous.expires_hint_ms {
-                            if Some(*entity_id) == local_id {
-                                self.tracker.refresh_hint(key, at, next.expires_hint_ms);
-                            }
-                            edges.push(HistoryBuff {
-                                entity_id: *entity_id,
-                                base_id: *base_id,
-                                edge: HistoryBuffEdge::Refreshed,
-                                layer: next.layer,
-                                expires_offset_ms: next.expires_hint_ms,
-                            });
-                        }
-                        if next.layer != previous.layer {
-                            edges.push(HistoryBuff {
-                                entity_id: *entity_id,
-                                base_id: *base_id,
-                                edge: HistoryBuffEdge::LayerChanged,
-                                layer: next.layer,
-                                expires_offset_ms: None,
-                            });
-                        }
-                    }
-                }
+                sink.diff(
+                    (*entity_id, *base_id),
+                    Some(previous),
+                    next,
+                    HistoryBuffEdge::Baseline,
+                );
             }
         }
         for (entity_id, next_buffs) in &next_open {
@@ -400,21 +462,90 @@ impl BuffTimelineProjection {
                 {
                     continue;
                 }
-                let key = (*entity_id, *base_id);
-                if Some(*entity_id) == local_id {
-                    self.tracker.set_on(key, at, next.expires_hint_ms);
+                sink.diff(
+                    (*entity_id, *base_id),
+                    None,
+                    Some(next),
+                    HistoryBuffEdge::Baseline,
+                );
+            }
+        }
+        let edges = sink.edges;
+        self.open = next_open;
+        edges
+    }
+}
+
+/// Collects the edges of one diff pass and keeps the local player's live
+/// coverage in step with them.
+struct EdgeSink<'a> {
+    tracker: &'a mut BuffCoverageTracker,
+    edges: Vec<HistoryBuff>,
+    at: u64,
+    local_id: Option<i64>,
+}
+
+impl EdgeSink<'_> {
+    fn diff(
+        &mut self,
+        key: (i64, i32),
+        previous: Option<&OpenBuff>,
+        next: Option<&OpenBuff>,
+        opened: HistoryBuffEdge,
+    ) {
+        let (entity_id, base_id) = key;
+        let is_local = self.local_id == Some(entity_id);
+        match (previous, next) {
+            (None, None) => {}
+            (None, Some(next)) => {
+                if is_local {
+                    self.tracker.set_on(key, self.at, next.expires_hint_ms);
                 }
-                edges.push(HistoryBuff {
-                    entity_id: *entity_id,
-                    base_id: *base_id,
-                    edge: HistoryBuffEdge::Baseline,
+                self.edges.push(HistoryBuff {
+                    entity_id,
+                    base_id,
+                    edge: opened,
                     layer: next.layer,
                     expires_offset_ms: next.expires_hint_ms,
                 });
             }
+            (Some(previous), None) => {
+                if is_local {
+                    self.tracker.set_off(key, self.at);
+                }
+                self.edges.push(HistoryBuff {
+                    entity_id,
+                    base_id,
+                    edge: HistoryBuffEdge::Removed,
+                    layer: previous.layer,
+                    expires_offset_ms: None,
+                });
+            }
+            (Some(previous), Some(next)) => {
+                if next.expires_hint_ms != previous.expires_hint_ms {
+                    if is_local {
+                        self.tracker
+                            .refresh_hint(key, self.at, next.expires_hint_ms);
+                    }
+                    self.edges.push(HistoryBuff {
+                        entity_id,
+                        base_id,
+                        edge: HistoryBuffEdge::Refreshed,
+                        layer: next.layer,
+                        expires_offset_ms: next.expires_hint_ms,
+                    });
+                }
+                if next.layer != previous.layer {
+                    self.edges.push(HistoryBuff {
+                        entity_id,
+                        base_id,
+                        edge: HistoryBuffEdge::LayerChanged,
+                        layer: next.layer,
+                        expires_offset_ms: None,
+                    });
+                }
+            }
         }
-        self.open = next_open;
-        edges
     }
 }
 
@@ -482,7 +613,7 @@ mod tests {
 
     fn projection() -> BuffTimelineProjection {
         let mut projection = BuffTimelineProjection::default();
-        projection.apply_config(&[BASE], &EntityContext::new(), None, |_| 0);
+        projection.apply_config(&[BASE], Arc::default(), &EntityContext::new(), None, |_| 0);
         projection.segment_active = true;
         projection
     }
@@ -609,7 +740,13 @@ mod tests {
             0,
             None,
         );
-        let edges = projection.apply_config(&[], &EntityContext::new(), Some(2_000), |_| 0);
+        let edges = projection.apply_config(
+            &[],
+            Arc::default(),
+            &EntityContext::new(),
+            Some(2_000),
+            |_| 0,
+        );
         assert_eq!(edges.len(), 1);
         assert_eq!(edges[0].edge, HistoryBuffEdge::Removed);
         assert!(
@@ -640,5 +777,340 @@ mod tests {
             )))
         );
         assert!(!projection.observe_hit(None));
+    }
+
+    mod composites {
+        use super::*;
+        use crate::live::bootstrap_snapshot::BuffCompositeSpec;
+        use crate::live::runtime::events::{
+            BatchId, DomainEvent, EventMeta, ObservedBuff, ObservedBuffChange, ProtocolBatch,
+            ProtocolObservation,
+        };
+
+        const COMPOSITE: i32 = -1;
+        const OTHER: i32 = 2_202;
+        const LOCAL: EntityUuid = EntityUuid(10);
+
+        fn batch(sequence: u64, observations: Vec<ProtocolObservation>) -> ProtocolBatch {
+            ProtocolBatch {
+                meta: EventMeta {
+                    batch_id: BatchId(sequence),
+                    capture_sequence: sequence,
+                    stream_id: 1,
+                    stream_epoch: 1,
+                    captured_wall_ms: sequence as i64 * 100,
+                    captured_mono_ns: sequence * 100_000_000,
+                    source_time_ms: None,
+                },
+                observations,
+            }
+        }
+
+        /// The entity table derives expiry from start + duration, so a buff
+        /// started at mono 0 expires at `expires_mono_ms`.
+        fn observed(instance_id: i64, base_id: i32, expires_mono_ms: u64) -> ObservedBuff {
+            ObservedBuff {
+                instance_id,
+                base_id,
+                layer: 1,
+                source_uuid: Some(LOCAL),
+                source_config_id: None,
+                duration_ms: Some(expires_mono_ms),
+                started_wall_ms: Some(0),
+                expires_wall_ms: None,
+                started_mono_ms: Some(MonoTimeMs(0)),
+                expires_mono_ms: None,
+                effect_ids: Arc::from([]),
+            }
+        }
+
+        fn local_character() -> EntityContext {
+            let mut entities = EntityContext::new();
+            entities.apply_batch(batch(
+                1,
+                vec![
+                    ProtocolObservation::EntityAppeared {
+                        uuid: LOCAL,
+                        kind: EntityKind::Character,
+                    },
+                    ProtocolObservation::LocalPlayerChanged { uuid: Some(LOCAL) },
+                ],
+            ));
+            entities
+        }
+
+        fn composite_projection() -> BuffTimelineProjection {
+            projection_for(vec![BASE, OTHER], None)
+        }
+
+        fn projection_for(member_ids: Vec<i32>, min_active: Option<u32>) -> BuffTimelineProjection {
+            let catalog = BuffCompositeCatalog::from_specs(&[BuffCompositeSpec {
+                id: COMPOSITE,
+                member_ids,
+                min_active,
+            }]);
+            let mut projection = BuffTimelineProjection::default();
+            projection.apply_config(
+                &[COMPOSITE],
+                Arc::new(catalog),
+                &EntityContext::new(),
+                None,
+                |_| 0,
+            );
+            projection.segment_active = true;
+            projection
+        }
+
+        /// Applies `changes` to the local character and feeds every
+        /// resulting buff event through the composite path at `at`.
+        fn apply(
+            projection: &mut BuffTimelineProjection,
+            entities: &mut EntityContext,
+            sequence: u64,
+            at: u64,
+            changes: Vec<ObservedBuffChange>,
+        ) -> Vec<HistoryBuff> {
+            let events = entities.apply_batch(batch(
+                sequence,
+                changes
+                    .into_iter()
+                    .map(|change| ProtocolObservation::BuffChanged {
+                        target_uuid: LOCAL,
+                        change,
+                    })
+                    .collect(),
+            ));
+            let mut edges = Vec::new();
+            for envelope in &events {
+                if let DomainEvent::BuffChanged(event) = &envelope.event {
+                    edges.extend(
+                        projection.apply_composites(event, true, entities, at, |mono| mono.0),
+                    );
+                }
+            }
+            edges
+        }
+
+        fn applied(buff: ObservedBuff) -> ObservedBuffChange {
+            ObservedBuffChange::Applied { buff }
+        }
+
+        #[test]
+        fn opens_with_the_last_member_and_closes_with_the_first_to_leave() {
+            let mut projection = composite_projection();
+            let mut entities = local_character();
+
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                2,
+                100,
+                vec![applied(observed(1, BASE, 9_000))],
+            );
+            assert!(edges.is_empty());
+
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                3,
+                200,
+                vec![applied(observed(2, OTHER, 5_000))],
+            );
+            assert_eq!(edges.len(), 1);
+            assert_eq!(edges[0].base_id, COMPOSITE);
+            assert_eq!(edges[0].edge, HistoryBuffEdge::Applied);
+            assert_eq!(edges[0].expires_offset_ms, Some(5_000));
+            assert!(projection.tracker.is_on((LOCAL.0, COMPOSITE)));
+
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                4,
+                300,
+                vec![ObservedBuffChange::Remove { instance_id: 1 }],
+            );
+            assert_eq!(edges.len(), 1);
+            assert_eq!(edges[0].edge, HistoryBuffEdge::Removed);
+            assert!(!projection.tracker.is_on((LOCAL.0, COMPOSITE)));
+        }
+
+        #[test]
+        fn expiry_follows_the_member_expiring_first() {
+            let mut projection = composite_projection();
+            let mut entities = local_character();
+            apply(
+                &mut projection,
+                &mut entities,
+                2,
+                100,
+                vec![
+                    applied(observed(1, BASE, 9_000)),
+                    applied(observed(2, OTHER, 5_000)),
+                ],
+            );
+
+            // Refreshing the limiting member moves the composite expiry.
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                3,
+                200,
+                vec![applied(observed(3, OTHER, 7_000))],
+            );
+            assert_eq!(edges.len(), 1);
+            assert_eq!(edges[0].edge, HistoryBuffEdge::Refreshed);
+            assert_eq!(edges[0].expires_offset_ms, Some(7_000));
+
+            // A later non-limiting refresh changes nothing.
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                4,
+                300,
+                vec![applied(observed(4, BASE, 12_000))],
+            );
+            assert!(edges.is_empty());
+        }
+
+        #[test]
+        fn ignores_unwhitelisted_composites_and_unrelated_buffs() {
+            let mut projection = composite_projection();
+            projection.whitelist.clear();
+            let mut entities = local_character();
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                2,
+                100,
+                vec![
+                    applied(observed(1, BASE, 9_000)),
+                    applied(observed(2, OTHER, 5_000)),
+                ],
+            );
+            assert!(edges.is_empty());
+
+            let mut projection = composite_projection();
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                3,
+                200,
+                vec![applied(observed(3, 9_999, 5_000))],
+            );
+            assert!(edges.is_empty());
+        }
+
+        #[test]
+        fn threshold_composite_tracks_member_count_without_reopening() {
+            const THIRD: i32 = 2_203;
+            let mut projection = projection_for(vec![BASE, OTHER, THIRD], Some(2));
+            let mut entities = local_character();
+            let edge_kinds = |edges: &[HistoryBuff]| {
+                edges
+                    .iter()
+                    .map(|edge| (edge.edge, edge.layer, edge.expires_offset_ms))
+                    .collect::<Vec<_>>()
+            };
+
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                2,
+                100,
+                vec![applied(observed(1, BASE, 9_000))],
+            );
+            assert!(edges.is_empty());
+
+            // Two of three: open, lasting until the earlier of the two ends.
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                3,
+                200,
+                vec![applied(observed(2, OTHER, 5_000))],
+            );
+            assert_eq!(
+                edge_kinds(&edges),
+                vec![(HistoryBuffEdge::Applied, 2, Some(5_000))]
+            );
+            assert!(projection.tracker.is_on((LOCAL.0, COMPOSITE)));
+
+            // A third member extends the expiry and raises the count.
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                4,
+                300,
+                vec![applied(observed(3, THIRD, 7_000))],
+            );
+            assert_eq!(
+                edge_kinds(&edges),
+                vec![
+                    (HistoryBuffEdge::Refreshed, 3, Some(7_000)),
+                    (HistoryBuffEdge::LayerChanged, 3, None),
+                ]
+            );
+
+            // Dropping back to two keeps the composite open.
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                5,
+                400,
+                vec![ObservedBuffChange::Remove { instance_id: 1 }],
+            );
+            assert_eq!(
+                edge_kinds(&edges),
+                vec![
+                    (HistoryBuffEdge::Refreshed, 2, Some(5_000)),
+                    (HistoryBuffEdge::LayerChanged, 2, None),
+                ]
+            );
+
+            let edges = apply(
+                &mut projection,
+                &mut entities,
+                6,
+                500,
+                vec![ObservedBuffChange::Remove { instance_id: 2 }],
+            );
+            assert_eq!(
+                edge_kinds(&edges),
+                vec![(HistoryBuffEdge::Removed, 2, None)]
+            );
+            assert!(!projection.tracker.is_on((LOCAL.0, COMPOSITE)));
+        }
+
+        #[test]
+        fn reconcile_and_despawn_open_and_close_the_composite() {
+            let mut projection = composite_projection();
+            let mut entities = local_character();
+            entities.apply_batch(batch(
+                2,
+                vec![
+                    ProtocolObservation::BuffChanged {
+                        target_uuid: LOCAL,
+                        change: applied(observed(1, BASE, 9_000)),
+                    },
+                    ProtocolObservation::BuffChanged {
+                        target_uuid: LOCAL,
+                        change: applied(observed(2, OTHER, 5_000)),
+                    },
+                ],
+            ));
+
+            let edges = projection.start_segment(&entities, |mono| mono.0);
+            assert_eq!(edges.len(), 1);
+            assert_eq!(edges[0].base_id, COMPOSITE);
+            assert_eq!(edges[0].edge, HistoryBuffEdge::Baseline);
+            let rows = projection.coverage_payload(&entities, 1_000);
+            assert_eq!(rows.len(), 1);
+            assert_eq!(rows[0].base_id, COMPOSITE);
+            assert!(rows[0].active_now);
+
+            let edges = projection.on_entity_disappeared(LOCAL.0, 400);
+            assert_eq!(edges.len(), 1);
+            assert_eq!(edges[0].edge, HistoryBuffEdge::Removed);
+        }
     }
 }

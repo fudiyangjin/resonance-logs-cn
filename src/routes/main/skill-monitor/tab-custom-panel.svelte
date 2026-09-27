@@ -13,6 +13,7 @@
     CustomPanelGroupKind,
     CustomPanelStyle,
     InlineBuffEntry,
+    InlineBuffFormat,
     UserCounterRule,
   } from "$lib/settings-store";
   import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
@@ -85,6 +86,11 @@
       entryId: string,
       checked: boolean,
     ) => void;
+    setCustomPanelEntryFormat: (
+      groupId: string,
+      entryId: string,
+      format: InlineBuffFormat,
+    ) => void;
     moveCustomPanelEntry: (
       groupId: string,
       entryId: string,
@@ -118,6 +124,7 @@
     removeCustomPanelEntry,
     setCustomPanelEntryLabel,
     setCustomPanelEntryHideWhenZero,
+    setCustomPanelEntryFormat,
     moveCustomPanelEntry,
   }: Props = $props();
 
@@ -1098,6 +1105,24 @@
               >
                 {buffName}
               </div>
+              <label
+                class="text-muted-foreground flex items-center gap-2 text-xs"
+              >
+                <input
+                  type="checkbox"
+                  class="border-border bg-muted/30 text-primary focus:ring-primary/50 h-4 w-4 rounded"
+                  checked={entry.format === "active"}
+                  onchange={(event) =>
+                    setCustomPanelEntryFormat(
+                      selectedGroup.id,
+                      entry.id,
+                      (event.currentTarget as HTMLInputElement).checked
+                        ? "active"
+                        : "timer",
+                    )}
+                />
+                <span>{t("skillMonitor.customPanel.entries.stateOnly")}</span>
+              </label>
             {/if}
             <div class="flex justify-end gap-2">
               <button

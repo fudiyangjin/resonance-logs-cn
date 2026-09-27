@@ -12,8 +12,10 @@
 //! input's revision moved. Casts and alerts are plain event edges.
 
 use std::collections::{BTreeSet, HashMap};
+use std::sync::Arc;
 
 use crate::live::counter::engine::CounterEngine;
+use crate::live::projections::buff_presence::BuffCompositeCatalog;
 use crate::live::projections::entity_monitor::EntityMonitorProjection;
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
@@ -94,6 +96,8 @@ pub struct VoiceProjection {
     /// Sole owner of every voice timer.
     tracker: DeadlineTracker,
     buffs: BuffAggregates,
+    /// Composite buffs aggregate as local-player buff subjects.
+    buff_composites: Arc<BuffCompositeCatalog>,
     /// Whether each watched counter slot had reached its threshold.
     counter_crossed: HashMap<(i32, i32), bool>,
     /// Cooldown timeline and last seen charges of every watched skill.
@@ -155,9 +159,34 @@ impl VoiceProjection {
         self.book = RuleBook::build(rules, &self.book);
         self.tracker.restart(scheduler);
         self.clear_derived_state();
-        self.buffs.replace(collect_buff_aggregates(entities), false);
+        self.buffs.replace(
+            collect_buff_aggregates(entities, &self.buff_composites),
+            false,
+        );
         self.sync_buff_leads(VoiceSyncReason::Baseline, now_ms, now_mono, scheduler);
         true
+    }
+
+    /// Replaces the composite-buff definitions and silently re-derives the
+    /// buff aggregates, so composite rules follow an edit right away.
+    pub fn set_buff_composites(
+        &mut self,
+        buff_composites: Arc<BuffCompositeCatalog>,
+        entities: &EntityContext,
+        now_ms: i64,
+        now_mono: MonoTimeMs,
+        scheduler: &mut DeadlineScheduler,
+    ) {
+        self.buff_composites = buff_composites;
+        if !self.book.is_empty() {
+            self.refresh_buffs(
+                entities,
+                VoiceSyncReason::Baseline,
+                now_ms,
+                now_mono,
+                scheduler,
+            );
+        }
     }
 
     fn clear_derived_state(&mut self) {

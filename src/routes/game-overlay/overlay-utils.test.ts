@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { BuffUpdateState, SkillCdState } from "$lib/bindings";
+import { t } from "$lib/i18n/index.svelte";
+import type { InlineBuffEntry } from "$lib/settings-store";
 import {
   buildBuffTextRow,
   computeDisplay,
   formatTimerText,
   getBuffRemainingMs,
+  getCustomPanelDisplayRow,
   isBuffActive,
 } from "./overlay-utils";
 
@@ -198,5 +201,57 @@ describe("buff display membership", () => {
 
   it("treats only a missing object as absent", () => {
     expect(isBuffActive(undefined, 1_000)).toBe(false);
+  });
+});
+
+describe("custom panel buff rows", () => {
+  function entry(format: InlineBuffEntry["format"]): InlineBuffEntry {
+    return {
+      id: "entry",
+      sourceType: "buff",
+      sourceId: 100,
+      label: "",
+      format,
+    };
+  }
+
+  function row(format: InlineBuffEntry["format"], buffs: BuffUpdateState[]) {
+    return getCustomPanelDisplayRow(
+      entry(format),
+      1_500,
+      new Map(buffs.map((item) => [item.baseId, item])),
+      new Map(),
+      new Map(),
+      () => "Buff",
+    );
+  }
+
+  it("shows only the active state without timing", () => {
+    expect(row("active", [buff({ layer: 3 })])).toEqual({
+      key: "inline_buff_entry",
+      label: "Buff",
+      valueText: t("gameOverlay.buff.stateActive"),
+      metaText: "x3",
+      progressPercent: 0,
+      showProgress: false,
+    });
+  });
+
+  it("keeps a state row visible while the buff is missing or expired", () => {
+    const inactive = {
+      valueText: t("gameOverlay.buff.stateInactive"),
+      showProgress: false,
+      inactive: true,
+    };
+    expect(row("active", [])).toMatchObject(inactive);
+    expect(row("active", [buff({ durationMs: 100 })])).toMatchObject(inactive);
+  });
+
+  it("drops a timer row while the buff is missing", () => {
+    expect(row("timer", [])).toBeNull();
+    expect(row("timer", [buff()])).toMatchObject({
+      key: "inline_buff_entry",
+      showProgress: true,
+    });
   });
 });

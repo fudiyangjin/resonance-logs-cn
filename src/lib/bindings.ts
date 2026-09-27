@@ -595,6 +595,13 @@ isDead: boolean }
 export type BossMonsterIdsResult = { ids: number[] }
 export type BossSummaryDto = { monsterId: number; maxHp: number | null; isDefeated: boolean }
 /**
+ * A composite buff: present on an entity while at least `min_active` of its
+ * member buffs are (every member when unset), then published and tracked
+ * under its own negative `id` like any other buff (see
+ * [`crate::live::projections::buff_presence`]).
+ */
+export type BuffCompositeSpec = { id: number; memberIds: number[]; minActive?: number | null }
+/**
  * Live coverage of one watched buff on the local player. `covered_ms` and
  * `active_ms` follow the shared active-window rule; the frontend only
  * divides and formats.
@@ -1044,7 +1051,12 @@ export type ModelState = { kind: "notInstalled" } | { kind: "installing" } | { k
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
-export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot }
+export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot;
+/**
+ * Global composite-buff definitions. Kept while the skill monitor is off:
+ * voice rules can still watch a composite.
+ */
+buffComposites: BuffCompositeSpec[] }
 /**
  * Which caster population a monster-buff voice rule observes.
  */

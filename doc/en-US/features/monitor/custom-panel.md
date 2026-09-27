@@ -46,7 +46,8 @@ From S4, **{{ui:skillMonitor.customPanel.newFactor}}** creates a season node zon
 
 Click **{{ui:skillMonitor.customPanel.new}}** to create one, then put things in it:
 
-- **{{ui:skillMonitor.customPanel.addBuff}}**: pick from the Buff search; added only to the current monitor area;
+- **{{ui:skillMonitor.customPanel.addBuff}}**: pick from the Buff search; added only to the current monitor area. [Composite buffs](./buff.md#composite-buffs) can be picked too;
+- **{{ui:skillMonitor.customPanel.entries.stateOnly}}**: the Buff entry stays on screen and only shows whether it is active, without a timer;
 - **{{ui:skillMonitor.customPanel.counter.title}}**: choose a counter slot from the preset rules or your own custom rules;
 - **{{ui:skillMonitor.customPanel.hideWhenZero}}**: the counter takes no space while it is 0;
 - **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}**: announce when the count reaches its target.
@@ -54,7 +55,7 @@ Click **{{ui:skillMonitor.customPanel.new}}** to create one, then put things in 
 In **{{ui:skillMonitor.customPanel.entries.title}}** you can change display names, reorder entries or remove them.
 
 > [!NOTE]
-> The same Buff or counter slot can appear only once across **all** monitor areas. Items already used by another area are shown as "Already in xxx".
+> The same Buff or counter slot can appear only once across **all** custom monitor areas; items already used by another area are shown as "Already in xxx". Buff Monitor and Buff Coverage are not affected: a Buff placed here still shows there as usual.
 
 ### Built-in preset counters
 

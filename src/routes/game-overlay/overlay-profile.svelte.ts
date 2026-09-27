@@ -1,12 +1,13 @@
 import {
   SETTINGS,
-  ensureBuffAliases,
   ensureOverlayTextStyle,
+  getSkillBuffDisplayAliases,
   type OverlayTextStyle,
   type ShieldDetailStyle,
   type TextBuffPanelStyle,
 } from "$lib/settings-store";
 import { buildConfiguredBuffPlan } from "$lib/buff-monitor-plan";
+import { ensureBuffComposites } from "$lib/buff-composites";
 import { ensureResourceSections } from "$lib/resource-sections";
 import { ensureBuffIconOverrides } from "$lib/buff-icons";
 import {
@@ -49,8 +50,9 @@ const _configuredBuffPlan = $derived.by(() =>
 const _selectedClassKey = $derived.by(
   () => _activeProfile?.selectedClass ?? "wind_knight",
 );
-const _buffAliases = $derived.by(() =>
-  ensureBuffAliases(SETTINGS.skillMonitor.state.buffAliases),
+const _buffAliases = $derived.by(() => getSkillBuffDisplayAliases());
+const _buffComposites = $derived.by(() =>
+  ensureBuffComposites(SETTINGS.skillMonitor.state.buffComposites),
 );
 const _buffIconOverrides = $derived.by(() =>
   ensureBuffIconOverrides(SETTINGS.skillMonitor.state.buffIconOverrides),
@@ -141,6 +143,10 @@ export function selectedClassKey() {
 
 export function buffAliases() {
   return _buffAliases;
+}
+
+export function buffComposites() {
+  return _buffComposites;
 }
 
 export function buffIconOverrides() {

@@ -1,6 +1,7 @@
 //! Incremental DTO projection for live skill/entity monitoring.
 
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::sync::Arc;
 
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
 use crate::live::ipc::models::{
@@ -9,6 +10,7 @@ use crate::live::ipc::models::{
     SkillCdState, StunEntry, TeammateFantasyState,
 };
 use crate::live::ipc::topic::TopicMask;
+use crate::live::projections::buff_presence::{BuffCompositeCatalog, BuffPresence};
 use crate::live::projections::entity_duration::EntityDurationWatch;
 use crate::live::projections::skill_cd;
 use crate::live::protocol::attrs as attr_type;
@@ -70,6 +72,7 @@ type BuffViews = (
 struct BuffPublishFilter {
     monitor_all_local: bool,
     local_ids: HashSet<i32>,
+    local_composite_members: HashSet<i32>,
     monster_global_ids: HashSet<i32>,
     monitor_all_monster_self_applied: bool,
     monster_self_applied_ids: HashSet<i32>,
@@ -80,10 +83,17 @@ struct BuffPublishFilter {
 }
 
 impl BuffPublishFilter {
-    fn from_snapshot(config: &MonitorRuntimeSnapshot) -> Self {
+    fn from_snapshot(config: &MonitorRuntimeSnapshot, composites: &BuffCompositeCatalog) -> Self {
+        let local_ids: HashSet<i32> = config.skill.monitored_buff_ids.iter().copied().collect();
+        let local_composite_members = local_ids
+            .iter()
+            .filter_map(|id| composites.get(*id))
+            .flat_map(|composite| composite.members.iter().copied())
+            .collect();
         Self {
             monitor_all_local: config.skill.monitor_all_buff,
-            local_ids: config.skill.monitored_buff_ids.iter().copied().collect(),
+            local_ids,
+            local_composite_members,
             monster_global_ids: config.monster.global_ids.iter().copied().collect(),
             monitor_all_monster_self_applied: config.monster.monitor_all_self_applied,
             monster_self_applied_ids: config.monster.self_applied_ids.iter().copied().collect(),
@@ -106,6 +116,14 @@ impl BuffPublishFilter {
 
     fn watches_local(&self, base_id: i32) -> bool {
         self.monitor_all_local || self.local_ids.contains(&base_id)
+    }
+
+    fn affects_local(&self, base_id: i32) -> bool {
+        self.watches_local(base_id) || self.local_composite_members.contains(&base_id)
+    }
+
+    fn publishes_local_composite(&self, id: i32) -> bool {
+        self.local_ids.contains(&id)
     }
 
     fn watches_monster(&self, base_id: i32, local_player_applied: bool) -> bool {
@@ -189,6 +207,7 @@ struct BossMechanicRecord {
 #[derive(Debug, Default)]
 pub struct EntityMonitorProjection {
     buff_filter: BuffPublishFilter,
+    buff_composites: Arc<BuffCompositeCatalog>,
     revisions: MonitorRevisions,
     /// The monster monitor is switched off: watched entities are still
     /// tracked (voice cues do not follow the HUD toggle), only the HUD
@@ -255,6 +274,7 @@ impl EntityMonitorProjection {
     pub fn apply_config(
         &mut self,
         config: &MonitorRuntimeSnapshot,
+        buff_composites: Arc<BuffCompositeCatalog>,
         entities: &EntityContext,
         now_mono: MonoTimeMs,
     ) {
@@ -264,7 +284,8 @@ impl EntityMonitorProjection {
         self.monitored_panel_attr_ids.clear();
         self.monitored_panel_attr_ids
             .extend(config.skill.monitored_panel_attr_ids.iter().copied());
-        self.buff_filter = BuffPublishFilter::from_snapshot(config);
+        self.buff_filter = BuffPublishFilter::from_snapshot(config, &buff_composites);
+        self.buff_composites = buff_composites;
         self.entity_duration_hidden = !config.monster.enabled;
         self.entity_duration
             .apply_config(&config.monster, entities, now_mono);
@@ -408,7 +429,7 @@ impl EntityMonitorProjection {
                 let state = &event.state;
                 let local_player_applied = state.source == self.local_player;
                 let watched = if roles.is_local_player {
-                    self.buff_filter.watches_local(state.base_id)
+                    self.buff_filter.affects_local(state.base_id)
                 } else if roles.is_current_target {
                     self.buff_filter
                         .watches_monster(state.base_id, local_player_applied)
@@ -984,6 +1005,17 @@ impl EntityMonitorProjection {
                 continue;
             }
 
+            if is_local {
+                for composite in self.buff_composites.iter() {
+                    if !self.buff_filter.publishes_local_composite(composite.id) {
+                        continue;
+                    }
+                    if let Some(presence) = composite.presence(entity.active_buffs.values()) {
+                        local_buffs.push(composite_dto(composite.id, presence));
+                    }
+                }
+            }
+
             for state in entity.active_buffs.values() {
                 if is_local {
                     if self.buff_filter.watches_local(state.base_id) {
@@ -1036,11 +1068,25 @@ fn buff_dto(state: &BuffState, entities: &EntityContext) -> BuffUpdateState {
         state.source.map(|source| source.uuid),
         state.source_config_id,
     );
+    timed_buff_dto(state, state.base_id, state.layer, source_remodel_level)
+}
+
+/// A composite counts down with the member that expires first.
+fn composite_dto(id: i32, presence: BuffPresence<'_>) -> BuffUpdateState {
+    timed_buff_dto(presence.timing, id, presence.layer, None)
+}
+
+fn timed_buff_dto(
+    timing: &BuffState,
+    base_id: i32,
+    layer: i32,
+    source_remodel_level: Option<i64>,
+) -> BuffUpdateState {
     BuffUpdateState {
-        base_id: state.base_id,
-        layer: state.layer,
-        duration_ms: state.duration_ms.unwrap_or_default().min(i32::MAX as u64) as i32,
-        create_time_ms: state.started_wall_ms.unwrap_or_default(),
+        base_id,
+        layer,
+        duration_ms: timing.duration_ms.unwrap_or_default().min(i32::MAX as u64) as i32,
+        create_time_ms: timing.started_wall_ms.unwrap_or_default(),
         source_remodel_level,
     }
 }
@@ -1513,10 +1559,15 @@ mod tests {
 
         let mut config = MonitorRuntimeSnapshot::default();
         config.skill.monitor_all_buff = true;
-        projection.apply_config(&config, &entities, MonoTimeMs(0));
+        projection.apply_config(&config, Arc::default(), &entities, MonoTimeMs(0));
         assert_eq!(projection.snapshot(&entities).local_buffs.len(), 1);
 
-        projection.apply_config(&MonitorRuntimeSnapshot::default(), &entities, MonoTimeMs(0));
+        projection.apply_config(
+            &MonitorRuntimeSnapshot::default(),
+            Arc::default(),
+            &entities,
+            MonoTimeMs(0),
+        );
         assert!(projection.snapshot(&entities).local_buffs.is_empty());
     }
 
@@ -1558,7 +1609,7 @@ mod tests {
         let mut config = MonitorRuntimeSnapshot::default();
         config.skill.monitored_buff_ids.push(77);
         config.skill.buff_timeline_ids.push(88);
-        projection.apply_config(&config, &entities, MonoTimeMs(0));
+        projection.apply_config(&config, Arc::default(), &entities, MonoTimeMs(0));
 
         let local_buffs = &projection.snapshot(&entities).local_buffs;
         assert_eq!(local_buffs.len(), 1);
@@ -1573,7 +1624,7 @@ mod tests {
         seed_local_player(&mut projection, &mut entities, &mut scheduler);
         let mut config = MonitorRuntimeSnapshot::default();
         config.skill.monitored_buff_ids.push(77);
-        projection.apply_config(&config, &entities, MonoTimeMs(0));
+        projection.apply_config(&config, Arc::default(), &entities, MonoTimeMs(0));
 
         let mut unwatched = observed_buff(1, EntityUuid(10));
         unwatched.base_id = 88;
@@ -1602,6 +1653,149 @@ mod tests {
             mask | projection.apply(&event, &entities, &mut scheduler)
         });
         assert_eq!(mask, TopicMask::BUFFS);
+    }
+
+    fn composite_catalog() -> Arc<BuffCompositeCatalog> {
+        Arc::new(BuffCompositeCatalog::from_specs(&[
+            crate::live::bootstrap_snapshot::BuffCompositeSpec {
+                id: -1,
+                member_ids: vec![77, 78],
+                min_active: None,
+            },
+        ]))
+    }
+
+    fn apply_local_buffs(
+        projection: &mut EntityMonitorProjection,
+        entities: &mut EntityContext,
+        scheduler: &mut DeadlineScheduler,
+        sequence: u64,
+        buffs: Vec<ObservedBuff>,
+    ) -> TopicMask {
+        let events = entities.apply_batch(ProtocolBatch {
+            meta: meta(sequence, sequence as i64 * 1_000),
+            observations: buffs
+                .into_iter()
+                .map(|buff| ProtocolObservation::BuffChanged {
+                    target_uuid: EntityUuid(10),
+                    change: ObservedBuffChange::Applied { buff },
+                })
+                .collect(),
+        });
+        events.into_iter().fold(TopicMask::EMPTY, |mask, event| {
+            mask | projection.apply(&event, entities, scheduler)
+        })
+    }
+
+    #[test]
+    fn subscribed_composite_is_published_only_while_every_member_is_present() {
+        let mut projection = EntityMonitorProjection::default();
+        let mut entities = EntityContext::new();
+        let mut scheduler = DeadlineScheduler::new();
+        seed_local_player(&mut projection, &mut entities, &mut scheduler);
+        let mut config = MonitorRuntimeSnapshot::default();
+        config.skill.monitored_buff_ids.push(-1);
+        projection.apply_config(&config, composite_catalog(), &entities, MonoTimeMs(0));
+
+        let first = observed_buff(1, EntityUuid(10));
+        apply_local_buffs(
+            &mut projection,
+            &mut entities,
+            &mut scheduler,
+            2,
+            vec![first],
+        );
+        assert!(projection.snapshot(&entities).local_buffs.is_empty());
+
+        let mut second = observed_buff(2, EntityUuid(10));
+        second.base_id = 78;
+        second.layer = 3;
+        second.duration_ms = Some(2_000);
+        second.started_wall_ms = Some(2_000);
+        second.expires_mono_ms = Some(MonoTimeMs(4_000));
+        apply_local_buffs(
+            &mut projection,
+            &mut entities,
+            &mut scheduler,
+            3,
+            vec![second],
+        );
+
+        // Members are not published for the composite's sake; the composite
+        // counts down with the member expiring first and the lowest layer.
+        let local_buffs = projection.snapshot(&entities).local_buffs;
+        assert_eq!(local_buffs.len(), 1);
+        assert_eq!(local_buffs[0].base_id, -1);
+        assert_eq!(local_buffs[0].layer, 1);
+        assert_eq!(local_buffs[0].duration_ms, 2_000);
+        assert_eq!(local_buffs[0].create_time_ms, 2_000);
+        assert_eq!(local_buffs[0].source_remodel_level, None);
+    }
+
+    #[test]
+    fn composite_members_dirty_the_buff_topic_only_while_subscribed() {
+        let mut projection = EntityMonitorProjection::default();
+        let mut entities = EntityContext::new();
+        let mut scheduler = DeadlineScheduler::new();
+        seed_local_player(&mut projection, &mut entities, &mut scheduler);
+        projection.apply_config(
+            &MonitorRuntimeSnapshot::default(),
+            composite_catalog(),
+            &entities,
+            MonoTimeMs(0),
+        );
+        let mut member = observed_buff(1, EntityUuid(10));
+        member.base_id = 78;
+        let mask = apply_local_buffs(
+            &mut projection,
+            &mut entities,
+            &mut scheduler,
+            2,
+            vec![member.clone()],
+        );
+        assert_eq!(mask, TopicMask::EMPTY);
+
+        let mut config = MonitorRuntimeSnapshot::default();
+        config.skill.monitored_buff_ids.push(-1);
+        projection.apply_config(&config, composite_catalog(), &entities, MonoTimeMs(0));
+        member.instance_id = 2;
+        let mask = apply_local_buffs(
+            &mut projection,
+            &mut entities,
+            &mut scheduler,
+            3,
+            vec![member],
+        );
+        assert_eq!(mask, TopicMask::BUFFS);
+    }
+
+    #[test]
+    fn monitor_all_does_not_publish_unsubscribed_composites() {
+        let mut projection = EntityMonitorProjection::default();
+        let mut entities = EntityContext::new();
+        let mut scheduler = DeadlineScheduler::new();
+        seed_local_player(&mut projection, &mut entities, &mut scheduler);
+        let mut config = MonitorRuntimeSnapshot::default();
+        config.skill.monitor_all_buff = true;
+        projection.apply_config(&config, composite_catalog(), &entities, MonoTimeMs(0));
+        let mut second = observed_buff(2, EntityUuid(10));
+        second.base_id = 78;
+        apply_local_buffs(
+            &mut projection,
+            &mut entities,
+            &mut scheduler,
+            2,
+            vec![observed_buff(1, EntityUuid(10)), second],
+        );
+
+        let mut ids = projection
+            .snapshot(&entities)
+            .local_buffs
+            .iter()
+            .map(|buff| buff.base_id)
+            .collect::<Vec<_>>();
+        ids.sort_unstable();
+        assert_eq!(ids, vec![77, 78]);
     }
 
     #[test]
@@ -1640,7 +1834,7 @@ mod tests {
 
         let mut config = MonitorRuntimeSnapshot::default();
         config.skill.monitor_all_buff = true;
-        projection.apply_config(&config, &entities, MonoTimeMs(0));
+        projection.apply_config(&config, Arc::default(), &entities, MonoTimeMs(0));
 
         // A remodel tier on the source identity alone never tags the buff:
         // only a marker-observed fantasy registration does.
@@ -1784,7 +1978,7 @@ mod tests {
         let mut config = MonitorRuntimeSnapshot::default();
         config.monster.global_ids.push(77);
         config.teammate.any_source_ids.push(77);
-        projection.apply_config(&config, &entities, MonoTimeMs(0));
+        projection.apply_config(&config, Arc::default(), &entities, MonoTimeMs(0));
 
         let snapshot = projection.snapshot(&entities);
         assert_eq!(snapshot.boss_buffs.len(), 1);
@@ -1897,7 +2091,7 @@ mod tests {
 
         let mut config = MonitorRuntimeSnapshot::default();
         config.monster.self_applied_ids.push(77);
-        projection.apply_config(&config, &entities, MonoTimeMs(0));
+        projection.apply_config(&config, Arc::default(), &entities, MonoTimeMs(0));
 
         // Only the buff whose raw source is the local player matches
         // self-applied; summon/fantasy sources and teammates do not.
@@ -1943,7 +2137,7 @@ mod tests {
         );
         let mut config = MonitorRuntimeSnapshot::default();
         config.monster.global_ids.push(77);
-        projection.apply_config(&config, &entities, MonoTimeMs(0));
+        projection.apply_config(&config, Arc::default(), &entities, MonoTimeMs(0));
         assert_eq!(projection.snapshot(&entities).boss_buffs.len(), 1);
 
         apply_observations(
@@ -1992,7 +2186,7 @@ mod tests {
         );
         let mut config = MonitorRuntimeSnapshot::default();
         config.monster.global_ids.push(77);
-        projection.apply_config(&config, &entities, MonoTimeMs(0));
+        projection.apply_config(&config, Arc::default(), &entities, MonoTimeMs(0));
         assert_eq!(projection.snapshot(&entities).boss_buffs.len(), 1);
 
         apply_observations(
@@ -2425,7 +2619,12 @@ mod tests {
             let mut entities = EntityContext::default();
             let mut scheduler = DeadlineScheduler::default();
             seed_local_player(&mut projection, &mut entities, &mut scheduler);
-            projection.apply_config(&watched_config(&[SCYTHE_CART]), &entities, MonoTimeMs(0));
+            projection.apply_config(
+                &watched_config(&[SCYTHE_CART]),
+                Arc::default(),
+                &entities,
+                MonoTimeMs(0),
+            );
             (projection, entities, scheduler)
         }
 
@@ -2622,11 +2821,17 @@ mod tests {
             );
             assert_eq!(tracks(&projection, &entities).len(), 1);
 
-            projection.apply_config(&watched_config(&[]), &entities, MonoTimeMs(0));
+            projection.apply_config(
+                &watched_config(&[]),
+                Arc::default(),
+                &entities,
+                MonoTimeMs(0),
+            );
             assert!(tracks(&projection, &entities).is_empty());
 
             projection.apply_config(
                 &watched_config(&[SCYTHE_CART, 12_345]),
+                Arc::default(),
                 &entities,
                 MonoTimeMs(0),
             );
@@ -2684,6 +2889,7 @@ mod tests {
                     EntityOwnerScope::LocalPlayer,
                     false,
                 )]),
+                Arc::default(),
                 &entities,
                 MonoTimeMs(0),
             );
@@ -2699,6 +2905,7 @@ mod tests {
             let (mut projection, mut entities, mut scheduler) = setup();
             projection.apply_config(
                 &config_with(vec![spec(SCYTHE_CART, EntityOwnerScope::Any, true)]),
+                Arc::default(),
                 &entities,
                 MonoTimeMs(0),
             );

@@ -8,6 +8,7 @@ use std::collections::{BTreeSet, HashMap};
 use super::deadline::{Lead, TimerClass};
 use super::rule_book::{SubjectKey, buff_rule_scope};
 use super::{VoiceProjection, VoiceSyncReason};
+use crate::live::projections::buff_presence::BuffCompositeCatalog;
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
     BuffState, MonoTimeMs, VoiceBuffScope, VoiceLeadSubject, VoiceTimer,
@@ -138,7 +139,7 @@ impl VoiceProjection {
         scheduler: &mut DeadlineScheduler,
     ) {
         let edges = self.buffs.replace(
-            collect_buff_aggregates(entities),
+            collect_buff_aggregates(entities, &self.buff_composites),
             reason == VoiceSyncReason::Runtime,
         );
         self.fire_buff_edges(&edges, now_ms);
@@ -201,7 +202,10 @@ impl VoiceProjection {
     }
 }
 
-pub(super) fn collect_buff_aggregates(entities: &EntityContext) -> BuffAggregateMap {
+pub(super) fn collect_buff_aggregates(
+    entities: &EntityContext,
+    composites: &BuffCompositeCatalog,
+) -> BuffAggregateMap {
     let mut builders: HashMap<VoiceBuffScope, HashMap<i32, BuffAggregateBuilder>> = HashMap::new();
     if let Some(local) = entities.local_player() {
         for buff in entities.active_buffs(local.uuid) {
@@ -231,7 +235,7 @@ pub(super) fn collect_buff_aggregates(entities: &EntityContext) -> BuffAggregate
         }
     }
 
-    builders
+    let mut aggregates: BuffAggregateMap = builders
         .into_iter()
         .map(|(scope, buffs)| {
             (
@@ -242,7 +246,29 @@ pub(super) fn collect_buff_aggregates(entities: &EntityContext) -> BuffAggregate
                     .collect(),
             )
         })
-        .collect()
+        .collect();
+
+    // Composites are local-player subjects under their own (negative) id.
+    if let Some(local) = entities
+        .local_player()
+        .and_then(|local| entities.entity(local.uuid))
+    {
+        for composite in composites.iter() {
+            if let Some(presence) = composite.presence(local.active_buffs.values()) {
+                aggregates
+                    .entry(VoiceBuffScope::LocalPlayer)
+                    .or_default()
+                    .insert(
+                        composite.id,
+                        BuffAggregate {
+                            expires_mono_ms: presence.expires_mono_ms(),
+                            fantasy_tier: None,
+                        },
+                    );
+            }
+        }
+    }
+    aggregates
 }
 
 fn record_aggregate(

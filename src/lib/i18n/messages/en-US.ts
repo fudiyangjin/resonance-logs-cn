@@ -1127,6 +1127,9 @@ export const enUSMessages = {
   "components.buffSearchResultGrid.subtitle.idOnly": "ID {id}",
   "components.buffSearchResultGrid.subtitle.idOnlyUncatalogued":
     "ID {id} · Not in catalog",
+  "components.buffSearchResultGrid.subtitle.composite": "Composite buff",
+  "components.buffSearchResultGrid.subtitle.compositeThreshold":
+    "Composite buff · {count} of {total}",
   "components.buffSearchResultGrid.showMore":
     "Show more ({remaining} remaining)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
@@ -1240,6 +1243,30 @@ export const enUSMessages = {
   "skillMonitor.buff.placeholder": "Search buff name or ID",
   "skillMonitor.buff.searchPrompt": "Enter a name or ID to search buffs",
   "skillMonitor.buff.selectedTitle": "Selected Buffs",
+  "skillMonitor.buff.composite.title": "Composite Buffs",
+  "skillMonitor.buff.composite.description":
+    "Active while all (or at least some) of its buffs are; usable like any buff in monitor areas, coverage and voice (global setting)",
+  "skillMonitor.buff.composite.empty": "No composite buffs yet",
+  "skillMonitor.buff.composite.references": "Used by {count} profile(s)",
+  "skillMonitor.buff.composite.edit": "Edit",
+  "skillMonitor.buff.composite.new": "New Composite",
+  "skillMonitor.buff.composite.namePlaceholder": "Composite name",
+  "skillMonitor.buff.composite.members": "Members {count}/{max} (at least 2)",
+  "skillMonitor.buff.composite.removeMember": "Click to remove",
+  "skillMonitor.buff.composite.memberPlaceholder":
+    "Search and add member buffs",
+  "skillMonitor.buff.composite.icon": "Icon",
+  "skillMonitor.buff.composite.iconNone": "None (show as text)",
+  "skillMonitor.buff.composite.condition": "Active when",
+  "skillMonitor.buff.composite.conditionAll": "All {count} active at once",
+  "skillMonitor.buff.composite.conditionAtLeast":
+    "At least {count} of {total} active at once",
+  "skillMonitor.buff.composite.hint":
+    "Shown while the condition holds, until fewer members than required remain (with all required, that is the member ending first). Stacks: the lowest member stack when all are required, otherwise the number of members active. Member buffs still display on their own.",
+  "skillMonitor.buff.composite.save": "Save Composite",
+  "skillMonitor.buff.composite.deleteTitle": 'Delete composite "{name}"?',
+  "skillMonitor.buff.composite.deleteDescription":
+    "Its references in {count} profile(s) are removed too (monitor areas, coverage, alerts, voice).",
   "skillMonitor.buff.alias.title": "Buff Alias Settings",
   "skillMonitor.buff.alias.configuredCount": "{count} aliases set",
   "skillMonitor.buff.alias.placeholder": "Search any buff to set an alias",
@@ -1413,6 +1440,8 @@ export const enUSMessages = {
   "skillMonitor.customPanel.entries.sourceCounter": "Source: Counter - {name}",
   "skillMonitor.customPanel.entries.sourceBuff": "Source: Buff - {name}",
   "skillMonitor.customPanel.entries.labelPlaceholder": "Display Name",
+  "skillMonitor.customPanel.entries.stateOnly":
+    "Show active state only (no timer)",
   "skillMonitor.customPanel.hideWhenZero": "Hide when count is 0",
   "skillMonitor.customPanel.empty":
     'No custom monitor areas yet. Click "New Monitor Area" above, then add buffs or counters.',
@@ -1713,6 +1742,8 @@ export const enUSMessages = {
   "gameOverlay.timer.infinite": "∞",
   "gameOverlay.timer.empty": "--",
   "gameOverlay.buff.fantasyTierSuffix": "{name} | Tier {level}",
+  "gameOverlay.buff.stateActive": "Active",
+  "gameOverlay.buff.stateInactive": "Inactive",
   "gameOverlay.timer.seconds": "{value}s",
   "gameOverlay.timer.minutes": "{value}m",
   "gameOverlay.timer.hours": "{value}h",

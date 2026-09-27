@@ -246,9 +246,11 @@ export function ensureBuffCoverageEntries(
   const seenEntryIds = new Set<string>();
   for (const [index, entry] of (profile?.buffCoverageEntries ?? []).entries()) {
     const buffId = entry?.buffId;
+    // Negative ids are composite buffs.
     if (
       !Number.isSafeInteger(buffId) ||
-      buffId <= 0 ||
+      buffId === 0 ||
+      buffId < -2_147_483_648 ||
       buffId > 2_147_483_647 ||
       seenBuffIds.has(buffId)
     ) {

@@ -1,4 +1,3 @@
-import type { ConfiguredBuffPlan } from "$lib/buff-monitor-plan";
 import {
   getSeasonCultivateFactorEffectBuffIdMap,
   getSeasonCultivateFactorItemSlotTemplateMap,
@@ -7,7 +6,6 @@ import {
   resolveSeasonPanelMode,
   SEASON_NODE_BUFF_CONFIG,
   type SeasonNodeTemplate,
-  type SeasonPanelMode,
 } from "$lib/skill-mappings";
 
 export type LegacyFactorItemPlan = {
@@ -22,9 +20,11 @@ export type SeasonNodeBuffPlan = {
   buffId: number;
 };
 
+/** Rows of the factor / season-node panel. Which buffs the monitor-all
+ * catch-all leaves to this panel is decided statically by the configured
+ * plan, never by this runtime view. */
 export type RuntimeFactorPlan = {
-  mode: SeasonPanelMode | "disabled";
-  ownedBuffIds: ReadonlySet<number>;
+  mode: "factor" | "node" | "disabled";
   legacyItems: readonly LegacyFactorItemPlan[];
   nodeBuffs: readonly SeasonNodeBuffPlan[];
 };
@@ -49,45 +49,25 @@ const DEFAULT_FACTOR_DISPLAY_CATALOG: FactorDisplayCatalog = {
 
 const EMPTY_FACTOR_PLAN: RuntimeFactorPlan = {
   mode: "disabled",
-  ownedBuffIds: new Set<number>(),
   legacyItems: [],
   nodeBuffs: [],
 };
 
 export function buildRuntimeFactorPlan(
-  configured: ConfiguredBuffPlan,
+  hasFactorPanel: boolean,
   context: RuntimeFactorContext,
   catalog: FactorDisplayCatalog = DEFAULT_FACTOR_DISPLAY_CATALOG,
 ): RuntimeFactorPlan {
-  if (!configured.hasFactorPanel) return EMPTY_FACTOR_PLAN;
+  if (!hasFactorPanel) return EMPTY_FACTOR_PLAN;
 
   const mode = resolveSeasonPanelMode(context.seasonId);
-  if (mode === "unknown") {
-    return {
-      mode,
-      ownedBuffIds: configured.factorDisplayCandidateIds,
-      legacyItems: [],
-      nodeBuffs: [],
-    };
-  }
   if (mode === "factor") {
     return buildLegacyFactorPlan(context.slotItemIds, catalog);
   }
-  return buildSeasonNodePlan(context.activeTemplateIds, catalog);
-}
-
-export function shouldDisplayOrdinaryBuff(
-  configured: ConfiguredBuffPlan,
-  factor: RuntimeFactorPlan,
-  baseId: number,
-): boolean {
-  if (
-    configured.liveOwnedBuffIds.has(baseId) ||
-    factor.ownedBuffIds.has(baseId)
-  ) {
-    return false;
+  if (mode === "node") {
+    return buildSeasonNodePlan(context.activeTemplateIds, catalog);
   }
-  return configured.monitorAll || configured.normalDisplayIds.has(baseId);
+  return EMPTY_FACTOR_PLAN;
 }
 
 function buildLegacyFactorPlan(
@@ -95,7 +75,6 @@ function buildLegacyFactorPlan(
   catalog: FactorDisplayCatalog,
 ): RuntimeFactorPlan {
   const seenItems = new Set<number>();
-  const ownedBuffIds = new Set<number>();
   const legacyItems: LegacyFactorItemPlan[] = [];
 
   for (const itemId of slotItemIds) {
@@ -105,7 +84,6 @@ function buildLegacyFactorPlan(
     seenItems.add(itemId);
     const effectBuffIds = catalog.effectBuffIdsByItem.get(itemId) ?? [];
     const slotTemplateId = catalog.slotTemplateIdByItem.get(itemId);
-    for (const buffId of effectBuffIds) ownedBuffIds.add(buffId);
     legacyItems.push({
       itemId,
       ruleId: getSeasonCultivateFactorRuleId(itemId),
@@ -116,7 +94,6 @@ function buildLegacyFactorPlan(
 
   return {
     mode: "factor",
-    ownedBuffIds,
     legacyItems,
     nodeBuffs: [],
   };
@@ -126,7 +103,7 @@ function buildSeasonNodePlan(
   activeTemplateIds: ReadonlySet<number>,
   catalog: FactorDisplayCatalog,
 ): RuntimeFactorPlan {
-  const ownedBuffIds = new Set<number>();
+  const seenBuffIds = new Set<number>();
   const nodeBuffs: SeasonNodeBuffPlan[] = [];
 
   for (const template of resolveActiveSeasonNodeTemplates(
@@ -134,8 +111,8 @@ function buildSeasonNodePlan(
     catalog.nodeTemplates,
   )) {
     for (const buff of template.displayBuffs) {
-      if (ownedBuffIds.has(buff.buffId)) continue;
-      ownedBuffIds.add(buff.buffId);
+      if (seenBuffIds.has(buff.buffId)) continue;
+      seenBuffIds.add(buff.buffId);
       nodeBuffs.push({
         templateId: template.templateId,
         buffId: buff.buffId,
@@ -145,7 +122,6 @@ function buildSeasonNodePlan(
 
   return {
     mode: "node",
-    ownedBuffIds,
     legacyItems: [],
     nodeBuffs,
   };

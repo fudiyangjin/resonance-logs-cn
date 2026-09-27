@@ -32,7 +32,8 @@ export function ensureCustomPanelEntries(
       entry.sourceType === "counter"
         ? (entry.label ?? `#${entry.sourceId}`)
         : (entry.label ?? ""),
-    format: entry.format ?? "timer",
+    // Legacy `stacks_timer` was never rendered differently from `timer`.
+    format: entry.format === "active" ? "active" : "timer",
   }));
 }
 

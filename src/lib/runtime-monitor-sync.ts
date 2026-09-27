@@ -4,11 +4,8 @@ import {
   type MonitorRuntimeSnapshot,
   type VoiceRuntimeSnapshot,
 } from "$lib/bindings";
-import {
-  buildBuffTimelineIds,
-  buildConfiguredBuffPlan,
-  buildPublishedBuffIds,
-} from "$lib/buff-monitor-plan";
+import { buildConfiguredBuffPlan } from "$lib/buff-monitor-plan";
+import { buffCompositeSpecs, ensureBuffComposites } from "$lib/buff-composites";
 import { expandBuffSelection } from "$lib/config/buff-name-table";
 import { activeProfile as getActiveProfile } from "$lib/skill-monitor-profile.svelte.js";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
@@ -103,8 +100,16 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
   const seasonCultivateFactorTemplates = hasSeasonCultivateFactorGroup
     ? getSeasonCultivateFactorTemplates()
     : [];
-  const buffTimelineIds = buildBuffTimelineIds(buffPlan);
-  const mergedBuffIds = buildPublishedBuffIds(buffPlan);
+  // A custom-panel counter row counts its reset buff down from the published
+  // buffs, so subscribe it; publication never implies display.
+  const counterResetBuffIds = enabledCounterRules
+    .filter((rule) => inlineCounterRuleIds.includes(rule.ruleId))
+    .flatMap((rule) => rule.effectSlots.map((slot) => slot.resetBuffId))
+    .filter((buffId) => buffId > 0);
+  const mergedBuffIds = uniqueSortedNumbers([
+    ...buffPlan.publishedIds,
+    ...counterResetBuffIds,
+  ]);
   const monitoredPanelAttrIds = uniqueSortedNumbers(
     monitoredPanelAttrs
       .filter((item) => item.enabled)
@@ -133,7 +138,7 @@ function buildSkillRuntimeSnapshot(): MonitorRuntimeSnapshot["skill"] {
     monitoredPanelAttrIds: skillMonitorEnabled ? monitoredPanelAttrIds : [],
     buffCounterRules: enabledCounterRules,
     seasonCultivateFactorTemplates,
-    buffTimelineIds,
+    buffTimelineIds: [...buffPlan.timelineIds],
   };
 }
 
@@ -214,6 +219,9 @@ export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
     skill: buildSkillRuntimeSnapshot(),
     monster: buildMonsterRuntimeSnapshot(),
     teammate: buildTeammateRuntimeSnapshot(),
+    buffComposites: buffCompositeSpecs(
+      ensureBuffComposites(SETTINGS.skillMonitor.state.buffComposites),
+    ),
   };
 }
 

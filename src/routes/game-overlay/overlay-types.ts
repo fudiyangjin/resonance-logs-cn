@@ -109,4 +109,7 @@ export type ResizeState = {
   element: HTMLElement | null;
 };
 
-export type CustomPanelDisplayRow = TextBuffRowDisplay;
+/** `inactive` marks an always-shown state row whose buff is currently off. */
+export type CustomPanelDisplayRow = TextBuffRowDisplay & {
+  inactive?: boolean | undefined;
+};

@@ -46,7 +46,8 @@ S4 起，**{{ui:skillMonitor.customPanel.newFactor}}** 创建的是赛季节点�
 
 点击 **{{ui:skillMonitor.customPanel.new}}** 创建，然后往里放东西：
 
-- **{{ui:skillMonitor.customPanel.addBuff}}**：从 Buff 搜索中选取，只加入当前监控区；
+- **{{ui:skillMonitor.customPanel.addBuff}}**：从 Buff 搜索中选取，只加入当前监控区；也可以选 [组合 Buff](./buff.md#组合-buff)；
+- **{{ui:skillMonitor.customPanel.entries.stateOnly}}**：勾选后该 Buff 条目常驻显示，只标明激活 / 未激活，不显示时间；
 - **{{ui:skillMonitor.customPanel.counter.title}}**：从预设规则或你的自定义规则中选择计数器槽位；
 - **{{ui:skillMonitor.customPanel.hideWhenZero}}**：计数器为 0 时不占位置；
 - **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}**：计数达到目标时播报。
@@ -54,7 +55,7 @@ S4 起，**{{ui:skillMonitor.customPanel.newFactor}}** 创建的是赛季节点�
 在 **{{ui:skillMonitor.customPanel.entries.title}}** 中可以修改显示名、调整顺序或移除。
 
 > [!NOTE]
-> 同一个 Buff 或计数器槽位在**所有**监控区中只能出现一次。已被其他区占用的项会显示「已在 xxx」。
+> 同一个 Buff 或计数器槽位在**所有**自定义监控区中只能出现一次，已被其他区占用的项会显示「已在 xxx」。Buff 监控和 Buff 覆盖率不受此限制：放在这里的 Buff 仍会在那些区域照常显示。
 
 ### 内置预设计数器
 

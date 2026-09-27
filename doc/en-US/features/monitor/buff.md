@@ -11,6 +11,9 @@ Type a **name or ID** in the search box and click a result to add it to **{{ui:s
 
 Not sure what a Buff is called? Turn on **{{ui:skillMonitor.buff.all.title}}** first, and the overlay will show every Buff you currently have. Once you find the one you want, add it precisely, then turn "Monitor All" off.
 
+> [!NOTE]
+> A Buff shows wherever you set it up: the same Buff can sit here, in [Custom Monitor](./custom-panel.md) and in [Buff Coverage](./buff-coverage.md) at the same time, and each area shows it on its own. **{{ui:skillMonitor.buff.all.title}}** only shows Buffs that no other enabled area already shows, so Buffs the season factor / node zone may use never leak into it.
+
 ### Category quick watch
 
 **{{ui:skillMonitor.buff.category.title}}** lets you watch all **Food** or **Alchemy** Buffs at once, which is handy for checking whether you have eaten and taken potions before entering a dungeon.
@@ -55,6 +58,17 @@ Some Buffs change their icon automatically with the stack count. For example, Wi
 Buff aliases are also used as the display names of Buff effects in the [factor zone](./custom-panel.md#factor-zone).
 
 Buffs that come from a Fantasy are shown as "Name | Tier n" when the Fantasy's tier can be detected.
+
+## Composite buffs
+
+Some effects only count when several Buffs are active at once. Create a composite in **{{ui:skillMonitor.buff.composite.title}}**: enter a name, search for and add 2–8 member Buffs, set **{{ui:skillMonitor.buff.composite.condition}}**, and optionally pick one member's icon (without one, it shows as text).
+
+- **{{ui:skillMonitor.buff.composite.condition}}** requires every member by default; you can lower it to at least k members at once (k can be 1, meaning any one of them);
+- A composite lasts until fewer members than required remain. With every member required, the remaining time is that of the member ending first; for example, with at least 3 of 5 and four members left at 10, 8, 6 and 4 seconds, the composite has 6 seconds left;
+- Stacks: with every member required, the lowest member stack count; with at least k, the number of members currently active;
+- Once saved, a composite can be searched and added like any Buff on this page, in [Custom Monitor](./custom-panel.md), [Buff Coverage](./buff-coverage.md), countdown alerts and voice announcements; search results mark it as "Composite buff";
+- Watching a composite does not change how its member Buffs display;
+- Like aliases, composites are a global setting and are not exported with profiles. When an imported profile refers to a composite this install does not have, those references are removed automatically; deleting a composite also removes its references from every profile.
 
 ## Priority
 

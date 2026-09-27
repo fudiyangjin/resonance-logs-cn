@@ -209,7 +209,10 @@ fn multiple_instances_emit_only_first_gained_and_last_lost() {
             },
         }],
     ));
-    let gained = aggregates.replace(collect_buff_aggregates(&entities), true);
+    let gained = aggregates.replace(
+        collect_buff_aggregates(&entities, &BuffCompositeCatalog::default()),
+        true,
+    );
     assert_eq!(gained.len(), 1);
     assert!(gained[0].gained);
 
@@ -224,7 +227,10 @@ fn multiple_instances_emit_only_first_gained_and_last_lost() {
     ));
     assert!(
         aggregates
-            .replace(collect_buff_aggregates(&entities), true)
+            .replace(
+                collect_buff_aggregates(&entities, &BuffCompositeCatalog::default()),
+                true
+            )
             .is_empty()
     );
 
@@ -237,7 +243,10 @@ fn multiple_instances_emit_only_first_gained_and_last_lost() {
     ));
     assert!(
         aggregates
-            .replace(collect_buff_aggregates(&entities), true)
+            .replace(
+                collect_buff_aggregates(&entities, &BuffCompositeCatalog::default()),
+                true
+            )
             .is_empty()
     );
 
@@ -248,7 +257,66 @@ fn multiple_instances_emit_only_first_gained_and_last_lost() {
             change: ObservedBuffChange::Remove { instance_id: 11 },
         }],
     ));
-    let lost = aggregates.replace(collect_buff_aggregates(&entities), true);
+    let lost = aggregates.replace(
+        collect_buff_aggregates(&entities, &BuffCompositeCatalog::default()),
+        true,
+    );
+    assert_eq!(lost.len(), 1);
+    assert!(!lost[0].gained);
+}
+
+#[test]
+fn composite_aggregate_follows_its_members() {
+    let catalog =
+        BuffCompositeCatalog::from_specs(&[crate::live::bootstrap_snapshot::BuffCompositeSpec {
+            id: -1,
+            member_ids: vec![77, 78],
+            min_active: None,
+        }]);
+    let applied = |buff: ObservedBuff| ProtocolObservation::BuffChanged {
+        target_uuid: EntityUuid(1),
+        change: ObservedBuffChange::Applied { buff },
+    };
+    let composite_edges = |edges: Vec<BuffEdge>| {
+        edges
+            .into_iter()
+            .filter(|edge| edge.base_id == -1)
+            .collect::<Vec<_>>()
+    };
+    let mut aggregates = BuffAggregates::default();
+    let mut entities = local_context();
+
+    entities.apply_batch(batch(2, vec![applied(buff(10, Some(2_000)))]));
+    let edges = aggregates.replace(collect_buff_aggregates(&entities, &catalog), true);
+    assert!(composite_edges(edges).is_empty());
+
+    // The second member expires first (started at 1_000, lasts 500).
+    let mut other = buff(11, Some(1_500));
+    other.base_id = 78;
+    other.duration_ms = Some(500);
+    entities.apply_batch(batch(3, vec![applied(other)]));
+    let gained =
+        composite_edges(aggregates.replace(collect_buff_aggregates(&entities, &catalog), true));
+    assert_eq!(gained.len(), 1);
+    assert!(gained[0].gained);
+    assert_eq!(gained[0].scope, VoiceBuffScope::LocalPlayer);
+    assert_eq!(gained[0].fantasy_tier, None);
+    assert_eq!(
+        aggregates
+            .get(VoiceBuffScope::LocalPlayer, -1)
+            .and_then(|aggregate| aggregate.expires_mono_ms),
+        Some(MonoTimeMs(1_500))
+    );
+
+    entities.apply_batch(batch(
+        4,
+        vec![ProtocolObservation::BuffChanged {
+            target_uuid: EntityUuid(1),
+            change: ObservedBuffChange::Remove { instance_id: 10 },
+        }],
+    ));
+    let lost =
+        composite_edges(aggregates.replace(collect_buff_aggregates(&entities, &catalog), true));
     assert_eq!(lost.len(), 1);
     assert!(!lost[0].gained);
 }
@@ -266,7 +334,10 @@ fn entity_disappearance_emits_one_lost_edge_for_each_aggregate() {
             },
         }],
     ));
-    aggregates.replace(collect_buff_aggregates(&entities), false);
+    aggregates.replace(
+        collect_buff_aggregates(&entities, &BuffCompositeCatalog::default()),
+        false,
+    );
 
     entities.apply_batch(batch(
         3,
@@ -274,7 +345,10 @@ fn entity_disappearance_emits_one_lost_edge_for_each_aggregate() {
             uuid: EntityUuid(1),
         }],
     ));
-    let lost = aggregates.replace(collect_buff_aggregates(&entities), true);
+    let lost = aggregates.replace(
+        collect_buff_aggregates(&entities, &BuffCompositeCatalog::default()),
+        true,
+    );
 
     assert_eq!(lost.len(), 1);
     assert_eq!(lost[0].scope, VoiceBuffScope::LocalPlayer);
@@ -333,7 +407,7 @@ fn local_source_scope_uses_original_source_not_summoner() {
 
     // A summon owned by the local player is not the local player: raw
     // source matching excludes it from the local-player scope.
-    let aggregates = collect_buff_aggregates(&entities);
+    let aggregates = collect_buff_aggregates(&entities, &BuffCompositeCatalog::default());
     assert!(aggregates[&VoiceBuffScope::MonsterAnySource].contains_key(&77));
     assert!(
         !aggregates
@@ -353,7 +427,7 @@ fn local_source_scope_uses_original_source_not_summoner() {
             },
         }],
     ));
-    let aggregates = collect_buff_aggregates(&entities);
+    let aggregates = collect_buff_aggregates(&entities, &BuffCompositeCatalog::default());
     assert!(aggregates[&VoiceBuffScope::MonsterLocalPlayerSource].contains_key(&77));
 }
 
@@ -1142,7 +1216,7 @@ mod entity_monitor_bridge {
             let mut config = MonitorRuntimeSnapshot::default();
             config.monster.enabled = monster_enabled;
             config.monster.watched_entities = specs;
-            monitor.apply_config(&config, &entities, MonoTimeMs(100));
+            monitor.apply_config(&config, Arc::default(), &entities, MonoTimeMs(100));
             let mut harness = Self {
                 entities,
                 monitor,
@@ -1400,7 +1474,7 @@ mod entity_monitor_bridge {
         config.skill.enabled = true;
         config.skill.monitored_skill_ids = vec![SKILL + 1];
         h.monitor
-            .apply_config(&config, &h.entities, MonoTimeMs(100));
+            .apply_config(&config, Arc::default(), &h.entities, MonoTimeMs(100));
 
         // Act: a cast, then a 10 s cooldown received at t = 200 ms.
         h.step(
@@ -1876,7 +1950,7 @@ mod entity_monitor_bridge {
         config.monster.enabled = true;
         config.monster.watched_entities = vec![spec(Some(20_000), EntityOwnerScope::Any)];
         h.monitor
-            .apply_config(&config, &h.entities, MonoTimeMs(500));
+            .apply_config(&config, Arc::default(), &h.entities, MonoTimeMs(500));
         h.flush(5);
         assert!(h.fired().is_empty());
         assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(20_200)));

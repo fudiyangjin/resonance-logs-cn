@@ -8,9 +8,11 @@
 
 Search for Buffs in **{{ui:skillMonitor.buffCoverage.list.title}}** and add them. There is a limit on how many you can add, and the page shows "added / limit".
 
+You can also add a [composite buff](./buff.md#composite-buffs): its coverage counts the time its condition holds (all, or at least k, members active at once), both live and in history (teammates included).
+
 Each entry has a **{{ui:skillMonitor.buffCoverage.entry.showInLive}}** switch:
 
-- **On**: your own coverage is shown in the Buff coverage area of the live monitor overlay;
+- **On**: your own coverage is shown in the Buff coverage area of the live monitor overlay. While that area is shown, **{{ui:skillMonitor.buff.all.title}}** no longer repeats this Buff; if you selected it explicitly in Buff Monitor, it still shows there;
 - **Off**: not shown in the overlay, but still tracked for teammates and history.
 
 ## Overlay style

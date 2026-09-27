@@ -256,6 +256,34 @@ export function buildBuffTextRow(
   };
 }
 
+/** Always-present row that only tells whether the buff is active; the
+ * timing is left out on purpose. */
+function buildBuffStateRow(
+  key: string,
+  label: string,
+  buff: BuffUpdateState | undefined,
+  now: number,
+): CustomPanelDisplayRow {
+  if (!buff || !isBuffActive(buff, now)) {
+    return {
+      key,
+      label,
+      valueText: t("gameOverlay.buff.stateInactive"),
+      progressPercent: 0,
+      showProgress: false,
+      inactive: true,
+    };
+  }
+  return {
+    key,
+    label: withFantasyTierSuffix(label, buff),
+    valueText: t("gameOverlay.buff.stateActive"),
+    metaText: buff.layer > 1 ? `x${buff.layer}` : undefined,
+    progressPercent: 0,
+    showProgress: false,
+  };
+}
+
 function formatCounterCountText(
   slotState: CounterSlotState,
   slotConfig?: CounterRulePreset["effectSlots"][number],
@@ -297,6 +325,14 @@ export function getCustomPanelDisplayRow(
 ): CustomPanelDisplayRow | null {
   if (entry.sourceType === "buff") {
     const buff = buffMap.get(entry.sourceId);
+    if (entry.format === "active") {
+      return buildBuffStateRow(
+        `inline_buff_${entry.id}`,
+        resolveBuffName(entry.sourceId),
+        buff,
+        now,
+      );
+    }
     if (!buff) return null;
     return buildBuffTextRow(
       `inline_buff_${entry.id}`,

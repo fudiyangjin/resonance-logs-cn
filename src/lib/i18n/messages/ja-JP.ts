@@ -1101,6 +1101,9 @@ export const jaJPMessages = {
   "components.buffSearchResultGrid.subtitle.idOnly": "ID {id}",
   "components.buffSearchResultGrid.subtitle.idOnlyUncatalogued":
     "ID {id} · 未収録",
+  "components.buffSearchResultGrid.subtitle.composite": "複合 Buff",
+  "components.buffSearchResultGrid.subtitle.compositeThreshold":
+    "複合 Buff · {total} 個中 {count} 個",
   "components.buffSearchResultGrid.showMore": "さらに表示(残り {remaining} 件)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
   "skillMonitor.layout.title": "ライブモニター",
@@ -1214,6 +1217,30 @@ export const jaJPMessages = {
   "skillMonitor.buff.placeholder": "Buff 名または ID を検索",
   "skillMonitor.buff.searchPrompt": "名前または ID を入力して Buff を検索",
   "skillMonitor.buff.selectedTitle": "選択した Buff",
+  "skillMonitor.buff.composite.title": "複合 Buff",
+  "skillMonitor.buff.composite.description":
+    "複数の Buff がすべて（またはそのうち指定数以上）有効なときに有効になり、通常の Buff と同じように各監視エリア・稼働率・音声で使えます（グローバル設定）",
+  "skillMonitor.buff.composite.empty": "複合 Buff はまだありません",
+  "skillMonitor.buff.composite.references": "{count} 個のプロファイルで使用中",
+  "skillMonitor.buff.composite.edit": "編集",
+  "skillMonitor.buff.composite.new": "複合を新規作成",
+  "skillMonitor.buff.composite.namePlaceholder": "複合名",
+  "skillMonitor.buff.composite.members": "メンバー {count}/{max}（2 個以上）",
+  "skillMonitor.buff.composite.removeMember": "クリックで削除",
+  "skillMonitor.buff.composite.memberPlaceholder":
+    "メンバー Buff を検索して追加",
+  "skillMonitor.buff.composite.icon": "アイコン",
+  "skillMonitor.buff.composite.iconNone": "なし（テキスト表示）",
+  "skillMonitor.buff.composite.condition": "有効条件",
+  "skillMonitor.buff.composite.conditionAll": "{count} 個すべてが同時に有効",
+  "skillMonitor.buff.composite.conditionAtLeast":
+    "{total} 個中 {count} 個以上が同時に有効",
+  "skillMonitor.buff.composite.hint":
+    "有効条件を満たしている間表示され、同時に有効なメンバーが必要数を下回るまで続きます（すべて必要な場合は最初に切れるメンバー）。スタック数：すべて必要な場合はメンバーの最小スタック数、それ以外は現在有効なメンバー数。メンバー Buff 自体の表示には影響しません。",
+  "skillMonitor.buff.composite.save": "複合を保存",
+  "skillMonitor.buff.composite.deleteTitle": "複合「{name}」を削除しますか？",
+  "skillMonitor.buff.composite.deleteDescription":
+    "{count} 個のプロファイルにある参照（監視エリア・稼働率・アラート・音声）も削除されます。",
   "skillMonitor.buff.alias.title": "Buff 別名設定",
   "skillMonitor.buff.alias.configuredCount": "{count} 件の別名を設定",
   "skillMonitor.buff.alias.placeholder": "任意の Buff を検索して別名を設定",
@@ -1390,6 +1417,8 @@ export const jaJPMessages = {
     "ソース: カウンター - {name}",
   "skillMonitor.customPanel.entries.sourceBuff": "ソース: Buff - {name}",
   "skillMonitor.customPanel.entries.labelPlaceholder": "表示名",
+  "skillMonitor.customPanel.entries.stateOnly":
+    "有効かどうかのみ表示（時間なし）",
   "skillMonitor.customPanel.hideWhenZero": "カウントが 0 のとき非表示",
   "skillMonitor.customPanel.empty":
     "カスタムモニターエリアはまだありません。上の「新規モニターエリア」をクリックし、Buff またはカウンターを追加してください。",
@@ -1692,6 +1721,8 @@ export const jaJPMessages = {
   "gameOverlay.timer.infinite": "∞",
   "gameOverlay.timer.empty": "--",
   "gameOverlay.buff.fantasyTierSuffix": "{name} | {level}階",
+  "gameOverlay.buff.stateActive": "有効",
+  "gameOverlay.buff.stateInactive": "無効",
   "gameOverlay.timer.seconds": "{value}秒",
   "gameOverlay.timer.minutes": "{value}分",
   "gameOverlay.timer.hours": "{value}時間",

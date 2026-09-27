@@ -103,6 +103,32 @@ describe("monitoring settings reconciliation", () => {
     });
   });
 
+  it("normalizes composites and prunes references to undefined ones", () => {
+    const state = createDefaultMonitoringSettingsState();
+    state.skillMonitor.buffComposites = [
+      { id: -1, name: "Kept", memberIds: [1, 2] },
+      { id: 3, name: "Invalid", memberIds: [1, 2] },
+    ];
+    state.skillMonitor.profiles[0]!.monitoredBuffIds = [-1, -2, 7];
+
+    const repaired = reconcileMonitoringState(state);
+    expect(repaired.skillMonitor.buffComposites).toEqual([
+      { id: -1, name: "Kept", memberIds: [1, 2] },
+    ]);
+    expect(repaired.skillMonitor.profiles[0]!.monitoredBuffIds).toEqual([
+      -1, 7,
+    ]);
+  });
+
+  it("defaults missing buff composites for legacy states", () => {
+    const state = createDefaultMonitoringSettingsState();
+    delete (state.skillMonitor as Partial<typeof state.skillMonitor>)
+      .buffComposites;
+
+    const repaired = reconcileMonitoringState(state);
+    expect(repaired.skillMonitor.buffComposites).toEqual([]);
+  });
+
   it("defaults missing buff icon overrides for legacy states", () => {
     const state = createDefaultMonitoringSettingsState();
     delete (state.skillMonitor as Partial<typeof state.skillMonitor>)
