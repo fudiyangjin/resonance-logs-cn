@@ -166,12 +166,27 @@
           {@const pct = laneCoveragePct(lane)}
           <div class="flex items-center" style="height: {LANE_H}px">
             <div
-              class="flex shrink-0 items-center overflow-hidden pr-2 pl-2.5"
+              class="flex shrink-0 items-center gap-1 overflow-hidden pr-2 pl-2.5"
               style="width: {gutter}px"
-              {@attach tooltip(() => `${group.player.name} · ${lane.buffName}`)}
+              {@attach tooltip(
+                () =>
+                  `${group.player.name} · ${lane.buffName} · ${t(
+                    "history.timeline.buff.pillTooltip",
+                    { count: lane.triggerCount },
+                  )}`,
+              )}
             >
-              <span class="truncate text-[10px]" style="color: var(--tl-fg)">
+              <span
+                class="min-w-0 flex-1 truncate text-[10px]"
+                style="color: var(--tl-fg)"
+              >
                 {lane.buffName}
+              </span>
+              <span
+                class="shrink-0 text-right text-[10px] font-medium tabular-nums"
+                style="color: {color}"
+              >
+                {pct === null ? "--" : `${pct.toFixed(1)}%`}
               </span>
             </div>
             <div
@@ -190,17 +205,6 @@
                   {@attach tooltip(() => spanTooltip(group.player, lane, rect))}
                 ></div>
               {/each}
-              <span
-                class="absolute top-1/2 right-1 -translate-y-1/2 rounded px-1 text-[10px] font-medium tabular-nums"
-                style="background: rgba(15,23,42,0.75); color: {color}"
-                {@attach tooltip(() =>
-                  t("history.timeline.buff.pillTooltip", {
-                    count: lane.triggerCount,
-                  }),
-                )}
-              >
-                {pct === null ? "--" : `${pct.toFixed(1)}%`}
-              </span>
             </div>
           </div>
         {/each}
