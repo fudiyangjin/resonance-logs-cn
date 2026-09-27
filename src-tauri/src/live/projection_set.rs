@@ -431,6 +431,15 @@ impl ProjectionSet {
                 minimap_changed |= self.minimap.apply(envelope);
                 reported |= TopicMask::SCENE;
             }
+            DomainEvent::DungeonDifficultyChanged { difficulty } => {
+                if let Some(scene_id) = entities.current_scene_id() {
+                    let changed = self.combat.set_scene(scene_id, Some(*difficulty));
+                    combat_changed |= changed;
+                    if changed {
+                        reported |= TopicMask::SCENE;
+                    }
+                }
+            }
             DomainEvent::LocalTalentChanged { .. } => {
                 reported |= TopicMask::SCENE;
             }
@@ -1808,6 +1817,82 @@ mod tests {
             .apply(&envelope, &entities, &mut scheduler)
             .unwrap();
         assert_eq!(projections.dirty_mask(), TopicMask::SCENE);
+
+        drop(projections);
+        join.join().expect("history writer stops after disconnect");
+    }
+
+    #[test]
+    fn dungeon_difficulty_updates_combat_without_clearing_the_scene() {
+        use crate::live::runtime::events::{ProtocolBatch, ProtocolObservation};
+
+        let (writer, join) = HistoryWriterHandle::start().expect("history writer starts");
+        let mut projections = ProjectionSet::new(writer);
+        let mut entities = EntityContext::new();
+        let mut scheduler = DeadlineScheduler::new();
+        let local = EntityUuid(10);
+        let monster = EntityUuid(11);
+        entities.apply_batch(ProtocolBatch {
+            meta: test_meta(1, 1_000, 1),
+            observations: vec![
+                ProtocolObservation::SceneChanged {
+                    scene_id: 101,
+                    difficulty: None,
+                },
+                ProtocolObservation::EntityAppeared {
+                    uuid: local,
+                    kind: EntityKind::Character,
+                },
+                ProtocolObservation::LocalPlayerChanged { uuid: Some(local) },
+                ProtocolObservation::EntityAppeared {
+                    uuid: monster,
+                    kind: EntityKind::Monster,
+                },
+            ],
+        });
+        projections
+            .apply(
+                &test_envelope(
+                    1,
+                    1_000,
+                    1,
+                    DomainEvent::SceneChanged {
+                        previous_scene_id: None,
+                        scene_id: 101,
+                        difficulty: None,
+                    },
+                ),
+                &entities,
+                &mut scheduler,
+            )
+            .unwrap();
+        let mut dirty = projections.dirty_mask();
+        dirty.remove(ALL_TOPICS);
+        projections.dirty = dirty;
+
+        let events = entities.apply_batch(ProtocolBatch {
+            meta: test_meta(2, 1_100, 2),
+            observations: vec![ProtocolObservation::DungeonDifficultyChanged { difficulty: 3 }],
+        });
+        assert!(matches!(
+            events.as_slice(),
+            [DomainEnvelope {
+                event: DomainEvent::DungeonDifficultyChanged { difficulty: 3 },
+                ..
+            }]
+        ));
+        projections
+            .apply(&events[0], &entities, &mut scheduler)
+            .unwrap();
+
+        let payload = projections.combat.payload();
+        assert_eq!(payload.scene_id, Some(101));
+        assert_eq!(payload.dungeon_difficulty, Some(3));
+        assert_eq!(
+            projections.dirty_mask(),
+            TopicMask::COMBAT.union(TopicMask::SCENE)
+        );
+        assert!(entities.entity(monster).unwrap().is_present);
 
         drop(projections);
         join.join().expect("history writer stops after disconnect");

@@ -903,7 +903,9 @@ impl ProtocolDecoder {
                 active_template_ids: Vec::new(),
                 active_item_ids: Vec::new(),
             });
-            observations.push(ProtocolObservation::LocalTalentChanged(LocalTalent::default()));
+            observations.push(ProtocolObservation::LocalTalentChanged(
+                LocalTalent::default(),
+            ));
             return observations;
         };
         if let Some(char_id) = data.char_id {
@@ -1006,7 +1008,9 @@ impl ProtocolDecoder {
         };
 
         let mut observations = Vec::new();
-        if touched.season && let Some(season) = self.season_data.as_ref() {
+        if touched.season
+            && let Some(season) = self.season_data.as_ref()
+        {
             let next = season_cultivate_state(season);
             let next_items = next
                 .active_item_ids
@@ -1017,10 +1021,7 @@ impl ProtocolDecoder {
                 season_id: next.season_id,
                 active_template_ids: next.active_template_ids,
                 activated_item_ids: next_items.difference(&previous_items).copied().collect(),
-                deactivated_item_ids: previous_items
-                    .difference(&next_items)
-                    .copied()
-                    .collect(),
+                deactivated_item_ids: previous_items.difference(&next_items).copied().collect(),
             });
         }
         if touched.profession {
@@ -2211,6 +2212,13 @@ fn decode_dungeon_snapshot(message: blueprotobuf::SyncDungeonData) -> Vec<Protoc
         .and_then(progress_state_from_dungeon_var)
     {
         observations.push(ProtocolObservation::DungeonProgressStateChanged { value });
+    }
+    if let Some(difficulty) = data
+        .dungeon_scene_info
+        .as_ref()
+        .and_then(|info| info.difficulty)
+    {
+        observations.push(ProtocolObservation::DungeonDifficultyChanged { difficulty });
     }
     observations
 }
@@ -3641,9 +3649,7 @@ mod tests {
 
         let mut decoder = ProtocolDecoder::new();
         let message = blueprotobuf::SyncContainerDirtyData {
-            v_data: Some(blueprotobuf::BufferStream {
-                buffer: Some(blob),
-            }),
+            v_data: Some(blueprotobuf::BufferStream { buffer: Some(blob) }),
         };
         let observations = decoder.decode_container_delta(message);
 
@@ -3800,5 +3806,50 @@ mod tests {
             ..Default::default()
         };
         assert!(decode_dungeon_snapshot(message).is_empty());
+    }
+
+    #[test]
+    fn dungeon_snapshot_emits_difficulty_alongside_progress_state() {
+        let message = blueprotobuf::SyncDungeonData {
+            v_data: Some(blueprotobuf::DungeonSyncData {
+                dungeon_var: Some(blueprotobuf::DungeonVar {
+                    dungeon_var_data: vec![blueprotobuf::DungeonVarData {
+                        name: Some("ProgressState".into()),
+                        value: Some(1),
+                    }],
+                }),
+                dungeon_scene_info: Some(blueprotobuf::DungeonSceneInfo {
+                    difficulty: Some(0),
+                }),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        assert_eq!(
+            decode_dungeon_snapshot(message),
+            vec![
+                ProtocolObservation::DungeonProgressStateChanged { value: 1 },
+                ProtocolObservation::DungeonDifficultyChanged { difficulty: 0 },
+            ]
+        );
+    }
+
+    #[test]
+    fn dungeon_snapshot_without_difficulty_omits_the_observation() {
+        let message = blueprotobuf::SyncDungeonData {
+            v_data: Some(blueprotobuf::DungeonSyncData {
+                flow_info: Some(blueprotobuf::DungeonFlowInfo {
+                    state: Some(2),
+                    ..Default::default()
+                }),
+                dungeon_scene_info: Some(blueprotobuf::DungeonSceneInfo { difficulty: None }),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        assert_eq!(
+            decode_dungeon_snapshot(message),
+            vec![ProtocolObservation::DungeonFlowChanged { state: 2 }]
+        );
     }
 }

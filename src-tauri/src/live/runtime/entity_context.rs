@@ -962,6 +962,18 @@ impl EntityContext {
                     );
                 }
             }
+            ProtocolObservation::DungeonDifficultyChanged { difficulty } => {
+                if self.current_difficulty != Some(difficulty) {
+                    self.current_difficulty = Some(difficulty);
+                    if self.current_scene_id.is_some() {
+                        self.emit(
+                            meta,
+                            DomainEvent::DungeonDifficultyChanged { difficulty },
+                            out,
+                        );
+                    }
+                }
+            }
             ProtocolObservation::DungeonFlowChanged { state } => {
                 let previous = self.dungeon_flow_state.replace(state);
                 if previous != Some(state) {
@@ -2174,6 +2186,64 @@ mod tests {
         assert!(matches!(events[1].event, DomainEvent::SceneChanged { .. }));
         assert!(!context.entity(monster).unwrap().is_present);
         assert!(context.entity(local).unwrap().is_present);
+    }
+
+    #[test]
+    fn dungeon_difficulty_updates_without_despawning_the_scene() {
+        let mut context = EntityContext::new();
+        let local = EntityUuid(10);
+        let monster = EntityUuid(11);
+        context.reduce_batch(batch(
+            1,
+            vec![
+                ProtocolObservation::SceneChanged {
+                    scene_id: 101,
+                    difficulty: None,
+                },
+                ProtocolObservation::EntityAppeared {
+                    uuid: local,
+                    kind: EntityKind::Character,
+                },
+                ProtocolObservation::LocalPlayerChanged { uuid: Some(local) },
+                ProtocolObservation::EntityAppeared {
+                    uuid: monster,
+                    kind: EntityKind::Monster,
+                },
+            ],
+        ));
+
+        let events = context.reduce_batch(batch(
+            2,
+            vec![ProtocolObservation::DungeonDifficultyChanged { difficulty: 3 }],
+        ));
+        assert_eq!(context.current_difficulty(), Some(3));
+        assert!(context.entity(monster).unwrap().is_present);
+        assert!(context.entity(local).unwrap().is_present);
+        assert!(matches!(
+            events.as_slice(),
+            [DomainEnvelope {
+                event: DomainEvent::DungeonDifficultyChanged { difficulty: 3 },
+                ..
+            }]
+        ));
+
+        let repeat = context.reduce_batch(batch(
+            3,
+            vec![ProtocolObservation::DungeonDifficultyChanged { difficulty: 3 }],
+        ));
+        assert!(repeat.is_empty());
+        assert_eq!(context.current_difficulty(), Some(3));
+    }
+
+    #[test]
+    fn dungeon_difficulty_before_scene_is_stored_without_an_event() {
+        let mut context = EntityContext::new();
+        let events = context.reduce_batch(batch(
+            1,
+            vec![ProtocolObservation::DungeonDifficultyChanged { difficulty: 2 }],
+        ));
+        assert!(events.is_empty());
+        assert_eq!(context.current_difficulty(), Some(2));
     }
 
     fn talent_events(events: &[DomainEnvelope]) -> Vec<(LocalTalent, LocalTalent)> {

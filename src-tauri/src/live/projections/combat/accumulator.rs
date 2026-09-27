@@ -3,11 +3,11 @@
 use std::collections::HashMap;
 
 use crate::live::projections::combat::hit_event::{
-    apply_to_combat_stats, apply_to_skill, apply_to_target_stats, StatDelta,
+    StatDelta, apply_to_combat_stats, apply_to_skill, apply_to_target_stats,
 };
-use crate::live::projections::combat::stats::class::{get_class_spec_from_skill_id, ClassSpec};
+use crate::live::projections::combat::stats::class::{ClassSpec, get_class_spec_from_skill_id};
 use crate::live::projections::combat::stats::{
-    damage_type_flag, merge_extrema, CombatStats, Skill, SkillTargetStats,
+    CombatStats, Skill, SkillTargetStats, damage_type_flag, merge_extrema,
 };
 use crate::live::runtime::events::{DomainHit, EntityKind, HitKind};
 

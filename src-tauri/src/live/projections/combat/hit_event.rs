@@ -1,7 +1,7 @@
 //! Shared hit stat-accounting primitives.
 
 use crate::live::projections::combat::stats::{
-    observe_extrema, CombatStats, Skill, SkillTargetStats,
+    CombatStats, Skill, SkillTargetStats, observe_extrema,
 };
 
 /// A single accounting delta shared by all aggregation maps.

@@ -614,6 +614,9 @@ pub enum ProtocolObservation {
         scene_id: i32,
         difficulty: Option<i32>,
     },
+    DungeonDifficultyChanged {
+        difficulty: i32,
+    },
     DungeonFlowChanged {
         state: i32,
     },
@@ -874,6 +877,10 @@ pub enum DomainEvent {
         previous_scene_id: Option<i32>,
         scene_id: i32,
         difficulty: Option<i32>,
+    },
+    /// Same-scene difficulty update. Projections must not treat this as a scene change.
+    DungeonDifficultyChanged {
+        difficulty: i32,
     },
     DungeonFlowChanged {
         previous: Option<i32>,

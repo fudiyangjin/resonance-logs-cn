@@ -929,15 +929,15 @@ facing: number | null;
 /**
  * Current HP when the entity publishes the HP attribute.
  */
-currentHp: number | null;
+currentHp?: number | null;
 /**
  * Maximum HP when the entity publishes the HP attribute.
  */
-maxHp: number | null;
+maxHp?: number | null;
 /**
  * UUID of the entity currently targeted by this entity, when known.
  */
-targetEntityUuid: string | null;
+targetEntityUuid?: string | null;
 /**
  * Whether the entity is currently in the dead actor state.
  */

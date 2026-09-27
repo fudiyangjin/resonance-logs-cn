@@ -3,9 +3,9 @@ mod build_app;
 mod live;
 pub mod module_optimizer;
 mod packets;
-mod updater;
 #[cfg(windows)]
 mod titlebar_guard;
+mod updater;
 pub mod voice;
 
 use crate::build_app::build_and_run;

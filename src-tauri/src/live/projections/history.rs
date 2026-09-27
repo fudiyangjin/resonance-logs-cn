@@ -43,10 +43,9 @@ impl HistoryProjection {
         segment_id: SegmentId,
         recording: RecordingEncounter,
     ) -> Result<(), String> {
-        let reducer =
-            crate::database::history_query::HistoryProjectionReducer::new(0..u64::MAX)
-                .map_err(|error| error.to_string())?
-                .without_dynamic_series();
+        let reducer = crate::database::history_query::HistoryProjectionReducer::new(0..u64::MAX)
+            .map_err(|error| error.to_string())?
+            .without_dynamic_series();
         self.writer.begin(segment_id, recording)?;
         self.active = Some(ActiveHistoryProjection {
             segment_id,
