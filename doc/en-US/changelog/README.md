@@ -2,9 +2,10 @@
 
 Release notes for every version, newest first.
 
-| Version | Document |
-| ------ | ------------------------ |
-| v0.2.4 | [v0.2.4.md](./v0.2.4.md) |
+| Version     | Document                           |
+| ----------- | ---------------------------------- |
+| v0.2.5-beta | [v0.2.5-beta.md](./v0.2.5-beta.md) |
+| v0.2.4      | [v0.2.4.md](./v0.2.4.md)           |
 | v0.2.3 | [v0.2.3.md](./v0.2.3.md) |
 | v0.2.2 | [v0.2.2.md](./v0.2.2.md) |
 | v0.2.1 | [v0.2.1.md](./v0.2.1.md) |

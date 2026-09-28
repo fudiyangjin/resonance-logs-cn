@@ -1,56 +1,49 @@
-# Changelog v0.2.5
-
-## Changes
-
-### Overlay Monitoring
-
-- Added **Entity Duration** to Monster Monitor (Monster Monitor → Entity Duration): times nearby entities by id (e.g. Scythe Cart 179903) with presets / manual entries and a caster scope (self only / anyone). The timer starts when the entity appears and ends when it disappears. The optional **Merge same ID** shows one caster's entities with the same id as a single row counting down the one that expires soonest (on by default for the Scythe Cart preset)
-- Removed **Duration Skills** from Live Monitor; a selected Scythe Cart is migrated automatically to Monster Monitor → Entity Duration
-
-# Changelog v0.2.4
+# Changelog v0.2.5-beta
 
 ## Changes
 
 ### DPS / History
 
-- Skill details now include max, min, and average damage (DPS Meter → Settings → Live / History)
-- Fixed a possible key conflict in death replay
-
-### Loadouts
-
-- Loadouts can link to a character spec and switch automatically when you change class (Loadouts → Linked spec)
-  - Enable "Auto-switch by spec"
-- Added a Lifebind loadout preset, and updated other presets with Buff coverage
-- Added a Vanguard loadout preset
+- Compact mode now applies to the player list only; skill details stay as a full table unless you enable "Also Compact Detail Pages" (DPS Meter → Themes → Compact Mode)
+- History timeline now includes Deter Shot and Luminary Bolt
+- Adjusted the history Buff coverage timeline so percentages no longer cover the bars
+- Damage element labels: Water is now Ice, Wood is now Forest
+- Fixed difficulty names not being appended to scene names
 
 ### Overlay Monitor
 
-- Monster Monitor now shows an HP bar for the current attack target (Monster Monitor → HP Bar) @dilone
-- Resource areas can be shown or hidden independently
-- Added Lifebind three-flower countdown to the resource area (Live Monitor → Overlay Area Visibility → Resource sections)
-  - Buff alerts use 2202716 for this area
-  - This follows the S4 logic; JP and Global servers are not supported yet
+- Added **Entity Duration** to Monster Monitor (Monster Monitor → Entity Duration): times nearby entities by id (e.g. Scythe Cart 179903) with presets / manual entries and a caster scope (self only / anyone). The timer starts when the entity appears and ends when it disappears. The optional **Merge same ID** shows one caster's entities with the same id as a single row counting down the one that expires soonest (on by default for the Scythe Cart preset)
+- Removed **Duration Skills** from Live Monitor; a selected Scythe Cart is migrated automatically to Monster Monitor → Entity Duration
+- Monster Monitor area visibility is now controlled from the enable window
+- Monster HP values follow the abbreviation setting (Western / Chinese)
+- Added Composite Buffs (Live Monitor → Buff → Composite Buffs): 2–8 Buffs that must all be present, or at least a set number of them, act as one Buff for monitor areas, coverage, and voice
+- Teammate Buffs can override colors per entry and show downed teammates (Monster Monitor → Teammate Buffs)
+- The season node area no longer hides Symphony Buffs
+- Added skill CDs for Shield Knight, Heavy Guardian, and Marksman
+- Minimap now tracks Lapsis, the first boss of the S4 raid Above the Firmament, End of Day and Night
 
-  ![Lifebind three-flower countdown](/images/changelog/v0.2.4_1.gif)
+### Voice
 
-- Buff search can set an unknown Buff ID directly, and results are paginated to avoid stuttering
-- Added Verdant S4 - Inspiration X6 Moonlight Solace counter (Live Monitor → Custom Monitor → Add Counter)
-- Skill axis now includes Blast Shot, Hellfire Meteor, Divine Sickle, and Vanguard Vortex Strike
-- Vanguard basic attacks now derive Swift Blade, shown below derived Drake Cannon
-- Added Twin Striker Harukawa Annihilation CD
-- Fixed Buff coverage not being tracked when the regular Buff area was hidden from the live overlay
-- Toggling Live Monitor and similar windows now restores them if they were minimized
-- Added a shortcut to minimize/restore DPS and overlay windows (DPS Meter → Settings → Shortcuts)
+- The phrase library can import any audio file (Voice → Phrase Library)
+- Skill CD and entity duration announcements can be bound on their own, without adding the skill to Skill CD monitoring first
+- Voice rules are saved with the monitoring loadout
+- Fixed charge-skill CD announcements when the remaining time crosses the threshold
+- Fixed the playback queue, and imported audio is now resampled in one pass
+
+### App Settings
+
+- Clicking an available update now downloads it silently in the background, then verifies, installs, and restarts
 
 ### Data
 
-- Updated 26.9.4 Star Resonance live 1.2.45164.0 data @YozoraHoshi
+- Updated monster names, Buffs, skill effects, and DBM data
+- Restored monster names that had been removed by mistake
 
 ## Notes
 
 ### Compatibility
 
-- If you used 0.0.2 or 0.0.3, first launch on 0.0.4-0.2.4 requires deleting `resonance-logs-cn.db` under `%LOCALAPPDATA%\resonance-logs-cn` and restarting
+- If you used 0.0.2 or 0.0.3, first launch on 0.0.4-0.2.5-beta requires deleting `resonance-logs-cn.db` under `%LOCALAPPDATA%\resonance-logs-cn` and restarting
 - 0.2.2 and 0.2.1 went through large refactors; if existing features break, please contact me promptly
 - 0.2.2 changed table fields; errors on old history records are expected, new records work normally
 - Voice announcements require a separate model download; the first phrase generation may take a while, but playback after that does not reload the model

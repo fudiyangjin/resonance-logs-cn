@@ -4187,7 +4187,7 @@ dependencies = [
 
 [[package]]
 name = "resonance-logs-cn"
-version = "0.2.4"
+version = "0.2.5-beta"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
