@@ -13,9 +13,11 @@ import {
   SETTINGS,
   createDefaultMonsterMonitorProfile,
   deepCloneSettings,
+  ensureTeammateCdPanelStyle,
   ensureTeammatePanelStyle,
   extractMonsterProfileData,
   generateProfileId,
+  normalizeTeammateCdSkills,
   type MonsterMonitorProfile,
   type MonsterMonitorProfileData,
   type MonsterMonitorState,
@@ -222,6 +224,10 @@ export function normalizeMonsterProfileStyles<
     },
     panelStyle: normalizeCustomPanelStyle(profile.panelStyle),
     teammatePanelStyle: ensureTeammatePanelStyle(profile.teammatePanelStyle),
+    teammateCdSkills: normalizeTeammateCdSkills(profile.teammateCdSkills),
+    teammateCdPanelStyle: ensureTeammateCdPanelStyle(
+      profile.teammateCdPanelStyle,
+    ),
     teammateBuffColumnStyles: ensureTeammateBuffColumnStyles(
       profile.teammateBuffColumnStyles,
       syncTeammateColumnOrder(profile),

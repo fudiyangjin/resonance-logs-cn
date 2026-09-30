@@ -9,6 +9,20 @@ use crate::database::history_query::{EncounterDetailData, EncounterRangeData};
 use crate::database::schema as sch;
 use crate::live::history_writer::HistoryWriterHandle;
 
+// Keep in sync with the history detail note limit in
+// `src/routes/main/dps/history/[id]/+page.svelte`.
+const MAX_ENCOUNTER_NOTE_CHARS: usize = 200;
+
+fn normalize_encounter_note(note: String) -> Result<Option<String>, String> {
+    let note = note.trim().to_owned();
+    if note.chars().count() > MAX_ENCOUNTER_NOTE_CHARS {
+        return Err(format!(
+            "encounter note must be at most {MAX_ENCOUNTER_NOTE_CHARS} characters"
+        ));
+    }
+    Ok((!note.is_empty()).then_some(note))
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerSummaryDto {
@@ -33,6 +47,7 @@ pub struct EncounterSummaryDto {
     pub players: Vec<PlayerSummaryDto>,
     pub remote_encounter_id: Option<i64>,
     pub is_favorite: bool,
+    pub note: Option<String>,
     pub detail_available: bool,
     pub display_index: i32,
 }
@@ -98,6 +113,7 @@ struct EncounterSummaryRow {
     local_player_id: Option<i64>,
     remote_encounter_id: Option<i64>,
     is_favorite: i32,
+    note: Option<String>,
     boss_monster_ids: Option<String>,
     player_names: Option<String>,
     projection_encounter_id: Option<i32>,
@@ -165,6 +181,7 @@ fn map_summary(row: EncounterSummaryRow) -> Result<EncounterSummaryDto, String> 
         local_player_id: row.local_player_id,
         remote_encounter_id: row.remote_encounter_id,
         is_favorite: row.is_favorite != 0,
+        note: row.note,
         bosses: parse_boss_ids(&row.boss_monster_ids)
             .into_iter()
             .map(|monster_id| BossSummaryDto {
@@ -289,6 +306,7 @@ pub(crate) fn load_encounter_summary(
             e::local_player_id,
             e::remote_encounter_id,
             e::is_favorite,
+            e::note,
             e::boss_monster_ids,
             e::player_names,
             p::encounter_id.nullable(),
@@ -430,6 +448,7 @@ fn get_recent_encounters_filtered_blocking(
                 e::local_player_id,
                 e::remote_encounter_id,
                 e::is_favorite,
+                e::note,
                 e::boss_monster_ids,
                 e::player_names,
                 p::encounter_id.nullable(),
@@ -577,9 +596,66 @@ pub fn toggle_favorite_encounter(id: i32, is_favorite: bool) -> Result<(), Strin
     })
 }
 
+#[tauri::command]
+#[specta::specta]
+pub async fn update_encounter_note(encounter_id: i32, note: String) -> Result<(), String> {
+    let note = normalize_encounter_note(note)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        with_db(move |conn| {
+            use sch::encounters::dsl as e;
+            let updated = diesel::update(e::encounters.filter(e::id.eq(encounter_id)))
+                .set(e::note.eq(note))
+                .execute(conn)
+                .map_err(|error| error.to_string())?;
+            if updated != 1 {
+                return Err(format!("encounter {encounter_id} was not found"));
+            }
+            Ok(())
+        })
+    })
+    .await
+    .map_err(|error| format!("encounter note worker failed: {error}"))?
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn get_history_retention_limit(app_handle: tauri::AppHandle) -> i64 {
+    super::load_history_retention_limit(&app_handle)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn save_history_retention_limit(
+    app_handle: tauri::AppHandle,
+    limit: i64,
+) -> Result<(), String> {
+    super::save_history_retention_limit(&app_handle, limit)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn normalize_encounter_note_trims_and_clears_empty_values() {
+        assert_eq!(
+            normalize_encounter_note("  phase two  ".to_string()).expect("normalize note"),
+            Some("phase two".to_string())
+        );
+        assert_eq!(
+            normalize_encounter_note("   ".to_string()).expect("normalize empty note"),
+            None
+        );
+    }
+
+    #[test]
+    fn normalize_encounter_note_counts_unicode_characters() {
+        let valid = "界".repeat(MAX_ENCOUNTER_NOTE_CHARS);
+        let invalid = "界".repeat(MAX_ENCOUNTER_NOTE_CHARS + 1);
+
+        assert!(normalize_encounter_note(valid).is_ok());
+        assert!(normalize_encounter_note(invalid).is_err());
+    }
 
     fn summary_row(
         detail_available: bool,
@@ -601,6 +677,7 @@ mod tests {
             local_player_id: None,
             remote_encounter_id: None,
             is_favorite: 0,
+            note: None,
             boss_monster_ids: None,
             player_names: None,
             projection_encounter_id: detail_available.then_some(1),
@@ -617,6 +694,16 @@ mod tests {
         assert_eq!(json["totalDmg"], i64::MAX.to_string());
         assert_eq!(json["totalHeal"], "0");
         assert_eq!(json["displayIndex"], 0);
+    }
+
+    #[test]
+    fn summary_preserves_encounter_note() {
+        let mut row = summary_row(false, None, None);
+        row.note = Some("phase two".to_string());
+
+        let summary = map_summary(row).expect("map summary");
+
+        assert_eq!(summary.note.as_deref(), Some("phase two"));
     }
 
     #[test]
@@ -655,6 +742,7 @@ mod tests {
             players: Vec::new(),
             remote_encounter_id: None,
             is_favorite,
+            note: None,
             detail_available: true,
             display_index: 0,
         }

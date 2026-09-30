@@ -14,7 +14,7 @@ use parking_lot::RwLock;
 use super::models::{
     HudFrame, HudFrameRequest, LiveBuffsPayload, LiveCombatPayload, LiveDeathsPayload,
     LiveFantasyPayload, LiveMonsterPayload, LivePullWindow, LiveScenePayload, LiveStatusPayload,
-    LiveWindowFrame, LiveWindowFrameRequest, MinimapSkillCast, MinimapSnapshot,
+    LiveTeamPayload, LiveWindowFrame, LiveWindowFrameRequest, MinimapSkillCast, MinimapSnapshot,
     MinimapSnapshotUpdate, MinimapUpdatePayload,
 };
 use crate::live::projection_set::TopicPublication;
@@ -46,6 +46,7 @@ impl_revisioned!(
     LiveFantasyPayload,
     LiveDeathsPayload,
     LiveScenePayload,
+    LiveTeamPayload,
 );
 
 #[derive(Debug, Clone)]
@@ -73,6 +74,7 @@ struct PublishedState {
     fantasy: Option<Arc<LiveFantasyPayload>>,
     deaths: Option<Arc<LiveDeathsPayload>>,
     scene: Option<Arc<LiveScenePayload>>,
+    team: Option<Arc<LiveTeamPayload>>,
     minimap: MinimapSlot,
 }
 
@@ -88,6 +90,7 @@ impl PublishedState {
             fantasy: None,
             deaths: None,
             scene: None,
+            team: None,
             minimap: MinimapSlot::default(),
         }
     }
@@ -155,6 +158,7 @@ impl LivePublicationCache {
                 TopicPublication::Monster(payload) => state.monster = Some(Arc::new(payload)),
                 TopicPublication::Fantasy(payload) => state.fantasy = Some(Arc::new(payload)),
                 TopicPublication::Deaths(payload) => state.deaths = Some(Arc::new(payload)),
+                TopicPublication::Team(payload) => state.team = Some(Arc::new(payload)),
                 TopicPublication::Scene(payload) => {
                     state.scene = Some(Arc::new(payload.clone()));
                     scene_event = Some(payload);
@@ -210,6 +214,7 @@ impl LivePublicationCache {
             buffs,
             monster,
             fantasy,
+            team,
             snapshot,
             skill_casts,
             skill_cast_cursor,
@@ -243,6 +248,10 @@ impl LivePublicationCache {
             let fantasy = request
                 .monster_interest
                 .then(|| changed(&state.fantasy, request.fantasy_revision, reset_epoch))
+                .flatten();
+            let team = request
+                .monster_interest
+                .then(|| changed(&state.team, request.team_revision, reset_epoch))
                 .flatten();
 
             let minimap = &state.minimap;
@@ -287,6 +296,7 @@ impl LivePublicationCache {
                 buffs,
                 monster,
                 fantasy,
+                team,
                 snapshot,
                 skill_casts,
                 skill_cast_cursor,
@@ -301,6 +311,7 @@ impl LivePublicationCache {
             buffs: clone_payload(buffs),
             monster: clone_payload(monster),
             fantasy: clone_payload(fantasy),
+            team: clone_payload(team),
             snapshot: snapshot.map(|(revision, snapshot)| MinimapSnapshotUpdate {
                 revision,
                 snapshot: snapshot.map(|snapshot| (*snapshot).clone()),

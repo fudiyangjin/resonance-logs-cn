@@ -11,7 +11,7 @@
 - **Pagination**: set the number of rows per page at the bottom.
 
 > [!NOTE]
-> When history exceeds **200 entries**, older records are automatically cleaned up by time on the next launch. **Add to favorites** to keep important records from being cleaned up.
+> The default is **200 non-favorite records**. You can change it to 1–2000 in App Settings. Older records are automatically cleaned up by time on the next launch. **Add to favorites** to keep important records from being cleaned up.
 
 ## Fight details
 
@@ -22,6 +22,7 @@ Actions in the top-right corner:
 | Button | Purpose |
 | --- | --- |
 | **{{ui:history.detail.actions.addFavorite}}** | Favorite this fight so you can filter for it quickly in the list |
+| **Edit note** | Add a note to identify this fight in the history list |
 | **Open on website** | View this fight on resonance-logs.com |
 | **Delete** | Delete this record |
 

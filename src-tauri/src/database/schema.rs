@@ -69,6 +69,8 @@ diesel::table! {
         remote_encounter_id -> Nullable<BigInt>,
         // Whether the encounter is favorited.
         is_favorite -> Integer,
+        // User-authored note used to identify this encounter.
+        note -> Nullable<Text>,
         // Whether this encounter was manually reset by the user (should not be uploaded).
         is_manually_reset -> Integer,
         // JSON-encoded array of boss monster template IDs for fast list/filter queries.

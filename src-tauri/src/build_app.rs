@@ -13,6 +13,11 @@ pub fn build_and_run(builder: TauriBuilder<tauri::Wry>) {
         .expect("error while running tauri application")
         .run(|app_handle, event| {
             if let tauri::RunEvent::ExitRequested { .. } = event {
+                // Leave the team room first so teammates see us go right away.
+                if let Some(team_share) = app_handle.try_state::<crate::team_share::TeamShareService>()
+                {
+                    team_share.shutdown();
+                }
                 stop_windivert();
                 if let Some(runtime) =
                     app_handle.try_state::<crate::live::runtime_handle::LiveRuntimeHandle>()

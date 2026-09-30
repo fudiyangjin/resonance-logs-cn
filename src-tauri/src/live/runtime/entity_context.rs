@@ -6,9 +6,9 @@ use crate::live::protocol::attrs as attr_type;
 
 use super::events::{
     AttributeValue, BuffEvent, BuffState, BuffTransition, BuffWireKind, DeathBuffCheckpoint,
-    DomainEnvelope, DomainEvent, DomainHit, EntityIdentity, EntityIdentityPatch, EntityKind,
-    EntityRef, EntityRoles, EntityUuid, EventMeta, FantasyState, FantasyTransition, FieldPatch,
-    GameTimerKey, GameTimerState, HateEntry, LOCAL_PLAYER, LocalTalent, MonoTimeMs,
+    Distribution, DomainEnvelope, DomainEvent, DomainHit, EntityIdentity, EntityIdentityPatch,
+    EntityKind, EntityRef, EntityRoles, EntityUuid, EventMeta, FantasyState, FantasyTransition,
+    FieldPatch, GameTimerKey, GameTimerState, HateEntry, LOCAL_PLAYER, LocalTalent, MonoTimeMs,
     ObservationOrigin, ObservedBuff, ObservedBuffChange, PassiveSkillObservation, Position,
     ProtocolBatch, ProtocolObservation, ResolvedShieldDetail, SegmentId, ShieldDetail,
     SkillCooldownState, SkillPhase,
@@ -139,6 +139,8 @@ pub struct EntityContext {
     /// `wall_ms - server_ms`, learned from server time packets. Buff deltas
     /// carry raw server creation timestamps that need it.
     server_clock_offset_ms: Option<i64>,
+    /// Distribution of the game process whose traffic is being captured.
+    game_client: Option<Distribution>,
     /// ActorState deaths queued for the current `apply_batch` only.
     pending_deaths: Vec<PendingDeath>,
 }
@@ -236,6 +238,23 @@ impl EntityContext {
 
     pub(crate) fn team_members(&self) -> impl Iterator<Item = EntityUuid> {
         self.team_members.iter().copied()
+    }
+
+    /// In-game team id; `0` when not in a team.
+    #[must_use]
+    pub(crate) fn team_id(&self) -> i64 {
+        self.team_id
+    }
+
+    /// `wall_ms - server_ms`, once a server time packet has been seen.
+    #[must_use]
+    pub(crate) fn server_clock_offset_ms(&self) -> Option<i64> {
+        self.server_clock_offset_ms
+    }
+
+    #[must_use]
+    pub(crate) fn game_client(&self) -> Option<Distribution> {
+        self.game_client
     }
 
     #[must_use]
@@ -604,11 +623,9 @@ impl EntityContext {
             ProtocolObservation::TeamInfoUpdated {
                 team_id,
                 leader_uuid,
+                roster,
             } => {
-                let leader = leader_uuid.filter(|uuid| uuid.0 != 0);
-                let mut members = self.team_members.clone();
-                members.extend(leader);
-                self.apply_team_state(meta, team_id, leader, members, out);
+                self.apply_team_info(meta, team_id, leader_uuid, roster, out);
             }
             ProtocolObservation::TeamMembersUpdated { members } => {
                 // Member notices are partial: the roster only grows until a
@@ -634,6 +651,9 @@ impl EntityContext {
             }
             ProtocolObservation::TeamDissolved => {
                 self.apply_team_state(meta, 0, None, HashSet::new(), out);
+            }
+            ProtocolObservation::GameClientIdentified { distribution } => {
+                self.game_client = Some(distribution);
             }
             ProtocolObservation::MatchmakingPopped => {
                 self.emit(meta, DomainEvent::MatchmakingPopped, out);
@@ -1119,6 +1139,41 @@ impl EntityContext {
                 }
             }
         }
+    }
+
+    /// Resolves a team-info notice into a roster, then applies it.
+    ///
+    /// A non-empty roster replaces the members. An empty roster keeps the
+    /// current members when the team id is unchanged, and keeps only the
+    /// leader when the team id changes. `team_id == 0` clears the team.
+    fn apply_team_info(
+        &mut self,
+        meta: EventMeta,
+        team_id: i64,
+        leader_uuid: Option<EntityUuid>,
+        roster: Vec<EntityUuid>,
+        out: &mut Vec<DomainEnvelope>,
+    ) {
+        if team_id == 0 {
+            self.apply_team_state(meta, 0, None, HashSet::new(), out);
+            return;
+        }
+        let leader = leader_uuid.filter(|uuid| uuid.0 != 0);
+        let next = match (roster.is_empty(), team_id == self.team_id) {
+            (false, _) => {
+                let mut next: HashSet<EntityUuid> =
+                    roster.into_iter().filter(|uuid| uuid.0 != 0).collect();
+                next.extend(leader);
+                next
+            }
+            (true, true) => {
+                let mut next = self.team_members.clone();
+                next.extend(leader);
+                next
+            }
+            (true, false) => leader.into_iter().collect(),
+        };
+        self.apply_team_state(meta, team_id, leader, next, out);
     }
 
     /// Applies a fully resolved team state and emits the membership deltas
@@ -2705,6 +2760,7 @@ mod tests {
                 ProtocolObservation::TeamInfoUpdated {
                     team_id: 99,
                     leader_uuid: Some(local),
+                    roster: Vec::new(),
                 },
                 ProtocolObservation::TeamMembersUpdated {
                     members: vec![local, teammate],
@@ -3076,6 +3132,7 @@ mod tests {
             vec![ProtocolObservation::TeamInfoUpdated {
                 team_id: 7,
                 leader_uuid: Some(EntityUuid(20)),
+                roster: Vec::new(),
             }],
         ));
         assert!(context.roles(EntityUuid(20)).is_team_member);
@@ -3093,6 +3150,7 @@ mod tests {
                 ProtocolObservation::TeamInfoUpdated {
                     team_id: 7,
                     leader_uuid: Some(local),
+                    roster: Vec::new(),
                 },
                 ProtocolObservation::TeamMembersUpdated {
                     members: vec![local, mate],
@@ -3128,6 +3186,123 @@ mod tests {
                 .reduce_batch(batch(4, vec![ProtocolObservation::TeamDissolved]))
                 .is_empty()
         );
+    }
+
+    #[test]
+    fn team_info_roster_replaces_members() {
+        let mut context = EntityContext::new();
+        let local = EntityUuid(20);
+        let old = EntityUuid(21);
+        let kept = EntityUuid(22);
+        let added = EntityUuid(23);
+        context.reduce_batch(batch(
+            1,
+            vec![ProtocolObservation::TeamInfoUpdated {
+                team_id: 7,
+                leader_uuid: Some(local),
+                roster: vec![local, old],
+            }],
+        ));
+        assert!(context.roles(old).is_team_member);
+
+        context.reduce_batch(batch(
+            2,
+            vec![ProtocolObservation::TeamInfoUpdated {
+                team_id: 7,
+                leader_uuid: Some(local),
+                roster: vec![local, kept, added],
+            }],
+        ));
+        assert!(!context.roles(old).is_team_member);
+        assert!(context.roles(kept).is_team_member);
+        assert!(context.roles(added).is_team_member);
+        assert!(context.roles(local).is_team_member);
+        assert_eq!(context.team_id, 7);
+    }
+
+    #[test]
+    fn new_team_id_drops_previous_members() {
+        let mut context = EntityContext::new();
+        let local = EntityUuid(20);
+        let old = EntityUuid(21);
+        context.reduce_batch(batch(
+            1,
+            vec![ProtocolObservation::TeamInfoUpdated {
+                team_id: 7,
+                leader_uuid: Some(local),
+                roster: vec![local, old],
+            }],
+        ));
+
+        context.reduce_batch(batch(
+            2,
+            vec![ProtocolObservation::TeamInfoUpdated {
+                team_id: 8,
+                leader_uuid: Some(local),
+                roster: Vec::new(),
+            }],
+        ));
+        assert!(!context.roles(old).is_team_member);
+        assert!(context.roles(local).is_team_member);
+        assert_eq!(context.team_id, 8);
+        assert_eq!(context.team_members, HashSet::from([local]));
+    }
+
+    #[test]
+    fn empty_roster_merges_within_same_team() {
+        let mut context = EntityContext::new();
+        let local = EntityUuid(20);
+        let mate = EntityUuid(21);
+        let leader = EntityUuid(22);
+        context.reduce_batch(batch(
+            1,
+            vec![ProtocolObservation::TeamInfoUpdated {
+                team_id: 7,
+                leader_uuid: Some(local),
+                roster: vec![local, mate],
+            }],
+        ));
+
+        context.reduce_batch(batch(
+            2,
+            vec![ProtocolObservation::TeamInfoUpdated {
+                team_id: 7,
+                leader_uuid: Some(leader),
+                roster: Vec::new(),
+            }],
+        ));
+        assert!(context.roles(mate).is_team_member);
+        assert!(context.roles(local).is_team_member);
+        assert!(context.roles(leader).is_team_member);
+        assert_eq!(context.team_id, 7);
+        assert_eq!(context.team_leader, Some(leader));
+    }
+
+    #[test]
+    fn zero_team_id_clears_team() {
+        let mut context = EntityContext::new();
+        let local = EntityUuid(20);
+        context.reduce_batch(batch(
+            1,
+            vec![ProtocolObservation::TeamInfoUpdated {
+                team_id: 7,
+                leader_uuid: Some(local),
+                roster: vec![local],
+            }],
+        ));
+
+        context.reduce_batch(batch(
+            2,
+            vec![ProtocolObservation::TeamInfoUpdated {
+                team_id: 0,
+                leader_uuid: Some(local),
+                roster: vec![local],
+            }],
+        ));
+        assert!(!context.roles(local).is_team_member);
+        assert_eq!(context.team_id, 0);
+        assert_eq!(context.team_leader, None);
+        assert!(context.team_members.is_empty());
     }
 
     #[test]

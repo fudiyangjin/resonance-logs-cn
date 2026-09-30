@@ -4,7 +4,7 @@
 
 | タブ | 内容 |
 | --- | --- |
-| [{{ui:appSettings.tabs.general}}](#一般) | 画面言語、閉じるボタンの動作 |
+| [{{ui:appSettings.tabs.general}}](#一般) | 画面言語、閉じるボタンの動作、パーティ共有 |
 | [{{ui:appSettings.tabs.appearance}}](#外観) | メインウィンドウの配色、背景画像、フォント |
 | [{{ui:appSettings.tabs.network}}](#ネットワーク) | キャプチャ方式とネットワークアダプター |
 | [{{ui:appSettings.tabs.shortcuts}}](#ショートカット) | グローバルショートカット |
@@ -14,6 +14,7 @@
 
 - **{{ui:appSettings.language.title}}**：简体中文 / English / 日本語。ゲームクライアントと同じ言語にすることをおすすめします。Buff やスキルの名前もそれに合わせて切り替わり、プリセットの音声音色も画面言語に応じて選ばれます。
 - **{{ui:appSettings.behavior.exitOnClose}}**：既定ではオフで、メインウィンドウの閉じるボタンをクリックしてもシステムトレイに隠れるだけで、オーバーレイや音声はそのまま動作します。オンにすると、閉じるボタンでアプリが終了します。
+- **{{ui:appSettings.teamShare.title}}**：既定ではオフです。オンにすると、同じくオンにしている味方とスキルクールダウンを共有し、[味方 CD](../monster/teammate-cd.md) パネルに表示します。スイッチの下に現在の接続状態が表示されます。
 
 ## 外観
 

@@ -8,5 +8,6 @@ pub mod history;
 pub mod minimap;
 pub mod presentation;
 pub mod skill_cd;
+pub mod team_cd;
 pub mod timeline;
 pub mod voice;

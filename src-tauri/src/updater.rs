@@ -153,6 +153,9 @@ fn endpoint_candidates(locale: AppLocale) -> &'static [&'static str] {
 /// hook only cleans up Tauri resources, bypassing RunEvent::Exit/ExitRequested.
 fn prepare_to_exit(app: &AppHandle) {
     save_settings_on_exit(app);
+    if let Some(team_share) = app.try_state::<crate::team_share::TeamShareService>() {
+        team_share.shutdown();
+    }
     if let Some(voice) = app.try_state::<crate::voice::VoiceService>() {
         voice.shutdown();
     }

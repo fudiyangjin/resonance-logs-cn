@@ -9,8 +9,9 @@ import { buffCompositeSpecs, ensureBuffComposites } from "$lib/buff-composites";
 import { expandBuffSelection } from "$lib/config/buff-name-table";
 import { activeProfile as getActiveProfile } from "$lib/skill-monitor-profile.svelte.js";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
-import { SETTINGS } from "$lib/settings-store";
+import { SETTINGS, normalizeTeammateCdSkills } from "$lib/settings-store";
 import {
+  getClassConfigs,
   getCounterRules,
   getSeasonCultivateFactorTemplates,
   resolveUserCounterRulesToPresets,
@@ -206,6 +207,27 @@ function buildTeammateRuntimeSnapshot(): MonitorRuntimeSnapshot["teammate"] {
   };
 }
 
+/**
+ * Teammates share every cooldown; this selection (per class, in display
+ * order) is what the backend publishes to the teammate CD panel.
+ */
+function buildTeammateCdRuntimeSnapshot(): MonitorRuntimeSnapshot["teammateCd"] {
+  const state = SETTINGS.monsterMonitor.state;
+  const visible =
+    state.enabled && (state.overlayVisibility?.showTeammateCdPanel ?? true);
+  if (!visible) return { enabled: false, classes: [] };
+
+  const selection = normalizeTeammateCdSkills(state.teammateCdSkills);
+  const classes = getClassConfigs()
+    .map((config) => ({
+      classId: config.classId,
+      skillIds: selection[config.classKey] ?? [],
+    }))
+    .filter((entry) => entry.skillIds.length > 0)
+    .sort((a, b) => a.classId - b.classId);
+  return { enabled: classes.length > 0, classes };
+}
+
 export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
   return {
     i18n: {
@@ -219,6 +241,7 @@ export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
     skill: buildSkillRuntimeSnapshot(),
     monster: buildMonsterRuntimeSnapshot(),
     teammate: buildTeammateRuntimeSnapshot(),
+    teammateCd: buildTeammateCdRuntimeSnapshot(),
     buffComposites: buffCompositeSpecs(
       ensureBuffComposites(SETTINGS.skillMonitor.state.buffComposites),
     ),

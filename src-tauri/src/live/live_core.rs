@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use tauri::{AppHandle, Manager};
-use tokio::sync::oneshot;
+use tokio::sync::{oneshot, watch};
 
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
 use crate::live::counter::engine::CounterSource;
@@ -24,6 +24,7 @@ use crate::live::runtime::events::{
 use crate::live::runtime::scheduler::{DeadlineScheduler, TimerTask};
 use crate::live::runtime::segment::{CombatGate, SegmentController, SegmentState};
 use crate::live::runtime_handle::RuntimeCommand;
+use crate::live::team_link::{ShareSnapshot, TeamLinkEvent};
 use crate::voice::models::VoiceRuntimeSnapshot;
 
 #[derive(Debug, Default)]
@@ -65,6 +66,8 @@ pub struct LiveCore {
     clock_anchor: ClockAnchor,
     live_publish_interval_ms: u64,
     publish: [PublishSchedule; Topic::COUNT],
+    /// Latest local share state for the team relay client.
+    team_share: watch::Sender<ShareSnapshot>,
     shutdown_complete: bool,
 }
 
@@ -74,6 +77,7 @@ impl LiveCore {
         history_writer: HistoryWriterHandle,
         initial_config: MonitorRuntimeSnapshot,
         mut initial_voice: VoiceRuntimeSnapshot,
+        team_share: watch::Sender<ShareSnapshot>,
     ) -> Result<Self, String> {
         let config = Arc::new(initial_config.normalize()?);
         initial_voice.normalize();
@@ -111,6 +115,7 @@ impl LiveCore {
             },
             live_publish_interval_ms: config.live.event_update_rate_ms,
             publish: [PublishSchedule::default(); Topic::COUNT],
+            team_share,
             shutdown_complete: false,
         };
         core.segments
@@ -219,10 +224,22 @@ impl LiveCore {
             &mut self.scheduler,
         );
         self.flush_voice_cues();
+        self.flush_team_share();
         result?;
 
         self.request_publications(packet_mono, force_publication);
         self.drain_due_through(packet_mono)
+    }
+
+    /// Applies a teammate update from the team relay. Relay traffic is not
+    /// ordered against capture batches, so it bypasses the control fence.
+    pub fn apply_team_event(&mut self, event: TeamLinkEvent) {
+        if self.shutdown_complete {
+            return;
+        }
+        self.projections.apply_team_event(event);
+        let now = self.refresh_clock();
+        self.request_publications(now, false);
     }
 
     pub fn drain_due_before(&mut self, packet_time: MonoTimeMs) -> Result<(), String> {
@@ -432,6 +449,14 @@ impl LiveCore {
         };
         for cue in cues {
             service.enqueue_cue(cue);
+        }
+    }
+
+    /// Hands the latest local share state to the team relay client. The
+    /// `watch` keeps only the newest value, so a busy client coalesces.
+    fn flush_team_share(&mut self) {
+        if let Some(share) = self.projections.take_team_share() {
+            self.team_share.send_replace(share);
         }
     }
 

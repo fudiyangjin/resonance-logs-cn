@@ -35,6 +35,7 @@ Monster Monitor has its own **configuration sub-profiles** (create, rename, dele
 | --- | --- | --- |
 | **{{ui:monsterMonitor.tabs.buff}}** | [Target Buffs](./buff.md) | [Watch the vulnerability you applied](./buff.md#example-watch-the-vulnerability-you-applied-and-get-alerted-before-it-drops) |
 | **{{ui:monsterMonitor.tabs.teammate}}** | [Teammate Buffs](./teammate.md) | — |
+| **{{ui:monsterMonitor.tabs.teammateCd}}** | [Teammate CD](./teammate-cd.md) | — |
 | **{{ui:monsterMonitor.tabs.hate}}** | [Threat List](./hate.md) | — |
 | **{{ui:monsterMonitor.tabs.stun}}** / **{{ui:monsterMonitor.tabs.hp}}** / **{{ui:monsterMonitor.tabs.fantasy}}** | [Stun, HP and Teammate Fantasies](./status.md) | — |
 | **{{ui:monsterMonitor.tabs.bossDbm}}** | [Boss DBM](./boss-dbm.md) | [Give a Boss skill an alias and a voice warning](./boss-dbm.md#example-give-a-boss-skill-an-alias-and-add-a-voice-warning) |

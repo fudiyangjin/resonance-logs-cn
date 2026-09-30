@@ -678,20 +678,23 @@
                     >
                   {/if}
                 </div>
-                <div>
+                <div
+                  class="max-w-72 truncate px-1.5 py-0.5 text-xs"
+                  title={enc.note || undefined}
+                >
                   {#if enc.bosses.length > 0}
-                    <div class="flex flex-wrap gap-1">
-                      <span class="rounded px-1.5 py-0.5 text-xs"
-                        >{enc.bosses[0]
-                          ? resolveMonsterName(enc.bosses[0].monsterId)
-                          : ""}</span
-                      >
-                    </div>
-                  {:else}
                     <span
-                      class="text-muted-foreground inline-block px-1.5 py-0.5 text-xs opacity-70"
+                      >{enc.bosses[0]
+                        ? resolveMonsterName(enc.bosses[0].monsterId)
+                        : ""}</span
+                    >
+                  {:else}
+                    <span class="opacity-70"
                       >{t("history.list.table.noBoss")}</span
                     >
+                  {/if}
+                  {#if enc.note}
+                    <span class="opacity-70"> ({enc.note})</span>
                   {/if}
                 </div>
               </div>

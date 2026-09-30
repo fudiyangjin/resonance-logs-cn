@@ -35,6 +35,7 @@
 | --- | --- | --- |
 | **{{ui:monsterMonitor.tabs.buff}}** | [ターゲット Buff](./buff.md) | [自分が付与した脆弱を監視する](./buff.md#例自分が付与した脆弱を監視し切れる前に知らせる) |
 | **{{ui:monsterMonitor.tabs.teammate}}** | [味方 Buff](./teammate.md) | — |
+| **{{ui:monsterMonitor.tabs.teammateCd}}** | [味方 CD](./teammate-cd.md) | — |
 | **{{ui:monsterMonitor.tabs.hate}}** | [ヘイトリスト](./hate.md) | — |
 | **{{ui:monsterMonitor.tabs.stun}}** / **{{ui:monsterMonitor.tabs.hp}}** / **{{ui:monsterMonitor.tabs.fantasy}}** | [スタン値・HP・味方幻想](./status.md) | — |
 | **{{ui:monsterMonitor.tabs.bossDbm}}** | [Boss DBM](./boss-dbm.md) | [Boss スキルに別名を付けて音声で予告する](./boss-dbm.md#例boss-スキルに別名を付けて音声で予告する) |

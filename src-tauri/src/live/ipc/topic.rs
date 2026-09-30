@@ -4,7 +4,7 @@ use crate::WINDOW_MAIN_LABEL;
 
 /// Bitmask of dirty publication topics.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct TopicMask(u8);
+pub struct TopicMask(u16);
 
 impl TopicMask {
     pub const EMPTY: Self = Self(0);
@@ -16,6 +16,7 @@ impl TopicMask {
     pub const MINIMAP: Self = Self(1 << 5);
     pub const DEATHS: Self = Self(1 << 6);
     pub const SCENE: Self = Self(1 << 7);
+    pub const TEAM: Self = Self(1 << 8);
 
     #[must_use]
     pub const fn is_empty(self) -> bool {
@@ -82,6 +83,7 @@ pub enum Topic {
     Minimap,
     Deaths,
     Scene,
+    Team,
 }
 
 impl Topic {
@@ -95,9 +97,10 @@ impl Topic {
         Self::Minimap,
         Self::Deaths,
         Self::Scene,
+        Self::Team,
     ];
 
-    pub const COUNT: usize = 8;
+    pub const COUNT: usize = 9;
 
     /// Position of this topic in [`Topic::ALL`].
     #[must_use]
@@ -111,6 +114,7 @@ impl Topic {
             Self::Minimap => 5,
             Self::Deaths => 6,
             Self::Scene => 7,
+            Self::Team => 8,
         }
     }
 
@@ -125,6 +129,7 @@ impl Topic {
             Self::Minimap => TopicMask::MINIMAP,
             Self::Deaths => TopicMask::DEATHS,
             Self::Scene => TopicMask::SCENE,
+            Self::Team => TopicMask::TEAM,
         }
     }
 
@@ -156,7 +161,8 @@ impl Topic {
             | Self::Fantasy
             | Self::Minimap
             | Self::Deaths
-            | Self::Scene => Some(50),
+            | Self::Scene
+            | Self::Team => Some(50),
         }
     }
 }
@@ -188,9 +194,18 @@ mod tests {
             Topic::Minimap,
             Topic::Deaths,
             Topic::Scene,
+            Topic::Team,
         ] {
             assert_eq!(topic.throttle_ms(), Some(50));
         }
         assert_eq!(Topic::Combat.throttle_ms(), None);
+    }
+
+    #[test]
+    fn topic_index_and_mask_are_consistent() {
+        for (index, topic) in Topic::ALL.into_iter().enumerate() {
+            assert_eq!(topic.index(), index);
+            assert_eq!(topic.mask(), TopicMask(1 << index));
+        }
     }
 }

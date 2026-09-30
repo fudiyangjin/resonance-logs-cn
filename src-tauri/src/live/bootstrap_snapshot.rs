@@ -67,6 +67,7 @@ pub struct MonitorRuntimeSnapshot {
     pub skill: SkillRuntimeSnapshot,
     pub monster: MonsterRuntimeSnapshot,
     pub teammate: TeammateRuntimeSnapshot,
+    pub teammate_cd: TeammateCdRuntimeSnapshot,
     pub buff_composites: Vec<BuffCompositeSpec>,
 }
 
@@ -79,6 +80,7 @@ impl Default for MonitorRuntimeSnapshot {
             skill: SkillRuntimeSnapshot::default(),
             monster: MonsterRuntimeSnapshot::default(),
             teammate: TeammateRuntimeSnapshot::default(),
+            teammate_cd: TeammateCdRuntimeSnapshot::default(),
         }
     }
 }
@@ -92,6 +94,7 @@ impl MonitorRuntimeSnapshot {
         if self.skill.monitored_skill_ids.len() > 10 {
             return Err("最多监控10个技能".to_string());
         }
+        self.teammate_cd.normalize();
         normalize_buff_composites(&mut self.buff_composites)?;
         // Negative ids name composites; one that is no longer defined is
         // dropped rather than failing the whole snapshot.
@@ -336,6 +339,50 @@ pub struct TeammateRuntimeSnapshot {
     pub local_player_source_ids: Vec<i32>,
     pub target_self_source_ids: Vec<i32>,
     pub monitor_all: bool,
+}
+
+/// Maximum skills shown per profession in the teammate cooldown panel.
+pub const TEAMMATE_CD_MAX_SKILLS_PER_CLASS: usize = 32;
+
+/// Teammate skills the team-cooldown panel shows. Teammates share every
+/// cooldown; this selection is applied locally before publication.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct TeammateCdRuntimeSnapshot {
+    pub enabled: bool,
+    pub classes: Vec<TeammateCdClassSkills>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct TeammateCdClassSkills {
+    /// Profession id (`EntityIdentity::profession_id`).
+    pub class_id: i32,
+    /// Base skill ids (`skill_level_id / 100`) in display order.
+    pub skill_ids: Vec<i32>,
+}
+
+impl TeammateCdRuntimeSnapshot {
+    /// Drops duplicate classes and skills (first wins) and caps each class.
+    fn normalize(&mut self) {
+        let mut seen_classes = std::collections::HashSet::new();
+        self.classes
+            .retain(|class| seen_classes.insert(class.class_id));
+        for class in &mut self.classes {
+            let mut seen = std::collections::HashSet::new();
+            class.skill_ids.retain(|id| *id > 0 && seen.insert(*id));
+            class.skill_ids.truncate(TEAMMATE_CD_MAX_SKILLS_PER_CLASS);
+        }
+        self.classes.retain(|class| !class.skill_ids.is_empty());
+    }
+
+    #[must_use]
+    pub fn skills_for(&self, class_id: i32) -> &[i32] {
+        self.classes
+            .iter()
+            .find(|class| class.class_id == class_id)
+            .map_or(&[], |class| class.skill_ids.as_slice())
+    }
 }
 
 fn describe_snapshot(snapshot: &MonitorRuntimeSnapshot) -> String {

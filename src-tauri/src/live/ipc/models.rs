@@ -132,6 +132,8 @@ pub struct HudFrameRequest {
     pub buffs_revision: Option<u64>,
     pub monster_revision: Option<u64>,
     pub fantasy_revision: Option<u64>,
+    #[serde(default)]
+    pub team_revision: Option<u64>,
     pub snapshot_revision: Option<u64>,
     pub skill_cast_cursor: Option<u64>,
     pub game_interest: bool,
@@ -155,10 +157,34 @@ pub struct HudFrame {
     pub buffs: Option<LiveBuffsPayload>,
     pub monster: Option<LiveMonsterPayload>,
     pub fantasy: Option<LiveFantasyPayload>,
+    /// Teammate cooldowns shared through the team relay (monster interest).
+    pub team: Option<LiveTeamPayload>,
     pub snapshot: Option<MinimapSnapshotUpdate>,
     pub skill_casts: Vec<MinimapSkillCast>,
     pub skill_cast_cursor: u64,
     pub casts_reset: bool,
+}
+
+/// Teammate cooldowns received from the team relay, already filtered to the
+/// skills selected for each teammate's class.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct LiveTeamPayload {
+    pub revision: u64,
+    /// `false` while the relay connection is down; rows are then stale.
+    pub link_online: bool,
+    pub teammates: Vec<TeammateCdPayload>,
+}
+
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct TeammateCdPayload {
+    /// Canonical entity uuid, as a string like the other teammate maps.
+    pub uuid: String,
+    pub name: String,
+    pub class_id: i32,
+    /// Cooldowns in the local time domain; interpolate exactly like own CDs.
+    pub skill_cds: Vec<SkillCdState>,
 }
 
 /// Skill CD / panel attrs / fight resource / shields / counters

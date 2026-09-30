@@ -17,7 +17,7 @@ See [When combat is split and when it is reset](../features/dps/README.md#when-f
 
 ### Is history cleaned up automatically?
 
-When there are more than 200 entries, older records are deleted by time on the next launch. Add important records to your favorites; see [History](../features/dps/history.md#history-list).
+The default is 200 non-favorite entries, configurable from 1 to 2000 in App Settings. Older records are deleted by time on the next launch. Add important records to your favorites; see [History](../features/dps/history.md#history-list).
 
 ## Appearance
 

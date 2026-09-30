@@ -10,6 +10,8 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use bytes::Bytes;
 
+pub use crate::packets::game_connections::Distribution;
+
 /// Sentinel UUID used by protocol observations that address the local player
 /// before the real entity id is known (e.g. SyncToMeDeltaInfo without uuid).
 /// [`EntityContext`] resolves it to the current local player on reduce.
@@ -552,12 +554,22 @@ pub enum ProtocolObservation {
     LocalSkillCompleted {
         skill_id: i32,
     },
+    /// Team id, leader, and the roster from `TeamBaseInfo` group slots.
+    ///
+    /// A non-empty `roster` replaces the members. An empty `roster` means the
+    /// notice carried no group slots: the same team keeps its members, and a
+    /// new team id keeps only the leader. `team_id == 0` clears the team.
     TeamInfoUpdated {
         team_id: i64,
         leader_uuid: Option<EntityUuid>,
+        roster: Vec<EntityUuid>,
     },
     TeamMembersUpdated {
         members: Vec<EntityUuid>,
+    },
+    /// The capture layer identified which game distribution owns the stream.
+    GameClientIdentified {
+        distribution: Distribution,
     },
     TeamMemberLeft {
         member_uuid: EntityUuid,

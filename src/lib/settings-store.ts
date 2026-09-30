@@ -42,6 +42,19 @@ export const DEFAULT_STATS = {
   damageMode: true,
 };
 
+export const DEFAULT_HISTORY_RETENTION_LIMIT = 200;
+export const MIN_HISTORY_RETENTION_LIMIT = 1;
+export const MAX_HISTORY_RETENTION_LIMIT = 2000;
+
+export function normalizeHistoryRetentionLimit(value: unknown): number {
+  return typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= MIN_HISTORY_RETENTION_LIMIT &&
+    value <= MAX_HISTORY_RETENTION_LIMIT
+    ? value
+    : DEFAULT_HISTORY_RETENTION_LIMIT;
+}
+
 export const DEFAULT_LIVE_TANKED_PLAYER_STATS = {
   totalDmg: true,
   dps: true,
@@ -1072,6 +1085,26 @@ export type TeammatePanelStyle = CustomPanelStyle & {
   deadRowPlacement: TeammateDeadRowPlacement;
 };
 
+/** Teammate skill-cooldown panel (team sharing). */
+export type TeammateCdPanelStyle = {
+  iconSize: number;
+  iconGap: number;
+  rowGap: number;
+  /** `0` hides the name column. */
+  nameColumnWidth: number;
+  fontSize: number;
+  nameColor: string;
+  deadNameColor: string;
+  deadRowPlacement: TeammateDeadRowPlacement;
+  showClassIcon: boolean;
+} & OverlayTextStyle;
+
+/**
+ * Base skill ids shown per teammate class, keyed by `classKey` from
+ * `class_skill_configs.json`, in display order.
+ */
+export type TeammateCdSkillMap = Partial<Record<string, number[]>>;
+
 export type ShieldDetailStyle = {
   fontSize: number;
   barWidth: number;
@@ -1087,6 +1120,7 @@ export type ShieldDetailStyle = {
 export type MonsterOverlayPositions = {
   monsterBuffPanel: Point;
   teammateBuffPanel: Point;
+  teammateCdPanel: Point;
   hatePanel: Point;
   fantasyPanel: Point;
   bossDbmPanel: Point;
@@ -1098,6 +1132,7 @@ export type MonsterOverlayPositions = {
 export type MonsterOverlaySizes = {
   monsterBuffPanelScale: number;
   teammateBuffPanelScale: number;
+  teammateCdPanelScale: number;
   hatePanelScale: number;
   fantasyPanelScale: number;
   bossDbmPanelScale: number;
@@ -1109,6 +1144,7 @@ export type MonsterOverlaySizes = {
 export type MonsterOverlayVisibility = {
   showMonsterBuffPanel: boolean;
   showTeammateBuffPanel: boolean;
+  showTeammateCdPanel: boolean;
   showHatePanel: boolean;
   showFantasyPanel: boolean;
   showBossDbmPanel: boolean;
@@ -1182,6 +1218,8 @@ export type MonsterMonitorConfig = {
   overlayVisibility: MonsterOverlayVisibility;
   panelStyle: CustomPanelStyle;
   teammatePanelStyle: TeammatePanelStyle;
+  teammateCdSkills: TeammateCdSkillMap;
+  teammateCdPanelStyle: TeammateCdPanelStyle;
   hatePanelStyle: CustomPanelStyle;
   fantasyPanelStyle: CustomPanelStyle;
   bossDbmPanelStyle: CustomPanelStyle;
@@ -1580,6 +1618,7 @@ function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
   return {
     monsterBuffPanel: { x: 40, y: 40 },
     teammateBuffPanel: { x: 420, y: 40 },
+    teammateCdPanel: { x: 420, y: 180 },
     hatePanel: { x: 40, y: 300 },
     fantasyPanel: { x: 420, y: 300 },
     bossDbmPanel: { x: 800, y: 40 },
@@ -1593,6 +1632,7 @@ function createDefaultMonsterOverlaySizes(): MonsterOverlaySizes {
   return {
     monsterBuffPanelScale: 1,
     teammateBuffPanelScale: 1,
+    teammateCdPanelScale: 1,
     hatePanelScale: 1,
     fantasyPanelScale: 1,
     bossDbmPanelScale: 1,
@@ -1606,6 +1646,7 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
   return {
     showMonsterBuffPanel: true,
     showTeammateBuffPanel: true,
+    showTeammateCdPanel: true,
     showHatePanel: false,
     showFantasyPanel: false,
     showBossDbmPanel: false,
@@ -1613,6 +1654,75 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
     showHpPanel: false,
     showEntityDurationPanel: true,
   };
+}
+
+export function createDefaultTeammateCdPanelStyle(): TeammateCdPanelStyle {
+  return {
+    iconSize: 36,
+    iconGap: 4,
+    rowGap: 4,
+    nameColumnWidth: 96,
+    fontSize: 13,
+    nameColor: "#ffffff",
+    deadNameColor: "#ef4444",
+    deadRowPlacement: "last",
+    showClassIcon: true,
+    ...createDefaultOverlayTextStyle(),
+  };
+}
+
+function clampRounded(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const numeric = Number(value);
+  return Math.max(
+    min,
+    Math.min(max, Math.round(Number.isFinite(numeric) ? numeric : fallback)),
+  );
+}
+
+export function ensureTeammateCdPanelStyle(
+  style: Partial<TeammateCdPanelStyle> | null | undefined,
+): TeammateCdPanelStyle {
+  const base = createDefaultTeammateCdPanelStyle();
+  const placement = style?.deadRowPlacement;
+  return {
+    iconSize: clampRounded(style?.iconSize, base.iconSize, 20, 72),
+    iconGap: clampRounded(style?.iconGap, base.iconGap, 0, 24),
+    rowGap: clampRounded(style?.rowGap, base.rowGap, 0, 24),
+    nameColumnWidth: clampRounded(
+      style?.nameColumnWidth,
+      base.nameColumnWidth,
+      0,
+      240,
+    ),
+    fontSize: clampRounded(style?.fontSize, base.fontSize, 10, 28),
+    nameColor: style?.nameColor ?? base.nameColor,
+    deadNameColor: style?.deadNameColor ?? base.deadNameColor,
+    deadRowPlacement: isTeammateDeadRowPlacement(placement)
+      ? placement
+      : base.deadRowPlacement,
+    showClassIcon: style?.showClassIcon ?? base.showClassIcon,
+    ...ensureOverlayTextStyle(style),
+  };
+}
+
+/** Drops malformed entries and duplicate skill ids (first wins). */
+export function normalizeTeammateCdSkills(
+  value: TeammateCdSkillMap | null | undefined,
+): TeammateCdSkillMap {
+  const result: TeammateCdSkillMap = {};
+  for (const [classKey, ids] of Object.entries(value ?? {})) {
+    if (!Array.isArray(ids)) continue;
+    const unique = [
+      ...new Set(ids.filter((id) => Number.isInteger(id) && id > 0)),
+    ];
+    if (unique.length > 0) result[classKey] = unique;
+  }
+  return result;
 }
 
 export function createDefaultTeammatePanelStyle(): TeammatePanelStyle {
@@ -1809,6 +1919,8 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     overlayVisibility: createDefaultMonsterOverlayVisibility(),
     panelStyle: createDefaultCustomPanelStyle(),
     teammatePanelStyle: createDefaultTeammatePanelStyle(),
+    teammateCdSkills: {},
+    teammateCdPanelStyle: createDefaultTeammateCdPanelStyle(),
     hatePanelStyle: createDefaultCustomPanelStyle(),
     fantasyPanelStyle: createDefaultCustomPanelStyle(),
     bossDbmPanelStyle: createDefaultBossDbmStyle(),
@@ -1887,6 +1999,8 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "overlayVisibility",
   "panelStyle",
   "teammatePanelStyle",
+  "teammateCdSkills",
+  "teammateCdPanelStyle",
   "hatePanelStyle",
   "fantasyPanelStyle",
   "bossDbmPanelStyle",

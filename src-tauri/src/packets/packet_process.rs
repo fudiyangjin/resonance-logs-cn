@@ -1,6 +1,7 @@
 use crate::live::runtime::events::{
     CaptureEnvelope, PacketDirection, PacketKey, monotonic_now_ns, wall_now_ms,
 };
+use crate::packets::game_connections::Distribution;
 use crate::packets::opcodes::{CaptureEvent, FragmentType};
 use crate::packets::parser;
 use bytes::Bytes;
@@ -16,6 +17,9 @@ use tokio_util::sync::CancellationToken;
 pub const SYNTHETIC_STREAM_GAP_OPCODE: u32 = u32::MAX - 1;
 pub const SYNTHETIC_REASSEMBLY_RESET_OPCODE: u32 = u32::MAX - 2;
 pub const SYNTHETIC_DECODE_ISSUE_OPCODE: u32 = u32::MAX - 3;
+/// The owning game process of a stream was identified. Payload: one
+/// [`Distribution::code`](crate::packets::game_connections::Distribution::code) byte.
+pub const SYNTHETIC_GAME_CLIENT_OPCODE: u32 = u32::MAX - 4;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -116,6 +120,25 @@ impl CaptureEmitter {
                 method_id: None,
             },
             Bytes::new(),
+        )
+    }
+
+    pub fn emit_game_client(
+        &mut self,
+        stream_id: u64,
+        stream_epoch: u64,
+        distribution: Distribution,
+    ) -> bool {
+        self.emit_envelope(
+            stream_id,
+            stream_epoch,
+            PacketDirection::ServerToClient,
+            PacketKey {
+                opcode: SYNTHETIC_GAME_CLIENT_OPCODE,
+                service_id: None,
+                method_id: None,
+            },
+            Bytes::from(vec![distribution.code()]),
         )
     }
 

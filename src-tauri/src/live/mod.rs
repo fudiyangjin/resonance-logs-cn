@@ -17,4 +17,5 @@ pub mod protocol;
 pub mod runtime;
 pub mod runtime_handle;
 pub mod store_file;
+pub mod team_link;
 pub mod voice_runtime_config;

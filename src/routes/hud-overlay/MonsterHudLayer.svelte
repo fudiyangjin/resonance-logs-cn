@@ -7,6 +7,7 @@
   import MonsterHpPanel from "../monster-overlay/MonsterHpPanel.svelte";
   import MonsterStunPanel from "../monster-overlay/MonsterStunPanel.svelte";
   import MonsterTeammateBuffPanel from "../monster-overlay/MonsterTeammateBuffPanel.svelte";
+  import MonsterTeammateCdPanel from "../monster-overlay/MonsterTeammateCdPanel.svelte";
   import { getMonsterOverlayVisibility } from "../monster-overlay/monster-state.svelte.js";
 
   const visibility = $derived(getMonsterOverlayVisibility());
@@ -18,6 +19,9 @@
   {/if}
   {#if visibility.showTeammateBuffPanel}
     <MonsterTeammateBuffPanel />
+  {/if}
+  {#if visibility.showTeammateCdPanel}
+    <MonsterTeammateCdPanel />
   {/if}
   {#if visibility.showHatePanel}
     <MonsterHatePanel />

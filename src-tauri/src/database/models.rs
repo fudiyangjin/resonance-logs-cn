@@ -139,6 +139,8 @@ pub struct EncounterRow {
     pub remote_encounter_id: Option<i64>,
     /// Whether the encounter is favorited.
     pub is_favorite: i32,
+    /// User-authored note used to identify this encounter.
+    pub note: Option<String>,
     /// Whether the encounter was manually reset (should not be uploaded).
     pub is_manually_reset: i32,
     pub boss_monster_ids: Option<String>,

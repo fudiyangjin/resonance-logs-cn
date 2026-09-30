@@ -153,6 +153,35 @@ export const jaJPMessages = {
   "appSettings.behavior.exitOnClose": "閉じるボタンでアプリを終了する",
   "appSettings.behavior.exitOnCloseDescription":
     "有効にすると、メインウィンドウの閉じるボタンをクリックした際に、システムトレイへ隠さずアプリ全体を終了します。この設定は次回起動後に反映されます。",
+  "appSettings.teamShare.title": "パーティ共有",
+  "appSettings.teamShare.enable": "味方とスキル CD を共有する",
+  "appSettings.teamShare.enableDescription":
+    "パーティにいる間、自分のすべてのスキルクールダウンを同じ機能を有効にした味方へリアルタイムで送り、味方のクールダウンをモンスターモニターの「味方 CD」パネルに表示します。すぐに反映されます。",
+  "appSettings.teamShare.saveFailed": "保存に失敗しました：{error}",
+  "appSettings.teamShare.privacy":
+    "有効にすると、キャラクター ID・キャラクター名・職業・パーティ ID・スキルクールダウンを bptimer.cn に送信します。サーバーは同じパーティで共有を有効にしている味方にだけ中継し、メモリ上にのみ保持してデータベースには書き込みません。パーティを抜けるか無効にすると削除されます。",
+  "appSettings.teamShare.status.disabled": "オフ",
+  "appSettings.teamShare.status.idle":
+    "オン、パーティへの参加待ち（またはゲーム未検出）",
+  "appSettings.teamShare.status.connecting": "接続中…",
+  "appSettings.teamShare.status.connected":
+    "接続済み、{count} 人の味方が共有中",
+  "appSettings.teamShare.status.retrying":
+    "接続が切れました。{seconds} 秒後に再試行します（{error}）",
+  "appSettings.historyRetention.title": "履歴の保持",
+  "appSettings.historyRetention.description":
+    "自動的に保持する未お気に入り履歴の件数を設定します。変更は次回起動時に反映されます。",
+  "appSettings.historyRetention.limit": "保持件数",
+  "appSettings.historyRetention.help":
+    "1～{max} 件を入力してください。お気に入りは自動削除されません。",
+  "appSettings.historyRetention.invalid": "有効な整数を入力してください。",
+  "appSettings.historyRetention.range":
+    "{min}～{max} の整数を入力してください。",
+  "appSettings.historyRetention.save": "保存",
+  "appSettings.historyRetention.saving": "保存中...",
+  "appSettings.historyRetention.saved":
+    "保存しました。次回起動時に反映されます。",
+  "appSettings.historyRetention.saveFailed": "保存に失敗しました：{error}",
   "appSettings.appearance.scope":
     "以下の外観設定は端末ごとのグローバル設定です。構成のエクスポートには含まれません。",
   "appSettings.appearance.colorScopeMain":
@@ -484,6 +513,12 @@ export const jaJPMessages = {
   "history.detail.actions.addFavorite": "お気に入りに追加",
   "history.detail.actions.deleteTitle": "このエンカウントを削除",
   "history.detail.actions.deleteAria": "エンカウントを削除",
+  "history.detail.note.edit": "メモを編集",
+  "history.detail.note.placeholder": "メモを入力",
+  "history.detail.note.save": "メモを保存",
+  "history.detail.note.cancel": "キャンセル",
+  "history.detail.note.tooLong": "メモは 200 文字以内で入力してください。",
+  "history.detail.note.saveFailed": "メモの保存に失敗しました：{error}",
   "history.detail.actions.backToOverview": "エンカウント概要に戻る",
   "history.detail.encounter.unknownScene": "不明なエンカウント",
   "history.detail.encounter.duration": "時間: {duration}",
@@ -1495,6 +1530,25 @@ export const jaJPMessages = {
     "日常シーンのブラックリストに入るとモンスターオーバーレイを自動的に非表示にし、離れると復元します。",
   "monsterMonitor.tabs.buff": "Buff モニター",
   "monsterMonitor.tabs.teammate": "味方 Buff",
+  "monsterMonitor.tabs.teammateCd": "味方 CD",
+  "monsterMonitor.teammateCd.title": "味方スキル CD",
+  "monsterMonitor.teammateCd.description":
+    "味方はすべてのスキルクールダウンを共有します。ここでは職業ごとに表示するスキルを選びます。双方が「アプリ設定 → パーティ共有」を有効にしている必要があります。",
+  "monsterMonitor.teammateCd.pickSkills":
+    "スキルをクリックすると表示／非表示を切り替えます",
+  "monsterMonitor.teammateCd.selectedOrder": "表示順（{count} 個）",
+  "monsterMonitor.teammateCd.emptyClass":
+    "この職業はまだスキルが選ばれていないため、この職業の味方は表示されません。",
+  "monsterMonitor.teammateCd.moveUp": "前へ",
+  "monsterMonitor.teammateCd.moveDown": "後ろへ",
+  "monsterMonitor.teammateCd.remove": "削除",
+  "monsterMonitor.teammateCd.styleTitle": "味方 CD パネルのスタイル",
+  "monsterMonitor.teammateCd.style.iconSize": "アイコンサイズ",
+  "monsterMonitor.teammateCd.style.iconGap": "アイコン間隔",
+  "monsterMonitor.teammateCd.style.rowGap": "行間隔",
+  "monsterMonitor.teammateCd.style.nameColumnWidth": "名前列の幅（0 で非表示）",
+  "monsterMonitor.teammateCd.style.fontSize": "文字サイズ",
+  "monsterMonitor.teammateCd.style.showClassIcon": "職業アイコンを表示",
   "monsterMonitor.tabs.hate": "ヘイトリスト",
   "monsterMonitor.tabs.stun": "スタンバーゲージ",
   "monsterMonitor.tabs.hp": "HP バー",
@@ -1616,6 +1670,7 @@ export const jaJPMessages = {
     "モンスターモニターオーバーレイの各表示エリアを制御します。",
   "monsterMonitor.overlay.monsterBuff": "モンスター Buff エリア: {state}",
   "monsterMonitor.overlay.teammateBuff": "味方 Buff エリア: {state}",
+  "monsterMonitor.overlay.teammateCd": "味方 CD エリア: {state}",
   "monsterMonitor.overlay.hate": "ヘイトリストエリア: {state}",
   "monsterMonitor.overlay.stun": "スタンバーゲージエリア: {state}",
   "monsterMonitor.overlay.hp": "HP バーエリア: {state}",
@@ -1676,6 +1731,8 @@ export const jaJPMessages = {
     "ここをドラッグして Monster Overlay ウィンドウを移動",
   "monsterOverlay.buffGroupTag": "モンスター Buff エリア",
   "monsterOverlay.teammateGroupTag": "味方 Buff エリア",
+  "monsterOverlay.teammateCdGroupTag": "味方 CD エリア",
+  "monsterOverlay.teammateCd.placeholderName": "味方",
   "monsterOverlay.hateGroupTag": "ヘイトエリア",
   "monsterOverlay.stunGroupTag": "スタンエリア",
   "monsterOverlay.hpGroupTag": "HP エリア",

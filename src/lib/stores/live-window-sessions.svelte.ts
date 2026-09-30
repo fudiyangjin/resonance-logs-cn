@@ -14,6 +14,7 @@ import {
   liveFantasyStore,
   liveMonsterStore,
   liveStatusStore,
+  liveTeamStore,
 } from "$lib/stores/live-topics.svelte";
 
 type Revisioned = { revision: number };
@@ -221,6 +222,7 @@ class HudOverlayPullSession implements WindowPullSession {
           buffsRevision: revisionOf(liveBuffsStore.data),
           monsterRevision: revisionOf(liveMonsterStore.data),
           fantasyRevision: revisionOf(liveFantasyStore.data),
+          teamRevision: revisionOf(liveTeamStore.data),
           snapshotRevision: this.#snapshotRevision,
           skillCastCursor: this.#skillCastCursor,
           gameInterest: this.#interests.game,
@@ -312,9 +314,11 @@ class HudOverlayPullSession implements WindowPullSession {
     }
 
     if (!interests.monster) {
-      clearTopics([liveMonsterStore, liveFantasyStore]);
+      clearTopics([liveMonsterStore, liveFantasyStore, liveTeamStore]);
     } else if (!previous.monster && this.#started && this.#active) {
-      clearTopics([liveMonsterStore, liveFantasyStore], { state: "loading" });
+      clearTopics([liveMonsterStore, liveFantasyStore, liveTeamStore], {
+        state: "loading",
+      });
     }
 
     if (!interests.minimap) {
@@ -350,6 +354,7 @@ class HudOverlayPullSession implements WindowPullSession {
     if (this.#interests.monster) {
       if (frame.monster) liveMonsterStore.apply(frame.monster);
       if (frame.fantasy) liveFantasyStore.apply(frame.fantasy);
+      if (frame.team) liveTeamStore.apply(frame.team);
     }
     this.#skillCastCursor = frame.skillCastCursor;
     if (this.#interests.minimap) {
@@ -369,7 +374,9 @@ class HudOverlayPullSession implements WindowPullSession {
   #activeTopics(): ResettableTopicStore[] {
     return [
       ...(this.#interests.game ? [liveStatusStore, liveBuffsStore] : []),
-      ...(this.#interests.monster ? [liveMonsterStore, liveFantasyStore] : []),
+      ...(this.#interests.monster
+        ? [liveMonsterStore, liveFantasyStore, liveTeamStore]
+        : []),
     ];
   }
 
@@ -379,6 +386,7 @@ class HudOverlayPullSession implements WindowPullSession {
       liveBuffsStore,
       liveMonsterStore,
       liveFantasyStore,
+      liveTeamStore,
     ];
   }
 }

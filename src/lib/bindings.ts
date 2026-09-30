@@ -131,6 +131,23 @@ async saveAndApplyVoiceRuntimeSnapshot(snapshot: VoiceRuntimeSnapshot) : Promise
     else return { status: "error", error: e  as any };
 }
 },
+async getTeamShareSettings() : Promise<TeamShareSettings> {
+    return await TAURI_INVOKE("get_team_share_settings");
+},
+/**
+ * Takes effect immediately; the switch is also persisted for the next launch.
+ */
+async setTeamShareEnabled(enabled: boolean) : Promise<Result<TeamShareSettings, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_team_share_enabled", { enabled }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getTeamShareStatus() : Promise<TeamShareStatus> {
+    return await TAURI_INVOKE("get_team_share_status");
+},
 async getUniqueSceneIds() : Promise<Result<SceneIdsResult, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_unique_scene_ids") };
@@ -198,6 +215,25 @@ async deleteEncounters(ids: number[]) : Promise<Result<null, string>> {
 async toggleFavoriteEncounter(id: number, isFavorite: boolean) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("toggle_favorite_encounter", { id, isFavorite }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async updateEncounterNote(encounterId: number, note: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_encounter_note", { encounterId, note }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getHistoryRetentionLimit() : Promise<number> {
+    return await TAURI_INVOKE("get_history_retention_limit");
+},
+async saveHistoryRetentionLimit(limit: number) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_history_retention_limit", { limit }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -742,7 +778,7 @@ damageHits?: EncounterDamageHitsData[]; markers: EncounterMarkerData[] }
 export type EncounterSkillData = { skillId: string; metric: HistoryMetric; property: number | null; damageMode: number | null; stats: EncounterStatsData }
 export type EncounterSourceBreakdownData = { sourceMonsterId: number | null; stats: EncounterStatsData; skills: EncounterSkillData[] }
 export type EncounterStatsData = { total: string; effectiveTotal: string; hits: string; criticalHits: string; criticalTotal: string; luckyHits: string; luckyTotal: string; triggerHits: string; blockedHits: string; luckyBlockHits: string; extrema?: RawHitExtrema | null }
-export type EncounterSummaryDto = { id: number; startedAtMs: number; endedAtMs: number | null; totalDmg: string; totalHeal: string; sceneId: number | null; dungeonDifficulty: number | null; duration: number; activeCombatDuration: number | null; localPlayerId: number | null; bosses: BossSummaryDto[]; players: PlayerSummaryDto[]; remoteEncounterId: number | null; isFavorite: boolean; detailAvailable: boolean; displayIndex: number }
+export type EncounterSummaryDto = { id: number; startedAtMs: number; endedAtMs: number | null; totalDmg: string; totalHeal: string; sceneId: number | null; dungeonDifficulty: number | null; duration: number; activeCombatDuration: number | null; localPlayerId: number | null; bosses: BossSummaryDto[]; players: PlayerSummaryDto[]; remoteEncounterId: number | null; isFavorite: boolean; note: string | null; detailAvailable: boolean; displayIndex: number }
 export type EncounterTargetBreakdownData = { targetEntityId: string; targetDisplayUid: number; targetName: string | null; targetMonsterId: number | null; isBoss: boolean; stats: EncounterStatsData; skills: EncounterSkillData[] }
 export type EncounterTotalsData = { damage: string; bossDamage: string; healing: string; effectiveHealing: string; damageTaken: string }
 export type EngineBackend = "cpu" | "vulkan"
@@ -794,8 +830,12 @@ export type HistoryQualityFlag = "incompleteSegment" | "missingEntityContext" | 
  * Health snapshot for the current monster target.
  */
 export type HpEntry = { bossEntityUuid: string; monsterId: number; current: number; max: number }
-export type HudFrame = { active: boolean; epoch: number; status: LiveStatusPayload | null; buffs: LiveBuffsPayload | null; monster: LiveMonsterPayload | null; fantasy: LiveFantasyPayload | null; snapshot: MinimapSnapshotUpdate | null; skillCasts: MinimapSkillCast[]; skillCastCursor: number; castsReset: boolean }
-export type HudFrameRequest = { epoch: number | null; statusRevision: number | null; buffsRevision: number | null; monsterRevision: number | null; fantasyRevision: number | null; snapshotRevision: number | null; skillCastCursor: number | null; gameInterest: boolean; monsterInterest: boolean; minimapInterest: boolean }
+export type HudFrame = { active: boolean; epoch: number; status: LiveStatusPayload | null; buffs: LiveBuffsPayload | null; monster: LiveMonsterPayload | null; fantasy: LiveFantasyPayload | null;
+/**
+ * Teammate cooldowns shared through the team relay (monster interest).
+ */
+team: LiveTeamPayload | null; snapshot: MinimapSnapshotUpdate | null; skillCasts: MinimapSkillCast[]; skillCastCursor: number; castsReset: boolean }
+export type HudFrameRequest = { epoch: number | null; statusRevision: number | null; buffsRevision: number | null; monsterRevision: number | null; fantasyRevision: number | null; teamRevision?: number | null; snapshotRevision: number | null; skillCastCursor: number | null; gameInterest: boolean; monsterInterest: boolean; minimapInterest: boolean }
 export type HudLayoutMigration = { translateMinimap: boolean; minimapOffsetX: number; minimapOffsetY: number }
 export type I18nRuntimeSnapshot = { locale: AppLocale }
 /**
@@ -856,6 +896,15 @@ export type LiveStatusPayload = { revision: number; counters: CounterUpdateState
  * container sync/patch; `0` before any season data has been observed.
  */
 seasonId: number; seasonActiveTemplateIds: number[]; skillCds: SkillCdState[]; panelAttrs: PanelAttrState[]; shieldCurrentHp: number; shieldMaxHp: number; shieldEntries: ShieldDetailEntry[]; fightResource: FightResourceState | null }
+/**
+ * Teammate cooldowns received from the team relay, already filtered to the
+ * skills selected for each teammate's class.
+ */
+export type LiveTeamPayload = { revision: number;
+/**
+ * `false` while the relay connection is down; rows are then stale.
+ */
+linkOnline: boolean; teammates: TeammateCdPayload[] }
 export type LiveWindowFrame = { active: boolean; epoch: number; combat: LiveCombatPayload | null; fantasy: LiveFantasyPayload | null; deaths: LiveDeathsPayload | null }
 export type LiveWindowFrameRequest = { epoch: number | null; combatRevision: number | null; fantasyRevision: number | null; deathsRevision: number | null; includeDeaths: boolean }
 /**
@@ -1056,7 +1105,7 @@ export type ModelState = { kind: "notInstalled" } | { kind: "installing" } | { k
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
-export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot; buffComposites: BuffCompositeSpec[] }
+export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot; teammateCd: TeammateCdRuntimeSnapshot; buffComposites: BuffCompositeSpec[] }
 /**
  * Which caster population a monster-buff voice rule observes.
  */
@@ -1168,6 +1217,39 @@ export type SlotUpdateState = { slotId: number; currentCount: number; threshold:
  * means the stagger threshold has been hit.
  */
 export type StunEntry = { bossEntityUuid: string; monsterId: number; current: number; max: number }
+export type TeamShareSettings = { enabled: boolean }
+/**
+ * Relay connection state shown in the settings page.
+ */
+export type TeamShareStatus = { state: "disabled" } |
+/**
+ * Sharing is on but the character is not in a team, the game client is
+ * not detected yet, or the server clock is still unknown.
+ */
+{ state: "idle" } | { state: "connecting" } | { state: "connected"; teammates: number } | { state: "retrying"; error: string; retryMs: number }
+export type TeammateCdClassSkills = {
+/**
+ * Profession id (`EntityIdentity::profession_id`).
+ */
+classId: number;
+/**
+ * Base skill ids (`skill_level_id / 100`) in display order.
+ */
+skillIds: number[] }
+export type TeammateCdPayload = {
+/**
+ * Canonical entity uuid, as a string like the other teammate maps.
+ */
+uuid: string; name: string; classId: number;
+/**
+ * Cooldowns in the local time domain; interpolate exactly like own CDs.
+ */
+skillCds: SkillCdState[] }
+/**
+ * Teammate skills the team-cooldown panel shows. Teammates share every
+ * cooldown; this selection is applied locally before publication.
+ */
+export type TeammateCdRuntimeSnapshot = { enabled: boolean; classes: TeammateCdClassSkills[] }
 export type TeammateFantasyState = { summonUuid: string; summonerUuid: string; summonerName: string | null; monsterId: number;
 /**
  * Normalized resonance skill id that summoned this fantasy, when known.

@@ -1,0 +1,2 @@
+ALTER TABLE encounters
+ADD COLUMN note TEXT;

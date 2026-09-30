@@ -20,6 +20,7 @@ function frame(snapshot: MinimapSnapshot | null): HudFrame {
     buffs: null,
     monster: null,
     fantasy: null,
+    team: null,
     snapshot: { revision: 1, snapshot },
     skillCasts: [],
     skillCastCursor: 0,

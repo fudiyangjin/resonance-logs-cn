@@ -22,6 +22,7 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | See my own skill CDs and Buffs on screen | [Live Monitor](./features/monitor/README.md) |
 | Show factor energy and season nodes automatically | [Example: Show factor energy and season nodes automatically](./features/monitor/custom-panel.md#example-automatically-show-factor-energy-and-season-nodes) |
 | Keep an eye on vulnerability debuffs on the Boss and watch Boss casts | [Monster Monitor](./features/monster/README.md) |
+| See when teammates' ultimates and mitigation come back | [Teammate CD](./features/monster/teammate-cd.md) |
 | See mechanic positioning in raids | [Dungeon Mechanics](./features/minimap/README.md) |
 | Hear a voice call when a skill comes off cooldown or a Boss uses a big attack | [Voice Announcements](./features/voice/README.md) |
 | Find the best combination from a pile of modules | [Module Calculator](./features/module-calc/README.md) |
@@ -59,6 +60,7 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | [Monster Monitor](./features/monster/README.md) | Feature overview and how it differs from Live Monitor | — |
 | [Target Buffs](./features/monster/buff.md) | Buffs on your target and alerts | [Watch vulnerability debuffs](./features/monster/buff.md#example-watch-the-vulnerability-you-applied-and-get-alerted-before-it-drops) |
 | [Teammate Buffs](./features/monster/teammate.md) | Buffs on your teammates | — |
+| [Teammate CD](./features/monster/teammate-cd.md) | Skill cooldowns shared by your teammates | — |
 | [Stun, HP & Teammate Fantasies](./features/monster/status.md) | Target status bars | — |
 | [Hate List](./features/monster/hate.md) | Threat ranking on your target | — |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss skill warning bars | [Boss skill voice warnings](./features/monster/boss-dbm.md#example-give-a-boss-skill-an-alias-and-add-a-voice-warning) |

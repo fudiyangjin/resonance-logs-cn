@@ -1,5 +1,5 @@
 use crate::live::runtime::events::CaptureEnvelope;
-use crate::packets::game_connections::{GameConnectionFilter, Verdict};
+use crate::packets::game_connections::{Distribution, GameConnectionFilter, Verdict};
 use crate::packets::npcap::NpcapCapture;
 use crate::packets::packet_process::{CaptureEmitter, process_packet};
 use crate::packets::reassembler::Reassembler;
@@ -115,6 +115,8 @@ struct SessionState {
     last_seen: Instant,
     stream_id: u64,
     stream_epoch: u64,
+    /// Last distribution announced downstream for this stream.
+    distribution: Option<Distribution>,
 }
 
 impl SessionState {
@@ -125,6 +127,7 @@ impl SessionState {
             last_seen: now,
             stream_id,
             stream_epoch: 1,
+            distribution: None,
         }
     }
 
@@ -308,7 +311,7 @@ fn read_packets(
             );
             let verdict = game_connections.classify(curr_server);
             let session_known = sessions.contains_key(&curr_server);
-            if !matches!(verdict, Verdict::Game) && !session_known {
+            if !matches!(verdict, Verdict::Game(_)) && !session_known {
                 return;
             }
 
@@ -318,6 +321,15 @@ fn read_packets(
                 .entry(curr_server)
                 .or_insert_with(|| SessionState::new(now, stream_id));
             session.last_seen = now;
+            if let Verdict::Game(distribution) = verdict
+                && session.distribution != Some(distribution)
+            {
+                session.distribution = Some(distribution);
+                if !emitter.emit_game_client(session.stream_id, session.stream_epoch, distribution)
+                {
+                    return;
+                }
+            }
 
             process_tcp_packet(
                 curr_server,

@@ -1,6 +1,9 @@
 import type { BuffCategoryKey } from "$lib/config/buff-name-table";
-import type { TextBuffDisplay } from "../game-overlay/overlay-types";
-import type { BuffAlertState } from "../game-overlay/overlay-types";
+import type {
+  BuffAlertState,
+  SkillDisplay,
+  TextBuffDisplay,
+} from "../game-overlay/overlay-types";
 import type { EntityId } from "$lib/entity-id";
 import type { HudTemporalValue } from "$lib/hud-temporal.svelte.js";
 
@@ -72,9 +75,29 @@ export type MonsterFantasyRow = {
   isPlaceholder?: boolean;
 };
 
+export type MonsterTeammateCdCell = {
+  skillId: number;
+  name: string;
+  imagePath?: string | undefined;
+  display: SkillDisplay | null;
+};
+
+export type MonsterTeammateCdRow = {
+  teammateEntityUuid: EntityId;
+  teammateName: string;
+  classId: number;
+  classIconPath?: string | undefined;
+  isDead: boolean;
+  /** The relay link is down; the row shows the last known state. */
+  isStale: boolean;
+  cells: MonsterTeammateCdCell[];
+  isPlaceholder?: boolean;
+};
+
 export type MonsterDragTarget =
   | { kind: "buffPanel" }
   | { kind: "teammatePanel" }
+  | { kind: "teammateCdPanel" }
   | { kind: "hatePanel" }
   | { kind: "stunPanel" }
   | { kind: "hpPanel" }
@@ -85,6 +108,7 @@ export type MonsterDragTarget =
 export type MonsterResizeTarget =
   | { kind: "buffPanel" }
   | { kind: "teammatePanel" }
+  | { kind: "teammateCdPanel" }
   | { kind: "hatePanel" }
   | { kind: "stunPanel" }
   | { kind: "hpPanel" }

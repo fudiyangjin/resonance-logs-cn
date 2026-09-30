@@ -1,4 +1,8 @@
-import { SETTINGS, ensureTeammatePanelStyle } from "$lib/settings-store";
+import {
+  SETTINGS,
+  ensureTeammateCdPanelStyle,
+  ensureTeammatePanelStyle,
+} from "$lib/settings-store";
 import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
 import {
   DEFAULT_MONSTER_OVERLAY_POSITIONS,
@@ -69,6 +73,20 @@ export function getTeammatePanelPosition() {
 
 export function getTeammatePanelScale() {
   return getMonsterOverlaySizes().teammateBuffPanelScale;
+}
+
+export function getTeammateCdPanelPosition() {
+  return getMonsterOverlayPositions().teammateCdPanel;
+}
+
+export function getTeammateCdPanelScale() {
+  return getMonsterOverlaySizes().teammateCdPanelScale;
+}
+
+export function teammateCdPanelStyle() {
+  return ensureTeammateCdPanelStyle(
+    SETTINGS.monsterMonitor.state.teammateCdPanelStyle,
+  );
 }
 
 export function getHatePanelPosition() {
@@ -209,6 +227,24 @@ export function setTeammatePanelScale(value: number) {
     overlaySizes: {
       ...getMonsterOverlaySizes(),
       teammateBuffPanelScale: clampPanelScale(value),
+    },
+  }));
+}
+
+export function setTeammateCdPanelPosition(nextPos: { x: number; y: number }) {
+  patchMonsterMonitor(() => ({
+    overlayPositions: {
+      ...getMonsterOverlayPositions(),
+      teammateCdPanel: nextPos,
+    },
+  }));
+}
+
+export function setTeammateCdPanelScale(value: number) {
+  patchMonsterMonitor(() => ({
+    overlaySizes: {
+      ...getMonsterOverlaySizes(),
+      teammateCdPanelScale: clampPanelScale(value),
     },
   }));
 }
@@ -449,6 +485,8 @@ function commitDragPreview() {
     setMonsterPanelPosition(nextPos);
   } else if (drag.target.kind === "teammatePanel") {
     setTeammatePanelPosition(nextPos);
+  } else if (drag.target.kind === "teammateCdPanel") {
+    setTeammateCdPanelPosition(nextPos);
   } else if (drag.target.kind === "hatePanel") {
     setHatePanelPosition(nextPos);
   } else if (drag.target.kind === "stunPanel") {
@@ -472,6 +510,8 @@ function commitResizePreview() {
     setMonsterPanelScale(nextValue);
   } else if (resize.target.kind === "teammatePanel") {
     setTeammatePanelScale(nextValue);
+  } else if (resize.target.kind === "teammateCdPanel") {
+    setTeammateCdPanelScale(nextValue);
   } else if (resize.target.kind === "hatePanel") {
     setHatePanelScale(nextValue);
   } else if (resize.target.kind === "stunPanel") {

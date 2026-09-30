@@ -13,6 +13,62 @@ const GAME_PROCESS_NAMES: &[&str] = &[
     "star",
 ];
 
+/// Game distribution: the process name without its `_steam` / `_epic` launcher
+/// suffix. Launchers of one distribution share servers, so teammates on
+/// different launchers must land in the same team-share room.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum Distribution {
+    Bpsr = 1,
+    StarSea = 2,
+    StarAsia = 3,
+    StarTw = 4,
+    Star = 5,
+}
+
+impl Distribution {
+    const ALL: [Self; 5] = [
+        Self::Bpsr,
+        Self::StarSea,
+        Self::StarAsia,
+        Self::StarTw,
+        Self::Star,
+    ];
+
+    /// `stem` is the lowercase process file name without `.exe`.
+    #[must_use]
+    pub fn from_process_stem(stem: &str) -> Option<Self> {
+        let base = stem
+            .strip_suffix("_steam")
+            .or_else(|| stem.strip_suffix("_epic"))
+            .unwrap_or(stem);
+        Self::ALL.into_iter().find(|dist| dist.as_str() == base)
+    }
+
+    /// Wire code of the team-share protocol.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Bpsr => "bpsr",
+            Self::StarSea => "starsea",
+            Self::StarAsia => "starasia",
+            Self::StarTw => "startw",
+            Self::Star => "star",
+        }
+    }
+
+    /// One-byte payload of the synthetic game-client envelope.
+    #[must_use]
+    pub const fn code(self) -> u8 {
+        self as u8
+    }
+
+    #[must_use]
+    pub fn from_code(code: u8) -> Option<Self> {
+        Self::ALL.into_iter().find(|dist| dist.code() == code)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Endpoint {
     addr: [u8; 4],
@@ -56,23 +112,24 @@ impl FlowKey {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Verdict {
-    Game,
+    Game(Distribution),
     NonGame,
 }
 
+type PidCache = HashMap<u32, Option<Distribution>>;
+
 struct TcpTableSnapshot {
-    game_endpoints: HashSet<Endpoint>,
+    game_endpoints: HashMap<Endpoint, Distribution>,
     non_game_flows: HashSet<FlowKey>,
-    pid_cache: HashMap<u32, bool>,
+    pid_cache: PidCache,
 }
 
-type SnapshotFn =
-    fn(&HashSet<&'static str>, &HashMap<u32, bool>) -> Result<TcpTableSnapshot, String>;
+type SnapshotFn = fn(&HashSet<&'static str>, &PidCache) -> Result<TcpTableSnapshot, String>;
 
 pub struct GameConnectionFilter {
-    game_endpoints: HashSet<Endpoint>,
+    game_endpoints: HashMap<Endpoint, Distribution>,
     non_game_flows: HashSet<FlowKey>,
-    pid_cache: HashMap<u32, bool>,
+    pid_cache: PidCache,
     process_names: HashSet<&'static str>,
     snapshot: SnapshotFn,
 }
@@ -80,7 +137,7 @@ pub struct GameConnectionFilter {
 impl GameConnectionFilter {
     pub fn new() -> Self {
         Self {
-            game_endpoints: HashSet::new(),
+            game_endpoints: HashMap::new(),
             non_game_flows: HashSet::new(),
             pid_cache: HashMap::new(),
             process_names: GAME_PROCESS_NAMES.iter().copied().collect(),
@@ -89,8 +146,8 @@ impl GameConnectionFilter {
     }
 
     pub fn classify(&mut self, server: Server) -> Verdict {
-        if self.contains_positive(server) {
-            return Verdict::Game;
+        if let Some(dist) = self.positive(server) {
+            return Verdict::Game(dist);
         }
 
         let flow = FlowKey::from_server(server);
@@ -100,8 +157,8 @@ impl GameConnectionFilter {
 
         self.refresh();
 
-        if self.contains_positive(server) {
-            return Verdict::Game;
+        if let Some(dist) = self.positive(server) {
+            return Verdict::Game(dist);
         }
 
         self.non_game_flows.insert(flow);
@@ -112,13 +169,13 @@ impl GameConnectionFilter {
         self.non_game_flows.remove(&FlowKey::from_server(server));
     }
 
-    fn contains_positive(&self, server: Server) -> bool {
-        self.contains_endpoint(server.source_addr(), server.source_port())
-            || self.contains_endpoint(server.destination_addr(), server.destination_port())
+    fn positive(&self, server: Server) -> Option<Distribution> {
+        self.endpoint(server.source_addr(), server.source_port())
+            .or_else(|| self.endpoint(server.destination_addr(), server.destination_port()))
     }
 
-    fn contains_endpoint(&self, addr: [u8; 4], port: u16) -> bool {
-        self.game_endpoints.contains(&Endpoint::new(addr, port))
+    fn endpoint(&self, addr: [u8; 4], port: u16) -> Option<Distribution> {
+        self.game_endpoints.get(&Endpoint::new(addr, port)).copied()
     }
 
     fn refresh(&mut self) {
@@ -143,7 +200,7 @@ impl Default for GameConnectionFilter {
 
 #[cfg(windows)]
 mod platform {
-    use super::{Endpoint, FlowKey, HashMap, HashSet, TcpTableSnapshot};
+    use super::{Distribution, Endpoint, FlowKey, HashMap, HashSet, PidCache, TcpTableSnapshot};
     use std::ffi::OsString;
     use std::mem::size_of;
     use std::os::raw::c_void;
@@ -194,10 +251,10 @@ mod platform {
 
     pub fn snapshot_tcp_table(
         process_names: &HashSet<&'static str>,
-        previous_pid_cache: &HashMap<u32, bool>,
+        previous_pid_cache: &PidCache,
     ) -> Result<TcpTableSnapshot, String> {
         let rows = tcp_rows()?;
-        let mut game_endpoints = HashSet::new();
+        let mut game_endpoints = HashMap::new();
         let mut non_game_flows = HashSet::new();
         let mut pid_cache = HashMap::new();
 
@@ -206,28 +263,28 @@ mod platform {
                 continue;
             }
 
-            let is_target = match pid_cache.get(&row.owning_pid) {
-                Some(is_target) => *is_target,
+            let target = match pid_cache.get(&row.owning_pid) {
+                Some(target) => *target,
                 None => {
-                    let is_target = previous_pid_cache
+                    let target = previous_pid_cache
                         .get(&row.owning_pid)
                         .copied()
                         .unwrap_or_else(|| {
                             process_name(row.owning_pid)
-                                .as_deref()
-                                .is_some_and(|name| process_names.contains(name))
+                                .filter(|name| process_names.contains(name.as_str()))
+                                .and_then(|name| Distribution::from_process_stem(&name))
                         });
-                    pid_cache.insert(row.owning_pid, is_target);
-                    is_target
+                    pid_cache.insert(row.owning_pid, target);
+                    target
                 }
             };
 
             let local = Endpoint::new(row.local_addr, port_from_bytes(row.local_port));
             let remote = Endpoint::new(row.remote_addr, port_from_bytes(row.remote_port));
 
-            if is_target {
-                game_endpoints.insert(local);
-                game_endpoints.insert(remote);
+            if let Some(dist) = target {
+                game_endpoints.insert(local, dist);
+                game_endpoints.insert(remote, dist);
             } else {
                 non_game_flows.insert(FlowKey::from_endpoints(local, remote));
             }
@@ -331,14 +388,14 @@ mod platform {
 
 #[cfg(not(windows))]
 mod platform {
-    use super::{HashMap, HashSet, TcpTableSnapshot};
+    use super::{HashMap, HashSet, PidCache, TcpTableSnapshot};
 
     pub fn snapshot_tcp_table(
         _process_names: &HashSet<&'static str>,
-        _previous_pid_cache: &HashMap<u32, bool>,
+        _previous_pid_cache: &PidCache,
     ) -> Result<TcpTableSnapshot, String> {
         Ok(TcpTableSnapshot {
-            game_endpoints: HashSet::new(),
+            game_endpoints: HashMap::new(),
             non_game_flows: HashSet::new(),
             pid_cache: HashMap::new(),
         })
@@ -368,26 +425,26 @@ mod tests {
 
     fn snapshot_with_game(
         _process_names: &HashSet<&'static str>,
-        _previous_pid_cache: &HashMap<u32, bool>,
+        _previous_pid_cache: &PidCache,
     ) -> Result<TcpTableSnapshot, String> {
         SNAPSHOT_CALLS.with(|calls| calls.set(calls.get() + 1));
         Ok(TcpTableSnapshot {
-            game_endpoints: HashSet::from([endpoint([10, 0, 0, 1], 40000)]),
+            game_endpoints: HashMap::from([(endpoint([10, 0, 0, 1], 40000), Distribution::Star)]),
             non_game_flows: HashSet::from([FlowKey::from_endpoints(
                 endpoint([1, 1, 1, 1], 1111),
                 endpoint([2, 2, 2, 2], 2222),
             )]),
-            pid_cache: HashMap::from([(123, true), (456, false)]),
+            pid_cache: HashMap::from([(123, Some(Distribution::Star)), (456, None)]),
         })
     }
 
     fn empty_snapshot(
         _process_names: &HashSet<&'static str>,
-        _previous_pid_cache: &HashMap<u32, bool>,
+        _previous_pid_cache: &PidCache,
     ) -> Result<TcpTableSnapshot, String> {
         SNAPSHOT_CALLS.with(|calls| calls.set(calls.get() + 1));
         Ok(TcpTableSnapshot {
-            game_endpoints: HashSet::new(),
+            game_endpoints: HashMap::new(),
             non_game_flows: HashSet::new(),
             pid_cache: HashMap::new(),
         })
@@ -395,7 +452,7 @@ mod tests {
 
     fn filter_with_snapshot(snapshot: SnapshotFn) -> GameConnectionFilter {
         GameConnectionFilter {
-            game_endpoints: HashSet::new(),
+            game_endpoints: HashMap::new(),
             non_game_flows: HashSet::new(),
             pid_cache: HashMap::new(),
             process_names: GAME_PROCESS_NAMES.iter().copied().collect(),
@@ -414,10 +471,43 @@ mod tests {
     #[test]
     fn classify_returns_game_when_endpoint_cached() {
         let mut filter = filter_with_snapshot(empty_snapshot);
-        filter.game_endpoints.insert(endpoint([10, 0, 0, 1], 40000));
+        filter
+            .game_endpoints
+            .insert(endpoint([10, 0, 0, 1], 40000), Distribution::Bpsr);
 
-        assert_eq!(filter.classify(server()), Verdict::Game);
-        assert_eq!(filter.classify(reversed_server()), Verdict::Game);
+        assert_eq!(filter.classify(server()), Verdict::Game(Distribution::Bpsr));
+        assert_eq!(
+            filter.classify(reversed_server()),
+            Verdict::Game(Distribution::Bpsr)
+        );
+    }
+
+    #[test]
+    fn launcher_suffixes_share_a_distribution() {
+        for name in GAME_PROCESS_NAMES {
+            assert!(Distribution::from_process_stem(name).is_some(), "{name}");
+        }
+        assert_eq!(
+            Distribution::from_process_stem("bpsr_steam"),
+            Some(Distribution::Bpsr)
+        );
+        assert_eq!(
+            Distribution::from_process_stem("bpsr_epic"),
+            Some(Distribution::Bpsr)
+        );
+        assert_eq!(
+            Distribution::from_process_stem("starasia_steam"),
+            Some(Distribution::StarAsia)
+        );
+        assert_eq!(
+            Distribution::from_process_stem("star"),
+            Some(Distribution::Star)
+        );
+        assert_eq!(Distribution::from_process_stem("notepad"), None);
+        for dist in Distribution::ALL {
+            assert_eq!(Distribution::from_code(dist.code()), Some(dist));
+        }
+        assert_eq!(Distribution::from_code(0), None);
     }
 
     #[test]
@@ -434,7 +524,7 @@ mod tests {
         reset_calls();
         let mut filter = filter_with_snapshot(snapshot_with_game);
 
-        assert_eq!(filter.classify(server()), Verdict::Game);
+        assert_eq!(filter.classify(server()), Verdict::Game(Distribution::Star));
         assert_eq!(snapshot_calls(), 1);
     }
 
@@ -443,18 +533,24 @@ mod tests {
         let mut filter = filter_with_snapshot(snapshot_with_game);
         filter
             .game_endpoints
-            .insert(endpoint([99, 99, 99, 99], 9999));
+            .insert(endpoint([99, 99, 99, 99], 9999), Distribution::Bpsr);
         filter.non_game_flows.insert(FlowKey::from_endpoints(
             endpoint([3, 3, 3, 3], 3333),
             endpoint([4, 4, 4, 4], 4444),
         ));
-        filter.pid_cache.insert(999, false);
+        filter.pid_cache.insert(999, None);
 
         filter.refresh();
 
-        assert!(filter.contains_endpoint([10, 0, 0, 1], 40000));
-        assert!(!filter.contains_endpoint([99, 99, 99, 99], 9999));
-        assert_eq!(filter.pid_cache, HashMap::from([(123, true), (456, false)]));
+        assert_eq!(
+            filter.endpoint([10, 0, 0, 1], 40000),
+            Some(Distribution::Star)
+        );
+        assert_eq!(filter.endpoint([99, 99, 99, 99], 9999), None);
+        assert_eq!(
+            filter.pid_cache,
+            HashMap::from([(123, Some(Distribution::Star)), (456, None)])
+        );
         assert!(!filter.non_game_flows.contains(&FlowKey::from_endpoints(
             endpoint([3, 3, 3, 3], 3333),
             endpoint([4, 4, 4, 4], 4444),

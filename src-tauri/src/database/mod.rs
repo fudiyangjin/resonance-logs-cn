@@ -23,7 +23,9 @@ use self::history_query::{
 };
 
 pub const MIGRATIONS: EmbeddedMigrations = diesel_migrations::embed_migrations!();
-const MAX_ENCOUNTER_HISTORY: i64 = 200;
+pub const DEFAULT_ENCOUNTER_HISTORY_LIMIT: i64 = 200;
+pub const MAX_ENCOUNTER_HISTORY_LIMIT: i64 = 2_000;
+const HISTORY_RETENTION_FILE: &str = "historyRetention.json";
 const DATABASE_QUEUE_CAPACITY: usize = 256;
 
 type DatabaseOperation = Box<dyn FnOnce(&mut SqliteConnection) + Send + 'static>;
@@ -352,10 +354,57 @@ pub fn shutdown_database() -> Result<(), String> {
     request(DatabaseRequest::Shutdown)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct HistoryRetentionConfig {
+    limit: i64,
+}
+
+fn is_valid_history_retention_limit(limit: i64) -> bool {
+    (1..=MAX_ENCOUNTER_HISTORY_LIMIT).contains(&limit)
+}
+
+/// Read `stores/historyRetention.json`. Missing or invalid values use the default.
+pub fn load_history_retention_limit(app_handle: &tauri::AppHandle) -> i64 {
+    let Some((path, config)) = crate::live::store_file::load_store_json::<HistoryRetentionConfig>(
+        app_handle,
+        HISTORY_RETENTION_FILE,
+    ) else {
+        return DEFAULT_ENCOUNTER_HISTORY_LIMIT;
+    };
+    if is_valid_history_retention_limit(config.limit) {
+        return config.limit;
+    }
+    log::warn!(
+        target: "app::db",
+        "history_retention_config_invalid path={} limit={} fallback={DEFAULT_ENCOUNTER_HISTORY_LIMIT}",
+        path.display(),
+        config.limit
+    );
+    DEFAULT_ENCOUNTER_HISTORY_LIMIT
+}
+
+/// Write `stores/historyRetention.json`. Rejects limits outside 1..=2000.
+pub fn save_history_retention_limit(
+    app_handle: &tauri::AppHandle,
+    limit: i64,
+) -> Result<(), String> {
+    if !is_valid_history_retention_limit(limit) {
+        return Err(format!(
+            "history retention limit must be from 1 to {MAX_ENCOUNTER_HISTORY_LIMIT}"
+        ));
+    }
+    crate::live::store_file::save_store_json(
+        app_handle,
+        HISTORY_RETENTION_FILE,
+        &HistoryRetentionConfig { limit },
+    )
+    .map(|_| ())
+}
+
 /// Delete old non-favorite summaries. Primary keys are stable and are never
 /// rewritten; child chunks/projections are removed by foreign-key cascade.
-pub fn startup_maintenance() {
-    db_send(|conn| {
+pub fn startup_maintenance(history_limit: i64) {
+    db_send(move |conn| {
         use sch::encounters::dsl as e;
         match diesel::delete(e::encounters.filter(e::ended_at_ms.is_null())).execute(conn) {
             Ok(deleted) if deleted > 0 => {
@@ -367,7 +416,7 @@ pub fn startup_maintenance() {
                 return;
             }
         }
-        if let Err(error) = prune_encounters(conn, MAX_ENCOUNTER_HISTORY) {
+        if let Err(error) = prune_encounters(conn, history_limit) {
             log::warn!(target: "app::db", "startup_maintenance_failed error={error}");
         }
     });
@@ -378,6 +427,7 @@ fn prune_encounters(conn: &mut SqliteConnection, keep: i64) -> Result<(), String
     let delete_ids = e::encounters
         .select(e::id)
         .filter(e::is_favorite.eq(0))
+        .filter(e::ended_at_ms.is_not_null())
         .order((e::started_at_ms.desc(), e::id.desc()))
         .offset(keep.max(0))
         .load::<i32>(conn)
@@ -411,6 +461,90 @@ mod tests {
             .select((dp::last_seen_ms, dp::vdata_bytes))
             .first(conn)
             .expect("load playerdata row")
+    }
+
+    #[test]
+    fn history_retention_limit_accepts_only_the_configured_range() {
+        assert!(is_valid_history_retention_limit(1));
+        assert!(is_valid_history_retention_limit(
+            MAX_ENCOUNTER_HISTORY_LIMIT
+        ));
+        assert!(!is_valid_history_retention_limit(0));
+        assert!(!is_valid_history_retention_limit(
+            MAX_ENCOUNTER_HISTORY_LIMIT + 1
+        ));
+    }
+
+    #[test]
+    fn history_retention_config_round_trips_and_rejects_non_integer_limits() {
+        let json = serde_json::to_string(&HistoryRetentionConfig { limit: 300 })
+            .expect("serialize config");
+        assert_eq!(json, r#"{"limit":300}"#);
+        let config = serde_json::from_str::<HistoryRetentionConfig>(&json).expect("parse config");
+        assert_eq!(config.limit, 300);
+
+        assert!(serde_json::from_str::<HistoryRetentionConfig>(r#"{"limit":"200"}"#).is_err());
+        assert!(serde_json::from_str::<HistoryRetentionConfig>("invalid").is_err());
+    }
+
+    #[test]
+    fn inserted_encounter_note_defaults_to_null() {
+        let mut conn = memory_conn();
+        insert_test_encounter(&mut conn, 1_000, Some(2_000), 0);
+
+        use crate::database::schema::encounters::dsl as e;
+        let note = e::encounters
+            .select(e::note)
+            .first::<Option<String>>(&mut conn)
+            .expect("load migrated note");
+
+        assert_eq!(note, None);
+    }
+
+    fn insert_test_encounter(
+        conn: &mut SqliteConnection,
+        started_at_ms: i64,
+        ended_at_ms: Option<i64>,
+        is_favorite: i32,
+    ) {
+        diesel::sql_query(
+            "INSERT INTO encounters (started_at_ms, ended_at_ms, duration, is_favorite)
+             VALUES (?, ?, ?, ?)",
+        )
+        .bind::<diesel::sql_types::BigInt, _>(started_at_ms)
+        .bind::<diesel::sql_types::Nullable<diesel::sql_types::BigInt>, _>(ended_at_ms)
+        .bind::<diesel::sql_types::Double, _>(1.0_f64)
+        .bind::<diesel::sql_types::Integer, _>(is_favorite)
+        .execute(conn)
+        .expect("insert encounter");
+    }
+
+    #[test]
+    fn prune_keeps_favorites_and_unfinished_rows_outside_the_limit() {
+        let mut conn = memory_conn();
+        insert_test_encounter(&mut conn, 1_000, Some(2_000), 0);
+        insert_test_encounter(&mut conn, 2_000, Some(3_000), 0);
+        insert_test_encounter(&mut conn, 3_000, Some(4_000), 0);
+        insert_test_encounter(&mut conn, 4_000, Some(5_000), 1);
+        insert_test_encounter(&mut conn, 5_000, None, 0);
+
+        prune_encounters(&mut conn, 2).expect("prune encounters");
+
+        use crate::database::schema::encounters::dsl as e;
+        let remaining = e::encounters
+            .select((e::started_at_ms, e::ended_at_ms, e::is_favorite))
+            .order(e::started_at_ms.asc())
+            .load::<(i64, Option<i64>, i32)>(&mut conn)
+            .expect("load remaining encounters");
+        assert_eq!(
+            remaining,
+            vec![
+                (2_000, Some(3_000), 0),
+                (3_000, Some(4_000), 0),
+                (4_000, Some(5_000), 1),
+                (5_000, None, 0),
+            ]
+        );
     }
 
     #[test]

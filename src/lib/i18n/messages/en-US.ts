@@ -154,6 +154,34 @@ export const enUSMessages = {
   "appSettings.behavior.exitOnClose": "Exit when the close button is clicked",
   "appSettings.behavior.exitOnCloseDescription":
     "When enabled, clicking the main window's close button exits the entire app instead of hiding it to the system tray. This setting takes effect after the next launch.",
+  "appSettings.teamShare.title": "Team Sharing",
+  "appSettings.teamShare.enable": "Share skill cooldowns with teammates",
+  "appSettings.teamShare.enableDescription":
+    "While you are in a team, sends all of your skill cooldowns in real time to teammates who also enabled this, and shows theirs in the monster monitor's Teammate CD panel. Takes effect immediately.",
+  "appSettings.teamShare.saveFailed": "Could not save: {error}",
+  "appSettings.teamShare.privacy":
+    "When enabled, this sends your character ID, character name, class, team ID and skill cooldowns to bptimer.cn. The server only relays them to teammates in the same team who also share, keeps them in memory only and never writes them to a database; they are gone once you leave the team or turn this off.",
+  "appSettings.teamShare.status.disabled": "Off",
+  "appSettings.teamShare.status.idle":
+    "On, waiting for a team (or the game is not detected yet)",
+  "appSettings.teamShare.status.connecting": "Connecting…",
+  "appSettings.teamShare.status.connected":
+    "Connected, {count} teammate(s) sharing",
+  "appSettings.teamShare.status.retrying":
+    "Connection lost, retrying in {seconds}s ({error})",
+  "appSettings.historyRetention.title": "History Retention",
+  "appSettings.historyRetention.description":
+    "Set how many non-favorite history records to keep automatically. Changes apply on the next launch.",
+  "appSettings.historyRetention.limit": "Records to keep",
+  "appSettings.historyRetention.help":
+    "Enter 1–{max} records. Favorite records are never removed automatically.",
+  "appSettings.historyRetention.invalid": "Enter a valid integer.",
+  "appSettings.historyRetention.range": "Enter an integer from {min} to {max}.",
+  "appSettings.historyRetention.save": "Save",
+  "appSettings.historyRetention.saving": "Saving...",
+  "appSettings.historyRetention.saved":
+    "Saved. It will apply on the next launch.",
+  "appSettings.historyRetention.saveFailed": "Save failed: {error}",
   "appSettings.appearance.scope":
     "The appearance settings below are local, global settings — they never travel with an exported loadout.",
   "appSettings.appearance.colorScopeMain":
@@ -508,6 +536,12 @@ export const enUSMessages = {
   "history.detail.actions.addFavorite": "Add favorite",
   "history.detail.actions.deleteTitle": "Delete this encounter",
   "history.detail.actions.deleteAria": "Delete encounter",
+  "history.detail.note.edit": "Edit note",
+  "history.detail.note.placeholder": "Enter a note",
+  "history.detail.note.save": "Save note",
+  "history.detail.note.cancel": "Cancel",
+  "history.detail.note.tooLong": "The note cannot exceed 200 characters.",
+  "history.detail.note.saveFailed": "Failed to save note: {error}",
   "history.detail.actions.backToOverview": "Back to encounter overview",
   "history.detail.encounter.unknownScene": "Unknown encounter",
   "history.detail.encounter.duration": "Duration: {duration}",
@@ -1518,6 +1552,25 @@ export const enUSMessages = {
     "Automatically hide the monster overlay in daily scene blacklist entries and restore it after leaving.",
   "monsterMonitor.tabs.buff": "Buff Monitor",
   "monsterMonitor.tabs.teammate": "Teammate Buffs",
+  "monsterMonitor.tabs.teammateCd": "Teammate CD",
+  "monsterMonitor.teammateCd.title": "Teammate Skill Cooldowns",
+  "monsterMonitor.teammateCd.description":
+    "Teammates share all of their skill cooldowns; pick which skills to show for each class here. Both sides need App Settings → Team Sharing turned on.",
+  "monsterMonitor.teammateCd.pickSkills": "Click a skill to show or hide it",
+  "monsterMonitor.teammateCd.selectedOrder": "Display order ({count})",
+  "monsterMonitor.teammateCd.emptyClass":
+    "No skills selected for this class yet; teammates of this class are hidden.",
+  "monsterMonitor.teammateCd.moveUp": "Move earlier",
+  "monsterMonitor.teammateCd.moveDown": "Move later",
+  "monsterMonitor.teammateCd.remove": "Remove",
+  "monsterMonitor.teammateCd.styleTitle": "Teammate CD Panel Style",
+  "monsterMonitor.teammateCd.style.iconSize": "Icon size",
+  "monsterMonitor.teammateCd.style.iconGap": "Icon spacing",
+  "monsterMonitor.teammateCd.style.rowGap": "Row spacing",
+  "monsterMonitor.teammateCd.style.nameColumnWidth":
+    "Name column width (0 hides it)",
+  "monsterMonitor.teammateCd.style.fontSize": "Font size",
+  "monsterMonitor.teammateCd.style.showClassIcon": "Show class icon",
   "monsterMonitor.tabs.hate": "Hate List",
   "monsterMonitor.tabs.stun": "Stun Bar",
   "monsterMonitor.tabs.hp": "HP Bar",
@@ -1639,6 +1692,7 @@ export const enUSMessages = {
     "Control each visible area in the monster monitor overlay.",
   "monsterMonitor.overlay.monsterBuff": "Monster Buff Area: {state}",
   "monsterMonitor.overlay.teammateBuff": "Teammate Buff Area: {state}",
+  "monsterMonitor.overlay.teammateCd": "Teammate CD Area: {state}",
   "monsterMonitor.overlay.hate": "Hate List Area: {state}",
   "monsterMonitor.overlay.stun": "Stun Bar Area: {state}",
   "monsterMonitor.overlay.hp": "HP Bar Area: {state}",
@@ -1698,6 +1752,8 @@ export const enUSMessages = {
     "Drag here to move the Monster Overlay window",
   "monsterOverlay.buffGroupTag": "Monster Buff Area",
   "monsterOverlay.teammateGroupTag": "Teammate Buff Area",
+  "monsterOverlay.teammateCdGroupTag": "Teammate CD Area",
+  "monsterOverlay.teammateCd.placeholderName": "Teammate",
   "monsterOverlay.hateGroupTag": "Hate Area",
   "monsterOverlay.stunGroupTag": "Stun Area",
   "monsterOverlay.hpGroupTag": "HP Area",

@@ -7,6 +7,7 @@ import {
   type LiveMonsterPayload,
   type LiveScenePayload,
   type LiveStatusPayload,
+  type LiveTeamPayload,
 } from "$lib/bindings";
 import {
   LiveSceneEventStore,
@@ -24,6 +25,9 @@ export const liveMonsterStore = new LiveTopicStore<LiveMonsterPayload>();
 export const liveFantasyStore = new LiveTopicStore<LiveFantasyPayload>();
 
 export const liveDeathsStore = new LiveTopicStore<LiveDeathsPayload>();
+
+// Teammate cooldowns shared through the team relay (monster HUD interest).
+export const liveTeamStore = new LiveTopicStore<LiveTeamPayload>();
 
 // `main`-only: drives the daily-scene auto-hide logic for the
 // game/monster/minimap overlay windows without subscribing to the far

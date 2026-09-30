@@ -13,6 +13,8 @@
   import LanguageSettings from "./language.svelte";
   import BehaviorSettings from "./behavior.svelte";
   import AppearanceSettings from "./appearance.svelte";
+  import HistoryRetentionSettings from "./history-retention.svelte";
+  import TeamShareSettings from "./team-share.svelte";
   import CogIcon from "virtual:icons/lucide/cog";
 
   const settingsTabs = [
@@ -54,6 +56,8 @@
       <div class="space-y-3">
         <LanguageSettings />
         <BehaviorSettings />
+        <TeamShareSettings />
+        <HistoryRetentionSettings />
       </div>
     </Tabs.Content>
 

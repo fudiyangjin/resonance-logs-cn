@@ -22,6 +22,7 @@ Resonance Logs CN 是《星痕共鸣》的战斗辅助工具：统计伤害与�
 | 在屏幕上看自己的技能 CD 和 Buff | [实时监控](./features/monitor/README.md) |
 | 自动显示因子能量与赛季节点 | [例：自动显示因子能量与赛季节点](./features/monitor/custom-panel.md#例自动显示因子能量与赛季节点) |
 | 盯住 Boss 身上的易伤、看 Boss 读条 | [怪物监控](./features/monster/README.md) |
+| 看队友的大招、减伤什么时候转好 | [队友 CD](./features/monster/teammate-cd.md) |
 | 团本里看机制站位 | [副本机制](./features/minimap/README.md) |
 | 技能转好、Boss 放大招时听到语音 | [语音播报](./features/voice/README.md) |
 | 从一堆模组里找出最优组合 | [模组计算](./features/module-calc/README.md) |
@@ -59,6 +60,7 @@ Resonance Logs CN 是《星痕共鸣》的战斗辅助工具：统计伤害与�
 | [怪物监控](./features/monster/README.md) | 功能总览，与实时监控的区别 | — |
 | [目标 Buff](./features/monster/buff.md) | 目标身上的 Buff 与告警 | [盯易伤](./features/monster/buff.md#例盯住自己挂的易伤快掉时提醒) |
 | [队友 Buff](./features/monster/teammate.md) | 队友身上的 Buff | — |
+| [队友 CD](./features/monster/teammate-cd.md) | 队友共享过来的技能冷却 | — |
 | [韧性、生命与队友幻想](./features/monster/status.md) | 目标状态条 | — |
 | [仇恨列表](./features/monster/hate.md) | 目标的仇恨排行 | — |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss 技能预警条 | [Boss 技能语音预警](./features/monster/boss-dbm.md#例给-boss-技能起别名并语音预警) |

@@ -22,6 +22,7 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | 自分のスキル CD と Buff を画面に表示したい | [ライブモニター](./features/monitor/README.md) |
 | ファクターエネルギーとシーズンノードを自動表示したい | [例：ファクターエネルギーとシーズンノードを自動表示する](./features/monitor/custom-panel.md#例因子エネルギーとシーズンノードを自動表示する) |
 | Boss の被ダメージ増加デバフや詠唱を見張りたい | [モンスターモニター](./features/monster/README.md) |
+| 味方の必殺技や軽減がいつ戻るか知りたい | [味方 CD](./features/monster/teammate-cd.md) |
 | レイドでギミックの立ち位置を確認したい | [ダンジョンギミック](./features/minimap/README.md) |
 | スキルの CD 明けや Boss の大技を音声で知りたい | [音声読み上げ](./features/voice/README.md) |
 | 大量のモジュールから最適な組み合わせを探したい | [モジュール計算](./features/module-calc/README.md) |
@@ -59,6 +60,7 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | [モンスターモニター](./features/monster/README.md) | 機能の概要、ライブモニターとの違い | — |
 | [対象バフ](./features/monster/buff.md) | ターゲットにかかっている Buff とアラート | [被ダメージ増加デバフを見張る](./features/monster/buff.md#例自分が付与した脆弱を監視し切れる前に知らせる) |
 | [味方 Buff](./features/monster/teammate.md) | 味方にかかっている Buff | — |
+| [味方 CD](./features/monster/teammate-cd.md) | 味方から共有されたスキルクールダウン | — |
 | [スタン、HP と味方幻想](./features/monster/status.md) | ターゲットの状態バー | — |
 | [ヘイトリスト](./features/monster/hate.md) | ターゲットのヘイト順位 | — |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss スキルの予告バー | [Boss スキルの音声予告](./features/monster/boss-dbm.md#例boss-スキルに別名を付けて音声で予告する) |

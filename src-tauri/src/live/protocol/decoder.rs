@@ -16,18 +16,19 @@ use crate::live::monster_registry::{self, MonsterType};
 use crate::live::protocol::attrs as attr_type;
 use crate::live::protocol::{COUNTER_PASSIVE_SKILL_IDS, MARKER_SKILL_ID_BASE};
 use crate::live::runtime::events::{
-    AttributeValue, BatchId, BossMechanicObservation, CaptureEnvelope, EntityIdentityPatch,
-    EntityKind, EntityUuid, FieldPatch, GameTimerKey, GameTimerState, HateEntry, HitChannel,
-    HitKind, LOCAL_PLAYER, LocalTalent, MonoTimeMs, ObservationOrigin, ObservedBuff,
-    ObservedBuffChange, ObservedHit, PacketDirection, PassiveSkillObservation, Position,
-    ProtocolBatch, ProtocolObservation, ShieldDetail, SkillCooldownState, SkillPhase,
+    AttributeValue, BatchId, BossMechanicObservation, CaptureEnvelope, Distribution,
+    EntityIdentityPatch, EntityKind, EntityUuid, FieldPatch, GameTimerKey, GameTimerState,
+    HateEntry, HitChannel, HitKind, LOCAL_PLAYER, LocalTalent, MonoTimeMs, ObservationOrigin,
+    ObservedBuff, ObservedBuffChange, ObservedHit, PacketDirection, PassiveSkillObservation,
+    Position, ProtocolBatch, ProtocolObservation, ShieldDetail, SkillCooldownState, SkillPhase,
 };
 use crate::packets::opcodes::{
     GRPC_TEAM_NTF_SERVICE_ID, MATCH_NTF_SERVICE_ID, Pkt, WORLD_CALL_SERVICE_ID,
     WORLD_NTF_SERVICE_ID, grpc_team_method, match_ntf_method, world_call_method,
 };
 use crate::packets::packet_process::{
-    SYNTHETIC_DECODE_ISSUE_OPCODE, SYNTHETIC_REASSEMBLY_RESET_OPCODE, SYNTHETIC_STREAM_GAP_OPCODE,
+    SYNTHETIC_DECODE_ISSUE_OPCODE, SYNTHETIC_GAME_CLIENT_OPCODE, SYNTHETIC_REASSEMBLY_RESET_OPCODE,
+    SYNTHETIC_STREAM_GAP_OPCODE,
 };
 use blueprotobuf_lib::blueprotobuf;
 use bytes::Buf;
@@ -56,16 +57,12 @@ struct HitCore {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum TeamWireEvent {
-    TeamInfoUpdated {
+    Info {
         team_id: i64,
         leader_uuid: i64,
+        roster: Vec<i64>,
     },
     MemberInfoUpdated {
-        members: Vec<i64>,
-    },
-    Joined {
-        team_id: i64,
-        leader_uuid: i64,
         members: Vec<i64>,
     },
     Left {
@@ -109,6 +106,16 @@ impl ProtocolDecoder {
         envelope: &CaptureEnvelope,
         source_time_ms: &mut Option<i64>,
     ) -> Vec<ProtocolObservation> {
+        if envelope.key.opcode == SYNTHETIC_GAME_CLIENT_OPCODE {
+            return envelope
+                .payload
+                .first()
+                .copied()
+                .and_then(Distribution::from_code)
+                .map(|distribution| ProtocolObservation::GameClientIdentified { distribution })
+                .into_iter()
+                .collect();
+        }
         if is_synthetic_opcode(envelope.key.opcode) {
             return Vec::new();
         }
@@ -1093,21 +1100,14 @@ fn decode_team(envelope: &CaptureEnvelope) -> Vec<ProtocolObservation> {
         return Vec::new();
     };
     match event {
-        TeamWireEvent::TeamInfoUpdated {
+        TeamWireEvent::Info {
             team_id,
             leader_uuid,
-        } => vec![team_info_updated(team_id, leader_uuid)],
+            roster,
+        } => vec![team_info_updated(team_id, leader_uuid, roster)],
         TeamWireEvent::MemberInfoUpdated { members } => {
             vec![team_members_updated(members)]
         }
-        TeamWireEvent::Joined {
-            team_id,
-            leader_uuid,
-            members,
-        } => vec![
-            team_info_updated(team_id, leader_uuid),
-            team_members_updated(members),
-        ],
         TeamWireEvent::Left { member_uuid } => vec![ProtocolObservation::TeamMemberLeft {
             member_uuid: EntityUuid(member_uuid),
         }],
@@ -1121,10 +1121,11 @@ fn decode_team(envelope: &CaptureEnvelope) -> Vec<ProtocolObservation> {
     }
 }
 
-fn team_info_updated(team_id: i64, leader_uuid: i64) -> ProtocolObservation {
+fn team_info_updated(team_id: i64, leader_uuid: i64, roster: Vec<i64>) -> ProtocolObservation {
     ProtocolObservation::TeamInfoUpdated {
         team_id,
         leader_uuid: (leader_uuid != 0).then_some(EntityUuid(leader_uuid)),
+        roster: roster.into_iter().map(EntityUuid).collect(),
     }
 }
 
@@ -1165,11 +1166,16 @@ fn decode_team_event(method_id: u32, payload: &[u8]) -> Option<TeamWireEvent> {
                     message
                         .v_request
                         .and_then(|request| request.base_info)
-                        .map(|base_info| TeamWireEvent::TeamInfoUpdated {
-                            team_id: base_info.team_id.unwrap_or_default(),
-                            leader_uuid: canonical_player_uuid(
-                                base_info.leader_id.unwrap_or_default(),
-                            ),
+                        .map(|base_info| {
+                            let mut roster = Vec::new();
+                            group_roster(&base_info, &mut roster);
+                            TeamWireEvent::Info {
+                                team_id: base_info.team_id.unwrap_or_default(),
+                                leader_uuid: canonical_player_uuid(
+                                    base_info.leader_id.unwrap_or_default(),
+                                ),
+                                roster,
+                            }
                         })
                 }
                 Err(category) => {
@@ -1200,20 +1206,21 @@ fn decode_team_event(method_id: u32, payload: &[u8]) -> Option<TeamWireEvent> {
             match decode_message::<blueprotobuf::NotifyJoinTeam>(payload) {
                 Ok(message) => message.v_request.and_then(|request| {
                     let base_info = request.base_info?;
-                    let mut members = Vec::new();
+                    let mut roster = Vec::new();
+                    group_roster(&base_info, &mut roster);
                     for member in request.member_data {
-                        push_team_member_id(&mut members, member.char_id);
+                        push_team_member_id(&mut roster, member.char_id);
                     }
                     let mut sync_members: Vec<_> = request.member_sync_datas.into_iter().collect();
                     sync_members.sort_by_key(|(char_id, _)| *char_id);
                     for (char_id, member) in sync_members {
-                        push_team_member_id(&mut members, Some(char_id));
-                        push_team_member_id(&mut members, member.char_id);
+                        push_team_member_id(&mut roster, Some(char_id));
+                        push_team_member_id(&mut roster, member.char_id);
                     }
-                    Some(TeamWireEvent::Joined {
+                    Some(TeamWireEvent::Info {
                         team_id: base_info.team_id.unwrap_or_default(),
                         leader_uuid: canonical_player_uuid(base_info.leader_id.unwrap_or_default()),
-                        members,
+                        roster,
                     })
                 }),
                 Err(category) => {
@@ -1263,6 +1270,17 @@ fn decode_team_event(method_id: u32, payload: &[u8]) -> Option<TeamWireEvent> {
         method_id => {
             log::trace!("unhandled GrpcTeamNtf method_id={method_id}");
             None
+        }
+    }
+}
+
+/// Full roster from `TeamBaseInfo.team_member_group_infos`, in group then slot order.
+fn group_roster(base: &blueprotobuf::TeamBaseInfo, members: &mut Vec<i64>) {
+    let mut groups: Vec<_> = base.team_member_group_infos.iter().collect();
+    groups.sort_unstable_by_key(|(group_id, _)| **group_id);
+    for (_, group) in groups {
+        for &char_id in &group.char_ids {
+            push_team_member_id(members, Some(char_id));
         }
     }
 }
@@ -2261,6 +2279,7 @@ fn is_synthetic_opcode(opcode: u32) -> bool {
         SYNTHETIC_STREAM_GAP_OPCODE
             | SYNTHETIC_REASSEMBLY_RESET_OPCODE
             | SYNTHETIC_DECODE_ISSUE_OPCODE
+            | SYNTHETIC_GAME_CLIENT_OPCODE
     )
 }
 
@@ -2446,6 +2465,13 @@ mod tests {
                 base_info: Some(blueprotobuf::TeamBaseInfo {
                     team_id: Some(7),
                     leader_id: Some(10),
+                    team_member_group_infos: HashMap::from([(
+                        1,
+                        blueprotobuf::TeamMemberGroupInfo {
+                            group_id: Some(1),
+                            char_ids: vec![15, 10],
+                        },
+                    )]),
                     ..Default::default()
                 }),
                 member_data: vec![blueprotobuf::TeamMemData {
@@ -2461,10 +2487,59 @@ mod tests {
 
         assert_eq!(
             event,
-            Some(TeamWireEvent::Joined {
+            Some(TeamWireEvent::Info {
                 team_id: 7,
                 leader_uuid: canonical(10),
-                members: vec![canonical(10), canonical(20), canonical(25), canonical(30)],
+                roster: vec![
+                    canonical(15),
+                    canonical(10),
+                    canonical(20),
+                    canonical(25),
+                    canonical(30),
+                ],
+            })
+        );
+    }
+
+    #[test]
+    fn team_info_roster_follows_group_slots() {
+        let message = blueprotobuf::NoticeUpdateTeamInfo {
+            v_request: Some(blueprotobuf::NoticeUpdateTeamInfoRequest {
+                base_info: Some(blueprotobuf::TeamBaseInfo {
+                    team_id: Some(7),
+                    leader_id: Some(10),
+                    team_member_group_infos: HashMap::from([
+                        (
+                            2,
+                            blueprotobuf::TeamMemberGroupInfo {
+                                group_id: Some(2),
+                                char_ids: vec![40, 0, 30],
+                            },
+                        ),
+                        (
+                            1,
+                            blueprotobuf::TeamMemberGroupInfo {
+                                group_id: Some(1),
+                                char_ids: vec![10, 20, 10],
+                            },
+                        ),
+                    ]),
+                    ..Default::default()
+                }),
+            }),
+        };
+
+        let event = decode_team_event(
+            grpc_team_method::NOTICE_UPDATE_TEAM_INFO,
+            &message.encode_to_vec(),
+        );
+
+        assert_eq!(
+            event,
+            Some(TeamWireEvent::Info {
+                team_id: 7,
+                leader_uuid: canonical(10),
+                roster: vec![canonical(10), canonical(20), canonical(40), canonical(30),],
             })
         );
     }

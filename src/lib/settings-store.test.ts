@@ -1,10 +1,33 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_DEATH_REPLAY_COLUMN_ORDER,
+  DEFAULT_HISTORY_RETENTION_LIMIT,
+  MAX_HISTORY_RETENTION_LIMIT,
+  MIN_HISTORY_RETENTION_LIMIT,
   createDefaultCustomPanelStyle,
   ensureTeammatePanelStyle,
   normalizeDeathReplayColumnOrder,
+  normalizeHistoryRetentionLimit,
 } from "./settings-store";
+
+describe("normalizeHistoryRetentionLimit", () => {
+  it("accepts the configured inclusive boundaries", () => {
+    expect(normalizeHistoryRetentionLimit(MIN_HISTORY_RETENTION_LIMIT)).toBe(
+      MIN_HISTORY_RETENTION_LIMIT,
+    );
+    expect(normalizeHistoryRetentionLimit(MAX_HISTORY_RETENTION_LIMIT)).toBe(
+      MAX_HISTORY_RETENTION_LIMIT,
+    );
+  });
+
+  it("falls back to the default for invalid values", () => {
+    for (const value of [0, 200.5, 2001, "200", null, undefined]) {
+      expect(normalizeHistoryRetentionLimit(value)).toBe(
+        DEFAULT_HISTORY_RETENTION_LIMIT,
+      );
+    }
+  });
+});
 
 describe("normalizeDeathReplayColumnOrder", () => {
   it("appends missing default keys at the end", () => {

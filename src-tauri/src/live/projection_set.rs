@@ -9,7 +9,7 @@ use crate::live::counter::engine::{CounterEngine, CounterNamespace};
 use crate::live::history_writer::HistoryWriterHandle;
 use crate::live::ipc::models::{
     LiveBuffsPayload, LiveCombatPayload, LiveDataPayload, LiveDeathsPayload, LiveFantasyPayload,
-    LiveMonsterPayload, LiveScenePayload, LiveStatusPayload, MinimapUpdatePayload,
+    LiveMonsterPayload, LiveScenePayload, LiveStatusPayload, LiveTeamPayload, MinimapUpdatePayload,
 };
 use crate::live::ipc::topic::{Topic, TopicMask};
 use crate::live::projections::buff_presence::BuffCompositeCatalog;
@@ -21,14 +21,17 @@ use crate::live::projections::entity_monitor::EntityMonitorProjection;
 use crate::live::projections::history::HistoryProjection;
 use crate::live::projections::minimap::MinimapProjection;
 use crate::live::projections::presentation::{ActiveCombat, PresentationProjection};
+use crate::live::projections::team_cd::TeamCdProjection;
 use crate::live::projections::timeline::TimelineProjection;
 use crate::live::projections::voice::{VoiceInputs, VoiceProjection, VoiceSyncReason};
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
     AttributeValue, DomainEnvelope, DomainEvent, EntityKind, MonoTimeMs, SegmentReason,
+    monotonic_now_ms, wall_now_ms,
 };
 use crate::live::runtime::scheduler::{DeadlineScheduler, DueTimer};
 use crate::live::runtime::segment::SegmentState;
+use crate::live::team_link::{ShareSnapshot, TeamLinkEvent};
 use crate::voice::models::{VoiceCueIntent, VoiceRuntimeSnapshot};
 
 /// Topics served by [`EntityMonitorProjection::snapshot`].
@@ -40,11 +43,12 @@ const MONITORED_TOPICS: TopicMask = TopicMask::STATUS
 const SEGMENT_TOPICS: TopicMask = MONITORED_TOPICS
     .union(TopicMask::COMBAT)
     .union(TopicMask::DEATHS);
-/// The scene is persistent `EntityContext` state, not segment-scoped, so it
-/// sits outside `SEGMENT_TOPICS` next to the minimap.
+/// The scene and the team are persistent state, not segment-scoped, so they
+/// sit outside `SEGMENT_TOPICS` next to the minimap.
 const ALL_TOPICS: TopicMask = SEGMENT_TOPICS
     .union(TopicMask::MINIMAP)
-    .union(TopicMask::SCENE);
+    .union(TopicMask::SCENE)
+    .union(TopicMask::TEAM);
 
 /// One replace-only payload for a single dirty topic.
 #[derive(Debug)]
@@ -57,6 +61,7 @@ pub enum TopicPublication {
     Minimap(MinimapUpdatePayload),
     Deaths(LiveDeathsPayload),
     Scene(LiveScenePayload),
+    Team(LiveTeamPayload),
 }
 
 impl TopicPublication {
@@ -71,6 +76,7 @@ impl TopicPublication {
             Self::Minimap(_) => Topic::Minimap,
             Self::Deaths(_) => Topic::Deaths,
             Self::Scene(_) => Topic::Scene,
+            Self::Team(_) => Topic::Team,
         }
     }
 }
@@ -87,6 +93,7 @@ pub struct ProjectionSet {
     voice: VoiceProjection,
     history: HistoryProjection,
     presentation: PresentationProjection,
+    team_cd: TeamCdProjection,
     dirty: TopicMask,
 }
 
@@ -103,6 +110,7 @@ impl ProjectionSet {
             voice: VoiceProjection::default(),
             history: HistoryProjection::new(history_writer),
             presentation: PresentationProjection::default(),
+            team_cd: TeamCdProjection::default(),
             dirty: ALL_TOPICS,
         }
     }
@@ -164,6 +172,9 @@ impl ProjectionSet {
             now_mono,
             scheduler,
         );
+        if self.team_cd.apply_config(&config.teammate_cd) {
+            self.dirty |= TopicMask::TEAM;
+        }
         self.dirty |= SEGMENT_TOPICS;
         Ok(())
     }
@@ -559,6 +570,9 @@ impl ProjectionSet {
             now_mono,
             scheduler,
         );
+        if self.team_cd.sync_local(&self.entity_monitor, entities) {
+            self.dirty |= TopicMask::TEAM;
+        }
     }
 
     /// Removes the voice cues matched since the last drain, for the caller to
@@ -566,6 +580,19 @@ impl ProjectionSet {
     /// lets every projection stay a pure function of the domain events.
     pub fn take_voice_cues(&mut self) -> Vec<VoiceCueIntent> {
         self.voice.take_cues()
+    }
+
+    /// The local share state for the team relay, if it changed since the
+    /// last drain. Like voice cues, delivery stays outside the projections.
+    pub fn take_team_share(&mut self) -> Option<ShareSnapshot> {
+        self.team_cd.take_share()
+    }
+
+    /// Applies a teammate update received from the team relay.
+    pub fn apply_team_event(&mut self, event: TeamLinkEvent) {
+        if self.team_cd.apply_event(event) {
+            self.dirty |= TopicMask::TEAM;
+        }
     }
 
     pub fn clear_display(&mut self) {
@@ -697,6 +724,11 @@ impl ProjectionSet {
                     entities.current_scene_id(),
                     entities.current_difficulty(),
                     entities.local_talent(),
+                )),
+                Topic::Team => TopicPublication::Team(self.team_cd.payload(
+                    entities,
+                    wall_now_ms(),
+                    monotonic_now_ms(),
                 )),
             });
         }
@@ -837,6 +869,7 @@ impl ProjectionSet {
                 players,
                 remote_encounter_id: None,
                 is_favorite: false,
+                note: None,
                 detail_available: true,
                 display_index: 0,
             },
@@ -1324,16 +1357,16 @@ mod tests {
             publications.as_slice(),
             [TopicPublication::Minimap(_)]
         ));
-        assert_eq!(
-            projections.dirty_mask(),
-            SEGMENT_TOPICS.union(TopicMask::SCENE)
-        );
+        let remaining = SEGMENT_TOPICS
+            .union(TopicMask::SCENE)
+            .union(TopicMask::TEAM);
+        assert_eq!(projections.dirty_mask(), remaining);
 
         assert_eq!(
             projections
                 .take_publications(&entities, &state, ALL_TOPICS)
                 .len(),
-            SEGMENT_TOPICS.union(TopicMask::SCENE).iter().count()
+            remaining.iter().count()
         );
         assert!(projections.dirty_mask().is_empty());
 

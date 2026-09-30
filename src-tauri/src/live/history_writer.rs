@@ -485,6 +485,7 @@ mod tests {
                 players: Vec::new(),
                 remote_encounter_id: None,
                 is_favorite: false,
+                note: None,
                 detail_available: true,
                 display_index: 0,
             },

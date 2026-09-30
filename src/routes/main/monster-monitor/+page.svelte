@@ -55,6 +55,7 @@
   import { resolveMonsterBuffSourceScope as resolveScopeIn } from "$lib/voice/association";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
   import TabEntityDuration from "./tab-entity-duration.svelte";
+  import TabTeammateCd from "./tab-teammate-cd.svelte";
   import TeammateColumnColors from "./teammate-column-colors.svelte";
   import {
     createEntryFromEntityDurationPreset,
@@ -75,6 +76,7 @@
   type MonsterMonitorTab =
     | "buff"
     | "teammate"
+    | "teammateCd"
     | "hate"
     | "stun"
     | "hp"
@@ -183,6 +185,8 @@
       monsterMonitor.overlayVisibility?.showMonsterBuffPanel ?? true,
     showTeammateBuffPanel:
       monsterMonitor.overlayVisibility?.showTeammateBuffPanel ?? true,
+    showTeammateCdPanel:
+      monsterMonitor.overlayVisibility?.showTeammateCdPanel ?? true,
     showHatePanel: monsterMonitor.overlayVisibility?.showHatePanel ?? false,
     showStunPanel: monsterMonitor.overlayVisibility?.showStunPanel ?? false,
     showHpPanel: monsterMonitor.overlayVisibility?.showHpPanel ?? false,
@@ -822,6 +826,8 @@
           state.overlayVisibility?.showMonsterBuffPanel ?? true,
         showTeammateBuffPanel:
           state.overlayVisibility?.showTeammateBuffPanel ?? true,
+        showTeammateCdPanel:
+          state.overlayVisibility?.showTeammateCdPanel ?? true,
         showHatePanel: state.overlayVisibility?.showHatePanel ?? false,
         showStunPanel: state.overlayVisibility?.showStunPanel ?? false,
         showHpPanel: state.overlayVisibility?.showHpPanel ?? false,
@@ -1009,6 +1015,18 @@
         }}
       >
         {t("monsterMonitor.tabs.teammate")}
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
+        'teammateCd'
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => {
+          activeTab = "teammateCd";
+        }}
+      >
+        {t("monsterMonitor.tabs.teammateCd")}
       </button>
       <button
         type="button"
@@ -3015,6 +3033,8 @@
           updateBossDbmPanelStyle("backgroundOpacity", v)}
       />
     </section>
+  {:else if activeTab === "teammateCd"}
+    <TabTeammateCd />
   {:else if activeTab === "entityDuration"}
     <TabEntityDuration
       entries={entityDurationEntries}
@@ -3062,6 +3082,18 @@
         >
           {t("monsterMonitor.overlay.teammateBuff", {
             state: visibilityState(overlayVisibility.showTeammateBuffPanel),
+          })}
+        </button>
+
+        <button
+          type="button"
+          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {overlayVisibility.showTeammateCdPanel
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+          onclick={() => toggleOverlayVisibility("showTeammateCdPanel")}
+        >
+          {t("monsterMonitor.overlay.teammateCd", {
+            state: visibilityState(overlayVisibility.showTeammateCdPanel),
           })}
         </button>
 

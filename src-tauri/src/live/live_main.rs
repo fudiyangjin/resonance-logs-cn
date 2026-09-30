@@ -17,6 +17,7 @@ use crate::live::ipc::topic::Topic;
 use crate::live::live_core::{LiveCore, LiveCoreFlow, Publications};
 use crate::live::runtime::events::{MonoTimeMs, monotonic_now_ms};
 use crate::live::runtime_handle::RuntimeCommand;
+use crate::live::team_link::LiveEnds;
 use crate::live::voice_runtime_config::load_voice_runtime_snapshot;
 use crate::packets;
 use crate::packets::packet_capture::CaptureMethod;
@@ -32,7 +33,13 @@ pub async fn start(
     publication_cache: LivePublicationCache,
     history_writer: HistoryWriterHandle,
     history_join: std::thread::JoinHandle<()>,
+    team_link: LiveEnds,
 ) {
+    let LiveEnds {
+        share: team_share,
+        events: mut team_events,
+    } = team_link;
+    let mut team_events_open = true;
     let initial_config = load_monitor_runtime_snapshot(&app).unwrap_or_else(|| {
         info!(target: "app::live", "monitor runtime snapshot missing; using defaults");
         MonitorRuntimeSnapshot::default()
@@ -46,6 +53,7 @@ pub async fn start(
         history_writer.clone(),
         initial_config,
         initial_voice,
+        team_share,
     ) {
         Ok(core) => core,
         Err(error) => {
@@ -111,6 +119,17 @@ pub async fn start(
                 };
                 close_capture_gate(&outstanding);
                 pending_command = Some(command);
+            }
+            // Low-rate relay traffic goes before capture batches so a busy
+            // capture queue cannot delay teammate cooldowns.
+            event = team_events.recv(), if team_events_open => {
+                match event {
+                    Some(event) => {
+                        core.apply_team_event(event);
+                        publish_due(&app, &publication_cache, &mut core, monotonic_now_ms());
+                    }
+                    None => team_events_open = false,
+                }
             }
             batch = batches.recv(), if batches_open => {
                 match batch {

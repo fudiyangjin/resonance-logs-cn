@@ -180,7 +180,7 @@ impl SkillCdRecord {
 
     /// Re-derives the DTO's readiness / charge fields after `state`'s
     /// duration inputs changed.
-    fn refresh_derived(&mut self) {
+    pub(crate) fn refresh_derived(&mut self) {
         let charge = skill_cd::skill_charge(self.skill_id());
         self.state.max_charges = charge.and_then(|charge| charge.max_charges);
         self.state.max_valid_cd_time = charge.and_then(|charge| charge.max_valid_cd_time);

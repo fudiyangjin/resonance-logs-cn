@@ -5,6 +5,7 @@ import {
   createDefaultMonsterMonitorProfile,
   createDefaultOverlayTextStyle,
   createDefaultSkillMonitorProfile,
+  createDefaultTeammateCdPanelStyle,
   createDefaultTeammatePanelStyle,
   deepCloneSettings,
   MAX_BUFF_COVERAGE_ENTRIES,
@@ -134,6 +135,28 @@ const teammatePanelStyleSchema = v.object({
     teammatePanelStyleDefaults.deadRowPlacement,
   ),
 });
+
+// Added with team cooldown sharing; older exports have neither field.
+const teammateCdPanelStyleDefaults = createDefaultTeammateCdPanelStyle();
+const teammateCdPanelStyleSchema = v.optional(
+  v.object({
+    iconSize: finiteNumberSchema,
+    iconGap: finiteNumberSchema,
+    rowGap: finiteNumberSchema,
+    nameColumnWidth: finiteNumberSchema,
+    fontSize: finiteNumberSchema,
+    nameColor: v.string(),
+    deadNameColor: v.string(),
+    deadRowPlacement: v.picklist(TEAMMATE_DEAD_ROW_PLACEMENTS),
+    showClassIcon: v.boolean(),
+    ...overlayTextStyleEntries,
+  }),
+  defaultClone(teammateCdPanelStyleDefaults),
+);
+const teammateCdSkillsSchema = v.optional(
+  v.record(v.string(), v.array(positiveI32Schema)),
+  () => ({}),
+);
 
 const textBuffPanelStyleSchema = v.object({
   displayMode: v.picklist(["modern", "classic"]),
@@ -385,6 +408,10 @@ const defaultMonster = omitProfileId(createDefaultMonsterMonitorProfile());
 const monsterOverlayPositionsSchema = v.object({
   monsterBuffPanel: pointSchema,
   teammateBuffPanel: pointSchema,
+  teammateCdPanel: v.optional(
+    pointSchema,
+    defaultClone(defaultMonster.overlayPositions.teammateCdPanel),
+  ),
   hatePanel: pointSchema,
   fantasyPanel: pointSchema,
   bossDbmPanel: pointSchema,
@@ -402,6 +429,10 @@ const monsterOverlayPositionsSchema = v.object({
 const monsterOverlaySizesSchema = v.object({
   monsterBuffPanelScale: finiteNumberSchema,
   teammateBuffPanelScale: finiteNumberSchema,
+  teammateCdPanelScale: v.optional(
+    finiteNumberSchema,
+    defaultMonster.overlaySizes.teammateCdPanelScale,
+  ),
   hatePanelScale: finiteNumberSchema,
   fantasyPanelScale: finiteNumberSchema,
   bossDbmPanelScale: finiteNumberSchema,
@@ -419,6 +450,7 @@ const monsterOverlaySizesSchema = v.object({
 const monsterOverlayVisibilitySchema = v.object({
   showMonsterBuffPanel: v.boolean(),
   showTeammateBuffPanel: v.boolean(),
+  showTeammateCdPanel: v.optional(v.boolean(), true),
   showHatePanel: v.boolean(),
   showFantasyPanel: v.boolean(),
   showBossDbmPanel: v.boolean(),
@@ -600,6 +632,8 @@ const monsterProfileSchema = v.object({
   overlayVisibility: monsterOverlayVisibilitySchema,
   panelStyle: customPanelStyleSchema,
   teammatePanelStyle: teammatePanelStyleSchema,
+  teammateCdSkills: teammateCdSkillsSchema,
+  teammateCdPanelStyle: teammateCdPanelStyleSchema,
   hatePanelStyle: customPanelStyleSchema,
   fantasyPanelStyle: customPanelStyleSchema,
   bossDbmPanelStyle: customPanelStyleSchema,

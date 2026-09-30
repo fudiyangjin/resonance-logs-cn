@@ -52,8 +52,11 @@
   import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
+  import CheckIcon from "@lucide/svelte/icons/check";
+  import PencilIcon from "@lucide/svelte/icons/pencil";
   import StarIcon from "@lucide/svelte/icons/star";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
+  import XIcon from "@lucide/svelte/icons/x";
   import { SvelteMap, SvelteURLSearchParams } from "svelte/reactivity";
   import { toast } from "svelte-sonner";
 
@@ -118,6 +121,10 @@
   let overviewTargetUuid = $state<string | null>(null);
   let showDeleteModal = $state(false);
   let isDeleting = $state(false);
+  let editingNote = $state(false);
+  let noteDraft = $state("");
+  let noteError = $state<string | null>(null);
+  let isSavingNote = $state(false);
   let detailRequestGeneration = 0;
   let rangeRequestGeneration = 0;
 
@@ -474,10 +481,14 @@
       .getEncounterDetail(requestedId)
       .then((result) => {
         if (generation !== detailRequestGeneration) return;
-        detailState =
-          result.status === "ok"
-            ? { kind: "ready", data: result.data }
-            : { kind: "error", message: String(result.error) };
+        if (result.status === "ok") {
+          detailState = { kind: "ready", data: result.data };
+          noteDraft = result.data.summary.note ?? "";
+          editingNote = false;
+          noteError = null;
+        } else {
+          detailState = { kind: "error", message: String(result.error) };
+        }
       })
       .catch((error: unknown) => {
         if (generation !== detailRequestGeneration) return;
@@ -722,6 +733,60 @@
     }
   }
 
+  function beginNoteEdit() {
+    if (!encounter) return;
+    noteDraft = encounter.note ?? "";
+    noteError = null;
+    editingNote = true;
+  }
+
+  function cancelNoteEdit() {
+    noteDraft = encounter?.note ?? "";
+    noteError = null;
+    editingNote = false;
+  }
+
+  async function saveNote() {
+    if (!encounter || detailState.kind !== "ready" || isSavingNote) return;
+    const normalized = noteDraft.trim();
+    // Keep in sync with MAX_ENCOUNTER_NOTE_CHARS in src-tauri/src/database/commands.rs.
+    if (Array.from(normalized).length > 200) {
+      noteError = t("history.detail.note.tooLong");
+      return;
+    }
+
+    isSavingNote = true;
+    noteError = null;
+    const previous = detailState.data;
+    try {
+      const result = await commands.updateEncounterNote(
+        encounter.id,
+        normalized,
+      );
+      if (result.status === "error") {
+        noteError = t("history.detail.note.saveFailed", {
+          error: String(result.error),
+        });
+        return;
+      }
+      detailState = {
+        kind: "ready",
+        data: {
+          ...previous,
+          summary: { ...previous.summary, note: normalized || null },
+        },
+      };
+      noteDraft = normalized;
+      editingNote = false;
+    } catch (error) {
+      noteError = t("history.detail.note.saveFailed", {
+        error: errorMessage(error),
+      });
+    } finally {
+      isSavingNote = false;
+    }
+  }
+
   async function confirmDelete() {
     if (!encounter || isDeleting) return;
     isDeleting = true;
@@ -810,6 +875,71 @@
             >
             <span>#{currentEncounter.displayIndex}</span>
           </div>
+          {#if editingNote}
+            <div class="mt-2 flex max-w-xl flex-wrap items-center gap-1.5">
+              <input
+                class="bg-popover border-border text-foreground min-w-56 flex-1 rounded border px-2 py-1 text-xs"
+                type="text"
+                value={noteDraft}
+                placeholder={t("history.detail.note.placeholder")}
+                aria-label={t("history.detail.note.edit")}
+                oninput={(event) => {
+                  noteDraft = (event.currentTarget as HTMLInputElement).value;
+                  noteError = null;
+                }}
+                onkeydown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void saveNote();
+                  } else if (event.key === "Escape") {
+                    cancelNoteEdit();
+                  }
+                }}
+              />
+              <button
+                class="hover:bg-muted inline-flex size-7 items-center justify-center rounded"
+                disabled={isSavingNote}
+                onclick={() => void saveNote()}
+                aria-label={t("history.detail.note.save")}
+              >
+                <CheckIcon class="size-4" />
+              </button>
+              <button
+                class="hover:bg-muted inline-flex size-7 items-center justify-center rounded"
+                disabled={isSavingNote}
+                onclick={cancelNoteEdit}
+                aria-label={t("history.detail.note.cancel")}
+              >
+                <XIcon class="size-4" />
+              </button>
+              {#if noteError}
+                <span class="text-destructive basis-full text-xs"
+                  >{noteError}</span
+                >
+              {/if}
+            </div>
+          {:else}
+            <div
+              class="text-muted-foreground mt-2 flex items-center gap-1 text-xs"
+            >
+              {#if currentEncounter.note}
+                <span class="max-w-xl truncate" title={currentEncounter.note}
+                  >{currentEncounter.note}</span
+                >
+              {:else}
+                <span class="opacity-60"
+                  >{t("history.detail.note.placeholder")}</span
+                >
+              {/if}
+              <button
+                class="hover:bg-muted inline-flex size-6 items-center justify-center rounded"
+                onclick={beginNoteEdit}
+                aria-label={t("history.detail.note.edit")}
+              >
+                <PencilIcon class="size-3.5" />
+              </button>
+            </div>
+          {/if}
         </div>
       </div>
       <div class="flex items-center gap-1">

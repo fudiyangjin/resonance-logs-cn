@@ -6,6 +6,7 @@ import type {
 export const DEFAULT_MONSTER_OVERLAY_POSITIONS: MonsterOverlayPositions = {
   monsterBuffPanel: { x: 40, y: 40 },
   teammateBuffPanel: { x: 420, y: 40 },
+  teammateCdPanel: { x: 420, y: 180 },
   hatePanel: { x: 40, y: 300 },
   fantasyPanel: { x: 420, y: 300 },
   bossDbmPanel: { x: 800, y: 40 },
@@ -17,6 +18,7 @@ export const DEFAULT_MONSTER_OVERLAY_POSITIONS: MonsterOverlayPositions = {
 export const DEFAULT_MONSTER_OVERLAY_SIZES: MonsterOverlaySizes = {
   monsterBuffPanelScale: 1,
   teammateBuffPanelScale: 1,
+  teammateCdPanelScale: 1,
   hatePanelScale: 1,
   fantasyPanelScale: 1,
   bossDbmPanelScale: 1,
@@ -28,6 +30,7 @@ export const DEFAULT_MONSTER_OVERLAY_SIZES: MonsterOverlaySizes = {
 export const DEFAULT_MONSTER_OVERLAY_VISIBILITY = {
   showMonsterBuffPanel: true,
   showTeammateBuffPanel: true,
+  showTeammateCdPanel: true,
   showHatePanel: false,
   showFantasyPanel: false,
   showBossDbmPanel: false,
