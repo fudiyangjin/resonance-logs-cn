@@ -2100,7 +2100,7 @@ export const jaJPMessages = {
   "minimap.s4SkyEndRaid.boss": "ラプシス",
   "minimap.s4SkyEndRaid.fullBurst": "全体爆発",
   "minimap.s4SkyEndRaid.lightSpear": "巨大光槍",
-  "minimap.s4SkyEndRaid.lightSpearHp": "光槍HP {current}/{max}",
+  "minimap.s4SkyEndRaid.lightSpearHp": "{percents}",
   "minimap.s4SkyEndRaid.lightTrack": "指生蒼軌",
   "minimap.s4SkyEndRaid.rain": "四時天光化雨",
   "minimap.s4SkyEndRaid.rainVulnerable": "死刑被ダメ増加",
@@ -2113,7 +2113,8 @@ export const jaJPMessages = {
   "minimap.s4SkyEndRaid.prayer": "祈光人形",
   "minimap.s4SkyEndRaid.entityCount": "×{count}",
   "minimap.s4SkyEndRaid.chaser": "小金人",
-  "minimap.s4SkyEndRaid.chaserRow": "→ {name} · {distance}m",
+  "minimap.s4SkyEndRaid.chaserRow": "{hp}% → {name} · {distance}m",
+  "minimap.s4SkyEndRaid.chaserRowNoHp": "→ {name} · {distance}m",
   "minimap.s4SkyEndRaid.chaserTarget": "小金人に追われている",
 
   "routes.tools.voice": "音声読み上げ",

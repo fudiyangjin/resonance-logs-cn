@@ -108,17 +108,38 @@ describe("S4 Lapsis shared scene", () => {
     expect(row?.targets.map((target) => target.uuid)).toEqual(["local"]);
   });
 
-  it("shows the spear HP without a countdown", () => {
+  it("shows spear HP as one percentage line without a countdown", () => {
     const current = snapshot();
-    const spear = entity("spear", "monster", 103404, 5, 5);
-    spear.currentHp = 42;
-    spear.maxHp = 100;
-    current.entities.push(spear);
-    const row = buildMechanicView(current, name, [], 1_100).rows.find(
-      (item) => item.key === "lightSpear:hp:spear",
-    );
+    const low = entity("low", "monster", 103404, 5, 5);
+    low.currentHp = 42;
+    low.maxHp = 100;
+    const high = entity("high", "monster", 103404, 6, 6);
+    high.currentHp = 8;
+    high.maxHp = 10;
+    const empty = entity("empty", "monster", 103404, 7, 7);
+    empty.maxHp = 0;
+    empty.currentHp = 0;
+    current.entities.push(low, high, empty);
+    const view = buildMechanicView(current, name, [], 1_100);
+    const row = view.rows.find((item) => item.key === "lightSpear:hp");
     expect(row?.hideTimer).toBe(true);
-    expect(row?.label).toContain("42/100");
+    expect(row?.targets).toEqual([]);
+    expect(row?.label).toBe("80%  42%");
+    expect(view.rows.filter((item) => item.key.startsWith("lightSpear:hp"))).toHaveLength(1);
+  });
+
+  it("lists shadow callout targets without drawing a sector", () => {
+    const current = snapshot();
+    current.buffs.push(buff("local", 829537), buff("mate", 829537));
+    const view = buildMechanicView(current, name, [], 1_100);
+    const row = view.rows.find((item) => item.key === "shadow");
+    expect(row?.targets.map((target) => target.uuid)).toEqual([
+      "local",
+      "mate",
+    ]);
+    expect(view.regions.some((region) => region.kind === "sector")).toBe(
+      false,
+    );
   });
 
   it("keeps sprout and rain vulnerability on separate buffs", () => {
@@ -147,11 +168,13 @@ describe("S4 Lapsis shared scene", () => {
     ).not.toContainEqual(line);
 
     current.buffs.push(buff("chaser", 829539, 1_000, -1));
+    current.entities[3]!.currentHp = 50;
+    current.entities[3]!.maxHp = 200;
     const view = buildMechanicView(current, name, [], 1_100);
+    const row = view.rows.find((item) => item.key === "chaser:chaser");
     expect(view.regions).toContainEqual(line);
-    expect(
-      view.rows.find((row) => row.key === "chaser:chaser")?.label,
-    ).toContain("5.0");
+    expect(row?.label).toBe("25% → mate · 5.0m");
+    expect(row?.targets).toEqual([]);
   });
 
   it("skips the chase line when the target is missing or dead", () => {

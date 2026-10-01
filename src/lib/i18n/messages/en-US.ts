@@ -2121,7 +2121,7 @@ export const enUSMessages = {
   "minimap.s4SkyEndRaid.boss": "Lapsis",
   "minimap.s4SkyEndRaid.fullBurst": "Full-field Burst",
   "minimap.s4SkyEndRaid.lightSpear": "Giant Light Spear",
-  "minimap.s4SkyEndRaid.lightSpearHp": "Spear HP {current}/{max}",
+  "minimap.s4SkyEndRaid.lightSpearHp": "{percents}",
   "minimap.s4SkyEndRaid.lightTrack": "Pointing Azure Track",
   "minimap.s4SkyEndRaid.rain": "Four Seasons Light Rain",
   "minimap.s4SkyEndRaid.rainVulnerable": "Execution Vulnerability",
@@ -2134,7 +2134,8 @@ export const enUSMessages = {
   "minimap.s4SkyEndRaid.prayer": "Praying Figures",
   "minimap.s4SkyEndRaid.entityCount": "×{count}",
   "minimap.s4SkyEndRaid.chaser": "Golden Chaser",
-  "minimap.s4SkyEndRaid.chaserRow": "→ {name} · {distance}m",
+  "minimap.s4SkyEndRaid.chaserRow": "{hp}% → {name} · {distance}m",
+  "minimap.s4SkyEndRaid.chaserRowNoHp": "→ {name} · {distance}m",
   "minimap.s4SkyEndRaid.chaserTarget": "Golden chaser on you",
 
   "routes.tools.voice": "Voice",

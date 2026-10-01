@@ -1969,7 +1969,7 @@ export const zhCNMessages = {
   "minimap.s4SkyEndRaid.boss": "拉普西斯",
   "minimap.s4SkyEndRaid.fullBurst": "全屏爆发",
   "minimap.s4SkyEndRaid.lightSpear": "巨型光矛",
-  "minimap.s4SkyEndRaid.lightSpearHp": "光矛生命 {current}/{max}",
+  "minimap.s4SkyEndRaid.lightSpearHp": "{percents}",
   "minimap.s4SkyEndRaid.lightTrack": "指生苍轨",
   "minimap.s4SkyEndRaid.rain": "四时天光化雨",
   "minimap.s4SkyEndRaid.rainVulnerable": "死刑易伤",
@@ -1982,7 +1982,8 @@ export const zhCNMessages = {
   "minimap.s4SkyEndRaid.prayer": "祈光人形",
   "minimap.s4SkyEndRaid.entityCount": "×{count}",
   "minimap.s4SkyEndRaid.chaser": "小金人",
-  "minimap.s4SkyEndRaid.chaserRow": "→ {name} · {distance}m",
+  "minimap.s4SkyEndRaid.chaserRow": "{hp}% → {name} · {distance}m",
+  "minimap.s4SkyEndRaid.chaserRowNoHp": "→ {name} · {distance}m",
   "minimap.s4SkyEndRaid.chaserTarget": "小金人追你",
 
   "routes.tools.voice": "语音播报",

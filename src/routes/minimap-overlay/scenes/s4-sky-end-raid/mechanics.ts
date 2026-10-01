@@ -49,6 +49,8 @@ const BUFF_SPROUT = 829530;
 const BUFF_RAIN_VULNERABLE = 829531;
 /** 谒彼诸天_易伤. */
 const BUFF_ETERNAL_DAY_VULNERABLE = 829535;
+/** 喻形成殇_点名: 270° fan callout, shown as a name row only. */
+const BUFF_SHADOW_TARGET = 829537;
 /** 追人连线: self-applied by a chaser while its chase link is alive. */
 const BUFF_CHASE_LINK = 829539;
 
@@ -88,6 +90,7 @@ const textKeys = {
   entityCount: "minimap.s4SkyEndRaid.entityCount",
   chaser: "minimap.s4SkyEndRaid.chaser",
   chaserRow: "minimap.s4SkyEndRaid.chaserRow",
+  chaserRowNoHp: "minimap.s4SkyEndRaid.chaserRowNoHp",
   chaserTarget: "minimap.s4SkyEndRaid.chaserTarget",
 } as const;
 
@@ -181,6 +184,13 @@ export function buildMechanicView(
   addEternalDay(ctx);
   addWish(ctx);
   addCastRow(ctx, SKILL_SHADOW, "shadow", textKeys.shadow, COLOR_LIGHT_TRACK);
+  addBuffRow(
+    ctx,
+    BUFF_SHADOW_TARGET,
+    "shadow",
+    textKeys.shadow,
+    COLOR_LIGHT_TRACK,
+  );
   addOuterLight(ctx);
   addPrayer(ctx);
   addChasers(ctx);
@@ -239,24 +249,28 @@ function addLightSpear(ctx: BuildContext) {
     });
   }
 
+  const percents: number[] = [];
   for (const spear of entitiesOf(ctx, SPEAR_MONSTER_ID)) {
     ctx.entityColorSlots.set(spear.entityUuid, COLOR_SPEAR);
     ctx.regions.push(circle(spear, SPEAR_RADIUS, COLOR_SPEAR));
-    if (spear.currentHp == null || spear.maxHp == null) continue;
-    addRow(ctx, {
-      key: `lightSpear:hp:${spear.entityUuid}`,
-      group: t(textKeys.lightSpear),
-      label: t(textKeys.lightSpearHp, {
-        current: spear.currentHp,
-        max: spear.maxHp,
-      }),
-      colorSlot: COLOR_SPEAR,
-      createTimeMs: 0,
-      durationMs: 0,
-      targets: [],
-      hideTimer: true,
-    });
+    const percent = hpPercent(spear);
+    if (percent == null) continue;
+    percents.push(percent);
   }
+  if (percents.length === 0) return;
+  percents.sort((left, right) => right - left);
+  ctx.rows.set("lightSpear:hp", {
+    key: "lightSpear:hp",
+    group: t(textKeys.lightSpear),
+    label: t(textKeys.lightSpearHp, {
+      percents: percents.map((percent) => `${percent}%`).join("  "),
+    }),
+    colorSlot: COLOR_SPEAR,
+    createTimeMs: 0,
+    durationMs: 0,
+    targets: [],
+    hideTimer: true,
+  });
 }
 
 function addLightTrack(ctx: BuildContext) {
@@ -421,17 +435,24 @@ function addChasers(ctx: BuildContext) {
       widthPx: 3,
     });
     const distance = Math.hypot(chaser.x - target.x, chaser.z - target.z);
+    const name = ctx.displayName(target);
+    const distanceLabel = distance.toFixed(1);
+    const percent = hpPercent(chaser);
     addRow(ctx, {
       key: `chaser:${chaser.entityUuid}`,
       group: t(textKeys.chaser),
-      label: t(textKeys.chaserRow, {
-        name: ctx.displayName(target),
-        distance: distance.toFixed(1),
-      }),
+      label:
+        percent == null
+          ? t(textKeys.chaserRowNoHp, { name, distance: distanceLabel })
+          : t(textKeys.chaserRow, {
+              hp: percent,
+              name,
+              distance: distanceLabel,
+            }),
       colorSlot: COLOR_CHASER,
       createTimeMs: 0,
       durationMs: 0,
-      targets: toMechanicTargets(target, local, ctx.displayName),
+      targets: [],
       hideTimer: true,
     });
   }
@@ -584,6 +605,13 @@ function circle(
     endDeg: 360,
     colorSlot,
   };
+}
+
+function hpPercent(entity: MinimapEntity): number | null {
+  if (entity.currentHp == null || entity.maxHp == null || entity.maxHp <= 0) {
+    return null;
+  }
+  return Math.round((entity.currentHp / entity.maxHp) * 100);
 }
 
 function maxDuration(buffs: readonly MinimapBuffFact[]): number {
