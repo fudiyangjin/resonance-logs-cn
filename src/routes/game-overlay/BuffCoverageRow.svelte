@@ -1,13 +1,10 @@
 <script lang="ts">
+  import { barMotion, type BarMotion } from "$lib/bar-motion.svelte.js";
   import { t } from "$lib/i18n/index.svelte";
   import type { BuffUpdateState } from "$lib/bindings";
   import type { BuffCoverageStyle } from "$lib/settings-store";
   import { overlayNow } from "./overlay-state.svelte.js";
-  import {
-    formatTimerText,
-    getBuffRemainPercent,
-    getBuffRemainingMs,
-  } from "./overlay-utils";
+  import { formatTimerText, getBuffRemainingMs } from "./overlay-utils";
 
   interface Props {
     name: string;
@@ -37,7 +34,6 @@
       ? formatTimerText(remainingMs)
       : "",
   );
-  const progressPercent = $derived(getBuffRemainPercent(buff, temporalNow));
   const mainColumns = $derived(
     style.showStateDot ? "auto minmax(0, 1fr) auto" : "minmax(0, 1fr) auto",
   );
@@ -48,7 +44,16 @@
     if (style.showCount) columns.push("3.2em");
     return columns.join(" ");
   });
-  const fillScale = $derived(Math.max(0, Math.min(100, progressPercent)) / 100);
+  // From the buff itself, never from the clock: the bar animates on its own.
+  const progressMotion = $derived<BarMotion>(
+    buff && buff.durationMs > 0
+      ? {
+          kind: "countdown",
+          deadlineMs: buff.createTimeMs + buff.durationMs,
+          spanMs: buff.durationMs,
+        }
+      : { kind: "static", scale: 0 },
+  );
 </script>
 
 <div class="coverage-row">
@@ -78,7 +83,7 @@
     <div class="coverage-decay">
       <div
         class="coverage-decay-fill"
-        style:transform={`scaleX(${fillScale})`}
+        {@attach barMotion(() => progressMotion)}
         style:background={style.progressColor}
         style:opacity={style.progressOpacity}
       ></div>
@@ -164,7 +169,6 @@
     width: 100%;
     height: 100%;
     transform-origin: left center;
-    transition: transform 100ms linear;
     will-change: transform;
   }
 </style>

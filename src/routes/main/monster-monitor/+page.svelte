@@ -2099,6 +2099,27 @@
           >
         </label>
       </div>
+      <label
+        class="border-border/60 bg-muted/20 flex items-center justify-between gap-2 rounded border px-3 py-2 text-xs"
+      >
+        <span class="space-y-0.5">
+          <span class="text-muted-foreground block"
+            >{t("monsterMonitor.style.preciseTimer")}</span
+          >
+          <span class="text-muted-foreground/70 block"
+            >{t("monsterMonitor.style.preciseTimerHint")}</span
+          >
+        </span>
+        <input
+          type="checkbox"
+          checked={teammatePanelStyle.preciseTimer}
+          onchange={(event) =>
+            updateTeammatePanelStyle(
+              "preciseTimer",
+              (event.currentTarget as HTMLInputElement).checked,
+            )}
+        />
+      </label>
       <OverlayTextStyleFields
         textShadowEnabled={teammatePanelStyle.textShadowEnabled}
         backgroundEnabled={teammatePanelStyle.backgroundEnabled}

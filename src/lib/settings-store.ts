@@ -1083,6 +1083,8 @@ export type TeammatePanelStyle = CustomPanelStyle & {
   buffColumnWidth: number;
   deadNameColor: string;
   deadRowPlacement: TeammateDeadRowPlacement;
+  /** Show countdowns at 0.1s precision instead of whole seconds. */
+  preciseTimer: boolean;
 };
 
 /** Teammate skill-cooldown panel (team sharing). */
@@ -1733,6 +1735,7 @@ export function createDefaultTeammatePanelStyle(): TeammatePanelStyle {
     buffColumnWidth: 72,
     deadNameColor: "#ef4444",
     deadRowPlacement: "last",
+    preciseTimer: false,
   };
 }
 
@@ -1806,6 +1809,10 @@ export function ensureTeammatePanelStyle(
       isTeammateDeadRowPlacement(style.deadRowPlacement)
         ? style.deadRowPlacement
         : base.deadRowPlacement,
+    preciseTimer:
+      style && "preciseTimer" in style
+        ? style.preciseTimer === true
+        : base.preciseTimer,
   };
 }
 

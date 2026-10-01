@@ -7,5 +7,6 @@
 - Search for Buffs to add them to **{{ui:monsterMonitor.teammate.groupTitle}}**, or add them quickly by category;
 - Each monitored column can override **{{ui:monsterMonitor.style.progressColor}}** and **{{ui:monsterMonitor.style.valueColor}}** on its own. **{{ui:monsterMonitor.teammate.columnColorReset}}** restores the panel colors;
 - **{{ui:monsterMonitor.teammate.styleTitle}}**: **{{ui:monsterMonitor.style.rowHeight}}**, **{{ui:monsterMonitor.style.nameColumnWidth}}**, **{{ui:monsterMonitor.style.buffColumnWidth}}**, **{{ui:monsterMonitor.style.deadNameColor}}**, and **{{ui:monsterMonitor.style.deadRowPlacement}}**. A dead teammate keeps a row, the name uses the dead color, and the row moves to the chosen position.
+- **{{ui:monsterMonitor.style.preciseTimer}}**: Off by default, so countdowns show whole seconds. Turn it on to show countdowns to 0.1s and update the progress bar every 100ms.
 
 Whether it appears in the overlay is controlled by **Teammate Buff Area** in [Enable Window](./overlay.md).

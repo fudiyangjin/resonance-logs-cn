@@ -9,7 +9,9 @@ import {
   liveBuffsStore,
   liveStatusStore,
 } from "$lib/stores/live-topics.svelte";
+import type { BuffCoverageEntry } from "$lib/bindings";
 import type { BuffDefinition } from "$lib/config/buff-name-table";
+import { reuseIfSame, reuseMap, reuseSet } from "$lib/structural-reuse";
 import type { DragState, ResizeState } from "./overlay-types";
 
 function latestBuffsByBaseId(buffs: BuffUpdateState[]) {
@@ -23,12 +25,40 @@ function latestBuffsByBaseId(buffs: BuffUpdateState[]) {
   return result;
 }
 
+// The local buff list can hold hundreds of entries ("monitor all"), so it
+// compares the known fields directly instead of a generic deep compare.
+function sameBuffState(left: BuffUpdateState, right: BuffUpdateState) {
+  return (
+    left.baseId === right.baseId &&
+    left.layer === right.layer &&
+    left.durationMs === right.durationMs &&
+    left.createTimeMs === right.createTimeMs &&
+    left.sourceRemodelLevel === right.sourceRemodelLevel
+  );
+}
+
+// Status and buffs payloads are replaced whenever any field changes (local
+// HP, coverage ticks, ...). Each view keeps its previous instance while its
+// own content is unchanged, so unrelated frames do not rebuild the panels.
+let cdMapCache: Map<number, SkillCdState> | undefined;
+let fightResMapCache: Map<number, number> | undefined;
+let buffMapCache: Map<number, BuffUpdateState> | undefined;
+let buffCoverageCache: BuffCoverageEntry[] | undefined;
+let counterMapCache: Map<number, CounterUpdateState> | undefined;
+let factorCounterMapCache: Map<number, CounterUpdateState> | undefined;
+let panelAttrMapCache: Map<number, number> | undefined;
+let factorSourceItemIdsCache: number[] | undefined;
+let factorSlotItemIdsCache: number[] | undefined;
+let seasonActiveTemplateIdsCache: Set<number> | undefined;
+let shieldHpCache: { current: number; max: number } | undefined;
+let shieldEntriesCache: ShieldDetailEntry[] | undefined;
+
 const _cdMap = $derived.by(() => {
   const result = new Map<number, SkillCdState>();
   for (const cd of liveStatusStore.data?.skillCds ?? []) {
     result.set(Math.floor(cd.skillLevelId / 100), cd);
   }
-  return result;
+  return (cdMapCache = reuseMap(cdMapCache, result));
 });
 
 const _fightResMap = $derived.by(() => {
@@ -36,33 +66,83 @@ const _fightResMap = $derived.by(() => {
   for (const entry of liveStatusStore.data?.fightResource?.entries ?? []) {
     result.set(entry.id, entry.value);
   }
-  return result;
+  return (fightResMapCache = reuseMap(fightResMapCache, result));
 });
 
-const _buffMap = $derived.by(() =>
-  latestBuffsByBaseId(liveBuffsStore.data?.localBuffs ?? []),
+const _buffMap = $derived.by(
+  () =>
+    (buffMapCache = reuseMap(
+      buffMapCache,
+      latestBuffsByBaseId(liveBuffsStore.data?.localBuffs ?? []),
+      sameBuffState,
+    )),
 );
 
-const _buffCoverage = $derived.by(() => liveBuffsStore.data?.coverage ?? []);
+const _buffCoverage = $derived.by(
+  () =>
+    (buffCoverageCache = reuseIfSame(
+      buffCoverageCache,
+      liveBuffsStore.data?.coverage ?? [],
+    )),
+);
 
 function countersByRuleId(counters: CounterUpdateState[]) {
   return new Map(counters.map((counter) => [counter.ruleId, counter]));
 }
 
-const _counterMap = $derived.by(() =>
-  countersByRuleId(liveStatusStore.data?.counters ?? []),
+const _counterMap = $derived.by(
+  () =>
+    (counterMapCache = reuseMap(
+      counterMapCache,
+      countersByRuleId(liveStatusStore.data?.counters ?? []),
+    )),
 );
-const _factorCounterMap = $derived.by(() =>
-  countersByRuleId(liveStatusStore.data?.factorCounters ?? []),
+const _factorCounterMap = $derived.by(
+  () =>
+    (factorCounterMapCache = reuseMap(
+      factorCounterMapCache,
+      countersByRuleId(liveStatusStore.data?.factorCounters ?? []),
+    )),
 );
 const _panelAttrMap = $derived.by(
   () =>
-    new Map(
-      (liveStatusStore.data?.panelAttrs ?? []).map((attr) => [
-        attr.attrId,
-        attr.value,
-      ]),
-    ),
+    (panelAttrMapCache = reuseMap(
+      panelAttrMapCache,
+      new Map(
+        (liveStatusStore.data?.panelAttrs ?? []).map((attr) => [
+          attr.attrId,
+          attr.value,
+        ]),
+      ),
+    )),
+);
+const _factorSourceItemIds = $derived.by(
+  () =>
+    (factorSourceItemIdsCache = reuseIfSame(
+      factorSourceItemIdsCache,
+      liveStatusStore.data?.factorSourceItemIds ?? [],
+    )),
+);
+const _factorSlotItemIds = $derived.by(
+  () =>
+    (factorSlotItemIdsCache = reuseIfSame(
+      factorSlotItemIdsCache,
+      liveStatusStore.data?.factorSlotItemIds ?? [],
+    )),
+);
+const _shieldHp = $derived.by(
+  () =>
+    (shieldHpCache = reuseIfSame(shieldHpCache, {
+      current: liveStatusStore.data?.shieldCurrentHp ?? 0,
+      max: liveStatusStore.data?.shieldMaxHp ?? 0,
+    })),
+);
+const _shieldEntries = $derived.by(
+  () =>
+    (shieldEntriesCache = reuseIfSame(
+      shieldEntriesCache,
+      liveStatusStore.data?.shieldEntries ?? [],
+    )),
 );
 
 export const overlayRuntime = $state({
@@ -102,15 +182,19 @@ export function factorCounterMap() {
 }
 
 export function seasonCultivateFactorSourceItemIds() {
-  return liveStatusStore.data?.factorSourceItemIds ?? [];
+  return _factorSourceItemIds;
 }
 
 export function seasonCultivateFactorSlotItemIds() {
-  return liveStatusStore.data?.factorSlotItemIds ?? [];
+  return _factorSlotItemIds;
 }
 
 const _seasonActiveTemplateIds = $derived.by(
-  () => new Set(liveStatusStore.data?.seasonActiveTemplateIds ?? []),
+  () =>
+    (seasonActiveTemplateIdsCache = reuseSet(
+      seasonActiveTemplateIdsCache,
+      new Set(liveStatusStore.data?.seasonActiveTemplateIds ?? []),
+    )),
 );
 
 /** Highest deep-sleep (800522) `seasonId` resolved by the backend; `0`
@@ -130,14 +214,11 @@ export function panelAttrMap() {
 }
 
 export function shieldDetailHp() {
-  return {
-    current: liveStatusStore.data?.shieldCurrentHp ?? 0,
-    max: liveStatusStore.data?.shieldMaxHp ?? 0,
-  };
+  return _shieldHp;
 }
 
 export function shieldDetailEntries(): ShieldDetailEntry[] {
-  return liveStatusStore.data?.shieldEntries ?? [];
+  return _shieldEntries;
 }
 
 export function buffDefinitions() {

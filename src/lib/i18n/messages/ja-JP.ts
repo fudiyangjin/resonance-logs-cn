@@ -1652,6 +1652,9 @@ export const jaJPMessages = {
   "monsterMonitor.style.deadRowPlacement.last": "末尾に移動",
   "monsterMonitor.style.deadRowPlacement.first": "先頭に移動",
   "monsterMonitor.style.deadRowPlacement.keep": "移動しない",
+  "monsterMonitor.style.preciseTimer": "100ms 精度",
+  "monsterMonitor.style.preciseTimerHint":
+    "カウントダウンを0.1秒単位で表示し、進捗を100msごとに更新します。オフの場合は秒単位で表示します",
   "monsterMonitor.hate.displayTitle": "ヘイトリスト表示",
   "monsterMonitor.hate.displayDescription":
     "ヘイトパネルの表示人数とスタイルを設定します。表示は「ウィンドウを有効化」で切り替えます。",

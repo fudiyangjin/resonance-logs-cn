@@ -7,5 +7,6 @@
 - 搜索 Buff 加入 **{{ui:monsterMonitor.teammate.groupTitle}}**，也可以按分类快捷添加；
 - 已监控的每一列可以单独覆盖 **{{ui:monsterMonitor.style.progressColor}}** 和 **{{ui:monsterMonitor.style.valueColor}}**，用 **{{ui:monsterMonitor.teammate.columnColorReset}}** 回到面板颜色；
 - **{{ui:monsterMonitor.teammate.styleTitle}}**：**{{ui:monsterMonitor.style.rowHeight}}**、**{{ui:monsterMonitor.style.nameColumnWidth}}**、**{{ui:monsterMonitor.style.buffColumnWidth}}**、**{{ui:monsterMonitor.style.deadNameColor}}**，以及 **{{ui:monsterMonitor.style.deadRowPlacement}}**。阵亡队友仍保留一行，名字改用阵亡颜色，并按所选位置排列。
+- **{{ui:monsterMonitor.style.preciseTimer}}**：默认关闭，倒计时按整秒显示；开启后倒计时显示到 0.1 秒，进度条每 100ms 更新一次。
 
 浮窗中是否显示由 [启用窗口](./overlay.md) 的 **队友 Buff 区** 控制。

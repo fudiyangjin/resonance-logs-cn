@@ -14,6 +14,7 @@ import {
   SETTINGS,
   ensureBuffAlerts,
   getGlobalBuffAliases,
+  type BuffAlertMap,
   type EntityDurationEntry,
   type TeammateDeadRowPlacement,
 } from "$lib/settings-store";
@@ -789,6 +790,7 @@ function buildTeammateDisplay(
   now: number,
   columnProjection: TeammateColumnProjection,
   aliases: ReturnType<typeof getGlobalBuffAliases>,
+  alertMap: BuffAlertMap,
   deadRowPlacement: TeammateDeadRowPlacement,
 ): {
   columns: MonsterTeammateBuffColumn[];
@@ -798,7 +800,6 @@ function buildTeammateDisplay(
   const teammateColumns = columnProjection.definitions;
   const fullTeammateDisplayColumns = columnProjection.displayColumns;
   const resolveTeammateBuffName = createBuffNameResolver(aliases);
-  const alertMap = ensureBuffAlerts(SETTINGS.monsterMonitor.state.buffAlerts);
   const resolveTeammateAlert = (baseId: number) => alertMap[String(baseId)];
   const nextTeammateRows: MonsterTeammateBuffRow[] = [];
   const deadlines = createDeadlineTracker(now);
@@ -831,7 +832,7 @@ function buildTeammateDisplay(
         const buffName = column.label;
         if (!buff) {
           return {
-            key: `teammate_${teammateUuid}_${column.key}_empty`,
+            key: column.key,
             buffId: column.buffId,
             buffName,
             valueText: "",
@@ -851,7 +852,7 @@ function buildTeammateDisplay(
         );
         if (!row) {
           return {
-            key: `teammate_${teammateUuid}_${column.key}_empty`,
+            key: column.key,
             buffId: column.buffId,
             buffName,
             valueText: "",
@@ -861,7 +862,7 @@ function buildTeammateDisplay(
         }
 
         return {
-          key: `teammate_${teammateUuid}_${column.key}`,
+          key: column.key,
           buffId: column.buffId,
           buffName,
           valueText: row.valueText,
@@ -879,7 +880,7 @@ function buildTeammateDisplay(
         : column.label;
       if (!buff) {
         return {
-          key: `teammate_${teammateUuid}_${column.key}_empty`,
+          key: column.key,
           buffId: column.buffIds[0] ?? 0,
           buffName: column.label,
           valueText: "",
@@ -900,7 +901,7 @@ function buildTeammateDisplay(
       );
       if (!row) {
         return {
-          key: `teammate_${teammateUuid}_${column.key}_empty`,
+          key: column.key,
           buffId: buff.baseId,
           buffName,
           valueText: "",
@@ -912,7 +913,7 @@ function buildTeammateDisplay(
       }
 
       return {
-        key: `teammate_${teammateUuid}_${column.key}`,
+        key: column.key,
         buffId: buff.baseId,
         buffName,
         valueText: row.valueText,
@@ -1245,6 +1246,10 @@ const teammateColumnProjection = $derived.by(() => {
   };
 });
 
+const teammateAlertMapProjection = $derived.by(() =>
+  ensureBuffAlerts(SETTINGS.monsterMonitor.state.buffAlerts),
+);
+
 // A primitive, so panel style edits (sizes, colors) do not rebuild the rows.
 const teammateDeadRowPlacement = $derived(
   teammatePanelStyle().deadRowPlacement,
@@ -1256,6 +1261,7 @@ const teammateDisplayProjection = $derived.by(() => {
     Date.now(),
     teammateColumnProjection,
     globalBuffAliasesProjection,
+    teammateAlertMapProjection,
     teammateDeadRowPlacement,
   );
 });

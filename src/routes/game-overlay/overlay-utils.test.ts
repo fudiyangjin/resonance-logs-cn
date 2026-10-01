@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { barScaleAt } from "$lib/bar-motion";
 import type { BuffUpdateState, SkillCdState } from "$lib/bindings";
 import { t } from "$lib/i18n/index.svelte";
 import type { InlineBuffEntry } from "$lib/settings-store";
@@ -87,6 +88,24 @@ describe("skill cooldown calculation with cached definitions", () => {
       usable: true,
       isActive: false,
     });
+  });
+
+  it("animates the recharge bar on the same course as the clock", () => {
+    const value = cd({
+      skillCdType: 1,
+      calculatedDuration: 5_000,
+      validCdTime: 1_000,
+      cdAccelerateRate: 0.5,
+      maxCharges: 3,
+    });
+    const motion = computeDisplay(value, 100_500)?.rechargeMotion;
+    expect(motion).toBeDefined();
+    // One course for the whole recharge, across charge boundaries.
+    for (const now of [100_500, 103_000, 104_200, 106_000, 108_900]) {
+      const display = computeDisplay(value, now);
+      expect(display?.rechargeMotion).toEqual(motion);
+      expect(barScaleAt(motion!, now)).toBeCloseTo(1 - display!.percent, 6);
+    }
   });
 
   it("keeps server-driven resource charging independent of elapsed time", () => {
@@ -252,6 +271,58 @@ describe("custom panel buff rows", () => {
     expect(row("timer", [buff()])).toMatchObject({
       key: "inline_buff_entry",
       showProgress: true,
+    });
+  });
+});
+
+describe("custom panel counter rows", () => {
+  function frozenRow(freezeDurationMs: number | null) {
+    const counterEntry: InlineBuffEntry = {
+      id: "counter",
+      sourceType: "counter",
+      sourceId: 7,
+      counterSlotId: 1,
+      label: "Counter",
+      format: "timer",
+    };
+    return getCustomPanelDisplayRow(
+      counterEntry,
+      1_000,
+      new Map(),
+      new Map([
+        [
+          7,
+          {
+            ruleId: 7,
+            slots: [
+              {
+                slotId: 1,
+                currentCount: 0,
+                threshold: null,
+                effectiveThreshold: null,
+                isCounting: false,
+                resetBuffActive: false,
+                freezeUntilMs: 4_000,
+                freezeDurationMs,
+                effectiveFreezeDurationMs: null,
+              },
+            ],
+          },
+        ],
+      ]),
+      new Map(),
+      () => "Buff",
+    );
+  }
+
+  it("counts a freeze down from its deadline even without a duration", () => {
+    expect(frozenRow(null)).toMatchObject({
+      showProgress: false,
+      temporal: { deadlineMs: 4_000, durationMs: 0 },
+    });
+    expect(frozenRow(5_000)).toMatchObject({
+      showProgress: true,
+      temporal: { deadlineMs: 4_000, durationMs: 5_000 },
     });
   });
 });

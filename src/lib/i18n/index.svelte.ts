@@ -47,11 +47,23 @@ export function t(key: MessageKey, params?: MessageParams): string {
   return key;
 }
 
+// Constructing an Intl.NumberFormat costs far more than formatting with one,
+// and overlays format numbers on every data frame. Callers pass a handful of
+// literal option sets, so the cache stays small. A plain (non-reactive)
+// record: nothing should re-render because a formatter got cached.
+const numberFormats: Partial<Record<string, Intl.NumberFormat>> = {};
+
 export function formatNumber(
   value: number,
   options?: Intl.NumberFormatOptions,
 ): string {
-  return new Intl.NumberFormat(getLocale(), options).format(value);
+  const locale = getLocale();
+  const key = options ? `${locale}\u0000${JSON.stringify(options)}` : locale;
+  const format = (numberFormats[key] ??= new Intl.NumberFormat(
+    locale,
+    options,
+  ));
+  return format.format(value);
 }
 
 export function formatDateTime(

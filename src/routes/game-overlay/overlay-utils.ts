@@ -392,14 +392,13 @@ export function getCustomPanelDisplayRow(
       metaText: t("gameOverlay.counter.cooling"),
       progressPercent,
       showProgress: freezeDurationMs > 0,
-      ...(freezeDurationMs > 0
-        ? {
-            temporal: {
-              deadlineMs: fixedFreezeUntilMs,
-              durationMs: freezeDurationMs,
-            },
-          }
-        : {}),
+      // Always temporal, even without a known duration: the countdown text
+      // follows the clock and the freeze end is registered as a projection
+      // deadline, instead of relying on unrelated frames to rebuild the row.
+      temporal: {
+        deadlineMs: fixedFreezeUntilMs,
+        durationMs: freezeDurationMs,
+      },
     };
   }
   if (selectedSlot.isCounting) {
@@ -514,6 +513,7 @@ export function computeDisplay(
         0,
         chargeDuration - (currentVct % chargeDuration),
       );
+      const cdRate = 1 + cdAccelerateRate;
       return {
         isActive: chargesOnCd > 0,
         percent: Math.min(1, timeToNextCharge / chargeDuration),
@@ -522,6 +522,15 @@ export function computeDisplay(
         usable: chargesAvailable >= 1,
         chargesAvailable,
         maxCharges,
+        // Fills once per charge until every charge is back; both ends come
+        // from the packet, so the course only changes with a new packet.
+        rechargeMotion: {
+          kind: "countdown",
+          deadlineMs: cd.receivedAt + (maxVct - scaledValidCdTime) / cdRate,
+          spanMs: chargeDuration / cdRate,
+          fill: true,
+          periodic: true,
+        },
       };
     }
   }

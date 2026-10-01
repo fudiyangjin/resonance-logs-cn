@@ -1674,6 +1674,9 @@ export const enUSMessages = {
   "monsterMonitor.style.deadRowPlacement.last": "Move to Bottom",
   "monsterMonitor.style.deadRowPlacement.first": "Move to Top",
   "monsterMonitor.style.deadRowPlacement.keep": "Keep in Place",
+  "monsterMonitor.style.preciseTimer": "100ms Precision",
+  "monsterMonitor.style.preciseTimerHint":
+    "Show countdowns to 0.1s and update progress every 100ms; off shows whole seconds",
   "monsterMonitor.hate.displayTitle": "Hate List Display",
   "monsterMonitor.hate.displayDescription":
     "Configure the monster hate panel's player limit and style. Control its visibility in Enable Window.",

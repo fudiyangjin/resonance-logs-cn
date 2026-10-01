@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { barMotion, type BarMotion } from "$lib/bar-motion.svelte.js";
   import type { SkillDisplay } from "./overlay-types";
 
   interface Props {
@@ -32,6 +33,9 @@
   const displayText = $derived(display?.text ?? "");
   const chargesAvailable = $derived(display?.chargesAvailable);
   const maxCharges = $derived(display?.maxCharges);
+  const rechargeMotion = $derived<BarMotion>(
+    display?.rechargeMotion ?? { kind: "static", scale: 1 - percent },
+  );
   const isFull = $derived(
     chargesAvailable !== undefined &&
       maxCharges !== undefined &&
@@ -80,10 +84,7 @@
     </div>
   {:else if isRechargingUsable}
     <div class="recharge-bar-wrap">
-      <div
-        class="recharge-bar"
-        style:transform={`scaleX(${Math.max(0, Math.min(1, 1 - percent))})`}
-      ></div>
+      <div class="recharge-bar" {@attach barMotion(() => rechargeMotion)}></div>
     </div>
     {#if displayText}
       <span class="recharge-text">{displayText}</span>
@@ -178,7 +179,6 @@
     background: linear-gradient(90deg, #60a5fa, #93c5fd);
     border-radius: 0 0 5px 5px;
     transform-origin: left center;
-    transition: transform 200ms linear;
     will-change: transform;
   }
 

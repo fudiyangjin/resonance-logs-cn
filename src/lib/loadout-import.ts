@@ -111,8 +111,8 @@ const customPanelStyleSchema = v.object({
   ...overlayTextStyleEntries,
 });
 
-// The dead-teammate fields postdate the teammate style; optional for the
-// same reason as the text-style trio above.
+// The dead-teammate fields and `preciseTimer` postdate the teammate style;
+// optional for the same reason as the text-style trio above.
 const teammatePanelStyleDefaults = createDefaultTeammatePanelStyle();
 const teammatePanelStyleSchema = v.object({
   gap: finiteNumberSchema,
@@ -133,6 +133,10 @@ const teammatePanelStyleSchema = v.object({
   deadRowPlacement: v.optional(
     v.picklist(TEAMMATE_DEAD_ROW_PLACEMENTS),
     teammatePanelStyleDefaults.deadRowPlacement,
+  ),
+  preciseTimer: v.optional(
+    v.boolean(),
+    teammatePanelStyleDefaults.preciseTimer,
   ),
 });
 

@@ -1,3 +1,4 @@
+import type { BarMotion } from "$lib/bar-motion";
 import type { OverlayPositions, PanelAttrConfig } from "$lib/settings-store";
 import type { BuffCategoryKey } from "$lib/config/buff-name-table";
 import type {
@@ -22,6 +23,8 @@ export type SkillDisplay = {
   usable: boolean;
   chargesAvailable?: number;
   maxCharges?: number;
+  /** Recharge bar of a multi-charge skill, independent of the clock. */
+  rechargeMotion?: BarMotion;
 };
 
 export type BuffAlertState = HudAlertState;

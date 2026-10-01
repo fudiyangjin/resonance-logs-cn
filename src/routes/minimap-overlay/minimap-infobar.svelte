@@ -141,7 +141,6 @@
     box-shadow:
       0 16px 44px rgba(15, 23, 42, 0.32),
       inset 0 1px 0 rgba(248, 250, 252, 0.06);
-    backdrop-filter: blur(12px);
   }
   .empty {
     margin: 0;

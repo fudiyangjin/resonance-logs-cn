@@ -1,9 +1,7 @@
 <script lang="ts">
+  import { barMotion, type BarMotion } from "$lib/bar-motion.svelte.js";
   import { t } from "$lib/i18n/index.svelte";
-  import {
-    hudTemporalProgressPercent,
-    remainingUntilMs,
-  } from "$lib/hud-temporal.svelte.js";
+  import { remainingUntilMs } from "$lib/hud-temporal.svelte.js";
   import { readFlowerSnapshot } from "$lib/flower-rotation";
   import { ensureBuffAlerts, type BuffAlertRule } from "$lib/settings-store";
   import type {
@@ -46,13 +44,17 @@
     return remainingUntilMs(deadlineMs, overlayNow());
   });
   const timeText = $derived(formatTimerText(remainingMs));
-  const progressPercent = $derived.by(() => {
-    if (deadlineMs === null) return scaffold ? 100 : 0;
-    return hudTemporalProgressPercent(
-      { deadlineMs, durationMs: resource.nominalDurationMs },
-      overlayNow(),
-    );
-  });
+  // From the deadline itself, never from the clock: the bar animates on its
+  // own and only restarts when the countdown changes.
+  const progressMotion = $derived<BarMotion>(
+    deadlineMs === null
+      ? { kind: "static", scale: scaffold ? 1 : 0 }
+      : {
+          kind: "countdown",
+          deadlineMs,
+          spanMs: resource.nominalDurationMs,
+        },
+  );
 
   // Alerts come solely from the user's rule for the countdown buff.
   const alertRule = $derived<BuffAlertRule | undefined>(
@@ -102,7 +104,7 @@
       <div class="flower-progress">
         <div
           class="flower-progress-fill"
-          style:transform={`scaleX(${progressPercent / 100})`}
+          {@attach barMotion(() => progressMotion)}
           style:background={alert?.applyToProgress
             ? alert.highlightColor
             : null}
@@ -195,7 +197,6 @@
     border-radius: 999px;
     background: #8bc34a;
     transform-origin: left center;
-    transition: transform 100ms linear;
     will-change: transform;
   }
 

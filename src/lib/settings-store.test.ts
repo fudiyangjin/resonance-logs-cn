@@ -87,5 +87,18 @@ describe("ensureTeammatePanelStyle", () => {
     const style = ensureTeammatePanelStyle(createDefaultCustomPanelStyle());
     expect(style.deadNameColor).toBe("#ef4444");
     expect(style.deadRowPlacement).toBe("last");
+    expect(style.preciseTimer).toBe(false);
+  });
+
+  it("keeps an enabled precise timer and rejects non-boolean values", () => {
+    expect(ensureTeammatePanelStyle({ preciseTimer: true }).preciseTimer).toBe(
+      true,
+    );
+    expect(
+      ensureTeammatePanelStyle({
+        preciseTimer: "yes",
+      } as unknown as Parameters<typeof ensureTeammatePanelStyle>[0])
+        .preciseTimer,
+    ).toBe(false);
   });
 });

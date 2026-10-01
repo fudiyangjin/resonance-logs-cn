@@ -1534,6 +1534,9 @@ export const zhCNMessages = {
   "monsterMonitor.style.deadRowPlacement.last": "排到最后",
   "monsterMonitor.style.deadRowPlacement.first": "排到最前",
   "monsterMonitor.style.deadRowPlacement.keep": "保持原位",
+  "monsterMonitor.style.preciseTimer": "100ms 精度",
+  "monsterMonitor.style.preciseTimerHint":
+    "倒计时显示到 0.1 秒，进度条每 100ms 更新；关闭时按整秒显示",
   "monsterMonitor.hate.displayTitle": "仇恨列表显示",
   "monsterMonitor.hate.displayDescription":
     "配置怪物仇恨面板的显示人数和样式；区域显示在「启用窗口」中控制。",

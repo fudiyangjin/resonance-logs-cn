@@ -50,7 +50,12 @@
       resolveTeammateColumnColors(styles, column.key, panelColors),
     );
   });
-  const teammateNowMs = $derived(Math.floor(overlayNow() / 1000) * 1000);
+  const precise = $derived(styleConfig.preciseTimer === true);
+  // Whole-second mode floors the shared 100ms clock so every cell updates in
+  // the same frame once per second; precise mode follows the clock itself.
+  const teammateNowMs = $derived(
+    precise ? overlayNow() : Math.floor(overlayNow() / 1000) * 1000,
+  );
 </script>
 
 {#if rows.length > 0 || scaffold}
@@ -112,6 +117,7 @@
               <MonsterTeammateBuffCell
                 {cell}
                 nowMs={teammateNowMs}
+                {precise}
                 progressColor={colors.progressColor}
                 progressOpacity={styleConfig.progressOpacity ?? 0.4}
                 valueColor={colors.valueColor}

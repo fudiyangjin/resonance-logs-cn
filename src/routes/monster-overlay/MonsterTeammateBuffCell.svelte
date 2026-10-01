@@ -11,25 +11,28 @@
   let {
     cell,
     nowMs = 0,
+    precise = false,
     progressColor,
     progressOpacity,
     valueColor,
   }: {
     cell: MonsterTeammateBuffCell;
     nowMs?: number;
+    /** 0.1s countdown text instead of whole seconds. */
+    precise?: boolean;
     progressColor: string;
     progressOpacity: number;
     valueColor: string;
   } = $props();
 
   const temporalNow = $derived(cell.temporal ? nowMs : 0);
-  const valueText = $derived(
-    cell.temporal
-      ? formatTeammateTimerText(
-          hudTemporalRemainingMs(cell.temporal, temporalNow),
-        )
-      : cell.valueText,
-  );
+  const valueText = $derived.by(() => {
+    if (!cell.temporal) return cell.valueText;
+    const remainingMs = hudTemporalRemainingMs(cell.temporal, temporalNow);
+    return precise
+      ? formatTimerText(remainingMs)
+      : formatTeammateTimerText(remainingMs);
+  });
   const progressPercent = $derived(
     cell.temporal
       ? Math.round(hudTemporalProgressPercent(cell.temporal, temporalNow))

@@ -471,6 +471,7 @@ describe("parseLoadoutExport", () => {
     >;
     delete teammatePanelStyle["deadNameColor"];
     delete teammatePanelStyle["deadRowPlacement"];
+    delete teammatePanelStyle["preciseTimer"];
     delete monster["teammateBuffColumnStyles"];
 
     const result = parseLoadoutExport(data);
@@ -482,6 +483,9 @@ describe("parseLoadoutExport", () => {
     expect(
       result.output.monsterProfile.teammatePanelStyle.deadRowPlacement,
     ).toBe("last");
+    expect(result.output.monsterProfile.teammatePanelStyle.preciseTimer).toBe(
+      false,
+    );
     expect(result.output.monsterProfile.teammateBuffColumnStyles).toEqual({});
   });
 

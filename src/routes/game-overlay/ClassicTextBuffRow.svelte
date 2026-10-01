@@ -1,7 +1,7 @@
 <script lang="ts">
+  import { barMotion, type BarMotion } from "$lib/bar-motion.svelte.js";
   import {
     hudTemporalAlert,
-    hudTemporalProgressPercent,
     hudTemporalRemainingMs,
     type HudTemporalValue,
   } from "$lib/hud-temporal.svelte.js";
@@ -47,10 +47,16 @@
       ? formatTimerText(hudTemporalRemainingMs(temporal, temporalNow))
       : valueText,
   );
-  const effectiveProgressPercent = $derived(
+  // Built from the countdown itself, never from the clock: the bar animates
+  // on its own and only restarts when the countdown changes.
+  const progressMotion = $derived<BarMotion>(
     temporal
-      ? hudTemporalProgressPercent(temporal, temporalNow)
-      : progressPercent,
+      ? {
+          kind: "countdown",
+          deadlineMs: temporal.deadlineMs,
+          spanMs: temporal.durationMs,
+        }
+      : { kind: "static", scale: progressPercent / 100 },
   );
   const effectiveAlert = $derived(
     temporal ? hudTemporalAlert(temporal, temporalNow) : alert,
@@ -96,10 +102,7 @@
     <div class="text-buff-decay">
       <div
         class="text-buff-decay-fill"
-        style:transform={`scaleX(${Math.max(
-          0,
-          Math.min(100, effectiveProgressPercent),
-        ) / 100})`}
+        {@attach barMotion(() => progressMotion)}
         style:background={effectiveAlert?.applyToProgress
           ? effectiveAlert.highlightColor
           : progressColor}
@@ -173,7 +176,6 @@
     width: 100%;
     height: 100%;
     transform-origin: left center;
-    transition: transform 100ms linear;
     will-change: transform;
   }
 

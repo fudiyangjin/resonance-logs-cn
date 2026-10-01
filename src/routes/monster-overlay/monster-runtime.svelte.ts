@@ -14,6 +14,13 @@ import {
 } from "$lib/stores/live-topics.svelte";
 import type { EntityId } from "$lib/entity-id";
 import type { TextBuffDisplay } from "../game-overlay/overlay-types";
+import {
+  definedEntries,
+  reuseEntityBuffMap,
+  reuseEntityMap,
+  reuseEntitySet,
+  type EntityBuffMapCache,
+} from "./monster-payload-reuse";
 import type {
   MonsterBossBuffSection,
   MonsterDragState,
@@ -37,47 +44,50 @@ function buffsByBaseId(buffs: BuffUpdateState[]) {
   return result;
 }
 
-function definedEntries<T>(
-  source: Partial<Record<string, T>>,
-): Array<[EntityId, T]> {
-  const result: Array<[EntityId, T]> = [];
-  for (const [entityUuid, value] of Object.entries(source)) {
-    if (value !== undefined) result.push([entityUuid, value]);
-  }
-  return result;
-}
+// Previous views, reused while a payload leaves their content unchanged.
+let playerNameCache: Map<EntityId, string> | null = null;
+let monsterIdCache: Map<EntityId, number> | null = null;
+let bossBuffCache: EntityBuffMapCache | null = null;
+let teammateBuffCache: EntityBuffMapCache | null = null;
+let deadTeammateCache: ReadonlySet<EntityId> | null = null;
 
-function entityBuffMap(source: Partial<Record<string, BuffUpdateState[]>>) {
-  return new Map<EntityId, Map<number, BuffUpdateState>>(
-    definedEntries(source).map(([entityUuid, buffs]) => [
-      entityUuid,
-      buffsByBaseId(buffs),
-    ]),
+const _playerNameCache = $derived.by(() => {
+  playerNameCache = reuseEntityMap(
+    playerNameCache,
+    liveMonsterStore.data?.playerNames ?? {},
   );
-}
-
-const _playerNameCache = $derived.by(
-  () =>
-    new Map<EntityId, string>(
-      definedEntries(liveMonsterStore.data?.playerNames ?? {}),
-    ),
-);
-const _monsterIdCache = $derived.by(
-  () =>
-    new Map<EntityId, number>(
-      definedEntries(liveMonsterStore.data?.monsterIds ?? {}),
-    ),
-);
-const _bossBuffMap = $derived.by(() =>
-  entityBuffMap(liveMonsterStore.data?.bossBuffs ?? {}),
-);
-const _teammateBuffMap = $derived.by(() =>
-  entityBuffMap(liveMonsterStore.data?.teammateBuffs ?? {}),
-);
-const _deadTeammateSet = $derived.by(
-  (): ReadonlySet<EntityId> =>
-    new Set(liveMonsterStore.data?.deadTeammates ?? []),
-);
+  return playerNameCache;
+});
+const _monsterIdCache = $derived.by(() => {
+  monsterIdCache = reuseEntityMap(
+    monsterIdCache,
+    liveMonsterStore.data?.monsterIds ?? {},
+  );
+  return monsterIdCache;
+});
+const _bossBuffMap = $derived.by(() => {
+  bossBuffCache = reuseEntityBuffMap(
+    bossBuffCache,
+    liveMonsterStore.data?.bossBuffs ?? {},
+    buffsByBaseId,
+  );
+  return bossBuffCache.value;
+});
+const _teammateBuffMap = $derived.by(() => {
+  teammateBuffCache = reuseEntityBuffMap(
+    teammateBuffCache,
+    liveMonsterStore.data?.teammateBuffs ?? {},
+    buffsByBaseId,
+  );
+  return teammateBuffCache.value;
+});
+const _deadTeammateSet = $derived.by((): ReadonlySet<EntityId> => {
+  deadTeammateCache = reuseEntitySet(
+    deadTeammateCache,
+    liveMonsterStore.data?.deadTeammates ?? [],
+  );
+  return deadTeammateCache;
+});
 const _bossHateMap = $derived.by(
   () =>
     new Map<EntityId, HateEntry[]>(
@@ -118,25 +128,31 @@ const _entityDurationTrackCache = $derived.by(
     liveMonsterStore.data?.entityDurationTracks ?? [],
 );
 
-export const monsterRuntime = $state({
-  currentWindow: null as ReturnType<typeof getCurrentWindow> | null,
-  cleanup: null as (() => void) | null,
-  isInitialized: false,
-  isMounted: false,
-  bossSections: [] as MonsterBossBuffSection[],
-  teammateColumns: [] as MonsterTeammateBuffColumn[],
-  teammateRows: [] as MonsterTeammateBuffRow[],
-  hateSections: [] as MonsterHateSection[],
-  stunSections: [] as MonsterStunSection[],
-  hpSections: [] as MonsterHpSection[],
-  fantasyRows: [] as MonsterFantasyRow[],
-  dbmRows: [] as TextBuffDisplay[],
-  entityDurationRows: [] as TextBuffDisplay[],
-  isEditing: false,
-  dragState: null as MonsterDragState | null,
-  resizeState: null as MonsterResizeState | null,
-  layoutPreviewRafId: null as number | null,
-});
+// Display projections are replaced wholesale, never mutated. Raw state keeps
+// the assigned instance, so `assignRuntime`'s identity check holds and a
+// frame that leaves a projection unchanged does not re-render its panel (a
+// deep `$state` re-proxies every assignment into a new, unequal value).
+class MonsterRuntimeState {
+  currentWindow = $state<ReturnType<typeof getCurrentWindow> | null>(null);
+  cleanup = $state<(() => void) | null>(null);
+  isInitialized = $state(false);
+  isMounted = $state(false);
+  bossSections = $state.raw<MonsterBossBuffSection[]>([]);
+  teammateColumns = $state.raw<MonsterTeammateBuffColumn[]>([]);
+  teammateRows = $state.raw<MonsterTeammateBuffRow[]>([]);
+  hateSections = $state.raw<MonsterHateSection[]>([]);
+  stunSections = $state.raw<MonsterStunSection[]>([]);
+  hpSections = $state.raw<MonsterHpSection[]>([]);
+  fantasyRows = $state.raw<MonsterFantasyRow[]>([]);
+  dbmRows = $state.raw<TextBuffDisplay[]>([]);
+  entityDurationRows = $state.raw<TextBuffDisplay[]>([]);
+  isEditing = $state(false);
+  dragState = $state<MonsterDragState | null>(null);
+  resizeState = $state<MonsterResizeState | null>(null);
+  layoutPreviewRafId = $state<number | null>(null);
+}
+
+export const monsterRuntime = new MonsterRuntimeState();
 
 export function monsterPlayerNames() {
   return _playerNameCache;
