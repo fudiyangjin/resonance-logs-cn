@@ -37,7 +37,7 @@
 | **{{ui:settings.live.trainingWindow}}** | 从你命中木桩起计时，到点结束本轮，默认 3:03（183 秒） |
 | **{{ui:settings.live.trainingLockPolicy}}** | **{{ui:settings.live.trainingLockPolicy.eliteDummies}}**：只认训练场的精英木桩；**{{ui:settings.live.trainingLockPolicy.firstMonster}}**：锁定你（含召唤物）打中的下一只怪物，适合在野外或副本中测试 |
 
-打桩流程见 [例：用打桩模式测一轮 3 分钟输出](./README.md#例用打桩模式测一轮-3-分钟输出)。
+打桩流程见 [例：用打桩模式测一轮 3 分钟输出](./examples/dummy-rotation.md)。
 
 ## 历史
 
@@ -49,3 +49,7 @@
 | **{{ui:settings.history.timeline.curveH}}** | DPS 曲线区域的高度 |
 | **{{ui:settings.history.timeline.instantWindow}}** | 瞬时 DPS 曲线统计最近多少秒 |
 | **{{ui:settings.history.fantasyCastIcons}}** | 在玩家名字旁显示整场最近释放的 2 种幻想 |
+
+## 例
+
+- [修改表格里的展示列](./examples/table-columns.md)

@@ -32,4 +32,4 @@ Boss DBM automatically shows Boss casts and phase skills, with no monitor entrie
 
 ### How do I see how much time a summon has left?
 
-Use [Entity Duration](../features/monster/entity-duration.md). Common summons have presets, such as the [Scythe Cart](../features/monster/entity-duration.md#example-show-the-scythe-carts-remaining-time).
+Use [Entity Duration](../features/monster/entity-duration.md). Common summons have presets, such as the [Scythe Cart](../features/monster/examples/scythe-cart.md).

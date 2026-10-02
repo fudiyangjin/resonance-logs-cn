@@ -40,14 +40,14 @@
 
 | 場所 | 使えるイベント | 例 |
 | --- | --- | --- |
-| [ライブモニター · Buff](../monitor/buff.md) | 獲得時 / 残り x 秒 / 終了時 | [ティナの CD が戻ったら音声で知らせる](../monitor/buff.md#例ティナの-cd-が戻ったら音声で知らせる) |
+| [ライブモニター · Buff](../monitor/buff.md) | 獲得時 / 残り x 秒 / 終了時 | [ティナの CD が戻ったら音声で知らせる](../monitor/examples/tina-cd.md) |
 | [ライブモニター · スキル CD](../monitor/skill-cd.md) | 発動時 / 完了時 / 完了 x 秒前 | — |
 | [ライブモニター · カスタムパネルのカウンター](../monitor/custom-panel.md) | 目標達成時 | — |
-| [モンスターモニター · Buff](../monster/buff.md) | 獲得時 / 残り x 秒 / 終了時 | [自分が付与した脆弱を監視する](../monster/buff.md#例自分が付与した脆弱を監視し切れる前に知らせる) |
-| [モンスターモニター · Boss DBM](../monster/boss-dbm.md) | 発生時 | [Boss スキルに別名を付けて音声で予告する](../monster/boss-dbm.md#例boss-スキルに別名を付けて音声で予告する) · [自分の効果音で Boss の大技を知らせる](./voices.md#例自分の効果音で-boss-の大技を知らせる) |
-| [モンスターモニター · エンティティ持続時間](../monster/entity-duration.md) | 出現時 / 残り x 秒 / 消滅時 | [鎌車の残り時間を表示する](../monster/entity-duration.md#例鎌車の残り時間を表示する) |
-| [ダンジョンギミック · ギミック音声読み上げ](../minimap/README.md#ギミック音声読み上げ) | 各ダンジョンで対応済みのギミック | [レイド初攻略前のミニマップ設定](../minimap/README.md#例レイド初攻略前のミニマップ設定) |
-| [{{ui:voice.tabs.alerts}}](./playback.md#マッチ通知) | マッチ成立 / 準備確認 / ダンジョン投票 | [マッチ成立を聞き逃さない](./playback.md#例放置でマッチング待ちしているときにマッチ成立を聞き逃さない) |
+| [モンスターモニター · Buff](../monster/buff.md) | 獲得時 / 残り x 秒 / 終了時 | [自分が付与した脆弱を監視する](../monster/examples/vulnerability.md) |
+| [モンスターモニター · Boss DBM](../monster/boss-dbm.md) | 発生時 | [Boss スキルに別名を付けて音声で予告する](../monster/examples/boss-alias.md) · [自分の効果音で Boss の大技を知らせる](./examples/custom-sfx.md) |
+| [モンスターモニター · エンティティ持続時間](../monster/entity-duration.md) | 出現時 / 残り x 秒 / 消滅時 | [鎌車の残り時間を表示する](../monster/examples/scythe-cart.md) |
+| [ダンジョンギミック · ギミック音声読み上げ](../minimap/README.md#ギミック音声読み上げ) | 各ダンジョンで対応済みのギミック | [レイド初攻略前のミニマップ設定](../minimap/examples/raid-setup.md) |
+| [{{ui:voice.tabs.alerts}}](./playback.md#マッチ通知) | マッチ成立 / 準備確認 / ダンジョン投票 | [マッチ成立を聞き逃さない](./examples/match-found.md) |
 
 注意点：
 
@@ -77,3 +77,7 @@
 | ダンジョンギミックページに読み上げ可能な項目がない | 現在のダンジョンはまだギミック音声に対応していません |
 | `${阶数}` を書いたのに階級が読み上げられない | [幻想階級プレースホルダー](./playback.md#幻想階級プレースホルダー) を参照してください |
 | 微調整音色が使えない | [方法 3：微調整音色（上級）](./voices.md#方法-3微調整音色上級) を参照してください |
+
+## 例
+
+- [Buff に音声読み上げを設定して一括生成する](./examples/buff-voice.md)

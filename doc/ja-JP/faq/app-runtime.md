@@ -49,7 +49,7 @@ WinDivert はネットワークドライバを読み込むため、一部のセ�
 
 ### 自分の設定を他の人に共有するには？
 
-**{{ui:routes.tools.loadouts}}** で **{{ui:loadout.page.exportButton}}** し、得られた JSON ファイルを相手に送ります。相手は **{{ui:loadout.page.importButton}}** で取り込めば OK です。[例：ロードアウトを味方に共有する](../features/app/loadouts.md#例ロードアウトをパーティーメンバーと共有する) を参照してください。
+**{{ui:routes.tools.loadouts}}** で **{{ui:loadout.page.exportButton}}** し、得られた JSON ファイルを相手に送ります。相手は **{{ui:loadout.page.importButton}}** で取り込めば OK です。[例：ロードアウトを味方に共有する](../features/app/examples/share-loadout.md) を参照してください。
 
 外観、ショートカット、キャプチャの設定はこの PC 固有の設定で、ロードアウトと一緒には共有されません。
 

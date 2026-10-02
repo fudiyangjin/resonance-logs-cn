@@ -8,7 +8,7 @@ The game only pushes data that changes, so if you open the app mid-session it ca
 
 ### How do I show factor energy and season nodes?
 
-You don't need to configure counters manually. In **{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.customPanel}}**, click **{{ui:skillMonitor.customPanel.newFactor}}**. The app creates a factor config area or season node area for the current season and automatically shows the factors and nodes you have equipped. See [Factor Config Area](../features/monitor/custom-panel.md#factor-zone) and [Example: Show factor energy and season nodes automatically](../features/monitor/custom-panel.md#example-automatically-show-factor-energy-and-season-nodes).
+You don't need to configure counters manually. In **{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.customPanel}}**, click **{{ui:skillMonitor.customPanel.newFactor}}**. The app creates a factor config area or season node area for the current season and automatically shows the factors and nodes you have equipped. See [Factor Config Area](../features/monitor/custom-panel.md#factor-zone) and [Example: Show factor energy and season nodes automatically](../features/monitor/examples/factor-energy.md).
 
 ### I can't make sense of a Buff's name — can I change it?
 
@@ -30,4 +30,4 @@ Use [Category Quick Monitor](../features/monitor/buff.md#category-quick-watch).
 
 ### After changing class, the overlay still shows the previous class?
 
-The overlay content follows your current [loadout](../features/app/loadouts.md). Switch loadouts, or turn on **{{ui:loadout.autoSwitch.toggle}}**; see [Example: Switch loadouts automatically when changing spec](../features/app/loadouts.md#example-switch-loadouts-automatically-when-changing-spec).
+The overlay content follows your current [loadout](../features/app/loadouts.md). Switch loadouts, or turn on **{{ui:loadout.autoSwitch.toggle}}**; see [Example: Switch loadouts automatically when changing spec](../features/app/examples/spec-loadout.md).

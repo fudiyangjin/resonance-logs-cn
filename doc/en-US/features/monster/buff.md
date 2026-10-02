@@ -45,33 +45,5 @@ For player-side buffs and fantasy CDs, see [Live Monitor · Buff Monitor](../mon
 
 ## Examples
 
-### Example: Watch the vulnerability you applied and get alerted before it drops
-
-**Scenario**: You bring Poison Hive and are responsible for keeping "Venom Vulnerability (Poison Hive)" on the Boss. You want to see its remaining time in the overlay, get a highlight when it is about to end, and hear a voice reminder to reapply it when it drops.
-
-#### Step 1: Add it as self-applied
-
-1. Open **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.buff}}**.
-2. Choose **{{ui:monsterMonitor.buffSearch.self}}**, search for **Venom Vulnerability (Poison Hive)** (ID 2110099) and add it.
-
-Self-applied is the right choice because you only care about your own instance; if two people in the party bring Poison Hive, with global you couldn't tell whose it is.
-
-#### Step 2: Set an alert
-
-In **{{ui:monsterMonitor.alert.title}}**, add an alert for "Venom Vulnerability (Poison Hive)": highlight in red when ≤ 3 seconds remain, with blinking on.
-
-#### Step 3: Voice reminder on expiry
-
-In **{{ui:monsterMonitor.buffVoice.title}}**, add "Venom Vulnerability (Poison Hive)", check **on expiry**, and set the text to "Reapply vulnerability". Make sure [Voice announcements](../voice/README.md) are on and the audio has been generated.
-
-#### Step 4: Open the overlay and position it
-
-1. Make sure **{{ui:monsterMonitor.enabled}}** is on, then click **{{ui:monsterMonitor.actions.toggleOverlay}}**.
-2. **{{ui:monsterMonitor.actions.editLayout}}**, drag the monster Buff area near the Boss HP bar.
-
-#### Check it
-
-Apply Poison Hive to a dummy in the training ground once. The dummy must be your **current attack target**, otherwise the overlay won't show its Buffs.
-
-> [!TIP]
-> Not sure what your Debuff is called? Turn on **{{ui:monsterMonitor.buffGroups.self.monitorAll}}** first, hit a dummy and see what shows up in the overlay, then add exactly that.
+- [Watch the vulnerability you applied and get alerted before it drops](./examples/vulnerability.md)
+- [Monitor Lorola fantasy buffs and stacks](./examples/lorola.md)

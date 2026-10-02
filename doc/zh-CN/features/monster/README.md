@@ -33,13 +33,13 @@
 
 | 标签 | 文档 | 例 |
 | --- | --- | --- |
-| **{{ui:monsterMonitor.tabs.buff}}** | [目标 Buff](./buff.md) | [盯住自己挂的易伤，快掉时提醒](./buff.md#例盯住自己挂的易伤快掉时提醒) |
+| **{{ui:monsterMonitor.tabs.buff}}** | [目标 Buff](./buff.md) | [盯住自己挂的易伤，快掉时提醒](./examples/vulnerability.md) · [监听罗罗拉幻想 Buff 与叠层](./examples/lorola.md) |
 | **{{ui:monsterMonitor.tabs.teammate}}** | [队友 Buff](./teammate.md) | — |
 | **{{ui:monsterMonitor.tabs.teammateCd}}** | [队友 CD](./teammate-cd.md) | — |
 | **{{ui:monsterMonitor.tabs.hate}}** | [仇恨列表](./hate.md) | — |
 | **{{ui:monsterMonitor.tabs.stun}}** / **{{ui:monsterMonitor.tabs.hp}}** / **{{ui:monsterMonitor.tabs.fantasy}}** | [韧性、生命与队友幻想](./status.md) | — |
-| **{{ui:monsterMonitor.tabs.bossDbm}}** | [Boss DBM](./boss-dbm.md) | [给 Boss 技能起别名并语音预警](./boss-dbm.md#例给-boss-技能起别名并语音预警) |
-| **{{ui:monsterMonitor.tabs.entityDuration}}** | [实体持续](./entity-duration.md) | [显示镰车剩余时间](./entity-duration.md#例显示镰车剩余时间) |
+| **{{ui:monsterMonitor.tabs.bossDbm}}** | [Boss DBM](./boss-dbm.md) | [给 Boss 技能起别名并语音预警](./examples/boss-alias.md) |
+| **{{ui:monsterMonitor.tabs.entityDuration}}** | [实体持续](./entity-duration.md) | [显示镰车剩余时间](./examples/scythe-cart.md) |
 | **{{ui:monsterMonitor.tabs.overlay}}** | [启用窗口](./overlay.md) | — |
 
 ## 和实时监控有什么不同

@@ -36,7 +36,7 @@
 - **{{ui:themes.section.customColorTheme}}**：逐项修改背景、**背景（实时）**、文字、按钮、边框、表格文字、K/M/% 后缀、提示框等颜色，每一项都支持透明度。
 - **{{ui:themes.section.classSpecColors}}**：表格中按职业 / 专精着色的颜色。
 
-把 **背景（实时）** 的透明度调低就能得到半透明窗口，见 [例：透明的极简 DPS 窗口](#例透明的极简-dps-窗口)。
+把 **背景（实时）** 的透明度调低就能得到半透明窗口，见 [例：透明的极简 DPS 窗口](./examples/transparent-window.md)。
 
 ![调整背景透明度](../../../shared/img/faq/faq_2.png)
 
@@ -54,7 +54,7 @@
 
 ## 紧凑模式
 
-开启 **{{ui:themes.compact.enable}}** 后，玩家表格和技能表格都会隐藏表头，每行只显示总量（秒伤）与占比，并按总量降序排列。DPS 面板括号中可以选择显示 **{{ui:themes.compact.option.dps}}** 还是 **{{ui:themes.compact.option.tdps}}**。
+开启 **{{ui:themes.compact.enable}}** 后，玩家表格会隐藏表头，每行只显示总量（秒伤）与占比，并按总量降序排列；若勾选 **{{ui:themes.compact.includeDetails}}**，点进玩家后的技能明细和承伤明细也会以紧凑样式展示。DPS 面板括号中可以选择显示 **{{ui:themes.compact.option.dps}}** 还是 **{{ui:themes.compact.option.tdps}}**。
 
 ![紧凑模式](../../../shared/img/dps/dps_5.png)
 
@@ -79,35 +79,5 @@
 
 ## 例
 
-### 例：透明的极简 DPS 窗口
-
-**场景**：你只想在屏幕角落看到一个半透明的小窗口，显示每个人的秒伤和占比，不要标题栏和表头，也不要挡住游戏操作。
-
-#### 第 1 步：套用尺寸预设
-
-**{{ui:routes.tools.dps}} → {{ui:routes.dps.themes}} → {{ui:themes.tabs.presets}}**，尺寸选择 **{{ui:themes.preset.size.compact.name}}**：去掉内边距和标题栏，只剩表格。
-
-#### 第 2 步：开启紧凑模式
-
-**{{ui:themes.tabs.general}} → {{ui:themes.compact.title}}**，开启 **{{ui:themes.compact.enable}}**，括号类型选 **{{ui:themes.compact.option.tdps}}**。每行只剩名字、真秒伤和占比。
-
-![紧凑模式](../../../shared/img/dps/dps_5.png)
-
-#### 第 3 步：让背景变透明
-
-**{{ui:themes.tabs.general}} → {{ui:themes.section.colorThemes}} → {{ui:themes.section.customColorTheme}}**，找到 **背景（实时）**，把透明度调到 30%～50%。
-
-![调整背景透明度](../../../shared/img/faq/faq_2.png)
-
-如果文字在亮色场景中看不清，可以适当提高 **{{ui:themes.table.rowGlowOpacity}}**，让彩色条更实。
-
-#### 第 4 步：开启点击穿透
-
-**{{ui:themes.tabs.live}} → 实时窗口显示设置 → {{ui:themes.liveDisplay.clickthrough}}**。之后鼠标会直接穿过窗口。
-
-> [!IMPORTANT]
-> 开启点击穿透后就无法用鼠标拖动或重置窗口了。建议先在 [应用设置 · 快捷键](../app/README.md#快捷键) 中绑定「切换点击穿透」和「重置战斗」，需要时用快捷键操作。
-
-#### 想恢复原样
-
-在 **{{ui:themes.tabs.presets}}** 中重新选择 **{{ui:themes.preset.size.medium.name}}** 和 **{{ui:themes.preset.color.dark.name}}** 即可。
+- [透明的极简 DPS 窗口](./examples/transparent-window.md)
+- [标题栏自由布局与死亡回放](./examples/header-death.md)

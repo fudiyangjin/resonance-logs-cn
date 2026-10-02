@@ -8,7 +8,7 @@
 
 ### 因子能量、赛季节点怎么显示？
 
-不需要手动配置计数器。在 **{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.customPanel}}** 中点 **{{ui:skillMonitor.customPanel.newFactor}}**，应用会按当前赛季自动创建因子配置区或赛季节点区，自动显示你携带的因子与节点。见 [因子配置区](../features/monitor/custom-panel.md#因子配置区) 和 [例：自动显示因子能量与赛季节点](../features/monitor/custom-panel.md#例自动显示因子能量与赛季节点)。
+不需要手动配置计数器。在 **{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.customPanel}}** 中点 **{{ui:skillMonitor.customPanel.newFactor}}**，应用会按当前赛季自动创建因子配置区或赛季节点区，自动显示你携带的因子与节点。见 [因子配置区](../features/monitor/custom-panel.md#因子配置区) 和 [例：自动显示因子能量与赛季节点](../features/monitor/examples/factor-energy.md)。
 
 ### Buff 名字看不懂，能改吗？
 
@@ -30,4 +30,4 @@
 
 ### 换职业后浮窗内容还是上一个职业的？
 
-浮窗内容跟随当前 [监控方案](../features/app/loadouts.md)。切换方案，或开启 **{{ui:loadout.autoSwitch.toggle}}**，见 [例：切专精时自动换方案](../features/app/loadouts.md#例切专精时自动换方案)。
+浮窗内容跟随当前 [监控方案](../features/app/loadouts.md)。切换方案，或开启 **{{ui:loadout.autoSwitch.toggle}}**，见 [例：切专精时自动换方案](../features/app/examples/spec-loadout.md)。

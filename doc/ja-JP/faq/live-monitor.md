@@ -8,7 +8,7 @@
 
 ### ファクターエネルギーやシーズンノードを表示するには？
 
-カウンターを手動で設定する必要はありません。**{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.customPanel}}** で **{{ui:skillMonitor.customPanel.newFactor}}** をクリックすると、現在のシーズンに合わせてファクター設定エリアまたはシーズンノードエリアが自動作成され、装備しているファクターとノードが自動で表示されます。[ファクター設定エリア](../features/monitor/custom-panel.md#因子設定エリア) と [例：ファクターエネルギーとシーズンノードを自動表示する](../features/monitor/custom-panel.md#例因子エネルギーとシーズンノードを自動表示する) を参照してください。
+カウンターを手動で設定する必要はありません。**{{ui:routes.tools.skillMonitor}} → {{ui:skillMonitor.tabs.customPanel}}** で **{{ui:skillMonitor.customPanel.newFactor}}** をクリックすると、現在のシーズンに合わせてファクター設定エリアまたはシーズンノードエリアが自動作成され、装備しているファクターとノードが自動で表示されます。[ファクター設定エリア](../features/monitor/custom-panel.md#因子設定エリア) と [例：ファクターエネルギーとシーズンノードを自動表示する](../features/monitor/examples/factor-energy.md) を参照してください。
 
 ### Buff の名前がわかりにくい。変更できる？
 
@@ -30,4 +30,4 @@
 
 ### 職業を変えたのに、オーバーレイの内容が前の職業のまま？
 
-オーバーレイの内容は現在の [ロードアウト](../features/app/loadouts.md) に従います。ロードアウトを切り替えるか、**{{ui:loadout.autoSwitch.toggle}}** をオンにしてください。[例：スペック切り替え時にロードアウトを自動切替](../features/app/loadouts.md#例スペック切り替え時にロードアウトを自動で切り替える) を参照してください。
+オーバーレイの内容は現在の [ロードアウト](../features/app/loadouts.md) に従います。ロードアウトを切り替えるか、**{{ui:loadout.autoSwitch.toggle}}** をオンにしてください。[例：スペック切り替え時にロードアウトを自動切替](../features/app/examples/spec-loadout.md) を参照してください。

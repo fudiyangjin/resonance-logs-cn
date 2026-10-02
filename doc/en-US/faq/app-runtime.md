@@ -49,7 +49,7 @@ No. Both in-app [automatic updates](../features/app/update.md#auto-update) and i
 
 ### How do I share my configuration with someone else?
 
-In **{{ui:routes.tools.loadouts}}**, use **{{ui:loadout.page.exportButton}}** and send the resulting JSON file to the other person; they import it with **{{ui:loadout.page.importButton}}**. See [Example: Share a loadout with your teammates](../features/app/loadouts.md#example-share-a-loadout-with-teammates).
+In **{{ui:routes.tools.loadouts}}**, use **{{ui:loadout.page.exportButton}}** and send the resulting JSON file to the other person; they import it with **{{ui:loadout.page.importButton}}**. See [Example: Share a loadout with your teammates](../features/app/examples/share-loadout.md).
 
 Appearance, shortcut and packet capture settings are local to your machine and are not shared with a loadout.
 

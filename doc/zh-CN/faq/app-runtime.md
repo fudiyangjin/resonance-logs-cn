@@ -49,7 +49,7 @@ WinDivert 会加载网络驱动，部分安全软件会将其当作风险行为�
 
 ### 如何把我的配置分享给别人？
 
-在 **{{ui:routes.tools.loadouts}}** 中 **{{ui:loadout.page.exportButton}}**，把得到的 JSON 文件发给对方，对方用 **{{ui:loadout.page.importButton}}** 导入即可，见 [例：把方案分享给队友](../features/app/loadouts.md#例把方案分享给队友)。
+在 **{{ui:routes.tools.loadouts}}** 中 **{{ui:loadout.page.exportButton}}**，把得到的 JSON 文件发给对方，对方用 **{{ui:loadout.page.importButton}}** 导入即可，见 [例：把方案分享给队友](../features/app/examples/share-loadout.md)。
 
 外观、快捷键和抓包设置属于本机设置，不随方案分享。
 

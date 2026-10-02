@@ -37,7 +37,7 @@
 | **{{ui:settings.live.trainingWindow}}** | ダミーに命中した時点から計測し、時間になるとそのラウンドを終了。既定は 3:03（183 秒） |
 | **{{ui:settings.live.trainingLockPolicy}}** | **{{ui:settings.live.trainingLockPolicy.eliteDummies}}**：訓練場のエリートダミーのみを対象；**{{ui:settings.live.trainingLockPolicy.firstMonster}}**：自分（召喚物を含む）が次に命中させたモンスターをロック。フィールドやダンジョンでのテストに便利 |
 
-訓練用ダミーの流れは [例：訓練用ダミーモードで 3 分間の火力を測る](./README.md#例訓練用ダミーモードで-3-分間の火力を測る) を参照してください。
+訓練用ダミーの流れは [例：訓練用ダミーモードで 3 分間の火力を測る](./examples/dummy-rotation.md) を参照してください。
 
 ## 履歴
 
@@ -49,3 +49,7 @@
 | **{{ui:settings.history.timeline.curveH}}** | DPS 曲線エリアの高さ |
 | **{{ui:settings.history.timeline.instantWindow}}** | 瞬間 DPS 曲線が直近何秒を集計するか |
 | **{{ui:settings.history.fantasyCastIcons}}** | 戦闘全体で最近発動した幻想 2 種をプレイヤー名の横に表示 |
+
+## 例
+
+- [テーブルの表示列をカスタマイズする](./examples/table-columns.md)

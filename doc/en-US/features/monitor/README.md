@@ -28,11 +28,11 @@ These are visible at the top of the page on every tab:
 | Tab | Shown in the overlay | Docs | Examples |
 | --- | --- | --- | --- |
 | **{{ui:skillMonitor.tabs.skillCd}}** | Skill cooldown icons | [Skill CD](./skill-cd.md) | — |
-| **{{ui:skillMonitor.tabs.buff}}** | Your own Buff icons or progress bars | [Buff Monitor](./buff.md) | [Voice reminder when Tina's CD is ready](./buff.md#example-voice-reminder-when-tinas-cd-is-ready) |
+| **{{ui:skillMonitor.tabs.buff}}** | Your own Buff icons or progress bars | [Buff Monitor](./buff.md) | [Voice reminder when Tina's CD is ready](./examples/tina-cd.md) · [Track 3-stack buff](./examples/attribute-symphony.md) |
 | **{{ui:skillMonitor.tabs.panelAttr}}** | Character attribute values | [Character Panel](./panel-attr.md) | — |
-| **{{ui:skillMonitor.tabs.customPanel}}** | Factor zone, season node zone, and freely combined Buffs and counters | [Custom Monitor](./custom-panel.md) | [Show factor energy and season nodes](./custom-panel.md#example-automatically-show-factor-energy-and-season-nodes) · [Track Absolute Luck with a preset counter](./custom-panel.md#example-track-flamehorns-absolute-luck-with-a-preset-counter) |
+| **{{ui:skillMonitor.tabs.customPanel}}** | Factor zone, season node zone, and freely combined Buffs and counters | [Custom Monitor](./custom-panel.md) | [Show factor energy and season nodes](./examples/factor-energy.md) · [Track Absolute Luck with a preset counter](./examples/preset-counter.md) |
 | **{{ui:skillMonitor.tabs.shieldDetail}}** | HP and shield bars | [HP/Shield Area](./shield.md) | — |
-| **{{ui:skillMonitor.tabs.buffCoverage}}** | Boost coverage | [Buff Coverage](./buff-coverage.md) | [Review your team's boost coverage](./buff-coverage.md#example-review-your-teams-boost-coverage) |
+| **{{ui:skillMonitor.tabs.buffCoverage}}** | Boost coverage | [Buff Coverage](./buff-coverage.md) | [Review your team's boost coverage](./examples/buff-coverage.md) |
 | **{{ui:skillMonitor.tabs.overlay}}** | Controls whether each of the areas above is shown | [Enable Window & Layout](./overlay.md) | — |
 
 All settings are saved in the **skill monitor profile** of the current loadout, so switching loadouts swaps the whole setup at once. See [Loadouts](../app/loadouts.md).

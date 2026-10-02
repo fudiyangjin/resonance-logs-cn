@@ -46,47 +46,20 @@
 - **试听**按 5 阶示例播放；实战中按当次识别到的阶数选择音频。
 - 改完文案后记得到 **{{ui:voice.tabs.bindings}}** 中 **{{ui:voice.bindings.generateMissing}}**。
 
-浮窗中能识别来源幻想阶数的 Buff，也会显示为「名称 | n阶」，与是否配置语音无关。完整示例见 [例：蒂娜 CD 转好时语音提醒](../monitor/buff.md#例蒂娜-cd-转好时语音提醒)。
+浮窗中能识别来源幻想阶数的 Buff，也会显示为「名称 | n阶」，与是否配置语音无关。完整示例见 [例：蒂娜 CD 转好时语音提醒](../monitor/examples/tina-cd.md)。
 
 ## 匹配提醒
 
 **{{ui:voice.tabs.alerts}}** 可以在切出游戏时提醒你排本进度，三种通知可以分别开启：
 
-| 通知 | 何时触发 |
-| --- | --- |
-| **{{ui:voice.alerts.matchReady.title}}** | 匹配成功，需要你点确认 |
-| **{{ui:voice.alerts.readyCheck.title}}** | 队长发起准备确认 |
-| **{{ui:voice.alerts.teamVote.title}}** | 队伍发起进本投票 |
+| 通知 | 何时触发 | 预置播报内容 |
+| --- | --- | --- |
+| **{{ui:voice.alerts.matchReady.title}}** | 匹配成功，需要你点确认 | {{ui:voice.alerts.autoText.matchReady}} |
+| **{{ui:voice.alerts.readyCheck.title}}** | 队长发起准备确认 | {{ui:voice.alerts.autoText.readyCheck}} |
+| **{{ui:voice.alerts.teamVote.title}}** | 队伍发起进本投票 | {{ui:voice.alerts.autoText.teamVote}} |
 
-每种通知的文案可以用默认的（如「{{ui:voice.alerts.autoText.matchReady}}」），也可以自定义或引用短句。匹配提醒同样需要先打开 **{{ui:voice.overview.enabled}}**。
+应用已提前预置了这三条提醒的预置音频，默认跟随应用语言直接播放，无需安装模型或单独生成音频，开箱即用；改为自定义语句后，才需要前往生成语音。匹配提醒同样需要先打开 **{{ui:voice.overview.enabled}}**。
 
 ## 例
 
-### 例：挂机排本时听到匹配成功
-
-**场景**：你在排本，同时切出去看视频。你希望匹配成功、队长发起准备确认或进本投票时，能听到语音提醒，别错过确认。
-
-#### 第 1 步：开启语音
-
-**{{ui:routes.tools.voice}} → {{ui:voice.tabs.overview}}**，打开 **{{ui:voice.overview.enabled}}**，把音量调到切出游戏后也能听清。
-
-#### 第 2 步：开启三种提醒
-
-打开 **{{ui:voice.tabs.alerts}}**，分别开启：
-
-- **{{ui:voice.alerts.matchReady.title}}**
-- **{{ui:voice.alerts.readyCheck.title}}**
-- **{{ui:voice.alerts.teamVote.title}}**
-
-文案可以保持默认，也可以改成更醒目的，比如「快回来确认」。
-
-#### 第 3 步：生成语音
-
-**{{ui:voice.tabs.bindings}}** → **{{ui:voice.bindings.generateMissing}}**。这三条提醒在总览中归入匹配提醒分组。
-
-#### 第 4 步：设置优先级
-
-排本提醒一般发生在战斗之外，不会和战斗播报冲突，保持默认即可。如果你经常在打小怪时排本，可以把它设为 **{{ui:voice.binding.priority.high}}**，避免被其他播报挡住。
-
-> [!NOTE]
-> 提醒依赖游戏推送的网络通知，应用必须保持运行（隐藏到托盘也可以）。
+- [挂机排本时听到匹配成功](./examples/match-found.md)

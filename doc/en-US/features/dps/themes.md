@@ -36,7 +36,7 @@ In **{{ui:themes.tabs.general}} → {{ui:themes.section.colorThemes}}**:
 - **{{ui:themes.section.customColorTheme}}**: edit colors one by one, including background, **Background (Live)**, text, buttons, borders, table text, K/M/% suffixes, and tooltips. Every item supports transparency.
 - **{{ui:themes.section.classSpecColors}}**: the colors used to tint table rows by class / spec.
 
-Lower the transparency of **Background (Live)** to get a semi-transparent window; see [Example: A transparent, minimal DPS window](#example-a-transparent-minimal-dps-window).
+Lower the transparency of **Background (Live)** to get a semi-transparent window; see [Example: A transparent, minimal DPS window](./examples/transparent-window.md).
 
 ![Adjusting background transparency](../../../shared/img/faq/faq_2.png)
 
@@ -54,7 +54,7 @@ Lower the transparency of **Background (Live)** to get a semi-transparent window
 
 ## Compact mode
 
-With **{{ui:themes.compact.enable}}** turned on, both the player table and the skill table hide their headers; each row shows only the total (DPS) and share, sorted by total in descending order. For the DPS panel you can choose whether the value in parentheses shows **{{ui:themes.compact.option.dps}}** or **{{ui:themes.compact.option.tdps}}**.
+With **{{ui:themes.compact.enable}}** turned on, player tables hide headers, showing only total (DPS) and share per row, sorted by total in descending order. You can also turn on **{{ui:themes.compact.includeDetails}}** to apply the same format to detail pages. For the DPS panel you can choose whether the value in parentheses shows **{{ui:themes.compact.option.dps}}** or **{{ui:themes.compact.option.tdps}}**.
 
 ![Compact mode](../../../shared/img/dps/dps_5.png)
 
@@ -79,35 +79,5 @@ When **{{ui:themes.tabs.live}} → Live Window Display Settings → {{ui:themes.
 
 ## Examples
 
-### Example: A transparent, minimal DPS window
-
-**Scenario**: You just want a small semi-transparent window in a corner of the screen showing everyone's DPS and share — no header, no table header, and nothing that gets in the way of playing.
-
-#### Step 1: Apply a size preset
-
-In **{{ui:routes.tools.dps}} → {{ui:routes.dps.themes}} → {{ui:themes.tabs.presets}}**, choose the size **{{ui:themes.preset.size.compact.name}}**: this removes the padding and header, leaving only the table.
-
-#### Step 2: Turn on compact mode
-
-In **{{ui:themes.tabs.general}} → {{ui:themes.compact.title}}**, turn on **{{ui:themes.compact.enable}}** and set the parentheses type to **{{ui:themes.compact.option.tdps}}**. Each row now shows only the name, True DPS, and share.
-
-![Compact mode](../../../shared/img/dps/dps_5.png)
-
-#### Step 3: Make the background transparent
-
-In **{{ui:themes.tabs.general}} → {{ui:themes.section.colorThemes}} → {{ui:themes.section.customColorTheme}}**, find **Background (Live)** and set its transparency to 30%–50%.
-
-![Adjusting background transparency](../../../shared/img/faq/faq_2.png)
-
-If the text is hard to read against bright scenes, raise **{{ui:themes.table.rowGlowOpacity}}** a bit to make the colored bars more solid.
-
-#### Step 4: Turn on clickthrough
-
-Go to **{{ui:themes.tabs.live}} → Live Window Display Settings → {{ui:themes.liveDisplay.clickthrough}}**. From then on, the mouse passes straight through the window.
-
-> [!IMPORTANT]
-> Once clickthrough is on, you can no longer drag or reset the window with the mouse. We recommend binding "Toggle Clickthrough" and "Reset Encounter" in [App Settings · Shortcuts](../app/README.md#shortcuts) first, and using the shortcuts when needed.
-
-#### Restoring the original look
-
-In **{{ui:themes.tabs.presets}}**, select **{{ui:themes.preset.size.medium.name}}** and **{{ui:themes.preset.color.dark.name}}** again.
+- [A transparent, minimal DPS window](./examples/transparent-window.md)
+- [Custom header layout and death replay](./examples/header-death.md)

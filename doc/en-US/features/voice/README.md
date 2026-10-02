@@ -40,14 +40,14 @@ Everywhere you can bind announcements:
 
 | Location | Available events | Examples |
 | --- | --- | --- |
-| [Live Monitor · Buff](../monitor/buff.md) | On gain / x seconds left / On expiry | [Voice reminder when Tina's CD is ready](../monitor/buff.md#example-voice-reminder-when-tinas-cd-is-ready) |
+| [Live Monitor · Buff](../monitor/buff.md) | On gain / x seconds left / On expiry | [Voice reminder when Tina's CD is ready](../monitor/examples/tina-cd.md) |
 | [Live Monitor · Skill CD](../monitor/skill-cd.md) | On cast / On ready / x seconds before ready | — |
 | [Live Monitor · Custom panel counters](../monitor/custom-panel.md) | On reaching target | — |
-| [Monster Monitor · Buff](../monster/buff.md) | On gain / x seconds left / On expiry | [Watch the vulnerability you applied](../monster/buff.md#example-watch-the-vulnerability-you-applied-and-get-alerted-before-it-drops) |
-| [Monster Monitor · Boss DBM](../monster/boss-dbm.md) | On trigger | [Give a Boss skill an alias and a voice warning](../monster/boss-dbm.md#example-give-a-boss-skill-an-alias-and-add-a-voice-warning) · [Warn with your own sound effect](./voices.md#example-warn-about-a-bosss-big-attack-with-your-own-sound-effect) |
-| [Monster Monitor · Entity duration](../monster/entity-duration.md) | On appear / x seconds left / On disappear | [Show the Scythe Cart's remaining time](../monster/entity-duration.md#example-show-the-scythe-carts-remaining-time) |
-| [Dungeon Mechanics · Mechanic voice announcements](../minimap/README.md#mechanic-voice-announcements) | The mechanics supported for each dungeon | [Minimap setup before a raid's first clear](../minimap/README.md#example-minimap-setup-before-a-raids-first-clear) |
-| [{{ui:voice.tabs.alerts}}](./playback.md#match-alerts) | Match found / Ready check / Dungeon vote | [Hear "match found" while queueing AFK](./playback.md#example-hear-match-found-while-queueing-afk) |
+| [Monster Monitor · Buff](../monster/buff.md) | On gain / x seconds left / On expiry | [Watch the vulnerability you applied](../monster/examples/vulnerability.md) |
+| [Monster Monitor · Boss DBM](../monster/boss-dbm.md) | On trigger | [Give a Boss skill an alias and a voice warning](../monster/examples/boss-alias.md) · [Warn with your own sound effect](./examples/custom-sfx.md) |
+| [Monster Monitor · Entity duration](../monster/entity-duration.md) | On appear / x seconds left / On disappear | [Show the Scythe Cart's remaining time](../monster/examples/scythe-cart.md) |
+| [Dungeon Mechanics · Mechanic voice announcements](../minimap/README.md#mechanic-voice-announcements) | The mechanics supported for each dungeon | [Minimap setup before a raid's first clear](../minimap/examples/raid-setup.md) |
+| [{{ui:voice.tabs.alerts}}](./playback.md#match-alerts) | Match found / Ready check / Dungeon vote | [Hear "match found" while queueing AFK](./examples/match-found.md) |
 
 A few things to note:
 
@@ -77,3 +77,7 @@ A few things to note:
 | No announceable items on the Dungeon Mechanics page | Mechanic voice has not been added for the current dungeon yet |
 | Wrote `${remodelLevel}` but the tier isn't announced | See [Fantasy tier placeholder](./playback.md#fantasy-tier-placeholder) |
 | Fine-tuned voice unavailable | See [Method 3: Fine-tuned voice (advanced)](./voices.md#method-3-fine-tuned-voice-advanced) |
+
+## Examples
+
+- [Set up a voice announcement for a buff and generate it](./examples/buff-voice.md)

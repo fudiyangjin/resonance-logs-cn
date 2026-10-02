@@ -36,7 +36,7 @@
 - **{{ui:themes.section.customColorTheme}}**：背景、**背景（ライブ）**、文字、ボタン、枠線、テーブル文字、K/M/% 接尾辞、ツールチップなどの色を項目ごとに変更できます。どの項目も透明度に対応しています。
 - **{{ui:themes.section.classSpecColors}}**：テーブルでクラス / スペックごとに色分けする際の色。
 
-**背景（ライブ）** の透明度を下げると半透明のウィンドウになります。[例：透明なミニマル DPS ウィンドウ](#例透明なミニマル-dps-ウィンドウ) を参照してください。
+**背景（ライブ）** の透明度を下げると半透明のウィンドウになります。[例：透明なミニマル DPS ウィンドウ](./examples/transparent-window.md) を参照してください。
 
 ![背景の透明度を調整](../../../shared/img/faq/faq_2.png)
 
@@ -54,7 +54,7 @@
 
 ## コンパクトモード
 
-**{{ui:themes.compact.enable}}** をオンにすると、プレイヤーテーブルとスキルテーブルの両方でヘッダーが非表示になり、各行には合計（DPS）と割合だけが表示され、合計の降順に並びます。DPS パネルでは、括弧内に **{{ui:themes.compact.option.dps}}** と **{{ui:themes.compact.option.tdps}}** のどちらを表示するかを選べます。
+**{{ui:themes.compact.enable}}** をオンにすると、プレイヤーテーブルでヘッダーが非表示になり、各行には合計（DPS）と割合のみが表示され、合計の降順に並びます。**{{ui:themes.compact.includeDetails}}** をオンにすると詳細ページにも同様に適用されます。DPS パネルでは、括弧内に **{{ui:themes.compact.option.dps}}** と **{{ui:themes.compact.option.tdps}}** のどちらを表示するかを選べます。
 
 ![コンパクトモード](../../../shared/img/dps/dps_5.png)
 
@@ -79,35 +79,5 @@
 
 ## 例
 
-### 例：透明なミニマル DPS ウィンドウ
-
-**シナリオ**：画面の隅に半透明の小さなウィンドウを置き、全員の DPS と割合だけを表示したい。ヘッダーやテーブルヘッダーは不要で、ゲーム操作の邪魔もしてほしくない場合です。
-
-#### ステップ 1：サイズプリセットを適用する
-
-**{{ui:routes.tools.dps}} → {{ui:routes.dps.themes}} → {{ui:themes.tabs.presets}}** で、サイズに **{{ui:themes.preset.size.compact.name}}** を選びます。余白とヘッダーが消え、テーブルだけが残ります。
-
-#### ステップ 2：コンパクトモードをオンにする
-
-**{{ui:themes.tabs.general}} → {{ui:themes.compact.title}}** で **{{ui:themes.compact.enable}}** をオンにし、括弧内の種類に **{{ui:themes.compact.option.tdps}}** を選びます。各行には名前、True DPS、割合だけが表示されます。
-
-![コンパクトモード](../../../shared/img/dps/dps_5.png)
-
-#### ステップ 3：背景を透明にする
-
-**{{ui:themes.tabs.general}} → {{ui:themes.section.colorThemes}} → {{ui:themes.section.customColorTheme}}** で **背景（ライブ）** を見つけ、透明度を 30%～50% に調整します。
-
-![背景の透明度を調整](../../../shared/img/faq/faq_2.png)
-
-明るい場面で文字が見えにくい場合は、**{{ui:themes.table.rowGlowOpacity}}** を少し上げてカラーバーをはっきりさせましょう。
-
-#### ステップ 4：クリックスルーをオンにする
-
-**{{ui:themes.tabs.live}} → ライブウィンドウ表示設定 → {{ui:themes.liveDisplay.clickthrough}}** をオンにします。以降、マウス操作はウィンドウを通り抜けます。
-
-> [!IMPORTANT]
-> クリックスルーをオンにすると、マウスでウィンドウをドラッグしたりリセットしたりできなくなります。先に [アプリ設定 · ショートカット](../app/README.md#ショートカット) で「クリックスルーの切替」と「エンカウントをリセット」を割り当て、必要なときはショートカットで操作することをおすすめします。
-
-#### 元に戻したいとき
-
-**{{ui:themes.tabs.presets}}** で **{{ui:themes.preset.size.medium.name}}** と **{{ui:themes.preset.color.dark.name}}** を選び直すだけです。
+- [透明なミニマル DPS ウィンドウ](./examples/transparent-window.md)
+- [ヘッダーのカスタムレイアウトと死亡リプレイ](./examples/header-death.md)

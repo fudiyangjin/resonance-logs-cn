@@ -32,4 +32,4 @@ Boss DBM 自动显示 Boss 读条和阶段技能，不需要添加监控项；Bu
 
 ### 召唤物的剩余时间怎么看？
 
-用 [实体持续](../features/monster/entity-duration.md)，常见召唤物有预设，例如 [镰车](../features/monster/entity-duration.md#例显示镰车剩余时间)。
+用 [实体持续](../features/monster/entity-duration.md)，常见召唤物有预设，例如 [镰车](../features/monster/examples/scythe-cart.md)。

@@ -27,7 +27,7 @@ Go to **{{ui:routes.tools.dps}} → {{ui:routes.dps.themes}} → {{ui:themes.tab
 
 ![Background opacity](../../shared/img/faq/faq_2.png)
 
-For the full walkthrough, see [Example: A transparent, minimal DPS window](../features/dps/themes.md#example-a-transparent-minimal-dps-window).
+For the full walkthrough, see [Example: A transparent, minimal DPS window](../features/dps/examples/transparent-window.md).
 
 ### The title bar is too crowded — how do I slim it down?
 

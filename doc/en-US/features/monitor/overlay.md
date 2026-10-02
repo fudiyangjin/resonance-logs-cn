@@ -32,6 +32,6 @@ Buff icons (each Buff in individual mode, each group in grouped mode) appear in 
 3. Exit editing when you are done; the overlay goes back to click-through.
 
 > [!TIP]
-> Once you are happy with the layout, you can use the game's own hide-UI feature to put away the game UI and keep only the overlay, placing skill CDs and resources near your character in your peripheral vision. You can bind the hotkey **Minimize/Restore DPS & Overlay Windows** to put away all overlays at once when you need a screenshot or during cutscenes. See [Example: Hide all overlays with one key](../app/README.md#example-adjust-overlays-in-combat-with-shortcuts).
+> Once you are happy with the layout, you can use the game's own hide-UI feature to put away the game UI and keep only the overlay, placing skill CDs and resources near your character in your peripheral vision. You can bind the hotkey **Minimize/Restore DPS & Overlay Windows** to put away all overlays at once when you need a screenshot or during cutscenes. See [Example: Hide all overlays with one key](../app/examples/combat-shortcuts.md).
 
 ![Best practice](../../../shared/img/monitor/buff_4.png)

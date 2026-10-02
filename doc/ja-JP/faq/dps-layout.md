@@ -27,7 +27,7 @@
 
 ![背景の透明度](../../shared/img/faq/faq_2.png)
 
-詳しい手順は [例：透明でミニマルな DPS ウィンドウ](../features/dps/themes.md#例透明なミニマル-dps-ウィンドウ) を参照してください。
+詳しい手順は [例：透明でミニマルな DPS ウィンドウ](../features/dps/examples/transparent-window.md) を参照してください。
 
 ### タイトルバーがごちゃごちゃしている。すっきりさせるには？
 

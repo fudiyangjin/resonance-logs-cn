@@ -40,14 +40,14 @@
 
 | 位置 | 可用事件 | 例 |
 | --- | --- | --- |
-| [实时监控 · Buff](../monitor/buff.md) | 生效时 / 剩 x 秒 / 失效时 | [蒂娜 CD 转好时语音提醒](../monitor/buff.md#例蒂娜-cd-转好时语音提醒) |
+| [实时监控 · Buff](../monitor/buff.md) | 生效时 / 剩 x 秒 / 失效时 | [蒂娜 CD 转好时语音提醒](../monitor/examples/tina-cd.md) |
 | [实时监控 · 技能 CD](../monitor/skill-cd.md) | 释放时 / 就绪时 / 就绪前 x 秒 | — |
 | [实时监控 · 自定义面板计数器](../monitor/custom-panel.md) | 达到目标时 | — |
-| [怪物监控 · Buff](../monster/buff.md) | 生效时 / 剩 x 秒 / 失效时 | [盯住自己挂的易伤，快掉时提醒](../monster/buff.md#例盯住自己挂的易伤快掉时提醒) |
-| [怪物监控 · Boss DBM](../monster/boss-dbm.md) | 触发时 | [给 Boss 技能起别名并语音预警](../monster/boss-dbm.md#例给-boss-技能起别名并语音预警) · [用自己的音效提醒 Boss 大招](./voices.md#例用自己的音效提醒-boss-大招) |
-| [怪物监控 · 实体持续时间](../monster/entity-duration.md) | 出现时 / 剩 x 秒 / 消失时 | [显示镰车剩余时间](../monster/entity-duration.md#例显示镰车剩余时间) |
-| [副本机制 · 机制语音播报](../minimap/README.md#机制语音播报) | 各副本已接入的机制 | [团本开荒前的小地图设置](../minimap/README.md#例团本开荒前的小地图设置) |
-| [{{ui:voice.tabs.alerts}}](./playback.md#匹配提醒) | 匹配成功 / 准备确认 / 进本投票 | [挂机排本时听到匹配成功](./playback.md#例挂机排本时听到匹配成功) |
+| [怪物监控 · Buff](../monster/buff.md) | 生效时 / 剩 x 秒 / 失效时 | [盯住自己挂的易伤，快掉时提醒](../monster/examples/vulnerability.md) |
+| [怪物监控 · Boss DBM](../monster/boss-dbm.md) | 触发时 | [给 Boss 技能起别名并语音预警](../monster/examples/boss-alias.md) · [用自己的音效提醒 Boss 大招](./examples/custom-sfx.md) |
+| [怪物监控 · 实体持续时间](../monster/entity-duration.md) | 出现时 / 剩 x 秒 / 消失时 | [显示镰车剩余时间](../monster/examples/scythe-cart.md) |
+| [副本机制 · 机制语音播报](../minimap/README.md#机制语音播报) | 各副本已接入的机制 | [团本开荒前的小地图设置](../minimap/examples/raid-setup.md) |
+| [{{ui:voice.tabs.alerts}}](./playback.md#匹配提醒) | 匹配成功 / 准备确认 / 进本投票 | [挂机排本时听到匹配成功](./examples/match-found.md) |
 
 注意几点：
 
@@ -77,3 +77,7 @@
 | 副本机制页看不到可播报项 | 当前副本尚未接入机制语音 |
 | 写了 `${阶数}` 但播报没有阶数 | 见 [幻想阶数占位符](./playback.md#幻想阶数占位符) |
 | 微调音色不可用 | 见 [方式三：微调音色（进阶）](./voices.md#方式三微调音色进阶) |
+
+## 例
+
+- [为 Buff 设置语音播报并生成](./examples/buff-voice.md)

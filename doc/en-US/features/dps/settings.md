@@ -37,7 +37,7 @@ Death replay columns are shared between Live and History.
 | **{{ui:settings.live.trainingWindow}}** | Timing starts when you hit the dummy and the round ends when time is up; default 3:03 (183 seconds) |
 | **{{ui:settings.live.trainingLockPolicy}}** | **{{ui:settings.live.trainingLockPolicy.eliteDummies}}**: only the elite dummies at the training ground count; **{{ui:settings.live.trainingLockPolicy.firstMonster}}**: locks onto the next monster you (including your summons) hit, suitable for testing in the open world or in dungeons |
 
-For the training dummy workflow, see [Example: Test a 3-minute rotation with training dummy mode](./README.md#example-test-a-3-minute-rotation-with-training-dummy-mode).
+For the training dummy workflow, see [Example: Test a 3-minute rotation with training dummy mode](./examples/dummy-rotation.md).
 
 ## History
 
@@ -49,3 +49,7 @@ The History tab has general settings and column settings with the same structure
 | **{{ui:settings.history.timeline.curveH}}** | Height of the DPS curve area |
 | **{{ui:settings.history.timeline.instantWindow}}** | How many recent seconds the instant DPS curve averages over |
 | **{{ui:settings.history.fantasyCastIcons}}** | Show the 2 Fantasies most recently cast during the whole fight next to player names |
+
+## Examples
+
+- [Customize displayed columns in tables](./examples/table-columns.md)

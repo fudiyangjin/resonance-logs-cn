@@ -27,7 +27,7 @@
 
 ![背景透明度](../../shared/img/faq/faq_2.png)
 
-完整做法见 [例：透明的极简 DPS 窗口](../features/dps/themes.md#例透明的极简-dps-窗口)。
+完整做法见 [例：透明的极简 DPS 窗口](../features/dps/examples/transparent-window.md)。
 
 ### 标题栏太挤，怎么精简？
 

@@ -32,4 +32,4 @@ Boss DBM は Boss の詠唱やフェーズスキルを自動で表示し、監�
 
 ### 召喚物の残り時間を見るには？
 
-[エンティティ持続](../features/monster/entity-duration.md) を使います。よくある召喚物にはプリセットがあります（例：[鎌車](../features/monster/entity-duration.md#例鎌車の残り時間を表示する)）。
+[エンティティ持続](../features/monster/entity-duration.md) を使います。よくある召喚物にはプリセットがあります（例：[鎌車](../features/monster/examples/scythe-cart.md)）。
