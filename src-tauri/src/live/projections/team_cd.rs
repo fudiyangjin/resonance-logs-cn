@@ -12,10 +12,13 @@ use std::sync::Arc;
 
 use crate::live::bootstrap_snapshot::TeammateCdRuntimeSnapshot;
 use crate::live::entity_id::{canonical_player_uuid, uid_from_uuid};
-use crate::live::ipc::models::{LiveTeamPayload, SkillCdState, TeammateCdPayload};
+use crate::live::ipc::models::{
+    LiveTeamPayload, SkillCdState, TeamLayoutKind, TeamLayoutPayload, TeamSlotPayload,
+    TeammateCdPayload,
+};
 use crate::live::projections::entity_monitor::{EntityMonitorProjection, SkillCdRecord};
 use crate::live::runtime::entity_context::EntityContext;
-use crate::live::runtime::events::MonoTimeMs;
+use crate::live::runtime::events::{MonoTimeMs, TeamKind};
 use crate::live::team_link::{
     CdSample, CdTable, CharId, ShareIdentity, ShareSnapshot, TeamId, TeamLinkEvent,
     TeammateProfile, TeammateSnapshot,
@@ -57,6 +60,7 @@ struct Teammate {
 #[derive(Debug, Default)]
 pub struct TeamCdProjection {
     seen_skill_revision: Option<u64>,
+    seen_roster_revision: u64,
     offset_known: bool,
     identity: Option<ShareIdentity>,
     table: CdTable,
@@ -97,7 +101,9 @@ impl TeamCdProjection {
             share_changed |= self.rebuild_table(monitor, offset);
         }
 
-        let mut view_changed = false;
+        let roster_revision = entities.team_roster().revision();
+        let mut view_changed = roster_revision != self.seen_roster_revision;
+        self.seen_roster_revision = roster_revision;
         let identity = local_identity(entities);
         if identity != self.identity {
             let before = self.teammates.len();
@@ -107,7 +113,7 @@ impl TeamCdProjection {
                     .retain(|char_id, _| is_teammate(identity, *char_id)),
                 None => self.teammates.clear(),
             }
-            view_changed = self.teammates.len() != before;
+            view_changed |= self.teammates.len() != before;
             self.identity = identity;
             share_changed = true;
         }
@@ -254,12 +260,41 @@ impl TeamCdProjection {
         } else {
             Vec::new()
         };
+        let layout = self.config.enabled.then(|| team_layout(entities)).flatten();
         LiveTeamPayload {
             revision: self.revision,
             link_online: self.link_online,
             teammates,
+            layout,
         }
     }
+}
+
+fn team_layout(entities: &EntityContext) -> Option<TeamLayoutPayload> {
+    let layout = entities.team_roster().layout();
+    if layout.slots.is_empty() {
+        return None;
+    }
+    let local = entities.local_player().map(|local| local.uuid.0);
+    Some(TeamLayoutPayload {
+        kind: match layout.kind {
+            TeamKind::Five => TeamLayoutKind::Five,
+            TeamKind::Twenty => TeamLayoutKind::Twenty,
+        },
+        slots: layout
+            .slots
+            .into_iter()
+            .map(|slot| {
+                let uuid = canonical_player_uuid(slot.char_id);
+                TeamSlotPayload {
+                    uuid: uuid.to_string(),
+                    group: slot.group,
+                    row: slot.row,
+                    is_self: local == Some(uuid),
+                }
+            })
+            .collect(),
+    })
 }
 
 fn is_teammate(identity: &ShareIdentity, char_id: CharId) -> bool {
@@ -280,8 +315,9 @@ fn local_identity(entities: &EntityContext) -> Option<ShareIdentity> {
         return None;
     }
     let mut roster: Vec<CharId> = entities
-        .team_members()
-        .map(|uuid| CharId(uid_from_uuid(uuid.0)))
+        .team_roster()
+        .member_ids()
+        .map(CharId)
         .chain([char_id])
         .filter(|id| id.0 > 0)
         .collect();
@@ -485,10 +521,118 @@ mod tests {
     }
 
     #[test]
+    fn payload_publishes_the_team_panel_layout() {
+        use crate::live::runtime::events::{
+            BatchId, EntityKind, EntityUuid, EventMeta, ObservedTeamBase, ObservedTeamMember,
+            ProtocolBatch, ProtocolObservation, TeamRosterUpdate,
+        };
+        let meta = EventMeta {
+            batch_id: BatchId(1),
+            capture_sequence: 1,
+            stream_id: 1,
+            stream_epoch: 1,
+            captured_wall_ms: 5_000,
+            captured_mono_ns: 0,
+            source_time_ms: None,
+        };
+        let local = EntityUuid(canonical_player_uuid(11));
+        let mut entities = EntityContext::new();
+        entities.apply_batch(ProtocolBatch {
+            meta,
+            observations: vec![
+                ProtocolObservation::EntityAppeared {
+                    uuid: local,
+                    kind: EntityKind::Character,
+                },
+                ProtocolObservation::LocalPlayerChanged { uuid: Some(local) },
+            ],
+        });
+        let monitor = EntityMonitorProjection::default();
+        let mut projection = TeamCdProjection {
+            config: TeammateCdRuntimeSnapshot {
+                enabled: true,
+                classes: Vec::new(),
+            },
+            ..TeamCdProjection::default()
+        };
+        projection.sync_local(&monitor, &entities);
+        assert!(
+            projection
+                .payload(&entities, 0, MonoTimeMs(0))
+                .layout
+                .is_none()
+        );
+
+        entities.apply_batch(ProtocolBatch {
+            meta,
+            observations: vec![ProtocolObservation::TeamRoster(TeamRosterUpdate::Joined {
+                base: Some(ObservedTeamBase {
+                    team_id: 7,
+                    leader_id: 11,
+                    kind: TeamKind::Five,
+                    create_time_ms: 0,
+                    groups: vec![(1, vec![22, 11])],
+                }),
+                members: vec![
+                    ObservedTeamMember {
+                        char_id: 11,
+                        enter_time: Some(1),
+                        group_id: Some(1),
+                    },
+                    ObservedTeamMember {
+                        char_id: 22,
+                        enter_time: Some(2),
+                        group_id: Some(1),
+                    },
+                ],
+            })],
+        });
+        assert!(
+            projection.sync_local(&monitor, &entities),
+            "a layout change republishes"
+        );
+        assert!(!projection.sync_local(&monitor, &entities));
+
+        let layout = projection
+            .payload(&entities, 0, MonoTimeMs(0))
+            .layout
+            .expect("layout");
+        assert_eq!(layout.kind, TeamLayoutKind::Five);
+        assert_eq!(
+            layout.slots,
+            vec![
+                TeamSlotPayload {
+                    uuid: canonical_player_uuid(11).to_string(),
+                    group: 1,
+                    row: 1,
+                    is_self: true,
+                },
+                TeamSlotPayload {
+                    uuid: canonical_player_uuid(22).to_string(),
+                    group: 1,
+                    row: 2,
+                    is_self: false,
+                },
+            ]
+        );
+
+        projection.apply_config(&TeammateCdRuntimeSnapshot::default());
+        assert!(
+            projection
+                .payload(&entities, 0, MonoTimeMs(0))
+                .layout
+                .is_none(),
+            "disabled sharing publishes nothing"
+        );
+    }
+
+    #[test]
     fn local_identity_needs_client_team_player_and_clock() {
         use crate::live::runtime::events::{
             BatchId, EntityKind, EntityUuid, EventMeta, ProtocolBatch, ProtocolObservation,
+            TeamRosterUpdate,
         };
+        use crate::live::runtime::team_roster::test_support::joined_team;
         let meta = EventMeta {
             batch_id: BatchId(1),
             capture_sequence: 1,
@@ -509,11 +653,7 @@ mod tests {
                     kind: EntityKind::Character,
                 },
                 ProtocolObservation::LocalPlayerChanged { uuid: Some(local) },
-                ProtocolObservation::TeamInfoUpdated {
-                    team_id: 77,
-                    leader_uuid: Some(mate),
-                    roster: vec![local, mate],
-                },
+                joined_team(77, &[mate, local]),
             ],
         });
         assert_eq!(
@@ -536,7 +676,7 @@ mod tests {
 
         entities.apply_batch(ProtocolBatch {
             meta,
-            observations: vec![ProtocolObservation::TeamDissolved],
+            observations: vec![ProtocolObservation::TeamRoster(TeamRosterUpdate::Dissolved)],
         });
         assert_eq!(local_identity(&entities), None, "left the team");
     }

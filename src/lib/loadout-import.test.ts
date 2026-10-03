@@ -489,6 +489,29 @@ describe("parseLoadoutExport", () => {
     expect(result.output.monsterProfile.teammateBuffColumnStyles).toEqual({});
   });
 
+  it("defaults the teammate CD slot layout missing from an older export", () => {
+    const data = validExport();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    const style = monster["teammateCdPanelStyle"] as Record<string, unknown>;
+    delete style["displayMode"];
+    delete style["slots"];
+    const positions = monster["overlayPositions"] as Record<string, unknown>;
+    delete positions["teammateCdSlotsTwenty"];
+
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const defaults = createDefaultMonsterMonitorProfile("Test");
+    const imported = result.output.monsterProfile;
+    expect(imported.teammateCdPanelStyle.displayMode).toBe("slots");
+    expect(imported.teammateCdPanelStyle.slots).toEqual(
+      defaults.teammateCdPanelStyle.slots,
+    );
+    expect(imported.overlayPositions.teammateCdSlotsTwenty).toEqual(
+      defaults.overlayPositions.teammateCdSlotsTwenty,
+    );
+  });
+
   it("includes the field path in validation issues", () => {
     const data = validExport();
     const skill = data["skillProfile"] as Record<string, unknown>;

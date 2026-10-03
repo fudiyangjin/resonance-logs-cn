@@ -1036,6 +1036,30 @@ pub struct NotifyLeaveTeamRequest {
     pub leave_type: ::core::option::Option<i32>,
 }
 #[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NotifyCharMatchResult {
+    #[prost(message, optional, tag = "1")]
+    pub v_request: ::core::option::Option<NotifyCharMatchResultRequest>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NotifyCharMatchResultRequest {
+    #[prost(bool, optional, tag = "1")]
+    pub success: ::core::option::Option<bool>,
+    #[prost(message, optional, tag = "2")]
+    pub team_info: ::core::option::Option<TeamInfo>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NotifyTeamGroupUpdate {
+    #[prost(message, optional, tag = "1")]
+    pub v_request: ::core::option::Option<NotifyTeamGroupUpdateRequest>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NotifyTeamGroupUpdateRequest {
+    #[prost(enumeration = "EErrorCode", optional, tag = "1")]
+    pub err_code: ::core::option::Option<i32>,
+    #[prost(map = "int32, message", tag = "2")]
+    pub team_member_group_infos: ::std::collections::HashMap<i32, TeamMemberGroupInfo>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
 pub struct TeamBaseInfo {
     #[prost(int64, optional, tag = "1")]
     pub team_id: ::core::option::Option<i64>,

@@ -1192,6 +1192,7 @@ fn bump(revision: &mut u64) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::live::runtime::team_roster::test_support::{joined_team, player};
     use std::sync::Arc;
 
     use crate::live::runtime::events::{
@@ -1994,8 +1995,8 @@ mod tests {
         let mut entities = EntityContext::new();
         let mut scheduler = DeadlineScheduler::new();
         let local = EntityUuid(10);
-        let target_a = EntityUuid(20);
-        let target_b = EntityUuid(30);
+        let target_a = player(20);
+        let target_b = player(30);
         apply_observations(
             &mut projection,
             &mut entities,
@@ -2015,9 +2016,7 @@ mod tests {
                     kind: crate::live::runtime::events::EntityKind::Monster,
                 },
                 ProtocolObservation::LocalPlayerChanged { uuid: Some(local) },
-                ProtocolObservation::TeamMembersUpdated {
-                    members: vec![target_a, target_b],
-                },
+                joined_team(1, &[target_a, target_b]),
                 ProtocolObservation::AttackTargetChanged {
                     actor_uuid: local,
                     target_uuid: Some(target_a),
@@ -3099,11 +3098,7 @@ mod tests {
                     ProtocolObservation::LocalPlayerChanged { uuid: Some(LOCAL) },
                 ];
                 observations.extend(members.iter().chain(strangers).map(|uuid| appeared(*uuid)));
-                observations.push(ProtocolObservation::TeamMembersUpdated {
-                    members: std::iter::once(LOCAL)
-                        .chain(members.iter().copied())
-                        .collect(),
-                });
+                observations.push(joined_team(1, members));
                 harness.apply(observations);
                 harness
             }
@@ -3161,13 +3156,8 @@ mod tests {
 
         #[test]
         fn lists_only_in_range_dead_party_members_in_ascending_order() {
-            let (first, second, alive, departed, stranger) = (
-                EntityUuid(20),
-                EntityUuid(30),
-                EntityUuid(40),
-                EntityUuid(50),
-                EntityUuid(60),
-            );
+            let (first, second, alive, departed, stranger) =
+                (player(2), player(3), player(4), player(5), player(6));
             let mut harness = Harness::new(&[second, first, alive, departed], &[stranger], true);
             harness.apply(vec![
                 died(second),
@@ -3188,11 +3178,9 @@ mod tests {
 
         #[test]
         fn corpse_first_seen_in_a_snapshot_is_published() {
-            let teammate = EntityUuid(20);
+            let teammate = player(2);
             let mut harness = Harness::new(&[], &[], true);
-            harness.apply(vec![ProtocolObservation::TeamMembersUpdated {
-                members: vec![teammate],
-            }]);
+            harness.apply(vec![joined_team(1, &[teammate])]);
             harness.apply(vec![appeared(teammate)]);
 
             // A snapshot corpse raises no `DeathOccurred`; only the ActorState
@@ -3209,7 +3197,7 @@ mod tests {
 
         #[test]
         fn revival_marks_monster_but_living_state_changes_and_strangers_do_not() {
-            let (teammate, stranger) = (EntityUuid(20), EntityUuid(60));
+            let (teammate, stranger) = (player(2), player(6));
             let mut harness = Harness::new(&[teammate], &[stranger], true);
             harness.apply(vec![died(teammate), died(stranger)]);
             assert_eq!(harness.dead_teammates(), vec![teammate.0.to_string()]);
@@ -3229,7 +3217,7 @@ mod tests {
 
         #[test]
         fn nothing_is_published_while_the_teammate_matrix_is_unused() {
-            let teammate = EntityUuid(20);
+            let teammate = player(2);
             let mut harness = Harness::new(&[teammate], &[], false);
             harness.apply(vec![died(teammate)]);
             assert!(harness.dead_teammates().is_empty());
@@ -3242,15 +3230,11 @@ mod tests {
         #[test]
         fn roster_changes_mark_monster_only_while_teammates_are_watched() {
             let mut harness = Harness::new(&[], &[], false);
-            let unwatched = harness.apply(vec![ProtocolObservation::TeamMembersUpdated {
-                members: vec![EntityUuid(20)],
-            }]);
+            let unwatched = harness.apply(vec![joined_team(1, &[player(2)])]);
             assert!(!unwatched.contains(TopicMask::MONSTER));
 
             harness.watch_teammates();
-            let watched = harness.apply(vec![ProtocolObservation::TeamMembersUpdated {
-                members: vec![EntityUuid(30)],
-            }]);
+            let watched = harness.apply(vec![joined_team(1, &[player(3)])]);
             assert!(watched.contains(TopicMask::MONSTER));
         }
     }

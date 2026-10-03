@@ -904,7 +904,12 @@ export type LiveTeamPayload = { revision: number;
 /**
  * `false` while the relay connection is down; rows are then stale.
  */
-linkOnline: boolean; teammates: TeammateCdPayload[] }
+linkOnline: boolean; teammates: TeammateCdPayload[];
+/**
+ * Where the game's team panel draws each member, the local character
+ * included; `None` while not in a team.
+ */
+layout: TeamLayoutPayload | null }
 export type LiveWindowFrame = { active: boolean; epoch: number; combat: LiveCombatPayload | null; fantasy: LiveFantasyPayload | null; deaths: LiveDeathsPayload | null }
 export type LiveWindowFrameRequest = { epoch: number | null; combatRevision: number | null; fantasyRevision: number | null; deathsRevision: number | null; includeDeaths: boolean }
 /**
@@ -1217,6 +1222,8 @@ export type SlotUpdateState = { slotId: number; currentCount: number; threshold:
  * means the stagger threshold has been hit.
  */
 export type StunEntry = { bossEntityUuid: string; monsterId: number; current: number; max: number }
+export type TeamLayoutKind = "five" | "twenty"
+export type TeamLayoutPayload = { kind: TeamLayoutKind; slots: TeamSlotPayload[] }
 export type TeamShareSettings = { enabled: boolean }
 /**
  * Relay connection state shown in the settings page.
@@ -1227,6 +1234,20 @@ export type TeamShareStatus = { state: "disabled" } |
  * not detected yet, or the server clock is still unknown.
  */
 { state: "idle" } | { state: "connecting" } | { state: "connected"; teammates: number } | { state: "retrying"; error: string; retryMs: number }
+export type TeamSlotPayload = {
+/**
+ * Canonical entity uuid, matching `TeammateCdPayload::uuid`.
+ */
+uuid: string;
+/**
+ * 1..=4; 1 top left, 2 top right, 3 bottom left, 4 bottom right. Always
+ * 1 for a five-member team.
+ */
+group: number;
+/**
+ * 1..=5 within the group.
+ */
+row: number; isSelf: boolean }
 export type TeammateCdClassSkills = {
 /**
  * Profession id (`EntityIdentity::profession_id`).

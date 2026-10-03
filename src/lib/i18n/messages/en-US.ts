@@ -1571,6 +1571,24 @@ export const enUSMessages = {
     "Name column width (0 hides it)",
   "monsterMonitor.teammateCd.style.fontSize": "Font size",
   "monsterMonitor.teammateCd.style.showClassIcon": "Show class icon",
+  "monsterMonitor.teammateCd.mode.slots": "Beside team panel",
+  "monsterMonitor.teammateCd.mode.list": "List",
+  "monsterMonitor.teammateCd.mode.slots.hint":
+    "Draws each teammate's skill cooldown icons beside their row of the in-game team panel; your own row stays empty. In the overlay's edit mode, drag the whole grid to line up the first row, then line up the other rows with the row height and distances below. The 5- and 20-member team panels are adjusted separately. The plugin must be running when you join the team to know the order.",
+  "monsterMonitor.teammateCd.mode.list.hint":
+    "A standalone panel: each row shows a teammate's name, class and skill cooldowns, in the in-game team panel order.",
+  "monsterMonitor.teammateCd.slots.editKind": "Team panel to adjust",
+  "monsterMonitor.teammateCd.slots.rowPitch": "Row height",
+  "monsterMonitor.teammateCd.slots.columnOffset":
+    "Left-to-right column distance",
+  "monsterMonitor.teammateCd.slots.blockOffset": "Top-to-bottom half distance",
+  "monsterMonitor.teammateCd.slots.side": "Direction",
+  "monsterMonitor.teammateCd.slots.leftSide":
+    "Left column (groups 1, 3) direction",
+  "monsterMonitor.teammateCd.slots.rightSide":
+    "Right column (groups 2, 4) direction",
+  "monsterMonitor.teammateCd.slots.side.left": "Leftward",
+  "monsterMonitor.teammateCd.slots.side.right": "Rightward",
   "monsterMonitor.tabs.hate": "Hate List",
   "monsterMonitor.tabs.stun": "Stun Bar",
   "monsterMonitor.tabs.hp": "HP Bar",
@@ -1757,6 +1775,8 @@ export const enUSMessages = {
   "monsterOverlay.teammateGroupTag": "Teammate Buff Area",
   "monsterOverlay.teammateCdGroupTag": "Teammate CD Area",
   "monsterOverlay.teammateCd.placeholderName": "Teammate",
+  "monsterOverlay.teammateCd.slotKind.five": "5-member team panel",
+  "monsterOverlay.teammateCd.slotKind.twenty": "20-member team panel",
   "monsterOverlay.hateGroupTag": "Hate Area",
   "monsterOverlay.stunGroupTag": "Stun Area",
   "monsterOverlay.hpGroupTag": "HP Area",

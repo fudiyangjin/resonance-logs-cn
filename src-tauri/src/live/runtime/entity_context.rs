@@ -16,6 +16,8 @@ use super::events::{
 use super::fantasy_registry::{
     FantasyRegistry, is_resonance_fantasy_monster_id, resolve_fantasy_skill_id,
 };
+use super::team_roster::{TeamMembership, TeamRoster};
+use crate::live::entity_id::{canonical_player_uuid, uid_from_uuid};
 
 #[derive(Debug, Clone)]
 pub struct EntityState {
@@ -112,9 +114,7 @@ struct CasterSkillLifecycle {
 pub struct EntityContext {
     entities: HashMap<EntityUuid, EntityState>,
     local_player: Option<EntityUuid>,
-    team_id: i64,
-    team_leader: Option<EntityUuid>,
-    team_members: HashSet<EntityUuid>,
+    team: TeamRoster,
     passive_skills: HashMap<i32, PassiveWireState>,
     passive_instances_by_entity: HashMap<EntityUuid, HashSet<i32>>,
     attack_targets: HashMap<EntityUuid, EntityUuid>,
@@ -236,14 +236,25 @@ impl EntityContext {
         self.entities.values()
     }
 
-    pub(crate) fn team_members(&self) -> impl Iterator<Item = EntityUuid> {
-        self.team_members.iter().copied()
+    /// Team members, the local player included.
+    pub(crate) fn team_members(&self) -> impl Iterator<Item = EntityUuid> + '_ {
+        self.team.member_ids().map(player_uuid)
     }
 
     /// In-game team id; `0` when not in a team.
     #[must_use]
     pub(crate) fn team_id(&self) -> i64 {
-        self.team_id
+        self.team.team_id()
+    }
+
+    #[must_use]
+    pub(crate) fn team_roster(&self) -> &TeamRoster {
+        &self.team
+    }
+
+    fn is_team_member(&self, uuid: EntityUuid) -> bool {
+        let char_id = uid_from_uuid(uuid.0);
+        player_uuid(char_id) == uuid && self.team.contains(char_id)
     }
 
     /// `wall_ms - server_ms`, once a server time packet has been seen.
@@ -333,7 +344,7 @@ impl EntityContext {
                 .is_some_and(|entity| entity.is_dead);
         EntityRoles {
             is_local_player: self.local_player == Some(uuid),
-            is_team_member: self.team_members.contains(&uuid),
+            is_team_member: self.is_team_member(uuid),
             is_current_target,
         }
     }
@@ -620,37 +631,11 @@ impl EntityContext {
                     out,
                 );
             }
-            ProtocolObservation::TeamInfoUpdated {
-                team_id,
-                leader_uuid,
-                roster,
-            } => {
-                self.apply_team_info(meta, team_id, leader_uuid, roster, out);
-            }
-            ProtocolObservation::TeamMembersUpdated { members } => {
-                // Member notices are partial: the roster only grows until a
-                // leave/dissolve notice prunes it.
-                let mut next = self.team_members.clone();
-                next.extend(members.into_iter().filter(|uuid| uuid.0 != 0));
-                let (team_id, leader) = (self.team_id, self.team_leader);
-                self.apply_team_state(meta, team_id, leader, next, out);
-            }
-            ProtocolObservation::TeamMemberLeft { member_uuid } => {
-                if member_uuid.0 == 0 {
-                    return;
-                }
-                if self.local_player == Some(member_uuid) {
-                    self.apply_team_state(meta, 0, None, HashSet::new(), out);
-                    return;
-                }
-                let mut next = self.team_members.clone();
-                next.remove(&member_uuid);
-                let team_id = self.team_id;
-                let leader = self.team_leader.filter(|uuid| *uuid != member_uuid);
-                self.apply_team_state(meta, team_id, leader, next, out);
-            }
-            ProtocolObservation::TeamDissolved => {
-                self.apply_team_state(meta, 0, None, HashSet::new(), out);
+            ProtocolObservation::TeamRoster(update) => {
+                let before = self.team.membership();
+                let local_char_id = self.local_player.map(|uuid| uid_from_uuid(uuid.0));
+                self.team.apply(update, local_char_id);
+                self.emit_team_changes(meta, &before, out);
             }
             ProtocolObservation::GameClientIdentified { distribution } => {
                 self.game_client = Some(distribution);
@@ -1141,101 +1126,51 @@ impl EntityContext {
         }
     }
 
-    /// Resolves a team-info notice into a roster, then applies it.
-    ///
-    /// A non-empty roster replaces the members. An empty roster keeps the
-    /// current members when the team id is unchanged, and keeps only the
-    /// leader when the team id changes. `team_id == 0` clears the team.
-    fn apply_team_info(
+    /// Emits the membership deltas, then one team event, when a team notice
+    /// changed who is in the team or who leads it.
+    fn emit_team_changes(
         &mut self,
         meta: EventMeta,
-        team_id: i64,
-        leader_uuid: Option<EntityUuid>,
-        roster: Vec<EntityUuid>,
+        before: &TeamMembership,
         out: &mut Vec<DomainEnvelope>,
     ) {
-        if team_id == 0 {
-            self.apply_team_state(meta, 0, None, HashSet::new(), out);
+        let after = self.team.membership();
+        if after == *before {
             return;
         }
-        let leader = leader_uuid.filter(|uuid| uuid.0 != 0);
-        let next = match (roster.is_empty(), team_id == self.team_id) {
-            (false, _) => {
-                let mut next: HashSet<EntityUuid> =
-                    roster.into_iter().filter(|uuid| uuid.0 != 0).collect();
-                next.extend(leader);
-                next
-            }
-            (true, true) => {
-                let mut next = self.team_members.clone();
-                next.extend(leader);
-                next
-            }
-            (true, false) => leader.into_iter().collect(),
-        };
-        self.apply_team_state(meta, team_id, leader, next, out);
-    }
-
-    /// Applies a fully resolved team state and emits the membership deltas
-    /// plus a single roster event when anything actually moved.
-    fn apply_team_state(
-        &mut self,
-        meta: EventMeta,
-        team_id: i64,
-        leader_uuid: Option<EntityUuid>,
-        members: HashSet<EntityUuid>,
-        out: &mut Vec<DomainEnvelope>,
-    ) {
-        let mut removed: Vec<_> = self.team_members.difference(&members).copied().collect();
-        let mut added: Vec<_> = members.difference(&self.team_members).copied().collect();
-        if removed.is_empty()
-            && added.is_empty()
-            && self.team_id == team_id
-            && self.team_leader == leader_uuid
-        {
-            return;
-        }
-        removed.sort_unstable();
-        added.sort_unstable();
-        self.team_members = members;
-        self.team_id = team_id;
-        self.team_leader = leader_uuid;
-        for uuid in removed {
-            let entity = self.ensure_ref(uuid);
+        let left = before
+            .members
+            .iter()
+            .filter(|char_id| after.members.binary_search(char_id).is_err())
+            .map(|char_id| (*char_id, false));
+        let joined = after
+            .members
+            .iter()
+            .filter(|char_id| before.members.binary_search(char_id).is_err())
+            .map(|char_id| (*char_id, true));
+        let changes: Vec<_> = left.chain(joined).collect();
+        for (char_id, is_member) in changes {
+            let entity = self.ensure_ref(player_uuid(char_id));
             self.emit(
                 meta,
-                DomainEvent::TeamMembershipChanged {
-                    entity,
-                    is_member: false,
-                },
-                out,
-            );
-        }
-        for uuid in added {
-            let entity = self.ensure_ref(uuid);
-            self.emit(
-                meta,
-                DomainEvent::TeamMembershipChanged {
-                    entity,
-                    is_member: true,
-                },
+                DomainEvent::TeamMembershipChanged { entity, is_member },
                 out,
             );
         }
 
-        let leader = leader_uuid.map(|uuid| self.ensure_ref(uuid));
-        let member_uuids: Vec<_> = self.team_members.iter().copied().collect();
-        let mut member_refs: Vec<_> = member_uuids
-            .into_iter()
-            .map(|uuid| self.ensure_ref(uuid))
+        let leader = (after.leader_id != 0).then(|| self.ensure_ref(player_uuid(after.leader_id)));
+        let mut members: Vec<_> = after
+            .members
+            .iter()
+            .map(|char_id| self.ensure_ref(player_uuid(*char_id)))
             .collect();
-        member_refs.sort_unstable();
+        members.sort_unstable();
         self.emit(
             meta,
             DomainEvent::TeamChanged {
-                team_id,
+                team_id: after.team_id,
                 leader,
-                members: member_refs,
+                members,
             },
             out,
         );
@@ -2010,11 +1945,19 @@ fn skill_phase(
     (skill.skill_id, phase, skill.target)
 }
 
+fn player_uuid(char_id: i64) -> EntityUuid {
+    EntityUuid(canonical_player_uuid(char_id))
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
 
-    use super::super::events::{BatchId, HitChannel, HitKind, MonoTimeMs, ObservedHit};
+    use super::super::events::{
+        BatchId, HitChannel, HitKind, MonoTimeMs, ObservedHit, ObservedTeamBase,
+        ObservedTeamMember, TeamKind, TeamRosterUpdate,
+    };
+    use super::super::team_roster::test_support::{joined_team, player};
     use super::*;
 
     fn meta(batch: u64) -> EventMeta {
@@ -2733,8 +2676,8 @@ mod tests {
     #[test]
     fn container_reset_clears_runtime_but_preserves_stable_context() {
         let mut context = EntityContext::new();
-        let local = EntityUuid(10);
-        let teammate = EntityUuid(20);
+        let local = player(10);
+        let teammate = player(20);
         let target = EntityUuid(30);
         let timer_key = GameTimerKey {
             cfg_id: 7,
@@ -2757,14 +2700,7 @@ mod tests {
                     kind: EntityKind::Monster,
                 },
                 ProtocolObservation::LocalPlayerChanged { uuid: Some(local) },
-                ProtocolObservation::TeamInfoUpdated {
-                    team_id: 99,
-                    leader_uuid: Some(local),
-                    roster: Vec::new(),
-                },
-                ProtocolObservation::TeamMembersUpdated {
-                    members: vec![local, teammate],
-                },
+                joined_team(99, &[local, teammate]),
                 ProtocolObservation::SceneChanged {
                     scene_id: 101,
                     difficulty: Some(3),
@@ -2821,9 +2757,9 @@ mod tests {
         assert!(context.active_season_template_ids.is_empty());
         assert!(context.dungeon_flow_state.is_none());
         assert!(context.progress_state.is_none());
-        assert_eq!(context.team_id, 99);
-        assert_eq!(context.team_leader, Some(local));
-        assert!(context.team_members.contains(&teammate));
+        assert_eq!(context.team_id(), 99);
+        assert_eq!(context.team_roster().membership().leader_id, 10);
+        assert!(context.roles(teammate).is_team_member);
         assert_eq!(context.current_scene_id(), Some(101));
         assert_eq!(context.current_difficulty(), Some(3));
         assert!(context.is_paused());
@@ -3115,53 +3051,67 @@ mod tests {
         );
     }
 
-    #[test]
-    fn known_character_is_not_a_team_member_without_team_state() {
-        let mut context = EntityContext::new();
-        context.reduce_batch(batch(
-            1,
-            vec![ProtocolObservation::EntityAppeared {
-                uuid: EntityUuid(20),
-                kind: EntityKind::Character,
-            }],
-        ));
-        assert!(!context.roles(EntityUuid(20)).is_team_member);
-
-        context.reduce_batch(batch(
-            2,
-            vec![ProtocolObservation::TeamInfoUpdated {
-                team_id: 7,
-                leader_uuid: Some(EntityUuid(20)),
-                roster: Vec::new(),
-            }],
-        ));
-        assert!(context.roles(EntityUuid(20)).is_team_member);
+    fn roster(update: TeamRosterUpdate) -> ProtocolObservation {
+        ProtocolObservation::TeamRoster(update)
     }
 
     #[test]
-    fn leaving_the_team_clears_membership_for_the_local_player() {
+    fn team_membership_follows_the_team_notices() {
         let mut context = EntityContext::new();
-        let local = EntityUuid(20);
-        let mate = EntityUuid(21);
+        let (local, mate) = (player(20), player(21));
         context.reduce_batch(batch(
             1,
-            vec![
-                ProtocolObservation::LocalPlayerChanged { uuid: Some(local) },
-                ProtocolObservation::TeamInfoUpdated {
-                    team_id: 7,
-                    leader_uuid: Some(local),
-                    roster: Vec::new(),
-                },
-                ProtocolObservation::TeamMembersUpdated {
-                    members: vec![local, mate],
-                },
-            ],
+            vec![ProtocolObservation::LocalPlayerChanged { uuid: Some(local) }],
         ));
+        assert!(!context.roles(mate).is_team_member);
+
+        let joined = context.reduce_batch(batch(2, vec![joined_team(7, &[local, mate])]));
+        assert!(context.roles(local).is_team_member);
         assert!(context.roles(mate).is_team_member);
+        assert!(
+            !context.roles(EntityUuid(21 << 16)).is_team_member,
+            "only the player entity of a member char id is a member"
+        );
+        assert!(matches!(
+            joined.as_slice(),
+            [
+                DomainEnvelope {
+                    event: DomainEvent::TeamMembershipChanged {
+                        is_member: true,
+                        ..
+                    },
+                    ..
+                },
+                DomainEnvelope {
+                    event: DomainEvent::TeamMembershipChanged {
+                        is_member: true,
+                        ..
+                    },
+                    ..
+                },
+                DomainEnvelope {
+                    event: DomainEvent::TeamChanged { team_id: 7, .. },
+                    ..
+                },
+            ]
+        ));
+
+        let refreshed = context.reduce_batch(batch(
+            3,
+            vec![roster(TeamRosterUpdate::MembersRefreshed(vec![
+                ObservedTeamMember {
+                    char_id: 30,
+                    enter_time: Some(1),
+                    group_id: Some(1),
+                },
+            ]))],
+        ));
+        assert!(refreshed.is_empty(), "member info never adds members");
+        assert!(!context.roles(player(30)).is_team_member);
 
         let left = context.reduce_batch(batch(
-            2,
-            vec![ProtocolObservation::TeamMemberLeft { member_uuid: mate }],
+            4,
+            vec![roster(TeamRosterUpdate::MemberLeft { char_id: 21 })],
         ));
         assert!(!context.roles(mate).is_team_member);
         assert!(context.roles(local).is_team_member);
@@ -3174,135 +3124,50 @@ mod tests {
         ));
 
         context.reduce_batch(batch(
-            3,
-            vec![ProtocolObservation::TeamMemberLeft { member_uuid: local }],
+            5,
+            vec![roster(TeamRosterUpdate::MemberLeft { char_id: 20 })],
         ));
         assert!(!context.roles(local).is_team_member);
-        assert_eq!(context.team_id, 0);
-        assert_eq!(context.team_leader, None);
-
+        assert_eq!(context.team_id(), 0);
         assert!(
             context
-                .reduce_batch(batch(4, vec![ProtocolObservation::TeamDissolved]))
+                .reduce_batch(batch(6, vec![roster(TeamRosterUpdate::Dissolved)]))
                 .is_empty()
         );
     }
 
     #[test]
-    fn team_info_roster_replaces_members() {
+    fn a_new_team_drops_previous_members_and_team_zero_clears() {
         let mut context = EntityContext::new();
-        let local = EntityUuid(20);
-        let old = EntityUuid(21);
-        let kept = EntityUuid(22);
-        let added = EntityUuid(23);
+        let (local, old) = (player(20), player(21));
         context.reduce_batch(batch(
             1,
-            vec![ProtocolObservation::TeamInfoUpdated {
-                team_id: 7,
-                leader_uuid: Some(local),
-                roster: vec![local, old],
-            }],
+            vec![
+                ProtocolObservation::LocalPlayerChanged { uuid: Some(local) },
+                joined_team(7, &[local, old]),
+            ],
         ));
-        assert!(context.roles(old).is_team_member);
 
+        let base = |team_id| ObservedTeamBase {
+            team_id,
+            leader_id: 20,
+            kind: TeamKind::Five,
+            create_time_ms: 0,
+            groups: vec![(1, vec![20])],
+        };
         context.reduce_batch(batch(
             2,
-            vec![ProtocolObservation::TeamInfoUpdated {
-                team_id: 7,
-                leader_uuid: Some(local),
-                roster: vec![local, kept, added],
-            }],
+            vec![roster(TeamRosterUpdate::BaseReplaced(base(8)))],
         ));
-        assert!(!context.roles(old).is_team_member);
-        assert!(context.roles(kept).is_team_member);
-        assert!(context.roles(added).is_team_member);
-        assert!(context.roles(local).is_team_member);
-        assert_eq!(context.team_id, 7);
-    }
-
-    #[test]
-    fn new_team_id_drops_previous_members() {
-        let mut context = EntityContext::new();
-        let local = EntityUuid(20);
-        let old = EntityUuid(21);
-        context.reduce_batch(batch(
-            1,
-            vec![ProtocolObservation::TeamInfoUpdated {
-                team_id: 7,
-                leader_uuid: Some(local),
-                roster: vec![local, old],
-            }],
-        ));
+        assert_eq!(context.team_id(), 8);
+        assert_eq!(context.team_members().collect::<Vec<_>>(), vec![local]);
 
         context.reduce_batch(batch(
-            2,
-            vec![ProtocolObservation::TeamInfoUpdated {
-                team_id: 8,
-                leader_uuid: Some(local),
-                roster: Vec::new(),
-            }],
+            3,
+            vec![roster(TeamRosterUpdate::BaseReplaced(base(0)))],
         ));
-        assert!(!context.roles(old).is_team_member);
-        assert!(context.roles(local).is_team_member);
-        assert_eq!(context.team_id, 8);
-        assert_eq!(context.team_members, HashSet::from([local]));
-    }
-
-    #[test]
-    fn empty_roster_merges_within_same_team() {
-        let mut context = EntityContext::new();
-        let local = EntityUuid(20);
-        let mate = EntityUuid(21);
-        let leader = EntityUuid(22);
-        context.reduce_batch(batch(
-            1,
-            vec![ProtocolObservation::TeamInfoUpdated {
-                team_id: 7,
-                leader_uuid: Some(local),
-                roster: vec![local, mate],
-            }],
-        ));
-
-        context.reduce_batch(batch(
-            2,
-            vec![ProtocolObservation::TeamInfoUpdated {
-                team_id: 7,
-                leader_uuid: Some(leader),
-                roster: Vec::new(),
-            }],
-        ));
-        assert!(context.roles(mate).is_team_member);
-        assert!(context.roles(local).is_team_member);
-        assert!(context.roles(leader).is_team_member);
-        assert_eq!(context.team_id, 7);
-        assert_eq!(context.team_leader, Some(leader));
-    }
-
-    #[test]
-    fn zero_team_id_clears_team() {
-        let mut context = EntityContext::new();
-        let local = EntityUuid(20);
-        context.reduce_batch(batch(
-            1,
-            vec![ProtocolObservation::TeamInfoUpdated {
-                team_id: 7,
-                leader_uuid: Some(local),
-                roster: vec![local],
-            }],
-        ));
-
-        context.reduce_batch(batch(
-            2,
-            vec![ProtocolObservation::TeamInfoUpdated {
-                team_id: 0,
-                leader_uuid: Some(local),
-                roster: vec![local],
-            }],
-        ));
-        assert!(!context.roles(local).is_team_member);
-        assert_eq!(context.team_id, 0);
-        assert_eq!(context.team_leader, None);
-        assert!(context.team_members.is_empty());
+        assert_eq!(context.team_id(), 0);
+        assert_eq!(context.team_members().count(), 0);
     }
 
     #[test]

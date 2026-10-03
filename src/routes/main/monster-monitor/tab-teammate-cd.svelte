@@ -3,11 +3,18 @@
   import { updateMonsterMonitor } from "$lib/monster-monitor-profile.svelte.js";
   import {
     SETTINGS,
+    TEAMMATE_CD_DISPLAY_MODES,
+    TEAMMATE_CD_SLOT_KINDS,
+    TEAMMATE_CD_SLOT_LIMITS,
+    TEAMMATE_CD_SLOT_SIDES,
     ensureTeammateCdPanelStyle,
     isTeammateDeadRowPlacement,
     normalizeTeammateCdSkills,
+    type TeammateCdFiveSlots,
     type TeammateCdPanelStyle,
     type TeammateCdSkillMap,
+    type TeammateCdSlotLayout,
+    type TeammateCdTwentySlots,
   } from "$lib/settings-store";
   import { getClassConfigs, getSkillsByClass } from "$lib/skill-mappings";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
@@ -84,6 +91,52 @@
     { key: "nameColumnWidth", min: 0, max: 240 },
     { key: "fontSize", min: 10, max: 28 },
   ] as const;
+
+  const slotLayout = $derived(panelStyle.slots);
+  const slotIconFields = ["iconSize", "iconGap"] as const;
+  const editKind = $derived(slotLayout.previewKind);
+
+  function updateSlots(
+    patch: (slots: TeammateCdSlotLayout) => TeammateCdSlotLayout,
+  ) {
+    updateMonsterMonitor((state) => {
+      const style = ensureTeammateCdPanelStyle(state.teammateCdPanelStyle);
+      return {
+        teammateCdPanelStyle: ensureTeammateCdPanelStyle({
+          ...style,
+          slots: patch(style.slots),
+        }),
+      };
+    });
+  }
+
+  // The two grids share field names; each lists only its own fields below.
+  type GridFields = TeammateCdFiveSlots & TeammateCdTwentySlots;
+  type GridNumberKey = "rowPitch" | "columnOffset" | "blockOffset";
+  type GridSideKey = "side" | "leftSide" | "rightSide";
+
+  const grid = $derived<Partial<GridFields>>(slotLayout[editKind]);
+
+  function updateGrid<K extends GridNumberKey | GridSideKey>(
+    key: K,
+    value: GridFields[K],
+  ) {
+    if (typeof value === "number" && !Number.isFinite(value)) return;
+    updateSlots((slots) => ({
+      ...slots,
+      [editKind]: { ...slots[editKind], [key]: value },
+    }));
+  }
+
+  // The grid's position is set by dragging it in the overlay's edit mode.
+  const gridNumberFields = $derived<GridNumberKey[]>(
+    editKind === "five"
+      ? ["rowPitch"]
+      : ["rowPitch", "columnOffset", "blockOffset"],
+  );
+  const gridSideFields = $derived<GridSideKey[]>(
+    editKind === "five" ? ["side"] : ["leftSide", "rightSide"],
+  );
 </script>
 
 <section class="border-border/60 bg-card/60 space-y-4 rounded-xl border p-5">
@@ -199,91 +252,199 @@
     </h2>
   </div>
 
-  <div class="grid gap-4 lg:grid-cols-3">
-    {#each rangeFields as field (field.key)}
-      <label class="style-field">
-        <span>{t(`monsterMonitor.teammateCd.style.${field.key}`)}</span>
-        <input
-          type="range"
-          min={field.min}
-          max={field.max}
-          value={panelStyle[field.key]}
-          oninput={(event) => updateStyle(field.key, intValue(event))}
-        />
-        <strong>{panelStyle[field.key]}px</strong>
-      </label>
-    {/each}
-
-    <label class="style-field">
-      <span>{t("monsterMonitor.style.deadRowPlacement")}</span>
-      <select
-        class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-sm"
-        value={panelStyle.deadRowPlacement}
-        onchange={(event) => {
-          const placement = (event.currentTarget as HTMLSelectElement).value;
-          if (isTeammateDeadRowPlacement(placement)) {
-            updateStyle("deadRowPlacement", placement);
-          }
-        }}
+  <div class="flex flex-wrap gap-2">
+    {#each TEAMMATE_CD_DISPLAY_MODES as mode (mode)}
+      <button
+        type="button"
+        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {panelStyle.displayMode ===
+        mode
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+        onclick={() => updateStyle("displayMode", mode)}
       >
-        <option value="last"
-          >{t("monsterMonitor.style.deadRowPlacement.last")}</option
-        >
-        <option value="first"
-          >{t("monsterMonitor.style.deadRowPlacement.first")}</option
-        >
-        <option value="keep"
-          >{t("monsterMonitor.style.deadRowPlacement.keep")}</option
-        >
-      </select>
-    </label>
-
-    <label class="style-field">
-      <span>{t("monsterMonitor.teammateCd.style.showClassIcon")}</span>
-      <input
-        type="checkbox"
-        checked={panelStyle.showClassIcon}
-        onchange={(event) =>
-          updateStyle(
-            "showClassIcon",
-            (event.currentTarget as HTMLInputElement).checked,
-          )}
-      />
-    </label>
+        {t(`monsterMonitor.teammateCd.mode.${mode}`)}
+      </button>
+    {/each}
   </div>
+  <p class="text-muted-foreground text-xs">
+    {t(`monsterMonitor.teammateCd.mode.${panelStyle.displayMode}.hint`)}
+  </p>
 
-  <div class="grid gap-4 md:grid-cols-2">
-    <label class="color-field">
-      <span>{t("monsterMonitor.style.nameColor")}</span>
-      <input
-        type="color"
-        value={panelStyle.nameColor}
-        oninput={(event) =>
-          updateStyle("nameColor", (event.currentTarget as HTMLInputElement).value)}
-      />
-    </label>
-    <label class="color-field">
-      <span>{t("monsterMonitor.style.deadNameColor")}</span>
-      <input
-        type="color"
-        value={panelStyle.deadNameColor}
-        oninput={(event) =>
-          updateStyle(
-            "deadNameColor",
-            (event.currentTarget as HTMLInputElement).value,
-          )}
-      />
-    </label>
-  </div>
+  {#if panelStyle.displayMode === "slots"}
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-foreground text-sm font-medium">
+        {t("monsterMonitor.teammateCd.slots.editKind")}
+      </span>
+      {#each TEAMMATE_CD_SLOT_KINDS as kind (kind)}
+        <button
+          type="button"
+          class="rounded-lg border px-3 py-1.5 text-sm transition-colors {editKind ===
+          kind
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+          onclick={() =>
+            updateSlots((slots) => ({ ...slots, previewKind: kind }))}
+        >
+          {t(`monsterOverlay.teammateCd.slotKind.${kind}`)}
+        </button>
+      {/each}
+    </div>
 
-  <OverlayTextStyleFields
-    textShadowEnabled={panelStyle.textShadowEnabled}
-    backgroundEnabled={panelStyle.backgroundEnabled}
-    backgroundOpacity={panelStyle.backgroundOpacity}
-    onTextShadowEnabled={(value) => updateStyle("textShadowEnabled", value)}
-    onBackgroundEnabled={(value) => updateStyle("backgroundEnabled", value)}
-    onBackgroundOpacity={(value) => updateStyle("backgroundOpacity", value)}
-  />
+    <div class="grid gap-4 lg:grid-cols-3">
+      {#each gridNumberFields as key (key)}
+        {@const [min, max] = TEAMMATE_CD_SLOT_LIMITS[key]}
+        <label class="style-field">
+          <span>{t(`monsterMonitor.teammateCd.slots.${key}`)}</span>
+          <input
+            type="range"
+            {min}
+            {max}
+            value={grid[key]}
+            oninput={(event) => updateGrid(key, intValue(event))}
+          />
+          <input
+            class="number-input"
+            type="number"
+            {min}
+            {max}
+            step="1"
+            value={grid[key]}
+            onchange={(event) => updateGrid(key, intValue(event))}
+          />
+        </label>
+      {/each}
+
+      {#each gridSideFields as key (key)}
+        <label class="style-field">
+          <span>{t(`monsterMonitor.teammateCd.slots.${key}`)}</span>
+          <select
+            class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-sm"
+            value={grid[key]}
+            onchange={(event) => {
+              const side = (event.currentTarget as HTMLSelectElement).value;
+              const match = TEAMMATE_CD_SLOT_SIDES.find(
+                (value) => value === side,
+              );
+              if (match) updateGrid(key, match);
+            }}
+          >
+            {#each TEAMMATE_CD_SLOT_SIDES as side (side)}
+              <option value={side}>
+                {t(`monsterMonitor.teammateCd.slots.side.${side}`)}
+              </option>
+            {/each}
+          </select>
+        </label>
+      {/each}
+
+      {#each slotIconFields as key (key)}
+        {@const [min, max] = TEAMMATE_CD_SLOT_LIMITS[key]}
+        <label class="style-field">
+          <span>{t(`monsterMonitor.teammateCd.style.${key}`)}</span>
+          <input
+            type="range"
+            {min}
+            {max}
+            value={slotLayout[key]}
+            oninput={(event) => {
+              const value = intValue(event);
+              updateSlots((slots) => ({ ...slots, [key]: value }));
+            }}
+          />
+          <strong>{slotLayout[key]}px</strong>
+        </label>
+      {/each}
+    </div>
+  {:else}
+    <div class="grid gap-4 lg:grid-cols-3">
+      {#each rangeFields as field (field.key)}
+        <label class="style-field">
+          <span>{t(`monsterMonitor.teammateCd.style.${field.key}`)}</span>
+          <input
+            type="range"
+            min={field.min}
+            max={field.max}
+            value={panelStyle[field.key]}
+            oninput={(event) => updateStyle(field.key, intValue(event))}
+          />
+          <strong>{panelStyle[field.key]}px</strong>
+        </label>
+      {/each}
+
+      <label class="style-field">
+        <span>{t("monsterMonitor.style.deadRowPlacement")}</span>
+        <select
+          class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-sm"
+          value={panelStyle.deadRowPlacement}
+          onchange={(event) => {
+            const placement = (event.currentTarget as HTMLSelectElement).value;
+            if (isTeammateDeadRowPlacement(placement)) {
+              updateStyle("deadRowPlacement", placement);
+            }
+          }}
+        >
+          <option value="last"
+            >{t("monsterMonitor.style.deadRowPlacement.last")}</option
+          >
+          <option value="first"
+            >{t("monsterMonitor.style.deadRowPlacement.first")}</option
+          >
+          <option value="keep"
+            >{t("monsterMonitor.style.deadRowPlacement.keep")}</option
+          >
+        </select>
+      </label>
+
+      <label class="style-field">
+        <span>{t("monsterMonitor.teammateCd.style.showClassIcon")}</span>
+        <input
+          type="checkbox"
+          checked={panelStyle.showClassIcon}
+          onchange={(event) =>
+            updateStyle(
+              "showClassIcon",
+              (event.currentTarget as HTMLInputElement).checked,
+            )}
+        />
+      </label>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <label class="color-field">
+        <span>{t("monsterMonitor.style.nameColor")}</span>
+        <input
+          type="color"
+          value={panelStyle.nameColor}
+          oninput={(event) =>
+            updateStyle(
+              "nameColor",
+              (event.currentTarget as HTMLInputElement).value,
+            )}
+        />
+      </label>
+      <label class="color-field">
+        <span>{t("monsterMonitor.style.deadNameColor")}</span>
+        <input
+          type="color"
+          value={panelStyle.deadNameColor}
+          oninput={(event) =>
+            updateStyle(
+              "deadNameColor",
+              (event.currentTarget as HTMLInputElement).value,
+            )}
+        />
+      </label>
+    </div>
+
+    <OverlayTextStyleFields
+      textShadowEnabled={panelStyle.textShadowEnabled}
+      backgroundEnabled={panelStyle.backgroundEnabled}
+      backgroundOpacity={panelStyle.backgroundOpacity}
+      onTextShadowEnabled={(value) => updateStyle("textShadowEnabled", value)}
+      onBackgroundEnabled={(value) => updateStyle("backgroundEnabled", value)}
+      onBackgroundOpacity={(value) => updateStyle("backgroundOpacity", value)}
+    />
+  {/if}
 </section>
 
 <style>
@@ -303,6 +464,16 @@
   .style-field strong {
     font-size: 12px;
     color: var(--muted-foreground, rgba(255, 255, 255, 0.72));
+  }
+
+  .number-input {
+    width: 96px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.35);
+    color: inherit;
+    font-size: 12px;
   }
 
   .color-field input[type="color"] {

@@ -27,16 +27,23 @@ export function latestBuffsByCategory(
 }
 
 /**
- * Teammate row order: a stable uuid-string order, with dead teammates moved
- * to the end or the front per `placement` ("keep" leaves them in place).
- * Duplicate uuids collapse to one row.
+ * Teammate row order: ascending `rank` when given (unranked last), then a
+ * stable uuid-string order, with dead teammates moved to the end or the
+ * front per `placement` ("keep" leaves them in place). Duplicate uuids
+ * collapse to one row.
  */
 export function orderTeammateUuids(
   uuids: Iterable<EntityId>,
   dead: ReadonlySet<EntityId>,
   placement: TeammateDeadRowPlacement,
+  rank?: ReadonlyMap<EntityId, number>,
 ): EntityId[] {
   const ordered = Array.from(new Set(uuids)).sort();
+  if (rank) {
+    const rankOf = (uuid: EntityId) =>
+      rank.get(uuid) ?? Number.MAX_SAFE_INTEGER;
+    ordered.sort((left, right) => rankOf(left) - rankOf(right));
+  }
   if (placement === "keep" || dead.size === 0) return ordered;
   const living = ordered.filter((uuid) => !dead.has(uuid));
   const fallen = ordered.filter((uuid) => dead.has(uuid));

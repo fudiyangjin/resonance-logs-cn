@@ -1087,8 +1087,61 @@ export type TeammatePanelStyle = CustomPanelStyle & {
   preciseTimer: boolean;
 };
 
+export const TEAMMATE_CD_DISPLAY_MODES = ["slots", "list"] as const;
+
+/**
+ * `slots` draws each teammate's icons beside their row of the in-game team
+ * panel; `list` is a standalone panel of name rows.
+ */
+export type TeammateCdDisplayMode = (typeof TEAMMATE_CD_DISPLAY_MODES)[number];
+
+export const TEAMMATE_CD_SLOT_SIDES = ["left", "right"] as const;
+
+/** Which way a row's icons extend from its anchor. */
+export type TeammateCdSlotSide = (typeof TEAMMATE_CD_SLOT_SIDES)[number];
+
+export const TEAMMATE_CD_SLOT_KINDS = ["five", "twenty"] as const;
+
+/** The game draws five- and twenty-member teams with different panels. */
+export type TeammateCdSlotKind = (typeof TEAMMATE_CD_SLOT_KINDS)[number];
+
+/**
+ * Slot grid of the five-member team panel, in HUD pixels. Its first row sits
+ * at `overlayPositions.teammateCdSlotsFive`.
+ */
+export type TeammateCdFiveSlots = {
+  rowPitch: number;
+  side: TeammateCdSlotSide;
+};
+
+/**
+ * Slot grid of the twenty-member team panel: groups 1/3 form the left
+ * column, 2/4 the right one, and 3/4 sit below 1/2. Group 1's first row sits
+ * at `overlayPositions.teammateCdSlotsTwenty`.
+ */
+export type TeammateCdTwentySlots = {
+  rowPitch: number;
+  /** From the left column's anchor to the right column's. */
+  columnOffset: number;
+  /** From group 1's first row to group 3's. */
+  blockOffset: number;
+  leftSide: TeammateCdSlotSide;
+  rightSide: TeammateCdSlotSide;
+};
+
+export type TeammateCdSlotLayout = {
+  iconSize: number;
+  iconGap: number;
+  /** The grid the editor previews while not in a team. */
+  previewKind: TeammateCdSlotKind;
+  five: TeammateCdFiveSlots;
+  twenty: TeammateCdTwentySlots;
+};
+
 /** Teammate skill-cooldown panel (team sharing). */
 export type TeammateCdPanelStyle = {
+  displayMode: TeammateCdDisplayMode;
+  slots: TeammateCdSlotLayout;
   iconSize: number;
   iconGap: number;
   rowGap: number;
@@ -1123,6 +1176,12 @@ export type MonsterOverlayPositions = {
   monsterBuffPanel: Point;
   teammateBuffPanel: Point;
   teammateCdPanel: Point;
+  /**
+   * First row of the teammate CD grid beside the in-game team panel, at the
+   * icon edge facing it; one per panel the game draws.
+   */
+  teammateCdSlotsFive: Point;
+  teammateCdSlotsTwenty: Point;
   hatePanel: Point;
   fantasyPanel: Point;
   bossDbmPanel: Point;
@@ -1621,6 +1680,8 @@ function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
     monsterBuffPanel: { x: 40, y: 40 },
     teammateBuffPanel: { x: 420, y: 40 },
     teammateCdPanel: { x: 420, y: 180 },
+    teammateCdSlotsFive: { x: 240, y: 320 },
+    teammateCdSlotsTwenty: { x: 240, y: 160 },
     hatePanel: { x: 40, y: 300 },
     fantasyPanel: { x: 420, y: 300 },
     bossDbmPanel: { x: 800, y: 40 },
@@ -1658,8 +1719,26 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
   };
 }
 
+export function createDefaultTeammateCdSlotLayout(): TeammateCdSlotLayout {
+  return {
+    iconSize: 28,
+    iconGap: 2,
+    previewKind: "five",
+    five: { rowPitch: 44, side: "left" },
+    twenty: {
+      rowPitch: 36,
+      columnOffset: 340,
+      blockOffset: 200,
+      leftSide: "left",
+      rightSide: "right",
+    },
+  };
+}
+
 export function createDefaultTeammateCdPanelStyle(): TeammateCdPanelStyle {
   return {
+    displayMode: "slots",
+    slots: createDefaultTeammateCdSlotLayout(),
     iconSize: 36,
     iconGap: 4,
     rowGap: 4,
@@ -1686,12 +1765,101 @@ function clampRounded(
   );
 }
 
+/** Inclusive `[min, max]` of each numeric slot-layout field, in pixels. */
+export const TEAMMATE_CD_SLOT_LIMITS = {
+  iconSize: [12, 72],
+  iconGap: [0, 24],
+  rowPitch: [10, 200],
+  columnOffset: [0, 4000],
+  blockOffset: [0, 2000],
+} as const satisfies Record<string, readonly [number, number]>;
+
+function clampSlotField(
+  key: keyof typeof TEAMMATE_CD_SLOT_LIMITS,
+  value: unknown,
+  fallback: number,
+): number {
+  const [min, max] = TEAMMATE_CD_SLOT_LIMITS[key];
+  return clampRounded(value, fallback, min, max);
+}
+
+function ensureSlotSide(
+  value: unknown,
+  fallback: TeammateCdSlotSide,
+): TeammateCdSlotSide {
+  return (TEAMMATE_CD_SLOT_SIDES as readonly unknown[]).includes(value)
+    ? (value as TeammateCdSlotSide)
+    : fallback;
+}
+
+export function isTeammateCdSlotKind(
+  value: unknown,
+): value is TeammateCdSlotKind {
+  return (TEAMMATE_CD_SLOT_KINDS as readonly unknown[]).includes(value);
+}
+
+export function ensureTeammateCdSlotLayout(
+  layout:
+    | (Partial<Omit<TeammateCdSlotLayout, "five" | "twenty">> & {
+        five?: Partial<TeammateCdFiveSlots>;
+        twenty?: Partial<TeammateCdTwentySlots>;
+      })
+    | null
+    | undefined,
+): TeammateCdSlotLayout {
+  const base = createDefaultTeammateCdSlotLayout();
+  const five = layout?.five;
+  const twenty = layout?.twenty;
+  return {
+    iconSize: clampSlotField("iconSize", layout?.iconSize, base.iconSize),
+    iconGap: clampSlotField("iconGap", layout?.iconGap, base.iconGap),
+    previewKind: isTeammateCdSlotKind(layout?.previewKind)
+      ? layout.previewKind
+      : base.previewKind,
+    five: {
+      rowPitch: clampSlotField("rowPitch", five?.rowPitch, base.five.rowPitch),
+      side: ensureSlotSide(five?.side, base.five.side),
+    },
+    twenty: {
+      rowPitch: clampSlotField(
+        "rowPitch",
+        twenty?.rowPitch,
+        base.twenty.rowPitch,
+      ),
+      columnOffset: clampSlotField(
+        "columnOffset",
+        twenty?.columnOffset,
+        base.twenty.columnOffset,
+      ),
+      blockOffset: clampSlotField(
+        "blockOffset",
+        twenty?.blockOffset,
+        base.twenty.blockOffset,
+      ),
+      leftSide: ensureSlotSide(twenty?.leftSide, base.twenty.leftSide),
+      rightSide: ensureSlotSide(twenty?.rightSide, base.twenty.rightSide),
+    },
+  };
+}
+
 export function ensureTeammateCdPanelStyle(
-  style: Partial<TeammateCdPanelStyle> | null | undefined,
+  style:
+    | (Partial<Omit<TeammateCdPanelStyle, "slots">> & {
+        slots?: Parameters<typeof ensureTeammateCdSlotLayout>[0];
+      })
+    | null
+    | undefined,
 ): TeammateCdPanelStyle {
   const base = createDefaultTeammateCdPanelStyle();
   const placement = style?.deadRowPlacement;
+  const displayMode = style?.displayMode;
   return {
+    displayMode: (TEAMMATE_CD_DISPLAY_MODES as readonly unknown[]).includes(
+      displayMode,
+    )
+      ? (displayMode as TeammateCdDisplayMode)
+      : base.displayMode,
+    slots: ensureTeammateCdSlotLayout(style?.slots),
     iconSize: clampRounded(style?.iconSize, base.iconSize, 20, 72),
     iconGap: clampRounded(style?.iconGap, base.iconGap, 0, 24),
     rowGap: clampRounded(style?.rowGap, base.rowGap, 0, 24),

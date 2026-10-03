@@ -5,3 +5,4 @@ pub mod events;
 mod fantasy_registry;
 pub mod scheduler;
 pub mod segment;
+pub mod team_roster;

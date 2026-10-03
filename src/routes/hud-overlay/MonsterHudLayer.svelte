@@ -8,9 +8,14 @@
   import MonsterStunPanel from "../monster-overlay/MonsterStunPanel.svelte";
   import MonsterTeammateBuffPanel from "../monster-overlay/MonsterTeammateBuffPanel.svelte";
   import MonsterTeammateCdPanel from "../monster-overlay/MonsterTeammateCdPanel.svelte";
-  import { getMonsterOverlayVisibility } from "../monster-overlay/monster-state.svelte.js";
+  import MonsterTeammateCdSlotsPanel from "../monster-overlay/MonsterTeammateCdSlotsPanel.svelte";
+  import {
+    getMonsterOverlayVisibility,
+    teammateCdPanelStyle,
+  } from "../monster-overlay/monster-state.svelte.js";
 
   const visibility = $derived(getMonsterOverlayVisibility());
+  const teammateCdMode = $derived(teammateCdPanelStyle().displayMode);
 </script>
 
 <div class="hud-layer">
@@ -21,7 +26,11 @@
     <MonsterTeammateBuffPanel />
   {/if}
   {#if visibility.showTeammateCdPanel}
-    <MonsterTeammateCdPanel />
+    {#if teammateCdMode === "slots"}
+      <MonsterTeammateCdSlotsPanel />
+    {:else}
+      <MonsterTeammateCdPanel />
+    {/if}
   {/if}
   {#if visibility.showHatePanel}
     <MonsterHatePanel />

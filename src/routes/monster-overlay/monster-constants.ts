@@ -7,6 +7,8 @@ export const DEFAULT_MONSTER_OVERLAY_POSITIONS: MonsterOverlayPositions = {
   monsterBuffPanel: { x: 40, y: 40 },
   teammateBuffPanel: { x: 420, y: 40 },
   teammateCdPanel: { x: 420, y: 180 },
+  teammateCdSlotsFive: { x: 240, y: 320 },
+  teammateCdSlotsTwenty: { x: 240, y: 160 },
   hatePanel: { x: 40, y: 300 },
   fantasyPanel: { x: 420, y: 300 },
   bossDbmPanel: { x: 800, y: 40 },

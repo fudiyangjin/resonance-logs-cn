@@ -2,6 +2,8 @@ import {
   SETTINGS,
   ensureTeammateCdPanelStyle,
   ensureTeammatePanelStyle,
+  type MonsterOverlayPositions,
+  type TeammateCdSlotKind,
 } from "$lib/settings-store";
 import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
 import {
@@ -81,6 +83,16 @@ export function getTeammateCdPanelPosition() {
 
 export function getTeammateCdPanelScale() {
   return getMonsterOverlaySizes().teammateCdPanelScale;
+}
+
+const TEAMMATE_CD_SLOT_POSITION_KEYS = {
+  five: "teammateCdSlotsFive",
+  twenty: "teammateCdSlotsTwenty",
+} as const satisfies Record<TeammateCdSlotKind, keyof MonsterOverlayPositions>;
+
+/** First row of a teammate CD grid; only set by dragging it in edit mode. */
+export function getTeammateCdSlotsPosition(kind: TeammateCdSlotKind) {
+  return getMonsterOverlayPositions()[TEAMMATE_CD_SLOT_POSITION_KEYS[kind]];
 }
 
 export function teammateCdPanelStyle() {
@@ -245,6 +257,18 @@ export function setTeammateCdPanelScale(value: number) {
     overlaySizes: {
       ...getMonsterOverlaySizes(),
       teammateCdPanelScale: clampPanelScale(value),
+    },
+  }));
+}
+
+export function setTeammateCdSlotsPosition(
+  kind: TeammateCdSlotKind,
+  nextPos: { x: number; y: number },
+) {
+  patchMonsterMonitor(() => ({
+    overlayPositions: {
+      ...getMonsterOverlayPositions(),
+      [TEAMMATE_CD_SLOT_POSITION_KEYS[kind]]: nextPos,
     },
   }));
 }
@@ -487,6 +511,8 @@ function commitDragPreview() {
     setTeammatePanelPosition(nextPos);
   } else if (drag.target.kind === "teammateCdPanel") {
     setTeammateCdPanelPosition(nextPos);
+  } else if (drag.target.kind === "teammateCdSlots") {
+    setTeammateCdSlotsPosition(drag.target.grid, nextPos);
   } else if (drag.target.kind === "hatePanel") {
     setHatePanelPosition(nextPos);
   } else if (drag.target.kind === "stunPanel") {

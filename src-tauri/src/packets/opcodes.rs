@@ -24,6 +24,8 @@ pub mod grpc_team_method {
     pub const NOTIFY_BE_TRANSFER_LEADER: u32 = 0x0b;
     pub const NOTICE_TEAM_DISSOLVE: u32 = 0x0d;
     pub const NOTIFY_TEAM_ACTIVITY_STATE: u32 = 0x0e;
+    pub const NOTIFY_CHAR_MATCH_RESULT: u32 = 0x12;
+    pub const NOTIFY_TEAM_GROUP_UPDATE: u32 = 0x1d;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

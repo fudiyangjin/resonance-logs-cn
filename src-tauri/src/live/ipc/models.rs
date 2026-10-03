@@ -174,6 +174,36 @@ pub struct LiveTeamPayload {
     /// `false` while the relay connection is down; rows are then stale.
     pub link_online: bool,
     pub teammates: Vec<TeammateCdPayload>,
+    /// Where the game's team panel draws each member, the local character
+    /// included; `None` while not in a team.
+    pub layout: Option<TeamLayoutPayload>,
+}
+
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum TeamLayoutKind {
+    Five,
+    Twenty,
+}
+
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct TeamLayoutPayload {
+    pub kind: TeamLayoutKind,
+    pub slots: Vec<TeamSlotPayload>,
+}
+
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct TeamSlotPayload {
+    /// Canonical entity uuid, matching `TeammateCdPayload::uuid`.
+    pub uuid: String,
+    /// 1..=4; 1 top left, 2 top right, 3 bottom left, 4 bottom right. Always
+    /// 1 for a five-member team.
+    pub group: u8,
+    /// 1..=5 within the group.
+    pub row: u8,
+    pub is_self: bool,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]

@@ -504,6 +504,62 @@ pub struct LocalTalent {
     pub talent_stage_cfg_id: Option<i32>,
 }
 
+/// `ETeamMemberType`: which team panel the game draws.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum TeamKind {
+    #[default]
+    Five,
+    Twenty,
+}
+
+/// The `TeamBaseInfo` fields the team panel order depends on. Notices always
+/// carry the whole base info, so an absent `teamMemberType` means `Five`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ObservedTeamBase {
+    pub team_id: i64,
+    /// `0` when absent.
+    pub leader_id: i64,
+    pub kind: TeamKind,
+    pub create_time_ms: i64,
+    /// `groupId` → slot char ids in slot order, ascending by group id. Empty
+    /// slots stay as `0` because a slot's index is its position.
+    pub groups: Vec<(i32, Vec<i64>)>,
+}
+
+/// The `TeamMemData` fields the team panel order depends on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ObservedTeamMember {
+    pub char_id: i64,
+    /// Unix seconds.
+    pub enter_time: Option<u32>,
+    pub group_id: Option<i32>,
+}
+
+/// One `GrpcTeamNtf` notice as the game's `team_data.TeamInfo` applies it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TeamRosterUpdate {
+    /// `NoticeUpdateTeamInfo`.
+    BaseReplaced(ObservedTeamBase),
+    /// `NotifyJoinTeam`: every member when joining, else only the newcomers.
+    Joined {
+        base: Option<ObservedTeamBase>,
+        members: Vec<ObservedTeamMember>,
+    },
+    /// `NoticeUpdateTeamMemberInfo.teamMemberSocialDatas`.
+    MembersRefreshed(Vec<ObservedTeamMember>),
+    /// `NotifyLeaveTeam`.
+    MemberLeft { char_id: i64 },
+    /// `NoticeTeamDissolve`.
+    Dissolved,
+    /// Successful `NotifyCharMatchResult`: the whole team.
+    Matched {
+        base: ObservedTeamBase,
+        members: Vec<ObservedTeamMember>,
+    },
+    /// Successful `NotifyTeamGroupUpdate`.
+    GroupsReplaced(Vec<(i32, Vec<i64>)>),
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProtocolObservation {
     ContainerReset,
@@ -554,27 +610,12 @@ pub enum ProtocolObservation {
     LocalSkillCompleted {
         skill_id: i32,
     },
-    /// Team id, leader, and the roster from `TeamBaseInfo` group slots.
-    ///
-    /// A non-empty `roster` replaces the members. An empty `roster` means the
-    /// notice carried no group slots: the same team keeps its members, and a
-    /// new team id keeps only the leader. `team_id == 0` clears the team.
-    TeamInfoUpdated {
-        team_id: i64,
-        leader_uuid: Option<EntityUuid>,
-        roster: Vec<EntityUuid>,
-    },
-    TeamMembersUpdated {
-        members: Vec<EntityUuid>,
-    },
     /// The capture layer identified which game distribution owns the stream.
     GameClientIdentified {
         distribution: Distribution,
     },
-    TeamMemberLeft {
-        member_uuid: EntityUuid,
-    },
-    TeamDissolved,
+    /// A `GrpcTeamNtf` notice, applied to the team as the game client does.
+    TeamRoster(TeamRosterUpdate),
     MatchmakingPopped,
     ReadyCheckStarted,
     TeamVoteStarted {

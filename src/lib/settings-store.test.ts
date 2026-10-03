@@ -5,6 +5,8 @@ import {
   MAX_HISTORY_RETENTION_LIMIT,
   MIN_HISTORY_RETENTION_LIMIT,
   createDefaultCustomPanelStyle,
+  createDefaultTeammateCdSlotLayout,
+  ensureTeammateCdPanelStyle,
   ensureTeammatePanelStyle,
   normalizeDeathReplayColumnOrder,
   normalizeHistoryRetentionLimit,
@@ -100,5 +102,36 @@ describe("ensureTeammatePanelStyle", () => {
       } as unknown as Parameters<typeof ensureTeammatePanelStyle>[0])
         .preciseTimer,
     ).toBe(false);
+  });
+});
+
+describe("ensureTeammateCdPanelStyle", () => {
+  it("fills the slot layout and display mode for older settings", () => {
+    const style = ensureTeammateCdPanelStyle({ iconSize: 40 });
+    expect(style.iconSize).toBe(40);
+    expect(style.displayMode).toBe("slots");
+    expect(style.slots).toEqual(createDefaultTeammateCdSlotLayout());
+  });
+
+  it("keeps partial grids and clamps or replaces invalid values", () => {
+    const style = ensureTeammateCdPanelStyle({
+      displayMode: "grid",
+      slots: {
+        previewKind: "twenty",
+        iconSize: 500,
+        five: { rowPitch: 12.4, side: "up" },
+        twenty: { rowPitch: 2, rightSide: "left" },
+      },
+    } as unknown as Parameters<typeof ensureTeammateCdPanelStyle>[0]);
+    const defaults = createDefaultTeammateCdSlotLayout();
+    expect(style.displayMode).toBe("slots");
+    expect(style.slots.previewKind).toBe("twenty");
+    expect(style.slots.iconSize).toBe(72);
+    expect(style.slots.five).toEqual({ ...defaults.five, rowPitch: 12 });
+    expect(style.slots.twenty).toEqual({
+      ...defaults.twenty,
+      rowPitch: 10,
+      rightSide: "left",
+    });
   });
 });

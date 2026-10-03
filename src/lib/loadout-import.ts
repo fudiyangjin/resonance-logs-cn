@@ -11,6 +11,9 @@ import {
   MAX_BUFF_COVERAGE_ENTRIES,
   omitProfileId,
   normalizeHistorySettings,
+  TEAMMATE_CD_DISPLAY_MODES,
+  TEAMMATE_CD_SLOT_KINDS,
+  TEAMMATE_CD_SLOT_SIDES,
   TEAMMATE_DEAD_ROW_PLACEMENTS,
   type EntityDurationEntry,
   type InlineBuffFormat,
@@ -142,8 +145,38 @@ const teammatePanelStyleSchema = v.object({
 
 // Added with team cooldown sharing; older exports have neither field.
 const teammateCdPanelStyleDefaults = createDefaultTeammateCdPanelStyle();
+const teammateCdSlotDefaults = teammateCdPanelStyleDefaults.slots;
+const slotSideSchema = v.picklist(TEAMMATE_CD_SLOT_SIDES);
+// Added with the team-panel slot mode; older exports have none of these.
+const teammateCdSlotsSchema = v.optional(
+  v.object({
+    iconSize: finiteNumberSchema,
+    iconGap: finiteNumberSchema,
+    previewKind: v.optional(
+      v.picklist(TEAMMATE_CD_SLOT_KINDS),
+      teammateCdSlotDefaults.previewKind,
+    ),
+    five: v.object({
+      rowPitch: finiteNumberSchema,
+      side: slotSideSchema,
+    }),
+    twenty: v.object({
+      rowPitch: finiteNumberSchema,
+      columnOffset: finiteNumberSchema,
+      blockOffset: finiteNumberSchema,
+      leftSide: slotSideSchema,
+      rightSide: slotSideSchema,
+    }),
+  }),
+  defaultClone(teammateCdSlotDefaults),
+);
 const teammateCdPanelStyleSchema = v.optional(
   v.object({
+    displayMode: v.optional(
+      v.picklist(TEAMMATE_CD_DISPLAY_MODES),
+      teammateCdPanelStyleDefaults.displayMode,
+    ),
+    slots: teammateCdSlotsSchema,
     iconSize: finiteNumberSchema,
     iconGap: finiteNumberSchema,
     rowGap: finiteNumberSchema,
@@ -415,6 +448,14 @@ const monsterOverlayPositionsSchema = v.object({
   teammateCdPanel: v.optional(
     pointSchema,
     defaultClone(defaultMonster.overlayPositions.teammateCdPanel),
+  ),
+  teammateCdSlotsFive: v.optional(
+    pointSchema,
+    defaultClone(defaultMonster.overlayPositions.teammateCdSlotsFive),
+  ),
+  teammateCdSlotsTwenty: v.optional(
+    pointSchema,
+    defaultClone(defaultMonster.overlayPositions.teammateCdSlotsTwenty),
   ),
   hatePanel: pointSchema,
   fantasyPanel: pointSchema,

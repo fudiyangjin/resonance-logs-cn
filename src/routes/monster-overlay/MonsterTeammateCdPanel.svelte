@@ -39,6 +39,7 @@
     buildTeammateCdRows({
       teammates: team?.teammates ?? [],
       linkOnline: team?.linkOnline ?? false,
+      layout: team?.layout ?? null,
       selection: SETTINGS.monsterMonitor.state.teammateCdSkills ?? {},
       classKeyOf: (classId) => classKeyById.get(classId),
       skillInfo: (classKey, skillId) =>
