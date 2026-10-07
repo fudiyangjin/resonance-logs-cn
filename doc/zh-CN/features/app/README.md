@@ -14,7 +14,7 @@
 
 - **{{ui:appSettings.language.title}}**：简体中文 / English / 日本語。建议与游戏客户端一致，Buff 和技能名称会随之切换，预置语音音色也按界面语言选择。
 - **{{ui:appSettings.behavior.exitOnClose}}**：默认关闭，点击主窗口关闭按钮只会隐藏到系统托盘，浮窗和语音继续工作。开启后关闭按钮直接退出应用。
-- **{{ui:appSettings.teamShare.title}}**：默认关闭。开启后与同样开启的队友互相共享技能 CD，显示在 [队友 CD](../monster/teammate-cd.md) 面板中；下方会显示当前连接状态。
+- **{{ui:appSettings.teamShare.title}}**：默认开启，与同样开启的队友互相共享技能 CD，显示在 [队友 CD](../monster/teammate-cd.md) 面板中；下方会显示当前连接状态。
 
 ## 外观
 

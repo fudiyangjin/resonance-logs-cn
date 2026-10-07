@@ -6,7 +6,7 @@
 
 ## 开启共享
 
-1. 打开 **{{ui:routes.tools.appSettings}} → {{ui:appSettings.tabs.general}} → {{ui:appSettings.teamShare.title}}**，勾选 **{{ui:appSettings.teamShare.enable}}**。需要显示的一方和被显示的一方**都要开启**。
+1. 打开 **{{ui:routes.tools.appSettings}} → {{ui:appSettings.tabs.general}} → {{ui:appSettings.teamShare.title}}**，确认已勾选 **{{ui:appSettings.teamShare.enable}}**（默认开启）。需要显示的一方和被显示的一方**都要开启**。
 2. 进入游戏并组队。状态显示为「已连接」后，队友放技能时你这边会立即更新。
 
 - 你的插件会把自己的**全部**技能 CD 共享出去；每个人在自己这边决定看哪些技能。
@@ -14,7 +14,7 @@
 - 同一游戏的 Steam、Epic 与官方启动器视为同一发行区，可以互相共享。
 
 > [!NOTE]
-> {{ui:appSettings.teamShare.privacy}}
+> 开启后会向 bptimer.cn 发送：角色 ID、角色名、职业、队伍 ID 和技能冷却。服务器只把这些数据转发给同队且同样开启共享的队友，只保存在内存里，不写数据库；离开队伍或关闭后即删除。
 
 ## 设置要显示的技能
 

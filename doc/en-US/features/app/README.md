@@ -14,7 +14,7 @@
 
 - **{{ui:appSettings.language.title}}**: 简体中文 / English / 日本語. It's best to match your game client. Buff and skill names switch along with it, and the preset voice is also chosen by the UI language.
 - **{{ui:appSettings.behavior.exitOnClose}}**: off by default, so clicking the main window's close button only hides it to the system tray while the overlays and voice keep working. When it is on, the close button quits the app.
-- **{{ui:appSettings.teamShare.title}}**: off by default. When on, you and teammates who also turned it on share skill cooldowns, shown in the [Teammate CD](../monster/teammate-cd.md) panel; the current connection state is shown below the switch.
+- **{{ui:appSettings.teamShare.title}}**: on by default. You and teammates who also have it on share skill cooldowns, shown in the [Teammate CD](../monster/teammate-cd.md) panel; the current connection state is shown below the switch.
 
 ## Appearance
 

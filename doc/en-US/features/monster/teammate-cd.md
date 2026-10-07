@@ -6,7 +6,7 @@ The game only sends **your own** cooldowns to you, so each teammate's cooldowns 
 
 ## Turn on sharing
 
-1. Open **{{ui:routes.tools.appSettings}} → {{ui:appSettings.tabs.general}} → {{ui:appSettings.teamShare.title}}** and tick **{{ui:appSettings.teamShare.enable}}**. **Both** the viewer and the teammate being shown need it on.
+1. Open **{{ui:routes.tools.appSettings}} → {{ui:appSettings.tabs.general}} → {{ui:appSettings.teamShare.title}}** and make sure **{{ui:appSettings.teamShare.enable}}** is ticked (on by default). **Both** the viewer and the teammate being shown need it on.
 2. Start the game and join a team. Once the status reads "Connected", a teammate's cast updates your panel right away.
 
 - Your app shares **all** of your skill cooldowns; everyone picks which ones to look at on their own side.
@@ -14,7 +14,7 @@ The game only sends **your own** cooldowns to you, so each teammate's cooldowns 
 - The Steam, Epic and standalone launchers of one game count as the same distribution and can share with each other.
 
 > [!NOTE]
-> {{ui:appSettings.teamShare.privacy}}
+> When enabled, this sends your character ID, character name, class, team ID and skill cooldowns to bptimer.cn. The server only relays them to teammates in the same team who also share, keeps them in memory only and never writes them to a database; they are gone once you leave the team or turn this off.
 
 ## Choose the skills to show
 

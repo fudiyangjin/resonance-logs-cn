@@ -6,7 +6,7 @@
 
 ## 共有を有効にする
 
-1. **{{ui:routes.tools.appSettings}} → {{ui:appSettings.tabs.general}} → {{ui:appSettings.teamShare.title}}** を開き、**{{ui:appSettings.teamShare.enable}}** にチェックを入れます。表示する側と表示される側の**両方**で有効にする必要があります。
+1. **{{ui:routes.tools.appSettings}} → {{ui:appSettings.tabs.general}} → {{ui:appSettings.teamShare.title}}** を開き、**{{ui:appSettings.teamShare.enable}}** にチェックが入っていることを確認します（既定で有効）。表示する側と表示される側の**両方**で有効にする必要があります。
 2. ゲームを起動してパーティを組みます。状態が「接続済み」になれば、味方がスキルを使うとすぐに反映されます。
 
 - 自分のアプリは**すべて**のスキルクールダウンを共有します。どれを表示するかは各自が自分の側で決めます。
@@ -14,7 +14,7 @@
 - 同じゲームの Steam・Epic・公式ランチャーは同じ配信区として扱われ、互いに共有できます。
 
 > [!NOTE]
-> {{ui:appSettings.teamShare.privacy}}
+> 有効にすると、キャラクター ID・キャラクター名・職業・パーティ ID・スキルクールダウンを bptimer.cn に送信します。サーバーは同じパーティで共有を有効にしている味方にだけ中継し、メモリ上にのみ保持してデータベースには書き込みません。パーティを抜けるか無効にすると削除されます。
 
 ## 表示するスキルを選ぶ
 

@@ -6,12 +6,13 @@
 | --- | --- | --- |
 | **Monster Buff Area** | Shown | [Target Buffs](./buff.md) |
 | **Teammate Buff Area** | Shown | [Teammate Buffs](./teammate.md) |
+| **Teammate CD Area** | Hidden | [Teammate CD](./teammate-cd.md) |
 | **Hate List Area** | Hidden | [Threat List](./hate.md) |
 | **Stun Bar Area** | Hidden | [Stun bar](./status.md#stun-bar) |
 | **HP Bar Area** | Hidden | [HP bar](./status.md#hp-bar) |
 | **Teammate Fantasy Area** | Shown | [Teammate fantasies](./status.md#teammate-fantasies) |
 | **Boss DBM Area** | Hidden | [Boss DBM](./boss-dbm.md) |
-| **Entity Duration Area** | Shown | [Entity Duration](./entity-duration.md) |
+| **Entity Duration Area** | Hidden | [Entity Duration](./entity-duration.md) |
 
 Click a button to toggle its visibility.
 
