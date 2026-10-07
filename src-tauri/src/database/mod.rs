@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{OnceLock, mpsc};
 
 use diesel::prelude::*;
+use diesel::sql_types::Text;
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness};
 use serde::{Deserialize, Serialize};
@@ -27,6 +28,23 @@ pub const DEFAULT_ENCOUNTER_HISTORY_LIMIT: i64 = 200;
 pub const MAX_ENCOUNTER_HISTORY_LIMIT: i64 = 2_000;
 const HISTORY_RETENTION_FILE: &str = "historyRetention.json";
 const DATABASE_QUEUE_CAPACITY: usize = 256;
+
+/// `encounters` columns absent from databases created by 0.0.1-0.0.3.
+///
+/// Those releases shipped an older `2026-01-01-000000_initial_schema`. The
+/// migration was later rewritten under the same version, so Diesel treats it as
+/// applied and never adds these columns. If a later migration drops one of
+/// them, remove it here too, or every startup will add it back.
+const LEGACY_MISSING_ENCOUNTER_COLUMNS: [(&str, &str); 2] = [
+    (
+        "boss_names",
+        "ALTER TABLE encounters ADD COLUMN boss_names TEXT",
+    ),
+    (
+        "player_names",
+        "ALTER TABLE encounters ADD COLUMN player_names TEXT",
+    ),
+];
 
 type DatabaseOperation = Box<dyn FnOnce(&mut SqliteConnection) + Send + 'static>;
 
@@ -66,6 +84,8 @@ pub enum DbInitError {
     Connection(String),
     #[error("DB migration error: {0}")]
     Migration(String),
+    #[error("DB schema repair error: {0}")]
+    SchemaRepair(#[source] diesel::result::Error),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -105,6 +125,11 @@ pub fn init_db() -> Result<(), DbInitError> {
     let mut conn = SqliteConnection::establish(&db_path.to_string_lossy())
         .map_err(|error| DbInitError::Connection(error.to_string()))?;
     apply_sqlite_pragmas(&mut conn).map_err(DbInitError::Connection)?;
+    // Repair before migrating so later migrations can rely on these columns.
+    let added = repair_legacy_encounter_columns(&mut conn).map_err(DbInitError::SchemaRepair)?;
+    if !added.is_empty() {
+        log::info!(target: "app::db", "legacy_schema_repaired table=encounters added_columns={added:?}");
+    }
     conn.run_pending_migrations(MIGRATIONS)
         .map_err(|error| DbInitError::Migration(error.to_string()))?;
 
@@ -154,6 +179,36 @@ fn apply_sqlite_pragmas(conn: &mut SqliteConnection) -> Result<(), String> {
             .map_err(|error| format!("failed to apply SQLite {name} pragma: {error}"))?;
     }
     Ok(())
+}
+
+#[derive(Debug, QueryableByName)]
+struct ColumnNameRow {
+    #[diesel(sql_type = Text)]
+    name: String,
+}
+
+/// Adds the [`LEGACY_MISSING_ENCOUNTER_COLUMNS`] that an existing `encounters`
+/// table lacks and returns their names. A database without `encounters` is
+/// left for the migrations to create.
+///
+/// # Errors
+///
+/// Returns the SQLite error if reading the table layout or adding a column fails.
+fn repair_legacy_encounter_columns(conn: &mut SqliteConnection) -> QueryResult<Vec<&'static str>> {
+    let existing = diesel::sql_query("SELECT name FROM pragma_table_info('encounters')")
+        .load::<ColumnNameRow>(conn)?;
+    if existing.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut added = Vec::new();
+    for (column, statement) in LEGACY_MISSING_ENCOUNTER_COLUMNS {
+        if existing.iter().any(|row| row.name == column) {
+            continue;
+        }
+        diesel::sql_query(statement).execute(conn)?;
+        added.push(column);
+    }
+    Ok(added)
 }
 
 fn database_actor(mut conn: SqliteConnection, receiver: mpsc::Receiver<DatabaseRequest>) {
@@ -444,8 +499,45 @@ fn prune_encounters(conn: &mut SqliteConnection, keep: i64) -> Result<(), String
 
 #[cfg(test)]
 mod tests {
+    use diesel::connection::SimpleConnection;
+
     use super::*;
     use crate::database::schema::detailed_playerdata::dsl as dp;
+
+    /// `encounters` as created by the 0.0.1-0.0.3 `initial_schema` (commit
+    /// 3c9af0a), with that migration version already recorded as applied.
+    const LEGACY_ENCOUNTERS_SCHEMA: &str = "
+        CREATE TABLE encounters (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          started_at_ms INTEGER NOT NULL,
+          ended_at_ms INTEGER,
+          local_player_id INTEGER,
+          total_dmg INTEGER DEFAULT 0,
+          total_heal INTEGER DEFAULT 0,
+          scene_id INTEGER,
+          scene_name TEXT,
+          duration REAL NOT NULL DEFAULT 0.0,
+          uploaded_at_ms INTEGER,
+          remote_encounter_id INTEGER,
+          is_favorite INTEGER NOT NULL DEFAULT 0,
+          is_manually_reset INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX idx_encounters_started ON encounters(started_at_ms);
+        CREATE TABLE __diesel_schema_migrations (
+          version VARCHAR(50) PRIMARY KEY NOT NULL,
+          run_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        INSERT INTO __diesel_schema_migrations (version) VALUES ('20260101000000');
+    ";
+
+    fn encounter_columns(conn: &mut SqliteConnection) -> Vec<String> {
+        diesel::sql_query("SELECT name FROM pragma_table_info('encounters') ORDER BY name")
+            .load::<ColumnNameRow>(conn)
+            .expect("read encounter columns")
+            .into_iter()
+            .map(|row| row.name)
+            .collect()
+    }
 
     fn memory_conn() -> SqliteConnection {
         let mut conn = SqliteConnection::establish(":memory:").expect("open in-memory sqlite");
@@ -545,6 +637,64 @@ mod tests {
                 (5_000, None, 0),
             ]
         );
+    }
+
+    #[test]
+    fn legacy_database_gains_missing_encounter_columns_before_migrations() {
+        let mut conn = SqliteConnection::establish(":memory:").expect("open in-memory sqlite");
+        apply_sqlite_pragmas(&mut conn).expect("apply sqlite pragmas");
+        conn.batch_execute(LEGACY_ENCOUNTERS_SCHEMA)
+            .expect("create legacy schema");
+
+        let added = repair_legacy_encounter_columns(&mut conn).expect("repair legacy schema");
+        conn.run_pending_migrations(MIGRATIONS)
+            .expect("run embedded migrations");
+
+        assert_eq!(added, ["boss_names", "player_names"]);
+        assert_eq!(
+            encounter_columns(&mut conn),
+            encounter_columns(&mut memory_conn())
+        );
+        insert_test_encounter(&mut conn, 1_000, Some(2_000), 0);
+        use crate::database::schema::encounters::dsl as e;
+        let player_names = e::encounters
+            .select(e::player_names)
+            .first::<Option<String>>(&mut conn)
+            .expect("load repaired player_names");
+        assert_eq!(player_names, None);
+    }
+
+    #[test]
+    fn already_migrated_legacy_database_gains_missing_encounter_columns() {
+        let mut conn = SqliteConnection::establish(":memory:").expect("open in-memory sqlite");
+        apply_sqlite_pragmas(&mut conn).expect("apply sqlite pragmas");
+        conn.batch_execute(LEGACY_ENCOUNTERS_SCHEMA)
+            .expect("create legacy schema");
+        conn.run_pending_migrations(MIGRATIONS)
+            .expect("run migrations as 0.2.x did");
+
+        let added = repair_legacy_encounter_columns(&mut conn).expect("repair legacy schema");
+
+        assert_eq!(added, ["boss_names", "player_names"]);
+        assert_eq!(
+            encounter_columns(&mut conn),
+            encounter_columns(&mut memory_conn())
+        );
+    }
+
+    #[test]
+    fn legacy_repair_is_a_noop_for_current_and_empty_databases() {
+        let mut current = memory_conn();
+        let mut empty = SqliteConnection::establish(":memory:").expect("open in-memory sqlite");
+
+        let added_to_current =
+            repair_legacy_encounter_columns(&mut current).expect("repair current schema");
+        let added_to_empty =
+            repair_legacy_encounter_columns(&mut empty).expect("repair empty database");
+
+        assert!(added_to_current.is_empty());
+        assert!(added_to_empty.is_empty());
+        assert!(encounter_columns(&mut empty).is_empty());
     }
 
     #[test]
