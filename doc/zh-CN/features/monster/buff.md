@@ -20,7 +20,7 @@
 | 设置 | 作用 |
 | --- | --- |
 | **{{ui:monsterMonitor.priority.title}}** | 空间有限时，靠前的 Buff 优先显示 |
-| **{{ui:monsterMonitor.alert.title}}** | 剩余 ≤ 设定秒数时高亮，可选闪烁 |
+| **{{ui:monsterMonitor.alert.title}}** | 剩余 ≤ 设定秒数时高亮，可选闪烁；秒数直接输入，0.1–60，精度 0.1 秒 |
 | **{{ui:monsterMonitor.alias.title}}** | 为已监控的 Buff 设置浮窗中的别名 |
 | **{{ui:monsterMonitor.style.panelTitle}}** | 行 / 列间距、字号、名称 / 数值 / 进度条颜色与透明度 |
 

@@ -20,7 +20,7 @@
 | 設定 | 役割 |
 | --- | --- |
 | **{{ui:monsterMonitor.priority.title}}** | 表示スペースが足りないとき、上位の Buff を優先して表示 |
-| **{{ui:monsterMonitor.alert.title}}** | 残り時間が設定秒数以下になるとハイライト。点滅も選択可能 |
+| **{{ui:monsterMonitor.alert.title}}** | 残り時間が設定秒数以下になるとハイライト。点滅も選択可能。秒数は直接入力（0.1〜60、0.1 秒単位） |
 | **{{ui:monsterMonitor.alias.title}}** | 監視中の Buff にオーバーレイ上の別名を設定 |
 | **{{ui:monsterMonitor.style.panelTitle}}** | 行 / 列の間隔、フォントサイズ、名前 / 数値 / プログレスバーの色と不透明度 |
 

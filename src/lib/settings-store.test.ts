@@ -4,13 +4,57 @@ import {
   DEFAULT_HISTORY_RETENTION_LIMIT,
   MAX_HISTORY_RETENTION_LIMIT,
   MIN_HISTORY_RETENTION_LIMIT,
+  createDefaultBuffAlertRule,
   createDefaultCustomPanelStyle,
   createDefaultTeammateCdSlotLayout,
+  ensureBuffAlerts,
   ensureTeammateCdPanelStyle,
   ensureTeammatePanelStyle,
   normalizeDeathReplayColumnOrder,
   normalizeHistoryRetentionLimit,
+  parseBuffAlertThresholdInput,
+  type BuffAlertMap,
 } from "./settings-store";
+
+describe("parseBuffAlertThresholdInput", () => {
+  it("rounds typed seconds to 0.1 within the supported range", () => {
+    expect(parseBuffAlertThresholdInput("2.5")).toBe(2.5);
+    expect(parseBuffAlertThresholdInput("2.55")).toBe(2.6);
+    expect(parseBuffAlertThresholdInput(" 3 ")).toBe(3);
+    expect(parseBuffAlertThresholdInput("0.3")).toBe(0.3);
+    expect(parseBuffAlertThresholdInput("0")).toBe(0.1);
+    expect(parseBuffAlertThresholdInput("0.04")).toBe(0.1);
+    expect(parseBuffAlertThresholdInput("61")).toBe(60);
+  });
+
+  it("rejects blank and non-numeric text", () => {
+    for (const text of ["", "   ", "abc", "2,5", "2.5s"]) {
+      expect(parseBuffAlertThresholdInput(text)).toBeUndefined();
+    }
+  });
+});
+
+describe("ensureBuffAlerts", () => {
+  function thresholdOf(thresholdSeconds: unknown): number | undefined {
+    const alerts = {
+      "1": { ...createDefaultBuffAlertRule(), thresholdSeconds },
+    } as unknown as BuffAlertMap;
+    return ensureBuffAlerts(alerts)["1"]?.thresholdSeconds;
+  }
+
+  it("keeps 0.1 s precision and clamps to the supported range", () => {
+    expect(thresholdOf(2.5)).toBe(2.5);
+    expect(thresholdOf(2.55)).toBe(2.6);
+    expect(thresholdOf(0)).toBe(0.1);
+    expect(thresholdOf(100)).toBe(60);
+  });
+
+  it("falls back to the default for missing or invalid values", () => {
+    expect(thresholdOf(Number.NaN)).toBe(5);
+    expect(thresholdOf(undefined)).toBe(5);
+    expect(thresholdOf("abc")).toBe(5);
+  });
+});
 
 describe("normalizeHistoryRetentionLimit", () => {
   it("accepts the configured inclusive boundaries", () => {

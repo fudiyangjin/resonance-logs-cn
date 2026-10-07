@@ -1515,6 +1515,28 @@ export function createDefaultBuffAlertRule(): BuffAlertRule {
   };
 }
 
+export const MIN_BUFF_ALERT_THRESHOLD_SECONDS = 0.1;
+export const MAX_BUFF_ALERT_THRESHOLD_SECONDS = 60;
+
+/** Clamps to the supported range and rounds to the overlay clock's 0.1 s. */
+export function normalizeBuffAlertThresholdSeconds(seconds: number): number {
+  const clamped = Math.max(
+    MIN_BUFF_ALERT_THRESHOLD_SECONDS,
+    Math.min(MAX_BUFF_ALERT_THRESHOLD_SECONDS, seconds),
+  );
+  return Math.round(clamped * 10) / 10;
+}
+
+/** Parses typed threshold text; blank or non-numeric input is `undefined`. */
+export function parseBuffAlertThresholdInput(text: string): number | undefined {
+  const trimmed = text.trim();
+  if (!trimmed) return undefined;
+  const seconds = Number(trimmed);
+  return Number.isFinite(seconds)
+    ? normalizeBuffAlertThresholdSeconds(seconds)
+    : undefined;
+}
+
 export function ensureBuffAlerts(
   buffAlerts: BuffAlertMap | null | undefined,
 ): BuffAlertMap {
@@ -1528,7 +1550,7 @@ export function ensureBuffAlerts(
     const flashIntervalMs = Number(rule.flashIntervalMs);
     next[String(numericBaseId)] = {
       thresholdSeconds: Number.isFinite(thresholdSeconds)
-        ? Math.max(1, Math.min(60, thresholdSeconds))
+        ? normalizeBuffAlertThresholdSeconds(thresholdSeconds)
         : 5,
       highlightColor: rule.highlightColor || "#ef4444",
       flash: Boolean(rule.flash),

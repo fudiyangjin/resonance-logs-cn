@@ -77,7 +77,7 @@ Some effects only count when several Buffs are active at once. Create a composit
 
 ## Countdown alerts
 
-**{{ui:skillMonitor.buff.alert.title}}** sets a threshold for a Buff: when the remaining time is ≤ the set number of seconds, it is highlighted in the chosen color, optionally **flashing**. Good for watching boosts that are about to drop.
+**{{ui:skillMonitor.buff.alert.title}}** sets a threshold for a Buff: when the remaining time is ≤ the set number of seconds, it is highlighted in the chosen color, optionally **flashing**. Type the seconds directly (0.1–60, in 0.1 s steps); the value applies when you press Enter or click elsewhere. Good for watching boosts that are about to drop.
 
 ## Voice announcements
 

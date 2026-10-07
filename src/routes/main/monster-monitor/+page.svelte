@@ -2,6 +2,7 @@
   import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import BuffSearchResultGrid from "$lib/components/BuffSearchResultGrid.svelte";
+  import BuffAlertThresholdInput from "$lib/components/buff-alert-threshold-input.svelte";
   import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
   import type { MonsterBuffSourceScope } from "$lib/bindings";
   import {
@@ -1398,18 +1399,12 @@
                   {t("monsterMonitor.alert.threshold", {
                     seconds: rule.thresholdSeconds,
                   })}
-                  <input
+                  <BuffAlertThresholdInput
                     class="border-border/60 bg-muted/30 text-foreground mt-1 w-full rounded border px-2 py-1 text-sm"
-                    type="number"
-                    min="1"
-                    max="60"
-                    step="1"
                     value={rule.thresholdSeconds}
-                    oninput={(event) =>
+                    onCommit={(seconds) =>
                       upsertMonsterBuffAlert(buffId, {
-                        thresholdSeconds: Number(
-                          (event.currentTarget as HTMLInputElement).value,
-                        ),
+                        thresholdSeconds: seconds,
                       })}
                   />
                 </label>

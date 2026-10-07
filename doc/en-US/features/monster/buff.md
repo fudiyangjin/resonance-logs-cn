@@ -20,7 +20,7 @@ A Buff can belong to only one of the two; adding it with the other mode moves it
 | Setting | Effect |
 | --- | --- |
 | **{{ui:monsterMonitor.priority.title}}** | When space is limited, Buffs higher in the list are shown first |
-| **{{ui:monsterMonitor.alert.title}}** | Highlights when the remaining time is ≤ the set number of seconds, optionally blinking |
+| **{{ui:monsterMonitor.alert.title}}** | Highlights when the remaining time is ≤ the set number of seconds, optionally blinking; type the seconds directly (0.1–60, in 0.1 s steps) |
 | **{{ui:monsterMonitor.alias.title}}** | Sets an alias for a monitored Buff in the overlay |
 | **{{ui:monsterMonitor.style.panelTitle}}** | Row / column spacing, font size, name / value / progress bar colors and opacity |
 

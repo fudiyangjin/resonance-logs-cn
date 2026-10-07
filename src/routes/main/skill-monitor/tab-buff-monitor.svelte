@@ -1,6 +1,7 @@
 <script lang="ts">
   import ChevronDown from "virtual:icons/lucide/chevron-down";
   import BuffSearchResultGrid from "$lib/components/BuffSearchResultGrid.svelte";
+  import BuffAlertThresholdInput from "$lib/components/buff-alert-threshold-input.svelte";
   import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
   import type {
     BuffCategoryDefinition,
@@ -1225,19 +1226,11 @@
                     {t("skillMonitor.buff.alert.threshold", {
                       seconds: rule.thresholdSeconds,
                     })}
-                    <input
+                    <BuffAlertThresholdInput
                       class="border-border/60 bg-muted/30 text-foreground mt-1 w-full rounded border px-2 py-1 text-sm"
-                      type="number"
-                      min="1"
-                      max="60"
-                      step="1"
                       value={rule.thresholdSeconds}
-                      oninput={(event) =>
-                        upsertBuffAlert(buffId, {
-                          thresholdSeconds: Number(
-                            (event.currentTarget as HTMLInputElement).value,
-                          ),
-                        })}
+                      onCommit={(seconds) =>
+                        upsertBuffAlert(buffId, { thresholdSeconds: seconds })}
                     />
                   </label>
                   <label class="text-muted-foreground text-xs">
