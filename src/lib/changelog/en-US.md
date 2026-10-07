@@ -12,7 +12,7 @@
 
 ### Overlay Monitor
 
-- Added **Entity Duration** to Monster Monitor (Monster Monitor → Entity Duration): times nearby entities by id (e.g. Scythe Cart 179903) with presets / manual entries and a caster scope (self only / anyone). The timer starts when the entity appears and ends when it disappears. The optional **Merge same ID** shows one caster's entities with the same id as a single row counting down the one that expires soonest (on by default for the Scythe Cart preset)
+- Added **Entity Duration** to Monster Monitor (Monster Monitor → Entity Duration): times nearby entities by id (e.g. Scythe Cart 179903) with presets / manual entries and a caster scope (self only / anyone). The timer starts when the entity appears and ends when it disappears. The optional **Merge same ID** shows one caster's entities with the same id as a single row counting down the one that expires soonest (on by default for the Scythe Cart preset). Built-in presets: Scythe Cart, Fafala Duty (zone, 10 s), Fafala Imagine (zone, 15 s)
 - Removed **Duration Skills** from Live Monitor; a selected Scythe Cart is migrated automatically to Monster Monitor → Entity Duration
 - Monster Monitor area visibility is now controlled from the enable window
 - Monster HP values follow the abbreviation setting (Western / Chinese)

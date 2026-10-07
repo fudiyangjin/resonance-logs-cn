@@ -17,7 +17,13 @@
 
 ## 预设
 
-**{{ui:monsterMonitor.entityDuration.presetsTitle}}** 中目前内置 **镰车**（ID 179903，35 秒，仅自己，合并同 ID），点击即可添加。
+**{{ui:monsterMonitor.entityDuration.presetsTitle}}** 中目前内置以下条目，点击即可添加：
+
+| 预设 | ID | 持续时间 | {{ui:monsterMonitor.entityDuration.scope}} | {{ui:monsterMonitor.entityDuration.merge}} |
+| --- | --- | --- | --- | --- |
+| **镰车** | 179903 | 35 秒 | {{ui:monsterMonitor.entityDuration.scope.self}} | 是 |
+| **法法菈职责**（领域） | 55 | 10 秒 | {{ui:monsterMonitor.entityDuration.scope.any}} | 否 |
+| **法法菈幻想**（领域） | 53 | 15 秒 | {{ui:monsterMonitor.entityDuration.scope.any}} | 否 |
 
 ## 手动添加
 

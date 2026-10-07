@@ -11,5 +11,31 @@
       "en-US": "Scythe Cart",
       "ja-JP": "鎌車"
     }
+  },
+  {
+    "key": "fafala_duty_field",
+    "monsterId": 55,
+    "durationMs": 10000,
+    "scope": "any",
+    "merge": false,
+    "imagePath": "/images/resonance_skill/skill_aoyi_skill_icon_054.png",
+    "label": {
+      "zh-CN": "法法菈职责",
+      "en-US": "Fafala Duty",
+      "ja-JP": "ファファラ職責"
+    }
+  },
+  {
+    "key": "fafala_fantasy_field",
+    "monsterId": 53,
+    "durationMs": 15000,
+    "scope": "any",
+    "merge": false,
+    "imagePath": "/images/resonance_skill/skill_aoyi_skill_icon_054.png",
+    "label": {
+      "zh-CN": "法法菈幻想",
+      "en-US": "Fafala Imagine",
+      "ja-JP": "ファファラ幻想"
+    }
   }
 ]

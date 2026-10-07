@@ -17,7 +17,13 @@ These skills spawn a separate entity on the field, which carries an **entity ID*
 
 ## Presets
 
-**{{ui:monsterMonitor.entityDuration.presetsTitle}}** currently includes the built-in **Scythe Cart** (ID 179903, 35 seconds, self only, merged); click it to add.
+**{{ui:monsterMonitor.entityDuration.presetsTitle}}** currently includes the following built-in entries; click one to add it:
+
+| Preset | ID | Duration | {{ui:monsterMonitor.entityDuration.scope}} | {{ui:monsterMonitor.entityDuration.merge}} |
+| --- | --- | --- | --- | --- |
+| **Scythe Cart** | 179903 | 35 seconds | {{ui:monsterMonitor.entityDuration.scope.self}} | Yes |
+| **Fafala Duty** (zone) | 55 | 10 seconds | {{ui:monsterMonitor.entityDuration.scope.any}} | No |
+| **Fafala Imagine** (zone) | 53 | 15 seconds | {{ui:monsterMonitor.entityDuration.scope.any}} | No |
 
 ## Adding manually
 

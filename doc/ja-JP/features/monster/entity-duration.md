@@ -17,7 +17,13 @@
 
 ## プリセット
 
-**{{ui:monsterMonitor.entityDuration.presetsTitle}}** には現在 **鎌車**（ID 179903、35 秒、自分のみ、同じ ID をまとめる）が組み込まれており、クリックするだけで追加できます。
+**{{ui:monsterMonitor.entityDuration.presetsTitle}}** には現在以下の項目が組み込まれており、クリックするだけで追加できます：
+
+| プリセット | ID | 持続時間 | {{ui:monsterMonitor.entityDuration.scope}} | {{ui:monsterMonitor.entityDuration.merge}} |
+| --- | --- | --- | --- | --- |
+| **鎌車** | 179903 | 35 秒 | {{ui:monsterMonitor.entityDuration.scope.self}} | はい |
+| **ファファラ職責**（領域） | 55 | 10 秒 | {{ui:monsterMonitor.entityDuration.scope.any}} | いいえ |
+| **ファファラ幻想**（領域） | 53 | 15 秒 | {{ui:monsterMonitor.entityDuration.scope.any}} | いいえ |
 
 ## 手動追加
 
