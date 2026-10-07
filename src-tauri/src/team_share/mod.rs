@@ -75,7 +75,11 @@ impl TeamShareService {
         let Some(task) = self.task.lock().take() else {
             return;
         };
-        let _ = tauri::async_runtime::block_on(tokio::time::timeout(SHUTDOWN_GRACE, task));
+        // Build the timeout inside `block_on`: it registers its timer on
+        // construction, and the exit hook runs outside any Tokio context.
+        let _ = tauri::async_runtime::block_on(async move {
+            tokio::time::timeout(SHUTDOWN_GRACE, task).await
+        });
     }
 
     fn is_enabled(&self, app: &AppHandle) -> bool {
@@ -134,5 +138,23 @@ pub mod commands {
     #[specta::specta]
     pub fn get_team_share_status(service: State<'_, TeamShareService>) -> TeamShareStatus {
         service.status()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The Tauri exit hook calls `shutdown` outside any Tokio runtime context.
+    #[test]
+    fn shutdown_outside_runtime_context_waits_for_client() {
+        let service = TeamShareService::new(crate::live::team_link::channel().1);
+        let cancel = service.cancel.clone();
+        *service.task.lock() = Some(tauri::async_runtime::spawn(async move {
+            cancel.cancelled().await;
+        }));
+        service.shutdown();
+        assert!(service.task.lock().is_none());
+        service.shutdown();
     }
 }
