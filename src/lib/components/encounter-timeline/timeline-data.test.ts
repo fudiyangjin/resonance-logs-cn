@@ -3,6 +3,7 @@ import {
   clampInstantDpsWindowSec,
   clampViewportWindow,
   collapseHoverLanePoints,
+  complementSpans,
   curveMaxValue,
   dedupeMarkersByPixel,
   dpsValueAt,
@@ -13,6 +14,7 @@ import {
   resolveHoverDisplayTimeMs,
   sampleDpsCurve,
   sliceLanePointsByTime,
+  spanAt,
   timeToX,
   teammateDpsSources,
   visibleSpanRects,
@@ -557,6 +559,102 @@ describe("visibleSpanRects", () => {
     expect(visibleSpanRects([{ startMs: 0, endMs: 100 }], 500, 500)).toEqual(
       [],
     );
+  });
+
+  it("merges neighbours closer than one pixel when given a plot width", () => {
+    // 10s over 100px: 1px = 100ms. A 50ms gap merges, a 200ms gap does not.
+    const spans = [
+      { startMs: 1_000, endMs: 2_000 },
+      { startMs: 2_050, endMs: 3_000 },
+      { startMs: 3_200, endMs: 4_000 },
+    ];
+    expect(visibleSpanRects(spans, 0, 10_000, 100)).toEqual([
+      { startMs: 1_000, endMs: 3_000, leftPct: 10, widthPct: 20 },
+      { startMs: 3_200, endMs: 4_000, leftPct: 32, widthPct: 8 },
+    ]);
+  });
+
+  it("never merges without a plot width, even touching spans", () => {
+    const spans = [
+      { startMs: 1_000, endMs: 2_000 },
+      { startMs: 2_000, endMs: 3_000 },
+    ];
+    expect(visibleSpanRects(spans, 0, 10_000)).toHaveLength(2);
+  });
+
+  it("clamps a merged rect to the window", () => {
+    const spans = [
+      { startMs: 8_000, endMs: 9_000 },
+      { startMs: 9_010, endMs: 12_000 },
+    ];
+    expect(visibleSpanRects(spans, 0, 10_000, 100)).toEqual([
+      { startMs: 8_000, endMs: 12_000, leftPct: 80, widthPct: 20 },
+    ]);
+  });
+});
+
+describe("spanAt", () => {
+  const spans = [
+    { startMs: 1_000, endMs: 2_000 },
+    { startMs: 3_000, endMs: 4_000 },
+    { startMs: 6_000, endMs: 9_000 },
+  ];
+
+  it("finds the span containing the time (half-open)", () => {
+    expect(spanAt(spans, 1_000)).toBe(spans[0]);
+    expect(spanAt(spans, 3_999)).toBe(spans[1]);
+    expect(spanAt(spans, 8_500)).toBe(spans[2]);
+  });
+
+  it("returns null in gaps, at an end edge and outside", () => {
+    expect(spanAt(spans, 2_000)).toBeNull();
+    expect(spanAt(spans, 5_000)).toBeNull();
+    expect(spanAt(spans, 500)).toBeNull();
+    expect(spanAt(spans, 9_000)).toBeNull();
+  });
+
+  it("returns null for no spans", () => {
+    expect(spanAt([], 1_000)).toBeNull();
+  });
+});
+
+describe("complementSpans", () => {
+  it("returns leading, inner and trailing gaps", () => {
+    expect(
+      complementSpans(
+        [
+          { startMs: 1_000, endMs: 2_000 },
+          { startMs: 5_000, endMs: 7_000 },
+        ],
+        10_000,
+      ),
+    ).toEqual([
+      { startMs: 0, endMs: 1_000 },
+      { startMs: 2_000, endMs: 5_000 },
+      { startMs: 7_000, endMs: 10_000 },
+    ]);
+  });
+
+  it("returns no gaps when the spans cover the whole duration", () => {
+    expect(complementSpans([{ startMs: 0, endMs: 10_000 }], 10_000)).toEqual(
+      [],
+    );
+  });
+
+  it("treats an empty span list as unknown, not as one big gap", () => {
+    expect(complementSpans([], 10_000)).toEqual([]);
+  });
+
+  it("clamps spans that run past the duration", () => {
+    expect(
+      complementSpans(
+        [
+          { startMs: 2_000, endMs: 12_000 },
+          { startMs: 13_000, endMs: 14_000 },
+        ],
+        10_000,
+      ),
+    ).toEqual([{ startMs: 0, endMs: 2_000 }]);
   });
 });
 

@@ -1,8 +1,13 @@
 <script lang="ts">
-  // Header bar: curve legend toggles, viewport indicator/reset, and the
-  // independent lane / curve teammate selector popovers.
+  // Header bar: curve legend toggles, viewport indicator/reset, the
+  // independent lane / curve selector popovers, and the buff section's
+  // collapse toggle (grouping + owner picker appear once it is expanded).
+  // Lane teammates and buff owners are separate selections on purpose: many
+  // users only want one.
   import ChartLineIcon from "@lucide/svelte/icons/chart-line";
   import RotateCcwIcon from "@lucide/svelte/icons/rotate-ccw";
+  import SparklesIcon from "@lucide/svelte/icons/sparkles";
+  import UserCheckIcon from "@lucide/svelte/icons/user-check";
   import UsersIcon from "@lucide/svelte/icons/users";
   import ZapIcon from "@lucide/svelte/icons/zap";
   import { t } from "$lib/i18n/index.svelte";
@@ -11,22 +16,29 @@
   import { TIMELINE_PALETTE } from "./timeline-palette";
   import TimelinePlayerPicker from "./timeline-player-picker.svelte";
   import type { TeammateCurveMode } from "./timeline-data";
+  import type {
+    BuffViewState,
+    PlayerSelection,
+  } from "./timeline-selection.svelte";
   import type { TimelineViewport } from "./timeline-viewport.svelte";
-  import type { TimelinePlayerMeta } from "./timeline-types";
+  import type { BuffGrouping, TimelinePlayerMeta } from "./timeline-types";
 
   type Props = {
     showAverageCurve: boolean;
     onToggleAverage: () => void;
     teammates: TimelinePlayerMeta[];
-    selectedTeammateUuids: string[];
-    onToggleTeammate: (entityUuid: string) => void;
-    onSelectAllTeammates: () => void;
-    onClearTeammates: () => void;
+    laneSelection: PlayerSelection;
     curveTeammates: TimelinePlayerMeta[];
     curveTeammateModes: ReadonlyMap<string, TeammateCurveMode>;
     onToggleCurveTeammate: (entityUuid: string) => void;
     onSelectAllCurveTeammates: () => void;
     onClearCurveTeammates: () => void;
+    /** Players owning buff lanes; empty hides every buff control. */
+    buffOwners: TimelinePlayerMeta[];
+    buffView: BuffViewState;
+    /** Whether any buff rows are on screen (grouping toggle). */
+    buffRowsVisible: boolean;
+    showInactiveLegend: boolean;
     viewport: TimelineViewport;
   };
 
@@ -34,17 +46,23 @@
     showAverageCurve,
     onToggleAverage,
     teammates,
-    selectedTeammateUuids,
-    onToggleTeammate,
-    onSelectAllTeammates,
-    onClearTeammates,
+    laneSelection,
     curveTeammates,
     curveTeammateModes,
     onToggleCurveTeammate,
     onSelectAllCurveTeammates,
     onClearCurveTeammates,
+    buffOwners,
+    buffView,
+    buffRowsVisible,
+    showInactiveLegend,
     viewport,
   }: Props = $props();
+
+  const groupingOptions = $derived<{ value: BuffGrouping; label: string }[]>([
+    { value: "player", label: t("history.timeline.buff.groupByPlayer") },
+    { value: "buff", label: t("history.timeline.buff.groupByBuff") },
+  ]);
 
   const selectedCurveTeammates = $derived(
     curveTeammates.filter((player) =>
@@ -110,6 +128,17 @@
         </span>
       </button>
     {/each}
+    {#if showInactiveLegend}
+      <span class="flex items-center gap-1.5 rounded px-1.5 py-0.5">
+        <span
+          class="h-2.5 w-3.5 shrink-0 rounded-sm"
+          style="background: var(--tl-inactive-hatch); outline: 1px solid var(--tl-row-line)"
+        ></span>
+        <span class="text-[10px]" style="color: var(--tl-fg-muted)">
+          {t("history.timeline.buff.inactiveLegend")}
+        </span>
+      </span>
+    {/if}
     <span class="text-[10px]" style="color: var(--tl-fg-muted)">
       {t("history.timeline.hint.gestures")}
     </span>
@@ -163,15 +192,73 @@
       selectAllLabel={t("history.timeline.lanes.selectAll")}
       clearAllLabel={t("history.timeline.lanes.clearAll")}
       players={teammates}
-      selectedUuids={selectedTeammateUuids}
-      onToggle={onToggleTeammate}
-      onSelectAll={onSelectAllTeammates}
-      onClear={onClearTeammates}
+      selectedUuids={laneSelection.uuids}
+      onToggle={(uuid) => laneSelection.toggle(uuid)}
+      onSelectAll={() =>
+        laneSelection.setAll(teammates.map((player) => player.entityUuid))}
+      onClear={() => laneSelection.clear()}
     >
       {#snippet icon()}
         <UsersIcon class="size-3 shrink-0" />
       {/snippet}
     </TimelinePlayerPicker>
+    {#if buffOwners.length > 0}
+      <button
+        type="button"
+        class="tl-chip flex cursor-pointer items-center gap-1.5 rounded px-2 py-1 text-[10px] transition-colors duration-150"
+        style="color: {buffView.expanded ? 'var(--tl-fg)' : 'var(--tl-fg-muted)'}"
+        aria-expanded={buffView.expanded}
+        aria-label={t("history.timeline.buff.toggle")}
+        onclick={() => buffView.toggleExpanded()}
+      >
+        <span
+          class="tl-disclosure"
+          class:tl-disclosure-open={buffView.expanded}
+          aria-hidden="true"
+        ></span>
+        <SparklesIcon class="size-3 shrink-0" />
+        <span>{t("history.timeline.buff.title")}</span>
+      </button>
+      {#if buffView.expanded}
+        {#if buffRowsVisible}
+          <div
+            class="tl-segmented flex items-center rounded"
+            role="group"
+            aria-label={t("history.timeline.buff.title")}
+          >
+            {#each groupingOptions as option (option.value)}
+              <button
+                type="button"
+                class="cursor-pointer rounded px-1.5 py-0.5 text-[10px] transition-colors duration-150"
+                class:tl-segmented-active={buffView.grouping === option.value}
+                aria-pressed={buffView.grouping === option.value}
+                onclick={() => (buffView.grouping = option.value)}
+              >
+                {option.label}
+              </button>
+            {/each}
+          </div>
+        {/if}
+        <TimelinePlayerPicker
+          label={t("history.timeline.buff.players")}
+          closeAriaLabel={t("history.timeline.buff.playerPicker")}
+          selectAllLabel={t("history.timeline.lanes.selectAll")}
+          clearAllLabel={t("history.timeline.lanes.clearAll")}
+          players={buffOwners}
+          selectedUuids={buffView.owners.uuids}
+          onToggle={(uuid) => buffView.owners.toggle(uuid)}
+          onSelectAll={() =>
+            buffView.owners.setAll(
+              buffOwners.map((player) => player.entityUuid),
+            )}
+          onClear={() => buffView.owners.clear()}
+        >
+          {#snippet icon()}
+            <UserCheckIcon class="size-3 shrink-0" />
+          {/snippet}
+        </TimelinePlayerPicker>
+      {/if}
+    {/if}
   </div>
 </div>
 
@@ -183,5 +270,38 @@
 
   .tl-chip:hover {
     background: rgba(148, 163, 184, 0.1);
+  }
+
+  .tl-disclosure {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 5px solid currentColor;
+    opacity: 0.65;
+    transition: transform 120ms ease;
+  }
+
+  .tl-disclosure-open {
+    transform: rotate(90deg);
+  }
+
+  .tl-segmented {
+    border: 1px solid var(--tl-row-line);
+    padding: 1px;
+  }
+
+  .tl-segmented button {
+    color: var(--tl-fg-muted);
+  }
+
+  .tl-segmented button:hover {
+    color: var(--tl-fg);
+  }
+
+  .tl-segmented button.tl-segmented-active {
+    background: rgba(148, 163, 184, 0.16);
+    color: var(--tl-fg);
   }
 </style>

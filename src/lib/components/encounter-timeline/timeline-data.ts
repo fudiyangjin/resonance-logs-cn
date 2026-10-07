@@ -367,28 +367,88 @@ export function sliceLanePointsByTime<T extends TimeStamped>(
   return points.slice(first, last);
 }
 
+/** Half-open `[startMs, endMs)` interval on the fight-offset axis. */
+type TimeSpan = { startMs: number; endMs: number };
+
 /** Keeps only spans overlapping the visible half-open window, clamped to it.
  * Buff lanes carry few spans, so a linear pass beats maintaining a second
- * binary-search index. Returns [leftPct, widthPct] pairs ready for CSS. */
+ * binary-search index. Returns [leftPct, widthPct] pairs ready for CSS.
+ *
+ * With `plotWidthPx`, neighbours separated by less than one pixel merge into
+ * one rect (keeping the first span's `startMs` and the last one's `endMs`),
+ * so a lane's node count is bounded by the plot width rather than by how
+ * often the buff flickered. Expects spans ascending and non-overlapping. */
 export function visibleSpanRects(
-  spans: readonly { startMs: number; endMs: number }[],
+  spans: readonly TimeSpan[],
   startMs: number,
   endMs: number,
+  plotWidthPx = 0,
 ): { startMs: number; endMs: number; leftPct: number; widthPct: number }[] {
   const windowMs = endMs - startMs;
   if (windowMs <= 0) return [];
-  const result = [];
+  const mergeGapMs = plotWidthPx > 0 ? windowMs / plotWidthPx : 0;
+  const result: {
+    startMs: number;
+    endMs: number;
+    leftPct: number;
+    widthPct: number;
+  }[] = [];
+  let lastClampedEnd = Number.NEGATIVE_INFINITY;
   for (const span of spans) {
     if (span.endMs <= startMs || span.startMs >= endMs) continue;
     const clampedStart = Math.max(span.startMs, startMs);
     const clampedEnd = Math.min(span.endMs, endMs);
+    const last = result[result.length - 1];
+    if (last && clampedStart - lastClampedEnd < mergeGapMs) {
+      last.endMs = span.endMs;
+      last.widthPct = ((clampedEnd - startMs) / windowMs) * 100 - last.leftPct;
+      lastClampedEnd = clampedEnd;
+      continue;
+    }
     result.push({
       startMs: span.startMs,
       endMs: span.endMs,
       leftPct: ((clampedStart - startMs) / windowMs) * 100,
       widthPct: ((clampedEnd - clampedStart) / windowMs) * 100,
     });
+    lastClampedEnd = clampedEnd;
   }
+  return result;
+}
+
+/** The span containing `timeMs`, by binary search over ascending,
+ * non-overlapping half-open spans; null when `timeMs` falls in a gap. */
+export function spanAt<T extends TimeSpan>(
+  spans: readonly T[],
+  timeMs: number,
+): T | null {
+  let lo = 0;
+  let hi = spans.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (spans[mid]!.endMs <= timeMs) lo = mid + 1;
+    else hi = mid;
+  }
+  const span = spans[lo];
+  return span && span.startMs <= timeMs ? span : null;
+}
+
+/** Gaps between ascending, non-overlapping spans within `[0, durationMs)`.
+ * Empty input yields no gaps: a missing span list means "unknown", and must
+ * not paint the whole fight as a gap. */
+export function complementSpans(
+  spans: readonly TimeSpan[],
+  durationMs: number,
+): TimeSpan[] {
+  if (spans.length === 0) return [];
+  const result: TimeSpan[] = [];
+  let cursor = 0;
+  for (const span of spans) {
+    const start = Math.min(durationMs, span.startMs);
+    if (start > cursor) result.push({ startMs: cursor, endMs: start });
+    cursor = Math.max(cursor, Math.min(durationMs, span.endMs));
+  }
+  if (durationMs > cursor) result.push({ startMs: cursor, endMs: durationMs });
   return result;
 }
 

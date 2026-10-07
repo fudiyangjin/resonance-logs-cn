@@ -45,8 +45,8 @@ After you select a time range, the damage stats on the page are **recalculated f
 
 If you have configured a watch list in [Buff Coverage](../monitor/buff-coverage.md), the history details additionally show:
 
-- **{{ui:history.timeline.buff.title}}** timeline: when each Buff was active and for how long;
-- **{{ui:history.buffCoverage.title}}**: coverage and trigger counts calculated over active combat time.
+- **{{ui:history.timeline.buff.title}}** rows: click **{{ui:history.timeline.buff.title}}** in the timeline header to expand it (collapsed by default) and list when each of your Buffs was active, between the skill lanes and the curve, with its coverage on the left; tick other players in the **{{ui:history.timeline.buff.players}}** picker next to it (you are listed first, and it is independent of the teammate lane picker). Switch grouping between **{{ui:history.timeline.buff.groupByPlayer}}** and **{{ui:history.timeline.buff.groupByBuff}}**; gray hatching marks inactive combat time that coverage does not count. Hover, drag-select, and zoom work the same as on the lanes above;
+- **{{ui:history.buffCoverage.title}}**: one row per Buff, with each player's coverage and trigger count calculated over active combat time.
 
 ![Buff coverage timeline](../../../shared/img/changelog/v0.2.3_2.png)
 

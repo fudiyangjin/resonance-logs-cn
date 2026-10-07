@@ -45,8 +45,8 @@
 
 [Buff カバー率](../monitor/buff-coverage.md) で監視リストを設定している場合、履歴の詳細に次の内容が追加で表示されます：
 
-- **{{ui:history.timeline.buff.title}}** タイムライン：各 Buff がいつ有効になり、どれだけ持続したか；
-- **{{ui:history.buffCoverage.title}}**：アクティブ戦闘時間を基準にしたカバー率と発動回数。
+- **{{ui:history.timeline.buff.title}}** 行：タイムラインのヘッダーにある **{{ui:history.timeline.buff.title}}** をクリックして展開すると（初期状態は折りたたみ）、スキルレーンと曲線の間に自分の各 Buff の有効期間が表示され、左側にカバー率が出ます。ほかのプレイヤーは隣の **{{ui:history.timeline.buff.players}}** セレクターでチェックを入れます（自分が先頭に表示され、味方レーンの選択とは独立しています）。**{{ui:history.timeline.buff.groupByPlayer}}** / **{{ui:history.timeline.buff.groupByBuff}}** でグループを切り替えられ、灰色の斜線はカバー率に含まれない非アクティブ戦闘時間です。ホバー、ドラッグ選択、ズームは上のレーンと同じです；
+- **{{ui:history.buffCoverage.title}}**：1 行に 1 つの Buff で、各プレイヤーのアクティブ戦闘時間を基準にしたカバー率と発動回数。
 
 ![Buff カバー率タイムライン](../../../shared/img/changelog/v0.2.3_2.png)
 

@@ -23,6 +23,9 @@ export const TIMELINE_PALETTE = {
   average: "#fbbf24",
   boss: "#f87171",
   fallbackPlayer: "#a78bfa",
+  /** Inactive-combat gaps excluded from buff coverage (lanes + legend). */
+  inactiveHatch:
+    "repeating-linear-gradient(135deg,rgba(148,163,184,0.12) 0 3px,transparent 3px 7px)",
 } as const;
 
 export function timelinePaletteCssVars(): string {
@@ -31,6 +34,7 @@ export function timelinePaletteCssVars(): string {
     `--tl-bg:${p.bg};--tl-header-bg:${p.headerBg};--tl-popover-bg:${p.popoverBg};` +
     `--tl-fg:${p.fg};--tl-fg-muted:${p.fgMuted};--tl-row-line:${p.rowLine};` +
     `--tl-mine:${p.mine};--tl-average:${p.average};` +
-    `--tl-tooltip-bg:${p.tooltipBg};--tl-tooltip-border:${p.tooltipBorder};`
+    `--tl-tooltip-bg:${p.tooltipBg};--tl-tooltip-border:${p.tooltipBorder};` +
+    `--tl-inactive-hatch:${p.inactiveHatch};`
   );
 }

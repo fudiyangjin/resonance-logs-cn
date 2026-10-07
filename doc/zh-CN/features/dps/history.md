@@ -45,8 +45,8 @@
 
 如果你在 [Buff 覆盖率](../monitor/buff-coverage.md) 中配置了监听列表，历史详情会额外显示：
 
-- **{{ui:history.timeline.buff.title}}** 时间轴：每个 Buff 在什么时候生效、持续多久；
-- **{{ui:history.buffCoverage.title}}**：按活跃战斗时间计算的覆盖率与触发次数。
+- **{{ui:history.timeline.buff.title}}** 轨道：点时间轴表头的 **{{ui:history.timeline.buff.title}}** 展开（默认收起），技能泳道和曲线之间会列出自己每个 Buff 的生效时段，左侧是覆盖率；想看其他人，在旁边的 **{{ui:history.timeline.buff.players}}** 选择器中勾选（自己排在第一位，和队友泳道的选择互不影响）。可在 **{{ui:history.timeline.buff.groupByPlayer}}** / **{{ui:history.timeline.buff.groupByBuff}}** 之间切换分组；灰色斜线是不计入覆盖率的非活跃战斗时段。悬停、拖拽选区、缩放都和上面的泳道一致；
+- **{{ui:history.buffCoverage.title}}**：每行一个 Buff，列出每位玩家按活跃战斗时间计算的覆盖率与触发次数。
 
 ![Buff 覆盖时间轴](../../../shared/img/changelog/v0.2.3_2.png)
 

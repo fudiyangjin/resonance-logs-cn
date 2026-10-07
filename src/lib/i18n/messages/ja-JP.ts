@@ -557,17 +557,21 @@ export const jaJPMessages = {
   "history.timeline.resize.curve":
     "ドラッグで曲線の高さを変更、ダブルクリックでリセット",
   "history.timeline.buff.title": "Buffカバー率",
-  "history.timeline.buff.toggle": "Buffカバー率タイムラインを開閉",
-  "history.timeline.buff.playerPicker": "プレイヤーを選択",
-  "history.timeline.buff.empty":
-    "プレイヤーが未選択、または監視中のbuffがありません",
-  "history.timeline.buff.spanTooltip":
-    "{player} · {name}：{start} - {end}（{duration}）",
-  "history.timeline.buff.pillTooltip": "{count} 回発動",
+  "history.timeline.buff.toggle": "Buffカバー率を開閉",
+  "history.timeline.buff.players": "プレイヤー",
+  "history.timeline.buff.playerPicker": "Buffプレイヤー選択を閉じる",
+  "history.timeline.buff.groupByPlayer": "プレイヤー別",
+  "history.timeline.buff.groupByBuff": "Buff別",
+  "history.timeline.buff.active": "発動中 {start} - {end}（{duration}）",
+  "history.timeline.buff.notActive": "未発動",
+  "history.timeline.buff.coverage": "カバー率 {pct} · {count} 回発動",
+  "history.timeline.buff.inactiveWindow":
+    "非アクティブ戦闘時間のため、カバー率に含まれません",
+  "history.timeline.buff.inactiveLegend": "カバー率対象外",
   "history.buffCoverage.title": "Buffカバー率サマリー",
   "history.buffCoverage.caption": "アクティブ戦闘時間（{seconds}秒）に基づく",
   "history.buffCoverage.rangeCaption": "選択範囲のアクティブ戦闘時間に基づく",
-  "history.buffCoverage.player": "プレイヤー",
+  "history.buffCoverage.buff": "Buff",
   "history.buffCoverage.count": "×{value}",
   "history.buffCoverage.unavailable":
     "この戦闘はbuffカバー率機能の実装前に記録されたため、データがありません",

@@ -1,7 +1,9 @@
 <script lang="ts">
-  // Player × watched-buff coverage summary. Percentages use the
-  // active-combat-window caliber (same as the live HUD and the timeline
-  // lane pills); trigger counts come from the wall-clock span count.
+  // Watched-buff × player coverage summary. One row per buff so the name gets
+  // a wide, wrapping first column (buff names run long; player names are the
+  // short axis). Percentages use the active-combat-window caliber (same as
+  // the live HUD and the timeline rows); trigger counts come from the
+  // wall-clock span count.
   import { t } from "$lib/i18n/index.svelte";
   import { tooltip } from "$lib/utils.svelte";
   import type {
@@ -27,18 +29,9 @@
 
   const activeView = $derived(rangeView ?? view);
 
-  const columns = $derived.by(() => {
-    const seen = new Set<number>();
-    const result: number[] = [];
-    for (const lane of view.lanes) {
-      if (seen.has(lane.baseId)) continue;
-      seen.add(lane.baseId);
-      result.push(lane.baseId);
-    }
-    return result;
-  });
+  const buffIds = $derived([...new Set(view.lanes.map((lane) => lane.baseId))]);
 
-  const rows = $derived.by(() => {
+  const owners = $derived.by(() => {
     const ownerUuids = new Set(view.lanes.map((lane) => lane.entityUuid));
     return players.filter((player) => ownerUuids.has(player.entityUuid));
   });
@@ -74,32 +67,38 @@
   <table class="w-full border-collapse text-xs">
     <thead>
       <tr class="border-border/60 text-muted-foreground border-t border-b">
-        <th class="px-3 py-1.5 text-left font-normal">
-          {t("history.buffCoverage.player")}
+        <th class="bg-background sticky left-0 px-3 py-1.5 text-left font-normal">
+          {t("history.buffCoverage.buff")}
         </th>
-        {#each columns as baseId (baseId)}
+        {#each owners as player (player.entityUuid)}
           <th
-            class="max-w-40 truncate px-3 py-1.5 text-right font-normal"
-            {@attach tooltip(() => `#${baseId}`)}
+            class="max-w-28 truncate px-3 py-1.5 text-right font-normal {player.isLocalPlayer
+              ? 'bg-blue-500/5'
+              : ''}"
+            {@attach tooltip(() => player.name)}
           >
-            {resolveBuffName(baseId)}
+            {player.name}
           </th>
         {/each}
       </tr>
     </thead>
     <tbody>
-      {#each rows as player (player.entityUuid)}
-        <tr
-          class="border-border/40 border-b last:border-b-0 {player.isLocalPlayer
-            ? 'bg-blue-500/5'
-            : ''}"
-        >
-          <td class="max-w-40 truncate px-3 py-1.5">
-            {player.name}
-          </td>
-          {#each columns as baseId (baseId)}
+      {#each buffIds as baseId (baseId)}
+        <tr class="border-border/40 border-b last:border-b-0">
+          <th
+            scope="row"
+            class="bg-background sticky left-0 max-w-72 min-w-40 px-3 py-1.5 text-left font-normal break-words whitespace-normal"
+            {@attach tooltip(() => `#${baseId}`)}
+          >
+            {resolveBuffName(baseId)}
+          </th>
+          {#each owners as player (player.entityUuid)}
             {@const lane = cell(player.entityUuid, baseId)}
-            <td class="px-3 py-1.5 text-right tabular-nums">
+            <td
+              class="px-3 py-1.5 text-right whitespace-nowrap tabular-nums {player.isLocalPlayer
+                ? 'bg-blue-500/5'
+                : ''}"
+            >
               {#if lane}
                 <span class="font-medium">{lane.coveragePct.toFixed(1)}%</span>
                 <span class="text-muted-foreground ml-1 text-[10px]">

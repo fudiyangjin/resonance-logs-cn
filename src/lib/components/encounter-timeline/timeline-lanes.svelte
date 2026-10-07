@@ -20,14 +20,20 @@
   } from "./timeline-data";
   import { hexToRgba } from "./timeline-format";
   import { laneColor } from "./timeline-colors";
-  import type { Lane, LanePoint, TimelineEventDisplay } from "./timeline-types";
+  import type {
+    LanePoint,
+    TimelineEventDisplay,
+    TimelineRow,
+  } from "./timeline-types";
   import type { EncounterTimelineEvent } from "./timeline-data";
 
+  type CastRow = Extract<TimelineRow, { kind: "cast" }>;
+
   type Props = {
-    lanes: Lane[];
+    /** Cast rows positioned in chart-body coordinates. */
+    rows: CastRow[];
     startMs: number;
     endMs: number;
-    laneH: number;
     iconSize: number;
     /** Live pixel width of the plot area (from the gesture layer's
      * `bind:clientWidth`), used only for the density-degrade calculation. */
@@ -35,7 +41,7 @@
     resolveEvent: (event: EncounterTimelineEvent) => TimelineEventDisplay;
   };
 
-  let { lanes, startMs, endMs, laneH, iconSize, plotWidthPx, resolveEvent }: Props =
+  let { rows, startMs, endMs, iconSize, plotWidthPx, resolveEvent }: Props =
     $props();
 
   const spanMs = $derived(Math.max(1, endMs - startMs));
@@ -50,10 +56,11 @@
    * pure node-count guard for dense/long encounters - nothing visible is
    * lost. */
   const visibleLanes = $derived(
-    lanes.map((lane) => ({
-      lane,
+    rows.map((row) => ({
+      row,
+      lane: row.lane,
       points: dedupeMarkersByPixel(
-        sliceLanePointsByTime(lane.points, startMs, endMs),
+        sliceLanePointsByTime(row.lane.points, startMs, endMs),
         startMs,
         endMs,
         plotWidthPx,
@@ -75,11 +82,11 @@
 </script>
 
 <div class="pointer-events-none absolute inset-x-0 top-0">
-  {#each visibleLanes as { lane, points }, laneIndex (lane.key)}
+  {#each visibleLanes as { row, lane, points } (row.key)}
     {@const stroke = laneColor(lane)}
     <div
       class="absolute inset-x-0"
-      style="top: {laneIndex * laneH}px; height: {laneH}px"
+      style="top: {row.top}px; height: {row.height}px"
     >
       {#each points as point, index (point.event.sequence)}
         {@const display = resolveEvent(point.event)}

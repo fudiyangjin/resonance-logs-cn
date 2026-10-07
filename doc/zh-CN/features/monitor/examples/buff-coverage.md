@@ -19,11 +19,11 @@
 ## 第 3 步：打完后看历史
 
 1. 打开 **{{ui:routes.tools.dps}} → {{ui:routes.dps.history}}**，点开这场战斗。
-2. **{{ui:history.buffCoverage.title}}** 列出每个 Buff 的覆盖率与触发次数，覆盖率按**活跃战斗时间**计算，Boss 无敌、转场的空档不会拉低数值。
+2. **{{ui:history.buffCoverage.title}}** 每行一个 Buff，列出每位玩家的覆盖率与触发次数，覆盖率按**活跃战斗时间**计算，Boss 无敌、转场的空档不会拉低数值。
 
 ![覆盖率汇总](../../../../shared/img/changelog/v0.2.3_3.png)
 
-3. 展开 **{{ui:history.timeline.buff.title}}**，选择要查看的玩家，每一段色块就是 Buff 生效的时间。和上方 DPS 曲线对照，能看出增益是否对上了爆发期。
+3. 点时间轴表头的 **{{ui:history.timeline.buff.title}}** 展开，默认显示自己，其他人在 **{{ui:history.timeline.buff.players}}** 选择器中勾选。每一段色块就是 Buff 生效的时间，灰色斜线是不计入覆盖率的非活跃时段。和下方 DPS 曲线对照，能看出增益是否对上了爆发期；想看全队谁没吃到同一个 Buff，切换到 **{{ui:history.timeline.buff.groupByBuff}}**。
 
 ![Buff 覆盖时间轴](../../../../shared/img/changelog/v0.2.3_2.png)
 

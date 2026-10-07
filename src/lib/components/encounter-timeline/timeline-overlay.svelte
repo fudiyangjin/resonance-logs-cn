@@ -8,23 +8,27 @@
     collapseHoverLanePoints,
     dpsValueAt,
     resolveHoverDisplayTimeMs,
+    spanAt,
     type DamageHitIndex,
     type EncounterTimelineEvent,
   } from "./timeline-data";
+  import { playerColor } from "./timeline-colors";
   import { formatTimeMs, formatValue } from "./timeline-format";
+  import { trackAt } from "./timeline-layout";
   import { t } from "$lib/i18n/index.svelte";
   import { SETTINGS } from "$lib/settings-store";
   import type {
-    Lane,
+    TimelineBuffLane,
+    TimelineBuffSpan,
     TimelineEventDisplay,
     TimelineHoverPoint,
+    TimelineRow,
     TimelineTeammateCurve,
   } from "./timeline-types";
 
   type Props = {
-    lanes: Lane[];
-    laneH: number;
-    lanesHeight: number;
+    /** Every row in chart-body coordinates; y outside all rows = curve. */
+    rows: TimelineRow[];
     startMs: number;
     endMs: number;
     hoverPoint: TimelineHoverPoint | null;
@@ -34,12 +38,13 @@
     teammateCurves?: TimelineTeammateCurve[];
     showAverageCurve: boolean;
     resolveEvent: (event: EncounterTimelineEvent) => TimelineEventDisplay;
+    /** Inactive-combat gaps excluded from buff coverage. */
+    inactiveSpans: TimelineBuffSpan[];
+    buffCoveragePct: (lane: TimelineBuffLane) => number | null;
   };
 
   let {
-    lanes,
-    laneH,
-    lanesHeight,
+    rows,
     startMs,
     endMs,
     hoverPoint,
@@ -49,6 +54,8 @@
     teammateCurves = [],
     showAverageCurve,
     resolveEvent,
+    inactiveSpans,
+    buffCoveragePct,
   }: Props = $props();
 
   const spanMs = $derived(Math.max(1, endMs - startMs));
@@ -77,20 +84,13 @@
   // radius" around the cursor regardless of zoom level.
   const toleranceMs = $derived(Math.max(30, spanMs * 0.012));
 
-  const hoverLaneIndex = $derived.by(() => {
-    if (!hoverPoint) return null;
-    if (hoverPoint.y < 0 || hoverPoint.y >= lanesHeight) return null;
-    const index = Math.floor(hoverPoint.y / laneH);
-    return index >= 0 && index < lanes.length ? index : null;
-  });
+  const hoverRow = $derived(hoverPoint ? trackAt(rows, hoverPoint.y) : null);
 
   const hoverLaneEvents = $derived.by(() => {
-    if (hoverLaneIndex === null || !hoverPoint) return [];
-    const lane = lanes[hoverLaneIndex];
-    if (!lane) return [];
+    if (hoverRow?.kind !== "cast" || !hoverPoint) return [];
     const point = hoverPoint;
     return collapseHoverLanePoints(
-      lane.points
+      hoverRow.lane.points
         .filter((p) => Math.abs(p.timeMs - point.timeMs) <= toleranceMs)
         .sort(
           (a, b) =>
@@ -101,8 +101,19 @@
     );
   });
 
+  const hoverBuffInfo = $derived.by(() => {
+    if (hoverRow?.kind !== "buff" || !hoverPoint) return null;
+    const pct = buffCoveragePct(hoverRow.lane);
+    return {
+      row: hoverRow,
+      span: spanAt(hoverRow.lane.spans, hoverPoint.timeMs),
+      inInactiveGap: spanAt(inactiveSpans, hoverPoint.timeMs) !== null,
+      pctText: pct === null ? "--" : `${pct.toFixed(1)}%`,
+    };
+  });
+
   const hoverCurveInfo = $derived.by(() => {
-    if (!hoverPoint || hoverLaneIndex !== null) return null;
+    if (!hoverPoint || hoverRow !== null) return null;
     const instant = mineHits
       ? dpsValueAt(mineHits, "instant", hoverPoint.timeMs, instantWindowMs)
       : null;
@@ -135,7 +146,9 @@
 
   const showTooltip = $derived(
     hoverPoint !== null &&
-      (hoverLaneEvents.length > 0 || hoverCurveInfo !== null),
+      (hoverLaneEvents.length > 0 ||
+        hoverBuffInfo !== null ||
+        hoverCurveInfo !== null),
   );
 
   const displayTimeMs = $derived(
@@ -194,7 +207,42 @@
       {#if showHeaderTime}
         <div class="tl-tooltip-time">{formatTimeMs(displayTimeMs, true)}</div>
       {/if}
-      {#if hoverLaneIndex !== null}
+      {#if hoverBuffInfo}
+        {@const { row, span, inInactiveGap, pctText } = hoverBuffInfo}
+        <div class="tl-tooltip-row tl-tooltip-row--wrap">
+          <span
+            class="tl-tooltip-dot"
+            style="background: {playerColor(row.player)}"
+          ></span>
+          <span class="tl-tooltip-name">
+            {row.player.name} · {row.lane.buffName}
+          </span>
+        </div>
+        <div class="tl-tooltip-row">
+          {#if span}
+            {t("history.timeline.buff.active", {
+              start: formatTimeMs(span.startMs, true),
+              end: formatTimeMs(span.endMs, true),
+              duration: formatTimeMs(span.endMs - span.startMs, true),
+            })}
+          {:else}
+            <span class="tl-tooltip-muted">
+              {t("history.timeline.buff.notActive")}
+            </span>
+          {/if}
+        </div>
+        <div class="tl-tooltip-row">
+          {t("history.timeline.buff.coverage", {
+            pct: pctText,
+            count: row.lane.triggerCount,
+          })}
+        </div>
+        {#if inInactiveGap}
+          <div class="tl-tooltip-row tl-tooltip-muted">
+            {t("history.timeline.buff.inactiveWindow")}
+          </div>
+        {/if}
+      {:else if hoverRow?.kind === "cast"}
         {#each hoverLaneEvents as point (point.event.sequence)}
           {@const display = resolveEvent(point.event)}
           <div class="tl-tooltip-row">
@@ -299,6 +347,20 @@
     align-items: center;
     gap: 4px;
     line-height: 1.5;
+  }
+
+  /* Buff names are long; let the title row wrap instead of clipping. */
+  .tl-tooltip-row--wrap {
+    align-items: baseline;
+    overflow-wrap: anywhere;
+  }
+
+  .tl-tooltip-row--wrap .tl-tooltip-dot {
+    flex-shrink: 0;
+  }
+
+  .tl-tooltip-muted {
+    color: var(--tl-fg-muted);
   }
 
   .tl-tooltip-event-time {

@@ -19,11 +19,11 @@ Related page: [Buff Coverage](../buff-coverage.md)
 ## Step 3: Check history after the fight
 
 1. Open **{{ui:routes.tools.dps}} → {{ui:routes.dps.history}}** and click into this fight.
-2. **{{ui:history.buffCoverage.title}}** lists each Buff's coverage and trigger count. Coverage is calculated over **active combat time**, so gaps such as boss invulnerability and phase transitions do not drag the number down.
+2. **{{ui:history.buffCoverage.title}}** has one row per Buff, listing each player's coverage and trigger count. Coverage is calculated over **active combat time**, so gaps such as boss invulnerability and phase transitions do not drag the number down.
 
 ![Coverage summary](../../../../shared/img/changelog/v0.2.3_3.png)
 
-3. Expand **{{ui:history.timeline.buff.title}}** and choose the player to view; each colored block is a period when the Buff was active. Compare it with the DPS curve above to see whether your boosts lined up with the burst windows.
+3. Click **{{ui:history.timeline.buff.title}}** in the timeline header to expand it; it shows you by default, and other players can be ticked in the **{{ui:history.timeline.buff.players}}** picker. Each colored block is a period when the Buff was active, and gray hatching marks inactive time that coverage does not count. Compare it with the DPS curve below to see whether your boosts lined up with the burst windows; to see who on the team missed the same Buff, switch to **{{ui:history.timeline.buff.groupByBuff}}**.
 
 ![Buff coverage timeline](../../../../shared/img/changelog/v0.2.3_2.png)
 

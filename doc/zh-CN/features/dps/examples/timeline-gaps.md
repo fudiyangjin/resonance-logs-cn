@@ -26,7 +26,7 @@
 
 ## 第 4 步：确认增益是否断了
 
-如果你配置了 [Buff 覆盖率](../../monitor/buff-coverage.md)，展开 **{{ui:history.timeline.buff.title}}**，选择自己，看看空窗期间爆发 Buff 是否恰好不在。
+如果你配置了 [Buff 覆盖率](../../monitor/buff-coverage.md)，点时间轴表头的 **{{ui:history.timeline.buff.title}}** 展开（默认显示自己），看看空窗期间爆发 Buff 是否恰好不在。
 
 ![Buff 覆盖时间轴](../../../../shared/img/changelog/v0.2.3_2.png)
 

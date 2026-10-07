@@ -6,7 +6,7 @@
 
 - Compact mode now applies to the player list only; skill details stay as a full table unless you enable "Also Compact Detail Pages" (DPS Meter → Themes → Compact Mode)
 - History timeline now includes Deter Shot and Luminary Bolt
-- Adjusted the history Buff coverage timeline so percentages no longer cover the bars
+- History Buff coverage now sits between the skill lanes and the curve: full Buff names, grouping by player or by Buff, gray hatching for inactive time that coverage does not count, and the same hover, selection and zoom as the lanes; expand it from the timeline header (collapsed by default, shows you when expanded; other players can be added independently of the teammate lane picker, and you are listed first in player lists and the summary). The Buff coverage summary now has one row per Buff
 - Damage element labels: Water is now Ice, Wood is now Forest
 - Fixed difficulty names not being appended to scene names
 

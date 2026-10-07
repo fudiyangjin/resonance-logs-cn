@@ -50,7 +50,7 @@ export type Lane =
     };
 
 /** A pointer's location while hovering the interactive plot surface, in the
- * plot's own local coordinate space (y=0 at the first lane row's top edge). */
+ * chart body's coordinate space (the same space `TimelineRow.top` uses). */
 export type TimelineHoverPoint = {
   timeMs: number;
   y: number;
@@ -74,6 +74,40 @@ export type TimelineBuffLane = {
   triggerCount: number;
   spans: TimelineBuffSpan[];
 };
+
+/** Buff coverage input for the timeline; `activeSpans` are the active-combat
+ * intervals the coverage percent is measured against. */
+export type TimelineBuffData = {
+  lanes: TimelineBuffLane[];
+  activeSpans: TimelineBuffSpan[];
+};
+
+/** How buff rows are grouped under their header rows. */
+export type BuffGrouping = "player" | "buff";
+
+/** One horizontal row of the chart body, top to bottom: cast lanes first,
+ * then buff group headers and buff rows. Geometry is added by
+ * `computeTimelineLayout`, so every consumer reads one positioned list. */
+export type TimelineTrack =
+  | { kind: "cast"; key: string; lane: Lane }
+  | {
+      kind: "buff-group";
+      key: string;
+      label: string;
+      /** Owner of a player group; null for a buff group. */
+      player: TimelinePlayerMeta | null;
+    }
+  | {
+      kind: "buff";
+      key: string;
+      lane: TimelineBuffLane;
+      player: TimelinePlayerMeta;
+      /** Row caption: the buff name when grouped by player, the player name
+       * when grouped by buff (the group header carries the other half). */
+      caption: "buff" | "player";
+    };
+
+export type TimelineRow = TimelineTrack & { top: number; height: number };
 
 /** One selected teammate's chosen DPS series, ready to draw / tooltip. */
 export type TimelineTeammateCurve = {

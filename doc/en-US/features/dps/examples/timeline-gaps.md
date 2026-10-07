@@ -26,7 +26,7 @@ In the **{{ui:history.timeline.title}}**, switch the curve to **{{ui:history.tim
 
 ## Step 4: Check whether a buff dropped
 
-If you have configured [Buff Coverage](../../monitor/buff-coverage.md), expand **{{ui:history.timeline.buff.title}}**, select yourself, and check whether your burst Buff happened to be missing during the gap.
+If you have configured [Buff Coverage](../../monitor/buff-coverage.md), click **{{ui:history.timeline.buff.title}}** in the timeline header to expand it (it shows you by default) and check whether your burst Buff happened to be missing during the gap.
 
 ![Buff coverage timeline](../../../../shared/img/changelog/v0.2.3_2.png)
 

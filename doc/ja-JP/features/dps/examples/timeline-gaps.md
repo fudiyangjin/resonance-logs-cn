@@ -26,7 +26,7 @@
 
 ## ステップ 4：バフが切れていないか確認する
 
-[Buff カバー率](../../monitor/buff-coverage.md) を設定している場合は、**{{ui:history.timeline.buff.title}}** を展開して自分を選び、空白の間にバースト Buff がちょうど切れていなかったかを確認します。
+[Buff カバー率](../../monitor/buff-coverage.md) を設定している場合は、タイムラインのヘッダーにある **{{ui:history.timeline.buff.title}}** をクリックして展開し（初期状態で自分が表示されます）、空白の間にバースト Buff がちょうど切れていなかったかを確認します。
 
 ![Buff カバー率タイムライン](../../../../shared/img/changelog/v0.2.3_2.png)
 

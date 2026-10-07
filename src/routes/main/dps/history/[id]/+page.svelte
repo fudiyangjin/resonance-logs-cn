@@ -21,7 +21,7 @@
     resolveSceneName,
   } from "$lib/config/game-names";
   import BuffCoverageTable from "$lib/components/history/buff-coverage-table.svelte";
-  import type { TimelineBuffLane } from "$lib/components/encounter-timeline/timeline-types";
+  import type { TimelineBuffData } from "$lib/components/encounter-timeline/timeline-types";
   import { resolveBuffDisplayName } from "$lib/config/buff-name-table";
   import { getGlobalBuffAliases } from "$lib/settings-store";
   import {
@@ -390,6 +390,8 @@
     return recentFantasyCastsByEntity(timelineEvents);
   });
 
+  /** Party members, local player first (stable for the rest, which arrive in
+   * entity-id order) so every player list and column starts with "me". */
   const timelinePlayers = $derived.by(() =>
     (detail?.entities ?? [])
       .filter((entity) => entity.monsterId === null)
@@ -402,7 +404,8 @@
           classSpecName: entity.classSpecName ?? "",
           isLocalPlayer: entity.entityId === localEntityId,
         };
-      }),
+      })
+      .sort((a, b) => Number(b.isLocalPlayer) - Number(a.isLocalPlayer)),
   );
 
   /** Boss casters seen as damage targets, keyed by their entity id. Marker
@@ -451,17 +454,20 @@
     );
   });
 
-  const buffLanes = $derived.by<TimelineBuffLane[] | null>(() => {
+  const buffTimeline = $derived.by<TimelineBuffData | null>(() => {
     if (!buffTimelineView) return null;
-    return buffTimelineView.lanes.map((lane) => ({
-      key: lane.key,
-      entityUuid: lane.entityUuid,
-      baseId: lane.baseId,
-      buffName: coverageBuffName(lane.baseId),
-      coveragePct: lane.coveragePct,
-      triggerCount: lane.triggerCount,
-      spans: lane.spans,
-    }));
+    return {
+      lanes: buffTimelineView.lanes.map((lane) => ({
+        key: lane.key,
+        entityUuid: lane.entityUuid,
+        baseId: lane.baseId,
+        buffName: coverageBuffName(lane.baseId),
+        coveragePct: lane.coveragePct,
+        triggerCount: lane.triggerCount,
+        spans: lane.spans,
+      })),
+      activeSpans: buffTimelineView.activeSpans,
+    };
   });
 
   // ---- Data loading --------------------------------------------------------
@@ -996,7 +1002,7 @@
             selectionPending={rangePending}
             bind:selectedRange
             resolveEvent={resolveTimelineEvent}
-            {buffLanes}
+            {buffTimeline}
             {buffRangeCoverage}
           />
         </section>

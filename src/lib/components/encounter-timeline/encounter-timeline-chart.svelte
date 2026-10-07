@@ -16,9 +16,10 @@
   //
   // Structure, top to bottom:
   //   - header: curve legend, viewport indicator/reset, independent
-  //     teammate lane / curve selectors;
-  //   - chart body: swim-lane markers + DPS curve, sharing one coordinate
-  //     system driven by `viewport`;
+  //     teammate lane / curve / buff owner selectors;
+  //   - chart body: one positioned track list (cast lanes, then buff rows)
+  //     above the DPS curve, all sharing the coordinate system driven by
+  //     `viewport` and one gesture/overlay surface;
   //   - minimap: full-encounter overview with a draggable/resizable window;
   //   - selection bar: active brush range, "zoom to selection", clear button.
   import { untrack } from "svelte";
@@ -26,13 +27,12 @@
   import Clock3Icon from "@lucide/svelte/icons/clock-3";
   import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
   import ZoomInIcon from "@lucide/svelte/icons/zoom-in";
-  import TriangleAlertIcon from "@lucide/svelte/icons/triangle-alert";
   import { t } from "$lib/i18n/index.svelte";
   import { SETTINGS } from "$lib/settings-store";
-  import { tooltip } from "$lib/utils.svelte";
-  import { laneColor, playerColor } from "./timeline-colors";
+  import { playerColor } from "./timeline-colors";
   import {
     clampInstantDpsWindowSec,
+    complementSpans,
     foldEncounterDamageHits,
     sampleDpsCurve,
     teammateDpsSources,
@@ -52,8 +52,11 @@
   } from "./timeline-layout";
   import { timelineGestures } from "./timeline-gestures";
   import { TIMELINE_PALETTE, timelinePaletteCssVars } from "./timeline-palette";
-  import TimelineBuffLanes from "./timeline-buff-lanes.svelte";
+  import { BuffViewState, PlayerSelection } from "./timeline-selection.svelte";
+  import { buildBuffTracks } from "./timeline-tracks";
+  import TimelineBuffTracks from "./timeline-buff-tracks.svelte";
   import TimelineCurve from "./timeline-curve.svelte";
+  import TimelineGutter from "./timeline-gutter.svelte";
   import TimelineHeader from "./timeline-header.svelte";
   import TimelineLanes from "./timeline-lanes.svelte";
   import TimelineMinimap from "./timeline-minimap.svelte";
@@ -62,12 +65,15 @@
   import type {
     Lane,
     LanePoint,
+    TimelineBuffData,
     TimelineBuffLane,
     TimelineBossMeta as TimelineBossMetaSource,
     TimelineEventDisplay as TimelineEventDisplaySource,
     TimelineHoverPoint,
     TimelinePlayerMeta as TimelinePlayerMetaSource,
+    TimelineRow,
     TimelineTeammateCurve,
+    TimelineTrack,
   } from "./timeline-types";
   import { TimelineViewport } from "./timeline-viewport.svelte";
 
@@ -99,8 +105,9 @@
     selectedRange?: [number, number] | null;
     /** Resolve the display strings/icon for one marker event. */
     resolveEvent: (event: EncounterTimelineEvent) => TimelineEventDisplay;
-    /** Buff coverage lanes; null hides the section (old encounters). */
-    buffLanes?: TimelineBuffLane[] | null;
+    /** Buff coverage lanes + active windows; null = recorded before buff
+     * persistence existed (no buff picker). */
+    buffTimeline?: TimelineBuffData | null;
     /** Range-recount coverage percent by lane key while a range is active. */
     buffRangeCoverage?: Map<string, number> | null;
   };
@@ -114,7 +121,7 @@
     selectionPending = false,
     selectedRange = $bindable(null),
     resolveEvent,
-    buffLanes = null,
+    buffTimeline = null,
     buffRangeCoverage = null,
   }: Props = $props();
 
@@ -203,32 +210,12 @@
       .map((p) => p.entityUuid),
   );
 
-  // null = "use the default" (support players); a string[] once the user has
-  // interacted with the selector.
-  let manualTeammateSelection = $state<string[] | null>(null);
-
-  let selectedTeammateUuids = $derived(
-    manualTeammateSelection ?? defaultTeammateUuids,
-  );
+  // Follows the default (support players) until the user touches the picker.
+  const laneSelection = new PlayerSelection(() => defaultTeammateUuids);
 
   let selectedTeammates = $derived(
-    teammates.filter((p) => selectedTeammateUuids.includes(p.entityUuid)),
+    teammates.filter((p) => laneSelection.has(p.entityUuid)),
   );
-
-  function toggleTeammate(entityUuid: string) {
-    const current = manualTeammateSelection ?? [...selectedTeammateUuids];
-    manualTeammateSelection = current.includes(entityUuid)
-      ? current.filter((uuid) => uuid !== entityUuid)
-      : [...current, entityUuid];
-  }
-
-  function selectAllTeammates() {
-    manualTeammateSelection = teammates.map((p) => p.entityUuid);
-  }
-
-  function clearTeammates() {
-    manualTeammateSelection = [];
-  }
 
   /** Teammates with damage (heal/taken-only actors stay off the curve picker). */
   let curveTeammates = $derived(
@@ -318,7 +305,48 @@
     return result;
   });
 
-  let mineLaneIndex = $derived(lanes.findIndex((l) => l.type === "mine"));
+  // ---- Buff rows ------------------------------------------------------------
+  const buffLanes = $derived(buffTimeline?.lanes ?? []);
+
+  /** Players owning at least one buff lane, in `players` order. */
+  const buffOwners = $derived.by(() => {
+    const ownerUuids = new Set(buffLanes.map((lane) => lane.entityUuid));
+    return players.filter((player) => ownerUuids.has(player.entityUuid));
+  });
+
+  /** Default buff owners: the local player, when they carry watched buffs. */
+  const defaultBuffOwnerUuids = $derived(
+    buffOwners.filter((p) => p.isLocalPlayer).map((p) => p.entityUuid),
+  );
+
+  // Collapsed by default with the local player preselected; independent of
+  // the lane picker.
+  const buffView = new BuffViewState(() => defaultBuffOwnerUuids);
+
+  const buffTracks = $derived(
+    buffView.expanded
+      ? buildBuffTracks(
+          buffLanes,
+          buffOwners.filter((p) => buffView.owners.has(p.entityUuid)),
+          buffView.grouping,
+        )
+      : [],
+  );
+
+  /** Gaps outside the active-combat window the coverage percent uses. */
+  const inactiveSpans = $derived(
+    complementSpans(buffTimeline?.activeSpans ?? [], chartDurationMs),
+  );
+
+  function buffCoveragePct(lane: TimelineBuffLane): number | null {
+    if (buffRangeCoverage) return buffRangeCoverage.get(lane.key) ?? null;
+    return lane.coveragePct;
+  }
+
+  const tracks = $derived<TimelineTrack[]>([
+    ...lanes.map((lane) => ({ kind: "cast" as const, key: lane.key, lane })),
+    ...buffTracks,
+  ]);
 
   // ---- Layout / viewport ----------------------------------------------------
   // Seeded once from the initial value (avoids a [0, 1] first frame); the
@@ -349,11 +377,23 @@
   );
   const baseLaneH = $derived(draftLaneH ?? persistedLaneH);
   const baseCurveH = $derived(draftCurveH ?? persistedCurveH);
-  let layout = $derived(
-    computeTimelineLayout(lanes.length, zoomTier, {
+  const layout = $derived(
+    computeTimelineLayout(tracks, zoomTier, {
       laneH: baseLaneH,
       curveH: baseCurveH,
     }),
+  );
+  const castRows = $derived(
+    layout.rows.filter(
+      (row): row is Extract<TimelineRow, { kind: "cast" }> =>
+        row.kind === "cast",
+    ),
+  );
+  const buffRows = $derived(
+    layout.rows.filter(
+      (row): row is Extract<TimelineRow, { kind: "buff" }> =>
+        row.kind === "buff",
+    ),
   );
 
   function beginLaneResize(clientY: number) {
@@ -362,12 +402,13 @@
   }
 
   function moveLaneResize(clientY: number) {
-    if (!laneDrag || lanes.length === 0) return;
+    const castCount = layout.castCount;
+    if (!laneDrag || castCount === 0) return;
     const nextLanesHeight = Math.max(
-      lanes.length,
+      castCount,
       laneDrag.startLanesHeight + (clientY - laneDrag.startY),
     );
-    draftLaneH = displayedLaneHToBase(nextLanesHeight / lanes.length, zoomTier);
+    draftLaneH = displayedLaneHToBase(nextLanesHeight / castCount, zoomTier);
   }
 
   function endLaneResize() {
@@ -545,38 +586,48 @@
     {showAverageCurve}
     onToggleAverage={() => (showAverageCurve = !showAverageCurve)}
     {teammates}
-    {selectedTeammateUuids}
-    onToggleTeammate={toggleTeammate}
-    onSelectAllTeammates={selectAllTeammates}
-    onClearTeammates={clearTeammates}
+    {laneSelection}
     {curveTeammates}
     curveTeammateModes={selectedCurveTeammateModes}
     onToggleCurveTeammate={toggleCurveTeammate}
     onSelectAllCurveTeammates={selectAllCurveTeammates}
     onClearCurveTeammates={clearCurveTeammates}
+    {buffOwners}
+    {buffView}
+    buffRowsVisible={buffRows.length > 0}
+    showInactiveLegend={buffRows.length > 0 && inactiveSpans.length > 0}
     {viewport}
   />
 
-  <!-- Chart body: backdrop rows + curve + lane markers + gesture/overlay
-       surface, pixel-aligned via a single shared layout module. -->
+  <!-- Chart body: one positioned row list (cast lanes, buff rows) above the
+       curve, pixel-aligned via the shared layout module. Every layer below
+       uses chart-body coordinates. -->
   <div class="relative w-full" style="height: {layout.totalHeight}px">
-    <!-- Backdrop layer: local-player row highlight + lane separators. -->
+    <!-- Backdrop layer: local-player row highlight + row separators. -->
     <div class="pointer-events-none absolute inset-0">
-      {#if mineLaneIndex >= 0}
+      {#each castRows as row (row.key)}
+        {#if row.lane.type === "mine"}
+          <div
+            class="absolute right-0 left-0"
+            style="top: {row.top}px; height: {row.height}px;
+                   background: rgba(96,165,250,0.06);
+                   border-left: 2px solid rgba(96,165,250,0.7)"
+          ></div>
+        {/if}
         <div
           class="absolute right-0 left-0"
-          style="top: {layout.laneTop +
-            mineLaneIndex * layout.laneH}px; height: {layout.laneH}px;
-                 background: rgba(96,165,250,0.06);
-                 border-left: 2px solid rgba(96,165,250,0.7)"
-        ></div>
-      {/if}
-      {#each lanes as lane, i (lane.key)}
-        <div
-          class="absolute right-0 left-0"
-          style="top: {layout.laneTop + (i + 1) * layout.laneH}px; height: 1px;
+          style="top: {row.top + row.height}px; height: 1px;
                  background: var(--tl-row-line)"
         ></div>
+      {/each}
+      {#each layout.rows as row (row.key)}
+        {#if row.kind === "buff-group"}
+          <div
+            class="absolute right-0 left-0"
+            style="top: {row.top}px; height: 1px;
+                   background: var(--tl-row-line)"
+          ></div>
+        {/if}
       {/each}
     </div>
 
@@ -598,40 +649,44 @@
       />
     </div>
 
-    <!-- Lane markers, positioned within the plot column only (right of the
-         gutter), matching the gesture layer's coordinate space below. -->
+    <!-- Row content, within the plot column only (right of the gutter),
+         matching the gesture layer's coordinate space below. -->
     <div
-      class="absolute"
-      style="left: {layout.gutter}px; right: {RIGHT_PADDING}px;
-             top: {layout.laneTop}px; height: {layout.lanesHeight}px"
+      class="absolute top-0"
+      style="left: {layout.gutter}px; right: {RIGHT_PADDING}px"
     >
       <TimelineLanes
-        {lanes}
+        rows={castRows}
         startMs={viewport.startMs}
         endMs={viewport.endMs}
-        laneH={layout.laneH}
         iconSize={layout.iconSize}
         {plotWidthPx}
         {resolveEvent}
       />
+      <TimelineBuffTracks
+        rows={buffRows}
+        buffTop={layout.buffTop}
+        buffHeight={layout.buffHeight}
+        {inactiveSpans}
+        startMs={viewport.startMs}
+        endMs={viewport.endMs}
+        {plotWidthPx}
+      />
     </div>
 
     <!-- Interactive plot surface: owns every pointer/wheel gesture (zoom,
-         pan, brush-select, hover) for both the lanes and the curve below. -->
+         pan, brush-select, hover) for every row and the curve below. -->
     <div
-      class="absolute cursor-crosshair"
+      class="absolute top-0 cursor-crosshair"
       style="left: {layout.gutter}px; right: {RIGHT_PADDING}px;
-             top: {layout.laneTop}px;
-             height: {layout.lanesHeight + layout.laneGap + layout.curveH}px"
+             height: {layout.totalHeight}px"
       bind:clientWidth={plotWidthPx}
       {@attach gestureAttachment}
       role="img"
       aria-label={t("history.timeline.chartAriaLabel")}
     >
       <TimelineOverlay
-        {lanes}
-        laneH={layout.laneH}
-        lanesHeight={layout.lanesHeight}
+        rows={layout.rows}
         startMs={viewport.startMs}
         endMs={viewport.endMs}
         {hoverPoint}
@@ -641,62 +696,19 @@
         teammateCurves={selectedTeammateCurves}
         {showAverageCurve}
         {resolveEvent}
+        {inactiveSpans}
+        {buffCoveragePct}
       />
     </div>
 
-    <!-- Lane gutter labels. Narrow on purpose so the plot gets the width, so
-         names truncate hard - each row carries the full one as a tooltip.
-         Pointer events are enabled here (unlike the rest of the overlays)
-         because this column sits entirely left of the gesture surface. -->
-    <div
-      class="pointer-events-none absolute top-0 left-0"
-      style="width: {layout.gutter}px; height: {layout.curveTop +
-        layout.curveH}px"
-    >
-      {#each lanes as lane, i (lane.key)}
-        {@const laneName = lane.type === "boss" ? lane.name : lane.player.name}
-        <div
-          class="pointer-events-auto absolute right-2 left-2.5 flex items-center gap-1.5 overflow-hidden"
-          style="top: {layout.laneTop +
-            i * layout.laneH}px; height: {layout.laneH}px"
-          {@attach tooltip(() => laneName)}
-        >
-          {#if lane.type === "boss"}
-            <TriangleAlertIcon
-              class="size-3.5 shrink-0"
-              style="color: {TIMELINE_PALETTE.boss}"
-            />
-            <span class="truncate text-[11px]" style="color: {laneColor(lane)}">
-              {lane.name}
-            </span>
-          {:else if lane.type === "mine"}
-            <span
-              class="size-1.5 shrink-0 rounded-full"
-              style="background: {TIMELINE_PALETTE.mine}; box-shadow: 0 0 6px {TIMELINE_PALETTE.mine}"
-            ></span>
-            <span
-              class="truncate text-[11px] font-medium"
-              style="color: #dbeafe"
-            >
-              {lane.player.name}
-            </span>
-          {:else}
-            <span
-              class="size-1.5 shrink-0 rounded-full"
-              style="background: {playerColor(lane.player)}"
-            ></span>
-            <span
-              class="truncate text-[11px]"
-              style="color: {playerColor(lane.player)}"
-            >
-              {lane.player.name}
-            </span>
-          {/if}
-        </div>
-      {/each}
-    </div>
+    <TimelineGutter
+      rows={layout.rows}
+      gutter={layout.gutter}
+      {plotWidthPx}
+      {buffCoveragePct}
+    />
 
-    {#if lanes.length > 0}
+    {#if layout.castCount > 0}
       <div
         class="absolute right-0 left-0"
         style="top: {layout.laneTop + layout.lanesHeight}px;
@@ -724,19 +736,6 @@
       />
     </div>
   </div>
-
-  <!-- Buff coverage lanes: same fight-offset axis as the plot above. -->
-  {#if buffLanes && buffLanes.length > 0}
-    <TimelineBuffLanes
-      lanes={buffLanes}
-      {players}
-      startMs={viewport.startMs}
-      endMs={viewport.endMs}
-      gutter={layout.gutter}
-      rangeCoverage={buffRangeCoverage}
-      rangePending={selectionPending}
-    />
-  {/if}
 
   <!-- Minimap: full-encounter overview + draggable/resizable viewport. -->
   <div

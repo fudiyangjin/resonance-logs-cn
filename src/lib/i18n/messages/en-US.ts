@@ -580,18 +580,22 @@ export const enUSMessages = {
   "history.timeline.resize.curve":
     "Drag to resize curve height, double-click to reset",
   "history.timeline.buff.title": "Buff coverage",
-  "history.timeline.buff.toggle": "Expand or collapse buff coverage timeline",
-  "history.timeline.buff.playerPicker": "Select players",
-  "history.timeline.buff.empty":
-    "No players selected, or none have watched buffs",
-  "history.timeline.buff.spanTooltip":
-    "{player} · {name}: {start} - {end} ({duration})",
-  "history.timeline.buff.pillTooltip": "Triggered {count} times",
+  "history.timeline.buff.toggle": "Expand or collapse buff coverage",
+  "history.timeline.buff.players": "Players",
+  "history.timeline.buff.playerPicker": "Close buff player selector",
+  "history.timeline.buff.groupByPlayer": "By player",
+  "history.timeline.buff.groupByBuff": "By buff",
+  "history.timeline.buff.active": "Active {start} - {end} ({duration})",
+  "history.timeline.buff.notActive": "Not active",
+  "history.timeline.buff.coverage": "Coverage {pct} · Triggered {count} times",
+  "history.timeline.buff.inactiveWindow":
+    "Inactive combat time, not counted toward coverage",
+  "history.timeline.buff.inactiveLegend": "Not counted",
   "history.buffCoverage.title": "Buff coverage summary",
   "history.buffCoverage.caption": "Based on active combat time ({seconds}s)",
   "history.buffCoverage.rangeCaption":
     "Based on the selection's active combat time",
-  "history.buffCoverage.player": "Player",
+  "history.buffCoverage.buff": "Buff",
   "history.buffCoverage.count": "×{value}",
   "history.buffCoverage.unavailable":
     "This encounter predates buff coverage tracking; no data available",
