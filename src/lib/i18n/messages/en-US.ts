@@ -5,6 +5,7 @@ export const enUSMessages = {
   "toolbox.subtitle": "Toolbox",
   "toolbox.section.tools": "Tools",
   "toolbox.versionLoading": "Loading...",
+  "toolbox.userGuide": "User Guide",
   "updater.available": "Update available",
   "updater.hint":
     "Version {version}: click to download in the background, then update and restart automatically",

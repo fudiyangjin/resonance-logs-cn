@@ -3,6 +3,7 @@ export const zhCNMessages = {
   "toolbox.subtitle": "工具箱",
   "toolbox.section.tools": "工具",
   "toolbox.versionLoading": "加载中...",
+  "toolbox.userGuide": "使用说明",
   "updater.available": "发现新版",
   "updater.hint": "新版本 v{version}：点击后后台下载，完成后自动更新并重启",
   "updater.downloading": "下载中 {progress}",

@@ -3,6 +3,7 @@ export const jaJPMessages = {
   "toolbox.subtitle": "ツールボックス",
   "toolbox.section.tools": "ツール",
   "toolbox.versionLoading": "読み込み中...",
+  "toolbox.userGuide": "使い方ガイド",
   "updater.available": "更新あり",
   "updater.hint":
     "新バージョン v{version}：クリックするとバックグラウンドでダウンロードし、自動更新して再起動します",

@@ -31,3 +31,9 @@ export const LOCALE_NATIVE_NAMES: Record<AppLocale, string> = {
   "en-US": "English",
   "ja-JP": "日本語",
 };
+
+export const USER_GUIDE_URLS: Record<AppLocale, string> = {
+  "zh-CN": "https://bptimer.cn/docs/zh-CN/",
+  "en-US": "https://bptimer.cn/docs/en-US/",
+  "ja-JP": "https://bptimer.cn/docs/ja-JP/",
+};

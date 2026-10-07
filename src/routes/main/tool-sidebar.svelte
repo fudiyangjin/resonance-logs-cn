@@ -3,7 +3,7 @@
    * @file Tool sidebar component for the toolbox layout.
    * Displays the list of available tools in the left panel.
    */
-  import { t, setLocale } from "$lib/i18n/index.svelte";
+  import { t, getLocale, setLocale } from "$lib/i18n/index.svelte";
   import { page } from "$app/state";
   import { onMount } from "svelte";
   import { TOOL_ROUTES } from "./routes.svelte";
@@ -11,11 +11,14 @@
   import {
     APP_LOCALES,
     LOCALE_NATIVE_NAMES,
+    USER_GUIDE_URLS,
     type AppLocale,
   } from "$lib/i18n/locales";
   import { SETTINGS } from "$lib/settings-store";
   import * as Popover from "$lib/components/ui/popover/index.js";
+  import BookOpen from "virtual:icons/lucide/book-open";
   import ChevronDown from "virtual:icons/lucide/chevron-down";
+  import ExternalLink from "virtual:icons/lucide/external-link";
   import Languages from "virtual:icons/lucide/languages";
   import LayersIcon from "virtual:icons/lucide/layers";
   import SettingsIcon from "virtual:icons/lucide/settings";
@@ -46,6 +49,9 @@
 
   const loadouts = $derived(listLoadouts());
   const currentLoadout = $derived(activeLoadout());
+  // Opened in the system browser by tauri-plugin-opener's injected handler
+  // for target="_blank" links.
+  const userGuideUrl = $derived(USER_GUIDE_URLS[getLocale()]);
 </script>
 
 <aside
@@ -133,11 +139,21 @@
     {/each}
   </nav>
 
-  <!-- Footer with version + language switcher -->
+  <!-- Footer with user guide + version + language switcher -->
   <div class="p-3 border-t border-border/50">
     <div
       class="flex flex-col items-center gap-1.5 text-xs text-muted-foreground"
     >
+      <a
+        href={userGuideUrl}
+        target="_blank"
+        rel="noreferrer"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-border/60 bg-popover/50 transition-colors hover:bg-muted hover:border-border hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+      >
+        <BookOpen class="w-3.5 h-3.5 opacity-70" />
+        {t("toolbox.userGuide")}
+        <ExternalLink class="w-3 h-3 opacity-60" />
+      </a>
       <div class="flex w-full items-center justify-center gap-1.5">
         <span class="shrink-0"
           >v{appVersion || t("toolbox.versionLoading")}</span
