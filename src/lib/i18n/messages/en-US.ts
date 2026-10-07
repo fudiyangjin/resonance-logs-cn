@@ -159,8 +159,6 @@ export const enUSMessages = {
   "appSettings.teamShare.enableDescription":
     "While you are in a team, sends all of your skill cooldowns in real time to teammates who also enabled this, and shows theirs in the monster monitor's Teammate CD panel. Takes effect immediately.",
   "appSettings.teamShare.saveFailed": "Could not save: {error}",
-  "appSettings.teamShare.privacy":
-    "When enabled, this sends your character ID, character name, class, team ID and skill cooldowns to bptimer.cn. The server only relays them to teammates in the same team who also share, keeps them in memory only and never writes them to a database; they are gone once you leave the team or turn this off.",
   "appSettings.teamShare.status.disabled": "Off",
   "appSettings.teamShare.status.idle":
     "On, waiting for a team (or the game is not detected yet)",

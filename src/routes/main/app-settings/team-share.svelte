@@ -81,8 +81,5 @@
     {#if error}
       <p class="text-destructive mt-1 px-3 text-xs">{error}</p>
     {/if}
-    <p class="text-muted-foreground mt-3 px-3 text-xs leading-relaxed">
-      {t("appSettings.teamShare.privacy")}
-    </p>
   </div>
 </div>

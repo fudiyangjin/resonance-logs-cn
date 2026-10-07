@@ -153,8 +153,6 @@ export const zhCNMessages = {
   "appSettings.teamShare.enableDescription":
     "开启后，在队伍中时会把自己的全部技能冷却实时发给同样开启了此功能的队友，并接收他们的冷却，显示在怪物监控的“队友 CD”面板里。立即生效。",
   "appSettings.teamShare.saveFailed": "保存失败：{error}",
-  "appSettings.teamShare.privacy":
-    "开启后会向 bptimer.cn 发送：角色 ID、角色名、职业、队伍 ID 和技能冷却。服务器只把这些数据转发给同队且同样开启共享的队友，只保存在内存里，不写数据库；离开队伍或关闭后即删除。",
   "appSettings.teamShare.status.disabled": "未开启",
   "appSettings.teamShare.status.idle":
     "已开启，等待进入队伍（或尚未检测到游戏）",

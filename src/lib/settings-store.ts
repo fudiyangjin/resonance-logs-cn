@@ -1731,13 +1731,13 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
   return {
     showMonsterBuffPanel: true,
     showTeammateBuffPanel: true,
-    showTeammateCdPanel: true,
+    showTeammateCdPanel: false,
     showHatePanel: false,
     showFantasyPanel: false,
     showBossDbmPanel: false,
     showStunPanel: false,
     showHpPanel: false,
-    showEntityDurationPanel: true,
+    showEntityDurationPanel: false,
   };
 }
 

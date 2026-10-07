@@ -495,13 +495,13 @@ const monsterOverlaySizesSchema = v.object({
 const monsterOverlayVisibilitySchema = v.object({
   showMonsterBuffPanel: v.boolean(),
   showTeammateBuffPanel: v.boolean(),
-  showTeammateCdPanel: v.optional(v.boolean(), true),
+  showTeammateCdPanel: v.optional(v.boolean(), false),
   showHatePanel: v.boolean(),
   showFantasyPanel: v.boolean(),
   showBossDbmPanel: v.boolean(),
   showStunPanel: v.boolean(),
   showHpPanel: v.optional(v.boolean(), false),
-  showEntityDurationPanel: v.optional(v.boolean(), true),
+  showEntityDurationPanel: v.optional(v.boolean(), false),
 });
 
 const entityDurationEntrySchema = v.object({

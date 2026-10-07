@@ -158,8 +158,6 @@ export const jaJPMessages = {
   "appSettings.teamShare.enableDescription":
     "パーティにいる間、自分のすべてのスキルクールダウンを同じ機能を有効にした味方へリアルタイムで送り、味方のクールダウンをモンスターモニターの「味方 CD」パネルに表示します。すぐに反映されます。",
   "appSettings.teamShare.saveFailed": "保存に失敗しました：{error}",
-  "appSettings.teamShare.privacy":
-    "有効にすると、キャラクター ID・キャラクター名・職業・パーティ ID・スキルクールダウンを bptimer.cn に送信します。サーバーは同じパーティで共有を有効にしている味方にだけ中継し、メモリ上にのみ保持してデータベースには書き込みません。パーティを抜けるか無効にすると削除されます。",
   "appSettings.teamShare.status.disabled": "オフ",
   "appSettings.teamShare.status.idle":
     "オン、パーティへの参加待ち（またはゲーム未検出）",

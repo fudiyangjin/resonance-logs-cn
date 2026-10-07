@@ -187,7 +187,7 @@
     showTeammateBuffPanel:
       monsterMonitor.overlayVisibility?.showTeammateBuffPanel ?? true,
     showTeammateCdPanel:
-      monsterMonitor.overlayVisibility?.showTeammateCdPanel ?? true,
+      monsterMonitor.overlayVisibility?.showTeammateCdPanel ?? false,
     showHatePanel: monsterMonitor.overlayVisibility?.showHatePanel ?? false,
     showStunPanel: monsterMonitor.overlayVisibility?.showStunPanel ?? false,
     showHpPanel: monsterMonitor.overlayVisibility?.showHpPanel ?? false,
@@ -196,7 +196,7 @@
     showBossDbmPanel:
       monsterMonitor.overlayVisibility?.showBossDbmPanel ?? false,
     showEntityDurationPanel:
-      monsterMonitor.overlayVisibility?.showEntityDurationPanel ?? true,
+      monsterMonitor.overlayVisibility?.showEntityDurationPanel ?? false,
   }));
   const globalBuffIds = $derived(monsterMonitor.monitoredBuffIds);
   const selfAppliedBuffIds = $derived(monsterMonitor.selfAppliedBuffIds);
@@ -828,14 +828,14 @@
         showTeammateBuffPanel:
           state.overlayVisibility?.showTeammateBuffPanel ?? true,
         showTeammateCdPanel:
-          state.overlayVisibility?.showTeammateCdPanel ?? true,
+          state.overlayVisibility?.showTeammateCdPanel ?? false,
         showHatePanel: state.overlayVisibility?.showHatePanel ?? false,
         showStunPanel: state.overlayVisibility?.showStunPanel ?? false,
         showHpPanel: state.overlayVisibility?.showHpPanel ?? false,
         showFantasyPanel: state.overlayVisibility?.showFantasyPanel ?? false,
         showBossDbmPanel: state.overlayVisibility?.showBossDbmPanel ?? false,
         showEntityDurationPanel:
-          state.overlayVisibility?.showEntityDurationPanel ?? true,
+          state.overlayVisibility?.showEntityDurationPanel ?? false,
       };
       return {
         ...state,

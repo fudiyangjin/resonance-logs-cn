@@ -9,11 +9,20 @@ use crate::live::store_file::{load_store_json, save_store_json};
 
 const FILE_NAME: &str = "teamShare.json";
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct StoredSettings {
     pub enabled: bool,
     pub token: Option<String>,
+}
+
+impl Default for StoredSettings {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            token: None,
+        }
+    }
 }
 
 /// Lazily loaded on first use, so commands that race `setup` still see the

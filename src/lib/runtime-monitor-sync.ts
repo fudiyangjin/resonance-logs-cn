@@ -214,7 +214,7 @@ function buildTeammateRuntimeSnapshot(): MonitorRuntimeSnapshot["teammate"] {
 function buildTeammateCdRuntimeSnapshot(): MonitorRuntimeSnapshot["teammateCd"] {
   const state = SETTINGS.monsterMonitor.state;
   const visible =
-    state.enabled && (state.overlayVisibility?.showTeammateCdPanel ?? true);
+    state.enabled && (state.overlayVisibility?.showTeammateCdPanel ?? false);
   if (!visible) return { enabled: false, classes: [] };
 
   const selection = normalizeTeammateCdSkills(state.teammateCdSkills);
