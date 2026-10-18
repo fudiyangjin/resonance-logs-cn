@@ -495,7 +495,7 @@
     "Name": "Link Test Model"
   },
   "1397": {
-    "Name": "Thunder Core (AI)"
+    "Name": "Thunder Core"
   },
   "1398": {
     "Name": "Wind Core"
@@ -1455,7 +1455,7 @@
     "Name": "Small Arachnocrab"
   },
   "4639": {
-    "Name": "Abyssal Gaze Matrix"
+    "Name": "Mystery Matrix"
   },
   "4640": {
     "Name": "Tidal Core (AI)"
@@ -1476,16 +1476,16 @@
     "Name": "Ee-chan"
   },
   "4701": {
-    "Name": "Vilda (AI)"
+    "Name": "Wirda"
   },
   "4702": {
     "Name": "Vilda's Phantom (AI)"
   },
   "4703": {
-    "Name": "Omen (AI)"
+    "Name": "Omen"
   },
   "4711": {
-    "Name": "Vilda (AI)"
+    "Name": "Wirda"
   },
   "7001": {
     "Name": "Unknown Monster"
@@ -1503,7 +1503,7 @@
     "Name": "Airona"
   },
   "7006": {
-    "Name": "Calamity Puppet"
+    "Name": "Tina - Void Reverie"
   },
   "8001": {
     "Name": "Synster"
@@ -1716,7 +1716,7 @@
     "Name": "Shadow Scout"
   },
   "8113": {
-    "Name": "​Shadow Warden"
+    "Name": "Shadow Warden"
   },
   "8114": {
     "Name": "Shadow Gunner"
@@ -2667,7 +2667,7 @@
     "Name": "Goblin Priest"
   },
   "11011": {
-    "Name": "Goblin Guard"
+    "Name": "Goblin Sentry"
   },
   "11012": {
     "Name": "Goblin Trickster"
@@ -2748,7 +2748,7 @@
     "Name": "Boss: Tyrant Yeti"
   },
   "11038": {
-    "Name": "Boss: King Tuo Kong"
+    "Name": "Boss: King Trogon"
   },
   "11039": {
     "Name": "Blue Gem Foxen"
@@ -2991,67 +2991,67 @@
     "Name": "Shrimp Mushroom"
   },
   "11221": {
-    "Name": "Venomous Shrimp Shroom (AI)"
+    "Name": "Venomous Shrimpshroom"
   },
   "11222": {
-    "Name": "Paralyzing Shrimp Shroom (AI)"
+    "Name": "Paralyzing Shrimpshroom"
   },
   "11223": {
-    "Name": "Dreammanifest Host (AI)"
+    "Name": "Dream Manifestor"
   },
   "11224": {
-    "Name": "Valley Brave (AI)"
+    "Name": "Valley Warrior"
   },
   "11225": {
-    "Name": "Valley Vanguard (AI)"
+    "Name": "Valley Vanguard"
   },
   "11226": {
-    "Name": "Valley Gladiator (AI)"
+    "Name": "Valley Brawler"
   },
   "11227": {
-    "Name": "Valley Shock Trooper (AI)"
+    "Name": "Valley Skirmisher"
   },
   "11228": {
-    "Name": "Whiteplume Goblin (AI)"
+    "Name": "Whitefeather Goblin"
   },
   "11229": {
-    "Name": "Darkplume Goblin (AI)"
+    "Name": "Darkfeather Goblin"
   },
   "11230": {
-    "Name": "Goblin Sage (AI)"
+    "Name": "Goblin Sage"
   },
   "11231": {
-    "Name": "Shell-Gathering Heretic (AI)"
+    "Name": "Shell-Gathering Cultist"
   },
   "11232": {
-    "Name": "Valley Scout (AI)"
+    "Name": "Valley Scout"
   },
   "11233": {
-    "Name": "Valley Crossbowman (AI)"
+    "Name": "Valley Crossbowman"
   },
   "11234": {
-    "Name": "Valley Ranger (AI)"
+    "Name": "Valley Ranger"
   },
   "11235": {
-    "Name": "Wandering Exile (AI)"
+    "Name": "Wandering Traveler"
   },
   "11236": {
-    "Name": "Deep Valley Merman (AI)"
+    "Name": "Valley Murloc"
   },
   "11237": {
-    "Name": "Creekside Merman (AI)"
+    "Name": "Riverbank Murloc"
   },
   "11238": {
-    "Name": "Darkriver Fin (AI)"
+    "Name": "Underriver Fin"
   },
   "11239": {
-    "Name": "Ravine Phantom (AI)"
+    "Name": "Ravine Aberration"
   },
   "11240": {
-    "Name": "Azurefoam Goblin (AI)"
+    "Name": "Green Foam Goblin"
   },
   "11241": {
-    "Name": "Violetfoam Goblin (AI)"
+    "Name": "Purple Foam Goblin"
   },
   "12000": {
     "Name": "Mine Arachnocrab"
@@ -3471,7 +3471,7 @@
     "Name": "Suicidal Soldier 03"
   },
   "21002": {
-    "Name": "Prank Bomb (AI)"
+    "Name": "Prank Bomb"
   },
   "21003": {
     "Name": "Void Corruption Soulshard"
@@ -3480,10 +3480,10 @@
     "Name": "Defensive Type 05"
   },
   "21005": {
-    "Name": "Mysterious Illusion (AI)"
+    "Name": "Mysterious Phantom"
   },
   "21006": {
-    "Name": "Dark Crystal (AI)"
+    "Name": "Crystal of Darkness"
   },
   "28001": {
     "Name": "Support Team Member"
@@ -3879,7 +3879,7 @@
     "Name": "Dark Mist Sergeant"
   },
   "30821": {
-    "Name": "Fagaro Guard (AI)"
+    "Name": "Fagaro Guard"
   },
   "30822": {
     "Name": "Fagaro Guard (AI)"
@@ -4383,10 +4383,10 @@
     "Name": "Charging Clone (Instant Right Light Sword)"
   },
   "33923": {
-    "Name": "Test Dummy (AI)"
+    "Name": "Test Dummy"
   },
   "33951": {
-    "Name": "Lapsis (AI)"
+    "Name": "Lampsis"
   },
   "33952": {
     "Name": "Lightformed Kin (AI)"
@@ -4398,25 +4398,25 @@
     "Name": "Lightformed Kin (AI)"
   },
   "33960": {
-    "Name": "Lapsis (AI)"
+    "Name": "Lampsis"
   },
   "33961": {
     "Name": "Lightformed Kin (AI)"
   },
   "34000": {
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34001": {
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34002": {
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34003": {
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34004": {
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34005": {
     "Name": "Boyce DD Arena-Edge Large AoE (AI)"
@@ -4431,7 +4431,7 @@
     "Name": "Boyce Standard Mirror (AI)"
   },
   "34009": {
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34010": {
     "Name": "Triple Knockback 1 (AI)"
@@ -4443,7 +4443,7 @@
     "Name": "Triple Knockback 3 (AI)"
   },
   "34013": {
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34014": {
     "Name": "Groundfire Marker (AI)"
@@ -4452,61 +4452,61 @@
     "Name": "Ice Spike (AI)"
   },
   "34016": {
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34017": {
-    "Name": "Memory Form: Guilt (AI)"
+    "Name": "Reminiscence: Guilt"
   },
   "34018": {
-    "Name": "Memory Form: Culpability (AI)"
+    "Name": "Reminiscence: Blame"
   },
   "34019": {
-    "Name": "Memory Form: Qualification (AI)"
+    "Name": "Reminiscence: Worthiness"
   },
   "34020": {
-    "Name": "Manifestation: Forest Whisperer (AI)"
+    "Name": "Manifestation: Verdant Oracle"
   },
   "34021": {
-    "Name": "Manifestation: Berserker (AI)"
+    "Name": "Manifestation: Twin Striker"
   },
   "34022": {
-    "Name": "Manifestation: Azurewind Knight (AI)"
+    "Name": "Manifestation: Wind Knight"
   },
   "34023": {
-    "Name": "Manifestation: Marksman (AI)"
+    "Name": "Manifestation: Marksman"
   },
   "34024": {
-    "Name": "Manifestation: Guardian (AI)"
+    "Name": "Manifestation: Heavy Guardian"
   },
   "34025": {
-    "Name": "Manifestation: Magus (AI)"
+    "Name": "Manifestation: Frost Mage"
   },
   "34026": {
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34027": {
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34028": {
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34029": {
-    "Name": "Manifestation: Mercenary (AI)"
+    "Name": "Manifestation: Mercenary"
   },
   "34030": {
     "Name": "Boyce DD Master Repeat Mirror (AI)"
   },
   "34031": {
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34032": {
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34033": {
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34034": {
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34035": {
     "Name": "Boyce Nine-Ring Center Large AoE (AI)"
@@ -5298,7 +5298,7 @@
     "Name": "Goblin Crossbow"
   },
   "60223": {
-    "Name": "Goblin Swords"
+    "Name": "Goblin Sword"
   },
   "60224": {
     "Name": "Goblin Axe"
@@ -5322,7 +5322,7 @@
     "Name": "Elite: Goblin Crossbow Captain"
   },
   "60231": {
-    "Name": "Elite: Goblin Swords"
+    "Name": "Elite: Goblin Sword"
   },
   "60232": {
     "Name": "Elite: Goblin Axe"
@@ -5352,7 +5352,7 @@
     "Name": "Goblin Crossbow"
   },
   "60403": {
-    "Name": "Goblin Swords"
+    "Name": "Goblin Sword"
   },
   "60404": {
     "Name": "Goblin Axe"
@@ -5373,7 +5373,7 @@
     "Name": "Elite: Goblin Crossbow Captain"
   },
   "60410": {
-    "Name": "Elite: Goblin Swords"
+    "Name": "Elite: Goblin Sword"
   },
   "60411": {
     "Name": "Elite: Goblin Axe"
@@ -5418,7 +5418,7 @@
     "Name": "Goblin Crossbow"
   },
   "60603": {
-    "Name": "Goblin Swords"
+    "Name": "Goblin Sword"
   },
   "60604": {
     "Name": "Goblin Axe"
@@ -5814,43 +5814,43 @@
     "Name": "Ritual Team Nappo (Test)"
   },
   "69200": {
-    "Name": "Plague Scale (AI)"
+    "Name": "Malice Scales"
   },
   "69201": {
-    "Name": "Plague Blackstone Legion Commander (AI)"
+    "Name": "Malice Blackstone Commander"
   },
   "69202": {
-    "Name": "Plague Blackstone Legion Vanguard (AI)"
+    "Name": "Malice Blackstone Vanguard"
   },
   "69203": {
-    "Name": "Plague Goblin Trickster (AI)"
+    "Name": "Malice Goblin Trickster"
   },
   "69204": {
-    "Name": "Plague Goblin Witch Doctor (AI)"
+    "Name": "Malice Goblin Shaman"
   },
   "69205": {
-    "Name": "Plague Bluespine Lizard (AI)"
+    "Name": "Malice Bluespine Lizard"
   },
   "69206": {
-    "Name": "Plague Melancholy Cabbage (AI)"
+    "Name": "Malice Gloomy Cabbage"
   },
   "69207": {
-    "Name": "Plague Ruthless Cabbage (AI)"
+    "Name": "Malice Ruthless Cabbage"
   },
   "69208": {
-    "Name": "Plague Emerald Caprahorn (AI)"
+    "Name": "Malice Emerald Caprahorn"
   },
   "69210": {
-    "Name": "Plague Frostshade Lizard (AI)"
+    "Name": "Malice Frost Lizard"
   },
   "69211": {
-    "Name": "Plague Goblin Warrior (AI)"
+    "Name": "Malice Goblin Warrior"
   },
   "69212": {
-    "Name": "Plague Cabbage Killer (AI)"
+    "Name": "Malice Cabbage Killer"
   },
   "69213": {
-    "Name": "Plague Blackstone Legion Assault Trooper (AI)"
+    "Name": "Malice Blackstone Assaulter"
   },
   "69214": {
     "Name": "Plague Seed - Phase 1 (Large) (AI)"
@@ -5880,7 +5880,7 @@
     "Name": "Poison Blade (AI)"
   },
   "69250": {
-    "Name": "Plague Scale (AI)"
+    "Name": "Malice Scales"
   },
   "70003": {
     "Name": "Goblin Dagger"
@@ -6447,7 +6447,7 @@
     "Name": "Boss: Predator Arachnocrab"
   },
   "73002": {
-    "Name": "Boss: Valley Shock Trooper (AI)"
+    "Name": "Boss: Valley Skirmisher"
   },
   "73003": {
     "Name": "Boss: Ridge Fang"
@@ -6456,16 +6456,16 @@
     "Name": "Boss: Bloodthirsty Furball"
   },
   "73005": {
-    "Name": "Boss: Dreammanifest Host (AI)"
+    "Name": "Boss: Dream Manifestor"
   },
   "73006": {
     "Name": "Boss: Golden Juggernaut"
   },
   "73007": {
-    "Name": "Boss: Shell-Gathering Heretic (AI)"
+    "Name": "Boss: Shell-Gathering Cultist"
   },
   "73008": {
-    "Name": "Boss: Wandering Exile (AI)"
+    "Name": "Boss: Wandering Traveler"
   },
   "73009": {
     "Name": "Boss: Cabbage Kingpin"
@@ -6474,7 +6474,7 @@
     "Name": "Boss: Flamehorn"
   },
   "73011": {
-    "Name": "Boss: Ravine Phantom (AI)"
+    "Name": "Boss: Ravine Aberration"
   },
   "73012": {
     "Name": "Boss: Muku Chief"
@@ -6618,49 +6618,49 @@
     "Name": "Glimmer Caprahorn"
   },
   "73059": {
-    "Name": "Elite: Paralyzing Shrimp Shroom (AI)"
+    "Name": "Elite: Paralyzing Shrimpshroom"
   },
   "73060": {
-    "Name": "Elite: Valley Gladiator (AI)"
+    "Name": "Elite: Valley Brawler"
   },
   "73061": {
-    "Name": "Elite: Goblin Sage (AI)"
+    "Name": "Elite: Goblin Sage"
   },
   "73062": {
-    "Name": "Elite: Valley Ranger (AI)"
+    "Name": "Elite: Valley Ranger"
   },
   "73063": {
-    "Name": "Elite: Darkriver Fin (AI)"
+    "Name": "Elite: Underriver Fin"
   },
   "73064": {
     "Name": "Shrimp Mushroom"
   },
   "73065": {
-    "Name": "Venomous Shrimp Shroom (AI)"
+    "Name": "Venomous Shrimpshroom"
   },
   "73066": {
-    "Name": "Valley Brave (AI)"
+    "Name": "Valley Warrior"
   },
   "73067": {
-    "Name": "Valley Vanguard (AI)"
+    "Name": "Valley Vanguard"
   },
   "73068": {
-    "Name": "Azurefoam Goblin (AI)"
+    "Name": "Green Foam Goblin"
   },
   "73069": {
-    "Name": "Violetfoam Goblin (AI)"
+    "Name": "Purple Foam Goblin"
   },
   "73070": {
-    "Name": "Valley Scout (AI)"
+    "Name": "Valley Scout"
   },
   "73071": {
-    "Name": "Valley Crossbowman (AI)"
+    "Name": "Valley Crossbowman"
   },
   "73072": {
-    "Name": "Deep Valley Merman (AI)"
+    "Name": "Valley Murloc"
   },
   "73073": {
-    "Name": "Creekside Merman (AI)"
+    "Name": "Riverbank Murloc"
   },
   "80001": {
     "Name": "Storm Goblin King"
@@ -6720,19 +6720,19 @@
     "Name": "Boss: Void Watcher"
   },
   "80020": {
-    "Name": "Boss: Dreammanifest Host (AI)"
+    "Name": "Boss: Dream Manifestor"
   },
   "80021": {
-    "Name": "Boss: Valley Shock Trooper (AI)"
+    "Name": "Boss: Valley Skirmisher"
   },
   "80022": {
-    "Name": "Boss: Shell-Gathering Heretic (AI)"
+    "Name": "Boss: Shell-Gathering Cultist"
   },
   "80023": {
-    "Name": "Boss: Wandering Exile (AI)"
+    "Name": "Boss: Wandering Traveler"
   },
   "80024": {
-    "Name": "Boss: Ravine Phantom (AI)"
+    "Name": "Boss: Ravine Aberration"
   },
   "81000": {
     "Name": "Muku King"
@@ -7396,7 +7396,7 @@
     "Name": "Erosion Bloom Afterimage"
   },
   "103100": {
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Origin"
   },
   "103101": {
     "Name": "Annihilation Cannon"
@@ -7405,36 +7405,36 @@
     "Name": "Annihilation Cannon"
   },
   "103103": {
-    "Name": "Mechanical Phantom Type I (AI)"
+    "Name": "Mech Illusion I"
   },
   "103104": {
-    "Name": "Mechanical Phantom Type V (AI)"
+    "Name": "Mech Illusion V"
   },
   "103105": {
     "Name": "Tripod Oculopod"
   },
   "103106": {
-    "Name": "Anti-Dragon Golem Phantom (AI)"
+    "Name": "Dragonbane Golem Illusion"
   },
   "103107": {
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Origin"
   },
   "103108": {
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Origin"
   },
   "103109": {
-    "Name": "Mechanical Phantom Type V (AI)"
+    "Name": "Mech Illusion V"
   },
   "103110": {
     "MonsterType": 1,
-    "Name": "Anti-Dragon Golem - Right Cannon Barrel (AI)"
+    "Name": "Dragonbane Golem - Right Cannon"
   },
   "103111": {
     "MonsterType": 1,
-    "Name": "Anti-Dragon Golem - Left Cannon Barrel (AI)"
+    "Name": "Dragonbane Golem - Left Cannon"
   },
   "103200": {
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Continuation"
   },
   "103201": {
     "Name": "Hidden Monster (Flash Target - Long Side) (AI)"
@@ -7455,10 +7455,10 @@
     "Name": "Mechanical Eye Pod (AI)"
   },
   "103207": {
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Continuation"
   },
   "103208": {
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Continuation"
   },
   "103209": {
     "Name": "Hidden Monster (Ending Charge Sequence) (AI)"
@@ -7476,15 +7476,15 @@
     "Name": "Autonomous Patrol Eye Pod (AI)"
   },
   "103300": {
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Final"
   },
   "103301": {
     "MonsterType": 1,
-    "Name": "Anti-Dragon Golem - Right Cannon Barrel (AI)"
+    "Name": "Dragonbane Golem - Right Cannon"
   },
   "103302": {
     "MonsterType": 1,
-    "Name": "Anti-Dragon Golem - Left Cannon Barrel (AI)"
+    "Name": "Dragonbane Golem - Left Cannon"
   },
   "103303": {
     "Name": "Block A Marker (AI)"
@@ -7499,37 +7499,37 @@
     "Name": "Block A Marker (AI)"
   },
   "103307": {
-    "Name": "Annihilation Cannon: Transformed (AI)"
+    "Name": "Annihilation Cannon - Morph"
   },
   "103308": {
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Final"
   },
   "103309": {
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Final"
   },
   "103310": {
-    "Name": "Remains of Paradox and Calamity: Final Phantom (AI)"
+    "Name": "Paradox-Calamity Remnant - Final Phantom"
   },
   "103311": {
-    "Name": "Remains of Paradox and Calamity: Final Phantom (AI)"
+    "Name": "Paradox-Calamity Remnant - Final Phantom"
   },
   "103400": {
-    "Name": "Lapsis - Phase 1 (AI)"
+    "Name": "Lampsis"
   },
   "103500": {
-    "Name": "Lapsis - Phase 2 (AI)"
+    "Name": "Lampsis: Midnight Sun"
   },
   "103501": {
-    "Name": "Light Shaping (AI)"
+    "Name": "Light Construct"
   },
   "103502": {
-    "Name": "Light Shaping (AI)"
+    "Name": "Light Construct"
   },
   "103503": {
-    "Name": "Light Shaping (AI)"
+    "Name": "Light Construct"
   },
   "103504": {
-    "Name": "Light Shaping (AI)"
+    "Name": "Light Construct"
   },
   "103600": {
     "Name": "Lapsis - Phase 3 (AI)"
@@ -7658,13 +7658,13 @@
     "Name": "Bonded Foxen"
   },
   "190101": {
-    "Name": "Kartgriff: Guardian of the Realm (AI)"
+    "Name": "Kartgriff the Domain Guardian"
   },
   "190102": {
-    "Name": "Gamma Support Unit (AI)"
+    "Name": "Gamma-Type Support Unit"
   },
   "190103": {
-    "Name": "Quadruped Mech Soldier (AI)"
+    "Name": "Quadrupedal Mech"
   },
   "190104": {
     "Name": "Patrolling Oculoid"
@@ -7673,10 +7673,10 @@
     "Name": "Airona"
   },
   "190106": {
-    "Name": "Slate's Phantom (AI)"
+    "Name": "Sleht's Phantom"
   },
   "190107": {
-    "Name": "Lothar's Phantom (AI)"
+    "Name": "Lothar's Phantom"
   },
   "190108": {
     "Name": "Beta-Type Combat Golem"
@@ -8363,13 +8363,13 @@
     "Name": "Vilda (AI)"
   },
   "660309": {
-    "Name": "Azurefoam Goblin (AI)"
+    "Name": "Green Foam Goblin"
   },
   "660310": {
-    "Name": "Thunderfoam Goblin (AI)"
+    "Name": "Thunder Foam Goblin"
   },
   "660311": {
-    "Name": "Goblin Sage (AI)"
+    "Name": "Goblin Sage"
   },
   "660312": {
     "Name": "Illusory Bloom"
@@ -8534,7 +8534,7 @@
     "Name": "Squeaky Boarlet"
   },
   "700111": {
-    "Name": "Light-Tracing Spirit (AI)"
+    "Name": "Lightchase Spirit"
   },
   "760001": {
     "Name": "Bane Lord"
@@ -8822,19 +8822,19 @@
     "Name": "Slumbering Scholar"
   },
   "920501": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920502": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920503": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920504": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920505": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920506": {
     "Name": "Boss: Rebel King"
@@ -8897,28 +8897,28 @@
     "Name": "Hunter Mountain Boar"
   },
   "920530": {
-    "Name": "Researcher Jim (AI)"
+    "Name": "Researcher Jim"
   },
   "920531": {
-    "Name": "Researcher Giddy (AI)"
+    "Name": "Researcher Giddy"
   },
   "920532": {
-    "Name": "Researcher Jimmy (AI)"
+    "Name": "Researcher Jimmy"
   },
   "920533": {
-    "Name": "Lost: Drifter (AI)"
+    "Name": "Lost - Roamer"
   },
   "920534": {
-    "Name": "Researcher Jim (AI)"
+    "Name": "Researcher Jim"
   },
   "920535": {
-    "Name": "Researcher Giddy (AI)"
+    "Name": "Researcher Giddy"
   },
   "920536": {
-    "Name": "Lost: Researcher (AI)"
+    "Name": "Lost - Researcher"
   },
   "920550": {
-    "Name": "Delusion: Colossus (AI)"
+    "Name": "Illusion-Shroud Colossus"
   },
   "920551": {
     "Name": "Goblin Mage"
@@ -8933,34 +8933,34 @@
     "Name": "Illusory Bloom"
   },
   "920561": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920562": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920563": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920564": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920565": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920566": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920567": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920568": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920569": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920570": {
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "1002901": {
     "Name": "Muku Cudgel"
@@ -9764,31 +9764,31 @@
     "Name": "Boyce"
   },
   "5100303": {
-    "Name": "Corroded Great Eagle (AI)"
+    "Name": "Corroded Great Eagle"
   },
   "5100304": {
     "Name": "Fafala"
   },
   "5100501": {
-    "Name": "Villager Blocking the Way (AI)"
+    "Name": "Lost Villager"
   },
   "5100502": {
-    "Name": "Villager Blocking the Way (AI)"
+    "Name": "Lost Villager"
   },
   "5100503": {
-    "Name": "Villager Blocking the Way (AI)"
+    "Name": "Lost Villager"
   },
   "5100601": {
-    "Name": "Azurefoam Goblin (AI)"
+    "Name": "Green Foam Goblin"
   },
   "5100602": {
-    "Name": "Thunderfoam Goblin (AI)"
+    "Name": "Thunder Foam Goblin"
   },
   "5100603": {
-    "Name": "Azurefoam Goblin (AI)"
+    "Name": "Green Foam Goblin"
   },
   "5100604": {
-    "Name": "Violetfoam Goblin (AI)"
+    "Name": "Purple Foam Goblin"
   },
   "6000001": {
     "Name": "Celestial Flier"
@@ -9902,132 +9902,624 @@
     "Name": "Swindler's Henchman"
   },
   "6611001": {
-    "Name": "Echo (AI)"
+    "Name": "Echo"
   },
   "6611002": {
-    "Name": "Unheard Prayer (AI)"
+    "Name": "Unheard Oath"
   },
   "6611003": {
-    "Name": "Phantom (AI)"
+    "Name": "Phantom"
   },
   "6611004": {
-    "Name": "Phantom (AI)"
+    "Name": "Phantom"
   },
   "6611005": {
-    "Name": "Phantom (AI)"
+    "Name": "Phantom"
   },
   "6611006": {
-    "Name": "Calling (AI)"
+    "Name": "Summon"
   },
   "6611007": {
-    "Name": "Unheard Belief (AI)"
+    "Name": "Unheard Faith"
   },
   "6611008": {
-    "Name": "Unheard Belief (AI)"
+    "Name": "Unheard Faith"
   },
   "6611009": {
-    "Name": "Unheard Courage (AI)"
+    "Name": "Unheard Courage"
   },
   "6611010": {
     "Name": "Trial"
   },
   "6611011": {
-    "Name": "Unheard Justice (AI)"
+    "Name": "Unheard Justice"
   },
   "6611012": {
-    "Name": "Unheard Obsession (Deprecated) (AI)"
+    "Name": "Unheard Obsession (Obsolete)"
   },
   "6611013": {
-    "Name": "Unheard Obsession (Deprecated) (AI)"
+    "Name": "Unheard Obsession (Obsolete)"
   },
   "6611014": {
-    "Name": "Unheard Obsession (AI)"
+    "Name": "Unheard Obsession"
   },
   "6611015": {
     "Name": "Trial"
   },
   "6611016": {
-    "Name": "Malice (Temporarily Deprecated) (AI)"
+    "Name": "Malice (Temporarily Obsolete)"
   },
   "6611017": {
-    "Name": "Vilda (AI)"
+    "Name": "Wirda"
   },
   "6611018": {
-    "Name": "Dreambound Goblin (AI)"
+    "Name": "Goblin Lost in Slumber"
   },
   "6611019": {
-    "Name": "Trash Mob (Deprecated) (AI)"
+    "Name": "Minor Mob (Obsolete)"
   },
   "6611020": {
-    "Name": "Immature Illusory Bloom (AI)"
+    "Name": "Immature Illusory Bloom"
   },
   "6611021": {
     "Name": "Illusory Bloom"
   },
   "6611022": {
-    "Name": "Vilda (AI)"
+    "Name": "Wirda"
   },
   "6611023": {
     "Name": "Trial"
   },
   "6611024": {
-    "Name": "Trial: Elite (AI)"
+    "Name": "Trial: Elite"
   },
   "6611025": {
-    "Name": "Dreambound Deep Valley Merman (AI)"
+    "Name": "Valley Murloc Lost in Slumber"
   },
   "6611026": {
-    "Name": "Dreambound Creekside Merman (AI)"
+    "Name": "Riverbank Murloc Lost in Slumber"
   },
   "6611027": {
-    "Name": "Dreambound Darkriver Fin (AI)"
+    "Name": "Underriver Fin Lost in Slumber"
   },
   "6611028": {
-    "Name": "Echo (AI)"
+    "Name": "Echo"
   },
   "6611029": {
-    "Name": "Echo (AI)"
+    "Name": "Echo"
   },
   "6611030": {
-    "Name": "Echo: Elite (AI)"
+    "Name": "Echo: Elite"
   },
   "6611031": {
-    "Name": "Unheard Prayer (AI)"
+    "Name": "Unheard Oath"
   },
   "6611032": {
-    "Name": "Unheard Obsession (AI)"
+    "Name": "Unheard Obsession"
   },
   "6611033": {
     "Name": "Vilda Route Elite Arena Marker (AI)"
   },
   "6611034": {
-    "Name": "Immature Illusory Bloom (AI)"
+    "Name": "Immature Illusory Bloom"
   },
   "6611035": {
-    "Name": "Dreambound Goblin Sage (AI)"
+    "Name": "Goblin Sage Lost in Slumber"
   },
   "6611036": {
-    "Name": "Unheard Belief (AI)"
+    "Name": "Unheard Faith"
   },
   "6611037": {
-    "Name": "Unheard Justice (AI)"
+    "Name": "Unheard Justice"
   },
   "6611038": {
-    "Name": "Unheard Courage (AI)"
+    "Name": "Unheard Courage"
   },
   "6611039": {
-    "Name": "Immature Illusory Bloom (AI)"
+    "Name": "Immature Illusory Bloom"
   },
   "6620001": {
-    "Name": "Valley Crossbowman (AI)"
+    "Name": "Valley Crossbowman"
   },
   "6621001": {
-    "Name": "Valley Crossbowman (AI)"
+    "Name": "Valley Crossbowman"
   },
   "7700001": {
     "Name": "Goblin King"
   },
   "7700002": {
     "Name": "Battle Mech 03"
+  },
+  "103410": {
+    "Name": "Lampsis"
+  },
+  "103420": {
+    "Name": "Lampsis"
+  },
+  "103505": {
+    "Name": "Light Construct"
+  },
+  "103508": {
+    "Name": "Light Construct"
+  },
+  "103510": {
+    "Name": "Lampsis: Midnight Sun"
+  },
+  "103511": {
+    "Name": "Light Construct"
+  },
+  "103515": {
+    "Name": "Eaglebeast"
+  },
+  "103520": {
+    "Name": "Lampsis: Midnight Sun"
+  },
+  "103601": {
+    "Name": "Lampsis: Polar Night"
+  },
+  "103610": {
+    "Name": "Lampsis: Polar Night"
+  },
+  "103620": {
+    "Name": "Lampsis: Polar Night"
+  },
+  "10933": {
+    "Name": "[50] Imagine Dual Axes"
+  },
+  "11242": {
+    "Name": "Yeti"
+  },
+  "11243": {
+    "Name": "Yeti"
+  },
+  "11244": {
+    "Name": "Yeti"
+  },
+  "11245": {
+    "Name": "Yeti"
+  },
+  "11246": {
+    "Name": "Trogon"
+  },
+  "11247": {
+    "Name": "Trogon"
+  },
+  "11248": {
+    "Name": "Trogon"
+  },
+  "11249": {
+    "Name": "Trogon"
+  },
+  "11250": {
+    "Name": "Foxen"
+  },
+  "11251": {
+    "Name": "Foxen"
+  },
+  "11252": {
+    "Name": "Foxen"
+  },
+  "11253": {
+    "Name": "Foxen"
+  },
+  "11254": {
+    "Name": "Brazer"
+  },
+  "11255": {
+    "Name": "Brazer"
+  },
+  "11256": {
+    "Name": "Brazer"
+  },
+  "11257": {
+    "Name": "Brazer"
+  },
+  "11258": {
+    "Name": "Arachnocrab"
+  },
+  "11259": {
+    "Name": "Arachnocrab"
+  },
+  "11260": {
+    "Name": "Arachnocrab"
+  },
+  "11261": {
+    "Name": "Arachnocrab"
+  },
+  "123": {
+    "Name": "Elite Guardian Dummy"
+  },
+  "5000000": {
+    "Name": "Muku Chief"
+  },
+  "5000001": {
+    "Name": "Inferno Ogre"
+  },
+  "5000002": {
+    "Name": "Golden Juggernaut"
+  },
+  "5000003": {
+    "Name": "Arachnocrab King"
+  },
+  "5000004": {
+    "Name": "Celestial Flier"
+  },
+  "5000005": {
+    "Name": "Tempest Ogre"
+  },
+  "5000006": {
+    "Name": "Frost Ogre"
+  },
+  "5000007": {
+    "Name": "Muku King"
+  },
+  "5000008": {
+    "Name": "Goblin King"
+  },
+  "5000009": {
+    "Name": "Storm Goblin King"
+  },
+  "5000010": {
+    "Name": "Brigand Leader"
+  },
+  "5000011": {
+    "Name": "Iron Fang"
+  },
+  "5000012": {
+    "Name": "Lizardman King"
+  },
+  "5000013": {
+    "Name": "Venobzzar Incubator"
+  },
+  "5000014": {
+    "Name": "Airona"
+  },
+  "5000015": {
+    "Name": "Tatta"
+  },
+  "5000016": {
+    "Name": "Olvera"
+  },
+  "5000017": {
+    "Name": "Tina"
+  },
+  "5000018": {
+    "Name": "Bane Lord"
+  },
+  "5000019": {
+    "Name": "Celestial Flier Summon"
+  },
+  "5000020": {
+    "Name": "Summon Melee Muku"
+  },
+  "5000021": {
+    "Name": "Summon Crossbow Muku"
+  },
+  "5000022": {
+    "Name": "Summon Muku Chief"
+  },
+  "5001000": {
+    "Name": "Skyfish"
+  },
+  "5001001": {
+    "Name": "Jade Skyfish"
+  },
+  "5001002": {
+    "Name": "Lizardman Soldier"
+  },
+  "5001003": {
+    "Name": "Lizardman Shaman"
+  },
+  "5001004": {
+    "Name": "Hard-Shell Arachnocrab"
+  },
+  "5001005": {
+    "Name": "Magebane Arachnocrab"
+  },
+  "5001006": {
+    "Name": "Burrowing Arachnocrab"
+  },
+  "5001007": {
+    "Name": "Deepwater Cabbage Enthusiast"
+  },
+  "5002000": {
+    "Name": "Lizardman Guardian"
+  },
+  "5002001": {
+    "Name": "Lizardman Mage"
+  },
+  "5002002": {
+    "Name": "Lizardman Priest"
+  },
+  "5002003": {
+    "Name": "Undying Arachnocrab"
+  },
+  "5002004": {
+    "Name": "Swift Arachnocrab"
+  },
+  "5002005": {
+    "Name": "King Diver Cabbage"
+  },
+  "5003000": {
+    "Name": "Celestial Flier"
+  },
+  "5003001": {
+    "Name": "Lizardman King"
+  },
+  "5003002": {
+    "Name": "Phantom Arachnocrab"
+  },
+  "5003003": {
+    "Name": "Predator Arachnocrab"
+  },
+  "5003004": {
+    "Name": "Cabbage Assault Captain - Toliver"
+  },
+  "5003005": {
+    "Name": "Cabbage Ultimate Ace - Hood"
+  },
+  "6611040": {
+    "Name": "Unheard Oath"
+  },
+  "663001": {
+    "Name": "Reminiscence: Jossier"
+  },
+  "663002": {
+    "Name": "Boyce"
+  },
+  "663201": {
+    "Name": "Lothar"
+  },
+  "663202": {
+    "Name": "Boyce"
+  },
+  "663203": {
+    "Name": "Boyce"
+  },
+  "663204": {
+    "Name": "Gareth"
+  },
+  "663402": {
+    "Name": "Wooden Dummy"
+  },
+  "663404": {
+    "Name": "Gareth"
+  },
+  "663405": {
+    "Name": "Gareth"
+  },
+  "663406": {
+    "Name": "Boyce"
+  },
+  "663407": {
+    "Name": "Reminiscence: Klaus"
+  },
+  "663408": {
+    "Name": "Afterimage"
+  },
+  "663410": {
+    "Name": "Reminiscence: Jossier"
+  },
+  "663411": {
+    "Name": "Reminiscence: Lothar"
+  },
+  "663412": {
+    "Name": "Reminiscence: Klaus"
+  },
+  "663413": {
+    "Name": "Anti-Imagine Boyce"
+  },
+  "663414": {
+    "Name": "Reminiscence: Jossier"
+  },
+  "663415": {
+    "Name": "Reminiscence: Lothar"
+  },
+  "663416": {
+    "Name": "Reminiscence: Klaus"
+  },
+  "663601": {
+    "Name": "Muku Crossbowman"
+  },
+  "663701": {
+    "Name": "Muku Crossbowman"
+  },
+  "663801": {
+    "Name": "Muku Crossbowman"
+  },
+  "663802": {
+    "Name": "Valley Brawler"
+  },
+  "663901": {
+    "Name": "Muku Crossbowman"
+  },
+  "663902": {
+    "Name": "Valley Skirmisher"
+  },
+  "664001": {
+    "Name": "A red goblin?"
+  },
+  "664101": {
+    "Name": "Brigand"
+  },
+  "664601": {
+    "Name": "Goblin Dagger"
+  },
+  "664602": {
+    "Name": "Goblin Crossbow"
+  },
+  "664603": {
+    "Name": "Goblin Mage"
+  },
+  "664604": {
+    "Name": "Goblin Sword"
+  },
+  "664605": {
+    "Name": "Goblin Mage"
+  },
+  "664701": {
+    "Name": "Quadruped Combat Golem"
+  },
+  "664702": {
+    "Name": "Quadruped Combat Golem"
+  },
+  "664703": {
+    "Name": "Quadruped Combat Golem"
+  },
+  "664704": {
+    "Name": "Quadruped Combat Golem"
+  },
+  "664705": {
+    "Name": "Tripod Oculopod"
+  },
+  "664706": {
+    "Name": "Sanctuary Eye"
+  },
+  "664707": {
+    "Name": "Tripod Heavy Oculopod"
+  },
+  "664708": {
+    "Name": "Golem Type I"
+  },
+  "664709": {
+    "Name": "Golem Type II"
+  },
+  "664710": {
+    "Name": "Eye of Dream-Peering"
+  },
+  "664711": {
+    "Name": "Rorola"
+  },
+  "665201": {
+    "Name": "Muku Crossbowman"
+  },
+  "665202": {
+    "Name": "Unknown Person"
+  },
+  "665203": {
+    "Name": "Muku Crossbowman"
+  },
+  "665204": {
+    "Name": "Virginia"
+  },
+  "665301": {
+    "Name": "Valley Murloc"
+  },
+  "665302": {
+    "Name": "Riverbank Murloc"
+  },
+  "665303": {
+    "Name": "Underriver Fin"
+  },
+  "665304": {
+    "Name": "Ravine Aberration"
+  },
+  "9300001": {
+    "Name": "Nightmare Lord: Peril of the Burning Woods"
+  },
+  "9300011": {
+    "Name": "Nightmare: Wildfire Arachnocrab"
+  },
+  "9300012": {
+    "Name": "Nightmare: Rockfall Arachnocrab"
+  },
+  "9300013": {
+    "Name": "Greater Nightmare: Predator Arachnocrab"
+  },
+  "9300021": {
+    "Name": "Nightmare: Mudslide Yeti"
+  },
+  "9300022": {
+    "Name": "Nightmare: Sandstorm Yeti"
+  },
+  "9300023": {
+    "Name": "Greater Nightmare: Nightstalker Dogorman"
+  },
+  "9300031": {
+    "Name": "Nightmare: Crop-Ravaging Mountain Boar"
+  },
+  "9300032": {
+    "Name": "Nightmare: Night-Raiding Mountain Boar"
+  },
+  "9300033": {
+    "Name": "Greater Nightmare: Miasmic Fang"
+  },
+  "9300041": {
+    "Name": "Nightmare: Heel-Biting Furball"
+  },
+  "9300042": {
+    "Name": "Nightmare: Spine Furball"
+  },
+  "9300043": {
+    "Name": "Greater Nightmare: Bone-Gnawing Furball"
+  },
+  "9300051": {
+    "Name": "Nightmare: Prying Oculoid"
+  },
+  "9300052": {
+    "Name": "Nightmare: Gazing Oculoid"
+  },
+  "9300053": {
+    "Name": "Greater Nightmare: Covetous Gaze"
+  },
+  "9300061": {
+    "Name": "Nightmare: Waylaying Brigand"
+  },
+  "9300062": {
+    "Name": "Nightmare: Woodland Brigand"
+  },
+  "9300063": {
+    "Name": "Greater Nightmare: Murderous Brigand Leader"
+  },
+  "9300071": {
+    "Name": "Nightmare: Homeless Faceless One"
+  },
+  "9300072": {
+    "Name": "Nightmare: Vacant Faceless One"
+  },
+  "9300073": {
+    "Name": "Greater Nightmare: No-Return Executor"
+  },
+  "9300102": {
+    "Name": "Nightmare Lord: Shackles of the Mind"
+  },
+  "9300103": {
+    "Name": "Nightmare Lord: Scars of the Burnt Homeland"
+  },
+  "9300104": {
+    "Name": "Nightmare Lord: Eye of the Dreamstalker"
+  },
+  "9300105": {
+    "Name": "Nightmare Lord: Dread of Theft"
+  },
+  "9300106": {
+    "Name": "Nightmare Lord: Plight of the Stranded"
+  },
+  "9300107": {
+    "Name": "Nightmare Lord: Terror of the Colossus"
+  },
+  "9300108": {
+    "Name": "Nightmare Lord: Affliction of Famine"
+  },
+  "9300109": {
+    "Name": "Nightmare Lord: Calamity of Shattered Sanity"
+  },
+  "9300110": {
+    "Name": "Nightmare Lord: Dread of Many-Legged Things"
+  },
+  "9300111": {
+    "Name": "Nightmare Lord: Disaster of the Unstoppable"
+  },
+  "9300112": {
+    "Name": "Nightmare Lord: Terror of Confinement"
+  },
+  "9300113": {
+    "Name": "Nightmare Lord: Havoc of the Raging Gale"
+  },
+  "9300114": {
+    "Name": "Nightmare Lord: Agony of the Sinking Mire"
+  },
+  "9300200": {
+    "Name": "Giant Treasure Chest"
   }
 }

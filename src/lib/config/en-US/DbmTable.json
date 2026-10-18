@@ -142,7 +142,7 @@
   "17021101": {
     "Id": 17021101,
     "CountCDTime": 15,
-    "Content": "Void Corruption: Waltz!"
+    "Content": "Void Corruption Waltz"
   },
   "17010801": {
     "Id": 17010801,
@@ -172,7 +172,7 @@
   "17021301": {
     "Id": 17021301,
     "CountCDTime": 15,
-    "Content": "Void Corruption Erasure (AI)"
+    "Content": "Void Corruption Purge"
   },
   "17025601": {
     "Id": 17025601,
@@ -397,7 +397,7 @@
   "6920003": {
     "Id": 6920003,
     "CountCDTime": 15,
-    "Content": "Plague Spread (AI)"
+    "Content": "Malice Spreading"
   },
   "339010101": {
     "Id": 339010101,
@@ -407,7 +407,7 @@
   "6920007": {
     "Id": 6920007,
     "CountCDTime": 15,
-    "Content": "Plague Seed (AI)"
+    "Content": "Blight Seed"
   },
   "3340224": {
     "Id": 3340224,
@@ -417,7 +417,7 @@
   "6920010": {
     "Id": 6920010,
     "CountCDTime": 15,
-    "Content": "Malicious Dive (AI)"
+    "Content": "Wicked Dive"
   },
   "11110301": {
     "Id": 11110301,
@@ -472,72 +472,72 @@
   "10310010": {
     "Id": 10310010,
     "CountCDTime": 15,
-    "Content": "Phantom: End Singularity (AI)"
+    "Content": "Illusion - Terminus Singularity"
   },
   "10310011": {
     "Id": 10310011,
     "CountCDTime": 15,
-    "Content": "Annihilation Beam (AI)"
+    "Content": "Annihilation Beam"
   },
   "10310012": {
     "Id": 10310012,
     "CountCDTime": 15,
-    "Content": "Phantom Remains Synchronization (AI)"
+    "Content": "Illusory Sync"
   },
   "10320001": {
     "Id": 10320001,
     "CountCDTime": 15,
-    "Content": "Phantom: Annihilation Orbital Cannon (AI)"
+    "Content": "Illusion - Obliteration Railgun"
   },
   "10320005": {
     "Id": 10320005,
     "CountCDTime": 15,
-    "Content": "Disintegration Shock (AI)"
+    "Content": "Disintegration Shockwave"
   },
   "10330009": {
     "Id": 10330009,
     "CountCDTime": 10,
-    "Content": "Predestined Return (AI)"
+    "Content": "Preset Return"
   },
   "10330010": {
     "Id": 10330010,
     "CountCDTime": 10,
-    "Content": "Causal Warp (AI)"
+    "Content": "Causality Warp"
   },
   "10330011": {
     "Id": 10330011,
     "CountCDTime": 15,
-    "Content": "Symphony of the End (AI)"
+    "Content": "Final Symphony"
   },
   "10330012": {
     "Id": 10330012,
     "CountCDTime": 15,
-    "Content": "Divine Banishment (AI)"
+    "Content": "Divine Banishment"
   },
   "47011901": {
     "Id": 47011901,
     "CountCDTime": 15,
-    "Content": "Shadow of Heluga (AI)"
+    "Content": "Hruga's Shadow"
   },
   "47011401": {
     "Id": 47011401,
     "CountCDTime": 10,
-    "Content": "Companion Dark Spirit (AI)"
+    "Content": "Bonded Dark Spirit"
   },
   "47013201": {
     "Id": 47013201,
     "CountCDTime": 15,
-    "Content": "Voidscar Dissolution (AI)"
+    "Content": "Voidscar Dissolution"
   },
   "10330013": {
     "Id": 10330013,
     "CountCDTime": 10,
-    "Content": "Cumulative Sentence (AI)"
+    "Content": "Cumulative Sentence"
   },
   "10330014": {
     "Id": 10330014,
     "CountCDTime": 10,
-    "Content": "Bond Trial (AI)"
+    "Content": "Trial of Bonds"
   },
   "14019101": {
     "Id": 14019101,
@@ -547,136 +547,136 @@
   "14019901": {
     "Id": 14019901,
     "CountCDTime": 10,
-    "Content": "Dragon Soul Awakening (AI)"
+    "Content": "Dragon Soul Awakening"
   },
   "10330016": {
     "Id": 10330016,
     "CountCDTime": 5,
-    "Content": "Illusion Projection (AI)"
+    "Content": "Illusionary Projection"
   },
   "10360004": {
     "Id": 10360004,
     "CountCDTime": 15,
-    "Content": "召唤黑洞"
+    "Content": "Summon Black Hole"
   },
   "10360010": {
     "Id": 10360010,
     "CountCDTime": 20,
-    "Content": "天体召唤"
+    "Content": "Celestial Summoning"
   },
   "10360011": {
     "Id": 10360011,
     "CountCDTime": 20,
-    "Content": "天体旋转"
+    "Content": "Celestial Rotation"
   },
   "10360012": {
     "Id": 10360012,
     "CountCDTime": 20,
-    "Content": "黑暗降临"
+    "Content": "Darkfall"
   },
   "10360013": {
     "Id": 10360013,
     "CountCDTime": 20,
-    "Content": "光暗抉择"
+    "Content": "Light or Dark"
   },
   "10360014": {
     "Id": 10360014,
     "CountCDTime": 20,
-    "Content": "神鸟降世"
+    "Content": "Divine Bird Descends"
   },
   "10360015": {
     "Id": 10360015,
     "CountCDTime": 20,
-    "Content": "空间穿梭"
+    "Content": "Spatial Translocation"
   },
   "10350001": {
     "Id": 10350001,
     "CountCDTime": 15,
-    "Content": "光陨坍塌"
+    "Content": "Lightfall Collapse"
   },
   "10350003": {
     "Id": 10350003,
     "CountCDTime": 10,
-    "Content": "幻光拟形"
+    "Content": "Illusory Lightform"
   },
   "10350011": {
     "Id": 10350011,
     "CountCDTime": 15,
-    "Content": "穹顶耀斑"
+    "Content": "Skyflare"
   },
   "10350014": {
     "Id": 10350014,
     "CountCDTime": 10,
-    "Content": "天光打击"
+    "Content": "Light Strike"
   },
   "10350015": {
     "Id": 10350015,
     "CountCDTime": 15,
-    "Content": "苍穹觉醒"
+    "Content": "Sky Awakening"
   },
   "10350016": {
     "Id": 10350016,
     "CountCDTime": 10,
-    "Content": "天光告诫"
+    "Content": "Light's Admonition"
   },
   "10350018": {
     "Id": 10350018,
     "CountCDTime": 20,
-    "Content": "扬升"
+    "Content": "Ascension"
   },
   "339510301": {
     "Id": 339510301,
     "CountCDTime": 15,
-    "Content": "金曜神祭"
+    "Content": "Golden Sacrifice"
   },
   "339510303": {
     "Id": 339510303,
     "CountCDTime": 20,
-    "Content": "光耀射线"
+    "Content": "Radiant Ray"
   },
   "339510305": {
     "Id": 339510305,
     "CountCDTime": 15,
-    "Content": "天光审判"
+    "Content": "Judgment of Light"
   },
   "339510307": {
     "Id": 339510307,
     "CountCDTime": 10,
-    "Content": "圣裁追猎"
+    "Content": "Judgment Hunt"
   },
   "3395166": {
     "Id": 3395166,
     "CountCDTime": 10,
-    "Content": "灭烬时针"
+    "Content": "Ashen Timekeeper"
   },
   "340000501": {
     "Id": 340000501,
     "CountCDTime": 18,
-    "Content": "冰华万象"
+    "Content": "Frost Kaleidoscope"
   },
   "3395177": {
     "Id": 3395177,
     "CountCDTime": 15,
-    "Content": "心如永昼，谒彼诸天"
+    "Content": "Everlight, Celestial Call"
   },
   "340002301": {
     "Id": 340002301,
     "CountCDTime": 18,
-    "Content": "暴风雪"
+    "Content": "Blizzard"
   },
   "3395178": {
     "Id": 3395178,
     "CountCDTime": 15,
-    "Content": "名启归愿，信者皆苦"
+    "Content": "Great Wish, Suffering Believers"
   },
   "340002501": {
     "Id": 340002501,
     "CountCDTime": 20,
-    "Content": "冰之狂想曲"
+    "Content": "Ice Rhapsody"
   },
   "3395179": {
     "Id": 3395179,
     "CountCDTime": 15,
-    "Content": "影似澄炼，喻形成殇"
+    "Content": "Shadow and Sorrow"
   }
 }

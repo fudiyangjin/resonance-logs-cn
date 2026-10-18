@@ -11,53 +11,53 @@
   },
   {
     "id": 3021,
-    "NameDesign": "Thunderous Attraction (AI)",
+    "NameDesign": "Thunderfall Grasp",
     "Icon": "skill_aoyi_skill_icon_014.png"
   },
   {
     "id": 3022,
-    "NameDesign": "Glazed Flame Roar (AI)",
+    "NameDesign": "Flame Roar",
     "Icon": "skill_aoyi_skill_icon_017.png"
   },
   {
     "id": 3023,
-    "NameDesign": "Pulse Benediction (AI)",
+    "NameDesign": "Pulse Benediction",
     "Icon": "skill_aoyi_skill_icon_012.png"
   },
   {
     "id": 3024,
-    "NameDesign": "Hell Thrust (AI)",
+    "NameDesign": "Infernal Thrust",
     "Icon": "skill_aoyi_skill_icon_047.png"
   },
   {
     "id": 3025,
-    "NameDesign": "Thunder Roar (AI)",
+    "NameDesign": "Thunder Roar",
     "Icon": "skill_aoyi_skill_icon_038.png"
   },
   {
     "id": 3026,
-    "NameDesign": "Silent Tide (AI)",
+    "NameDesign": "Silent Tide",
     "Icon": "skill_aoyi_skill_icon_049.png"
   },
   {
     "id": 3027,
-    "NameDesign": "Prayer of Life (AI)",
+    "NameDesign": "Blessing of Life",
     "Icon": "skill_aoyi_skill_icon_013.png"
   },
   {
     "id": 3028,
-    "NameDesign": "Worldguard Boundary (AI)",
+    "NameDesign": "Guardian's Boundary",
     "Icon": "skill_aoyi_skill_icon_054.png"
   },
   {
     "id": 3898,
-    "NameDesign": "Stunt! Frostwind Vortex (AI)",
+    "NameDesign": "Stunt! Frostwind Vortex",
     "Icon": "skill_aoyi_skill_icon_099.png",
     "maxCharges": 2
   },
   {
     "id": 3899,
-    "NameDesign": "Stunt! Flame Dispel (AI)",
+    "NameDesign": "Stunt! Blaze Purge",
     "Icon": "skill_aoyi_skill_icon_100.png"
   },
   {
@@ -390,7 +390,7 @@
   },
   {
     "id": 3967,
-    "NameDesign": "Exit Talos Transformation",
+    "NameDesign": "Exit Dorothy Form",
     "Icon": "skill_aoyi_skill_icon_053.png"
   },
   {
@@ -497,67 +497,67 @@
   },
   {
     "id": 3988,
-    "NameDesign": "Arcane! Sacred Flame Dragon Breath (AI)",
+    "NameDesign": "Arcane! Sacred Flame Breath",
     "Icon": "skill_aoyi_skill_icon_087.png",
     "maxCharges": 2
   },
   {
     "id": 3989,
-    "NameDesign": "Arcane! Twin-Star Duel (AI)",
+    "NameDesign": "Arcane! Twin Star Duel",
     "Icon": "skill_aoyi_skill_icon_088.png",
     "maxCharges": 2
   },
   {
     "id": 3990,
-    "NameDesign": "Arcane! Stone-Rending Storm (AI)",
+    "NameDesign": "Arcane! Shatterstone Storm",
     "Icon": "skill_aoyi_skill_icon_089.png",
     "maxCharges": 2
   },
   {
     "id": 3991,
-    "NameDesign": "Arcane! Endbringer Incarnation (AI)",
+    "NameDesign": "Arcane! Avatar of the End",
     "Icon": "skill_aoyi_skill_icon_090.png",
     "maxCharges": 2
   },
   {
     "id": 3992,
-    "NameDesign": "Arcane! Fallen Strike (AI)",
+    "NameDesign": "Arcane! Corrupted Strike",
     "Icon": "skill_aoyi_skill_icon_091.png"
   },
   {
     "id": 3993,
-    "NameDesign": "Arcane! Reverse-Blade Absolute Frost Slash (AI)",
+    "NameDesign": "Arcane! Glacial Reverse Blade",
     "Icon": "skill_aoyi_skill_icon_092.png"
   },
   {
     "id": 3994,
-    "NameDesign": "Arcane! Iron-Cleaving Form (AI)",
+    "NameDesign": "Arcane! Ironcleave Stance",
     "Icon": "skill_aoyi_skill_icon_093.png"
   },
   {
     "id": 3995,
-    "NameDesign": "Arcane! Sharkspin Torrent (AI)",
+    "NameDesign": "Arcane! Sharkspin Torrent",
     "Icon": "skill_aoyi_skill_icon_094.png"
   },
   {
     "id": 3996,
-    "NameDesign": "Arcane! Bubble Breath (AI)",
+    "NameDesign": "Arcane! Breath of Illusions",
     "Icon": "skill_aoyi_skill_icon_095.png"
   },
   {
     "id": 3997,
-    "NameDesign": "Stunt! Tidal Pillar Combo (AI)",
+    "NameDesign": "Stunt! Cascading Tidal Pillars",
     "Icon": "skill_aoyi_skill_icon_096.png"
   },
   {
     "id": 3998,
-    "NameDesign": "Stunt! Fin Hammer Smash (AI)",
+    "NameDesign": "Stunt! Fin Hammer Slam",
     "Icon": "skill_aoyi_skill_icon_097.png",
     "maxCharges": 3
   },
   {
     "id": 3999,
-    "NameDesign": "Stunt! Explosive Water Bomb (AI)",
+    "NameDesign": "Stunt! Bursting Water Shell",
     "Icon": "skill_aoyi_skill_icon_098.png",
     "maxCharges": 1
   }

@@ -169,7 +169,7 @@
   },
   "21": {
     "Id": 21,
-    "RecountName": "Grand Tornado (AI)",
+    "RecountName": "Grand Tornado",
     "DamageId": [
       11499080101
     ]
@@ -319,7 +319,7 @@
   },
   "40": {
     "Id": 40,
-    "RecountName": "Ice Arrow (AI)",
+    "RecountName": "Ice Arrow",
     "DamageId": [
       312130100,
       312130200
@@ -370,7 +370,7 @@
   },
   "47": {
     "Id": 47,
-    "RecountName": "Ice Demon G11 - Frost Storm (AI)",
+    "RecountName": "Frost Mage G11 - Blizzard",
     "DamageId": [
       2305211201
     ]
@@ -484,7 +484,7 @@
   },
   "59": {
     "Id": 59,
-    "RecountName": "Moonblade Cyclone (AI)",
+    "RecountName": "Moonblade Whirl",
     "DamageId": [
       11799060101
     ]
@@ -695,7 +695,7 @@
   },
   "82": {
     "Id": 82,
-    "RecountName": "Light Energy Explosion (AI)",
+    "RecountName": "Photon Explosion",
     "DamageId": [
       122910101
     ]
@@ -758,7 +758,7 @@
   },
   "91": {
     "Id": 91,
-    "RecountName": "Wolf Pounce (AI)",
+    "RecountName": "Wild Wolf - Pounce",
     "DamageId": [
       117008250102,
       117008260102
@@ -766,28 +766,28 @@
   },
   "92": {
     "Id": 92,
-    "RecountName": "Falcon Dive Attack (AI)",
+    "RecountName": "Falcon Dive",
     "DamageId": [
       11011120101
     ]
   },
   "93": {
     "Id": 93,
-    "RecountName": "Wolf Normal Attack: Sweep (AI)",
+    "RecountName": "Wild Wolf - Basic Attack - Sweep",
     "DamageId": [
       117008270101
     ]
   },
   "94": {
     "Id": 94,
-    "RecountName": "Wolf Coordinated Attack: Bite (AI)",
+    "RecountName": "Wild Wolf - Coordinated Attack - Bite",
     "DamageId": [
       117008200102
     ]
   },
   "95": {
     "Id": 95,
-    "RecountName": "Wolf Tail Sweep (AI)",
+    "RecountName": "Wild Wolf - Tail Sweep",
     "DamageId": [
       117008240102
     ]
@@ -808,7 +808,7 @@
   },
   "98": {
     "Id": 98,
-    "RecountName": "HP Loss (AI)",
+    "RecountName": "Bleed",
     "DamageId": [
       2220309102,
       2220310102,
@@ -819,14 +819,14 @@
   },
   "99": {
     "Id": 99,
-    "RecountName": "Falcon Strike (AI)",
+    "RecountName": "Falcon Strike",
     "DamageId": [
       2220329107
     ]
   },
   "100": {
     "Id": 100,
-    "RecountName": "Implosion (AI)",
+    "RecountName": "Implosion",
     "DamageId": [
       2220352105
     ]
@@ -850,7 +850,7 @@
   },
   "103": {
     "Id": 103,
-    "RecountName": "Falcon Lightning Strike (AI)",
+    "RecountName": "Falcon Lightning Strike",
     "DamageId": [
       2220329109
     ]
@@ -881,7 +881,7 @@
   },
   "107": {
     "Id": 107,
-    "RecountName": "Magic Arrow (AI)",
+    "RecountName": "Magic Arrow",
     "DamageId": [
       322010700
     ]
@@ -1101,7 +1101,7 @@
   },
   "135": {
     "Id": 135,
-    "RecountName": "Sandgrip",
+    "RecountName": "Rock Heal",
     "DamageId": [
       2220164103,
       2220164104
@@ -1132,14 +1132,14 @@
   },
   "139": {
     "Id": 139,
-    "RecountName": "Star Shatter Pursuit",
+    "RecountName": "Bash Pursuit",
     "DamageId": [
       2220154005
     ]
   },
   "140": {
     "Id": 140,
-    "RecountName": "Rock Heal",
+    "RecountName": "Granite Fury Pursuit",
     "DamageId": [
       2220164005
     ]
@@ -1214,7 +1214,7 @@
   },
   "149": {
     "Id": 149,
-    "RecountName": "Automatic Judgment (AI)",
+    "RecountName": "Auto Judgment",
     "DamageId": [
       124510101
     ]
@@ -1369,14 +1369,14 @@
   },
   "168": {
     "Id": 168,
-    "RecountName": "Judgment Pursuit (AI)",
+    "RecountName": "Judgment Pursuit",
     "DamageId": [
       2220629005
     ]
   },
   "169": {
     "Id": 169,
-    "RecountName": "Judgment Pursuit (AI)",
+    "RecountName": "Judgment Pursuit",
     "DamageId": [
       2220668005
     ]
@@ -1510,7 +1510,7 @@
   },
   "183": {
     "Id": 183,
-    "RecountName": "Forest Whisper G10 - Forest Prayer (AI)",
+    "RecountName": "Verdant Oracle G10 - Grove Wish",
     "DamageId": [
       22140604
     ]
@@ -1601,7 +1601,7 @@
   },
   "195": {
     "Id": 195,
-    "RecountName": "Revival (AI)",
+    "RecountName": "Resurrect",
     "DamageId": [
       2220226203
     ]
@@ -1622,7 +1622,7 @@
   },
   "198": {
     "Id": 198,
-    "RecountName": "Dormant Healing (AI)",
+    "RecountName": "Healing of Stillness",
     "DamageId": [
       25535501,
       25535601,
@@ -1688,7 +1688,7 @@
   },
   "205": {
     "Id": 205,
-    "RecountName": "Ascension: Crowd-Pleaser / Ascension: Infinite Rhapsody (AI)",
+    "RecountName": "Rock the Stage/Infinite Rhapsody",
     "DamageId": [
       123140106,
       123140107,
@@ -1867,7 +1867,7 @@
   },
   "224": {
     "Id": 224,
-    "RecountName": "Serenade of Peace (AI)",
+    "RecountName": "Peaceful Tune",
     "DamageId": [
       25531105
     ]
@@ -1888,7 +1888,7 @@
   },
   "227": {
     "Id": 227,
-    "RecountName": "Dormant Healing (AI)",
+    "RecountName": "Healing of Stillness",
     "DamageId": [
       22142701,
       22142801,
@@ -1999,7 +1999,7 @@
   },
   "239": {
     "Id": 239,
-    "RecountName": "Wildfire Starstream (AI)",
+    "RecountName": "Wild Fire Starstream",
     "DamageId": []
   },
   "240": {
@@ -2012,7 +2012,7 @@
   },
   "241": {
     "Id": 241,
-    "RecountName": "Explosive Fury (AI)",
+    "RecountName": "Explosive Wrath",
     "DamageId": []
   },
   "242": {
@@ -2048,7 +2048,7 @@
   },
   "246": {
     "Id": 246,
-    "RecountName": "Wildfire Dance - Final Slash (AI)",
+    "RecountName": "Wildfire Dance - Final Slash",
     "DamageId": [
       116220101
     ]
@@ -2689,7 +2689,7 @@
   },
   "324": {
     "Id": 324,
-    "RecountName": "Void Corruption Pulse (Formerly Void Corruption Focus) (AI)",
+    "RecountName": "Void Corruption Frenzy Pulse (formerly Void Corruption Frenzy Focus)",
     "DamageId": [
       339140100
     ]
@@ -2720,14 +2720,14 @@
   },
   "328": {
     "Id": 328,
-    "RecountName": "Phantasmal Dream - Immortal Battle Stance (AI)",
+    "RecountName": "Mirage Dream - Immortal Stance",
     "DamageId": [
       2300267103
     ]
   },
   "329": {
     "Id": 329,
-    "RecountName": "Dream of Oblivion - Bloodlimit Surge (AI)",
+    "RecountName": "Oblivion Dream - Bloodbound Surge",
     "DamageId": [
       2300302301,
       2300302501
@@ -2742,42 +2742,42 @@
   },
   "331": {
     "Id": 331,
-    "RecountName": "False Judgment - Judgment: Heal (AI)",
+    "RecountName": "Shattered Illusion - Judgment - Heal",
     "DamageId": [
       2300326003
     ]
   },
   "332": {
     "Id": 332,
-    "RecountName": "Steady State G8 (AI)",
+    "RecountName": "Stasis G8",
     "DamageId": [
       2305908003
     ]
   },
   "333": {
     "Id": 333,
-    "RecountName": "Thunder Shadow Steady State G1 (AI)",
+    "RecountName": "Stormblade Stasis G1",
     "DamageId": [
       2305910103
     ]
   },
   "334": {
     "Id": 334,
-    "RecountName": "Greatblade Steady State G2 (AI)",
+    "RecountName": "Heavy Guardian Stasis G2",
     "DamageId": [
       2305921003
     ]
   },
   "335": {
     "Id": 335,
-    "RecountName": "Illusion-Shattering Impact (AI)",
+    "RecountName": "Disillusion Impact",
     "DamageId": [
       179980101
     ]
   },
   "336": {
     "Id": 336,
-    "RecountName": "Battle Spirit Surge (AI)",
+    "RecountName": "Battle Surge",
     "DamageId": [
       2300550401,
       2300559003
@@ -2801,7 +2801,7 @@
   },
   "338": {
     "Id": 338,
-    "RecountName": "Normal Attack - Arcane! Astral Mage (AI)",
+    "RecountName": "Normal attack - Arcane! Celestial Spirit Mage",
     "DamageId": [
       125010101,
       125020101,
@@ -2810,7 +2810,7 @@
   },
   "339": {
     "Id": 339,
-    "RecountName": "River of Stars - Arcane! Astral Mage (AI)",
+    "RecountName": "Fleuve d'étoiles - Arcane! Celestial Spirit Mage",
     "DamageId": [
       125040102,
       125040103,
@@ -2819,14 +2819,14 @@
   },
   "340": {
     "Id": 340,
-    "RecountName": "Chronicle of Water - Arcane! Astral Mage (AI)",
+    "RecountName": "Aqua Metria - Arcane! Celestial Spirit Mage",
     "DamageId": [
       325010100
     ]
   },
   "341": {
     "Id": 341,
-    "RecountName": "Normal Attack - Arcane! Dragon Slayer Mage (AI)",
+    "RecountName": "Normal Attack - Arcane! Dragon Slayer",
     "DamageId": [
       126010102,
       126020102,
@@ -2835,35 +2835,35 @@
   },
   "342": {
     "Id": 342,
-    "RecountName": "Fire Dragon's Iron Fist - Arcane! Dragon Slayer Mage (AI)",
+    "RecountName": "Fire Dragon's Iron Fist - Arcane! Dragon Slayer",
     "DamageId": [
       126040101
     ]
   },
   "343": {
     "Id": 343,
-    "RecountName": "Fire Dragon's Wing Strike - Arcane! Dragon Slayer Mage (AI)",
+    "RecountName": "Fire Dragon's Wing Attack - Arcane! Dragon Slayer",
     "DamageId": [
       126050102
     ]
   },
   "344": {
     "Id": 344,
-    "RecountName": "Fire Dragon's Roar - Arcane! Dragon Slayer Mage (AI)",
+    "RecountName": "Fire Dragon's Roar - Arcane! Dragon Slayer",
     "DamageId": [
       126060102
     ]
   },
   "345": {
     "Id": 345,
-    "RecountName": "Thunderous Attraction (AI)",
+    "RecountName": "Thunderfall Grasp",
     "DamageId": [
       120024410102
     ]
   },
   "346": {
     "Id": 346,
-    "RecountName": "Glazed Flame Roar (AI)",
+    "RecountName": "Flame Roar",
     "DamageId": [
       11012270101,
       2211030203
@@ -2871,28 +2871,28 @@
   },
   "347": {
     "Id": 347,
-    "RecountName": "Pulse Benediction (AI)",
+    "RecountName": "Pulse Benediction",
     "DamageId": [
       2211030403
     ]
   },
   "348": {
     "Id": 348,
-    "RecountName": "Hell Thrust (AI)",
+    "RecountName": "Infernal Thrust",
     "DamageId": [
       110081410101
     ]
   },
   "349": {
     "Id": 349,
-    "RecountName": "Silent Tide (AI)",
+    "RecountName": "Silent Tide",
     "DamageId": [
       110085410101
     ]
   },
   "350": {
     "Id": 350,
-    "RecountName": "Arcane! Sacred Flame Dragon Breath (AI)",
+    "RecountName": "Arcane! Sacred Flame Breath",
     "DamageId": [
       1102701410101,
       1102701410102,
@@ -2901,7 +2901,7 @@
   },
   "351": {
     "Id": 351,
-    "RecountName": "Arcane! Twin-Star Duel (AI)",
+    "RecountName": "Arcane! Twin Star Duel",
     "DamageId": [
       1102800410101,
       2321026201
@@ -2909,7 +2909,7 @@
   },
   "352": {
     "Id": 352,
-    "RecountName": "Arcane! Stone-Rending Storm (AI)",
+    "RecountName": "Arcane! Shatterstone Storm",
     "DamageId": [
       1102901410101,
       1102901410102
@@ -2917,7 +2917,7 @@
   },
   "353": {
     "Id": 353,
-    "RecountName": "Arcane! Endbringer Incarnation (AI)",
+    "RecountName": "Arcane! Avatar of the End",
     "DamageId": [
       1103001410101,
       1103001410102,
@@ -2926,7 +2926,7 @@
   },
   "354": {
     "Id": 354,
-    "RecountName": "Arcane! Fallen Strike (AI)",
+    "RecountName": "Arcane! Corrupted Strike",
     "DamageId": [
       111231410101,
       111231410102
@@ -2934,7 +2934,7 @@
   },
   "355": {
     "Id": 355,
-    "RecountName": "Arcane! Reverse-Blade Absolute Frost Slash (AI)",
+    "RecountName": "Arcane! Glacial Reverse Blade",
     "DamageId": [
       111227410101,
       111227410102,
@@ -2943,21 +2943,21 @@
   },
   "356": {
     "Id": 356,
-    "RecountName": "Arcane! Iron-Cleaving Form (AI)",
+    "RecountName": "Arcane! Ironcleave Stance",
     "DamageId": [
       111235410101
     ]
   },
   "357": {
     "Id": 357,
-    "RecountName": "Arcane! Sharkspin Torrent (AI)",
+    "RecountName": "Arcane! Sharkspin Torrent",
     "DamageId": [
       2211018103
     ]
   },
   "358": {
     "Id": 358,
-    "RecountName": "Arcane! Bubble Breath (AI)",
+    "RecountName": "Arcane! Breath of Illusions",
     "DamageId": [
       111223410101,
       2321030003
@@ -2965,7 +2965,7 @@
   },
   "359": {
     "Id": 359,
-    "RecountName": "Special! Tidal Pillar Combo (AI)",
+    "RecountName": "Stunt! Cascading Tidal Pillars",
     "DamageId": [
       111222410101,
       111222410102,
@@ -2974,21 +2974,21 @@
   },
   "360": {
     "Id": 360,
-    "RecountName": "Special! Fin Hammer Smash (AI)",
+    "RecountName": "Stunt! Fin Hammer Slam",
     "DamageId": [
       111238410101
     ]
   },
   "361": {
     "Id": 361,
-    "RecountName": "Special! Explosive Water Bomb (AI)",
+    "RecountName": "Stunt! Bursting Water Shell",
     "DamageId": [
       3112344100
     ]
   },
   "362": {
     "Id": 362,
-    "RecountName": "Special! Frostwind Vortex (AI)",
+    "RecountName": "Stunt! Frostwind Vortex",
     "DamageId": [
       110022410101,
       110022410104
@@ -2996,7 +2996,7 @@
   },
   "363": {
     "Id": 363,
-    "RecountName": "Special! Flame Dispel (AI)",
+    "RecountName": "Stunt! Blaze Purge",
     "DamageId": [
       111230410101,
       111230410102

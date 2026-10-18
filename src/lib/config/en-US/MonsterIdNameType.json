@@ -1181,7 +1181,7 @@
   },
   "103100": {
     "MonsterType": 2,
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Origin"
   },
   "103101": {
     "MonsterType": 1,
@@ -1193,11 +1193,11 @@
   },
   "103103": {
     "MonsterType": 1,
-    "Name": "Mechanical Phantom Type I (AI)"
+    "Name": "Mech Illusion I"
   },
   "103104": {
     "MonsterType": 1,
-    "Name": "Mechanical Phantom Type V (AI)"
+    "Name": "Mech Illusion V"
   },
   "103105": {
     "MonsterType": 1,
@@ -1205,27 +1205,27 @@
   },
   "103106": {
     "MonsterType": 1,
-    "Name": "Anti-Dragon Golem Phantom (AI)"
+    "Name": "Dragonbane Golem Illusion"
   },
   "103107": {
     "MonsterType": 2,
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Origin"
   },
   "103108": {
     "MonsterType": 2,
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Origin"
   },
   "103109": {
     "MonsterType": 1,
-    "Name": "Mechanical Phantom Type V (AI)"
+    "Name": "Mech Illusion V"
   },
   "103110": {
     "MonsterType": 1,
-    "Name": "Anti-Dragon Golem - Right Cannon Barrel (AI)"
+    "Name": "Dragonbane Golem - Right Cannon"
   },
   "103111": {
     "MonsterType": 1,
-    "Name": "Anti-Dragon Golem - Left Cannon Barrel (AI)"
+    "Name": "Dragonbane Golem - Left Cannon"
   },
   "10314": {
     "MonsterType": 0,
@@ -1233,7 +1233,7 @@
   },
   "103200": {
     "MonsterType": 2,
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Continuation"
   },
   "103201": {
     "MonsterType": 0,
@@ -1261,11 +1261,11 @@
   },
   "103207": {
     "MonsterType": 2,
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Continuation"
   },
   "103208": {
     "MonsterType": 2,
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Continuation"
   },
   "103209": {
     "MonsterType": 0,
@@ -1289,15 +1289,15 @@
   },
   "103300": {
     "MonsterType": 2,
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Final"
   },
   "103301": {
     "MonsterType": 1,
-    "Name": "Anti-Dragon Golem - Right Cannon Barrel (AI)"
+    "Name": "Dragonbane Golem - Right Cannon"
   },
   "103302": {
     "MonsterType": 1,
-    "Name": "Anti-Dragon Golem - Left Cannon Barrel (AI)"
+    "Name": "Dragonbane Golem - Left Cannon"
   },
   "103303": {
     "MonsterType": 1,
@@ -1317,27 +1317,27 @@
   },
   "103307": {
     "MonsterType": 1,
-    "Name": "Annihilation Cannon: Transformed (AI)"
+    "Name": "Annihilation Cannon - Morph"
   },
   "103308": {
     "MonsterType": 2,
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Final"
   },
   "103309": {
     "MonsterType": 2,
-    "Name": "Dragonfighter Golem"
+    "Name": "Paradox-Calamity Remnant - Final"
   },
   "103310": {
     "MonsterType": 2,
-    "Name": "Remains of Paradox and Calamity: Final Phantom (AI)"
+    "Name": "Paradox-Calamity Remnant - Final Phantom"
   },
   "103311": {
     "MonsterType": 2,
-    "Name": "Remains of Paradox and Calamity: Final Phantom (AI)"
+    "Name": "Paradox-Calamity Remnant - Final Phantom"
   },
   "103400": {
     "MonsterType": 2,
-    "Name": "Lapsis - Phase 1 (AI)"
+    "Name": "Lampsis"
   },
   "103401": {
     "MonsterType": 0,
@@ -1357,11 +1357,11 @@
   },
   "103410": {
     "MonsterType": 2,
-    "Name": "拉普西斯"
+    "Name": "Lampsis"
   },
   "103420": {
     "MonsterType": 2,
-    "Name": "拉普西斯"
+    "Name": "Lampsis"
   },
   "103421": {
     "MonsterType": 0,
@@ -1393,27 +1393,27 @@
   },
   "103500": {
     "MonsterType": 2,
-    "Name": "Lapsis - Phase 2 (AI)"
+    "Name": "Lampsis: Midnight Sun"
   },
   "103501": {
     "MonsterType": 1,
-    "Name": "Light Shaping (AI)"
+    "Name": "Light Construct"
   },
   "103502": {
     "MonsterType": 1,
-    "Name": "Light Shaping (AI)"
+    "Name": "Light Construct"
   },
   "103503": {
     "MonsterType": 1,
-    "Name": "Light Shaping (AI)"
+    "Name": "Light Construct"
   },
   "103504": {
     "MonsterType": 1,
-    "Name": "Light Shaping (AI)"
+    "Name": "Light Construct"
   },
   "103505": {
     "MonsterType": 1,
-    "Name": "光之塑形"
+    "Name": "Light Construct"
   },
   "103506": {
     "MonsterType": 1,
@@ -1425,7 +1425,7 @@
   },
   "103508": {
     "MonsterType": 1,
-    "Name": "光之塑形"
+    "Name": "Light Construct"
   },
   "103509": {
     "MonsterType": 1,
@@ -1433,11 +1433,11 @@
   },
   "103510": {
     "MonsterType": 2,
-    "Name": "拉普西斯·极昼"
+    "Name": "Lampsis: Midnight Sun"
   },
   "103511": {
     "MonsterType": 1,
-    "Name": "光之塑形"
+    "Name": "Light Construct"
   },
   "103512": {
     "MonsterType": 1,
@@ -1453,11 +1453,11 @@
   },
   "103515": {
     "MonsterType": 1,
-    "Name": "枭兽"
+    "Name": "Eaglebeast"
   },
   "103520": {
     "MonsterType": 2,
-    "Name": "拉普西斯·极昼"
+    "Name": "Lampsis: Midnight Sun"
   },
   "103600": {
     "MonsterType": 2,
@@ -1465,7 +1465,7 @@
   },
   "103601": {
     "MonsterType": 2,
-    "Name": "拉普西斯·极夜"
+    "Name": "Lampsis: Polar Night"
   },
   "103602": {
     "MonsterType": 0,
@@ -1481,7 +1481,7 @@
   },
   "103610": {
     "MonsterType": 2,
-    "Name": "拉普西斯·极夜"
+    "Name": "Lampsis: Polar Night"
   },
   "103611": {
     "MonsterType": 2,
@@ -1489,7 +1489,7 @@
   },
   "103620": {
     "MonsterType": 2,
-    "Name": "拉普西斯·极夜"
+    "Name": "Lampsis: Polar Night"
   },
   "104": {
     "MonsterType": 0,
@@ -1649,7 +1649,7 @@
   },
   "10933": {
     "MonsterType": 1,
-    "Name": "[50]幻想双斧"
+    "Name": "[50] Imagine Dual Axes"
   },
   "110": {
     "MonsterType": 0,
@@ -1773,7 +1773,7 @@
   },
   "11011": {
     "MonsterType": 0,
-    "Name": "Goblin Guard"
+    "Name": "Goblin Sentry"
   },
   "11012": {
     "MonsterType": 1,
@@ -1889,7 +1889,7 @@
   },
   "11038": {
     "MonsterType": 2,
-    "Name": "Boss: King Tuo Kong"
+    "Name": "Boss: King Trogon"
   },
   "11039": {
     "MonsterType": 0,
@@ -2297,39 +2297,39 @@
   },
   "11221": {
     "MonsterType": 0,
-    "Name": "Venomous Shrimp Shroom (AI)"
+    "Name": "Venomous Shrimpshroom"
   },
   "11222": {
     "MonsterType": 1,
-    "Name": "Paralyzing Shrimp Shroom (AI)"
+    "Name": "Paralyzing Shrimpshroom"
   },
   "11223": {
     "MonsterType": 2,
-    "Name": "Dreammanifest Host (AI)"
+    "Name": "Dream Manifestor"
   },
   "11224": {
     "MonsterType": 0,
-    "Name": "Valley Brave (AI)"
+    "Name": "Valley Warrior"
   },
   "11225": {
     "MonsterType": 0,
-    "Name": "Valley Vanguard (AI)"
+    "Name": "Valley Vanguard"
   },
   "11226": {
     "MonsterType": 1,
-    "Name": "Valley Gladiator (AI)"
+    "Name": "Valley Brawler"
   },
   "11227": {
     "MonsterType": 2,
-    "Name": "Valley Shock Trooper (AI)"
+    "Name": "Valley Skirmisher"
   },
   "11228": {
     "MonsterType": 0,
-    "Name": "Whiteplume Goblin (AI)"
+    "Name": "Whitefeather Goblin"
   },
   "11229": {
     "MonsterType": 0,
-    "Name": "Darkplume Goblin (AI)"
+    "Name": "Darkfeather Goblin"
   },
   "1123": {
     "MonsterType": 0,
@@ -2337,43 +2337,43 @@
   },
   "11230": {
     "MonsterType": 1,
-    "Name": "Goblin Sage (AI)"
+    "Name": "Goblin Sage"
   },
   "11231": {
     "MonsterType": 2,
-    "Name": "Shell-Gathering Heretic (AI)"
+    "Name": "Shell-Gathering Cultist"
   },
   "11232": {
     "MonsterType": 0,
-    "Name": "Valley Scout (AI)"
+    "Name": "Valley Scout"
   },
   "11233": {
     "MonsterType": 0,
-    "Name": "Valley Crossbowman (AI)"
+    "Name": "Valley Crossbowman"
   },
   "11234": {
     "MonsterType": 1,
-    "Name": "Valley Ranger (AI)"
+    "Name": "Valley Ranger"
   },
   "11235": {
     "MonsterType": 2,
-    "Name": "Wandering Exile (AI)"
+    "Name": "Wandering Traveler"
   },
   "11236": {
     "MonsterType": 0,
-    "Name": "Deep Valley Merman (AI)"
+    "Name": "Valley Murloc"
   },
   "11237": {
     "MonsterType": 0,
-    "Name": "Creekside Merman (AI)"
+    "Name": "Riverbank Murloc"
   },
   "11238": {
     "MonsterType": 1,
-    "Name": "Darkriver Fin (AI)"
+    "Name": "Underriver Fin"
   },
   "11239": {
     "MonsterType": 2,
-    "Name": "Ravine Phantom (AI)"
+    "Name": "Ravine Aberration"
   },
   "1124": {
     "MonsterType": 0,
@@ -2381,91 +2381,91 @@
   },
   "11240": {
     "MonsterType": 0,
-    "Name": "Azurefoam Goblin (AI)"
+    "Name": "Green Foam Goblin"
   },
   "11241": {
     "MonsterType": 0,
-    "Name": "Violetfoam Goblin (AI)"
+    "Name": "Purple Foam Goblin"
   },
   "11242": {
     "MonsterType": 0,
-    "Name": "肉山"
+    "Name": "Yeti"
   },
   "11243": {
     "MonsterType": 0,
-    "Name": "肉山"
+    "Name": "Yeti"
   },
   "11244": {
     "MonsterType": 1,
-    "Name": "肉山"
+    "Name": "Yeti"
   },
   "11245": {
     "MonsterType": 2,
-    "Name": "肉山"
+    "Name": "Yeti"
   },
   "11246": {
     "MonsterType": 0,
-    "Name": "鵎鵼"
+    "Name": "Trogon"
   },
   "11247": {
     "MonsterType": 0,
-    "Name": "鵎鵼"
+    "Name": "Trogon"
   },
   "11248": {
     "MonsterType": 1,
-    "Name": "鵎鵼"
+    "Name": "Trogon"
   },
   "11249": {
     "MonsterType": 2,
-    "Name": "鵎鵼"
+    "Name": "Trogon"
   },
   "11250": {
     "MonsterType": 0,
-    "Name": "地狐"
+    "Name": "Foxen"
   },
   "11251": {
     "MonsterType": 0,
-    "Name": "地狐"
+    "Name": "Foxen"
   },
   "11252": {
     "MonsterType": 1,
-    "Name": "地狐"
+    "Name": "Foxen"
   },
   "11253": {
     "MonsterType": 2,
-    "Name": "地狐"
+    "Name": "Foxen"
   },
   "11254": {
     "MonsterType": 0,
-    "Name": "布雷泽"
+    "Name": "Brazer"
   },
   "11255": {
     "MonsterType": 0,
-    "Name": "布雷泽"
+    "Name": "Brazer"
   },
   "11256": {
     "MonsterType": 1,
-    "Name": "布雷泽"
+    "Name": "Brazer"
   },
   "11257": {
     "MonsterType": 2,
-    "Name": "布雷泽"
+    "Name": "Brazer"
   },
   "11258": {
     "MonsterType": 0,
-    "Name": "蟹蛛"
+    "Name": "Arachnocrab"
   },
   "11259": {
     "MonsterType": 0,
-    "Name": "蟹蛛"
+    "Name": "Arachnocrab"
   },
   "11260": {
     "MonsterType": 1,
-    "Name": "蟹蛛"
+    "Name": "Arachnocrab"
   },
   "11261": {
     "MonsterType": 2,
-    "Name": "蟹蛛"
+    "Name": "Arachnocrab"
   },
   "113": {
     "MonsterType": 1,
@@ -2853,7 +2853,7 @@
   },
   "123": {
     "MonsterType": 2,
-    "Name": "精英守护木桩"
+    "Name": "Elite Guardian Dummy"
   },
   "1230": {
     "MonsterType": 2,
@@ -3229,7 +3229,7 @@
   },
   "1397": {
     "MonsterType": 1,
-    "Name": "Thunder Core (AI)"
+    "Name": "Thunder Core"
   },
   "1398": {
     "MonsterType": 0,
@@ -3821,15 +3821,15 @@
   },
   "190101": {
     "MonsterType": 1,
-    "Name": "Kartgriff: Guardian of the Realm (AI)"
+    "Name": "Kartgriff the Domain Guardian"
   },
   "190102": {
     "MonsterType": 0,
-    "Name": "Gamma Support Unit (AI)"
+    "Name": "Gamma-Type Support Unit"
   },
   "190103": {
     "MonsterType": 0,
-    "Name": "Quadruped Mech Soldier (AI)"
+    "Name": "Quadrupedal Mech"
   },
   "190104": {
     "MonsterType": 0,
@@ -3841,11 +3841,11 @@
   },
   "190106": {
     "MonsterType": 0,
-    "Name": "Slate's Phantom (AI)"
+    "Name": "Sleht's Phantom"
   },
   "190107": {
     "MonsterType": 0,
-    "Name": "Lothar's Phantom (AI)"
+    "Name": "Lothar's Phantom"
   },
   "190108": {
     "MonsterType": 0,
@@ -4897,7 +4897,7 @@
   },
   "21002": {
     "MonsterType": 1,
-    "Name": "Prank Bomb (AI)"
+    "Name": "Prank Bomb"
   },
   "21003": {
     "MonsterType": 1,
@@ -4909,11 +4909,11 @@
   },
   "21005": {
     "MonsterType": 1,
-    "Name": "Mysterious Illusion (AI)"
+    "Name": "Mysterious Phantom"
   },
   "21006": {
     "MonsterType": 1,
-    "Name": "Dark Crystal (AI)"
+    "Name": "Crystal of Darkness"
   },
   "2101": {
     "MonsterType": 0,
@@ -6029,7 +6029,7 @@
   },
   "30821": {
     "MonsterType": 1,
-    "Name": "Fagaro Guard (AI)"
+    "Name": "Fagaro Guard"
   },
   "30822": {
     "MonsterType": 1,
@@ -6745,11 +6745,11 @@
   },
   "33923": {
     "MonsterType": 2,
-    "Name": "Test Dummy (AI)"
+    "Name": "Test Dummy"
   },
   "33951": {
     "MonsterType": 2,
-    "Name": "Lapsis (AI)"
+    "Name": "Lampsis"
   },
   "33952": {
     "MonsterType": 0,
@@ -6765,7 +6765,7 @@
   },
   "33960": {
     "MonsterType": 2,
-    "Name": "Lapsis (AI)"
+    "Name": "Lampsis"
   },
   "33961": {
     "MonsterType": 0,
@@ -6777,23 +6777,23 @@
   },
   "34000": {
     "MonsterType": 2,
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34001": {
     "MonsterType": 0,
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34002": {
     "MonsterType": 0,
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34003": {
     "MonsterType": 0,
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34004": {
     "MonsterType": 0,
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34005": {
     "MonsterType": 0,
@@ -6813,7 +6813,7 @@
   },
   "34009": {
     "MonsterType": 0,
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34010": {
     "MonsterType": 0,
@@ -6829,7 +6829,7 @@
   },
   "34013": {
     "MonsterType": 0,
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34014": {
     "MonsterType": 0,
@@ -6841,59 +6841,59 @@
   },
   "34016": {
     "MonsterType": 0,
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34017": {
     "MonsterType": 0,
-    "Name": "Memory Form: Guilt (AI)"
+    "Name": "Reminiscence: Guilt"
   },
   "34018": {
     "MonsterType": 0,
-    "Name": "Memory Form: Culpability (AI)"
+    "Name": "Reminiscence: Blame"
   },
   "34019": {
     "MonsterType": 0,
-    "Name": "Memory Form: Qualification (AI)"
+    "Name": "Reminiscence: Worthiness"
   },
   "34020": {
     "MonsterType": 0,
-    "Name": "Manifestation: Forest Whisperer (AI)"
+    "Name": "Manifestation: Verdant Oracle"
   },
   "34021": {
     "MonsterType": 0,
-    "Name": "Manifestation: Berserker (AI)"
+    "Name": "Manifestation: Twin Striker"
   },
   "34022": {
     "MonsterType": 0,
-    "Name": "Manifestation: Azurewind Knight (AI)"
+    "Name": "Manifestation: Wind Knight"
   },
   "34023": {
     "MonsterType": 0,
-    "Name": "Manifestation: Marksman (AI)"
+    "Name": "Manifestation: Marksman"
   },
   "34024": {
     "MonsterType": 0,
-    "Name": "Manifestation: Guardian (AI)"
+    "Name": "Manifestation: Heavy Guardian"
   },
   "34025": {
     "MonsterType": 0,
-    "Name": "Manifestation: Magus (AI)"
+    "Name": "Manifestation: Frost Mage"
   },
   "34026": {
     "MonsterType": 0,
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34027": {
     "MonsterType": 0,
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34028": {
     "MonsterType": 0,
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34029": {
     "MonsterType": 0,
-    "Name": "Manifestation: Mercenary (AI)"
+    "Name": "Manifestation: Mercenary"
   },
   "34030": {
     "MonsterType": 0,
@@ -6901,19 +6901,19 @@
   },
   "34031": {
     "MonsterType": 0,
-    "Name": "Anti-Fantasy: Boyce (AI)"
+    "Name": "Anti-Imagine Boyce"
   },
   "34032": {
     "MonsterType": 0,
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34033": {
     "MonsterType": 0,
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34034": {
     "MonsterType": 0,
-    "Name": "Manifestation: Priest (AI)"
+    "Name": "Manifestation: Priest"
   },
   "34035": {
     "MonsterType": 0,
@@ -8137,7 +8137,7 @@
   },
   "4639": {
     "MonsterType": 1,
-    "Name": "Abyssal Gaze Matrix"
+    "Name": "Mystery Matrix"
   },
   "4640": {
     "MonsterType": 1,
@@ -8165,7 +8165,7 @@
   },
   "4701": {
     "MonsterType": 2,
-    "Name": "Vilda (AI)"
+    "Name": "Wirda"
   },
   "4702": {
     "MonsterType": 1,
@@ -8173,11 +8173,11 @@
   },
   "4703": {
     "MonsterType": 0,
-    "Name": "Omen (AI)"
+    "Name": "Omen"
   },
   "4711": {
     "MonsterType": 2,
-    "Name": "Vilda (AI)"
+    "Name": "Wirda"
   },
   "50000": {
     "MonsterType": 0,
@@ -8185,95 +8185,95 @@
   },
   "5000000": {
     "MonsterType": 0,
-    "Name": "姆克头目"
+    "Name": "Muku Chief"
   },
   "5000001": {
     "MonsterType": 0,
-    "Name": "火焰食人魔"
+    "Name": "Inferno Ogre"
   },
   "5000002": {
     "MonsterType": 0,
-    "Name": "凶猛金牙"
+    "Name": "Golden Juggernaut"
   },
   "5000003": {
     "MonsterType": 0,
-    "Name": "蟹蛛王"
+    "Name": "Arachnocrab King"
   },
   "5000004": {
     "MonsterType": 0,
-    "Name": "圣域飞鱼"
+    "Name": "Celestial Flier"
   },
   "5000005": {
     "MonsterType": 0,
-    "Name": "雷电食人魔"
+    "Name": "Tempest Ogre"
   },
   "5000006": {
     "MonsterType": 0,
-    "Name": "寒霜食人魔"
+    "Name": "Frost Ogre"
   },
   "5000007": {
     "MonsterType": 0,
-    "Name": "姆克王"
+    "Name": "Muku King"
   },
   "5000008": {
     "MonsterType": 0,
-    "Name": "哥布林王"
+    "Name": "Goblin King"
   },
   "5000009": {
     "MonsterType": 0,
-    "Name": "飓风哥布林王"
+    "Name": "Storm Goblin King"
   },
   "5000010": {
     "MonsterType": 0,
-    "Name": "山贼头目"
+    "Name": "Brigand Leader"
   },
   "5000011": {
     "MonsterType": 0,
-    "Name": "铁牙"
+    "Name": "Iron Fang"
   },
   "5000012": {
     "MonsterType": 0,
-    "Name": "蜥蜴人王"
+    "Name": "Lizardman King"
   },
   "5000013": {
     "MonsterType": 0,
-    "Name": "剧毒蜂巢"
+    "Name": "Venobzzar Incubator"
   },
   "5000014": {
     "MonsterType": 0,
-    "Name": "艾露娜"
+    "Name": "Airona"
   },
   "5000015": {
     "MonsterType": 0,
-    "Name": "塔塔"
+    "Name": "Tatta"
   },
   "5000016": {
     "MonsterType": 0,
-    "Name": "奥尔维拉"
+    "Name": "Olvera"
   },
   "5000017": {
     "MonsterType": 0,
-    "Name": "蒂娜"
+    "Name": "Tina"
   },
   "5000018": {
     "MonsterType": 0,
-    "Name": "灾厄之主"
+    "Name": "Bane Lord"
   },
   "5000019": {
     "MonsterType": 0,
-    "Name": "圣域飞鱼召唤怪"
+    "Name": "Celestial Flier Summon"
   },
   "5000020": {
     "MonsterType": 0,
-    "Name": "召唤近战姆克"
+    "Name": "Summon Melee Muku"
   },
   "5000021": {
     "MonsterType": 0,
-    "Name": "召唤弩手姆克"
+    "Name": "Summon Crossbow Muku"
   },
   "5000022": {
     "MonsterType": 0,
-    "Name": "召唤姆克头目"
+    "Name": "Summon Muku Chief"
   },
   "50001": {
     "MonsterType": 0,
@@ -8281,83 +8281,83 @@
   },
   "5001000": {
     "MonsterType": 0,
-    "Name": "飞鱼"
+    "Name": "Skyfish"
   },
   "5001001": {
     "MonsterType": 0,
-    "Name": "碧玉飞鱼"
+    "Name": "Jade Skyfish"
   },
   "5001002": {
     "MonsterType": 0,
-    "Name": "蜥蜴人士兵"
+    "Name": "Lizardman Soldier"
   },
   "5001003": {
     "MonsterType": 0,
-    "Name": "蜥蜴人萨满"
+    "Name": "Lizardman Shaman"
   },
   "5001004": {
     "MonsterType": 0,
-    "Name": "硬壳蟹蛛"
+    "Name": "Hard-Shell Arachnocrab"
   },
   "5001005": {
     "MonsterType": 0,
-    "Name": "嗜魔蟹蛛"
+    "Name": "Magebane Arachnocrab"
   },
   "5001006": {
     "MonsterType": 0,
-    "Name": "钻地蟹蛛"
+    "Name": "Burrowing Arachnocrab"
   },
   "5001007": {
     "MonsterType": 0,
-    "Name": "卷心菜深水爱好者"
+    "Name": "Deepwater Cabbage Enthusiast"
   },
   "5002000": {
     "MonsterType": 1,
-    "Name": "蜥蜴人守护者"
+    "Name": "Lizardman Guardian"
   },
   "5002001": {
     "MonsterType": 1,
-    "Name": "蜥蜴人法师"
+    "Name": "Lizardman Mage"
   },
   "5002002": {
     "MonsterType": 1,
-    "Name": "蜥蜴人牧师"
+    "Name": "Lizardman Priest"
   },
   "5002003": {
     "MonsterType": 1,
-    "Name": "不死蟹蛛"
+    "Name": "Undying Arachnocrab"
   },
   "5002004": {
     "MonsterType": 1,
-    "Name": "极速蟹蛛"
+    "Name": "Swift Arachnocrab"
   },
   "5002005": {
     "MonsterType": 1,
-    "Name": "卷心菜潜水王"
+    "Name": "King Diver Cabbage"
   },
   "5003000": {
     "MonsterType": 2,
-    "Name": "圣域飞鱼"
+    "Name": "Celestial Flier"
   },
   "5003001": {
     "MonsterType": 2,
-    "Name": "蜥蜴人王"
+    "Name": "Lizardman King"
   },
   "5003002": {
     "MonsterType": 2,
-    "Name": "幻妖蟹蛛"
+    "Name": "Phantom Arachnocrab"
   },
   "5003003": {
     "MonsterType": 2,
-    "Name": "掠食蟹蛛"
+    "Name": "Predator Arachnocrab"
   },
   "5003004": {
     "MonsterType": 2,
-    "Name": "卷心菜强袭队长·托利弗"
+    "Name": "Cabbage Assault Captain - Toliver"
   },
   "5003005": {
     "MonsterType": 2,
-    "Name": "卷心菜绝对王牌·胡德"
+    "Name": "Cabbage Ultimate Ace - Hood"
   },
   "5004001": {
     "MonsterType": 0,
@@ -8405,7 +8405,7 @@
   },
   "5100303": {
     "MonsterType": 0,
-    "Name": "Corroded Great Eagle (AI)"
+    "Name": "Corroded Great Eagle"
   },
   "5100304": {
     "MonsterType": 0,
@@ -8413,31 +8413,31 @@
   },
   "5100501": {
     "MonsterType": 0,
-    "Name": "Villager Blocking the Way (AI)"
+    "Name": "Lost Villager"
   },
   "5100502": {
     "MonsterType": 0,
-    "Name": "Villager Blocking the Way (AI)"
+    "Name": "Lost Villager"
   },
   "5100503": {
     "MonsterType": 0,
-    "Name": "Villager Blocking the Way (AI)"
+    "Name": "Lost Villager"
   },
   "5100601": {
     "MonsterType": 0,
-    "Name": "Azurefoam Goblin (AI)"
+    "Name": "Green Foam Goblin"
   },
   "5100602": {
     "MonsterType": 0,
-    "Name": "Thunderfoam Goblin (AI)"
+    "Name": "Thunder Foam Goblin"
   },
   "5100603": {
     "MonsterType": 0,
-    "Name": "Azurefoam Goblin (AI)"
+    "Name": "Green Foam Goblin"
   },
   "5100604": {
     "MonsterType": 0,
-    "Name": "Violetfoam Goblin (AI)"
+    "Name": "Purple Foam Goblin"
   },
   "511031": {
     "MonsterType": 1,
@@ -9509,7 +9509,7 @@
   },
   "60223": {
     "MonsterType": 0,
-    "Name": "Goblin Swords"
+    "Name": "Goblin Sword"
   },
   "60224": {
     "MonsterType": 0,
@@ -9541,7 +9541,7 @@
   },
   "60231": {
     "MonsterType": 1,
-    "Name": "Elite: Goblin Swords"
+    "Name": "Elite: Goblin Sword"
   },
   "60232": {
     "MonsterType": 1,
@@ -9617,7 +9617,7 @@
   },
   "60403": {
     "MonsterType": 0,
-    "Name": "Goblin Swords"
+    "Name": "Goblin Sword"
   },
   "60404": {
     "MonsterType": 0,
@@ -9645,7 +9645,7 @@
   },
   "60410": {
     "MonsterType": 1,
-    "Name": "Elite: Goblin Swords"
+    "Name": "Elite: Goblin Sword"
   },
   "60411": {
     "MonsterType": 1,
@@ -9705,7 +9705,7 @@
   },
   "60603": {
     "MonsterType": 0,
-    "Name": "Goblin Swords"
+    "Name": "Goblin Sword"
   },
   "60604": {
     "MonsterType": 0,
@@ -10401,15 +10401,15 @@
   },
   "660309": {
     "MonsterType": 0,
-    "Name": "Azurefoam Goblin (AI)"
+    "Name": "Green Foam Goblin"
   },
   "660310": {
     "MonsterType": 0,
-    "Name": "Thunderfoam Goblin (AI)"
+    "Name": "Thunder Foam Goblin"
   },
   "660311": {
     "MonsterType": 1,
-    "Name": "Goblin Sage (AI)"
+    "Name": "Goblin Sage"
   },
   "660312": {
     "MonsterType": 1,
@@ -10429,39 +10429,39 @@
   },
   "6611001": {
     "MonsterType": 1,
-    "Name": "Echo (AI)"
+    "Name": "Echo"
   },
   "6611002": {
     "MonsterType": 0,
-    "Name": "Unheard Prayer (AI)"
+    "Name": "Unheard Oath"
   },
   "6611003": {
     "MonsterType": 0,
-    "Name": "Phantom (AI)"
+    "Name": "Phantom"
   },
   "6611004": {
     "MonsterType": 0,
-    "Name": "Phantom (AI)"
+    "Name": "Phantom"
   },
   "6611005": {
     "MonsterType": 0,
-    "Name": "Phantom (AI)"
+    "Name": "Phantom"
   },
   "6611006": {
     "MonsterType": 0,
-    "Name": "Calling (AI)"
+    "Name": "Summon"
   },
   "6611007": {
     "MonsterType": 0,
-    "Name": "Unheard Belief (AI)"
+    "Name": "Unheard Faith"
   },
   "6611008": {
     "MonsterType": 0,
-    "Name": "Unheard Belief (AI)"
+    "Name": "Unheard Faith"
   },
   "6611009": {
     "MonsterType": 0,
-    "Name": "Unheard Courage (AI)"
+    "Name": "Unheard Courage"
   },
   "661101": {
     "MonsterType": 0,
@@ -10473,19 +10473,19 @@
   },
   "6611011": {
     "MonsterType": 0,
-    "Name": "Unheard Justice (AI)"
+    "Name": "Unheard Justice"
   },
   "6611012": {
     "MonsterType": 0,
-    "Name": "Unheard Obsession (Deprecated) (AI)"
+    "Name": "Unheard Obsession (Obsolete)"
   },
   "6611013": {
     "MonsterType": 0,
-    "Name": "Unheard Obsession (Deprecated) (AI)"
+    "Name": "Unheard Obsession (Obsolete)"
   },
   "6611014": {
     "MonsterType": 1,
-    "Name": "Unheard Obsession (AI)"
+    "Name": "Unheard Obsession"
   },
   "6611015": {
     "MonsterType": 0,
@@ -10493,23 +10493,23 @@
   },
   "6611016": {
     "MonsterType": 0,
-    "Name": "Malice (Temporarily Deprecated) (AI)"
+    "Name": "Malice (Temporarily Obsolete)"
   },
   "6611017": {
     "MonsterType": 0,
-    "Name": "Vilda (AI)"
+    "Name": "Wirda"
   },
   "6611018": {
     "MonsterType": 0,
-    "Name": "Dreambound Goblin (AI)"
+    "Name": "Goblin Lost in Slumber"
   },
   "6611019": {
     "MonsterType": 0,
-    "Name": "Trash Mob (Deprecated) (AI)"
+    "Name": "Minor Mob (Obsolete)"
   },
   "6611020": {
     "MonsterType": 1,
-    "Name": "Immature Illusory Bloom (AI)"
+    "Name": "Immature Illusory Bloom"
   },
   "6611021": {
     "MonsterType": 1,
@@ -10517,7 +10517,7 @@
   },
   "6611022": {
     "MonsterType": 0,
-    "Name": "Vilda (AI)"
+    "Name": "Wirda"
   },
   "6611023": {
     "MonsterType": 0,
@@ -10525,39 +10525,39 @@
   },
   "6611024": {
     "MonsterType": 1,
-    "Name": "Trial: Elite (AI)"
+    "Name": "Trial: Elite"
   },
   "6611025": {
     "MonsterType": 0,
-    "Name": "Dreambound Deep Valley Merman (AI)"
+    "Name": "Valley Murloc Lost in Slumber"
   },
   "6611026": {
     "MonsterType": 0,
-    "Name": "Dreambound Creekside Merman (AI)"
+    "Name": "Riverbank Murloc Lost in Slumber"
   },
   "6611027": {
     "MonsterType": 1,
-    "Name": "Dreambound Darkriver Fin (AI)"
+    "Name": "Underriver Fin Lost in Slumber"
   },
   "6611028": {
     "MonsterType": 0,
-    "Name": "Echo (AI)"
+    "Name": "Echo"
   },
   "6611029": {
     "MonsterType": 0,
-    "Name": "Echo (AI)"
+    "Name": "Echo"
   },
   "6611030": {
     "MonsterType": 1,
-    "Name": "Echo: Elite (AI)"
+    "Name": "Echo: Elite"
   },
   "6611031": {
     "MonsterType": 0,
-    "Name": "Unheard Prayer (AI)"
+    "Name": "Unheard Oath"
   },
   "6611032": {
     "MonsterType": 1,
-    "Name": "Unheard Obsession (AI)"
+    "Name": "Unheard Obsession"
   },
   "6611033": {
     "MonsterType": 0,
@@ -10565,31 +10565,31 @@
   },
   "6611034": {
     "MonsterType": 1,
-    "Name": "Immature Illusory Bloom (AI)"
+    "Name": "Immature Illusory Bloom"
   },
   "6611035": {
     "MonsterType": 1,
-    "Name": "Dreambound Goblin Sage (AI)"
+    "Name": "Goblin Sage Lost in Slumber"
   },
   "6611036": {
     "MonsterType": 0,
-    "Name": "Unheard Belief (AI)"
+    "Name": "Unheard Faith"
   },
   "6611037": {
     "MonsterType": 0,
-    "Name": "Unheard Justice (AI)"
+    "Name": "Unheard Justice"
   },
   "6611038": {
     "MonsterType": 0,
-    "Name": "Unheard Courage (AI)"
+    "Name": "Unheard Courage"
   },
   "6611039": {
     "MonsterType": 1,
-    "Name": "Immature Illusory Bloom (AI)"
+    "Name": "Immature Illusory Bloom"
   },
   "6611040": {
     "MonsterType": 0,
-    "Name": "未被倾听的祈愿"
+    "Name": "Unheard Oath"
   },
   "661201": {
     "MonsterType": 0,
@@ -10637,35 +10637,35 @@
   },
   "6620001": {
     "MonsterType": 0,
-    "Name": "Valley Crossbowman (AI)"
+    "Name": "Valley Crossbowman"
   },
   "6621001": {
     "MonsterType": 0,
-    "Name": "Valley Crossbowman (AI)"
+    "Name": "Valley Crossbowman"
   },
   "663001": {
     "MonsterType": 0,
-    "Name": "回想体·约书亚"
+    "Name": "Reminiscence: Jossier"
   },
   "663002": {
     "MonsterType": 0,
-    "Name": "博伊斯"
+    "Name": "Boyce"
   },
   "663201": {
     "MonsterType": 0,
-    "Name": "洛塔尔"
+    "Name": "Lothar"
   },
   "663202": {
     "MonsterType": 0,
-    "Name": "博伊斯"
+    "Name": "Boyce"
   },
   "663203": {
     "MonsterType": 0,
-    "Name": "博伊斯"
+    "Name": "Boyce"
   },
   "663204": {
     "MonsterType": 0,
-    "Name": "伽雷斯"
+    "Name": "Gareth"
   },
   "663401": {
     "MonsterType": 0,
@@ -10673,7 +10673,7 @@
   },
   "663402": {
     "MonsterType": 1,
-    "Name": "木人"
+    "Name": "Wooden Dummy"
   },
   "663403": {
     "MonsterType": 0,
@@ -10681,23 +10681,23 @@
   },
   "663404": {
     "MonsterType": 0,
-    "Name": "伽雷斯"
+    "Name": "Gareth"
   },
   "663405": {
     "MonsterType": 0,
-    "Name": "伽雷斯"
+    "Name": "Gareth"
   },
   "663406": {
     "MonsterType": 0,
-    "Name": "博伊斯"
+    "Name": "Boyce"
   },
   "663407": {
     "MonsterType": 0,
-    "Name": "回想体·克劳斯"
+    "Name": "Reminiscence: Klaus"
   },
   "663408": {
     "MonsterType": 0,
-    "Name": "残影"
+    "Name": "Afterimage"
   },
   "663409": {
     "MonsterType": 0,
@@ -10705,159 +10705,159 @@
   },
   "663410": {
     "MonsterType": 0,
-    "Name": "回想体·约书亚"
+    "Name": "Reminiscence: Jossier"
   },
   "663411": {
     "MonsterType": 0,
-    "Name": "回想体·洛塔尔"
+    "Name": "Reminiscence: Lothar"
   },
   "663412": {
     "MonsterType": 0,
-    "Name": "回想体·克劳斯"
+    "Name": "Reminiscence: Klaus"
   },
   "663413": {
     "MonsterType": 0,
-    "Name": "反幻想·博伊斯"
+    "Name": "Anti-Imagine Boyce"
   },
   "663414": {
     "MonsterType": 0,
-    "Name": "回想体·约书亚"
+    "Name": "Reminiscence: Jossier"
   },
   "663415": {
     "MonsterType": 0,
-    "Name": "回想体·洛塔尔"
+    "Name": "Reminiscence: Lothar"
   },
   "663416": {
     "MonsterType": 0,
-    "Name": "回想体·克劳斯"
+    "Name": "Reminiscence: Klaus"
   },
   "663601": {
     "MonsterType": 0,
-    "Name": "姆克弩手"
+    "Name": "Muku Crossbowman"
   },
   "663701": {
     "MonsterType": 0,
-    "Name": "姆克弩手"
+    "Name": "Muku Crossbowman"
   },
   "663801": {
     "MonsterType": 0,
-    "Name": "姆克弩手"
+    "Name": "Muku Crossbowman"
   },
   "663802": {
     "MonsterType": 1,
-    "Name": "溪谷斗技者"
+    "Name": "Valley Brawler"
   },
   "663901": {
     "MonsterType": 0,
-    "Name": "姆克弩手"
+    "Name": "Muku Crossbowman"
   },
   "663902": {
     "MonsterType": 2,
-    "Name": "溪谷尖兵"
+    "Name": "Valley Skirmisher"
   },
   "664001": {
     "MonsterType": 1,
-    "Name": "红色的哥布林？"
+    "Name": "A red goblin?"
   },
   "664101": {
     "MonsterType": 0,
-    "Name": "山贼"
+    "Name": "Brigand"
   },
   "664601": {
     "MonsterType": 0,
-    "Name": "小刀哥布林"
+    "Name": "Goblin Dagger"
   },
   "664602": {
     "MonsterType": 0,
-    "Name": "弩箭哥布林"
+    "Name": "Goblin Crossbow"
   },
   "664603": {
     "MonsterType": 0,
-    "Name": "巫妖哥布林"
+    "Name": "Goblin Mage"
   },
   "664604": {
     "MonsterType": 0,
-    "Name": "剑盾哥布林"
+    "Name": "Goblin Sword"
   },
   "664605": {
     "MonsterType": 1,
-    "Name": "巫师哥布林"
+    "Name": "Goblin Mage"
   },
   "664701": {
     "MonsterType": 0,
-    "Name": "四足作战用机"
+    "Name": "Quadruped Combat Golem"
   },
   "664702": {
     "MonsterType": 0,
-    "Name": "四足作战用机"
+    "Name": "Quadruped Combat Golem"
   },
   "664703": {
     "MonsterType": 0,
-    "Name": "四足作战用机"
+    "Name": "Quadruped Combat Golem"
   },
   "664704": {
     "MonsterType": 0,
-    "Name": "四足作战用机"
+    "Name": "Quadruped Combat Golem"
   },
   "664705": {
     "MonsterType": 0,
-    "Name": "三足眼舱"
+    "Name": "Tripod Oculopod"
   },
   "664706": {
     "MonsterType": 1,
-    "Name": "圣堂之眼"
+    "Name": "Sanctuary Eye"
   },
   "664707": {
     "MonsterType": 1,
-    "Name": "三足重型眼舱"
+    "Name": "Tripod Heavy Oculopod"
   },
   "664708": {
     "MonsterType": 0,
-    "Name": "机像Ⅰ型"
+    "Name": "Golem Type I"
   },
   "664709": {
     "MonsterType": 1,
-    "Name": "机像Ⅱ型"
+    "Name": "Golem Type II"
   },
   "664710": {
     "MonsterType": 2,
-    "Name": "窥梦之眼"
+    "Name": "Eye of Dream-Peering"
   },
   "664711": {
     "MonsterType": 0,
-    "Name": "罗罗拉"
+    "Name": "Rorola"
   },
   "665201": {
     "MonsterType": 0,
-    "Name": "姆克弩手"
+    "Name": "Muku Crossbowman"
   },
   "665202": {
     "MonsterType": 0,
-    "Name": "不明人员"
+    "Name": "Unknown Person"
   },
   "665203": {
     "MonsterType": 0,
-    "Name": "姆克弩手"
+    "Name": "Muku Crossbowman"
   },
   "665204": {
     "MonsterType": 0,
-    "Name": "弗吉妮娅"
+    "Name": "Virginia"
   },
   "665301": {
     "MonsterType": 0,
-    "Name": "深谷鱼人"
+    "Name": "Valley Murloc"
   },
   "665302": {
     "MonsterType": 0,
-    "Name": "溪岸鱼人"
+    "Name": "Riverbank Murloc"
   },
   "665303": {
     "MonsterType": 1,
-    "Name": "暗河之鳍"
+    "Name": "Underriver Fin"
   },
   "665304": {
     "MonsterType": 2,
-    "Name": "涧流的异影"
+    "Name": "Ravine Aberration"
   },
   "69001": {
     "MonsterType": 1,
@@ -10921,55 +10921,55 @@
   },
   "69200": {
     "MonsterType": 2,
-    "Name": "Plague Scale (AI)"
+    "Name": "Malice Scales"
   },
   "69201": {
     "MonsterType": 1,
-    "Name": "Plague Blackstone Legion Commander (AI)"
+    "Name": "Malice Blackstone Commander"
   },
   "69202": {
     "MonsterType": 1,
-    "Name": "Plague Blackstone Legion Vanguard (AI)"
+    "Name": "Malice Blackstone Vanguard"
   },
   "69203": {
     "MonsterType": 1,
-    "Name": "Plague Goblin Trickster (AI)"
+    "Name": "Malice Goblin Trickster"
   },
   "69204": {
     "MonsterType": 1,
-    "Name": "Plague Goblin Witch Doctor (AI)"
+    "Name": "Malice Goblin Shaman"
   },
   "69205": {
     "MonsterType": 1,
-    "Name": "Plague Bluespine Lizard (AI)"
+    "Name": "Malice Bluespine Lizard"
   },
   "69206": {
     "MonsterType": 1,
-    "Name": "Plague Melancholy Cabbage (AI)"
+    "Name": "Malice Gloomy Cabbage"
   },
   "69207": {
     "MonsterType": 1,
-    "Name": "Plague Ruthless Cabbage (AI)"
+    "Name": "Malice Ruthless Cabbage"
   },
   "69208": {
     "MonsterType": 1,
-    "Name": "Plague Emerald Caprahorn (AI)"
+    "Name": "Malice Emerald Caprahorn"
   },
   "69210": {
     "MonsterType": 0,
-    "Name": "Plague Frostshade Lizard (AI)"
+    "Name": "Malice Frost Lizard"
   },
   "69211": {
     "MonsterType": 0,
-    "Name": "Plague Goblin Warrior (AI)"
+    "Name": "Malice Goblin Warrior"
   },
   "69212": {
     "MonsterType": 0,
-    "Name": "Plague Cabbage Killer (AI)"
+    "Name": "Malice Cabbage Killer"
   },
   "69213": {
     "MonsterType": 0,
-    "Name": "Plague Blackstone Legion Assault Trooper (AI)"
+    "Name": "Malice Blackstone Assaulter"
   },
   "69214": {
     "MonsterType": 0,
@@ -11009,7 +11009,7 @@
   },
   "69250": {
     "MonsterType": 2,
-    "Name": "Plague Scale (AI)"
+    "Name": "Malice Scales"
   },
   "700001": {
     "MonsterType": 1,
@@ -11201,7 +11201,7 @@
   },
   "700111": {
     "MonsterType": 1,
-    "Name": "Light-Tracing Spirit (AI)"
+    "Name": "Lightchase Spirit"
   },
   "700112": {
     "MonsterType": 1,
@@ -11373,7 +11373,7 @@
   },
   "7006": {
     "MonsterType": 2,
-    "Name": "Calamity Puppet"
+    "Name": "Tina - Void Reverie"
   },
   "70060": {
     "MonsterType": 1,
@@ -11949,7 +11949,7 @@
   },
   "73002": {
     "MonsterType": 2,
-    "Name": "Boss: Valley Shock Trooper (AI)"
+    "Name": "Boss: Valley Skirmisher"
   },
   "73003": {
     "MonsterType": 2,
@@ -11961,7 +11961,7 @@
   },
   "73005": {
     "MonsterType": 2,
-    "Name": "Boss: Dreammanifest Host (AI)"
+    "Name": "Boss: Dream Manifestor"
   },
   "73006": {
     "MonsterType": 2,
@@ -11969,11 +11969,11 @@
   },
   "73007": {
     "MonsterType": 2,
-    "Name": "Boss: Shell-Gathering Heretic (AI)"
+    "Name": "Boss: Shell-Gathering Cultist"
   },
   "73008": {
     "MonsterType": 2,
-    "Name": "Boss: Wandering Exile (AI)"
+    "Name": "Boss: Wandering Traveler"
   },
   "73009": {
     "MonsterType": 2,
@@ -11985,7 +11985,7 @@
   },
   "73011": {
     "MonsterType": 2,
-    "Name": "Boss: Ravine Phantom (AI)"
+    "Name": "Boss: Ravine Aberration"
   },
   "73012": {
     "MonsterType": 2,
@@ -12177,23 +12177,23 @@
   },
   "73059": {
     "MonsterType": 1,
-    "Name": "Elite: Paralyzing Shrimp Shroom (AI)"
+    "Name": "Elite: Paralyzing Shrimpshroom"
   },
   "73060": {
     "MonsterType": 1,
-    "Name": "Elite: Valley Gladiator (AI)"
+    "Name": "Elite: Valley Brawler"
   },
   "73061": {
     "MonsterType": 1,
-    "Name": "Elite: Goblin Sage (AI)"
+    "Name": "Elite: Goblin Sage"
   },
   "73062": {
     "MonsterType": 1,
-    "Name": "Elite: Valley Ranger (AI)"
+    "Name": "Elite: Valley Ranger"
   },
   "73063": {
     "MonsterType": 1,
-    "Name": "Elite: Darkriver Fin (AI)"
+    "Name": "Elite: Underriver Fin"
   },
   "73064": {
     "MonsterType": 0,
@@ -12201,39 +12201,39 @@
   },
   "73065": {
     "MonsterType": 0,
-    "Name": "Venomous Shrimp Shroom (AI)"
+    "Name": "Venomous Shrimpshroom"
   },
   "73066": {
     "MonsterType": 0,
-    "Name": "Valley Brave (AI)"
+    "Name": "Valley Warrior"
   },
   "73067": {
     "MonsterType": 0,
-    "Name": "Valley Vanguard (AI)"
+    "Name": "Valley Vanguard"
   },
   "73068": {
     "MonsterType": 0,
-    "Name": "Azurefoam Goblin (AI)"
+    "Name": "Green Foam Goblin"
   },
   "73069": {
     "MonsterType": 0,
-    "Name": "Violetfoam Goblin (AI)"
+    "Name": "Purple Foam Goblin"
   },
   "73070": {
     "MonsterType": 0,
-    "Name": "Valley Scout (AI)"
+    "Name": "Valley Scout"
   },
   "73071": {
     "MonsterType": 0,
-    "Name": "Valley Crossbowman (AI)"
+    "Name": "Valley Crossbowman"
   },
   "73072": {
     "MonsterType": 0,
-    "Name": "Deep Valley Merman (AI)"
+    "Name": "Valley Murloc"
   },
   "73073": {
     "MonsterType": 0,
-    "Name": "Creekside Merman (AI)"
+    "Name": "Riverbank Murloc"
   },
   "760001": {
     "MonsterType": 1,
@@ -12333,23 +12333,23 @@
   },
   "80020": {
     "MonsterType": 2,
-    "Name": "Boss: Dreammanifest Host (AI)"
+    "Name": "Boss: Dream Manifestor"
   },
   "80021": {
     "MonsterType": 2,
-    "Name": "Boss: Valley Shock Trooper (AI)"
+    "Name": "Boss: Valley Skirmisher"
   },
   "80022": {
     "MonsterType": 2,
-    "Name": "Boss: Shell-Gathering Heretic (AI)"
+    "Name": "Boss: Shell-Gathering Cultist"
   },
   "80023": {
     "MonsterType": 2,
-    "Name": "Boss: Wandering Exile (AI)"
+    "Name": "Boss: Wandering Traveler"
   },
   "80024": {
     "MonsterType": 2,
-    "Name": "Boss: Ravine Phantom (AI)"
+    "Name": "Boss: Ravine Aberration"
   },
   "8003": {
     "MonsterType": 1,
@@ -12797,7 +12797,7 @@
   },
   "8113": {
     "MonsterType": 0,
-    "Name": "​Shadow Warden"
+    "Name": "Shadow Warden"
   },
   "8114": {
     "MonsterType": 0,
@@ -13817,23 +13817,23 @@
   },
   "920501": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920502": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920503": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920504": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920505": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920506": {
     "MonsterType": 2,
@@ -13917,35 +13917,35 @@
   },
   "920530": {
     "MonsterType": 0,
-    "Name": "Researcher Jim (AI)"
+    "Name": "Researcher Jim"
   },
   "920531": {
     "MonsterType": 0,
-    "Name": "Researcher Giddy (AI)"
+    "Name": "Researcher Giddy"
   },
   "920532": {
     "MonsterType": 0,
-    "Name": "Researcher Jimmy (AI)"
+    "Name": "Researcher Jimmy"
   },
   "920533": {
     "MonsterType": 0,
-    "Name": "Lost: Drifter (AI)"
+    "Name": "Lost - Roamer"
   },
   "920534": {
     "MonsterType": 0,
-    "Name": "Researcher Jim (AI)"
+    "Name": "Researcher Jim"
   },
   "920535": {
     "MonsterType": 0,
-    "Name": "Researcher Giddy (AI)"
+    "Name": "Researcher Giddy"
   },
   "920536": {
     "MonsterType": 0,
-    "Name": "Lost: Researcher (AI)"
+    "Name": "Lost - Researcher"
   },
   "920550": {
     "MonsterType": 1,
-    "Name": "Delusion: Colossus (AI)"
+    "Name": "Illusion-Shroud Colossus"
   },
   "920551": {
     "MonsterType": 1,
@@ -13965,187 +13965,187 @@
   },
   "920561": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920562": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920563": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920564": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920565": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920566": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920567": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920568": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920569": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "920570": {
     "MonsterType": 2,
-    "Name": "Delusion Arbiter - Final Form (AI)"
+    "Name": "Illusion-Shroud Adjudicator - Final Form"
   },
   "9300001": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·焚林之厄"
+    "Name": "Nightmare Lord: Peril of the Burning Woods"
   },
   "9300011": {
     "MonsterType": 0,
-    "Name": "梦魇·山火蟹蛛"
+    "Name": "Nightmare: Wildfire Arachnocrab"
   },
   "9300012": {
     "MonsterType": 0,
-    "Name": "梦魇·坠岩蟹蛛"
+    "Name": "Nightmare: Rockfall Arachnocrab"
   },
   "9300013": {
     "MonsterType": 1,
-    "Name": "魁梦魇·掠食蟹蛛"
+    "Name": "Greater Nightmare: Predator Arachnocrab"
   },
   "9300021": {
     "MonsterType": 0,
-    "Name": "梦魇·泥流肉山"
+    "Name": "Nightmare: Mudslide Yeti"
   },
   "9300022": {
     "MonsterType": 0,
-    "Name": "梦魇·沙暴肉山"
+    "Name": "Nightmare: Sandstorm Yeti"
   },
   "9300023": {
     "MonsterType": 1,
-    "Name": "魁梦魇·夜伏多戈尔曼"
+    "Name": "Greater Nightmare: Nightstalker Dogorman"
   },
   "9300031": {
     "MonsterType": 0,
-    "Name": "梦魇·毁田山猪"
+    "Name": "Nightmare: Crop-Ravaging Mountain Boar"
   },
   "9300032": {
     "MonsterType": 0,
-    "Name": "梦魇·夜袭山猪"
+    "Name": "Nightmare: Night-Raiding Mountain Boar"
   },
   "9300033": {
     "MonsterType": 1,
-    "Name": "魁梦魇·疫瘴之牙"
+    "Name": "Greater Nightmare: Miasmic Fang"
   },
   "9300041": {
     "MonsterType": 0,
-    "Name": "梦魇·噬踵毛球"
+    "Name": "Nightmare: Heel-Biting Furball"
   },
   "9300042": {
     "MonsterType": 0,
-    "Name": "梦魇·针刺毛球"
+    "Name": "Nightmare: Spine Furball"
   },
   "9300043": {
     "MonsterType": 1,
-    "Name": "魁梦魇·啃骨毛球"
+    "Name": "Greater Nightmare: Bone-Gnawing Furball"
   },
   "9300051": {
     "MonsterType": 0,
-    "Name": "梦魇·窥伺浮瞳"
+    "Name": "Nightmare: Prying Oculoid"
   },
   "9300052": {
     "MonsterType": 0,
-    "Name": "梦魇·冷视浮瞳"
+    "Name": "Nightmare: Gazing Oculoid"
   },
   "9300053": {
     "MonsterType": 1,
-    "Name": "魁梦魇·觊觎之视"
+    "Name": "Greater Nightmare: Covetous Gaze"
   },
   "9300061": {
     "MonsterType": 0,
-    "Name": "梦魇·劫路绿匪"
+    "Name": "Nightmare: Waylaying Brigand"
   },
   "9300062": {
     "MonsterType": 0,
-    "Name": "梦魇·山林盗匪"
+    "Name": "Nightmare: Woodland Brigand"
   },
   "9300063": {
     "MonsterType": 1,
-    "Name": "魁梦魇·猎命匪首"
+    "Name": "Greater Nightmare: Murderous Brigand Leader"
   },
   "9300071": {
     "MonsterType": 0,
-    "Name": "梦魇·失乡无面人"
+    "Name": "Nightmare: Homeless Faceless One"
   },
   "9300072": {
     "MonsterType": 0,
-    "Name": "梦魇·空席无面人"
+    "Name": "Nightmare: Vacant Faceless One"
   },
   "9300073": {
     "MonsterType": 1,
-    "Name": "魁梦魇·无归执令人"
+    "Name": "Greater Nightmare: No-Return Executor"
   },
   "9300102": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·缚心自困之患"
+    "Name": "Nightmare Lord: Shackles of the Mind"
   },
   "9300103": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·故土尽焚之创"
+    "Name": "Nightmare Lord: Scars of the Burnt Homeland"
   },
   "9300104": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·窥梦之眼"
+    "Name": "Nightmare Lord: Eye of the Dreamstalker"
   },
   "9300105": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·失窃之惧"
+    "Name": "Nightmare Lord: Dread of Theft"
   },
   "9300106": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·孤立受敌之厄"
+    "Name": "Nightmare Lord: Plight of the Stranded"
   },
   "9300107": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·庞然巨物之恐"
+    "Name": "Nightmare Lord: Terror of the Colossus"
   },
   "9300108": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·绝粮之患"
+    "Name": "Nightmare Lord: Affliction of Famine"
   },
   "9300109": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·理智裂解之灾"
+    "Name": "Nightmare Lord: Calamity of Shattered Sanity"
   },
   "9300110": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·复足之惧"
+    "Name": "Nightmare Lord: Dread of Many-Legged Things"
   },
   "9300111": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·不可阻之灾"
+    "Name": "Nightmare Lord: Disaster of the Unstoppable"
   },
   "9300112": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·幽闭之恐"
+    "Name": "Nightmare Lord: Terror of Confinement"
   },
   "9300113": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·飓风摧居之祸"
+    "Name": "Nightmare Lord: Havoc of the Raging Gale"
   },
   "9300114": {
     "MonsterType": 2,
-    "Name": "梦魇主宰·沉沼之痛"
+    "Name": "Nightmare Lord: Agony of the Sinking Mire"
   },
   "9300200": {
     "MonsterType": 2,
-    "Name": "巨大宝箱"
+    "Name": "Giant Treasure Chest"
   },
   "9999": {
     "MonsterType": 0,
