@@ -540,7 +540,8 @@ pub struct ObservedTeamMember {
     pub group_id: Option<i32>,
 }
 
-/// One `GrpcTeamNtf` notice as the game's `team_data.TeamInfo` applies it.
+/// One team notice as the game's `team_data.TeamInfo` applies it, or the
+/// team a character's social profile repeats.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TeamRosterUpdate {
     /// `NoticeUpdateTeamInfo`.
@@ -563,6 +564,17 @@ pub enum TeamRosterUpdate {
     },
     /// Successful `NotifyTeamGroupUpdate`.
     GroupsReplaced(Vec<(i32, Vec<i64>)>),
+    /// `SocialNtf.NotifySocialData.teamData` of `char_id`: that character's
+    /// whole team, repeated on every scene entry and team change. It may lag
+    /// the team notices.
+    Snapshot {
+        char_id: i64,
+        /// Never `0`: a profile outside a team yields no snapshot.
+        team_id: i64,
+        /// `0` when absent.
+        leader_id: i64,
+        members: Vec<ObservedTeamMember>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -627,7 +639,8 @@ pub enum ProtocolObservation {
         map_id: i32,
         line: LineId,
     },
-    /// A `GrpcTeamNtf` notice, applied to the team as the game client does.
+    /// A team notice or social team snapshot, applied to the team as the
+    /// game client does.
     TeamRoster(TeamRosterUpdate),
     MatchmakingPopped,
     ReadyCheckStarted,

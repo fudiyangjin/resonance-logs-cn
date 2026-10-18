@@ -5,7 +5,10 @@
 //! notices change the table, `team_vm.lua` (`GetTeamMemData`) and
 //! `team_view.lua` (`getTeamGroupMemberInfo`, `getMemberInfoByIndex`) for the
 //! panel order. Only the notices the client applies change membership, so a
-//! team is known once the plugin has seen it being joined or created.
+//! team is known once the plugin has seen it being joined or created. A team
+//! formed before the plugin started gets its members from the local
+//! character's social profile instead, which the game resends on every scene
+//! entry and team change; the panel layout still waits for a notice.
 
 use std::collections::BTreeMap;
 
@@ -159,6 +162,31 @@ impl TeamRoster {
                 if table.team_id != 0 {
                     table.groups = groups.into_iter().collect();
                     table.rewrite_group_ids();
+                }
+            }
+            TeamRosterUpdate::Snapshot {
+                char_id,
+                team_id,
+                leader_id,
+                members,
+            } => {
+                if local_char_id == Some(char_id) {
+                    // An empty table is a team formed before the plugin
+                    // started.
+                    if table.team_id == 0 {
+                        table.team_id = team_id;
+                        table.leader_id = leader_id;
+                    }
+                    // Lagging the team notices, the profile only fills in
+                    // members of the known team they have not shown; members
+                    // leave and the panel layout changes by notice alone.
+                    if team_id == table.team_id {
+                        for member in members {
+                            if !table.members.contains_key(&member.char_id) {
+                                table.upsert(member);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -627,5 +655,159 @@ mod tests {
             Some(SELF_ID),
         );
         assert_eq!(roster.membership(), TeamMembership::default());
+    }
+
+    /// Team, bots in join order, and their shared enter time from capture
+    /// 1792306677684: the local player fills a team with four bots.
+    const CAPTURE_TEAM: i64 = 770_483_541;
+    const CAPTURE_FILLED: [i64; 5] = [SELF_ID, 823_196, 823_195, 823_193, 823_194];
+    const CAPTURE_ENTER: u32 = 1_792_306_751;
+
+    fn snapshot(char_id: i64, team_id: i64, members: &[i64]) -> TeamRosterUpdate {
+        TeamRosterUpdate::Snapshot {
+            char_id,
+            team_id,
+            leader_id: SELF_ID,
+            members: members
+                .iter()
+                .map(|char_id| member(*char_id, CAPTURE_ENTER, 1))
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn social_snapshot_fills_a_team_formed_before_the_plugin() {
+        let mut roster = TeamRoster::default();
+        roster.apply(
+            snapshot(CAPTURE_FILLED[1], CAPTURE_TEAM, &CAPTURE_FILLED),
+            Some(SELF_ID),
+        );
+        assert_eq!(
+            roster.membership(),
+            TeamMembership::default(),
+            "another character's profile is not our team"
+        );
+
+        roster.apply(
+            snapshot(SELF_ID, CAPTURE_TEAM, &CAPTURE_FILLED),
+            Some(SELF_ID),
+        );
+        let mut members = CAPTURE_FILLED.to_vec();
+        members.sort_unstable();
+        assert_eq!(
+            roster.membership(),
+            TeamMembership {
+                team_id: CAPTURE_TEAM,
+                leader_id: SELF_ID,
+                members,
+            }
+        );
+        assert_eq!(
+            rows(&roster),
+            vec![
+                (823_193, 1, 1),
+                (823_194, 1, 2),
+                (823_195, 1, 3),
+                (823_196, 1, 4),
+                (SELF_ID, 1, 5),
+            ],
+            "enter time first, char id breaks ties"
+        );
+
+        let revision = roster.revision();
+        roster.apply(
+            snapshot(SELF_ID, CAPTURE_TEAM, &CAPTURE_FILLED[..2]),
+            Some(SELF_ID),
+        );
+        assert_eq!(
+            roster.revision(),
+            revision,
+            "a lagging snapshot never removes"
+        );
+        roster.apply(snapshot(SELF_ID, 8, &[SELF_ID]), Some(SELF_ID));
+        assert_eq!(
+            roster.revision(),
+            revision,
+            "another team's snapshot is ignored"
+        );
+    }
+
+    #[test]
+    fn social_snapshot_never_changes_the_table_the_notices_build() {
+        let join = |slots: &[i64]| {
+            let mut padded = slots.to_vec();
+            padded.resize(ROWS_PER_GROUP, 0);
+            TeamRosterUpdate::Joined {
+                base: Some(base(CAPTURE_TEAM, TeamKind::Five, &[(1, &padded)])),
+                members: vec![member(*slots.last().expect("a newcomer"), CAPTURE_ENTER, 1)],
+            }
+        };
+        let profile = |count| snapshot(SELF_ID, CAPTURE_TEAM, &CAPTURE_FILLED[..count]);
+        // The capture's order: each profile lags, and the first leads, the
+        // join it reflects.
+        let steps = [
+            profile(1),
+            join(&CAPTURE_FILLED[..1]),
+            profile(1),
+            join(&CAPTURE_FILLED[..2]),
+            join(&CAPTURE_FILLED[..3]),
+            profile(2),
+            join(&CAPTURE_FILLED[..4]),
+            profile(3),
+            profile(4),
+            join(&CAPTURE_FILLED[..]),
+            profile(5),
+        ];
+
+        let (mut notices, mut interleaved) = (TeamRoster::default(), TeamRoster::default());
+        for step in steps {
+            let is_notice = matches!(step, TeamRosterUpdate::Joined { .. });
+            interleaved.apply(step.clone(), Some(SELF_ID));
+            if is_notice {
+                notices.apply(step, Some(SELF_ID));
+                assert_eq!(interleaved.table, notices.table);
+            }
+        }
+        assert_eq!(interleaved.table, notices.table);
+        assert_eq!(interleaved.membership().members.len(), 5);
+    }
+
+    #[test]
+    fn social_snapshot_completes_a_team_seen_only_from_a_newcomer() {
+        let mut roster = TeamRoster::default();
+        let newcomer = CAPTURE_FILLED[4];
+        roster.apply(
+            TeamRosterUpdate::Joined {
+                base: Some(base(
+                    CAPTURE_TEAM,
+                    TeamKind::Twenty,
+                    &[(1, &CAPTURE_FILLED)],
+                )),
+                members: vec![member(newcomer, CAPTURE_ENTER + 5, 1)],
+            },
+            Some(SELF_ID),
+        );
+        assert_eq!(roster.membership().members, vec![newcomer]);
+
+        roster.apply(
+            snapshot(SELF_ID, CAPTURE_TEAM, &CAPTURE_FILLED),
+            Some(SELF_ID),
+        );
+        let expected: Vec<(i64, u8, u8)> = CAPTURE_FILLED
+            .iter()
+            .zip(1..)
+            .map(|(char_id, row)| (*char_id, 1, row))
+            .collect();
+        assert_eq!(
+            rows(&roster),
+            expected,
+            "the join notice's slots still order the panel"
+        );
+        assert_eq!(roster.layout().kind, TeamKind::Twenty);
+        assert_eq!(
+            roster.table.members[&newcomer].enter_time,
+            CAPTURE_ENTER + 5,
+            "known entries are kept"
+        );
     }
 }

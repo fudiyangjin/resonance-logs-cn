@@ -30,7 +30,7 @@ In the **{{ui:monsterMonitor.tabs.teammateCd}}** tab:
 - **{{ui:monsterMonitor.teammateCd.mode.list}}**: a standalone panel; each row shows a teammate's name, class icon and skill cooldowns, in the in-game team panel order.
 
 > [!NOTE]
-> The team order comes from the notices the game sends when you join and when the team changes, so the app must be **running when you join the team**.
+> If the app starts after the team is formed, the team is filled in the next time someone joins or you change scenes (for example, by entering a dungeon). In a 20-player team, the group positions line up only after someone joins or the leader regroups the team.
 
 ## Line up with the team panel
 

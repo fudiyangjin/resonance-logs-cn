@@ -1082,18 +1082,36 @@ fn decode_match(envelope: &CaptureEnvelope) -> Vec<ProtocolObservation> {
 }
 
 /// `SocialNtf.NotifySocialData` carries the character's full social profile
-/// (name, equipment, account data); only the scene placement is kept and the
-/// payload is never logged.
+/// (name, equipment, account data); only the scene placement and the team
+/// are kept and the payload is never logged.
 fn decode_social(envelope: &CaptureEnvelope) -> Vec<ProtocolObservation> {
     if envelope.key.method_id != Some(social_ntf_method::NOTIFY_SOCIAL_DATA) {
         return Vec::new();
     }
-    decode_message::<blueprotobuf::NotifySocialData>(&envelope.payload)
+    let Some(data) = decode_message::<blueprotobuf::NotifySocialData>(&envelope.payload)
         .ok()
         .and_then(|message| message.v_request?.data)
-        .and_then(scene_placement)
-        .into_iter()
-        .collect()
+    else {
+        return Vec::new();
+    };
+    let team = data
+        .char_id
+        .filter(|id| *id > 0)
+        .zip(data.team_data.as_ref())
+        .and_then(|(char_id, team)| social_team(char_id, team));
+    scene_placement(data).into_iter().chain(team).collect()
+}
+
+/// The team a social profile repeats; `None` outside a team.
+fn social_team(char_id: i64, team: &blueprotobuf::CharTeam) -> Option<ProtocolObservation> {
+    Some(ProtocolObservation::TeamRoster(
+        TeamRosterUpdate::Snapshot {
+            char_id,
+            team_id: team.team_id.filter(|id| *id != 0)?,
+            leader_id: team.leader_id.unwrap_or_default(),
+            members: observed_team_members(&team.team_member_data),
+        },
+    ))
 }
 
 fn scene_placement(data: blueprotobuf::SocialData) -> Option<ProtocolObservation> {
@@ -1184,18 +1202,9 @@ fn decode_team_event(method_id: u32, payload: &[u8]) -> Option<ProtocolObservati
                 return None;
             }
             let team_info = request.team_info?;
-            // A member may leave its own char id to the map key.
-            let mut members: Vec<_> = team_info
-                .members
-                .iter()
-                .filter_map(|(char_id, member)| {
-                    observed_team_member(member.char_id.unwrap_or(*char_id), member)
-                })
-                .collect();
-            members.sort_unstable_by_key(|member| member.char_id);
             TeamRosterUpdate::Matched {
+                members: observed_team_members(&team_info.members),
                 base: observed_team_base(team_info.base_info.unwrap_or_default()),
-                members,
             }
         }
         grpc_team_method::NOTIFY_TEAM_GROUP_UPDATE => {
@@ -1274,6 +1283,21 @@ fn observed_team_groups(
         .collect();
     groups.sort_unstable_by_key(|(group_id, _)| *group_id);
     groups
+}
+
+/// Members keyed by char id, in ascending char id order.
+fn observed_team_members(
+    members: &HashMap<i64, blueprotobuf::TeamMemData>,
+) -> Vec<ObservedTeamMember> {
+    // A member may leave its own char id to the map key.
+    let mut observed: Vec<_> = members
+        .iter()
+        .filter_map(|(char_id, member)| {
+            observed_team_member(member.char_id.unwrap_or(*char_id), member)
+        })
+        .collect();
+    observed.sort_unstable_by_key(|member| member.char_id);
+    observed
 }
 
 fn observed_team_member(
@@ -2875,8 +2899,33 @@ mod tests {
     }
 
     #[test]
-    fn social_data_yields_only_the_scene_placement() {
-        let message = |line_id| blueprotobuf::NotifySocialData {
+    fn social_data_yields_scene_placement_and_team() {
+        let team = blueprotobuf::CharTeam {
+            team_id: Some(9),
+            leader_id: Some(42),
+            char_ids: vec![42, 7],
+            team_member_data: HashMap::from([
+                (
+                    42,
+                    blueprotobuf::TeamMemData {
+                        char_id: Some(42),
+                        enter_time: Some(100),
+                        group_id: Some(1),
+                        ..Default::default()
+                    },
+                ),
+                (
+                    7,
+                    blueprotobuf::TeamMemData {
+                        enter_time: Some(101),
+                        group_id: Some(1),
+                        ..Default::default()
+                    },
+                ),
+            ]),
+            ..Default::default()
+        };
+        let message = |line_id, team_data| blueprotobuf::NotifySocialData {
             v_request: Some(blueprotobuf::NotifySocialDataRequest {
                 data: Some(blueprotobuf::SocialData {
                     char_id: Some(42),
@@ -2885,33 +2934,65 @@ mod tests {
                         line_id: Some(line_id),
                         ..Default::default()
                     }),
+                    team_data,
                     ..Default::default()
                 }),
             }),
         };
-        let social = |sequence, method_id, line_id| {
+        let social = |sequence, method_id, line_id, team_data| {
             service_notify(
                 sequence,
                 SOCIAL_NTF_SERVICE_ID,
                 method_id,
-                &message(line_id),
+                &message(line_id, team_data),
             )
         };
+        let method = social_ntf_method::NOTIFY_SOCIAL_DATA;
         let mut decoder = ProtocolDecoder::new();
 
-        let placed = decoder.decode(social(1, social_ntf_method::NOTIFY_SOCIAL_DATA, 16));
-        let without_line = decoder.decode(social(2, social_ntf_method::NOTIFY_SOCIAL_DATA, 0));
-        let other_method = decoder.decode(social(3, social_ntf_method::NOTIFY_SOCIAL_DATA + 1, 16));
+        let placed = decoder.decode(social(1, method, 16, Some(team.clone())));
+        let outside_team = decoder.decode(social(
+            2,
+            method,
+            16,
+            Some(blueprotobuf::CharTeam::default()),
+        ));
+        let without_line = decoder.decode(social(3, method, 0, Some(team.clone())));
+        let other_method = decoder.decode(social(4, method + 1, 16, Some(team)));
 
+        let placement = ProtocolObservation::SceneLineObserved {
+            char_id: 42,
+            map_id: 10,
+            line: LineId(16),
+        };
+        let snapshot = ProtocolObservation::TeamRoster(TeamRosterUpdate::Snapshot {
+            char_id: 42,
+            team_id: 9,
+            leader_id: 42,
+            members: vec![
+                ObservedTeamMember {
+                    char_id: 7,
+                    enter_time: Some(101),
+                    group_id: Some(1),
+                },
+                ObservedTeamMember {
+                    char_id: 42,
+                    enter_time: Some(100),
+                    group_id: Some(1),
+                },
+            ],
+        });
         assert_eq!(
             placed.observations,
-            vec![ProtocolObservation::SceneLineObserved {
-                char_id: 42,
-                map_id: 10,
-                line: LineId(16),
-            }]
+            vec![placement.clone(), snapshot.clone()],
+            "a member may leave its own char id to the map key"
         );
-        assert!(without_line.observations.is_empty());
+        assert_eq!(
+            outside_team.observations,
+            vec![placement],
+            "an empty team yields no snapshot"
+        );
+        assert_eq!(without_line.observations, vec![snapshot]);
         assert!(other_method.observations.is_empty());
     }
 
