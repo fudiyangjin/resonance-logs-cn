@@ -8,6 +8,10 @@
    * Self-contained: reads and writes settings directly via
    * `voice-binding-subject.svelte.ts` based on `subject`, so parent pages
    * only need to pass which subject this instance represents.
+   *
+   * Typed fields commit on `change` (blur / Enter), never per keystroke:
+   * managed phrases are named by their text, so every intermediate text
+   * would otherwise land in the phrase library as a phrase of its own.
    */
   import PlayIcon from "virtual:icons/lucide/play";
   import { t, type MessageKey } from "$lib/i18n/index.svelte";
@@ -17,6 +21,7 @@
     type VoicePhraseBinding,
   } from "$lib/settings-store";
   import { VOICE } from "$lib/stores/voice-store.svelte";
+  import { blurOnEnter } from "$lib/utils.svelte";
   import { previewPhraseBinding } from "$lib/voice/preview.svelte";
   import {
     subjectEvents,
@@ -156,13 +161,18 @@
               class="border-border/60 bg-muted/30 text-foreground w-16 rounded border px-1.5 py-1 text-xs"
               value={seconds}
               title={t("voice.binding.secondsBefore", { seconds })}
-              oninput={(ev) =>
-                updateSubjectEvent(subject, event.eventKind, {
-                  secondsBefore: Math.max(
-                    1,
-                    Number((ev.currentTarget as HTMLInputElement).value) || 1,
-                  ),
-                })}
+              {@attach blurOnEnter}
+              onchange={(ev) => {
+                const input = ev.currentTarget as HTMLInputElement;
+                const next = Math.max(1, Number(input.value) || 1);
+                // A one-way `value` won't repaint a clamp onto the current value.
+                input.value = String(next);
+                if (next !== seconds) {
+                  updateSubjectEvent(subject, event.eventKind, {
+                    secondsBefore: next,
+                  });
+                }
+              }}
             />
           {/if}
 
@@ -188,7 +198,8 @@
             class="border-border/60 bg-muted/30 text-foreground placeholder:text-muted-foreground w-full rounded border px-2 py-1 text-xs"
             placeholder={t("voice.binding.customPlaceholder")}
             value={binding.text}
-            oninput={(ev) =>
+            {@attach blurOnEnter}
+            onchange={(ev) =>
               updateSubjectEvent(subject, event.eventKind, {
                 phrase: {
                   source: "custom",

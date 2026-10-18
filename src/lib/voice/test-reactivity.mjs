@@ -123,11 +123,14 @@ const syncUrl = await moduleAt("./sync.svelte.ts", {
     export const phraseRequests = b => b;
     export const compileVoiceRules = (b, index) => b.flatMap(r => index[r.name] ? [{ id: r.name, phraseId: index[r.name].phraseId }] : []);
   `),
+  "./gc": mock(
+    "export const collectVoicePhraseRefs = () => ({ names: new Set(), phraseIds: new Set() }); export const silentOrphanPhrases = () => [];",
+  ),
   "./subject-types": mock(
     "export const mergeVoiceConfigPatch = (a, b) => ({ ...a, ...b });",
   ),
   "./view": mock(
-    "export const buildVoiceBindingView = () => globalThis.voiceTest.demands.requests;",
+    "export const buildVoiceBindingView = () => globalThis.voiceTest.demands.requests; export const buildVoiceGcViews = () => [];",
   ),
 });
 const sync = await import(syncUrl);

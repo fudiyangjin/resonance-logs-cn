@@ -89,6 +89,18 @@ export function tooltip(getContent: () => string): Attachment {
   };
 }
 
+/**
+ * Enter commits a typed field: blurring fires its `change`. The Enter that
+ * confirms an IME composition is left alone.
+ */
+export const blurOnEnter: Attachment<HTMLInputElement> = (input) => {
+  const onKeydown = (event: KeyboardEvent) => {
+    if (event.key === "Enter" && !event.isComposing) input.blur();
+  };
+  input.addEventListener("keydown", onKeydown);
+  return () => input.removeEventListener("keydown", onKeydown);
+};
+
 export async function copyToClipboard(
   error: MouseEvent & { currentTarget: EventTarget & HTMLElement },
   content: string,

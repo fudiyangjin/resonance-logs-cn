@@ -19,6 +19,7 @@
     TextBuffPanelStyle,
   } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
+  import { blurOnEnter } from "$lib/utils.svelte";
   import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
   import BuffCompositeSection from "./buff-composite-section.svelte";
 
@@ -633,7 +634,8 @@
                   class="border-border/60 bg-muted/30 text-foreground placeholder:text-muted-foreground focus:ring-primary/50 w-full rounded border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                   placeholder={getBuffDefaultName(buffAliasEditingBuffId)}
                   value={getBuffAlias(buffAliasEditingBuffId)}
-                  oninput={(event) =>
+                  {@attach blurOnEnter}
+                  onchange={(event) =>
                     setBuffAlias(
                       buffAliasEditingBuffId,
                       (event.currentTarget as HTMLInputElement).value,

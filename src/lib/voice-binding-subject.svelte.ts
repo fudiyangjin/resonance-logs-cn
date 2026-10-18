@@ -11,11 +11,15 @@ import {
   type VoiceEventConfig,
   type VoiceExpiringEventConfig,
 } from "$lib/settings-store";
+import { secondsBeforeOf } from "$lib/voice/compile";
+import { bindingPhrases } from "$lib/voice/phrase-key";
 import { adapterFor } from "$lib/voice/registry";
 import type {
   VoiceBindingEventKind,
   VoiceBindingSubject,
+  VoiceEventConfigAny,
 } from "$lib/voice/subject-types";
+import { releaseSilentPhrases } from "$lib/voice/sync.svelte";
 import { buildVoiceBindingView, SETTINGS_WRITER } from "$lib/voice/view";
 
 export type { VoiceBindingEventKind, VoiceBindingSubject };
@@ -84,11 +88,29 @@ export function updateSubjectEvent(
   const adapter = adapterFor(subject);
   const view = buildVoiceBindingView();
   const current = adapter.read(view, subject, eventKind);
-  const expiring =
-    adapter.events(view, subject).find((spec) => spec.eventKind === eventKind)
-      ?.expiring ?? false;
-  adapter.write(SETTINGS_WRITER, subject, eventKind, {
-    ...(current ?? defaultEventConfig(expiring)),
+  const spec = adapter
+    .events(view, subject)
+    .find((spec) => spec.eventKind === eventKind);
+  const next = {
+    ...(current ?? defaultEventConfig(spec?.expiring ?? false)),
     ...patch,
-  });
+  };
+  adapter.write(SETTINGS_WRITER, subject, eventKind, next);
+  if (!current || !spec) return;
+
+  // Another source, text or lead time can leave the old phrase unused; one
+  // that never got audio goes right away (`releaseSilentPhrases`).
+  const phraseNames = (config: VoiceEventConfigAny) =>
+    bindingPhrases({
+      ruleKey: adapter.ruleKey(subject, eventKind),
+      phrase: config.phrase,
+      autoText: spec.autoText(secondsBeforeOf(config)),
+      language: adapter.language(view),
+      supportsTier: spec.supportsTierPlaceholder,
+      fixedName: adapter.fixedPhraseName === true,
+      includePreview: true,
+    }).map((phrase) => phrase.name);
+  const kept = phraseNames(next);
+  const dropped = phraseNames(current).filter((name) => !kept.includes(name));
+  if (dropped.length > 0) void releaseSilentPhrases(dropped);
 }

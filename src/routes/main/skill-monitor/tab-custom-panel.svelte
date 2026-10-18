@@ -26,6 +26,7 @@
     type SourceTemplate,
   } from "$lib/skill-mappings";
   import { t } from "$lib/i18n/index.svelte";
+  import { blurOnEnter } from "$lib/utils.svelte";
   import {
     subjectHasBindings,
     type VoiceBindingSubject,
@@ -741,7 +742,8 @@
                     <input
                       class="border-border/60 bg-muted/30 text-foreground focus:ring-primary/50 mt-1 w-full rounded border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                       value={rule.name}
-                      oninput={(event) =>
+                      {@attach blurOnEnter}
+                      onchange={(event) =>
                         updateUserCounterRule(rule.ruleId, {
                           name: (event.currentTarget as HTMLInputElement).value,
                         })}

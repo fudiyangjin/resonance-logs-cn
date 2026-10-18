@@ -14,7 +14,12 @@
  * long-running generation.
  */
 import { untrack } from "svelte";
-import { commands, type VoiceLanguage } from "$lib/bindings";
+import {
+  commands,
+  type Result,
+  type VoiceCommandError,
+  type VoiceLanguage,
+} from "$lib/bindings";
 import { lookupDbmDefaultName } from "$lib/config/dbm-table";
 import { updateMonsterMonitor } from "$lib/monster-monitor-profile.svelte.js";
 import { saveAndApplyVoiceRuntimeSnapshot } from "$lib/runtime-monitor-sync";
@@ -38,9 +43,11 @@ import {
   ensureVoiceCatalog,
   mergeVoicePhrase,
   requestVoiceCatalogRefresh,
+  runVoiceOperation,
   voiceOperationActive,
   voiceErrorMessage,
 } from "$lib/stores/voice-store.svelte";
+import { collectVoicePhraseRefs, silentOrphanPhrases } from "./gc";
 import { createPhraseResolver } from "./phrase-resolver";
 import { createVoiceSnapshotSync } from "./snapshot-sync";
 import {
@@ -51,7 +58,7 @@ import {
   type ResolvedPhrase,
 } from "./compile";
 import { mergeVoiceConfigPatch } from "./subject-types";
-import { buildVoiceBindingView } from "./view";
+import { buildVoiceBindingView, buildVoiceGcViews } from "./view";
 
 const phraseIndex = $derived.by(() => {
   const index: Record<string, ResolvedPhrase> = {};
@@ -90,6 +97,40 @@ export function upsertManagedPhrase(
   language: VoiceLanguage,
 ): Promise<string | null> {
   return resolver.resolve({ name, text, language });
+}
+
+/**
+ * Deletes the phrases among `names` that a binding edit left unused and
+ * that never got audio (`gc.ts::silentOrphanPhrases`). Best effort: while
+ * another voice operation runs, or when a delete fails, they stay for the
+ * phrase library's cleanup. A phrase needed again later is simply recreated.
+ */
+export async function releaseSilentPhrases(
+  names: readonly string[],
+): Promise<void> {
+  const catalog = VOICE.status?.catalog;
+  if (!catalog || voiceOperationActive()) return;
+  const targets = silentOrphanPhrases(
+    names,
+    catalog.phrases,
+    catalog.assets,
+    collectVoicePhraseRefs(buildVoiceGcViews()),
+  );
+  if (targets.length === 0) return;
+  // One operation for the batch keeps background upserts paused throughout.
+  const res = await runVoiceOperation(
+    { kind: "updatingCatalog" },
+    async (): Promise<Result<null, VoiceCommandError>> => {
+      for (const target of targets) {
+        const deleted = await commands.voiceDeletePhrase(target.id);
+        if (deleted.status === "error") return deleted;
+      }
+      return { status: "ok", data: null };
+    },
+  );
+  if (res.status === "error") {
+    console.warn("[voice-sync] failed to release unused phrases", res.error);
+  }
 }
 
 let legacyMigrationDone = false;

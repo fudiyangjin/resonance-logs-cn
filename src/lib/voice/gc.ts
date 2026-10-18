@@ -8,7 +8,9 @@
  * exist while their subject is associated (`association.ts`), so
  * un-monitoring a skill or removing an entity entry turns its phrases into
  * orphans here, and the phrase library deletes them in one click. Until
- * then, re-adding the binding with the same text reuses the audio.
+ * then, re-adding the binding with the same text reuses the audio. The
+ * exception is an orphan a binding edit leaves behind that never got audio
+ * (`silentOrphanPhrases`): with nothing to reuse, the edit deletes it.
  *
  * Never orphans: hand-made phrases (non-managed names), phrases a binding
  * picked from the library by id, phrases whose active audio was imported
@@ -118,4 +120,24 @@ export function classifyOrphanPhrases(
       : undefined;
     return asset?.source.kind !== "imported";
   });
+}
+
+/**
+ * The orphans among `names` that have no audio: what a binding edit (another
+ * source, text or lead time) left behind before any audio was generated.
+ * Pure, like `classifyOrphanPhrases`.
+ */
+export function silentOrphanPhrases(
+  names: readonly string[],
+  phrases: readonly VoicePhraseMeta[],
+  assets: readonly VoiceAssetMeta[],
+  refs: VoicePhraseRefs,
+): VoicePhraseMeta[] {
+  const wanted = new Set(names);
+  const assetIds = new Set(assets.map((asset) => asset.id));
+  return classifyOrphanPhrases(phrases, assets, refs).filter(
+    (phrase) =>
+      wanted.has(phrase.name) &&
+      !(phrase.activeAssetId && assetIds.has(phrase.activeAssetId)),
+  );
 }

@@ -6,7 +6,11 @@ import type {
   VoicePhraseMeta,
 } from "$lib/bindings";
 import type { VoiceEventConfig, VoicePhraseBinding } from "$lib/settings-store";
-import { classifyOrphanPhrases, collectVoicePhraseRefs } from "./gc";
+import {
+  classifyOrphanPhrases,
+  collectVoicePhraseRefs,
+  silentOrphanPhrases,
+} from "./gc";
 import { bindingPhrases, contentHash, managedPhraseName } from "./phrase-key";
 import type {
   MonsterVoiceSlice,
@@ -311,5 +315,68 @@ describe("classifyOrphanPhrases", () => {
     expect(orphanNames(catalog, [entityView("镰车")])).toEqual([
       name("镰刀车已出现"),
     ]);
+  });
+});
+
+describe("silentOrphanPhrases", () => {
+  const silentNames = (
+    names: string[],
+    entries: ReturnType<typeof phrase>[],
+    views: VoiceBindingView[],
+  ) =>
+    silentOrphanPhrases(
+      names,
+      entries.map((entry) => entry.phrase),
+      entries.flatMap((entry) => (entry.asset ? [entry.asset] : [])),
+      collectVoicePhraseRefs(views),
+    ).map((orphan) => orphan.name);
+
+  it("releases the auto phrase a switch to custom text left without audio", () => {
+    const autoName = buffName("auto", "gained", "狂暴已生效");
+    const switched = skillView({
+      buffVoiceConfigs: { "101": { gained: bound(custom("")) } },
+    });
+    expect(
+      silentNames([autoName], [phrase(autoName, { audio: null })], [switched]),
+    ).toEqual([autoName]);
+  });
+
+  it("keeps old phrases with audio, ones another profile speaks, and names outside the edit", () => {
+    const voiced = phrase(buffName("custom", "gained", "有音频"));
+    const shared = phrase(buffName("custom", "gained", "别的方案"), {
+      audio: null,
+    });
+    const unrelated = phrase(buffName("custom", "lost", "别的事件"), {
+      audio: null,
+    });
+    const edited = skillView({
+      buffVoiceConfigs: { "101": { gained: bound(custom("新文本")) } },
+    });
+    const other = skillView({
+      buffVoiceConfigs: { "101": { gained: bound(custom("别的方案")) } },
+    });
+    expect(
+      silentNames(
+        [voiced.phrase.name, shared.phrase.name],
+        [voiced, shared, unrelated],
+        [edited, other],
+      ),
+    ).toEqual([]);
+  });
+
+  it("counts a phrase whose active asset is gone as silent", () => {
+    const old = phrase(buffName("custom", "gained", "旧文本"));
+    const dangling = { ...old, asset: null };
+    expect(
+      silentNames(
+        [old.phrase.name],
+        [dangling],
+        [
+          skillView({
+            buffVoiceConfigs: { "101": { gained: bound(custom("新文本")) } },
+          }),
+        ],
+      ),
+    ).toEqual([old.phrase.name]);
   });
 });

@@ -53,6 +53,7 @@
   } from "$lib/teammate-buff-columns";
   import { updateMonsterMonitor } from "$lib/monster-monitor-profile.svelte.js";
   import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
+  import { blurOnEnter } from "$lib/utils.svelte";
   import { resolveMonsterBuffSourceScope as resolveScopeIn } from "$lib/voice/association";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
   import TabEntityDuration from "./tab-entity-duration.svelte";
@@ -604,10 +605,9 @@
     }));
   }
 
-  /** A name left empty falls back to the default one. */
+  /** Commits an edited name; one left empty falls back to the default one. */
   function commitDbmEntryName(id: number, input: HTMLInputElement) {
-    if (input.value.trim()) return;
-    input.value = defaultDbmEntryName(id);
+    if (!input.value.trim()) input.value = defaultDbmEntryName(id);
     renameDbmEntry(id, input.value);
   }
 
@@ -1599,7 +1599,8 @@
                 value={buffAliases[buffId] ?? ""}
                 placeholder={defaultBuffName(buffId)}
                 class="border-border bg-background focus:border-primary w-full rounded-lg border px-3 py-2 text-sm outline-none"
-                oninput={(event) =>
+                {@attach blurOnEnter}
+                onchange={(event) =>
                   setAlias(
                     buffId,
                     (event.currentTarget as HTMLInputElement).value,
@@ -2872,8 +2873,7 @@
                     type="text"
                     value={alias}
                     class="border-border/60 bg-background/60 text-foreground min-w-0 w-28 rounded-md border px-2 py-1 text-sm outline-none transition-colors focus:border-primary"
-                    oninput={(event) =>
-                      renameDbmEntry(Number(id), event.currentTarget.value)}
+                    {@attach blurOnEnter}
                     onchange={(event) =>
                       commitDbmEntryName(Number(id), event.currentTarget)}
                   />
