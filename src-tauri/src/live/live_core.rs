@@ -10,6 +10,7 @@ use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
 use crate::live::counter::engine::CounterSource;
 use crate::live::dungeon_objectives::{classify_objective, classify_progress_state};
 use crate::live::history_writer::HistoryWriterHandle;
+use crate::live::hp_link::{HpLinkEvent, HpShare};
 use crate::live::ipc::topic::{Topic, TopicMask};
 use crate::live::marker_skills::KEY_SKILL_IDS;
 use crate::live::projection_set::{ProjectionSet, TopicPublication};
@@ -68,6 +69,8 @@ pub struct LiveCore {
     publish: [PublishSchedule; Topic::COUNT],
     /// Latest local share state for the team relay client.
     team_share: watch::Sender<ShareSnapshot>,
+    /// Latest bosses in view for the HP report client.
+    hp_share: watch::Sender<HpShare>,
     shutdown_complete: bool,
 }
 
@@ -78,6 +81,7 @@ impl LiveCore {
         initial_config: MonitorRuntimeSnapshot,
         mut initial_voice: VoiceRuntimeSnapshot,
         team_share: watch::Sender<ShareSnapshot>,
+        hp_share: watch::Sender<HpShare>,
     ) -> Result<Self, String> {
         let config = Arc::new(initial_config.normalize()?);
         initial_voice.normalize();
@@ -116,6 +120,7 @@ impl LiveCore {
             live_publish_interval_ms: config.live.event_update_rate_ms,
             publish: [PublishSchedule::default(); Topic::COUNT],
             team_share,
+            hp_share,
             shutdown_complete: false,
         };
         core.segments
@@ -225,6 +230,7 @@ impl LiveCore {
         );
         self.flush_voice_cues();
         self.flush_team_share();
+        self.flush_hp_share();
         result?;
 
         self.request_publications(packet_mono, force_publication);
@@ -240,6 +246,16 @@ impl LiveCore {
         self.projections.apply_team_event(event);
         let now = self.refresh_clock();
         self.request_publications(now, false);
+    }
+
+    /// Applies an update from the HP report client. It changes no published
+    /// view, only what the client is sent back.
+    pub fn apply_hp_event(&mut self, event: HpLinkEvent) {
+        if self.shutdown_complete {
+            return;
+        }
+        self.projections.apply_hp_event(event, &self.entities);
+        self.flush_hp_share();
     }
 
     pub fn drain_due_before(&mut self, packet_time: MonoTimeMs) -> Result<(), String> {
@@ -457,6 +473,12 @@ impl LiveCore {
     fn flush_team_share(&mut self) {
         if let Some(share) = self.projections.take_team_share() {
             self.team_share.send_replace(share);
+        }
+    }
+
+    fn flush_hp_share(&mut self) {
+        if let Some(share) = self.projections.take_hp_share() {
+            self.hp_share.send_replace(share);
         }
     }
 

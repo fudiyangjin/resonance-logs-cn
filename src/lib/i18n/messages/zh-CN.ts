@@ -161,6 +161,19 @@ export const zhCNMessages = {
   "appSettings.teamShare.status.connected": "已连接，{count} 名队友正在共享",
   "appSettings.teamShare.status.retrying":
     "连接中断，{seconds} 秒后重试（{error}）",
+  "appSettings.hpReport.title": "Boss 血量上报",
+  "appSettings.hpReport.enable": "上报野外 Boss 血量",
+  "appSettings.hpReport.enableDescription":
+    "开启后，在野外看到被追踪的 Boss 或魔法生物时，会把它的血量（每 5% 一档）连同所在线路和游戏区服发送到 bptimer.cn，供网站按线路展示各 Boss 的血量。不包含账号或角色信息。立即生效。",
+  "appSettings.hpReport.saveFailed": "保存失败：{error}",
+  "appSettings.hpReport.status.disabled": "未开启",
+  "appSettings.hpReport.status.idle":
+    "已开启，等待附近出现被追踪的 Boss（或尚未检测到游戏、线路）",
+  "appSettings.hpReport.status.connecting": "正在连接……",
+  "appSettings.hpReport.status.connected": "已连接，正在上报 {count} 个 Boss",
+  "appSettings.hpReport.status.unsupported": "服务器暂不接收当前区服的上报",
+  "appSettings.hpReport.status.retrying":
+    "连接中断，{seconds} 秒后重试（{error}）",
   "appSettings.historyRetention.title": "历史记录",
   "appSettings.historyRetention.description":
     "设置自动保留的未收藏历史记录数量，修改将在下次启动时清理。",

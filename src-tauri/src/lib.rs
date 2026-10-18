@@ -1,5 +1,7 @@
+mod bptimer;
 mod buff_icons;
 mod build_app;
+mod hp_report;
 mod live;
 pub mod module_optimizer;
 mod packets;
@@ -78,6 +80,9 @@ fn api_builder() -> Builder<tauri::Wry> {
         team_share::commands::get_team_share_settings,
         team_share::commands::set_team_share_enabled,
         team_share::commands::get_team_share_status,
+        hp_report::commands::get_hp_report_settings,
+        hp_report::commands::set_hp_report_enabled,
+        hp_report::commands::get_hp_report_status,
         database::commands::get_unique_scene_ids,
         database::commands::get_unique_boss_monster_ids,
         database::commands::get_player_names_filtered,
@@ -170,6 +175,8 @@ pub fn run() {
     let (history_writer, history_join) = crate::live::history_writer::HistoryWriterHandle::start()
         .expect("failed to start history writer");
     let (team_link, team_net) = crate::live::team_link::channel();
+    let (hp_link, hp_net) = crate::live::hp_link::channel();
+    let credentials = std::sync::Arc::new(bptimer::Credentials::default());
 
     let tauri_builder = tauri::Builder::default()
         .manage(live_runtime)
@@ -177,7 +184,14 @@ pub fn run() {
         .manage(history_writer.clone())
         .manage(ExitOnClose::default())
         .manage(updater::UpdateService::default())
-        .manage(team_share::TeamShareService::new(team_net))
+        .manage(team_share::TeamShareService::new(
+            team_net,
+            std::sync::Arc::clone(&credentials),
+        ))
+        .manage(hp_report::HpReportService::new(
+            hp_net,
+            std::sync::Arc::clone(&credentials),
+        ))
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -317,9 +331,14 @@ pub fn run() {
                 Err(e) => warn!(target: "app::voice", "failed to initialize VoiceService: {e}"),
             }
 
+            // bptimer.cn clients. The shared token is loaded (and migrated)
+            // before either can write its settings.
+            credentials.prime(&app_handle);
             // Team cooldown sharing: idle until enabled and in a team.
             app.state::<team_share::TeamShareService>()
                 .start(&app_handle);
+            // Boss HP reports: idle until a tracked boss is in view.
+            app.state::<hp_report::HpReportService>().start(&app_handle);
 
             // Live Meter
             // https://v2.tauri.app/learn/splashscreen/#start-some-setup-tasks
@@ -331,6 +350,7 @@ pub fn run() {
                     history_writer,
                     history_join,
                     team_link,
+                    hp_link,
                 )
                 .await
             });

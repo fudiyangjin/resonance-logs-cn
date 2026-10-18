@@ -1,0 +1,18 @@
+{
+  "protocol": "bptimer.hp.v1",
+  "client": [
+    { "t": "ctx", "dist": "star", "line": 16 },
+    {
+      "t": "hp",
+      "e": [
+        [10032, 85],
+        [10904, 40, -282, 86]
+      ]
+    }
+  ],
+  "server": [
+    { "t": "error", "code": "invalid" },
+    { "t": "error", "code": "unsupported_dist" },
+    { "t": "error", "code": "rate_limited" }
+  ]
+}

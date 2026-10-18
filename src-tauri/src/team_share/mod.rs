@@ -3,50 +3,45 @@
 //!
 //! The live runtime owns all game state and talks to this module only through
 //! [`team_link`](crate::live::team_link). This module owns the network side:
-//! the persisted switch, the anonymous relay token, and one client task.
+//! the persisted switch and one client task; the client token is shared with
+//! the other bptimer services through [`Credentials`].
 
 mod client;
 mod protocol;
-mod settings;
 mod status;
 
 use std::sync::Arc;
-use std::time::Duration;
 
 use parking_lot::Mutex;
 use tauri::AppHandle;
 use tokio::sync::watch;
-use tokio_util::sync::CancellationToken;
 
+use crate::bptimer::{ClientTask, Credentials, SwitchStore};
 use crate::live::team_link::NetEnds;
 use client::ClientContext;
-use settings::SettingsStore;
-use status::StatusReporter;
 pub use status::TeamShareStatus;
-
-/// Upper bound on how long exit waits for the client to say goodbye.
-const SHUTDOWN_GRACE: Duration = Duration::from_millis(800);
+use status::{STATUS_EVENT, StatusReporter};
 
 /// Registered on the Builder so commands can reach it before `setup`.
 pub struct TeamShareService {
-    settings: Arc<SettingsStore>,
+    switch: SwitchStore,
+    credentials: Arc<Credentials>,
     enabled: watch::Sender<bool>,
     status: watch::Sender<TeamShareStatus>,
     net: Mutex<Option<NetEnds>>,
-    cancel: CancellationToken,
-    task: Mutex<Option<tauri::async_runtime::JoinHandle<()>>>,
+    task: ClientTask,
 }
 
 impl TeamShareService {
     #[must_use]
-    pub fn new(net: NetEnds) -> Self {
+    pub fn new(net: NetEnds, credentials: Arc<Credentials>) -> Self {
         Self {
-            settings: Arc::new(SettingsStore::default()),
+            switch: SwitchStore::new("teamShare.json"),
+            credentials,
             enabled: watch::channel(false).0,
             status: watch::channel(TeamShareStatus::Disabled).0,
             net: Mutex::new(Some(net)),
-            cancel: CancellationToken::new(),
-            task: Mutex::new(None),
+            task: ClientTask::default(),
         }
     }
 
@@ -56,42 +51,31 @@ impl TeamShareService {
         let Some(net) = self.net.lock().take() else {
             return;
         };
-        self.enabled.send_replace(self.settings.get(app).enabled);
-        let context = ClientContext {
+        self.enabled.send_replace(self.switch.is_enabled(app));
+        self.task.spawn(client::run(ClientContext {
             app: app.clone(),
-            settings: Arc::clone(&self.settings),
+            credentials: Arc::clone(&self.credentials),
             enabled: self.enabled.subscribe(),
             share: net.share,
             events: net.events,
-            status: StatusReporter::new(app.clone(), self.status.clone()),
-            cancel: self.cancel.clone(),
-        };
-        *self.task.lock() = Some(tauri::async_runtime::spawn(client::run(context)));
+            status: StatusReporter::new(app.clone(), self.status.clone(), STATUS_EVENT),
+            cancel: self.task.cancel_token(),
+        }));
     }
 
     /// Closes the relay connection. Safe to call more than once.
     pub fn shutdown(&self) {
-        self.cancel.cancel();
-        let Some(task) = self.task.lock().take() else {
-            return;
-        };
-        // Build the timeout inside `block_on`: it registers its timer on
-        // construction, and the exit hook runs outside any Tokio context.
-        let _ = tauri::async_runtime::block_on(async move {
-            tokio::time::timeout(SHUTDOWN_GRACE, task).await
-        });
+        self.task.shutdown();
     }
 
     fn is_enabled(&self, app: &AppHandle) -> bool {
-        self.settings.get(app).enabled
+        self.switch.is_enabled(app)
     }
 
     fn set_enabled(&self, app: &AppHandle, enabled: bool) -> Result<(), String> {
-        let saved = self
-            .settings
-            .update(app, |settings| settings.enabled = enabled);
+        let saved = self.switch.set(app, enabled);
         self.enabled.send_replace(enabled);
-        saved.map(|_| ())
+        saved
     }
 
     fn status(&self) -> TeamShareStatus {
@@ -138,23 +122,5 @@ pub mod commands {
     #[specta::specta]
     pub fn get_team_share_status(service: State<'_, TeamShareService>) -> TeamShareStatus {
         service.status()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// The Tauri exit hook calls `shutdown` outside any Tokio runtime context.
-    #[test]
-    fn shutdown_outside_runtime_context_waits_for_client() {
-        let service = TeamShareService::new(crate::live::team_link::channel().1);
-        let cancel = service.cancel.clone();
-        *service.task.lock() = Some(tauri::async_runtime::spawn(async move {
-            cancel.cancelled().await;
-        }));
-        service.shutdown();
-        assert!(service.task.lock().is_none());
-        service.shutdown();
     }
 }

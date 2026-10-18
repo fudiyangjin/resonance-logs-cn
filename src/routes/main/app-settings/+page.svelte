@@ -15,6 +15,7 @@
   import AppearanceSettings from "./appearance.svelte";
   import HistoryRetentionSettings from "./history-retention.svelte";
   import TeamShareSettings from "./team-share.svelte";
+  import HpReportSettings from "./hp-report.svelte";
   import CogIcon from "virtual:icons/lucide/cog";
 
   const settingsTabs = [
@@ -57,6 +58,7 @@
         <LanguageSettings />
         <BehaviorSettings />
         <TeamShareSettings />
+        <HpReportSettings />
         <HistoryRetentionSettings />
       </div>
     </Tabs.Content>

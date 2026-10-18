@@ -7,6 +7,7 @@ pub const WORLD_NTF_SERVICE_ID: u64 = 1_664_308_034;
 pub const WORLD_CALL_SERVICE_ID: u64 = 103_198_054;
 pub const GRPC_TEAM_NTF_SERVICE_ID: u64 = 966_773_353;
 pub const MATCH_NTF_SERVICE_ID: u64 = 822_849_903;
+pub const SOCIAL_NTF_SERVICE_ID: u64 = 625_772_963;
 
 pub mod world_call_method {
     pub const USE_SLOT: u32 = 0x3d002;
@@ -14,6 +15,10 @@ pub mod world_call_method {
 
 pub mod match_ntf_method {
     pub const ENTER_MATCH_RESULT: u32 = 0x4;
+}
+
+pub mod social_ntf_method {
+    pub const NOTIFY_SOCIAL_DATA: u32 = 0x1;
 }
 
 pub mod grpc_team_method {

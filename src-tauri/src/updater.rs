@@ -156,6 +156,9 @@ fn prepare_to_exit(app: &AppHandle) {
     if let Some(team_share) = app.try_state::<crate::team_share::TeamShareService>() {
         team_share.shutdown();
     }
+    if let Some(hp_report) = app.try_state::<crate::hp_report::HpReportService>() {
+        hp_report.shutdown();
+    }
     if let Some(voice) = app.try_state::<crate::voice::VoiceService>() {
         voice.shutdown();
     }

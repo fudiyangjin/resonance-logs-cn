@@ -4,7 +4,7 @@
 
 | Tab | Contents |
 | --- | --- |
-| [{{ui:appSettings.tabs.general}}](#general) | UI language, close button behavior, team sharing |
+| [{{ui:appSettings.tabs.general}}](#general) | UI language, close button behavior, team sharing, boss HP reports |
 | [{{ui:appSettings.tabs.appearance}}](#appearance) | Main window colors, background image, fonts |
 | [{{ui:appSettings.tabs.network}}](#network) | Capture method and network adapter |
 | [{{ui:appSettings.tabs.shortcuts}}](#shortcuts) | Global shortcuts |
@@ -15,6 +15,10 @@
 - **{{ui:appSettings.language.title}}**: 简体中文 / English / 日本語. It's best to match your game client. Buff and skill names switch along with it, and the preset voice is also chosen by the UI language.
 - **{{ui:appSettings.behavior.exitOnClose}}**: off by default, so clicking the main window's close button only hides it to the system tray while the overlays and voice keep working. When it is on, the close button quits the app.
 - **{{ui:appSettings.teamShare.title}}**: on by default. You and teammates who also have it on share skill cooldowns, shown in the [Teammate CD](../monster/teammate-cd.md) panel; the current connection state is shown below the switch.
+- **{{ui:appSettings.hpReport.title}}**: on by default. When a tracked field boss or magical creature is in view, its HP is reported to bptimer.cn, which shows every boss's HP by line; nothing is reported inside dungeons. The current connection state is shown below the switch.
+
+> [!NOTE]
+> Boss HP reports send only: the game region (as determined by the game client), your line, the monster ID, its HP (in 5% steps), and a rough position for the few magical creatures whose spawn point matters. No account, character ID or character name is sent.
 
 ## Appearance
 

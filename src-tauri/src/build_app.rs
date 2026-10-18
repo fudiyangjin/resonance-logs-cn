@@ -18,6 +18,10 @@ pub fn build_and_run(builder: TauriBuilder<tauri::Wry>) {
                 {
                     team_share.shutdown();
                 }
+                if let Some(hp_report) = app_handle.try_state::<crate::hp_report::HpReportService>()
+                {
+                    hp_report.shutdown();
+                }
                 stop_windivert();
                 if let Some(runtime) =
                     app_handle.try_state::<crate::live::runtime_handle::LiveRuntimeHandle>()

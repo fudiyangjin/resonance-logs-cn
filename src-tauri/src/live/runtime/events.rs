@@ -67,6 +67,11 @@ pub struct SegmentId(pub u64);
 #[repr(transparent)]
 pub struct EntityUuid(pub i64);
 
+/// In-game line (channel) of a scene; never zero.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
+pub struct LineId(pub u32);
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EntityRef {
     pub uuid: EntityUuid,
@@ -613,6 +618,14 @@ pub enum ProtocolObservation {
     /// The capture layer identified which game distribution owns the stream.
     GameClientIdentified {
         distribution: Distribution,
+    },
+    /// `SocialNtf.NotifySocialData`: the scene and line a character is in.
+    /// The game sends a burst of these on every scene entry; `EntityContext`
+    /// only keeps the ones that name the known local character.
+    SceneLineObserved {
+        char_id: i64,
+        map_id: i32,
+        line: LineId,
     },
     /// A `GrpcTeamNtf` notice, applied to the team as the game client does.
     TeamRoster(TeamRosterUpdate),

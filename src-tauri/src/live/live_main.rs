@@ -11,6 +11,7 @@ use tokio::sync::{mpsc, oneshot};
 
 use crate::live::bootstrap_snapshot::{MonitorRuntimeSnapshot, load_monitor_runtime_snapshot};
 use crate::live::history_writer::HistoryWriterHandle;
+use crate::live::hp_link;
 use crate::live::ipc::models::LiveScenePayload;
 use crate::live::ipc::publisher::LivePublicationCache;
 use crate::live::ipc::topic::Topic;
@@ -34,12 +35,18 @@ pub async fn start(
     history_writer: HistoryWriterHandle,
     history_join: std::thread::JoinHandle<()>,
     team_link: LiveEnds,
+    hp_link: hp_link::LiveEnds,
 ) {
     let LiveEnds {
         share: team_share,
         events: mut team_events,
     } = team_link;
     let mut team_events_open = true;
+    let hp_link::LiveEnds {
+        share: hp_share,
+        events: mut hp_events,
+    } = hp_link;
+    let mut hp_events_open = true;
     let initial_config = load_monitor_runtime_snapshot(&app).unwrap_or_else(|| {
         info!(target: "app::live", "monitor runtime snapshot missing; using defaults");
         MonitorRuntimeSnapshot::default()
@@ -54,6 +61,7 @@ pub async fn start(
         initial_config,
         initial_voice,
         team_share,
+        hp_share,
     ) {
         Ok(core) => core,
         Err(error) => {
@@ -129,6 +137,12 @@ pub async fn start(
                         publish_due(&app, &publication_cache, &mut core, monotonic_now_ms());
                     }
                     None => team_events_open = false,
+                }
+            }
+            event = hp_events.recv(), if hp_events_open => {
+                match event {
+                    Some(event) => core.apply_hp_event(event),
+                    None => hp_events_open = false,
                 }
             }
             batch = batches.recv(), if batches_open => {

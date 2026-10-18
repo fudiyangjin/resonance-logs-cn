@@ -148,6 +148,23 @@ async setTeamShareEnabled(enabled: boolean) : Promise<Result<TeamShareSettings, 
 async getTeamShareStatus() : Promise<TeamShareStatus> {
     return await TAURI_INVOKE("get_team_share_status");
 },
+async getHpReportSettings() : Promise<HpReportSettings> {
+    return await TAURI_INVOKE("get_hp_report_settings");
+},
+/**
+ * Takes effect immediately; the switch is also persisted for the next launch.
+ */
+async setHpReportEnabled(enabled: boolean) : Promise<Result<HpReportSettings, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_hp_report_enabled", { enabled }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getHpReportStatus() : Promise<HpReportStatus> {
+    return await TAURI_INVOKE("get_hp_report_status");
+},
 async getUniqueSceneIds() : Promise<Result<SceneIdsResult, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_unique_scene_ids") };
@@ -830,6 +847,20 @@ export type HistoryQualityFlag = "incompleteSegment" | "missingEntityContext" | 
  * Health snapshot for the current monster target.
  */
 export type HpEntry = { bossEntityUuid: string; monsterId: number; current: number; max: number }
+export type HpReportSettings = { enabled: boolean }
+/**
+ * Report connection state shown in the settings page.
+ */
+export type HpReportStatus = { state: "disabled" } |
+/**
+ * Reporting is on, but no tracked boss is in view on a known open-world
+ * line.
+ */
+{ state: "idle" } | { state: "connecting" } | { state: "connected"; bosses: number } |
+/**
+ * The server does not accept reports from this game distribution.
+ */
+{ state: "unsupported" } | { state: "retrying"; error: string; retryMs: number }
 export type HudFrame = { active: boolean; epoch: number; status: LiveStatusPayload | null; buffs: LiveBuffsPayload | null; monster: LiveMonsterPayload | null; fantasy: LiveFantasyPayload | null;
 /**
  * Teammate cooldowns shared through the team relay (monster interest).

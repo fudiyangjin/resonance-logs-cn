@@ -5,6 +5,7 @@ pub mod death;
 pub mod entity_duration;
 pub mod entity_monitor;
 pub mod history;
+pub mod hp_report;
 pub mod minimap;
 pub mod presentation;
 pub mod skill_cd;

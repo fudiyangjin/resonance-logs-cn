@@ -167,6 +167,20 @@ export const jaJPMessages = {
     "接続済み、{count} 人の味方が共有中",
   "appSettings.teamShare.status.retrying":
     "接続が切れました。{seconds} 秒後に再試行します（{error}）",
+  "appSettings.hpReport.title": "ボス HP 報告",
+  "appSettings.hpReport.enable": "フィールドボスの HP を報告する",
+  "appSettings.hpReport.enableDescription":
+    "追跡対象のフィールドボスや魔法生物が近くにいるとき、その HP（5% 刻み）を現在のチャンネルとゲームのリージョンとともに bptimer.cn へ送信し、サイトでボスごとの HP をチャンネル別に表示します。アカウントやキャラクターの情報は送信しません。すぐに反映されます。",
+  "appSettings.hpReport.saveFailed": "保存に失敗しました：{error}",
+  "appSettings.hpReport.status.disabled": "オフ",
+  "appSettings.hpReport.status.idle":
+    "オン、追跡対象のボスが近くに現れるのを待っています（またはゲーム・チャンネル未検出）",
+  "appSettings.hpReport.status.connecting": "接続中…",
+  "appSettings.hpReport.status.connected": "接続済み、{count} 体のボスを報告中",
+  "appSettings.hpReport.status.unsupported":
+    "サーバーはこのゲームリージョンからの報告にまだ対応していません",
+  "appSettings.hpReport.status.retrying":
+    "接続が切れました。{seconds} 秒後に再試行します（{error}）",
   "appSettings.historyRetention.title": "履歴の保持",
   "appSettings.historyRetention.description":
     "自動的に保持する未お気に入り履歴の件数を設定します。変更は次回起動時に反映されます。",

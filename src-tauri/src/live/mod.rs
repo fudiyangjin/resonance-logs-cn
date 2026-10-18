@@ -6,6 +6,7 @@ pub mod dungeon_dirty_blob;
 pub mod dungeon_objectives;
 pub mod entity_id;
 pub mod history_writer;
+pub mod hp_link;
 pub mod ipc;
 pub mod live_core;
 pub mod live_main;

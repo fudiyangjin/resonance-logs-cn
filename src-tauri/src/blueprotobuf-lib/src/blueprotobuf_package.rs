@@ -4398,6 +4398,16 @@ pub struct DungeonPlayerInfo {
     pub social_data: ::core::option::Option<SocialData>,
 }
 #[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NotifySocialData {
+    #[prost(message, optional, tag = "1")]
+    pub v_request: ::core::option::Option<NotifySocialDataRequest>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NotifySocialDataRequest {
+    #[prost(message, optional, tag = "1")]
+    pub data: ::core::option::Option<SocialData>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
 pub struct SocialData {
     #[prost(int64, optional, tag = "1")]
     pub char_id: ::core::option::Option<i64>,

@@ -7,6 +7,7 @@ use crate::database::event_journal::{FinalizeEncounterMetadata, RecordingEncount
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
 use crate::live::counter::engine::{CounterEngine, CounterNamespace};
 use crate::live::history_writer::HistoryWriterHandle;
+use crate::live::hp_link::{HpLinkEvent, HpShare};
 use crate::live::ipc::models::{
     LiveBuffsPayload, LiveCombatPayload, LiveDataPayload, LiveDeathsPayload, LiveFantasyPayload,
     LiveMonsterPayload, LiveScenePayload, LiveStatusPayload, LiveTeamPayload, MinimapUpdatePayload,
@@ -19,6 +20,7 @@ use crate::live::projections::combat::projection::CombatProjection;
 use crate::live::projections::death::DeathProjection;
 use crate::live::projections::entity_monitor::EntityMonitorProjection;
 use crate::live::projections::history::HistoryProjection;
+use crate::live::projections::hp_report::HpReportProjection;
 use crate::live::projections::minimap::MinimapProjection;
 use crate::live::projections::presentation::{ActiveCombat, PresentationProjection};
 use crate::live::projections::team_cd::TeamCdProjection;
@@ -94,6 +96,7 @@ pub struct ProjectionSet {
     history: HistoryProjection,
     presentation: PresentationProjection,
     team_cd: TeamCdProjection,
+    hp_report: HpReportProjection,
     dirty: TopicMask,
 }
 
@@ -111,6 +114,7 @@ impl ProjectionSet {
             history: HistoryProjection::new(history_writer),
             presentation: PresentationProjection::default(),
             team_cd: TeamCdProjection::default(),
+            hp_report: HpReportProjection::default(),
             dirty: ALL_TOPICS,
         }
     }
@@ -215,6 +219,9 @@ impl ProjectionSet {
         entities: &EntityContext,
         scheduler: &mut DeadlineScheduler,
     ) -> Result<(), String> {
+        // Not segment-scoped and publishes nothing, so it sees every event
+        // before the early returns below.
+        self.hp_report.observe(&envelope.event);
         match &envelope.event {
             DomainEvent::SegmentStarted {
                 segment_id,
@@ -573,6 +580,7 @@ impl ProjectionSet {
         if self.team_cd.sync_local(&self.entity_monitor, entities) {
             self.dirty |= TopicMask::TEAM;
         }
+        self.hp_report.sync(entities);
     }
 
     /// Removes the voice cues matched since the last drain, for the caller to
@@ -593,6 +601,17 @@ impl ProjectionSet {
         if self.team_cd.apply_event(event) {
             self.dirty |= TopicMask::TEAM;
         }
+    }
+
+    /// The bosses in view for the HP report client, if they changed since the
+    /// last drain.
+    pub fn take_hp_share(&mut self) -> Option<HpShare> {
+        self.hp_report.take_share()
+    }
+
+    /// Applies an update received from the HP report client.
+    pub fn apply_hp_event(&mut self, event: HpLinkEvent, entities: &EntityContext) {
+        self.hp_report.apply_event(event, entities);
     }
 
     pub fn clear_display(&mut self) {

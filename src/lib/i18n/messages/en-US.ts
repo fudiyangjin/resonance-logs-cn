@@ -168,6 +168,21 @@ export const enUSMessages = {
     "Connected, {count} teammate(s) sharing",
   "appSettings.teamShare.status.retrying":
     "Connection lost, retrying in {seconds}s ({error})",
+  "appSettings.hpReport.title": "Boss HP Reports",
+  "appSettings.hpReport.enable": "Report field boss HP",
+  "appSettings.hpReport.enableDescription":
+    "When a tracked field boss or magical creature is in view, sends its HP (in 5% steps) together with your line and game region to bptimer.cn, which shows every boss's HP by line. No account or character information is sent. Takes effect immediately.",
+  "appSettings.hpReport.saveFailed": "Could not save: {error}",
+  "appSettings.hpReport.status.disabled": "Off",
+  "appSettings.hpReport.status.idle":
+    "On, waiting for a tracked boss nearby (or the game or line is not detected yet)",
+  "appSettings.hpReport.status.connecting": "Connecting…",
+  "appSettings.hpReport.status.connected":
+    "Connected, reporting {count} boss(es)",
+  "appSettings.hpReport.status.unsupported":
+    "The server does not accept reports from this game region yet",
+  "appSettings.hpReport.status.retrying":
+    "Connection lost, retrying in {seconds}s ({error})",
   "appSettings.historyRetention.title": "History Retention",
   "appSettings.historyRetention.description":
     "Set how many non-favorite history records to keep automatically. Changes apply on the next launch.",

@@ -18,14 +18,15 @@ use crate::live::protocol::{COUNTER_PASSIVE_SKILL_IDS, MARKER_SKILL_ID_BASE};
 use crate::live::runtime::events::{
     AttributeValue, BatchId, BossMechanicObservation, CaptureEnvelope, Distribution,
     EntityIdentityPatch, EntityKind, EntityUuid, FieldPatch, GameTimerKey, GameTimerState,
-    HateEntry, HitChannel, HitKind, LOCAL_PLAYER, LocalTalent, MonoTimeMs, ObservationOrigin,
-    ObservedBuff, ObservedBuffChange, ObservedHit, ObservedTeamBase, ObservedTeamMember,
-    PacketDirection, PassiveSkillObservation, Position, ProtocolBatch, ProtocolObservation,
-    ShieldDetail, SkillCooldownState, SkillPhase, TeamKind, TeamRosterUpdate,
+    HateEntry, HitChannel, HitKind, LOCAL_PLAYER, LineId, LocalTalent, MonoTimeMs,
+    ObservationOrigin, ObservedBuff, ObservedBuffChange, ObservedHit, ObservedTeamBase,
+    ObservedTeamMember, PacketDirection, PassiveSkillObservation, Position, ProtocolBatch,
+    ProtocolObservation, ShieldDetail, SkillCooldownState, SkillPhase, TeamKind, TeamRosterUpdate,
 };
 use crate::packets::opcodes::{
-    GRPC_TEAM_NTF_SERVICE_ID, MATCH_NTF_SERVICE_ID, Pkt, WORLD_CALL_SERVICE_ID,
-    WORLD_NTF_SERVICE_ID, grpc_team_method, match_ntf_method, world_call_method,
+    GRPC_TEAM_NTF_SERVICE_ID, MATCH_NTF_SERVICE_ID, Pkt, SOCIAL_NTF_SERVICE_ID,
+    WORLD_CALL_SERVICE_ID, WORLD_NTF_SERVICE_ID, grpc_team_method, match_ntf_method,
+    social_ntf_method, world_call_method,
 };
 use crate::packets::packet_process::{
     SYNTHETIC_DECODE_ISSUE_OPCODE, SYNTHETIC_GAME_CLIENT_OPCODE, SYNTHETIC_REASSEMBLY_RESET_OPCODE,
@@ -128,6 +129,12 @@ impl ProtocolDecoder {
             && envelope.direction == PacketDirection::ServerToClient
         {
             return decode_match(envelope);
+        }
+
+        if service_id == Some(SOCIAL_NTF_SERVICE_ID)
+            && envelope.direction == PacketDirection::ServerToClient
+        {
+            return decode_social(envelope);
         }
 
         Vec::new()
@@ -1072,6 +1079,30 @@ fn decode_match(envelope: &CaptureEnvelope) -> Vec<ProtocolObservation> {
 
     log::info!("matchmaking ready notification detected");
     vec![ProtocolObservation::MatchmakingPopped]
+}
+
+/// `SocialNtf.NotifySocialData` carries the character's full social profile
+/// (name, equipment, account data); only the scene placement is kept and the
+/// payload is never logged.
+fn decode_social(envelope: &CaptureEnvelope) -> Vec<ProtocolObservation> {
+    if envelope.key.method_id != Some(social_ntf_method::NOTIFY_SOCIAL_DATA) {
+        return Vec::new();
+    }
+    decode_message::<blueprotobuf::NotifySocialData>(&envelope.payload)
+        .ok()
+        .and_then(|message| message.v_request?.data)
+        .and_then(scene_placement)
+        .into_iter()
+        .collect()
+}
+
+fn scene_placement(data: blueprotobuf::SocialData) -> Option<ProtocolObservation> {
+    let scene = data.scene_data?;
+    Some(ProtocolObservation::SceneLineObserved {
+        char_id: data.char_id.filter(|id| *id > 0)?,
+        map_id: i32::try_from(scene.map_id?).ok().filter(|id| *id > 0)?,
+        line: LineId(scene.line_id.filter(|line| *line > 0)?),
+    })
 }
 
 fn decode_team(envelope: &CaptureEnvelope) -> Vec<ProtocolObservation> {
@@ -2841,6 +2872,47 @@ mod tests {
             vec![ProtocolObservation::MatchmakingPopped]
         );
         assert!(matching.observations.is_empty());
+    }
+
+    #[test]
+    fn social_data_yields_only_the_scene_placement() {
+        let message = |line_id| blueprotobuf::NotifySocialData {
+            v_request: Some(blueprotobuf::NotifySocialDataRequest {
+                data: Some(blueprotobuf::SocialData {
+                    char_id: Some(42),
+                    scene_data: Some(blueprotobuf::SceneData {
+                        map_id: Some(10),
+                        line_id: Some(line_id),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }),
+            }),
+        };
+        let social = |sequence, method_id, line_id| {
+            service_notify(
+                sequence,
+                SOCIAL_NTF_SERVICE_ID,
+                method_id,
+                &message(line_id),
+            )
+        };
+        let mut decoder = ProtocolDecoder::new();
+
+        let placed = decoder.decode(social(1, social_ntf_method::NOTIFY_SOCIAL_DATA, 16));
+        let without_line = decoder.decode(social(2, social_ntf_method::NOTIFY_SOCIAL_DATA, 0));
+        let other_method = decoder.decode(social(3, social_ntf_method::NOTIFY_SOCIAL_DATA + 1, 16));
+
+        assert_eq!(
+            placed.observations,
+            vec![ProtocolObservation::SceneLineObserved {
+                char_id: 42,
+                map_id: 10,
+                line: LineId(16),
+            }]
+        );
+        assert!(without_line.observations.is_empty());
+        assert!(other_method.observations.is_empty());
     }
 
     #[test]

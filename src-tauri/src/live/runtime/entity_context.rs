@@ -8,9 +8,9 @@ use super::events::{
     AttributeValue, BuffEvent, BuffState, BuffTransition, BuffWireKind, DeathBuffCheckpoint,
     Distribution, DomainEnvelope, DomainEvent, DomainHit, EntityIdentity, EntityIdentityPatch,
     EntityKind, EntityRef, EntityRoles, EntityUuid, EventMeta, FantasyState, FantasyTransition,
-    FieldPatch, GameTimerKey, GameTimerState, HateEntry, LOCAL_PLAYER, LocalTalent, MonoTimeMs,
-    ObservationOrigin, ObservedBuff, ObservedBuffChange, PassiveSkillObservation, Position,
-    ProtocolBatch, ProtocolObservation, ResolvedShieldDetail, SegmentId, ShieldDetail,
+    FieldPatch, GameTimerKey, GameTimerState, HateEntry, LOCAL_PLAYER, LineId, LocalTalent,
+    MonoTimeMs, ObservationOrigin, ObservedBuff, ObservedBuffChange, PassiveSkillObservation,
+    Position, ProtocolBatch, ProtocolObservation, ResolvedShieldDetail, SegmentId, ShieldDetail,
     SkillCooldownState, SkillPhase,
 };
 use super::fantasy_registry::{
@@ -110,6 +110,13 @@ struct CasterSkillLifecycle {
     duration_skill: Option<ActiveSkill>,
 }
 
+/// Scene and line the local character was last placed in by the server.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct SceneLine {
+    map_id: i32,
+    line: LineId,
+}
+
 #[derive(Debug, Default)]
 pub struct EntityContext {
     entities: HashMap<EntityUuid, EntityState>,
@@ -141,6 +148,9 @@ pub struct EntityContext {
     server_clock_offset_ms: Option<i64>,
     /// Distribution of the game process whose traffic is being captured.
     game_client: Option<Distribution>,
+    /// Latest `NotifySocialData` placement of the local character. Cleared by
+    /// container resets, so only the packets after a scene entry's resync count.
+    scene_line: Option<SceneLine>,
     /// ActorState deaths queued for the current `apply_batch` only.
     pending_deaths: Vec<PendingDeath>,
 }
@@ -184,6 +194,7 @@ impl EntityContext {
         self.local_talent = LocalTalent::default();
         self.dungeon_flow_state = None;
         self.progress_state = None;
+        self.scene_line = None;
         self.pending_deaths.clear();
     }
 
@@ -266,6 +277,15 @@ impl EntityContext {
     #[must_use]
     pub(crate) fn game_client(&self) -> Option<Distribution> {
         self.game_client
+    }
+
+    /// The open-world line the local character is in: the server placement
+    /// must name the current scene, and no dungeon flow may be running.
+    #[must_use]
+    pub(crate) fn field_line(&self) -> Option<LineId> {
+        let placement = self.scene_line?;
+        (self.current_scene_id == Some(placement.map_id) && self.dungeon_flow_state.is_none())
+            .then_some(placement.line)
     }
 
     #[must_use]
@@ -639,6 +659,18 @@ impl EntityContext {
             }
             ProtocolObservation::GameClientIdentified { distribution } => {
                 self.game_client = Some(distribution);
+            }
+            ProtocolObservation::SceneLineObserved {
+                char_id,
+                map_id,
+                line,
+            } => {
+                let is_local = self
+                    .local_player
+                    .is_some_and(|uuid| uid_from_uuid(uuid.0) == char_id);
+                if is_local {
+                    self.scene_line = Some(SceneLine { map_id, line });
+                }
             }
             ProtocolObservation::MatchmakingPopped => {
                 self.emit(meta, DomainEvent::MatchmakingPopped, out);
@@ -4505,5 +4537,56 @@ mod tests {
             DomainEvent::SkillCooldownUpdated { .. }
         ));
         assert_eq!(context.entity(local).unwrap().skill_cooldowns.len(), 2);
+    }
+
+    #[test]
+    fn field_line_keeps_only_local_placements_in_the_current_open_world_scene() {
+        let mut context = EntityContext::new();
+        let local = player(10);
+        let placed = |char_id, map_id, line| ProtocolObservation::SceneLineObserved {
+            char_id,
+            map_id,
+            line: LineId(line),
+        };
+        let scene = |scene_id| ProtocolObservation::SceneChanged {
+            scene_id,
+            difficulty: None,
+        };
+        let local_known = || {
+            vec![
+                ProtocolObservation::EntityAppeared {
+                    uuid: local,
+                    kind: EntityKind::Character,
+                },
+                ProtocolObservation::LocalPlayerChanged { uuid: Some(local) },
+            ]
+        };
+
+        // A burst starts before the container sync names the local player.
+        context.reduce_batch(batch(1, vec![placed(10, 10, 6)]));
+        let mut entered = local_known();
+        entered.push(scene(10));
+        context.reduce_batch(batch(2, entered));
+        assert_eq!(context.field_line(), None);
+
+        context.reduce_batch(batch(3, vec![placed(10, 10, 16), placed(20, 10, 3)]));
+        assert_eq!(context.field_line(), Some(LineId(16)));
+
+        context.reduce_batch(batch(4, vec![scene(13_032)]));
+        assert_eq!(context.field_line(), None, "placement names another scene");
+        context.reduce_batch(batch(5, vec![scene(10)]));
+        assert_eq!(context.field_line(), Some(LineId(16)));
+        context.reduce_batch(batch(
+            6,
+            vec![ProtocolObservation::DungeonFlowChanged { state: 2 }],
+        ));
+        assert_eq!(context.field_line(), None, "a dungeon flow is running");
+
+        let mut resynced = vec![ProtocolObservation::ContainerReset];
+        resynced.extend(local_known());
+        context.reduce_batch(batch(7, resynced));
+        assert_eq!(context.field_line(), None, "the resync drops the placement");
+        context.reduce_batch(batch(8, vec![placed(10, 10, 6)]));
+        assert_eq!(context.field_line(), Some(LineId(6)));
     }
 }
