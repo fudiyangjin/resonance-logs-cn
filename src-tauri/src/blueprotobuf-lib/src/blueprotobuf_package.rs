@@ -1758,6 +1758,8 @@ pub struct Item {
     pub reward_id: ::core::option::Option<i32>,
     #[prost(map = "int32, int32", tag = "17")]
     pub gene_sequence: ::std::collections::HashMap<i32, i32>,
+    #[prost(message, optional, tag = "21")]
+    pub mod_part_level: ::core::option::Option<ModPartLevel>,
 }
 #[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
 pub struct EquipAttr {
@@ -1826,6 +1828,11 @@ pub struct ModNewAttr {
     pub mod_parts: ::prost::alloc::vec::Vec<i32>,
     #[prost(message, repeated, tag = "2")]
     pub upgrade_records: ::prost::alloc::vec::Vec<ModPartUpgradeRecord>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct ModPartLevel {
+    #[prost(map = "int32, int32", tag = "1")]
+    pub levels: ::std::collections::HashMap<i32, i32>,
 }
 #[derive(specta::Type, Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ModPartUpgradeRecord {

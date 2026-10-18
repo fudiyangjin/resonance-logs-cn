@@ -158,85 +158,97 @@ pub const MODULE_ATTR_NAMES: &[(i32, &str)] = &[
     (2304, "极-绝境守护"),
 ];
 
-pub fn parse_modules_from_vdata(v_data: &blueprotobuf::CharSerialize) -> Vec<ModuleInfo> {
-    let mut modules = Vec::new();
+enum PartValues<'a> {
+    ByAttrId(&'a HashMap<i32, i32>),
+    ByIndex(&'a [i32]),
+}
 
-    let attr_name_map: HashMap<i32, &str> = MODULE_ATTR_NAMES.iter().cloned().collect();
-    let module_name_map: HashMap<i32, &str> = MODULE_NAMES.iter().cloned().collect();
-
-    let mod_infos = if let Some(mod_data) = &v_data.r#mod {
-        &mod_data.mod_infos
-    } else {
-        log::warn!("v_data 中没有 mod_infos");
-        return modules;
-    };
-
-    if let Some(item_package) = &v_data.item_package {
-        for package in item_package.packages.values() {
-            for (key, item) in &package.items {
-                let mod_new_attr = if let Some(attr) = &item.mod_new_attr {
-                    attr
-                } else {
-                    continue;
-                };
-
-                if mod_new_attr.mod_parts.is_empty() {
-                    continue;
-                }
-
-                let config_id = item.config_id.unwrap_or(0);
-                if !module_name_map.contains_key(&config_id) {
-                    log::info!("跳过未知模组 config_id: {}", config_id);
-                    continue;
-                }
-
-                let module_name = module_name_map
-                    .get(&config_id)
-                    .unwrap_or(&"未知模组")
-                    .to_string();
-                let uuid = item.uuid.unwrap_or(0) as i32;
-                let quality = item.quality.unwrap_or(0);
-
-                let init_link_nums = if let Some(info) = mod_infos.get(key) {
-                    &info.init_link_nums
-                } else {
-                    log::info!("未找到模组属性值 key: {}", key);
-                    continue;
-                };
-
-                let mut parts = Vec::new();
-                for (i, part_id) in mod_new_attr.mod_parts.iter().enumerate() {
-                    if i >= init_link_nums.len() {
-                        break;
-                    }
-
-                    let attr_id = *part_id;
-                    let attr_name = attr_name_map
-                        .get(&attr_id)
-                        .unwrap_or(&"未知属性")
-                        .to_string();
-                    let attr_value = init_link_nums[i];
-
-                    parts.push(ModulePart {
-                        id: attr_id,
-                        name: attr_name,
-                        value: attr_value,
-                    });
-                }
-
-                modules.push(ModuleInfo {
-                    name: module_name,
-                    config_id,
-                    uuid,
-                    quality,
-                    parts,
-                });
-            }
+impl PartValues<'_> {
+    fn get(&self, index: usize, attr_id: i32) -> Option<i32> {
+        match self {
+            Self::ByAttrId(levels) => levels.get(&attr_id).copied(),
+            Self::ByIndex(values) => values.get(index).copied(),
         }
     }
+}
+
+fn module_name(config_id: i32) -> Option<&'static str> {
+    MODULE_NAMES
+        .iter()
+        .find(|(id, _)| *id == config_id)
+        .map(|(_, name)| *name)
+}
+
+fn attr_name(attr_id: i32) -> &'static str {
+    MODULE_ATTR_NAMES
+        .iter()
+        .find(|(id, _)| *id == attr_id)
+        .map_or("未知属性", |(_, name)| *name)
+}
+
+pub fn parse_modules_from_vdata(v_data: &blueprotobuf::CharSerialize) -> Vec<ModuleInfo> {
+    let Some(item_package) = &v_data.item_package else {
+        log::warn!("v_data 中没有 item_package");
+        return Vec::new();
+    };
+    let mod_infos = v_data.r#mod.as_ref().map(|data| &data.mod_infos);
+
+    let modules: Vec<ModuleInfo> = item_package
+        .packages
+        .values()
+        .flat_map(|package| &package.items)
+        .filter_map(|(key, item)| parse_module(*key, item, mod_infos))
+        .collect();
 
     log::info!("解析到 {} 个模组", modules.len());
     modules
+}
+
+fn parse_module(
+    key: i64,
+    item: &blueprotobuf::Item,
+    mod_infos: Option<&HashMap<i64, blueprotobuf::ModInfo>>,
+) -> Option<ModuleInfo> {
+    let part_ids = &item.mod_new_attr.as_ref()?.mod_parts;
+    if part_ids.is_empty() {
+        return None;
+    }
+    let config_id = item.config_id.unwrap_or(0);
+    let name = module_name(config_id)?;
+
+    let values = match item.mod_part_level.as_ref().map(|level| &level.levels) {
+        Some(levels) if !levels.is_empty() => PartValues::ByAttrId(levels),
+        _ => PartValues::ByIndex(
+            mod_infos
+                .and_then(|infos| infos.get(&key))
+                .map(|info| info.init_link_nums.as_slice())
+                .unwrap_or_default(),
+        ),
+    };
+
+    let parts: Vec<ModulePart> = part_ids
+        .iter()
+        .enumerate()
+        .filter_map(|(index, &id)| {
+            let value = values.get(index, id)?;
+            Some(ModulePart {
+                id,
+                name: attr_name(id).to_string(),
+                value,
+            })
+        })
+        .collect();
+    if parts.is_empty() {
+        return None;
+    }
+
+    Some(ModuleInfo {
+        name: name.to_string(),
+        config_id,
+        uuid: item.uuid.unwrap_or(0) as i32,
+        quality: item.quality.unwrap_or(0),
+        parts,
+    })
 }
 
 fn to_ffi_modules(modules: &[ModuleInfo]) -> Vec<ModuleInfoFfi> {
@@ -662,4 +674,166 @@ pub fn calculate_combat_power(modules: &[ModuleInfo]) -> i32 {
     let total_attr_power = TOTAL_ATTR_POWER_VALUES[idx];
 
     threshold_power + total_attr_power
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use blueprotobuf::{
+        CharSerialize, Item, ItemPackage, Mod, ModInfo, ModNewAttr, ModPartLevel, Package,
+    };
+    use prost::Message;
+
+    fn module_item(
+        uuid: i64,
+        config_id: i32,
+        part_ids: &[i32],
+        levels: Option<&[(i32, i32)]>,
+    ) -> Item {
+        Item {
+            uuid: Some(uuid),
+            config_id: Some(config_id),
+            quality: Some(4),
+            mod_new_attr: Some(ModNewAttr {
+                mod_parts: part_ids.to_vec(),
+                ..Default::default()
+            }),
+            mod_part_level: levels.map(|levels| ModPartLevel {
+                levels: levels.iter().copied().collect(),
+            }),
+            ..Default::default()
+        }
+    }
+
+    /// 物品以 uuid 为 key 放进同一个背包；`init_link_nums` 为空时不生成 `Mod`。
+    fn char_with(items: Vec<Item>, init_link_nums: &[(i64, &[i32])]) -> CharSerialize {
+        let items = items
+            .into_iter()
+            .map(|item| (item.uuid.unwrap_or(0), item))
+            .collect();
+        CharSerialize {
+            item_package: Some(ItemPackage {
+                packages: HashMap::from([(
+                    5,
+                    Package {
+                        items,
+                        ..Default::default()
+                    },
+                )]),
+                ..Default::default()
+            }),
+            r#mod: (!init_link_nums.is_empty()).then(|| Mod {
+                mod_infos: init_link_nums
+                    .iter()
+                    .map(|&(key, nums)| {
+                        (
+                            key,
+                            ModInfo {
+                                init_link_nums: nums.to_vec(),
+                                ..Default::default()
+                            },
+                        )
+                    })
+                    .collect(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
+    }
+
+    fn part_values(module: &ModuleInfo) -> Vec<(i32, i32)> {
+        module
+            .parts
+            .iter()
+            .map(|part| (part.id, part.value))
+            .collect()
+    }
+
+    #[test]
+    fn reads_levels_by_attribute_id_in_mod_parts_order() {
+        let v_data = char_with(
+            vec![module_item(
+                18094,
+                5500103,
+                &[1114, 1410, 1408],
+                Some(&[(1408, 3), (1410, 10), (1114, 6)]),
+            )],
+            &[],
+        );
+
+        let modules = parse_modules_from_vdata(&v_data);
+
+        assert_eq!(modules.len(), 1);
+        assert_eq!(modules[0].name, "卓越攻击");
+        assert_eq!(modules[0].uuid, 18094);
+        assert_eq!(modules[0].parts[0].name, "精英打击");
+        assert_eq!(part_values(&modules[0]), [(1114, 6), (1410, 10), (1408, 3)]);
+    }
+
+    #[test]
+    fn falls_back_to_init_link_nums_when_levels_are_absent_or_empty() {
+        let v_data = char_with(
+            vec![
+                module_item(9, 5500102, &[1110, 1111], None),
+                module_item(10, 5500102, &[1110, 1111], Some(&[])),
+            ],
+            &[(9, &[4, 7]), (10, &[4, 7])],
+        );
+
+        let modules = parse_modules_from_vdata(&v_data);
+
+        assert_eq!(modules.len(), 2);
+        for module in &modules {
+            assert_eq!(part_values(module), [(1110, 4), (1111, 7)]);
+        }
+    }
+
+    #[test]
+    fn levels_take_precedence_over_init_link_nums() {
+        let v_data = char_with(
+            vec![module_item(9, 5500101, &[1110], Some(&[(1110, 8)]))],
+            &[(9, &[1])],
+        );
+
+        let modules = parse_modules_from_vdata(&v_data);
+
+        assert_eq!(part_values(&modules[0]), [(1110, 8)]);
+    }
+
+    #[test]
+    fn skips_parts_without_value_and_modules_without_parts() {
+        let plain_item = Item {
+            uuid: Some(4),
+            config_id: Some(1010),
+            mod_part_level: Some(ModPartLevel::default()),
+            ..Default::default()
+        };
+        let v_data = char_with(
+            vec![
+                module_item(1, 5500103, &[1114, 1410], Some(&[(1410, 5)])),
+                module_item(2, 5500103, &[1114], Some(&[(1410, 5)])),
+                module_item(3, 9_999_999, &[1114], Some(&[(1114, 5)])),
+                plain_item,
+            ],
+            &[],
+        );
+
+        let modules = parse_modules_from_vdata(&v_data);
+
+        assert_eq!(modules.len(), 1);
+        assert_eq!(modules[0].uuid, 1);
+        assert_eq!(part_values(&modules[0]), [(1410, 5)]);
+    }
+
+    #[test]
+    fn item_field_21_survives_decode_and_reencode() {
+        // Item { 21: ModPartLevel { 1: {1114: 6} } }
+        const RAW: &[u8] = &[0xAA, 0x01, 0x07, 0x0A, 0x05, 0x08, 0xDA, 0x08, 0x10, 0x06];
+
+        let item = Item::decode(RAW).expect("decode item with field 21");
+
+        let level = item.mod_part_level.as_ref().expect("field 21 decoded");
+        assert_eq!(level.levels, HashMap::from([(1114, 6)]));
+        assert_eq!(item.encode_to_vec(), RAW);
+    }
 }
