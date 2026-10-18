@@ -13,6 +13,7 @@
 | **Teammate Fantasy Area** | Shown | [Teammate fantasies](./status.md#teammate-fantasies) |
 | **Boss DBM Area** | Hidden | [Boss DBM](./boss-dbm.md) |
 | **Entity Duration Area** | Hidden | [Entity Duration](./entity-duration.md) |
+| **Monster Skills Area** | Hidden | [Monster Skills](./monster-skill.md) |
 
 Click a button to toggle its visibility.
 

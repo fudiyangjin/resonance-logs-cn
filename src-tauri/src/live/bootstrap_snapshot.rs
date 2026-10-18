@@ -318,6 +318,8 @@ pub struct MonsterRuntimeSnapshot {
     pub self_applied_ids: Vec<i32>,
     pub monitor_all_self_applied: bool,
     pub watched_entities: Vec<WatchedEntitySpec>,
+    /// Skills shown (and voiced) when any nearby monster casts them.
+    pub watched_skill_ids: Vec<i32>,
 }
 
 impl MonsterRuntimeSnapshot {

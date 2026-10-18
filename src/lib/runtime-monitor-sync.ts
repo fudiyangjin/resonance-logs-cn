@@ -9,6 +9,7 @@ import { buffCompositeSpecs, ensureBuffComposites } from "$lib/buff-composites";
 import { expandBuffSelection } from "$lib/config/buff-name-table";
 import { activeProfile as getActiveProfile } from "$lib/skill-monitor-profile.svelte.js";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
+import { ensureMonsterSkillEntries } from "$lib/monster-skill-entries";
 import { SETTINGS, normalizeTeammateCdSkills } from "$lib/settings-store";
 import {
   getClassConfigs,
@@ -157,6 +158,13 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
       merge: entry.merge === true,
     }))
     .sort((a, b) => a.monsterId - b.monsterId);
+  // Same as the entity watch list: monster skill voice does not follow the
+  // HUD toggle.
+  const watchedSkillIds = uniqueSortedNumbers(
+    ensureMonsterSkillEntries(
+      SETTINGS.monsterMonitor.state.monsterSkillEntries,
+    ).map((entry) => entry.skillId),
+  );
   if (!enabled) {
     return {
       enabled: false,
@@ -164,6 +172,7 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
       selfAppliedIds: [],
       monitorAllSelfApplied: false,
       watchedEntities,
+      watchedSkillIds,
     };
   }
 
@@ -177,6 +186,7 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
     ),
     monitorAllSelfApplied: SETTINGS.monsterMonitor.state.selfAppliedMonitorAll,
     watchedEntities,
+    watchedSkillIds,
   };
 }
 

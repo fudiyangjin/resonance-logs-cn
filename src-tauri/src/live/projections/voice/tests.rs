@@ -2250,6 +2250,67 @@ mod entity_monitor_bridge {
         assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(8_000)));
     }
 
+    const MONSTER_SKILL: i32 = 101_403;
+
+    fn monster_skill_rule() -> VoiceRule {
+        rule(
+            "monster-skill",
+            trigger(
+                VoiceSubject::MonsterSkill {
+                    skill_id: MONSTER_SKILL,
+                },
+                VoiceEvent::Started,
+            ),
+            "cast",
+            0,
+        )
+    }
+
+    fn monster(uuid: EntityUuid, owner: Option<EntityUuid>) -> Vec<ProtocolObservation> {
+        vec![
+            ProtocolObservation::EntityAppeared {
+                uuid,
+                kind: EntityKind::Monster,
+            },
+            ProtocolObservation::IdentityUpdated {
+                uuid,
+                patch: EntityIdentityPatch {
+                    owner_uuid: owner.map_or(FieldPatch::Unchanged, FieldPatch::Set),
+                    ..Default::default()
+                },
+            },
+        ]
+    }
+
+    #[test]
+    fn monster_skill_cast_fires_once_per_batch() {
+        let mut h = Harness::new(vec![monster_skill_rule()], vec![]);
+        let boss = EntityUuid(30);
+        let mut observations = monster(boss, None);
+        observations.push(cast(boss, MONSTER_SKILL, SkillPhase::Observed));
+        observations.push(cast(boss, MONSTER_SKILL, SkillPhase::Observed));
+
+        h.step(10, observations);
+        assert_eq!(h.fired(), ["cast"]);
+
+        h.step(30, vec![cast(boss, MONSTER_SKILL, SkillPhase::Observed)]);
+        assert_eq!(h.fired(), ["cast"]);
+    }
+
+    #[test]
+    fn monster_skill_cast_by_character_or_player_summon_is_silent() {
+        let mut h = Harness::new(vec![monster_skill_rule()], vec![]);
+        let summon = EntityUuid(31);
+        let player_owner = EntityUuid(crate::live::entity_id::canonical_player_uuid(5));
+        let mut observations = monster(summon, Some(player_owner));
+        observations.push(cast(summon, MONSTER_SKILL, SkillPhase::Observed));
+        observations.push(cast(OTHER_PLAYER, MONSTER_SKILL, SkillPhase::Observed));
+
+        h.step(10, observations);
+
+        assert!(h.fired().is_empty());
+    }
+
     #[test]
     fn deadline_delivery_fires_rule_once_and_rejects_superseded_schedule() {
         let mut h = Harness::new(

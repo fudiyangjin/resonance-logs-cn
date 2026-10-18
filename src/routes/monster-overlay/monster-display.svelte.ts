@@ -6,7 +6,10 @@ import {
 } from "$lib/config/buff-name-table";
 import { untrack } from "svelte";
 import { resolveDbmSkillName } from "$lib/config/dbm-table";
-import { resolveMonsterName } from "$lib/config/game-names";
+import {
+  resolveMonsterName,
+  resolveMonsterSkillName,
+} from "$lib/config/game-names";
 import { t } from "$lib/i18n/index.svelte";
 import { abbreviateNumber, type AbbreviationStyle } from "$lib/number-format";
 import { uidFromEntityUuid, type EntityId } from "$lib/entity-id";
@@ -16,14 +19,17 @@ import {
   getGlobalBuffAliases,
   type BuffAlertMap,
   type EntityDurationEntry,
+  type MonsterSkillWatchEntry,
   type TeammateDeadRowPlacement,
 } from "$lib/settings-store";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
+import { ensureMonsterSkillEntries } from "$lib/monster-skill-entries";
 import {
   orderedTeammateColumns,
   type TeammateColumnRef,
 } from "$lib/teammate-buff-columns";
 import { buildEntityDurationRows } from "./monster-entity-duration";
+import { buildMonsterSkillRows, monsterSkillRow } from "./monster-skill-rows";
 import type {
   BuffUpdateState,
   HateEntry,
@@ -59,6 +65,7 @@ import {
   monsterIds,
   monsterPlayerNames,
   monsterRuntime,
+  monsterSkillCasts,
   monsterStunEntries,
   monsterTeammateBuffs,
 } from "./monster-runtime.svelte.js";
@@ -94,12 +101,14 @@ export const MONSTER_FANTASY_DEADLINE_SOURCE = "hud-overlay:monster-fantasy";
 export const MONSTER_DBM_DEADLINE_SOURCE = "hud-overlay:monster-dbm";
 export const MONSTER_ENTITY_DURATION_DEADLINE_SOURCE =
   "hud-overlay:monster-entity-duration";
+export const MONSTER_SKILL_DEADLINE_SOURCE = "hud-overlay:monster-skill";
 export const MONSTER_PROJECTION_DEADLINE_SOURCES = [
   MONSTER_TEAMMATE_DEADLINE_SOURCE,
   MONSTER_BOSS_DEADLINE_SOURCE,
   MONSTER_FANTASY_DEADLINE_SOURCE,
   MONSTER_DBM_DEADLINE_SOURCE,
   MONSTER_ENTITY_DURATION_DEADLINE_SOURCE,
+  MONSTER_SKILL_DEADLINE_SOURCE,
 ] as const;
 
 type TeammateDisplay = {
@@ -1224,6 +1233,47 @@ function buildEntityDurationDisplay(now: number): {
   return { rows, nextDeadlineMs: built.nextDeadlineMs };
 }
 
+function monsterSkillEntryLabel(entry: MonsterSkillWatchEntry): string {
+  return entry.label.trim() || resolveMonsterSkillName(entry.skillId);
+}
+
+function buildMonsterSkillDisplay(now: number): {
+  rows: TextBuffDisplay[];
+  nextDeadlineMs: number | null;
+} {
+  const entries = ensureMonsterSkillEntries(
+    SETTINGS.monsterMonitor.state.monsterSkillEntries,
+  );
+  const built = buildMonsterSkillRows({
+    entries,
+    casts: monsterSkillCasts(),
+    now,
+    resolveLabel: monsterSkillEntryLabel,
+  });
+  let rows = built.rows;
+  if (rows.length === 0 && isMonsterLayoutScaffold()) {
+    rows =
+      entries.length === 0
+        ? [
+            monsterSkillRow(
+              "monster_skill_preview",
+              t("monsterOverlay.placeholder.monsterSkill"),
+              true,
+            ),
+          ]
+        : entries
+            .slice(0, 3)
+            .map((entry) =>
+              monsterSkillRow(
+                `monster_skill_preview_${entry.skillId}`,
+                monsterSkillEntryLabel(entry),
+                true,
+              ),
+            );
+  }
+  return { rows, nextDeadlineMs: built.nextDeadlineMs };
+}
+
 const globalBuffAliasesProjection = $derived.by(() => getGlobalBuffAliases());
 
 const teammateColumnProjection = $derived.by(() => {
@@ -1301,6 +1351,11 @@ const entityDurationDisplayProjection = $derived.by(() => {
   return buildEntityDurationDisplay(Date.now());
 });
 
+const monsterSkillDisplayProjection = $derived.by(() => {
+  void hudProjectionRevision(MONSTER_SKILL_DEADLINE_SOURCE);
+  return buildMonsterSkillDisplay(Date.now());
+});
+
 function assignRuntime<
   K extends
     | "bossSections"
@@ -1311,7 +1366,8 @@ function assignRuntime<
     | "hpSections"
     | "fantasyRows"
     | "dbmRows"
-    | "entityDurationRows",
+    | "entityDurationRows"
+    | "monsterSkillRows",
 >(key: K, value: (typeof monsterRuntime)[K]) {
   if (untrack(() => monsterRuntime[key]) !== value) {
     monsterRuntime[key] = value;
@@ -1332,6 +1388,7 @@ export function updateMonsterDisplay() {
   assignRuntime("fantasyRows", fantasyDisplayProjection.rows);
   assignRuntime("dbmRows", dbmDisplayProjection.rows);
   assignRuntime("entityDurationRows", entityDurationDisplayProjection.rows);
+  assignRuntime("monsterSkillRows", monsterSkillDisplayProjection.rows);
 }
 
 export function syncMonsterProjectionDeadlines() {
@@ -1355,6 +1412,10 @@ export function syncMonsterProjectionDeadlines() {
     MONSTER_ENTITY_DURATION_DEADLINE_SOURCE,
     entityDurationDisplayProjection.nextDeadlineMs,
   );
+  setHudProjectionDeadline(
+    MONSTER_SKILL_DEADLINE_SOURCE,
+    monsterSkillDisplayProjection.nextDeadlineMs,
+  );
 }
 
 export function clearMonsterProjectionDeadlines() {
@@ -1370,6 +1431,7 @@ export function nextMonsterProjectionDeadline(): number | null {
     fantasyDisplayProjection.nextDeadlineMs,
     dbmDisplayProjection.nextDeadlineMs,
     entityDurationDisplayProjection.nextDeadlineMs,
+    monsterSkillDisplayProjection.nextDeadlineMs,
   ].filter((value): value is number => value !== null);
   return candidates.length > 0 ? Math.min(...candidates) : null;
 }

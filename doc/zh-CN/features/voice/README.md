@@ -46,6 +46,7 @@
 | [怪物监控 · Buff](../monster/buff.md) | 生效时 / 剩 x 秒 / 失效时 | [盯住自己挂的易伤，快掉时提醒](../monster/examples/vulnerability.md) |
 | [怪物监控 · Boss DBM](../monster/boss-dbm.md) | 触发时 | [给 Boss 技能起别名并语音预警](../monster/examples/boss-alias.md) · [用自己的音效提醒 Boss 大招](./examples/custom-sfx.md) |
 | [怪物监控 · 实体持续时间](../monster/entity-duration.md) | 出现时 / 剩 x 秒 / 消失时 | [显示镰车剩余时间](../monster/examples/scythe-cart.md) |
+| [怪物监控 · 怪物技能](../monster/monster-skill.md) | 触发时 | — |
 | [副本机制 · 机制语音播报](../minimap/README.md#机制语音播报) | 各副本已接入的机制 | [团本开荒前的小地图设置](../minimap/examples/raid-setup.md) |
 | [{{ui:voice.tabs.alerts}}](./playback.md#匹配提醒) | 匹配成功 / 准备确认 / 进本投票 | [挂机排本时听到匹配成功](./examples/match-found.md) |
 

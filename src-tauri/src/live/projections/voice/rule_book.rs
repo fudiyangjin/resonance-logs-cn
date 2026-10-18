@@ -18,6 +18,7 @@ pub(super) enum SubjectKey {
     Skill(i32),
     Entity(i32),
     BossDbm(i32),
+    MonsterSkill(i32),
     Counter { rule_id: i32, slot_id: i32 },
     Alert(AlertKind),
 }
@@ -30,6 +31,7 @@ impl SubjectKey {
             VoiceSubject::Skill { skill_id } => Self::Skill(*skill_id),
             VoiceSubject::Entity { monster_id, .. } => Self::Entity(*monster_id),
             VoiceSubject::BossDbm { base_skill_id } => Self::BossDbm(*base_skill_id),
+            VoiceSubject::MonsterSkill { skill_id } => Self::MonsterSkill(*skill_id),
             VoiceSubject::Counter { rule_id, slot_id } => Self::Counter {
                 rule_id: *rule_id,
                 slot_id: *slot_id,
@@ -213,7 +215,8 @@ impl RuleBook {
                     });
                 }
             }
-            (VoiceSubject::Alert { .. }, _) => {}
+            // Cast edges only: a monster skill has no duration to lead.
+            (VoiceSubject::MonsterSkill { .. } | VoiceSubject::Alert { .. }, _) => {}
         }
     }
 

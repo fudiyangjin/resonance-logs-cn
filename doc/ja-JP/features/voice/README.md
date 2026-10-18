@@ -46,6 +46,7 @@
 | [モンスターモニター · Buff](../monster/buff.md) | 獲得時 / 残り x 秒 / 終了時 | [自分が付与した脆弱を監視する](../monster/examples/vulnerability.md) |
 | [モンスターモニター · Boss DBM](../monster/boss-dbm.md) | 発生時 | [Boss スキルに別名を付けて音声で予告する](../monster/examples/boss-alias.md) · [自分の効果音で Boss の大技を知らせる](./examples/custom-sfx.md) |
 | [モンスターモニター · エンティティ持続時間](../monster/entity-duration.md) | 出現時 / 残り x 秒 / 消滅時 | [鎌車の残り時間を表示する](../monster/examples/scythe-cart.md) |
+| [モンスターモニター · モンスタースキル](../monster/monster-skill.md) | 発生時 | — |
 | [ダンジョンギミック · ギミック音声読み上げ](../minimap/README.md#ギミック音声読み上げ) | 各ダンジョンで対応済みのギミック | [レイド初攻略前のミニマップ設定](../minimap/examples/raid-setup.md) |
 | [{{ui:voice.tabs.alerts}}](./playback.md#マッチ通知) | マッチ成立 / 準備確認 / ダンジョン投票 | [マッチ成立を聞き逃さない](./examples/match-found.md) |
 

@@ -40,6 +40,7 @@ function monster(
     selfAppliedMonitorAll: false,
     dbmAliases: {},
     entityDurationEntries: [],
+    monsterSkillEntries: [],
     ...overrides,
   };
 }
@@ -198,6 +199,21 @@ describe("pruneMonsterVoice", () => {
       "179902": { expiring: soon },
     });
     const pruned = pruneMonsterVoice(slice);
+    expect(pruneMonsterVoice(pruned)).toBe(pruned);
+  });
+
+  it("keeps monster skill bindings only for listed watch entries", () => {
+    const slice = monster({
+      monsterSkillEntries: [{ skillId: 101403, label: "", displayMs: 5_000 }],
+      monsterSkillVoiceConfigs: {
+        "101403": { onCast: on },
+        "101404": { onCast: on },
+      },
+    });
+    const pruned = pruneMonsterVoice(slice);
+    expect(pruned.monsterSkillVoiceConfigs).toEqual({
+      "101403": { onCast: on },
+    });
     expect(pruneMonsterVoice(pruned)).toBe(pruned);
   });
 

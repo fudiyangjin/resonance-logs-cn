@@ -287,6 +287,9 @@ pub struct LiveMonsterPayload {
     pub monster_ids: HashMap<String, i32>,
     #[serde(default)]
     pub entity_duration_tracks: Vec<EntityDurationTrackState>,
+    /// Latest cast of each watched monster skill, ascending by skill id.
+    #[serde(default)]
+    pub monster_skill_casts: Vec<MonsterSkillCastState>,
 }
 
 /// Fantasy cast icons shared by live + monster overlay (`live-fantasy`).
@@ -612,6 +615,16 @@ pub struct BossDbmEvent {
     pub create_time_ms: i64,
     pub insertion: i32,
     pub server_timestamp_ms: Option<i64>,
+}
+
+/// The latest cast of one watched skill by any nearby monster. How long it
+/// stays on screen is a display setting applied by the HUD.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct MonsterSkillCastState {
+    pub skill_id: i32,
+    /// Local receive time of the cast, wall clock milliseconds.
+    pub cast_at_ms: i64,
 }
 
 /// One row of the monster-monitor entity-duration panel: a single watched

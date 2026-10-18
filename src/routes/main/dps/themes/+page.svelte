@@ -100,6 +100,8 @@
         settingsButtonPadding: 4,
         minimizeButtonSize: 14,
         minimizeButtonPadding: 4,
+        historyButtonPadding: 4,
+        historyButtonSize: 14,
         totalDamageLabelFontSize: 9,
         totalDamageValueFontSize: 12,
         totalDpsLabelFontSize: 9,
@@ -172,6 +174,8 @@
         settingsButtonPadding: 6,
         minimizeButtonSize: 16,
         minimizeButtonPadding: 6,
+        historyButtonPadding: 6,
+        historyButtonSize: 16,
         totalDamageLabelFontSize: 10,
         totalDamageValueFontSize: 14,
         totalDpsLabelFontSize: 10,
@@ -243,6 +247,8 @@
         settingsButtonPadding: 8,
         minimizeButtonSize: 20,
         minimizeButtonPadding: 8,
+        historyButtonPadding: 8,
+        historyButtonSize: 20,
         totalDamageLabelFontSize: 14,
         totalDamageValueFontSize: 18,
         totalDpsLabelFontSize: 14,
@@ -314,6 +320,8 @@
         settingsButtonPadding: 10,
         minimizeButtonSize: 26,
         minimizeButtonPadding: 10,
+        historyButtonPadding: 10,
+        historyButtonSize: 26,
         totalDamageLabelFontSize: 16,
         totalDamageValueFontSize: 24,
         totalDpsLabelFontSize: 16,
@@ -1331,6 +1339,43 @@
                   <h3 class="text-sm font-semibold text-foreground">
                     {t("themes.header.controlButtons")}
                   </h3>
+
+                  <!-- History Button -->
+                  <SettingsSwitch
+                    bind:checked={
+                      SETTINGS.live.headerCustomization.state.showHistoryButton
+                    }
+                    label={t("themes.header.showHistoryButton")}
+                    description={t(
+                      "themes.header.showHistoryButtonDescription",
+                    )}
+                  />
+                  {#if SETTINGS.live.headerCustomization.state.showHistoryButton}
+                    <div class="grid grid-cols-2 gap-2 pl-4">
+                      <SettingsSlider
+                        bind:value={
+                          SETTINGS.live.headerCustomization.state
+                            .historyButtonSize
+                        }
+                        min={12}
+                        max={32}
+                        step={1}
+                        label={t("themes.header.iconSize")}
+                        unit="px"
+                      />
+                      <SettingsSlider
+                        bind:value={
+                          SETTINGS.live.headerCustomization.state
+                            .historyButtonPadding
+                        }
+                        min={2}
+                        max={16}
+                        step={1}
+                        label={t("themes.header.padding")}
+                        unit="px"
+                      />
+                    </div>
+                  {/if}
 
                   <!-- Reset Button -->
                   <SettingsSwitch

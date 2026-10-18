@@ -133,7 +133,7 @@ export const entityAdapter: VoiceSubjectAdapter<EntitySubject> = {
     group: "entity",
     titleKey: "monsterMonitor.entityDuration.title",
     navigateKey: "voice.bindings.navigate.entity",
-    route: "/main/monster-monitor",
+    route: "/main/monster-monitor?tab=entityDuration",
   },
   // Scope-less: re-scoping the entry keeps the binding's phrases (the
   // backend renamed pre-rekey names, `phrase_name.rs::current_rule_name`).

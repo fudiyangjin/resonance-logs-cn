@@ -375,4 +375,5 @@ function clearMonsterDisplay(): void {
   monsterRuntime.fantasyRows = [];
   monsterRuntime.dbmRows = [];
   monsterRuntime.entityDurationRows = [];
+  monsterRuntime.monsterSkillRows = [];
 }

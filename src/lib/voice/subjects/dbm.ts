@@ -54,7 +54,7 @@ export const dbmAdapter: VoiceSubjectAdapter<DbmSubject> = {
     group: "dbm",
     titleKey: "monsterMonitor.bossDbm.title",
     navigateKey: "voice.bindings.navigate.dbm",
-    route: "/main/monster-monitor",
+    route: "/main/monster-monitor?tab=bossDbm",
   },
   ruleKey: (subject, eventKind) =>
     `voice:dbm:${subject.baseSkillId}:${eventKind}`,

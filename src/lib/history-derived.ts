@@ -7,12 +7,18 @@
  * instead of duplicating formatting logic.
  */
 import type {
+  DeathRecord,
   EncounterBuffTimelineData,
   EncounterDamageHitsData,
+  EncounterDetailData,
   EncounterEntityData,
+  EncounterMarkerData,
   EncounterSkillData,
   EncounterStatsData,
+  EncounterSummaryDto,
   HistoryMetric,
+  LiveDataPayload,
+  LiveDisplayClock,
 } from "$lib/bindings";
 import type {
   RawCombatStats,
@@ -21,10 +27,18 @@ import type {
   RawPerSourceStats,
 } from "$lib/api";
 import type { DeathPlayerEntry } from "$lib/components/death-replay/death-player-list.svelte";
-import type { EntityDamageHits } from "$lib/components/encounter-timeline/timeline-data";
+import type {
+  EncounterTimelineEvent,
+  EntityDamageHits,
+} from "$lib/components/encounter-timeline/timeline-data";
 import { formatClassSpecLabel } from "$lib/class-labels";
+import { resolveMonsterName } from "$lib/config/game-names";
+import {
+  recentFantasyCastsByEntity,
+  type FantasyCastDisplay,
+} from "$lib/fantasy-icons";
 import { t } from "$lib/i18n/index.svelte";
-import { ipcBigInt } from "$lib/ipc-decimal";
+import { ipcBigInt, ipcCompare, ipcNumber } from "$lib/ipc-decimal";
 import { computePlayerRowsFromEntities } from "$lib/live-derived";
 import { CLASS_MAP } from "$lib/utils.svelte";
 
@@ -211,6 +225,110 @@ export function historyEntityToRaw(entity: EncounterEntityData): HistoryEntity {
   };
 }
 
+/** Recorded display names keyed by entity id (players and monsters). */
+export function historyEntityNames(
+  entities: EncounterEntityData[],
+): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const entity of entities) {
+    const name = entity.name?.trim();
+    if (name) names.set(entity.entityId, name);
+  }
+  return names;
+}
+
+/** A damage target merged across players, for the "damage on X" filter. */
+export type HistoryDamageTarget = {
+  targetEntityUuid: string;
+  targetDisplayUid: number;
+  targetMonsterId: number | null;
+  targetName: string;
+  totalValue: bigint;
+};
+
+function isNumericLikeName(name: string): boolean {
+  return /^#?\d+$/.test(name.trim());
+}
+
+function resolveTargetDisplayName(
+  target: HistoryPerTargetStats,
+  entityNames: Map<string, string>,
+): string {
+  const entityName = entityNames.get(target.targetEntityUuid);
+  if (entityName) return entityName;
+  const recorded = target.targetName?.trim();
+  if (recorded) return recorded;
+  if (target.targetMonsterId !== null) {
+    return resolveMonsterName(target.targetMonsterId);
+  }
+  return `#${target.targetDisplayUid}`;
+}
+
+/**
+ * Every named target the players damaged, largest total first. Targets
+ * that only resolve to a bare id are dropped as unidentifiable.
+ */
+export function historyDamageTargets(
+  players: HistoryEntity[],
+  entityNames: Map<string, string>,
+): HistoryDamageTarget[] {
+  const merged = new Map<string, HistoryDamageTarget>();
+  for (const entity of players) {
+    for (const target of entity.dmgPerTarget) {
+      const targetName = resolveTargetDisplayName(target, entityNames);
+      const totalValue = ipcBigInt(target.totalValue);
+      const existing = merged.get(target.targetEntityUuid);
+      if (existing) {
+        existing.totalValue += totalValue;
+        if (existing.targetName.startsWith("#") && targetName) {
+          existing.targetName = targetName;
+        }
+        if (
+          existing.targetMonsterId === null &&
+          target.targetMonsterId !== null
+        ) {
+          existing.targetMonsterId = target.targetMonsterId;
+        }
+      } else {
+        merged.set(target.targetEntityUuid, {
+          targetEntityUuid: target.targetEntityUuid,
+          targetDisplayUid: target.targetDisplayUid,
+          targetMonsterId: target.targetMonsterId,
+          targetName,
+          totalValue,
+        });
+      }
+    }
+  }
+  return [...merged.values()]
+    .filter(
+      (target) =>
+        target.targetName.trim().length > 0 &&
+        !isNumericLikeName(target.targetName),
+    )
+    .toSorted((a, b) => ipcCompare(b.totalValue, a.totalValue));
+}
+
+/**
+ * The player's damage narrowed to one target. Boss-only damage follows the
+ * target too, matching the history page's per-target view.
+ */
+export function historyEntityDamageOn(
+  entity: HistoryEntity,
+  targetEntityUuid: string,
+): HistoryEntity {
+  const perTarget = entity.dmgPerTarget.find(
+    (target) => target.targetEntityUuid === targetEntityUuid,
+  );
+  const damage = perTarget?.damage ?? zeroCombatStats();
+  return {
+    ...entity,
+    damage,
+    damageBossOnly: damage,
+    dmgSkills: perTarget?.skills ?? {},
+  };
+}
+
 /** Death-replay player entries; only deaths carrying a replay are listed. */
 export function historyDeathEntries(
   entities: EncounterEntityData[],
@@ -231,6 +349,21 @@ export function historyDeathEntries(
         death.replay ? [death.replay] : [],
       ),
     }));
+}
+
+/** Cast markers re-based onto the encounter start for the timeline/icons. */
+export function historyMarkerEvents(
+  markers: EncounterMarkerData[],
+  startMs: number,
+): EncounterTimelineEvent[] {
+  return markers.map((marker) => ({
+    sequence: marker.sequence,
+    tsOffsetMs: marker.offsetMs - startMs,
+    casterUuid: marker.casterEntityId,
+    skillId: ipcNumber(marker.skillId),
+    kind: marker.kind,
+    remodelLevel: marker.remodelLevel ?? null,
+  }));
 }
 
 /** Map backend per-entity damage hit streams onto the chart component's DTO. */
@@ -301,6 +434,34 @@ function sumTotals(entities: RawEntityData[], metric: HistoryMetric): string {
   return total.toString();
 }
 
+function sumBossTotals(entities: RawEntityData[]): string {
+  return entities
+    .reduce((sum, entity) => sum + ipcBigInt(entity.damageBossOnly.total), 0n)
+    .toString();
+}
+
+/**
+ * Meter-row source for adapted history entities. History has a single
+ * duration, so it doubles as the damage-rate window; totals are summed over
+ * the given (player) entities. Shared by the history tables and the live
+ * window's history view so both read identical numbers.
+ */
+export function historyRowsSource(
+  entities: RawEntityData[],
+  elapsedMs: number,
+  activeCombatMs: number | null,
+) {
+  return {
+    entities,
+    elapsedMs,
+    damageElapsedMs: elapsedMs,
+    activeCombatTimeMs: activeCombatMs ?? elapsedMs,
+    totalDmg: sumTotals(entities, "damage"),
+    totalHeal: sumTotals(entities, "healing"),
+    totalDmgBossOnly: sumBossTotals(entities),
+  };
+}
+
 /**
  * Build merged player rows from adapted history entities. `activeCombatMs`
  * drives the TDPS column; pass `null` to fall back to `elapsedMs` (e.g. when
@@ -312,17 +473,7 @@ export function buildHistoryPlayerRows(
   activeCombatMs: number | null,
   localUuid: string | null,
 ): HistoryPlayerRow[] {
-  const source = {
-    entities,
-    elapsedMs,
-    damageElapsedMs: elapsedMs,
-    activeCombatTimeMs: activeCombatMs ?? elapsedMs,
-    totalDmg: sumTotals(entities, "damage"),
-    totalHeal: sumTotals(entities, "healing"),
-    totalDmgBossOnly: entities
-      .reduce((sum, entity) => sum + ipcBigInt(entity.damageBossOnly.total), 0n)
-      .toString(),
-  };
+  const source = historyRowsSource(entities, elapsedMs, activeCombatMs);
 
   const dpsRows = computePlayerRowsFromEntities(source, "dps");
   const healRows = computePlayerRowsFromEntities(source, "heal");
@@ -383,6 +534,113 @@ export function buildHistoryPlayerRows(
     .filter(
       (row) => row.totalDmg > 0 || row.healDealt > 0 || row.damageTaken > 0,
     );
+}
+
+/**
+ * One saved encounter frozen into the live window's payload shapes, so the
+ * live tables, drill-downs and header render it unchanged.
+ */
+export type LiveHistorySnapshot = {
+  encounterId: number;
+  summary: EncounterSummaryDto;
+  combat: LiveDataPayload;
+  displayClock: LiveDisplayClock;
+  deaths: DeathRecord[];
+  fantasyCasts: Map<string, FantasyCastDisplay[]>;
+  /** Adapted player entities, keeping the per-target breakdowns. */
+  players: HistoryEntity[];
+  /** Damage targets selectable in the live window's history view. */
+  targets: HistoryDamageTarget[];
+};
+
+/**
+ * Adapt a loaded encounter detail for the live window. Durations and totals
+ * follow the history detail page (`historyRowsSource`), so both views show
+ * the same DPS. The clock is frozen at the recorded duration; bosses stay
+ * empty because history keeps no remaining HP (the header reads
+ * `summary.bosses` instead).
+ */
+export function historyDetailToLiveSnapshot(
+  detail: EncounterDetailData,
+): LiveHistorySnapshot {
+  const { summary } = detail;
+  const playerEntities = detail.entities.filter(
+    (entity) => entity.monsterId === null,
+  );
+  const entities = playerEntities.map(historyEntityToRaw);
+  const elapsedMs = Math.max(1, Math.ceil(summary.duration * 1_000));
+  const activeCombatMs =
+    summary.activeCombatDuration != null
+      ? Math.min(
+          elapsedMs,
+          Math.max(1, Math.ceil(summary.activeCombatDuration * 1_000)),
+        )
+      : null;
+  const source = historyRowsSource(entities, elapsedMs, activeCombatMs);
+  const totalEffectiveHeal = entities.reduce(
+    (sum, entity) => sum + ipcBigInt(entity.healing.effectiveTotal),
+    0n,
+  );
+
+  return {
+    encounterId: detail.encounterId,
+    summary,
+    combat: {
+      elapsedMs: String(source.elapsedMs),
+      damageElapsedMs: String(source.damageElapsedMs),
+      activeCombatTimeMs: String(source.activeCombatTimeMs),
+      fightStartTimestampMs: String(summary.startedAtMs),
+      totalDmg: source.totalDmg,
+      totalDmgBossOnly: source.totalDmgBossOnly,
+      totalHeal: source.totalHeal,
+      totalEffectiveHeal: totalEffectiveHeal.toString(),
+      localPlayerUuid:
+        summary.localPlayerId == null ? "" : String(summary.localPlayerId),
+      sceneId: summary.sceneId,
+      dungeonDifficulty: summary.dungeonDifficulty,
+      isPaused: false,
+      bosses: [],
+      entities,
+    },
+    displayClock: {
+      startedAtWallMs: summary.startedAtMs,
+      accumulatedPausedMs: 0,
+      pausedAtWallMs: null,
+      endedAtWallMs: summary.startedAtMs + elapsedMs,
+    },
+    deaths: playerEntities.flatMap((entity) =>
+      entity.deaths.flatMap((death) => (death.replay ? [death.replay] : [])),
+    ),
+    fantasyCasts: recentFantasyCastsByEntity(
+      historyMarkerEvents(detail.markers, detail.startMs),
+    ),
+    players: entities,
+    targets: historyDamageTargets(
+      entities,
+      historyEntityNames(detail.entities),
+    ),
+  };
+}
+
+/**
+ * The snapshot's payload with damage narrowed to one target (`null` keeps
+ * the whole encounter). Healing and damage taken are left untouched so the
+ * other tabs are unaffected.
+ */
+export function historyCombatForTarget(
+  snapshot: LiveHistorySnapshot,
+  targetEntityUuid: string | null,
+): LiveDataPayload {
+  if (targetEntityUuid === null) return snapshot.combat;
+  const entities = snapshot.players.map((entity) =>
+    historyEntityDamageOn(entity, targetEntityUuid),
+  );
+  return {
+    ...snapshot.combat,
+    entities,
+    totalDmg: sumTotals(entities, "damage"),
+    totalDmgBossOnly: sumBossTotals(entities),
+  };
 }
 
 /** One (player, buff) coverage lane view derived from `buffTimeline`. */

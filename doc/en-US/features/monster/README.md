@@ -8,6 +8,7 @@
 - See whether your teammates' Debuffs are all applied;
 - Tanks can check the threat ranking, and DPS can see how much stun value is left before the Boss breaks;
 - Pop up a DBM warning bar with a voice alert when the Boss starts casting;
+- Show a skill's name as soon as any nearby monster casts it;
 - Show the remaining time of summons and ground devices (such as the Scythe Cart).
 
 ## Follows your current target
@@ -31,6 +32,8 @@ Monster Monitor has its own **configuration sub-profiles** (create, rename, dele
 
 ## Page layout
 
+Tabs are grouped into **{{ui:monsterMonitor.tabGroups.target}}**, **{{ui:monsterMonitor.tabGroups.team}}**, **{{ui:monsterMonitor.tabGroups.alert}}** and **{{ui:monsterMonitor.tabGroups.window}}**; in a narrow window a group wraps as a whole. A green dot on a tab means its area is shown on the monster overlay; the switches are in **{{ui:monsterMonitor.tabs.overlay}}**.
+
 | Tab | Documentation | Examples |
 | --- | --- | --- |
 | **{{ui:monsterMonitor.tabs.buff}}** | [Target Buffs](./buff.md) | [Watch the vulnerability you applied](./examples/vulnerability.md) · [Monitor Lorola buffs and stacks](./examples/lorola.md) |
@@ -39,6 +42,7 @@ Monster Monitor has its own **configuration sub-profiles** (create, rename, dele
 | **{{ui:monsterMonitor.tabs.hate}}** | [Threat List](./hate.md) | — |
 | **{{ui:monsterMonitor.tabs.stun}}** / **{{ui:monsterMonitor.tabs.hp}}** / **{{ui:monsterMonitor.tabs.fantasy}}** | [Stun, HP and Teammate Fantasies](./status.md) | — |
 | **{{ui:monsterMonitor.tabs.bossDbm}}** | [Boss DBM](./boss-dbm.md) | [Give a Boss skill an alias and a voice warning](./examples/boss-alias.md) |
+| **{{ui:monsterMonitor.tabs.monsterSkill}}** | [Monster Skills](./monster-skill.md) | — |
 | **{{ui:monsterMonitor.tabs.entityDuration}}** | [Entity Duration](./entity-duration.md) | [Show the Scythe Cart's remaining time](./examples/scythe-cart.md) |
 | **{{ui:monsterMonitor.tabs.overlay}}** | [Enable Window](./overlay.md) | — |
 

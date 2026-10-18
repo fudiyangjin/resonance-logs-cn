@@ -1,6 +1,10 @@
 <script lang="ts">
   import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
+  import { page } from "$app/state";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
+  import MonitorTabNav, {
+    type MonitorTabGroup,
+  } from "$lib/components/monitor-tab-nav.svelte";
   import BuffSearchResultGrid from "$lib/components/BuffSearchResultGrid.svelte";
   import BuffAlertThresholdInput from "$lib/components/buff-alert-threshold-input.svelte";
   import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
@@ -38,6 +42,7 @@
     isTeammateDeadRowPlacement,
     type CustomPanelStyle,
     type EntityDurationEntry,
+    type MonsterSkillWatchEntry,
     type TeammateBuffColumnKey,
     type TeammateBuffColumnStyle,
     type TeammatePanelStyle,
@@ -57,6 +62,7 @@
   import { resolveMonsterBuffSourceScope as resolveScopeIn } from "$lib/voice/association";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
   import TabEntityDuration from "./tab-entity-duration.svelte";
+  import TabMonsterSkill from "./tab-monster-skill.svelte";
   import TabTeammateCd from "./tab-teammate-cd.svelte";
   import TeammateColumnColors from "./teammate-column-colors.svelte";
   import {
@@ -72,6 +78,14 @@
     type EntityDurationEntryInput,
     type EntityDurationEntryPatch,
   } from "$lib/entity-duration-entries";
+  import {
+    addMonsterSkillEntry,
+    ensureMonsterSkillEntries,
+    moveMonsterSkillEntry,
+    patchMonsterSkillEntry,
+    removeMonsterSkillEntry,
+    type MonsterSkillEntryPatch,
+  } from "$lib/monster-skill-entries";
   import { getLocale } from "$lib/i18n/index.svelte";
 
   type SearchTarget = "global" | "self";
@@ -84,6 +98,7 @@
     | "hp"
     | "fantasy"
     | "bossDbm"
+    | "monsterSkill"
     | "entityDuration"
     | "overlay";
   type FantasyMonsterOption = {
@@ -120,6 +135,16 @@
 
   let searchTarget = $state<SearchTarget>("self");
   let activeTab = $state<MonsterMonitorTab>("buff");
+
+  // Deep links (e.g. from the voice bindings overview) open a given tab.
+  $effect(() => {
+    const requested = page.url.searchParams.get("tab");
+    if (
+      tabGroups.some((group) => group.tabs.some((tab) => tab.id === requested))
+    ) {
+      activeTab = requested as MonsterMonitorTab;
+    }
+  });
 
   const monsterMonitor = $derived(SETTINGS.monsterMonitor.state);
   const resolveMonsterBuffSourceScope = (buffId: number) =>
@@ -177,6 +202,14 @@
   const entityDurationPresets = $derived.by(() =>
     getEntityDurationPresets(getLocale()),
   );
+  const monsterSkillPanelStyle = $derived.by(() =>
+    normalizeCustomPanelStyle(
+      monsterMonitor.monsterSkillPanelStyle ?? monsterMonitor.panelStyle,
+    ),
+  );
+  const monsterSkillEntries = $derived.by(() =>
+    ensureMonsterSkillEntries(monsterMonitor.monsterSkillEntries),
+  );
   const teammatePanelStyle = $derived.by(() =>
     ensureTeammatePanelStyle(
       monsterMonitor.teammatePanelStyle ?? monsterMonitor.panelStyle,
@@ -198,7 +231,86 @@
       monsterMonitor.overlayVisibility?.showBossDbmPanel ?? false,
     showEntityDurationPanel:
       monsterMonitor.overlayVisibility?.showEntityDurationPanel ?? false,
+    showMonsterSkillPanel:
+      monsterMonitor.overlayVisibility?.showMonsterSkillPanel ?? false,
   }));
+  const tabGroups = $derived.by(
+    (): MonitorTabGroup<MonsterMonitorTab>[] => [
+      {
+        id: "target",
+        labelKey: "monsterMonitor.tabGroups.target",
+        tabs: [
+          {
+            id: "buff",
+            labelKey: "monsterMonitor.tabs.buff",
+            shown: overlayVisibility.showMonsterBuffPanel,
+          },
+          {
+            id: "hate",
+            labelKey: "monsterMonitor.tabs.hate",
+            shown: overlayVisibility.showHatePanel,
+          },
+          {
+            id: "stun",
+            labelKey: "monsterMonitor.tabs.stun",
+            shown: overlayVisibility.showStunPanel,
+          },
+          {
+            id: "hp",
+            labelKey: "monsterMonitor.tabs.hp",
+            shown: overlayVisibility.showHpPanel,
+          },
+        ],
+      },
+      {
+        id: "team",
+        labelKey: "monsterMonitor.tabGroups.team",
+        tabs: [
+          {
+            id: "teammate",
+            labelKey: "monsterMonitor.tabs.teammate",
+            shown: overlayVisibility.showTeammateBuffPanel,
+          },
+          {
+            id: "teammateCd",
+            labelKey: "monsterMonitor.tabs.teammateCd",
+            shown: overlayVisibility.showTeammateCdPanel,
+          },
+          {
+            id: "fantasy",
+            labelKey: "monsterMonitor.tabs.fantasy",
+            shown: overlayVisibility.showFantasyPanel,
+          },
+        ],
+      },
+      {
+        id: "alert",
+        labelKey: "monsterMonitor.tabGroups.alert",
+        tabs: [
+          {
+            id: "bossDbm",
+            labelKey: "monsterMonitor.tabs.bossDbm",
+            shown: overlayVisibility.showBossDbmPanel,
+          },
+          {
+            id: "monsterSkill",
+            labelKey: "monsterMonitor.tabs.monsterSkill",
+            shown: overlayVisibility.showMonsterSkillPanel,
+          },
+          {
+            id: "entityDuration",
+            labelKey: "monsterMonitor.tabs.entityDuration",
+            shown: overlayVisibility.showEntityDurationPanel,
+          },
+        ],
+      },
+      {
+        id: "window",
+        labelKey: "monsterMonitor.tabGroups.window",
+        tabs: [{ id: "overlay", labelKey: "monsterMonitor.tabs.overlay" }],
+      },
+    ],
+  );
   const globalBuffIds = $derived(monsterMonitor.monitoredBuffIds);
   const selfAppliedBuffIds = $derived(monsterMonitor.selfAppliedBuffIds);
   const teammateBuffIds = $derived(monsterMonitor.teammateBuffIds);
@@ -777,6 +889,48 @@
     );
   }
 
+  function setMonsterSkillEntries(next: readonly MonsterSkillWatchEntry[]) {
+    updateMonsterMonitor((state) => ({
+      ...state,
+      monsterSkillEntries: ensureMonsterSkillEntries(next),
+    }));
+  }
+
+  function addMonsterSkill(skillId: number) {
+    setMonsterSkillEntries(addMonsterSkillEntry(monsterSkillEntries, skillId));
+  }
+
+  function updateMonsterSkill(skillId: number, patch: MonsterSkillEntryPatch) {
+    setMonsterSkillEntries(
+      patchMonsterSkillEntry(monsterSkillEntries, skillId, patch),
+    );
+  }
+
+  function moveMonsterSkill(skillId: number, direction: "up" | "down") {
+    setMonsterSkillEntries(
+      moveMonsterSkillEntry(monsterSkillEntries, skillId, direction),
+    );
+  }
+
+  function removeMonsterSkill(skillId: number) {
+    setMonsterSkillEntries(
+      removeMonsterSkillEntry(monsterSkillEntries, skillId),
+    );
+  }
+
+  function updateMonsterSkillPanelStyle<K extends keyof CustomPanelStyle>(
+    key: K,
+    value: CustomPanelStyle[K],
+  ) {
+    updateMonsterMonitor((state) => ({
+      ...state,
+      monsterSkillPanelStyle: {
+        ...(state.monsterSkillPanelStyle ?? state.panelStyle),
+        [key]: value,
+      },
+    }));
+  }
+
   function updateBossDbmPanelStyle<K extends keyof CustomPanelStyle>(
     key: K,
     value: CustomPanelStyle[K],
@@ -836,6 +990,8 @@
         showBossDbmPanel: state.overlayVisibility?.showBossDbmPanel ?? false,
         showEntityDurationPanel:
           state.overlayVisibility?.showEntityDurationPanel ?? false,
+        showMonsterSkillPanel:
+          state.overlayVisibility?.showMonsterSkillPanel ?? false,
       };
       return {
         ...state,
@@ -992,128 +1148,7 @@
   </section>
 
   <section class="border-border/60 bg-card/60 rounded-xl border p-2">
-    <div class="flex flex-wrap gap-2">
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'buff'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => {
-          activeTab = "buff";
-        }}
-      >
-        {t("monsterMonitor.tabs.buff")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'teammate'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => {
-          activeTab = "teammate";
-        }}
-      >
-        {t("monsterMonitor.tabs.teammate")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'teammateCd'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => {
-          activeTab = "teammateCd";
-        }}
-      >
-        {t("monsterMonitor.tabs.teammateCd")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'hate'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => {
-          activeTab = "hate";
-        }}
-      >
-        {t("monsterMonitor.tabs.hate")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'stun'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => {
-          activeTab = "stun";
-        }}
-      >
-        {t("monsterMonitor.tabs.stun")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'hp'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => {
-          activeTab = "hp";
-        }}
-      >
-        {t("monsterMonitor.tabs.hp")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'fantasy'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => {
-          activeTab = "fantasy";
-        }}
-      >
-        {t("monsterMonitor.tabs.fantasy")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'bossDbm'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => {
-          activeTab = "bossDbm";
-        }}
-      >
-        {t("monsterMonitor.tabs.bossDbm")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'entityDuration'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => {
-          activeTab = "entityDuration";
-        }}
-      >
-        {t("monsterMonitor.tabs.entityDuration")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'overlay'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => {
-          activeTab = "overlay";
-        }}
-      >
-        {t("monsterMonitor.tabs.overlay")}
-      </button>
-    </div>
+    <MonitorTabNav groups={tabGroups} bind:value={activeTab} />
   </section>
 
   {#if activeTab === "buff"}
@@ -3051,6 +3086,16 @@
     </section>
   {:else if activeTab === "teammateCd"}
     <TabTeammateCd />
+  {:else if activeTab === "monsterSkill"}
+    <TabMonsterSkill
+      entries={monsterSkillEntries}
+      panelStyle={monsterSkillPanelStyle}
+      addEntry={addMonsterSkill}
+      updateEntry={updateMonsterSkill}
+      moveEntry={moveMonsterSkill}
+      removeEntry={removeMonsterSkill}
+      updatePanelStyle={updateMonsterSkillPanelStyle}
+    />
   {:else if activeTab === "entityDuration"}
     <TabEntityDuration
       entries={entityDurationEntries}
@@ -3181,6 +3226,17 @@
         >
           {t("monsterMonitor.overlay.entityDuration", {
             state: visibilityState(overlayVisibility.showEntityDurationPanel),
+          })}
+        </button>
+        <button
+          type="button"
+          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {overlayVisibility.showMonsterSkillPanel
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+          onclick={() => toggleOverlayVisibility("showMonsterSkillPanel")}
+        >
+          {t("monsterMonitor.overlay.monsterSkill", {
+            state: visibilityState(overlayVisibility.showMonsterSkillPanel),
           })}
         </button>
       </div>

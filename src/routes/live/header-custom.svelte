@@ -14,6 +14,7 @@
   import SettingsIcon from "virtual:icons/lucide/settings";
   import RefreshCwIcon from "virtual:icons/lucide/refresh-cw";
   import CrosshairIcon from "virtual:icons/lucide/crosshair";
+  import HistoryIcon from "virtual:icons/lucide/history";
 
   import { onMount } from "svelte";
   import { page } from "$app/stores";
@@ -36,7 +37,8 @@
     type HeaderLayoutComponentId,
   } from "$lib/live-header-layout";
   import { ipcNumber, ipcRatio } from "$lib/ipc-decimal";
-  import { liveCombatStore } from "$lib/stores/live-topics.svelte";
+  import { isLiveHistoryPath, LIVE_HISTORY_PATH } from "$lib/live-history-query";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
   import { displayElapsedMs as computeDisplayElapsedMs } from "$lib/live-display-clock";
   import {
     liveDisplayNow,
@@ -52,10 +54,19 @@
     SETTINGS.live.general.state.abbreviationStyle,
   );
 
-  const liveData = $derived(liveCombatStore.data?.combat ?? null);
-  const displayClock = $derived(liveCombatStore.data?.displayClock ?? null);
-  const runtimeTrainingDummyState = $derived(
-    liveCombatStore.data?.training ?? null,
+  // Header totals describe the whole encounter, not the DPS target filter.
+  const liveData = $derived(liveView.encounterCombat);
+  const displayClock = $derived(liveView.displayClock);
+  const runtimeTrainingDummyState = $derived(liveView.training);
+  // Training dummy / reset / pause act on the live runtime, so they are
+  // hidden while a saved encounter is displayed.
+  const showLiveControls = $derived(!liveView.isHistory);
+  const isOnHistoryPicker = $derived(isLiveHistoryPath($page.url.pathname));
+  const historyBosses = $derived(
+    liveView.history?.summary.bosses.map((boss) => ({
+      ...boss,
+      displayName: resolveMonsterName(boss.monsterId) || `#${boss.monsterId}`,
+    })) ?? null,
   );
 
   const emptyTrainingDummy: TrainingDummyState = {
@@ -161,6 +172,10 @@
     void resetEncounter();
   }
 
+  function toggleHistoryPicker() {
+    void goto(isOnHistoryPicker ? liveView.returnTab : LIVE_HISTORY_PATH);
+  }
+
   function formatTrainingDummyLabel(state: TrainingDummyState) {
     switch (state.phase) {
       case "armed":
@@ -195,9 +210,9 @@
 
   // Check if we have any row 1 right content (buttons)
   const hasRow1Right = $derived(
-    h.showHeaderControl ||
-      h.showResetButton ||
-      h.showPauseButton ||
+    (showLiveControls &&
+      (h.showHeaderControl || h.showResetButton || h.showPauseButton)) ||
+      h.showHistoryButton ||
       h.showSettingsButton ||
       h.showMinimizeButton,
   );
@@ -336,7 +351,33 @@
       {@attach tooltip(() => t("live.header.tooltip.bossHealth"))}
       >{t("live.header.boss")}</span
     >
-    {#if displayBosses.length > 0}
+    {#if historyBosses && historyBosses.length > 0}
+      <!-- History keeps no remaining HP, only whether each boss died. -->
+      <div
+        class="flex gap-1 overflow-hidden"
+        class:flex-col={h.bossHealthLayout !== "horizontal"}
+        class:flex-row={h.bossHealthLayout === "horizontal"}
+        class:flex-nowrap={h.bossHealthLayout === "horizontal"}
+      >
+        {#each historyBosses as boss, index (`${boss.monsterId}:${index}`)}
+          <div class="flex items-center gap-1 whitespace-nowrap">
+            <span
+              class="text-foreground truncate font-semibold tracking-tight"
+              style="font-size: {h.bossHealthNameFontSize}px"
+              {@attach tooltip(() => boss.displayName)}
+              >{boss.displayName} -</span
+            >
+            <span
+              class="text-foreground font-semibold tabular-nums"
+              style="font-size: {h.bossHealthValueFontSize}px"
+              >{boss.isDefeated
+                ? t("live.history.bossDefeated")
+                : t("live.history.bossAlive")}</span
+            >
+          </div>
+        {/each}
+      </div>
+    {:else if !historyBosses && displayBosses.length > 0}
       <div
         class="flex gap-1 overflow-hidden"
         class:flex-col={h.bossHealthLayout !== "horizontal"}
@@ -390,92 +431,113 @@
   </div>
 {/snippet}
 
+{#snippet controlButtonList()}
+  {#if h.showHistoryButton}
+    <button
+      class="{isOnHistoryPicker || !showLiveControls
+        ? 'bg-amber-500/15 text-amber-500'
+        : 'text-muted-foreground'} hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
+      style="padding: {h.historyButtonPadding ?? h.resetButtonPadding}px"
+      aria-pressed={isOnHistoryPicker}
+      aria-label={t("live.header.tooltip.history")}
+      onclick={toggleHistoryPicker}
+      {@attach tooltip(() => t("live.header.tooltip.history"))}
+    >
+      <HistoryIcon
+        style="width: {h.historyButtonSize ?? h.resetButtonSize}px; height: {h.historyButtonSize ?? h.resetButtonSize}px"
+      />
+    </button>
+  {/if}
+
+  {#if showLiveControls && h.showHeaderControl}
+    <button
+      class="{isTrainingDummyActive
+        ? 'bg-muted text-foreground border-border shadow-sm'
+        : 'text-muted-foreground border-transparent'} hover:text-foreground hover:bg-popover/60 rounded-lg border transition-all duration-200 disabled:opacity-60"
+      style="padding: {h.headerControlPadding ?? h.pauseButtonPadding}px"
+      aria-pressed={isTrainingDummyActive}
+      aria-label={isTrainingDummyActive
+        ? t("live.header.trainingDummy.disable")
+        : t("live.header.trainingDummy.enable")}
+      disabled={trainingDummyBusy}
+      onclick={toggleTrainingDummyMode}
+      {@attach tooltip(() =>
+        isTrainingDummyActive
+          ? t("live.header.trainingDummy.disable")
+          : t("live.header.trainingDummy.enable"),
+      )}
+    >
+      <CrosshairIcon
+        style="width: {h.headerControlSize ?? h.pauseButtonSize}px; height: {h.headerControlSize ?? h.pauseButtonSize}px"
+      />
+    </button>
+  {/if}
+
+  {#if showLiveControls && h.showResetButton}
+    <button
+      class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
+      style="padding: {h.resetButtonPadding}px"
+      onclick={handleResetEncounter}
+      {@attach tooltip(() => t("live.header.tooltip.resetEncounter"))}
+    >
+      <RefreshCwIcon
+        style="width: {h.resetButtonSize}px; height: {h.resetButtonSize}px"
+      />
+    </button>
+  {/if}
+
+  {#if showLiveControls && h.showPauseButton}
+    <button
+      class="{isEncounterPaused
+        ? 'bg-[oklch(0.9_0.02_145)]/30 text-[oklch(0.65_0.1_145)]'
+        : 'text-muted-foreground'} hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
+      style="padding: {h.pauseButtonPadding}px"
+      onclick={() => void togglePauseEncounter()}
+    >
+      {#if isEncounterPaused}
+        <PlayIcon
+          {@attach tooltip(() => t("live.header.tooltip.resumeEncounter"))}
+          style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
+        />
+      {:else}
+        <PauseIcon
+          {@attach tooltip(() => t("live.header.tooltip.pauseEncounter"))}
+          style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
+        />
+      {/if}
+    </button>
+  {/if}
+
+  {#if h.showSettingsButton}
+    <button
+      class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
+      style="padding: {h.settingsButtonPadding}px"
+      onclick={() => openSettings()}
+      {@attach tooltip(() => t("live.header.tooltip.settings"))}
+    >
+      <SettingsIcon
+        style="width: {h.settingsButtonSize}px; height: {h.settingsButtonSize}px"
+      />
+    </button>
+  {/if}
+
+  {#if h.showMinimizeButton}
+    <button
+      class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
+      style="padding: {h.minimizeButtonPadding}px"
+      onclick={hideLiveWindow}
+      {@attach tooltip(() => t("live.header.tooltip.minimize"))}
+    >
+      <MinusIcon
+        style="width: {h.minimizeButtonSize}px; height: {h.minimizeButtonSize}px"
+      />
+    </button>
+  {/if}
+{/snippet}
+
 {#snippet controlButtonsItem()}
   <div class="flex shrink-0 items-center gap-2">
-    {#if h.showHeaderControl}
-      <button
-        class="{isTrainingDummyActive
-          ? 'bg-muted text-foreground border-border shadow-sm'
-          : 'text-muted-foreground border-transparent'} hover:text-foreground hover:bg-popover/60 rounded-lg border transition-all duration-200 disabled:opacity-60"
-        style="padding: {h.headerControlPadding ?? h.pauseButtonPadding}px"
-        aria-pressed={isTrainingDummyActive}
-        aria-label={isTrainingDummyActive
-          ? t("live.header.trainingDummy.disable")
-          : t("live.header.trainingDummy.enable")}
-        disabled={trainingDummyBusy}
-        onclick={toggleTrainingDummyMode}
-        {@attach tooltip(() =>
-          isTrainingDummyActive
-            ? t("live.header.trainingDummy.disable")
-            : t("live.header.trainingDummy.enable"),
-        )}
-      >
-        <CrosshairIcon
-          style="width: {h.headerControlSize ?? h.pauseButtonSize}px; height: {h.headerControlSize ?? h.pauseButtonSize}px"
-        />
-      </button>
-    {/if}
-
-    {#if h.showResetButton}
-      <button
-        class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
-        style="padding: {h.resetButtonPadding}px"
-        onclick={handleResetEncounter}
-        {@attach tooltip(() => t("live.header.tooltip.resetEncounter"))}
-      >
-        <RefreshCwIcon
-          style="width: {h.resetButtonSize}px; height: {h.resetButtonSize}px"
-        />
-      </button>
-    {/if}
-
-    {#if h.showPauseButton}
-      <button
-        class="{isEncounterPaused
-          ? 'bg-[oklch(0.9_0.02_145)]/30 text-[oklch(0.65_0.1_145)]'
-          : 'text-muted-foreground'} hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
-        style="padding: {h.pauseButtonPadding}px"
-        onclick={() => void togglePauseEncounter()}
-      >
-        {#if isEncounterPaused}
-          <PlayIcon
-            {@attach tooltip(() => t("live.header.tooltip.resumeEncounter"))}
-            style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
-          />
-        {:else}
-          <PauseIcon
-            {@attach tooltip(() => t("live.header.tooltip.pauseEncounter"))}
-            style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
-          />
-        {/if}
-      </button>
-    {/if}
-
-    {#if h.showSettingsButton}
-      <button
-        class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
-        style="padding: {h.settingsButtonPadding}px"
-        onclick={() => openSettings()}
-        {@attach tooltip(() => t("live.header.tooltip.settings"))}
-      >
-        <SettingsIcon
-          style="width: {h.settingsButtonSize}px; height: {h.settingsButtonSize}px"
-        />
-      </button>
-    {/if}
-
-    {#if h.showMinimizeButton}
-      <button
-        class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
-        style="padding: {h.minimizeButtonPadding}px"
-        onclick={hideLiveWindow}
-        {@attach tooltip(() => t("live.header.tooltip.minimize"))}
-      >
-        <MinusIcon
-          style="width: {h.minimizeButtonSize}px; height: {h.minimizeButtonSize}px"
-        />
-      </button>
-    {/if}
+    {@render controlButtonList()}
   </div>
 {/snippet}
 
@@ -662,92 +724,7 @@
       <div
         class="col-start-2 row-start-1 flex shrink-0 items-center gap-2 justify-self-end"
       >
-        {#if h.showHeaderControl}
-          <button
-            class="{isTrainingDummyActive
-              ? 'bg-muted text-foreground border-border shadow-sm'
-              : 'text-muted-foreground border-transparent'} hover:text-foreground hover:bg-popover/60 rounded-lg border transition-all duration-200 disabled:opacity-60"
-            style="padding: {h.headerControlPadding ?? h.pauseButtonPadding}px"
-            aria-pressed={isTrainingDummyActive}
-            aria-label={isTrainingDummyActive
-              ? t("live.header.trainingDummy.disable")
-              : t("live.header.trainingDummy.enable")}
-            disabled={trainingDummyBusy}
-            onclick={toggleTrainingDummyMode}
-            {@attach tooltip(() =>
-              isTrainingDummyActive
-                ? t("live.header.trainingDummy.disable")
-                : t("live.header.trainingDummy.enable"),
-            )}
-          >
-            <CrosshairIcon
-              style="width: {h.headerControlSize ?? h.pauseButtonSize}px; height: {h.headerControlSize ?? h.pauseButtonSize}px"
-            />
-          </button>
-        {/if}
-
-        {#if h.showResetButton}
-          <button
-            class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
-            style="padding: {h.resetButtonPadding}px"
-            onclick={handleResetEncounter}
-            {@attach tooltip(() => t("live.header.tooltip.resetEncounter"))}
-          >
-            <RefreshCwIcon
-              style="width: {h.resetButtonSize}px; height: {h.resetButtonSize}px"
-            />
-          </button>
-        {/if}
-
-        {#if h.showPauseButton}
-          <button
-            class="{isEncounterPaused
-              ? 'bg-[oklch(0.9_0.02_145)]/30 text-[oklch(0.65_0.1_145)]'
-              : 'text-muted-foreground'} hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
-            style="padding: {h.pauseButtonPadding}px"
-            onclick={() => void togglePauseEncounter()}
-          >
-            {#if isEncounterPaused}
-              <PlayIcon
-                {@attach tooltip(() =>
-                  t("live.header.tooltip.resumeEncounter"),
-                )}
-                style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
-              />
-            {:else}
-              <PauseIcon
-                {@attach tooltip(() => t("live.header.tooltip.pauseEncounter"))}
-                style="width: {h.pauseButtonSize}px; height: {h.pauseButtonSize}px"
-              />
-            {/if}
-          </button>
-        {/if}
-
-        {#if h.showSettingsButton}
-          <button
-            class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
-            style="padding: {h.settingsButtonPadding}px"
-            onclick={() => openSettings()}
-            {@attach tooltip(() => t("live.header.tooltip.settings"))}
-          >
-            <SettingsIcon
-              style="width: {h.settingsButtonSize}px; height: {h.settingsButtonSize}px"
-            />
-          </button>
-        {/if}
-
-        {#if h.showMinimizeButton}
-          <button
-            class="text-muted-foreground hover:text-foreground hover:bg-popover/60 rounded-lg transition-all duration-200"
-            style="padding: {h.minimizeButtonPadding}px"
-            onclick={hideLiveWindow}
-            {@attach tooltip(() => t("live.header.tooltip.minimize"))}
-          >
-            <MinusIcon
-              style="width: {h.minimizeButtonSize}px; height: {h.minimizeButtonSize}px"
-            />
-          </button>
-        {/if}
+        {@render controlButtonList()}
       </div>
     {/if}
 
@@ -803,72 +780,7 @@
         </div>
 
         {#if h.showBossHealth}
-          <div class="flex shrink-0 items-center gap-2">
-            <span
-              class="text-muted-foreground font-bold tracking-wider uppercase"
-              style="font-size: {h.bossHealthLabelFontSize}px"
-              {@attach tooltip(() => t("live.header.tooltip.bossHealth"))}
-              >{t("live.header.boss")}</span
-            >
-            <!-- Inline Boss Health Display -->
-            {#if displayBosses.length > 0}
-              <div
-                class="flex gap-1 overflow-hidden"
-                class:flex-col={h.bossHealthLayout !== "horizontal"}
-                class:flex-row={h.bossHealthLayout === "horizontal"}
-                class:flex-nowrap={h.bossHealthLayout === "horizontal"}
-              >
-                {#each displayBosses as boss (boss.entityUuid)}
-                  {@const hpPercent =
-                    boss.maxHp && boss.currentHp !== null
-                      ? Math.min(
-                          100,
-                          Math.max(0, (boss.currentHp / boss.maxHp) * 100),
-                        )
-                      : 0}
-                  <div class="flex items-center gap-1 whitespace-nowrap">
-                    <span
-                      class="text-foreground truncate font-semibold tracking-tight"
-                      style="font-size: {h.bossHealthNameFontSize}px"
-                      {@attach tooltip(() => boss.displayName)}
-                      >{boss.displayName} -</span
-                    >
-                    <span
-                      class="text-foreground font-semibold tabular-nums"
-                      style="font-size: {h.bossHealthValueFontSize}px"
-                    >
-                      <AbbreviatedNumber
-                        num={boss.currentHp !== null ? boss.currentHp : 0}
-                        {abbreviationStyle}
-                      />
-                      {#if boss.maxHp}
-                        <span>
-                          / <AbbreviatedNumber
-                            num={boss.maxHp}
-                            {abbreviationStyle}
-                          /></span
-                        >
-                        <span
-                          class="text-destructive ml-1"
-                          style="font-size: {h.bossHealthPercentFontSize}px"
-                          >({formatNumber(hpPercent, {
-                            minimumFractionDigits: 1,
-                            maximumFractionDigits: 1,
-                          })}%)</span
-                        >
-                      {/if}
-                    </span>
-                  </div>
-                {/each}
-              </div>
-            {:else}
-              <span
-                class="font-medium text-neutral-500 italic"
-                style="font-size: {h.bossHealthNameFontSize}px"
-                >{t("live.empty.noBoss")}</span
-              >
-            {/if}
-          </div>
+          {@render bossHealthItem()}
         {/if}
       </div>
     {/if}

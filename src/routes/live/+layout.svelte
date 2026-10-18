@@ -8,12 +8,14 @@
   import { liveCombatStore } from "$lib/stores/live-topics.svelte";
   import { initLiveDisplayClock } from "$lib/live-display-clock.svelte";
   import { liveWindowSession } from "$lib/stores/live-window-sessions.svelte";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
   import { listenLivePullGate } from "$lib/live-pull-gate";
   import { applyLiveClickthrough } from "$lib/utils.svelte";
   import { writable } from "svelte/store";
   import { beforeNavigate, afterNavigate } from "$app/navigation";
   import AppBackgroundLayer from "$lib/components/app-background-layer.svelte";
   import HeaderCustom from "./header-custom.svelte";
+  import HistoryBanner from "./history-banner.svelte";
   import NotificationToast from "./notification-toast.svelte";
 
   const scrollPositions = writable<Record<string, number>>({});
@@ -34,6 +36,7 @@
   });
 
   afterNavigate(({ to }) => {
+    if (to?.url.pathname) liveView.rememberTab(to.url.pathname);
     if (mainElement && to?.url.pathname) {
       const savedPosition = $scrollPositions[to.url.pathname];
       if (savedPosition !== undefined) {
@@ -149,6 +152,7 @@
   ></div>
   <div class="relative z-20 flex h-full flex-col">
     <HeaderCustom />
+    <HistoryBanner />
     <main
       bind:this={mainElement}
       class="bg-card/20 flex-1 gap-4 overflow-y-auto rounded-lg"

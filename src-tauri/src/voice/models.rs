@@ -333,6 +333,12 @@ pub enum VoiceSubject {
         #[serde(rename = "baseSkillId")]
         base_skill_id: i32,
     },
+    /// A skill on the monster-skill watch list. `Started` = any nearby
+    /// monster cast it.
+    MonsterSkill {
+        #[serde(rename = "skillId")]
+        skill_id: i32,
+    },
     /// One effect slot of a counter rule.
     Counter {
         #[serde(rename = "ruleId")]
@@ -386,7 +392,7 @@ impl VoiceTrigger {
                 E::Started | E::Ended | E::ExpiringIn { .. }
             ) | (S::BossDbm { .. }, E::Started | E::ExpiringIn { .. })
                 | (S::Counter { .. }, E::Threshold | E::ExpiringIn { .. })
-                | (S::Alert { .. }, E::Started)
+                | (S::MonsterSkill { .. } | S::Alert { .. }, E::Started)
         );
         if ok {
             Ok(())

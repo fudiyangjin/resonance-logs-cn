@@ -46,6 +46,7 @@ Everywhere you can bind announcements:
 | [Monster Monitor · Buff](../monster/buff.md) | On gain / x seconds left / On expiry | [Watch the vulnerability you applied](../monster/examples/vulnerability.md) |
 | [Monster Monitor · Boss DBM](../monster/boss-dbm.md) | On trigger | [Give a Boss skill an alias and a voice warning](../monster/examples/boss-alias.md) · [Warn with your own sound effect](./examples/custom-sfx.md) |
 | [Monster Monitor · Entity duration](../monster/entity-duration.md) | On appear / x seconds left / On disappear | [Show the Scythe Cart's remaining time](../monster/examples/scythe-cart.md) |
+| [Monster Monitor · Monster skills](../monster/monster-skill.md) | On trigger | — |
 | [Dungeon Mechanics · Mechanic voice announcements](../minimap/README.md#mechanic-voice-announcements) | The mechanics supported for each dungeon | [Minimap setup before a raid's first clear](../minimap/examples/raid-setup.md) |
 | [{{ui:voice.tabs.alerts}}](./playback.md#match-alerts) | Match found / Ready check / Dungeon vote | [Hear "match found" while queueing AFK](./examples/match-found.md) |
 

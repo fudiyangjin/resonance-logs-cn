@@ -65,6 +65,7 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | [ヘイトリスト](./features/monster/hate.md) | ターゲットのヘイト順位 | — |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss スキルの予告バー | [Boss スキルの音声予告](./features/monster/examples/boss-alias.md) |
 | [エンティティ持続](./features/monster/entity-duration.md) | 召喚物などエンティティの存在時間 | [鎌車の残り時間](./features/monster/examples/scythe-cart.md) |
+| [モンスタースキル](./features/monster/monster-skill.md) | 周囲のモンスターが指定スキルを使うと表示 | — |
 | [ウィンドウを有効化](./features/monster/overlay.md) | モンスターオーバーレイ各エリアのオン/オフ | — |
 
 ### ダンジョンギミック

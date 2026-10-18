@@ -1,7 +1,8 @@
 <script lang="ts">
   /**
    * @file Live-window wrapper: reads the current fight's teammate fantasies
-   * and renders the shared icon row for one player.
+   * (or the viewed history encounter's recorded casts) and renders the
+   * shared icon row for one player.
    */
   import FantasyCastIcons from "$lib/components/fantasy-cast-icons.svelte";
   import {
@@ -12,6 +13,7 @@
   import type { TeammateFantasyState } from "$lib/api";
   import { SETTINGS } from "$lib/settings-store";
   import { liveFantasyStore } from "$lib/stores/live-topics.svelte";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
 
   let { entityUuid, size = 16 }: { entityUuid: string; size?: number } =
     $props();
@@ -21,6 +23,9 @@
   );
   const casts = $derived.by((): FantasyCastDisplay[] => {
     if (!showFantasyCastIcons) return [];
+
+    const history = liveView.history;
+    if (history) return history.fantasyCasts.get(entityUuid) ?? [];
 
     const latestByType = new Map<string, TeammateFantasyState>();
     for (const entry of liveFantasyStore.data?.teammateFantasies ?? []) {

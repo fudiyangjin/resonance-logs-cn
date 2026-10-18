@@ -911,7 +911,11 @@ export type LiveMonsterPayload = { revision: number; bossBuffs: Partial<{ [key i
  * Entity UUIDs of non-local party members that are in range and dead,
  * ascending. Empty while no teammate buff is monitored.
  */
-deadTeammates?: string[]; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [key in string]: HateEntry[] }>; stun: StunEntry[]; hp: HpEntry[]; playerNames: Partial<{ [key in string]: string }>; monsterIds: Partial<{ [key in string]: number }>; entityDurationTracks?: EntityDurationTrackState[] }
+deadTeammates?: string[]; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [key in string]: HateEntry[] }>; stun: StunEntry[]; hp: HpEntry[]; playerNames: Partial<{ [key in string]: string }>; monsterIds: Partial<{ [key in string]: number }>; entityDurationTracks?: EntityDurationTrackState[];
+/**
+ * Latest cast of each watched monster skill, ascending by skill id.
+ */
+monsterSkillCasts?: MonsterSkillCastState[] }
 export type LivePullWindow = "live" | "hud-overlay"
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number; trainingWindowMs: number; trainingLockPolicy: TrainingLockPolicy }
 export type LiveScenePayload = { revision: number; sceneId: number | null; dungeonDifficulty: number | null; localClassId: number | null; localTalentStageCfgId: number | null }
@@ -1146,7 +1150,20 @@ export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRunt
  * Which caster population a monster-buff voice rule observes.
  */
 export type MonsterBuffSourceScope = "anySource" | "localPlayerSource"
-export type MonsterRuntimeSnapshot = { enabled: boolean; globalIds: number[]; selfAppliedIds: number[]; monitorAllSelfApplied: boolean; watchedEntities: WatchedEntitySpec[] }
+export type MonsterRuntimeSnapshot = { enabled: boolean; globalIds: number[]; selfAppliedIds: number[]; monitorAllSelfApplied: boolean; watchedEntities: WatchedEntitySpec[];
+/**
+ * Skills shown (and voiced) when any nearby monster casts them.
+ */
+watchedSkillIds: number[] }
+/**
+ * The latest cast of one watched skill by any nearby monster. How long it
+ * stays on screen is a display setting applied by the HUD.
+ */
+export type MonsterSkillCastState = { skillId: number;
+/**
+ * Local receive time of the cast, wall clock milliseconds.
+ */
+castAtMs: number }
 export type PanelAttrState = { attrId: number; value: number }
 /**
  * Damage taken by a defender, aggregated by the attacking monster's template.
@@ -1473,6 +1490,11 @@ export type VoiceSubject =
  * A boss "DBM" mechanic world event with this base skill id.
  */
 { kind: "bossDbm"; baseSkillId: number } |
+/**
+ * A skill on the monster-skill watch list. `Started` = any nearby
+ * monster cast it.
+ */
+{ kind: "monsterSkill"; skillId: number } |
 /**
  * One effect slot of a counter rule.
  */

@@ -149,6 +149,21 @@ export function getEntityDurationPanelScale() {
   return getMonsterOverlaySizes().entityDurationPanelScale;
 }
 
+export function getMonsterSkillPanelPosition() {
+  return getMonsterOverlayPositions().monsterSkillPanel;
+}
+
+export function getMonsterSkillPanelScale() {
+  return getMonsterOverlaySizes().monsterSkillPanelScale;
+}
+
+export function monsterSkillPanelStyle() {
+  return normalizeCustomPanelStyle(
+    SETTINGS.monsterMonitor.state.monsterSkillPanelStyle ??
+      SETTINGS.monsterMonitor.state.panelStyle,
+  );
+}
+
 export function entityDurationPanelStyle() {
   return normalizeCustomPanelStyle(
     SETTINGS.monsterMonitor.state.entityDurationPanelStyle ??
@@ -384,6 +399,24 @@ export function setEntityDurationPanelScale(value: number) {
   }));
 }
 
+export function setMonsterSkillPanelPosition(nextPos: { x: number; y: number }) {
+  patchMonsterMonitor(() => ({
+    overlayPositions: {
+      ...getMonsterOverlayPositions(),
+      monsterSkillPanel: nextPos,
+    },
+  }));
+}
+
+export function setMonsterSkillPanelScale(value: number) {
+  patchMonsterMonitor(() => ({
+    overlaySizes: {
+      ...getMonsterOverlaySizes(),
+      monsterSkillPanelScale: clampPanelScale(value),
+    },
+  }));
+}
+
 export function startMonsterDrag(
   event: PointerEvent,
   target: MonsterDragTarget,
@@ -523,6 +556,8 @@ function commitDragPreview() {
     setDbmPanelPosition(nextPos);
   } else if (drag.target.kind === "entityDurationPanel") {
     setEntityDurationPanelPosition(nextPos);
+  } else if (drag.target.kind === "monsterSkillPanel") {
+    setMonsterSkillPanelPosition(nextPos);
   } else {
     setFantasyPanelPosition(nextPos);
   }
@@ -548,6 +583,8 @@ function commitResizePreview() {
     setDbmPanelScale(nextValue);
   } else if (resize.target.kind === "entityDurationPanel") {
     setEntityDurationPanelScale(nextValue);
+  } else if (resize.target.kind === "monsterSkillPanel") {
+    setMonsterSkillPanelScale(nextValue);
   } else {
     setFantasyPanelScale(nextValue);
   }

@@ -65,6 +65,7 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | [Hate List](./features/monster/hate.md) | Threat ranking on your target | — |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss skill warning bars | [Boss skill voice warnings](./features/monster/examples/boss-alias.md) |
 | [Entity Duration](./features/monster/entity-duration.md) | How long summons and other entities stay around | [Scythe Cart remaining time](./features/monster/examples/scythe-cart.md) |
+| [Monster Skills](./features/monster/monster-skill.md) | Shown when a nearby monster casts a listed skill | — |
 | [Enable Window](./features/monster/overlay.md) | Toggles for each area of the monster overlay | — |
 
 ### Dungeon Mechanics

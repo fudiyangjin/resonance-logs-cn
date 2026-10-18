@@ -6,18 +6,19 @@ use std::sync::Arc;
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
 use crate::live::ipc::models::{
     BossDbmEvent, BuffUpdateState, EntityDurationTrackState, FightResourceEntry,
-    FightResourceState, HateEntry as HateEntryDto, HpEntry, PanelAttrState, ShieldDetailEntry,
-    SkillCdState, StunEntry, TeammateFantasyState,
+    FightResourceState, HateEntry as HateEntryDto, HpEntry, MonsterSkillCastState, PanelAttrState,
+    ShieldDetailEntry, SkillCdState, StunEntry, TeammateFantasyState,
 };
 use crate::live::ipc::topic::TopicMask;
 use crate::live::projections::buff_presence::{BuffCompositeCatalog, BuffPresence};
 use crate::live::projections::entity_duration::EntityDurationWatch;
+use crate::live::projections::monster_skill_watch::MonsterSkillWatch;
 use crate::live::projections::skill_cd;
 use crate::live::protocol::attrs as attr_type;
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
     AttributeValue, BuffState, DomainEnvelope, DomainEvent, EntityRef, EntityUuid,
-    FantasyTransition, MonoTimeMs, TimerKey, TimerScope,
+    FantasyTransition, MonoTimeMs, SkillPhase, TimerKey, TimerScope,
 };
 use crate::live::runtime::scheduler::{DeadlineScheduler, TimerTask};
 
@@ -47,6 +48,7 @@ pub struct EntityMonitorSnapshot {
     pub player_names: HashMap<String, String>,
     pub monster_ids: HashMap<String, i32>,
     pub entity_duration_tracks: Vec<EntityDurationTrackState>,
+    pub monster_skill_casts: Vec<MonsterSkillCastState>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -217,9 +219,9 @@ pub struct EntityMonitorProjection {
     buff_filter: BuffPublishFilter,
     buff_composites: Arc<BuffCompositeCatalog>,
     revisions: MonitorRevisions,
-    /// The monster monitor is switched off: watched entities are still
-    /// tracked (voice cues do not follow the HUD toggle), only the HUD
-    /// payload hides them.
+    /// The monster monitor is switched off: watched entities and monster
+    /// skill casts are still tracked (voice cues do not follow the HUD
+    /// toggle), only the HUD payload hides them.
     entity_duration_hidden: bool,
     local_player: Option<EntityRef>,
     current_target: Option<EntityRef>,
@@ -241,6 +243,7 @@ pub struct EntityMonitorProjection {
     player_names: HashMap<EntityUuid, String>,
     monster_ids: HashMap<EntityUuid, i32>,
     entity_duration: EntityDurationWatch,
+    monster_skills: MonsterSkillWatch,
 }
 
 impl EntityMonitorProjection {
@@ -257,6 +260,7 @@ impl EntityMonitorProjection {
         self.player_names.clear();
         self.monster_ids.clear();
         self.entity_duration.clear();
+        self.monster_skills.clear();
         bump(&mut self.revisions.watched_entities);
     }
 
@@ -297,6 +301,8 @@ impl EntityMonitorProjection {
         self.entity_duration_hidden = !config.monster.enabled;
         self.entity_duration
             .apply_config(&config.monster, entities, now_mono);
+        self.monster_skills
+            .apply_config(&config.monster.watched_skill_ids);
         bump(&mut self.revisions.watched_entities);
         self.panel_attrs
             .retain(|attr_id, _| self.monitored_panel_attr_ids.contains(attr_id));
@@ -638,6 +644,23 @@ impl EntityMonitorProjection {
                     TopicMask::EMPTY
                 }
             }
+            DomainEvent::SkillLifecycleChanged {
+                caster,
+                skill_id,
+                phase: SkillPhase::CastStarted | SkillPhase::Observed,
+                ..
+            } => {
+                if self.monster_skills.observe(
+                    entities,
+                    caster.uuid,
+                    *skill_id,
+                    envelope.occurred_at_ms,
+                ) {
+                    TopicMask::MONSTER
+                } else {
+                    TopicMask::EMPTY
+                }
+            }
             DomainEvent::HateListUpdated { entity, entries } => {
                 if self.current_target == Some(*entity) {
                     self.set_hate_list(entity.uuid, entries);
@@ -648,6 +671,7 @@ impl EntityMonitorProjection {
             }
             DomainEvent::SceneChanged { .. } => {
                 self.clear_boss_mechanics(scheduler);
+                self.monster_skills.clear();
                 self.hate_lists.clear();
                 self.stun_values.clear();
                 self.hp_values.clear();
@@ -767,6 +791,11 @@ impl EntityMonitorProjection {
                 Vec::new()
             } else {
                 self.entity_duration.track_states(entities)
+            },
+            monster_skill_casts: if self.entity_duration_hidden {
+                Vec::new()
+            } else {
+                self.monster_skills.states()
             },
         }
     }
@@ -3061,6 +3090,123 @@ mod tests {
                 summon(cart2, None),
             );
             assert_eq!(tracks(&projection, &entities).len(), 1);
+        }
+    }
+
+    mod monster_skills {
+        use super::*;
+        use crate::live::runtime::events::EntityKind;
+
+        const SKILL: i32 = 101_403;
+        const MONSTER: EntityUuid = EntityUuid(30);
+
+        fn setup(
+            monster_enabled: bool,
+        ) -> (EntityMonitorProjection, EntityContext, DeadlineScheduler) {
+            let mut projection = EntityMonitorProjection::default();
+            let mut entities = EntityContext::default();
+            let mut scheduler = DeadlineScheduler::default();
+            seed_local_player(&mut projection, &mut entities, &mut scheduler);
+            let mut config = MonitorRuntimeSnapshot::default();
+            config.monster.enabled = monster_enabled;
+            config.monster.watched_skill_ids = vec![SKILL];
+            projection.apply_config(&config, Arc::default(), &entities, MonoTimeMs(0));
+            (projection, entities, scheduler)
+        }
+
+        fn monster_cast() -> Vec<ProtocolObservation> {
+            vec![
+                ProtocolObservation::EntityAppeared {
+                    uuid: MONSTER,
+                    kind: EntityKind::Monster,
+                },
+                ProtocolObservation::SkillLifecycleChanged {
+                    caster_uuid: MONSTER,
+                    skill_id: SKILL,
+                    phase: SkillPhase::Observed,
+                    target_uuid: None,
+                },
+            ]
+        }
+
+        #[test]
+        fn nearby_monster_cast_is_published_with_batch_time() {
+            let (mut projection, mut entities, mut scheduler) = setup(true);
+
+            let mask = apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                monster_cast(),
+            );
+
+            assert!(mask.contains(TopicMask::MONSTER));
+            assert_eq!(
+                projection.snapshot(&entities).monster_skill_casts,
+                vec![MonsterSkillCastState {
+                    skill_id: SKILL,
+                    cast_at_ms: 2_000,
+                }]
+            );
+        }
+
+        #[test]
+        fn cast_outlives_its_caster_but_not_a_scene_change() {
+            let (mut projection, mut entities, mut scheduler) = setup(true);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                monster_cast(),
+            );
+
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                3,
+                vec![ProtocolObservation::EntityDisappeared { uuid: MONSTER }],
+            );
+            assert_eq!(projection.snapshot(&entities).monster_skill_casts.len(), 1);
+
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                4,
+                vec![ProtocolObservation::SceneChanged {
+                    scene_id: 2,
+                    difficulty: None,
+                }],
+            );
+            assert!(
+                projection
+                    .snapshot(&entities)
+                    .monster_skill_casts
+                    .is_empty()
+            );
+        }
+
+        #[test]
+        fn disabled_monster_monitor_hides_casts_from_the_hud() {
+            let (mut projection, mut entities, mut scheduler) = setup(false);
+
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                monster_cast(),
+            );
+
+            assert!(
+                projection
+                    .snapshot(&entities)
+                    .monster_skill_casts
+                    .is_empty()
+            );
         }
     }
 

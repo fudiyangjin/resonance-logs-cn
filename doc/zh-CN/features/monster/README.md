@@ -8,6 +8,7 @@
 - 看队友的 Debuff 是否都挂上了；
 - 坦克查看仇恨排名，输出查看 Boss 韧性还差多少破防；
 - Boss 读条时弹出 DBM 预警条并语音提醒；
+- 附近任意怪物释放指定技能时直接显示技能名；
 - 为召唤物、地面装置（如镰车）显示剩余时间。
 
 ## 跟随当前目标
@@ -31,6 +32,8 @@
 
 ## 页面结构
 
+标签按 **{{ui:monsterMonitor.tabGroups.target}}**、**{{ui:monsterMonitor.tabGroups.team}}**、**{{ui:monsterMonitor.tabGroups.alert}}**、**{{ui:monsterMonitor.tabGroups.window}}** 分组，窗口较窄时整组换行。标签上的绿点表示对应区域已在怪物遮罩中显示，开关在 **{{ui:monsterMonitor.tabs.overlay}}** 中。
+
 | 标签 | 文档 | 例 |
 | --- | --- | --- |
 | **{{ui:monsterMonitor.tabs.buff}}** | [目标 Buff](./buff.md) | [盯住自己挂的易伤，快掉时提醒](./examples/vulnerability.md) · [监听罗罗拉幻想 Buff 与叠层](./examples/lorola.md) |
@@ -39,6 +42,7 @@
 | **{{ui:monsterMonitor.tabs.hate}}** | [仇恨列表](./hate.md) | — |
 | **{{ui:monsterMonitor.tabs.stun}}** / **{{ui:monsterMonitor.tabs.hp}}** / **{{ui:monsterMonitor.tabs.fantasy}}** | [韧性、生命与队友幻想](./status.md) | — |
 | **{{ui:monsterMonitor.tabs.bossDbm}}** | [Boss DBM](./boss-dbm.md) | [给 Boss 技能起别名并语音预警](./examples/boss-alias.md) |
+| **{{ui:monsterMonitor.tabs.monsterSkill}}** | [怪物技能](./monster-skill.md) | — |
 | **{{ui:monsterMonitor.tabs.entityDuration}}** | [实体持续](./entity-duration.md) | [显示镰车剩余时间](./examples/scythe-cart.md) |
 | **{{ui:monsterMonitor.tabs.overlay}}** | [启用窗口](./overlay.md) | — |
 

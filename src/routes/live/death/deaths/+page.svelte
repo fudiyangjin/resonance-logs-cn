@@ -1,13 +1,13 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
-  import { liveCombatStore, liveDeathsStore } from "$lib/stores/live-topics.svelte";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
   import DeathList from "$lib/components/death-replay/death-list.svelte";
 
   const entityUuid = page.url.searchParams.get("entityUuid") ?? "";
 
-  const liveData = $derived(liveCombatStore.data?.combat ?? null);
-  const deathRecords = $derived(liveDeathsStore.data?.deaths ?? []);
+  const liveData = $derived(liveView.combat);
+  const deathRecords = $derived(liveView.deaths);
 
   const deaths = $derived(
     deathRecords.filter((r) => r.victimEntityUuid === entityUuid),

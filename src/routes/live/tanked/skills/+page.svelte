@@ -6,7 +6,7 @@
     DEFAULT_LIVE_TANKED_SKILL_STATS,
     normalizeTankedSkillColumnOrder,
   } from "$lib/settings-store";
-  import { liveCombatStore } from "$lib/stores/live-topics.svelte";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
   import { computePlayerRows } from "$lib/live-derived";
   import {
     groupSkillsByRecount,
@@ -28,7 +28,7 @@
     ungrouped: [] as SkillDisplayRow[],
   };
 
-  let liveData = $derived(liveCombatStore.data?.combat ?? null);
+  let liveData = $derived(liveView.combat);
   let tankedPlayers = $derived(
     liveData ? computePlayerRows(liveData, "tanked") : [],
   );

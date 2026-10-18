@@ -128,6 +128,16 @@ const _entityDurationTrackCache = $derived.by(
     liveMonsterStore.data?.entityDurationTracks ?? [],
 );
 
+const _monsterSkillCastMap = $derived.by(
+  () =>
+    new Map<number, number>(
+      (liveMonsterStore.data?.monsterSkillCasts ?? []).map((cast) => [
+        cast.skillId,
+        cast.castAtMs,
+      ]),
+    ),
+);
+
 // Display projections are replaced wholesale, never mutated. Raw state keeps
 // the assigned instance, so `assignRuntime`'s identity check holds and a
 // frame that leaves a projection unchanged does not re-render its panel (a
@@ -146,6 +156,7 @@ class MonsterRuntimeState {
   fantasyRows = $state.raw<MonsterFantasyRow[]>([]);
   dbmRows = $state.raw<TextBuffDisplay[]>([]);
   entityDurationRows = $state.raw<TextBuffDisplay[]>([]);
+  monsterSkillRows = $state.raw<TextBuffDisplay[]>([]);
   isEditing = $state(false);
   dragState = $state<MonsterDragState | null>(null);
   resizeState = $state<MonsterResizeState | null>(null);
@@ -225,6 +236,15 @@ export function monsterEntityDurationTracks(): EntityDurationTrackState[] {
 
 export function monsterEntityDurationRows() {
   return monsterRuntime.entityDurationRows;
+}
+
+/** Skill id -> wall time of its latest cast by a nearby monster. */
+export function monsterSkillCasts(): ReadonlyMap<number, number> {
+  return _monsterSkillCastMap;
+}
+
+export function monsterSkillRows() {
+  return monsterRuntime.monsterSkillRows;
 }
 
 export function monsterTeammateRows() {

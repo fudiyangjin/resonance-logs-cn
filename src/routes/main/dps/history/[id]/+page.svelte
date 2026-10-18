@@ -30,13 +30,15 @@
     historyBuffTimeline,
     historyBuffTimelineRange,
     historyDamageHits,
+    historyDamageTargets,
     historyDeathEntries,
+    historyEntityNames,
     historyEntityToRaw,
+    historyMarkerEvents,
     type HistoryEntity,
     type HistoryPlayerRow,
   } from "$lib/history-derived";
   import { formatDateTime, t, type MessageKey } from "$lib/i18n/index.svelte";
-  import { ipcBigInt, ipcCompare, ipcNumber } from "$lib/ipc-decimal";
   import getDisplayName from "$lib/name-display";
   import { SETTINGS, settings } from "$lib/settings-store";
   import {
@@ -71,14 +73,6 @@
     | { kind: "loading"; startMs: number; endMs: number }
     | { kind: "ready"; data: EncounterRangeData }
     | { kind: "error"; message: string };
-
-  type OverviewTargetOption = {
-    targetEntityUuid: string;
-    targetDisplayUid: number;
-    targetMonsterId: number | null;
-    targetName: string;
-    totalValue: bigint;
-  };
 
   const tabs: { key: HistoryTab; labelKey: MessageKey }[] = [
     { key: "damage", labelKey: "history.detail.tabs.damage" },
@@ -170,14 +164,7 @@
       .filter((entity) => entity.monsterId === null)
       .map(historyEntityToRaw),
   );
-  const entityNames = $derived.by(() => {
-    const mapping = new SvelteMap<string, string>();
-    for (const entity of activeData?.entities ?? []) {
-      const name = entity.name?.trim();
-      if (name) mapping.set(entity.entityId, name);
-    }
-    return mapping;
-  });
+  const entityNames = $derived(historyEntityNames(activeData?.entities ?? []));
   const playerUuids = $derived(
     new Set(rawEntities.map((entity) => entity.entityUuid)),
   );
@@ -191,63 +178,9 @@
     ),
   );
 
-  function isNumericLikeName(name: string): boolean {
-    return /^#?\d+$/.test(name.trim());
-  }
-
-  function resolveTargetDisplayName(target: {
-    targetEntityUuid: string;
-    targetDisplayUid: number;
-    targetMonsterId: number | null;
-    targetName: string | null;
-  }): string {
-    const entityName = entityNames.get(target.targetEntityUuid);
-    if (entityName) return entityName;
-    const recorded = target.targetName?.trim();
-    if (recorded) return recorded;
-    if (target.targetMonsterId !== null) {
-      return resolveMonsterName(target.targetMonsterId);
-    }
-    return `#${target.targetDisplayUid}`;
-  }
-
-  const overviewTargets = $derived.by(() => {
-    const merged = new SvelteMap<string, OverviewTargetOption>();
-    for (const entity of rawEntities) {
-      for (const target of entity.dmgPerTarget) {
-        const targetName = resolveTargetDisplayName(target);
-        const totalValue = ipcBigInt(target.totalValue);
-        const existing = merged.get(target.targetEntityUuid);
-        if (existing) {
-          existing.totalValue += totalValue;
-          if (existing.targetName.startsWith("#") && targetName) {
-            existing.targetName = targetName;
-          }
-          if (
-            existing.targetMonsterId === null &&
-            target.targetMonsterId !== null
-          ) {
-            existing.targetMonsterId = target.targetMonsterId;
-          }
-        } else {
-          merged.set(target.targetEntityUuid, {
-            targetEntityUuid: target.targetEntityUuid,
-            targetDisplayUid: target.targetDisplayUid,
-            targetMonsterId: target.targetMonsterId,
-            targetName,
-            totalValue,
-          });
-        }
-      }
-    }
-    return [...merged.values()]
-      .filter(
-        (target) =>
-          target.targetName.trim().length > 0 &&
-          !isNumericLikeName(target.targetName),
-      )
-      .toSorted((a, b) => ipcCompare(b.totalValue, a.totalValue));
-  });
+  const overviewTargets = $derived(
+    historyDamageTargets(rawEntities, entityNames),
+  );
 
   const displayedPlayers = $derived.by(() => {
     if (activeTab === "damage") {
@@ -372,15 +305,8 @@
     };
   });
 
-  const timelineEvents = $derived.by<EncounterTimelineEvent[]>(() =>
-    (detail?.markers ?? []).map((marker) => ({
-      sequence: marker.sequence,
-      tsOffsetMs: marker.offsetMs - (detail?.startMs ?? 0),
-      casterUuid: marker.casterEntityId,
-      skillId: ipcNumber(marker.skillId),
-      kind: marker.kind,
-      remodelLevel: marker.remodelLevel ?? null,
-    })),
+  const timelineEvents = $derived<EncounterTimelineEvent[]>(
+    historyMarkerEvents(detail?.markers ?? [], detail?.startMs ?? 0),
   );
 
   const fantasyCastsByEntity = $derived.by(() => {

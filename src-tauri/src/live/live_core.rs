@@ -882,6 +882,7 @@ fn sync_voice_service_settings(app: &AppHandle, snapshot: &VoiceRuntimeSnapshot)
 fn watched_skill_ids(config: &MonitorRuntimeSnapshot) -> HashSet<i32> {
     let mut watched: HashSet<_> = config.skill.monitored_skill_ids.iter().copied().collect();
     watched.extend(KEY_SKILL_IDS.iter().copied());
+    watched.extend(config.monster.watched_skill_ids.iter().copied());
     for rule in &config.skill.buff_counter_rules {
         for source in &rule.sources {
             collect_counter_skill_ids(source, &mut watched);

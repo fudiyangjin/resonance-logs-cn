@@ -28,6 +28,13 @@ pub fn entity_type_bits(uuid: i64) -> i32 {
     ((uuid >> ENTITY_TYPE_SHIFT) & ENTITY_TYPE_MASK) as i32
 }
 
+/// Whether `uuid` addresses a player character, read from its type bits so
+/// it holds even for entities this client has never seen.
+#[inline]
+pub fn is_character_uuid(uuid: i64) -> bool {
+    i64::from(entity_type_bits(uuid)) == ENTITY_TYPE_CHARACTER
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -54,5 +61,11 @@ mod tests {
             entity_type_bits(player_uuid),
             entity_type_bits(monster_uuid)
         );
+    }
+
+    #[test]
+    fn is_character_uuid_reads_type_bits_only() {
+        assert!(is_character_uuid(canonical_player_uuid(7)));
+        assert!(!is_character_uuid(entity_id_to_uuid(7, 1, true, false)));
     }
 }

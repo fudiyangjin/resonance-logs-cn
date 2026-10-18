@@ -7,7 +7,7 @@
     DEFAULT_LIVE_TANKED_PLAYER_STATS,
     normalizeTankedPlayerColumnOrder,
   } from "$lib/settings-store";
-  import { liveCombatStore } from "$lib/stores/live-topics.svelte";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
   import {
     computePlayerRows,
     computePlayerRowsFromEntities,
@@ -22,7 +22,7 @@
 
   const entityUuid = page.url.searchParams.get("entityUuid") ?? "";
 
-  let liveData = $derived(liveCombatStore.data?.combat ?? null);
+  let liveData = $derived(liveView.combat);
   let currEntity = $derived(
     liveData?.entities.find((entity) => entity.entityUuid === entityUuid) ??
       null,

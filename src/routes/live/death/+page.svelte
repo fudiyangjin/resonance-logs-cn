@@ -1,12 +1,12 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { liveCombatStore, liveDeathsStore } from "$lib/stores/live-topics.svelte";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
   import DeathPlayerList, {
     type DeathPlayerEntry,
   } from "$lib/components/death-replay/death-player-list.svelte";
 
-  let liveData = $derived(liveCombatStore.data?.combat ?? null);
-  let deathRecords = $derived(liveDeathsStore.data?.deaths ?? []);
+  let liveData = $derived(liveView.combat);
+  let deathRecords = $derived(liveView.deaths);
 
   let entries = $derived.by<DeathPlayerEntry[]>(() => {
     const grouped = new Map<string, DeathPlayerEntry>();

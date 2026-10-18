@@ -534,6 +534,25 @@ export type DbmVoiceConfig = {
 
 export type DbmVoiceConfigMap = Record<string, DbmVoiceConfig>;
 
+/** Voice bindings for one monster-skill entry: when a nearby monster casts it. */
+export type MonsterSkillVoiceConfig = {
+  onCast?: VoiceEventConfig;
+};
+
+export type MonsterSkillVoiceConfigMap = Record<string, MonsterSkillVoiceConfig>;
+
+export function ensureMonsterSkillVoiceConfigs(
+  configs: MonsterSkillVoiceConfigMap | null | undefined,
+): MonsterSkillVoiceConfigMap {
+  const next: MonsterSkillVoiceConfigMap = {};
+  for (const [skillId, config] of Object.entries(configs ?? {})) {
+    if (config?.onCast) {
+      next[skillId] = config;
+    }
+  }
+  return next;
+}
+
 export function ensureDbmVoiceConfigs(
   configs: DbmVoiceConfigMap | null | undefined,
 ): DbmVoiceConfigMap {
@@ -1188,6 +1207,7 @@ export type MonsterOverlayPositions = {
   stunPanel: Point;
   hpPanel: Point;
   entityDurationPanel: Point;
+  monsterSkillPanel: Point;
 };
 
 export type MonsterOverlaySizes = {
@@ -1200,6 +1220,7 @@ export type MonsterOverlaySizes = {
   stunPanelScale: number;
   hpPanelScale: number;
   entityDurationPanelScale: number;
+  monsterSkillPanelScale: number;
 };
 
 export type MonsterOverlayVisibility = {
@@ -1212,6 +1233,7 @@ export type MonsterOverlayVisibility = {
   showStunPanel: boolean;
   showHpPanel: boolean;
   showEntityDurationPanel: boolean;
+  showMonsterSkillPanel: boolean;
 };
 
 export type BuffAlertRule = {
@@ -1244,6 +1266,17 @@ export type EntityDurationEntry = {
   presetKey?: string;
 };
 
+/**
+ * One monster-monitor "monster skill" watch: when any nearby monster casts
+ * `skillId`, a row shows its name for `displayMs`; a recast restarts it.
+ * An empty `label` falls back to the game's skill name.
+ */
+export type MonsterSkillWatchEntry = {
+  skillId: number;
+  label: string;
+  displayMs: number;
+};
+
 export type MonsterMonitorConfig = {
   enabled: boolean;
   autoHideInDailyScenes: boolean;
@@ -1270,6 +1303,8 @@ export type MonsterMonitorConfig = {
   monsterBuffVoiceConfigs?: BuffVoiceConfigMap;
   /** Voice bindings for entity-duration entries, keyed `"{monsterId}:{scope}"`. */
   entityVoiceConfigs?: EntityVoiceConfigMap;
+  /** Voice bindings for monster-skill entries, keyed by skill id (as a string). */
+  monsterSkillVoiceConfigs?: MonsterSkillVoiceConfigMap;
   fantasyShowAll: boolean;
   buffPriorityIds: number[];
   buffAliases: BuffAliasMap;
@@ -1288,6 +1323,8 @@ export type MonsterMonitorConfig = {
   hpPanelStyle: CustomPanelStyle;
   entityDurationEntries: EntityDurationEntry[];
   entityDurationPanelStyle: CustomPanelStyle;
+  monsterSkillEntries: MonsterSkillWatchEntry[];
+  monsterSkillPanelStyle: CustomPanelStyle;
 };
 
 export type TextBuffPanelDisplayMode = "modern" | "classic";
@@ -1677,6 +1714,14 @@ export function createDefaultEntityDurationPanelStyle(): CustomPanelStyle {
   };
 }
 
+export function createDefaultMonsterSkillPanelStyle(): CustomPanelStyle {
+  return {
+    ...createDefaultCustomPanelStyle(),
+    columnGap: 8,
+    fontSize: 13,
+  };
+}
+
 export function createDefaultStunPanelStyle(): CustomPanelStyle {
   return {
     ...createDefaultCustomPanelStyle(),
@@ -1710,6 +1755,7 @@ function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
     stunPanel: { x: 40, y: 460 },
     hpPanel: { x: 40, y: 560 },
     entityDurationPanel: { x: 800, y: 300 },
+    monsterSkillPanel: { x: 800, y: 460 },
   };
 }
 
@@ -1724,6 +1770,7 @@ function createDefaultMonsterOverlaySizes(): MonsterOverlaySizes {
     stunPanelScale: 1,
     hpPanelScale: 1,
     entityDurationPanelScale: 1,
+    monsterSkillPanelScale: 1,
   };
 }
 
@@ -1738,6 +1785,7 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
     showStunPanel: false,
     showHpPanel: false,
     showEntityDurationPanel: false,
+    showMonsterSkillPanel: false,
   };
 }
 
@@ -2107,6 +2155,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     dbmVoiceConfigs: {},
     monsterBuffVoiceConfigs: {},
     entityVoiceConfigs: {},
+    monsterSkillVoiceConfigs: {},
     fantasyShowAll: false,
     buffPriorityIds: [],
     buffAliases: {},
@@ -2125,6 +2174,8 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     hpPanelStyle: createDefaultHpPanelStyle(),
     entityDurationEntries: [],
     entityDurationPanelStyle: createDefaultEntityDurationPanelStyle(),
+    monsterSkillEntries: [],
+    monsterSkillPanelStyle: createDefaultMonsterSkillPanelStyle(),
   };
 }
 
@@ -2188,6 +2239,7 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "dbmVoiceConfigs",
   "monsterBuffVoiceConfigs",
   "entityVoiceConfigs",
+  "monsterSkillVoiceConfigs",
   "fantasyShowAll",
   "buffPriorityIds",
   "buffAlerts",
@@ -2205,6 +2257,8 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "hpPanelStyle",
   "entityDurationEntries",
   "entityDurationPanelStyle",
+  "monsterSkillEntries",
+  "monsterSkillPanelStyle",
 ] as const satisfies readonly (keyof MonsterMonitorProfileData)[];
 
 // Compile-time exhaustiveness guard: if a field is added to
@@ -2376,6 +2430,7 @@ export function createDefaultLiveMeterProfileData(): LiveMeterProfileData {
       showSceneName: true,
       showResetButton: true,
       showPauseButton: true,
+      showHistoryButton: false,
       showBossOnlyButton: true,
       showSettingsButton: true,
       showMinimizeButton: true,
@@ -2401,6 +2456,8 @@ export function createDefaultLiveMeterProfileData(): LiveMeterProfileData {
       settingsButtonPadding: 8,
       minimizeButtonSize: 20,
       minimizeButtonPadding: 8,
+      historyButtonSize: 20,
+      historyButtonPadding: 8,
       totalDamageLabelFontSize: 14,
       totalDamageValueFontSize: 18,
       totalDpsLabelFontSize: 14,
@@ -3022,6 +3079,7 @@ const DEFAULT_SETTINGS = {
       showSceneName: true,
       showResetButton: true,
       showPauseButton: true,
+      showHistoryButton: false,
       showBossOnlyButton: true,
       showSettingsButton: true,
       showMinimizeButton: true,
@@ -3047,6 +3105,8 @@ const DEFAULT_SETTINGS = {
       settingsButtonPadding: 8,
       minimizeButtonSize: 20,
       minimizeButtonPadding: 8,
+      historyButtonSize: 20,
+      historyButtonPadding: 8,
       totalDamageLabelFontSize: 14,
       totalDamageValueFontSize: 18,
       totalDpsLabelFontSize: 14,

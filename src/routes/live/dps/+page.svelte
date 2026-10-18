@@ -2,7 +2,7 @@
   import { getClassIcon, tooltip } from "$lib/utils.svelte";
   import { goto } from "$app/navigation";
   import { settings, SETTINGS, DEFAULT_STATS } from "$lib/settings-store";
-  import { liveCombatStore } from "$lib/stores/live-topics.svelte";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
   import { computePlayerRows } from "$lib/live-derived";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import { historyDpsPlayerColumns } from "$lib/column-data";
@@ -16,8 +16,9 @@
   import { formatNumber, t } from "$lib/i18n/index.svelte";
   import { resolveColumnLabel } from "$lib/column-labels";
   import FantasyCastIcons from "../fantasy-cast-icons.svelte";
+  import HistoryTargetStrip from "../history-target-strip.svelte";
 
-  let liveData = $derived(liveCombatStore.data?.combat ?? null);
+  let liveData = $derived(liveView.combat);
   let forbiddenIds = $derived(
     new Set(SETTINGS.challengeWatch.state.forbiddenDamageIds),
   );
@@ -127,6 +128,8 @@
     return [...rawDpsData].sort((a, b) => b.totalDmg - a.totalDmg);
   });
 </script>
+
+<HistoryTargetStrip />
 
 <div
   class="ring-border/60 bg-card/30 relative flex flex-col gap-2 overflow-hidden rounded-lg ring-1"

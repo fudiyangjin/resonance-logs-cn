@@ -13,6 +13,7 @@
 | **队友幻想区** | 显示 | [队友幻想](./status.md#队友幻想) |
 | **Boss DBM 区** | 隐藏 | [Boss DBM](./boss-dbm.md) |
 | **实体监控区** | 隐藏 | [实体持续](./entity-duration.md) |
+| **怪物技能区** | 隐藏 | [怪物技能](./monster-skill.md) |
 
 点击按钮即可切换显示。
 

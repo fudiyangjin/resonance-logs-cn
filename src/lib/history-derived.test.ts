@@ -1,20 +1,32 @@
 import { describe, expect, it } from "vitest";
 import type {
+  DeathRecord,
   EncounterBuffTimelineData,
+  EncounterDetailData,
   EncounterEntityData,
   EncounterSkillData,
   EncounterStatsData,
+  EncounterSummaryDto,
   HistoryMetric,
 } from "$lib/bindings";
+import { displayElapsedMs } from "$lib/live-display-clock";
+import { computePlayerRows } from "$lib/live-derived";
+import { RESONANCE_SKILLS } from "$lib/skill-mappings";
 import {
   aggregateMetricStats,
+  buildHistoryPlayerRows,
   historyBuffCoverageByKey,
   historyBuffLaneKey,
   historyBuffTimeline,
   historyBuffTimelineRange,
+  historyCombatForTarget,
   historyDamageHits,
+  historyDamageTargets,
   historyDeathEntries,
+  historyDetailToLiveSnapshot,
+  historyEntityNames,
   historyEntityToRaw,
+  historyMarkerEvents,
   historySkillRecord,
   historyStatsToCombat,
 } from "./history-derived";
@@ -380,5 +392,397 @@ describe("historyBuffTimelineRange", () => {
 
     const noHitRange = historyBuffTimelineRange(view, 2_000, 4_000);
     expect(noHitRange?.activeWindowMs).toBe(0);
+  });
+});
+
+function summary(
+  partial: Partial<EncounterSummaryDto> = {},
+): EncounterSummaryDto {
+  return {
+    id: 7,
+    startedAtMs: 1_700_000_000_000,
+    endedAtMs: 1_700_000_061_000,
+    totalDmg: "0",
+    totalHeal: "0",
+    sceneId: 1001,
+    dungeonDifficulty: 2,
+    duration: 60.4,
+    activeCombatDuration: 45.2,
+    localPlayerId: 1,
+    bosses: [{ monsterId: 9001, maxHp: 1000, isDefeated: true }],
+    players: [],
+    remoteEncounterId: null,
+    isFavorite: false,
+    note: null,
+    detailAvailable: true,
+    displayIndex: 3,
+    ...partial,
+  };
+}
+
+function deathReplay(victimEntityUuid: string): DeathRecord {
+  return {
+    victimEntityUuid,
+    deathTimestampMs: "1000",
+    recentDamages: [],
+    victimBuffs: [],
+    participantBuffs: [],
+  };
+}
+
+function detail(
+  partial: Partial<EncounterDetailData> = {},
+): EncounterDetailData {
+  const encounterSummary = partial.summary ?? summary();
+  return {
+    encounterId: encounterSummary.id,
+    summary: encounterSummary,
+    detailAvailable: true,
+    qualityFlags: [],
+    startMs: 0,
+    endMsExclusive: 60_400,
+    totals: {
+      damage: "0",
+      bossDamage: "0",
+      healing: "0",
+      effectiveHealing: "0",
+      damageTaken: "0",
+    },
+    entities: [
+      entity({
+        entityId: "1",
+        totals: {
+          damage: "6000",
+          bossDamage: "4000",
+          healing: "900",
+          effectiveHealing: "600",
+          damageTaken: "300",
+        },
+        skills: [
+          skill("1", "damage", {
+            total: "6000",
+            hits: "10",
+            criticalHits: "3",
+          }),
+          skill("5", "healing", { total: "900", effectiveTotal: "600" }),
+          skill("2", "damage_taken", { total: "300", hits: "4" }),
+        ],
+        deaths: [
+          { offsetMs: 5, sourceEntityId: null, skillId: null, replay: null },
+          {
+            offsetMs: 9,
+            sourceEntityId: "m",
+            skillId: "3",
+            replay: deathReplay("1"),
+          },
+        ],
+      }),
+      entity({
+        entityId: "2",
+        displayUid: 1002,
+        skills: [
+          skill("1", "damage", { total: "3000", hits: "6" }),
+          skill("2", "damage_taken", { total: "700", hits: "9" }),
+        ],
+      }),
+      entity({
+        entityId: "m",
+        monsterId: 9001,
+        skills: [skill("3", "damage", { total: "5000", hits: "2" })],
+        deaths: [
+          {
+            offsetMs: 60,
+            sourceEntityId: "1",
+            skillId: "1",
+            replay: deathReplay("m"),
+          },
+        ],
+      }),
+    ],
+    markers: [],
+    ...partial,
+  };
+}
+
+describe("historyMarkerEvents", () => {
+  it("re-bases offsets onto the encounter start and parses skill ids", () => {
+    const events = historyMarkerEvents(
+      [
+        {
+          offsetMs: 1_500,
+          sequence: 4,
+          casterEntityId: "1",
+          skillId: "123",
+          kind: "fantasy",
+          remodelLevel: 3,
+        },
+        {
+          offsetMs: 2_000,
+          sequence: 5,
+          casterEntityId: "2",
+          skillId: "77",
+          kind: "boss_skill",
+        },
+      ],
+      500,
+    );
+    expect(events).toEqual([
+      {
+        sequence: 4,
+        tsOffsetMs: 1_000,
+        casterUuid: "1",
+        skillId: 123,
+        kind: "fantasy",
+        remodelLevel: 3,
+      },
+      {
+        sequence: 5,
+        tsOffsetMs: 1_500,
+        casterUuid: "2",
+        skillId: 77,
+        kind: "boss_skill",
+        remodelLevel: null,
+      },
+    ]);
+  });
+});
+
+describe("historyDetailToLiveSnapshot", () => {
+  it("matches the history page's player rows for every metric", () => {
+    const encounter = detail();
+    const snapshot = historyDetailToLiveSnapshot(encounter);
+    const players = encounter.entities
+      .filter((row) => row.monsterId === null)
+      .map(historyEntityToRaw);
+    const historyRows = new Map(
+      buildHistoryPlayerRows(players, 60_400, 45_200, "1").map((row) => [
+        row.entityUuid,
+        row,
+      ]),
+    );
+
+    const dpsRows = computePlayerRows(snapshot.combat, "dps");
+    expect(dpsRows.map((row) => row.entityUuid).sort()).toEqual(["1", "2"]);
+    for (const row of dpsRows) {
+      const expected = historyRows.get(row.entityUuid);
+      expect(row.dps).toBe(expected?.dps);
+      expect(row.tdps).toBe(expected?.tdps);
+      expect(row.dmgPct).toBe(expected?.dmgPct);
+      expect(row.bossDps).toBe(expected?.bossDps);
+      expect(row.bossDmgPct).toBe(expected?.bossDmgPct);
+    }
+    for (const row of computePlayerRows(snapshot.combat, "heal")) {
+      const expected = historyRows.get(row.entityUuid);
+      expect(row.dps).toBe(expected?.hps);
+      expect(row.effectiveDps).toBe(expected?.ehps);
+      expect(row.dmgPct).toBe(expected?.healPct);
+    }
+    for (const row of computePlayerRows(snapshot.combat, "tanked")) {
+      const expected = historyRows.get(row.entityUuid);
+      expect(row.dps).toBe(expected?.tankedPS);
+      expect(row.dmgPct).toBe(expected?.tankedPct);
+    }
+  });
+
+  it("fills the live payload envelope from the summary", () => {
+    const snapshot = historyDetailToLiveSnapshot(detail());
+    expect(snapshot.encounterId).toBe(7);
+    expect(snapshot.combat.elapsedMs).toBe("60400");
+    expect(snapshot.combat.damageElapsedMs).toBe("60400");
+    expect(snapshot.combat.activeCombatTimeMs).toBe("45200");
+    expect(snapshot.combat.fightStartTimestampMs).toBe("1700000000000");
+    expect(snapshot.combat.totalDmg).toBe("9000");
+    expect(snapshot.combat.totalDmgBossOnly).toBe("4000");
+    expect(snapshot.combat.totalHeal).toBe("900");
+    expect(snapshot.combat.totalEffectiveHeal).toBe("600");
+    expect(snapshot.combat.localPlayerUuid).toBe("1");
+    expect(snapshot.combat.sceneId).toBe(1001);
+    expect(snapshot.combat.dungeonDifficulty).toBe(2);
+    expect(snapshot.combat.isPaused).toBe(false);
+    expect(snapshot.combat.bosses).toEqual([]);
+  });
+
+  it("freezes the display clock at the recorded duration", () => {
+    const snapshot = historyDetailToLiveSnapshot(detail());
+    expect(displayElapsedMs(snapshot.displayClock, 0)).toBe(60_400);
+    expect(
+      displayElapsedMs(snapshot.displayClock, Number.MAX_SAFE_INTEGER),
+    ).toBe(60_400);
+  });
+
+  it("caps active time at the duration and falls back without it", () => {
+    const capped = historyDetailToLiveSnapshot(
+      detail({ summary: summary({ activeCombatDuration: 99 }) }),
+    );
+    expect(capped.combat.activeCombatTimeMs).toBe("60400");
+    const missing = historyDetailToLiveSnapshot(
+      detail({
+        summary: summary({ activeCombatDuration: null, localPlayerId: null }),
+      }),
+    );
+    expect(missing.combat.activeCombatTimeMs).toBe("60400");
+    expect(missing.combat.localPlayerUuid).toBe("");
+  });
+
+  it("keeps only player deaths that carry a replay", () => {
+    const snapshot = historyDetailToLiveSnapshot(detail());
+    expect(snapshot.deaths).toEqual([deathReplay("1")]);
+  });
+
+  it("derives fantasy casts from the encounter's markers", () => {
+    const fantasy = RESONANCE_SKILLS[0];
+    if (!fantasy) throw new Error("expected resonance skills");
+    const snapshot = historyDetailToLiveSnapshot(
+      detail({
+        startMs: 100,
+        markers: [
+          {
+            offsetMs: 1_100,
+            sequence: 1,
+            casterEntityId: "2",
+            skillId: String(fantasy.skillId),
+            kind: "fantasy",
+            remodelLevel: 4,
+          },
+        ],
+      }),
+    );
+    const [cast] = snapshot.fantasyCasts.get("2") ?? [];
+    expect(cast?.id).toBe(String(fantasy.skillId));
+    expect(cast?.remodelLevel).toBe(4);
+    expect(snapshot.fantasyCasts.has("1")).toBe(false);
+  });
+});
+
+function damageTarget(
+  targetEntityId: string,
+  total: string,
+  partial: Partial<EncounterEntityData["damageTargets"][number]> = {},
+): EncounterEntityData["damageTargets"][number] {
+  return {
+    targetEntityId,
+    targetDisplayUid: 0,
+    targetName: null,
+    targetMonsterId: null,
+    isBoss: false,
+    stats: stats({ total, hits: "2" }),
+    skills: [skill("1", "damage", { total, hits: "2" })],
+    ...partial,
+  };
+}
+
+function targetedDetail(): EncounterDetailData {
+  const base = detail();
+  const [first, second, monster] = base.entities;
+  if (!first || !second || !monster) throw new Error("fixture entities");
+  return {
+    ...base,
+    entities: [
+      {
+        ...first,
+        damageTargets: [
+          damageTarget("boss-1", "5000", {
+            isBoss: true,
+            targetMonsterId: 9001,
+          }),
+          damageTarget("add-7", "1000", { targetName: "Add" }),
+        ],
+      },
+      {
+        ...second,
+        damageTargets: [
+          damageTarget("boss-1", "3000", { isBoss: true }),
+          damageTarget("x", "2000", { targetDisplayUid: 55 }),
+        ],
+      },
+      monster,
+      entity({ entityId: "boss-1", name: "Tina", monsterId: 9001 }),
+    ],
+  };
+}
+
+describe("historyDamageTargets", () => {
+  it("merges targets across players, names them and drops bare ids", () => {
+    const encounter = targetedDetail();
+    const players = encounter.entities
+      .filter((row) => row.monsterId === null)
+      .map(historyEntityToRaw);
+    const targets = historyDamageTargets(
+      players,
+      historyEntityNames(encounter.entities),
+    );
+    expect(
+      targets.map((target) => [
+        target.targetEntityUuid,
+        target.targetName,
+        target.totalValue,
+      ]),
+    ).toEqual([
+      ["boss-1", "Tina", 8000n],
+      ["add-7", "Add", 1000n],
+    ]);
+    expect(targets[0]?.targetMonsterId).toBe(9001);
+  });
+});
+
+describe("historyCombatForTarget", () => {
+  it("returns the whole-encounter payload without a target", () => {
+    const snapshot = historyDetailToLiveSnapshot(targetedDetail());
+    expect(historyCombatForTarget(snapshot, null)).toBe(snapshot.combat);
+  });
+
+  it("matches the history page's per-target damage rows", () => {
+    const encounter = targetedDetail();
+    const snapshot = historyDetailToLiveSnapshot(encounter);
+    const zero = historyStatsToCombat(stats());
+    // The history page's own construction for a selected target.
+    const pageEntities = snapshot.players.map((row) => {
+      const damage =
+        row.dmgPerTarget.find((target) => target.targetEntityUuid === "boss-1")
+          ?.damage ?? zero;
+      return {
+        ...row,
+        damage,
+        damageBossOnly: damage,
+        healing: zero,
+        taken: zero,
+      };
+    });
+    const expected = new Map(
+      buildHistoryPlayerRows(pageEntities, 60_400, 45_200, "1").map((row) => [
+        row.entityUuid,
+        row,
+      ]),
+    );
+
+    const combat = historyCombatForTarget(snapshot, "boss-1");
+    expect(combat.totalDmg).toBe("8000");
+    expect(combat.totalDmgBossOnly).toBe("8000");
+    const rows = computePlayerRows(combat, "dps");
+    expect(rows.map((row) => row.entityUuid).sort()).toEqual(["1", "2"]);
+    for (const row of rows) {
+      const page = expected.get(row.entityUuid);
+      expect(row.totalDmg).toBe(page?.totalDmg);
+      expect(row.dps).toBe(page?.dps);
+      expect(row.tdps).toBe(page?.tdps);
+      expect(row.dmgPct).toBe(page?.dmgPct);
+      expect(row.bossDps).toBe(page?.bossDps);
+    }
+  });
+
+  it("narrows skills to the target and leaves healing / taken alone", () => {
+    const snapshot = historyDetailToLiveSnapshot(targetedDetail());
+    const combat = historyCombatForTarget(snapshot, "add-7");
+    const first = combat.entities.find((row) => row.entityUuid === "1");
+    expect(first?.dmgSkills[1]?.totalValue).toBe("1000");
+    expect(
+      computePlayerRows(combat, "dps").map((row) => row.entityUuid),
+    ).toEqual(["1"]);
+    expect(computePlayerRows(combat, "heal")).toEqual(
+      computePlayerRows(snapshot.combat, "heal"),
+    );
+    expect(computePlayerRows(combat, "tanked")).toEqual(
+      computePlayerRows(snapshot.combat, "tanked"),
+    );
   });
 });

@@ -17,12 +17,14 @@ import {
   TEAMMATE_DEAD_ROW_PLACEMENTS,
   type EntityDurationEntry,
   type InlineBuffFormat,
+  type MonsterSkillWatchEntry,
   type LiveMeterProfile,
   type MonsterMonitorProfile,
   type SkillMonitorProfile,
 } from "./settings-store";
 import { normalizeDpsColumnLabels } from "./column-labels";
 import { ensureEntityDurationEntries } from "./entity-duration-entries";
+import { ensureMonsterSkillEntries } from "./monster-skill-entries";
 import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
 import { ensureShieldDetailStyle } from "./skill-monitor-normalize";
 import { migrateLegacyMonsterPanels } from "./monster-panel-migration";
@@ -289,6 +291,11 @@ const dbmVoiceConfigMapSchema = v.record(
   dbmVoiceConfigSchema,
 );
 
+const monsterSkillVoiceConfigMapSchema = v.record(
+  numericKeySchema,
+  v.object({ onCast: v.optional(voiceEventSchema) }),
+);
+
 const buffAlertRuleSchema = v.object({
   thresholdSeconds: finiteNumberSchema,
   highlightColor: v.string(),
@@ -469,6 +476,10 @@ const monsterOverlayPositionsSchema = v.object({
     pointSchema,
     defaultClone(defaultMonster.overlayPositions.entityDurationPanel),
   ),
+  monsterSkillPanel: v.optional(
+    pointSchema,
+    defaultClone(defaultMonster.overlayPositions.monsterSkillPanel),
+  ),
 });
 
 const monsterOverlaySizesSchema = v.object({
@@ -490,6 +501,10 @@ const monsterOverlaySizesSchema = v.object({
     finiteNumberSchema,
     defaultMonster.overlaySizes.entityDurationPanelScale,
   ),
+  monsterSkillPanelScale: v.optional(
+    finiteNumberSchema,
+    defaultMonster.overlaySizes.monsterSkillPanelScale,
+  ),
 });
 
 const monsterOverlayVisibilitySchema = v.object({
@@ -502,6 +517,7 @@ const monsterOverlayVisibilitySchema = v.object({
   showStunPanel: v.boolean(),
   showHpPanel: v.optional(v.boolean(), false),
   showEntityDurationPanel: v.optional(v.boolean(), false),
+  showMonsterSkillPanel: v.optional(v.boolean(), false),
 });
 
 const entityDurationEntrySchema = v.object({
@@ -520,6 +536,24 @@ const entityDurationEntriesSchema = v.optional(
     v.transform((entries) =>
       ensureEntityDurationEntries(
         entries as readonly Partial<EntityDurationEntry>[],
+      ),
+    ),
+  ),
+  () => [],
+);
+
+const monsterSkillEntriesSchema = v.optional(
+  v.pipe(
+    v.array(
+      v.object({
+        skillId: positiveI32Schema,
+        label: v.optional(v.string(), ""),
+        displayMs: v.optional(finiteNumberSchema),
+      }),
+    ),
+    v.transform((entries) =>
+      ensureMonsterSkillEntries(
+        entries as readonly Partial<MonsterSkillWatchEntry>[],
       ),
     ),
   ),
@@ -669,6 +703,10 @@ const monsterProfileSchema = v.object({
     entityVoiceConfigMapSchema,
     defaultClone(defaultMonster.entityVoiceConfigs ?? {}),
   ),
+  monsterSkillVoiceConfigs: v.optional(
+    monsterSkillVoiceConfigMapSchema,
+    defaultClone(defaultMonster.monsterSkillVoiceConfigs ?? {}),
+  ),
   fantasyShowAll: v.boolean(),
   buffPriorityIds: numberArraySchema,
   buffAlerts: buffAlertMapSchema,
@@ -691,6 +729,11 @@ const monsterProfileSchema = v.object({
   entityDurationPanelStyle: v.optional(
     customPanelStyleSchema,
     defaultClone(defaultMonster.entityDurationPanelStyle),
+  ),
+  monsterSkillEntries: monsterSkillEntriesSchema,
+  monsterSkillPanelStyle: v.optional(
+    customPanelStyleSchema,
+    defaultClone(defaultMonster.monsterSkillPanelStyle),
   ),
 });
 

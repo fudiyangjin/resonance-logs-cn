@@ -2,7 +2,7 @@
   import { getClassIcon, tooltip } from "$lib/utils.svelte";
   import { goto } from "$app/navigation";
   import { settings, SETTINGS } from "$lib/settings-store";
-  import { liveCombatStore } from "$lib/stores/live-topics.svelte";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
   import { computePlayerRows } from "$lib/live-derived";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import { liveHealPlayerColumns } from "$lib/column-data";
@@ -16,7 +16,7 @@
   import { formatNumber, t } from "$lib/i18n/index.svelte";
   import FantasyCastIcons from "../fantasy-cast-icons.svelte";
 
-  let liveData = $derived(liveCombatStore.data?.combat ?? null);
+  let liveData = $derived(liveView.combat);
   let forbiddenIds = $derived(
     new Set(SETTINGS.challengeWatch.state.forbiddenDamageIds),
   );

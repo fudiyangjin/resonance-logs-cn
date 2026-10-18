@@ -13,6 +13,7 @@ function emptyView(): VoiceBindingView {
       selfAppliedMonitorAll: false,
       dbmAliases: {},
       entityDurationEntries: [],
+      monsterSkillEntries: [],
     },
     mechanicVoiceConfigs: {},
     alertConfigs: {},
@@ -42,6 +43,7 @@ describe("VOICE_SUBJECT_ADAPTERS", () => {
         "entity",
         "minimap",
         "monsterBuff",
+        "monsterSkill",
         "skill",
       ].sort(),
     );
@@ -52,6 +54,7 @@ describe("VOICE_SUBJECT_ADAPTERS", () => {
       "counter",
       "dbm",
       "entity",
+      "monsterSkill",
       "minimap",
       "alerts",
     ]);
@@ -318,5 +321,33 @@ describe("resolveMonsterBuffSourceScope", () => {
         3,
       ),
     ).toBe("localPlayerSource");
+  });
+});
+
+describe("monsterSkill adapter", () => {
+  const a = byKind("monsterSkill");
+  const s = { kind: "monsterSkill", skillId: 101403 } as const;
+
+  it("keys rules by skill id and only fires on cast", () => {
+    expect(a.ruleKey(s, "onCast")).toBe("voice:monsterSkill:101403:onCast");
+    expect(a.trigger(s, "onCast", 0)).toEqual({
+      subject: { kind: "monsterSkill", skillId: 101403 },
+      event: { kind: "started" },
+    });
+    expect(a.trigger(s, "expiring", 5)).toBeNull();
+  });
+
+  it("speaks the entry label, falling back to the game name", () => {
+    const view = emptyView();
+    view.monster.monsterSkillEntries = [
+      { skillId: 101403, label: "", displayMs: 5_000 },
+    ];
+    expect(a.events(view, s).map((event) => event.autoText(0))).toEqual([
+      "冰龙蓄力下砸",
+    ]);
+    view.monster.monsterSkillEntries = [
+      { skillId: 101403, label: "下砸", displayMs: 5_000 },
+    ];
+    expect(a.label(view, s)).toBe("下砸");
   });
 });

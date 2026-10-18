@@ -19,6 +19,7 @@
  */
 import type { MonsterBuffSourceScope } from "$lib/bindings";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
+import { ensureMonsterSkillEntries } from "$lib/monster-skill-entries";
 import {
   ensureDbmAliases,
   GAME_ALERT_KINDS,
@@ -86,6 +87,17 @@ export function dbmEntryIds(
   slice: Pick<MonsterVoiceSlice, "dbmAliases">,
 ): Set<number> {
   return new Set(Object.keys(ensureDbmAliases(slice.dbmAliases)).map(Number));
+}
+
+/** Skill ids of the monster-skill watch entries. */
+export function monsterSkillEntryIds(
+  slice: Pick<MonsterVoiceSlice, "monsterSkillEntries">,
+): Set<number> {
+  return new Set(
+    ensureMonsterSkillEntries(slice.monsterSkillEntries).map(
+      (entry) => entry.skillId,
+    ),
+  );
 }
 
 /** Events an entity entry supports: `expiring` needs a duration. */
@@ -276,10 +288,16 @@ export function pruneMonsterVoice<M extends MonsterVoiceSlice>(monster: M): M {
     monster.entityVoiceConfigs,
     monster.entityDurationEntries,
   );
+  const monsterSkillEntries = monsterSkillEntryIds(monster);
+  const monsterSkillVoiceConfigs = pruneRecord(
+    monster.monsterSkillVoiceConfigs,
+    (key, config) => (monsterSkillEntries.has(Number(key)) ? config : null),
+  );
   if (
     monsterBuffVoiceConfigs === monster.monsterBuffVoiceConfigs &&
     dbmVoiceConfigs === monster.dbmVoiceConfigs &&
-    entityVoiceConfigs === monster.entityVoiceConfigs
+    entityVoiceConfigs === monster.entityVoiceConfigs &&
+    monsterSkillVoiceConfigs === monster.monsterSkillVoiceConfigs
   ) {
     return monster;
   }
@@ -288,6 +306,7 @@ export function pruneMonsterVoice<M extends MonsterVoiceSlice>(monster: M): M {
     monsterBuffVoiceConfigs,
     dbmVoiceConfigs,
     entityVoiceConfigs,
+    monsterSkillVoiceConfigs,
   };
 }
 

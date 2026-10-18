@@ -36,6 +36,8 @@ export type VoiceBindingSubject =
   | { kind: "dbm"; baseSkillId: number }
   /** An entity-duration watch entry; `scope` mirrors `EntityDurationScope`. */
   | { kind: "entity"; monsterId: number; scope: EntityOwnerScope }
+  /** A monster-skill watch entry: any nearby monster cast the skill. */
+  | { kind: "monsterSkill"; skillId: number }
   | { kind: "minimapCue"; cueId: string }
   | { kind: "gameAlert"; alertKind: GameAlertKind };
 
@@ -79,6 +81,7 @@ export type OverviewGroup =
   | "counter"
   | "dbm"
   | "entity"
+  | "monsterSkill"
   | "minimap"
   | "alerts";
 
@@ -108,6 +111,8 @@ export type MonsterVoiceSlice = Pick<
   | "selfAppliedMonitorAll"
   | "entityDurationEntries"
   | "entityVoiceConfigs"
+  | "monsterSkillEntries"
+  | "monsterSkillVoiceConfigs"
 >;
 
 /**
@@ -137,7 +142,10 @@ export type VoiceBindingWriter = {
     ) => Partial<
       Pick<
         MonsterVoiceSlice,
-        "monsterBuffVoiceConfigs" | "dbmVoiceConfigs" | "entityVoiceConfigs"
+        | "monsterBuffVoiceConfigs"
+        | "dbmVoiceConfigs"
+        | "entityVoiceConfigs"
+        | "monsterSkillVoiceConfigs"
       >
     >,
   ): void;

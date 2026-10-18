@@ -7,7 +7,7 @@
     DEFAULT_LIVE_TANKED_PLAYER_STATS,
     normalizeTankedPlayerColumnOrder,
   } from "$lib/settings-store";
-  import { liveCombatStore } from "$lib/stores/live-topics.svelte";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
   import { computePlayerRows } from "$lib/live-derived";
   import TableRowGlow from "$lib/components/table-row-glow.svelte";
   import { liveTankedPlayerColumns } from "$lib/column-data";
@@ -21,7 +21,7 @@
   import { formatNumber, t } from "$lib/i18n/index.svelte";
   import FantasyCastIcons from "../fantasy-cast-icons.svelte";
 
-  let liveData = $derived(liveCombatStore.data?.combat ?? null);
+  let liveData = $derived(liveView.combat);
   let forbiddenIds = $derived(
     new Set(SETTINGS.challengeWatch.state.forbiddenDamageIds),
   );

@@ -46,6 +46,8 @@ const EMPTY_MONSTER_SLICE: MonsterVoiceSlice = {
   selfAppliedMonitorAll: false,
   entityDurationEntries: [],
   entityVoiceConfigs: {},
+  monsterSkillEntries: [],
+  monsterSkillVoiceConfigs: {},
 };
 
 /**

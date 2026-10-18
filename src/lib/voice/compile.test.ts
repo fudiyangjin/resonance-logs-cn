@@ -88,6 +88,7 @@ function view(overrides: Partial<VoiceBindingView> = {}): VoiceBindingView {
       selfAppliedMonitorAll: false,
       dbmAliases: {},
       entityDurationEntries: [],
+      monsterSkillEntries: [],
     },
     mechanicVoiceConfigs: {},
     alertConfigs: {},
@@ -165,6 +166,7 @@ describe("collectBindings + phraseRequests", () => {
           selfAppliedMonitorAll: false,
           dbmAliases: {},
           entityDurationEntries: [],
+          monsterSkillEntries: [],
           monsterBuffVoiceConfigs: {
             "55": {
               gained: {
@@ -233,6 +235,7 @@ describe("compileVoiceRules", () => {
           scope: "self",
         },
       ],
+      monsterSkillEntries: [],
       monsterBuffVoiceConfigs: { "55": { gained: custom("x") } },
       dbmVoiceConfigs: { "8801": { onCast: auto(), expiring: expiring(5) } },
       entityVoiceConfigs: {
@@ -563,5 +566,55 @@ describe("compileVoiceRules", () => {
     expect(mb.monsterBuffSourceScope).toBe("anySource");
     const alert = entries.find((e) => e.id === "voice:alert:matchReady")!;
     expect(alert).toMatchObject({ bundledFallback: true, language: "enUs" });
+  });
+});
+
+describe("monster skill bindings", () => {
+  const monsterSkillView = (entries: { skillId: number; label: string }[]) =>
+    view({
+      monster: {
+        monitoredBuffIds: [],
+        selfAppliedBuffIds: [],
+        selfAppliedMonitorAll: false,
+        dbmAliases: {},
+        entityDurationEntries: [],
+        monsterSkillEntries: entries.map((entry) => ({
+          ...entry,
+          displayMs: 5_000,
+        })),
+        monsterSkillVoiceConfigs: { "101403": { onCast: auto() } },
+      },
+    });
+
+  it("compiles an on-cast binding to a backend started rule named by its label", () => {
+    const bindings = collectBindings(
+      monsterSkillView([{ skillId: 101403, label: "下砸" }]),
+    );
+    expect(bindings.map((binding) => binding.ruleKey)).toEqual([
+      "voice:monsterSkill:101403:onCast",
+    ]);
+    const index = indexOf(bindings, {
+      "voice:monsterSkill:101403:onCast": "P-ms",
+    });
+    expect(compileVoiceRules(bindings, index)).toEqual([
+      {
+        id: "voice:monsterSkill:101403:onCast",
+        enabled: true,
+        trigger: {
+          subject: { kind: "monsterSkill", skillId: 101403 },
+          event: { kind: "started" },
+        },
+        phraseId: "P-ms",
+        priority: 0,
+        cooldownMs: 2000,
+      },
+    ]);
+    expect(phraseRequests(bindings).map((request) => request.text)).toEqual([
+      "下砸",
+    ]);
+  });
+
+  it("drops the binding once its watch entry is gone", () => {
+    expect(collectBindings(monsterSkillView([]))).toEqual([]);
   });
 });

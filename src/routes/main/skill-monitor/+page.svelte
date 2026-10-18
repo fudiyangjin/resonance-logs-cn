@@ -1,5 +1,8 @@
 <script lang="ts">
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
+  import MonitorTabNav, {
+    type MonitorTabGroup,
+  } from "$lib/components/monitor-tab-nav.svelte";
   import TabSkillCd from "./tab-skill-cd.svelte";
   import TabBuffMonitor from "./tab-buff-monitor.svelte";
   import TabPanelAttr from "./tab-panel-attr.svelte";
@@ -113,15 +116,15 @@
   let groupPrioritySearchKeyword = $state<Record<string, string>>({});
   let resonanceSearch = $state("");
   let inlineBuffSearch = $state("");
-  let activeTab = $state<
+  type SkillMonitorTab =
     | "skill-cd"
     | "buff"
     | "panel-attr"
     | "custom-panel"
     | "shield-detail"
     | "buff-coverage"
-    | "overlay"
-  >("skill-cd");
+    | "overlay";
+  let activeTab = $state<SkillMonitorTab>("skill-cd");
   let coverageBuffSearch = $state("");
   let attrSectionExpanded = $state(false);
   let buffAliasSectionExpanded = $state(false);
@@ -211,6 +214,45 @@
   const showBuffCoverageGroup = $derived(
     activeProfile.overlayVisibility?.showBuffCoverageGroup ?? false,
   );
+  const tabGroups = $derived.by((): MonitorTabGroup<SkillMonitorTab>[] => [
+    {
+      id: "monitor",
+      labelKey: "skillMonitor.tabGroups.monitor",
+      tabs: [
+        {
+          id: "skill-cd",
+          labelKey: "skillMonitor.tabs.skillCd",
+          shown: showSkillCdGroup,
+        },
+        { id: "buff", labelKey: "skillMonitor.tabs.buff" },
+        {
+          id: "panel-attr",
+          labelKey: "skillMonitor.tabs.panelAttr",
+          shown: showPanelAttrGroup,
+        },
+        {
+          id: "custom-panel",
+          labelKey: "skillMonitor.tabs.customPanel",
+          shown: showCustomPanelGroup,
+        },
+        {
+          id: "shield-detail",
+          labelKey: "skillMonitor.tabs.shieldDetail",
+          shown: showShieldDetailGroup,
+        },
+        {
+          id: "buff-coverage",
+          labelKey: "skillMonitor.tabs.buffCoverage",
+          shown: showBuffCoverageGroup,
+        },
+      ],
+    },
+    {
+      id: "window",
+      labelKey: "skillMonitor.tabGroups.window",
+      tabs: [{ id: "overlay", labelKey: "skillMonitor.tabs.overlay" }],
+    },
+  ]);
   const buffCoverageEntries = $derived.by(() =>
     ensureBuffCoverageEntries(activeProfile),
   );
@@ -1864,78 +1906,7 @@
   <div
     class="border-border/60 bg-card/40 rounded-lg border p-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
   >
-    <div class="flex flex-wrap gap-2">
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'skill-cd'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => (activeTab = "skill-cd")}
-      >
-        {t("skillMonitor.tabs.skillCd")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'buff'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => (activeTab = "buff")}
-      >
-        {t("skillMonitor.tabs.buff")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'panel-attr'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => (activeTab = "panel-attr")}
-      >
-        {t("skillMonitor.tabs.panelAttr")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'custom-panel'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => (activeTab = "custom-panel")}
-      >
-        {t("skillMonitor.tabs.customPanel")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'shield-detail'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => (activeTab = "shield-detail")}
-      >
-        {t("skillMonitor.tabs.shieldDetail")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'buff-coverage'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => (activeTab = "buff-coverage")}
-      >
-        {t("skillMonitor.tabs.buffCoverage")}
-      </button>
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {activeTab ===
-        'overlay'
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-        onclick={() => (activeTab = "overlay")}
-      >
-        {t("skillMonitor.tabs.overlay")}
-      </button>
-    </div>
+    <MonitorTabNav groups={tabGroups} bind:value={activeTab} />
   </div>
 
   {#if activeTab === "skill-cd"}

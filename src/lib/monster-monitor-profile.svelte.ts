@@ -23,6 +23,7 @@ import {
   type MonsterMonitorState,
 } from "./settings-store";
 import { ensureEntityDurationEntries } from "./entity-duration-entries";
+import { ensureMonsterSkillEntries } from "./monster-skill-entries";
 import { normalizeCustomPanelStyle } from "./skill-monitor-normalize";
 import {
   ensureTeammateBuffColumnStyles,
@@ -244,6 +245,10 @@ export function normalizeMonsterProfileStyles<
     ),
     entityDurationPanelStyle: normalizeCustomPanelStyle(
       profile.entityDurationPanelStyle ?? defaults.entityDurationPanelStyle,
+    ),
+    monsterSkillEntries: ensureMonsterSkillEntries(profile.monsterSkillEntries),
+    monsterSkillPanelStyle: normalizeCustomPanelStyle(
+      profile.monsterSkillPanelStyle ?? defaults.monsterSkillPanelStyle,
     ),
   };
 }

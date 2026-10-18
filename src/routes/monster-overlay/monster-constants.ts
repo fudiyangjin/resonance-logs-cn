@@ -15,6 +15,7 @@ export const DEFAULT_MONSTER_OVERLAY_POSITIONS: MonsterOverlayPositions = {
   stunPanel: { x: 40, y: 460 },
   hpPanel: { x: 40, y: 560 },
   entityDurationPanel: { x: 800, y: 300 },
+  monsterSkillPanel: { x: 800, y: 460 },
 };
 
 export const DEFAULT_MONSTER_OVERLAY_SIZES: MonsterOverlaySizes = {
@@ -27,6 +28,7 @@ export const DEFAULT_MONSTER_OVERLAY_SIZES: MonsterOverlaySizes = {
   stunPanelScale: 1,
   hpPanelScale: 1,
   entityDurationPanelScale: 1,
+  monsterSkillPanelScale: 1,
 };
 
 export const DEFAULT_MONSTER_OVERLAY_VISIBILITY = {
@@ -39,6 +41,7 @@ export const DEFAULT_MONSTER_OVERLAY_VISIBILITY = {
   showStunPanel: false,
   showHpPanel: false,
   showEntityDurationPanel: false,
+  showMonsterSkillPanel: false,
 };
 
 export const MIN_MONSTER_PANEL_SCALE = 0.5;

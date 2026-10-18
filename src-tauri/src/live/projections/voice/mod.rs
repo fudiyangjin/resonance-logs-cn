@@ -11,16 +11,17 @@
 //! watched entities and boss mechanics once per batch, and only when their
 //! input's revision moved. Casts and alerts are plain event edges.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::Arc;
 
 use crate::live::counter::engine::CounterEngine;
 use crate::live::projections::buff_presence::BuffCompositeCatalog;
 use crate::live::projections::entity_monitor::EntityMonitorProjection;
+use crate::live::projections::monster_skill_watch::is_world_monster;
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
-    BuffTransition, DomainEnvelope, DomainEvent, MonoTimeMs, SkillPhase, TimerKey, VoiceRuleHandle,
-    VoiceTimer,
+    BatchId, BuffTransition, DomainEnvelope, DomainEvent, MonoTimeMs, SkillPhase, TimerKey,
+    VoiceRuleHandle, VoiceTimer,
 };
 use crate::live::runtime::scheduler::DeadlineScheduler;
 use crate::voice::models::{
@@ -105,6 +106,10 @@ pub struct VoiceProjection {
     /// `(monster_id, scope)` pairs with a present watched entity at the last
     /// derivation; `Entity/Started|Ended` fire on set differences.
     entity_presence: BTreeSet<(i32, EntityOwnerScope)>,
+    /// Monster skills already announced in `monster_skill_batch`: one cast
+    /// can reach the context more than once per batch.
+    monster_skill_batch: Option<BatchId>,
+    monster_skills_fired: HashSet<i32>,
     seen: SeenInputs,
     /// Cues matched since the last [`Self::take_cues`].
     pending_cues: Vec<VoiceCueIntent>,
@@ -194,6 +199,8 @@ impl VoiceProjection {
         self.counter_crossed.clear();
         self.skills.clear();
         self.entity_presence.clear();
+        self.monster_skill_batch = None;
+        self.monster_skills_fired.clear();
         self.seen = SeenInputs::default();
     }
 
@@ -260,6 +267,25 @@ impl VoiceProjection {
                 ..
             } if entities.local_player() == Some(*caster) => {
                 self.fire_started(SubjectKey::Skill(*skill_id), now_ms);
+            }
+            DomainEvent::SkillLifecycleChanged {
+                caster,
+                skill_id,
+                phase: SkillPhase::CastStarted | SkillPhase::Observed,
+                ..
+            } if !self
+                .book
+                .matching(SubjectKey::MonsterSkill(*skill_id))
+                .is_empty()
+                && is_world_monster(entities, caster.uuid) =>
+            {
+                if self.monster_skill_batch != Some(envelope.batch_id) {
+                    self.monster_skill_batch = Some(envelope.batch_id);
+                    self.monster_skills_fired.clear();
+                }
+                if self.monster_skills_fired.insert(*skill_id) {
+                    self.fire_started(SubjectKey::MonsterSkill(*skill_id), now_ms);
+                }
             }
             DomainEvent::BossMechanicStarted(mechanic) => {
                 self.fire_started(SubjectKey::BossDbm(mechanic.base_skill_id), now_ms);

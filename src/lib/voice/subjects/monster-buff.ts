@@ -40,7 +40,7 @@ export const monsterBuffAdapter: VoiceSubjectAdapter<MonsterBuffSubject> = {
     group: "monsterBuff",
     titleKey: "monsterMonitor.buff.title",
     navigateKey: "voice.bindings.navigate.monsterBuff",
-    route: "/main/monster-monitor",
+    route: "/main/monster-monitor?tab=buff",
   },
   ruleKey: (subject, eventKind) =>
     `voice:monsterBuff:${subject.sourceScope}:${subject.buffId}:${eventKind}`,

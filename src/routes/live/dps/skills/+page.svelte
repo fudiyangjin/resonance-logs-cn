@@ -5,7 +5,7 @@
     SETTINGS,
     normalizeDpsSkillColumnOrder,
   } from "$lib/settings-store";
-  import { liveCombatStore } from "$lib/stores/live-topics.svelte";
+  import { liveView } from "$lib/stores/live-view-source.svelte";
   import { computePlayerRows } from "$lib/live-derived";
   import {
     groupSkillsByRecount,
@@ -13,6 +13,7 @@
     type SkillDisplayRow,
   } from "$lib/config/recount-table";
   import LiveGroupedSkillTable from "$lib/components/live-grouped-skill-table.svelte";
+  import HistoryTargetStrip from "../../history-target-strip.svelte";
   import { liveDpsSkillColumns } from "$lib/column-data";
   import { resolveColumnLabel } from "$lib/column-labels";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
@@ -25,7 +26,7 @@
     ungrouped: [] as SkillDisplayRow[],
   };
 
-  let liveData = $derived(liveCombatStore.data?.combat ?? null);
+  let liveData = $derived(liveView.combat);
   let dpsPlayers = $derived(liveData ? computePlayerRows(liveData, "dps") : []);
   let currPlayer = $derived(
     dpsPlayers.find((player) => player.entityUuid === entityUuid),
@@ -122,6 +123,8 @@
 </script>
 
 <svelte:window oncontextmenu={() => window.history.back()} />
+
+<HistoryTargetStrip />
 
 <LiveGroupedSkillTable
   {groupedSkills}

@@ -24,6 +24,7 @@ const EMPTY_MONSTER: MonsterVoiceSlice = {
   selfAppliedMonitorAll: false,
   dbmAliases: {},
   entityDurationEntries: [],
+  monsterSkillEntries: [],
 };
 
 function view(overrides: Partial<VoiceBindingView> = {}): VoiceBindingView {

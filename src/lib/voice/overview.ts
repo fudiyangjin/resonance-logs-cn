@@ -89,6 +89,7 @@ export function overviewGroups(): readonly OverviewGroupMeta[] {
       "counter",
       "dbm",
       "entity",
+      "monsterSkill",
       "minimap",
       "alerts",
     ] as const
@@ -101,6 +102,7 @@ export function overviewGroups(): readonly OverviewGroupMeta[] {
         counter: "counterSlot",
         dbm: "dbm",
         entity: "entity",
+        monsterSkill: "monsterSkill",
         minimap: "minimapCue",
         alerts: "gameAlert",
       } as const
