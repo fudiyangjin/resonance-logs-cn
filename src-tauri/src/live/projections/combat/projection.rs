@@ -497,6 +497,8 @@ impl CombatProjection {
         self.dungeon_difficulty
     }
 
+    /// Players for the encounter list. Unnamed characters are kept for their
+    /// UID, which the history search matches.
     #[must_use]
     pub fn player_names(&self) -> Vec<crate::database::PlayerNameEntry> {
         self.accumulator
@@ -504,7 +506,9 @@ impl CombatProjection {
             .iter()
             .filter_map(|(entity_id, stats)| {
                 let combatant = self.combatants.get(entity_id)?;
-                if combatant.name.is_empty() {
+                let uid = crate::live::entity_id::is_character_uuid(*entity_id)
+                    .then(|| crate::live::entity_id::uid_from_uuid(*entity_id));
+                if combatant.name.is_empty() && uid.is_none() {
                     return None;
                 }
                 let class_id = if stats.class_spec == ClassSpec::Unknown {
@@ -515,6 +519,7 @@ impl CombatProjection {
                 Some(crate::database::PlayerNameEntry {
                     name: combatant.name.clone(),
                     class_id,
+                    uid,
                 })
             })
             .collect()
@@ -738,6 +743,50 @@ mod tests {
         assert_eq!(projection.accumulator.entities[&10].damage.total, 100);
         assert_eq!(projection.accumulator.entities[&10].taken.total, 0);
         assert_eq!(projection.accumulator.entities[&20].taken.total, 100);
+    }
+
+    #[test]
+    fn player_names_keep_unnamed_characters_for_their_uid() {
+        let named = crate::live::entity_id::canonical_player_uuid(1_001);
+        let unnamed = crate::live::entity_id::canonical_player_uuid(1_002);
+        let mut projection = CombatProjection::default();
+        projection.start_segment(SegmentId(1), MonoTimeMs(1_000), 1_000);
+        let entities = EntityContext::new();
+        for (source, wall_ms, mono_ms) in [
+            (named, 1_000, 1_000),
+            (unnamed, 1_001, 1_001),
+            (10, 1_002, 1_002),
+        ] {
+            let mut player_hit = hit(true, HitKind::Damage);
+            player_hit.source = Some(entity(source));
+            apply_hit(
+                &mut projection,
+                player_hit,
+                wall_ms,
+                MonoTimeMs(mono_ms),
+                &entities,
+            );
+        }
+        projection
+            .combatants
+            .get_mut(&named)
+            .expect("named combatant")
+            .name = "Alice".to_string();
+
+        let mut players = projection
+            .player_names()
+            .into_iter()
+            .map(|player| (player.name, player.uid))
+            .collect::<Vec<_>>();
+        players.sort();
+
+        assert_eq!(
+            players,
+            vec![
+                (String::new(), Some(1_002)),
+                ("Alice".to_string(), Some(1_001)),
+            ]
+        );
     }
 
     #[test]

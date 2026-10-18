@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -66,6 +66,8 @@ pub struct EncounterFiltersDto {
     pub scene_ids: Option<Vec<i32>>,
     pub player_name: Option<String>,
     pub player_names: Option<Vec<String>>,
+    /// Exact in-game UIDs, OR-ed with the player names.
+    pub player_uids: Option<Vec<i64>>,
     pub date_from_ms: Option<i64>,
     pub date_to_ms: Option<i64>,
     pub is_favorite: Option<bool>,
@@ -95,6 +97,23 @@ pub struct SceneIdsResult {
 #[serde(rename_all = "camelCase")]
 pub struct PlayerNamesResult {
     pub names: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryUidCandidateDto {
+    pub uid: i64,
+    /// Every name recorded with this UID, newest first.
+    pub names: Vec<String>,
+    pub encounter_count: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryPlayerSearchResult {
+    pub names: Vec<String>,
+    /// Exact match first, then the most recently seen.
+    pub uids: Vec<HistoryUidCandidateDto>,
 }
 
 #[derive(Debug, Queryable)]
@@ -127,24 +146,50 @@ where
     db_exec(operation)
 }
 
-fn parse_player_entries(json: &Option<String>) -> Vec<PlayerSummaryDto> {
+fn parse_player_entries(json: &Option<String>) -> Vec<PlayerNameEntry> {
     let Some(json) = json else {
         return Vec::new();
     };
     if let Ok(entries) = serde_json::from_str::<Vec<PlayerNameEntry>>(json) {
-        return entries
-            .into_iter()
-            .map(|entry| PlayerSummaryDto {
-                name: entry.name,
-                class_id: entry.class_id,
-            })
-            .collect();
+        return entries;
     }
     serde_json::from_str::<Vec<String>>(json)
         .unwrap_or_default()
         .into_iter()
-        .map(|name| PlayerSummaryDto { name, class_id: 0 })
+        .map(|name| PlayerNameEntry {
+            name,
+            class_id: 0,
+            uid: None,
+        })
         .collect()
+}
+
+/// Players the encounter list shows; unnamed entries only serve the UID filter.
+pub(crate) fn shown_players(entries: &[PlayerNameEntry]) -> Vec<PlayerSummaryDto> {
+    entries
+        .iter()
+        .filter(|entry| !entry.name.is_empty())
+        .map(|entry| PlayerSummaryDto {
+            name: entry.name.clone(),
+            class_id: entry.class_id,
+        })
+        .collect()
+}
+
+/// Player dimension of the list filter: names and UIDs are OR-ed together.
+fn matches_players(
+    players: &[PlayerSummaryDto],
+    player_uids: &[i64],
+    name_filter: &HashSet<String>,
+    uid_filter: &HashSet<i64>,
+) -> bool {
+    if name_filter.is_empty() && uid_filter.is_empty() {
+        return true;
+    }
+    players
+        .iter()
+        .any(|player| name_filter.contains(&player.name.to_lowercase()))
+        || player_uids.iter().any(|uid| uid_filter.contains(uid))
 }
 
 fn parse_boss_ids(json: &Option<String>) -> Vec<i32> {
@@ -154,6 +199,16 @@ fn parse_boss_ids(json: &Option<String>) -> Vec<i32> {
 }
 
 fn map_summary(row: EncounterSummaryRow) -> Result<EncounterSummaryDto, String> {
+    map_summary_with_uids(row).map(|(summary, _)| summary)
+}
+
+/// Also returns the encounter's recorded player UIDs, which only the list
+/// filter reads.
+fn map_summary_with_uids(
+    row: EncounterSummaryRow,
+) -> Result<(EncounterSummaryDto, Vec<i64>), String> {
+    let players = parse_player_entries(&row.player_names);
+    let player_uids = players.iter().filter_map(|player| player.uid).collect();
     let total_dmg = summary_total(
         row.id,
         "damage",
@@ -168,7 +223,7 @@ fn map_summary(row: EncounterSummaryRow) -> Result<EncounterSummaryDto, String> 
         row.total_heal_exact,
         row.total_heal,
     )?;
-    Ok(EncounterSummaryDto {
+    let summary = EncounterSummaryDto {
         id: row.id,
         started_at_ms: row.started_at_ms,
         ended_at_ms: row.ended_at_ms,
@@ -190,10 +245,11 @@ fn map_summary(row: EncounterSummaryRow) -> Result<EncounterSummaryDto, String> 
                 is_defeated: true,
             })
             .collect(),
-        players: parse_player_entries(&row.player_names),
+        players: shown_players(&players),
         detail_available: row.projection_encounter_id.is_some(),
         display_index: DisplayIndex::UNASSIGNED.as_i32(),
-    })
+    };
+    Ok((summary, player_uids))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -392,7 +448,7 @@ pub fn get_player_names_filtered(prefix: String) -> Result<PlayerNamesResult, St
             encounter_names
                 .into_iter()
                 .flat_map(|json| parse_player_entries(&json))
-                .map(|entry| entry.name),
+                .filter_map(|entry| (!entry.name.is_empty()).then_some(entry.name)),
         );
         names.retain(|name| prefix.is_empty() || name.to_lowercase().starts_with(&prefix));
         names.sort_unstable_by_key(|name| name.to_lowercase());
@@ -400,6 +456,101 @@ pub fn get_player_names_filtered(prefix: String) -> Result<PlayerNamesResult, St
         names.truncate(100);
         Ok(PlayerNamesResult { names })
     })
+}
+
+/// Name and UID suggestions for the history search. Only the SELECT runs on
+/// the database actor; parsing and matching happen after releasing it.
+#[tauri::command]
+#[specta::specta]
+pub async fn search_history_players(query: String) -> Result<HistoryPlayerSearchResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let rows = with_db(|conn| {
+            use sch::encounters::dsl as e;
+            e::encounters
+                .select(e::player_names)
+                .filter(e::ended_at_ms.is_not_null())
+                .filter(e::player_names.is_not_null())
+                .order((e::started_at_ms.desc(), e::id.desc()))
+                .load::<Option<String>>(conn)
+                .map_err(|error| error.to_string())
+        })?;
+        Ok(search_players(&query, &rows))
+    })
+    .await
+    .map_err(|error| format!("player search worker failed: {error}"))?
+}
+
+struct UidMatch {
+    candidate: HistoryUidCandidateDto,
+    last_row: usize,
+}
+
+/// `rows` are encounters' `player_names` JSON, newest first. Names match by
+/// case-insensitive prefix; a numeric query (optionally `#`-prefixed) also
+/// matches UIDs by prefix. Nothing is truncated.
+fn search_players(query: &str, rows: &[Option<String>]) -> HistoryPlayerSearchResult {
+    let query = query.trim();
+    if query.is_empty() {
+        return HistoryPlayerSearchResult {
+            names: Vec::new(),
+            uids: Vec::new(),
+        };
+    }
+    let name_prefix = query.to_lowercase();
+    let uid_prefix = query.strip_prefix('#').unwrap_or(query);
+    let uid_prefix = (!uid_prefix.is_empty()
+        && uid_prefix.bytes().all(|byte| byte.is_ascii_digit()))
+    .then_some(uid_prefix);
+
+    let mut names = Vec::new();
+    let mut uid_matches: Vec<UidMatch> = Vec::new();
+    let mut uid_slots: HashMap<i64, usize> = HashMap::new();
+    for (row, json) in rows.iter().enumerate() {
+        for entry in parse_player_entries(json) {
+            if !entry.name.is_empty() && entry.name.to_lowercase().starts_with(&name_prefix) {
+                names.push(entry.name.clone());
+            }
+            let Some(uid) = entry
+                .uid
+                .filter(|uid| uid_prefix.is_some_and(|prefix| uid.to_string().starts_with(prefix)))
+            else {
+                continue;
+            };
+            let slot = *uid_slots.entry(uid).or_insert_with(|| {
+                uid_matches.push(UidMatch {
+                    candidate: HistoryUidCandidateDto {
+                        uid,
+                        names: Vec::new(),
+                        encounter_count: 0,
+                    },
+                    last_row: usize::MAX,
+                });
+                uid_matches.len() - 1
+            });
+            let uid_match = &mut uid_matches[slot];
+            if uid_match.last_row != row {
+                uid_match.last_row = row;
+                uid_match.candidate.encounter_count += 1;
+            }
+            if !entry.name.is_empty() && !uid_match.candidate.names.contains(&entry.name) {
+                uid_match.candidate.names.push(entry.name);
+            }
+        }
+    }
+
+    names.sort_unstable_by_key(|name| name.to_lowercase());
+    names.dedup_by(|left, right| left.eq_ignore_ascii_case(right));
+    // Rows are newest first, so insertion order is recency; the stable sort
+    // only lifts the exact UID to the top.
+    let exact_uid = uid_prefix.and_then(|prefix| prefix.parse::<i64>().ok());
+    uid_matches.sort_by_key(|uid_match| Some(uid_match.candidate.uid) != exact_uid);
+    HistoryPlayerSearchResult {
+        names,
+        uids: uid_matches
+            .into_iter()
+            .map(|uid_match| uid_match.candidate)
+            .collect(),
+    }
 }
 
 #[tauri::command]
@@ -461,6 +612,7 @@ fn get_recent_encounters_filtered_blocking(
             scene_ids: None,
             player_name: None,
             player_names: None,
+            player_uids: None,
             date_from_ms: None,
             date_to_ms: None,
             is_favorite: None,
@@ -475,36 +627,44 @@ fn get_recent_encounters_filtered_blocking(
             .into_iter()
             .map(|name| name.to_lowercase())
             .collect::<HashSet<_>>();
-        let mut summaries = rows
+        let uid_filter = filters
+            .player_uids
+            .unwrap_or_default()
             .into_iter()
-            .map(map_summary)
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<HashSet<_>>();
+        let (mut summaries, player_uids): (Vec<_>, Vec<_>) = rows
+            .into_iter()
+            .map(map_summary_with_uids)
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .unzip();
         assign_display_indices(&mut summaries)?;
-        summaries.retain(|summary| {
-            (boss_filter.is_empty()
-                || summary
-                    .bosses
-                    .iter()
-                    .any(|boss| boss_filter.contains(&boss.monster_id)))
-                && (scene_filter.is_empty()
+        let mut summaries = summaries
+            .into_iter()
+            .zip(player_uids)
+            .filter(|(summary, player_uids)| {
+                (boss_filter.is_empty()
                     || summary
-                        .scene_id
-                        .is_some_and(|scene| scene_filter.contains(&scene)))
-                && (player_filter.is_empty()
-                    || summary
-                        .players
+                        .bosses
                         .iter()
-                        .any(|player| player_filter.contains(&player.name.to_lowercase())))
-                && filters
-                    .date_from_ms
-                    .is_none_or(|from| summary.started_at_ms >= from)
-                && filters
-                    .date_to_ms
-                    .is_none_or(|to| summary.started_at_ms < to)
-                && filters
-                    .is_favorite
-                    .is_none_or(|favorite| summary.is_favorite == favorite)
-        });
+                        .any(|boss| boss_filter.contains(&boss.monster_id)))
+                    && (scene_filter.is_empty()
+                        || summary
+                            .scene_id
+                            .is_some_and(|scene| scene_filter.contains(&scene)))
+                    && matches_players(&summary.players, player_uids, &player_filter, &uid_filter)
+                    && filters
+                        .date_from_ms
+                        .is_none_or(|from| summary.started_at_ms >= from)
+                    && filters
+                        .date_to_ms
+                        .is_none_or(|to| summary.started_at_ms < to)
+                    && filters
+                        .is_favorite
+                        .is_none_or(|favorite| summary.is_favorite == favorite)
+            })
+            .map(|(summary, _)| summary)
+            .collect::<Vec<_>>();
         let total_count = i64::try_from(summaries.len()).unwrap_or(i64::MAX);
         let start = usize::try_from(offset)
             .unwrap_or(usize::MAX)
@@ -704,6 +864,145 @@ mod tests {
         let summary = map_summary(row).expect("map summary");
 
         assert_eq!(summary.note.as_deref(), Some("phase two"));
+    }
+
+    #[test]
+    fn player_entries_without_uid_parse_as_none() {
+        let entries = parse_player_entries(&Some(r#"[{"name":"Alice","class_id":2}]"#.into()));
+        let legacy = parse_player_entries(&Some(r#"["Bob"]"#.into()));
+
+        assert_eq!(entries[0].uid, None);
+        assert_eq!(legacy[0].name, "Bob");
+        assert_eq!(legacy[0].uid, None);
+    }
+
+    #[test]
+    fn summary_hides_unnamed_players_but_keeps_their_uids() {
+        let mut row = summary_row(false, None, None);
+        row.player_names = Some(
+            r#"[{"name":"Alice","class_id":2,"uid":11},{"name":"","class_id":0,"uid":22}]"#.into(),
+        );
+
+        let (summary, player_uids) = map_summary_with_uids(row).expect("map summary");
+
+        assert_eq!(
+            summary
+                .players
+                .iter()
+                .map(|player| player.name.as_str())
+                .collect::<Vec<_>>(),
+            vec!["Alice"]
+        );
+        assert_eq!(player_uids, vec![11, 22]);
+    }
+
+    #[test]
+    fn matches_players_ors_names_and_uids() {
+        let players = vec![PlayerSummaryDto {
+            name: "Alice".into(),
+            class_id: 2,
+        }];
+        let names = HashSet::from(["alice".to_string()]);
+        let other_names = HashSet::from(["bob".to_string()]);
+        let uids = HashSet::from([22]);
+
+        assert!(matches_players(
+            &players,
+            &[11, 22],
+            &HashSet::new(),
+            &HashSet::new()
+        ));
+        assert!(matches_players(&players, &[11, 22], &HashSet::new(), &uids));
+        assert!(matches_players(&players, &[], &names, &uids));
+        assert!(matches_players(&players, &[22], &other_names, &uids));
+        assert!(!matches_players(&players, &[11], &other_names, &uids));
+    }
+
+    #[test]
+    fn matches_players_never_matches_rows_without_uids_by_uid() {
+        let players = vec![PlayerSummaryDto {
+            name: "Alice".into(),
+            class_id: 2,
+        }];
+
+        assert!(!matches_players(
+            &players,
+            &[],
+            &HashSet::new(),
+            &HashSet::from([11])
+        ));
+    }
+
+    fn player_rows() -> Vec<Option<String>> {
+        // Newest first, as the search query orders them.
+        vec![
+            Some(
+                r#"[{"name":"Alice","class_id":2,"uid":5126482},{"name":"","class_id":0,"uid":5199}]"#
+                    .into(),
+            ),
+            Some(r#"[{"name":"OldAlice","class_id":2,"uid":5126482},{"name":"alice","class_id":1,"uid":51}]"#.into()),
+            Some(r#"[{"name":"Bob","class_id":3}]"#.into()),
+            Some(r#"["Alicia"]"#.into()),
+            None,
+        ]
+    }
+
+    #[test]
+    fn search_players_matches_names_by_case_insensitive_prefix_without_limit() {
+        let result = search_players("ali", &player_rows());
+
+        assert_eq!(result.names, vec!["Alice", "Alicia"]);
+        assert!(result.uids.is_empty());
+    }
+
+    #[test]
+    fn search_players_lists_every_uid_with_all_names_newest_first() {
+        let result = search_players("#51", &player_rows());
+
+        assert_eq!(
+            result.uids,
+            vec![
+                HistoryUidCandidateDto {
+                    uid: 51,
+                    names: vec!["alice".into()],
+                    encounter_count: 1,
+                },
+                HistoryUidCandidateDto {
+                    uid: 5_126_482,
+                    names: vec!["Alice".into(), "OldAlice".into()],
+                    encounter_count: 2,
+                },
+                HistoryUidCandidateDto {
+                    uid: 5199,
+                    names: Vec::new(),
+                    encounter_count: 1,
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn search_players_orders_uids_by_recency_after_the_exact_match() {
+        let result = search_players("5", &player_rows());
+
+        assert_eq!(
+            result
+                .uids
+                .iter()
+                .map(|candidate| candidate.uid)
+                .collect::<Vec<_>>(),
+            vec![5_126_482, 5199, 51]
+        );
+    }
+
+    #[test]
+    fn search_players_ignores_blank_and_non_numeric_uid_queries() {
+        assert_eq!(
+            search_players("  ", &player_rows()).names,
+            Vec::<String>::new()
+        );
+        assert!(search_players("5a", &player_rows()).uids.is_empty());
+        assert!(search_players("#", &player_rows()).uids.is_empty());
     }
 
     #[test]

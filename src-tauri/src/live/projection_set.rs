@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::database::commands::{EncounterSummaryDto, PlayerSummaryDto};
+use crate::database::commands::{EncounterSummaryDto, shown_players};
 use crate::database::event_journal::{FinalizeEncounterMetadata, RecordingEncounter};
 use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
 use crate::live::counter::engine::{CounterEngine, CounterNamespace};
@@ -846,13 +846,7 @@ impl ProjectionSet {
         let total_healing = clamp_u128_to_i64(total_healing_exact);
         let boss_ids = self.combat.boss_monster_ids();
         let player_names = self.combat.player_names();
-        let players = player_names
-            .iter()
-            .map(|player| PlayerSummaryDto {
-                name: player.name.clone(),
-                class_id: player.class_id,
-            })
-            .collect();
+        let players = shown_players(&player_names);
         let metadata = FinalizeEncounterMetadata {
             ended_at_ms: ended_at_wall_ms,
             local_player_id: self.combat.local_player_id(),

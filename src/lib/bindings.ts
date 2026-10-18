@@ -189,6 +189,18 @@ async getPlayerNamesFiltered(prefix: string) : Promise<Result<PlayerNamesResult,
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Name and UID suggestions for the history search. Only the SELECT runs on
+ * the database actor; parsing and matching happen after releasing it.
+ */
+async searchHistoryPlayers(query: string) : Promise<Result<HistoryPlayerSearchResult, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_history_players", { query }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getRecentEncountersFiltered(limit: number, offset: number, filters: EncounterFiltersDto | null) : Promise<Result<RecentEncountersResult, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_recent_encounters_filtered", { limit, offset, filters }) };
@@ -780,7 +792,11 @@ export type EncounterEntityData = { entityId: string; displayUid: number; name: 
  * field existed, and are backfilled from `class_spec` at query time.
  */
 classSpecName?: string | null; abilityScore: number | null; seasonStrength: number | null; monsterId: number | null; totals: EncounterTotalsData; skills: EncounterSkillData[]; damageTargets: EncounterTargetBreakdownData[]; healingTargets: EncounterTargetBreakdownData[]; takenSources: EncounterSourceBreakdownData[]; deaths: EncounterDeathData[] }
-export type EncounterFiltersDto = { bossMonsterIds: number[] | null; sceneIds: number[] | null; playerName: string | null; playerNames: string[] | null; dateFromMs: number | null; dateToMs: number | null; isFavorite: boolean | null }
+export type EncounterFiltersDto = { bossMonsterIds: number[] | null; sceneIds: number[] | null; playerName: string | null; playerNames: string[] | null;
+/**
+ * Exact in-game UIDs, OR-ed with the player names.
+ */
+playerUids: number[] | null; dateFromMs: number | null; dateToMs: number | null; isFavorite: boolean | null }
 export type EncounterMarkerData = { offsetMs: number; sequence: number; casterEntityId: string; skillId: string; kind: HistoryCastKind;
 /**
  * Fantasy remodel tier when recorded. Absent on older encounters and non-fantasy casts.
@@ -842,7 +858,17 @@ export type GpuSupport = { cuda_available: boolean; opencl_available: boolean }
 export type HateEntry = { entityUuid: string; hateVal: number }
 export type HistoryCastKind = "boss_skill" | "fantasy" | "key_skill"
 export type HistoryMetric = "damage" | "healing" | "damage_taken"
+export type HistoryPlayerSearchResult = { names: string[];
+/**
+ * Exact match first, then the most recently seen.
+ */
+uids: HistoryUidCandidateDto[] }
 export type HistoryQualityFlag = "incompleteSegment" | "missingEntityContext" | "saturatedAmount"
+export type HistoryUidCandidateDto = { uid: number;
+/**
+ * Every name recorded with this UID, newest first.
+ */
+names: string[]; encounterCount: number }
 /**
  * Health snapshot for the current monster target.
  */

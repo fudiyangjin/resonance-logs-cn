@@ -86,6 +86,7 @@ fn api_builder() -> Builder<tauri::Wry> {
         database::commands::get_unique_scene_ids,
         database::commands::get_unique_boss_monster_ids,
         database::commands::get_player_names_filtered,
+        database::commands::search_history_players,
         database::commands::get_recent_encounters_filtered,
         database::commands::get_encounter_detail,
         database::commands::get_encounter_range,

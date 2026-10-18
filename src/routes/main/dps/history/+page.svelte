@@ -58,6 +58,9 @@
     if (selectedPlayerNames.length > 0) {
       sp.set("players", selectedPlayerNames.join(","));
     }
+    if (selectedPlayerUids.length > 0) {
+      sp.set("uids", selectedPlayerUids.join(","));
+    }
     if (selectedSceneIds.length > 0) {
       sp.set("sceneIds", selectedSceneIds.join(","));
     }
@@ -138,14 +141,15 @@
     }
   }
 
-  // Unified search (boss, player and encounter names)
+  // Unified search (boss, player and encounter names, player UIDs)
   let availableBossOptions = $state<NameOption[]>([]);
   let availableEncounterOptions = $state<NameOption[]>([]);
   let selectedBossMonsterIds = $state<number[]>([]);
   let selectedSceneIds = $state<number[]>([]);
   let selectedPlayerNames = $state<string[]>([]);
+  let selectedPlayerUids = $state<number[]>([]);
   let searchValue = $state("");
-  let searchType = $state<"boss" | "player" | "encounter">("encounter");
+  let searchType = $state<"boss" | "player" | "encounter" | "uid">("encounter");
   let isLoadingBossNames = $state(false);
 
   let showFavoritesOnly = $state(false);
@@ -199,6 +203,7 @@
         sceneIds: selectedSceneIds.length > 0 ? selectedSceneIds : null,
         playerNames:
           selectedPlayerNames.length > 0 ? selectedPlayerNames : null,
+        playerUids: selectedPlayerUids.length > 0 ? selectedPlayerUids : null,
         dateFromMs: null,
         dateToMs: null,
         isFavorite: showFavoritesOnly ? true : null,
@@ -208,6 +213,7 @@
         filterPayload.bossMonsterIds !== null ||
         filterPayload.sceneIds !== null ||
         filterPayload.playerNames !== null ||
+        filterPayload.playerUids !== null ||
         filterPayload.isFavorite !== null;
 
       const res = await commands.getRecentEncountersFiltered(
@@ -246,10 +252,18 @@
   }
 
   function handleSearchSelect(
-    option: NameOption | { label: string; ids: [] },
-    type: "boss" | "player" | "encounter",
+    option:
+      | NameOption
+      | { label: string; ids: [] }
+      | { label: string; ids: []; uid: number },
+    type: "boss" | "player" | "encounter" | "uid",
   ) {
-    if (type === "boss") {
+    if ("uid" in option) {
+      if (!selectedPlayerUids.includes(option.uid)) {
+        selectedPlayerUids = [...selectedPlayerUids, option.uid];
+        loadEncounters(0);
+      }
+    } else if (type === "boss") {
       const nextIds = mergeIds(selectedBossMonsterIds, option.ids);
       if (nextIds.length !== selectedBossMonsterIds.length) {
         selectedBossMonsterIds = nextIds;
@@ -291,9 +305,17 @@
     loadEncounters(0);
   }
 
+  function removePlayerUidFilter(uid: number) {
+    selectedPlayerUids = selectedPlayerUids.filter(
+      (playerUid) => playerUid !== uid,
+    );
+    loadEncounters(0);
+  }
+
   function clearAllFilters() {
     selectedBossMonsterIds = [];
     selectedPlayerNames = [];
+    selectedPlayerUids = [];
     selectedSceneIds = [];
     showFavoritesOnly = false;
     loadEncounters(0);
@@ -302,6 +324,7 @@
   const hasActiveFilters = $derived(
     selectedBossMonsterIds.length > 0 ||
       selectedPlayerNames.length > 0 ||
+      selectedPlayerUids.length > 0 ||
       selectedSceneIds.length > 0 ||
       showFavoritesOnly,
   );
@@ -322,6 +345,8 @@
     if (playersParam) {
       selectedPlayerNames = playersParam.split(",").filter(Boolean);
     }
+
+    selectedPlayerUids = parsePositiveIntList(sp.get("uids"));
 
     selectedSceneIds = parsePositiveIntList(sp.get("sceneIds"));
 
@@ -476,6 +501,25 @@
               class="text-muted-foreground/70 hover:text-destructive transition-colors"
               aria-label={t("history.list.filters.removeAria", {
                 name: player,
+              })}
+            >
+              ✕
+            </button>
+          </span>
+        {/each}
+        {#each selectedPlayerUids as uid (uid)}
+          <span
+            class="bg-popover text-muted-foreground border-border/60 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] leading-tight"
+          >
+            <span class="text-muted-foreground/70"
+              >{t("history.list.filters.uidPrefix")}</span
+            >
+            #{uid}
+            <button
+              onclick={() => removePlayerUidFilter(uid)}
+              class="text-muted-foreground/70 hover:text-destructive transition-colors"
+              aria-label={t("history.list.filters.removeAria", {
+                name: `#${uid}`,
               })}
             >
               ✕

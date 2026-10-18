@@ -10,7 +10,9 @@ import {
   liveTabRoot,
   matchNameOptions,
   neighborIndex,
+  parsePlayerUid,
   startOfLocalDay,
+  uidCandidateDetail,
 } from "./live-history-query";
 
 const NOW = new Date(2026, 9, 18, 21, 30).getTime();
@@ -27,6 +29,7 @@ describe("buildEncounterFilters", () => {
           sceneIds: [3, 4],
           bossIds: [9001],
           players: ["Alice"],
+          playerUids: [123456],
           favoriteOnly: true,
           todayOnly: true,
         },
@@ -37,6 +40,7 @@ describe("buildEncounterFilters", () => {
       sceneIds: [3, 4],
       playerName: null,
       playerNames: ["Alice"],
+      playerUids: [123456],
       dateFromMs: new Date(2026, 9, 18).getTime(),
       dateToMs: null,
       isFavorite: true,
@@ -49,9 +53,36 @@ describe("buildEncounterFilters", () => {
       bossMonsterIds: null,
       sceneIds: null,
       playerNames: null,
+      playerUids: null,
       dateFromMs: null,
       isFavorite: true,
     });
+  });
+
+  it("treats a lone UID as a filter", () => {
+    const filters = { ...emptyLiveHistoryFilters(), playerUids: [42] };
+    expect(buildEncounterFilters(filters, NOW)).toMatchObject({
+      playerNames: null,
+      playerUids: [42],
+    });
+  });
+});
+
+describe("parsePlayerUid", () => {
+  it("accepts digits with an optional leading # and surrounding spaces", () => {
+    expect(parsePlayerUid("123456")).toBe(123456);
+    expect(parsePlayerUid("  #123456 ")).toBe(123456);
+  });
+
+  it("rejects anything that is not a positive safe integer", () => {
+    expect(parsePlayerUid("")).toBeNull();
+    expect(parsePlayerUid("#")).toBeNull();
+    expect(parsePlayerUid("12a4")).toBeNull();
+    expect(parsePlayerUid("-5")).toBeNull();
+    expect(parsePlayerUid("1.5")).toBeNull();
+    expect(parsePlayerUid("##12")).toBeNull();
+    expect(parsePlayerUid("0")).toBeNull();
+    expect(parsePlayerUid("9007199254740993")).toBeNull();
   });
 });
 
@@ -111,6 +142,22 @@ describe("matchNameOptions", () => {
 
   it("matches nothing for a blank query", () => {
     expect(matchNameOptions(options, "  ", 5)).toEqual([]);
+  });
+
+  it("returns every match when no limit is given", () => {
+    expect(matchNameOptions(options, "i")).toHaveLength(3);
+  });
+});
+
+describe("uidCandidateDetail", () => {
+  it("lists every recorded name before the count", () => {
+    expect(uidCandidateDetail(["Alice", "OldAlice"], "2 fights")).toBe(
+      "Alice / OldAlice · 2 fights",
+    );
+  });
+
+  it("shows only the count for a UID that never had a name", () => {
+    expect(uidCandidateDetail([], "1 fight")).toBe("1 fight");
   });
 });
 

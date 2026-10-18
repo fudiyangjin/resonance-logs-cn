@@ -127,6 +127,19 @@ class LiveHistoryQuery {
     void this.reload();
   }
 
+  addPlayerUid(uid: number): void {
+    if (this.filters.playerUids.includes(uid)) return;
+    this.filters.playerUids.push(uid);
+    void this.reload();
+  }
+
+  removePlayerUid(uid: number): void {
+    this.filters.playerUids = this.filters.playerUids.filter(
+      (playerUid) => playerUid !== uid,
+    );
+    void this.reload();
+  }
+
   toggleFlag(key: "favoriteOnly" | "todayOnly"): void {
     this.filters[key] = !this.filters[key];
     void this.reload();

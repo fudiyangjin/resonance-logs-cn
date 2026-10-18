@@ -90,8 +90,13 @@ pub enum DbInitError {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PlayerNameEntry {
+    /// Empty when the player's name was never observed.
     pub name: String,
     pub class_id: i32,
+    /// In-game character id (`uuid >> 16`); `None` in rows finalized before
+    /// it was recorded.
+    #[serde(default)]
+    pub uid: Option<i64>,
 }
 
 pub fn default_db_path() -> PathBuf {

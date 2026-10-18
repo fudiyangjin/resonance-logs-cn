@@ -1,56 +1,76 @@
 <script lang="ts">
   /**
    * @file Search bar of the live history picker. One input matches scenes
-   * and bosses locally and player names through the backend; suggestions
-   * expand inline instead of floating, because the live window can be very
-   * short and the scroll container would clip a dropdown.
+   * and bosses locally, player names and UIDs through the backend;
+   * suggestions expand inline instead of floating, because the live window
+   * can be very short and the scroll container would clip a dropdown.
    */
   import ArrowLeftIcon from "virtual:icons/lucide/arrow-left";
   import RefreshCwIcon from "virtual:icons/lucide/refresh-cw";
   import SearchIcon from "virtual:icons/lucide/search";
   import StarIcon from "virtual:icons/lucide/star";
   import XIcon from "virtual:icons/lucide/x";
-  import { onDestroy } from "svelte";
-  import { commands } from "$lib/bindings";
+  import { onDestroy, tick } from "svelte";
+  import { commands, type HistoryUidCandidateDto } from "$lib/bindings";
   import { getBossOptions, getSceneOptions } from "$lib/config/game-names";
   import { t } from "$lib/i18n/index.svelte";
   import {
     expandOptionIds,
     hasLiveHistoryFilters,
     matchNameOptions,
+    uidCandidateDetail,
   } from "$lib/live-history-query";
   import { liveHistoryQuery as query } from "$lib/stores/live-history-query.svelte";
   import { liveView } from "$lib/stores/live-view-source.svelte";
 
   let { onBack }: { onBack: () => void } = $props();
 
-  const SUGGESTIONS_PER_KIND = 3;
+  const SUGGESTION_PAGE_SIZE = 20;
   const PLAYER_LOOKUP_DELAY_MS = 250;
 
   type Suggestion =
     | { kind: "scene" | "boss"; label: string; ids: number[] }
-    | { kind: "player"; label: string };
+    | { kind: "player"; label: string }
+    | { kind: "uid"; label: string; uid: number; detail: string };
 
   let text = $state("");
   let highlighted = $state(0);
+  let visibleCount = $state(SUGGESTION_PAGE_SIZE);
   let playerNames = $state.raw<string[]>([]);
+  let uidCandidates = $state.raw<HistoryUidCandidateDto[]>([]);
   let playersLoading = $state(false);
   let playerTimer: ReturnType<typeof setTimeout> | undefined;
   let playerGeneration = 0;
+  let listbox: HTMLElement | undefined = $state();
 
   const trimmed = $derived(text.trim());
+  // UIDs first: a numeric query rarely matches a scene, boss or name.
   const suggestions = $derived.by((): Suggestion[] => [
-    ...matchNameOptions(query.sceneOptions, trimmed, SUGGESTIONS_PER_KIND).map(
-      (option) => ({ kind: "scene" as const, ...option }),
-    ),
-    ...matchNameOptions(query.bossOptions, trimmed, SUGGESTIONS_PER_KIND).map(
-      (option) => ({ kind: "boss" as const, ...option }),
-    ),
+    ...uidCandidates
+      .filter((candidate) => !query.filters.playerUids.includes(candidate.uid))
+      .map((candidate) => ({
+        kind: "uid" as const,
+        label: `#${candidate.uid}`,
+        uid: candidate.uid,
+        detail: uidCandidateDetail(
+          candidate.names,
+          t("common.encounterCount", { count: candidate.encounterCount }),
+        ),
+      })),
+    ...matchNameOptions(query.sceneOptions, trimmed).map((option) => ({
+      kind: "scene" as const,
+      ...option,
+    })),
+    ...matchNameOptions(query.bossOptions, trimmed).map((option) => ({
+      kind: "boss" as const,
+      ...option,
+    })),
     ...playerNames
       .filter((name) => !query.filters.players.includes(name))
-      .slice(0, SUGGESTIONS_PER_KIND)
       .map((name) => ({ kind: "player" as const, label: name })),
   ]);
+  const visibleSuggestions = $derived(suggestions.slice(0, visibleCount));
+  const remainingCount = $derived(suggestions.length - visibleCount);
 
   // Quick filters follow what the window currently shows (live or history).
   const currentSceneIds = $derived.by(() => {
@@ -72,33 +92,38 @@
   const hasSelectedNames = $derived(
     selectedScenes.length > 0 ||
       selectedBosses.length > 0 ||
-      query.filters.players.length > 0,
+      query.filters.players.length > 0 ||
+      query.filters.playerUids.length > 0,
   );
 
   function kindLabel(kind: Suggestion["kind"]): string {
     if (kind === "scene") return t("live.history.filter.scene");
     if (kind === "boss") return t("live.history.filter.boss");
+    if (kind === "uid") return t("live.history.filter.uid");
     return t("live.history.filter.player");
   }
 
-  function lookupPlayers(prefix: string) {
+  function lookupPlayers(query: string) {
     clearTimeout(playerTimer);
     const generation = ++playerGeneration;
-    if (!prefix) {
+    if (!query) {
       playerNames = [];
+      uidCandidates = [];
       playersLoading = false;
       return;
     }
     playersLoading = true;
     playerTimer = setTimeout(async () => {
       try {
-        const result = await commands.getPlayerNamesFiltered(prefix);
+        const result = await commands.searchHistoryPlayers(query);
         if (generation !== playerGeneration) return;
-        playerNames = result.status === "ok" ? (result.data.names ?? []) : [];
+        playerNames = result.status === "ok" ? result.data.names : [];
+        uidCandidates = result.status === "ok" ? result.data.uids : [];
       } catch (error) {
         if (generation !== playerGeneration) return;
         console.error("[live-history] player lookup failed", error);
         playerNames = [];
+        uidCandidates = [];
       } finally {
         if (generation === playerGeneration) playersLoading = false;
       }
@@ -107,18 +132,33 @@
 
   function handleInput() {
     highlighted = 0;
+    visibleCount = SUGGESTION_PAGE_SIZE;
     lookupPlayers(text.trim());
   }
 
   function clearText() {
     text = "";
     highlighted = 0;
+    visibleCount = SUGGESTION_PAGE_SIZE;
     lookupPlayers("");
+  }
+
+  // The list scrolls inside the sticky header, so keep the keyboard
+  // selection in view.
+  function moveHighlight(next: number) {
+    highlighted = next;
+    void tick().then(() =>
+      listbox
+        ?.querySelector('[aria-selected="true"]')
+        ?.scrollIntoView({ block: "nearest" }),
+    );
   }
 
   function select(suggestion: Suggestion) {
     if (suggestion.kind === "player") {
       query.addPlayer(suggestion.label);
+    } else if (suggestion.kind === "uid") {
+      query.addPlayerUid(suggestion.uid);
     } else {
       query.addIds(
         suggestion.kind === "scene" ? "sceneIds" : "bossIds",
@@ -129,15 +169,15 @@
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.key === "ArrowDown" && suggestions.length > 0) {
+    const count = visibleSuggestions.length;
+    if (event.key === "ArrowDown" && count > 0) {
       event.preventDefault();
-      highlighted = (highlighted + 1) % suggestions.length;
-    } else if (event.key === "ArrowUp" && suggestions.length > 0) {
+      moveHighlight((highlighted + 1) % count);
+    } else if (event.key === "ArrowUp" && count > 0) {
       event.preventDefault();
-      highlighted =
-        (highlighted - 1 + suggestions.length) % suggestions.length;
+      moveHighlight((highlighted - 1 + count) % count);
     } else if (event.key === "Enter") {
-      const suggestion = suggestions[highlighted];
+      const suggestion = visibleSuggestions[highlighted];
       if (suggestion) {
         event.preventDefault();
         select(suggestion);
@@ -294,15 +334,21 @@
           query.removePlayer(name),
         )}
       {/each}
+      {#each query.filters.playerUids as uid (uid)}
+        {@render selectedChip(t("live.history.filter.uid"), `#${uid}`, () =>
+          query.removePlayerUid(uid),
+        )}
+      {/each}
     </div>
   {/if}
 
   {#if trimmed}
     <div
-      class="border-border/60 bg-background/70 overflow-hidden rounded-md border text-xs"
+      bind:this={listbox}
+      class="border-border/60 bg-background/70 max-h-[50vh] overflow-y-auto rounded-md border text-xs"
       role="listbox"
     >
-      {#each suggestions as suggestion, index (`${suggestion.kind}:${suggestion.label}`)}
+      {#each visibleSuggestions as suggestion, index (`${suggestion.kind}:${suggestion.label}`)}
         <button
           type="button"
           role="option"
@@ -317,9 +363,25 @@
           <span class="w-9 shrink-0 text-[10px] opacity-70"
             >{kindLabel(suggestion.kind)}</span
           >
-          <span class="truncate">{suggestion.label}</span>
+          {#if suggestion.kind === "uid"}
+            <span class="shrink-0">{suggestion.label}</span>
+            <span class="truncate text-[10px] opacity-70"
+              >{suggestion.detail}</span
+            >
+          {:else}
+            <span class="truncate">{suggestion.label}</span>
+          {/if}
         </button>
       {/each}
+      {#if remainingCount > 0}
+        <button
+          type="button"
+          class="text-muted-foreground hover:text-foreground hover:bg-muted/40 border-border/60 w-full border-t px-2 py-1 text-left text-[11px] transition-colors"
+          onclick={() => (visibleCount += SUGGESTION_PAGE_SIZE)}
+        >
+          {t("common.showMore", { remaining: remainingCount })}
+        </button>
+      {/if}
       {#if playersLoading}
         <div class="text-muted-foreground px-2 py-1 text-[11px]">
           {t("live.history.suggest.searchingPlayers")}

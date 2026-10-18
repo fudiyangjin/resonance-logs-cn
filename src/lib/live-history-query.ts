@@ -9,6 +9,7 @@ export type LiveHistoryFilters = {
   sceneIds: number[];
   bossIds: number[];
   players: string[];
+  playerUids: number[];
   favoriteOnly: boolean;
   todayOnly: boolean;
 };
@@ -18,6 +19,7 @@ export function emptyLiveHistoryFilters(): LiveHistoryFilters {
     sceneIds: [],
     bossIds: [],
     players: [],
+    playerUids: [],
     favoriteOnly: false,
     todayOnly: false,
   };
@@ -28,9 +30,21 @@ export function hasLiveHistoryFilters(filters: LiveHistoryFilters): boolean {
     filters.sceneIds.length > 0 ||
     filters.bossIds.length > 0 ||
     filters.players.length > 0 ||
+    filters.playerUids.length > 0 ||
     filters.favoriteOnly ||
     filters.todayOnly
   );
+}
+
+/**
+ * Read a player UID typed into a search box, with or without the `#` the
+ * app prints before it. Only records saved since UIDs were stored match.
+ */
+export function parsePlayerUid(text: string): number | null {
+  const digits = text.trim().replace(/^#/, "");
+  if (!/^\d+$/.test(digits)) return null;
+  const uid = Number(digits);
+  return Number.isSafeInteger(uid) && uid > 0 ? uid : null;
 }
 
 export function startOfLocalDay(ms: number): number {
@@ -39,7 +53,10 @@ export function startOfLocalDay(ms: number): number {
   return date.getTime();
 }
 
-/** Same semantics as the main history list: AND across kinds, OR within. */
+/**
+ * Same semantics as the main history list: AND across kinds, OR within.
+ * Player names and UIDs are one kind on the backend.
+ */
 export function buildEncounterFilters(
   filters: LiveHistoryFilters,
   nowMs: number,
@@ -50,6 +67,7 @@ export function buildEncounterFilters(
     sceneIds: filters.sceneIds.length > 0 ? [...filters.sceneIds] : null,
     playerName: null,
     playerNames: filters.players.length > 0 ? [...filters.players] : null,
+    playerUids: filters.playerUids.length > 0 ? [...filters.playerUids] : null,
     dateFromMs: filters.todayOnly ? startOfLocalDay(nowMs) : null,
     dateToMs: null,
     isFavorite: filters.favoriteOnly ? true : null,
@@ -117,13 +135,21 @@ export function groupRowsByLocalDay<T extends { startedAtMs: number }>(
 export function matchNameOptions<T extends { label: string }>(
   options: readonly T[],
   query: string,
-  limit: number,
+  limit = Number.POSITIVE_INFINITY,
 ): T[] {
   const needle = query.trim().toLowerCase();
   if (!needle) return [];
   return options
     .filter((option) => option.label.toLowerCase().includes(needle))
     .slice(0, limit);
+}
+
+/** Secondary line of a UID suggestion: "Name A / Name B · 12 fights". */
+export function uidCandidateDetail(
+  names: readonly string[],
+  countLabel: string,
+): string {
+  return names.length > 0 ? `${names.join(" / ")} · ${countLabel}` : countLabel;
 }
 
 /**
