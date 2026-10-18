@@ -1831,6 +1831,7 @@ export const enUSMessages = {
   "monsterOverlay.ghost.buff": "Buff {id}",
   "monsterOverlay.ghost.category": "Category {key}",
   "gameOverlay.edit.title": "Edit Mode - Drag to Adjust Position",
+  "gameOverlay.edit.revert": "Undo Changes",
   "gameOverlay.edit.resetPosition": "Reset Position",
   "gameOverlay.edit.resetSize": "Reset Size",
   "gameOverlay.edit.done": "Done",

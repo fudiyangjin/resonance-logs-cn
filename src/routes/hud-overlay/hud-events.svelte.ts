@@ -68,6 +68,7 @@ import {
   setHudDomainVisible,
 } from "./hud-runtime.svelte.js";
 import { migrateLegacyHudLayout } from "./hud-layout-migration";
+import { beginHudEditSession, endHudEditSession } from "./hud-edit-session";
 
 const HUD_READY_RETRY_MS = 500;
 let hudLayoutReady: Promise<void> | null = null;
@@ -233,6 +234,7 @@ export function initHudOverlay(): () => void {
     minimapRuntime.isMounted = false;
     minimapRuntime.isInitialized = false;
     applyHudEditingState(false);
+    endHudEditSession();
     detachHudWindow();
     hudLayoutReady = null;
     hudRuntime.cleanup = null;
@@ -262,12 +264,14 @@ async function applyHudEditMode(editing: boolean): Promise<void> {
   if (hudRuntime.editing === editing) return;
 
   const currentWindow = hudRuntime.currentWindow;
+  if (editing) await beginHudEditSession(currentWindow);
   if (currentWindow) {
     // Click-through is the latency-sensitive side effect when editing ends.
     // Apply it before any reactive projection or cross-window notification.
     await currentWindow.setIgnoreCursorEvents(!editing);
   }
   applyHudEditingState(editing);
+  if (!editing) endHudEditSession();
   if (!currentWindow) return;
 
   if (editing) {

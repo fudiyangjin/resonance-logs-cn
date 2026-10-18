@@ -1681,6 +1681,7 @@ export const zhCNMessages = {
   "monsterOverlay.ghost.buff": "Buff {id}",
   "monsterOverlay.ghost.category": "分类 {key}",
   "gameOverlay.edit.title": "编辑模式 - 可拖拽调整位置",
+  "gameOverlay.edit.revert": "撤销本次修改",
   "gameOverlay.edit.resetPosition": "重置位置",
   "gameOverlay.edit.resetSize": "重置尺寸",
   "gameOverlay.edit.done": "完成编辑",

@@ -12,6 +12,7 @@
     resetMinimapPositions,
     resetMinimapSizes,
   } from "../minimap-overlay/minimap-state.svelte.js";
+  import { revertHudEditSession } from "./hud-edit-session";
   import { finishHudEditing, startHudWindowDrag } from "./hud-events.svelte.js";
 
   function resetAllPositions() {
@@ -29,6 +30,13 @@
 
 <div class="edit-banner">
   <div class="edit-title">{t("gameOverlay.edit.title")}</div>
+  <button
+    type="button"
+    class="done-btn secondary"
+    onclick={() => void revertHudEditSession()}
+  >
+    {t("gameOverlay.edit.revert")}
+  </button>
   <button type="button" class="done-btn secondary" onclick={resetAllPositions}>
     {t("gameOverlay.edit.resetPosition")}
   </button>

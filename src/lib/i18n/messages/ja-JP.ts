@@ -1806,6 +1806,7 @@ export const jaJPMessages = {
   "monsterOverlay.ghost.buff": "Buff {id}",
   "monsterOverlay.ghost.category": "カテゴリ {key}",
   "gameOverlay.edit.title": "編集モード - ドラッグで位置を調整",
+  "gameOverlay.edit.revert": "今回の変更を取り消す",
   "gameOverlay.edit.resetPosition": "位置をリセット",
   "gameOverlay.edit.resetSize": "サイズをリセット",
   "gameOverlay.edit.done": "完了",
