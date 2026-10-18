@@ -69,7 +69,6 @@
     </h2>
     <SettingsSwitch
       label={t("appSettings.hpReport.enable")}
-      description={t("appSettings.hpReport.enableDescription")}
       bind:checked={enabled}
       onCheckedChange={(next) => void setEnabled(next)}
     />

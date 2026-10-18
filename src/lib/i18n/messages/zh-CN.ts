@@ -163,8 +163,6 @@ export const zhCNMessages = {
     "连接中断，{seconds} 秒后重试（{error}）",
   "appSettings.hpReport.title": "Boss 血量上报",
   "appSettings.hpReport.enable": "上报野外 Boss 血量",
-  "appSettings.hpReport.enableDescription":
-    "开启后，在野外看到被追踪的 Boss 或魔法生物时，会把它的血量（每 5% 一档）连同所在线路和游戏区服发送到 bptimer.cn，供网站按线路展示各 Boss 的血量。不包含账号或角色信息。立即生效。",
   "appSettings.hpReport.saveFailed": "保存失败：{error}",
   "appSettings.hpReport.status.disabled": "未开启",
   "appSettings.hpReport.status.idle":

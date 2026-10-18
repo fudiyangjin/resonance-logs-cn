@@ -169,8 +169,6 @@ export const jaJPMessages = {
     "接続が切れました。{seconds} 秒後に再試行します（{error}）",
   "appSettings.hpReport.title": "ボス HP 報告",
   "appSettings.hpReport.enable": "フィールドボスの HP を報告する",
-  "appSettings.hpReport.enableDescription":
-    "追跡対象のフィールドボスや魔法生物が近くにいるとき、その HP（5% 刻み）を現在のチャンネルとゲームのリージョンとともに bptimer.cn へ送信し、サイトでボスごとの HP をチャンネル別に表示します。アカウントやキャラクターの情報は送信しません。すぐに反映されます。",
   "appSettings.hpReport.saveFailed": "保存に失敗しました：{error}",
   "appSettings.hpReport.status.disabled": "オフ",
   "appSettings.hpReport.status.idle":

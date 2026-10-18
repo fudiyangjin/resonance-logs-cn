@@ -170,8 +170,6 @@ export const enUSMessages = {
     "Connection lost, retrying in {seconds}s ({error})",
   "appSettings.hpReport.title": "Boss HP Reports",
   "appSettings.hpReport.enable": "Report field boss HP",
-  "appSettings.hpReport.enableDescription":
-    "When a tracked field boss or magical creature is in view, sends its HP (in 5% steps) together with your line and game region to bptimer.cn, which shows every boss's HP by line. No account or character information is sent. Takes effect immediately.",
   "appSettings.hpReport.saveFailed": "Could not save: {error}",
   "appSettings.hpReport.status.disabled": "Off",
   "appSettings.hpReport.status.idle":
