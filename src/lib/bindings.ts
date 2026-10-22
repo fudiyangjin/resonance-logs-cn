@@ -1030,6 +1030,10 @@ entityType: MinimapEntityType;
  */
 kind: MinimapEntityKind;
 /**
+ * Party icon type (1..=6); the frontend keeps the local player's normal glyph.
+ */
+teamMark?: number | null;
+/**
  * Horizontal map coordinate.
  */
 x: number;
@@ -1110,9 +1114,9 @@ export type MinimapEntityType = "unknown" | "monster" | "npc" | "sceneObject" | 
  */
 export type MinimapMarker = {
 /**
- * Displayed marker number 1..=6, derived as `skill_id - MARKER_SKILL_ID_BASE`.
+ * Display digit: legacy skills use 1..=6, scene mark types use 0..=9.
  */
-marker: number; skillId: number; x: number | null; z: number | null }
+marker: number; x: number | null; z: number | null }
 /**
  * One monster skill cast event observed from `ATTR_SKILL_ID` (attribute 100).
  */

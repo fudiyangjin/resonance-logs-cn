@@ -106,6 +106,7 @@ pub enum Pkt {
     // 0x47 skipped
     NotifyTimerList = 0x00000048,
     NotifyTimerUpdate = 0x00000049,
+    NotifySceneMark = 0x00000057,
     SyncServerSkillEnd = 0x00003005,
 }
 
@@ -152,6 +153,7 @@ impl TryFrom<u32> for Pkt {
             0x00000046 => Ok(Pkt::NotifyAllMemberReady),
             0x00000048 => Ok(Pkt::NotifyTimerList),
             0x00000049 => Ok(Pkt::NotifyTimerUpdate),
+            0x00000057 => Ok(Pkt::NotifySceneMark),
             0x00003005 => Ok(Pkt::SyncServerSkillEnd),
             _ => Err(ParseError),
         }

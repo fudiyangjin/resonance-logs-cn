@@ -333,6 +333,15 @@ pub struct PassiveSkillObservation {
     pub ended: bool,
 }
 
+/// Complete scene-scoped marker state, normalized at the protocol boundary.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct SceneMarkSnapshot {
+    /// Ground mark type (1..=10) to world position. Ordered for stable publication.
+    pub ground: std::collections::BTreeMap<u8, Position>,
+    /// Character UUID to icon type (1..=6), independent of entity visibility.
+    pub teammates: std::collections::BTreeMap<EntityUuid, u8>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BossMechanicObservation {
     pub base_skill_id: i32,
@@ -721,6 +730,7 @@ pub enum ProtocolObservation {
 
     LocalTalentChanged(LocalTalent),
     PassiveSkillObserved(PassiveSkillObservation),
+    SceneMarkSnapshot(SceneMarkSnapshot),
     BossMechanicStarted(BossMechanicObservation),
     GameTimerSnapshot {
         timers: Vec<GameTimerState>,
@@ -992,6 +1002,7 @@ pub enum DomainEvent {
         target_position: Option<Position>,
         ended: bool,
     },
+    SceneMarkSnapshot(SceneMarkSnapshot),
     BossMechanicStarted(BossMechanicObservation),
     GameTimerSnapshot {
         timers: Vec<GameTimerState>,

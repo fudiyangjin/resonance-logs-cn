@@ -93857,3 +93857,427 @@ impl<'de> serde::Deserialize<'de> for WorldQuestList {
         deserializer.deserialize_struct("blueprotobuf_package.worldQuestList", FIELDS, GeneratedVisitor)
     }
 }
+
+impl serde::Serialize for NotifySceneMark {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.v_info.is_some() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("blueprotobuf_package.NotifySceneMark", len)?;
+        if let Some(v) = self.v_info.as_ref() {
+            struct_ser.serialize_field("vInfo", v)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for NotifySceneMark {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "vInfo",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            VInfo,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "vInfo" => Ok(GeneratedField::VInfo),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = NotifySceneMark;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct blueprotobuf_package.NotifySceneMark")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<NotifySceneMark, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut v_info__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::VInfo => {
+                            if v_info__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("vInfo"));
+                            }
+                            v_info__ = map_.next_value()?;
+                        }
+                    }
+                }
+                Ok(NotifySceneMark {
+                    v_info: v_info__,
+                })
+            }
+        }
+        deserializer.deserialize_struct("blueprotobuf_package.NotifySceneMark", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for SceneMarkInfo {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.mark_type.is_some() {
+            len += 1;
+        }
+        if self.position.is_some() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("blueprotobuf_package.SceneMarkInfo", len)?;
+        if let Some(v) = self.mark_type.as_ref() {
+            struct_ser.serialize_field("markType", v)?;
+        }
+        if let Some(v) = self.position.as_ref() {
+            struct_ser.serialize_field("position", v)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for SceneMarkInfo {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "markType",
+            "position",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            MarkType,
+            Position,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "markType" => Ok(GeneratedField::MarkType),
+                            "position" => Ok(GeneratedField::Position),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = SceneMarkInfo;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct blueprotobuf_package.SceneMarkInfo")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<SceneMarkInfo, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut mark_type__ = None;
+                let mut position__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::MarkType => {
+                            if mark_type__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("markType"));
+                            }
+                            mark_type__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::Position => {
+                            if position__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("position"));
+                            }
+                            position__ = map_.next_value()?;
+                        }
+                    }
+                }
+                Ok(SceneMarkInfo {
+                    mark_type: mark_type__,
+                    position: position__,
+                })
+            }
+        }
+        deserializer.deserialize_struct("blueprotobuf_package.SceneMarkInfo", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for SceneMarkSync {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if !self.scene_marks.is_empty() {
+            len += 1;
+        }
+        if !self.teammate_marks.is_empty() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("blueprotobuf_package.SceneMarkSync", len)?;
+        if !self.scene_marks.is_empty() {
+            struct_ser.serialize_field("sceneMarks", &self.scene_marks)?;
+        }
+        if !self.teammate_marks.is_empty() {
+            struct_ser.serialize_field("teammateMarks", &self.teammate_marks)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for SceneMarkSync {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "sceneMarks",
+            "teammateMarks",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            SceneMarks,
+            TeammateMarks,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "sceneMarks" => Ok(GeneratedField::SceneMarks),
+                            "teammateMarks" => Ok(GeneratedField::TeammateMarks),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = SceneMarkSync;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct blueprotobuf_package.SceneMarkSync")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<SceneMarkSync, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut scene_marks__ = None;
+                let mut teammate_marks__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::SceneMarks => {
+                            if scene_marks__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("sceneMarks"));
+                            }
+                            scene_marks__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::TeammateMarks => {
+                            if teammate_marks__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("teammateMarks"));
+                            }
+                            teammate_marks__ = Some(map_.next_value()?);
+                        }
+                    }
+                }
+                Ok(SceneMarkSync {
+                    scene_marks: scene_marks__.unwrap_or_default(),
+                    teammate_marks: teammate_marks__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("blueprotobuf_package.SceneMarkSync", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for TeammateMarkInfo {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.char_id.is_some() {
+            len += 1;
+        }
+        if self.mark_type.is_some() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("blueprotobuf_package.TeammateMarkInfo", len)?;
+        if let Some(v) = self.char_id.as_ref() {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("charId", ToString::to_string(&v).as_str())?;
+        }
+        if let Some(v) = self.mark_type.as_ref() {
+            struct_ser.serialize_field("markType", v)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for TeammateMarkInfo {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "charId",
+            "markType",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            CharId,
+            MarkType,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "charId" => Ok(GeneratedField::CharId),
+                            "markType" => Ok(GeneratedField::MarkType),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = TeammateMarkInfo;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct blueprotobuf_package.TeammateMarkInfo")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<TeammateMarkInfo, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut char_id__ = None;
+                let mut mark_type__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::CharId => {
+                            if char_id__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("charId"));
+                            }
+                            char_id__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                        GeneratedField::MarkType => {
+                            if mark_type__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("markType"));
+                            }
+                            mark_type__ =
+                                map_.next_value::<::std::option::Option<::pbjson::private::NumberDeserialize<_>>>()?.map(|x| x.0)
+                            ;
+                        }
+                    }
+                }
+                Ok(TeammateMarkInfo {
+                    char_id: char_id__,
+                    mark_type: mark_type__,
+                })
+            }
+        }
+        deserializer.deserialize_struct("blueprotobuf_package.TeammateMarkInfo", FIELDS, GeneratedVisitor)
+    }
+}

@@ -1,6 +1,10 @@
 <script lang="ts">
   import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
   import { createDefaultMinimapConfig, SETTINGS } from "$lib/settings-store";
+  import {
+    MINIMAP_MARKER_DIGITS,
+    normalizeMinimapMarkerSettings,
+  } from "$lib/minimap-marker-settings";
   import { resolveSceneName } from "$lib/config/game-names";
   import { t } from "$lib/i18n/index.svelte";
   import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
@@ -17,6 +21,7 @@
     hideAllTeammates?: boolean;
     showBoss?: boolean;
     showMarkers?: boolean;
+    showTeamMarks?: boolean;
     entityColors?: Partial<typeof defaultMinimapConfig.entityColors>;
     entitySizes?: Partial<typeof defaultMinimapConfig.entitySizes>;
     markerColors?: Partial<typeof defaultMinimapConfig.markerColors>;
@@ -32,7 +37,9 @@
     state.autoHideInDailyScenes ??= defaultMinimapConfig.autoHideInDailyScenes;
     state.hideAllTeammates ??= defaultMinimapConfig.hideAllTeammates;
     state.showBoss ??= defaultMinimapConfig.showBoss;
-    state.showMarkers ??= defaultMinimapConfig.showMarkers;
+    const markerDefaults = normalizeMinimapMarkerSettings(state);
+    state.showMarkers ??= markerDefaults.showMarkers;
+    state.showTeamMarks ??= markerDefaults.showTeamMarks;
     state.entityColors ??= { ...defaultMinimapConfig.entityColors };
     state.entityColors.boss ??= defaultMinimapConfig.entityColors.boss;
     state.entitySizes ??= { ...defaultMinimapConfig.entitySizes };
@@ -40,13 +47,11 @@
     state.entitySizes.teammate ??= defaultMinimapConfig.entitySizes.teammate;
     state.entitySizes.boss ??= defaultMinimapConfig.entitySizes.boss;
     state.entitySizes.other ??= defaultMinimapConfig.entitySizes.other;
-    state.markerColors ??= { ...defaultMinimapConfig.markerColors };
-    state.markerColors.m1 ??= defaultMinimapConfig.markerColors.m1;
-    state.markerColors.m2 ??= defaultMinimapConfig.markerColors.m2;
-    state.markerColors.m3 ??= defaultMinimapConfig.markerColors.m3;
-    state.markerColors.m4 ??= defaultMinimapConfig.markerColors.m4;
-    state.markerColors.m5 ??= defaultMinimapConfig.markerColors.m5;
-    state.markerColors.m6 ??= defaultMinimapConfig.markerColors.m6;
+    state.markerColors ??= markerDefaults.markerColors;
+    for (const digit of MINIMAP_MARKER_DIGITS) {
+      const key = `m${digit}` as const;
+      state.markerColors[key] ??= markerDefaults.markerColors[key];
+    }
     state.localRing ??= { ...defaultMinimapConfig.localRing };
     state.localRing.enabled ??= defaultMinimapConfig.localRing.enabled;
     state.localRing.color ??= defaultMinimapConfig.localRing.color;
@@ -69,6 +74,7 @@
   $effect(() => {
     void minimapSettings.showBoss;
     void minimapSettings.showMarkers;
+    void minimapSettings.showTeamMarks;
     void minimapSettings.autoHideInDailyScenes;
     void minimapSettings.entityColors;
     void minimapSettings.entitySizes;
@@ -373,32 +379,19 @@
 
     {#if minimapSettings.markerColors}
       <div class="grid gap-2 lg:grid-cols-2">
-        <SettingsColor
-          bind:value={minimapSettings.markerColors.m1}
-          label={t("minimap.settings.colors.marker1")}
-        />
-        <SettingsColor
-          bind:value={minimapSettings.markerColors.m2}
-          label={t("minimap.settings.colors.marker2")}
-        />
-        <SettingsColor
-          bind:value={minimapSettings.markerColors.m3}
-          label={t("minimap.settings.colors.marker3")}
-        />
-        <SettingsColor
-          bind:value={minimapSettings.markerColors.m4}
-          label={t("minimap.settings.colors.marker4")}
-        />
-        <SettingsColor
-          bind:value={minimapSettings.markerColors.m5}
-          label={t("minimap.settings.colors.marker5")}
-        />
-        <SettingsColor
-          bind:value={minimapSettings.markerColors.m6}
-          label={t("minimap.settings.colors.marker6")}
-        />
+        {#each MINIMAP_MARKER_DIGITS as digit (digit)}
+          <SettingsColor
+            bind:value={minimapSettings.markerColors[`m${digit}`]}
+            label={t(`minimap.settings.colors.marker${digit}`)}
+          />
+        {/each}
       </div>
     {/if}
+    <SettingsSwitch
+      bind:checked={minimapSettings.showTeamMarks}
+      label={t("minimap.settings.showTeamMarks.label")}
+      description={t("minimap.settings.showTeamMarks.description")}
+    />
   </section>
 
   <section

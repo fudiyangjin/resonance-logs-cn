@@ -351,6 +351,7 @@ impl ProjectionSet {
             | DomainEvent::LocalPlayerChanged { .. }
             | DomainEvent::BuffChanged(_)
             | DomainEvent::SkillLifecycleChanged { .. }
+            | DomainEvent::SceneMarkSnapshot(_)
             | DomainEvent::PassiveSkillObserved { .. } => {
                 reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 minimap_changed |= self.minimap.apply(envelope);
@@ -1382,6 +1383,70 @@ mod tests {
             remaining.iter().count()
         );
         assert!(projections.dirty_mask().is_empty());
+
+        drop(projections);
+        join.join().expect("history writer stops after disconnect");
+    }
+
+    #[test]
+    fn first_empty_scene_mark_snapshot_takes_over_and_duplicates_do_not_publish() {
+        use crate::live::runtime::events::{ProtocolBatch, ProtocolObservation, SceneMarkSnapshot};
+
+        let (writer, join) = HistoryWriterHandle::start().expect("history writer starts");
+        let mut projections = ProjectionSet::new(writer);
+        let mut entities = EntityContext::new();
+        let mut scheduler = DeadlineScheduler::new();
+        let state = SegmentState::Idle {
+            mode: IdleMode::Standard,
+        };
+        projections.take_publications(&entities, &state, ALL_TOPICS);
+
+        for sequence in 1..=2 {
+            let events = entities.apply_batch(ProtocolBatch {
+                meta: EventMeta {
+                    batch_id: BatchId(sequence),
+                    capture_sequence: sequence,
+                    stream_id: 1,
+                    stream_epoch: 1,
+                    captured_wall_ms: 1_000,
+                    captured_mono_ns: 1_000_000,
+                    source_time_ms: None,
+                },
+                observations: vec![ProtocolObservation::SceneMarkSnapshot(
+                    SceneMarkSnapshot::default(),
+                )],
+            });
+            assert_eq!(events.len(), 1);
+            projections
+                .apply(&events[0], &entities, &mut scheduler)
+                .unwrap();
+            assert_eq!(
+                projections.dirty_mask(),
+                if sequence == 1 {
+                    TopicMask::MINIMAP
+                } else {
+                    TopicMask::EMPTY
+                }
+            );
+            let publications = projections.take_publications(&entities, &state, ALL_TOPICS);
+            assert_eq!(publications.len(), if sequence == 1 { 1 } else { 0 });
+
+            let mut legacy = events[0].clone();
+            legacy.event = DomainEvent::PassiveSkillObserved {
+                entity: EntityRef {
+                    uuid: EntityUuid(1),
+                    generation: 0,
+                },
+                passive_instance_id: 900,
+                skill_id: 1101,
+                target_position: None,
+                ended: false,
+            };
+            projections
+                .apply(&legacy, &entities, &mut scheduler)
+                .unwrap();
+            assert!(!projections.is_dirty(TopicMask::MINIMAP));
+        }
 
         drop(projections);
         join.join().expect("history writer stops after disconnect");

@@ -7,6 +7,8 @@
   import { SETTINGS } from "$lib/settings-store";
   import { untrack } from "svelte";
   import { slotColor } from "./colors";
+  import { hideTeammate, visibleTeamMark } from "./minimap-markers";
+  import { MINIMAP_MARKER_DIGITS } from "$lib/minimap-marker-settings";
   import { minimapSkillCasts } from "./minimap-runtime.svelte.js";
   import { resolveScene } from "./scene-registry";
   import {
@@ -35,6 +37,9 @@
   const DEFAULT_LOCAL_RING_WIDTH = 2;
   const DEFAULT_DEAD_COLOR = "#ef4444";
   const DEFAULT_DEAD_OPACITY = 0.35;
+  const TEAM_MARK_SIZE = 20;
+  // Canvas redraws are explicitly invalidated when an image finishes loading.
+  const teamMarkImages: (HTMLImageElement | null)[] = Array(7).fill(null);
   const minimapSettings = $derived(SETTINGS.minimap.state);
 
   type Projector = (x: number, z: number) => [number, number];
@@ -404,21 +409,40 @@
       const safeStatus = view.entitySafeStatus?.get(entity.entityUuid);
       const hasSafeStatus = safeStatus !== undefined && team;
       const hasMechanic = colorSlot !== undefined || hasSafeStatus;
+      const teamMark = visibleTeamMark(entity, minimapSettings.showTeamMarks);
       if (
-        minimapSettings.hideAllTeammates &&
-        entity.kind === "teammate"
-      ) {
-        continue;
-      }
-      if (
-        minimapSettings.hideNormalTeammates &&
-        entity.kind === "teammate" &&
-        !hasMechanic
+        hideTeammate(
+          entity.kind,
+          hasMechanic,
+          teamMark !== null,
+          minimapSettings,
+        )
       ) {
         continue;
       }
 
       const [sx, sy] = project(entity.x, entity.z);
+      const dotColor = hasSafeStatus
+        ? safeStatus
+          ? slotColor(1) // green = inside safe zone
+          : slotColor(3) // red = outside safe zone
+        : colorSlot === undefined
+          ? colorFor(entity)
+          : slotColor(colorSlot);
+      const teamMarkImage = teamMark === null ? null : teamMarkImages[teamMark];
+      if (teamMarkImage) {
+        ctx.globalAlpha = entity.isDead ? deadOpacity() : 1;
+        ctx.shadowColor = dotColor;
+        ctx.shadowBlur = !entity.isDead && hasMechanic ? 12 : 0;
+        ctx.drawImage(
+          teamMarkImage,
+          sx - TEAM_MARK_SIZE / 2,
+          sy - TEAM_MARK_SIZE / 2,
+          TEAM_MARK_SIZE,
+          TEAM_MARK_SIZE,
+        );
+        continue;
+      }
 
       // Dead team members render with the configured dead style, fully
       // overriding mechanic coloring and glow. Dead bosses/other entities
@@ -443,14 +467,6 @@
         }
         continue;
       }
-
-      const dotColor = hasSafeStatus
-        ? safeStatus
-          ? slotColor(1) // green = inside safe zone
-          : slotColor(3) // red = outside safe zone
-        : colorSlot === undefined
-          ? colorFor(entity)
-          : slotColor(colorSlot);
 
       ctx.globalAlpha = entity.isDead
         ? 0.35
@@ -483,7 +499,7 @@
   }
 
   // Player markers (标点): drawn from the scene view so they share the same
-  // arena-local coordinate space as entities. Each is a colored number 1..6
+  // arena-local coordinate space as entities. Each is a colored digit 0..9
   // with a black outline; gated by the `showMarkers` toggle (default off).
   function drawMarkers(
     ctx: CanvasRenderingContext2D,
@@ -516,7 +532,7 @@
         continue;
       }
       const n = marker.marker;
-      if (n < 1 || n > 6) continue;
+      if (!Number.isInteger(n) || n < 0 || n > 9) continue;
       const [sx, sy] = project(marker.x, marker.z);
       const label = String(n);
       ctx.strokeText(label, sx, sy);
@@ -749,6 +765,16 @@
 
     const invalidator = createFrameInvalidator(draw, browserFrameApi());
     frameInvalidator = invalidator;
+    const images = Array.from({ length: 6 }, (_, index) => {
+      const mark = index + 1;
+      const image = new Image();
+      image.onload = () => {
+        teamMarkImages[mark] = image;
+        invalidator.invalidate();
+      };
+      image.src = `/images/scene_team_mark/img_punctuate_symbol0${mark}.png`;
+      return image;
+    });
     const invalidateSize = () => {
       arenaCache = null;
       invalidator.invalidate();
@@ -762,6 +788,8 @@
     invalidator.invalidate();
 
     return () => {
+      for (const image of images) image.onload = null;
+      teamMarkImages.fill(null);
       resizeObserver?.disconnect();
       window.removeEventListener("resize", invalidateSize);
       invalidator.cancel();
@@ -778,7 +806,10 @@
     void minimapSettings.hideAllTeammates;
     void minimapSettings.showBoss;
     void minimapSettings.showMarkers;
-    void minimapSettings.markerColors;
+    void minimapSettings.showTeamMarks;
+    for (const digit of MINIMAP_MARKER_DIGITS) {
+      void minimapSettings.markerColors?.[`m${digit}`];
+    }
     void minimapSettings.entityColors.local;
     void minimapSettings.entityColors.teammate;
     void minimapSettings.entityColors.boss;

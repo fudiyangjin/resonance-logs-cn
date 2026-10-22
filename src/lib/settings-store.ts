@@ -3,6 +3,12 @@
  * It uses `@tauri-store/svelte` to create persistent stores for user settings.
  */
 import { RuneStore } from "@tauri-store/svelte";
+import {
+  DEFAULT_MINIMAP_MARKER_COLORS,
+  normalizeMinimapMarkerSettings,
+  type MinimapMarkerColors,
+} from "./minimap-marker-settings";
+export type { MinimapMarkerColors } from "./minimap-marker-settings";
 import type { CounterSource } from "./bindings";
 import { buffCompositeAliases, type BuffComposite } from "./buff-composites";
 import type { BuffIconOverrideMap } from "./buff-icons";
@@ -680,15 +686,6 @@ export type MinimapEntitySizes = {
   other: number;
 };
 
-export type MinimapMarkerColors = {
-  m1: string;
-  m2: string;
-  m3: string;
-  m4: string;
-  m5: string;
-  m6: string;
-};
-
 export type MinimapInfoPanelStyle = {
   backgroundOpacity: number;
 };
@@ -715,6 +712,7 @@ export type MinimapConfig = {
   hideAllTeammates: boolean;
   showBoss: boolean;
   showMarkers: boolean;
+  showTeamMarks: boolean;
   showMapPanel: boolean;
   showInfoPanel: boolean;
   mapPanel: MinimapPanelRect;
@@ -2565,6 +2563,7 @@ export function createDefaultMinimapConfig(): MinimapConfig {
     hideAllTeammates: false,
     showBoss: false,
     showMarkers: false,
+    showTeamMarks: false,
     showMapPanel: false,
     showInfoPanel: false,
     mapPanel: { x: 24, y: 24, width: 340, scale: 1 },
@@ -2580,14 +2579,7 @@ export function createDefaultMinimapConfig(): MinimapConfig {
       boss: 10,
       other: 10,
     },
-    markerColors: {
-      m1: "#facc15",
-      m2: "#fb923c",
-      m3: "#4ade80",
-      m4: "#67e8f9",
-      m5: "#c084fc",
-      m6: "#2563eb",
-    },
+    markerColors: { ...DEFAULT_MINIMAP_MARKER_COLORS },
     localRing: {
       enabled: true,
       color: "#ffffff",
@@ -3184,11 +3176,15 @@ export const SETTINGS = {
   loadouts: monitoringSection("loadouts"),
   /** @deprecated Read/write through SETTINGS.monitoring.state.liveMeter. */
   liveMeter: monitoringSection("liveMeter"),
-  minimap: new RuneStore(
-    "minimap",
-    DEFAULT_SETTINGS.minimap,
-    RUNE_STORE_OPTIONS,
-  ),
+  minimap: new RuneStore("minimap", DEFAULT_SETTINGS.minimap, {
+    ...RUNE_STORE_OPTIONS,
+    hooks: {
+      beforeFrontendSync: (state) => ({
+        ...state,
+        ...normalizeMinimapMarkerSettings(state),
+      }),
+    },
+  }),
   voice: new RuneStore("voice", DEFAULT_SETTINGS.voice, RUNE_STORE_OPTIONS),
   /**
    * Mirror store for the active loadout's forbidden-damage list (see

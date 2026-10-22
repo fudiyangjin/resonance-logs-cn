@@ -1120,6 +1120,9 @@ impl EntityContext {
             ProtocolObservation::PassiveSkillObserved(observation) => {
                 self.apply_passive_skill(meta, observation, out);
             }
+            ProtocolObservation::SceneMarkSnapshot(snapshot) => {
+                self.emit(meta, DomainEvent::SceneMarkSnapshot(snapshot), out);
+            }
             ProtocolObservation::BossMechanicStarted(mechanic) => {
                 self.emit(meta, DomainEvent::BossMechanicStarted(mechanic), out);
             }

@@ -2245,18 +2245,21 @@ export const enUSMessages = {
   "minimap.settings.autoHideInDailyScenes.description":
     "Automatically hide the minimap overlay in daily scene blacklist entries and restore its previous visibility after leaving.",
   "minimap.settings.hideNormalTeammates.label":
-    "Only show self and teammates affected by mechanics",
+    "Only show self, marked teammates and mechanic targets",
   "minimap.settings.hideNormalTeammates.description":
-    "When enabled, normal teammate points are hidden; teammates with mechanic colors or buffs are shown automatically.",
+    "Hide ordinary teammates. Teammates affected by mechanics or buffs, and marked teammates when party icons are enabled, remain visible.",
   "minimap.settings.hideAllTeammates.label": "Hide all teammate points",
   "minimap.settings.hideAllTeammates.description":
-    "When enabled, all teammate points are hidden even if affected by mechanic colors or buffs; only your own point remains. Takes priority over the option above.",
+    "Hide all teammate points and party icons, including teammates affected by mechanics. Your own display is unchanged. Takes priority over the option above.",
   "minimap.settings.showBoss.label": "Show Boss Position",
   "minimap.settings.showBoss.description":
     "Show the current dungeon boss position on the minimap when enabled. Off by default to reduce noise.",
-  "minimap.settings.showMarkers.label": "Show Markers",
+  "minimap.settings.showMarkers.label": "Show Ground Markers",
   "minimap.settings.showMarkers.description":
-    "Show party markers (1-6) on the minimap when enabled. Drawn as colored numbers on the map only. Off by default.",
+    "Show ground markers as colored digits (0-9). Older server versions use 1-6. Off by default.",
+  "minimap.settings.showTeamMarks.label": "Show Party Icons",
+  "minimap.settings.showTeamMarks.description":
+    "Replace marked teammates' dots with their in-game icons. Your own display is unchanged.",
   "minimap.overlay.title": "Panel Visibility",
   "minimap.overlay.description":
     "Control which independent panels are visible in the dungeon mechanics overlay.",
@@ -2272,12 +2275,16 @@ export const enUSMessages = {
   "minimap.settings.colors.local": "Self",
   "minimap.settings.colors.teammate": "Teammate",
   "minimap.settings.colors.boss": "Boss",
+  "minimap.settings.colors.marker0": "Marker 0",
   "minimap.settings.colors.marker1": "Marker 1",
   "minimap.settings.colors.marker2": "Marker 2",
   "minimap.settings.colors.marker3": "Marker 3",
   "minimap.settings.colors.marker4": "Marker 4",
   "minimap.settings.colors.marker5": "Marker 5",
   "minimap.settings.colors.marker6": "Marker 6",
+  "minimap.settings.colors.marker7": "Marker 7",
+  "minimap.settings.colors.marker8": "Marker 8",
+  "minimap.settings.colors.marker9": "Marker 9",
   "minimap.settings.localRing.title": "Self Marker",
   "minimap.settings.localRing.description":
     "Draw an extra ring around your minimap dot so you can locate yourself even when mechanic colors override your marker.",

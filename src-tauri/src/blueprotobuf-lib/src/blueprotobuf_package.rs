@@ -5808,6 +5808,32 @@ pub struct NotifyTimerUpdate {
     #[prost(message, optional, tag = "1")]
     pub timer_info: ::core::option::Option<TimerInfo>,
 }
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct NotifySceneMark {
+    #[prost(message, optional, tag = "1")]
+    pub v_info: ::core::option::Option<SceneMarkSync>,
+}
+#[derive(specta::Type, Clone, PartialEq, ::prost::Message)]
+pub struct SceneMarkSync {
+    #[prost(message, repeated, tag = "1")]
+    pub scene_marks: ::prost::alloc::vec::Vec<SceneMarkInfo>,
+    #[prost(message, repeated, tag = "2")]
+    pub teammate_marks: ::prost::alloc::vec::Vec<TeammateMarkInfo>,
+}
+#[derive(specta::Type, Clone, Copy, PartialEq, ::prost::Message)]
+pub struct SceneMarkInfo {
+    #[prost(int32, optional, tag = "1")]
+    pub mark_type: ::core::option::Option<i32>,
+    #[prost(message, optional, tag = "2")]
+    pub position: ::core::option::Option<Position>,
+}
+#[derive(specta::Type, Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TeammateMarkInfo {
+    #[prost(int64, optional, tag = "1")]
+    pub char_id: ::core::option::Option<i64>,
+    #[prost(int32, optional, tag = "2")]
+    pub mark_type: ::core::option::Option<i32>,
+}
 #[derive(specta::Type, Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct NotifyPlayerBeginInteraction {
     #[prost(message, optional, tag = "1")]

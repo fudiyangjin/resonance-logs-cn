@@ -21,7 +21,8 @@ use crate::live::runtime::events::{
     HateEntry, HitChannel, HitKind, LOCAL_PLAYER, LineId, LocalTalent, MonoTimeMs,
     ObservationOrigin, ObservedBuff, ObservedBuffChange, ObservedHit, ObservedTeamBase,
     ObservedTeamMember, PacketDirection, PassiveSkillObservation, Position, ProtocolBatch,
-    ProtocolObservation, ShieldDetail, SkillCooldownState, SkillPhase, TeamKind, TeamRosterUpdate,
+    ProtocolObservation, SceneMarkSnapshot, ShieldDetail, SkillCooldownState, SkillPhase, TeamKind,
+    TeamRosterUpdate,
 };
 use crate::packets::opcodes::{
     GRPC_TEAM_NTF_SERVICE_ID, MATCH_NTF_SERVICE_ID, Pkt, SOCIAL_NTF_SERVICE_ID,
@@ -156,6 +157,7 @@ impl ProtocolDecoder {
         }
 
         match opcode {
+            Pkt::NotifySceneMark => decoded!(blueprotobuf::NotifySceneMark, decode_scene_marks),
             Pkt::EnterScene => decoded!(
                 blueprotobuf::EnterScene,
                 |message: blueprotobuf::EnterScene| { self.decode_enter_scene(message, envelope) }
@@ -2282,6 +2284,48 @@ fn decode_dungeon_delta(message: blueprotobuf::SyncDungeonDirtyData) -> Vec<Prot
     observations
 }
 
+fn decode_scene_marks(message: blueprotobuf::NotifySceneMark) -> Vec<ProtocolObservation> {
+    let Some(sync) = message.v_info else {
+        return Vec::new();
+    };
+    let ground = sync
+        .scene_marks
+        .into_iter()
+        .filter_map(|mark| {
+            let mark_type = u8::try_from(mark.mark_type?)
+                .ok()
+                .filter(|id| (1..=10).contains(id))?;
+            let position = mark.position?;
+            // Proto3 omits scalar zero values; a present Position may be empty.
+            let position = Position {
+                x: position.x.unwrap_or_default(),
+                y: position.y.unwrap_or_default(),
+                z: position.z.unwrap_or_default(),
+            };
+            (position.x.is_finite() && position.y.is_finite() && position.z.is_finite())
+                .then_some((mark_type, position))
+        })
+        .collect();
+    let teammates = sync
+        .teammate_marks
+        .into_iter()
+        .filter_map(|mark| {
+            let mark_type = u8::try_from(mark.mark_type?)
+                .ok()
+                .filter(|id| (1..=6).contains(id))?;
+            // Character UUIDs reserve the low 16 bits for entity type/flags.
+            let char_id = mark
+                .char_id
+                .filter(|id| *id > 0 && *id <= (i64::MAX >> 16))?;
+            Some((EntityUuid(canonical_player_uuid(char_id)), mark_type))
+        })
+        .collect();
+    vec![ProtocolObservation::SceneMarkSnapshot(SceneMarkSnapshot {
+        ground,
+        teammates,
+    })]
+}
+
 fn decode_message<M>(payload: &[u8]) -> Result<M, prost::DecodeError>
 where
     M: Message + Default,
@@ -2379,6 +2423,166 @@ mod tests {
 
     fn canonical(char_id: i64) -> i64 {
         canonical_player_uuid(char_id)
+    }
+
+    #[test]
+    fn scene_marks_decode_official_wire_tags_and_proto3_zero_positions() {
+        // Handwritten from zproto: vInfo { sceneMarks {1, {}},
+        // sceneMarks {10, {z: 2.5}}, teammateMarks {charId: 42, markType: 6} }.
+        // Do not encode with our structs: that would hide incorrect field tags.
+        let mut packet = notify(
+            1,
+            Pkt::NotifySceneMark,
+            &blueprotobuf::NotifySceneMark::default(),
+        );
+        packet.payload = vec![
+            0x0a, 0x17, 0x0a, 0x04, 0x08, 0x01, 0x12, 0x00, 0x0a, 0x09, 0x08, 0x0a, 0x12, 0x05,
+            0x1d, 0x00, 0x00, 0x20, 0x40, 0x12, 0x04, 0x08, 0x2a, 0x10, 0x06,
+        ]
+        .into();
+        assert_eq!(packet.key.opcode, 87);
+        let mut decoder = ProtocolDecoder::new();
+        let batch = decoder.decode(packet.clone());
+        let [ProtocolObservation::SceneMarkSnapshot(snapshot)] = batch.observations.as_slice()
+        else {
+            panic!("expected one marker snapshot");
+        };
+        assert_eq!(
+            snapshot.ground[&1],
+            Position {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0
+            }
+        );
+        assert_eq!(
+            snapshot.ground[&10],
+            Position {
+                x: 0.0,
+                y: 0.0,
+                z: 2.5
+            }
+        );
+        assert_eq!(snapshot.teammates[&EntityUuid(canonical(42))], 6);
+
+        // The reducer forwards the whole snapshot without requiring entities.
+        let mut context = crate::live::runtime::entity_context::EntityContext::new();
+        let events = context.apply_batch(batch);
+        assert!(
+            matches!(events.as_slice(), [event] if matches!(event.event, crate::live::runtime::events::DomainEvent::SceneMarkSnapshot(_)))
+        );
+
+        packet.direction = PacketDirection::ClientToServer;
+        assert!(decoder.decode(packet.clone()).observations.is_empty());
+        packet.direction = PacketDirection::ServerToClient;
+        packet.key.service_id = Some(1);
+        assert!(decoder.decode(packet).observations.is_empty());
+    }
+
+    #[test]
+    fn scene_marks_distinguish_empty_snapshot_from_absent_or_malformed_payload() {
+        let mut decoder = ProtocolDecoder::new();
+        for (bytes, expected_count) in [
+            (vec![0x0a, 0x00], 1),
+            (vec![], 0),
+            (vec![0x0a, 0x04, 0x08], 0),
+        ] {
+            let mut packet = notify(
+                1,
+                Pkt::NotifySceneMark,
+                &blueprotobuf::NotifySceneMark::default(),
+            );
+            packet.payload = bytes.into();
+            let batch = decoder.decode(packet);
+            assert_eq!(batch.observations.len(), expected_count);
+            if expected_count == 1 {
+                assert_eq!(
+                    batch.observations,
+                    vec![ProtocolObservation::SceneMarkSnapshot(
+                        SceneMarkSnapshot::default()
+                    )]
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn scene_marks_filter_invalid_entries_and_last_valid_duplicate_wins() {
+        let ground = |mark_type, x| blueprotobuf::SceneMarkInfo {
+            mark_type: Some(mark_type),
+            position: Some(blueprotobuf::Position {
+                x: Some(x),
+                ..Default::default()
+            }),
+        };
+        let team = |char_id, mark_type| blueprotobuf::TeammateMarkInfo {
+            char_id: Some(char_id),
+            mark_type: Some(mark_type),
+        };
+        let observations = decode_scene_marks(blueprotobuf::NotifySceneMark {
+            v_info: Some(blueprotobuf::SceneMarkSync {
+                scene_marks: vec![
+                    ground(1, 1.0),
+                    ground(1, 2.0),
+                    ground(1, f32::NAN),
+                    ground(0, 1.0),
+                    ground(11, 1.0),
+                    ground(2, f32::INFINITY),
+                    blueprotobuf::SceneMarkInfo {
+                        mark_type: Some(3),
+                        position: None,
+                    },
+                ],
+                teammate_marks: vec![
+                    team(42, 1),
+                    team(42, 6),
+                    team(42, 7),
+                    team(0, 1),
+                    team(-1, 1),
+                    team(i64::MAX, 1),
+                    team(43, 0),
+                    team(44, 6),
+                ],
+            }),
+        });
+        let [ProtocolObservation::SceneMarkSnapshot(snapshot)] = observations.as_slice() else {
+            panic!("snapshot")
+        };
+        assert_eq!(snapshot.ground.len(), 1);
+        assert_eq!(snapshot.ground[&1].x, 2.0);
+        assert_eq!(snapshot.teammates.len(), 2);
+        assert_eq!(snapshot.teammates[&EntityUuid(canonical(42))], 6);
+        assert_eq!(snapshot.teammates[&EntityUuid(canonical(44))], 6);
+    }
+
+    #[test]
+    fn scene_marks_json_preserves_int64_ids_as_strings() {
+        let mark = blueprotobuf::TeammateMarkInfo {
+            char_id: Some(9_007_199_254_740_993),
+            mark_type: Some(6),
+        };
+        let value = serde_json::to_value(mark).unwrap();
+        assert_eq!(value["charId"], "9007199254740993");
+        assert_eq!(value["markType"], 6);
+        assert_eq!(
+            serde_json::from_value::<blueprotobuf::TeammateMarkInfo>(value).unwrap(),
+            mark
+        );
+        let snapshot = blueprotobuf::NotifySceneMark {
+            v_info: Some(blueprotobuf::SceneMarkSync {
+                scene_marks: vec![blueprotobuf::SceneMarkInfo {
+                    mark_type: Some(1),
+                    position: Some(blueprotobuf::Position::default()),
+                }],
+                teammate_marks: vec![mark],
+            }),
+        };
+        let value = serde_json::to_value(&snapshot).unwrap();
+        assert!(value["vInfo"]["sceneMarks"].is_array());
+        assert_eq!(
+            serde_json::from_value::<blueprotobuf::NotifySceneMark>(value).unwrap(),
+            snapshot
+        );
     }
 
     #[test]

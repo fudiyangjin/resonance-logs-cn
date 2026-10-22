@@ -744,6 +744,9 @@ pub struct MinimapEntity {
     pub entity_type: MinimapEntityType,
     /// What the entity is, used by the frontend to pick color/size.
     pub kind: MinimapEntityKind,
+    /// Party icon type (1..=6); the frontend keeps the local player's normal glyph.
+    #[serde(default)]
+    pub team_mark: Option<u8>,
     /// Horizontal map coordinate.
     pub x: f32,
     /// Vertical game coordinate.
@@ -793,9 +796,8 @@ pub struct MinimapSkillCast {
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct MinimapMarker {
-    /// Displayed marker number 1..=6, derived as `skill_id - MARKER_SKILL_ID_BASE`.
+    /// Display digit: legacy skills use 1..=6, scene mark types use 0..=9.
     pub marker: i32,
-    pub skill_id: i32,
     pub x: Option<f32>,
     pub z: Option<f32>,
 }

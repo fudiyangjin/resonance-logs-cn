@@ -2216,18 +2216,21 @@ export const jaJPMessages = {
   "minimap.settings.autoHideInDailyScenes.description":
     "日常シーンのブラックリストに入るとミニマップオーバーレイを自動的に非表示にし、離れると以前の表示状態を復元します。",
   "minimap.settings.hideNormalTeammates.label":
-    "自分とギミック対象の味方のみ表示",
+    "自分とギミック・マーカー対象の味方のみ表示",
   "minimap.settings.hideNormalTeammates.description":
-    "有効にすると通常の味方位置は非表示になり、ギミック色やBuffの影響を受けた味方だけ自動表示されます。",
+    "通常の味方を非表示にします。ギミックやBuffの対象、および人物マーカー表示が有効なマーカー付きの味方は表示されます。",
   "minimap.settings.hideAllTeammates.label": "味方位置をすべて非表示",
   "minimap.settings.hideAllTeammates.description":
-    "有効にするとギミック色やBuffの影響に関わらずすべての味方位置を非表示にし、自分のみ表示します。上の設定より優先されます。",
+    "ギミックやマーカーの有無に関わらず、味方の位置と人物アイコンをすべて非表示にします。自分の表示は変わりません。上の設定より優先されます。",
   "minimap.settings.showBoss.label": "Boss位置を表示",
   "minimap.settings.showBoss.description":
     "有効にすると、現在のダンジョンBossの位置をミニマップに表示します。ノイズを減らすため既定ではオフです。",
-  "minimap.settings.showMarkers.label": "マーカーを表示",
+  "minimap.settings.showMarkers.label": "地面マーカーを表示",
   "minimap.settings.showMarkers.description":
-    "有効にすると、パーティマーカー（1〜6）をミニマップに表示します。マップ上に色付き数字でのみ表示され、既定ではオフです。",
+    "地面マーカーを色付き数字（0〜9）で表示します。旧バージョンのサーバーでは1〜6を使用します。既定ではオフです。",
+  "minimap.settings.showTeamMarks.label": "人物マーカーを表示",
+  "minimap.settings.showTeamMarks.description":
+    "マーカー付きの味方の点をゲーム内アイコンに置き換えます。自分の表示は変わりません。",
   "minimap.overlay.title": "パネル表示",
   "minimap.overlay.description":
     "ダンジョンギミック overlay で表示する独立パネルを制御します。",
@@ -2243,12 +2246,16 @@ export const jaJPMessages = {
   "minimap.settings.colors.local": "自分",
   "minimap.settings.colors.teammate": "味方",
   "minimap.settings.colors.boss": "Boss",
+  "minimap.settings.colors.marker0": "マーカー 0",
   "minimap.settings.colors.marker1": "マーカー 1",
   "minimap.settings.colors.marker2": "マーカー 2",
   "minimap.settings.colors.marker3": "マーカー 3",
   "minimap.settings.colors.marker4": "マーカー 4",
   "minimap.settings.colors.marker5": "マーカー 5",
   "minimap.settings.colors.marker6": "マーカー 6",
+  "minimap.settings.colors.marker7": "マーカー 7",
+  "minimap.settings.colors.marker8": "マーカー 8",
+  "minimap.settings.colors.marker9": "マーカー 9",
   "minimap.settings.localRing.title": "自分マーカー",
   "minimap.settings.localRing.description":
     "自分のミニマップ点の外側に追加の同心円を描画し、ギミック色で変わっても自分の位置を見つけやすくします。",

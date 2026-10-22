@@ -14,7 +14,7 @@ use crate::live::protocol::MARKER_SKILL_ID_BASE;
 use crate::live::protocol::attrs as attr_type;
 use crate::live::runtime::events::{
     AttributeValue, BuffTransition, DomainEnvelope, DomainEvent, EntityKind, EntityRef, EntityUuid,
-    SkillPhase,
+    SceneMarkSnapshot, SkillPhase,
 };
 
 #[derive(Debug, Clone)]
@@ -54,6 +54,51 @@ impl MinimapEntityState {
     }
 }
 
+#[derive(Debug, PartialEq)]
+enum MarkerState {
+    Legacy(BTreeMap<i32, (EntityRef, MinimapMarker)>),
+    Synced(SceneMarkSnapshot),
+}
+
+impl Default for MarkerState {
+    fn default() -> Self {
+        Self::Legacy(BTreeMap::new())
+    }
+}
+
+impl MarkerState {
+    fn forget_entity(&mut self, entity: EntityRef) -> bool {
+        let Self::Legacy(markers) = self else {
+            return false;
+        };
+        let before = markers.len();
+        markers.retain(|_, (owner, _)| *owner != entity);
+        before != markers.len()
+    }
+
+    fn team_mark(&self, uuid: EntityUuid) -> Option<u8> {
+        match self {
+            Self::Legacy(_) => None,
+            Self::Synced(snapshot) => snapshot.teammates.get(&uuid).copied(),
+        }
+    }
+
+    fn ground_markers(&self) -> Vec<MinimapMarker> {
+        match self {
+            Self::Legacy(markers) => markers.values().map(|(_, marker)| marker.clone()).collect(),
+            Self::Synced(snapshot) => snapshot
+                .ground
+                .iter()
+                .map(|(mark_type, position)| MinimapMarker {
+                    marker: i32::from(*mark_type) - 1,
+                    x: Some(position.x),
+                    z: Some(position.z),
+                })
+                .collect(),
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct MinimapProjection {
     scene_id: Option<i32>,
@@ -62,7 +107,7 @@ pub struct MinimapProjection {
     entities: HashMap<EntityUuid, MinimapEntityState>,
     visible_entities: HashSet<EntityUuid>,
     buffs: HashMap<(EntityUuid, i64), MinimapBuffFact>,
-    markers: BTreeMap<i32, (EntityRef, MinimapMarker)>,
+    markers: MarkerState,
     pending_skill_casts: Vec<MinimapSkillCast>,
 }
 
@@ -72,7 +117,7 @@ impl MinimapProjection {
         self.entities.clear();
         self.visible_entities.clear();
         self.buffs.clear();
-        self.markers.clear();
+        self.markers = MarkerState::default();
         self.pending_skill_casts.clear();
     }
 
@@ -94,8 +139,7 @@ impl MinimapProjection {
                 let visible_taken = self.visible_entities.remove(&entity.uuid);
                 let buffs_before = self.buffs.len();
                 self.buffs.retain(|(target, _), _| *target != entity.uuid);
-                let markers_before = self.markers.len();
-                self.markers.retain(|_, (owner, _)| *owner != *entity);
+                let markers_changed = self.markers.forget_entity(*entity);
                 let entity_uuid = entity.uuid.0.to_string();
                 let casts_before = self.pending_skill_casts.len();
                 self.pending_skill_casts
@@ -110,7 +154,7 @@ impl MinimapProjection {
                 state_taken
                     || visible_taken
                     || self.buffs.len() != buffs_before
-                    || self.markers.len() != markers_before
+                    || markers_changed
                     || self.pending_skill_casts.len() != casts_before
                     || targets_cleared
             }
@@ -294,29 +338,38 @@ impl MinimapProjection {
                 ended,
                 ..
             } => {
+                let MarkerState::Legacy(markers) = &mut self.markers else {
+                    return false;
+                };
                 if *ended {
-                    self.markers.remove(passive_instance_id).is_some()
+                    markers.remove(passive_instance_id).is_some()
                 } else if let Some(marker) = marker_number(*skill_id) {
                     let next = (
                         *entity,
                         MinimapMarker {
                             marker,
-                            skill_id: *skill_id,
                             x: target_position.map(|position| position.x),
                             z: target_position.map(|position| position.z),
                         },
                     );
-                    self.markers.insert(*passive_instance_id, next.clone()) != Some(next)
+                    markers.insert(*passive_instance_id, next.clone()) != Some(next)
                 } else {
                     false
                 }
+            }
+            DomainEvent::SceneMarkSnapshot(snapshot) => {
+                if matches!(&self.markers, MarkerState::Synced(current) if current == snapshot) {
+                    return false;
+                }
+                self.markers = MarkerState::Synced(snapshot.clone());
+                true
             }
             DomainEvent::SceneChanged { scene_id, .. } => {
                 self.scene_id = Some(*scene_id);
                 self.entities.clear();
                 self.visible_entities.clear();
                 self.buffs.clear();
-                self.markers.clear();
+                self.markers = MarkerState::default();
                 self.pending_skill_casts.clear();
                 true
             }
@@ -337,6 +390,7 @@ impl MinimapProjection {
                             entity_uuid: state.reference.uuid.0.to_string(),
                             entity_type: state.entity_type,
                             kind: state.kind,
+                            team_mark: self.markers.team_mark(state.reference.uuid),
                             x,
                             y,
                             z,
@@ -362,11 +416,7 @@ impl MinimapProjection {
                         .unwrap_or_default(),
                     entities,
                     buffs: self.buffs.values().cloned().collect(),
-                    markers: self
-                        .markers
-                        .values()
-                        .map(|(_, marker)| marker.clone())
-                        .collect(),
+                    markers: self.markers.ground_markers(),
                 }
             })
         });
@@ -798,7 +848,7 @@ mod tests {
         ));
         assert!(projection.entities.contains_key(&LOCAL.uuid));
         assert_eq!(projection.buffs.len(), 1);
-        assert_eq!(projection.markers.len(), 1);
+        assert_eq!(projection.markers.ground_markers().len(), 1);
         assert_eq!(projection.pending_skill_casts.len(), 1);
 
         projection.apply(&envelope(
@@ -810,7 +860,7 @@ mod tests {
         assert!(!projection.entities.contains_key(&LOCAL.uuid));
         assert!(!projection.visible_entities.contains(&LOCAL.uuid));
         assert!(projection.buffs.is_empty());
-        assert!(projection.markers.is_empty());
+        assert!(projection.markers.ground_markers().is_empty());
         assert!(projection.pending_skill_casts.is_empty());
         let payload = projection.take_payload();
         let snapshot = payload
@@ -1069,7 +1119,200 @@ mod tests {
             .expect("registered scene should publish a snapshot");
         assert_eq!(snapshot.markers.len(), 1);
         assert_eq!(snapshot.markers[0].marker, 3);
-        assert_eq!(snapshot.markers[0].skill_id, 1103);
+    }
+
+    fn legacy_mark(ended: bool) -> DomainEnvelope {
+        envelope(
+            1,
+            10_001,
+            DomainEvent::PassiveSkillObserved {
+                entity: LOCAL,
+                passive_instance_id: 900,
+                skill_id: 1103,
+                target_position: Some(Position {
+                    x: 1.0,
+                    y: 0.0,
+                    z: 2.0,
+                }),
+                ended,
+            },
+        )
+    }
+
+    fn synced_marks(mark: u8) -> DomainEnvelope {
+        envelope(
+            2,
+            10_002,
+            DomainEvent::SceneMarkSnapshot(SceneMarkSnapshot {
+                ground: BTreeMap::from([
+                    (
+                        1,
+                        Position {
+                            x: 0.0,
+                            y: 0.0,
+                            z: 0.0,
+                        },
+                    ),
+                    (
+                        10,
+                        Position {
+                            x: 2.0,
+                            y: 0.0,
+                            z: 3.0,
+                        },
+                    ),
+                ]),
+                teammates: BTreeMap::from([(TEAMMATE.uuid, mark), (LOCAL.uuid, 1)]),
+            }),
+        )
+    }
+
+    #[test]
+    fn scene_marks_take_over_atomically_and_empty_sync_never_revives_legacy_marks() {
+        let mut projection = MinimapProjection::default();
+        projection.apply(&scene(1, 6563));
+        assert!(projection.apply(&legacy_mark(false)));
+        assert!(projection.apply(&legacy_mark(true)));
+        assert!(
+            projection
+                .take_payload()
+                .snapshot
+                .unwrap()
+                .markers
+                .is_empty()
+        );
+        projection.apply(&legacy_mark(false));
+        assert!(projection.apply(&synced_marks(2)));
+        assert!(!projection.apply(&synced_marks(2)));
+        assert!(!projection.apply(&legacy_mark(true)));
+        projection.apply(&envelope(
+            3,
+            10_003,
+            DomainEvent::EntityDisappeared { entity: LOCAL },
+        ));
+        let snapshot = projection.take_payload().snapshot.unwrap();
+        assert_eq!(
+            snapshot
+                .markers
+                .iter()
+                .map(|mark| mark.marker)
+                .collect::<Vec<_>>(),
+            [0, 9]
+        );
+
+        let empty = envelope(
+            4,
+            10_004,
+            DomainEvent::SceneMarkSnapshot(SceneMarkSnapshot::default()),
+        );
+        assert!(projection.apply(&empty));
+        assert!(!projection.apply(&empty));
+        assert!(!projection.apply(&legacy_mark(false)));
+        assert!(
+            projection
+                .take_payload()
+                .snapshot
+                .unwrap()
+                .markers
+                .is_empty()
+        );
+        assert_eq!(projection.markers.team_mark(TEAMMATE.uuid), None);
+    }
+
+    #[test]
+    fn scene_marks_survive_unseen_entities_and_follow_reappearance_and_movement() {
+        let mut projection = MinimapProjection::default();
+        projection.apply(&scene(1, 6563));
+        projection.apply(&synced_marks(2));
+        assert!(
+            projection
+                .take_payload()
+                .snapshot
+                .unwrap()
+                .entities
+                .is_empty()
+        );
+        projection.apply(&envelope(
+            3,
+            10_003,
+            DomainEvent::TeamMembershipChanged {
+                entity: TEAMMATE,
+                is_member: true,
+            },
+        ));
+        projection.apply(&appeared(4, TEAMMATE, EntityKind::Character));
+        projection.apply(&position(5, TEAMMATE, 3.0, 4.0));
+        let snapshot = projection.take_payload().snapshot.unwrap();
+        assert_eq!(snapshot.entities[0].team_mark, Some(2));
+        assert_eq!((snapshot.entities[0].x, snapshot.entities[0].z), (3.0, 4.0));
+
+        projection.apply(&position(6, TEAMMATE, 5.0, 6.0));
+        projection.apply(&synced_marks(6));
+        let snapshot = projection.take_payload().snapshot.unwrap();
+        assert_eq!(snapshot.entities[0].team_mark, Some(6));
+        assert_eq!((snapshot.entities[0].x, snapshot.entities[0].z), (5.0, 6.0));
+        projection.apply(&envelope(
+            7,
+            10_007,
+            DomainEvent::EntityDisappeared { entity: TEAMMATE },
+        ));
+        assert!(
+            projection
+                .take_payload()
+                .snapshot
+                .unwrap()
+                .entities
+                .is_empty()
+        );
+        let returned = EntityRef {
+            generation: 2,
+            ..TEAMMATE
+        };
+        projection.apply(&appeared(8, returned, EntityKind::Character));
+        projection.apply(&position(9, returned, 7.0, 8.0));
+        assert_eq!(
+            projection.take_payload().snapshot.unwrap().entities[0].team_mark,
+            Some(6)
+        );
+        projection.apply(&envelope(
+            10,
+            10_010,
+            DomainEvent::SceneMarkSnapshot(SceneMarkSnapshot::default()),
+        ));
+        assert_eq!(
+            projection.take_payload().snapshot.unwrap().entities[0].team_mark,
+            None
+        );
+    }
+
+    #[test]
+    fn scene_marks_reset_source_on_scene_change_and_runtime_reset() {
+        let mut projection = MinimapProjection::default();
+        projection.apply(&scene(1, 6563));
+        projection.apply(&synced_marks(2));
+        projection.apply(&scene(2, 6513));
+        assert!(
+            projection
+                .take_payload()
+                .snapshot
+                .unwrap()
+                .markers
+                .is_empty()
+        );
+        assert_eq!(projection.markers.team_mark(TEAMMATE.uuid), None);
+        assert!(projection.apply(&legacy_mark(false)));
+        projection.apply(&synced_marks(2));
+        projection.reset_runtime();
+        assert!(
+            projection
+                .take_payload()
+                .snapshot
+                .unwrap()
+                .markers
+                .is_empty()
+        );
+        assert_eq!(projection.markers.team_mark(TEAMMATE.uuid), None);
+        assert!(projection.apply(&legacy_mark(false)));
     }
 
     #[test]

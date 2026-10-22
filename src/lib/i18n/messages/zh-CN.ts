@@ -2072,18 +2072,22 @@ export const zhCNMessages = {
   "minimap.settings.autoHideInDailyScenes.label": "日常场景自动隐藏",
   "minimap.settings.autoHideInDailyScenes.description":
     "进入日常场景黑名单时自动隐藏小地图遮罩，离开后恢复之前的显示状态。",
-  "minimap.settings.hideNormalTeammates.label": "仅显示自己与被机制影响的队友",
+  "minimap.settings.hideNormalTeammates.label":
+    "仅显示自己、机制队友与标记队友",
   "minimap.settings.hideNormalTeammates.description":
-    "开启后，普通队友点位会隐藏；当队友被机制颜色或 Buff 影响时会自动显示。",
+    "隐藏普通队友；被机制颜色或 Buff 影响的队友，以及已开启人物标记显示的标记队友，仍会显示。",
   "minimap.settings.hideAllTeammates.label": "完全不显示队友坐标点",
   "minimap.settings.hideAllTeammates.description":
-    "开启后所有队友点位一律隐藏，即便队友正被机制颜色或 Buff 影响也不会显示；仅保留自己的点位。优先级高于上一项。",
+    "隐藏所有队友点位及人物图标，包括被机制影响或带标记的队友；自身显示不受影响。优先级高于上一项。",
   "minimap.settings.showBoss.label": "显示 Boss 位置",
   "minimap.settings.showBoss.description":
     "开启后，在小地图中显示当前副本 Boss 的位置；默认关闭以减少干扰。",
-  "minimap.settings.showMarkers.label": "显示标点",
+  "minimap.settings.showMarkers.label": "显示地面标点",
   "minimap.settings.showMarkers.description":
-    "开启后，在小地图中显示队伍标点（1~6 号）；仅在地图上以彩色数字显示，默认关闭。",
+    "以彩色数字显示地面标点（0~9）；较早版本的服务器显示 1~6。默认关闭。",
+  "minimap.settings.showTeamMarks.label": "显示人物标记",
+  "minimap.settings.showTeamMarks.description":
+    "用游戏标记图标替代被标记队友的圆点；自身保持原有显示。",
   "minimap.overlay.title": "面板可见性",
   "minimap.overlay.description": "控制副本机制 overlay 中哪些独立面板可见。",
   "minimap.overlay.state.show": "显示",
@@ -2098,12 +2102,16 @@ export const zhCNMessages = {
   "minimap.settings.colors.local": "自己",
   "minimap.settings.colors.teammate": "队友",
   "minimap.settings.colors.boss": "Boss",
+  "minimap.settings.colors.marker0": "标点 0",
   "minimap.settings.colors.marker1": "标点 1",
   "minimap.settings.colors.marker2": "标点 2",
   "minimap.settings.colors.marker3": "标点 3",
   "minimap.settings.colors.marker4": "标点 4",
   "minimap.settings.colors.marker5": "标点 5",
   "minimap.settings.colors.marker6": "标点 6",
+  "minimap.settings.colors.marker7": "标点 7",
+  "minimap.settings.colors.marker8": "标点 8",
+  "minimap.settings.colors.marker9": "标点 9",
   "minimap.settings.localRing.title": "自身标记",
   "minimap.settings.localRing.description":
     "在自己的小地图圆点外叠加一圈同心圆，即使被机制点名变色也能快速定位自己。",
