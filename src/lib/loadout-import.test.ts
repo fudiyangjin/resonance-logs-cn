@@ -174,8 +174,17 @@ describe("parseLoadoutExport", () => {
       {
         ruleId: 101,
         name: "Rule",
-        sourceRefs: [],
-        slotRefs: [],
+        sources: [{ skillCast: { skillBaseIds: [1714], increment: 25 } }],
+        effectSlots: [
+          {
+            slotId: 2,
+            threshold: 610,
+            resetBuffId: 3050401,
+            onBuffAdd: "freeze",
+            onBuffChange: "noOp",
+            onBuffRemove: "resetAndStartCount",
+          },
+        ],
         voice: {
           "2": {
             threshold: { enabled: true, phrase: { source: "auto" } },
@@ -196,6 +205,66 @@ describe("parseLoadoutExport", () => {
         ?.enabled,
     ).toBe(true);
     expect(parseLoadoutExport(result.output).success).toBe(true);
+  });
+
+  it("drops template-picker counter rules and their panel entries", () => {
+    const data = validExport();
+    const skill = data["skillProfile"] as Record<string, unknown>;
+    skill["inlineBuffEntries"] = [
+      {
+        id: "legacy",
+        sourceType: "counter",
+        sourceId: 101,
+        counterSlotId: 1,
+        label: "Legacy",
+        format: "timer",
+      },
+      {
+        id: "preset",
+        sourceType: "counter",
+        sourceId: 4,
+        counterSlotId: 1,
+        label: "Preset",
+        format: "timer",
+      },
+    ];
+    skill["userCounterRules"] = [
+      {
+        ruleId: 101,
+        name: "Legacy",
+        sourceRefs: ["stormablade_x1"],
+        slotRefs: ["stormablade_x1"],
+      },
+    ];
+
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.output.skillProfile.userCounterRules).toEqual([]);
+    expect(
+      result.output.skillProfile.inlineBuffEntries?.map((entry) => entry.id),
+    ).toEqual(["preset"]);
+  });
+
+  it("rejects a counter rule with an unknown slot field", () => {
+    const data = validExport();
+    const skill = data["skillProfile"] as Record<string, unknown>;
+    skill["userCounterRules"] = [
+      {
+        ruleId: 101,
+        name: "Typo",
+        sources: [],
+        effectSlots: [
+          {
+            slotId: 1,
+            threshold: null,
+            resetBuffId: 3050401,
+            freezeDurationMS: 1000,
+          },
+        ],
+      },
+    ];
+    expect(parseLoadoutExport(data).success).toBe(false);
   });
 
   it("round-trips valid buff, counter, monster, and DBM voice bindings", () => {

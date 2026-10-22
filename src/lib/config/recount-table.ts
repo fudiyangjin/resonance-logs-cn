@@ -118,9 +118,10 @@ function getDamageToRecount(locale: AppLocale) {
   return damageToRecount;
 }
 
-function lookupDamageAttrIdName(
+/** The damage id's own name, without falling back to its recount group. */
+export function lookupDamageAttrIdName(
   damageId: number,
-  locale: AppLocale,
+  locale: AppLocale = getLocale(),
 ): string | null {
   for (const candidate of getGameDataFallbackChain(locale)) {
     const name = normalizeGameDataText(

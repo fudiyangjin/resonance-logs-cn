@@ -3,6 +3,7 @@
  * It uses `@tauri-store/svelte` to create persistent stores for user settings.
  */
 import { RuneStore } from "@tauri-store/svelte";
+import type { CounterSource } from "./bindings";
 import { buffCompositeAliases, type BuffComposite } from "./buff-composites";
 import type { BuffIconOverrideMap } from "./buff-icons";
 import type {
@@ -19,6 +20,7 @@ import {
   createDefaultDpsColumnLabels,
   type DpsColumnLabels,
 } from "./column-labels";
+import type { CounterEffectSlotPreset } from "./skill-mappings";
 
 export const DEFAULT_STATS = {
   totalDmg: true,
@@ -1384,12 +1386,14 @@ export type BuffCoverageStyle = {
   showProgress: boolean;
 } & OverlayTextStyle;
 
+/** A counter rule built in the counter editor: the same `sources` +
+ * `effectSlots` shape as a preset in `config/counter_rules.json`. */
 export type UserCounterRule = {
   ruleId: number;
   name: string;
-  sourceRefs: string[];
-  slotRefs: string[];
-  /** Keyed by 1-based slot index (as a string), matching `slotRefs` order. */
+  sources: CounterSource[];
+  effectSlots: CounterEffectSlotPreset[];
+  /** Keyed by slot id (as a string). */
   voice?: CounterVoiceConfigMap;
 };
 

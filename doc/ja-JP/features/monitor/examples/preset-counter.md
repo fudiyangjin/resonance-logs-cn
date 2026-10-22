@@ -37,4 +37,4 @@
 - **重装S4・自動竜砲**、**射线S4・氷の灌注4セット** などの S4 セット効果；
 - **超越発動回数**、**幻想衝撃スタック - 30 - フロストメイジ** など。
 
-一覧は上の [組み込みプリセットカウンター](../custom-panel.md#組み込みプリセットカウンター) を参照してください。どのカウンターでも **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}** から、目標に達したときの音声通知を設定できます。
+一覧は上の [組み込みプリセットカウンター](../custom-panel.md#組み込みプリセットカウンター) を参照してください。プリセットの設定（目標値など）を変えたい場合は、**{{ui:skillMonitor.customPanel.counterEditor.new}} → {{ui:skillMonitor.customPanel.counterEditor.copyFromPreset}}** でコピーしてから編集します。[カスタムカウンター](../custom-panel.md#カスタムカウンター) を参照してください。どのカウンターでも **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}** から、目標に達したときの音声通知を設定できます。

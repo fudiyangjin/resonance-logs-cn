@@ -1165,7 +1165,6 @@ export const zhCNMessages = {
   "skillMonitor.common.moveDown": "下移",
   "skillMonitor.common.delete": "删除",
   "skillMonitor.common.cancel": "取消",
-  "skillMonitor.common.save": "保存规则",
   "skillMonitor.common.selectedCount": "已选 {count}",
   "skillMonitor.common.selectedTotal": "已选 {count}/{total}",
   "skillMonitor.common.unconfigured": "未配置",
@@ -1382,24 +1381,208 @@ export const zhCNMessages = {
   "skillMonitor.customPanel.addBuffDescription": "仅添加到当前监控区的文本区域",
   "skillMonitor.customPanel.addBuffPlaceholder": "搜索并添加 Buff",
   "skillMonitor.customPanel.noMatchingBuff": "没有匹配的 Buff",
-  "skillMonitor.customPanel.rule.title": "自定义计数器规则",
-  "skillMonitor.customPanel.rule.description":
-    "从 Source 模板和 Slot 模板中多选组合，创建可复用的计数器规则。",
-  "skillMonitor.customPanel.rule.collapse": "收起",
-  "skillMonitor.customPanel.rule.new": "新建规则",
-  "skillMonitor.customPanel.rule.empty":
-    "还没有自定义计数器规则，先从下方模板中组合一个。",
-  "skillMonitor.customPanel.rule.name": "规则名称",
-  "skillMonitor.customPanel.rule.sourceSummary": "Source：{value}",
-  "skillMonitor.customPanel.rule.slotSummary": "Slot：{value}",
-  "skillMonitor.customPanel.rule.notConfigured": "未配置",
-  "skillMonitor.customPanel.rule.placeholder": "例如：居合 + Tick 能量",
-  "skillMonitor.customPanel.rule.sources": "选择 Sources",
-  "skillMonitor.customPanel.rule.slots": "选择 Slots",
-  "skillMonitor.customPanel.rule.voiceTitle": "语音播报",
-  "skillMonitor.customPanel.counter.title": "添加计数器",
+  "skillMonitor.customPanel.counter.title": "计数器",
   "skillMonitor.customPanel.counter.description":
-    "计数器槽位全局唯一，只能属于一个监控区。预设规则与自定义规则会一起显示。",
+    "预设与自定义计数器一起列出；每个槽位只能放在一个监控区。",
+  "skillMonitor.customPanel.counterEditor.new": "新建计数器",
+  "skillMonitor.customPanel.counterEditor.edit": "编辑计数器",
+  "skillMonitor.customPanel.counterEditor.name": "名称",
+  "skillMonitor.customPanel.counterEditor.namePlaceholder": "例如：居合计数",
+  "skillMonitor.customPanel.counterEditor.copyFromPreset": "从预设复制",
+  "skillMonitor.customPanel.counterEditor.copyFromPresetPlaceholder":
+    "选择预设…",
+  "skillMonitor.customPanel.counterEditor.copyName": "{name}（副本）",
+  "skillMonitor.customPanel.counterEditor.sources": "计数来源",
+  "skillMonitor.customPanel.counterEditor.sourcesHint":
+    "任一来源触发时，按增量累加到所有槽位",
+  "skillMonitor.customPanel.counterEditor.sourcesEmpty":
+    "没有计数来源：槽位只会被关联 Buff 的动作或冷却改变",
+  "skillMonitor.customPanel.counterEditor.addSource": "添加来源",
+  "skillMonitor.customPanel.counterEditor.removeSource": "删除来源",
+  "skillMonitor.customPanel.counterEditor.kindLabel": "来源类型",
+  "skillMonitor.customPanel.counterEditor.slots": "显示槽位",
+  "skillMonitor.customPanel.counterEditor.slotsHint":
+    "每个槽位是面板上的一行，各自计数、清零和冷却",
+  "skillMonitor.customPanel.counterEditor.addSlot": "添加槽位",
+  "skillMonitor.customPanel.counterEditor.removeSlot": "删除槽位",
+  "skillMonitor.customPanel.counterEditor.slotTitle": "槽位 #{id}",
+  "skillMonitor.customPanel.counterEditor.advanced": "高级",
+  "skillMonitor.customPanel.counterEditor.unset": "不设",
+  "skillMonitor.customPanel.counterEditor.save": "保存",
+  "skillMonitor.customPanel.counterEditor.issueCount":
+    "还有 {count} 处需要修改",
+  "skillMonitor.customPanel.counterEditor.inactive": "未生效",
+  "skillMonitor.customPanel.counterEditor.inactiveTitle":
+    "配置不完整或无效，编辑并保存后生效",
+  "skillMonitor.customPanel.counterEditor.deleteTitle":
+    "删除计数器「{name}」？",
+  "skillMonitor.customPanel.counterEditor.deleteDescription":
+    "将删除它的全部 {count} 个槽位，以及这些槽位在监控区中的条目和语音播报。",
+  "skillMonitor.customPanel.counterEditor.group.skill": "技能",
+  "skillMonitor.customPanel.counterEditor.group.damage": "伤害",
+  "skillMonitor.customPanel.counterEditor.group.buff": "Buff",
+  "skillMonitor.customPanel.counterEditor.group.resource": "资源",
+  "skillMonitor.customPanel.counterEditor.kind.skillCast": "释放技能",
+  "skillMonitor.customPanel.counterEditor.kind.skillCastComplete":
+    "技能释放完成",
+  "skillMonitor.customPanel.counterEditor.kind.skillDurationTick":
+    "技能持续期间定时",
+  "skillMonitor.customPanel.counterEditor.kind.damageBySkillKey": "技能命中",
+  "skillMonitor.customPanel.counterEditor.kind.damageBySkillKeyOnce":
+    "技能命中（多目标只计一次）",
+  "skillMonitor.customPanel.counterEditor.kind.damageBySkillKeySelfTarget":
+    "命中自己",
+  "skillMonitor.customPanel.counterEditor.kind.anyDamage": "任意命中",
+  "skillMonitor.customPanel.counterEditor.kind.damageTaken": "受到伤害",
+  "skillMonitor.customPanel.counterEditor.kind.buffAdded": "获得 Buff",
+  "skillMonitor.customPanel.counterEditor.kind.buffLayerSpent":
+    "消耗 Buff 层数",
+  "skillMonitor.customPanel.counterEditor.kind.buffDurationTick":
+    "Buff 持续期间定时",
+  "skillMonitor.customPanel.counterEditor.kind.movementDistance":
+    "Buff 期间移动距离",
+  "skillMonitor.customPanel.counterEditor.kind.fightResourceSpent":
+    "消耗战斗资源",
+  "skillMonitor.customPanel.counterEditor.kindHint.skillCast":
+    "释放所选技能时累加",
+  "skillMonitor.customPanel.counterEditor.kindHint.skillCastComplete":
+    "所选技能释放完成时累加",
+  "skillMonitor.customPanel.counterEditor.kindHint.skillDurationTick":
+    "所选技能持续期间，每隔一段时间累加",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageBySkillKey":
+    "所选伤害每命中一次累加",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageBySkillKeyOnce":
+    "同一时刻打中多个目标，只按命中次数最多的那个目标计",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageBySkillKeySelfTarget":
+    "所选伤害命中自己时累加（如自我治疗）",
+  "skillMonitor.customPanel.counterEditor.kindHint.anyDamage":
+    "自己造成的任意命中都累加",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageTaken":
+    "受到伤害时累加；不选伤害则任意伤害都算",
+  "skillMonitor.customPanel.counterEditor.kindHint.buffAdded":
+    "获得所选 Buff 时累加",
+  "skillMonitor.customPanel.counterEditor.kindHint.buffLayerSpent":
+    "所选 Buff 每减少指定层数累加",
+  "skillMonitor.customPanel.counterEditor.kindHint.buffDurationTick":
+    "所选 Buff 存在期间，每隔一段时间累加",
+  "skillMonitor.customPanel.counterEditor.kindHint.movementDistance":
+    "所选 Buff 存在期间，每移动指定距离累加",
+  "skillMonitor.customPanel.counterEditor.kindHint.fightResourceSpent":
+    "战斗资源每消耗指定数量累加",
+  "skillMonitor.customPanel.counterEditor.field.skills": "技能",
+  "skillMonitor.customPanel.counterEditor.field.skill": "技能",
+  "skillMonitor.customPanel.counterEditor.field.damages": "伤害",
+  "skillMonitor.customPanel.counterEditor.field.damagesOptional":
+    "伤害（可选）",
+  "skillMonitor.customPanel.counterEditor.field.buff": "Buff",
+  "skillMonitor.customPanel.counterEditor.field.resource": "战斗资源",
+  "skillMonitor.customPanel.counterEditor.field.increment": "每次增加",
+  "skillMonitor.customPanel.counterEditor.field.hitsRequired":
+    "每 N 次命中才计一次",
+  "skillMonitor.customPanel.counterEditor.field.requiredTypeFlags": "伤害类型",
+  "skillMonitor.customPanel.counterEditor.field.requiredTypeFlagsHint":
+    "勾选的类型须全部满足才计；不勾选则不限",
+  "skillMonitor.customPanel.counterEditor.field.sourceConfigId": "来源配置 ID",
+  "skillMonitor.customPanel.counterEditor.field.layersRequired": "每消耗层数",
+  "skillMonitor.customPanel.counterEditor.field.unitsRequired": "每消耗数量",
+  "skillMonitor.customPanel.counterEditor.field.tickInterval": "间隔（秒）",
+  "skillMonitor.customPanel.counterEditor.field.attrCondition": "属性条件",
+  "skillMonitor.customPanel.counterEditor.field.attrConditionHint":
+    "只在属性等于指定值时计时",
+  "skillMonitor.customPanel.counterEditor.field.attrId": "属性 ID",
+  "skillMonitor.customPanel.counterEditor.field.attrValue": "等于",
+  "skillMonitor.customPanel.counterEditor.field.metersRequired": "每移动（米）",
+  "skillMonitor.customPanel.counterEditor.field.positionAttr": "坐标属性 ID",
+  "skillMonitor.customPanel.counterEditor.flag.crit": "暴击",
+  "skillMonitor.customPanel.counterEditor.flag.block": "格挡",
+  "skillMonitor.customPanel.counterEditor.flag.lucky": "幸运一击",
+  "skillMonitor.customPanel.counterEditor.flag.luckyTaken": "被幸运一击",
+  "skillMonitor.customPanel.counterEditor.slot.threshold": "目标值",
+  "skillMonitor.customPanel.counterEditor.slot.displayMode": "显示方式",
+  "skillMonitor.customPanel.counterEditor.slot.wrapAtThreshold":
+    "达到目标后从 0 重新计",
+  "skillMonitor.customPanel.counterEditor.slot.resetBuff": "关联 Buff",
+  "skillMonitor.customPanel.counterEditor.slot.resetBuffTarget": "Buff 所在",
+  "skillMonitor.customPanel.counterEditor.slot.onBuffAdd": "获得时",
+  "skillMonitor.customPanel.counterEditor.slot.onBuffChange": "变化时",
+  "skillMonitor.customPanel.counterEditor.slot.onBuffRemove": "消失时",
+  "skillMonitor.customPanel.counterEditor.slot.cooldown": "冷却（秒）",
+  "skillMonitor.customPanel.counterEditor.slot.onFreezeExpire": "冷却结束后",
+  "skillMonitor.customPanel.counterEditor.slot.cooldownHint":
+    "设置冷却后，「暂停计数」「清零并暂停」「清零并开始冷却」会开始冷却",
+  "skillMonitor.customPanel.counterEditor.slot.resetSourceConfigId":
+    "关联 Buff 的来源配置 ID",
+  "skillMonitor.customPanel.counterEditor.slot.dungeonStartFreeze":
+    "进入副本时冷却（秒）",
+  "skillMonitor.customPanel.counterEditor.slot.altFreeze":
+    "带有条件 Buff 时改用另一个冷却时长",
+  "skillMonitor.customPanel.counterEditor.slot.altFreezeBuff": "条件 Buff",
+  "skillMonitor.customPanel.counterEditor.slot.resetSkillKeys":
+    "命中这些伤害时",
+  "skillMonitor.customPanel.counterEditor.slot.resetPassiveSkillIds":
+    "这些被动技能触发时",
+  "skillMonitor.customPanel.counterEditor.slot.action": "执行",
+  "skillMonitor.customPanel.counterEditor.slot.thresholdModifier":
+    "目标值按属性缩减",
+  "skillMonitor.customPanel.counterEditor.slot.freezeDurationModifier":
+    "冷却按属性缩减",
+  "skillMonitor.customPanel.counterEditor.slot.modifierMax": "最多减少（%）",
+  "skillMonitor.customPanel.counterEditor.slot.modifierPerUnit":
+    "每多少点属性减少 0.01%",
+  "skillMonitor.customPanel.counterEditor.target.selfPlayer": "自己身上",
+  "skillMonitor.customPanel.counterEditor.target.anyTeam": "任意队友",
+  "skillMonitor.customPanel.counterEditor.display.raw": "计数",
+  "skillMonitor.customPanel.counterEditor.display.rawWithThreshold":
+    "计数/目标",
+  "skillMonitor.customPanel.counterEditor.display.remainingToThreshold": "剩余",
+  "skillMonitor.customPanel.counterEditor.display.percentOfThreshold": "百分比",
+  "skillMonitor.customPanel.counterEditor.action.noOp": "不处理",
+  "skillMonitor.customPanel.counterEditor.action.reset": "清零",
+  "skillMonitor.customPanel.counterEditor.action.freeze": "暂停计数",
+  "skillMonitor.customPanel.counterEditor.action.startCount": "继续计数",
+  "skillMonitor.customPanel.counterEditor.action.resetAndStartCount":
+    "清零并开始计数",
+  "skillMonitor.customPanel.counterEditor.action.resetAndFreeze": "清零并暂停",
+  "skillMonitor.customPanel.counterEditor.action.resetAndFreezeKeepCounting":
+    "清零并开始冷却（不暂停计数）",
+  "skillMonitor.customPanel.counterEditor.issue.nameRequired": "请填写名称",
+  "skillMonitor.customPanel.counterEditor.issue.slotsRequired":
+    "至少需要一个槽位",
+  "skillMonitor.customPanel.counterEditor.issue.duplicateSlot": "槽位编号重复",
+  "skillMonitor.customPanel.counterEditor.issue.required": "必填",
+  "skillMonitor.customPanel.counterEditor.issue.idInvalid": "ID 无效",
+  "skillMonitor.customPanel.counterEditor.issue.countInvalid": "请输入正整数",
+  "skillMonitor.customPanel.counterEditor.issue.durationInvalid":
+    "请输入 0.001–86400 秒",
+  "skillMonitor.customPanel.counterEditor.issue.metersInvalid":
+    "请输入大于 0 的数",
+  "skillMonitor.customPanel.counterEditor.issue.valueInvalid": "值无效",
+  "skillMonitor.customPanel.counterEditor.issue.reductionInvalid":
+    "请输入 0.01–100",
+  "skillMonitor.customPanel.counterEditor.issue.ruleInvalid":
+    "配置无效，请检查各项",
+  "skillMonitor.customPanel.counterEditor.issue.freezeNeverStarts":
+    "设置了冷却，但没有任何动作会开始冷却",
+  "skillMonitor.customPanel.counterEditor.issue.neverChanges":
+    "既没有计数来源，也没有关联 Buff 的动作，这个计数器不会变化",
+  "skillMonitor.customPanel.counterEditor.picker.add": "添加",
+  "skillMonitor.customPanel.counterEditor.picker.replace": "更换",
+  "skillMonitor.customPanel.counterEditor.picker.remove": "移除",
+  "skillMonitor.customPanel.counterEditor.picker.done": "完成",
+  "skillMonitor.customPanel.counterEditor.picker.searchBuff":
+    "搜索 Buff 名称或 ID",
+  "skillMonitor.customPanel.counterEditor.picker.searchDamage":
+    "搜索伤害名称或 ID",
+  "skillMonitor.customPanel.counterEditor.picker.searchSkill":
+    "搜索共鸣技能，或输入技能 ID 后回车",
+  "skillMonitor.customPanel.counterEditor.picker.enterId": "输入 ID 后回车",
+  "skillMonitor.customPanel.counterEditor.picker.noMatch": "没有匹配项",
+  "skillMonitor.customPanel.counterEditor.picker.classSkills": "当前职业技能",
+  "skillMonitor.customPanel.counterEditor.picker.group": "组",
+  "skillMonitor.customPanel.counterEditor.picker.groupName":
+    "{name}（{count} 个伤害）",
+  "skillMonitor.customPanel.counterEditor.picker.pressEnter":
+    "回车添加：{name}",
   "skillMonitor.customPanel.counter.add": "点击添加",
   "skillMonitor.customPanel.counter.voiceConfigure": "配置语音播报",
   "skillMonitor.customPanel.counter.voiceConfigured": "已配置语音播报",

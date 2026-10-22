@@ -1,8 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import ChevronDown from "virtual:icons/lucide/chevron-down";
+  import PencilIcon from "virtual:icons/lucide/pencil";
+  import PlusIcon from "virtual:icons/lucide/plus";
+  import Trash2Icon from "virtual:icons/lucide/trash-2";
   import Volume2Icon from "virtual:icons/lucide/volume-2";
   import BuffSearchResultGrid from "$lib/components/BuffSearchResultGrid.svelte";
+  import ConfirmDialog from "$lib/components/ConfirmDialog.svelte";
   import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
   import type {
     BuffDefinition,
@@ -16,17 +19,18 @@
     InlineBuffFormat,
     UserCounterRule,
   } from "$lib/settings-store";
+  import CounterRuleEditor from "./counter-rule-editor.svelte";
   import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
   import {
     getCounterDisplayLabel,
+    isUserCounterRuleActive,
     resolveSeasonPanelMode,
     type CounterDisplayLabelInput,
     type CounterRulePreset,
     type SlotTemplate,
-    type SourceTemplate,
   } from "$lib/skill-mappings";
+  import type { CounterRuleDefinition } from "$lib/user-counter-rules";
   import { t } from "$lib/i18n/index.svelte";
-  import { blurOnEnter } from "$lib/utils.svelte";
   import {
     subjectHasBindings,
     type VoiceBindingSubject,
@@ -36,10 +40,13 @@
   type CounterRuleOption = CounterRulePreset & { origin: "preset" | "user" };
 
   interface Props {
+    /** Presets plus the user rules that pass validation. */
     counterRules: CounterRuleOption[];
-    sourceTemplates: SourceTemplate[];
+    presetCounterRules: CounterRulePreset[];
     slotTemplates: SlotTemplate[];
+    /** Every user rule, including ones that fail validation. */
     userCounterRules: UserCounterRule[];
+    selectedClassKey: string;
     availableBuffMap: Map<number, BuffDefinition>;
     getBuffDisplayName: (buffId: number) => string;
     getBuffIconPreviewSrc: (buffId: number) => string | null;
@@ -66,16 +73,11 @@
       sourceId: number,
       counterSlotId?: number,
     ) => void;
-    addUserCounterRule: (
-      name: string,
-      sourceRefs: string[],
-      slotRefs: string[],
+    saveUserCounterRule: (
+      body: { name: string } & CounterRuleDefinition,
+      ruleId: number | null,
     ) => void;
     removeUserCounterRule: (ruleId: number) => void;
-    updateUserCounterRule: (
-      ruleId: number,
-      updates: Partial<UserCounterRule>,
-    ) => void;
     removeCustomPanelEntry: (groupId: string, entryId: string) => void;
     setCustomPanelEntryLabel: (
       groupId: string,
@@ -101,9 +103,10 @@
 
   let {
     counterRules,
-    sourceTemplates,
+    presetCounterRules,
     slotTemplates,
     userCounterRules,
+    selectedClassKey,
     availableBuffMap,
     getBuffDisplayName,
     getBuffIconPreviewSrc,
@@ -119,9 +122,8 @@
     updateCustomPanelGroupStyle,
     setCustomPanelGroupHideZeroCounters,
     addCustomPanelEntry,
-    addUserCounterRule,
+    saveUserCounterRule,
     removeUserCounterRule,
-    updateUserCounterRule,
     removeCustomPanelEntry,
     setCustomPanelEntryLabel,
     setCustomPanelEntryHideWhenZero,
@@ -130,10 +132,10 @@
   }: Props = $props();
 
   let selectedGroupId = $state<string | null>(customPanelGroups[0]?.id ?? null);
-  let draftRuleName = $state("");
-  let draftSourceRefs = $state<string[]>([]);
-  let draftSlotRefs = $state<string[]>([]);
-  let isCreatingUserRule = $state(false);
+  /** The rule open in the counter editor; `"new"` while creating one. */
+  let editingRuleId = $state<number | "new" | null>(null);
+  let pendingDelete = $state<UserCounterRule | null>(null);
+  let confirmDeleteOpen = $state(false);
   let factorSlotSearch = $state("");
 
   $effect(() => {
@@ -156,21 +158,30 @@
   const selectedGroupIndex = $derived.by(() =>
     customPanelGroups.findIndex((group) => group.id === selectedGroupId),
   );
-  const sourceTemplateMap = $derived.by(
-    () =>
-      new Map(sourceTemplates.map((template) => [template.sourceId, template])),
-  );
   const slotTemplateMap = $derived.by(
     () =>
       new Map(
         slotTemplates.map((template) => [template.slotTemplateId, template]),
       ),
   );
-  const canSaveDraftRule = $derived(
-    draftRuleName.trim().length > 0 &&
-      draftSourceRefs.length > 0 &&
-      draftSlotRefs.length > 0,
+  const editingRule = $derived(
+    typeof editingRuleId === "number"
+      ? (userCounterRules.find((rule) => rule.ruleId === editingRuleId) ?? null)
+      : null,
   );
+  /** Counter cards: presets, then every user rule (invalid ones flagged). */
+  const counterCards = $derived([
+    ...presetCounterRules.map((rule) => ({
+      rule,
+      userRule: null,
+      active: true,
+    })),
+    ...userCounterRules.map((rule) => ({
+      rule: rule as CounterRulePreset,
+      userRule: rule,
+      active: isUserCounterRuleActive(rule),
+    })),
+  ]);
   const isSelectedManualGroup = $derived(
     selectedGroup?.kind !== "seasonCultivateFactor",
   );
@@ -279,25 +290,6 @@
     );
   }
 
-  function toggleDraftRef(current: string[], value: string): string[] {
-    return current.includes(value)
-      ? current.filter((item) => item !== value)
-      : [...current, value];
-  }
-
-  function resetDraftRule() {
-    draftRuleName = "";
-    draftSourceRefs = [];
-    draftSlotRefs = [];
-    isCreatingUserRule = false;
-  }
-
-  function submitDraftRule() {
-    if (!canSaveDraftRule) return;
-    addUserCounterRule(draftRuleName, draftSourceRefs, draftSlotRefs);
-    resetDraftRule();
-  }
-
   function updateSelectedGroupStyle(
     updater: (style: CustomPanelStyle) => CustomPanelStyle,
   ) {
@@ -360,45 +352,46 @@
     }));
   }
 
-  function getUserRuleSourceNames(rule: UserCounterRule): string {
-    return rule.sourceRefs
-      .map((ref) => sourceTemplateMap.get(ref)?.name ?? ref)
-      .join(", ");
-  }
-
-  function getUserRuleSlotNames(rule: UserCounterRule): string {
-    return rule.slotRefs
-      .map((ref) => slotTemplateMap.get(ref)?.name ?? ref)
-      .join(", ");
-  }
-
   function getCounterEntryLabel(entry: CounterDisplayLabelInput): string {
     return getCounterDisplayLabel(entry);
   }
 
-  let voiceExpandedRuleIds = $state<number[]>([]);
-  let presetVoiceExpandedKeys = $state<string[]>([]);
+  let voiceExpandedKeys = $state<string[]>([]);
 
-  function toggleVoiceExpanded(ruleId: number) {
-    voiceExpandedRuleIds = voiceExpandedRuleIds.includes(ruleId)
-      ? voiceExpandedRuleIds.filter((id) => id !== ruleId)
-      : [...voiceExpandedRuleIds, ruleId];
-  }
-
-  function getSlotLabel(rule: UserCounterRule, slotId: number): string {
-    const ref = rule.slotRefs[slotId - 1];
-    return (ref ? slotTemplateMap.get(ref)?.name : undefined) ?? `#${slotId}`;
-  }
-
-  function presetVoiceKey(ruleId: number, slotId: number): string {
+  function counterVoiceKey(ruleId: number, slotId: number): string {
     return `${ruleId}:${slotId}`;
   }
 
-  function togglePresetVoice(ruleId: number, slotId: number) {
-    const key = presetVoiceKey(ruleId, slotId);
-    presetVoiceExpandedKeys = presetVoiceExpandedKeys.includes(key)
-      ? presetVoiceExpandedKeys.filter((item) => item !== key)
-      : [...presetVoiceExpandedKeys, key];
+  function toggleCounterVoice(ruleId: number, slotId: number) {
+    const key = counterVoiceKey(ruleId, slotId);
+    voiceExpandedKeys = voiceExpandedKeys.includes(key)
+      ? voiceExpandedKeys.filter((item) => item !== key)
+      : [...voiceExpandedKeys, key];
+  }
+
+  function toggleNewCounter() {
+    editingRuleId = editingRuleId === "new" ? null : "new";
+  }
+
+  function saveCounter(
+    body: { name: string } & CounterRuleDefinition,
+    ruleId: number | null,
+  ) {
+    saveUserCounterRule(body, ruleId);
+    editingRuleId = null;
+  }
+
+  function requestDeleteCounter(rule: UserCounterRule) {
+    pendingDelete = rule;
+    confirmDeleteOpen = true;
+  }
+
+  function confirmDeleteCounter() {
+    // Kept until the next request so the closing dialog keeps its text.
+    const target = pendingDelete;
+    if (!target) return;
+    removeUserCounterRule(target.ruleId);
+    if (editingRuleId === target.ruleId) editingRuleId = null;
   }
 
   function counterVoiceSubject(
@@ -408,6 +401,21 @@
     return { kind: "counterSlot", ruleId, slotId };
   }
 </script>
+
+<ConfirmDialog
+  bind:open={confirmDeleteOpen}
+  title={t("skillMonitor.customPanel.counterEditor.deleteTitle", {
+    name: pendingDelete?.name ?? "",
+  })}
+  description={t("skillMonitor.customPanel.counterEditor.deleteDescription", {
+    count: pendingDelete?.effectSlots.length ?? 0,
+  })}
+  confirmText={t("common.delete")}
+  cancelText={t("common.cancel")}
+  onconfirm={confirmDeleteCounter}
+  oncancel={() => (pendingDelete = null)}
+  variant="destructive"
+/>
 
 <div class="space-y-6">
   <div
@@ -693,237 +701,47 @@
       <div
         class="border-border/60 bg-card/40 space-y-3 rounded-lg border p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
       >
-        <div class="space-y-1">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="text-foreground text-sm font-medium">
-                {t("skillMonitor.customPanel.rule.title")}
-              </div>
-              <p class="text-muted-foreground text-xs">
-                {t("skillMonitor.customPanel.rule.description")}
-              </p>
+        <div class="flex items-start justify-between gap-3">
+          <div class="space-y-1">
+            <div class="text-foreground text-sm font-medium">
+              {t("skillMonitor.customPanel.counter.title")}
             </div>
-            <button
-              type="button"
-              class="border-border/60 bg-muted/20 text-foreground hover:bg-muted/40 min-h-11 cursor-pointer rounded-lg border px-4 py-2 text-sm font-medium transition-colors"
-              onclick={() => {
-                isCreatingUserRule = !isCreatingUserRule;
-                if (!isCreatingUserRule) {
-                  draftRuleName = "";
-                  draftSourceRefs = [];
-                  draftSlotRefs = [];
-                }
-              }}
-            >
-              {isCreatingUserRule
-                ? t("skillMonitor.customPanel.rule.collapse")
-                : t("skillMonitor.customPanel.rule.new")}
-            </button>
+            <p class="text-muted-foreground text-xs">
+              {t("skillMonitor.customPanel.counter.description")}
+            </p>
           </div>
+          <button
+            type="button"
+            class="border-border/60 bg-muted/20 text-foreground hover:bg-muted/40 flex min-h-9 shrink-0 items-center gap-1 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
+            aria-expanded={editingRuleId === "new"}
+            onclick={toggleNewCounter}
+          >
+            <PlusIcon class="h-4 w-4" />
+            {t("skillMonitor.customPanel.counterEditor.new")}
+          </button>
         </div>
 
-        {#if userCounterRules.length === 0}
-          <div
-            class="border-border/60 bg-muted/10 text-muted-foreground rounded-lg border border-dashed px-3 py-6 text-center text-sm"
-          >
-            {t("skillMonitor.customPanel.rule.empty")}
-          </div>
+        {#if editingRuleId !== null}
+          {#key editingRuleId}
+            <CounterRuleEditor
+              rule={editingRule}
+              presets={presetCounterRules}
+              classKey={selectedClassKey}
+              {availableBuffMap}
+              {getBuffDisplayName}
+              {getBuffIconPreviewSrc}
+              onsave={saveCounter}
+              oncancel={() => (editingRuleId = null)}
+            />
+          {/key}
         {/if}
 
-        <div class="space-y-3">
-          {#each userCounterRules as rule (rule.ruleId)}
-            <div
-              class="border-border/60 bg-muted/20 space-y-2 rounded-lg border p-3"
-            >
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div class="min-w-0 flex-1 space-y-2">
-                  <label class="text-muted-foreground block text-xs">
-                    {t("skillMonitor.customPanel.rule.name")}
-                    <input
-                      class="border-border/60 bg-muted/30 text-foreground focus:ring-primary/50 mt-1 w-full rounded border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-                      value={rule.name}
-                      {@attach blurOnEnter}
-                      onchange={(event) =>
-                        updateUserCounterRule(rule.ruleId, {
-                          name: (event.currentTarget as HTMLInputElement).value,
-                        })}
-                    />
-                  </label>
-                  <div class="text-muted-foreground text-xs">
-                    {t("skillMonitor.customPanel.rule.sourceSummary", {
-                      value:
-                        getUserRuleSourceNames(rule) ||
-                        t("skillMonitor.customPanel.rule.notConfigured"),
-                    })}
-                  </div>
-                  <div class="text-muted-foreground text-xs">
-                    {t("skillMonitor.customPanel.rule.slotSummary", {
-                      value:
-                        getUserRuleSlotNames(rule) ||
-                        t("skillMonitor.customPanel.rule.notConfigured"),
-                    })}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  class="border-border/60 text-destructive hover:bg-destructive/10 min-h-11 cursor-pointer rounded-md border px-3 py-1.5 text-xs transition-colors"
-                  onclick={() => removeUserCounterRule(rule.ruleId)}
-                >
-                  {t("skillMonitor.common.delete")}
-                </button>
-              </div>
-
-              {#if rule.slotRefs.length > 0}
-                <div class="border-border/40 border-t pt-2">
-                  <button
-                    type="button"
-                    class="text-muted-foreground hover:text-foreground flex w-full items-center justify-between gap-2 text-xs"
-                    onclick={() => toggleVoiceExpanded(rule.ruleId)}
-                  >
-                    <span>{t("skillMonitor.customPanel.rule.voiceTitle")}</span>
-                    <ChevronDown
-                      class="h-3.5 w-3.5 shrink-0 transition-transform duration-200 {voiceExpandedRuleIds.includes(
-                        rule.ruleId,
-                      )
-                        ? 'rotate-180'
-                        : ''}"
-                    />
-                  </button>
-                  {#if voiceExpandedRuleIds.includes(rule.ruleId)}
-                    <div class="mt-2 space-y-2">
-                      <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-                      {#each rule.slotRefs as _, idx (idx)}
-                        {@const slotId = idx + 1}
-                        <div>
-                          {#if rule.slotRefs.length > 1}
-                            <div class="text-muted-foreground mb-1 text-xs">
-                              {getSlotLabel(rule, slotId)}
-                            </div>
-                          {/if}
-                          <VoiceBindingControl
-                            subject={{
-                              kind: "counterSlot",
-                              ruleId: rule.ruleId,
-                              slotId,
-                            }}
-                          />
-                        </div>
-                      {/each}
-                    </div>
-                  {/if}
-                </div>
-              {/if}
-            </div>
-          {/each}
-        </div>
-
-        {#if isCreatingUserRule}
-          <div
-            class="border-primary/30 bg-primary/5 space-y-4 rounded-lg border p-4"
-          >
-            <label class="text-muted-foreground block text-xs">
-              {t("skillMonitor.customPanel.rule.name")}
-              <input
-                class="border-border/60 bg-muted/30 text-foreground focus:ring-primary/50 mt-1 w-full rounded border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-                value={draftRuleName}
-                placeholder={t("skillMonitor.customPanel.rule.placeholder")}
-                oninput={(event) =>
-                  (draftRuleName = (event.currentTarget as HTMLInputElement)
-                    .value)}
-              />
-            </label>
-
-            <div class="space-y-2">
-              <div class="text-foreground text-sm font-medium">
-                {t("skillMonitor.customPanel.rule.sources")}
-              </div>
-              <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {#each sourceTemplates as template (template.sourceId)}
-                  {@const selected = draftSourceRefs.includes(
-                    template.sourceId,
-                  )}
-                  <button
-                    type="button"
-                    class="min-h-11 cursor-pointer rounded border px-3 py-2 text-left transition-colors {selected
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border/60 bg-muted/20 hover:bg-muted/40'}"
-                    onclick={() =>
-                      (draftSourceRefs = toggleDraftRef(
-                        draftSourceRefs,
-                        template.sourceId,
-                      ))}
-                  >
-                    <div class="text-foreground text-sm font-medium">
-                      {template.name}
-                    </div>
-                  </button>
-                {/each}
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <div class="text-foreground text-sm font-medium">
-                {t("skillMonitor.customPanel.rule.slots")}
-              </div>
-              <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {#each slotTemplates as template (template.slotTemplateId)}
-                  {@const selected = draftSlotRefs.includes(
-                    template.slotTemplateId,
-                  )}
-                  <button
-                    type="button"
-                    class="min-h-11 cursor-pointer rounded border px-3 py-2 text-left transition-colors {selected
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border/60 bg-muted/20 hover:bg-muted/40'}"
-                    onclick={() =>
-                      (draftSlotRefs = toggleDraftRef(
-                        draftSlotRefs,
-                        template.slotTemplateId,
-                      ))}
-                  >
-                    <div class="text-foreground text-sm font-medium">
-                      {template.name}
-                    </div>
-                  </button>
-                {/each}
-              </div>
-            </div>
-
-            <div class="flex flex-wrap justify-end gap-2">
-              <button
-                type="button"
-                class="border-border/60 text-foreground hover:bg-muted/40 min-h-11 cursor-pointer rounded border px-4 py-2 text-sm"
-                onclick={resetDraftRule}
-              >
-                {t("skillMonitor.common.cancel")}
-              </button>
-              <button
-                type="button"
-                class="border-primary/60 bg-primary/15 text-foreground min-h-11 cursor-pointer rounded border px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-                onclick={submitDraftRule}
-                disabled={!canSaveDraftRule}
-              >
-                {t("skillMonitor.common.save")}
-              </button>
-            </div>
-          </div>
-        {/if}
-      </div>
-
-      <div
-        class="border-border/60 bg-card/40 space-y-3 rounded-lg border p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
-      >
-        <div class="space-y-1">
-          <div class="text-foreground text-sm font-medium">
-            {t("skillMonitor.customPanel.counter.title")}
-          </div>
-          <p class="text-muted-foreground text-xs">
-            {t("skillMonitor.customPanel.counter.description")}
-          </p>
-        </div>
         <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-          {#each counterRules as rule (rule.ruleId)}
-            {#each rule.effectSlots as slot (slot.slotId)}
+          {#each counterCards as card, cardIndex (`${cardIndex}:${card.rule.ruleId}`)}
+            {@const rule = card.rule}
+            {@const userRule = card.userRule}
+            <!-- Index in the keys: a hand-edited rule may repeat ids. -->
+            {#each rule.effectSlots as slot, slotIndex (`${slotIndex}:${slot.slotId}`)}
               {@const location = getEntryLocation(
                 "counter",
                 rule.ruleId,
@@ -934,10 +752,9 @@
                 rule.ruleId,
                 slot.slotId,
               )}
-              {@const voiceConfigured =
-                rule.origin === "preset" && subjectHasBindings(voiceSubject)}
-              {@const voiceExpanded = presetVoiceExpandedKeys.includes(
-                presetVoiceKey(rule.ruleId, slot.slotId),
+              {@const voiceConfigured = subjectHasBindings(voiceSubject)}
+              {@const voiceExpanded = voiceExpandedKeys.includes(
+                counterVoiceKey(rule.ruleId, slot.slotId),
               )}
               <div
                 class="rounded border px-3 py-2 transition-colors {exists
@@ -946,23 +763,58 @@
               >
                 <div class="flex items-center justify-between gap-2">
                   <div class="min-w-0">
-                    <div class="text-foreground text-sm font-medium">
+                    <div class="text-foreground truncate text-sm font-medium">
                       {rule.name}{rule.effectSlots.length > 1
                         ? ` #${slot.slotId}`
                         : ""}
                     </div>
-                    <div class="text-muted-foreground mt-1 text-xs">
+                    <div class="text-muted-foreground mt-1 flex gap-1 text-xs">
                       <span
                         class="border-border/60 bg-muted/30 inline-block rounded border px-1.5 py-0.5"
                       >
-                        {rule.origin === "user"
+                        {userRule
                           ? t("skillMonitor.common.custom")
                           : t("skillMonitor.common.preset")}
                       </span>
+                      {#if !card.active}
+                        <span
+                          class="border-destructive/50 text-destructive inline-block rounded border px-1.5 py-0.5"
+                          title={t(
+                            "skillMonitor.customPanel.counterEditor.inactiveTitle",
+                          )}
+                        >
+                          {t("skillMonitor.customPanel.counterEditor.inactive")}
+                        </span>
+                      {/if}
                     </div>
                   </div>
                   <div class="flex shrink-0 items-center gap-1.5">
-                    {#if rule.origin === "preset"}
+                    {#if userRule}
+                      <button
+                        type="button"
+                        class="flex h-9 w-9 items-center justify-center rounded border transition-colors {editingRuleId ===
+                        rule.ruleId
+                          ? 'border-primary bg-primary/15 text-primary'
+                          : 'border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground'}"
+                        aria-label={t(
+                          "skillMonitor.customPanel.counterEditor.edit",
+                        )}
+                        title={t("skillMonitor.customPanel.counterEditor.edit")}
+                        onclick={() => (editingRuleId = rule.ruleId)}
+                      >
+                        <PencilIcon class="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        class="border-border/60 text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex h-9 w-9 items-center justify-center rounded border transition-colors"
+                        aria-label={t("skillMonitor.common.delete")}
+                        title={t("skillMonitor.common.delete")}
+                        onclick={() => requestDeleteCounter(userRule)}
+                      >
+                        <Trash2Icon class="h-4 w-4" />
+                      </button>
+                    {/if}
+                    {#if card.active}
                       <button
                         type="button"
                         class="flex h-9 w-9 items-center justify-center rounded border transition-colors {voiceConfigured
@@ -980,7 +832,7 @@
                             : "skillMonitor.customPanel.counter.voiceConfigure",
                         )}
                         onclick={() =>
-                          togglePresetVoice(rule.ruleId, slot.slotId)}
+                          toggleCounterVoice(rule.ruleId, slot.slotId)}
                       >
                         <Volume2Icon class="h-4 w-4" />
                       </button>
@@ -997,7 +849,7 @@
                           rule.ruleId,
                           slot.slotId,
                         )}
-                      disabled={exists}
+                      disabled={exists || !card.active}
                     >
                       {#if !exists}
                         {t("skillMonitor.customPanel.counter.add")}
@@ -1011,7 +863,7 @@
                     </button>
                   </div>
                 </div>
-                {#if rule.origin === "preset" && voiceExpanded}
+                {#if card.active && voiceExpanded}
                   <div class="border-border/40 mt-2 border-t pt-2">
                     <VoiceBindingControl subject={voiceSubject} />
                   </div>

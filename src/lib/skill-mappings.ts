@@ -20,6 +20,10 @@ import {
   ensureCounterVoiceConfigs,
   type UserCounterRule,
 } from "$lib/settings-store";
+import {
+  isCurrentUserCounterRule,
+  isValidCounterRuleDefinition,
+} from "$lib/user-counter-rules";
 
 export type SkillDisplayInfo = {
   skillId: number;
@@ -208,7 +212,6 @@ type ClassSkillConfigOverride = Partial<ClassSkillConfig> & {
 
 type ResourceOverride = Partial<ResourceDefinition>;
 type CounterRuleOverride = Partial<CounterRulePreset> & { ruleId?: number };
-type SourceTemplateOverride = Partial<SourceTemplate> & { sourceId?: string };
 type SlotTemplateOverride = Partial<SlotTemplate> & {
   slotTemplateId?: string;
 };
@@ -271,7 +274,6 @@ const CLASS_RESOURCES_BY_LOCALE = new Map<
   Record<string, ResourceDefinition[]>
 >();
 const COUNTER_RULES_BY_LOCALE = new Map<AppLocale, CounterRulePreset[]>();
-const SOURCE_TEMPLATES_BY_LOCALE = new Map<AppLocale, SourceTemplate[]>();
 const SLOT_TEMPLATES_BY_LOCALE = new Map<AppLocale, SlotTemplate[]>();
 const RESONANCE_SKILLS_BY_LOCALE = new Map<
   AppLocale,
@@ -458,15 +460,6 @@ function getCounterRuleOverrides(
     [...overrides.entries()]
       .map(([key, value]) => [Number(key), value] as const)
       .filter(([key]) => Number.isFinite(key)),
-  );
-}
-
-function getSourceTemplateOverrides(
-  locale: AppLocale,
-): Map<string, SourceTemplateOverride> {
-  return valuesFromMaybeRecord<SourceTemplateOverride>(
-    getLocaleConfig(locale, "counter_source_templates.json"),
-    (item) => stringKey(item.sourceId),
   );
 }
 
@@ -663,23 +656,6 @@ export function getCounterDisplayLabel(
   return savedLabel;
 }
 
-export function getSourceTemplates(locale = getLocale()): SourceTemplate[] {
-  const cached = SOURCE_TEMPLATES_BY_LOCALE.get(locale);
-  if (cached) return cached;
-
-  const overrides = getSourceTemplateOverrides(locale);
-  const localized = SOURCE_TEMPLATES.map((template) => {
-    const override = overrides.get(template.sourceId);
-    return {
-      ...template,
-      name: localizedText(override?.name, template.name),
-      description: localizedText(override?.description, template.description),
-    };
-  });
-  SOURCE_TEMPLATES_BY_LOCALE.set(locale, localized);
-  return localized;
-}
-
 export function getSlotTemplates(locale = getLocale()): SlotTemplate[] {
   const cached = SLOT_TEMPLATES_BY_LOCALE.get(locale);
   if (cached) return cached;
@@ -850,16 +826,6 @@ export function getSeasonCultivateFactorConfiguredEffectBuffIds(): number[] {
   ).sort((left, right) => left - right);
 }
 
-export function resolveCounterSources(sourceRefs: string[]): CounterSource[] {
-  const templateMap = new Map(
-    SOURCE_TEMPLATES.map((item) => [item.sourceId, item]),
-  );
-  return sourceRefs.flatMap((ref) => {
-    const item = templateMap.get(ref);
-    return item ? resolveSourceTemplateSources(item) : [];
-  });
-}
-
 export function resolveCounterEffectSlots(
   slotRefs: string[],
 ): CounterEffectSlotPreset[] {
@@ -925,50 +891,50 @@ export function resolveCounterEffectSlots(
   });
 }
 
+/** The profile's rules in the current shape; rules left in the retired
+ * template-picker shape are skipped (normalization deletes them). */
 export function ensureUserCounterRules(
   rules: UserCounterRule[] | undefined,
 ): UserCounterRule[] {
-  return (rules ?? []).map((rule, idx) => ({
-    ruleId: Number.isInteger(rule.ruleId) ? rule.ruleId : 10001 + idx,
-    name:
-      rule.name?.trim() ||
-      `#${Number.isInteger(rule.ruleId) ? rule.ruleId : 10001 + idx}`,
-    sourceRefs: Array.from(
-      new Set(
-        (rule.sourceRefs ?? []).filter(
-          (item) => typeof item === "string" && item.trim(),
-        ),
-      ),
-    ),
-    slotRefs: Array.from(
-      new Set(
-        (rule.slotRefs ?? []).filter(
-          (item) => typeof item === "string" && item.trim(),
-        ),
-      ),
-    ),
-    voice: ensureCounterVoiceConfigs(rule.voice),
-  }));
+  return (rules ?? [])
+    .filter(
+      (rule): rule is UserCounterRule =>
+        isCurrentUserCounterRule(rule) && Number.isInteger(rule.ruleId),
+    )
+    .map((rule) => ({
+      ruleId: rule.ruleId,
+      name: rule.name?.trim() || `#${rule.ruleId}`,
+      sources: rule.sources,
+      effectSlots: rule.effectSlots,
+      voice: ensureCounterVoiceConfigs(rule.voice),
+    }));
 }
 
+/** Whether a stored user rule may reach the runtime. */
+export function isUserCounterRuleActive(rule: UserCounterRule): boolean {
+  return isValidCounterRuleDefinition(rule);
+}
+
+/**
+ * The profile's user rules in preset form, for the runtime snapshot, the
+ * overlay and voice. A rule that fails the strict schema would make the whole
+ * monitor snapshot fail to deserialize, so it is left out.
+ */
 export function resolveUserCounterRulesToPresets(
   rules: UserCounterRule[] | undefined,
 ): CounterRulePreset[] {
-  return ensureUserCounterRules(rules).flatMap((rule) => {
-    const sources = resolveCounterSources(rule.sourceRefs);
-    const effectSlots = resolveCounterEffectSlots(rule.slotRefs);
-    if (sources.length === 0 || effectSlots.length === 0) {
-      return [];
-    }
-    return [
-      {
-        ruleId: rule.ruleId,
-        name: rule.name,
-        sources,
-        effectSlots,
-      },
-    ];
-  });
+  return ensureUserCounterRules(rules).flatMap((rule) =>
+    isUserCounterRuleActive(rule)
+      ? [
+          {
+            ruleId: rule.ruleId,
+            name: rule.name,
+            sources: rule.sources,
+            effectSlots: rule.effectSlots,
+          },
+        ]
+      : [],
+  );
 }
 
 export function getSkillsByClass(

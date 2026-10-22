@@ -1285,7 +1285,6 @@ export const enUSMessages = {
   "skillMonitor.common.moveDown": "Move Down",
   "skillMonitor.common.delete": "Delete",
   "skillMonitor.common.cancel": "Cancel",
-  "skillMonitor.common.save": "Save Rule",
   "skillMonitor.common.selectedCount": "Selected {count}",
   "skillMonitor.common.selectedTotal": "Selected {count}/{total}",
   "skillMonitor.common.unconfigured": "Not configured",
@@ -1515,24 +1514,224 @@ export const enUSMessages = {
     "Only add to the current monitor area's text area",
   "skillMonitor.customPanel.addBuffPlaceholder": "Search and add buff",
   "skillMonitor.customPanel.noMatchingBuff": "No matching buffs",
-  "skillMonitor.customPanel.rule.title": "Custom Counter Rules",
-  "skillMonitor.customPanel.rule.description":
-    "Combine Source templates and Slot templates to create reusable counter rules.",
-  "skillMonitor.customPanel.rule.collapse": "Collapse",
-  "skillMonitor.customPanel.rule.new": "New Rule",
-  "skillMonitor.customPanel.rule.empty":
-    "No custom counter rules yet. Combine templates below to create one.",
-  "skillMonitor.customPanel.rule.name": "Rule Name",
-  "skillMonitor.customPanel.rule.sourceSummary": "Source: {value}",
-  "skillMonitor.customPanel.rule.slotSummary": "Slot: {value}",
-  "skillMonitor.customPanel.rule.notConfigured": "Not configured",
-  "skillMonitor.customPanel.rule.placeholder": "Example: Iai + Tick Energy",
-  "skillMonitor.customPanel.rule.sources": "Select Sources",
-  "skillMonitor.customPanel.rule.slots": "Select Slots",
-  "skillMonitor.customPanel.rule.voiceTitle": "Voice Broadcast",
-  "skillMonitor.customPanel.counter.title": "Add Counter",
+  "skillMonitor.customPanel.counter.title": "Counters",
   "skillMonitor.customPanel.counter.description":
-    "Counter slots are globally unique and can only belong to one monitor area. Preset and custom rules are shown together.",
+    "Preset and custom counters are listed together; each slot can belong to only one monitor area.",
+  "skillMonitor.customPanel.counterEditor.new": "New Counter",
+  "skillMonitor.customPanel.counterEditor.edit": "Edit counter",
+  "skillMonitor.customPanel.counterEditor.name": "Name",
+  "skillMonitor.customPanel.counterEditor.namePlaceholder":
+    "Example: Iai count",
+  "skillMonitor.customPanel.counterEditor.copyFromPreset": "Copy from preset",
+  "skillMonitor.customPanel.counterEditor.copyFromPresetPlaceholder":
+    "Choose a preset…",
+  "skillMonitor.customPanel.counterEditor.copyName": "{name} (copy)",
+  "skillMonitor.customPanel.counterEditor.sources": "Counting sources",
+  "skillMonitor.customPanel.counterEditor.sourcesHint":
+    "When any source fires, its increment is added to every slot",
+  "skillMonitor.customPanel.counterEditor.sourcesEmpty":
+    "No counting source: slots only change through linked-buff actions or cooldowns",
+  "skillMonitor.customPanel.counterEditor.addSource": "Add source",
+  "skillMonitor.customPanel.counterEditor.removeSource": "Remove source",
+  "skillMonitor.customPanel.counterEditor.kindLabel": "Source type",
+  "skillMonitor.customPanel.counterEditor.slots": "Display slots",
+  "skillMonitor.customPanel.counterEditor.slotsHint":
+    "Each slot is one row on the panel and counts, resets and cools down on its own",
+  "skillMonitor.customPanel.counterEditor.addSlot": "Add slot",
+  "skillMonitor.customPanel.counterEditor.removeSlot": "Remove slot",
+  "skillMonitor.customPanel.counterEditor.slotTitle": "Slot #{id}",
+  "skillMonitor.customPanel.counterEditor.advanced": "Advanced",
+  "skillMonitor.customPanel.counterEditor.unset": "None",
+  "skillMonitor.customPanel.counterEditor.save": "Save",
+  "skillMonitor.customPanel.counterEditor.issueCount":
+    "{count} field(s) need attention",
+  "skillMonitor.customPanel.counterEditor.inactive": "Inactive",
+  "skillMonitor.customPanel.counterEditor.inactiveTitle":
+    "Incomplete or invalid; edit and save it to take effect",
+  "skillMonitor.customPanel.counterEditor.deleteTitle":
+    'Delete counter "{name}"?',
+  "skillMonitor.customPanel.counterEditor.deleteDescription":
+    "All {count} of its slots are deleted, along with their monitor area entries and voice broadcasts.",
+  "skillMonitor.customPanel.counterEditor.group.skill": "Skill",
+  "skillMonitor.customPanel.counterEditor.group.damage": "Damage",
+  "skillMonitor.customPanel.counterEditor.group.buff": "Buff",
+  "skillMonitor.customPanel.counterEditor.group.resource": "Resource",
+  "skillMonitor.customPanel.counterEditor.kind.skillCast": "Skill cast",
+  "skillMonitor.customPanel.counterEditor.kind.skillCastComplete":
+    "Skill cast completed",
+  "skillMonitor.customPanel.counterEditor.kind.skillDurationTick":
+    "Timer while skill lasts",
+  "skillMonitor.customPanel.counterEditor.kind.damageBySkillKey": "Skill hit",
+  "skillMonitor.customPanel.counterEditor.kind.damageBySkillKeyOnce":
+    "Skill hit (multi-target counts once)",
+  "skillMonitor.customPanel.counterEditor.kind.damageBySkillKeySelfTarget":
+    "Hit on self",
+  "skillMonitor.customPanel.counterEditor.kind.anyDamage": "Any hit",
+  "skillMonitor.customPanel.counterEditor.kind.damageTaken": "Damage taken",
+  "skillMonitor.customPanel.counterEditor.kind.buffAdded": "Buff gained",
+  "skillMonitor.customPanel.counterEditor.kind.buffLayerSpent":
+    "Buff stacks spent",
+  "skillMonitor.customPanel.counterEditor.kind.buffDurationTick":
+    "Timer while buff lasts",
+  "skillMonitor.customPanel.counterEditor.kind.movementDistance":
+    "Distance moved during buff",
+  "skillMonitor.customPanel.counterEditor.kind.fightResourceSpent":
+    "Combat resource spent",
+  "skillMonitor.customPanel.counterEditor.kindHint.skillCast":
+    "Adds when one of the chosen skills is cast",
+  "skillMonitor.customPanel.counterEditor.kindHint.skillCastComplete":
+    "Adds when one of the chosen skills finishes casting",
+  "skillMonitor.customPanel.counterEditor.kindHint.skillDurationTick":
+    "Adds at each interval while the chosen skill lasts",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageBySkillKey":
+    "Adds for every hit of the chosen damages",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageBySkillKeyOnce":
+    "Hits on several targets at once count only for the most-hit target",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageBySkillKeySelfTarget":
+    "Adds when the chosen damages hit yourself (e.g. self-heals)",
+  "skillMonitor.customPanel.counterEditor.kindHint.anyDamage":
+    "Adds for every hit you deal",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageTaken":
+    "Adds when you take damage; with no damage chosen, any damage counts",
+  "skillMonitor.customPanel.counterEditor.kindHint.buffAdded":
+    "Adds when you gain the chosen buff",
+  "skillMonitor.customPanel.counterEditor.kindHint.buffLayerSpent":
+    "Adds each time the chosen buff loses the given number of stacks",
+  "skillMonitor.customPanel.counterEditor.kindHint.buffDurationTick":
+    "Adds at each interval while the chosen buff is present",
+  "skillMonitor.customPanel.counterEditor.kindHint.movementDistance":
+    "Adds for each given distance moved while the chosen buff is present",
+  "skillMonitor.customPanel.counterEditor.kindHint.fightResourceSpent":
+    "Adds each time the given amount of the combat resource is spent",
+  "skillMonitor.customPanel.counterEditor.field.skills": "Skills",
+  "skillMonitor.customPanel.counterEditor.field.skill": "Skill",
+  "skillMonitor.customPanel.counterEditor.field.damages": "Damages",
+  "skillMonitor.customPanel.counterEditor.field.damagesOptional":
+    "Damages (optional)",
+  "skillMonitor.customPanel.counterEditor.field.buff": "Buff",
+  "skillMonitor.customPanel.counterEditor.field.resource": "Combat resource",
+  "skillMonitor.customPanel.counterEditor.field.increment": "Increment",
+  "skillMonitor.customPanel.counterEditor.field.hitsRequired":
+    "Count once every N hits",
+  "skillMonitor.customPanel.counterEditor.field.requiredTypeFlags": "Hit type",
+  "skillMonitor.customPanel.counterEditor.field.requiredTypeFlagsHint":
+    "All checked types must apply; none checked means any",
+  "skillMonitor.customPanel.counterEditor.field.sourceConfigId":
+    "Source config ID",
+  "skillMonitor.customPanel.counterEditor.field.layersRequired":
+    "Per stacks spent",
+  "skillMonitor.customPanel.counterEditor.field.unitsRequired":
+    "Per amount spent",
+  "skillMonitor.customPanel.counterEditor.field.tickInterval": "Interval (s)",
+  "skillMonitor.customPanel.counterEditor.field.attrCondition":
+    "Attribute condition",
+  "skillMonitor.customPanel.counterEditor.field.attrConditionHint":
+    "Only tick while the attribute equals a value",
+  "skillMonitor.customPanel.counterEditor.field.attrId": "Attribute ID",
+  "skillMonitor.customPanel.counterEditor.field.attrValue": "Equals",
+  "skillMonitor.customPanel.counterEditor.field.metersRequired":
+    "Per meters moved",
+  "skillMonitor.customPanel.counterEditor.field.positionAttr":
+    "Position attribute ID",
+  "skillMonitor.customPanel.counterEditor.flag.crit": "Crit",
+  "skillMonitor.customPanel.counterEditor.flag.block": "Block",
+  "skillMonitor.customPanel.counterEditor.flag.lucky": "Lucky hit",
+  "skillMonitor.customPanel.counterEditor.flag.luckyTaken": "Lucky hit taken",
+  "skillMonitor.customPanel.counterEditor.slot.threshold": "Target",
+  "skillMonitor.customPanel.counterEditor.slot.displayMode": "Display",
+  "skillMonitor.customPanel.counterEditor.slot.wrapAtThreshold":
+    "Restart from 0 after reaching the target",
+  "skillMonitor.customPanel.counterEditor.slot.resetBuff": "Linked buff",
+  "skillMonitor.customPanel.counterEditor.slot.resetBuffTarget": "Buff on",
+  "skillMonitor.customPanel.counterEditor.slot.onBuffAdd": "On gain",
+  "skillMonitor.customPanel.counterEditor.slot.onBuffChange": "On change",
+  "skillMonitor.customPanel.counterEditor.slot.onBuffRemove": "On removal",
+  "skillMonitor.customPanel.counterEditor.slot.cooldown": "Cooldown (s)",
+  "skillMonitor.customPanel.counterEditor.slot.onFreezeExpire":
+    "When cooldown ends",
+  "skillMonitor.customPanel.counterEditor.slot.cooldownHint":
+    'With a cooldown set, "Pause counting", "Reset and pause" and "Reset and start cooldown" start it',
+  "skillMonitor.customPanel.counterEditor.slot.resetSourceConfigId":
+    "Linked buff source config ID",
+  "skillMonitor.customPanel.counterEditor.slot.dungeonStartFreeze":
+    "Cooldown on dungeon start (s)",
+  "skillMonitor.customPanel.counterEditor.slot.altFreeze":
+    "Use another cooldown while a condition buff is present",
+  "skillMonitor.customPanel.counterEditor.slot.altFreezeBuff": "Condition buff",
+  "skillMonitor.customPanel.counterEditor.slot.resetSkillKeys":
+    "When these damages hit",
+  "skillMonitor.customPanel.counterEditor.slot.resetPassiveSkillIds":
+    "When these passive skills trigger",
+  "skillMonitor.customPanel.counterEditor.slot.action": "Do",
+  "skillMonitor.customPanel.counterEditor.slot.thresholdModifier":
+    "Scale target down by an attribute",
+  "skillMonitor.customPanel.counterEditor.slot.freezeDurationModifier":
+    "Scale cooldown down by an attribute",
+  "skillMonitor.customPanel.counterEditor.slot.modifierMax":
+    "Max reduction (%)",
+  "skillMonitor.customPanel.counterEditor.slot.modifierPerUnit":
+    "Attribute points per 0.01% reduction",
+  "skillMonitor.customPanel.counterEditor.target.selfPlayer": "Yourself",
+  "skillMonitor.customPanel.counterEditor.target.anyTeam": "Any teammate",
+  "skillMonitor.customPanel.counterEditor.display.raw": "Count",
+  "skillMonitor.customPanel.counterEditor.display.rawWithThreshold":
+    "Count/target",
+  "skillMonitor.customPanel.counterEditor.display.remainingToThreshold":
+    "Remaining",
+  "skillMonitor.customPanel.counterEditor.display.percentOfThreshold":
+    "Percent",
+  "skillMonitor.customPanel.counterEditor.action.noOp": "Nothing",
+  "skillMonitor.customPanel.counterEditor.action.reset": "Reset",
+  "skillMonitor.customPanel.counterEditor.action.freeze": "Pause counting",
+  "skillMonitor.customPanel.counterEditor.action.startCount": "Resume counting",
+  "skillMonitor.customPanel.counterEditor.action.resetAndStartCount":
+    "Reset and count",
+  "skillMonitor.customPanel.counterEditor.action.resetAndFreeze":
+    "Reset and pause",
+  "skillMonitor.customPanel.counterEditor.action.resetAndFreezeKeepCounting":
+    "Reset and start cooldown (keep counting)",
+  "skillMonitor.customPanel.counterEditor.issue.nameRequired": "Enter a name",
+  "skillMonitor.customPanel.counterEditor.issue.slotsRequired":
+    "Add at least one slot",
+  "skillMonitor.customPanel.counterEditor.issue.duplicateSlot":
+    "Duplicate slot number",
+  "skillMonitor.customPanel.counterEditor.issue.required": "Required",
+  "skillMonitor.customPanel.counterEditor.issue.idInvalid": "Invalid ID",
+  "skillMonitor.customPanel.counterEditor.issue.countInvalid":
+    "Enter a positive whole number",
+  "skillMonitor.customPanel.counterEditor.issue.durationInvalid":
+    "Enter 0.001–86400 seconds",
+  "skillMonitor.customPanel.counterEditor.issue.metersInvalid":
+    "Enter a number above 0",
+  "skillMonitor.customPanel.counterEditor.issue.valueInvalid": "Invalid value",
+  "skillMonitor.customPanel.counterEditor.issue.reductionInvalid":
+    "Enter 0.01–100",
+  "skillMonitor.customPanel.counterEditor.issue.ruleInvalid":
+    "Invalid configuration; check each field",
+  "skillMonitor.customPanel.counterEditor.issue.freezeNeverStarts":
+    "A cooldown is set, but no action starts it",
+  "skillMonitor.customPanel.counterEditor.issue.neverChanges":
+    "No counting source and no linked-buff action: this counter never changes",
+  "skillMonitor.customPanel.counterEditor.picker.add": "Add",
+  "skillMonitor.customPanel.counterEditor.picker.replace": "Change",
+  "skillMonitor.customPanel.counterEditor.picker.remove": "Remove",
+  "skillMonitor.customPanel.counterEditor.picker.done": "Done",
+  "skillMonitor.customPanel.counterEditor.picker.searchBuff":
+    "Search buff name or ID",
+  "skillMonitor.customPanel.counterEditor.picker.searchDamage":
+    "Search damage name or ID",
+  "skillMonitor.customPanel.counterEditor.picker.searchSkill":
+    "Search resonance skills, or type a skill ID and press Enter",
+  "skillMonitor.customPanel.counterEditor.picker.enterId":
+    "Type an ID and press Enter",
+  "skillMonitor.customPanel.counterEditor.picker.noMatch": "No matches",
+  "skillMonitor.customPanel.counterEditor.picker.classSkills":
+    "Current class skills",
+  "skillMonitor.customPanel.counterEditor.picker.group": "Group",
+  "skillMonitor.customPanel.counterEditor.picker.groupName":
+    "{name} ({count} damages)",
+  "skillMonitor.customPanel.counterEditor.picker.pressEnter":
+    "Press Enter to add: {name}",
   "skillMonitor.customPanel.counter.add": "Click to Add",
   "skillMonitor.customPanel.counter.voiceConfigure":
     "Configure voice broadcast",

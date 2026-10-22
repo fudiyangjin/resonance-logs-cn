@@ -37,4 +37,4 @@ The same approach works for the other built-in presets, for example:
 - S4 set effects such as **Vanguard S4 - Auto Dragon Cannon** and **Ray S4 - Frost Infusion 4-Piece**;
 - **Transcendence Trigger Count**, **Fantasia Impact Stacks - 30 - Frost Mage**, and so on.
 
-For the full list, see [Built-in preset counters](../custom-panel.md#built-in-preset-counters) above. Any counter can use **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}** to give a voice reminder when it reaches its target.
+For the full list, see [Built-in preset counters](../custom-panel.md#built-in-preset-counters) above. To change a preset's settings (such as its target), use **{{ui:skillMonitor.customPanel.counterEditor.new}} → {{ui:skillMonitor.customPanel.counterEditor.copyFromPreset}}** and edit the copy; see [Custom counters](../custom-panel.md#custom-counters). Any counter can use **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}** to give a voice reminder when it reaches its target.

@@ -17,10 +17,10 @@ export type DamageSearchResult = {
   isGroup: boolean;
 };
 
-type CatalogEntry = DamageSearchResult & { nameLower: string };
+export type DamageCatalogEntry = DamageSearchResult & { nameLower: string };
 
 // Built lazily once per locale — the underlying game-data tables are static.
-const CATALOG_BY_LOCALE = new Map<AppLocale, CatalogEntry[]>();
+const CATALOG_BY_LOCALE = new Map<AppLocale, DamageCatalogEntry[]>();
 
 function resolveSingleName(id: number, locale: AppLocale): string | null {
   for (const candidate of getGameDataFallbackChain(locale)) {
@@ -48,8 +48,8 @@ function resolveGroupName(
   return null;
 }
 
-function buildCatalog(locale: AppLocale): CatalogEntry[] {
-  const entries: CatalogEntry[] = [];
+function buildCatalog(locale: AppLocale): DamageCatalogEntry[] {
+  const entries: DamageCatalogEntry[] = [];
 
   // Named mechanic groups first (adding one bundles all of its damage ids).
   const recountTable = getGameData(locale).recountTable;
@@ -85,7 +85,8 @@ function buildCatalog(locale: AppLocale): CatalogEntry[] {
   return entries;
 }
 
-function getCatalog(locale: AppLocale): CatalogEntry[] {
+/** Every named damage group and damage id, built once per locale. */
+export function getDamageCatalog(locale: AppLocale): DamageCatalogEntry[] {
   const cached = CATALOG_BY_LOCALE.get(locale);
   if (cached) return cached;
   const built = buildCatalog(locale);
@@ -106,8 +107,8 @@ export function searchForbiddenDamage(
   const q = query.trim().toLowerCase();
   if (!q) return { results: [], total: 0 };
 
-  const matched: CatalogEntry[] = [];
-  for (const entry of getCatalog(locale)) {
+  const matched: DamageCatalogEntry[] = [];
+  for (const entry of getDamageCatalog(locale)) {
     if (entry.nameLower.includes(q)) matched.push(entry);
   }
   matched.sort(

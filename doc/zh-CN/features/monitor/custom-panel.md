@@ -15,7 +15,7 @@
 点击 **{{ui:skillMonitor.customPanel.newFactor}}** 时，应用会根据当前赛季自动决定创建哪一种：S4 起显示赛季节点区，之前的赛季显示因子配置区。
 
 > [!IMPORTANT]
-> 想看因子或节点的触发情况，**直接新建因子区**即可，不需要再像旧版那样用「自定义计数器规则」手动组合 Sources 和 Slots。
+> 想看因子或节点的触发情况，**直接新建因子区**即可，不需要自己配置计数器。
 
 ## 因子配置区
 
@@ -48,7 +48,7 @@ S4 起，**{{ui:skillMonitor.customPanel.newFactor}}** 创建的是赛季节点�
 
 - **{{ui:skillMonitor.customPanel.addBuff}}**：从 Buff 搜索中选取，只加入当前监控区；也可以选 [组合 Buff](./buff.md#组合-buff)；
 - **{{ui:skillMonitor.customPanel.entries.stateOnly}}**：勾选后该 Buff 条目常驻显示，只标明激活 / 未激活，不显示时间；
-- **{{ui:skillMonitor.customPanel.counter.title}}**：从预设规则或你的自定义规则中选择计数器槽位；
+- **{{ui:skillMonitor.customPanel.counter.title}}**：从预设计数器和你[自己定义的计数器](#自定义计数器)中选择槽位；
 - **{{ui:skillMonitor.customPanel.hideWhenZero}}**：计数器为 0 时不占位置；
 - **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}**：计数达到目标时播报。
 
@@ -69,15 +69,58 @@ S4 起，**{{ui:skillMonitor.customPanel.newFactor}}** 创建的是赛季节点�
 | 模组 / 套装 | N20-治疗机器人冷却、N20-蒂娜降攻冷却 |
 | S4 | 重装S4-自动龙炮、重装S4-额外神影螺旋、射线S4-冰之灌注四件套、森语S4-灵感X6苍月慰藉 |
 
-### 自定义计数器规则
+### 自定义计数器
 
-预设不够用时，可以在 **{{ui:skillMonitor.customPanel.rule.title}}** 中自己组合：
+预设不够用时，在 **{{ui:skillMonitor.customPanel.counter.title}}** 中点 **{{ui:skillMonitor.customPanel.counterEditor.new}}**，用表单自己定义计数器。可填的参数与内置预设完全相同，最省事的做法是先 **{{ui:skillMonitor.customPanel.counterEditor.copyFromPreset}}**，再在此基础上修改。
 
-1. **{{ui:skillMonitor.customPanel.rule.new}}**；
-2. 在 **{{ui:skillMonitor.customPanel.rule.sources}}** 中选择推进计数的事件来源（可多选）；
-3. 在 **{{ui:skillMonitor.customPanel.rule.slots}}** 中选择要在面板上展示的槽位（可多选）；
-4. 填写 **{{ui:skillMonitor.customPanel.rule.name}}** 并保存；
-5. 回到普通自定义区，**{{ui:skillMonitor.customPanel.counter.title}}** 选中刚保存的规则。
+一个计数器由两部分组成：
+
+- **{{ui:skillMonitor.customPanel.counterEditor.sources}}**：什么事件让计数增加。任一来源触发时，按「每次增加」累加到所有槽位；也可以没有来源（例如只靠 Buff 触发的冷却）。
+- **{{ui:skillMonitor.customPanel.counterEditor.slots}}**：面板上显示的每一行，各自有目标值、清零规则和冷却。
+
+保存后，计数器和预设一起出现在列表里，同样可以添加到监控区、配置语音播报；点 ✎ 修改、点 🗑 删除。表单有缺漏时，保存会定位到需要修改的地方。
+
+技能、伤害、Buff 都可以按名称搜索；名称表里找不到的，直接输入 ID 后回车。不常用的设置收在每个来源和槽位的 **{{ui:skillMonitor.customPanel.counterEditor.advanced}}** 里。
+
+> [!NOTE]
+> 旧版「自定义计数器规则」（从因子模板勾选拼装）已被因子区取代。升级后这些规则会被自动删除，连同它们在监控区中的条目和语音播报。
+
+#### 计数来源
+
+| 类型 | 何时累加 |
+| --- | --- |
+| 释放技能 / 技能释放完成 | 释放（或释放完成）所选技能时 |
+| 技能持续期间定时 | 所选技能持续期间，每隔一段时间 |
+| 技能命中 | 所选伤害每命中一次；高级里可设「每 N 次命中才计一次」和伤害类型（暴击、格挡、幸运一击等） |
+| 技能命中（多目标只计一次） | 同一时刻打中多个目标，只按命中次数最多的那个目标计 |
+| 命中自己 | 所选伤害命中自己时（如自我治疗） |
+| 任意命中 / 受到伤害 | 自己造成任意命中时 / 受到伤害时（受到伤害可以限定伤害） |
+| 获得 Buff | 获得所选 Buff 时 |
+| 消耗 Buff 层数 | 所选 Buff 每减少指定层数 |
+| Buff 持续期间定时 | 所选 Buff 存在期间，每隔一段时间 |
+| Buff 期间移动距离 | 所选 Buff 存在期间，每移动指定距离 |
+| 消耗战斗资源 | 战斗资源每消耗指定数量 |
+
+#### 槽位
+
+| 设置 | 说明 |
+| --- | --- |
+| 目标值 | 留空表示不设目标。设置后可以选显示方式（计数、计数/目标、剩余、百分比），以及「达到目标后从 0 重新计」 |
+| 关联 Buff | 选一个 Buff，分别指定它「获得时 / 变化时 / 消失时」对计数做什么；可以选 Buff 在自己身上还是任意队友身上 |
+| 冷却 | 由「暂停计数」「清零并暂停」「清零并开始冷却」动作开始，面板显示冷却进度；「冷却结束后」决定接下来怎么做 |
+| 高级 | 关联 Buff 的来源配置 ID、带有条件 Buff 时改用另一个冷却时长、进入副本时冷却、命中指定伤害或被动技能触发时执行动作、目标值或冷却按属性缩减 |
+
+可选的动作：
+
+| 动作 | 效果 |
+| --- | --- |
+| 不处理 | 不改变计数 |
+| 清零 | 计数归零 |
+| 暂停计数 | 停止累加；设置了冷却时同时开始冷却 |
+| 继续计数 | 恢复累加 |
+| 清零并开始计数 | 归零后继续累加 |
+| 清零并暂停 | 归零并停止累加；设置了冷却时同时开始冷却 |
+| 清零并开始冷却（不暂停计数） | 归零并开始冷却，冷却期间照常累加 |
 
 这是面向进阶用户的功能，一般用户使用预设或因子区即可。
 

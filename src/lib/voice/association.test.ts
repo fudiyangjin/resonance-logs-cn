@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type {
   EntityDurationEntry,
+  UserCounterRule,
   VoiceEventConfig,
   VoiceExpiringEventConfig,
 } from "$lib/settings-store";
@@ -24,6 +25,20 @@ import type {
 const on: VoiceEventConfig = { enabled: true, phrase: { source: "auto" } };
 const off: VoiceEventConfig = { enabled: false, phrase: { source: "auto" } };
 const soon: VoiceExpiringEventConfig = { ...on, secondsBefore: 5 };
+/** One slot with a target and no cooldown: only `threshold` applies. */
+const userRuleDefinition: Pick<UserCounterRule, "sources" | "effectSlots"> = {
+  sources: [{ skillCast: { skillBaseIds: [1714], increment: 25 } }],
+  effectSlots: [
+    {
+      slotId: 1,
+      threshold: 610,
+      resetBuffId: 3050401,
+      onBuffAdd: "freeze",
+      onBuffChange: "noOp",
+      onBuffRemove: "resetAndStartCount",
+    },
+  ],
+};
 
 function skillProfile(
   overrides: Partial<SkillProfileVoiceSlice> = {},
@@ -115,8 +130,7 @@ describe("pruneSkillProfileVoice", () => {
         {
           ruleId: preset.ruleId,
           name: "mine",
-          sourceRefs: ["stormablade_x1"],
-          slotRefs: ["stormablade_x1"],
+          ...userRuleDefinition,
         },
       ],
     });
@@ -129,8 +143,7 @@ describe("pruneSkillProfileVoice", () => {
     const rule = {
       ruleId: 10001,
       name: "mine",
-      sourceRefs: ["stormablade_x1"],
-      slotRefs: ["stormablade_x1"],
+      ...userRuleDefinition,
       voice: {
         "1": { threshold: on, expiring: soon },
         "2": { threshold: on },

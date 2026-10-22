@@ -28,6 +28,10 @@ import { ensureMonsterSkillEntries } from "./monster-skill-entries";
 import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
 import { ensureShieldDetailStyle } from "./skill-monitor-normalize";
 import { migrateLegacyMonsterPanels } from "./monster-panel-migration";
+import {
+  counterRuleDefinitionEntries,
+  dropLegacyUserCounterRules,
+} from "./user-counter-rules";
 
 export type LoadoutExport = {
   kind: "resonance-logs-loadout";
@@ -386,13 +390,25 @@ const resourceSectionLayoutSchema = v.object({
   visible: v.boolean(),
 });
 
-const userCounterRuleSchema = v.object({
+/** Rules from the retired template picker; accepted so older exports still
+ * import, then dropped by `dropLegacyUserCounterRules`. */
+const legacyUserCounterRuleSchema = v.object({
   ruleId: finiteNumberSchema,
   name: v.string(),
   sourceRefs: stringArraySchema,
   slotRefs: stringArraySchema,
   voice: v.optional(counterVoiceConfigMapSchema),
 });
+
+const userCounterRuleSchema = v.union([
+  v.object({
+    ruleId: v.pipe(v.number(), v.integer(), v.minValue(1)),
+    name: v.string(),
+    ...counterRuleDefinitionEntries,
+    voice: v.optional(counterVoiceConfigMapSchema),
+  }),
+  legacyUserCounterRuleSchema,
+]);
 
 const panelAreaRowSchema = v.object({
   type: v.literal("attr"),
@@ -1088,10 +1104,12 @@ type LegacyAwareLoadoutExport = Omit<LoadoutExport, "skillProfile"> & {
 };
 
 /**
- * Maps legacy skill-monitor duration skills (e.g. 1719 镰车) onto the monster
- * profile's entity-duration entries and strips the legacy key.
+ * Drops counter rules from the retired template picker (with their panel
+ * entries), and maps legacy skill-monitor duration skills (e.g. 1719 镰车)
+ * onto the monster profile's entity-duration entries and strips that key.
  */
 function migrateLegacyLoadoutExport(output: LegacyAwareLoadoutExport): void {
+  output.skillProfile = dropLegacyUserCounterRules(output.skillProfile);
   const legacyIds = output.skillProfile.monitoredSkillDurationIds;
   delete output.skillProfile.monitoredSkillDurationIds;
   if (!legacyIds?.length) return;

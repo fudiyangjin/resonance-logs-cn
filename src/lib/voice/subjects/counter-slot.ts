@@ -58,7 +58,7 @@ export const counterSlotAdapter: VoiceSubjectAdapter<CounterSubject> = {
   runtime: "backend",
   overview: {
     group: "counter",
-    titleKey: "skillMonitor.customPanel.rule.title",
+    titleKey: "skillMonitor.customPanel.counter.title",
     navigateKey: "voice.bindings.navigate.counter",
     route: "/main/skill-monitor",
   },

@@ -1257,7 +1257,6 @@ export const jaJPMessages = {
   "skillMonitor.common.moveDown": "下へ",
   "skillMonitor.common.delete": "削除",
   "skillMonitor.common.cancel": "キャンセル",
-  "skillMonitor.common.save": "ルールを保存",
   "skillMonitor.common.selectedCount": "{count} 件選択中",
   "skillMonitor.common.selectedTotal": "{count}/{total} 件選択中",
   "skillMonitor.common.unconfigured": "未設定",
@@ -1492,24 +1491,221 @@ export const jaJPMessages = {
     "現在のモニターエリアのテキストエリアにのみ追加",
   "skillMonitor.customPanel.addBuffPlaceholder": "Buff を検索して追加",
   "skillMonitor.customPanel.noMatchingBuff": "一致する Buff がありません",
-  "skillMonitor.customPanel.rule.title": "カスタムカウンタールール",
-  "skillMonitor.customPanel.rule.description":
-    "Source テンプレートと Slot テンプレートを組み合わせて再利用可能なカウンタールールを作成。",
-  "skillMonitor.customPanel.rule.collapse": "折りたたむ",
-  "skillMonitor.customPanel.rule.new": "新規ルール",
-  "skillMonitor.customPanel.rule.empty":
-    "カスタムカウンタールールはまだありません。下のテンプレートを組み合わせて作成してください。",
-  "skillMonitor.customPanel.rule.name": "ルール名",
-  "skillMonitor.customPanel.rule.sourceSummary": "Source: {value}",
-  "skillMonitor.customPanel.rule.slotSummary": "Slot: {value}",
-  "skillMonitor.customPanel.rule.notConfigured": "未設定",
-  "skillMonitor.customPanel.rule.placeholder": "例: 居合 + Tick エネルギー",
-  "skillMonitor.customPanel.rule.sources": "Source を選択",
-  "skillMonitor.customPanel.rule.slots": "Slot を選択",
-  "skillMonitor.customPanel.rule.voiceTitle": "音声読み上げ",
-  "skillMonitor.customPanel.counter.title": "カウンターを追加",
+  "skillMonitor.customPanel.counter.title": "カウンター",
   "skillMonitor.customPanel.counter.description":
-    "カウンタースロットはグローバルに一意で、1つのモニターエリアにのみ所属可能。プリセットとカスタムルールを一緒に表示。",
+    "プリセットとカスタムのカウンターをまとめて表示。各スロットは1つのモニターエリアにのみ配置可能。",
+  "skillMonitor.customPanel.counterEditor.new": "カウンターを新規作成",
+  "skillMonitor.customPanel.counterEditor.edit": "カウンターを編集",
+  "skillMonitor.customPanel.counterEditor.name": "名前",
+  "skillMonitor.customPanel.counterEditor.namePlaceholder": "例: 居合カウント",
+  "skillMonitor.customPanel.counterEditor.copyFromPreset":
+    "プリセットからコピー",
+  "skillMonitor.customPanel.counterEditor.copyFromPresetPlaceholder":
+    "プリセットを選択…",
+  "skillMonitor.customPanel.counterEditor.copyName": "{name}（コピー）",
+  "skillMonitor.customPanel.counterEditor.sources": "カウント元",
+  "skillMonitor.customPanel.counterEditor.sourcesHint":
+    "いずれかのカウント元が発生すると、増分が全スロットに加算されます",
+  "skillMonitor.customPanel.counterEditor.sourcesEmpty":
+    "カウント元なし: スロットは関連バフの動作かクールダウンでのみ変化します",
+  "skillMonitor.customPanel.counterEditor.addSource": "カウント元を追加",
+  "skillMonitor.customPanel.counterEditor.removeSource": "カウント元を削除",
+  "skillMonitor.customPanel.counterEditor.kindLabel": "カウント元の種類",
+  "skillMonitor.customPanel.counterEditor.slots": "表示スロット",
+  "skillMonitor.customPanel.counterEditor.slotsHint":
+    "各スロットはパネルの1行で、個別にカウント・リセット・クールダウンします",
+  "skillMonitor.customPanel.counterEditor.addSlot": "スロットを追加",
+  "skillMonitor.customPanel.counterEditor.removeSlot": "スロットを削除",
+  "skillMonitor.customPanel.counterEditor.slotTitle": "スロット #{id}",
+  "skillMonitor.customPanel.counterEditor.advanced": "詳細",
+  "skillMonitor.customPanel.counterEditor.unset": "なし",
+  "skillMonitor.customPanel.counterEditor.save": "保存",
+  "skillMonitor.customPanel.counterEditor.issueCount":
+    "あと {count} 件の修正が必要です",
+  "skillMonitor.customPanel.counterEditor.inactive": "無効",
+  "skillMonitor.customPanel.counterEditor.inactiveTitle":
+    "設定が不完全または無効です。編集して保存すると有効になります",
+  "skillMonitor.customPanel.counterEditor.deleteTitle":
+    "カウンター「{name}」を削除しますか？",
+  "skillMonitor.customPanel.counterEditor.deleteDescription":
+    "全 {count} 個のスロットと、それらのモニターエリアのエントリおよび音声読み上げも削除されます。",
+  "skillMonitor.customPanel.counterEditor.group.skill": "スキル",
+  "skillMonitor.customPanel.counterEditor.group.damage": "ダメージ",
+  "skillMonitor.customPanel.counterEditor.group.buff": "バフ",
+  "skillMonitor.customPanel.counterEditor.group.resource": "リソース",
+  "skillMonitor.customPanel.counterEditor.kind.skillCast": "スキル発動",
+  "skillMonitor.customPanel.counterEditor.kind.skillCastComplete":
+    "スキル発動完了",
+  "skillMonitor.customPanel.counterEditor.kind.skillDurationTick":
+    "スキル持続中の定期加算",
+  "skillMonitor.customPanel.counterEditor.kind.damageBySkillKey": "スキル命中",
+  "skillMonitor.customPanel.counterEditor.kind.damageBySkillKeyOnce":
+    "スキル命中（複数対象は1回）",
+  "skillMonitor.customPanel.counterEditor.kind.damageBySkillKeySelfTarget":
+    "自分への命中",
+  "skillMonitor.customPanel.counterEditor.kind.anyDamage": "任意の命中",
+  "skillMonitor.customPanel.counterEditor.kind.damageTaken": "被ダメージ",
+  "skillMonitor.customPanel.counterEditor.kind.buffAdded": "バフ獲得",
+  "skillMonitor.customPanel.counterEditor.kind.buffLayerSpent":
+    "バフスタック消費",
+  "skillMonitor.customPanel.counterEditor.kind.buffDurationTick":
+    "バフ持続中の定期加算",
+  "skillMonitor.customPanel.counterEditor.kind.movementDistance":
+    "バフ中の移動距離",
+  "skillMonitor.customPanel.counterEditor.kind.fightResourceSpent":
+    "戦闘リソース消費",
+  "skillMonitor.customPanel.counterEditor.kindHint.skillCast":
+    "選んだスキルを発動したときに加算",
+  "skillMonitor.customPanel.counterEditor.kindHint.skillCastComplete":
+    "選んだスキルの発動が完了したときに加算",
+  "skillMonitor.customPanel.counterEditor.kindHint.skillDurationTick":
+    "選んだスキルの持続中、一定間隔ごとに加算",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageBySkillKey":
+    "選んだダメージが命中するたびに加算",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageBySkillKeyOnce":
+    "同時に複数の対象に命中しても、最も多く命中した対象の分だけ数えます",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageBySkillKeySelfTarget":
+    "選んだダメージが自分に命中したときに加算（自己回復など）",
+  "skillMonitor.customPanel.counterEditor.kindHint.anyDamage":
+    "自分が与えたすべての命中で加算",
+  "skillMonitor.customPanel.counterEditor.kindHint.damageTaken":
+    "ダメージを受けたときに加算。ダメージ未選択なら任意のダメージが対象",
+  "skillMonitor.customPanel.counterEditor.kindHint.buffAdded":
+    "選んだバフを獲得したときに加算",
+  "skillMonitor.customPanel.counterEditor.kindHint.buffLayerSpent":
+    "選んだバフのスタックが指定数減るごとに加算",
+  "skillMonitor.customPanel.counterEditor.kindHint.buffDurationTick":
+    "選んだバフがある間、一定間隔ごとに加算",
+  "skillMonitor.customPanel.counterEditor.kindHint.movementDistance":
+    "選んだバフがある間、指定距離を移動するごとに加算",
+  "skillMonitor.customPanel.counterEditor.kindHint.fightResourceSpent":
+    "戦闘リソースを指定量消費するごとに加算",
+  "skillMonitor.customPanel.counterEditor.field.skills": "スキル",
+  "skillMonitor.customPanel.counterEditor.field.skill": "スキル",
+  "skillMonitor.customPanel.counterEditor.field.damages": "ダメージ",
+  "skillMonitor.customPanel.counterEditor.field.damagesOptional":
+    "ダメージ（任意）",
+  "skillMonitor.customPanel.counterEditor.field.buff": "バフ",
+  "skillMonitor.customPanel.counterEditor.field.resource": "戦闘リソース",
+  "skillMonitor.customPanel.counterEditor.field.increment": "増分",
+  "skillMonitor.customPanel.counterEditor.field.hitsRequired":
+    "N 回命中ごとに1回数える",
+  "skillMonitor.customPanel.counterEditor.field.requiredTypeFlags":
+    "命中タイプ",
+  "skillMonitor.customPanel.counterEditor.field.requiredTypeFlagsHint":
+    "チェックしたタイプをすべて満たす命中のみ数えます。未チェックなら制限なし",
+  "skillMonitor.customPanel.counterEditor.field.sourceConfigId":
+    "ソース設定 ID",
+  "skillMonitor.customPanel.counterEditor.field.layersRequired":
+    "消費スタック数ごと",
+  "skillMonitor.customPanel.counterEditor.field.unitsRequired": "消費量ごと",
+  "skillMonitor.customPanel.counterEditor.field.tickInterval": "間隔（秒）",
+  "skillMonitor.customPanel.counterEditor.field.attrCondition": "属性条件",
+  "skillMonitor.customPanel.counterEditor.field.attrConditionHint":
+    "属性が指定値のときだけ加算",
+  "skillMonitor.customPanel.counterEditor.field.attrId": "属性 ID",
+  "skillMonitor.customPanel.counterEditor.field.attrValue": "等しい値",
+  "skillMonitor.customPanel.counterEditor.field.metersRequired":
+    "移動距離ごと（m）",
+  "skillMonitor.customPanel.counterEditor.field.positionAttr": "座標属性 ID",
+  "skillMonitor.customPanel.counterEditor.flag.crit": "会心",
+  "skillMonitor.customPanel.counterEditor.flag.block": "ブロック",
+  "skillMonitor.customPanel.counterEditor.flag.lucky": "幸運の一撃",
+  "skillMonitor.customPanel.counterEditor.flag.luckyTaken": "被幸運の一撃",
+  "skillMonitor.customPanel.counterEditor.slot.threshold": "目標値",
+  "skillMonitor.customPanel.counterEditor.slot.displayMode": "表示",
+  "skillMonitor.customPanel.counterEditor.slot.wrapAtThreshold":
+    "目標到達後に 0 から数え直す",
+  "skillMonitor.customPanel.counterEditor.slot.resetBuff": "関連バフ",
+  "skillMonitor.customPanel.counterEditor.slot.resetBuffTarget": "バフの対象",
+  "skillMonitor.customPanel.counterEditor.slot.onBuffAdd": "獲得時",
+  "skillMonitor.customPanel.counterEditor.slot.onBuffChange": "変化時",
+  "skillMonitor.customPanel.counterEditor.slot.onBuffRemove": "消滅時",
+  "skillMonitor.customPanel.counterEditor.slot.cooldown": "クールダウン（秒）",
+  "skillMonitor.customPanel.counterEditor.slot.onFreezeExpire":
+    "クールダウン終了後",
+  "skillMonitor.customPanel.counterEditor.slot.cooldownHint":
+    "クールダウン設定時、「カウント停止」「リセットして停止」「リセットしてクールダウン開始」でクールダウンが始まります",
+  "skillMonitor.customPanel.counterEditor.slot.resetSourceConfigId":
+    "関連バフのソース設定 ID",
+  "skillMonitor.customPanel.counterEditor.slot.dungeonStartFreeze":
+    "ダンジョン開始時のクールダウン（秒）",
+  "skillMonitor.customPanel.counterEditor.slot.altFreeze":
+    "条件バフがある間は別のクールダウンを使う",
+  "skillMonitor.customPanel.counterEditor.slot.altFreezeBuff": "条件バフ",
+  "skillMonitor.customPanel.counterEditor.slot.resetSkillKeys":
+    "これらのダメージが命中したとき",
+  "skillMonitor.customPanel.counterEditor.slot.resetPassiveSkillIds":
+    "これらのパッシブスキルが発動したとき",
+  "skillMonitor.customPanel.counterEditor.slot.action": "動作",
+  "skillMonitor.customPanel.counterEditor.slot.thresholdModifier":
+    "属性で目標値を短縮",
+  "skillMonitor.customPanel.counterEditor.slot.freezeDurationModifier":
+    "属性でクールダウンを短縮",
+  "skillMonitor.customPanel.counterEditor.slot.modifierMax": "最大短縮率（%）",
+  "skillMonitor.customPanel.counterEditor.slot.modifierPerUnit":
+    "0.01% 短縮あたりの属性値",
+  "skillMonitor.customPanel.counterEditor.target.selfPlayer": "自分",
+  "skillMonitor.customPanel.counterEditor.target.anyTeam": "任意の味方",
+  "skillMonitor.customPanel.counterEditor.display.raw": "カウント",
+  "skillMonitor.customPanel.counterEditor.display.rawWithThreshold":
+    "カウント/目標",
+  "skillMonitor.customPanel.counterEditor.display.remainingToThreshold": "残り",
+  "skillMonitor.customPanel.counterEditor.display.percentOfThreshold": "割合",
+  "skillMonitor.customPanel.counterEditor.action.noOp": "何もしない",
+  "skillMonitor.customPanel.counterEditor.action.reset": "リセット",
+  "skillMonitor.customPanel.counterEditor.action.freeze": "カウント停止",
+  "skillMonitor.customPanel.counterEditor.action.startCount": "カウント再開",
+  "skillMonitor.customPanel.counterEditor.action.resetAndStartCount":
+    "リセットしてカウント開始",
+  "skillMonitor.customPanel.counterEditor.action.resetAndFreeze":
+    "リセットして停止",
+  "skillMonitor.customPanel.counterEditor.action.resetAndFreezeKeepCounting":
+    "リセットしてクールダウン開始（カウント継続）",
+  "skillMonitor.customPanel.counterEditor.issue.nameRequired":
+    "名前を入力してください",
+  "skillMonitor.customPanel.counterEditor.issue.slotsRequired":
+    "スロットが1つ以上必要です",
+  "skillMonitor.customPanel.counterEditor.issue.duplicateSlot":
+    "スロット番号が重複しています",
+  "skillMonitor.customPanel.counterEditor.issue.required": "必須",
+  "skillMonitor.customPanel.counterEditor.issue.idInvalid": "ID が無効です",
+  "skillMonitor.customPanel.counterEditor.issue.countInvalid":
+    "正の整数を入力してください",
+  "skillMonitor.customPanel.counterEditor.issue.durationInvalid":
+    "0.001–86400 秒で入力してください",
+  "skillMonitor.customPanel.counterEditor.issue.metersInvalid":
+    "0 より大きい数を入力してください",
+  "skillMonitor.customPanel.counterEditor.issue.valueInvalid": "値が無効です",
+  "skillMonitor.customPanel.counterEditor.issue.reductionInvalid":
+    "0.01–100 で入力してください",
+  "skillMonitor.customPanel.counterEditor.issue.ruleInvalid":
+    "設定が無効です。各項目を確認してください",
+  "skillMonitor.customPanel.counterEditor.issue.freezeNeverStarts":
+    "クールダウンが設定されていますが、開始する動作がありません",
+  "skillMonitor.customPanel.counterEditor.issue.neverChanges":
+    "カウント元も関連バフの動作もないため、このカウンターは変化しません",
+  "skillMonitor.customPanel.counterEditor.picker.add": "追加",
+  "skillMonitor.customPanel.counterEditor.picker.replace": "変更",
+  "skillMonitor.customPanel.counterEditor.picker.remove": "削除",
+  "skillMonitor.customPanel.counterEditor.picker.done": "完了",
+  "skillMonitor.customPanel.counterEditor.picker.searchBuff":
+    "バフ名または ID で検索",
+  "skillMonitor.customPanel.counterEditor.picker.searchDamage":
+    "ダメージ名または ID で検索",
+  "skillMonitor.customPanel.counterEditor.picker.searchSkill":
+    "共鳴スキルを検索、またはスキル ID を入力して Enter",
+  "skillMonitor.customPanel.counterEditor.picker.enterId":
+    "ID を入力して Enter",
+  "skillMonitor.customPanel.counterEditor.picker.noMatch":
+    "一致する項目がありません",
+  "skillMonitor.customPanel.counterEditor.picker.classSkills":
+    "現在のクラスのスキル",
+  "skillMonitor.customPanel.counterEditor.picker.group": "グループ",
+  "skillMonitor.customPanel.counterEditor.picker.groupName":
+    "{name}（{count} 件のダメージ）",
+  "skillMonitor.customPanel.counterEditor.picker.pressEnter":
+    "Enter で追加: {name}",
   "skillMonitor.customPanel.counter.add": "クリックで追加",
   "skillMonitor.customPanel.counter.voiceConfigure": "音声読み上げを設定",
   "skillMonitor.customPanel.counter.voiceConfigured": "音声読み上げ設定済み",

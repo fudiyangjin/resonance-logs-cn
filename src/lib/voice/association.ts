@@ -33,7 +33,6 @@ import {
   type MechanicVoiceConfigMap,
   type UserCounterRule,
 } from "$lib/settings-store";
-import { ensureUserCounterRules } from "$lib/skill-mappings";
 import {
   counterSlotSupportsExpiry,
   counterSlotSupportsThreshold,
@@ -226,13 +225,13 @@ export function pruneSkillProfileVoice<P extends SkillProfileVoiceSlice>(
     },
   );
   let userRulesChanged = false;
-  // Same order as `profile.userCounterRules`; it fixes up legacy ids.
-  const normalizedUserRules = ensureUserCounterRules(profile.userCounterRules);
   const userCounterRules = profile.userCounterRules?.map(
-    (rule, index): UserCounterRule => {
+    (rule): UserCounterRule => {
       if (!rule.voice) return rule;
-      const ruleId = normalizedUserRules[index]?.ruleId ?? rule.ruleId;
-      const voice = pruneCounterSlots(rule.voice, counters.user.get(ruleId));
+      const voice = pruneCounterSlots(
+        rule.voice,
+        counters.user.get(rule.ruleId),
+      );
       if (voice === rule.voice) return rule;
       userRulesChanged = true;
       return { ...rule, voice: voice ?? {} };

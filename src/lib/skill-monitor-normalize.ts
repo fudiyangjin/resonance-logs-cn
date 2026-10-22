@@ -17,6 +17,7 @@ import {
   MAX_BUFF_COVERAGE_ENTRIES,
   ensureOverlayTextStyle,
 } from "$lib/settings-store";
+import { dropLegacyUserCounterRules } from "$lib/user-counter-rules";
 
 export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   skillCdGroupScale: 1,
@@ -327,8 +328,10 @@ export function ensureShieldDetailStyle(
  * already-normalized profile returns an equivalent value.
  */
 export function normalizeSkillProfile(
-  profile: SkillMonitorProfile,
+  input: SkillMonitorProfile,
 ): SkillMonitorProfile {
+  // Rules from the retired template picker go, with their panel entries.
+  const profile = dropLegacyUserCounterRules(input);
   const defaults = createDefaultSkillMonitorProfile(
     profile.name,
     profile.selectedClass,

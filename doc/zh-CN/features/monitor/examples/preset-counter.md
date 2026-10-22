@@ -37,4 +37,4 @@
 - **重装S4-自动龙炮**、**射线S4-冰之灌注四件套** 等 S4 套装效果；
 - **超然触发计数**、**幻想冲击层数-30-冰法** 等。
 
-完整列表见上文 [内置预设计数器](../custom-panel.md#内置预设计数器)。任何计数器都可以点 **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}**，在达到目标时语音提醒。
+完整列表见上文 [内置预设计数器](../custom-panel.md#内置预设计数器)。想改预设的参数（例如目标值），可以 **{{ui:skillMonitor.customPanel.counterEditor.new}} → {{ui:skillMonitor.customPanel.counterEditor.copyFromPreset}}** 后修改，见 [自定义计数器](../custom-panel.md#自定义计数器)。任何计数器都可以点 **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}**，在达到目标时语音提醒。

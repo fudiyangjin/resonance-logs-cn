@@ -15,7 +15,7 @@
 When you click **{{ui:skillMonitor.customPanel.newFactor}}**, the app decides which kind to create based on the current season: from S4 it creates a season node zone; in earlier seasons it creates a factor zone.
 
 > [!IMPORTANT]
-> To see when factors or nodes trigger, **just create a factor zone**. You no longer need to combine Sources and Slots by hand with "Custom counter rules" as in older versions.
+> To see when factors or nodes trigger, **just create a factor zone**. You do not need to set up any counter yourself.
 
 ## Factor zone
 
@@ -48,7 +48,7 @@ Click **{{ui:skillMonitor.customPanel.new}}** to create one, then put things in 
 
 - **{{ui:skillMonitor.customPanel.addBuff}}**: pick from the Buff search; added only to the current monitor area. [Composite buffs](./buff.md#composite-buffs) can be picked too;
 - **{{ui:skillMonitor.customPanel.entries.stateOnly}}**: the Buff entry stays on screen and only shows whether it is active, without a timer;
-- **{{ui:skillMonitor.customPanel.counter.title}}**: choose a counter slot from the preset rules or your own custom rules;
+- **{{ui:skillMonitor.customPanel.counter.title}}**: choose a slot from the preset counters or [your own counters](#custom-counters);
 - **{{ui:skillMonitor.customPanel.hideWhenZero}}**: the counter takes no space while it is 0;
 - **{{ui:skillMonitor.customPanel.counter.voiceConfigure}}**: announce when the count reaches its target.
 
@@ -69,15 +69,58 @@ Some triggers do not show up as Buffs and need counting instead (for example "tr
 | Module / set | N20-Healing Bot Cooldown, N20-Tina ATK Down Cooldown |
 | S4 | Vanguard S4 - Auto Dragon Cannon, Vanguard S4 - Extra Phantom Spiral, Ray S4 - Frost Infusion 4-Piece, Verdant S4 - Inspiration X6 Moonlight Solace |
 
-### Custom counter rules
+### Custom counters
 
-When the presets are not enough, you can build your own in **{{ui:skillMonitor.customPanel.rule.title}}**:
+When the presets are not enough, click **{{ui:skillMonitor.customPanel.counterEditor.new}}** in **{{ui:skillMonitor.customPanel.counter.title}}** to define your own counter with a form. It takes exactly the same settings as the built-in presets; the quickest start is **{{ui:skillMonitor.customPanel.counterEditor.copyFromPreset}}**, then adjust.
 
-1. **{{ui:skillMonitor.customPanel.rule.new}}**;
-2. In **{{ui:skillMonitor.customPanel.rule.sources}}**, choose the event sources that advance the count (multiple allowed);
-3. In **{{ui:skillMonitor.customPanel.rule.slots}}**, choose the slots to show on the panel (multiple allowed);
-4. Fill in **{{ui:skillMonitor.customPanel.rule.name}}** and save;
-5. Go back to a manual zone and use **{{ui:skillMonitor.customPanel.counter.title}}** to select the rule you just saved.
+A counter has two parts:
+
+- **{{ui:skillMonitor.customPanel.counterEditor.sources}}**: which events increase the count. When any source fires, its increment is added to every slot. A counter can also have no source (for example a cooldown driven only by a buff).
+- **{{ui:skillMonitor.customPanel.counterEditor.slots}}**: the rows shown on the panel, each with its own target, reset rules and cooldown.
+
+Once saved, the counter is listed together with the presets and can be added to monitor areas and given voice broadcasts the same way; use ✎ to edit and 🗑 to delete. If something is missing, saving jumps to the field that needs attention.
+
+Skills, damages and Buffs can be searched by name; for anything the name tables do not list, type its ID and press Enter. Rarely needed settings sit under **{{ui:skillMonitor.customPanel.counterEditor.advanced}}** in each source and slot.
+
+> [!NOTE]
+> The old "Custom counter rules" (assembled by ticking factor templates) are replaced by the factor zone. After updating, those rules are deleted automatically, together with their monitor area entries and voice broadcasts.
+
+#### Counting sources
+
+| Type | Adds when |
+| --- | --- |
+| Skill cast / Skill cast completed | One of the chosen skills is cast (or finishes casting) |
+| Timer while skill lasts | At each interval while the chosen skill lasts |
+| Skill hit | Every hit of the chosen damages; Advanced adds "Count once every N hits" and the hit type (crit, block, lucky hit, …) |
+| Skill hit (multi-target counts once) | Hits on several targets at once count only for the most-hit target |
+| Hit on self | The chosen damages hit yourself (e.g. self-heals) |
+| Any hit / Damage taken | You land any hit / you take damage (damage taken can be limited to chosen damages) |
+| Buff gained | You gain the chosen Buff |
+| Buff stacks spent | The chosen Buff loses the given number of stacks |
+| Timer while buff lasts | At each interval while the chosen Buff is present |
+| Distance moved during buff | Each given distance moved while the chosen Buff is present |
+| Combat resource spent | Each given amount of the combat resource spent |
+
+#### Slots
+
+| Setting | Meaning |
+| --- | --- |
+| Target | Leave empty for no target. With a target you can pick the display (count, count/target, remaining, percent) and "Restart from 0 after reaching the target" |
+| Linked buff | Pick a Buff and choose what happens to the count when it is gained / changes / is removed; it can be on yourself or on any teammate |
+| Cooldown | Started by "Pause counting", "Reset and pause" or "Reset and start cooldown"; the panel shows its progress, and "When cooldown ends" decides what happens next |
+| Advanced | Linked buff source config ID, another cooldown while a condition buff is present, cooldown on dungeon start, actions when chosen damages hit or passive skills trigger, target or cooldown scaled down by an attribute |
+
+Available actions:
+
+| Action | Effect |
+| --- | --- |
+| Nothing | The count is unchanged |
+| Reset | The count goes back to 0 |
+| Pause counting | Stops adding; with a cooldown set, also starts it |
+| Resume counting | Adds again |
+| Reset and count | Back to 0 and keeps adding |
+| Reset and pause | Back to 0 and stops adding; with a cooldown set, also starts it |
+| Reset and start cooldown (keep counting) | Back to 0 and starts the cooldown, still adding during it |
 
 This is a feature for advanced users; most users can simply use the presets or a factor zone.
 

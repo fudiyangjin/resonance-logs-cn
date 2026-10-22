@@ -37,7 +37,6 @@
     ensureBuffAliases,
     ensureBuffAlerts,
     ensureBuffVoiceConfigs,
-    ensureCounterVoiceConfigs,
     getSkillBuffDisplayAliases,
     MAX_BUFF_COVERAGE_ENTRIES,
     SETTINGS,
@@ -57,7 +56,6 @@
     type SkillMonitorProfile,
     type TextBuffPanelDisplayMode,
     type TextBuffPanelStyle,
-    type UserCounterRule,
     type OverlayTextStyle,
     ensureOverlayTextStyle,
   } from "$lib/settings-store";
@@ -69,7 +67,6 @@
     getClassConfigs,
     getResourceCountdownBuffIds,
     getSlotTemplates,
-    getSourceTemplates,
     getSkillsByClass,
     resolveUserCounterRulesToPresets,
     searchResonanceSkills,
@@ -97,6 +94,10 @@
     ensureCustomPanelGroups,
     ensureInlineBuffEntries,
   } from "$lib/custom-panel-utils";
+  import {
+    pruneCounterEntriesForSlots,
+    type CounterRuleDefinition,
+  } from "$lib/user-counter-rules";
   import { t } from "$lib/i18n/index.svelte";
   import { open } from "@tauri-apps/plugin-dialog";
   import { toast } from "svelte-sonner";
@@ -139,7 +140,6 @@
 
   const classConfigs = $derived(getClassConfigs());
   const counterRules = $derived(getCounterRules());
-  const sourceTemplates = $derived(getSourceTemplates());
   const slotTemplates = $derived(getSlotTemplates());
   /** The user's own aliases, edited by the alias section. */
   const buffAliases = $derived.by(() =>
@@ -976,17 +976,6 @@
     }));
   }
 
-  function updateUserCounterRules(
-    updater: (rules: UserCounterRule[]) => UserCounterRule[],
-  ) {
-    updateActiveProfile((profile) => ({
-      ...profile,
-      userCounterRules: updater(
-        ensureUserCounterRules(profile.userCounterRules),
-      ),
-    }));
-  }
-
   function getNextUserCounterRuleId(profile: SkillMonitorProfile): number {
     const highestPresetRuleId = counterRules.reduce(
       (maxId, rule) => Math.max(maxId, rule.ruleId),
@@ -998,37 +987,35 @@
     return Math.max(highestPresetRuleId, highestUserRuleId, 10000) + 1;
   }
 
-  function addUserCounterRule(
-    name: string,
-    sourceRefs: string[],
-    slotRefs: string[],
+  /** Creates (`ruleId === null`) or replaces a user rule. Editing keeps the
+   * rule's voice bindings as stored now, and drops panel entries of slots
+   * the edit removed; their voice bindings are pruned on write. */
+  function saveUserCounterRule(
+    body: { name: string } & CounterRuleDefinition,
+    ruleId: number | null,
   ) {
-    const nextName = name.trim();
-    const nextSourceRefs = Array.from(
-      new Set(
-        sourceRefs.filter((item) => typeof item === "string" && item.trim()),
-      ),
-    );
-    const nextSlotRefs = Array.from(
-      new Set(
-        slotRefs.filter((item) => typeof item === "string" && item.trim()),
-      ),
-    );
-    if (!nextName || nextSourceRefs.length === 0 || nextSlotRefs.length === 0) {
-      return;
-    }
-    updateActiveProfile((profile) => ({
-      ...profile,
-      userCounterRules: [
-        ...ensureUserCounterRules(profile.userCounterRules),
+    updateActiveProfile((profile) => {
+      const rules = ensureUserCounterRules(profile.userCounterRules);
+      if (ruleId === null) {
+        return {
+          ...profile,
+          userCounterRules: [
+            ...rules,
+            { ruleId: getNextUserCounterRuleId(profile), ...body },
+          ],
+        };
+      }
+      return pruneCounterEntriesForSlots(
         {
-          ruleId: getNextUserCounterRuleId(profile),
-          name: nextName,
-          sourceRefs: nextSourceRefs,
-          slotRefs: nextSlotRefs,
+          ...profile,
+          userCounterRules: rules.map((rule) =>
+            rule.ruleId === ruleId ? { ...rule, ...body } : rule,
+          ),
         },
-      ],
-    }));
+        ruleId,
+        new Set(body.effectSlots.map((slot) => slot.slotId)),
+      );
+    });
   }
 
   function removeUserCounterRule(ruleId: number) {
@@ -1054,48 +1041,6 @@
           !(entry.sourceType === "counter" && entry.sourceId === ruleId),
       ),
     }));
-  }
-
-  function updateUserCounterRule(
-    ruleId: number,
-    updates: Partial<UserCounterRule>,
-  ) {
-    updateUserCounterRules((rules) =>
-      rules.map((rule) => {
-        if (rule.ruleId !== ruleId) return rule;
-        return {
-          ...rule,
-          ...(updates.name !== undefined
-            ? { name: updates.name.trim() || rule.name }
-            : {}),
-          ...(updates.sourceRefs !== undefined
-            ? {
-                sourceRefs: Array.from(
-                  new Set(
-                    updates.sourceRefs.filter(
-                      (item) => typeof item === "string" && item.trim(),
-                    ),
-                  ),
-                ),
-              }
-            : {}),
-          ...(updates.slotRefs !== undefined
-            ? {
-                slotRefs: Array.from(
-                  new Set(
-                    updates.slotRefs.filter(
-                      (item) => typeof item === "string" && item.trim(),
-                    ),
-                  ),
-                ),
-              }
-            : {}),
-          ...(updates.voice !== undefined
-            ? { voice: ensureCounterVoiceConfigs(updates.voice) }
-            : {}),
-        };
-      }),
-    );
   }
 
   function findCustomPanelEntryLocation(
@@ -2056,9 +2001,10 @@
   {:else if activeTab === "custom-panel"}
     <TabCustomPanel
       counterRules={allCounterRules}
-      {sourceTemplates}
+      presetCounterRules={counterRules}
       {slotTemplates}
       {userCounterRules}
+      {selectedClassKey}
       {availableBuffMap}
       {getBuffDisplayName}
       {getBuffIconPreviewSrc}
@@ -2074,9 +2020,8 @@
       {updateCustomPanelGroupStyle}
       {setCustomPanelGroupHideZeroCounters}
       {addCustomPanelEntry}
-      {addUserCounterRule}
+      {saveUserCounterRule}
       {removeUserCounterRule}
-      {updateUserCounterRule}
       {removeCustomPanelEntry}
       {setCustomPanelEntryLabel}
       {setCustomPanelEntryHideWhenZero}

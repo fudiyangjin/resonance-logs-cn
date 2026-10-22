@@ -122,6 +122,7 @@ impl MonitorRuntimeSnapshot {
         self.skill
             .buff_counter_rules
             .dedup_by_key(|rule| rule.rule_id);
+        dedup_counter_slots(&mut self.skill.buff_counter_rules);
         self.skill.season_cultivate_factor_templates = normalize_factor_templates(std::mem::take(
             &mut self.skill.season_cultivate_factor_templates,
         ));
@@ -190,6 +191,25 @@ impl MonitorRuntimeSnapshot {
         }
 
         Ok(self)
+    }
+}
+
+/// Keeps the first slot of each id in every rule. The counter engine rejects
+/// a repeated slot id only when it compiles the rules, after the snapshot is
+/// already saved, so a hand-edited rule would otherwise stop the whole
+/// config from applying on every start.
+fn dedup_counter_slots(rules: &mut [CounterRule]) {
+    for rule in rules {
+        let before = rule.effect_slots.len();
+        let mut seen = std::collections::HashSet::with_capacity(before);
+        rule.effect_slots.retain(|slot| seen.insert(slot.slot_id));
+        if rule.effect_slots.len() != before {
+            warn!(
+                target: "app::live",
+                "counter rule {} repeats slot ids; kept the first of each",
+                rule.rule_id
+            );
+        }
     }
 }
 
@@ -567,6 +587,30 @@ mod tests {
                 .live
                 .training_window_ms,
             600_000
+        );
+    }
+
+    #[test]
+    fn normalize_keeps_the_first_counter_slot_of_each_id() {
+        let rule: CounterRule = serde_json::from_str(
+            r#"{"ruleId":10001,"sources":[],"effectSlots":[
+                {"slotId":1,"threshold":10,"resetBuffId":1},
+                {"slotId":2,"threshold":20,"resetBuffId":2},
+                {"slotId":1,"threshold":30,"resetBuffId":3}
+            ]}"#,
+        )
+        .expect("counter rule deserializes");
+        let mut snapshot = MonitorRuntimeSnapshot::default();
+        snapshot.skill.enabled = true;
+        snapshot.skill.buff_counter_rules = vec![rule];
+        let normalized = snapshot.normalize().expect("snapshot is valid");
+        let slots = &normalized.skill.buff_counter_rules[0].effect_slots;
+        assert_eq!(
+            slots
+                .iter()
+                .map(|slot| (slot.slot_id, slot.threshold))
+                .collect::<Vec<_>>(),
+            vec![(1, Some(10)), (2, Some(20))]
         );
     }
 
