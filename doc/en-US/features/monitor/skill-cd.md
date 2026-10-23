@@ -5,9 +5,10 @@
 ## Choosing skills
 
 1. Pick a class in **{{ui:skillMonitor.skillCd.class.title}}**; that class's skills are listed below.
-2. In **{{ui:skillMonitor.skillCd.skills.title}}**, select up to **10** skills. Class and resonance skills share this limit.
+2. In **{{ui:skillMonitor.skillCd.skills.title}}**, select up to **10** skills. Class, resonance and role skills share this limit.
 3. **{{ui:skillMonitor.skillCd.resonance.title}}** are not listed automatically; add them by searching for their name in the search box.
-4. Arrange skills in **{{ui:skillMonitor.skillCd.preview.title}}**. The default grid is 2 rows × 5 columns; each dimension can be set from **1 to 10**.
+4. In **{{ui:skillMonitor.skillCd.duty.title}}**, select attack, survival, support or encyclopedia role skills to display their icons and cooldowns. Unyielding Spirit supports two charges.
+5. Arrange skills in **{{ui:skillMonitor.skillCd.preview.title}}**. The default grid is 2 rows × 5 columns; each dimension can be set from **1 to 10**.
 
 ## Arranging skills
 

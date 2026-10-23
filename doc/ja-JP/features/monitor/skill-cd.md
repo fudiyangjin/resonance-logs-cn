@@ -5,9 +5,10 @@
 ## スキルを選ぶ
 
 1. **{{ui:skillMonitor.skillCd.class.title}}** でクラスを選ぶと、そのクラスのスキルが下に一覧表示されます。
-2. **{{ui:skillMonitor.skillCd.skills.title}}** で最大 **10** 個のスキルを選択します。クラススキルと共鳴スキルでこの上限を共有します。
+2. **{{ui:skillMonitor.skillCd.skills.title}}** で最大 **10** 個のスキルを選択します。クラス・共鳴・ロールスキルでこの上限を共有します。
 3. **{{ui:skillMonitor.skillCd.resonance.title}}** は自動では一覧に出ないため、検索ボックスで名前を検索して追加します。
-4. **{{ui:skillMonitor.skillCd.preview.title}}** でスキルを配置します。初期値は2行 × 5列で、行数・列数をそれぞれ **1～10** に設定できます。
+4. **{{ui:skillMonitor.skillCd.duty.title}}** で攻撃・生存・支援・図鑑のロールスキルを選ぶと、アイコンと残りクールダウンを表示します。「不屈の闘志」は2回分のチャージに対応しています。
+5. **{{ui:skillMonitor.skillCd.preview.title}}** でスキルを配置します。初期値は2行 × 5列で、行数・列数をそれぞれ **1～10** に設定できます。
 
 ## スキルの配置
 

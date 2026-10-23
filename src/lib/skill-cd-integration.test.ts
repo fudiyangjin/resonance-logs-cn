@@ -90,6 +90,35 @@ function edit(action: SkillCdAction) {
 describe("skill CD profile integration", () => {
   beforeEach(setup);
 
+  it("persists mixed duty skills and subscribes them through the existing runtime", () => {
+    edit({ kind: "toggle", skillId: 3612 });
+    edit({ kind: "toggle", skillId: 3028 });
+    expect(buildMonitorRuntimeSnapshot().skill.monitoredSkillIds).toEqual([
+      1420, 1421, 3028, 3612,
+    ]);
+    const parsed = parseLoadoutExport(
+      JSON.parse(JSON.stringify(exportLoadout("layout-test"))),
+    );
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) throw new Error(parsed.issues.join("\n"));
+    switchLoadout(importLoadout(parsed.output));
+    expect(activeProfile()!.monitoredSkillIds).toEqual([
+      1420, 1421, 3612, 3028,
+    ]);
+    expect(activeProfile()!.skillCdLayout!.positions[3612]).toEqual({
+      row: 0,
+      column: 0,
+    });
+    // The SSR test environment does not recompute loadouts' module-level
+    // $derived value used by the production writer; edit the original here.
+    switchLoadout("layout-test");
+    edit({ kind: "remove", skillId: 3612 });
+    expect(buildMonitorRuntimeSnapshot().skill.monitoredSkillIds).toEqual([
+      1420, 1421, 3028,
+    ]);
+    expect(activeProfile()!.skillCdLayout!.positions[3612]).toBeUndefined();
+  });
+
   it("keeps valid layout coordinates through save, load, export and import", () => {
     const expected = activeProfile()!.skillCdLayout;
     const reloaded = reconcileMonitoringState(

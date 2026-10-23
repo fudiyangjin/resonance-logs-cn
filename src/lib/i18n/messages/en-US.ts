@@ -1317,6 +1317,12 @@ export const enUSMessages = {
   "skillMonitor.skillCd.skills.title": "Skill Selection",
   "skillMonitor.skillCd.skills.description":
     "Monitor up to 10 skills and arrange their cells in the layout below",
+  "skillMonitor.skillCd.duty.title": "Role Skills",
+  "skillMonitor.skillCd.duty.description": "Select role skills to monitor. Class, resonance and role skills share a limit of 10.",
+  "skillMonitor.skillCd.duty.attack": "Attack",
+  "skillMonitor.skillCd.duty.survival": "Survival",
+  "skillMonitor.skillCd.duty.support": "Support",
+  "skillMonitor.skillCd.duty.encyclopedia": "Encyclopedia Role Skills",
   "skillMonitor.skillCd.resonance.title": "Resonance Skills",
   "skillMonitor.skillCd.resonance.description":
     "Search for resonance skills. Monitor up to 10 skills in total, including normal skills",

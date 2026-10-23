@@ -1195,6 +1195,12 @@ export const zhCNMessages = {
     "支持当前已配置的职业技能方案；切换职业会清空当前方案已选的技能和技能语音播报",
   "skillMonitor.skillCd.skills.title": "技能选择",
   "skillMonitor.skillCd.skills.description": "最多监控 10 个技能，可在下方布局中自由调整格子",
+  "skillMonitor.skillCd.duty.title": "职责技能",
+  "skillMonitor.skillCd.duty.description": "点击添加职责技能，与职业、共鸣技能合计最多监控 10 个技能。",
+  "skillMonitor.skillCd.duty.attack": "攻击",
+  "skillMonitor.skillCd.duty.survival": "生存",
+  "skillMonitor.skillCd.duty.support": "辅助",
+  "skillMonitor.skillCd.duty.encyclopedia": "图鉴职责技能",
   "skillMonitor.skillCd.resonance.title": "共鸣技能",
   "skillMonitor.skillCd.resonance.description":
     "通过搜索选择共鸣技能，与普通技能合计最多监控 10 个技能",

@@ -1289,6 +1289,12 @@ export const jaJPMessages = {
   "skillMonitor.skillCd.skills.title": "スキル選択",
   "skillMonitor.skillCd.skills.description":
     "最大10個のスキルを監視できます。下のレイアウトでマスを自由に配置できます",
+  "skillMonitor.skillCd.duty.title": "ロールスキル",
+  "skillMonitor.skillCd.duty.description": "クリックして監視に追加します。クラス・共鳴・ロールスキルの合計上限は10個です。",
+  "skillMonitor.skillCd.duty.attack": "攻撃",
+  "skillMonitor.skillCd.duty.survival": "生存",
+  "skillMonitor.skillCd.duty.support": "支援",
+  "skillMonitor.skillCd.duty.encyclopedia": "図鑑ロールスキル",
   "skillMonitor.skillCd.resonance.title": "共鳴スキル",
   "skillMonitor.skillCd.resonance.description":
     "共鳴スキルを検索します。通常スキルと合わせて最大10個のスキルを監視できます",

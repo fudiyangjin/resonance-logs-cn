@@ -5,9 +5,10 @@
 ## 选择技能
 
 1. 在 **{{ui:skillMonitor.skillCd.class.title}}** 中选择职业，下方会列出该职业的技能。
-2. 在 **{{ui:skillMonitor.skillCd.skills.title}}** 中勾选要监控的技能，最多 **10** 个。职业技能与共鸣技能共用此上限。
+2. 在 **{{ui:skillMonitor.skillCd.skills.title}}** 中勾选要监控的技能，最多 **10** 个。职业、共鸣与职责技能共用此上限。
 3. **{{ui:skillMonitor.skillCd.resonance.title}}** 不会自动列出，需要在搜索框中按名称搜索添加。
-4. 在 **{{ui:skillMonitor.skillCd.preview.title}}** 中调整技能位置。默认 2 行 × 5 列，行、列均可设置为 **1～10**。
+4. 在 **{{ui:skillMonitor.skillCd.duty.title}}** 中直接选择攻击、生存、辅助或图鉴职责技能，使用对应图标显示冷却；「不屈斗志」支持两层充能显示。
+5. 在 **{{ui:skillMonitor.skillCd.preview.title}}** 中调整技能位置。默认 2 行 × 5 列，行、列均可设置为 **1～10**。
 
 ## 调整技能布局
 

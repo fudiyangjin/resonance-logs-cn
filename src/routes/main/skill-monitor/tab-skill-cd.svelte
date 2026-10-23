@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { type ClassSkillConfig, type ResonanceSkillDefinition, type SkillDefinition } from "$lib/skill-mappings";
+  import {
+    getDutySkills,
+    type DutySkillGroup,
+    type ClassSkillConfig,
+    type ResonanceSkillDefinition,
+    type SkillDefinition,
+  } from "$lib/skill-mappings";
   import { MAX_MONITORED_SKILLS, type SkillCdAction, type SkillCdLayout, type SkillCdPosition } from "$lib/skill-cd-layout";
   import SkillCdLayoutEditor from "./skill-cd-layout-editor.svelte";
   import { t } from "$lib/i18n/index.svelte";
@@ -38,7 +44,16 @@
   }: Props = $props();
 
   let selectedCell = $state<SkillCdPosition | null>(null);
-  const layoutSkills = $derived([...classSkills, ...selectedResonanceSkills]);
+  const dutySkills = $derived(getDutySkills());
+  const dutyGroups: DutySkillGroup[] = [
+    "attack", "survival", "support", "encyclopedia",
+  ];
+  const selectedDutySkills = $derived(
+    dutySkills.filter((skill) => monitoredSkillIds.includes(skill.skillId)),
+  );
+  const layoutSkills = $derived([
+    ...classSkills, ...selectedDutySkills, ...selectedResonanceSkills,
+  ]);
 
   function changeLayout(action: SkillCdAction): boolean {
     return onSkillCdAction(action, profileId, selectedClassKey);
@@ -194,6 +209,39 @@
         {/if}
       </div>
     </div>
+  </div>
+
+  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.skillCd.duty.title")}</h2>
+        <p class="text-xs text-muted-foreground">{t("skillMonitor.skillCd.duty.description")}</p>
+      </div>
+      <div class="text-xs text-muted-foreground">
+        {t("skillMonitor.common.selectedCount", { count: selectedDutySkills.length })}
+      </div>
+    </div>
+    {#each dutyGroups as group (group)}
+      <div class="space-y-2">
+        <h3 class="text-sm font-medium">{t(`skillMonitor.skillCd.duty.${group}`)}</h3>
+        <div class="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3">
+          {#each dutySkills.filter((skill) => skill.group === group) as skill (skill.skillId)}
+            <button
+              type="button"
+              class="flex items-center gap-2 rounded-lg border p-2 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
+                ? 'border-primary bg-primary/10 ring-1 ring-primary'
+                : 'border-border/60 hover:bg-muted/30'}"
+              title={`${skill.name} (#${skill.skillId})`}
+              aria-pressed={isSelected(skill.skillId)}
+              onclick={() => toggleSkill(skill.skillId)}
+            >
+              <img src={skill.imagePath} alt="" class="size-11 shrink-0 object-contain" />
+              <span class="min-w-0 flex-1 text-xs break-words">{skill.name}</span>
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/each}
   </div>
 
   <SkillCdLayoutEditor

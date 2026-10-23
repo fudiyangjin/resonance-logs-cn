@@ -1,0 +1,142 @@
+[
+  {
+    "skillId": 3611,
+    "name": "超频震爆",
+    "imagePath": "/images/dutyskill/skill_gj_01.png",
+    "group": "attack",
+    "dutyTypes": [1]
+  },
+  {
+    "skillId": 3612,
+    "name": "不屈斗志",
+    "imagePath": "/images/dutyskill/skill_gj_02.png",
+    "group": "attack",
+    "dutyTypes": [1]
+  },
+  {
+    "skillId": 3613,
+    "name": "静息指令·极",
+    "imagePath": "/images/dutyskill/skill_gj_03.png",
+    "group": "attack",
+    "dutyTypes": [1]
+  },
+  {
+    "skillId": 3614,
+    "name": "能量回流",
+    "imagePath": "/images/dutyskill/skill_gj_04.png",
+    "group": "attack",
+    "dutyTypes": [1]
+  },
+  {
+    "skillId": 3012,
+    "name": "超频震爆·止",
+    "imagePath": "/images/dutyskill/skill_sc_01.png",
+    "group": "survival",
+    "dutyTypes": [3]
+  },
+  {
+    "skillId": 3011,
+    "name": "强制受击",
+    "imagePath": "/images/dutyskill/skill_sc_02.png",
+    "group": "survival",
+    "dutyTypes": [3]
+  },
+  {
+    "skillId": 3013,
+    "name": "不屈斗志·御",
+    "imagePath": "/images/dutyskill/skill_sc_03.png",
+    "group": "survival",
+    "dutyTypes": [3]
+  },
+  {
+    "skillId": 3014,
+    "name": "静息指令·御",
+    "imagePath": "/images/dutyskill/skill_sc_04.png",
+    "group": "survival",
+    "dutyTypes": [3]
+  },
+  {
+    "skillId": 3311,
+    "name": "超频震爆·默",
+    "imagePath": "/images/dutyskill/skill_fz_01.png",
+    "group": "support",
+    "dutyTypes": [2]
+  },
+  {
+    "skillId": 3312,
+    "name": "复苏祷言",
+    "imagePath": "/images/dutyskill/skill_fz_02.png",
+    "group": "support",
+    "dutyTypes": [2]
+  },
+  {
+    "skillId": 3313,
+    "name": "生命屏障",
+    "imagePath": "/images/dutyskill/skill_fz_03.png",
+    "group": "support",
+    "dutyTypes": [2]
+  },
+  {
+    "skillId": 3314,
+    "name": "静息指令",
+    "imagePath": "/images/dutyskill/skill_fz_04.png",
+    "group": "support",
+    "dutyTypes": [2]
+  },
+  {
+    "skillId": 3021,
+    "name": "雷霆天引",
+    "imagePath": "/images/dutyskill/skill_aoyi_skill_icon_014.png",
+    "group": "encyclopedia",
+    "dutyTypes": [1, 2, 3]
+  },
+  {
+    "skillId": 3022,
+    "name": "琉火咆哮",
+    "imagePath": "/images/dutyskill/skill_aoyi_skill_icon_017.png",
+    "group": "encyclopedia",
+    "dutyTypes": [1, 2, 3]
+  },
+  {
+    "skillId": 3023,
+    "name": "脉冲祝祷",
+    "imagePath": "/images/dutyskill/skill_aoyi_skill_icon_012.png",
+    "group": "encyclopedia",
+    "dutyTypes": [1, 2, 3]
+  },
+  {
+    "skillId": 3024,
+    "name": "地狱突刺",
+    "imagePath": "/images/dutyskill/skill_aoyi_skill_icon_047.png",
+    "group": "encyclopedia",
+    "dutyTypes": [1, 2, 3]
+  },
+  {
+    "skillId": 3025,
+    "name": "雷霆咆哮",
+    "imagePath": "/images/dutyskill/skill_aoyi_skill_icon_038.png",
+    "group": "encyclopedia",
+    "dutyTypes": [1, 2, 3]
+  },
+  {
+    "skillId": 3026,
+    "name": "静默潮汐",
+    "imagePath": "/images/dutyskill/skill_aoyi_skill_icon_049.png",
+    "group": "encyclopedia",
+    "dutyTypes": [1, 2, 3]
+  },
+  {
+    "skillId": 3027,
+    "name": "生命祈愿",
+    "imagePath": "/images/dutyskill/skill_aoyi_skill_icon_013.png",
+    "group": "encyclopedia",
+    "dutyTypes": [1, 2, 3]
+  },
+  {
+    "skillId": 3028,
+    "name": "佑世边界",
+    "imagePath": "/images/dutyskill/skill_aoyi_skill_icon_054.png",
+    "group": "encyclopedia",
+    "dutyTypes": [1, 2, 3]
+  }
+]

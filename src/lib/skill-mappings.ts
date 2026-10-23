@@ -1,6 +1,7 @@
 import keySkillMarkersRaw from "$lib/config/key_skill_markers.json";
 import resonanceSkillIconsRaw from "$lib/config/skill_aoyi_icons.json";
 import classSkillConfigsRaw from "$lib/config/class_skill_configs.json";
+import dutySkillsRaw from "$lib/config/duty_skills.json";
 import classResourcesRaw from "$lib/config/class_resources.json";
 import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays.json";
 import counterRulesRaw from "$lib/config/counter_rules.json";
@@ -33,6 +34,12 @@ export type SkillDisplayInfo = {
 };
 
 export type SkillDefinition = SkillDisplayInfo;
+
+export type DutySkillGroup = "attack" | "survival" | "support" | "encyclopedia";
+export type DutySkillDefinition = SkillDisplayInfo & {
+  group: DutySkillGroup;
+  dutyTypes: number[];
+};
 
 export type ClassSkillConfig = {
   classKey: string;
@@ -248,6 +255,9 @@ export const RESONANCE_SKILLS: ResonanceSkillDefinition[] =
   buildResonanceSkills(RESONANCE_SKILL_ICONS, new Map());
 
 const KEY_SKILL_MARKERS = keySkillMarkersRaw as KeySkillMarkerRaw[];
+
+const DUTY_SKILLS = dutySkillsRaw as DutySkillDefinition[];
+const DUTY_SKILLS_BY_LOCALE = new Map<AppLocale, DutySkillDefinition[]>();
 
 export const COUNTER_RULES: CounterRulePreset[] =
   counterRulesRaw as CounterRulePreset[];
@@ -1031,6 +1041,28 @@ export function findResonanceSkill(
   return getResonanceSkills(locale).find((skill) => skill.skillId === skillId);
 }
 
+export function getDutySkills(locale = getLocale()): DutySkillDefinition[] {
+  const cached = DUTY_SKILLS_BY_LOCALE.get(locale);
+  if (cached) return cached;
+  const overrides = mapByNumber(
+    getLocaleConfig<Partial<SkillDisplayInfo>[]>(locale, "duty_skills.json") ?? [],
+    (item) => numberKey(item.skillId),
+  );
+  const localized = DUTY_SKILLS.map((skill) => ({
+    ...skill,
+    name: localizedText(overrides.get(skill.skillId)?.name, skill.name),
+  }));
+  DUTY_SKILLS_BY_LOCALE.set(locale, localized);
+  return localized;
+}
+
+export function findDutySkill(
+  skillId: number,
+  locale = getLocale(),
+): DutySkillDefinition | undefined {
+  return getDutySkills(locale).find((skill) => skill.skillId === skillId);
+}
+
 export function findKeySkillMarker(
   skillId: number,
   locale = getLocale(),
@@ -1058,6 +1090,7 @@ export function findAnySkillByBaseId(
 ): SkillDisplayInfo | undefined {
   return (
     findSkillById(classKey, skillId, locale) ??
+    findDutySkill(skillId, locale) ??
     findResonanceSkill(skillId, locale)
   );
 }
