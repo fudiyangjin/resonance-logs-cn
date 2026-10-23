@@ -124,7 +124,7 @@ describe("ensureTeammatePanelStyle", () => {
     const style = ensureTeammatePanelStyle({
       deadNameColor: "#123456",
       deadRowPlacement: "beside",
-    } as Parameters<typeof ensureTeammatePanelStyle>[0]);
+    } as unknown as Parameters<typeof ensureTeammatePanelStyle>[0]);
     expect(style.deadNameColor).toBe("#123456");
     expect(style.deadRowPlacement).toBe("last");
   });

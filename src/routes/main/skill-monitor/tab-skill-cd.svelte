@@ -1,9 +1,14 @@
 <script lang="ts">
-  import { findAnySkillByBaseId, type ClassSkillConfig, type ResonanceSkillDefinition, type SkillDefinition } from "$lib/skill-mappings";
+  import { type ClassSkillConfig, type ResonanceSkillDefinition, type SkillDefinition } from "$lib/skill-mappings";
+  import { MAX_MONITORED_SKILLS, type SkillCdAction, type SkillCdLayout, type SkillCdPosition } from "$lib/skill-cd-layout";
+  import SkillCdLayoutEditor from "./skill-cd-layout-editor.svelte";
   import { t } from "$lib/i18n/index.svelte";
   import SkillVoiceSection from "./skill-voice-section.svelte";
 
   interface Props {
+    profileId: string;
+    skillCdLayout: SkillCdLayout;
+    onSkillCdAction: (action: SkillCdAction, profileId: string, classKey: string) => boolean;
     classConfigs: ClassSkillConfig[];
     selectedClassKey: string;
     classSkills: SkillDefinition[];
@@ -12,13 +17,14 @@
     filteredResonanceSkills: ResonanceSkillDefinition[];
     selectedResonanceSkills: ResonanceSkillDefinition[];
     setSelectedClass: (classKey: string) => void;
-    toggleSkill: (skillId: number) => void;
     isSelected: (skillId: number) => boolean;
-    clearSkills: () => void;
     setResonanceSearch: (value: string) => void;
   }
 
   let {
+    profileId,
+    skillCdLayout,
+    onSkillCdAction,
     classConfigs,
     selectedClassKey,
     classSkills,
@@ -27,11 +33,20 @@
     filteredResonanceSkills,
     selectedResonanceSkills,
     setSelectedClass,
-    toggleSkill,
     isSelected,
-    clearSkills,
     setResonanceSearch,
   }: Props = $props();
+
+  let selectedCell = $state<SkillCdPosition | null>(null);
+  const layoutSkills = $derived([...classSkills, ...selectedResonanceSkills]);
+
+  function changeLayout(action: SkillCdAction): boolean {
+    return onSkillCdAction(action, profileId, selectedClassKey);
+  }
+
+  function toggleSkill(skillId: number) {
+    changeLayout({ kind: "toggle", skillId, preferredCell: selectedCell ?? undefined });
+  }
 </script>
 
 <div class="space-y-6">
@@ -67,12 +82,12 @@
       </div>
       <div class="flex items-center gap-3">
         <div class="text-xs text-muted-foreground">
-          {t("skillMonitor.common.selectedTotal", { count: monitoredSkillIds.length, total: 10 })}
+          {t("skillMonitor.common.selectedTotal", { count: monitoredSkillIds.length, total: MAX_MONITORED_SKILLS })}
         </div>
         <button
           type="button"
           class="text-xs px-2 py-1 rounded border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
-          onclick={clearSkills}
+          onclick={() => changeLayout({ kind: "clear" })}
         >
           {t("skillMonitor.common.clear")}
         </button>
@@ -181,43 +196,13 @@
     </div>
   </div>
 
-  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
-    <div>
-      <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.skillCd.preview.title")}</h2>
-      <p class="text-xs text-muted-foreground">{t("skillMonitor.skillCd.preview.description")}</p>
-    </div>
-    <div class="grid grid-cols-5 gap-2">
-      {#each Array(10) as _, idx (idx)}
-        {@const skillId = monitoredSkillIds[idx]}
-        {@const skill = skillId ? findAnySkillByBaseId(selectedClassKey, skillId) : undefined}
-        <button
-          type="button"
-          class="relative rounded-md border border-border/60 overflow-hidden bg-muted/20 aspect-square text-left {skillId
-            ? 'hover:border-border hover:bg-muted/30'
-            : ''}"
-          onclick={() => {
-            if (skillId) toggleSkill(skillId);
-          }}
-        >
-          {#if skill?.imagePath}
-            <img
-              src={skill.imagePath}
-              alt={skill.name}
-              class="w-full h-full object-cover"
-            />
-          {:else if skillId}
-            <div class="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">
-              #{skillId}
-            </div>
-          {:else}
-            <div class="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">
-              {t("skillMonitor.common.empty")}
-            </div>
-          {/if}
-        </button>
-      {/each}
-    </div>
-  </div>
+  <SkillCdLayoutEditor
+    layout={skillCdLayout}
+    skills={layoutSkills}
+    {selectedCell}
+    onSelect={(cell) => selectedCell = cell}
+    onAction={changeLayout}
+  />
 
   <SkillVoiceSection {selectedClassKey} {classSkills} />
 </div>

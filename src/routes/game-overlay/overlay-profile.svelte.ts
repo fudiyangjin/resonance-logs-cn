@@ -7,6 +7,7 @@ import {
   type TextBuffPanelStyle,
 } from "$lib/settings-store";
 import { buildConfiguredBuffPlan } from "$lib/buff-monitor-plan";
+import { normalizeSkillCdLayout } from "$lib/skill-cd-layout";
 import { ensureBuffComposites } from "$lib/buff-composites";
 import { ensureResourceSections } from "$lib/resource-sections";
 import { ensureBuffIconOverrides } from "$lib/buff-icons";
@@ -60,6 +61,13 @@ const _buffIconOverrides = $derived.by(() =>
 const _monitoredSkillIds = $derived.by(
   () => _activeProfile?.monitoredSkillIds ?? [],
 );
+const _skillCdLayout = $derived(normalizeSkillCdLayout(
+  _activeProfile ?? { monitoredSkillIds: [] },
+));
+
+export function skillCdLayout() {
+  return _skillCdLayout;
+}
 const _monitoredBuffIds = $derived.by(
   () => _activeProfile?.monitoredBuffIds ?? [],
 );

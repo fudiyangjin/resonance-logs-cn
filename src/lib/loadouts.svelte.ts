@@ -151,7 +151,7 @@ export function duplicateLoadout(id: string): string | null {
     ? // Deep-clone so the copy owns its nested arrays/objects instead of
       // aliasing the source profile's.
       {
-        ...deepCloneSettings(sourceSkillProfile),
+        ...normalizeSkillProfile(deepCloneSettings(sourceSkillProfile)),
         id: generateProfileId("skill"),
       }
     : createDefaultSkillMonitorProfile();
@@ -362,7 +362,7 @@ function materializeLoadout(
   const skillProfile: SkillMonitorProfile = pruneSkillProfileVoice(
     pruneUnknownCompositeRefs(
       {
-        ...deepCloneSettings(data.skillProfile),
+        ...normalizeSkillProfile({ ...deepCloneSettings(data.skillProfile), id: "" }),
         id: generateProfileId("skill"),
       },
       new Set(skillState.buffComposites.map((composite) => composite.id)),

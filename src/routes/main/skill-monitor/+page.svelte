@@ -4,6 +4,7 @@
     type MonitorTabGroup,
   } from "$lib/components/monitor-tab-nav.svelte";
   import TabSkillCd from "./tab-skill-cd.svelte";
+  import { changeSkillCdSelection, normalizeSkillCdLayout, type SkillCdAction } from "$lib/skill-cd-layout";
   import TabBuffMonitor from "./tab-buff-monitor.svelte";
   import TabPanelAttr from "./tab-panel-attr.svelte";
   import TabCustomPanel from "./tab-custom-panel.svelte";
@@ -61,6 +62,7 @@
   } from "$lib/settings-store";
   import {
     findResonanceSkill,
+    findAnySkillByBaseId,
     ensureUserCounterRules,
     getCounterDisplayLabel,
     getCounterRules,
@@ -176,6 +178,7 @@
   const selectedClassKey = $derived(activeProfile.selectedClass);
   const classSkills = $derived(getSkillsByClass(selectedClassKey));
   const monitoredSkillIds = $derived(activeProfile.monitoredSkillIds);
+  const skillCdLayout = $derived(normalizeSkillCdLayout(activeProfile));
   const monitoredBuffIds = $derived(activeProfile.monitoredBuffIds);
   const monitoredBuffCategories = $derived.by(() =>
     normalizeBuffCategoryKeys(activeProfile.monitoredBuffCategories),
@@ -401,25 +404,27 @@
       ...profile,
       selectedClass: classKey,
       monitoredSkillIds: [],
+      skillCdLayout: { ...normalizeSkillCdLayout(profile), positions: {} },
       skillVoiceConfigs: {},
     }));
   }
 
-  function toggleSkill(skillId: number) {
-    const current = monitoredSkillIds;
-    const exists = current.includes(skillId);
-    if (exists) {
-      updateActiveProfile((profile) => ({
-        ...profile,
-        monitoredSkillIds: current.filter((id) => id !== skillId),
-      }));
-      return;
-    }
-    if (current.length >= 10) return;
-    updateActiveProfile((profile) => ({
-      ...profile,
-      monitoredSkillIds: [...current, skillId],
-    }));
+  function changeSkillCd(action: SkillCdAction, profileId: string, classKey: string): boolean {
+    let changed = false;
+    updateActiveProfile((profile) => {
+      if (profile.id !== profileId || profile.selectedClass !== classKey) return profile;
+      const result = changeSkillCdSelection(profile, action);
+      if (!result.ok) {
+        const skills = result.skillIds.map((id) =>
+          findAnySkillByBaseId(profile.selectedClass, id)?.name || `#${id}`,
+        ).join(", ");
+        toast.error(t(`skillMonitor.skillCd.layout.error.${result.reason}`, { skills }));
+        return profile;
+      }
+      changed = true;
+      return { ...profile, monitoredSkillIds: result.monitoredSkillIds, skillCdLayout: result.skillCdLayout };
+    });
+    return changed;
   }
 
   function isSelected(skillId: number): boolean {
@@ -435,10 +440,6 @@
       .filter((skill): skill is NonNullable<typeof skill> => Boolean(skill))
       .slice(0, 10),
   );
-
-  function clearSkills() {
-    updateActiveProfile((profile) => ({ ...profile, monitoredSkillIds: [] }));
-  }
 
   function clearBuffs() {
     updateActiveProfile((profile) => ({
@@ -1855,8 +1856,11 @@
   </div>
 
   {#if activeTab === "skill-cd"}
-    {#key activeProfile.id}
+    {#key `${activeProfile.id}:${selectedClassKey}:${skillCdLayout.rows}:${skillCdLayout.columns}`}
       <TabSkillCd
+        profileId={activeProfile.id}
+        {skillCdLayout}
+        onSkillCdAction={changeSkillCd}
         {classConfigs}
         {selectedClassKey}
         {classSkills}
@@ -1865,9 +1869,7 @@
         {filteredResonanceSkills}
         {selectedResonanceSkills}
         {setSelectedClass}
-        {toggleSkill}
         {isSelected}
-        {clearSkills}
         {setResonanceSearch}
       />
     {/key}

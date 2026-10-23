@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { MAX_SKILL_CD_GRID_SIZE, normalizeSkillCdLayout } from "./skill-cd-layout";
 import {
   createDefaultCustomPanelGroup,
   createDefaultLiveMeterProfileData,
@@ -582,6 +583,14 @@ const skillProfileSchema = v.object({
   autoHideInDailyScenes: v.optional(v.boolean(), false),
   selectedClass: v.string(),
   monitoredSkillIds: numberArraySchema,
+  skillCdLayout: v.optional(v.object({
+    rows: v.pipe(finiteNumberSchema, v.integer(), v.minValue(1), v.maxValue(MAX_SKILL_CD_GRID_SIZE)),
+    columns: v.pipe(finiteNumberSchema, v.integer(), v.minValue(1), v.maxValue(MAX_SKILL_CD_GRID_SIZE)),
+    positions: v.record(numericKeySchema, v.object({
+      row: v.pipe(finiteNumberSchema, v.integer(), v.minValue(0), v.maxValue(MAX_SKILL_CD_GRID_SIZE - 1)),
+      column: v.pipe(finiteNumberSchema, v.integer(), v.minValue(0), v.maxValue(MAX_SKILL_CD_GRID_SIZE - 1)),
+    })),
+  })),
   // Legacy (pre-entity-duration) exports; mapped onto the monster profile's
   // entity-duration entries after parsing and then dropped.
   monitoredSkillDurationIds: v.optional(numberArraySchema, () => []),
@@ -702,7 +711,7 @@ const monsterProfileSchema = v.object({
   ),
   teammateBuffColumnStyles: v.optional(
     v.record(teammateColumnSchema, teammateColumnStyleSchema),
-    defaultClone(defaultMonster.teammateBuffColumnStyles ?? {}),
+    () => ({}),
   ),
   fantasyWhitelistMonsterIds: numberArraySchema,
   fantasyMonsterAliases: numericStringRecordSchema,
@@ -1091,6 +1100,7 @@ export function parseLoadoutExport(data: unknown): LoadoutParseResult {
     version: 2,
   } as unknown as LegacyAwareLoadoutExport;
   migrateLegacyLoadoutExport(output);
+  output.skillProfile.skillCdLayout = normalizeSkillCdLayout(output.skillProfile);
   return { success: true, output: output as unknown as LoadoutExport };
 }
 

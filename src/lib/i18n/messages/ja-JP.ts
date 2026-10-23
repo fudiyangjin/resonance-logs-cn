@@ -1288,18 +1288,29 @@ export const jaJPMessages = {
     "現在設定されているクラススキルプロファイルに対応。クラスを切り替えると、このロードアウトで選択したスキルとスキル音声読み上げがクリアされます",
   "skillMonitor.skillCd.skills.title": "スキル選択",
   "skillMonitor.skillCd.skills.description":
-    "最大10スキルをモニター（2行 x 5列）",
+    "最大10個のスキルを監視できます。下のレイアウトでマスを自由に配置できます",
   "skillMonitor.skillCd.resonance.title": "共鳴スキル",
   "skillMonitor.skillCd.resonance.description":
-    "共鳴スキルを検索します。通常スキルと10個のモニタースロットを共有",
+    "共鳴スキルを検索します。通常スキルと合わせて最大10個のスキルを監視できます",
   "skillMonitor.skillCd.resonance.placeholder": "共鳴スキル名を検索",
   "skillMonitor.skillCd.resonance.searchPrompt":
     "キーワードを入力して共鳴スキルを検索",
   "skillMonitor.skillCd.resonance.selectedTitle": "選択した共鳴スキル",
   "skillMonitor.skillCd.resonance.noneSelected":
     "共鳴スキルが選択されていません",
-  "skillMonitor.skillCd.preview.title": "モニタープレビュー",
-  "skillMonitor.skillCd.preview.description": "選択順に並べ替え",
+  "skillMonitor.skillCd.preview.title": "スキル配置",
+  "skillMonitor.skillCd.preview.description": "空きマスへドラッグすると移動、スキルへドラッグすると入れ替えます。オーバーレイは右端・下端の空白を詰め、意図した間隔は保持します。",
+  "skillMonitor.skillCd.layout.rows": "行数",
+  "skillMonitor.skillCd.layout.columns": "列数",
+  "skillMonitor.skillCd.layout.compact": "空きを詰める",
+  "skillMonitor.skillCd.layout.help": "空きマスを選んでからスキルを追加すると、その位置に配置します。Enter / Spaceで選択、Alt + 矢印キーで移動・入れ替え、Deleteで削除、Escでキャンセル。空きを詰めると意図した間隔もなくなります。",
+  "skillMonitor.skillCd.layout.cell": "{row}行 {column}列：{skill}",
+  "skillMonitor.skillCd.layout.selectHint": "マスをクリックして選択します。監視を解除しても他のスキルは移動しません。",
+  "skillMonitor.skillCd.layout.error.limit": "監視できるスキルは最大10個です。先にスキルを削除してください。",
+  "skillMonitor.skillCd.layout.error.full": "空きマスがありません。行数または列数を増やしてください。",
+  "skillMonitor.skillCd.layout.error.invalidSize": "行数と列数には1～10の整数を入力してください。",
+  "skillMonitor.skillCd.layout.error.overflow": "次のスキルが枠外になります。先に移動するか、空きを詰めてください：{skills}",
+  "skillMonitor.skillCd.layout.error.stale": "スキル配置が変更されました。もう一度操作してください。",
   "skillMonitor.skillCd.voice.title": "音声読み上げ",
   "skillMonitor.skillCd.voice.description":
     "クラススキルや共鳴スキルに発動・クールダウン完了・完了前の読み上げを設定します。上のクールダウン監視に追加する必要はありません。チャージ系スキルはチャージが1つ戻るたびに完了を読み上げます。",

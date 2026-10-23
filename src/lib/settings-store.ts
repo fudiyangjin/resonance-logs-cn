@@ -3,6 +3,7 @@
  * It uses `@tauri-store/svelte` to create persistent stores for user settings.
  */
 import { RuneStore } from "@tauri-store/svelte";
+import { createDefaultSkillCdLayout, type SkillCdLayout } from "./skill-cd-layout";
 import {
   DEFAULT_MINIMAP_MARKER_COLORS,
   normalizeMinimapMarkerSettings,
@@ -1439,6 +1440,7 @@ export type SkillMonitorProfile = {
   autoHideInDailyScenes: boolean;
   selectedClass: string;
   monitoredSkillIds: number[];
+  skillCdLayout?: SkillCdLayout;
   monitoredBuffIds: number[];
   monitoredBuffCategories?: BuffCategoryKey[];
   monitoredPanelAttrs: PanelAttrConfig[];
@@ -2109,6 +2111,7 @@ export function createDefaultSkillMonitorProfile(
     autoHideInDailyScenes: false,
     selectedClass: classKey,
     monitoredSkillIds: [],
+    skillCdLayout: createDefaultSkillCdLayout(),
     monitoredBuffIds: [],
     monitoredBuffCategories: [],
     monitoredPanelAttrs: AVAILABLE_PANEL_ATTRS.map((item) => ({

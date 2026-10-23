@@ -5,9 +5,20 @@
 ## Choosing skills
 
 1. Pick a class in **{{ui:skillMonitor.skillCd.class.title}}**; that class's skills are listed below.
-2. In **{{ui:skillMonitor.skillCd.skills.title}}**, check the skills to monitor, up to **10** (about 2 rows × 5 columns in the overlay).
+2. In **{{ui:skillMonitor.skillCd.skills.title}}**, select up to **10** skills. Class and resonance skills share this limit.
 3. **{{ui:skillMonitor.skillCd.resonance.title}}** are not listed automatically; add them by searching for their name in the search box.
-4. **{{ui:skillMonitor.skillCd.preview.title}}** shows how they will be arranged in the overlay, in the order you checked them.
+4. Arrange skills in **{{ui:skillMonitor.skillCd.preview.title}}**. The default grid is 2 rows × 5 columns; each dimension can be set from **1 to 10**.
+
+## Arranging skills
+
+- Select an empty cell before adding a skill to place it there. Otherwise, the first empty cell is used. Increase rows or columns when the grid is full.
+- Drag to an empty cell to move, or onto another skill to swap. Removing a skill leaves its cell empty without moving other skills. Clicking a preview cell only selects it.
+- Resizing preserves coordinates. A smaller grid is rejected if any skill would fall outside it. **{{ui:skillMonitor.skillCd.layout.compact}}** packs skills in their current reading order and shrinks the grid, removing intentional gaps.
+- Use Enter / Space to select, Alt + arrow keys to move or swap, Delete to remove, and Esc to cancel. Dropping outside the grid leaves the layout unchanged.
+
+The normal overlay shows only configured skills and trims unused rows at the bottom and columns on the right. Leading and internal gaps are preserved. Two adjacent skills show just two icons; an empty selection hides the skill bar. Overlay edit mode shows the entire grid for moving or scaling the group; individual cells are arranged on the settings page.
+
+Layouts are saved, copied, exported and imported with the loadout. Older loadouts retain their original order. Clearing skills or switching class preserves the grid dimensions.
 
 ## Skill transforms
 

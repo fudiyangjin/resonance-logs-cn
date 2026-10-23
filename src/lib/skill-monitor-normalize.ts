@@ -18,6 +18,7 @@ import {
   ensureOverlayTextStyle,
 } from "$lib/settings-store";
 import { dropLegacyUserCounterRules } from "$lib/user-counter-rules";
+import { normalizeSkillCdLayout } from "$lib/skill-cd-layout";
 
 export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   skillCdGroupScale: 1,
@@ -341,6 +342,7 @@ export function normalizeSkillProfile(
     ...defaults,
     ...profile,
     id: profile.id,
+    skillCdLayout: normalizeSkillCdLayout(profile),
     monitoredPanelAttrs,
     panelAreaRowOrder: ensurePanelAreaRowOrder(profile, monitoredPanelAttrs),
     overlayPositions: {
