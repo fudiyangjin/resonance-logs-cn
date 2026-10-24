@@ -1323,6 +1323,7 @@ export type MonsterMonitorConfig = {
   hpPanelStyle: CustomPanelStyle;
   entityDurationEntries: EntityDurationEntry[];
   entityDurationPanelStyle: CustomPanelStyle;
+  monsterSkillMonitorAll: boolean;
   monsterSkillEntries: MonsterSkillWatchEntry[];
   monsterSkillPanelStyle: CustomPanelStyle;
 };
@@ -2174,6 +2175,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     hpPanelStyle: createDefaultHpPanelStyle(),
     entityDurationEntries: [],
     entityDurationPanelStyle: createDefaultEntityDurationPanelStyle(),
+    monsterSkillMonitorAll: false,
     monsterSkillEntries: [],
     monsterSkillPanelStyle: createDefaultMonsterSkillPanelStyle(),
   };
@@ -2257,6 +2259,7 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "hpPanelStyle",
   "entityDurationEntries",
   "entityDurationPanelStyle",
+  "monsterSkillMonitorAll",
   "monsterSkillEntries",
   "monsterSkillPanelStyle",
 ] as const satisfies readonly (keyof MonsterMonitorProfileData)[];

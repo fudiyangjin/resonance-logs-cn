@@ -1766,6 +1766,10 @@ export const jaJPMessages = {
   "monsterMonitor.overlay.bossDbm": "Boss DBM: {state}",
   "monsterMonitor.overlay.entityDuration": "エンティティ持続エリア：{state}",
   "monsterMonitor.overlay.monsterSkill": "モンスタースキルエリア：{state}",
+  "monsterMonitor.monsterSkill.monitorAll":
+    "周囲のすべてのモンスタースキルを表示",
+  "monsterMonitor.monsterSkill.monitorAllDesc":
+    "周囲のモンスターが使用したスキルを スキル名#id で表示します。個別設定のないスキルは5秒間表示され、再使用時に表示時間を更新します。",
   "monsterMonitor.monsterSkill.title": "モンスタースキル",
   "monsterMonitor.monsterSkill.description":
     "周囲のいずれかのモンスターがリスト内のスキルを使うと、モンスターオーバーレイにスキル名を設定した秒数だけ表示します。再使用するとタイマーはやり直しになります。Boss DBM と違いサーバー側の警告マーカーは不要で、どのモンスタースキルでも監視できます。",

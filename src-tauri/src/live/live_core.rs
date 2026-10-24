@@ -98,6 +98,7 @@ impl LiveCore {
             &mut scheduler,
         )?;
         projections.apply_voice_config(&initial_voice, &entities, wall_now, now, &mut scheduler);
+        entities.set_monitor_all_monster_skills(config.monster.monitor_all_skills);
         entities.set_watched_skill_ids(watched_skill_ids(&config));
         // The worker starts disabled. Publish persisted settings before any
         // cue can be produced, including cold starts without the main window.
@@ -421,6 +422,8 @@ impl LiveCore {
             now,
             &mut self.scheduler,
         )?;
+        self.entities
+            .set_monitor_all_monster_skills(config.monster.monitor_all_skills);
         self.entities
             .set_watched_skill_ids(watched_skill_ids(&config));
         self.flush_voice_cues();
