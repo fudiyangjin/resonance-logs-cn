@@ -1704,6 +1704,47 @@ mod entity_monitor_bridge {
     }
 
     #[test]
+    fn duty_skill_with_charges_is_voiced_without_a_hud_slot() {
+        // Arrange: duty skill 3612 (SkillChargeTable maxCharges 2) is voiced
+        // while the cooldown HUD monitors only a class skill.
+        const DUTY_SKILL: i32 = 3612;
+        let mut h = Harness::new(
+            vec![
+                rule("cast", skill(DUTY_SKILL, VoiceEvent::Started), "cast", 0),
+                rule("soon", skill(DUTY_SKILL, expiring(5)), "soon", 0),
+                rule("ready", skill(DUTY_SKILL, VoiceEvent::Ended), "ready", 0),
+            ],
+            vec![],
+        );
+        let mut config = MonitorRuntimeSnapshot::default();
+        config.skill.enabled = true;
+        config.skill.monitored_skill_ids = vec![SKILL];
+        h.monitor
+            .apply_config(&config, Arc::default(), &h.entities, MonoTimeMs(100));
+
+        // Act: a cast from full at 200 ms leaves one charge; the other is
+        // back at 80 200.
+        h.step(
+            2,
+            vec![
+                cast(LOCAL, DUTY_SKILL, SkillPhase::CastStarted),
+                charged_cooldown(DUTY_SKILL, 80_000, 80_000),
+            ],
+        );
+        let cast_cues = h.fired();
+        h.drain(752);
+        let ready_in_cues = h.fired();
+        h.drain(802);
+        let ready_cues = h.fired();
+
+        // Assert
+        assert_eq!(cast_cues, ["cast"]);
+        assert_eq!(ready_in_cues, ["soon"]);
+        assert_eq!(ready_cues, ["ready"]);
+        assert!(h.scheduler.is_empty());
+    }
+
+    #[test]
     fn local_player_change_cancels_cooldown_timers() {
         let mut h = Harness::new(
             vec![

@@ -7,7 +7,6 @@ import type {
 } from "$lib/hud-temporal.svelte.js";
 
 export type OverlayScaleKey =
-  | "skillCdGroupScale"
   | "resourceGroupScale"
   | "textBuffPanelScale"
   | "panelAttrGroupScale"
@@ -72,9 +71,10 @@ export type DragTarget =
       kind: "group";
       key: keyof Omit<
         OverlayPositions,
-        "iconBuffPositions" | "categoryIconPositions"
+        "iconBuffPositions" | "categoryIconPositions" | "skillCdGroup"
       >;
     }
+  | { kind: "skillCdRegion"; regionId: string }
   | { kind: "customPanelGroup"; groupId: string }
   | { kind: "resourceSection"; key: string }
   | { kind: "iconBuff"; baseId: number }
@@ -96,6 +96,7 @@ export type ResizeTarget =
       kind: "group";
       key: OverlayScaleKey;
     }
+  | { kind: "skillCdRegion"; regionId: string }
   | { kind: "customPanelGroup"; groupId: string }
   | { kind: "resourceSection"; key: string }
   | { kind: "iconBuff"; baseId: number }

@@ -13,6 +13,12 @@ import {
   updateResourceSectionLayout,
 } from "$lib/resource-sections";
 import { iconDisplayBuffs } from "./overlay-display.svelte.js";
+import {
+  resetSkillCdRegionPositions,
+  resetSkillCdRegionScales,
+  setSkillCdRegionLayout,
+  type SkillCdPoint,
+} from "$lib/skill-cd-layout";
 import type {
   DragTarget,
   IconBuffDisplay,
@@ -29,7 +35,7 @@ import {
 
 type OverlayPositionKey = keyof Omit<
   typeof DEFAULT_OVERLAY_POSITIONS,
-  "iconBuffPositions" | "categoryIconPositions"
+  "iconBuffPositions" | "categoryIconPositions" | "skillCdGroup"
 >;
 type OverlaySizeKey = OverlayScaleKey;
 
@@ -251,6 +257,27 @@ export function setBuffGroupIconSize(groupId: string, value: number) {
   );
 }
 
+function updateSkillCdRegion(
+  regionId: string,
+  patch: { position?: SkillCdPoint; scale?: number },
+) {
+  updateActiveProfile((profile) => ({
+    ...profile,
+    skillCdRegions: setSkillCdRegionLayout(profile, regionId, patch),
+  }));
+}
+
+export function setSkillCdRegionPosition(
+  regionId: string,
+  nextPos: SkillCdPoint,
+) {
+  updateSkillCdRegion(regionId, { position: nextPos });
+}
+
+export function setSkillCdRegionScale(regionId: string, value: number) {
+  updateSkillCdRegion(regionId, { scale: value });
+}
+
 export function setCustomPanelGroupPosition(
   groupId: string,
   nextPos: { x: number; y: number },
@@ -368,10 +395,12 @@ export function onGlobalPointerMove(e: PointerEvent) {
       overlayRuntime.resizeState.startX +
       (e.clientY - overlayRuntime.resizeState.startY);
     const targetKind = overlayRuntime.resizeState.target.kind;
+    // Icon targets resize in px; every other target scales.
     const isIconSize =
-      targetKind !== "group" &&
-      targetKind !== "customPanelGroup" &&
-      targetKind !== "resourceSection";
+      targetKind === "iconBuff" ||
+      targetKind === "categoryIcon" ||
+      targetKind === "buffGroup" ||
+      targetKind === "individualAllGroup";
     overlayRuntime.resizeState.nextValue = isIconSize
       ? clampIconSize(overlayRuntime.resizeState.startValue + delta / 2)
       : clampGroupScale(overlayRuntime.resizeState.startValue + delta / 300);
@@ -466,6 +495,8 @@ function commitDragPreview() {
   const nextPos = drag.nextPos;
   if (drag.target.kind === "group") {
     setGroupPosition(drag.target.key, nextPos);
+  } else if (drag.target.kind === "skillCdRegion") {
+    setSkillCdRegionPosition(drag.target.regionId, nextPos);
   } else if (drag.target.kind === "customPanelGroup") {
     setCustomPanelGroupPosition(drag.target.groupId, nextPos);
   } else if (drag.target.kind === "resourceSection") {
@@ -487,6 +518,8 @@ function commitResizePreview() {
   const nextValue = resize.nextValue;
   if (resize.target.kind === "group") {
     setGroupScale(resize.target.key, nextValue);
+  } else if (resize.target.kind === "skillCdRegion") {
+    setSkillCdRegionScale(resize.target.regionId, nextValue);
   } else if (resize.target.kind === "customPanelGroup") {
     setCustomPanelGroupScale(resize.target.groupId, nextValue);
   } else if (resize.target.kind === "resourceSection") {
@@ -506,6 +539,7 @@ export function resetOverlaySizes() {
   updateActiveProfile((profile) => ({
     ...profile,
     overlaySizes: { ...DEFAULT_OVERLAY_SIZES },
+    skillCdRegions: resetSkillCdRegionScales(profile),
     resourceSectionLayouts: resetResourceSectionLayouts(
       profile.resourceSectionLayouts,
       ["scale"],
@@ -522,6 +556,7 @@ export function resetOverlayPositions() {
   updateActiveProfile((profile) => ({
     ...profile,
     overlayPositions: { ...DEFAULT_OVERLAY_POSITIONS },
+    skillCdRegions: resetSkillCdRegionPositions(profile),
     resourceSectionLayouts: resetResourceSectionLayouts(
       profile.resourceSectionLayouts,
       ["position"],

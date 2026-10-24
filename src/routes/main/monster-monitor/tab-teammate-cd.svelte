@@ -16,7 +16,12 @@
     type TeammateCdSlotLayout,
     type TeammateCdTwentySlots,
   } from "$lib/settings-store";
-  import { getClassConfigs, getSkillsByClass } from "$lib/skill-mappings";
+  import SkillIcon from "$lib/components/skill-icon.svelte";
+  import {
+    getClassConfigs,
+    getSkillsByClass,
+    skillBgColour,
+  } from "$lib/skill-mappings";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
 
   const classConfigs = $derived(getClassConfigs());
@@ -180,12 +185,16 @@
           title={skill.name}
           onclick={() => toggleSkill(skill.skillId)}
         >
-          <img
-            src={skill.imagePath}
-            alt={skill.name}
-            class="size-10 rounded object-cover"
+          <div
+            class="size-10 overflow-hidden rounded"
             class:opacity-50={!selected}
-          />
+          >
+            <SkillIcon
+              imagePath={skill.imagePath}
+              alt={skill.name}
+              colour={skillBgColour(skill.skillId)}
+            />
+          </div>
           <span class="w-full truncate text-center">{skill.name}</span>
         </button>
       {/each}
@@ -210,11 +219,13 @@
             class="border-border/60 bg-muted/20 flex items-center gap-1 rounded-lg border p-1"
           >
             {#if skill}
-              <img
-                src={skill.imagePath}
-                alt={skill.name}
-                class="size-8 rounded object-cover"
-              />
+              <div class="size-8 overflow-hidden rounded">
+                <SkillIcon
+                  imagePath={skill.imagePath}
+                  alt={skill.name}
+                  colour={skillBgColour(skill.skillId)}
+                />
+              </div>
             {:else}
               <span class="text-muted-foreground px-1 text-xs">#{skillId}</span>
             {/if}

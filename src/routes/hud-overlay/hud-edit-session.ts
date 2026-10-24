@@ -22,6 +22,10 @@ import {
   type SkillMonitorProfile,
 } from "$lib/settings-store";
 import {
+  normalizeSkillCdRegions,
+  type SkillCdRegion,
+} from "$lib/skill-cd-layout";
+import {
   ensureBuffGroups,
   ensureCustomPanelGroups,
   ensureIndividualMonitorAllGroup,
@@ -39,6 +43,7 @@ export type SkillProfileLayout = {
     Partial<Pick<ResourceSectionLayout, "position" | "scale">>
   >;
   buffGroups: Record<string, Pick<BuffGroup, "position" | "iconSize">>;
+  skillCdRegions: Record<string, Pick<SkillCdRegion, "position" | "scale">>;
   customPanelGroups: Record<
     string,
     Pick<CustomPanelGroup, "position" | "scale">
@@ -91,6 +96,12 @@ export function pickSkillProfileLayout(
         { position: group.position, iconSize: group.iconSize },
       ]),
     ),
+    skillCdRegions: Object.fromEntries(
+      normalizeSkillCdRegions(profile).map((region) => [
+        region.id,
+        { position: region.position, scale: region.scale },
+      ]),
+    ),
     customPanelGroups: Object.fromEntries(
       ensureCustomPanelGroups(profile).map((group) => [
         group.id,
@@ -126,6 +137,10 @@ export function restoreSkillProfileLayout(
     buffGroups: ensureBuffGroups(profile).map((group) => ({
       ...group,
       ...layout.buffGroups[group.id],
+    })),
+    skillCdRegions: normalizeSkillCdRegions(profile).map((region) => ({
+      ...region,
+      ...layout.skillCdRegions[region.id],
     })),
     customPanelGroups: ensureCustomPanelGroups(profile).map((group) => ({
       ...group,

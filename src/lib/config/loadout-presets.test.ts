@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { buildLoadoutPresets } from "./loadout-presets";
+import { createDefaultSkillCdRegion } from "$lib/skill-cd-layout";
 import {
   SETTINGS,
   createDefaultMonitoringSettingsState,
@@ -94,6 +95,19 @@ describe("built-in loadout presets", () => {
     expect(vanguard.data.linkedTalentStageCfgId).toBe(107);
     expect(vanguard.data.skillProfile.selectedClass).toBe("wind_knight");
     expect(vanguard.data.skillProfile.monitoredBuffIds).toContain(2302421);
+  });
+
+  it("parses every preset into one default skill CD region", () => {
+    for (const preset of buildLoadoutPresets("zh-CN")) {
+      const skill = preset.data.skillProfile;
+      expect(skill.skillCdRegions).toEqual([
+        {
+          ...createDefaultSkillCdRegion(),
+          position: skill.overlayPositions.skillCdGroup,
+        },
+      ]);
+      expect(skill).not.toHaveProperty("skillCdLayout");
+    }
   });
 
   it("tracks attribute-resonance coverage on every preset", () => {

@@ -1271,6 +1271,7 @@ export const jaJPMessages = {
   "skillMonitor.defaults.buffGroupName": "グループ {index}",
   "skillMonitor.defaults.allBuffGroupName": "すべての Buff",
   "skillMonitor.defaults.customPanelGroupName": "モニターエリア {index}",
+  "skillMonitor.defaults.skillCdRegionName": "エリア {index}",
   "skillMonitor.defaults.counterRuleName": "カスタムカウンター {index}",
   "skillMonitor.profile.title": "プロファイル",
   "skillMonitor.profile.description":
@@ -1287,39 +1288,41 @@ export const jaJPMessages = {
   "skillMonitor.skillCd.class.description":
     "現在設定されているクラススキルプロファイルに対応。クラスを切り替えると、このロードアウトで選択したスキルとスキル音声読み上げがクリアされます",
   "skillMonitor.skillCd.skills.title": "スキル選択",
-  "skillMonitor.skillCd.skills.description":
-    "最大10個のスキルを監視できます。下のレイアウトでマスを自由に配置できます",
   "skillMonitor.skillCd.duty.title": "ロールスキル",
-  "skillMonitor.skillCd.duty.description": "クリックして監視に追加します。クラス・共鳴・ロールスキルの合計上限は10個です。",
   "skillMonitor.skillCd.duty.attack": "攻撃",
   "skillMonitor.skillCd.duty.survival": "生存",
   "skillMonitor.skillCd.duty.support": "支援",
   "skillMonitor.skillCd.duty.encyclopedia": "図鑑ロールスキル",
-  "skillMonitor.skillCd.resonance.title": "共鳴スキル",
-  "skillMonitor.skillCd.resonance.description":
-    "共鳴スキルを検索します。通常スキルと合わせて最大10個のスキルを監視できます",
-  "skillMonitor.skillCd.resonance.placeholder": "共鳴スキル名を検索",
-  "skillMonitor.skillCd.resonance.searchPrompt":
-    "キーワードを入力して共鳴スキルを検索",
-  "skillMonitor.skillCd.resonance.selectedTitle": "選択した共鳴スキル",
-  "skillMonitor.skillCd.resonance.noneSelected":
-    "共鳴スキルが選択されていません",
+  "skillMonitor.skillCd.resonance.title": "幻想スキル",
+  "skillMonitor.skillCd.resonance.placeholder": "幻想スキル名を検索",
+  "skillMonitor.skillCd.resonance.searchPrompt": "キーワードを入力して幻想スキルを検索",
   "skillMonitor.skillCd.preview.title": "スキル配置",
-  "skillMonitor.skillCd.preview.description": "空きマスへドラッグすると移動、スキルへドラッグすると入れ替えます。オーバーレイは右端・下端の空白を詰め、意図した間隔は保持します。",
+  "skillMonitor.skillCd.preview.description": "複数のエリアに分けられ、各エリアはオーバーレイで個別に移動・拡大縮小できます。空きマスへドラッグすると移動、スキルへドラッグすると入れ替えます。オーバーレイは右端・下端の空白を詰め、意図した間隔は保持します。",
   "skillMonitor.skillCd.layout.rows": "行数",
   "skillMonitor.skillCd.layout.columns": "列数",
+  "skillMonitor.skillCd.layout.gap": "アイコン間隔",
   "skillMonitor.skillCd.layout.compact": "空きを詰める",
   "skillMonitor.skillCd.layout.help": "空きマスを選んでからスキルを追加すると、その位置に配置します。Enter / Spaceで選択、Alt + 矢印キーで移動・入れ替え、Deleteで削除、Escでキャンセル。空きを詰めると意図した間隔もなくなります。",
   "skillMonitor.skillCd.layout.cell": "{row}行 {column}列：{skill}",
   "skillMonitor.skillCd.layout.selectHint": "マスをクリックして選択します。監視を解除しても他のスキルは移動しません。",
-  "skillMonitor.skillCd.layout.error.limit": "監視できるスキルは最大10個です。先にスキルを削除してください。",
+  "skillMonitor.skillCd.layout.error.limit": "全エリア合計で監視できるスキルは最大10個です。先にスキルを削除してください。",
   "skillMonitor.skillCd.layout.error.full": "空きマスがありません。行数または列数を増やしてください。",
   "skillMonitor.skillCd.layout.error.invalidSize": "行数と列数には1～10の整数を入力してください。",
+  "skillMonitor.skillCd.layout.error.invalidGap": "アイコン間隔には0～24の整数を入力してください。",
   "skillMonitor.skillCd.layout.error.overflow": "次のスキルが枠外になります。先に移動するか、空きを詰めてください：{skills}",
   "skillMonitor.skillCd.layout.error.stale": "スキル配置が変更されました。もう一度操作してください。",
+  "skillMonitor.skillCd.layout.error.lastRegion": "エリアは少なくとも1つ必要です。",
+  "skillMonitor.skillCd.region.add": "エリアを追加",
+  "skillMonitor.skillCd.region.name": "エリア名",
+  "skillMonitor.skillCd.region.clear": "エリアを空にする",
+  "skillMonitor.skillCd.region.delete": "エリアを削除",
+  "skillMonitor.skillCd.region.deleteTitle": "「{name}」を削除しますか？",
+  "skillMonitor.skillCd.region.deleteDescription": "このエリアの {count} 個のスキルも監視対象から外れます。",
+  "skillMonitor.skillCd.region.addTo": "クリックで「{region}」に追加します。他のエリアにあるスキル（バッジはエリア番号）はここへ移動します。",
+  "skillMonitor.skillCd.region.inRegion": "「{region}」に配置済み。クリックで現在のエリアへ移動",
+  "skillMonitor.skillCd.picker.noResults": "一致するスキルがありません",
   "skillMonitor.skillCd.voice.title": "音声読み上げ",
-  "skillMonitor.skillCd.voice.description":
-    "クラススキルや共鳴スキルに発動・クールダウン完了・完了前の読み上げを設定します。上のクールダウン監視に追加する必要はありません。チャージ系スキルはチャージが1つ戻るたびに完了を読み上げます。",
+  "skillMonitor.skillCd.voice.description": "クラス・幻想・ロールスキルに発動・クールダウン完了・完了前の読み上げを設定します。上のクールダウン監視とは独立しており、CD表示は不要です。チャージ系スキルはチャージが1つ戻るたびに完了を読み上げます。",
   "skillMonitor.skillCd.voice.empty":
     "まだ音声読み上げが設定されていません。上のスキルをクリックして追加してください。",
   "skillMonitor.skillCd.voice.configuredCount": "{count} 件設定済み",
@@ -1710,8 +1713,7 @@ export const jaJPMessages = {
     "バフ名または ID で検索",
   "skillMonitor.customPanel.counterEditor.picker.searchDamage":
     "ダメージ名または ID で検索",
-  "skillMonitor.customPanel.counterEditor.picker.searchSkill":
-    "共鳴スキルを検索、またはスキル ID を入力して Enter",
+  "skillMonitor.customPanel.counterEditor.picker.searchSkill": "幻想スキルを検索、またはスキル ID を入力して Enter",
   "skillMonitor.customPanel.counterEditor.picker.enterId":
     "ID を入力して Enter",
   "skillMonitor.customPanel.counterEditor.picker.noMatch":
@@ -1887,8 +1889,7 @@ export const jaJPMessages = {
   "monsterMonitor.teammate.styleTitle": "味方 Buff マトリクススタイル",
   "monsterMonitor.teammate.columnColorReset": "リセット",
   "monsterMonitor.fantasy.title": "味方幻想",
-  "monsterMonitor.fantasy.description":
-    "味方が発動した共鳴スキル召喚モンスター。",
+  "monsterMonitor.fantasy.description": "味方が発動した幻想スキル召喚モンスター。",
   "monsterMonitor.fantasy.showAll": "すべての味方幻想を表示",
   "monsterMonitor.fantasy.placeholder": "味方幻想名または MonsterId を検索",
   "monsterMonitor.fantasy.emptySearch": "一致する味方幻想がありません",

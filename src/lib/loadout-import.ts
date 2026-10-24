@@ -1,5 +1,9 @@
 import * as v from "valibot";
-import { MAX_SKILL_CD_GRID_SIZE, normalizeSkillCdLayout } from "./skill-cd-layout";
+import {
+  MAX_SKILL_CD_GRID_SIZE,
+  MAX_SKILL_CD_REGIONS,
+  normalizeSkillCdRegions,
+} from "./skill-cd-layout";
 import {
   createDefaultCustomPanelGroup,
   createDefaultLiveMeterProfileData,
@@ -374,6 +378,35 @@ const buffCoverageStyleSchema = v.object({
   backgroundOpacity: finiteNumberSchema,
 });
 
+const skillCdGridSizeSchema = v.pipe(
+  finiteNumberSchema,
+  v.integer(),
+  v.minValue(1),
+  v.maxValue(MAX_SKILL_CD_GRID_SIZE),
+);
+const skillCdCellIndexSchema = v.pipe(
+  finiteNumberSchema,
+  v.integer(),
+  v.minValue(0),
+  v.maxValue(MAX_SKILL_CD_GRID_SIZE - 1),
+);
+const skillCdGridEntries = {
+  rows: skillCdGridSizeSchema,
+  columns: skillCdGridSizeSchema,
+  positions: v.record(
+    numericKeySchema,
+    v.object({ row: skillCdCellIndexSchema, column: skillCdCellIndexSchema }),
+  ),
+};
+const skillCdRegionSchema = v.object({
+  ...skillCdGridEntries,
+  id: v.pipe(v.string(), v.trim(), v.minLength(1)),
+  name: v.string(),
+  position: pointSchema,
+  scale: finiteNumberSchema,
+  gap: v.optional(finiteNumberSchema),
+});
+
 const customPanelGroupSchema = v.object({
   id: v.string(),
   name: v.string(),
@@ -583,14 +616,15 @@ const skillProfileSchema = v.object({
   autoHideInDailyScenes: v.optional(v.boolean(), false),
   selectedClass: v.string(),
   monitoredSkillIds: numberArraySchema,
-  skillCdLayout: v.optional(v.object({
-    rows: v.pipe(finiteNumberSchema, v.integer(), v.minValue(1), v.maxValue(MAX_SKILL_CD_GRID_SIZE)),
-    columns: v.pipe(finiteNumberSchema, v.integer(), v.minValue(1), v.maxValue(MAX_SKILL_CD_GRID_SIZE)),
-    positions: v.record(numericKeySchema, v.object({
-      row: v.pipe(finiteNumberSchema, v.integer(), v.minValue(0), v.maxValue(MAX_SKILL_CD_GRID_SIZE - 1)),
-      column: v.pipe(finiteNumberSchema, v.integer(), v.minValue(0), v.maxValue(MAX_SKILL_CD_GRID_SIZE - 1)),
-    })),
-  })),
+  skillCdRegions: v.optional(
+    v.pipe(
+      v.array(skillCdRegionSchema),
+      v.minLength(1),
+      v.maxLength(MAX_SKILL_CD_REGIONS),
+    ),
+  ),
+  // Legacy single-grid layout; normalized into region 1 after parsing.
+  skillCdLayout: v.optional(v.object(skillCdGridEntries)),
   // Legacy (pre-entity-duration) exports; mapped onto the monster profile's
   // entity-duration entries after parsing and then dropped.
   monitoredSkillDurationIds: v.optional(numberArraySchema, () => []),
@@ -1100,7 +1134,10 @@ export function parseLoadoutExport(data: unknown): LoadoutParseResult {
     version: 2,
   } as unknown as LegacyAwareLoadoutExport;
   migrateLegacyLoadoutExport(output);
-  output.skillProfile.skillCdLayout = normalizeSkillCdLayout(output.skillProfile);
+  output.skillProfile.skillCdRegions = normalizeSkillCdRegions(
+    output.skillProfile,
+  );
+  delete output.skillProfile.skillCdLayout;
   return { success: true, output: output as unknown as LoadoutExport };
 }
 

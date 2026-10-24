@@ -18,7 +18,7 @@ import {
   ensureOverlayTextStyle,
 } from "$lib/settings-store";
 import { dropLegacyUserCounterRules } from "$lib/user-counter-rules";
-import { normalizeSkillCdLayout } from "$lib/skill-cd-layout";
+import { normalizeSkillCdRegions } from "$lib/skill-cd-layout";
 
 export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
   skillCdGroupScale: 1,
@@ -342,7 +342,7 @@ export function normalizeSkillProfile(
     ...defaults,
     ...profile,
     id: profile.id,
-    skillCdLayout: normalizeSkillCdLayout(profile),
+    skillCdRegions: normalizeSkillCdRegions(profile),
     monitoredPanelAttrs,
     panelAreaRowOrder: ensurePanelAreaRowOrder(profile, monitoredPanelAttrs),
     overlayPositions: {
@@ -380,5 +380,7 @@ export function normalizeSkillProfile(
   if (profile.shieldDetailStyle) {
     normalized.shieldDetailStyle = ensureShieldDetailStyle(profile);
   }
+  // Region 1 replaces the single-grid layout.
+  delete normalized.skillCdLayout;
   return normalized;
 }

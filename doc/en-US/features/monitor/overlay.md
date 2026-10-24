@@ -6,7 +6,7 @@
 
 | Area | Content source |
 | --- | --- |
-| **Skill CD Area** | [Skill CD](./skill-cd.md) |
+| **Skill CD Area** | [Skill CD](./skill-cd.md); each skill area is a separate area |
 | **Resource Monitor Area** | Energy, stacks and other resources of the current class |
 | **Character Attribute Area** | [Character Panel](./panel-attr.md) |
 | **Custom Monitor Area** | [Custom Monitor](./custom-panel.md); each monitor area is a separate area |

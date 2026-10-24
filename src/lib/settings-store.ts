@@ -3,7 +3,11 @@
  * It uses `@tauri-store/svelte` to create persistent stores for user settings.
  */
 import { RuneStore } from "@tauri-store/svelte";
-import { createDefaultSkillCdLayout, type SkillCdLayout } from "./skill-cd-layout";
+import {
+  createDefaultSkillCdRegion,
+  type SkillCdLayout,
+  type SkillCdRegion,
+} from "./skill-cd-layout";
 import {
   DEFAULT_MINIMAP_MARKER_COLORS,
   normalizeMinimapMarkerSettings,
@@ -1024,6 +1028,8 @@ export const AVAILABLE_PANEL_ATTRS: PanelAttrConfig[] = [
 ];
 
 export type OverlayPositions = {
+  /** @deprecated Placement of the single-grid skill CD HUD, kept as the
+   * fallback for region 1 and for older builds importing new exports. */
   skillCdGroup: Point;
   resourceGroup: Point;
   textBuffPanel: Point;
@@ -1037,6 +1043,7 @@ export type OverlayPositions = {
 };
 
 export type OverlaySizes = {
+  /** @deprecated See `OverlayPositions.skillCdGroup`. */
   skillCdGroupScale: number;
   resourceGroupScale: number;
   textBuffPanelScale: number;
@@ -1439,7 +1446,10 @@ export type SkillMonitorProfile = {
   enabled: boolean;
   autoHideInDailyScenes: boolean;
   selectedClass: string;
+  /** Every monitored skill sits in exactly one of `skillCdRegions`. */
   monitoredSkillIds: number[];
+  skillCdRegions?: SkillCdRegion[];
+  /** @deprecated Single-grid layout; normalization turns it into region 1. */
   skillCdLayout?: SkillCdLayout;
   monitoredBuffIds: number[];
   monitoredBuffCategories?: BuffCategoryKey[];
@@ -2111,7 +2121,7 @@ export function createDefaultSkillMonitorProfile(
     autoHideInDailyScenes: false,
     selectedClass: classKey,
     monitoredSkillIds: [],
-    skillCdLayout: createDefaultSkillCdLayout(),
+    skillCdRegions: [createDefaultSkillCdRegion()],
     monitoredBuffIds: [],
     monitoredBuffCategories: [],
     monitoredPanelAttrs: AVAILABLE_PANEL_ATTRS.map((item) => ({

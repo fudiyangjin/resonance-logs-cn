@@ -4,7 +4,11 @@
     type MonitorTabGroup,
   } from "$lib/components/monitor-tab-nav.svelte";
   import TabSkillCd from "./tab-skill-cd.svelte";
-  import { changeSkillCdSelection, normalizeSkillCdLayout, type SkillCdAction } from "$lib/skill-cd-layout";
+  import {
+    changeSkillCdSelection,
+    normalizeSkillCdRegions,
+    type SkillCdAction,
+  } from "$lib/skill-cd-layout";
   import TabBuffMonitor from "./tab-buff-monitor.svelte";
   import TabPanelAttr from "./tab-panel-attr.svelte";
   import TabCustomPanel from "./tab-custom-panel.svelte";
@@ -61,7 +65,6 @@
     ensureOverlayTextStyle,
   } from "$lib/settings-store";
   import {
-    findResonanceSkill,
     findAnySkillByBaseId,
     ensureUserCounterRules,
     getCounterDisplayLabel,
@@ -71,7 +74,6 @@
     getSlotTemplates,
     getSkillsByClass,
     resolveUserCounterRulesToPresets,
-    searchResonanceSkills,
     type CounterRulePreset,
   } from "$lib/skill-mappings";
   import {
@@ -117,7 +119,6 @@
   let alertSearch = $state("");
   let groupSearchKeyword = $state<Record<string, string>>({});
   let groupPrioritySearchKeyword = $state<Record<string, string>>({});
-  let resonanceSearch = $state("");
   let inlineBuffSearch = $state("");
   type SkillMonitorTab =
     | "skill-cd"
@@ -178,7 +179,7 @@
   const selectedClassKey = $derived(activeProfile.selectedClass);
   const classSkills = $derived(getSkillsByClass(selectedClassKey));
   const monitoredSkillIds = $derived(activeProfile.monitoredSkillIds);
-  const skillCdLayout = $derived(normalizeSkillCdLayout(activeProfile));
+  const skillCdRegions = $derived(normalizeSkillCdRegions(activeProfile));
   const monitoredBuffIds = $derived(activeProfile.monitoredBuffIds);
   const monitoredBuffCategories = $derived.by(() =>
     normalizeBuffCategoryKeys(activeProfile.monitoredBuffCategories),
@@ -404,7 +405,10 @@
       ...profile,
       selectedClass: classKey,
       monitoredSkillIds: [],
-      skillCdLayout: { ...normalizeSkillCdLayout(profile), positions: {} },
+      skillCdRegions: normalizeSkillCdRegions({
+        ...profile,
+        monitoredSkillIds: [],
+      }),
       skillVoiceConfigs: {},
     }));
   }
@@ -422,24 +426,14 @@
         return profile;
       }
       changed = true;
-      return { ...profile, monitoredSkillIds: result.monitoredSkillIds, skillCdLayout: result.skillCdLayout };
+      return {
+        ...profile,
+        monitoredSkillIds: result.monitoredSkillIds,
+        skillCdRegions: result.skillCdRegions,
+      };
     });
     return changed;
   }
-
-  function isSelected(skillId: number): boolean {
-    return monitoredSkillIds.includes(skillId);
-  }
-
-  const filteredResonanceSkills = $derived.by(() =>
-    searchResonanceSkills(resonanceSearch),
-  );
-  const selectedResonanceSkills = $derived.by(() =>
-    monitoredSkillIds
-      .map((id) => findResonanceSkill(id))
-      .filter((skill): skill is NonNullable<typeof skill> => Boolean(skill))
-      .slice(0, 10),
-  );
 
   function clearBuffs() {
     updateActiveProfile((profile) => ({
@@ -502,10 +496,6 @@
       }
     }
     return filtered;
-  }
-
-  function setResonanceSearch(value: string) {
-    resonanceSearch = value;
   }
 
   function setBuffSearch(value: string) {
@@ -1856,21 +1846,16 @@
   </div>
 
   {#if activeTab === "skill-cd"}
-    {#key `${activeProfile.id}:${selectedClassKey}:${skillCdLayout.rows}:${skillCdLayout.columns}`}
+    {#key `${activeProfile.id}:${selectedClassKey}`}
       <TabSkillCd
         profileId={activeProfile.id}
-        {skillCdLayout}
+        {skillCdRegions}
         onSkillCdAction={changeSkillCd}
         {classConfigs}
         {selectedClassKey}
         {classSkills}
         {monitoredSkillIds}
-        {resonanceSearch}
-        {filteredResonanceSkills}
-        {selectedResonanceSkills}
         {setSelectedClass}
-        {isSelected}
-        {setResonanceSearch}
       />
     {/key}
   {:else if activeTab === "buff"}

@@ -1,73 +1,211 @@
 <script lang="ts">
+  import PlusIcon from "virtual:icons/lucide/plus";
+  import ConfirmDialog from "$lib/components/ConfirmDialog.svelte";
   import {
-    getDutySkills,
-    type DutySkillGroup,
+    findAnySkillByBaseId,
+    findResonanceSkill,
     type ClassSkillConfig,
-    type ResonanceSkillDefinition,
     type SkillDefinition,
   } from "$lib/skill-mappings";
-  import { MAX_MONITORED_SKILLS, type SkillCdAction, type SkillCdLayout, type SkillCdPosition } from "$lib/skill-cd-layout";
+  import {
+    MAX_MONITORED_SKILLS,
+    MAX_SKILL_CD_REGIONS,
+    isSkillCdPositionInBounds,
+    skillCdRegionIndexOf,
+    type SkillCdAction,
+    type SkillCdGridAction,
+    type SkillCdPosition,
+    type SkillCdRegion,
+  } from "$lib/skill-cd-layout";
   import SkillCdLayoutEditor from "./skill-cd-layout-editor.svelte";
+  import SkillPicker, { type SkillTileState } from "./skill-picker.svelte";
   import { t } from "$lib/i18n/index.svelte";
+  import { blurOnEnter } from "$lib/utils.svelte";
   import SkillVoiceSection from "./skill-voice-section.svelte";
 
   interface Props {
     profileId: string;
-    skillCdLayout: SkillCdLayout;
-    onSkillCdAction: (action: SkillCdAction, profileId: string, classKey: string) => boolean;
+    skillCdRegions: SkillCdRegion[];
+    onSkillCdAction: (
+      action: SkillCdAction,
+      profileId: string,
+      classKey: string,
+    ) => boolean;
     classConfigs: ClassSkillConfig[];
     selectedClassKey: string;
     classSkills: SkillDefinition[];
     monitoredSkillIds: number[];
-    resonanceSearch: string;
-    filteredResonanceSkills: ResonanceSkillDefinition[];
-    selectedResonanceSkills: ResonanceSkillDefinition[];
     setSelectedClass: (classKey: string) => void;
-    isSelected: (skillId: number) => boolean;
-    setResonanceSearch: (value: string) => void;
   }
 
   let {
     profileId,
-    skillCdLayout,
+    skillCdRegions,
     onSkillCdAction,
     classConfigs,
     selectedClassKey,
     classSkills,
     monitoredSkillIds,
-    resonanceSearch,
-    filteredResonanceSkills,
-    selectedResonanceSkills,
     setSelectedClass,
-    isSelected,
-    setResonanceSearch,
   }: Props = $props();
 
-  let selectedCell = $state<SkillCdPosition | null>(null);
-  const dutySkills = $derived(getDutySkills());
-  const dutyGroups: DutySkillGroup[] = [
-    "attack", "survival", "support", "encyclopedia",
-  ];
-  const selectedDutySkills = $derived(
-    dutySkills.filter((skill) => monitoredSkillIds.includes(skill.skillId)),
+  // A vanished region (deleted here or in another window) falls back to the
+  // first one; a selected cell only counts inside its own region's bounds.
+  let activeRegionId = $state("");
+  let selection = $state<{ regionId: string; cell: SkillCdPosition } | null>(
+    null,
   );
-  const layoutSkills = $derived([
-    ...classSkills, ...selectedDutySkills, ...selectedResonanceSkills,
-  ]);
+  let pendingDelete = $state<{
+    regionId: string;
+    name: string;
+    count: number;
+  } | null>(null);
+  let confirmDeleteOpen = $state(false);
 
-  function changeLayout(action: SkillCdAction): boolean {
+  const activeIndex = $derived(
+    Math.max(
+      0,
+      skillCdRegions.findIndex((region) => region.id === activeRegionId),
+    ),
+  );
+  const activeRegion = $derived(skillCdRegions[activeIndex]!);
+  const activeCount = $derived(Object.keys(activeRegion.positions).length);
+  const selectedCell = $derived(
+    selection?.regionId === activeRegion.id &&
+      isSkillCdPositionInBounds(selection.cell, activeRegion)
+      ? selection.cell
+      : null,
+  );
+  const activeSkills = $derived(
+    Object.keys(activeRegion.positions).flatMap(
+      (id) => findAnySkillByBaseId(selectedClassKey, Number(id)) ?? [],
+    ),
+  );
+  const monitoredFantasyIds = $derived(
+    monitoredSkillIds.filter((id) => findResonanceSkill(id) !== undefined),
+  );
+
+  function regionLabel(region: SkillCdRegion, index: number): string {
+    return (
+      region.name.trim() ||
+      t("skillMonitor.defaults.skillCdRegionName", { index: index + 1 })
+    );
+  }
+
+  function change(action: SkillCdAction): boolean {
     return onSkillCdAction(action, profileId, selectedClassKey);
   }
 
+  function changeGrid(action: SkillCdGridAction): boolean {
+    return change({ ...action, regionId: activeRegion.id });
+  }
+
   function toggleSkill(skillId: number) {
-    changeLayout({ kind: "toggle", skillId, preferredCell: selectedCell ?? undefined });
+    changeGrid({
+      kind: "toggle",
+      skillId,
+      preferredCell: selectedCell ?? undefined,
+    });
+  }
+
+  function tileState(skillId: number): SkillTileState {
+    const index = skillCdRegionIndexOf(skillCdRegions, skillId);
+    if (index === -1) return { selected: false };
+    if (index === activeIndex) return { selected: true };
+    return {
+      selected: false,
+      badge: String(index + 1),
+      badgeTitle: t("skillMonitor.skillCd.region.inRegion", {
+        region: regionLabel(skillCdRegions[index]!, index),
+      }),
+    };
+  }
+
+  function addRegion() {
+    const id = `skill_cd_region_${Date.now()}`;
+    if (change({ kind: "addRegion", id })) activeRegionId = id;
+  }
+
+  function requestRemoveRegion() {
+    const regionId = activeRegion.id;
+    if (activeCount === 0) {
+      change({ kind: "removeRegion", regionId });
+      return;
+    }
+    pendingDelete = {
+      regionId,
+      name: regionLabel(activeRegion, activeIndex),
+      count: activeCount,
+    };
+    confirmDeleteOpen = true;
   }
 </script>
 
+<ConfirmDialog
+  bind:open={confirmDeleteOpen}
+  title={t("skillMonitor.skillCd.region.deleteTitle", {
+    name: pendingDelete?.name ?? "",
+  })}
+  description={t("skillMonitor.skillCd.region.deleteDescription", {
+    count: pendingDelete?.count ?? 0,
+  })}
+  confirmText={t("common.delete")}
+  cancelText={t("common.cancel")}
+  onconfirm={() => {
+    if (pendingDelete)
+      change({ kind: "removeRegion", regionId: pendingDelete.regionId });
+  }}
+  variant="destructive"
+/>
+
+{#snippet regionName()}
+  <label class="flex flex-col gap-1 text-xs text-muted-foreground">
+    {t("skillMonitor.skillCd.region.name")}
+    <input
+      class="w-36 rounded border border-border bg-background px-2 py-1.5 text-sm text-foreground"
+      value={activeRegion.name}
+      placeholder={regionLabel(activeRegion, activeIndex)}
+      onchange={(event) =>
+        change({
+          kind: "renameRegion",
+          regionId: activeRegion.id,
+          name: event.currentTarget.value,
+        })}
+      {@attach blurOnEnter}
+    />
+  </label>
+{/snippet}
+
+{#snippet regionActions()}
+  <button
+    type="button"
+    class="rounded border border-border px-3 py-1.5 text-sm hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50"
+    disabled={activeCount === 0}
+    onclick={() => changeGrid({ kind: "clear" })}
+  >
+    {t("skillMonitor.skillCd.region.clear")}
+  </button>
+  <button
+    type="button"
+    class="rounded border border-border/60 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-50"
+    disabled={skillCdRegions.length <= 1}
+    title={skillCdRegions.length <= 1
+      ? t("skillMonitor.skillCd.layout.error.lastRegion")
+      : undefined}
+    onclick={requestRemoveRegion}
+  >
+    {t("skillMonitor.skillCd.region.delete")}
+  </button>
+{/snippet}
+
 <div class="space-y-6">
-  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
+  <div
+    class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+  >
     <div>
-      <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.skillCd.class.title")}</h2>
+      <h2 class="text-base font-semibold text-foreground">
+        {t("skillMonitor.skillCd.class.title")}
+      </h2>
       <p class="text-xs text-muted-foreground">
         {t("skillMonitor.skillCd.class.description")}
       </p>
@@ -76,7 +214,8 @@
       {#each classConfigs as config (config.classKey)}
         <button
           type="button"
-          class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {selectedClassKey === config.classKey
+          class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {selectedClassKey ===
+          config.classKey
             ? 'bg-primary text-primary-foreground border-primary'
             : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
           onclick={() => setSelectedClass(config.classKey)}
@@ -87,170 +226,94 @@
     </div>
   </div>
 
-  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
-    <div class="flex items-center justify-between">
+  <div
+    class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+  >
+    <div class="flex items-start justify-between gap-3">
       <div>
-        <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.skillCd.skills.title")}</h2>
+        <h2 class="text-base font-semibold text-foreground">
+          {t("skillMonitor.skillCd.preview.title")}
+        </h2>
         <p class="text-xs text-muted-foreground">
-          {t("skillMonitor.skillCd.skills.description")}
+          {t("skillMonitor.skillCd.preview.description")}
         </p>
       </div>
-      <div class="flex items-center gap-3">
-        <div class="text-xs text-muted-foreground">
-          {t("skillMonitor.common.selectedTotal", { count: monitoredSkillIds.length, total: MAX_MONITORED_SKILLS })}
-        </div>
-        <button
-          type="button"
-          class="text-xs px-2 py-1 rounded border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
-          onclick={() => changeLayout({ kind: "clear" })}
-        >
-          {t("skillMonitor.common.clear")}
-        </button>
+      <div class="shrink-0 text-xs text-muted-foreground">
+        {t("skillMonitor.common.selectedTotal", {
+          count: monitoredSkillIds.length,
+          total: MAX_MONITORED_SKILLS,
+        })}
       </div>
     </div>
 
-    <div class="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-3">
-      {#each classSkills as skill (skill.skillId)}
+    <div
+      class="flex flex-wrap items-center gap-2"
+      role="tablist"
+      aria-label={t("skillMonitor.skillCd.preview.title")}
+    >
+      {#each skillCdRegions as region, index (region.id)}
         <button
           type="button"
-          class="relative min-h-11 cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
-            ? 'border-primary ring-1 ring-primary'
-            : 'border-border/60 hover:border-border'}"
-          onclick={() => toggleSkill(skill.skillId)}
+          role="tab"
+          aria-selected={index === activeIndex}
+          class="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors {index ===
+          activeIndex
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+          onclick={() => (activeRegionId = region.id)}
         >
-          {#if skill.imagePath}
-            <img
-              src={skill.imagePath}
-              alt={skill.name}
-              class="w-full h-full object-cover aspect-square"
-            />
-          {:else}
-            <div class="w-full h-full aspect-square flex items-center justify-center bg-muted/30 text-xs text-muted-foreground">
-              {t("skillMonitor.common.unconfigured")}
-            </div>
-          {/if}
-          <div class="absolute inset-x-0 bottom-0 bg-black/50 text-[10px] text-white px-1 py-0.5 truncate">
-            {skill.name || `#${skill.skillId}`}
-          </div>
+          {regionLabel(region, index)}
+          <span class="ml-1 text-xs opacity-75"
+            >{Object.keys(region.positions).length}</span
+          >
         </button>
       {/each}
+      <button
+        type="button"
+        class="inline-flex items-center gap-1 rounded-lg border border-dashed border-border/80 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={skillCdRegions.length >= MAX_SKILL_CD_REGIONS}
+        onclick={addRegion}
+      >
+        <PlusIcon class="size-3.5" />
+        {t("skillMonitor.skillCd.region.add")}
+      </button>
     </div>
+
+    {#key activeRegion.id}
+      <SkillCdLayoutEditor
+        layout={activeRegion}
+        skills={activeSkills}
+        {selectedCell}
+        onSelect={(cell) =>
+          (selection = cell ? { regionId: activeRegion.id, cell } : null)}
+        onAction={changeGrid}
+        leading={regionName}
+        trailing={regionActions}
+      />
+    {/key}
   </div>
 
-
-  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
-    <div class="flex items-center justify-between gap-3">
-      <div>
-        <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.skillCd.resonance.title")}</h2>
+  <div
+    class="rounded-lg border border-border/60 bg-card/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+  >
+    <SkillPicker
+      {classSkills}
+      {tileState}
+      onPick={toggleSkill}
+      pinnedFantasyIds={monitoredFantasyIds}
+    >
+      {#snippet heading()}
+        <h2 class="text-base font-semibold text-foreground">
+          {t("skillMonitor.skillCd.skills.title")}
+        </h2>
         <p class="text-xs text-muted-foreground">
-          {t("skillMonitor.skillCd.resonance.description")}
+          {t("skillMonitor.skillCd.region.addTo", {
+            region: regionLabel(activeRegion, activeIndex),
+          })}
         </p>
-      </div>
-      <div class="text-xs text-muted-foreground">
-        {t("skillMonitor.common.selectedCount", { count: selectedResonanceSkills.length })}
-      </div>
-    </div>
-
-    <input
-      class="w-full sm:w-64 rounded border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-      placeholder={t("skillMonitor.skillCd.resonance.placeholder")}
-      value={resonanceSearch}
-      oninput={(event) => setResonanceSearch((event.currentTarget as HTMLInputElement).value)}
-    />
-
-    {#if resonanceSearch.trim().length > 0}
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-3">
-        {#each filteredResonanceSkills as skill (skill.skillId)}
-          <button
-            type="button"
-            class="relative min-h-11 cursor-pointer group rounded-lg border overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
-              ? 'border-primary ring-1 ring-primary'
-              : 'border-border/60 hover:border-border'}"
-            title={skill.name}
-            onclick={() => toggleSkill(skill.skillId)}
-          >
-            <img
-              src={skill.imagePath}
-              alt={skill.name}
-              class="w-full h-full object-contain aspect-square bg-muted/20"
-            />
-            <div class="absolute inset-x-0 bottom-0 bg-black/50 text-[10px] text-white px-1 py-0.5 truncate">
-              {skill.name}
-            </div>
-          </button>
-        {/each}
-      </div>
-    {:else}
-      <div class="text-xs text-muted-foreground">{t("skillMonitor.skillCd.resonance.searchPrompt")}</div>
-    {/if}
-
-    <div class="space-y-2">
-      <div class="text-xs text-muted-foreground">{t("skillMonitor.skillCd.resonance.selectedTitle")}</div>
-      <div class="flex flex-wrap gap-2">
-        {#each selectedResonanceSkills as skill (skill.skillId)}
-          <button
-            type="button"
-            class="relative min-h-11 cursor-pointer rounded-md border border-border/60 overflow-hidden bg-muted/20 size-12 hover:border-border hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
-            title={skill.name}
-            onclick={() => toggleSkill(skill.skillId)}
-          >
-            <img
-              src={skill.imagePath}
-              alt={skill.name}
-              class="w-full h-full object-contain"
-            />
-            <div class="absolute inset-x-0 bottom-0 bg-black/60 text-[9px] text-white px-1 py-0.5 truncate">
-              {skill.name}
-            </div>
-          </button>
-        {/each}
-        {#if selectedResonanceSkills.length === 0}
-          <div class="text-xs text-muted-foreground">{t("skillMonitor.skillCd.resonance.noneSelected")}</div>
-        {/if}
-      </div>
-    </div>
+      {/snippet}
+    </SkillPicker>
   </div>
-
-  <div class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
-    <div class="flex items-center justify-between gap-3">
-      <div>
-        <h2 class="text-base font-semibold text-foreground">{t("skillMonitor.skillCd.duty.title")}</h2>
-        <p class="text-xs text-muted-foreground">{t("skillMonitor.skillCd.duty.description")}</p>
-      </div>
-      <div class="text-xs text-muted-foreground">
-        {t("skillMonitor.common.selectedCount", { count: selectedDutySkills.length })}
-      </div>
-    </div>
-    {#each dutyGroups as group (group)}
-      <div class="space-y-2">
-        <h3 class="text-sm font-medium">{t(`skillMonitor.skillCd.duty.${group}`)}</h3>
-        <div class="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3">
-          {#each dutySkills.filter((skill) => skill.group === group) as skill (skill.skillId)}
-            <button
-              type="button"
-              class="flex items-center gap-2 rounded-lg border p-2 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 {isSelected(skill.skillId)
-                ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                : 'border-border/60 hover:bg-muted/30'}"
-              title={`${skill.name} (#${skill.skillId})`}
-              aria-pressed={isSelected(skill.skillId)}
-              onclick={() => toggleSkill(skill.skillId)}
-            >
-              <img src={skill.imagePath} alt="" class="size-11 shrink-0 object-contain" />
-              <span class="min-w-0 flex-1 text-xs break-words">{skill.name}</span>
-            </button>
-          {/each}
-        </div>
-      </div>
-    {/each}
-  </div>
-
-  <SkillCdLayoutEditor
-    layout={skillCdLayout}
-    skills={layoutSkills}
-    {selectedCell}
-    onSelect={(cell) => selectedCell = cell}
-    onAction={changeLayout}
-  />
 
   <SkillVoiceSection {selectedClassKey} {classSkills} />
 </div>

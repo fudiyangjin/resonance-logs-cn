@@ -1,11 +1,15 @@
 <script lang="ts">
   import { barMotion, type BarMotion } from "$lib/bar-motion.svelte.js";
+  import SkillIcon from "$lib/components/skill-icon.svelte";
+  import { skillBgColour } from "$lib/skill-mappings";
   import type { SkillDisplay } from "./overlay-types";
 
   interface Props {
     skillId?: number | undefined;
     name?: string | undefined;
     imagePath?: string | undefined;
+    /** `PCBgColour` of the skill shown; defaults to `skillId`'s. */
+    bgColour?: number | undefined;
     /** No display renders the skill as ready. */
     display?: SkillDisplay | null | undefined;
     /** A required resource is short, so the skill is unusable even off CD. */
@@ -19,12 +23,14 @@
     skillId,
     name,
     imagePath,
+    bgColour,
     display,
     resourceBlocked = false,
     derivedActive = false,
     size = 52,
   }: Props = $props();
 
+  const colour = $derived(bgColour ?? skillBgColour(skillId));
   const isOnCd = $derived(display?.isActive ?? false);
   const isUsable = $derived(display?.usable ?? true);
   const isUnavailable = $derived(!isUsable || resourceBlocked);
@@ -52,15 +58,17 @@
   style:--skill-cell-size={`${size}px`}
   style:--skill-cell-scale={size / 52}
 >
-  {#if imagePath}
-    <img
-      src={imagePath}
+  {#if skillId}
+    <SkillIcon
+      {imagePath}
       alt={name}
-      class="skill-icon"
-      class:dimmed={isUnavailable}
+      {colour}
+      dimmed={isUnavailable}
+      stroke={!derivedActive}
     />
-  {:else if skillId}
-    <div class="skill-fallback">#{skillId}</div>
+    {#if !imagePath}
+      <div class="skill-fallback">#{skillId}</div>
+    {/if}
   {/if}
 
   {#if display?.chargesText}
@@ -112,20 +120,9 @@
     box-shadow: 0 0 8px rgba(255, 216, 102, 0.6);
   }
 
-  .skill-icon {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none;
-  }
-
-  .skill-icon.dimmed {
-    filter: grayscale(80%) brightness(0.5);
-  }
-
   .skill-fallback {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;

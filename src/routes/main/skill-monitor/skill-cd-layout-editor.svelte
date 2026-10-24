@@ -1,25 +1,39 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
+  import { onDestroy, type Snippet } from "svelte";
+  import SkillIcon from "$lib/components/skill-icon.svelte";
   import { t } from "$lib/i18n/index.svelte";
-  import type { SkillDisplayInfo } from "$lib/skill-mappings";
+  import { skillBgColour, type SkillDisplayInfo } from "$lib/skill-mappings";
   import {
     MAX_SKILL_CD_GRID_SIZE,
+    SKILL_CD_GAP_MAX,
     isSkillCdPositionInBounds,
     sameSkillCdPosition,
     skillCdAt,
-    type SkillCdAction,
+    type SkillCdGridAction,
     type SkillCdLayout,
     type SkillCdPosition,
+    type SkillCdRegion,
   } from "$lib/skill-cd-layout";
 
   interface Props {
-    layout: SkillCdLayout;
+    layout: SkillCdLayout & Pick<SkillCdRegion, "gap">;
     skills: readonly SkillDisplayInfo[];
     selectedCell: SkillCdPosition | null;
     onSelect: (cell: SkillCdPosition | null) => void;
-    onAction: (action: SkillCdAction) => boolean;
+    onAction: (action: SkillCdGridAction) => boolean;
+    /** Controls placed before / after the size controls. */
+    leading?: Snippet;
+    trailing?: Snippet;
   }
-  let { layout, skills, selectedCell, onSelect, onAction }: Props = $props();
+  let {
+    layout,
+    skills,
+    selectedCell,
+    onSelect,
+    onAction,
+    leading,
+    trailing,
+  }: Props = $props();
   let grid = $state<HTMLDivElement>();
   let drag = $state<{
     pointerId: number;
@@ -204,6 +218,12 @@
     // Restore a rejected edit even when the controlled prop did not change.
     input.value = String(layout[dimension]);
   }
+
+  function setGap(event: Event) {
+    const input = event.currentTarget as HTMLInputElement;
+    onAction({ kind: "gap", gap: input.valueAsNumber });
+    input.value = String(layout.gap);
+  }
 </script>
 
 <svelte:window
@@ -215,16 +235,9 @@
   }}
 />
 
-<div class="space-y-3 rounded-lg border border-border/60 bg-card/40 p-4">
-  <div>
-    <h2 class="text-base font-semibold text-foreground">
-      {t("skillMonitor.skillCd.preview.title")}
-    </h2>
-    <p class="text-xs text-muted-foreground">
-      {t("skillMonitor.skillCd.preview.description")}
-    </p>
-  </div>
+<div class="space-y-3">
   <div class="flex flex-wrap items-end gap-3">
+    {@render leading?.()}
     {#each ["rows", "columns"] as dimension (dimension)}
       <label class="flex flex-col gap-1 text-xs text-muted-foreground">
         {t(
@@ -244,9 +257,25 @@
         />
       </label>
     {/each}
+    <label class="flex flex-col gap-1 text-xs text-muted-foreground">
+      {t("skillMonitor.skillCd.layout.gap")}
+      <span class="flex items-center gap-1">
+        <input
+          type="number"
+          min="0"
+          max={SKILL_CD_GAP_MAX}
+          step="1"
+          class="w-20 rounded border border-border bg-background px-2 py-1.5 text-sm text-foreground"
+          value={layout.gap}
+          onchange={setGap}
+        />
+        px
+      </span>
+    </label>
     <button
       type="button"
-      class="rounded border border-border px-3 py-1.5 text-sm hover:bg-muted/40"
+      class="rounded border border-border px-3 py-1.5 text-sm hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50"
+      disabled={Object.keys(layout.positions).length === 0}
       onclick={() => {
         cancelDrag();
         onAction({ kind: "compact" });
@@ -255,6 +284,7 @@
     >
       {t("skillMonitor.skillCd.layout.compact")}
     </button>
+    {@render trailing?.()}
   </div>
   <p class="text-xs text-muted-foreground">
     {t("skillMonitor.skillCd.layout.help")}
@@ -304,11 +334,9 @@
           }}
         >
           {#if cell.skill?.imagePath}
-            <img
-              src={cell.skill.imagePath}
-              alt=""
-              draggable="false"
-              class="pointer-events-none size-full object-cover"
+            <SkillIcon
+              imagePath={cell.skill.imagePath}
+              colour={skillBgColour(cell.skillId)}
             />
           {:else if cell.skillId !== null}
             #{cell.skillId}

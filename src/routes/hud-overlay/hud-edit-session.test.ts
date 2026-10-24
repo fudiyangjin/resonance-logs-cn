@@ -7,6 +7,10 @@ import {
   type SkillMonitorProfile,
 } from "$lib/settings-store";
 import {
+  createDefaultSkillCdRegion,
+  type SkillCdRegion,
+} from "$lib/skill-cd-layout";
+import {
   layoutChange,
   pickMinimapLayout,
   pickSkillProfileLayout,
@@ -28,6 +32,20 @@ function buffGroup(id: string, x: number, iconSize = 44): BuffGroup {
     showName: true,
     showTime: true,
     showLayer: true,
+  };
+}
+
+function skillCdRegion(
+  id: string,
+  x: number,
+  scale = 1,
+  positions: SkillCdRegion["positions"] = {},
+): SkillCdRegion {
+  return {
+    ...createDefaultSkillCdRegion(id),
+    positions,
+    position: { x, y: 0 },
+    scale,
   };
 }
 
@@ -86,6 +104,44 @@ describe("restoreSkillProfileLayout", () => {
       ["a", 10, 40],
       ["new", 400, 60],
     ]);
+  });
+
+  it("restores skill CD region position and scale by id, keeps new regions and skips deleted ones", () => {
+    const saved = pickSkillProfileLayout(
+      profile({
+        skillCdRegions: [
+          skillCdRegion("skill_cd_region_1", 10, 1.2),
+          skillCdRegion("gone", 20),
+        ],
+      }),
+    );
+    const edited = profile({
+      monitoredSkillIds: [1420],
+      skillCdRegions: [
+        skillCdRegion("skill_cd_region_1", 300, 2, {
+          1420: { row: 1, column: 1 },
+        }),
+        skillCdRegion("new", 400, 0.8),
+      ],
+    });
+
+    const restored = restoreSkillProfileLayout(edited, saved);
+
+    expect(
+      restored.skillCdRegions!.map((region) => [
+        region.id,
+        region.position.x,
+        region.scale,
+      ]),
+    ).toEqual([
+      ["skill_cd_region_1", 10, 1.2],
+      ["new", 400, 0.8],
+    ]);
+    // Cells and membership are settings, not layout.
+    expect(restored.monitoredSkillIds).toEqual([1420]);
+    expect(restored.skillCdRegions![0]!.positions).toEqual({
+      1420: { row: 1, column: 1 },
+    });
   });
 
   it("leaves non-layout settings alone", () => {

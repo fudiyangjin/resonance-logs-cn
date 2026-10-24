@@ -2,6 +2,7 @@ import keySkillMarkersRaw from "$lib/config/key_skill_markers.json";
 import resonanceSkillIconsRaw from "$lib/config/skill_aoyi_icons.json";
 import classSkillConfigsRaw from "$lib/config/class_skill_configs.json";
 import dutySkillsRaw from "$lib/config/duty_skills.json";
+import skillBgColoursRaw from "$lib/config/skill_bg_colours.json";
 import classResourcesRaw from "$lib/config/class_resources.json";
 import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays.json";
 import counterRulesRaw from "$lib/config/counter_rules.json";
@@ -1081,6 +1082,26 @@ export function searchResonanceSkills(
   return getResonanceSkills(locale).filter((skill) =>
     skill.name.toLowerCase().includes(normalized),
   );
+}
+
+/**
+ * Element colours of the in-game skill button, indexed by
+ * `SkillTable.PCBgColour` (as the PC auto-battle bar draws them). 0 = none.
+ */
+export const SKILL_BG_COLOURS: readonly string[] = [
+  "",
+  "#c04823",
+  "#4f5759",
+  "#2371c0",
+  "#c09923",
+  "#69c023",
+];
+
+const SKILL_BG_COLOUR_BY_ID = skillBgColoursRaw as Record<string, number>;
+
+/** `PCBgColour` of a skill; derived skills carry their own. 0 = no tint. */
+export function skillBgColour(skillId: number | null | undefined): number {
+  return skillId ? (SKILL_BG_COLOUR_BY_ID[skillId] ?? 0) : 0;
 }
 
 export function findAnySkillByBaseId(

@@ -5,7 +5,18 @@ import {
   createDefaultSkillMonitorProfile,
   type SkillMonitorProfile,
 } from "./settings-store";
-import { changeSkillCdSelection, type SkillCdAction } from "./skill-cd-layout";
+import {
+  DEFAULT_SKILL_CD_GAP,
+  DEFAULT_SKILL_CD_REGION_ID,
+  MAX_SKILL_CD_REGIONS,
+  SKILL_CD_GAP_MAX,
+  changeSkillCdSelection,
+  createDefaultSkillCdRegion,
+  setSkillCdRegionLayout,
+  type SkillCdAction,
+  type SkillCdGridAction,
+  type SkillCdRegion,
+} from "./skill-cd-layout";
 import { normalizeSkillProfile } from "./skill-monitor-normalize";
 import { isDefaultSkillMonitorProfile } from "./starter-loadout";
 import { parseLoadoutExport } from "./loadout-import";
@@ -21,6 +32,8 @@ import {
 } from "./skill-monitor-profile.svelte.js";
 import { buildMonitorRuntimeSnapshot } from "./runtime-monitor-sync";
 import { reconcileMonitoringState } from "./settings-migrations";
+
+const R1 = DEFAULT_SKILL_CD_REGION_ID;
 
 // Vitest runs Svelte modules in SSR mode, where module-level $derived values
 // are evaluated once. Supply the live profile at this boundary while keeping
@@ -48,14 +61,17 @@ function setup() {
   const skill = state.skillMonitor.profiles[0]!;
   skill.enabled = true;
   skill.monitoredSkillIds = [1420, 1421];
-  skill.skillCdLayout = {
-    rows: 3,
-    columns: 4,
-    positions: {
-      1420: { row: 2, column: 3 },
-      1421: { row: 0, column: 1 },
+  skill.skillCdRegions = [
+    {
+      ...createDefaultSkillCdRegion(),
+      rows: 3,
+      columns: 4,
+      positions: {
+        1420: { row: 2, column: 3 },
+        1421: { row: 0, column: 1 },
+      },
     },
-  };
+  ];
   state.loadouts = {
     ...state.loadouts,
     activeId: "layout-test",
@@ -82,17 +98,41 @@ function edit(action: SkillCdAction) {
     return {
       ...profile,
       monitoredSkillIds: result.monitoredSkillIds,
-      skillCdLayout: result.skillCdLayout,
+      skillCdRegions: result.skillCdRegions,
     };
   });
+}
+
+/** A grid edit of region 1, as the settings tab sends it. */
+function editGrid(action: SkillCdGridAction, regionId = R1) {
+  edit({ ...action, regionId });
+}
+
+function regions() {
+  return activeProfile()!.skillCdRegions!;
+}
+
+/** Region 1 keeps 1420; region "fantasy" (moved, scaled, gapless) holds 1421. */
+function splitIntoTwoRegions() {
+  edit({ kind: "addRegion", id: "fantasy" });
+  edit({ kind: "renameRegion", regionId: "fantasy", name: "幻想" });
+  editGrid({ kind: "toggle", skillId: 1421 }, "fantasy");
+  editGrid({ kind: "gap", gap: 0 }, "fantasy");
+  updateActiveProfile((profile) => ({
+    ...profile,
+    skillCdRegions: setSkillCdRegionLayout(profile, "fantasy", {
+      position: { x: 320, y: 180 },
+      scale: 1.3,
+    }),
+  }));
 }
 
 describe("skill CD profile integration", () => {
   beforeEach(setup);
 
   it("persists mixed duty skills and subscribes them through the existing runtime", () => {
-    edit({ kind: "toggle", skillId: 3612 });
-    edit({ kind: "toggle", skillId: 3028 });
+    editGrid({ kind: "toggle", skillId: 3612 });
+    editGrid({ kind: "toggle", skillId: 3028 });
     expect(buildMonitorRuntimeSnapshot().skill.monitoredSkillIds).toEqual([
       1420, 1421, 3028, 3612,
     ]);
@@ -105,84 +145,126 @@ describe("skill CD profile integration", () => {
     expect(activeProfile()!.monitoredSkillIds).toEqual([
       1420, 1421, 3612, 3028,
     ]);
-    expect(activeProfile()!.skillCdLayout!.positions[3612]).toEqual({
-      row: 0,
-      column: 0,
-    });
+    expect(regions()[0]!.positions[3612]).toEqual({ row: 0, column: 0 });
     // The SSR test environment does not recompute loadouts' module-level
     // $derived value used by the production writer; edit the original here.
     switchLoadout("layout-test");
-    edit({ kind: "remove", skillId: 3612 });
+    editGrid({ kind: "remove", skillId: 3612 });
     expect(buildMonitorRuntimeSnapshot().skill.monitoredSkillIds).toEqual([
       1420, 1421, 3028,
     ]);
-    expect(activeProfile()!.skillCdLayout!.positions[3612]).toBeUndefined();
+    expect(regions()[0]!.positions[3612]).toBeUndefined();
   });
 
-  it("keeps valid layout coordinates through save, load, export and import", () => {
-    const expected = activeProfile()!.skillCdLayout;
+  it("keeps every region through save, load, export and import", () => {
+    splitIntoTwoRegions();
+    const expected = regions();
+    expect(expected.map((region) => region.id)).toEqual([R1, "fantasy"]);
+    expect(expected[1]).toMatchObject({
+      name: "幻想",
+      position: { x: 320, y: 180 },
+      scale: 1.3,
+      gap: 0,
+      positions: { 1421: { row: 0, column: 0 } },
+    });
     const reloaded = reconcileMonitoringState(
       JSON.parse(JSON.stringify(SETTINGS.monitoring.state)),
     );
-    expect(reloaded.skillMonitor.profiles[0]!.skillCdLayout).toEqual(expected);
+    expect(reloaded.skillMonitor.profiles[0]!.skillCdRegions).toEqual(expected);
     const exported = exportLoadout("layout-test")!;
     const parsed = parseLoadoutExport(JSON.parse(JSON.stringify(exported)));
     expect(parsed.success).toBe(true);
     if (!parsed.success) throw new Error(parsed.issues.join("\n"));
-    expect(parsed.output.skillProfile.skillCdLayout).toEqual(expected);
+    expect(parsed.output.skillProfile.skillCdRegions).toEqual(expected);
+    expect(parsed.output.skillProfile).not.toHaveProperty("skillCdLayout");
     const id = importLoadout(parsed.output);
     switchLoadout(id);
-    expect(activeProfile()!.skillCdLayout).toEqual(expected);
+    expect(regions()).toEqual(expected);
     expect(activeProfile()!.monitoredSkillIds).toEqual([1420, 1421]);
     switchLoadout("layout-test");
-    expect(activeProfile()!.skillCdLayout).toEqual(expected);
+    expect(regions()).toEqual(expected);
   });
 
-  it("copies layout without sharing nested coordinates", () => {
+  it("converts and drops a legacy layout identically across repeated reconciles", () => {
+    const profile = SETTINGS.monitoring.state.skillMonitor.profiles[0]!;
+    delete profile.skillCdRegions;
+    profile.skillCdLayout = {
+      rows: 3,
+      columns: 4,
+      positions: { 1420: { row: 2, column: 3 } },
+    };
+    const once = reconcileMonitoringState(
+      JSON.parse(JSON.stringify(SETTINGS.monitoring.state)),
+    );
+    const twice = reconcileMonitoringState(JSON.parse(JSON.stringify(once)));
+    const [converted] = once.skillMonitor.profiles;
+    expect(converted).not.toHaveProperty("skillCdLayout");
+    expect(converted!.skillCdRegions).toEqual([
+      {
+        ...createDefaultSkillCdRegion(),
+        rows: 3,
+        columns: 4,
+        positions: {
+          1420: { row: 2, column: 3 },
+          1421: { row: 0, column: 0 },
+        },
+      },
+    ]);
+    expect(twice.skillMonitor.profiles).toEqual(once.skillMonitor.profiles);
+  });
+
+  it("copies regions without sharing nested coordinates", () => {
     const source = activeProfile()!;
     const id = duplicateLoadout("layout-test")!;
     switchLoadout(id);
-    expect(activeProfile()!.skillCdLayout).toEqual(source.skillCdLayout);
+    expect(regions()).toEqual(source.skillCdRegions);
     const copy = activeProfile()!;
-    const compacted = changeSkillCdSelection(copy, { kind: "compact" });
-    if (!compacted.ok) throw new Error(compacted.reason);
-    copy.skillCdLayout = compacted.skillCdLayout;
-    expect(activeProfile()!.skillCdLayout).not.toEqual(source.skillCdLayout);
-    switchLoadout("layout-test");
-    expect(activeProfile()!.skillCdLayout!.positions[1420]).toEqual({
-      row: 2,
-      column: 3,
+    const compacted = changeSkillCdSelection(copy, {
+      kind: "compact",
+      regionId: R1,
     });
+    if (!compacted.ok) throw new Error(compacted.reason);
+    copy.skillCdRegions = compacted.skillCdRegions;
+    expect(regions()).not.toEqual(source.skillCdRegions);
+    switchLoadout("layout-test");
+    expect(regions()[0]!.positions[1420]).toEqual({ row: 2, column: 3 });
   });
 
   it("backfills legacy layouts while preserving the group position and scale", () => {
     const profile = createDefaultSkillMonitorProfile();
-    delete profile.skillCdLayout;
+    delete profile.skillCdRegions;
     profile.monitoredSkillIds = [1421, 1420];
     profile.overlayPositions.skillCdGroup = { x: 123, y: 234 };
     profile.overlaySizes.skillCdGroupScale = 1.7;
     const normalized = normalizeSkillProfile(profile);
-    expect(normalized.skillCdLayout).toEqual({
-      rows: 2,
-      columns: 5,
-      positions: {
-        1421: { row: 0, column: 0 },
-        1420: { row: 0, column: 1 },
+    expect(normalized.skillCdRegions).toEqual([
+      {
+        ...createDefaultSkillCdRegion(),
+        positions: {
+          1421: { row: 0, column: 0 },
+          1420: { row: 0, column: 1 },
+        },
+        position: { x: 123, y: 234 },
+        scale: 1.7,
       },
-    });
-    expect(normalized.overlayPositions.skillCdGroup).toEqual({
-      x: 123,
-      y: 234,
-    });
-    expect(normalized.overlaySizes.skillCdGroupScale).toBe(1.7);
+    ]);
     expect(normalizeSkillProfile(normalized)).toEqual(normalized);
+
     const exported = exportLoadout("layout-test")!;
-    delete exported.skillProfile.skillCdLayout;
+    delete exported.skillProfile.skillCdRegions;
+    exported.skillProfile.skillCdLayout = {
+      rows: 3,
+      columns: 4,
+      positions: { 1420: { row: 1, column: 1 } },
+    };
     const parsed = parseLoadoutExport(exported);
-    expect(
-      parsed.success &&
-        parsed.output.skillProfile.skillCdLayout!.positions[1420],
-    ).toEqual({ row: 0, column: 0 });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) throw new Error(parsed.issues.join("\n"));
+    expect(parsed.output.skillProfile).not.toHaveProperty("skillCdLayout");
+    expect(parsed.output.skillProfile.skillCdRegions![0]!.positions).toEqual({
+      1420: { row: 1, column: 1 },
+      1421: { row: 0, column: 0 },
+    });
   });
 
   it("keeps fresh and legacy untouched profiles recognizable", () => {
@@ -190,17 +272,28 @@ describe("skill CD profile integration", () => {
     expect(isDefaultSkillMonitorProfile(normalizeSkillProfile(profile))).toBe(
       true,
     );
-    delete profile.skillCdLayout;
+    delete profile.skillCdRegions;
     expect(isDefaultSkillMonitorProfile(profile)).toBe(true);
+    profile.skillCdLayout = { rows: 2, columns: 5, positions: {} };
     expect(isDefaultSkillMonitorProfile(normalizeSkillProfile(profile))).toBe(
       true,
     );
   });
 
-  it("keeps backend snapshots identical when moving, swapping, resizing or compacting", () => {
+  it("does not treat a moved region as an untouched starter", () => {
+    const profile = createDefaultSkillMonitorProfile();
+    profile.skillCdRegions = setSkillCdRegionLayout(profile, R1, {
+      position: { x: 999, y: 40 },
+    });
+    expect(isDefaultSkillMonitorProfile(normalizeSkillProfile(profile))).toBe(
+      false,
+    );
+  });
+
+  it("keeps backend snapshots identical for layout-only and cross-region edits", () => {
     const before = buildMonitorRuntimeSnapshot();
     expect(before.skill.monitoredSkillIds).toEqual([1420, 1421]);
-    edit({
+    editGrid({
       kind: "move",
       skillId: 1420,
       from: { row: 2, column: 3 },
@@ -210,7 +303,7 @@ describe("skill CD profile integration", () => {
       columns: 4,
     });
     expect(buildMonitorRuntimeSnapshot()).toEqual(before);
-    edit({
+    editGrid({
       kind: "move",
       skillId: 1420,
       from: { row: 1, column: 2 },
@@ -220,9 +313,15 @@ describe("skill CD profile integration", () => {
       columns: 4,
     });
     expect(buildMonitorRuntimeSnapshot()).toEqual(before);
-    edit({ kind: "resize", rows: 2, columns: 3 });
+    editGrid({ kind: "resize", rows: 2, columns: 3 });
     expect(buildMonitorRuntimeSnapshot()).toEqual(before);
-    edit({ kind: "compact" });
+    editGrid({ kind: "compact" });
+    expect(buildMonitorRuntimeSnapshot()).toEqual(before);
+    splitIntoTwoRegions();
+    expect(buildMonitorRuntimeSnapshot()).toEqual(before);
+    editGrid({ kind: "toggle", skillId: 1421 });
+    expect(buildMonitorRuntimeSnapshot()).toEqual(before);
+    edit({ kind: "removeRegion", regionId: "fantasy" });
     expect(buildMonitorRuntimeSnapshot()).toEqual(before);
   });
 
@@ -231,17 +330,21 @@ describe("skill CD profile integration", () => {
       "1420": {
         ready: { enabled: true, phrase: { source: "auto" } },
       },
+      "1421": {
+        cast: { enabled: true, phrase: { source: "auto" } },
+      },
     };
     updateActiveProfile((profile) => ({
       ...profile,
       skillVoiceConfigs: voice,
     }));
-    edit({ kind: "remove", skillId: 1420 });
+    editGrid({ kind: "remove", skillId: 1420 });
+    expect(regions()[0]!.positions[1420]).toBeUndefined();
+    splitIntoTwoRegions();
+    edit({ kind: "removeRegion", regionId: "fantasy" });
     expect(activeProfile()!.skillVoiceConfigs).toEqual(voice);
-    expect(activeProfile()!.skillCdLayout!.positions[1420]).toBeUndefined();
-    expect(buildMonitorRuntimeSnapshot().skill.monitoredSkillIds).toEqual([
-      1421,
-    ]);
+    expect(regions().map((region) => region.id)).toEqual([R1]);
+    expect(buildMonitorRuntimeSnapshot().skill.monitoredSkillIds).toEqual([]);
   });
 
   it.each([
@@ -252,12 +355,42 @@ describe("skill CD profile integration", () => {
     { positions: { 1420: { row: 0, column: 10 } } },
     { positions: { 1420: { row: 0 } } },
     { positions: { invalid: { row: 0, column: 0 } } },
-  ])("rejects malformed imported layouts: %j", (invalid) => {
+    { id: " " },
+    { scale: Number.NaN },
+    { gap: "4" },
+    { position: { x: 0 } },
+  ])("rejects malformed imported regions: %j", (invalid) => {
     const data = exportLoadout("layout-test")!;
-    Object.assign(data.skillProfile.skillCdLayout!, invalid);
+    Object.assign(data.skillProfile.skillCdRegions![0]!, invalid);
     const parsed = parseLoadoutExport(data);
     expect(parsed.success).toBe(false);
     if (!parsed.success)
-      expect(parsed.issues.join("\n")).toContain("skillCdLayout");
+      expect(parsed.issues.join("\n")).toContain("skillCdRegions");
+  });
+
+  it.each([
+    [undefined, DEFAULT_SKILL_CD_GAP],
+    [99, SKILL_CD_GAP_MAX],
+  ])("normalizes an imported icon gap of %s to %i", (gap, expected) => {
+    const data = exportLoadout("layout-test")!;
+    const region: Partial<SkillCdRegion> =
+      data.skillProfile.skillCdRegions![0]!;
+    if (gap === undefined) delete region.gap;
+    else region.gap = gap;
+    const parsed = parseLoadoutExport(data);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) throw new Error(parsed.issues.join("\n"));
+    expect(parsed.output.skillProfile.skillCdRegions![0]!.gap).toBe(expected);
+  });
+
+  it.each([
+    ["no regions", 0],
+    ["too many regions", MAX_SKILL_CD_REGIONS + 1],
+  ])("rejects imported region lists with %s", (_label, count) => {
+    const data = exportLoadout("layout-test")!;
+    data.skillProfile.skillCdRegions = Array.from({ length: count }, (_, i) =>
+      createDefaultSkillCdRegion(`r${i}`),
+    );
+    expect(parseLoadoutExport(data).success).toBe(false);
   });
 });
