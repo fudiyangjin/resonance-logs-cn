@@ -1850,6 +1850,9 @@ export const zhCNMessages = {
   "monsterMonitor.overlay.bossDbm": "Boss DBM 区：{state}",
   "monsterMonitor.overlay.entityDuration": "实体监控区：{state}",
   "monsterMonitor.overlay.monsterSkill": "怪物技能区：{state}",
+  "monsterMonitor.monsterSkill.monitorAll": "显示周围所有怪物技能",
+  "monsterMonitor.monsterSkill.monitorAllDesc":
+    "开启后显示周围所有怪物释放的技能，格式为 技能名字#id。未单独配置的技能显示 5 秒，重复施放会刷新显示时间。",
   "monsterMonitor.monsterSkill.title": "怪物技能",
   "monsterMonitor.monsterSkill.description":
     "附近任意怪物释放列表中的技能时，在怪物遮罩中显示技能名，停留设定的秒数后消失；再次释放会重新计时。与 Boss DBM 不同，这里不依赖服务端的预警标记，任何怪物技能都可以监控。",

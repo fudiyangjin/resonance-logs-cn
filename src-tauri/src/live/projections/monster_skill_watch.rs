@@ -2,8 +2,8 @@
 //! nearby monster.
 //!
 //! Casts come from `ATTR_SKILL_ID` deltas, which the server sends for every
-//! entity in view. Only the latest cast per skill is kept, so the state is
-//! bounded by the watch list. How long a cast stays on screen is a display
+//! entity in view. Only the latest cast per skill is kept. Discovery mode
+//! also admits unlisted skills, with bounded storage. How long a cast stays on screen is a display
 //! setting, so expiry is left to the HUD; a caster that dies or leaves view
 //! does not take its cast with it.
 
@@ -31,6 +31,7 @@ pub(crate) fn is_world_monster(entities: &EntityContext, uuid: EntityUuid) -> bo
 #[derive(Debug, Default)]
 pub(crate) struct MonsterSkillWatch {
     watched: HashSet<i32>,
+    monitor_all: bool,
     /// Skill id -> wall time of its latest cast.
     latest: HashMap<i32, i64>,
 }
@@ -41,7 +42,14 @@ impl MonsterSkillWatch {
         self.watched.clear();
         self.watched.extend(skill_ids.iter().copied());
         let watched = &self.watched;
-        self.latest.retain(|skill_id, _| watched.contains(skill_id));
+        self.latest
+            .retain(|skill_id, _| self.monitor_all || watched.contains(skill_id));
+    }
+
+    pub fn set_monitor_all(&mut self, enabled: bool) {
+        self.monitor_all = enabled;
+        self.latest
+            .retain(|skill_id, _| enabled || self.watched.contains(skill_id));
     }
 
     /// Records a cast of `skill_id` by `caster`; returns whether the
@@ -53,8 +61,27 @@ impl MonsterSkillWatch {
         skill_id: i32,
         cast_at_ms: i64,
     ) -> bool {
-        if !self.watched.contains(&skill_id) || !is_world_monster(entities, caster) {
+        if skill_id <= 0
+            || (!self.monitor_all && !self.watched.contains(&skill_id))
+            || !is_world_monster(entities, caster)
+        {
             return false;
+        }
+        if self.monitor_all {
+            self.latest.retain(|id, time| {
+                self.watched.contains(id) || cast_at_ms.saturating_sub(*time) < 60_000
+            });
+            if !self.latest.contains_key(&skill_id) && self.latest.len() >= 512 {
+                if let Some(oldest) = self
+                    .latest
+                    .iter()
+                    .filter(|(id, _)| !self.watched.contains(id))
+                    .min_by_key(|(id, time)| (**time, **id))
+                    .map(|(&id, _)| id)
+                {
+                    self.latest.remove(&oldest);
+                }
+            }
         }
         self.latest.insert(skill_id, cast_at_ms) != Some(cast_at_ms)
     }
@@ -195,6 +222,38 @@ mod tests {
         assert!(!watch.observe(&entities, MONSTER, SKILL + 1, 5_000));
 
         assert!(watch.states().is_empty());
+    }
+
+    #[test]
+    fn discovery_records_unlisted_monster_skills_and_disable_removes_them() {
+        let entities = scene();
+        let mut watch = watching(&[SKILL]);
+        watch.set_monitor_all(true);
+        assert!(watch.observe(&entities, MONSTER, SKILL + 1, 5_000));
+        assert!(watch.observe(&entities, MONSTER, SKILL, 5_000));
+        assert!(!watch.observe(&entities, player(), SKILL + 2, 5_000));
+        assert!(!watch.observe(&entities, SUMMON, SKILL + 2, 5_000));
+        assert!(!watch.observe(&entities, MONSTER, 0, 5_000));
+        watch.apply_config(&[SKILL]);
+        assert_eq!(watch.states().len(), 2);
+        watch.set_monitor_all(false);
+        assert_eq!(watch.states().len(), 1);
+        assert_eq!(watch.states()[0].skill_id, SKILL);
+    }
+
+    #[test]
+    fn discovery_bounds_storage_without_evicting_configured_skills() {
+        let entities = scene();
+        let mut watch = watching(&[SKILL]);
+        watch.set_monitor_all(true);
+        watch.observe(&entities, MONSTER, SKILL, 1_000);
+        for id in 1..600 {
+            watch.observe(&entities, MONSTER, id, 2_000 + i64::from(id));
+        }
+        assert_eq!(watch.states().len(), 512);
+        assert!(watch.states().iter().any(|state| state.skill_id == SKILL));
+        watch.observe(&entities, MONSTER, 600, 70_000);
+        assert_eq!(watch.states().len(), 2);
     }
 
     #[test]

@@ -1245,6 +1245,8 @@ function buildMonsterSkillDisplay(now: number): {
     SETTINGS.monsterMonitor.state.monsterSkillEntries,
   );
   const built = buildMonsterSkillRows({
+    monitorAll: SETTINGS.monsterMonitor.state.monsterSkillMonitorAll === true,
+    resolveSkillName: resolveMonsterSkillName,
     entries,
     casts: monsterSkillCasts(),
     now,

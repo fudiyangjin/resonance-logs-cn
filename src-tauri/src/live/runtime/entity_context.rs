@@ -131,6 +131,7 @@ pub struct EntityContext {
     fantasy_registry: FantasyRegistry,
     game_timers: HashMap<GameTimerKey, GameTimerState>,
     watched_skill_ids: HashSet<i32>,
+    monitor_all_monster_skills: bool,
     pending_skills_by_caster: HashMap<EntityUuid, Vec<PendingSkill>>,
     pending_skill_expiries: VecDeque<(MonoTimeMs, EntityUuid)>,
     skill_lifecycles: HashMap<EntityUuid, CasterSkillLifecycle>,
@@ -161,11 +162,16 @@ impl EntityContext {
         Self::default()
     }
 
+    pub fn set_monitor_all_monster_skills(&mut self, enabled: bool) {
+        self.monitor_all_monster_skills = enabled;
+    }
+
     pub fn set_watched_skill_ids(&mut self, watched_skill_ids: HashSet<i32>) {
         self.watched_skill_ids = watched_skill_ids;
+        let monitor_all = self.monitor_all_monster_skills;
         let watched_skill_ids = &self.watched_skill_ids;
         self.pending_skills_by_caster.retain(|_, pending| {
-            pending.retain(|skill| watched_skill_ids.contains(&skill.skill_id));
+            pending.retain(|skill| monitor_all || watched_skill_ids.contains(&skill.skill_id));
             !pending.is_empty()
         });
     }
@@ -811,7 +817,9 @@ impl EntityContext {
                 let target = target_uuid.map(|uuid| self.ensure_ref(uuid));
                 if self.identity_is_known(caster_uuid) {
                     self.apply_known_skill_lifecycle(meta, caster, skill_id, phase, target, out);
-                } else if self.watched_skill_ids.contains(&skill_id) {
+                } else if self.monitor_all_monster_skills
+                    || self.watched_skill_ids.contains(&skill_id)
+                {
                     self.pending_skills_by_caster
                         .entry(caster_uuid)
                         .or_default()
@@ -3899,6 +3907,36 @@ mod tests {
         assert_eq!(
             skill_phases(&events),
             vec![SkillPhase::CastStarted, SkillPhase::Completed]
+        );
+    }
+
+    #[test]
+    fn monster_skill_discovery_buffers_cast_until_identity_arrives() {
+        let mut context = EntityContext::new();
+        let caster = EntityUuid(61);
+        context.set_monitor_all_monster_skills(true);
+        context.set_watched_skill_ids(HashSet::new());
+        context.reduce_batch(batch(
+            1,
+            vec![ProtocolObservation::SkillLifecycleChanged {
+                caster_uuid: caster,
+                skill_id: 88,
+                phase: super::super::events::SkillPhase::Observed,
+                target_uuid: None,
+            }],
+        ));
+        // A watch-list refresh must not discard discovery casts.
+        context.set_watched_skill_ids(HashSet::new());
+        let events = context.reduce_batch(batch(
+            2,
+            vec![ProtocolObservation::EntityAppeared {
+                uuid: caster,
+                kind: EntityKind::Monster,
+            }],
+        ));
+        assert_eq!(
+            skill_phases(&events),
+            vec![super::super::events::SkillPhase::Observed]
         );
     }
 

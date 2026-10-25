@@ -1184,7 +1184,11 @@ export type MonsterRuntimeSnapshot = { enabled: boolean; globalIds: number[]; se
 /**
  * Skills shown (and voiced) when any nearby monster casts them.
  */
-watchedSkillIds: number[] }
+watchedSkillIds: number[];
+/**
+ * Discover all nearby world-monster skills for the HUD.
+ */
+monitorAllSkills: boolean }
 /**
  * The latest cast of one watched skill by any nearby monster. How long it
  * stays on screen is a display setting applied by the HUD.
