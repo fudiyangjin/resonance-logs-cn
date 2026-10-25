@@ -6,6 +6,10 @@
  * order so rows do not jump, and reports the nearest expiry so the HUD
  * re-projects exactly when a row has to disappear. A cast has no duration
  * of its own, so rows carry no countdown or progress.
+ *
+ * In discovery mode (`monitorAll`) listed skills still come first exactly as
+ * above; casts of unlisted skills follow in ascending id order, labeled
+ * `name#id` (`#id` when the skill table has no name) for the default time.
  */
 import { DEFAULT_MONSTER_SKILL_DISPLAY_MS } from "$lib/monster-skill-entries";
 import type { MonsterSkillWatchEntry } from "$lib/settings-store";
@@ -13,7 +17,8 @@ import type { TextBuffDisplay } from "../game-overlay/overlay-types";
 
 export type MonsterSkillRowsInput = {
   monitorAll?: boolean;
-  resolveSkillName?: (skillId: number) => string;
+  /** Game name of an unlisted skill, `null` when the table has none. */
+  resolveSkillName?: (skillId: number) => string | null;
   entries: readonly MonsterSkillWatchEntry[];
   /** Skill id -> wall time of its latest cast. */
   casts: ReadonlyMap<number, number>;
@@ -46,37 +51,31 @@ export function buildMonsterSkillRows(
 ): MonsterSkillRowsOutput {
   const rows: TextBuffDisplay[] = [];
   let nextDeadlineMs: number | null = null;
-  const configured = new Map(
-    input.entries.map((entry) => [entry.skillId, entry]),
-  );
-  const entries = input.monitorAll
-    ? [...input.casts.keys()]
-        .sort((a, b) => a - b)
-        .map(
-          (skillId) =>
-            configured.get(skillId) ?? {
-              skillId,
-              label: "",
-              displayMs: DEFAULT_MONSTER_SKILL_DISPLAY_MS,
-            },
-        )
-    : input.entries;
-  for (const entry of entries) {
-    const castAtMs = input.casts.get(entry.skillId);
-    if (castAtMs === undefined) continue;
-    const deadlineMs = castAtMs + entry.displayMs;
-    if (deadlineMs <= input.now) continue;
+  // Labels are resolved only for rows still on screen.
+  const show = (skillId: number, displayMs: number, label: () => string) => {
+    const castAtMs = input.casts.get(skillId);
+    if (castAtMs === undefined) return;
+    const deadlineMs = castAtMs + displayMs;
+    if (deadlineMs <= input.now) return;
     if (nextDeadlineMs === null || deadlineMs < nextDeadlineMs) {
       nextDeadlineMs = deadlineMs;
     }
-    rows.push(
-      monsterSkillRow(
-        `monster_skill_${entry.skillId}`,
-        input.monitorAll
-          ? `${input.resolveSkillName?.(entry.skillId) ?? input.resolveLabel(entry)}#${entry.skillId}`
-          : input.resolveLabel(entry),
-      ),
-    );
+    rows.push(monsterSkillRow(`monster_skill_${skillId}`, label()));
+  };
+  for (const entry of input.entries) {
+    show(entry.skillId, entry.displayMs, () => input.resolveLabel(entry));
+  }
+  if (input.monitorAll) {
+    const listed = new Set(input.entries.map((entry) => entry.skillId));
+    const discovered = [...input.casts.keys()]
+      .filter((skillId) => !listed.has(skillId))
+      .sort((a, b) => a - b);
+    for (const skillId of discovered) {
+      show(skillId, DEFAULT_MONSTER_SKILL_DISPLAY_MS, () => {
+        const name = input.resolveSkillName?.(skillId);
+        return name ? `${name}#${skillId}` : `#${skillId}`;
+      });
+    }
   }
   return { rows, nextDeadlineMs };
 }

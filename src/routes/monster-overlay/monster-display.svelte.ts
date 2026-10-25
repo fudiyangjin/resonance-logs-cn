@@ -10,7 +10,8 @@ import {
   resolveMonsterName,
   resolveMonsterSkillName,
 } from "$lib/config/game-names";
-import { t } from "$lib/i18n/index.svelte";
+import { lookupMonsterSkillDefaultName } from "$lib/config/monster-skill-search";
+import { getLocale, t } from "$lib/i18n/index.svelte";
 import { abbreviateNumber, type AbbreviationStyle } from "$lib/number-format";
 import { uidFromEntityUuid, type EntityId } from "$lib/entity-id";
 import {
@@ -1246,7 +1247,8 @@ function buildMonsterSkillDisplay(now: number): {
   );
   const built = buildMonsterSkillRows({
     monitorAll: SETTINGS.monsterMonitor.state.monsterSkillMonitorAll === true,
-    resolveSkillName: resolveMonsterSkillName,
+    resolveSkillName: (skillId) =>
+      lookupMonsterSkillDefaultName(skillId, getLocale()),
     entries,
     casts: monsterSkillCasts(),
     now,

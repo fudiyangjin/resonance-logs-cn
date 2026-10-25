@@ -2013,7 +2013,7 @@ export const enUSMessages = {
   "monsterMonitor.overlay.monsterSkill": "Monster Skills: {state}",
   "monsterMonitor.monsterSkill.monitorAll": "Show all nearby monster skills",
   "monsterMonitor.monsterSkill.monitorAllDesc":
-    "Show every skill cast by nearby monsters as skill name#id. Skills without a watch-list entry stay visible for 5 seconds; recasts refresh the display time.",
+    "Also show every other skill cast by nearby monsters as skill name#id for 5 seconds; a recast refreshes the time. Listed skills keep their own label, order and display time, and stay on top.",
   "monsterMonitor.monsterSkill.title": "Monster Skills",
   "monsterMonitor.monsterSkill.description":
     "When any nearby monster casts a listed skill, its name appears on the monster overlay for the configured number of seconds; a recast restarts the timer. Unlike Boss DBM this needs no server-side warning marker, so any monster skill can be watched.",

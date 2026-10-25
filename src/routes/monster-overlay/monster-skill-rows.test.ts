@@ -36,6 +36,32 @@ describe("buildMonsterSkillRows", () => {
     expect(result.nextDeadlineMs).toBe(7_000);
   });
 
+  it("keeps listed skills first as configured, then unlisted ones by id", () => {
+    const result = buildMonsterSkillRows({
+      entries,
+      monitorAll: true,
+      casts: new Map([
+        [9, 4_000],
+        [2, 4_000],
+        [7, 4_000],
+        [1, 4_000],
+      ]),
+      now: 5_000,
+      resolveLabel: (entry) => entry.label || `Listed ${entry.skillId}`,
+      resolveSkillName: (id) => (id === 7 ? "Skill 7" : null),
+    });
+    // Listed rows keep their alias and watch-list order; an unlisted skill
+    // the table cannot name shows its id once.
+    expect(result.rows.map((row) => row.label)).toEqual([
+      "分摊",
+      "Listed 1",
+      "Skill 7#7",
+      "#9",
+    ]);
+    // Skill 1 keeps its own 3 s display time.
+    expect(result.nextDeadlineMs).toBe(7_000);
+  });
+
   it("shows casts in watch-list order without countdown or progress", () => {
     const { rows } = build(
       [
