@@ -77,6 +77,8 @@
 
 已经有喜欢的 TTS（本地部署的 TTS 服务、OpenAI 兼容接口、Google Cloud TTS 等），或者不想在本机跑模型时，可以通过 HTTP 调用它来生成音频。音频在生成时请求一次并保存到本地，**播报时不联网**，也不需要安装语音模型。
 
+![HTTP 语音服务设置示例](../../../shared/img/changelog/voice_http.png)
+
 1. 在 **{{ui:voice.tabs.model}} → {{ui:voice.http.title}}** 中选择一个预设，点击 **{{ui:voice.http.add}}**：
    - **{{ui:voice.http.preset.openaiCompatible}}**：POST `/v1/audio/speech`，很多本地 TTS 服务也兼容这个接口；
    - **{{ui:voice.http.preset.googleCloud}}**：填入 API Key，从返回 JSON 的 `audioContent` 中取音频；

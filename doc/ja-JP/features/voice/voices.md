@@ -77,6 +77,8 @@ TTS を使いたくない場合や、効果音を使いたい場合は、音声�
 
 好みの TTS（ローカルで動かしている TTS サーバー、OpenAI 互換 API、Google Cloud TTS など）がある場合や、ローカルでモデルを動かしたくない場合は、HTTP で呼び出して音声を生成できます。音声は生成時に 1 回だけリクエストしてローカルに保存するため、**読み上げ時に通信は発生せず**、音声モデルも不要です。
 
+![HTTP 音声サービスの設定例](../../../shared/img/changelog/voice_http_jp.png)
+
 1. **{{ui:voice.tabs.model}} → {{ui:voice.http.title}}** でプリセットを選び、**{{ui:voice.http.add}}** をクリックします。
    - **{{ui:voice.http.preset.openaiCompatible}}**：POST `/v1/audio/speech`。多くのローカル TTS サーバーもこのインターフェースに対応しています。
    - **{{ui:voice.http.preset.googleCloud}}**：API キーを入力します。レスポンス JSON の `audioContent` から音声を取り出します。

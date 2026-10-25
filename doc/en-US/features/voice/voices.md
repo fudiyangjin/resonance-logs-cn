@@ -77,6 +77,8 @@ Imported audio is converted to mono 24kHz, shows the status **{{ui:voice.phrases
 
 If you already have a TTS you like (a locally hosted TTS server, an OpenAI-compatible API, Google Cloud TTS, ...), or would rather not run the model on this machine, you can generate audio by calling it over HTTP. Each line is requested once at generation time and saved locally, so **cues play without any network access**, and no voice model is needed.
 
+![HTTP voice service setup example](../../../shared/img/changelog/voice_http_en.png)
+
 1. In **{{ui:voice.tabs.model}} → {{ui:voice.http.title}}**, pick a preset and click **{{ui:voice.http.add}}**:
    - **{{ui:voice.http.preset.openaiCompatible}}**: POST `/v1/audio/speech`, an interface many local TTS servers also implement;
    - **{{ui:voice.http.preset.googleCloud}}**: enter your API key; the audio is read from `audioContent` in the JSON response;

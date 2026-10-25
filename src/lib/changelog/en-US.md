@@ -1,53 +1,57 @@
-# Changelog v0.2.6
+# Changelog v0.2.7
 
 ## Changes
 
-### DPS / History
+### Custom monitoring
 
-- The live window can now show history: click the History button in the header to open the history list, search by scene / boss / player / UID, or use the quick filters for the current scene, current boss, today, and favorites; once you pick a record, the DPS, HEAL, TANKED, and DEATH pages all show that encounter, and the banner at the top steps to an older / newer encounter or goes back to live. The History button is hidden by default; turn on "Show History Button" (DPS Meter → Themes → Live → Header Settings)
-  - A target bar above the DPS and skill pages shows damage against a single target
-  - If a new fight starts while you are viewing history, the banner shows "In combat" instead of switching back automatically; live controls such as Reset and Pause are hidden while viewing history
+- Reworked custom counters. Counters can accumulate from skill casts or hits, Buff gains or consumption, movement distance, combat resources, and other events; each slot can define a target, display mode, reset action, pause state, and cooldown.
+- Counters can be copied from presets, searched by skill, damage, or Buff name/ID, added to custom panels, and bound to a voice cue when a target is reached.
+- Factor and season-node panels now synchronize automatically. From S4 onward, active season-node Buffs can be shown directly. Legacy custom-counter rules are cleaned up during migration, together with their panel entries and voice bindings.
 
-  ![Viewing history in the live window](/images/changelog/v0.2.6_1.en-US.png)
+### Skill cooldowns and announcements
 
-  ![Skill details of a history record in the live window](/images/changelog/v0.2.6_2.en-US.png)
+- Skill cooldowns support multiple independent regions. Each region can be named, moved, resized, and configured with 1–10 rows or columns and adjustable icon spacing. Drag-and-swap, keyboard movement, compact layout, and loadout import/export are supported.
+- Added duty skills grouped by attack, survival, support, and collection, including charge display and duty-skill icons and data.
+- Resonance skills can be added to cooldown monitoring and voice announcements independently. Class, resonance, and duty skills share a maximum of 10 monitored slots, and a skill no longer needs to be shown in the cooldown panel to receive an announcement.
+- Skill icons now use element-colored backplates and show skill transformations more clearly; teammate cooldowns use the same style.
 
-- History can be searched by player UID (DPS Meter → History, set the search type to UID): type the first digits of a UID to list matches, along with the names that UID has used and its encounter count; only records created from this version onward are searchable
-- History search suggestions are no longer truncated; click "Show more" to see the rest
+### Monster monitoring and minimap
 
-### Overlay Monitoring
-
-- Added Monster Skills (Monster Monitor → Monster Skills): when any nearby monster casts a skill on your list, its name appears on the monster overlay and disappears after the set number of seconds, restarting on each cast; voice announcements can be bound, which is handy for skills without a DBM alert
-  - The Monster Skills area is hidden by default; enable it under Monster Monitor → Enable Window
-- Monster Monitor and Live Monitor tabs are now grouped, and a green dot marks tabs whose area is shown on the overlay
-- Overlay edit mode adds "Undo Changes", which restores panel positions, sizes, and the overlay window to how they were when you entered edit mode
-- Fixed teammate Buffs and teammate CDs not showing when the app was opened after entering a dungeon, because the party roster was incomplete
+- Monster Skill monitoring now watches listed skills cast by any nearby monster, with configurable duration, order, aliases, and voice cues. The Monster Skills area is hidden by default ([@nekoyama32767](https://github.com/nekoyama32767)).
+- The minimap now parses new party-mark data and shows the matching icon for marked teammates, with additional marker display settings.
+- Added part of the S4 “Sky’s End, Day and Night’s End” mechanics and icons as a test feature.
 
 ### Voice
 
-- Custom announcement text is now saved when you finish typing (on blur or Enter) instead of turning every intermediate edit into a phrase
+- Added HTTP voice services for OpenAI-compatible APIs, Google Cloud TTS, and custom GET forwarders, with configurable URLs, headers, bodies, response formats, and `{text}`, `{lang}`, `{voice}`, and `{secret}` placeholders.
+- After adding a service, select HTTP and that provider during phrase generation or in the announcement binding; otherwise the preset voice remains active. Requests can be tested before saving, and generated audio is stored locally, so playback makes no network request and does not require a local voice model.
 
-### App Settings
+![HTTP voice service setup example](/images/changelog/voice_http_en.png)
 
-- Added Boss HP Reports (App Settings → General → Boss HP Reports), on by default
+### Module optimizer and builds
 
-### Module Calculator
+- Improved Windows CUDA builds by separating MSVC and MinGW CMake caches, tracking PATH changes, and preserving useful CMake diagnostics; CUDA still falls back to CPU when unavailable ([@nekoyama32767](https://github.com/nekoyama32767)).
+- Updated special-attribute string handling in the module optimizer to avoid compiler encoding differences.
 
-- Adapted to the module data format after the game update, fixing module values that could not be read; after updating, log in again or switch lines once to load the new module data
+## Documentation
 
-### Data
-
-- Updated monster names, Buffs, monster skills, scene names, and DBM data
-- Mainly adds S4 translations for the Global server; when the JP server enters S4, please contact me on Discord to send the corresponding config
+- Added the HTTP voice service setup example and usage guide.
+- Added instructions for opening, filtering, and switching history records from the live DPS window.
+- Updated the custom-counter, skill cooldown, duty-skill, and Monster Skill guides.
 
 ## Notes
 
+- Legacy custom-counter rules are replaced during migration; their old panel entries and voice bindings are not retained.
+- Remote HTTP services receive phrase text; keys stay in the local voice directory and are not included in shared loadouts.
+- Preset, cloned, and fine-tuned voices still need a voice model. HTTP voice services do not.
+
+
 ### Compatibility
 
-- If you used 0.0.2 or 0.0.3, first launch on 0.0.4-0.2.6 requires deleting `resonance-logs-cn.db` under `%LOCALAPPDATA%\resonance-logs-cn` and restarting
+- If you used 0.0.2 or 0.0.3, first launch on 0.0.4-0.2.7 requires deleting `resonance-logs-cn.db` under `%LOCALAPPDATA%\resonance-logs-cn` and restarting
 - 0.2.2 and 0.2.1 went through large refactors; if existing features break, please contact me promptly
 - 0.2.2 changed table fields; errors on old history records are expected, new records work normally
-- Voice announcements require a separate model download; the first phrase generation may take a while, but playback after that does not reload the model
+- Voice announcements require a separate model download; the first phrase generation may take a while, but playback after that does not reload the model. HTTP voice services do not require a model
 
 ### Important
 

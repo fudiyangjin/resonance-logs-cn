@@ -4,6 +4,20 @@
 
 ![History](../../../shared/img/dps/dps_3.png)
 
+## View history in the live window
+
+You can open history directly from the live window without returning to the main window:
+
+1. Turn on **Show History Button** under **{{ui:routes.dps.themes}} → {{ui:themes.tabs.live}} → {{ui:themes.header.title}}**.
+2. Click the History button in the live window header. Search by scene, Boss, player, or UID, or use the quick filters for the current scene, current Boss, today, and favorites.
+3. Select a record. The DPS, HEAL, TANKED, and DEATH pages in the live window switch to that fight; use the banner at the top to move to an older or newer record, or return to live data.
+
+![Viewing history in the live window](../../../shared/img/changelog/v0.2.6_1.en-US.png)
+
+The DPS and skill pages in live history include a target filter for damage against one target. If a new fight starts while you are viewing history, the banner shows **In combat** and stays on the selected record; live controls such as Reset and Pause are temporarily hidden.
+
+![Skill details of a history record in the live window](../../../shared/img/changelog/v0.2.6_2.en-US.png)
+
 ## History list
 
 - **Filter**: filter by **{{ui:history.list.filters.favorite}}**, Boss, player, or encounter; click **{{ui:history.list.filters.favoriteOnly}}** to show only favorites.

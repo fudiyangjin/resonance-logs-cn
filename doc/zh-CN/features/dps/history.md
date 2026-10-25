@@ -4,6 +4,20 @@
 
 ![历史记录](../../../shared/img/dps/dps_3.png)
 
+## 在实时窗口查看历史
+
+实时窗口也可以直接打开历史记录，不必先回到主窗口：
+
+1. 在 **{{ui:routes.dps.themes}} → {{ui:themes.tabs.live}} → {{ui:themes.header.title}}** 中开启 **显示历史按钮**。
+2. 点击实时窗口标题栏的历史按钮，按场景、Boss、玩家或 UID 搜索，也可以使用当前场景、当前 Boss、今天和收藏等快捷筛选。
+3. 选择一条记录后，实时窗口中的 DPS、HEAL、TANKED、DEATH 页面都会切换到这场战斗；顶部横幅可以切换更早或更晚的记录，或返回实时数据。
+
+![实时窗口查看历史记录](../../../shared/img/changelog/v0.2.6_1.zh-CN.png)
+
+实时窗口历史中的 DPS 页和技能页支持目标筛选，只查看对某个目标的伤害。查看历史期间如果实时开始了新战斗，横幅会提示 **战斗中**，不会自动切回实时；重置、暂停等实时控制按钮也会暂时隐藏。
+
+![实时窗口历史技能明细](../../../shared/img/changelog/v0.2.6_2.zh-CN.png)
+
 ## 历史列表
 
 - **筛选**：按 **{{ui:history.list.filters.favorite}}**、首领、玩家、场景过滤；点 **{{ui:history.list.filters.favoriteOnly}}** 只看收藏。
