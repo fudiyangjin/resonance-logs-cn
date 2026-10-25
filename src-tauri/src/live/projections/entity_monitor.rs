@@ -302,6 +302,8 @@ impl EntityMonitorProjection {
         self.entity_duration
             .apply_config(&config.monster, entities, now_mono);
         self.monster_skills
+            .set_monitor_all(config.monster.monitor_all_skills);
+        self.monster_skills
             .apply_config(&config.monster.watched_skill_ids);
         bump(&mut self.revisions.watched_entities);
         self.panel_attrs

@@ -320,6 +320,8 @@ pub struct MonsterRuntimeSnapshot {
     pub watched_entities: Vec<WatchedEntitySpec>,
     /// Skills shown (and voiced) when any nearby monster casts them.
     pub watched_skill_ids: Vec<i32>,
+    /// Discover all nearby world-monster skills for the HUD.
+    pub monitor_all_skills: bool,
 }
 
 impl MonsterRuntimeSnapshot {

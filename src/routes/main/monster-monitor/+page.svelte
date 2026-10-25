@@ -3088,6 +3088,9 @@
     <TabTeammateCd />
   {:else if activeTab === "monsterSkill"}
     <TabMonsterSkill
+      monitorAll={monsterMonitor.monsterSkillMonitorAll === true}
+      onMonitorAllChange={(checked) =>
+        updateMonsterMonitor(() => ({ monsterSkillMonitorAll: checked }))}
       entries={monsterSkillEntries}
       panelStyle={monsterSkillPanelStyle}
       addEntry={addMonsterSkill}

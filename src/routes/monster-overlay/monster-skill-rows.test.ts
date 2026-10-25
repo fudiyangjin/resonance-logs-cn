@@ -19,6 +19,23 @@ function build(casts: [number, number][], now: number) {
 }
 
 describe("buildMonsterSkillRows", () => {
+  it("discovers unlisted skills with ids, expires them, and keeps configured durations", () => {
+    const result = buildMonsterSkillRows({
+      entries,
+      monitorAll: true,
+      casts: new Map([
+        [9, 1_000],
+        [8, 2_000],
+        [1, 2_000],
+      ]),
+      now: 6_000,
+      resolveLabel: () => "alias",
+      resolveSkillName: (id) => `Skill ${id}`,
+    });
+    expect(result.rows.map((row) => row.label)).toEqual(["Skill 8#8"]);
+    expect(result.nextDeadlineMs).toBe(7_000);
+  });
+
   it("shows casts in watch-list order without countdown or progress", () => {
     const { rows } = build(
       [

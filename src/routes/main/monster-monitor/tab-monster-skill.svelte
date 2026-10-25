@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
   import MonsterSkillSearchGrid from "$lib/components/MonsterSkillSearchGrid.svelte";
   import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
@@ -16,6 +17,8 @@
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
 
   interface Props {
+    monitorAll: boolean;
+    onMonitorAllChange: (checked: boolean) => void;
     entries: MonsterSkillWatchEntry[];
     panelStyle: CustomPanelStyle;
     addEntry: (skillId: number) => void;
@@ -29,6 +32,8 @@
   }
 
   let {
+    monitorAll,
+    onMonitorAllChange,
     entries,
     panelStyle,
     addEntry,
@@ -67,7 +72,10 @@
     return String(Math.round(entry.displayMs / 100) / 10);
   }
 
-  function commitSeconds(entry: MonsterSkillWatchEntry, input: HTMLInputElement) {
+  function commitSeconds(
+    entry: MonsterSkillWatchEntry,
+    input: HTMLInputElement,
+  ) {
     const seconds = Number(input.value.trim());
     if (Number.isFinite(seconds) && seconds > 0) {
       updateEntry(entry.skillId, { displayMs: Math.round(seconds * 1000) });
@@ -89,6 +97,12 @@
       {t("monsterMonitor.monsterSkill.description")}
     </p>
   </div>
+  <SettingsSwitch
+    label={t("monsterMonitor.monsterSkill.monitorAll")}
+    description={t("monsterMonitor.monsterSkill.monitorAllDesc")}
+    checked={monitorAll}
+    onCheckedChange={onMonitorAllChange}
+  />
 </section>
 
 <section class="border-border/60 bg-card/60 space-y-4 rounded-xl border p-5">
@@ -146,7 +160,9 @@
                 label: event.currentTarget.value,
               })}
           />
-          <label class="text-muted-foreground flex shrink-0 items-center gap-2 text-xs">
+          <label
+            class="text-muted-foreground flex shrink-0 items-center gap-2 text-xs"
+          >
             {t("monsterMonitor.monsterSkill.displaySeconds")}
             <input
               type="text"

@@ -67,6 +67,24 @@ function legacyExport(monsterProfile: MonsterMonitorProfileData) {
 }
 
 describe("single monster panel visibility", () => {
+  it("preserves skill discovery on import and defaults older profiles to off", () => {
+    const profile = createDefaultMonsterMonitorProfile();
+    profile.monsterSkillMonitorAll = true;
+    const imported = parseLoadoutExport(legacyExport(profile));
+    expect(imported.success).toBe(true);
+    if (imported.success) {
+      expect(imported.output.monsterProfile.monsterSkillMonitorAll).toBe(true);
+    }
+    const older = legacyExport(profile);
+    delete (older.monsterProfile as Partial<MonsterMonitorProfileData>)
+      .monsterSkillMonitorAll;
+    const legacy = parseLoadoutExport(older);
+    expect(legacy.success).toBe(true);
+    if (legacy.success) {
+      expect(legacy.output.monsterProfile.monsterSkillMonitorAll).toBe(false);
+    }
+  });
+
   for (const [flag, visibility] of panels) {
     it.each([
       [false, false, false],
