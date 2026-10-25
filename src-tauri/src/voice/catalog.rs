@@ -5,6 +5,7 @@
 //! - `profiles/<profileId>/speaker.q3sp` — speaker embedding profile.
 //! - `assets/<phraseId>/<assetId>.wav` — generated takes.
 //! - `finetuned/` — validation state for the user-provided CustomVoice package.
+//! - `preview/` — uncataloged HTTP provider test takes.
 //! - `catalog.json` — profile/phrase/asset metadata (this file).
 
 use std::path::{Path, PathBuf};
@@ -15,7 +16,7 @@ use log::warn;
 use super::error::{VoiceError, VoiceResult};
 use super::models::VOICE_CATALOG_SCHEMA_VERSION;
 use super::models::VoiceCatalog;
-use super::types::{AssetId, ModelVersion, PhraseId, ProfileId, Sha256Hex};
+use super::types::{AssetId, HttpProviderId, ModelVersion, PhraseId, ProfileId, Sha256Hex};
 
 const CATALOG_FILE_NAME: &str = "catalog.json";
 
@@ -48,6 +49,12 @@ pub fn assets_dir(voice_root: &Path) -> PathBuf {
 /// removable media, so nothing is ever written back into it.
 pub fn fine_tuned_dir(voice_root: &Path) -> PathBuf {
     voice_root.join("finetuned")
+}
+
+/// Throwaway takes from testing an unsaved HTTP provider; never cataloged
+/// and cleared on startup.
+pub fn preview_dir(voice_root: &Path) -> PathBuf {
+    voice_root.join("preview")
 }
 
 pub fn profile_dir(voice_root: &Path, profile_id: &str) -> PathBuf {
@@ -181,6 +188,13 @@ fn validate_catalog(catalog: &VoiceCatalog) -> VoiceResult<()> {
             super::models::VoiceAssetSource::Imported { sha256, .. } => {
                 Sha256Hex::parse(sha256.clone())?;
             }
+            super::models::VoiceAssetSource::Http {
+                provider_id,
+                config_fingerprint,
+            } => {
+                HttpProviderId::parse(provider_id.clone())?;
+                Sha256Hex::parse(config_fingerprint.clone())?;
+            }
         }
         ModelVersion::parse(asset.model_version.clone())?;
     }
@@ -192,6 +206,10 @@ fn validate_catalog(catalog: &VoiceCatalog) -> VoiceResult<()> {
     }
     if let Some(voice) = &catalog.fine_tuned_voice {
         Sha256Hex::parse(voice.model_sha256.clone())?;
+    }
+    for provider in &catalog.http_providers {
+        HttpProviderId::parse(provider.id.clone())?;
+        Sha256Hex::parse(provider.config_fingerprint.clone())?;
     }
     Ok(())
 }

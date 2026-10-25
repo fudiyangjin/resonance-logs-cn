@@ -114,6 +114,7 @@ macro_rules! id_type {
 id_type!(PhraseId, "phraseId", validate_identifier);
 id_type!(ProfileId, "profileId", validate_identifier);
 id_type!(AssetId, "assetId", validate_identifier);
+id_type!(HttpProviderId, "providerId", validate_identifier);
 id_type!(ModelVersion, "modelVersion", validate_path_component);
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

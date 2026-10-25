@@ -11,14 +11,17 @@
   import RefreshCwIcon from "virtual:icons/lucide/refresh-cw";
   import SparklesIcon from "virtual:icons/lucide/sparkles";
   import { commands, type VoiceGenerateRequestDto } from "$lib/bindings";
-  import { getLocale, t, type MessageKey } from "$lib/i18n/index.svelte";
+  import { t, type MessageKey } from "$lib/i18n/index.svelte";
   import {
     SETTINGS,
     VOICE_PRIORITY_TIERS,
     type VoicePhraseBinding,
   } from "$lib/settings-store";
-  import { runVoiceGeneration, VOICE } from "$lib/stores/voice-store.svelte";
-  import { presetSourceForLocale } from "$lib/voice-preset-source";
+  import {
+    runVoiceGeneration,
+    savedGenerationSource,
+    VOICE,
+  } from "$lib/stores/voice-store.svelte";
   import {
     listVoiceBindingOverview,
     overviewGroups,
@@ -123,22 +126,6 @@
     }
   }
 
-  const fineTunedState = $derived(VOICE.status?.fineTunedVoice ?? null);
-  const selectedSource = $derived(SETTINGS.voice.state.selectedSource);
-  const selectedProfileId = $derived(SETTINGS.voice.state.selectedProfileId);
-
-  function resolveGenerationSource(): VoiceGenerateRequestDto["source"] | null {
-    if (selectedSource === "fineTuned") {
-      return fineTunedState?.kind === "ready" ? { mode: "fineTuned" } : null;
-    }
-    if (selectedSource === "preset") {
-      return presetSourceForLocale(getLocale());
-    }
-    return selectedProfileId
-      ? { mode: "cloneExisting", profileId: selectedProfileId }
-      : null;
-  }
-
   async function generateMissing() {
     generateMessage = null;
     // Materialize every phrase behind each pending entry (tier-placeholder
@@ -160,7 +147,7 @@
       generateMessage = t("voice.bindings.generateMissing.none");
       return;
     }
-    const source = resolveGenerationSource();
+    const source = savedGenerationSource();
     if (!source) {
       generateMessage = t("voice.bindings.generateMissing.needProfile");
       return;

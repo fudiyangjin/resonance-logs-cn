@@ -9,6 +9,7 @@ pub mod error;
 pub mod finetuned;
 pub mod generation;
 pub mod generator;
+pub mod http_tts;
 pub mod import;
 pub mod model_lifecycle;
 pub mod model_manager;

@@ -530,6 +530,34 @@ async voiceGenerate(request: VoiceGenerateRequestDto) : Promise<Result<Generatio
 async voiceCancelGeneration() : Promise<void> {
     await TAURI_INVOKE("voice_cancel_generation");
 },
+async voiceSaveHttpProvider(provider: HttpProviderInput) : Promise<Result<HttpProviderMeta, VoiceCommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("voice_save_http_provider", { provider }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async voiceDeleteHttpProvider(providerId: string) : Promise<Result<null, VoiceCommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("voice_delete_http_provider", { providerId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Synthesizes `text` with an unsaved provider draft and plays it without
+ * cataloging the take.
+ */
+async voiceTestHttpProvider(provider: HttpProviderInput, text: string, language: VoiceLanguage) : Promise<Result<HttpProviderTestResult, VoiceCommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("voice_test_http_provider", { provider, text, language }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async voicePreviewAsset(phraseId: string, assetId: string) : Promise<Result<null, VoiceCommandError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("voice_preview_asset", { phraseId, assetId }) };
@@ -887,6 +915,59 @@ export type HpReportStatus = { state: "disabled" } |
  * The server does not accept reports from this game distribution.
  */
 { state: "unsupported" } | { state: "retrying"; error: string; retryMs: number }
+/**
+ * How placeholders are escaped inside the body, and the `Content-Type`
+ * sent when the headers don't set one.
+ */
+export type HttpBodyEncoding = "json" | "form" | "xml" | "text"
+export type HttpBodyTemplate = { encoding: HttpBodyEncoding; template: string }
+export type HttpHeaderTemplate = { name: string; value: string }
+/**
+ * Per-language values for the `{lang}` and `{voice}` placeholders.
+ */
+export type HttpLanguageParam = { lang: string; voice: string }
+export type HttpLanguageParams = { zhCn: HttpLanguageParam; enUs: HttpLanguageParam; jaJp: HttpLanguageParam }
+export type HttpMethod = "get" | "post"
+/**
+ * A provider as submitted by the settings UI. `id: None` creates one.
+ */
+export type HttpProviderInput = { id?: string | null; name: string; request: HttpRequestSpec; secret?: string; maxConcurrency?: number }
+/**
+ * A configured HTTP TTS provider, persisted in the catalog.
+ */
+export type HttpProviderMeta = { id: string; name: string; request: HttpRequestSpec;
+/**
+ * Substituted for `{secret}`. Stored in plain text with the catalog.
+ */
+secret: string; maxConcurrency: number;
+/**
+ * SHA-256 of `request` only: renaming the provider, rotating its
+ * secret or tuning concurrency never invalidates its audio.
+ */
+configFingerprint: string; updatedAtMs: number }
+export type HttpProviderTestResult = { durationSec: number }
+/**
+ * Everything that shapes the audio a provider returns. Its fingerprint is
+ * what cataloged takes are checked against.
+ */
+export type HttpRequestSpec = { method: HttpMethod;
+/**
+ * URL template; placeholders are percent-encoded.
+ */
+url: string; headers: HttpHeaderTemplate[]; body: HttpBodyTemplate | null; response: HttpResponseFormat; languages: HttpLanguageParams }
+/**
+ * Where the audio is in a successful response.
+ */
+export type HttpResponseFormat =
+/**
+ * The body is the audio file itself.
+ */
+{ kind: "audioBytes" } |
+/**
+ * The body is JSON with the base64 audio at a JSON Pointer
+ * (e.g. Google's `/audioContent`).
+ */
+{ kind: "jsonBase64"; pointer: string }
 export type HudFrame = { active: boolean; epoch: number; status: LiveStatusPayload | null; buffs: LiveBuffsPayload | null; monster: LiveMonsterPayload | null; fantasy: LiveFantasyPayload | null;
 /**
  * Teammate cooldowns shared through the team relay (monster interest).
@@ -1388,13 +1469,19 @@ export type VoiceAssetSource = { kind: "cloneProfile"; profileId: string } | { k
  * normalized to the catalog WAV format. Never regenerated and never
  * marked stale by phrase text/model changes.
  */
-{ kind: "imported"; sha256: string; originalFileName: string }
+{ kind: "imported"; sha256: string; originalFileName: string } |
+/**
+ * Synthesized by a user-configured HTTP TTS provider. Goes stale when
+ * the provider's request shape changes (`config_fingerprint`) or the
+ * provider is removed, like any other text-derived take.
+ */
+{ kind: "http"; providerId: string; configFingerprint: string }
 export type VoiceBackendInventory = { cpu: VoiceBackendStatus; vulkan: VoiceBackendStatus; recommended: EngineBackend }
 export type VoiceBackendStatus = { backend: EngineBackend; engine: EngineState; componentVersion: string | null; updateAvailable: boolean }
 /**
  * The full persisted voice catalog (`catalog.json`).
  */
-export type VoiceCatalog = { schemaVersion: number; profiles: VoiceProfileMeta[]; phrases: VoicePhraseMeta[]; assets: VoiceAssetMeta[]; installedModelVersion: string | null; installedModelSha256: string | null; fineTunedVoice: FineTunedVoiceMeta | null }
+export type VoiceCatalog = { schemaVersion: number; profiles: VoiceProfileMeta[]; phrases: VoicePhraseMeta[]; assets: VoiceAssetMeta[]; installedModelVersion: string | null; installedModelSha256: string | null; fineTunedVoice: FineTunedVoiceMeta | null; httpProviders: HttpProviderMeta[] }
 export type VoiceCommandError = { code: string; message: string; retriable: boolean }
 /**
  * *When* a voice rule fires relative to its subject.
@@ -1487,7 +1574,11 @@ export type VoiceSourceSelectionDto = { mode: "cloneNew"; name: string; referenc
  * Auto-selects the bundled reference voice for a UI locale, extracting
  * (and thereafter reusing) a clone profile from it on demand.
  */
-{ mode: "preset"; locale: VoicePresetLocale } | { mode: "fineTuned" }
+{ mode: "preset"; locale: VoicePresetLocale } | { mode: "fineTuned" } |
+/**
+ * A configured HTTP TTS provider; needs no local model.
+ */
+{ mode: "http"; providerId: string }
 /**
  * Overall status snapshot returned to the frontend for the voice feature.
  */

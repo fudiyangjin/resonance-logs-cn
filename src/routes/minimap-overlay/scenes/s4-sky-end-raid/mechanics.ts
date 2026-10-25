@@ -1,28 +1,42 @@
 import type {
-  MinimapBuffFact,
   MinimapEntity,
   MinimapSkillCast,
   MinimapSnapshot,
 } from "$lib/api";
 import { t } from "$lib/i18n/index.svelte";
 import { overlayNow } from "../../../game-overlay/overlay-clock.svelte.js";
-import { mergeMechanicTargets, toMechanicTargets } from "../../mechanic-row";
 import type {
+  MapIcon,
   MechanicRegion,
   MechanicRow,
-  MechanicRowTarget,
   MinimapVoiceCueDef,
   MinimapVoiceCueFire,
 } from "../../scene-types";
 import { resolveSkillVoiceCues } from "../../voice-cue-utils";
+import { addCelestialCollision } from "./celestial";
+import {
+  activeAt,
+  activeBuffs,
+  addRow,
+  type BuildContext,
+  circle,
+  type DisplayName,
+  latestCast,
+  maxDuration,
+  playerTargets,
+} from "./context";
+import { addErosion } from "./erosion";
+import { addEvilRitual } from "./ritual";
+import { addShare } from "./share";
+import { addSin } from "./sin";
+import { bossRuneBuff, type RuneNumber, turntableRuneIcons } from "./turntable";
 
 export type LapsisMechanicView = {
   regions: MechanicRegion[];
+  icons: MapIcon[];
   rows: MechanicRow[];
   entityColorSlots: Map<string, number>;
 };
-
-type DisplayName = (entity: MinimapEntity) => string;
 
 const BOSS_MONSTER_IDS = new Set([103400, 103410, 103420]);
 const SPEAR_MONSTER_ID = 103404;
@@ -53,6 +67,10 @@ const BUFF_ETERNAL_DAY_VULNERABLE = 829535;
 const BUFF_SHADOW_TARGET = 829537;
 /** 追人连线: self-applied by a chaser while its chase link is alive. */
 const BUFF_CHASE_LINK = 829539;
+/** 死刑换T (45 s, 老二): armour broken, auto attacks hit much harder. */
+const BUFF_TANK_SWAP = 829654;
+/** 追踪球目标 (3 s, 老三): the fog orb (+5 erosion) is chasing this player. */
+const BUFF_FOG_ORB_TARGET = 829725;
 
 const FULL_BURST_RADIUS = 28.67;
 const WISH_RADIUS = 33.33;
@@ -71,6 +89,7 @@ const COLOR_WISH = 6;
 const COLOR_OUTER_LIGHT = 4;
 const COLOR_PRAYER = 9;
 const COLOR_CHASER = 10;
+const COLOR_FOG_ORB = 11;
 
 const textKeys = {
   boss: "minimap.s4SkyEndRaid.boss",
@@ -92,9 +111,23 @@ const textKeys = {
   chaserRow: "minimap.s4SkyEndRaid.chaserRow",
   chaserRowNoHp: "minimap.s4SkyEndRaid.chaserRowNoHp",
   chaserTarget: "minimap.s4SkyEndRaid.chaserTarget",
+  runeWheel: "minimap.s4SkyEndRaid.runeWheel",
+  bossRune: "minimap.s4SkyEndRaid.bossRune",
+  runeShape1: "minimap.s4SkyEndRaid.runeShape1",
+  runeShape4: "minimap.s4SkyEndRaid.runeShape4",
+  tankSwap: "minimap.s4SkyEndRaid.tankSwap",
+  fogOrbTarget: "minimap.s4SkyEndRaid.fogOrbTarget",
 } as const;
 
 type TextKey = (typeof textKeys)[keyof typeof textKeys];
+
+/** The boss only ever holds rune 1 or rune 4; slots match the glyph colours. */
+const BOSS_RUNE_ROWS: Partial<
+  Record<RuneNumber, { colorSlot: number; shapeKey: TextKey }>
+> = {
+  1: { colorSlot: 1, shapeKey: textKeys.runeShape1 },
+  4: { colorSlot: 0, shapeKey: textKeys.runeShape4 },
+};
 
 const voiceCueIds = {
   fullBurst: "s4-sky-end-raid.fullBurst",
@@ -194,25 +227,29 @@ export function buildMechanicView(
   addOuterLight(ctx);
   addPrayer(ctx);
   addChasers(ctx);
+  addBossRune(ctx);
+  addSin(ctx);
+  addShare(ctx);
+  addBuffRow(ctx, BUFF_TANK_SWAP, "tankSwap", textKeys.tankSwap, COLOR_RAIN);
+  addEvilRitual(ctx);
+  // After the ritual so a self-destruct holder's colour wins.
+  addErosion(ctx);
+  addBuffRow(
+    ctx,
+    BUFF_FOG_ORB_TARGET,
+    "fogOrbTarget",
+    textKeys.fogOrbTarget,
+    COLOR_FOG_ORB,
+  );
+  addCelestialCollision(ctx);
 
   return {
     regions: ctx.regions,
+    icons: turntableRuneIcons(snapshot, ctx.entitiesByUuid),
     rows: [...ctx.rows.values()],
     entityColorSlots: ctx.entityColorSlots,
   };
 }
-
-type BuildContext = {
-  snapshot: MinimapSnapshot;
-  displayName: DisplayName;
-  skillCasts: readonly MinimapSkillCast[];
-  nowMs: number;
-  entitiesByUuid: Map<string, MinimapEntity>;
-  boss: MinimapEntity | undefined;
-  regions: MechanicRegion[];
-  rows: Map<string, MechanicRow>;
-  entityColorSlots: Map<string, number>;
-};
 
 function addFullBurst(ctx: BuildContext) {
   const cast = latestCast(ctx, SKILL_FULL_BURST, 4_000);
@@ -458,6 +495,22 @@ function addChasers(ctx: BuildContext) {
   }
 }
 
+function addBossRune(ctx: BuildContext) {
+  const held = bossRuneBuff(ctx.snapshot);
+  const style = held && BOSS_RUNE_ROWS[held.rune];
+  if (!held || !style) return;
+  addRow(ctx, {
+    key: "runeWheel:bossRune",
+    group: t(textKeys.runeWheel),
+    label: t(textKeys.bossRune, { rune: held.rune, shape: t(style.shapeKey) }),
+    colorSlot: style.colorSlot,
+    createTimeMs: held.createTimeMs,
+    durationMs: 0,
+    targets: [],
+    hideTimer: true,
+  });
+}
+
 function addCastRow(
   ctx: BuildContext,
   skillId: number,
@@ -519,20 +572,6 @@ function addCountRow(
   });
 }
 
-/** Merges rows sharing a key (e.g. a cast and the buff it applies). */
-function addRow(ctx: BuildContext, next: MechanicRow) {
-  const current = ctx.rows.get(next.key);
-  if (!current) {
-    ctx.rows.set(next.key, next);
-    return;
-  }
-  const currentEnd = current.createTimeMs + current.durationMs;
-  const nextEnd = next.createTimeMs + next.durationMs;
-  current.createTimeMs = Math.min(current.createTimeMs, next.createTimeMs);
-  current.durationMs = Math.max(currentEnd, nextEnd) - current.createTimeMs;
-  mergeMechanicTargets(current.targets, next.targets);
-}
-
 function chaseLinkedEntities(snapshot: MinimapSnapshot): Set<string> {
   return new Set(
     snapshot.buffs
@@ -547,64 +586,8 @@ function entitiesOf(ctx: BuildContext, monsterId: number): MinimapEntity[] {
   );
 }
 
-function activeBuffs(ctx: BuildContext, buffId: number): MinimapBuffFact[] {
-  return ctx.snapshot.buffs.filter(
-    (buff) =>
-      buff.baseId === buffId &&
-      activeAt(buff.createTimeMs, buff.durationMs, ctx.nowMs),
-  );
-}
-
-function playerTargets(
-  ctx: BuildContext,
-  buffs: readonly MinimapBuffFact[],
-): MechanicRowTarget[] {
-  const targets: MechanicRowTarget[] = [];
-  for (const buff of buffs) {
-    const entity = ctx.entitiesByUuid.get(buff.targetEntityUuid);
-    if (!entity || (entity.kind !== "local" && entity.kind !== "teammate")) {
-      continue;
-    }
-    mergeMechanicTargets(
-      targets,
-      toMechanicTargets(entity, ctx.snapshot.localPlayerUuid, ctx.displayName),
-    );
-  }
-  return targets;
-}
-
-function latestCast(
-  ctx: BuildContext,
-  skillId: number,
-  windowMs: number,
-): MinimapSkillCast | undefined {
-  let latest: MinimapSkillCast | undefined;
-  for (const cast of ctx.skillCasts) {
-    if (cast.skillId !== skillId || !activeAt(cast.timeMs, windowMs, ctx.nowMs))
-      continue;
-    if (!latest || cast.timeMs > latest.timeMs) latest = cast;
-  }
-  return latest;
-}
-
 function bossCenter(ctx: BuildContext): { x: number; z: number } {
   return { x: ctx.boss?.x ?? 0, z: ctx.boss?.z ?? 0 };
-}
-
-function circle(
-  center: { x: number; z: number },
-  radius: number,
-  colorSlot: number,
-): MechanicRegion {
-  return {
-    kind: "sector",
-    x: center.x,
-    z: center.z,
-    radius,
-    startDeg: 0,
-    endDeg: 360,
-    colorSlot,
-  };
 }
 
 function hpPercent(entity: MinimapEntity): number | null {
@@ -612,18 +595,4 @@ function hpPercent(entity: MinimapEntity): number | null {
     return null;
   }
   return Math.round((entity.currentHp / entity.maxHp) * 100);
-}
-
-function maxDuration(buffs: readonly MinimapBuffFact[]): number {
-  return Math.max(0, ...buffs.map((buff) => buff.durationMs));
-}
-
-function activeAt(
-  createTimeMs: number,
-  durationMs: number,
-  nowMs: number,
-  graceMs = 500,
-): boolean {
-  if (nowMs < createTimeMs - graceMs) return false;
-  return durationMs <= 0 || nowMs <= createTimeMs + durationMs + graceMs;
 }

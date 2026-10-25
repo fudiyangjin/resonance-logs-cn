@@ -13,6 +13,7 @@
   import { resolveScene } from "./scene-registry";
   import {
     emptySceneView,
+    type MapIcon,
     type MechanicRegion,
     type SceneView,
   } from "./scene-types";
@@ -40,6 +41,8 @@
   const TEAM_MARK_SIZE = 20;
   // Canvas redraws are explicitly invalidated when an image finishes loading.
   const teamMarkImages: (HTMLImageElement | null)[] = Array(7).fill(null);
+  // Scene icons load lazily by src; each finished load invalidates the frame.
+  const iconImages = new Map<string, HTMLImageElement>();
   const minimapSettings = $derived(SETTINGS.minimap.state);
 
   type Projector = (x: number, z: number) => [number, number];
@@ -398,6 +401,7 @@
     for (const region of view.regions) {
       drawRegion(ctx, region, project, scale, ox, oy);
     }
+    drawIcons(ctx, project, view.icons);
 
     for (const entity of view.entities) {
       if (entity.kind === "boss" && minimapSettings.showBoss !== true) {
@@ -538,6 +542,52 @@
       ctx.strokeText(label, sx, sy);
       ctx.fillStyle = colors?.[`m${n}`] ?? "#ffffff";
       ctx.fillText(label, sx, sy);
+    }
+    ctx.restore();
+  }
+
+  function loadedIcon(src: string): HTMLImageElement | null {
+    let image = iconImages.get(src);
+    if (!image) {
+      if (typeof Image === "undefined") return null;
+      image = new Image();
+      image.onload = () => frameInvalidator?.invalidate();
+      image.src = src;
+      iconImages.set(src, image);
+    }
+    return image.complete && image.naturalWidth > 0 ? image : null;
+  }
+
+  function drawIcons(
+    ctx: CanvasRenderingContext2D,
+    project: Projector,
+    icons: MapIcon[] | undefined,
+  ) {
+    if (!icons || icons.length === 0) return;
+
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const icon of icons) {
+      const [sx, sy] = project(icon.x, icon.z);
+      const half = icon.sizePx / 2;
+      const image = loadedIcon(icon.src);
+      if (image) {
+        ctx.drawImage(image, sx - half, sy - half, icon.sizePx, icon.sizePx);
+        continue;
+      }
+
+      ctx.fillStyle = icon.fallbackColor;
+      ctx.beginPath();
+      ctx.arc(sx, sy, half * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      if (icon.fallbackLabel) {
+        ctx.fillStyle = "#0f172a";
+        ctx.font = `700 ${Math.round(half * 0.8)}px sans-serif`;
+        ctx.fillText(icon.fallbackLabel, sx, sy);
+      }
     }
     ctx.restore();
   }
@@ -790,6 +840,8 @@
     return () => {
       for (const image of images) image.onload = null;
       teamMarkImages.fill(null);
+      for (const image of iconImages.values()) image.onload = null;
+      iconImages.clear();
       resizeObserver?.disconnect();
       window.removeEventListener("resize", invalidateSize);
       invalidator.cancel();

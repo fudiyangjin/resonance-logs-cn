@@ -7,13 +7,16 @@ use specta::Type;
 use tauri::State;
 
 use super::error::{VoiceCommandError, VoiceError};
+use super::http_tts::{
+    HttpGenerateRequest, HttpProviderInput, HttpProviderMeta, HttpProviderTestResult,
+};
 use super::model_manager::ModelDownloadSource;
 use super::models::{
     FineTunedVoiceMeta, ModelState, VoiceGenerationBackend, VoiceLanguage, VoicePhraseMeta,
     VoiceStatus,
 };
 use super::presets::VoicePresetLocale;
-use super::types::{AssetId, ModelVersion, PhraseId, ProfileId};
+use super::types::{AssetId, HttpProviderId, ModelVersion, PhraseId, ProfileId};
 use super::{
     GenerateItemRequest, GenerateRequest, GenerationSummary, ImportTarget, ProfileSelection,
     ProfileSelectionNew, VoiceService, VoiceSourceSelection,
@@ -61,6 +64,11 @@ pub enum VoiceSourceSelectionDto {
         locale: VoicePresetLocale,
     },
     FineTuned,
+    /// A configured HTTP TTS provider; needs no local model.
+    Http {
+        #[specta(rename = "providerId")]
+        provider_id: String,
+    },
 }
 
 #[derive(Debug, Clone, Deserialize, Type)]
@@ -72,10 +80,25 @@ pub struct VoiceGenerateRequestDto {
     pub backend_preference: VoiceGenerationBackend,
 }
 
-fn to_generate_request(dto: VoiceGenerateRequestDto) -> CommandResult<GenerateRequest> {
+/// Local sources run the blocking sidecar pipeline; HTTP providers run the
+/// async request pipeline. Splitting here keeps either side's source enum
+/// free of variants it cannot handle.
+enum GenerationJob {
+    Local(GenerateRequest),
+    Http(HttpGenerateRequest),
+}
+
+fn to_generation_job(dto: VoiceGenerateRequestDto) -> CommandResult<GenerationJob> {
     if dto.phrase_ids.is_empty() {
         return Err(VoiceError::validation("phraseIds", "must not be empty").into());
     }
+    let items = dto
+        .phrase_ids
+        .into_iter()
+        .map(PhraseId::parse)
+        .map(|result| result.map(|phrase_id| GenerateItemRequest { phrase_id }))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(VoiceCommandError::from)?;
     let source = match dto.source {
         VoiceSourceSelectionDto::CloneNew {
             name,
@@ -93,19 +116,18 @@ fn to_generate_request(dto: VoiceGenerateRequestDto) -> CommandResult<GenerateRe
         }
         VoiceSourceSelectionDto::Preset { locale } => VoiceSourceSelection::Preset(locale),
         VoiceSourceSelectionDto::FineTuned => VoiceSourceSelection::FineTuned,
+        VoiceSourceSelectionDto::Http { provider_id } => {
+            return Ok(GenerationJob::Http(HttpGenerateRequest {
+                provider_id: HttpProviderId::parse(provider_id).map_err(VoiceCommandError::from)?,
+                items,
+            }));
+        }
     };
-    let items = dto
-        .phrase_ids
-        .into_iter()
-        .map(PhraseId::parse)
-        .map(|result| result.map(|phrase_id| GenerateItemRequest { phrase_id }))
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(VoiceCommandError::from)?;
-    Ok(GenerateRequest {
+    Ok(GenerationJob::Local(GenerateRequest {
         source,
         items,
         backend_preference: dto.backend_preference,
-    })
+    }))
 }
 
 #[tauri::command]
@@ -323,9 +345,60 @@ pub async fn voice_generate(
     voice: State<'_, VoiceService>,
     request: VoiceGenerateRequestDto,
 ) -> CommandResult<GenerationSummary> {
-    let request = to_generate_request(request)?;
+    match to_generation_job(request)? {
+        GenerationJob::Local(request) => {
+            let service = voice.inner().clone();
+            run_blocking_voice_operation("generation", move || service.generate_blocking(request))
+                .await
+        }
+        GenerationJob::Http(request) => voice
+            .generate_http(request)
+            .await
+            .map_err(VoiceCommandError::from),
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn voice_save_http_provider(
+    voice: State<'_, VoiceService>,
+    provider: HttpProviderInput,
+) -> CommandResult<HttpProviderMeta> {
     let service = voice.inner().clone();
-    run_blocking_voice_operation("generation", move || service.generate_blocking(request)).await
+    run_blocking_voice_operation("HTTP provider save", move || {
+        service.save_http_provider(provider)
+    })
+    .await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn voice_delete_http_provider(
+    voice: State<'_, VoiceService>,
+    provider_id: String,
+) -> CommandResult<()> {
+    let provider_id = HttpProviderId::parse(provider_id).map_err(VoiceCommandError::from)?;
+    let service = voice.inner().clone();
+    run_blocking_voice_operation("HTTP provider deletion", move || {
+        service.delete_http_provider(provider_id)
+    })
+    .await
+}
+
+/// Synthesizes `text` with an unsaved provider draft and plays it without
+/// cataloging the take.
+#[tauri::command]
+#[specta::specta]
+pub async fn voice_test_http_provider(
+    voice: State<'_, VoiceService>,
+    provider: HttpProviderInput,
+    text: String,
+    language: VoiceLanguage,
+) -> CommandResult<HttpProviderTestResult> {
+    voice
+        .test_http_provider(provider, text, language)
+        .await
+        .map_err(VoiceCommandError::from)
 }
 
 #[tauri::command]

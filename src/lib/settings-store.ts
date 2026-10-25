@@ -361,11 +361,12 @@ export type VoiceQueuePolicySetting =
 export type VoiceGenerationBackendSetting = "auto" | "cpu" | "vulkan";
 /**
  * `"preset"` auto-selects the bundled reference voice matching the app's
- * current UI locale (see `$lib/voice-preset-source.ts`) and is the default
- * so generation works right after the model is installed, without the
- * user recording or importing a reference clip first.
+ * current UI locale (see `$lib/voice/generation-source.ts`) and is the
+ * default so generation works right after the model is installed, without
+ * the user recording or importing a reference clip first. `"http"` uses the
+ * provider in `selectedHttpProviderId` and needs no local model.
  */
-export type VoiceSourceSetting = "preset" | "clone" | "fineTuned";
+export type VoiceSourceSetting = "preset" | "clone" | "fineTuned" | "http";
 export type VoiceModelDownloadSource = "auto" | "huggingFace" | "hfMirror";
 
 export type VoiceSettingsConfig = {
@@ -376,6 +377,7 @@ export type VoiceSettingsConfig = {
   rules?: VoiceRuleSetting[];
   alertConfigs?: GameAlertVoiceConfigMap;
   selectedProfileId: string | null;
+  selectedHttpProviderId: string | null;
   selectedSource: VoiceSourceSetting;
   generationBackend: VoiceGenerationBackendSetting;
   modelDownloadSource: VoiceModelDownloadSource;
@@ -388,6 +390,7 @@ export function createDefaultVoiceSettings(): VoiceSettingsConfig {
     queuePolicy: "dropLowPriority",
     alertConfigs: {},
     selectedProfileId: null,
+    selectedHttpProviderId: null,
     selectedSource: "preset",
     generationBackend: "auto",
     modelDownloadSource: "auto",

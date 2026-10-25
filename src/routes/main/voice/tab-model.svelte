@@ -20,6 +20,7 @@
     SETTINGS,
     type VoiceModelDownloadSource,
   } from "$lib/settings-store";
+  import HttpProvidersSection from "./http-providers-section.svelte";
 
   let manualModelVersion = $state("");
   let installing = $state(false);
@@ -620,6 +621,8 @@
       </div>
     {/if}
   </section>
+
+  <HttpProvidersSection />
 </div>
 
 <ConfirmDialog

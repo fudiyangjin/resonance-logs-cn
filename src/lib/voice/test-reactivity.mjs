@@ -48,7 +48,13 @@ const phrase = (name, text = name) => ({
   updatedAtMs: 1,
 });
 const status = (phrases = []) => ({
-  catalog: { phrases, profiles: [], assets: [], schemaVersion: 1 },
+  catalog: {
+    phrases,
+    profiles: [],
+    assets: [],
+    httpProviders: [],
+    schemaVersion: 1,
+  },
   operation: { kind: "idle" },
 });
 const settings = proxy({
@@ -59,6 +65,7 @@ const settings = proxy({
       queuePolicy: "dropLowPriority",
       rules: [],
       selectedProfileId: null,
+      selectedHttpProviderId: null,
     },
   },
 });
@@ -96,8 +103,11 @@ const storeUrl = await moduleAt("../stores/voice-store.svelte.ts", {
     "export const onVoiceGenerationProgress = async () => {}; export const onVoiceModelDownloadProgress = async () => {};",
   ),
   "$lib/bindings": bindings,
-  "$lib/i18n/index.svelte": mock("export const t = x => x;"),
+  "$lib/i18n/index.svelte": mock(
+    "export const t = x => x; export const getLocale = () => 'zh-CN';",
+  ),
   "$lib/settings-store": settingsModule,
+  "$lib/voice/generation-source": await moduleAt("./generation-source.ts", {}),
 });
 const store = await import(storeUrl);
 const syncUrl = await moduleAt("./sync.svelte.ts", {

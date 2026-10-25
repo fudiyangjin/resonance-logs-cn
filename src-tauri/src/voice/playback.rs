@@ -41,7 +41,8 @@ impl CueAudioRef {
             },
             VoiceAssetSource::CloneProfile { .. }
             | VoiceAssetSource::FineTuned { .. }
-            | VoiceAssetSource::Imported { .. } => Self::CatalogAsset {
+            | VoiceAssetSource::Imported { .. }
+            | VoiceAssetSource::Http { .. } => Self::CatalogAsset {
                 asset_id: asset.id.clone(),
             },
         }
@@ -242,13 +243,19 @@ impl VoiceService {
         let Some(wav_path) = self.audio_ref_wav_path(phrase_id.as_str(), audio_ref) else {
             return Err(VoiceError::not_found("asset WAV", asset_id.to_string()));
         };
+        self.play_preview_file(wav_path);
+        Ok(())
+    }
+
+    /// Plays `wav_path` at preview priority; also used for uncataloged
+    /// takes such as an HTTP provider test.
+    pub(super) fn play_preview_file(&self, wav_path: PathBuf) {
         self.inner.player.enqueue(QueuedCue {
             rule_id: PREVIEW_RULE_ID.to_string(),
             priority: PREVIEW_PRIORITY,
             wav_path: Some(wav_path),
             stale_at: None,
         });
-        Ok(())
     }
 
     pub fn stop_playback(&self) {

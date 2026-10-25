@@ -25,11 +25,15 @@
     cancelVoiceGeneration,
     runVoiceOperation,
     runVoiceGeneration,
+    savedGenerationSource,
     VOICE,
     voiceErrorMessage,
   } from "$lib/stores/voice-store.svelte";
-  import { presetSourceForLocale } from "$lib/voice-preset-source";
   import { classifyOrphanPhrases, collectVoicePhraseRefs } from "$lib/voice/gc";
+  import {
+    sourceNeedsLocalModel,
+    type GenerationSource,
+  } from "$lib/voice/generation-source";
   import { buildVoiceGcViews } from "$lib/voice/view";
 
   const status = $derived(VOICE.status);
@@ -67,6 +71,10 @@
   let profileMode = $state<"existing" | "new">("existing");
   const selectedSource = $derived(SETTINGS.voice.state.selectedSource);
   const selectedProfileId = $derived(SETTINGS.voice.state.selectedProfileId);
+  const httpProviders = $derived(status?.catalog.httpProviders ?? []);
+  const selectedHttpProviderId = $derived(
+    SETTINGS.voice.state.selectedHttpProviderId,
+  );
   let newProfileName = $state("");
   let referenceWavPath = $state<string | null>(null);
   let keepReference = $state(false);
@@ -327,51 +335,28 @@
     }
   }
 
-  // "Preset" needs nothing beyond an installed model: the backend
-  // extracts (and thereafter reuses) a clone profile from the bundled
-  // reference voice matching the UI locale on its own. Only the "clone an
-  // already-saved profile" and "fine-tuned voice" sources make sense for a
-  // single-phrase inline regenerate otherwise: creating a brand-new cloned
-  // profile is inherently a one-shot, multi-phrase action that belongs in
-  // the batch panel below.
-  const rowSourceReady = $derived(
-    status?.model.kind === "ready" &&
-      (selectedSource === "fineTuned"
-        ? fineTunedState?.kind === "ready"
-        : selectedSource === "preset"
-          ? true
-          : !!selectedProfileId),
-  );
-  const canRegenerateRow = $derived(!operationActive && rowSourceReady);
+  // Inline regenerate uses the saved source as-is. Creating a brand-new
+  // cloned profile is a one-shot, multi-phrase action that belongs in the
+  // batch panel below, so only the batch source considers it.
+  const savedSource = $derived(savedGenerationSource());
+  const canRegenerateRow = $derived(!operationActive && savedSource !== null);
 
-  const canGenerate = $derived(
-    !operationActive &&
-      status?.model.kind === "ready" &&
-      selectedPhraseIds.size > 0 &&
-      (selectedSource === "fineTuned"
-        ? fineTunedState?.kind === "ready"
-        : selectedSource === "preset"
-          ? true
-          : profileMode === "existing"
-            ? !!selectedProfileId
-            : !!referenceWavPath && newProfileName.trim().length > 0),
-  );
-
-  function buildRowSource(): VoiceGenerateRequestDto["source"] | null {
-    if (selectedSource === "fineTuned") {
-      return fineTunedState?.kind === "ready" ? { mode: "fineTuned" } : null;
+  const batchSource = $derived.by((): GenerationSource | null => {
+    if (selectedSource !== "clone" || profileMode === "existing") {
+      return savedSource;
     }
-    if (selectedSource === "preset") {
-      return presetSourceForLocale(getLocale());
-    }
-    return selectedProfileId
-      ? { mode: "cloneExisting", profileId: selectedProfileId }
+    const name = newProfileName.trim();
+    return status?.model.kind === "ready" && referenceWavPath && name
+      ? { mode: "cloneNew", name, referenceWavPath, keepReference }
       : null;
-  }
+  });
+  const canGenerate = $derived(
+    !operationActive && selectedPhraseIds.size > 0 && batchSource !== null,
+  );
 
   async function regeneratePhrase(phraseId: string) {
     if (!canRegenerateRow || regeneratingId) return;
-    const source = buildRowSource();
+    const source = savedSource;
     if (!source) return;
     regeneratingId = phraseId;
     try {
@@ -386,20 +371,8 @@
   }
 
   async function submitGeneration() {
-    if (!canGenerate) return;
-    const source: VoiceGenerateRequestDto["source"] =
-      selectedSource === "fineTuned"
-        ? { mode: "fineTuned" }
-        : selectedSource === "preset"
-          ? presetSourceForLocale(getLocale())
-          : profileMode === "existing"
-            ? { mode: "cloneExisting", profileId: selectedProfileId! }
-            : {
-                mode: "cloneNew",
-                name: newProfileName.trim(),
-                referenceWavPath: referenceWavPath!,
-                keepReference,
-              };
+    const source = batchSource;
+    if (!canGenerate || !source) return;
     const request: VoiceGenerateRequestDto = {
       source,
       phraseIds: phrases
@@ -408,12 +381,7 @@
       backendPreference: SETTINGS.voice.state.generationBackend,
     };
     const summary = await runVoiceGeneration(request);
-    if (
-      selectedSource === "clone" &&
-      profileMode === "new" &&
-      summary &&
-      !VOICE.generationError
-    ) {
+    if (source.mode === "cloneNew" && summary && !VOICE.generationError) {
       newProfileName = "";
       referenceWavPath = null;
       profileMode = "existing";
@@ -682,7 +650,7 @@
                   type="button"
                   class="border-border/60 hover:bg-muted/40 flex items-center gap-1 rounded border px-2 py-1 text-xs disabled:opacity-50"
                   disabled={!canRegenerateRow || regeneratingId === phrase.id}
-                  title={!rowSourceReady
+                  title={savedSource === null
                     ? t("voice.phrases.rowGenerateHint")
                     : undefined}
                   onclick={() => regeneratePhrase(phrase.id)}
@@ -759,7 +727,7 @@
 
     {#if generatePanelOpen}
       <div class="space-y-4">
-        {#if status && status.model.kind !== "ready"}
+        {#if status && status.model.kind !== "ready" && sourceNeedsLocalModel(selectedSource)}
           <div
             class="border-destructive/40 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-xs"
           >
@@ -801,9 +769,45 @@
           >
             {t("voice.phrases.generate.finetunedSource")}
           </button>
+          <button
+            type="button"
+            class="flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors {selectedSource ===
+            'http'
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+            disabled={operationActive}
+            onclick={() => (SETTINGS.voice.state.selectedSource = "http")}
+          >
+            {t("voice.phrases.generate.httpSource")}
+          </button>
         </div>
 
-        {#if selectedSource === "fineTuned"}
+        {#if selectedSource === "http"}
+          {#if httpProviders.length > 0}
+            <select
+              class="border-border/60 bg-muted/30 text-foreground w-full rounded border px-3 py-2 text-sm"
+              value={selectedHttpProviderId ?? ""}
+              disabled={operationActive}
+              onchange={(event) => {
+                SETTINGS.voice.state.selectedHttpProviderId =
+                  (event.currentTarget as HTMLSelectElement).value || null;
+              }}
+            >
+              <option value=""
+                >{t("voice.phrases.generate.pickHttpProvider")}</option
+              >
+              {#each httpProviders as provider (provider.id)}
+                <option value={provider.id}>{provider.name}</option>
+              {/each}
+            </select>
+          {:else}
+            <div
+              class="border-border/60 bg-muted/30 text-muted-foreground rounded border px-3 py-2 text-xs"
+            >
+              {t("voice.phrases.generate.httpSourceEmpty")}
+            </div>
+          {/if}
+        {:else if selectedSource === "fineTuned"}
           {#if fineTunedState?.kind === "ready"}
             <div
               class="border-border/60 bg-muted/30 rounded border px-3 py-2 text-sm"
@@ -977,6 +981,9 @@
                   {item.status}
                 </span>
               </div>
+              {#if item.error}
+                <div class="text-destructive break-all">{item.error}</div>
+              {/if}
             {/each}
             {#if VOICE.generationSummary}
               <div class="text-foreground">

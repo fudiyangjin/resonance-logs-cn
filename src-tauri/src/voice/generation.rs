@@ -106,7 +106,7 @@ impl GenerationArtifactsGuard {
         self.job_file = Some(path);
     }
 
-    fn track_output_files(&mut self, paths: impl IntoIterator<Item = PathBuf>) {
+    pub(super) fn track_output_files(&mut self, paths: impl IntoIterator<Item = PathBuf>) {
         self.output_files.extend(paths);
     }
 
@@ -114,7 +114,7 @@ impl GenerationArtifactsGuard {
         self.profile_directory = Some(path);
     }
 
-    fn commit(&mut self) {
+    pub(super) fn commit(&mut self) {
         self.committed = true;
     }
 }
@@ -169,6 +169,60 @@ pub(super) fn generation_fingerprint(
     hasher.update(model_sha256.as_bytes());
     hasher.update(profile_id.unwrap_or_default().as_bytes());
     hex::encode(hasher.finalize())
+}
+
+/// Rejects the batch up front when any phrase plays imported audio, so a
+/// mixed batch fails before a single item is synthesized.
+pub(super) fn ensure_generatable(
+    catalog: &models::VoiceCatalog,
+    items: &[GenerateItemRequest],
+) -> VoiceResult<()> {
+    match items
+        .iter()
+        .find(|item| phrase_has_imported_audio(catalog, item.phrase_id.as_str()))
+    {
+        Some(item) => Err(VoiceError::validation(
+            "phraseIds",
+            format!(
+                "phrase {} uses imported audio and cannot be generated",
+                item.phrase_id
+            ),
+        )),
+        None => Ok(()),
+    }
+}
+
+/// A phrase keeps at most one asset: each freshly generated take becomes
+/// active immediately and replaces whatever used to be there, so users never
+/// need to confirm a take or clean up old versions by hand. Returns the
+/// replaced `(phrase_id, asset_id)` pairs, whose files the caller removes
+/// once the catalog is committed.
+pub(super) fn apply_generated_assets(
+    catalog: &mut models::VoiceCatalog,
+    generated: Vec<VoiceAssetMeta>,
+) -> Vec<(String, String)> {
+    let mut replaced = Vec::new();
+    for asset in generated {
+        replaced.extend(
+            catalog
+                .assets
+                .iter()
+                .filter(|existing| existing.phrase_id == asset.phrase_id)
+                .map(|existing| (existing.phrase_id.clone(), existing.id.clone())),
+        );
+        catalog
+            .assets
+            .retain(|existing| existing.phrase_id != asset.phrase_id);
+        if let Some(phrase) = catalog
+            .phrases
+            .iter_mut()
+            .find(|phrase| phrase.id == asset.phrase_id)
+        {
+            phrase.active_asset_id = Some(asset.id.clone());
+        }
+        catalog.assets.push(asset);
+    }
+    replaced
 }
 
 pub(super) fn generation_sampling_params(source: &VoiceAssetSource) -> (Option<f32>, Option<i32>) {
@@ -427,19 +481,7 @@ impl VoiceService {
         } = resolved;
 
         let catalog_snapshot = self.inner.catalog.lock().clone();
-        // Reject imported phrases up front so a mixed batch fails before any
-        // item is synthesized, instead of after the sidecar already ran.
-        for item in &request.items {
-            if phrase_has_imported_audio(&catalog_snapshot, item.phrase_id.as_str()) {
-                return Err(VoiceError::validation(
-                    "phraseIds",
-                    format!(
-                        "phrase {} uses imported audio and cannot be generated",
-                        item.phrase_id
-                    ),
-                ));
-            }
-        }
+        ensure_generatable(&catalog_snapshot, &request.items)?;
         let fingerprint_source = match &asset_source {
             VoiceAssetSource::CloneProfile { profile_id } => format!("clone:{profile_id}"),
             VoiceAssetSource::FineTuned {
@@ -452,9 +494,9 @@ impl VoiceService {
                 locale,
                 revision,
             } => format!("bundled-prompt:{key}:{locale:?}:{revision}"),
-            VoiceAssetSource::Imported { .. } => {
+            VoiceAssetSource::Imported { .. } | VoiceAssetSource::Http { .. } => {
                 return Err(VoiceError::Internal(
-                    "imported audio is not a generation source".to_string(),
+                    "not a sidecar generation source".to_string(),
                 ));
             }
         };
@@ -525,8 +567,38 @@ impl VoiceService {
             ));
         }
 
+        let mut generated = Vec::with_capacity(outcome.item_results.len());
+        for item in &outcome.item_results {
+            if !item.ok {
+                continue;
+            }
+            let Some(phrase_id) = phrase_by_item_id.get(&item.id).cloned() else {
+                continue;
+            };
+            let expected_path = output_paths
+                .get(&item.id)
+                .ok_or_else(|| VoiceError::Internal("missing generated output path".to_string()))?;
+            if item.output_path.as_deref() != Some(expected_path.to_string_lossy().as_ref()) {
+                return Err(VoiceError::Security(format!(
+                    "sidecar returned an unexpected output path for {}",
+                    item.id
+                )));
+            }
+            let wav = audio::read_wav_info(expected_path)?;
+            generated.push(VoiceAssetMeta {
+                id: item.id.clone(),
+                phrase_id,
+                source: asset_source.clone(),
+                model_version: generation_model_version.clone(),
+                params_fingerprint: fingerprints.get(&item.id).cloned().unwrap_or_default(),
+                created_at_ms: now_ms(),
+                duration_sec: wav.duration_sec,
+                sample_rate: wav.sample_rate as i32,
+                stale: false,
+            });
+        }
+
         let mut catalog = self.inner.catalog.lock().clone();
-        let mut committed_asset_ids = Vec::new();
         if let (Some(pending), Some(meta)) = (&pending_profile, &outcome.profile_meta) {
             if meta.model_sha256 != model_sha256 {
                 return Err(VoiceError::Incompatible(
@@ -552,60 +624,10 @@ impl VoiceService {
         }
         let resolved_profile_id = match &asset_source {
             VoiceAssetSource::CloneProfile { profile_id } => Some(profile_id.clone()),
-            VoiceAssetSource::FineTuned { .. }
-            | VoiceAssetSource::BundledPrompt { .. }
-            | VoiceAssetSource::Imported { .. } => None,
+            _ => None,
         };
-        // A phrase keeps at most one asset: the freshly generated take
-        // becomes active immediately and replaces whatever used to be
-        // there, so users never need to manually confirm a take or clean
-        // up old versions by hand.
-        let mut replaced_assets: Vec<(String, String)> = Vec::new();
-        for item in &outcome.item_results {
-            if !item.ok {
-                continue;
-            }
-            let Some(phrase_id) = phrase_by_item_id.get(&item.id).cloned() else {
-                continue;
-            };
-            let expected_path = output_paths
-                .get(&item.id)
-                .ok_or_else(|| VoiceError::Internal("missing generated output path".to_string()))?;
-            if item.output_path.as_deref() != Some(expected_path.to_string_lossy().as_ref()) {
-                return Err(VoiceError::Security(format!(
-                    "sidecar returned an unexpected output path for {}",
-                    item.id
-                )));
-            }
-            let wav = audio::read_wav_info(expected_path)?;
-            for stale in catalog
-                .assets
-                .iter()
-                .filter(|asset| asset.phrase_id == phrase_id)
-            {
-                replaced_assets.push((phrase_id.clone(), stale.id.clone()));
-            }
-            catalog.assets.retain(|asset| asset.phrase_id != phrase_id);
-            catalog.assets.push(VoiceAssetMeta {
-                id: item.id.clone(),
-                phrase_id: phrase_id.clone(),
-                source: asset_source.clone(),
-                model_version: generation_model_version.clone(),
-                params_fingerprint: fingerprints.get(&item.id).cloned().unwrap_or_default(),
-                created_at_ms: now_ms(),
-                duration_sec: wav.duration_sec,
-                sample_rate: wav.sample_rate as i32,
-                stale: false,
-            });
-            if let Some(phrase) = catalog
-                .phrases
-                .iter_mut()
-                .find(|phrase| phrase.id == phrase_id)
-            {
-                phrase.active_asset_id = Some(item.id.clone());
-            }
-            committed_asset_ids.push(item.id.clone());
-        }
+        let committed_asset_ids = generated.iter().map(|asset| asset.id.clone()).collect();
+        let replaced_assets = apply_generated_assets(&mut catalog, generated);
         self.commit_catalog(catalog)?;
         artifacts.commit();
         remove_asset_files_best_effort(&self.inner.voice_root, &replaced_assets);
@@ -880,6 +902,44 @@ mod tests {
             (Some(FINE_TUNED_TEMPERATURE), Some(FINE_TUNED_TOP_K))
         );
         assert_eq!(generation_sampling_params(&clone), (None, None));
+    }
+
+    #[test]
+    fn generated_assets_replace_the_phrase_take_and_become_active() {
+        use crate::voice::test_support::{asset_stub, phrase_stub};
+        let mut catalog = models::VoiceCatalog {
+            phrases: vec![
+                phrase_stub("phrase_a", Some("old_a")),
+                phrase_stub("phrase_b", None),
+            ],
+            assets: vec![
+                asset_stub("old_a", "phrase_a", 1),
+                asset_stub("keep_c", "phrase_c", 1),
+            ],
+            ..models::VoiceCatalog::default()
+        };
+
+        let replaced = apply_generated_assets(
+            &mut catalog,
+            vec![
+                asset_stub("new_a", "phrase_a", 2),
+                asset_stub("new_b", "phrase_b", 2),
+            ],
+        );
+
+        assert_eq!(replaced, [("phrase_a".to_string(), "old_a".to_string())]);
+        let ids: Vec<_> = catalog
+            .assets
+            .iter()
+            .map(|asset| asset.id.as_str())
+            .collect();
+        assert_eq!(ids, ["keep_c", "new_a", "new_b"]);
+        let active: Vec<_> = catalog
+            .phrases
+            .iter()
+            .map(|phrase| phrase.active_asset_id.as_deref())
+            .collect();
+        assert_eq!(active, [Some("new_a"), Some("new_b")]);
     }
 
     #[test]

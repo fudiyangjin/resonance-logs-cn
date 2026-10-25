@@ -439,7 +439,10 @@ where
     }
 }
 
-fn emit_progress<R: Runtime>(app_handle: &AppHandle<R>, progress: VoiceGenerationProgress) {
+pub(super) fn emit_progress<R: Runtime>(
+    app_handle: &AppHandle<R>,
+    progress: VoiceGenerationProgress,
+) {
     if let Err(error) = app_handle.emit(VOICE_GENERATION_PROGRESS_EVENT, progress) {
         warn!(target: "app::voice", "failed to emit generation progress: {error}");
     }

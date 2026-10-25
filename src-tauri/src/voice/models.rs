@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
+use super::http_tts::HttpProviderMeta;
 use super::presets::VoicePresetTag;
 
 pub const VOICE_CATALOG_SCHEMA_VERSION: u32 = 3;
@@ -181,10 +182,22 @@ pub enum VoiceAssetSource {
         #[specta(rename = "originalFileName")]
         original_file_name: String,
     },
+    /// Synthesized by a user-configured HTTP TTS provider. Goes stale when
+    /// the provider's request shape changes (`config_fingerprint`) or the
+    /// provider is removed, like any other text-derived take.
+    Http {
+        #[specta(rename = "providerId")]
+        provider_id: String,
+        #[specta(rename = "configFingerprint")]
+        config_fingerprint: String,
+    },
 }
 
 /// `model_version` recorded on imported assets (no TTS model involved).
 pub const IMPORTED_MODEL_VERSION: &str = "imported";
+
+/// `model_version` recorded on assets synthesized by an HTTP provider.
+pub const HTTP_MODEL_VERSION: &str = "http";
 
 impl VoiceAssetSource {
     /// True for audio that did not come out of the TTS pipeline: imported
@@ -245,6 +258,7 @@ pub struct VoiceCatalog {
     pub installed_model_version: Option<String>,
     pub installed_model_sha256: Option<String>,
     pub fine_tuned_voice: Option<FineTunedVoiceMeta>,
+    pub http_providers: Vec<HttpProviderMeta>,
 }
 
 /// Which caster population a monster-buff voice rule observes.
@@ -770,6 +784,7 @@ impl Default for VoiceCatalog {
             installed_model_version: None,
             installed_model_sha256: None,
             fine_tuned_voice: None,
+            http_providers: Vec::new(),
         }
     }
 }

@@ -7,7 +7,7 @@
 //! takes.
 
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Read, Write};
+use std::io::{BufReader, BufWriter, Cursor, Read, Write};
 use std::path::Path;
 
 use rodio::{Decoder, Source};
@@ -61,19 +61,53 @@ pub fn decode_and_normalize(path: &Path) -> VoiceResult<ImportedClip> {
     let sha256 = hash_file(path)?;
 
     let file = File::open(path).map_err(|e| VoiceError::io_at("open", path, e))?;
-    let decoder = Decoder::new(BufReader::new(file)).map_err(|e| {
-        VoiceError::validation(
-            IMPORT_PATH_FIELD,
-            format!("unsupported or corrupt audio: {e}"),
-        )
-    })?;
-    let samples = normalize(decoder)?;
+    let decoder =
+        Decoder::new(BufReader::new(file)).map_err(|e| unsupported_audio(IMPORT_PATH_FIELD, &e))?;
+    Ok(clip_from(normalize(decoder, IMPORT_PATH_FIELD)?, sha256))
+}
+
+/// Decodes an in-memory clip (e.g. an HTTP TTS response) into the same
+/// normalized shape as [`decode_and_normalize`]. `mime_type` is the
+/// server-reported container, used as a probe hint when present; errors
+/// are reported against `field`.
+///
+/// # Errors
+/// `Validation` for oversized, undecodable or out-of-range-duration input.
+pub fn decode_bytes(
+    bytes: Vec<u8>,
+    mime_type: Option<&str>,
+    field: &'static str,
+) -> VoiceResult<ImportedClip> {
+    let byte_len = bytes.len() as u64;
+    if byte_len > MAX_IMPORT_FILE_BYTES {
+        return Err(VoiceError::validation(
+            field,
+            format!("audio too large ({byte_len} bytes, max {MAX_IMPORT_FILE_BYTES})"),
+        ));
+    }
+    let sha256 = format!("{:x}", Sha256::digest(&bytes));
+    let mut builder = Decoder::builder()
+        .with_data(Cursor::new(bytes))
+        .with_byte_len(byte_len)
+        .with_seekable(true);
+    if let Some(mime_type) = mime_type {
+        builder = builder.with_mime_type(mime_type);
+    }
+    let decoder = builder.build().map_err(|e| unsupported_audio(field, &e))?;
+    Ok(clip_from(normalize(decoder, field)?, sha256))
+}
+
+fn unsupported_audio(field: &'static str, error: &impl std::fmt::Display) -> VoiceError {
+    VoiceError::validation(field, format!("unsupported or corrupt audio: {error}"))
+}
+
+fn clip_from(samples: Vec<i16>, sha256: String) -> ImportedClip {
     let duration_sec = samples.len() as f64 / f64::from(IMPORT_SAMPLE_RATE);
-    Ok(ImportedClip {
+    ImportedClip {
         samples,
         duration_sec,
         sha256,
-    })
+    }
 }
 
 /// Downmixes to mono, resamples to [`IMPORT_SAMPLE_RATE`] and quantizes to
@@ -83,7 +117,7 @@ pub fn decode_and_normalize(path: &Path) -> VoiceResult<ImportedClip> {
 /// `UniformSourceIterator` would instead rebuild its converter at every
 /// decoder span (one per compressed packet), resetting the interpolation
 /// phase and leaving audible discontinuities at packet boundaries.
-fn normalize<S>(mut source: S) -> VoiceResult<Vec<i16>>
+fn normalize<S>(mut source: S, field: &'static str) -> VoiceResult<Vec<i16>>
 where
     S: Source<Item = f32>,
 {
@@ -92,8 +126,8 @@ where
     let limit = u64::from(source_rate)
         .checked_mul(u64::from(MAX_IMPORT_DURATION_SEC))
         .and_then(|frames| usize::try_from(frames).ok())
-        .ok_or_else(|| VoiceError::validation(IMPORT_PATH_FIELD, "audio frame limit overflow"))?;
-    let invalid = |message| VoiceError::validation(IMPORT_PATH_FIELD, message);
+        .ok_or_else(|| VoiceError::validation(field, "audio frame limit overflow"))?;
+    let invalid = |message| VoiceError::validation(field, message);
     let mut mono = Vec::new();
     // Keep only mono frames. Check each decoded sample, including packet boundaries.
     'frames: loop {
@@ -224,7 +258,7 @@ mod tests {
 
     #[test]
     fn normalize_downmixes_and_resamples() {
-        let samples = normalize(sine(48_000, 2, 1.0)).unwrap();
+        let samples = normalize(sine(48_000, 2, 1.0), IMPORT_PATH_FIELD).unwrap();
         let duration = samples.len() as f64 / f64::from(IMPORT_SAMPLE_RATE);
         assert!((duration - 1.0).abs() < 0.01, "duration {duration}");
         assert!(samples.iter().any(|s| *s > 10_000));
@@ -235,7 +269,7 @@ mod tests {
     fn resampled_sine_is_continuous_across_the_whole_clip() {
         // 3 s at 48 kHz stereo is well past rodio's 32768-sample span size,
         // so any per-span phase reset would show up as a jump here.
-        let samples = normalize(sine(48_000, 2, 3.0)).unwrap();
+        let samples = normalize(sine(48_000, 2, 3.0), IMPORT_PATH_FIELD).unwrap();
         // 440 Hz at amplitude 0.5 sampled at 24 kHz: max slope per sample is
         // 0.5 * 2π * 440 / 24000 ≈ 0.0576 → ~1887 PCM16 units; allow slack.
         let max_step = 2_400;
@@ -263,7 +297,7 @@ mod tests {
     fn wav_roundtrip_is_readable_by_catalog_reader_and_importer() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("clip.wav");
-        let samples = normalize(sine(44_100, 1, 0.5)).unwrap();
+        let samples = normalize(sine(44_100, 1, 0.5), IMPORT_PATH_FIELD).unwrap();
         write_pcm16_wav(&path, &samples, IMPORT_SAMPLE_RATE).unwrap();
 
         let info = crate::voice::audio::read_wav_info(&path).unwrap();
@@ -275,6 +309,30 @@ mod tests {
         let clip = decode_and_normalize(&path).unwrap();
         assert!((clip.duration_sec - 0.5).abs() < 0.01);
         assert_eq!(clip.sha256.len(), 64);
+    }
+
+    #[test]
+    fn in_memory_clips_decode_like_files_with_or_without_a_mime_hint() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("clip.wav");
+        let samples = normalize(sine(44_100, 1, 0.5), IMPORT_PATH_FIELD).unwrap();
+        write_pcm16_wav(&path, &samples, IMPORT_SAMPLE_RATE).unwrap();
+        let bytes = std::fs::read(&path).unwrap();
+        let from_file = decode_and_normalize(&path).unwrap();
+
+        for mime in [Some("audio/wav"), None] {
+            let clip = decode_bytes(bytes.clone(), mime, "audio").unwrap();
+            assert_eq!(clip.samples, from_file.samples);
+            assert_eq!(clip.sha256, from_file.sha256);
+        }
+        assert!(matches!(
+            decode_bytes(
+                b"{\"error\":\"nope\"}".to_vec(),
+                Some("application/json"),
+                "audio"
+            ),
+            Err(VoiceError::Validation { field: "audio", .. })
+        ));
     }
 
     struct CountingSource {
@@ -340,7 +398,7 @@ mod tests {
                     change_at: None,
                     change_channels: false,
                 };
-                let result = normalize(source);
+                let result = normalize(source, IMPORT_PATH_FIELD);
                 if excess == 0 {
                     assert_eq!(result.unwrap().len(), 30 * IMPORT_SAMPLE_RATE as usize);
                 } else {
@@ -368,11 +426,16 @@ mod tests {
                 change_channels,
             };
             assert!(matches!(
-                normalize(source),
+                normalize(source, IMPORT_PATH_FIELD),
                 Err(VoiceError::Validation { .. })
             ));
         }
-        assert_eq!(normalize(sine(100, 1, 0.2)).unwrap().len(), 4_800);
+        assert_eq!(
+            normalize(sine(100, 1, 0.2), IMPORT_PATH_FIELD)
+                .unwrap()
+                .len(),
+            4_800
+        );
     }
 
     #[test]

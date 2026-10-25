@@ -1,6 +1,16 @@
 import type { MinimapEntity, MinimapMarker } from "$lib/api";
-import type { MechanicRegion, SceneDefinition } from "../../scene-types";
-import { arenaLayout, inBossArea, toArenaLocal, yInArena } from "./arena";
+import type {
+  MapIcon,
+  MechanicRegion,
+  SceneDefinition,
+} from "../../scene-types";
+import {
+  arenaLayout,
+  inBossArea,
+  type SceneLayout,
+  toArenaLocal,
+  yInArena,
+} from "./arena";
 import {
   buildMechanicView,
   resolveLapsisVoiceCues,
@@ -14,7 +24,7 @@ export const s4SkyEndRaidScene: SceneDefinition = {
   voiceCues: S4_SKY_END_RAID_VOICE_CUES,
   resolveVoiceCues: resolveLapsisVoiceCues,
   resolveView(snapshot, displayName, skillCasts = []) {
-    const layout = arenaLayout();
+    const layout = arenaLayout(snapshot.entities);
     const mechanicView = buildMechanicView(snapshot, displayName, skillCasts);
     return {
       worldHalfX: layout.worldHalfX,
@@ -22,11 +32,13 @@ export const s4SkyEndRaidScene: SceneDefinition = {
       rotationQuarters: layout.rotationQuarters,
       layout: layout.shapes,
       regions: mechanicView.regions.map(localizeRegion),
+      icons: mechanicView.icons.map(localizeIcon),
       rows: mechanicView.rows,
       entityColorSlots: mechanicView.entityColorSlots,
       entities: visibleEntities(
         snapshot.entities,
         mechanicView.entityColorSlots,
+        layout,
       ).map(localizeEntity),
       markers: snapshot.markers.map(localizeMarker),
     };
@@ -36,11 +48,12 @@ export const s4SkyEndRaidScene: SceneDefinition = {
 function visibleEntities(
   entities: MinimapEntity[],
   entityColorSlots: Map<string, number>,
+  layout: SceneLayout,
 ): MinimapEntity[] {
   return entities.filter(
     (entity) =>
       yInArena(entity.y) &&
-      inBossArea(entity.x, entity.z) &&
+      inBossArea(entity.x, entity.z, layout) &&
       (entity.kind === "local" ||
         entity.kind === "teammate" ||
         entity.kind === "boss" ||
@@ -51,6 +64,11 @@ function visibleEntities(
 function localizeEntity(entity: MinimapEntity): MinimapEntity {
   const point = toArenaLocal(entity.x, entity.z);
   return { ...entity, x: point.x, z: point.z };
+}
+
+function localizeIcon(icon: MapIcon): MapIcon {
+  const point = toArenaLocal(icon.x, icon.z);
+  return { ...icon, x: point.x, z: point.z };
 }
 
 function localizeMarker(marker: MinimapMarker): MinimapMarker {

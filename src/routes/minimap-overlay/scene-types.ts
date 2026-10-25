@@ -63,6 +63,19 @@ export type MechanicRegion =
       label?: string;
     };
 
+/**
+ * An image drawn centred on a world point, above regions and below entities.
+ * Until the image loads, a `fallbackColor` dot with `fallbackLabel` stands in.
+ */
+export type MapIcon = {
+  x: number;
+  z: number;
+  src: string;
+  sizePx: number;
+  fallbackColor: string;
+  fallbackLabel?: string;
+};
+
 export type MechanicRowTarget = {
   uuid: string;
   name: string;
@@ -91,6 +104,7 @@ export type SceneView = {
   rotationQuarters: number;
   layout: LayoutShapes;
   regions: MechanicRegion[];
+  icons?: MapIcon[];
   rows: MechanicRow[];
   entityColorSlots: Map<string, number>;
   entities: MinimapEntity[];

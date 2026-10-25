@@ -1464,4 +1464,130 @@ mod tests {
 
         assert!(projection.take_payload().skill_casts.is_empty());
     }
+
+    #[test]
+    fn sky_end_turntable_ring_publishes_facing_and_layout_buff() {
+        let mut projection = MinimapProjection::default();
+        projection.apply(&scene(1, 13032));
+        add_positioned_entity(
+            &mut projection,
+            10,
+            CONFIGURED_MONSTER,
+            EntityKind::Monster,
+            Some(103401),
+            false,
+        );
+        projection.apply(&integer_attribute(
+            20,
+            CONFIGURED_MONSTER,
+            attr_type::ATTR_FACING,
+            13_015,
+        ));
+        projection.apply(&buff(21, BuffTransition::Baseline, 301, 829502));
+        projection.apply(&buff(22, BuffTransition::Applied, 302, 829509));
+
+        let snapshot = projection
+            .take_payload()
+            .snapshot
+            .expect("registered scene should publish a snapshot");
+        let ring = snapshot
+            .entities
+            .iter()
+            .find(|entity| entity.entity_uuid == "3")
+            .expect("turntable ring should be visible");
+        assert_eq!(ring.monster_id, Some(103401));
+        assert_eq!(ring.facing, Some(130.15));
+        let mut base_ids = snapshot
+            .buffs
+            .iter()
+            .map(|buff| buff.base_id)
+            .collect::<Vec<_>>();
+        base_ids.sort_unstable();
+        assert_eq!(base_ids, [829502, 829509]);
+    }
+
+    #[test]
+    fn sky_end_lapsis_night_publishes_balls_executor_casts_and_ritual_buffs() {
+        let mut projection = MinimapProjection::default();
+        projection.apply(&scene(1, 13032));
+        add_positioned_entity(
+            &mut projection,
+            10,
+            CONFIGURED_MONSTER,
+            EntityKind::Monster,
+            Some(103602),
+            false,
+        );
+        add_positioned_entity(
+            &mut projection,
+            20,
+            UNRELATED_MONSTER,
+            EntityKind::Monster,
+            Some(103611),
+            false,
+        );
+        projection.apply(&envelope(
+            30,
+            12_000,
+            DomainEvent::SkillLifecycleChanged {
+                caster: UNRELATED_MONSTER,
+                skill_id: 10360011,
+                phase: SkillPhase::Observed,
+                target: None,
+            },
+        ));
+        projection.apply(&buff(31, BuffTransition::Applied, 401, 829712));
+        projection.apply(&buff(32, BuffTransition::Applied, 402, 829602));
+        projection.apply(&buff(33, BuffTransition::Applied, 403, 829601));
+
+        let payload = projection.take_payload();
+        let snapshot = payload
+            .snapshot
+            .expect("registered scene should publish a snapshot");
+        let monsters = snapshot
+            .entities
+            .iter()
+            .filter_map(|entity| entity.monster_id)
+            .collect::<Vec<_>>();
+        assert_eq!(monsters, [103602, 103611]);
+        let mut base_ids = snapshot
+            .buffs
+            .iter()
+            .map(|buff| buff.base_id)
+            .collect::<Vec<_>>();
+        base_ids.sort_unstable();
+        assert_eq!(base_ids, [829602, 829712]);
+        assert_eq!(payload.skill_casts.len(), 1);
+        assert_eq!(payload.skill_casts[0].skill_id, 10360011);
+    }
+
+    #[test]
+    fn sky_end_raid_publishes_share_tank_swap_erosion_and_fog_ball_buffs() {
+        let mut projection = MinimapProjection::default();
+        projection.apply(&scene(1, 13032));
+        let published = [829649, 829650, 829654, 829721, 829722, 829725];
+        for (offset, base_id) in published.into_iter().enumerate() {
+            let offset = offset as u64;
+            projection.apply(&buff(
+                10 + offset,
+                BuffTransition::Applied,
+                500 + offset as i64,
+                base_id,
+            ));
+        }
+        // 罪罚叠层计数 is the hidden counter behind 罪罚; it stays out.
+        projection.apply(&buff(20, BuffTransition::Applied, 520, 829604));
+
+        let snapshot = projection
+            .take_payload()
+            .snapshot
+            .expect("registered scene should publish a snapshot");
+        let mut base_ids = snapshot
+            .buffs
+            .iter()
+            .map(|buff| buff.base_id)
+            .collect::<Vec<_>>();
+        base_ids.sort_unstable();
+        assert_eq!(base_ids, published);
+    }
 }

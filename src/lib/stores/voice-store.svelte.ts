@@ -15,9 +15,12 @@ import {
   type VoicePhraseMeta,
   type VoiceStatus,
 } from "$lib/bindings";
-import { SvelteSet } from "svelte/reactivity";
-import { t } from "$lib/i18n/index.svelte";
+import { getLocale, t } from "$lib/i18n/index.svelte";
 import { SETTINGS } from "$lib/settings-store";
+import {
+  resolveSavedGenerationSource,
+  type GenerationSource,
+} from "$lib/voice/generation-source";
 
 export function voiceErrorMessage(error: VoiceCommandError | unknown): string {
   if (
@@ -133,25 +136,46 @@ export function voiceOperationActive(): boolean {
   return localOperations > 0 || VOICE.operation.kind !== "idle";
 }
 
-/** Drops a selected clone profile that no longer exists in the catalog. */
-export function reconcileSelectedProfile(
-  catalog: VoiceCatalog,
-  selectedProfileId: string | null,
+/** Keeps a selected id only while the catalog still has an entry with it. */
+export function reconcileSelectedId(
+  entries: readonly { id: string }[],
+  selectedId: string | null,
 ): string | null {
-  const profileIds = new SvelteSet(
-    catalog.profiles.map((profile) => profile.id),
-  );
-  return selectedProfileId && profileIds.has(selectedProfileId)
-    ? selectedProfileId
+  return selectedId && entries.some((entry) => entry.id === selectedId)
+    ? selectedId
     : null;
 }
 
+/** Drops a selected clone profile / HTTP provider that no longer exists. */
 function applyReconciledVoiceSettings(catalog: VoiceCatalog) {
-  const currentProfileId = SETTINGS.voice.state.selectedProfileId;
-  const reconciled = reconcileSelectedProfile(catalog, currentProfileId);
-  if (reconciled !== currentProfileId) {
-    SETTINGS.voice.state.selectedProfileId = reconciled;
+  const state = SETTINGS.voice.state;
+  const profileId = reconcileSelectedId(
+    catalog.profiles,
+    state.selectedProfileId,
+  );
+  if (profileId !== state.selectedProfileId) {
+    state.selectedProfileId = profileId;
   }
+  const providerId = reconcileSelectedId(
+    catalog.httpProviders,
+    state.selectedHttpProviderId,
+  );
+  if (providerId !== state.selectedHttpProviderId) {
+    state.selectedHttpProviderId = providerId;
+  }
+}
+
+/** The saved generation source, resolved against the current voice status. */
+export function savedGenerationSource(): GenerationSource | null {
+  const state = SETTINGS.voice.state;
+  return resolveSavedGenerationSource({
+    selectedSource: state.selectedSource,
+    selectedProfileId: state.selectedProfileId,
+    selectedHttpProviderId: state.selectedHttpProviderId,
+    modelReady: VOICE.status?.model.kind === "ready",
+    fineTunedReady: VOICE.status?.fineTunedVoice.kind === "ready",
+    locale: getLocale(),
+  });
 }
 
 export function ensureVoiceListeners(): Promise<void> {

@@ -26,7 +26,7 @@ use super::operation::{
 };
 use super::phrases::{reconcile_single_asset_per_phrase, remove_asset_files_best_effort};
 use super::player::{PlaybackSink, PlayerHandle};
-use super::{catalog, finetuned, generator, model_manager, models, phrase_name, prompts};
+use super::{catalog, finetuned, generator, http_tts, model_manager, models, phrase_name, prompts};
 
 pub(super) struct VoiceServiceInner {
     pub(super) app_handle: AppHandle,
@@ -34,6 +34,9 @@ pub(super) struct VoiceServiceInner {
     pub(super) catalog: Mutex<models::VoiceCatalog>,
     pub(super) player: Arc<dyn PlaybackSink>,
     pub(super) http_client: reqwest::Client,
+    /// HTTP TTS provider calls; unlike `http_client` it allows plain HTTP to
+    /// local/LAN endpoints.
+    pub(super) tts_http_client: reqwest::Client,
     pub(super) sidecar_runner: Arc<dyn SidecarRunner>,
     pub(super) model_downloader: Arc<dyn ModelDownloader>,
     pub(super) model_store: Arc<dyn ModelStore>,
@@ -127,6 +130,7 @@ impl VoiceService {
                 context: "build voice HTTP client".to_string(),
                 source,
             })?;
+        http_tts::clear_previews(&catalog::preview_dir(&voice_root));
         Ok(Self {
             inner: Arc::new(VoiceServiceInner {
                 app_handle,
@@ -134,6 +138,7 @@ impl VoiceService {
                 catalog: Mutex::new(catalog_data),
                 player: Arc::new(PlayerHandle::spawn()?),
                 http_client,
+                tts_http_client: http_tts::build_client()?,
                 sidecar_runner: Arc::new(generator::ProcessSidecarRunner),
                 model_downloader: Arc::new(model_manager::SignedHttpModelDownloader),
                 model_store: Arc::new(model_manager::FileModelStore),

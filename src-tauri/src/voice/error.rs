@@ -43,6 +43,9 @@ pub enum VoiceError {
     },
     #[error("{0}")]
     Process(String),
+    /// A remote service (HTTP TTS provider) answered with an error status.
+    #[error("HTTP {status}: {message}")]
+    Upstream { status: u16, message: String },
     #[error("{0}")]
     Internal(String),
 }
@@ -102,6 +105,7 @@ impl VoiceError {
             Self::Http { .. } => "network",
             Self::Json { .. } => "invalid_data",
             Self::Process(_) => "sidecar",
+            Self::Upstream { .. } => "upstream",
             Self::Internal(_) => "internal",
         }
     }
@@ -114,6 +118,7 @@ impl VoiceError {
                 | Self::Io { .. }
                 | Self::Http { .. }
                 | Self::Process(_)
+                | Self::Upstream { .. }
         )
     }
 }
