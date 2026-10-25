@@ -44,9 +44,9 @@ namespace Constants {
     /// @brief 特殊属性映射
     /// @details 特殊属性映射, str
     inline const std::unordered_map<std::string, bool> SPECIAL_ATTR_NAMES_STR = {
-        {"极-伤害叠加", true}, {"极-灵活身法", true}, {"极-生命凝聚", true},
-        {"极-急救措施", true}, {"极-生命波动", true}, {"极-生命汲取", true},
-        {"极-全队幸暴", true}, {"极-绝境守护", true}
+        {u8"\u6781-\u4f24\u5bb3\u53e0\u52a0", true}, {u8"\u6781-\u7075\u6d3b\u8eab\u6cd5", true}, {u8"\u6781-\u751f\u547d\u51dd\u805a", true},
+        {u8"\u6781-\u6025\u6551\u63aa\u65bd", true}, {u8"\u6781-\u751f\u547d\u6ce2\u52a8", true}, {u8"\u6781-\u751f\u547d\u6c72\u53d6", true},
+        {u8"\u6781-\u5168\u961f\u5e78\u66b4", true}, {u8"\u6781-\u7edd\u5883\u5b88\u62a4", true}
     };
     
     /// @brief 总属性战斗力映射表

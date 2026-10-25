@@ -142,6 +142,7 @@ fn build_module_optimizer() {
     println!("cargo:rerun-if-changed=src/module_optimizer/bridge.rs");
     println!("cargo:rerun-if-changed=src/module_optimizer/cpp/");
     println!("cargo:rerun-if-env-changed=CUDA_HOME");
+    println!("cargo:rerun-if-env-changed=PATH");
     println!("cargo:rerun-if-env-changed=CUDA_PATH");
     println!("cargo:rerun-if-env-changed=OPENCL_HOME");
     println!("cargo:rerun-if-env-changed=OPENCL_CLHPP_ROOT");
@@ -245,7 +246,7 @@ fn find_cccl_root() -> Option<PathBuf> {
         cccl_root.join("libcudacxx/include"),
     ];
 
-    if required_dirs.iter().all(|dir| dir.exists()) {
+    if required_dirs.iter().all(|dir: &PathBuf| dir.exists()) {
         println!("cargo:warning=Using CCCL from: {}", cccl_root.display());
         Some(cccl_root)
     } else {
@@ -273,7 +274,9 @@ fn compile_cuda(cpp_dir: &Path, cccl_root: Option<&Path>) -> Option<PathBuf> {
     let cuda_architectures =
         env::var("CMAKE_CUDA_ARCHITECTURES").unwrap_or_else(|_| "75;86;89;120".to_string());
     let install_dir = PathBuf::from(env::var("OUT_DIR").expect("missing OUT_DIR"));
-    let build_dir = install_dir.join("build");
+    let use_msvc = env::var("TARGET").is_ok_and(|target| target.ends_with("-msvc"));
+    // Keep MSVC builds separate from caches previously configured with MinGW.
+    let build_dir = install_dir.join(if use_msvc { "build-msvc" } else { "build" });
 
     if let Err(error) = std::fs::create_dir_all(&build_dir) {
         println!(
@@ -284,6 +287,22 @@ fn compile_cuda(cpp_dir: &Path, cccl_root: Option<&Path>) -> Option<PathBuf> {
     }
 
     let mut configure = Command::new("cmake");
+    if use_msvc {
+        let librarian = env::var_os("PATH").and_then(|path| {
+            env::split_paths(&path)
+                .map(|dir| dir.join("lib.exe"))
+                .find(|path| path.is_file())
+        });
+        let Some(librarian) = librarian else {
+            println!(
+                "cargo:warning=MSVC lib.exe not found in PATH; initialize vcvars64.bat before building CUDA"
+            );
+            return None;
+        };
+        configure
+            .arg("-DCMAKE_CXX_COMPILER=cl.exe")
+            .arg(format!("-DCMAKE_AR={}", librarian.display()));
+    }
     configure
         .arg("-S")
         .arg(cpp_dir)
@@ -353,7 +372,7 @@ fn run_cmake_step(mut command: Command, step: &str) -> bool {
 }
 
 /// `cargo:warning=` only renders single lines, so the captured cmake output is
-/// flattened and trimmed to the tail where the actual diagnostics live.
+/// flattened, retaining the first diagnostics as well as the final summary.
 fn cmake_failure_lines(output: &Output) -> Vec<String> {
     const MAX_LINES: usize = 40;
 
@@ -369,7 +388,10 @@ fn cmake_failure_lines(output: &Output) -> Vec<String> {
         .collect();
 
     if lines.len() > MAX_LINES {
-        lines.drain(..lines.len() - MAX_LINES);
+        let tail = lines.split_off(lines.len() - 10);
+        lines.truncate(MAX_LINES - 11);
+        lines.push("... additional CMake output omitted ...".to_string());
+        lines.extend(tail);
     }
 
     lines
