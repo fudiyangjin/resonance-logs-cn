@@ -131,40 +131,47 @@
     // Materialize every phrase behind each pending entry (tier-placeholder
     // text expands to 7 phrases, upserted here if not cached yet), then
     // submit the ones that still lack audio.
-    const missingIds: string[] = [];
+    const batches = new Map<
+      string,
+      { source: VoiceGenerateRequestDto["source"]; ids: Set<string> }
+    >();
     for (const entry of entries) {
       if (isReady(entry)) continue;
+      const source =
+        entry.binding.source === "custom" && entry.binding.generationSource
+          ? entry.binding.generationSource
+          : savedGenerationSource();
+      if (!source) {
+        generateMessage = t("voice.bindings.generateMissing.needProfile");
+        return;
+      }
       const ids = await materializeBindingPhraseIds(
         entry.binding,
         entry.phrases,
       );
-      missingIds.push(
-        ...ids.filter((id) => !phrasesById.get(id)?.activeAssetId),
-      );
+      const key = JSON.stringify(source);
+      const batch = batches.get(key) ?? { source, ids: new Set<string>() };
+      for (const id of ids)
+        if (!phrasesById.get(id)?.activeAssetId) batch.ids.add(id);
+      batches.set(key, batch);
     }
-    const phraseIds = Array.from(new Set(missingIds));
-    if (phraseIds.length === 0) {
-      generateMessage = t("voice.bindings.generateMissing.none");
-      return;
-    }
-    const source = savedGenerationSource();
-    if (!source) {
-      generateMessage = t("voice.bindings.generateMissing.needProfile");
-      return;
-    }
-    const request: VoiceGenerateRequestDto = {
-      source,
-      phraseIds,
-      backendPreference: SETTINGS.voice.state.generationBackend,
-    };
-    const summary = await runVoiceGeneration(request);
-    if (VOICE.generationError) {
-      generateMessage = VOICE.generationError;
-    } else if (summary) {
-      generateMessage = t("voice.bindings.generateMissing.summary", {
-        count: phraseIds.length,
+    let count = 0;
+    for (const { source, ids } of batches.values()) {
+      if (!ids.size) continue;
+      const summary = await runVoiceGeneration({
+        source,
+        phraseIds: [...ids],
+        backendPreference: SETTINGS.voice.state.generationBackend,
       });
+      if (!summary || VOICE.generationError) {
+        generateMessage = VOICE.generationError;
+        return;
+      }
+      count += ids.size;
     }
+    generateMessage = count
+      ? t("voice.bindings.generateMissing.summary", { count })
+      : t("voice.bindings.generateMissing.none");
   }
 </script>
 

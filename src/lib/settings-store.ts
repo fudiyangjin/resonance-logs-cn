@@ -405,7 +405,15 @@ export function createDefaultVoiceSettings(): VoiceSettingsConfig {
  */
 export type VoicePhraseBinding =
   | { source: "auto" }
-  | { source: "custom"; text: string }
+  | {
+      source: "custom";
+      text: string;
+      httpLanguage?: "zhCn" | "enUs" | "jaJp";
+      generationSource?:
+        | { mode: "preset"; locale: "zh-CN" | "en-US" | "ja-JP" }
+        | { mode: "http"; providerId: string }
+        | undefined;
+    }
   | { source: "phrase"; phraseId: string };
 
 export function createDefaultVoicePhraseBinding(): VoicePhraseBinding {
@@ -555,7 +563,10 @@ export type MonsterSkillVoiceConfig = {
   onCast?: VoiceEventConfig;
 };
 
-export type MonsterSkillVoiceConfigMap = Record<string, MonsterSkillVoiceConfig>;
+export type MonsterSkillVoiceConfigMap = Record<
+  string,
+  MonsterSkillVoiceConfig
+>;
 
 export function ensureMonsterSkillVoiceConfigs(
   configs: MonsterSkillVoiceConfigMap | null | undefined,

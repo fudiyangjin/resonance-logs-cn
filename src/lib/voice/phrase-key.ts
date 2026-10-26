@@ -154,18 +154,25 @@ export function bindingPhrases(input: BindingPhraseInput): BindingPhrase[] {
     phrase.source === "custom" ? phrase.text : input.autoText
   ).trim();
   if (!raw) return [];
+  const language =
+    phrase.source === "custom" && phrase.generationSource?.mode === "http"
+      ? (phrase.httpLanguage ?? input.language)
+      : input.language;
   const make = (
     text: string,
     variant?: ManagedPhraseVariant,
   ): BindingPhrase => ({
     name: managedPhraseName({
       source: phrase.source,
-      ruleKey: input.ruleKey,
+      ruleKey:
+        phrase.source === "custom" && phrase.generationSource
+          ? `${input.ruleKey}:source${contentHash(JSON.stringify(phrase.generationSource), language)}`
+          : input.ruleKey,
       ...(variant ? { variant } : {}),
-      ...(input.fixedName ? {} : { hash: contentHash(text, input.language) }),
+      ...(input.fixedName ? {} : { hash: contentHash(text, language) }),
     }),
     text,
-    language: input.language,
+    language,
     ...(variant ? { variant } : {}),
   });
   const tiered =
