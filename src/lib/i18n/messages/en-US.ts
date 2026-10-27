@@ -2508,6 +2508,7 @@ export const enUSMessages = {
   "minimap.s4SkyEndRaid.erosionLayer": "{layer} stacks",
   "minimap.s4SkyEndRaid.selfDestruct": "Self-Destruct",
   "minimap.s4SkyEndRaid.fogOrbTarget": "Fog Orb Target",
+  "minimap.s4SkyEndRaid.fogOrbSpawn": "Fog Orb Appears",
 
   "routes.tools.voice": "Voice",
 

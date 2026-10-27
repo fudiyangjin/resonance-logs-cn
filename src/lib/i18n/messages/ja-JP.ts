@@ -2478,6 +2478,7 @@ export const jaJPMessages = {
   "minimap.s4SkyEndRaid.erosionLayer": "{layer}層",
   "minimap.s4SkyEndRaid.selfDestruct": "自己崩壊",
   "minimap.s4SkyEndRaid.fogOrbTarget": "霧球の対象",
+  "minimap.s4SkyEndRaid.fogOrbSpawn": "霧球出現",
 
   "routes.tools.voice": "音声読み上げ",
 

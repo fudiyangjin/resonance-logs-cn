@@ -71,8 +71,7 @@ async function playCue(cueId: string): Promise<void> {
  * `resolveVoiceCues` output.
  */
 export function handleMinimapVoiceCues(fires: MinimapVoiceCueFire[]): void {
-  for (const fire of fires) {
-    if (!shouldFireMinimapVoiceCue(fire.cueId, fire.instanceKey)) continue;
+  for (const fire of cueDeduper.filterFrame(fires)) {
     void playCue(fire.cueId);
   }
 }

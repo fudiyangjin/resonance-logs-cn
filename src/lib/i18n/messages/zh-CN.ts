@@ -2336,6 +2336,7 @@ export const zhCNMessages = {
   "minimap.s4SkyEndRaid.erosionLayer": "{layer}层",
   "minimap.s4SkyEndRaid.selfDestruct": "自我毁灭",
   "minimap.s4SkyEndRaid.fogOrbTarget": "虚雾球点名",
+  "minimap.s4SkyEndRaid.fogOrbSpawn": "虚雾球出现",
 
   "routes.tools.voice": "语音播报",
 
