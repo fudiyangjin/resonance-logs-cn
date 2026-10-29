@@ -68,9 +68,8 @@ function applyMinimapUpdate(
       snapshot,
       skillCasts,
     );
-    if (fires && fires.length > 0) {
-      handleMinimapVoiceCues(fires);
-    }
+    // Empty frames release cues that announce once while a mechanic is active.
+    handleMinimapVoiceCues(fires ?? []);
   } else if (skillCasts.length === 0) {
     clearMinimapLayerState();
   }

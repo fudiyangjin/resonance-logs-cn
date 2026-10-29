@@ -2508,6 +2508,7 @@ export const enUSMessages = {
   "minimap.s4SkyEndRaid.erosionLayer": "{layer} stacks",
   "minimap.s4SkyEndRaid.selfDestruct": "Self-Destruct",
   "minimap.s4SkyEndRaid.fogOrbTarget": "Fog Orb Target",
+  "minimap.s4SkyEndRaid.fogOrbSpawn": "Fog Orb Appears",
 
   "routes.tools.voice": "Voice",
 
@@ -2736,6 +2737,11 @@ export const enUSMessages = {
   "voice.binding.event.gone": "Broadcast on disappear",
   "voice.binding.source.auto": "Auto-generated",
   "voice.binding.source.preset": "Preset",
+  "voice.binding.generationLanguage": "Generation language",
+  "voice.binding.generationSource": "Generation voice",
+  "voice.binding.generationDefault": "Use global settings",
+  "voice.binding.generationUnavailable": "Service unavailable",
+  "voice.binding.generate": "Generate audio",
   "voice.binding.source.custom": "Custom text",
   "voice.binding.source.phrase": "Phrase library reference",
   "voice.binding.priority": "Priority",

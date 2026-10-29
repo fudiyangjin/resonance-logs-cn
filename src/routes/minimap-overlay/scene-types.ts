@@ -128,6 +128,8 @@ export type MinimapVoiceCueDef = {
 /** One occurrence of a registered voice cue, produced by `resolveVoiceCues`. */
 export type MinimapVoiceCueFire = {
   cueId: string;
+  /** Announce once until this cue is absent from a subsequent frame. */
+  onceWhileActive?: boolean;
   /**
    * Distinguishes concurrent/rapid occurrences of the same cue so the
    * player's `fireOnce` dedup doesn't collapse two genuinely separate

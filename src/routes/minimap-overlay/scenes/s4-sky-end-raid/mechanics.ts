@@ -12,7 +12,11 @@ import type {
   MinimapVoiceCueDef,
   MinimapVoiceCueFire,
 } from "../../scene-types";
-import { resolveSkillVoiceCues } from "../../voice-cue-utils";
+import {
+  buffInstanceKey,
+  resolveBuffVoiceCues,
+  resolveSkillVoiceCues,
+} from "../../voice-cue-utils";
 import { addCelestialCollision } from "./celestial";
 import {
   activeAt,
@@ -26,8 +30,8 @@ import {
   playerTargets,
 } from "./context";
 import { addErosion } from "./erosion";
-import { addEvilRitual } from "./ritual";
-import { addShare } from "./share";
+import { addEvilRitual, ritualSides } from "./ritual";
+import { addShare, shareOrder } from "./share";
 import { addSin } from "./sin";
 import { bossRuneBuff, type RuneNumber, turntableRuneIcons } from "./turntable";
 
@@ -117,6 +121,18 @@ const textKeys = {
   runeShape4: "minimap.s4SkyEndRaid.runeShape4",
   tankSwap: "minimap.s4SkyEndRaid.tankSwap",
   fogOrbTarget: "minimap.s4SkyEndRaid.fogOrbTarget",
+  fogOrbSpawn: "minimap.s4SkyEndRaid.fogOrbSpawn",
+  sin: "minimap.s4SkyEndRaid.sin",
+  extremeSin: "minimap.s4SkyEndRaid.extremeSin",
+  shareFirst: "minimap.s4SkyEndRaid.shareFirst",
+  shareSecond: "minimap.s4SkyEndRaid.shareSecond",
+  shareVulnerable: "minimap.s4SkyEndRaid.shareVulnerable",
+  evilRitual: "minimap.s4SkyEndRaid.evilRitual",
+  ritualLight: "minimap.s4SkyEndRaid.ritualLight",
+  ritualDark: "minimap.s4SkyEndRaid.ritualDark",
+  erosion: "minimap.s4SkyEndRaid.erosion",
+  selfDestruct: "minimap.s4SkyEndRaid.selfDestruct",
+  celestial: "minimap.s4SkyEndRaid.celestial",
 } as const;
 
 type TextKey = (typeof textKeys)[keyof typeof textKeys];
@@ -130,6 +146,29 @@ const BOSS_RUNE_ROWS: Partial<
 };
 
 const voiceCueIds = {
+  lightTrack: "s4-sky-end-raid.lightTrack",
+  sprout: "s4-sky-end-raid.sprout",
+  eternalDay: "s4-sky-end-raid.eternalDay",
+  shadow: "s4-sky-end-raid.shadow",
+  rainVulnerable: "s4-sky-end-raid.rainVulnerable",
+  outerLight: "s4-sky-end-raid.outerLight",
+  prayer: "s4-sky-end-raid.prayer",
+  runeWheel: "s4-sky-end-raid.runeWheel",
+  sin: "s4-sky-end-raid.sin",
+  extremeSin: "s4-sky-end-raid.extremeSin",
+  shareFirst: "s4-sky-end-raid.shareFirst",
+  shareSecond: "s4-sky-end-raid.shareSecond",
+  shareVulnerable: "s4-sky-end-raid.shareVulnerable",
+  tankSwap: "s4-sky-end-raid.tankSwap",
+  evilRitual: "s4-sky-end-raid.evilRitual",
+  ritualLight: "s4-sky-end-raid.ritualLight",
+  ritualDark: "s4-sky-end-raid.ritualDark",
+  erosion: "s4-sky-end-raid.erosion",
+  selfDestruct: "s4-sky-end-raid.selfDestruct",
+  fogOrbTarget: "s4-sky-end-raid.fogOrbTarget",
+  fogOrbSpawn: "s4-sky-end-raid.fogOrbSpawn",
+  celestial: "s4-sky-end-raid.celestial",
+
   fullBurst: "s4-sky-end-raid.fullBurst",
   lightSpear: "s4-sky-end-raid.lightSpear",
   rain: "s4-sky-end-raid.rain",
@@ -138,6 +177,105 @@ const voiceCueIds = {
 } as const;
 
 export const S4_SKY_END_RAID_VOICE_CUES: MinimapVoiceCueDef[] = [
+  {
+    id: voiceCueIds.lightTrack,
+    labelKey: textKeys.lightTrack,
+    autoText: "指生苍轨",
+  },
+  { id: voiceCueIds.sprout, labelKey: textKeys.sprout, autoText: "金石生芽" },
+  {
+    id: voiceCueIds.eternalDay,
+    labelKey: textKeys.eternalDay,
+    autoText: "谒彼诸天",
+  },
+  { id: voiceCueIds.shadow, labelKey: textKeys.shadow, autoText: "影似澄炼" },
+  {
+    id: voiceCueIds.rainVulnerable,
+    labelKey: textKeys.rainVulnerable,
+    autoText: "死刑易伤",
+  },
+  {
+    id: voiceCueIds.outerLight,
+    labelKey: textKeys.outerLight,
+    autoText: "化光眷属出现",
+  },
+  {
+    id: voiceCueIds.prayer,
+    labelKey: textKeys.prayer,
+    autoText: "祈光人形出现",
+  },
+  {
+    id: voiceCueIds.runeWheel,
+    labelKey: textKeys.runeWheel,
+    autoText: "符文轮盘",
+  },
+  { id: voiceCueIds.sin, labelKey: textKeys.sin, autoText: "罪罚层数变化" },
+  {
+    id: voiceCueIds.extremeSin,
+    labelKey: textKeys.extremeSin,
+    autoText: "极罪",
+  },
+  {
+    id: voiceCueIds.shareFirst,
+    labelKey: textKeys.shareFirst,
+    autoText: "第一次分摊点名",
+  },
+  {
+    id: voiceCueIds.shareSecond,
+    labelKey: textKeys.shareSecond,
+    autoText: "第二次分摊点名",
+  },
+  {
+    id: voiceCueIds.shareVulnerable,
+    labelKey: textKeys.shareVulnerable,
+    autoText: "分摊易伤",
+  },
+  {
+    id: voiceCueIds.tankSwap,
+    labelKey: textKeys.tankSwap,
+    autoText: "死刑换T",
+  },
+  {
+    id: voiceCueIds.evilRitual,
+    labelKey: textKeys.evilRitual,
+    autoText: "邪恶仪式",
+  },
+  {
+    id: voiceCueIds.ritualLight,
+    labelKey: textKeys.ritualLight,
+    autoText: "你是光球",
+  },
+  {
+    id: voiceCueIds.ritualDark,
+    labelKey: textKeys.ritualDark,
+    autoText: "你是暗球",
+  },
+  {
+    id: voiceCueIds.erosion,
+    labelKey: textKeys.erosion,
+    autoText: "暗之侵蚀层数变化",
+  },
+  {
+    id: voiceCueIds.selfDestruct,
+    labelKey: textKeys.selfDestruct,
+    autoText: "自我毁灭",
+  },
+  {
+    id: voiceCueIds.fogOrbTarget,
+    labelKey: textKeys.fogOrbTarget,
+    autoText: "虚雾球点名",
+  },
+  {
+    id: voiceCueIds.fogOrbSpawn,
+    labelKey: textKeys.fogOrbSpawn,
+    autoText: "虚雾球出现",
+  },
+  {
+    id: voiceCueIds.celestial,
+    labelKey: textKeys.celestial,
+    autoText: "天体碰撞",
+  },
+
   {
     id: voiceCueIds.fullBurst,
     labelKey: textKeys.fullBurst,
@@ -157,7 +295,7 @@ export const S4_SKY_END_RAID_VOICE_CUES: MinimapVoiceCueDef[] = [
   },
 ];
 
-/** Each cue has exactly one trigger source so one mechanic speaks once. */
+/** Casts announce arena mechanics; player debuffs only announce local targets. */
 export function resolveLapsisVoiceCues(
   snapshot: MinimapSnapshot,
   skillCasts: MinimapSkillCast[],
@@ -167,7 +305,84 @@ export function resolveLapsisVoiceCues(
     [SKILL_LIGHT_SPEAR]: voiceCueIds.lightSpear,
     [SKILL_RAIN]: voiceCueIds.rain,
     [SKILL_WISH]: voiceCueIds.wish,
+    [SKILL_LIGHT_TRACK]: voiceCueIds.lightTrack,
+    [SKILL_SPROUT]: voiceCueIds.sprout,
+    [SKILL_ETERNAL_DAY]: voiceCueIds.eternalDay,
+    [SKILL_SHADOW]: voiceCueIds.shadow,
+    [10360011]: voiceCueIds.celestial,
   });
+  fires.push(
+    ...resolveBuffVoiceCues(
+      snapshot,
+      {
+        [BUFF_RAIN_VULNERABLE]: voiceCueIds.rainVulnerable,
+        [BUFF_TANK_SWAP]: voiceCueIds.tankSwap,
+        [BUFF_FOG_ORB_TARGET]: voiceCueIds.fogOrbTarget,
+        829602: voiceCueIds.sin,
+        829603: voiceCueIds.extremeSin,
+        829650: voiceCueIds.shareVulnerable,
+        829721: voiceCueIds.erosion,
+        829722: voiceCueIds.selfDestruct,
+      },
+      "localTarget",
+    ),
+  );
+  fires.push(
+    ...resolveBuffVoiceCues(
+      snapshot,
+      {
+        829506: voiceCueIds.runeWheel,
+        [BUFF_FOG_ORB_TARGET]: voiceCueIds.fogOrbSpawn,
+        829509: voiceCueIds.runeWheel,
+      },
+      "global",
+    ),
+  );
+  for (const entity of snapshot.entities) {
+    const cueId =
+      entity.monsterId === OUTER_LIGHT_MONSTER_ID
+        ? voiceCueIds.outerLight
+        : entity.monsterId === PRAYER_MONSTER_ID
+          ? voiceCueIds.prayer
+          : undefined;
+    if (cueId && !entity.isDead) {
+      fires.push({ cueId, instanceKey: entity.entityUuid });
+    }
+  }
+  const marks = snapshot.buffs.filter((buff) => buff.baseId === 829649);
+  const { first, second } = shareOrder(
+    marks,
+    snapshot.buffs.filter((buff) => buff.baseId === 829650),
+  );
+  for (const [buffs, cueId] of [
+    [first, voiceCueIds.shareFirst],
+    [second, voiceCueIds.shareSecond],
+  ] as const) {
+    for (const buff of buffs) {
+      if (buff.targetEntityUuid === snapshot.localPlayerUuid) {
+        fires.push({ cueId, instanceKey: buffInstanceKey(buff) });
+      }
+    }
+  }
+  const ritual = snapshot.buffs.filter((buff) => buff.baseId === 829712);
+  // A shared instance announces the ritual once, regardless of party size.
+  if (ritual.length > 0) {
+    fires.push({
+      cueId: voiceCueIds.evilRitual,
+      instanceKey: String(Math.min(...ritual.map((buff) => buff.createTimeMs))),
+    });
+  }
+  const side = ritualSides(ritual).get(snapshot.localPlayerUuid ?? "");
+  const localRitual = ritual.find(
+    (buff) => buff.targetEntityUuid === snapshot.localPlayerUuid,
+  );
+  if (localRitual && (side === "light" || side === "dark")) {
+    fires.push({
+      cueId:
+        side === "light" ? voiceCueIds.ritualLight : voiceCueIds.ritualDark,
+      instanceKey: buffInstanceKey(localRitual),
+    });
+  }
   const linked = chaseLinkedEntities(snapshot);
   for (const chaser of snapshot.entities) {
     if (
@@ -183,7 +398,28 @@ export function resolveLapsisVoiceCues(
       instanceKey: `${chaser.entityUuid}:${chaser.targetEntityUuid}`,
     });
   }
-  return fires;
+  // Group party-wide marks, simultaneous summons and refreshed personal marks
+  // into one announcement for each uninterrupted activation of the mechanic.
+  const onceWhileActive: ReadonlySet<string> = new Set([
+    voiceCueIds.fogOrbSpawn,
+    voiceCueIds.fogOrbTarget,
+    voiceCueIds.runeWheel,
+    voiceCueIds.outerLight,
+    voiceCueIds.prayer,
+    voiceCueIds.evilRitual,
+    voiceCueIds.ritualLight,
+    voiceCueIds.ritualDark,
+    voiceCueIds.rainVulnerable,
+    voiceCueIds.tankSwap,
+    voiceCueIds.extremeSin,
+    voiceCueIds.shareVulnerable,
+    voiceCueIds.shareFirst,
+    voiceCueIds.shareSecond,
+    voiceCueIds.selfDestruct,
+  ]);
+  return fires.map((fire) =>
+    onceWhileActive.has(fire.cueId) ? { ...fire, onceWhileActive: true } : fire,
+  );
 }
 
 export function buildMechanicView(

@@ -203,3 +203,62 @@ describe("voiceLanguageForLocale", () => {
     expect(voiceLanguageForLocale("ja-JP")).toBe("jaJp");
   });
 });
+
+describe("custom generation sources", () => {
+  it("keeps audio separate across sources and round-trips managed names", () => {
+    const make = (generationSource?: { mode: "http"; providerId: string }) =>
+      bindingPhrases({
+        ruleKey: "voice:buff:101:gained",
+        phrase: {
+          source: "custom",
+          text: "Ready",
+          ...(generationSource ? { generationSource } : {}),
+        },
+        autoText: "",
+        language: "enUs",
+        supportsTier: false,
+      })[0]!;
+    const original = make();
+    const first = make({ mode: "http", providerId: "one" });
+    const second = make({ mode: "http", providerId: "two" });
+    expect(new Set([original.name, first.name, second.name]).size).toBe(3);
+    expect(make({ mode: "http", providerId: "one" })).toEqual(first);
+    expect(managedPhraseName(parseManagedPhraseName(first.name)!)).toBe(
+      first.name,
+    );
+    expect(managedSlotOf(first.name)).not.toBe(managedSlotOf(second.name));
+  });
+});
+
+it("uses the HTTP language for all variants and keeps other sources unchanged", () => {
+  const input = {
+    ruleKey: "voice:buff:101:gained",
+    autoText: "",
+    language: "zhCn" as const,
+    supportsTier: true,
+    includePreview: true,
+  };
+  const phrase = {
+    source: "custom" as const,
+    text: "Ready ${remodelLevel}",
+    httpLanguage: "enUs" as const,
+    generationSource: { mode: "http" as const, providerId: "service" },
+  };
+  const english = bindingPhrases({ ...input, phrase });
+  const japanese = bindingPhrases({
+    ...input,
+    phrase: { ...phrase, httpLanguage: "jaJp" },
+  });
+  expect(english.length).toBe(8);
+  expect(english.every((p) => p.language === "enUs")).toBe(true);
+  expect(japanese.every((p) => p.language === "jaJp")).toBe(true);
+  expect(english[0]!.name).not.toBe(japanese[0]!.name);
+  const preset = bindingPhrases({
+    ...input,
+    phrase: {
+      ...phrase,
+      generationSource: { mode: "preset", locale: "en-US" },
+    },
+  });
+  expect(preset.every((p) => p.language === "zhCn")).toBe(true);
+});

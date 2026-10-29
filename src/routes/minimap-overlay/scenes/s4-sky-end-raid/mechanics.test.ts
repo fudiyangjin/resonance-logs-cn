@@ -347,7 +347,7 @@ describe("S4 Lapsis voice cues", () => {
     expect(resolveLapsisVoiceCues(current, [])).toEqual([]);
   });
 
-  it("announces rain and wish from the cast only", () => {
+  it("keeps cast cues separate from local vulnerability cues", () => {
     const current = snapshot();
     current.buffs.push(
       buff("local", 829530),
@@ -358,7 +358,11 @@ describe("S4 Lapsis voice cues", () => {
       resolveLapsisVoiceCues(current, [cast(3395174), cast(3395178)]).map(
         (fire) => fire.cueId,
       ),
-    ).toEqual(["s4-sky-end-raid.rain", "s4-sky-end-raid.wish"]);
+    ).toEqual([
+      "s4-sky-end-raid.rain",
+      "s4-sky-end-raid.wish",
+      "s4-sky-end-raid.rainVulnerable",
+    ]);
   });
 });
 

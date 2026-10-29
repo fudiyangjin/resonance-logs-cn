@@ -2478,6 +2478,7 @@ export const jaJPMessages = {
   "minimap.s4SkyEndRaid.erosionLayer": "{layer}層",
   "minimap.s4SkyEndRaid.selfDestruct": "自己崩壊",
   "minimap.s4SkyEndRaid.fogOrbTarget": "霧球の対象",
+  "minimap.s4SkyEndRaid.fogOrbSpawn": "霧球出現",
 
   "routes.tools.voice": "音声読み上げ",
 
@@ -2704,6 +2705,11 @@ export const jaJPMessages = {
   "voice.binding.event.gone": "消滅時に読み上げ",
   "voice.binding.source.auto": "自動生成",
   "voice.binding.source.preset": "プリセット",
+  "voice.binding.generationLanguage": "生成言語",
+  "voice.binding.generationSource": "生成する音声",
+  "voice.binding.generationDefault": "全体設定を使用",
+  "voice.binding.generationUnavailable": "サービスが利用できません",
+  "voice.binding.generate": "音声を生成",
   "voice.binding.source.custom": "カスタムテキスト",
   "voice.binding.source.phrase": "フレーズ集から参照",
   "voice.binding.priority": "優先度",
