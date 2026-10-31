@@ -18,7 +18,6 @@ export type SkillDisplay = {
   isActive: boolean;
   percent: number;
   text: string;
-  chargesText?: string;
   usable: boolean;
   chargesAvailable?: number;
   maxCharges?: number;
