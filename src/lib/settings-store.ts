@@ -705,7 +705,24 @@ export type MinimapEntitySizes = {
   other: number;
 };
 
+/**
+ * Default backdrop opacity of each minimap panel. Exported so the overlay can
+ * fall back to them without building a whole default config (the overlay
+ * window never runs the settings page's defaults backfill).
+ */
+export const DEFAULT_MINIMAP_MAP_BACKGROUND_OPACITY = 0.68;
+export const DEFAULT_MINIMAP_INFO_BACKGROUND_OPACITY = 0.76;
+
 export type MinimapInfoPanelStyle = {
+  backgroundOpacity: number;
+};
+
+/**
+ * Map panel backdrop. Only the base fill follows `backgroundOpacity`; arena
+ * lines, mechanic regions and entity dots keep their own alpha so the map
+ * stays readable when the backdrop is fully transparent.
+ */
+export type MinimapMapPanelStyle = {
   backgroundOpacity: number;
 };
 
@@ -741,6 +758,7 @@ export type MinimapConfig = {
   markerColors: MinimapMarkerColors;
   localRing: MinimapLocalRing;
   localFacing: MinimapLocalFacing;
+  mapPanelStyle: MinimapMapPanelStyle;
   infoPanelStyle: MinimapInfoPanelStyle;
   deadStyle: MinimapDeadStyle;
   /**
@@ -2627,8 +2645,11 @@ export function createDefaultMinimapConfig(): MinimapConfig {
     localFacing: {
       enabled: false,
     },
+    mapPanelStyle: {
+      backgroundOpacity: DEFAULT_MINIMAP_MAP_BACKGROUND_OPACITY,
+    },
     infoPanelStyle: {
-      backgroundOpacity: 0.76,
+      backgroundOpacity: DEFAULT_MINIMAP_INFO_BACKGROUND_OPACITY,
     },
     deadStyle: {
       shape: "default",

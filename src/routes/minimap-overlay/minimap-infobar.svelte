@@ -1,27 +1,33 @@
 <script lang="ts">
   import type { MinimapEntity, MinimapSnapshot } from "$lib/api";
-  import { SETTINGS } from "$lib/settings-store";
+  import {
+    DEFAULT_MINIMAP_INFO_BACKGROUND_OPACITY,
+    SETTINGS,
+  } from "$lib/settings-store";
   import { untrack } from "svelte";
   import { minimapSkillCasts } from "./minimap-runtime.svelte.js";
   import { slotColor } from "./colors";
   import { sortLocalFirst } from "./mechanic-row";
   import MinimapTimer from "./MinimapTimer.svelte";
+  import {
+    backdropFill,
+    backdropShadowStrength,
+    resolveBackdropOpacity,
+  } from "./panel-backdrop";
   import { resolveScene } from "./scene-registry";
   import type { MechanicRow, MechanicRowTarget } from "./scene-types";
 
   let { snapshot }: { snapshot: MinimapSnapshot | null } = $props();
 
-  const infoPanelStyle = $derived(SETTINGS.minimap.state.infoPanelStyle);
   const localRingColor = $derived(
     SETTINGS.minimap.state.localRing?.color ?? "#ffffff",
   );
-  const backgroundVar = $derived.by(() => {
-    const opacity = Math.max(
-      0,
-      Math.min(1, Number(infoPanelStyle?.backgroundOpacity ?? 0.76)),
-    );
-    return `rgba(15, 23, 42, ${opacity})`;
-  });
+  const backgroundOpacity = $derived(
+    resolveBackdropOpacity(
+      SETTINGS.minimap.state.infoPanelStyle?.backgroundOpacity,
+      DEFAULT_MINIMAP_INFO_BACKGROUND_OPACITY,
+    ),
+  );
 
   type SkillGroup = { group: string; rows: MechanicRow[] };
   type ChipTarget = MechanicRowTarget & { safe?: boolean };
@@ -92,7 +98,14 @@
   </span>
 {/snippet}
 
-<div class="infobar" style:background={backgroundVar}>
+<div
+  class="infobar"
+  style:background={backdropFill(backgroundOpacity)}
+  style:--backdrop-shadow-strength={backdropShadowStrength(
+    backgroundOpacity,
+    DEFAULT_MINIMAP_INFO_BACKGROUND_OPACITY,
+  )}
+>
   {#if groups.length === 0}
     <p class="empty">无机制</p>
   {:else}
@@ -139,7 +152,8 @@
     border: 1px solid rgba(148, 163, 184, 0.24);
     border-radius: 14px;
     box-shadow:
-      0 16px 44px rgba(15, 23, 42, 0.32),
+      0 16px 44px
+        rgba(15, 23, 42, calc(0.32 * var(--backdrop-shadow-strength, 1))),
       inset 0 1px 0 rgba(248, 250, 252, 0.06);
   }
   .empty {

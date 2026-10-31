@@ -1,6 +1,11 @@
 <script lang="ts">
   import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
-  import { createDefaultMinimapConfig, SETTINGS } from "$lib/settings-store";
+  import {
+    createDefaultMinimapConfig,
+    DEFAULT_MINIMAP_INFO_BACKGROUND_OPACITY,
+    DEFAULT_MINIMAP_MAP_BACKGROUND_OPACITY,
+    SETTINGS,
+  } from "$lib/settings-store";
   import {
     MINIMAP_MARKER_DIGITS,
     normalizeMinimapMarkerSettings,
@@ -27,6 +32,7 @@
     markerColors?: Partial<typeof defaultMinimapConfig.markerColors>;
     localRing?: Partial<typeof defaultMinimapConfig.localRing>;
     localFacing?: Partial<typeof defaultMinimapConfig.localFacing>;
+    mapPanelStyle?: Partial<typeof defaultMinimapConfig.mapPanelStyle>;
     infoPanelStyle?: Partial<typeof defaultMinimapConfig.infoPanelStyle>;
     deadStyle?: Partial<typeof defaultMinimapConfig.deadStyle>;
   };
@@ -58,6 +64,9 @@
     state.localRing.width ??= defaultMinimapConfig.localRing.width;
     state.localFacing ??= { ...defaultMinimapConfig.localFacing };
     state.localFacing.enabled ??= defaultMinimapConfig.localFacing.enabled;
+    state.mapPanelStyle ??= { ...defaultMinimapConfig.mapPanelStyle };
+    state.mapPanelStyle.backgroundOpacity ??=
+      defaultMinimapConfig.mapPanelStyle.backgroundOpacity;
     state.infoPanelStyle ??= { ...defaultMinimapConfig.infoPanelStyle };
     state.infoPanelStyle.backgroundOpacity ??=
       defaultMinimapConfig.infoPanelStyle.backgroundOpacity;
@@ -81,10 +90,20 @@
     void minimapSettings.markerColors;
     void minimapSettings.localRing;
     void minimapSettings.localFacing;
+    void minimapSettings.mapPanelStyle;
     void minimapSettings.infoPanelStyle;
     void minimapSettings.deadStyle;
     ensureMinimapSettingsDefaults();
   });
+
+  type PanelStyleKey = "mapPanelStyle" | "infoPanelStyle";
+
+  function setPanelBackgroundOpacity(key: PanelStyleKey, value: number) {
+    minimapSettings[key] = {
+      ...minimapSettings[key],
+      backgroundOpacity: value,
+    };
+  }
 
   function visibilityState(value: boolean): string {
     return value
@@ -216,28 +235,23 @@
     </div>
 
     <div class="space-y-3 border-t border-border/40 pt-3">
-      <label class="text-muted-foreground block text-xs">
-        {t("overlay.style.backgroundOpacity", {
-          value: Math.round(
-            (minimapSettings.infoPanelStyle?.backgroundOpacity ?? 0.76) * 100,
-          ),
-        })}
-        <input
-          class="mt-1 w-full"
-          type="range"
-          min="0"
-          max="1"
-          step="0.02"
-          value={minimapSettings.infoPanelStyle?.backgroundOpacity ?? 0.76}
-          oninput={(event) =>
-            (minimapSettings.infoPanelStyle = {
-              ...minimapSettings.infoPanelStyle,
-              backgroundOpacity: Number(
-                (event.currentTarget as HTMLInputElement).value,
-              ),
-            })}
-        />
-      </label>
+      <div class="grid gap-3 lg:grid-cols-2">
+        {@render backgroundOpacitySlider(
+          "mapPanelStyle",
+          t("minimap.overlay.mapBackgroundOpacity"),
+          minimapSettings.mapPanelStyle?.backgroundOpacity ??
+            DEFAULT_MINIMAP_MAP_BACKGROUND_OPACITY,
+        )}
+        {@render backgroundOpacitySlider(
+          "infoPanelStyle",
+          t("minimap.overlay.infoBackgroundOpacity"),
+          minimapSettings.infoPanelStyle?.backgroundOpacity ??
+            DEFAULT_MINIMAP_INFO_BACKGROUND_OPACITY,
+        )}
+      </div>
+      <p class="text-muted-foreground text-xs">
+        {t("minimap.overlay.backgroundOpacityHelp")}
+      </p>
     </div>
   </section>
 
@@ -532,3 +546,26 @@
     {/if}
   </section>
 </div>
+
+{#snippet backgroundOpacitySlider(
+  key: PanelStyleKey,
+  label: string,
+  value: number,
+)}
+  <label class="text-muted-foreground block text-xs">
+    <span class="flex items-center justify-between gap-2">
+      <span>{label}</span>
+      <span class="tabular-nums">{Math.round(value * 100)}%</span>
+    </span>
+    <input
+      class="mt-1 w-full"
+      type="range"
+      min="0"
+      max="1"
+      step="0.02"
+      {value}
+      oninput={(event) =>
+        setPanelBackgroundOpacity(key, Number(event.currentTarget.value))}
+    />
+  </label>
+{/snippet}

@@ -2139,6 +2139,10 @@ export const zhCNMessages = {
   "minimap.overlay.infoPanel": "机制报幕：{state}",
   "minimap.overlay.help":
     "面板位置和宽度请在副本机制窗口的编辑布局模式中调整。",
+  "minimap.overlay.mapBackgroundOpacity": "地图背景浓度",
+  "minimap.overlay.infoBackgroundOpacity": "机制报幕背景浓度",
+  "minimap.overlay.backgroundOpacityHelp":
+    "只调整面板底色，数值越低越透明；地图上的线条、机制区域和人物点不受影响。",
   "minimap.settings.colors.title": "玩家颜色",
   "minimap.settings.colors.description":
     "设置无机制颜色覆盖时的自己与队友颜色；机制点名颜色仍使用专用高区分度色槽。",

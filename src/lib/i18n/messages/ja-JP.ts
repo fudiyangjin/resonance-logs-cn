@@ -2280,6 +2280,10 @@ export const jaJPMessages = {
   "minimap.overlay.infoPanel": "ギミック通知：{state}",
   "minimap.overlay.help":
     "パネル位置と幅はダンジョンギミック窓のレイアウト編集モードで調整してください。",
+  "minimap.overlay.mapBackgroundOpacity": "マップ背景の濃度",
+  "minimap.overlay.infoBackgroundOpacity": "ギミック通知背景の濃度",
+  "minimap.overlay.backgroundOpacityHelp":
+    "パネルの背景色のみを調整します。値が低いほど透明になり、マップ上の線・ギミック範囲・プレイヤーの点は変わりません。",
   "minimap.settings.colors.title": "プレイヤー色",
   "minimap.settings.colors.description":
     "ギミック色がない場合の自分と味方の色を設定します。ギミック通知は引き続き高コントラストのスロット色を使用します。",

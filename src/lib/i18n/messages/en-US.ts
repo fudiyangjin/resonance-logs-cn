@@ -2309,6 +2309,10 @@ export const enUSMessages = {
   "minimap.overlay.infoPanel": "Mechanic Calls: {state}",
   "minimap.overlay.help":
     "Adjust panel position and width in the dungeon mechanics window's layout edit mode.",
+  "minimap.overlay.mapBackgroundOpacity": "Map background opacity",
+  "minimap.overlay.infoBackgroundOpacity": "Mechanic Calls background opacity",
+  "minimap.overlay.backgroundOpacityHelp":
+    "Only changes the panel backdrop; lower is more transparent. Lines, mechanic areas and player dots on the map are unaffected.",
   "minimap.settings.colors.title": "Player Colors",
   "minimap.settings.colors.description":
     "Set self and teammate colors when no mechanic color override is active; mechanic callouts still use the high-contrast slot palette.",

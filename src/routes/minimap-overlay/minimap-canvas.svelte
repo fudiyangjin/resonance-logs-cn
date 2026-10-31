@@ -4,12 +4,20 @@
     browserFrameApi,
     createFrameInvalidator,
   } from "$lib/hud-scheduler.svelte.js";
-  import { SETTINGS } from "$lib/settings-store";
+  import {
+    DEFAULT_MINIMAP_MAP_BACKGROUND_OPACITY,
+    SETTINGS,
+  } from "$lib/settings-store";
   import { untrack } from "svelte";
   import { slotColor } from "./colors";
   import { hideTeammate, visibleTeamMark } from "./minimap-markers";
   import { MINIMAP_MARKER_DIGITS } from "$lib/minimap-marker-settings";
   import { minimapSkillCasts } from "./minimap-runtime.svelte.js";
+  import {
+    backdropFill,
+    backdropShadowStrength,
+    resolveBackdropOpacity,
+  } from "./panel-backdrop";
   import { resolveScene } from "./scene-registry";
   import {
     emptySceneView,
@@ -44,6 +52,12 @@
   // Scene icons load lazily by src; each finished load invalidates the frame.
   const iconImages = new Map<string, HTMLImageElement>();
   const minimapSettings = $derived(SETTINGS.minimap.state);
+  const mapBackgroundOpacity = $derived(
+    resolveBackdropOpacity(
+      minimapSettings.mapPanelStyle?.backgroundOpacity,
+      DEFAULT_MINIMAP_MAP_BACKGROUND_OPACITY,
+    ),
+  );
 
   type Projector = (x: number, z: number) => [number, number];
 
@@ -285,6 +299,8 @@
       view.worldHalfX,
       view.worldHalfZ,
       view.layout,
+      // The backdrop fill is baked into the cached layer.
+      mapBackgroundOpacity,
     ]);
   }
 
@@ -294,7 +310,7 @@
     cssH: number,
     view: SceneView,
   ) {
-    ctx.fillStyle = "rgba(15, 23, 42, 0.68)";
+    ctx.fillStyle = backdropFill(mapBackgroundOpacity);
     ctx.fillRect(0, 0, cssW, cssH);
     ctx.strokeStyle = "rgba(203, 213, 225, 0.72)";
     ctx.lineWidth = 2;
@@ -872,6 +888,7 @@
     void minimapSettings.deadStyle?.shape;
     void minimapSettings.deadStyle?.color;
     void minimapSettings.deadStyle?.opacity;
+    void mapBackgroundOpacity;
     void minimapSettings.entitySizes?.local;
     void minimapSettings.entitySizes?.teammate;
     void minimapSettings.entitySizes?.boss;
@@ -880,7 +897,14 @@
   });
 </script>
 
-<canvas bind:this={canvas} class="minimap-canvas" style="aspect-ratio: {aspect}"
+<canvas
+  bind:this={canvas}
+  class="minimap-canvas"
+  style="aspect-ratio: {aspect}"
+  style:--backdrop-shadow-strength={backdropShadowStrength(
+    mapBackgroundOpacity,
+    DEFAULT_MINIMAP_MAP_BACKGROUND_OPACITY,
+  )}
 ></canvas>
 
 <style>
@@ -889,7 +913,8 @@
     display: block;
     border-radius: 14px;
     box-shadow:
-      0 16px 44px rgba(15, 23, 42, 0.28),
+      0 16px 44px
+        rgba(15, 23, 42, calc(0.28 * var(--backdrop-shadow-strength, 1))),
       inset 0 1px 0 rgba(248, 250, 252, 0.06);
   }
 </style>
