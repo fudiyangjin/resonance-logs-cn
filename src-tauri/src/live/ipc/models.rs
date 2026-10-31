@@ -239,6 +239,7 @@ pub struct LiveStatusPayload {
     pub shield_max_hp: i64,
     pub shield_entries: Vec<ShieldDetailEntry>,
     pub fight_resource: Option<FightResourceState>,
+    pub profession_count: Option<ProfessionCountState>,
 }
 
 /// Live coverage of one watched buff on the local player. `covered_ms` and
@@ -920,6 +921,23 @@ pub struct FightResourceState {
     pub entries: Vec<FightResourceEntry>,
     /// Local timestamp when this state was received
     pub received_at: i64,
+}
+
+/// Main-HUD profession counter (`profession_buff_show_helper.lua`), driven by
+/// local-player buffs that carry a `BuffEffectEnergyDisplay` logic effect.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfessionCountState {
+    /// Buff of the latest counter change (`SetProfessionBuff`).
+    pub buff_base_id: i32,
+    /// Its `FightResIconTable` row.
+    pub effect_id: i32,
+    /// Its layer; 0 once the buff is gone.
+    pub layer: i32,
+    /// Some tracked buff still has layers (keeps the flower layer up).
+    pub any_layer: bool,
+    /// Rows whose buff currently has layers, in the order they appeared.
+    pub active_effect_ids: Vec<i32>,
 }
 
 /// A single damage event recorded in the 2s sliding window used for death replay.

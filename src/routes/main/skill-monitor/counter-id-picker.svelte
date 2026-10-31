@@ -18,7 +18,7 @@
   import { getSkillsByClass, searchResonanceSkills } from "$lib/skill-mappings";
   import { isCounterId, type CounterIdDomain } from "$lib/user-counter-rules";
   import {
-    classGaugeResources,
+    classFightResources,
     counterIdName,
     getCounterEditorContext,
   } from "./counter-editor-context";
@@ -70,7 +70,7 @@
     domain === "skill" ? getSkillsByClass(context.classKey) : [],
   );
   const classResources = $derived(
-    domain === "resource" ? classGaugeResources(context.classKey) : [],
+    domain === "resource" ? classFightResources(context.classKey) : [],
   );
 
   const listItems = $derived.by<IdSearchResultItem[]>(() => {
@@ -256,16 +256,16 @@
 
       {#if classResources.length > 0}
         <div class="flex flex-wrap gap-2">
-          {#each classResources as resource (resource.currentId)}
-            {@const selected = ids.includes(resource.currentId)}
+          {#each classResources as resource (resource.id)}
+            {@const selected = ids.includes(resource.id)}
             <button
               type="button"
               class="rounded border px-2.5 py-1 text-xs transition-colors {selected
                 ? 'border-primary bg-primary/10 text-foreground'
                 : 'border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground'}"
-              onclick={() => toggle(resource.currentId)}
+              onclick={() => toggle(resource.id)}
             >
-              {resource.label} #{resource.currentId}
+              {resource.label} #{resource.id}
             </button>
           {/each}
         </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t } from "$lib/i18n/index.svelte";
+  import type { ResourceTextStyle } from "$lib/settings-store";
 
   interface Props {
     showSkillCdGroup: boolean;
@@ -19,6 +20,8 @@
         | "showShieldDetailGroup"
         | "showBuffCoverageGroup",
     ) => void;
+    resourceTextStyle: ResourceTextStyle;
+    setResourceTextStyle: (patch: Partial<ResourceTextStyle>) => void;
   }
 
   let {
@@ -31,7 +34,14 @@
     resourceSections,
     toggleResourceSectionVisibility,
     toggleOverlaySectionVisibility,
+    resourceTextStyle,
+    setResourceTextStyle,
   }: Props = $props();
+
+  // Every settings write saves the whole file; the slider previews its value
+  // while dragging and saves once on release.
+  let draftFontSize = $state<number | null>(null);
+  const shownFontSize = $derived(draftFontSize ?? resourceTextStyle.fontSize);
 
   function visibilityState(value: boolean): string {
     return value ? t("skillMonitor.common.show") : t("skillMonitor.common.hide");
@@ -127,6 +137,53 @@
       <p class="text-xs text-muted-foreground">
         {t("skillMonitor.overlay.resourceSectionsHelp")}
       </p>
+      <div class="space-y-2 border-t border-border/40 pt-3">
+        <div class="text-xs font-medium text-foreground">
+          {t("skillMonitor.overlay.resourceTextStyle")}
+        </div>
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <label class="text-xs text-muted-foreground">
+            {t("skillMonitor.style.fontSize", { value: shownFontSize })}
+            <input
+              class="mt-1 w-full"
+              type="range"
+              min="10"
+              max="36"
+              step="1"
+              value={shownFontSize}
+              oninput={(event) =>
+                (draftFontSize = Number(
+                  (event.currentTarget as HTMLInputElement).value,
+                ))}
+              onchange={(event) => {
+                setResourceTextStyle({
+                  fontSize: Number(
+                    (event.currentTarget as HTMLInputElement).value,
+                  ),
+                });
+                draftFontSize = null;
+              }}
+            />
+          </label>
+          <label
+            class="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-sm text-foreground"
+          >
+            <span>{t("skillMonitor.style.valueColor")}</span>
+            <input
+              type="color"
+              value={resourceTextStyle.color}
+              class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
+              onchange={(event) =>
+                setResourceTextStyle({
+                  color: (event.currentTarget as HTMLInputElement).value,
+                })}
+            />
+          </label>
+        </div>
+        <p class="text-xs text-muted-foreground">
+          {t("skillMonitor.overlay.resourceTextStyleHelp")}
+        </p>
+      </div>
     </div>
   {/if}
 </div>

@@ -7,12 +7,13 @@ use crate::live::bootstrap_snapshot::{BuffCompositeMode, MonitorRuntimeSnapshot}
 use crate::live::ipc::models::{
     BossDbmEvent, BuffFocusState, BuffUpdateState, EntityDurationTrackState, FightResourceEntry,
     FightResourceState, HateEntry as HateEntryDto, HpEntry, MonsterSkillCastState, PanelAttrState,
-    ShieldDetailEntry, SkillCdState, StunEntry, TeammateFantasyState,
+    ProfessionCountState, ShieldDetailEntry, SkillCdState, StunEntry, TeammateFantasyState,
 };
 use crate::live::ipc::topic::TopicMask;
 use crate::live::projections::buff_presence::{BuffCompositeCatalog, BuffFocus, BuffPresence};
 use crate::live::projections::entity_duration::EntityDurationWatch;
 use crate::live::projections::monster_skill_watch::MonsterSkillWatch;
+use crate::live::projections::profession_count::ProfessionCountTracker;
 use crate::live::projections::skill_cd;
 use crate::live::protocol::attrs as attr_type;
 use crate::live::runtime::entity_context::EntityContext;
@@ -40,6 +41,7 @@ pub struct EntityMonitorSnapshot {
     pub shield_max_hp: i64,
     pub shield_entries: Vec<ShieldDetailEntry>,
     pub fight_resource: Option<FightResourceState>,
+    pub profession_count: Option<ProfessionCountState>,
     pub teammate_fantasies: Vec<TeammateFantasyState>,
     pub boss_mechanics: Vec<BossDbmEvent>,
     pub hate_lists: HashMap<String, Vec<HateEntryDto>>,
@@ -234,6 +236,7 @@ pub struct EntityMonitorProjection {
     fight_resource_ids: Vec<i32>,
     fight_resources: HashMap<i32, i64>,
     fight_resource_received_at: i64,
+    profession_count: ProfessionCountTracker,
     active_fantasies: HashMap<EntityUuid, FantasyCastKey>,
     recent_fantasies: VecDeque<RecentFantasy>,
     boss_mechanics: HashMap<i32, BossMechanicRecord>,
@@ -472,12 +475,18 @@ impl EntityMonitorProjection {
                 } else {
                     false
                 };
-                if !watched {
+                let counter_changed = roles.is_local_player && self.profession_count.apply(event);
+                let mask = if !watched {
                     TopicMask::EMPTY
                 } else if roles.is_local_player {
                     TopicMask::BUFFS
                 } else {
                     TopicMask::MONSTER
+                };
+                if counter_changed {
+                    mask | TopicMask::STATUS
+                } else {
+                    mask
                 }
             }
             DomainEvent::SkillCooldownUpdated { entity, cooldowns }
@@ -761,6 +770,7 @@ impl EntityMonitorProjection {
                     .collect(),
                 received_at: self.fight_resource_received_at,
             }),
+            profession_count: self.profession_count.snapshot(),
             teammate_fantasies: self.displayed_fantasies(),
             boss_mechanics: self
                 .boss_mechanics
@@ -846,6 +856,7 @@ impl EntityMonitorProjection {
         self.fight_resource_ids.clear();
         self.fight_resources.clear();
         self.fight_resource_received_at = 0;
+        self.profession_count.clear();
     }
 
     fn remove_entity(&mut self, entity: EntityUuid) {
@@ -1339,6 +1350,7 @@ mod tests {
             started_mono_ms: Some(crate::live::runtime::events::MonoTimeMs(1_000)),
             expires_mono_ms: Some(crate::live::runtime::events::MonoTimeMs(6_000)),
             effect_ids: Arc::from([]),
+            energy_display_id: None,
         }
     }
 

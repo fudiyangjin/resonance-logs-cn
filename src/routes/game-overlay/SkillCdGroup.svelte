@@ -92,10 +92,12 @@
             : skill}
           {@const effectiveDisplay =
             derivation && !derivation.keepCdWhenDerived ? undefined : display}
-          {@const resourceBlocked = skill?.resourceRequirement
-            ? getResourceValue(skill.resourceRequirement.resourceId) <
-              skill.resourceRequirement.amount
-            : false}
+          {@const resourceAmount = skill?.resourceRequirement
+            ? getResourceValue(skill.resourceRequirement.resourceId)
+            : null}
+          {@const resourceBlocked =
+            resourceAmount !== null &&
+            resourceAmount < (skill?.resourceRequirement?.amount ?? 0)}
 
           <div
             class="skill-slot"

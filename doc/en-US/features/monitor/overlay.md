@@ -17,9 +17,22 @@ Buff icons (each Buff in individual mode, each group in grouped mode) appear in 
 
 ### Resource sections
 
-**{{ui:skillMonitor.overlay.resourceSections}}** splits the current class's resources into several small blocks, each of which can be **shown / hidden and dragged separately**. For example, the "three healing flowers" countdown of the Verdant Oracle's Lifebind specialization is a separate section.
+**{{ui:skillMonitor.overlay.resourceSections}}** splits the current class's resources into several small blocks, each of which can be **shown / hidden and dragged separately**. They follow the game's own resource HUD; below is an example for each class (the values are only for illustration):
+
+![Resource bar and resource points of each class](../../../shared/img/monitor/resource_1.en-US.png)
+
+- **Resource bar**: the game's weapon resource bar. The coloured bar on the frame is the remaining time of the class buff; the thin white bar and the numbers are the current energy. Twin Striker's crimson orb, Marksman's wolf / hawk frames and Beat Performer's performance bar are shown here too.
+- **Resource points**: the row of points under the bar (for example Wind Knight's battle spirit or Frost Mage's frost ice). Points that need a buff stay hidden without it; above six points only one is shown, with the count next to it.
+- **Shield bar**: Shield Knight's vertical shield bar during "Radiant Shield" (right of the Shield Knight bar above).
+- **Class counter**: the game HUD's class counter, such as stack numbers, Wind Knight's wind mark, Stormblade's special thunder sigil, Twin Striker's rank letter and Verdant Oracle's flowers.
+
+![Class counter examples](../../../shared/img/monitor/resource_2.en-US.png)
+
+- The "three healing flowers" countdown of the Verdant Oracle's Lifebind specialization is also a separate section.
 
 ![Healing flowers countdown in the resource area](../../../shared/img/changelog/v0.2.4_1.gif)
+
+**{{ui:skillMonitor.overlay.resourceTextStyle}}** (below the section toggles) sets the size and colour of the numbers on the resource bar, resource points and shield bar (for example `100/400`); the size is saved when you release the slider. The class counter uses the game's digit images and is not affected.
 
 ### Text style
 

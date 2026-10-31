@@ -57,6 +57,7 @@
     type InlineBuffEntry,
     type InlineBuffFormat,
     type PanelAreaRowRef,
+    type ResourceTextStyle,
     type ShieldDetailStyle,
     type SkillMonitorProfile,
     type TextBuffPanelDisplayMode,
@@ -91,6 +92,7 @@
     ensureOverlaySizes,
     ensurePanelAreaRowOrder,
     ensurePanelAttrs,
+    ensureResourceTextStyle,
     ensureShieldDetailStyle,
     ensureTextBuffPanelStyle,
   } from "$lib/skill-monitor-normalize";
@@ -268,6 +270,9 @@
   );
   const shieldDetailStyle = $derived.by(() =>
     ensureShieldDetailStyle(activeProfile),
+  );
+  const resourceTextStyle = $derived.by(() =>
+    ensureResourceTextStyle(activeProfile),
   );
   const overlayTextStyle = $derived.by(() =>
     ensureOverlayTextStyle(activeProfile.overlayTextStyle),
@@ -813,7 +818,7 @@
   const resourceSections = $derived(
     ensureResourceSections(activeProfile).map((section) => ({
       key: section.key,
-      label: section.definition.label,
+      label: section.label,
       visible: section.layout.visible,
     })),
   );
@@ -1210,6 +1215,15 @@
     updateOverlayTextStyle((style) => ({
       ...style,
       backgroundOpacity: Math.max(0, Math.min(1, value)),
+    }));
+  }
+
+  function setResourceTextStyle(patch: Partial<ResourceTextStyle>) {
+    updateActiveProfile((profile) => ({
+      ...profile,
+      resourceTextStyle: ensureResourceTextStyle({
+        resourceTextStyle: { ...ensureResourceTextStyle(profile), ...patch },
+      }),
     }));
   }
 
@@ -2061,6 +2075,8 @@
       {resourceSections}
       {toggleResourceSectionVisibility}
       {toggleOverlaySectionVisibility}
+      {resourceTextStyle}
+      {setResourceTextStyle}
     />
   {/if}
 </div>

@@ -764,6 +764,8 @@ impl ProtocolDecoder {
             let effect_ids = decode_play_effect_ids(&effect.logic_effect);
             let effect_ids =
                 (!effect_ids.is_empty()).then(|| Arc::<[i32]>::from(effect_ids.into_boxed_slice()));
+            let energy_display_id = decode_energy_display_id(&effect.logic_effect);
+            let mut carried_energy_display = false;
 
             for logic in &effect.logic_effect {
                 let effect_type = logic
@@ -779,6 +781,10 @@ impl ProtocolDecoder {
                         if let Some(effect_ids) = &effect_ids {
                             buff.effect_ids = Arc::clone(effect_ids);
                         }
+                        if energy_display_id.is_some() {
+                            buff.energy_display_id = energy_display_id;
+                            carried_energy_display = true;
+                        }
                         observations.push(ProtocolObservation::BuffChanged {
                             target_uuid,
                             change: ObservedBuffChange::Applied { buff },
@@ -788,6 +794,7 @@ impl ProtocolDecoder {
                     == blueprotobuf::EBuffEffectLogicPbType::BuffEffectBuffChange as i32
                     && let Ok(change) = decode_message::<blueprotobuf::BuffChange>(raw)
                 {
+                    carried_energy_display |= energy_display_id.is_some();
                     observations.push(ProtocolObservation::BuffChanged {
                         target_uuid,
                         change: ObservedBuffChange::Delta {
@@ -798,9 +805,26 @@ impl ProtocolDecoder {
                                 .and_then(|value| u64::try_from(value).ok()),
                             create_time: change.create_time,
                             effect_ids: effect_ids.clone(),
+                            energy_display_id,
                         },
                     });
                 }
+            }
+
+            // An energy display effect synced on its own still has to reach
+            // the instance it belongs to.
+            if !carried_energy_display && energy_display_id.is_some() {
+                observations.push(ProtocolObservation::BuffChanged {
+                    target_uuid,
+                    change: ObservedBuffChange::Delta {
+                        instance_id,
+                        layer: None,
+                        duration_ms: None,
+                        create_time: None,
+                        effect_ids: None,
+                        energy_display_id,
+                    },
+                });
             }
 
             if effect.r#type == Some(blueprotobuf::EBuffEventType::BuffEventCustomize as i32) {
@@ -814,6 +838,7 @@ impl ProtocolDecoder {
                             duration_ms: None,
                             create_time: None,
                             effect_ids: Some(Arc::from(customize_ids.into_boxed_slice())),
+                            energy_display_id: None,
                         },
                     });
                 }
@@ -850,6 +875,7 @@ impl ProtocolDecoder {
             started_mono_ms: None,
             expires_mono_ms: None,
             effect_ids: Arc::from(decode_play_effect_ids(&info.logic_effect).into_boxed_slice()),
+            energy_display_id: decode_energy_display_id(&info.logic_effect),
         };
         update_buff_times(
             &mut buff,
@@ -2099,6 +2125,32 @@ fn decode_play_effect_ids(logic_effects: &[blueprotobuf::BuffEffectLogicInfo]) -
                 .and_then(|effect| effect.effect_id)
         })
         .collect()
+}
+
+/// `BuffEnergyDisplayInfo` (`stru_buff_energy_display_info.proto`), the payload
+/// of a `BuffEffectEnergyDisplay` logic effect. `effect_id` is a
+/// `FightResIconTable` row.
+#[derive(Clone, Copy, PartialEq, Message)]
+struct BuffEnergyDisplayInfo {
+    #[prost(int32, optional, tag = "1")]
+    effect_id: Option<i32>,
+}
+
+fn decode_energy_display_id(logic_effects: &[blueprotobuf::BuffEffectLogicInfo]) -> Option<i32> {
+    logic_effects
+        .iter()
+        .filter(|logic| {
+            logic.effect_type
+                == Some(blueprotobuf::EBuffEffectLogicPbType::BuffEffectEnergyDisplay as i32)
+        })
+        .find_map(|logic| {
+            logic
+                .raw_data
+                .as_deref()
+                .and_then(|raw| decode_message::<BuffEnergyDisplayInfo>(raw).ok())
+                .and_then(|info| info.effect_id)
+                .filter(|id| *id != 0)
+        })
 }
 
 /// Slot/lock values from `BuffEventCustomize` (`logicIdx` 1-4).
@@ -3517,6 +3569,109 @@ mod tests {
         ));
     }
 
+    /// `BuffEnergyDisplayInfo { effectId = 1 }` with `effectId` 22, as bytes.
+    fn energy_display_logic() -> blueprotobuf::BuffEffectLogicInfo {
+        blueprotobuf::BuffEffectLogicInfo {
+            effect_type: Some(blueprotobuf::EBuffEffectLogicPbType::BuffEffectEnergyDisplay as i32),
+            raw_data: Some(vec![0x08, 22]),
+            ..Default::default()
+        }
+    }
+
+    fn decode_sync(sync: &blueprotobuf::BuffEffectSync) -> Vec<ProtocolObservation> {
+        let envelope = notify(
+            1,
+            Pkt::SyncNearDeltaInfo,
+            &blueprotobuf::SyncNearDeltaInfo::default(),
+        );
+        let mut decoder = ProtocolDecoder::new();
+        let mut observations = Vec::new();
+        decoder.decode_buff_effect_sync(EntityUuid(10), sync, &envelope, &mut observations);
+        observations
+    }
+
+    #[test]
+    fn buff_info_carries_its_energy_display_row() {
+        let info = blueprotobuf::BuffInfo {
+            base_id: Some(2205211),
+            logic_effect: vec![play_effect_logic(900), energy_display_logic()],
+            ..Default::default()
+        };
+        let envelope = notify(
+            1,
+            Pkt::SyncNearDeltaInfo,
+            &blueprotobuf::SyncNearDeltaInfo::default(),
+        );
+        let decoder = ProtocolDecoder::new();
+        let buff = decoder
+            .observed_buff(5, &info, &envelope)
+            .expect("buff with base id");
+        assert_eq!(buff.energy_display_id, Some(22));
+        assert_eq!(buff.effect_ids.as_ref(), &[900]);
+    }
+
+    #[test]
+    fn synced_energy_display_rides_on_the_buff_change() {
+        let change = blueprotobuf::BuffEffectLogicInfo {
+            effect_type: Some(blueprotobuf::EBuffEffectLogicPbType::BuffEffectBuffChange as i32),
+            raw_data: Some(
+                blueprotobuf::BuffChange {
+                    layer: Some(2),
+                    ..Default::default()
+                }
+                .encode_to_vec(),
+            ),
+            ..Default::default()
+        };
+        let sync = blueprotobuf::BuffEffectSync {
+            uuid: Some(20),
+            buff_effects: vec![blueprotobuf::BuffEffect {
+                buff_uuid: Some(70),
+                logic_effect: vec![change, energy_display_logic()],
+                ..Default::default()
+            }],
+        };
+        let observations = decode_sync(&sync);
+        assert!(matches!(
+            observations.as_slice(),
+            [ProtocolObservation::BuffChanged {
+                change: ObservedBuffChange::Delta {
+                    instance_id: 70,
+                    layer: Some(2),
+                    energy_display_id: Some(22),
+                    ..
+                },
+                ..
+            }]
+        ));
+    }
+
+    #[test]
+    fn energy_display_alone_still_reaches_its_instance() {
+        let sync = blueprotobuf::BuffEffectSync {
+            uuid: Some(20),
+            buff_effects: vec![blueprotobuf::BuffEffect {
+                buff_uuid: Some(70),
+                logic_effect: vec![energy_display_logic()],
+                ..Default::default()
+            }],
+        };
+        let observations = decode_sync(&sync);
+        assert!(matches!(
+            observations.as_slice(),
+            [ProtocolObservation::BuffChanged {
+                target_uuid: EntityUuid(20),
+                change: ObservedBuffChange::Delta {
+                    instance_id: 70,
+                    layer: None,
+                    effect_ids: None,
+                    energy_display_id: Some(22),
+                    ..
+                },
+            }]
+        ));
+    }
+
     fn play_effect_logic(effect_id: i32) -> blueprotobuf::BuffEffectLogicInfo {
         blueprotobuf::BuffEffectLogicInfo {
             effect_type: Some(blueprotobuf::EBuffEffectLogicPbType::PlayEffect as i32),
@@ -3569,6 +3724,7 @@ mod tests {
                             layer: None,
                             duration_ms: None,
                             create_time: None,
+                            energy_display_id: None,
                         },
                 },
             ] => (*target_uuid, *instance_id, effect_ids.clone()),

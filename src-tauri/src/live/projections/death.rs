@@ -399,6 +399,7 @@ mod tests {
                         started_mono_ms: None,
                         expires_mono_ms: None,
                         effect_ids: Arc::from([]),
+                        energy_display_id: None,
                     }],
                 },
                 ProtocolObservation::BuffSnapshot {
@@ -415,6 +416,7 @@ mod tests {
                         started_mono_ms: None,
                         expires_mono_ms: None,
                         effect_ids: Arc::from([]),
+                        energy_display_id: None,
                     }],
                 },
                 ProtocolObservation::AttributeUpdated {

@@ -2170,6 +2170,7 @@ mod tests {
                     started_mono_ms: Some(MonoTimeMs(0)),
                     expires_mono_ms: Some(MonoTimeMs(10_000)),
                     effect_ids: Arc::from([]),
+                    energy_display_id: None,
                 },
                 target_roles: EntityRoles {
                     is_local_player: true,

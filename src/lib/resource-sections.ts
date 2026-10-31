@@ -3,10 +3,13 @@ import type {
   ResourceSectionLayout,
   SkillMonitorProfile,
 } from "$lib/settings-store";
+import { t } from "$lib/i18n/index.svelte";
+import { getFightResTemplate, RES_MAX_ID_OFFSET } from "$lib/resource-bar";
+import { getResourceBarLayout } from "$lib/resource-bar-layouts";
 import {
-  findResourcesByClass,
+  findFlowerRotationResources,
   getResourceSectionKey,
-  type ResourceDefinition,
+  type FlowerRotationResourceDefinition,
 } from "$lib/skill-mappings";
 
 export const DEFAULT_RESOURCE_SECTION_POSITION: Point = { x: 40, y: 170 };
@@ -14,11 +17,86 @@ export const DEFAULT_RESOURCE_SECTION_SCALE = 1;
 /** Vertical spacing between stacked sections when no layout is stored yet. */
 export const RESOURCE_SECTION_STACK_OFFSET = 64;
 
+/** Main-HUD profession counter; class independent, data driven. */
+export const PROFESSION_COUNT_SECTION_KEY = "professionCount";
+
+/**
+ * What a section draws. The weapon bar's two halves and the shield knight's
+ * side bar come from the class's fight resource template; the flower rotation
+ * is hand configured in `class_resources.json`.
+ */
+export type ResourceSectionContent =
+  | { type: "bar" }
+  | { type: "dots" }
+  | { type: "siderLine" }
+  | { type: "flowerRotation"; definition: FlowerRotationResourceDefinition }
+  | { type: "professionCount" };
+
 export type ResourceSection = {
   key: string;
-  definition: ResourceDefinition;
+  label: string;
+  content: ResourceSectionContent;
   layout: ResourceSectionLayout;
 };
+
+type SectionEntry = Omit<ResourceSection, "layout">;
+
+function resourceKey(type: string, resourceId: number): string {
+  return `${type}:${resourceId}:${resourceId + RES_MAX_ID_OFFSET}`;
+}
+
+/**
+ * Sections of `classKey` in display order. Bar and dot keys keep the
+ * `bar:<id>:<id+6>` / `charges:<id>:<id+6>` form of the earlier
+ * hand-written config, so stored layouts carry over.
+ */
+function sectionEntries(classKey: string): SectionEntry[] {
+  const template = getFightResTemplate(classKey);
+  const layout = getResourceBarLayout(classKey);
+  if (!template || !layout) return [];
+  const result: SectionEntry[] = [];
+  const main = template.resources.find(
+    (resource) => resource.ui === "line" || resource.ui === "guitar",
+  );
+  result.push({
+    key: main
+      ? resourceKey("bar", main.id)
+      : `bar:template:${template.templateId}`,
+    label: t("gameOverlay.resource.section.bar"),
+    content: { type: "bar" },
+  });
+  const dot = template.resources.find((resource) => resource.ui === "dot");
+  if (dot) {
+    result.push({
+      key: resourceKey("charges", dot.id),
+      label: t("gameOverlay.resource.section.dots"),
+      content: { type: "dots" },
+    });
+  }
+  const sider = template.resources.find(
+    (resource) => resource.ui === "siderLine",
+  );
+  if (sider && layout.siderLine) {
+    result.push({
+      key: resourceKey("siderLine", sider.id),
+      label: t("gameOverlay.resource.section.siderLine"),
+      content: { type: "siderLine" },
+    });
+  }
+  for (const definition of findFlowerRotationResources(classKey)) {
+    result.push({
+      key: getResourceSectionKey(definition),
+      label: definition.label,
+      content: { type: "flowerRotation", definition },
+    });
+  }
+  result.push({
+    key: PROFESSION_COUNT_SECTION_KEY,
+    label: t("gameOverlay.resource.section.professionCount"),
+    content: { type: "professionCount" },
+  });
+  return result;
+}
 
 type ProfileLayoutSource = Pick<
   SkillMonitorProfile,
@@ -47,7 +125,7 @@ function isPoint(value: unknown): value is Point {
 }
 
 /**
- * One section per class resource entry, in class-config order. Stored
+ * One section per class resource part, in `sectionEntries` order. Stored
  * layouts override the legacy single-panel position/scale defaults; the
  * defaults stack sections vertically so an un-customised profile still reads
  * like the old combined panel.
@@ -63,14 +141,11 @@ export function ensureResourceSections(
     profile?.overlaySizes?.resourceGroupScale ?? DEFAULT_RESOURCE_SECTION_SCALE,
   );
   const stored = profile?.resourceSectionLayouts ?? {};
-  const definitions = findResourcesByClass(classKey);
 
-  return definitions.map((definition, index) => {
-    const key = getResourceSectionKey(definition);
-    const override = stored[key];
+  return sectionEntries(classKey).map((entry, index) => {
+    const override = stored[entry.key];
     return {
-      key,
-      definition,
+      ...entry,
       layout: {
         position: isPoint(override?.position)
           ? override.position
@@ -133,7 +208,7 @@ export function isFlowerSectionVisible(
 ): boolean {
   if (profile.overlayVisibility?.showResourceGroup !== true) return false;
   const flowerSections = ensureResourceSections(profile).filter(
-    (section) => section.definition.type === "flowerRotation",
+    (section) => section.content.type === "flowerRotation",
   );
   return (
     flowerSections.length > 0 &&

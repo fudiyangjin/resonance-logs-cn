@@ -1814,6 +1814,9 @@ export const enUSMessages = {
   "skillMonitor.overlay.resourceSections": "Resource sections",
   "skillMonitor.overlay.resourceSectionsHelp":
     "Each resource section of the current class can be shown/hidden separately and dragged/scaled independently in overlay edit mode",
+  "skillMonitor.overlay.resourceTextStyle": "Resource text",
+  "skillMonitor.overlay.resourceTextStyleHelp":
+    "Numbers on the resource bar, resource points and shield bar (for example 100/400). The class counter uses the game's digit images and is not affected; the text shadow follows the shared text style.",
   "monsterMonitor.title": "Monster Monitor",
   "monsterMonitor.description":
     "Monitor current target monster buffs and related data",
@@ -2140,6 +2143,10 @@ export const enUSMessages = {
   "gameOverlay.edit.done": "Done",
   "gameOverlay.edit.dragHint": "Drag here to move the Game Overlay window",
   "gameOverlay.group.resource": "Resource Area",
+  "gameOverlay.resource.section.bar": "Resource bar",
+  "gameOverlay.resource.section.dots": "Resource points",
+  "gameOverlay.resource.section.siderLine": "Shield bar",
+  "gameOverlay.resource.section.professionCount": "Class counter",
   "gameOverlay.group.skillCd": "Skill CD Area",
   "gameOverlay.group.textBuff": "Text Buff Area",
   "gameOverlay.group.shieldDetail": "HP/Shield Area",

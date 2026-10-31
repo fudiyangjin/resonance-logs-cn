@@ -264,6 +264,7 @@ impl PresentationProjection {
             shield_max_hp: monitored.shield_max_hp,
             shield_entries: monitored.shield_entries.clone(),
             fight_resource: monitored.fight_resource.clone(),
+            profession_count: monitored.profession_count.clone(),
         }
     }
 

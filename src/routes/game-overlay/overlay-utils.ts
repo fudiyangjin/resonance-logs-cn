@@ -35,8 +35,6 @@ import type { CounterRulePreset } from "$lib/skill-mappings";
 import {
   DEFAULT_OVERLAY_POSITIONS,
   DEFAULT_OVERLAY_VISIBILITY,
-  DEFAULT_RESOURCE_VALUES_BY_CLASS,
-  RESOURCE_SCALES_BY_CLASS,
 } from "./overlay-constants";
 import type {
   BuffAlertState,
@@ -586,36 +584,6 @@ export function computeDisplay(
     text: remaining > 0 ? formatTenthsDown(remaining / 1000) : "",
     usable: remaining <= 0,
   };
-}
-
-export function getResourceValue(
-  fightResMap: Map<number, number>,
-  selectedClassKey: string,
-  resourceId: number,
-): number {
-  const raw = fightResMap.get(resourceId);
-  if (raw === undefined) {
-    return (
-      DEFAULT_RESOURCE_VALUES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 0
-    );
-  }
-  const scale = RESOURCE_SCALES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 1;
-  return Math.floor(raw / scale);
-}
-
-export function getResourcePreciseValue(
-  fightResMap: Map<number, number>,
-  selectedClassKey: string,
-  resourceId: number,
-): number {
-  const raw = fightResMap.get(resourceId);
-  if (raw === undefined) {
-    return (
-      DEFAULT_RESOURCE_VALUES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 0
-    );
-  }
-  const scale = RESOURCE_SCALES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 1;
-  return raw / scale;
 }
 
 function formatTenthsDown(value: number): string {

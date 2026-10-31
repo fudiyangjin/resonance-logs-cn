@@ -44,9 +44,9 @@ In **{{ui:skillMonitor.buff.group.title}}**:
 
 Buffs without an icon are shown as a line of text plus a progress bar. You can choose **{{ui:skillMonitor.buff.display.modernText}}** or **{{ui:skillMonitor.buff.display.classicText}}**, and limit how many are shown at most.
 
-### Buffs that change with stacks
+### Class counter
 
-Some Buffs change their icon automatically with the stack count. For example, Wind Knight's "Chasing Step" shows a single icon at 1 stack and a double icon at 2 stacks, with no extra setup needed.
+The game HUD's class counter (for example Wind Knight's "Chasing Step" wind mark, Stormblade's thunder sigil count or Twin Striker's rank letter) is not shown in the Buff area. It is the "Class counter" section of the resource area, see [Resource sections](./overlay.md#resource-sections).
 
 ## Names and icons
 

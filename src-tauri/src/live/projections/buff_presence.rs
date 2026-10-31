@@ -272,6 +272,7 @@ mod tests {
             started_mono_ms: Some(MonoTimeMs(0)),
             expires_mono_ms: expires.map(MonoTimeMs),
             effect_ids: Arc::from([]),
+            energy_display_id: None,
         }
     }
 

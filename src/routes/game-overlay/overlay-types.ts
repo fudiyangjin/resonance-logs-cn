@@ -43,8 +43,6 @@ export type IconBuffDisplay = {
   isPlaceholder?: boolean;
   /** Shown but off, e.g. a most-urgent composite's missing member. */
   inactive?: boolean;
-  specialImages?: string[];
-  specialDisplayStyle?: "woodCounter";
   alert?: BuffAlertState | undefined;
   temporal?: HudTemporalValue | undefined;
 };

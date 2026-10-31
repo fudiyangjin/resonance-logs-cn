@@ -231,6 +231,9 @@ pub struct ObservedBuff {
     pub started_mono_ms: Option<MonoTimeMs>,
     pub expires_mono_ms: Option<MonoTimeMs>,
     pub effect_ids: Arc<[i32]>,
+    /// `BuffEffectEnergyDisplay` effect id: the `FightResIconTable` row of the
+    /// main-HUD profession counter this buff drives.
+    pub energy_display_id: Option<i32>,
 }
 
 /// Wire-level buff delta. The decoder emits raw observations; [`EntityContext`]
@@ -246,6 +249,7 @@ pub enum ObservedBuffChange {
         duration_ms: Option<u64>,
         create_time: Option<i64>,
         effect_ids: Option<Arc<[i32]>>,
+        energy_display_id: Option<i32>,
     },
     Remove {
         instance_id: i64,
@@ -765,6 +769,8 @@ pub struct BuffState {
     pub started_mono_ms: Option<MonoTimeMs>,
     pub expires_mono_ms: Option<MonoTimeMs>,
     pub effect_ids: Arc<[i32]>,
+    /// See [`ObservedBuff::energy_display_id`].
+    pub energy_display_id: Option<i32>,
 }
 
 /// Point-in-time active buffs captured before a death event can be followed by

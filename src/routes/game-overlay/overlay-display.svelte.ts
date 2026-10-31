@@ -1,11 +1,9 @@
 import {
   findAnySkillByBaseId,
-  findSpecialBuffDisplays,
   getCounterDisplayLabel,
   getCounterRules,
   getSeasonCultivateFactorRuleMap,
   type CounterRulePreset,
-  type SpecialBuffDisplay,
 } from "$lib/skill-mappings";
 import {
   getBuffCategoryLabel,
@@ -31,13 +29,12 @@ import {
   getCustomPanelDisplayRow,
   isBuffActive,
   isFocusMissing,
-  getResourcePreciseValue as getResourcePreciseValueValue,
-  getResourceValue as getResourceValueValue,
   resolveAlertState,
   withFantasyTierSuffix,
   withFocusMember,
 } from "./overlay-utils";
 import { t } from "$lib/i18n/index.svelte";
+import { resourceValue } from "$lib/resource-bar";
 import {
   ensureBuffAlerts,
   type BuffAlertRule,
@@ -86,40 +83,6 @@ import {
 
 export const GAME_PROJECTION_DEADLINE_SOURCE = "game-overlay:display";
 
-type ResolvedSpecialBuffDisplay = Pick<
-  IconBuffDisplay,
-  "specialDisplayStyle" | "specialImages"
->;
-
-function resolveSpecialBuffDisplay(
-  config: SpecialBuffDisplay | undefined,
-  layer: number,
-): ResolvedSpecialBuffDisplay {
-  if (!config) return {};
-
-  if (config.displayStyle === "woodCounter") {
-    const digitImages = config.digitImages ?? [];
-    if (digitImages.length === 0) return {};
-    const digitIndex = Math.min(
-      digitImages.length - 1,
-      Math.max(0, Math.floor(Number.isFinite(layer) ? layer : 0)),
-    );
-    const digitImage = digitImages[digitIndex];
-    return digitImage
-      ? { specialDisplayStyle: "woodCounter", specialImages: [digitImage] }
-      : {};
-  }
-
-  const layerImages = config.layerImages ?? [];
-  if (layerImages.length === 0) return {};
-  const layerIdx = Math.min(
-    layerImages.length - 1,
-    Math.max(0, Math.floor((Number.isFinite(layer) ? layer : 1) - 1)),
-  );
-  const specialImages = layerImages[layerIdx] ?? [];
-  return specialImages.length > 0 ? { specialImages } : {};
-}
-
 const _normalizedBuffGroups = $derived.by(
   () => configuredBuffPlan().buffGroups,
 );
@@ -131,17 +94,6 @@ const _individualMonitorAllGroup = $derived.by(
 const _panelAreaRows = $derived.by(() =>
   buildPanelAreaRows(activeProfile(), enabledPanelAttrs()),
 );
-
-const _specialBuffConfigMap = $derived.by(() => {
-  const map = new Map<
-    number,
-    ReturnType<typeof findSpecialBuffDisplays>[number]
-  >();
-  for (const config of findSpecialBuffDisplays(selectedClassKey())) {
-    map.set(config.buffBaseId, config);
-  }
-  return map;
-});
 
 const _counterRuleMap = $derived.by(() => {
   const map = new Map<number, CounterRulePreset>();
@@ -275,20 +227,10 @@ const _buffSnapshot = $derived.by(() => {
       iconOverrides,
       iconDirUrl,
     );
-    // A player override wins over special (per-layer) displays. It counts
-    // only when actually applied (see resolveBuffIconSrc): configured and
-    // the icon directory is ready.
+    // The override counts only when actually applied (see
+    // resolveBuffIconSrc): configured and the icon directory is ready.
     const isIconOverrideActive =
       iconOverrides[String(faceId)] !== undefined && iconDirUrl !== null;
-    // A focused member's special display would move the slot between the
-    // plain and the special containers each time the focus changes.
-    const specialDisplay: ResolvedSpecialBuffDisplay =
-      isIconOverrideActive || buff.focus
-        ? {}
-        : resolveSpecialBuffDisplay(
-            _specialBuffConfigMap.get(baseId),
-            buff.layer,
-          );
 
     if (iconSrc) {
       nextIconBuffs.push({
@@ -301,7 +243,6 @@ const _buffSnapshot = $derived.by(() => {
         text: timeText,
         layer: focusMissing ? 0 : buff.layer,
         ...(focusMissing ? { inactive: true } : {}),
-        ...(specialDisplay.specialImages ? specialDisplay : {}),
         ...(alert ? { alert } : {}),
         ...(temporal ? { temporal } : {}),
       });
@@ -337,10 +278,6 @@ const _buffSnapshot = $derived.by(() => {
       );
       const isIconOverrideActive =
         iconOverrides[String(baseId)] !== undefined && iconDirUrl !== null;
-      const placeholderSpecialDisplay: ResolvedSpecialBuffDisplay =
-        isIconOverrideActive
-          ? {}
-          : resolveSpecialBuffDisplay(_specialBuffConfigMap.get(baseId), 0);
       if (iconSrc) {
         nextIconBuffs.push({
           baseId,
@@ -352,9 +289,6 @@ const _buffSnapshot = $derived.by(() => {
           text: "--",
           layer: 1,
           isPlaceholder: true,
-          ...(placeholderSpecialDisplay.specialImages
-            ? placeholderSpecialDisplay
-            : {}),
         });
       } else {
         const row = buildBuffTextRow(
@@ -564,9 +498,7 @@ const _groupedIconBuffs = $derived.by(() => {
     return new Map<string, IconBuffDisplay[]>();
   const groups = _normalizedBuffGroups;
   const { catchAllExcludedIds } = configuredBuffPlan();
-  const iconBuffs = _iconDisplayBuffs.filter(
-    (buff) => !(buff.specialImages && buff.specialImages.length > 0),
-  );
+  const iconBuffs = _iconDisplayBuffs;
   const result = new Map<string, IconBuffDisplay[]>();
   for (const group of groups) {
     const maxVisible = Math.max(1, group.columns * group.rows);
@@ -637,26 +569,8 @@ const _individualAllGroupBuffs = $derived.by(() => {
     return [];
   const { catchAllExcludedIds } = configuredBuffPlan();
   return _iconDisplayBuffs.filter(
-    (buff) =>
-      !catchAllExcludedIds.has(buff.baseId) &&
-      !(buff.specialImages && buff.specialImages.length > 0),
+    (buff) => !catchAllExcludedIds.has(buff.baseId),
   );
-});
-
-const _specialStandaloneBuffs = $derived.by(() => {
-  if (buffDisplayMode() !== "grouped") return [];
-  const specials = _iconDisplayBuffs.filter(
-    (buff) => buff.specialImages && buff.specialImages.length > 0,
-  );
-  const groups = _normalizedBuffGroups;
-  if (groups.some((group) => group.monitorAll)) return specials;
-  const selectedIds = new Set<number>();
-  for (const group of groups) {
-    for (const buffId of group.buffIds) {
-      selectedIds.add(buffId);
-    }
-  }
-  return specials.filter((buff) => selectedIds.has(buff.baseId));
 });
 
 const _limitedTextBuffs = $derived.by(() =>
@@ -695,10 +609,6 @@ export function textBuffs() {
   return _textBuffs;
 }
 
-export function specialBuffConfigMap() {
-  return _specialBuffConfigMap;
-}
-
 export function counterRuleMap() {
   return _counterRuleMap;
 }
@@ -715,10 +625,6 @@ export function individualAllGroupBuffs() {
   return _individualAllGroupBuffs;
 }
 
-export function specialStandaloneBuffs() {
-  return _specialStandaloneBuffs;
-}
-
 export function limitedTextBuffs() {
   return _limitedTextBuffs;
 }
@@ -731,16 +637,9 @@ export function nextOverlayProjectionDeadline(): number | null {
   return _buffSnapshot.nextDeadlineMs;
 }
 
-export function getResourceValue(resourceId: number): number {
-  return getResourceValueValue(fightResMap(), selectedClassKey(), resourceId);
-}
-
-export function getResourcePreciseValue(resourceId: number): number {
-  return getResourcePreciseValueValue(
-    fightResMap(),
-    selectedClassKey(),
-    resourceId,
-  );
+/** Display value of a fight resource; `null` until the server sends it. */
+export function getResourceValue(resourceId: number): number | null {
+  return resourceValue(fightResMap(), resourceId);
 }
 
 function getBuffPrioritySorter(priorityIds: number[]) {

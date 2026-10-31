@@ -231,6 +231,11 @@ const shieldDetailStyleSchema = v.object({
   ...overlayTextStyleEntries,
 });
 
+const resourceTextStyleSchema = v.object({
+  fontSize: finiteNumberSchema,
+  color: v.string(),
+});
+
 const voicePhraseBindingSchema = v.variant("source", [
   v.object({ source: v.literal("auto") }),
   v.object({ source: v.literal("custom"), text: v.string() }),
@@ -707,6 +712,7 @@ const skillProfileSchema = v.object({
     shieldDetailStyleSchema,
     defaultClone(ensureShieldDetailStyle({ ...defaultSkill, id: "schema" })),
   ),
+  resourceTextStyle: v.optional(resourceTextStyleSchema),
   overlayTextStyle: v.optional(
     overlayTextStyleSchema,
     defaultClone(defaultSkill.overlayTextStyle!),

@@ -1,0 +1,271 @@
+{
+  "stormblade": {
+    "templateId": 1,
+    "resources": [],
+    "effectShowBuff": [
+      {
+        "type": 0,
+        "buffId": 2200151
+      },
+      {
+        "type": 0,
+        "buffId": 2200601
+      },
+      {
+        "type": 1,
+        "buffId": 43101
+      },
+      {
+        "type": 1,
+        "buffId": 43201
+      }
+    ]
+  },
+  "frost_mage": {
+    "templateId": 2,
+    "resources": [
+      {
+        "id": 12001,
+        "name": "冰晶",
+        "ui": "line",
+        "openBuff": 0
+      },
+      {
+        "id": 12021,
+        "name": "玄冰",
+        "ui": "dot",
+        "openBuff": 27013
+      }
+    ],
+    "effectShowBuff": [
+      {
+        "type": 1,
+        "buffId": 27007
+      },
+      {
+        "type": 0,
+        "buffId": 2204371
+      },
+      {
+        "type": 0,
+        "buffId": 2204551
+      }
+    ]
+  },
+  "flame_berserker": {
+    "templateId": 4,
+    "resources": [
+      {
+        "id": 13011,
+        "name": "炎魂",
+        "ui": "line",
+        "openBuff": 0
+      },
+      {
+        "id": 13001,
+        "name": "狂意",
+        "ui": "dot",
+        "openBuff": 2208030
+      },
+      {
+        "id": 13021,
+        "name": "赤痕",
+        "ui": "axeBall",
+        "openBuff": 2208430
+      }
+    ],
+    "effectShowBuff": [
+      {
+        "type": 0,
+        "buffId": 2208152
+      },
+      {
+        "type": 0,
+        "buffId": 2208622
+      },
+      {
+        "type": 1,
+        "buffId": 35102
+      },
+      {
+        "type": 1,
+        "buffId": 35103
+      }
+    ]
+  },
+  "wind_knight": {
+    "templateId": 5,
+    "resources": [
+      {
+        "id": 14011,
+        "name": "能量值",
+        "ui": "line",
+        "openBuff": 0
+      },
+      {
+        "id": 14001,
+        "name": "战意点",
+        "ui": "dot",
+        "openBuff": 2205040
+      }
+    ],
+    "effectShowBuff": [
+      {
+        "type": 1,
+        "buffId": 31201
+      }
+    ]
+  },
+  "verdant_oracle": {
+    "templateId": 13,
+    "resources": [
+      {
+        "id": 15001,
+        "name": "艾露娜能量值",
+        "ui": "line",
+        "openBuff": 0
+      },
+      {
+        "id": 15011,
+        "name": "花花",
+        "ui": "dot",
+        "openBuff": 2202050
+      }
+    ],
+    "effectShowBuff": [
+      {
+        "type": 1,
+        "buffId": 2202561
+      },
+      {
+        "type": 0,
+        "buffId": 2202751
+      },
+      {
+        "type": 1,
+        "buffId": 2202716
+      }
+    ]
+  },
+  "heavy_guardian": {
+    "templateId": 9,
+    "resources": [
+      {
+        "id": 19001,
+        "name": "怒气",
+        "ui": "line",
+        "openBuff": 0
+      },
+      {
+        "id": 19011,
+        "name": "砂晶石",
+        "ui": "dot",
+        "openBuff": 0
+      }
+    ],
+    "effectShowBuff": [
+      {
+        "type": 1,
+        "buffId": 2201461
+      },
+      {
+        "type": 1,
+        "buffId": 50050
+      }
+    ]
+  },
+  "marksman": {
+    "templateId": 11,
+    "resources": [
+      {
+        "id": 22001,
+        "name": "怒气",
+        "ui": "line",
+        "openBuff": 0
+      },
+      {
+        "id": 22011,
+        "name": "箭矢",
+        "ui": "dot",
+        "openBuff": 55237
+      }
+    ],
+    "effectShowBuff": [
+      {
+        "type": 1,
+        "buffId": 55223
+      }
+    ]
+  },
+  "shield_knight": {
+    "templateId": 12,
+    "resources": [
+      {
+        "id": 24001,
+        "name": "神圣能量",
+        "ui": "line",
+        "openBuff": 0
+      },
+      {
+        "id": 25001,
+        "name": "圣令",
+        "ui": "dot",
+        "openBuff": 0
+      },
+      {
+        "id": 27001,
+        "name": "盾条",
+        "ui": "siderLine",
+        "openBuff": 2206011
+      }
+    ],
+    "effectShowBuff": [
+      {
+        "type": 2,
+        "buffId": 2206031
+      },
+      {
+        "type": 0,
+        "buffId": 2206171
+      },
+      {
+        "type": 1,
+        "buffId": 55412
+      },
+      {
+        "type": 1,
+        "buffId": 55417
+      }
+    ]
+  },
+  "beat_performer": {
+    "templateId": 14,
+    "resources": [
+      {
+        "id": 23001,
+        "name": "演奏能量",
+        "ui": "guitar",
+        "openBuff": 0
+      },
+      {
+        "id": 23011,
+        "name": "演奏热情",
+        "ui": "dot",
+        "openBuff": 0
+      },
+      {
+        "id": 23021,
+        "name": "律动",
+        "ui": "line",
+        "openBuff": 2207620
+      },
+      {
+        "id": 23031,
+        "name": "溢出治疗",
+        "ui": "line",
+        "openBuff": 2207150
+      }
+    ],
+    "effectShowBuff": []
+  }
+}

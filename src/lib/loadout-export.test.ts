@@ -123,6 +123,23 @@ describe("exportLoadout normalization", () => {
     );
   });
 
+  it("keeps the resource text style through export and import", () => {
+    const { loadoutId } = resetWithLegacyLoadout();
+    SETTINGS.monitoring.state.skillMonitor.profiles[0]!.resourceTextStyle = {
+      fontSize: 24,
+      color: "#ffcc00",
+    };
+
+    const data = exportLoadout(loadoutId);
+    const parsed = parseLoadoutExport(JSON.parse(JSON.stringify(data)));
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.output.skillProfile.resourceTextStyle).toEqual({
+      fontSize: 24,
+      color: "#ffcc00",
+    });
+  });
+
   it("re-imports byte-for-byte the same as parsing directly", () => {
     const { loadoutId } = resetWithLegacyLoadout();
     const data = exportLoadout(loadoutId);
@@ -154,6 +171,20 @@ describe("normalizeSkillProfile", () => {
     expect(normalized.shieldDetailStyle).toBeUndefined();
     expect("customPanelStyle" in normalized).toBe(false);
     expect("shieldDetailStyle" in normalized).toBe(false);
+  });
+
+  it("only normalizes a resource text style the profile already has", () => {
+    const fresh = normalizeSkillProfile(
+      createDefaultSkillMonitorProfile("Fresh"),
+    );
+    expect("resourceTextStyle" in fresh).toBe(false);
+
+    const profile = createDefaultSkillMonitorProfile("Text");
+    profile.resourceTextStyle = { fontSize: 99, color: "#ff0000" };
+    expect(normalizeSkillProfile(profile).resourceTextStyle).toEqual({
+      fontSize: 36,
+      color: "#ff0000",
+    });
   });
 
   it("keeps the first 32 unique positive coverage ids", () => {

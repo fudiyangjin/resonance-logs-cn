@@ -9,7 +9,7 @@ import {
   liveBuffsStore,
   liveStatusStore,
 } from "$lib/stores/live-topics.svelte";
-import type { BuffCoverageEntry } from "$lib/bindings";
+import type { BuffCoverageEntry, ProfessionCountState } from "$lib/bindings";
 import type { BuffDefinition } from "$lib/config/buff-name-table";
 import { reuseIfSame, reuseMap, reuseSet } from "$lib/structural-reuse";
 import type { DragState, ResizeState } from "./overlay-types";
@@ -54,6 +54,7 @@ let factorSlotItemIdsCache: number[] | undefined;
 let seasonActiveTemplateIdsCache: Set<number> | undefined;
 let shieldHpCache: { current: number; max: number } | undefined;
 let shieldEntriesCache: ShieldDetailEntry[] | undefined;
+let professionCountCache: ProfessionCountState | null | undefined;
 
 const _cdMap = $derived.by(() => {
   const result = new Map<number, SkillCdState>();
@@ -146,6 +147,13 @@ const _shieldEntries = $derived.by(
       liveStatusStore.data?.shieldEntries ?? [],
     )),
 );
+const _professionCount = $derived.by(
+  () =>
+    (professionCountCache = reuseIfSame(
+      professionCountCache,
+      liveStatusStore.data?.professionCount ?? null,
+    )),
+);
 
 export const overlayRuntime = $state({
   currentWindow: null as ReturnType<typeof getCurrentWindow> | null,
@@ -221,6 +229,10 @@ export function shieldDetailHp() {
 
 export function shieldDetailEntries(): ShieldDetailEntry[] {
   return _shieldEntries;
+}
+
+export function professionCount(): ProfessionCountState | null {
+  return _professionCount;
 }
 
 export function buffDefinitions() {

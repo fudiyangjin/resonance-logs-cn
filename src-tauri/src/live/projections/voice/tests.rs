@@ -45,6 +45,7 @@ fn buff(instance_id: i64, expires_mono_ms: Option<u64>) -> ObservedBuff {
         started_mono_ms: Some(MonoTimeMs(1_000)),
         expires_mono_ms: expires_mono_ms.map(MonoTimeMs),
         effect_ids: Arc::from([]),
+        energy_display_id: None,
     }
 }
 
@@ -102,6 +103,7 @@ fn buff_state(
         started_mono_ms: Some(MonoTimeMs(1_000)),
         expires_mono_ms: expires_mono_ms.map(MonoTimeMs),
         effect_ids: Arc::from([]),
+        energy_display_id: None,
     }
 }
 
@@ -566,6 +568,7 @@ fn local_buff_applied(instance_id: i64, duration_ms: u64) -> ObservedBuff {
         started_mono_ms: None,
         expires_mono_ms: None,
         effect_ids: Arc::from([]),
+        energy_display_id: None,
     }
 }
 
@@ -605,6 +608,7 @@ fn shorten_local_buff(duration_ms: u64) -> ProtocolObservation {
             duration_ms: Some(duration_ms),
             create_time: None,
             effect_ids: None,
+            energy_display_id: None,
         },
     }
 }

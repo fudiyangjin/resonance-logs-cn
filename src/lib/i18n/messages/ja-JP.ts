@@ -1786,6 +1786,9 @@ export const jaJPMessages = {
   "skillMonitor.overlay.resourceSections": "リソース区分",
   "skillMonitor.overlay.resourceSectionsHelp":
     "現在の職業の各リソース区分は個別に表示/非表示でき、オーバーレイ編集モードで独立してドラッグ・拡縮できます",
+  "skillMonitor.overlay.resourceTextStyle": "リソース文字",
+  "skillMonitor.overlay.resourceTextStyleHelp":
+    "リソースバー・リソースポイント・シールドバーの数字（例：100/400）。職業カウンターはゲームの数字画像なので影響しません。文字の影は共通の文字スタイルに従います。",
   "monsterMonitor.title": "モンスターモニター",
   "monsterMonitor.description":
     "現在のターゲットモンスターの Buff と関連データをモニター",
@@ -2111,6 +2114,10 @@ export const jaJPMessages = {
   "gameOverlay.edit.dragHint":
     "ここをドラッグして Game Overlay ウィンドウを移動",
   "gameOverlay.group.resource": "リソースエリア",
+  "gameOverlay.resource.section.bar": "リソースバー",
+  "gameOverlay.resource.section.dots": "リソースポイント",
+  "gameOverlay.resource.section.siderLine": "シールドバー",
+  "gameOverlay.resource.section.professionCount": "職業カウンター",
   "gameOverlay.group.skillCd": "スキル CD エリア",
   "gameOverlay.group.textBuff": "テキスト Buff エリア",
   "gameOverlay.group.shieldDetail": "HP/シールドエリア",

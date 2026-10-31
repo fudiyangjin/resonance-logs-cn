@@ -9,6 +9,7 @@ pub mod hp_report;
 pub mod minimap;
 pub mod monster_skill_watch;
 pub mod presentation;
+pub mod profession_count;
 pub mod skill_cd;
 pub mod team_cd;
 pub mod timeline;

@@ -3,6 +3,7 @@ import {
   ensureOverlayTextStyle,
   getSkillBuffDisplayAliases,
   type OverlayTextStyle,
+  type ResourceTextStyle,
   type ShieldDetailStyle,
   type TextBuffPanelStyle,
 } from "$lib/settings-store";
@@ -20,6 +21,7 @@ import {
   ensureBuffCoverageStyle,
   ensureFactorSlotLabels,
   ensurePanelAttrs,
+  ensureResourceTextStyle,
 } from "$lib/skill-monitor-normalize";
 import {
   expandBuffSelection,
@@ -104,6 +106,9 @@ const _textBuffPanelStyle = $derived.by<TextBuffPanelStyle>(() =>
 );
 const _shieldDetailStyle = $derived.by<ShieldDetailStyle>(() =>
   ensureShieldDetailStyle(_activeProfile),
+);
+const _resourceTextStyle = $derived.by<ResourceTextStyle>(() =>
+  ensureResourceTextStyle(_activeProfile),
 );
 const _buffCoverageEntries = $derived.by(
   () => _configuredBuffPlan.coverageEntries,
@@ -199,6 +204,10 @@ export function textBuffPanelStyle() {
 
 export function shieldDetailStyle() {
   return _shieldDetailStyle;
+}
+
+export function resourceTextStyle() {
+  return _resourceTextStyle;
 }
 
 export function buffCoverageEntries() {

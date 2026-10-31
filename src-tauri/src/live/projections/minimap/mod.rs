@@ -669,6 +669,7 @@ mod tests {
                     started_mono_ms: None,
                     expires_mono_ms: None,
                     effect_ids: Arc::from([7, 8]),
+                    energy_display_id: None,
                 },
                 target_roles: EntityRoles {
                     is_local_player: true,

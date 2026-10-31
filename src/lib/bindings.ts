@@ -1065,7 +1065,7 @@ export type LiveStatusPayload = { revision: number; counters: CounterUpdateState
  * Highest deep-sleep (800522) `seasonId` resolved from the last
  * container sync/patch; `0` before any season data has been observed.
  */
-seasonId: number; seasonActiveTemplateIds: number[]; skillCds: SkillCdState[]; panelAttrs: PanelAttrState[]; shieldCurrentHp: number; shieldMaxHp: number; shieldEntries: ShieldDetailEntry[]; fightResource: FightResourceState | null }
+seasonId: number; seasonActiveTemplateIds: number[]; skillCds: SkillCdState[]; panelAttrs: PanelAttrState[]; shieldCurrentHp: number; shieldMaxHp: number; shieldEntries: ShieldDetailEntry[]; fightResource: FightResourceState | null; professionCount: ProfessionCountState | null }
 /**
  * Teammate cooldowns received from the team relay, already filtered to the
  * skills selected for each teammate's class.
@@ -1318,6 +1318,31 @@ export type PerSourceStats = {
 sourceMonsterId: number | null; totalValue: string; taken: RawCombatStats; skills: Partial<{ [key in number]: RawSkillStats }> }
 export type PlayerNamesResult = { names: string[] }
 export type PlayerSummaryDto = { name: string; classId: number }
+/**
+ * Main-HUD profession counter (`profession_buff_show_helper.lua`), driven by
+ * local-player buffs that carry a `BuffEffectEnergyDisplay` logic effect.
+ */
+export type ProfessionCountState = {
+/**
+ * Buff of the latest counter change (`SetProfessionBuff`).
+ */
+buffBaseId: number;
+/**
+ * Its `FightResIconTable` row.
+ */
+effectId: number;
+/**
+ * Its layer; 0 once the buff is gone.
+ */
+layer: number;
+/**
+ * Some tracked buff still has layers (keeps the flower layer up).
+ */
+anyLayer: boolean;
+/**
+ * Rows whose buff currently has layers, in the order they appeared.
+ */
+activeEffectIds: number[] }
 export type RawCombatStats = { total: string; effectiveTotal: string; hits: string; critHits: string; critTotal: string; luckyHits: string; luckyTotal: string; triggerHits: string; blockHits: string; luckyBlockHits: string }
 export type RawEntityData = { entityUuid: string; displayUid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; seasonStrength: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }>; takenPerSource: PerSourceStats[] }
 export type RawHitExtrema = { min: string; max: string }

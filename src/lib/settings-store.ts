@@ -1201,6 +1201,14 @@ export type TeammateCdPanelStyle = {
  */
 export type TeammateCdSkillMap = Partial<Record<string, number[]>>;
 
+/** Numbers on the weapon resource bar sections. */
+export type ResourceTextStyle = {
+  /** `now/max` size (the game's 18px); the shield number and the orb
+   * percentage keep their in-game ratio to it. */
+  fontSize: number;
+  color: string;
+};
+
 export type ShieldDetailStyle = {
   fontSize: number;
   barWidth: number;
@@ -1495,6 +1503,7 @@ export type SkillMonitorProfile = {
   customPanelStyle?: CustomPanelStyle;
   textBuffPanelStyle?: TextBuffPanelStyle;
   shieldDetailStyle?: ShieldDetailStyle;
+  resourceTextStyle?: ResourceTextStyle;
   /** Shared text style applied to overlay groups without a dedicated style
    * config (skill Cd, resource, panel attr, buff icon/duration groups). */
   overlayTextStyle?: OverlayTextStyle;

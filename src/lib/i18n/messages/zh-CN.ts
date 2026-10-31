@@ -1662,6 +1662,9 @@ export const zhCNMessages = {
   "skillMonitor.overlay.resourceSections": "资源分区",
   "skillMonitor.overlay.resourceSectionsHelp":
     "当前职业的每个资源分区可单独显示/隐藏，并在覆盖层编辑模式下独立拖动和缩放",
+  "skillMonitor.overlay.resourceTextStyle": "资源文字",
+  "skillMonitor.overlay.resourceTextStyleHelp":
+    "资源条、资源点和盾条上的数字（例如 100/400）。职业计数用的是游戏数字图，不受影响；文字阴影沿用共享文字样式。",
   "monsterMonitor.title": "怪物监控",
   "monsterMonitor.description": "监控 Boss buff 等数据",
   "monsterMonitor.actions.toggleOverlay": "开关怪物监控",
@@ -1974,6 +1977,10 @@ export const zhCNMessages = {
   "gameOverlay.edit.done": "完成编辑",
   "gameOverlay.edit.dragHint": "拖动此处移动 Game Overlay 窗口",
   "gameOverlay.group.resource": "资源区",
+  "gameOverlay.resource.section.bar": "资源条",
+  "gameOverlay.resource.section.dots": "资源点",
+  "gameOverlay.resource.section.siderLine": "盾条",
+  "gameOverlay.resource.section.professionCount": "职业计数",
   "gameOverlay.group.skillCd": "技能CD区",
   "gameOverlay.group.textBuff": "无图标Buff区",
   "gameOverlay.group.shieldDetail": "血量护盾区",

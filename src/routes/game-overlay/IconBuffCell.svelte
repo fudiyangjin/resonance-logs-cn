@@ -35,10 +35,6 @@
     onResizePointerDown?: PointerHandler;
   } = $props();
 
-  const hasSpecialImages = $derived(
-    Boolean(buff.specialImages && buff.specialImages.length > 0),
-  );
-  const specialDisplayStyle = $derived(buff.specialDisplayStyle);
   const temporalNow = $derived(buff.temporal ? overlayNow() : 0);
   const alert = $derived(
     buff.temporal
@@ -80,7 +76,7 @@
     : undefined}
   onpointerdown={onPointerDown}
 >
-  {#if showName && !hasSpecialImages}
+  {#if showName}
     <div
       class="buff-name-label"
       style:max-width={`${iconSize + 8}px`}
@@ -92,44 +88,24 @@
 
   <div
     class="buff-icon-wrap"
-    class:special-wood-counter-wrap={specialDisplayStyle === "woodCounter"}
     style:width={`${iconSize}px`}
     style:height={`${iconSize}px`}
   >
-    {#if hasSpecialImages}
-      {#if specialDisplayStyle === "woodCounter"}
-        {@const digitSrc = buff.specialImages?.[0]}
-        <div class="special-wood-counter">
-          {#if digitSrc}
-            <img
-              src={digitSrc}
-              alt={buff.name}
-              class="special-wood-counter-digit"
-            />
-          {/if}
-        </div>
-      {:else}
-        {#each buff.specialImages ?? [] as imgSrc (imgSrc)}
-          <img src={imgSrc} alt={buff.name} class="special-buff-icon" />
-        {/each}
-      {/if}
-    {:else}
-      {#if displayedSrc}
-        <img
-          src={displayedSrc}
-          alt={buff.name}
-          class="buff-icon"
-          onerror={() => (failedSrc = displayedSrc)}
-        />
-      {/if}
+    {#if displayedSrc}
+      <img
+        src={displayedSrc}
+        alt={buff.name}
+        class="buff-icon"
+        onerror={() => (failedSrc = displayedSrc)}
+      />
     {/if}
 
-    {#if showLayer && !hasSpecialImages && buff.layer > 1}
+    {#if showLayer && buff.layer > 1}
       <div class="layer-badge">{buff.layer}</div>
     {/if}
   </div>
 
-  {#if showTime && !hasSpecialImages}
+  {#if showTime}
     <div
       class="buff-time"
       style:font-size={`${Math.max(10, Math.round(iconSize * 0.26))}px`}
@@ -224,40 +200,6 @@
     font-size: 9px;
     font-weight: 600;
     line-height: 1;
-  }
-
-  .special-buff-icon {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.9));
-  }
-
-  .buff-icon-wrap.special-wood-counter-wrap {
-    overflow: visible;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-  }
-
-  .special-wood-counter {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    filter: drop-shadow(0 0 3px rgba(12, 42, 12, 0.9));
-  }
-
-  .special-wood-counter-digit {
-    position: relative;
-    z-index: 1;
-    width: auto;
-    height: 72%;
-    object-fit: contain;
-    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.9));
   }
 
   @keyframes buff-alert-flash {
