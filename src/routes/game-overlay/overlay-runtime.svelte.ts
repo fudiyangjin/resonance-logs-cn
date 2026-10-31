@@ -33,7 +33,9 @@ function sameBuffState(left: BuffUpdateState, right: BuffUpdateState) {
     left.layer === right.layer &&
     left.durationMs === right.durationMs &&
     left.createTimeMs === right.createTimeMs &&
-    left.sourceRemodelLevel === right.sourceRemodelLevel
+    left.sourceRemodelLevel === right.sourceRemodelLevel &&
+    left.focus?.memberId === right.focus?.memberId &&
+    left.focus?.missing === right.focus?.missing
   );
 }
 

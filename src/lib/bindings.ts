@@ -688,12 +688,30 @@ isDead: boolean }
 export type BossMonsterIdsResult = { ids: number[] }
 export type BossSummaryDto = { monsterId: number; maxHp: number | null; isDefeated: boolean }
 /**
+ * How a composite buff shows on the HUD.
+ */
+export type BuffCompositeMode =
+/**
+ * The composite as one buff, present while at least `min_active`
+ * members are.
+ */
+"joint" |
+/**
+ * The member most in need of attention, present while any member is:
+ * a missing member first, otherwise the one ending first.
+ */
+"mostUrgent"
+/**
  * A composite buff: present on an entity while at least `min_active` of its
  * member buffs are (every member when unset), then published and tracked
  * under its own negative `id` like any other buff (see
  * [`crate::live::projections::buff_presence`]).
  */
-export type BuffCompositeSpec = { id: number; memberIds: number[]; minActive?: number | null }
+export type BuffCompositeSpec = { id: number;
+/**
+ * In configured order, which breaks most-urgent ties.
+ */
+memberIds: number[]; minActive?: number | null; mode?: BuffCompositeMode }
 /**
  * Live coverage of one watched buff on the local player. `covered_ms` and
  * `active_ms` follow the shared active-window rule; the frontend only
@@ -701,9 +719,19 @@ export type BuffCompositeSpec = { id: number; memberIds: number[]; minActive?: n
  */
 export type BuffCoverageEntry = { baseId: number; coveredMs: number; activeMs: number; activeNow: boolean; layer: number; count: number }
 /**
+ * The member a most-urgent composite shows. While present, the composite's
+ * timing and layer are that member's; a missing member carries none.
+ */
+export type BuffFocusState = { memberId: number; missing: boolean }
+/**
  * Represents a buff update state.
  */
-export type BuffUpdateState = { baseId: number; layer: number; durationMs: number; createTimeMs: number; sourceRemodelLevel: number | null }
+export type BuffUpdateState = { baseId: number; layer: number; durationMs: number; createTimeMs: number; sourceRemodelLevel: number | null;
+/**
+ * Set only on a most-urgent composite; left out of every other buff
+ * so a long local buff list does not grow.
+ */
+focus?: BuffFocusState | null }
 export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "resetAndFreezeKeepCounting" | "resetAndStartCount" | "startCount" | "noOp"
 export type CounterRule = { ruleId: number; sources: CounterSource[]; effectSlots: EffectSlotConfig[] }
 export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number; hitsRequired?: number | null; requiredTypeFlags?: number | null } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number; requiredTypeFlags?: number | null } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number; hitsRequired?: number | null; requiredTypeFlags?: number | null } } | { anyDamage: { increment: number; hitsRequired?: number | null; requiredTypeFlags?: number | null } } | { damageTaken: { skillKeys?: number[] | null; increment: number; hitsRequired?: number | null; requiredTypeFlags?: number | null } } | { fightResourceSpent: { resourceId: number; unitsRequired: number; increment: number } } | { buffAdded: { buffId: number; sourceConfigId?: number | null; increment: number } } | { buffLayerSpent: { buffId: number; unitsRequired: number; increment: number } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } } | { skillCastComplete: { skillBaseIds: number[]; increment: number } } | { movementDistance: { buffId: number; attrId: number; metersRequired: number; increment: number } }

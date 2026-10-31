@@ -11,6 +11,8 @@ import {
   getBuffRemainingMs,
   getCustomPanelDisplayRow,
   isBuffActive,
+  isFocusMissing,
+  withFocusMember,
 } from "./overlay-utils";
 
 function buff(overrides: Partial<BuffUpdateState> = {}): BuffUpdateState {
@@ -272,6 +274,70 @@ describe("custom panel buff rows", () => {
       key: "inline_buff_entry",
       showProgress: true,
     });
+  });
+});
+
+describe("most-urgent composite rows", () => {
+  const resolveName = (baseId: number) =>
+    baseId === 100 ? "Set" : `M${baseId}`;
+  const shown = (memberId: number, missing = false) =>
+    buff({ focus: { memberId, missing } });
+  const missingRow = (member: string) => ({
+    label: t("gameOverlay.buff.focusMember", { composite: "Set", member }),
+    valueText: t("gameOverlay.buff.memberMissing"),
+    showProgress: false,
+    inactive: true,
+  });
+
+  function row(format: InlineBuffEntry["format"], value: BuffUpdateState) {
+    return getCustomPanelDisplayRow(
+      {
+        id: "entry",
+        sourceType: "buff",
+        sourceId: 100,
+        label: "",
+        format,
+      },
+      1_500,
+      new Map([[value.baseId, value]]),
+      new Map(),
+      new Map(),
+      resolveName,
+    );
+  }
+
+  it("names the shown member and counts down with it", () => {
+    expect(row("timer", shown(7))).toMatchObject({
+      label: t("gameOverlay.buff.focusMember", {
+        composite: "Set",
+        member: "M7",
+      }),
+      showProgress: true,
+    });
+    expect(row("active", shown(7))).toMatchObject({
+      valueText: t("gameOverlay.buff.stateActive"),
+    });
+  });
+
+  it("dims a missing member in every format", () => {
+    const missing = shown(8, true);
+    expect(row("timer", missing)).toMatchObject(missingRow("M8"));
+    expect(row("active", missing)).toMatchObject(missingRow("M8"));
+    expect(
+      buildBuffTextRow("buff_100", "Set·M8", missing, 1_500),
+    ).toMatchObject({ inactive: true, showProgress: false });
+  });
+
+  it("shows a member that ran out before the next publish as missing", () => {
+    const ranOut = shown(7);
+    expect(isFocusMissing(ranOut, 1_500)).toBe(false);
+    expect(isFocusMissing(ranOut, 2_500)).toBe(true);
+    expect(isFocusMissing(buff(), 2_500)).toBe(false);
+  });
+
+  it("leaves other buffs' labels alone", () => {
+    expect(withFocusMember("Buff", buff(), resolveName)).toBe("Buff");
+    expect(withFocusMember("Buff", undefined, resolveName)).toBe("Buff");
   });
 });
 

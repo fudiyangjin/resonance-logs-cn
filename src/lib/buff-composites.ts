@@ -1,8 +1,10 @@
 /**
  * Composite buffs: a named set of member buffs that counts as present only
- * while every member is. Each composite owns a negative id (never a game buff
- * id) and is used anywhere a buff id is — display areas, coverage, alerts,
- * voice. The backend derives its presence (`projections::buff_presence`).
+ * while every member (or a threshold of them) is. A most-urgent composite
+ * instead shows the member most in need of attention while any member is
+ * present. Each composite owns a negative id (never a game buff id) and is
+ * used anywhere a buff id is — display areas, coverage, alerts, voice. The
+ * backend derives its presence (`projections::buff_presence`).
  *
  * Definitions are global, like buff aliases, and are not exported with
  * loadouts; profile references to an unknown composite are pruned.
@@ -27,17 +29,28 @@ export type BuffComposite = {
   /** Negative i32. */
   id: number;
   name: string;
+  /** In configured order, which breaks most-urgent ties. */
   memberIds: number[];
   /** Members that must be active at once, below the member count; omitted
-   * means every member. */
+   * means every member. Never set on a most-urgent composite. */
   minActive?: number;
   /** Member whose sprite the composite shows; without one it renders as
-   * text. */
+   * text. Never set on a most-urgent composite, which shows its focused
+   * member. */
   iconBuffId?: number;
+  /** Shows the member most in need of attention — a missing one first,
+   * otherwise the one ending first — while any member is present. Omitted
+   * means the composite shows as one buff. */
+  mode?: "mostUrgent";
 };
+
+export function isMostUrgentComposite(composite: BuffComposite): boolean {
+  return composite.mode === "mostUrgent";
+}
 
 /** Members that must be active at once for `composite` to count. */
 export function buffCompositeMinActive(composite: BuffComposite): number {
+  if (isMostUrgentComposite(composite)) return 1;
   return composite.minActive ?? composite.memberIds.length;
 }
 
@@ -58,7 +71,8 @@ function isGameBuffId(id: unknown): id is number {
 
 /** Drops malformed definitions: a composite needs a unique negative id and
  * 2..MAX distinct member buffs. A threshold outside 1..members-1 means every
- * member and is dropped. */
+ * member and is dropped. A most-urgent composite keeps neither a threshold
+ * nor an icon member. */
 export function ensureBuffComposites(raw: unknown): BuffComposite[] {
   if (!Array.isArray(raw)) return [];
   const result: BuffComposite[] = [];
@@ -71,6 +85,11 @@ export function ensureBuffComposites(raw: unknown): BuffComposite[] {
     ).slice(0, MAX_BUFF_COMPOSITE_MEMBERS);
     if (memberIds.length < 2) continue;
     seenIds.add(item.id);
+    const name = typeof item.name === "string" ? item.name.trim() : "";
+    if (item.mode === "mostUrgent") {
+      result.push({ id: item.id, name, memberIds, mode: "mostUrgent" });
+      continue;
+    }
     const minActive = item.minActive;
     const hasThreshold =
       typeof minActive === "number" &&
@@ -79,7 +98,7 @@ export function ensureBuffComposites(raw: unknown): BuffComposite[] {
       minActive < memberIds.length;
     result.push({
       id: item.id,
-      name: typeof item.name === "string" ? item.name.trim() : "",
+      name,
       memberIds,
       ...(hasThreshold ? { minActive } : {}),
       ...(item.iconBuffId !== undefined && memberIds.includes(item.iconBuffId)
@@ -108,10 +127,11 @@ export function allocateBuffCompositeId(
 export function buffCompositeSpecs(
   composites: readonly BuffComposite[],
 ): BuffCompositeSpec[] {
-  return composites.map(({ id, memberIds, minActive }) => ({
+  return composites.map(({ id, memberIds, minActive, mode }) => ({
     id,
     memberIds: [...memberIds],
     ...(minActive !== undefined ? { minActive } : {}),
+    ...(mode !== undefined ? { mode } : {}),
   }));
 }
 
@@ -127,17 +147,26 @@ export function buffCompositeAliases(
   return aliases;
 }
 
-/** The buff whose sprite stands for `baseId`: a composite borrows its icon
- * member's, any other buff is itself. */
+/** The member whose sprite stands for `composite` without live data (layout
+ * placeholders, pickers): its icon member, or a most-urgent composite's
+ * first member. */
+export function compositeIconMemberId(
+  composite: BuffComposite,
+): number | undefined {
+  return isMostUrgentComposite(composite)
+    ? composite.memberIds[0]
+    : composite.iconBuffId;
+}
+
+/** The buff whose sprite stands for `baseId`: a composite borrows a
+ * member's (see `compositeIconMemberId`), any other buff is itself. */
 export function buffIconSourceId(
   baseId: number,
   composites: readonly BuffComposite[],
 ): number {
   if (!isBuffCompositeId(baseId)) return baseId;
-  return (
-    composites.find((composite) => composite.id === baseId)?.iconBuffId ??
-    baseId
-  );
+  const composite = composites.find((candidate) => candidate.id === baseId);
+  return (composite ? compositeIconMemberId(composite) : undefined) ?? baseId;
 }
 
 type BuffIdMapper = (buffId: number) => number | null;

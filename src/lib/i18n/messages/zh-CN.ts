@@ -1114,6 +1114,8 @@ export const zhCNMessages = {
   "components.buffSearchResultGrid.subtitle.composite": "组合 Buff",
   "components.buffSearchResultGrid.subtitle.compositeThreshold":
     "组合 Buff · {total} 选 {count}",
+  "components.buffSearchResultGrid.subtitle.compositeMostUrgent":
+    "组合 Buff · 最急成员",
   "components.buffSearchResultGrid.showMore": "显示更多(还有 {remaining} 条)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
   "skillMonitor.layout.title": "实时监控",
@@ -1264,6 +1266,13 @@ export const zhCNMessages = {
     "{total} 个中至少 {count} 个同时存在",
   "skillMonitor.buff.composite.hint":
     "满足生效条件时显示，持续到同时存在的成员少于所需数量为止（要求全部时即最先结束的成员）。层数：要求全部时为成员的最小层数，否则为当前存在的成员数。成员 Buff 自身的显示不受影响。",
+  "skillMonitor.buff.composite.mode": "显示方式",
+  "skillMonitor.buff.composite.modeJoint": "组合整体",
+  "skillMonitor.buff.composite.modeMostUrgent": "最急成员",
+  "skillMonitor.buff.composite.conditionMostUrgent":
+    "最急成员：任一成员存在时显示，缺失优先，其次剩余最短",
+  "skillMonitor.buff.composite.hintMostUrgent":
+    "任一成员存在时显示一格：有成员缺失时灰显该成员并标「缺失」（多个缺失时取排在前面的），否则显示剩余时间最短的成员，图标、时间、层数都跟随该成员。覆盖率按任一成员存在统计；语音按组合整体的出现、消失和即将结束触发，想单独提醒某个成员请给该成员配置语音。成员 Buff 自身的显示不受影响。",
   "skillMonitor.buff.composite.save": "保存组合",
   "skillMonitor.buff.composite.deleteTitle": "删除组合「{name}」？",
   "skillMonitor.buff.composite.deleteDescription":
@@ -1978,6 +1987,8 @@ export const zhCNMessages = {
   "gameOverlay.buff.fantasyTierSuffix": "{name} | {level}阶",
   "gameOverlay.buff.stateActive": "激活",
   "gameOverlay.buff.stateInactive": "未激活",
+  "gameOverlay.buff.memberMissing": "缺失",
+  "gameOverlay.buff.focusMember": "{composite}·{member}",
   "gameOverlay.timer.seconds": "{value}s",
   "gameOverlay.timer.minutes": "{value}m",
   "gameOverlay.timer.hours": "{value}h",

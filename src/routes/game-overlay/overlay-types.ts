@@ -41,6 +41,8 @@ export type IconBuffDisplay = {
   layoutKey?: string;
   categoryKey?: BuffCategoryKey;
   isPlaceholder?: boolean;
+  /** Shown but off, e.g. a most-urgent composite's missing member. */
+  inactive?: boolean;
   specialImages?: string[];
   specialDisplayStyle?: "woodCounter";
   alert?: BuffAlertState | undefined;
@@ -55,6 +57,9 @@ export type TextBuffRowDisplay = {
   progressPercent: number;
   showProgress: boolean;
   isPlaceholder?: boolean | undefined;
+  /** Shown but off: an always-shown state row whose buff is currently off,
+   * or a most-urgent composite's missing member. */
+  inactive?: boolean | undefined;
   alert?: BuffAlertState | undefined;
   temporal?: HudTemporalValue | undefined;
 };
@@ -113,7 +118,4 @@ export type ResizeState = {
   element: HTMLElement | null;
 };
 
-/** `inactive` marks an always-shown state row whose buff is currently off. */
-export type CustomPanelDisplayRow = TextBuffRowDisplay & {
-  inactive?: boolean | undefined;
-};
+export type CustomPanelDisplayRow = TextBuffRowDisplay;

@@ -7,6 +7,7 @@
     collectProfileBuffIds,
     ensureBuffComposites,
     isBuffCompositeId,
+    isMostUrgentComposite,
     MAX_BUFF_COMPOSITE_MEMBERS,
     MAX_BUFF_COMPOSITES,
     pruneUnknownCompositeRefs,
@@ -36,6 +37,7 @@
     /** Below the member count; `undefined` requires every member. */
     minActive: number | undefined;
     iconBuffId: number | undefined;
+    mode: BuffComposite["mode"];
   };
 
   let expanded = $state(false);
@@ -65,6 +67,8 @@
   const iconCandidateIds = $derived(
     draft?.memberIds.filter((memberId) => availableBuffMap.has(memberId)) ?? [],
   );
+  /** A most-urgent draft has neither a threshold nor an icon to pick. */
+  const draftIsMostUrgent = $derived(draft?.mode === "mostUrgent");
 
   /** Thresholds below "every member" the draft can pick. */
   const thresholdOptions = $derived(
@@ -83,6 +87,12 @@
         });
   }
 
+  function compositeConditionLabel(composite: BuffComposite): string {
+    return isMostUrgentComposite(composite)
+      ? t("skillMonitor.buff.composite.conditionMostUrgent")
+      : conditionLabel(composite.memberIds.length, composite.minActive);
+  }
+
   function referenceCount(compositeId: number): number {
     return profileCompositeRefs.filter((ids) => ids.includes(compositeId))
       .length;
@@ -95,6 +105,7 @@
       memberIds: [],
       minActive: undefined,
       iconBuffId: undefined,
+      mode: undefined,
     };
     memberSearch = "";
   }
@@ -106,6 +117,7 @@
       memberIds: [...composite.memberIds],
       minActive: composite.minActive,
       iconBuffId: composite.iconBuffId,
+      mode: composite.mode,
     };
     memberSearch = "";
   }
@@ -135,18 +147,24 @@
   function saveDraft() {
     if (!draft || !canSave) return;
     const editingId = draft.id;
-    const saved: BuffComposite = {
+    const base = {
       id: editingId ?? allocateBuffCompositeId(composites),
       name: draft.name.trim(),
       memberIds: [...draft.memberIds],
-      ...(draft.minActive !== undefined &&
-      draft.minActive < draft.memberIds.length
-        ? { minActive: draft.minActive }
-        : {}),
-      ...(draft.iconBuffId !== undefined
-        ? { iconBuffId: draft.iconBuffId }
-        : {}),
     };
+    const saved: BuffComposite =
+      draft.mode === "mostUrgent"
+        ? { ...base, mode: "mostUrgent" }
+        : {
+            ...base,
+            ...(draft.minActive !== undefined &&
+            draft.minActive < draft.memberIds.length
+              ? { minActive: draft.minActive }
+              : {}),
+            ...(draft.iconBuffId !== undefined
+              ? { iconBuffId: draft.iconBuffId }
+              : {}),
+          };
     SETTINGS.skillMonitor.state.buffComposites =
       editingId === null
         ? [...composites, saved]
@@ -239,7 +257,7 @@
               {composite.memberIds.map(getBuffDisplayName).join(" + ")}
             </div>
             <div class="text-muted-foreground text-xs">
-              {conditionLabel(composite.memberIds.length, composite.minActive)}
+              {compositeConditionLabel(composite)}
             </div>
             <div class="text-muted-foreground text-xs">
               {t("skillMonitor.buff.composite.references", {
@@ -322,7 +340,25 @@
             {/if}
           </div>
 
-          {#if draft.memberIds.length >= 2}
+          <label class="text-muted-foreground flex items-center gap-2 text-xs">
+            <span>{t("skillMonitor.buff.composite.mode")}</span>
+            <select
+              class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-xs"
+              value={draft.mode ?? ""}
+              onchange={(event) => {
+                if (!draft) return;
+                const value = (event.currentTarget as HTMLSelectElement).value;
+                draft.mode = value === "mostUrgent" ? "mostUrgent" : undefined;
+              }}
+            >
+              <option value="">{t("skillMonitor.buff.composite.modeJoint")}</option>
+              <option value="mostUrgent">
+                {t("skillMonitor.buff.composite.modeMostUrgent")}
+              </option>
+            </select>
+          </label>
+
+          {#if draft.memberIds.length >= 2 && !draftIsMostUrgent}
             <label
               class="text-muted-foreground flex items-center gap-2 text-xs"
             >
@@ -351,32 +387,39 @@
             </label>
           {/if}
 
-          <label class="text-muted-foreground flex items-center gap-2 text-xs">
-            <span>{t("skillMonitor.buff.composite.icon")}</span>
-            <select
-              class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-xs"
-              value={draft.iconBuffId === undefined
-                ? ""
-                : String(draft.iconBuffId)}
-              onchange={(event) => {
-                if (!draft) return;
-                const value = (event.currentTarget as HTMLSelectElement).value;
-                draft.iconBuffId = value ? Number(value) : undefined;
-              }}
+          {#if !draftIsMostUrgent}
+            <label
+              class="text-muted-foreground flex items-center gap-2 text-xs"
             >
-              <option value=""
-                >{t("skillMonitor.buff.composite.iconNone")}</option
+              <span>{t("skillMonitor.buff.composite.icon")}</span>
+              <select
+                class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-xs"
+                value={draft.iconBuffId === undefined
+                  ? ""
+                  : String(draft.iconBuffId)}
+                onchange={(event) => {
+                  if (!draft) return;
+                  const value = (event.currentTarget as HTMLSelectElement)
+                    .value;
+                  draft.iconBuffId = value ? Number(value) : undefined;
+                }}
               >
-              {#each iconCandidateIds as memberId (memberId)}
-                <option value={String(memberId)}>
-                  {getBuffDisplayName(memberId)}
-                </option>
-              {/each}
-            </select>
-          </label>
+                <option value=""
+                  >{t("skillMonitor.buff.composite.iconNone")}</option
+                >
+                {#each iconCandidateIds as memberId (memberId)}
+                  <option value={String(memberId)}>
+                    {getBuffDisplayName(memberId)}
+                  </option>
+                {/each}
+              </select>
+            </label>
+          {/if}
 
           <p class="text-muted-foreground text-xs">
-            {t("skillMonitor.buff.composite.hint")}
+            {draftIsMostUrgent
+              ? t("skillMonitor.buff.composite.hintMostUrgent")
+              : t("skillMonitor.buff.composite.hint")}
           </p>
 
           <div class="flex justify-end gap-2">

@@ -848,6 +848,7 @@ mod tests {
                 id: COMPOSITE,
                 member_ids,
                 min_active,
+                mode: crate::live::bootstrap_snapshot::BuffCompositeMode::Joint,
             }]);
             let mut projection = BuffTimelineProjection::default();
             projection.apply_config(

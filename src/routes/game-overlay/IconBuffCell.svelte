@@ -68,7 +68,7 @@
   class:overlay-group={standalone}
   class:editable
   class="icon-buff-cell"
-  class:placeholder={buff.isPlaceholder}
+  class:placeholder={buff.isPlaceholder || buff.inactive}
   class:alert-active={Boolean(alert)}
   class:alert-flash={alert?.flash === true}
   style:width={`${iconSize + 8}px`}

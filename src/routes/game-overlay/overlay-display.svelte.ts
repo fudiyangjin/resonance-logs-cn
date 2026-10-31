@@ -30,11 +30,14 @@ import {
   getBuffTemporalValue,
   getCustomPanelDisplayRow,
   isBuffActive,
+  isFocusMissing,
   getResourcePreciseValue as getResourcePreciseValueValue,
   getResourceValue as getResourceValueValue,
   resolveAlertState,
   withFantasyTierSuffix,
+  withFocusMember,
 } from "./overlay-utils";
+import { t } from "$lib/i18n/index.svelte";
 import {
   ensureBuffAlerts,
   type BuffAlertRule,
@@ -220,13 +223,17 @@ const _buffSnapshot = $derived.by(() => {
       nextDeadlineMs = deadlineMs;
     }
   };
+  const resolveName = (id: number) =>
+    resolveBuffDisplayName(id, currentBuffAliases);
   for (const [baseId, buff] of currentBuffMap) {
     if (buff.durationMs > 0) {
       includeDeadline(buff.createTimeMs + buff.durationMs);
     }
 
     const remaining = getBuffRemainingMs(buff, now);
-    if (isBuffActive(buff, now)) {
+    // A most-urgent composite outlives its shown member running out.
+    const focusMissing = isFocusMissing(buff, now);
+    if (isBuffActive(buff, now) || focusMissing) {
       nextActiveBuffIds.add(baseId);
     } else {
       continue;
@@ -236,23 +243,34 @@ const _buffSnapshot = $derived.by(() => {
     if (
       buff.durationMs <= 0 &&
       buff.layer <= 1 &&
+      !buff.focus &&
       !configuredPlan.ordinaryIds.has(baseId)
     )
       continue;
 
+    // A most-urgent composite wears its focused member's icon, override and
+    // name; its slot (position, alert rule) stays the composite's.
+    const faceId = buff.focus?.memberId ?? baseId;
     const definition = buffDefinitionsMap.get(
-      buffIconSourceId(baseId, composites),
+      buff.focus ? faceId : buffIconSourceId(baseId, composites),
     );
-    const name = withFantasyTierSuffix(
-      resolveBuffDisplayName(baseId, currentBuffAliases),
+    const label = withFantasyTierSuffix(
+      withFocusMember(resolveName(baseId), buff, resolveName),
       buff,
     );
-    const timeText = formatTimerText(remaining);
-    const alertRule = resolveAlert(baseId);
+    const name = buff.focus
+      ? withFantasyTierSuffix(resolveName(faceId), buff)
+      : label;
+    const timeText = focusMissing
+      ? t("gameOverlay.buff.memberMissing")
+      : formatTimerText(remaining);
+    const alertRule = focusMissing ? undefined : resolveAlert(baseId);
     const alert = resolveAlertState(alertRule, remaining, buff.durationMs);
-    const temporal = getBuffTemporalValue(buff, alertRule);
+    const temporal = focusMissing
+      ? undefined
+      : getBuffTemporalValue(buff, alertRule);
     const iconSrc = resolveBuffIconSrc(
-      baseId,
+      faceId,
       definition?.spriteFile,
       iconOverrides,
       iconDirUrl,
@@ -261,13 +279,16 @@ const _buffSnapshot = $derived.by(() => {
     // only when actually applied (see resolveBuffIconSrc): configured and
     // the icon directory is ready.
     const isIconOverrideActive =
-      iconOverrides[String(baseId)] !== undefined && iconDirUrl !== null;
-    const specialDisplay: ResolvedSpecialBuffDisplay = isIconOverrideActive
-      ? {}
-      : resolveSpecialBuffDisplay(
-          _specialBuffConfigMap.get(baseId),
-          buff.layer,
-        );
+      iconOverrides[String(faceId)] !== undefined && iconDirUrl !== null;
+    // A focused member's special display would move the slot between the
+    // plain and the special containers each time the focus changes.
+    const specialDisplay: ResolvedSpecialBuffDisplay =
+      isIconOverrideActive || buff.focus
+        ? {}
+        : resolveSpecialBuffDisplay(
+            _specialBuffConfigMap.get(baseId),
+            buff.layer,
+          );
 
     if (iconSrc) {
       nextIconBuffs.push({
@@ -278,7 +299,8 @@ const _buffSnapshot = $derived.by(() => {
           ? { fallbackSrc: `/images/buff/${definition.spriteFile}` }
           : {}),
         text: timeText,
-        layer: buff.layer,
+        layer: focusMissing ? 0 : buff.layer,
+        ...(focusMissing ? { inactive: true } : {}),
         ...(specialDisplay.specialImages ? specialDisplay : {}),
         ...(alert ? { alert } : {}),
         ...(temporal ? { temporal } : {}),
@@ -286,7 +308,7 @@ const _buffSnapshot = $derived.by(() => {
     } else {
       const row = buildBuffTextRow(
         `buff_${baseId}`,
-        name,
+        label,
         buff,
         now,
         false,

@@ -604,6 +604,19 @@ pub struct BuffUpdateState {
     pub duration_ms: i32,
     pub create_time_ms: i64,
     pub source_remodel_level: Option<i64>,
+    /// Set only on a most-urgent composite; left out of every other buff
+    /// so a long local buff list does not grow.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub focus: Option<BuffFocusState>,
+}
+
+/// The member a most-urgent composite shows. While present, the composite's
+/// timing and layer are that member's; a missing member carries none.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct BuffFocusState {
+    pub member_id: i32,
+    pub missing: bool,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]

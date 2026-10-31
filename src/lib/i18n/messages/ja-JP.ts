@@ -1204,6 +1204,8 @@ export const jaJPMessages = {
   "components.buffSearchResultGrid.subtitle.composite": "複合 Buff",
   "components.buffSearchResultGrid.subtitle.compositeThreshold":
     "複合 Buff · {total} 個中 {count} 個",
+  "components.buffSearchResultGrid.subtitle.compositeMostUrgent":
+    "複合 Buff · 最も急ぐメンバー",
   "components.buffSearchResultGrid.showMore": "さらに表示(残り {remaining} 件)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
   "skillMonitor.layout.title": "ライブモニター",
@@ -1359,6 +1361,13 @@ export const jaJPMessages = {
     "{total} 個中 {count} 個以上が同時に有効",
   "skillMonitor.buff.composite.hint":
     "有効条件を満たしている間表示され、同時に有効なメンバーが必要数を下回るまで続きます（すべて必要な場合は最初に切れるメンバー）。スタック数：すべて必要な場合はメンバーの最小スタック数、それ以外は現在有効なメンバー数。メンバー Buff 自体の表示には影響しません。",
+  "skillMonitor.buff.composite.mode": "表示方法",
+  "skillMonitor.buff.composite.modeJoint": "複合全体",
+  "skillMonitor.buff.composite.modeMostUrgent": "最も急ぐメンバー",
+  "skillMonitor.buff.composite.conditionMostUrgent":
+    "最も急ぐメンバー：いずれかのメンバーが有効な間表示、欠けているメンバー優先、次に残り時間が最短のメンバー",
+  "skillMonitor.buff.composite.hintMostUrgent":
+    "いずれかのメンバーが有効な間 1 枠で表示します。欠けているメンバーがいればそのメンバーを暗く表示して「欠落」と示し（複数ある場合は先に並んでいるもの）、いなければ残り時間が最短のメンバーをそのアイコン・時間・スタック数で表示します。バフ稼働率はいずれかのメンバーが有効な時間で集計し、音声は複合全体の出現・終了・まもなく終了で再生されます。メンバーごとに通知したい場合はそのメンバーに音声を設定してください。メンバー Buff 自体の表示には影響しません。",
   "skillMonitor.buff.composite.save": "複合を保存",
   "skillMonitor.buff.composite.deleteTitle": "複合「{name}」を削除しますか？",
   "skillMonitor.buff.composite.deleteDescription":
@@ -2117,6 +2126,8 @@ export const jaJPMessages = {
   "gameOverlay.buff.fantasyTierSuffix": "{name} | {level}階",
   "gameOverlay.buff.stateActive": "有効",
   "gameOverlay.buff.stateInactive": "無効",
+  "gameOverlay.buff.memberMissing": "欠落",
+  "gameOverlay.buff.focusMember": "{composite}・{member}",
   "gameOverlay.timer.seconds": "{value}秒",
   "gameOverlay.timer.minutes": "{value}分",
   "gameOverlay.timer.hours": "{value}時間",

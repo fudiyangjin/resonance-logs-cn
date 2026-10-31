@@ -1231,6 +1231,8 @@ export const enUSMessages = {
   "components.buffSearchResultGrid.subtitle.composite": "Composite buff",
   "components.buffSearchResultGrid.subtitle.compositeThreshold":
     "Composite buff · {count} of {total}",
+  "components.buffSearchResultGrid.subtitle.compositeMostUrgent":
+    "Composite buff · most urgent member",
   "components.buffSearchResultGrid.showMore":
     "Show more ({remaining} remaining)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
@@ -1387,6 +1389,13 @@ export const enUSMessages = {
     "At least {count} of {total} active at once",
   "skillMonitor.buff.composite.hint":
     "Shown while the condition holds, until fewer members than required remain (with all required, that is the member ending first). Stacks: the lowest member stack when all are required, otherwise the number of members active. Member buffs still display on their own.",
+  "skillMonitor.buff.composite.mode": "Display",
+  "skillMonitor.buff.composite.modeJoint": "As one buff",
+  "skillMonitor.buff.composite.modeMostUrgent": "Most urgent member",
+  "skillMonitor.buff.composite.conditionMostUrgent":
+    "Most urgent member: shown while any member is active, missing members first, then the one ending soonest",
+  "skillMonitor.buff.composite.hintMostUrgent":
+    "Shows one slot while any member is active: a missing member is dimmed and marked \"Missing\" (the earliest listed one if several are), otherwise the member ending soonest is shown with its own icon, time and stacks. Coverage counts any member being active; voice follows the composite as a whole (appearing, ending, about to end), so give a member its own voice cue to hear about it separately. Member buffs still display on their own.",
   "skillMonitor.buff.composite.save": "Save Composite",
   "skillMonitor.buff.composite.deleteTitle": 'Delete composite "{name}"?',
   "skillMonitor.buff.composite.deleteDescription":
@@ -2146,6 +2155,8 @@ export const enUSMessages = {
   "gameOverlay.buff.fantasyTierSuffix": "{name} | Tier {level}",
   "gameOverlay.buff.stateActive": "Active",
   "gameOverlay.buff.stateInactive": "Inactive",
+  "gameOverlay.buff.memberMissing": "Missing",
+  "gameOverlay.buff.focusMember": "{composite} · {member}",
   "gameOverlay.timer.seconds": "{value}s",
   "gameOverlay.timer.minutes": "{value}m",
   "gameOverlay.timer.hours": "{value}h",

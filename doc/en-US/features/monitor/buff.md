@@ -70,6 +70,17 @@ Some effects only count when several Buffs are active at once. Create a composit
 - Watching a composite does not change how its member Buffs display;
 - Like aliases, composites are a global setting and are not exported with profiles. When an imported profile refers to a composite this install does not have, those references are removed automatically; deleting a composite also removes its references from every profile.
 
+### Display: most urgent member
+
+**{{ui:skillMonitor.buff.composite.mode}}** defaults to **{{ui:skillMonitor.buff.composite.modeJoint}}**, the rules above. If the composite is there to keep an eye on each member (for example several Buffs you keep refreshing in turn), switch it to **{{ui:skillMonitor.buff.composite.modeMostUrgent}}**:
+
+- One slot is shown while any member is active, and none once all are gone; there is no condition or icon to pick in this mode;
+- When a member is missing, the slot shows that member dimmed and marked "Missing" (the one listed first if several are);
+- Otherwise it shows the member ending soonest, with that member's icon, remaining time and stacks; on a tie, the member listed first;
+- In the text area and in Custom Monitor, the name reads "composite · member";
+- Buff Coverage counts the time any member is active;
+- Voice announcements follow the composite as a whole: start = the first member appears, end = the last member is gone, about to end = before the last member runs out. To be told about one member, give that member its own voice cue.
+
 ## Priority
 
 - **{{ui:skillMonitor.buff.priority.globalTitle}}**: display order in individual mode;

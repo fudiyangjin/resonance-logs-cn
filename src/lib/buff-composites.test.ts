@@ -168,6 +168,32 @@ describe("composite buff definitions", () => {
     expect(buffIconSourceId(-10, composites)).toBe(-10);
     expect(buffIconSourceId(7, composites)).toBe(7);
   });
+
+  it("keeps a most-urgent composite free of a threshold and an icon member", () => {
+    const composites = ensureBuffComposites([
+      composite({
+        id: -30,
+        memberIds: [3, 1, 2],
+        minActive: 2,
+        iconBuffId: 2,
+        mode: "mostUrgent",
+      }),
+      { ...composite({ id: -31 }), mode: "other" },
+    ]);
+    // Members keep their configured order; an unknown mode is a plain
+    // composite.
+    expect(composites).toEqual([
+      { id: -30, name: "Set", memberIds: [3, 1, 2], mode: "mostUrgent" },
+      { id: -31, name: "Set", memberIds: [1, 2] },
+    ]);
+    expect(composites.map(buffCompositeMinActive)).toEqual([1, 2]);
+    expect(buffCompositeSpecs(composites)).toEqual([
+      { id: -30, memberIds: [3, 1, 2], mode: "mostUrgent" },
+      { id: -31, memberIds: [1, 2] },
+    ]);
+    // Without live data it stands for itself with its first member's icon.
+    expect(buffIconSourceId(-30, composites)).toBe(3);
+  });
 });
 
 describe("profile buff references", () => {
