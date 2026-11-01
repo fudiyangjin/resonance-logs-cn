@@ -2040,6 +2040,9 @@ export const enUSMessages = {
   "monsterMonitor.monsterSkill.empty": "No skills added yet.",
   "monsterMonitor.monsterSkill.label": "Alias",
   "monsterMonitor.monsterSkill.displaySeconds": "Show for (s)",
+  "monsterMonitor.monsterSkill.countdown": "Countdown",
+  "monsterMonitor.monsterSkill.countdownHint":
+    "Shows the remaining seconds and a progress bar; the row disappears when the countdown ends. Useful when this skill is followed by another one a fixed number of seconds later.",
   "monsterMonitor.monsterSkill.voice.title": "Voice Broadcast",
   "monsterMonitor.monsterSkill.styleTitle": "Panel Style",
   "monsterMonitor.entityDuration.title": "Entity Duration",

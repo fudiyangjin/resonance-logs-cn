@@ -1238,6 +1238,24 @@ function monsterSkillEntryLabel(entry: MonsterSkillWatchEntry): string {
   return entry.label.trim() || resolveMonsterSkillName(entry.skillId);
 }
 
+/** Edit-layout preview of an entry: a countdown entry shows its full bar. */
+function monsterSkillPlaceholderRow(
+  entry: MonsterSkillWatchEntry,
+): TextBuffDisplay {
+  const row = monsterSkillRow(
+    `monster_skill_preview_${entry.skillId}`,
+    monsterSkillEntryLabel(entry),
+    true,
+  );
+  if (entry.countdown !== true) return row;
+  return {
+    ...row,
+    valueText: formatTimerText(entry.displayMs),
+    progressPercent: 100,
+    showProgress: true,
+  };
+}
+
 function buildMonsterSkillDisplay(now: number): {
   rows: TextBuffDisplay[];
   nextDeadlineMs: number | null;
@@ -1253,6 +1271,7 @@ function buildMonsterSkillDisplay(now: number): {
     casts: monsterSkillCasts(),
     now,
     resolveLabel: monsterSkillEntryLabel,
+    formatRemaining: formatTimerText,
   });
   let rows = built.rows;
   if (rows.length === 0 && isMonsterLayoutScaffold()) {
@@ -1265,15 +1284,7 @@ function buildMonsterSkillDisplay(now: number): {
               true,
             ),
           ]
-        : entries
-            .slice(0, 3)
-            .map((entry) =>
-              monsterSkillRow(
-                `monster_skill_preview_${entry.skillId}`,
-                monsterSkillEntryLabel(entry),
-                true,
-              ),
-            );
+        : entries.slice(0, 3).map(monsterSkillPlaceholderRow);
   }
   return { rows, nextDeadlineMs: built.nextDeadlineMs };
 }

@@ -2009,6 +2009,9 @@ export const jaJPMessages = {
   "monsterMonitor.monsterSkill.empty": "スキルはまだ追加されていません。",
   "monsterMonitor.monsterSkill.label": "別名",
   "monsterMonitor.monsterSkill.displaySeconds": "表示秒数",
+  "monsterMonitor.monsterSkill.countdown": "カウントダウン",
+  "monsterMonitor.monsterSkill.countdownHint":
+    "残り秒数とプログレスバーを表示し、カウントダウンが終わると消えます。このスキルの数秒後に次のスキルが来る場合に便利です。",
   "monsterMonitor.monsterSkill.voice.title": "音声読み上げ",
   "monsterMonitor.monsterSkill.styleTitle": "パネルスタイル",
   "monsterMonitor.entityDuration.title": "エンティティ持続時間",

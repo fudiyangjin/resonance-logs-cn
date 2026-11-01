@@ -1878,6 +1878,9 @@ export const zhCNMessages = {
   "monsterMonitor.monsterSkill.empty": "尚未添加任何技能。",
   "monsterMonitor.monsterSkill.label": "别名",
   "monsterMonitor.monsterSkill.displaySeconds": "显示秒数",
+  "monsterMonitor.monsterSkill.countdown": "倒计时",
+  "monsterMonitor.monsterSkill.countdownHint":
+    "开启后显示剩余秒数和进度条，倒计时结束即消失。适合「放出这个技能后若干秒释放下一个技能」的情况。",
   "monsterMonitor.monsterSkill.voice.title": "语音播报",
   "monsterMonitor.monsterSkill.styleTitle": "面板样式",
   "monsterMonitor.entityDuration.title": "实体持续时间",

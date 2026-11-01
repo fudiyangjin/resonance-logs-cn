@@ -1317,12 +1317,15 @@ export type EntityDurationEntry = {
 /**
  * One monster-monitor "monster skill" watch: when any nearby monster casts
  * `skillId`, a row shows its name for `displayMs`; a recast restarts it.
- * An empty `label` falls back to the game's skill name.
+ * An empty `label` falls back to the game's skill name. `countdown` also
+ * shows the remaining time and a draining bar, for a skill that announces
+ * another one `displayMs` later.
  */
 export type MonsterSkillWatchEntry = {
   skillId: number;
   label: string;
   displayMs: number;
+  countdown?: boolean;
 };
 
 export type MonsterMonitorConfig = {

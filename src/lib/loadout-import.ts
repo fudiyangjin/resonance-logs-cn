@@ -604,6 +604,7 @@ const monsterSkillEntriesSchema = v.optional(
         skillId: positiveI32Schema,
         label: v.optional(v.string(), ""),
         displayMs: v.optional(finiteNumberSchema),
+        countdown: v.optional(v.boolean()),
       }),
     ),
     v.transform((entries) =>
