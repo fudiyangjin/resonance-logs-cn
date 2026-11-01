@@ -46,7 +46,7 @@ Resonance Logs CN 是《星痕共鸣》的战斗辅助工具：统计伤害与�
 | --- | --- | --- |
 | [实时监控](./features/monitor/README.md) | 功能总览与使用流程 | — |
 | [技能 CD](./features/monitor/skill-cd.md) | 选择要监控的技能 | — |
-| [Buff 监控](./features/monitor/buff.md) | 精确监控、分类快捷监听、别名 | [蒂娜 CD 语音提醒](./features/monitor/examples/tina-cd.md) · [组合 Buff 监控](./features/monitor/examples/attribute-symphony.md) |
+| [Buff 监控](./features/monitor/buff.md) | 精确监控、分类快捷监听、别名 | [蒂娜 CD 语音提醒](./features/monitor/examples/tina-cd.md) · [组合 Buff 监控](./features/monitor/examples/attribute-symphony.md) · [最急成员](./features/monitor/examples/symphony-most-urgent.md) |
 | [Buff 覆盖率](./features/monitor/buff-coverage.md) | 统计增益在战斗中的覆盖时间 | [覆盖率复盘](./features/monitor/examples/buff-coverage.md) |
 | [角色面板](./features/monitor/panel-attr.md) | 实时显示属性 | — |
 | [血量护盾区](./features/monitor/shield.md) | 自身血量与护盾 | — |

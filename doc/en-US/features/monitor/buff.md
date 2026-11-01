@@ -79,7 +79,14 @@ Some effects only count when several Buffs are active at once. Create a composit
 - Otherwise it shows the member ending soonest, with that member's icon, remaining time and stacks; on a tie, the member listed first;
 - In the text area and in Custom Monitor, the name reads "composite · member";
 - Buff Coverage counts the time any member is active;
-- Voice announcements follow the composite as a whole: start = the first member appears, end = the last member is gone, about to end = before the last member runs out. To be told about one member, give that member its own voice cue.
+- Voice announcements follow the composite as a whole: start = the first member appears, end = the last member is gone, about to end = before the last member runs out. To be told about one member, give that member its own voice cue;
+- The composite takes a single slot but does not hide its members: a member also added on its own to another area still shows its own row there. To see a single slot, remove those members from that area.
+
+![Every member active: the member running out first is shown](../../../shared/img/monitor/composite_4.en-US.png)
+
+![A member missing: the missing member is shown](../../../shared/img/monitor/composite_5.en-US.png)
+
+For the full setup, see [Show only the Attribute Symphony that needs refreshing with "most urgent member"](./examples/symphony-most-urgent.md).
 
 ## Priority
 
@@ -119,3 +126,4 @@ For vulnerabilities and damage boosts placed on monsters (such as Venom Vulnerab
 
 - [Voice reminder when Tina's CD is ready](./examples/tina-cd.md)
 - [Track the 3-stack "Attribute Symphony" buff with composite buffs](./examples/attribute-symphony.md)
+- [Show only the Attribute Symphony that needs refreshing with "most urgent member"](./examples/symphony-most-urgent.md)

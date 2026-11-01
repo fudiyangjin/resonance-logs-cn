@@ -28,7 +28,7 @@
 | 标签 | 在浮窗中显示 | 文档 | 例 |
 | --- | --- | --- | --- |
 | **{{ui:skillMonitor.tabs.skillCd}}** | 技能冷却图标 | [技能 CD](./skill-cd.md) | — |
-| **{{ui:skillMonitor.tabs.buff}}** | 自身 Buff 图标或进度条 | [Buff 监控](./buff.md) | [蒂娜 CD 转好时语音提醒](./examples/tina-cd.md) · [用组合 Buff 监控 3 层效果](./examples/attribute-symphony.md) |
+| **{{ui:skillMonitor.tabs.buff}}** | 自身 Buff 图标或进度条 | [Buff 监控](./buff.md) | [蒂娜 CD 转好时语音提醒](./examples/tina-cd.md) · [用组合 Buff 监控 3 层效果](./examples/attribute-symphony.md) · [用最急成员只看该补的那个](./examples/symphony-most-urgent.md) |
 | **{{ui:skillMonitor.tabs.panelAttr}}** | 角色属性数值 | [角色面板](./panel-attr.md) | — |
 | **{{ui:skillMonitor.tabs.customPanel}}** | 因子区、赛季节点区、自由组合的 Buff 与计数器 | [自定义监控](./custom-panel.md) | [自动显示因子能量与赛季节点](./examples/factor-energy.md) · [用预设计数器盯炎角的绝对幸运](./examples/preset-counter.md) |
 | **{{ui:skillMonitor.tabs.shieldDetail}}** | HP 与护盾条 | [血量护盾区](./shield.md) | — |

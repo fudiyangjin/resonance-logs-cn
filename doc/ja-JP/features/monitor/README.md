@@ -28,7 +28,7 @@
 | タブ | オーバーレイでの表示 | ドキュメント | 例 |
 | --- | --- | --- | --- |
 | **{{ui:skillMonitor.tabs.skillCd}}** | スキルのクールダウンアイコン | [スキル CD](./skill-cd.md) | — |
-| **{{ui:skillMonitor.tabs.buff}}** | 自身の Buff アイコンまたはプログレスバー | [Buff モニター](./buff.md) | [ティナの CD が戻ったら音声で知らせる](./examples/tina-cd.md) · [複合 Buff で 3 スタック監視](./examples/attribute-symphony.md) |
+| **{{ui:skillMonitor.tabs.buff}}** | 自身の Buff アイコンまたはプログレスバー | [Buff モニター](./buff.md) | [ティナの CD が戻ったら音声で知らせる](./examples/tina-cd.md) · [複合 Buff で 3 スタック監視](./examples/attribute-symphony.md) · [掛け直すべきものだけ表示](./examples/symphony-most-urgent.md) |
 | **{{ui:skillMonitor.tabs.panelAttr}}** | キャラクター属性の数値 | [キャラクターパネル](./panel-attr.md) | — |
 | **{{ui:skillMonitor.tabs.customPanel}}** | 因子エリア、シーズンノードエリア、自由に組み合わせた Buff とカウンター | [カスタムモニター](./custom-panel.md) | [因子エネルギーとシーズンノードを自動表示する](./examples/factor-energy.md) · [プリセットカウンターで絶対幸運を見張る](./examples/preset-counter.md) |
 | **{{ui:skillMonitor.tabs.shieldDetail}}** | HP とシールドのバー | [HP/シールドエリア](./shield.md) | — |

@@ -46,7 +46,7 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | --- | --- | --- |
 | [ライブモニター](./features/monitor/README.md) | 機能の概要と使い方の流れ | — |
 | [スキル CD](./features/monitor/skill-cd.md) | 監視するスキルを選ぶ | — |
-| [Buff モニター](./features/monitor/buff.md) | 個別監視、カテゴリクイックモニター、別名 | [ティーナ CD の音声通知](./features/monitor/examples/tina-cd.md) · [複合 Buff 監視](./features/monitor/examples/attribute-symphony.md) |
+| [Buff モニター](./features/monitor/buff.md) | 個別監視、カテゴリクイックモニター、別名 | [ティーナ CD の音声通知](./features/monitor/examples/tina-cd.md) · [複合 Buff 監視](./features/monitor/examples/attribute-symphony.md) · [最も急ぐメンバー](./features/monitor/examples/symphony-most-urgent.md) |
 | [バフ稼働率](./features/monitor/buff-coverage.md) | 戦闘中のバフの維持時間を集計 | [稼働率の振り返り](./features/monitor/examples/buff-coverage.md) |
 | [キャラクターパネル](./features/monitor/panel-attr.md) | ステータスをリアルタイム表示 | — |
 | [HP/シールドエリア](./features/monitor/shield.md) | 自分の HP とシールド | — |

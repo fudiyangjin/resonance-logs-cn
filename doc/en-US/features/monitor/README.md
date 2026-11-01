@@ -28,7 +28,7 @@ These are visible at the top of the page on every tab:
 | Tab | Shown in the overlay | Docs | Examples |
 | --- | --- | --- | --- |
 | **{{ui:skillMonitor.tabs.skillCd}}** | Skill cooldown icons | [Skill CD](./skill-cd.md) | — |
-| **{{ui:skillMonitor.tabs.buff}}** | Your own Buff icons or progress bars | [Buff Monitor](./buff.md) | [Voice reminder when Tina's CD is ready](./examples/tina-cd.md) · [Track 3-stack buff](./examples/attribute-symphony.md) |
+| **{{ui:skillMonitor.tabs.buff}}** | Your own Buff icons or progress bars | [Buff Monitor](./buff.md) | [Voice reminder when Tina's CD is ready](./examples/tina-cd.md) · [Track 3-stack buff](./examples/attribute-symphony.md) · [Show only the one to refresh](./examples/symphony-most-urgent.md) |
 | **{{ui:skillMonitor.tabs.panelAttr}}** | Character attribute values | [Character Panel](./panel-attr.md) | — |
 | **{{ui:skillMonitor.tabs.customPanel}}** | Factor zone, season node zone, and freely combined Buffs and counters | [Custom Monitor](./custom-panel.md) | [Show factor energy and season nodes](./examples/factor-energy.md) · [Track Absolute Luck with a preset counter](./examples/preset-counter.md) |
 | **{{ui:skillMonitor.tabs.shieldDetail}}** | HP and shield bars | [HP/Shield Area](./shield.md) | — |

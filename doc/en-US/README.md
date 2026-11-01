@@ -46,7 +46,7 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | --- | --- | --- |
 | [Live Monitor](./features/monitor/README.md) | Feature overview and workflow | — |
 | [Skill CD](./features/monitor/skill-cd.md) | Choose which skills to monitor | — |
-| [Buff Monitor](./features/monitor/buff.md) | Exact monitoring, category quick monitor, aliases | [Tina CD voice reminder](./features/monitor/examples/tina-cd.md) · [Track 3-stack buff](./features/monitor/examples/attribute-symphony.md) |
+| [Buff Monitor](./features/monitor/buff.md) | Exact monitoring, category quick monitor, aliases | [Tina CD voice reminder](./features/monitor/examples/tina-cd.md) · [Track 3-stack buff](./features/monitor/examples/attribute-symphony.md) · [Most urgent member](./features/monitor/examples/symphony-most-urgent.md) |
 | [Buff Coverage](./features/monitor/buff-coverage.md) | Measure how long buffs stay up during combat | [Coverage review](./features/monitor/examples/buff-coverage.md) |
 | [Character Panel](./features/monitor/panel-attr.md) | Live attribute display | — |
 | [HP/Shield Area](./features/monitor/shield.md) | Your own HP and shields | — |
