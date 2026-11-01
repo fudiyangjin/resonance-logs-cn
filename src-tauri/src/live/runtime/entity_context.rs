@@ -5,13 +5,13 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use crate::live::protocol::attrs as attr_type;
 
 use super::events::{
-    AttributeValue, BuffEvent, BuffState, BuffTransition, BuffWireKind, DeathBuffCheckpoint,
-    Distribution, DomainEnvelope, DomainEvent, DomainHit, EntityIdentity, EntityIdentityPatch,
-    EntityKind, EntityRef, EntityRoles, EntityUuid, EventMeta, FantasyState, FantasyTransition,
-    FieldPatch, GameTimerKey, GameTimerState, HateEntry, LOCAL_PLAYER, LineId, LocalTalent,
-    MonoTimeMs, ObservationOrigin, ObservedBuff, ObservedBuffChange, PassiveSkillObservation,
-    Position, ProtocolBatch, ProtocolObservation, ResolvedShieldDetail, SegmentId, ShieldDetail,
-    SkillCooldownState, SkillPhase,
+    AttributeValue, BuffCustomizeEvent, BuffEvent, BuffState, BuffTransition, BuffWireKind,
+    DeathBuffCheckpoint, Distribution, DomainEnvelope, DomainEvent, DomainHit, EntityIdentity,
+    EntityIdentityPatch, EntityKind, EntityRef, EntityRoles, EntityUuid, EventMeta, FantasyState,
+    FantasyTransition, FieldPatch, GameTimerKey, GameTimerState, HateEntry, LOCAL_PLAYER, LineId,
+    LocalTalent, MonoTimeMs, ObservationOrigin, ObservedBuff, ObservedBuffChange,
+    PassiveSkillObservation, Position, ProtocolBatch, ProtocolObservation, ResolvedShieldDetail,
+    SegmentId, ShieldDetail, SkillCooldownState, SkillPhase,
 };
 use super::fantasy_registry::{
     FantasyRegistry, is_resonance_fantasy_monster_id, resolve_fantasy_skill_id,
@@ -1380,6 +1380,26 @@ impl EntityContext {
                     target_roles: self.roles(target_uuid),
                 };
                 self.emit(meta, DomainEvent::BuffChanged(event), out);
+            }
+            ObservedBuffChange::Customized {
+                instance_id,
+                commands,
+            } => {
+                // Like a delta, commands for an unknown instance are dropped.
+                let Some(state) = self
+                    .entities
+                    .get(&target_uuid)
+                    .and_then(|entity| entity.active_buffs.get(&instance_id))
+                else {
+                    return;
+                };
+                let event = BuffCustomizeEvent {
+                    target: state.target,
+                    instance_id,
+                    base_id: state.base_id,
+                    commands,
+                };
+                self.emit(meta, DomainEvent::BuffCustomized(event), out);
             }
         }
     }
@@ -2963,6 +2983,52 @@ mod tests {
         assert_eq!(event.previous_layer, Some(1));
         assert_eq!(event.state.layer, 4);
         assert_eq!(event.state.base_id, 42);
+    }
+
+    #[test]
+    fn buff_customize_commands_reach_known_instances_only() {
+        use super::super::events::BuffEffectCommand;
+
+        let mut context = EntityContext::new();
+        let target = EntityUuid(12);
+        let customized = |instance_id| ProtocolObservation::BuffChanged {
+            target_uuid: target,
+            change: ObservedBuffChange::Customized {
+                instance_id,
+                commands: Arc::from([BuffEffectCommand::Stop { effect_id: 3 }]),
+            },
+        };
+        assert!(
+            context
+                .reduce_batch(batch(1, vec![customized(3)]))
+                .is_empty()
+        );
+
+        context.reduce_batch(batch(
+            2,
+            vec![ProtocolObservation::BuffChanged {
+                target_uuid: target,
+                change: ObservedBuffChange::Applied {
+                    buff: buff(3, 829541),
+                },
+            }],
+        ));
+        let events = context.reduce_batch(batch(3, vec![customized(3)]));
+        let [envelope] = events.as_slice() else {
+            panic!("expected one event, got {events:?}");
+        };
+        let DomainEvent::BuffCustomized(event) = &envelope.event else {
+            panic!("expected customize event, got {:?}", envelope.event);
+        };
+        assert_eq!(event.target.uuid, target);
+        assert_eq!(event.instance_id, 3);
+        assert_eq!(event.base_id, 829541);
+        assert_eq!(*event.commands, [BuffEffectCommand::Stop { effect_id: 3 }]);
+        assert!(
+            context
+                .reduce_batch(batch(4, vec![customized(9)]))
+                .is_empty()
+        );
     }
 
     #[test]

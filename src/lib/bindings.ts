@@ -1121,7 +1121,14 @@ sourceConfigId: number | null;
 /**
  * `PlayEffect` effect ids from the buff's logic_effects, in wire order.
  */
-effectIds: number[] }
+effectIds: number[];
+/**
+ * Effects this instance is looping because a `BuffEventCustomize` started
+ * them and nothing has stopped them yet, ascending. A looping play adds
+ * its id, a stop removes it, a stop-all clears the set; one-shot plays
+ * leave it unchanged.
+ */
+loopEffects: number[] }
 /**
  * A single entity fact rendered/interpreted by the 2D minimap overlay.
  */

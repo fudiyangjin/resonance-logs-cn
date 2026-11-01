@@ -122,7 +122,19 @@
           <div class="buff-row">
             <span class="dot" style:background={color} style:color></span>
             <span class="text" title={targetText(row)}>
-              <span class="label">{row.label}</span>
+              {#if row.icons && row.icons.length > 0}
+                <span class="label-line">
+                  <span class="row-icons">
+                    {#each row.icons as icon, index (index)}
+                      {#if index > 0}<span class="icon-sep">›</span>{/if}
+                      <img class="row-icon" src={icon.src} alt={icon.alt} />
+                    {/each}
+                  </span>
+                  <span class="label">{row.label}</span>
+                </span>
+              {:else}
+                <span class="label">{row.label}</span>
+              {/if}
               {#if chips.length > 0}
                 <span class="targets">
                   {#each chips as chip (chip.uuid)}
@@ -203,6 +215,27 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: 700;
+  }
+  .label-line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+  }
+  .row-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex: none;
+  }
+  .row-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
+  .icon-sep {
+    color: #94a3b8;
+    font-size: 11px;
   }
   .targets {
     display: flex;

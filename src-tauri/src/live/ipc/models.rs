@@ -746,6 +746,11 @@ pub struct MinimapBuffFact {
     pub source_config_id: Option<i32>,
     /// `PlayEffect` effect ids from the buff's logic_effects, in wire order.
     pub effect_ids: Vec<i32>,
+    /// Effects this instance is looping because a `BuffEventCustomize` started
+    /// them and nothing has stopped them yet, ascending. A looping play adds
+    /// its id, a stop removes it, a stop-all clears the set; one-shot plays
+    /// leave it unchanged.
+    pub loop_effects: Vec<i32>,
 }
 
 /// A single entity fact rendered/interpreted by the 2D minimap overlay.

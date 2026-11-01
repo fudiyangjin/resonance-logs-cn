@@ -414,6 +414,9 @@ impl ProjectionSet {
                     minimap_changed |= self.minimap.apply(envelope);
                 }
             }
+            DomainEvent::BuffCustomized(_) => {
+                minimap_changed |= self.minimap.apply(envelope);
+            }
             DomainEvent::BossMechanicStarted(_) => {
                 reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);

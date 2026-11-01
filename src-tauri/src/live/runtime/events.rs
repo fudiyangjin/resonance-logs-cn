@@ -254,6 +254,21 @@ pub enum ObservedBuffChange {
     Remove {
         instance_id: i64,
     },
+    /// `BuffEventCustomize` effect commands for an existing instance.
+    Customized {
+        instance_id: i64,
+        commands: Arc<[BuffEffectCommand]>,
+    },
+}
+
+/// One effect command of a `BuffEventCustomize`, in wire order. The client
+/// keeps a looping effect running until it is stopped, so these commands are
+/// the instance's own display state, not a derived one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BuffEffectCommand {
+    Play { effect_id: i32, looping: bool },
+    Stop { effect_id: i32 },
+    StopAll,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -826,6 +841,15 @@ pub struct BuffEvent {
     pub target_roles: EntityRoles,
 }
 
+/// Effect commands sent to a known buff instance (see [`BuffEffectCommand`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BuffCustomizeEvent {
+    pub target: EntityRef,
+    pub instance_id: i64,
+    pub base_id: i32,
+    pub commands: Arc<[BuffEffectCommand]>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DomainHit {
     pub channel: HitChannel,
@@ -891,6 +915,7 @@ pub enum DomainEvent {
         is_baseline: bool,
     },
     BuffChanged(BuffEvent),
+    BuffCustomized(BuffCustomizeEvent),
     LocalPlayerChanged {
         previous: Option<EntityRef>,
         current: Option<EntityRef>,

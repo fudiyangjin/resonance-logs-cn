@@ -18,6 +18,7 @@ const snapshot: MinimapSnapshot = {
       fireUuid: null,
       sourceConfigId: null,
       effectIds: [],
+      loopEffects: [],
     },
     {
       targetEntityUuid: "teammate",
@@ -29,6 +30,7 @@ const snapshot: MinimapSnapshot = {
       fireUuid: null,
       sourceConfigId: null,
       effectIds: [],
+      loopEffects: [],
     },
   ],
 };

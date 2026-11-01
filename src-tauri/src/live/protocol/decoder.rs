@@ -16,9 +16,9 @@ use crate::live::monster_registry::{self, MonsterType};
 use crate::live::protocol::attrs as attr_type;
 use crate::live::protocol::{COUNTER_PASSIVE_SKILL_IDS, MARKER_SKILL_ID_BASE};
 use crate::live::runtime::events::{
-    AttributeValue, BatchId, BossMechanicObservation, CaptureEnvelope, Distribution,
-    EntityIdentityPatch, EntityKind, EntityUuid, FieldPatch, GameTimerKey, GameTimerState,
-    HateEntry, HitChannel, HitKind, LOCAL_PLAYER, LineId, LocalTalent, MonoTimeMs,
+    AttributeValue, BatchId, BossMechanicObservation, BuffEffectCommand, CaptureEnvelope,
+    Distribution, EntityIdentityPatch, EntityKind, EntityUuid, FieldPatch, GameTimerKey,
+    GameTimerState, HateEntry, HitChannel, HitKind, LOCAL_PLAYER, LineId, LocalTalent, MonoTimeMs,
     ObservationOrigin, ObservedBuff, ObservedBuffChange, ObservedHit, ObservedTeamBase,
     ObservedTeamMember, PacketDirection, PassiveSkillObservation, Position, ProtocolBatch,
     ProtocolObservation, SceneMarkSnapshot, ShieldDetail, SkillCooldownState, SkillPhase, TeamKind,
@@ -691,7 +691,7 @@ impl ProtocolDecoder {
                     entity_uuid,
                     passive_instance_id: instance_id,
                     skill_id,
-                    target_position: passive.tar_pos.as_ref().and_then(vector_position),
+                    target_position: passive.tar_pos.as_ref().map(vector_position),
                     ended: false,
                 },
             ));
@@ -839,6 +839,16 @@ impl ProtocolDecoder {
                             create_time: None,
                             effect_ids: Some(Arc::from(customize_ids.into_boxed_slice())),
                             energy_display_id: None,
+                        },
+                    });
+                }
+                let commands = decode_effect_commands(&effect.logic_effect);
+                if !commands.is_empty() {
+                    observations.push(ProtocolObservation::BuffChanged {
+                        target_uuid,
+                        change: ObservedBuffChange::Customized {
+                            instance_id,
+                            commands: Arc::from(commands.into_boxed_slice()),
                         },
                     });
                 }
@@ -1985,21 +1995,24 @@ fn decode_attribute_value(raw: &[u8]) -> Option<AttributeValue> {
         .or_else(|| decode_prefixed_string(raw).map(AttributeValue::Text))
 }
 
+/// The server omits zero-valued axes (an entity on the arena centre line sends
+/// only `y`), so a missing axis is 0, not an unknown position.
 fn decode_position(raw: &[u8]) -> Option<Position> {
     let position = decode_message::<blueprotobuf::Position>(raw).ok()?;
     Some(Position {
-        x: position.x?,
-        y: position.y?,
-        z: position.z?,
+        x: position.x.unwrap_or_default(),
+        y: position.y.unwrap_or_default(),
+        z: position.z.unwrap_or_default(),
     })
 }
 
-fn vector_position(position: &blueprotobuf::Vector3) -> Option<Position> {
-    Some(Position {
-        x: position.x?,
-        y: position.y?,
-        z: position.z?,
-    })
+/// Same zero-omission as [`decode_position`].
+fn vector_position(position: &blueprotobuf::Vector3) -> Position {
+    Position {
+        x: position.x.unwrap_or_default(),
+        y: position.y.unwrap_or_default(),
+        z: position.z.unwrap_or_default(),
+    }
 }
 
 fn decode_temp_attributes(
@@ -2168,6 +2181,38 @@ fn decode_customize_values(logic_effects: &[blueprotobuf::BuffEffectLogicInfo]) 
                 != blueprotobuf::EBuffEffectLogicPbType::BuffEffectStopAll as i32
         })
         .filter_map(|logic| logic.raw_data.as_deref().and_then(decode_customize_value))
+        .collect()
+}
+
+/// `BuffEventCustomize` logic as effect commands. Unlike
+/// [`decode_customize_values`], `BuffEffectStop` and the loop flag are kept:
+/// they decide whether the effect keeps showing.
+fn decode_effect_commands(
+    logic_effects: &[blueprotobuf::BuffEffectLogicInfo],
+) -> Vec<BuffEffectCommand> {
+    const PLAY: i32 = blueprotobuf::EBuffEffectLogicPbType::PlayEffect as i32;
+    const STOP: i32 = blueprotobuf::EBuffEffectLogicPbType::BuffEffectStop as i32;
+    const STOP_ALL: i32 = blueprotobuf::EBuffEffectLogicPbType::BuffEffectStopAll as i32;
+    logic_effects
+        .iter()
+        .filter_map(|logic| {
+            // An absent payload is effect 0 (protobuf omits the zero id).
+            let effect_id = || match logic.raw_data.as_deref() {
+                None | Some([]) => Some(0),
+                Some(raw) => decode_customize_value(raw),
+            };
+            match logic.effect_type.unwrap_or(PLAY) {
+                PLAY => Some(BuffEffectCommand::Play {
+                    effect_id: effect_id()?,
+                    looping: logic.is_loop.unwrap_or(false),
+                }),
+                STOP => Some(BuffEffectCommand::Stop {
+                    effect_id: effect_id()?,
+                }),
+                STOP_ALL => Some(BuffEffectCommand::StopAll),
+                _ => None,
+            }
+        })
         .collect()
 }
 
@@ -3702,9 +3747,7 @@ mod tests {
         }
     }
 
-    fn decode_customize_delta(
-        sync: &blueprotobuf::BuffEffectSync,
-    ) -> (EntityUuid, i64, Option<Arc<[i32]>>) {
+    fn decode_customize(sync: &blueprotobuf::BuffEffectSync) -> Vec<ProtocolObservation> {
         let envelope = notify(
             1,
             Pkt::SyncNearDeltaInfo,
@@ -3713,7 +3756,13 @@ mod tests {
         let mut decoder = ProtocolDecoder::new();
         let mut observations = Vec::new();
         decoder.decode_buff_effect_sync(EntityUuid(10), sync, &envelope, &mut observations);
-        match observations.as_slice() {
+        observations
+    }
+
+    fn decode_customize_delta(
+        sync: &blueprotobuf::BuffEffectSync,
+    ) -> (EntityUuid, i64, Option<Arc<[i32]>>) {
+        match decode_customize(sync).as_slice() {
             [
                 ProtocolObservation::BuffChanged {
                     target_uuid,
@@ -3727,8 +3776,141 @@ mod tests {
                             energy_display_id: None,
                         },
                 },
+                ..,
             ] => (*target_uuid, *instance_id, effect_ids.clone()),
             other => panic!("customize delta expected, got {other:?}"),
+        }
+    }
+
+    /// The `Customized` observation, which always follows the delta.
+    fn decode_customize_commands(sync: &blueprotobuf::BuffEffectSync) -> Vec<BuffEffectCommand> {
+        match decode_customize(sync).as_slice() {
+            [
+                ..,
+                ProtocolObservation::BuffChanged {
+                    target_uuid: EntityUuid(30),
+                    change:
+                        ObservedBuffChange::Customized {
+                            instance_id: 77,
+                            commands,
+                        },
+                },
+            ] => commands.to_vec(),
+            other => panic!("customize commands expected, got {other:?}"),
+        }
+    }
+
+    fn looping_play_logic(effect_id: i32) -> blueprotobuf::BuffEffectLogicInfo {
+        blueprotobuf::BuffEffectLogicInfo {
+            is_loop: Some(true),
+            ..play_effect_logic(effect_id)
+        }
+    }
+
+    fn effect_logic(
+        effect_type: blueprotobuf::EBuffEffectLogicPbType,
+        effect_id: Option<i32>,
+    ) -> blueprotobuf::BuffEffectLogicInfo {
+        blueprotobuf::BuffEffectLogicInfo {
+            effect_type: Some(effect_type as i32),
+            raw_data: effect_id.map(|effect_id| {
+                blueprotobuf::BuffEffectLogicPlayEffect {
+                    effect_id: Some(effect_id),
+                }
+                .encode_to_vec()
+            }),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn buff_event_customize_keeps_loop_flag_and_stops_as_commands() {
+        use blueprotobuf::EBuffEffectLogicPbType as Logic;
+        // Captured on the S4 turntable: a ring slot charge, the matching chaser
+        // arriving at it, and the boss head rune cycling.
+        let cases = [
+            (
+                "charge",
+                vec![looping_play_logic(2)],
+                vec![BuffEffectCommand::Play {
+                    effect_id: 2,
+                    looping: true,
+                }],
+            ),
+            (
+                "chaser arrives",
+                vec![
+                    effect_logic(Logic::BuffEffectStop, Some(3)),
+                    play_effect_logic(7),
+                ],
+                vec![
+                    BuffEffectCommand::Stop { effect_id: 3 },
+                    BuffEffectCommand::Play {
+                        effect_id: 7,
+                        looping: false,
+                    },
+                ],
+            ),
+            (
+                "head rune",
+                vec![
+                    effect_logic(Logic::BuffEffectStopAll, None),
+                    looping_play_logic(4),
+                ],
+                vec![
+                    BuffEffectCommand::StopAll,
+                    BuffEffectCommand::Play {
+                        effect_id: 4,
+                        looping: true,
+                    },
+                ],
+            ),
+        ];
+        for (name, logic_effect, expected) in cases {
+            let sync = customize_sync(30, 77, logic_effect);
+            assert_eq!(decode_customize_commands(&sync), expected, "{name}");
+        }
+    }
+
+    #[test]
+    fn buff_event_customize_play_without_payload_is_effect_zero() {
+        let sync = customize_sync(
+            30,
+            77,
+            vec![blueprotobuf::BuffEffectLogicInfo {
+                is_loop: Some(true),
+                ..Default::default()
+            }],
+        );
+        assert_eq!(
+            decode_customize_commands(&sync),
+            vec![BuffEffectCommand::Play {
+                effect_id: 0,
+                looping: true,
+            }]
+        );
+    }
+
+    #[test]
+    fn position_omitted_axes_are_zero() {
+        // The S4 turntable rings sit on the arena centre: the inner ring sends
+        // only x and y, the middle and outer rings only y.
+        for (x, z) in [(Some(0.12), None), (None, None)] {
+            let raw = blueprotobuf::Position {
+                x,
+                y: Some(350.2),
+                z,
+                dir: None,
+            }
+            .encode_to_vec();
+            assert_eq!(
+                decode_position(&raw),
+                Some(Position {
+                    x: x.unwrap_or_default(),
+                    y: 350.2,
+                    z: 0.0,
+                })
+            );
         }
     }
 
@@ -3770,7 +3952,7 @@ mod tests {
     }
 
     #[test]
-    fn buff_event_customize_stop_all_only_does_not_emit_delta() {
+    fn buff_event_customize_stop_all_only_emits_commands_but_no_delta() {
         let sync = customize_sync(
             30,
             77,
@@ -3780,15 +3962,21 @@ mod tests {
                 ..Default::default()
             }],
         );
-        let envelope = notify(
-            1,
-            Pkt::SyncNearDeltaInfo,
-            &blueprotobuf::SyncNearDeltaInfo::default(),
+        let observations = decode_customize(&sync);
+        assert!(
+            !observations.iter().any(|observation| matches!(
+                observation,
+                ProtocolObservation::BuffChanged {
+                    change: ObservedBuffChange::Delta { .. },
+                    ..
+                }
+            )),
+            "{observations:?}"
         );
-        let mut decoder = ProtocolDecoder::new();
-        let mut observations = Vec::new();
-        decoder.decode_buff_effect_sync(EntityUuid(10), &sync, &envelope, &mut observations);
-        assert!(observations.is_empty());
+        assert_eq!(
+            decode_customize_commands(&sync),
+            vec![BuffEffectCommand::StopAll]
+        );
     }
 
     #[test]

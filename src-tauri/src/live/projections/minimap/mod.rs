@@ -13,8 +13,8 @@ use crate::live::ipc::models::{
 use crate::live::protocol::MARKER_SKILL_ID_BASE;
 use crate::live::protocol::attrs as attr_type;
 use crate::live::runtime::events::{
-    AttributeValue, BuffTransition, DomainEnvelope, DomainEvent, EntityKind, EntityRef, EntityUuid,
-    SceneMarkSnapshot, SkillPhase,
+    AttributeValue, BuffEffectCommand, BuffTransition, DomainEnvelope, DomainEvent, EntityKind,
+    EntityRef, EntityUuid, SceneMarkSnapshot, SkillPhase,
 };
 
 #[derive(Debug, Clone)]
@@ -287,6 +287,14 @@ impl MinimapProjection {
                     .and_then(scene_config)
                     .is_some_and(|config| config.mechanic_buff_ids.contains(&event.state.base_id))
                 {
+                    // Refreshes and re-synced snapshots don't restate the
+                    // effects a customize started; keep them.
+                    let loop_effects = self
+                        .buffs
+                        .get(&key)
+                        .filter(|fact| fact.base_id == event.state.base_id)
+                        .map(|fact| fact.loop_effects.clone())
+                        .unwrap_or_default();
                     let next = MinimapBuffFact {
                         target_entity_uuid: event.state.target.uuid.0.to_string(),
                         buff_uuid: i32::try_from(event.state.instance_id).unwrap_or_default(),
@@ -301,11 +309,19 @@ impl MinimapProjection {
                         fire_uuid: event.state.source.map(|source| source.uuid.0.to_string()),
                         source_config_id: event.state.source_config_id,
                         effect_ids: event.state.effect_ids.to_vec(),
+                        loop_effects,
                     };
                     self.buffs.insert(key, next.clone()) != Some(next)
                 } else {
                     false
                 }
+            }
+            DomainEvent::BuffCustomized(event) => {
+                // Only buffs already kept as mechanic facts track their loops.
+                let Some(fact) = self.buffs.get_mut(&(event.target.uuid, event.instance_id)) else {
+                    return false;
+                };
+                apply_effect_commands(&mut fact.loop_effects, &event.commands)
             }
             DomainEvent::SkillLifecycleChanged {
                 caster,
@@ -509,6 +525,37 @@ fn display_kind(
     }
 }
 
+/// Mirrors the client: a looping play keeps showing until stopped. Returns
+/// whether the set changed.
+fn apply_effect_commands(loop_effects: &mut Vec<i32>, commands: &[BuffEffectCommand]) -> bool {
+    let mut changed = false;
+    for command in commands {
+        match *command {
+            BuffEffectCommand::Play {
+                effect_id,
+                looping: true,
+            } => {
+                if let Err(index) = loop_effects.binary_search(&effect_id) {
+                    loop_effects.insert(index, effect_id);
+                    changed = true;
+                }
+            }
+            BuffEffectCommand::Play { looping: false, .. } => {}
+            BuffEffectCommand::Stop { effect_id } => {
+                if let Ok(index) = loop_effects.binary_search(&effect_id) {
+                    loop_effects.remove(index);
+                    changed = true;
+                }
+            }
+            BuffEffectCommand::StopAll => {
+                changed |= !loop_effects.is_empty();
+                loop_effects.clear();
+            }
+        }
+    }
+    changed
+}
+
 /// Display number (1..=6) for a validated marker skill id; `None` for
 /// out-of-range ids so a protocol drift never reaches the overlay.
 fn marker_number(skill_id: i32) -> Option<i32> {
@@ -522,8 +569,8 @@ mod tests {
 
     use super::*;
     use crate::live::runtime::events::{
-        BatchId, BuffEvent, BuffState, BuffWireKind, DeathBuffCheckpoint, EntityIdentity,
-        EntityRoles, EventMeta, Position, SegmentId,
+        BatchId, BuffCustomizeEvent, BuffEvent, BuffState, BuffWireKind, DeathBuffCheckpoint,
+        EntityIdentity, EntityRoles, EventMeta, Position, SegmentId,
     };
 
     const LOCAL: EntityRef = entity(1);
@@ -1505,6 +1552,96 @@ mod tests {
             .collect::<Vec<_>>();
         base_ids.sort_unstable();
         assert_eq!(base_ids, [829502, 829509]);
+    }
+
+    fn customized(
+        sequence: u64,
+        instance_id: i64,
+        base_id: i32,
+        commands: &[BuffEffectCommand],
+    ) -> DomainEnvelope {
+        envelope(
+            sequence,
+            10_000 + sequence as i64,
+            DomainEvent::BuffCustomized(BuffCustomizeEvent {
+                target: LOCAL,
+                instance_id,
+                base_id,
+                commands: Arc::from(commands),
+            }),
+        )
+    }
+
+    const fn looping(effect_id: i32) -> BuffEffectCommand {
+        BuffEffectCommand::Play {
+            effect_id,
+            looping: true,
+        }
+    }
+
+    fn loop_effects(projection: &mut MinimapProjection, instance_id: i32) -> Vec<i32> {
+        projection
+            .take_payload()
+            .snapshot
+            .expect("registered scene should publish a snapshot")
+            .buffs
+            .into_iter()
+            .find(|buff| buff.buff_uuid == instance_id)
+            .expect("buff fact should be published")
+            .loop_effects
+    }
+
+    #[test]
+    fn customize_commands_mirror_the_effects_a_buff_keeps_looping() {
+        let mut projection = MinimapProjection::default();
+        projection.apply(&scene(1, 13032));
+        projection.apply(&buff(2, BuffTransition::Baseline, 1, 829541));
+
+        // 1793362646209 inner ring after it was rebuilt at 20:18:10: spears and
+        // players charge slots, a matching chaser ends slot 2, a spear recharges it.
+        assert!(projection.apply(&customized(3, 1, 829541, &[looping(2)])));
+        assert!(projection.apply(&customized(4, 1, 829541, &[looping(3)])));
+        assert!(projection.apply(&customized(5, 1, 829541, &[looping(4)])));
+        let chaser = [
+            BuffEffectCommand::Stop { effect_id: 2 },
+            BuffEffectCommand::Play {
+                effect_id: 6,
+                looping: false,
+            },
+        ];
+        assert!(projection.apply(&customized(6, 1, 829541, &chaser)));
+        assert_eq!(loop_effects(&mut projection, 1), [3, 4]);
+
+        assert!(projection.apply(&customized(7, 1, 829541, &[looping(1)])));
+        assert!(projection.apply(&customized(8, 1, 829541, &[looping(2)])));
+        assert!(!projection.apply(&customized(9, 1, 829541, &[looping(2)])));
+        assert_eq!(loop_effects(&mut projection, 1), [1, 2, 3, 4]);
+
+        // A refresh or re-synced snapshot of the same buff keeps the loops.
+        projection.apply(&buff(10, BuffTransition::Baseline, 1, 829541));
+        assert_eq!(loop_effects(&mut projection, 1), [1, 2, 3, 4]);
+
+        assert!(projection.apply(&customized(
+            11,
+            1,
+            829541,
+            &[BuffEffectCommand::StopAll, looping(4)],
+        )));
+        assert_eq!(loop_effects(&mut projection, 1), [4]);
+
+        // Removal forgets them; commands for an untracked buff do nothing.
+        projection.apply(&buff(12, BuffTransition::Removed, 1, 829541));
+        assert!(!projection.apply(&customized(13, 1, 829541, &[looping(1)])));
+        projection.apply(&buff(14, BuffTransition::Applied, 1, 829541));
+        assert!(loop_effects(&mut projection, 1).is_empty());
+    }
+
+    #[test]
+    fn customize_commands_ignore_buffs_outside_the_scene_config() {
+        let mut projection = MinimapProjection::default();
+        projection.apply(&scene(1, 13032));
+        projection.apply(&buff(2, BuffTransition::Applied, 5, 123_456));
+        assert!(!projection.apply(&customized(3, 5, 123_456, &[looping(1)])));
     }
 
     #[test]

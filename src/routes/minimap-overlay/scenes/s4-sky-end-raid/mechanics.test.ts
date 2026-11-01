@@ -7,10 +7,12 @@ import type {
 } from "$lib/api";
 import type { MechanicRegion } from "../../scene-types";
 import { resolveScene } from "../../scene-registry";
-import { predictPair, resetCelestialSpawns } from "./celestial";
+import { predictChase, resetCelestialSpawns } from "./celestial";
 import { buildMechanicView, resolveLapsisVoiceCues } from "./mechanics";
 import { ritualSides } from "./ritual";
+import { resetRuneOrder } from "./rune-order";
 import { shareOrder } from "./share";
+import { headRune } from "./turntable";
 
 function entity(
   entityUuid: string,
@@ -53,6 +55,7 @@ function buff(
     fireUuid: "boss",
     sourceConfigId: null,
     effectIds: [],
+    loopEffects: [],
   };
 }
 
@@ -328,6 +331,142 @@ describe("S4 Lapsis turntable runes", () => {
       if (rune === 4) expect(gap).toBeLessThan(3);
       else expect(gap).toBeGreaterThan(90);
     }
+  });
+});
+
+function sectorsAt(
+  view: ReturnType<typeof buildMechanicView>,
+  radius: number,
+): Extract<MechanicRegion, { kind: "sector" }>[] {
+  return view.regions.filter(
+    (region): region is Extract<MechanicRegion, { kind: "sector" }> =>
+      region.kind === "sector" && region.radius === radius,
+  );
+}
+
+describe("S4 Lapsis challenge turntable", () => {
+  beforeEach(() => resetRuneOrder());
+
+  it("maps 头标符文 values to the slot order 1 / 4 / 3 / 2", () => {
+    expect([1, 2, 3, 4, 5, 6, 7, 8].map(headRune)).toEqual([
+      1, 4, 3, 2, 1, 4, 3, 2,
+    ]);
+    expect(headRune(0)).toBeNull();
+    expect(headRune(9)).toBeNull();
+  });
+
+  it("circles the slots the ring keeps looping, turning with the ring", () => {
+    const current = snapshot();
+    current.entities.push(ring("inner", 103425, 0, 0.12));
+    // 1793362646209 inner ring after its last chaser: slots 1, 3 and 4 lit.
+    current.buffs.push({
+      ...buff("inner", 829541, 1_000, -1),
+      loopEffects: [1, 3, 4],
+    });
+    let circles = sectorsAt(buildMechanicView(current, name, [], 1_100), 3);
+    expect(circles.map((item) => [item.x, item.z, item.colorSlot])).toEqual([
+      [expect.closeTo(0.12), expect.closeTo(7.5), 1],
+      [expect.closeTo(0.12), expect.closeTo(-7.5), 3],
+      [expect.closeTo(-7.38), expect.closeTo(0), 4],
+    ]);
+
+    current.entities[3]!.facing = 90;
+    circles = sectorsAt(buildMechanicView(current, name, [], 1_100), 3);
+    expect([circles[0]!.x, circles[0]!.z]).toEqual([
+      expect.closeTo(7.62),
+      expect.closeTo(0),
+    ]);
+  });
+
+  it("draws no circles for unlit slots or the non-challenge layout", () => {
+    const current = snapshot();
+    current.entities.push(ring("inner", 103401, 0));
+    current.buffs.push({
+      ...buff("inner", 829502, 1_000, -1),
+      loopEffects: [1, 2],
+    });
+    expect(sectorsAt(buildMechanicView(current, name, [], 1_100), 3)).toEqual(
+      [],
+    );
+
+    current.buffs = [buff("inner", 829541, 1_000, -1)];
+    expect(sectorsAt(buildMechanicView(current, name, [], 1_100), 3)).toEqual(
+      [],
+    );
+  });
+
+  it("colours a challenge chaser by its rune and puts the rune before its row", () => {
+    const current = snapshot();
+    current.entities.push(chaser("mate"));
+    current.buffs.push(buff("chaser", 829539, 1_000, -1), {
+      ...buff("chaser", 829544, 1_000, -1),
+      effectIds: [6],
+    });
+    const view = buildMechanicView(current, name, [], 1_100);
+    expect(view.entityColorSlots.get("chaser")).toBe(0);
+    expect(view.entityColorSlots.get("mate")).toBe(0);
+    expect(view.regions).toContainEqual(
+      expect.objectContaining({ kind: "line", colorSlot: 0 }),
+    );
+    const row = view.rows.find((item) => item.key === "chaser:chaser");
+    expect(row?.colorSlot).toBe(0);
+    expect(row?.icons?.map((icon) => icon.src)).toEqual([
+      "/images/lapsis_rune/rune_04.png",
+    ]);
+  });
+
+  it("keeps the plain chaser colour without a rune", () => {
+    const current = snapshot();
+    current.entities.push(chaser("mate"));
+    current.buffs.push(buff("chaser", 829539, 1_000, -1));
+    const view = buildMechanicView(current, name, [], 1_100);
+    expect(view.entityColorSlots.get("chaser")).toBe(10);
+    expect(
+      view.rows.find((item) => item.key === "chaser:chaser")?.icons,
+    ).toBeUndefined();
+  });
+
+  it("keeps the boss's lighting order until the next 谒彼诸天", () => {
+    const current = snapshot();
+    const orderRow = () =>
+      buildMechanicView(current, name, [], 1_100).rows.find(
+        (item) => item.key === "runeWheel:order",
+      );
+    const runes = () =>
+      orderRow()?.icons?.map((icon) => Number(icon.src.slice(-5, -4)));
+    expect(orderRow()).toBeUndefined();
+
+    // 1793362959357 20:22:54: values 2 → 1 → 4 → 3, one looping at a time.
+    for (const value of [2, 1, 4, 3]) {
+      current.buffs = [
+        { ...buff("boss", 829544, 1_000, 4_000), loopEffects: [value] },
+      ];
+      runes();
+    }
+    expect(runes()).toEqual([4, 1, 2, 3]);
+    expect(orderRow()).toMatchObject({ hideTimer: true, targets: [] });
+
+    current.buffs = [];
+    expect(runes()).toEqual([4, 1, 2, 3]);
+
+    current.buffs = [
+      { ...buff("boss", 829544, 9_000, 4_000), loopEffects: [1] },
+    ];
+    expect(runes()).toEqual([1]);
+
+    current.buffs = [];
+    current.entities = current.entities.filter((item) => item.kind !== "boss");
+    expect(orderRow()).toBeUndefined();
+  });
+
+  it("lists 充能间隔 holders with their 15 s timer", () => {
+    const current = snapshot();
+    current.buffs.push(buff("local", 829546, 1_000, 15_000));
+    const row = buildMechanicView(current, name, [], 1_100).rows.find(
+      (item) => item.key === "chargeInterval",
+    );
+    expect(row).toMatchObject({ createTimeMs: 1_000, durationMs: 15_000 });
+    expect(row?.targets.map((target) => target.uuid)).toEqual(["local"]);
   });
 });
 
@@ -646,21 +785,36 @@ function spotBearing(region: Polygon | undefined): number {
 describe("S4 Lapsis eternal night celestial collision", () => {
   beforeEach(() => resetCelestialSpawns());
 
-  it("predicts both logged 90° collisions from the spawn positions", () => {
-    // Log A: light +X, dark +Z, collided at 156.3°. Log B: light −Z, dark +X, 247.3°.
-    const a = predictPair({ x: 35, z: 0 }, { x: 0, z: 35 });
-    const b = predictPair({ x: 0, z: -35 }, { x: 35, z: 0 });
-    expect(a.gapDeg).toBeCloseTo(90);
-    expect(bearingGap(bearing(a.collision), 156.3)).toBeLessThan(2);
-    expect(bearingGap(bearing(b.collision), 247.3)).toBeLessThan(2);
-    // Both logs moved for 4.9–5.0 s.
-    expect(a.moveMs).toBeGreaterThan(4_700);
-    expect(a.moveMs).toBeLessThan(5_100);
+  // Light spawn, dark spawn, 控制球 cast → explosion (ms), collision midpoint.
+  const loggedChases: [number, number, number, number | null][] = [
+    [90, 0, 6_932, 156.3], // 1792922485907
+    [180, 90, 6_989, 247.3], // 1792922825153
+    [0, 270, 6_986, 65.4], // 1793021651371
+    [270, 90, 12_989, 70.5],
+    [0, 180, 13_002, 159.5],
+    [0, 270, 6_983, 63.5],
+    [90, 270, 13_006, null], // 1793362959357, three balls: the dark one
+    [180, 270, 19_007, null], // runs on after the first catch
+  ];
+
+  it("times every logged explosion from the spawn gap", () => {
+    for (const [light, dark, explodeMs] of loggedChases) {
+      const { explodeAfterCastMs } = predictChase(at(light), at(dark));
+      expect(Math.abs(explodeAfterCastMs - explodeMs)).toBeLessThan(60);
+    }
+  });
+
+  it("puts the collision where both balls stopped", () => {
+    for (const [light, dark, , midpoint] of loggedChases) {
+      if (midpoint == null) continue;
+      const { collision } = predictChase(at(light), at(dark));
+      expect(bearingGap(bearing(collision), midpoint)).toBeLessThan(3);
+    }
   });
 
   it("separates the players the logged explosions hit from those they spared", () => {
-    const a = predictPair({ x: 35, z: 0 }, { x: 0, z: 35 }).collision;
-    const b = predictPair({ x: 0, z: -35 }, { x: 35, z: 0 }).collision;
+    const a = predictChase(at(90), at(0)).collision;
+    const b = predictChase(at(180), at(90)).collision;
     expect(dist(a, { x: -8.54, z: 8.7 })).toBeLessThan(48.7);
     expect(dist(a, { x: -0.7, z: 19.45 })).toBeGreaterThan(48.7);
     expect(dist(b, { x: 13.19, z: 4.08 })).toBeLessThan(48.7);
@@ -669,7 +823,7 @@ describe("S4 Lapsis eternal night celestial collision", () => {
   });
 
   it("puts the 180° safe spot near the light ball's spawn", () => {
-    const { safe } = predictPair({ x: 0, z: -35 }, { x: 0, z: 35 });
+    const { safe } = predictChase(at(180), at(0));
     expect(bearingGap(bearing(safe), 180)).toBeLessThan(30);
   });
 
@@ -688,43 +842,125 @@ describe("S4 Lapsis eternal night celestial collision", () => {
       hideTimer: true,
     });
 
-    const control: MinimapSkillCast = {
-      entityUuid: "executor",
-      skillId: 10360011,
-      timeMs: 11_000,
-      x: null,
-      z: null,
-      facing: null,
-    };
-    view = buildMechanicView(current, name, [control], 12_000);
+    view = buildMechanicView(current, name, [control(11_000)], 12_000);
     expect(explosion(view)).toBeDefined();
     const row = view.rows.find((item) => item.key === "celestial");
     expect(row?.hideTimer).toBe(false);
     expect(row?.createTimeMs).toBe(11_000);
-    // 1.5 s to start moving, ~4.9 s chase, 0.5 s to the explosion.
-    expect(row?.durationMs).toBeGreaterThan(6_700);
-    expect(row?.durationMs).toBeLessThan(7_100);
+    // Logged 6.93–6.99 s from the cast for a 90° gap.
+    expect(row?.durationMs).toBeGreaterThan(6_900);
+    expect(row?.durationMs).toBeLessThan(7_050);
 
-    view = buildMechanicView(current, name, [control], 19_000);
+    view = buildMechanicView(current, name, [control(11_000)], 19_000);
     expect(explosion(view)).toBeUndefined();
   });
 
-  it("follows the three-ball guide: between the first two, then the second", () => {
+  it("times a 180° pair longer than a 90° one", () => {
+    const current = nightSnapshot([
+      ball("light", 103602, 0, -35),
+      ball("dark", 103603, 0, 35),
+    ]);
+    buildMechanicView(current, name, [], 10_000);
+    const row = buildMechanicView(
+      current,
+      name,
+      [control(11_000)],
+      12_000,
+    ).rows.find((item) => item.key === "celestial");
+    expect(row?.label).toBe("双球 180°");
+    // Logged 12.99–13.01 s.
+    expect(row?.durationMs).toBeGreaterThan(12_900);
+    expect(row?.durationMs).toBeLessThan(13_050);
+  });
+
+  it("predicts nothing for balls first seen already moving", () => {
+    const view = buildMechanicView(
+      nightSnapshot([
+        ball("light", 103602, 30, -10),
+        ball("dark", 103603, 20, 25),
+      ]),
+      name,
+      [control(11_000)],
+      13_000,
+    );
+    expect(view.entityColorSlots.get("light")).toBe(0);
+    expect(view.regions).toEqual([]);
+    expect(view.rows.some((row) => row.key === "celestial")).toBe(false);
+  });
+
+  it("follows the three-ball guide and counts down to each explosion", () => {
+    // The logged layout: light balls at 90° and 180°, the dark one at 270°.
+    const lightA = ball("lightA", 103602, 35, 0);
+    const lightB = ball("lightB", 103602, 0, -35);
+    const dark = ball("dark", 103603, -35, 0);
+    let view = buildMechanicView(
+      nightSnapshot([lightA, lightB, dark]),
+      name,
+      [],
+      10_000,
+    );
+    expect(spotBearing(spot(view, "①"))).toBeCloseTo(135);
+    expect(spotBearing(spot(view, "②"))).toBeCloseTo(180);
+    expect(view.rows.find((row) => row.key === "celestial")).toMatchObject({
+      label: "三球 第1次爆炸",
+      hideTimer: true,
+    });
+
+    view = buildMechanicView(
+      nightSnapshot([lightA, lightB, dark]),
+      name,
+      [control(11_000)],
+      12_000,
+    );
+    // Where the explosions land is not drawn.
+    expect(explosion(view)).toBeUndefined();
+    let row = view.rows.find((item) => item.key === "celestial");
+    expect(row).toMatchObject({
+      label: "三球 第1次爆炸",
+      hideTimer: false,
+      createTimeMs: 11_000,
+    });
+    const first = row!.createTimeMs + row!.durationMs;
+    expect(Math.abs(first - (11_000 + 13_006))).toBeLessThan(60);
+
+    // Light A leaves right after its explosion.
+    view = buildMechanicView(
+      nightSnapshot([lightB, dark]),
+      name,
+      [control(11_000)],
+      24_500,
+    );
+    expect(spot(view, "①")).toBeUndefined();
+    expect(spotBearing(spot(view, "②"))).toBeCloseTo(180);
+    row = view.rows.find((item) => item.key === "celestial");
+    expect(row).toMatchObject({
+      label: "三球 第2次爆炸",
+      hideTimer: false,
+      createTimeMs: first,
+    });
+    const second = row!.createTimeMs + row!.durationMs;
+    expect(Math.abs(second - (11_000 + 19_007))).toBeLessThan(60);
+  });
+
+  it("keeps the guide but no countdown for an unlogged colour make-up", () => {
     const balls = [
       ball("left", 103603, 0, 35),
       ball("top", 103602, 35, 0),
       ball("right", 103603, 0, -35),
     ];
-    let view = buildMechanicView(nightSnapshot(balls), name, [], 10_000);
+    buildMechanicView(nightSnapshot(balls), name, [], 10_000);
+    const view = buildMechanicView(
+      nightSnapshot(balls),
+      name,
+      [control(11_000)],
+      12_000,
+    );
     expect(spotBearing(spot(view, "①"))).toBeCloseTo(45);
     expect(spotBearing(spot(view, "②"))).toBeCloseTo(90);
-    expect(view.rows.find((row) => row.key === "celestial")?.label).toBe(
-      "三球（推测）",
-    );
-
-    view = buildMechanicView(nightSnapshot(balls.slice(1)), name, [], 16_000);
-    expect(spot(view, "①")).toBeUndefined();
-    expect(spotBearing(spot(view, "②"))).toBeCloseTo(90);
+    expect(view.rows.find((row) => row.key === "celestial")).toMatchObject({
+      label: "三球 第1次爆炸",
+      hideTimer: true,
+    });
   });
 
   it("widens the arena while 老三's entities are around", () => {
@@ -740,3 +976,20 @@ describe("S4 Lapsis eternal night celestial collision", () => {
     expect(scene.resolveView(snapshot(), name).worldHalfX).toBe(30);
   });
 });
+
+function control(timeMs: number): MinimapSkillCast {
+  return {
+    entityUuid: "executor",
+    skillId: 10360011,
+    timeMs,
+    x: null,
+    z: null,
+    facing: null,
+  };
+}
+
+/** A spawn position on the 35 m ring. */
+function at(bearingDeg: number) {
+  const rad = (bearingDeg * Math.PI) / 180;
+  return { x: Math.sin(rad) * 35, z: Math.cos(rad) * 35 };
+}

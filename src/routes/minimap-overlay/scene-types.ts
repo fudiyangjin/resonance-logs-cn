@@ -86,6 +86,12 @@ export type MechanicRowTargetStatus = MechanicRowTarget & {
   safe: boolean;
 };
 
+/** A small image shown in front of a row's label. */
+export type MechanicRowIcon = {
+  src: string;
+  alt: string;
+};
+
 export type MechanicRow = {
   key: string;
   group: string;
@@ -96,6 +102,8 @@ export type MechanicRow = {
   targets: MechanicRowTarget[];
   hideTimer?: boolean;
   targetStatus?: MechanicRowTargetStatus[];
+  /** Leading images, in order; more than one reads as a sequence. */
+  icons?: readonly MechanicRowIcon[];
 };
 
 export type SceneView = {
