@@ -30,14 +30,14 @@
   });
 
   function back() {
-    void goto(liveView.returnTab);
+    void goto(liveView.returnPath);
   }
 
   async function select(summary: EncounterSummaryDto) {
     openError = null;
     const result = await liveView.open(summary);
     if (result.status === "opened") {
-      await goto(liveView.returnTab);
+      await goto(liveView.returnPath);
     } else if (result.status === "failed") {
       openError = result.message;
     }

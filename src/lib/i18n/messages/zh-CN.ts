@@ -468,6 +468,15 @@ export const zhCNMessages = {
   "live.history.bossDefeated": "已击杀",
   "live.history.bossAlive": "未击杀",
   "live.history.target.label": "目标",
+  "live.history.banner.coverage": "Buff 覆盖率",
+  "live.coverage.playersLabel": "玩家",
+  "live.coverage.caption": "按活跃战斗时长 {duration} 计算",
+  "live.coverage.empty":
+    "这场没有记录到覆盖率监控的 Buff。在主窗口「{path}」添加后，之后的战斗才会记录。",
+  "live.coverage.historyOnly": "查看历史战斗时可用",
+  "live.coverage.rowTooltip":
+    "{name} #{id} · 覆盖 {covered} / {active} · 触发 {count} 次",
+  "live.coverage.absentTooltip": "{name} #{id} · 本场未出现",
   "history.list.error.deleteFailed": "删除失败：{error}",
   "history.list.error.loadFailed": "加载战斗列表失败：{error}",
   "history.list.filters.favorite": "收藏",

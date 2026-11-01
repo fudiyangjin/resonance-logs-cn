@@ -508,6 +508,15 @@ export const jaJPMessages = {
   "live.history.bossDefeated": "撃破",
   "live.history.bossAlive": "未撃破",
   "live.history.target.label": "ターゲット",
+  "live.history.banner.coverage": "バフ稼働率",
+  "live.coverage.playersLabel": "プレイヤー",
+  "live.coverage.caption": "アクティブ戦闘時間（{duration}）に基づく",
+  "live.coverage.empty":
+    "この戦闘では稼働率監視中のバフが記録されていません。メインウィンドウの「{path}」で追加すると、以降の戦闘から記録されます。",
+  "live.coverage.historyOnly": "履歴の戦闘を表示中のみ利用できます",
+  "live.coverage.rowTooltip":
+    "{name} #{id} · 稼働 {covered} / {active} · 発動 {count} 回",
+  "live.coverage.absentTooltip": "{name} #{id} · この戦闘では未発生",
   "history.list.error.deleteFailed": "削除に失敗しました: {error}",
   "history.list.error.loadFailed":
     "エンカウント一覧の読み込みに失敗しました: {error}",

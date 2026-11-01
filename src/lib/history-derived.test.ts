@@ -652,6 +652,32 @@ describe("historyDetailToLiveSnapshot", () => {
     expect(cast?.remodelLevel).toBe(4);
     expect(snapshot.fantasyCasts.has("1")).toBe(false);
   });
+
+  it("keeps the buff coverage view, null for pre-coverage records", () => {
+    expect(historyDetailToLiveSnapshot(detail()).buffCoverage).toBeNull();
+    const snapshot = historyDetailToLiveSnapshot(
+      detail({
+        buffTimeline: {
+          activeWindowMs: 4_000,
+          lanes: [
+            {
+              entityId: "1",
+              baseId: 501,
+              coveredActiveMs: 3_000,
+              spans: [{ startMs: 0, endMsExclusive: 3_000 }],
+            },
+          ],
+        },
+      }),
+    );
+    expect(snapshot.buffCoverage?.activeWindowMs).toBe(4_000);
+    expect(snapshot.buffCoverage?.lanes[0]).toMatchObject({
+      key: "1:501",
+      entityUuid: "1",
+      coveragePct: 75,
+      triggerCount: 1,
+    });
+  });
 });
 
 function damageTarget(

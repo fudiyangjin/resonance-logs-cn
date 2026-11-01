@@ -188,6 +188,9 @@ export type LiveTabRoot = (typeof LIVE_TAB_ROOTS)[number];
 
 export const LIVE_HISTORY_PATH = "/live/history";
 
+/** History-only page; not a tab root, so it is not a drill-down either. */
+export const LIVE_COVERAGE_PATH = "/live/coverage";
+
 function trimTrailingSlash(pathname: string): string {
   return pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
 }
@@ -205,6 +208,10 @@ export function liveTabRoot(pathname: string): LiveTabRoot | null {
 export function isLiveDrillDown(pathname: string): boolean {
   const root = liveTabRoot(pathname);
   return root !== null && trimTrailingSlash(pathname) !== root;
+}
+
+export function isLiveCoveragePath(pathname: string): boolean {
+  return trimTrailingSlash(pathname) === LIVE_COVERAGE_PATH;
 }
 
 export function isLiveHistoryPath(pathname: string): boolean {

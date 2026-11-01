@@ -9,11 +9,17 @@ import {
 import {
   historyCombatForTarget,
   historyDetailToLiveSnapshot,
+  type HistoryBuffTimelineView,
   type HistoryDamageTarget,
   type LiveHistorySnapshot,
 } from "$lib/history-derived";
 import { t } from "$lib/i18n/index.svelte";
-import { liveTabRoot, type LiveTabRoot } from "$lib/live-history-query";
+import {
+  isLiveCoveragePath,
+  LIVE_COVERAGE_PATH,
+  liveTabRoot,
+  type LiveTabRoot,
+} from "$lib/live-history-query";
 import {
   liveCombatStore,
   liveDeathsStore,
@@ -42,10 +48,18 @@ class LiveViewSource {
 
   /** Encounter whose detail is being fetched, for row / banner spinners. */
   pendingEncounterId = $state.raw<number | null>(null);
-  /** Last meter tab visited; history picker and source switches return here. */
+  /** Last meter tab visited; returning to live data always lands here. */
   returnTab = $state.raw<LiveTabRoot>("/live/dps");
   /** History only: narrow damage to one target (`null` = whole encounter). */
   targetUuid = $state.raw<string | null>(null);
+  /**
+   * Coverage page player pick (`null` = local player). Kept across
+   * encounters: the page falls back to the local player while the picked
+   * one is absent, and shows them again once they are back.
+   */
+  coveragePlayerUuid = $state.raw<string | null>(null);
+  /** The coverage page, not a meter tab, was the last page visited. */
+  #coverageLast = $state.raw(false);
 
   #historyCombat = $derived.by(() => {
     const history = this.history;
@@ -73,6 +87,21 @@ class LiveViewSource {
 
   get targets(): HistoryDamageTarget[] {
     return this.history?.targets ?? [];
+  }
+
+  /** History only; `null` also for encounters recorded before coverage. */
+  get buffCoverage(): HistoryBuffTimelineView | null {
+    return this.history?.buffCoverage ?? null;
+  }
+
+  /**
+   * Where the picker and source switches land: the coverage page while a
+   * saved encounter is shown and it was the last page, else the meter tab.
+   */
+  get returnPath(): LiveTabRoot | typeof LIVE_COVERAGE_PATH {
+    return this.isHistory && this.#coverageLast
+      ? LIVE_COVERAGE_PATH
+      : this.returnTab;
   }
 
   get displayClock(): LiveDisplayClock | null {
@@ -137,6 +166,8 @@ class LiveViewSource {
     this.#generation += 1;
     this.pendingEncounterId = null;
     this.targetUuid = null;
+    this.coveragePlayerUuid = null;
+    this.#coverageLast = false;
     this.#state = { kind: "live" };
   }
 
@@ -144,9 +175,20 @@ class LiveViewSource {
     this.targetUuid = targetUuid;
   }
 
+  setCoveragePlayer(entityUuid: string | null): void {
+    this.coveragePlayerUuid = entityUuid;
+  }
+
   rememberTab(pathname: string): void {
+    if (isLiveCoveragePath(pathname)) {
+      this.#coverageLast = true;
+      return;
+    }
     const root = liveTabRoot(pathname);
-    if (root) this.returnTab = root;
+    if (root) {
+      this.returnTab = root;
+      this.#coverageLast = false;
+    }
   }
 }
 

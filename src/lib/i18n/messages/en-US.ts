@@ -535,6 +535,15 @@ export const enUSMessages = {
   "live.history.bossDefeated": "Defeated",
   "live.history.bossAlive": "Not defeated",
   "live.history.target.label": "Target",
+  "live.history.banner.coverage": "Buff Coverage",
+  "live.coverage.playersLabel": "Player",
+  "live.coverage.caption": "Based on active combat time ({duration})",
+  "live.coverage.empty":
+    "No watched buffs were recorded in this fight. Add them in the main window under “{path}”; only later fights will record them.",
+  "live.coverage.historyOnly": "Available while viewing a saved fight",
+  "live.coverage.rowTooltip":
+    "{name} #{id} · Covered {covered} / {active} · Triggered {count}×",
+  "live.coverage.absentTooltip": "{name} #{id} · Not present in this fight",
   "history.list.error.deleteFailed": "Delete failed: {error}",
   "history.list.error.loadFailed": "Failed to load encounter list: {error}",
   "history.list.filters.favorite": "Favorites",

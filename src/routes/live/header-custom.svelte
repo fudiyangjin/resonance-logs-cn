@@ -173,7 +173,7 @@
   }
 
   function toggleHistoryPicker() {
-    void goto(isOnHistoryPicker ? liveView.returnTab : LIVE_HISTORY_PATH);
+    void goto(isOnHistoryPicker ? liveView.returnPath : LIVE_HISTORY_PATH);
   }
 
   function formatTrainingDummyLabel(state: TrainingDummyState) {

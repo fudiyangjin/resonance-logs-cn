@@ -4,32 +4,16 @@
    * encounter is displayed. Live data has no per-target breakdown, so the
    * strip renders nothing outside history mode.
    */
-  import type { Attachment } from "svelte/attachments";
   import { formatNumber, t } from "$lib/i18n/index.svelte";
   import { ipcRatio } from "$lib/ipc-decimal";
   import { liveView } from "$lib/stores/live-view-source.svelte";
   import { tooltip } from "$lib/utils.svelte";
+  import { revealWhenActive, wheelScrollsSideways } from "./strip-attachments";
 
   const targets = $derived(liveView.targets);
   const totalDamage = $derived(
     targets.reduce((sum, target) => sum + target.totalValue, 0n),
   );
-
-  // The strip is one line: let the vertical wheel scroll it sideways.
-  const wheelScrollsSideways: Attachment<HTMLElement> = (node) => {
-    const onWheel = (event: WheelEvent) => {
-      if (node.scrollWidth <= node.clientWidth) return;
-      if (Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
-      node.scrollLeft += event.deltaY;
-      event.preventDefault();
-    };
-    node.addEventListener("wheel", onWheel, { passive: false });
-    return () => node.removeEventListener("wheel", onWheel);
-  };
-
-  const revealWhenActive: Attachment<HTMLElement> = (node) => {
-    node.scrollIntoView({ block: "nearest", inline: "nearest" });
-  };
 </script>
 
 {#snippet chip(
