@@ -4,8 +4,12 @@
  * bindings tab resolve it the same way.
  */
 import type { VoiceGenerateRequestDto } from "$lib/bindings";
-import type { AppLocale } from "$lib/i18n/locales";
-import type { VoiceSourceSetting } from "$lib/settings-store";
+import { isAppLocale, type AppLocale } from "$lib/i18n/locales";
+import type {
+  VoiceBindingGenerationSource,
+  VoicePhraseBinding,
+  VoiceSourceSetting,
+} from "$lib/settings-store";
 
 export type GenerationSource = VoiceGenerateRequestDto["source"];
 
@@ -58,4 +62,52 @@ export function resolveSavedGenerationSource(
         ? { mode: "http", providerId: context.selectedHttpProviderId }
         : null;
   }
+}
+
+/** `<select>` value of a binding's voice: `default`, `preset:<locale>` or `http:<id>`. */
+export function encodeBindingSource(
+  source: VoiceBindingGenerationSource | undefined,
+): string {
+  if (!source) return "default";
+  return source.mode === "http"
+    ? `http:${source.providerId}`
+    : `preset:${source.locale}`;
+}
+
+/** Inverse of `encodeBindingSource`; `undefined` follows the voice settings. */
+export function decodeBindingSource(
+  value: string,
+): VoiceBindingGenerationSource | undefined {
+  if (value.startsWith("http:")) {
+    const providerId = value.slice("http:".length);
+    return providerId ? { mode: "http", providerId } : undefined;
+  }
+  if (value.startsWith("preset:")) {
+    const locale = value.slice("preset:".length);
+    return isAppLocale(locale) ? { mode: "preset", locale } : undefined;
+  }
+  return undefined;
+}
+
+export type BindingSourceContext = {
+  /** The voice settings' source (`resolveSavedGenerationSource`). */
+  saved: GenerationSource | null;
+  modelReady: boolean;
+  httpProviderIds: readonly string[];
+};
+
+/**
+ * What a binding generates with: the voice it pins, else the saved source;
+ * `null` while that can't generate (no local model for a preset, a removed
+ * HTTP provider, nothing saved). A library phrase pins nothing.
+ */
+export function resolveBindingGenerationSource(
+  binding: VoicePhraseBinding,
+  context: BindingSourceContext,
+): GenerationSource | null {
+  const pinned =
+    binding.source === "phrase" ? undefined : binding.generationSource;
+  if (!pinned) return context.saved;
+  if (pinned.mode === "preset") return context.modelReady ? pinned : null;
+  return context.httpProviderIds.includes(pinned.providerId) ? pinned : null;
 }

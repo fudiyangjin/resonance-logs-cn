@@ -248,6 +248,7 @@ add_library(voice_profile STATIC
     src/fs_util.cpp
     src/voice_profile.cpp
     src/audio_validate.cpp
+    src/generation_budget.cpp
 )
 target_include_directories(voice_profile PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -322,6 +323,14 @@ target_link_libraries(test_audio_validate PRIVATE
     voice_profile
 )
 
+# Test executable for the per-item frame budget (no model required)
+add_executable(test_generation_budget
+    tests/test_generation_budget.cpp
+)
+target_link_libraries(test_generation_budget PRIVATE
+    voice_profile
+)
+
 # Test executable for the sidecar's minimal JSON job parser (no model required)
 add_executable(test_json_lite
     tests/test_json_lite.cpp
@@ -347,6 +356,7 @@ install(FILES
     src/qwen3tts_c_api.h
     src/voice_profile.h
     src/audio_validate.h
+    src/generation_budget.h
     src/json_lite.h
     src/sha256.h
     src/fs_util.h
@@ -377,6 +387,10 @@ add_test(NAME voice_profile_test
 )
 add_test(NAME audio_validate_test
     COMMAND test_audio_validate
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+add_test(NAME generation_budget_test
+    COMMAND test_generation_budget
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 add_test(NAME json_lite_test

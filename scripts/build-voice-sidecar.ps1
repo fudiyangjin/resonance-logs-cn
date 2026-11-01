@@ -142,13 +142,13 @@ if ($LASTEXITCODE -ne 0) {
     throw "CMake configure failed with exit code $LASTEXITCODE"
 }
 
-& cmake --build $buildDir --config $Configuration --target qwen3-tts-sidecar test_voice_profile test_audio_validate test_json_lite -j
+& cmake --build $buildDir --config $Configuration --target qwen3-tts-sidecar test_voice_profile test_audio_validate test_generation_budget test_json_lite -j
 if ($LASTEXITCODE -ne 0) {
     throw "native build failed with exit code $LASTEXITCODE"
 }
 
 if (-not $SkipTests) {
-    & ctest --test-dir $buildDir -C $Configuration --output-on-failure -R "^(voice_profile_test|audio_validate_test|json_lite_test|sidecar_probe_test|sidecar_protocol_rejection_test)$"
+    & ctest --test-dir $buildDir -C $Configuration --output-on-failure -R "^(voice_profile_test|audio_validate_test|generation_budget_test|json_lite_test|sidecar_probe_test|sidecar_protocol_rejection_test)$"
     if ($LASTEXITCODE -ne 0) {
         throw "native tests failed with exit code $LASTEXITCODE"
     }

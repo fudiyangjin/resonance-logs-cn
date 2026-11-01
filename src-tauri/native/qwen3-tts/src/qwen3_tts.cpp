@@ -480,6 +480,16 @@ tts_result Qwen3TTS::synthesize_internal(const std::string & text,
         return result;
     }
 
+    // The generate loop only fills the whole budget when end-of-speech
+    // never came. Decoding that would cost a vocoder graph proportional to
+    // the budget for audio that is truncated by definition.
+    if (n_frames >= params.max_audio_tokens) {
+        result.hit_length_limit = true;
+        result.error_msg = "Speech did not end within " +
+                           std::to_string(params.max_audio_tokens) + " frames";
+        return result;
+    }
+
     if (low_mem_mode_) {
         transformer_.unload_model();
         transformer_loaded_ = false;

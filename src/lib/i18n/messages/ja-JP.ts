@@ -2814,7 +2814,5 @@ export const jaJPMessages = {
   "voice.bindings.generateMissing.needProfile":
     "先に「フレーズ集」で使用可能な生成ソースを選択してください（ローカル音声にはモデルのインストールが必要です）",
   "voice.bindings.generateMissing.none": "生成待ちの音声はありません",
-  "voice.bindings.generateMissing.summary":
-    "{count} 件の音声生成を送信しました",
   "voice.bindings.tryPlay": "試聴",
 };

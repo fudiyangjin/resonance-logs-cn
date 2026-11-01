@@ -80,7 +80,7 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | Document | Description | Examples |
 | --- | --- | --- |
 | [Voice Announcements](./features/voice/README.md) | Quick start, binding announcements on feature pages | [Buff voice announcement](./features/voice/examples/buff-voice.md) |
-| [Voices & Phrases](./features/voice/voices.md) | Preset, cloned and fine-tuned voices, importing audio | [Custom sound effects](./features/voice/examples/custom-sfx.md) · [Clone voices & import audio](./features/voice/examples/clone-import.md) |
+| [Voices & Phrases](./features/voice/voices.md) | Preset, cloned and fine-tuned voices, importing audio, HTTP voice services | [Custom sound effects](./features/voice/examples/custom-sfx.md) · [Clone voices & import audio](./features/voice/examples/clone-import.md) · [Fish Audio online voice](./features/voice/examples/http-fish-audio.md) |
 | [Playback & Reminders](./features/voice/playback.md) | Volume, priority, placeholders, match-found reminders | [Match-found reminder](./features/voice/examples/match-found.md) |
 
 ### Module Calculator

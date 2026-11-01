@@ -80,7 +80,7 @@ Resonance Logs CN 是《星痕共鸣》的战斗辅助工具：统计伤害与�
 | 文档 | 说明 | 例 |
 | --- | --- | --- |
 | [语音播报](./features/voice/README.md) | 快速开始、在功能页绑定播报 | [Buff 语音播报生成](./features/voice/examples/buff-voice.md) |
-| [音色与短句](./features/voice/voices.md) | 预置、克隆、微调音色，导入音频 | [自定义音效](./features/voice/examples/custom-sfx.md) · [音色克隆与音频导入](./features/voice/examples/clone-import.md) |
+| [音色与短句](./features/voice/voices.md) | 预置、克隆、微调音色，导入音频，HTTP 语音服务 | [自定义音效](./features/voice/examples/custom-sfx.md) · [音色克隆与音频导入](./features/voice/examples/clone-import.md) · [Fish Audio 在线音色](./features/voice/examples/http-fish-audio.md) |
 | [播放与提醒](./features/voice/playback.md) | 音量、优先级、占位符、匹配提醒 | [匹配成功提醒](./features/voice/examples/match-found.md) |
 
 ### 模组计算

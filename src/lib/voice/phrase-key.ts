@@ -16,7 +16,10 @@
  */
 import type { VoiceLanguage } from "$lib/bindings";
 import type { AppLocale } from "$lib/i18n/locales";
-import type { VoicePhraseBinding } from "$lib/settings-store";
+import type {
+  VoiceBindingGenerationSource,
+  VoicePhraseBinding,
+} from "$lib/settings-store";
 
 export type ManagedPhraseSource = "auto" | "custom";
 
@@ -119,6 +122,19 @@ export function expandTierPlaceholder(
     .trim();
 }
 
+/**
+ * The pinned voice as hashed into the slot name, `mode` first as names were
+ * first minted. Spelled out because settings reload from disk with sorted
+ * keys, which would otherwise rename a preset slot on every restart.
+ */
+function sourceSlotKey(source: VoiceBindingGenerationSource): string {
+  return JSON.stringify(
+    source.mode === "http"
+      ? { mode: source.mode, providerId: source.providerId }
+      : { mode: source.mode, locale: source.locale },
+  );
+}
+
 /** One managed catalog phrase a binding speaks through. */
 export type BindingPhrase = {
   name: string;
@@ -158,16 +174,18 @@ export function bindingPhrases(input: BindingPhraseInput): BindingPhrase[] {
     phrase.source === "custom" && phrase.generationSource?.mode === "http"
       ? (phrase.httpLanguage ?? input.language)
       : input.language;
+  // A pinned voice is its own slot, so its audio never stands in for (or
+  // overwrites) the audio generated with another voice.
+  const ruleKey = phrase.generationSource
+    ? `${input.ruleKey}:source${contentHash(sourceSlotKey(phrase.generationSource), language)}`
+    : input.ruleKey;
   const make = (
     text: string,
     variant?: ManagedPhraseVariant,
   ): BindingPhrase => ({
     name: managedPhraseName({
       source: phrase.source,
-      ruleKey:
-        phrase.source === "custom" && phrase.generationSource
-          ? `${input.ruleKey}:source${contentHash(JSON.stringify(phrase.generationSource), language)}`
-          : input.ruleKey,
+      ruleKey,
       ...(variant ? { variant } : {}),
       ...(input.fixedName ? {} : { hash: contentHash(text, language) }),
     }),

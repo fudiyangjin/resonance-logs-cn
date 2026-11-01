@@ -2655,6 +2655,5 @@ export const zhCNMessages = {
   "voice.bindings.generateMissing.needProfile":
     "请先在“短句库”中选择可用的生成来源（本地音色需要先安装模型）",
   "voice.bindings.generateMissing.none": "没有待生成的语音",
-  "voice.bindings.generateMissing.summary": "已提交 {count} 条待生成语音",
   "voice.bindings.tryPlay": "试听",
 };

@@ -2846,7 +2846,5 @@ export const enUSMessages = {
   "voice.bindings.generateMissing.needProfile":
     "Pick a usable generation source in the Phrase Library first (local voices need the model installed)",
   "voice.bindings.generateMissing.none": "No pending voices to generate",
-  "voice.bindings.generateMissing.summary":
-    "Submitted {count} voice(s) for generation",
   "voice.bindings.tryPlay": "Preview",
 } satisfies typeof zhCNMessages;

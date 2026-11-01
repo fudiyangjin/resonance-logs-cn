@@ -80,7 +80,7 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | ドキュメント | 説明 | 例 |
 | --- | --- | --- |
 | [音声読み上げ](./features/voice/README.md) | クイックスタート、機能ページでの読み上げ設定 | [Buff 音声の一括生成](./features/voice/examples/buff-voice.md) |
-| [音色と短文](./features/voice/voices.md) | プリセット・クローン・微調整音色、音声のインポート | [カスタム効果音](./features/voice/examples/custom-sfx.md) · [音声クローンとインポート](./features/voice/examples/clone-import.md) |
+| [音色と短文](./features/voice/voices.md) | プリセット・クローン・微調整音色、音声のインポート、HTTP 音声サービス | [カスタム効果音](./features/voice/examples/custom-sfx.md) · [音声クローンとインポート](./features/voice/examples/clone-import.md) · [Fish Audio のオンライン音色](./features/voice/examples/http-fish-audio.md) |
 | [再生と通知](./features/voice/playback.md) | 音量、優先度、プレースホルダー、マッチング通知 | [マッチング成功の通知](./features/voice/examples/match-found.md) |
 
 ### モジュール計算

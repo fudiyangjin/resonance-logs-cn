@@ -59,7 +59,11 @@ struct tts_result {
     
     // Error message if failed
     std::string error_msg;
-    
+
+    // Generation reached max_audio_tokens without the end-of-speech token.
+    // The truncated codes are discarded undecoded; sampling again may end.
+    bool hit_length_limit = false;
+
     // Timing info (in milliseconds)
     int64_t t_load_ms = 0;
     int64_t t_tokenize_ms = 0;

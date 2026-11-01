@@ -402,19 +402,29 @@ export function createDefaultVoiceSettings(): VoiceSettingsConfig {
  * phrase from the subject's display name (see `$lib/voice/subjects/*`);
  * `custom` lets the user type their own short line; `phrase` points at an
  * existing entry in the phrase library for reuse across bindings.
+ *
+ * `auto` and `custom` text is generated into managed phrases; either can
+ * pin the voice it is generated with (`generationSource`, otherwise the
+ * voice settings' source). `httpLanguage` only applies to custom text: auto
+ * text is written in its subject's language.
  */
 export type VoicePhraseBinding =
-  | { source: "auto" }
+  | {
+      source: "auto";
+      generationSource?: VoiceBindingGenerationSource | undefined;
+    }
   | {
       source: "custom";
       text: string;
       httpLanguage?: "zhCn" | "enUs" | "jaJp";
-      generationSource?:
-        | { mode: "preset"; locale: "zh-CN" | "en-US" | "ja-JP" }
-        | { mode: "http"; providerId: string }
-        | undefined;
+      generationSource?: VoiceBindingGenerationSource | undefined;
     }
   | { source: "phrase"; phraseId: string };
+
+/** A voice pinned on one binding, overriding the voice settings' source. */
+export type VoiceBindingGenerationSource =
+  | { mode: "preset"; locale: "zh-CN" | "en-US" | "ja-JP" }
+  | { mode: "http"; providerId: string };
 
 export function createDefaultVoicePhraseBinding(): VoicePhraseBinding {
   return { source: "auto" };
