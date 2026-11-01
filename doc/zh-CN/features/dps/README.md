@@ -58,7 +58,7 @@ DPS 技能栏按客户端的逻辑聚合：一个技能可能由多个伤害来�
 
 | 页面 | 内容 | 例 |
 | --- | --- | --- |
-| [历史记录](./history.md) | 历史列表、详情、时间轴、Buff 覆盖、死亡回放 | [用时间轴找出输出空窗](./examples/timeline-gaps.md) |
+| [历史记录](./history.md) | 历史列表、详情、时间轴、Buff 覆盖、死亡回放 | [用时间轴找出输出空窗](./examples/timeline-gaps.md) · [在实时窗口查看历史战斗的 Buff 覆盖率](./examples/live-buff-coverage.md) |
 | [挑战监控](./challenge.md) | 标记受到「禁用伤害」的队员 | [挑战本中看谁吃了浮游炮](./examples/challenge-hits.md) |
 | [主题与外观](./themes.md) | 配色、尺寸、紧凑模式、表格、标题栏 | [透明的极简 DPS 窗口](./examples/transparent-window.md) · [标题栏自由布局与死亡回放](./examples/header-death.md) |
 | [显示设置](./settings.md) | 名称、列、缩写、刷新频率、打桩时长 | [修改表格展示列](./examples/table-columns.md) |

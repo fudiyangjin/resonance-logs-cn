@@ -18,6 +18,10 @@ The DPS and skill pages in live history include a target filter for damage again
 
 ![Skill details of a history record in the live window](../../../shared/img/changelog/v0.2.6_2.en-US.png)
 
+The **{{ui:live.history.banner.coverage}}** button in the banner opens the coverage page of this fight: pick a player in the **{{ui:live.coverage.playersLabel}}** strip to see the coverage and trigger count of each watched Buff. Switching to an older / newer fight keeps you on the coverage page, and pressing the button again returns to the meter tab you came from. Only Buffs watched in [Buff Coverage](../monitor/buff-coverage.md) have data; for the full walkthrough see [Example: check a history fight's Buff coverage in the live window](./examples/live-buff-coverage.md).
+
+![Buff coverage of a history fight in the live window](../../../shared/img/dps/live_coverage_2.en-US.png)
+
 ## History list
 
 - **Filter**: filter by **{{ui:history.list.filters.favorite}}**, Boss, player, or encounter; click **{{ui:history.list.filters.favoriteOnly}}** to show only favorites.
@@ -78,3 +82,4 @@ Lane height, curve height, the instant DPS window, and the history table columns
 ## Examples
 
 - [Find DPS gaps with the timeline](./examples/timeline-gaps.md)
+- [Check a history fight's Buff coverage in the live window](./examples/live-buff-coverage.md)

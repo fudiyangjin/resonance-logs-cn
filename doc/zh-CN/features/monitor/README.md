@@ -32,7 +32,7 @@
 | **{{ui:skillMonitor.tabs.panelAttr}}** | 角色属性数值 | [角色面板](./panel-attr.md) | — |
 | **{{ui:skillMonitor.tabs.customPanel}}** | 因子区、赛季节点区、自由组合的 Buff 与计数器 | [自定义监控](./custom-panel.md) | [自动显示因子能量与赛季节点](./examples/factor-energy.md) · [用预设计数器盯炎角的绝对幸运](./examples/preset-counter.md) |
 | **{{ui:skillMonitor.tabs.shieldDetail}}** | HP 与护盾条 | [血量护盾区](./shield.md) | — |
-| **{{ui:skillMonitor.tabs.buffCoverage}}** | 增益覆盖率 | [Buff 覆盖率](./buff-coverage.md) | [复盘队伍的增益覆盖率](./examples/buff-coverage.md) |
+| **{{ui:skillMonitor.tabs.buffCoverage}}** | 增益覆盖率 | [Buff 覆盖率](./buff-coverage.md) | [复盘队伍的增益覆盖率](./examples/buff-coverage.md) · [在实时窗口查看历史战斗的 Buff 覆盖率](../dps/examples/live-buff-coverage.md) |
 | **{{ui:skillMonitor.tabs.overlay}}** | 控制以上各区域是否显示 | [启用窗口与布局](./overlay.md) | — |
 
 所有配置都保存在当前总方案的 **技能监控子方案** 中，切换方案即可整套切换，见 [监控方案](../app/loadouts.md)。

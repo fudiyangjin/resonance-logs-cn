@@ -23,8 +23,11 @@
 
 战斗结束后，打开 [历史记录](../dps/history.md#buff-覆盖) 的详情页，可以看到每位队员这些 Buff 的覆盖时间轴与覆盖率汇总。
 
+在实时窗口查看历史时，也可以点横幅中的 **{{ui:live.history.banner.coverage}}** 按钮，按玩家查看这场的覆盖率，见 [在实时窗口查看历史战斗的 Buff 覆盖率](../dps/examples/live-buff-coverage.md)。
+
 ![覆盖率汇总](../../../shared/img/changelog/v0.2.3_3.png)
 
 ## 例
 
 - [复盘队伍的增益覆盖率](./examples/buff-coverage.md)
+- [在实时窗口查看历史战斗的 Buff 覆盖率](../dps/examples/live-buff-coverage.md)

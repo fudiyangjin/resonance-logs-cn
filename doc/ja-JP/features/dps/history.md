@@ -18,6 +18,10 @@
 
 ![リアルタイムウィンドウでの履歴スキル詳細](../../../shared/img/changelog/v0.2.6_1.ja-JP.png)
 
+バナーの **{{ui:live.history.banner.coverage}}** ボタンで、この戦闘の稼働率ページを開けます。**{{ui:live.coverage.playersLabel}}** 欄でプレイヤーを選ぶと、監視中の各 Buff の稼働率と発動回数を確認できます。前 / 次の戦闘に切り替えても稼働率ページのままで、ボタンをもう一度押すと元の統計ページに戻ります。データがあるのは [バフ稼働率](../monitor/buff-coverage.md) で監視している Buff だけです。手順全体は [例：リアルタイムウィンドウで履歴戦闘のバフ稼働率を確認する](./examples/live-buff-coverage.md) を参照してください。
+
+![リアルタイムウィンドウで履歴戦闘のバフ稼働率を表示](../../../shared/img/dps/live_coverage_2.ja-JP.png)
+
 ## 履歴一覧
 
 - **絞り込み**：**{{ui:history.list.filters.favorite}}**、ボス、プレイヤー、エンカウントで絞り込み。**{{ui:history.list.filters.favoriteOnly}}** をクリックするとお気に入りだけを表示します。
@@ -78,3 +82,4 @@
 ## 例
 
 - [タイムラインで火力の空白を見つける](./examples/timeline-gaps.md)
+- [リアルタイムウィンドウで履歴戦闘のバフ稼働率を確認する](./examples/live-buff-coverage.md)

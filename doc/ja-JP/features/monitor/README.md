@@ -32,7 +32,7 @@
 | **{{ui:skillMonitor.tabs.panelAttr}}** | キャラクター属性の数値 | [キャラクターパネル](./panel-attr.md) | — |
 | **{{ui:skillMonitor.tabs.customPanel}}** | 因子エリア、シーズンノードエリア、自由に組み合わせた Buff とカウンター | [カスタムモニター](./custom-panel.md) | [因子エネルギーとシーズンノードを自動表示する](./examples/factor-energy.md) · [プリセットカウンターで絶対幸運を見張る](./examples/preset-counter.md) |
 | **{{ui:skillMonitor.tabs.shieldDetail}}** | HP とシールドのバー | [HP/シールドエリア](./shield.md) | — |
-| **{{ui:skillMonitor.tabs.buffCoverage}}** | 強化 Buff の稼働率 | [バフ稼働率](./buff-coverage.md) | [パーティの強化 Buff 稼働率を振り返る](./examples/buff-coverage.md) |
+| **{{ui:skillMonitor.tabs.buffCoverage}}** | 強化 Buff の稼働率 | [バフ稼働率](./buff-coverage.md) | [パーティの強化 Buff 稼働率を振り返る](./examples/buff-coverage.md) · [リアルタイムウィンドウで履歴戦闘のバフ稼働率を確認する](../dps/examples/live-buff-coverage.md) |
 | **{{ui:skillMonitor.tabs.overlay}}** | 上記各エリアを表示するかどうかを制御 | [ウィンドウの有効化とレイアウト](./overlay.md) | — |
 
 すべての設定は現在のロードアウトの **スキル監視プロファイル** に保存され、ロードアウトを切り替えれば設定一式がまとめて切り替わります。[ロードアウト](../app/loadouts.md) を参照してください。

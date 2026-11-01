@@ -18,6 +18,10 @@
 
 ![实时窗口历史技能明细](../../../shared/img/changelog/v0.2.6_2.zh-CN.png)
 
+横幅中的 **{{ui:live.history.banner.coverage}}** 按钮可以打开这场战斗的覆盖率页：在 **{{ui:live.coverage.playersLabel}}** 条中选一名玩家，查看他每个监听 Buff 的覆盖率和触发次数。切换更早 / 更晚一场时停留在覆盖率页，再点一次按钮回到原来的统计页。只有在 [Buff 覆盖率](../monitor/buff-coverage.md) 中加入监听的 Buff 才有数据，完整流程见 [例：在实时窗口查看历史战斗的 Buff 覆盖率](./examples/live-buff-coverage.md)。
+
+![实时窗口查看历史战斗的 Buff 覆盖率](../../../shared/img/dps/live_coverage_2.zh-CN.png)
+
 ## 历史列表
 
 - **筛选**：按 **{{ui:history.list.filters.favorite}}**、首领、玩家、场景过滤；点 **{{ui:history.list.filters.favoriteOnly}}** 只看收藏。
@@ -78,3 +82,4 @@
 ## 例
 
 - [用时间轴找出输出空窗](./examples/timeline-gaps.md)
+- [在实时窗口查看历史战斗的 Buff 覆盖率](./examples/live-buff-coverage.md)
