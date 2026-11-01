@@ -24,8 +24,26 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function ConvertTo-CMakePath([string]$Path) {
+    # VsDevCmd can leave a doubled separator in WindowsSdkDir (10.0.26100.0\\x64).
+    # CMake parses backslashes in compiler paths as escapes, so "\P" in
+    # "\Program Files" aborts configure. Forward slashes are safe.
+    return ($Path -replace '\\+', '/')
+}
+
+function Test-MsvcEnvironmentReady {
+    $cl = Get-Command cl.exe -ErrorAction SilentlyContinue
+    $rc = Get-Command rc.exe -ErrorAction SilentlyContinue
+    $mt = Get-Command mt.exe -ErrorAction SilentlyContinue
+    return [bool]($cl -and $rc -and $mt -and $env:INCLUDE -and $env:LIB)
+}
+
 function Import-MsvcEnvironment {
-    if (Get-Command cl.exe -ErrorAction SilentlyContinue) {
+    # cl.exe can sit on PATH by itself while the Windows SDK tools do not.
+    # CMake's Ninja/MSVC link step still needs rc.exe and mt.exe. Skipping
+    # VsDevCmd in that case caches CMAKE_MT=CMAKE_MT-NOTFOUND and the
+    # compiler test fails with "rc ... no such file or directory".
+    if (Test-MsvcEnvironmentReady) {
         return
     }
 
@@ -52,6 +70,9 @@ function Import-MsvcEnvironment {
     }
     if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
         throw "MSVC environment initialized but cl.exe is still unavailable"
+    }
+    if (-not ((Get-Command rc.exe -ErrorAction SilentlyContinue) -and (Get-Command mt.exe -ErrorAction SilentlyContinue))) {
+        throw "MSVC environment is missing Windows SDK tools (rc.exe and mt.exe). Install the Windows 10/11 SDK with the Desktop development with C++ workload."
     }
 }
 
@@ -88,13 +109,27 @@ if (-not (Test-Path -LiteralPath (Join-Path $sourceDir "CMakeLists.txt"))) {
     throw "vendored qwen3-tts source is missing: $sourceDir"
 }
 
+$cmakeCache = Join-Path $buildDir "CMakeCache.txt"
+if (Test-Path -LiteralPath $cmakeCache) {
+    $staleManifestTool = Select-String -LiteralPath $cmakeCache -Pattern '^CMAKE_MT:FILEPATH=CMAKE_MT-NOTFOUND$' -Quiet
+    $staleRcCompiler = Select-String -LiteralPath $cmakeCache -Pattern '^CMAKE_RC_COMPILER:.*\\' -Quiet
+    if ($staleManifestTool -or $staleRcCompiler) {
+        Write-Host "Removing CMake cache configured without Windows SDK manifest tools: $buildDir"
+        Remove-Item -LiteralPath $buildDir -Recurse -Force
+    }
+}
+
 New-Item -ItemType Directory -Force -Path $buildDir, $destinationDir | Out-Null
 
+$rcCompiler = ConvertTo-CMakePath (Get-Command rc.exe).Source
+$manifestTool = ConvertTo-CMakePath (Get-Command mt.exe).Source
 $cmakeArgs = @(
     "-S", $sourceDir,
     "-B", $buildDir,
     "-G", "Ninja",
     "-DCMAKE_BUILD_TYPE=$Configuration",
+    "-DCMAKE_RC_COMPILER=$rcCompiler",
+    "-DCMAKE_MT=$manifestTool",
     "-DQWEN3_TTS_STATIC_CRT=ON",
     "-DQWEN3_TTS_VARIANT=$variantName",
     "-DQWEN3_TTS_TIMING=$(if ($Timing) { 'ON' } else { 'OFF' })",
