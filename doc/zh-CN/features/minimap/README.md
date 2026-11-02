@@ -25,6 +25,8 @@
 | **{{ui:minimap.panels.map}}** | 俯视小地图：玩家、Boss、标点和机制区域 |
 | **{{ui:minimap.panels.info}}** | 文字列表：进行中的机制名称、点名对象与剩余时间 |
 
+两个面板的底色也在这里分别调整：**{{ui:minimap.overlay.mapBackgroundOpacity}}** 和 **{{ui:minimap.overlay.infoBackgroundOpacity}}**，数值越低越透明。调到 0 时地图只保留线条、机制区域和人物点，报幕只保留文字。
+
 ## 显示选项
 
 | 选项 | 效果 |

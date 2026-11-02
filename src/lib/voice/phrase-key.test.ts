@@ -262,3 +262,67 @@ it("uses the HTTP language for all variants and keeps other sources unchanged", 
   });
   expect(preset.every((p) => p.language === "zhCn")).toBe(true);
 });
+
+describe("pinned generation voices", () => {
+  const base = {
+    ruleKey: "voice:buff:2110050:gained",
+    autoText: "增益获得",
+    language: "zhCn" as const,
+    supportsTier: false,
+  };
+
+  it("names a preset slot the same whatever order its keys come back in", () => {
+    // Golden: a phrase minted in the app, before settings reloaded from disk
+    // with sorted keys.
+    const name = "custom:voice:buff:2110050:gained:sourcea2c183b4~2e1e42ae";
+    const minted = bindingPhrases({
+      ...base,
+      phrase: {
+        source: "custom",
+        text: "123",
+        generationSource: { mode: "preset", locale: "ja-JP" },
+      },
+    });
+    const reloaded = bindingPhrases({
+      ...base,
+      phrase: JSON.parse(
+        '{"generationSource":{"locale":"ja-JP","mode":"preset"},"source":"custom","text":"123"}',
+      ),
+    });
+    expect(minted[0]!.name).toBe(name);
+    expect(reloaded[0]!.name).toBe(name);
+  });
+
+  it("keeps HTTP slot names as they were first minted", () => {
+    const source = { mode: "http" as const, providerId: "http_1" };
+    const [phrase] = bindingPhrases({
+      ...base,
+      phrase: { source: "custom", text: "Ready", generationSource: source },
+    });
+    const slot = contentHash(JSON.stringify(source), "zhCn");
+    expect(phrase!.name).toBe(
+      `custom:voice:buff:2110050:gained:source${slot}~${contentHash("Ready", "zhCn")}`,
+    );
+  });
+
+  it("gives auto text a slot of its own per voice, in the subject's language", () => {
+    const plain = bindingPhrases({ ...base, phrase: { source: "auto" } })[0]!;
+    const pinned = bindingPhrases({
+      ...base,
+      phrase: {
+        source: "auto",
+        generationSource: { mode: "http", providerId: "http_1" },
+      },
+    })[0]!;
+    expect(plain.name).toBe(
+      `auto:voice:buff:2110050:gained~${contentHash("增益获得", "zhCn")}`,
+    );
+    expect(pinned.name).not.toBe(plain.name);
+    expect(pinned.text).toBe(plain.text);
+    expect(pinned.language).toBe("zhCn");
+    expect(managedSlotOf(pinned.name)).not.toBe(managedSlotOf(plain.name));
+    expect(managedPhraseName(parseManagedPhraseName(pinned.name)!)).toBe(
+      pinned.name,
+    );
+  });
+});

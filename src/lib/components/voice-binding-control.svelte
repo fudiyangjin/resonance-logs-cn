@@ -4,6 +4,9 @@
    * (a monitored buff / counter slot / boss DBM mechanic), each with
    * a row per configurable event (enabled toggle, phrase source picker,
    * optional "seconds before" for expiring events, and a preview button).
+   * Generated text (auto or custom) also gets a voice picker and a
+   * generate button; an alert's auto line is a bundled recording and
+   * gets neither.
    *
    * Self-contained: reads and writes settings directly via
    * `voice-binding-subject.svelte.ts` based on `subject`, so parent pages
@@ -15,6 +18,7 @@
    */
   import PlayIcon from "virtual:icons/lucide/play";
   import { t, type MessageKey } from "$lib/i18n/index.svelte";
+  import { APP_LOCALES, LOCALE_NATIVE_NAMES } from "$lib/i18n/locales";
   import {
     SETTINGS,
     resolveVoicePriority,
@@ -22,12 +26,17 @@
     type VoicePhraseBinding,
   } from "$lib/settings-store";
   import {
+    bindingGenerationSource,
+    lastGenerationError,
     runVoiceGeneration,
-    savedGenerationSource,
     voiceOperationActive,
     VOICE,
   } from "$lib/stores/voice-store.svelte";
   import { blurOnEnter } from "$lib/utils.svelte";
+  import {
+    decodeBindingSource,
+    encodeBindingSource,
+  } from "$lib/voice/generation-source";
   import { bindingPhrases } from "$lib/voice/phrase-key";
   import {
     materializeBindingPhraseIds,
@@ -37,16 +46,21 @@
     subjectEvents,
     updateSubjectEvent,
     type VoiceBindingEventDef,
-    type VoiceBindingEventKind,
     type VoiceBindingSubject,
   } from "$lib/voice-binding-subject.svelte.js";
 
   let { subject }: { subject: VoiceBindingSubject } = $props();
 
+  /** A binding whose text is generated into managed phrases. */
+  type ManagedBinding = Exclude<VoicePhraseBinding, { source: "phrase" }>;
+
   const events = $derived(subjectEvents(subject));
   const phrases = $derived(VOICE.status?.catalog.phrases ?? []);
+  const httpProviders = $derived(VOICE.status?.catalog.httpProviders ?? []);
 
   let previewingKey = $state<string | null>(null);
+  /** Why the last "生成语音" failed, shown under the event that ran it. */
+  let feedback = $state<{ key: string; text: string } | null>(null);
 
   const PRIORITY_LABEL_KEYS = {
     default: "voice.binding.priority.default",
@@ -78,15 +92,13 @@
 
   async function generate(
     event: VoiceBindingEventDef,
-    binding: VoicePhraseBinding,
+    binding: ManagedBinding,
     autoText: string,
   ) {
-    const source =
-      binding.source === "custom" && binding.generationSource
-        ? binding.generationSource
-        : savedGenerationSource();
+    const source = bindingGenerationSource(binding);
     if (!source || voiceOperationActive()) return;
     previewingKey = event.key;
+    feedback = null;
     try {
       const phraseIds = await materializeBindingPhraseIds(
         binding,
@@ -99,30 +111,134 @@
           fixedName: event.fixedPhraseName,
         }),
       );
-      if (phraseIds.length)
-        await runVoiceGeneration({
-          source,
-          phraseIds,
-          backendPreference: SETTINGS.voice.state.generationBackend,
-        });
+      if (!phraseIds.length) return;
+      const summary = await runVoiceGeneration({
+        source,
+        phraseIds,
+        backendPreference: SETTINGS.voice.state.generationBackend,
+      });
+      if (summary && summary.failed === 0) return;
+      const text =
+        lastGenerationError() ??
+        (summary
+          ? t("voice.phrases.generate.summary", {
+              completed: summary.completed,
+              failed: summary.failed,
+            })
+          : null);
+      if (text) feedback = { key: event.key, text };
     } finally {
       previewingKey = null;
     }
   }
 
   function setSource(
-    eventKind: VoiceBindingEventKind,
+    event: VoiceBindingEventDef,
+    binding: VoicePhraseBinding,
     source: VoicePhraseBinding["source"],
   ) {
+    // The pinned voice doesn't depend on where the text comes from, except
+    // for an alert's auto line, which is a bundled recording.
+    const pinned =
+      binding.source === "phrase" ||
+      (source === "auto" && event.fixedPhraseName)
+        ? undefined
+        : binding.generationSource;
+    const voice = pinned ? { generationSource: pinned } : {};
     const phrase: VoicePhraseBinding =
       source === "custom"
-        ? { source: "custom", text: "" }
+        ? { source: "custom", text: "", ...voice }
         : source === "phrase"
           ? { source: "phrase", phraseId: phrases[0]?.id ?? "" }
-          : { source: "auto" };
-    updateSubjectEvent(subject, eventKind, { phrase });
+          : { source: "auto", ...voice };
+    updateSubjectEvent(subject, event.eventKind, { phrase });
   }
 </script>
+
+{#snippet generationRow(
+  event: VoiceBindingEventDef,
+  binding: ManagedBinding,
+  autoText: string,
+)}
+  {@const pinned = binding.generationSource}
+  {@const spokenText = binding.source === "custom" ? binding.text : autoText}
+  <div class="flex flex-wrap items-center gap-2">
+    <label class="flex items-center gap-2 text-xs">
+      {t("voice.binding.generationSource")}
+      <select
+        class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-xs"
+        value={encodeBindingSource(pinned)}
+        onchange={(ev) =>
+          updateSubjectEvent(subject, event.eventKind, {
+            phrase: {
+              ...binding,
+              generationSource: decodeBindingSource(ev.currentTarget.value),
+            },
+          })}
+      >
+        <option value="default">{t("voice.binding.generationDefault")}</option>
+        <optgroup label={t("voice.phrases.generate.presetSource")}>
+          {#each APP_LOCALES as locale (locale)}
+            <option value={encodeBindingSource({ mode: "preset", locale })}
+              >{LOCALE_NATIVE_NAMES[locale]}</option
+            >
+          {/each}
+        </optgroup>
+        <optgroup label={t("voice.http.title")}>
+          {#if pinned?.mode === "http" && !httpProviders.some((provider) => provider.id === pinned.providerId)}
+            <option value={encodeBindingSource(pinned)} disabled
+              >{t("voice.binding.generationUnavailable")}</option
+            >
+          {/if}
+          {#each httpProviders as provider (provider.id)}
+            <option
+              value={encodeBindingSource({
+                mode: "http",
+                providerId: provider.id,
+              })}>{provider.name}</option
+            >
+          {/each}
+        </optgroup>
+      </select>
+    </label>
+    {#if binding.source === "custom" && pinned?.mode === "http"}
+      <label class="flex items-center gap-2 text-xs">
+        {t("voice.binding.generationLanguage")}
+        <select
+          class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-xs"
+          value={binding.httpLanguage ?? event.language ?? "zhCn"}
+          onchange={(ev) =>
+            updateSubjectEvent(subject, event.eventKind, {
+              phrase: {
+                ...binding,
+                httpLanguage: ev.currentTarget.value as
+                  | "zhCn"
+                  | "enUs"
+                  | "jaJp",
+              },
+            })}
+        >
+          <option value="zhCn">{t("voice.language.zhCN")}</option>
+          <option value="enUs">{t("voice.language.enUS")}</option>
+          <option value="jaJp">{t("voice.language.jaJP")}</option>
+        </select>
+      </label>
+    {/if}
+    <button
+      type="button"
+      class="border-border/60 hover:bg-muted/40 rounded border px-2 py-1 text-xs disabled:opacity-50"
+      disabled={voiceOperationActive() ||
+        previewingKey !== null ||
+        !spokenText.trim() ||
+        !bindingGenerationSource(binding)}
+      onclick={() => generate(event, binding, autoText)}
+      >{t("voice.binding.generate")}</button
+    >
+  </div>
+  {#if feedback?.key === event.key}
+    <p class="text-destructive text-xs break-all">{feedback.text}</p>
+  {/if}
+{/snippet}
 
 <div class="space-y-2">
   {#each events as event (event.key)}
@@ -161,7 +277,8 @@
             value={binding.source}
             onchange={(ev) =>
               setSource(
-                event.eventKind,
+                event,
+                binding,
                 (ev.currentTarget as HTMLSelectElement)
                   .value as VoicePhraseBinding["source"],
               )}
@@ -237,6 +354,9 @@
           <div class="text-muted-foreground text-xs">
             {t("voice.binding.autoPreview", { text: autoText })}
           </div>
+          {#if !event.fixedPhraseName}
+            {@render generationRow(event, binding, autoText)}
+          {/if}
         {:else if binding.source === "custom"}
           <input
             class="border-border/60 bg-muted/30 text-foreground placeholder:text-muted-foreground w-full rounded border px-2 py-1 text-xs"
@@ -252,101 +372,7 @@
                 },
               })}
           />
-          <div class="flex flex-wrap items-center gap-2">
-            <label class="flex items-center gap-2 text-xs">
-              {t("voice.binding.generationSource")}
-              <select
-                class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-xs"
-                value={binding.generationSource
-                  ? binding.generationSource.mode === "http"
-                    ? `http:${binding.generationSource.providerId}`
-                    : `preset:${binding.generationSource.locale}`
-                  : "default"}
-                onchange={(ev) => {
-                  const value = ev.currentTarget.value;
-                  const generationSource = value.startsWith("http:")
-                    ? { mode: "http" as const, providerId: value.slice(5) }
-                    : value.startsWith("preset:")
-                      ? {
-                          mode: "preset" as const,
-                          locale: value.slice(7) as "zh-CN" | "en-US" | "ja-JP",
-                        }
-                      : undefined;
-                  updateSubjectEvent(subject, event.eventKind, {
-                    phrase: { ...binding, generationSource },
-                  });
-                }}
-              >
-                <option value="default"
-                  >{t("voice.binding.generationDefault")}</option
-                >
-                <optgroup label={t("voice.phrases.generate.presetSource")}>
-                  <option value="preset:zh-CN">中文</option>
-                  <option value="preset:en-US">English</option>
-                  <option value="preset:ja-JP">日本語</option>
-                </optgroup>
-                <optgroup label={t("voice.http.title")}>
-                  {#if binding.generationSource?.mode === "http" && !VOICE.status?.catalog.httpProviders.some((p) => p.id === (binding.generationSource as { providerId: string }).providerId)}
-                    <option
-                      value={`http:${binding.generationSource.providerId}`}
-                      disabled
-                      >{t("voice.binding.generationUnavailable")}</option
-                    >
-                  {/if}
-                  {#each VOICE.status?.catalog.httpProviders ?? [] as provider (provider.id)}
-                    <option value={`http:${provider.id}`}
-                      >{provider.name}</option
-                    >
-                  {/each}
-                </optgroup>
-              </select>
-            </label>
-            {#if binding.generationSource?.mode === "http"}
-              <label class="flex items-center gap-2 text-xs">
-                {t("voice.binding.generationLanguage")}
-                <select
-                  class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-xs"
-                  value={binding.httpLanguage ?? event.language ?? "zhCn"}
-                  onchange={(ev) =>
-                    updateSubjectEvent(subject, event.eventKind, {
-                      phrase: {
-                        ...binding,
-                        httpLanguage: ev.currentTarget.value as
-                          | "zhCn"
-                          | "enUs"
-                          | "jaJp",
-                      },
-                    })}
-                >
-                  <option value="zhCn">{t("voice.language.zhCN")}</option>
-                  <option value="enUs">{t("voice.language.enUS")}</option>
-                  <option value="jaJp">{t("voice.language.jaJP")}</option>
-                </select>
-              </label>
-            {/if}
-            <button
-              type="button"
-              class="border-border/60 hover:bg-muted/40 rounded border px-2 py-1 text-xs disabled:opacity-50"
-              disabled={voiceOperationActive() ||
-                previewingKey !== null ||
-                !binding.text.trim() ||
-                (binding.generationSource?.mode === "preset" &&
-                  VOICE.status?.model.kind !== "ready") ||
-                (binding.generationSource?.mode === "http" &&
-                  !VOICE.status?.catalog.httpProviders.some(
-                    (p) =>
-                      p.id ===
-                      (binding.generationSource as { providerId: string })
-                        .providerId,
-                  )) ||
-                (!binding.generationSource && !savedGenerationSource())}
-              onclick={() => generate(event, binding, autoText)}
-              >{t("voice.binding.generate")}</button
-            >
-          </div>
-          {#if VOICE.generationError}
-            <p class="text-destructive text-xs">{VOICE.generationError}</p>
-          {/if}
+          {@render generationRow(event, binding, autoText)}
           {#if event.supportsTierPlaceholder}
             <p class="text-muted-foreground text-[11px]">
               {t("voice.binding.tierPlaceholderHint")}

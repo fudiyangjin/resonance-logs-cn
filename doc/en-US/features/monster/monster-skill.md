@@ -9,8 +9,8 @@ Typical uses: trash-mob skills without a DBM warning, dangerous casts by elites,
 The game tells the client which skill every entity in view is casting, and the app checks that against your list:
 
 - **Source**: any nearby monster, including adds summoned by a boss; players and their summons never trigger it;
-- **Display**: one row per skill, name only, with no countdown or progress bar (a cast has no duration of its own);
-- **Lifetime**: the row disappears after **{{ui:monsterMonitor.monsterSkill.displaySeconds}}** seconds; a recast in the meantime restarts the timer;
+- **Display**: one row per skill, name only by default (a cast has no duration of its own); with **{{ui:monsterMonitor.monsterSkill.countdown}}** ticked, the row also shows the remaining seconds and a progress bar;
+- **Lifetime**: the row disappears after **{{ui:monsterMonitor.monsterSkill.displaySeconds}}** seconds (with a countdown, when it reaches zero); a recast in the meantime restarts the timer;
 - **Order**: rows follow the list order, so they never jump around;
 - If the caster dies or leaves view, the row still stays until its time is up; changing scenes clears everything.
 
@@ -20,7 +20,7 @@ The game tells the client which skill every entity in view is casting, and the a
 | --- | --- | --- |
 | Triggered by | Mechanics the server flags with a warning | Any monster skill |
 | Setup | None | Add the skills you want to watch |
-| Shows | Skill name + countdown + progress bar | Skill name only |
+| Shows | Skill name + countdown + progress bar | Skill name, optional countdown + progress bar |
 
 Both can be on at the same time. For mechanics that already have a DBM warning, [Boss DBM](./boss-dbm.md) is enough.
 
@@ -39,7 +39,14 @@ Each skill is listed once, up to 32 skills. In the **{{ui:monsterMonitor.monster
 | --- | --- |
 | **{{ui:monsterMonitor.monsterSkill.label}}** | Name shown on the panel; empty uses the in-game name |
 | **{{ui:monsterMonitor.monsterSkill.displaySeconds}}** | 5 seconds by default, 0.5–60 seconds allowed |
+| **{{ui:monsterMonitor.monsterSkill.countdown}}** | Off by default; when on, the display time becomes a countdown with remaining seconds and a progress bar |
 | Move up / Move down / Remove | Reorder the panel or remove the entry |
+
+With **{{ui:monsterMonitor.monsterSkill.monitorAll}}** on, skills that are not on your list show their name only, never a countdown.
+
+### Counting down to the next skill
+
+Some bosses cast skill B a fixed number of seconds after skill A. Add A to the list, set its alias to something about B (for example "B incoming"), enter the gap as **{{ui:monsterMonitor.monsterSkill.displaySeconds}}** and tick **{{ui:monsterMonitor.monsterSkill.countdown}}**: as soon as A is cast, the row counts down from the gap and reaches zero when B comes out.
 
 ## Voice broadcast
 
@@ -53,4 +60,4 @@ Each skill can have an **On trigger** cue that plays as soon as a nearby monster
 
 Turn on the **Monster Skills** area in **{{ui:monsterMonitor.tabs.overlay}}** (off by default), then use **{{ui:monsterMonitor.actions.editLayout}}** to drag it into place. Without live data, edit mode previews the first skills on your list.
 
-The panel style covers row gap, font size, name color, text shadow and background.
+The panel style covers row gap, column gap, font size, name color, value color, progress bar color, progress bar opacity, text shadow and background.

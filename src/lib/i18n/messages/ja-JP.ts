@@ -582,6 +582,15 @@ export const jaJPMessages = {
   "live.history.bossDefeated": "撃破",
   "live.history.bossAlive": "未撃破",
   "live.history.target.label": "ターゲット",
+  "live.history.banner.coverage": "バフ稼働率",
+  "live.coverage.playersLabel": "プレイヤー",
+  "live.coverage.caption": "アクティブ戦闘時間（{duration}）に基づく",
+  "live.coverage.empty":
+    "この戦闘では稼働率監視中のバフが記録されていません。メインウィンドウの「{path}」で追加すると、以降の戦闘から記録されます。",
+  "live.coverage.historyOnly": "履歴の戦闘を表示中のみ利用できます",
+  "live.coverage.rowTooltip":
+    "{name} #{id} · 稼働 {covered} / {active} · 発動 {count} 回",
+  "live.coverage.absentTooltip": "{name} #{id} · この戦闘では未発生",
   "history.list.error.deleteFailed": "削除に失敗しました: {error}",
   "history.list.error.loadFailed":
     "エンカウント一覧の読み込みに失敗しました: {error}",
@@ -1278,6 +1287,8 @@ export const jaJPMessages = {
   "components.buffSearchResultGrid.subtitle.composite": "複合 Buff",
   "components.buffSearchResultGrid.subtitle.compositeThreshold":
     "複合 Buff · {total} 個中 {count} 個",
+  "components.buffSearchResultGrid.subtitle.compositeMostUrgent":
+    "複合 Buff · 最も急ぐメンバー",
   "components.buffSearchResultGrid.showMore": "さらに表示(残り {remaining} 件)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
   "skillMonitor.layout.title": "ライブモニター",
@@ -1433,6 +1444,13 @@ export const jaJPMessages = {
     "{total} 個中 {count} 個以上が同時に有効",
   "skillMonitor.buff.composite.hint":
     "有効条件を満たしている間表示され、同時に有効なメンバーが必要数を下回るまで続きます（すべて必要な場合は最初に切れるメンバー）。スタック数：すべて必要な場合はメンバーの最小スタック数、それ以外は現在有効なメンバー数。メンバー Buff 自体の表示には影響しません。",
+  "skillMonitor.buff.composite.mode": "表示方法",
+  "skillMonitor.buff.composite.modeJoint": "複合全体",
+  "skillMonitor.buff.composite.modeMostUrgent": "最も急ぐメンバー",
+  "skillMonitor.buff.composite.conditionMostUrgent":
+    "最も急ぐメンバー：いずれかのメンバーが有効な間表示、欠けているメンバー優先、次に残り時間が最短のメンバー",
+  "skillMonitor.buff.composite.hintMostUrgent":
+    "いずれかのメンバーが有効な間 1 枠で表示します。欠けているメンバーがいればそのメンバーを暗く表示して「欠落」と示し（複数ある場合は先に並んでいるもの）、いなければ残り時間が最短のメンバーをそのアイコン・時間・スタック数で表示します。バフ稼働率はいずれかのメンバーが有効な時間で集計し、音声は複合全体の出現・終了・まもなく終了で再生されます。メンバーごとに通知したい場合はそのメンバーに音声を設定してください。メンバー Buff 自体の表示には影響しません。",
   "skillMonitor.buff.composite.save": "複合を保存",
   "skillMonitor.buff.composite.deleteTitle": "複合「{name}」を削除しますか？",
   "skillMonitor.buff.composite.deleteDescription":
@@ -1851,6 +1869,9 @@ export const jaJPMessages = {
   "skillMonitor.overlay.resourceSections": "リソース区分",
   "skillMonitor.overlay.resourceSectionsHelp":
     "現在の職業の各リソース区分は個別に表示/非表示でき、オーバーレイ編集モードで独立してドラッグ・拡縮できます",
+  "skillMonitor.overlay.resourceTextStyle": "リソース文字",
+  "skillMonitor.overlay.resourceTextStyleHelp":
+    "リソースバー・リソースポイント・シールドバーの数字（例：100/400）。職業カウンターはゲームの数字画像なので影響しません。文字の影は共通の文字スタイルに従います。",
   "monsterMonitor.title": "モンスターモニター",
   "monsterMonitor.description":
     "現在のターゲットモンスターの Buff と関連データをモニター",
@@ -2071,6 +2092,9 @@ export const jaJPMessages = {
   "monsterMonitor.monsterSkill.empty": "スキルはまだ追加されていません。",
   "monsterMonitor.monsterSkill.label": "別名",
   "monsterMonitor.monsterSkill.displaySeconds": "表示秒数",
+  "monsterMonitor.monsterSkill.countdown": "カウントダウン",
+  "monsterMonitor.monsterSkill.countdownHint":
+    "残り秒数とプログレスバーを表示し、カウントダウンが終わると消えます。このスキルの数秒後に次のスキルが来る場合に便利です。",
   "monsterMonitor.monsterSkill.voice.title": "音声読み上げ",
   "monsterMonitor.monsterSkill.styleTitle": "パネルスタイル",
   "monsterMonitor.entityDuration.title": "エンティティ持続時間",
@@ -2176,6 +2200,10 @@ export const jaJPMessages = {
   "gameOverlay.edit.dragHint":
     "ここをドラッグして Game Overlay ウィンドウを移動",
   "gameOverlay.group.resource": "リソースエリア",
+  "gameOverlay.resource.section.bar": "リソースバー",
+  "gameOverlay.resource.section.dots": "リソースポイント",
+  "gameOverlay.resource.section.siderLine": "シールドバー",
+  "gameOverlay.resource.section.professionCount": "職業カウンター",
   "gameOverlay.group.skillCd": "スキル CD エリア",
   "gameOverlay.group.textBuff": "テキスト Buff エリア",
   "gameOverlay.group.shieldDetail": "HP/シールドエリア",
@@ -2191,6 +2219,8 @@ export const jaJPMessages = {
   "gameOverlay.buff.fantasyTierSuffix": "{name} | {level}階",
   "gameOverlay.buff.stateActive": "有効",
   "gameOverlay.buff.stateInactive": "無効",
+  "gameOverlay.buff.memberMissing": "欠落",
+  "gameOverlay.buff.focusMember": "{composite}・{member}",
   "gameOverlay.timer.seconds": "{value}秒",
   "gameOverlay.timer.minutes": "{value}分",
   "gameOverlay.timer.hours": "{value}時間",
@@ -2336,6 +2366,10 @@ export const jaJPMessages = {
   "minimap.overlay.infoPanel": "ギミック通知：{state}",
   "minimap.overlay.help":
     "パネル位置と幅はダンジョンギミック窓のレイアウト編集モードで調整してください。",
+  "minimap.overlay.mapBackgroundOpacity": "マップ背景の濃度",
+  "minimap.overlay.infoBackgroundOpacity": "ギミック通知背景の濃度",
+  "minimap.overlay.backgroundOpacityHelp":
+    "パネルの背景色のみを調整します。値が低いほど透明になり、マップ上の線・ギミック範囲・プレイヤーの点は変わりません。",
   "minimap.settings.colors.title": "プレイヤー色",
   "minimap.settings.colors.description":
     "ギミック色がない場合の自分と味方の色を設定します。ギミック通知は引き続き高コントラストのスロット色を使用します。",
@@ -2528,6 +2562,9 @@ export const jaJPMessages = {
   "minimap.s4SkyEndRaid.bossRune": "ボス符文{rune}・{shape}",
   "minimap.s4SkyEndRaid.runeShape1": "緑の鳥",
   "minimap.s4SkyEndRaid.runeShape4": "黄色の折れ角",
+  "minimap.s4SkyEndRaid.runeOrder": "点灯順",
+  "minimap.s4SkyEndRaid.runeAlt": "ルーン{rune}",
+  "minimap.s4SkyEndRaid.chargeInterval": "チャージ間隔",
   "minimap.s4SkyEndRaid.sin": "罪罰",
   "minimap.s4SkyEndRaid.sinLayer": "{layer}層",
   "minimap.s4SkyEndRaid.extremeSin": "極罪",
@@ -2539,7 +2576,7 @@ export const jaJPMessages = {
   "minimap.s4SkyEndRaid.darkPoint": "闇",
   "minimap.s4SkyEndRaid.celestial": "天体衝突",
   "minimap.s4SkyEndRaid.celestialPair": "球2つ {gap}°",
-  "minimap.s4SkyEndRaid.celestialTriple": "球3つ（推測）",
+  "minimap.s4SkyEndRaid.celestialTriple": "球3つ 爆発{n}回目",
   "minimap.s4SkyEndRaid.safeSpot": "安全",
   "minimap.s4SkyEndRaid.firstSpot": "①",
   "minimap.s4SkyEndRaid.secondSpot": "②",
@@ -2851,7 +2888,5 @@ export const jaJPMessages = {
   "voice.bindings.generateMissing.needProfile":
     "先に「フレーズ集」で使用可能な生成ソースを選択してください（ローカル音声にはモデルのインストールが必要です）",
   "voice.bindings.generateMissing.none": "生成待ちの音声はありません",
-  "voice.bindings.generateMissing.summary":
-    "{count} 件の音声生成を送信しました",
   "voice.bindings.tryPlay": "試聴",
 };

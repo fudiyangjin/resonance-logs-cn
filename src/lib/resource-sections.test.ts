@@ -21,14 +21,44 @@ function profile(
 }
 
 describe("ensureResourceSections", () => {
-  it("derives one section per class resource in config order", () => {
+  it("derives the bar parts, the flower and the counter in order", () => {
     const sections = ensureResourceSections(profile());
-    expect(sections.map((section) => section.definition.type)).toEqual([
+    expect(sections.map((section) => section.content.type)).toEqual([
       "bar",
-      "charges",
+      "dots",
       "flowerRotation",
+      "professionCount",
     ]);
-    expect(sections.at(-1)?.key).toBe("flowerRotation:2202716");
+    expect(sections.map((section) => section.key)).toEqual([
+      "bar:15001:15007",
+      "charges:15011:15017",
+      "flowerRotation:2202716",
+      "professionCount",
+    ]);
+  });
+
+  it("keys the stormblade supplement and the shield side bar", () => {
+    expect(
+      ensureResourceSections(profile({ selectedClass: "stormblade" })).map(
+        (section) => section.key,
+      ),
+    ).toEqual(["bar:12051:12057", "charges:12041:12047", "professionCount"]);
+    expect(
+      ensureResourceSections(profile({ selectedClass: "shield_knight" })).map(
+        (section) => section.content.type,
+      ),
+    ).toEqual(["bar", "dots", "siderLine", "professionCount"]);
+  });
+
+  it("keeps layouts stored under the earlier bar and charges keys", () => {
+    const stored = { position: { x: 7, y: 8 }, scale: 1.5, visible: false };
+    const sections = ensureResourceSections(
+      profile({
+        selectedClass: "wind_knight",
+        resourceSectionLayouts: { "charges:14001:14007": stored },
+      }),
+    );
+    expect(sections[1]?.layout).toEqual(stored);
   });
 
   it("stacks defaults below the legacy resource group position", () => {
@@ -57,7 +87,7 @@ describe("ensureResourceSections", () => {
         },
       }),
     );
-    expect(sections).toHaveLength(3);
+    expect(sections).toHaveLength(4);
     expect(sections[2]?.layout).toEqual({
       position: { x: 5, y: 6 },
       scale: 2.5,
@@ -68,7 +98,7 @@ describe("ensureResourceSections", () => {
   it("follows the class count", () => {
     expect(
       ensureResourceSections(profile({ selectedClass: "wind_knight" })),
-    ).toHaveLength(2);
+    ).toHaveLength(3);
     expect(ensureResourceSections(profile({ selectedClass: "nope" }))).toEqual(
       [],
     );

@@ -216,6 +216,22 @@ describe("configured buff monitor plan", () => {
     expect(plan.timelineIds).toEqual([42]);
   });
 
+  it("publishes the weapon bar's buffs while the resource group is shown", () => {
+    const barProfile = (showResourceGroup: boolean) => {
+      const value = withVisibility(profile(), { showResourceGroup });
+      value.selectedClass = "flame_berserker";
+      return value;
+    };
+    const barIds = [35102, 35103, 2208030, 2208430];
+
+    const shownPlan = buildConfiguredBuffPlan(barProfile(true));
+    expect(shownPlan.publishedIds).toEqual(expect.arrayContaining(barIds));
+    expect(isOrdinaryBuff(shownPlan, 35102)).toBe(false);
+
+    const hiddenPlan = buildConfiguredBuffPlan(barProfile(false));
+    expect(hiddenPlan.publishedIds).not.toContain(35102);
+  });
+
   it("lets the flower section keep its buffs out of the catch-all only while shown", () => {
     const flowerIds = [2202713, 2202714, 2202715, 2202716];
     const flowerProfile = (showResourceGroup: boolean) => {

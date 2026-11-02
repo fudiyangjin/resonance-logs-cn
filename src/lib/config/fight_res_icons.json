@@ -1,0 +1,138 @@
+{
+  "1": {
+    "name": "通用冰",
+    "showType": 1,
+    "subType": null,
+    "max": null,
+    "digits": "ice",
+    "color": "#73CEFE"
+  },
+  "11": {
+    "name": "通用雷",
+    "showType": 1,
+    "subType": 1,
+    "max": 30,
+    "digits": "thunder",
+    "color": "#D6B4FF"
+  },
+  "12": {
+    "name": "特殊雷",
+    "showType": 3,
+    "subType": 1,
+    "max": 8,
+    "digits": "thunder",
+    "color": null
+  },
+  "21": {
+    "name": "通用风",
+    "showType": 1,
+    "subType": 1,
+    "max": 5,
+    "digits": "wind",
+    "color": "#51E1CF"
+  },
+  "22": {
+    "name": "特殊风",
+    "showType": 2,
+    "subType": 2,
+    "max": 2,
+    "digits": null,
+    "color": null
+  },
+  "31": {
+    "name": "通用岩",
+    "showType": 1,
+    "subType": 1,
+    "max": 20,
+    "digits": "rock",
+    "color": "#FFC07D"
+  },
+  "41": {
+    "name": "通用森",
+    "showType": 1,
+    "subType": 1,
+    "max": 10,
+    "digits": "wood",
+    "color": "#80E56A"
+  },
+  "42": {
+    "name": "法环用红花",
+    "showType": 4,
+    "subType": 1,
+    "max": 1,
+    "digits": null,
+    "color": null
+  },
+  "43": {
+    "name": "法环用黄花",
+    "showType": 4,
+    "subType": 2,
+    "max": 1,
+    "digits": null,
+    "color": null
+  },
+  "44": {
+    "name": "法环用蓝花",
+    "showType": 4,
+    "subType": 3,
+    "max": 1,
+    "digits": null,
+    "color": null
+  },
+  "45": {
+    "name": "法环用底板",
+    "showType": 4,
+    "subType": 0,
+    "max": 1,
+    "digits": null,
+    "color": null
+  },
+  "51": {
+    "name": "通用光",
+    "showType": 1,
+    "subType": 1,
+    "max": 5,
+    "digits": "light",
+    "color": "#FFDC72"
+  },
+  "52": {
+    "name": "肉鸽用光",
+    "showType": 1,
+    "subType": null,
+    "max": null,
+    "digits": "light",
+    "color": "#FFDC72"
+  },
+  "61": {
+    "name": "通用无",
+    "showType": 1,
+    "subType": 1,
+    "max": 10,
+    "digits": "wu",
+    "color": "#E2E2E2"
+  },
+  "71": {
+    "name": "通用火",
+    "showType": 1,
+    "subType": 1,
+    "max": 50,
+    "digits": "fire",
+    "color": "#FF6969"
+  },
+  "81": {
+    "name": "双斧rank",
+    "showType": 5,
+    "subType": 1,
+    "max": 6,
+    "digits": null,
+    "color": null
+  },
+  "101": {
+    "name": "剑盾用光",
+    "showType": 1,
+    "subType": 1,
+    "max": 12,
+    "digits": "light",
+    "color": "#FFDC72"
+  }
+}

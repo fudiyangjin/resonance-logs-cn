@@ -65,7 +65,9 @@
       {@const statusLabel = getStatusLabel(item.baseId)}
       {@const defaultName = iconBuff?.name ?? null}
       {@const subtitle = item.composite
-        ? item.composite.minActive < item.composite.memberCount
+        ? item.composite.mostUrgent
+          ? t("components.buffSearchResultGrid.subtitle.compositeMostUrgent")
+          : item.composite.minActive < item.composite.memberCount
           ? t("components.buffSearchResultGrid.subtitle.compositeThreshold", {
               count: item.composite.minActive,
               total: item.composite.memberCount,

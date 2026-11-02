@@ -15,9 +15,12 @@
     /** A required resource is short, so the skill is unusable even off CD. */
     resourceBlocked?: boolean;
     derivedActive?: boolean;
-    /** Edge length in px. */
+    /** Edge length in px; the cell is drawn at `CELL_SIZE` and zoomed. */
     size?: number;
   }
+
+  /** Edge length every px value below is designed for. */
+  const CELL_SIZE = 52;
 
   let {
     skillId,
@@ -27,7 +30,7 @@
     display,
     resourceBlocked = false,
     derivedActive = false,
-    size = 52,
+    size = CELL_SIZE,
   }: Props = $props();
 
   const colour = $derived(bgColour ?? skillBgColour(skillId));
@@ -36,17 +39,16 @@
   const isUnavailable = $derived(!isUsable || resourceBlocked);
   const isRechargingUsable = $derived(isOnCd && isUsable);
   const percent = $derived(isOnCd ? (display?.percent ?? 0) : 0);
-  const displayText = $derived(display?.text ?? "");
-  const chargesAvailable = $derived(display?.chargesAvailable);
-  const maxCharges = $derived(display?.maxCharges);
   const rechargeMotion = $derived<BarMotion>(
     display?.rechargeMotion ?? { kind: "static", scale: 1 - percent },
   );
-  const isFull = $derived(
-    chargesAvailable !== undefined &&
-      maxCharges !== undefined &&
-      chargesAvailable >= maxCharges,
-  );
+  /** Colour of the available-charge count; `null` for single-charge skills. */
+  const chargeState = $derived.by(() => {
+    const available = display?.chargesAvailable;
+    const max = display?.maxCharges;
+    if (available === undefined || max === undefined) return null;
+    return available >= max ? "full" : available > 0 ? "partial" : "empty";
+  });
 </script>
 
 <div
@@ -55,8 +57,7 @@
   class:on-cd={isOnCd}
   class:derived-active={derivedActive}
   class:usable-recharging={isRechargingUsable}
-  style:--skill-cell-size={`${size}px`}
-  style:--skill-cell-scale={size / 52}
+  style:zoom={size / CELL_SIZE}
 >
   {#if skillId}
     <SkillIcon
@@ -71,40 +72,30 @@
     {/if}
   {/if}
 
-  {#if display?.chargesText}
-    <div
-      class="charges-badge"
-      class:charges-full={isFull}
-      class:charges-partial={!isFull &&
-        chargesAvailable !== undefined &&
-        chargesAvailable > 0}
-      class:charges-empty={chargesAvailable === 0}
-    >
-      {display.chargesText}
-    </div>
+  {#if chargeState}
+    <span class="charges" data-state={chargeState}>
+      {display?.chargesAvailable}
+    </span>
   {/if}
 
   {#if isUnavailable && isOnCd}
     <div class="cd-overlay" style={`--cd-percent: ${percent}`}>
-      {#if displayText}
-        <span class="cd-text">{displayText}</span>
+      {#if display?.text}
+        <span class="cd-text">{display.text}</span>
       {/if}
     </div>
   {:else if isRechargingUsable}
     <div class="recharge-bar-wrap">
       <div class="recharge-bar" {@attach barMotion(() => rechargeMotion)}></div>
     </div>
-    {#if displayText}
-      <span class="recharge-text">{displayText}</span>
-    {/if}
   {/if}
 </div>
 
 <style>
   .skill-cell {
     position: relative;
-    width: var(--skill-cell-size, 52px);
-    height: var(--skill-cell-size, 52px);
+    width: 52px;
+    height: 52px;
     border-radius: 6px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -144,7 +135,7 @@
   }
 
   .cd-text {
-    font-size: max(10px, calc(15px * var(--skill-cell-scale, 1)));
+    font-size: 15px;
     font-weight: 700;
     color: #ffffff;
     line-height: 1;
@@ -179,45 +170,32 @@
     will-change: transform;
   }
 
-  .recharge-text {
+  /* Available charges, colour-coded; outlined so it needs no backing box */
+  .charges {
     position: absolute;
-    bottom: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: max(9px, calc(11px * var(--skill-cell-scale, 1)));
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 1;
-    padding: 1px 4px;
-    border-radius: 3px;
-    background: rgba(0, 0, 0, 0.5);
-    text-shadow: var(--overlay-text-shadow, 0 1px 2px rgba(0, 0, 0, 1));
-    white-space: nowrap;
-  }
-
-  /* Charges badge: color-coded by available count */
-  .charges-badge {
-    position: absolute;
-    right: 3px;
     top: 3px;
-    padding: 2px 5px;
-    border-radius: 5px;
-    background: rgba(0, 0, 0, 0.7);
-    color: #ffffff;
-    font-size: max(9px, calc(11px * var(--skill-cell-scale, 1)));
-    font-weight: 700;
+    right: 4px;
+    z-index: 1;
+    font-size: 18px;
+    font-weight: 800;
     line-height: 1;
+    pointer-events: none;
+    text-shadow: var(
+      --overlay-text-shadow,
+      0 0 2px rgba(0, 0, 0, 1),
+      0 1px 3px rgba(0, 0, 0, 0.9)
+    );
   }
 
-  .charges-badge.charges-full {
+  .charges[data-state="full"] {
     color: #34d399;
   }
 
-  .charges-badge.charges-partial {
+  .charges[data-state="partial"] {
     color: #fbbf24;
   }
 
-  .charges-badge.charges-empty {
+  .charges[data-state="empty"] {
     color: #94a3b8;
   }
 </style>

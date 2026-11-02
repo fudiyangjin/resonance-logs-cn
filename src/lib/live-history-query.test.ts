@@ -5,6 +5,7 @@ import {
   expandOptionIds,
   formatEncounterDuration,
   groupRowsByLocalDay,
+  isLiveCoveragePath,
   isLiveDrillDown,
   isLiveHistoryPath,
   liveTabRoot,
@@ -195,5 +196,14 @@ describe("live route helpers", () => {
     expect(isLiveHistoryPath("/live/history")).toBe(true);
     expect(isLiveHistoryPath("/live/history/")).toBe(true);
     expect(isLiveHistoryPath("/live/dps")).toBe(false);
+  });
+
+  it("keeps the coverage page apart from tabs, drill-downs and the picker", () => {
+    expect(isLiveCoveragePath("/live/coverage")).toBe(true);
+    expect(isLiveCoveragePath("/live/coverage/")).toBe(true);
+    expect(isLiveCoveragePath("/live/dps")).toBe(false);
+    expect(liveTabRoot("/live/coverage")).toBeNull();
+    expect(isLiveDrillDown("/live/coverage")).toBe(false);
+    expect(isLiveHistoryPath("/live/coverage")).toBe(false);
   });
 });

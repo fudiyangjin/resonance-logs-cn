@@ -34,22 +34,27 @@ export function normalizeMonsterSkillDisplayMs(value: unknown): number {
   );
 }
 
+/** `countdown` is kept only when literally `true`, so entries that never
+ * turned it on stay as they were persisted. */
 function buildEntry(
   skillId: number,
   label: unknown,
   displayMs: unknown,
+  countdown: unknown,
 ): MonsterSkillWatchEntry {
   return {
     skillId,
     label: typeof label === "string" ? label.trim() : "",
     displayMs: normalizeMonsterSkillDisplayMs(displayMs),
+    ...(countdown === true ? { countdown: true } : {}),
   };
 }
 
 /**
  * Normalizes a persisted list: drops entries with invalid skill ids, keeps
- * the first entry per skill id, trims labels, clamps display times and
- * truncates to `MAX_MONSTER_SKILL_ENTRIES`.
+ * the first entry per skill id, trims labels, clamps display times, keeps
+ * the countdown flag only when it is `true` and truncates to
+ * `MAX_MONSTER_SKILL_ENTRIES`.
  */
 export function ensureMonsterSkillEntries(
   entries: readonly Partial<MonsterSkillWatchEntry>[] | null | undefined,
@@ -62,13 +67,15 @@ export function ensureMonsterSkillEntries(
     if (!raw || typeof raw !== "object") continue;
     if (!isValidMonsterSkillId(raw.skillId) || seen.has(raw.skillId)) continue;
     seen.add(raw.skillId);
-    result.push(buildEntry(raw.skillId, raw.label, raw.displayMs));
+    result.push(
+      buildEntry(raw.skillId, raw.label, raw.displayMs, raw.countdown),
+    );
   }
   return result;
 }
 
-/** Appends `skillId` with the default display time; a no-op for a skill
- * already on the list, an invalid id or a full list. */
+/** Appends `skillId` with the default display time and no countdown; a
+ * no-op for a skill already on the list, an invalid id or a full list. */
 export function addMonsterSkillEntry(
   entries: readonly MonsterSkillWatchEntry[],
   skillId: number,
@@ -82,13 +89,14 @@ export function addMonsterSkillEntry(
   }
   return [
     ...entries,
-    buildEntry(skillId, "", DEFAULT_MONSTER_SKILL_DISPLAY_MS),
+    buildEntry(skillId, "", DEFAULT_MONSTER_SKILL_DISPLAY_MS, false),
   ];
 }
 
 export type MonsterSkillEntryPatch = {
   label?: string;
   displayMs?: number;
+  countdown?: boolean;
 };
 
 export function patchMonsterSkillEntry(
@@ -102,6 +110,7 @@ export function patchMonsterSkillEntry(
           skillId,
           patch.label ?? entry.label,
           patch.displayMs ?? entry.displayMs,
+          patch.countdown ?? entry.countdown,
         )
       : entry,
   );

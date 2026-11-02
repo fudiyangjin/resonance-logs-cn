@@ -9,8 +9,8 @@
 游戏会把视野内每个实体当前释放的技能同步给客户端，应用据此判断：
 
 - **来源**：附近任意怪物，包括 Boss 召唤出的小怪；玩家和玩家的召唤物不会触发；
-- **显示**：一个技能一行，只显示名称，没有倒计时和进度条（释放技能本身没有持续时间）；
-- **停留**：显示 **{{ui:monsterMonitor.monsterSkill.displaySeconds}}** 秒后消失；期间再次释放会重新计时；
+- **显示**：一个技能一行，默认只显示名称（释放技能本身没有持续时间）；勾选 **{{ui:monsterMonitor.monsterSkill.countdown}}** 后，同时显示剩余秒数和进度条；
+- **停留**：显示 **{{ui:monsterMonitor.monsterSkill.displaySeconds}}** 秒后消失（开了倒计时就是倒计时归零时消失）；期间再次释放会重新计时；
 - **顺序**：按列表顺序排列，行的位置不会跳动；
 - 施法的怪物死亡或离开视野后，这一行照常显示到时间结束；切换场景时全部清空。
 
@@ -20,7 +20,7 @@
 | --- | --- | --- |
 | 触发条件 | 服务端带预警标记的机制 | 任何怪物技能 |
 | 需要配置 | 不需要 | 手动添加要监控的技能 |
-| 显示内容 | 技能名 + 倒计时 + 进度条 | 只有技能名 |
+| 显示内容 | 技能名 + 倒计时 + 进度条 | 技能名，可选倒计时 + 进度条 |
 
 两者可以同时开启。已经有 DBM 预警的机制，用 [Boss DBM](./boss-dbm.md) 即可。
 
@@ -39,7 +39,14 @@
 | --- | --- |
 | **{{ui:monsterMonitor.monsterSkill.label}}** | 面板上显示的名字，留空则用游戏内名称 |
 | **{{ui:monsterMonitor.monsterSkill.displaySeconds}}** | 默认 5 秒，可设 0.5–60 秒 |
+| **{{ui:monsterMonitor.monsterSkill.countdown}}** | 默认关闭；开启后把显示秒数当作倒计时，显示剩余秒数和进度条 |
 | 上移 / 下移 / 删除 | 调整面板上的顺序或移除条目 |
+
+开启 **{{ui:monsterMonitor.monsterSkill.monitorAll}}** 时，列表外的技能只显示名称，不显示倒计时。
+
+### 用倒计时预告下一个技能
+
+有些 Boss 放出技能 A 后，固定若干秒释放技能 B。把 A 加入列表，别名填成 B 的名字（例如“B 来了”），**{{ui:monsterMonitor.monsterSkill.displaySeconds}}** 填两者的间隔，再勾选 **{{ui:monsterMonitor.monsterSkill.countdown}}**：A 一放出，这一行就从间隔秒数开始倒数，归零时正是 B 释放的时候。
 
 ## 语音播报
 
@@ -53,4 +60,4 @@
 
 在 **{{ui:monsterMonitor.tabs.overlay}}** 中打开 **怪物技能区**（默认关闭），再点击 **{{ui:monsterMonitor.actions.editLayout}}** 把它拖到合适的位置。编辑模式下没有数据时会显示列表中前几个技能作为占位。
 
-面板样式可以调整行间距、字号、名称颜色、文字阴影和背景。
+面板样式可以调整行间距、列间距、字号、名称颜色、数值颜色、进度条颜色、进度条透明度、文字阴影和背景。

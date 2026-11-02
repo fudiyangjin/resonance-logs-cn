@@ -35,7 +35,7 @@ Resonance Logs CN 是《星痕共鸣》的战斗辅助工具：统计伤害与�
 | 文档 | 说明 | 例 |
 | --- | --- | --- |
 | [DPS 检测](./features/dps/README.md) | 实时统计、打桩模式、战斗切分与重置 | [打桩测输出](./features/dps/examples/dummy-rotation.md) |
-| [历史记录](./features/dps/history.md) | 历史列表、技能明细、时间轴 | [时间轴复盘](./features/dps/examples/timeline-gaps.md) |
+| [历史记录](./features/dps/history.md) | 历史列表、技能明细、时间轴 | [时间轴复盘](./features/dps/examples/timeline-gaps.md) · [实时窗口看覆盖率](./features/dps/examples/live-buff-coverage.md) |
 | [挑战监控](./features/dps/challenge.md) | 挑战本的受击与失误统计 | [挑战本受击](./features/dps/examples/challenge-hits.md) |
 | [主题与外观](./features/dps/themes.md) | 配色、透明度、标题栏、紧凑模式 | [极简透明窗口](./features/dps/examples/transparent-window.md) · [自由布局与死亡回放](./features/dps/examples/header-death.md) |
 | [显示设置](./features/dps/settings.md) | 实时和历史表格的列设置 | [修改展示列](./features/dps/examples/table-columns.md) |
@@ -46,8 +46,8 @@ Resonance Logs CN 是《星痕共鸣》的战斗辅助工具：统计伤害与�
 | --- | --- | --- |
 | [实时监控](./features/monitor/README.md) | 功能总览与使用流程 | — |
 | [技能 CD](./features/monitor/skill-cd.md) | 选择要监控的技能 | — |
-| [Buff 监控](./features/monitor/buff.md) | 精确监控、分类快捷监听、别名 | [蒂娜 CD 语音提醒](./features/monitor/examples/tina-cd.md) · [组合 Buff 监控](./features/monitor/examples/attribute-symphony.md) |
-| [Buff 覆盖率](./features/monitor/buff-coverage.md) | 统计增益在战斗中的覆盖时间 | [覆盖率复盘](./features/monitor/examples/buff-coverage.md) |
+| [Buff 监控](./features/monitor/buff.md) | 精确监控、分类快捷监听、别名 | [蒂娜 CD 语音提醒](./features/monitor/examples/tina-cd.md) · [组合 Buff 监控](./features/monitor/examples/attribute-symphony.md) · [最急成员](./features/monitor/examples/symphony-most-urgent.md) |
+| [Buff 覆盖率](./features/monitor/buff-coverage.md) | 统计增益在战斗中的覆盖时间 | [覆盖率复盘](./features/monitor/examples/buff-coverage.md) · [实时窗口看覆盖率](./features/dps/examples/live-buff-coverage.md) |
 | [角色面板](./features/monitor/panel-attr.md) | 实时显示属性 | — |
 | [血量护盾区](./features/monitor/shield.md) | 自身血量与护盾 | — |
 | [自定义监控](./features/monitor/custom-panel.md) | 普通区、因子配置区、赛季节点区、计数器 | [因子区](./features/monitor/examples/factor-energy.md) · [预设计数器](./features/monitor/examples/preset-counter.md) |
@@ -80,7 +80,7 @@ Resonance Logs CN 是《星痕共鸣》的战斗辅助工具：统计伤害与�
 | 文档 | 说明 | 例 |
 | --- | --- | --- |
 | [语音播报](./features/voice/README.md) | 快速开始、在功能页绑定播报 | [Buff 语音播报生成](./features/voice/examples/buff-voice.md) |
-| [音色与短句](./features/voice/voices.md) | 预置、克隆、微调音色，导入音频 | [自定义音效](./features/voice/examples/custom-sfx.md) · [音色克隆与音频导入](./features/voice/examples/clone-import.md) |
+| [音色与短句](./features/voice/voices.md) | 预置、克隆、微调音色，导入音频，HTTP 语音服务 | [自定义音效](./features/voice/examples/custom-sfx.md) · [音色克隆与音频导入](./features/voice/examples/clone-import.md) · [Fish Audio 在线音色](./features/voice/examples/http-fish-audio.md) |
 | [播放与提醒](./features/voice/playback.md) | 音量、优先级、占位符、匹配提醒 | [匹配成功提醒](./features/voice/examples/match-found.md) |
 
 ### 模组计算

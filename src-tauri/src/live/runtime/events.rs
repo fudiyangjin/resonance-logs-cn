@@ -231,6 +231,9 @@ pub struct ObservedBuff {
     pub started_mono_ms: Option<MonoTimeMs>,
     pub expires_mono_ms: Option<MonoTimeMs>,
     pub effect_ids: Arc<[i32]>,
+    /// `BuffEffectEnergyDisplay` effect id: the `FightResIconTable` row of the
+    /// main-HUD profession counter this buff drives.
+    pub energy_display_id: Option<i32>,
 }
 
 /// Wire-level buff delta. The decoder emits raw observations; [`EntityContext`]
@@ -246,10 +249,26 @@ pub enum ObservedBuffChange {
         duration_ms: Option<u64>,
         create_time: Option<i64>,
         effect_ids: Option<Arc<[i32]>>,
+        energy_display_id: Option<i32>,
     },
     Remove {
         instance_id: i64,
     },
+    /// `BuffEventCustomize` effect commands for an existing instance.
+    Customized {
+        instance_id: i64,
+        commands: Arc<[BuffEffectCommand]>,
+    },
+}
+
+/// One effect command of a `BuffEventCustomize`, in wire order. The client
+/// keeps a looping effect running until it is stopped, so these commands are
+/// the instance's own display state, not a derived one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BuffEffectCommand {
+    Play { effect_id: i32, looping: bool },
+    Stop { effect_id: i32 },
+    StopAll,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -765,6 +784,8 @@ pub struct BuffState {
     pub started_mono_ms: Option<MonoTimeMs>,
     pub expires_mono_ms: Option<MonoTimeMs>,
     pub effect_ids: Arc<[i32]>,
+    /// See [`ObservedBuff::energy_display_id`].
+    pub energy_display_id: Option<i32>,
 }
 
 /// Point-in-time active buffs captured before a death event can be followed by
@@ -818,6 +839,15 @@ pub struct BuffEvent {
     pub previous_layer: Option<i32>,
     pub state: BuffState,
     pub target_roles: EntityRoles,
+}
+
+/// Effect commands sent to a known buff instance (see [`BuffEffectCommand`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BuffCustomizeEvent {
+    pub target: EntityRef,
+    pub instance_id: i64,
+    pub base_id: i32,
+    pub commands: Arc<[BuffEffectCommand]>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -885,6 +915,7 @@ pub enum DomainEvent {
         is_baseline: bool,
     },
     BuffChanged(BuffEvent),
+    BuffCustomized(BuffCustomizeEvent),
     LocalPlayerChanged {
         previous: Option<EntityRef>,
         current: Option<EntityRef>,

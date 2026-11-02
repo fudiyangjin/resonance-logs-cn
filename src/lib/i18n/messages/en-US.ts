@@ -609,6 +609,15 @@ export const enUSMessages = {
   "live.history.bossDefeated": "Defeated",
   "live.history.bossAlive": "Not defeated",
   "live.history.target.label": "Target",
+  "live.history.banner.coverage": "Buff Coverage",
+  "live.coverage.playersLabel": "Player",
+  "live.coverage.caption": "Based on active combat time ({duration})",
+  "live.coverage.empty":
+    "No watched buffs were recorded in this fight. Add them in the main window under “{path}”; only later fights will record them.",
+  "live.coverage.historyOnly": "Available while viewing a saved fight",
+  "live.coverage.rowTooltip":
+    "{name} #{id} · Covered {covered} / {active} · Triggered {count}×",
+  "live.coverage.absentTooltip": "{name} #{id} · Not present in this fight",
   "history.list.error.deleteFailed": "Delete failed: {error}",
   "history.list.error.loadFailed": "Failed to load encounter list: {error}",
   "history.list.filters.favorite": "Favorites",
@@ -1305,6 +1314,8 @@ export const enUSMessages = {
   "components.buffSearchResultGrid.subtitle.composite": "Composite buff",
   "components.buffSearchResultGrid.subtitle.compositeThreshold":
     "Composite buff · {count} of {total}",
+  "components.buffSearchResultGrid.subtitle.compositeMostUrgent":
+    "Composite buff · most urgent member",
   "components.buffSearchResultGrid.showMore":
     "Show more ({remaining} remaining)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
@@ -1461,6 +1472,13 @@ export const enUSMessages = {
     "At least {count} of {total} active at once",
   "skillMonitor.buff.composite.hint":
     "Shown while the condition holds, until fewer members than required remain (with all required, that is the member ending first). Stacks: the lowest member stack when all are required, otherwise the number of members active. Member buffs still display on their own.",
+  "skillMonitor.buff.composite.mode": "Display",
+  "skillMonitor.buff.composite.modeJoint": "As one buff",
+  "skillMonitor.buff.composite.modeMostUrgent": "Most urgent member",
+  "skillMonitor.buff.composite.conditionMostUrgent":
+    "Most urgent member: shown while any member is active, missing members first, then the one ending soonest",
+  "skillMonitor.buff.composite.hintMostUrgent":
+    "Shows one slot while any member is active: a missing member is dimmed and marked \"Missing\" (the earliest listed one if several are), otherwise the member ending soonest is shown with its own icon, time and stacks. Coverage counts any member being active; voice follows the composite as a whole (appearing, ending, about to end), so give a member its own voice cue to hear about it separately. Member buffs still display on their own.",
   "skillMonitor.buff.composite.save": "Save Composite",
   "skillMonitor.buff.composite.deleteTitle": 'Delete composite "{name}"?',
   "skillMonitor.buff.composite.deleteDescription":
@@ -1879,6 +1897,9 @@ export const enUSMessages = {
   "skillMonitor.overlay.resourceSections": "Resource sections",
   "skillMonitor.overlay.resourceSectionsHelp":
     "Each resource section of the current class can be shown/hidden separately and dragged/scaled independently in overlay edit mode",
+  "skillMonitor.overlay.resourceTextStyle": "Resource text",
+  "skillMonitor.overlay.resourceTextStyleHelp":
+    "Numbers on the resource bar, resource points and shield bar (for example 100/400). The class counter uses the game's digit images and is not affected; the text shadow follows the shared text style.",
   "monsterMonitor.title": "Monster Monitor",
   "monsterMonitor.description":
     "Monitor current target monster buffs and related data",
@@ -2102,6 +2123,9 @@ export const enUSMessages = {
   "monsterMonitor.monsterSkill.empty": "No skills added yet.",
   "monsterMonitor.monsterSkill.label": "Alias",
   "monsterMonitor.monsterSkill.displaySeconds": "Show for (s)",
+  "monsterMonitor.monsterSkill.countdown": "Countdown",
+  "monsterMonitor.monsterSkill.countdownHint":
+    "Shows the remaining seconds and a progress bar; the row disappears when the countdown ends. Useful when this skill is followed by another one a fixed number of seconds later.",
   "monsterMonitor.monsterSkill.voice.title": "Voice Broadcast",
   "monsterMonitor.monsterSkill.styleTitle": "Panel Style",
   "monsterMonitor.entityDuration.title": "Entity Duration",
@@ -2205,6 +2229,10 @@ export const enUSMessages = {
   "gameOverlay.edit.done": "Done",
   "gameOverlay.edit.dragHint": "Drag here to move the Game Overlay window",
   "gameOverlay.group.resource": "Resource Area",
+  "gameOverlay.resource.section.bar": "Resource bar",
+  "gameOverlay.resource.section.dots": "Resource points",
+  "gameOverlay.resource.section.siderLine": "Shield bar",
+  "gameOverlay.resource.section.professionCount": "Class counter",
   "gameOverlay.group.skillCd": "Skill CD Area",
   "gameOverlay.group.textBuff": "Text Buff Area",
   "gameOverlay.group.shieldDetail": "HP/Shield Area",
@@ -2220,6 +2248,8 @@ export const enUSMessages = {
   "gameOverlay.buff.fantasyTierSuffix": "{name} | Tier {level}",
   "gameOverlay.buff.stateActive": "Active",
   "gameOverlay.buff.stateInactive": "Inactive",
+  "gameOverlay.buff.memberMissing": "Missing",
+  "gameOverlay.buff.focusMember": "{composite} · {member}",
   "gameOverlay.timer.seconds": "{value}s",
   "gameOverlay.timer.minutes": "{value}m",
   "gameOverlay.timer.hours": "{value}h",
@@ -2365,6 +2395,10 @@ export const enUSMessages = {
   "minimap.overlay.infoPanel": "Mechanic Calls: {state}",
   "minimap.overlay.help":
     "Adjust panel position and width in the dungeon mechanics window's layout edit mode.",
+  "minimap.overlay.mapBackgroundOpacity": "Map background opacity",
+  "minimap.overlay.infoBackgroundOpacity": "Mechanic Calls background opacity",
+  "minimap.overlay.backgroundOpacityHelp":
+    "Only changes the panel backdrop; lower is more transparent. Lines, mechanic areas and player dots on the map are unaffected.",
   "minimap.settings.colors.title": "Player Colors",
   "minimap.settings.colors.description":
     "Set self and teammate colors when no mechanic color override is active; mechanic callouts still use the high-contrast slot palette.",
@@ -2558,6 +2592,9 @@ export const enUSMessages = {
   "minimap.s4SkyEndRaid.bossRune": "Boss rune {rune} · {shape}",
   "minimap.s4SkyEndRaid.runeShape1": "green bird",
   "minimap.s4SkyEndRaid.runeShape4": "yellow angle",
+  "minimap.s4SkyEndRaid.runeOrder": "Lighting order",
+  "minimap.s4SkyEndRaid.runeAlt": "Rune {rune}",
+  "minimap.s4SkyEndRaid.chargeInterval": "Charge Interval",
   "minimap.s4SkyEndRaid.sin": "Sin",
   "minimap.s4SkyEndRaid.sinLayer": "{layer} stacks",
   "minimap.s4SkyEndRaid.extremeSin": "Extreme Sin",
@@ -2569,7 +2606,7 @@ export const enUSMessages = {
   "minimap.s4SkyEndRaid.darkPoint": "Dark",
   "minimap.s4SkyEndRaid.celestial": "Celestial Collision",
   "minimap.s4SkyEndRaid.celestialPair": "Two orbs {gap}°",
-  "minimap.s4SkyEndRaid.celestialTriple": "Three orbs (guess)",
+  "minimap.s4SkyEndRaid.celestialTriple": "Three orbs · blast {n}",
   "minimap.s4SkyEndRaid.safeSpot": "Safe",
   "minimap.s4SkyEndRaid.firstSpot": "①",
   "minimap.s4SkyEndRaid.secondSpot": "②",
@@ -2883,7 +2920,5 @@ export const enUSMessages = {
   "voice.bindings.generateMissing.needProfile":
     "Pick a usable generation source in the Phrase Library first (local voices need the model installed)",
   "voice.bindings.generateMissing.none": "No pending voices to generate",
-  "voice.bindings.generateMissing.summary":
-    "Submitted {count} voice(s) for generation",
   "voice.bindings.tryPlay": "Preview",
 } satisfies typeof zhCNMessages;

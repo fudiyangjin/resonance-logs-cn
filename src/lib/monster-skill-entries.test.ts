@@ -52,6 +52,18 @@ describe("ensureMonsterSkillEntries", () => {
     ]);
   });
 
+  it("keeps countdown only when it is literally true", () => {
+    const result = ensureMonsterSkillEntries([
+      { skillId: 1, label: "", displayMs: 1_000, countdown: true },
+      { skillId: 2, label: "", displayMs: 1_000, countdown: false },
+      { skillId: 3, label: "", displayMs: 1_000, countdown: "yes" as never },
+    ]);
+    expect(result[0]?.countdown).toBe(true);
+    for (const normalized of result.slice(1)) {
+      expect("countdown" in normalized).toBe(false);
+    }
+  });
+
   it("truncates to the entry limit", () => {
     const many = Array.from({ length: MAX_MONSTER_SKILL_ENTRIES + 5 }, (_, i) =>
       entry(i + 1),
@@ -92,6 +104,17 @@ describe("patchMonsterSkillEntry", () => {
       entry(1),
       { skillId: 2, label: "分摊", displayMs: MIN_MONSTER_SKILL_DISPLAY_MS },
     ]);
+  });
+
+  it("toggles countdown and keeps it across unrelated patches", () => {
+    const [on] = patchMonsterSkillEntry([entry(1)], 1, { countdown: true });
+    expect(on?.countdown).toBe(true);
+    const [relabeled] = patchMonsterSkillEntry([on!], 1, { label: "a" });
+    expect(relabeled?.countdown).toBe(true);
+    const [off] = patchMonsterSkillEntry([relabeled!], 1, {
+      countdown: false,
+    });
+    expect(off).toEqual({ skillId: 1, label: "a", displayMs: 5_000 });
   });
 });
 

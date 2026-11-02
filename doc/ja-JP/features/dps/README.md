@@ -58,7 +58,7 @@ DPS のスキル欄はクライアントのロジックで集約されます。1
 
 | ページ | 内容 | 例 |
 | --- | --- | --- |
-| [履歴](./history.md) | 履歴一覧、詳細、タイムライン、Buff カバー率、死亡リプレイ | [タイムラインで火力の空白を見つける](./examples/timeline-gaps.md) |
+| [履歴](./history.md) | 履歴一覧、詳細、タイムライン、Buff カバー率、死亡リプレイ | [タイムラインで火力の空白を見つける](./examples/timeline-gaps.md) · [リアルタイムウィンドウで履歴戦闘のバフ稼働率を確認する](./examples/live-buff-coverage.md) |
 | [チャレンジ監視](./challenge.md) | 「禁止ダメージ」を受けたメンバーをマーク | [浮遊砲を受けたのは誰か確認する](./examples/challenge-hits.md) |
 | [テーマと外観](./themes.md) | 配色、サイズ、コンパクトモード、テーブル、ヘッダー | [透明なミニマル DPS ウィンドウ](./examples/transparent-window.md) · [ヘッダーのカスタムレイアウトと死亡リプレイ](./examples/header-death.md) |
 | [表示設定](./settings.md) | 名前、列、短縮表示、更新レート、訓練時間 | [表示列をカスタマイズ](./examples/table-columns.md) |

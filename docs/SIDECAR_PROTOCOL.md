@@ -54,6 +54,17 @@ Run `--job <job.json> --backend <cpu|vulkan>`. The job uses snake_case:
 - `profile_existing`: requires `existing_q3sp_path`.
 - `speaker_token`: requires a non-negative `speaker_token_id`.
 
+## Item length
+
+An item's optional `max_duration_sec` (default 30) caps the accepted clip.
+Unless the item sets `max_audio_tokens`, the sidecar sizes the frame cap from
+the text: 2 s plus 1 s per letter, digit or ideograph, never above
+`max_duration_sec`, at 12.5 codec frames per second.
+
+A generation that fills its cap never produced end-of-speech. Its codes are
+discarded without decoding and the item is sampled again, up to 3 attempts.
+If every attempt fills the cap, the item fails with an error.
+
 The sidecar emits JSON Lines. The first batch event is `hello`; later events are
 `stage`, `item`, `batch`, or `fatal`. The host rejects any handshake whose
 protocol version or engine does not match.

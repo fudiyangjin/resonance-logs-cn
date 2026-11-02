@@ -4,7 +4,6 @@ import classSkillConfigsRaw from "$lib/config/class_skill_configs.json";
 import dutySkillsRaw from "$lib/config/duty_skills.json";
 import skillBgColoursRaw from "$lib/config/skill_bg_colours.json";
 import classResourcesRaw from "$lib/config/class_resources.json";
-import classSpecialBuffDisplaysRaw from "$lib/config/class_special_buff_displays.json";
 import counterRulesRaw from "$lib/config/counter_rules.json";
 import counterSourceTemplatesRaw from "$lib/config/counter_source_templates.json";
 import counterSlotTemplatesRaw from "$lib/config/counter_slot_templates.json";
@@ -51,19 +50,6 @@ export type ClassSkillConfig = {
   defaultMonitoredBuffIds?: number[];
 };
 
-export type GaugeResourceDefinition = {
-  type: "bar" | "charges";
-  label: string;
-  currentId: number;
-  maxId: number;
-  imageOn: string;
-  imageOff: string;
-  buffBaseId?: number;
-  buffBaseIds?: number[];
-  compactAbove?: number;
-  compactMultiplierPrefix?: string;
-};
-
 export type FlowerColor = "red" | "yellow" | "blue";
 
 export type FlowerPetalDefinition = {
@@ -86,16 +72,11 @@ export type FlowerRotationResourceDefinition = {
   petals: FlowerPetalDefinition[];
 };
 
-export type ResourceDefinition =
-  | GaugeResourceDefinition
-  | FlowerRotationResourceDefinition;
-
-export type SpecialBuffDisplay = {
-  buffBaseId: number;
-  layerImages?: string[][];
-  digitImages?: string[];
-  displayStyle?: "woodCounter";
-};
+/**
+ * Hand-configured class resource entries (`class_resources.json`). The weapon
+ * bar itself is table driven, see `resource-bar.ts`.
+ */
+export type ResourceDefinition = FlowerRotationResourceDefinition;
 
 export type ResourceRequirement = {
   resourceId: number;
@@ -235,9 +216,6 @@ export const FACTOR_RULE_ID_BASE = 900_000_000;
 export const CLASS_RESOURCES: Record<string, ResourceDefinition[]> =
   classResourcesRaw as Record<string, ResourceDefinition[]>;
 
-export const CLASS_SPECIAL_BUFF_DISPLAYS: Record<string, SpecialBuffDisplay[]> =
-  classSpecialBuffDisplaysRaw as Record<string, SpecialBuffDisplay[]>;
-
 export const CLASS_SKILL_CONFIGS: Record<string, ClassSkillConfig> =
   classSkillConfigsRaw as Record<string, ClassSkillConfig>;
 
@@ -374,22 +352,11 @@ function derivationKey(
 
 function resourceKey(item: {
   type?: string;
-  currentId?: number;
-  maxId?: number;
   countdownBuffId?: number;
 }): string | null {
-  if (item.type === "flowerRotation") {
-    const countdownBuffId = numberKey(item.countdownBuffId);
-    return countdownBuffId === null
-      ? null
-      : `flowerRotation:${countdownBuffId}`;
-  }
-  const type =
-    item.type === "bar" || item.type === "charges" ? item.type : null;
-  const currentId = numberKey(item.currentId);
-  const maxId = numberKey(item.maxId);
-  if (!type || currentId === null || maxId === null) return null;
-  return `${type}:${currentId}:${maxId}`;
+  if (item.type !== "flowerRotation") return null;
+  const countdownBuffId = numberKey(item.countdownBuffId);
+  return countdownBuffId === null ? null : `flowerRotation:${countdownBuffId}`;
 }
 
 /** Stable identity of a class resource entry, used for per-section overlay layout. */
@@ -976,10 +943,7 @@ export function findFlowerRotationResources(
   classKey: string,
   locale = getLocale(),
 ): FlowerRotationResourceDefinition[] {
-  return findResourcesByClass(classKey, locale).filter(
-    (resource): resource is FlowerRotationResourceDefinition =>
-      resource.type === "flowerRotation",
-  );
+  return findResourcesByClass(classKey, locale);
 }
 
 /**
@@ -1000,12 +964,6 @@ export function getResourceCountdownBuffIds(classKey: string): number[] {
   return (CLASS_RESOURCES[classKey] ?? []).flatMap((resource) =>
     resource.type === "flowerRotation" ? [resource.countdownBuffId] : [],
   );
-}
-
-export function findSpecialBuffDisplays(
-  classKey: string,
-): SpecialBuffDisplay[] {
-  return CLASS_SPECIAL_BUFF_DISPLAYS[classKey] ?? [];
 }
 
 export function getDefaultMonitoredBuffIds(classKey: string): number[] {

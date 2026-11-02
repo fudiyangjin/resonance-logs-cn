@@ -78,7 +78,7 @@
     inset: 0;
     z-index: 2;
     border-radius: inherit;
-    box-shadow: inset 0 0 0 max(1px, calc(1.5px * var(--skill-cell-scale, 1)))
+    box-shadow: inset 0 0 0 1.5px
       color-mix(in srgb, var(--skill-tint) 85%, transparent);
     pointer-events: none;
   }

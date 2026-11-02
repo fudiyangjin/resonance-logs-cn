@@ -58,7 +58,7 @@ You don't need to press Reset manually. The app automatically splits fights and 
 
 | Page | Content | Examples |
 | --- | --- | --- |
-| [History](./history.md) | History list, details, timeline, Buff coverage, death replay | [Find DPS gaps with the timeline](./examples/timeline-gaps.md) |
+| [History](./history.md) | History list, details, timeline, Buff coverage, death replay | [Find DPS gaps with the timeline](./examples/timeline-gaps.md) · [Check a history fight's Buff coverage in the live window](./examples/live-buff-coverage.md) |
 | [Challenge Watch](./challenge.md) | Flag party members hit by "forbidden damage" | [See who got hit by the Drone Cannon](./examples/challenge-hits.md) |
 | [Themes & Appearance](./themes.md) | Colors, size, compact mode, tables, header | [A transparent, minimal DPS window](./examples/transparent-window.md) · [Custom header layout and death replay](./examples/header-death.md) |
 | [Display Settings](./settings.md) | Names, columns, abbreviations, refresh rate, training dummy duration | [Customize displayed columns](./examples/table-columns.md) |

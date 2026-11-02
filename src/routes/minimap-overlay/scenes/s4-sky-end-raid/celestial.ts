@@ -11,19 +11,29 @@ import {
 
 const LIGHT_BALL_MONSTER_ID = 103602;
 const DARK_BALL_MONSTER_ID = 103603;
-/** 控制球: the balls start moving 1.5 s after the cast. */
+/** 控制球: starts the chase. */
 const SKILL_CONTROL_BALLS = 10360011;
 
-// Measured on two 90° pairs (logs 1792922485907, 1792922825153): both balls
-// run clockwise (bearing increasing), the dark one twice as fast; they stop
-// 13.4° apart once it catches up and explode 0.5 s later.
-const LIGHT_DEG_PER_S = 14.9;
-const DARK_DEG_PER_S = 30.4;
-const CONTACT_GAP_DEG = 13.4;
-const MOVE_DELAY_MS = 1_500;
-const EXPLODE_DELAY_MS = 500;
-/** Midpoint of the two stop positions (light at 34.7 m, dark at 33.9 m). */
-const COLLISION_RADIUS = 34.3;
+// Fitted on eight explosions in three logs (1792922485907, 1793021651371,
+// 1793362959357; spawn gaps 90°, 180° and 270°): every ball runs clockwise
+// (bearing increasing), the dark one twice as fast. With three balls the
+// dark one chases each light ball in turn and only stops at the last one.
+const LIGHT_DEG_PER_S = 15.15;
+const DARK_DEG_PER_S = 31;
+const LIGHT_RUN_RADIUS = 34.72;
+const DARK_RUN_RADIUS = 33.92;
+/**
+ * The chase is checked once a second after the start: a light ball stops
+ * 0.1 s before the first whole second the dark one is within reach, so a
+ * spawn gap of 90°, 180° or 270° stops after 4.9, 10.9 or 16.9 s.
+ */
+const CATCH_GAP_DEG = 13.4;
+const STOP_LEAD_MS = 100;
+/** 控制球 cast to the start buff (1.50–1.63 s logged). */
+const MOVE_DELAY_MS = 1_550;
+/** The balls visibly set off ~0.1 s after the start buff. */
+const MOTION_LAG_MS = 100;
+const EXPLODE_DELAY_MS = 520;
 /** Players were hit at ≤ 47.85 m from the collision, spared at ≥ 49.51 m. */
 const EXPLOSION_RADIUS = 48.7;
 /** Players spared on the far side stood at 19–33 m. */
@@ -33,8 +43,10 @@ const SPAWN_TOLERANCE = 0.3;
 /** Balls of one summon appear within milliseconds of each other. */
 const SPAWN_GROUP_MS = 2_000;
 const SPAWN_TTL_MS = 90_000;
-/** Longest chase the model allows (dark 90° ahead) ends ~18 s after the cast. */
+/** The longest chase (270° gap) explodes ~19 s after the cast. */
 const CAST_WINDOW_MS = 20_000;
+/** A finished explosion's countdown lingers this long before moving on. */
+const EXPLODED_GRACE_MS = 500;
 const PATH_STEP_DEG = 15;
 
 const COLOR_LIGHT_BALL = 0;
@@ -54,40 +66,54 @@ const textKeys = {
   secondSpot: "minimap.s4SkyEndRaid.secondSpot",
 } as const;
 
-export type PairPrediction = {
+export type ChasePrediction = {
   /** Clockwise distance from the dark ball forward to the light ball. */
   gapDeg: number;
-  /** From the balls' current positions until they stop. */
-  moveMs: number;
+  /** From the 控制球 cast to this light ball's explosion. */
+  explodeAfterCastMs: number;
+  /** Midpoint of where the two balls stop. */
   collision: ArenaPoint;
   safe: ArenaPoint;
 };
 
-/** Dark chases light clockwise and stops on catching up ("追上才停"). */
-export function predictPair(
-  light: ArenaPoint,
-  dark: ArenaPoint,
-): PairPrediction {
-  const lightBearing = bearingOf(light);
-  const gapDeg = normalize(lightBearing - bearingOf(dark));
-  const moveS =
-    Math.max(0, gapDeg - CONTACT_GAP_DEG) / (DARK_DEG_PER_S - LIGHT_DEG_PER_S);
-  const collisionBearing =
-    lightBearing + LIGHT_DEG_PER_S * moveS - CONTACT_GAP_DEG / 2;
+/**
+ * The dark ball chasing one light ball from their spawn positions ("追上才
+ * 停"). The light ball always stops where it is caught, whether or not the
+ * dark one stops with it.
+ */
+export function predictChase(
+  lightSpawn: ArenaPoint,
+  darkSpawn: ArenaPoint,
+): ChasePrediction {
+  const lightBearing = bearingOf(lightSpawn);
+  const darkBearing = bearingOf(darkSpawn);
+  const gapDeg = normalize(lightBearing - darkBearing);
+  const checks = Math.max(
+    1,
+    Math.ceil((gapDeg - CATCH_GAP_DEG) / (DARK_DEG_PER_S - LIGHT_DEG_PER_S)),
+  );
+  const stopAfterStartMs = checks * 1_000 - STOP_LEAD_MS;
+  const movedS = (stopAfterStartMs - MOTION_LAG_MS) / 1_000;
+  const light = pointAt(
+    lightBearing + LIGHT_DEG_PER_S * movedS,
+    LIGHT_RUN_RADIUS,
+  );
+  const dark = pointAt(darkBearing + DARK_DEG_PER_S * movedS, DARK_RUN_RADIUS);
+  const collision = { x: (light.x + dark.x) / 2, z: (light.z + dark.z) / 2 };
   return {
     gapDeg,
-    moveMs: moveS * 1_000,
-    collision: pointAt(collisionBearing, COLLISION_RADIUS),
-    safe: pointAt(collisionBearing + 180, SPOT_RADIUS),
+    explodeAfterCastMs: MOVE_DELAY_MS + stopAfterStartMs + EXPLODE_DELAY_MS,
+    collision,
+    safe: pointAt(bearingOf(collision) + 180, SPOT_RADIUS),
   };
 }
 
 export type TripleGuide = { firstBearing: number; secondBearing: number };
 
 /**
- * Three balls, from the raid guide (no log yet): clockwise from the widest
- * gap, stand between the first two balls; after the first explosion walk
- * clockwise along the edge to the second ball's spawn.
+ * Three balls, from the challenge-mode guide (colours don't matter): clockwise
+ * from the widest gap, stand between the first two balls; after the first
+ * explosion walk clockwise along the edge to the second ball's spawn.
  */
 export function tripleGuide(bearings: readonly number[]): TripleGuide | null {
   if (bearings.length !== 3) return null;
@@ -110,12 +136,31 @@ export function tripleGuide(bearings: readonly number[]): TripleGuide | null {
   };
 }
 
-type Spawn = { bearing: number; seenMs: number };
+/**
+ * Both explosions of a three-ball summon, earliest first, as delays after the
+ * 控制球 cast. Only for the logged make-up of two light balls and one dark.
+ */
+export function tripleExplosions(
+  balls: readonly { light: boolean; bearing: number }[],
+): [number, number] | null {
+  const dark = balls.filter((ball) => !ball.light);
+  const [a, b, ...rest] = balls.filter((ball) => ball.light);
+  if (dark.length !== 1 || !a || !b || rest.length > 0) return null;
+  const darkSpawn = pointAt(dark[0]!.bearing, SPAWN_RADIUS);
+  const delay = (ball: { bearing: number }) =>
+    predictChase(pointAt(ball.bearing, SPAWN_RADIUS), darkSpawn)
+      .explodeAfterCastMs;
+  const [first, second] = [delay(a), delay(b)].sort((x, y) => x - y);
+  return [first!, second!];
+}
+
+type Spawn = { bearing: number; light: boolean; seenMs: number };
 
 /**
- * Spawn bearings, kept after the balls start moving: the three-ball guide
- * needs where they appeared. A plain map, not reactive state; recording the
- * same snapshot twice changes nothing.
+ * Spawn positions, kept after the balls start moving: every prediction is
+ * made from where they appeared. A plain map rather than reactive state, so
+ * the view builder can record into it while it runs; recording the same
+ * snapshot twice changes nothing.
  */
 const spawns = new Map<string, Spawn>();
 
@@ -156,9 +201,16 @@ export function addCelestialCollision(ctx: BuildContext) {
   }
 }
 
+/** Nothing is predicted for balls first seen already moving. */
 function addPair(ctx: BuildContext, light: MinimapEntity, dark: MinimapEntity) {
-  const prediction = predictPair(light, dark);
-  const timer = pairTimer(ctx, light, dark, prediction);
+  const lightSpawn = spawns.get(light.entityUuid);
+  const darkSpawn = spawns.get(dark.entityUuid);
+  if (!lightSpawn || !darkSpawn) return;
+  const prediction = predictChase(
+    pointAt(lightSpawn.bearing, SPAWN_RADIUS),
+    pointAt(darkSpawn.bearing, SPAWN_RADIUS),
+  );
+  const timer = pairTimer(ctx, [light.entityUuid, dark.entityUuid], prediction);
   if (timer) {
     ctx.regions.push(
       circle(prediction.collision, EXPLOSION_RADIUS, COLOR_DANGER),
@@ -185,38 +237,24 @@ function addPair(ctx: BuildContext, light: MinimapEntity, dark: MinimapEntity) {
   });
 }
 
-/**
- * From the 控制球 cast to the explosion, or null before the cast and after
- * the explosion. Timed from the spawn gap when known, so the countdown
- * doesn't drift while the balls move.
- */
+/** From the 控制球 cast to the explosion; null before the cast and after it. */
 function pairTimer(
   ctx: BuildContext,
-  light: MinimapEntity,
-  dark: MinimapEntity,
-  live: PairPrediction,
+  uuids: readonly string[],
+  prediction: ChasePrediction,
 ): { castMs: number; explodeAtMs: number } | null {
-  const cast = castFor(ctx, [light.entityUuid, dark.entityUuid]);
+  const cast = castFor(ctx, uuids);
   if (!cast) return null;
-  const lightSpawn = spawns.get(light.entityUuid);
-  const darkSpawn = spawns.get(dark.entityUuid);
-  let explodeAtMs: number;
-  if (lightSpawn && darkSpawn) {
-    const fromSpawn = predictPair(
-      pointAt(lightSpawn.bearing, SPAWN_RADIUS),
-      pointAt(darkSpawn.bearing, SPAWN_RADIUS),
-    );
-    explodeAtMs =
-      cast.timeMs + MOVE_DELAY_MS + fromSpawn.moveMs + EXPLODE_DELAY_MS;
-  } else if (atSpawn(light) && atSpawn(dark)) {
-    explodeAtMs = cast.timeMs + MOVE_DELAY_MS + live.moveMs + EXPLODE_DELAY_MS;
-  } else {
-    explodeAtMs = ctx.nowMs + live.moveMs + EXPLODE_DELAY_MS;
-  }
-  if (ctx.nowMs > explodeAtMs + 500) return null;
+  const explodeAtMs = cast.timeMs + prediction.explodeAfterCastMs;
+  if (ctx.nowMs > explodeAtMs + EXPLODED_GRACE_MS) return null;
   return { castMs: cast.timeMs, explodeAtMs };
 }
 
+/**
+ * The guide's two stops, and a countdown to whichever explosion is next.
+ * Where the explosions land is left undrawn: their reach was only inferred
+ * from who got hit.
+ */
 function addTriple(
   ctx: BuildContext,
   group: Map<string, Spawn>,
@@ -224,17 +262,8 @@ function addTriple(
 ) {
   const guide = tripleGuide([...group.values()].map((spawn) => spawn.bearing));
   if (!guide) return;
+  // The first caught light ball leaves the field right after its explosion.
   const firstPhase = aliveCount === 3;
-  const spotBearing = firstPhase ? guide.firstBearing : guide.secondBearing;
-  if (castFor(ctx, [...group.keys()])) {
-    ctx.regions.push(
-      circle(
-        pointAt(spotBearing + 180, COLLISION_RADIUS),
-        EXPLOSION_RADIUS,
-        COLOR_DANGER,
-      ),
-    );
-  }
   if (firstPhase) {
     const arc = normalize(guide.secondBearing - guide.firstBearing);
     const steps = Math.max(2, Math.ceil(arc / PATH_STEP_DEG));
@@ -271,16 +300,39 @@ function addTriple(
       t(textKeys.secondSpot),
     ),
   );
+
+  const next = nextTripleExplosion(ctx, group, firstPhase);
   addRow(ctx, {
     key: "celestial",
     group: t(textKeys.celestial),
-    label: t(textKeys.celestialTriple),
+    label: t(textKeys.celestialTriple, {
+      n: next?.number ?? (firstPhase ? 1 : 2),
+    }),
     colorSlot: COLOR_DANGER,
-    createTimeMs: 0,
-    durationMs: 0,
+    createTimeMs: next?.fromMs ?? 0,
+    durationMs: next ? next.atMs - next.fromMs : 0,
     targets: [],
-    hideTimer: true,
+    hideTimer: !next,
   });
+}
+
+function nextTripleExplosion(
+  ctx: BuildContext,
+  group: Map<string, Spawn>,
+  firstPhase: boolean,
+): { number: 1 | 2; fromMs: number; atMs: number } | null {
+  const cast = castFor(ctx, [...group.keys()]);
+  const delays = tripleExplosions([...group.values()]);
+  if (!cast || !delays) return null;
+  const first = cast.timeMs + delays[0];
+  const second = cast.timeMs + delays[1];
+  if (firstPhase && ctx.nowMs <= first + EXPLODED_GRACE_MS) {
+    return { number: 1, fromMs: cast.timeMs, atMs: first };
+  }
+  if (ctx.nowMs <= second + EXPLODED_GRACE_MS) {
+    return { number: 2, fromMs: first, atMs: second };
+  }
+  return null;
 }
 
 /** The latest 控制球 cast, if it came after these balls spawned. */
@@ -299,7 +351,11 @@ function rememberSpawns(balls: readonly MinimapEntity[], nowMs: number) {
   }
   for (const ball of balls) {
     if (spawns.has(ball.entityUuid) || !atSpawn(ball)) continue;
-    spawns.set(ball.entityUuid, { bearing: bearingOf(ball), seenMs: nowMs });
+    spawns.set(ball.entityUuid, {
+      bearing: bearingOf(ball),
+      light: ball.monsterId === LIGHT_BALL_MONSTER_ID,
+      seenMs: nowMs,
+    });
   }
 }
 

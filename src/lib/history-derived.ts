@@ -551,6 +551,8 @@ export type LiveHistorySnapshot = {
   players: HistoryEntity[];
   /** Damage targets selectable in the live window's history view. */
   targets: HistoryDamageTarget[];
+  /** Watched-buff coverage; `null` = recorded before buff persistence. */
+  buffCoverage: HistoryBuffTimelineView | null;
 };
 
 /**
@@ -619,6 +621,7 @@ export function historyDetailToLiveSnapshot(
       entities,
       historyEntityNames(detail.entities),
     ),
+    buffCoverage: historyBuffTimeline(detail.buffTimeline),
   };
 }
 

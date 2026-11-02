@@ -18,8 +18,9 @@
     type VoicePhraseBinding,
   } from "$lib/settings-store";
   import {
+    bindingGenerationSource,
+    lastGenerationError,
     runVoiceGeneration,
-    savedGenerationSource,
     VOICE,
   } from "$lib/stores/voice-store.svelte";
   import {
@@ -137,10 +138,7 @@
     >();
     for (const entry of entries) {
       if (isReady(entry)) continue;
-      const source =
-        entry.binding.source === "custom" && entry.binding.generationSource
-          ? entry.binding.generationSource
-          : savedGenerationSource();
+      const source = bindingGenerationSource(entry.binding);
       if (!source) {
         generateMessage = t("voice.bindings.generateMissing.needProfile");
         return;
@@ -155,7 +153,9 @@
         if (!phrasesById.get(id)?.activeAssetId) batch.ids.add(id);
       batches.set(key, batch);
     }
-    let count = 0;
+    let completed = 0;
+    let failed = 0;
+    let firstError: string | null = null;
     for (const { source, ids } of batches.values()) {
       if (!ids.size) continue;
       const summary = await runVoiceGeneration({
@@ -167,11 +167,19 @@
         generateMessage = VOICE.generationError;
         return;
       }
-      count += ids.size;
+      completed += summary.completed;
+      failed += summary.failed;
+      if (summary.failed > 0) firstError ??= lastGenerationError();
     }
-    generateMessage = count
-      ? t("voice.bindings.generateMissing.summary", { count })
-      : t("voice.bindings.generateMissing.none");
+    generateMessage =
+      completed + failed === 0
+        ? t("voice.bindings.generateMissing.none")
+        : [
+            t("voice.phrases.generate.summary", { completed, failed }),
+            firstError,
+          ]
+            .filter(Boolean)
+            .join(" · ");
   }
 </script>
 

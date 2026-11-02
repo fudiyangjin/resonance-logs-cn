@@ -2,12 +2,7 @@
   import type { Snippet } from "svelte";
   import { t } from "$lib/i18n/index.svelte";
   import type { ResourceSectionLayout } from "$lib/settings-store";
-  import {
-    isEditing,
-    selectedClassKey,
-    startDrag,
-    startResize,
-  } from "./overlay-state.svelte.js";
+  import { isEditing, startDrag, startResize } from "./overlay-state.svelte.js";
 
   interface Props {
     sectionKey: string;
@@ -19,7 +14,6 @@
   let { sectionKey, label, layout, children }: Props = $props();
 
   const editing = $derived(isEditing());
-  const classKey = $derived(selectedClassKey());
 </script>
 
 <div
@@ -38,7 +32,7 @@
     </div>
   {/if}
 
-  <div class="resource-section-body" data-class={classKey}>
+  <div class="resource-section-body">
     {@render children()}
   </div>
 
@@ -70,10 +64,5 @@
     flex-direction: row;
     align-items: center;
     gap: 12px;
-  }
-
-  .resource-section-body[data-class="frost_mage"] {
-    transform: scale(1.5);
-    transform-origin: top left;
   }
 </style>

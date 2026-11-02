@@ -688,12 +688,30 @@ isDead: boolean }
 export type BossMonsterIdsResult = { ids: number[] }
 export type BossSummaryDto = { monsterId: number; maxHp: number | null; isDefeated: boolean }
 /**
+ * How a composite buff shows on the HUD.
+ */
+export type BuffCompositeMode =
+/**
+ * The composite as one buff, present while at least `min_active`
+ * members are.
+ */
+"joint" |
+/**
+ * The member most in need of attention, present while any member is:
+ * a missing member first, otherwise the one ending first.
+ */
+"mostUrgent"
+/**
  * A composite buff: present on an entity while at least `min_active` of its
  * member buffs are (every member when unset), then published and tracked
  * under its own negative `id` like any other buff (see
  * [`crate::live::projections::buff_presence`]).
  */
-export type BuffCompositeSpec = { id: number; memberIds: number[]; minActive?: number | null }
+export type BuffCompositeSpec = { id: number;
+/**
+ * In configured order, which breaks most-urgent ties.
+ */
+memberIds: number[]; minActive?: number | null; mode?: BuffCompositeMode }
 /**
  * Live coverage of one watched buff on the local player. `covered_ms` and
  * `active_ms` follow the shared active-window rule; the frontend only
@@ -701,9 +719,19 @@ export type BuffCompositeSpec = { id: number; memberIds: number[]; minActive?: n
  */
 export type BuffCoverageEntry = { baseId: number; coveredMs: number; activeMs: number; activeNow: boolean; layer: number; count: number }
 /**
+ * The member a most-urgent composite shows. While present, the composite's
+ * timing and layer are that member's; a missing member carries none.
+ */
+export type BuffFocusState = { memberId: number; missing: boolean }
+/**
  * Represents a buff update state.
  */
-export type BuffUpdateState = { baseId: number; layer: number; durationMs: number; createTimeMs: number; sourceRemodelLevel: number | null }
+export type BuffUpdateState = { baseId: number; layer: number; durationMs: number; createTimeMs: number; sourceRemodelLevel: number | null;
+/**
+ * Set only on a most-urgent composite; left out of every other buff
+ * so a long local buff list does not grow.
+ */
+focus?: BuffFocusState | null }
 export type CounterAction = "reset" | "freeze" | "resetAndFreeze" | "resetAndFreezeKeepCounting" | "resetAndStartCount" | "startCount" | "noOp"
 export type CounterRule = { ruleId: number; sources: CounterSource[]; effectSlots: EffectSlotConfig[] }
 export type CounterSource = { damageBySkillKey: { skillKeys: number[]; increment: number; hitsRequired?: number | null; requiredTypeFlags?: number | null } } | { damageBySkillKeyOnce: { skillKeys: number[]; increment: number; requiredTypeFlags?: number | null } } | { damageBySkillKeySelfTarget: { skillKeys: number[]; increment: number; hitsRequired?: number | null; requiredTypeFlags?: number | null } } | { anyDamage: { increment: number; hitsRequired?: number | null; requiredTypeFlags?: number | null } } | { damageTaken: { skillKeys?: number[] | null; increment: number; hitsRequired?: number | null; requiredTypeFlags?: number | null } } | { fightResourceSpent: { resourceId: number; unitsRequired: number; increment: number } } | { buffAdded: { buffId: number; sourceConfigId?: number | null; increment: number } } | { buffLayerSpent: { buffId: number; unitsRequired: number; increment: number } } | { buffDurationTick: { buffId: number; tickIntervalMs: number; increment: number; attrCondition?: TickAttrCondition | null } } | { skillCast: { skillBaseIds: number[]; increment: number } } | { skillDurationTick: { skillBaseId: number; tickIntervalMs: number; increment: number } } | { skillCastComplete: { skillBaseIds: number[]; increment: number } } | { movementDistance: { buffId: number; attrId: number; metersRequired: number; increment: number } }
@@ -1037,7 +1065,7 @@ export type LiveStatusPayload = { revision: number; counters: CounterUpdateState
  * Highest deep-sleep (800522) `seasonId` resolved from the last
  * container sync/patch; `0` before any season data has been observed.
  */
-seasonId: number; seasonActiveTemplateIds: number[]; skillCds: SkillCdState[]; panelAttrs: PanelAttrState[]; shieldCurrentHp: number; shieldMaxHp: number; shieldEntries: ShieldDetailEntry[]; fightResource: FightResourceState | null }
+seasonId: number; seasonActiveTemplateIds: number[]; skillCds: SkillCdState[]; panelAttrs: PanelAttrState[]; shieldCurrentHp: number; shieldMaxHp: number; shieldEntries: ShieldDetailEntry[]; fightResource: FightResourceState | null; professionCount: ProfessionCountState | null }
 /**
  * Teammate cooldowns received from the team relay, already filtered to the
  * skills selected for each teammate's class.
@@ -1093,7 +1121,14 @@ sourceConfigId: number | null;
 /**
  * `PlayEffect` effect ids from the buff's logic_effects, in wire order.
  */
-effectIds: number[] }
+effectIds: number[];
+/**
+ * Effects this instance is looping because a `BuffEventCustomize` started
+ * them and nothing has stopped them yet, ascending. A looping play adds
+ * its id, a stop removes it, a stop-all clears the set; one-shot plays
+ * leave it unchanged.
+ */
+loopEffects: number[] }
 /**
  * A single entity fact rendered/interpreted by the 2D minimap overlay.
  */
@@ -1290,6 +1325,31 @@ export type PerSourceStats = {
 sourceMonsterId: number | null; totalValue: string; taken: RawCombatStats; skills: Partial<{ [key in number]: RawSkillStats }> }
 export type PlayerNamesResult = { names: string[] }
 export type PlayerSummaryDto = { name: string; classId: number }
+/**
+ * Main-HUD profession counter (`profession_buff_show_helper.lua`), driven by
+ * local-player buffs that carry a `BuffEffectEnergyDisplay` logic effect.
+ */
+export type ProfessionCountState = {
+/**
+ * Buff of the latest counter change (`SetProfessionBuff`).
+ */
+buffBaseId: number;
+/**
+ * Its `FightResIconTable` row.
+ */
+effectId: number;
+/**
+ * Its layer; 0 once the buff is gone.
+ */
+layer: number;
+/**
+ * Some tracked buff still has layers (keeps the flower layer up).
+ */
+anyLayer: boolean;
+/**
+ * Rows whose buff currently has layers, in the order they appeared.
+ */
+activeEffectIds: number[] }
 export type RawCombatStats = { total: string; effectiveTotal: string; hits: string; critHits: string; critTotal: string; luckyHits: string; luckyTotal: string; triggerHits: string; blockHits: string; luckyBlockHits: string }
 export type RawEntityData = { entityUuid: string; displayUid: number; name: string; classId: number; classSpec: number; className: string; classSpecName: string; abilityScore: number; seasonStrength: number; damage: RawCombatStats; damageBossOnly: RawCombatStats; healing: RawCombatStats; taken: RawCombatStats; dmgSkills: Partial<{ [key in number]: RawSkillStats }>; healSkills: Partial<{ [key in number]: RawSkillStats }>; takenSkills: Partial<{ [key in number]: RawSkillStats }>; takenPerSource: PerSourceStats[] }
 export type RawHitExtrema = { min: string; max: string }

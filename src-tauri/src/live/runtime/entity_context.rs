@@ -5,13 +5,13 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use crate::live::protocol::attrs as attr_type;
 
 use super::events::{
-    AttributeValue, BuffEvent, BuffState, BuffTransition, BuffWireKind, DeathBuffCheckpoint,
-    Distribution, DomainEnvelope, DomainEvent, DomainHit, EntityIdentity, EntityIdentityPatch,
-    EntityKind, EntityRef, EntityRoles, EntityUuid, EventMeta, FantasyState, FantasyTransition,
-    FieldPatch, GameTimerKey, GameTimerState, HateEntry, LOCAL_PLAYER, LineId, LocalTalent,
-    MonoTimeMs, ObservationOrigin, ObservedBuff, ObservedBuffChange, PassiveSkillObservation,
-    Position, ProtocolBatch, ProtocolObservation, ResolvedShieldDetail, SegmentId, ShieldDetail,
-    SkillCooldownState, SkillPhase,
+    AttributeValue, BuffCustomizeEvent, BuffEvent, BuffState, BuffTransition, BuffWireKind,
+    DeathBuffCheckpoint, Distribution, DomainEnvelope, DomainEvent, DomainHit, EntityIdentity,
+    EntityIdentityPatch, EntityKind, EntityRef, EntityRoles, EntityUuid, EventMeta, FantasyState,
+    FantasyTransition, FieldPatch, GameTimerKey, GameTimerState, HateEntry, LOCAL_PLAYER, LineId,
+    LocalTalent, MonoTimeMs, ObservationOrigin, ObservedBuff, ObservedBuffChange,
+    PassiveSkillObservation, Position, ProtocolBatch, ProtocolObservation, ResolvedShieldDetail,
+    SegmentId, ShieldDetail, SkillCooldownState, SkillPhase,
 };
 use super::fantasy_registry::{
     FantasyRegistry, is_resonance_fantasy_monster_id, resolve_fantasy_skill_id,
@@ -1231,11 +1231,13 @@ impl EntityContext {
         }
         let target = self.ensure_ref(target_uuid);
         for observed in buffs {
-            let previous_layer = self.entities[&target_uuid]
+            let previous = self.entities[&target_uuid]
                 .active_buffs
                 .get(&observed.instance_id)
-                .map(|buff| buff.layer);
-            let state = self.resolve_buff_state(meta, target, observed);
+                .map(|buff| (buff.layer, buff.energy_display_id));
+            let previous_layer = previous.map(|(layer, _)| layer);
+            let mut state = self.resolve_buff_state(meta, target, observed);
+            keep_energy_display(&mut state, previous);
             self.entities
                 .get_mut(&target_uuid)
                 .expect("ensured above")
@@ -1266,11 +1268,13 @@ impl EntityContext {
                     return;
                 }
                 let target = self.ensure_ref(target_uuid);
-                let previous_layer = self.entities[&target_uuid]
+                let previous = self.entities[&target_uuid]
                     .active_buffs
                     .get(&buff.instance_id)
-                    .map(|buff| buff.layer);
-                let state = self.resolve_buff_state(meta, target, buff);
+                    .map(|buff| (buff.layer, buff.energy_display_id));
+                let previous_layer = previous.map(|(layer, _)| layer);
+                let mut state = self.resolve_buff_state(meta, target, buff);
+                keep_energy_display(&mut state, previous);
                 self.entities
                     .get_mut(&target_uuid)
                     .expect("ensured above")
@@ -1311,6 +1315,7 @@ impl EntityContext {
                 duration_ms,
                 create_time,
                 effect_ids,
+                energy_display_id,
             } => {
                 let clock_offset_ms = self.server_clock_offset_ms;
                 let Some(existing) = self
@@ -1331,6 +1336,9 @@ impl EntityContext {
                 }
                 if let Some(effect_ids) = effect_ids {
                     existing.effect_ids = effect_ids;
+                }
+                if energy_display_id.is_some() {
+                    existing.energy_display_id = energy_display_id;
                 }
                 if let Some(create_time) = create_time {
                     apply_buff_create_time(existing, create_time, meta, clock_offset_ms);
@@ -1373,6 +1381,26 @@ impl EntityContext {
                 };
                 self.emit(meta, DomainEvent::BuffChanged(event), out);
             }
+            ObservedBuffChange::Customized {
+                instance_id,
+                commands,
+            } => {
+                // Like a delta, commands for an unknown instance are dropped.
+                let Some(state) = self
+                    .entities
+                    .get(&target_uuid)
+                    .and_then(|entity| entity.active_buffs.get(&instance_id))
+                else {
+                    return;
+                };
+                let event = BuffCustomizeEvent {
+                    target: state.target,
+                    instance_id,
+                    base_id: state.base_id,
+                    commands,
+                };
+                self.emit(meta, DomainEvent::BuffCustomized(event), out);
+            }
         }
     }
 
@@ -1407,6 +1435,7 @@ impl EntityContext {
             started_mono_ms: Some(observed.started_mono_ms.unwrap_or_else(|| meta.mono_ms())),
             expires_mono_ms: None,
             effect_ids: observed.effect_ids,
+            energy_display_id: observed.energy_display_id,
         };
         refresh_buff_deadlines(&mut state);
         state
@@ -1937,6 +1966,14 @@ fn apply_required_patch<T>(target: &mut T, patch: FieldPatch<T>, clear_value: T)
     }
 }
 
+/// A re-add of a known instance may omit the energy display logic effect that
+/// arrived earlier; the instance keeps driving the same counter row.
+fn keep_energy_display(state: &mut BuffState, previous: Option<(i32, Option<i32>)>) {
+    if state.energy_display_id.is_none() {
+        state.energy_display_id = previous.and_then(|(_, id)| id);
+    }
+}
+
 /// Re-anchors a buff on the server-side creation timestamp carried by a delta.
 /// Without a known server clock offset the packet itself is the only anchor.
 fn apply_buff_create_time(
@@ -2035,6 +2072,7 @@ mod tests {
             started_mono_ms: None,
             expires_mono_ms: None,
             effect_ids: Arc::from([]),
+            energy_display_id: None,
         }
     }
 
@@ -2045,6 +2083,7 @@ mod tests {
             duration_ms: Some(5_000),
             create_time: None,
             effect_ids: None,
+            energy_display_id: None,
         }
     }
 
@@ -2947,6 +2986,52 @@ mod tests {
     }
 
     #[test]
+    fn buff_customize_commands_reach_known_instances_only() {
+        use super::super::events::BuffEffectCommand;
+
+        let mut context = EntityContext::new();
+        let target = EntityUuid(12);
+        let customized = |instance_id| ProtocolObservation::BuffChanged {
+            target_uuid: target,
+            change: ObservedBuffChange::Customized {
+                instance_id,
+                commands: Arc::from([BuffEffectCommand::Stop { effect_id: 3 }]),
+            },
+        };
+        assert!(
+            context
+                .reduce_batch(batch(1, vec![customized(3)]))
+                .is_empty()
+        );
+
+        context.reduce_batch(batch(
+            2,
+            vec![ProtocolObservation::BuffChanged {
+                target_uuid: target,
+                change: ObservedBuffChange::Applied {
+                    buff: buff(3, 829541),
+                },
+            }],
+        ));
+        let events = context.reduce_batch(batch(3, vec![customized(3)]));
+        let [envelope] = events.as_slice() else {
+            panic!("expected one event, got {events:?}");
+        };
+        let DomainEvent::BuffCustomized(event) = &envelope.event else {
+            panic!("expected customize event, got {:?}", envelope.event);
+        };
+        assert_eq!(event.target.uuid, target);
+        assert_eq!(event.instance_id, 3);
+        assert_eq!(event.base_id, 829541);
+        assert_eq!(*event.commands, [BuffEffectCommand::Stop { effect_id: 3 }]);
+        assert!(
+            context
+                .reduce_batch(batch(4, vec![customized(9)]))
+                .is_empty()
+        );
+    }
+
+    #[test]
     fn teammate_wipe_buff_does_not_end_the_local_segment() {
         let mut context = EntityContext::new();
         context.reduce_batch(batch(
@@ -3388,6 +3473,7 @@ mod tests {
                     duration_ms: Some(2_000),
                     create_time: None,
                     effect_ids: None,
+                    energy_display_id: None,
                 },
             }],
         ));
@@ -3412,6 +3498,7 @@ mod tests {
                     duration_ms: Some(0),
                     create_time: None,
                     effect_ids: None,
+                    energy_display_id: None,
                 },
             }],
         ));
@@ -3434,6 +3521,7 @@ mod tests {
                     duration_ms: Some(1_000),
                     create_time: Some(123),
                     effect_ids: None,
+                    energy_display_id: None,
                 },
             }],
         ));

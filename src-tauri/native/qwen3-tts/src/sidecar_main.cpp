@@ -19,6 +19,7 @@
 #include "gguf_loader.h"
 #include "voice_profile.h"
 #include "audio_validate.h"
+#include "generation_budget.h"
 #include "json_lite.h"
 #include "sha256.h"
 #include "fs_util.h"
@@ -49,6 +50,10 @@ using namespace qwen3_tts;
 namespace {
 
 constexpr int32_t SIDECAR_PROTOCOL_VERSION = 3;
+
+// Sampling again usually ends a run that missed end-of-speech; each miss
+// costs at most the item's frame budget and never reaches the vocoder.
+constexpr int kMaxSynthAttempts = 3;
 
 const char * device_type_name(enum ggml_backend_dev_type type) {
     switch (type) {
@@ -312,15 +317,20 @@ bool parse_job(const json_lite::Value & root, BatchJob & job, std::string & erro
         item.params.top_p = float(item_v.get_number("top_p", item.params.top_p));
         item.params.top_k = int32_t(item_v.get_number("top_k", item.params.top_k));
         item.params.repetition_penalty = float(item_v.get_number("repetition_penalty", item.params.repetition_penalty));
-        item.params.max_audio_tokens = int32_t(item_v.get_number("max_audio_tokens", item.params.max_audio_tokens));
+        item.min_duration_sec = item_v.get_number("min_duration_sec", 0.15);
+        item.max_duration_sec = item_v.get_number("max_duration_sec", 30.0);
+        // An explicit cap (benchmarks) wins; otherwise size it from the text
+        // so a run that never ends stops within the duration limit.
+        const double requested_tokens = item_v.get_number("max_audio_tokens", 0.0);
+        item.params.max_audio_tokens = requested_tokens > 0.0
+            ? int32_t(requested_tokens)
+            : audio_token_budget(item.text, item.max_duration_sec);
         item.params.print_progress = false;
         // Stage-level timing (tokenize/encode/generate/decode + RTF) is
         // noisy on stderr and normally off. scripts/bench-voice-sidecar.ps1
         // opts in via this env var to get per-stage numbers without
         // changing the protocol or the default (production) behavior.
         item.params.print_timing = std::getenv("QWEN3_TTS_BENCH_TIMING") != nullptr;
-        item.min_duration_sec = item_v.get_number("min_duration_sec", 0.15);
-        item.max_duration_sec = item_v.get_number("max_duration_sec", 30.0);
 
         job.items.push_back(std::move(item));
     }
@@ -569,11 +579,29 @@ int main(int argc, char ** argv) {
         emit_line("{\"type\":\"item\",\"id\":\"" + json_lite::escape(item.id) + "\",\"status\":\"start\"}");
         int64_t t_item_start = now_ms();
 
-        qwen3_tts::tts_result result = uses_speaker_token
-            ? tts.synthesize_with_speaker_token(item.text, job.source.speaker_token_id, item.params)
-            : tts.synthesize_with_embedding(item.text, speaker_embedding.data(),
-                                            int32_t(speaker_embedding.size()), item.params);
+        qwen3_tts::tts_result result;
+        for (int attempt = 1; attempt <= kMaxSynthAttempts; ++attempt) {
+            result = uses_speaker_token
+                ? tts.synthesize_with_speaker_token(item.text, job.source.speaker_token_id, item.params)
+                : tts.synthesize_with_embedding(item.text, speaker_embedding.data(),
+                                                int32_t(speaker_embedding.size()), item.params);
+            if (!result.hit_length_limit) {
+                break;
+            }
+            fprintf(stderr, "item %s: %s (attempt %d/%d)\n", item.id.c_str(),
+                    result.error_msg.c_str(), attempt, kMaxSynthAttempts);
+        }
 
+        if (result.hit_length_limit) {
+            char seconds[32];
+            std::snprintf(seconds, sizeof(seconds), "%.1f",
+                          item.params.max_audio_tokens / kCodecFramesPerSecond);
+            emit_item_error(item.id, std::string("Speech did not end within ") + seconds +
+                                         "s after " + std::to_string(kMaxSynthAttempts) +
+                                         " attempts; try a longer phrase");
+            ++failed;
+            continue;
+        }
         if (!result.success) {
             emit_item_error(item.id, result.error_msg);
             ++failed;

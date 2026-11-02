@@ -1,14 +1,10 @@
 <script lang="ts">
   import BuffGroupGrid from "./BuffGroupGrid.svelte";
-  import IconBuffCell from "./IconBuffCell.svelte";
   import {
-    getIconBuffPosition,
-    getIconBuffSize,
     groupedIconBuffs,
     isEditing,
     isLayoutScaffold,
     normalizedBuffGroups,
-    specialStandaloneBuffs,
     startDrag,
     startResize,
   } from "./overlay-state.svelte.js";
@@ -18,7 +14,6 @@
   const scaffold = $derived(isLayoutScaffold());
   const groups = $derived(normalizedBuffGroups());
   const groupedBuffMap = $derived(groupedIconBuffs());
-  const standaloneBuffs = $derived(specialStandaloneBuffs());
 
   function getGroupName(group: { name: string; monitorAll: boolean }, index: number): string {
     return group.name.trim() || (group.monitorAll
@@ -46,25 +41,6 @@
         startResize(e, { kind: "buffGroup", groupId: group.id }, group.iconSize)}
     />
   {/if}
-{/each}
-
-{#each standaloneBuffs as buff (buff.baseId)}
-  {@const iconPos = getIconBuffPosition(buff.baseId)}
-  {@const iconSize = getIconBuffSize(buff.baseId)}
-  <IconBuffCell
-    {buff}
-    {iconSize}
-    showName={false}
-    showTime={false}
-    showLayer={false}
-    standalone={true}
-    editable={editing}
-    left={iconPos.x}
-    top={iconPos.y}
-    onPointerDown={(e) => startDrag(e, { kind: "iconBuff", baseId: buff.baseId }, iconPos)}
-    onResizePointerDown={(e) =>
-      startResize(e, { kind: "iconBuff", baseId: buff.baseId }, iconSize)}
-  />
 {/each}
 
 <style>

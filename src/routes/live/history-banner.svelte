@@ -8,10 +8,14 @@
   import ChevronLeftIcon from "virtual:icons/lucide/chevron-left";
   import ChevronRightIcon from "virtual:icons/lucide/chevron-right";
   import LoaderCircleIcon from "virtual:icons/lucide/loader-circle";
+  import CoverageIcon from "virtual:icons/lucide/chart-no-axes-gantt";
   import { goto } from "$app/navigation";
+  import { page } from "$app/state";
   import { t } from "$lib/i18n/index.svelte";
   import {
     formatEncounterDuration,
+    isLiveCoveragePath,
+    LIVE_COVERAGE_PATH,
     LIVE_HISTORY_PATH,
     type NeighborDirection,
   } from "$lib/live-history-query";
@@ -41,6 +45,7 @@
   const canNewer = $derived(
     summary !== null && liveHistoryQuery.hasNeighbor(summary.id, "newer"),
   );
+  const onCoverage = $derived(isLiveCoveragePath(page.url.pathname));
 
   let stepping = $state<NeighborDirection | null>(null);
   let stepError = $state<string | null>(null);
@@ -61,6 +66,11 @@
     } finally {
       stepping = null;
     }
+  }
+
+  /** A second press goes back to the meter tab the page was opened from. */
+  function toggleCoverage() {
+    void goto(onCoverage ? liveView.returnTab : LIVE_COVERAGE_PATH);
   }
 
   async function backToLive() {
@@ -119,6 +129,17 @@
       {/if}
     </button>
 
+    <button
+      class="flex size-5 shrink-0 items-center justify-center rounded transition-colors {onCoverage
+        ? 'bg-amber-500/15 text-amber-500'
+        : 'text-muted-foreground hover:text-foreground hover:bg-popover/60'}"
+      aria-pressed={onCoverage}
+      aria-label={t("live.history.banner.coverage")}
+      onclick={toggleCoverage}
+      {@attach tooltip(() => t("live.history.banner.coverage"))}
+    >
+      <CoverageIcon class="size-3.5" />
+    </button>
     {@render stepButton("older", canOlder, t("live.history.banner.older"))}
     {@render stepButton("newer", canNewer, t("live.history.banner.newer"))}
 

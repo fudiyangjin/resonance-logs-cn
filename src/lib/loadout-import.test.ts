@@ -531,6 +531,26 @@ describe("parseLoadoutExport", () => {
     expect("merge" in entries[1]!).toBe(false);
   });
 
+  it("keeps the countdown flag of imported monster-skill entries", () => {
+    const data = validExport();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    monster["monsterSkillEntries"] = [
+      { skillId: 7, label: "a", displayMs: 8000, countdown: true },
+      { skillId: 8, label: "b", displayMs: 3000 },
+    ];
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const entries = result.output.monsterProfile.monsterSkillEntries;
+    expect(entries[0]).toEqual({
+      skillId: 7,
+      label: "a",
+      displayMs: 8000,
+      countdown: true,
+    });
+    expect("countdown" in entries[1]!).toBe(false);
+  });
+
   it("fills dead-teammate defaults missing from an older monster profile", () => {
     const data = validExport();
     const monster = data["monsterProfile"] as Record<string, unknown>;

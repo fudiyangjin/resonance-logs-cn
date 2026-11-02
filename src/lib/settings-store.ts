@@ -405,19 +405,29 @@ export function createDefaultVoiceSettings(): VoiceSettingsConfig {
  * phrase from the subject's display name (see `$lib/voice/subjects/*`);
  * `custom` lets the user type their own short line; `phrase` points at an
  * existing entry in the phrase library for reuse across bindings.
+ *
+ * `auto` and `custom` text is generated into managed phrases; either can
+ * pin the voice it is generated with (`generationSource`, otherwise the
+ * voice settings' source). `httpLanguage` only applies to custom text: auto
+ * text is written in its subject's language.
  */
 export type VoicePhraseBinding =
-  | { source: "auto" }
+  | {
+      source: "auto";
+      generationSource?: VoiceBindingGenerationSource | undefined;
+    }
   | {
       source: "custom";
       text: string;
       httpLanguage?: "zhCn" | "enUs" | "jaJp";
-      generationSource?:
-        | { mode: "preset"; locale: "zh-CN" | "en-US" | "ja-JP" }
-        | { mode: "http"; providerId: string }
-        | undefined;
+      generationSource?: VoiceBindingGenerationSource | undefined;
     }
   | { source: "phrase"; phraseId: string };
+
+/** A voice pinned on one binding, overriding the voice settings' source. */
+export type VoiceBindingGenerationSource =
+  | { mode: "preset"; locale: "zh-CN" | "en-US" | "ja-JP" }
+  | { mode: "http"; providerId: string };
 
 export function createDefaultVoicePhraseBinding(): VoicePhraseBinding {
   return { source: "auto" };
@@ -708,7 +718,24 @@ export type MinimapEntitySizes = {
   other: number;
 };
 
+/**
+ * Default backdrop opacity of each minimap panel. Exported so the overlay can
+ * fall back to them without building a whole default config (the overlay
+ * window never runs the settings page's defaults backfill).
+ */
+export const DEFAULT_MINIMAP_MAP_BACKGROUND_OPACITY = 0.68;
+export const DEFAULT_MINIMAP_INFO_BACKGROUND_OPACITY = 0.76;
+
 export type MinimapInfoPanelStyle = {
+  backgroundOpacity: number;
+};
+
+/**
+ * Map panel backdrop. Only the base fill follows `backgroundOpacity`; arena
+ * lines, mechanic regions and entity dots keep their own alpha so the map
+ * stays readable when the backdrop is fully transparent.
+ */
+export type MinimapMapPanelStyle = {
   backgroundOpacity: number;
 };
 
@@ -744,6 +771,7 @@ export type MinimapConfig = {
   markerColors: MinimapMarkerColors;
   localRing: MinimapLocalRing;
   localFacing: MinimapLocalFacing;
+  mapPanelStyle: MinimapMapPanelStyle;
   infoPanelStyle: MinimapInfoPanelStyle;
   deadStyle: MinimapDeadStyle;
   /**
@@ -1204,6 +1232,14 @@ export type TeammateCdPanelStyle = {
  */
 export type TeammateCdSkillMap = Partial<Record<string, number[]>>;
 
+/** Numbers on the weapon resource bar sections. */
+export type ResourceTextStyle = {
+  /** `now/max` size (the game's 18px); the shield number and the orb
+   * percentage keep their in-game ratio to it. */
+  fontSize: number;
+  color: string;
+};
+
 export type ShieldDetailStyle = {
   fontSize: number;
   barWidth: number;
@@ -1297,12 +1333,15 @@ export type EntityDurationEntry = {
 /**
  * One monster-monitor "monster skill" watch: when any nearby monster casts
  * `skillId`, a row shows its name for `displayMs`; a recast restarts it.
- * An empty `label` falls back to the game's skill name.
+ * An empty `label` falls back to the game's skill name. `countdown` also
+ * shows the remaining time and a draining bar, for a skill that announces
+ * another one `displayMs` later.
  */
 export type MonsterSkillWatchEntry = {
   skillId: number;
   label: string;
   displayMs: number;
+  countdown?: boolean;
 };
 
 export type MonsterMonitorConfig = {
@@ -1563,6 +1602,7 @@ export type SkillMonitorProfile = {
   customPanelStyle?: CustomPanelStyle;
   textBuffPanelStyle?: TextBuffPanelStyle;
   shieldDetailStyle?: ShieldDetailStyle;
+  resourceTextStyle?: ResourceTextStyle;
   /** Shared text style applied to overlay groups without a dedicated style
    * config (skill Cd, resource, panel attr, buff icon/duration groups). */
   overlayTextStyle?: OverlayTextStyle;
@@ -2691,8 +2731,11 @@ export function createDefaultMinimapConfig(): MinimapConfig {
     localFacing: {
       enabled: false,
     },
+    mapPanelStyle: {
+      backgroundOpacity: DEFAULT_MINIMAP_MAP_BACKGROUND_OPACITY,
+    },
     infoPanelStyle: {
-      backgroundOpacity: 0.76,
+      backgroundOpacity: DEFAULT_MINIMAP_INFO_BACKGROUND_OPACITY,
     },
     deadStyle: {
       shape: "default",

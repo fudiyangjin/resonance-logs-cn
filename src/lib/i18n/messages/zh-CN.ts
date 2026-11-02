@@ -542,6 +542,15 @@ export const zhCNMessages = {
   "live.history.bossDefeated": "已击杀",
   "live.history.bossAlive": "未击杀",
   "live.history.target.label": "目标",
+  "live.history.banner.coverage": "Buff 覆盖率",
+  "live.coverage.playersLabel": "玩家",
+  "live.coverage.caption": "按活跃战斗时长 {duration} 计算",
+  "live.coverage.empty":
+    "这场没有记录到覆盖率监控的 Buff。在主窗口「{path}」添加后，之后的战斗才会记录。",
+  "live.coverage.historyOnly": "查看历史战斗时可用",
+  "live.coverage.rowTooltip":
+    "{name} #{id} · 覆盖 {covered} / {active} · 触发 {count} 次",
+  "live.coverage.absentTooltip": "{name} #{id} · 本场未出现",
   "history.list.error.deleteFailed": "删除失败：{error}",
   "history.list.error.loadFailed": "加载战斗列表失败：{error}",
   "history.list.filters.favorite": "收藏",
@@ -1188,6 +1197,8 @@ export const zhCNMessages = {
   "components.buffSearchResultGrid.subtitle.composite": "组合 Buff",
   "components.buffSearchResultGrid.subtitle.compositeThreshold":
     "组合 Buff · {total} 选 {count}",
+  "components.buffSearchResultGrid.subtitle.compositeMostUrgent":
+    "组合 Buff · 最急成员",
   "components.buffSearchResultGrid.showMore": "显示更多(还有 {remaining} 条)",
   "components.buffSearchResultGrid.fallbackIcon": "Buff",
   "skillMonitor.layout.title": "实时监控",
@@ -1338,6 +1349,13 @@ export const zhCNMessages = {
     "{total} 个中至少 {count} 个同时存在",
   "skillMonitor.buff.composite.hint":
     "满足生效条件时显示，持续到同时存在的成员少于所需数量为止（要求全部时即最先结束的成员）。层数：要求全部时为成员的最小层数，否则为当前存在的成员数。成员 Buff 自身的显示不受影响。",
+  "skillMonitor.buff.composite.mode": "显示方式",
+  "skillMonitor.buff.composite.modeJoint": "组合整体",
+  "skillMonitor.buff.composite.modeMostUrgent": "最急成员",
+  "skillMonitor.buff.composite.conditionMostUrgent":
+    "最急成员：任一成员存在时显示，缺失优先，其次剩余最短",
+  "skillMonitor.buff.composite.hintMostUrgent":
+    "任一成员存在时显示一格：有成员缺失时灰显该成员并标「缺失」（多个缺失时取排在前面的），否则显示剩余时间最短的成员，图标、时间、层数都跟随该成员。覆盖率按任一成员存在统计；语音按组合整体的出现、消失和即将结束触发，想单独提醒某个成员请给该成员配置语音。成员 Buff 自身的显示不受影响。",
   "skillMonitor.buff.composite.save": "保存组合",
   "skillMonitor.buff.composite.deleteTitle": "删除组合「{name}」？",
   "skillMonitor.buff.composite.deleteDescription":
@@ -1727,6 +1745,9 @@ export const zhCNMessages = {
   "skillMonitor.overlay.resourceSections": "资源分区",
   "skillMonitor.overlay.resourceSectionsHelp":
     "当前职业的每个资源分区可单独显示/隐藏，并在覆盖层编辑模式下独立拖动和缩放",
+  "skillMonitor.overlay.resourceTextStyle": "资源文字",
+  "skillMonitor.overlay.resourceTextStyleHelp":
+    "资源条、资源点和盾条上的数字（例如 100/400）。职业计数用的是游戏数字图，不受影响；文字阴影沿用共享文字样式。",
   "monsterMonitor.title": "怪物监控",
   "monsterMonitor.description": "监控 Boss buff 等数据",
   "monsterMonitor.actions.toggleOverlay": "开关怪物监控",
@@ -1940,6 +1961,9 @@ export const zhCNMessages = {
   "monsterMonitor.monsterSkill.empty": "尚未添加任何技能。",
   "monsterMonitor.monsterSkill.label": "别名",
   "monsterMonitor.monsterSkill.displaySeconds": "显示秒数",
+  "monsterMonitor.monsterSkill.countdown": "倒计时",
+  "monsterMonitor.monsterSkill.countdownHint":
+    "开启后显示剩余秒数和进度条，倒计时结束即消失。适合「放出这个技能后若干秒释放下一个技能」的情况。",
   "monsterMonitor.monsterSkill.voice.title": "语音播报",
   "monsterMonitor.monsterSkill.styleTitle": "面板样式",
   "monsterMonitor.entityDuration.title": "实体持续时间",
@@ -2039,6 +2063,10 @@ export const zhCNMessages = {
   "gameOverlay.edit.done": "完成编辑",
   "gameOverlay.edit.dragHint": "拖动此处移动 Game Overlay 窗口",
   "gameOverlay.group.resource": "资源区",
+  "gameOverlay.resource.section.bar": "资源条",
+  "gameOverlay.resource.section.dots": "资源点",
+  "gameOverlay.resource.section.siderLine": "盾条",
+  "gameOverlay.resource.section.professionCount": "职业计数",
   "gameOverlay.group.skillCd": "技能CD区",
   "gameOverlay.group.textBuff": "无图标Buff区",
   "gameOverlay.group.shieldDetail": "血量护盾区",
@@ -2052,6 +2080,8 @@ export const zhCNMessages = {
   "gameOverlay.buff.fantasyTierSuffix": "{name} | {level}阶",
   "gameOverlay.buff.stateActive": "激活",
   "gameOverlay.buff.stateInactive": "未激活",
+  "gameOverlay.buff.memberMissing": "缺失",
+  "gameOverlay.buff.focusMember": "{composite}·{member}",
   "gameOverlay.timer.seconds": "{value}s",
   "gameOverlay.timer.minutes": "{value}m",
   "gameOverlay.timer.hours": "{value}h",
@@ -2195,6 +2225,10 @@ export const zhCNMessages = {
   "minimap.overlay.infoPanel": "机制报幕：{state}",
   "minimap.overlay.help":
     "面板位置和宽度请在副本机制窗口的编辑布局模式中调整。",
+  "minimap.overlay.mapBackgroundOpacity": "地图背景浓度",
+  "minimap.overlay.infoBackgroundOpacity": "机制报幕背景浓度",
+  "minimap.overlay.backgroundOpacityHelp":
+    "只调整面板底色，数值越低越透明；地图上的线条、机制区域和人物点不受影响。",
   "minimap.settings.colors.title": "玩家颜色",
   "minimap.settings.colors.description":
     "设置无机制颜色覆盖时的自己与队友颜色；机制点名颜色仍使用专用高区分度色槽。",
@@ -2386,6 +2420,9 @@ export const zhCNMessages = {
   "minimap.s4SkyEndRaid.bossRune": "Boss 符文{rune} · {shape}",
   "minimap.s4SkyEndRaid.runeShape1": "绿色飞鸟",
   "minimap.s4SkyEndRaid.runeShape4": "黄色折角",
+  "minimap.s4SkyEndRaid.runeOrder": "点亮顺序",
+  "minimap.s4SkyEndRaid.runeAlt": "符文{rune}",
+  "minimap.s4SkyEndRaid.chargeInterval": "充能间隔",
   "minimap.s4SkyEndRaid.sin": "罪罚",
   "minimap.s4SkyEndRaid.sinLayer": "{layer}层",
   "minimap.s4SkyEndRaid.extremeSin": "极罪",
@@ -2397,7 +2434,7 @@ export const zhCNMessages = {
   "minimap.s4SkyEndRaid.darkPoint": "暗",
   "minimap.s4SkyEndRaid.celestial": "天体碰撞",
   "minimap.s4SkyEndRaid.celestialPair": "双球 {gap}°",
-  "minimap.s4SkyEndRaid.celestialTriple": "三球（推测）",
+  "minimap.s4SkyEndRaid.celestialTriple": "三球 第{n}次爆炸",
   "minimap.s4SkyEndRaid.safeSpot": "安全",
   "minimap.s4SkyEndRaid.firstSpot": "①",
   "minimap.s4SkyEndRaid.secondSpot": "②",
@@ -2692,6 +2729,5 @@ export const zhCNMessages = {
   "voice.bindings.generateMissing.needProfile":
     "请先在“短句库”中选择可用的生成来源（本地音色需要先安装模型）",
   "voice.bindings.generateMissing.none": "没有待生成的语音",
-  "voice.bindings.generateMissing.summary": "已提交 {count} 条待生成语音",
   "voice.bindings.tryPlay": "试听",
 };

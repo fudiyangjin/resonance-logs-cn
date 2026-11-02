@@ -25,6 +25,8 @@ The overlay consists of two panels, which can be toggled separately in **{{ui:mi
 | **{{ui:minimap.panels.map}}** | Top-down minimap: players, Boss, markers and mechanic zones |
 | **{{ui:minimap.panels.info}}** | Text list: names of active mechanics, targets and remaining time |
 
+The backdrop of each panel is adjusted separately in the same place: **{{ui:minimap.overlay.mapBackgroundOpacity}}** and **{{ui:minimap.overlay.infoBackgroundOpacity}}**; lower values are more transparent. At 0 the map keeps only its lines, mechanic areas and player dots, and the call list keeps only its text.
+
 ## Display options
 
 | Option | Effect |

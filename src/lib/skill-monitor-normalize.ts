@@ -7,6 +7,7 @@ import {
   type OverlaySizes,
   type PanelAreaRowRef,
   type PanelAttrConfig,
+  type ResourceTextStyle,
   type ShieldDetailStyle,
   type SkillMonitorProfile,
   type TextBuffPanelStyle,
@@ -316,6 +317,23 @@ export function ensureShieldDetailStyle(
   };
 }
 
+/** The game's `lab_progress` size on the weapon resource bar. */
+export const DEFAULT_RESOURCE_FONT_SIZE = 18;
+
+export function ensureResourceTextStyle(
+  profile: Pick<SkillMonitorProfile, "resourceTextStyle"> | null,
+): ResourceTextStyle {
+  const current = profile?.resourceTextStyle;
+  return {
+    fontSize: clampRounded(
+      current?.fontSize ?? DEFAULT_RESOURCE_FONT_SIZE,
+      10,
+      36,
+    ),
+    color: current?.color ?? "#ffffff",
+  };
+}
+
 /**
  * Fully normalizes a skill-monitor profile by backfilling every field that
  * was added after some profiles were first created (overlay text-style
@@ -379,6 +397,9 @@ export function normalizeSkillProfile(
   }
   if (profile.shieldDetailStyle) {
     normalized.shieldDetailStyle = ensureShieldDetailStyle(profile);
+  }
+  if (profile.resourceTextStyle) {
+    normalized.resourceTextStyle = ensureResourceTextStyle(profile);
   }
   // Region 1 replaces the single-grid layout.
   delete normalized.skillCdLayout;

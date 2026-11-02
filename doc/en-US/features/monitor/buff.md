@@ -44,9 +44,9 @@ In **{{ui:skillMonitor.buff.group.title}}**:
 
 Buffs without an icon are shown as a line of text plus a progress bar. You can choose **{{ui:skillMonitor.buff.display.modernText}}** or **{{ui:skillMonitor.buff.display.classicText}}**, and limit how many are shown at most.
 
-### Buffs that change with stacks
+### Class counter
 
-Some Buffs change their icon automatically with the stack count. For example, Wind Knight's "Chasing Step" shows a single icon at 1 stack and a double icon at 2 stacks, with no extra setup needed.
+The game HUD's class counter (for example Wind Knight's "Chasing Step" wind mark, Stormblade's thunder sigil count or Twin Striker's rank letter) is not shown in the Buff area. It is the "Class counter" section of the resource area, see [Resource sections](./overlay.md#resource-sections).
 
 ## Names and icons
 
@@ -69,6 +69,24 @@ Some effects only count when several Buffs are active at once. Create a composit
 - Once saved, a composite can be searched and added like any Buff on this page, in [Custom Monitor](./custom-panel.md), [Buff Coverage](./buff-coverage.md), countdown alerts and voice announcements; search results mark it as "Composite buff";
 - Watching a composite does not change how its member Buffs display;
 - Like aliases, composites are a global setting and are not exported with profiles. When an imported profile refers to a composite this install does not have, those references are removed automatically; deleting a composite also removes its references from every profile.
+
+### Display: most urgent member
+
+**{{ui:skillMonitor.buff.composite.mode}}** defaults to **{{ui:skillMonitor.buff.composite.modeJoint}}**, the rules above. If the composite is there to keep an eye on each member (for example several Buffs you keep refreshing in turn), switch it to **{{ui:skillMonitor.buff.composite.modeMostUrgent}}**:
+
+- One slot is shown while any member is active, and none once all are gone; there is no condition or icon to pick in this mode;
+- When a member is missing, the slot shows that member dimmed and marked "Missing" (the one listed first if several are);
+- Otherwise it shows the member ending soonest, with that member's icon, remaining time and stacks; on a tie, the member listed first;
+- In the text area and in Custom Monitor, the name reads "composite · member";
+- Buff Coverage counts the time any member is active;
+- Voice announcements follow the composite as a whole: start = the first member appears, end = the last member is gone, about to end = before the last member runs out. To be told about one member, give that member its own voice cue;
+- The composite takes a single slot but does not hide its members: a member also added on its own to another area still shows its own row there. To see a single slot, remove those members from that area.
+
+![Every member active: the member running out first is shown](../../../shared/img/monitor/composite_4.en-US.png)
+
+![A member missing: the missing member is shown](../../../shared/img/monitor/composite_5.en-US.png)
+
+For the full setup, see [Show only the Attribute Symphony that needs refreshing with "most urgent member"](./examples/symphony-most-urgent.md).
 
 ## Priority
 
@@ -108,3 +126,4 @@ For vulnerabilities and damage boosts placed on monsters (such as Venom Vulnerab
 
 - [Voice reminder when Tina's CD is ready](./examples/tina-cd.md)
 - [Track the 3-stack "Attribute Symphony" buff with composite buffs](./examples/attribute-symphony.md)
+- [Show only the Attribute Symphony that needs refreshing with "most urgent member"](./examples/symphony-most-urgent.md)

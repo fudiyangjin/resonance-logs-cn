@@ -173,6 +173,20 @@
               onchange={(event) => commitSeconds(entry, event.currentTarget)}
             />
           </label>
+          <label
+            class="text-foreground flex shrink-0 items-center gap-2 text-xs"
+            title={t("monsterMonitor.monsterSkill.countdownHint")}
+          >
+            <input
+              type="checkbox"
+              checked={entry.countdown === true}
+              onchange={(event) =>
+                updateEntry(entry.skillId, {
+                  countdown: event.currentTarget.checked,
+                })}
+            />
+            {t("monsterMonitor.monsterSkill.countdown")}
+          </label>
           <button
             type="button"
             class="order-button"
@@ -244,6 +258,21 @@
       <strong>{panelStyle.gap}px</strong>
     </label>
     <label class="style-field">
+      <span>{t("monsterMonitor.style.columnGap")}</span>
+      <input
+        type="range"
+        min="0"
+        max="240"
+        value={panelStyle.columnGap}
+        oninput={(event) =>
+          updatePanelStyle(
+            "columnGap",
+            Number.parseInt(event.currentTarget.value, 10),
+          )}
+      />
+      <strong>{panelStyle.columnGap}px</strong>
+    </label>
+    <label class="style-field">
       <span>{t("monsterMonitor.style.fontSize")}</span>
       <input
         type="range"
@@ -258,6 +287,9 @@
       />
       <strong>{panelStyle.fontSize}px</strong>
     </label>
+  </div>
+
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
     <label class="color-field">
       <span>{t("monsterMonitor.style.nameColor")}</span>
       <input
@@ -266,6 +298,40 @@
         oninput={(event) =>
           updatePanelStyle("nameColor", event.currentTarget.value)}
       />
+    </label>
+    <label class="color-field">
+      <span>{t("monsterMonitor.style.valueColor")}</span>
+      <input
+        type="color"
+        value={panelStyle.valueColor}
+        oninput={(event) =>
+          updatePanelStyle("valueColor", event.currentTarget.value)}
+      />
+    </label>
+    <label class="color-field">
+      <span>{t("monsterMonitor.style.progressColor")}</span>
+      <input
+        type="color"
+        value={panelStyle.progressColor}
+        oninput={(event) =>
+          updatePanelStyle("progressColor", event.currentTarget.value)}
+      />
+    </label>
+    <label class="color-field">
+      <span>{t("monsterMonitor.style.progressOpacity")}</span>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.05"
+        value={panelStyle.progressOpacity}
+        oninput={(event) =>
+          updatePanelStyle(
+            "progressOpacity",
+            Number(event.currentTarget.value),
+          )}
+      />
+      <strong>{Math.round(panelStyle.progressOpacity * 100)}%</strong>
     </label>
   </div>
   <OverlayTextStyleFields

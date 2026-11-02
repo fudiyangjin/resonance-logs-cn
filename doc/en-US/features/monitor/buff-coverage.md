@@ -23,8 +23,11 @@ Each entry has a **{{ui:skillMonitor.buffCoverage.entry.showInLive}}** switch:
 
 After a fight, open its details page in [History](../dps/history.md#buff-coverage) to see the coverage timeline and coverage summary of these Buffs for each party member.
 
+While viewing history in the live window, you can also press **{{ui:live.history.banner.coverage}}** in the banner to see the fight's coverage per player, see [Check a history fight's Buff coverage in the live window](../dps/examples/live-buff-coverage.md).
+
 ![Coverage summary](../../../shared/img/changelog/v0.2.3_3.png)
 
 ## Examples
 
 - [Review your team's boost coverage](./examples/buff-coverage.md)
+- [Check a history fight's Buff coverage in the live window](../dps/examples/live-buff-coverage.md)

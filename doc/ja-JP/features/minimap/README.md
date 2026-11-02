@@ -25,6 +25,8 @@
 | **{{ui:minimap.panels.map}}** | 俯瞰ミニマップ：プレイヤー、Boss、マーカー、ギミック領域 |
 | **{{ui:minimap.panels.info}}** | テキスト一覧：進行中のギミック名、指名対象、残り時間 |
 
+各パネルの背景色も同じ場所で個別に調整できます：**{{ui:minimap.overlay.mapBackgroundOpacity}}** と **{{ui:minimap.overlay.infoBackgroundOpacity}}**。値が低いほど透明になります。0 にするとマップは線・ギミック範囲・プレイヤーの点だけ、通知は文字だけが残ります。
+
 ## 表示オプション
 
 | オプション | 効果 |

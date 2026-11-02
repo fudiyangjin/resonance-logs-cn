@@ -95,6 +95,8 @@ If you already have a TTS you like (a locally hosted TTS server, an OpenAI-compa
 3. Click **{{ui:voice.http.form.testButton}}** to hear a line, then **{{ui:voice.http.form.save}}**.
 4. In **{{ui:voice.phrases.generate.title}}**, choose **{{ui:voice.phrases.generate.httpSource}}** and the service you added. Generation then works like any other source, and **{{ui:voice.bindings.generateMissing}}** uses it too. You can add several services and switch between them.
 
+   On feature pages, a cue whose text is **{{ui:voice.binding.source.auto}}** or **{{ui:voice.binding.source.custom}}** can also use **{{ui:voice.binding.generationSource}}** to pick its own service. With **{{ui:voice.binding.source.custom}}** text, **{{ui:voice.binding.generationLanguage}}** also sets the generation language.
+
 > [!NOTE]
 > - The service must return wav / mp3 / flac / ogg (vorbis) / m4a. **Opus and headerless raw PCM are not supported**; ask the service for wav or mp3.
 > - Remote addresses must use https; plain http is only allowed for this machine (`127.0.0.1`, `localhost`) and LAN IP addresses.
@@ -129,3 +131,4 @@ Deleting announcements, un-monitoring their targets or changing their text turns
 
 - [Warn about a Boss's big attack with your own sound effect](./examples/custom-sfx.md)
 - [Download models, clone voices, and import audio phrases](./examples/clone-import.md)
+- [Generate cues with an online Fish Audio voice](./examples/http-fish-audio.md)

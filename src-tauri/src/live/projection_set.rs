@@ -414,6 +414,9 @@ impl ProjectionSet {
                     minimap_changed |= self.minimap.apply(envelope);
                 }
             }
+            DomainEvent::BuffCustomized(_) => {
+                minimap_changed |= self.minimap.apply(envelope);
+            }
             DomainEvent::BossMechanicStarted(_) => {
                 reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);
@@ -2211,6 +2214,7 @@ mod tests {
                     started_mono_ms: Some(MonoTimeMs(0)),
                     expires_mono_ms: Some(MonoTimeMs(10_000)),
                     effect_ids: Arc::from([]),
+                    energy_display_id: None,
                 },
                 target_roles: EntityRoles {
                     is_local_player: true,

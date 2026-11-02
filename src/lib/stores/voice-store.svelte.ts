@@ -16,8 +16,9 @@ import {
   type VoiceStatus,
 } from "$lib/bindings";
 import { getLocale, t } from "$lib/i18n/index.svelte";
-import { SETTINGS } from "$lib/settings-store";
+import { SETTINGS, type VoicePhraseBinding } from "$lib/settings-store";
 import {
+  resolveBindingGenerationSource,
   resolveSavedGenerationSource,
   type GenerationSource,
 } from "$lib/voice/generation-source";
@@ -176,6 +177,27 @@ export function savedGenerationSource(): GenerationSource | null {
     fineTunedReady: VOICE.status?.fineTunedVoice.kind === "ready",
     locale: getLocale(),
   });
+}
+
+/** What a binding generates with, resolved against the current voice status. */
+export function bindingGenerationSource(
+  binding: VoicePhraseBinding,
+): GenerationSource | null {
+  return resolveBindingGenerationSource(binding, {
+    saved: savedGenerationSource(),
+    modelReady: VOICE.status?.model.kind === "ready",
+    httpProviderIds:
+      VOICE.status?.catalog.httpProviders.map((provider) => provider.id) ?? [],
+  });
+}
+
+/** The last run's fatal error, else its first failed item's error. */
+export function lastGenerationError(): string | null {
+  return (
+    VOICE.generationError ??
+    Object.values(VOICE.generationItems).find((item) => item.error)?.error ??
+    null
+  );
 }
 
 export function ensureVoiceListeners(): Promise<void> {

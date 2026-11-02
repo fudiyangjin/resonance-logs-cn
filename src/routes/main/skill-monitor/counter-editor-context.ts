@@ -10,13 +10,11 @@ import { lookupMonsterSkillDefaultName } from "$lib/config/monster-skill-search"
 import { getLocale } from "$lib/i18n/index.svelte";
 import { resolvePanelAttrLabel } from "$lib/i18n/panel-attrs";
 import {
-  CLASS_RESOURCES,
-  findResonanceSkill,
-  findResourcesByClass,
-  getClassConfigs,
-  type GaugeResourceDefinition,
-  type ResourceDefinition,
-} from "$lib/skill-mappings";
+  allFightResources,
+  fightResName,
+  getFightResTemplate,
+} from "$lib/resource-bar";
+import { findResonanceSkill, getClassConfigs } from "$lib/skill-mappings";
 import type { CounterIdDomain } from "$lib/user-counter-rules";
 
 export type CounterEditorContext = {
@@ -37,15 +35,15 @@ export function getCounterEditorContext(): CounterEditorContext {
   return getContext<CounterEditorContext>(KEY);
 }
 
-function isGauge(item: ResourceDefinition): item is GaugeResourceDefinition {
-  return item.type === "bar" || item.type === "charges";
-}
-
-/** Gauge resources of `classKey`, the ones a resource source can count. */
-export function classGaugeResources(
+/** Weapon bar resources of `classKey`, the ones a resource source can count. */
+export function classFightResources(
   classKey: string,
-): GaugeResourceDefinition[] {
-  return findResourcesByClass(classKey).filter(isGauge);
+): { id: number; label: string }[] {
+  const locale = getLocale();
+  return (getFightResTemplate(classKey)?.resources ?? []).map((resource) => ({
+    id: resource.id,
+    label: fightResName(resource, locale),
+  }));
 }
 
 function findSkillName(skillId: number): string | null {
@@ -60,13 +58,10 @@ function findSkillName(skillId: number): string | null {
 }
 
 function findResourceName(resourceId: number): string | null {
-  for (const classKey of Object.keys(CLASS_RESOURCES)) {
-    const match = classGaugeResources(classKey).find(
-      (item) => item.currentId === resourceId,
-    );
-    if (match) return match.label;
-  }
-  return null;
+  const match = allFightResources().find(
+    (resource) => resource.id === resourceId,
+  );
+  return match ? fightResName(match, getLocale()) : null;
 }
 
 /** Display name of an id in `domain`, `null` when no table knows it. */

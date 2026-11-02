@@ -107,7 +107,9 @@ const storeUrl = await moduleAt("../stores/voice-store.svelte.ts", {
     "export const t = x => x; export const getLocale = () => 'zh-CN';",
   ),
   "$lib/settings-store": settingsModule,
-  "$lib/voice/generation-source": await moduleAt("./generation-source.ts", {}),
+  "$lib/voice/generation-source": await moduleAt("./generation-source.ts", {
+    "$lib/i18n/locales": await moduleAt("../i18n/locales.ts", {}),
+  }),
 });
 const store = await import(storeUrl);
 const syncUrl = await moduleAt("./sync.svelte.ts", {

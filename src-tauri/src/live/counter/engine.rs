@@ -2502,6 +2502,7 @@ mod tests {
                 started_mono_ms: None,
                 expires_mono_ms: None,
                 effect_ids: std::sync::Arc::from([]),
+                energy_display_id: None,
             },
             target_roles: EntityRoles {
                 is_local_player: true,

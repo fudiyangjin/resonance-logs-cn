@@ -219,6 +219,19 @@ pub const MAX_BUFF_COMPOSITES: usize = 64;
 /// Most member buffs one composite may combine.
 pub const MAX_BUFF_COMPOSITE_MEMBERS: usize = 8;
 
+/// How a composite buff shows on the HUD.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub enum BuffCompositeMode {
+    /// The composite as one buff, present while at least `min_active`
+    /// members are.
+    #[default]
+    Joint,
+    /// The member most in need of attention, present while any member is:
+    /// a missing member first, otherwise the one ending first.
+    MostUrgent,
+}
+
 /// A composite buff: present on an entity while at least `min_active` of its
 /// member buffs are (every member when unset), then published and tracked
 /// under its own negative `id` like any other buff (see
@@ -227,20 +240,25 @@ pub const MAX_BUFF_COMPOSITE_MEMBERS: usize = 8;
 #[serde(rename_all = "camelCase")]
 pub struct BuffCompositeSpec {
     pub id: i32,
+    /// In configured order, which breaks most-urgent ties.
     pub member_ids: Vec<i32>,
     #[serde(default)]
     pub min_active: Option<u32>,
+    #[serde(default)]
+    pub mode: BuffCompositeMode,
 }
 
 /// Validates composite definitions and sorts them by id, so lookups can
 /// binary-search. A threshold that requires every member is dropped, so
-/// "all members" has a single spelling.
+/// "all members" has a single spelling; a most-urgent composite needs any
+/// one member and carries no threshold either.
 fn normalize_buff_composites(composites: &mut [BuffCompositeSpec]) -> Result<(), String> {
     if composites.len() > MAX_BUFF_COMPOSITES {
         return Err(format!("组合buff最多{MAX_BUFF_COMPOSITES}个"));
     }
     for composite in composites.iter_mut() {
-        dedup_and_sort_i32(&mut composite.member_ids);
+        let mut seen = std::collections::HashSet::new();
+        composite.member_ids.retain(|id| seen.insert(*id));
         let member_count = composite.member_ids.len();
         let valid_members = (2..=MAX_BUFF_COMPOSITE_MEMBERS).contains(&member_count)
             && composite.member_ids.iter().all(|id| *id > 0);
@@ -257,6 +275,9 @@ fn normalize_buff_composites(composites: &mut [BuffCompositeSpec]) -> Result<(),
             if min_active == member_count {
                 composite.min_active = None;
             }
+        }
+        if composite.mode == BuffCompositeMode::MostUrgent {
+            composite.min_active = None;
         }
     }
     composites.sort_unstable_by_key(|composite| composite.id);
@@ -656,6 +677,7 @@ mod tests {
             id,
             member_ids,
             min_active: None,
+            mode: BuffCompositeMode::Joint,
         }
     }
 
@@ -692,6 +714,29 @@ mod tests {
         let spec: BuffCompositeSpec = serde_json::from_str(r#"{"id":-1,"memberIds":[1,2]}"#)
             .expect("specs without a threshold still deserialize");
         assert_eq!(spec.min_active, None);
+        assert_eq!(spec.mode, BuffCompositeMode::Joint);
+    }
+
+    #[test]
+    fn most_urgent_composites_carry_no_threshold() {
+        let most_urgent = BuffCompositeSpec {
+            mode: BuffCompositeMode::MostUrgent,
+            ..threshold(-1, vec![1, 2, 3], 2)
+        };
+        let normalized = with_composites(vec![most_urgent])
+            .normalize()
+            .expect("most-urgent composites are valid");
+        assert_eq!(
+            normalized.buff_composites,
+            vec![BuffCompositeSpec {
+                mode: BuffCompositeMode::MostUrgent,
+                ..composite(-1, vec![1, 2, 3])
+            }]
+        );
+        let spec: BuffCompositeSpec =
+            serde_json::from_str(r#"{"id":-1,"memberIds":[1,2],"mode":"mostUrgent"}"#)
+                .expect("the mode deserializes");
+        assert_eq!(spec.mode, BuffCompositeMode::MostUrgent);
     }
 
     fn with_composites(buff_composites: Vec<BuffCompositeSpec>) -> MonitorRuntimeSnapshot {
@@ -708,9 +753,10 @@ mod tests {
             composite(-9, vec![5, 6]),
         ]);
         let normalized = snapshot.normalize().expect("composites are valid");
+        // Members keep their configured order; only repeats are dropped.
         assert_eq!(
             normalized.buff_composites,
-            vec![composite(-9, vec![5, 6]), composite(-1, vec![1, 3])]
+            vec![composite(-9, vec![5, 6]), composite(-1, vec![3, 1])]
         );
 
         for invalid in [

@@ -67,7 +67,7 @@
           progressColor={styleConfig.progressColor}
           progressOpacity={styleConfig.progressOpacity}
           fontSize={styleConfig.fontSize}
-          placeholder={buff.isPlaceholder}
+          placeholder={buff.isPlaceholder || buff.inactive}
           alert={buff.alert}
           temporal={buff.temporal}
         />
@@ -84,7 +84,7 @@
           progressOpacity={styleConfig.progressOpacity}
           fontSize={styleConfig.fontSize}
           columnGap={styleConfig.columnGap}
-          placeholder={buff.isPlaceholder}
+          placeholder={buff.isPlaceholder || buff.inactive}
           alert={buff.alert}
           temporal={buff.temporal}
         />

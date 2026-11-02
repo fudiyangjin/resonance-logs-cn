@@ -239,6 +239,7 @@ pub struct LiveStatusPayload {
     pub shield_max_hp: i64,
     pub shield_entries: Vec<ShieldDetailEntry>,
     pub fight_resource: Option<FightResourceState>,
+    pub profession_count: Option<ProfessionCountState>,
 }
 
 /// Live coverage of one watched buff on the local player. `covered_ms` and
@@ -620,6 +621,19 @@ pub struct BuffUpdateState {
     pub duration_ms: i32,
     pub create_time_ms: i64,
     pub source_remodel_level: Option<i64>,
+    /// Set only on a most-urgent composite; left out of every other buff
+    /// so a long local buff list does not grow.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub focus: Option<BuffFocusState>,
+}
+
+/// The member a most-urgent composite shows. While present, the composite's
+/// timing and layer are that member's; a missing member carries none.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct BuffFocusState {
+    pub member_id: i32,
+    pub missing: bool,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -748,6 +762,11 @@ pub struct MinimapBuffFact {
     pub source_config_id: Option<i32>,
     /// `PlayEffect` effect ids from the buff's logic_effects, in wire order.
     pub effect_ids: Vec<i32>,
+    /// Effects this instance is looping because a `BuffEventCustomize` started
+    /// them and nothing has stopped them yet, ascending. A looping play adds
+    /// its id, a stop removes it, a stop-all clears the set; one-shot plays
+    /// leave it unchanged.
+    pub loop_effects: Vec<i32>,
 }
 
 /// A single entity fact rendered/interpreted by the 2D minimap overlay.
@@ -923,6 +942,23 @@ pub struct FightResourceState {
     pub entries: Vec<FightResourceEntry>,
     /// Local timestamp when this state was received
     pub received_at: i64,
+}
+
+/// Main-HUD profession counter (`profession_buff_show_helper.lua`), driven by
+/// local-player buffs that carry a `BuffEffectEnergyDisplay` logic effect.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfessionCountState {
+    /// Buff of the latest counter change (`SetProfessionBuff`).
+    pub buff_base_id: i32,
+    /// Its `FightResIconTable` row.
+    pub effect_id: i32,
+    /// Its layer; 0 once the buff is gone.
+    pub layer: i32,
+    /// Some tracked buff still has layers (keeps the flower layer up).
+    pub any_layer: bool,
+    /// Rows whose buff currently has layers, in the order they appeared.
+    pub active_effect_ids: Vec<i32>,
 }
 
 /// A single damage event recorded in the 2s sliding window used for death replay.

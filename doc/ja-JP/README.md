@@ -35,7 +35,7 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | ドキュメント | 説明 | 例 |
 | --- | --- | --- |
 | [DPSメーター](./features/dps/README.md) | リアルタイム集計、ダミーモード、戦闘の分割とリセット | [木人で火力測定](./features/dps/examples/dummy-rotation.md) |
-| [履歴](./features/dps/history.md) | 履歴リスト、スキル詳細、タイムライン | [タイムラインで振り返り](./features/dps/examples/timeline-gaps.md) |
+| [履歴](./features/dps/history.md) | 履歴リスト、スキル詳細、タイムライン | [タイムラインで振り返り](./features/dps/examples/timeline-gaps.md) · [リアルタイムウィンドウで稼働率](./features/dps/examples/live-buff-coverage.md) |
 | [チャレンジ監視](./features/dps/challenge.md) | チャレンジダンジョンでの被弾とミスの集計 | [チャレンジの被弾](./features/dps/examples/challenge-hits.md) |
 | [テーマと外観](./features/dps/themes.md) | 配色、透明度、タイトルバー、コンパクトモード | [ミニマルな透明ウィンドウ](./features/dps/examples/transparent-window.md) · [カスタムレイアウトと死亡リプレイ](./features/dps/examples/header-death.md) |
 | [表示設定](./features/dps/settings.md) | ライブと履歴テーブルの列設定 | [表示列のカスタマイズ](./features/dps/examples/table-columns.md) |
@@ -46,8 +46,8 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | --- | --- | --- |
 | [ライブモニター](./features/monitor/README.md) | 機能の概要と使い方の流れ | — |
 | [スキル CD](./features/monitor/skill-cd.md) | 監視するスキルを選ぶ | — |
-| [Buff モニター](./features/monitor/buff.md) | 個別監視、カテゴリクイックモニター、別名 | [ティーナ CD の音声通知](./features/monitor/examples/tina-cd.md) · [複合 Buff 監視](./features/monitor/examples/attribute-symphony.md) |
-| [バフ稼働率](./features/monitor/buff-coverage.md) | 戦闘中のバフの維持時間を集計 | [稼働率の振り返り](./features/monitor/examples/buff-coverage.md) |
+| [Buff モニター](./features/monitor/buff.md) | 個別監視、カテゴリクイックモニター、別名 | [ティーナ CD の音声通知](./features/monitor/examples/tina-cd.md) · [複合 Buff 監視](./features/monitor/examples/attribute-symphony.md) · [最も急ぐメンバー](./features/monitor/examples/symphony-most-urgent.md) |
+| [バフ稼働率](./features/monitor/buff-coverage.md) | 戦闘中のバフの維持時間を集計 | [稼働率の振り返り](./features/monitor/examples/buff-coverage.md) · [リアルタイムウィンドウで稼働率](./features/dps/examples/live-buff-coverage.md) |
 | [キャラクターパネル](./features/monitor/panel-attr.md) | ステータスをリアルタイム表示 | — |
 | [HP/シールドエリア](./features/monitor/shield.md) | 自分の HP とシールド | — |
 | [カスタムモニター](./features/monitor/custom-panel.md) | 通常エリア、ファクター設定エリア、シーズンノードエリア、カウンター | [ファクターエリア](./features/monitor/examples/factor-energy.md) · [プリセットカウンター](./features/monitor/examples/preset-counter.md) |
@@ -80,7 +80,7 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | ドキュメント | 説明 | 例 |
 | --- | --- | --- |
 | [音声読み上げ](./features/voice/README.md) | クイックスタート、機能ページでの読み上げ設定 | [Buff 音声の一括生成](./features/voice/examples/buff-voice.md) |
-| [音色と短文](./features/voice/voices.md) | プリセット・クローン・微調整音色、音声のインポート | [カスタム効果音](./features/voice/examples/custom-sfx.md) · [音声クローンとインポート](./features/voice/examples/clone-import.md) |
+| [音色と短文](./features/voice/voices.md) | プリセット・クローン・微調整音色、音声のインポート、HTTP 音声サービス | [カスタム効果音](./features/voice/examples/custom-sfx.md) · [音声クローンとインポート](./features/voice/examples/clone-import.md) · [Fish Audio のオンライン音色](./features/voice/examples/http-fish-audio.md) |
 | [再生と通知](./features/voice/playback.md) | 音量、優先度、プレースホルダー、マッチング通知 | [マッチング成功の通知](./features/voice/examples/match-found.md) |
 
 ### モジュール計算

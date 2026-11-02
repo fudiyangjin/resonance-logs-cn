@@ -3,16 +3,17 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Arc;
 
-use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
+use crate::live::bootstrap_snapshot::{BuffCompositeMode, MonitorRuntimeSnapshot};
 use crate::live::ipc::models::{
-    BossDbmEvent, BuffUpdateState, EntityDurationTrackState, FightResourceEntry,
+    BossDbmEvent, BuffFocusState, BuffUpdateState, EntityDurationTrackState, FightResourceEntry,
     FightResourceState, HateEntry as HateEntryDto, HpEntry, MonsterSkillCastState, PanelAttrState,
-    ShieldDetailEntry, SkillCdState, SkillDamageHitState, StunEntry, TeammateFantasyState,
+    ProfessionCountState, ShieldDetailEntry, SkillCdState, SkillDamageHitState, StunEntry, TeammateFantasyState,
 };
 use crate::live::ipc::topic::TopicMask;
-use crate::live::projections::buff_presence::{BuffCompositeCatalog, BuffPresence};
+use crate::live::projections::buff_presence::{BuffCompositeCatalog, BuffFocus, BuffPresence};
 use crate::live::projections::entity_duration::EntityDurationWatch;
 use crate::live::projections::monster_skill_watch::MonsterSkillWatch;
+use crate::live::projections::profession_count::ProfessionCountTracker;
 use crate::live::projections::skill_cd;
 use crate::live::protocol::attrs as attr_type;
 use crate::live::runtime::entity_context::EntityContext;
@@ -40,6 +41,7 @@ pub struct EntityMonitorSnapshot {
     pub shield_max_hp: i64,
     pub shield_entries: Vec<ShieldDetailEntry>,
     pub fight_resource: Option<FightResourceState>,
+    pub profession_count: Option<ProfessionCountState>,
     pub teammate_fantasies: Vec<TeammateFantasyState>,
     pub boss_mechanics: Vec<BossDbmEvent>,
     pub hate_lists: HashMap<String, Vec<HateEntryDto>>,
@@ -235,6 +237,7 @@ pub struct EntityMonitorProjection {
     fight_resource_ids: Vec<i32>,
     fight_resources: HashMap<i32, i64>,
     fight_resource_received_at: i64,
+    profession_count: ProfessionCountTracker,
     active_fantasies: HashMap<EntityUuid, FantasyCastKey>,
     recent_fantasies: VecDeque<RecentFantasy>,
     boss_mechanics: HashMap<i32, BossMechanicRecord>,
@@ -500,12 +503,18 @@ impl EntityMonitorProjection {
                 } else {
                     false
                 };
-                if !watched {
+                let counter_changed = roles.is_local_player && self.profession_count.apply(event);
+                let mask = if !watched {
                     TopicMask::EMPTY
                 } else if roles.is_local_player {
                     TopicMask::BUFFS
                 } else {
                     TopicMask::MONSTER
+                };
+                if counter_changed {
+                    mask | TopicMask::STATUS
+                } else {
+                    mask
                 }
             }
             DomainEvent::SkillCooldownUpdated { entity, cooldowns }
@@ -790,6 +799,7 @@ impl EntityMonitorProjection {
                     .collect(),
                 received_at: self.fight_resource_received_at,
             }),
+            profession_count: self.profession_count.snapshot(),
             teammate_fantasies: self.displayed_fantasies(),
             boss_mechanics: self
                 .boss_mechanics
@@ -876,6 +886,7 @@ impl EntityMonitorProjection {
         self.fight_resource_ids.clear();
         self.fight_resources.clear();
         self.fight_resource_received_at = 0;
+        self.profession_count.clear();
     }
 
     fn remove_entity(&mut self, entity: EntityUuid) {
@@ -1128,9 +1139,16 @@ impl EntityMonitorProjection {
                     if !self.buff_filter.publishes_local_composite(composite.id) {
                         continue;
                     }
-                    if let Some(presence) = composite.presence(entity.active_buffs.values()) {
-                        local_buffs.push(composite_dto(composite.id, presence));
-                    }
+                    let buffs = entity.active_buffs.values();
+                    let dto = match composite.mode {
+                        BuffCompositeMode::Joint => composite
+                            .presence(buffs)
+                            .map(|presence| composite_dto(composite.id, presence)),
+                        BuffCompositeMode::MostUrgent => composite
+                            .focus(buffs)
+                            .map(|focus| focus_dto(composite.id, focus, entities)),
+                    };
+                    local_buffs.extend(dto);
                 }
             }
 
@@ -1194,6 +1212,33 @@ fn composite_dto(id: i32, presence: BuffPresence<'_>) -> BuffUpdateState {
     timed_buff_dto(presence.timing, id, presence.layer, None)
 }
 
+/// A most-urgent composite shows its focused member: that member's timing,
+/// layer and fantasy tier while present, no timing while missing.
+fn focus_dto(id: i32, focus: BuffFocus<'_>, entities: &EntityContext) -> BuffUpdateState {
+    match focus {
+        BuffFocus::Present(presence) => BuffUpdateState {
+            base_id: id,
+            layer: presence.layer,
+            focus: Some(BuffFocusState {
+                member_id: presence.timing.base_id,
+                missing: false,
+            }),
+            ..buff_dto(presence.timing, entities)
+        },
+        BuffFocus::Missing(member_id) => BuffUpdateState {
+            base_id: id,
+            layer: 0,
+            duration_ms: 0,
+            create_time_ms: 0,
+            source_remodel_level: None,
+            focus: Some(BuffFocusState {
+                member_id,
+                missing: true,
+            }),
+        },
+    }
+}
+
 fn timed_buff_dto(
     timing: &BuffState,
     base_id: i32,
@@ -1206,6 +1251,7 @@ fn timed_buff_dto(
         duration_ms: timing.duration_ms.unwrap_or_default().min(i32::MAX as u64) as i32,
         create_time_ms: timing.started_wall_ms.unwrap_or_default(),
         source_remodel_level,
+        focus: None,
     }
 }
 
@@ -1405,6 +1451,7 @@ mod tests {
             started_mono_ms: Some(crate::live::runtime::events::MonoTimeMs(1_000)),
             expires_mono_ms: Some(crate::live::runtime::events::MonoTimeMs(6_000)),
             effect_ids: Arc::from([]),
+            energy_display_id: None,
         }
     }
 
@@ -1855,8 +1902,76 @@ mod tests {
                 id: -1,
                 member_ids: vec![77, 78],
                 min_active: None,
+                mode: BuffCompositeMode::Joint,
+            },
+            crate::live::bootstrap_snapshot::BuffCompositeSpec {
+                id: -2,
+                member_ids: vec![77, 78, 79],
+                min_active: None,
+                mode: BuffCompositeMode::MostUrgent,
             },
         ]))
+    }
+
+    #[test]
+    fn most_urgent_composite_publishes_its_focused_member() {
+        let mut projection = EntityMonitorProjection::default();
+        let mut entities = EntityContext::new();
+        let mut scheduler = DeadlineScheduler::new();
+        seed_local_player(&mut projection, &mut entities, &mut scheduler);
+        let mut config = MonitorRuntimeSnapshot::default();
+        config.skill.monitored_buff_ids.push(-2);
+        projection.apply_config(&config, composite_catalog(), &entities, MonoTimeMs(0));
+        assert!(projection.snapshot(&entities).local_buffs.is_empty());
+
+        apply_local_buffs(
+            &mut projection,
+            &mut entities,
+            &mut scheduler,
+            2,
+            vec![observed_buff(1, EntityUuid(10))],
+        );
+        // The first missing member, in configured order, carries no timing.
+        let local_buffs = projection.snapshot(&entities).local_buffs;
+        assert_eq!(local_buffs.len(), 1);
+        assert_eq!(local_buffs[0].base_id, -2);
+        assert_eq!(
+            local_buffs[0].focus,
+            Some(BuffFocusState {
+                member_id: 78,
+                missing: true,
+            })
+        );
+        assert_eq!(local_buffs[0].duration_ms, 0);
+        assert_eq!(local_buffs[0].layer, 0);
+
+        let mut ending_first = observed_buff(2, EntityUuid(10));
+        ending_first.base_id = 78;
+        ending_first.layer = 3;
+        ending_first.duration_ms = Some(2_000);
+        ending_first.started_wall_ms = Some(2_000);
+        let mut lasting = observed_buff(3, EntityUuid(10));
+        lasting.base_id = 79;
+        apply_local_buffs(
+            &mut projection,
+            &mut entities,
+            &mut scheduler,
+            3,
+            vec![ending_first, lasting],
+        );
+        // Every member present: the one ending first, with its own layer.
+        let local_buffs = projection.snapshot(&entities).local_buffs;
+        assert_eq!(local_buffs.len(), 1);
+        assert_eq!(
+            local_buffs[0].focus,
+            Some(BuffFocusState {
+                member_id: 78,
+                missing: false,
+            })
+        );
+        assert_eq!(local_buffs[0].duration_ms, 2_000);
+        assert_eq!(local_buffs[0].create_time_ms, 2_000);
+        assert_eq!(local_buffs[0].layer, 3);
     }
 
     fn apply_local_buffs(
@@ -1924,6 +2039,7 @@ mod tests {
         assert_eq!(local_buffs[0].duration_ms, 2_000);
         assert_eq!(local_buffs[0].create_time_ms, 2_000);
         assert_eq!(local_buffs[0].source_remodel_level, None);
+        assert_eq!(local_buffs[0].focus, None);
     }
 
     #[test]

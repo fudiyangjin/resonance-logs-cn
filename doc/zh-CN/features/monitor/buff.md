@@ -44,9 +44,9 @@
 
 没有图标的 Buff 以一行文字 + 进度条显示，可选 **{{ui:skillMonitor.buff.display.modernText}}** 或 **{{ui:skillMonitor.buff.display.classicText}}**，并限制最多显示几条。
 
-### 按层数变化的 Buff
+### 职业计数
 
-部分 Buff 的图标会随层数自动变化，例如青岚骑士的「追击身法」1 层显示单图标、2 层显示双图标，无需额外配置。
+游戏主界面那组职业计数（例如青岚骑士「追击身法」的风纹、雷影剑士的雷印层数、赤炎狂战士的评级字母）不在 Buff 区显示，而是资源区的「职业计数」分区，见 [资源分区](./overlay.md#资源分区)。
 
 ## 名称与图标
 
@@ -69,6 +69,24 @@ Buff 别名同时用于 [因子区](./custom-panel.md#因子配置区) 中 Buff 
 - 保存后，组合可以像普通 Buff 一样在本页、[自定义监控](./custom-panel.md)、[Buff 覆盖率](./buff-coverage.md)、倒计时告警和语音播报中搜索添加，搜索结果会标注「组合 Buff」；
 - 监听组合不影响成员 Buff 自己的显示；
 - 组合和别名一样是全局设置，不随方案导出。导入的方案如果引用了本机没有的组合，这些引用会被自动移除；删除组合时，也会从所有方案中移除对它的引用。
+
+### 显示方式：最急成员
+
+**{{ui:skillMonitor.buff.composite.mode}}** 默认为 **{{ui:skillMonitor.buff.composite.modeJoint}}**，即上面描述的规则。如果建组合是为了方便盯住每个成员（例如几个需要轮流续上的 Buff），可以改为 **{{ui:skillMonitor.buff.composite.modeMostUrgent}}**：
+
+- 任一成员存在时就显示一格，全部不在时不显示；这种方式下没有生效条件和图标可选；
+- 有成员缺失时，这一格灰显缺失的成员并标「缺失」（多个缺失时取成员列表里排在前面的）；
+- 没有缺失时，显示剩余时间最短的成员，图标、剩余时间和层数都跟随该成员；剩余时间相同时取排在前面的成员；
+- 在文字区和自定义监控中，名称显示为「组合名·成员名」；
+- Buff 覆盖率按任一成员存在统计；
+- 语音播报按组合整体触发：开始 = 第一个成员出现，结束 = 最后一个成员消失，即将结束 = 最后一个成员到期前。想单独提醒某个成员，请给该成员自己配置语音；
+- 组合只占一格，不会隐藏成员自己的显示：成员如果还单独加在其他区域，会照常各显示一条。只想看一格时，把这些成员从对应区域删掉。
+
+![成员都在时显示最快到期的成员](../../../shared/img/monitor/composite_4.zh-CN.png)
+
+![有成员缺失时提示缺失的成员](../../../shared/img/monitor/composite_5.zh-CN.png)
+
+完整设置步骤见 [用「最急成员」只看该补的那个属性交响](./examples/symphony-most-urgent.md)。
 
 ## 优先级
 
@@ -108,3 +126,4 @@ Buff 别名同时用于 [因子区](./custom-panel.md#因子配置区) 中 Buff 
 
 - [蒂娜 CD 转好时语音提醒](./examples/tina-cd.md)
 - [用组合 Buff 监控「属性交响」3 层效果](./examples/attribute-symphony.md)
+- [用「最急成员」只看该补的那个属性交响](./examples/symphony-most-urgent.md)

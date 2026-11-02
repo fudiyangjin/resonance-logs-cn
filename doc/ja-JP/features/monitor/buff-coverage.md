@@ -23,8 +23,11 @@
 
 戦闘終了後、[履歴](../dps/history.md#buff-カバー率) の詳細ページを開くと、各メンバーについてこれらの Buff のカバータイムラインと稼働率のまとめを確認できます。
 
+リアルタイムウィンドウで履歴を見ているときは、バナーの **{{ui:live.history.banner.coverage}}** ボタンからプレイヤーごとの稼働率も確認できます。[リアルタイムウィンドウで履歴戦闘のバフ稼働率を確認する](../dps/examples/live-buff-coverage.md) を参照してください。
+
 ![稼働率のまとめ](../../../shared/img/changelog/v0.2.3_3.png)
 
 ## 例
 
 - [パーティの強化 Buff 稼働率を振り返る](./examples/buff-coverage.md)
+- [リアルタイムウィンドウで履歴戦闘のバフ稼働率を確認する](../dps/examples/live-buff-coverage.md)

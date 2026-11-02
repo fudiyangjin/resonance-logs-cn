@@ -71,6 +71,7 @@ function pairBuff(
     fireUuid: null,
     sourceConfigId: 884666,
     effectIds,
+    loopEffects: [],
   };
 }
 
@@ -104,6 +105,7 @@ function mechanicBuff(
     fireUuid: extras.fireUuid ?? null,
     sourceConfigId: null,
     effectIds: [],
+    loopEffects: [],
   };
 }
 

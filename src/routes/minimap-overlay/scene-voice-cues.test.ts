@@ -126,6 +126,7 @@ describe("S3 raid voice cues", () => {
         fireUuid: null,
         sourceConfigId: null,
         effectIds: [],
+        loopEffects: [],
       },
       {
         targetEntityUuid: "local",
@@ -137,6 +138,7 @@ describe("S3 raid voice cues", () => {
         fireUuid: null,
         sourceConfigId: null,
         effectIds: [],
+        loopEffects: [],
       },
     ];
 

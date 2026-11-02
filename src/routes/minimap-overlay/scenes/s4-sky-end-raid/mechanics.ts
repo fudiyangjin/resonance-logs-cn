@@ -33,7 +33,16 @@ import { addErosion } from "./erosion";
 import { addEvilRitual, ritualSides } from "./ritual";
 import { addShare, shareOrder } from "./share";
 import { addSin } from "./sin";
-import { bossRuneBuff, type RuneNumber, turntableRuneIcons } from "./turntable";
+import { rememberRuneOrder } from "./rune-order";
+import {
+  bossRuneBuff,
+  headRune,
+  RUNE_COLOR_SLOTS,
+  type RuneNumber,
+  runeRowIcon,
+  turntableRuneIcons,
+  turntableSlotRegions,
+} from "./turntable";
 
 export type LapsisMechanicView = {
   regions: MechanicRegion[];
@@ -71,6 +80,10 @@ const BUFF_ETERNAL_DAY_VULNERABLE = 829535;
 const BUFF_SHADOW_TARGET = 829537;
 /** 追人连线: self-applied by a chaser while its chase link is alive. */
 const BUFF_CHASE_LINK = 829539;
+/** 头标符文 (challenge): the rune a chaser carries, looped above its head. */
+const BUFF_HEAD_RUNE = 829544;
+/** 充能间隔 (15 s): charging a turntable slot again while it lasts kills. */
+const BUFF_CHARGE_INTERVAL = 829546;
 /** 死刑换T (45 s, 老二): armour broken, auto attacks hit much harder. */
 const BUFF_TANK_SWAP = 829654;
 /** 追踪球目标 (3 s, 老三): the fog orb (+5 erosion) is chasing this player. */
@@ -94,6 +107,7 @@ const COLOR_OUTER_LIGHT = 4;
 const COLOR_PRAYER = 9;
 const COLOR_CHASER = 10;
 const COLOR_FOG_ORB = 11;
+const COLOR_CHARGE_INTERVAL = 6;
 
 const textKeys = {
   boss: "minimap.s4SkyEndRaid.boss",
@@ -119,6 +133,9 @@ const textKeys = {
   bossRune: "minimap.s4SkyEndRaid.bossRune",
   runeShape1: "minimap.s4SkyEndRaid.runeShape1",
   runeShape4: "minimap.s4SkyEndRaid.runeShape4",
+  runeOrder: "minimap.s4SkyEndRaid.runeOrder",
+  runeAlt: "minimap.s4SkyEndRaid.runeAlt",
+  chargeInterval: "minimap.s4SkyEndRaid.chargeInterval",
   tankSwap: "minimap.s4SkyEndRaid.tankSwap",
   fogOrbTarget: "minimap.s4SkyEndRaid.fogOrbTarget",
   fogOrbSpawn: "minimap.s4SkyEndRaid.fogOrbSpawn",
@@ -141,8 +158,8 @@ type TextKey = (typeof textKeys)[keyof typeof textKeys];
 const BOSS_RUNE_ROWS: Partial<
   Record<RuneNumber, { colorSlot: number; shapeKey: TextKey }>
 > = {
-  1: { colorSlot: 1, shapeKey: textKeys.runeShape1 },
-  4: { colorSlot: 0, shapeKey: textKeys.runeShape4 },
+  1: { colorSlot: RUNE_COLOR_SLOTS[1], shapeKey: textKeys.runeShape1 },
+  4: { colorSlot: RUNE_COLOR_SLOTS[4], shapeKey: textKeys.runeShape4 },
 };
 
 const voiceCueIds = {
@@ -154,6 +171,7 @@ const voiceCueIds = {
   outerLight: "s4-sky-end-raid.outerLight",
   prayer: "s4-sky-end-raid.prayer",
   runeWheel: "s4-sky-end-raid.runeWheel",
+  chargeInterval: "s4-sky-end-raid.chargeInterval",
   sin: "s4-sky-end-raid.sin",
   extremeSin: "s4-sky-end-raid.extremeSin",
   shareFirst: "s4-sky-end-raid.shareFirst",
@@ -208,6 +226,11 @@ export const S4_SKY_END_RAID_VOICE_CUES: MinimapVoiceCueDef[] = [
     id: voiceCueIds.runeWheel,
     labelKey: textKeys.runeWheel,
     autoText: "符文轮盘",
+  },
+  {
+    id: voiceCueIds.chargeInterval,
+    labelKey: textKeys.chargeInterval,
+    autoText: "充能间隔",
   },
   { id: voiceCueIds.sin, labelKey: textKeys.sin, autoText: "罪罚层数变化" },
   {
@@ -318,6 +341,7 @@ export function resolveLapsisVoiceCues(
         [BUFF_RAIN_VULNERABLE]: voiceCueIds.rainVulnerable,
         [BUFF_TANK_SWAP]: voiceCueIds.tankSwap,
         [BUFF_FOG_ORB_TARGET]: voiceCueIds.fogOrbTarget,
+        [BUFF_CHARGE_INTERVAL]: voiceCueIds.chargeInterval,
         829602: voiceCueIds.sin,
         829603: voiceCueIds.extremeSin,
         829650: voiceCueIds.shareVulnerable,
@@ -411,6 +435,7 @@ export function resolveLapsisVoiceCues(
     voiceCueIds.ritualDark,
     voiceCueIds.rainVulnerable,
     voiceCueIds.tankSwap,
+    voiceCueIds.chargeInterval,
     voiceCueIds.extremeSin,
     voiceCueIds.shareVulnerable,
     voiceCueIds.shareFirst,
@@ -464,6 +489,14 @@ export function buildMechanicView(
   addPrayer(ctx);
   addChasers(ctx);
   addBossRune(ctx);
+  addRuneOrder(ctx);
+  addBuffRow(
+    ctx,
+    BUFF_CHARGE_INTERVAL,
+    "chargeInterval",
+    textKeys.chargeInterval,
+    COLOR_CHARGE_INTERVAL,
+  );
   addSin(ctx);
   addShare(ctx);
   addBuffRow(ctx, BUFF_TANK_SWAP, "tankSwap", textKeys.tankSwap, COLOR_RAIN);
@@ -480,7 +513,11 @@ export function buildMechanicView(
   addCelestialCollision(ctx);
 
   return {
-    regions: ctx.regions,
+    // Slot circles sit under the glyphs: regions are drawn before icons.
+    regions: [
+      ...turntableSlotRegions(snapshot, ctx.entitiesByUuid),
+      ...ctx.regions,
+    ],
     icons: turntableRuneIcons(snapshot, ctx.entitiesByUuid),
     rows: [...ctx.rows.values()],
     entityColorSlots: ctx.entityColorSlots,
@@ -681,13 +718,21 @@ function addPrayer(ctx: BuildContext) {
  */
 function addChasers(ctx: BuildContext) {
   const linked = chaseLinkedEntities(ctx.snapshot);
-  const chases: { chaser: MinimapEntity; target: MinimapEntity }[] = [];
+  const chases: {
+    chaser: MinimapEntity;
+    target: MinimapEntity;
+    rune: RuneNumber | null;
+    colorSlot: number;
+  }[] = [];
   for (const chaser of entitiesOf(ctx, CHASER_MONSTER_ID)) {
-    ctx.entityColorSlots.set(chaser.entityUuid, COLOR_CHASER);
+    // Only challenge chasers carry a rune; the others keep the chaser colour.
+    const rune = chaserRune(ctx, chaser);
+    const colorSlot = rune ? RUNE_COLOR_SLOTS[rune] : COLOR_CHASER;
+    ctx.entityColorSlots.set(chaser.entityUuid, colorSlot);
     if (!linked.has(chaser.entityUuid) || !chaser.targetEntityUuid) continue;
     const target = ctx.entitiesByUuid.get(chaser.targetEntityUuid);
     if (!target || target.isDead) continue;
-    chases.push({ chaser, target });
+    chases.push({ chaser, target, rune, colorSlot });
   }
 
   const local = ctx.snapshot.localPlayerUuid;
@@ -696,15 +741,15 @@ function addChasers(ctx: BuildContext) {
       Number(right.target.entityUuid === local) -
       Number(left.target.entityUuid === local),
   );
-  for (const { chaser, target } of chases) {
-    ctx.entityColorSlots.set(target.entityUuid, COLOR_CHASER);
+  for (const { chaser, target, rune, colorSlot } of chases) {
+    ctx.entityColorSlots.set(target.entityUuid, colorSlot);
     ctx.regions.push({
       kind: "line",
       x1: chaser.x,
       z1: chaser.z,
       x2: target.x,
       z2: target.z,
-      colorSlot: COLOR_CHASER,
+      colorSlot,
       widthPx: 3,
     });
     const distance = Math.hypot(chaser.x - target.x, chaser.z - target.z);
@@ -722,13 +767,49 @@ function addChasers(ctx: BuildContext) {
               name,
               distance: distanceLabel,
             }),
-      colorSlot: COLOR_CHASER,
+      colorSlot,
       createTimeMs: 0,
       durationMs: 0,
       targets: [],
       hideTimer: true,
+      ...(rune ? { icons: [runeIcon(rune)] } : {}),
     });
   }
+}
+
+/** The rune a chaser's 头标符文 loops above it, from its spawn snapshot. */
+function chaserRune(
+  ctx: BuildContext,
+  chaser: MinimapEntity,
+): RuneNumber | null {
+  const buff = ctx.snapshot.buffs.find(
+    (fact) =>
+      fact.baseId === BUFF_HEAD_RUNE &&
+      fact.targetEntityUuid === chaser.entityUuid,
+  );
+  const value = buff?.effectIds[0];
+  return value === undefined ? null : headRune(value);
+}
+
+function runeIcon(rune: RuneNumber) {
+  return runeRowIcon(rune, t(textKeys.runeAlt, { rune }));
+}
+
+/** The boss's 头标符文 order, kept until the next 谒彼诸天. */
+function addRuneOrder(ctx: BuildContext) {
+  const runes = rememberRuneOrder(ctx.snapshot, ctx.boss?.entityUuid);
+  if (runes.length === 0) return;
+  addRow(ctx, {
+    key: "runeWheel:order",
+    group: t(textKeys.runeWheel),
+    label: t(textKeys.runeOrder),
+    colorSlot: COLOR_BOSS,
+    createTimeMs: 0,
+    durationMs: 0,
+    targets: [],
+    hideTimer: true,
+    icons: runes.map(runeIcon),
+  });
 }
 
 function addBossRune(ctx: BuildContext) {

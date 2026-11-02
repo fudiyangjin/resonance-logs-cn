@@ -35,7 +35,7 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | Document | Description | Examples |
 | --- | --- | --- |
 | [DPS Meter](./features/dps/README.md) | Live stats, dummy mode, combat splitting and resets | [Dummy damage test](./features/dps/examples/dummy-rotation.md) |
-| [History](./features/dps/history.md) | History list, skill breakdown, timeline | [Timeline review](./features/dps/examples/timeline-gaps.md) |
+| [History](./features/dps/history.md) | History list, skill breakdown, timeline | [Timeline review](./features/dps/examples/timeline-gaps.md) · [Coverage in the live window](./features/dps/examples/live-buff-coverage.md) |
 | [Challenge Watch](./features/dps/challenge.md) | Hits taken and mistakes in challenge dungeons | [Challenge hits taken](./features/dps/examples/challenge-hits.md) |
 | [Themes & Appearance](./features/dps/themes.md) | Colors, opacity, title bar, compact mode | [Minimal transparent window](./features/dps/examples/transparent-window.md) · [Custom layout & death replay](./features/dps/examples/header-death.md) |
 | [Display Settings](./features/dps/settings.md) | Column settings for the live and history tables | [Customize columns](./features/dps/examples/table-columns.md) |
@@ -46,8 +46,8 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | --- | --- | --- |
 | [Live Monitor](./features/monitor/README.md) | Feature overview and workflow | — |
 | [Skill CD](./features/monitor/skill-cd.md) | Choose which skills to monitor | — |
-| [Buff Monitor](./features/monitor/buff.md) | Exact monitoring, category quick monitor, aliases | [Tina CD voice reminder](./features/monitor/examples/tina-cd.md) · [Track 3-stack buff](./features/monitor/examples/attribute-symphony.md) |
-| [Buff Coverage](./features/monitor/buff-coverage.md) | Measure how long buffs stay up during combat | [Coverage review](./features/monitor/examples/buff-coverage.md) |
+| [Buff Monitor](./features/monitor/buff.md) | Exact monitoring, category quick monitor, aliases | [Tina CD voice reminder](./features/monitor/examples/tina-cd.md) · [Track 3-stack buff](./features/monitor/examples/attribute-symphony.md) · [Most urgent member](./features/monitor/examples/symphony-most-urgent.md) |
+| [Buff Coverage](./features/monitor/buff-coverage.md) | Measure how long buffs stay up during combat | [Coverage review](./features/monitor/examples/buff-coverage.md) · [Coverage in the live window](./features/dps/examples/live-buff-coverage.md) |
 | [Character Panel](./features/monitor/panel-attr.md) | Live attribute display | — |
 | [HP/Shield Area](./features/monitor/shield.md) | Your own HP and shields | — |
 | [Custom Monitor](./features/monitor/custom-panel.md) | Standard areas, factor config area, season node area, counters | [Factor area](./features/monitor/examples/factor-energy.md) · [Preset counters](./features/monitor/examples/preset-counter.md) |
@@ -80,7 +80,7 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | Document | Description | Examples |
 | --- | --- | --- |
 | [Voice Announcements](./features/voice/README.md) | Quick start, binding announcements on feature pages | [Buff voice announcement](./features/voice/examples/buff-voice.md) |
-| [Voices & Phrases](./features/voice/voices.md) | Preset, cloned and fine-tuned voices, importing audio | [Custom sound effects](./features/voice/examples/custom-sfx.md) · [Clone voices & import audio](./features/voice/examples/clone-import.md) |
+| [Voices & Phrases](./features/voice/voices.md) | Preset, cloned and fine-tuned voices, importing audio, HTTP voice services | [Custom sound effects](./features/voice/examples/custom-sfx.md) · [Clone voices & import audio](./features/voice/examples/clone-import.md) · [Fish Audio online voice](./features/voice/examples/http-fish-audio.md) |
 | [Playback & Reminders](./features/voice/playback.md) | Volume, priority, placeholders, match-found reminders | [Match-found reminder](./features/voice/examples/match-found.md) |
 
 ### Module Calculator

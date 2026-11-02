@@ -35,8 +35,6 @@ import type { CounterRulePreset } from "$lib/skill-mappings";
 import {
   DEFAULT_OVERLAY_POSITIONS,
   DEFAULT_OVERLAY_VISIBILITY,
-  DEFAULT_RESOURCE_VALUES_BY_CLASS,
-  RESOURCE_SCALES_BY_CLASS,
 } from "./overlay-constants";
 import type {
   BuffAlertState,
@@ -133,6 +131,44 @@ export function isBuffActive(
   return buff.createTimeMs + buff.durationMs > now;
 }
 
+/**
+ * Whether `buff`, a most-urgent composite, shows its member as missing:
+ * published so, or the shown member ran out before the next publish (the
+ * backend would show it missing then, so the slot does not blink away).
+ */
+export function isFocusMissing(
+  buff: BuffUpdateState | undefined,
+  now: number,
+): boolean {
+  if (!buff?.focus) return false;
+  return buff.focus.missing || !isBuffActive(buff, now);
+}
+
+/** "Composite · member" for a most-urgent composite; `label` otherwise. */
+export function withFocusMember(
+  label: string,
+  buff: BuffUpdateState | undefined,
+  resolveName: (baseId: number) => string,
+): string {
+  if (!buff?.focus) return label;
+  return t("gameOverlay.buff.focusMember", {
+    composite: label,
+    member: resolveName(buff.focus.memberId),
+  });
+}
+
+/** A most-urgent composite's missing member: dimmed, without timing. */
+function missingMemberRow(key: string, label: string): CustomPanelDisplayRow {
+  return {
+    key,
+    label,
+    valueText: t("gameOverlay.buff.memberMissing"),
+    progressPercent: 0,
+    showProgress: false,
+    inactive: true,
+  };
+}
+
 export function formatTimerText(remainingMs: number): string {
   if (!Number.isFinite(remainingMs)) return t("gameOverlay.timer.infinite");
   if (remainingMs <= 0) return t("gameOverlay.timer.empty");
@@ -224,6 +260,9 @@ export function buildBuffTextRow(
   forceShow = false,
   alertResolver?: BuffAlertResolver,
 ): TextBuffDisplay | null {
+  if (!isPlaceholder && isFocusMissing(buff, now)) {
+    return missingMemberRow(key, label);
+  }
   const active = isBuffActive(buff, now);
   if (!active && !isPlaceholder) return null;
 
@@ -264,6 +303,7 @@ function buildBuffStateRow(
   buff: BuffUpdateState | undefined,
   now: number,
 ): CustomPanelDisplayRow {
+  if (isFocusMissing(buff, now)) return missingMemberRow(key, label);
   if (!buff || !isBuffActive(buff, now)) {
     return {
       key,
@@ -325,18 +365,18 @@ export function getCustomPanelDisplayRow(
 ): CustomPanelDisplayRow | null {
   if (entry.sourceType === "buff") {
     const buff = buffMap.get(entry.sourceId);
+    const label = withFocusMember(
+      resolveBuffName(entry.sourceId),
+      buff,
+      resolveBuffName,
+    );
     if (entry.format === "active") {
-      return buildBuffStateRow(
-        `inline_buff_${entry.id}`,
-        resolveBuffName(entry.sourceId),
-        buff,
-        now,
-      );
+      return buildBuffStateRow(`inline_buff_${entry.id}`, label, buff, now);
     }
     if (!buff) return null;
     return buildBuffTextRow(
       `inline_buff_${entry.id}`,
-      withFantasyTierSuffix(resolveBuffName(entry.sourceId), buff),
+      withFantasyTierSuffix(label, buff),
       buff,
       now,
       false,
@@ -503,7 +543,6 @@ export function computeDisplay(
           isActive: false,
           percent: 0,
           text: "",
-          chargesText: `${maxCharges}/${maxCharges}`,
           usable: true,
           chargesAvailable: maxCharges,
           maxCharges,
@@ -518,7 +557,6 @@ export function computeDisplay(
         isActive: chargesOnCd > 0,
         percent: Math.min(1, timeToNextCharge / chargeDuration),
         text: formatTenthsDown(timeToNextCharge / 1000),
-        chargesText: `${chargesAvailable}/${maxCharges}`,
         usable: chargesAvailable >= 1,
         chargesAvailable,
         maxCharges,
@@ -544,36 +582,6 @@ export function computeDisplay(
     text: remaining > 0 ? formatTenthsDown(remaining / 1000) : "",
     usable: remaining <= 0,
   };
-}
-
-export function getResourceValue(
-  fightResMap: Map<number, number>,
-  selectedClassKey: string,
-  resourceId: number,
-): number {
-  const raw = fightResMap.get(resourceId);
-  if (raw === undefined) {
-    return (
-      DEFAULT_RESOURCE_VALUES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 0
-    );
-  }
-  const scale = RESOURCE_SCALES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 1;
-  return Math.floor(raw / scale);
-}
-
-export function getResourcePreciseValue(
-  fightResMap: Map<number, number>,
-  selectedClassKey: string,
-  resourceId: number,
-): number {
-  const raw = fightResMap.get(resourceId);
-  if (raw === undefined) {
-    return (
-      DEFAULT_RESOURCE_VALUES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 0
-    );
-  }
-  const scale = RESOURCE_SCALES_BY_CLASS[selectedClassKey]?.[resourceId] ?? 1;
-  return raw / scale;
 }
 
 function formatTenthsDown(value: number): string {

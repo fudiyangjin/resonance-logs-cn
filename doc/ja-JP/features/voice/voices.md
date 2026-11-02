@@ -95,6 +95,8 @@ TTS を使いたくない場合や、効果音を使いたい場合は、音声�
 3. **{{ui:voice.http.form.testButton}}** で 1 文試聴し、問題なければ **{{ui:voice.http.form.save}}** をクリックします。
 4. **{{ui:voice.phrases.generate.title}}** で **{{ui:voice.phrases.generate.httpSource}}** と追加したサービスを選びます。あとは他のソースと同じように生成でき、**{{ui:voice.bindings.generateMissing}}** でも使われます。サービスは複数追加して切り替えられます。
 
+   機能ページで文言が **{{ui:voice.binding.source.auto}}** または **{{ui:voice.binding.source.custom}}** の読み上げは、**{{ui:voice.binding.generationSource}}** でその一文だけ使うサービスを指定することもできます。文言が **{{ui:voice.binding.source.custom}}** のときは、**{{ui:voice.binding.generationLanguage}}** で生成言語も指定できます。
+
 > [!NOTE]
 > - サービスが返す音声は wav / mp3 / flac / ogg（vorbis）/ m4a である必要があります。**Opus とヘッダーのない生の PCM は非対応**のため、サービス側で wav か mp3 を選んでください。
 > - リモートのアドレスは https 必須です。平文の http は、この PC（`127.0.0.1`、`localhost`）と LAN の IP アドレスにのみ使えます。
@@ -129,3 +131,4 @@ TTS を使いたくない場合や、効果音を使いたい場合は、音声�
 
 - [自分の効果音で Boss の大技を知らせる](./examples/custom-sfx.md)
 - [モデルのダウンロード、音声のクローン、音声ファイルのインポート](./examples/clone-import.md)
+- [Fish Audio のオンライン音色で読み上げを生成する](./examples/http-fish-audio.md)

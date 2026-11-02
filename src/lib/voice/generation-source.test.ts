@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { APP_LOCALES } from "$lib/i18n/locales";
 import {
+  decodeBindingSource,
+  encodeBindingSource,
   presetSourceForLocale,
+  resolveBindingGenerationSource,
   resolveSavedGenerationSource,
+  type BindingSourceContext,
   type SavedSourceContext,
 } from "./generation-source";
 
@@ -73,5 +77,72 @@ describe("resolveSavedGenerationSource", () => {
         selectedHttpProviderId: "http_1",
       }),
     ).toEqual({ mode: "http", providerId: "http_1" });
+  });
+});
+
+describe("binding source select values", () => {
+  it("round-trips every source and rejects malformed values", () => {
+    for (const source of [
+      undefined,
+      ...APP_LOCALES.map((locale) => ({ mode: "preset" as const, locale })),
+      { mode: "http" as const, providerId: "http_1" },
+    ]) {
+      expect(decodeBindingSource(encodeBindingSource(source))).toEqual(source);
+    }
+    expect(decodeBindingSource("preset:fr-FR")).toBeUndefined();
+    expect(decodeBindingSource("http:")).toBeUndefined();
+  });
+});
+
+describe("resolveBindingGenerationSource", () => {
+  const saved = { mode: "http" as const, providerId: "saved" };
+  const context: BindingSourceContext = {
+    saved,
+    modelReady: true,
+    httpProviderIds: ["http_1"],
+  };
+  const preset = { mode: "preset" as const, locale: "ja-JP" as const };
+  const http = { mode: "http" as const, providerId: "http_1" };
+
+  it("uses the pinned voice of auto and custom text", () => {
+    expect(
+      resolveBindingGenerationSource(
+        { source: "auto", generationSource: preset },
+        context,
+      ),
+    ).toEqual(preset);
+    expect(
+      resolveBindingGenerationSource(
+        { source: "custom", text: "Ready", generationSource: http },
+        context,
+      ),
+    ).toEqual(http);
+  });
+
+  it("falls back to the saved source without a pin and for library phrases", () => {
+    expect(resolveBindingGenerationSource({ source: "auto" }, context)).toBe(
+      saved,
+    );
+    expect(
+      resolveBindingGenerationSource(
+        { source: "phrase", phraseId: "phrase_1" },
+        context,
+      ),
+    ).toBe(saved);
+  });
+
+  it("is null while the pinned voice cannot generate", () => {
+    expect(
+      resolveBindingGenerationSource(
+        { source: "auto", generationSource: preset },
+        { ...context, modelReady: false },
+      ),
+    ).toBeNull();
+    expect(
+      resolveBindingGenerationSource(
+        { source: "auto", generationSource: http },
+        { ...context, httpProviderIds: [] },
+      ),
+    ).toBeNull();
   });
 });

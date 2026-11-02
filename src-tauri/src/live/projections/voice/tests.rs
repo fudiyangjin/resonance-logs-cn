@@ -45,6 +45,7 @@ fn buff(instance_id: i64, expires_mono_ms: Option<u64>) -> ObservedBuff {
         started_mono_ms: Some(MonoTimeMs(1_000)),
         expires_mono_ms: expires_mono_ms.map(MonoTimeMs),
         effect_ids: Arc::from([]),
+        energy_display_id: None,
     }
 }
 
@@ -102,6 +103,7 @@ fn buff_state(
         started_mono_ms: Some(MonoTimeMs(1_000)),
         expires_mono_ms: expires_mono_ms.map(MonoTimeMs),
         effect_ids: Arc::from([]),
+        energy_display_id: None,
     }
 }
 
@@ -272,6 +274,7 @@ fn composite_aggregate_follows_its_members() {
             id: -1,
             member_ids: vec![77, 78],
             min_active: None,
+            mode: crate::live::bootstrap_snapshot::BuffCompositeMode::Joint,
         }]);
     let applied = |buff: ObservedBuff| ProtocolObservation::BuffChanged {
         target_uuid: EntityUuid(1),
@@ -319,6 +322,55 @@ fn composite_aggregate_follows_its_members() {
         composite_edges(aggregates.replace(collect_buff_aggregates(&entities, &catalog), true));
     assert_eq!(lost.len(), 1);
     assert!(!lost[0].gained);
+}
+
+#[test]
+fn most_urgent_composite_aggregate_spans_any_member() {
+    let catalog =
+        BuffCompositeCatalog::from_specs(&[crate::live::bootstrap_snapshot::BuffCompositeSpec {
+            id: -2,
+            member_ids: vec![77, 78],
+            min_active: None,
+            mode: crate::live::bootstrap_snapshot::BuffCompositeMode::MostUrgent,
+        }]);
+    let applied = |buff: ObservedBuff| ProtocolObservation::BuffChanged {
+        target_uuid: EntityUuid(1),
+        change: ObservedBuffChange::Applied { buff },
+    };
+    let removed = |instance_id: i64| ProtocolObservation::BuffChanged {
+        target_uuid: EntityUuid(1),
+        change: ObservedBuffChange::Remove { instance_id },
+    };
+    let mut aggregates = BuffAggregates::default();
+    let mut entities = local_context();
+    let mut refresh = |entities: &EntityContext| {
+        let edges: Vec<bool> = aggregates
+            .replace(collect_buff_aggregates(entities, &catalog), true)
+            .into_iter()
+            .filter(|edge| edge.base_id == -2)
+            .map(|edge| edge.gained)
+            .collect();
+        let expires = aggregates
+            .get(VoiceBuffScope::LocalPlayer, -2)
+            .and_then(|aggregate| aggregate.expires_mono_ms);
+        (edges, expires)
+    };
+
+    // One member is enough to start the composite.
+    entities.apply_batch(batch(2, vec![applied(buff(10, Some(2_000)))]));
+    assert_eq!(refresh(&entities), (vec![true], Some(MonoTimeMs(2_000))));
+
+    // It lasts until the last member ends, with no edge in between.
+    let mut other = buff(11, Some(1_500));
+    other.base_id = 78;
+    other.duration_ms = Some(500);
+    entities.apply_batch(batch(3, vec![applied(other)]));
+    assert_eq!(refresh(&entities), (vec![], Some(MonoTimeMs(2_000))));
+    entities.apply_batch(batch(4, vec![removed(10)]));
+    assert_eq!(refresh(&entities), (vec![], Some(MonoTimeMs(1_500))));
+
+    entities.apply_batch(batch(5, vec![removed(11)]));
+    assert_eq!(refresh(&entities), (vec![false], None));
 }
 
 #[test]
@@ -516,6 +568,7 @@ fn local_buff_applied(instance_id: i64, duration_ms: u64) -> ObservedBuff {
         started_mono_ms: None,
         expires_mono_ms: None,
         effect_ids: Arc::from([]),
+        energy_display_id: None,
     }
 }
 
@@ -555,6 +608,7 @@ fn shorten_local_buff(duration_ms: u64) -> ProtocolObservation {
             duration_ms: Some(duration_ms),
             create_time: None,
             effect_ids: None,
+            energy_display_id: None,
         },
     }
 }

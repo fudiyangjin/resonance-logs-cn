@@ -1,5 +1,6 @@
 import { ensureCustomPanelGroups } from "$lib/custom-panel-utils";
 import { expandBuffSelection } from "$lib/config/buff-name-table";
+import { getResourceBarBuffIds } from "$lib/resource-bar";
 import { isFlowerSectionVisible } from "$lib/resource-sections";
 import {
   ensureBuffCoverageEntries,
@@ -116,6 +117,12 @@ export function buildConfiguredBuffPlan(
   const flowerIds = isFlowerSectionVisible(profile)
     ? validIdSet(getResourceOwnedBuffIds(profile.selectedClass))
     : EMPTY_IDS;
+  // The weapon bar reads its unlock and timer buffs; they are published but
+  // stay ordinary buffs everywhere else.
+  const resourceBarIds =
+    profile.overlayVisibility?.showResourceGroup === true
+      ? validIdSet(getResourceBarBuffIds(profile.selectedClass))
+      : EMPTY_IDS;
   // Same defaults as `ensureOverlayVisibility`.
   const showCustomPanels =
     profile.overlayVisibility?.showCustomPanelGroup ?? true;
@@ -149,6 +156,7 @@ export function buildConfiguredBuffPlan(
             ...factorIds,
             ...liveCoverageIds,
             ...flowerIds,
+            ...resourceBarIds,
             ...validIdSet(getDefaultMonitoredBuffIds(profile.selectedClass)),
           ]),
         )

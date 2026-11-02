@@ -14,8 +14,19 @@ describe("searchBuffCandidates", () => {
       memberIds: [91_234_567, 91_234_568],
       minActive: 1,
     },
+    {
+      id: -7,
+      name: "最急箭雨",
+      memberIds: [91_234_568, 91_234_567],
+      mode: "mostUrgent" as const,
+    },
   ];
-  const aliases = { "-5": "箭雨组合", "-6": "任一箭雨", "91234567": "箭雨甲" };
+  const aliases = {
+    "-5": "箭雨组合",
+    "-6": "任一箭雨",
+    "-7": "最急箭雨",
+    "91234567": "箭雨甲",
+  };
 
   it("matches composites by name or member name, ahead of catalog buffs", () => {
     expect(searchBuffCandidates("箭雨组合", aliases, composites)[0]).toEqual({
@@ -23,13 +34,18 @@ describe("searchBuffCandidates", () => {
       name: "箭雨组合",
       hasSpriteFile: false,
       inCatalog: true,
-      composite: { minActive: 2, memberCount: 2 },
+      composite: { minActive: 2, memberCount: 2, mostUrgent: false },
     });
 
     const byMember = searchBuffCandidates("箭雨甲", aliases, composites);
-    expect(byMember.slice(0, 2)).toMatchObject([
+    expect(byMember.slice(0, 3)).toMatchObject([
       { baseId: -5, composite: { minActive: 2, memberCount: 2 } },
       { baseId: -6, name: "任一箭雨", composite: { minActive: 1 } },
+      {
+        baseId: -7,
+        name: "最急箭雨",
+        composite: { minActive: 1, memberCount: 2, mostUrgent: true },
+      },
     ]);
   });
 

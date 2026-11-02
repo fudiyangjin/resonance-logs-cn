@@ -9,6 +9,15 @@
   }
 }
 
+/* Game HUD digits (`ui/font/common_sc`), subset to 0-9 . / X x. */
+@font-face {
+  font-family: "Dream Han Sans SC";
+  src: url("/fonts/common_sc_ui.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --font-sans: "Inter Variable", sans-serif;
   --font-mono: "Geist Mono Variable", monospace;

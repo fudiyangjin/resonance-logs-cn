@@ -8,7 +8,9 @@
 use std::cmp::Reverse;
 use std::collections::HashMap;
 
-use crate::live::bootstrap_snapshot::{BuffCompositeSpec, MAX_BUFF_COMPOSITE_MEMBERS};
+use crate::live::bootstrap_snapshot::{
+    BuffCompositeMode, BuffCompositeSpec, MAX_BUFF_COMPOSITE_MEMBERS,
+};
 use crate::live::runtime::events::{BuffState, MonoTimeMs};
 
 /// One composite buff: present while at least `min_active` of its `members`
@@ -16,13 +18,55 @@ use crate::live::runtime::events::{BuffState, MonoTimeMs};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BuffComposite {
     pub id: i32,
+    /// In configured order.
     pub members: Box<[i32]>,
     /// In `1..=members.len()`; equal to the member count unless a threshold
-    /// is configured.
+    /// is configured, and 1 for a most-urgent composite.
     pub min_active: usize,
+    pub mode: BuffCompositeMode,
+}
+
+/// What a most-urgent composite shows (see [`BuffComposite::focus`]).
+#[derive(Debug, Clone, Copy)]
+pub enum BuffFocus<'a> {
+    /// The first member, in configured order, that is not present.
+    Missing(i32),
+    /// The present member ending first; `timing.base_id` is that member.
+    Present(BuffPresence<'a>),
 }
 
 impl BuffComposite {
+    /// The member most in need of attention among one entity's `buffs`, or
+    /// `None` while no member is present.
+    ///
+    /// A missing member outranks every present one; otherwise the member
+    /// ending first wins, a member that never expires ranking last. Ties
+    /// keep the configured order.
+    pub fn focus<'a, I>(&self, buffs: I) -> Option<BuffFocus<'a>>
+    where
+        I: IntoIterator<Item = &'a BuffState> + Clone,
+    {
+        let mut missing = None;
+        let mut soonest: Option<BuffPresence<'a>> = None;
+        for member in &self.members {
+            match buff_presence(*member, buffs.clone()) {
+                None => {
+                    missing.get_or_insert(*member);
+                }
+                Some(presence) => {
+                    let ends_sooner = soonest.is_none_or(|current| {
+                        expires_later(current.expires_mono_ms(), presence.expires_mono_ms())
+                    });
+                    if ends_sooner {
+                        soonest = Some(presence);
+                    }
+                }
+            }
+        }
+        let soonest = soonest?;
+        Some(missing.map_or(BuffFocus::Present(soonest), BuffFocus::Missing))
+    }
+
     /// Presence of the composite among one entity's `buffs`.
     ///
     /// It holds while at least `min_active` members are present, so its
@@ -96,16 +140,22 @@ impl BuffCompositeCatalog {
                     by_member.entry(*member).or_default().push(index);
                 }
                 let member_count = members.len();
-                let min_active = spec
-                    .min_active
-                    .map_or(member_count, |min_active| {
-                        usize::try_from(min_active).unwrap_or(usize::MAX)
-                    })
-                    .clamp(1, member_count.max(1));
+                // A most-urgent composite stays up while any member is, so
+                // coverage, history and voice follow that one rule.
+                let min_active = match spec.mode {
+                    BuffCompositeMode::Joint => {
+                        spec.min_active.map_or(member_count, |min_active| {
+                            usize::try_from(min_active).unwrap_or(usize::MAX)
+                        })
+                    }
+                    BuffCompositeMode::MostUrgent => 1,
+                }
+                .clamp(1, member_count.max(1));
                 BuffComposite {
                     id: spec.id,
                     members,
                     min_active,
+                    mode: spec.mode,
                 }
             })
             .collect();
@@ -222,6 +272,7 @@ mod tests {
             started_mono_ms: Some(MonoTimeMs(0)),
             expires_mono_ms: expires.map(MonoTimeMs),
             effect_ids: Arc::from([]),
+            energy_display_id: None,
         }
     }
 
@@ -253,7 +304,69 @@ mod tests {
             id: -1,
             members: members.into(),
             min_active,
+            mode: BuffCompositeMode::Joint,
         }
+    }
+
+    fn most_urgent(members: &[i32]) -> BuffComposite {
+        BuffComposite {
+            mode: BuffCompositeMode::MostUrgent,
+            ..at_least(members, 1)
+        }
+    }
+
+    fn focused_member(focus: Option<BuffFocus<'_>>) -> Option<(i32, bool)> {
+        focus.map(|focus| match focus {
+            BuffFocus::Missing(member) => (member, true),
+            BuffFocus::Present(presence) => (presence.timing.base_id, false),
+        })
+    }
+
+    #[test]
+    fn focus_shows_the_first_missing_member() {
+        let buffs = [buff(1, 2, 1, Some(3_000))];
+        let focus = most_urgent(&[1, 2, 3]).focus(&buffs);
+        assert_eq!(focused_member(focus), Some((1, true)));
+    }
+
+    #[test]
+    fn focus_follows_the_member_ending_first() {
+        let buffs = [
+            buff(1, 1, 1, Some(9_000)),
+            buff(2, 2, 3, Some(4_000)),
+            buff(3, 3, 1, None),
+        ];
+        let Some(BuffFocus::Present(presence)) = most_urgent(&[1, 2, 3]).focus(&buffs) else {
+            panic!("every member is present");
+        };
+        assert_eq!(presence.timing.base_id, 2);
+        assert_eq!(presence.layer, 3);
+        assert_eq!(presence.expires_mono_ms(), Some(MonoTimeMs(4_000)));
+    }
+
+    #[test]
+    fn focus_ranks_permanent_members_last_and_keeps_configured_order_on_ties() {
+        let permanent_first = [buff(1, 1, 1, None), buff(2, 2, 1, Some(9_000))];
+        assert_eq!(
+            focused_member(most_urgent(&[1, 2]).focus(&permanent_first)),
+            Some((2, false))
+        );
+        let tied = [buff(1, 5, 1, Some(4_000)), buff(2, 4, 1, Some(4_000))];
+        assert_eq!(
+            focused_member(most_urgent(&[5, 4]).focus(&tied)),
+            Some((5, false))
+        );
+        let all_permanent = [buff(1, 5, 1, None), buff(2, 4, 1, None)];
+        assert_eq!(
+            focused_member(most_urgent(&[4, 5]).focus(&all_permanent)),
+            Some((4, false))
+        );
+    }
+
+    #[test]
+    fn focus_is_absent_while_no_member_is_present() {
+        let unrelated = [buff(1, 9, 1, Some(4_000))];
+        assert!(most_urgent(&[1, 2]).focus(&unrelated).is_none());
     }
 
     fn all_of(members: &[i32]) -> BuffComposite {
@@ -346,11 +459,19 @@ mod tests {
                 id: -1,
                 member_ids: vec![1, 2],
                 min_active: None,
+                mode: BuffCompositeMode::Joint,
             },
             BuffCompositeSpec {
                 id: -2,
                 member_ids: vec![2, 3, 4],
                 min_active: Some(2),
+                mode: BuffCompositeMode::Joint,
+            },
+            BuffCompositeSpec {
+                id: -3,
+                member_ids: vec![6, 7, 8],
+                min_active: None,
+                mode: BuffCompositeMode::MostUrgent,
             },
         ]);
         assert_eq!(
@@ -360,6 +481,17 @@ mod tests {
         assert_eq!(
             catalog.get(-2).map(|composite| composite.min_active),
             Some(2)
+        );
+        // A most-urgent composite is present while any member is, lasting
+        // until the last one ends.
+        let most_urgent = catalog.get(-3).expect("defined");
+        assert_eq!(most_urgent.min_active, 1);
+        let one = [buff(1, 6, 1, Some(4_000)), buff(2, 7, 1, Some(8_000))];
+        assert_eq!(
+            most_urgent
+                .presence(&one)
+                .map(|presence| presence.expires_mono_ms()),
+            Some(Some(MonoTimeMs(8_000)))
         );
         let ids = |base_id| {
             catalog

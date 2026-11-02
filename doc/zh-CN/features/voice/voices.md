@@ -95,6 +95,8 @@
 3. 点击 **{{ui:voice.http.form.testButton}}** 试听一句，确认没问题后点 **{{ui:voice.http.form.save}}**。
 4. 在 **{{ui:voice.phrases.generate.title}}** 中选择 **{{ui:voice.phrases.generate.httpSource}}** 和刚添加的服务，之后的生成方式与其他来源相同，**{{ui:voice.bindings.generateMissing}}** 也会使用它。可以添加多个服务，随时切换。
 
+   功能页中文案为 **{{ui:voice.binding.source.auto}}** 或 **{{ui:voice.binding.source.custom}}** 的播报，还可以用 **{{ui:voice.binding.generationSource}}** 单独指定这一条使用哪个服务；文案为 **{{ui:voice.binding.source.custom}}** 时，还能用 **{{ui:voice.binding.generationLanguage}}** 指定按哪种语言生成。
+
 > [!NOTE]
 > - 服务返回的音频需要是 wav / mp3 / flac / ogg（vorbis）/ m4a。**不支持 Opus 和没有文件头的原始 PCM**，请在服务端选择 wav 或 mp3。
 > - 远端地址必须使用 https；明文 http 只允许本机（`127.0.0.1`、`localhost`）和局域网 IP。
@@ -129,3 +131,4 @@
 
 - [用自己的音效提醒 Boss 大招](./examples/custom-sfx.md)
 - [下载模型、克隆音色与导入音频短句](./examples/clone-import.md)
+- [用 Fish Audio 在线音色生成播报](./examples/http-fish-audio.md)
