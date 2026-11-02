@@ -2,6 +2,7 @@
  * @file This file defines the tool routes for the toolbox sidebar.
  */
 import type { MessageKey } from "$lib/i18n/index.svelte";
+import FlameIcon from "virtual:icons/lucide/flame";
 import ActivityIcon from "virtual:icons/lucide/activity";
 import CalculatorIcon from "virtual:icons/lucide/calculator";
 import CogIcon from "virtual:icons/lucide/cog";
@@ -39,6 +40,7 @@ export const TOOL_ROUTES = {
     labelKey: "routes.tools.monsterMonitor",
     icon: ShieldAlertIcon,
   },
+  "/main/skill-damage": { labelKey: "routes.tools.skillDamage", icon: FlameIcon },
   "/main/minimap": {
     labelKey: "routes.tools.minimap",
     icon: MapIcon,

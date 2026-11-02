@@ -526,6 +526,10 @@ const monsterOverlayPositionsSchema = v.object({
     pointSchema,
     defaultClone(defaultMonster.overlayPositions.entityDurationPanel),
   ),
+  skillDamagePanel: v.optional(
+    pointSchema,
+    defaultClone(defaultMonster.overlayPositions.skillDamagePanel),
+  ),
   monsterSkillPanel: v.optional(
     pointSchema,
     defaultClone(defaultMonster.overlayPositions.monsterSkillPanel),
@@ -551,6 +555,7 @@ const monsterOverlaySizesSchema = v.object({
     finiteNumberSchema,
     defaultMonster.overlaySizes.entityDurationPanelScale,
   ),
+  skillDamagePanelScale: v.optional(finiteNumberSchema, 1),
   monsterSkillPanelScale: v.optional(
     finiteNumberSchema,
     defaultMonster.overlaySizes.monsterSkillPanelScale,
@@ -568,6 +573,7 @@ const monsterOverlayVisibilitySchema = v.object({
   showHpPanel: v.optional(v.boolean(), false),
   showEntityDurationPanel: v.optional(v.boolean(), false),
   showMonsterSkillPanel: v.optional(v.boolean(), false),
+  showSkillDamagePanel: v.optional(v.boolean(), true),
 });
 
 const entityDurationEntrySchema = v.object({
@@ -726,6 +732,85 @@ const teammateColumnStyleSchema = v.object({
   valueColor: v.optional(v.string()),
 });
 
+const damagePaintSchema = v.object({
+  mode: v.picklist(["solid", "gradient"]),
+  color: v.pipe(v.string(), v.regex(/^#[0-9a-fA-F]{6}$/)),
+  endColor: v.pipe(v.string(), v.regex(/^#[0-9a-fA-F]{6}$/)),
+  angle: v.pipe(finiteNumberSchema, v.minValue(0), v.maxValue(360)),
+});
+const damageEffectSizeSchema = v.pipe(
+  finiteNumberSchema,
+  v.minValue(0),
+  v.maxValue(100),
+);
+const damageNumberStyleSchema = v.object({
+  italic: v.boolean(),
+  fill: damagePaintSchema,
+  innerGlow: v.boolean(),
+  innerGlowSize: damageEffectSizeSchema,
+  innerGlowColor: damagePaintSchema,
+  outline: v.boolean(),
+  outlineWidth: damageEffectSizeSchema,
+  outlineColor: damagePaintSchema,
+  outerGlow: v.boolean(),
+  outerGlowSize: damageEffectSizeSchema,
+  outerGlowColor: damagePaintSchema,
+  shadow: v.boolean(),
+  shadowSize: damageEffectSizeSchema,
+  shadowColor: damagePaintSchema,
+});
+const skillDamageSettingsEntries = {
+  enabled: v.boolean(),
+  entries: v.array(
+    v.object({
+      skillId: v.pipe(
+        v.number(),
+        v.integer(),
+        v.minValue(1),
+        v.maxValue(Number.MAX_SAFE_INTEGER),
+      ),
+      alias: v.string(),
+    }),
+  ),
+  format: v.picklist(["integer", "grouped", "cn", "western"]),
+  animation: v.picklist(["pop", "shrink", "floatUp"]),
+  scrollDirection: v.optional(v.picklist(["up", "down"]), "up"),
+  labelSpacing: v.optional(v.pipe(finiteNumberSchema, v.minValue(0), v.maxValue(200)), 12),
+  durationMs: v.optional(
+    v.pipe(finiteNumberSchema, v.minValue(100), v.maxValue(60000)),
+    2500,
+  ),
+  mergeHits: v.optional(v.boolean(), false),
+  showSkillName: v.optional(v.boolean(), true),
+  nameDisplayMode: v.optional(v.picklist(["text", "icon"]), "text"),
+  iconPath: v.optional(v.string(), ""),
+  iconBackground: v.optional(damagePaintSchema),
+  iconBackgroundOpacity: v.optional(v.pipe(finiteNumberSchema, v.minValue(0), v.maxValue(1))),
+  x: finiteNumberSchema,
+  y: finiteNumberSchema,
+  fontFamily: v.optional(v.string(), ""),
+  fontUrl: v.optional(v.string(), ""),
+  fontSize: v.optional(
+    v.pipe(finiteNumberSchema, v.minValue(8), v.maxValue(120)),
+    24,
+  ),
+  fontWeight: v.optional(
+    v.pipe(finiteNumberSchema, v.minValue(100), v.maxValue(900)),
+    700,
+  ),
+  fontColor: v.optional(v.string(), "#ffd86b"),
+  numberStyle: v.optional(damageNumberStyleSchema),
+};
+const skillDamageGroupSchema = v.object({
+  position: v.optional(pointSchema),
+  scale: v.optional(v.pipe(finiteNumberSchema, v.minValue(Number.EPSILON))),
+  ...skillDamageSettingsEntries,
+  id: v.string(),
+  name: v.string(),
+  mergeSimultaneous: v.optional(v.boolean(), false),
+  maxVisible: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(8)), 8),
+});
+
 const monsterProfileSchema = v.object({
   name: v.string(),
   enabled: v.optional(v.boolean(), false),
@@ -788,6 +873,13 @@ const monsterProfileSchema = v.object({
   entityDurationPanelStyle: v.optional(
     customPanelStyleSchema,
     defaultClone(defaultMonster.entityDurationPanelStyle),
+  ),
+  skillDamageDisplay: v.optional(
+    v.object({
+      ...skillDamageSettingsEntries,
+      groups: v.optional(v.array(skillDamageGroupSchema)),
+    }),
+    defaultClone(defaultMonster.skillDamageDisplay!),
   ),
   monsterSkillMonitorAll: v.optional(v.boolean(), false),
   monsterSkillEntries: monsterSkillEntriesSchema,

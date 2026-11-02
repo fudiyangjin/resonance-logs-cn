@@ -34,6 +34,7 @@ import {
 import type { CounterEffectSlotPreset } from "./skill-mappings";
 
 export const DEFAULT_STATS = {
+  skillId: false,
   totalDmg: true,
   dps: true,
   effectiveTotal: true,
@@ -92,6 +93,7 @@ export const DEFAULT_LIVE_TANKED_SKILL_STATS = {
 };
 
 export const DEFAULT_HISTORY_STATS = {
+  skillId: false,
   totalDmg: true,
   dps: true,
   effectiveTotal: true,
@@ -181,6 +183,7 @@ export const DEFAULT_DPS_PLAYER_COLUMN_ORDER = [
   "hitsPerMinute",
 ];
 export const DEFAULT_DPS_SKILL_COLUMN_ORDER = [
+  "skillId",
   "totalDmg",
   "dps",
   "effectiveTotal",
@@ -1230,6 +1233,7 @@ export type MonsterOverlayPositions = {
   hpPanel: Point;
   entityDurationPanel: Point;
   monsterSkillPanel: Point;
+  skillDamagePanel: Point;
 };
 
 export type MonsterOverlaySizes = {
@@ -1243,6 +1247,7 @@ export type MonsterOverlaySizes = {
   hpPanelScale: number;
   entityDurationPanelScale: number;
   monsterSkillPanelScale: number;
+  skillDamagePanelScale: number;
 };
 
 export type MonsterOverlayVisibility = {
@@ -1256,6 +1261,7 @@ export type MonsterOverlayVisibility = {
   showHpPanel: boolean;
   showEntityDurationPanel: boolean;
   showMonsterSkillPanel: boolean;
+  showSkillDamagePanel: boolean;
 };
 
 export type BuffAlertRule = {
@@ -1348,7 +1354,69 @@ export type MonsterMonitorConfig = {
   monsterSkillMonitorAll: boolean;
   monsterSkillEntries: MonsterSkillWatchEntry[];
   monsterSkillPanelStyle: CustomPanelStyle;
+  skillDamageDisplay?: SkillDamageDisplaySettings;
 };
+
+export type SkillDamageDisplaySettings = {
+  groups?: SkillDamageGroup[];
+  numberStyle?: SkillDamageNumberStyle;
+  mergeHits?: boolean;
+  showSkillName?: boolean;
+  nameDisplayMode?: "text" | "icon";
+  iconPath?: string;
+  iconBackground?: SkillDamagePaint;
+  iconBackgroundOpacity?: number;
+  enabled: boolean;
+  entries: { skillId: number; alias: string }[];
+  format: "integer" | "grouped" | "cn" | "western";
+  animation: "pop" | "shrink" | "floatUp";
+  scrollDirection?: "up" | "down";
+  labelSpacing?: number;
+  durationMs?: number;
+  fontFamily?: string;
+  fontUrl?: string;
+  fontSize?: number;
+  fontColor?: string;
+  fontWeight?: number;
+  x: number;
+  y: number;
+};
+
+export type SkillDamagePaint = { mode: "solid" | "gradient"; color: string; endColor: string; angle: number };
+export type SkillDamageNumberStyle = {
+  italic: boolean;
+  fill: SkillDamagePaint;
+  innerGlow: boolean; innerGlowSize: number; innerGlowColor: SkillDamagePaint;
+  outline: boolean; outlineWidth: number; outlineColor: SkillDamagePaint;
+  outerGlow: boolean; outerGlowSize: number; outerGlowColor: SkillDamagePaint;
+  shadow: boolean; shadowSize: number; shadowColor: SkillDamagePaint;
+};
+export type SkillDamageGroup = Omit<SkillDamageDisplaySettings, "groups"> & {
+  id: string; name: string; mergeSimultaneous: boolean; maxVisible?: number; position?: Point; scale?: number;
+};
+
+export function defaultSkillDamageDisplay(): SkillDamageDisplaySettings {
+  return {
+    mergeHits: false,
+    showSkillName: true,
+    nameDisplayMode: "text",
+    iconPath: "",
+    enabled: false,
+    entries: [],
+    format: "grouped",
+    animation: "pop",
+    scrollDirection: "up",
+    labelSpacing: 12,
+    durationMs: 2500,
+    x: 500,
+    y: 300,
+    fontFamily: "",
+    fontUrl: "",
+    fontSize: 24,
+    fontWeight: 700,
+    fontColor: "#ffd86b",
+  };
+}
 
 export type TextBuffPanelDisplayMode = "modern" | "classic";
 
@@ -1785,6 +1853,7 @@ function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
     hpPanel: { x: 40, y: 560 },
     entityDurationPanel: { x: 800, y: 300 },
     monsterSkillPanel: { x: 800, y: 460 },
+    skillDamagePanel: { x: 500, y: 300 },
   };
 }
 
@@ -1800,6 +1869,7 @@ function createDefaultMonsterOverlaySizes(): MonsterOverlaySizes {
     hpPanelScale: 1,
     entityDurationPanelScale: 1,
     monsterSkillPanelScale: 1,
+    skillDamagePanelScale: 1,
   };
 }
 
@@ -1815,6 +1885,7 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
     showHpPanel: false,
     showEntityDurationPanel: false,
     showMonsterSkillPanel: false,
+    showSkillDamagePanel: true,
   };
 }
 
@@ -2206,6 +2277,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     entityDurationPanelStyle: createDefaultEntityDurationPanelStyle(),
     monsterSkillMonitorAll: false,
     monsterSkillEntries: [],
+    skillDamageDisplay: defaultSkillDamageDisplay(),
     monsterSkillPanelStyle: createDefaultMonsterSkillPanelStyle(),
   };
 }
@@ -2290,6 +2362,7 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "entityDurationPanelStyle",
   "monsterSkillMonitorAll",
   "monsterSkillEntries",
+  "skillDamageDisplay",
   "monsterSkillPanelStyle",
 ] as const satisfies readonly (keyof MonsterMonitorProfileData)[];
 

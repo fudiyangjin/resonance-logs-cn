@@ -14,6 +14,7 @@ export const DPS_PLAYER_COLUMN_KEYS = [
 ] as const;
 
 export const DPS_SKILL_COLUMN_KEYS = [
+  "skillId",
   "totalDmg",
   "dps",
   "dmgPct",

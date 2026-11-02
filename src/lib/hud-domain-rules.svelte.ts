@@ -65,14 +65,29 @@ export function readHudDomainRules(domain: HudDomain): HudDomainRules {
   return HUD_DOMAIN_RULES[domain].read();
 }
 
+/** The damage tool shares the monster HUD transport, with its own enable intent. */
+export function readHudDomainVisibilityRules(
+  domain: HudDomain,
+): HudDomainRules {
+  const rules = readHudDomainRules(domain);
+  if (domain !== "monster") return rules;
+  const state = SETTINGS.monsterMonitor.state;
+  return {
+    ...rules,
+    enabled:
+      rules.enabled ||
+      Boolean(
+        state.skillDamageDisplay?.enabled &&
+          (state.overlayVisibility?.showSkillDamagePanel ?? true),
+      ),
+  };
+}
+
 export function isHudDomainEnabled(domain: HudDomain): boolean {
   return readHudDomainRules(domain).enabled;
 }
 
-export function setHudDomainEnabled(
-  domain: HudDomain,
-  enabled: boolean,
-): void {
+export function setHudDomainEnabled(domain: HudDomain, enabled: boolean): void {
   HUD_DOMAIN_RULES[domain].setEnabled(enabled);
 }
 
