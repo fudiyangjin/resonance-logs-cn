@@ -1,4 +1,6 @@
 export const zhCNMessages = {
+  "skillDamage.actions.toggleOverlay": "开关伤害显示",
+  "skillDamage.actions.editLayout": "编辑伤害显示布局",
   "routes.tools.skillDamage": "技能伤害显示",
   "skillDamage.pageDescription": "配置技能组、伤害数字风格、动画及各组独立显示区域。",
   "skillDamage.showRegion": "显示技能伤害区域",

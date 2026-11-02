@@ -1,4 +1,6 @@
 export const jaJPMessages = {
+  "skillDamage.actions.toggleOverlay": "ダメージ表示の切り替え",
+  "skillDamage.actions.editLayout": "ダメージ表示レイアウトを編集",
   "routes.tools.skillDamage": "スキルダメージ表示",
   "skillDamage.pageDescription": "スキルグループ、数値のスタイル、アニメーション、各グループの表示領域を設定します。",
   "skillDamage.showRegion": "スキルダメージ領域を表示",

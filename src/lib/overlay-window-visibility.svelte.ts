@@ -4,6 +4,7 @@
  * logical domains backed by one `hud-overlay` WebView; `live` remains physical.
  */
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { SETTINGS, defaultSkillDamageDisplay } from "$lib/settings-store";
 import { listen } from "@tauri-apps/api/event";
 import { emitLivePullGate } from "$lib/live-pull-gate";
 import {
@@ -61,6 +62,21 @@ export function isOverlayWindowVisible(label: OverlayWindowLabel): boolean {
 export async function toggleHudEditing(): Promise<void> {
   hudEditing = !hudEditing;
   if (hudReady) await synchronizeHudWindow();
+}
+
+export async function toggleSkillDamageWithRestore(): Promise<void> {
+  SETTINGS.monsterMonitor.state.skillDamageDisplay ??=
+    defaultSkillDamageDisplay();
+  const config = SETTINGS.monsterMonitor.state.skillDamageDisplay;
+  if (config.enabled) {
+    const win = await WebviewWindow.getByLabel(HUD_OVERLAY_LABEL);
+    if (win && (await win.isMinimized())) {
+      await win.show();
+      await win.unminimize();
+      return;
+    }
+  }
+  config.enabled = !config.enabled;
 }
 
 export async function toggleHudDomainWithRestore(

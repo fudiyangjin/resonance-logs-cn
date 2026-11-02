@@ -1,6 +1,8 @@
 import type { zhCNMessages } from "./zh-CN";
 
 export const enUSMessages = {
+  "skillDamage.actions.toggleOverlay": "Toggle damage display",
+  "skillDamage.actions.editLayout": "Edit damage display layout",
   "routes.tools.skillDamage": "Skill Damage Display",
   "skillDamage.pageDescription": "Configure skill groups, damage styles, animations and independent display regions.",
   "skillDamage.showRegion": "Show skill damage regions",
