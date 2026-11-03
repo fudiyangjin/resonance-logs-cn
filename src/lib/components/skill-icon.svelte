@@ -8,6 +8,7 @@
   import { SKILL_BG_COLOURS } from "$lib/skill-mappings";
 
   interface Props {
+    background?: string | undefined;
     imagePath?: string | undefined;
     alt?: string | undefined;
     /** `PCBgColour` index; 0 draws the plate without a tint. */
@@ -19,6 +20,7 @@
   }
 
   let {
+    background,
     imagePath,
     alt = "",
     colour = 0,
@@ -35,6 +37,7 @@
   class:stroke={tint !== "" && stroke}
   class:dimmed
   style:--skill-tint={tint || undefined}
+  style:background
 >
   {#if imagePath}
     <img src={imagePath} {alt} draggable="false" />

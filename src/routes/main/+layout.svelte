@@ -8,7 +8,7 @@
   import { listen, type UnlistenFn } from "@tauri-apps/api/event";
   import { goto } from "$app/navigation";
   import { liveSceneStore } from "$lib/stores/live-topics.svelte";
-  import { readHudDomainRules } from "$lib/hud-domain-rules.svelte";
+  import { readHudDomainVisibilityRules } from "$lib/hud-domain-rules.svelte";
   import {
     domainRequiresSupportedScene,
     resolveSceneVisibility,
@@ -109,21 +109,21 @@
   // switches alike) is the only intent input; everything else is derived.
   const gameVisible = $derived(
     resolveSceneVisibility({
-      ...readHudDomainRules("game"),
+      ...readHudDomainVisibilityRules("game"),
       sceneId: currentSceneId,
       requiresSupportedScene: domainRequiresSupportedScene("game"),
     }),
   );
   const monsterVisible = $derived(
     resolveSceneVisibility({
-      ...readHudDomainRules("monster"),
+      ...readHudDomainVisibilityRules("monster"),
       sceneId: currentSceneId,
       requiresSupportedScene: domainRequiresSupportedScene("monster"),
     }),
   );
   const minimapVisible = $derived(
     resolveSceneVisibility({
-      ...readHudDomainRules("minimap"),
+      ...readHudDomainVisibilityRules("minimap"),
       sceneId: currentSceneId,
       requiresSupportedScene: domainRequiresSupportedScene("minimap"),
     }),

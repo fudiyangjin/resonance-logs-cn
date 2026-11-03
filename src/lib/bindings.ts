@@ -1050,7 +1050,7 @@ deadTeammates?: string[]; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [k
 /**
  * Latest cast of each watched monster skill, ascending by skill id.
  */
-monsterSkillCasts?: MonsterSkillCastState[] }
+monsterSkillCasts?: MonsterSkillCastState[]; skillDamageHits?: SkillDamageHitState[] }
 export type LivePullWindow = "live" | "hud-overlay"
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number; trainingWindowMs: number; trainingLockPolicy: TrainingLockPolicy }
 export type LiveScenePayload = { revision: number; sceneId: number | null; dungeonDifficulty: number | null; localClassId: number | null; localTalentStageCfgId: number | null }
@@ -1432,6 +1432,7 @@ maxCharges?: number | null;
  * Resource-slot capacity from `meter-data/SkillChargeTable.json`.
  */
 maxValidCdTime?: number | null }
+export type SkillDamageHitState = { id: string; batchId?: string; targetUuid?: string; skillId: number; amount: string; occurredAtMs: number }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[]; seasonCultivateFactorTemplates: FactorCounterTemplate[];
 /**
  * Coverage watch list: these buff ids are tracked for live coverage on

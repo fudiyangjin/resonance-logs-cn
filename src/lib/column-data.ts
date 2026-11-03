@@ -128,6 +128,12 @@ export const historyDpsPlayerColumns = [
 
 export const historyDpsSkillColumns = [
   createColumn({
+    key: "skillId",
+    labelKey: "columns.skill.id",
+    descriptionKey: "columns.description.skill.id",
+    format: (value: number) => String(value),
+  }),
+  createColumn({
     key: "totalDmg",
     labelKey: "columns.dps.totalDmg",
     descriptionKey: "columns.description.dps.skill.totalDmg",

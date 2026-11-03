@@ -446,6 +446,7 @@ impl ProjectionSet {
                 minimap_changed |= self.minimap.apply(envelope);
             }
             DomainEvent::CombatHitAccepted(hit) => {
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 let fact = CombatHitFact::from_domain(hit);
                 let outcome = self.combat.apply_hit(
                     hit,
@@ -516,8 +517,10 @@ impl ProjectionSet {
                 reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);
             }
-            DomainEvent::HitResolved(_)
-            | DomainEvent::WipeDetected { .. }
+            DomainEvent::HitResolved(_) => {
+                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
+            }
+            DomainEvent::WipeDetected { .. }
             | DomainEvent::DungeonFlowChanged { .. }
             | DomainEvent::DungeonObjectiveChanged { .. }
             | DomainEvent::DungeonProgressStateChanged { .. }
@@ -2099,6 +2102,44 @@ mod tests {
             damage_mode: None,
             effective_amount: None,
         }
+    }
+
+    #[test]
+    fn accepted_skill_damage_reaches_monster_payload() {
+        let (writer, join) = HistoryWriterHandle::start().expect("history writer starts");
+        let mut projections = ProjectionSet::new(writer);
+        let entities = EntityContext::new();
+        let mut scheduler = DeadlineScheduler::new();
+        let mut hit = player_hit();
+        hit.skill_key = 25_523_102;
+        hit.amount = 123_456;
+        projections
+            .apply(
+                &test_envelope(1, 1_000, 1_000, DomainEvent::CombatHitAccepted(hit)),
+                &entities,
+                &mut scheduler,
+            )
+            .unwrap();
+        assert!(projections.is_dirty(TopicMask::MONSTER));
+        let publications = projections.take_publications(
+            &entities,
+            &SegmentState::Idle {
+                mode: IdleMode::Standard,
+            },
+            TopicMask::MONSTER,
+        );
+        let payload = publications
+            .iter()
+            .find_map(|publication| match publication {
+                TopicPublication::Monster(payload) => Some(payload),
+                _ => None,
+            })
+            .expect("monster publication after accepted hit");
+        assert_eq!(payload.skill_damage_hits.len(), 1);
+        assert_eq!(payload.skill_damage_hits[0].skill_id, 25_523_102);
+        assert_eq!(payload.skill_damage_hits[0].amount, "123456");
+        drop(projections);
+        join.join().expect("history writer stops");
     }
 
     fn published_coverage(publications: &[TopicPublication]) -> &[BuffCoverageEntry] {

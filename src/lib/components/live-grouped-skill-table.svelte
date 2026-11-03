@@ -337,6 +337,11 @@
                     <span class="w-3 shrink-0"></span>
                   {/if}
                   <span class="truncate">{skill.name}</span>
+                  {#if !skill.isGroup && visibleColumns.some((col) => col.key === "skillId")}
+                    <span class="shrink-0 text-xs opacity-60"
+                      >#{skill.skillId}</span
+                    >
+                  {/if}
                 </button>
                 <span
                   class="inline-flex shrink-0 items-center gap-1 tabular-nums"
@@ -446,7 +451,9 @@
                 class="relative z-10 px-2 py-1 text-right"
                 style="color: {customThemeColors.tableTextColor};"
               >
-                {#if col.key === "totalDmg" || col.key === "effectiveTotal" || col.key === "avgDmg" || col.key === "maxDmg" || col.key === "minDmg"}
+                {#if col.key === "skillId"}
+                  {skill.isGroup ? "-" : String(skill.skillId)}
+                {:else if col.key === "totalDmg" || col.key === "effectiveTotal" || col.key === "avgDmg" || col.key === "maxDmg" || col.key === "minDmg"}
                   {#if (col.key === "maxDmg" && skill.maxDmg === null) || (col.key === "minDmg" && skill.minDmg === null)}
                     <span class="text-muted-foreground/50">-</span>
                   {:else if shortenValues}

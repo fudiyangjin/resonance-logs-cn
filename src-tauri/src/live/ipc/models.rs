@@ -269,6 +269,20 @@ pub struct LiveBuffsPayload {
     pub coverage: Vec<BuffCoverageEntry>,
 }
 
+/// Recent individual damage hits by the local player. Amount stays exact over IPC.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SkillDamageHitState {
+    pub id: String,
+    #[serde(default)]
+    pub batch_id: String,
+    #[serde(default)]
+    pub target_uuid: String,
+    pub skill_id: i64,
+    pub amount: String,
+    pub occurred_at_ms: i64,
+}
+
 /// Monster overlay topic (`live-monster`), 50ms throttle.
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -291,6 +305,8 @@ pub struct LiveMonsterPayload {
     /// Latest cast of each watched monster skill, ascending by skill id.
     #[serde(default)]
     pub monster_skill_casts: Vec<MonsterSkillCastState>,
+    #[serde(default)]
+    pub skill_damage_hits: Vec<SkillDamageHitState>,
 }
 
 /// Fantasy cast icons shared by live + monster overlay (`live-fantasy`).
