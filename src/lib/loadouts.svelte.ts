@@ -1,14 +1,16 @@
 /**
  * @file Accessors for the top-level "loadout" concept: a named combination
- * of a skill-monitor profile + a monster-monitor profile. Switching the
- * active loadout swaps the entire live monitoring setup (skills/buffs,
- * monster monitor, and their voice bindings) in one action.
+ * of a skill-monitor, monster-monitor, live-meter and skill damage profile.
+ * Switching the active loadout swaps the entire live monitoring setup
+ * (skills/buffs, monster monitor, damage numbers and their voice bindings)
+ * in one action.
  *
  * Monster-monitor profiles are "mirrored" into `SETTINGS.monsterMonitor`'s
  * top-level fields (see `monster-monitor-profile.svelte.ts`), so switching
  * the active monster profile is an explicit, imperative copy. Skill-monitor
- * profiles are resolved on read (see `skill-monitor-profile.svelte.ts`), so
- * no explicit action is needed for them here.
+ * and skill damage profiles are resolved on read (see
+ * `skill-monitor-profile.svelte.ts`, `skill-damage-profile.svelte.ts`), so no
+ * explicit action is needed for them here.
  */
 import {
   SETTINGS,
@@ -32,6 +34,20 @@ import {
   removeLiveProfileById,
   switchLiveProfile,
 } from "./live-meter-profile.svelte.js";
+import {
+  addSkillDamageFonts,
+  createSkillDamageProfileSlot,
+  getSkillDamageProfileSnapshot,
+  pruneUnusedSkillDamageFonts,
+  removeSkillDamageProfileById,
+  skillDamageFontsFor,
+} from "./skill-damage-profile.svelte.js";
+import {
+  normalizeSkillDamageProfile,
+  skillDamageFontId,
+  type SkillDamageFont,
+  type SkillDamageProfile,
+} from "./skill-damage-settings";
 import { pruneUnknownCompositeRefs } from "./buff-composites";
 import type { LoadoutPreset } from "./config/loadout-presets";
 import type { LoadoutExport } from "./loadout-import";
@@ -92,6 +108,7 @@ export function createLoadout(options?: {
   skillProfileId?: string;
   monsterProfileId?: string;
   liveProfileId?: string;
+  damageProfileId?: string;
   linkedTalentStageCfgId?: number | null;
   activate?: boolean;
 }): string {
@@ -106,6 +123,8 @@ export function createLoadout(options?: {
   const monsterProfileId =
     options?.monsterProfileId ?? createMonsterProfile("");
   const liveProfileId = options?.liveProfileId ?? createLiveProfile("");
+  const damageProfileId =
+    options?.damageProfileId ?? createSkillDamageProfileSlot("");
 
   const id = generateProfileId("loadout");
   const name = ensureUniqueLoadoutName(
@@ -117,6 +136,7 @@ export function createLoadout(options?: {
     skillProfileId,
     monsterProfileId,
     liveProfileId,
+    damageProfileId,
     starterPlaceholder: false,
     linkedTalentStageCfgId: options?.linkedTalentStageCfgId ?? null,
   };
@@ -161,12 +181,17 @@ export function duplicateLoadout(id: string): string | null {
     source.monsterProfileId,
   );
   const newLiveProfileId = duplicateLiveProfileFor(source.liveProfileId);
+  const newDamageProfileId = createSkillDamageProfileSlot(
+    "",
+    getSkillDamageProfileSnapshot(source.damageProfileId),
+  );
 
   return createLoadout({
     name: t("loadout.defaults.copyName", { name: source.name }),
     skillProfileId: newSkillProfile.id,
     monsterProfileId: newMonsterProfileId,
     liveProfileId: newLiveProfileId,
+    damageProfileId: newDamageProfileId,
     activate: false,
   });
 }
@@ -212,6 +237,10 @@ export function removeLoadout(id: string): void {
   if (profilesToCollect.liveProfileId) {
     removeLiveProfileById(profilesToCollect.liveProfileId);
   }
+
+  if (profilesToCollect.damageProfileId) {
+    removeSkillDamageProfileById(profilesToCollect.damageProfileId);
+  }
 }
 
 export function setLoadoutSkillProfile(
@@ -253,6 +282,17 @@ export function setLoadoutLiveProfile(
   if (state.activeId === loadoutId) {
     switchLiveProfile(liveProfileId);
   }
+}
+
+export function setLoadoutDamageProfile(
+  loadoutId: string,
+  damageProfileId: string,
+): void {
+  SETTINGS.loadouts.state.items = SETTINGS.loadouts.state.items.map((item) =>
+    item.id === loadoutId
+      ? { ...item, damageProfileId, starterPlaceholder: false }
+      : item,
+  );
 }
 
 /**
@@ -331,6 +371,17 @@ export function removeLiveProfileEverywhere(liveProfileId: string): void {
   }
 }
 
+/** Removes a skill damage profile, re-pointing any loadouts that referenced it. */
+export function removeDamageProfileEverywhere(damageProfileId: string): void {
+  const fallbackId = removeSkillDamageProfileById(damageProfileId);
+  if (!fallbackId) return;
+  SETTINGS.loadouts.state.items = SETTINGS.loadouts.state.items.map((item) =>
+    item.damageProfileId === damageProfileId
+      ? { ...item, damageProfileId: fallbackId, starterPlaceholder: false }
+      : item,
+  );
+}
+
 /** Creates a brand-new loadout (with its own fresh profiles) from a built-in preset. */
 export function createLoadoutFromPreset(preset: LoadoutPreset): string {
   // On a fresh install there is exactly one untouched auto-created loadout;
@@ -378,15 +429,42 @@ function materializeLoadout(
     data.liveProfile.name,
     data.liveProfile,
   );
+  const damageProfileId = importDamageProfile(data);
 
   return createLoadout({
     name,
     skillProfileId: skillProfile.id,
     monsterProfileId,
     liveProfileId,
+    damageProfileId,
     linkedTalentStageCfgId: data.linkedTalentStageCfgId ?? null,
     activate,
   });
+}
+
+/**
+ * Creates the damage profile of an imported loadout. Font ids are recomputed
+ * from content, so a tampered or stale id can never point at another font.
+ * Older exports and presets carry no damage profile and get a default one.
+ */
+function importDamageProfile(data: LoadoutExport): string {
+  if (!data.damageProfile) return createSkillDamageProfileSlot("");
+  const fontIds = new Map<string, string>();
+  const fonts: SkillDamageFont[] = (data.damageFonts ?? []).map((font) => {
+    const id = skillDamageFontId(font.dataUrl);
+    fontIds.set(font.id, id);
+    return { id, name: font.name, dataUrl: font.dataUrl };
+  });
+  addSkillDamageFonts(fonts);
+  const profile: SkillDamageProfile = normalizeSkillDamageProfile(
+    deepCloneSettings(data.damageProfile),
+  );
+  for (const group of profile.groups) {
+    group.fontId = group.fontId ? (fontIds.get(group.fontId) ?? null) : null;
+  }
+  const id = createSkillDamageProfileSlot(profile.name, profile);
+  pruneUnusedSkillDamageFonts();
+  return id;
 }
 
 /**
@@ -427,6 +505,7 @@ export function exportLoadout(id: string): LoadoutExport | null {
   );
   const monsterProfile = getMonsterProfileSnapshot(loadout.monsterProfileId);
   const liveProfile = getLiveProfileSnapshot(loadout.liveProfileId);
+  const damageProfile = getSkillDamageProfileSnapshot(loadout.damageProfileId);
   if (!skillProfile || !monsterProfile || !liveProfile) return null;
 
   // Profiles created before certain fields existed (e.g. the overlay
@@ -445,6 +524,8 @@ export function exportLoadout(id: string): LoadoutExport | null {
       normalizeMonsterProfileStyles(monsterProfile),
     ),
     liveProfile: omitProfileId(liveProfile),
+    damageProfile: damageProfile,
+    damageFonts: skillDamageFontsFor(damageProfile),
   };
 }
 

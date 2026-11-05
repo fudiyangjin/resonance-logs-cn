@@ -119,8 +119,7 @@ export type MonsterDragTarget =
   | { kind: "fantasyPanel" }
   | { kind: "dbmPanel" }
   | { kind: "entityDurationPanel" }
-  | { kind: "monsterSkillPanel" }
-  | { kind: "skillDamagePanel"; groupId?: string };
+  | { kind: "monsterSkillPanel" };
 
 export type MonsterResizeTarget =
   | { kind: "buffPanel" }
@@ -132,8 +131,7 @@ export type MonsterResizeTarget =
   | { kind: "fantasyPanel" }
   | { kind: "dbmPanel" }
   | { kind: "entityDurationPanel" }
-  | { kind: "monsterSkillPanel" }
-  | { kind: "skillDamagePanel"; groupId?: string };
+  | { kind: "monsterSkillPanel" };
 
 export type MonsterDragState = {
   target: MonsterDragTarget;

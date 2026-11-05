@@ -1,9 +1,11 @@
 import {
   commands,
   type HudFrame,
+  type LiveSkillDamagePayload,
   type LiveWindowFrame,
   type Result,
 } from "$lib/bindings";
+import { HUD_DOMAINS, type HudDomain } from "$lib/hud-domain";
 import { liveDebugError, liveDebugLog } from "$lib/live-debug";
 import { LivePullLoop } from "$lib/live-pull-loop";
 import type { LiveTopicStatus } from "$lib/stores/live-topic-store.svelte";
@@ -197,11 +199,7 @@ class LiveWindowPullSession implements WindowPullSession {
 
 export const liveWindowSession = new LiveWindowPullSession();
 
-export type HudInterests = {
-  game: boolean;
-  monster: boolean;
-  minimap: boolean;
-};
+export type HudInterests = Record<HudDomain, boolean>;
 
 export type HudFrameContext = {
   epochChanged: boolean;
@@ -211,6 +209,16 @@ export type HudMinimapFrameHandler = (
   frame: HudFrame,
   context: HudFrameContext,
 ) => void;
+
+/**
+ * Incremental consumer of the skill damage topic. `reset` means the stream
+ * restarted (interest, activity or epoch change) and the next payload must
+ * not be replayed.
+ */
+export type HudSkillDamageFrameHandler = {
+  apply: (payload: LiveSkillDamagePayload) => void;
+  reset: () => void;
+};
 
 class HudOverlayPullSession implements WindowPullSession {
   readonly #loop = new LivePullLoop<HudFrame>({
@@ -223,11 +231,13 @@ class HudOverlayPullSession implements WindowPullSession {
           monsterRevision: revisionOf(liveMonsterStore.data),
           fantasyRevision: revisionOf(liveFantasyStore.data),
           teamRevision: revisionOf(liveTeamStore.data),
+          skillDamageRevision: this.#skillDamageRevision,
           snapshotRevision: this.#snapshotRevision,
           skillCastCursor: this.#skillCastCursor,
           gameInterest: this.#interests.game,
           monsterInterest: this.#interests.monster,
           minimapInterest: this.#interests.minimap,
+          skillDamageInterest: this.#interests.damage,
         }),
       ),
     onFrame: (frame) => this.#handleFrame(frame),
@@ -251,12 +261,15 @@ class HudOverlayPullSession implements WindowPullSession {
   #epoch: number | null = null;
   #snapshotRevision: number | null = null;
   #skillCastCursor: number | null = null;
+  #skillDamageRevision: number | null = null;
   #interests: HudInterests = {
     game: false,
     monster: false,
     minimap: false,
+    damage: false,
   };
   #handler: HudMinimapFrameHandler | null = null;
+  #skillDamageHandler: HudSkillDamageFrameHandler | null = null;
 
   get active(): boolean {
     return this.#active;
@@ -288,6 +301,7 @@ class HudOverlayPullSession implements WindowPullSession {
     this.#active = active;
     if (!active) {
       this.#skillCastCursor = null;
+      this.#resetSkillDamage();
       clearTopics(this.#allTopics());
     } else if (this.#started) {
       clearTopics(this.#activeTopics(), { state: "loading" });
@@ -297,9 +311,9 @@ class HudOverlayPullSession implements WindowPullSession {
 
   setInterests(interests: HudInterests): void {
     if (
-      this.#interests.game === interests.game &&
-      this.#interests.monster === interests.monster &&
-      this.#interests.minimap === interests.minimap
+      HUD_DOMAINS.every(
+        (domain) => this.#interests[domain] === interests[domain],
+      )
     ) {
       return;
     }
@@ -325,11 +339,18 @@ class HudOverlayPullSession implements WindowPullSession {
       this.#snapshotRevision = null;
       this.#skillCastCursor = null;
     }
+    if (!interests.damage) {
+      this.#resetSkillDamage();
+    }
     this.#loop.refresh();
   }
 
   setMinimapFrameHandler(handler: HudMinimapFrameHandler | null): void {
     this.#handler = handler;
+  }
+
+  setSkillDamageFrameHandler(handler: HudSkillDamageFrameHandler | null): void {
+    this.#skillDamageHandler = handler;
   }
 
   #handleFrame(frame: HudFrame): void {
@@ -343,6 +364,7 @@ class HudOverlayPullSession implements WindowPullSession {
     if (epochChanged) {
       this.#snapshotRevision = null;
       this.#skillCastCursor = null;
+      this.#resetSkillDamage();
       clearTopics(this.#activeTopics(), { state: "loading" });
     }
 
@@ -363,12 +385,22 @@ class HudOverlayPullSession implements WindowPullSession {
       }
       this.#handler?.(frame, { epochChanged });
     }
+    if (this.#interests.damage && frame.skillDamage) {
+      this.#skillDamageRevision = frame.skillDamage.revision;
+      this.#skillDamageHandler?.apply(frame.skillDamage);
+    }
   }
 
   #resetProtocolState(): void {
     this.#epoch = null;
     this.#snapshotRevision = null;
     this.#skillCastCursor = null;
+    this.#resetSkillDamage();
+  }
+
+  #resetSkillDamage(): void {
+    this.#skillDamageRevision = null;
+    this.#skillDamageHandler?.reset();
   }
 
   #activeTopics(): ResettableTopicStore[] {

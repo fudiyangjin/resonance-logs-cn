@@ -1,14 +1,29 @@
+<script lang="ts" module>
+  /**
+   * Position and scale of a HUD panel, persisted by mutating this object
+   * (pass a reactive settings proxy). Without `width` the panel sizes to its
+   * content.
+   */
+  export type HudPanelRect = {
+    x: number;
+    y: number;
+    scale: number;
+    width?: number;
+  };
+</script>
+
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import type { MinimapPanelRect } from "$lib/settings-store";
 
   type ScaleMode = "transform" | "width";
 
   type Props = {
-    rect: MinimapPanelRect;
+    rect: HudPanelRect;
     editing: boolean;
     title: string;
     scaleMode?: ScaleMode;
+    /** `bottom` pins the panel's bottom edge to `rect.y`, so it grows upward. */
+    anchor?: "top" | "bottom";
     class?: string;
     children: Snippet;
   };
@@ -18,6 +33,7 @@
     editing,
     title,
     scaleMode = "transform",
+    anchor = "top",
     class: className = "",
     children,
   }: Props = $props();
@@ -30,7 +46,7 @@
         kind: "move";
         startX: number;
         startY: number;
-        startRect: MinimapPanelRect;
+        startRect: HudPanelRect;
       }
     | {
         kind: "resize";
@@ -47,15 +63,27 @@
 
   const panelScale = $derived((rect.scale ?? 1) * previewScale);
   const panelWidth = $derived(
-    scaleMode === "width" ? rect.width * panelScale : rect.width,
+    rect.width === undefined
+      ? undefined
+      : scaleMode === "width"
+        ? rect.width * panelScale
+        : rect.width,
+  );
+  const panelTransform = $derived(
+    [
+      scaleMode === "transform" ? `scale(${panelScale})` : "",
+      anchor === "bottom" ? "translateY(-100%)" : "",
+    ]
+      .filter(Boolean)
+      .join(" "),
   );
   const panelStyle = $derived(
     [
       `left: ${rect.x + previewOffset.x}px`,
       `top: ${rect.y + previewOffset.y}px`,
-      `width: ${panelWidth}px`,
-      scaleMode === "transform"
-        ? `transform: scale(${panelScale}); transform-origin: top left`
+      panelWidth === undefined ? "" : `width: ${panelWidth}px`,
+      panelTransform
+        ? `transform: ${panelTransform}; transform-origin: top left`
         : "",
     ]
       .filter(Boolean)

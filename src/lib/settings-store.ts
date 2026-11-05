@@ -32,6 +32,11 @@ import {
   type DpsColumnLabels,
 } from "./column-labels";
 import type { CounterEffectSlotPreset } from "./skill-mappings";
+import {
+  createDefaultSkillDamageState,
+  type SkillDamageFontsState,
+  type SkillDamageState,
+} from "./skill-damage-settings";
 
 export const DEFAULT_STATS = {
   skillId: false,
@@ -1269,7 +1274,6 @@ export type MonsterOverlayPositions = {
   hpPanel: Point;
   entityDurationPanel: Point;
   monsterSkillPanel: Point;
-  skillDamagePanel: Point;
 };
 
 export type MonsterOverlaySizes = {
@@ -1283,7 +1287,6 @@ export type MonsterOverlaySizes = {
   hpPanelScale: number;
   entityDurationPanelScale: number;
   monsterSkillPanelScale: number;
-  skillDamagePanelScale: number;
 };
 
 export type MonsterOverlayVisibility = {
@@ -1297,7 +1300,6 @@ export type MonsterOverlayVisibility = {
   showHpPanel: boolean;
   showEntityDurationPanel: boolean;
   showMonsterSkillPanel: boolean;
-  showSkillDamagePanel: boolean;
 };
 
 export type BuffAlertRule = {
@@ -1393,69 +1395,7 @@ export type MonsterMonitorConfig = {
   monsterSkillMonitorAll: boolean;
   monsterSkillEntries: MonsterSkillWatchEntry[];
   monsterSkillPanelStyle: CustomPanelStyle;
-  skillDamageDisplay?: SkillDamageDisplaySettings;
 };
-
-export type SkillDamageDisplaySettings = {
-  groups?: SkillDamageGroup[];
-  numberStyle?: SkillDamageNumberStyle;
-  mergeHits?: boolean;
-  showSkillName?: boolean;
-  nameDisplayMode?: "text" | "icon";
-  iconPath?: string;
-  iconBackground?: SkillDamagePaint;
-  iconBackgroundOpacity?: number;
-  enabled: boolean;
-  entries: { skillId: number; alias: string }[];
-  format: "integer" | "grouped" | "cn" | "western";
-  animation: "pop" | "shrink" | "floatUp";
-  scrollDirection?: "up" | "down";
-  labelSpacing?: number;
-  durationMs?: number;
-  fontFamily?: string;
-  fontUrl?: string;
-  fontSize?: number;
-  fontColor?: string;
-  fontWeight?: number;
-  x: number;
-  y: number;
-};
-
-export type SkillDamagePaint = { mode: "solid" | "gradient"; color: string; endColor: string; angle: number };
-export type SkillDamageNumberStyle = {
-  italic: boolean;
-  fill: SkillDamagePaint;
-  innerGlow: boolean; innerGlowSize: number; innerGlowColor: SkillDamagePaint;
-  outline: boolean; outlineWidth: number; outlineColor: SkillDamagePaint;
-  outerGlow: boolean; outerGlowSize: number; outerGlowColor: SkillDamagePaint;
-  shadow: boolean; shadowSize: number; shadowColor: SkillDamagePaint;
-};
-export type SkillDamageGroup = Omit<SkillDamageDisplaySettings, "groups"> & {
-  id: string; name: string; mergeSimultaneous: boolean; maxVisible?: number; position?: Point; scale?: number;
-};
-
-export function defaultSkillDamageDisplay(): SkillDamageDisplaySettings {
-  return {
-    mergeHits: false,
-    showSkillName: true,
-    nameDisplayMode: "text",
-    iconPath: "",
-    enabled: false,
-    entries: [],
-    format: "grouped",
-    animation: "pop",
-    scrollDirection: "up",
-    labelSpacing: 12,
-    durationMs: 2500,
-    x: 500,
-    y: 300,
-    fontFamily: "",
-    fontUrl: "",
-    fontSize: 24,
-    fontWeight: 700,
-    fontColor: "#ffd86b",
-  };
-}
 
 export type TextBuffPanelDisplayMode = "modern" | "classic";
 
@@ -1893,7 +1833,6 @@ function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
     hpPanel: { x: 40, y: 560 },
     entityDurationPanel: { x: 800, y: 300 },
     monsterSkillPanel: { x: 800, y: 460 },
-    skillDamagePanel: { x: 500, y: 300 },
   };
 }
 
@@ -1909,7 +1848,6 @@ function createDefaultMonsterOverlaySizes(): MonsterOverlaySizes {
     hpPanelScale: 1,
     entityDurationPanelScale: 1,
     monsterSkillPanelScale: 1,
-    skillDamagePanelScale: 1,
   };
 }
 
@@ -1925,7 +1863,6 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
     showHpPanel: false,
     showEntityDurationPanel: false,
     showMonsterSkillPanel: false,
-    showSkillDamagePanel: true,
   };
 }
 
@@ -2317,7 +2254,6 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     entityDurationPanelStyle: createDefaultEntityDurationPanelStyle(),
     monsterSkillMonitorAll: false,
     monsterSkillEntries: [],
-    skillDamageDisplay: defaultSkillDamageDisplay(),
     monsterSkillPanelStyle: createDefaultMonsterSkillPanelStyle(),
   };
 }
@@ -2402,7 +2338,6 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "entityDurationPanelStyle",
   "monsterSkillMonitorAll",
   "monsterSkillEntries",
-  "skillDamageDisplay",
   "monsterSkillPanelStyle",
 ] as const satisfies readonly (keyof MonsterMonitorProfileData)[];
 
@@ -2464,6 +2399,8 @@ export type Loadout = {
   skillProfileId: string;
   monsterProfileId: string;
   liveProfileId: string;
+  /** Skill damage HUD profile (`monitoring.skillDamage.profiles`). */
+  damageProfileId: string;
   /** True only for the untouched system-created first-run placeholder. */
   starterPlaceholder: boolean;
   /**
@@ -2681,6 +2618,7 @@ export type MonitoringSettingsState = {
   monsterMonitor: MonsterMonitorState;
   loadouts: LoadoutsState;
   liveMeter: LiveMeterState;
+  skillDamage: SkillDamageState;
 };
 
 export function createDefaultMonitoringSettingsState(): MonitoringSettingsState {
@@ -2695,6 +2633,7 @@ export function createDefaultMonitoringSettingsState(): MonitoringSettingsState 
     monsterMonitor: createDefaultMonsterMonitorState(),
     loadouts: createDefaultLoadoutsState(),
     liveMeter: createDefaultLiveMeterState(),
+    skillDamage: createDefaultSkillDamageState(),
   };
 }
 
@@ -3290,6 +3229,23 @@ export function startAccessibilityStore(): Promise<void> {
   return accessibilityStartPromise;
 }
 
+/**
+ * Uploaded skill damage fonts, kept out of `monitoring` so editing damage
+ * settings never rewrites font data. Started with the bootstrap stores, as
+ * the v8 migration writes fonts into it.
+ */
+const skillDamageFontsStore = new RuneStore(
+  "skillDamageFonts",
+  { fonts: [] } as SkillDamageFontsState,
+  { ...RUNE_STORE_OPTIONS, autoStart: false },
+);
+let skillDamageFontsStartPromise: Promise<void> | null = null;
+
+export function startSkillDamageFontsStore(): Promise<void> {
+  skillDamageFontsStartPromise ??= skillDamageFontsStore.start();
+  return skillDamageFontsStartPromise;
+}
+
 function monitoringSection<
   K extends keyof Omit<MonitoringSettingsState, "schemaVersion">,
 >(key: K): { readonly state: MonitoringSettingsState[K] } {
@@ -3322,6 +3278,7 @@ export const SETTINGS = {
   loadouts: monitoringSection("loadouts"),
   /** @deprecated Read/write through SETTINGS.monitoring.state.liveMeter. */
   liveMeter: monitoringSection("liveMeter"),
+  skillDamageFonts: skillDamageFontsStore,
   minimap: new RuneStore("minimap", DEFAULT_SETTINGS.minimap, {
     ...RUNE_STORE_OPTIONS,
     hooks: {

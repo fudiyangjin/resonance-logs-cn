@@ -5,6 +5,7 @@ import {
   HUD_EDIT_REQUEST_EVENT,
   HUD_OVERLAY_LABEL,
   HUD_READY_EVENT,
+  HUD_DOMAINS,
   HUD_STATE_SYNC_EVENT,
   type HudStateSyncEvent,
 } from "$lib/hud-overlay";
@@ -55,6 +56,11 @@ import {
   clearMinimapLayerState,
   handleHudMinimapFrame,
 } from "../minimap-overlay/minimap-frame";
+import {
+  clearSkillDamageDeadline,
+  skillDamageFeed,
+  syncSkillDamageDeadline,
+} from "../damage-overlay/damage-feed.svelte.js";
 import { minimapRuntime } from "../minimap-overlay/minimap-runtime.svelte.js";
 import {
   applyHudEditingState,
@@ -109,6 +115,7 @@ export function initHudOverlay(): () => void {
   });
 
   hudOverlaySession.setMinimapFrameHandler(handleHudMinimapFrame);
+  hudOverlaySession.setSkillDamageFrameHandler(skillDamageFeed);
   hudOverlaySession.start();
 
   let visibilitySynchronized = false;
@@ -118,9 +125,9 @@ export function initHudOverlay(): () => void {
     (event) => {
       void hudLayoutReady?.then(async () => {
         const { visibility, editing } = event.payload;
-        setHudDomainVisible("game", visibility.game);
-        setHudDomainVisible("monster", visibility.monster);
-        setHudDomainVisible("minimap", visibility.minimap);
+        for (const domain of HUD_DOMAINS) {
+          setHudDomainVisible(domain, visibility[domain]);
+        }
         await setHudEditMode(editing);
         visibilitySynchronized = true;
         if (readyRetryTimer !== null) {
@@ -201,6 +208,19 @@ export function initHudOverlay(): () => void {
     });
   });
 
+  const stopDamageProjection = $effect.root(() => {
+    $effect(() => {
+      if (
+        !hudOverlaySession.active ||
+        (!isHudEditing() && !isHudDomainVisible("damage"))
+      ) {
+        clearSkillDamageDeadline();
+        return;
+      }
+      syncSkillDamageDeadline();
+    });
+  });
+
   const handlePointerMove = (event: PointerEvent) => {
     onGamePointerMove(event);
     onMonsterPointerMove(event);
@@ -216,13 +236,16 @@ export function initHudOverlay(): () => void {
     stopInterests();
     stopGameProjection();
     stopMonsterProjection();
+    stopDamageProjection();
     stopClockLifecycle();
     clearMonsterProjectionDeadlines();
+    clearSkillDamageDeadline();
     if (readyRetryTimer !== null) clearInterval(readyRetryTimer);
     void unlistenStateSync.then((unlisten) => unlisten());
     void unlistenPullGate.then((unlisten) => unlisten());
     hudOverlaySession.setMinimapFrameHandler(null);
     hudOverlaySession.stop();
+    hudOverlaySession.setSkillDamageFrameHandler(null);
     window.removeEventListener("pointermove", handlePointerMove);
     window.removeEventListener("pointerup", handlePointerUp);
     clearMonsterDisplay();
@@ -320,6 +343,7 @@ function currentHudInterests(): HudInterests {
     game: editing || visibility.game,
     monster: editing || visibility.monster,
     minimap: editing || visibility.minimap,
+    damage: editing || visibility.damage,
   };
 }
 

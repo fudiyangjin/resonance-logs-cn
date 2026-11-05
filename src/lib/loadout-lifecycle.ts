@@ -4,6 +4,7 @@ export type ProfilesToCollect = {
   skillProfileId: string | null;
   monsterProfileId: string | null;
   liveProfileId: string | null;
+  damageProfileId: string | null;
 };
 
 export function profilesToCollectAfterLoadoutRemoval(
@@ -26,5 +27,10 @@ export function profilesToCollectAfterLoadoutRemoval(
     )
       ? null
       : removed.liveProfileId,
+    damageProfileId: remaining.some(
+      (item) => item.damageProfileId === removed.damageProfileId,
+    )
+      ? null
+      : removed.damageProfileId,
   };
 }

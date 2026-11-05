@@ -12,6 +12,10 @@
     resetMinimapPositions,
     resetMinimapSizes,
   } from "../minimap-overlay/minimap-state.svelte.js";
+  import {
+    resetSkillDamagePositions,
+    resetSkillDamageSizes,
+  } from "../damage-overlay/damage-layout";
   import { revertHudEditSession } from "./hud-edit-session";
   import { finishHudEditing, startHudWindowDrag } from "./hud-events.svelte.js";
 
@@ -19,12 +23,14 @@
     resetOverlayPositions();
     resetMonsterOverlayPositions();
     resetMinimapPositions();
+    resetSkillDamagePositions();
   }
 
   function resetAllSizes() {
     resetOverlaySizes();
     resetMonsterOverlaySizes();
     resetMinimapSizes();
+    resetSkillDamageSizes();
   }
 </script>
 

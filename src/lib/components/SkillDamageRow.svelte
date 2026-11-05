@@ -1,94 +1,66 @@
 <script lang="ts">
   import SkillIcon from "./skill-icon.svelte";
+  import SkillDamageDigits from "./SkillDamageDigits.svelte";
   import {
     resolveSkillDamageIcon,
     skillDamageIconBackground,
   } from "$lib/skill-damage-icons";
-  import SkillDamageDigits from "./SkillDamageDigits.svelte";
-  import { defaultDamageNumberStyle } from "$lib/skill-damage-groups";
-  import type { SkillDamageDisplaySettings } from "$lib/settings-store";
-  import {
-    formatSkillDamage,
-    skillDamageDurationMs,
-  } from "$lib/skill-damage-display";
-  import { loadSkillDamageFont } from "$lib/skill-damage-font";
+  import { formatSkillDamage } from "$lib/skill-damage-display";
+  import type { SkillDamageGroup } from "$lib/skill-damage-settings";
+
   let {
-    config,
+    group,
     label,
     amount,
     hitCount = 1,
     animated = true,
+    fontFamily,
   }: {
-    config: SkillDamageDisplaySettings;
+    group: SkillDamageGroup;
     label: string;
     amount: string;
     hitCount?: number;
     animated?: boolean;
+    /** Resolved by the caller, which owns font loading for all its rows. */
+    fontFamily?: string | undefined;
   } = $props();
-  const numberStyle = $derived(
-    config.numberStyle ?? defaultDamageNumberStyle(config.fontColor),
-  );
+
   const valueText = $derived(
-    formatSkillDamage(amount, config.format) +
+    formatSkillDamage(amount, group.format) +
       (hitCount > 1 ? `[${hitCount}]` : ""),
   );
-  const icon = $derived(resolveSkillDamageIcon(config.iconPath));
-  let loadedFont = $state("");
-  const fontFamily = $derived(
-    loadedFont
-      ? `${JSON.stringify(loadedFont)}, sans-serif`
-      : config.fontFamily?.trim()
-        ? `${JSON.stringify(config.fontFamily.trim())}, sans-serif`
-        : undefined,
+  const icon = $derived(
+    group.labelMode === "icon" ? resolveSkillDamageIcon(group.iconPath) : null,
   );
-  $effect(() => {
-    const url = config.fontUrl;
-    let cancelled = false;
-    loadedFont = "";
-    if (url)
-      void loadSkillDamageFont(url)
-        .then((family) => {
-          if (!cancelled) loadedFont = family;
-        })
-        .catch((error) =>
-          console.warn("Failed to load skill damage font", error),
-        );
-    return () => {
-      cancelled = true;
-    };
-  });
 </script>
 
 <div
   class="damage-row"
-  class:float-up={animated && config.animation === "floatUp"}
-  style:--damage-label-gap={`${config.showSkillName === false ? 0 : (config.labelSpacing ?? 12)}px`}
-  class:pop={animated && config.animation === "pop"}
-  class:shrink={animated && config.animation === "shrink"}
-  style:--damage-duration={`${skillDamageDurationMs(config.durationMs)}ms`}
+  class:float-up={animated && group.animation === "floatUp"}
+  class:pop={animated && group.animation === "pop"}
+  class:shrink={animated && group.animation === "shrink"}
+  style:--damage-label-gap={`${group.labelMode === "none" ? 0 : group.labelSpacing}px`}
+  style:--damage-duration={`${group.durationMs}ms`}
 >
-  {#if config.showSkillName !== false}
-    {#if config.nameDisplayMode === "icon" && icon}
-      <span
-        class="skill-label-icon"
-        style:width={`${config.fontSize ?? 24}px`}
-        style:height={`${config.fontSize ?? 24}px`}
-        ><SkillIcon
-          imagePath={icon}
-          alt={label}
-          background={skillDamageIconBackground(config)}
-        /></span
-      >
-    {:else}{label}{/if}
-  {/if}
+  {#if icon}
+    <span
+      class="skill-label-icon"
+      style:width={`${group.fontSize}px`}
+      style:height={`${group.fontSize}px`}
+      ><SkillIcon
+        imagePath={icon}
+        alt={label}
+        background={skillDamageIconBackground(group)}
+      /></span
+    >
+  {:else if group.labelMode !== "none"}{label}{/if}
   <span
     class="damage"
     style:font-family={fontFamily}
-    style:font-size={`${config.fontSize ?? 24}px`}
-    style:color={config.fontColor ?? "#ffd86b"}
-    style:font-weight={config.fontWeight ?? 700}
+    style:font-size={`${group.fontSize}px`}
+    style:font-weight={group.fontWeight}
   >
-    <SkillDamageDigits text={valueText} style={numberStyle} />
+    <SkillDamageDigits text={valueText} style={group.numberStyle} />
   </span>
 </div>
 

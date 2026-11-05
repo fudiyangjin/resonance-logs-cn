@@ -1,10 +1,9 @@
 /**
  * @file Shared visibility state for the overlay/companion windows that are
- * toggled from buttons in the main window. The game/monster/minimap keys are
- * logical domains backed by one `hud-overlay` WebView; `live` remains physical.
+ * toggled from buttons in the main window. The HUD domain keys are logical
+ * layers backed by one `hud-overlay` WebView; `live` remains physical.
  */
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { SETTINGS, defaultSkillDamageDisplay } from "$lib/settings-store";
 import { listen } from "@tauri-apps/api/event";
 import { emitLivePullGate } from "$lib/live-pull-gate";
 import {
@@ -12,6 +11,7 @@ import {
   toggleHudDomainEnabled,
 } from "$lib/hud-domain-rules.svelte";
 import {
+  HUD_DOMAINS,
   HUD_EDIT_REQUEST_EVENT,
   HUD_OVERLAY_LABEL,
   HUD_READY_EVENT,
@@ -29,6 +29,7 @@ const visibility = $state<Record<OverlayWindowLabel, boolean>>({
   game: false,
   monster: false,
   minimap: false,
+  damage: false,
   live: false,
 });
 let hudEditing = false;
@@ -62,21 +63,6 @@ export function isOverlayWindowVisible(label: OverlayWindowLabel): boolean {
 export async function toggleHudEditing(): Promise<void> {
   hudEditing = !hudEditing;
   if (hudReady) await synchronizeHudWindow();
-}
-
-export async function toggleSkillDamageWithRestore(): Promise<void> {
-  SETTINGS.monsterMonitor.state.skillDamageDisplay ??=
-    defaultSkillDamageDisplay();
-  const config = SETTINGS.monsterMonitor.state.skillDamageDisplay;
-  if (config.enabled) {
-    const win = await WebviewWindow.getByLabel(HUD_OVERLAY_LABEL);
-    if (win && (await win.isMinimized())) {
-      await win.show();
-      await win.unminimize();
-      return;
-    }
-  }
-  config.enabled = !config.enabled;
 }
 
 export async function toggleHudDomainWithRestore(
@@ -150,11 +136,9 @@ async function setHudDomainVisible(
 }
 
 function hudVisibilitySnapshot(): HudDomainVisibility {
-  return {
-    game: visibility.game,
-    monster: visibility.monster,
-    minimap: visibility.minimap,
-  };
+  return Object.fromEntries(
+    HUD_DOMAINS.map((domain) => [domain, visibility[domain]]),
+  ) as HudDomainVisibility;
 }
 
 async function synchronizeHudWindow(existing?: WebviewWindow): Promise<void> {

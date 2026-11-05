@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   formatSkillDamage,
-  skillDamageDurationMs,
   orderSkillDamageRows,
 } from "./skill-damage-display";
 
@@ -9,23 +8,9 @@ describe("skill damage scrolling", () => {
   it("puts new hits below for up and above for down without changing stored order", () => {
     const rows = [{ id: "old" }, { id: "new" }];
     expect(orderSkillDamageRows(rows, "up")).toEqual(rows);
-    expect(orderSkillDamageRows(rows, undefined)).toEqual(rows);
     expect(orderSkillDamageRows(rows, "down")).toEqual([rows[1], rows[0]]);
     expect(rows.map((row) => row.id)).toEqual(["old", "new"]);
     expect(orderSkillDamageRows([], "down")).toEqual([]);
-  });
-});
-
-describe("skill damage duration", () => {
-  it("defaults old settings and rejects invalid durations", () => {
-    for (const value of [undefined, null, NaN, Infinity, 0, -1, "invalid"]) {
-      expect(skillDamageDurationMs(value)).toBe(2500);
-    }
-  });
-  it("keeps milliseconds and clamps to the supported input range", () => {
-    expect(skillDamageDurationMs(1234)).toBe(1234);
-    expect(skillDamageDurationMs(1)).toBe(100);
-    expect(skillDamageDurationMs(100000)).toBe(60000);
   });
 });
 

@@ -70,6 +70,7 @@ describe("monitoring settings reconciliation", () => {
         skillProfileId: "missing",
         monsterProfileId: "missing",
         liveProfileId: "missing",
+        damageProfileId: "missing",
         starterPlaceholder: false,
         linkedTalentStageCfgId: null,
       },
@@ -86,6 +87,9 @@ describe("monitoring settings reconciliation", () => {
     );
     expect(repaired.loadouts.items[0]!.monsterProfileId).toBe(
       repaired.monsterMonitor.profiles[0]!.id,
+    );
+    expect(repaired.loadouts.items[0]!.damageProfileId).toBe(
+      repaired.skillDamage.profiles[0]!.id,
     );
   });
 
@@ -197,6 +201,7 @@ describe("monitoring settings reconciliation", () => {
         skillProfileId: state.skillMonitor.profiles[0]!.id,
         monsterProfileId: state.monsterMonitor.profiles[0]!.id,
         liveProfileId: state.liveMeter.profiles[0]!.id,
+        damageProfileId: state.skillDamage.profiles[0]!.id,
         starterPlaceholder: false,
         linkedTalentStageCfgId: null,
       },
@@ -226,6 +231,7 @@ describe("monitoring settings reconciliation", () => {
         skillProfileId: state.skillMonitor.profiles[0]!.id,
         monsterProfileId: second.id,
         liveProfileId: state.liveMeter.profiles[0]!.id,
+        damageProfileId: state.skillDamage.profiles[0]!.id,
         starterPlaceholder: false,
         linkedTalentStageCfgId: null,
       },
@@ -447,6 +453,7 @@ describe("legacy monitoring migration", () => {
         skillProfileId: firstSkill.id,
         monsterProfileId: firstMonster.id,
         liveProfileId: base.liveMeter.profiles[0]!.id,
+        damageProfileId: base.skillDamage.profiles[0]!.id,
         starterPlaceholder: false,
         linkedTalentStageCfgId: null,
       },
@@ -587,6 +594,7 @@ describe("incremental monitoring migration", () => {
         skillProfileId: state.skillMonitor.profiles[0]!.id,
         monsterProfileId: state.monsterMonitor.profiles[0]!.id,
         liveProfileId: state.liveMeter.profiles[0]!.id,
+        damageProfileId: state.skillDamage.profiles[0]!.id,
         starterPlaceholder: false,
         linkedTalentStageCfgId: null,
       },
@@ -739,6 +747,7 @@ describe("incremental monitoring migration", () => {
         skillProfileId: skill.id,
         monsterProfileId: monster.id,
         liveProfileId: state.liveMeter.profiles[0]!.id,
+        damageProfileId: state.skillDamage.profiles[0]!.id,
         starterPlaceholder: false,
         linkedTalentStageCfgId: null,
       } as Loadout,
@@ -790,6 +799,7 @@ describe("incremental monitoring migration", () => {
         skillProfileId: skill.id,
         monsterProfileId: monster.id,
         liveProfileId: state.liveMeter.profiles[0]!.id,
+        damageProfileId: state.skillDamage.profiles[0]!.id,
         starterPlaceholder: false,
         linkedTalentStageCfgId: null,
       } as Loadout,

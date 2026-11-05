@@ -1,58 +1,41 @@
-import type { SkillDamageDisplaySettings } from "./settings-store";
+import type { SkillDamageFormat } from "./skill-damage-settings";
+
+type BatchHit = { skillId: number; batch: number };
 
 /** New hits enter below for upward scrolling and above for downward scrolling. */
 export function orderSkillDamageRows<T>(
   rows: readonly T[],
-  direction: "up" | "down" | undefined,
+  direction: "up" | "down",
 ): T[] {
   return direction === "down" ? [...rows].reverse() : [...rows];
 }
 
-export function skillDamageDurationMs(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value) && value > 0
-    ? Math.max(100, Math.min(60000, Math.round(value)))
-    : 2500;
-}
+const batchSkillKey = (hit: BatchHit) => `${hit.batch}:${hit.skillId}`;
 
 /** Count distinct targets per skill/batch; repeated hits on one target count once. */
 export function withSkillDamageTargetCounts<
-  T extends {
-    skillId: number;
-    occurredAtMs: number;
-    batchId?: string;
-    targetUuid?: string;
-  },
+  T extends BatchHit & { targetUuid: string },
 >(hits: readonly T[]): (T & { hitCount: number })[] {
-  const keyOf = (hit: T) =>
-    `${hit.batchId ? `batch:${hit.batchId}` : `time:${hit.occurredAtMs}`}:skill:${hit.skillId}`;
   const targets = new Map<string, Set<string>>();
   for (const hit of hits) {
-    const key = keyOf(hit);
+    const key = batchSkillKey(hit);
     let ids = targets.get(key);
     if (!ids) targets.set(key, (ids = new Set()));
-    if (hit.targetUuid) ids.add(hit.targetUuid);
+    ids.add(hit.targetUuid);
   }
   return hits.map((hit) => ({
     ...hit,
-    hitCount: Math.max(1, targets.get(keyOf(hit))!.size),
+    hitCount: targets.get(batchSkillKey(hit))!.size,
   }));
 }
 
-/** Sum the same watched skill within one batch, keeping each skill's own label. */
+/** Sum the same skill within one batch, keeping each skill's own label. */
 export function sumSimultaneousSkillHits<
-  T extends {
-    amount: string;
-    skillId: number;
-    occurredAtMs: number;
-    batchId?: string;
-  },
+  T extends BatchHit & { amount: string },
 >(hits: readonly T[]): T[] {
   const totals = new Map<string, T>();
   for (const hit of hits) {
-    const batch = hit.batchId
-      ? `batch:${hit.batchId}`
-      : `time:${hit.occurredAtMs}`;
-    const key = `${batch}:skill:${hit.skillId}`;
+    const key = batchSkillKey(hit);
     const previous = totals.get(key);
     totals.set(
       key,
@@ -69,16 +52,13 @@ export function sumSimultaneousSkillHits<
 
 /** Call after filtering watched skills, so unmonitored damage cannot hide them. */
 export function largestSimultaneousSkillHits<
-  T extends { amount: string; occurredAtMs: number; batchId?: string },
+  T extends { batch: number; amount: string },
 >(hits: readonly T[]): T[] {
-  const largest = new Map<string, T>();
+  const largest = new Map<number, T>();
   for (const hit of hits) {
-    const key = hit.batchId
-      ? `batch:${hit.batchId}`
-      : `time:${hit.occurredAtMs}`;
-    const previous = largest.get(key);
+    const previous = largest.get(hit.batch);
     if (!previous || BigInt(hit.amount) > BigInt(previous.amount)) {
-      largest.set(key, hit);
+      largest.set(hit.batch, hit);
     }
   }
   return [...largest.values()];
@@ -86,7 +66,7 @@ export function largestSimultaneousSkillHits<
 
 export function formatSkillDamage(
   amount: string,
-  format: SkillDamageDisplaySettings["format"],
+  format: SkillDamageFormat,
 ): string {
   const value = BigInt(amount);
   if (format === "integer") return value.toString();

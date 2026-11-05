@@ -149,32 +149,6 @@ export function getEntityDurationPanelScale() {
   return getMonsterOverlaySizes().entityDurationPanelScale;
 }
 
-export function getSkillDamagePanelPosition(groupId?: string) {
-  const state = SETTINGS.monsterMonitor.state;
-  const groups = state.skillDamageDisplay?.groups ?? [];
-  const index = groups.findIndex((group) => group.id === groupId);
-  const group = groups[index];
-  const base = state.overlayPositions?.skillDamagePanel ?? {
-    x: state.skillDamageDisplay?.x ?? 500,
-    y: state.skillDamageDisplay?.y ?? 300,
-  };
-  if (group) return group.position ?? { x: base.x, y: base.y + index * 120 };
-  return (
-    state.overlayPositions?.skillDamagePanel ?? {
-      x: state.skillDamageDisplay?.x ?? 500,
-      y: state.skillDamageDisplay?.y ?? 300,
-    }
-  );
-}
-
-export function getSkillDamagePanelScale(groupId?: string) {
-  return (
-    SETTINGS.monsterMonitor.state.skillDamageDisplay?.groups?.find(
-      (group) => group.id === groupId,
-    )?.scale ?? getMonsterOverlaySizes().skillDamagePanelScale
-  );
-}
-
 export function getMonsterSkillPanelPosition() {
   return getMonsterOverlayPositions().monsterSkillPanel;
 }
@@ -446,42 +420,6 @@ export function setMonsterSkillPanelScale(value: number) {
   }));
 }
 
-export function setSkillDamagePanelPosition(
-  nextPos: { x: number; y: number },
-  groupId?: string,
-) {
-  const group = SETTINGS.monsterMonitor.state.skillDamageDisplay?.groups?.find(
-    (group) => group.id === groupId,
-  );
-  if (group) {
-    group.position = { ...nextPos };
-    return;
-  }
-  patchMonsterMonitor(() => ({
-    overlayPositions: {
-      ...getMonsterOverlayPositions(),
-      skillDamagePanel: nextPos,
-    },
-  }));
-}
-
-export function setSkillDamagePanelScale(value: number, groupId?: string) {
-  if (!Number.isFinite(value) || value <= 0) return;
-  const group = SETTINGS.monsterMonitor.state.skillDamageDisplay?.groups?.find(
-    (group) => group.id === groupId,
-  );
-  if (group) {
-    group.scale = value;
-    return;
-  }
-  patchMonsterMonitor(() => ({
-    overlaySizes: {
-      ...getMonsterOverlaySizes(),
-      skillDamagePanelScale: value,
-    },
-  }));
-}
-
 export function startMonsterDrag(
   event: PointerEvent,
   target: MonsterDragTarget,
@@ -534,11 +472,9 @@ export function onGlobalPointerMove(event: PointerEvent) {
     const deltaX = event.clientX - monsterRuntime.resizeState.startX;
     const deltaY = event.clientY - monsterRuntime.resizeState.startY;
     const delta = (deltaX + deltaY) / 300;
-    const nextValue = monsterRuntime.resizeState.startValue + delta;
-    monsterRuntime.resizeState.nextValue =
-      monsterRuntime.resizeState.target.kind === "skillDamagePanel"
-        ? Math.max(Number.EPSILON, nextValue)
-        : clampPanelScale(nextValue);
+    monsterRuntime.resizeState.nextValue = clampPanelScale(
+      monsterRuntime.resizeState.startValue + delta,
+    );
     scheduleLayoutPreview();
   }
 }
@@ -623,8 +559,6 @@ function commitDragPreview() {
     setDbmPanelPosition(nextPos);
   } else if (drag.target.kind === "entityDurationPanel") {
     setEntityDurationPanelPosition(nextPos);
-  } else if (drag.target.kind === "skillDamagePanel") {
-    setSkillDamagePanelPosition(nextPos, drag.target.groupId);
   } else if (drag.target.kind === "monsterSkillPanel") {
     setMonsterSkillPanelPosition(nextPos);
   } else {
@@ -652,8 +586,6 @@ function commitResizePreview() {
     setDbmPanelScale(nextValue);
   } else if (resize.target.kind === "entityDurationPanel") {
     setEntityDurationPanelScale(nextValue);
-  } else if (resize.target.kind === "skillDamagePanel") {
-    setSkillDamagePanelScale(nextValue, resize.target.groupId);
   } else if (resize.target.kind === "monsterSkillPanel") {
     setMonsterSkillPanelScale(nextValue);
   } else {
@@ -662,18 +594,12 @@ function commitResizePreview() {
 }
 
 export function resetMonsterOverlayPositions() {
-  for (const group of SETTINGS.monsterMonitor.state.skillDamageDisplay
-    ?.groups ?? [])
-    delete group.position;
   patchMonsterMonitor(() => ({
     overlayPositions: { ...DEFAULT_MONSTER_OVERLAY_POSITIONS },
   }));
 }
 
 export function resetMonsterOverlaySizes() {
-  for (const group of SETTINGS.monsterMonitor.state.skillDamageDisplay
-    ?.groups ?? [])
-    delete group.scale;
   patchMonsterMonitor(() => ({
     overlaySizes: { ...DEFAULT_MONSTER_OVERLAY_SIZES },
   }));

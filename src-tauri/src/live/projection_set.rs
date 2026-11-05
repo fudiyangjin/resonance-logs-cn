@@ -10,7 +10,8 @@ use crate::live::history_writer::HistoryWriterHandle;
 use crate::live::hp_link::{HpLinkEvent, HpShare};
 use crate::live::ipc::models::{
     LiveBuffsPayload, LiveCombatPayload, LiveDataPayload, LiveDeathsPayload, LiveFantasyPayload,
-    LiveMonsterPayload, LiveScenePayload, LiveStatusPayload, LiveTeamPayload, MinimapUpdatePayload,
+    LiveMonsterPayload, LiveScenePayload, LiveSkillDamagePayload, LiveStatusPayload,
+    LiveTeamPayload, MinimapUpdatePayload,
 };
 use crate::live::ipc::topic::{Topic, TopicMask};
 use crate::live::projections::buff_presence::BuffCompositeCatalog;
@@ -23,6 +24,7 @@ use crate::live::projections::history::HistoryProjection;
 use crate::live::projections::hp_report::HpReportProjection;
 use crate::live::projections::minimap::MinimapProjection;
 use crate::live::projections::presentation::{ActiveCombat, PresentationProjection};
+use crate::live::projections::skill_damage::SkillDamageProjection;
 use crate::live::projections::team_cd::TeamCdProjection;
 use crate::live::projections::timeline::TimelineProjection;
 use crate::live::projections::voice::{VoiceInputs, VoiceProjection, VoiceSyncReason};
@@ -45,12 +47,13 @@ const MONITORED_TOPICS: TopicMask = TopicMask::STATUS
 const SEGMENT_TOPICS: TopicMask = MONITORED_TOPICS
     .union(TopicMask::COMBAT)
     .union(TopicMask::DEATHS);
-/// The scene and the team are persistent state, not segment-scoped, so they
-/// sit outside `SEGMENT_TOPICS` next to the minimap.
+/// The scene, the team and skill damage hits are persistent state, not
+/// segment-scoped, so they sit outside `SEGMENT_TOPICS` next to the minimap.
 const ALL_TOPICS: TopicMask = SEGMENT_TOPICS
     .union(TopicMask::MINIMAP)
     .union(TopicMask::SCENE)
-    .union(TopicMask::TEAM);
+    .union(TopicMask::TEAM)
+    .union(TopicMask::SKILL_DAMAGE);
 
 /// One replace-only payload for a single dirty topic.
 #[derive(Debug)]
@@ -64,6 +67,7 @@ pub enum TopicPublication {
     Deaths(LiveDeathsPayload),
     Scene(LiveScenePayload),
     Team(LiveTeamPayload),
+    SkillDamage(LiveSkillDamagePayload),
 }
 
 impl TopicPublication {
@@ -79,6 +83,7 @@ impl TopicPublication {
             Self::Deaths(_) => Topic::Deaths,
             Self::Scene(_) => Topic::Scene,
             Self::Team(_) => Topic::Team,
+            Self::SkillDamage(_) => Topic::SkillDamage,
         }
     }
 }
@@ -97,6 +102,7 @@ pub struct ProjectionSet {
     presentation: PresentationProjection,
     team_cd: TeamCdProjection,
     hp_report: HpReportProjection,
+    skill_damage: SkillDamageProjection,
     dirty: TopicMask,
 }
 
@@ -115,6 +121,7 @@ impl ProjectionSet {
             presentation: PresentationProjection::default(),
             team_cd: TeamCdProjection::default(),
             hp_report: HpReportProjection::default(),
+            skill_damage: SkillDamageProjection::default(),
             dirty: ALL_TOPICS,
         }
     }
@@ -179,6 +186,8 @@ impl ProjectionSet {
         if self.team_cd.apply_config(&config.teammate_cd) {
             self.dirty |= TopicMask::TEAM;
         }
+        // The retained window does not depend on the list, so nothing to publish.
+        self.skill_damage.apply_config(&config.skill_damage);
         self.dirty |= SEGMENT_TOPICS;
         Ok(())
     }
@@ -268,6 +277,9 @@ impl ProjectionSet {
         let mut reported = TopicMask::EMPTY;
         let mut combat_changed = false;
         let mut minimap_changed = false;
+        // Hits, scene and local-player changes; ContainerReset clears it in
+        // `reset_runtime` below.
+        let skill_damage_changed = self.skill_damage.apply(envelope);
 
         match &envelope.event {
             DomainEvent::ContainerReset => {
@@ -446,7 +458,6 @@ impl ProjectionSet {
                 minimap_changed |= self.minimap.apply(envelope);
             }
             DomainEvent::CombatHitAccepted(hit) => {
-                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 let fact = CombatHitFact::from_domain(hit);
                 let outcome = self.combat.apply_hit(
                     hit,
@@ -517,10 +528,8 @@ impl ProjectionSet {
                 reported |= self.apply_entity_monitor(envelope, entities, scheduler);
                 self.voice.apply(envelope, entities, scheduler);
             }
-            DomainEvent::HitResolved(_) => {
-                reported |= self.apply_entity_monitor(envelope, entities, scheduler);
-            }
-            DomainEvent::WipeDetected { .. }
+            DomainEvent::HitResolved(_)
+            | DomainEvent::WipeDetected { .. }
             | DomainEvent::DungeonFlowChanged { .. }
             | DomainEvent::DungeonObjectiveChanged { .. }
             | DomainEvent::DungeonProgressStateChanged { .. }
@@ -535,6 +544,9 @@ impl ProjectionSet {
         }
         if minimap_changed {
             reported |= TopicMask::MINIMAP;
+        }
+        if skill_damage_changed {
+            reported |= TopicMask::SKILL_DAMAGE;
         }
         self.dirty |= reported;
         Ok(())
@@ -650,6 +662,7 @@ impl ProjectionSet {
         self.minimap.reset_runtime();
         self.timeline.reset_runtime();
         self.voice.reset_runtime(scheduler);
+        self.skill_damage.reset_runtime();
         self.dirty = ALL_TOPICS;
     }
 
@@ -756,6 +769,7 @@ impl ProjectionSet {
                     wall_now_ms(),
                     monotonic_now_ms(),
                 )),
+                Topic::SkillDamage => TopicPublication::SkillDamage(self.skill_damage.payload()),
             });
         }
 
@@ -1379,7 +1393,8 @@ mod tests {
         ));
         let remaining = SEGMENT_TOPICS
             .union(TopicMask::SCENE)
-            .union(TopicMask::TEAM);
+            .union(TopicMask::TEAM)
+            .union(TopicMask::SKILL_DAMAGE);
         assert_eq!(projections.dirty_mask(), remaining);
 
         assert_eq!(
@@ -2105,39 +2120,69 @@ mod tests {
     }
 
     #[test]
-    fn accepted_skill_damage_reaches_monster_payload() {
+    fn watched_skill_damage_dirties_only_its_own_topic() {
         let (writer, join) = HistoryWriterHandle::start().expect("history writer starts");
         let mut projections = ProjectionSet::new(writer);
         let entities = EntityContext::new();
         let mut scheduler = DeadlineScheduler::new();
+        let idle = SegmentState::Idle {
+            mode: IdleMode::Standard,
+        };
+        let mut config = MonitorRuntimeSnapshot::default();
+        config.skill_damage.watched_skill_keys = vec![25_523_102];
+        projections
+            .apply_config(
+                Arc::new(config),
+                &entities,
+                100,
+                MonoTimeMs(100),
+                &mut scheduler,
+            )
+            .unwrap();
+        projections.take_publications(&entities, &idle, ALL_TOPICS);
+
         let mut hit = player_hit();
         hit.skill_key = 25_523_102;
         hit.amount = 123_456;
+        for event in [
+            DomainEvent::HitResolved(hit.clone()),
+            DomainEvent::CombatHitAccepted(hit),
+        ] {
+            projections
+                .apply(
+                    &test_envelope(1, 1_000, 1_000, event),
+                    &entities,
+                    &mut scheduler,
+                )
+                .unwrap();
+        }
+        assert!(projections.is_dirty(TopicMask::SKILL_DAMAGE));
+        assert!(!projections.is_dirty(TopicMask::MONSTER));
+        let publications = projections.take_publications(&entities, &idle, ALL_TOPICS);
+        let payload = publications
+            .iter()
+            .find_map(|publication| match publication {
+                TopicPublication::SkillDamage(payload) => Some(payload),
+                _ => None,
+            })
+            .expect("skill damage publication after a watched hit");
+        assert_eq!(payload.hits.len(), 2);
+        assert_eq!(payload.hits[0].skill_id, 25_523_102);
+        assert_eq!(payload.hits[0].amount, "123456");
+
         projections
             .apply(
-                &test_envelope(1, 1_000, 1_000, DomainEvent::CombatHitAccepted(hit)),
+                &test_envelope(
+                    2,
+                    1_100,
+                    1_100,
+                    DomainEvent::CombatHitAccepted(player_hit()),
+                ),
                 &entities,
                 &mut scheduler,
             )
             .unwrap();
-        assert!(projections.is_dirty(TopicMask::MONSTER));
-        let publications = projections.take_publications(
-            &entities,
-            &SegmentState::Idle {
-                mode: IdleMode::Standard,
-            },
-            TopicMask::MONSTER,
-        );
-        let payload = publications
-            .iter()
-            .find_map(|publication| match publication {
-                TopicPublication::Monster(payload) => Some(payload),
-                _ => None,
-            })
-            .expect("monster publication after accepted hit");
-        assert_eq!(payload.skill_damage_hits.len(), 1);
-        assert_eq!(payload.skill_damage_hits[0].skill_id, 25_523_102);
-        assert_eq!(payload.skill_damage_hits[0].amount, "123456");
+        assert!(!projections.is_dirty(TopicMask::SKILL_DAMAGE));
         drop(projections);
         join.join().expect("history writer stops");
     }

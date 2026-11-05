@@ -68,6 +68,7 @@ pub struct MonitorRuntimeSnapshot {
     pub monster: MonsterRuntimeSnapshot,
     pub teammate: TeammateRuntimeSnapshot,
     pub teammate_cd: TeammateCdRuntimeSnapshot,
+    pub skill_damage: SkillDamageRuntimeSnapshot,
     pub buff_composites: Vec<BuffCompositeSpec>,
 }
 
@@ -81,6 +82,7 @@ impl Default for MonitorRuntimeSnapshot {
             monster: MonsterRuntimeSnapshot::default(),
             teammate: TeammateRuntimeSnapshot::default(),
             teammate_cd: TeammateCdRuntimeSnapshot::default(),
+            skill_damage: SkillDamageRuntimeSnapshot::default(),
         }
     }
 }
@@ -90,11 +92,12 @@ impl MonitorRuntimeSnapshot {
         self.live.event_update_rate_ms = self.live.event_update_rate_ms.clamp(50, 2000);
         self.live.training_window_ms = self.live.training_window_ms.clamp(30_000, 600_000);
 
-        dedup_and_sort_i32(&mut self.skill.monitored_skill_ids);
+        dedup_and_sort(&mut self.skill.monitored_skill_ids);
         if self.skill.monitored_skill_ids.len() > 10 {
             return Err("最多监控10个技能".to_string());
         }
         self.teammate_cd.normalize();
+        self.skill_damage.normalize();
         normalize_buff_composites(&mut self.buff_composites)?;
         // Negative ids name composites; one that is no longer defined is
         // dropped rather than failing the whole snapshot.
@@ -106,16 +109,16 @@ impl MonitorRuntimeSnapshot {
                     .is_ok()
         };
         self.skill.monitored_buff_ids.retain(is_known_buff);
-        dedup_and_sort_i32(&mut self.skill.monitored_buff_ids);
+        dedup_and_sort(&mut self.skill.monitored_buff_ids);
         if self.skill.buff_timeline_ids.contains(&0) {
             return Err("buff覆盖率ID无效".to_string());
         }
         self.skill.buff_timeline_ids.retain(is_known_buff);
-        dedup_and_sort_i32(&mut self.skill.buff_timeline_ids);
+        dedup_and_sort(&mut self.skill.buff_timeline_ids);
         if self.skill.buff_timeline_ids.len() > MAX_BUFF_COVERAGE_ENTRIES {
             return Err(format!("buff覆盖率最多监控{MAX_BUFF_COVERAGE_ENTRIES}项"));
         }
-        dedup_and_sort_i32(&mut self.skill.monitored_panel_attr_ids);
+        dedup_and_sort(&mut self.skill.monitored_panel_attr_ids);
         self.skill
             .buff_counter_rules
             .sort_by_key(|rule| rule.rule_id);
@@ -155,8 +158,8 @@ impl MonitorRuntimeSnapshot {
             self.skill.season_cultivate_factor_templates.clear();
         }
 
-        dedup_and_sort_i32(&mut self.monster.global_ids);
-        dedup_and_sort_i32(&mut self.monster.self_applied_ids);
+        dedup_and_sort(&mut self.monster.global_ids);
+        dedup_and_sort(&mut self.monster.self_applied_ids);
         self.monster
             .watched_entities
             .retain(|spec| spec.monster_id > 0);
@@ -180,9 +183,9 @@ impl MonitorRuntimeSnapshot {
             self.monster.monitor_all_self_applied = false;
         }
 
-        dedup_and_sort_i32(&mut self.teammate.any_source_ids);
-        dedup_and_sort_i32(&mut self.teammate.local_player_source_ids);
-        dedup_and_sort_i32(&mut self.teammate.target_self_source_ids);
+        dedup_and_sort(&mut self.teammate.any_source_ids);
+        dedup_and_sort(&mut self.teammate.local_player_source_ids);
+        dedup_and_sort(&mut self.teammate.target_self_source_ids);
         if !self.teammate.enabled {
             self.teammate.any_source_ids.clear();
             self.teammate.local_player_source_ids.clear();
@@ -430,6 +433,26 @@ impl TeammateCdRuntimeSnapshot {
     }
 }
 
+/// Upper bound on watched skill damage ids; far above any real group setup.
+pub const SKILL_DAMAGE_MAX_WATCHED: usize = 512;
+
+/// Damage ids (`skill_key`) whose local hits the skill damage HUD shows.
+/// Empty means the feature is off and no hit is collected.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct SkillDamageRuntimeSnapshot {
+    pub watched_skill_keys: Vec<i64>,
+}
+
+impl SkillDamageRuntimeSnapshot {
+    /// Sorted and deduplicated, so lookups can binary search.
+    fn normalize(&mut self) {
+        self.watched_skill_keys.retain(|key| *key > 0);
+        dedup_and_sort(&mut self.watched_skill_keys);
+        self.watched_skill_keys.truncate(SKILL_DAMAGE_MAX_WATCHED);
+    }
+}
+
 fn describe_snapshot(snapshot: &MonitorRuntimeSnapshot) -> String {
     format!(
         "locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} monster_watched_entities={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={} buff_composites={}",
@@ -493,7 +516,7 @@ pub(crate) fn load_monitor_runtime_snapshot(
     }
 }
 
-fn dedup_and_sort_i32(values: &mut Vec<i32>) {
+fn dedup_and_sort<T: Ord>(values: &mut Vec<T>) {
     values.sort_unstable();
     values.dedup();
 }

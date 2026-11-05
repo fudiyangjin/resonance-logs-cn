@@ -11,6 +11,7 @@ pub mod monster_skill_watch;
 pub mod presentation;
 pub mod profession_count;
 pub mod skill_cd;
+pub mod skill_damage;
 pub mod team_cd;
 pub mod timeline;
 pub mod voice;

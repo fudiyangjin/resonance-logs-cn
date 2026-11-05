@@ -89,6 +89,7 @@ function configureTwoLiveProfiles(): void {
         skillProfileId,
         monsterProfileId,
         liveProfileId: first.id,
+        damageProfileId: "damage",
         starterPlaceholder: false,
         linkedTalentStageCfgId: null,
       },

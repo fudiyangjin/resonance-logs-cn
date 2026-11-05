@@ -1,7 +1,6 @@
 <script lang="ts">
   import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
   import { page } from "$app/state";
-  import { goto } from "$app/navigation";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import MonitorTabNav, {
     type MonitorTabGroup,
@@ -140,7 +139,6 @@
   // Deep links (e.g. from the voice bindings overview) open a given tab.
   $effect(() => {
     const requested = page.url.searchParams.get("tab");
-    if (requested === "skillDamage") { void goto("/main/skill-damage", { replaceState: true }); return; }
     if (
       tabGroups.some((group) => group.tabs.some((tab) => tab.id === requested))
     ) {
@@ -235,8 +233,6 @@
       monsterMonitor.overlayVisibility?.showEntityDurationPanel ?? false,
     showMonsterSkillPanel:
       monsterMonitor.overlayVisibility?.showMonsterSkillPanel ?? false,
-    showSkillDamagePanel:
-      monsterMonitor.overlayVisibility?.showSkillDamagePanel ?? true,
   }));
   const tabGroups = $derived.by(
     (): MonitorTabGroup<MonsterMonitorTab>[] => [
@@ -996,8 +992,6 @@
           state.overlayVisibility?.showEntityDurationPanel ?? false,
         showMonsterSkillPanel:
           state.overlayVisibility?.showMonsterSkillPanel ?? false,
-        showSkillDamagePanel:
-          state.overlayVisibility?.showSkillDamagePanel ?? true,
       };
       return {
         ...state,

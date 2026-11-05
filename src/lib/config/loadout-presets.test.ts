@@ -22,6 +22,7 @@ function resetWithStarterLoadout(): void {
     skillProfileId: skillProfile.id,
     monsterProfileId: monsterProfile.id,
     liveProfileId: liveProfile.id,
+    damageProfileId: state.skillDamage.profiles[0]!.id,
     starterPlaceholder: true,
     linkedTalentStageCfgId: null,
   };

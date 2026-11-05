@@ -25,6 +25,10 @@ import {
   normalizeSkillCdRegions,
   type SkillCdRegion,
 } from "$lib/skill-cd-layout";
+import type {
+  SkillDamageLayout,
+  SkillDamageProfile,
+} from "$lib/skill-damage-settings";
 import {
   ensureBuffGroups,
   ensureCustomPanelGroups,
@@ -58,6 +62,9 @@ export type MonsterLayout = Pick<
 
 export type MinimapLayout = Pick<MinimapConfig, "mapPanel" | "infoPanel">;
 
+/** Panel layout of each skill damage group, by group id. */
+export type DamageProfileLayout = Record<string, SkillDamageLayout>;
+
 type WindowGeometry = {
   target: HudWindow;
   position: Awaited<ReturnType<HudWindow["outerPosition"]>>;
@@ -69,6 +76,7 @@ type HudEditSession = {
   // spec) can change which profile is being edited mid-session.
   skillProfiles: Map<string, SkillProfileLayout>;
   monsterProfiles: Map<string, MonsterLayout>;
+  damageProfiles: Map<string, DamageProfileLayout>;
   minimap: MinimapLayout;
   window: WindowGeometry | null;
 };
@@ -183,6 +191,14 @@ export function pickMonsterLayout(data: MonsterLayout): MonsterLayout {
   });
 }
 
+export function pickDamageProfileLayout(
+  profile: SkillDamageProfile,
+): DamageProfileLayout {
+  return deepCloneSettings(
+    Object.fromEntries(profile.groups.map((group) => [group.id, group.layout])),
+  );
+}
+
 export function pickMinimapLayout(config: MinimapLayout): MinimapLayout {
   return deepCloneSettings({
     mapPanel: config.mapPanel,
@@ -218,11 +234,23 @@ export async function beginHudEditSession(
     ),
     [monster.mirroredProfileId, pickMonsterLayout(monster)] as const,
   ]);
+  const damageProfiles = new Map(
+    SETTINGS.monitoring.state.skillDamage.profiles.map((profile) => [
+      profile.id,
+      pickDamageProfileLayout(profile),
+    ]),
+  );
   const minimap = pickMinimapLayout(SETTINGS.minimap.state);
   const geometry = currentWindow
     ? await readWindowGeometry(currentWindow)
     : null;
-  session = { skillProfiles, monsterProfiles, minimap, window: geometry };
+  session = {
+    skillProfiles,
+    monsterProfiles,
+    damageProfiles,
+    minimap,
+    window: geometry,
+  };
 }
 
 export function endHudEditSession(): void {
@@ -235,6 +263,7 @@ export async function revertHudEditSession(): Promise<void> {
   if (!current) return;
   restoreSkillProfiles(current.skillProfiles);
   restoreMonsterProfiles(current.monsterProfiles);
+  restoreDamageProfiles(current.damageProfiles);
   const minimap = layoutChange(
     pickMinimapLayout(SETTINGS.minimap.state),
     current.minimap,
@@ -273,6 +302,19 @@ function restoreMonsterProfiles(saved: Map<string, MonsterLayout>): void {
     return { ...profile, ...change };
   });
   if (changed) state.profiles = profiles;
+}
+
+/** Groups created during the session keep their layout; only changed layouts are written. */
+function restoreDamageProfiles(saved: Map<string, DamageProfileLayout>): void {
+  for (const profile of SETTINGS.monitoring.state.skillDamage.profiles) {
+    const layouts = saved.get(profile.id);
+    if (!layouts) continue;
+    for (const group of profile.groups) {
+      const layout = layouts[group.id];
+      const change = layout ? layoutChange(group.layout, layout) : null;
+      if (change) group.layout = change;
+    }
+  }
 }
 
 async function readWindowGeometry(

@@ -1,5 +1,9 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import type { HudDomain, HudDomainVisibility } from "$lib/hud-overlay";
+import {
+  HUD_DOMAINS,
+  type HudDomain,
+  type HudDomainVisibility,
+} from "$lib/hud-overlay";
 import { overlayRuntime } from "../game-overlay/overlay-runtime.svelte.js";
 import { monsterRuntime } from "../monster-overlay/monster-runtime.svelte.js";
 import { minimapRuntime } from "../minimap-overlay/minimap-runtime.svelte.js";
@@ -8,6 +12,7 @@ const visibility = $state<HudDomainVisibility>({
   game: false,
   monster: false,
   minimap: false,
+  damage: false,
 });
 
 export const hudRuntime = $state({
@@ -25,7 +30,7 @@ export function isHudDomainVisible(domain: HudDomain): boolean {
 }
 
 export function hasVisibleHudDomain(): boolean {
-  return visibility.game || visibility.monster || visibility.minimap;
+  return HUD_DOMAINS.some((domain) => visibility[domain]);
 }
 
 export function setHudDomainVisible(domain: HudDomain, visible: boolean): void {

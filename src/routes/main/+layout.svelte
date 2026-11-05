@@ -8,12 +8,12 @@
   import { listen, type UnlistenFn } from "@tauri-apps/api/event";
   import { goto } from "$app/navigation";
   import { liveSceneStore } from "$lib/stores/live-topics.svelte";
-  import { readHudDomainVisibilityRules } from "$lib/hud-domain-rules.svelte";
+  import { readHudDomainRules } from "$lib/hud-domain-rules.svelte";
   import {
     domainRequiresSupportedScene,
     resolveSceneVisibility,
   } from "$lib/hud-scene-visibility";
-  import type { HudDomain } from "$lib/hud-domain";
+  import { HUD_DOMAINS, type HudDomain } from "$lib/hud-domain";
   import { SETTINGS } from "$lib/settings-store";
   import { applyCustomFonts } from "$lib/font-loader";
   import { applyLiveClickthrough } from "$lib/utils.svelte";
@@ -103,31 +103,17 @@
   // snapshot, and vice versa.
   const stopVoiceRuntimeSync = startVoiceRuntimeSync();
 
-  // The three HUD domains share one physical overlay window, so their
-  // visibility is resolved by one shared rule instead of three hand-rolled
-  // effects. `enabled` (flipped by the toggle buttons and the settings
-  // switches alike) is the only intent input; everything else is derived.
-  const gameVisible = $derived(
-    resolveSceneVisibility({
-      ...readHudDomainVisibilityRules("game"),
+  // The HUD domains share one physical overlay window, so their visibility
+  // is resolved by one shared rule instead of hand-rolled effects. `enabled`
+  // (flipped by the toggle buttons and the settings switches alike) is the
+  // only intent input; everything else is derived.
+  function resolveHudDomainVisible(domain: HudDomain): boolean {
+    return resolveSceneVisibility({
+      ...readHudDomainRules(domain),
       sceneId: currentSceneId,
-      requiresSupportedScene: domainRequiresSupportedScene("game"),
-    }),
-  );
-  const monsterVisible = $derived(
-    resolveSceneVisibility({
-      ...readHudDomainVisibilityRules("monster"),
-      sceneId: currentSceneId,
-      requiresSupportedScene: domainRequiresSupportedScene("monster"),
-    }),
-  );
-  const minimapVisible = $derived(
-    resolveSceneVisibility({
-      ...readHudDomainVisibilityRules("minimap"),
-      sceneId: currentSceneId,
-      requiresSupportedScene: domainRequiresSupportedScene("minimap"),
-    }),
-  );
+      requiresSupportedScene: domainRequiresSupportedScene(domain),
+    });
+  }
 
   function syncHudDomain(domain: HudDomain, shouldShow: boolean) {
     // untrack() the current visibility so this only reacts to the resolved
@@ -136,9 +122,9 @@
     void setOverlayWindowVisible(domain, shouldShow);
   }
 
-  $effect(() => syncHudDomain("game", gameVisible));
-  $effect(() => syncHudDomain("monster", monsterVisible));
-  $effect(() => syncHudDomain("minimap", minimapVisible));
+  for (const domain of HUD_DOMAINS) {
+    $effect(() => syncHudDomain(domain, resolveHudDomainVisible(domain)));
+  }
 
   $effect(() => {
     applyCustomFonts({

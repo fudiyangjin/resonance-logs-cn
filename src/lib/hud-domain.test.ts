@@ -5,7 +5,7 @@ describe("shouldShowHudWindow", () => {
   it("keeps the physical HUD visible while any logical domain is visible", () => {
     expect(
       shouldShowHudWindow(
-        { game: false, monster: true, minimap: false },
+        { game: false, monster: true, minimap: false, damage: false },
         false,
       ),
     ).toBe(true);
@@ -14,7 +14,7 @@ describe("shouldShowHudWindow", () => {
   it("keeps the shared canvas visible for unified editing", () => {
     expect(
       shouldShowHudWindow(
-        { game: false, monster: false, minimap: false },
+        { game: false, monster: false, minimap: false, damage: false },
         true,
       ),
     ).toBe(true);
@@ -23,7 +23,7 @@ describe("shouldShowHudWindow", () => {
   it("hides only when editing and every domain are inactive", () => {
     expect(
       shouldShowHudWindow(
-        { game: false, monster: false, minimap: false },
+        { game: false, monster: false, minimap: false, damage: false },
         false,
       ),
     ).toBe(false);

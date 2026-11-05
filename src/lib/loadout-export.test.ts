@@ -80,6 +80,7 @@ function resetWithLegacyLoadout(): { loadoutId: string } {
     skillProfileId: skillProfile.id,
     monsterProfileId: monsterProfile.id,
     liveProfileId: liveProfile.id,
+    damageProfileId: state.skillDamage.profiles[0]!.id,
     starterPlaceholder: false,
     linkedTalentStageCfgId: null,
   };

@@ -4,16 +4,38 @@
   import PlayIcon from "virtual:icons/lucide/play";
   import PauseIcon from "virtual:icons/lucide/pause";
   import ExternalLinkIcon from "virtual:icons/lucide/external-link";
-  import { SETTINGS } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
+  import { isHudDomainEnabled } from "$lib/hud-domain-rules.svelte";
   import {
+    toggleHudDomainWithRestore,
     toggleHudEditing,
-    toggleSkillDamageWithRestore,
   } from "$lib/overlay-window-visibility.svelte";
+  import {
+    activeLoadout,
+    removeDamageProfileEverywhere,
+    setLoadoutDamageProfile,
+  } from "$lib/loadouts.svelte.js";
+  import {
+    createSkillDamageProfileSlot,
+    renameSkillDamageProfile,
+  } from "$lib/skill-damage-profile.svelte";
+  import { SETTINGS } from "$lib/settings-store";
+  import LoadoutProfileSwitcher from "$lib/components/LoadoutProfileSwitcher.svelte";
+
   let { children } = $props();
-  const enabled = $derived(
-    SETTINGS.monsterMonitor.state.skillDamageDisplay?.enabled ?? false,
-  );
+
+  // Tracks the persisted intent, not the physical window: an auto-hidden
+  // scene must not make the button read as "off" while the HUD is on.
+  const overlayEnabled = $derived(isHudDomainEnabled("damage"));
+  const loadout = $derived(activeLoadout());
+
+  async function run(action: () => Promise<void>, failure: string) {
+    try {
+      await action();
+    } catch (error) {
+      console.error(failure, error);
+    }
+  }
 </script>
 
 <div class="space-y-6">
@@ -36,19 +58,17 @@
     <div class="flex items-center gap-2">
       <button
         type="button"
-        aria-pressed={enabled}
-        class="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm transition-colors {enabled
-          ? 'border border-border/60 bg-muted/30 text-foreground hover:bg-muted/50'
+        aria-pressed={overlayEnabled}
+        class="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm transition-colors {overlayEnabled
+          ? 'border-border/60 bg-muted/30 text-foreground hover:bg-muted/50 border'
           : 'bg-primary text-primary-foreground hover:bg-primary/90'}"
-        onclick={async () => {
-          try {
-            await toggleSkillDamageWithRestore();
-          } catch (error) {
-            console.error("Failed to toggle skill damage display", error);
-          }
-        }}
+        onclick={() =>
+          run(
+            () => toggleHudDomainWithRestore("damage"),
+            "Failed to toggle skill damage overlay",
+          )}
       >
-        {#if enabled}<PauseIcon class="h-4 w-4" />{:else}<PlayIcon
+        {#if overlayEnabled}<PauseIcon class="h-4 w-4" />{:else}<PlayIcon
             class="h-4 w-4"
           />{/if}
         <span>{t("skillDamage.actions.toggleOverlay")}</span>
@@ -57,18 +77,28 @@
       <button
         type="button"
         class="border-border/60 bg-muted/30 hover:bg-muted/50 flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium"
-        onclick={async () => {
-          try {
-            await toggleHudEditing();
-          } catch (error) {
-            console.error("Failed to edit skill damage layout", error);
-          }
-        }}
-        ><PenSquareIcon class="h-4 w-4" />{t(
-          "skillDamage.actions.editLayout",
-        )}<ExternalLinkIcon class="h-3.5 w-3.5 opacity-70" /></button
+        onclick={() =>
+          run(toggleHudEditing, "Failed to edit skill damage layout")}
       >
+        <PenSquareIcon class="h-4 w-4" />
+        {t("skillDamage.actions.editLayout")}
+        <ExternalLinkIcon class="h-3.5 w-3.5 opacity-70" />
+      </button>
     </div>
   </div>
+
+  <LoadoutProfileSwitcher
+    kind="damage"
+    i18nPrefix="skillDamage.profile"
+    profiles={SETTINGS.monitoring.state.skillDamage.profiles}
+    activeProfileId={loadout?.damageProfileId ?? ""}
+    onselect={(profileId) => {
+      if (loadout) setLoadoutDamageProfile(loadout.id, profileId);
+    }}
+    oncreate={() => createSkillDamageProfileSlot("")}
+    onrename={renameSkillDamageProfile}
+    onremove={removeDamageProfileEverywhere}
+  />
+
   {@render children()}
 </div>

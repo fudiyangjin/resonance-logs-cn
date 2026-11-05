@@ -12,7 +12,6 @@
 import {
   SETTINGS,
   createDefaultMonsterMonitorProfile,
-  defaultSkillDamageDisplay,
   deepCloneSettings,
   ensureTeammateCdPanelStyle,
   ensureTeammatePanelStyle,
@@ -84,14 +83,7 @@ function applyProfileData(data: MonsterMonitorProfileData): void {
   // Deep-clone so the mirror never aliases the profile slot's nested
   // arrays/objects — otherwise in-place edits would silently leak into the
   // stored profile without going through flushMirrorToProfile.
-  Object.assign(
-    SETTINGS.monsterMonitor.state,
-    deepCloneSettings({
-      ...data,
-      skillDamageDisplay:
-        data.skillDamageDisplay ?? defaultSkillDamageDisplay(),
-    }),
-  );
+  Object.assign(SETTINGS.monsterMonitor.state, deepCloneSettings(data));
 }
 
 /** Flushes the current mirror fields into their profile slot (if it still exists). */
@@ -225,14 +217,6 @@ export function normalizeMonsterProfileStyles<
     overlayPositions: {
       ...defaults.overlayPositions,
       ...profile.overlayPositions,
-      skillDamagePanel: profile.overlayPositions?.skillDamagePanel ?? {
-        x: profile.skillDamageDisplay?.x ?? 500,
-        y: profile.skillDamageDisplay?.y ?? 300,
-      },
-    },
-    skillDamageDisplay: {
-      ...defaultSkillDamageDisplay(),
-      ...profile.skillDamageDisplay,
     },
     overlaySizes: { ...defaults.overlaySizes, ...profile.overlaySizes },
     overlayVisibility: {

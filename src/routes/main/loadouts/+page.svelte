@@ -25,6 +25,7 @@
     listLoadouts,
     removeLoadout,
     renameLoadout,
+    setLoadoutDamageProfile,
     setLoadoutLinkedTalentStage,
     setLoadoutLiveProfile,
     setLoadoutMonsterProfile,
@@ -32,6 +33,7 @@
     switchLoadout,
   } from "$lib/loadouts.svelte.js";
   import { parseLoadoutExport } from "$lib/loadout-import";
+  import { profileDisplayName } from "$lib/profile-switcher-utils";
   import { buildLoadoutPresets } from "$lib/config/loadout-presets";
   import {
     TALENT_STAGE_SPECS,
@@ -50,6 +52,9 @@
   const skillProfiles = $derived(SETTINGS.skillMonitor.state.profiles);
   const monsterProfiles = $derived(SETTINGS.monsterMonitor.state.profiles);
   const liveProfiles = $derived(SETTINGS.monitoring.state.liveMeter.profiles);
+  const damageProfiles = $derived(
+    SETTINGS.monitoring.state.skillDamage.profiles,
+  );
   const presets = $derived(buildLoadoutPresets(getLocale()));
   const specOptions = talentStageOptions();
   const specGroups = $derived.by(() => {
@@ -421,6 +426,24 @@
                 {#each liveProfiles as profile, idx (profile.id)}
                   <option value={profile.id}
                     >{liveProfileName(profile.id, idx)}</option
+                  >
+                {/each}
+              </select>
+            </label>
+            <label class="text-muted-foreground flex flex-col gap-1 text-xs">
+              {t("loadout.page.damageProfileLabel")}
+              <select
+                class="border-border/60 bg-muted/30 text-foreground focus:ring-primary/50 rounded border px-2.5 py-1.5 text-sm focus:ring-2 focus:outline-none"
+                value={loadout.damageProfileId}
+                onchange={(event) =>
+                  setLoadoutDamageProfile(
+                    loadout.id,
+                    (event.currentTarget as HTMLSelectElement).value,
+                  )}
+              >
+                {#each damageProfiles as profile, idx (profile.id)}
+                  <option value={profile.id}
+                    >{profileDisplayName("damage", profile.name, idx)}</option
                   >
                 {/each}
               </select>

@@ -1000,8 +1000,12 @@ export type HudFrame = { active: boolean; epoch: number; status: LiveStatusPaylo
 /**
  * Teammate cooldowns shared through the team relay (monster interest).
  */
-team: LiveTeamPayload | null; snapshot: MinimapSnapshotUpdate | null; skillCasts: MinimapSkillCast[]; skillCastCursor: number; castsReset: boolean }
-export type HudFrameRequest = { epoch: number | null; statusRevision: number | null; buffsRevision: number | null; monsterRevision: number | null; fantasyRevision: number | null; teamRevision?: number | null; snapshotRevision: number | null; skillCastCursor: number | null; gameInterest: boolean; monsterInterest: boolean; minimapInterest: boolean }
+team: LiveTeamPayload | null;
+/**
+ * Watched local skill damage hits (skill damage interest).
+ */
+skillDamage: LiveSkillDamagePayload | null; snapshot: MinimapSnapshotUpdate | null; skillCasts: MinimapSkillCast[]; skillCastCursor: number; castsReset: boolean }
+export type HudFrameRequest = { epoch: number | null; statusRevision: number | null; buffsRevision: number | null; monsterRevision: number | null; fantasyRevision: number | null; teamRevision?: number | null; skillDamageRevision?: number | null; snapshotRevision: number | null; skillCastCursor: number | null; gameInterest: boolean; monsterInterest: boolean; minimapInterest: boolean; skillDamageInterest?: boolean }
 export type HudLayoutMigration = { translateMinimap: boolean; minimapOffsetX: number; minimapOffsetY: number }
 export type I18nRuntimeSnapshot = { locale: AppLocale }
 /**
@@ -1050,10 +1054,14 @@ deadTeammates?: string[]; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [k
 /**
  * Latest cast of each watched monster skill, ascending by skill id.
  */
-monsterSkillCasts?: MonsterSkillCastState[]; skillDamageHits?: SkillDamageHitState[] }
+monsterSkillCasts?: MonsterSkillCastState[] }
 export type LivePullWindow = "live" | "hud-overlay"
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number; trainingWindowMs: number; trainingLockPolicy: TrainingLockPolicy }
 export type LiveScenePayload = { revision: number; sceneId: number | null; dungeonDifficulty: number | null; localClassId: number | null; localTalentStageCfgId: number | null }
+/**
+ * Skill damage topic: the retained window of watched local hits.
+ */
+export type LiveSkillDamagePayload = { revision: number; hits: SkillDamageHitState[] }
 /**
  * Skill CD / panel attrs / fight resource / shields / counters
  * (`live-status`). Published on the same 50ms cadence as the other overlay
@@ -1291,7 +1299,7 @@ export type ModelState = { kind: "notInstalled" } | { kind: "installing" } | { k
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
-export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot; teammateCd: TeammateCdRuntimeSnapshot; buffComposites: BuffCompositeSpec[] }
+export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot; teammateCd: TeammateCdRuntimeSnapshot; skillDamage: SkillDamageRuntimeSnapshot; buffComposites: BuffCompositeSpec[] }
 /**
  * Which caster population a monster-buff voice rule observes.
  */
@@ -1432,7 +1440,29 @@ maxCharges?: number | null;
  * Resource-slot capacity from `meter-data/SkillChargeTable.json`.
  */
 maxValidCdTime?: number | null }
-export type SkillDamageHitState = { id: string; batchId?: string; targetUuid?: string; skillId: number; amount: string; occurredAtMs: number }
+/**
+ * One damage hit by the local player on a watched skill.
+ */
+export type SkillDamageHitState = {
+/**
+ * Strictly increasing for the lifetime of the runtime; clients keep a
+ * cursor and only consume hits above it.
+ */
+id: number;
+/**
+ * Ordinal of the capture batch the hit arrived in. Hits sharing it were
+ * reported together by the game and count as simultaneous.
+ */
+batch: number; targetUuid: string; skillId: number;
+/**
+ * Exact decimal damage (u128 does not fit a JS number).
+ */
+amount: string; occurredAtMs: number }
+/**
+ * Damage ids (`skill_key`) whose local hits the skill damage HUD shows.
+ * Empty means the feature is off and no hit is collected.
+ */
+export type SkillDamageRuntimeSnapshot = { watchedSkillKeys: number[] }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[]; seasonCultivateFactorTemplates: FactorCounterTemplate[];
 /**
  * Coverage watch list: these buff ids are tracked for live coverage on

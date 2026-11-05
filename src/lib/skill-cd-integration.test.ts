@@ -83,6 +83,7 @@ function setup() {
         skillProfileId: skill.id,
         monsterProfileId: state.monsterMonitor.profiles[0]!.id,
         liveProfileId: state.liveMeter.profiles[0]!.id,
+        damageProfileId: state.skillDamage.profiles[0]!.id,
         starterPlaceholder: false,
         linkedTalentStageCfgId: null,
       },

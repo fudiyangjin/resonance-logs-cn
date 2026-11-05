@@ -7,7 +7,7 @@ use crate::live::bootstrap_snapshot::{BuffCompositeMode, MonitorRuntimeSnapshot}
 use crate::live::ipc::models::{
     BossDbmEvent, BuffFocusState, BuffUpdateState, EntityDurationTrackState, FightResourceEntry,
     FightResourceState, HateEntry as HateEntryDto, HpEntry, MonsterSkillCastState, PanelAttrState,
-    ProfessionCountState, ShieldDetailEntry, SkillCdState, SkillDamageHitState, StunEntry, TeammateFantasyState,
+    ProfessionCountState, ShieldDetailEntry, SkillCdState, StunEntry, TeammateFantasyState,
 };
 use crate::live::ipc::topic::TopicMask;
 use crate::live::projections::buff_presence::{BuffCompositeCatalog, BuffFocus, BuffPresence};
@@ -51,7 +51,6 @@ pub struct EntityMonitorSnapshot {
     pub monster_ids: HashMap<String, i32>,
     pub entity_duration_tracks: Vec<EntityDurationTrackState>,
     pub monster_skill_casts: Vec<MonsterSkillCastState>,
-    pub skill_damage_hits: Vec<SkillDamageHitState>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -248,8 +247,6 @@ pub struct EntityMonitorProjection {
     monster_ids: HashMap<EntityUuid, i32>,
     entity_duration: EntityDurationWatch,
     monster_skills: MonsterSkillWatch,
-    skill_damage_hits: VecDeque<SkillDamageHitState>,
-    skill_damage_sequence: u64,
 }
 
 impl EntityMonitorProjection {
@@ -267,7 +264,6 @@ impl EntityMonitorProjection {
         self.monster_ids.clear();
         self.entity_duration.clear();
         self.monster_skills.clear();
-        self.skill_damage_hits.clear();
         bump(&mut self.revisions.watched_entities);
     }
 
@@ -336,31 +332,7 @@ impl EntityMonitorProjection {
         scheduler: &mut DeadlineScheduler,
     ) -> TopicMask {
         match &envelope.event {
-            DomainEvent::HitResolved(hit) | DomainEvent::CombatHitAccepted(hit)
-                if hit.source_is_local_player
-                    && hit.kind == crate::live::runtime::events::HitKind::Damage
-                    && hit.amount > 0 =>
-            {
-                self.skill_damage_sequence = self.skill_damage_sequence.wrapping_add(1);
-                self.skill_damage_hits.push_back(SkillDamageHitState {
-                    id: self.skill_damage_sequence.to_string(),
-                    batch_id: envelope.batch_id.0.to_string(),
-                    target_uuid: hit.target.uuid.0.to_string(),
-                    skill_id: hit.skill_key,
-                    amount: hit.amount.to_string(),
-                    occurred_at_ms: envelope.occurred_at_ms,
-                });
-                while self.skill_damage_hits.len() > 128
-                    || self.skill_damage_hits.front().is_some_and(|hit| {
-                        envelope.occurred_at_ms.saturating_sub(hit.occurred_at_ms) > 5000
-                    })
-                {
-                    self.skill_damage_hits.pop_front();
-                }
-                TopicMask::MONSTER
-            }
             DomainEvent::LocalPlayerChanged { .. } => {
-                self.skill_damage_hits.clear();
                 self.local_player = entities.local_player();
                 self.clear_local_runtime();
                 self.sync_current_target(entities);
@@ -711,7 +683,6 @@ impl EntityMonitorProjection {
             DomainEvent::SceneChanged { .. } => {
                 self.clear_boss_mechanics(scheduler);
                 self.monster_skills.clear();
-                self.skill_damage_hits.clear();
                 self.hate_lists.clear();
                 self.stun_values.clear();
                 self.hp_values.clear();
@@ -833,7 +804,6 @@ impl EntityMonitorProjection {
             } else {
                 self.entity_duration.track_states(entities)
             },
-            skill_damage_hits: self.skill_damage_hits.iter().cloned().collect(),
             monster_skill_casts: if self.entity_duration_hidden {
                 Vec::new()
             } else {
@@ -1365,77 +1335,6 @@ mod tests {
             uuid: EntityUuid(10),
             generation: 1,
         }
-    }
-
-    #[test]
-    fn skill_damage_keeps_local_hits_exact_bounded_and_clears_on_reset() {
-        use crate::live::runtime::events::{DomainHit, EntityKind, HitChannel, HitKind};
-        let mut projection = EntityMonitorProjection::default();
-        let entities = EntityContext::default();
-        let mut scheduler = DeadlineScheduler::default();
-        let mut hit = DomainHit {
-            channel: HitChannel::Near,
-            source: Some(local_ref()),
-            packet_owner: None,
-            resolved_owner: None,
-            target: local_ref(),
-            source_kind: Some(EntityKind::Character),
-            target_kind: EntityKind::Monster,
-            source_monster_id: None,
-            target_monster_id: None,
-            target_is_boss: false,
-            source_is_player: true,
-            source_is_local_player: false,
-            skill_key: 123456789,
-            skill_id: Some(123),
-            type_flags: 0,
-            kind: HitKind::Damage,
-            amount: u128::MAX,
-            has_loss_breakdown: false,
-            hp_loss: 0,
-            shield_loss: 0,
-            is_lucky_bonus_only: false,
-            property: None,
-            damage_mode: None,
-            effective_amount: None,
-        };
-        let apply = |projection: &mut EntityMonitorProjection,
-                     sequence,
-                     hit: DomainHit,
-                     scheduler: &mut DeadlineScheduler| {
-            projection.apply(
-                &envelope(sequence, 1000, DomainEvent::HitResolved(hit)),
-                &entities,
-                scheduler,
-            )
-        };
-        assert_eq!(
-            apply(&mut projection, 1, hit.clone(), &mut scheduler),
-            TopicMask::EMPTY
-        );
-        hit.source_is_local_player = true;
-        hit.kind = HitKind::Healing;
-        assert_eq!(
-            apply(&mut projection, 2, hit.clone(), &mut scheduler),
-            TopicMask::EMPTY
-        );
-        hit.kind = HitKind::Damage;
-        for sequence in 3..=140 {
-            assert_eq!(
-                apply(&mut projection, sequence, hit.clone(), &mut scheduler),
-                TopicMask::MONSTER
-            );
-        }
-        let snapshot = projection.snapshot(&entities);
-        assert_eq!(snapshot.skill_damage_hits.len(), 128);
-        assert_eq!(snapshot.skill_damage_hits[0].amount, u128::MAX.to_string());
-        assert_eq!(snapshot.skill_damage_hits[0].skill_id, hit.skill_key);
-        assert_ne!(
-            snapshot.skill_damage_hits[0].id,
-            snapshot.skill_damage_hits[1].id
-        );
-        projection.reset_runtime(&mut scheduler);
-        assert!(projection.snapshot(&entities).skill_damage_hits.is_empty());
     }
 
     fn observed_buff(instance_id: i64, target: EntityUuid) -> ObservedBuff {

@@ -134,11 +134,15 @@ pub struct HudFrameRequest {
     pub fantasy_revision: Option<u64>,
     #[serde(default)]
     pub team_revision: Option<u64>,
+    #[serde(default)]
+    pub skill_damage_revision: Option<u64>,
     pub snapshot_revision: Option<u64>,
     pub skill_cast_cursor: Option<u64>,
     pub game_interest: bool,
     pub monster_interest: bool,
     pub minimap_interest: bool,
+    #[serde(default)]
+    pub skill_damage_interest: bool,
 }
 
 #[derive(specta::Type, serde::Serialize, Debug, Clone)]
@@ -159,6 +163,8 @@ pub struct HudFrame {
     pub fantasy: Option<LiveFantasyPayload>,
     /// Teammate cooldowns shared through the team relay (monster interest).
     pub team: Option<LiveTeamPayload>,
+    /// Watched local skill damage hits (skill damage interest).
+    pub skill_damage: Option<LiveSkillDamagePayload>,
     pub snapshot: Option<MinimapSnapshotUpdate>,
     pub skill_casts: Vec<MinimapSkillCast>,
     pub skill_cast_cursor: u64,
@@ -269,18 +275,29 @@ pub struct LiveBuffsPayload {
     pub coverage: Vec<BuffCoverageEntry>,
 }
 
-/// Recent individual damage hits by the local player. Amount stays exact over IPC.
-#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+/// One damage hit by the local player on a watched skill.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct SkillDamageHitState {
-    pub id: String,
-    #[serde(default)]
-    pub batch_id: String,
-    #[serde(default)]
+    /// Strictly increasing for the lifetime of the runtime; clients keep a
+    /// cursor and only consume hits above it.
+    pub id: u64,
+    /// Ordinal of the capture batch the hit arrived in. Hits sharing it were
+    /// reported together by the game and count as simultaneous.
+    pub batch: u64,
     pub target_uuid: String,
     pub skill_id: i64,
+    /// Exact decimal damage (u128 does not fit a JS number).
     pub amount: String,
     pub occurred_at_ms: i64,
+}
+
+/// Skill damage topic: the retained window of watched local hits.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct LiveSkillDamagePayload {
+    pub revision: u64,
+    pub hits: Vec<SkillDamageHitState>,
 }
 
 /// Monster overlay topic (`live-monster`), 50ms throttle.
@@ -305,8 +322,6 @@ pub struct LiveMonsterPayload {
     /// Latest cast of each watched monster skill, ascending by skill id.
     #[serde(default)]
     pub monster_skill_casts: Vec<MonsterSkillCastState>,
-    #[serde(default)]
-    pub skill_damage_hits: Vec<SkillDamageHitState>,
 }
 
 /// Fantasy cast icons shared by live + monster overlay (`live-fantasy`).

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t } from "$lib/i18n/index.svelte";
   import { SETTINGS } from "$lib/settings-store";
-  import DraggablePanel from "../minimap-overlay/draggable-panel.svelte";
+  import DraggablePanel from "./DraggablePanel.svelte";
   import MinimapCanvas from "../minimap-overlay/minimap-canvas.svelte";
   import MinimapInfobar from "../minimap-overlay/minimap-infobar.svelte";
   import { minimapSnapshot } from "../minimap-overlay/minimap-runtime.svelte.js";

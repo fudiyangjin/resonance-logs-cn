@@ -1,11 +1,13 @@
 <script lang="ts">
-  import type { SkillDamageGroup } from "$lib/settings-store";
-  import { defaultDamageNumberStyle } from "$lib/skill-damage-groups";
+  import {
+    SKILL_DAMAGE_EFFECT_SIZE_MAX,
+    type SkillDamageNumberStyle,
+  } from "$lib/skill-damage-settings";
   import { t } from "$lib/i18n/index.svelte";
   import DamagePaintEditor from "./damage-paint-editor.svelte";
-  let { config }: { config: SkillDamageGroup } = $props();
-  config.numberStyle ??= defaultDamageNumberStyle(config.fontColor);
-  const style = $derived(config.numberStyle!);
+
+  let { style }: { style: SkillDamageNumberStyle } = $props();
+
   const effects = [
     {
       enabled: "innerGlow",
@@ -42,7 +44,7 @@
     )}</label
   >
   <DamagePaintEditor paint={style.fill} label={t("skillDamage.fill")} />
-  {#each effects as effect}
+  {#each effects as effect (effect.enabled)}
     <div class="space-y-2 rounded border p-3">
       <label class="flex items-center gap-2 text-sm"
         ><input type="checkbox" bind:checked={style[effect.enabled]} />{t(
@@ -60,13 +62,16 @@
             class="bg-background w-24 rounded border p-1"
             type="number"
             min="0"
-            max="100"
+            max={SKILL_DAMAGE_EFFECT_SIZE_MAX}
             step="0.5"
             value={style[effect.size]}
             onchange={(event) =>
               (style[effect.size] = Math.max(
                 0,
-                Math.min(100, Number(event.currentTarget.value) || 0),
+                Math.min(
+                  SKILL_DAMAGE_EFFECT_SIZE_MAX,
+                  Number(event.currentTarget.value) || 0,
+                ),
               ))}
           />
         </label>

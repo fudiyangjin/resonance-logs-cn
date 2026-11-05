@@ -9,6 +9,7 @@ function loadout(id: string, linkedTalentStageCfgId: number | null): Loadout {
     skillProfileId: `skill-${id}`,
     monsterProfileId: `monster-${id}`,
     liveProfileId: `live-${id}`,
+    damageProfileId: `damage-${id}`,
     starterPlaceholder: false,
     linkedTalentStageCfgId,
   };

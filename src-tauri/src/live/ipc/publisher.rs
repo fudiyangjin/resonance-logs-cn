@@ -13,9 +13,10 @@ use parking_lot::RwLock;
 
 use super::models::{
     HudFrame, HudFrameRequest, LiveBuffsPayload, LiveCombatPayload, LiveDeathsPayload,
-    LiveFantasyPayload, LiveMonsterPayload, LivePullWindow, LiveScenePayload, LiveStatusPayload,
-    LiveTeamPayload, LiveWindowFrame, LiveWindowFrameRequest, MinimapSkillCast, MinimapSnapshot,
-    MinimapSnapshotUpdate, MinimapUpdatePayload,
+    LiveFantasyPayload, LiveMonsterPayload, LivePullWindow, LiveScenePayload,
+    LiveSkillDamagePayload, LiveStatusPayload, LiveTeamPayload, LiveWindowFrame,
+    LiveWindowFrameRequest, MinimapSkillCast, MinimapSnapshot, MinimapSnapshotUpdate,
+    MinimapUpdatePayload,
 };
 use crate::live::projection_set::TopicPublication;
 
@@ -47,6 +48,7 @@ impl_revisioned!(
     LiveDeathsPayload,
     LiveScenePayload,
     LiveTeamPayload,
+    LiveSkillDamagePayload,
 );
 
 #[derive(Debug, Clone)]
@@ -75,6 +77,7 @@ struct PublishedState {
     deaths: Option<Arc<LiveDeathsPayload>>,
     scene: Option<Arc<LiveScenePayload>>,
     team: Option<Arc<LiveTeamPayload>>,
+    skill_damage: Option<Arc<LiveSkillDamagePayload>>,
     minimap: MinimapSlot,
 }
 
@@ -91,6 +94,7 @@ impl PublishedState {
             deaths: None,
             scene: None,
             team: None,
+            skill_damage: None,
             minimap: MinimapSlot::default(),
         }
     }
@@ -159,6 +163,9 @@ impl LivePublicationCache {
                 TopicPublication::Fantasy(payload) => state.fantasy = Some(Arc::new(payload)),
                 TopicPublication::Deaths(payload) => state.deaths = Some(Arc::new(payload)),
                 TopicPublication::Team(payload) => state.team = Some(Arc::new(payload)),
+                TopicPublication::SkillDamage(payload) => {
+                    state.skill_damage = Some(Arc::new(payload));
+                }
                 TopicPublication::Scene(payload) => {
                     state.scene = Some(Arc::new(payload.clone()));
                     scene_event = Some(payload);
@@ -215,6 +222,7 @@ impl LivePublicationCache {
             monster,
             fantasy,
             team,
+            skill_damage,
             snapshot,
             skill_casts,
             skill_cast_cursor,
@@ -252,6 +260,16 @@ impl LivePublicationCache {
             let team = request
                 .monster_interest
                 .then(|| changed(&state.team, request.team_revision, reset_epoch))
+                .flatten();
+            let skill_damage = request
+                .skill_damage_interest
+                .then(|| {
+                    changed(
+                        &state.skill_damage,
+                        request.skill_damage_revision,
+                        reset_epoch,
+                    )
+                })
                 .flatten();
 
             let minimap = &state.minimap;
@@ -297,6 +315,7 @@ impl LivePublicationCache {
                 monster,
                 fantasy,
                 team,
+                skill_damage,
                 snapshot,
                 skill_casts,
                 skill_cast_cursor,
@@ -312,6 +331,7 @@ impl LivePublicationCache {
             monster: clone_payload(monster),
             fantasy: clone_payload(fantasy),
             team: clone_payload(team),
+            skill_damage: clone_payload(skill_damage),
             snapshot: snapshot.map(|(revision, snapshot)| MinimapSnapshotUpdate {
                 revision,
                 snapshot: snapshot.map(|snapshot| (*snapshot).clone()),
@@ -638,9 +658,57 @@ mod tests {
         assert!(frame.buffs.is_none());
         assert!(frame.monster.is_none());
         assert!(frame.fantasy.is_none());
+        assert!(frame.skill_damage.is_none());
         assert!(frame.snapshot.is_none());
         assert!(frame.skill_casts.is_empty());
         assert_eq!(frame.skill_cast_cursor, 1);
+    }
+
+    #[test]
+    fn skill_damage_is_served_only_to_its_own_interest() {
+        let cache = LivePublicationCache::new();
+        let monster = LiveMonsterPayload {
+            revision: 3,
+            ..LiveMonsterPayload::default()
+        };
+        let damage = LiveSkillDamagePayload {
+            revision: 5,
+            ..LiveSkillDamagePayload::default()
+        };
+        cache.publish([
+            TopicPublication::Monster(monster),
+            TopicPublication::SkillDamage(damage),
+        ]);
+
+        let damage_only = cache.pull_hud(
+            &HudFrameRequest {
+                skill_damage_interest: true,
+                ..HudFrameRequest::default()
+            },
+            true,
+        );
+        assert!(damage_only.monster.is_none());
+        assert_eq!(damage_only.skill_damage.unwrap().revision, 5);
+
+        let monster_only = cache.pull_hud(
+            &HudFrameRequest {
+                monster_interest: true,
+                ..HudFrameRequest::default()
+            },
+            true,
+        );
+        assert!(monster_only.skill_damage.is_none());
+
+        let unchanged = cache.pull_hud(
+            &HudFrameRequest {
+                epoch: Some(damage_only.epoch),
+                skill_damage_revision: Some(5),
+                skill_damage_interest: true,
+                ..HudFrameRequest::default()
+            },
+            true,
+        );
+        assert!(unchanged.skill_damage.is_none());
     }
 
     #[test]

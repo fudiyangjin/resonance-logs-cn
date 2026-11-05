@@ -15,7 +15,7 @@ describe("skill damage icon presets", () => {
       .map((name) => `/images/talent/${name}`)
       .sort();
     expect(TALENT_DAMAGE_ICON_PRESETS).toEqual(files);
-    expect(resolveSkillDamageIcon(TALENT_DAMAGE_ICON_PRESETS[0])).toBe(
+    expect(resolveSkillDamageIcon(TALENT_DAMAGE_ICON_PRESETS[0]!)).toBe(
       TALENT_DAMAGE_ICON_PRESETS[0],
     );
   });
@@ -60,7 +60,7 @@ describe("skill damage icon presets", () => {
   it("resolves only valid preset paths and safely falls back for missing icons", () => {
     const preset = SKILL_DAMAGE_ICON_PRESETS[0]!;
     expect(resolveSkillDamageIcon(preset)).toBe(preset);
-    expect(resolveSkillDamageIcon(undefined)).toBeNull();
+    expect(resolveSkillDamageIcon("")).toBeNull();
     expect(resolveSkillDamageIcon("/images/missing.png")).toBeNull();
     expect(resolveSkillDamageIcon("https://example.com/image.png")).toBeNull();
   });

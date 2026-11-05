@@ -13,6 +13,7 @@ function starterLoadout(): Loadout {
     skillProfileId: "skill",
     monsterProfileId: "monster",
     liveProfileId: "live",
+    damageProfileId: "damage",
     starterPlaceholder: true,
     linkedTalentStageCfgId: null,
   };

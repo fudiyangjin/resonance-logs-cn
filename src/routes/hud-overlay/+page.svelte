@@ -6,6 +6,7 @@
     overlayCustomFontFamily,
     setupOverlayCustomFonts,
   } from "$lib/overlay-custom-font.svelte";
+  import DamageHudLayer from "./DamageHudLayer.svelte";
   import GameHudLayer from "./GameHudLayer.svelte";
   import HudEditBanner from "./HudEditBanner.svelte";
   import MinimapHudLayer from "./MinimapHudLayer.svelte";
@@ -47,6 +48,12 @@
     </div>
   {/if}
 
+  {#if editing || visibility.damage}
+    <div class="domain-layer damage-layer">
+      <DamageHudLayer {editing} />
+    </div>
+  {/if}
+
   {#if editing || visibility.minimap}
     <div class="domain-layer minimap-layer">
       <MinimapHudLayer {editing} />
@@ -85,6 +92,10 @@
 
   .monster-layer {
     z-index: 20;
+  }
+
+  .damage-layer {
+    z-index: 25;
   }
 
   .minimap-layer {

@@ -17,6 +17,7 @@ impl TopicMask {
     pub const DEATHS: Self = Self(1 << 6);
     pub const SCENE: Self = Self(1 << 7);
     pub const TEAM: Self = Self(1 << 8);
+    pub const SKILL_DAMAGE: Self = Self(1 << 9);
 
     #[must_use]
     pub const fn is_empty(self) -> bool {
@@ -84,6 +85,7 @@ pub enum Topic {
     Deaths,
     Scene,
     Team,
+    SkillDamage,
 }
 
 impl Topic {
@@ -98,9 +100,10 @@ impl Topic {
         Self::Deaths,
         Self::Scene,
         Self::Team,
+        Self::SkillDamage,
     ];
 
-    pub const COUNT: usize = 9;
+    pub const COUNT: usize = 10;
 
     /// Position of this topic in [`Topic::ALL`].
     #[must_use]
@@ -115,6 +118,7 @@ impl Topic {
             Self::Deaths => 6,
             Self::Scene => 7,
             Self::Team => 8,
+            Self::SkillDamage => 9,
         }
     }
 
@@ -130,6 +134,7 @@ impl Topic {
             Self::Deaths => TopicMask::DEATHS,
             Self::Scene => TopicMask::SCENE,
             Self::Team => TopicMask::TEAM,
+            Self::SkillDamage => TopicMask::SKILL_DAMAGE,
         }
     }
 
@@ -162,7 +167,8 @@ impl Topic {
             | Self::Minimap
             | Self::Deaths
             | Self::Scene
-            | Self::Team => Some(50),
+            | Self::Team
+            | Self::SkillDamage => Some(50),
         }
     }
 }
@@ -195,6 +201,7 @@ mod tests {
             Topic::Deaths,
             Topic::Scene,
             Topic::Team,
+            Topic::SkillDamage,
         ] {
             assert_eq!(topic.throttle_ms(), Some(50));
         }

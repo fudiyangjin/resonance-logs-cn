@@ -1,6 +1,7 @@
 import type { HudDomainVisibility } from "$lib/hud-domain";
 
 export {
+  HUD_DOMAINS,
   isHudDomain,
   shouldShowHudWindow,
   type HudDomain,

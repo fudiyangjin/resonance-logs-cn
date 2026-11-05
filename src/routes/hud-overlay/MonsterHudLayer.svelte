@@ -1,13 +1,10 @@
 <script lang="ts">
-  import { SETTINGS } from "$lib/settings-store";
-  import { isMonsterEditing } from "../monster-overlay/monster-state.svelte";
   import MonsterBossDbmPanel from "../monster-overlay/MonsterBossDbmPanel.svelte";
   import MonsterBuffPanel from "../monster-overlay/MonsterBuffPanel.svelte";
   import MonsterEntityDurationPanel from "../monster-overlay/MonsterEntityDurationPanel.svelte";
   import MonsterFantasyPanel from "../monster-overlay/MonsterFantasyPanel.svelte";
   import MonsterHatePanel from "../monster-overlay/MonsterHatePanel.svelte";
   import MonsterHpPanel from "../monster-overlay/MonsterHpPanel.svelte";
-  import SkillDamagePanel from "../monster-overlay/SkillDamagePanel.svelte";
   import MonsterSkillPanel from "../monster-overlay/MonsterSkillPanel.svelte";
   import MonsterStunPanel from "../monster-overlay/MonsterStunPanel.svelte";
   import MonsterTeammateBuffPanel from "../monster-overlay/MonsterTeammateBuffPanel.svelte";
@@ -23,42 +20,39 @@
 </script>
 
 <div class="hud-layer">
-  <SkillDamagePanel />
-  {#if SETTINGS.monsterMonitor.state.enabled || isMonsterEditing()}
-    {#if visibility.showMonsterBuffPanel}
-      <MonsterBuffPanel />
+  {#if visibility.showMonsterBuffPanel}
+    <MonsterBuffPanel />
+  {/if}
+  {#if visibility.showTeammateBuffPanel}
+    <MonsterTeammateBuffPanel />
+  {/if}
+  {#if visibility.showTeammateCdPanel}
+    {#if teammateCdMode === "slots"}
+      <MonsterTeammateCdSlotsPanel />
+    {:else}
+      <MonsterTeammateCdPanel />
     {/if}
-    {#if visibility.showTeammateBuffPanel}
-      <MonsterTeammateBuffPanel />
-    {/if}
-    {#if visibility.showTeammateCdPanel}
-      {#if teammateCdMode === "slots"}
-        <MonsterTeammateCdSlotsPanel />
-      {:else}
-        <MonsterTeammateCdPanel />
-      {/if}
-    {/if}
-    {#if visibility.showHatePanel}
-      <MonsterHatePanel />
-    {/if}
-    {#if visibility.showStunPanel}
-      <MonsterStunPanel />
-    {/if}
-    {#if visibility.showHpPanel}
-      <MonsterHpPanel />
-    {/if}
-    {#if visibility.showFantasyPanel}
-      <MonsterFantasyPanel />
-    {/if}
-    {#if visibility.showBossDbmPanel}
-      <MonsterBossDbmPanel />
-    {/if}
-    {#if visibility.showEntityDurationPanel}
-      <MonsterEntityDurationPanel />
-    {/if}
-    {#if visibility.showMonsterSkillPanel}
-      <MonsterSkillPanel />
-    {/if}
+  {/if}
+  {#if visibility.showHatePanel}
+    <MonsterHatePanel />
+  {/if}
+  {#if visibility.showStunPanel}
+    <MonsterStunPanel />
+  {/if}
+  {#if visibility.showHpPanel}
+    <MonsterHpPanel />
+  {/if}
+  {#if visibility.showFantasyPanel}
+    <MonsterFantasyPanel />
+  {/if}
+  {#if visibility.showBossDbmPanel}
+    <MonsterBossDbmPanel />
+  {/if}
+  {#if visibility.showEntityDurationPanel}
+    <MonsterEntityDurationPanel />
+  {/if}
+  {#if visibility.showMonsterSkillPanel}
+    <MonsterSkillPanel />
   {/if}
 </div>
 

@@ -202,6 +202,7 @@ describe("single monster panel visibility", () => {
         skillProfileId: state.skillMonitor.profiles[0]!.id,
         monsterProfileId: second.id,
         liveProfileId: state.liveMeter.profiles[0]!.id,
+        damageProfileId: state.skillDamage.profiles[0]!.id,
         starterPlaceholder: false,
         linkedTalentStageCfgId: null,
       },

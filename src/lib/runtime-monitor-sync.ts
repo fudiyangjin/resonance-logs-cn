@@ -11,6 +11,8 @@ import { activeProfile as getActiveProfile } from "$lib/skill-monitor-profile.sv
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
 import { ensureMonsterSkillEntries } from "$lib/monster-skill-entries";
 import { SETTINGS, normalizeTeammateCdSkills } from "$lib/settings-store";
+import { activeSkillDamageProfile } from "$lib/skill-damage-profile.svelte";
+import { watchedSkillDamageKeys } from "$lib/skill-damage-settings";
 import {
   getClassConfigs,
   getCounterRules,
@@ -255,6 +257,9 @@ export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
     monster: buildMonsterRuntimeSnapshot(),
     teammate: buildTeammateRuntimeSnapshot(),
     teammateCd: buildTeammateCdRuntimeSnapshot(),
+    skillDamage: {
+      watchedSkillKeys: watchedSkillDamageKeys(activeSkillDamageProfile()),
+    },
     buffComposites: buffCompositeSpecs(
       ensureBuffComposites(SETTINGS.skillMonitor.state.buffComposites),
     ),

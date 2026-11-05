@@ -7,6 +7,7 @@ function loadout(
   skillProfileId: string,
   monsterProfileId: string,
   liveProfileId = "live",
+  damageProfileId = "damage",
 ): Loadout {
   return {
     id,
@@ -14,6 +15,7 @@ function loadout(
     skillProfileId,
     monsterProfileId,
     liveProfileId,
+    damageProfileId,
     starterPlaceholder: false,
     linkedTalentStageCfgId: null,
   };
@@ -23,13 +25,14 @@ describe("profilesToCollectAfterLoadoutRemoval", () => {
   it("collects profiles owned only by the removed loadout", () => {
     expect(
       profilesToCollectAfterLoadoutRemoval(
-        loadout("a", "skill-a", "monster-a", "live-a"),
-        [loadout("b", "skill-b", "monster-b", "live-b")],
+        loadout("a", "skill-a", "monster-a", "live-a", "damage-a"),
+        [loadout("b", "skill-b", "monster-b", "live-b", "damage-b")],
       ),
     ).toEqual({
       skillProfileId: "skill-a",
       monsterProfileId: "monster-a",
       liveProfileId: "live-a",
+      damageProfileId: "damage-a",
     });
   });
 
@@ -42,6 +45,7 @@ describe("profilesToCollectAfterLoadoutRemoval", () => {
       skillProfileId: null,
       monsterProfileId: null,
       liveProfileId: null,
+      damageProfileId: null,
     });
   });
 });

@@ -2,7 +2,7 @@
   import type {
     SkillDamageNumberStyle,
     SkillDamagePaint,
-  } from "$lib/settings-store";
+  } from "$lib/skill-damage-settings";
   let { text, style }: { text: string; style: SkillDamageNumberStyle } =
     $props();
   const uid = $props.id();
@@ -11,12 +11,13 @@
   const effectPadding = $derived(
     Math.max(4, style.outerGlowSize * 3, style.shadowSize * 3),
   );
+  // Index = gradient id suffix; disabled effects contribute no gradient.
   const paints = $derived([
     style.fill,
-    style.innerGlowColor,
-    style.outlineColor,
-    style.outerGlowColor,
-    style.shadowColor,
+    style.innerGlow ? style.innerGlowColor : null,
+    style.outline ? style.outlineColor : null,
+    style.outerGlow ? style.outerGlowColor : null,
+    style.shadow ? style.shadowColor : null,
   ]);
   function paint(color: SkillDamagePaint, index: number) {
     return color.mode === "gradient"
@@ -42,21 +43,23 @@
   >
     <defs>
       {#each paints as color, index}
-        <linearGradient
-          id={`${uid}-paint-${index}`}
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="0%"
-          gradientTransform={`rotate(${color.angle} .5 .5)`}
-        >
-          <stop offset="0%" stop-color={color.color} /><stop
-            offset="100%"
-            stop-color={color.endColor}
-          />
-        </linearGradient>
+        {#if color?.mode === "gradient"}
+          <linearGradient
+            id={`${uid}-paint-${index}`}
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="0%"
+            gradientTransform={`rotate(${color.angle} .5 .5)`}
+          >
+            <stop offset="0%" stop-color={color.color} /><stop
+              offset="100%"
+              stop-color={color.endColor}
+            />
+          </linearGradient>
+        {/if}
       {/each}
-      <filter
+      {#if style.outerGlow}<filter
         id={`${uid}-outer`}
         filterUnits="userSpaceOnUse"
         x={-effectPadding}
@@ -64,8 +67,8 @@
         width={width + effectPadding * 2}
         height={height + effectPadding * 2}
         ><feGaussianBlur stdDeviation={style.outerGlowSize / 2} /></filter
-      >
-      <filter
+      >{/if}
+      {#if style.shadow}<filter
         id={`${uid}-shadow`}
         filterUnits="userSpaceOnUse"
         x={-effectPadding}
@@ -73,8 +76,14 @@
         width={width + effectPadding * 2}
         height={height + effectPadding * 2}
         ><feGaussianBlur stdDeviation={style.shadowSize / 3} /></filter
+      >{/if}
+      {#if style.innerGlow}<filter
+        id={`${uid}-inner`}
+        x="-50%"
+        y="-50%"
+        width="200%"
+        height="200%"
       >
-      <filter id={`${uid}-inner`} x="-50%" y="-50%" width="200%" height="200%">
         <feGaussianBlur
           in="SourceAlpha"
           stdDeviation={style.innerGlowSize / 2}
@@ -89,7 +98,7 @@
           result="edge"
         />
         <feComposite in="SourceGraphic" in2="edge" operator="in" />
-      </filter>
+      </filter>{/if}
     </defs>
     {#snippet glyph(
       fill: string,

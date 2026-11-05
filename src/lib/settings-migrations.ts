@@ -28,6 +28,7 @@ import {
   generateProfileId,
   startAccessibilityStore,
   startLiveMeterStores,
+  startSkillDamageFontsStore,
   type LiveAppearance,
   type LiveMeterProfile,
   type LiveMeterProfileData,
@@ -41,6 +42,14 @@ import {
   type SkillMonitorState,
 } from "./settings-store";
 import { normalizeDpsColumnLabels } from "./column-labels";
+import { extractSkillDamageFromMonster } from "./skill-damage-migration";
+import {
+  createDefaultSkillDamageState,
+  mergeSkillDamageFonts,
+  normalizeSkillDamageState,
+  type SkillDamageFont,
+  type SkillDamageProfile,
+} from "./skill-damage-settings";
 import { lookupDbmDefaultName } from "./config/dbm-table";
 import { ensureEntityDurationEntries } from "./entity-duration-entries";
 import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
@@ -52,7 +61,7 @@ import { migrateLegacyMonsterPanels } from "./monster-panel-migration";
 import { pruneMonsterVoice, pruneSkillProfileVoice } from "./voice/association";
 import type { MonsterVoiceSlice } from "./voice/subject-types";
 
-export const CURRENT_MONITORING_SCHEMA_VERSION = 7;
+export const CURRENT_MONITORING_SCHEMA_VERSION = 8;
 
 const READY_EVENT = "monitoring-settings-ready";
 const ERROR_EVENT = "monitoring-settings-error";
@@ -243,6 +252,7 @@ function buildDefaultLoadouts(
   skillProfiles: SkillMonitorProfile[],
   monsterProfileId: string,
   liveProfileId: string,
+  damageProfileId: string,
   activeProfileIndex = 0,
   starterPlaceholder = false,
 ): LoadoutsState {
@@ -252,6 +262,7 @@ function buildDefaultLoadouts(
     skillProfileId: profile.id,
     monsterProfileId,
     liveProfileId,
+    damageProfileId,
     starterPlaceholder: starterPlaceholder && skillProfiles.length === 1,
     linkedTalentStageCfgId: null,
   }));
@@ -271,13 +282,16 @@ function normalizeLoadouts(
   skillProfiles: SkillMonitorProfile[],
   monsterProfiles: MonsterMonitorProfile[],
   liveProfiles: LiveMeterProfile[],
+  damageProfiles: SkillDamageProfile[],
 ): LoadoutsState {
   const skillIds = new Set(skillProfiles.map((profile) => profile.id));
   const monsterIds = new Set(monsterProfiles.map((profile) => profile.id));
   const liveIds = new Set(liveProfiles.map((profile) => profile.id));
+  const damageIds = new Set(damageProfiles.map((profile) => profile.id));
   const fallbackSkillId = skillProfiles[0]!.id;
   const fallbackMonsterId = monsterProfiles[0]!.id;
   const fallbackLiveId = liveProfiles[0]!.id;
+  const fallbackDamageId = damageProfiles[0]!.id;
   const seen = new Set<string>();
   const items = (Array.isArray(state.items) ? state.items : []).map(
     (item, index): Loadout => ({
@@ -292,6 +306,9 @@ function normalizeLoadouts(
       liveProfileId: liveIds.has(item.liveProfileId)
         ? item.liveProfileId
         : fallbackLiveId,
+      damageProfileId: damageIds.has(item.damageProfileId)
+        ? item.damageProfileId
+        : fallbackDamageId,
       starterPlaceholder: Boolean(item.starterPlaceholder),
       linkedTalentStageCfgId:
         typeof item.linkedTalentStageCfgId === "number" &&
@@ -305,6 +322,7 @@ function normalizeLoadouts(
       skillProfiles,
       fallbackMonsterId,
       fallbackLiveId,
+      fallbackDamageId,
     );
   }
   return {
@@ -513,11 +531,13 @@ export function reconcileMonitoringState(
   ).map((profile) => pruneMonsterVoice(profile));
   Object.assign(state.monsterMonitor, pruneMonsterVoice(state.monsterMonitor));
   state.liveMeter = normalizeLiveProfiles(state.liveMeter);
+  state.skillDamage = normalizeSkillDamageState(state.skillDamage);
   state.loadouts = normalizeLoadouts(
     state.loadouts,
     state.skillMonitor.profiles,
     state.monsterMonitor.profiles,
     state.liveMeter.profiles,
+    state.skillDamage.profiles,
   );
   reconcileMonsterMirror(state);
   reconcileLiveMirror(state);
@@ -572,12 +592,14 @@ export function migrateLegacyMonitoringState(
     name: "",
   };
 
+  const skillDamage = createDefaultSkillDamageState();
   const loadouts = hasExistingLoadouts
     ? deepCloneSettings(sources.loadouts)
     : buildDefaultLoadouts(
         skillMonitor.profiles,
         activeMonsterProfileId,
         liveProfile.id,
+        skillDamage.profiles[0]!.id,
         sources.skillMonitor.activeProfileIndex ?? 0,
         pristineLegacyMonitoring,
       );
@@ -597,6 +619,7 @@ export function migrateLegacyMonitoringState(
     monsterMonitor,
     loadouts,
     liveMeter: { mirroredProfileId: liveProfile.id, profiles: [liveProfile] },
+    skillDamage,
   });
 }
 
@@ -634,6 +657,7 @@ function applyMonitoringState(next: MonitoringSettingsState): void {
   target.monsterMonitor = deepCloneSettings(next.monsterMonitor);
   target.loadouts = deepCloneSettings(next.loadouts);
   target.liveMeter = deepCloneSettings(next.liveMeter);
+  target.skillDamage = deepCloneSettings(next.skillDamage);
 }
 
 type V1MonitoringState = MonitoringSettingsState & {
@@ -653,11 +677,14 @@ type V1MonitoringState = MonitoringSettingsState & {
  * live-meter profile too. v4 adds the formerly-global history settings so
  * they switch and travel with the same profile. v5 removes the skill-monitor
  * "duration skills" and re-expresses them as monster-monitor entity-duration
- * entries on the loadout's monster profile.
+ * entries on the loadout's monster profile. v8 moves the skill damage display
+ * out of the monster profiles into loadout-linked skill damage profiles; its
+ * uploaded fonts are pushed to `skillDamageFonts` for the font store.
  */
 export function migrateMonitoringStateIncrementally(
   input: MonitoringSettingsState,
   liveProfileData: LiveMeterProfileData,
+  skillDamageFonts: SkillDamageFont[] = [],
 ): MonitoringSettingsState {
   const state = deepCloneSettings(input) as V1MonitoringState;
   const fromSchemaVersion = state.schemaVersion || 1;
@@ -736,6 +763,10 @@ export function migrateMonitoringStateIncrementally(
 
   if (fromSchemaVersion < 5) {
     migrateSkillDurationIdsToEntityDuration(state);
+  }
+
+  if (fromSchemaVersion < 8) {
+    skillDamageFonts.push(...extractSkillDamageFromMonster(state));
   }
 
   return reconcileMonitoringState(state);
@@ -1008,7 +1039,11 @@ export function initializeMonitoringSettings(): Promise<MonitoringInitialization
     );
 
     try {
-      await Promise.all([startAccessibilityStore(), startLiveMeterStores()]);
+      await Promise.all([
+        startAccessibilityStore(),
+        startLiveMeterStores(),
+        startSkillDamageFontsStore(),
+      ]);
       const legacyLiveProfileData = await readLiveMirrorSnapshot();
       // `appearance` is a brand-new store (unlike `challengeWatch`, which
       // reuses the pre-existing global store id), so its snapshot only has
@@ -1042,11 +1077,21 @@ export function initializeMonitoringSettings(): Promise<MonitoringInitialization
         // rather than re-reading the pre-consolidation legacy stores.
         if (SETTINGS.monitoring.state.schemaVersion >= 1) {
           if (isMainWindow) {
+            const skillDamageFonts: SkillDamageFont[] = [];
             const migrated = migrateMonitoringStateIncrementally(
               SETTINGS.monitoring.state,
               legacyLiveProfileData,
+              skillDamageFonts,
             );
             applyMonitoringState(migrated);
+            if (skillDamageFonts.length > 0) {
+              const fontStore = SETTINGS.skillDamageFonts;
+              fontStore.state.fonts = mergeSkillDamageFonts(
+                fontStore.state.fonts,
+                skillDamageFonts,
+              );
+              await fontStore.saveNow();
+            }
             await syncLiveMirrorToActiveLoadout();
             await tick();
             await SETTINGS.monitoring.saveNow();

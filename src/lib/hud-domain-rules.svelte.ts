@@ -1,11 +1,11 @@
 /**
  * @file Uniform read/write access to each HUD domain's enable switch.
  *
- * The three domains store their intent in structurally different places:
- * `game` in the active skill-monitor profile, `monster` in the mirrored
- * monster-monitor state, `minimap` in its own config store. These accessors
- * hide that difference so the toggle buttons and the visibility resolver can
- * treat all three the same way.
+ * The domains store their intent in structurally different places: `game`
+ * in the active skill-monitor profile, `monster` in the mirrored
+ * monster-monitor state, `minimap` in its own config store, `damage` in the
+ * active skill damage profile. These accessors hide that difference so the
+ * toggle buttons and the visibility resolver can treat them all the same way.
  *
  * Reads stay lazy (plain getters) so Svelte still tracks the underlying
  * `$state` when they are called inside an effect or `$derived`.
@@ -16,6 +16,7 @@ import {
   activeProfileOrDefault,
   updateActiveProfile,
 } from "$lib/skill-monitor-profile.svelte";
+import { activeSkillDamageProfile } from "$lib/skill-damage-profile.svelte";
 import type { HudDomainRules } from "$lib/hud-scene-visibility";
 
 export type HudDomainRulesAccessor = {
@@ -59,28 +60,23 @@ export const HUD_DOMAIN_RULES: Record<HudDomain, HudDomainRulesAccessor> = {
       SETTINGS.minimap.state.enabled = enabled;
     },
   },
+  damage: {
+    read: () => {
+      const profile = activeSkillDamageProfile();
+      return {
+        enabled: profile?.enabled ?? false,
+        autoHideInDailyScenes: profile?.autoHideInDailyScenes ?? false,
+      };
+    },
+    setEnabled: (enabled) => {
+      const profile = activeSkillDamageProfile();
+      if (profile) profile.enabled = enabled;
+    },
+  },
 };
 
 export function readHudDomainRules(domain: HudDomain): HudDomainRules {
   return HUD_DOMAIN_RULES[domain].read();
-}
-
-/** The damage tool shares the monster HUD transport, with its own enable intent. */
-export function readHudDomainVisibilityRules(
-  domain: HudDomain,
-): HudDomainRules {
-  const rules = readHudDomainRules(domain);
-  if (domain !== "monster") return rules;
-  const state = SETTINGS.monsterMonitor.state;
-  return {
-    ...rules,
-    enabled:
-      rules.enabled ||
-      Boolean(
-        state.skillDamageDisplay?.enabled &&
-          (state.overlayVisibility?.showSkillDamagePanel ?? true),
-      ),
-  };
 }
 
 export function isHudDomainEnabled(domain: HudDomain): boolean {
