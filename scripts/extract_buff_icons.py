@@ -1,36 +1,31 @@
 #!/usr/bin/env python3
-"""
-从 BuffTable.json 提取全部条目的 Id、Icon（短名）、NameDesign，
-并在 scripts/exported_images/__no_container/Sprite 中搜索对应图片，输出 JSON 到 scripts/output/BuffName.json。
+"""从统一 BuffTable 结构导出图标和三语名称。
 
-- ModEffectTable Level 6：当 buff 本身无图标时，使用 EffectConfigIcon 的 Sprite 填入 SpriteFile。
-- Buff 组：主 buff 组根 base_id=(id//10)*10，子 buff 为 +1,+2,...，不同组一般相差 10。
-- 天赋关联：从 TalentTable 的 TalentEffect（类型 3 为 buff）得到天赋关联的 buff；若 buff/子 buff 的
-  NameDesign 中不包含该天赋名，则在名称后拼接「-天赋名」；若该 buff 没有对应图片，则用天赋图标替代。
-- 名称例外：最后应用各语言 overrides 目录里的 buff_name_overrides.json。
-- 多语言：Id/Icon/SpriteFile 始终以中文 ZTable 为模板源；en/jp 名称由
-  overrides_en/overrides_jp 下的 buff_name_overrides.json 覆盖。
-
-用法:
-  python extract_buff_icons.py
-  python extract_buff_icons.py --id 997110
-  python extract_buff_icons.py --lang en
+官方名称读取 Localization/<语言>/Tables/BuffTable/Name.json；官方为空时
+保留 NameDesign、Mod/天赋研究说明和对应语言 override。原始官方值与回退来源
+写入 output/name_sources，Id/Icon/SpriteFile 及图标回退行为不变。
+可用 --lang、--id、--no-copy、--output-dir、--localization-dir。
 """
 
 import argparse
 import json
 import shutil
 import sys
+from functools import lru_cache
 from pathlib import Path
+
+from game_data_paths import DATA_ROOT
+
+from localized_names import OfficialNames, add_arguments
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
-ZTABLE_DIR = PROJECT_ROOT / "ZTable"
+ZTABLE_DIR = DATA_ROOT / "ZTable"
 BUFF_TABLE_PATH = ZTABLE_DIR / "BuffTable.json"
 MOD_EFFECT_TABLE_PATH = ZTABLE_DIR / "ModEffectTable.json"
 TALENT_TABLE_PATH = ZTABLE_DIR / "TalentTable.json"
 OUTPUT_DIR = SCRIPT_DIR / "output"
-SPRITE_DIR = SCRIPT_DIR / "exported_images" / "__no_container" / "Sprite"
+SPRITE_DIR = DATA_ROOT / "scripts" / "exported_images" / "__no_container" / "Sprite"
 
 LANG_CONFIGS = {
     "zh": {
@@ -81,12 +76,17 @@ def extract_buff_entries(buff_table: dict, target_id: int | None = None):
     return results
 
 
+@lru_cache(maxsize=None)
+def _sprite_paths(sprite_dir: Path) -> tuple[Path, ...]:
+    # Keep the original filesystem order, including first-match selection.
+    return tuple(sprite_dir.glob("*.png")) if sprite_dir.exists() else ()
+
+
+@lru_cache(maxsize=None)
 def find_sprite_images(sprite_dir: Path, icon_short: str) -> list[Path]:
     """在 Sprite 目录中搜索以 icon_short_ 开头的 png 文件"""
-    if not sprite_dir.exists():
-        return []
     prefix = f"{icon_short}_"
-    return [f for f in sprite_dir.glob("*.png") if f.name.startswith(prefix)]
+    return [f for f in _sprite_paths(sprite_dir) if f.name.startswith(prefix)]
 
 
 def load_buff_ids(buff_table: dict) -> set[int]:
@@ -303,13 +303,14 @@ def write_buff_output(lang: str, output_data: list[dict], with_name_override: in
         json.dump(output_data, f, ensure_ascii=False, indent=2, sort_keys=True)
     print(
         f"已生成: {output_path}，共 {len(output_data)} 条"
-        f"（{with_name_override} 条由例外文件覆盖）"
+        f"（匹配 {with_name_override} 条回退例外，非空官方名称优先）"
     )
     return output_path
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="从 BuffTable 提取 Id/Icon/NameDesign，支持 ModEffect 与天赋回退")
+    add_arguments(parser)
     parser.add_argument("--id", type=int, default=None, help="仅提取指定 Id（可选）")
     parser.add_argument("--no-copy", action="store_true", help="不复制图片到 output")
     parser.add_argument(
@@ -321,7 +322,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
+    global OUTPUT_DIR
     args = parse_args()
+    OUTPUT_DIR = args.output_dir
     langs = [args.lang] if args.lang else list(LANG_CONFIGS.keys())
 
     if not BUFF_TABLE_PATH.exists():
@@ -347,7 +350,12 @@ def main():
         print("未找到任何 Buff 条目")
         return 0
 
+    zh_overrides = load_json(LANG_CONFIGS["zh"]["overrides_dir"] / OVERRIDE_FILE_NAME)
+    zh_entries, _ = apply_language_names(base_entries, "zh", zh_overrides)
+    research_labels = {str(item["Id"]): item["NameDesign"] for item in zh_entries}
     for lang in langs:
+        names = OfficialNames(lang, args.localization_dir)
+        names.bind("BuffTable", "Name", buff_table)
         name_overrides = load_json(LANG_CONFIGS[lang]["overrides_dir"] / OVERRIDE_FILE_NAME)
         if not isinstance(name_overrides, dict):
             name_overrides = {}
@@ -357,7 +365,15 @@ def main():
             lang,
             name_overrides,
         )
+        for entry in output_data:
+            key = str(entry["Id"])
+            entry["NameDesign"] = names.resolve(
+                "BuffTable", "Name", key, entry["NameDesign"],
+                fallback_source="research_override" if key in name_overrides else "research_template",
+                research_label=research_labels[key],
+            )
         write_buff_output(lang, output_data, with_name_override)
+        names.write_audit(OUTPUT_DIR / LANG_CONFIGS[lang]["output_name"])
 
     copied = 0
     image_output_dir = OUTPUT_DIR / "buff_icons"

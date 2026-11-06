@@ -73,7 +73,7 @@
   },
   "9": {
     "Id": 9,
-    "RecountName": "破追 (AI)",
+    "RecountName": "破追",
     "DamageId": [
       114220103,
       114270104
@@ -89,7 +89,7 @@
   },
   "11": {
     "Id": 11,
-    "RecountName": "刹那 (AI)",
+    "RecountName": "刹那",
     "DamageId": [
       114240101,
       114240102
@@ -169,7 +169,7 @@
   },
   "21": {
     "Id": 21,
-    "RecountName": "大竜巻 (AI)",
+    "RecountName": "大竜巻",
     "DamageId": [
       11499080101
     ]
@@ -184,7 +184,7 @@
   },
   "23": {
     "Id": 23,
-    "RecountName": "風裂拡散",
+    "RecountName": "風傷拡散",
     "DamageId": [
       2220506003
     ]
@@ -319,7 +319,7 @@
   },
   "40": {
     "Id": 40,
-    "RecountName": "氷の矢 (AI)",
+    "RecountName": "氷矢",
     "DamageId": [
       312130100,
       312130200
@@ -342,7 +342,7 @@
   },
   "43": {
     "Id": 43,
-    "RecountName": "霜爆 (AI)",
+    "RecountName": "霜爆",
     "DamageId": [
       2220408101
     ]
@@ -370,7 +370,7 @@
   },
   "47": {
     "Id": 47,
-    "RecountName": "氷魔G11・氷嵐 (AI)",
+    "RecountName": "氷魔G11-ブリザード",
     "DamageId": [
       2305211201
     ]
@@ -476,7 +476,7 @@
   },
   "58": {
     "Id": 58,
-    "RecountName": "月刃 (AI)",
+    "RecountName": "月刃",
     "DamageId": [
       24460103,
       24470103
@@ -484,7 +484,7 @@
   },
   "59": {
     "Id": 59,
-    "RecountName": "月刃旋回 (AI)",
+    "RecountName": "月刃旋回",
     "DamageId": [
       11799060101
     ]
@@ -534,7 +534,7 @@
   },
   "63": {
     "Id": 63,
-    "RecountName": "心眼 (AI)",
+    "RecountName": "心眼",
     "DamageId": [
       117200103,
       117200105,
@@ -654,7 +654,7 @@
   },
   "77": {
     "Id": 77,
-    "RecountName": "百発百中 (AI)",
+    "RecountName": "ブルズアイ",
     "DamageId": [
       322010100,
       322010300
@@ -695,7 +695,7 @@
   },
   "82": {
     "Id": 82,
-    "RecountName": "光エネルギー爆発 (AI)",
+    "RecountName": "閃心爆発",
     "DamageId": [
       122910101
     ]
@@ -758,7 +758,7 @@
   },
   "91": {
     "Id": 91,
-    "RecountName": "野狼の飛びかかり (AI)",
+    "RecountName": "臣狼アサルト",
     "DamageId": [
       117008250102,
       117008260102
@@ -766,35 +766,35 @@
   },
   "92": {
     "Id": 92,
-    "RecountName": "ハヤブサ急降下攻撃 (AI)",
+    "RecountName": "臣鷹ダイブ",
     "DamageId": [
       11011120101
     ]
   },
   "93": {
     "Id": 93,
-    "RecountName": "野狼通常攻撃・薙ぎ払い (AI)",
+    "RecountName": "臣狼の通常攻撃・なぎ払い",
     "DamageId": [
       117008270101
     ]
   },
   "94": {
     "Id": 94,
-    "RecountName": "野狼連携攻撃・噛みつき (AI)",
+    "RecountName": "臣狼の協力攻撃・噛みつき",
     "DamageId": [
       117008200102
     ]
   },
   "95": {
     "Id": 95,
-    "RecountName": "野狼の尾払い (AI)",
+    "RecountName": "臣狼の掃撃",
     "DamageId": [
       117008240102
     ]
   },
   "96": {
     "Id": 96,
-    "RecountName": "幻影魔狼 (AI)",
+    "RecountName": "幻影魔狼",
     "DamageId": [
       122920102
     ]
@@ -819,14 +819,14 @@
   },
   "99": {
     "Id": 99,
-    "RecountName": "ハヤブサ出撃 (AI)",
+    "RecountName": "臣鷹出撃",
     "DamageId": [
       2220329107
     ]
   },
   "100": {
     "Id": 100,
-    "RecountName": "内爆 (AI)",
+    "RecountName": "内部破裂",
     "DamageId": [
       2220352105
     ]
@@ -850,7 +850,7 @@
   },
   "103": {
     "Id": 103,
-    "RecountName": "ハヤブサ雷撃 (AI)",
+    "RecountName": "臣鷹の雷撃衝撃",
     "DamageId": [
       2220329109
     ]
@@ -881,7 +881,7 @@
   },
   "107": {
     "Id": 107,
-    "RecountName": "魔法の矢 (AI)",
+    "RecountName": "マジックアロー",
     "DamageId": [
       322010700
     ]
@@ -972,7 +972,7 @@
   },
   "118": {
     "Id": 118,
-    "RecountName": "巨岩の身体 (AI)",
+    "RecountName": "巨岩躯体",
     "DamageId": []
   },
   "119": {
@@ -1101,7 +1101,7 @@
   },
   "135": {
     "Id": 135,
-    "RecountName": "砂岩握［強化］",
+    "RecountName": "岩拳回復",
     "DamageId": [
       2220164103,
       2220164104
@@ -1132,14 +1132,14 @@
   },
   "139": {
     "Id": 139,
-    "RecountName": "砕星衝追撃",
+    "RecountName": "猛撃追撃",
     "DamageId": [
       2220154005
     ]
   },
   "140": {
     "Id": 140,
-    "RecountName": "岩拳回復",
+    "RecountName": "岩塊追撃",
     "DamageId": [
       2220164005
     ]
@@ -1214,7 +1214,7 @@
   },
   "149": {
     "Id": 149,
-    "RecountName": "自動裁決 (AI)",
+    "RecountName": "オートジャッジメント",
     "DamageId": [
       124510101
     ]
@@ -1369,14 +1369,14 @@
   },
   "168": {
     "Id": 168,
-    "RecountName": "裁決追撃 (AI)",
+    "RecountName": "裁決追撃",
     "DamageId": [
       2220629005
     ]
   },
   "169": {
     "Id": 169,
-    "RecountName": "裁決追撃 (AI)",
+    "RecountName": "裁決追撃",
     "DamageId": [
       2220668005
     ]
@@ -1510,7 +1510,7 @@
   },
   "183": {
     "Id": 183,
-    "RecountName": "森語G10・森の祈り (AI)",
+    "RecountName": "ヴァーダントオラクルG10-グローヴウィッシュ",
     "DamageId": [
       22140604
     ]
@@ -1573,7 +1573,7 @@
   },
   "191": {
     "Id": 191,
-    "RecountName": "ヒールリンク",
+    "RecountName": "治癒連結",
     "DamageId": [
       2220209101
     ]
@@ -1601,7 +1601,7 @@
   },
   "195": {
     "Id": 195,
-    "RecountName": "蘇生 (AI)",
+    "RecountName": "復活",
     "DamageId": [
       2220226203
     ]
@@ -1622,7 +1622,7 @@
   },
   "198": {
     "Id": 198,
-    "RecountName": "休止の癒し (AI)",
+    "RecountName": "小休止の癒し",
     "DamageId": [
       25535501,
       25535601,
@@ -1688,7 +1688,7 @@
   },
   "205": {
     "Id": 205,
-    "RecountName": "昇格・会場熱狂／昇格・無限狂想 (AI)",
+    "RecountName": "響演・バッドネスステージ/ブレイブフェローチェ",
     "DamageId": [
       123140106,
       123140107,
@@ -1829,7 +1829,7 @@
   },
   "219": {
     "Id": 219,
-    "RecountName": "活力解放 (AI)",
+    "RecountName": "活力解放",
     "DamageId": [
       2220762007,
       2220762008
@@ -1837,7 +1837,7 @@
   },
   "220": {
     "Id": 220,
-    "RecountName": "音符 (AI)",
+    "RecountName": "音符",
     "DamageId": [
       2220741101,
       2220714102,
@@ -1867,14 +1867,14 @@
   },
   "224": {
     "Id": 224,
-    "RecountName": "安和の曲 (AI)",
+    "RecountName": "ピースフルロンド",
     "DamageId": [
       25531105
     ]
   },
   "225": {
     "Id": 225,
-    "RecountName": "熱き治療",
+    "RecountName": "炎癒",
     "DamageId": [
       2220715103
     ]
@@ -1888,7 +1888,7 @@
   },
   "227": {
     "Id": 227,
-    "RecountName": "休止の癒し (AI)",
+    "RecountName": "小休止の癒し",
     "DamageId": [
       22142701,
       22142801,
@@ -1913,7 +1913,7 @@
   },
   "230": {
     "Id": 230,
-    "RecountName": "ブレイズスラッシュ",
+    "RecountName": "ブレイズスイング",
     "DamageId": [
       116010101,
       116020101,
@@ -1925,7 +1925,7 @@
   },
   "231": {
     "Id": 231,
-    "RecountName": "熾烈なる昇天",
+    "RecountName": "スパイラルブロウ",
     "DamageId": [
       116050102,
       116050103,
@@ -1935,7 +1935,7 @@
   },
   "232": {
     "Id": 232,
-    "RecountName": "狂熱の斬撃 (AI)",
+    "RecountName": "ブレイズアクス",
     "DamageId": [
       116060102,
       23510401
@@ -1943,7 +1943,7 @@
   },
   "233": {
     "Id": 233,
-    "RecountName": "燼滅！獄炎不知火",
+    "RecountName": "ヴォルテクスインパクト",
     "DamageId": [
       116180104,
       116180105,
@@ -1953,7 +1953,7 @@
   },
   "234": {
     "Id": 234,
-    "RecountName": "烈炎の突撃",
+    "RecountName": "ツインラッシュ",
     "DamageId": [
       116070102,
       116070103,
@@ -1963,7 +1963,7 @@
   },
   "235": {
     "Id": 235,
-    "RecountName": "激怒の斬撃",
+    "RecountName": "ラースアクス",
     "DamageId": [
       116080101,
       116080102,
@@ -1975,7 +1975,7 @@
   },
   "236": {
     "Id": 236,
-    "RecountName": "斧風の狩猟 (AI)",
+    "RecountName": "アクススパイラル",
     "DamageId": [
       116120101,
       116120102
@@ -1983,7 +1983,7 @@
   },
   "237": {
     "Id": 237,
-    "RecountName": "迷いと狂い炎舞",
+    "RecountName": "バーニングラッシュ",
     "DamageId": [
       116130101,
       116130103
@@ -1991,7 +1991,7 @@
   },
   "238": {
     "Id": 238,
-    "RecountName": "自由なる墜星",
+    "RecountName": "ラーヴァインパクト",
     "DamageId": [
       116140103,
       11601010101
@@ -1999,12 +1999,12 @@
   },
   "239": {
     "Id": 239,
-    "RecountName": "荒火星流 (AI)",
+    "RecountName": "荒火の星流",
     "DamageId": []
   },
   "240": {
     "Id": 240,
-    "RecountName": "川流のごとき斬撃",
+    "RecountName": "バーニングクロス",
     "DamageId": [
       116160102,
       23510503
@@ -2012,12 +2012,12 @@
   },
   "241": {
     "Id": 241,
-    "RecountName": "爆裂の怒り (AI)",
+    "RecountName": "爆裂の怒り",
     "DamageId": []
   },
   "242": {
     "Id": 242,
-    "RecountName": "無相火斬",
+    "RecountName": "イラプション",
     "DamageId": [
       23510703,
       23510803,
@@ -2026,14 +2026,14 @@
   },
   "243": {
     "Id": 243,
-    "RecountName": "地火の流星",
+    "RecountName": "流星火",
     "DamageId": [
       11601020101
     ]
   },
   "244": {
     "Id": 244,
-    "RecountName": "バーニング",
+    "RecountName": "鬼火",
     "DamageId": [
       2220817203,
       2220817204
@@ -2041,35 +2041,35 @@
   },
   "245": {
     "Id": 245,
-    "RecountName": "炎爆 (AI)",
+    "RecountName": "フレアバースト",
     "DamageId": [
       2220818103
     ]
   },
   "246": {
     "Id": 246,
-    "RecountName": "迷狂炎舞・最後の一閃 (AI)",
+    "RecountName": "燃焼ラッシュ・最後の一撃",
     "DamageId": [
       116220101
     ]
   },
   "247": {
     "Id": 247,
-    "RecountName": "飛翔炎華",
+    "RecountName": "クリムゾンブロウ",
     "DamageId": [
       116200103
     ]
   },
   "248": {
     "Id": 248,
-    "RecountName": "大紅蓮丸 (AI)",
+    "RecountName": "フレイムスピン",
     "DamageId": [
       116230101
     ]
   },
   "249": {
     "Id": 249,
-    "RecountName": "炎魔天落殺 (AI)",
+    "RecountName": "クリムゾンインパクト",
     "DamageId": [
       116210103,
       116210105,
@@ -2234,7 +2234,7 @@
   },
   "269": {
     "Id": 269,
-    "RecountName": "絶技！カオスボルト",
+    "RecountName": "絶技！カオスミサイル",
     "DamageId": [
       339100100,
       339100200,
@@ -2549,21 +2549,21 @@
   },
   "307": {
     "Id": 307,
-    "RecountName": "奥義！虚蝕の劫刃 (AI)",
+    "RecountName": "奥義！虚蝕劫刃",
     "DamageId": [
       11701120104
     ]
   },
   "308": {
     "Id": 308,
-    "RecountName": "奥義！裂空反衝 (AI)",
+    "RecountName": "奥義！裂空の反動",
     "DamageId": [
       11401450102
     ]
   },
   "309": {
     "Id": 309,
-    "RecountName": "奥義！指令象限 (AI)",
+    "RecountName": "奥義！指令の象限",
     "DamageId": [
       133401900101,
       133401900102,
@@ -2579,14 +2579,14 @@
   },
   "310": {
     "Id": 310,
-    "RecountName": "奥義！超伝導波動 (AI)",
+    "RecountName": "奥義！超伝導波動",
     "DamageId": [
       11110690101
     ]
   },
   "311": {
     "Id": 311,
-    "RecountName": "奥義！疾駆の毒牙 (AI)",
+    "RecountName": "奥義！飛び交う毒牙",
     "DamageId": [
       111203100101,
       111203100103
@@ -2594,14 +2594,14 @@
   },
   "312": {
     "Id": 312,
-    "RecountName": "奥義！瞬空踏破 (AI)",
+    "RecountName": "奥義！瞬踏撃",
     "DamageId": [
       117010400102
     ]
   },
   "313": {
     "Id": 313,
-    "RecountName": "奥義！精密射撃 (AI)",
+    "RecountName": "奥義！精密点射",
     "DamageId": [
       110097020102,
       3100970300,
@@ -2610,14 +2610,14 @@
   },
   "314": {
     "Id": 314,
-    "RecountName": "奥義！貫通咆哮 (AI)",
+    "RecountName": "奥義！轟く怒号",
     "DamageId": [
       111211050102
     ]
   },
   "315": {
     "Id": 315,
-    "RecountName": "奥義！疾風連喰 (AI)",
+    "RecountName": "奥義！暴食の嵐",
     "DamageId": [
       111215080107,
       111215080108,
@@ -2628,21 +2628,21 @@
   },
   "316": {
     "Id": 316,
-    "RecountName": "絶技！隠密の一撃 (AI)",
+    "RecountName": "絶技！ステルスアタック",
     "DamageId": [
       111202200103
     ]
   },
   "317": {
     "Id": 317,
-    "RecountName": "絶技！絶対零度 (AI)",
+    "RecountName": "絶技！絶対零度",
     "DamageId": [
       11026640101
     ]
   },
   "318": {
     "Id": 318,
-    "RecountName": "絶技！深淵の吐息 (AI)",
+    "RecountName": "絶技！深淵の吐息",
     "DamageId": [
       111214060102,
       111214060103,
@@ -2651,7 +2651,7 @@
   },
   "319": {
     "Id": 319,
-    "RecountName": "絶技！地面強打 (AI)",
+    "RecountName": "絶技！ラッシュスラム",
     "DamageId": [
       111206100101,
       111206100102,
@@ -2660,7 +2660,7 @@
   },
   "320": {
     "Id": 320,
-    "RecountName": "絶技！ロックオン射撃 (AI)",
+    "RecountName": "絶技！ロックオンショット",
     "DamageId": [
       111218100101,
       111218100102
@@ -2668,7 +2668,7 @@
   },
   "321": {
     "Id": 321,
-    "RecountName": "極・応急処置",
+    "RecountName": "極・ファーストエイド",
     "DamageId": [
       2230232103
     ]
@@ -2689,7 +2689,7 @@
   },
   "324": {
     "Id": 324,
-    "RecountName": "虚蝕パルス（旧・虚蝕凝神） (AI)",
+    "RecountName": "虚蝕パルス（もと虚蝕フォーカス）",
     "DamageId": [
       339140100
     ]
@@ -2720,14 +2720,14 @@
   },
   "328": {
     "Id": 328,
-    "RecountName": "幻惑の夢・不滅の戦姿 (AI)",
+    "RecountName": "夢幻迷界-不屈の構え",
     "DamageId": [
       2300267103
     ]
   },
   "329": {
     "Id": 329,
-    "RecountName": "寂滅の夢・血限衝域 (AI)",
+    "RecountName": "寂滅の夢-HP限界突破",
     "DamageId": [
       2300302301,
       2300302501
@@ -2742,42 +2742,42 @@
   },
   "331": {
     "Id": 331,
-    "RecountName": "虚妄裁定・裁定・癒 (AI)",
+    "RecountName": "虚妄断罪-断罪・癒",
     "DamageId": [
       2300326003
     ]
   },
   "332": {
     "Id": 332,
-    "RecountName": "安定状態G8 (AI)",
+    "RecountName": "恒常性G8",
     "DamageId": [
       2305908003
     ]
   },
   "333": {
     "Id": 333,
-    "RecountName": "雷影安定状態G1 (AI)",
+    "RecountName": "ストームブレイド・恒常性G1",
     "DamageId": [
       2305910103
     ]
   },
   "334": {
     "Id": 334,
-    "RecountName": "巨刃安定状態G2 (AI)",
+    "RecountName": "ヘヴィガーディアン・恒常性G2",
     "DamageId": [
       2305921003
     ]
   },
   "335": {
     "Id": 335,
-    "RecountName": "幻滅衝撃 (AI)",
+    "RecountName": "幻滅の衝撃",
     "DamageId": [
       179980101
     ]
   },
   "336": {
     "Id": 336,
-    "RecountName": "戦意激昂 (AI)",
+    "RecountName": "戦意激動",
     "DamageId": [
       2300550401,
       2300559003
@@ -2801,7 +2801,7 @@
   },
   "338": {
     "Id": 338,
-    "RecountName": "通常攻撃・奥義！星霊魔導士 (AI)",
+    "RecountName": "通常攻撃-奥義！星霊魔導士",
     "DamageId": [
       125010101,
       125020101,
@@ -2810,7 +2810,7 @@
   },
   "339": {
     "Id": 339,
-    "RecountName": "星の大河・奥義！星霊魔導士 (AI)",
+    "RecountName": "星の大河-奥義！星霊魔導士",
     "DamageId": [
       125040102,
       125040103,
@@ -2819,14 +2819,14 @@
   },
   "340": {
     "Id": 340,
-    "RecountName": "水文史話・奥義！星霊魔導士 (AI)",
+    "RecountName": "アクアメトリア-奥義！星霊魔導士",
     "DamageId": [
       325010100
     ]
   },
   "341": {
     "Id": 341,
-    "RecountName": "通常攻撃・奥義！滅竜魔導士 (AI)",
+    "RecountName": "通常攻撃-奥義！滅竜魔導士",
     "DamageId": [
       126010102,
       126020102,
@@ -2835,35 +2835,35 @@
   },
   "342": {
     "Id": 342,
-    "RecountName": "火竜の鉄拳・奥義！滅竜魔導士 (AI)",
+    "RecountName": "火竜の鉄拳-奥義！滅竜魔導士",
     "DamageId": [
       126040101
     ]
   },
   "343": {
     "Id": 343,
-    "RecountName": "火竜の翼撃・奥義！滅竜魔導士 (AI)",
+    "RecountName": "火竜の翼撃-奥義！滅竜魔導士",
     "DamageId": [
       126050102
     ]
   },
   "344": {
     "Id": 344,
-    "RecountName": "火竜の咆哮・奥義！滅竜魔導士 (AI)",
+    "RecountName": "火竜の咆哮-奥義！滅竜魔導士",
     "DamageId": [
       126060102
     ]
   },
   "345": {
     "Id": 345,
-    "RecountName": "雷霆天引 (AI)",
+    "RecountName": "サンダーコール",
     "DamageId": [
       120024410102
     ]
   },
   "346": {
     "Id": 346,
-    "RecountName": "琉火の咆哮 (AI)",
+    "RecountName": "炎の咆哮",
     "DamageId": [
       11012270101,
       2211030203
@@ -2871,28 +2871,28 @@
   },
   "347": {
     "Id": 347,
-    "RecountName": "パルス祝祷 (AI)",
+    "RecountName": "パルスの祈り",
     "DamageId": [
       2211030403
     ]
   },
   "348": {
     "Id": 348,
-    "RecountName": "地獄突き (AI)",
+    "RecountName": "ヘルスラスト",
     "DamageId": [
       110081410101
     ]
   },
   "349": {
     "Id": 349,
-    "RecountName": "静寂の潮汐 (AI)",
+    "RecountName": "サイレントサージ",
     "DamageId": [
       110085410101
     ]
   },
   "350": {
     "Id": 350,
-    "RecountName": "奥義！聖炎の竜息 (AI)",
+    "RecountName": "奥義！聖炎の竜息",
     "DamageId": [
       1102701410101,
       1102701410102,
@@ -2901,7 +2901,7 @@
   },
   "351": {
     "Id": 351,
-    "RecountName": "奥義！双星の決闘 (AI)",
+    "RecountName": "奥義！双星の決闘",
     "DamageId": [
       1102800410101,
       2321026201
@@ -2909,7 +2909,7 @@
   },
   "352": {
     "Id": 352,
-    "RecountName": "奥義！裂石の嵐 (AI)",
+    "RecountName": "奥義！つぶての嵐",
     "DamageId": [
       1102901410101,
       1102901410102
@@ -2917,7 +2917,7 @@
   },
   "353": {
     "Id": 353,
-    "RecountName": "奥義！終焉の化身 (AI)",
+    "RecountName": "奥義！終焉の化身",
     "DamageId": [
       1103001410101,
       1103001410102,
@@ -2926,7 +2926,7 @@
   },
   "354": {
     "Id": 354,
-    "RecountName": "奥義！堕落の一撃 (AI)",
+    "RecountName": "奥義！堕落の一撃",
     "DamageId": [
       111231410101,
       111231410102
@@ -2934,7 +2934,7 @@
   },
   "355": {
     "Id": 355,
-    "RecountName": "奥義！逆刃極凍斬 (AI)",
+    "RecountName": "奥義！氷刃返し",
     "DamageId": [
       111227410101,
       111227410102,
@@ -2943,21 +2943,21 @@
   },
   "356": {
     "Id": 356,
-    "RecountName": "奥義！斬鉄式 (AI)",
+    "RecountName": "奥義！斬鉄式",
     "DamageId": [
       111235410101
     ]
   },
   "357": {
     "Id": 357,
-    "RecountName": "奥義！鮫旋の激流 (AI)",
+    "RecountName": "奥義！シャークトルネード",
     "DamageId": [
       2211018103
     ]
   },
   "358": {
     "Id": 358,
-    "RecountName": "奥義！泡影の息 (AI)",
+    "RecountName": "奥義！バブルブレス",
     "DamageId": [
       111223410101,
       2321030003
@@ -2965,7 +2965,7 @@
   },
   "359": {
     "Id": 359,
-    "RecountName": "絶技！連携潮柱 (AI)",
+    "RecountName": "絶技！タイドピンサー",
     "DamageId": [
       111222410101,
       111222410102,
@@ -2974,21 +2974,21 @@
   },
   "360": {
     "Id": 360,
-    "RecountName": "絶技！ヒレハンマー強打 (AI)",
+    "RecountName": "絶技！フィンハンマー",
     "DamageId": [
       111238410101
     ]
   },
   "361": {
     "Id": 361,
-    "RecountName": "絶技！爆裂水弾 (AI)",
+    "RecountName": "絶技！アクアバースト",
     "DamageId": [
       3112344100
     ]
   },
   "362": {
     "Id": 362,
-    "RecountName": "絶技！寒風の渦 (AI)",
+    "RecountName": "絶技！フロストサイクロン",
     "DamageId": [
       110022410101,
       110022410104
@@ -2996,7 +2996,7 @@
   },
   "363": {
     "Id": 363,
-    "RecountName": "絶技！烈炎払拭 (AI)",
+    "RecountName": "絶技！烈火一掃",
     "DamageId": [
       111230410101,
       111230410102
@@ -3004,12 +3004,12 @@
   },
   "365": {
     "Id": 365,
-    "RecountName": "不明集計 365 (AI)",
+    "RecountName": "",
     "DamageId": []
   },
   "366": {
     "Id": 366,
-    "RecountName": "不明集計 366 (AI)",
+    "RecountName": "",
     "DamageId": []
   }
 }

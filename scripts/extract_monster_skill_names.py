@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
-"""Extract monster skill Id -> Name mappings into scripts/output.
+"""Export monster skill names within MonsterTable.SkillIds.
 
-Scope is limited to the skill ids referenced by MonsterTable.SkillIds so the
-output stays a monster-skill table instead of the full (mostly player) skill
-table. All languages share the Chinese ZTable as the template source so every
-output keeps the same keys. Language-specific override folders supply
-translated names.
+Nonempty official SkillTable.Name wins over planner labels and research overrides.
+Empty official fields keep research names, with separate name_sources provenance.
+All languages share the same IDs; no language-specific placeholder heuristic.
 """
 
 import argparse
 import json
-import re
 from pathlib import Path
+
+from game_data_paths import DATA_ROOT
+
+from localized_names import OfficialNames, add_arguments
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 OUTPUT_DIR = SCRIPT_DIR / "output"
-ZTABLE_DIR = PROJECT_ROOT / "ZTable"
+ZTABLE_DIR = DATA_ROOT / "ZTable"
 
 LANG_CONFIGS = {
     "zh": {
@@ -35,15 +36,6 @@ LANG_CONFIGS = {
 
 OVERRIDE_FILE_NAME = "monster_skill_name_overrides.json"
 
-# SkillTable.Name is a shared placeholder ("场地标记01") for most monster
-# skills; NameDesign carries the planner-facing label instead.
-PLACEHOLDER_NAME = "场地标记01"
-
-# Latin letters / digits / separators mark planner-internal labels such as
-# "塔塔ATK_01" or "P2缓慢回血技能".
-LATIN_PATTERN = re.compile(r"[A-Za-z0-9_\-]")
-
-
 def _load_json(path: Path) -> dict:
     if not path.exists():
         return {}
@@ -51,24 +43,10 @@ def _load_json(path: Path) -> dict:
         return json.load(f)
 
 
-def _usable_name(entry: dict, field: str) -> str:
-    value = entry.get(field)
-    if not isinstance(value, str):
-        return ""
-    value = value.strip()
-    if not value or value == PLACEHOLDER_NAME:
-        return ""
-    return value
-
-
 def _monster_skill_name(entry: dict) -> str:
-    """NameDesign first; fall back to Name only when NameDesign carries a
-    planner-internal latin label while Name is a proper localized name."""
-    name_design = _usable_name(entry, "NameDesign")
-    name = _usable_name(entry, "Name")
-    if name and (not name_design or LATIN_PATTERN.search(name_design)):
-        return name
-    return name_design or name
+    """Plain planner label, used only when the verified official name is empty."""
+    value = entry.get("NameDesign")
+    return value.strip() if isinstance(value, str) else ""
 
 
 def _source_monster_skill_ids() -> list[str]:
@@ -89,7 +67,7 @@ def _source_monster_skill_ids() -> list[str]:
     return [str(skill_id) for skill_id in sorted(skill_ids)]
 
 
-def _build_monster_skill_names(lang: str, skill_ids: list[str]) -> tuple[dict, int]:
+def _build_monster_skill_names(lang: str, skill_ids: list[str], names: OfficialNames) -> tuple[dict, int]:
     input_path = ZTABLE_DIR / "SkillTable.json"
     overrides_path = LANG_CONFIGS[lang]["overrides_dir"] / OVERRIDE_FILE_NAME
 
@@ -98,16 +76,23 @@ def _build_monster_skill_names(lang: str, skill_ids: list[str]) -> tuple[dict, i
 
     skill_table = _load_json(input_path)
     name_overrides = _load_json(overrides_path)
+    names.bind("SkillTable", "Name", skill_table)
 
     result = {}
     for skill_id in skill_ids:
         entry = skill_table.get(skill_id)
         if not isinstance(entry, dict):
             continue
-        name = _monster_skill_name(entry)
+        name = names.resolve(
+            "SkillTable", "Name", skill_id,
+            name_overrides.get(skill_id, _monster_skill_name(entry)),
+            fallback_source="research_override" if skill_id in name_overrides else "research_template",
+            research_label=_monster_skill_name(entry),
+        )
         if name:
             result[skill_id] = name
-    result.update({str(skill_id): name for skill_id, name in name_overrides.items()})
+        else:
+            names.records.pop(skill_id, None)
 
     return result, len(name_overrides)
 
@@ -119,13 +104,14 @@ def _write_monster_skill_names(lang: str, result: dict, override_count: int) -> 
         json.dump(result, f, ensure_ascii=False, indent=2, sort_keys=True)
         f.write("\n")
 
-    print(f"已生成: {output_path}，共 {len(result)} 条（{override_count} 条由例外文件覆盖）")
+    print(f"已生成: {output_path}，共 {len(result)} 条（{override_count} 条研究回退输入，非空官方名称优先）")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="从 ZTable/SkillTable.json + MonsterTable.json 提取多语言怪物技能 Id -> Name。"
     )
+    add_arguments(parser)
     parser.add_argument(
         "--lang",
         choices=sorted(LANG_CONFIGS.keys()),
@@ -135,14 +121,18 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    global OUTPUT_DIR
     args = parse_args()
+    OUTPUT_DIR = args.output_dir
     langs = [args.lang] if args.lang else list(LANG_CONFIGS.keys())
 
     try:
         skill_ids = _source_monster_skill_ids()
         for lang in langs:
-            result, override_count = _build_monster_skill_names(lang, skill_ids)
+            names = OfficialNames(lang, args.localization_dir)
+            result, override_count = _build_monster_skill_names(lang, skill_ids, names)
             _write_monster_skill_names(lang, result, override_count)
+            names.write_audit(OUTPUT_DIR / LANG_CONFIGS[lang]["output_name"])
     except FileNotFoundError as exc:
         print(f"错误: {exc}")
         return 1

@@ -10678,6 +10678,10 @@
       [
         "冷却时间",
         ""
+      ],
+      [
+        "充能时间",
+        ""
       ]
     ],
     "MaxHorizontalMotionDis": 0.0,
@@ -16212,7 +16216,14 @@
       0.0,
       0.0
     ],
-    "Tags": [],
+    "Tags": [
+      4,
+      66,
+      34,
+      9,
+      68,
+      93
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -16410,7 +16421,14 @@
       0.0,
       0.0
     ],
-    "Tags": [],
+    "Tags": [
+      61,
+      34,
+      66,
+      9,
+      68,
+      93
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -16438,7 +16456,14 @@
       0.0,
       0.0
     ],
-    "Tags": [],
+    "Tags": [
+      61,
+      34,
+      66,
+      9,
+      68,
+      93
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -21906,7 +21931,7 @@
       ],
       [
         "溟灭弹",
-        "{*skillpara.damageMerge({118500101},{1,1},\"PVEDamageRadio\",\"up\")*}物/魔攻击力+{*skillpara.damageMerge({118500101},{1,1},\"PVEFixedParameter\",\"un\")*}"
+        "{*skillpara.damageMerge({118500101},{1},\"PVEDamageRadio\",\"up\")*}物/魔攻击力+{*skillpara.damageMerge({118500101},{1},\"PVEFixedParameter\",\"un\")*}"
       ],
       [
         "终极冷却时间",
@@ -25772,6 +25797,174 @@
     "SkillLearnBuffs": [],
     "InstallSkillAddBuffs": []
   },
+  "420301": {
+    "Id": 420301,
+    "Level": 1,
+    "Name": "碎晶雷",
+    "SkillId": 4203,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "420401": {
+    "Id": 420401,
+    "Level": 1,
+    "Name": "碎晶雷",
+    "SkillId": 4204,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "420501": {
+    "Id": 420501,
+    "Level": 1,
+    "Name": "碎晶雷",
+    "SkillId": 4205,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "420601": {
+    "Id": 420601,
+    "Level": 1,
+    "Name": "碎晶雷",
+    "SkillId": 4206,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "420701": {
+    "Id": 420701,
+    "Level": 1,
+    "Name": "碎晶雷",
+    "SkillId": 4207,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "420801": {
+    "Id": 420801,
+    "Level": 1,
+    "Name": "碎晶雷",
+    "SkillId": 4208,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
   "430101": {
     "Id": 430101,
     "Level": 1,
@@ -29080,6 +29273,66 @@
     "SkillLearnBuffs": [],
     "InstallSkillAddBuffs": []
   },
+  "477101": {
+    "Id": 477101,
+    "Level": 1,
+    "Name": "垂直起落",
+    "SkillId": 4771,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [
+      86
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": false,
+    "TakeWeaponInSkill": false,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "477201": {
+    "Id": 477201,
+    "Level": 1,
+    "Name": "星云翱翔",
+    "SkillId": 4772,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [
+      86
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": false,
+    "TakeWeaponInSkill": false,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
   "490101": {
     "Id": 490101,
     "Level": 1,
@@ -30392,6 +30645,68 @@
     "Level": 1,
     "Name": "玩具·烟花冲天炮",
     "SkillId": 5140,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [
+      86,
+      87
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": false,
+    "TakeWeaponInSkill": false,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "514101": {
+    "Id": 514101,
+    "Level": 1,
+    "Name": "玩具·烟花冲天炮",
+    "SkillId": 5141,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [
+      86,
+      87
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": false,
+    "TakeWeaponInSkill": false,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "514201": {
+    "Id": 514201,
+    "Level": 1,
+    "Name": "玩具·烟花冲天炮",
+    "SkillId": 5142,
     "SkillDamageDistance": 0.0,
     "EffectRange": [],
     "AiReleaseSkillRange": [
@@ -89648,6 +89963,36 @@
       10.0,
       0.0
     ],
+    "Tags": [
+      61
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "100696001": {
+    "Id": 100696001,
+    "Level": 1,
+    "Name": "蟹蛛王正面吐子弹",
+    "SkillId": 1006960,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      15.0,
+      15.0,
+      0.0
+    ],
     "Tags": [],
     "BuffTags": [],
     "HitTags": [],
@@ -91749,7 +92094,9 @@
       15.0,
       0.0
     ],
-    "Tags": [],
+    "Tags": [
+      61
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -92141,7 +92488,9 @@
       10.0,
       0.0
     ],
-    "Tags": [],
+    "Tags": [
+      5
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -92197,7 +92546,9 @@
       10.0,
       0.0
     ],
-    "Tags": [],
+    "Tags": [
+      61
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -92684,7 +93035,9 @@
       12.0,
       0.0
     ],
-    "Tags": [],
+    "Tags": [
+      5
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -92712,7 +93065,9 @@
       12.0,
       0.0
     ],
-    "Tags": [],
+    "Tags": [
+      61
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -97546,6 +97901,36 @@
     "SkillLearnBuffs": [],
     "InstallSkillAddBuffs": []
   },
+  "101185001": {
+    "Id": 101185001,
+    "Level": 1,
+    "Name": "塔防-卷心菜掠夺",
+    "SkillId": 1011850,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      10.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
   "101190101": {
     "Id": 101190101,
     "Level": 1,
@@ -97854,6 +98239,94 @@
     "SkillLearnBuffs": [],
     "InstallSkillAddBuffs": []
   },
+  "101195001": {
+    "Id": 101195001,
+    "Level": 1,
+    "Name": "塔防-熊熊烈焰",
+    "SkillId": 1011950,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      10.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "101195101": {
+    "Id": 101195101,
+    "Level": 1,
+    "Name": "塔防-地狱火召唤",
+    "SkillId": 1011951,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      10.0,
+      0.0
+    ],
+    "Tags": [
+      61
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "101195201": {
+    "Id": 101195201,
+    "Level": 1,
+    "Name": "塔防-地狱火",
+    "SkillId": 1011952,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
   "109000101": {
     "Id": 109000101,
     "Level": 1,
@@ -97924,6 +98397,66 @@
       0.0
     ],
     "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "109005001": {
+    "Id": 109005001,
+    "Level": 1,
+    "Name": "塔防-不给糖就捣蛋",
+    "SkillId": 1090050,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      50.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "109005101": {
+    "Id": 109005101,
+    "Level": 1,
+    "Name": "塔防-娜宝普攻撒糖",
+    "SkillId": 1090051,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      6.0,
+      0.0
+    ],
+    "Tags": [
+      61
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -99979,6 +100512,94 @@
     "SkillLearnBuffs": [],
     "InstallSkillAddBuffs": []
   },
+  "110075001": {
+    "Id": 110075001,
+    "Level": 1,
+    "Name": "塔防-石化吐息",
+    "SkillId": 1100750,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      10.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "110075101": {
+    "Id": 110075101,
+    "Level": 1,
+    "Name": "塔防-普攻石突",
+    "SkillId": 1100751,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      10.0,
+      0.0
+    ],
+    "Tags": [
+      61
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "110075201": {
+    "Id": 110075201,
+    "Level": 1,
+    "Name": "石化突刺虚拟体",
+    "SkillId": 1100752,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
   "110079901": {
     "Id": 110079901,
     "Level": 1,
@@ -100543,6 +101164,66 @@
       0.0
     ],
     "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "110145001": {
+    "Id": 110145001,
+    "Level": 1,
+    "Name": "塔防-无双突刺",
+    "SkillId": 1101450,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      30.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "110145101": {
+    "Id": 110145101,
+    "Level": 1,
+    "Name": "塔防-二连斩",
+    "SkillId": 1101451,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      10.0,
+      0.0
+    ],
+    "Tags": [
+      61
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -101309,6 +101990,98 @@
     ],
     "IsInBattleState": true,
     "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "110235001": {
+    "Id": 110235001,
+    "Level": 1,
+    "Name": "炎角-怒殒",
+    "SkillId": 1102350,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      12.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "110235101": {
+    "Id": 110235101,
+    "Level": 1,
+    "Name": "塔防-愤怒践踏",
+    "SkillId": 1102351,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      10.0,
+      0.0
+    ],
+    "Tags": [
+      61
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "110235201": {
+    "Id": 110235201,
+    "Level": 1,
+    "Name": "塔防-陨石虚拟体",
+    "SkillId": 1102352,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": false,
+    "TakeWeaponInSkill": false,
     "NeedScaleCamera": false,
     "SkillLearnBuffs": [],
     "InstallSkillAddBuffs": []
@@ -110164,6 +110937,66 @@
     "SkillLearnBuffs": [],
     "InstallSkillAddBuffs": []
   },
+  "170087001": {
+    "Id": 170087001,
+    "Level": 1,
+    "Name": "宠物-地狐横扫",
+    "SkillId": 1700870,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      20.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "170087101": {
+    "Id": 170087101,
+    "Level": 1,
+    "Name": "塔防-地狐爪击2连",
+    "SkillId": 1700871,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      10.0,
+      0.0
+    ],
+    "Tags": [
+      61
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
   "170100101": {
     "Id": 170100101,
     "Level": 1,
@@ -116563,7 +117396,7 @@
     "AiReleaseSkillRange": [
       0.0,
       0.0,
-      0.0,
+      15.0,
       0.0
     ],
     "Tags": [
@@ -116600,7 +117433,9 @@
       5.0,
       0.0
     ],
-    "Tags": [],
+    "Tags": [
+      61
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -117345,7 +118180,7 @@
     "AiReleaseSkillRange": [
       0.0,
       0.0,
-      0.0,
+      15.0,
       0.0
     ],
     "Tags": [
@@ -117382,7 +118217,9 @@
       20.0,
       0.0
     ],
-    "Tags": [],
+    "Tags": [
+      61
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
@@ -118581,20 +119418,7 @@
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
-    "SkillAttrDes": [
-      [
-        "",
-        ""
-      ],
-      [
-        "",
-        ""
-      ],
-      [
-        "",
-        ""
-      ]
-    ],
+    "SkillAttrDes": [],
     "MaxHorizontalMotionDis": 0.0,
     "STRange": [
       10.0
@@ -120453,16 +121277,7 @@
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
-    "SkillAttrDes": [
-      [
-        "",
-        ""
-      ],
-      [
-        "",
-        ""
-      ]
-    ],
+    "SkillAttrDes": [],
     "MaxHorizontalMotionDis": 0.0,
     "STRange": [
       0.0
@@ -120498,20 +121313,7 @@
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
-    "SkillAttrDes": [
-      [
-        "",
-        ""
-      ],
-      [
-        "",
-        ""
-      ],
-      [
-        "",
-        ""
-      ]
-    ],
+    "SkillAttrDes": [],
     "MaxHorizontalMotionDis": 0.0,
     "STRange": [
       0.0
@@ -120930,16 +121732,7 @@
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
-    "SkillAttrDes": [
-      [
-        "",
-        ""
-      ],
-      [
-        "",
-        ""
-      ]
-    ],
+    "SkillAttrDes": [],
     "MaxHorizontalMotionDis": 10.0,
     "STRange": [
       0.0
@@ -120978,20 +121771,7 @@
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
-    "SkillAttrDes": [
-      [
-        "",
-        ""
-      ],
-      [
-        "",
-        ""
-      ],
-      [
-        "",
-        ""
-      ]
-    ],
+    "SkillAttrDes": [],
     "MaxHorizontalMotionDis": 0.0,
     "STRange": [
       0.0
@@ -121246,6 +122026,66 @@
       30,
       49,
       51
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290045001": {
+    "Id": 290045001,
+    "Level": 1,
+    "Name": "塔防-突突突",
+    "SkillId": 2900450,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      15.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290045101": {
+    "Id": 290045101,
+    "Level": 1,
+    "Name": "塔防-普通射击",
+    "SkillId": 2900451,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      15.0,
+      0.0
+    ],
+    "Tags": [
+      61
     ],
     "BuffTags": [],
     "HitTags": [],
@@ -121732,16 +122572,7 @@
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
-    "SkillAttrDes": [
-      [
-        "",
-        ""
-      ],
-      [
-        "",
-        ""
-      ]
-    ],
+    "SkillAttrDes": [],
     "MaxHorizontalMotionDis": 0.0,
     "STRange": [
       0.0
@@ -121770,26 +122601,12 @@
       0.0
     ],
     "Tags": [
-      4,
-      66,
-      28,
-      9,
-      68,
-      93
+      61
     ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],
-    "SkillAttrDes": [
-      [
-        "",
-        ""
-      ],
-      [
-        "",
-        ""
-      ]
-    ],
+    "SkillAttrDes": [],
     "MaxHorizontalMotionDis": 0.0,
     "STRange": [
       0.0
@@ -122308,6 +123125,234 @@
     "SkillLearnBuffs": [],
     "InstallSkillAddBuffs": []
   },
+  "290075001": {
+    "Id": 290075001,
+    "Level": 1,
+    "Name": "塔防-极寒射线",
+    "SkillId": 2900750,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      15.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      40.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290075101": {
+    "Id": 290075101,
+    "Level": 1,
+    "Name": "塔防-普攻冰陨石",
+    "SkillId": 2900751,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      15.0,
+      0.0
+    ],
+    "Tags": [
+      61
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290075201": {
+    "Id": 290075201,
+    "Level": 1,
+    "Name": "塔防-单颗冰陨石",
+    "SkillId": 2900752,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290075301": {
+    "Id": 290075301,
+    "Level": 1,
+    "Name": "塔防-冰陨石3连",
+    "SkillId": 2900753,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290075401": {
+    "Id": 290075401,
+    "Level": 1,
+    "Name": "塔防-道具特效水龙卷",
+    "SkillId": 2900754,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290075501": {
+    "Id": 290075501,
+    "Level": 1,
+    "Name": "塔防-道具特效巨大陨石",
+    "SkillId": 2900755,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290075601": {
+    "Id": 290075601,
+    "Level": 1,
+    "Name": "塔防-道具升级-单颗大冰陨石",
+    "SkillId": 2900756,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290075701": {
+    "Id": 290075701,
+    "Level": 1,
+    "Name": "塔防-道具升级-大冰陨石3连",
+    "SkillId": 2900757,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
   "290077001": {
     "Id": 290077001,
     "Level": 1,
@@ -122367,6 +123412,66 @@
         ""
       ]
     ],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290085001": {
+    "Id": 290085001,
+    "Level": 1,
+    "Name": "塔防-仪式",
+    "SkillId": 2900850,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      23.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290085101": {
+    "Id": 290085101,
+    "Level": 1,
+    "Name": "塔防-普攻3连",
+    "SkillId": 2900851,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      8.0,
+      0.0
+    ],
+    "Tags": [
+      61
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
     "MaxHorizontalMotionDis": 0.0,
     "STRange": [
       0.0
@@ -123013,6 +124118,96 @@
       0.0
     ],
     "Tags": [],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290095001": {
+    "Id": 290095001,
+    "Level": 1,
+    "Name": "塔防-炽热清算",
+    "SkillId": 2900950,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      7.0,
+      0.0
+    ],
+    "Tags": [
+      5
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290095101": {
+    "Id": 290095101,
+    "Level": 1,
+    "Name": "塔防-普攻单体圣剑",
+    "SkillId": 2900951,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      7.0,
+      0.0
+    ],
+    "Tags": [
+      61
+    ],
+    "BuffTags": [],
+    "HitTags": [],
+    "EntityTags": [],
+    "SkillAttrDes": [],
+    "MaxHorizontalMotionDis": 0.0,
+    "STRange": [
+      0.0
+    ],
+    "IsInBattleState": true,
+    "TakeWeaponInSkill": true,
+    "NeedScaleCamera": false,
+    "SkillLearnBuffs": [],
+    "InstallSkillAddBuffs": []
+  },
+  "290095201": {
+    "Id": 290095201,
+    "Level": 1,
+    "Name": "塔防-圣剑召唤兽",
+    "SkillId": 2900952,
+    "SkillDamageDistance": 0.0,
+    "EffectRange": [],
+    "AiReleaseSkillRange": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "Tags": [
+      61
+    ],
     "BuffTags": [],
     "HitTags": [],
     "EntityTags": [],

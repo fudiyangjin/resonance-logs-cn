@@ -4201,6 +4201,111 @@
     "AttrDesc": "全子弹大小",
     "AttrIcon": ""
   },
+  "90401": {
+    "Id": 90401,
+    "Name": "塔防-赤玉地狐CD",
+    "Desc": "塔防-赤玉地狐CD",
+    "AttrType": 100,
+    "LogicType": 1,
+    "AttrParams": [
+      1700870
+    ],
+    "LowerLimit": -99999,
+    "UpperLimit": 10000,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "90402": {
+    "Id": 90402,
+    "Name": "塔防-燃烧最大层数增加",
+    "Desc": "英勇盾击buff层数增加",
+    "AttrType": 503,
+    "LogicType": 4,
+    "AttrParams": [
+      831998
+    ],
+    "LowerLimit": -999,
+    "UpperLimit": 999,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "90403": {
+    "Id": 90403,
+    "Name": "塔防-禁用普攻技能",
+    "Desc": "塔防-禁用普攻技能",
+    "AttrType": 509,
+    "LogicType": 3,
+    "AttrParams": [
+      61
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 10000,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "90404": {
+    "Id": 90404,
+    "Name": "塔防-全技能CD",
+    "Desc": "塔防-全技能CD",
+    "AttrType": 100,
+    "LogicType": 3,
+    "AttrParams": [
+      5
+    ],
+    "LowerLimit": -99999,
+    "UpperLimit": 10000,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "90405": {
+    "Id": 90405,
+    "Name": "塔防-禁用一般技能",
+    "Desc": "塔防-禁用一般技能",
+    "AttrType": 509,
+    "LogicType": 3,
+    "AttrParams": [
+      5
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 10000,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "90406": {
+    "Id": 90406,
+    "Name": "塔防-寒冷层数+",
+    "Desc": "塔防-寒冷层数+",
+    "AttrType": 503,
+    "LogicType": 4,
+    "AttrParams": [
+      831999
+    ],
+    "LowerLimit": -999,
+    "UpperLimit": 999,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
+  "90407": {
+    "Id": 90407,
+    "Name": "塔防-冰冻持续时间+",
+    "Desc": "塔防-冰冻持续时间+",
+    "AttrType": 502,
+    "LogicType": 4,
+    "AttrParams": [
+      831996
+    ],
+    "LowerLimit": 0,
+    "UpperLimit": 9999999,
+    "IsSyncClient": true,
+    "AttrDesc": "全子弹大小",
+    "AttrIcon": ""
+  },
   "92000": {
     "Id": 92000,
     "Name": "全移动速度加值",

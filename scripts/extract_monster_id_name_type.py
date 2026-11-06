@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
-"""Extract monster Id -> {Name, MonsterType} into scripts/output.
+"""Export monster Id -> {Name, MonsterType} with official localized names.
 
-All languages share the Chinese ZTable as the template source so every output
-keeps the same keys. Language-specific override folders supply translated names
-and corrections such as MonsterType fixes.
-
-When MonsterTable.Name is empty, fill from ModelTable.ModelDesc via ModelID.
-Cleared official Chinese names are restored from overrides; ModelDesc is only
-a fallback for entries that never had a display name.
+All languages keep the unified ZTable structure and type corrections. Overrides
+and plain ModelDesc are research fallbacks only for empty official names.
+The output schema is unchanged; official/research provenance is in name_sources.
 """
 
 import argparse
 import json
 from pathlib import Path
 
+from game_data_paths import DATA_ROOT
+
+from localized_names import OfficialNames, add_arguments
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 OUTPUT_DIR = SCRIPT_DIR / "output"
-ZTABLE_DIR = PROJECT_ROOT / "ZTable"
+ZTABLE_DIR = DATA_ROOT / "ZTable"
 
 # ModelDesc values that are placeholders, not usable display names.
 GENERIC_MODEL_DESCS = frozenset({
@@ -185,7 +185,7 @@ def _write_monster_names(
 
     print(
         f"已生成: {output_path}，共 {len(result)} 条"
-        f"（{override_count} 条由例外文件覆盖，"
+        f"（{override_count} 条例外输入，非空官方名称优先；"
         f"{filled_from_model} 条名称由 ModelID 补全）"
     )
 
@@ -208,6 +208,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="从 ZTable/MonsterTable.json 提取多语言怪物 Id -> Name/Type；空名称按 ModelID 回退 ModelDesc。"
     )
+    add_arguments(parser)
     parser.add_argument(
         "--lang",
         choices=sorted(LANG_CONFIGS.keys()),
@@ -217,19 +218,34 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    global OUTPUT_DIR
     args = parse_args()
+    OUTPUT_DIR = args.output_dir
     langs = [args.lang] if args.lang else list(LANG_CONFIGS.keys())
 
     try:
         monster_table = _load_monster_table()
         model_table = _load_model_table()
         monster_ids = _source_monster_ids(monster_table)
+        zh_research, _, _ = _build_monster_names("zh", monster_ids, monster_table, model_table)
         zh_result = None
         for lang in langs:
+            names = OfficialNames(lang, args.localization_dir)
+            names.bind("MonsterTable", "Name", monster_table)
             result, override_count, filled_from_model = _build_monster_names(
                 lang, monster_ids, monster_table, model_table
             )
+            overrides = _load_json(LANG_CONFIGS[lang]["overrides_dir"] / OVERRIDE_FILE_NAME)
+            for key, entry in result.items():
+                override = overrides.get(key)
+                has_name = isinstance(override, str) or isinstance(override, dict) and "Name" in override
+                entry["Name"] = names.resolve(
+                    "MonsterTable", "Name", key, entry["Name"],
+                    fallback_source="research_override" if has_name else "research_model",
+                    research_label=zh_research[key]["Name"],
+                )
             _write_monster_names(lang, result, override_count, filled_from_model)
+            names.write_audit(OUTPUT_DIR / LANG_CONFIGS[lang]["output_name"])
             if lang == "zh":
                 zh_result = result
         if zh_result is not None:

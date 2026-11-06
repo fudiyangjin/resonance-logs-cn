@@ -172,7 +172,7 @@
   "17021301": {
     "Id": 17021301,
     "CountCDTime": 15,
-    "Content": "虚蝕消滅 (AI)"
+    "Content": "虚蝕の滅跡"
   },
   "17025601": {
     "Id": 17025601,
@@ -397,42 +397,42 @@
   "6920003": {
     "Id": 6920003,
     "CountCDTime": 15,
-    "Content": "悪疫蔓延 (AI)"
+    "Content": "汚染拡大"
   },
   "339010101": {
     "Id": 339010101,
     "CountCDTime": 10,
-    "Content": "崩壊光線 (AI)"
+    "Content": "崩壊ビーム"
   },
   "6920007": {
     "Id": 6920007,
     "CountCDTime": 15,
-    "Content": "悪疫の種 (AI)"
+    "Content": "汚染源"
   },
   "3340224": {
     "Id": 3340224,
     "CountCDTime": 10,
-    "Content": "絶賛演奏 (AI)"
+    "Content": "グレートセッション"
   },
   "6920010": {
     "Id": 6920010,
     "CountCDTime": 15,
-    "Content": "悪の急降下 (AI)"
+    "Content": "イビルダイブ"
   },
   "11110301": {
     "Id": 11110301,
     "CountCDTime": 15,
-    "Content": "超伝導波動・幻 (AI)"
+    "Content": "超伝導波動・幻"
   },
   "11110501": {
     "Id": 11110501,
     "CountCDTime": 10,
-    "Content": "粘着弾・幻 (AI)"
+    "Content": "粘着弾・幻"
   },
   "338011001": {
     "Id": 338011001,
     "CountCDTime": 20,
-    "Content": "隙を狙う飛びかかり (AI)"
+    "Content": "隙を突く飛びかかり"
   },
   "338010401": {
     "Id": 338010401,
@@ -442,102 +442,102 @@
   "338010101": {
     "Id": 338010101,
     "CountCDTime": 10,
-    "Content": "散裂風刃 (AI)"
+    "Content": "散風カッター"
   },
   "338010201": {
     "Id": 338010201,
     "CountCDTime": 10,
-    "Content": "強力な噛みつき (AI)"
+    "Content": "強力な噛みつき"
   },
   "338010501": {
     "Id": 338010501,
     "CountCDTime": 10,
-    "Content": "複合連撃 (AI)"
+    "Content": "ミックスコンボ"
   },
   "338010601": {
     "Id": 338010601,
     "CountCDTime": 10,
-    "Content": "膨張竜巻 (AI)"
+    "Content": "膨張トルネード"
   },
   "338010801": {
     "Id": 338010801,
     "CountCDTime": 10,
-    "Content": "風刃の呼び声 (AI)"
+    "Content": "風刃召喚"
   },
   "338010901": {
     "Id": 338010901,
     "CountCDTime": 10,
-    "Content": "圧縮ハリケーン (AI)"
+    "Content": "圧縮ハリケーン"
   },
   "10310010": {
     "Id": 10310010,
     "CountCDTime": 15,
-    "Content": "幻・終焉の特異点 (AI)"
+    "Content": "幻・終焉の特異点"
   },
   "10310011": {
     "Id": 10310011,
     "CountCDTime": 15,
-    "Content": "消滅光線 (AI)"
+    "Content": "殲滅ビーム"
   },
   "10310012": {
     "Id": 10310012,
     "CountCDTime": 15,
-    "Content": "幻骸同調 (AI)"
+    "Content": "幻骸の同調"
   },
   "10320001": {
     "Id": 10320001,
     "CountCDTime": 15,
-    "Content": "幻・殲滅軌道砲 (AI)"
+    "Content": "幻・殲滅レールガン"
   },
   "10320005": {
     "Id": 10320005,
     "CountCDTime": 15,
-    "Content": "崩壊衝撃 (AI)"
+    "Content": "崩壊ショック"
   },
   "10330009": {
     "Id": 10330009,
     "CountCDTime": 10,
-    "Content": "予め定められた帰路 (AI)"
+    "Content": "定められた帰途"
   },
   "10330010": {
     "Id": 10330010,
     "CountCDTime": 10,
-    "Content": "因果跳躍 (AI)"
+    "Content": "因果のワープ"
   },
   "10330011": {
     "Id": 10330011,
     "CountCDTime": 15,
-    "Content": "終焉交響曲 (AI)"
+    "Content": "終焉の交響曲"
   },
   "10330012": {
     "Id": 10330012,
     "CountCDTime": 15,
-    "Content": "神の追放 (AI)"
+    "Content": "神の追放"
   },
   "47011901": {
     "Id": 47011901,
     "CountCDTime": 15,
-    "Content": "ヘルガの影 (AI)"
+    "Content": "ヘルガの影"
   },
   "47011401": {
     "Id": 47011401,
     "CountCDTime": 10,
-    "Content": "共生する闇の霊 (AI)"
+    "Content": "伴生の暗霊"
   },
   "47013201": {
     "Id": 47013201,
     "CountCDTime": 15,
-    "Content": "虚痕剥離 (AI)"
+    "Content": "虚痕の剥解"
   },
   "10330013": {
     "Id": 10330013,
     "CountCDTime": 10,
-    "Content": "累刑宣告 (AI)"
+    "Content": "累刑宣告"
   },
   "10330014": {
     "Id": 10330014,
     "CountCDTime": 10,
-    "Content": "連結の試練 (AI)"
+    "Content": "連結の試練"
   },
   "14019101": {
     "Id": 14019101,
@@ -547,136 +547,136 @@
   "14019901": {
     "Id": 14019901,
     "CountCDTime": 10,
-    "Content": "竜魂覚醒 (AI)"
+    "Content": "竜魂覚醒"
   },
   "10330016": {
     "Id": 10330016,
     "CountCDTime": 5,
-    "Content": "幻像投影 (AI)"
+    "Content": "幻象の投影"
   },
   "10360004": {
     "Id": 10360004,
     "CountCDTime": 15,
-    "Content": "召唤黑洞"
+    "Content": "ブラックホール召喚"
   },
   "10360010": {
     "Id": 10360010,
     "CountCDTime": 20,
-    "Content": "天体召唤"
+    "Content": "アストロサモン"
   },
   "10360011": {
     "Id": 10360011,
     "CountCDTime": 20,
-    "Content": "天体旋转"
+    "Content": "アストロスピン"
   },
   "10360012": {
     "Id": 10360012,
     "CountCDTime": 20,
-    "Content": "黑暗降临"
+    "Content": "闇の降臨"
   },
   "10360013": {
     "Id": 10360013,
     "CountCDTime": 20,
-    "Content": "光暗抉择"
+    "Content": "光と闇の選択"
   },
   "10360014": {
     "Id": 10360014,
     "CountCDTime": 20,
-    "Content": "神鸟降世"
+    "Content": "神鳥降臨"
   },
   "10360015": {
     "Id": 10360015,
     "CountCDTime": 20,
-    "Content": "空间穿梭"
+    "Content": "空間転移"
   },
   "10350001": {
     "Id": 10350001,
     "CountCDTime": 15,
-    "Content": "光陨坍塌"
+    "Content": "光隕崩壊"
   },
   "10350003": {
     "Id": 10350003,
     "CountCDTime": 10,
-    "Content": "幻光拟形"
+    "Content": "幻光具現"
   },
   "10350011": {
     "Id": 10350011,
     "CountCDTime": 15,
-    "Content": "穹顶耀斑"
+    "Content": "ドームフレア"
   },
   "10350014": {
     "Id": 10350014,
     "CountCDTime": 10,
-    "Content": "天光打击"
+    "Content": "天光撃"
   },
   "10350015": {
     "Id": 10350015,
     "CountCDTime": 15,
-    "Content": "苍穹觉醒"
+    "Content": "蒼穹覚醒"
   },
   "10350016": {
     "Id": 10350016,
     "CountCDTime": 10,
-    "Content": "天光告诫"
+    "Content": "天光戒告"
   },
   "10350018": {
     "Id": 10350018,
     "CountCDTime": 20,
-    "Content": "扬升"
+    "Content": "アセンション"
   },
   "339510301": {
     "Id": 339510301,
     "CountCDTime": 15,
-    "Content": "金曜神祭"
+    "Content": "黄金神祭"
   },
   "339510303": {
     "Id": 339510303,
     "CountCDTime": 20,
-    "Content": "光耀射线"
+    "Content": "ルミナスレイ"
   },
   "339510305": {
     "Id": 339510305,
     "CountCDTime": 15,
-    "Content": "天光审判"
+    "Content": "天光審判"
   },
   "339510307": {
     "Id": 339510307,
     "CountCDTime": 10,
-    "Content": "圣裁追猎"
+    "Content": "聖裁追撃"
   },
   "3395166": {
     "Id": 3395166,
     "CountCDTime": 10,
-    "Content": "巨型光矛"
+    "Content": "巨大光槍"
   },
   "340000501": {
     "Id": 340000501,
     "CountCDTime": 18,
-    "Content": "冰华万象"
+    "Content": "氷華万象"
   },
   "3395177": {
     "Id": 3395177,
     "CountCDTime": 15,
-    "Content": "连续爆发"
+    "Content": "連続爆発"
   },
   "340002301": {
     "Id": 340002301,
     "CountCDTime": 18,
-    "Content": "暴风雪"
+    "Content": "暴風雪"
   },
   "3395178": {
     "Id": 3395178,
     "CountCDTime": 15,
-    "Content": "化光眷属召唤"
+    "Content": "化光の眷属召喚"
   },
   "340002501": {
     "Id": 340002501,
     "CountCDTime": 20,
-    "Content": "冰之狂想曲"
+    "Content": "アイスラプソディ"
   },
   "3395179": {
     "Id": 3395179,
     "CountCDTime": 15,
-    "Content": "巨型光剪"
+    "Content": "巨大光刃"
   }
 }

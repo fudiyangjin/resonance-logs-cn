@@ -357,7 +357,7 @@
   },
   "101": {
     "MonsterType": 1,
-    "Name": "Dummy (Flame Orc)"
+    "Name": "Wooden Dummy (Flame Orc)"
   },
   "10100": {
     "MonsterType": 0,
@@ -1229,7 +1229,7 @@
   },
   "10314": {
     "MonsterType": 0,
-    "Name": "Hidden Monster (Mechanical Guard 180-Degree Turn) (AI)"
+    "Name": "Invisible Helper (Mechanical Guard 180-Degree Turn)"
   },
   "103200": {
     "MonsterType": 2,
@@ -1237,27 +1237,27 @@
   },
   "103201": {
     "MonsterType": 0,
-    "Name": "Hidden Monster (Flash Target - Long Side) (AI)"
+    "Name": "Invisible Helper (Blink Target, Long Side)"
   },
   "103202": {
     "MonsterType": 0,
-    "Name": "Hidden Monster (Arena Center) (AI)"
+    "Name": "Stealth Monster (Scene Mid Heart Point)"
   },
   "103203": {
     "MonsterType": 1,
-    "Name": "Anti-Dragon Golem Phantom (Phase 2) (AI)"
+    "Name": "Dragonbane Golem Illusion (Phase 2)"
   },
   "103204": {
     "MonsterType": 0,
-    "Name": "Hidden Monster (Flash Target - Short Side) (AI)"
+    "Name": "Invisible Helper (Blink Target, Short Side)"
   },
   "103205": {
     "MonsterType": 1,
-    "Name": "Mechanical Guard (AI)"
+    "Name": "Mechanical Guard"
   },
   "103206": {
     "MonsterType": 1,
-    "Name": "Mechanical Eye Pod (AI)"
+    "Name": "Mechanical Eye Pod"
   },
   "103207": {
     "MonsterType": 2,
@@ -1269,23 +1269,23 @@
   },
   "103209": {
     "MonsterType": 0,
-    "Name": "Hidden Monster (Ending Charge Sequence) (AI)"
+    "Name": "Invisible Helper (Ending Cinematic Charge)"
   },
   "103210": {
     "MonsterType": 1,
-    "Name": "Autonomous Patrol Guard (AI)"
+    "Name": "Autonomous Patrol Guard"
   },
   "103211": {
     "MonsterType": 1,
-    "Name": "Autonomous Patrol Eye Pod (AI)"
+    "Name": "Autonomous Patrol Eye Pod"
   },
   "103212": {
     "MonsterType": 1,
-    "Name": "Autonomous Patrol Eye Pod (AI)"
+    "Name": "Autonomous Patrol Eye Pod"
   },
   "103213": {
     "MonsterType": 1,
-    "Name": "Autonomous Patrol Eye Pod (AI)"
+    "Name": "Autonomous Patrol Eye Pod"
   },
   "103300": {
     "MonsterType": 2,
@@ -1301,19 +1301,19 @@
   },
   "103303": {
     "MonsterType": 1,
-    "Name": "Block A Marker (AI)"
+    "Name": "Tile A Marker"
   },
   "103304": {
     "MonsterType": 1,
-    "Name": "Block A Marker (AI)"
+    "Name": "Tile A Marker"
   },
   "103305": {
     "MonsterType": 1,
-    "Name": "Block A Marker (AI)"
+    "Name": "Tile A Marker"
   },
   "103306": {
     "MonsterType": 1,
-    "Name": "Block A Marker (AI)"
+    "Name": "Tile A Marker"
   },
   "103307": {
     "MonsterType": 1,
@@ -1341,19 +1341,19 @@
   },
   "103401": {
     "MonsterType": 0,
-    "Name": "S4raid 内环"
+    "Name": "Wheel Inner Ring"
   },
   "103402": {
     "MonsterType": 0,
-    "Name": "S4raid 中环"
+    "Name": "Wheel Ring"
   },
   "103403": {
     "MonsterType": 0,
-    "Name": "S4raid 外环"
+    "Name": "Wheel Outer Ring"
   },
   "103404": {
     "MonsterType": 0,
-    "Name": "冰龙-人体冰块-有碰撞空模型"
+    "Name": "Light Spear (Stealth Monster)"
   },
   "103410": {
     "MonsterType": 2,
@@ -1365,15 +1365,15 @@
   },
   "103421": {
     "MonsterType": 0,
-    "Name": "化光眷属"
+    "Name": "Lightbound Minion"
   },
   "103422": {
     "MonsterType": 0,
-    "Name": "化光眷属"
+    "Name": "Lightbound Minion"
   },
   "103423": {
     "MonsterType": 0,
-    "Name": "化光眷属"
+    "Name": "Lightbound Minion"
   },
   "103424": {
     "MonsterType": 1,
@@ -1381,15 +1381,15 @@
   },
   "103425": {
     "MonsterType": 0,
-    "Name": "S4raid 内环"
+    "Name": "S4raid Inner Ring"
   },
   "103426": {
     "MonsterType": 0,
-    "Name": "S4raid 中环"
+    "Name": "S4raid Ring"
   },
   "103427": {
     "MonsterType": 0,
-    "Name": "S4raid 外环"
+    "Name": "S4raid Outer Ring"
   },
   "103500": {
     "MonsterType": 2,
@@ -1417,11 +1417,11 @@
   },
   "103506": {
     "MonsterType": 1,
-    "Name": ""
+    "Name": "Ascension (Stealth Monster)"
   },
   "103507": {
     "MonsterType": 1,
-    "Name": ""
+    "Name": "Scene Center - - - - (Stealth Monster)"
   },
   "103508": {
     "MonsterType": 1,
@@ -1429,7 +1429,7 @@
   },
   "103509": {
     "MonsterType": 1,
-    "Name": ""
+    "Name": "Vortex"
   },
   "103510": {
     "MonsterType": 2,
@@ -1441,15 +1441,15 @@
   },
   "103512": {
     "MonsterType": 1,
-    "Name": "拉普西斯02光人-卫刃"
+    "Name": "Lampsis 02 Light Figure - Guard Blade"
   },
   "103513": {
     "MonsterType": 1,
-    "Name": "拉普西斯02光人-剑盾"
+    "Name": "Lampsis 02 Light Figure - Sword and Shield"
   },
   "103514": {
     "MonsterType": 1,
-    "Name": "黑金雄鹰"
+    "Name": "Black Gold Eagle"
   },
   "103515": {
     "MonsterType": 1,
@@ -1461,7 +1461,7 @@
   },
   "103600": {
     "MonsterType": 2,
-    "Name": "Lapsis - Phase 3 (AI)"
+    "Name": "Lampsis: Polar Night"
   },
   "103601": {
     "MonsterType": 2,
@@ -1469,15 +1469,15 @@
   },
   "103602": {
     "MonsterType": 0,
-    "Name": "S4raid-光球"
+    "Name": "Lampsis Control - Light Orb"
   },
   "103603": {
     "MonsterType": 0,
-    "Name": "S4raid-暗球"
+    "Name": "Lampsis Control - Dark Orb"
   },
   "103604": {
     "MonsterType": 1,
-    "Name": "黑金雄鹰"
+    "Name": "Eaglebeast"
   },
   "103610": {
     "MonsterType": 2,
@@ -1485,7 +1485,7 @@
   },
   "103611": {
     "MonsterType": 2,
-    "Name": "S4Riad-拉普西斯（三阶段）"
+    "Name": "S4Riad - Lampsis (3 Phase)"
   },
   "103620": {
     "MonsterType": 2,
@@ -2905,7 +2905,7 @@
   },
   "130112": {
     "MonsterType": 1,
-    "Name": "Elite: Shadow Blade"
+    "Name": "Elite - Shadow Blade"
   },
   "130113": {
     "MonsterType": 0,
@@ -2921,7 +2921,7 @@
   },
   "130116": {
     "MonsterType": 0,
-    "Name": "Corrupted Dark Mist Soldier"
+    "Name": "Corrosion - Dark Mist Soldier"
   },
   "130117": {
     "MonsterType": 0,
@@ -2945,7 +2945,7 @@
   },
   "130122": {
     "MonsterType": 0,
-    "Name": "Corrupted Dark Mist Soldier"
+    "Name": "Corrosion - Dark Mist Soldier"
   },
   "130123": {
     "MonsterType": 0,
@@ -3065,11 +3065,11 @@
   },
   "133101": {
     "MonsterType": 0,
-    "Name": "Dark Mist Lancer"
+    "Name": "Dark Mist Spearman"
   },
   "133102": {
     "MonsterType": 0,
-    "Name": "Dark Mist Guard"
+    "Name": "Dark Mist Warden"
   },
   "133103": {
     "MonsterType": 0,
@@ -3089,7 +3089,7 @@
   },
   "133115": {
     "MonsterType": 1,
-    "Name": "Boss - Dark Mist Swordsman"
+    "Name": "Dark Mist Swordsman"
   },
   "133116": {
     "MonsterType": 1,
@@ -3105,7 +3105,7 @@
   },
   "133119": {
     "MonsterType": 1,
-    "Name": "Boss - Dark Mist Mage"
+    "Name": "Dark Mist Mage"
   },
   "133120": {
     "MonsterType": 0,
@@ -3113,15 +3113,15 @@
   },
   "133121": {
     "MonsterType": 1,
-    "Name": "Corrupted Source"
+    "Name": "Corrupted Core"
   },
   "133122": {
     "MonsterType": 1,
-    "Name": "The Cunning Dark Mist Mage"
+    "Name": "Cunning Dark Mist Mage"
   },
   "133123": {
     "MonsterType": 1,
-    "Name": "Boss - Dark Mist Mage"
+    "Name": "Dark Mist Mage"
   },
   "1332": {
     "MonsterType": 0,
@@ -3957,7 +3957,7 @@
   },
   "200": {
     "MonsterType": 0,
-    "Name": "Transformation Exclusive - Void Tina"
+    "Name": "Transform Exclusive - Void Corruption Tina"
   },
   "20000": {
     "MonsterType": 0,
@@ -4753,7 +4753,7 @@
   },
   "201": {
     "MonsterType": 0,
-    "Name": "Transformation Exclusive - Goblin Axe"
+    "Name": "Transform Exclusive - Goblin Axe"
   },
   "20100": {
     "MonsterType": 2,
@@ -4873,7 +4873,7 @@
   },
   "202": {
     "MonsterType": 0,
-    "Name": "Transformation Exclusive - Airona"
+    "Name": "Transform Exclusive - Airona"
   },
   "203": {
     "MonsterType": 2,
@@ -5101,7 +5101,7 @@
   },
   "3000015": {
     "MonsterType": 0,
-    "Name": "Great Muku Axe - Resonance"
+    "Name": "Muku Axe - Resonance"
   },
   "3000016": {
     "MonsterType": 0,
@@ -5181,7 +5181,7 @@
   },
   "3000035": {
     "MonsterType": 0,
-    "Name": "Void Orc - Resonance"
+    "Name": "Void Corruption Orc - Resonance"
   },
   "3000036": {
     "MonsterType": 0,
@@ -5201,11 +5201,11 @@
   },
   "3000040": {
     "MonsterType": 0,
-    "Name": "storm Goblin Axe - Resonance"
+    "Name": "Wind Goblin Axe - Resonance"
   },
   "3000041": {
     "MonsterType": 0,
-    "Name": "Tatta-Resonance"
+    "Name": "Tatta - Resonance"
   },
   "3000042": {
     "MonsterType": 0,
@@ -5361,11 +5361,11 @@
   },
   "3000080": {
     "MonsterType": 0,
-    "Name": "Lucy - Resonance (AI)"
+    "Name": "Lucy - Resonance"
   },
   "3000081": {
     "MonsterType": 0,
-    "Name": "Nazz - Resonance (AI)"
+    "Name": "Natsu - Resonance"
   },
   "3000082": {
     "MonsterType": 0,
@@ -5389,43 +5389,43 @@
   },
   "3000087": {
     "MonsterType": 0,
-    "Name": "Shell-Gathering Heretic (AI)"
+    "Name": "Shell-Gathering Cultist"
   },
   "3000088": {
     "MonsterType": 0,
-    "Name": "Valley Shock Trooper (AI)"
+    "Name": "Valley Skirmisher"
   },
   "3000089": {
     "MonsterType": 0,
-    "Name": "Wandering Exile (AI)"
+    "Name": "Wandering Traveler"
   },
   "3000090": {
     "MonsterType": 0,
-    "Name": "Ravine Phantom (AI)"
+    "Name": "Ravine Aberration"
   },
   "3000091": {
     "MonsterType": 0,
-    "Name": "Dreammanifest Host (AI)"
+    "Name": "Dream Manifestor"
   },
   "3000092": {
     "MonsterType": 0,
-    "Name": "Paralyzing Shrimp Shroom (AI)"
+    "Name": "Paralyzing Shrimpshroom"
   },
   "3000093": {
     "MonsterType": 0,
-    "Name": "Darkriver Fin (AI)"
+    "Name": "Underriver Fin"
   },
   "3000094": {
     "MonsterType": 0,
-    "Name": "Valley Ranger (AI)"
+    "Name": "Valley Ranger"
   },
   "3000095": {
     "MonsterType": 0,
-    "Name": "Valley Gladiator (AI)"
+    "Name": "Valley Brawler"
   },
   "3000096": {
     "MonsterType": 0,
-    "Name": "Goblin Sage (AI)"
+    "Name": "Goblin Sage"
   },
   "3002": {
     "MonsterType": 2,
@@ -6033,11 +6033,11 @@
   },
   "30822": {
     "MonsterType": 1,
-    "Name": "Fagaro Guard (AI)"
+    "Name": "Fagaro Guard"
   },
   "30823": {
     "MonsterType": 1,
-    "Name": "Fagaro Guard (AI)"
+    "Name": "Fagaro Guard"
   },
   "30850": {
     "MonsterType": 0,
@@ -6065,15 +6065,15 @@
   },
   "30856": {
     "MonsterType": 0,
-    "Name": "Corrupted Serpent Hatchling"
+    "Name": "Corrosive Little Snake"
   },
   "30857": {
     "MonsterType": 0,
-    "Name": "Rock Serpent Hatchling"
+    "Name": "Rock Snake Little Snake"
   },
   "30858": {
     "MonsterType": 0,
-    "Name": "Life Serpent Hatchling"
+    "Name": "Life Little Snake"
   },
   "30859": {
     "MonsterType": 0,
@@ -6089,7 +6089,7 @@
   },
   "30862": {
     "MonsterType": 0,
-    "Name": "Serpent Hatchling"
+    "Name": "Little Snake"
   },
   "30863": {
     "MonsterType": 0,
@@ -6133,35 +6133,35 @@
   },
   "3110001": {
     "MonsterType": 0,
-    "Name": "Thunder Ogre - Role (AI)"
+    "Name": "Tempest Ogre - Role"
   },
   "3110002": {
     "MonsterType": 0,
-    "Name": "Flame Orc - Role (AI)"
+    "Name": "Flame Orc - Role"
   },
   "3110003": {
     "MonsterType": 0,
-    "Name": "Muku King - Role (AI)"
+    "Name": "Muku King - Role"
   },
   "3110004": {
     "MonsterType": 0,
-    "Name": "Ironfang - Role (AI)"
+    "Name": "Iron Fang - Role"
   },
   "3110005": {
     "MonsterType": 0,
-    "Name": "Goldfang - Role (AI)"
+    "Name": "Gold Fang - Role"
   },
   "3110006": {
     "MonsterType": 0,
-    "Name": "Lizardman King - Role (AI)"
+    "Name": "Lizardman King - Role"
   },
   "3110007": {
     "MonsterType": 0,
-    "Name": "Airona - Role (AI)"
+    "Name": "Airona - Role"
   },
   "3110008": {
     "MonsterType": 0,
-    "Name": "Fafala - Role (AI)"
+    "Name": "Fafala - Role"
   },
   "31101": {
     "MonsterType": 2,
@@ -6229,11 +6229,11 @@
   },
   "33302": {
     "MonsterType": 0,
-    "Name": "Edgeblade"
+    "Name": "Edge Blade"
   },
   "33303": {
     "MonsterType": 0,
-    "Name": "Edgeblade"
+    "Name": "Edge Blade"
   },
   "33304": {
     "MonsterType": 0,
@@ -6353,7 +6353,7 @@
   },
   "33422": {
     "MonsterType": 0,
-    "Name": "Green Nappo (AI)"
+    "Name": "Green Nappo"
   },
   "33423": {
     "MonsterType": 0,
@@ -6365,7 +6365,7 @@
   },
   "33425": {
     "MonsterType": 0,
-    "Name": "Green Nappo (AI)"
+    "Name": "Green Nappo"
   },
   "33426": {
     "MonsterType": 0,
@@ -6569,7 +6569,7 @@
   },
   "33549": {
     "MonsterType": 0,
-    "Name": "Rainbow Gaze Explosion (AI)"
+    "Name": "Rainbow Gaze Explosion"
   },
   "33601": {
     "MonsterType": 2,
@@ -6753,15 +6753,15 @@
   },
   "33952": {
     "MonsterType": 0,
-    "Name": "Lightformed Kin (AI)"
+    "Name": "Lightbound Minion"
   },
   "33953": {
     "MonsterType": 0,
-    "Name": "Lightformed Kin (Healing) (AI)"
+    "Name": "Lightbound Minion (Healing)"
   },
   "33954": {
     "MonsterType": 0,
-    "Name": "Lightformed Kin (AI)"
+    "Name": "Lightbound Minion"
   },
   "33960": {
     "MonsterType": 2,
@@ -6769,11 +6769,11 @@
   },
   "33961": {
     "MonsterType": 0,
-    "Name": "Lightformed Kin (AI)"
+    "Name": "Lightbound Minion"
   },
   "33962": {
     "MonsterType": 0,
-    "Name": "化光眷属"
+    "Name": "Lightbound Minion"
   },
   "34000": {
     "MonsterType": 2,
@@ -6797,7 +6797,7 @@
   },
   "34005": {
     "MonsterType": 0,
-    "Name": "Boyce DD Arena-Edge Large AoE (AI)"
+    "Name": "Boyce Meteor Storm"
   },
   "34006": {
     "MonsterType": 0,
@@ -6805,11 +6805,11 @@
   },
   "34007": {
     "MonsterType": 0,
-    "Name": "Boyce DD Mirror (AI)"
+    "Name": "Boyce DD Mirror"
   },
   "34008": {
     "MonsterType": 0,
-    "Name": "Boyce Standard Mirror (AI)"
+    "Name": "Boyce Normal Mirror"
   },
   "34009": {
     "MonsterType": 0,
@@ -6817,15 +6817,15 @@
   },
   "34010": {
     "MonsterType": 0,
-    "Name": "Triple Knockback 1 (AI)"
+    "Name": "Three Hits Knockback 1"
   },
   "34011": {
     "MonsterType": 0,
-    "Name": "Triple Knockback 2 (AI)"
+    "Name": "Three Hits Knockback 2"
   },
   "34012": {
     "MonsterType": 0,
-    "Name": "Triple Knockback 3 (AI)"
+    "Name": "Three Hits Knockback 3"
   },
   "34013": {
     "MonsterType": 0,
@@ -6833,11 +6833,11 @@
   },
   "34014": {
     "MonsterType": 0,
-    "Name": "Groundfire Marker (AI)"
+    "Name": "Ground Fire Marker"
   },
   "34015": {
     "MonsterType": 0,
-    "Name": "Ice Spike (AI)"
+    "Name": "Ice Spike"
   },
   "34016": {
     "MonsterType": 0,
@@ -6897,7 +6897,7 @@
   },
   "34030": {
     "MonsterType": 0,
-    "Name": "Boyce DD Master Repeat Mirror (AI)"
+    "Name": "Boyce DD Master Repeat Mirror"
   },
   "34031": {
     "MonsterType": 0,
@@ -6917,15 +6917,15 @@
   },
   "34035": {
     "MonsterType": 0,
-    "Name": "Boyce Nine-Ring Center Large AoE (AI)"
+    "Name": "Boyce Frost Thrust"
   },
   "34036": {
     "MonsterType": 0,
-    "Name": "Vertical Direction Marker (AI)"
+    "Name": "Vertical Direction Marker"
   },
   "34037": {
     "MonsterType": 0,
-    "Name": ""
+    "Name": "Master En Route Teleport"
   },
   "35000": {
     "MonsterType": 2,
@@ -8141,7 +8141,7 @@
   },
   "4640": {
     "MonsterType": 1,
-    "Name": "Tidal Core (AI)"
+    "Name": "Tidal Core"
   },
   "4691": {
     "MonsterType": 1,
@@ -8169,7 +8169,7 @@
   },
   "4702": {
     "MonsterType": 1,
-    "Name": "Vilda's Phantom (AI)"
+    "Name": "Wirda Phantom"
   },
   "4703": {
     "MonsterType": 0,
@@ -8185,7 +8185,7 @@
   },
   "5000000": {
     "MonsterType": 0,
-    "Name": "Muku Chief"
+    "Name": "Boss: Muku Chief"
   },
   "5000001": {
     "MonsterType": 0,
@@ -8241,19 +8241,19 @@
   },
   "5000014": {
     "MonsterType": 0,
-    "Name": "Airona"
+    "Name": "Resonance - Airona"
   },
   "5000015": {
     "MonsterType": 0,
-    "Name": "Tatta"
+    "Name": "Resonance - Tatta"
   },
   "5000016": {
     "MonsterType": 0,
-    "Name": "Olvera"
+    "Name": "Resonance - Olvera"
   },
   "5000017": {
     "MonsterType": 0,
-    "Name": "Tina"
+    "Name": "Resonance - Tina"
   },
   "5000018": {
     "MonsterType": 0,
@@ -8261,19 +8261,67 @@
   },
   "5000019": {
     "MonsterType": 0,
-    "Name": "Celestial Flier Summon"
+    "Name": "Boss: Celestial Flier"
   },
   "5000020": {
     "MonsterType": 0,
-    "Name": "Summon Melee Muku"
+    "Name": "Muku Cudgel"
   },
   "5000021": {
     "MonsterType": 0,
-    "Name": "Summon Crossbow Muku"
+    "Name": "Crossbow Muku - Wind Elemental"
   },
   "5000022": {
     "MonsterType": 0,
-    "Name": "Summon Muku Chief"
+    "Name": "Boss: Muku Chief"
+  },
+  "5000023": {
+    "MonsterType": 0,
+    "Name": "Engram Line Tuning - Mischievous Nappo"
+  },
+  "5000024": {
+    "MonsterType": 0,
+    "Name": "Resonance - Rorola"
+  },
+  "5000025": {
+    "MonsterType": 0,
+    "Name": "Weapon Use - Boyce"
+  },
+  "5000026": {
+    "MonsterType": 0,
+    "Name": "Weapon Use - Fafala"
+  },
+  "5000027": {
+    "MonsterType": 0,
+    "Name": "Resonance - Dorothy"
+  },
+  "5000028": {
+    "MonsterType": 0,
+    "Name": "Engram Line Tuning - Black Stone Captain"
+  },
+  "5000029": {
+    "MonsterType": 0,
+    "Name": "Engram Line Tuning - Basilisk"
+  },
+  "5000030": {
+    "MonsterType": 0,
+    "Name": "Engram Line Tuning - Crimson Foxen"
+  },
+  "5000031": {
+    "MonsterType": 0,
+    "Name": "Engram Line Tuning - Flamehorn"
+  },
+  "5000032": {
+    "MonsterType": 0,
+    "Name": "Engram Line Tuning - Goblin Chief"
+  },
+  "5000033": {
+    "MonsterType": 0,
+    "Name": "Engram Line Tuning - Cabbage Kingpin"
+  },
+  "5000034": {
+    "MonsterType": 0,
+    "Name": "Engram Line Tuning - Mischievous Nappo"
   },
   "50001": {
     "MonsterType": 0,
@@ -8311,6 +8359,62 @@
     "MonsterType": 0,
     "Name": "Deepwater Cabbage Enthusiast"
   },
+  "5001008": {
+    "MonsterType": 0,
+    "Name": "Mischief Goblin"
+  },
+  "5001009": {
+    "MonsterType": 0,
+    "Name": "Mischief Goblin Shielder"
+  },
+  "5001010": {
+    "MonsterType": 0,
+    "Name": "Mischief Goblin Escapist"
+  },
+  "5001011": {
+    "MonsterType": 0,
+    "Name": "Mischief Goblin Priest"
+  },
+  "5001012": {
+    "MonsterType": 0,
+    "Name": "Shadow Falcon"
+  },
+  "5001013": {
+    "MonsterType": 0,
+    "Name": "Blightfeather Vulture"
+  },
+  "5001014": {
+    "MonsterType": 0,
+    "Name": "Radiant Spirit"
+  },
+  "5001015": {
+    "MonsterType": 0,
+    "Name": "Shadow Spirit"
+  },
+  "5001016": {
+    "MonsterType": 0,
+    "Name": "Blazing Spirit"
+  },
+  "5001017": {
+    "MonsterType": 0,
+    "Name": "Frost Spirit"
+  },
+  "5001018": {
+    "MonsterType": 0,
+    "Name": "Sword Spirit"
+  },
+  "5001019": {
+    "MonsterType": 0,
+    "Name": "Broken Sword Ghost"
+  },
+  "5001020": {
+    "MonsterType": 0,
+    "Name": "Kanamia Revenant Warrior"
+  },
+  "5001021": {
+    "MonsterType": 0,
+    "Name": "Kanamia Revenant Witch"
+  },
   "5002000": {
     "MonsterType": 1,
     "Name": "Lizardman Guardian"
@@ -8334,6 +8438,62 @@
   "5002005": {
     "MonsterType": 1,
     "Name": "King Diver Cabbage"
+  },
+  "5002006": {
+    "MonsterType": 1,
+    "Name": "Mischief Goblin Guard"
+  },
+  "5002007": {
+    "MonsterType": 1,
+    "Name": "Mischief Goblin Shaman"
+  },
+  "5002008": {
+    "MonsterType": 1,
+    "Name": "Mischief Goblin Trickster"
+  },
+  "5002009": {
+    "MonsterType": 1,
+    "Name": "Ironclad Arachnocrab"
+  },
+  "5002010": {
+    "MonsterType": 1,
+    "Name": "Nether Skyraider"
+  },
+  "5002011": {
+    "MonsterType": 1,
+    "Name": "Duskwarden Priest"
+  },
+  "5002012": {
+    "MonsterType": 1,
+    "Name": "Soul Binder"
+  },
+  "5002013": {
+    "MonsterType": 1,
+    "Name": "Frenzied Zealot"
+  },
+  "5002014": {
+    "MonsterType": 1,
+    "Name": "Radiant Guardian"
+  },
+  "5002015": {
+    "MonsterType": 1,
+    "Name": "Shadow Guardian"
+  },
+  "5002016": {
+    "MonsterType": 1,
+    "Name": "Blazing Guardian"
+  },
+  "5002017": {
+    "MonsterType": 1,
+    "Name": "Frost Guardian"
+  },
+  "5002018": {
+    "MonsterType": 1,
+    "Name": "Mischief Goblin Trickster"
+  },
+  "5002500": {
+    "MonsterType": 0,
+    "Name": "Masked Nappo"
   },
   "5003000": {
     "MonsterType": 2,
@@ -8359,6 +8519,54 @@
     "MonsterType": 2,
     "Name": "Cabbage Ultimate Ace - Hood"
   },
+  "5003006": {
+    "MonsterType": 2,
+    "Name": "Mischief Goblin Chief"
+  },
+  "5003007": {
+    "MonsterType": 2,
+    "Name": "Earth Devourer - Akufis"
+  },
+  "5003008": {
+    "MonsterType": 2,
+    "Name": "Evernight Sovereign - Helasveil"
+  },
+  "5003009": {
+    "MonsterType": 2,
+    "Name": "Sheathblade Fox - Elinor"
+  },
+  "5003010": {
+    "MonsterType": 2,
+    "Name": "Abyssal Wyrmlance - Quinin"
+  },
+  "5003011": {
+    "MonsterType": 2,
+    "Name": "Shadowstalker Felis - Rebekah"
+  },
+  "5003012": {
+    "MonsterType": 2,
+    "Name": "Shadowprowler Wolf - Rex"
+  },
+  "5003013": {
+    "MonsterType": 2,
+    "Name": "Lord of Four Elements"
+  },
+  "5003014": {
+    "MonsterType": 0,
+    "Name": "Yaretsi"
+  },
+  "5003015": {
+    "MonsterType": 0,
+    "Name": "Yaretsi"
+  },
+  "5003016": {
+    "MonsterType": 0,
+    "Name": "Yaretsi"
+  },
+  "5003017": {
+    "MonsterType": 0,
+    "Name": "Yaretsi"
+  },
   "5004001": {
     "MonsterType": 0,
     "Name": ""
@@ -8371,11 +8579,63 @@
     "MonsterType": 0,
     "Name": ""
   },
+  "5004010": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
+  "5004011": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
+  "5004012": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
+  "5004013": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
+  "5004014": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
+  "5004015": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
+  "5004016": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
+  "5004017": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
+  "5004018": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
+  "5004019": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
   "5004020": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Wraith"
+  },
+  "5004021": {
     "MonsterType": 0,
     "Name": ""
   },
-  "5004021": {
+  "5004022": {
+    "MonsterType": 0,
+    "Name": "Soul Spear"
+  },
+  "5004024": {
+    "MonsterType": 0,
+    "Name": "Tower Defense - Scene Hittable Pumpkin"
+  },
+  "5004025": {
     "MonsterType": 0,
     "Name": ""
   },
@@ -8441,7 +8701,7 @@
   },
   "511031": {
     "MonsterType": 1,
-    "Name": "Goblin Sage (AI)"
+    "Name": "Goblin Sage"
   },
   "512011": {
     "MonsterType": 0,
@@ -8597,19 +8857,19 @@
   },
   "530396": {
     "MonsterType": 0,
-    "Name": "Void Goblin Mage"
+    "Name": "Void Corruption Goblin Mage"
   },
   "530397": {
     "MonsterType": 0,
-    "Name": "Void Goblin Fire Mage"
+    "Name": "Void Corruption Goblin Fire Mage"
   },
   "530398": {
     "MonsterType": 0,
-    "Name": "Void Goblin Forest Mage"
+    "Name": "Void Corruption Goblin Forest Mage"
   },
   "530399": {
     "MonsterType": 0,
-    "Name": "Void Goblin Wind Mage"
+    "Name": "Void Corruption Goblin Wind Mage"
   },
   "540101": {
     "MonsterType": 1,
@@ -8853,15 +9113,15 @@
   },
   "552017": {
     "MonsterType": 0,
-    "Name": "​Void Goblin Fire Mage"
+    "Name": "Void Corruption Goblin Fire Mage"
   },
   "552018": {
     "MonsterType": 0,
-    "Name": "Void Goblin Forest Mage"
+    "Name": "Void Corruption Goblin Forest Mage"
   },
   "552019": {
     "MonsterType": 0,
-    "Name": "Void Goblin Wind Mage"
+    "Name": "Void Corruption Goblin Wind Mage"
   },
   "552020": {
     "MonsterType": 2,
@@ -8873,7 +9133,7 @@
   },
   "552022": {
     "MonsterType": 0,
-    "Name": "Void - Legion Soldier"
+    "Name": "Void Corruption - Soldier"
   },
   "553501": {
     "MonsterType": 1,
@@ -9041,11 +9301,11 @@
   },
   "590104": {
     "MonsterType": 0,
-    "Name": "Klose (AI)"
+    "Name": "Klausze"
   },
   "590105": {
     "MonsterType": 0,
-    "Name": "General Jagor (AI)"
+    "Name": "General Yageer"
   },
   "591001": {
     "MonsterType": 1,
@@ -9229,7 +9489,7 @@
   },
   "6000902": {
     "MonsterType": 0,
-    "Name": "Poison Mist (AI)"
+    "Name": "Poison Mist"
   },
   "60010": {
     "MonsterType": 0,
@@ -9953,7 +10213,7 @@
   },
   "60905": {
     "MonsterType": 0,
-    "Name": "Slow Spider Mine"
+    "Name": "Slow Spider Thunder"
   },
   "60906": {
     "MonsterType": 0,
@@ -10193,7 +10453,7 @@
   },
   "61905": {
     "MonsterType": 0,
-    "Name": "Slow Spider Mine"
+    "Name": "Slow Spider Thunder"
   },
   "61906": {
     "MonsterType": 0,
@@ -10205,7 +10465,7 @@
   },
   "61908": {
     "MonsterType": 0,
-    "Name": "Homing Spider Mine"
+    "Name": "Tracking Spider Thunder"
   },
   "62000": {
     "MonsterType": 0,
@@ -10385,11 +10645,11 @@
   },
   "660305": {
     "MonsterType": 0,
-    "Name": "Slate (AI)"
+    "Name": "Sleht"
   },
   "660306": {
     "MonsterType": 0,
-    "Name": "Triban (AI)"
+    "Name": "Triban"
   },
   "660307": {
     "MonsterType": 0,
@@ -10397,7 +10657,7 @@
   },
   "660308": {
     "MonsterType": 0,
-    "Name": "Vilda (AI)"
+    "Name": "Wirda"
   },
   "660309": {
     "MonsterType": 0,
@@ -10561,7 +10821,7 @@
   },
   "6611033": {
     "MonsterType": 0,
-    "Name": "Vilda Route Elite Arena Marker (AI)"
+    "Name": "Wirda Dungeon Route Elite Arena Marker"
   },
   "6611034": {
     "MonsterType": 1,
@@ -10669,7 +10929,7 @@
   },
   "663401": {
     "MonsterType": 0,
-    "Name": "博伊斯后日谈-拿枪的博伊斯（战斗动作）（1.5倍大）"
+    "Name": "Boyce"
   },
   "663402": {
     "MonsterType": 1,
@@ -10677,7 +10937,7 @@
   },
   "663403": {
     "MonsterType": 0,
-    "Name": "博伊斯后日谈-拿枪的博伊斯（平常动作）"
+    "Name": "Boyce"
   },
   "663404": {
     "MonsterType": 0,
@@ -10701,7 +10961,7 @@
   },
   "663409": {
     "MonsterType": 0,
-    "Name": "博伊斯后日谈-拿枪的博伊斯（镜光之枪）"
+    "Name": "Boyce Epilogue - Gun Boyce (Mirrorlight Lance)"
   },
   "663410": {
     "MonsterType": 0,
@@ -10881,7 +11141,7 @@
   },
   "69006": {
     "MonsterType": 0,
-    "Name": "Homing Spider Mine"
+    "Name": "Tracking Spider Thunder"
   },
   "69007": {
     "MonsterType": 0,
@@ -10918,6 +11178,10 @@
   "69104": {
     "MonsterType": 0,
     "Name": "Ritual Team Nappo (Test)"
+  },
+  "69105": {
+    "MonsterType": 1,
+    "Name": "Mischief Goblin (Transformed)"
   },
   "69200": {
     "MonsterType": 2,
@@ -10973,39 +11237,71 @@
   },
   "69214": {
     "MonsterType": 0,
-    "Name": "Plague Seed - Phase 1 (Large) (AI)"
+    "Name": "Blight Seed - Phase 1, Large"
   },
   "69215": {
     "MonsterType": 0,
-    "Name": "Plague Seed - Phase 2 (Large) (AI)"
+    "Name": "Blight Seed - Phase 2, Large"
   },
   "69216": {
     "MonsterType": 0,
-    "Name": "Plague Seed - Phase 2 (Small) (AI)"
+    "Name": "Blight Seed - Phase 2, Small"
   },
   "69217": {
     "MonsterType": 0,
-    "Name": "Poison Mist (AI)"
+    "Name": "Poison Mist"
   },
   "69220": {
     "MonsterType": 0,
-    "Name": "Poison Pool Air Wall (AI)"
+    "Name": "Poison Pool Invisible Wall"
   },
   "69230": {
     "MonsterType": 0,
-    "Name": "Poison Mist (AI)"
+    "Name": "Poison Mist"
   },
   "69231": {
     "MonsterType": 0,
-    "Name": "Poison Orb (AI)"
+    "Name": "Poison Orb"
   },
   "69232": {
     "MonsterType": 0,
-    "Name": "Falling Rock (AI)"
+    "Name": "Falling Rocks"
   },
   "69233": {
     "MonsterType": 0,
-    "Name": "Poison Blade (AI)"
+    "Name": "Poison Blade"
+  },
+  "69234": {
+    "MonsterType": 0,
+    "Name": "Mischief Goblin"
+  },
+  "69235": {
+    "MonsterType": 0,
+    "Name": "Mischief Giant Eagle"
+  },
+  "69236": {
+    "MonsterType": 0,
+    "Name": "Halloween Floating Pupil"
+  },
+  "69237": {
+    "MonsterType": 0,
+    "Name": "Halloween Muku"
+  },
+  "69238": {
+    "MonsterType": 0,
+    "Name": "Halloween Furball 1"
+  },
+  "69239": {
+    "MonsterType": 0,
+    "Name": "Halloween Bee"
+  },
+  "69240": {
+    "MonsterType": 0,
+    "Name": "Halloween Arachnocrab"
+  },
+  "69241": {
+    "MonsterType": 0,
+    "Name": "Halloween Goblin"
   },
   "69250": {
     "MonsterType": 2,
@@ -12665,7 +12961,7 @@
   },
   "81020": {
     "MonsterType": 0,
-    "Name": "Void Corruption: Goblin"
+    "Name": "Void Corruption - Normal Goblin"
   },
   "81021": {
     "MonsterType": 0,
@@ -12673,23 +12969,23 @@
   },
   "81022": {
     "MonsterType": 0,
-    "Name": "Void Corruption: Goblin"
+    "Name": "Void Corruption - Normal Goblin"
   },
   "81023": {
     "MonsterType": 0,
-    "Name": "Void Corruption: Goblin Crossbow"
+    "Name": "Void - Goblin Crossbow"
   },
   "81024": {
     "MonsterType": 0,
-    "Name": "Void Corruption: Goblin Swords"
+    "Name": "Void - Goblin Sword"
   },
   "81025": {
     "MonsterType": 1,
-    "Name": "Void Goblin Lich"
+    "Name": "Void - Goblin Mage"
   },
   "81026": {
     "MonsterType": 1,
-    "Name": "Void Corruption: Goblin Wizard"
+    "Name": "Void - Goblin Mage"
   },
   "81027": {
     "MonsterType": 0,
@@ -12769,7 +13065,7 @@
   },
   "81105": {
     "MonsterType": 1,
-    "Name": "Ee-chan (Line Connection)"
+    "Name": "Ee - chan (Tether)"
   },
   "81106": {
     "MonsterType": 1,
@@ -12977,11 +13273,11 @@
   },
   "8501": {
     "MonsterType": 0,
-    "Name": "Void - Legion Soldier"
+    "Name": "Void Corruption - Soldier"
   },
   "8502": {
     "MonsterType": 0,
-    "Name": "Void - Legion Soldier"
+    "Name": "Void Corruption - Soldier"
   },
   "8503": {
     "MonsterType": 0,
@@ -13005,11 +13301,11 @@
   },
   "8508": {
     "MonsterType": 0,
-    "Name": "Void - Legion Soldier"
+    "Name": "Void Corruption - Soldier"
   },
   "8509": {
     "MonsterType": 0,
-    "Name": "Void - Legion Soldier"
+    "Name": "Void Corruption - Soldier"
   },
   "8510": {
     "MonsterType": 0,
@@ -13017,11 +13313,11 @@
   },
   "8511": {
     "MonsterType": 0,
-    "Name": "Void - Legion Soldier"
+    "Name": "Void Corruption - Soldier"
   },
   "8512": {
     "MonsterType": 0,
-    "Name": "Void - Legion Soldier"
+    "Name": "Void Corruption - Soldier"
   },
   "8513": {
     "MonsterType": 0,
@@ -13029,7 +13325,7 @@
   },
   "8515": {
     "MonsterType": 0,
-    "Name": "Void Goblin"
+    "Name": "Void Corruption Goblin"
   },
   "8516": {
     "MonsterType": 0,

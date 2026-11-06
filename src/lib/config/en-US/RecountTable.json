@@ -2017,7 +2017,7 @@
   },
   "242": {
     "Id": 242,
-    "RecountName": "Formless Flame Slash",
+    "RecountName": "Formless Flame Slash.",
     "DamageId": [
       23510703,
       23510803,
@@ -2041,7 +2041,7 @@
   },
   "245": {
     "Id": 245,
-    "RecountName": "Explosion",
+    "RecountName": "Explosion.",
     "DamageId": [
       2220818103
     ]
@@ -2069,7 +2069,7 @@
   },
   "249": {
     "Id": 249,
-    "RecountName": "Falling Hellfire",
+    "RecountName": "Falling Hellfire.",
     "DamageId": [
       116210103,
       116210105,
@@ -3004,12 +3004,12 @@
   },
   "365": {
     "Id": 365,
-    "RecountName": "Unknown Recount 365 (AI)",
+    "RecountName": "",
     "DamageId": []
   },
   "366": {
     "Id": 366,
-    "RecountName": "Unknown Recount 366 (AI)",
+    "RecountName": "",
     "DamageId": []
   }
 }

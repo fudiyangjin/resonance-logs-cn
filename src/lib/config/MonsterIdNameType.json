@@ -3089,7 +3089,7 @@
   },
   "133115": {
     "MonsterType": 1,
-    "Name": "[首领]黯影剑士"
+    "Name": "黯影剑士"
   },
   "133116": {
     "MonsterType": 1,
@@ -3105,7 +3105,7 @@
   },
   "133119": {
     "MonsterType": 1,
-    "Name": "[首领]黯影法师"
+    "Name": "黯影法师"
   },
   "133120": {
     "MonsterType": 0,
@@ -3121,7 +3121,7 @@
   },
   "133123": {
     "MonsterType": 1,
-    "Name": "[首领]黯影法师"
+    "Name": "黯影法师"
   },
   "1332": {
     "MonsterType": 0,
@@ -8185,95 +8185,143 @@
   },
   "5000000": {
     "MonsterType": 0,
-    "Name": "姆克头目"
+    "Name": "首领·姆克头目"
   },
   "5000001": {
     "MonsterType": 0,
-    "Name": "火焰食人魔"
+    "Name": "星脉调谐·火焰兽人"
   },
   "5000002": {
     "MonsterType": 0,
-    "Name": "凶猛金牙"
+    "Name": "星脉调谐·金牙"
   },
   "5000003": {
     "MonsterType": 0,
-    "Name": "蟹蛛王"
+    "Name": "星脉调谐·幻妖蟹蛛"
   },
   "5000004": {
     "MonsterType": 0,
-    "Name": "圣域飞鱼"
+    "Name": "星脉调谐·圣域飞鱼"
   },
   "5000005": {
     "MonsterType": 0,
-    "Name": "雷电食人魔"
+    "Name": "星脉调谐·雷电食人魔"
   },
   "5000006": {
     "MonsterType": 0,
-    "Name": "寒霜食人魔"
+    "Name": "星脉调谐·寒霜食人魔"
   },
   "5000007": {
     "MonsterType": 0,
-    "Name": "姆克王"
+    "Name": "星脉调谐·姆克王"
   },
   "5000008": {
     "MonsterType": 0,
-    "Name": "哥布林王"
+    "Name": "星脉调谐·哥布林王"
   },
   "5000009": {
     "MonsterType": 0,
-    "Name": "飓风哥布林王"
+    "Name": "星脉调谐·风哥王"
   },
   "5000010": {
     "MonsterType": 0,
-    "Name": "山贼头目"
+    "Name": "星脉调谐·山贼头目"
   },
   "5000011": {
     "MonsterType": 0,
-    "Name": "铁牙"
+    "Name": "星脉调谐·铁牙"
   },
   "5000012": {
     "MonsterType": 0,
-    "Name": "蜥蜴人王"
+    "Name": "星脉调谐·蜥蜴人王"
   },
   "5000013": {
     "MonsterType": 0,
-    "Name": "剧毒蜂巢"
+    "Name": "星脉调谐·剧毒蜂巢"
   },
   "5000014": {
     "MonsterType": 0,
-    "Name": "艾露娜"
+    "Name": "共鸣-艾露娜"
   },
   "5000015": {
     "MonsterType": 0,
-    "Name": "塔塔"
+    "Name": "共鸣-塔塔"
   },
   "5000016": {
     "MonsterType": 0,
-    "Name": "奥尔维拉"
+    "Name": "共鸣-奥尔维拉"
   },
   "5000017": {
     "MonsterType": 0,
-    "Name": "蒂娜"
+    "Name": "共鸣-蒂娜"
   },
   "5000018": {
     "MonsterType": 0,
-    "Name": "灾厄之主"
+    "Name": "星脉调谐·灾厄之主"
   },
   "5000019": {
     "MonsterType": 0,
-    "Name": "圣域飞鱼召唤怪"
+    "Name": "首领·圣域飞鱼"
   },
   "5000020": {
     "MonsterType": 0,
-    "Name": "召唤近战姆克"
+    "Name": "棒槌姆克"
   },
   "5000021": {
     "MonsterType": 0,
-    "Name": "召唤弩手姆克"
+    "Name": "弩箭姆克-风元素"
   },
   "5000022": {
     "MonsterType": 0,
-    "Name": "召唤姆克头目"
+    "Name": "首领·姆克头目"
+  },
+  "5000023": {
+    "MonsterType": 0,
+    "Name": "星脉调谐·捣蛋鬼娜宝"
+  },
+  "5000024": {
+    "MonsterType": 0,
+    "Name": "共鸣-罗罗拉"
+  },
+  "5000025": {
+    "MonsterType": 0,
+    "Name": "武器使-博伊斯"
+  },
+  "5000026": {
+    "MonsterType": 0,
+    "Name": "武器使-法法菈"
+  },
+  "5000027": {
+    "MonsterType": 0,
+    "Name": "共鸣-陶洛斯"
+  },
+  "5000028": {
+    "MonsterType": 0,
+    "Name": "星脉调谐·黑石队长"
+  },
+  "5000029": {
+    "MonsterType": 0,
+    "Name": "星脉调谐·巴西利斯克"
+  },
+  "5000030": {
+    "MonsterType": 0,
+    "Name": "星脉调谐·赤玉地狐"
+  },
+  "5000031": {
+    "MonsterType": 0,
+    "Name": "星脉调谐·炎角"
+  },
+  "5000032": {
+    "MonsterType": 0,
+    "Name": "星脉调谐·哥布林首领"
+  },
+  "5000033": {
+    "MonsterType": 0,
+    "Name": "星脉调谐·卷心菜大王"
+  },
+  "5000034": {
+    "MonsterType": 0,
+    "Name": "星脉调谐·捣蛋鬼娜宝"
   },
   "50001": {
     "MonsterType": 0,
@@ -8311,6 +8359,62 @@
     "MonsterType": 0,
     "Name": "卷心菜深水爱好者"
   },
+  "5001008": {
+    "MonsterType": 0,
+    "Name": "捣蛋哥布林"
+  },
+  "5001009": {
+    "MonsterType": 0,
+    "Name": "捣蛋盾牌哥布林"
+  },
+  "5001010": {
+    "MonsterType": 0,
+    "Name": "捣蛋逃跑哥布林"
+  },
+  "5001011": {
+    "MonsterType": 0,
+    "Name": "捣蛋牧师哥布林"
+  },
+  "5001012": {
+    "MonsterType": 0,
+    "Name": "幽影隼"
+  },
+  "5001013": {
+    "MonsterType": 0,
+    "Name": "蚀羽鸦鹫"
+  },
+  "5001014": {
+    "MonsterType": 0,
+    "Name": "辉光之灵"
+  },
+  "5001015": {
+    "MonsterType": 0,
+    "Name": "暗影之灵"
+  },
+  "5001016": {
+    "MonsterType": 0,
+    "Name": "烈焰之灵"
+  },
+  "5001017": {
+    "MonsterType": 0,
+    "Name": "寒霜之灵"
+  },
+  "5001018": {
+    "MonsterType": 0,
+    "Name": "剑之灵"
+  },
+  "5001019": {
+    "MonsterType": 0,
+    "Name": "断剑残魂"
+  },
+  "5001020": {
+    "MonsterType": 0,
+    "Name": "卡尼曼恶灵战士"
+  },
+  "5001021": {
+    "MonsterType": 0,
+    "Name": "卡尼曼恶灵女巫"
+  },
   "5002000": {
     "MonsterType": 1,
     "Name": "蜥蜴人守护者"
@@ -8334,6 +8438,62 @@
   "5002005": {
     "MonsterType": 1,
     "Name": "卷心菜潜水王"
+  },
+  "5002006": {
+    "MonsterType": 1,
+    "Name": "捣蛋哥布林护卫"
+  },
+  "5002007": {
+    "MonsterType": 1,
+    "Name": "捣蛋哥布林巫医"
+  },
+  "5002008": {
+    "MonsterType": 1,
+    "Name": "捣蛋哥布林欺诈师"
+  },
+  "5002009": {
+    "MonsterType": 1,
+    "Name": "双御蟹蛛"
+  },
+  "5002010": {
+    "MonsterType": 1,
+    "Name": "冥空掠袭者"
+  },
+  "5002011": {
+    "MonsterType": 1,
+    "Name": "暝守祭司"
+  },
+  "5002012": {
+    "MonsterType": 1,
+    "Name": "缚魂者"
+  },
+  "5002013": {
+    "MonsterType": 1,
+    "Name": "永躁狂徒"
+  },
+  "5002014": {
+    "MonsterType": 1,
+    "Name": "辉光守护者"
+  },
+  "5002015": {
+    "MonsterType": 1,
+    "Name": "暗影守护者"
+  },
+  "5002016": {
+    "MonsterType": 1,
+    "Name": "烈焰守护者"
+  },
+  "5002017": {
+    "MonsterType": 1,
+    "Name": "寒霜守护者"
+  },
+  "5002018": {
+    "MonsterType": 1,
+    "Name": "捣蛋哥布林欺诈师"
+  },
+  "5002500": {
+    "MonsterType": 0,
+    "Name": "面具娜宝"
   },
   "5003000": {
     "MonsterType": 2,
@@ -8359,6 +8519,54 @@
     "MonsterType": 2,
     "Name": "卷心菜绝对王牌·胡德"
   },
+  "5003006": {
+    "MonsterType": 2,
+    "Name": "捣蛋哥布林首领"
+  },
+  "5003007": {
+    "MonsterType": 2,
+    "Name": "食地者·阿库菲斯"
+  },
+  "5003008": {
+    "MonsterType": 2,
+    "Name": "永夜穹主·赫拉斯维尔"
+  },
+  "5003009": {
+    "MonsterType": 2,
+    "Name": "封刃狐·艾丽诺尔"
+  },
+  "5003010": {
+    "MonsterType": 2,
+    "Name": "蜧渊尖枪·奎宁"
+  },
+  "5003011": {
+    "MonsterType": 2,
+    "Name": "复仇暗猫·蕾贝卡"
+  },
+  "5003012": {
+    "MonsterType": 2,
+    "Name": "疾影狼·莱克斯"
+  },
+  "5003013": {
+    "MonsterType": 2,
+    "Name": "四相之主"
+  },
+  "5003014": {
+    "MonsterType": 0,
+    "Name": "娅蕾丝"
+  },
+  "5003015": {
+    "MonsterType": 0,
+    "Name": "娅蕾丝"
+  },
+  "5003016": {
+    "MonsterType": 0,
+    "Name": "娅蕾丝"
+  },
+  "5003017": {
+    "MonsterType": 0,
+    "Name": "娅蕾丝"
+  },
   "5004001": {
     "MonsterType": 0,
     "Name": ""
@@ -8371,11 +8579,63 @@
     "MonsterType": 0,
     "Name": ""
   },
+  "5004010": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
+  "5004011": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
+  "5004012": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
+  "5004013": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
+  "5004014": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
+  "5004015": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
+  "5004016": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
+  "5004017": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
+  "5004018": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
+  "5004019": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
   "5004020": {
+    "MonsterType": 0,
+    "Name": "塔防-游魂"
+  },
+  "5004021": {
     "MonsterType": 0,
     "Name": ""
   },
-  "5004021": {
+  "5004022": {
+    "MonsterType": 0,
+    "Name": "灵魂之枪"
+  },
+  "5004024": {
+    "MonsterType": 0,
+    "Name": "塔防-场景可被击南瓜"
+  },
+  "5004025": {
     "MonsterType": 0,
     "Name": ""
   },
@@ -10919,6 +11179,10 @@
     "MonsterType": 0,
     "Name": "仪仗队娜宝-测试"
   },
+  "69105": {
+    "MonsterType": 1,
+    "Name": "捣蛋哥布林（变身）"
+  },
   "69200": {
     "MonsterType": 2,
     "Name": "恶疫之鳞"
@@ -11006,6 +11270,38 @@
   "69233": {
     "MonsterType": 0,
     "Name": "毒刃"
+  },
+  "69234": {
+    "MonsterType": 0,
+    "Name": "捣蛋哥布林"
+  },
+  "69235": {
+    "MonsterType": 0,
+    "Name": "捣蛋大鹫"
+  },
+  "69236": {
+    "MonsterType": 0,
+    "Name": "万圣浮瞳"
+  },
+  "69237": {
+    "MonsterType": 0,
+    "Name": "万圣姆克"
+  },
+  "69238": {
+    "MonsterType": 0,
+    "Name": "万圣毛球1"
+  },
+  "69239": {
+    "MonsterType": 0,
+    "Name": "万圣蜜蜂"
+  },
+  "69240": {
+    "MonsterType": 0,
+    "Name": "万圣蟹蛛"
+  },
+  "69241": {
+    "MonsterType": 0,
+    "Name": "万圣哥布林"
   },
   "69250": {
     "MonsterType": 2,

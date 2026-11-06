@@ -1,126 +1,71 @@
 # -*- coding: utf-8 -*-
-"""Extract localized RecountTable files into scripts/output.
+"""Export native localized Recount rows; verify groups by DamageId, never row ID.
 
-The Chinese ZTable/RecountTable.json is the template source for all output keys
-and full row structure. The "其他" catch-all row is skipped. English/Japanese
-names are supplied by override files and only replace RecountName.
+Each language supplies its own complete CTB rows, including RecountName and
+DamageId together. No name overrides or research translations are applied.
 """
 
 import argparse
-import json
 from pathlib import Path
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
-OUTPUT_DIR = SCRIPT_DIR / "output"
-ZH_RECOUNT_PATH = PROJECT_ROOT / "ZTable" / "RecountTable.json"
+from localized_names import OfficialNames, add_arguments, write_json
+from recount_groups import damage_signature, load_native_rows, pair_groups
 
-LANG_CONFIGS = {
-    "zh": {
-        "overrides_dir": SCRIPT_DIR / "overrides",
-        "output_name": "RecountTable.json",
-    },
-    "en": {
-        "overrides_dir": SCRIPT_DIR / "overrides_en",
-        "output_name": "RecountTable_en.json",
-    },
-    "jp": {
-        "overrides_dir": SCRIPT_DIR / "overrides_jp",
-        "output_name": "RecountTable_jp.json",
-    },
-}
-
-OVERRIDE_FILE_NAME = "recount_name_overrides.json"
-SKIP_RECOUNT_NAMES = {"其他"}
+OUTPUT_NAMES = {"zh": "RecountTable.json", "en": "RecountTable_en.json", "jp": "RecountTable_jp.json"}
 
 
-def _load_json(path: Path, missing_ok: bool = False) -> dict:
-    if not path.exists():
-        if missing_ok:
-            return {}
-        raise FileNotFoundError(path)
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def _write_json(path: Path, data: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-
-def _source_recount_table() -> dict:
-    table = _load_json(ZH_RECOUNT_PATH)
-    result = {}
-
-    for key, entry in table.items():
-        if not isinstance(entry, dict):
+def build_output(chinese: dict, native: dict, names, include_other: bool = False) -> dict:
+    matches = pair_groups(chinese, native)
+    other = [damage_signature(row) for row in chinese.values() if row["RecountName"] == "其他"]
+    if len(other) > 1 or any(not signature for signature in other):
+        raise ValueError("Cannot identify the Chinese catch-all by a unique nonempty DamageId group")
+    other_signature = other[0] if other else None
+    output = {}
+    for key, row in native.items():
+        signature = damage_signature(row)
+        if not include_other and signature and signature == other_signature:
             continue
-
-        source_key = str(entry.get("Id", key))
-        recount_name = entry.get("RecountName") or ""
-        if recount_name in SKIP_RECOUNT_NAMES:
-            continue
-
-        result[source_key] = dict(entry)
-
-    return result
-
-
-def _load_overrides(lang: str) -> dict:
-    if lang == "zh":
-        return {}
-    return _load_json(
-        LANG_CONFIGS[lang]["overrides_dir"] / OVERRIDE_FILE_NAME,
-        missing_ok=True,
-    )
+        output[key] = dict(row)
+        ref = names.references["RecountTable", "RecountName"][key]
+        value = row["RecountName"]
+        names.records[key] = {
+            "source": "official" if value else "official_empty", "value": value,
+            "table": "RecountTable", "field": "RecountName", "textId": key,
+            "official": value, "officialSource": ref["source"], "languageKey": ref["key"],
+            "damageIds": list(signature), "damageVerified": bool(signature),
+            "damageMatch": "exact_set" if signature else "empty_unverifiable",
+            "chineseSourceRow": matches[key],
+        }
+    return output
 
 
-def _build_recount_table(lang: str, source_table: dict) -> tuple[dict, int]:
-    overrides = _load_overrides(lang)
-    result = {key: dict(entry) for key, entry in source_table.items()}
-
-    applied_count = 0
-    for recount_id, name in overrides.items():
-        entry = result.get(str(recount_id))
-        if isinstance(entry, dict):
-            entry["RecountName"] = name
-            applied_count += 1
-
-    return result, applied_count
-
-
-def _write_recount_table(lang: str, result: dict, override_count: int) -> None:
-    output_path = OUTPUT_DIR / LANG_CONFIGS[lang]["output_name"]
-    _write_json(output_path, result)
-    print(f"已生成: {output_path}，共 {len(result)} 条（{override_count} 条由例外文件覆盖）")
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="从中文 RecountTable 模板和 override 文件提取多语言 RecountTable。"
-    )
-    parser.add_argument(
-        "--lang",
-        choices=sorted(LANG_CONFIGS.keys()),
-        help="只生成指定语言；默认生成所有语言。",
-    )
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_arguments(parser)
+    parser.add_argument("--lang", choices=sorted(OUTPUT_NAMES), help="Export one language; default: all three")
+    parser.add_argument("--include-other", action="store_true", help="Include the catch-all group for a complete native table")
     return parser.parse_args()
 
 
-def main() -> int:
+def main():
     args = parse_args()
-    langs = [args.lang] if args.lang else list(LANG_CONFIGS.keys())
-
-    try:
-        source_table = _source_recount_table()
-        for lang in langs:
-            result, override_count = _build_recount_table(lang, source_table)
-            _write_recount_table(lang, result, override_count)
-    except FileNotFoundError as exc:
-        print(f"错误: 未找到 {exc}")
-        return 1
-
+    chinese_names = OfficialNames("zh", args.localization_dir)
+    chinese = load_native_rows(chinese_names)
+    planned = []
+    for language in ([args.lang] if args.lang else OUTPUT_NAMES):
+        names = OfficialNames(language, args.localization_dir)
+        native = load_native_rows(names)
+        output = build_output(chinese, native, names, args.include_other)
+        planned.append((args.output_dir / OUTPUT_NAMES[language], output, names))
+    # Do all language/group checks before publishing any file.
+    for path, output, names in planned:
+        # Native row ids are contiguous integers. Text sorting puts 10 before 2.
+        output = {key: output[key] for key in sorted(output, key=int)}
+        write_json(path, output, sort_keys=False)
+        names.write_audit(path)
+        verified = sum(record["damageVerified"] for record in names.records.values())
+        print(f"Generated {path}: {len(output)} native rows; {verified} exact DamageId groups, "
+              f"{len(output) - verified} empty groups unverified by damage; no name overrides")
     return 0
 
 

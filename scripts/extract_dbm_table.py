@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""Export localized DbmTable rows using the Chinese table as the structure template."""
+"""Export DbmTable structure with official Content and separate name provenance."""
 
 import argparse
 import json
 from pathlib import Path
 
+from game_data_paths import DATA_ROOT
+
+from localized_names import OfficialNames, add_arguments
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 OUTPUT_DIR = SCRIPT_DIR / "output"
-ZH_DBM_PATH = PROJECT_ROOT / "ZTable" / "DbmTable.json"
+ZH_DBM_PATH = DATA_ROOT / "ZTable" / "DbmTable.json"
 OVERRIDE_FILE_NAME = "dbm_content_overrides.json"
 
 LANG_CONFIGS = {
@@ -72,12 +76,13 @@ def write_dbm_table(lang: str, result: dict, override_count: int) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as file:
         json.dump(result, file, ensure_ascii=False, indent=2)
-    print(f"Generated {output_path}: {len(result)} rows, {override_count} overrides")
+    print(f"Generated {output_path}: {len(result)} rows, {override_count} fallback inputs; official text wins")
     return output_path
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Export localized DbmTable configuration.")
+    add_arguments(parser)
     parser.add_argument(
         "--lang",
         choices=sorted(LANG_CONFIGS),
@@ -87,13 +92,25 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    global OUTPUT_DIR
     args = parse_args()
+    OUTPUT_DIR = args.output_dir
     langs = [args.lang] if args.lang else list(LANG_CONFIGS)
     try:
         source_table = source_dbm_table()
         for lang in langs:
+            names = OfficialNames(lang, args.localization_dir)
+            names.bind("DbmTable", "Content", source_table)
             result, override_count = build_dbm_table(lang, source_table)
+            overrides = load_overrides(lang)
+            for key, entry in result.items():
+                entry["Content"] = names.resolve(
+                    "DbmTable", "Content", key, entry["Content"],
+                    fallback_source="research_override" if key in overrides else "research_template",
+                    research_label=source_table[key]["Content"],
+                )
             write_dbm_table(lang, result, override_count)
+            names.write_audit(OUTPUT_DIR / LANG_CONFIGS[lang]["output_name"])
     except FileNotFoundError as error:
         print(f"Missing input: {error}")
         return 1

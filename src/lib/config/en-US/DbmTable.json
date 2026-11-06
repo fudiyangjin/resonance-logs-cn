@@ -172,7 +172,7 @@
   "17021301": {
     "Id": 17021301,
     "CountCDTime": 15,
-    "Content": "Void Corruption Purge"
+    "Content": "​Void Corruption Purge"
   },
   "17025601": {
     "Id": 17025601,
@@ -647,7 +647,7 @@
   "3395166": {
     "Id": 3395166,
     "CountCDTime": 10,
-    "Content": "Ashen Timekeeper"
+    "Content": "Giant Light Spear"
   },
   "340000501": {
     "Id": 340000501,
@@ -657,7 +657,7 @@
   "3395177": {
     "Id": 3395177,
     "CountCDTime": 15,
-    "Content": "Everlight, Celestial Call"
+    "Content": "Consecutive Explosion"
   },
   "340002301": {
     "Id": 340002301,
@@ -667,7 +667,7 @@
   "3395178": {
     "Id": 3395178,
     "CountCDTime": 15,
-    "Content": "Great Wish, Suffering Believers"
+    "Content": "Lightbound Minion Summon"
   },
   "340002501": {
     "Id": 340002501,
@@ -677,6 +677,6 @@
   "3395179": {
     "Id": 3395179,
     "CountCDTime": 15,
-    "Content": "Shadow and Sorrow"
+    "Content": "Giant Light Scissors"
   }
 }

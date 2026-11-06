@@ -6,58 +6,58 @@
   },
   {
     "id": 2351,
-    "NameDesign": "伝説の鷹-ハウル",
+    "NameDesign": "伝説の臣鷹-ハウル",
     "Icon": "skill_aoyi_skill_icon_001.png"
   },
   {
     "id": 3021,
-    "NameDesign": "雷霆天引 (AI)",
+    "NameDesign": "サンダーコール",
     "Icon": "skill_aoyi_skill_icon_014.png"
   },
   {
     "id": 3022,
-    "NameDesign": "琉火の咆哮 (AI)",
+    "NameDesign": "炎の咆哮",
     "Icon": "skill_aoyi_skill_icon_017.png"
   },
   {
     "id": 3023,
-    "NameDesign": "パルス祝祷 (AI)",
+    "NameDesign": "パルスの祈り",
     "Icon": "skill_aoyi_skill_icon_012.png"
   },
   {
     "id": 3024,
-    "NameDesign": "地獄突き (AI)",
+    "NameDesign": "ヘルスラスト",
     "Icon": "skill_aoyi_skill_icon_047.png"
   },
   {
     "id": 3025,
-    "NameDesign": "雷霆の咆哮 (AI)",
+    "NameDesign": "サンダーロア",
     "Icon": "skill_aoyi_skill_icon_038.png"
   },
   {
     "id": 3026,
-    "NameDesign": "静寂の潮汐 (AI)",
+    "NameDesign": "サイレントサージ",
     "Icon": "skill_aoyi_skill_icon_049.png"
   },
   {
     "id": 3027,
-    "NameDesign": "生命の祈り (AI)",
+    "NameDesign": "ライフブレス",
     "Icon": "skill_aoyi_skill_icon_013.png"
   },
   {
     "id": 3028,
-    "NameDesign": "救世の境界 (AI)",
+    "NameDesign": "加護結界",
     "Icon": "skill_aoyi_skill_icon_054.png"
   },
   {
     "id": 3898,
-    "NameDesign": "絶技！寒風の渦 (AI)",
+    "NameDesign": "絶技！フロストサイクロン",
     "Icon": "skill_aoyi_skill_icon_099.png",
     "maxCharges": 2
   },
   {
     "id": 3899,
-    "NameDesign": "絶技！烈炎払拭 (AI)",
+    "NameDesign": "絶技！烈火一掃",
     "Icon": "skill_aoyi_skill_icon_100.png"
   },
   {
@@ -390,12 +390,12 @@
   },
   {
     "id": 3967,
-    "NameDesign": "タロス変身解除",
+    "NameDesign": "ドロシー変身終了",
     "Icon": "skill_aoyi_skill_icon_053.png"
   },
   {
     "id": 3968,
-    "NameDesign": "奥義！虚蝕奪刃",
+    "NameDesign": "奥義！虚蝕劫刃",
     "Icon": "skill_aoyi_skill_icon_071.png",
     "maxCharges": 2
   },
@@ -477,12 +477,12 @@
   },
   {
     "id": 3984,
-    "NameDesign": "ルーシー変身解除",
+    "NameDesign": "ルーシィ変身終了",
     "Icon": "skill_aoyi_skill_icon_086.png"
   },
   {
     "id": 3985,
-    "NameDesign": "ナツ変身解除",
+    "NameDesign": "ナツ変身終了",
     "Icon": "skill_aoyi_skill_icon_085.png"
   },
   {
@@ -497,67 +497,67 @@
   },
   {
     "id": 3988,
-    "NameDesign": "奥義！聖炎の竜息 (AI)",
+    "NameDesign": "奥義！聖炎の竜息",
     "Icon": "skill_aoyi_skill_icon_087.png",
     "maxCharges": 2
   },
   {
     "id": 3989,
-    "NameDesign": "奥義！双星の決闘 (AI)",
+    "NameDesign": "奥義！双星の決闘",
     "Icon": "skill_aoyi_skill_icon_088.png",
     "maxCharges": 2
   },
   {
     "id": 3990,
-    "NameDesign": "奥義！裂石の嵐 (AI)",
+    "NameDesign": "奥義！つぶての嵐",
     "Icon": "skill_aoyi_skill_icon_089.png",
     "maxCharges": 2
   },
   {
     "id": 3991,
-    "NameDesign": "奥義！終焉の化身 (AI)",
+    "NameDesign": "奥義！終焉の化身",
     "Icon": "skill_aoyi_skill_icon_090.png",
     "maxCharges": 2
   },
   {
     "id": 3992,
-    "NameDesign": "奥義！堕落の一撃 (AI)",
+    "NameDesign": "奥義！堕落の一撃",
     "Icon": "skill_aoyi_skill_icon_091.png"
   },
   {
     "id": 3993,
-    "NameDesign": "奥義！逆刃極凍斬 (AI)",
+    "NameDesign": "奥義！氷刃返し",
     "Icon": "skill_aoyi_skill_icon_092.png"
   },
   {
     "id": 3994,
-    "NameDesign": "奥義！斬鉄式 (AI)",
+    "NameDesign": "奥義！斬鉄式",
     "Icon": "skill_aoyi_skill_icon_093.png"
   },
   {
     "id": 3995,
-    "NameDesign": "奥義！鮫旋の激流 (AI)",
+    "NameDesign": "奥義！シャークトルネード",
     "Icon": "skill_aoyi_skill_icon_094.png"
   },
   {
     "id": 3996,
-    "NameDesign": "奥義！泡影の息 (AI)",
+    "NameDesign": "奥義！バブルブレス",
     "Icon": "skill_aoyi_skill_icon_095.png"
   },
   {
     "id": 3997,
-    "NameDesign": "絶技！連携潮柱 (AI)",
+    "NameDesign": "絶技！タイドピンサー",
     "Icon": "skill_aoyi_skill_icon_096.png"
   },
   {
     "id": 3998,
-    "NameDesign": "絶技！ヒレハンマー強打 (AI)",
+    "NameDesign": "絶技！フィンハンマー",
     "Icon": "skill_aoyi_skill_icon_097.png",
     "maxCharges": 3
   },
   {
     "id": 3999,
-    "NameDesign": "絶技！爆裂水弾 (AI)",
+    "NameDesign": "絶技！アクアバースト",
     "Icon": "skill_aoyi_skill_icon_098.png",
     "maxCharges": 1
   }
