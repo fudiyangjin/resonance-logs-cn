@@ -14,6 +14,8 @@ export const enUSMessages = {
   "skillDamage.iconCategory": "Icon category",
   "skillDamage.skillIcons": "Skill icons",
   "skillDamage.talentIcons": "Talent icons",
+  "skillDamage.iconCommon": "Common",
+  "skillDamage.talentGeneral": "General",
   "skillDamage.iconBackground": "Icon background",
   "skillDamage.iconOpacity": "Background opacity",
   "skillDamage.labelMode": "Skill label",

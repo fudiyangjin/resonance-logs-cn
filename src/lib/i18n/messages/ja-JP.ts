@@ -12,6 +12,8 @@ export const jaJPMessages = {
   "skillDamage.iconCategory": "アイコンの種類",
   "skillDamage.skillIcons": "スキルアイコン",
   "skillDamage.talentIcons": "タレントアイコン",
+  "skillDamage.iconCommon": "共通",
+  "skillDamage.talentGeneral": "汎用",
   "skillDamage.iconBackground": "アイコンの背景色",
   "skillDamage.iconOpacity": "背景の不透明度",
   "skillDamage.labelMode": "スキルの表示形式",

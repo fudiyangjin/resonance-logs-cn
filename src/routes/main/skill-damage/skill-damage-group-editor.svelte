@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { onDestroy, untrack } from "svelte";
+  import { onDestroy } from "svelte";
   import {
     SKILL_DAMAGE_ICON_PRESETS,
-    TALENT_DAMAGE_ICON_PRESETS,
     skillDamageIconBackground,
     resolveSkillDamageIcon,
   } from "$lib/skill-damage-icons";
@@ -28,24 +27,16 @@
   import { getLocale, t } from "$lib/i18n/index.svelte";
   import { searchSkillDamage } from "$lib/config/skill-damage-search";
   import { lookupDamageIdName } from "$lib/config/recount-table";
-  import SkillIcon from "$lib/components/skill-icon.svelte";
   import SkillDamageRow from "$lib/components/SkillDamageRow.svelte";
   import MonsterSkillSearchGrid from "$lib/components/MonsterSkillSearchGrid.svelte";
   import DamagePaintEditor from "./damage-paint-editor.svelte";
   import DamageNumberStyleEditor from "./damage-number-style-editor.svelte";
+  import SkillDamageIconPicker from "./skill-damage-icon-picker.svelte";
   import SettingsFilePicker from "../dps/settings/settings-file-picker.svelte";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
 
   let { group }: { group: SkillDamageGroup } = $props();
 
-  let iconCategory = $state<"skill" | "talent">(
-    untrack(() => (group.iconPath.includes("/talent/") ? "talent" : "skill")),
-  );
-  const iconPresets = $derived(
-    iconCategory === "talent"
-      ? TALENT_DAMAGE_ICON_PRESETS
-      : SKILL_DAMAGE_ICON_PRESETS,
-  );
   const fonts = $derived(skillDamageFonts());
   const fontFamily = $derived(skillDamageFontFamily(group));
   $effect(() => ensureSkillDamageFonts([group]));
@@ -146,17 +137,6 @@
   {#if group.labelMode === "icon"}
     <div class="space-y-2 rounded border p-3">
       <h3 class="text-sm font-semibold">{t("skillDamage.iconPresets")}</h3>
-      <label class="flex items-center gap-2 text-sm"
-        >{t("skillDamage.iconCategory")}
-        <select
-          class="bg-background rounded border p-2"
-          bind:value={iconCategory}
-        >
-          <option value="skill">{t("skillDamage.skillIcons")}</option><option
-            value="talent">{t("skillDamage.talentIcons")}</option
-          >
-        </select>
-      </label>
       <DamagePaintEditor
         paint={group.iconBackground}
         label={t("skillDamage.iconBackground")}
@@ -175,27 +155,11 @@
         />
         <span>{Math.round(group.iconBackgroundOpacity * 100)}%</span>
       </label>
-      <div
-        class="grid max-h-80 grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-2 overflow-y-auto p-1"
-      >
-        {#each iconPresets as path, index (path)}
-          <button
-            type="button"
-            class="h-12 w-12 rounded border-2 p-1 {group.iconPath === path
-              ? 'border-primary bg-primary/20'
-              : 'hover:border-border border-transparent'}"
-            aria-label={t("skillDamage.iconNumber", { number: index + 1 })}
-            aria-pressed={group.iconPath === path}
-            title={t("skillDamage.iconNumber", { number: index + 1 })}
-            onclick={() => (group.iconPath = path)}
-          >
-            <SkillIcon
-              imagePath={path}
-              background={skillDamageIconBackground(group)}
-            />
-          </button>
-        {/each}
-      </div>
+      <SkillDamageIconPicker
+        selected={group.iconPath}
+        background={skillDamageIconBackground(group)}
+        onSelect={(path) => (group.iconPath = path)}
+      />
     </div>
   {/if}
   <div class="flex flex-wrap items-center gap-4">

@@ -1,0 +1,1840 @@
+{
+  "changqiang435_-2866570409935272242.png": [
+    "迅速"
+  ],
+  "changqiang436_4117253435183368844.png": [
+    "鋭利拡充"
+  ],
+  "changqiang437_7063217441095209841.png": [
+    "長槍利刃"
+  ],
+  "changqiang438_-1282176577225336026.png": [
+    "鋒鋭"
+  ],
+  "changqiang439_8818520318972933003.png": [
+    "破追［強化］"
+  ],
+  "changqiang440_5728195816400155166.png": [
+    "風螺旋"
+  ],
+  "changqiang441_2150706842455422230.png": [
+    "気勁加持"
+  ],
+  "changqiang442_-2858139388189630353.png": [
+    "無畏疾風"
+  ],
+  "changqiang443_-4834428676759947386.png": [
+    "微風低語"
+  ],
+  "changqiang444_1156106869178080869.png": [
+    "疾馳竜砲"
+  ],
+  "changqiang445_-4964736730817407015.png": [
+    "千瘡百孔"
+  ],
+  "changqiang446_7480908388146868551.png": [
+    "螺旋撕裂"
+  ],
+  "changqiang447_5680669484564452170.png": [
+    "剛毅"
+  ],
+  "changqiang448_-4510002464464487984.png": [
+    "微風迅捷"
+  ],
+  "changqiang449_3638626699845432040.png": [
+    "風元素之息"
+  ],
+  "changqiang450_6124430015259085455.png": [
+    "風起"
+  ],
+  "changqiang451_1442775011230175216.png": [
+    "強攻"
+  ],
+  "changqiang452_-1988887240211528143.png": [
+    "螺旋爆炎"
+  ],
+  "changqiang453_-8482019637162186223.png": [
+    "竜之怒焰"
+  ],
+  "changqiang454_8161012731315541338.png": [
+    "風環竜砲"
+  ],
+  "changqiang455_1760157507975667262.png": [
+    "飛鳥投［強化］"
+  ],
+  "changqiang456_4840828462350825523.png": [
+    "鋭利［強化］"
+  ],
+  "changqiang457_-1055245693951117675.png": [
+    "長槍回復"
+  ],
+  "changqiang458_3095064993358103087.png": [
+    "鋭利長息"
+  ],
+  "changqiang459_-2906842949815592558.png": [
+    "鋭利拡充"
+  ],
+  "changqiang460_-5890237489046489368.png": [
+    "鋭利翔返"
+  ],
+  "changqiang461_5704196102068674653.png": [
+    "追撃之力"
+  ],
+  "changqiang462_-2578614624030480868.png": [
+    "卓絶風華"
+  ],
+  "changqiang463_7129388977321887545.png": [
+    "風陣・鋭利衝"
+  ],
+  "changqiang464_-4481220336161756758.png": [
+    "刹那破式"
+  ],
+  "changqiang465_-1807010239651972738.png": [
+    "風巻勁撃"
+  ],
+  "changqiang466_6187123280827468643.png": [
+    "追撃之鋭"
+  ],
+  "changqiang467_-4472971840714153032.png": [
+    "刹那連撃"
+  ],
+  "changqiang468_-8989146338701917470.png": [
+    "破式"
+  ],
+  "changqiang469_315812944271703805.png": [
+    "鋭利回響"
+  ],
+  "changqiang470_6576723726823090294.png": [
+    "勇風幸運"
+  ],
+  "common_attrdexterity_5933509642912299638.png": [
+    "敏捷"
+  ],
+  "common_attrhaste_8454206061634060323.png": [
+    "ファスト"
+  ],
+  "common_attrluck_-6126577399248271687.png": [
+    "幸運",
+    "幸運確率",
+    "幸運ダメージ"
+  ],
+  "common_attrmastery_7412119243494228917.png": [
+    "器用さ"
+  ],
+  "common_attrversatility_-5327509501343454434.png": [
+    "万能",
+    "全能ダメージボーナス",
+    "全能ダメージ軽減"
+  ],
+  "common_icon03_8900073195624449876.png": [
+    "氷属性攻撃",
+    "岩属性攻撃",
+    "雷属性攻撃",
+    "森属性攻撃",
+    "光属性攻撃",
+    "風属性攻撃",
+    "火属性攻撃"
+  ],
+  "common_icon04_7530785129569524332.png": [
+    "回復効果",
+    "バリアダメージ軽減",
+    "レジストダメージ軽減"
+  ],
+  "common_icon05_-8156243332899822416.png": [
+    "筋力"
+  ],
+  "common_icon06_-3579383552921421169.png": [
+    "知力"
+  ],
+  "common_icon07_-9027704475579957595.png": [
+    "脆弱ダメージボーナス",
+    "抑圧ダメージ軽減"
+  ],
+  "common_icon08_3824526913602173039.png": [
+    "耐久力"
+  ],
+  "common_icon12_3270441707782298779.png": [
+    "会心",
+    "会心率",
+    "会心ダメージ"
+  ],
+  "common_icon13_-2602042637177491941.png": [
+    "攻撃速度",
+    "発動速度",
+    "リキャスト",
+    "防御無視"
+  ],
+  "fahuan536_-44999428732803211.png": [
+    "舞い踊る種"
+  ],
+  "fahuan537_-4481300547764871846.png": [
+    "力の奔流"
+  ],
+  "fahuan538_-8144878600697684431.png": [
+    "再生の芽"
+  ],
+  "fahuan539_-7818113566627469458.png": [
+    "万能の息吹"
+  ],
+  "fahuan540_6979704159053203383.png": [
+    "庇護"
+  ],
+  "fahuan541_-4013252779961407226.png": [
+    "波動の息吹"
+  ],
+  "fahuan542_5486931548173804155.png": [
+    "野生種共生"
+  ],
+  "fahuan543_6552257880758455673.png": [
+    "荒野の加護"
+  ],
+  "fahuan544_-7454259557201802938.png": [
+    "広域の茨"
+  ],
+  "fahuan545_5318936377185258130.png": [
+    "イバラ崩し"
+  ],
+  "fahuan546_-7114294191212327446.png": [
+    "二重波動"
+  ],
+  "fahuan547_969106134143339723.png": [
+    "迅速庇護"
+  ],
+  "fahuan548_-3923477589100837086.png": [
+    "波動回帰"
+  ],
+  "fahuan549_-8862656815810232831.png": [
+    "迅速の蕾"
+  ],
+  "fahuan550_2503545620821595806.png": [
+    "共生の息吹"
+  ],
+  "fahuan551_-2780079593286497614.png": [
+    "共生延長"
+  ],
+  "fahuan552_-2158863115718786368.png": [
+    "波動残響"
+  ],
+  "fahuan553_-8685088967225004013.png": [
+    "幸運ダメージ"
+  ],
+  "fahuan554_3454146171493669825.png": [
+    "緑の衝撃"
+  ],
+  "fahuan555_8230401689617975517.png": [
+    "荒野の幸運"
+  ],
+  "fahuan556_1453573699219029806.png": [
+    "緑の滋養"
+  ],
+  "fahuan557_6036496301706496962.png": [
+    "鼓舞の極意"
+  ],
+  "fahuan558_3412957291670990100.png": [
+    "生命開花"
+  ],
+  "fahuan559_-3642899574653387783.png": [
+    "活気"
+  ],
+  "fahuan560_5562259156717883335.png": [
+    "ブルームチャージ［強化］"
+  ],
+  "fahuan561_-498824976965191721.png": [
+    "開花循環"
+  ],
+  "fahuan562_7204500161430898321.png": [
+    "エネルギー発生"
+  ],
+  "fahuan563_-4047024709558437948.png": [
+    "無心"
+  ],
+  "fahuan564_4730186388724748147.png": [
+    "旺盛な苗"
+  ],
+  "fahuan565_8858565807237953882.png": [
+    "三色花の啓示"
+  ],
+  "fahuan566_-3917635024218789857.png": [
+    "花の輪舞"
+  ],
+  "fahuan567_-422092813257201281.png": [
+    "蕾の開花"
+  ],
+  "fahuan568_-2620164662528302541.png": [
+    "鼓舞強化"
+  ],
+  "fahuan569_2630055620366304518.png": [
+    "エネルギー増量"
+  ],
+  "fahuan570_748945073261766250.png": [
+    "救護"
+  ],
+  "fahuan571_-4869854771324790511.png": [
+    "再生の蕾",
+    "瞬間開花"
+  ],
+  "gita1300_7042270298278048048.png": [
+    "ラッシュパッション"
+  ],
+  "gita1301_-7294983709632326696.png": [
+    "弦域拡張"
+  ],
+  "gita1302_-5464239430900081923.png": [
+    "ほとばしる熱"
+  ],
+  "gita1303_-2135000125641023626.png": [
+    "知力変換"
+  ],
+  "gita1304_5140558767029781562.png": [
+    "魔力昇華"
+  ],
+  "gita1305_8758412832807048424.png": [
+    "奏鳴・熱核"
+  ],
+  "gita1306_-542090610853701645.png": [
+    "追撃の炎爆"
+  ],
+  "gita1307_7606935984008914576.png": [
+    "追撃の炎爆［強化］"
+  ],
+  "gita1308_-1586858441948561383.png": [
+    "狂音型"
+  ],
+  "gita1309_788879049657143378.png": [
+    "幸運音波"
+  ],
+  "gita1310_4876583110830487529.png": [
+    "散重狂想"
+  ],
+  "gita1311_-6564652363958283634.png": [
+    "断章"
+  ],
+  "gita1312_4113308115471917756.png": [
+    "音波烈火"
+  ],
+  "gita1313_8065691184841970055.png": [
+    "癒しの音符"
+  ],
+  "gita1314_-2917578890301856271.png": [
+    "炎癒"
+  ],
+  "gita1315_5460004520000922569.png": [
+    "響奏"
+  ],
+  "gita1316_5581599121998839076.png": [
+    "再始動"
+  ],
+  "gita1317_-8451936109518878182.png": [
+    "響奏型"
+  ],
+  "gita1318_-5650709715071812200.png": [
+    "華章充填"
+  ],
+  "gita1319_-6930558388795201870.png": [
+    "双生の治癒音符"
+  ],
+  "gita1320_-1399813773371777426.png": [
+    "会心回復"
+  ],
+  "gita1321_-8179628368221980695.png": [
+    "熱いビート"
+  ],
+  "gita1322_-4392008421217031163.png": [
+    "追奏会心増幅"
+  ],
+  "gita1323_-3800447573122976607.png": [
+    "レイジパッショネート"
+  ],
+  "gita1324_2349786721378738097.png": [
+    "能力共鳴"
+  ],
+  "gita1325_-5447470031736844593.png": [
+    "会心共鳴"
+  ],
+  "gita1326_-8926076463079744637.png": [
+    "輝炎"
+  ],
+  "gita1327_-812776380437314246.png": [
+    "喝彩"
+  ],
+  "gita1328_7606706970840134983.png": [
+    "律動精韻"
+  ],
+  "gita1329_5601130750137218605.png": [
+    "ブレイブフェローチェ"
+  ],
+  "gita1330_4953859182551037259.png": [
+    "アレグロヴィヴァーチェ"
+  ],
+  "gita1331_-1528431874626921891.png": [
+    "追奏連奏"
+  ],
+  "gita1332_7625590731055256217.png": [
+    "熱力倍増"
+  ],
+  "gita1333_5015477312347178629.png": [
+    "変奏"
+  ],
+  "gita1334_-8588402097613964101.png": [
+    "奏鳴和音"
+  ],
+  "gita1335_-537427837496188791.png": [
+    "激情"
+  ],
+  "gita1336_-546540430641009254.png": [
+    "調和"
+  ],
+  "gita1337_4648724849424599981.png": [
+    "揮撃回流"
+  ],
+  "gita1338_-2358470468252112488.png": [
+    "幸運相乗"
+  ],
+  "gita1339_4094189731690727909.png": [
+    "残響遁走曲"
+  ],
+  "gita1340_-2560734101898800203.png": [
+    "音爆延長"
+  ],
+  "gita1341_4885128839853557617.png": [
+    "音癒"
+  ],
+  "gita1342_-2424788192891654952.png": [
+    "炎律の狂踏"
+  ],
+  "gita1343_-4992418681027234323.png": [
+    "烈炎音符"
+  ],
+  "gita1344_7145140224005900700.png": [
+    "終幕指令"
+  ],
+  "gita1345_4997531449544313089.png": [
+    "追奏永続"
+  ],
+  "gita1346_6011222973588733929.png": [
+    "追奏幸運増幅"
+  ],
+  "gita1347_4234725828576437237.png": [
+    "追奏鋭撃"
+  ],
+  "gita1348_8104144995079380705.png": [
+    "絶頂スポットライト"
+  ],
+  "gita1349_-3471932870631011929.png": [
+    "狂音極意"
+  ],
+  "gita1350_1518685466594881416.png": [
+    "音塔多層波動"
+  ],
+  "gita1351_7413395461200761542.png": [
+    "音波超高周波領域"
+  ],
+  "gita1352_-716981585557560936.png": [
+    "会心充填率"
+  ],
+  "gita1353_-1515754831156126652.png": [
+    "音塔爆炎衝撃"
+  ],
+  "gita1354_-3359520224797076492.png": [
+    "複数対象熱力増幅"
+  ],
+  "gita1355_6662380929134600867.png": [
+    "熱烈音塔爆炎衝撃"
+  ],
+  "gita1356_-4817414435032203250.png": [
+    "音波裁断"
+  ],
+  "gita1357_-1980810285946563658.png": [
+    "調律増幅器"
+  ],
+  "gita1358_-3376497144215722066.png": [
+    "漸進治癒和音"
+  ],
+  "gita1359_404147572251239841.png": [
+    "会心の天秤"
+  ],
+  "gita1360_1069751366696579003.png": [
+    "鳴奏交響式"
+  ],
+  "gita1361_1953433533247231711.png": [
+    "活力解放"
+  ],
+  "gita1362_-7575048779916721681.png": [
+    "アンコール連発"
+  ],
+  "gita1363_-8031967201643301070.png": [
+    "音塔共鳴"
+  ],
+  "gita1364_-7302750103488180759.png": [
+    "能力共鳴オーバーロード"
+  ],
+  "gita1365_4302501160682938649.png": [
+    "響奏極意"
+  ],
+  "gita1366_-395760613389825022.png": [
+    "絶頂スポットライト"
+  ],
+  "gita1367_-5299931498317334948.png": [
+    "螺旋炎奏"
+  ],
+  "gongjian1132_-1302161707481035464.png": [
+    "急速射撃"
+  ],
+  "gongjian1133_5976665028936618669.png": [
+    "臣獣の力"
+  ],
+  "gongjian1134_1814174961468924098.png": [
+    "機敏"
+  ],
+  "gongjian1135_4828386006887583276.png": [
+    "迅射"
+  ],
+  "gongjian1136_-4637771648593616074.png": [
+    "臣狼強撃"
+  ],
+  "gongjian1137_6692597613712292927.png": [
+    "怒涛の臣獣"
+  ],
+  "gongjian1138_9205083172175722472.png": [
+    "矢雨加速"
+  ],
+  "gongjian1139_-5220436269506633074.png": [
+    "生命狩猟"
+  ],
+  "gongjian1140_6061510829725384148.png": [
+    "臣狼の契約"
+  ],
+  "gongjian1141_-8758213773347382136.png": [
+    "閃影流矢"
+  ],
+  "gongjian1142_3793203283890112842.png": [
+    "臣狼進化"
+  ],
+  "gongjian1143_-8861874603109035245.png": [
+    "伝説の臣獣"
+  ],
+  "gongjian1144_-2223882682845529979.png": [
+    "閃意怒涛"
+  ],
+  "gongjian1145_2027274784145327978.png": [
+    "臣獣の呼び声"
+  ],
+  "gongjian1146_7852759246475548336.png": [
+    "HP流失精通"
+  ],
+  "gongjian1147_-7070382074069117826.png": [
+    "追撃閃光"
+  ],
+  "gongjian1148_-1320308342387735457.png": [
+    "閃光矢"
+  ],
+  "gongjian1149_-2618424745002011847.png": [
+    "閃意"
+  ],
+  "gongjian1150_3414212359170841905.png": [
+    "幻影魔狼の牙"
+  ],
+  "gongjian1151_3756239704465071853.png": [
+    "踏撃"
+  ],
+  "gongjian1152_-7892639729727182064.png": [
+    "弓心"
+  ],
+  "gongjian1153_-2544693340079185519.png": [
+    "幻影の臣鷹"
+  ],
+  "gongjian1154_-1933085418678219963.png": [
+    "集中"
+  ],
+  "gongjian1155_3253108447175161270.png": [
+    "双矢極意"
+  ],
+  "gongjian1156_-837403304086851961.png": [
+    "二連矢［強化］"
+  ],
+  "gongjian1157_-6021832224655243960.png": [
+    "閃心停滞"
+  ],
+  "gongjian1158_300076161079534991.png": [
+    "破壊の臣鷹"
+  ],
+  "gongjian1159_2751165188587234805.png": [
+    "臣鷹の目"
+  ],
+  "gongjian1160_-2446302958817462071.png": [
+    "天界の臣鷹"
+  ],
+  "gongjian1161_906420539170874407.png": [
+    "閃爆充填"
+  ],
+  "gongjian1162_-7710031968813354312.png": [
+    "閃稜"
+  ],
+  "gongjian1163_6370743563231735347.png": [
+    "雷破"
+  ],
+  "gongjian1164_2364470429858491604.png": [
+    "集力"
+  ],
+  "gongjian1165_7903268321277358691.png": [
+    "弓心攻撃"
+  ],
+  "gongjian1166_298629613559334571.png": [
+    "急速爆撃"
+  ],
+  "gongjian1167_-8284180784635419728.png": [
+    "連環爆発"
+  ],
+  "jiandun1200_-6773735832233916301.png": [
+    "光身躯"
+  ],
+  "jiandun1201_-8108579239872170853.png": [
+    "パニッシュメント"
+  ],
+  "jiandun1202_2290855188061519729.png": [
+    "光力の恩惠"
+  ],
+  "jiandun1203_-43078451485573190.png": [
+    "裁決輪"
+  ],
+  "jiandun1204_8394038943092455415.png": [
+    "光明の盾［強化］"
+  ],
+  "jiandun1205_-1762508648945639034.png": [
+    "光力加速"
+  ],
+  "jiandun1206_-6283846987022120379.png": [
+    "筋力変換"
+  ],
+  "jiandun1207_-1429454668650764564.png": [
+    "断罪の光"
+  ],
+  "jiandun1208_449476087059871284.png": [
+    "光砕型"
+  ],
+  "jiandun1209_-6752476680964564441.png": [
+    "神託"
+  ],
+  "jiandun1210_-5082643878449165271.png": [
+    "審判"
+  ],
+  "jiandun1211_-5816055113790409608.png": [
+    "聖環護衛"
+  ],
+  "jiandun1212_-1702913504885627293.png": [
+    "光の守り"
+  ],
+  "jiandun1213_-1736642997314103878.png": [
+    "聖光守護の賛歌"
+  ],
+  "jiandun1214_6342863842306165662.png": [
+    "無畏盾"
+  ],
+  "jiandun1215_6515870512490150235.png": [
+    "聖光懲戒"
+  ],
+  "jiandun1216_-6207186174221622816.png": [
+    "光明聖剣"
+  ],
+  "jiandun1217_-4732894723976089037.png": [
+    "聖壁"
+  ],
+  "jiandun1218_9210525446440273373.png": [
+    "光盾型"
+  ],
+  "jiandun1219_7452183829489257127.png": [
+    "光壁"
+  ],
+  "jiandun1220_5505731374315686449.png": [
+    "光盾障壁強化"
+  ],
+  "jiandun1221_4275078565510249872.png": [
+    "聖環詠唱"
+  ],
+  "jiandun1222_1567664867629103612.png": [
+    "聖撃"
+  ],
+  "jiandun1223_1117255614674905977.png": [
+    "神聖光輝"
+  ],
+  "jiandun1224_-3686983280125223300.png": [
+    "決意斬撃"
+  ],
+  "jiandun1225_-1522270446822299044.png": [
+    "光駆動"
+  ],
+  "jiandun1226_5588516664998390942.png": [
+    "冷酷回帰"
+  ],
+  "jiandun1227_4751278380088342101.png": [
+    "聖環激動"
+  ],
+  "jiandun1228_-2637363237474792725.png": [
+    "裁決追撃・二",
+    "裁決追撃・一"
+  ],
+  "jiandun1229_-2186585529870960048.png": [
+    "聖環祝福"
+  ],
+  "jiandun1230_-1726005971081924316.png": [
+    "均衡の光"
+  ],
+  "jiandun1231_-3314942067790636626.png": [
+    "剛毅の光"
+  ],
+  "jiandun1232_-1415930219092587397.png": [
+    "光源援護"
+  ],
+  "jiandun1233_1609582243022166741.png": [
+    "HP強化"
+  ],
+  "jiandun1234_2351718655516323156.png": [
+    "断罪時限"
+  ],
+  "jiandun1235_1390609618129929372.png": [
+    "剣舞"
+  ],
+  "jiandun1236_-6361339817339207180.png": [
+    "盾衝撃"
+  ],
+  "jiandun1237_5702466976784301717.png": [
+    "清算炎盾"
+  ],
+  "jiandun1238_-4649790848388031777.png": [
+    "聖光時限"
+  ],
+  "jiandun1239_2465990856003016899.png": [
+    "聖光召喚"
+  ],
+  "jiandun1240_-5263172786528121644.png": [
+    "光攻撃連鎖"
+  ],
+  "jiandun1241_830678371601676996.png": [
+    "清算爆炎"
+  ],
+  "jiandun1242_-6813561569957124518.png": [
+    "聖体回復"
+  ],
+  "jiandun1243_7406568101833520745.png": [
+    "光元素の加護"
+  ],
+  "jiandun1244_-6711190163413412939.png": [
+    "防御の極意"
+  ],
+  "jiandun1245_8960019716899595701.png": [
+    "盾撃守護"
+  ],
+  "jiandun1246_-8256969953470926977.png": [
+    "光癒裁断"
+  ],
+  "jiandun1247_1239733441280049316.png": [
+    "神聖攻撃の極意"
+  ],
+  "jiandun1248_1039790835260823812.png": [
+    "魔法守護"
+  ],
+  "jiandun1249_-1814399949790760065.png": [
+    "征伐の極意"
+  ],
+  "jiandun1250_-4440082046267133992.png": [
+    "会心の光"
+  ],
+  "jiandun1251_-4870281914383440121.png": [
+    "逆境強化"
+  ],
+  "jiandun1252_-961779494042555355.png": [
+    "広域征伐"
+  ],
+  "jiandun1253_2440651556776620774.png": [
+    "剛勇無畏"
+  ],
+  "jiandun1254_-1463541222100975820.png": [
+    "光核"
+  ],
+  "jiandun1255_-1985912719845156771.png": [
+    "征伐追撃"
+  ],
+  "jiandun1256_1777315687923373649.png": [
+    "決断の刃"
+  ],
+  "jiandun1257_-7338438287342497443.png": [
+    "征伐加速"
+  ],
+  "jiandun1258_-6199259721473509106.png": [
+    "聖印強化"
+  ],
+  "jiandun1259_7984178414492659520.png": [
+    "聖環守護"
+  ],
+  "jiandun1260_-2806789615190311984.png": [
+    "ジャッジメント［強化］"
+  ],
+  "jiandun1261_7103626725800279735.png": [
+    "聖印追撃"
+  ],
+  "jiandun1262_2498683532456260287.png": [
+    "溢れる光壁"
+  ],
+  "jiandun1263_3623733060550291828.png": [
+    "癒しの光"
+  ],
+  "jiandun1264_-1235518011761020916.png": [
+    "光元素の加護"
+  ],
+  "jiandun1265_-4532514377643360226.png": [
+    "即行回復"
+  ],
+  "jiandun1266_5464923835327230226.png": [
+    "光暈"
+  ],
+  "mozhang236_-5694261179385412233.png": [
+    "知力冷却"
+  ],
+  "mozhang237_-8144150381219040929.png": [
+    "二段増幅"
+  ],
+  "mozhang238_-6211253637147627227.png": [
+    "鋭い冷気",
+    "冷気流"
+  ],
+  "mozhang239_7863068387401225131.png": [
+    "氷恵"
+  ],
+  "mozhang240_2763127444974343976.png": [
+    "無尽極寒"
+  ],
+  "mozhang241_-7479211098212862186.png": [
+    "氷槍連撃"
+  ],
+  "mozhang242_8345750522791375286.png": [
+    "凍嵐"
+  ],
+  "mozhang243_8272853342141170763.png": [
+    "凍源返還"
+  ],
+  "mozhang244_-4218582218656298278.png": [
+    "霜刃"
+  ],
+  "mozhang245_-231316717157022014.png": [
+    "魔法の槍"
+  ],
+  "mozhang246_-5575937324192706294.png": [
+    "隕石嵐拡張"
+  ],
+  "mozhang247_6150221227282139836.png": [
+    "氷槍会心"
+  ],
+  "mozhang248_-7607321649420805272.png": [
+    "注入昇華"
+  ],
+  "mozhang249_-1875357226806229128.png": [
+    "致命氷槍"
+  ],
+  "mozhang250_-6737098591456917482.png": [
+    "酷寒"
+  ],
+  "mozhang251_7408337694167288412.png": [
+    "凛烈"
+  ],
+  "mozhang252_-7478174988781509750.png": [
+    "氷嵐"
+  ],
+  "mozhang253_-6821954370713934915.png": [
+    "玄氷強化"
+  ],
+  "mozhang254_-5456599955270050576.png": [
+    "霜襲来"
+  ],
+  "mozhang255_-1044921415998567028.png": [
+    "幸運ダメージ"
+  ],
+  "mozhang256_-4229276892184829850.png": [
+    "冷気温存"
+  ],
+  "mozhang257_8971861892004539060.png": [
+    "霜の啓示"
+  ],
+  "mozhang258_-8249300292796268567.png": [
+    "湧力法則"
+  ],
+  "mozhang259_5303501064642724021.png": [
+    "凍源の力"
+  ],
+  "mozhang260_7975020198837852925.png": [
+    "凍源回復"
+  ],
+  "mozhang261_68457310628373794.png": [
+    "氷矢速射"
+  ],
+  "mozhang262_-1375423911745025561.png": [
+    "氷の吐息",
+    "無限潮流"
+  ],
+  "mozhang263_5013689969631274019.png": [
+    "玄氷の流れ"
+  ],
+  "mozhang264_7073525340321408909.png": [
+    "フロストレイ［強化］"
+  ],
+  "mozhang265_-1619521838561868028.png": [
+    "広域氷矢"
+  ],
+  "mozhang266_2702788040260565207.png": [
+    "知力凍源"
+  ],
+  "mozhang267_8102179355957378390.png": [
+    "高速詠唱"
+  ],
+  "mozhang268_3745734882025806136.png": [
+    "氷矢強撃"
+  ],
+  "mozhang269_-1658129692608359478.png": [
+    "射線絶唱"
+  ],
+  "mozhang270_-1900381981162474161.png": [
+    "氷晶拡充"
+  ],
+  "mozhang271_-8887330061916302916.png": [
+    "知力強化"
+  ],
+  "shuangfu300_2133144090375162796.png": [
+    "筋力変換"
+  ],
+  "shuangfu301_-2399705944250816661.png": [
+    "疾転"
+  ],
+  "shuangfu302_-6856224810333726538.png": [
+    "炎魂"
+  ],
+  "shuangfu303_-6071156897983607265.png": [
+    "紅蓮"
+  ],
+  "shuangfu304_-4752409059908344481.png": [
+    "緋炎追撃"
+  ],
+  "shuangfu305_-7351905991044442284.png": [
+    "荒魂・破"
+  ],
+  "shuangfu306_1469404845953130158.png": [
+    "紅蓮双極"
+  ],
+  "shuangfu307_6195644401845369028.png": [
+    "霊火の刻印"
+  ],
+  "shuangfu308_6271132668027518806.png": [
+    "荒魂・疾"
+  ],
+  "shuangfu309_-6413302405197465846.png": [
+    "火焔抑圧"
+  ],
+  "shuangfu310_-5548534239347090564.png": [
+    "紅蓮滅烬"
+  ],
+  "shuangfu311_-4390105621298517971.png": [
+    "緋炎追撃 [強化]"
+  ],
+  "shuangfu312_-7390683048772311116.png": [
+    "双炎型"
+  ],
+  "shuangfu313_7344609750541970317.png": [
+    "炎斧の契約"
+  ],
+  "shuangfu314_456390558786505264.png": [
+    "クリムゾンブロウ"
+  ],
+  "shuangfu315_3395463920483623527.png": [
+    "炎輪回帰"
+  ],
+  "shuangfu316_-6549373701705945965.png": [
+    "烈焔"
+  ],
+  "shuangfu317_6042906635792004042.png": [
+    "フレアバースト [烈焔]"
+  ],
+  "shuangfu318_-7124736638917428800.png": [
+    "フレアバースト [幸運]"
+  ],
+  "shuangfu319_-7483091062004570178.png": [
+    "火焔突撃"
+  ],
+  "shuangfu320_-3139401705317482643.png": [
+    "双炎・幸運"
+  ],
+  "shuangfu321_-2846011813378625530.png": [
+    "双炎・筋力"
+  ],
+  "shuangfu322_-2154018977745117190.png": [
+    "霊火回帰"
+  ],
+  "shuangfu323_-1040512578132115524.png": [
+    "二重烈焔"
+  ],
+  "shuangfu324_4927356752473123861.png": [
+    "流星火"
+  ],
+  "shuangfu325_1639148389304013273.png": [
+    "無上の戦域"
+  ],
+  "shuangfu326_-5542334325512820313.png": [
+    "終焉の焔"
+  ],
+  "shuangfu327_4627627066522273519.png": [
+    "イラプション [極意]"
+  ],
+  "shuangfu328_619996992613869099.png": [
+    "イラプション [幸運]"
+  ],
+  "shuangfu329_270719907217083196.png": [
+    "双炎 [連撃]"
+  ],
+  "shuangfu330_-441553709471701586.png": [
+    "イラプション・破"
+  ],
+  "shuangfu331_-1971329198217311880.png": [
+    "イラプション・幸"
+  ],
+  "shuangfu332_2125399849664793231.png": [
+    "イラプション・焔"
+  ],
+  "shuangfu333_4569297845133318833.png": [
+    "イラプション [破攻]"
+  ],
+  "shuangfu334_1620403063338480305.png": [
+    "幸運の連刃"
+  ],
+  "shuangfu335_5585095095983100886.png": [
+    "イラプション [連撃]"
+  ],
+  "shuangfu336_-4823544891319313441.png": [
+    "寂滅の業火"
+  ],
+  "shuangfu337_-7486768755483884135.png": [
+    "燃焼加速"
+  ],
+  "shuangfu338_-4117113061862107962.png": [
+    "焚攻"
+  ],
+  "shuangfu339_-7180698373553533509.png": [
+    "多重炎斬"
+  ],
+  "shuangfu340_2555877866254226.png": [
+    "霊火刈奪"
+  ],
+  "shuangfu341_-9181221501276128510.png": [
+    "星火"
+  ],
+  "shuangfu342_8755052147204917988.png": [
+    "炎舞型"
+  ],
+  "shuangfu343_9145741074134540861.png": [
+    "魂焔"
+  ],
+  "shuangfu344_-4452784411976691381.png": [
+    "怒炎狂鋭・一"
+  ],
+  "shuangfu345_-4683440941011154849.png": [
+    "炎舞エリア・霊火"
+  ],
+  "shuangfu346_-205518321422300641.png": [
+    "炎舞エリア・迅速"
+  ],
+  "shuangfu347_7290520020879029734.png": [
+    "墜炎ノ舞・初式"
+  ],
+  "shuangfu348_-8175406292326790907.png": [
+    "怒炎狂鋭・二"
+  ],
+  "shuangfu349_8183868018539129092.png": [
+    "墜炎ノ舞・弐式"
+  ],
+  "shuangfu350_4511283376309918484.png": [
+    "墜炎の宿命"
+  ],
+  "shuangfu351_8291038059830524537.png": [
+    "炎舞破斬"
+  ],
+  "shuangfu352_-4110513195625845820.png": [
+    "炎の契約"
+  ],
+  "shuangfu353_1448312791521358191.png": [
+    "炎舞 [集中]"
+  ],
+  "shuangfu354_8287819619603499070.png": [
+    "クロスラッシュ"
+  ],
+  "shuangfu355_4527660200468586845.png": [
+    "バーニングチャージ"
+  ],
+  "shuangfu356_2934076728104733883.png": [
+    "業炎の極意"
+  ],
+  "shuangfu357_5903541921163145859.png": [
+    "炎舞会心"
+  ],
+  "shuangfu358_2130988305466432454.png": [
+    "炎舞破甲"
+  ],
+  "shuangfu359_9201038596761185659.png": [
+    "クリムゾンインパクト [連撃]"
+  ],
+  "shuangfu360_2934122298532524987.png": [
+    "紅蓮の覚悟"
+  ],
+  "shuangfu361_-8410215615197729333.png": [
+    "炎舞一閃"
+  ],
+  "shuangfu362_4569252799937714136.png": [
+    "イラプション [炎舞]"
+  ],
+  "shuangfu363_-4233446065110307977.png": [
+    "炎舞連撃"
+  ],
+  "shuangfu364_6636090993631443010.png": [
+    "炎舞奥義"
+  ],
+  "shuangfu365_2552774699774963930.png": [
+    "炎舞加速"
+  ],
+  "shuangfu366_6446555465290641028.png": [
+    "火焔奥義"
+  ],
+  "taidao135_1644291667619602855.png": [
+    "迅速"
+  ],
+  "taidao136_2679379289363234477.png": [
+    "霹靂"
+  ],
+  "taidao137_-2857153490999459874.png": [
+    "迅雷"
+  ],
+  "taidao138_7374684314001062954.png": [
+    "雷印刀意"
+  ],
+  "taidao139_7089337983153356311.png": [
+    "無限の雷霆"
+  ],
+  "taidao140_8839135166508308678.png": [
+    "雷印回帰"
+  ],
+  "taidao141_-1343588304675625764.png": [
+    "雷威"
+  ],
+  "taidao142_-4059180998150961438.png": [
+    "無双飛雷"
+  ],
+  "taidao143_-1467707851314563816.png": [
+    "暴斬"
+  ],
+  "taidao144_457255911769315799.png": [
+    "追撃の風・右刃",
+    "追撃の風・左刃"
+  ],
+  "taidao145_6928810167663351857.png": [
+    "刀意無双"
+  ],
+  "taidao146_1702839282550973457.png": [
+    "雷印親和"
+  ],
+  "taidao147_-5428016891072870215.png": [
+    "雷圧"
+  ],
+  "taidao148_-2238719935558037101.png": [
+    "彼岸［強化］"
+  ],
+  "taidao149_5158377370814764496.png": [
+    "刀意雷撃"
+  ],
+  "taidao150_-7716163340458354964.png": [
+    "時間差月影"
+  ],
+  "taidao151_-1859278860122347610.png": [
+    "破斬"
+  ],
+  "taidao152_-6577550984410376419.png": [
+    "爆裂"
+  ],
+  "taidao153_-3820244644097162364.png": [
+    "瞬斬"
+  ],
+  "taidao154_3824363030858337407.png": [
+    "改良"
+  ],
+  "taidao155_-7046975182809769465.png": [
+    "雷霆鎌［強化］"
+  ],
+  "taidao156_-4151080417518821768.png": [
+    "刀意回復"
+  ],
+  "taidao157_-4674659845681166599.png": [
+    "霹靂電禍"
+  ],
+  "taidao158_4470989273118996281.png": [
+    "審罰鎌"
+  ],
+  "taidao159_903205260476960303.png": [
+    "月影電禍"
+  ],
+  "taidao160_8577213380478401967.png": [
+    "刀意・極"
+  ],
+  "taidao161_-8731798044924366803.png": [
+    "雷鳴千閃"
+  ],
+  "taidao162_-4394392484815470849.png": [
+    "繚乱兜割"
+  ],
+  "taidao163_2521024467674555405.png": [
+    "雷撃強化"
+  ],
+  "taidao164_-7475652830760940628.png": [
+    "集中電禍"
+  ],
+  "taidao165_6706791743330362438.png": [
+    "雷の囁き"
+  ],
+  "taidao166_8263710650311787539.png": [
+    "月影殺強撃"
+  ],
+  "taidao167_603288090974383121.png": [
+    "霹靂"
+  ],
+  "taidao168_-5169045047903268899.png": [
+    "雷印極意"
+  ],
+  "taidao169_-6945947578409367684.png": [
+    "迅雷電禍"
+  ],
+  "taidao170_-4495561753701230229.png": [
+    "神速の月刃",
+    "雷威"
+  ],
+  "talent_passive_icon_dps_combo02_9069735004479135638.png": [
+    "戦闘意識"
+  ],
+  "talent_passive_icon_dps_comboconversion_8610329451014759470.png": [
+    "破滅雷閃"
+  ],
+  "talent_passive_icon_dps_crit04_1805785673948377249.png": [
+    "一閃強撃"
+  ],
+  "talent_passive_icon_dps_lucky04_3630585918272962198.png": [
+    "継続の茨"
+  ],
+  "talent_passive_icon_dps_luckyconversion_-2226033876322988981.png": [
+    "蕾の息吹",
+    "二重注入"
+  ],
+  "talent_passive_icon_dps_sacrifice04_-2084638218474038508.png": [
+    "尽きせぬ花"
+  ],
+  "talent_passive_icon_dps_sacrificeconversion_-535211137127277943.png": [
+    "氷晶共鳴"
+  ],
+  "talent_passive_icon_general_dps_arrtuprandom_-170170258944537217.png": [
+    "静かなる氷"
+  ],
+  "talent_passive_icon_general_dps_backhitget_4964421102441627641.png": [
+    "烈風型"
+  ],
+  "talent_passive_icon_general_dps_backhitpro_-2066749960922532771.png": [
+    "疾馳鋒刃"
+  ],
+  "talent_passive_icon_general_dps_bigicespear_-5931002866956003642.png": [
+    "極寒の槍"
+  ],
+  "talent_passive_icon_general_dps_birdingnoredef_9165524309035019873.png": [
+    "臣鷹の心"
+  ],
+  "talent_passive_icon_general_dps_bleedbow_7155227687755401273.png": [
+    "舞う臣狼"
+  ],
+  "talent_passive_icon_general_dps_bowarrow_-6517615294903934427.png": [
+    "爆破の矢"
+  ],
+  "talent_passive_icon_general_dps_crithreetimes_-4526495085408076459.png": [
+    "氷河の怒濤"
+  ],
+  "talent_passive_icon_general_dps_crushedice_-1267330544110224266.png": [
+    "砕氷攻撃"
+  ],
+  "talent_passive_icon_general_dps_doublearrowfly_3153531576962717561.png": [
+    "双星の矢"
+  ],
+  "talent_passive_icon_general_dps_doublehit_5092871202857175000.png": [
+    "雷舞"
+  ],
+  "talent_passive_icon_general_dps_doubleicearrow_-8250302052786953673.png": [
+    "氷の啓示"
+  ],
+  "talent_passive_icon_general_dps_draw_7468588183644438809.png": [
+    "居合の才"
+  ],
+  "talent_passive_icon_general_dps_extralightarrow_584293073345477232.png": [
+    "追跡の矢"
+  ],
+  "talent_passive_icon_general_dps_flycriluck_-4397977988837288756.png": [
+    "空舞重撃"
+  ],
+  "talent_passive_icon_general_dps_flyhitget_1483048762046676683.png": [
+    "乱風型"
+  ],
+  "talent_passive_icon_general_dps_fullattack_-3695955764129732016.png": [
+    "心眼一閃",
+    "心眼強化"
+  ],
+  "talent_passive_icon_general_dps_icearea_-6415426824015115183.png": [
+    "氷の領域"
+  ],
+  "talent_passive_icon_general_dps_icearrowaoe_-5890132798454636393.png": [
+    "霜爆"
+  ],
+  "talent_passive_icon_general_dps_icecharge_6536620775141988385.png": [
+    "氷霜衝撃"
+  ],
+  "talent_passive_icon_general_dps_icecharge02_-1232850557262009384.png": [
+    "急速冷凍"
+  ],
+  "talent_passive_icon_general_dps_icecomet_1611337091920902535.png": [
+    "氷慧"
+  ],
+  "talent_passive_icon_general_dps_icedamgeup_-3265969024740177737.png": [
+    "氷流連綿"
+  ],
+  "talent_passive_icon_general_dps_iceenergy_-6391902725845644305.png": [
+    "瞬間冷却"
+  ],
+  "talent_passive_icon_general_dps_iceenergy02_7582705421025815122.png": [
+    "寒流"
+  ],
+  "talent_passive_icon_general_dps_iceenergycost_-1814576381972923272.png": [
+    "氷凌の約束"
+  ],
+  "talent_passive_icon_general_dps_iceenergyget_-6213448500245723497.png": [
+    "寒風の集約"
+  ],
+  "talent_passive_icon_general_dps_icejoin_-9150297788508645420.png": [
+    "氷共鳴"
+  ],
+  "talent_passive_icon_general_dps_icelasermastery_3841266868427727827.png": [
+    "潮流精通"
+  ],
+  "talent_passive_icon_general_dps_icenucleus_-3562277074333379218.png": [
+    "氷結の呪い",
+    "易傷一撃"
+  ],
+  "talent_passive_icon_general_dps_icepearextra_-8255672618023533477.png": [
+    "氷槍追加"
+  ],
+  "talent_passive_icon_general_dps_icepulse_-1930906762712051734.png": [
+    "氷冷波動"
+  ],
+  "talent_passive_icon_general_dps_iceskyhit_-1035384728055736586.png": [
+    "玄氷無界"
+  ],
+  "talent_passive_icon_general_dps_icespeardouble_4860997707069397100.png": [
+    "嵐の交会"
+  ],
+  "talent_passive_icon_general_dps_icespearget_-7449856905542822401.png": [
+    "霜天型"
+  ],
+  "talent_passive_icon_general_dps_icespearluck_356477374354012415.png": [
+    "滝流雪影"
+  ],
+  "talent_passive_icon_general_dps_ignoredef_7286603713275054058.png": [
+    "敵蔑視",
+    "幸運強化"
+  ],
+  "talent_passive_icon_general_dps_injured_-5416923532089156570.png": [
+    "霹靂回旋"
+  ],
+  "talent_passive_icon_general_dps_instant_6578954050367131765.png": [
+    "無心の好機"
+  ],
+  "talent_passive_icon_general_dps_inttran_-3351449962676288113.png": [
+    "知力変換"
+  ],
+  "talent_passive_icon_general_dps_joy_-6716875204547555466.png": [
+    "雷刃型"
+  ],
+  "talent_passive_icon_general_dps_lightattackre_-7920381845468714401.png": [
+    "霊能激流"
+  ],
+  "talent_passive_icon_general_dps_lightenergy_4654697744549693277.png": [
+    "閃心突破"
+  ],
+  "talent_passive_icon_general_dps_lightenergy02_-4737989366383713861.png": [
+    "輝く射手"
+  ],
+  "talent_passive_icon_general_dps_lightenergycost_-5831015236897072445.png": [
+    "冥想"
+  ],
+  "talent_passive_icon_general_dps_lightfull_-4488458789564464957.png": [
+    "精神の輝き"
+  ],
+  "talent_passive_icon_general_dps_luckandcri_-3138000845652143501.png": [
+    "星凍結"
+  ],
+  "talent_passive_icon_general_dps_momentcri_-1932996690629249149.png": [
+    "刹那暴撃"
+  ],
+  "talent_passive_icon_general_dps_petbig_-1588689765727112482.png": [
+    "狼弓型"
+  ],
+  "talent_passive_icon_general_dps_petdamboss_1737517073416817444.png": [
+    "勇敢な心"
+  ],
+  "talent_passive_icon_general_dps_pursue_-920102285510907981.png": [
+    "雷燕"
+  ],
+  "talent_passive_icon_general_dps_resetbite_-7972763417752715279.png": [
+    "閃心共牙"
+  ],
+  "talent_passive_icon_general_dps_ruthless_-8955585685760905934.png": [
+    "追撃身法"
+  ],
+  "talent_passive_icon_general_dps_sharpeffectup_2881723983785751079.png": [
+    "勢張"
+  ],
+  "talent_passive_icon_general_dps_sharpenergyre_-4988504195800596324.png": [
+    "風舞軽霊"
+  ],
+  "talent_passive_icon_general_dps_sharpenergyre02_4724496562625892107.png": [
+    "烈風助身"
+  ],
+  "talent_passive_icon_general_dps_sharpenergyre03_725438515333581216.png": [
+    "破壊の風雷"
+  ],
+  "talent_passive_icon_general_dps_sharpget_2364131482517998195.png": [
+    "鋭利"
+  ],
+  "talent_passive_icon_general_dps_sharpspeed_-93795399919510782.png": [
+    "追風逐影"
+  ],
+  "talent_passive_icon_general_dps_sickleairun_-6813231458193829154.png": [
+    "月鎌の領域・初式",
+    "月鎌の領域・弐式"
+  ],
+  "talent_passive_icon_general_dps_sickleget_7277470796038356571.png": [
+    "月影型"
+  ],
+  "talent_passive_icon_general_dps_sicklespeed_8925246470520840651.png": [
+    "荒れ狂う光",
+    "回帰冥想"
+  ],
+  "talent_passive_icon_general_dps_sickletime_-8664202761899484080.png": [
+    "雷力"
+  ],
+  "talent_passive_icon_general_dps_skilltriggericearrow_2374185675085443689.png": [
+    "氷牙型"
+  ],
+  "talent_passive_icon_general_dps_skycri_-5270325091101540407.png": [
+    "鋭射"
+  ],
+  "talent_passive_icon_general_dps_skyhitcri_-9034016585177689235.png": [
+    "空裂く閃光"
+  ],
+  "talent_passive_icon_general_dps_skyhitcrilight_-4896179297343515246.png": [
+    "閃落"
+  ],
+  "talent_passive_icon_general_dps_skyhitget_-60442297385266657.png": [
+    "鷹弓型"
+  ],
+  "talent_passive_icon_general_dps_spearrush_-5285447201626553291.png": [
+    "長槍貫穿"
+  ],
+  "talent_passive_icon_general_dps_speedtran_-2559044009577034951.png": [
+    "敏捷変換"
+  ],
+  "talent_passive_icon_general_dps_splitarrow_1358488041650526805.png": [
+    "裂空の矢"
+  ],
+  "talent_passive_icon_general_dps_strtran_2602671007434135097.png": [
+    "敏捷変換",
+    "筋力変換"
+  ],
+  "talent_passive_icon_general_dps_swordbullet_-8275410435127269321.png": [
+    "抜刀真空波"
+  ],
+  "talent_passive_icon_general_dps_teardelay_2776217789318810523.png": [
+    "風裂拡散"
+  ],
+  "talent_passive_icon_general_dps_tearget_-4439643837671849030.png": [
+    "風傷"
+  ],
+  "talent_passive_icon_general_dps_teargetenergy_-694662703563578361.png": [
+    "風裂身法"
+  ],
+  "talent_passive_icon_general_dps_thirddamup_3103156042392658497.png": [
+    "活力充填"
+  ],
+  "talent_passive_icon_general_dps_threetargetarrow_7358845499223190469.png": [
+    "矢の雨"
+  ],
+  "talent_passive_icon_general_dps_thunderbird_-3276686481378146780.png": [
+    "迅速"
+  ],
+  "talent_passive_icon_general_dps_thunderbird02_6566626226291510572.png": [
+    "臣鷹の閃撃"
+  ],
+  "talent_passive_icon_general_dps_thundercost_6323952977511578800.png": [
+    "襲雷"
+  ],
+  "talent_passive_icon_general_dps_thundercurse_-2467988513355957660.png": [
+    "雷呪"
+  ],
+  "talent_passive_icon_general_dps_thunderkill_7957514928206938738.png": [
+    "狂雷"
+  ],
+  "talent_passive_icon_general_dps_thundermastery_-4667395688833047006.png": [
+    "狂刃"
+  ],
+  "talent_passive_icon_general_dps_thunderrepro_-7701914167442613011.png": [
+    "刻印回復"
+  ],
+  "talent_passive_icon_general_dps_thunderseed_-7997887068673212519.png": [
+    "月刃延長"
+  ],
+  "talent_passive_icon_general_dps_thunderstrike_3218134762327707677.png": [
+    "目覚める雷魂"
+  ],
+  "talent_passive_icon_general_dps_tornadoget_8234457504861682088.png": [
+    "竜巻之舞"
+  ],
+  "talent_passive_icon_general_dps_tyrannical_5179128863593007882.png": [
+    "風怒"
+  ],
+  "talent_passive_icon_general_dps_winddancecount_7929719269179499751.png": [
+    "快銃流星"
+  ],
+  "talent_passive_icon_general_dps_windspiral_-2750583510728120713.png": [
+    "瞬影螺旋"
+  ],
+  "talent_passive_icon_general_dps_wolfbleed_5994421608145579662.png": [
+    "臣狼の牙"
+  ],
+  "talent_passive_icon_general_dps_wolfget_-6127867354490971796.png": [
+    "臣狼の主"
+  ],
+  "talent_passive_icon_general_dps_wolfonce_2135164927422448344.png": [
+    "双生の臣狼"
+  ],
+  "talent_passive_icon_general_dps_wolfroar_1152377082036453333.png": [
+    "咆哮法"
+  ],
+  "talent_passive_icon_general_dps_wolfspeedup_816324292716069852.png": [
+    "臣狼の爪"
+  ],
+  "talent_passive_icon_general_dps_wolfswoop_6927286954813557011.png": [
+    "幻影魔狼"
+  ],
+  "talent_passive_icon_general_sup_aggregation_-3428670337991002917.png": [
+    "疾風流影"
+  ],
+  "talent_passive_icon_general_sup_aid_8853143144856023181.png": [
+    "命の贈り物"
+  ],
+  "talent_passive_icon_general_sup_aoyiguide_-148650855109893727.png": [
+    "ライフサージ",
+    "ブルームヒール"
+  ],
+  "talent_passive_icon_general_sup_aoyitrigger_-3453879932511817198.png": [
+    "威咲型"
+  ],
+  "talent_passive_icon_general_sup_burstforth_-6283895452403338216.png": [
+    "満開"
+  ],
+  "talent_passive_icon_general_sup_encourage_8876108180631058624.png": [
+    "鼓舞"
+  ],
+  "talent_passive_icon_general_sup_flowerlimit_-4727433609669891129.png": [
+    "花界昇華"
+  ],
+  "talent_passive_icon_general_sup_grace_4357278635385016459.png": [
+    "延命"
+  ],
+  "talent_passive_icon_general_sup_grassarea_-2699280676978229692.png": [
+    "緑の根幹"
+  ],
+  "talent_passive_icon_general_sup_grassdammastery_-7240197960042963000.png": [
+    "緑の爆発"
+  ],
+  "talent_passive_icon_general_sup_grassdeer_-8459190925909112243.png": [
+    "スタッグチャージ"
+  ],
+  "talent_passive_icon_general_sup_grassenergyup_-6783012000201020774.png": [
+    "活力充実"
+  ],
+  "talent_passive_icon_general_sup_guide_8226416676337510715.png": [
+    "レジスト反撃"
+  ],
+  "talent_passive_icon_general_sup_healringdouble_569031093535757954.png": [
+    "緑の二重奏"
+  ],
+  "talent_passive_icon_general_sup_healringget_-1429063272623993457.png": [
+    "森癒型"
+  ],
+  "talent_passive_icon_general_sup_healshield_-7749716988162940962.png": [
+    "自然防壁"
+  ],
+  "talent_passive_icon_general_sup_inspire_-6432064480786422417.png": [
+    "絶境逢生"
+  ],
+  "talent_passive_icon_general_sup_inspireex_-5332009446003868568.png": [
+    "剛守型"
+  ],
+  "talent_passive_icon_general_sup_killgrassenergy_-5325343834670923875.png": [
+    "蕾の芽吹き"
+  ],
+  "talent_passive_icon_general_sup_killhealring_2507991279959377824.png": [
+    "治癒律動",
+    "幸運の鼓動"
+  ],
+  "talent_passive_icon_general_sup_seedtrriger_-8403839690203707975.png": [
+    "防御強化"
+  ],
+  "talent_passive_icon_general_sup_shieldlimit_-5255133618474193693.png": [
+    "荒野の祝福",
+    "緑の守り"
+  ],
+  "talent_passive_icon_general_sup_starfield_5093829511543149601.png": [
+    "レジスト回復"
+  ],
+  "talent_passive_icon_general_sup_starlight_-1183063612983352033.png": [
+    "癒しの息吹"
+  ],
+  "talent_passive_icon_general_tank_adjustment_4479773509355681438.png": [
+    "癒しの砂"
+  ],
+  "talent_passive_icon_general_tank_angerinhibit_-8592472177472865664.png": [
+    "砕石の吸引"
+  ],
+  "talent_passive_icon_general_tank_angerinhibitget_7732332478532431048.png": [
+    "生命制圧"
+  ],
+  "talent_passive_icon_general_tank_barrier_1756594318485816037.png": [
+    "砂岩の加護"
+  ],
+  "talent_passive_icon_general_tank_blockbless_3176285845881368948.png": [
+    "レジスト祝福"
+  ],
+  "talent_passive_icon_general_tank_counterattack_1355883207887674866.png": [
+    "幸運砦壁"
+  ],
+  "talent_passive_icon_general_tank_deftran_307476076342814903.png": [
+    "筋力変換"
+  ],
+  "talent_passive_icon_general_tank_grind_-8011041684372079886.png": [
+    "砂岩激震"
+  ],
+  "talent_passive_icon_general_tank_growing_-2643893351757096063.png": [
+    "猛撃の加護"
+  ],
+  "talent_passive_icon_general_tank_luckblockcd_7879603332321940074.png": [
+    "砂岩回帰"
+  ],
+  "talent_passive_icon_general_tank_pierce_3485067466456800186.png": [
+    "岩塊追撃"
+  ],
+  "talent_passive_icon_general_tank_shieldbash_2276059374816935612.png": [
+    "刀意"
+  ],
+  "talent_passive_icon_general_tank_shieldcounter_-2474888131609774595.png": [
+    "剛身型"
+  ],
+  "talent_passive_icon_general_tank_stonearea_5865177450902400999.png": [
+    "同調領域"
+  ],
+  "talent_passive_icon_general_tank_suppressex_8799781842692572293.png": [
+    "無辺なる氷"
+  ],
+  "talent_passive_icon_general_tank_tough_6929393942810472144.png": [
+    "怒火覚醒"
+  ],
+  "talent_passive_icon_general_tank_unrelent_-3175128053629604350.png": [
+    "堅忍不抜"
+  ],
+  "talent_passive_icon_general_tank_victoryrush_8328971838923015856.png": [
+    "巨岩の息吹"
+  ],
+  "talent_passive_icon_sup_control01_1788478368704197986.png": [
+    "神隠"
+  ],
+  "talent_passive_icon_sup_heal01_-6622005666501254407.png": [
+    "集中射撃"
+  ],
+  "talent_passive_icon_sup_heal02_371218397759507600.png": [
+    "終焉の光輪"
+  ],
+  "talent_passive_icon_sup_heal04_-1163600720444833470.png": [
+    "花言葉"
+  ],
+  "talent_passive_icon_sup_heal05_-3097515871320179690.png": [
+    "復活の翼"
+  ],
+  "talent_passive_icon_sup_healconversion_1237461555720813909.png": [
+    "滋養の華"
+  ],
+  "talent_passive_icon_sup_melee01_-143879956763713635.png": [
+    "回復充実"
+  ],
+  "talent_passive_icon_sup_melee02_-5148266489743418661.png": [
+    "戦闘熟練"
+  ],
+  "talent_passive_icon_sup_melee03_-7442360106387184460.png": [
+    "自然開花"
+  ],
+  "talent_passive_icon_sup_melee04_-3148179664473351796.png": [
+    "奮勇"
+  ],
+  "talent_passive_icon_sup_meleeconversion_5095031411280052604.png": [
+    "盾連撃"
+  ],
+  "talent_passive_icon_tank_bk01_6349040228040050397.png": [
+    "怒涛"
+  ],
+  "talent_passive_icon_tank_bk03_3263069676339373485.png": [
+    "敵影の盾"
+  ],
+  "talent_passive_icon_tank_bk04_1340366341250342826.png": [
+    "衆敵抑圧"
+  ],
+  "talent_passive_icon_tank_ridicule02_-4220460464625354670.png": [
+    "盾残響"
+  ],
+  "talent_passive_icon_tank_ridicule03_-7977123215517870881.png": [
+    "弱点攻撃",
+    "弱点強化"
+  ],
+  "talent_passive_icon_tank_ridiculeconversion_7554233677811443365.png": [
+    "精鋭の牙"
+  ],
+  "talent_passive_icon_tank_violent01_-6899993752557351730.png": [
+    "破砕怒撃"
+  ],
+  "talent_passive_icon_tank_violent03_-6067882314511611014.png": [
+    "剛勇"
+  ],
+  "talent_passive_icon_tank_violent05_2577265303974605481.png": [
+    "猛撃援護"
+  ],
+  "talent_passive_icon_tank_violentconversion_87977974815457412.png": [
+    "元素協調"
+  ],
+  "talent_skill_300001_-713103732695156529.png": [
+    "闘志昂揚"
+  ],
+  "talent_skill_330101_7760701223249705077.png": [
+    "緑の繁栄"
+  ],
+  "talent_skill_360105_4925120933173908008.png": [
+    "刃域"
+  ],
+  "weiren936_2192281945077083776.png": [
+    "憤怒の加護"
+  ],
+  "weiren937_3245947757931255782.png": [
+    "憤怒抑圧"
+  ],
+  "weiren938_4260719072765138885.png": [
+    "憤怒延長"
+  ],
+  "weiren939_-5103743225773167626.png": [
+    "砂晶回復"
+  ],
+  "weiren940_341436078491915378.png": [
+    "憤怒の拡張"
+  ],
+  "weiren941_-5228447378654407433.png": [
+    "憤怒の剛撃［強化］"
+  ],
+  "weiren942_4897712912167863467.png": [
+    "憤怒の砕星"
+  ],
+  "weiren943_-809865590488259970.png": [
+    "砂塵域"
+  ],
+  "weiren944_-3415164336228523533.png": [
+    "剛身強化"
+  ],
+  "weiren945_4809790328159903964.png": [
+    "巨岩の加護"
+  ],
+  "weiren946_-581375399550043404.png": [
+    "猛撃の砕刃"
+  ],
+  "weiren947_-652670719946873945.png": [
+    "回復"
+  ],
+  "weiren948_2403398221713346961.png": [
+    "砕星の鉄槌"
+  ],
+  "weiren949_5507704167072511230.png": [
+    "岩身"
+  ],
+  "weiren950_5063989800749197717.png": [
+    "砕撃"
+  ],
+  "weiren951_-520514212991545588.png": [
+    "猛攻断裂"
+  ],
+  "weiren952_8143393319629407803.png": [
+    "猛撃追撃"
+  ],
+  "weiren953_-327305793929001874.png": [
+    "巨岩"
+  ],
+  "weiren954_-5266264894873556893.png": [
+    "勇猛果敢"
+  ],
+  "weiren955_376778384323853777.png": [
+    "岩守"
+  ],
+  "weiren956_-2866362831242428321.png": [
+    "剛撃砦壁"
+  ],
+  "weiren957_-5789570813471792005.png": [
+    "レジストの庇護"
+  ],
+  "weiren958_6169478197733365881.png": [
+    "砂石レジスト"
+  ],
+  "weiren959_9006721102314387352.png": [
+    "岩心"
+  ],
+  "weiren960_5509201915616776854.png": [
+    "岩石弾"
+  ],
+  "weiren961_1255242026940846560.png": [
+    "憤怒の岩弾"
+  ],
+  "weiren962_487516027964618427.png": [
+    "岩拳回復"
+  ],
+  "weiren963_2502289835201006764.png": [
+    "堅固な壁"
+  ],
+  "weiren964_-8650547743914937878.png": [
+    "怒撃強化"
+  ],
+  "weiren965_-8795950900575911074.png": [
+    "岩弾連撃"
+  ],
+  "weiren966_-2256281398126870544.png": [
+    "威圧"
+  ],
+  "weiren967_-1744710142381756092.png": [
+    "岩弾怒撃"
+  ],
+  "weiren968_934415160672003609.png": [
+    "反撃の嵐"
+  ],
+  "weiren969_3945859805671368468.png": [
+    "幸運の剛岩"
+  ],
+  "weiren970_-7814936208432219688.png": [
+    "剛岩精通"
+  ],
+  "weiren971_-9075450417919943305.png": [
+    "激怒の岩心"
+  ]
+}

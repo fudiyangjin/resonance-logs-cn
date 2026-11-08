@@ -12,6 +12,8 @@ export const zhCNMessages = {
   "skillDamage.iconCategory": "图标分类",
   "skillDamage.skillIcons": "技能图标",
   "skillDamage.talentIcons": "天赋图标",
+  "skillDamage.iconCommon": "公共",
+  "skillDamage.talentGeneral": "通用",
   "skillDamage.iconBackground": "图标背景色",
   "skillDamage.iconOpacity": "背景不透明度",
   "skillDamage.labelMode": "技能标识",
