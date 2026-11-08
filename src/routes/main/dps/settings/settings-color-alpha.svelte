@@ -1,5 +1,9 @@
 <script lang="ts">
-  import Color from 'colorjs.io';
+  import { onDestroy } from "svelte";
+  import Color from "colorjs.io";
+  import ColorField from "$lib/components/ColorField.svelte";
+  import { createThrottledCommit } from "$lib/color-field";
+  import { t } from "$lib/i18n/index.svelte";
 
   let {
     label = "",
@@ -13,108 +17,116 @@
     oninput?: (value: string) => void;
   } = $props();
 
-  // Parse any color format (oklch, rgba, hex, etc.) to RGBA using colorjs.io
-  function parseToRgba(colorStr: string): { r: number; g: number; b: number; a: number } {
+  type Rgba = { r: number; g: number; b: number; a: number };
+
+  // Any CSS color (oklch, rgba, hex, …) to sRGB channels; output is rgba().
+  function parseToRgba(colorStr: string): Rgba {
     try {
-      const color = new Color(colorStr);
-      const srgb = color.to('srgb');
-      const r = Math.round(Math.max(0, Math.min(1, srgb.coords[0] ?? 0)) * 255);
-      const g = Math.round(Math.max(0, Math.min(1, srgb.coords[1] ?? 0)) * 255);
-      const b = Math.round(Math.max(0, Math.min(1, srgb.coords[2] ?? 0)) * 255);
-      const a = srgb.alpha ?? 1;
-      return { r, g, b, a };
+      const srgb = new Color(colorStr).to("srgb");
+      const channel = (n: number | null | undefined) =>
+        Math.round(Math.max(0, Math.min(1, n ?? 0)) * 255);
+      return {
+        r: channel(srgb.coords[0]),
+        g: channel(srgb.coords[1]),
+        b: channel(srgb.coords[2]),
+        a: srgb.alpha ?? 1,
+      };
     } catch {
       return { r: 255, g: 255, b: 255, a: 1 };
     }
   }
 
-  // Convert to hex for color input
-  function toHex(r: number, g: number, b: number): string {
-    const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
-    return '#' + [clamp(r), clamp(g), clamp(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+  function toHex({ r, g, b }: Rgba): string {
+    return `#${[r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
   }
 
-  // Local state - initialized once from value, then managed locally
-  const initial = parseToRgba(value);
-  let r = $state(initial.r);
-  let g = $state(initial.g);
-  let b = $state(initial.b);
-  let a = $state(initial.a);
-  
-  // Track external value changes
-  let lastExternalValue = value;
-  
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  const DEBOUNCE_MS = 10;
-  
-  $effect(() => {
-    if (value !== lastExternalValue) {
-      const parsed = parseToRgba(value);
-      r = parsed.r;
-      g = parsed.g;
-      b = parsed.b;
-      a = parsed.a;
-      lastExternalValue = value;
-    }
-  });
+  const parsed = $derived(parseToRgba(value));
+  const hex = $derived(toHex(parsed));
 
-  let hexColor = $derived(toHex(r, g, b));
-  let alphaPercent = $derived(Math.round(a * 100));
+  // The slider previews locally while dragged; the store sees throttled commits.
+  let alphaDraft = $state<number | null>(null);
+  const alphaPercent = $derived(Math.round((alphaDraft ?? parsed.a) * 100));
 
-  function emitValue(newR: number, newG: number, newB: number, newA: number) {
-    const newValue = `rgba(${newR}, ${newG}, ${newB}, ${newA})`;
-    lastExternalValue = newValue;
-    
-    // Clear any pending debounce
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-    
-    debounceTimer = setTimeout(() => {
-      value = newValue;
-      oninput?.(newValue);
-      debounceTimer = null;
-    }, DEBOUNCE_MS);
+  function emit(color: Rgba) {
+    const next = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+    if (next === value) return;
+    value = next;
+    oninput?.(next);
   }
 
-  function handleColorChange(e: Event) {
-    const hex = (e.target as HTMLInputElement).value;
-    r = parseInt(hex.slice(1, 3), 16);
-    g = parseInt(hex.slice(3, 5), 16);
-    b = parseInt(hex.slice(5, 7), 16);
-    emitValue(r, g, b, a);
+  const alphaThrottle = createThrottledCommit((alpha: number) => {
+    emit({ ...parsed, a: alpha });
+  }, 200);
+
+  function setHex(next: string) {
+    emit({
+      r: Number.parseInt(next.slice(1, 3), 16),
+      g: Number.parseInt(next.slice(3, 5), 16),
+      b: Number.parseInt(next.slice(5, 7), 16),
+      a: parsed.a,
+    });
   }
 
-  function handleAlphaChange(e: Event) {
-    a = Math.round(parseInt((e.target as HTMLInputElement).value, 10)) / 100;
-    emitValue(r, g, b, a);
+  function percentToAlpha(text: string): number | null {
+    const percent = Number(text);
+    if (!Number.isFinite(percent)) return null;
+    return Math.round(Math.max(0, Math.min(100, percent))) / 100;
   }
+
+  function onSliderInput(event: Event & { currentTarget: HTMLInputElement }) {
+    const alpha = percentToAlpha(event.currentTarget.value);
+    if (alpha === null) return;
+    alphaDraft = alpha;
+    alphaThrottle.push(alpha);
+  }
+
+  function onSliderChange() {
+    alphaThrottle.flush();
+    alphaDraft = null;
+  }
+
+  function onPercentChange(event: Event & { currentTarget: HTMLInputElement }) {
+    const alpha = percentToAlpha(event.currentTarget.value);
+    if (alpha !== null) emit({ ...parsed, a: alpha });
+    event.currentTarget.value = String(Math.round(parsed.a * 100));
+  }
+
+  onDestroy(() => alphaThrottle.flush());
 </script>
 
-<label class="flex items-center justify-between gap-3 py-2.5 px-3 rounded-md hover:bg-popover/50 transition-colors">
-  <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-    <div class="text-sm font-medium text-foreground">{label}</div>
+<div
+  class="hover:bg-popover/50 flex flex-wrap items-center justify-between gap-3 rounded-md px-3 py-2.5 transition-colors"
+>
+  <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+    <div class="text-foreground text-sm font-medium">{label}</div>
     {#if description}
-      <div class="text-xs text-muted-foreground leading-relaxed">{description}</div>
+      <div class="text-muted-foreground text-xs leading-relaxed">
+        {description}
+      </div>
     {/if}
   </div>
-  <div class="flex items-center gap-2 flex-shrink-0">
+  <div class="flex flex-shrink-0 items-center gap-2">
+    <ColorField value={hex} ariaLabel={label} onchange={setHex} />
     <input
-      type="color"
-      value={hexColor}
-      oninput={handleColorChange}
-      class="w-8 h-8 rounded cursor-pointer border border-border/50 bg-transparent"
+      type="range"
+      min="0"
+      max="100"
+      value={alphaPercent}
+      aria-label={`${label} ${t("colorField.opacity")}`}
+      oninput={onSliderInput}
+      onchange={onSliderChange}
+      class="accent-primary h-2 w-16 cursor-pointer"
     />
-    <div class="flex items-center gap-1">
+    <label class="text-muted-foreground flex items-center gap-0.5 text-xs">
       <input
-        type="range"
+        type="number"
         min="0"
         max="100"
         value={alphaPercent}
-        oninput={handleAlphaChange}
-        class="w-16 h-2 accent-primary cursor-pointer"
-      />
-      <span class="text-xs text-muted-foreground font-mono w-8">{alphaPercent}%</span>
-    </div>
+        aria-label={`${label} ${t("colorField.opacity")}`}
+        class="bg-background border-border/60 w-12 rounded border px-1 py-0.5 text-right font-mono"
+        onchange={onPercentChange}
+      />%
+    </label>
   </div>
-</label>
+</div>

@@ -295,6 +295,7 @@
   titleKey="monsterMonitor.roster.styleTitle"
   {panelStyle}
   {updatePanelStyle}
+  schemePanel="roster"
 />
 
 <style>

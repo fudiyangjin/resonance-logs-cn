@@ -14,6 +14,7 @@ import {
   createDefaultLiveAppearance,
   createDefaultLiveMeterProfileData,
   createDefaultLiveMeterState,
+  createReferenceLiveMeterProfileData,
   mergeLiveHeaderCustomization,
   normalizeHistorySettings,
   normalizeDeathReplayColumnOrder,
@@ -22,6 +23,7 @@ import {
   normalizeTankedSkillColumnOrder,
   createDefaultMonsterMonitorState,
   createDefaultSkillMonitorProfile,
+  createReferenceSkillMonitorProfile,
   deepCloneSettings,
   ensureDbmAliases,
   extractMonsterProfileData,
@@ -29,6 +31,8 @@ import {
   startAccessibilityStore,
   startLiveMeterStores,
   startSkillDamageFontsStore,
+  withReferenceHudColors,
+  withReferenceMonsterHudColors,
   type LiveAppearance,
   type LiveMeterProfile,
   type LiveMeterProfileData,
@@ -56,7 +60,10 @@ import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
 import { t } from "$lib/i18n/index.svelte";
 import { normalizeMonsterProfileStyles } from "./monster-monitor-profile.svelte.js";
 import { normalizeSkillProfile } from "./skill-monitor-normalize";
-import { isPristineLegacyMonitoring } from "./starter-loadout";
+import {
+  isDefaultLiveMeterProfileData,
+  isPristineLegacyMonitoring,
+} from "./starter-loadout";
 import { migrateLegacyMonsterPanels } from "./monster-panel-migration";
 import { pruneMonsterVoice, pruneSkillProfileVoice } from "./voice/association";
 import type { MonsterVoiceSlice } from "./voice/subject-types";
@@ -176,7 +183,7 @@ function normalizeSkillProfiles(
 ): SkillMonitorProfile[] {
   const source = Array.isArray(profiles) ? profiles : [];
   const fallback =
-    source.length > 0 ? source : [createDefaultSkillMonitorProfile()];
+    source.length > 0 ? source : [createReferenceSkillMonitorProfile()];
   const seen = new Set<string>();
   return fallback.map((profile) => {
     // Backfills fields added after this profile was first created (overlay
@@ -575,6 +582,13 @@ export function migrateLegacyMonitoringState(
   monsterMonitor = adoptAllDbmVoiceEntries(
     migrateMonsterPanelState(monsterMonitor),
   );
+  // A fresh install reaches here with untouched legacy defaults: nothing to
+  // preserve, so its HUD panels start on the default color scheme. Done
+  // before materializing so the monster profile slot gets it too.
+  if (pristineLegacyMonitoring) {
+    skillMonitor.profiles = skillMonitor.profiles.map(withReferenceHudColors);
+    monsterMonitor = withReferenceMonsterHudColors(monsterMonitor);
+  }
   if (!hasExistingLoadouts) {
     monsterMonitor.profiles = materializeLegacyMonsterMirror(monsterMonitor);
   } else {
@@ -586,8 +600,12 @@ export function migrateLegacyMonitoringState(
       (profile) => profile.id === monsterMonitor.mirroredProfileId,
     )?.id ?? monsterMonitor.profiles[0]!.id;
 
+  // A fresh install reaches here too, with legacy live stores that only hold
+  // the neutral defaults; nothing to preserve, so start from the reference.
   const liveProfile: LiveMeterProfile = {
-    ...deepCloneSettings(liveProfileData),
+    ...(isDefaultLiveMeterProfileData(liveProfileData)
+      ? createReferenceLiveMeterProfileData()
+      : deepCloneSettings(liveProfileData)),
     id: generateProfileId("live"),
     name: "",
   };

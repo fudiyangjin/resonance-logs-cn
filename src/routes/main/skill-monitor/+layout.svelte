@@ -4,7 +4,10 @@
   import PlayIcon from "virtual:icons/lucide/play";
   import PauseIcon from "virtual:icons/lucide/pause";
   import PenSquareIcon from "virtual:icons/lucide/pen-square";
+  import PaletteIcon from "virtual:icons/lucide/palette";
   import ProfileSwitcher from "./profile-switcher.svelte";
+  import HudColorSchemeDialog from "$lib/components/HudColorSchemeDialog.svelte";
+  import HudWhitePanelsHint from "$lib/components/HudWhitePanelsHint.svelte";
   import { t } from "$lib/i18n/index.svelte";
   import {
     toggleHudDomainWithRestore,
@@ -17,6 +20,7 @@
   // Tracks the persisted intent, not the physical window: a scene-driven
   // auto-hide must not make the button read as "off" while the monitor is on.
   const overlayEnabled = $derived(isHudDomainEnabled("game"));
+  let schemeDialogOpen = $state(false);
 
   async function toggleOverlayEditMode() {
     try {
@@ -66,10 +70,22 @@
         <span>{t("skillMonitor.layout.editOverlayLayout")}</span>
         <ExternalLinkIcon class="w-3.5 h-3.5 opacity-70" />
       </button>
+
+      <button
+        type="button"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border/60 bg-muted/30 text-foreground font-medium text-sm hover:bg-muted/50 transition-colors shadow-sm"
+        onclick={() => (schemeDialogOpen = true)}
+      >
+        <PaletteIcon class="w-4 h-4" />
+        <span>{t("hudScheme.open")}</span>
+      </button>
     </div>
   </div>
 
   <ProfileSwitcher />
+
+  <HudWhitePanelsHint scope="skill" onopen={() => (schemeDialogOpen = true)} />
+  <HudColorSchemeDialog bind:open={schemeDialogOpen} />
 
   <div class="min-h-0">
     {@render children()}

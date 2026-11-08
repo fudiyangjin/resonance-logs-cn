@@ -22,6 +22,9 @@
   import { blurOnEnter } from "$lib/utils.svelte";
   import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
   import BuffCompositeSection from "./buff-composite-section.svelte";
+  import ColorField from "$lib/components/ColorField.svelte";
+  import PanelColorFields from "$lib/components/PanelColorFields.svelte";
+  import type { PanelColorPatch } from "$lib/hud-color-schemes";
 
   type BuffGroupUpdateHandler = (
     updater: (curr: BuffGroup) => BuffGroup,
@@ -78,10 +81,7 @@
     setTextBuffPanelGap: (value: number) => void;
     setTextBuffPanelFontSize: (value: number) => void;
     setTextBuffPanelColumnGap: (value: number) => void;
-    setTextBuffPanelNameColor: (value: string) => void;
-    setTextBuffPanelValueColor: (value: string) => void;
-    setTextBuffPanelProgressColor: (value: string) => void;
-    setTextBuffPanelProgressOpacity: (value: number) => void;
+    applyTextBuffPanelColors: (patch: PanelColorPatch) => void;
     setTextBuffPanelTextShadowEnabled: (value: boolean) => void;
     setTextBuffPanelBackgroundEnabled: (value: boolean) => void;
     setTextBuffPanelBackgroundOpacity: (value: number) => void;
@@ -202,10 +202,7 @@
     setTextBuffPanelGap,
     setTextBuffPanelFontSize,
     setTextBuffPanelColumnGap,
-    setTextBuffPanelNameColor,
-    setTextBuffPanelValueColor,
-    setTextBuffPanelProgressColor,
-    setTextBuffPanelProgressOpacity,
+    applyTextBuffPanelColors,
     setTextBuffPanelTextShadowEnabled,
     setTextBuffPanelBackgroundEnabled,
     setTextBuffPanelBackgroundOpacity,
@@ -1003,70 +1000,12 @@
         </label>
       {/if}
     </div>
-    <div class="grid max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <label
-        class="border-border/60 bg-muted/20 text-muted-foreground flex items-center justify-between gap-2 rounded border px-3 py-2 text-xs"
-      >
-        {t("skillMonitor.style.nameColor")}
-        <input
-          type="color"
-          value={textBuffPanelStyle.nameColor}
-          class="border-border/60 h-7 w-12 rounded border bg-transparent p-0"
-          onchange={(event) =>
-            setTextBuffPanelNameColor(
-              (event.currentTarget as HTMLInputElement).value,
-            )}
-        />
-      </label>
-      <label
-        class="border-border/60 bg-muted/20 text-muted-foreground flex items-center justify-between gap-2 rounded border px-3 py-2 text-xs"
-      >
-        {t("skillMonitor.style.valueColor")}
-        <input
-          type="color"
-          value={textBuffPanelStyle.valueColor}
-          class="border-border/60 h-7 w-12 rounded border bg-transparent p-0"
-          onchange={(event) =>
-            setTextBuffPanelValueColor(
-              (event.currentTarget as HTMLInputElement).value,
-            )}
-        />
-      </label>
-      <label
-        class="border-border/60 bg-muted/20 text-muted-foreground flex items-center justify-between gap-2 rounded border px-3 py-2 text-xs"
-      >
-        {t("skillMonitor.style.progressColor")}
-        <input
-          type="color"
-          value={textBuffPanelStyle.progressColor}
-          class="border-border/60 h-7 w-12 rounded border bg-transparent p-0"
-          onchange={(event) =>
-            setTextBuffPanelProgressColor(
-              (event.currentTarget as HTMLInputElement).value,
-            )}
-        />
-      </label>
-      <label
-        class="border-border/60 bg-muted/20 text-muted-foreground rounded border px-3 py-2 text-xs"
-      >
-        <div>
-          {t("skillMonitor.style.progressOpacity", {
-            value: Math.round(textBuffPanelStyle.progressOpacity * 100),
-          })}
-        </div>
-        <input
-          class="mt-2 w-full"
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          value={textBuffPanelStyle.progressOpacity}
-          oninput={(event) =>
-            setTextBuffPanelProgressOpacity(
-              Number((event.currentTarget as HTMLInputElement).value),
-            )}
-        />
-      </label>
+    <div class="max-w-4xl">
+      <PanelColorFields
+        style={textBuffPanelStyle}
+        schemePanel="textBuff"
+        onchange={applyTextBuffPanelColors}
+      />
     </div>
     <OverlayTextStyleFields
       textShadowEnabled={textBuffPanelStyle.textShadowEnabled}
@@ -1235,20 +1174,16 @@
                         upsertBuffAlert(buffId, { thresholdSeconds: seconds })}
                     />
                   </label>
-                  <label class="text-muted-foreground text-xs">
+                  <div class="text-muted-foreground text-xs">
                     {t("skillMonitor.buff.alert.highlightColor")}
-                    <input
-                      class="border-border/60 mt-1 h-8 w-full rounded border bg-transparent p-0"
-                      type="color"
+                    <ColorField
+                      class="mt-1"
                       value={rule.highlightColor}
-                      oninput={(event) =>
-                        upsertBuffAlert(buffId, {
-                          highlightColor: (
-                            event.currentTarget as HTMLInputElement
-                          ).value,
-                        })}
+                      ariaLabel={t("skillMonitor.buff.alert.highlightColor")}
+                      onchange={(highlightColor) =>
+                        upsertBuffAlert(buffId, { highlightColor })}
                     />
-                  </label>
+                  </div>
                   <label
                     class="text-foreground flex items-center gap-2 text-xs"
                   >

@@ -7,7 +7,7 @@
    */
   import {
     SETTINGS,
-    createDefaultSkillMonitorProfile,
+    createReferenceSkillMonitorProfile,
   } from "$lib/settings-store";
   import {
     activeLoadout,
@@ -55,7 +55,7 @@
   }
 
   function addProfile() {
-    const nextProfile = createDefaultSkillMonitorProfile("");
+    const nextProfile = createReferenceSkillMonitorProfile("");
     SETTINGS.skillMonitor.state.profiles = [...profiles, nextProfile];
     selectProfile(nextProfile.id);
   }

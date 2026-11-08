@@ -62,7 +62,8 @@
   import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
   import { blurOnEnter } from "$lib/utils.svelte";
   import { resolveMonsterBuffSourceScope as resolveScopeIn } from "$lib/voice/association";
-  import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
+  import ColorField from "$lib/components/ColorField.svelte";
+  import PanelStyleSection from "./panel-style-section.svelte";
   import TabEntityDuration from "./tab-entity-duration.svelte";
   import TabMonsterRoster from "./tab-monster-roster.svelte";
   import TabMonsterSkill from "./tab-monster-skill.svelte";
@@ -1526,20 +1527,16 @@
                       })}
                   />
                 </label>
-                <label class="text-muted-foreground text-xs">
+                <div class="text-muted-foreground text-xs">
                   {t("monsterMonitor.alert.highlightColor")}
-                  <input
-                    class="border-border/60 mt-1 h-8 w-full rounded border bg-transparent p-0"
-                    type="color"
+                  <ColorField
+                    class="mt-1"
                     value={rule.highlightColor}
-                    oninput={(event) =>
-                      upsertMonsterBuffAlert(buffId, {
-                        highlightColor: (
-                          event.currentTarget as HTMLInputElement
-                        ).value,
-                      })}
+                    ariaLabel={t("monsterMonitor.alert.highlightColor")}
+                    onchange={(highlightColor) =>
+                      upsertMonsterBuffAlert(buffId, { highlightColor })}
                   />
-                </label>
+                </div>
                 <label class="text-foreground flex items-center gap-2 text-xs">
                   <input
                     type="checkbox"
@@ -1734,141 +1731,12 @@
       {/if}
     </section>
 
-    <section
-      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
-    >
-      <div class="space-y-1">
-        <h2 class="text-foreground text-base font-semibold">
-          {t("monsterMonitor.style.panelTitle")}
-        </h2>
-      </div>
-
-      <div class="grid gap-4 lg:grid-cols-3">
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.gap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="24"
-            value={monsterPanelStyle.gap}
-            oninput={(event) =>
-              updatePanelStyle(
-                "gap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{monsterPanelStyle.gap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.columnGap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="40"
-            value={monsterPanelStyle.columnGap}
-            oninput={(event) =>
-              updatePanelStyle(
-                "columnGap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{monsterPanelStyle.columnGap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.fontSize")}</span>
-          <input
-            type="range"
-            min="10"
-            max="28"
-            value={monsterPanelStyle.fontSize}
-            oninput={(event) =>
-              updatePanelStyle(
-                "fontSize",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{monsterPanelStyle.fontSize}px</strong>
-        </label>
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.nameColor")}</span>
-          <input
-            type="color"
-            value={monsterPanelStyle.nameColor}
-            oninput={(event) =>
-              updatePanelStyle(
-                "nameColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.valueColor")}</span>
-          <input
-            type="color"
-            value={monsterPanelStyle.valueColor}
-            oninput={(event) =>
-              updatePanelStyle(
-                "valueColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressColor")}</span>
-          <input
-            type="color"
-            value={monsterPanelStyle.progressColor}
-            oninput={(event) =>
-              updatePanelStyle(
-                "progressColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressOpacity")}</span>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={monsterPanelStyle.progressOpacity}
-            oninput={(event) =>
-              updatePanelStyle(
-                "progressOpacity",
-                Number((event.currentTarget as HTMLInputElement).value),
-              )}
-          />
-          <strong>{Math.round(monsterPanelStyle.progressOpacity * 100)}%</strong
-          >
-        </label>
-      </div>
-      <OverlayTextStyleFields
-        textShadowEnabled={monsterPanelStyle.textShadowEnabled}
-        backgroundEnabled={monsterPanelStyle.backgroundEnabled}
-        backgroundOpacity={monsterPanelStyle.backgroundOpacity}
-        onTextShadowEnabled={(v) => updatePanelStyle("textShadowEnabled", v)}
-        onBackgroundEnabled={(v) => updatePanelStyle("backgroundEnabled", v)}
-        onBackgroundOpacity={(v) => updatePanelStyle("backgroundOpacity", v)}
-      />
-    </section>
+    <PanelStyleSection
+      titleKey="monsterMonitor.style.panelTitle"
+      panelStyle={monsterPanelStyle}
+      updatePanelStyle={updatePanelStyle}
+      schemePanel="monsterBuff"
+    />
   {:else if activeTab === "teammate"}
     <section
       class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
@@ -1991,73 +1859,14 @@
         {/if}
       </div>
     </section>
-    <section
-      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
+    <PanelStyleSection
+      titleKey="monsterMonitor.teammate.styleTitle"
+      panelStyle={teammatePanelStyle}
+      updatePanelStyle={(key, value) =>
+        updateTeammatePanelStyle(key, value as TeammatePanelStyle[typeof key])}
+      schemePanel="teammate"
     >
-      <div class="space-y-1">
-        <h2 class="text-foreground text-base font-semibold">
-          {t("monsterMonitor.teammate.styleTitle")}
-        </h2>
-      </div>
-
-      <div class="grid gap-4 lg:grid-cols-3">
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.gap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="24"
-            value={teammatePanelStyle.gap}
-            oninput={(event) =>
-              updateTeammatePanelStyle(
-                "gap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{teammatePanelStyle.gap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.columnGap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="40"
-            value={teammatePanelStyle.columnGap}
-            oninput={(event) =>
-              updateTeammatePanelStyle(
-                "columnGap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{teammatePanelStyle.columnGap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.fontSize")}</span>
-          <input
-            type="range"
-            min="10"
-            max="28"
-            value={teammatePanelStyle.fontSize}
-            oninput={(event) =>
-              updateTeammatePanelStyle(
-                "fontSize",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{teammatePanelStyle.fontSize}px</strong>
-        </label>
-
+      {#snippet extraFields()}
         <label class="style-field">
           <span>{t("monsterMonitor.style.rowHeight")}</span>
           <input
@@ -2068,15 +1877,11 @@
             oninput={(event) =>
               updateTeammatePanelStyle(
                 "rowHeight",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
+                Number.parseInt(event.currentTarget.value, 10),
               )}
           />
           <strong>{teammatePanelStyle.rowHeight}px</strong>
         </label>
-
         <label class="style-field">
           <span>{t("monsterMonitor.style.nameColumnWidth")}</span>
           <input
@@ -2087,15 +1892,11 @@
             oninput={(event) =>
               updateTeammatePanelStyle(
                 "nameColumnWidth",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
+                Number.parseInt(event.currentTarget.value, 10),
               )}
           />
           <strong>{teammatePanelStyle.nameColumnWidth}px</strong>
         </label>
-
         <label class="style-field">
           <span>{t("monsterMonitor.style.buffColumnWidth")}</span>
           <input
@@ -2106,23 +1907,18 @@
             oninput={(event) =>
               updateTeammatePanelStyle(
                 "buffColumnWidth",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
+                Number.parseInt(event.currentTarget.value, 10),
               )}
           />
           <strong>{teammatePanelStyle.buffColumnWidth}px</strong>
         </label>
-
         <label class="style-field">
           <span>{t("monsterMonitor.style.deadRowPlacement")}</span>
           <select
             class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-sm"
             value={teammatePanelStyle.deadRowPlacement}
             onchange={(event) => {
-              const placement = (event.currentTarget as HTMLSelectElement)
-                .value;
+              const placement = event.currentTarget.value;
               if (isTeammateDeadRowPlacement(placement)) {
                 updateTeammatePanelStyle("deadRowPlacement", placement);
               }
@@ -2139,113 +1935,38 @@
             >
           </select>
         </label>
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.nameColor")}</span>
-          <input
-            type="color"
-            value={teammatePanelStyle.nameColor}
-            oninput={(event) =>
-              updateTeammatePanelStyle(
-                "nameColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.deadNameColor")}</span>
-          <input
-            type="color"
-            value={teammatePanelStyle.deadNameColor}
-            oninput={(event) =>
-              updateTeammatePanelStyle(
-                "deadNameColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.valueColor")}</span>
-          <input
-            type="color"
-            value={teammatePanelStyle.valueColor}
-            oninput={(event) =>
-              updateTeammatePanelStyle(
-                "valueColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressColor")}</span>
-          <input
-            type="color"
-            value={teammatePanelStyle.progressColor}
-            oninput={(event) =>
-              updateTeammatePanelStyle(
-                "progressColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressOpacity")}</span>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={teammatePanelStyle.progressOpacity}
-            oninput={(event) =>
-              updateTeammatePanelStyle(
-                "progressOpacity",
-                Number((event.currentTarget as HTMLInputElement).value),
-              )}
-          />
-          <strong
-            >{Math.round(teammatePanelStyle.progressOpacity * 100)}%</strong
-          >
-        </label>
-      </div>
-      <label
-        class="border-border/60 bg-muted/20 flex items-center justify-between gap-2 rounded border px-3 py-2 text-xs"
-      >
-        <span class="space-y-0.5">
-          <span class="text-muted-foreground block"
-            >{t("monsterMonitor.style.preciseTimer")}</span
-          >
-          <span class="text-muted-foreground/70 block"
-            >{t("monsterMonitor.style.preciseTimerHint")}</span
-          >
-        </span>
-        <input
-          type="checkbox"
-          checked={teammatePanelStyle.preciseTimer}
-          onchange={(event) =>
-            updateTeammatePanelStyle(
-              "preciseTimer",
-              (event.currentTarget as HTMLInputElement).checked,
-            )}
+      {/snippet}
+      {#snippet extraColors()}
+        <ColorField
+          label={t("monsterMonitor.style.deadNameColor")}
+          value={teammatePanelStyle.deadNameColor}
+          onchange={(hex) => updateTeammatePanelStyle("deadNameColor", hex)}
         />
-      </label>
-      <OverlayTextStyleFields
-        textShadowEnabled={teammatePanelStyle.textShadowEnabled}
-        backgroundEnabled={teammatePanelStyle.backgroundEnabled}
-        backgroundOpacity={teammatePanelStyle.backgroundOpacity}
-        onTextShadowEnabled={(v) =>
-          updateTeammatePanelStyle("textShadowEnabled", v)}
-        onBackgroundEnabled={(v) =>
-          updateTeammatePanelStyle("backgroundEnabled", v)}
-        onBackgroundOpacity={(v) =>
-          updateTeammatePanelStyle("backgroundOpacity", v)}
-      />
-    </section>
+      {/snippet}
+      {#snippet footer()}
+        <label
+          class="border-border/60 bg-muted/20 flex items-center justify-between gap-2 rounded border px-3 py-2 text-xs"
+        >
+          <span class="space-y-0.5">
+            <span class="text-muted-foreground block"
+              >{t("monsterMonitor.style.preciseTimer")}</span
+            >
+            <span class="text-muted-foreground/70 block"
+              >{t("monsterMonitor.style.preciseTimerHint")}</span
+            >
+          </span>
+          <input
+            type="checkbox"
+            checked={teammatePanelStyle.preciseTimer}
+            onchange={(event) =>
+              updateTeammatePanelStyle(
+                "preciseTimer",
+                event.currentTarget.checked,
+              )}
+          />
+        </label>
+      {/snippet}
+    </PanelStyleSection>
   {:else if activeTab === "hate"}
     <section
       class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
@@ -2282,143 +2003,12 @@
       </div>
     </section>
 
-    <section
-      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
-    >
-      <div class="space-y-1">
-        <h2 class="text-foreground text-base font-semibold">
-          {t("monsterMonitor.hate.styleTitle")}
-        </h2>
-      </div>
-
-      <div class="grid gap-4 lg:grid-cols-3">
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.gap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="24"
-            value={hatePanelStyle.gap}
-            oninput={(event) =>
-              updateHatePanelStyle(
-                "gap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{hatePanelStyle.gap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.columnGap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="40"
-            value={hatePanelStyle.columnGap}
-            oninput={(event) =>
-              updateHatePanelStyle(
-                "columnGap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{hatePanelStyle.columnGap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.fontSize")}</span>
-          <input
-            type="range"
-            min="10"
-            max="28"
-            value={hatePanelStyle.fontSize}
-            oninput={(event) =>
-              updateHatePanelStyle(
-                "fontSize",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{hatePanelStyle.fontSize}px</strong>
-        </label>
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.nameColor")}</span>
-          <input
-            type="color"
-            value={hatePanelStyle.nameColor}
-            oninput={(event) =>
-              updateHatePanelStyle(
-                "nameColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.valueColor")}</span>
-          <input
-            type="color"
-            value={hatePanelStyle.valueColor}
-            oninput={(event) =>
-              updateHatePanelStyle(
-                "valueColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressColor")}</span>
-          <input
-            type="color"
-            value={hatePanelStyle.progressColor}
-            oninput={(event) =>
-              updateHatePanelStyle(
-                "progressColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressOpacity")}</span>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={hatePanelStyle.progressOpacity}
-            oninput={(event) =>
-              updateHatePanelStyle(
-                "progressOpacity",
-                Number((event.currentTarget as HTMLInputElement).value),
-              )}
-          />
-          <strong>{Math.round(hatePanelStyle.progressOpacity * 100)}%</strong>
-        </label>
-      </div>
-      <OverlayTextStyleFields
-        textShadowEnabled={hatePanelStyle.textShadowEnabled}
-        backgroundEnabled={hatePanelStyle.backgroundEnabled}
-        backgroundOpacity={hatePanelStyle.backgroundOpacity}
-        onTextShadowEnabled={(v) =>
-          updateHatePanelStyle("textShadowEnabled", v)}
-        onBackgroundEnabled={(v) =>
-          updateHatePanelStyle("backgroundEnabled", v)}
-        onBackgroundOpacity={(v) =>
-          updateHatePanelStyle("backgroundOpacity", v)}
-      />
-    </section>
+    <PanelStyleSection
+      titleKey="monsterMonitor.hate.styleTitle"
+      panelStyle={hatePanelStyle}
+      updatePanelStyle={updateHatePanelStyle}
+      schemePanel="hate"
+    />
   {:else if activeTab === "stun"}
     <section
       class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
@@ -2433,143 +2023,12 @@
       </div>
     </section>
 
-    <section
-      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
-    >
-      <div class="space-y-1">
-        <h2 class="text-foreground text-base font-semibold">
-          {t("monsterMonitor.stun.styleTitle")}
-        </h2>
-      </div>
-
-      <div class="grid gap-4 lg:grid-cols-3">
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.gap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="24"
-            value={stunPanelStyle.gap}
-            oninput={(event) =>
-              updateStunPanelStyle(
-                "gap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{stunPanelStyle.gap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.columnGap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="40"
-            value={stunPanelStyle.columnGap}
-            oninput={(event) =>
-              updateStunPanelStyle(
-                "columnGap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{stunPanelStyle.columnGap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.fontSize")}</span>
-          <input
-            type="range"
-            min="10"
-            max="28"
-            value={stunPanelStyle.fontSize}
-            oninput={(event) =>
-              updateStunPanelStyle(
-                "fontSize",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{stunPanelStyle.fontSize}px</strong>
-        </label>
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.nameColor")}</span>
-          <input
-            type="color"
-            value={stunPanelStyle.nameColor}
-            oninput={(event) =>
-              updateStunPanelStyle(
-                "nameColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.valueColor")}</span>
-          <input
-            type="color"
-            value={stunPanelStyle.valueColor}
-            oninput={(event) =>
-              updateStunPanelStyle(
-                "valueColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressColor")}</span>
-          <input
-            type="color"
-            value={stunPanelStyle.progressColor}
-            oninput={(event) =>
-              updateStunPanelStyle(
-                "progressColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressOpacity")}</span>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={stunPanelStyle.progressOpacity}
-            oninput={(event) =>
-              updateStunPanelStyle(
-                "progressOpacity",
-                Number((event.currentTarget as HTMLInputElement).value),
-              )}
-          />
-          <strong>{Math.round(stunPanelStyle.progressOpacity * 100)}%</strong>
-        </label>
-      </div>
-      <OverlayTextStyleFields
-        textShadowEnabled={stunPanelStyle.textShadowEnabled}
-        backgroundEnabled={stunPanelStyle.backgroundEnabled}
-        backgroundOpacity={stunPanelStyle.backgroundOpacity}
-        onTextShadowEnabled={(v) =>
-          updateStunPanelStyle("textShadowEnabled", v)}
-        onBackgroundEnabled={(v) =>
-          updateStunPanelStyle("backgroundEnabled", v)}
-        onBackgroundOpacity={(v) =>
-          updateStunPanelStyle("backgroundOpacity", v)}
-      />
-    </section>
+    <PanelStyleSection
+      titleKey="monsterMonitor.stun.styleTitle"
+      panelStyle={stunPanelStyle}
+      updatePanelStyle={updateStunPanelStyle}
+      schemePanel="stun"
+    />
   {:else if activeTab === "hp"}
     <section
       class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
@@ -2584,140 +2043,12 @@
       </div>
     </section>
 
-    <section
-      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
-    >
-      <div class="space-y-1">
-        <h2 class="text-foreground text-base font-semibold">
-          {t("monsterMonitor.hp.styleTitle")}
-        </h2>
-      </div>
-
-      <div class="grid gap-4 lg:grid-cols-3">
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.gap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="24"
-            value={hpPanelStyle.gap}
-            oninput={(event) =>
-              updateHpPanelStyle(
-                "gap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{hpPanelStyle.gap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.columnGap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="40"
-            value={hpPanelStyle.columnGap}
-            oninput={(event) =>
-              updateHpPanelStyle(
-                "columnGap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{hpPanelStyle.columnGap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.fontSize")}</span>
-          <input
-            type="range"
-            min="10"
-            max="28"
-            value={hpPanelStyle.fontSize}
-            oninput={(event) =>
-              updateHpPanelStyle(
-                "fontSize",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{hpPanelStyle.fontSize}px</strong>
-        </label>
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.nameColor")}</span>
-          <input
-            type="color"
-            value={hpPanelStyle.nameColor}
-            oninput={(event) =>
-              updateHpPanelStyle(
-                "nameColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.valueColor")}</span>
-          <input
-            type="color"
-            value={hpPanelStyle.valueColor}
-            oninput={(event) =>
-              updateHpPanelStyle(
-                "valueColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressColor")}</span>
-          <input
-            type="color"
-            value={hpPanelStyle.progressColor}
-            oninput={(event) =>
-              updateHpPanelStyle(
-                "progressColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressOpacity")}</span>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={hpPanelStyle.progressOpacity}
-            oninput={(event) =>
-              updateHpPanelStyle(
-                "progressOpacity",
-                Number((event.currentTarget as HTMLInputElement).value),
-              )}
-          />
-          <strong>{Math.round(hpPanelStyle.progressOpacity * 100)}%</strong>
-        </label>
-      </div>
-      <OverlayTextStyleFields
-        textShadowEnabled={hpPanelStyle.textShadowEnabled}
-        backgroundEnabled={hpPanelStyle.backgroundEnabled}
-        backgroundOpacity={hpPanelStyle.backgroundOpacity}
-        onTextShadowEnabled={(v) => updateHpPanelStyle("textShadowEnabled", v)}
-        onBackgroundEnabled={(v) => updateHpPanelStyle("backgroundEnabled", v)}
-        onBackgroundOpacity={(v) => updateHpPanelStyle("backgroundOpacity", v)}
-      />
-    </section>
+    <PanelStyleSection
+      titleKey="monsterMonitor.hp.styleTitle"
+      panelStyle={hpPanelStyle}
+      updatePanelStyle={updateHpPanelStyle}
+      schemePanel="hp"
+    />
   {:else if activeTab === "fantasy"}
     <section
       class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
@@ -2806,113 +2137,13 @@
       </div>
     </section>
 
-    <section
-      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
-    >
-      <div class="space-y-1">
-        <h2 class="text-foreground text-base font-semibold">
-          {t("monsterMonitor.fantasy.styleTitle")}
-        </h2>
-      </div>
-
-      <div class="grid gap-4 lg:grid-cols-3">
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.gap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="24"
-            value={fantasyPanelStyle.gap}
-            oninput={(event) =>
-              updateFantasyPanelStyle(
-                "gap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{fantasyPanelStyle.gap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.columnGap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="40"
-            value={fantasyPanelStyle.columnGap}
-            oninput={(event) =>
-              updateFantasyPanelStyle(
-                "columnGap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{fantasyPanelStyle.columnGap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.fontSize")}</span>
-          <input
-            type="range"
-            min="10"
-            max="28"
-            value={fantasyPanelStyle.fontSize}
-            oninput={(event) =>
-              updateFantasyPanelStyle(
-                "fontSize",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{fantasyPanelStyle.fontSize}px</strong>
-        </label>
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.nameColor")}</span>
-          <input
-            type="color"
-            value={fantasyPanelStyle.nameColor}
-            oninput={(event) =>
-              updateFantasyPanelStyle(
-                "nameColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.valueColor")}</span>
-          <input
-            type="color"
-            value={fantasyPanelStyle.valueColor}
-            oninput={(event) =>
-              updateFantasyPanelStyle(
-                "valueColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-      </div>
-      <OverlayTextStyleFields
-        textShadowEnabled={fantasyPanelStyle.textShadowEnabled}
-        backgroundEnabled={fantasyPanelStyle.backgroundEnabled}
-        backgroundOpacity={fantasyPanelStyle.backgroundOpacity}
-        onTextShadowEnabled={(v) =>
-          updateFantasyPanelStyle("textShadowEnabled", v)}
-        onBackgroundEnabled={(v) =>
-          updateFantasyPanelStyle("backgroundEnabled", v)}
-        onBackgroundOpacity={(v) =>
-          updateFantasyPanelStyle("backgroundOpacity", v)}
-      />
-    </section>
+    <PanelStyleSection
+      titleKey="monsterMonitor.fantasy.styleTitle"
+      panelStyle={fantasyPanelStyle}
+      updatePanelStyle={updateFantasyPanelStyle}
+      schemePanel="fantasy"
+      showProgress={false}
+    />
   {:else if activeTab === "bossDbm"}
     <section
       class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
@@ -3035,138 +2266,12 @@
       </div>
     </section>
 
-    <section
-      class="border-border/60 bg-card/60 space-y-5 rounded-xl border p-5"
-    >
-      <div class="grid gap-4 lg:grid-cols-3">
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.gap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="24"
-            value={bossDbmPanelStyle.gap}
-            oninput={(event) =>
-              updateBossDbmPanelStyle(
-                "gap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{bossDbmPanelStyle.gap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.columnGap")}</span>
-          <input
-            type="range"
-            min="0"
-            max="240"
-            value={bossDbmPanelStyle.columnGap}
-            oninput={(event) =>
-              updateBossDbmPanelStyle(
-                "columnGap",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{bossDbmPanelStyle.columnGap}px</strong>
-        </label>
-
-        <label class="style-field">
-          <span>{t("monsterMonitor.style.fontSize")}</span>
-          <input
-            type="range"
-            min="10"
-            max="28"
-            value={bossDbmPanelStyle.fontSize}
-            oninput={(event) =>
-              updateBossDbmPanelStyle(
-                "fontSize",
-                Number.parseInt(
-                  (event.currentTarget as HTMLInputElement).value,
-                  10,
-                ),
-              )}
-          />
-          <strong>{bossDbmPanelStyle.fontSize}px</strong>
-        </label>
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.nameColor")}</span>
-          <input
-            type="color"
-            value={bossDbmPanelStyle.nameColor}
-            oninput={(event) =>
-              updateBossDbmPanelStyle(
-                "nameColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.valueColor")}</span>
-          <input
-            type="color"
-            value={bossDbmPanelStyle.valueColor}
-            oninput={(event) =>
-              updateBossDbmPanelStyle(
-                "valueColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressColor")}</span>
-          <input
-            type="color"
-            value={bossDbmPanelStyle.progressColor}
-            oninput={(event) =>
-              updateBossDbmPanelStyle(
-                "progressColor",
-                (event.currentTarget as HTMLInputElement).value,
-              )}
-          />
-        </label>
-
-        <label class="color-field">
-          <span>{t("monsterMonitor.style.progressOpacity")}</span>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={bossDbmPanelStyle.progressOpacity}
-            oninput={(event) =>
-              updateBossDbmPanelStyle(
-                "progressOpacity",
-                Number((event.currentTarget as HTMLInputElement).value),
-              )}
-          />
-          <strong>{Math.round(bossDbmPanelStyle.progressOpacity * 100)}%</strong
-          >
-        </label>
-      </div>
-      <OverlayTextStyleFields
-        textShadowEnabled={bossDbmPanelStyle.textShadowEnabled}
-        backgroundEnabled={bossDbmPanelStyle.backgroundEnabled}
-        backgroundOpacity={bossDbmPanelStyle.backgroundOpacity}
-        onTextShadowEnabled={(v) =>
-          updateBossDbmPanelStyle("textShadowEnabled", v)}
-        onBackgroundEnabled={(v) =>
-          updateBossDbmPanelStyle("backgroundEnabled", v)}
-        onBackgroundOpacity={(v) =>
-          updateBossDbmPanelStyle("backgroundOpacity", v)}
-      />
-    </section>
+    <PanelStyleSection
+      panelStyle={bossDbmPanelStyle}
+      updatePanelStyle={updateBossDbmPanelStyle}
+      schemePanel="bossDbm"
+      columnGapMax={240}
+    />
   {:else if activeTab === "teammateCd"}
     <TabTeammateCd />
   {:else if activeTab === "roster"}
@@ -3439,8 +2544,7 @@
     background: rgba(127, 29, 29, 0.24);
   }
 
-  .style-field,
-  .color-field {
+  .style-field {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -3455,14 +2559,5 @@
   .style-field strong {
     font-size: 12px;
     color: var(--muted-foreground, rgba(255, 255, 255, 0.72));
-  }
-
-  .color-field input[type="color"] {
-    width: 100%;
-    height: 42px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
   }
 </style>

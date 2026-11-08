@@ -6,6 +6,7 @@ import {
   createDefaultMonitoringSettingsState,
   createDefaultMonsterMonitorProfile,
   createDefaultSkillMonitorProfile,
+  createReferenceLiveMeterProfileData,
   startAccessibilityStore,
   type Loadout,
 } from "./settings-store";
@@ -17,6 +18,8 @@ import {
   migrateMonitoringStateIncrementally,
   reconcileMonitoringState,
 } from "./settings-migrations";
+import { getHudColorScheme } from "./hud-color-schemes";
+import { isReplaceableStarterLoadout } from "./starter-loadout";
 
 function defaultLiveProfileData() {
   return createDefaultLiveMeterProfileData();
@@ -367,6 +370,56 @@ describe("legacy monitoring migration", () => {
     expect(migrated.loadouts.items[0]!.starterPlaceholder).toBe(true);
   });
 
+  it("starts a fresh install on the default HUD colors, still as a starter", () => {
+    const base = createDefaultMonitoringSettingsState();
+    const migrated = migrateLegacyMonitoringState(
+      {
+        skillMonitor: { ...base.skillMonitor, activeProfileIndex: 0 },
+        monsterMonitor: base.monsterMonitor,
+        loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
+      },
+      defaultLiveProfileData(),
+    );
+    const vivid = getHudColorScheme("vivid");
+    const skill = migrated.skillMonitor.profiles[0]!;
+    const monster = migrated.monsterMonitor.profiles.find(
+      (profile) => profile.id === migrated.loadouts.items[0]!.monsterProfileId,
+    )!;
+
+    expect(skill.textBuffPanelStyle?.progressColor).toBe(
+      vivid.panels.textBuff.progressColor,
+    );
+    expect(migrated.monsterMonitor.panelStyle.progressColor).toBe(
+      vivid.panels.monsterBuff.progressColor,
+    );
+    expect(monster.entityDurationPanelStyle.progressColor).toBe(
+      vivid.panels.entityDuration.progressColor,
+    );
+    expect(
+      isReplaceableStarterLoadout(migrated.loadouts.items[0]!, skill, monster),
+    ).toBe(true);
+  });
+
+  it("leaves a configured legacy user's white panels white", () => {
+    const base = createDefaultMonitoringSettingsState();
+    base.skillMonitor.profiles[0]!.monitoredSkillIds = [101];
+    const migrated = migrateLegacyMonitoringState(
+      {
+        skillMonitor: { ...base.skillMonitor, activeProfileIndex: 0 },
+        monsterMonitor: base.monsterMonitor,
+        loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
+      },
+      defaultLiveProfileData(),
+    );
+
+    expect(
+      migrated.skillMonitor.profiles[0]!.textBuffPanelStyle?.progressColor,
+    ).toBe("#ffffff");
+    expect(migrated.monsterMonitor.panelStyle.progressColor).toBe("#ffffff");
+    const reconciled = reconcileMonitoringState(migrated);
+    expect(reconciled.monsterMonitor.panelStyle.nameColor).toBe("#ffffff");
+  });
+
   it.each([
     [
       "monitored skill",
@@ -543,6 +596,24 @@ describe("legacy monitoring migration", () => {
       ).toBe(true);
     },
   );
+
+  it("seeds the reference look when the legacy live stores are untouched", () => {
+    // A fresh install takes this path with default-only legacy stores.
+    const base = createDefaultMonitoringSettingsState();
+    const migrated = migrateLegacyMonitoringState(
+      {
+        skillMonitor: { ...base.skillMonitor, activeProfileIndex: 0 },
+        monsterMonitor: base.monsterMonitor,
+        loadouts: { ...createDefaultLoadoutsState(), schemaVersion: 0 },
+      },
+      defaultLiveProfileData(),
+    );
+
+    const { id, name, ...profile } = migrated.liveMeter.profiles[0]!;
+    expect(name).toBe("");
+    expect(profile).toEqual(createReferenceLiveMeterProfileData());
+    expect(migrated.loadouts.items[0]!.liveProfileId).toBe(id);
+  });
 
   it("seeds schema zero live profiles from the legacy live stores", () => {
     const base = createDefaultMonitoringSettingsState();

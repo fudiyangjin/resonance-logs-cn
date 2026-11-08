@@ -21,6 +21,7 @@
   } from "$lib/settings-store";
   import CounterRuleEditor from "./counter-rule-editor.svelte";
   import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
+  import PanelColorFields from "$lib/components/PanelColorFields.svelte";
   import {
     getCounterDisplayLabel,
     isUserCounterRuleActive,
@@ -312,25 +313,6 @@
     updateSelectedGroupStyle((style) => ({ ...style, columnGap: nextValue }));
   }
 
-  function setSelectedGroupNameColor(value: string) {
-    updateSelectedGroupStyle((style) => ({ ...style, nameColor: value }));
-  }
-
-  function setSelectedGroupValueColor(value: string) {
-    updateSelectedGroupStyle((style) => ({ ...style, valueColor: value }));
-  }
-
-  function setSelectedGroupProgressColor(value: string) {
-    updateSelectedGroupStyle((style) => ({ ...style, progressColor: value }));
-  }
-
-  function setSelectedGroupProgressOpacity(value: number) {
-    updateSelectedGroupStyle((style) => ({
-      ...style,
-      progressOpacity: Math.max(0, Math.min(1, value)),
-    }));
-  }
-
   function setSelectedGroupTextShadowEnabled(value: boolean) {
     updateSelectedGroupStyle((style) => ({
       ...style,
@@ -587,71 +569,13 @@
           </label>
         </div>
 
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <label
-            class="border-border/60 bg-muted/20 text-muted-foreground flex items-center justify-between gap-2 rounded border px-3 py-2 text-xs"
-          >
-            {t("skillMonitor.style.nameColor")}
-            <input
-              type="color"
-              value={selectedGroup.style.nameColor}
-              class="border-border/60 h-7 w-12 rounded border bg-transparent p-0"
-              onchange={(event) =>
-                setSelectedGroupNameColor(
-                  (event.currentTarget as HTMLInputElement).value,
-                )}
-            />
-          </label>
-          <label
-            class="border-border/60 bg-muted/20 text-muted-foreground flex items-center justify-between gap-2 rounded border px-3 py-2 text-xs"
-          >
-            {t("skillMonitor.style.valueColor")}
-            <input
-              type="color"
-              value={selectedGroup.style.valueColor}
-              class="border-border/60 h-7 w-12 rounded border bg-transparent p-0"
-              onchange={(event) =>
-                setSelectedGroupValueColor(
-                  (event.currentTarget as HTMLInputElement).value,
-                )}
-            />
-          </label>
-          <label
-            class="border-border/60 bg-muted/20 text-muted-foreground flex items-center justify-between gap-2 rounded border px-3 py-2 text-xs"
-          >
-            {t("skillMonitor.style.progressColor")}
-            <input
-              type="color"
-              value={selectedGroup.style.progressColor}
-              class="border-border/60 h-7 w-12 rounded border bg-transparent p-0"
-              onchange={(event) =>
-                setSelectedGroupProgressColor(
-                  (event.currentTarget as HTMLInputElement).value,
-                )}
-            />
-          </label>
-          <label
-            class="border-border/60 bg-muted/20 text-muted-foreground rounded border px-3 py-2 text-xs"
-          >
-            <div>
-              {t("skillMonitor.style.progressOpacity", {
-                value: Math.round(selectedGroup.style.progressOpacity * 100),
-              })}
-            </div>
-            <input
-              class="mt-2 w-full"
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={selectedGroup.style.progressOpacity}
-              oninput={(event) =>
-                setSelectedGroupProgressOpacity(
-                  Number((event.currentTarget as HTMLInputElement).value),
-                )}
-            />
-          </label>
-        </div>
+        <PanelColorFields
+          style={selectedGroup.style}
+          schemePanel="customGroup"
+          groupIndex={selectedGroupIndex >= 0 ? selectedGroupIndex : 0}
+          onchange={(patch) =>
+            updateSelectedGroupStyle((style) => ({ ...style, ...patch }))}
+        />
         <OverlayTextStyleFields
           textShadowEnabled={selectedGroup.style.textShadowEnabled}
           backgroundEnabled={selectedGroup.style.backgroundEnabled}

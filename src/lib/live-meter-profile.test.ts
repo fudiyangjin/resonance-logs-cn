@@ -3,13 +3,17 @@ import { tick } from "svelte";
 import {
   SETTINGS,
   createDefaultLiveMeterProfileData,
+  createReferenceLiveMeterProfileData,
   deepCloneSettings,
   type LiveMeterProfileData,
   type MonitoringSettingsState,
 } from "./settings-store";
 import {
   applyActiveLiveProfileToMirror,
+  applyReferenceStyleToActiveLiveProfile,
+  createLiveProfile,
   extractLiveProfileData,
+  findLiveProfile,
   persistLiveProfileData,
   startLiveProfilePersistence,
   stopLiveProfilePersistence,
@@ -284,5 +288,32 @@ describe("live meter profile persistence", () => {
 
     switchLiveProfile("live-a");
     expect(SETTINGS.live.general.state.showFantasyCastIcons).toBe(false);
+  });
+});
+
+describe("live meter reference look", () => {
+  it("starts a new profile from the reference look", () => {
+    const id = createLiveProfile("New");
+    const { id: storedId, name, ...data } = findLiveProfile(id)!;
+    expect(storedId).toBe(id);
+    expect(name).toBe("New");
+    expect(data).toEqual(createReferenceLiveMeterProfileData());
+  });
+
+  it("applies the reference look to the active profile, keeping challenge watch", () => {
+    applyReferenceStyleToActiveLiveProfile();
+
+    const expected = {
+      ...createReferenceLiveMeterProfileData(),
+      challengeWatch: { forbiddenDamageIds: [111] },
+    };
+    expect(extractLiveProfileData()).toEqual(expected);
+    const { id, name, ...stored } = findLiveProfile("live-a")!;
+    expect([id, name]).toEqual(["live-a", "A"]);
+    expect(stored).toEqual(expected);
+    // Other profiles are untouched.
+    expect(findLiveProfile("live-b")!.tableCustomization.playerRowHeight).toBe(
+      42,
+    );
   });
 });

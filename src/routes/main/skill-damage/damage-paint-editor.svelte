@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { SkillDamagePaint } from "$lib/skill-damage-settings";
   import { t } from "$lib/i18n/index.svelte";
+  import ColorField from "$lib/components/ColorField.svelte";
   let { paint, label }: { paint: SkillDamagePaint; label: string } = $props();
 </script>
 
@@ -15,19 +16,16 @@
       value="gradient">{t("skillDamage.gradient")}</option
     >
   </select>
-  <!-- onchange, not bind: the picker fires input on every drag step. -->
-  <input
-    type="color"
+  <ColorField
     value={paint.color}
-    onchange={(event) => (paint.color = event.currentTarget.value)}
-    aria-label={`${label} 1`}
+    ariaLabel={`${label} 1`}
+    onchange={(hex) => (paint.color = hex)}
   />
   {#if paint.mode === "gradient"}
-    <input
-      type="color"
+    <ColorField
       value={paint.endColor}
-      onchange={(event) => (paint.endColor = event.currentTarget.value)}
-      aria-label={`${label} 2`}
+      ariaLabel={`${label} 2`}
+      onchange={(hex) => (paint.endColor = hex)}
     />
     <label
       >{t("skillDamage.angle")}<input

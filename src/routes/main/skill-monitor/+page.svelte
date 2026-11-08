@@ -105,6 +105,12 @@
     type CounterRuleDefinition,
   } from "$lib/user-counter-rules";
   import { t } from "$lib/i18n/index.svelte";
+  import {
+    getHudColorScheme,
+    inferSkillSchemeId,
+    schemePatch,
+    type PanelColorPatch,
+  } from "$lib/hud-color-schemes";
   import { open } from "@tauri-apps/plugin-dialog";
   import { toast } from "svelte-sonner";
   import { commands } from "$lib/bindings";
@@ -1076,10 +1082,22 @@
   }
 
   function addCustomPanelGroup(kind: CustomPanelGroupKind = "manual") {
-    updateCustomPanelGroups((groups) => [
-      ...groups,
-      createDefaultCustomPanelGroup("", groups.length + 1, kind),
-    ]);
+    updateCustomPanelGroups((groups) => {
+      const group = createDefaultCustomPanelGroup("", groups.length + 1, kind);
+      // A new group continues the scheme the other panels follow.
+      const scheme = getHudColorScheme(
+        inferSkillSchemeId({
+          textBuffPanelStyle,
+          buffCoverageStyle,
+          customPanelGroups: groups,
+        }),
+      );
+      group.style = {
+        ...group.style,
+        ...schemePatch(scheme, "customGroup", groups.length),
+      };
+      return [...groups, group];
+    });
   }
 
   function removeCustomPanelGroup(groupId: string) {
@@ -1152,23 +1170,8 @@
     updateTextBuffPanelStyle((style) => ({ ...style, columnGap: nextValue }));
   }
 
-  function setTextBuffPanelNameColor(value: string) {
-    updateTextBuffPanelStyle((style) => ({ ...style, nameColor: value }));
-  }
-
-  function setTextBuffPanelValueColor(value: string) {
-    updateTextBuffPanelStyle((style) => ({ ...style, valueColor: value }));
-  }
-
-  function setTextBuffPanelProgressColor(value: string) {
-    updateTextBuffPanelStyle((style) => ({ ...style, progressColor: value }));
-  }
-
-  function setTextBuffPanelProgressOpacity(value: number) {
-    updateTextBuffPanelStyle((style) => ({
-      ...style,
-      progressOpacity: Math.max(0, Math.min(1, value)),
-    }));
+  function applyTextBuffPanelColors(patch: PanelColorPatch) {
+    updateTextBuffPanelStyle((style) => ({ ...style, ...patch }));
   }
 
   function setTextBuffPanelTextShadowEnabled(value: boolean) {
@@ -1368,18 +1371,8 @@
     updateBuffCoverageStyle((style) => ({ ...style, gap: nextValue }));
   }
 
-  function setBuffCoverageColor(
-    key: "nameColor" | "valueColor" | "progressColor",
-    value: string,
-  ) {
-    updateBuffCoverageStyle((style) => ({ ...style, [key]: value }));
-  }
-
-  function setBuffCoverageProgressOpacity(value: number) {
-    updateBuffCoverageStyle((style) => ({
-      ...style,
-      progressOpacity: Math.max(0, Math.min(1, value)),
-    }));
+  function applyBuffCoverageColors(patch: PanelColorPatch) {
+    updateBuffCoverageStyle((style) => ({ ...style, ...patch }));
   }
 
   function setBuffCoverageTextShadowEnabled(value: boolean) {
@@ -1924,10 +1917,7 @@
         {setTextBuffPanelGap}
         {setTextBuffPanelFontSize}
         {setTextBuffPanelColumnGap}
-        {setTextBuffPanelNameColor}
-        {setTextBuffPanelValueColor}
-        {setTextBuffPanelProgressColor}
-        {setTextBuffPanelProgressOpacity}
+        {applyTextBuffPanelColors}
         {setTextBuffPanelTextShadowEnabled}
         {setTextBuffPanelBackgroundEnabled}
         {setTextBuffPanelBackgroundOpacity}
@@ -2058,8 +2048,7 @@
       {setBuffCoverageStyleFlag}
       {setBuffCoverageFontSize}
       {setBuffCoverageGap}
-      {setBuffCoverageColor}
-      {setBuffCoverageProgressOpacity}
+      {applyBuffCoverageColors}
       {setBuffCoverageTextShadowEnabled}
       {setBuffCoverageBackgroundEnabled}
       {setBuffCoverageBackgroundOpacity}

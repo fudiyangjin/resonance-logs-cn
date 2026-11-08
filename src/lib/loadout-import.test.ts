@@ -4,6 +4,7 @@ import {
   createDefaultMonsterMonitorProfile,
   createDefaultOverlayTextStyle,
   createDefaultSkillMonitorProfile,
+  createReferenceLiveMeterProfileData,
   omitProfileId,
   resolveVoicePriority,
 } from "./settings-store";
@@ -355,10 +356,30 @@ describe("parseLoadoutExport", () => {
     expect(resolveVoicePriority(999)).toBe(255);
   });
 
-  it("defaults new live profile fields for pre-existing exports", () => {
-    // Older exports predate the challengeWatch/appearance fields entirely —
-    // `liveProfile` itself may even be absent (falls back to defaults).
+  it("gives exports without a live profile the reference look", () => {
+    // Older exports predate live profiles entirely; the missing profile is a
+    // brand-new one, so it starts from the reference template.
     const result = parseLoadoutExport(validExport());
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.output.liveProfile).toEqual({
+      ...createReferenceLiveMeterProfileData(),
+      name: "",
+    });
+  });
+
+  it("backfills missing live profile sections with neutral defaults", () => {
+    // A present-but-old live profile keeps its own look: sections it lacks
+    // come from the neutral defaults, never from the reference template.
+    const data = validExport();
+    const { challengeWatch, appearance, history, columnLabels, ...legacy } =
+      createDefaultLiveMeterProfileData();
+    void challengeWatch;
+    void appearance;
+    void history;
+    void columnLabels;
+    data["liveProfile"] = { ...legacy, name: "" };
+    const result = parseLoadoutExport(data);
     expect(result.success).toBe(true);
     if (!result.success) return;
     const defaults = createDefaultLiveMeterProfileData();

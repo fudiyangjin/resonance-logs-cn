@@ -23,6 +23,8 @@
     skillBgColour,
   } from "$lib/skill-mappings";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
+  import ColorField from "$lib/components/ColorField.svelte";
+  import HudSchemeChips from "$lib/components/HudSchemeChips.svelte";
 
   const classConfigs = $derived(getClassConfigs());
   const selection = $derived(
@@ -420,31 +422,26 @@
       </label>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2">
-      <label class="color-field">
-        <span>{t("monsterMonitor.style.nameColor")}</span>
-        <input
-          type="color"
+    <div class="space-y-2">
+      <HudSchemeChips
+        panel="teammateCd"
+        style={panelStyle}
+        onapply={(patch) => {
+          if (patch.nameColor) updateStyle("nameColor", patch.nameColor);
+        }}
+      />
+      <div class="grid gap-x-4 gap-y-0.5 md:grid-cols-2">
+        <ColorField
+          label={t("monsterMonitor.style.nameColor")}
           value={panelStyle.nameColor}
-          oninput={(event) =>
-            updateStyle(
-              "nameColor",
-              (event.currentTarget as HTMLInputElement).value,
-            )}
+          onchange={(hex) => updateStyle("nameColor", hex)}
         />
-      </label>
-      <label class="color-field">
-        <span>{t("monsterMonitor.style.deadNameColor")}</span>
-        <input
-          type="color"
+        <ColorField
+          label={t("monsterMonitor.style.deadNameColor")}
           value={panelStyle.deadNameColor}
-          oninput={(event) =>
-            updateStyle(
-              "deadNameColor",
-              (event.currentTarget as HTMLInputElement).value,
-            )}
+          onchange={(hex) => updateStyle("deadNameColor", hex)}
         />
-      </label>
+      </div>
     </div>
 
     <OverlayTextStyleFields
@@ -459,8 +456,7 @@
 </section>
 
 <style>
-  .style-field,
-  .color-field {
+  .style-field {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -485,14 +481,5 @@
     background: rgba(15, 23, 42, 0.35);
     color: inherit;
     font-size: 12px;
-  }
-
-  .color-field input[type="color"] {
-    width: 100%;
-    height: 42px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
   }
 </style>

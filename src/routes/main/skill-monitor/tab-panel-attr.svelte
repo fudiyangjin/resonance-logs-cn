@@ -8,6 +8,7 @@
   import { t } from "$lib/i18n/index.svelte";
   import { resolvePanelAttrLabel } from "$lib/i18n/panel-attrs";
   import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
+  import ColorField from "$lib/components/ColorField.svelte";
 
   interface Props {
     attrSectionExpanded: boolean;
@@ -105,16 +106,14 @@
                   setPanelAttrEnabled(attr.attrId, (event.currentTarget as HTMLInputElement).checked)}
               />
             </label>
-            <label class="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <div class="flex items-center justify-between gap-3 text-xs text-muted-foreground">
               <span>{t("skillMonitor.panelAttr.displayColor")}</span>
-              <input
-                type="color"
+              <ColorField
                 value={attr.color}
-                class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-                onchange={(event) =>
-                  setPanelAttrColor(attr.attrId, (event.currentTarget as HTMLInputElement).value)}
+                ariaLabel={`${resolvePanelAttrLabel(attr)} ${t("skillMonitor.panelAttr.displayColor")}`}
+                onchange={(hex) => setPanelAttrColor(attr.attrId, hex)}
               />
-            </label>
+            </div>
           </div>
         {/each}
       </div>

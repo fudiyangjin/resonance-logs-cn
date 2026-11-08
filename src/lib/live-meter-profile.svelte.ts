@@ -13,7 +13,7 @@
  */
 import {
   SETTINGS,
-  createDefaultLiveMeterProfileData,
+  createReferenceLiveMeterProfileData,
   deepCloneSettings,
   mergeLiveHeaderCustomization,
   normalizeDeathReplayColumnOrder,
@@ -298,6 +298,18 @@ export function persistLiveProfileData(data: LiveMeterProfileData): void {
   flushMirrorToProfile(deepCloneSettings(data));
 }
 
+/**
+ * Overwrites the materialized profile with the reference look (style,
+ * display format, columns, history display). The forbidden-damage list is
+ * a per-loadout function, not part of the look, so it is carried over.
+ */
+export function applyReferenceStyleToActiveLiveProfile(): void {
+  const data = createReferenceLiveMeterProfileData();
+  data.challengeWatch = deepCloneSettings(SETTINGS.challengeWatch.state);
+  applyProfileData(data);
+  flushMirrorToProfile();
+}
+
 let stopPersistenceRoot: (() => void) | null = null;
 
 export function stopLiveProfilePersistence(): void {
@@ -338,7 +350,7 @@ export function switchLiveProfile(nextId: string): void {
   const state = SETTINGS.monitoring.state.liveMeter;
   if (state.profiles.length === 0) {
     const fallback: LiveMeterProfile = {
-      ...createDefaultLiveMeterProfileData(),
+      ...createReferenceLiveMeterProfileData(),
       id: generateProfileId("live"),
       name: "",
     };
@@ -368,7 +380,7 @@ export function applyActiveLiveProfileToMirror(): void {
   const state = SETTINGS.monitoring.state.liveMeter;
   if (state.profiles.length === 0) {
     const fallback: LiveMeterProfile = {
-      ...createDefaultLiveMeterProfileData(),
+      ...createReferenceLiveMeterProfileData(),
       id: generateProfileId("live"),
       name: "",
     };
@@ -396,7 +408,7 @@ export function applyActiveLiveProfileToMirror(): void {
 /**
  * Creates a new live-meter profile. When `sourceData` is provided the new
  * profile starts as a copy of it (used for duplication); otherwise it
- * starts from the built-in defaults.
+ * starts from the curated reference look.
  */
 export function createLiveProfile(
   name: string,
@@ -405,7 +417,7 @@ export function createLiveProfile(
   const state = SETTINGS.monitoring.state.liveMeter;
   const base = sourceData
     ? deepCloneSettings(sourceData)
-    : createDefaultLiveMeterProfileData();
+    : createReferenceLiveMeterProfileData();
   const profile: LiveMeterProfile = {
     ...base,
     id: generateProfileId("live"),

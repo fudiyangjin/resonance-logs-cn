@@ -1,10 +1,40 @@
 import { describe, expect, it } from "vitest";
 import {
+  createDefaultLiveMeterProfileData,
   createDefaultMonsterMonitorProfile,
   createDefaultSkillMonitorProfile,
+  createReferenceLiveMeterProfileData,
+  createReferenceMonsterMonitorProfile,
+  createReferenceSkillMonitorProfile,
   type Loadout,
 } from "./settings-store";
-import { isReplaceableStarterLoadout } from "./starter-loadout";
+import {
+  applySchemeToMonsterStyles,
+  getHudColorScheme,
+} from "./hud-color-schemes";
+import { extractLiveProfileData } from "./live-meter-profile.svelte";
+import {
+  isDefaultLiveMeterProfileData,
+  isReplaceableStarterLoadout,
+} from "./starter-loadout";
+
+describe("untouched live meter detection", () => {
+  it("treats the untouched live stores of a fresh install as default", () => {
+    // A fresh install migrates from these stores; if their defaults drift
+    // from `createDefaultLiveMeterProfileData`, new users silently lose the
+    // reference look.
+    expect(isDefaultLiveMeterProfileData(extractLiveProfileData())).toBe(true);
+  });
+
+  it("rejects any user change and the reference look itself", () => {
+    const changed = createDefaultLiveMeterProfileData();
+    changed.tableCustomization.playerRowHeight = 31;
+    expect(isDefaultLiveMeterProfileData(changed)).toBe(false);
+    expect(
+      isDefaultLiveMeterProfileData(createReferenceLiveMeterProfileData()),
+    ).toBe(false);
+  });
+});
 
 function starterLoadout(): Loadout {
   return {
@@ -59,6 +89,34 @@ describe("starter loadout replacement", () => {
         starterLoadout(),
         createDefaultSkillMonitorProfile(),
         monster,
+      ),
+    ).toBe(false);
+  });
+
+  it("treats the default HUD colors as untouched, but not other schemes or edits", () => {
+    const skill = createReferenceSkillMonitorProfile();
+    const monster = createReferenceMonsterMonitorProfile();
+    expect(isReplaceableStarterLoadout(starterLoadout(), skill, monster)).toBe(
+      true,
+    );
+
+    skill.textBuffPanelStyle!.nameColor = "#123456";
+    expect(isReplaceableStarterLoadout(starterLoadout(), skill, monster)).toBe(
+      false,
+    );
+
+    const iceMonster = {
+      ...createDefaultMonsterMonitorProfile(),
+      ...applySchemeToMonsterStyles(
+        createDefaultMonsterMonitorProfile(),
+        getHudColorScheme("ice"),
+      ),
+    };
+    expect(
+      isReplaceableStarterLoadout(
+        starterLoadout(),
+        createReferenceSkillMonitorProfile(),
+        iceMonster,
       ),
     ).toBe(false);
   });

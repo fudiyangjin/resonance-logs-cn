@@ -14,7 +14,7 @@
  */
 import {
   SETTINGS,
-  createDefaultSkillMonitorProfile,
+  createReferenceSkillMonitorProfile,
   deepCloneSettings,
   generateProfileId,
   omitProfileId,
@@ -116,7 +116,7 @@ export function createLoadout(options?: {
   const skillProfileId =
     options?.skillProfileId ??
     (() => {
-      const profile = createDefaultSkillMonitorProfile();
+      const profile = createReferenceSkillMonitorProfile();
       skillState.profiles = [...skillState.profiles, profile];
       return profile.id;
     })();
@@ -174,7 +174,7 @@ export function duplicateLoadout(id: string): string | null {
         ...normalizeSkillProfile(deepCloneSettings(sourceSkillProfile)),
         id: generateProfileId("skill"),
       }
-    : createDefaultSkillMonitorProfile();
+    : createReferenceSkillMonitorProfile();
   skillState.profiles = [...skillState.profiles, newSkillProfile];
 
   const newMonsterProfileId = duplicateMonsterProfileFor(

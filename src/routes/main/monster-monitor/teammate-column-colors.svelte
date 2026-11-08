@@ -2,6 +2,7 @@
   import { t } from "$lib/i18n/index.svelte";
   import type { TeammateBuffColumnStyle } from "$lib/settings-store";
   import type { TeammateColumnColors } from "$lib/teammate-buff-columns";
+  import ColorField from "$lib/components/ColorField.svelte";
 
   interface Props {
     /** Effective colors: the column's overrides, else the panel's. */
@@ -13,31 +14,25 @@
   }
 
   let { colors, customized, onChange, onReset }: Props = $props();
-
-  const swatchClass =
-    "border-border/60 h-7 w-9 cursor-pointer rounded border bg-transparent p-0";
 </script>
 
-<div class="flex flex-none items-center gap-2">
-  <label class="text-muted-foreground flex items-center gap-1 text-xs">
+<div class="flex flex-none flex-wrap items-center gap-3">
+  <div class="text-muted-foreground flex items-center gap-1.5 text-xs">
     {t("monsterMonitor.style.progressColor")}
-    <input
-      class={swatchClass}
-      type="color"
+    <ColorField
       value={colors.progressColor}
-      oninput={(event) =>
-        onChange({ progressColor: event.currentTarget.value })}
+      ariaLabel={t("monsterMonitor.style.progressColor")}
+      onchange={(progressColor) => onChange({ progressColor })}
     />
-  </label>
-  <label class="text-muted-foreground flex items-center gap-1 text-xs">
+  </div>
+  <div class="text-muted-foreground flex items-center gap-1.5 text-xs">
     {t("monsterMonitor.style.valueColor")}
-    <input
-      class={swatchClass}
-      type="color"
+    <ColorField
       value={colors.valueColor}
-      oninput={(event) => onChange({ valueColor: event.currentTarget.value })}
+      ariaLabel={t("monsterMonitor.style.valueColor")}
+      onchange={(valueColor) => onChange({ valueColor })}
     />
-  </label>
+  </div>
   {#if customized}
     <button
       type="button"

@@ -4,6 +4,7 @@
   } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
   import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
+  import ColorField from "$lib/components/ColorField.svelte";
 
   interface Props {
     shieldDetailStyle: ShieldDetailStyle;
@@ -135,37 +136,22 @@
         />
       </label>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <label class="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        <span>{t("skillMonitor.shieldDetail.hpColor")}</span>
-        <input
-          type="color"
-          value={shieldDetailStyle.hpColor}
-          class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-          onchange={(event) =>
-            setShieldDetailColor("hpColor", (event.currentTarget as HTMLInputElement).value)}
-        />
-      </label>
-      <label class="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        <span>{t("skillMonitor.shieldDetail.shieldColor")}</span>
-        <input
-          type="color"
-          value={shieldDetailStyle.shieldColor}
-          class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-          onchange={(event) =>
-            setShieldDetailColor("shieldColor", (event.currentTarget as HTMLInputElement).value)}
-        />
-      </label>
-      <label class="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        <span>{t("skillMonitor.shieldDetail.healShieldColor")}</span>
-        <input
-          type="color"
-          value={shieldDetailStyle.healShieldColor}
-          class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-          onchange={(event) =>
-            setShieldDetailColor("healShieldColor", (event.currentTarget as HTMLInputElement).value)}
-        />
-      </label>
+    <div class="grid grid-cols-1 gap-x-4 gap-y-0.5 md:grid-cols-2">
+      <ColorField
+        label={t("skillMonitor.shieldDetail.hpColor")}
+        value={shieldDetailStyle.hpColor}
+        onchange={(hex) => setShieldDetailColor("hpColor", hex)}
+      />
+      <ColorField
+        label={t("skillMonitor.shieldDetail.shieldColor")}
+        value={shieldDetailStyle.shieldColor}
+        onchange={(hex) => setShieldDetailColor("shieldColor", hex)}
+      />
+      <ColorField
+        label={t("skillMonitor.shieldDetail.healShieldColor")}
+        value={shieldDetailStyle.healShieldColor}
+        onchange={(hex) => setShieldDetailColor("healShieldColor", hex)}
+      />
     </div>
     <OverlayTextStyleFields
       textShadowEnabled={shieldDetailStyle.textShadowEnabled}

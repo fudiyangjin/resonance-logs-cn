@@ -1,6 +1,7 @@
 import {
   SETTINGS,
   createDefaultSkillMonitorProfile,
+  createReferenceSkillMonitorProfile,
   type SkillMonitorProfile,
 } from "$lib/settings-store";
 import { activeLoadout } from "$lib/loadouts.svelte.js";
@@ -54,7 +55,7 @@ export function updateActiveProfile(
   const profiles = state.profiles;
   if (profiles.length === 0) {
     if (options?.createDefaultIfEmpty) {
-      state.profiles = [createDefaultSkillMonitorProfile()];
+      state.profiles = [createReferenceSkillMonitorProfile()];
     }
     return;
   }

@@ -12,6 +12,7 @@
 import {
   SETTINGS,
   createDefaultMonsterMonitorProfile,
+  createReferenceMonsterMonitorProfile,
   deepCloneSettings,
   ensureTeammateCdPanelStyle,
   ensureTeammatePanelStyle,
@@ -109,7 +110,7 @@ function flushMirrorToProfile(): void {
 export function switchMonsterProfile(nextId: string): void {
   const state = SETTINGS.monsterMonitor.state;
   if (state.profiles.length === 0) {
-    const fallback = createDefaultMonsterMonitorProfile();
+    const fallback = createReferenceMonsterMonitorProfile();
     state.profiles = [fallback];
   }
 
@@ -148,7 +149,7 @@ export function createMonsterProfile(
           id,
           name: _name,
           ...rest
-        } = createDefaultMonsterMonitorProfile();
+        } = createReferenceMonsterMonitorProfile();
         void id;
         void _name;
         return rest;

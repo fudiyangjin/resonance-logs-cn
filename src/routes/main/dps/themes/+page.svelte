@@ -18,6 +18,10 @@
   } from "$lib/settings-store";
   import { COLOR_PRESETS } from "$lib/theme-color-presets";
   import { CLASS_NAMES, getClassColorRaw } from "$lib/utils.svelte";
+  import { activeLoadout } from "$lib/loadouts.svelte.js";
+  import { applyReferenceStyleToActiveLiveProfile } from "$lib/live-meter-profile.svelte.js";
+  import ConfirmDialog from "$lib/components/ConfirmDialog.svelte";
+  import ColorField from "$lib/components/ColorField.svelte";
   import ChevronDown from "virtual:icons/lucide/chevron-down";
 
   const themesTabs = [
@@ -363,6 +367,26 @@
 
   let activeTab = $state("general");
 
+  // Recommended (reference) style: overwrites the whole active DPS profile,
+  // so confirm first and name every loadout sharing that profile.
+  const REFERENCE_PREVIEW = COLOR_PRESETS["green"]!.preview;
+  let referenceConfirmOpen = $state(false);
+  const referenceSharedLoadoutNames = $derived.by(() => {
+    const liveProfileId = activeLoadout()?.liveProfileId;
+    if (!liveProfileId) return [];
+    return SETTINGS.loadouts.state.items
+      .filter((item) => item.liveProfileId === liveProfileId)
+      .map((item) => item.name);
+  });
+  const referenceConfirmDescription = $derived(
+    referenceSharedLoadoutNames.length > 1
+      ? `${t("themes.presets.reference.confirmDescription")}\n${t(
+          "themes.presets.reference.shared",
+          { names: referenceSharedLoadoutNames.join(" / ") },
+        )}`
+      : t("themes.presets.reference.confirmDescription"),
+  );
+
   // Collapsible section state - all collapsed by default
   let expandedSections = $state({
     colorThemes: false,
@@ -629,20 +653,18 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2 mt-2">
                   {#each CLASS_NAMES as className}
-                    <label
+                    <div
                       class="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-popover/50 transition-colors"
                     >
-                      <input
-                        type="color"
+                      <ColorField
                         value={getClassColorRaw(className)}
-                        oninput={(e) =>
-                          updateClassColor(className, e.currentTarget.value)}
-                        class="w-8 h-8 rounded cursor-pointer border border-border/50"
+                        ariaLabel={className}
+                        onchange={(hex) => updateClassColor(className, hex)}
                       />
                       <span class="text-sm font-medium text-foreground"
                         >{className}</span
                       >
-                    </label>
+                    </div>
                   {/each}
                 </div>
               {:else}
@@ -658,20 +680,18 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2 mt-2">
                   {#each CLASS_SPEC_NAMES as specName}
-                    <label
+                    <div
                       class="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-popover/50 transition-colors"
                     >
-                      <input
-                        type="color"
+                      <ColorField
                         value={getClassColorRaw("", specName)}
-                        oninput={(e) =>
-                          updateClassSpecColor(specName, e.currentTarget.value)}
-                        class="w-8 h-8 rounded cursor-pointer border border-border/50"
+                        ariaLabel={specName}
+                        onchange={(hex) => updateClassSpecColor(specName, hex)}
                       />
                       <span class="text-sm font-medium text-foreground"
                         >{specName}</span
                       >
-                    </label>
+                    </div>
                   {/each}
                 </div>
               {/if}
@@ -1801,8 +1821,35 @@
   {:else if activeTab === "presets"}
     <Tabs.Content value="presets">
       <div class="space-y-6">
-        <!-- Color Theme Presets -->
+        <!-- Recommended (reference) style -->
         <div class="space-y-3">
+          <h2 class="text-base font-semibold text-foreground">
+            {t("themes.presets.reference.title")}
+          </h2>
+          <button
+            type="button"
+            class="group flex w-full flex-col items-start p-4 rounded-lg border border-primary/40 bg-card/40 hover:bg-card/60 hover:border-primary/70 transition-all text-left"
+            onclick={() => (referenceConfirmOpen = true)}
+          >
+            <div class="flex gap-1.5 mb-2">
+              {#each [REFERENCE_PREVIEW.bg, REFERENCE_PREVIEW.primary, REFERENCE_PREVIEW.accent, REFERENCE_PREVIEW.fg] as color}
+                <span
+                  class="w-4 h-4 rounded-full border border-black/20"
+                  style="background: {color}"
+                ></span>
+              {/each}
+            </div>
+            <span class="text-sm font-medium text-foreground"
+              >{t("themes.presets.reference.name")}</span
+            >
+            <span class="text-xs text-muted-foreground mt-0.5"
+              >{t("themes.presets.reference.description")}</span
+            >
+          </button>
+        </div>
+
+        <!-- Color Theme Presets -->
+        <div class="space-y-3 pt-4 border-t border-border/50">
           <div>
             <h2 class="text-base font-semibold text-foreground">
               {t("themes.presets.colorTitle")}
@@ -1906,3 +1953,13 @@
     </Tabs.Content>
   {/if}
 </Tabs.Root>
+
+<ConfirmDialog
+  bind:open={referenceConfirmOpen}
+  title={t("themes.presets.reference.confirmTitle")}
+  description={referenceConfirmDescription}
+  confirmText={t("common.confirm")}
+  cancelText={t("common.cancel")}
+  onconfirm={applyReferenceStyleToActiveLiveProfile}
+  variant="default"
+/>

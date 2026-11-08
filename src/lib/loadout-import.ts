@@ -12,6 +12,7 @@ import {
   createDefaultSkillMonitorProfile,
   createDefaultTeammateCdPanelStyle,
   createDefaultTeammatePanelStyle,
+  createReferenceLiveMeterProfileData,
   deepCloneSettings,
   MAX_BUFF_COVERAGE_ENTRIES,
   omitProfileId,
@@ -1171,11 +1172,13 @@ const currentLoadoutExportSchema = v.object({
   linkedTalentStageCfgId: v.optional(v.nullable(finiteNumberSchema), null),
   skillProfile: skillProfileSchema,
   monsterProfile: monsterProfileSchema,
+  // An export without a live profile gets a brand-new one, so it starts
+  // from the reference look like any other new profile.
   liveProfile: v.optional(
     liveProfileSchema,
     () =>
       deepCloneSettings({
-        ...createDefaultLiveMeterProfileData(),
+        ...createReferenceLiveMeterProfileData(),
         name: "",
       }) as Omit<LiveMeterProfile, "id">,
   ),

@@ -1,8 +1,12 @@
 import {
+  createDefaultLiveMeterProfileData,
   createDefaultMonsterMonitorState,
   createDefaultSkillMonitorProfile,
   extractMonsterProfileData,
   omitProfileId,
+  withReferenceHudColors,
+  withReferenceMonsterHudColors,
+  type LiveMeterProfileData,
   type Loadout,
   type MonsterMonitorProfile,
   type MonsterMonitorState,
@@ -73,13 +77,22 @@ function normalizeWithDefaults(value: unknown, defaults: unknown): unknown {
   return normalized;
 }
 
+function equalsDefaults(value: unknown, defaults: unknown): boolean {
+  return jsonSettingsEqual(normalizeWithDefaults(value, defaults), defaults);
+}
+
+/**
+ * Untouched: the neutral defaults, or those defaults on the default HUD
+ * color scheme (what fresh installs and new profiles start with).
+ */
 export function isDefaultSkillMonitorProfile(
   profile: SkillMonitorProfile,
 ): boolean {
-  const defaults = omitProfileId(createDefaultSkillMonitorProfile());
-  return jsonSettingsEqual(
-    normalizeWithDefaults(omitProfileId(profile), defaults),
-    defaults,
+  const neutral = createDefaultSkillMonitorProfile();
+  const candidate = omitProfileId(profile);
+  return (
+    equalsDefaults(candidate, omitProfileId(neutral)) ||
+    equalsDefaults(candidate, omitProfileId(withReferenceHudColors(neutral)))
   );
 }
 
@@ -97,11 +110,26 @@ export function isDefaultMonsterMonitorProfile(
     });
     defaults.overlayVisibility.showHatePanel = true;
   }
-  const defaultsWithoutId = omitProfileId(defaults);
-  return jsonSettingsEqual(
-    normalizeWithDefaults(omitProfileId(profile), defaultsWithoutId),
-    defaultsWithoutId,
+  const candidate = omitProfileId(profile);
+  return (
+    equalsDefaults(candidate, omitProfileId(defaults)) ||
+    equalsDefaults(
+      candidate,
+      omitProfileId(withReferenceMonsterHudColors(defaults)),
+    )
   );
+}
+
+/**
+ * True when live-meter data still equals the neutral built-in defaults,
+ * i.e. the user never touched the live meter (always the case on a fresh
+ * install, where the legacy live stores only hold their defaults).
+ */
+export function isDefaultLiveMeterProfileData(
+  data: LiveMeterProfileData,
+): boolean {
+  const defaults = createDefaultLiveMeterProfileData();
+  return jsonSettingsEqual(normalizeWithDefaults(data, defaults), defaults);
 }
 
 export function isPristineLegacyMonitoring(

@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { buildLoadoutPresets } from "./loadout-presets";
 import { createDefaultSkillCdRegion } from "$lib/skill-cd-layout";
+import { listWhitePanels } from "$lib/hud-color-schemes";
 import {
   SETTINGS,
   createDefaultMonitoringSettingsState,
+  createReferenceLiveMeterProfileData,
   type Loadout,
 } from "$lib/settings-store";
 import {
@@ -98,6 +100,24 @@ describe("built-in loadout presets", () => {
     expect(vanguard.data.skillProfile.monitoredBuffIds).toContain(2302421);
   });
 
+  it("ships the reference live look on every preset, keeping its challenge watch", () => {
+    const { challengeWatch, ...reference } =
+      createReferenceLiveMeterProfileData();
+    void challengeWatch;
+    for (const preset of buildLoadoutPresets("zh-CN")) {
+      const {
+        challengeWatch: presetChallengeWatch,
+        name,
+        ...live
+      } = preset.data.liveProfile;
+      expect(name, preset.id).toBe("");
+      expect(live, preset.id).toEqual(reference);
+      expect(presetChallengeWatch.forbiddenDamageIds, preset.id).toHaveLength(
+        7,
+      );
+    }
+  });
+
   it("parses every preset into one default skill CD region", () => {
     for (const preset of buildLoadoutPresets("zh-CN")) {
       const skill = preset.data.skillProfile;
@@ -150,6 +170,17 @@ describe("built-in loadout presets", () => {
           `${preset.id}/${group.id} progressColor`,
         ).not.toBe("#ffffff");
       }
+    }
+  });
+
+  it("gives every HUD panel of every preset real colors", () => {
+    // A panel style missing from a preset is filled with the white defaults
+    // on import, so this also catches panels a preset forgot.
+    for (const preset of buildLoadoutPresets("zh-CN")) {
+      expect(
+        listWhitePanels(preset.data.skillProfile, preset.data.monsterProfile),
+        preset.id,
+      ).toEqual([]);
     }
   });
 

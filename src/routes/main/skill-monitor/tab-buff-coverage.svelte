@@ -11,6 +11,8 @@
   } from "$lib/settings-store";
   import { t } from "$lib/i18n/index.svelte";
   import OverlayTextStyleFields from "./overlay-text-style-fields.svelte";
+  import PanelColorFields from "$lib/components/PanelColorFields.svelte";
+  import type { PanelColorPatch } from "$lib/hud-color-schemes";
 
   interface Props {
     buffCoverageEntries: BuffCoverageEntry[];
@@ -36,11 +38,7 @@
     ) => void;
     setBuffCoverageFontSize: (value: number) => void;
     setBuffCoverageGap: (value: number) => void;
-    setBuffCoverageColor: (
-      key: "nameColor" | "valueColor" | "progressColor",
-      value: string,
-    ) => void;
-    setBuffCoverageProgressOpacity: (value: number) => void;
+    applyBuffCoverageColors: (patch: PanelColorPatch) => void;
     setBuffCoverageTextShadowEnabled: (value: boolean) => void;
     setBuffCoverageBackgroundEnabled: (value: boolean) => void;
     setBuffCoverageBackgroundOpacity: (value: number) => void;
@@ -62,8 +60,7 @@
     setBuffCoverageStyleFlag,
     setBuffCoverageFontSize,
     setBuffCoverageGap,
-    setBuffCoverageColor,
-    setBuffCoverageProgressOpacity,
+    applyBuffCoverageColors,
     setBuffCoverageTextShadowEnabled,
     setBuffCoverageBackgroundEnabled,
     setBuffCoverageBackgroundOpacity,
@@ -317,74 +314,11 @@
         />
       </label>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <label
-        class="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground"
-      >
-        <span>{t("skillMonitor.buffCoverage.style.nameColor")}</span>
-        <input
-          type="color"
-          value={buffCoverageStyle.nameColor}
-          class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-          onchange={(event) =>
-            setBuffCoverageColor(
-              "nameColor",
-              (event.currentTarget as HTMLInputElement).value,
-            )}
-        />
-      </label>
-      <label
-        class="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground"
-      >
-        <span>{t("skillMonitor.buffCoverage.style.valueColor")}</span>
-        <input
-          type="color"
-          value={buffCoverageStyle.valueColor}
-          class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-          onchange={(event) =>
-            setBuffCoverageColor(
-              "valueColor",
-              (event.currentTarget as HTMLInputElement).value,
-            )}
-        />
-      </label>
-      <label
-        class="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground"
-      >
-        <span>{t("skillMonitor.buffCoverage.style.progressColor")}</span>
-        <input
-          type="color"
-          value={buffCoverageStyle.progressColor}
-          class="h-7 w-12 rounded border border-border/60 bg-transparent p-0"
-          onchange={(event) =>
-            setBuffCoverageColor(
-              "progressColor",
-              (event.currentTarget as HTMLInputElement).value,
-            )}
-        />
-      </label>
-      <label
-        class="rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground"
-      >
-        <div>
-          {t("skillMonitor.style.progressOpacity", {
-            value: Math.round(buffCoverageStyle.progressOpacity * 100),
-          })}
-        </div>
-        <input
-          class="mt-2 w-full"
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          value={buffCoverageStyle.progressOpacity}
-          oninput={(event) =>
-            setBuffCoverageProgressOpacity(
-              Number((event.currentTarget as HTMLInputElement).value),
-            )}
-        />
-      </label>
-    </div>
+    <PanelColorFields
+      style={buffCoverageStyle}
+      schemePanel="buffCoverage"
+      onchange={applyBuffCoverageColors}
+    />
     <OverlayTextStyleFields
       textShadowEnabled={buffCoverageStyle.textShadowEnabled}
       backgroundEnabled={buffCoverageStyle.backgroundEnabled}

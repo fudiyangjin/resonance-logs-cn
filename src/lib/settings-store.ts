@@ -23,7 +23,15 @@ import type {
 } from "./config/buff-name-table";
 import type { AppLocale } from "./i18n/locales";
 import { createDefaultMonsterRosterOptions } from "./monster-roster-settings";
+import { COLOR_PRESETS } from "./theme-color-presets";
 import { createDefaultHistoryViewPrefs } from "./history-view-prefs";
+import {
+  DEFAULT_HUD_COLOR_SCHEME_ID,
+  applySchemeToMonsterStyles,
+  applySchemeToSkillStyles,
+  getHudColorScheme,
+  type MonsterSchemeStyles,
+} from "./hud-color-schemes";
 import {
   cloneHeaderCustomLayout,
   type HeaderCustomLayout,
@@ -2409,6 +2417,64 @@ const _monsterProfileFieldKeysExhaustive: Record<
 > = {};
 void _monsterProfileFieldKeysExhaustive;
 
+/**
+ * The default HUD color scheme on a skill profile's panels. Used for
+ * profiles created from now on; `createDefaultSkillMonitorProfile` stays
+ * neutral because it back-fills keys missing from existing profiles.
+ */
+export function withReferenceHudColors(
+  profile: SkillMonitorProfile,
+): SkillMonitorProfile {
+  const applied = applySchemeToSkillStyles(
+    {
+      textBuffPanelStyle:
+        profile.textBuffPanelStyle ?? createDefaultTextBuffPanelStyle(),
+      buffCoverageStyle:
+        profile.buffCoverageStyle ?? createDefaultBuffCoverageStyle(),
+      customPanelGroups: profile.customPanelGroups ?? [],
+    },
+    getHudColorScheme(DEFAULT_HUD_COLOR_SCHEME_ID),
+  );
+  return {
+    ...profile,
+    textBuffPanelStyle: applied.textBuffPanelStyle,
+    buffCoverageStyle: applied.buffCoverageStyle,
+    customPanelGroups: applied.customPanelGroups,
+  };
+}
+
+/** The monster-monitor counterpart of `withReferenceHudColors`. */
+export function withReferenceMonsterHudColors<T extends MonsterSchemeStyles>(
+  target: T,
+): T {
+  return {
+    ...target,
+    ...applySchemeToMonsterStyles(
+      target,
+      getHudColorScheme(DEFAULT_HUD_COLOR_SCHEME_ID),
+    ),
+  };
+}
+
+/** A new skill profile, on the default HUD color scheme. */
+export function createReferenceSkillMonitorProfile(
+  name = "",
+  classKey?: string,
+): SkillMonitorProfile {
+  return withReferenceHudColors(
+    createDefaultSkillMonitorProfile(name, classKey),
+  );
+}
+
+/** A new monster profile, on the default HUD color scheme. */
+export function createReferenceMonsterMonitorProfile(
+  name = "",
+): MonsterMonitorProfile {
+  return withReferenceMonsterHudColors(
+    createDefaultMonsterMonitorProfile(name),
+  );
+}
+
 export function createDefaultMonsterMonitorProfile(
   name = "",
 ): MonsterMonitorProfile {
@@ -2630,6 +2696,171 @@ export function createDefaultLiveMeterProfileData(): LiveMeterProfileData {
   };
 }
 
+/**
+ * The curated live-meter look every *new* profile starts from (fresh
+ * install, "new profile", "new loadout", the built-in presets, and the
+ * themes page's one-click reference action).
+ *
+ * Kept separate from `createDefaultLiveMeterProfileData` on purpose: that
+ * one also backfills keys missing from existing profiles on every startup,
+ * and must stay neutral so an old dark profile never receives light-theme
+ * text colors for a key it happens to lack.
+ */
+export function createReferenceLiveMeterProfileData(): LiveMeterProfileData {
+  const base = createDefaultLiveMeterProfileData();
+  const { appearance, history, sorting } = base;
+  return {
+    ...base,
+    general: {
+      ...base.general,
+      showYourName: "Show Your Name - Spec",
+      showOthersName: "Show Others' Name - Spec",
+      showYourSeasonStrength: true,
+      showOthersSeasonStrength: true,
+      showFantasyCastIcons: true,
+      relativeToTopHealSkill: false,
+      shortenAbilityScore: false,
+      abbreviationStyle: "cn",
+      abbreviatedDecimalPlaces: 2,
+    },
+    history: {
+      ...history,
+      general: {
+        ...history.general,
+        showYourSeasonStrength: true,
+        showOthersSeasonStrength: true,
+        showFantasyCastIcons: true,
+      },
+      dpsSkillBreakdown: {
+        ...history.dpsSkillBreakdown,
+        critRate: true,
+        critDmgRate: true,
+        luckyRate: true,
+        luckyDmgRate: true,
+        hits: true,
+        maxDmg: true,
+      },
+    },
+    dpsPlayers: {
+      ...base.dpsPlayers,
+      tdps: true,
+      critDmgRate: false,
+      luckyRate: true,
+    },
+    dpsSkillBreakdown: {
+      ...base.dpsSkillBreakdown,
+      dps: false,
+      luckyRate: true,
+      luckyDmgRate: true,
+      hits: true,
+      maxDmg: true,
+    },
+    healPlayers: { ...base.healPlayers, hitsPerMinute: true },
+    healSkillBreakdown: {
+      ...base.healSkillBreakdown,
+      hits: true,
+      avgDmg: true,
+      maxDmg: true,
+      minDmg: true,
+    },
+    tankedPlayers: {
+      ...base.tankedPlayers,
+      critRate: false,
+      critDmgRate: false,
+      blockRate: true,
+      luckyBlockRate: true,
+    },
+    tankedSkillBreakdown: {
+      ...base.tankedSkillBreakdown,
+      blockRate: true,
+      luckyBlockRate: true,
+      avgDmg: true,
+      maxDmg: true,
+      minDmg: true,
+    },
+    tableCustomization: {
+      ...base.tableCustomization,
+      compactMode: true,
+      compactDpsKey: "tdps",
+      playerRowHeight: 22,
+      playerFontSize: 11,
+      tableHeaderHeight: 27,
+      tableHeaderFontSize: 12,
+      tableHeaderTextColor: "#24248f",
+      rowGlowOpacity: 0.5,
+      skillRowGlowOpacity: 0.5,
+    },
+    headerCustomization: {
+      ...base.headerCustomization,
+      headerLayoutMode: "custom",
+      headerCustomLayout: cloneHeaderCustomLayout({
+        rowGap: 0,
+        itemGap: 11,
+        rows: [
+          {
+            id: "primary",
+            zones: {
+              start: ["timer", "sceneName"],
+              end: [
+                "trainingDummyStatus",
+                "totalDps",
+                "totalDamage",
+                "controlButtons",
+              ],
+            },
+          },
+          {
+            id: "secondary",
+            zones: { start: ["bossHealth"], end: ["navigationTabs"] },
+          },
+        ],
+      }),
+      showHistoryButton: true,
+      showDeathTab: true,
+      timerLabelFontSize: 11,
+      timerFontSize: 14,
+      resetButtonSize: 14,
+      resetButtonPadding: 2,
+      pauseButtonSize: 14,
+      pauseButtonPadding: 2,
+      headerControlSize: 14,
+      headerControlPadding: 2,
+      settingsButtonSize: 14,
+      settingsButtonPadding: 2,
+      minimizeButtonSize: 14,
+      minimizeButtonPadding: 2,
+      historyButtonSize: 14,
+      historyButtonPadding: 2,
+      totalDamageLabelFontSize: 11,
+      totalDamageValueFontSize: 13,
+      totalDpsLabelFontSize: 11,
+      totalDpsValueFontSize: 13,
+      bossHealthLayout: "horizontal",
+      bossHealthLabelFontSize: 10,
+      bossHealthNameFontSize: 12,
+      bossHealthValueFontSize: 12,
+      bossHealthPercentFontSize: 12,
+      navTabFontSize: 10,
+      navTabPaddingX: 8,
+      navTabPaddingY: 3,
+    },
+    sorting: {
+      ...sorting,
+      healPlayers: { sortKey: "dmgPct", sortDesc: true },
+    },
+    appearance: {
+      ...appearance,
+      themeColors: {
+        ...appearance.themeColors,
+        ...COLOR_PRESETS["green"]!.vars,
+        backgroundMain: "rgba(173, 210, 178, 1)",
+        backgroundLive: "rgba(222, 241, 225, 0.73)",
+        surface: "rgba(227, 244, 230, 0.38)",
+      },
+    },
+  };
+}
+
 export function mergeLiveHeaderCustomization(
   header:
     | Partial<LiveMeterProfileData["headerCustomization"]>
@@ -2651,16 +2882,12 @@ export function mergeLiveHeaderCustomization(
   };
 }
 
-export function createDefaultLiveMeterProfile(name = ""): LiveMeterProfile {
-  return {
-    ...createDefaultLiveMeterProfileData(),
-    id: generateProfileId("live"),
-    name,
-  };
-}
-
 export function createDefaultLiveMeterState(): LiveMeterState {
-  const profile = createDefaultLiveMeterProfile();
+  const profile: LiveMeterProfile = {
+    ...createReferenceLiveMeterProfileData(),
+    id: generateProfileId("live"),
+    name: "",
+  };
   return {
     mirroredProfileId: profile.id,
     profiles: [profile],
