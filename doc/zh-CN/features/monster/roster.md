@@ -2,6 +2,8 @@
 
 **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.roster}}** 对应怪物遮罩中的战斗名单区。与只看当前目标的 [生命条](./status.md#生命条) 不同，它覆盖你和队友正在交战的**所有**怪物。
 
+![战斗名单](../../../shared/img/monster/roster_1.zh-CN.png)
+
 ## 显示内容
 
 列出与你或队友交战中的每只怪物的血量：

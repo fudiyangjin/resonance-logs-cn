@@ -1,6 +1,6 @@
 [package]
 name = "resonance-logs-cn"
-version = "0.2.8"
+version = "0.2.9"
 default-run = "resonance-logs-cn"
 description = "Blue Protocol: Star Resonance DPS Meter"
 authors = ["Keberrye", "Deusexitium"]

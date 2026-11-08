@@ -2,6 +2,8 @@
 
 **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.roster}}** はモンスターオーバーレイの戦闘リストエリアです。現在のターゲットだけを表示する [HP バー](./status.md#hp-バー) と違い、あなたと味方が戦っている**すべての**モンスターを対象にします。
 
+![戦闘リスト](../../../shared/img/monster/roster_1.ja-JP.png)
+
 ## 表示内容
 
 あなたまたは味方と交戦中のモンスターの HP を一覧表示します。

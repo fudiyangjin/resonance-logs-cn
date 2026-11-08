@@ -2,6 +2,8 @@
 
 **{{ui:routes.tools.monsterMonitor}} → {{ui:monsterMonitor.tabs.roster}}** is the battle roster area of the monster overlay. Unlike the [HP bar](./status.md#hp-bar), which follows your current target, it covers **every** monster you and your teammates are fighting.
 
+![Battle Roster](../../../shared/img/monster/roster_1.en-US.png)
+
 ## What it shows
 
 Lists the HP of each monster in combat with you or a teammate:
