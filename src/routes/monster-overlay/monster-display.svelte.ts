@@ -7,6 +7,7 @@ import {
 import { untrack } from "svelte";
 import { resolveDbmSkillName } from "$lib/config/dbm-table";
 import {
+  findMonsterName,
   resolveMonsterName,
   resolveMonsterSkillName,
 } from "$lib/config/game-names";
@@ -59,6 +60,7 @@ import {
   monsterBossBuffs,
   monsterBossMechanics,
   monsterDeadTeammates,
+  monsterDiscoveredEntities,
   monsterEntityDurationTracks,
   monsterFantasyEntries,
   monsterHateLists,
@@ -1232,6 +1234,15 @@ function buildEntityDurationDisplay(now: number): {
     },
     formatRemaining: formatTimerText,
     infiniteText: formatTimerText(Number.POSITIVE_INFINITY),
+    monitorAll: SETTINGS.monsterMonitor.state.entityDurationMonitorAll === true,
+    discovered: monsterDiscoveredEntities(),
+    // Only monster ids index the monster table; other kinds number theirs
+    // separately.
+    resolveDiscoveredName: (state) =>
+      state.name ??
+      (state.isMonster ? findMonsterName(state.monsterId, getLocale()) : null),
+    formatElapsed: (seconds) =>
+      t("monsterOverlay.entityDuration.elapsed", { value: seconds }),
   });
   let rows = built.rows;
   if (rows.length === 0 && isMonsterLayoutScaffold()) {

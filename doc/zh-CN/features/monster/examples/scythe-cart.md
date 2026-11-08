@@ -25,4 +25,4 @@
 
 ## 其他实体
 
-对于没有预设的召唤物或地面装置，在 **{{ui:monsterMonitor.entityDuration.manualTitle}}** 中填写实体 ID 与持续时间即可。不知道持续多久时留空，显示为 `∞`，直到实体消失。
+对于没有预设的召唤物或地面装置，先打开 **{{ui:monsterMonitor.entityDuration.monitorAll}}** 放一次技能，从实体监控区读出 ID 和已出现的秒数（见 [实体持续](../entity-duration.md) 的调试一节），再在 **{{ui:monsterMonitor.entityDuration.manualTitle}}** 中填写实体 ID 与持续时间。不知道持续多久时留空，显示为 `∞`，直到实体消失。

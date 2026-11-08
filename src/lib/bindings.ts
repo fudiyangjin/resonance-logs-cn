@@ -800,6 +800,31 @@ export type DeathRecord = { victimEntityUuid: string; deathTimestampMs: string;
  */
 recentDamages?: DamageSnapshot[]; victimBuffs?: DeathBuffSnapshot[]; participantBuffs?: DeathParticipantBuffSnapshot[] }
 export type Device = { name: string; description: string | null }
+/**
+ * One monster id of the local player's entities in view that is not on the
+ * entity-duration watch list, for the panel's discovery mode. Every present
+ * entity with the id folds into this one row.
+ */
+export type DiscoveredEntityState = { monsterId: number;
+/**
+ * The entity's own name, when the server sent one.
+ */
+name: string | null;
+/**
+ * Whether the entity is a monster. Only monster ids are monster
+ * template ids that the monster name table can resolve; fields, traps
+ * and other kinds number their ids separately, so the same id can name
+ * an unrelated monster there.
+ */
+isMonster: boolean;
+/**
+ * How many entities with the id are present.
+ */
+count: number;
+/**
+ * Wall time the earliest of them was detected.
+ */
+detectedAtMs: number }
 export type EffectSlotConfig = { slotId: number; threshold: number | null; resetBuffId: number; resetSourceConfigId?: number | null; resetBuffTarget?: ResetBuffTarget; onBuffAdd?: CounterAction; onBuffChange?: CounterAction; onBuffRemove?: CounterAction; freezeDurationMs?: number | null; onFreezeExpire?: CounterAction; altFreeze?: AltFreezeConfig | null; thresholdModifier?: AttrModifier | null; freezeDurationModifier?: AttrModifier | null; resetSkillKeys?: number[] | null; onResetSkill?: CounterAction; wrapAtThreshold?: boolean; resetPassiveSkillIds?: number[] | null; onPassiveSkill?: CounterAction; dungeonStartFreezeMs?: number | null }
 export type EncounterBuffGraceData = { offsetMs: number; creditedMs: number }
 export type EncounterBuffLaneData = { entityId: string; baseId: number;
@@ -1062,6 +1087,11 @@ export type LiveMonsterPayload = { revision: number; bossBuffs: Partial<{ [key i
  * ascending. Empty while no teammate buff is monitored.
  */
 deadTeammates?: string[]; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [key in string]: HateEntry[] }>; stun: StunEntry[]; hp: HpEntry[]; playerNames: Partial<{ [key in string]: string }>; monsterIds: Partial<{ [key in string]: number }>; entityDurationTracks?: EntityDurationTrackState[];
+/**
+ * Discovery mode's unlisted entities of the local player, in order of
+ * first detection. Empty unless discovery is on.
+ */
+discoveredEntities?: DiscoveredEntityState[];
 /**
  * Latest cast of each watched monster skill, ascending by skill id.
  */
@@ -1336,7 +1366,12 @@ watchedSkillIds: number[];
 /**
  * Discover all nearby world-monster skills for the HUD.
  */
-monitorAllSkills: boolean }
+monitorAllSkills: boolean;
+/**
+ * Discovery mode of the entity-duration panel: also show the local
+ * player's entities whose id is not on the watch list (HUD only).
+ */
+monitorAllOwnEntities: boolean }
 /**
  * The latest cast of one watched skill by any nearby monster. How long it
  * stays on screen is a display setting applied by the HUD.

@@ -107,6 +107,15 @@ export function resolveMonsterName(
   return lookupMonsterName(id, locale) ?? t("game.monster.unknown", { id });
 }
 
+/** Monster table name of `monsterId`; `null` when the table has none. */
+export function findMonsterName(
+  monsterId: number | null | undefined,
+  locale = getLocale(),
+): string | null {
+  const id = normalizeId(monsterId);
+  return id === null ? null : lookupMonsterName(id, locale);
+}
+
 export function resolveMonsterSkillName(
   skillId: number | null | undefined,
   locale = getLocale(),

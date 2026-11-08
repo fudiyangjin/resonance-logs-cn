@@ -177,6 +177,7 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
       watchedEntities,
       watchedSkillIds,
       monitorAllSkills: false,
+      monitorAllOwnEntities: false,
     };
   }
 
@@ -193,6 +194,8 @@ function buildMonsterRuntimeSnapshot(): MonitorRuntimeSnapshot["monster"] {
     watchedSkillIds,
     monitorAllSkills:
       SETTINGS.monsterMonitor.state.monsterSkillMonitorAll === true,
+    monitorAllOwnEntities:
+      SETTINGS.monsterMonitor.state.entityDurationMonitorAll === true,
   };
 }
 

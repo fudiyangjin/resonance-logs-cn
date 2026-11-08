@@ -248,6 +248,7 @@ export function normalizeMonsterProfileStyles<
     entityDurationPanelStyle: normalizeCustomPanelStyle(
       profile.entityDurationPanelStyle ?? defaults.entityDurationPanelStyle,
     ),
+    entityDurationMonitorAll: profile.entityDurationMonitorAll === true,
     monsterSkillMonitorAll: profile.monsterSkillMonitorAll === true,
     monsterSkillEntries: ensureMonsterSkillEntries(profile.monsterSkillEntries),
     monsterSkillPanelStyle: normalizeCustomPanelStyle(

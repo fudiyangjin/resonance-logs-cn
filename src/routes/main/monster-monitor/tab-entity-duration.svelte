@@ -1,5 +1,6 @@
 <script lang="ts">
   import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
+  import SettingsSwitch from "../dps/settings/settings-switch.svelte";
   import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
   import type { EntityDurationPreset } from "$lib/config/entity-duration-presets";
   import {
@@ -16,6 +17,8 @@
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
 
   interface Props {
+    monitorAll: boolean;
+    onMonitorAllChange: (checked: boolean) => void;
     entries: EntityDurationEntry[];
     presets: EntityDurationPreset[];
     panelStyle: CustomPanelStyle;
@@ -31,6 +34,8 @@
   }
 
   let {
+    monitorAll,
+    onMonitorAllChange,
     entries,
     presets,
     panelStyle,
@@ -112,6 +117,12 @@
       {t("monsterMonitor.entityDuration.description")}
     </p>
   </div>
+  <SettingsSwitch
+    label={t("monsterMonitor.entityDuration.monitorAll")}
+    description={t("monsterMonitor.entityDuration.monitorAllDesc")}
+    checked={monitorAll}
+    onCheckedChange={onMonitorAllChange}
+  />
 </section>
 
 <section class="border-border/60 bg-card/60 space-y-4 rounded-xl border p-5">

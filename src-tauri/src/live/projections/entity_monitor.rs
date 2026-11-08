@@ -5,13 +5,14 @@ use std::sync::Arc;
 
 use crate::live::bootstrap_snapshot::{BuffCompositeMode, MonitorRuntimeSnapshot};
 use crate::live::ipc::models::{
-    BossDbmEvent, BuffFocusState, BuffUpdateState, EntityDurationTrackState, FightResourceEntry,
-    FightResourceState, HateEntry as HateEntryDto, HpEntry, MonsterSkillCastState, PanelAttrState,
-    ProfessionCountState, ShieldDetailEntry, SkillCdState, StunEntry, TeammateFantasyState,
+    BossDbmEvent, BuffFocusState, BuffUpdateState, DiscoveredEntityState, EntityDurationTrackState,
+    FightResourceEntry, FightResourceState, HateEntry as HateEntryDto, HpEntry,
+    MonsterSkillCastState, PanelAttrState, ProfessionCountState, ShieldDetailEntry, SkillCdState,
+    StunEntry, TeammateFantasyState,
 };
 use crate::live::ipc::topic::TopicMask;
 use crate::live::projections::buff_presence::{BuffCompositeCatalog, BuffFocus, BuffPresence};
-use crate::live::projections::entity_duration::EntityDurationWatch;
+use crate::live::projections::entity_duration::{EntityDurationWatch, WatchView};
 use crate::live::projections::monster_skill_watch::MonsterSkillWatch;
 use crate::live::projections::profession_count::ProfessionCountTracker;
 use crate::live::projections::skill_cd;
@@ -50,6 +51,7 @@ pub struct EntityMonitorSnapshot {
     pub player_names: HashMap<String, String>,
     pub monster_ids: HashMap<String, i32>,
     pub entity_duration_tracks: Vec<EntityDurationTrackState>,
+    pub discovered_entities: Vec<DiscoveredEntityState>,
     pub monster_skill_casts: Vec<MonsterSkillCastState>,
 }
 
@@ -302,8 +304,12 @@ impl EntityMonitorProjection {
         self.buff_filter = BuffPublishFilter::from_snapshot(config, &buff_composites);
         self.buff_composites = buff_composites;
         self.entity_duration_hidden = !config.monster.enabled;
-        self.entity_duration
-            .apply_config(&config.monster, entities, now_mono);
+        self.entity_duration.apply_config(
+            &config.monster,
+            entities,
+            self.local_player.map(|local| local.uuid),
+            now_mono,
+        );
         self.monster_skills
             .set_monitor_all(config.monster.monitor_all_skills);
         self.monster_skills
@@ -336,6 +342,13 @@ impl EntityMonitorProjection {
                 self.local_player = entities.local_player();
                 self.clear_local_runtime();
                 self.sync_current_target(entities);
+                // Discovery admits the local player's entities only.
+                self.entity_duration.reseed(
+                    entities,
+                    self.local_player.map(|local| local.uuid),
+                    envelope.occurred_at_ms,
+                    envelope.meta.mono_ms(),
+                );
                 // Owner scopes compare casters against the local player.
                 bump(&mut self.revisions.watched_entities);
                 TopicMask::STATUS | TopicMask::MONSTER
@@ -361,15 +374,15 @@ impl EntityMonitorProjection {
                     }
                 }
                 let is_present = entities.entity(key).is_some_and(|state| state.is_present);
-                if self.entity_duration.sync(
+                let change = self.entity_duration.sync(
                     *entity,
                     current,
                     is_present,
+                    self.local_player.map(|local| local.uuid),
                     envelope.occurred_at_ms,
                     envelope.meta.mono_ms(),
-                ) {
-                    bump(&mut self.revisions.watched_entities);
-                }
+                );
+                self.note_watch_change(change);
                 let mut mask = TopicMask::MONSTER;
                 for fantasy in &mut self.recent_fantasies {
                     if fantasy.key.summoner == entity.uuid {
@@ -384,17 +397,18 @@ impl EntityMonitorProjection {
                 self.sync_current_target(entities);
                 // Identity may have arrived before the appearance; re-sync so
                 // the watched record reflects the now-present entity.
-                let changed = entities.entity(entity.uuid).is_some_and(|state| {
+                let local_player = self.local_player.map(|local| local.uuid);
+                let change = entities.entity(entity.uuid).and_then(|state| {
                     self.entity_duration.sync(
                         *entity,
                         &state.identity,
                         state.is_present,
+                        local_player,
                         envelope.occurred_at_ms,
                         envelope.meta.mono_ms(),
                     )
                 });
-                if changed {
-                    bump(&mut self.revisions.watched_entities);
+                if self.note_watch_change(change) {
                     TopicMask::MONSTER
                 } else {
                     TopicMask::EMPTY
@@ -804,6 +818,11 @@ impl EntityMonitorProjection {
             } else {
                 self.entity_duration.track_states(entities)
             },
+            discovered_entities: if self.entity_duration_hidden {
+                Vec::new()
+            } else {
+                self.entity_duration.discovered_states(entities)
+            },
             monster_skill_casts: if self.entity_duration_hidden {
                 Vec::new()
             } else {
@@ -859,10 +878,19 @@ impl EntityMonitorProjection {
         self.profession_count.clear();
     }
 
-    fn remove_entity(&mut self, entity: EntityUuid) {
-        if self.entity_duration.remove(entity) {
+    /// Records an entity-duration change; returns whether there was one.
+    /// Only watch-list changes move the revision voice re-reads tracks on:
+    /// discovered entities have no cues.
+    fn note_watch_change(&mut self, change: Option<WatchView>) -> bool {
+        if change == Some(WatchView::Watched) {
             bump(&mut self.revisions.watched_entities);
         }
+        change.is_some()
+    }
+
+    fn remove_entity(&mut self, entity: EntityUuid) {
+        let change = self.entity_duration.remove(entity);
+        self.note_watch_change(change);
         self.active_fantasies.remove(&entity);
         self.hate_lists.remove(&entity);
         self.stun_values.remove(&entity);
@@ -3208,6 +3236,190 @@ mod tests {
                 summon(cart2, None),
             );
             assert_eq!(tracks(&projection, &entities).len(), 1);
+        }
+
+        /// An id that is not on the watch list.
+        const FIELD: i32 = 53;
+
+        fn discovery_config(monster_enabled: bool) -> MonitorRuntimeSnapshot {
+            let mut config = watched_config(&[SCYTHE_CART]);
+            config.monster.enabled = monster_enabled;
+            config.monster.monitor_all_own_entities = true;
+            config
+        }
+
+        fn discovering_setup() -> (EntityMonitorProjection, EntityContext, DeadlineScheduler) {
+            let (mut projection, entities, scheduler) = setup();
+            projection.apply_config(
+                &discovery_config(true),
+                Arc::default(),
+                &entities,
+                MonoTimeMs(0),
+            );
+            (projection, entities, scheduler)
+        }
+
+        fn owned_entity(
+            uuid: EntityUuid,
+            monster_id: i32,
+            owner: EntityUuid,
+        ) -> Vec<ProtocolObservation> {
+            vec![appear(uuid), identity(uuid, Some(monster_id), Some(owner))]
+        }
+
+        fn discovered(
+            projection: &EntityMonitorProjection,
+            entities: &EntityContext,
+        ) -> Vec<DiscoveredEntityState> {
+            projection.snapshot(entities).discovered_entities
+        }
+
+        fn discovered_ids(
+            projection: &EntityMonitorProjection,
+            entities: &EntityContext,
+        ) -> Vec<i32> {
+            discovered(projection, entities)
+                .iter()
+                .map(|state| state.monster_id)
+                .collect()
+        }
+
+        #[test]
+        fn own_unlisted_entity_is_published_without_moving_the_voice_revision() {
+            let (mut projection, mut entities, mut scheduler) = discovering_setup();
+            let revision = projection.revisions().watched_entities;
+            let field = EntityUuid(600);
+
+            let mask = apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                owned_entity(field, FIELD, local_ref().uuid),
+            );
+            assert!(mask.contains(TopicMask::MONSTER));
+            assert_eq!(projection.revisions().watched_entities, revision);
+            assert!(tracks(&projection, &entities).is_empty());
+            assert_eq!(
+                discovered(&projection, &entities),
+                vec![DiscoveredEntityState {
+                    monster_id: FIELD,
+                    name: None,
+                    is_monster: true,
+                    count: 1,
+                    detected_at_ms: 2_000,
+                }]
+            );
+
+            let mask = apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                3,
+                vec![ProtocolObservation::EntityDisappeared { uuid: field }],
+            );
+            assert!(mask.contains(TopicMask::MONSTER));
+            assert_eq!(projection.revisions().watched_entities, revision);
+            assert!(discovered(&projection, &entities).is_empty());
+        }
+
+        #[test]
+        fn discovered_entity_carries_its_own_name() {
+            let (mut projection, mut entities, mut scheduler) = discovering_setup();
+            let field = EntityUuid(600);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                vec![
+                    appear(field),
+                    ProtocolObservation::IdentityUpdated {
+                        uuid: field,
+                        patch: EntityIdentityPatch {
+                            name: FieldPatch::Set("Field".to_owned()),
+                            monster_id: FieldPatch::Set(FIELD),
+                            owner_uuid: FieldPatch::Set(local_ref().uuid),
+                            ..Default::default()
+                        },
+                    },
+                ],
+            );
+            let states = discovered(&projection, &entities);
+            assert_eq!(states.len(), 1);
+            assert_eq!(states[0].name.as_deref(), Some("Field"));
+        }
+
+        #[test]
+        fn teammates_entities_and_listed_ids_are_not_discovered() {
+            let (mut projection, mut entities, mut scheduler) = discovering_setup();
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                [
+                    owned_entity(EntityUuid(600), FIELD, EntityUuid(20)),
+                    summon(EntityUuid(500), Some(local_ref().uuid)),
+                ]
+                .concat(),
+            );
+            assert!(discovered(&projection, &entities).is_empty());
+            assert_eq!(tracks(&projection, &entities).len(), 1);
+        }
+
+        #[test]
+        fn another_local_player_rediscovers_its_own_entities() {
+            let (mut projection, mut entities, mut scheduler) = discovering_setup();
+            let other = EntityUuid(11);
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                [
+                    owned_entity(EntityUuid(600), FIELD, local_ref().uuid),
+                    owned_entity(EntityUuid(601), 77, other),
+                ]
+                .concat(),
+            );
+            assert_eq!(discovered_ids(&projection, &entities), vec![FIELD]);
+
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                3,
+                vec![
+                    ProtocolObservation::EntityAppeared {
+                        uuid: other,
+                        kind: EntityKind::Character,
+                    },
+                    ProtocolObservation::LocalPlayerChanged { uuid: Some(other) },
+                ],
+            );
+            assert_eq!(discovered_ids(&projection, &entities), vec![77]);
+        }
+
+        #[test]
+        fn disabled_monster_monitor_publishes_no_discoveries() {
+            let (mut projection, mut entities, mut scheduler) = discovering_setup();
+            apply_observations(
+                &mut projection,
+                &mut entities,
+                &mut scheduler,
+                2,
+                owned_entity(EntityUuid(600), FIELD, local_ref().uuid),
+            );
+            assert_eq!(discovered_ids(&projection, &entities), vec![FIELD]);
+
+            projection.apply_config(
+                &discovery_config(false),
+                Arc::default(),
+                &entities,
+                MonoTimeMs(0),
+            );
+            assert!(discovered(&projection, &entities).is_empty());
         }
     }
 

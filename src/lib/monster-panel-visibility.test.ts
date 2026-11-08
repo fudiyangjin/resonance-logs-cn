@@ -85,6 +85,26 @@ describe("single monster panel visibility", () => {
     }
   });
 
+  it("preserves entity discovery on import and defaults older profiles to off", () => {
+    const profile = createDefaultMonsterMonitorProfile();
+    profile.entityDurationMonitorAll = true;
+    const imported = parseLoadoutExport(legacyExport(profile));
+    expect(imported.success).toBe(true);
+    if (imported.success) {
+      expect(imported.output.monsterProfile.entityDurationMonitorAll).toBe(
+        true,
+      );
+    }
+    const older = legacyExport(profile);
+    delete (older.monsterProfile as Partial<MonsterMonitorProfileData>)
+      .entityDurationMonitorAll;
+    const legacy = parseLoadoutExport(older);
+    expect(legacy.success).toBe(true);
+    if (legacy.success) {
+      expect(legacy.output.monsterProfile.entityDurationMonitorAll).toBe(false);
+    }
+  });
+
   for (const [flag, visibility] of panels) {
     it.each([
       [false, false, false],

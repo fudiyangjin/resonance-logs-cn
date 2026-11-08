@@ -184,6 +184,9 @@ impl MonitorRuntimeSnapshot {
             self.monster.global_ids.clear();
             self.monster.self_applied_ids.clear();
             self.monster.monitor_all_self_applied = false;
+            // Discovery has no voice cues, so it has nothing to do while
+            // the HUD is off.
+            self.monster.monitor_all_own_entities = false;
         }
 
         dedup_and_sort(&mut self.teammate.any_source_ids);
@@ -369,6 +372,9 @@ pub struct MonsterRuntimeSnapshot {
     pub watched_skill_ids: Vec<i32>,
     /// Discover all nearby world-monster skills for the HUD.
     pub monitor_all_skills: bool,
+    /// Discovery mode of the entity-duration panel: also show the local
+    /// player's entities whose id is not on the watch list (HUD only).
+    pub monitor_all_own_entities: bool,
 }
 
 impl MonsterRuntimeSnapshot {
@@ -480,7 +486,7 @@ impl MonsterRosterRuntimeSnapshot {
 
 fn describe_snapshot(snapshot: &MonitorRuntimeSnapshot) -> String {
     format!(
-        "locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} monster_watched_entities={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={} buff_composites={}",
+        "locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} monster_watched_entities={} monster_own_entity_discovery={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={} buff_composites={}",
         snapshot.i18n.locale.as_str(),
         snapshot.live.event_update_rate_ms,
         snapshot.skill.enabled,
@@ -492,6 +498,7 @@ fn describe_snapshot(snapshot: &MonitorRuntimeSnapshot) -> String {
         snapshot.monster.global_ids.len(),
         snapshot.monster.self_applied_ids.len(),
         snapshot.monster.watched_entities.len(),
+        snapshot.monster.monitor_all_own_entities,
         snapshot.teammate.enabled,
         snapshot.teammate.any_source_ids.len(),
         snapshot.teammate.local_player_source_ids.len(),
@@ -615,6 +622,22 @@ mod tests {
             disabled.monster.watched_entities,
             normalized.monster.watched_entities
         );
+    }
+
+    #[test]
+    fn own_entity_discovery_follows_the_monster_monitor_toggle() {
+        let mut snapshot = MonitorRuntimeSnapshot::default();
+        snapshot.monster.enabled = true;
+        snapshot.monster.monitor_all_own_entities = true;
+        let enabled = snapshot
+            .clone()
+            .normalize()
+            .expect("enabled snapshot is valid");
+        assert!(enabled.monster.monitor_all_own_entities);
+
+        snapshot.monster.enabled = false;
+        let disabled = snapshot.normalize().expect("disabled snapshot is valid");
+        assert!(!disabled.monster.monitor_all_own_entities);
     }
 
     #[test]

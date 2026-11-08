@@ -3213,6 +3213,9 @@
     />
   {:else if activeTab === "entityDuration"}
     <TabEntityDuration
+      monitorAll={monsterMonitor.entityDurationMonitorAll === true}
+      onMonitorAllChange={(checked) =>
+        updateMonsterMonitor(() => ({ entityDurationMonitorAll: checked }))}
       entries={entityDurationEntries}
       presets={entityDurationPresets}
       panelStyle={entityDurationPanelStyle}

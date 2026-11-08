@@ -2239,6 +2239,9 @@ export const enUSMessages = {
   "monsterMonitor.entityDuration.title": "Entity Duration",
   "monsterMonitor.entityDuration.description":
     "Watches nearby entities by id (e.g. Scythe Cart). The countdown starts when the entity appears and the row disappears with it. Use a preset or enter any entity id.",
+  "monsterMonitor.entityDuration.monitorAll": "Show all your own entities",
+  "monsterMonitor.entityDuration.monitorAllDesc":
+    "For debugging: the Entity Duration area also shows entities you create that are not on the list, as name#id ×count, with the seconds since they appeared on the right. Use that id and duration to add an entry. Listed entities stay on top. Needs the monster monitor on and the Entity Duration area shown.",
   "monsterMonitor.entityDuration.presetsTitle": "Presets",
   "monsterMonitor.entityDuration.presetAdded": "Added",
   "monsterMonitor.entityDuration.manualTitle": "Add Manually",
@@ -2335,6 +2338,7 @@ export const enUSMessages = {
   "monsterOverlay.placeholder.fantasy": "Fantasy Preview",
   "monsterOverlay.placeholder.buffName": "Sample Buff",
   "monsterOverlay.entity.uid": "UID {uid}",
+  "monsterOverlay.entityDuration.elapsed": "+{value}s",
   "monsterOverlay.teammate.nameHeader": "Teammate",
   "monsterOverlay.ghost.skillCd": "Skill CD Area",
   "monsterOverlay.ghost.resource": "Resource Area",

@@ -1426,6 +1426,8 @@ export type MonsterMonitorConfig = {
   hpPanelStyle: CustomPanelStyle;
   entityDurationEntries: EntityDurationEntry[];
   entityDurationPanelStyle: CustomPanelStyle;
+  /** Debug: also show the local player's entities not on the list. */
+  entityDurationMonitorAll: boolean;
   monsterSkillMonitorAll: boolean;
   monsterSkillEntries: MonsterSkillWatchEntry[];
   monsterSkillPanelStyle: CustomPanelStyle;
@@ -2292,6 +2294,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     hpPanelStyle: createDefaultHpPanelStyle(),
     entityDurationEntries: [],
     entityDurationPanelStyle: createDefaultEntityDurationPanelStyle(),
+    entityDurationMonitorAll: false,
     monsterSkillMonitorAll: false,
     monsterSkillEntries: [],
     monsterSkillPanelStyle: createDefaultMonsterSkillPanelStyle(),
@@ -2383,6 +2386,7 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "hpPanelStyle",
   "entityDurationEntries",
   "entityDurationPanelStyle",
+  "entityDurationMonitorAll",
   "monsterSkillMonitorAll",
   "monsterSkillEntries",
   "monsterSkillPanelStyle",

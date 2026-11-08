@@ -2063,6 +2063,9 @@ export const zhCNMessages = {
   "monsterMonitor.entityDuration.title": "实体持续时间",
   "monsterMonitor.entityDuration.description":
     "监控附近出现的指定实体（如镰车），实体出现即开始倒计时，消失即结束。可用预设或手动输入实体 ID。",
+  "monsterMonitor.entityDuration.monitorAll": "显示自己放出的所有实体",
+  "monsterMonitor.entityDuration.monitorAllDesc":
+    "调试用：开启后实体监控区还会显示你放出的、不在监控列表中的实体，格式为 名称#ID ×数量，右侧为已出现的秒数，照着填写实体 ID 和持续时间即可。列表中的实体仍排在前面。需要启用怪物监控并显示实体监控区。",
   "monsterMonitor.entityDuration.presetsTitle": "预设",
   "monsterMonitor.entityDuration.presetAdded": "已添加",
   "monsterMonitor.entityDuration.manualTitle": "手动添加",
@@ -2155,6 +2158,7 @@ export const zhCNMessages = {
   "monsterOverlay.placeholder.fantasy": "幻想预览",
   "monsterOverlay.placeholder.buffName": "示例 Buff",
   "monsterOverlay.entity.uid": "UID {uid}",
+  "monsterOverlay.entityDuration.elapsed": "+{value}s",
   "monsterOverlay.teammate.nameHeader": "队友",
   "monsterOverlay.ghost.skillCd": "技能CD区",
   "monsterOverlay.ghost.resource": "资源区",

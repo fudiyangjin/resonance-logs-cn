@@ -849,6 +849,7 @@ const monsterProfileSchema = v.object({
     customPanelStyleSchema,
     defaultClone(defaultMonster.entityDurationPanelStyle),
   ),
+  entityDurationMonitorAll: v.optional(v.boolean(), false),
   monsterSkillMonitorAll: v.optional(v.boolean(), false),
   monsterSkillEntries: monsterSkillEntriesSchema,
   monsterSkillPanelStyle: v.optional(

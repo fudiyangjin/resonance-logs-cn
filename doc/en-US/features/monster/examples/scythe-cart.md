@@ -25,4 +25,4 @@ If you also want to see teammates' Scythe Carts, adding the same ID again manual
 
 ## Other entities
 
-For summons or ground devices without a preset, just enter the entity ID and duration in **{{ui:monsterMonitor.entityDuration.manualTitle}}**. If you don't know how long it lasts, leave the duration empty; it shows `∞` until the entity disappears.
+For summons or ground devices without a preset, first turn on **{{ui:monsterMonitor.entityDuration.monitorAll}}** and cast the skill once to read the ID and the seconds it has been present off the Entity Duration Area (see the debugging section of [Entity Duration](../entity-duration.md)), then enter the entity ID and duration in **{{ui:monsterMonitor.entityDuration.manualTitle}}**. If you don't know how long it lasts, leave the duration empty; it shows `∞` until the entity disappears.

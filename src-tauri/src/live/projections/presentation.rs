@@ -297,6 +297,7 @@ impl PresentationProjection {
             player_names: monitored.player_names.clone(),
             monster_ids: monitored.monster_ids.clone(),
             entity_duration_tracks: monitored.entity_duration_tracks.clone(),
+            discovered_entities: monitored.discovered_entities.clone(),
             monster_skill_casts: monitored.monster_skill_casts.clone(),
         }
     }

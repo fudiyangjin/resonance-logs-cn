@@ -37,6 +37,21 @@ These skills spawn a separate entity on the field, which carries an **entity ID*
 
 Only one entry is kept per entity ID, up to 32 entries. You can edit, reorder, delete them or toggle merging in **{{ui:monsterMonitor.entityDuration.listTitle}}**.
 
+## Debugging: show your own entities
+
+If you don't know the ID of a summon or zone, turn on **{{ui:monsterMonitor.entityDuration.monitorAll}}** at the top of the page and cast the skill once. After the list entries, the Entity Duration Area shows the entities you created that are not on the list:
+
+- They are shown as `name#ID`, or just `#ID` when there is no name; `×count` is appended when several entities with the same ID are present, in which case the entry should have **{{ui:monsterMonitor.entityDuration.merge}}** checked;
+- On the right is how many seconds the entity has been present (e.g. `+12s`), counting until it disappears, so you can read off its duration;
+- Once you add the ID to the list, the row turns into a countdown right away, timed from when the entity actually appeared.
+
+Notes:
+
+- Only entities you create are shown; entities the game reports no caster for do not appear;
+- Entities already on the field when you turn the switch on are timed from that moment;
+- Requires **{{ui:monsterMonitor.enabled}}** and the Entity Duration Area shown in **{{ui:monsterMonitor.tabs.overlay}}**;
+- The switch is saved with the profile and included in loadout exports; turn it off once your entries are set up.
+
 ## Voice announcements
 
 Three events can be configured: **on appear / x seconds left / on disappear**:

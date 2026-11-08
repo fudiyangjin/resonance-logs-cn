@@ -25,4 +25,4 @@
 
 ## ほかのエンティティ
 
-プリセットのない召喚物や設置物は、**{{ui:monsterMonitor.entityDuration.manualTitle}}** でエンティティ ID と持続時間を入力するだけです。持続時間がわからない場合は空欄にすると `∞` と表示され、エンティティが消えるまで続きます。
+プリセットのない召喚物や設置物は、まず **{{ui:monsterMonitor.entityDuration.monitorAll}}** をオンにしてスキルを 1 回使い、エンティティ持続エリアで ID と出現からの秒数を確認してから（[エンティティ持続](../entity-duration.md) のデバッグの節を参照）、**{{ui:monsterMonitor.entityDuration.manualTitle}}** でエンティティ ID と持続時間を入力します。持続時間がわからない場合は空欄にすると `∞` と表示され、エンティティが消えるまで続きます。

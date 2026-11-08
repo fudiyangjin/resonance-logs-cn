@@ -7,20 +7,44 @@
 //! caster has on the field. The HUD payload and the voice projection both
 //! read tracks from here, so scope filtering, grouping and expiry rules live
 //! in one place.
+//!
+//! Discovery mode also admits the local player's entities whose id is not on
+//! the watch list. They never form tracks (so they have no voice cues); the
+//! HUD lists them per monster id so the player can find the id to add.
 
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
 use crate::live::bootstrap_snapshot::{MonsterRuntimeSnapshot, WatchedEntitySpec};
-use crate::live::ipc::models::EntityDurationTrackState;
+use crate::live::ipc::models::{DiscoveredEntityState, EntityDurationTrackState};
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
-    EntityIdentity, EntityRef, EntityUuid, MonoTimeMs, wall_now_ms,
+    EntityIdentity, EntityKind, EntityRef, EntityUuid, MonoTimeMs, wall_now_ms,
 };
 use crate::voice::models::EntityOwnerScope;
 
-/// A present entity whose `monster_id` is on the entity-duration watch list.
+/// Most unlisted entities discovery mode keeps at once. Further ones are
+/// ignored until some leave, so a burst of short-lived entities cannot grow
+/// the payload without bound.
+const MAX_DISCOVERED_ENTITIES: usize = 64;
+
+/// The published view a record change touched.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum WatchView {
+    /// The watch-list tracks, which the HUD and the voice cues read.
+    Watched,
+    /// Discovery mode's unlisted entities, which only the HUD reads.
+    Discovered,
+}
+
+/// Whether `owner` is known and is the local player.
+fn is_owned_by(owner: Option<EntityUuid>, local_player: Option<EntityUuid>) -> bool {
+    owner.is_some() && owner == local_player
+}
+
+/// A present entity admitted by the entity-duration watch: its `monster_id`
+/// is on the watch list, or discovery mode admitted it as the local player's.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct WatchedEntityRecord {
     pub entity: EntityRef,
@@ -116,50 +140,119 @@ impl EntityDurationTrack<'_> {
 pub(crate) struct EntityDurationWatch {
     specs: Vec<WatchedEntitySpec>,
     watched_ids: HashSet<i32>,
+    /// Discovery mode: also admit the local player's entities whose id is
+    /// not on the watch list.
+    monitor_all_own: bool,
+    /// Records of both views. Whether a record's `monster_id` is in
+    /// `watched_ids` decides its view, so an id moving onto or off the list
+    /// keeps its detection time.
     records: HashMap<EntityUuid, WatchedEntityRecord>,
 }
 
 impl EntityDurationWatch {
-    /// Replaces the watch entries. Records whose monster id is no longer
-    /// watched are dropped, and entities already in the scene are seeded so
-    /// a newly watched id shows up immediately instead of waiting for its
-    /// next identity update.
+    /// Replaces the watch entries and the discovery switch, then re-admits
+    /// the scene (see [`Self::reseed`]).
     pub fn apply_config(
         &mut self,
         config: &MonsterRuntimeSnapshot,
         entities: &EntityContext,
+        local_player: Option<EntityUuid>,
         now_mono: MonoTimeMs,
     ) {
         self.specs.clone_from(&config.watched_entities);
         self.watched_ids.clear();
         self.watched_ids.extend(config.watched_monster_ids());
+        self.monitor_all_own = config.monitor_all_own_entities;
+        self.reseed(entities, local_player, wall_now_ms(), now_mono);
+    }
+
+    /// Re-admits the scene against the current rules: drops the records no
+    /// rule admits any more (an id taken off the list, discovery switched
+    /// off, another local player) and seeds the present entities, so a newly
+    /// admitted entity shows up immediately instead of waiting for its next
+    /// identity update. Records that stay keep their detection time.
+    pub fn reseed(
+        &mut self,
+        entities: &EntityContext,
+        local_player: Option<EntityUuid>,
+        now_wall_ms: i64,
+        now_mono: MonoTimeMs,
+    ) {
         let watched = &self.watched_ids;
-        self.records
-            .retain(|_, record| watched.contains(&record.monster_id));
-        let now = wall_now_ms();
+        let monitor_all_own = self.monitor_all_own;
+        self.records.retain(|_, record| {
+            watched.contains(&record.monster_id)
+                || (monitor_all_own && is_owned_by(record.owner, local_player))
+        });
         for state in entities.entities().filter(|state| state.is_present) {
-            self.sync(state.entity, &state.identity, true, now, now_mono);
+            // Seeding republishes the whole view anyway.
+            let _ = self.sync(
+                state.entity,
+                &state.identity,
+                true,
+                local_player,
+                now_wall_ms,
+                now_mono,
+            );
         }
     }
 
     /// Keeps the record for `entity` in sync with its identity and presence.
-    /// Returns whether the published view changed.
+    /// Returns the view that changed, if any; a record whose id moved
+    /// between the views reports [`WatchView::Watched`].
     /// `detected_at_ms` is consumed only when a record is created or a reused
     /// uuid comes back with a new generation.
+    #[must_use]
     pub fn sync(
         &mut self,
         entity: EntityRef,
         identity: &EntityIdentity,
         is_present: bool,
+        local_player: Option<EntityUuid>,
+        detected_at_ms: i64,
+        detected_mono_ms: MonoTimeMs,
+    ) -> Option<WatchView> {
+        let recorded_id = self
+            .records
+            .get(&entity.uuid)
+            .map(|record| record.monster_id);
+        let admitted_id = identity.monster_id.filter(|monster_id| {
+            is_present
+                && (self.watched_ids.contains(monster_id)
+                    || (self.monitor_all_own
+                        && is_owned_by(identity.owner_uuid, local_player)
+                        && (recorded_id.is_some()
+                            || self.discovered_len() < MAX_DISCOVERED_ENTITIES)))
+        });
+        let Some(monster_id) = admitted_id else {
+            return self.remove(entity.uuid);
+        };
+        let changed = self.upsert(
+            entity,
+            monster_id,
+            identity,
+            detected_at_ms,
+            detected_mono_ms,
+        );
+        let touches_watched = self.watched_ids.contains(&monster_id)
+            || recorded_id.is_some_and(|id| self.watched_ids.contains(&id));
+        changed.then_some(if touches_watched {
+            WatchView::Watched
+        } else {
+            WatchView::Discovered
+        })
+    }
+
+    /// Creates or refreshes the record of an admitted entity; returns
+    /// whether it changed.
+    fn upsert(
+        &mut self,
+        entity: EntityRef,
+        monster_id: i32,
+        identity: &EntityIdentity,
         detected_at_ms: i64,
         detected_mono_ms: MonoTimeMs,
     ) -> bool {
-        let watched_id = identity
-            .monster_id
-            .filter(|monster_id| is_present && self.watched_ids.contains(monster_id));
-        let Some(monster_id) = watched_id else {
-            return self.records.remove(&entity.uuid).is_some();
-        };
         match self.records.entry(entity.uuid) {
             Entry::Vacant(slot) => {
                 slot.insert(WatchedEntityRecord {
@@ -192,9 +285,72 @@ impl EntityDurationWatch {
         }
     }
 
-    /// Returns whether `entity` was watched.
-    pub fn remove(&mut self, entity: EntityUuid) -> bool {
-        self.records.remove(&entity).is_some()
+    /// Forgets `entity`; returns the view it was in, if it was admitted.
+    #[must_use]
+    pub fn remove(&mut self, entity: EntityUuid) -> Option<WatchView> {
+        self.records
+            .remove(&entity)
+            .map(|record| self.view_of(record.monster_id))
+    }
+
+    fn view_of(&self, monster_id: i32) -> WatchView {
+        if self.watched_ids.contains(&monster_id) {
+            WatchView::Watched
+        } else {
+            WatchView::Discovered
+        }
+    }
+
+    /// Discovered records (ids not on the watch list).
+    fn discovered(&self) -> impl Iterator<Item = &WatchedEntityRecord> + '_ {
+        self.records
+            .values()
+            .filter(|record| !self.watched_ids.contains(&record.monster_id))
+    }
+
+    fn discovered_len(&self) -> usize {
+        self.discovered().count()
+    }
+
+    /// Discovery mode's unlisted entities as the HUD payload: one entry per
+    /// monster id, in order of first detection, with how many are present
+    /// and the earliest detection time. Names and kinds are read from
+    /// `entities` at publish time; the first member with a name names the
+    /// entry.
+    #[must_use]
+    pub fn discovered_states(&self, entities: &EntityContext) -> Vec<DiscoveredEntityState> {
+        let mut records = self.discovered().collect::<Vec<_>>();
+        records.sort_unstable_by_key(|record| (record.detected_mono_ms, record.entity.uuid));
+
+        let mut states: Vec<DiscoveredEntityState> = Vec::new();
+        let mut slots: HashMap<i32, usize> = HashMap::new();
+        for record in records {
+            let identity = entities
+                .entity(record.entity.uuid)
+                .map(|state| &state.identity);
+            let name = || identity.and_then(|identity| identity.name.clone());
+            match slots.entry(record.monster_id) {
+                Entry::Occupied(slot) => {
+                    let state = &mut states[*slot.get()];
+                    state.count = state.count.saturating_add(1);
+                    if state.name.is_none() {
+                        state.name = name();
+                    }
+                }
+                Entry::Vacant(slot) => {
+                    slot.insert(states.len());
+                    states.push(DiscoveredEntityState {
+                        monster_id: record.monster_id,
+                        name: name(),
+                        is_monster: identity
+                            .is_some_and(|identity| identity.kind == EntityKind::Monster),
+                        count: 1,
+                        detected_at_ms: record.detected_at_ms,
+                    });
+                }
+            }
+        }
+        states
     }
 
     /// Forgets every present entity; the watch entries stay.
@@ -302,6 +458,7 @@ mod tests {
                 .into_iter()
                 .map(|record| (record.entity.uuid, record))
                 .collect(),
+            ..EntityDurationWatch::default()
         }
     }
 
@@ -493,5 +650,237 @@ mod tests {
         let state = tracks[0].to_state(&entities);
         assert_eq!(state.key, "179903:self:e500");
         assert!(state.deadlines_ms.is_empty());
+    }
+
+    /// An unlisted id, numbered like a field.
+    const FIELD: i32 = 53;
+
+    fn entity_ref(uuid: i64) -> EntityRef {
+        EntityRef {
+            uuid: EntityUuid(uuid),
+            generation: 1,
+        }
+    }
+
+    fn identity(monster_id: i32, owner: Option<EntityUuid>) -> EntityIdentity {
+        EntityIdentity {
+            monster_id: Some(monster_id),
+            owner_uuid: owner,
+            ..EntityIdentity::default()
+        }
+    }
+
+    /// A watch on the cart entry with discovery switched on.
+    fn discovering() -> EntityDurationWatch {
+        let mut watch = watch(
+            vec![spec(EntityOwnerScope::LocalPlayer, Some(35_000), true)],
+            Vec::new(),
+        );
+        watch.monitor_all_own = true;
+        watch
+    }
+
+    /// Syncs a present entity with `LOCAL` as the local player.
+    fn sync_at(
+        watch: &mut EntityDurationWatch,
+        uuid: i64,
+        monster_id: i32,
+        owner: Option<EntityUuid>,
+        detected_ms: u64,
+    ) -> Option<WatchView> {
+        watch.sync(
+            entity_ref(uuid),
+            &identity(monster_id, owner),
+            true,
+            Some(LOCAL),
+            detected_ms as i64,
+            MonoTimeMs(detected_ms),
+        )
+    }
+
+    fn config(
+        specs: Vec<WatchedEntitySpec>,
+        monitor_all_own_entities: bool,
+    ) -> MonsterRuntimeSnapshot {
+        MonsterRuntimeSnapshot {
+            watched_entities: specs,
+            monitor_all_own_entities,
+            ..MonsterRuntimeSnapshot::default()
+        }
+    }
+
+    /// `(monster id, count, detected at)` of each discovered entry.
+    fn discovered(watch: &EntityDurationWatch) -> Vec<(i32, u32, i64)> {
+        watch
+            .discovered_states(&EntityContext::new())
+            .iter()
+            .map(|state| (state.monster_id, state.count, state.detected_at_ms))
+            .collect()
+    }
+
+    #[test]
+    fn discovery_admits_own_unlisted_entities_without_forming_tracks() {
+        let mut watch = discovering();
+        assert_eq!(
+            sync_at(&mut watch, 600, FIELD, Some(LOCAL), 1_000),
+            Some(WatchView::Discovered)
+        );
+        assert!(watch.tracks_with(|owner| owner == LOCAL).is_empty());
+        assert_eq!(discovered(&watch), vec![(FIELD, 1, 1_000)]);
+    }
+
+    #[test]
+    fn discovery_skips_entities_of_other_or_unknown_casters() {
+        let mut watch = discovering();
+        assert_eq!(sync_at(&mut watch, 600, FIELD, Some(TEAMMATE), 1_000), None);
+        assert_eq!(sync_at(&mut watch, 601, FIELD, None, 1_000), None);
+        // Without a known local player nothing is the local player's.
+        let no_local = watch.sync(
+            entity_ref(602),
+            &identity(FIELD, Some(LOCAL)),
+            true,
+            None,
+            1_000,
+            MonoTimeMs(1_000),
+        );
+        assert_eq!(no_local, None);
+        assert!(discovered(&watch).is_empty());
+    }
+
+    #[test]
+    fn without_discovery_only_watched_ids_are_admitted() {
+        let mut watch = discovering();
+        watch.monitor_all_own = false;
+        assert_eq!(sync_at(&mut watch, 600, FIELD, Some(LOCAL), 1_000), None);
+        assert_eq!(
+            sync_at(&mut watch, 500, CART, Some(LOCAL), 1_000),
+            Some(WatchView::Watched)
+        );
+        assert!(discovered(&watch).is_empty());
+    }
+
+    #[test]
+    fn sync_and_remove_report_the_view_they_changed() {
+        let mut watch = discovering();
+        assert_eq!(
+            sync_at(&mut watch, 500, CART, Some(LOCAL), 1_000),
+            Some(WatchView::Watched)
+        );
+        assert_eq!(
+            sync_at(&mut watch, 600, FIELD, Some(LOCAL), 1_000),
+            Some(WatchView::Discovered)
+        );
+        assert_eq!(sync_at(&mut watch, 600, FIELD, Some(LOCAL), 2_000), None);
+        // The cart turning into an unlisted id leaves the tracks.
+        assert_eq!(
+            sync_at(&mut watch, 500, FIELD, Some(LOCAL), 2_000),
+            Some(WatchView::Watched)
+        );
+        assert_eq!(discovered(&watch), vec![(FIELD, 2, 1_000)]);
+        assert_eq!(watch.remove(EntityUuid(600)), Some(WatchView::Discovered));
+        assert_eq!(watch.remove(EntityUuid(600)), None);
+        let left_view = watch.sync(
+            entity_ref(500),
+            &identity(FIELD, Some(LOCAL)),
+            false,
+            Some(LOCAL),
+            3_000,
+            MonoTimeMs(3_000),
+        );
+        assert_eq!(left_view, Some(WatchView::Discovered));
+    }
+
+    #[test]
+    fn an_id_moving_onto_or_off_the_list_keeps_its_detection_time() {
+        let entities = EntityContext::new();
+        let mut watch = discovering();
+        let _ = sync_at(&mut watch, 600, FIELD, Some(LOCAL), 1_000);
+
+        let field_spec = WatchedEntitySpec {
+            monster_id: FIELD,
+            ..spec(EntityOwnerScope::LocalPlayer, Some(15_000), false)
+        };
+        watch.apply_config(
+            &config(vec![field_spec], true),
+            &entities,
+            Some(LOCAL),
+            MonoTimeMs(5_000),
+        );
+        assert!(discovered(&watch).is_empty());
+        let tracks = watch.tracks_with(|owner| owner == LOCAL);
+        assert_eq!(tracks.len(), 1);
+        assert_eq!(tracks[0].members[0].detected_at_ms, 1_000);
+
+        watch.apply_config(
+            &config(Vec::new(), true),
+            &entities,
+            Some(LOCAL),
+            MonoTimeMs(6_000),
+        );
+        assert!(watch.tracks_with(|owner| owner == LOCAL).is_empty());
+        assert_eq!(discovered(&watch), vec![(FIELD, 1, 1_000)]);
+    }
+
+    #[test]
+    fn switching_discovery_off_drops_only_discovered_records() {
+        let entities = EntityContext::new();
+        let mut watch = discovering();
+        let _ = sync_at(&mut watch, 500, CART, Some(LOCAL), 1_000);
+        let _ = sync_at(&mut watch, 600, FIELD, Some(LOCAL), 1_000);
+        watch.apply_config(
+            &config(
+                vec![spec(EntityOwnerScope::LocalPlayer, Some(35_000), true)],
+                false,
+            ),
+            &entities,
+            Some(LOCAL),
+            MonoTimeMs(2_000),
+        );
+        assert!(discovered(&watch).is_empty());
+        assert_eq!(watch.tracks_with(|owner| owner == LOCAL).len(), 1);
+    }
+
+    #[test]
+    fn another_local_player_drops_the_previous_ones_discoveries() {
+        let mut watch = discovering();
+        let _ = sync_at(&mut watch, 600, FIELD, Some(LOCAL), 1_000);
+        watch.reseed(
+            &EntityContext::new(),
+            Some(TEAMMATE),
+            2_000,
+            MonoTimeMs(2_000),
+        );
+        assert!(discovered(&watch).is_empty());
+    }
+
+    #[test]
+    fn discovery_stops_admitting_at_the_cap_but_watched_ids_still_enter() {
+        let mut watch = discovering();
+        let cap = i64::try_from(MAX_DISCOVERED_ENTITIES).expect("cap fits in i64");
+        for offset in 0..cap {
+            assert_eq!(
+                sync_at(&mut watch, 1_000 + offset, FIELD, Some(LOCAL), 1_000),
+                Some(WatchView::Discovered)
+            );
+        }
+        assert_eq!(sync_at(&mut watch, 5_000, FIELD, Some(LOCAL), 1_000), None);
+        // Entities already admitted keep updating at the cap.
+        assert_eq!(
+            sync_at(&mut watch, 1_000, FIELD + 1, Some(LOCAL), 2_000),
+            Some(WatchView::Discovered)
+        );
+        assert_eq!(
+            sync_at(&mut watch, 500, CART, Some(LOCAL), 1_000),
+            Some(WatchView::Watched)
+        );
+    }
+
+    #[test]
+    fn discovered_states_fold_each_id_with_count_and_earliest_detection() {
+        let mut watch = discovering();
+        let _ = sync_at(&mut watch, 601, FIELD, Some(LOCAL), 2_000);
+        let _ = sync_at(&mut watch, 700, 77, Some(LOCAL), 1_500);
+        let _ = sync_at(&mut watch, 600, FIELD, Some(LOCAL), 1_000);
+        assert_eq!(discovered(&watch), vec![(FIELD, 2, 1_000), (77, 1, 1_500)]);
     }
 }

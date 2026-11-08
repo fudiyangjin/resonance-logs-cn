@@ -6,8 +6,14 @@
  * each row shows: the first member deadline still in the future. It also
  * reports the nearest deadline so the HUD schedules its next re-projection,
  * which is also when a merged row hands over to its next member.
+ *
+ * In discovery mode (`monitorAll`) the local player's entities that are not
+ * on the list follow the list rows, one row per monster id in order of first
+ * detection: `name#id` (`#id` without a name), ` ×N` when several are
+ * present, and the whole seconds since the earliest appeared, counting up.
+ * Such a row re-projects at its next whole second.
  */
-import type { EntityDurationTrackState } from "$lib/api";
+import type { DiscoveredEntityState, EntityDurationTrackState } from "$lib/api";
 import type { EntityDurationEntry } from "$lib/settings-store";
 import type { TextBuffDisplay } from "../game-overlay/overlay-types";
 import {
@@ -26,6 +32,13 @@ export type EntityDurationRowsInput = {
   formatRemaining: (remainingMs: number) => string;
   /** Text for rows without a configured duration (e.g. `∞`). */
   infiniteText: string;
+  /** Discovery mode: also list `discovered`. */
+  monitorAll?: boolean;
+  discovered?: readonly DiscoveredEntityState[];
+  /** Display name of a discovered entity, `null` when it has none. */
+  resolveDiscoveredName?: (state: DiscoveredEntityState) => string | null;
+  /** Text of the whole seconds a discovered entity has been present. */
+  formatElapsed?: (seconds: number) => string;
 };
 
 export type EntityDurationRowsOutput = {
@@ -87,6 +100,31 @@ export function buildEntityDurationRows(
       showProgress: true,
       temporal,
     });
+  }
+
+  if (input.monitorAll) {
+    for (const state of input.discovered ?? []) {
+      // A listed id is a payload published before the entry was added.
+      if (entriesByMonsterId.has(state.monsterId)) continue;
+      const elapsedSeconds = Math.max(
+        0,
+        Math.floor((input.now - state.detectedAtMs) / 1000),
+      );
+      const nextSecondMs = state.detectedAtMs + (elapsedSeconds + 1) * 1000;
+      if (nextDeadlineMs === null || nextSecondMs < nextDeadlineMs) {
+        nextDeadlineMs = nextSecondMs;
+      }
+      const name = input.resolveDiscoveredName?.(state) ?? null;
+      const label = name ? `${name}#${state.monsterId}` : `#${state.monsterId}`;
+      rows.push({
+        key: `entity_discovery_${state.monsterId}`,
+        label: state.count > 1 ? `${label} ×${state.count}` : label,
+        valueText:
+          input.formatElapsed?.(elapsedSeconds) ?? `+${elapsedSeconds}s`,
+        progressPercent: 0,
+        showProgress: false,
+      });
+    }
   }
 
   return { rows, nextDeadlineMs };

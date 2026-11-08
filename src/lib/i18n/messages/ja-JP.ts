@@ -2206,6 +2206,10 @@ export const jaJPMessages = {
   "monsterMonitor.entityDuration.title": "エンティティ持続時間",
   "monsterMonitor.entityDuration.description":
     "指定した ID のエンティティ（鎌車など）を監視します。出現でカウントダウン開始、消失で終了。プリセットまたは任意の ID を入力できます。",
+  "monsterMonitor.entityDuration.monitorAll":
+    "自分が出したすべてのエンティティを表示",
+  "monsterMonitor.entityDuration.monitorAllDesc":
+    "デバッグ用：エンティティ持続エリアに、自分が出したリスト外のエンティティも 名前#ID ×数 で表示し、右側に出現からの秒数を表示します。その ID と秒数で登録できます。リスト内のエンティティは上に表示されます。モンスターモニターの有効化とエンティティ持続エリアの表示が必要です。",
   "monsterMonitor.entityDuration.presetsTitle": "プリセット",
   "monsterMonitor.entityDuration.presetAdded": "追加済み",
   "monsterMonitor.entityDuration.manualTitle": "手動追加",
@@ -2303,6 +2307,7 @@ export const jaJPMessages = {
   "monsterOverlay.placeholder.fantasy": "幻想プレビュー",
   "monsterOverlay.placeholder.buffName": "サンプル Buff",
   "monsterOverlay.entity.uid": "UID {uid}",
+  "monsterOverlay.entityDuration.elapsed": "+{value}s",
   "monsterOverlay.teammate.nameHeader": "味方",
   "monsterOverlay.ghost.skillCd": "スキル CD エリア",
   "monsterOverlay.ghost.resource": "リソースエリア",

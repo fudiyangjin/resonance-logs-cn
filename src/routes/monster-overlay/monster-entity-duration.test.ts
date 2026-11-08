@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { EntityDurationTrackState } from "$lib/api";
+import type { DiscoveredEntityState, EntityDurationTrackState } from "$lib/api";
 import type { EntityDurationEntry } from "$lib/settings-store";
 import {
   buildEntityDurationRows,
@@ -28,6 +28,18 @@ function track(
     ownerName: "Me",
     durationMs: 10_000,
     deadlinesMs: [11_000],
+    ...overrides,
+  };
+}
+
+function discovered(
+  overrides: Partial<DiscoveredEntityState> & { monsterId: number },
+): DiscoveredEntityState {
+  return {
+    name: null,
+    isMonster: false,
+    count: 1,
+    detectedAtMs: 1_000,
     ...overrides,
   };
 }
@@ -192,5 +204,99 @@ describe("buildEntityDurationRows", () => {
       tracks: [track({ key: "1:self:e10", monsterId: 1 })],
     });
     expect(result.rows[0]?.label).toBe("first");
+  });
+});
+
+describe("buildEntityDurationRows discovery", () => {
+  const discovery = {
+    monitorAll: true,
+    resolveDiscoveredName: (state: DiscoveredEntityState) => state.name,
+    formatElapsed: (seconds: number) => `+${seconds}s`,
+  };
+
+  it("lists discovered entities after the list rows with elapsed seconds", () => {
+    const result = build({
+      ...discovery,
+      now: 13_500,
+      entries: [entry({ monsterId: 179901 })],
+      tracks: [
+        track({ key: "179901:self:e500", durationMs: null, deadlinesMs: [] }),
+      ],
+      discovered: [
+        discovered({ monsterId: 53, detectedAtMs: 6_000 }),
+        discovered({
+          monsterId: 179903,
+          name: "镰车",
+          count: 2,
+          detectedAtMs: 1_200,
+        }),
+      ],
+    });
+    expect(
+      result.rows.map((row) => [row.key, row.label, row.valueText]),
+    ).toEqual([
+      ["entity_duration_179901:self:e500", "L179901", "∞"],
+      ["entity_discovery_53", "#53", "+7s"],
+      ["entity_discovery_179903", "镰车#179903 ×2", "+12s"],
+    ]);
+    expect(result.rows[1]).toMatchObject({
+      showProgress: false,
+      progressPercent: 0,
+    });
+    expect(result.rows[1]?.temporal).toBeUndefined();
+  });
+
+  it("re-projects at the next whole second of the earliest boundary", () => {
+    const result = build({
+      ...discovery,
+      now: 13_500,
+      discovered: [
+        discovered({ monsterId: 53, detectedAtMs: 6_000 }),
+        discovered({ monsterId: 54, detectedAtMs: 1_200 }),
+      ],
+    });
+    // 53 ticks over at 14_000, 54 at 14_200.
+    expect(result.nextDeadlineMs).toBe(14_000);
+  });
+
+  it("keeps a sooner countdown deadline", () => {
+    const result = build({
+      ...discovery,
+      now: 2_000,
+      entries: [entry({ monsterId: 179901 })],
+      tracks: [track({ key: "179901:self:e500", deadlinesMs: [2_100] })],
+      discovered: [discovered({ monsterId: 53, detectedAtMs: 1_000 })],
+    });
+    expect(result.nextDeadlineMs).toBe(2_100);
+  });
+
+  it("drops discovered ids that are already listed", () => {
+    const result = build({
+      ...discovery,
+      entries: [entry({ monsterId: 53 })],
+      discovered: [discovered({ monsterId: 53 })],
+    });
+    expect(result.rows).toEqual([]);
+    expect(result.nextDeadlineMs).toBeNull();
+  });
+
+  it("shows nothing discovered while discovery is off", () => {
+    const result = build({
+      ...discovery,
+      monitorAll: false,
+      discovered: [discovered({ monsterId: 53 })],
+    });
+    expect(result.rows).toEqual([]);
+    expect(result.nextDeadlineMs).toBeNull();
+  });
+
+  it("never counts below zero for a detection ahead of the clock", () => {
+    const result = build({
+      ...discovery,
+      now: 2_000,
+      discovered: [discovered({ monsterId: 53, detectedAtMs: 2_400 })],
+    });
+    expect(result.rows[0]?.valueText).toBe("+0s");
+    expect(result.nextDeadlineMs).toBe(3_400);
   });
 });

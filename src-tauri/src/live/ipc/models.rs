@@ -407,6 +407,10 @@ pub struct LiveMonsterPayload {
     pub monster_ids: HashMap<String, i32>,
     #[serde(default)]
     pub entity_duration_tracks: Vec<EntityDurationTrackState>,
+    /// Discovery mode's unlisted entities of the local player, in order of
+    /// first detection. Empty unless discovery is on.
+    #[serde(default)]
+    pub discovered_entities: Vec<DiscoveredEntityState>,
     /// Latest cast of each watched monster skill, ascending by skill id.
     #[serde(default)]
     pub monster_skill_casts: Vec<MonsterSkillCastState>,
@@ -774,6 +778,26 @@ pub struct EntityDurationTrackState {
     pub owner_name: Option<String>,
     pub duration_ms: Option<u64>,
     pub deadlines_ms: Vec<i64>,
+}
+
+/// One monster id of the local player's entities in view that is not on the
+/// entity-duration watch list, for the panel's discovery mode. Every present
+/// entity with the id folds into this one row.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DiscoveredEntityState {
+    pub monster_id: i32,
+    /// The entity's own name, when the server sent one.
+    pub name: Option<String>,
+    /// Whether the entity is a monster. Only monster ids are monster
+    /// template ids that the monster name table can resolve; fields, traps
+    /// and other kinds number their ids separately, so the same id can name
+    /// an unrelated monster there.
+    pub is_monster: bool,
+    /// How many entities with the id are present.
+    pub count: u32,
+    /// Wall time the earliest of them was detected.
+    pub detected_at_ms: i64,
 }
 
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]

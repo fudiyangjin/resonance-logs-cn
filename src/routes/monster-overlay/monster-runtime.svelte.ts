@@ -2,6 +2,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import type {
   BossDbmEvent,
   BuffUpdateState,
+  DiscoveredEntityState,
   EntityDurationTrackState,
   HateEntry,
   HpEntry,
@@ -129,6 +130,11 @@ const _entityDurationTrackCache = $derived.by(
     liveMonsterStore.data?.entityDurationTracks ?? [],
 );
 
+const _discoveredEntityCache = $derived.by(
+  (): DiscoveredEntityState[] =>
+    liveMonsterStore.data?.discoveredEntities ?? [],
+);
+
 const _monsterSkillCastMap = $derived.by(
   () =>
     new Map<number, number>(
@@ -238,6 +244,11 @@ export function monsterDbmRows() {
 
 export function monsterEntityDurationTracks(): EntityDurationTrackState[] {
   return _entityDurationTrackCache;
+}
+
+/** The local player's unlisted entities (entity-duration discovery mode). */
+export function monsterDiscoveredEntities(): DiscoveredEntityState[] {
+  return _discoveredEntityCache;
 }
 
 export function monsterEntityDurationRows() {
