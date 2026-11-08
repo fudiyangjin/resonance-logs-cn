@@ -7,7 +7,7 @@ import {
   type Loadout,
   type SkillMonitorProfile,
 } from "$lib/settings-store";
-import { exportLoadout } from "$lib/loadouts.svelte.js";
+import { exportLoadout, importLoadout } from "$lib/loadouts.svelte.js";
 import { applyActiveLiveProfileToMirror } from "$lib/live-meter-profile.svelte.js";
 import { parseLoadoutExport } from "$lib/loadout-import";
 import { normalizeSkillProfile } from "$lib/skill-monitor-normalize";
@@ -151,6 +151,52 @@ describe("exportLoadout normalization", () => {
     const roundTripped = JSON.parse(JSON.stringify(data));
     const parsed = parseLoadoutExport(roundTripped);
     expect(parsed.success).toBe(true);
+  });
+});
+
+describe("entity voice bindings through export and import", () => {
+  const on = { enabled: true, phrase: { source: "auto" as const } };
+
+  /** Exports a loadout whose (mirrored) monster profile voices entity 179903. */
+  function exportWithEntityVoice(): Record<string, unknown> {
+    const { loadoutId } = resetWithLegacyLoadout();
+    const mirror = SETTINGS.monitoring.state.monsterMonitor;
+    mirror.entityDurationEntries = [
+      { id: "e", monsterId: 179903, label: "", scope: "self" },
+    ];
+    mirror.entityVoiceConfigs = { "179903": { appeared: on } };
+    return JSON.parse(JSON.stringify(exportLoadout(loadoutId)));
+  }
+
+  function importedEntityVoiceConfigs(data: unknown) {
+    const parsed = parseLoadoutExport(data);
+    if (!parsed.success) throw new Error(parsed.issues.join("\n"));
+    const id = importLoadout(parsed.output);
+    const state = SETTINGS.monitoring.state;
+    const loadout = state.loadouts.items.find((item) => item.id === id)!;
+    return state.monsterMonitor.profiles.find(
+      (profile) => profile.id === loadout.monsterProfileId,
+    )!.entityVoiceConfigs;
+  }
+
+  it("re-imports the binding the app exported under its monster-id key", () => {
+    const data = exportWithEntityVoice();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    expect(monster["entityVoiceConfigs"]).toEqual({
+      "179903": { appeared: on },
+    });
+    expect(importedEntityVoiceConfigs(data)).toEqual({
+      "179903": { appeared: on },
+    });
+  });
+
+  it("re-keys a pre-rekey binding onto the monster id on import", () => {
+    const data = exportWithEntityVoice();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    monster["entityVoiceConfigs"] = { "179903:self": { appeared: on } };
+    expect(importedEntityVoiceConfigs(data)).toEqual({
+      "179903": { appeared: on },
+    });
   });
 });
 

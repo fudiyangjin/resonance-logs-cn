@@ -17,6 +17,7 @@ import {
   MAX_BUFF_COVERAGE_ENTRIES,
   omitProfileId,
   normalizeHistorySettings,
+  parseEntityVoiceConfigKey,
   TEAMMATE_CD_DISPLAY_MODES,
   TEAMMATE_CD_SLOT_KINDS,
   TEAMMATE_CD_SLOT_SIDES,
@@ -303,8 +304,20 @@ const skillVoiceConfigMapSchema = v.record(
   numericKeySchema,
   skillVoiceConfigSchema,
 );
+/**
+ * Entity voice key: canonical `"{monsterId}"` or pre-rekey
+ * `"{monsterId}:{scope}"`. Importing re-keys the latter
+ * (`createMonsterProfile` → `pruneMonsterVoice`).
+ */
+const entityVoiceKeySchema = v.pipe(
+  v.string(),
+  v.check(
+    (key) => parseEntityVoiceConfigKey(key) !== null,
+    "entity voice key must be a monster id, optionally suffixed :self or :any",
+  ),
+);
 const entityVoiceConfigMapSchema = v.record(
-  v.pipe(v.string(), v.regex(/^\d+:(?:self|any)$/)),
+  entityVoiceKeySchema,
   entityVoiceConfigSchema,
 );
 const counterVoiceConfigMapSchema = v.record(

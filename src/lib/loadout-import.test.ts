@@ -333,6 +333,59 @@ describe("parseLoadoutExport", () => {
     expect(roundTrip).toEqual(parsed);
   });
 
+  describe("entity voice binding keys", () => {
+    const on = { enabled: true, phrase: { source: "auto" } };
+
+    function withEntityVoice(
+      entityVoiceConfigs: Record<string, unknown>,
+    ): Record<string, unknown> {
+      const data = validExport();
+      const monster = data["monsterProfile"] as Record<string, unknown>;
+      monster["entityDurationEntries"] = [
+        { id: "e", monsterId: 179903, label: "", scope: "self" },
+      ];
+      monster["entityVoiceConfigs"] = entityVoiceConfigs;
+      return data;
+    }
+
+    it("accepts the canonical monster-id key the app exports", () => {
+      const parsed = parseLoadoutExport(
+        withEntityVoice({ "179903": { appeared: on } }),
+      );
+      expect(parsed.success).toBe(true);
+      if (!parsed.success) return;
+      expect(parsed.output.monsterProfile.entityVoiceConfigs).toEqual({
+        "179903": { appeared: on },
+      });
+    });
+
+    it.each(["179903:self", "179903:any"])(
+      "accepts the pre-rekey key %s",
+      (key) => {
+        expect(
+          parseLoadoutExport(withEntityVoice({ [key]: { appeared: on } }))
+            .success,
+        ).toBe(true);
+      },
+    );
+
+    it.each(["abc", "179903:foo", "0", ":self"])(
+      "rejects the malformed key %s with its field path",
+      (key) => {
+        const parsed = parseLoadoutExport(
+          withEntityVoice({ [key]: { appeared: on } }),
+        );
+        expect(parsed.success).toBe(false);
+        if (parsed.success) return;
+        expect(
+          parsed.issues.some((issue) =>
+            issue.startsWith("monsterProfile.entityVoiceConfigs"),
+          ),
+        ).toBe(true);
+      },
+    );
+  });
+
   it("keeps omitted voice priorities compatible and resolves them as lowest", () => {
     const data = validExport();
     const skill = data["skillProfile"] as Record<string, unknown>;
