@@ -6,7 +6,7 @@
   // their row has nothing else in it.
   import TriangleAlertIcon from "@lucide/svelte/icons/triangle-alert";
   import { tooltip } from "$lib/utils.svelte";
-  import { laneColor, playerColor } from "./timeline-colors";
+  import { laneColor } from "./timeline-colors";
   import { BUFF_BAR_CENTER_Y } from "./timeline-layout";
   import { TIMELINE_PALETTE } from "./timeline-palette";
   import type { TimelineBuffLane, TimelineRow } from "./timeline-types";
@@ -49,22 +49,23 @@
         {:else if lane.type === "mine"}
           <span
             class="size-1.5 shrink-0 rounded-full"
-            style="background: {TIMELINE_PALETTE.mine}; box-shadow: 0 0 6px {TIMELINE_PALETTE.mine}"
+            style="background: {lane.player.color}; box-shadow: 0 0 6px {lane
+              .player.color}"
           ></span>
           <span
             class="truncate text-[11px] font-medium"
-            style="color: #dbeafe"
+            style="color: {lane.player.color}"
           >
             {lane.player.name}
           </span>
         {:else}
           <span
             class="size-1.5 shrink-0 rounded-full"
-            style="background: {playerColor(lane.player)}"
+            style="background: {lane.player.color}"
           ></span>
           <span
             class="truncate text-[11px]"
-            style="color: {playerColor(lane.player)}"
+            style="color: {lane.player.color}"
           >
             {lane.player.name}
           </span>
@@ -77,7 +78,7 @@
                max-width: {gutter + plotWidthPx - LABEL_INSET_PX}px"
       >
         {#if row.player}
-          {@const color = playerColor(row.player)}
+          {@const color = row.player.color}
           <span
             class="size-1.5 shrink-0 rounded-full"
             style="background: {color}"
@@ -95,9 +96,7 @@
       {@const pct = buffCoveragePct(row.lane)}
       <div
         class="absolute right-2 -translate-y-1/2 text-[11px] font-medium tabular-nums"
-        style="top: {row.top + BUFF_BAR_CENTER_Y}px; color: {playerColor(
-          row.player,
-        )}"
+        style="top: {row.top + BUFF_BAR_CENTER_Y}px; color: {row.player.color}"
       >
         {pct === null ? "--" : `${pct.toFixed(1)}%`}
       </div>

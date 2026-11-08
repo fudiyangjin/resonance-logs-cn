@@ -23,9 +23,17 @@
     rangeView?: HistoryBuffTimelineView | null;
     players: PlayerInfo[];
     resolveBuffName: (baseId: number) => string;
+    /** Whether the summary is expanded; bindable so the page can remember it. */
+    open?: boolean;
   };
 
-  let { view, rangeView = null, players, resolveBuffName }: Props = $props();
+  let {
+    view,
+    rangeView = null,
+    players,
+    resolveBuffName,
+    open = $bindable(false),
+  }: Props = $props();
 
   const activeView = $derived(rangeView ?? view);
 
@@ -48,7 +56,7 @@
   }
 </script>
 
-<details class="border-border/60 overflow-x-auto rounded-lg border">
+<details class="border-border/60 overflow-x-auto rounded-lg border" bind:open>
   <summary
     class="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2"
   >

@@ -28,8 +28,12 @@
   import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
   import ZoomInIcon from "@lucide/svelte/icons/zoom-in";
   import { t } from "$lib/i18n/index.svelte";
+  import {
+    parseHistoryViewPrefs,
+    type HistoryViewPrefs,
+  } from "$lib/history-view-prefs";
   import { SETTINGS } from "$lib/settings-store";
-  import { playerColor } from "./timeline-colors";
+  import { withTimelineColors } from "./timeline-colors";
   import {
     clampInstantDpsWindowSec,
     complementSpans,
@@ -39,9 +43,8 @@
     zoomTierFor,
     type EncounterChart,
     type EncounterTimelineEvent,
-    type TeammateCurveMode,
   } from "./timeline-data";
-  import { formatTimeMs } from "./timeline-format";
+  import { formatTimeMs, hexToRgba } from "./timeline-format";
   import {
     DEFAULT_CURVE_H,
     DEFAULT_LANE_H,
@@ -52,7 +55,11 @@
   } from "./timeline-layout";
   import { timelineGestures } from "./timeline-gestures";
   import { TIMELINE_PALETTE, timelinePaletteCssVars } from "./timeline-palette";
-  import { BuffViewState, PlayerSelection } from "./timeline-selection.svelte";
+  import {
+    BuffViewState,
+    CurveSelection,
+    PlayerSelection,
+  } from "./timeline-selection.svelte";
   import { buildBuffTracks } from "./timeline-tracks";
   import TimelineBuffTracks from "./timeline-buff-tracks.svelte";
   import TimelineCurve from "./timeline-curve.svelte";
@@ -133,7 +140,34 @@
   const chartDurationMs = $derived(damageHits.durationMs);
   const perEntityHits = $derived(damageHits.perEntityHits);
 
-  const localPlayer = $derived(players.find((p) => p.isLocalPlayer) ?? null);
+  // ---- Remembered choices ---------------------------------------------------
+  // Every selector below reads and writes `SETTINGS.historyView`, so picks
+  // survive returning to the list and restarting the app. Parsed once per
+  // change so a hand-edited or older file degrades to defaults.
+  const viewPrefs = $derived(parseHistoryViewPrefs(SETTINGS.historyView.state));
+
+  function writeViewPrefs<K extends keyof HistoryViewPrefs>(
+    key: K,
+    value: HistoryViewPrefs[K],
+  ) {
+    SETTINGS.historyView.state[key] = value;
+  }
+
+  // ---- Players / colors -----------------------------------------------------
+  // Colors are assigned once for the whole party from the user's class/spec
+  // colors (same-color players get distinguishable variants), so they never
+  // change with what is selected. Everything below reads `coloredPlayers`.
+  const coloredPlayers = $derived(withTimelineColors(players));
+
+  const localPlayer = $derived(
+    coloredPlayers.find((p) => p.isLocalPlayer) ?? null,
+  );
+
+  /** Both of the local player's readings use their color, told apart by
+   * shape; the fallback only matters for encounters without a local id. */
+  const selfColor = $derived(
+    localPlayer?.color ?? TIMELINE_PALETTE.fallbackPlayer,
+  );
 
   const mineHits = $derived.by(() =>
     localPlayer ? (perEntityHits.get(localPlayer.entityUuid) ?? null) : null,
@@ -187,7 +221,7 @@
 
   /** Non-local players that have casts or damage worth a lane/curve. */
   let teammates = $derived.by(() => {
-    return players.filter((p) => {
+    return coloredPlayers.filter((p) => {
       if (localPlayer && p.entityUuid === localPlayer.entityUuid) return false;
       return (
         (playerEventsByCaster.get(p.entityUuid)?.length ?? 0) > 0 ||
@@ -211,7 +245,14 @@
   );
 
   // Follows the default (support players) until the user touches the picker.
-  const laneSelection = new PlayerSelection(() => defaultTeammateUuids);
+  const laneSelection = new PlayerSelection({
+    candidates: () => teammates,
+    defaults: () => defaultTeammateUuids,
+    pick: {
+      get: () => viewPrefs.lanes,
+      set: (lanes) => writeViewPrefs("lanes", lanes),
+    },
+  });
 
   let selectedTeammates = $derived(
     teammates.filter((p) => laneSelection.has(p.entityUuid)),
@@ -229,40 +270,15 @@
   // Independent of lane selection: default is none, so opening a support
   // lane never also overlays that player's DPS. Each selected teammate owns
   // exactly one mode: average or instant.
-  const manualCurveTeammateModes = new SvelteMap<string, TeammateCurveMode>();
-
-  let selectedCurveTeammateModes = $derived.by(() => {
-    const availableUuids = new Set(
-      curveTeammates.map((player) => player.entityUuid),
-    );
-    return new Map(
-      [...manualCurveTeammateModes].filter(([uuid]) =>
-        availableUuids.has(uuid),
-      ),
-    );
+  const curveSelection = new CurveSelection({
+    candidates: () => curveTeammates,
+    pick: {
+      get: () => viewPrefs.curves,
+      set: (curves) => writeViewPrefs("curves", curves),
+    },
   });
 
-  function toggleCurveTeammate(entityUuid: string) {
-    const current = manualCurveTeammateModes.get(entityUuid);
-    if (current === "average") {
-      manualCurveTeammateModes.set(entityUuid, "instant");
-    } else if (current === "instant") {
-      manualCurveTeammateModes.delete(entityUuid);
-    } else {
-      manualCurveTeammateModes.set(entityUuid, "average");
-    }
-  }
-
-  function selectAllCurveTeammates() {
-    manualCurveTeammateModes.clear();
-    for (const player of curveTeammates) {
-      manualCurveTeammateModes.set(player.entityUuid, "average");
-    }
-  }
-
-  function clearCurveTeammates() {
-    manualCurveTeammateModes.clear();
-  }
+  const selectedCurveTeammateModes = $derived(curveSelection.modes);
 
   function toPoints(list: EncounterTimelineEvent[]): LanePoint[] {
     return list.map((ev) => ({ timeMs: clampEventOffsetMs(ev), event: ev }));
@@ -311,7 +327,7 @@
   /** Players owning at least one buff lane, in `players` order. */
   const buffOwners = $derived.by(() => {
     const ownerUuids = new Set(buffLanes.map((lane) => lane.entityUuid));
-    return players.filter((player) => ownerUuids.has(player.entityUuid));
+    return coloredPlayers.filter((player) => ownerUuids.has(player.entityUuid));
   });
 
   /** Default buff owners: the local player, when they carry watched buffs. */
@@ -321,7 +337,14 @@
 
   // Collapsed by default with the local player preselected; independent of
   // the lane picker.
-  const buffView = new BuffViewState(() => defaultBuffOwnerUuids);
+  const buffView = new BuffViewState({
+    buff: {
+      get: () => viewPrefs.buff,
+      set: (buff) => writeViewPrefs("buff", buff),
+    },
+    owners: () => buffOwners,
+    defaultOwners: () => defaultBuffOwnerUuids,
+  });
 
   const buffTracks = $derived(
     buffView.expanded
@@ -458,7 +481,7 @@
     viewport.setDuration(chartDurationMs);
   });
 
-  let showAverageCurve = $state(true);
+  const showAverageCurve = $derived(viewPrefs.showAverageCurve);
   let hoverPoint = $state<TimelineHoverPoint | null>(null);
   let brushPreviewMs = $state<[number, number] | null>(null);
   let plotWidthPx = $state(0);
@@ -517,7 +540,7 @@
         {
           entityUuid: row.entityUuid,
           name: player.name,
-          color: playerColor(player),
+          color: player.color,
           mode: row.mode,
           hits: row.hits,
           curve: sampleDpsCurve(
@@ -580,18 +603,20 @@
      from the app theme; only the outer border follows the theme. -->
 <div
   class="tl-panel border-border overflow-hidden rounded-md border"
-  style={timelinePaletteCssVars()}
+  style={timelinePaletteCssVars(selfColor)}
 >
   <TimelineHeader
+    {selfColor}
     {showAverageCurve}
-    onToggleAverage={() => (showAverageCurve = !showAverageCurve)}
+    onToggleAverage={() =>
+      writeViewPrefs("showAverageCurve", !showAverageCurve)}
     {teammates}
     {laneSelection}
     {curveTeammates}
     curveTeammateModes={selectedCurveTeammateModes}
-    onToggleCurveTeammate={toggleCurveTeammate}
-    onSelectAllCurveTeammates={selectAllCurveTeammates}
-    onClearCurveTeammates={clearCurveTeammates}
+    onToggleCurveTeammate={(uuid) => curveSelection.cycle(uuid)}
+    onSelectAllCurveTeammates={() => curveSelection.setAll()}
+    onClearCurveTeammates={() => curveSelection.clear()}
     {buffOwners}
     {buffView}
     buffRowsVisible={buffRows.length > 0}
@@ -610,8 +635,8 @@
           <div
             class="absolute right-0 left-0"
             style="top: {row.top}px; height: {row.height}px;
-                   background: rgba(96,165,250,0.06);
-                   border-left: 2px solid rgba(96,165,250,0.7)"
+                   background: {hexToRgba(selfColor, 0.06)};
+                   border-left: 2px solid {hexToRgba(selfColor, 0.7)}"
           ></div>
         {/if}
         <div
@@ -641,6 +666,7 @@
       <TimelineCurve
         {mineInstantCurve}
         {mineAverageCurve}
+        {selfColor}
         teammateCurves={selectedTeammateCurves}
         {showAverageCurve}
         startMs={viewport.startMs}
@@ -750,6 +776,7 @@
     <TimelineMinimap
       {viewport}
       curve={mineOverviewCurve}
+      color={selfColor}
       selectedRange={selectionEnabled ? selectedRange : null}
     />
   </div>
@@ -763,7 +790,7 @@
       <div class="flex min-w-0 items-center gap-1.5">
         <Clock3Icon
           class="size-3.5 shrink-0"
-          style="color: {TIMELINE_PALETTE.mine}"
+          style="color: {TIMELINE_PALETTE.accent}"
         />
         <span class="truncate text-[11px] tabular-nums" style="color: #bfdbfe">
           {t("history.timeline.selection.label", {
@@ -786,7 +813,7 @@
         <button
           type="button"
           class="flex cursor-pointer items-center gap-1 rounded border px-2 py-0.5 text-[10px] transition-colors duration-150 hover:bg-blue-400/15"
-          style="border-color: rgba(96,165,250,0.4); color: {TIMELINE_PALETTE.mine}"
+          style="border-color: rgba(96,165,250,0.4); color: {TIMELINE_PALETTE.accent}"
           onclick={zoomToSelection}
         >
           <ZoomInIcon class="size-3" />
@@ -795,7 +822,7 @@
         <button
           type="button"
           class="cursor-pointer rounded border px-2 py-0.5 text-[10px] transition-colors duration-150 hover:bg-blue-400/15"
-          style="border-color: rgba(96,165,250,0.4); color: {TIMELINE_PALETTE.mine}"
+          style="border-color: rgba(96,165,250,0.4); color: {TIMELINE_PALETTE.accent}"
           onclick={() => (selectedRange = null)}
         >
           {t("history.timeline.selection.clear")}

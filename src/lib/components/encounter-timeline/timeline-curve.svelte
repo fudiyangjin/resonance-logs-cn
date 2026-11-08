@@ -27,6 +27,9 @@
   type Props = {
     mineInstantCurve: EncounterCurvePoint[] | null;
     mineAverageCurve: EncounterCurvePoint[] | null;
+    /** The local player's chart color; their two readings share it and are
+     * told apart by shape (thin line vs. thick line with dots). */
+    selfColor: string;
     teammateCurves?: TimelineTeammateCurve[];
     showAverageCurve: boolean;
     startMs: number;
@@ -37,6 +40,7 @@
   let {
     mineInstantCurve,
     mineAverageCurve,
+    selfColor,
     teammateCurves = [],
     showAverageCurve,
     startMs,
@@ -96,10 +100,12 @@
       });
     }
 
-    // Two distinct hues, crisp unfilled lines: the instant reading is meant to
-    // be read as noise with spikes (no smoothing, no glow, no area fill - all
-    // of which used to blur exactly the burst peaks the curve exists to show),
-    // while the cumulative average is the calm reference line drawn over it.
+    // One color (the local player's), two shapes: the instant reading is a
+    // thin crisp line meant to be read as noise with spikes (no smoothing, no
+    // glow, no area fill - all of which used to blur exactly the burst peaks
+    // the curve exists to show), while the cumulative average is the calm,
+    // thicker reference line with dots drawn over it. A separate hue for the
+    // average used to collide with yellow class colors.
     if (showAverageCurve && mineAverageCurve) {
       series.push({
         type: "line",
@@ -111,13 +117,13 @@
         // sampled point would bury the line under its own markers.
         symbolSize: (_value: unknown, params: { dataIndex: number }) =>
           params.dataIndex % SYMBOL_STRIDE === 0 ? 4 : 0,
-        itemStyle: { color: TIMELINE_PALETTE.average },
+        itemStyle: { color: selfColor },
         smooth: false,
         step: "end",
         silent: true,
         lineStyle: {
           width: 2,
-          color: TIMELINE_PALETTE.average,
+          color: selfColor,
         },
         z: 3,
       });
@@ -132,7 +138,7 @@
         silent: true,
         lineStyle: {
           width: 1.2,
-          color: TIMELINE_PALETTE.mine,
+          color: selfColor,
         },
         z: 2,
       });

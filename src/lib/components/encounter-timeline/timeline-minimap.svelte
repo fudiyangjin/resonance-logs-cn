@@ -4,17 +4,18 @@
   // draggable/resizable rectangle, and the active selection (if any). This is
   // the primary way to orient yourself once zoomed in - panning/zooming the
   // main plot alone gives no sense of where you are in the fight.
-  import { TIMELINE_PALETTE } from "./timeline-palette";
   import type { TimelineViewport } from "./timeline-viewport.svelte";
   import type { EncounterCurvePoint } from "./timeline-data";
 
   type Props = {
     viewport: TimelineViewport;
     curve: EncounterCurvePoint[] | null;
+    /** The local player's chart color (the curve is theirs). */
+    color: string;
     selectedRange?: [number, number] | null;
   };
 
-  let { viewport, curve, selectedRange = null }: Props = $props();
+  let { viewport, curve, color, selectedRange = null }: Props = $props();
 
   let trackEl: HTMLDivElement | undefined = $state();
 
@@ -134,11 +135,11 @@
     viewBox="0 0 {VIEWBOX_W} {VIEWBOX_H}"
     preserveAspectRatio="none"
   >
-    <path d={areaPath} fill={TIMELINE_PALETTE.mine} fill-opacity="0.15" />
+    <path d={areaPath} fill={color} fill-opacity="0.15" />
     <path
       d={linePath}
       fill="none"
-      stroke={TIMELINE_PALETTE.mine}
+      stroke={color}
       stroke-width="1.5"
       vector-effect="non-scaling-stroke"
     />
@@ -190,7 +191,7 @@
     bottom: 0;
     min-width: 6px;
     background: rgba(148, 163, 184, 0.14);
-    border: 1px solid var(--tl-mine);
+    border: 1px solid var(--tl-accent);
     border-radius: 2px;
     cursor: grab;
   }

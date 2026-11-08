@@ -12,8 +12,6 @@
   import ZapIcon from "@lucide/svelte/icons/zap";
   import { t } from "$lib/i18n/index.svelte";
   import { formatTimeMs } from "./timeline-format";
-  import { playerColor } from "./timeline-colors";
-  import { TIMELINE_PALETTE } from "./timeline-palette";
   import TimelinePlayerPicker from "./timeline-player-picker.svelte";
   import type { TeammateCurveMode } from "./timeline-data";
   import type {
@@ -21,20 +19,23 @@
     PlayerSelection,
   } from "./timeline-selection.svelte";
   import type { TimelineViewport } from "./timeline-viewport.svelte";
-  import type { BuffGrouping, TimelinePlayerMeta } from "./timeline-types";
+  import type { BuffGrouping, TimelinePlayer } from "./timeline-types";
 
   type Props = {
+    /** The local player's chart color; both of their readings use it and
+     * differ by glyph (⚡ instant, ● average), like teammate curves. */
+    selfColor: string;
     showAverageCurve: boolean;
     onToggleAverage: () => void;
-    teammates: TimelinePlayerMeta[];
+    teammates: TimelinePlayer[];
     laneSelection: PlayerSelection;
-    curveTeammates: TimelinePlayerMeta[];
+    curveTeammates: TimelinePlayer[];
     curveTeammateModes: ReadonlyMap<string, TeammateCurveMode>;
     onToggleCurveTeammate: (entityUuid: string) => void;
     onSelectAllCurveTeammates: () => void;
     onClearCurveTeammates: () => void;
     /** Players owning buff lanes; empty hides every buff control. */
-    buffOwners: TimelinePlayerMeta[];
+    buffOwners: TimelinePlayer[];
     buffView: BuffViewState;
     /** Whether any buff rows are on screen (grouping toggle). */
     buffRowsVisible: boolean;
@@ -43,6 +44,7 @@
   };
 
   let {
+    selfColor,
     showAverageCurve,
     onToggleAverage,
     teammates,
@@ -75,10 +77,11 @@
 <div class="tl-header flex items-center justify-between gap-2 px-3 py-1.5">
   <div class="flex min-w-0 flex-wrap items-center gap-1">
     <span class="flex items-center gap-1.5 rounded px-1.5 py-0.5">
-      <span
-        class="size-1.5 shrink-0 rounded-full"
-        style="background: {TIMELINE_PALETTE.mine}; box-shadow: 0 0 5px {TIMELINE_PALETTE.mine}"
-      ></span>
+      <ZapIcon
+        class="size-2.5 shrink-0"
+        style="color: {selfColor}"
+        fill="currentColor"
+      />
       <span class="text-[10px] font-medium" style="color: var(--tl-fg)">
         {t("history.timeline.series.instant")}
       </span>
@@ -92,7 +95,7 @@
     >
       <span
         class="size-1.5 shrink-0 rounded-full"
-        style="background: {TIMELINE_PALETTE.average}"
+        style="background: {selfColor}"
       ></span>
       <span class="text-[10px]" style="color: var(--tl-fg-muted)">
         {t("history.timeline.series.average")}
@@ -111,18 +114,18 @@
         {#if mode === "instant"}
           <ZapIcon
             class="size-2.5 shrink-0"
-            style="color: {playerColor(player)}"
+            style="color: {player.color}"
             fill="currentColor"
           />
         {:else}
           <span
             class="size-1.5 shrink-0 rounded-full"
-            style="background: {playerColor(player)}"
+            style="background: {player.color}"
           ></span>
         {/if}
         <span
           class="max-w-20 truncate text-[10px]"
-          style="color: {playerColor(player)}"
+          style="color: {player.color}"
         >
           {player.name}
         </span>
@@ -194,8 +197,7 @@
       players={teammates}
       selectedUuids={laneSelection.uuids}
       onToggle={(uuid) => laneSelection.toggle(uuid)}
-      onSelectAll={() =>
-        laneSelection.setAll(teammates.map((player) => player.entityUuid))}
+      onSelectAll={() => laneSelection.setAll()}
       onClear={() => laneSelection.clear()}
     >
       {#snippet icon()}
@@ -247,10 +249,7 @@
           players={buffOwners}
           selectedUuids={buffView.owners.uuids}
           onToggle={(uuid) => buffView.owners.toggle(uuid)}
-          onSelectAll={() =>
-            buffView.owners.setAll(
-              buffOwners.map((player) => player.entityUuid),
-            )}
+          onSelectAll={() => buffView.owners.setAll()}
           onClear={() => buffView.owners.clear()}
         >
           {#snippet icon()}

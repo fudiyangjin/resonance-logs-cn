@@ -226,7 +226,11 @@
         {/if}
       </td>
     {/each}
-    <TableRowGlow className={row.className} percentage={glow} />
+    <TableRowGlow
+      className={row.className}
+      classSpecName={row.classSpecName}
+      percentage={glow}
+    />
   </tr>
 {/snippet}
 

@@ -467,6 +467,7 @@
           {/each}
           <TableRowGlow
             className={entity.className}
+            classSpecName={entity.classSpecName}
             percentage={skillGlowPercentage(item)}
           />
         </tr>

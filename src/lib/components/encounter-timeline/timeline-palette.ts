@@ -16,24 +16,26 @@ export const TIMELINE_PALETTE = {
   axis: "rgba(148,163,184,0.20)",
   tooltipBg: "rgba(15,18,24,0.94)",
   tooltipBorder: "rgba(148,163,184,0.22)",
-  mine: "#60a5fa",
-  /** Cumulative-DPS curve. A distinct hue from `mine` on purpose: the two
-   * readings used to share one colour, which left the legend unable to tell
-   * them apart. Kept clear of `boss` red and `fallbackPlayer` purple. */
-  average: "#fbbf24",
+  /** UI accent for selection / brush / minimap window / resize handles.
+   * Never a player color: players (the local one included) use their
+   * class/spec color, see `assignTimelineColors`. */
+  accent: "#60a5fa",
   boss: "#f87171",
+  /** Player color when the configured class/spec color is not a hex value. */
   fallbackPlayer: "#a78bfa",
   /** Inactive-combat gaps excluded from buff coverage (lanes + legend). */
   inactiveHatch:
     "repeating-linear-gradient(135deg,rgba(148,163,184,0.12) 0 3px,transparent 3px 7px)",
 } as const;
 
-export function timelinePaletteCssVars(): string {
+/** `selfColor` is the local player's chart color (`--tl-self`), the one
+ * per-encounter value the component styles need besides the fixed palette. */
+export function timelinePaletteCssVars(selfColor: string): string {
   const p = TIMELINE_PALETTE;
   return (
     `--tl-bg:${p.bg};--tl-header-bg:${p.headerBg};--tl-popover-bg:${p.popoverBg};` +
     `--tl-fg:${p.fg};--tl-fg-muted:${p.fgMuted};--tl-row-line:${p.rowLine};` +
-    `--tl-mine:${p.mine};--tl-average:${p.average};` +
+    `--tl-accent:${p.accent};--tl-self:${selfColor};` +
     `--tl-tooltip-bg:${p.tooltipBg};--tl-tooltip-border:${p.tooltipBorder};` +
     `--tl-inactive-hatch:${p.inactiveHatch};`
   );

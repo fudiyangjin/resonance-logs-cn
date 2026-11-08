@@ -15,6 +15,10 @@ export type TimelinePlayerMeta = {
   isLocalPlayer: boolean;
 };
 
+/** A player with the chart color assigned for this encounter (see
+ * `assignTimelineColors`); every row, curve and picker reads this one value. */
+export type TimelinePlayer = TimelinePlayerMeta & { color: string };
+
 /** Display strings/icon for one lane marker, resolved by the parent. */
 export type TimelineEventDisplay = {
   name: string;
@@ -39,13 +43,13 @@ export type Lane =
   | {
       key: string;
       type: "mine";
-      player: TimelinePlayerMeta;
+      player: TimelinePlayer;
       points: LanePoint[];
     }
   | {
       key: string;
       type: "teammate";
-      player: TimelinePlayerMeta;
+      player: TimelinePlayer;
       points: LanePoint[];
     };
 
@@ -95,13 +99,13 @@ export type TimelineTrack =
       key: string;
       label: string;
       /** Owner of a player group; null for a buff group. */
-      player: TimelinePlayerMeta | null;
+      player: TimelinePlayer | null;
     }
   | {
       kind: "buff";
       key: string;
       lane: TimelineBuffLane;
-      player: TimelinePlayerMeta;
+      player: TimelinePlayer;
       /** Row caption: the buff name when grouped by player, the player name
        * when grouped by buff (the group header carries the other half). */
       caption: "buff" | "player";

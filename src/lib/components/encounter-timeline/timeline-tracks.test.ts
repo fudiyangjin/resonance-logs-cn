@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { buildBuffTracks } from "./timeline-tracks";
-import type { TimelineBuffLane, TimelinePlayerMeta } from "./timeline-types";
+import type { TimelineBuffLane, TimelinePlayer } from "./timeline-types";
 
-function player(entityUuid: string, isLocalPlayer = false): TimelinePlayerMeta {
+function player(entityUuid: string, isLocalPlayer = false): TimelinePlayer {
   return {
     entityUuid,
     name: `name-${entityUuid}`,
     className: "",
     classSpecName: "",
     isLocalPlayer,
+    color: "#ffffff",
   };
 }
 

@@ -23,6 +23,7 @@ import type {
 } from "./config/buff-name-table";
 import type { AppLocale } from "./i18n/locales";
 import { createDefaultMonsterRosterOptions } from "./monster-roster-settings";
+import { createDefaultHistoryViewPrefs } from "./history-view-prefs";
 import {
   cloneHeaderCustomLayout,
   type HeaderCustomLayout,
@@ -3537,6 +3538,14 @@ export const SETTINGS = {
   packetCapture: new RuneStore(
     "packetCapture",
     { method: "Npcap", npcapDevice: "" },
+    RUNE_STORE_OPTIONS,
+  ),
+  // Remembered history-detail choices (timeline selectors, buff section).
+  // Global on purpose: kept out of `history.general`, which travels with
+  // loadouts (see history-view-prefs.ts).
+  historyView: new RuneStore(
+    "historyView",
+    createDefaultHistoryViewPrefs(),
     RUNE_STORE_OPTIONS,
   ),
 };

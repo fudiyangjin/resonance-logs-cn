@@ -632,6 +632,38 @@
     });
   }
 
+  /** Right-click: one level up, through the same function the visible back
+   * button of the current level uses. Not `history.back()`: the back buttons
+   * push entries (goto), so after clicking one, history.back() would return
+   * into the view just left. The overview is the top level here; it does not
+   * go back to the list. */
+  function navigateUp() {
+    if (!entityUuid) return;
+    if (skillType === "death") {
+      if (selectedDeathTs != null) backToDeathList();
+      else backToDeathPlayerList();
+    } else if (skillType === "tanked" && selectedTakenMonsterId !== null) {
+      backToTakenMonsters();
+    } else {
+      backToEncounter();
+    }
+  }
+
+  function isTextEntryTarget(target: EventTarget | null): boolean {
+    return (
+      target instanceof HTMLElement &&
+      (target.isContentEditable ||
+        target.closest("input, textarea, select") !== null)
+    );
+  }
+
+  function handleContextMenu(event: MouseEvent) {
+    if (showDeleteModal || editingNote || isTextEntryTarget(event.target)) {
+      return;
+    }
+    navigateUp();
+  }
+
   function backToHistory() {
     // Return to the history list while preserving list state.
     const sp = new SvelteURLSearchParams($page.url.searchParams);
@@ -739,6 +771,8 @@
     await openUrl(`https://bpsr.app/encounter/${encounter.remoteEncounterId}`);
   }
 </script>
+
+<svelte:window oncontextmenu={handleContextMenu} />
 
 <svelte:head>
   <title>{t("history.detail.skills.title")}</title>
@@ -1015,6 +1049,7 @@
               rangeView={rangeBuffTimelineView}
               players={timelinePlayers}
               resolveBuffName={coverageBuffName}
+              bind:open={SETTINGS.historyView.state.coverageTableOpen}
             />
           </section>
         {:else if chart && !buffTimelineView}

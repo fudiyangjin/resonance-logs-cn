@@ -1,7 +1,7 @@
 import type {
   BuffGrouping,
   TimelineBuffLane,
-  TimelinePlayerMeta,
+  TimelinePlayer,
   TimelineTrack,
 } from "./timeline-types";
 
@@ -16,7 +16,7 @@ type BuffTrack = Extract<TimelineTrack, { kind: "buff-group" | "buff" }>;
  * lanes, and buffs nobody selected carries, produce nothing. */
 export function buildBuffTracks(
   lanes: readonly TimelineBuffLane[],
-  owners: readonly TimelinePlayerMeta[],
+  owners: readonly TimelinePlayer[],
   grouping: BuffGrouping,
 ): BuffTrack[] {
   const lanesByOwner = new Map<string, TimelineBuffLane[]>();
@@ -52,7 +52,7 @@ export function buildBuffTracks(
 
   const rowsByBaseId = new Map<
     number,
-    { lane: TimelineBuffLane; player: TimelinePlayerMeta }[]
+    { lane: TimelineBuffLane; player: TimelinePlayer }[]
   >();
   for (const owner of owners) {
     for (const lane of lanesByOwner.get(owner.entityUuid) ?? []) {

@@ -4,7 +4,6 @@
   // hatched layer marking inactive-combat gaps that the coverage percent
   // ignores. Purely visual - hover details come from the shared overlay, so
   // spans carry no per-element tooltips.
-  import { playerColor } from "./timeline-colors";
   import { visibleSpanRects } from "./timeline-data";
   import { BUFF_BAR_CENTER_Y, BUFF_CAPTION_H } from "./timeline-layout";
   import type { TimelineBuffSpan, TimelineRow } from "./timeline-types";
@@ -53,7 +52,7 @@
   {/if}
 
   {#each rows as row (row.key)}
-    {@const color = playerColor(row.player)}
+    {@const color = row.player.color}
     <div
       class="absolute inset-x-0"
       style="top: {row.top}px; height: {row.height}px"

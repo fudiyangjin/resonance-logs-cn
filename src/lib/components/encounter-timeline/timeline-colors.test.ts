@@ -1,65 +1,161 @@
 import { describe, expect, it } from "vitest";
+import {
+  contrastRatio,
+  hexToOklch,
+  oklabDistance,
+} from "./timeline-color-math";
+import {
+  MIN_PLAYER_COLOR_DISTANCE,
+  MIN_READABLE_CONTRAST,
+  assignTimelineColors,
+  laneColor,
+  readableChartColor,
+  withTimelineColors,
+} from "./timeline-colors";
 import { TIMELINE_PALETTE } from "./timeline-palette";
-import { laneColor, playerColor } from "./timeline-colors";
 import type { TimelinePlayerMeta } from "./timeline-types";
 
+const IAIDO = "#9b6cf0";
+const SMITE = "#b9f36e";
+const MOONSTRIKE = "#4a2f80";
+
 function player(
-  overrides: Partial<TimelinePlayerMeta> = {},
+  entityUuid: string,
+  classSpecName: string,
+  isLocalPlayer = false,
 ): TimelinePlayerMeta {
   return {
-    entityUuid: "10",
-    name: "Local",
-    className: "雷影剑",
-    classSpecName: "",
-    isLocalPlayer: false,
-    ...overrides,
+    entityUuid,
+    name: `name-${entityUuid}`,
+    className: "",
+    classSpecName,
+    isLocalPlayer,
   };
 }
 
-describe("playerColor", () => {
-  it("keeps the local player on the reserved mine blue", () => {
-    expect(playerColor(player({ isLocalPlayer: true }))).toBe(
-      TIMELINE_PALETTE.mine,
-    );
+/** Test stand-in for the user's class/spec colors. */
+const SPEC_COLORS: Record<string, string> = {
+  Iaido: IAIDO,
+  Smite: SMITE,
+  Moonstrike: MOONSTRIKE,
+};
+const specColor = (p: TimelinePlayerMeta) =>
+  SPEC_COLORS[p.classSpecName] ?? "not-a-color";
+
+describe("readableChartColor", () => {
+  it("keeps colors that are already readable on the chart", () => {
+    expect(readableChartColor(IAIDO)).toBe(IAIDO);
   });
 
-  it("is stable for the same uuid and ignores class", () => {
-    const first = player({ entityUuid: "21", className: "雷影剑" });
-    expect(playerColor(first)).toBe(playerColor({ ...first }));
-    expect(playerColor(first)).toBe(
-      playerColor(player({ entityUuid: "21", className: "冰魔导师" })),
+  it("lifts a dark color to readable contrast without changing its hue", () => {
+    expect(contrastRatio(MOONSTRIKE, TIMELINE_PALETTE.bg)).toBeLessThan(
+      MIN_READABLE_CONTRAST,
     );
+    const lifted = readableChartColor(MOONSTRIKE);
+    expect(contrastRatio(lifted, TIMELINE_PALETTE.bg)).toBeGreaterThanOrEqual(
+      MIN_READABLE_CONTRAST,
+    );
+    const before = hexToOklch(MOONSTRIKE)!;
+    const after = hexToOklch(lifted)!;
+    expect(after.l).toBeGreaterThan(before.l);
+    expect(Math.abs(after.h - before.h)).toBeLessThan(8);
   });
 
-  it("assigns different hues to different teammate uuids", () => {
-    const colors = new Set(
-      ["21", "22", "23", "24", "25", "26", "27", "28"].map((entityUuid) =>
-        playerColor(player({ entityUuid, className: "雷影剑" })),
-      ),
+  it("falls back for values that are not hex colors", () => {
+    expect(readableChartColor("rgb(1, 2, 3)")).toBe(
+      TIMELINE_PALETTE.fallbackPlayer,
     );
-    expect(colors.size).toBeGreaterThan(1);
+  });
+});
+
+describe("assignTimelineColors", () => {
+  it("uses each player's own color when nobody collides", () => {
+    const colors = assignTimelineColors(
+      [player("1", "Iaido", true), player("2", "Smite")],
+      specColor,
+    );
+    expect(colors.get("1")).toBe(IAIDO);
+    expect(colors.get("2")).toBe(SMITE);
   });
 
-  it("does not use mine, average, or boss for teammates", () => {
-    const reserved = new Set<string>([
-      TIMELINE_PALETTE.mine,
-      TIMELINE_PALETTE.average,
-      TIMELINE_PALETTE.boss,
+  it("separates players that share a spec color", () => {
+    const players = [
+      player("1", "Iaido", true),
+      player("2", "Iaido"),
+      player("3", "Iaido"),
+    ];
+    const colors = [...assignTimelineColors(players, specColor).values()];
+    expect(colors[0]).toBe(IAIDO);
+    for (let i = 0; i < colors.length; i += 1) {
+      for (let j = i + 1; j < colors.length; j += 1) {
+        expect(oklabDistance(colors[i]!, colors[j]!)).toBeGreaterThanOrEqual(
+          MIN_PLAYER_COLOR_DISTANCE,
+        );
+      }
+    }
+    for (const color of colors) {
+      expect(contrastRatio(color, TIMELINE_PALETTE.bg)).toBeGreaterThanOrEqual(
+        MIN_READABLE_CONTRAST,
+      );
+    }
+  });
+
+  it("lets the local player keep their color wherever they are listed", () => {
+    const colors = assignTimelineColors(
+      [player("2", "Iaido"), player("1", "Iaido", true)],
+      specColor,
+    );
+    expect(colors.get("1")).toBe(IAIDO);
+    expect(colors.get("2")).not.toBe(IAIDO);
+  });
+
+  it("is deterministic for the same party", () => {
+    const players = [
+      player("1", "Iaido", true),
+      player("2", "Iaido"),
+      player("3", "Smite"),
+      player("4", "Smite"),
+    ];
+    expect([...assignTimelineColors(players, specColor)]).toEqual([
+      ...assignTimelineColors(players, specColor),
     ]);
-    const color = playerColor(player({ entityUuid: "99" }));
-    expect(reserved.has(color)).toBe(false);
+  });
+
+  it("keeps earlier players' colors when later players leave", () => {
+    const full = assignTimelineColors(
+      [player("1", "Iaido", true), player("2", "Iaido"), player("3", "Iaido")],
+      specColor,
+    );
+    const partial = assignTimelineColors(
+      [player("1", "Iaido", true), player("2", "Iaido")],
+      specColor,
+    );
+    expect(partial.get("1")).toBe(full.get("1"));
+    expect(partial.get("2")).toBe(full.get("2"));
+  });
+});
+
+describe("withTimelineColors", () => {
+  it("attaches colors and keeps input order", () => {
+    const players = [player("2", "Smite"), player("1", "Iaido", true)];
+    const colored = withTimelineColors(players, specColor);
+    expect(colored.map((p) => p.entityUuid)).toEqual(["2", "1"]);
+    expect(colored[1]!.color).toBe(IAIDO);
   });
 });
 
 describe("laneColor", () => {
-  it("keeps mine lanes on the reserved blue", () => {
+  it("uses the boss color for boss lanes and the player color otherwise", () => {
+    expect(
+      laneColor({ key: "boss-1", type: "boss", name: "Boss", points: [] }),
+    ).toBe(TIMELINE_PALETTE.boss);
     expect(
       laneColor({
         key: "mine",
         type: "mine",
-        player: player({ isLocalPlayer: true }),
+        player: { ...player("1", "Iaido", true), color: IAIDO },
         points: [],
       }),
-    ).toBe(TIMELINE_PALETTE.mine);
+    ).toBe(IAIDO);
   });
 });

@@ -8,16 +8,15 @@
   import ZapIcon from "@lucide/svelte/icons/zap";
   import { t } from "$lib/i18n/index.svelte";
   import { getClassIcon } from "$lib/utils.svelte";
-  import { playerColor } from "./timeline-colors";
   import type { TeammateCurveMode } from "./timeline-data";
-  import type { TimelinePlayerMeta } from "./timeline-types";
+  import type { TimelinePlayer } from "./timeline-types";
 
   type Props = {
     label: string;
     closeAriaLabel: string;
     selectAllLabel: string;
     clearAllLabel: string;
-    players: TimelinePlayerMeta[];
+    players: TimelinePlayer[];
     selectedUuids: readonly string[];
     modes?: ReadonlyMap<string, TeammateCurveMode>;
     onToggle: (entityUuid: string) => void;
@@ -129,12 +128,12 @@
                 {#if mode === "average"}
                   <span
                     class="size-3 shrink-0 rounded-full"
-                    style="background: {playerColor(player)}"
+                    style="background: {player.color}"
                   ></span>
                 {:else if mode === "instant"}
                   <ZapIcon
                     class="size-3 shrink-0"
-                    style="color: {playerColor(player)}"
+                    style="color: {player.color}"
                     fill="currentColor"
                   />
                 {:else}
@@ -150,7 +149,7 @@
                 />
                 <span
                   class="truncate text-[11px]"
-                  style="color: {playerColor(player)}"
+                  style="color: {player.color}"
                 >
                   {player.name}
                 </span>
@@ -172,7 +171,7 @@
                 />
                 <span
                   class="truncate text-[11px]"
-                  style="color: {playerColor(player)}"
+                  style="color: {player.color}"
                 >
                   {player.name}
                 </span>

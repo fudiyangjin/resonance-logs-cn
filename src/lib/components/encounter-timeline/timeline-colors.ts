@@ -1,52 +1,121 @@
+import { getClassColorRaw } from "$lib/utils.svelte";
+import {
+  ensureContrast,
+  hexToOklch,
+  normalizeHex,
+  oklabDistance,
+  oklchToHex,
+} from "./timeline-color-math";
 import { TIMELINE_PALETTE } from "./timeline-palette";
-import type { Lane, TimelinePlayerMeta } from "./timeline-types";
+import type {
+  Lane,
+  TimelinePlayer,
+  TimelinePlayerMeta,
+} from "./timeline-types";
 
-/** Distinct teammate hues for the history chart. Avoids `mine` / `average` /
- * `boss` so overlay curves stay separable from the local player, the
- * cumulative-DPS series, and boss markers. */
-const TEAMMATE_HUES = [
-  "#34d399",
-  "#a78bfa",
-  "#fb923c",
-  "#22d3ee",
-  "#f472b6",
-  "#4ade80",
-  "#c084fc",
-  "#e879f9",
-  "#2dd4bf",
-  "#818cf8",
-  "#fdba74",
-  "#5eead4",
-  "#f0abfc",
-  "#86efac",
-] as const;
+/** Lines and dots must stay legible on the fixed dark chart island
+ * (WCAG non-text contrast). */
+export const MIN_READABLE_CONTRAST = 3;
+/** Two players closer than this in OKLab get a variant for the later one. */
+export const MIN_PLAYER_COLOR_DISTANCE = 0.07;
 
-function hashEntityUuid(uuid: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < uuid.length; i += 1) {
-    hash ^= uuid.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
+/** Variant ladder tried in order when a player's color is taken: lightness
+ * first (keeps the spec's hue family), hue rotation only as a last resort. */
+const LIGHTNESS_STEPS = [0.1, -0.1, 0.18, -0.18] as const;
+const HUE_STEPS = [25, -25, 50, -50] as const;
+
+/** The user's class/spec color, exactly as the live meter resolves it (follows
+ * the active loadout and the "use spec colors" switch). */
+function userClassColor(player: TimelinePlayerMeta): string {
+  return getClassColorRaw(player.className, player.classSpecName);
 }
 
-/** Chart color for one combatant. Local player stays `mine` so skill lanes
- * and the primary curve keep their familiar blue; everyone else is a stable
- * hash of `entityUuid`, not class/spec. */
-export function playerColor(player: TimelinePlayerMeta): string {
-  if (player.isLocalPlayer) return TIMELINE_PALETTE.mine;
-  if (!player.entityUuid) return TIMELINE_PALETTE.fallbackPlayer;
-  const index = hashEntityUuid(player.entityUuid) % TEAMMATE_HUES.length;
-  return TEAMMATE_HUES[index] ?? TIMELINE_PALETTE.fallbackPlayer;
+/** The user's color, made readable on the chart background. Colors that are
+ * already readable come back unchanged. */
+export function readableChartColor(color: string): string {
+  return ensureContrast(
+    normalizeHex(color) ?? TIMELINE_PALETTE.fallbackPlayer,
+    TIMELINE_PALETTE.bg,
+    MIN_READABLE_CONTRAST,
+  );
+}
+
+function colorCandidates(base: string): string[] {
+  const color = hexToOklch(base);
+  if (!color) return [base];
+  const candidates = [base];
+  for (const step of LIGHTNESS_STEPS) {
+    candidates.push(
+      readableChartColor(oklchToHex({ ...color, l: color.l + step })),
+    );
+  }
+  for (const step of HUE_STEPS) {
+    candidates.push(
+      readableChartColor(
+        oklchToHex({ ...color, h: (color.h + step + 360) % 360 }),
+      ),
+    );
+  }
+  return candidates;
+}
+
+function nearestDistance(color: string, taken: readonly string[]): number {
+  let nearest = Number.POSITIVE_INFINITY;
+  for (const other of taken) {
+    nearest = Math.min(nearest, oklabDistance(color, other));
+  }
+  return nearest;
+}
+
+/** One chart color per player, assigned once for the whole party so a
+ * player's color never changes with what is selected. Everyone starts from
+ * their class/spec color; the local player is placed first and always keeps
+ * it, the rest (in `players` order) step through lighter/darker/hue variants
+ * until they are distinguishable from everyone already placed. */
+export function assignTimelineColors(
+  players: readonly TimelinePlayerMeta[],
+  baseColor: (player: TimelinePlayerMeta) => string = userClassColor,
+): Map<string, string> {
+  const ordered = [
+    ...players.filter((player) => player.isLocalPlayer),
+    ...players.filter((player) => !player.isLocalPlayer),
+  ];
+  const colors = new Map<string, string>();
+  const taken: string[] = [];
+  for (const player of ordered) {
+    if (colors.has(player.entityUuid)) continue;
+    const candidates = colorCandidates(readableChartColor(baseColor(player)));
+    let chosen = candidates[0]!;
+    let chosenDistance = -1;
+    for (const candidate of candidates) {
+      const distance = nearestDistance(candidate, taken);
+      if (distance >= MIN_PLAYER_COLOR_DISTANCE) {
+        chosen = candidate;
+        break;
+      }
+      if (distance > chosenDistance) {
+        chosen = candidate;
+        chosenDistance = distance;
+      }
+    }
+    taken.push(chosen);
+    colors.set(player.entityUuid, chosen);
+  }
+  return colors;
+}
+
+/** Attaches the assigned chart color to each player, keeping input order. */
+export function withTimelineColors(
+  players: readonly TimelinePlayerMeta[],
+  baseColor?: (player: TimelinePlayerMeta) => string,
+): TimelinePlayer[] {
+  const colors = assignTimelineColors(players, baseColor);
+  return players.map((player) => ({
+    ...player,
+    color: colors.get(player.entityUuid) ?? TIMELINE_PALETTE.fallbackPlayer,
+  }));
 }
 
 export function laneColor(lane: Lane): string {
-  switch (lane.type) {
-    case "boss":
-      return TIMELINE_PALETTE.boss;
-    case "mine":
-      return TIMELINE_PALETTE.mine;
-    case "teammate":
-      return playerColor(lane.player);
-  }
+  return lane.type === "boss" ? TIMELINE_PALETTE.boss : lane.player.color;
 }

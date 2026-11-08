@@ -12,7 +12,6 @@
     type DamageHitIndex,
     type EncounterTimelineEvent,
   } from "./timeline-data";
-  import { playerColor } from "./timeline-colors";
   import { formatTimeMs, formatValue } from "./timeline-format";
   import { trackAt } from "./timeline-layout";
   import { t } from "$lib/i18n/index.svelte";
@@ -212,7 +211,7 @@
         <div class="tl-tooltip-row tl-tooltip-row--wrap">
           <span
             class="tl-tooltip-dot"
-            style="background: {playerColor(row.player)}"
+            style="background: {row.player.color}"
           ></span>
           <span class="tl-tooltip-name">
             {row.player.name} · {row.lane.buffName}
@@ -267,7 +266,7 @@
         {/if}
         {#if hoverCurveInfo.average !== null}
           <div class="tl-tooltip-row">
-            <span class="tl-tooltip-dot tl-tooltip-dot--muted"></span>
+            <span class="tl-tooltip-dot"></span>
             {t("history.timeline.series.average")}:
             <b>{formatCurveValue(hoverCurveInfo.average)}</b>
           </div>
@@ -391,10 +390,6 @@
     width: 6px;
     height: 6px;
     border-radius: 999px;
-    background: var(--tl-mine);
-  }
-
-  .tl-tooltip-dot--muted {
-    background: var(--tl-average);
+    background: var(--tl-self);
   }
 </style>

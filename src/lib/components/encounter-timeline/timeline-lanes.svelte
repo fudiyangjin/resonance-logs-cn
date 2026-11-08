@@ -165,7 +165,7 @@
     border-width: 1.5px;
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.55),
-      0 0 5px var(--tl-mine);
+      0 0 5px var(--tl-self);
   }
 
   .tl-marker-icon img {
