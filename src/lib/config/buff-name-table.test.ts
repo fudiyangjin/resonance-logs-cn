@@ -1,9 +1,38 @@
 import { describe, expect, it } from "vitest";
 import {
+  expandBuffSelection,
+  getBuffIdsByCategory,
+  resolveBuffCategoryKey,
   resolveBuffDisplayName,
   searchBuffCandidates,
   searchBuffsByName,
 } from "./buff-name-table";
+
+describe("buff categories", () => {
+  it("keeps food and alchemy members after the official name update", () => {
+    const food = getBuffIdsByCategory("food");
+    const alchemy = getBuffIdsByCategory("alchemy");
+    expect(food).toHaveLength(160);
+    expect(food).toContain(2032011);
+    expect(alchemy).toHaveLength(210);
+    expect(alchemy).toContain(2033011);
+    expect(resolveBuffCategoryKey(2032011)).toBe("food");
+    expect(resolveBuffCategoryKey(2033011)).toBe("alchemy");
+  });
+
+  it("excludes unrelated buffs that share the category icons", () => {
+    // 海风之宴 and 沉梦抗性1生效 share the food and alchemy icons.
+    expect(resolveBuffCategoryKey(2010003)).toBeUndefined();
+    expect(resolveBuffCategoryKey(2010064)).toBeUndefined();
+  });
+
+  it("expands selected categories into monitored ids without duplicates", () => {
+    const ids = expandBuffSelection([2032011], ["food", "alchemy"]);
+    expect(ids).toHaveLength(370);
+    expect(ids).toContain(2032011);
+    expect(ids).toContain(2033011);
+  });
+});
 
 describe("searchBuffCandidates", () => {
   const composites = [

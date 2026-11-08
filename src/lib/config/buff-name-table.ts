@@ -91,15 +91,16 @@ function resolveBuffCategories(
   const normalizedName = normalizeText(defaultName);
   if (
     iconKey?.startsWith("buff_food_up") &&
-    BUFF_CATEGORY_NAME_KEYWORDS.food.some((keyword) =>
-      normalizedName.includes(normalizeText(keyword)),
-    )
+    (normalizedName === "料理" ||
+      BUFF_CATEGORY_NAME_KEYWORDS.food.some((keyword) =>
+        normalizedName.includes(normalizeText(keyword)),
+      ))
   ) {
     categories.push("food");
   }
   if (
     iconKey?.startsWith("buff_agentia_up") &&
-    isAlchemyBuffName(defaultName)
+    (normalizedName === "药剂" || isAlchemyBuffName(defaultName))
   ) {
     categories.push("alchemy");
   }
