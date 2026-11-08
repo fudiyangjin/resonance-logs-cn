@@ -7,7 +7,7 @@
  */
 import type { MonsterSkillWatchEntry } from "./settings-store";
 
-export const MAX_MONSTER_SKILL_ENTRIES = 32;
+export const MAX_MONSTER_SKILL_ENTRIES = 128;
 export const MIN_MONSTER_SKILL_DISPLAY_MS = 500;
 export const MAX_MONSTER_SKILL_DISPLAY_MS = 60_000;
 export const DEFAULT_MONSTER_SKILL_DISPLAY_MS = 5_000;
