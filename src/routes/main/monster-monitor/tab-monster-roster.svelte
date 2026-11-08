@@ -19,12 +19,14 @@
   import {
     isRosterPresetBlock,
     MAX_ROSTER_NORMAL_ROWS,
+    MAX_ROSTER_PANEL_WIDTH,
+    MIN_ROSTER_PANEL_WIDTH,
   } from "$lib/monster-roster-settings";
   import { abbreviateNumber } from "$lib/number-format";
   import {
     SETTINGS,
-    type CustomPanelStyle,
     type MonsterRosterOptions,
+    type RosterPanelStyle,
   } from "$lib/settings-store";
   import type { RosterSkillEntryPatch } from "$lib/roster-skill-entries";
   import type { RosterSkillEntry } from "$lib/settings-store";
@@ -34,10 +36,10 @@
   interface Props {
     options: MonsterRosterOptions;
     updateOptions: (patch: Partial<MonsterRosterOptions>) => void;
-    panelStyle: CustomPanelStyle;
-    updatePanelStyle: <K extends keyof CustomPanelStyle>(
+    panelStyle: RosterPanelStyle;
+    updatePanelStyle: <K extends keyof RosterPanelStyle>(
       key: K,
-      value: CustomPanelStyle[K],
+      value: RosterPanelStyle[K],
     ) => void;
     /** The player's own blocks; the developer presets are never shown. */
     blockedIds: number[];
@@ -294,9 +296,33 @@
 <PanelStyleSection
   titleKey="monsterMonitor.roster.styleTitle"
   {panelStyle}
-  {updatePanelStyle}
+  updatePanelStyle={(key, value) =>
+    updatePanelStyle(key, value as RosterPanelStyle[typeof key])}
   schemePanel="roster"
-/>
+>
+  {#snippet extraFields()}
+    <!-- Live like the section's other sliders, so the HUD previews it. -->
+    <label class="style-field">
+      <span>{t("monsterMonitor.roster.panelWidth")}</span>
+      <input
+        type="range"
+        min={MIN_ROSTER_PANEL_WIDTH}
+        max={MAX_ROSTER_PANEL_WIDTH}
+        step="1"
+        value={panelStyle.width}
+        oninput={(event) =>
+          updatePanelStyle(
+            "width",
+            Number.parseInt(event.currentTarget.value, 10),
+          )}
+      />
+      <strong>{panelStyle.width}px</strong>
+      <small class="text-muted-foreground text-xs">
+        {t("monsterMonitor.roster.panelWidthHint")}
+      </small>
+    </label>
+  {/snippet}
+</PanelStyleSection>
 
 <style>
   .style-field {

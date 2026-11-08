@@ -22,7 +22,10 @@ import type {
   BuffCategoryKey,
 } from "./config/buff-name-table";
 import type { AppLocale } from "./i18n/locales";
-import { createDefaultMonsterRosterOptions } from "./monster-roster-settings";
+import {
+  createDefaultMonsterRosterOptions,
+  DEFAULT_ROSTER_PANEL_WIDTH,
+} from "./monster-roster-settings";
 import { COLOR_PRESETS } from "./theme-color-presets";
 import { createDefaultHistoryViewPrefs } from "./history-view-prefs";
 import {
@@ -1144,6 +1147,12 @@ export type CustomPanelStyle = {
   progressOpacity: number;
 } & OverlayTextStyle;
 
+/** Battle roster panel: a fixed-width HP column, the skill column on top. */
+export type RosterPanelStyle = CustomPanelStyle & {
+  /** HP column width in px (`normalizeRosterPanelWidth`). */
+  width: number;
+};
+
 export type TeammateBuffColumnKey =
   | `buff:${number}`
   | `category:${BuffCategoryKey}`;
@@ -1447,7 +1456,7 @@ export type MonsterMonitorConfig = {
   monsterSkillPanelStyle: CustomPanelStyle;
   roster: MonsterRosterOptions;
   rosterSkillEntries: RosterSkillEntry[];
-  rosterPanelStyle: CustomPanelStyle;
+  rosterPanelStyle: RosterPanelStyle;
 };
 
 export type TextBuffPanelDisplayMode = "modern" | "classic";
@@ -1869,6 +1878,13 @@ export function createDefaultHpPanelStyle(): CustomPanelStyle {
     fontSize: 13,
     progressColor: "#ef4444",
     progressOpacity: 0.45,
+  };
+}
+
+export function createDefaultRosterPanelStyle(): RosterPanelStyle {
+  return {
+    ...createDefaultHpPanelStyle(),
+    width: DEFAULT_ROSTER_PANEL_WIDTH,
   };
 }
 
@@ -2315,7 +2331,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     monsterSkillPanelStyle: createDefaultMonsterSkillPanelStyle(),
     roster: createDefaultMonsterRosterOptions(),
     rosterSkillEntries: [],
-    rosterPanelStyle: createDefaultHpPanelStyle(),
+    rosterPanelStyle: createDefaultRosterPanelStyle(),
   };
 }
 

@@ -4,12 +4,21 @@ import { ROSTER_PRESET_BLOCKED_MONSTERS } from "./config/roster-preset-blocks";
 import {
   blockRosterMonster,
   createDefaultMonsterRosterOptions,
+  DEFAULT_ROSTER_PANEL_WIDTH,
   effectiveRosterBlockedIds,
   ensureRosterBlockedMonsterIds,
   MAX_ROSTER_NORMAL_ROWS,
+  MAX_ROSTER_PANEL_WIDTH,
+  MIN_ROSTER_PANEL_WIDTH,
   normalizeMonsterRosterOptions,
+  normalizeRosterPanelWidth,
   unblockRosterMonster,
 } from "./monster-roster-settings";
+import {
+  createDefaultHpPanelStyle,
+  createDefaultRosterPanelStyle,
+} from "./settings-store";
+import { normalizeRosterPanelStyle } from "./skill-monitor-normalize";
 
 /** 地块A标记, a developer preset. */
 const PRESET = 103303;
@@ -32,6 +41,39 @@ describe("normalizeMonsterRosterOptions", () => {
     expect(options.normalRows).toBe(MAX_ROSTER_NORMAL_ROWS);
     expect(options.tankMode).toBe(true);
     expect(options.showHpValue).toBe(false);
+  });
+});
+
+describe("roster panel width", () => {
+  it("rounds and clamps to the slider range, defaulting when unusable", () => {
+    expect(normalizeRosterPanelWidth(180.4)).toBe(180);
+    expect(normalizeRosterPanelWidth(10)).toBe(MIN_ROSTER_PANEL_WIDTH);
+    expect(normalizeRosterPanelWidth(9_999)).toBe(MAX_ROSTER_PANEL_WIDTH);
+    for (const bad of [undefined, null, Number.NaN, "180"]) {
+      expect(normalizeRosterPanelWidth(bad)).toBe(DEFAULT_ROSTER_PANEL_WIDTH);
+    }
+  });
+
+  it("keeps the former minimum width as the default look", () => {
+    expect(DEFAULT_ROSTER_PANEL_WIDTH).toBe(240);
+    expect(createDefaultRosterPanelStyle()).toEqual({
+      ...createDefaultHpPanelStyle(),
+      width: DEFAULT_ROSTER_PANEL_WIDTH,
+    });
+  });
+
+  it("normalizes the roster style, including the HP style it falls back to", () => {
+    expect(normalizeRosterPanelStyle(createDefaultHpPanelStyle())).toEqual(
+      createDefaultRosterPanelStyle(),
+    );
+    const narrow = normalizeRosterPanelStyle({
+      ...createDefaultRosterPanelStyle(),
+      fontSize: 15,
+      width: 150,
+    });
+    expect(narrow.width).toBe(150);
+    expect(narrow.fontSize).toBe(15);
+    expect(normalizeRosterPanelStyle(narrow)).toEqual(narrow);
   });
 });
 

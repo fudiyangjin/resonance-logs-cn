@@ -23,6 +23,8 @@
 | **{{ui:monsterMonitor.roster.showHpValue}}** | % の横に HP の数値を表示します |
 | **{{ui:monsterMonitor.roster.showDistance}}** | あなたとの水平距離を表示し、同名のモンスターを見分けやすくします |
 
+**{{ui:monsterMonitor.roster.styleTitle}}** の **{{ui:monsterMonitor.roster.panelWidth}}** で HP バーの列の幅を調整できます（120～400px、既定 240）。右側のスキル列はその外側に加わります。長い名前は省略記号で表示します。幅が足りない場合は HP% や HP の数値、下部の小さなバーを折り返し、切れないように表示します。
+
 ## 注目スキル
 
 **{{ui:monsterMonitor.roster.skills.title}}** で気になるモンスタースキルを選ぶと、リストのそのモンスターの**行末**にスキルの状態が表示されます。モンスター名は繰り返しません。

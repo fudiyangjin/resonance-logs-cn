@@ -43,6 +43,7 @@
     type CustomPanelStyle,
     type EntityDurationEntry,
     type MonsterRosterOptions,
+    type RosterPanelStyle,
     type RosterSkillEntry,
     type MonsterSkillWatchEntry,
     type TeammateBuffColumnKey,
@@ -59,7 +60,10 @@
     type TeammateColumnRef,
   } from "$lib/teammate-buff-columns";
   import { updateMonsterMonitor } from "$lib/monster-monitor-profile.svelte.js";
-  import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
+  import {
+    normalizeCustomPanelStyle,
+    normalizeRosterPanelStyle,
+  } from "$lib/skill-monitor-normalize";
   import { blurOnEnter } from "$lib/utils.svelte";
   import { resolveMonsterBuffSourceScope as resolveScopeIn } from "$lib/voice/association";
   import ColorField from "$lib/components/ColorField.svelte";
@@ -209,7 +213,7 @@
     normalizeMonsterRosterOptions(monsterMonitor.roster),
   );
   const rosterPanelStyle = $derived.by(() =>
-    normalizeCustomPanelStyle(
+    normalizeRosterPanelStyle(
       monsterMonitor.rosterPanelStyle ?? monsterMonitor.hpPanelStyle,
     ),
   );
@@ -963,17 +967,17 @@
     }));
   }
 
-  function updateRosterPanelStyle<K extends keyof CustomPanelStyle>(
+  function updateRosterPanelStyle<K extends keyof RosterPanelStyle>(
     key: K,
-    value: CustomPanelStyle[K],
+    value: RosterPanelStyle[K],
   ) {
     updateMonsterMonitor((state) => ({
-      rosterPanelStyle: {
-        ...normalizeCustomPanelStyle(
+      rosterPanelStyle: normalizeRosterPanelStyle({
+        ...normalizeRosterPanelStyle(
           state.rosterPanelStyle ?? state.hpPanelStyle,
         ),
         [key]: value,
-      },
+      }),
     }));
   }
 

@@ -15,9 +15,11 @@ import {
   schemePatch,
   type MonsterSchemeStyles,
 } from "./hud-color-schemes";
+import { monsterSchemeStyles } from "./hud-color-scheme-actions";
 import {
   createDefaultCustomPanelGroup,
   createDefaultMonsterMonitorConfig,
+  createDefaultMonsterMonitorState,
   createDefaultSkillMonitorProfile,
 } from "./settings-store";
 
@@ -153,6 +155,16 @@ describe("applying a scheme", () => {
     );
     expect(result.hpPanelStyle.progressColor).toBe("#ef4444");
     expect(result.stunPanelStyle.progressColor).toBe("#60a5fa");
+  });
+
+  it("keeps the roster panel width when applied to the monster state", () => {
+    const state = createDefaultMonsterMonitorState();
+    state.rosterPanelStyle = { ...state.rosterPanelStyle, width: 168 };
+    const result = applySchemeToMonsterStyles(
+      monsterSchemeStyles(state),
+      getHudColorScheme("violet"),
+    );
+    expect(result.rosterPanelStyle.width).toBe(168);
   });
 });
 

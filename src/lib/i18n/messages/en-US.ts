@@ -2198,6 +2198,9 @@ export const enUSMessages = {
     "No skill data for this monster",
   "monsterMonitor.roster.skills.searchTitle": "Add by skill name or id",
   "monsterMonitor.roster.styleTitle": "Battle Roster Panel Style",
+  "monsterMonitor.roster.panelWidth": "Panel Width",
+  "monsterMonitor.roster.panelWidthHint":
+    "Width of the HP column, excluding skills on the right. Long names end in an ellipsis; values wrap when space is limited.",
   "monsterMonitor.roster.blockTitle": "Blocked Monsters",
   "monsterMonitor.roster.blockDescription":
     "Blocked monsters are left out of the battle roster and its counts. Blocking works by monster id and applies to every profile and dungeon.",

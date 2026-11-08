@@ -23,6 +23,8 @@ Bars update live; the order changes at most once per second so rows do not jump 
 | **{{ui:monsterMonitor.roster.showHpValue}}** | Shows the HP value next to the percentage |
 | **{{ui:monsterMonitor.roster.showDistance}}** | Shows the ground distance to you, to tell same-name monsters apart |
 
+**{{ui:monsterMonitor.roster.panelWidth}}** in **{{ui:monsterMonitor.roster.styleTitle}}** sets the width of the HP column (120–400 px, 240 by default); the skill column adds to that width on the right. Long names end in an ellipsis. When space is limited, percentages, HP values and the mini bars below wrap onto additional lines to avoid clipping.
+
 ## Watched skills
 
 Pick the monster skills you care about in **{{ui:monsterMonitor.roster.skills.title}}**. The roster then shows their state **at the end of the monster's row**, without repeating its name:

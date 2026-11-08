@@ -62,6 +62,7 @@ src-tauri/binaries/*.pdb
 /src-tauri/native/qwen3-tts/out/
 /src-tauri/native/qwen3-tts/models/
 /src-tauri/native/qwen3-tts/.cache/
+Task/
 latest.json
 latest.en-US.json
 latest.ja-JP.json

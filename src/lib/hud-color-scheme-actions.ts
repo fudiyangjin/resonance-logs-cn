@@ -16,6 +16,7 @@ import {
   ensureBuffCoverageStyle,
   ensureTextBuffPanelStyle,
   normalizeCustomPanelStyle,
+  normalizeRosterPanelStyle,
 } from "./skill-monitor-normalize";
 import {
   applySchemeToMonsterStyles,
@@ -74,7 +75,7 @@ export function monsterSchemeStyles(
     hpPanelStyle: resolve(state.hpPanelStyle),
     entityDurationPanelStyle: resolve(state.entityDurationPanelStyle),
     monsterSkillPanelStyle: resolve(state.monsterSkillPanelStyle),
-    rosterPanelStyle: normalizeCustomPanelStyle(
+    rosterPanelStyle: normalizeRosterPanelStyle(
       state.rosterPanelStyle ?? state.hpPanelStyle,
     ),
   };

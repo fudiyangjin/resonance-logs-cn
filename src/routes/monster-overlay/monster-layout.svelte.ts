@@ -5,7 +5,10 @@ import {
   type MonsterOverlayPositions,
   type TeammateCdSlotKind,
 } from "$lib/settings-store";
-import { normalizeCustomPanelStyle } from "$lib/skill-monitor-normalize";
+import {
+  normalizeCustomPanelStyle,
+  normalizeRosterPanelStyle,
+} from "$lib/skill-monitor-normalize";
 import {
   DEFAULT_MONSTER_OVERLAY_POSITIONS,
   DEFAULT_MONSTER_OVERLAY_SIZES,
@@ -212,7 +215,7 @@ export function hpPanelStyle() {
 }
 
 export function rosterPanelStyle() {
-  return normalizeCustomPanelStyle(
+  return normalizeRosterPanelStyle(
     SETTINGS.monsterMonitor.state.rosterPanelStyle ??
       SETTINGS.monsterMonitor.state.hpPanelStyle,
   );

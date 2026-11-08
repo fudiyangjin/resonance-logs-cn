@@ -12,6 +12,11 @@ import type { MonsterRosterOptions } from "./settings-store";
 
 export const MAX_ROSTER_NORMAL_ROWS = 20;
 export const DEFAULT_ROSTER_NORMAL_ROWS = 5;
+/** Width of the HP column in px; the skill column comes on top of it. */
+export const MIN_ROSTER_PANEL_WIDTH = 120;
+export const MAX_ROSTER_PANEL_WIDTH = 400;
+/** The former minimum width, so the default look is unchanged. */
+export const DEFAULT_ROSTER_PANEL_WIDTH = 240;
 /** Far above any real setup; keeps a corrupted file from growing forever. */
 export const MAX_ROSTER_BLOCKED_MONSTERS = 1_000;
 /** Rust side stores monster ids as `i32`. */
@@ -43,6 +48,17 @@ export function normalizeMonsterRosterOptions(
     showHpValue: value.showHpValue === true,
     showDistance: value.showDistance === true,
   };
+}
+
+/** A rounded width within the slider's range; the default when unusable. */
+export function normalizeRosterPanelWidth(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return DEFAULT_ROSTER_PANEL_WIDTH;
+  }
+  return Math.min(
+    MAX_ROSTER_PANEL_WIDTH,
+    Math.max(MIN_ROSTER_PANEL_WIDTH, Math.round(value)),
+  );
 }
 
 export function isValidMonsterId(value: unknown): value is number {

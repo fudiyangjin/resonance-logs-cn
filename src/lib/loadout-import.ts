@@ -41,6 +41,7 @@ import {
 import { ensureEntityDurationEntries } from "./entity-duration-entries";
 import { ensureMonsterSkillEntries } from "./monster-skill-entries";
 import { ensureRosterSkillEntries } from "./roster-skill-entries";
+import { DEFAULT_ROSTER_PANEL_WIDTH } from "./monster-roster-settings";
 import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
 import { ensureShieldDetailStyle } from "./skill-monitor-normalize";
 import { migrateLegacyMonsterPanels } from "./monster-panel-migration";
@@ -139,6 +140,12 @@ const customPanelStyleSchema = v.object({
   progressColor: v.string(),
   progressOpacity: finiteNumberSchema,
   ...overlayTextStyleEntries,
+});
+
+// `width` postdates the roster; older exports and presets have none.
+const rosterPanelStyleSchema = v.object({
+  ...customPanelStyleSchema.entries,
+  width: v.optional(finiteNumberSchema, DEFAULT_ROSTER_PANEL_WIDTH),
 });
 
 // The dead-teammate fields and `preciseTimer` postdate the teammate style;
@@ -877,7 +884,7 @@ const monsterProfileSchema = v.object({
   roster: monsterRosterOptionsSchema,
   rosterSkillEntries: rosterSkillEntriesSchema,
   rosterPanelStyle: v.optional(
-    customPanelStyleSchema,
+    rosterPanelStyleSchema,
     defaultClone(defaultMonster.rosterPanelStyle),
   ),
 });

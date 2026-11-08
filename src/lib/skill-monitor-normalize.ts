@@ -8,6 +8,7 @@ import {
   type PanelAreaRowRef,
   type PanelAttrConfig,
   type ResourceTextStyle,
+  type RosterPanelStyle,
   type ShieldDetailStyle,
   type SkillMonitorProfile,
   type TextBuffPanelStyle,
@@ -19,6 +20,7 @@ import {
   ensureOverlayTextStyle,
 } from "$lib/settings-store";
 import { dropLegacyUserCounterRules } from "$lib/user-counter-rules";
+import { normalizeRosterPanelWidth } from "$lib/monster-roster-settings";
 import { normalizeSkillCdRegions } from "$lib/skill-cd-layout";
 
 export const DEFAULT_OVERLAY_SIZES: OverlaySizes = {
@@ -195,6 +197,21 @@ export function normalizeCustomPanelStyle(
       1,
     ),
     ...ensureOverlayTextStyle(style),
+  };
+}
+
+/**
+ * The roster's panel style; also accepts the HP panel style it falls back
+ * to, which has no width.
+ */
+export function normalizeRosterPanelStyle(
+  style: Partial<RosterPanelStyle> | CustomPanelStyle | null | undefined,
+): RosterPanelStyle {
+  return {
+    ...normalizeCustomPanelStyle(style as CustomPanelStyle | null | undefined),
+    width: normalizeRosterPanelWidth(
+      style && "width" in style ? style.width : undefined,
+    ),
   };
 }
 

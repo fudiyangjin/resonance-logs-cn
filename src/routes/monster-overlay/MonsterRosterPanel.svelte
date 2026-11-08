@@ -42,6 +42,7 @@
     style:top={`${panelPos.y}px`}
     style:transform={`scale(${panelScale})`}
     style:transform-origin="top left"
+    style:--roster-width={`${styleConfig.width}px`}
     style:--overlay-text-shadow={overlayTextShadow(
       styleConfig.textShadowEnabled,
     )}
@@ -102,7 +103,7 @@
               {/if}
               <div
                 class="roster-main"
-                style:gap={`${styleConfig.columnGap}px`}
+                style:column-gap={`${styleConfig.columnGap}px`}
                 style:font-size={`${styleConfig.fontSize}px`}
               >
                 <span class="roster-name" style:color={styleConfig.nameColor}>
@@ -204,10 +205,10 @@
 {/if}
 
 <style>
-  /* No max width: the skill column grows with the watched skills of the
-     monsters shown, the HP column is capped per row. */
+  /* The HP column has the configured width (`--roster-width`); only the
+     skill column grows, with the watched skills of the monsters shown. */
   .monster-roster-panel {
-    min-width: 240px;
+    min-width: var(--roster-width);
   }
 
   .monster-roster-panel.has-background {
@@ -230,14 +231,17 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    min-width: 240px;
+    min-width: var(--roster-width);
   }
 
   .roster.placeholder {
     opacity: 0.7;
   }
 
+  /* `contain: inline-size`: the header and the strip take the rows' width
+     instead of widening the panel past the configured width. */
   .roster-header {
+    contain: inline-size;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.92);
     text-shadow: var(--overlay-text-shadow, 0 0 4px rgba(0, 0, 0, 0.9));
@@ -253,12 +257,12 @@
   /* One grid for all rows, so every HP bar and skill column lines up. */
   .roster-rows {
     display: grid;
-    grid-template-columns: minmax(240px, max-content);
+    grid-template-columns: var(--roster-width);
     column-gap: 6px;
   }
 
   .roster-rows.with-skills {
-    grid-template-columns: minmax(240px, max-content) max-content;
+    grid-template-columns: var(--roster-width) max-content;
   }
 
   .roster-skills {
@@ -273,7 +277,6 @@
 
   .roster-row {
     position: relative;
-    max-width: 340px;
     min-height: 20px;
     border-radius: 6px;
     overflow: hidden;
@@ -301,6 +304,8 @@
     position: relative;
     z-index: 1;
     display: flex;
+    flex-wrap: wrap;
+    row-gap: 2px;
     align-items: center;
     justify-content: space-between;
     min-width: 0;
@@ -315,7 +320,7 @@
 
   .roster-name {
     min-width: 0;
-    flex: 1 1 auto;
+    flex: 1 1 3em;
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
@@ -342,11 +347,22 @@
 
   .roster-right {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: baseline;
+    justify-content: flex-end;
     gap: 6px;
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    margin-left: auto;
     font-variant-numeric: tabular-nums;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .roster-right > span {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .roster-percent,
@@ -354,10 +370,14 @@
     font-weight: 600;
   }
 
+  /* Wrap the summary and mini bars when narrow so no monsters are hidden. */
   .roster-strip {
+    contain: inline-size;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
+    column-gap: 6px;
+    row-gap: 2px;
     min-width: 0;
     text-shadow: var(--overlay-text-shadow, 0 0 3px rgba(0, 0, 0, 1));
     white-space: nowrap;
@@ -365,18 +385,21 @@
 
   .strip-bars {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
     gap: 2px;
-    flex: 1 1 auto;
-    min-width: 0;
-    height: 16px;
+    flex: 1 1 0;
+    min-width: 32px;
+    max-width: 100%;
+    min-height: 16px;
   }
 
   .strip-bar {
     position: relative;
-    flex: 0 1 6px;
+    flex: 1 0 2px;
     min-width: 2px;
-    height: 100%;
+    max-width: 6px;
+    height: 16px;
     background: rgba(255, 255, 255, 0.16);
     border-radius: 1px;
     overflow: hidden;
@@ -388,8 +411,16 @@
     transform-origin: bottom center;
   }
 
+  .strip-label,
   .strip-range {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .strip-range {
     font-variant-numeric: tabular-nums;
   }
 </style>

@@ -2165,6 +2165,9 @@ export const jaJPMessages = {
     "このモンスターのスキルデータはありません",
   "monsterMonitor.roster.skills.searchTitle": "スキル名または ID で追加",
   "monsterMonitor.roster.styleTitle": "戦闘リストパネルスタイル",
+  "monsterMonitor.roster.panelWidth": "パネル幅",
+  "monsterMonitor.roster.panelWidthHint":
+    "HP バーの列の幅です（右側のスキル列は含みません）。長い名前は省略記号で表示し、幅が足りない場合は数値を折り返します。",
   "monsterMonitor.roster.blockTitle": "モンスターの非表示",
   "monsterMonitor.roster.blockDescription":
     "非表示にしたモンスターは戦闘リストに表示されず、数にも含まれません。モンスター ID 単位で、すべてのプロファイルとダンジョンに適用されます。",

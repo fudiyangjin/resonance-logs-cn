@@ -7,7 +7,11 @@ import {
   type Loadout,
   type SkillMonitorProfile,
 } from "$lib/settings-store";
-import { exportLoadout, importLoadout } from "$lib/loadouts.svelte.js";
+import {
+  exportLoadout,
+  importLoadout,
+  switchLoadout,
+} from "$lib/loadouts.svelte.js";
 import { applyActiveLiveProfileToMirror } from "$lib/live-meter-profile.svelte.js";
 import { parseLoadoutExport } from "$lib/loadout-import";
 import { normalizeSkillProfile } from "$lib/skill-monitor-normalize";
@@ -139,6 +143,25 @@ describe("exportLoadout normalization", () => {
       fontSize: 24,
       color: "#ffcc00",
     });
+  });
+
+  it("keeps the roster panel width through export and import", () => {
+    const { loadoutId } = resetWithLegacyLoadout();
+    const mirror = SETTINGS.monitoring.state.monsterMonitor;
+    mirror.rosterPanelStyle = { ...mirror.rosterPanelStyle, width: 168 };
+
+    const data = exportLoadout(loadoutId);
+    const parsed = parseLoadoutExport(JSON.parse(JSON.stringify(data)));
+    if (!parsed.success) throw new Error(parsed.issues.join("\n"));
+    expect(parsed.output.monsterProfile.rosterPanelStyle.width).toBe(168);
+
+    const importedId = importLoadout(parsed.output);
+    switchLoadout(loadoutId);
+    SETTINGS.monsterMonitor.state.rosterPanelStyle.width = 320;
+    switchLoadout(importedId);
+    expect(SETTINGS.monsterMonitor.state.rosterPanelStyle.width).toBe(168);
+    switchLoadout(loadoutId);
+    expect(SETTINGS.monsterMonitor.state.rosterPanelStyle.width).toBe(320);
   });
 
   it("re-imports byte-for-byte the same as parsing directly", () => {

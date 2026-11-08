@@ -682,6 +682,28 @@ describe("parseLoadoutExport", () => {
     expect(result.output.monsterProfile.rosterPanelStyle.progressColor).toBe(
       "#ef4444",
     );
+    expect(result.output.monsterProfile.rosterPanelStyle.width).toBe(240);
+  });
+
+  it("defaults the roster panel width missing from an older export", () => {
+    const data = validExport();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    const style = { ...(monster["rosterPanelStyle"] as object) } as Record<
+      string,
+      unknown
+    >;
+    delete style["width"];
+    monster["rosterPanelStyle"] = style;
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.output.monsterProfile.rosterPanelStyle.width).toBe(240);
+
+    style["width"] = 168;
+    const narrow = parseLoadoutExport(data);
+    expect(narrow.success).toBe(true);
+    if (!narrow.success) return;
+    expect(narrow.output.monsterProfile.rosterPanelStyle.width).toBe(168);
   });
 
   it("fills dead-teammate defaults missing from an older monster profile", () => {

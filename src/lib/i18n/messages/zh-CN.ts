@@ -2025,6 +2025,9 @@ export const zhCNMessages = {
   "monsterMonitor.roster.skills.monsterNoSkills": "没有这只怪的技能数据",
   "monsterMonitor.roster.skills.searchTitle": "按技能名或 ID 添加",
   "monsterMonitor.roster.styleTitle": "战斗名单面板样式",
+  "monsterMonitor.roster.panelWidth": "面板宽度",
+  "monsterMonitor.roster.panelWidthHint":
+    "血条列的宽度，不含右侧技能列。过长的名字显示省略号；宽度不足时，数值换行显示。",
   "monsterMonitor.roster.blockTitle": "屏蔽怪物",
   "monsterMonitor.roster.blockDescription":
     "被屏蔽的怪不会出现在战斗名单里，也不计入数量。屏蔽按怪物 ID 生效，对所有方案和副本都有效。",

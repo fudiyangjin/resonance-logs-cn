@@ -23,6 +23,8 @@
 | **{{ui:monsterMonitor.roster.showHpValue}}** | 在百分比旁显示具体血量 |
 | **{{ui:monsterMonitor.roster.showDistance}}** | 显示与你的水平距离，方便区分同名的怪 |
 
+在 **{{ui:monsterMonitor.roster.styleTitle}}** 里可以调 **{{ui:monsterMonitor.roster.panelWidth}}**（120～400px，默认 240）。它控制血条列的宽度，右侧技能列另算。过长的名字显示省略号；宽度不足时，百分比、血量等数值换行显示，底部的小血条也会折行，避免被裁掉。
+
 ## 关注技能
 
 在 **{{ui:monsterMonitor.roster.skills.title}}** 里选出你关心的怪物技能，名单会在怪那一行的**行尾**显示技能状态，不会重复写怪名：
