@@ -1416,6 +1416,12 @@ export type MonsterMonitorConfig = {
   entityVoiceConfigs?: EntityVoiceConfigMap;
   /** Voice bindings for monster-skill entries, keyed by skill id (as a string). */
   monsterSkillVoiceConfigs?: MonsterSkillVoiceConfigMap;
+  /**
+   * Voice bindings for the battle roster's watched skills, keyed by skill id
+   * (as a string). Same cast-only shape as `monsterSkillVoiceConfigs`, but
+   * spoken only for monsters on the roster.
+   */
+  rosterSkillVoiceConfigs?: MonsterSkillVoiceConfigMap;
   fantasyShowAll: boolean;
   buffPriorityIds: number[];
   buffAliases: BuffAliasMap;
@@ -2284,6 +2290,7 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     monsterBuffVoiceConfigs: {},
     entityVoiceConfigs: {},
     monsterSkillVoiceConfigs: {},
+    rosterSkillVoiceConfigs: {},
     fantasyShowAll: false,
     buffPriorityIds: [],
     buffAliases: {},
@@ -2377,6 +2384,7 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "monsterBuffVoiceConfigs",
   "entityVoiceConfigs",
   "monsterSkillVoiceConfigs",
+  "rosterSkillVoiceConfigs",
   "fantasyShowAll",
   "buffPriorityIds",
   "buffAlerts",

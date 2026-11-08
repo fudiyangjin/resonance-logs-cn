@@ -53,6 +53,22 @@ export function lookupMonsterSkillDefaultName(
   return catalog(locale).get(skillId) ?? null;
 }
 
+/**
+ * What a watched monster skill is called on its HUD row and in its voice
+ * line: the user's label, else the game's name, else `#id`.
+ */
+export function monsterSkillDisplayName(
+  label: string | undefined,
+  skillId: number,
+  locale: AppLocale,
+): string {
+  return (
+    label?.trim() ||
+    lookupMonsterSkillDefaultName(skillId, locale) ||
+    `#${skillId}`
+  );
+}
+
 function normalizeText(value: string): string {
   return value.trim().toLowerCase();
 }

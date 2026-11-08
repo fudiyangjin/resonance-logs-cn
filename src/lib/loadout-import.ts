@@ -827,6 +827,10 @@ const monsterProfileSchema = v.object({
     monsterSkillVoiceConfigMapSchema,
     defaultClone(defaultMonster.monsterSkillVoiceConfigs ?? {}),
   ),
+  rosterSkillVoiceConfigs: v.optional(
+    monsterSkillVoiceConfigMapSchema,
+    defaultClone(defaultMonster.rosterSkillVoiceConfigs ?? {}),
+  ),
   fantasyShowAll: v.boolean(),
   buffPriorityIds: numberArraySchema,
   buffAlerts: buffAlertMapSchema,

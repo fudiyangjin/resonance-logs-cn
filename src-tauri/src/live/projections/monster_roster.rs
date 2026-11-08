@@ -9,7 +9,11 @@
 //! Casts of the watched skills are tracked per member: the latest cast of
 //! each watched skill, and the one being cast right now. Cooldowns, battle
 //! start windows and sing bars are derived on the frontend from these
-//! timestamps and the skill tables.
+//! timestamps and the skill tables. Each new watched cast is also reported
+//! to the caller, which hands it to the voice rules.
+//!
+//! Tracking runs while the panel is shown or a voice rule listens for roster
+//! casts; only the panel makes the roster published.
 //!
 //! The projection also remembers, for this run only, which monster templates
 //! (and which of their skills) have been on the roster so the settings page
@@ -49,6 +53,16 @@ pub struct MonsterRosterPublication {
     pub recent: Option<Vec<RecentRosterMonster>>,
 }
 
+/// What one event did to the roster.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[must_use]
+pub struct RosterOutcome {
+    /// The published roster changed; always false while the panel is hidden.
+    pub republish: bool,
+    /// A member started a cast of this watched skill.
+    pub watched_cast: Option<i32>,
+}
+
 #[derive(Debug)]
 struct Member {
     joined_seq: u64,
@@ -64,7 +78,10 @@ struct Member {
 
 #[derive(Debug, Default)]
 pub struct MonsterRosterProjection {
-    enabled: bool,
+    /// The panel is shown: the roster is published.
+    panel: bool,
+    /// A voice rule announces roster casts.
+    voiced: bool,
     /// Sorted and deduplicated (normalized by the runtime snapshot).
     watched: Vec<i32>,
     members: HashMap<EntityUuid, Member>,
@@ -78,16 +95,18 @@ pub struct MonsterRosterProjection {
 }
 
 impl MonsterRosterProjection {
-    /// Turns tracking on (rebuilding from the current entities) or off and
-    /// replaces the watched skills. Returns true when the published roster
-    /// changed.
+    /// Applies the panel's visibility and replaces the watched skills.
+    /// Returns true when the roster should be republished.
     pub fn apply_config(
         &mut self,
         config: &MonsterRosterRuntimeSnapshot,
         entities: &EntityContext,
         now_wall_ms: i64,
     ) -> bool {
-        let mut changed = false;
+        let was_tracking = self.tracking();
+        let panel_toggled = config.enabled != self.panel;
+        self.panel = config.enabled;
+        let mut changed = self.retrack(was_tracking, entities, now_wall_ms);
         if config.watched_skill_ids != self.watched {
             self.watched.clone_from(&config.watched_skill_ids);
             let watched = &self.watched;
@@ -102,24 +121,59 @@ impl MonsterRosterProjection {
                 changed |= before != (member.casts.len(), member.current_cast);
             }
         }
-        if config.enabled != self.enabled {
-            self.enabled = config.enabled;
-            changed |= if self.enabled {
-                self.rebuild(entities, now_wall_ms);
-                true
-            } else {
-                self.clear_members()
-            };
-        }
-        changed
+        // Showing the panel publishes what voice-only tracking gathered.
+        self.panel && (changed || panel_toggled)
     }
 
-    /// Returns true when the published roster changed. Does nothing while
-    /// the panels are off.
-    pub fn apply(&mut self, envelope: &DomainEnvelope, entities: &EntityContext) -> bool {
-        if !self.enabled {
-            return false;
+    /// Turns tracking for the voice rules on or off. Returns true when the
+    /// roster should be republished.
+    pub fn set_voiced(&mut self, voiced: bool, entities: &EntityContext, now_wall_ms: i64) -> bool {
+        let was_tracking = self.tracking();
+        self.voiced = voiced;
+        self.retrack(was_tracking, entities, now_wall_ms) && self.panel
+    }
+
+    /// Does nothing while neither the panel nor a voice rule needs the
+    /// roster.
+    pub fn apply(&mut self, envelope: &DomainEnvelope, entities: &EntityContext) -> RosterOutcome {
+        if !self.tracking() {
+            return RosterOutcome::default();
         }
+        let (changed, watched_cast) = match &envelope.event {
+            DomainEvent::SkillLifecycleChanged {
+                caster,
+                skill_id,
+                phase: SkillPhase::Observed,
+                ..
+            } => self.observe_cast(entities, caster.uuid, *skill_id, envelope.occurred_at_ms),
+            _ => (self.apply_membership(envelope, entities), None),
+        };
+        RosterOutcome {
+            republish: changed && self.panel,
+            watched_cast,
+        }
+    }
+
+    const fn tracking(&self) -> bool {
+        self.panel || self.voiced
+    }
+
+    /// Rebuilds or drops the members when tracking switched; true when they
+    /// changed.
+    fn retrack(&mut self, was_tracking: bool, entities: &EntityContext, now_ms: i64) -> bool {
+        match (was_tracking, self.tracking()) {
+            (false, true) => {
+                self.rebuild(entities, now_ms);
+                true
+            }
+            (true, false) => self.clear_members(),
+            _ => false,
+        }
+    }
+
+    /// Every event except casts: membership, HP, targets and positions.
+    /// True when the roster changed.
+    fn apply_membership(&mut self, envelope: &DomainEnvelope, entities: &EntityContext) -> bool {
         let now_ms = envelope.occurred_at_ms;
         match &envelope.event {
             DomainEvent::HateListUpdated { entity, entries } => {
@@ -156,12 +210,6 @@ impl MonsterRosterProjection {
                 .members
                 .get_mut(&entity.uuid)
                 .is_some_and(|member| member.current_cast.take().is_some()),
-            DomainEvent::SkillLifecycleChanged {
-                caster,
-                skill_id,
-                phase: SkillPhase::Observed,
-                ..
-            } => self.observe_cast(entities, caster.uuid, *skill_id, now_ms),
             DomainEvent::AttackTargetChanged {
                 actor,
                 previous,
@@ -409,23 +457,24 @@ impl MonsterRosterProjection {
     /// Records a cast by a member. A watched skill becomes the latest cast
     /// of that skill and the current cast of the member; any other skill
     /// ends the current one. Every skill also goes to the recent list of the
-    /// member's template. True when the publication changed: the roster, or
-    /// the recent list (the settings page reads it from the last
-    /// publication, so a new skill must not wait for another roster change).
+    /// member's template. Returns whether the publication changed (the
+    /// roster, or the recent list: the settings page reads it from the last
+    /// publication, so a new skill must not wait for another roster change)
+    /// and the watched skill a member started casting, if any.
     fn observe_cast(
         &mut self,
         entities: &EntityContext,
         uuid: EntityUuid,
         skill_id: i32,
         now_ms: i64,
-    ) -> bool {
+    ) -> (bool, Option<i32>) {
         let Some(member) = self.members.get_mut(&uuid) else {
-            return false;
+            return (false, None);
         };
         let state = entities.entity(uuid);
         let skill_uuid = state.and_then(|state| state.int_attr(attr_type::ATTR_SKILL_UUID));
         if skill_uuid.is_some() && skill_uuid == member.last_skill_uuid {
-            return false;
+            return (false, None);
         }
         member.last_skill_uuid = skill_uuid;
         let cast_at_ms = state
@@ -435,7 +484,8 @@ impl MonsterRosterProjection {
             .filter(|at_ms| at_ms.abs_diff(now_ms) <= MAX_SKILL_TIME_SKEW_MS)
             .unwrap_or(now_ms);
 
-        let changed = if self.watched.binary_search(&skill_id).is_ok() {
+        let watched = self.watched.binary_search(&skill_id).is_ok();
+        let changed = if watched {
             let cast = RosterSkillCast {
                 skill_id,
                 cast_at_ms,
@@ -457,7 +507,7 @@ impl MonsterRosterProjection {
         let noted = state
             .and_then(|state| state.identity.monster_id)
             .is_some_and(|monster_id| self.note_recent_skill(monster_id, skill_id));
-        changed || noted
+        (changed || noted, watched.then_some(skill_id))
     }
 
     /// Adds `skill_id` to the recent skills of `monster_id`; true when it was
@@ -707,22 +757,43 @@ mod tests {
             .expect("roster member")
     }
 
-    /// Applies `observations` and feeds the resulting events to `roster`;
-    /// true when any event changed the roster.
+    /// Applies `observations` and feeds the resulting events to `roster`.
+    fn outcomes(
+        entities: &mut EntityContext,
+        roster: &mut MonsterRosterProjection,
+        observations: Vec<ProtocolObservation>,
+    ) -> Vec<RosterOutcome> {
+        let envelopes = entities.apply_batch(ProtocolBatch {
+            meta: meta(),
+            observations,
+        });
+        envelopes
+            .iter()
+            .map(|envelope| roster.apply(envelope, entities))
+            .collect()
+    }
+
+    /// True when any event changed the published roster.
     fn step(
         entities: &mut EntityContext,
         roster: &mut MonsterRosterProjection,
         observations: Vec<ProtocolObservation>,
     ) -> bool {
-        let envelopes = entities.apply_batch(ProtocolBatch {
-            meta: meta(),
-            observations,
-        });
-        let mut changed = false;
-        for envelope in &envelopes {
-            changed |= roster.apply(envelope, entities);
-        }
-        changed
+        outcomes(entities, roster, observations)
+            .iter()
+            .any(|outcome| outcome.republish)
+    }
+
+    /// The watched casts the events reported, in order.
+    fn watched_casts(
+        entities: &mut EntityContext,
+        roster: &mut MonsterRosterProjection,
+        observations: Vec<ProtocolObservation>,
+    ) -> Vec<i32> {
+        outcomes(entities, roster, observations)
+            .iter()
+            .filter_map(|outcome| outcome.watched_cast)
+            .collect()
     }
 
     fn member_uuids(roster: &mut MonsterRosterProjection, entities: &EntityContext) -> Vec<String> {
@@ -889,7 +960,39 @@ mod tests {
             vec![MONSTER.0.to_string()]
         );
 
-        assert!(roster.apply_config(&config(false, &[]), &entities, 0));
+        // Hiding the panel stops tracking; the hidden panel needs no update.
+        assert!(!roster.apply_config(&config(false, &[]), &entities, 0));
+        assert!(member_uuids(&mut roster, &entities).is_empty());
+    }
+
+    #[test]
+    fn voice_alone_tracks_the_roster_without_publishing_it() {
+        let mut entities = scene();
+        let mut roster = MonsterRosterProjection::default();
+        assert!(!roster.apply_config(&config(false, &[WATCHED]), &entities, 0));
+        assert!(!roster.set_voiced(true, &entities, 0));
+
+        assert!(!step(
+            &mut entities,
+            &mut roster,
+            vec![hate(MONSTER, &[local()])]
+        ));
+        assert_eq!(
+            watched_casts(&mut entities, &mut roster, cast(MONSTER, WATCHED, 31)),
+            vec![WATCHED]
+        );
+
+        // Showing the panel publishes what was tracked meanwhile.
+        assert!(roster.apply_config(&config(true, &[WATCHED]), &entities, 0));
+        assert_eq!(
+            member_uuids(&mut roster, &entities),
+            vec![MONSTER.0.to_string()]
+        );
+
+        // The panel keeps tracking on without the voice rules.
+        assert!(!roster.set_voiced(false, &entities, 0));
+        assert_eq!(member_uuids(&mut roster, &entities).len(), 1);
+        assert!(!roster.apply_config(&config(false, &[WATCHED]), &entities, 0));
         assert!(member_uuids(&mut roster, &entities).is_empty());
     }
 
@@ -968,6 +1071,31 @@ mod tests {
     }
 
     #[test]
+    fn watched_casts_are_reported_for_members_once_per_instance() {
+        let mut entities = scene();
+        let mut roster = watching(&entities, &[WATCHED]);
+
+        assert!(
+            watched_casts(&mut entities, &mut roster, cast(OTHER_MONSTER, WATCHED, 41)).is_empty(),
+            "not on the roster"
+        );
+
+        step(&mut entities, &mut roster, vec![hate(MONSTER, &[local()])]);
+        assert_eq!(
+            watched_casts(&mut entities, &mut roster, cast(MONSTER, WATCHED, 42)),
+            vec![WATCHED]
+        );
+        assert!(
+            watched_casts(&mut entities, &mut roster, cast(MONSTER, WATCHED, 42)).is_empty(),
+            "the same instance again"
+        );
+        assert!(
+            watched_casts(&mut entities, &mut roster, cast(MONSTER, OTHER_SKILL, 43)).is_empty(),
+            "not watched"
+        );
+    }
+
+    #[test]
     fn cast_time_comes_from_the_server_skill_begin_time() {
         let mut entities = scene();
         let mut roster = watching(&entities, &[WATCHED]);
@@ -987,7 +1115,7 @@ mod tests {
             },
         });
         for envelope in &envelopes {
-            roster.apply(envelope, &entities);
+            let _ = roster.apply(envelope, &entities);
         }
 
         let monster = roster_monster(&mut roster, &entities, MONSTER);
@@ -1112,6 +1240,92 @@ mod tests {
         assert_eq!(
             cache.current_monster_roster_recent()[0].skill_ids,
             vec![OTHER_SKILL]
+        );
+
+        drop(projections);
+        join.join().expect("history writer stops");
+    }
+
+    /// A roster voice rule keeps the roster tracked behind a hidden panel:
+    /// a member's cast is announced, and nothing is published.
+    #[test]
+    fn a_hidden_roster_still_announces_member_casts() {
+        use crate::live::bootstrap_snapshot::MonitorRuntimeSnapshot;
+        use crate::live::history_writer::HistoryWriterHandle;
+        use crate::live::ipc::topic::TopicMask;
+        use crate::live::projection_set::ProjectionSet;
+        use crate::live::runtime::scheduler::DeadlineScheduler;
+        use crate::live::runtime::segment::SegmentState;
+        use crate::voice::models::{
+            VoiceEvent, VoiceRule, VoiceRuntimeSnapshot, VoiceSubject, VoiceTrigger,
+        };
+        use std::sync::Arc;
+
+        let (writer, join) = HistoryWriterHandle::start().expect("history writer starts");
+        let mut projections = ProjectionSet::new(writer);
+        let mut scheduler = DeadlineScheduler::new();
+        let idle = SegmentState::default();
+        let mut entities = scene();
+        let monitor = MonitorRuntimeSnapshot {
+            monster_roster: config(false, &[WATCHED]),
+            ..MonitorRuntimeSnapshot::default()
+        };
+        projections
+            .apply_config(
+                Arc::new(monitor),
+                &entities,
+                0,
+                MonoTimeMs(0),
+                &mut scheduler,
+            )
+            .unwrap();
+        projections.apply_voice_config(
+            &VoiceRuntimeSnapshot {
+                enabled: true,
+                volume: 1.0,
+                queue_policy: Default::default(),
+                rules: vec![VoiceRule {
+                    id: "roster".to_owned(),
+                    enabled: true,
+                    trigger: VoiceTrigger::new(
+                        VoiceSubject::RosterSkill { skill_id: WATCHED },
+                        VoiceEvent::Started,
+                    ),
+                    phrase_id: "phrase".to_owned(),
+                    priority: 0,
+                    cooldown_ms: 0,
+                    phrase_id_by_tier: None,
+                }],
+            },
+            &entities,
+            0,
+            MonoTimeMs(0),
+            &mut scheduler,
+        );
+        // Drop whatever the configuration itself marked dirty.
+        let _ = projections.take_publications(&entities, &idle, TopicMask::MONSTER_ROSTER);
+
+        let mut feed = |entities: &mut EntityContext, observations| {
+            let envelopes = entities.apply_batch(ProtocolBatch {
+                meta: meta(),
+                observations,
+            });
+            for envelope in &envelopes {
+                projections
+                    .apply(envelope, entities, &mut scheduler)
+                    .unwrap();
+            }
+        };
+        feed(&mut entities, vec![hate(MONSTER, &[local()])]);
+        feed(&mut entities, cast(MONSTER, WATCHED, 61));
+
+        let cues = projections.take_voice_cues();
+        assert_eq!(cues.len(), 1);
+        assert_eq!(cues[0].phrase_id, "phrase");
+        assert!(
+            projections
+                .take_publications(&entities, &idle, TopicMask::MONSTER_ROSTER)
+                .is_empty()
         );
 
         drop(projections);

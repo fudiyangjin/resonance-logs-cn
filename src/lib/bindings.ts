@@ -1351,9 +1351,14 @@ export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRunt
  */
 export type MonsterBuffSourceScope = "anySource" | "localPlayerSource"
 /**
- * The battle roster panel. Off means the roster projection tracks nothing.
+ * The battle roster panel. The roster is tracked while the panel is shown
+ * or a voice rule announces roster casts, and published only while shown.
  */
-export type MonsterRosterRuntimeSnapshot = { enabled: boolean;
+export type MonsterRosterRuntimeSnapshot = {
+/**
+ * The panel is shown.
+ */
+enabled: boolean;
 /**
  * Skills whose casts and cooldowns are shown at the end of roster rows.
  */
@@ -1831,6 +1836,11 @@ export type VoiceSubject =
  * monster cast it.
  */
 { kind: "monsterSkill"; skillId: number } |
+/**
+ * A skill on the battle roster's watch list. `Started` = a monster on
+ * the roster cast it.
+ */
+{ kind: "rosterSkill"; skillId: number } |
 /**
  * One effect slot of a counter rule.
  */

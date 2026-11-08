@@ -5,7 +5,8 @@
  * profile that holds it — the entity entry exists, the target buff sits in
  * a monitor list, the DBM entry is listed, the counter slot resolves, the
  * minimap cue is registered — and only for events that apply (an entity
- * entry without a duration has no "expiring"). Local buff and skill
+ * entry without a duration has no "expiring"; a monster or roster skill
+ * binding needs its watch entry). Local buff and skill
  * bindings form their own lists (a skill needs no cooldown HUD slot to be
  * voiced), so they are always associated. These pure functions are the
  * single judge: the adapters' `enumerate` / `events` (what compiles), the
@@ -20,6 +21,7 @@
 import type { MonsterBuffSourceScope } from "$lib/bindings";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
 import { ensureMonsterSkillEntries } from "$lib/monster-skill-entries";
+import { ensureRosterSkillEntries } from "$lib/roster-skill-entries";
 import {
   ensureDbmAliases,
   GAME_ALERT_KINDS,
@@ -94,6 +96,17 @@ export function monsterSkillEntryIds(
 ): Set<number> {
   return new Set(
     ensureMonsterSkillEntries(slice.monsterSkillEntries).map(
+      (entry) => entry.skillId,
+    ),
+  );
+}
+
+/** Skill ids watched on the battle roster. */
+export function rosterSkillEntryIds(
+  slice: Pick<MonsterVoiceSlice, "rosterSkillEntries">,
+): Set<number> {
+  return new Set(
+    ensureRosterSkillEntries(slice.rosterSkillEntries).map(
       (entry) => entry.skillId,
     ),
   );
@@ -292,11 +305,17 @@ export function pruneMonsterVoice<M extends MonsterVoiceSlice>(monster: M): M {
     monster.monsterSkillVoiceConfigs,
     (key, config) => (monsterSkillEntries.has(Number(key)) ? config : null),
   );
+  const rosterSkillEntries = rosterSkillEntryIds(monster);
+  const rosterSkillVoiceConfigs = pruneRecord(
+    monster.rosterSkillVoiceConfigs,
+    (key, config) => (rosterSkillEntries.has(Number(key)) ? config : null),
+  );
   if (
     monsterBuffVoiceConfigs === monster.monsterBuffVoiceConfigs &&
     dbmVoiceConfigs === monster.dbmVoiceConfigs &&
     entityVoiceConfigs === monster.entityVoiceConfigs &&
-    monsterSkillVoiceConfigs === monster.monsterSkillVoiceConfigs
+    monsterSkillVoiceConfigs === monster.monsterSkillVoiceConfigs &&
+    rosterSkillVoiceConfigs === monster.rosterSkillVoiceConfigs
   ) {
     return monster;
   }
@@ -306,6 +325,7 @@ export function pruneMonsterVoice<M extends MonsterVoiceSlice>(monster: M): M {
     dbmVoiceConfigs,
     entityVoiceConfigs,
     monsterSkillVoiceConfigs,
+    rosterSkillVoiceConfigs,
   };
 }
 

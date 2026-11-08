@@ -9,7 +9,7 @@
  */
 import type { RosterMonsterState, RosterPlayerState } from "$lib/bindings";
 import { resolveMonsterName } from "$lib/config/game-names";
-import { lookupMonsterSkillDefaultName } from "$lib/config/monster-skill-search";
+import { monsterSkillDisplayName } from "$lib/config/monster-skill-search";
 import {
   monsterSkillIdsOf,
   monsterSkillTiming,
@@ -23,11 +23,7 @@ import {
 } from "$lib/monster-roster-settings";
 import { abbreviateNumber } from "$lib/number-format";
 import { ensureRosterSkillEntries } from "$lib/roster-skill-entries";
-import {
-  SETTINGS,
-  type MonsterRosterOptions,
-  type RosterSkillEntry,
-} from "$lib/settings-store";
+import { SETTINGS, type MonsterRosterOptions } from "$lib/settings-store";
 import { getClassConfigs } from "$lib/skill-mappings";
 import { liveMonsterRosterStore } from "$lib/stores/live-topics.svelte";
 import { reuseIfSame } from "$lib/structural-reuse";
@@ -114,14 +110,6 @@ function playerName(player: RosterPlayerState): string {
   );
 }
 
-function skillLabel(skillId: number, entry: RosterSkillEntry | undefined) {
-  return (
-    entry?.label ||
-    lookupMonsterSkillDefaultName(skillId, getLocale()) ||
-    `#${skillId}`
-  );
-}
-
 function skillChips(
   monster: RosterMonsterState,
   skillIds: readonly number[],
@@ -131,7 +119,7 @@ function skillChips(
     const current = monster.currentCast;
     return {
       skillId,
-      label: skillLabel(skillId, entry),
+      label: monsterSkillDisplayName(entry?.label, skillId, getLocale()),
       timing: monsterSkillTiming(skillId),
       customCooldownSeconds: entry?.cooldownSeconds ?? null,
       joinedAtMs: monster.joinedAtMs,

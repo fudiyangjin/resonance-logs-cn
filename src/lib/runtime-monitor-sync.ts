@@ -247,19 +247,17 @@ function buildTeammateCdRuntimeSnapshot(): MonitorRuntimeSnapshot["teammateCd"] 
   return { enabled: classes.length > 0, classes };
 }
 
-/** The roster projection runs only while the battle roster is shown; its
- * watched skills are tracked per monster for the cells at the row ends. */
+/** `enabled` is whether the battle roster is shown (and published). The
+ * watched skills always go down: roster voice rules keep the roster tracked
+ * behind a hidden panel, like the other monster voice subjects. */
 function buildMonsterRosterRuntimeSnapshot(): MonitorRuntimeSnapshot["monsterRoster"] {
   const state = SETTINGS.monsterMonitor.state;
-  const enabled =
-    state.enabled && (state.overlayVisibility?.showRosterPanel ?? false);
   return {
-    enabled,
-    watchedSkillIds: enabled
-      ? ensureRosterSkillEntries(state.rosterSkillEntries).map(
-          (entry) => entry.skillId,
-        )
-      : [],
+    enabled:
+      state.enabled && (state.overlayVisibility?.showRosterPanel ?? false),
+    watchedSkillIds: ensureRosterSkillEntries(state.rosterSkillEntries).map(
+      (entry) => entry.skillId,
+    ),
   };
 }
 

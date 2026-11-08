@@ -1991,6 +1991,10 @@ export const zhCNMessages = {
   "monsterMonitor.roster.showDistanceDesc":
     "与你的水平距离（米），方便在同名的怪里找到对应的那只。",
   "monsterMonitor.roster.skills.title": "关注技能（显示在名单行尾）",
+  "monsterMonitor.roster.skills.voiceTitle": "语音播报",
+  "monsterMonitor.roster.skills.voiceHint":
+    "名单里的怪放出这个技能时播报（读条技能在开始读条时）；同一时刻几只怪一起放只播一次。名单面板隐藏也会播报。没进仇恨列表的机制物不在名单上，请在怪物技能面板里配置。",
+  "monsterMonitor.roster.skills.voiceGroup": "战斗名单技能",
   "monsterMonitor.roster.skills.description":
     "能放这些技能的怪会排在主目标下面并逐行显示，行尾显示技能状态：灰色倒计时为冷却中，琥珀色为就绪，红色为读条中或刚放出。按技能 ID 生效，所有能放该技能的怪都算。",
   "monsterMonitor.roster.skills.caveatReady":
@@ -2845,6 +2849,7 @@ export const zhCNMessages = {
   "voice.bindings.navigate.skill": "前往技能 CD",
   "voice.bindings.navigate.entity": "前往实体持续时间",
   "voice.bindings.navigate.monsterSkill": "前往怪物技能",
+  "voice.bindings.navigate.rosterSkill": "前往战斗名单",
   "voice.bindings.generateMissing": "一键生成缺失语音",
   "voice.bindings.generateMissing.generating": "正在生成…",
   "voice.bindings.generateMissing.needProfile":

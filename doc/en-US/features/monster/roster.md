@@ -46,6 +46,17 @@ To add skills:
 > [!NOTE]
 > The cooldown is a lower bound: in captured logs monsters never recast sooner, but the AI may wait longer once it is over. Skills triggered by scripts (several monsters casting at once, for example) cannot be predicted, and an interrupted cast can have a longer cooldown, so "Ready" may show early.
 
+### Voice broadcast
+
+Each watched skill can expand **{{ui:monsterMonitor.roster.skills.voiceTitle}}** to set up **{{ui:voice.binding.event.onCast}}**:
+
+- It plays only when a monster on the roster casts the skill; a cast-bar skill plays when its bar starts;
+- Several monsters casting the same skill at the same moment play it once;
+- It keeps playing while the roster panel is hidden or **{{ui:monsterMonitor.enabled}}** is off;
+- Removing the watched skill also removes its voice binding.
+
+Mechanic objects outside the hate lists are not on the roster, so they are never announced here. Set those skills up in [Monster Skills](./monster-skill.md), which covers any nearby monster.
+
 ## Blocking monsters
 
 Mechanic markers, scene objects and other monsters whose HP does not matter can be blocked under **{{ui:monsterMonitor.roster.blockTitle}}**. Blocking works by monster id and applies to every profile and dungeon; blocked monsters are left out of the roster and its counts. Common mechanic monsters such as invisible carriers and field markers are already blocked; you do not need to add them.
@@ -54,4 +65,4 @@ Mechanic markers, scene objects and other monsters whose HP does not matter can 
 - or search every monster by name or monster id.
 
 > [!NOTE]
-> **Battle Roster** is off by default; turn it on in [Enable Window](./overlay.md). The roster is only tracked while it is on.
+> **Battle Roster** is off by default; turn it on in [Enable Window](./overlay.md). The roster is only tracked while it is on, or while a watched skill has a voice broadcast.

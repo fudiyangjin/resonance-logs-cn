@@ -2162,6 +2162,10 @@ export const enUSMessages = {
     "Ground distance to you in meters, to tell same-name monsters apart.",
   "monsterMonitor.roster.skills.title":
     "Watched skills (shown at the end of roster rows)",
+  "monsterMonitor.roster.skills.voiceTitle": "Voice Broadcast",
+  "monsterMonitor.roster.skills.voiceHint":
+    "Announced when a monster on the roster casts this skill (a cast-bar skill when its bar starts); several monsters casting at the same moment are announced once. Also works while the roster panel is hidden. Mechanic objects outside the hate lists are not on the roster; set those up in the Monster Skills panel.",
+  "monsterMonitor.roster.skills.voiceGroup": "Battle Roster Skills",
   "monsterMonitor.roster.skills.description":
     "Monsters that can cast these skills are listed right below your target, each with a cell per skill at the end of its row: a gray countdown while cooling down, amber when ready, red while casting or just cast. Works by skill id, for every monster that has the skill.",
   "monsterMonitor.roster.skills.caveatReady":
@@ -3050,6 +3054,7 @@ export const enUSMessages = {
   "voice.bindings.navigate.skill": "Go to Skill CD",
   "voice.bindings.navigate.entity": "Go to Entity Duration",
   "voice.bindings.navigate.monsterSkill": "Go to Monster Skills",
+  "voice.bindings.navigate.rosterSkill": "Go to Battle Roster",
   "voice.bindings.generateMissing": "Generate missing voices",
   "voice.bindings.generateMissing.generating": "Generating…",
   "voice.bindings.generateMissing.needProfile":

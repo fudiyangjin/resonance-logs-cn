@@ -89,6 +89,7 @@ function view(overrides: Partial<VoiceBindingView> = {}): VoiceBindingView {
       dbmAliases: {},
       entityDurationEntries: [],
       monsterSkillEntries: [],
+      rosterSkillEntries: [],
     },
     mechanicVoiceConfigs: {},
     alertConfigs: {},
@@ -167,6 +168,7 @@ describe("collectBindings + phraseRequests", () => {
           dbmAliases: {},
           entityDurationEntries: [],
           monsterSkillEntries: [],
+          rosterSkillEntries: [],
           monsterBuffVoiceConfigs: {
             "55": {
               gained: {
@@ -236,6 +238,7 @@ describe("compileVoiceRules", () => {
         },
       ],
       monsterSkillEntries: [],
+      rosterSkillEntries: [],
       monsterBuffVoiceConfigs: { "55": { gained: custom("x") } },
       dbmVoiceConfigs: { "8801": { onCast: auto(), expiring: expiring(5) } },
       entityVoiceConfigs: {
@@ -583,6 +586,7 @@ describe("monster skill bindings", () => {
           displayMs: 5_000,
         })),
         monsterSkillVoiceConfigs: { "101403": { onCast: auto() } },
+        rosterSkillEntries: [],
       },
     });
 
@@ -616,5 +620,65 @@ describe("monster skill bindings", () => {
 
   it("drops the binding once its watch entry is gone", () => {
     expect(collectBindings(monsterSkillView([]))).toEqual([]);
+  });
+});
+
+describe("roster skill bindings", () => {
+  const rosterSkillView = (entries: { skillId: number; label: string }[]) =>
+    view({
+      monster: {
+        monitoredBuffIds: [],
+        selfAppliedBuffIds: [],
+        selfAppliedMonitorAll: false,
+        dbmAliases: {},
+        entityDurationEntries: [],
+        monsterSkillEntries: [],
+        rosterSkillEntries: entries,
+        rosterSkillVoiceConfigs: { "101403": { onCast: auto() } },
+      },
+    });
+
+  it("compiles an on-cast binding to a roster started rule named by its label", () => {
+    const bindings = collectBindings(
+      rosterSkillView([{ skillId: 101403, label: "下砸" }]),
+    );
+    expect(bindings.map((binding) => binding.ruleKey)).toEqual([
+      "voice:rosterSkill:101403:onCast",
+    ]);
+    const index = indexOf(bindings, {
+      "voice:rosterSkill:101403:onCast": "P-rs",
+    });
+    expect(compileVoiceRules(bindings, index)).toEqual([
+      {
+        id: "voice:rosterSkill:101403:onCast",
+        enabled: true,
+        trigger: {
+          subject: { kind: "rosterSkill", skillId: 101403 },
+          event: { kind: "started" },
+        },
+        phraseId: "P-rs",
+        priority: 0,
+        cooldownMs: 2000,
+      },
+    ]);
+    expect(phraseRequests(bindings).map((request) => request.text)).toEqual([
+      "下砸",
+    ]);
+  });
+
+  it("is not voiced by the monster-skill panel's entry of the same skill", () => {
+    const shared = view({
+      monster: {
+        monitoredBuffIds: [],
+        selfAppliedBuffIds: [],
+        selfAppliedMonitorAll: false,
+        dbmAliases: {},
+        entityDurationEntries: [],
+        monsterSkillEntries: [{ skillId: 101403, label: "", displayMs: 5_000 }],
+        rosterSkillEntries: [],
+        rosterSkillVoiceConfigs: { "101403": { onCast: auto() } },
+      },
+    });
+    expect(collectBindings(shared)).toEqual([]);
   });
 });

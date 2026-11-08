@@ -9,7 +9,9 @@
 //! that is gone simply drops out of that set, so there is no separate
 //! cleanup path. Buffs are re-derived per event; counters, skill cooldowns,
 //! watched entities and boss mechanics once per batch, and only when their
-//! input's revision moved. Casts and alerts are plain event edges.
+//! input's revision moved. Casts and alerts are plain event edges; roster
+//! casts arrive pre-judged from the battle roster (see
+//! [`VoiceProjection::on_roster_cast`]).
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::Arc;
@@ -106,10 +108,11 @@ pub struct VoiceProjection {
     /// `(monster_id, scope)` pairs with a present watched entity at the last
     /// derivation; `Entity/Started|Ended` fire on set differences.
     entity_presence: BTreeSet<(i32, EntityOwnerScope)>,
-    /// Monster skills already announced in `monster_skill_batch`: one cast
-    /// can reach the context more than once per batch.
-    monster_skill_batch: Option<BatchId>,
-    monster_skills_fired: HashSet<i32>,
+    /// Cast subjects already announced in `cast_batch`: one cast can reach
+    /// the context more than once per batch, and a pack casting together
+    /// is one cue.
+    cast_batch: Option<BatchId>,
+    casts_fired: HashSet<SubjectKey>,
     seen: SeenInputs,
     /// Cues matched since the last [`Self::take_cues`].
     pending_cues: Vec<VoiceCueIntent>,
@@ -199,8 +202,8 @@ impl VoiceProjection {
         self.counter_crossed.clear();
         self.skills.clear();
         self.entity_presence.clear();
-        self.monster_skill_batch = None;
-        self.monster_skills_fired.clear();
+        self.cast_batch = None;
+        self.casts_fired.clear();
         self.seen = SeenInputs::default();
     }
 
@@ -279,13 +282,11 @@ impl VoiceProjection {
                 .is_empty()
                 && is_world_monster(entities, caster.uuid) =>
             {
-                if self.monster_skill_batch != Some(envelope.batch_id) {
-                    self.monster_skill_batch = Some(envelope.batch_id);
-                    self.monster_skills_fired.clear();
-                }
-                if self.monster_skills_fired.insert(*skill_id) {
-                    self.fire_started(SubjectKey::MonsterSkill(*skill_id), now_ms);
-                }
+                self.fire_cast_once(
+                    SubjectKey::MonsterSkill(*skill_id),
+                    envelope.batch_id,
+                    now_ms,
+                );
             }
             DomainEvent::BossMechanicStarted(mechanic) => {
                 self.fire_started(SubjectKey::BossDbm(mechanic.base_skill_id), now_ms);
@@ -358,6 +359,34 @@ impl VoiceProjection {
             VoiceTimer::SkillRefill { .. } => {
                 self.derive_skills(VoiceSyncReason::Runtime, now_ms, fired_at, scheduler);
             }
+        }
+    }
+
+    /// Whether a rule announces roster casts: the battle roster must then be
+    /// tracked even while its panel is hidden.
+    #[must_use]
+    pub fn needs_roster(&self) -> bool {
+        self.book.roster_casts
+    }
+
+    /// A monster on the battle roster started a cast of a watched skill.
+    /// The roster is the single judge of membership and of one cast per
+    /// skill instance, the same one the roster rows show.
+    pub fn on_roster_cast(&mut self, skill_id: i32, batch: BatchId, now_ms: i64) {
+        self.fire_cast_once(SubjectKey::RosterSkill(skill_id), batch, now_ms);
+    }
+
+    /// Fires `key`'s `Started` rules at most once per batch.
+    fn fire_cast_once(&mut self, key: SubjectKey, batch: BatchId, now_ms: i64) {
+        if self.book.matching(key).is_empty() {
+            return;
+        }
+        if self.cast_batch != Some(batch) {
+            self.cast_batch = Some(batch);
+            self.casts_fired.clear();
+        }
+        if self.casts_fired.insert(key) {
+            self.fire_started(key, now_ms);
         }
     }
 

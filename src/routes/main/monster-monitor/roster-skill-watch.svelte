@@ -2,7 +2,10 @@
   import IdSearchResultGrid, {
     type IdSearchResultItem,
   } from "$lib/components/IdSearchResultGrid.svelte";
+  import ChevronDownIcon from "virtual:icons/lucide/chevron-down";
+  import { SvelteSet } from "svelte/reactivity";
   import MonsterSkillSearchGrid from "$lib/components/MonsterSkillSearchGrid.svelte";
+  import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
   import type { RecentRosterMonster } from "$lib/bindings";
   import { resolveMonsterName } from "$lib/config/game-names";
   import {
@@ -37,6 +40,12 @@
 
   let expandedMonsterId = $state<number | null>(null);
   let searchKeyword = $state("");
+  /** Entries whose voice section is open. */
+  const voiceExpandedIds = new SvelteSet<number>();
+
+  function toggleVoice(skillId: number) {
+    if (!voiceExpandedIds.delete(skillId)) voiceExpandedIds.add(skillId);
+  }
 
   const watchedIds = $derived(new Set(entries.map((entry) => entry.skillId)));
   const full = $derived(entries.length >= MAX_ROSTER_SKILL_ENTRIES);
@@ -212,6 +221,30 @@
             >
               {t("monsterMonitor.priority.remove")}
             </button>
+            <button
+              type="button"
+              class="text-muted-foreground hover:text-foreground flex basis-full items-center justify-between gap-2 px-1 text-xs"
+              onclick={() => toggleVoice(entry.skillId)}
+            >
+              <span>{t("monsterMonitor.roster.skills.voiceTitle")}</span>
+              <ChevronDownIcon
+                class="h-3.5 w-3.5 shrink-0 transition-transform duration-200 {voiceExpandedIds.has(
+                  entry.skillId,
+                )
+                  ? 'rotate-180'
+                  : ''}"
+              />
+            </button>
+            {#if voiceExpandedIds.has(entry.skillId)}
+              <div class="basis-full space-y-1">
+                <p class="text-muted-foreground px-1 text-xs">
+                  {t("monsterMonitor.roster.skills.voiceHint")}
+                </p>
+                <VoiceBindingControl
+                  subject={{ kind: "rosterSkill", skillId: entry.skillId }}
+                />
+              </div>
+            {/if}
           </div>
         {/each}
       </div>

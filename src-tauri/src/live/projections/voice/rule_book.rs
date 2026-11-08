@@ -19,6 +19,7 @@ pub(super) enum SubjectKey {
     Entity(i32),
     BossDbm(i32),
     MonsterSkill(i32),
+    RosterSkill(i32),
     Counter { rule_id: i32, slot_id: i32 },
     Alert(AlertKind),
 }
@@ -32,6 +33,7 @@ impl SubjectKey {
             VoiceSubject::Entity { monster_id, .. } => Self::Entity(*monster_id),
             VoiceSubject::BossDbm { base_skill_id } => Self::BossDbm(*base_skill_id),
             VoiceSubject::MonsterSkill { skill_id } => Self::MonsterSkill(*skill_id),
+            VoiceSubject::RosterSkill { skill_id } => Self::RosterSkill(*skill_id),
             VoiceSubject::Counter { rule_id, slot_id } => Self::Counter {
                 rule_id: *rule_id,
                 slot_id: *slot_id,
@@ -113,6 +115,9 @@ pub(super) struct RuleBook {
     /// Whether any `Entity/Started|Ended` rule needs presence edges.
     pub(super) entity_edges: bool,
     pub(super) boss_leads: Vec<BossLeadRule>,
+    /// Whether any rule announces roster casts, so the roster must be
+    /// tracked even while its panel is hidden.
+    pub(super) roster_casts: bool,
     /// When each rule last spoke, by handle.
     last_fired_ms: Vec<Option<i64>>,
 }
@@ -216,6 +221,7 @@ impl RuleBook {
                 }
             }
             // Cast edges only: a monster skill has no duration to lead.
+            (VoiceSubject::RosterSkill { .. }, _) => self.roster_casts = true,
             (VoiceSubject::MonsterSkill { .. } | VoiceSubject::Alert { .. }, _) => {}
         }
     }

@@ -2406,6 +2406,63 @@ mod entity_monitor_bridge {
         assert!(h.fired().is_empty());
     }
 
+    fn roster_skill_rule(event: VoiceEvent) -> VoiceRule {
+        rule(
+            "roster-skill",
+            trigger(
+                VoiceSubject::RosterSkill {
+                    skill_id: MONSTER_SKILL,
+                },
+                event,
+            ),
+            "roster",
+            0,
+        )
+    }
+
+    #[test]
+    fn roster_cast_fires_once_per_batch() {
+        let mut h = Harness::new(vec![roster_skill_rule(VoiceEvent::Started)], vec![]);
+        assert!(h.voice.needs_roster());
+
+        h.voice.on_roster_cast(MONSTER_SKILL, BatchId(10), 1_000);
+        h.voice.on_roster_cast(MONSTER_SKILL, BatchId(10), 1_000);
+        assert_eq!(h.fired(), ["roster"]);
+
+        h.voice.on_roster_cast(MONSTER_SKILL, BatchId(11), 1_100);
+        assert_eq!(h.fired(), ["roster"]);
+    }
+
+    #[test]
+    fn roster_and_nearby_monster_casts_are_separate_subjects() {
+        let mut h = Harness::new(
+            vec![monster_skill_rule(), roster_skill_rule(VoiceEvent::Started)],
+            vec![],
+        );
+        let boss = EntityUuid(30);
+        let mut observations = monster(boss, None);
+        observations.push(cast(boss, MONSTER_SKILL, SkillPhase::Observed));
+
+        h.step(10, observations);
+        assert_eq!(h.fired(), ["cast"], "a nearby cast is no roster cast");
+
+        // The same batch: each subject is deduplicated on its own.
+        h.voice.on_roster_cast(MONSTER_SKILL, BatchId(10), 1_000);
+        assert_eq!(h.fired(), ["roster"]);
+    }
+
+    #[test]
+    fn roster_skill_only_supports_cast_rules() {
+        let mut h = Harness::new(
+            vec![monster_skill_rule(), roster_skill_rule(VoiceEvent::Ended)],
+            vec![],
+        );
+
+        assert!(!h.voice.needs_roster(), "the invalid rule was dropped");
+        h.voice.on_roster_cast(MONSTER_SKILL, BatchId(10), 1_000);
+        assert!(h.fired().is_empty());
+    }
+
     #[test]
     fn deadline_delivery_fires_rule_once_and_rejects_superseded_schedule() {
         let mut h = Harness::new(

@@ -56,6 +56,7 @@ function monster(
     dbmAliases: {},
     entityDurationEntries: [],
     monsterSkillEntries: [],
+    rosterSkillEntries: [],
     ...overrides,
   };
 }
@@ -225,6 +226,23 @@ describe("pruneMonsterVoice", () => {
     });
     const pruned = pruneMonsterVoice(slice);
     expect(pruned.monsterSkillVoiceConfigs).toEqual({
+      "101403": { onCast: on },
+    });
+    expect(pruneMonsterVoice(pruned)).toBe(pruned);
+  });
+
+  it("keeps roster skill bindings only for the roster's own watch list", () => {
+    const slice = monster({
+      // The monster-skill panel's entry does not keep a roster binding.
+      monsterSkillEntries: [{ skillId: 101404, label: "", displayMs: 5_000 }],
+      rosterSkillEntries: [{ skillId: 101403, label: "" }],
+      rosterSkillVoiceConfigs: {
+        "101403": { onCast: on },
+        "101404": { onCast: on },
+      },
+    });
+    const pruned = pruneMonsterVoice(slice);
+    expect(pruned.rosterSkillVoiceConfigs).toEqual({
       "101403": { onCast: on },
     });
     expect(pruneMonsterVoice(pruned)).toBe(pruned);

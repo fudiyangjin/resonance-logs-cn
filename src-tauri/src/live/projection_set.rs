@@ -227,6 +227,14 @@ impl ProjectionSet {
                 now_mono,
                 scheduler,
             );
+            // Roster cast rules keep the roster tracked while its panel is
+            // hidden.
+            if self
+                .monster_roster
+                .set_voiced(self.voice.needs_roster(), entities, now_wall_ms)
+            {
+                self.dirty |= TopicMask::MONSTER_ROSTER;
+            }
         }
     }
 
@@ -293,8 +301,13 @@ impl ProjectionSet {
         // Hits, scene and local-player changes; ContainerReset clears it in
         // `reset_runtime` below.
         let skill_damage_changed = self.skill_damage.apply(envelope);
-        // Every event that touches a roster member; a no-op while disabled.
-        let monster_roster_changed = self.monster_roster.apply(envelope, entities);
+        // Every event that touches a roster member; a no-op while neither the
+        // panel nor a voice rule needs the roster.
+        let roster = self.monster_roster.apply(envelope, entities);
+        if let Some(skill_id) = roster.watched_cast {
+            self.voice
+                .on_roster_cast(skill_id, envelope.batch_id, envelope.occurred_at_ms);
+        }
 
         match &envelope.event {
             DomainEvent::ContainerReset => {
@@ -563,7 +576,7 @@ impl ProjectionSet {
         if skill_damage_changed {
             reported |= TopicMask::SKILL_DAMAGE;
         }
-        if monster_roster_changed {
+        if roster.republish {
             reported |= TopicMask::MONSTER_ROSTER;
         }
         self.dirty |= reported;

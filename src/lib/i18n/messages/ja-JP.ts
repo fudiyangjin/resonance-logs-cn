@@ -2130,6 +2130,10 @@ export const jaJPMessages = {
   "monsterMonitor.roster.showDistanceDesc":
     "あなたとの水平距離（メートル）。同名のモンスターを見分けるのに使えます。",
   "monsterMonitor.roster.skills.title": "注目スキル（リストの行末に表示）",
+  "monsterMonitor.roster.skills.voiceTitle": "音声読み上げ",
+  "monsterMonitor.roster.skills.voiceHint":
+    "リスト内のモンスターがこのスキルを使ったときに読み上げます（詠唱スキルは詠唱開始時）。同時に複数体が使った場合は1回だけです。戦闘リストのパネルを非表示にしていても読み上げます。ヘイトリストに入らないギミックはリストに載らないため、モンスタースキルパネルで設定してください。",
+  "monsterMonitor.roster.skills.voiceGroup": "戦闘リストのスキル",
   "monsterMonitor.roster.skills.description":
     "これらのスキルを使えるモンスターは攻撃対象のすぐ下に1行ずつ表示され、行末にスキルの状態が出ます。灰色のカウントダウンはクールダウン中、琥珀色は準備完了、赤は詠唱中または使用直後です。スキル ID 単位で、そのスキルを持つすべてのモンスターに適用されます。",
   "monsterMonitor.roster.skills.caveatReady":
@@ -3017,6 +3021,7 @@ export const jaJPMessages = {
   "voice.bindings.navigate.skill": "スキルCDへ",
   "voice.bindings.navigate.entity": "エンティティ持続時間へ",
   "voice.bindings.navigate.monsterSkill": "モンスタースキルへ",
+  "voice.bindings.navigate.rosterSkill": "戦闘リストへ",
   "voice.bindings.generateMissing": "不足分の音声を一括生成",
   "voice.bindings.generateMissing.generating": "生成中…",
   "voice.bindings.generateMissing.needProfile":

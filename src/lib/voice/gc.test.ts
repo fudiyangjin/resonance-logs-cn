@@ -25,6 +25,7 @@ const EMPTY_MONSTER: MonsterVoiceSlice = {
   dbmAliases: {},
   entityDurationEntries: [],
   monsterSkillEntries: [],
+  rosterSkillEntries: [],
 };
 
 function view(overrides: Partial<VoiceBindingView> = {}): VoiceBindingView {

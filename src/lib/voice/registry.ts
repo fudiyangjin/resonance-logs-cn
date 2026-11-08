@@ -6,6 +6,7 @@ import { gameAlertAdapter } from "./subjects/game-alert";
 import { minimapCueAdapter } from "./subjects/minimap-cue";
 import { monsterBuffAdapter } from "./subjects/monster-buff";
 import { monsterSkillAdapter } from "./subjects/monster-skill";
+import { rosterSkillAdapter } from "./subjects/roster-skill";
 import { skillAdapter } from "./subjects/skill";
 import type {
   VoiceBindingSubject,
@@ -26,6 +27,7 @@ export const VOICE_SUBJECT_ADAPTERS: readonly VoiceSubjectAdapter[] = [
   dbmAdapter,
   entityAdapter,
   monsterSkillAdapter,
+  rosterSkillAdapter,
   minimapCueAdapter,
   gameAlertAdapter,
 ] as readonly VoiceSubjectAdapter[];

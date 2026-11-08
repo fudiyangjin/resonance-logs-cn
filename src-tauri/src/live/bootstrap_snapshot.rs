@@ -465,10 +465,12 @@ impl SkillDamageRuntimeSnapshot {
 /// Upper bound on skills watched on the battle roster; the UI allows 32.
 pub const MONSTER_ROSTER_MAX_WATCHED_SKILLS: usize = 64;
 
-/// The battle roster panel. Off means the roster projection tracks nothing.
+/// The battle roster panel. The roster is tracked while the panel is shown
+/// or a voice rule announces roster casts, and published only while shown.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MonsterRosterRuntimeSnapshot {
+    /// The panel is shown.
     pub enabled: bool,
     /// Skills whose casts and cooldowns are shown at the end of roster rows.
     pub watched_skill_ids: Vec<i32>,

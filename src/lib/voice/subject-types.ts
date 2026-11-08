@@ -38,6 +38,8 @@ export type VoiceBindingSubject =
   | { kind: "entity"; monsterId: number; scope: EntityOwnerScope }
   /** A monster-skill watch entry: any nearby monster cast the skill. */
   | { kind: "monsterSkill"; skillId: number }
+  /** A battle-roster watched skill: a monster on the roster cast it. */
+  | { kind: "rosterSkill"; skillId: number }
   | { kind: "minimapCue"; cueId: string }
   | { kind: "gameAlert"; alertKind: GameAlertKind };
 
@@ -82,6 +84,7 @@ export type OverviewGroup =
   | "dbm"
   | "entity"
   | "monsterSkill"
+  | "rosterSkill"
   | "minimap"
   | "alerts";
 
@@ -113,6 +116,8 @@ export type MonsterVoiceSlice = Pick<
   | "entityVoiceConfigs"
   | "monsterSkillEntries"
   | "monsterSkillVoiceConfigs"
+  | "rosterSkillEntries"
+  | "rosterSkillVoiceConfigs"
 >;
 
 /**
@@ -146,6 +151,7 @@ export type VoiceBindingWriter = {
         | "dbmVoiceConfigs"
         | "entityVoiceConfigs"
         | "monsterSkillVoiceConfigs"
+        | "rosterSkillVoiceConfigs"
       >
     >,
   ): void;

@@ -48,6 +48,8 @@ const EMPTY_MONSTER_SLICE: MonsterVoiceSlice = {
   entityVoiceConfigs: {},
   monsterSkillEntries: [],
   monsterSkillVoiceConfigs: {},
+  rosterSkillEntries: [],
+  rosterSkillVoiceConfigs: {},
 };
 
 /**
