@@ -4,6 +4,7 @@ Release notes for every version, newest first.
 
 | Version     | Document                           |
 | ----------- | ---------------------------------- |
+| v0.2.10     | [v0.2.10.md](./v0.2.10.md)         |
 | v0.2.9      | [v0.2.9.md](./v0.2.9.md)           |
 | v0.2.8      | [v0.2.8.md](./v0.2.8.md)           |
 | v0.2.7      | [v0.2.7.md](./v0.2.7.md)           |

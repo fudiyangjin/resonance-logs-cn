@@ -1,6 +1,12 @@
-# Changelog v0.2.9
+# Changelog v0.2.10
 
 ## Changes
+
+### Fixes
+
+- Fixed food and alchemy categories failing to match after the game data update. Buffs named "料理" or "药剂" are classified as Food and Alchemy again, so adding by category includes them
+- Fixed loadouts with Entity Duration voice failing to import after export. Voice saved under the monster ID imports again, and older keys written as `monsterId:self` or `monsterId:any` still import
+- The Battle Roster HP column width can be adjusted (Monster Monitor › Battle Roster › Battle Roster Panel Style › Panel Width, 120–400, default 240). Long names are truncated with an ellipsis; when the column is narrow, the percentage, HP and the small bars at the bottom wrap instead of being clipped
 
 ### Skill damage display
 
@@ -78,7 +84,7 @@
 
 ### Compatibility
 
-- If you used 0.0.2 or 0.0.3, first launch on 0.0.4-0.2.9 requires deleting `resonance-logs-cn.db` under `%LOCALAPPDATA%\resonance-logs-cn` and restarting
+- If you used 0.0.2 or 0.0.3, first launch on 0.0.4-0.2.10 requires deleting `resonance-logs-cn.db` under `%LOCALAPPDATA%\resonance-logs-cn` and restarting
 - 0.2.2 and 0.2.1 went through large refactors; if existing features break, please contact me promptly
 - 0.2.2 changed table fields; errors on old history records are expected, new records work normally
 - Voice announcements require a separate model download; the first phrase generation may take a while, but playback after that does not reload the model. HTTP voice services do not require a model
