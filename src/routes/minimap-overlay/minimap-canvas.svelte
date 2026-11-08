@@ -328,14 +328,14 @@
       }
     }
 
-    if (view.layout.circles.length > 0) {
-      ctx.strokeStyle = "rgba(226, 232, 240, 0.85)";
-      ctx.lineWidth = 1.5;
-      for (const r of view.layout.circles) {
-        ctx.beginPath();
-        ctx.arc(ox, oy, r * scale, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+    for (const circle of view.layout.circles) {
+      const styled = typeof circle === "number" ? null : circle;
+      const radius = typeof circle === "number" ? circle : circle.radius;
+      ctx.strokeStyle = styled?.color ?? "rgba(226, 232, 240, 0.85)";
+      ctx.lineWidth = styled?.widthPx ?? 1.5;
+      ctx.beginPath();
+      ctx.arc(ox, oy, radius * scale, 0, Math.PI * 2);
+      ctx.stroke();
     }
 
     if (view.layout.lines.length > 0) {

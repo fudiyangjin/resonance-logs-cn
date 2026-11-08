@@ -395,6 +395,23 @@ describe("S4 Lapsis challenge turntable", () => {
     );
   });
 
+  it("separates the three rings with concentric circles while glyphs show", () => {
+    const scene = resolveScene(13032)!;
+    const current = snapshot();
+    expect(scene.resolveView(current, name).layout.circles).toEqual([]);
+
+    current.buffs.push(buff("inner", 829541, 1_000, -1));
+    expect(scene.resolveView(current, name).layout.circles).toEqual([]);
+
+    current.entities.push(ring("inner", 103425, 0));
+    const radii = scene
+      .resolveView(current, name)
+      .layout.circles.map((circle) =>
+        typeof circle === "number" ? circle : circle.radius,
+      );
+    expect(radii).toEqual([12.55, 22.45]);
+  });
+
   it("colours a challenge chaser by its rune and puts the rune before its row", () => {
     const current = snapshot();
     current.entities.push(chaser("mate"));

@@ -1,5 +1,6 @@
 import type { MinimapEntity, MinimapSnapshot } from "$lib/api";
 import type {
+  LayoutCircle,
   MapIcon,
   MechanicRegion,
   MechanicRowIcon,
@@ -84,6 +85,15 @@ export const RUNE_COLOR_SLOTS: Record<RuneNumber, number> = {
   4: 0,
 };
 
+/**
+ * Concentric circles in the gaps between the inner / middle / outer ring
+ * bands (mesh 4.9-10.1 / 15.0-20.0 / 24.9-30.1 m), so each glyph reads as
+ * belonging to its ring. The rings sit at the arena centre.
+ */
+export const TURNTABLE_RING_CIRCLES: readonly LayoutCircle[] = [
+  12.55, 22.45,
+].map((radius) => ({ radius, color: "rgba(255, 59, 48, 0.9)", widthPx: 2.5 }));
+
 const RUNE_SIZE_PX = 22;
 /** Just past the observed trigger reach (players ≤ 1.8 m, spears ≤ 3 m). */
 const SLOT_CIRCLE_RADIUS = 3;
@@ -135,6 +145,17 @@ export function turntableRuneIcons(
     }
   }
   return icons;
+}
+
+/** Whether any ring glyphs are on the map, i.e. a ring carries a layout buff. */
+export function hasTurntableRunes(snapshot: MinimapSnapshot): boolean {
+  return snapshot.buffs.some(
+    (buff) =>
+      RUNE_LAYOUTS.has(buff.baseId) &&
+      snapshot.entities.some(
+        (entity) => entity.entityUuid === buff.targetEntityUuid,
+      ),
+  );
 }
 
 /**

@@ -13,9 +13,17 @@ export type MapLine = {
   z2: number;
 };
 
+/**
+ * A circle around the arena centre. A bare number is its radius drawn in the
+ * default outline style.
+ */
+export type LayoutCircle =
+  | number
+  | { radius: number; color: string; widthPx: number };
+
 export type LayoutShapes = {
   lines: MapLine[];
-  circles: number[];
+  circles: LayoutCircle[];
   squares: number[];
 };
 

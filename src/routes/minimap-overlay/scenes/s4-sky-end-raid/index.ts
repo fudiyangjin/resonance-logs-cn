@@ -16,6 +16,7 @@ import {
   resolveLapsisVoiceCues,
   S4_SKY_END_RAID_VOICE_CUES,
 } from "./mechanics";
+import { hasTurntableRunes } from "./turntable";
 
 export const s4SkyEndRaidScene: SceneDefinition = {
   id: "s4-sky-end-raid",
@@ -24,7 +25,7 @@ export const s4SkyEndRaidScene: SceneDefinition = {
   voiceCues: S4_SKY_END_RAID_VOICE_CUES,
   resolveVoiceCues: resolveLapsisVoiceCues,
   resolveView(snapshot, displayName, skillCasts = []) {
-    const layout = arenaLayout(snapshot.entities);
+    const layout = arenaLayout(snapshot.entities, hasTurntableRunes(snapshot));
     const mechanicView = buildMechanicView(snapshot, displayName, skillCasts);
     return {
       worldHalfX: layout.worldHalfX,

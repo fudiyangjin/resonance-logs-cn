@@ -1,5 +1,6 @@
 import type { MinimapEntity } from "$lib/api";
 import type { LayoutShapes, MapLine } from "../../scene-types";
+import { TURNTABLE_RING_CIRCLES } from "./turntable";
 
 export type ArenaPoint = { x: number; z: number };
 
@@ -32,6 +33,7 @@ function arenaLines(halfX: number, halfZ: number): MapLine[] {
 
 export function arenaLayout(
   entities: readonly MinimapEntity[] = [],
+  turntable = false,
 ): SceneLayout {
   const night = entities.some(
     (entity) =>
@@ -43,7 +45,11 @@ export function arenaLayout(
     worldHalfX: halfX,
     worldHalfZ: halfZ,
     rotationQuarters: 0,
-    shapes: { lines: arenaLines(halfX, halfZ), circles: [], squares: [] },
+    shapes: {
+      lines: arenaLines(halfX, halfZ),
+      circles: turntable ? [...TURNTABLE_RING_CIRCLES] : [],
+      squares: [],
+    },
   };
 }
 
