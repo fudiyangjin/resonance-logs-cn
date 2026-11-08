@@ -175,6 +175,16 @@ pub struct Position {
     pub z: f32,
 }
 
+impl Position {
+    /// Ground-plane (x/z) distance in meters; height is ignored.
+    #[must_use]
+    pub fn planar_distance_to(self, other: Self) -> f32 {
+        let dx = other.x - self.x;
+        let dz = other.z - self.z;
+        dx.mul_add(dx, dz * dz).sqrt()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum AttributeValue {
     Int(i64),

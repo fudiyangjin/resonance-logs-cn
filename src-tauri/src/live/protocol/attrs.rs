@@ -18,9 +18,12 @@ pub const ATTR_SKILL_ID: i32 = 0x64;
 pub const ATTR_RESURRECTION_COUNT: i32 = 0x65;
 pub const ATTR_ENDURANCE: i32 = 0x67;
 pub const ATTR_COMBAT_MODE: i32 = 0x68;
-pub const ATTR_CHARACTER_TIMESTAMP: i32 = 0x6a;
+/// `AttrSkillBeginTime`: server ms at which the current skill started.
+pub const ATTR_SKILL_BEGIN_TIME: i32 = 0x6a;
 pub const ATTR_PARTY_ROLE: i32 = 0x6c;
-pub const ATTR_SESSION_TIMESTAMP: i32 = 0x6f;
+/// `AttrSkillUuid`: changes with every new skill instance, even when the
+/// skill id repeats.
+pub const ATTR_SKILL_UUID: i32 = 0x6f;
 pub const ATTR_COMBAT_STATE: i32 = 0x71;
 pub const ATTR_LAST_ACTION_TIMESTAMP: i32 = 0x72;
 pub const ATTR_MOVEMENT_SPEED: i32 = 0x74;
@@ -94,9 +97,9 @@ pub const fn is_known_integer(id: i32) -> bool {
             | ATTR_RESURRECTION_COUNT
             | ATTR_ENDURANCE
             | ATTR_COMBAT_MODE
-            | ATTR_CHARACTER_TIMESTAMP
+            | ATTR_SKILL_BEGIN_TIME
             | ATTR_PARTY_ROLE
-            | ATTR_SESSION_TIMESTAMP
+            | ATTR_SKILL_UUID
             | ATTR_COMBAT_STATE
             | ATTR_LAST_ACTION_TIMESTAMP
             | ATTR_MOVEMENT_SPEED

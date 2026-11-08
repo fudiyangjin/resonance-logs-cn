@@ -5,6 +5,7 @@
   import MonsterFantasyPanel from "../monster-overlay/MonsterFantasyPanel.svelte";
   import MonsterHatePanel from "../monster-overlay/MonsterHatePanel.svelte";
   import MonsterHpPanel from "../monster-overlay/MonsterHpPanel.svelte";
+  import MonsterRosterPanel from "../monster-overlay/MonsterRosterPanel.svelte";
   import MonsterSkillPanel from "../monster-overlay/MonsterSkillPanel.svelte";
   import MonsterStunPanel from "../monster-overlay/MonsterStunPanel.svelte";
   import MonsterTeammateBuffPanel from "../monster-overlay/MonsterTeammateBuffPanel.svelte";
@@ -41,6 +42,9 @@
   {/if}
   {#if visibility.showHpPanel}
     <MonsterHpPanel />
+  {/if}
+  {#if visibility.showRosterPanel}
+    <MonsterRosterPanel />
   {/if}
   {#if visibility.showFantasyPanel}
     <MonsterFantasyPanel />

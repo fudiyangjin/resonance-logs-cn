@@ -1166,7 +1166,7 @@ impl NamespaceState {
                 let Some(previous) = last_position.replace(position) else {
                     continue;
                 };
-                let distance = distance_between(previous, position);
+                let distance = previous.planar_distance_to(position);
                 if !distance.is_finite() || distance <= 0.0 {
                     continue;
                 }
@@ -2307,12 +2307,6 @@ fn scale_basis_points_ceil(value: u64, scale: u32) -> u64 {
         .saturating_mul(u64::from(scale))
         .saturating_add(FULL_SCALE_BASIS_POINTS - 1)
         / FULL_SCALE_BASIS_POINTS
-}
-
-fn distance_between(a: Position, b: Position) -> f32 {
-    let dx = b.x - a.x;
-    let dz = b.z - a.z;
-    (dx.mul_add(dx, dz * dz)).sqrt()
 }
 
 fn normalize_meters_required(value: f32) -> f32 {

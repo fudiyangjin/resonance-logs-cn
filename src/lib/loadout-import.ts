@@ -23,6 +23,7 @@ import {
   type EntityDurationEntry,
   type InlineBuffFormat,
   type MonsterSkillWatchEntry,
+  type RosterSkillEntry,
   type LiveMeterProfile,
   type MonsterMonitorProfile,
   type SkillMonitorProfile,
@@ -37,6 +38,7 @@ import {
 } from "./skill-damage-settings";
 import { ensureEntityDurationEntries } from "./entity-duration-entries";
 import { ensureMonsterSkillEntries } from "./monster-skill-entries";
+import { ensureRosterSkillEntries } from "./roster-skill-entries";
 import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
 import { ensureShieldDetailStyle } from "./skill-monitor-normalize";
 import { migrateLegacyMonsterPanels } from "./monster-panel-migration";
@@ -547,6 +549,10 @@ const monsterOverlayPositionsSchema = v.object({
     pointSchema,
     defaultClone(defaultMonster.overlayPositions.monsterSkillPanel),
   ),
+  rosterPanel: v.optional(
+    pointSchema,
+    defaultClone(defaultMonster.overlayPositions.rosterPanel),
+  ),
 });
 
 const monsterOverlaySizesSchema = v.object({
@@ -572,6 +578,10 @@ const monsterOverlaySizesSchema = v.object({
     finiteNumberSchema,
     defaultMonster.overlaySizes.monsterSkillPanelScale,
   ),
+  rosterPanelScale: v.optional(
+    finiteNumberSchema,
+    defaultMonster.overlaySizes.rosterPanelScale,
+  ),
 });
 
 const monsterOverlayVisibilitySchema = v.object({
@@ -585,7 +595,22 @@ const monsterOverlayVisibilitySchema = v.object({
   showHpPanel: v.optional(v.boolean(), false),
   showEntityDurationPanel: v.optional(v.boolean(), false),
   showMonsterSkillPanel: v.optional(v.boolean(), false),
+  showRosterPanel: v.optional(v.boolean(), false),
 });
+
+const monsterRosterOptionsSchema = v.optional(
+  v.object({
+    normalRows: v.optional(
+      finiteNumberSchema,
+      defaultMonster.roster.normalRows,
+    ),
+    tankMode: v.optional(v.boolean(), false),
+    notAttackingMeFirst: v.optional(v.boolean(), false),
+    showHpValue: v.optional(v.boolean(), false),
+    showDistance: v.optional(v.boolean(), false),
+  }),
+  defaultClone(defaultMonster.roster),
+);
 
 const entityDurationEntrySchema = v.object({
   id: v.optional(v.string(), ""),
@@ -604,6 +629,22 @@ const entityDurationEntriesSchema = v.optional(
       ensureEntityDurationEntries(
         entries as readonly Partial<EntityDurationEntry>[],
       ),
+    ),
+  ),
+  () => [],
+);
+
+const rosterSkillEntriesSchema = v.optional(
+  v.pipe(
+    v.array(
+      v.object({
+        skillId: positiveI32Schema,
+        label: v.optional(v.string(), ""),
+        cooldownSeconds: v.optional(finiteNumberSchema),
+      }),
+    ),
+    v.transform((entries) =>
+      ensureRosterSkillEntries(entries as readonly Partial<RosterSkillEntry>[]),
     ),
   ),
   () => [],
@@ -813,6 +854,12 @@ const monsterProfileSchema = v.object({
   monsterSkillPanelStyle: v.optional(
     customPanelStyleSchema,
     defaultClone(defaultMonster.monsterSkillPanelStyle),
+  ),
+  roster: monsterRosterOptionsSchema,
+  rosterSkillEntries: rosterSkillEntriesSchema,
+  rosterPanelStyle: v.optional(
+    customPanelStyleSchema,
+    defaultClone(defaultMonster.rosterPanelStyle),
   ),
 });
 

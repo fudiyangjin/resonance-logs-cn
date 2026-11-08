@@ -2,7 +2,8 @@ export const jaJPMessages = {
   "skillDamage.actions.toggleOverlay": "ダメージ表示の切り替え",
   "skillDamage.actions.editLayout": "ダメージ表示レイアウトを編集",
   "routes.tools.skillDamage": "スキルダメージ表示",
-  "skillDamage.pageDescription": "スキルグループ、数値のスタイル、アニメーション、各グループの表示領域を設定します。",
+  "skillDamage.pageDescription":
+    "スキルグループ、数値のスタイル、アニメーション、各グループの表示領域を設定します。",
   "skillDamage.floatUp": "上に浮かびフェードアウト",
   "skillDamage.scrollDirection": "後続数値のスクロール方向",
   "skillDamage.scrollUp": "上へスクロール",
@@ -26,7 +27,8 @@ export const jaJPMessages = {
   "skillDamage.groupName": "グループ名",
   "skillDamage.groupEnabled": "このグループを有効化",
   "skillDamage.groupMerge": "グループ内の同時ダメージを合算",
-  "skillDamage.groupMergeHint": "同一バッチ内のグループの全スキルを合算し、グループ名で表示します。対象数は重複を除きます。",
+  "skillDamage.groupMergeHint":
+    "同一バッチ内のグループの全スキルを合算し、グループ名で表示します。対象数は重複を除きます。",
   "skillDamage.numberStyle": "ダメージ数値のスタイル",
   "skillDamage.italic": "斜体",
   "skillDamage.fill": "塗りの色",
@@ -43,19 +45,25 @@ export const jaJPMessages = {
   "skillDamage.duration": "表示時間（秒）",
   "skillDamage.shrink": "徐々に縮小",
   "skillDamage.test": "アニメーションをテスト",
-  "skillDamage.testHint": "表示時間は 0.1～60 秒です。テストを押すと現在のフォントとアニメーションで下にプレビューします。",
-  "skillDamage.mergeHitsHint": "同一バッチ内の同じスキルのヒットを合算します（複数対象を含む）。オフの場合は各バッチの最大ダメージのみ表示します。",
+  "skillDamage.testHint":
+    "表示時間は 0.1～60 秒です。テストを押すと現在のフォントとアニメーションで下にプレビューします。",
+  "skillDamage.mergeHitsHint":
+    "同一バッチ内の同じスキルのヒットを合算します（複数対象を含む）。オフの場合は各バッチの最大ダメージのみ表示します。",
   "skillDamage.mergeHits": "複数ヒットの合計ダメージを表示",
   "skillDamage.searchPlaceholder": "スキル名、別名、ID で検索",
-  "skillDamage.searchHint": "検索結果をクリックして追加します。ダメージ名や集計スキル名で検索でき、同名の異なる ID も個別に追加できます。",
-  "skillDamage.emptySearch": "一致するスキルがありません。ダメージ ID を直接入力して追加できます。",
+  "skillDamage.searchHint":
+    "検索結果をクリックして追加します。ダメージ名や集計スキル名で検索でき、同名の異なる ID も個別に追加できます。",
+  "skillDamage.emptySearch":
+    "一致するスキルがありません。ダメージ ID を直接入力して追加できます。",
   "skillDamage.font": "ダメージ数値のフォント",
   "skillDamage.fontFamily": "フォント名",
   "skillDamage.fontSize": "文字サイズ",
   "skillDamage.fontWeight": "文字の太さ",
   "columns.skill.id": "ID",
-  "columns.description.skill.id": "スキルダメージ表示の設定に使用するダメージ ID",
-  "skillDamage.description": "自身の指定スキルの各ダメージを表示します。ID は DPS のスキル詳細で確認できます。オーバーレイ編集モードで位置をドラッグできます。",
+  "columns.description.skill.id":
+    "スキルダメージ表示の設定に使用するダメージ ID",
+  "skillDamage.description":
+    "自身の指定スキルの各ダメージを表示します。ID は DPS のスキル詳細で確認できます。オーバーレイ編集モードで位置をドラッグできます。",
   "skillDamage.enabled": "スキルダメージ表示を有効化",
   "skillDamage.alias": "スキルの別名",
   "skillDamage.delete": "削除",
@@ -98,21 +106,25 @@ export const jaJPMessages = {
   "loadout.page.skillProfileLabel": "スキル監視プロファイル",
   "loadout.page.monsterProfileLabel": "モンスター監視プロファイル",
   "skillDamage.profile.title": "ダメージ表示プロファイル",
-  "skillDamage.profile.pickerDescription": "現在のロードアウトが参照するダメージ表示プロファイルです。ここで切替・管理できます。組み合わせは「ロードアウト」ページへ",
+  "skillDamage.profile.pickerDescription":
+    "現在のロードアウトが参照するダメージ表示プロファイルです。ここで切替・管理できます。組み合わせは「ロードアウト」ページへ",
   "skillDamage.profile.new": "新規プロファイル",
   "skillDamage.profile.rename": "名前を変更",
   "skillDamage.profile.delete": "削除",
   "skillDamage.profile.renamePrompt": "新しいプロファイル名を入力",
-  "skillDamage.profile.deleteConfirm": "このダメージ表示プロファイルを削除しますか？参照しているロードアウトは先頭のプロファイルにフォールバックします。",
+  "skillDamage.profile.deleteConfirm":
+    "このダメージ表示プロファイルを削除しますか？参照しているロードアウトは先頭のプロファイルにフォールバックします。",
   "skillDamage.defaults.defaultProfileName": "デフォルトプロファイル",
   "skillDamage.defaults.profileName": "プロファイル {index}",
   "skillDamage.autoHideInDailyScenes.label": "日常シーンで自動的に非表示",
-  "skillDamage.autoHideInDailyScenes.description": "日常シーンのブラックリストに入るとダメージ表示を自動的に非表示にし、離れると復元します。",
+  "skillDamage.autoHideInDailyScenes.description":
+    "日常シーンのブラックリストに入るとダメージ表示を自動的に非表示にし、離れると復元します。",
   "skillDamage.nameNone": "表示しない",
   "skillDamage.fontSource": "フォントの種類",
   "skillDamage.systemFont": "システムフォント（名前で指定）",
   "skillDamage.uploadFont": "フォントをアップロード",
-  "skillDamage.uploadFontDescription": "フォントファイル（.woff2/.woff/.ttf/.otf）を選択。同じフォントは一度だけ保存され、各グループで再利用できます",
+  "skillDamage.uploadFontDescription":
+    "フォントファイル（.woff2/.woff/.ttf/.otf）を選択。同じフォントは一度だけ保存され、各グループで再利用できます",
   "loadout.page.damageProfileLabel": "ダメージ表示プロファイル",
   "loadout.page.liveProfileLabel": "DPS 設定プロファイル",
   "loadout.page.linkedSpecLabel": "連携スペック",
@@ -1390,34 +1402,49 @@ export const jaJPMessages = {
   "skillMonitor.skillCd.duty.encyclopedia": "図鑑ロールスキル",
   "skillMonitor.skillCd.resonance.title": "幻想スキル",
   "skillMonitor.skillCd.resonance.placeholder": "幻想スキル名を検索",
-  "skillMonitor.skillCd.resonance.searchPrompt": "キーワードを入力して幻想スキルを検索",
+  "skillMonitor.skillCd.resonance.searchPrompt":
+    "キーワードを入力して幻想スキルを検索",
   "skillMonitor.skillCd.preview.title": "スキル配置",
-  "skillMonitor.skillCd.preview.description": "複数のエリアに分けられ、各エリアはオーバーレイで個別に移動・拡大縮小できます。空きマスへドラッグすると移動、スキルへドラッグすると入れ替えます。オーバーレイは右端・下端の空白を詰め、意図した間隔は保持します。",
+  "skillMonitor.skillCd.preview.description":
+    "複数のエリアに分けられ、各エリアはオーバーレイで個別に移動・拡大縮小できます。空きマスへドラッグすると移動、スキルへドラッグすると入れ替えます。オーバーレイは右端・下端の空白を詰め、意図した間隔は保持します。",
   "skillMonitor.skillCd.layout.rows": "行数",
   "skillMonitor.skillCd.layout.columns": "列数",
   "skillMonitor.skillCd.layout.gap": "アイコン間隔",
   "skillMonitor.skillCd.layout.compact": "空きを詰める",
-  "skillMonitor.skillCd.layout.help": "空きマスを選んでからスキルを追加すると、その位置に配置します。Enter / Spaceで選択、Alt + 矢印キーで移動・入れ替え、Deleteで削除、Escでキャンセル。空きを詰めると意図した間隔もなくなります。",
+  "skillMonitor.skillCd.layout.help":
+    "空きマスを選んでからスキルを追加すると、その位置に配置します。Enter / Spaceで選択、Alt + 矢印キーで移動・入れ替え、Deleteで削除、Escでキャンセル。空きを詰めると意図した間隔もなくなります。",
   "skillMonitor.skillCd.layout.cell": "{row}行 {column}列：{skill}",
-  "skillMonitor.skillCd.layout.selectHint": "マスをクリックして選択します。監視を解除しても他のスキルは移動しません。",
-  "skillMonitor.skillCd.layout.error.limit": "全エリア合計で監視できるスキルは最大10個です。先にスキルを削除してください。",
-  "skillMonitor.skillCd.layout.error.full": "空きマスがありません。行数または列数を増やしてください。",
-  "skillMonitor.skillCd.layout.error.invalidSize": "行数と列数には1～10の整数を入力してください。",
-  "skillMonitor.skillCd.layout.error.invalidGap": "アイコン間隔には0～24の整数を入力してください。",
-  "skillMonitor.skillCd.layout.error.overflow": "次のスキルが枠外になります。先に移動するか、空きを詰めてください：{skills}",
-  "skillMonitor.skillCd.layout.error.stale": "スキル配置が変更されました。もう一度操作してください。",
-  "skillMonitor.skillCd.layout.error.lastRegion": "エリアは少なくとも1つ必要です。",
+  "skillMonitor.skillCd.layout.selectHint":
+    "マスをクリックして選択します。監視を解除しても他のスキルは移動しません。",
+  "skillMonitor.skillCd.layout.error.limit":
+    "全エリア合計で監視できるスキルは最大10個です。先にスキルを削除してください。",
+  "skillMonitor.skillCd.layout.error.full":
+    "空きマスがありません。行数または列数を増やしてください。",
+  "skillMonitor.skillCd.layout.error.invalidSize":
+    "行数と列数には1～10の整数を入力してください。",
+  "skillMonitor.skillCd.layout.error.invalidGap":
+    "アイコン間隔には0～24の整数を入力してください。",
+  "skillMonitor.skillCd.layout.error.overflow":
+    "次のスキルが枠外になります。先に移動するか、空きを詰めてください：{skills}",
+  "skillMonitor.skillCd.layout.error.stale":
+    "スキル配置が変更されました。もう一度操作してください。",
+  "skillMonitor.skillCd.layout.error.lastRegion":
+    "エリアは少なくとも1つ必要です。",
   "skillMonitor.skillCd.region.add": "エリアを追加",
   "skillMonitor.skillCd.region.name": "エリア名",
   "skillMonitor.skillCd.region.clear": "エリアを空にする",
   "skillMonitor.skillCd.region.delete": "エリアを削除",
   "skillMonitor.skillCd.region.deleteTitle": "「{name}」を削除しますか？",
-  "skillMonitor.skillCd.region.deleteDescription": "このエリアの {count} 個のスキルも監視対象から外れます。",
-  "skillMonitor.skillCd.region.addTo": "クリックで「{region}」に追加します。他のエリアにあるスキル（バッジはエリア番号）はここへ移動します。",
-  "skillMonitor.skillCd.region.inRegion": "「{region}」に配置済み。クリックで現在のエリアへ移動",
+  "skillMonitor.skillCd.region.deleteDescription":
+    "このエリアの {count} 個のスキルも監視対象から外れます。",
+  "skillMonitor.skillCd.region.addTo":
+    "クリックで「{region}」に追加します。他のエリアにあるスキル（バッジはエリア番号）はここへ移動します。",
+  "skillMonitor.skillCd.region.inRegion":
+    "「{region}」に配置済み。クリックで現在のエリアへ移動",
   "skillMonitor.skillCd.picker.noResults": "一致するスキルがありません",
   "skillMonitor.skillCd.voice.title": "音声読み上げ",
-  "skillMonitor.skillCd.voice.description": "クラス・幻想・ロールスキルに発動・クールダウン完了・完了前の読み上げを設定します。上のクールダウン監視とは独立しており、CD表示は不要です。チャージ系スキルはチャージが1つ戻るたびに完了を読み上げます。",
+  "skillMonitor.skillCd.voice.description":
+    "クラス・幻想・ロールスキルに発動・クールダウン完了・完了前の読み上げを設定します。上のクールダウン監視とは独立しており、CD表示は不要です。チャージ系スキルはチャージが1つ戻るたびに完了を読み上げます。",
   "skillMonitor.skillCd.voice.empty":
     "まだ音声読み上げが設定されていません。上のスキルをクリックして追加してください。",
   "skillMonitor.skillCd.voice.configuredCount": "{count} 件設定済み",
@@ -1815,7 +1842,8 @@ export const jaJPMessages = {
     "バフ名または ID で検索",
   "skillMonitor.customPanel.counterEditor.picker.searchDamage":
     "ダメージ名または ID で検索",
-  "skillMonitor.customPanel.counterEditor.picker.searchSkill": "幻想スキルを検索、またはスキル ID を入力して Enter",
+  "skillMonitor.customPanel.counterEditor.picker.searchSkill":
+    "幻想スキルを検索、またはスキル ID を入力して Enter",
   "skillMonitor.customPanel.counterEditor.picker.enterId":
     "ID を入力して Enter",
   "skillMonitor.customPanel.counterEditor.picker.noMatch":
@@ -1952,6 +1980,7 @@ export const jaJPMessages = {
   "monsterMonitor.tabs.hate": "ヘイトリスト",
   "monsterMonitor.tabs.stun": "スタンバーゲージ",
   "monsterMonitor.tabs.hp": "HP バー",
+  "monsterMonitor.tabs.roster": "戦闘リスト",
   "monsterMonitor.tabs.fantasy": "味方幻想",
   "monsterMonitor.tabs.bossDbm": "Boss DBM",
   "monsterMonitor.tabs.entityDuration": "エンティティ持続",
@@ -1994,7 +2023,8 @@ export const jaJPMessages = {
   "monsterMonitor.teammate.styleTitle": "味方 Buff マトリクススタイル",
   "monsterMonitor.teammate.columnColorReset": "リセット",
   "monsterMonitor.fantasy.title": "味方幻想",
-  "monsterMonitor.fantasy.description": "味方が発動した幻想スキル召喚モンスター。",
+  "monsterMonitor.fantasy.description":
+    "味方が発動した幻想スキル召喚モンスター。",
   "monsterMonitor.fantasy.showAll": "すべての味方幻想を表示",
   "monsterMonitor.fantasy.placeholder": "味方幻想名または MonsterId を検索",
   "monsterMonitor.fantasy.emptySearch": "一致する味方幻想がありません",
@@ -2072,6 +2102,71 @@ export const jaJPMessages = {
   "monsterMonitor.hp.displayDescription":
     "現在の攻撃対象の HP バー（現在/最大）を表示します。",
   "monsterMonitor.hp.styleTitle": "HP バーパネルスタイル",
+  "monsterMonitor.roster.displayTitle": "戦闘リスト表示",
+  "monsterMonitor.roster.displayDescription":
+    "あなたと味方が戦っているすべてのモンスターの HP を一覧表示します。攻撃対象は最上部に固定し、ボスはすべて1行ずつ表示します。通常モンスターとエリートは並び順の上位数体を1行ずつ表示し、残りは隠さずに1行の小さなバーにまとめます。エリアの表示は「有効ウィンドウ」で切り替えます。",
+  "monsterMonitor.roster.normalRows":
+    "1行ずつ表示する通常モンスター・エリート数",
+  "monsterMonitor.roster.normalRowsHint":
+    "既定では HP% の高い順に並べます。残りは1行の小さなバーにまとめ、その中の最高と最低の HP を表示します。",
+  "monsterMonitor.roster.tankMode": "タンクモード",
+  "monsterMonitor.roster.tankModeDesc":
+    "あなた以外を攻撃しているモンスターを数え、1行ずつ表示して誰を攻撃しているかを示します。",
+  "monsterMonitor.roster.notAttackingMeFirst":
+    "自分を攻撃していないモンスターを優先",
+  "monsterMonitor.roster.notAttackingMeFirstDesc":
+    "他の人を狙っているモンスターを先に並べ、次にあなたを攻撃しているものと対象不明のものを並べます。各グループ内は HP% 順で、並べ替えは最大1秒に1回です。",
+  "monsterMonitor.roster.showHpValue": "HP の数値を表示",
+  "monsterMonitor.roster.showDistance": "距離を表示",
+  "monsterMonitor.roster.showDistanceDesc":
+    "あなたとの水平距離（メートル）。同名のモンスターを見分けるのに使えます。",
+  "monsterMonitor.roster.skills.title": "注目スキル（リストの行末に表示）",
+  "monsterMonitor.roster.skills.description":
+    "これらのスキルを使えるモンスターは攻撃対象のすぐ下に1行ずつ表示され、行末にスキルの状態が出ます。灰色のカウントダウンはクールダウン中、琥珀色は準備完了、赤は詠唱中または使用直後です。スキル ID 単位で、そのスキルを持つすべてのモンスターに適用されます。",
+  "monsterMonitor.roster.skills.caveatReady":
+    "「準備完了」は最も早く使える時刻を示すだけで、AI がすぐ使うとは限りません。",
+  "monsterMonitor.roster.skills.caveatScripted":
+    "スクリプトで発動するスキル（複数体が同時に使うものなど）は予測できず、使用時に知らせるだけです。",
+  "monsterMonitor.roster.skills.caveatInterrupt":
+    "詠唱を中断されると実際のクールダウンが長くなることがあり、準備完了が早めに表示されます。",
+  "monsterMonitor.roster.skills.listTitle": "注目中",
+  "monsterMonitor.roster.skills.empty": "注目スキルはありません",
+  "monsterMonitor.roster.skills.label": "略称",
+  "monsterMonitor.roster.skills.customCooldown": "クールダウン",
+  "monsterMonitor.roster.skills.tableCooldown": "テーブル",
+  "monsterMonitor.roster.skills.cooldownHint":
+    "空欄ならゲームのテーブルのクールダウンを使います。秒数を入力すると上書きします。",
+  "monsterMonitor.roster.skills.cooldown": "CD {seconds}s",
+  "monsterMonitor.roster.skills.battleStart": "開戦 {from}–{to}s",
+  "monsterMonitor.roster.skills.battleStartNever": "開戦時は使わない",
+  "monsterMonitor.roster.skills.sing": "詠唱 {seconds}s",
+  "monsterMonitor.roster.skills.danger": "危険",
+  "monsterMonitor.roster.skills.noTiming": "クールダウンデータなし",
+  "monsterMonitor.roster.skills.fromRecent": "今回遭遇したモンスターから追加",
+  "monsterMonitor.roster.skills.fromRecentHint":
+    "モンスターを開いて注目するスキルにチェックを入れます。ゲームのテーブルにあるスキルと、今回実際に使われたスキルが表示されます。",
+  "monsterMonitor.roster.skills.expanded": "展開中",
+  "monsterMonitor.roster.skills.monsterNoSkills":
+    "このモンスターのスキルデータはありません",
+  "monsterMonitor.roster.skills.searchTitle": "スキル名または ID で追加",
+  "monsterMonitor.roster.styleTitle": "戦闘リストパネルスタイル",
+  "monsterMonitor.roster.blockTitle": "モンスターの非表示",
+  "monsterMonitor.roster.blockDescription":
+    "非表示にしたモンスターは戦闘リストに表示されず、数にも含まれません。モンスター ID 単位で、すべてのプロファイルとダンジョンに適用されます。",
+  "monsterMonitor.roster.blockedTitle": "自分で非表示にしたもの",
+  "monsterMonitor.roster.blockedEmpty": "非表示のモンスターはありません",
+  "monsterMonitor.roster.unblock": "クリックで非表示を解除",
+  "monsterMonitor.roster.recentTitle": "今回遭遇したモンスター",
+  "monsterMonitor.roster.recentDescription":
+    "起動後に戦闘リストに入ったモンスターです。再起動で消去されます。戦闘リストエリアが有効である必要があります。クリックで非表示にします。",
+  "monsterMonitor.roster.recentEmpty":
+    "まだ戦闘リストに入ったモンスターはいません",
+  "monsterMonitor.roster.refresh": "更新",
+  "monsterMonitor.roster.searchTitle": "モンスター検索",
+  "monsterMonitor.roster.searchPlaceholder":
+    "名前またはモンスター ID で検索、クリックで非表示",
+  "monsterMonitor.roster.searchEmpty": "一致するモンスターはありません",
+  "monsterMonitor.roster.blocked": "非表示中",
   "monsterMonitor.overlay.title": "オーバーレイエリア表示",
   "monsterMonitor.overlay.description":
     "モンスターモニターオーバーレイの各表示エリアを制御します。",
@@ -2085,6 +2180,7 @@ export const jaJPMessages = {
   "monsterMonitor.overlay.bossDbm": "Boss DBM: {state}",
   "monsterMonitor.overlay.entityDuration": "エンティティ持続エリア：{state}",
   "monsterMonitor.overlay.monsterSkill": "モンスタースキルエリア：{state}",
+  "monsterMonitor.overlay.roster": "戦闘リストエリア：{state}",
   "monsterMonitor.monsterSkill.monitorAll":
     "周囲のすべてのモンスタースキルを表示",
   "monsterMonitor.monsterSkill.monitorAllDesc":
@@ -2172,6 +2268,20 @@ export const jaJPMessages = {
   "monsterOverlay.bossDbmGroupTag": "Boss DBM 区",
   "monsterOverlay.entityDurationGroupTag": "エンティティ持続エリア",
   "monsterOverlay.monsterSkillGroupTag": "モンスタースキルエリア",
+  "monsterOverlay.rosterGroupTag": "戦闘リストエリア",
+  "monsterOverlay.roster.count": "戦闘リスト {count} 体",
+  "monsterOverlay.roster.looseCount": "自分以外を攻撃 {count}",
+  "monsterOverlay.roster.looseDetail": "（{summary}）",
+  "monsterOverlay.roster.more": "他 {count} 体",
+  "monsterOverlay.roster.stripRange": "最高 {highest} · 最低 {lowest}",
+  "monsterOverlay.roster.kind.normal": "通常",
+  "monsterOverlay.roster.kind.elite": "エリート",
+  "monsterOverlay.roster.kind.boss": "ボス",
+  "monsterOverlay.roster.unknownMonster": "不明なモンスター",
+  "monsterOverlay.roster.otherPlayer": "他のプレイヤー",
+  "monsterOverlay.roster.previewMonster": "モンスタープレビュー",
+  "monsterOverlay.roster.previewSkill": "スキル",
+  "monsterOverlay.roster.skillReady": "準備",
   "monsterOverlay.hateSectionTitle": "{title} - ヘイト",
   "monsterOverlay.stunSectionTitle": "{title} - スタン",
   "monsterOverlay.hpSectionTitle": "{title} - HP",

@@ -10,6 +10,7 @@
 | **Hate List Area** | Hidden | [Threat List](./hate.md) |
 | **Stun Bar Area** | Hidden | [Stun bar](./status.md#stun-bar) |
 | **HP Bar Area** | Hidden | [HP bar](./status.md#hp-bar) |
+| **Battle Roster** | Hidden | [Battle roster](./roster.md) |
 | **Teammate Fantasy Area** | Shown | [Teammate fantasies](./status.md#teammate-fantasies) |
 | **Boss DBM Area** | Hidden | [Boss DBM](./boss-dbm.md) |
 | **Entity Duration Area** | Hidden | [Entity Duration](./entity-duration.md) |

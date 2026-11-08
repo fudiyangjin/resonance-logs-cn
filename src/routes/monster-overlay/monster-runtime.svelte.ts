@@ -27,6 +27,7 @@ import type {
   MonsterFantasyRow,
   MonsterHateSection,
   MonsterHpSection,
+  MonsterRosterDisplay,
   MonsterStunSection,
   MonsterTeammateBuffColumn,
   MonsterTeammateBuffRow,
@@ -157,6 +158,7 @@ class MonsterRuntimeState {
   dbmRows = $state.raw<TextBuffDisplay[]>([]);
   entityDurationRows = $state.raw<TextBuffDisplay[]>([]);
   monsterSkillRows = $state.raw<TextBuffDisplay[]>([]);
+  rosterDisplay = $state.raw<MonsterRosterDisplay | null>(null);
   isEditing = $state(false);
   dragState = $state<MonsterDragState | null>(null);
   resizeState = $state<MonsterResizeState | null>(null);
@@ -220,6 +222,10 @@ export function monsterStunSections() {
 
 export function monsterHpSections() {
   return monsterRuntime.hpSections;
+}
+
+export function monsterRosterPanelData() {
+  return monsterRuntime.rosterDisplay;
 }
 
 export function monsterFantasyRows() {

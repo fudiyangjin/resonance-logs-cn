@@ -41,6 +41,7 @@ Tabs are grouped into **{{ui:monsterMonitor.tabGroups.target}}**, **{{ui:monster
 | **{{ui:monsterMonitor.tabs.teammateCd}}** | [Teammate CD](./teammate-cd.md) | — |
 | **{{ui:monsterMonitor.tabs.hate}}** | [Threat List](./hate.md) | — |
 | **{{ui:monsterMonitor.tabs.stun}}** / **{{ui:monsterMonitor.tabs.hp}}** / **{{ui:monsterMonitor.tabs.fantasy}}** | [Stun, HP and Teammate Fantasies](./status.md) | — |
+| **{{ui:monsterMonitor.tabs.roster}}** | [Battle Roster](./roster.md) | — |
 | **{{ui:monsterMonitor.tabs.bossDbm}}** | [Boss DBM](./boss-dbm.md) | [Give a Boss skill an alias and a voice warning](./examples/boss-alias.md) |
 | **{{ui:monsterMonitor.tabs.monsterSkill}}** | [Monster Skills](./monster-skill.md) | — |
 | **{{ui:monsterMonitor.tabs.entityDuration}}** | [Entity Duration](./entity-duration.md) | [Show the Scythe Cart's remaining time](./examples/scythe-cart.md) |

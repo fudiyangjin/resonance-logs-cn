@@ -69,6 +69,7 @@ pub struct MonitorRuntimeSnapshot {
     pub teammate: TeammateRuntimeSnapshot,
     pub teammate_cd: TeammateCdRuntimeSnapshot,
     pub skill_damage: SkillDamageRuntimeSnapshot,
+    pub monster_roster: MonsterRosterRuntimeSnapshot,
     pub buff_composites: Vec<BuffCompositeSpec>,
 }
 
@@ -83,6 +84,7 @@ impl Default for MonitorRuntimeSnapshot {
             teammate: TeammateRuntimeSnapshot::default(),
             teammate_cd: TeammateCdRuntimeSnapshot::default(),
             skill_damage: SkillDamageRuntimeSnapshot::default(),
+            monster_roster: MonsterRosterRuntimeSnapshot::default(),
         }
     }
 }
@@ -98,6 +100,7 @@ impl MonitorRuntimeSnapshot {
         }
         self.teammate_cd.normalize();
         self.skill_damage.normalize();
+        self.monster_roster.normalize();
         normalize_buff_composites(&mut self.buff_composites)?;
         // Negative ids name composites; one that is no longer defined is
         // dropped rather than failing the whole snapshot.
@@ -453,6 +456,28 @@ impl SkillDamageRuntimeSnapshot {
     }
 }
 
+/// Upper bound on skills watched on the battle roster; the UI allows 32.
+pub const MONSTER_ROSTER_MAX_WATCHED_SKILLS: usize = 64;
+
+/// The battle roster panel. Off means the roster projection tracks nothing.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct MonsterRosterRuntimeSnapshot {
+    pub enabled: bool,
+    /// Skills whose casts and cooldowns are shown at the end of roster rows.
+    pub watched_skill_ids: Vec<i32>,
+}
+
+impl MonsterRosterRuntimeSnapshot {
+    /// Positive, sorted and deduplicated, so lookups can binary search.
+    fn normalize(&mut self) {
+        self.watched_skill_ids.retain(|id| *id > 0);
+        dedup_and_sort(&mut self.watched_skill_ids);
+        self.watched_skill_ids
+            .truncate(MONSTER_ROSTER_MAX_WATCHED_SKILLS);
+    }
+}
+
 fn describe_snapshot(snapshot: &MonitorRuntimeSnapshot) -> String {
     format!(
         "locale={} event_update_rate_ms={} skill_enabled={} monitored_skills={} monitored_buffs={} panel_attrs={} counter_rules={} monster_enabled={} monster_global={} monster_self_applied={} monster_watched_entities={} teammate_enabled={} teammate_any={} teammate_local={} teammate_self={} buff_composites={}",
@@ -524,6 +549,20 @@ fn dedup_and_sort<T: Ord>(values: &mut Vec<T>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn monster_roster_watched_skills_are_positive_sorted_and_deduplicated() {
+        let snapshot = MonitorRuntimeSnapshot {
+            monster_roster: MonsterRosterRuntimeSnapshot {
+                enabled: true,
+                watched_skill_ids: vec![5, -1, 3, 5, 0],
+            },
+            ..MonitorRuntimeSnapshot::default()
+        }
+        .normalize()
+        .expect("valid snapshot");
+        assert_eq!(snapshot.monster_roster.watched_skill_ids, vec![3, 5]);
+    }
 
     fn spec(
         monster_id: i32,

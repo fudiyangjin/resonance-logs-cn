@@ -4,7 +4,8 @@ export const enUSMessages = {
   "skillDamage.actions.toggleOverlay": "Toggle damage display",
   "skillDamage.actions.editLayout": "Edit damage display layout",
   "routes.tools.skillDamage": "Skill Damage Display",
-  "skillDamage.pageDescription": "Configure skill groups, damage styles, animations and independent display regions.",
+  "skillDamage.pageDescription":
+    "Configure skill groups, damage styles, animations and independent display regions.",
   "skillDamage.floatUp": "Float up and fade",
   "skillDamage.scrollDirection": "Subsequent numbers scroll direction",
   "skillDamage.scrollUp": "Scroll up",
@@ -28,7 +29,8 @@ export const enUSMessages = {
   "skillDamage.groupName": "Group name",
   "skillDamage.groupEnabled": "Enable this group",
   "skillDamage.groupMerge": "Combine simultaneous group damage",
-  "skillDamage.groupMergeHint": "Sum all skills in this group within one batch and display the group name. Count each target once.",
+  "skillDamage.groupMergeHint":
+    "Sum all skills in this group within one batch and display the group name. Count each target once.",
   "skillDamage.numberStyle": "Damage number style",
   "skillDamage.italic": "Italic",
   "skillDamage.fill": "Fill color",
@@ -45,19 +47,25 @@ export const enUSMessages = {
   "skillDamage.duration": "Display duration (seconds)",
   "skillDamage.shrink": "Gradual shrink",
   "skillDamage.test": "Test animation",
-  "skillDamage.testHint": "Duration: 0.1–60 seconds. Click Test to preview damage below using the current font and animation settings.",
+  "skillDamage.testHint":
+    "Duration: 0.1–60 seconds. Click Test to preview damage below using the current font and animation settings.",
   "skillDamage.mergeHits": "Combine multiple hits into total damage",
-  "skillDamage.mergeHitsHint": "Sum hits from the same skill in one batch, including multiple targets. When off, show only the largest hit in each batch.",
+  "skillDamage.mergeHitsHint":
+    "Sum hits from the same skill in one batch, including multiple targets. When off, show only the largest hit in each batch.",
   "skillDamage.searchPlaceholder": "Search by skill name, alias or ID",
-  "skillDamage.searchHint": "Click a result to add it. Search damage names or skill group names; matching IDs can be added individually.",
-  "skillDamage.emptySearch": "No matching skills. Enter a damage ID to add it directly.",
+  "skillDamage.searchHint":
+    "Click a result to add it. Search damage names or skill group names; matching IDs can be added individually.",
+  "skillDamage.emptySearch":
+    "No matching skills. Enter a damage ID to add it directly.",
   "skillDamage.font": "Damage number font",
   "skillDamage.fontFamily": "Font family",
   "skillDamage.fontSize": "Font size",
   "skillDamage.fontWeight": "Font weight",
   "columns.skill.id": "ID",
-  "columns.description.skill.id": "Damage skill ID used to configure skill damage display",
-  "skillDamage.description": "Show each damage hit from your selected skills. Find IDs in DPS skill details. Drag to position in overlay edit mode.",
+  "columns.description.skill.id":
+    "Damage skill ID used to configure skill damage display",
+  "skillDamage.description":
+    "Show each damage hit from your selected skills. Find IDs in DPS skill details. Drag to position in overlay edit mode.",
   "skillDamage.enabled": "Enable skill damage display",
   "skillDamage.alias": "Skill alias",
   "skillDamage.delete": "Delete",
@@ -100,21 +108,25 @@ export const enUSMessages = {
   "loadout.page.skillProfileLabel": "Skill monitor profile",
   "loadout.page.monsterProfileLabel": "Monster monitor profile",
   "skillDamage.profile.title": "Damage display profiles",
-  "skillDamage.profile.pickerDescription": "The damage display profile referenced by the active loadout. Switch or manage it here; for more combinations go to the Loadouts page",
+  "skillDamage.profile.pickerDescription":
+    "The damage display profile referenced by the active loadout. Switch or manage it here; for more combinations go to the Loadouts page",
   "skillDamage.profile.new": "New Profile",
   "skillDamage.profile.rename": "Rename",
   "skillDamage.profile.delete": "Delete",
   "skillDamage.profile.renamePrompt": "Enter a new profile name",
-  "skillDamage.profile.deleteConfirm": "Delete this damage display profile? Loadouts referencing it will fall back to the first profile.",
+  "skillDamage.profile.deleteConfirm":
+    "Delete this damage display profile? Loadouts referencing it will fall back to the first profile.",
   "skillDamage.defaults.defaultProfileName": "Default Profile",
   "skillDamage.defaults.profileName": "Profile {index}",
   "skillDamage.autoHideInDailyScenes.label": "Auto Hide in Daily Scenes",
-  "skillDamage.autoHideInDailyScenes.description": "Automatically hide the damage display in daily scene blacklist entries and restore it after leaving.",
+  "skillDamage.autoHideInDailyScenes.description":
+    "Automatically hide the damage display in daily scene blacklist entries and restore it after leaving.",
   "skillDamage.nameNone": "Hidden",
   "skillDamage.fontSource": "Font source",
   "skillDamage.systemFont": "System font (by name)",
   "skillDamage.uploadFont": "Upload font",
-  "skillDamage.uploadFontDescription": "Choose a font file (.woff2/.woff/.ttf/.otf). Each font is stored once and can be reused by every group",
+  "skillDamage.uploadFontDescription":
+    "Choose a font file (.woff2/.woff/.ttf/.otf). Each font is stored once and can be reused by every group",
   "loadout.page.damageProfileLabel": "Damage display profile",
   "loadout.page.liveProfileLabel": "DPS settings profile",
   "loadout.page.linkedSpecLabel": "Linked spec",
@@ -1418,34 +1430,49 @@ export const enUSMessages = {
   "skillMonitor.skillCd.duty.encyclopedia": "Encyclopedia Role Skills",
   "skillMonitor.skillCd.resonance.title": "Fantasy Skills",
   "skillMonitor.skillCd.resonance.placeholder": "Search fantasy skill name",
-  "skillMonitor.skillCd.resonance.searchPrompt": "Enter a keyword to search fantasy skills",
+  "skillMonitor.skillCd.resonance.searchPrompt":
+    "Enter a keyword to search fantasy skills",
   "skillMonitor.skillCd.preview.title": "Skill Layout",
-  "skillMonitor.skillCd.preview.description": "Split skills into several areas, each moved and scaled on its own in the overlay. Drag to an empty cell to move, or onto a skill to swap. The overlay trims unused space on the right and bottom while keeping intentional gaps.",
+  "skillMonitor.skillCd.preview.description":
+    "Split skills into several areas, each moved and scaled on its own in the overlay. Drag to an empty cell to move, or onto a skill to swap. The overlay trims unused space on the right and bottom while keeping intentional gaps.",
   "skillMonitor.skillCd.layout.rows": "Rows",
   "skillMonitor.skillCd.layout.columns": "Columns",
   "skillMonitor.skillCd.layout.gap": "Icon spacing",
   "skillMonitor.skillCd.layout.compact": "Compact layout",
-  "skillMonitor.skillCd.layout.help": "Select an empty cell before adding a skill to place it there. Enter / Space selects, Alt + arrow keys moves or swaps, Delete removes, and Esc cancels. Compact layout removes intentional gaps.",
+  "skillMonitor.skillCd.layout.help":
+    "Select an empty cell before adding a skill to place it there. Enter / Space selects, Alt + arrow keys moves or swaps, Delete removes, and Esc cancels. Compact layout removes intentional gaps.",
   "skillMonitor.skillCd.layout.cell": "Row {row}, column {column}: {skill}",
-  "skillMonitor.skillCd.layout.selectHint": "Click a cell to select it. Removing a skill leaves its cell empty.",
-  "skillMonitor.skillCd.layout.error.limit": "You can monitor up to 10 skills across all areas. Remove a skill first.",
-  "skillMonitor.skillCd.layout.error.full": "The grid is full. Increase the number of rows or columns.",
-  "skillMonitor.skillCd.layout.error.invalidSize": "Rows and columns must be whole numbers from 1 to 10.",
-  "skillMonitor.skillCd.layout.error.invalidGap": "Icon spacing must be a whole number from 0 to 24.",
-  "skillMonitor.skillCd.layout.error.overflow": "These skills would fall outside the grid. Move them first or use Compact layout: {skills}",
-  "skillMonitor.skillCd.layout.error.stale": "The skill layout has changed. Please try again.",
-  "skillMonitor.skillCd.layout.error.lastRegion": "At least one area is required.",
+  "skillMonitor.skillCd.layout.selectHint":
+    "Click a cell to select it. Removing a skill leaves its cell empty.",
+  "skillMonitor.skillCd.layout.error.limit":
+    "You can monitor up to 10 skills across all areas. Remove a skill first.",
+  "skillMonitor.skillCd.layout.error.full":
+    "The grid is full. Increase the number of rows or columns.",
+  "skillMonitor.skillCd.layout.error.invalidSize":
+    "Rows and columns must be whole numbers from 1 to 10.",
+  "skillMonitor.skillCd.layout.error.invalidGap":
+    "Icon spacing must be a whole number from 0 to 24.",
+  "skillMonitor.skillCd.layout.error.overflow":
+    "These skills would fall outside the grid. Move them first or use Compact layout: {skills}",
+  "skillMonitor.skillCd.layout.error.stale":
+    "The skill layout has changed. Please try again.",
+  "skillMonitor.skillCd.layout.error.lastRegion":
+    "At least one area is required.",
   "skillMonitor.skillCd.region.add": "Add area",
   "skillMonitor.skillCd.region.name": "Area name",
   "skillMonitor.skillCd.region.clear": "Clear area",
   "skillMonitor.skillCd.region.delete": "Delete area",
   "skillMonitor.skillCd.region.deleteTitle": "Delete “{name}”?",
-  "skillMonitor.skillCd.region.deleteDescription": "The {count} skills in this area will stop being monitored.",
-  "skillMonitor.skillCd.region.addTo": "Click to add to “{region}”. Skills in another area (the badge shows its number) move here.",
-  "skillMonitor.skillCd.region.inRegion": "In “{region}”. Click to move it to the current area",
+  "skillMonitor.skillCd.region.deleteDescription":
+    "The {count} skills in this area will stop being monitored.",
+  "skillMonitor.skillCd.region.addTo":
+    "Click to add to “{region}”. Skills in another area (the badge shows its number) move here.",
+  "skillMonitor.skillCd.region.inRegion":
+    "In “{region}”. Click to move it to the current area",
   "skillMonitor.skillCd.picker.noResults": "No matching skills",
   "skillMonitor.skillCd.voice.title": "Voice Broadcast",
-  "skillMonitor.skillCd.voice.description": "Announce casts, cooldown ready and ready-in for class, fantasy or role skills. Independent of the cooldown monitor above, so no cooldown display is needed. Charge skills announce ready for every charge that returns.",
+  "skillMonitor.skillCd.voice.description":
+    "Announce casts, cooldown ready and ready-in for class, fantasy or role skills. Independent of the cooldown monitor above, so no cooldown display is needed. Charge skills announce ready for every charge that returns.",
   "skillMonitor.skillCd.voice.empty":
     "No voice broadcasts configured yet. Click a skill above to add one.",
   "skillMonitor.skillCd.voice.configuredCount": "{count} configured",
@@ -1488,7 +1515,7 @@ export const enUSMessages = {
   "skillMonitor.buff.composite.conditionMostUrgent":
     "Most urgent member: shown while any member is active, missing members first, then the one ending soonest",
   "skillMonitor.buff.composite.hintMostUrgent":
-    "Shows one slot while any member is active: a missing member is dimmed and marked \"Missing\" (the earliest listed one if several are), otherwise the member ending soonest is shown with its own icon, time and stacks. Coverage counts any member being active; voice follows the composite as a whole (appearing, ending, about to end), so give a member its own voice cue to hear about it separately. Member buffs still display on their own.",
+    'Shows one slot while any member is active: a missing member is dimmed and marked "Missing" (the earliest listed one if several are), otherwise the member ending soonest is shown with its own icon, time and stacks. Coverage counts any member being active; voice follows the composite as a whole (appearing, ending, about to end), so give a member its own voice cue to hear about it separately. Member buffs still display on their own.',
   "skillMonitor.buff.composite.save": "Save Composite",
   "skillMonitor.buff.composite.deleteTitle": 'Delete composite "{name}"?',
   "skillMonitor.buff.composite.deleteDescription":
@@ -1843,7 +1870,8 @@ export const enUSMessages = {
     "Search buff name or ID",
   "skillMonitor.customPanel.counterEditor.picker.searchDamage":
     "Search damage name or ID",
-  "skillMonitor.customPanel.counterEditor.picker.searchSkill": "Search fantasy skills, or type a skill ID and press Enter",
+  "skillMonitor.customPanel.counterEditor.picker.searchSkill":
+    "Search fantasy skills, or type a skill ID and press Enter",
   "skillMonitor.customPanel.counterEditor.picker.enterId":
     "Type an ID and press Enter",
   "skillMonitor.customPanel.counterEditor.picker.noMatch": "No matches",
@@ -1983,6 +2011,7 @@ export const enUSMessages = {
   "monsterMonitor.tabs.hate": "Hate List",
   "monsterMonitor.tabs.stun": "Stun Bar",
   "monsterMonitor.tabs.hp": "HP Bar",
+  "monsterMonitor.tabs.roster": "Battle Roster",
   "monsterMonitor.tabs.fantasy": "Teammate Fantasies",
   "monsterMonitor.tabs.bossDbm": "Boss DBM",
   "monsterMonitor.tabs.entityDuration": "Entity Duration",
@@ -2025,7 +2054,8 @@ export const enUSMessages = {
   "monsterMonitor.teammate.styleTitle": "Teammate Buff Matrix Style",
   "monsterMonitor.teammate.columnColorReset": "Reset",
   "monsterMonitor.fantasy.title": "Teammate Fantasies",
-  "monsterMonitor.fantasy.description": "Fantasy skill summoned monsters released by teammates.",
+  "monsterMonitor.fantasy.description":
+    "Fantasy skill summoned monsters released by teammates.",
   "monsterMonitor.fantasy.showAll": "Show all teammate fantasies",
   "monsterMonitor.fantasy.placeholder":
     "Search teammate fantasy name or MonsterId",
@@ -2103,6 +2133,73 @@ export const enUSMessages = {
   "monsterMonitor.hp.displayDescription":
     "Show the health bar (current/max) for the current attack target.",
   "monsterMonitor.hp.styleTitle": "HP Bar Panel Style",
+  "monsterMonitor.roster.displayTitle": "Battle Roster",
+  "monsterMonitor.roster.displayDescription":
+    "Lists the HP of every monster you and your teammates are fighting. Your target is pinned to the top and every boss gets its own row; the first few normal and elite monsters in rank order get rows too, and the rest are folded into one strip of mini bars instead of being hidden. Control its visibility in Enable Window.",
+  "monsterMonitor.roster.normalRows":
+    "Normal and elite monsters listed by name",
+  "monsterMonitor.roster.normalRowsHint":
+    "Ranked by HP%, highest first, by default. The rest are folded into one strip of mini bars, with the highest and lowest HP shown.",
+  "monsterMonitor.roster.tankMode": "Tank mode",
+  "monsterMonitor.roster.tankModeDesc":
+    "Counts the monsters attacking someone other than you, lists each of them and shows whom it is attacking.",
+  "monsterMonitor.roster.notAttackingMeFirst":
+    "Monsters not attacking me first",
+  "monsterMonitor.roster.notAttackingMeFirstDesc":
+    "Monsters targeting someone else come first, then those attacking you or with no known target; each group is still ranked by HP%, at most once per second.",
+  "monsterMonitor.roster.showHpValue": "Show HP values",
+  "monsterMonitor.roster.showDistance": "Show distance",
+  "monsterMonitor.roster.showDistanceDesc":
+    "Ground distance to you in meters, to tell same-name monsters apart.",
+  "monsterMonitor.roster.skills.title":
+    "Watched skills (shown at the end of roster rows)",
+  "monsterMonitor.roster.skills.description":
+    "Monsters that can cast these skills are listed right below your target, each with a cell per skill at the end of its row: a gray countdown while cooling down, amber when ready, red while casting or just cast. Works by skill id, for every monster that has the skill.",
+  "monsterMonitor.roster.skills.caveatReady":
+    "“Ready” only means the earliest moment it can be cast; the AI may wait longer.",
+  "monsterMonitor.roster.skills.caveatScripted":
+    "Skills triggered by scripts (several monsters casting at once, for example) cannot be predicted; they only flash when cast.",
+  "monsterMonitor.roster.skills.caveatInterrupt":
+    "An interrupted cast can have a longer cooldown, so “Ready” may show early.",
+  "monsterMonitor.roster.skills.listTitle": "Watched",
+  "monsterMonitor.roster.skills.empty": "No watched skill",
+  "monsterMonitor.roster.skills.label": "Short name",
+  "monsterMonitor.roster.skills.customCooldown": "Cooldown",
+  "monsterMonitor.roster.skills.tableCooldown": "Table",
+  "monsterMonitor.roster.skills.cooldownHint":
+    "Leave empty to use the game table cooldown; seconds entered here override it.",
+  "monsterMonitor.roster.skills.cooldown": "CD {seconds}s",
+  "monsterMonitor.roster.skills.battleStart": "Opener {from}–{to}s",
+  "monsterMonitor.roster.skills.battleStartNever": "Not at battle start",
+  "monsterMonitor.roster.skills.sing": "Cast bar {seconds}s",
+  "monsterMonitor.roster.skills.danger": "Dangerous",
+  "monsterMonitor.roster.skills.noTiming": "No cooldown data",
+  "monsterMonitor.roster.skills.fromRecent":
+    "Add from monsters met this session",
+  "monsterMonitor.roster.skills.fromRecentHint":
+    "Open a monster and tick the skills to watch. The list holds the skills from the game table plus those seen cast during this session.",
+  "monsterMonitor.roster.skills.expanded": "Open",
+  "monsterMonitor.roster.skills.monsterNoSkills":
+    "No skill data for this monster",
+  "monsterMonitor.roster.skills.searchTitle": "Add by skill name or id",
+  "monsterMonitor.roster.styleTitle": "Battle Roster Panel Style",
+  "monsterMonitor.roster.blockTitle": "Blocked Monsters",
+  "monsterMonitor.roster.blockDescription":
+    "Blocked monsters are left out of the battle roster and its counts. Blocking works by monster id and applies to every profile and dungeon.",
+  "monsterMonitor.roster.blockedTitle": "Blocked by you",
+  "monsterMonitor.roster.blockedEmpty": "No monster is blocked",
+  "monsterMonitor.roster.unblock": "Click to unblock",
+  "monsterMonitor.roster.recentTitle": "Monsters met this session",
+  "monsterMonitor.roster.recentDescription":
+    "Monsters that joined the battle roster since the app started; cleared on restart. Requires the battle roster area to be on. Click one to block it.",
+  "monsterMonitor.roster.recentEmpty":
+    "No monster has joined the battle roster yet",
+  "monsterMonitor.roster.refresh": "Refresh",
+  "monsterMonitor.roster.searchTitle": "Search monsters",
+  "monsterMonitor.roster.searchPlaceholder":
+    "Search by name or monster id; click a result to block it",
+  "monsterMonitor.roster.searchEmpty": "No matching monster",
+  "monsterMonitor.roster.blocked": "Blocked",
   "monsterMonitor.overlay.title": "Overlay Area Visibility",
   "monsterMonitor.overlay.description":
     "Control each visible area in the monster monitor overlay.",
@@ -2116,6 +2213,7 @@ export const enUSMessages = {
   "monsterMonitor.overlay.bossDbm": "Boss DBM: {state}",
   "monsterMonitor.overlay.entityDuration": "Entity Duration: {state}",
   "monsterMonitor.overlay.monsterSkill": "Monster Skills: {state}",
+  "monsterMonitor.overlay.roster": "Battle Roster: {state}",
   "monsterMonitor.monsterSkill.monitorAll": "Show all nearby monster skills",
   "monsterMonitor.monsterSkill.monitorAllDesc":
     "Also show every other skill cast by nearby monsters as skill name#id for 5 seconds; a recast refreshes the time. Listed skills keep their own label, order and display time, and stay on top.",
@@ -2202,6 +2300,20 @@ export const enUSMessages = {
   "monsterOverlay.bossDbmGroupTag": "Boss DBM 区",
   "monsterOverlay.entityDurationGroupTag": "Entity Duration",
   "monsterOverlay.monsterSkillGroupTag": "Monster Skills",
+  "monsterOverlay.rosterGroupTag": "Battle Roster",
+  "monsterOverlay.roster.count": "Roster {count}",
+  "monsterOverlay.roster.looseCount": "Not on me {count}",
+  "monsterOverlay.roster.looseDetail": " ({summary})",
+  "monsterOverlay.roster.more": "+{count} more",
+  "monsterOverlay.roster.stripRange": "High {highest} · Low {lowest}",
+  "monsterOverlay.roster.kind.normal": "Normal",
+  "monsterOverlay.roster.kind.elite": "Elite",
+  "monsterOverlay.roster.kind.boss": "Boss",
+  "monsterOverlay.roster.unknownMonster": "Unknown monster",
+  "monsterOverlay.roster.otherPlayer": "Other player",
+  "monsterOverlay.roster.previewMonster": "Monster preview",
+  "monsterOverlay.roster.previewSkill": "Skill",
+  "monsterOverlay.roster.skillReady": "Ready",
   "monsterOverlay.hateSectionTitle": "{title} - Hate",
   "monsterOverlay.stunSectionTitle": "{title} - Stun",
   "monsterOverlay.hpSectionTitle": "{title} - HP",

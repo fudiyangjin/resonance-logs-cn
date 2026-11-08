@@ -63,6 +63,7 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | [味方 CD](./features/monster/teammate-cd.md) | 味方から共有されたスキルクールダウン | — |
 | [スタン、HP と味方幻想](./features/monster/status.md) | ターゲットの状態バー | — |
 | [ヘイトリスト](./features/monster/hate.md) | ターゲットのヘイト順位 | — |
+| [戦闘リスト](./features/monster/roster.md) | 交戦中の全モンスターの HP、タンク視点、ギミック用モンスターの非表示 | — |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss スキルの予告バー | [Boss スキルの音声予告](./features/monster/examples/boss-alias.md) |
 | [エンティティ持続](./features/monster/entity-duration.md) | 召喚物などエンティティの存在時間 | [鎌車の残り時間](./features/monster/examples/scythe-cart.md) |
 | [モンスタースキル](./features/monster/monster-skill.md) | 周囲のモンスターが指定スキルを使うと表示 | — |

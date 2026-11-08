@@ -68,6 +68,7 @@ fn api_builder() -> Builder<tauri::Wry> {
         live::ipc::commands::set_live_pull_active,
         live::ipc::commands::get_live_status,
         live::ipc::commands::get_live_scene,
+        live::ipc::commands::get_monster_roster_recent,
         hud_layout::migrate_hud_layout,
         live::ipc::commands::enable_blur,
         live::ipc::commands::disable_blur,

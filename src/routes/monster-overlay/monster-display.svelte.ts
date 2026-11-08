@@ -92,6 +92,11 @@ import {
   latestBuffsByCategory,
   orderTeammateUuids,
 } from "./monster-teammate-projection";
+import {
+  MONSTER_ROSTER_DEADLINE_SOURCE,
+  monsterRosterDisplay,
+  monsterRosterNextDeadlineMs,
+} from "./monster-roster-display.svelte.js";
 
 const FANTASY_DISPLAY_TTL_MS = 5000;
 const STUN_BROKEN_HIGHLIGHT_COLOR = "#ff4d4f";
@@ -110,6 +115,7 @@ export const MONSTER_PROJECTION_DEADLINE_SOURCES = [
   MONSTER_DBM_DEADLINE_SOURCE,
   MONSTER_ENTITY_DURATION_DEADLINE_SOURCE,
   MONSTER_SKILL_DEADLINE_SOURCE,
+  MONSTER_ROSTER_DEADLINE_SOURCE,
 ] as const;
 
 type TeammateDisplay = {
@@ -1382,7 +1388,8 @@ function assignRuntime<
     | "fantasyRows"
     | "dbmRows"
     | "entityDurationRows"
-    | "monsterSkillRows",
+    | "monsterSkillRows"
+    | "rosterDisplay",
 >(key: K, value: (typeof monsterRuntime)[K]) {
   if (untrack(() => monsterRuntime[key]) !== value) {
     monsterRuntime[key] = value;
@@ -1404,6 +1411,7 @@ export function updateMonsterDisplay() {
   assignRuntime("dbmRows", dbmDisplayProjection.rows);
   assignRuntime("entityDurationRows", entityDurationDisplayProjection.rows);
   assignRuntime("monsterSkillRows", monsterSkillDisplayProjection.rows);
+  assignRuntime("rosterDisplay", monsterRosterDisplay());
 }
 
 export function syncMonsterProjectionDeadlines() {
@@ -1431,6 +1439,10 @@ export function syncMonsterProjectionDeadlines() {
     MONSTER_SKILL_DEADLINE_SOURCE,
     monsterSkillDisplayProjection.nextDeadlineMs,
   );
+  setHudProjectionDeadline(
+    MONSTER_ROSTER_DEADLINE_SOURCE,
+    monsterRosterNextDeadlineMs(),
+  );
 }
 
 export function clearMonsterProjectionDeadlines() {
@@ -1447,6 +1459,7 @@ export function nextMonsterProjectionDeadline(): number | null {
     dbmDisplayProjection.nextDeadlineMs,
     entityDurationDisplayProjection.nextDeadlineMs,
     monsterSkillDisplayProjection.nextDeadlineMs,
+    monsterRosterNextDeadlineMs(),
   ].filter((value): value is number => value !== null);
   return candidates.length > 0 ? Math.min(...candidates) : null;
 }

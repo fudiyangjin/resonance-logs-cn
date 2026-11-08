@@ -10,6 +10,7 @@ import { expandBuffSelection } from "$lib/config/buff-name-table";
 import { activeProfile as getActiveProfile } from "$lib/skill-monitor-profile.svelte.js";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
 import { ensureMonsterSkillEntries } from "$lib/monster-skill-entries";
+import { ensureRosterSkillEntries } from "$lib/roster-skill-entries";
 import { SETTINGS, normalizeTeammateCdSkills } from "$lib/settings-store";
 import { activeSkillDamageProfile } from "$lib/skill-damage-profile.svelte";
 import { watchedSkillDamageKeys } from "$lib/skill-damage-settings";
@@ -243,6 +244,22 @@ function buildTeammateCdRuntimeSnapshot(): MonitorRuntimeSnapshot["teammateCd"] 
   return { enabled: classes.length > 0, classes };
 }
 
+/** The roster projection runs only while the battle roster is shown; its
+ * watched skills are tracked per monster for the cells at the row ends. */
+function buildMonsterRosterRuntimeSnapshot(): MonitorRuntimeSnapshot["monsterRoster"] {
+  const state = SETTINGS.monsterMonitor.state;
+  const enabled =
+    state.enabled && (state.overlayVisibility?.showRosterPanel ?? false);
+  return {
+    enabled,
+    watchedSkillIds: enabled
+      ? ensureRosterSkillEntries(state.rosterSkillEntries).map(
+          (entry) => entry.skillId,
+        )
+      : [],
+  };
+}
+
 export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
   return {
     i18n: {
@@ -260,6 +277,7 @@ export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
     skillDamage: {
       watchedSkillKeys: watchedSkillDamageKeys(activeSkillDamageProfile()),
     },
+    monsterRoster: buildMonsterRosterRuntimeSnapshot(),
     buffComposites: buffCompositeSpecs(
       ensureBuffComposites(SETTINGS.skillMonitor.state.buffComposites),
     ),

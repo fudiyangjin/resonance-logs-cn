@@ -7,6 +7,8 @@ import type {
 import type { EntityId } from "$lib/entity-id";
 import type { HudTemporalValue } from "$lib/hud-temporal.svelte.js";
 import type { TeammateCdSlotKind } from "$lib/settings-store";
+import type { RosterMonsterKind } from "$lib/bindings";
+import type { MonsterSkillTiming } from "$lib/config/monster-skill-timing";
 
 export type MonsterBossBuffSection = {
   bossEntityUuid: EntityId;
@@ -31,6 +33,58 @@ export type MonsterStunSection = {
 };
 
 export type MonsterHpSection = MonsterStunSection;
+
+export type MonsterRosterRow = {
+  uuid: string;
+  name: string;
+  kind: RosterMonsterKind;
+  isTarget: boolean;
+  /** HP ratio, `0..1`. */
+  ratio: number;
+  percentText: string;
+  hpText: string | null;
+  distanceText: string | null;
+  /** Who this monster attacks instead of the local player (tank mode). */
+  looseTargetName: string | null;
+  /** A blocked monster shown only for its watched skills: no HP bar. */
+  skillOnly: boolean;
+  /** Watched skill cells, in watch-list order. */
+  skills: MonsterRosterSkillChip[];
+};
+
+/**
+ * One watched skill cell. Holds timestamps only; the cell derives its
+ * state (cooling, ready, casting…) from the overlay clock.
+ */
+export type MonsterRosterSkillChip = {
+  skillId: number;
+  label: string;
+  timing: MonsterSkillTiming;
+  customCooldownSeconds: number | null;
+  joinedAtMs: number;
+  lastCastAtMs: number | null;
+  currentCastAtMs: number | null;
+};
+
+export type MonsterRosterStripBar = {
+  uuid: string;
+  ratio: number;
+};
+
+/** The battle roster panel: every monster the team is fighting. */
+export type MonsterRosterDisplay = {
+  count: number;
+  tankMode: boolean;
+  looseCount: number;
+  /** e.g. "牧师 2 · 弓手 1"; empty without loose monsters. */
+  looseSummary: string;
+  rows: MonsterRosterRow[];
+  strip: MonsterRosterStripBar[];
+  /** Highest and lowest HP% among the strip's monsters. */
+  stripHighestText: string | null;
+  stripLowestText: string | null;
+  isPlaceholder: boolean;
+};
 
 export type MonsterTeammateBuffCell = {
   key: string;
@@ -119,7 +173,8 @@ export type MonsterDragTarget =
   | { kind: "fantasyPanel" }
   | { kind: "dbmPanel" }
   | { kind: "entityDurationPanel" }
-  | { kind: "monsterSkillPanel" };
+  | { kind: "monsterSkillPanel" }
+  | { kind: "rosterPanel" };
 
 export type MonsterResizeTarget =
   | { kind: "buffPanel" }
@@ -131,7 +186,8 @@ export type MonsterResizeTarget =
   | { kind: "fantasyPanel" }
   | { kind: "dbmPanel" }
   | { kind: "entityDurationPanel" }
-  | { kind: "monsterSkillPanel" };
+  | { kind: "monsterSkillPanel" }
+  | { kind: "rosterPanel" };
 
 export type MonsterDragState = {
   target: MonsterDragTarget;

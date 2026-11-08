@@ -248,6 +248,13 @@ impl EntityContext {
         self.entities.get(&uuid).map(|entity| entity.entity)
     }
 
+    /// The entity `actor` is attacking (attr `TargetId`), for any actor;
+    /// unlike [`Self::current_attack_target`] it does not check liveness.
+    #[must_use]
+    pub(crate) fn attack_target_of(&self, actor: EntityUuid) -> Option<EntityUuid> {
+        self.attack_targets.get(&actor).copied()
+    }
+
     #[must_use]
     pub(crate) fn entities(&self) -> impl Iterator<Item = &EntityState> {
         self.entities.values()

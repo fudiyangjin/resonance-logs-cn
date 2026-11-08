@@ -23,6 +23,7 @@ use crate::live::projections::entity_monitor::EntityMonitorProjection;
 use crate::live::projections::history::HistoryProjection;
 use crate::live::projections::hp_report::HpReportProjection;
 use crate::live::projections::minimap::MinimapProjection;
+use crate::live::projections::monster_roster::{MonsterRosterProjection, MonsterRosterPublication};
 use crate::live::projections::presentation::{ActiveCombat, PresentationProjection};
 use crate::live::projections::skill_damage::SkillDamageProjection;
 use crate::live::projections::team_cd::TeamCdProjection;
@@ -47,13 +48,15 @@ const MONITORED_TOPICS: TopicMask = TopicMask::STATUS
 const SEGMENT_TOPICS: TopicMask = MONITORED_TOPICS
     .union(TopicMask::COMBAT)
     .union(TopicMask::DEATHS);
-/// The scene, the team and skill damage hits are persistent state, not
-/// segment-scoped, so they sit outside `SEGMENT_TOPICS` next to the minimap.
+/// The scene, the team, skill damage hits and the monster roster are
+/// persistent state, not segment-scoped, so they sit outside
+/// `SEGMENT_TOPICS` next to the minimap.
 const ALL_TOPICS: TopicMask = SEGMENT_TOPICS
     .union(TopicMask::MINIMAP)
     .union(TopicMask::SCENE)
     .union(TopicMask::TEAM)
-    .union(TopicMask::SKILL_DAMAGE);
+    .union(TopicMask::SKILL_DAMAGE)
+    .union(TopicMask::MONSTER_ROSTER);
 
 /// One replace-only payload for a single dirty topic.
 #[derive(Debug)]
@@ -68,6 +71,7 @@ pub enum TopicPublication {
     Scene(LiveScenePayload),
     Team(LiveTeamPayload),
     SkillDamage(LiveSkillDamagePayload),
+    MonsterRoster(MonsterRosterPublication),
 }
 
 impl TopicPublication {
@@ -84,6 +88,7 @@ impl TopicPublication {
             Self::Scene(_) => Topic::Scene,
             Self::Team(_) => Topic::Team,
             Self::SkillDamage(_) => Topic::SkillDamage,
+            Self::MonsterRoster(_) => Topic::MonsterRoster,
         }
     }
 }
@@ -103,6 +108,7 @@ pub struct ProjectionSet {
     team_cd: TeamCdProjection,
     hp_report: HpReportProjection,
     skill_damage: SkillDamageProjection,
+    monster_roster: MonsterRosterProjection,
     dirty: TopicMask,
 }
 
@@ -122,6 +128,7 @@ impl ProjectionSet {
             team_cd: TeamCdProjection::default(),
             hp_report: HpReportProjection::default(),
             skill_damage: SkillDamageProjection::default(),
+            monster_roster: MonsterRosterProjection::default(),
             dirty: ALL_TOPICS,
         }
     }
@@ -188,6 +195,12 @@ impl ProjectionSet {
         }
         // The retained window does not depend on the list, so nothing to publish.
         self.skill_damage.apply_config(&config.skill_damage);
+        if self
+            .monster_roster
+            .apply_config(&config.monster_roster, entities, now_wall_ms)
+        {
+            self.dirty |= TopicMask::MONSTER_ROSTER;
+        }
         self.dirty |= SEGMENT_TOPICS;
         Ok(())
     }
@@ -280,6 +293,8 @@ impl ProjectionSet {
         // Hits, scene and local-player changes; ContainerReset clears it in
         // `reset_runtime` below.
         let skill_damage_changed = self.skill_damage.apply(envelope);
+        // Every event that touches a roster member; a no-op while disabled.
+        let monster_roster_changed = self.monster_roster.apply(envelope, entities);
 
         match &envelope.event {
             DomainEvent::ContainerReset => {
@@ -548,6 +563,9 @@ impl ProjectionSet {
         if skill_damage_changed {
             reported |= TopicMask::SKILL_DAMAGE;
         }
+        if monster_roster_changed {
+            reported |= TopicMask::MONSTER_ROSTER;
+        }
         self.dirty |= reported;
         Ok(())
     }
@@ -663,6 +681,7 @@ impl ProjectionSet {
         self.timeline.reset_runtime();
         self.voice.reset_runtime(scheduler);
         self.skill_damage.reset_runtime();
+        self.monster_roster.reset_runtime();
         self.dirty = ALL_TOPICS;
     }
 
@@ -770,6 +789,9 @@ impl ProjectionSet {
                     monotonic_now_ms(),
                 )),
                 Topic::SkillDamage => TopicPublication::SkillDamage(self.skill_damage.payload()),
+                Topic::MonsterRoster => {
+                    TopicPublication::MonsterRoster(self.monster_roster.payload(entities))
+                }
             });
         }
 
@@ -1394,7 +1416,8 @@ mod tests {
         let remaining = SEGMENT_TOPICS
             .union(TopicMask::SCENE)
             .union(TopicMask::TEAM)
-            .union(TopicMask::SKILL_DAMAGE);
+            .union(TopicMask::SKILL_DAMAGE)
+            .union(TopicMask::MONSTER_ROSTER);
         assert_eq!(projections.dirty_mask(), remaining);
 
         assert_eq!(

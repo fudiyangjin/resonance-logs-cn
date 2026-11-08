@@ -22,6 +22,7 @@ import type {
   BuffCategoryKey,
 } from "./config/buff-name-table";
 import type { AppLocale } from "./i18n/locales";
+import { createDefaultMonsterRosterOptions } from "./monster-roster-settings";
 import {
   cloneHeaderCustomLayout,
   type HeaderCustomLayout,
@@ -1274,6 +1275,7 @@ export type MonsterOverlayPositions = {
   hpPanel: Point;
   entityDurationPanel: Point;
   monsterSkillPanel: Point;
+  rosterPanel: Point;
 };
 
 export type MonsterOverlaySizes = {
@@ -1287,6 +1289,7 @@ export type MonsterOverlaySizes = {
   hpPanelScale: number;
   entityDurationPanelScale: number;
   monsterSkillPanelScale: number;
+  rosterPanelScale: number;
 };
 
 export type MonsterOverlayVisibility = {
@@ -1300,6 +1303,24 @@ export type MonsterOverlayVisibility = {
   showHpPanel: boolean;
   showEntityDurationPanel: boolean;
   showMonsterSkillPanel: boolean;
+  showRosterPanel: boolean;
+};
+
+/**
+ * Battle roster panel options: the panel lists every monster the team is
+ * fighting.
+ */
+export type MonsterRosterOptions = {
+  /** Normal and elite monsters listed by name in rank order; the rest fold
+   * into one strip of mini bars. Bosses are always listed. */
+  normalRows: number;
+  /** Tank view: counts and lists monsters attacking someone else. */
+  tankMode: boolean;
+  /** Rank monsters attacking someone else before the rest, each group by
+   * HP%. */
+  notAttackingMeFirst: boolean;
+  showHpValue: boolean;
+  showDistance: boolean;
 };
 
 export type BuffAlertRule = {
@@ -1344,6 +1365,18 @@ export type MonsterSkillWatchEntry = {
   label: string;
   displayMs: number;
   countdown?: boolean;
+};
+
+/**
+ * One skill watched on the battle roster: monsters that can cast it always
+ * get a row, with a cell at the end showing its cooldown, sing bar or cast.
+ * An empty `label` falls back to the game's skill name; no
+ * `cooldownSeconds` uses the skill table.
+ */
+export type RosterSkillEntry = {
+  skillId: number;
+  label: string;
+  cooldownSeconds?: number;
 };
 
 export type MonsterMonitorConfig = {
@@ -1395,6 +1428,9 @@ export type MonsterMonitorConfig = {
   monsterSkillMonitorAll: boolean;
   monsterSkillEntries: MonsterSkillWatchEntry[];
   monsterSkillPanelStyle: CustomPanelStyle;
+  roster: MonsterRosterOptions;
+  rosterSkillEntries: RosterSkillEntry[];
+  rosterPanelStyle: CustomPanelStyle;
 };
 
 export type TextBuffPanelDisplayMode = "modern" | "classic";
@@ -1833,6 +1869,7 @@ function createDefaultMonsterOverlayPositions(): MonsterOverlayPositions {
     hpPanel: { x: 40, y: 560 },
     entityDurationPanel: { x: 800, y: 300 },
     monsterSkillPanel: { x: 800, y: 460 },
+    rosterPanel: { x: 1180, y: 40 },
   };
 }
 
@@ -1848,6 +1885,7 @@ function createDefaultMonsterOverlaySizes(): MonsterOverlaySizes {
     hpPanelScale: 1,
     entityDurationPanelScale: 1,
     monsterSkillPanelScale: 1,
+    rosterPanelScale: 1,
   };
 }
 
@@ -1863,6 +1901,7 @@ function createDefaultMonsterOverlayVisibility(): MonsterOverlayVisibility {
     showHpPanel: false,
     showEntityDurationPanel: false,
     showMonsterSkillPanel: false,
+    showRosterPanel: false,
   };
 }
 
@@ -2255,6 +2294,9 @@ export function createDefaultMonsterMonitorConfig(): MonsterMonitorConfig {
     monsterSkillMonitorAll: false,
     monsterSkillEntries: [],
     monsterSkillPanelStyle: createDefaultMonsterSkillPanelStyle(),
+    roster: createDefaultMonsterRosterOptions(),
+    rosterSkillEntries: [],
+    rosterPanelStyle: createDefaultHpPanelStyle(),
   };
 }
 
@@ -2287,6 +2329,10 @@ export type MonsterMonitorState = MonsterMonitorConfig & {
   /** Id of the profile currently materialized into the mirror fields above. */
   mirroredProfileId: string;
   profiles: MonsterMonitorProfile[];
+  /** Monster template ids the player hid from the battle roster, on top of
+   * the hidden developer presets. Global: shared by every profile, never
+   * exported with loadouts. */
+  rosterBlockedMonsterIds?: number[];
 };
 
 export type SkillMonitorState = {
@@ -2339,6 +2385,9 @@ export const MONSTER_PROFILE_FIELD_KEYS = [
   "monsterSkillMonitorAll",
   "monsterSkillEntries",
   "monsterSkillPanelStyle",
+  "roster",
+  "rosterSkillEntries",
+  "rosterPanelStyle",
 ] as const satisfies readonly (keyof MonsterMonitorProfileData)[];
 
 // Compile-time exhaustiveness guard: if a field is added to
@@ -2390,6 +2439,7 @@ export function createDefaultMonsterMonitorState(): MonsterMonitorState {
     ...profileData,
     mirroredProfileId: profile.id,
     profiles: [profile],
+    rosterBlockedMonsterIds: [],
   };
 }
 

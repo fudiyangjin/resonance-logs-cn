@@ -886,6 +886,11 @@ fn watched_skill_ids(config: &MonitorRuntimeSnapshot) -> HashSet<i32> {
     let mut watched: HashSet<_> = config.skill.monitored_skill_ids.iter().copied().collect();
     watched.extend(KEY_SKILL_IDS.iter().copied());
     watched.extend(config.monster.watched_skill_ids.iter().copied());
+    // Roster rows show these casts; without them a cast by a monster whose
+    // identity has not arrived yet would be dropped.
+    if config.monster_roster.enabled {
+        watched.extend(config.monster_roster.watched_skill_ids.iter().copied());
+    }
     for rule in &config.skill.buff_counter_rules {
         for source in &rule.sources {
             collect_counter_skill_ids(source, &mut watched);
@@ -982,6 +987,16 @@ mod tests {
         DomainHit, EntityKind, EntityRef, EntityUuid, HitChannel, HitKind, ObservationOrigin,
         ObservedHit,
     };
+
+    #[test]
+    fn roster_watched_skills_are_watched_only_while_the_roster_is_on() {
+        let mut config = MonitorRuntimeSnapshot::default();
+        config.monster_roster.watched_skill_ids = vec![1_009_804];
+        assert!(!watched_skill_ids(&config).contains(&1_009_804));
+
+        config.monster_roster.enabled = true;
+        assert!(watched_skill_ids(&config).contains(&1_009_804));
+    }
 
     fn hit(target: EntityRef) -> DomainHit {
         DomainHit {

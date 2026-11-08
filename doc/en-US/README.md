@@ -63,6 +63,7 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | [Teammate CD](./features/monster/teammate-cd.md) | Skill cooldowns shared by your teammates | — |
 | [Stun, HP & Teammate Fantasies](./features/monster/status.md) | Target status bars | — |
 | [Hate List](./features/monster/hate.md) | Threat ranking on your target | — |
+| [Battle Roster](./features/monster/roster.md) | HP of every monster in the fight, tank view, mechanic monster blocking | — |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss skill warning bars | [Boss skill voice warnings](./features/monster/examples/boss-alias.md) |
 | [Entity Duration](./features/monster/entity-duration.md) | How long summons and other entities stay around | [Scythe Cart remaining time](./features/monster/examples/scythe-cart.md) |
 | [Monster Skills](./features/monster/monster-skill.md) | Shown when a nearby monster casts a listed skill | — |

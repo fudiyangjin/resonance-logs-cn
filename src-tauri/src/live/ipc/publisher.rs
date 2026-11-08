@@ -13,10 +13,10 @@ use parking_lot::RwLock;
 
 use super::models::{
     HudFrame, HudFrameRequest, LiveBuffsPayload, LiveCombatPayload, LiveDeathsPayload,
-    LiveFantasyPayload, LiveMonsterPayload, LivePullWindow, LiveScenePayload,
-    LiveSkillDamagePayload, LiveStatusPayload, LiveTeamPayload, LiveWindowFrame,
+    LiveFantasyPayload, LiveMonsterPayload, LiveMonsterRosterPayload, LivePullWindow,
+    LiveScenePayload, LiveSkillDamagePayload, LiveStatusPayload, LiveTeamPayload, LiveWindowFrame,
     LiveWindowFrameRequest, MinimapSkillCast, MinimapSnapshot, MinimapSnapshotUpdate,
-    MinimapUpdatePayload,
+    MinimapUpdatePayload, RecentRosterMonster,
 };
 use crate::live::projection_set::TopicPublication;
 
@@ -49,6 +49,7 @@ impl_revisioned!(
     LiveScenePayload,
     LiveTeamPayload,
     LiveSkillDamagePayload,
+    LiveMonsterRosterPayload,
 );
 
 #[derive(Debug, Clone)]
@@ -78,6 +79,10 @@ struct PublishedState {
     scene: Option<Arc<LiveScenePayload>>,
     team: Option<Arc<LiveTeamPayload>>,
     skill_damage: Option<Arc<LiveSkillDamagePayload>>,
+    monster_roster: Option<Arc<LiveMonsterRosterPayload>>,
+    /// Monster templates seen on the roster this run; replaced only when the
+    /// roster publication carries a changed list.
+    monster_roster_recent: Arc<Vec<RecentRosterMonster>>,
     minimap: MinimapSlot,
 }
 
@@ -95,6 +100,8 @@ impl PublishedState {
             scene: None,
             team: None,
             skill_damage: None,
+            monster_roster: None,
+            monster_roster_recent: Arc::new(Vec::new()),
             minimap: MinimapSlot::default(),
         }
     }
@@ -166,6 +173,12 @@ impl LivePublicationCache {
                 TopicPublication::SkillDamage(payload) => {
                     state.skill_damage = Some(Arc::new(payload));
                 }
+                TopicPublication::MonsterRoster(publication) => {
+                    state.monster_roster = Some(Arc::new(publication.payload));
+                    if let Some(recent) = publication.recent {
+                        state.monster_roster_recent = Arc::new(recent);
+                    }
+                }
                 TopicPublication::Scene(payload) => {
                     state.scene = Some(Arc::new(payload.clone()));
                     scene_event = Some(payload);
@@ -223,6 +236,7 @@ impl LivePublicationCache {
             fantasy,
             team,
             skill_damage,
+            monster_roster,
             snapshot,
             skill_casts,
             skill_cast_cursor,
@@ -260,6 +274,16 @@ impl LivePublicationCache {
             let team = request
                 .monster_interest
                 .then(|| changed(&state.team, request.team_revision, reset_epoch))
+                .flatten();
+            let monster_roster = request
+                .monster_interest
+                .then(|| {
+                    changed(
+                        &state.monster_roster,
+                        request.monster_roster_revision,
+                        reset_epoch,
+                    )
+                })
                 .flatten();
             let skill_damage = request
                 .skill_damage_interest
@@ -316,6 +340,7 @@ impl LivePublicationCache {
                 fantasy,
                 team,
                 skill_damage,
+                monster_roster,
                 snapshot,
                 skill_casts,
                 skill_cast_cursor,
@@ -332,6 +357,7 @@ impl LivePublicationCache {
             fantasy: clone_payload(fantasy),
             team: clone_payload(team),
             skill_damage: clone_payload(skill_damage),
+            monster_roster: clone_payload(monster_roster),
             snapshot: snapshot.map(|(revision, snapshot)| MinimapSnapshotUpdate {
                 revision,
                 snapshot: snapshot.map(|snapshot| (*snapshot).clone()),
@@ -363,6 +389,12 @@ impl LivePublicationCache {
             .as_deref()
             .cloned()
             .unwrap_or_default()
+    }
+
+    /// Monster templates seen on the roster this run, most recent first.
+    #[must_use]
+    pub fn current_monster_roster_recent(&self) -> Vec<RecentRosterMonster> {
+        self.inner.read().monster_roster_recent.as_ref().clone()
     }
 }
 
@@ -709,6 +741,65 @@ mod tests {
             true,
         );
         assert!(unchanged.skill_damage.is_none());
+    }
+
+    #[test]
+    fn monster_roster_rides_monster_interest_and_keeps_the_last_recent_list() {
+        use crate::live::ipc::models::RosterMonsterKind;
+        use crate::live::projections::monster_roster::MonsterRosterPublication;
+
+        let cache = LivePublicationCache::new();
+        let recent = vec![RecentRosterMonster {
+            monster_id: 7,
+            kind: RosterMonsterKind::Elite,
+            max_hp: 100,
+            scene_id: Some(3),
+            last_seen_ms: 1,
+            skill_ids: vec![9],
+        }];
+        cache.publish([TopicPublication::MonsterRoster(MonsterRosterPublication {
+            payload: LiveMonsterRosterPayload {
+                revision: 2,
+                ..LiveMonsterRosterPayload::default()
+            },
+            recent: Some(recent.clone()),
+        })]);
+        // A later publication without a changed list keeps the previous one.
+        cache.publish([TopicPublication::MonsterRoster(MonsterRosterPublication {
+            payload: LiveMonsterRosterPayload {
+                revision: 3,
+                ..LiveMonsterRosterPayload::default()
+            },
+            recent: None,
+        })]);
+
+        assert_eq!(cache.current_monster_roster_recent(), recent);
+        let game_only = cache.pull_hud(
+            &HudFrameRequest {
+                game_interest: true,
+                ..HudFrameRequest::default()
+            },
+            true,
+        );
+        assert!(game_only.monster_roster.is_none());
+        let monster = cache.pull_hud(
+            &HudFrameRequest {
+                monster_interest: true,
+                ..HudFrameRequest::default()
+            },
+            true,
+        );
+        assert_eq!(monster.monster_roster.unwrap().revision, 3);
+        let unchanged = cache.pull_hud(
+            &HudFrameRequest {
+                epoch: Some(monster.epoch),
+                monster_roster_revision: Some(3),
+                monster_interest: true,
+                ..HudFrameRequest::default()
+            },
+            true,
+        );
+        assert!(unchanged.monster_roster.is_none());
     }
 
     #[test]

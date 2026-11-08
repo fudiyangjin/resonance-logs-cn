@@ -41,6 +41,7 @@
 | **{{ui:monsterMonitor.tabs.teammateCd}}** | [队友 CD](./teammate-cd.md) | — |
 | **{{ui:monsterMonitor.tabs.hate}}** | [仇恨列表](./hate.md) | — |
 | **{{ui:monsterMonitor.tabs.stun}}** / **{{ui:monsterMonitor.tabs.hp}}** / **{{ui:monsterMonitor.tabs.fantasy}}** | [韧性、生命与队友幻想](./status.md) | — |
+| **{{ui:monsterMonitor.tabs.roster}}** | [战斗名单](./roster.md) | — |
 | **{{ui:monsterMonitor.tabs.bossDbm}}** | [Boss DBM](./boss-dbm.md) | [给 Boss 技能起别名并语音预警](./examples/boss-alias.md) |
 | **{{ui:monsterMonitor.tabs.monsterSkill}}** | [怪物技能](./monster-skill.md) | — |
 | **{{ui:monsterMonitor.tabs.entityDuration}}** | [实体持续](./entity-duration.md) | [显示镰车剩余时间](./examples/scythe-cart.md) |

@@ -64,6 +64,13 @@ async getLiveScene() : Promise<Result<LiveScenePayload, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Monster templates seen on the monster roster during this run, most
+ * recent first, for the settings page's block picker.
+ */
+async getMonsterRosterRecent() : Promise<RecentRosterMonster[]> {
+    return await TAURI_INVOKE("get_monster_roster_recent");
+},
 async migrateHudLayout(complete: boolean) : Promise<Result<HudLayoutMigration, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("migrate_hud_layout", { complete }) };
@@ -1004,8 +1011,12 @@ team: LiveTeamPayload | null;
 /**
  * Watched local skill damage hits (skill damage interest).
  */
-skillDamage: LiveSkillDamagePayload | null; snapshot: MinimapSnapshotUpdate | null; skillCasts: MinimapSkillCast[]; skillCastCursor: number; castsReset: boolean }
-export type HudFrameRequest = { epoch: number | null; statusRevision: number | null; buffsRevision: number | null; monsterRevision: number | null; fantasyRevision: number | null; teamRevision?: number | null; skillDamageRevision?: number | null; snapshotRevision: number | null; skillCastCursor: number | null; gameInterest: boolean; monsterInterest: boolean; minimapInterest: boolean; skillDamageInterest?: boolean }
+skillDamage: LiveSkillDamagePayload | null;
+/**
+ * Every monster the team is fighting (monster interest).
+ */
+monsterRoster: LiveMonsterRosterPayload | null; snapshot: MinimapSnapshotUpdate | null; skillCasts: MinimapSkillCast[]; skillCastCursor: number; castsReset: boolean }
+export type HudFrameRequest = { epoch: number | null; statusRevision: number | null; buffsRevision: number | null; monsterRevision: number | null; fantasyRevision: number | null; teamRevision?: number | null; skillDamageRevision?: number | null; monsterRosterRevision?: number | null; snapshotRevision: number | null; skillCastCursor: number | null; gameInterest: boolean; monsterInterest: boolean; minimapInterest: boolean; skillDamageInterest?: boolean }
 export type HudLayoutMigration = { translateMinimap: boolean; minimapOffsetX: number; minimapOffsetY: number }
 export type I18nRuntimeSnapshot = { locale: AppLocale }
 /**
@@ -1055,6 +1066,11 @@ deadTeammates?: string[]; bossMechanics: BossDbmEvent[]; hateLists: Partial<{ [k
  * Latest cast of each watched monster skill, ascending by skill id.
  */
 monsterSkillCasts?: MonsterSkillCastState[] }
+/**
+ * Monster roster topic: every monster in the team's hate lists, plus the
+ * local player's attack target. Ordered by `joined_seq`.
+ */
+export type LiveMonsterRosterPayload = { revision: number; localUuid: string | null; currentTargetUuid: string | null; monsters: RosterMonsterState[]; players: RosterPlayerState[] }
 export type LivePullWindow = "live" | "hud-overlay"
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number; trainingWindowMs: number; trainingLockPolicy: TrainingLockPolicy }
 export type LiveScenePayload = { revision: number; sceneId: number | null; dungeonDifficulty: number | null; localClassId: number | null; localTalentStageCfgId: number | null }
@@ -1299,11 +1315,19 @@ export type ModelState = { kind: "notInstalled" } | { kind: "installing" } | { k
 export type ModuleInfo = { name: string; config_id: number; uuid: number; quality: number; parts: ModulePart[] }
 export type ModulePart = { id: number; name: string; value: number }
 export type ModuleSolution = { modules: ModuleInfo[]; score: number; attr_breakdown: Partial<{ [key in string]: number }> }
-export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot; teammateCd: TeammateCdRuntimeSnapshot; skillDamage: SkillDamageRuntimeSnapshot; buffComposites: BuffCompositeSpec[] }
+export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRuntimeSnapshot; skill: SkillRuntimeSnapshot; monster: MonsterRuntimeSnapshot; teammate: TeammateRuntimeSnapshot; teammateCd: TeammateCdRuntimeSnapshot; skillDamage: SkillDamageRuntimeSnapshot; monsterRoster: MonsterRosterRuntimeSnapshot; buffComposites: BuffCompositeSpec[] }
 /**
  * Which caster population a monster-buff voice rule observes.
  */
 export type MonsterBuffSourceScope = "anySource" | "localPlayerSource"
+/**
+ * The battle roster panel. Off means the roster projection tracks nothing.
+ */
+export type MonsterRosterRuntimeSnapshot = { enabled: boolean;
+/**
+ * Skills whose casts and cooldowns are shown at the end of roster rows.
+ */
+watchedSkillIds: number[] }
 export type MonsterRuntimeSnapshot = { enabled: boolean; globalIds: number[]; selfAppliedIds: number[]; monitorAllSelfApplied: boolean; watchedEntities: WatchedEntitySpec[];
 /**
  * Skills shown (and voiced) when any nearby monster casts them.
@@ -1363,7 +1387,68 @@ export type RawEntityData = { entityUuid: string; displayUid: number; name: stri
 export type RawHitExtrema = { min: string; max: string }
 export type RawSkillStats = { totalValue: string; effectiveTotalValue: string; hits: string; critHits: string; critTotalValue: string; luckyHits: string; luckyTotalValue: string; property: number | null; damageMode: number | null; triggerHits: string; blockHits: string; luckyBlockHits: string; extrema?: RawHitExtrema | null }
 export type RecentEncountersResult = { rows: EncounterSummaryDto[]; totalCount: number }
+/**
+ * A monster template seen in the roster during this run, for the settings
+ * page's block picker. Never persisted.
+ */
+export type RecentRosterMonster = { monsterId: number; kind: RosterMonsterKind;
+/**
+ * Largest max HP seen for the template.
+ */
+maxHp: number; sceneId: number | null; lastSeenMs: number;
+/**
+ * Skills seen cast by this template during the run, ascending.
+ */
+skillIds: number[] }
 export type ResetBuffTarget = "selfPlayer" | "anyTeam"
+/**
+ * Monster classification from `MonsterIdType.json`; unknown ids are normal.
+ */
+export type RosterMonsterKind = "normal" | "elite" | "boss"
+/**
+ * One monster the local player or a teammate is fighting.
+ */
+export type RosterMonsterState = { uuid: string; monsterId: number | null; kind: RosterMonsterKind; hp: number; maxHp: number;
+/**
+ * What the monster is attacking (attr `TargetId`), if anything.
+ */
+targetUuid: string | null;
+/**
+ * Ground distance to the local player in meters, once both positions
+ * are known.
+ */
+distanceM: number | null;
+/**
+ * Order in which the monster joined the roster; a stable tie-breaker.
+ */
+joinedSeq: number;
+/**
+ * Wall-clock ms the monster joined the roster: its battle start for
+ * first-cast windows.
+ */
+joinedAtMs: number;
+/**
+ * Latest cast of each watched skill, by skill id.
+ */
+skillCasts: RosterSkillCast[];
+/**
+ * The watched skill being cast right now; cleared when the monster casts
+ * anything else or leaves the skill state.
+ */
+currentCast: RosterSkillCast | null }
+/**
+ * A character other than the local player that a roster monster targets.
+ */
+export type RosterPlayerState = { uuid: string; name: string | null; professionId: number | null }
+/**
+ * One cast of a watched skill by a roster monster.
+ */
+export type RosterSkillCast = { skillId: number;
+/**
+ * Wall-clock ms the cast started (the server's skill begin time when
+ * known).
+ */
+castAtMs: number }
 export type SceneIdsResult = { ids: number[] }
 /**
  * A single shield entry parsed from attr 60050.

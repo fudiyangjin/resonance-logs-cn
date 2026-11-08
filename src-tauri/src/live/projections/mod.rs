@@ -7,6 +7,7 @@ pub mod entity_monitor;
 pub mod history;
 pub mod hp_report;
 pub mod minimap;
+pub mod monster_roster;
 pub mod monster_skill_watch;
 pub mod presentation;
 pub mod profession_count;

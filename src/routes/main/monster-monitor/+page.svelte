@@ -42,6 +42,8 @@
     isTeammateDeadRowPlacement,
     type CustomPanelStyle,
     type EntityDurationEntry,
+    type MonsterRosterOptions,
+    type RosterSkillEntry,
     type MonsterSkillWatchEntry,
     type TeammateBuffColumnKey,
     type TeammateBuffColumnStyle,
@@ -62,6 +64,7 @@
   import { resolveMonsterBuffSourceScope as resolveScopeIn } from "$lib/voice/association";
   import OverlayTextStyleFields from "../skill-monitor/overlay-text-style-fields.svelte";
   import TabEntityDuration from "./tab-entity-duration.svelte";
+  import TabMonsterRoster from "./tab-monster-roster.svelte";
   import TabMonsterSkill from "./tab-monster-skill.svelte";
   import TabTeammateCd from "./tab-teammate-cd.svelte";
   import TeammateColumnColors from "./teammate-column-colors.svelte";
@@ -87,6 +90,20 @@
     type MonsterSkillEntryPatch,
   } from "$lib/monster-skill-entries";
   import { getLocale } from "$lib/i18n/index.svelte";
+  import {
+    addRosterSkillEntry,
+    ensureRosterSkillEntries,
+    moveRosterSkillEntry,
+    patchRosterSkillEntry,
+    removeRosterSkillEntry,
+    type RosterSkillEntryPatch,
+  } from "$lib/roster-skill-entries";
+  import {
+    blockRosterMonster,
+    ensureRosterBlockedMonsterIds,
+    normalizeMonsterRosterOptions,
+    unblockRosterMonster,
+  } from "$lib/monster-roster-settings";
 
   type SearchTarget = "global" | "self";
   type MonsterMonitorTab =
@@ -96,6 +113,7 @@
     | "hate"
     | "stun"
     | "hp"
+    | "roster"
     | "fantasy"
     | "bossDbm"
     | "monsterSkill"
@@ -186,6 +204,17 @@
       monsterMonitor.fantasyPanelStyle ?? monsterMonitor.panelStyle,
     ),
   );
+  const rosterOptions = $derived(
+    normalizeMonsterRosterOptions(monsterMonitor.roster),
+  );
+  const rosterPanelStyle = $derived.by(() =>
+    normalizeCustomPanelStyle(
+      monsterMonitor.rosterPanelStyle ?? monsterMonitor.hpPanelStyle,
+    ),
+  );
+  const rosterBlockedIds = $derived(
+    ensureRosterBlockedMonsterIds(monsterMonitor.rosterBlockedMonsterIds),
+  );
   const bossDbmPanelStyle = $derived.by(() =>
     normalizeCustomPanelStyle(
       monsterMonitor.bossDbmPanelStyle ?? monsterMonitor.panelStyle,
@@ -225,6 +254,7 @@
     showHatePanel: monsterMonitor.overlayVisibility?.showHatePanel ?? false,
     showStunPanel: monsterMonitor.overlayVisibility?.showStunPanel ?? false,
     showHpPanel: monsterMonitor.overlayVisibility?.showHpPanel ?? false,
+    showRosterPanel: monsterMonitor.overlayVisibility?.showRosterPanel ?? false,
     showFantasyPanel:
       monsterMonitor.overlayVisibility?.showFantasyPanel ?? false,
     showBossDbmPanel:
@@ -259,6 +289,11 @@
             id: "hp",
             labelKey: "monsterMonitor.tabs.hp",
             shown: overlayVisibility.showHpPanel,
+          },
+          {
+            id: "roster",
+            labelKey: "monsterMonitor.tabs.roster",
+            shown: overlayVisibility.showRosterPanel,
           },
         ],
       },
@@ -918,6 +953,53 @@
     );
   }
 
+  function updateRosterOptions(patch: Partial<MonsterRosterOptions>) {
+    updateMonsterMonitor((state) => ({
+      roster: normalizeMonsterRosterOptions({
+        ...normalizeMonsterRosterOptions(state.roster),
+        ...patch,
+      }),
+    }));
+  }
+
+  function updateRosterPanelStyle<K extends keyof CustomPanelStyle>(
+    key: K,
+    value: CustomPanelStyle[K],
+  ) {
+    updateMonsterMonitor((state) => ({
+      rosterPanelStyle: {
+        ...normalizeCustomPanelStyle(
+          state.rosterPanelStyle ?? state.hpPanelStyle,
+        ),
+        [key]: value,
+      },
+    }));
+  }
+
+  const rosterSkillEntries = $derived(
+    ensureRosterSkillEntries(monsterMonitor.rosterSkillEntries),
+  );
+
+  function updateRosterSkillEntries(
+    update: (entries: RosterSkillEntry[]) => RosterSkillEntry[],
+  ) {
+    updateMonsterMonitor((state) => ({
+      rosterSkillEntries: update(
+        ensureRosterSkillEntries(state.rosterSkillEntries),
+      ),
+    }));
+  }
+
+  // The block list is global (outside the profile mirror), so it survives
+  // profile switches and is never exported with a loadout.
+  function updateRosterBlockedIds(update: (ids: number[]) => number[]) {
+    updateMonsterMonitor((state) => ({
+      rosterBlockedMonsterIds: update(
+        ensureRosterBlockedMonsterIds(state.rosterBlockedMonsterIds),
+      ),
+    }));
+  }
+
   function updateMonsterSkillPanelStyle<K extends keyof CustomPanelStyle>(
     key: K,
     value: CustomPanelStyle[K],
@@ -986,6 +1068,7 @@
         showHatePanel: state.overlayVisibility?.showHatePanel ?? false,
         showStunPanel: state.overlayVisibility?.showStunPanel ?? false,
         showHpPanel: state.overlayVisibility?.showHpPanel ?? false,
+        showRosterPanel: state.overlayVisibility?.showRosterPanel ?? false,
         showFantasyPanel: state.overlayVisibility?.showFantasyPanel ?? false,
         showBossDbmPanel: state.overlayVisibility?.showBossDbmPanel ?? false,
         showEntityDurationPanel:
@@ -3086,6 +3169,35 @@
     </section>
   {:else if activeTab === "teammateCd"}
     <TabTeammateCd />
+  {:else if activeTab === "roster"}
+    <TabMonsterRoster
+      options={rosterOptions}
+      updateOptions={updateRosterOptions}
+      panelStyle={rosterPanelStyle}
+      updatePanelStyle={updateRosterPanelStyle}
+      blockedIds={rosterBlockedIds}
+      onBlock={(monsterId) =>
+        updateRosterBlockedIds((ids) => blockRosterMonster(ids, monsterId))}
+      onUnblock={(monsterId) =>
+        updateRosterBlockedIds((ids) => unblockRosterMonster(ids, monsterId))}
+      skillEntries={rosterSkillEntries}
+      onAddSkill={(skillId) =>
+        updateRosterSkillEntries((entries) =>
+          addRosterSkillEntry(entries, skillId),
+        )}
+      onUpdateSkill={(skillId, patch: RosterSkillEntryPatch) =>
+        updateRosterSkillEntries((entries) =>
+          patchRosterSkillEntry(entries, skillId, patch),
+        )}
+      onMoveSkill={(skillId, direction) =>
+        updateRosterSkillEntries((entries) =>
+          moveRosterSkillEntry(entries, skillId, direction),
+        )}
+      onRemoveSkill={(skillId) =>
+        updateRosterSkillEntries((entries) =>
+          removeRosterSkillEntry(entries, skillId),
+        )}
+    />
   {:else if activeTab === "monsterSkill"}
     <TabMonsterSkill
       monitorAll={monsterMonitor.monsterSkillMonitorAll === true}
@@ -3193,6 +3305,17 @@
         >
           {t("monsterMonitor.overlay.hp", {
             state: visibilityState(overlayVisibility.showHpPanel),
+          })}
+        </button>
+        <button
+          type="button"
+          class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {overlayVisibility.showRosterPanel
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
+          onclick={() => toggleOverlayVisibility("showRosterPanel")}
+        >
+          {t("monsterMonitor.overlay.roster", {
+            state: visibilityState(overlayVisibility.showRosterPanel),
           })}
         </button>
 

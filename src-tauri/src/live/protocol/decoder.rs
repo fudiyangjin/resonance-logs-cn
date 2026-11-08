@@ -609,7 +609,14 @@ impl ProtocolDecoder {
                     pending_resource_values = raw.and_then(parse_i64_sequence);
                 }
                 attr_type::ATTR_HATE_LIST => {
-                    if let Some(entries) = raw.and_then(decode_hate_list) {
+                    // The server clears the list (combat left, monster reset)
+                    // by sending the attribute without any data; a malformed
+                    // list is still dropped.
+                    let entries = match raw {
+                        None => Some(Vec::new()),
+                        Some(bytes) => decode_hate_list(bytes),
+                    };
+                    if let Some(entries) = entries {
                         observations.push(ProtocolObservation::HateListUpdated {
                             entity_uuid: uuid,
                             entries,
@@ -4616,6 +4623,63 @@ mod tests {
                 _ => None,
             })
             .expect("identity patch")
+    }
+
+    /// The hate list updates decoded from one attribute; other observations
+    /// (the identity patch every collection yields) are dropped.
+    fn decode_hate_attribute(raw_data: Option<Vec<u8>>) -> Vec<Vec<HateEntry>> {
+        let collection = blueprotobuf::AttrCollection {
+            attrs: vec![blueprotobuf::Attr {
+                id: Some(attr_type::ATTR_HATE_LIST),
+                raw_data,
+            }],
+            ..Default::default()
+        };
+        let mut observations = Vec::new();
+        ProtocolDecoder::decode_attributes(
+            EntityUuid(1),
+            EntityKind::Monster,
+            &collection,
+            ObservationOrigin::Delta,
+            &mut observations,
+        );
+        observations
+            .into_iter()
+            .filter_map(|observation| match observation {
+                ProtocolObservation::HateListUpdated {
+                    entity_uuid: EntityUuid(1),
+                    entries,
+                } => Some(entries),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn hate_list_without_data_clears_the_list() {
+        assert_eq!(decode_hate_attribute(None), vec![Vec::new()]);
+    }
+
+    #[test]
+    fn hate_list_decodes_entries_and_drops_malformed_data() {
+        let mut raw = Vec::new();
+        prost::encoding::encode_varint(0x0a, &mut raw);
+        HateInfoWire {
+            uuid: 42 << 16 | 640,
+            value: 900,
+        }
+        .encode_length_delimited(&mut raw)
+        .expect("encode hate entry");
+
+        assert_eq!(
+            decode_hate_attribute(Some(raw)),
+            vec![vec![HateEntry {
+                entity_uuid: EntityUuid(42 << 16 | 640),
+                value: 900,
+            }]]
+        );
+
+        assert!(decode_hate_attribute(Some(vec![0x12, 0x00])).is_empty());
     }
 
     #[test]

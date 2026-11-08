@@ -18,6 +18,7 @@ impl TopicMask {
     pub const SCENE: Self = Self(1 << 7);
     pub const TEAM: Self = Self(1 << 8);
     pub const SKILL_DAMAGE: Self = Self(1 << 9);
+    pub const MONSTER_ROSTER: Self = Self(1 << 10);
 
     #[must_use]
     pub const fn is_empty(self) -> bool {
@@ -86,6 +87,7 @@ pub enum Topic {
     Scene,
     Team,
     SkillDamage,
+    MonsterRoster,
 }
 
 impl Topic {
@@ -101,9 +103,10 @@ impl Topic {
         Self::Scene,
         Self::Team,
         Self::SkillDamage,
+        Self::MonsterRoster,
     ];
 
-    pub const COUNT: usize = 10;
+    pub const COUNT: usize = 11;
 
     /// Position of this topic in [`Topic::ALL`].
     #[must_use]
@@ -119,6 +122,7 @@ impl Topic {
             Self::Scene => 7,
             Self::Team => 8,
             Self::SkillDamage => 9,
+            Self::MonsterRoster => 10,
         }
     }
 
@@ -135,6 +139,7 @@ impl Topic {
             Self::Scene => TopicMask::SCENE,
             Self::Team => TopicMask::TEAM,
             Self::SkillDamage => TopicMask::SKILL_DAMAGE,
+            Self::MonsterRoster => TopicMask::MONSTER_ROSTER,
         }
     }
 
@@ -169,6 +174,8 @@ impl Topic {
             | Self::Scene
             | Self::Team
             | Self::SkillDamage => Some(50),
+            // Every monster in the team's fights: bars only need ~10 Hz.
+            Self::MonsterRoster => Some(100),
         }
     }
 }
@@ -206,6 +213,7 @@ mod tests {
             assert_eq!(topic.throttle_ms(), Some(50));
         }
         assert_eq!(Topic::Combat.throttle_ms(), None);
+        assert_eq!(Topic::MonsterRoster.throttle_ms(), Some(100));
     }
 
     #[test]

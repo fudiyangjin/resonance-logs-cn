@@ -551,6 +551,65 @@ describe("parseLoadoutExport", () => {
     expect("countdown" in entries[1]!).toBe(false);
   });
 
+  it("keeps the battle roster options, panels and styles of a monster profile", () => {
+    const data = validExport();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    monster["roster"] = {
+      normalRows: 8,
+      tankMode: true,
+    };
+    monster["overlayVisibility"] = {
+      ...(monster["overlayVisibility"] as Record<string, unknown>),
+      showRosterPanel: true,
+    };
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const profile = result.output.monsterProfile;
+    expect(profile.roster).toEqual({
+      normalRows: 8,
+      tankMode: true,
+      notAttackingMeFirst: false,
+      showHpValue: false,
+      showDistance: false,
+    });
+    expect(profile.overlayVisibility.showRosterPanel).toBe(true);
+    expect(profile.rosterPanelStyle).toBeTruthy();
+    // The block list is global, never part of a profile.
+    expect("rosterBlockedMonsterIds" in profile).toBe(false);
+  });
+
+  it("keeps and normalizes the watched roster skills", () => {
+    const data = validExport();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    monster["rosterSkillEntries"] = [
+      { skillId: 1009804, label: " 颤爆 ", cooldownSeconds: 25 },
+      { skillId: 1009804, label: "dup" },
+      { skillId: 2001727 },
+    ];
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.output.monsterProfile.rosterSkillEntries).toEqual([
+      { skillId: 1009804, label: "颤爆", cooldownSeconds: 25 },
+      { skillId: 2001727, label: "" },
+    ]);
+  });
+
+  it("fills roster defaults missing from an older monster profile", () => {
+    const data = validExport();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    delete monster["roster"];
+    delete monster["rosterPanelStyle"];
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.output.monsterProfile.roster.normalRows).toBe(5);
+    expect(result.output.monsterProfile.rosterPanelStyle.progressColor).toBe(
+      "#ef4444",
+    );
+  });
+
   it("fills dead-teammate defaults missing from an older monster profile", () => {
     const data = validExport();
     const monster = data["monsterProfile"] as Record<string, unknown>;

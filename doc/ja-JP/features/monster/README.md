@@ -41,6 +41,7 @@
 | **{{ui:monsterMonitor.tabs.teammateCd}}** | [味方 CD](./teammate-cd.md) | — |
 | **{{ui:monsterMonitor.tabs.hate}}** | [ヘイトリスト](./hate.md) | — |
 | **{{ui:monsterMonitor.tabs.stun}}** / **{{ui:monsterMonitor.tabs.hp}}** / **{{ui:monsterMonitor.tabs.fantasy}}** | [スタン値・HP・味方幻想](./status.md) | — |
+| **{{ui:monsterMonitor.tabs.roster}}** | [戦闘リスト](./roster.md) | — |
 | **{{ui:monsterMonitor.tabs.bossDbm}}** | [Boss DBM](./boss-dbm.md) | [Boss スキルに別名を付けて音声で予告する](./examples/boss-alias.md) |
 | **{{ui:monsterMonitor.tabs.monsterSkill}}** | [モンスタースキル](./monster-skill.md) | — |
 | **{{ui:monsterMonitor.tabs.entityDuration}}** | [エンティティ持続](./entity-duration.md) | [鎌車の残り時間を表示する](./examples/scythe-cart.md) |

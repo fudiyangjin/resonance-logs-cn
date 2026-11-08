@@ -136,6 +136,8 @@ pub struct HudFrameRequest {
     pub team_revision: Option<u64>,
     #[serde(default)]
     pub skill_damage_revision: Option<u64>,
+    #[serde(default)]
+    pub monster_roster_revision: Option<u64>,
     pub snapshot_revision: Option<u64>,
     pub skill_cast_cursor: Option<u64>,
     pub game_interest: bool,
@@ -165,6 +167,8 @@ pub struct HudFrame {
     pub team: Option<LiveTeamPayload>,
     /// Watched local skill damage hits (skill damage interest).
     pub skill_damage: Option<LiveSkillDamagePayload>,
+    /// Every monster the team is fighting (monster interest).
+    pub monster_roster: Option<LiveMonsterRosterPayload>,
     pub snapshot: Option<MinimapSnapshotUpdate>,
     pub skill_casts: Vec<MinimapSkillCast>,
     pub skill_cast_cursor: u64,
@@ -298,6 +302,90 @@ pub struct SkillDamageHitState {
 pub struct LiveSkillDamagePayload {
     pub revision: u64,
     pub hits: Vec<SkillDamageHitState>,
+}
+
+/// Monster classification from `MonsterIdType.json`; unknown ids are normal.
+#[derive(
+    specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq,
+)]
+#[serde(rename_all = "camelCase")]
+pub enum RosterMonsterKind {
+    #[default]
+    Normal,
+    Elite,
+    Boss,
+}
+
+/// One cast of a watched skill by a roster monster.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RosterSkillCast {
+    pub skill_id: i32,
+    /// Wall-clock ms the cast started (the server's skill begin time when
+    /// known).
+    pub cast_at_ms: i64,
+}
+
+/// One monster the local player or a teammate is fighting.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RosterMonsterState {
+    pub uuid: String,
+    pub monster_id: Option<i32>,
+    pub kind: RosterMonsterKind,
+    pub hp: i64,
+    pub max_hp: i64,
+    /// What the monster is attacking (attr `TargetId`), if anything.
+    pub target_uuid: Option<String>,
+    /// Ground distance to the local player in meters, once both positions
+    /// are known.
+    pub distance_m: Option<f32>,
+    /// Order in which the monster joined the roster; a stable tie-breaker.
+    pub joined_seq: u64,
+    /// Wall-clock ms the monster joined the roster: its battle start for
+    /// first-cast windows.
+    pub joined_at_ms: i64,
+    /// Latest cast of each watched skill, by skill id.
+    pub skill_casts: Vec<RosterSkillCast>,
+    /// The watched skill being cast right now; cleared when the monster casts
+    /// anything else or leaves the skill state.
+    pub current_cast: Option<RosterSkillCast>,
+}
+
+/// A character other than the local player that a roster monster targets.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RosterPlayerState {
+    pub uuid: String,
+    pub name: Option<String>,
+    pub profession_id: Option<i32>,
+}
+
+/// Monster roster topic: every monster in the team's hate lists, plus the
+/// local player's attack target. Ordered by `joined_seq`.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct LiveMonsterRosterPayload {
+    pub revision: u64,
+    pub local_uuid: Option<String>,
+    pub current_target_uuid: Option<String>,
+    pub monsters: Vec<RosterMonsterState>,
+    pub players: Vec<RosterPlayerState>,
+}
+
+/// A monster template seen in the roster during this run, for the settings
+/// page's block picker. Never persisted.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RecentRosterMonster {
+    pub monster_id: i32,
+    pub kind: RosterMonsterKind,
+    /// Largest max HP seen for the template.
+    pub max_hp: i64,
+    pub scene_id: Option<i32>,
+    pub last_seen_ms: i64,
+    /// Skills seen cast by this template during the run, ascending.
+    pub skill_ids: Vec<i32>,
 }
 
 /// Monster overlay topic (`live-monster`), 50ms throttle.

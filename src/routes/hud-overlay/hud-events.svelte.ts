@@ -52,6 +52,7 @@ import {
   onGlobalPointerUp as onMonsterPointerUp,
 } from "../monster-overlay/monster-layout.svelte.js";
 import { monsterRuntime } from "../monster-overlay/monster-runtime.svelte.js";
+import { resetMonsterRosterDisplay } from "../monster-overlay/monster-roster-display.svelte.js";
 import {
   clearMinimapLayerState,
   handleHudMinimapFrame,
@@ -400,4 +401,6 @@ function clearMonsterDisplay(): void {
   monsterRuntime.dbmRows = [];
   monsterRuntime.entityDurationRows = [];
   monsterRuntime.monsterSkillRows = [];
+  resetMonsterRosterDisplay();
+  monsterRuntime.rosterDisplay = null;
 }

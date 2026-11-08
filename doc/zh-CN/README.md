@@ -63,6 +63,7 @@ Resonance Logs CN 是《星痕共鸣》的战斗辅助工具：统计伤害与�
 | [队友 CD](./features/monster/teammate-cd.md) | 队友共享过来的技能冷却 | — |
 | [韧性、生命与队友幻想](./features/monster/status.md) | 目标状态条 | — |
 | [仇恨列表](./features/monster/hate.md) | 目标的仇恨排行 | — |
+| [战斗名单](./features/monster/roster.md) | 所有交战怪物的血量、坦克视角、屏蔽机制怪 | — |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss 技能预警条 | [Boss 技能语音预警](./features/monster/examples/boss-alias.md) |
 | [实体持续](./features/monster/entity-duration.md) | 召唤物等实体的存在时间 | [镰车剩余时间](./features/monster/examples/scythe-cart.md) |
 | [怪物技能](./features/monster/monster-skill.md) | 附近怪物释放指定技能时显示 | — |

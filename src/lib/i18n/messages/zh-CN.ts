@@ -2,7 +2,8 @@ export const zhCNMessages = {
   "skillDamage.actions.toggleOverlay": "开关伤害显示",
   "skillDamage.actions.editLayout": "编辑伤害显示布局",
   "routes.tools.skillDamage": "技能伤害显示",
-  "skillDamage.pageDescription": "配置技能组、伤害数字风格、动画及各组独立显示区域。",
+  "skillDamage.pageDescription":
+    "配置技能组、伤害数字风格、动画及各组独立显示区域。",
   "skillDamage.floatUp": "向上浮现并淡出",
   "skillDamage.scrollDirection": "后续数字滚动方向",
   "skillDamage.scrollUp": "向上滚动",
@@ -26,7 +27,8 @@ export const zhCNMessages = {
   "skillDamage.groupName": "组名",
   "skillDamage.groupEnabled": "启用此技能组",
   "skillDamage.groupMerge": "合并组内同时造成的伤害",
-  "skillDamage.groupMergeHint": "同一批次中，本组所有技能的伤害相加，以组名显示；命中目标数按不同目标去重。",
+  "skillDamage.groupMergeHint":
+    "同一批次中，本组所有技能的伤害相加，以组名显示；命中目标数按不同目标去重。",
   "skillDamage.numberStyle": "伤害数字风格",
   "skillDamage.italic": "斜体",
   "skillDamage.fill": "内侧颜色",
@@ -43,11 +45,14 @@ export const zhCNMessages = {
   "skillDamage.duration": "显示持续时间（秒）",
   "skillDamage.shrink": "逐渐缩小",
   "skillDamage.test": "测试动画",
-  "skillDamage.testHint": "持续时间范围为 0.1～60 秒。点击测试，在下方按当前字体和动画设置预览伤害数字。",
-  "skillDamage.mergeHitsHint": "开启后，同一技能在同一批次内的多次命中合并显示总伤害（含多个目标）；关闭时仅显示该批次最大的伤害。",
+  "skillDamage.testHint":
+    "持续时间范围为 0.1～60 秒。点击测试，在下方按当前字体和动画设置预览伤害数字。",
+  "skillDamage.mergeHitsHint":
+    "开启后，同一技能在同一批次内的多次命中合并显示总伤害（含多个目标）；关闭时仅显示该批次最大的伤害。",
   "skillDamage.mergeHits": "多次命中合并总伤害",
   "skillDamage.searchPlaceholder": "输入技能名称、别名或 ID 搜索",
-  "skillDamage.searchHint": "点击搜索结果添加技能；支持按伤害名称或技能统计名称检索，同名的不同 ID 可分别添加。",
+  "skillDamage.searchHint":
+    "点击搜索结果添加技能；支持按伤害名称或技能统计名称检索，同名的不同 ID 可分别添加。",
   "skillDamage.emptySearch": "没有找到匹配的技能，可直接输入伤害 ID 添加。",
   "skillDamage.font": "伤害数字字体",
   "skillDamage.fontFamily": "字体名称",
@@ -55,7 +60,8 @@ export const zhCNMessages = {
   "skillDamage.fontWeight": "字重",
   "columns.skill.id": "ID",
   "columns.description.skill.id": "技能伤害 ID，可用于配置技能伤害显示",
-  "skillDamage.description": "显示自身指定技能的每次伤害。ID 可在 DPS 技能明细中查看；浮层编辑模式下可拖动显示位置。",
+  "skillDamage.description":
+    "显示自身指定技能的每次伤害。ID 可在 DPS 技能明细中查看；浮层编辑模式下可拖动显示位置。",
   "skillDamage.enabled": "启用技能伤害显示",
   "skillDamage.alias": "技能别名",
   "skillDamage.delete": "删除",
@@ -97,21 +103,25 @@ export const zhCNMessages = {
   "loadout.page.skillProfileLabel": "技能监控子方案",
   "loadout.page.monsterProfileLabel": "怪物监控子方案",
   "skillDamage.profile.title": "伤害显示方案",
-  "skillDamage.profile.pickerDescription": "当前总方案引用的伤害显示子方案，可在此切换或管理；更多方案组合请前往「监控方案」页",
+  "skillDamage.profile.pickerDescription":
+    "当前总方案引用的伤害显示子方案，可在此切换或管理；更多方案组合请前往「监控方案」页",
   "skillDamage.profile.new": "新建方案",
   "skillDamage.profile.rename": "重命名",
   "skillDamage.profile.delete": "删除方案",
   "skillDamage.profile.renamePrompt": "请输入新的方案名称",
-  "skillDamage.profile.deleteConfirm": "确定要删除该伤害显示方案吗？引用它的总方案将回退到第一个方案。",
+  "skillDamage.profile.deleteConfirm":
+    "确定要删除该伤害显示方案吗？引用它的总方案将回退到第一个方案。",
   "skillDamage.defaults.defaultProfileName": "默认方案",
   "skillDamage.defaults.profileName": "方案 {index}",
   "skillDamage.autoHideInDailyScenes.label": "日常场景自动隐藏",
-  "skillDamage.autoHideInDailyScenes.description": "进入日常场景黑名单时自动隐藏伤害显示，离开后恢复。",
+  "skillDamage.autoHideInDailyScenes.description":
+    "进入日常场景黑名单时自动隐藏伤害显示，离开后恢复。",
   "skillDamage.nameNone": "不显示",
   "skillDamage.fontSource": "字体来源",
   "skillDamage.systemFont": "系统字体（按名称）",
   "skillDamage.uploadFont": "上传字体",
-  "skillDamage.uploadFontDescription": "选择字体文件（.woff2/.woff/.ttf/.otf），同一字体只保存一份，可在各技能组间复用",
+  "skillDamage.uploadFontDescription":
+    "选择字体文件（.woff2/.woff/.ttf/.otf），同一字体只保存一份，可在各技能组间复用",
   "loadout.page.damageProfileLabel": "伤害显示子方案",
   "loadout.page.liveProfileLabel": "DPS 设置子方案",
   "loadout.page.linkedSpecLabel": "关联专精",
@@ -1299,19 +1309,26 @@ export const zhCNMessages = {
   "skillMonitor.skillCd.resonance.placeholder": "搜索幻想技能名称",
   "skillMonitor.skillCd.resonance.searchPrompt": "输入关键词搜索幻想技能",
   "skillMonitor.skillCd.preview.title": "技能布局",
-  "skillMonitor.skillCd.preview.description": "可分成多个区域，各自在浮窗中拖动和缩放。拖到空格可移动，拖到技能上可交换；浮窗自动收起右侧、底部空白，保留预留间隔。",
+  "skillMonitor.skillCd.preview.description":
+    "可分成多个区域，各自在浮窗中拖动和缩放。拖到空格可移动，拖到技能上可交换；浮窗自动收起右侧、底部空白，保留预留间隔。",
   "skillMonitor.skillCd.layout.rows": "行数",
   "skillMonitor.skillCd.layout.columns": "列数",
   "skillMonitor.skillCd.layout.gap": "图标间距",
   "skillMonitor.skillCd.layout.compact": "紧凑排列",
-  "skillMonitor.skillCd.layout.help": "先选空格再添加技能可指定位置。Enter / 空格选中，Alt + 方向键移动或交换，Delete 移除，Esc 取消。紧凑排列会移除预留间隔。",
+  "skillMonitor.skillCd.layout.help":
+    "先选空格再添加技能可指定位置。Enter / 空格选中，Alt + 方向键移动或交换，Delete 移除，Esc 取消。紧凑排列会移除预留间隔。",
   "skillMonitor.skillCd.layout.cell": "第 {row} 行，第 {column} 列：{skill}",
-  "skillMonitor.skillCd.layout.selectHint": "点击格子选中；取消监控只清空对应格子。",
-  "skillMonitor.skillCd.layout.error.limit": "所有区域合计最多监控 10 个技能，请先移除一个技能。",
+  "skillMonitor.skillCd.layout.selectHint":
+    "点击格子选中；取消监控只清空对应格子。",
+  "skillMonitor.skillCd.layout.error.limit":
+    "所有区域合计最多监控 10 个技能，请先移除一个技能。",
   "skillMonitor.skillCd.layout.error.full": "网格已满，请增大行数或列数。",
-  "skillMonitor.skillCd.layout.error.invalidSize": "行数和列数必须为 1～10 的整数。",
-  "skillMonitor.skillCd.layout.error.invalidGap": "图标间距必须为 0～24 的整数。",
-  "skillMonitor.skillCd.layout.error.overflow": "以下技能将超出网格，请先移动或紧凑排列：{skills}",
+  "skillMonitor.skillCd.layout.error.invalidSize":
+    "行数和列数必须为 1～10 的整数。",
+  "skillMonitor.skillCd.layout.error.invalidGap":
+    "图标间距必须为 0～24 的整数。",
+  "skillMonitor.skillCd.layout.error.overflow":
+    "以下技能将超出网格，请先移动或紧凑排列：{skills}",
   "skillMonitor.skillCd.layout.error.stale": "技能布局已变化，请重新操作。",
   "skillMonitor.skillCd.layout.error.lastRegion": "至少需要保留一个区域。",
   "skillMonitor.skillCd.region.add": "新增区域",
@@ -1319,12 +1336,15 @@ export const zhCNMessages = {
   "skillMonitor.skillCd.region.clear": "清空本区域",
   "skillMonitor.skillCd.region.delete": "删除区域",
   "skillMonitor.skillCd.region.deleteTitle": "删除「{name}」？",
-  "skillMonitor.skillCd.region.deleteDescription": "该区域中的 {count} 个技能将一起取消监控。",
-  "skillMonitor.skillCd.region.addTo": "点击添加到「{region}」；已在其他区域的技能（角标为区域序号）会移到这里。",
+  "skillMonitor.skillCd.region.deleteDescription":
+    "该区域中的 {count} 个技能将一起取消监控。",
+  "skillMonitor.skillCd.region.addTo":
+    "点击添加到「{region}」；已在其他区域的技能（角标为区域序号）会移到这里。",
   "skillMonitor.skillCd.region.inRegion": "已在「{region}」，点击移到当前区域",
   "skillMonitor.skillCd.picker.noResults": "没有匹配的技能",
   "skillMonitor.skillCd.voice.title": "语音播报",
-  "skillMonitor.skillCd.voice.description": "为职业、幻想或职责技能设置释放、就绪与提前就绪播报，与上方的 CD 监控相互独立，无需显示 CD。充能类技能每恢复一层都会播报就绪。",
+  "skillMonitor.skillCd.voice.description":
+    "为职业、幻想或职责技能设置释放、就绪与提前就绪播报，与上方的 CD 监控相互独立，无需显示 CD。充能类技能每恢复一层都会播报就绪。",
   "skillMonitor.skillCd.voice.empty": "尚未配置语音播报，点击上方技能添加。",
   "skillMonitor.skillCd.voice.configuredCount": "已配置 {count}",
   "skillMonitor.skillCd.voice.classSkills": "职业技能",
@@ -1698,7 +1718,8 @@ export const zhCNMessages = {
     "搜索 Buff 名称或 ID",
   "skillMonitor.customPanel.counterEditor.picker.searchDamage":
     "搜索伤害名称或 ID",
-  "skillMonitor.customPanel.counterEditor.picker.searchSkill": "搜索幻想技能，或输入技能 ID 后回车",
+  "skillMonitor.customPanel.counterEditor.picker.searchSkill":
+    "搜索幻想技能，或输入技能 ID 后回车",
   "skillMonitor.customPanel.counterEditor.picker.enterId": "输入 ID 后回车",
   "skillMonitor.customPanel.counterEditor.picker.noMatch": "没有匹配项",
   "skillMonitor.customPanel.counterEditor.picker.classSkills": "当前职业技能",
@@ -1826,6 +1847,7 @@ export const zhCNMessages = {
   "monsterMonitor.tabs.hate": "仇恨列表",
   "monsterMonitor.tabs.stun": "韧性条",
   "monsterMonitor.tabs.hp": "生命条",
+  "monsterMonitor.tabs.roster": "战斗名单",
   "monsterMonitor.tabs.fantasy": "队友幻想",
   "monsterMonitor.tabs.bossDbm": "Boss DBM",
   "monsterMonitor.tabs.entityDuration": "实体持续",
@@ -1943,6 +1965,67 @@ export const zhCNMessages = {
   "monsterMonitor.hp.displayDescription":
     "显示当前攻击主目标的生命条（当前/最大）。",
   "monsterMonitor.hp.styleTitle": "生命条面板样式",
+  "monsterMonitor.roster.displayTitle": "战斗名单显示",
+  "monsterMonitor.roster.displayDescription":
+    "列出你和队友正在交战的所有怪物的血量。主目标固定在最上面，Boss 全部逐行显示；普通怪和精英按排序逐行显示前几只，其余合成一行小竖条，不会被藏掉。区域显示在「启用窗口」中控制。",
+  "monsterMonitor.roster.normalRows": "普通怪和精英逐行显示数量",
+  "monsterMonitor.roster.normalRowsHint":
+    "默认按血量百分比从高到低排。其余的合成一行小竖条，并标出其中的最高和最低血量。",
+  "monsterMonitor.roster.tankMode": "坦克模式",
+  "monsterMonitor.roster.tankModeDesc":
+    "统计攻击目标不是你的怪，并把它们逐行列出，行尾标出它在打谁。",
+  "monsterMonitor.roster.notAttackingMeFirst": "不攻击我的怪优先",
+  "monsterMonitor.roster.notAttackingMeFirstDesc":
+    "目标是别人的怪排在前面，再排攻击你的和目标未知的怪；每组内仍按血量排序，最多每秒调整一次。",
+  "monsterMonitor.roster.showHpValue": "显示具体血量",
+  "monsterMonitor.roster.showDistance": "显示距离",
+  "monsterMonitor.roster.showDistanceDesc":
+    "与你的水平距离（米），方便在同名的怪里找到对应的那只。",
+  "monsterMonitor.roster.skills.title": "关注技能（显示在名单行尾）",
+  "monsterMonitor.roster.skills.description":
+    "能放这些技能的怪会排在主目标下面并逐行显示，行尾显示技能状态：灰色倒计时为冷却中，琥珀色为就绪，红色为读条中或刚放出。按技能 ID 生效，所有能放该技能的怪都算。",
+  "monsterMonitor.roster.skills.caveatReady":
+    "「就绪」只表示最早可以放，怪的 AI 不一定马上放。",
+  "monsterMonitor.roster.skills.caveatScripted":
+    "脚本触发的技能（例如几只怪同时放）无法预测，只在释放时提醒。",
+  "monsterMonitor.roster.skills.caveatInterrupt":
+    "读条被打断后实际冷却可能更长，就绪会显示得偏早。",
+  "monsterMonitor.roster.skills.listTitle": "已关注",
+  "monsterMonitor.roster.skills.empty": "尚未关注任何技能",
+  "monsterMonitor.roster.skills.label": "简称",
+  "monsterMonitor.roster.skills.customCooldown": "冷却",
+  "monsterMonitor.roster.skills.tableCooldown": "按表格",
+  "monsterMonitor.roster.skills.cooldownHint":
+    "留空使用游戏表里的冷却；填写秒数会覆盖它。",
+  "monsterMonitor.roster.skills.cooldown": "冷却 {seconds}s",
+  "monsterMonitor.roster.skills.battleStart": "开战 {from}–{to}s",
+  "monsterMonitor.roster.skills.battleStartNever": "开战不放",
+  "monsterMonitor.roster.skills.sing": "读条 {seconds}s",
+  "monsterMonitor.roster.skills.danger": "危险",
+  "monsterMonitor.roster.skills.noTiming": "无冷却数据",
+  "monsterMonitor.roster.skills.fromRecent": "从本次遇到的怪物添加",
+  "monsterMonitor.roster.skills.fromRecentHint":
+    "点开一只怪，勾选要关注的技能。列表包含游戏表里的技能，以及本次运行中见到它实际放过的技能。",
+  "monsterMonitor.roster.skills.expanded": "已展开",
+  "monsterMonitor.roster.skills.monsterNoSkills": "没有这只怪的技能数据",
+  "monsterMonitor.roster.skills.searchTitle": "按技能名或 ID 添加",
+  "monsterMonitor.roster.styleTitle": "战斗名单面板样式",
+  "monsterMonitor.roster.blockTitle": "屏蔽怪物",
+  "monsterMonitor.roster.blockDescription":
+    "被屏蔽的怪不会出现在战斗名单里，也不计入数量。屏蔽按怪物 ID 生效，对所有方案和副本都有效。",
+  "monsterMonitor.roster.blockedTitle": "我屏蔽的",
+  "monsterMonitor.roster.blockedEmpty": "尚未屏蔽任何怪物",
+  "monsterMonitor.roster.unblock": "点击取消屏蔽",
+  "monsterMonitor.roster.recentTitle": "本次遇到的怪物",
+  "monsterMonitor.roster.recentDescription":
+    "本次启动后进入过战斗名单的怪物，重启后清空；需要战斗名单区处于开启状态。点击即可屏蔽。",
+  "monsterMonitor.roster.recentEmpty": "本次运行还没有怪物进入战斗名单",
+  "monsterMonitor.roster.refresh": "刷新",
+  "monsterMonitor.roster.searchTitle": "搜索怪物",
+  "monsterMonitor.roster.searchPlaceholder":
+    "按名称或怪物 ID 搜索，点击即可屏蔽",
+  "monsterMonitor.roster.searchEmpty": "没有匹配的怪物",
+  "monsterMonitor.roster.blocked": "已屏蔽",
   "monsterMonitor.overlay.title": "Overlay 区域显示",
   "monsterMonitor.overlay.description": "分别控制怪物监控遮罩中的显示区域。",
   "monsterMonitor.overlay.monsterBuff": "怪物 Buff 区：{state}",
@@ -1955,6 +2038,7 @@ export const zhCNMessages = {
   "monsterMonitor.overlay.bossDbm": "Boss DBM 区：{state}",
   "monsterMonitor.overlay.entityDuration": "实体监控区：{state}",
   "monsterMonitor.overlay.monsterSkill": "怪物技能区：{state}",
+  "monsterMonitor.overlay.roster": "战斗名单区：{state}",
   "monsterMonitor.monsterSkill.monitorAll": "显示周围所有怪物技能",
   "monsterMonitor.monsterSkill.monitorAllDesc":
     "开启后还会显示周围怪物释放的其他技能，格式为 技能名#id，显示 5 秒，重复施放会刷新显示时间。列表中的技能仍按自己的名称、顺序和显示时长排在前面。",
@@ -2037,6 +2121,20 @@ export const zhCNMessages = {
   "monsterOverlay.bossDbmGroupTag": "Boss DBM 区",
   "monsterOverlay.entityDurationGroupTag": "实体监控区",
   "monsterOverlay.monsterSkillGroupTag": "怪物技能区",
+  "monsterOverlay.rosterGroupTag": "战斗名单区",
+  "monsterOverlay.roster.count": "战斗名单 {count} 只",
+  "monsterOverlay.roster.looseCount": "不在我身上 {count}",
+  "monsterOverlay.roster.looseDetail": "（{summary}）",
+  "monsterOverlay.roster.more": "另 {count} 只",
+  "monsterOverlay.roster.stripRange": "最高 {highest} · 最低 {lowest}",
+  "monsterOverlay.roster.kind.normal": "普通",
+  "monsterOverlay.roster.kind.elite": "精英",
+  "monsterOverlay.roster.kind.boss": "Boss",
+  "monsterOverlay.roster.unknownMonster": "未知怪物",
+  "monsterOverlay.roster.otherPlayer": "其他玩家",
+  "monsterOverlay.roster.previewMonster": "怪物预览",
+  "monsterOverlay.roster.previewSkill": "技能",
+  "monsterOverlay.roster.skillReady": "就绪",
   "monsterOverlay.hateSectionTitle": "{title} - 仇恨",
   "monsterOverlay.stunSectionTitle": "{title} - 韧性",
   "monsterOverlay.hpSectionTitle": "{title} - 生命",

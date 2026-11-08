@@ -2,7 +2,7 @@ use crate::WINDOW_LIVE_LABEL;
 use crate::live::bootstrap_snapshot::{MonitorRuntimeSnapshot, save_monitor_runtime_snapshot};
 use crate::live::ipc::models::{
     HudFrame, HudFrameRequest, LivePullWindow, LiveScenePayload, LiveStatusPayload,
-    LiveWindowFrame, LiveWindowFrameRequest,
+    LiveWindowFrame, LiveWindowFrameRequest, RecentRosterMonster,
 };
 use crate::live::ipc::publisher::LivePublicationCache;
 use crate::live::runtime_handle::LiveRuntimeHandle;
@@ -61,6 +61,16 @@ pub fn get_live_scene(
     cache: tauri::State<'_, LivePublicationCache>,
 ) -> Result<LiveScenePayload, String> {
     Ok(cache.current_scene())
+}
+
+/// Monster templates seen on the monster roster during this run, most
+/// recent first, for the settings page's block picker.
+#[tauri::command]
+#[specta::specta]
+pub fn get_monster_roster_recent(
+    cache: tauri::State<'_, LivePublicationCache>,
+) -> Vec<RecentRosterMonster> {
+    cache.current_monster_roster_recent()
 }
 
 fn pull_window_active(

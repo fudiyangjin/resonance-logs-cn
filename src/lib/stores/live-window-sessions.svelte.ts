@@ -17,6 +17,7 @@ import {
   liveMonsterStore,
   liveStatusStore,
   liveTeamStore,
+  liveMonsterRosterStore,
 } from "$lib/stores/live-topics.svelte";
 
 type Revisioned = { revision: number };
@@ -220,6 +221,14 @@ export type HudSkillDamageFrameHandler = {
   reset: () => void;
 };
 
+/** Topics served under the monster HUD interest. */
+const MONSTER_INTEREST_TOPICS: ResettableTopicStore[] = [
+  liveMonsterStore,
+  liveFantasyStore,
+  liveTeamStore,
+  liveMonsterRosterStore,
+];
+
 class HudOverlayPullSession implements WindowPullSession {
   readonly #loop = new LivePullLoop<HudFrame>({
     pull: () =>
@@ -231,6 +240,7 @@ class HudOverlayPullSession implements WindowPullSession {
           monsterRevision: revisionOf(liveMonsterStore.data),
           fantasyRevision: revisionOf(liveFantasyStore.data),
           teamRevision: revisionOf(liveTeamStore.data),
+          monsterRosterRevision: revisionOf(liveMonsterRosterStore.data),
           skillDamageRevision: this.#skillDamageRevision,
           snapshotRevision: this.#snapshotRevision,
           skillCastCursor: this.#skillCastCursor,
@@ -328,11 +338,9 @@ class HudOverlayPullSession implements WindowPullSession {
     }
 
     if (!interests.monster) {
-      clearTopics([liveMonsterStore, liveFantasyStore, liveTeamStore]);
+      clearTopics(MONSTER_INTEREST_TOPICS);
     } else if (!previous.monster && this.#started && this.#active) {
-      clearTopics([liveMonsterStore, liveFantasyStore, liveTeamStore], {
-        state: "loading",
-      });
+      clearTopics(MONSTER_INTEREST_TOPICS, { state: "loading" });
     }
 
     if (!interests.minimap) {
@@ -377,6 +385,8 @@ class HudOverlayPullSession implements WindowPullSession {
       if (frame.monster) liveMonsterStore.apply(frame.monster);
       if (frame.fantasy) liveFantasyStore.apply(frame.fantasy);
       if (frame.team) liveTeamStore.apply(frame.team);
+      if (frame.monsterRoster)
+        liveMonsterRosterStore.apply(frame.monsterRoster);
     }
     this.#skillCastCursor = frame.skillCastCursor;
     if (this.#interests.minimap) {
@@ -406,9 +416,7 @@ class HudOverlayPullSession implements WindowPullSession {
   #activeTopics(): ResettableTopicStore[] {
     return [
       ...(this.#interests.game ? [liveStatusStore, liveBuffsStore] : []),
-      ...(this.#interests.monster
-        ? [liveMonsterStore, liveFantasyStore, liveTeamStore]
-        : []),
+      ...(this.#interests.monster ? MONSTER_INTEREST_TOPICS : []),
     ];
   }
 
@@ -419,6 +427,7 @@ class HudOverlayPullSession implements WindowPullSession {
       liveMonsterStore,
       liveFantasyStore,
       liveTeamStore,
+      liveMonsterRosterStore,
     ];
   }
 }

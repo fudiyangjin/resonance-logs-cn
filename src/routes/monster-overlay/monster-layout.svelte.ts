@@ -125,6 +125,14 @@ export function getHpPanelScale() {
   return getMonsterOverlaySizes().hpPanelScale;
 }
 
+export function getRosterPanelPosition() {
+  return getMonsterOverlayPositions().rosterPanel;
+}
+
+export function getRosterPanelScale() {
+  return getMonsterOverlaySizes().rosterPanelScale;
+}
+
 export function getFantasyPanelPosition() {
   return getMonsterOverlayPositions().fantasyPanel;
 }
@@ -200,6 +208,13 @@ export function hpPanelStyle() {
   return normalizeCustomPanelStyle(
     SETTINGS.monsterMonitor.state.hpPanelStyle ??
       SETTINGS.monsterMonitor.state.panelStyle,
+  );
+}
+
+export function rosterPanelStyle() {
+  return normalizeCustomPanelStyle(
+    SETTINGS.monsterMonitor.state.rosterPanelStyle ??
+      SETTINGS.monsterMonitor.state.hpPanelStyle,
   );
 }
 
@@ -338,6 +353,24 @@ export function setHpPanelScale(value: number) {
     overlaySizes: {
       ...getMonsterOverlaySizes(),
       hpPanelScale: clampPanelScale(value),
+    },
+  }));
+}
+
+export function setRosterPanelPosition(nextPos: { x: number; y: number }) {
+  patchMonsterMonitor(() => ({
+    overlayPositions: {
+      ...getMonsterOverlayPositions(),
+      rosterPanel: nextPos,
+    },
+  }));
+}
+
+export function setRosterPanelScale(value: number) {
+  patchMonsterMonitor(() => ({
+    overlaySizes: {
+      ...getMonsterOverlaySizes(),
+      rosterPanelScale: clampPanelScale(value),
     },
   }));
 }
@@ -561,6 +594,8 @@ function commitDragPreview() {
     setEntityDurationPanelPosition(nextPos);
   } else if (drag.target.kind === "monsterSkillPanel") {
     setMonsterSkillPanelPosition(nextPos);
+  } else if (drag.target.kind === "rosterPanel") {
+    setRosterPanelPosition(nextPos);
   } else {
     setFantasyPanelPosition(nextPos);
   }
@@ -588,6 +623,8 @@ function commitResizePreview() {
     setEntityDurationPanelScale(nextValue);
   } else if (resize.target.kind === "monsterSkillPanel") {
     setMonsterSkillPanelScale(nextValue);
+  } else if (resize.target.kind === "rosterPanel") {
+    setRosterPanelScale(nextValue);
   } else {
     setFantasyPanelScale(nextValue);
   }
