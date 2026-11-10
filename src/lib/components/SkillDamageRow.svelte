@@ -6,7 +6,10 @@
     skillDamageIconBackground,
   } from "$lib/skill-damage-icons";
   import { formatSkillDamage } from "$lib/skill-damage-display";
-  import type { SkillDamageGroup } from "$lib/skill-damage-settings";
+  import type {
+    SkillDamageGroup,
+    SkillDamageAnimation,
+  } from "$lib/skill-damage-settings";
 
   let {
     group,
@@ -15,8 +18,16 @@
     hitCount = 1,
     animated = true,
     fontFamily,
+    comboCount,
+    animation,
+    animationDurationMs,
+    running = false,
   }: {
     group: SkillDamageGroup;
+    comboCount?: string | undefined;
+    animation?: SkillDamageAnimation | undefined;
+    animationDurationMs?: number | undefined;
+    running?: boolean;
     label: string;
     amount: string;
     hitCount?: number;
@@ -25,9 +36,12 @@
     fontFamily?: string | undefined;
   } = $props();
 
+  const effectiveAnimation = $derived(animation ?? group.animation);
   const valueText = $derived(
     formatSkillDamage(amount, group.format) +
-      (hitCount > 1 ? `[${hitCount}]` : ""),
+      (group.displayMode !== "continuous" && hitCount > 1
+        ? `[${hitCount}]`
+        : ""),
   );
   const icon = $derived(
     group.labelMode === "icon" ? resolveSkillDamageIcon(group.iconPath) : null,
@@ -36,11 +50,12 @@
 
 <div
   class="damage-row"
-  class:float-up={animated && group.animation === "floatUp"}
-  class:pop={animated && group.animation === "pop"}
-  class:shrink={animated && group.animation === "shrink"}
+  class:running
+  class:float-up={animated && effectiveAnimation === "floatUp"}
+  class:pop={animated && effectiveAnimation === "pop"}
+  class:shrink={animated && effectiveAnimation === "shrink"}
   style:--damage-label-gap={`${group.labelMode === "none" ? 0 : group.labelSpacing}px`}
-  style:--damage-duration={`${group.durationMs}ms`}
+  style:--damage-duration={`${animationDurationMs ?? group.durationMs}ms`}
 >
   {#if icon}
     <span
@@ -55,16 +70,88 @@
     >
   {:else if group.labelMode !== "none"}{label}{/if}
   <span
-    class="damage"
-    style:font-family={fontFamily}
-    style:font-size={`${group.fontSize}px`}
-    style:font-weight={group.fontWeight}
+    class="damage-block"
+    class:combo-top={group.comboPosition === "top"}
+    class:combo-left={group.comboPosition === "left"}
+    class:combo-right={group.comboPosition === "right"}
+    style:gap={`${group.comboSpacing}px`}
   >
-    <SkillDamageDigits text={valueText} style={group.numberStyle} />
+    <span
+      class="damage"
+      style:font-family={fontFamily}
+      style:font-size={`${group.fontSize}px`}
+      style:font-weight={group.fontWeight}
+    >
+      <SkillDamageDigits text={valueText} style={group.numberStyle} />
+    </span>
+    {#if group.showComboCount && comboCount !== undefined}
+      <span
+        class="combo"
+        style:font-family={fontFamily}
+        style:font-size={`${group.fontSize * 0.55}px`}
+        style:font-weight={group.fontWeight}
+      >
+        <SkillDamageDigits
+          text={group.comboFormat === "multiplier"
+            ? `\u00d7${comboCount}`
+            : `${comboCount} HIT`}
+          style={group.numberStyle}
+        />
+      </span>
+    {/if}
   </span>
 </div>
 
 <style>
+  .running.pop {
+    animation: running-pop min(var(--damage-duration), 200ms) ease-out both;
+  }
+  .running.float-up {
+    animation: running-float min(var(--damage-duration), 200ms) ease-out both;
+  }
+  @keyframes running-pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(1.08);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes running-float {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .damage-block {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .combo-top {
+    flex-direction: column-reverse;
+  }
+  .combo-left {
+    flex-direction: row-reverse;
+  }
+  .combo-right {
+    flex-direction: row;
+  }
+  .combo {
+    display: inline-block;
+    line-height: 1.25;
+  }
+
   .skill-label-icon {
     display: inline-block;
     vertical-align: middle;
