@@ -1,5 +1,15 @@
 use crate::packets::utils::Server;
 use std::collections::{HashMap, HashSet};
+use std::time::{Duration, Instant};
+
+/// Minimum spacing of the snapshots that re-check flows missing from an
+/// earlier one. Such flows (stray packets of closed connections, rewritten
+/// tuples) would otherwise force a snapshot on every packet; the spacing also
+/// bounds how long a game connection stays ignored after a failed snapshot or
+/// one taken before its row appeared.
+const ABSENT_RECHECK_INTERVAL: Duration = Duration::from_secs(1);
+/// Absent flows not re-checked for this long are forgotten.
+const ABSENT_FLOW_TTL: Duration = Duration::from_secs(60);
 
 const GAME_PROCESS_NAMES: &[&str] = &[
     "bpsr",
@@ -129,6 +139,12 @@ type SnapshotFn = fn(&HashSet<&'static str>, &PidCache) -> Result<TcpTableSnapsh
 pub struct GameConnectionFilter {
     game_endpoints: HashMap<Endpoint, Distribution>,
     non_game_flows: HashSet<FlowKey>,
+    /// Flows missing from the snapshot that last checked them, with when it
+    /// did. Kept across refreshes, unlike `non_game_flows`, which each
+    /// snapshot replaces.
+    absent_flows: HashMap<FlowKey, Instant>,
+    /// When the last snapshot was attempted, successful or not.
+    last_snapshot: Option<Instant>,
     pid_cache: PidCache,
     process_names: HashSet<&'static str>,
     snapshot: SnapshotFn,
@@ -139,6 +155,8 @@ impl GameConnectionFilter {
         Self {
             game_endpoints: HashMap::new(),
             non_game_flows: HashSet::new(),
+            absent_flows: HashMap::new(),
+            last_snapshot: None,
             pid_cache: HashMap::new(),
             process_names: GAME_PROCESS_NAMES.iter().copied().collect(),
             snapshot: platform::snapshot_tcp_table,
@@ -146,6 +164,10 @@ impl GameConnectionFilter {
     }
 
     pub fn classify(&mut self, server: Server) -> Verdict {
+        self.classify_at(server, Instant::now())
+    }
+
+    fn classify_at(&mut self, server: Server, now: Instant) -> Verdict {
         if let Some(dist) = self.positive(server) {
             return Verdict::Game(dist);
         }
@@ -154,19 +176,70 @@ impl GameConnectionFilter {
         if self.non_game_flows.contains(&flow) {
             return Verdict::NonGame;
         }
+        if self.absent_flows.contains_key(&flow) && !self.recheck_due(now) {
+            return Verdict::NonGame;
+        }
 
-        self.refresh();
+        self.refresh(now);
 
         if let Some(dist) = self.positive(server) {
+            self.absent_flows.remove(&flow);
             return Verdict::Game(dist);
         }
 
-        self.non_game_flows.insert(flow);
+        if self.non_game_flows.contains(&flow) {
+            self.absent_flows.remove(&flow);
+        } else {
+            // Also after a failed snapshot: the verdict only stands until
+            // the next re-check.
+            self.absent_flows.insert(flow, now);
+        }
         Verdict::NonGame
     }
 
+    /// Absent flows share one re-check snapshot per interval.
+    fn recheck_due(&self, now: Instant) -> bool {
+        self.last_snapshot
+            .is_none_or(|at| now.saturating_duration_since(at) >= ABSENT_RECHECK_INTERVAL)
+    }
+
+    /// Drops any cached non-game verdict, so the next packet of this tuple
+    /// is classified afresh (connection closed or a new one starting).
     pub fn forget_flow(&mut self, server: Server) {
-        self.non_game_flows.remove(&FlowKey::from_server(server));
+        let flow = FlowKey::from_server(server);
+        self.non_game_flows.remove(&flow);
+        self.absent_flows.remove(&flow);
+    }
+
+    /// Whether the last snapshot saw any game connection.
+    #[must_use]
+    pub fn has_game_connections(&self) -> bool {
+        !self.game_endpoints.is_empty()
+    }
+
+    /// Takes a fresh TCP table snapshot now, outside the classify path.
+    pub fn refresh_now(&mut self) {
+        self.refresh(Instant::now());
+    }
+
+    /// A filter that already knows one game endpoint and whose snapshots are
+    /// empty, for tests of code built on top of the filter.
+    #[cfg(test)]
+    pub(crate) fn with_game_endpoint(addr: [u8; 4], port: u16, distribution: Distribution) -> Self {
+        let mut filter = Self {
+            snapshot: |_, _| {
+                Ok(TcpTableSnapshot {
+                    game_endpoints: HashMap::new(),
+                    non_game_flows: HashSet::new(),
+                    pid_cache: HashMap::new(),
+                })
+            },
+            ..Self::new()
+        };
+        filter
+            .game_endpoints
+            .insert(Endpoint::new(addr, port), distribution);
+        filter
     }
 
     fn positive(&self, server: Server) -> Option<Distribution> {
@@ -178,12 +251,16 @@ impl GameConnectionFilter {
         self.game_endpoints.get(&Endpoint::new(addr, port)).copied()
     }
 
-    fn refresh(&mut self) {
+    fn refresh(&mut self, now: Instant) {
+        self.last_snapshot = Some(now);
         match (self.snapshot)(&self.process_names, &self.pid_cache) {
             Ok(snapshot) => {
                 self.game_endpoints = snapshot.game_endpoints;
                 self.non_game_flows = snapshot.non_game_flows;
                 self.pid_cache = snapshot.pid_cache;
+                self.absent_flows.retain(|_, checked_at| {
+                    now.saturating_duration_since(*checked_at) < ABSENT_FLOW_TTL
+                });
             }
             Err(err) => {
                 log::debug!(target: "app::capture", "failed to refresh game TCP connections: {err}");
@@ -297,6 +374,12 @@ mod platform {
         })
     }
 
+    /// Reads attempted before giving up on a table that keeps growing.
+    const TABLE_READ_ATTEMPTS: usize = 3;
+    /// Room for connections opened between sizing the table and reading it,
+    /// which is common exactly when a game opens many connections at once.
+    const TABLE_HEADROOM_ROWS: usize = 64;
+
     fn tcp_rows() -> Result<Vec<TcpRowOwnerPid>, String> {
         let mut table_len = 0u32;
         let first = unsafe {
@@ -314,20 +397,36 @@ mod platform {
             return Err(format!("GetExtendedTcpTable sizing failed with {first}"));
         }
 
-        let mut table = vec![0u8; table_len as usize];
-        let result = unsafe {
-            GetExtendedTcpTable(
-                table.as_mut_ptr().cast(),
-                &mut table_len,
-                0,
-                AF_INET,
-                TCP_TABLE_OWNER_PID_ALL,
-                0,
-            )
-        };
-
-        if result != NO_ERROR {
-            return Err(format!("GetExtendedTcpTable failed with {result}"));
+        let mut table = Vec::new();
+        let mut read = false;
+        for _ in 0..TABLE_READ_ATTEMPTS {
+            table.resize(
+                table_len as usize + TABLE_HEADROOM_ROWS * size_of::<TcpRowOwnerPid>(),
+                0u8,
+            );
+            let mut len = u32::try_from(table.len()).map_err(|e| format!("{e}"))?;
+            let result = unsafe {
+                GetExtendedTcpTable(
+                    table.as_mut_ptr().cast(),
+                    &mut len,
+                    0,
+                    AF_INET,
+                    TCP_TABLE_OWNER_PID_ALL,
+                    0,
+                )
+            };
+            match result {
+                NO_ERROR => {
+                    read = true;
+                    break;
+                }
+                // `len` now holds the size the grown table needs.
+                ERROR_INSUFFICIENT_BUFFER => table_len = len,
+                other => return Err(format!("GetExtendedTcpTable failed with {other}")),
+            }
+        }
+        if !read {
+            return Err("GetExtendedTcpTable kept outgrowing its buffer".to_string());
         }
 
         if table.len() < size_of::<u32>() {
@@ -423,26 +522,49 @@ mod tests {
         Endpoint::new(addr, port)
     }
 
-    fn snapshot_with_game(
-        _process_names: &HashSet<&'static str>,
-        _previous_pid_cache: &PidCache,
-    ) -> Result<TcpTableSnapshot, String> {
-        SNAPSHOT_CALLS.with(|calls| calls.set(calls.get() + 1));
-        Ok(TcpTableSnapshot {
+    /// Counts a snapshot call and returns its 1-based number.
+    fn count_snapshot() -> usize {
+        SNAPSHOT_CALLS.with(|calls| {
+            calls.set(calls.get() + 1);
+            calls.get()
+        })
+    }
+
+    fn game_snapshot() -> TcpTableSnapshot {
+        TcpTableSnapshot {
             game_endpoints: HashMap::from([(endpoint([10, 0, 0, 1], 40000), Distribution::Star)]),
             non_game_flows: HashSet::from([FlowKey::from_endpoints(
                 endpoint([1, 1, 1, 1], 1111),
                 endpoint([2, 2, 2, 2], 2222),
             )]),
             pid_cache: HashMap::from([(123, Some(Distribution::Star)), (456, None)]),
-        })
+        }
+    }
+
+    fn snapshot_with_game(
+        _process_names: &HashSet<&'static str>,
+        _previous_pid_cache: &PidCache,
+    ) -> Result<TcpTableSnapshot, String> {
+        count_snapshot();
+        Ok(game_snapshot())
+    }
+
+    /// The first read fails, as when the table grows while it is read.
+    fn failing_then_game_snapshot(
+        _process_names: &HashSet<&'static str>,
+        _previous_pid_cache: &PidCache,
+    ) -> Result<TcpTableSnapshot, String> {
+        if count_snapshot() == 1 {
+            return Err("table grew while it was read".to_string());
+        }
+        Ok(game_snapshot())
     }
 
     fn empty_snapshot(
         _process_names: &HashSet<&'static str>,
         _previous_pid_cache: &PidCache,
     ) -> Result<TcpTableSnapshot, String> {
-        SNAPSHOT_CALLS.with(|calls| calls.set(calls.get() + 1));
+        count_snapshot();
         Ok(TcpTableSnapshot {
             game_endpoints: HashMap::new(),
             non_game_flows: HashSet::new(),
@@ -454,6 +576,8 @@ mod tests {
         GameConnectionFilter {
             game_endpoints: HashMap::new(),
             non_game_flows: HashSet::new(),
+            absent_flows: HashMap::new(),
+            last_snapshot: None,
             pid_cache: HashMap::new(),
             process_names: GAME_PROCESS_NAMES.iter().copied().collect(),
             snapshot,
@@ -540,7 +664,7 @@ mod tests {
         ));
         filter.pid_cache.insert(999, None);
 
-        filter.refresh();
+        filter.refresh(Instant::now());
 
         assert_eq!(
             filter.endpoint([10, 0, 0, 1], 40000),
@@ -567,5 +691,79 @@ mod tests {
 
         assert_eq!(filter.classify(server()), Verdict::NonGame);
         assert_eq!(snapshot_calls(), 1);
+    }
+
+    #[test]
+    fn alternating_absent_flows_refresh_once_each() {
+        reset_calls();
+        let mut filter = filter_with_snapshot(empty_snapshot);
+
+        for _ in 0..10 {
+            assert_eq!(filter.classify(server()), Verdict::NonGame);
+            assert_eq!(
+                filter.classify(Server::new([30, 0, 0, 1], 1, [40, 0, 0, 1], 2)),
+                Verdict::NonGame
+            );
+        }
+
+        assert_eq!(snapshot_calls(), 2);
+    }
+
+    #[test]
+    fn forget_flow_clears_absent_verdict() {
+        reset_calls();
+        let mut filter = filter_with_snapshot(empty_snapshot);
+        assert_eq!(filter.classify(server()), Verdict::NonGame);
+
+        filter.forget_flow(reversed_server());
+        assert_eq!(filter.classify(server()), Verdict::NonGame);
+
+        assert_eq!(snapshot_calls(), 2);
+    }
+
+    /// A failed snapshot (or one taken before the game's row appeared) holds
+    /// a game connection back only until the next re-check, whatever other
+    /// traffic does meanwhile.
+    #[test]
+    fn absent_flow_is_rechecked_after_interval() {
+        reset_calls();
+        let mut filter = filter_with_snapshot(failing_then_game_snapshot);
+        let start = Instant::now();
+
+        assert_eq!(filter.classify_at(server(), start), Verdict::NonGame);
+        assert_eq!(
+            filter.classify_at(server(), start + ABSENT_RECHECK_INTERVAL / 2),
+            Verdict::NonGame
+        );
+        assert_eq!(snapshot_calls(), 1);
+
+        assert_eq!(
+            filter.classify_at(server(), start + ABSENT_RECHECK_INTERVAL),
+            Verdict::Game(Distribution::Star)
+        );
+        assert_eq!(snapshot_calls(), 2);
+        assert!(filter.absent_flows.is_empty());
+    }
+
+    #[test]
+    fn absent_flows_share_one_recheck_per_interval() {
+        reset_calls();
+        let mut filter = filter_with_snapshot(empty_snapshot);
+        let start = Instant::now();
+        let flows: Vec<Server> = (1..=5)
+            .map(|port| Server::new([30, 0, 0, 1], port, [40, 0, 0, 1], 2))
+            .collect();
+        for flow in &flows {
+            assert_eq!(filter.classify_at(*flow, start), Verdict::NonGame);
+        }
+        assert_eq!(snapshot_calls(), 5);
+
+        let later = start + ABSENT_RECHECK_INTERVAL;
+        for _ in 0..3 {
+            for flow in &flows {
+                assert_eq!(filter.classify_at(*flow, later), Verdict::NonGame);
+            }
+        }
+        assert_eq!(snapshot_calls(), 6);
     }
 }

@@ -8,7 +8,7 @@ use bytes::Bytes;
 use log::debug;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
@@ -39,6 +39,8 @@ pub struct CaptureEmitter {
     cancellation: CancellationToken,
     outstanding: Arc<AtomicUsize>,
     next_sequence: u64,
+    /// Total time spent waiting on a command fence or a full decode queue.
+    blocked: Duration,
 }
 
 impl CaptureEmitter {
@@ -52,11 +54,20 @@ impl CaptureEmitter {
             cancellation,
             outstanding,
             next_sequence: 1,
+            blocked: Duration::ZERO,
         }
     }
 
     pub fn is_stopped(&self) -> bool {
         self.cancellation.is_cancelled() || self.sender.is_closed()
+    }
+
+    /// Total time emits have waited on downstream so far. The caller cannot
+    /// read its own input meanwhile, so timeouts that wait for input (TCP
+    /// holes) must not count it.
+    #[must_use]
+    pub fn blocked_time(&self) -> Duration {
+        self.blocked
     }
 
     /// Emits a decoded frame with bounded backpressure. Queue saturation never
@@ -173,7 +184,32 @@ impl CaptureEmitter {
         key: PacketKey,
         payload: Bytes,
     ) -> bool {
-        if !reserve_outstanding(&self.outstanding, &self.cancellation) {
+        let mut waiting_since = None;
+        let sent = self.send_envelope(
+            stream_id,
+            stream_epoch,
+            direction,
+            key,
+            payload,
+            &mut waiting_since,
+        );
+        if let Some(since) = waiting_since {
+            self.blocked += since.elapsed();
+        }
+        sent
+    }
+
+    /// `waiting_since` is set when the first wait starts.
+    fn send_envelope(
+        &mut self,
+        stream_id: u64,
+        stream_epoch: u64,
+        direction: PacketDirection,
+        key: PacketKey,
+        payload: Bytes,
+        waiting_since: &mut Option<Instant>,
+    ) -> bool {
+        if !reserve_outstanding(&self.outstanding, &self.cancellation, waiting_since) {
             return false;
         }
         let sequence = self.next_sequence;
@@ -200,6 +236,7 @@ impl CaptureEmitter {
                 Ok(()) => return true,
                 Err(mpsc::error::TrySendError::Full(returned)) => {
                     envelope = returned;
+                    waiting_since.get_or_insert_with(Instant::now);
                     std::thread::sleep(BACKPRESSURE_POLL_INTERVAL);
                 }
                 Err(mpsc::error::TrySendError::Closed(_)) => {
@@ -211,13 +248,18 @@ impl CaptureEmitter {
     }
 }
 
-fn reserve_outstanding(outstanding: &AtomicUsize, cancellation: &CancellationToken) -> bool {
+fn reserve_outstanding(
+    outstanding: &AtomicUsize,
+    cancellation: &CancellationToken,
+    waiting_since: &mut Option<Instant>,
+) -> bool {
     loop {
         if cancellation.is_cancelled() {
             return false;
         }
         let current = outstanding.load(Ordering::Acquire);
         if current & CAPTURE_PIPELINE_FENCE != 0 {
+            waiting_since.get_or_insert_with(Instant::now);
             std::thread::sleep(BACKPRESSURE_POLL_INTERVAL);
             continue;
         }
@@ -441,5 +483,26 @@ mod tests {
         cancellation.cancel();
         assert!(!emitter.emit_reassembly_reset(7, 1));
         assert_eq!(outstanding.load(Ordering::Acquire), 1);
+    }
+
+    #[test]
+    fn fence_wait_counts_as_blocked_time() {
+        let (sender, _receiver) = mpsc::channel(8);
+        let outstanding = Arc::new(AtomicUsize::new(0));
+        let mut emitter =
+            CaptureEmitter::new(sender, CancellationToken::new(), Arc::clone(&outstanding));
+        assert!(emitter.emit_reassembly_reset(7, 1));
+        assert_eq!(emitter.blocked_time(), Duration::ZERO);
+
+        outstanding.fetch_or(CAPTURE_PIPELINE_FENCE, Ordering::AcqRel);
+        let gate = Arc::clone(&outstanding);
+        let release = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(60));
+            gate.fetch_and(!CAPTURE_PIPELINE_FENCE, Ordering::AcqRel);
+        });
+        assert!(emitter.emit_reassembly_reset(7, 1));
+        release.join().expect("release thread");
+
+        assert!(emitter.blocked_time() >= Duration::from_millis(30));
     }
 }

@@ -1,9 +1,13 @@
+use crate::packets::capture_source::{
+    CaptureError, CapturedPacket, PacketFormat, PacketSource, SourceDrops,
+};
 use libloading::{Library, Symbol};
 use log::info;
 use std::ffi::{CStr, CString};
 use std::ptr;
 use std::sync::Arc;
 use std::sync::OnceLock;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 // Type definitions for pcap functions
 type PcapFindAllDevs = unsafe extern "C" fn(*mut *mut PcapIf, *mut i8) -> i32;
@@ -24,12 +28,26 @@ type PcapFreeCode = unsafe extern "C" fn(*mut BpfProgram);
 type PcapSetImmediateMode = unsafe extern "C" fn(*mut PcapT, i32) -> i32;
 type PcapHandler = unsafe extern "C" fn(*mut u8, *const PcapPkthdr, *const u8);
 type PcapDispatch = unsafe extern "C" fn(*mut PcapT, i32, PcapHandler, *mut u8) -> i32;
+type PcapStats = unsafe extern "C" fn(*mut PcapT, *mut PcapStat) -> i32;
 
 const NPCAP_SNAPLEN: i32 = 65_536;
-const NPCAP_PROMISC: i32 = 1;
+/// Game connections are identified through this host's TCP table, so other
+/// hosts' traffic is always discarded; promiscuous mode would only add noise.
+const NPCAP_PROMISC: i32 = 0;
 const NPCAP_TIMEOUT_MS: i32 = 1_000;
 const NPCAP_BUFFER_SIZE: i32 = 64 * 1024 * 1024;
 const NPCAP_IMMEDIATE: i32 = 1;
+/// IPv4 TCP outside well-known ports, keeping only segments that carry
+/// payload or SYN/FIN/RST (the reassembler ignores other empty segments).
+const NPCAP_FILTER: &str = "ip and tcp and not portrange 0-1000 and \
+(tcp[tcpflags] & (tcp-syn|tcp-fin|tcp-rst) != 0 or \
+(ip[2:2] - ((ip[0]&0xf)<<2) - ((tcp[12]&0xf0)>>2)) != 0)";
+
+// Common libpcap datalink constants we care about.
+const DLT_NULL: i32 = 0;
+const DLT_EN10MB: i32 = 1;
+const DLT_RAW: i32 = 12;
+const DLT_LOOP: i32 = 108;
 
 #[repr(C)]
 pub struct PcapIf {
@@ -54,6 +72,19 @@ pub struct PcapPkthdr {
     pub ts: libc::timeval,
     pub caplen: u32,
     pub len: u32,
+}
+
+/// `struct pcap_stat`. Npcap appends Windows-only counters after the three
+/// portable ones; they are reserved here so the call never writes past it.
+#[repr(C)]
+#[derive(Default)]
+struct PcapStat {
+    _ps_recv: u32,
+    ps_drop: u32,
+    ps_ifdrop: u32,
+    _ps_capt: u32,
+    _ps_sent: u32,
+    _ps_netdrop: u32,
 }
 
 #[repr(C)]
@@ -158,8 +189,10 @@ pub struct NpcapCapture {
     fn_get_err: PcapGetErr,
     fn_close: PcapClose,
     fn_dispatch: PcapDispatch,
+    fn_stats: Option<PcapStats>,
 }
 
+// SAFETY: the pcap handle is only used by the thread that owns this value.
 unsafe impl Send for NpcapCapture {}
 
 impl NpcapCapture {
@@ -224,6 +257,8 @@ impl NpcapCapture {
                 .lib
                 .get::<PcapDispatch>(b"pcap_dispatch")
                 .map_err(|e| e.to_string())?;
+            let fn_stats: Option<PcapStats> =
+                context.lib.get::<PcapStats>(b"pcap_stats").ok().map(|f| *f);
 
             let device_c = CString::new(device_name).map_err(|e| e.to_string())?;
             let mut errbuf = [0i8; 256];
@@ -291,7 +326,7 @@ impl NpcapCapture {
                     *set_filter,
                     *free_code,
                     *get_err,
-                    "tcp and not portrange 0-1000",
+                    NPCAP_FILTER,
                 )?;
 
                 Ok(())
@@ -309,7 +344,7 @@ impl NpcapCapture {
                 NPCAP_SNAPLEN,
                 NPCAP_TIMEOUT_MS,
                 NPCAP_IMMEDIATE,
-                "tcp and not portrange 0-1000"
+                NPCAP_FILTER
             );
 
             let data_link = data_link_fn(handle);
@@ -329,8 +364,22 @@ impl NpcapCapture {
                 fn_get_err,
                 fn_close,
                 fn_dispatch,
+                fn_stats,
             })
         }
+    }
+
+    /// Cumulative drop counters from `pcap_stats`.
+    pub fn stats(&self) -> Option<SourceDrops> {
+        let stats_fn = self.fn_stats?;
+        let mut stat = PcapStat::default();
+        // SAFETY: `handle` is an activated pcap handle and `stat` is a valid,
+        // writable `pcap_stat` (with room for the Windows extension fields).
+        let result = unsafe { stats_fn(self.handle, &mut stat) };
+        (result == 0).then_some(SourceDrops {
+            buffer: u64::from(stat.ps_drop),
+            interface: u64::from(stat.ps_ifdrop),
+        })
     }
 
     pub fn datalink(&self) -> i32 {
@@ -365,20 +414,21 @@ impl NpcapCapture {
 
     /// Dispatch up to `max` packets via a callback, returning the number processed.
     ///
-    /// The callback receives the raw packet bytes (lifetime limited to the call).
-    /// Pass `max = -1` to drain the entire kernel buffer in one syscall.
+    /// The callback receives the raw packet bytes (lifetime limited to the call)
+    /// and the capture time from the packet header, in microseconds since the
+    /// Unix epoch. Pass `max = -1` to drain the entire kernel buffer in one syscall.
     ///
     /// # Safety
     /// The `&[u8]` passed to `on_packet` is only valid for the duration of the
     /// callback invocation. The closure **must not** store the slice beyond return.
     /// Panics inside `on_packet` are caught via `catch_unwind` to avoid UB across
     /// the FFI boundary.
-    pub fn dispatch_batch<F: FnMut(&[u8])>(
+    pub fn dispatch_batch<F: FnMut(&[u8], i64)>(
         &self,
         max: i32,
         on_packet: &mut F,
     ) -> Result<i32, String> {
-        unsafe extern "C" fn trampoline<F: FnMut(&[u8])>(
+        unsafe extern "C" fn trampoline<F: FnMut(&[u8], i64)>(
             user: *mut u8,
             header: *const PcapPkthdr,
             data: *const u8,
@@ -389,8 +439,10 @@ impl NpcapCapture {
                 unsafe {
                     let f = &mut *(user as *mut F);
                     let len = (*header).caplen as usize;
+                    let ts = (*header).ts;
+                    let captured_us = i64::from(ts.tv_sec) * 1_000_000 + i64::from(ts.tv_usec);
                     let slice = std::slice::from_raw_parts(data, len);
-                    f(slice);
+                    f(slice, captured_us);
                 }
             }));
             if result.is_err() {
@@ -467,5 +519,139 @@ impl Drop for NpcapCapture {
         unsafe {
             (self.fn_close)(self.handle);
         }
+    }
+}
+
+/// Npcap capture on one device, normalised to raw IP or Ethernet frames.
+pub struct NpcapSource {
+    capture: NpcapCapture,
+}
+
+impl NpcapSource {
+    pub fn open(device: &str) -> Result<Self, CaptureError> {
+        if device.trim().is_empty() {
+            return Err(CaptureError::Npcap("device is empty".to_string()));
+        }
+
+        let capture = NpcapCapture::new(device).map_err(CaptureError::Npcap)?;
+        info!(target: "app::capture", "Npcap handle opened device={}", device);
+        Ok(Self { capture })
+    }
+}
+
+impl PacketSource for NpcapSource {
+    fn pump(
+        &mut self,
+        on_packet: &mut dyn FnMut(CapturedPacket<'_>),
+    ) -> Result<usize, CaptureError> {
+        let datalink = self.capture.datalink();
+        let format = packet_format_for_datalink(datalink);
+        // Every packet of this dispatch was buffered before the call, so one
+        // clock anchor serves the whole batch.
+        let anchor = ClockAnchor::now();
+        let mut delivered = 0usize;
+        self.capture
+            .dispatch_batch(-1, &mut |raw_pkt: &[u8], captured_us: i64| {
+                let Some(data) = normalize_slice_for_datalink(raw_pkt, datalink) else {
+                    return;
+                };
+                delivered += 1;
+                on_packet(CapturedPacket {
+                    format,
+                    data,
+                    captured_at: anchor.instant_for_wall_us(captured_us),
+                });
+            })
+            .map_err(CaptureError::Npcap)?;
+        Ok(delivered)
+    }
+
+    fn drops(&mut self) -> Option<SourceDrops> {
+        self.capture.stats()
+    }
+}
+
+/// A matching pair of `Instant` and wall-clock readings, used to map pcap
+/// header timestamps (wall clock) onto `Instant`.
+#[derive(Clone, Copy)]
+struct ClockAnchor {
+    instant: Instant,
+    wall_us: i64,
+}
+
+impl ClockAnchor {
+    fn now() -> Self {
+        Self {
+            instant: Instant::now(),
+            wall_us: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|elapsed| i64::try_from(elapsed.as_micros()).unwrap_or(i64::MAX))
+                .unwrap_or_default(),
+        }
+    }
+
+    /// Times after the anchor (clock adjustments) map to the anchor itself.
+    fn instant_for_wall_us(self, captured_us: i64) -> Instant {
+        let age_us = u64::try_from(self.wall_us.saturating_sub(captured_us)).unwrap_or(0);
+        self.instant
+            .checked_sub(Duration::from_micros(age_us))
+            .unwrap_or(self.instant)
+    }
+}
+
+fn packet_format_for_datalink(datalink: i32) -> PacketFormat {
+    match datalink {
+        DLT_EN10MB => PacketFormat::Ethernet,
+        DLT_RAW | DLT_NULL | DLT_LOOP => PacketFormat::RawIp,
+        other => {
+            log_unsupported_datalink(other);
+            PacketFormat::Unsupported
+        }
+    }
+}
+
+#[inline]
+fn normalize_slice_for_datalink(data: &[u8], datalink: i32) -> Option<&[u8]> {
+    match datalink {
+        DLT_EN10MB | DLT_RAW => Some(data),
+        DLT_NULL | DLT_LOOP => {
+            if data.len() <= 4 {
+                return None;
+            }
+            let family = u32::from_ne_bytes([data[0], data[1], data[2], data[3]]);
+            match family {
+                2 => Some(&data[4..]),
+                23 | 24 => None,
+                other => {
+                    log_unsupported_loopback_family(other, datalink);
+                    None
+                }
+            }
+        }
+        other => {
+            log_unsupported_datalink(other);
+            None
+        }
+    }
+}
+
+fn log_unsupported_loopback_family(family: u32, datalink: i32) {
+    static LOGGED_FAMILY: OnceLock<u32> = OnceLock::new();
+    if LOGGED_FAMILY.set(family).is_ok() {
+        log::warn!(
+            "Unsupported DLT_NULL/LOOP family {} (datalink {}), dropping packets",
+            family,
+            datalink
+        );
+    }
+}
+
+fn log_unsupported_datalink(datalink: i32) {
+    static LOGGED_DLT: OnceLock<i32> = OnceLock::new();
+    if LOGGED_DLT.set(datalink).is_ok() {
+        log::warn!(
+            "Unsupported Npcap datalink type {}, dropping packets",
+            datalink
+        );
     }
 }
