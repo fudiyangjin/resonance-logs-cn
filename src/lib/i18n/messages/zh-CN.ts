@@ -2809,6 +2809,12 @@ export const zhCNMessages = {
     "可使用 ${阶数}（或 ${remodelLevel}）插入幻想阶数，如「蒂娜${阶数}已生效」在5阶时播报为「蒂娜5阶已生效」",
   "voice.binding.pickPhrase": "选择短语",
   "voice.binding.secondsBefore": "提前 {seconds} 秒",
+  "voice.binding.finishBefore": "提前念完",
+  "voice.binding.finishBefore.hint":
+    "按语音长度提前开口，在剩 {seconds} 秒时念完；不勾选则在剩 {seconds} 秒时才开始念",
+  "voice.binding.countdown": "倒数",
+  "voice.binding.countdown.hint":
+    "语音念完后逐秒倒数（最多从 10 开始），与其他语音同时播放；对象被刷新或消失时立即停止",
   "voice.binding.tryPlay": "试听",
   "voice.binding.pendingGeneration": "待生成",
   "voice.binding.playFailed": "播放失败，请检查语音模型是否已安装",

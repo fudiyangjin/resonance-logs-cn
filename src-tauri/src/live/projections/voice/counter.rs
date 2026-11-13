@@ -1,11 +1,11 @@
 //! Counter-slot subjects: a threshold edge when a slot's count reaches its
 //! target, and a lead cue before the slot's freeze window ends.
 
-use super::deadline::{Lead, TimerClass};
+use super::deadline::TimerClass;
 use super::rule_book::CounterCue;
 use super::{VoiceProjection, VoiceSyncReason};
 use crate::live::counter::engine::{CounterEngine, CounterNamespace};
-use crate::live::runtime::events::{MonoTimeMs, VoiceLeadSubject, VoiceTimer};
+use crate::live::runtime::events::{MonoTimeMs, VoiceLeadSubject};
 use crate::live::runtime::scheduler::DeadlineScheduler;
 
 impl VoiceProjection {
@@ -40,24 +40,21 @@ impl VoiceProjection {
                         crossed_now.push(rule.handle);
                     }
                 }
-                CounterCue::Freeze { lead_ms } => {
+                CounterCue::Freeze(lead) => {
                     // Freeze windows are wall-clock; convert the remaining
                     // time onto the monotonic axis the scheduler runs on.
                     let Some(expiry_wall) = slot.and_then(|slot| slot.freeze_until_ms) else {
                         continue;
                     };
                     let remaining = u64::try_from(expiry_wall.saturating_sub(now_ms)).unwrap_or(0);
-                    self.leads.push(Lead {
-                        timer: VoiceTimer::Lead {
-                            rule: rule.handle,
-                            subject: VoiceLeadSubject::CounterFreeze {
-                                rule_id: rule.rule_id,
-                                slot_id: rule.slot_id,
-                            },
+                    lead.push_timers(
+                        VoiceLeadSubject::CounterFreeze {
+                            rule_id: rule.rule_id,
+                            slot_id: rule.slot_id,
                         },
-                        expires: now_mono.saturating_add(remaining),
-                        lead_ms,
-                    });
+                        now_mono.saturating_add(remaining),
+                        &mut self.leads,
+                    );
                 }
             }
         }

@@ -65,6 +65,8 @@ export type ResolvedPhrase = {
   language: VoiceLanguage;
   /** The phrase has an active asset to play. */
   hasAudio?: boolean;
+  /** Length of that asset; 0 or absent when unknown. */
+  durationMs?: number;
   updatedAtMs?: number;
 };
 
@@ -75,6 +77,51 @@ export function secondsBeforeOf(config: VoiceEventConfigAny): number {
   const raw =
     "secondsBefore" in config ? config.secondsBefore : DEFAULT_SECONDS_BEFORE;
   return Math.max(1, Math.round(raw));
+}
+
+/** Highest number a countdown starts from (`MAX_COUNTDOWN_FROM` in Rust). */
+export const MAX_COUNTDOWN_FROM = 10;
+/** Pause between the end of the phrase and the first counted digit. */
+const COUNTDOWN_GAP_MS = 200;
+
+export type LeadTiming = {
+  /** How much earlier than `secondsBefore` the phrase starts. */
+  leadAdvanceMs: number;
+  /** The digit the countdown starts from; 0 does not count. */
+  countdownFrom: number;
+};
+
+/**
+ * When an expiring event speaks, from its two switches and the length of
+ * its audio. `finishBefore` starts the phrase early enough to be done at
+ * `secondsBefore`; `countdown` then counts whatever whole seconds are left
+ * once the phrase is over, so a digit never talks over the phrase it
+ * follows. An unknown length counts as 0.
+ */
+export function leadTiming(
+  config: VoiceEventConfigAny,
+  secondsBefore: number,
+  durationMs: number,
+): LeadTiming {
+  const expiring = "secondsBefore" in config ? config : null;
+  const duration = Math.max(0, Math.round(durationMs));
+  const finishBefore = expiring?.finishBefore === true && duration > 0;
+  if (!expiring?.countdown) {
+    return { leadAdvanceMs: finishBefore ? duration : 0, countdownFrom: 0 };
+  }
+  // Finished ahead of `secondsBefore`, the phrase leaves a short pause and
+  // the count starts at the top. Otherwise it starts at `secondsBefore`
+  // and the count picks up at the first whole second after it ends.
+  const secondsLeftAfterPhrase = finishBefore
+    ? secondsBefore
+    : Math.floor((secondsBefore * 1000 - duration) / 1000);
+  return {
+    leadAdvanceMs: finishBefore ? duration + COUNTDOWN_GAP_MS : 0,
+    countdownFrom: Math.max(
+      0,
+      Math.min(MAX_COUNTDOWN_FROM, secondsLeftAfterPhrase),
+    ),
+  };
 }
 
 export type CollectOptions = {
@@ -152,6 +199,64 @@ export function phraseRequests(
 }
 
 /**
+ * Spoken text of countdown digits 1-10, per language. Must match the
+ * bundled prompts in `src-tauri/voice-prompts/prompts.json` so the bundled
+ * recording binds to the phrase.
+ */
+const COUNTDOWN_DIGIT_TEXT: Record<VoiceLanguage, readonly string[]> = {
+  zhCn: ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"],
+  enUs: [
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+  ],
+  jaJp: [
+    "いち",
+    "に",
+    "さん",
+    "よん",
+    "ご",
+    "ろく",
+    "なな",
+    "はち",
+    "きゅう",
+    "じゅう",
+  ],
+};
+
+/** Fixed catalog name of countdown digit `n` (`prompts.rs`). */
+export function countdownPhraseName(n: number): string {
+  return `auto:voice:countdown:${n}`;
+}
+
+/**
+ * The digit phrases a countdown speaks, in `language`, when any binding
+ * counts down. They are shared by every countdown and follow the app
+ * language, like the bundled alert prompts.
+ */
+export function countdownPhraseRequests(
+  bindings: readonly VoiceBinding[],
+  language: VoiceLanguage,
+): PhraseRequest[] {
+  const counts = bindings.some(
+    (binding) => "countdown" in binding.config && binding.config.countdown,
+  );
+  if (!counts) return [];
+  return COUNTDOWN_DIGIT_TEXT[language].map((text, index) => ({
+    name: countdownPhraseName(index + 1),
+    text,
+    language,
+  }));
+}
+
+/**
  * How to resolve a phrase name: `exact` (status views) finds that phrase or
  * nothing; `playable` (compiled rules) falls back, while the phrase does not
  * exist yet, to the newest phrase of the same binding slot that has audio —
@@ -195,6 +300,29 @@ function phraseIdFor(
   if (resolution === "exact") return null;
   const slot = managedSlotOf(name);
   return slot ? (playableBySlot(index).get(slot)?.phraseId ?? null) : null;
+}
+
+/**
+ * Length of the audio a binding's base phrase plays: its own, or while it
+ * has none, the same-slot phrase the backend falls back to. 0 when unknown.
+ */
+export function playableDurationMs(
+  binding: VoiceBinding,
+  index: PhraseIndex,
+): number {
+  if (binding.phrase.source === "phrase") {
+    const phraseId = binding.phrase.phraseId.trim();
+    const picked = Object.values(index).find(
+      (phrase) => phrase.phraseId === phraseId,
+    );
+    return picked?.durationMs ?? 0;
+  }
+  const base = binding.phrases.find((phrase) => !phrase.variant);
+  if (!base) return 0;
+  const exact = index[base.name];
+  if (exact?.hasAudio) return exact.durationMs ?? 0;
+  const slot = managedSlotOf(base.name);
+  return (slot ? playableBySlot(index).get(slot)?.durationMs : 0) ?? 0;
 }
 
 /** Phrase id a binding compiles to (its base phrase). */
@@ -244,6 +372,16 @@ export function compileVoiceRules(
     if (binding.tiered) {
       const byTier = resolveTierPhraseIds(binding, index);
       rule.phraseIdByTier = Object.keys(byTier).length > 0 ? byTier : null;
+    }
+    if (binding.trigger.event.kind === "expiringIn") {
+      const timing = leadTiming(
+        binding.config,
+        binding.trigger.event.secondsBefore,
+        playableDurationMs(binding, index),
+      );
+      // Left out when 0, the backend's default.
+      if (timing.leadAdvanceMs > 0) rule.leadAdvanceMs = timing.leadAdvanceMs;
+      if (timing.countdownFrom > 0) rule.countdownFrom = timing.countdownFrom;
     }
     rules.push(rule);
   }

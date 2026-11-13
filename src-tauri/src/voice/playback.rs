@@ -8,9 +8,9 @@ use std::time::{Duration, Instant};
 use log::warn;
 
 use super::error::{VoiceError, VoiceResult};
-use super::models::{VoiceAssetMeta, VoiceAssetSource, VoiceCueIntent};
+use super::models::{CountdownTick, VoiceAssetMeta, VoiceAssetSource, VoiceCueIntent};
 use super::now_ms;
-use super::player::QueuedCue;
+use super::player::{QueuedCue, QueuedTick};
 use super::service::VoiceService;
 use super::types::{AssetId, PhraseId};
 use super::{catalog, models, phrase_name, presets, prompts};
@@ -160,6 +160,32 @@ impl VoiceService {
             stale_at: intent
                 .valid_for_ms
                 .and_then(|ms| Instant::now().checked_add(Duration::from_millis(ms))),
+        });
+    }
+
+    /// Plays one countdown digit on the countdown track, over whatever the
+    /// cue queue is speaking. The digit is a bundled prompt the user may
+    /// have replaced with a take of their own; without playable audio it
+    /// falls back to the built-in tone, so the beat is still audible.
+    pub fn enqueue_tick(&self, tick: CountdownTick) {
+        let name = prompts::countdown_phrase_name(tick.n);
+        let audio = {
+            let catalog = self.inner.catalog.lock();
+            catalog
+                .phrases
+                .iter()
+                .find(|phrase| phrase.name == name)
+                .and_then(|phrase| {
+                    catalog_audio_ref(&catalog, &phrase.id).map(|audio| (phrase.id.clone(), audio))
+                })
+        };
+        let wav_path =
+            audio.and_then(|(phrase_id, audio)| self.audio_ref_wav_path(&phrase_id, audio));
+        self.inner.player.enqueue_tick(QueuedTick {
+            countdown: tick.countdown,
+            priority: tick.priority,
+            wav_path,
+            stale_at: Instant::now().checked_add(Duration::from_millis(tick.valid_for_ms)),
         });
     }
 

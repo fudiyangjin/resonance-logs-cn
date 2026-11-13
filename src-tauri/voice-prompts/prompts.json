@@ -51,6 +51,176 @@
           "file": "alerts/teamVote.ja-JP.wav"
         }
       }
+    },
+    {
+      "key": "voice:countdown:1",
+      "variants": {
+        "zh-CN": {
+          "text": "一",
+          "file": "countdown/1.zh-CN.wav"
+        },
+        "en-US": {
+          "text": "one",
+          "file": "countdown/1.en-US.wav"
+        },
+        "ja-JP": {
+          "text": "いち",
+          "file": "countdown/1.ja-JP.wav"
+        }
+      }
+    },
+    {
+      "key": "voice:countdown:2",
+      "variants": {
+        "zh-CN": {
+          "text": "二",
+          "file": "countdown/2.zh-CN.wav"
+        },
+        "en-US": {
+          "text": "two",
+          "file": "countdown/2.en-US.wav"
+        },
+        "ja-JP": {
+          "text": "に",
+          "file": "countdown/2.ja-JP.wav"
+        }
+      }
+    },
+    {
+      "key": "voice:countdown:3",
+      "variants": {
+        "zh-CN": {
+          "text": "三",
+          "file": "countdown/3.zh-CN.wav"
+        },
+        "en-US": {
+          "text": "three",
+          "file": "countdown/3.en-US.wav"
+        },
+        "ja-JP": {
+          "text": "さん",
+          "file": "countdown/3.ja-JP.wav"
+        }
+      }
+    },
+    {
+      "key": "voice:countdown:4",
+      "variants": {
+        "zh-CN": {
+          "text": "四",
+          "file": "countdown/4.zh-CN.wav"
+        },
+        "en-US": {
+          "text": "four",
+          "file": "countdown/4.en-US.wav"
+        },
+        "ja-JP": {
+          "text": "よん",
+          "file": "countdown/4.ja-JP.wav"
+        }
+      }
+    },
+    {
+      "key": "voice:countdown:5",
+      "variants": {
+        "zh-CN": {
+          "text": "五",
+          "file": "countdown/5.zh-CN.wav"
+        },
+        "en-US": {
+          "text": "five",
+          "file": "countdown/5.en-US.wav"
+        },
+        "ja-JP": {
+          "text": "ご",
+          "file": "countdown/5.ja-JP.wav"
+        }
+      }
+    },
+    {
+      "key": "voice:countdown:6",
+      "variants": {
+        "zh-CN": {
+          "text": "六",
+          "file": "countdown/6.zh-CN.wav"
+        },
+        "en-US": {
+          "text": "six",
+          "file": "countdown/6.en-US.wav"
+        },
+        "ja-JP": {
+          "text": "ろく",
+          "file": "countdown/6.ja-JP.wav"
+        }
+      }
+    },
+    {
+      "key": "voice:countdown:7",
+      "variants": {
+        "zh-CN": {
+          "text": "七",
+          "file": "countdown/7.zh-CN.wav"
+        },
+        "en-US": {
+          "text": "seven",
+          "file": "countdown/7.en-US.wav"
+        },
+        "ja-JP": {
+          "text": "なな",
+          "file": "countdown/7.ja-JP.wav"
+        }
+      }
+    },
+    {
+      "key": "voice:countdown:8",
+      "variants": {
+        "zh-CN": {
+          "text": "八",
+          "file": "countdown/8.zh-CN.wav"
+        },
+        "en-US": {
+          "text": "eight",
+          "file": "countdown/8.en-US.wav"
+        },
+        "ja-JP": {
+          "text": "はち",
+          "file": "countdown/8.ja-JP.wav"
+        }
+      }
+    },
+    {
+      "key": "voice:countdown:9",
+      "variants": {
+        "zh-CN": {
+          "text": "九",
+          "file": "countdown/9.zh-CN.wav"
+        },
+        "en-US": {
+          "text": "nine",
+          "file": "countdown/9.en-US.wav"
+        },
+        "ja-JP": {
+          "text": "きゅう",
+          "file": "countdown/9.ja-JP.wav"
+        }
+      }
+    },
+    {
+      "key": "voice:countdown:10",
+      "variants": {
+        "zh-CN": {
+          "text": "十",
+          "file": "countdown/10.zh-CN.wav"
+        },
+        "en-US": {
+          "text": "ten",
+          "file": "countdown/10.en-US.wav"
+        },
+        "ja-JP": {
+          "text": "じゅう",
+          "file": "countdown/10.ja-JP.wav"
+        }
+      }
     }
   ]
 }

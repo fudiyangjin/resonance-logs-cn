@@ -1780,7 +1780,18 @@ export type VoiceRule = { id: string; enabled: boolean; trigger: VoiceTrigger; p
 /**
  * 0 = lowest, 255 = highest. Higher priority can interrupt lower priority playback.
  */
-priority: number; cooldownMs: number; phraseIdByTier?: Partial<{ [key in number]: string }> | null }
+priority: number; cooldownMs: number; phraseIdByTier?: Partial<{ [key in number]: string }> | null;
+/**
+ * `ExpiringIn` only: start this much earlier than `seconds_before`, so
+ * a phrase of that length has finished by then. 0 starts exactly at
+ * `seconds_before`.
+ */
+leadAdvanceMs?: number;
+/**
+ * `ExpiringIn` only: count the last seconds down from this number
+ * (one digit per second, on the second). 0 does not count.
+ */
+countdownFrom?: number }
 /**
  * Persisted + hot-synced runtime settings for the voice feature.
  */

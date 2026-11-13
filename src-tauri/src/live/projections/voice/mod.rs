@@ -3,7 +3,8 @@
 //! Every stateful trigger follows one pattern. Edges (buff gained/lost,
 //! entity appeared/gone, skill charge refilled, counter threshold reached)
 //! come from diffing a subject's state against what the projection saw
-//! last. Lead cues ("N seconds left") are derived as the complete set of
+//! last. Lead cues ("N seconds left") and the countdown digits that may
+//! follow them are derived as the complete set of
 //! timers the subjects should have right now and handed to the
 //! [`DeadlineTracker`], which arms, moves and cancels to match — a subject
 //! that is gone simply drops out of that set, so there is no separate
@@ -23,11 +24,12 @@ use crate::live::projections::monster_skill_watch::is_world_monster;
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
     BatchId, BuffTransition, DomainEnvelope, DomainEvent, MonoTimeMs, SkillPhase, TimerKey,
-    VoiceRuleHandle, VoiceTimer,
+    VoiceLeadSubject, VoiceRuleHandle, VoiceTimer,
 };
 use crate::live::runtime::scheduler::DeadlineScheduler;
 use crate::voice::models::{
-    AlertKind, EntityOwnerScope, VoiceCueIntent, VoiceEvent, VoiceRule, VoiceRuntimeSnapshot,
+    AlertKind, CountdownId, CountdownTick, EntityOwnerScope, VoiceCueIntent, VoiceEvent, VoiceRule,
+    VoiceRuntimeSnapshot,
 };
 
 mod boss;
@@ -41,7 +43,7 @@ mod skill;
 mod tests;
 
 use buff::{BuffAggregates, collect_buff_aggregates};
-use deadline::{DeadlineTracker, Fire, Lead, TimerClass};
+use deadline::{DeadlineTracker, Fire, Lead, Staleness, TimerClass};
 use rule_book::{RuleBook, SubjectKey};
 use skill::SkillTrack;
 
@@ -85,6 +87,14 @@ impl Seen {
     }
 }
 
+/// One countdown is one rule on one subject, within a rule set.
+fn countdown_id(rule: VoiceRuleHandle, subject: VoiceLeadSubject) -> CountdownId {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    (rule, subject).hash(&mut hasher);
+    CountdownId(hasher.finish())
+}
+
 #[derive(Debug, Default)]
 struct SeenInputs {
     counters: Seen,
@@ -116,6 +126,8 @@ pub struct VoiceProjection {
     seen: SeenInputs,
     /// Cues matched since the last [`Self::take_cues`].
     pending_cues: Vec<VoiceCueIntent>,
+    /// Countdown digits due since the last [`Self::take_ticks`].
+    pending_ticks: Vec<CountdownTick>,
     /// Scratch buffers reused by every derivation so a busy batch does not
     /// allocate per subject.
     leads: Vec<Lead>,
@@ -128,6 +140,12 @@ impl VoiceProjection {
     /// `VoiceService` handle; this projection stays free of Tauri.
     pub fn take_cues(&mut self) -> Vec<VoiceCueIntent> {
         std::mem::take(&mut self.pending_cues)
+    }
+
+    /// Removes the countdown digits due since the last drain. They take
+    /// their own road to the player: a digit never waits in the cue queue.
+    pub fn take_ticks(&mut self) -> Vec<CountdownTick> {
+        std::mem::take(&mut self.pending_ticks)
     }
 
     /// Container reset: a new timer epoch, and every input re-seeds silently
@@ -352,7 +370,25 @@ impl VoiceProjection {
         };
         match timer {
             VoiceTimer::Lead { rule, .. } => {
-                self.fire(rule, now_ms, None, armed.valid_for_ms(fired_at));
+                if let Staleness::Fresh { valid_for_ms } = armed.staleness(fired_at) {
+                    self.fire(rule, now_ms, None, valid_for_ms);
+                }
+            }
+            // A digit bypasses the rule's cooldown: it is part of the cue
+            // the phrase started, not a cue of its own.
+            VoiceTimer::Tick { rule, subject, n } => {
+                if let Staleness::Fresh {
+                    valid_for_ms: Some(valid_for_ms),
+                } = armed.staleness(fired_at)
+                    && let Some(rule_spec) = self.book.get(rule)
+                {
+                    self.pending_ticks.push(CountdownTick {
+                        countdown: countdown_id(rule, subject),
+                        n,
+                        priority: rule_spec.priority,
+                        valid_for_ms,
+                    });
+                }
             }
             // A refill wakeup carries no cue of its own: re-deriving at the
             // refill fires the charge edge and re-aims the lead cues.

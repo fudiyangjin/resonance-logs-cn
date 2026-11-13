@@ -37,7 +37,7 @@ use crate::live::runtime::events::{
 use crate::live::runtime::scheduler::{DeadlineScheduler, DueTimer};
 use crate::live::runtime::segment::SegmentState;
 use crate::live::team_link::{ShareSnapshot, TeamLinkEvent};
-use crate::voice::models::{VoiceCueIntent, VoiceRuntimeSnapshot};
+use crate::voice::models::{CountdownTick, VoiceCueIntent, VoiceRuntimeSnapshot};
 
 /// Topics served by [`EntityMonitorProjection::snapshot`].
 const MONITORED_TOPICS: TopicMask = TopicMask::STATUS
@@ -640,6 +640,11 @@ impl ProjectionSet {
         self.voice.take_cues()
     }
 
+    /// Removes the countdown digits due since the last drain.
+    pub fn take_voice_ticks(&mut self) -> Vec<CountdownTick> {
+        self.voice.take_ticks()
+    }
+
     /// The local share state for the team relay, if it changed since the
     /// last drain. Like voice cues, delivery stays outside the projections.
     pub fn take_team_share(&mut self) -> Option<ShareSnapshot> {
@@ -1108,6 +1113,8 @@ mod tests {
             priority: 0,
             cooldown_ms: 0,
             phrase_id_by_tier: None,
+            lead_advance_ms: 0,
+            countdown_from: 0,
         })
         .collect();
         projections.apply_voice_config(
@@ -1255,6 +1262,8 @@ mod tests {
                     priority: 0,
                     cooldown_ms: 0,
                     phrase_id_by_tier: None,
+                    lead_advance_ms: 0,
+                    countdown_from: 0,
                 }],
                 ..Default::default()
             },

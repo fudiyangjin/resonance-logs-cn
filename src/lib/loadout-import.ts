@@ -276,6 +276,8 @@ const voiceExpiringEventSchema = v.object({
   phrase: voicePhraseBindingSchema,
   priority: v.optional(finiteNumberSchema),
   secondsBefore: finiteNumberSchema,
+  finishBefore: v.optional(v.boolean()),
+  countdown: v.optional(v.boolean()),
 });
 
 const buffVoiceConfigSchema = v.object({

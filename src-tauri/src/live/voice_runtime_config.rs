@@ -83,6 +83,8 @@ mod tests {
                 priority: 3,
                 cooldown_ms: 100,
                 phrase_id_by_tier: None,
+                lead_advance_ms: 0,
+                countdown_from: 0,
             }],
         };
         let json = serde_json::to_string(&snapshot).unwrap();

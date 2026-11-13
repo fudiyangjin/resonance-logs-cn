@@ -530,6 +530,12 @@ pub enum VoiceTimer {
         rule: VoiceRuleHandle,
         subject: VoiceLeadSubject,
     },
+    /// Digit `n` of a countdown: due `n` seconds before the subject expires.
+    Tick {
+        rule: VoiceRuleHandle,
+        subject: VoiceLeadSubject,
+        n: u8,
+    },
     SkillRefill {
         skill_id: i32,
     },

@@ -111,6 +111,14 @@ fn phrase_id(key: &str) -> String {
     format!("builtin_phrase_{}", stable_slug(key))
 }
 
+/// Catalog name of the phrase that speaks countdown digit `n` (manifest key
+/// `voice:countdown:{n}`). Looked up by name: the frontend may have created
+/// the phrase before a build that bundles its recording seeded it.
+#[must_use]
+pub(crate) fn countdown_phrase_name(n: u8) -> String {
+    managed_name(&format!("voice:countdown:{n}"))
+}
+
 fn locale_slug(locale: VoicePresetLocale) -> &'static str {
     match locale {
         VoicePresetLocale::ZhCn => "zh_cn",
@@ -399,6 +407,35 @@ mod tests {
                 let info = super::super::audio::read_wav_info(&path)
                     .unwrap_or_else(|error| panic!("invalid prompt {}: {error}", path.display()));
                 assert!(info.duration_sec > 0.0);
+            }
+        }
+    }
+
+    #[test]
+    fn every_countdown_digit_is_bundled_and_fits_inside_its_second() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("voice-prompts");
+        for n in 1..=super::super::models::MAX_COUNTDOWN_FROM {
+            let name = countdown_phrase_name(n);
+            let prompt = MANIFEST
+                .prompts
+                .iter()
+                .find(|prompt| managed_name(&prompt.key) == name)
+                .unwrap_or_else(|| panic!("no bundled prompt for countdown digit {n}"));
+            for locale in [
+                VoicePresetLocale::ZhCn,
+                VoicePresetLocale::EnUs,
+                VoicePresetLocale::JaJp,
+            ] {
+                let path = root.join(&prompt.variants.get(locale).file);
+                let info = super::super::audio::read_wav_info(&path)
+                    .unwrap_or_else(|error| panic!("invalid digit {}: {error}", path.display()));
+                // The next digit starts a second later and cuts this one off.
+                assert!(
+                    info.duration_sec <= 0.7,
+                    "{} is {:.2}s long",
+                    path.display(),
+                    info.duration_sec
+                );
             }
         }
     }

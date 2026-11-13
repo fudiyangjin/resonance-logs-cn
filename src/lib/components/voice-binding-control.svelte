@@ -3,7 +3,8 @@
    * @file Inline voice-binding control: one collapsible block per subject
    * (a monitored buff / counter slot / boss DBM mechanic), each with
    * a row per configurable event (enabled toggle, phrase source picker,
-   * optional "seconds before" for expiring events, and a preview button).
+   * for expiring events the "seconds before" with its two timing switches
+   * (finish by then / count down), and a preview button).
    * Generated text (auto or custom) also gets a voice picker and a
    * generate button; an alert's auto line is a bundled recording and
    * gets neither.
@@ -249,10 +250,9 @@
     {@const hasKnownPriority = VOICE_PRIORITY_TIERS.some(
       (tier) => tier.value === priority,
     )}
-    {@const seconds =
-      event.expiring && config && "secondsBefore" in config
-        ? config.secondsBefore
-        : 5}
+    {@const expiringConfig =
+      event.expiring && config && "secondsBefore" in config ? config : null}
+    {@const seconds = expiringConfig?.secondsBefore ?? 5}
     {@const autoText = event.autoText(seconds)}
     {@const autoSourceLabelKey =
       event.autoSourceLabelKey ?? "voice.binding.source.auto"}
@@ -335,6 +335,34 @@
                 }
               }}
             />
+            <label
+              class="text-muted-foreground flex items-center gap-1 text-xs"
+              title={t("voice.binding.finishBefore.hint", { seconds })}
+            >
+              <input
+                type="checkbox"
+                checked={expiringConfig?.finishBefore ?? false}
+                onchange={(ev) =>
+                  updateSubjectEvent(subject, event.eventKind, {
+                    finishBefore: ev.currentTarget.checked,
+                  })}
+              />
+              {t("voice.binding.finishBefore")}
+            </label>
+            <label
+              class="text-muted-foreground flex items-center gap-1 text-xs"
+              title={t("voice.binding.countdown.hint")}
+            >
+              <input
+                type="checkbox"
+                checked={expiringConfig?.countdown ?? false}
+                onchange={(ev) =>
+                  updateSubjectEvent(subject, event.eventKind, {
+                    countdown: ev.currentTarget.checked,
+                  })}
+              />
+              {t("voice.binding.countdown")}
+            </label>
           {/if}
 
           <button

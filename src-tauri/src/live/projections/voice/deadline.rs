@@ -30,7 +30,8 @@ impl TimerClass {
     pub(super) const fn of(timer: VoiceTimer) -> Self {
         match timer {
             VoiceTimer::SkillRefill { .. } => Self::SkillRefill,
-            VoiceTimer::Lead { subject, .. } => match subject {
+            // A countdown's digits live and die with the phrase they follow.
+            VoiceTimer::Lead { subject, .. } | VoiceTimer::Tick { subject, .. } => match subject {
                 VoiceLeadSubject::Buff { .. } => Self::Buff,
                 VoiceLeadSubject::BossDbm { .. } => Self::BossDbm,
                 VoiceLeadSubject::CounterFreeze { .. } => Self::CounterFreeze,
@@ -52,11 +53,22 @@ pub(super) struct Lead {
     /// The moment the cue warns about (for a refill wakeup, the refill).
     pub(super) expires: MonoTimeMs,
     pub(super) lead_ms: u64,
+    /// How long past its deadline the cue may still start; later it would
+    /// speak about a moment that has moved on, so it is dropped. `None`
+    /// never goes stale: a cue due at the expiry itself *is* that moment.
+    pub(super) late_ms: Option<u64>,
 }
 
 impl Lead {
     fn deadline(self) -> MonoTimeMs {
         self.expires.saturating_sub(self.lead_ms)
+    }
+
+    /// Whether the cue may still start at `now`. Measured from the exact
+    /// due moment, which — unlike [`Self::deadline`] — may lie before the
+    /// clock's origin.
+    fn staleness(self, now: MonoTimeMs) -> Staleness {
+        Staleness::at(self.late_ms, self.expires, self.lead_ms, now)
     }
 }
 
@@ -65,7 +77,7 @@ impl Lead {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Fire {
     pub(super) rule: VoiceRuleHandle,
-    /// See [`valid_for_ms`].
+    /// See [`Staleness`].
     pub(super) valid_for_ms: Option<u64>,
 }
 
@@ -73,27 +85,46 @@ pub(super) struct Fire {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Armed {
     pub(super) deadline: MonoTimeMs,
-    pub(super) expires: MonoTimeMs,
+    late_ms: Option<u64>,
     /// The reconcile pass that last wanted this timer.
     pass: u32,
 }
 
 impl Armed {
-    /// See [`valid_for_ms`]; `fired_at` is when the timer was delivered.
-    pub(super) fn valid_for_ms(self, fired_at: MonoTimeMs) -> Option<u64> {
-        valid_for_ms(
-            self.expires,
-            self.expires.0.saturating_sub(self.deadline.0),
-            fired_at,
-        )
+    /// Whether the cue may still start at `fired_at`, when the timer was
+    /// delivered.
+    pub(super) fn staleness(self, fired_at: MonoTimeMs) -> Staleness {
+        // An armed deadline was in the future when it was scheduled, so it
+        // is the exact due moment.
+        Staleness::at(self.late_ms, self.deadline, 0, fired_at)
     }
 }
 
-/// How long a lead cue stays worth playing: an "N seconds left" warning
-/// is stale once the moment it warns about has come. A zero-lead cue *is*
-/// that moment, so like an edge it carries no expiry.
-fn valid_for_ms(expires: MonoTimeMs, lead_ms: u64, now: MonoTimeMs) -> Option<u64> {
-    (lead_ms > 0).then(|| expires.0.saturating_sub(now.0))
+/// Whether a cue due at some deadline is still worth starting.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Staleness {
+    /// Still on time; `valid_for_ms` is how much longer it stays so
+    /// (`None` never goes stale), for the wait in the playback queue.
+    Fresh { valid_for_ms: Option<u64> },
+    /// Too late to start.
+    Stale,
+}
+
+impl Staleness {
+    /// For a cue due `lead_ms` before `expires` that may start `late_ms`
+    /// late.
+    fn at(late_ms: Option<u64>, expires: MonoTimeMs, lead_ms: u64, now: MonoTimeMs) -> Self {
+        let Some(late_ms) = late_ms else {
+            return Self::Fresh { valid_for_ms: None };
+        };
+        let stale_at = expires.0.saturating_add(late_ms);
+        match stale_at.checked_sub(now.0.saturating_add(lead_ms)) {
+            Some(left) if left > 0 => Self::Fresh {
+                valid_for_ms: Some(left),
+            },
+            _ => Self::Stale,
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -135,9 +166,10 @@ impl DeadlineTracker {
     ///   next `drain_due` still delivers it — a packet processed just before
     ///   the drain must not swallow the cue.
     /// * A pending future timer pulled to `<= now` is cancelled. A runtime
-    ///   update then announces it right away through `fire`, unless it warns
-    ///   about a moment that has already come; a
-    ///   [`VoiceSyncReason::Baseline`] rebuild drops it silently.
+    ///   update then announces a phrase right away through `fire`, unless it
+    ///   is already too late to start it ([`Lead::late_ms`]); a countdown
+    ///   digit is never announced late, and a
+    ///   [`VoiceSyncReason::Baseline`] rebuild drops everything silently.
     ///
     /// Armed timers of `class` missing from `desired` are cancelled: their
     /// subject is gone.
@@ -166,17 +198,14 @@ impl DeadlineTracker {
                 Some(_) if deadline <= now => {
                     armed.remove(&lead.timer);
                     scheduler.cancel(voice_key(rule_set, lead.timer));
-                    // "N seconds left" is stale once the moment itself has
-                    // come; a zero-lead cue *is* that moment and still speaks.
-                    let still_ahead = lead.lead_ms == 0 || lead.expires > now;
+                    // Only a phrase catches up, and only while it is not too
+                    // late to start; a countdown digit that was skipped over
+                    // is simply not counted.
                     if reason == VoiceSyncReason::Runtime
-                        && still_ahead
                         && let VoiceTimer::Lead { rule, .. } = lead.timer
+                        && let Staleness::Fresh { valid_for_ms } = lead.staleness(now)
                     {
-                        fire.push(Fire {
-                            rule,
-                            valid_for_ms: valid_for_ms(lead.expires, lead.lead_ms, now),
-                        });
+                        fire.push(Fire { rule, valid_for_ms });
                     }
                 }
                 None if deadline <= now => {}
@@ -191,7 +220,7 @@ impl DeadlineTracker {
                         lead.timer,
                         Armed {
                             deadline,
-                            expires: lead.expires,
+                            late_ms: lead.late_ms,
                             pass,
                         },
                     );
@@ -262,11 +291,27 @@ mod tests {
         }
     }
 
+    /// A phrase that may start up to 1.5 s late, like an un-advanced rule.
     fn lead(handle: u32, expires: u64, seconds_before: u64) -> Lead {
+        let lead_ms = seconds_before * 1_000;
         Lead {
             timer: timer(handle),
             expires: MonoTimeMs(expires),
-            lead_ms: seconds_before * 1_000,
+            lead_ms,
+            late_ms: (lead_ms > 0).then_some(1_500),
+        }
+    }
+
+    fn tick(handle: u32, expires: u64, n: u8) -> Lead {
+        Lead {
+            timer: VoiceTimer::Tick {
+                rule: VoiceRuleHandle(handle),
+                subject: VoiceLeadSubject::BossDbm { base_skill_id: 7 },
+                n,
+            },
+            expires: MonoTimeMs(expires),
+            lead_ms: u64::from(n) * 1_000,
+            late_ms: Some(300),
         }
     }
 
@@ -382,12 +427,12 @@ mod tests {
             RUNTIME,
         );
 
-        // At 2 000 an update leaves 3 s: the lead moment is gone, the expiry
-        // is not.
+        // At 2 000 an update leaves 4.5 s: the lead moment was half a second
+        // ago, still close enough to say so.
         let fired = reconcile(
             &mut tracker,
             &mut scheduler,
-            &[lead(1, 5_000, 5)],
+            &[lead(1, 6_500, 5)],
             2_000,
             RUNTIME,
         );
@@ -395,7 +440,7 @@ mod tests {
             fired,
             [Fire {
                 rule: VoiceRuleHandle(1),
-                valid_for_ms: Some(3_000),
+                valid_for_ms: Some(1_000),
             }]
         );
         assert!(scheduler.is_empty());
@@ -405,11 +450,99 @@ mod tests {
         let again = reconcile(
             &mut tracker,
             &mut scheduler,
-            &[lead(1, 4_000, 5)],
-            3_000,
+            &[lead(1, 6_000, 5)],
+            2_500,
             RUNTIME,
         );
         assert!(again.is_empty());
+    }
+
+    #[test]
+    fn armed_cue_pulled_too_far_inside_its_window_is_dropped() {
+        let (mut tracker, mut scheduler) = tracker();
+        reconcile(
+            &mut tracker,
+            &mut scheduler,
+            &[lead(1, 11_000, 5)],
+            1_000,
+            RUNTIME,
+        );
+
+        // 3 s left: "5 seconds left" would be wrong by now.
+        let fired = reconcile(
+            &mut tracker,
+            &mut scheduler,
+            &[lead(1, 5_000, 5)],
+            2_000,
+            RUNTIME,
+        );
+        assert!(fired.is_empty());
+        assert!(scheduler.is_empty());
+        assert_eq!(tracker.len(), 0);
+    }
+
+    #[test]
+    fn countdown_digits_follow_the_expiry_and_never_catch_up() {
+        let (mut tracker, mut scheduler) = tracker();
+        let countdown = |expires| {
+            [
+                tick(1, expires, 3),
+                tick(1, expires, 2),
+                tick(1, expires, 1),
+            ]
+        };
+        reconcile(
+            &mut tracker,
+            &mut scheduler,
+            &countdown(10_000),
+            1_000,
+            RUNTIME,
+        );
+        assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(7_000)));
+
+        // "3" is delivered on its second.
+        let due = scheduler.drain_due(MonoTimeMs(7_000));
+        assert_eq!(due.len(), 1);
+        let (fired, armed) = tracker
+            .confirm(due[0].key, MonoTimeMs(7_000), MonoTimeMs(7_050))
+            .expect("the digit is armed");
+        assert!(matches!(fired, VoiceTimer::Tick { n: 3, .. }));
+        assert_eq!(
+            armed.staleness(MonoTimeMs(7_050)),
+            Staleness::Fresh {
+                valid_for_ms: Some(250)
+            }
+        );
+        assert_eq!(armed.staleness(MonoTimeMs(7_300)), Staleness::Stale);
+
+        // The subject is refreshed right after: "2" and "1" move with the
+        // new expiry, and the whole countdown is due again before it.
+        let fired = reconcile(
+            &mut tracker,
+            &mut scheduler,
+            &countdown(30_000),
+            7_100,
+            RUNTIME,
+        );
+        assert!(fired.is_empty());
+        assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(27_000)));
+        assert_eq!(tracker.len(), 3);
+
+        // An update that jumps over "3" and "2" announces neither late.
+        let fired = reconcile(
+            &mut tracker,
+            &mut scheduler,
+            &countdown(9_000),
+            7_500,
+            RUNTIME,
+        );
+        assert!(fired.is_empty());
+        assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(8_000)));
+        assert_eq!(tracker.len(), 1);
+
+        // The subject is gone: the rest of the countdown goes with it.
+        reconcile(&mut tracker, &mut scheduler, &[], 7_600, RUNTIME);
+        assert!(scheduler.is_empty());
     }
 
     #[test]
@@ -523,7 +656,7 @@ mod tests {
         let (_, armed) = tracker
             .confirm(key, MonoTimeMs(12_000), MonoTimeMs(12_000))
             .expect("current delivery is confirmed");
-        assert_eq!(armed.expires, MonoTimeMs(12_000));
+        assert_eq!(armed.deadline, MonoTimeMs(12_000));
         // Consumed: a duplicate delivery is ignored.
         assert!(
             tracker
@@ -557,6 +690,7 @@ mod tests {
             },
             expires: MonoTimeMs(10_000),
             lead_ms: 0,
+            late_ms: None,
         };
         let mut fire = Vec::new();
         tracker.reconcile(

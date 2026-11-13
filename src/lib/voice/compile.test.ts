@@ -7,6 +7,8 @@ import type {
 import {
   collectBindings,
   compileVoiceRules,
+  countdownPhraseRequests,
+  leadTiming,
   phraseRequests,
   type PhraseIndex,
   type ResolvedPhrase,
@@ -680,5 +682,85 @@ describe("roster skill bindings", () => {
       },
     });
     expect(collectBindings(shared)).toEqual([]);
+  });
+});
+
+describe("leadTiming", () => {
+  const timing = (
+    switches: Partial<VoiceExpiringEventConfig>,
+    durationMs: number,
+    secondsBefore = 5,
+  ) =>
+    leadTiming(
+      { ...expiring(secondsBefore), ...switches },
+      secondsBefore,
+      durationMs,
+    );
+
+  it("starts exactly on the mark and counts nothing by default", () => {
+    expect(timing({}, 3_000)).toEqual({ leadAdvanceMs: 0, countdownFrom: 0 });
+    // Events without a lead time have no timing at all.
+    expect(leadTiming(auto(), 5, 3_000)).toEqual({
+      leadAdvanceMs: 0,
+      countdownFrom: 0,
+    });
+  });
+
+  it("starts earlier by the audio's length to finish on the mark", () => {
+    expect(timing({ finishBefore: true }, 3_000)).toEqual({
+      leadAdvanceMs: 3_000,
+      countdownFrom: 0,
+    });
+  });
+
+  it("counts from the top once the phrase finished ahead of the mark", () => {
+    expect(timing({ finishBefore: true, countdown: true }, 3_000)).toEqual({
+      leadAdvanceMs: 3_200,
+      countdownFrom: 5,
+    });
+    expect(
+      timing({ finishBefore: true, countdown: true }, 3_000, 30),
+    ).toMatchObject({ countdownFrom: 10 });
+  });
+
+  it("counts only the seconds left after a phrase that starts on the mark", () => {
+    expect(timing({ countdown: true }, 3_000)).toEqual({
+      leadAdvanceMs: 0,
+      countdownFrom: 2,
+    });
+    expect(timing({ countdown: true }, 3_400)).toMatchObject({
+      countdownFrom: 1,
+    });
+    // A phrase as long as the lead leaves nothing to count.
+    expect(timing({ countdown: true }, 6_000)).toMatchObject({
+      countdownFrom: 0,
+    });
+  });
+
+  it("treats audio of unknown length as none", () => {
+    expect(timing({ finishBefore: true, countdown: true }, 0)).toEqual({
+      leadAdvanceMs: 0,
+      countdownFrom: 5,
+    });
+  });
+});
+
+describe("countdownPhraseRequests", () => {
+  const binding = (config: VoiceExpiringEventConfig) =>
+    ({ config }) as VoiceBinding;
+
+  it("asks for the ten digit phrases only while a binding counts down", () => {
+    expect(countdownPhraseRequests([binding(expiring(5))], "zhCn")).toEqual([]);
+    const requests = countdownPhraseRequests(
+      [binding({ ...expiring(5), countdown: true })],
+      "enUs",
+    );
+    expect(requests).toHaveLength(10);
+    expect(requests[0]).toEqual({
+      name: "auto:voice:countdown:1",
+      text: "one",
+      language: "enUs",
+    });
+    expect(requests[9]?.name).toBe("auto:voice:countdown:10");
   });
 });

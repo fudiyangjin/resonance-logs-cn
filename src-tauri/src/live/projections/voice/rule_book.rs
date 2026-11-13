@@ -3,10 +3,87 @@
 
 use std::collections::HashMap;
 
-use crate::live::runtime::events::{VoiceBuffScope, VoiceRuleHandle};
-use crate::voice::models::{
-    AlertKind, EntityOwnerScope, MonsterBuffSourceScope, VoiceEvent, VoiceRule, VoiceSubject,
+use super::deadline::Lead;
+use crate::live::runtime::events::{
+    MonoTimeMs, VoiceBuffScope, VoiceLeadSubject, VoiceRuleHandle, VoiceTimer,
 };
+use crate::voice::models::{
+    AlertKind, EntityOwnerScope, MAX_COUNTDOWN_FROM, MAX_LEAD_ADVANCE_MS, MonsterBuffSourceScope,
+    VoiceEvent, VoiceRule, VoiceSubject,
+};
+
+/// How late a lead cue may still start: past this it would talk about a
+/// moment that is no longer where the listener expects it.
+const LATE_TOLERANCE_MS: u64 = 1_500;
+/// How late a countdown digit may still start; later it is skipped.
+const TICK_LATE_MS: u64 = 300;
+
+/// When one `ExpiringIn` rule speaks relative to its subject's expiry.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct LeadSpec {
+    pub(super) handle: VoiceRuleHandle,
+    /// The configured "N seconds before".
+    pub(super) mark_ms: u64,
+    /// When the phrase starts: `mark_ms` plus the rule's head start.
+    lead_ms: u64,
+    /// See [`Lead::late_ms`].
+    late_ms: Option<u64>,
+    /// Digits counted down after the phrase, highest first.
+    ticks: u8,
+}
+
+impl LeadSpec {
+    fn of(handle: VoiceRuleHandle, rule: &VoiceRule, seconds_before: u32) -> Self {
+        let mark_ms = u64::from(seconds_before).saturating_mul(1_000);
+        let advance = u64::from(rule.lead_advance_ms.min(MAX_LEAD_ADVANCE_MS));
+        let lead_ms = mark_ms.saturating_add(advance);
+        Self {
+            handle,
+            mark_ms,
+            lead_ms,
+            // A cue due at the expiry itself *is* that moment: never stale.
+            late_ms: (lead_ms > 0).then(|| advance.saturating_add(LATE_TOLERANCE_MS).min(lead_ms)),
+            ticks: rule
+                .countdown_from
+                .min(MAX_COUNTDOWN_FROM)
+                .min(u8::try_from(seconds_before).unwrap_or(u8::MAX)),
+        }
+    }
+
+    /// Whether the phrase is due at the expiry itself.
+    pub(super) const fn is_at_expiry(self) -> bool {
+        self.lead_ms == 0
+    }
+
+    /// Every timer this rule wants for a subject expiring at `expires`: the
+    /// phrase, then one per counted digit.
+    pub(super) fn push_timers(
+        self,
+        subject: VoiceLeadSubject,
+        expires: MonoTimeMs,
+        out: &mut Vec<Lead>,
+    ) {
+        out.push(Lead {
+            timer: VoiceTimer::Lead {
+                rule: self.handle,
+                subject,
+            },
+            expires,
+            lead_ms: self.lead_ms,
+            late_ms: self.late_ms,
+        });
+        out.extend((1..=self.ticks).map(|n| Lead {
+            timer: VoiceTimer::Tick {
+                rule: self.handle,
+                subject,
+                n,
+            },
+            expires,
+            lead_ms: u64::from(n) * 1_000,
+            late_ms: Some(TICK_LATE_MS),
+        }));
+    }
+}
 
 /// Lookup key derived from a [`VoiceSubject`] with scope details stripped:
 /// the buff aggregates are keyed per base id, and the source scope is
@@ -55,10 +132,9 @@ impl SubjectKey {
 /// A buff `ExpiringIn` rule.
 #[derive(Debug, Clone, Copy)]
 pub(super) struct BuffLeadRule {
-    pub(super) handle: VoiceRuleHandle,
+    pub(super) lead: LeadSpec,
     pub(super) scope: VoiceBuffScope,
     pub(super) base_id: i32,
-    pub(super) lead_ms: u64,
 }
 
 /// What a counter rule announces.
@@ -66,8 +142,8 @@ pub(super) struct BuffLeadRule {
 pub(super) enum CounterCue {
     /// The slot's count reaching its threshold.
     Threshold,
-    /// `lead_ms` before the slot's freeze window ends.
-    Freeze { lead_ms: u64 },
+    /// Ahead of the end of the slot's freeze window.
+    Freeze(LeadSpec),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -83,25 +159,23 @@ pub(super) struct CounterRule {
 pub(super) struct SkillRules {
     /// `Ended` and zero-lead `ExpiringIn`: every refilled charge.
     pub(super) ready: Vec<VoiceRuleHandle>,
-    /// `ExpiringIn` as `(handle, lead_ms)`, aimed at the next refill.
-    pub(super) ready_in: Vec<(VoiceRuleHandle, u64)>,
+    /// `ExpiringIn`, aimed at the next refill.
+    pub(super) ready_in: Vec<LeadSpec>,
 }
 
 /// An entity `ExpiringIn` rule.
 #[derive(Debug, Clone, Copy)]
 pub(super) struct EntityLeadRule {
-    pub(super) handle: VoiceRuleHandle,
+    pub(super) lead: LeadSpec,
     pub(super) monster_id: i32,
     pub(super) scope: EntityOwnerScope,
-    pub(super) lead_ms: u64,
 }
 
 /// A boss mechanic `ExpiringIn` rule.
 #[derive(Debug, Clone, Copy)]
 pub(super) struct BossLeadRule {
-    pub(super) handle: VoiceRuleHandle,
+    pub(super) lead: LeadSpec,
     pub(super) base_skill_id: i32,
-    pub(super) lead_ms: u64,
 }
 
 #[derive(Debug, Default)]
@@ -156,27 +230,26 @@ impl RuleBook {
             .entry(SubjectKey::of(&rule.trigger.subject))
             .or_default()
             .push(handle);
-        let lead_ms = rule
+        let lead = rule
             .trigger
             .seconds_before()
-            .map(|seconds| u64::from(seconds).saturating_mul(1_000));
+            .map(|seconds| LeadSpec::of(handle, rule, seconds));
         match (&rule.trigger.subject, &rule.trigger.event) {
             (VoiceSubject::Buff { .. } | VoiceSubject::MonsterBuff { .. }, _) => {
-                if let (Some(lead_ms), Some((scope, base_id))) =
-                    (lead_ms, buff_rule_scope(&rule.trigger.subject))
+                if let (Some(lead), Some((scope, base_id))) =
+                    (lead, buff_rule_scope(&rule.trigger.subject))
                 {
                     self.buff_leads.push(BuffLeadRule {
-                        handle,
+                        lead,
                         scope,
                         base_id,
-                        lead_ms,
                     });
                 }
             }
             (VoiceSubject::Counter { rule_id, slot_id }, event) => {
-                let cue = match (event, lead_ms) {
+                let cue = match (event, lead) {
                     (VoiceEvent::Threshold, _) => CounterCue::Threshold,
-                    (_, Some(lead_ms)) => CounterCue::Freeze { lead_ms },
+                    (_, Some(lead)) => CounterCue::Freeze(lead),
                     _ => return,
                 };
                 self.counters.push(CounterRule {
@@ -188,35 +261,36 @@ impl RuleBook {
             }
             // "Ready in 0 s" is the refill itself, so it rides the edge. A
             // cast-only skill gets no entry: it needs no cooldown tracking.
-            (VoiceSubject::Skill { skill_id }, event) => match (event, lead_ms) {
-                (VoiceEvent::Ended, _) | (_, Some(0)) => {
+            (VoiceSubject::Skill { skill_id }, event) => match (event, lead) {
+                (VoiceEvent::Ended, _) => {
                     self.skills.entry(*skill_id).or_default().ready.push(handle);
                 }
-                (_, Some(lead_ms)) => {
+                (_, Some(lead)) if lead.is_at_expiry() => {
+                    self.skills.entry(*skill_id).or_default().ready.push(handle);
+                }
+                (_, Some(lead)) => {
                     self.skills
                         .entry(*skill_id)
                         .or_default()
                         .ready_in
-                        .push((handle, lead_ms));
+                        .push(lead);
                 }
                 _ => {}
             },
-            (VoiceSubject::Entity { monster_id, scope }, event) => match (event, lead_ms) {
+            (VoiceSubject::Entity { monster_id, scope }, event) => match (event, lead) {
                 (VoiceEvent::Started | VoiceEvent::Ended, _) => self.entity_edges = true,
-                (_, Some(lead_ms)) => self.entity_leads.push(EntityLeadRule {
-                    handle,
+                (_, Some(lead)) => self.entity_leads.push(EntityLeadRule {
+                    lead,
                     monster_id: *monster_id,
                     scope: *scope,
-                    lead_ms,
                 }),
                 _ => {}
             },
             (VoiceSubject::BossDbm { base_skill_id }, _) => {
-                if let Some(lead_ms) = lead_ms {
+                if let Some(lead) = lead {
                     self.boss_leads.push(BossLeadRule {
-                        handle,
+                        lead,
                         base_skill_id: *base_skill_id,
-                        lead_ms,
                     });
                 }
             }

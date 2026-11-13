@@ -4,12 +4,12 @@
 
 use std::collections::BTreeSet;
 
-use super::deadline::{Lead, TimerClass};
+use super::deadline::TimerClass;
 use super::rule_book::SubjectKey;
 use super::{VoiceProjection, VoiceSyncReason};
 use crate::live::projections::entity_monitor::EntityMonitorProjection;
 use crate::live::runtime::entity_context::EntityContext;
-use crate::live::runtime::events::{MonoTimeMs, VoiceLeadSubject, VoiceTimer};
+use crate::live::runtime::events::{MonoTimeMs, VoiceLeadSubject};
 use crate::live::runtime::scheduler::DeadlineScheduler;
 use crate::voice::models::{EntityOwnerScope, VoiceEvent, VoiceSubject};
 
@@ -43,15 +43,12 @@ impl VoiceProjection {
                 track.spec.monster_id == rule.monster_id && track.spec.scope == rule.scope
             });
             for track in matching {
-                for (entity, expires) in track.audible_expiries(rule.lead_ms) {
-                    self.leads.push(Lead {
-                        timer: VoiceTimer::Lead {
-                            rule: rule.handle,
-                            subject: VoiceLeadSubject::Entity { entity },
-                        },
+                for (entity, expires) in track.audible_expiries(rule.lead.mark_ms) {
+                    rule.lead.push_timers(
+                        VoiceLeadSubject::Entity { entity },
                         expires,
-                        lead_ms: rule.lead_ms,
-                    });
+                        &mut self.leads,
+                    );
                 }
             }
         }

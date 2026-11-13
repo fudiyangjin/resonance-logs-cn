@@ -27,7 +27,7 @@ import {
 import type { VoiceBindingView } from "./subject-types";
 
 /** Rule keys of bundled prompts, which the backend re-seeds anyway. */
-const BUNDLED_RULE_KEY_PREFIX = "voice:alert:";
+const BUNDLED_RULE_KEY_PREFIXES = ["voice:alert:", "voice:countdown:"];
 
 /** What the phrase library must keep. */
 export type VoicePhraseRefs = {
@@ -105,7 +105,12 @@ export function classifyOrphanPhrases(
 
   return phrases.filter((phrase) => {
     const parsed = parseManagedPhraseName(phrase.name);
-    if (!parsed || parsed.ruleKey.startsWith(BUNDLED_RULE_KEY_PREFIX)) {
+    if (
+      !parsed ||
+      BUNDLED_RULE_KEY_PREFIXES.some((prefix) =>
+        parsed.ruleKey.startsWith(prefix),
+      )
+    ) {
       return false;
     }
     if (

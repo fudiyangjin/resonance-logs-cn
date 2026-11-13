@@ -110,15 +110,12 @@ impl VoiceProjection {
             let Some(next_refill) = track.timeline.next_refill_after(now) else {
                 continue;
             };
-            for &(rule, lead_ms) in &rules.ready_in {
-                self.leads.push(Lead {
-                    timer: VoiceTimer::Lead {
-                        rule,
-                        subject: VoiceLeadSubject::SkillReady { skill_id },
-                    },
-                    expires: next_refill,
-                    lead_ms,
-                });
+            for lead in &rules.ready_in {
+                lead.push_timers(
+                    VoiceLeadSubject::SkillReady { skill_id },
+                    next_refill,
+                    &mut self.leads,
+                );
             }
         }
         for &handle in &ready {
@@ -134,6 +131,7 @@ impl VoiceProjection {
                     timer: VoiceTimer::SkillRefill { skill_id },
                     expires: next_refill,
                     lead_ms: 0,
+                    late_ms: None,
                 });
             }
         }

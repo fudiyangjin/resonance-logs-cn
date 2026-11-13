@@ -128,11 +128,13 @@ const syncUrl = await moduleAt("./sync.svelte.ts", {
     "export const activeProfile = () => null; export const updateActiveProfile = () => {};",
   ),
   "$lib/stores/voice-store.svelte": storeUrl,
+  "./phrase-key": mock('export const voiceLanguageForLocale = () => "zhCn";'),
   "./phrase-resolver": await moduleAt("./phrase-resolver.ts", {}),
   "./snapshot-sync": await moduleAt("./snapshot-sync.ts", {}),
   "./compile": mock(`
     export const collectBindings = v => v;
     export const phraseRequests = b => b;
+    export const countdownPhraseRequests = () => [];
     export const compileVoiceRules = (b, index) => b.flatMap(r => index[r.name] ? [{ id: r.name, phraseId: index[r.name].phraseId }] : []);
   `),
   "./gc": mock(

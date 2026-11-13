@@ -1,5 +1,8 @@
 //! Non-blocking WAV-only playback worker.
 //!
+//! Two tracks share one output: the cue queue speaks one phrase at a time,
+//! and the countdown track plays digits over it, each on its second.
+//!
 //! Owns the audio output stream on a dedicated thread (rodio's stream handle
 //! is not meant to hop threads) and exposes a bounded command channel so the
 //! live event loop can `enqueue` cues without ever waiting on audio I/O.
@@ -17,7 +20,7 @@ use rodio::source::SineWave;
 use rodio::{Decoder, DeviceSinkBuilder, MixerDeviceSink, Player, Source};
 
 use super::error::{VoiceError, VoiceResult};
-use super::models::VoiceQueuePolicy;
+use super::models::{CountdownId, VoiceQueuePolicy};
 
 const MAX_QUEUE_LEN: usize = 8;
 const COMMAND_CHANNEL_CAPACITY: usize = 32;
@@ -58,6 +61,37 @@ impl QueuedCue {
     }
 }
 
+/// One digit of a countdown. It plays on the countdown track, over the cue
+/// queue's speech, and never waits: on its second or not at all.
+#[derive(Debug, Clone)]
+pub struct QueuedTick {
+    pub countdown: CountdownId,
+    pub priority: u8,
+    /// `None` plays the built-in tone, like a cue without audio.
+    pub wav_path: Option<PathBuf>,
+    /// When the digit is no longer on its second.
+    pub stale_at: Option<Instant>,
+}
+
+impl QueuedTick {
+    fn is_stale(&self, now: Instant) -> bool {
+        self.stale_at.is_some_and(|stale_at| now >= stale_at)
+    }
+}
+
+/// How long after its last digit a countdown still owns the track; within
+/// it, digits of another countdown are not counted unless they outrank it.
+/// Two interleaved countdowns ("3, 3, 2, 2") would be noise.
+const COUNTDOWN_HOLD: Duration = Duration::from_millis(1_500);
+
+/// The countdown that last spoke on the countdown track.
+#[derive(Debug, Clone, Copy)]
+struct ActiveCountdown {
+    id: CountdownId,
+    priority: u8,
+    last_at: Instant,
+}
+
 /// Published atomically as one coherent settings snapshot.
 #[derive(Debug, Clone, Copy)]
 pub struct PlaybackSettings {
@@ -83,8 +117,13 @@ struct ControlState {
     shutdown: bool,
 }
 
+enum Playable {
+    Cue(QueuedCue),
+    Tick(QueuedTick),
+}
+
 struct PlaybackMessage {
-    cue: QueuedCue,
+    item: Playable,
     epoch: u64,
 }
 
@@ -96,6 +135,7 @@ pub struct PlayerHandle {
 
 pub trait PlaybackSink: Send + Sync {
     fn enqueue(&self, cue: QueuedCue);
+    fn enqueue_tick(&self, tick: QueuedTick);
     fn apply_settings(&self, settings: PlaybackSettings);
     fn stop_all(&self);
     fn shutdown(&self);
@@ -116,6 +156,14 @@ impl PlayerHandle {
     }
 
     pub fn enqueue(&self, cue: QueuedCue) {
+        self.send(Playable::Cue(cue));
+    }
+
+    pub fn enqueue_tick(&self, tick: QueuedTick) {
+        self.send(Playable::Tick(tick));
+    }
+
+    fn send(&self, item: Playable) {
         let epoch = {
             let control = self.control.lock();
             if !control.settings.enabled || control.shutdown {
@@ -124,7 +172,7 @@ impl PlayerHandle {
             control.stop_epoch
         };
         // A stop racing this send makes the message stale, even if it arrives late.
-        match self.tx.try_send(PlaybackMessage { cue, epoch }) {
+        match self.tx.try_send(PlaybackMessage { item, epoch }) {
             Ok(()) => {}
             Err(TrySendError::Full(_)) => {
                 warn!(target: "app::voice", "playback queue is full; dropping cue");
@@ -158,6 +206,9 @@ impl PlaybackSink for PlayerHandle {
     fn enqueue(&self, cue: QueuedCue) {
         PlayerHandle::enqueue(self, cue);
     }
+    fn enqueue_tick(&self, tick: QueuedTick) {
+        PlayerHandle::enqueue_tick(self, tick);
+    }
     fn apply_settings(&self, settings: PlaybackSettings) {
         PlayerHandle::apply_settings(self, settings);
     }
@@ -180,13 +231,21 @@ trait CueOutput {
     /// passed explicitly because the underlying output may be (re)created
     /// lazily here, after any earlier `set_volume` call has been lost.
     fn start(&mut self, cue: &QueuedCue, volume: f32);
-    /// Stops whatever is playing and discards any pending sound.
+    /// Stops the cue that is playing and discards any pending sound. The
+    /// countdown track keeps going.
     fn stop(&mut self);
+    /// Starts `tick` immediately on the countdown track, mixed over the
+    /// cue; a digit still sounding there is cut off. Must not block.
+    fn start_tick(&mut self, tick: &QueuedTick, volume: f32);
+    /// Silences the countdown track.
+    fn stop_ticks(&mut self);
 }
 
 struct RodioOutput {
     device_sink: Option<MixerDeviceSink>,
     player: Option<Player>,
+    /// The countdown track: a second player on the same mixer.
+    tick_player: Option<Player>,
     warned_no_device: bool,
 }
 
@@ -202,7 +261,43 @@ impl RodioOutput {
         Self {
             device_sink,
             player: None,
+            tick_player: None,
             warned_no_device: false,
+        }
+    }
+}
+
+/// The open output device, warning once when there is none. Takes the two
+/// fields apart so the caller can still borrow its players.
+fn device_or_warn<'a>(
+    device_sink: &'a Option<MixerDeviceSink>,
+    warned_no_device: &mut bool,
+) -> Option<&'a MixerDeviceSink> {
+    if device_sink.is_none() && !*warned_no_device {
+        *warned_no_device = true;
+        warn!(target: "app::voice", "no audio output device; voice cues cannot be played");
+    }
+    device_sink.as_ref()
+}
+
+/// Appends the WAV at `wav_path` to `player`, or the fallback tone when
+/// there is none or it cannot be read.
+fn append_audio(player: &Player, wav_path: Option<&PathBuf>) {
+    let Some(wav_path) = wav_path else {
+        player.append(fallback_tone());
+        return;
+    };
+    match File::open(wav_path) {
+        Ok(file) => match Decoder::new(BufReader::new(file)) {
+            Ok(source) => player.append(source),
+            Err(e) => {
+                warn!(target: "app::voice", "cannot decode cue wav {}: {e}", wav_path.display());
+                player.append(fallback_tone());
+            }
+        },
+        Err(e) => {
+            warn!(target: "app::voice", "cannot open cue wav {}: {e}", wav_path.display());
+            player.append(fallback_tone());
         }
     }
 }
@@ -213,17 +308,14 @@ impl CueOutput for RodioOutput {
     }
 
     fn set_volume(&mut self, volume: f32) {
-        if let Some(player) = &self.player {
+        for player in self.player.iter().chain(&self.tick_player) {
             player.set_volume(volume);
         }
     }
 
     fn start(&mut self, cue: &QueuedCue, volume: f32) {
-        let Some(device_sink) = &self.device_sink else {
-            if !self.warned_no_device {
-                self.warned_no_device = true;
-                warn!(target: "app::voice", "no audio output device; voice cues cannot be played");
-            }
+        let Some(device_sink) = device_or_warn(&self.device_sink, &mut self.warned_no_device)
+        else {
             return;
         };
         let player = self.player.get_or_insert_with(|| {
@@ -233,22 +325,24 @@ impl CueOutput for RodioOutput {
             player.set_volume(volume);
             player
         });
-        match &cue.wav_path {
-            Some(wav_path) => match File::open(wav_path) {
-                Ok(file) => match Decoder::new(BufReader::new(file)) {
-                    Ok(source) => player.append(source),
-                    Err(e) => {
-                        warn!(target: "app::voice", "cannot decode cue wav {}: {e}", wav_path.display());
-                        player.append(fallback_tone());
-                    }
-                },
-                Err(e) => {
-                    warn!(target: "app::voice", "cannot open cue wav {}: {e}", wav_path.display());
-                    player.append(fallback_tone());
-                }
-            },
-            None => player.append(fallback_tone()),
-        }
+        append_audio(player, cue.wav_path.as_ref());
+    }
+
+    /// A fresh player per digit, for the reason given on [`Self::stop`]:
+    /// replacing the player cuts the previous digit off without blocking.
+    fn start_tick(&mut self, tick: &QueuedTick, volume: f32) {
+        let Some(device_sink) = device_or_warn(&self.device_sink, &mut self.warned_no_device)
+        else {
+            return;
+        };
+        let player = Player::connect_new(device_sink.mixer());
+        player.set_volume(volume);
+        append_audio(&player, tick.wav_path.as_ref());
+        self.tick_player = Some(player);
+    }
+
+    fn stop_ticks(&mut self) {
+        self.tick_player = None;
     }
 
     /// Dropping a non-detached `Player` stops its sounds immediately. This
@@ -268,6 +362,8 @@ struct WorkerState<O: CueOutput> {
     volume: f32,
     policy: VoiceQueuePolicy,
     playing_priority: Option<u8>,
+    /// Who holds the countdown track.
+    countdown: Option<ActiveCountdown>,
     stop_epoch: u64,
 }
 
@@ -280,8 +376,39 @@ impl<O: CueOutput> WorkerState<O> {
             volume: 1.0,
             policy: VoiceQueuePolicy::default(),
             playing_priority: None,
+            countdown: None,
             stop_epoch: 0,
         }
+    }
+
+    fn handle(&mut self, item: Playable) {
+        match item {
+            Playable::Cue(cue) => self.handle_enqueue(cue),
+            Playable::Tick(tick) => self.handle_tick(tick, Instant::now()),
+        }
+    }
+
+    /// Plays `tick` now or drops it; a digit never waits. One countdown
+    /// holds the track at a time: another one's digits are dropped while it
+    /// is still counting, unless they outrank it.
+    fn handle_tick(&mut self, tick: QueuedTick, now: Instant) {
+        if !self.enabled || tick.is_stale(now) {
+            return;
+        }
+        let held_by_another = self.countdown.is_some_and(|current| {
+            current.id != tick.countdown
+                && now.saturating_duration_since(current.last_at) < COUNTDOWN_HOLD
+                && tick.priority <= current.priority
+        });
+        if held_by_another {
+            return;
+        }
+        self.countdown = Some(ActiveCountdown {
+            id: tick.countdown,
+            priority: tick.priority,
+            last_at: now,
+        });
+        self.output.start_tick(&tick, self.volume);
     }
 
     fn is_playing(&self) -> bool {
@@ -364,8 +491,10 @@ impl<O: CueOutput> WorkerState<O> {
 
     fn stop_all(&mut self) {
         self.output.stop();
+        self.output.stop_ticks();
         self.queue.clear();
         self.playing_priority = None;
+        self.countdown = None;
     }
 }
 
@@ -446,7 +575,7 @@ fn apply_message<O: CueOutput>(
         return false;
     }
     if message.epoch == state.stop_epoch {
-        state.handle_enqueue(message.cue);
+        state.handle(message.item);
     }
     true
 }
@@ -462,6 +591,9 @@ mod tests {
         /// Volume passed to each `start`, parallel to `started`.
         start_volumes: Vec<f32>,
         stops: usize,
+        /// Countdown each digit started on the countdown track belonged to.
+        ticks: Vec<u64>,
+        tick_stops: usize,
     }
 
     impl CueOutput for FakeOutput {
@@ -477,6 +609,28 @@ mod tests {
         fn stop(&mut self) {
             self.stops += 1;
             self.busy = false;
+        }
+        fn start_tick(&mut self, tick: &QueuedTick, _volume: f32) {
+            self.ticks.push(tick.countdown.0);
+        }
+        fn stop_ticks(&mut self) {
+            self.tick_stops += 1;
+        }
+    }
+
+    fn tick(countdown: u64, priority: u8) -> QueuedTick {
+        QueuedTick {
+            countdown: CountdownId(countdown),
+            priority,
+            wav_path: None,
+            stale_at: None,
+        }
+    }
+
+    fn cue_of(message: PlaybackMessage) -> QueuedCue {
+        match message.item {
+            Playable::Cue(cue) => cue,
+            Playable::Tick(_) => panic!("expected a cue"),
         }
     }
 
@@ -535,7 +689,7 @@ mod tests {
         handle.enqueue(first);
         handle.enqueue(second);
 
-        let received = rx.try_recv().unwrap().cue;
+        let received = cue_of(rx.try_recv().unwrap());
         assert_eq!(received.rule_id, "first");
         assert!(rx.try_recv().is_err());
     }
@@ -586,7 +740,7 @@ mod tests {
         handle.shutdown();
         assert!(!sync_control(&mut state, &handle.control));
         handle.enqueue(cue("rejected", 1));
-        assert_eq!(rx.try_recv().unwrap().cue.rule_id, "pending");
+        assert_eq!(cue_of(rx.try_recv().unwrap()).rule_id, "pending");
         assert!(rx.try_recv().is_err());
     }
 
@@ -602,6 +756,8 @@ mod tests {
             }
             fn set_volume(&mut self, _: f32) {}
             fn stop(&mut self) {}
+            fn start_tick(&mut self, _: &QueuedTick, _: f32) {}
+            fn stop_ticks(&mut self) {}
             fn start(&mut self, current: &QueuedCue, _: f32) {
                 let count = {
                     let mut starts = self.starts.lock();
@@ -686,6 +842,66 @@ mod tests {
         finish_current(&mut state);
         assert_eq!(state.output.started, vec!["playing", "still-valid"]);
         assert!(state.queue.is_empty());
+    }
+
+    #[test]
+    fn countdown_digits_play_over_speech_and_never_queue() {
+        let mut state = WorkerState::new(FakeOutput::default());
+        state.enabled = true;
+        state.policy = VoiceQueuePolicy::InterruptForHigherPriority;
+        let now = Instant::now();
+        state.handle_enqueue(cue("speaking", 1));
+
+        // A digit starts while the phrase is still playing, without
+        // touching it or the queue, whatever its priority.
+        state.handle_tick(tick(1, 200), now);
+        assert_eq!(state.output.ticks, [1]);
+        assert_eq!(state.output.started, ["speaking"]);
+        assert_eq!(state.output.stops, 0);
+        assert!(state.queue.is_empty());
+
+        // A digit that is no longer on its second is not played late.
+        let late = QueuedTick {
+            stale_at: now.checked_sub(Duration::from_millis(1)),
+            ..tick(1, 200)
+        };
+        state.handle_tick(late, now);
+        assert_eq!(state.output.ticks, [1]);
+
+        // Interrupting the speech leaves the countdown counting.
+        state.handle_enqueue(cue("urgent", 250));
+        assert_eq!(state.output.stops, 1);
+        assert_eq!(state.output.tick_stops, 0);
+
+        // Stopping playback silences both tracks.
+        state.stop_all();
+        assert_eq!(state.output.tick_stops, 1);
+        assert!(state.countdown.is_none());
+    }
+
+    #[test]
+    fn one_countdown_holds_the_track_at_a_time() {
+        let mut state = WorkerState::new(FakeOutput::default());
+        state.enabled = true;
+        let start = Instant::now();
+        let at = |ms: u64| start + Duration::from_millis(ms);
+
+        state.handle_tick(tick(1, 5), at(0));
+        // Another countdown of the same rank is not interleaved...
+        state.handle_tick(tick(2, 5), at(500));
+        state.handle_tick(tick(1, 5), at(1_000));
+        assert_eq!(state.output.ticks, [1, 1]);
+        // ...a higher-ranked one takes the track over, and keeps it...
+        state.handle_tick(tick(3, 9), at(1_200));
+        state.handle_tick(tick(1, 5), at(2_000));
+        assert_eq!(state.output.ticks, [1, 1, 3]);
+        // ...until it has been silent for a while.
+        state.handle_tick(tick(1, 5), at(1_200 + 1_500));
+        assert_eq!(state.output.ticks, [1, 1, 3, 1]);
+
+        state.enabled = false;
+        state.handle_tick(tick(1, 5), at(4_000));
+        assert_eq!(state.output.ticks.len(), 4);
     }
 
     #[test]

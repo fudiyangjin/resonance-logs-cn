@@ -4,10 +4,10 @@
 //! rule-set change re-arms every mechanic still running. The `Started`
 //! cue is a cast edge handled in [`VoiceProjection::apply`].
 
-use super::deadline::{Lead, TimerClass};
+use super::deadline::TimerClass;
 use super::{VoiceProjection, VoiceSyncReason};
 use crate::live::projections::entity_monitor::EntityMonitorProjection;
-use crate::live::runtime::events::{MonoTimeMs, VoiceLeadSubject, VoiceTimer};
+use crate::live::runtime::events::{MonoTimeMs, VoiceLeadSubject};
 use crate::live::runtime::scheduler::DeadlineScheduler;
 
 impl VoiceProjection {
@@ -31,16 +31,13 @@ impl VoiceProjection {
             let Some(expires) = monitor.boss_mechanic_expiry(rule.base_skill_id) else {
                 continue;
             };
-            self.leads.push(Lead {
-                timer: VoiceTimer::Lead {
-                    rule: rule.handle,
-                    subject: VoiceLeadSubject::BossDbm {
-                        base_skill_id: rule.base_skill_id,
-                    },
+            rule.lead.push_timers(
+                VoiceLeadSubject::BossDbm {
+                    base_skill_id: rule.base_skill_id,
                 },
                 expires,
-                lead_ms: rule.lead_ms,
-            });
+                &mut self.leads,
+            );
         }
         self.reconcile_leads(TimerClass::BossDbm, now_ms, now_mono, reason, scheduler);
     }

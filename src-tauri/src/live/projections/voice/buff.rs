@@ -5,14 +5,12 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use super::deadline::{Lead, TimerClass};
+use super::deadline::TimerClass;
 use super::rule_book::{SubjectKey, buff_rule_scope};
 use super::{VoiceProjection, VoiceSyncReason};
 use crate::live::projections::buff_presence::BuffCompositeCatalog;
 use crate::live::runtime::entity_context::EntityContext;
-use crate::live::runtime::events::{
-    BuffState, MonoTimeMs, VoiceBuffScope, VoiceLeadSubject, VoiceTimer,
-};
+use crate::live::runtime::events::{BuffState, MonoTimeMs, VoiceBuffScope, VoiceLeadSubject};
 use crate::live::runtime::scheduler::DeadlineScheduler;
 use crate::voice::models::{VoiceEvent, VoiceTrigger};
 
@@ -168,8 +166,8 @@ impl VoiceProjection {
         self.handles = handles;
     }
 
-    /// One lead timer per buff `ExpiringIn` rule whose aggregate is present
-    /// and bounded; the rest are cancelled by the reconcile.
+    /// The lead timers of every buff `ExpiringIn` rule whose aggregate is
+    /// present and bounded; the rest are cancelled by the reconcile.
     pub(super) fn sync_buff_leads(
         &mut self,
         reason: VoiceSyncReason,
@@ -186,17 +184,14 @@ impl VoiceProjection {
             else {
                 continue;
             };
-            self.leads.push(Lead {
-                timer: VoiceTimer::Lead {
-                    rule: rule.handle,
-                    subject: VoiceLeadSubject::Buff {
-                        scope: rule.scope,
-                        base_id: rule.base_id,
-                    },
+            rule.lead.push_timers(
+                VoiceLeadSubject::Buff {
+                    scope: rule.scope,
+                    base_id: rule.base_id,
                 },
                 expires,
-                lead_ms: rule.lead_ms,
-            });
+                &mut self.leads,
+            );
         }
         self.reconcile_leads(TimerClass::Buff, now_ms, now, reason, scheduler);
     }

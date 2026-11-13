@@ -500,6 +500,13 @@ export function ensureGameAlertVoiceConfigs(
 /** Like `VoiceEventConfig`, but for triggers that fire ahead of an expiry. */
 export type VoiceExpiringEventConfig = VoiceEventConfig & {
   secondsBefore: number;
+  /**
+   * Start earlier by the phrase's length, so it has finished speaking at
+   * `secondsBefore` instead of starting there.
+   */
+  finishBefore?: boolean | undefined;
+  /** After the phrase, count the remaining seconds down, one per second. */
+  countdown?: boolean | undefined;
 };
 
 export function createDefaultVoiceEventConfig(): VoiceEventConfig {

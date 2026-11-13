@@ -449,6 +449,37 @@ pub struct VoiceRule {
     pub cooldown_ms: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub phrase_id_by_tier: Option<HashMap<u8, String>>,
+    /// `ExpiringIn` only: start this much earlier than `seconds_before`, so
+    /// a phrase of that length has finished by then. 0 starts exactly at
+    /// `seconds_before`.
+    #[serde(default)]
+    pub lead_advance_ms: u32,
+    /// `ExpiringIn` only: count the last seconds down from this number
+    /// (one digit per second, on the second). 0 does not count.
+    #[serde(default)]
+    pub countdown_from: u8,
+}
+
+/// Longest head start a rule may ask for.
+pub const MAX_LEAD_ADVANCE_MS: u32 = 30_000;
+/// Highest number a countdown starts from; one bundled digit prompt each.
+pub const MAX_COUNTDOWN_FROM: u8 = 10;
+
+/// Identifies one running countdown (a rule on one subject). Opaque: the
+/// player only compares it to tell two countdowns apart.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CountdownId(pub u64);
+
+/// One spoken digit of a countdown, produced by the rule engine. Unlike a
+/// [`VoiceCueIntent`] it never queues: it plays on its second or not at all.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CountdownTick {
+    pub countdown: CountdownId,
+    /// The digit: seconds left when it is spoken.
+    pub n: u8,
+    pub priority: u8,
+    /// How long after it was produced the digit is still on time.
+    pub valid_for_ms: u64,
 }
 
 /// A resolved intent to play a specific phrase, produced by the rule engine and
@@ -637,6 +668,21 @@ impl VoiceRuntimeSnapshot {
         });
         for rule in &mut self.rules {
             rule.cooldown_ms = rule.cooldown_ms.min(MAX_VOICE_RULE_COOLDOWN_MS);
+            // Lead timing only means something ahead of an expiry, and a
+            // countdown cannot start above the lead it counts through.
+            match rule.trigger.seconds_before() {
+                Some(seconds) => {
+                    rule.lead_advance_ms = rule.lead_advance_ms.min(MAX_LEAD_ADVANCE_MS);
+                    rule.countdown_from = rule
+                        .countdown_from
+                        .min(MAX_COUNTDOWN_FROM)
+                        .min(u8::try_from(seconds).unwrap_or(u8::MAX));
+                }
+                None => {
+                    rule.lead_advance_ms = 0;
+                    rule.countdown_from = 0;
+                }
+            }
         }
         if !self.enabled {
             self.rules.clear();

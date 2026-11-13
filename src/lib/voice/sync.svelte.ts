@@ -48,11 +48,13 @@ import {
   voiceErrorMessage,
 } from "$lib/stores/voice-store.svelte";
 import { collectVoicePhraseRefs, silentOrphanPhrases } from "./gc";
+import { voiceLanguageForLocale } from "./phrase-key";
 import { createPhraseResolver } from "./phrase-resolver";
 import { createVoiceSnapshotSync } from "./snapshot-sync";
 import {
   collectBindings,
   compileVoiceRules,
+  countdownPhraseRequests,
   phraseRequests,
   type PhraseIndex,
   type ResolvedPhrase,
@@ -61,13 +63,24 @@ import { mergeVoiceConfigPatch } from "./subject-types";
 import { buildVoiceBindingView, buildVoiceGcViews } from "./view";
 
 const phraseIndex = $derived.by(() => {
+  const catalog = VOICE.status?.catalog;
+  const durationMsByAsset = new Map(
+    (catalog?.assets ?? []).map((asset) => [
+      asset.id,
+      Math.round(asset.durationSec * 1000),
+    ]),
+  );
   const index: Record<string, ResolvedPhrase> = {};
-  for (const phrase of VOICE.status?.catalog.phrases ?? []) {
+  for (const phrase of catalog?.phrases ?? []) {
     index[phrase.name] = {
       phraseId: phrase.id,
       text: phrase.text,
       language: phrase.language,
       hasAudio: phrase.activeAssetId != null,
+      durationMs:
+        (phrase.activeAssetId != null
+          ? durationMsByAsset.get(phrase.activeAssetId)
+          : undefined) ?? 0,
       updatedAtMs: phrase.updatedAtMs,
     };
   }
@@ -224,9 +237,14 @@ export function startVoiceRuntimeSync(): () => void {
 
   $effect(() => {
     const voice = SETTINGS.voice.state;
-    const bindings = collectBindings(buildVoiceBindingView());
+    const view = buildVoiceBindingView();
+    const bindings = collectBindings(view);
     const index = phraseIndex;
-    const missing = phraseRequests(bindings).filter((request) => {
+    const requests = [
+      ...phraseRequests(bindings),
+      ...countdownPhraseRequests(bindings, voiceLanguageForLocale(view.locale)),
+    ];
+    const missing = requests.filter((request) => {
       const known = index[request.name];
       return (
         known?.text !== request.text || known.language !== request.language

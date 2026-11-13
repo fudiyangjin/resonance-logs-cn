@@ -3011,6 +3011,12 @@ export const enUSMessages = {
     'Use ${remodelLevel} (or ${阶数}) to insert the fantasy tier, e.g. "Tina Tier ${remodelLevel} active" becomes "Tina Tier 5 active" at tier 5',
   "voice.binding.pickPhrase": "Select phrase",
   "voice.binding.secondsBefore": "{seconds}s before",
+  "voice.binding.finishBefore": "Finish by then",
+  "voice.binding.finishBefore.hint":
+    "Start earlier by the length of the audio so it has finished with {seconds}s left; unchecked, it only starts with {seconds}s left",
+  "voice.binding.countdown": "Count down",
+  "voice.binding.countdown.hint":
+    "After the phrase, count the remaining seconds (from 10 at most) over any other voice; stops at once when the subject is refreshed or gone",
   "voice.binding.tryPlay": "Preview",
   "voice.binding.pendingGeneration": "Pending generation",
   "voice.binding.playFailed":

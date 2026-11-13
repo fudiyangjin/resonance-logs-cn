@@ -460,7 +460,8 @@ impl LiveCore {
     /// order the domain events produced them.
     fn flush_voice_cues(&mut self) {
         let cues = self.projections.take_voice_cues();
-        if cues.is_empty() {
+        let ticks = self.projections.take_voice_ticks();
+        if cues.is_empty() && ticks.is_empty() {
             return;
         }
         let Some(service) = self.app.try_state::<crate::voice::VoiceService>() else {
@@ -468,6 +469,9 @@ impl LiveCore {
         };
         for cue in cues {
             service.enqueue_cue(cue);
+        }
+        for tick in ticks {
+            service.enqueue_tick(tick);
         }
     }
 

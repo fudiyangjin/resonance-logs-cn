@@ -116,6 +116,8 @@ fn rule(id: &str, trigger: VoiceTrigger, phrase_id: &str, cooldown_ms: u64) -> V
         priority: 1,
         cooldown_ms,
         phrase_id_by_tier: None,
+        lead_advance_ms: 0,
+        countdown_from: 0,
     }
 }
 
@@ -617,19 +619,20 @@ fn shorten_local_buff(duration_ms: u64) -> ProtocolObservation {
 fn buff_shortened_inside_lead_fires_expiring_immediately() {
     let (mut projection, mut entities, mut scheduler) = buff_expiring_in_five_seconds();
 
-    // At 1 000 ms the server leaves 3 s: the 5 s mark is gone, the buff is not.
+    // At 1 000 ms the server leaves 4.5 s: the 5 s mark was half a second
+    // ago, close enough to still say so.
     apply_observations(
         &mut projection,
         &mut entities,
         &mut scheduler,
         10,
-        vec![shorten_local_buff(3_000)],
+        vec![shorten_local_buff(4_500)],
     );
     let cues = projection.take_cues();
     assert_eq!(cues.len(), 1);
     assert_eq!(cues[0].phrase_id, "soon");
-    // The warning is only worth playing until the buff actually runs out.
-    assert_eq!(cues[0].valid_for_ms, Some(3_000));
+    // The warning may start up to 1.5 s after its mark, no later.
+    assert_eq!(cues[0].valid_for_ms, Some(1_000));
     assert!(scheduler.is_empty());
 
     // Further updates inside the same window stay quiet.
@@ -641,6 +644,91 @@ fn buff_shortened_inside_lead_fires_expiring_immediately() {
         vec![shorten_local_buff(1_500)],
     );
     assert!(projection.take_cues().is_empty());
+}
+
+#[test]
+fn buff_shortened_far_inside_lead_stays_silent() {
+    let (mut projection, mut entities, mut scheduler) = buff_expiring_in_five_seconds();
+
+    // 3 s left: "5 seconds left" would be wrong by now.
+    apply_observations(
+        &mut projection,
+        &mut entities,
+        &mut scheduler,
+        10,
+        vec![shorten_local_buff(3_000)],
+    );
+    assert!(projection.take_cues().is_empty());
+    assert!(scheduler.is_empty());
+}
+
+#[test]
+fn buff_countdown_stops_when_the_buff_is_refreshed() {
+    let mut counting = rule("soon", trigger(local_buff(77), expiring(5)), "soon", 0);
+    counting.countdown_from = 3;
+    let mut projection = projection_with(vec![counting]);
+    let mut entities = local_context();
+    let mut scheduler = DeadlineScheduler::new();
+    // Applied at 200 ms for 10 s: the phrase at 5 200, digits from 7 200.
+    apply_observations(
+        &mut projection,
+        &mut entities,
+        &mut scheduler,
+        2,
+        vec![ProtocolObservation::BuffChanged {
+            target_uuid: EntityUuid(1),
+            change: ObservedBuffChange::Applied {
+                buff: local_buff_applied(10, 10_000),
+            },
+        }],
+    );
+    assert_eq!(scheduler.len(), 4);
+
+    let deliver = |projection: &mut VoiceProjection,
+                   scheduler: &mut DeadlineScheduler,
+                   entities: &EntityContext,
+                   now: u64| {
+        for due in scheduler.drain_due(MonoTimeMs(now)) {
+            projection.apply(
+                &domain_event(
+                    now,
+                    DomainEvent::DeadlineReached {
+                        key: due.key,
+                        scheduled_for: due.scheduled_for,
+                        fired_at: MonoTimeMs(now),
+                        kind: due.kind,
+                        scope: due.scope,
+                        generation: due.generation,
+                    },
+                ),
+                entities,
+                scheduler,
+            );
+        }
+    };
+    deliver(&mut projection, &mut scheduler, &entities, 5_200);
+    assert_eq!(fired_phrases(&mut projection), ["soon"]);
+    assert!(projection.take_ticks().is_empty());
+    deliver(&mut projection, &mut scheduler, &entities, 7_200);
+    assert!(projection.take_cues().is_empty());
+    let ticks = projection.take_ticks();
+    assert_eq!(ticks.iter().map(|tick| tick.n).collect::<Vec<_>>(), [3]);
+    assert_eq!(ticks[0].valid_for_ms, 300);
+
+    // Refreshed for another 10 s right after "3": "2" and "1" are not
+    // counted now, and the whole cue is due again before the new expiry.
+    apply_observations(
+        &mut projection,
+        &mut entities,
+        &mut scheduler,
+        73,
+        vec![shorten_local_buff(10_000)],
+    );
+    deliver(&mut projection, &mut scheduler, &entities, 10_200);
+    assert!(projection.take_ticks().is_empty());
+    assert!(projection.take_cues().is_empty());
+    assert_eq!(scheduler.next_deadline(), Some(MonoTimeMs(12_300)));
+    assert_eq!(scheduler.len(), 4);
 }
 
 #[test]
@@ -1596,12 +1684,13 @@ mod entity_monitor_bridge {
         h.step(2, vec![cooldown(SKILL, 10_000, 0)]);
         assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(5_200)));
 
-        // At 3 000 ms a reduction leaves 2 s: past the 5 s mark, so speak now.
-        h.step(30, vec![cooldown(SKILL, 10_000, 8_000)]);
+        // At 3 000 ms a reduction leaves 4.5 s: just past the 5 s mark, so
+        // speak now.
+        h.step(30, vec![cooldown(SKILL, 10_000, 5_500)]);
         assert_eq!(h.fired(), ["soon"]);
-        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(5_000)));
+        assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(7_500)));
 
-        h.drain(50);
+        h.drain(75);
         assert_eq!(h.fired(), ["ready"]);
         assert!(h.scheduler.is_empty());
     }
@@ -1884,7 +1973,7 @@ mod entity_monitor_bridge {
         let cues = h.voice.take_cues();
         assert_eq!(cues.len(), 1);
         assert_eq!(cues[0].phrase_id, "soon");
-        assert_eq!(cues[0].valid_for_ms, Some(5_000));
+        assert_eq!(cues[0].valid_for_ms, Some(1_500));
 
         h.step(
             150,
@@ -2268,8 +2357,8 @@ mod entity_monitor_bridge {
         h.event(10, boss_mechanic(9, 16_000));
         assert_eq!(h.scheduler.next_deadline(), Some(MonoTimeMs(11_000)));
 
-        // Re-fired at 2 s with 3 s to go: announced on the spot.
-        h.event(20, boss_mechanic(9, 5_000));
+        // Re-fired at 2 s with 4.5 s to go: announced on the spot.
+        h.event(20, boss_mechanic(9, 6_500));
         assert_eq!(h.fired(), ["soon"]);
         // Only the monitor's own expiry timer is left.
         assert_eq!(h.voice.tracker.len(), 0);

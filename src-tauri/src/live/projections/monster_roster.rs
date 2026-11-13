@@ -1295,6 +1295,8 @@ mod tests {
                     priority: 0,
                     cooldown_ms: 0,
                     phrase_id_by_tier: None,
+                    lead_advance_ms: 0,
+                    countdown_from: 0,
                 }],
             },
             &entities,

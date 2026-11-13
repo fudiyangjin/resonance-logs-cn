@@ -2978,6 +2978,12 @@ export const jaJPMessages = {
     "${阶数}（または ${remodelLevel}）でファンタジーの階級を挿入できます。例:「ティナ${阶数}が発効」は5階のとき「ティナ5阶が発効」と読み上げられます",
   "voice.binding.pickPhrase": "フレーズを選択",
   "voice.binding.secondsBefore": "{seconds} 秒前",
+  "voice.binding.finishBefore": "先に言い終える",
+  "voice.binding.finishBefore.hint":
+    "音声の長さだけ早く話し始め、残り {seconds} 秒で言い終えます。オフの場合は残り {seconds} 秒で話し始めます",
+  "voice.binding.countdown": "カウントダウン",
+  "voice.binding.countdown.hint":
+    "音声の後、残り秒数を 1 秒ごとに読み上げます（最大 10 から）。他の音声と重ねて再生され、対象が更新または消滅するとすぐ止まります",
   "voice.binding.tryPlay": "試聴",
   "voice.binding.pendingGeneration": "生成待ち",
   "voice.binding.playFailed":
