@@ -1107,7 +1107,9 @@ export type LiveScenePayload = { revision: number; sceneId: number | null; dunge
 /**
  * Skill damage topic: the retained window of watched local hits.
  */
-export type LiveSkillDamagePayload = { revision: number; hits: SkillDamageHitState[] }
+export type SkillDamageCastState = { id: number; skillId: number; phase: string; occurredAtMs: number }
+
+export type LiveSkillDamagePayload = { revision: number; hits: SkillDamageHitState[]; casts?: SkillDamageCastState[] }
 /**
  * Skill CD / panel attrs / fight resource / shields / counters
  * (`live-status`). Published on the same 50ms cadence as the other overlay
@@ -1587,7 +1589,7 @@ amount: string; occurredAtMs: number }
  * Damage ids (`skill_key`) whose local hits the skill damage HUD shows.
  * Empty means the feature is off and no hit is collected.
  */
-export type SkillDamageRuntimeSnapshot = { watchedSkillKeys: number[] }
+export type SkillDamageRuntimeSnapshot = { watchedSkillKeys: number[]; watchedCastIds?: number[]; monitorAll?: boolean }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[]; seasonCultivateFactorTemplates: FactorCounterTemplate[];
 /**
  * Coverage watch list: these buff ids are tracked for live coverage on

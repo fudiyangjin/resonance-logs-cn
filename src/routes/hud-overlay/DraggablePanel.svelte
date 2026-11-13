@@ -233,6 +233,15 @@
       border-color 180ms ease;
   }
 
+  .overlay-group.editable {
+    border: 2px solid var(--overlay-edit-panel-border);
+    border-radius: 10px;
+    background: var(--overlay-edit-panel-bg);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+    padding: 8px;
+    cursor: move;
+  }
+
   .panel-content {
     width: 100%;
   }

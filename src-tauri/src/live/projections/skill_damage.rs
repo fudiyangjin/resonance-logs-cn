@@ -1,15 +1,17 @@
 //! Local skill damage hits for the skill damage HUD domain.
 //!
-//! Only hits whose `skill_key` is on the frontend's watch list are kept, so a
-//! disabled feature (empty list) costs nothing per hit. The topic is dirtied
-//! only when a hit is accepted or the window is cleared; clients consume the
-//! window incrementally through each hit's `id`.
+//! Watched skill hits are kept; continuous all-damage mode also collects the
+//! local player's other skills. Cast presets watch local lifecycle events too.
+//! The topic is dirtied only on accepted hits/casts or reset; clients consume
+//! both retained windows incrementally through a shared sequence cursor.
 
 use std::collections::VecDeque;
 
 use crate::live::bootstrap_snapshot::SkillDamageRuntimeSnapshot;
-use crate::live::ipc::models::{LiveSkillDamagePayload, SkillDamageHitState};
-use crate::live::runtime::events::{BatchId, DomainEnvelope, DomainEvent, HitKind};
+use crate::live::ipc::models::{LiveSkillDamagePayload, SkillDamageCastState, SkillDamageHitState};
+use crate::live::runtime::events::{
+    BatchId, DomainEnvelope, DomainEvent, EntityRef, HitKind, SkillPhase,
+};
 
 /// Most hits held at once.
 const MAX_RETAINED_HITS: usize = 128;
@@ -20,6 +22,9 @@ const RETAIN_WINDOW_MS: i64 = 5_000;
 pub struct SkillDamageProjection {
     /// Sorted, deduplicated (normalized by the runtime snapshot).
     watched: Vec<i64>,
+    watched_cast_ids: Vec<i32>,
+    casts: VecDeque<SkillDamageCastState>,
+    monitor_all: bool,
     hits: VecDeque<SkillDamageHitState>,
     /// Last issued hit id; never reset, so ids stay unique for the runtime.
     sequence: u64,
@@ -34,6 +39,45 @@ impl SkillDamageProjection {
     /// them by id, so dropping them would only churn the payload.
     pub fn apply_config(&mut self, config: &SkillDamageRuntimeSnapshot) {
         self.watched.clone_from(&config.watched_skill_keys);
+        self.watched_cast_ids.clone_from(&config.watched_cast_ids);
+        self.monitor_all = config.monitor_all;
+    }
+
+    pub fn apply_cast(&mut self, envelope: &DomainEnvelope, local: Option<EntityRef>) -> bool {
+        let DomainEvent::SkillLifecycleChanged {
+            caster,
+            skill_id,
+            phase,
+            ..
+        } = &envelope.event
+        else {
+            return false;
+        };
+        if Some(*caster) != local || self.watched_cast_ids.binary_search(skill_id).is_err() {
+            return false;
+        }
+        let phase = match phase {
+            SkillPhase::CastStarted => "start",
+            SkillPhase::DurationStarted => "durationStart",
+            SkillPhase::DurationEnded => "end",
+            SkillPhase::Completed => "complete",
+            SkillPhase::Observed => return false,
+        };
+        self.sequence = self.sequence.wrapping_add(1);
+        self.casts.push_back(SkillDamageCastState {
+            id: self.sequence,
+            skill_id: *skill_id,
+            phase: phase.into(),
+            occurred_at_ms: envelope.occurred_at_ms,
+        });
+        while self.casts.len() > MAX_RETAINED_HITS
+            || self.casts.front().is_some_and(|item| {
+                envelope.occurred_at_ms.saturating_sub(item.occurred_at_ms) > RETAIN_WINDOW_MS
+            })
+        {
+            self.casts.pop_front();
+        }
+        true
     }
 
     /// Returns true when the published window changed.
@@ -43,7 +87,7 @@ impl SkillDamageProjection {
                 if hit.source_is_local_player
                     && hit.kind == HitKind::Damage
                     && hit.amount > 0
-                    && self.watched.binary_search(&hit.skill_key).is_ok() =>
+                    && (self.monitor_all || self.watched.binary_search(&hit.skill_key).is_ok()) =>
             {
                 if self.last_batch != Some(envelope.batch_id) {
                     self.last_batch = Some(envelope.batch_id);
@@ -84,11 +128,13 @@ impl SkillDamageProjection {
         LiveSkillDamagePayload {
             revision: self.revision,
             hits: self.hits.iter().cloned().collect(),
+            casts: self.casts.iter().cloned().collect(),
         }
     }
 
     fn clear(&mut self) -> bool {
-        let changed = !self.hits.is_empty();
+        let changed = !self.hits.is_empty() || !self.casts.is_empty();
+        self.casts.clear();
         self.hits.clear();
         self.last_batch = None;
         changed
@@ -107,7 +153,9 @@ mod tests {
     fn projection(watched: &[i64]) -> SkillDamageProjection {
         let mut projection = SkillDamageProjection::default();
         projection.apply_config(&SkillDamageRuntimeSnapshot {
+            watched_cast_ids: vec![],
             watched_skill_keys: watched.to_vec(),
+            monitor_all: false,
         });
         projection
     }
@@ -215,6 +263,27 @@ mod tests {
     }
 
     #[test]
+    fn monitor_all_keeps_other_local_skills_but_never_other_players() {
+        let mut projection = projection(&[WATCHED]);
+        projection.apply_config(&SkillDamageRuntimeSnapshot {
+            watched_cast_ids: vec![],
+            watched_skill_keys: vec![WATCHED],
+            monitor_all: true,
+        });
+        assert!(accept(&mut projection, 1, 1_000, hit(999, 100)));
+        let mut other = hit(999, 100);
+        other.source_is_local_player = false;
+        assert!(!accept(&mut projection, 2, 1_010, other));
+        projection.apply_config(&SkillDamageRuntimeSnapshot {
+            watched_cast_ids: vec![],
+            watched_skill_keys: vec![],
+            monitor_all: true,
+        });
+        assert!(accept(&mut projection, 3, 1_020, hit(999, 100)));
+        assert_eq!(projection.payload().hits.len(), 2);
+    }
+
+    #[test]
     fn retention_is_bounded_by_count_and_newest_hit_window() {
         let mut projection = projection(&[WATCHED]);
         for batch in 1..=140 {
@@ -270,6 +339,51 @@ mod tests {
         projection.apply_config(&SkillDamageRuntimeSnapshot::default());
         assert_eq!(projection.payload().hits.len(), 1);
         assert!(!accept(&mut projection, 2, 1_000, hit(WATCHED, 100)));
+    }
+
+    #[test]
+    fn cast_lifecycle_is_local_filtered_ordered_and_reset_with_hits() {
+        let mut projection = projection(&[WATCHED]);
+        projection.apply_config(&SkillDamageRuntimeSnapshot {
+            watched_skill_keys: vec![WATCHED],
+            watched_cast_ids: vec![1241],
+            monitor_all: false,
+        });
+        let cast = |caster, skill_id, phase| {
+            envelope(
+                1,
+                1_000,
+                DomainEvent::SkillLifecycleChanged {
+                    caster: entity(caster),
+                    skill_id,
+                    phase,
+                    target: None,
+                },
+            )
+        };
+        assert!(!projection.apply_cast(
+            &cast(20, 1241, SkillPhase::DurationStarted),
+            Some(entity(10))
+        ));
+        assert!(!projection.apply_cast(&cast(10, 1520, SkillPhase::CastStarted), Some(entity(10))));
+        assert!(!projection.apply_cast(&cast(10, 1241, SkillPhase::Observed), Some(entity(10))));
+        assert!(projection.apply_cast(
+            &cast(10, 1241, SkillPhase::DurationStarted),
+            Some(entity(10))
+        ));
+        accept(&mut projection, 2, 1_100, hit(WATCHED, 100));
+        assert!(
+            projection.apply_cast(&cast(10, 1241, SkillPhase::DurationEnded), Some(entity(10)))
+        );
+        let payload = projection.payload();
+        assert_eq!(payload.casts[0].id, 1);
+        assert_eq!(payload.hits[0].id, 2);
+        assert_eq!(payload.casts[1].id, 3);
+        assert_eq!(payload.casts[0].phase, "durationStart");
+        assert_eq!(payload.casts[1].phase, "end");
+        projection.reset_runtime();
+        assert!(projection.payload().casts.is_empty());
+        assert!(projection.payload().hits.is_empty());
     }
 
     #[test]

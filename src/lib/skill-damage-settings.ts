@@ -44,13 +44,29 @@ export type SkillDamageEntry = { skillId: number; alias: string };
 export type SkillDamageLayout = { x: number; y: number; scale: number };
 
 export type SkillDamageGroup = {
+  displayMode: "merge" | "continuous";
+  continuousWindowMs: number;
+  continuousWindowMode: "rolling" | "skills" | "cast";
+  continuousStartSkillIds: number[];
+  continuousEndSkillIds: number[];
+  continuousTimeoutMs: number;
+  continuousCastPreset: "ray" | "infusion";
+  continuousCastCloseDelayMs: number;
+  allSelfDamage: boolean;
+  continuousAllDamage: boolean;
+  continuousAnimation: SkillDamageAnimation;
+  continuousFinalAnimation: SkillDamageAnimation;
+  comboFormat: "hit" | "multiplier";
+  showComboCount: boolean;
+  comboPosition: "top" | "bottom" | "left" | "right";
+  comboSpacing: number;
   id: string;
   name: string;
   enabled: boolean;
   entries: SkillDamageEntry[];
   /** Sum every watched hit of one batch into a single row named after the group. */
   mergeSimultaneous: boolean;
-  /** Sum one skill's hits within a batch; otherwise show only the batch's largest hit. */
+  /** Sum one skill's hits within a batch; otherwise show every hit separately. */
   mergeHits: boolean;
   maxVisible: number;
   durationMs: number;
@@ -155,6 +171,22 @@ export function createSkillDamageGroup(
     name,
     enabled: true,
     entries: [],
+    displayMode: "merge",
+    continuousWindowMs: 1500,
+    continuousWindowMode: "rolling",
+    continuousStartSkillIds: [],
+    continuousEndSkillIds: [],
+    continuousTimeoutMs: 15000,
+    continuousCastPreset: "ray",
+    continuousCastCloseDelayMs: 0,
+    allSelfDamage: false,
+    continuousAllDamage: false,
+    continuousAnimation: "shrink",
+    continuousFinalAnimation: "pop",
+    comboFormat: "hit",
+    showComboCount: false,
+    comboPosition: "bottom",
+    comboSpacing: 4,
     mergeSimultaneous: false,
     mergeHits: false,
     maxVisible: SKILL_DAMAGE_MAX_VISIBLE,
@@ -212,6 +244,22 @@ export function clampSkillDamageScale(value: unknown): number {
   return clampNumber(value, 1, SKILL_DAMAGE_SCALE.min, SKILL_DAMAGE_SCALE.max);
 }
 
+export function monitorAllSkillDamage(
+  profile: SkillDamageProfile | null | undefined,
+): boolean {
+  return Boolean(
+    profile?.enabled &&
+      profile.groups.some(
+        (group) =>
+          group.enabled &&
+          (group.allSelfDamage ||
+            (group.entries.length > 0 &&
+              group.displayMode === "continuous" &&
+              group.continuousAllDamage)),
+      ),
+  );
+}
+
 /** Damage ids whose hits the backend should keep for this profile. */
 export function watchedSkillDamageKeys(
   profile: SkillDamageProfile | null | undefined,
@@ -221,6 +269,13 @@ export function watchedSkillDamageKeys(
   for (const group of profile.groups) {
     if (!group.enabled) continue;
     for (const entry of group.entries) keys.add(entry.skillId);
+    if (
+      group.displayMode === "continuous" &&
+      group.continuousWindowMode === "skills"
+    ) {
+      for (const id of group.continuousStartSkillIds) keys.add(id);
+      for (const id of group.continuousEndSkillIds) keys.add(id);
+    }
   }
   return [...keys].sort((a, b) => a - b);
 }
@@ -311,7 +366,12 @@ export function normalizeSkillDamageGroup(
   input: unknown,
   index = 0,
 ): SkillDamageGroup {
-  const source = loose<SkillDamageGroup>(input);
+  const source = loose<
+    SkillDamageGroup & {
+      continuousStartSkillId: unknown;
+      continuousEndSkillId: unknown;
+    }
+  >(input);
   const defaults = createSkillDamageGroup("", index);
   const layout = loose<SkillDamageLayout>(source.layout);
   const seenSkills = new Set<number>();
@@ -338,6 +398,61 @@ export function normalizeSkillDamageGroup(
     name: typeof source.name === "string" ? source.name : "",
     enabled: source.enabled !== false,
     entries,
+    displayMode: oneOf(source.displayMode, ["merge", "continuous"], "merge"),
+    continuousWindowMs: Math.round(
+      clampSkillDamageDuration(
+        source.continuousWindowMs ?? defaults.continuousWindowMs,
+      ),
+    ),
+    continuousWindowMode: oneOf(
+      source.continuousWindowMode,
+      ["rolling", "skills", "cast"],
+      "rolling",
+    ),
+    continuousStartSkillIds: normalizeWindowSkillIds(
+      source.continuousStartSkillIds,
+      source.continuousStartSkillId,
+    ),
+    continuousEndSkillIds: normalizeWindowSkillIds(
+      source.continuousEndSkillIds,
+      source.continuousEndSkillId,
+    ),
+    continuousTimeoutMs: Math.round(
+      clampNumber(source.continuousTimeoutMs, 15000, 100, 3600000),
+    ),
+    continuousCastCloseDelayMs: Math.round(
+      clampNumber(source.continuousCastCloseDelayMs, 0, 0, 1000),
+    ),
+    continuousCastPreset: oneOf(
+      source.continuousCastPreset,
+      ["ray", "infusion"],
+      "ray",
+    ),
+    allSelfDamage: source.allSelfDamage === true,
+    continuousAllDamage: source.continuousAllDamage === true,
+    continuousAnimation: oneOf(
+      source.continuousAnimation,
+      ["pop", "shrink", "floatUp"],
+      defaults.continuousAnimation,
+    ),
+    continuousFinalAnimation: oneOf(
+      source.continuousFinalAnimation,
+      ["pop", "shrink", "floatUp"],
+      defaults.continuousFinalAnimation,
+    ),
+    comboFormat: oneOf(source.comboFormat, ["hit", "multiplier"], "hit"),
+    showComboCount: source.showComboCount === true,
+    comboPosition: oneOf(
+      source.comboPosition,
+      ["top", "bottom", "left", "right"],
+      defaults.comboPosition,
+    ),
+    comboSpacing: clampNumber(
+      source.comboSpacing,
+      defaults.comboSpacing,
+      0,
+      SKILL_DAMAGE_LABEL_SPACING_MAX,
+    ),
     mergeSimultaneous: source.mergeSimultaneous === true,
     mergeHits: source.mergeHits === true,
     maxVisible: Math.round(
@@ -498,4 +613,17 @@ function oneOf<T extends string>(
   fallback: T,
 ): T {
   return options.includes(value as T) ? (value as T) : fallback;
+}
+
+/** Accept old single-skill profiles; an explicitly empty selection stays empty. */
+function normalizeWindowSkillIds(value: unknown, legacy: unknown): number[] {
+  const values = Array.isArray(value) ? value : [legacy];
+  return [
+    ...new Set(
+      values.filter(
+        (id): id is number =>
+          typeof id === "number" && Number.isSafeInteger(id) && id > 0,
+      ),
+    ),
+  ].slice(0, 512);
 }

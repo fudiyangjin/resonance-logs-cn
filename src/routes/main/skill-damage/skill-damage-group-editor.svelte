@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ContinuousDamageSettings from "./continuous-damage-settings.svelte";
   import { onDestroy } from "svelte";
   import {
     SKILL_DAMAGE_ICON_PRESETS,
@@ -42,21 +43,44 @@
   $effect(() => ensureSkillDamageFonts([group]));
 
   let previewId = $state(0);
+  let previewFinal = $state(false);
+  let previewWindowTimer: ReturnType<typeof setTimeout> | undefined;
   let previewVisible = $state(false);
   let previewTimer: ReturnType<typeof setTimeout> | undefined;
+  const previewWindowMs = $derived(
+    group.continuousWindowMode === "rolling"
+      ? group.continuousWindowMs
+      : group.continuousWindowMode === "cast"
+        ? 1500 + group.continuousCastCloseDelayMs // Simulate cast end plus its closing delay.
+        : group.continuousTimeoutMs,
+  );
   function testAnimation() {
     clearTimeout(previewTimer);
+    clearTimeout(previewWindowTimer);
     previewId += 1;
     previewVisible = true;
+    previewFinal = false;
+    if (group.displayMode === "continuous") {
+      previewWindowTimer = setTimeout(() => {
+        previewFinal = true;
+        previewId += 1;
+      }, previewWindowMs);
+    }
     previewTimer = setTimeout(
       () => (previewVisible = false),
-      group.durationMs,
+      group.durationMs +
+        (group.displayMode === "continuous" ? previewWindowMs : 0),
     );
   }
-  onDestroy(() => clearTimeout(previewTimer));
+  onDestroy(() => {
+    clearTimeout(previewTimer);
+    clearTimeout(previewWindowTimer);
+  });
 
   let searchKeyword = $state("");
-  const addedIds = $derived(new Set(group.entries.map((entry) => entry.skillId)));
+  const addedIds = $derived(
+    new Set(group.entries.map((entry) => entry.skillId)),
+  );
   const aliases = $derived(
     Object.fromEntries(
       group.entries.map((entry) => [String(entry.skillId), entry.alias]),
@@ -93,7 +117,7 @@
   }
 
   const previewLabel = $derived(
-    group.mergeSimultaneous
+    group.displayMode === "continuous" || group.mergeSimultaneous
       ? group.name || t("skillDamage.defaultGroup")
       : group.entries[0]?.alias.trim() ||
           (group.entries[0]
@@ -111,16 +135,31 @@
     bind:checked={group.enabled}
     label={t("skillDamage.groupEnabled")}
   />
-  <SettingsSwitch
-    bind:checked={group.mergeSimultaneous}
-    label={t("skillDamage.groupMerge")}
-    description={t("skillDamage.groupMergeHint")}
-  />
-  <SettingsSwitch
-    bind:checked={group.mergeHits}
-    label={t("skillDamage.mergeHits")}
-    description={t("skillDamage.mergeHitsHint")}
-  />
+  <label class="flex items-center gap-2 text-sm"
+    >{t("skillDamage.displayMode")}
+    <select
+      class="bg-background rounded border p-2"
+      bind:value={group.displayMode}
+    >
+      <option value="merge">{t("skillDamage.mergeMode")}</option><option
+        value="continuous">{t("skillDamage.continuousMode")}</option
+      >
+    </select>
+  </label>
+  {#if group.displayMode === "continuous"}<ContinuousDamageSettings
+      {group}
+    />{:else}
+    <SettingsSwitch
+      bind:checked={group.mergeSimultaneous}
+      label={t("skillDamage.groupMerge")}
+      description={t("skillDamage.groupMergeHint")}
+    />
+    <SettingsSwitch
+      bind:checked={group.mergeHits}
+      label={t("skillDamage.mergeHits")}
+      description={t("skillDamage.mergeHitsHint")}
+    />
+  {/if}
   <label class="flex items-center gap-2 text-sm"
     >{t("skillDamage.labelMode")}
     <select
@@ -163,17 +202,19 @@
     </div>
   {/if}
   <div class="flex flex-wrap items-center gap-4">
-    <label class="flex items-center gap-2 text-sm"
-      >{t("skillDamage.scrollDirection")}
-      <select
-        class="bg-background rounded border p-2"
-        bind:value={group.scrollDirection}
-      >
-        <option value="up">{t("skillDamage.scrollUp")}</option><option
-          value="down">{t("skillDamage.scrollDown")}</option
+    {#if group.displayMode === "merge"}
+      <label class="flex items-center gap-2 text-sm"
+        >{t("skillDamage.scrollDirection")}
+        <select
+          class="bg-background rounded border p-2"
+          bind:value={group.scrollDirection}
         >
-      </select>
-    </label>
+          <option value="up">{t("skillDamage.scrollUp")}</option><option
+            value="down">{t("skillDamage.scrollDown")}</option
+          >
+        </select>
+      </label>
+    {/if}
     {#if group.labelMode !== "none"}
       <label class="flex items-center gap-2 text-sm"
         >{t("skillDamage.labelSpacing")}
@@ -195,42 +236,58 @@
       </label>
     {/if}
   </div>
-  <label class="flex items-center gap-2 text-sm">
-    {t("skillDamage.maxVisible")}
-    <select
-      class="bg-background rounded border p-2"
-      bind:value={group.maxVisible}
-    >
-      {#each Array.from({ length: SKILL_DAMAGE_MAX_VISIBLE }, (_, index) => index + 1) as count (count)}<option
-          value={count}>{count}</option
-        >{/each}
-    </select>
-  </label>
+  {#if group.displayMode === "merge"}
+    <label class="flex items-center gap-2 text-sm">
+      {t("skillDamage.maxVisible")}
+      <select
+        class="bg-background rounded border p-2"
+        bind:value={group.maxVisible}
+      >
+        {#each Array.from({ length: SKILL_DAMAGE_MAX_VISIBLE }, (_, index) => index + 1) as count (count)}<option
+            value={count}>{count}</option
+          >{/each}
+      </select>
+    </label>
+  {/if}
+  <SettingsSwitch
+    bind:checked={group.allSelfDamage}
+    label={t("skillDamage.allSelfDamage")}
+    description={t("skillDamage.allSelfDamageHint")}
+  />
   <div class="flex flex-wrap gap-4">
     <label class="flex items-center gap-2 text-sm">
       {t("skillDamage.format")}
-      <select class="bg-background rounded border p-2" bind:value={group.format}>
+      <select
+        class="bg-background rounded border p-2"
+        bind:value={group.format}
+      >
         <option value="integer">{t("skillDamage.integer")}</option>
         <option value="grouped">{t("skillDamage.grouped")}</option>
         <option value="cn">{t("skillDamage.cn")}</option>
         <option value="western">{t("skillDamage.western")}</option>
       </select>
     </label>
-    <label class="flex items-center gap-2 text-sm">
-      {t("skillDamage.animation")}
-      <select
-        class="bg-background rounded border p-2"
-        bind:value={group.animation}
-      >
-        <option value="pop">{t("skillDamage.pop")}</option>
-        <option value="shrink">{t("skillDamage.shrink")}</option>
-        <option value="floatUp">{t("skillDamage.floatUp")}</option>
-      </select>
-    </label>
+    {#if group.displayMode === "merge"}
+      <label class="flex items-center gap-2 text-sm">
+        {t("skillDamage.animation")}
+        <select
+          class="bg-background rounded border p-2"
+          bind:value={group.animation}
+        >
+          <option value="pop">{t("skillDamage.pop")}</option>
+          <option value="shrink">{t("skillDamage.shrink")}</option>
+          <option value="floatUp">{t("skillDamage.floatUp")}</option>
+        </select>
+      </label>
+    {/if}
   </div>
   <div class="flex flex-wrap items-center gap-3">
     <label class="flex items-center gap-2 text-sm">
-      {t("skillDamage.duration")}
+      {t(
+        group.displayMode === "continuous"
+          ? "skillDamage.continuousTotalDuration"
+          : "skillDamage.duration",
+      )}
       <input
         class="bg-background w-24 rounded border p-2"
         type="text"
@@ -262,8 +319,19 @@
         <SkillDamageRow
           {group}
           label={previewLabel}
-          amount="123456"
+          amount={previewFinal ? "345678" : "123456"}
           hitCount={3}
+          comboCount={group.displayMode === "continuous" ? "3" : undefined}
+          running={group.displayMode === "continuous" && !previewFinal}
+          animation={group.displayMode === "continuous"
+            ? previewFinal
+              ? group.continuousFinalAnimation
+              : group.continuousAnimation
+            : group.animation}
+          animationDurationMs={group.displayMode === "continuous" &&
+          !previewFinal
+            ? previewWindowMs
+            : group.durationMs}
           {fontFamily}
         />
       {/key}

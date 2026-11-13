@@ -296,10 +296,22 @@ pub struct SkillDamageHitState {
     pub occurred_at_ms: i64,
 }
 
+/// Local player's cast lifecycle, sharing the hit sequence cursor.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SkillDamageCastState {
+    pub id: u64,
+    pub skill_id: i32,
+    pub phase: String,
+    pub occurred_at_ms: i64,
+}
+
 /// Skill damage topic: the retained window of watched local hits.
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LiveSkillDamagePayload {
+    #[serde(default)]
+    pub casts: Vec<SkillDamageCastState>,
     pub revision: u64,
     pub hits: Vec<SkillDamageHitState>,
 }

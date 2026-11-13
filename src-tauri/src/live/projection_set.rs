@@ -300,7 +300,10 @@ impl ProjectionSet {
         let mut minimap_changed = false;
         // Hits, scene and local-player changes; ContainerReset clears it in
         // `reset_runtime` below.
-        let skill_damage_changed = self.skill_damage.apply(envelope);
+        let cast_changed = self
+            .skill_damage
+            .apply_cast(envelope, entities.local_player());
+        let skill_damage_changed = self.skill_damage.apply(envelope) | cast_changed;
         // Every event that touches a roster member; a no-op while neither the
         // panel nor a voice rule needs the roster.
         let roster = self.monster_roster.apply(envelope, entities);
