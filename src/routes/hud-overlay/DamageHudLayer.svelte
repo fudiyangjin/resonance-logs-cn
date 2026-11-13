@@ -81,13 +81,29 @@
                   duration: 120,
                 }}
               >
-                <SkillDamageRow
-                  {group}
-                  label={rowLabel(group, row)}
-                  amount={row.amount}
-                  hitCount={row.hitCount}
-                  {fontFamily}
-                />
+                {#key row.phase === "active" ? row.comboCount : row.key}
+                  <SkillDamageRow
+                    {group}
+                    label={rowLabel(group, row)}
+                    amount={row.amount}
+                    hitCount={row.hitCount}
+                    comboCount={row.comboCount}
+                    running={row.phase === "active"}
+                    animation={row.phase === "final"
+                      ? group.continuousFinalAnimation
+                      : row.phase === "active"
+                        ? group.continuousAnimation
+                        : group.animation}
+                    animationDurationMs={row.phase === "active"
+                      ? group.continuousWindowMode === "rolling"
+                        ? group.continuousWindowMs
+                        : group.continuousWindowMode === "cast"
+                          ? group.durationMs
+                          : group.continuousTimeoutMs
+                      : group.durationMs}
+                    {fontFamily}
+                  />
+                {/key}
               </div>
             {/each}
           {/if}

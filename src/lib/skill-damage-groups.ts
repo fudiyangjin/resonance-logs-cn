@@ -8,13 +8,14 @@
  */
 import type { SkillDamageHitState } from "./bindings";
 import {
-  largestSimultaneousSkillHits,
   sumSimultaneousSkillHits,
   withSkillDamageTargetCounts,
 } from "./skill-damage-display";
 import type { SkillDamageGroup } from "./skill-damage-settings";
 
 export type SkillDamageRow = {
+  comboCount?: string;
+  phase?: "active" | "final";
   /** Unique per group and hit; stable for keyed rendering. */
   key: string;
   groupId: string;
@@ -34,9 +35,11 @@ export function buildSkillDamageRows(
   groups: readonly SkillDamageGroup[],
 ): SkillDamageRow[] {
   return groups.flatMap((group) => {
-    if (!group.enabled) return [];
+    if (!group.enabled || group.displayMode === "continuous") return [];
     const watched = new Set(group.entries.map((entry) => entry.skillId));
-    const selected = hits.filter((hit) => watched.has(hit.skillId));
+    const selected = hits.filter(
+      (hit) => group.allSelfDamage || watched.has(hit.skillId),
+    );
     if (selected.length === 0) return [];
     const row = (
       hit: SkillDamageHitState,
@@ -63,11 +66,13 @@ export function buildSkillDamageRows(
         ),
       );
     }
-    const counted = withSkillDamageTargetCounts(selected);
-    const reduced = group.mergeHits
-      ? sumSimultaneousSkillHits(counted)
-      : largestSimultaneousSkillHits(counted);
-    return reduced.map((hit) => row(hit, hit.amount, hit.hitCount, false));
+    if (group.mergeHits) {
+      const counted = withSkillDamageTargetCounts(selected);
+      return sumSimultaneousSkillHits(counted).map((hit) =>
+        row(hit, hit.amount, hit.hitCount, false),
+      );
+    }
+    return selected.map((hit) => row(hit, hit.amount, 1, false));
   });
 }
 

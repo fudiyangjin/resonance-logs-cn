@@ -1,3 +1,4 @@
+import { watchedSkillDamageCastIds } from "$lib/skill-damage-cast-presets";
 import {
   commands,
   type CounterRule,
@@ -13,7 +14,10 @@ import { ensureMonsterSkillEntries } from "$lib/monster-skill-entries";
 import { ensureRosterSkillEntries } from "$lib/roster-skill-entries";
 import { SETTINGS, normalizeTeammateCdSkills } from "$lib/settings-store";
 import { activeSkillDamageProfile } from "$lib/skill-damage-profile.svelte";
-import { watchedSkillDamageKeys } from "$lib/skill-damage-settings";
+import {
+  watchedSkillDamageKeys,
+  monitorAllSkillDamage,
+} from "$lib/skill-damage-settings";
 import {
   getClassConfigs,
   getCounterRules,
@@ -277,6 +281,8 @@ export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
     teammateCd: buildTeammateCdRuntimeSnapshot(),
     skillDamage: {
       watchedSkillKeys: watchedSkillDamageKeys(activeSkillDamageProfile()),
+      watchedCastIds: watchedSkillDamageCastIds(activeSkillDamageProfile()),
+      monitorAll: monitorAllSkillDamage(activeSkillDamageProfile()),
     },
     monsterRoster: buildMonsterRosterRuntimeSnapshot(),
     buffComposites: buffCompositeSpecs(

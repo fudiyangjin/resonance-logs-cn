@@ -5,9 +5,11 @@ import { getGameData } from "$lib/i18n/game-data";
 describe("skill damage search", () => {
   it("finds the reported damage ID by its own name and its group name", () => {
     expect(
-      searchSkillDamage("爆炸箭BUFF", {}, "zh-CN").some(
-        (item) => item.skillId === 25523102,
-      ),
+      searchSkillDamage(
+        getGameData("zh-CN").damageAttrIdNames["25523102"]!,
+        {},
+        "zh-CN",
+      ).some((item) => item.skillId === 25523102),
     ).toBe(true);
     const group = Object.values(getGameData("zh-CN").recountTable).find(
       (entry) => entry.DamageId.includes(25523102),

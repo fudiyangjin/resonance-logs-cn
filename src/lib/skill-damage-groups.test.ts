@@ -37,16 +37,36 @@ function group(name: string, skillIds: number[]) {
 }
 
 describe("buildSkillDamageRows", () => {
-  it("keeps the largest hit per batch, with its target count, when unmerged", () => {
+  it("treats every local hit as group damage without skill entries when all damage is selected", () => {
+    const all = group("All", []);
+    all.allSelfDamage = true;
+    expect(buildSkillDamageRows(hits, [all]).map((row) => row.amount)).toEqual(
+      hits.map((hit) => hit.amount),
+    );
+    all.mergeSimultaneous = true;
+    expect(buildSkillDamageRows(hits, [all]).map((row) => row.amount)).toEqual([
+      "9007199254742010",
+      "50",
+    ]);
+    all.allSelfDamage = false;
+    expect(buildSkillDamageRows(hits, [all])).toEqual([]);
+  });
+  it("keeps every watched hit of the same batch when unmerged", () => {
     const first = group("First", [10, 20]);
     const rows = buildSkillDamageRows(hits, [first]);
     expect(rows.map((row) => [row.skillId, row.amount, row.hitCount])).toEqual([
       [10, "9007199254740993", 1],
+      [20, "7", 1],
+      [20, "10", 1],
       [20, "50", 1],
     ]);
     expect(rows.every((row) => !row.merged && row.groupId === first.id)).toBe(
       true,
     );
+    expect(new Set(rows.map((row) => row.key)).size).toBe(4);
+    expect(rows.map((row) => row.occurredAtMs)).toEqual([
+      1000, 1000, 1000, 1050,
+    ]);
   });
 
   it("sums one skill per batch when merging hits", () => {
@@ -90,6 +110,21 @@ describe("buildSkillDamageRows", () => {
 });
 
 describe("mergeSkillDamageRows", () => {
+  it("displays multiple unmerged hits in one arrival and only evicts beyond the group limit", () => {
+    const first = group("First", [20]);
+    first.maxVisible = 3;
+    const added = buildSkillDamageRows(
+      [hit(1, 20, "7"), hit(2, 20, "10"), hit(3, 20, "20")],
+      [first],
+    );
+    const shown = mergeSkillDamageRows([], added, [first], 1100);
+    expect(shown.map((row) => row.amount)).toEqual(["7", "10", "20"]);
+    expect(shown.map((row) => row.hitCount)).toEqual([1, 1, 1]);
+    const next = buildSkillDamageRows([hit(4, 20, "30", 2)], [first]);
+    expect(
+      mergeSkillDamageRows(shown, next, [first], 1100).map((row) => row.amount),
+    ).toEqual(["10", "20", "30"]);
+  });
   it.each([false, true])(
     "limits each group independently, keeping the newest (group merge: %s)",
     (merge) => {
