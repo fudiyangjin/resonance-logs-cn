@@ -2,8 +2,10 @@
   import { t } from "$lib/i18n/index.svelte";
   import type { ResourceTextStyle } from "$lib/settings-store";
   import ColorField from "$lib/components/ColorField.svelte";
+  import ClassContextLink from "./class-context-link.svelte";
 
   interface Props {
+    selectedClassKey: string;
     showSkillCdGroup: boolean;
     showResourceGroup: boolean;
     showPanelAttrGroup: boolean;
@@ -26,6 +28,7 @@
   }
 
   let {
+    selectedClassKey,
     showSkillCdGroup,
     showResourceGroup,
     showPanelAttrGroup,
@@ -116,6 +119,12 @@
     <p class="text-xs text-muted-foreground">
       {t("skillMonitor.overlay.help")}
     </p>
+  </div>
+  <div class="space-y-2 border-t border-border/40 pt-3">
+    <ClassContextLink classKey={selectedClassKey} resource />
+    {#if selectedClassKey === "flame_berserker"}
+      <p class="text-xs text-muted-foreground">{t("skillMonitor.profile.axeBallHelp")}</p>
+    {/if}
   </div>
   {#if showResourceGroup && resourceSections.length > 0}
     <div class="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">

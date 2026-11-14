@@ -131,9 +131,11 @@ export const jaJPMessages = {
   "skillDamage.mergeMode": "合算表示モード",
   "skillDamage.continuousMode": "連続表示モード",
   "skillDamage.allSelfDamage": "自身の全ダメージを表示",
-  "skillDamage.allSelfDamageHint": "自身の全スキルダメージをこのグループの対象とします。個別登録は不要で、グループの表示モードとスタイルを適用します。スキル・詠唱ウィンドウの開始・終了条件は設定に従います。",
+  "skillDamage.allSelfDamageHint":
+    "自身の全スキルダメージをこのグループの対象とします。個別登録は不要で、グループの表示モードとスタイルを適用します。スキル・詠唱ウィンドウの開始・終了条件は設定に従います。",
   "skillDamage.castCloseDelay": "終了後の待機時間（秒、0～1）",
-  "skillDamage.castCloseDelayHint": "詠唱終了後も待機時間中はダメージを加算し、時間経過後に精算します。0 なら即座に精算します。",
+  "skillDamage.castCloseDelayHint":
+    "詠唱終了後も待機時間中はダメージを加算し、時間経過後に精算します。0 なら即座に精算します。",
   "skillDamage.windowMode": "ウィンドウの条件",
   "skillDamage.windowRolling": "ローリング",
   "skillDamage.windowSkills": "スキルで開始・終了",
@@ -147,12 +149,16 @@ export const jaJPMessages = {
   "skillDamage.windowPreset": "詠唱プリセット",
   "skillDamage.castRay": "寒氷射線（持続詠唱終了で精算）",
   "skillDamage.castInfusion": "灌注（森語者）",
-  "skillDamage.windowSkillsHint": "開始スキルの命中で開始し、終了スキルの命中で即座に精算します。開始スキルの再命中でタイムアウトを更新し、累計と連撃数を維持します。対象外の開始・終了ダメージは全ダメージ集計時のみ加算します。",
-  "skillDamage.windowCastHint": "自身の詠唱イベントと基本スキルIDを使い、詠唱開始または持続詠唱開始で開き、終了・完了で精算します。タイムアウトはなく、終了イベントが届くまで累計します。カウンターの有効化は不要で、集計対象はグループ設定に従います。",
-  "skillDamage.continuousHint": "累計を1件表示し、終了後は別の最終合計アニメーションを再生します。ローリングはグループ命中で延長し、スキルウィンドウは開始条件でタイムアウトを更新します。詠唱プリセットは開始・終了イベントのみで制御します。",
+  "skillDamage.windowSkillsHint":
+    "開始スキルの命中で開始し、終了スキルの命中で即座に精算します。開始スキルの再命中でタイムアウトを更新し、累計と連撃数を維持します。対象外の開始・終了ダメージは全ダメージ集計時のみ加算します。",
+  "skillDamage.windowCastHint":
+    "自身の詠唱イベントと基本スキルIDを使い、詠唱開始または持続詠唱開始で開き、終了・完了で精算します。タイムアウトはなく、終了イベントが届くまで累計します。カウンターの有効化は不要で、集計対象はグループ設定に従います。",
+  "skillDamage.continuousHint":
+    "累計を1件表示し、終了後は別の最終合計アニメーションを再生します。ローリングはグループ命中で延長し、スキルウィンドウは開始条件でタイムアウトを更新します。詠唱プリセットは開始・終了イベントのみで制御します。",
   "skillDamage.continuousWindow": "連続ウィンドウ（秒）",
   "skillDamage.continuousAll": "自身の全ダメージを累計",
-  "skillDamage.continuousAllHint": "ウィンドウ内の他の自身スキルもダメージとHIT数に加算します。開始・延長はグループ内スキルの命中時のみです。",
+  "skillDamage.continuousAllHint":
+    "ウィンドウ内の他の自身スキルもダメージとHIT数に加算します。開始・延長はグループ内スキルの命中時のみです。",
   "skillDamage.continuousAnimation": "累計中のアニメーション",
   "skillDamage.continuousFinalAnimation": "終了合計のアニメーション",
   "skillDamage.continuousTotalDuration": "終了合計の表示時間（秒）",
@@ -1441,6 +1447,27 @@ export const jaJPMessages = {
     "現在のロードアウトが参照するスキル監視プロファイルです。ここで切替・管理できます。組み合わせは「ロードアウト」ページへ",
   "skillMonitor.profile.deleteConfirm":
     "このスキル監視プロファイルを削除しますか？参照しているロードアウトは先頭のプロファイルにフォールバックします。",
+  "skillMonitor.profile.currentLoadout": "現在のプラン：{name}",
+  "skillMonitor.profile.configLabel": "監視設定",
+  "skillMonitor.profile.classLabel": "設定のクラス",
+  "skillMonitor.profile.classHelp":
+    "スキル一覧、クラスリソース表示、関連する既定の監視に使用します。",
+  "skillMonitor.profile.shared":
+    "この設定は「{names}」で共有されています。変更はすべてに適用されます。",
+  "skillMonitor.profile.copy": "複製",
+  "skillMonitor.profile.copyName": "{name}（コピー）",
+  "skillMonitor.profile.changeClass": "設定のクラスを変更",
+  "skillMonitor.profile.currentClass": "設定のクラス：{name}",
+  "skillMonitor.profile.resourceClass": "{name} · クラスリソース",
+  "skillMonitor.profile.axeBallHelp":
+    "赤痕の球はリソースバーと連動し、クラスの条件を満たすと表示されます。",
+  "skillMonitor.profile.classChangeImpact":
+    "「{from}」から「{to}」に変更すると、監視スキル {skills} 件とスキル音声設定 {voices} 件が削除されます。他の監視設定とリソースの配置は保持されます。",
+  "skillMonitor.profile.privateCopyHelp":
+    "複製すると、現在のプランだけクラスを変更できます。他のプランは元の設定を使い続けます。",
+  "skillMonitor.profile.changeShared": "共有設定を変更",
+  "skillMonitor.profile.copyForCurrent": "現在のプラン用に複製",
+  "skillMonitor.profile.confirmClassChange": "削除して切り替え",
   "skillMonitor.skillCd.class.title": "クラス選択",
   "skillMonitor.skillCd.class.description":
     "現在設定されているクラススキルプロファイルに対応。クラスを切り替えると、このロードアウトで選択したスキルとスキル音声読み上げがクリアされます",
@@ -3079,7 +3106,8 @@ export const jaJPMessages = {
   "voice.bindings.generateMissing.none": "生成待ちの音声はありません",
   "voice.bindings.tryPlay": "試聴",
   "colorField.hexLabel": "カラーコード",
-  "colorField.invalid": "色を認識できません。#38BDF8、38bdf8、rgb(56, 189, 248) の形式で入力してください",
+  "colorField.invalid":
+    "色を認識できません。#38BDF8、38bdf8、rgb(56, 189, 248) の形式で入力してください",
   "colorField.openPalette": "パレット",
   "colorField.schemeColors": "プリセットの色",
   "colorField.recent": "最近使った色",
@@ -3087,17 +3115,22 @@ export const jaJPMessages = {
   "colorField.opacity": "不透明度",
   "hudScheme.open": "配色プリセット",
   "hudScheme.dialogTitle": "配色を一括適用",
-  "hudScheme.dialogDescription": "現在の構成の HUD パネルに配色を適用します。変わるのは名前・数値・プログレスバーの色だけで、文字サイズ・間隔・背景はそのままです。",
-  "hudScheme.semanticNote": "HP・ブレイク・ボス警告・戦闘リストは、どの配色でも赤・青・琥珀の意味を持つ色を保ちます。",
+  "hudScheme.dialogDescription":
+    "現在の構成の HUD パネルに配色を適用します。変わるのは名前・数値・プログレスバーの色だけで、文字サイズ・間隔・背景はそのままです。",
+  "hudScheme.semanticNote":
+    "HP・ブレイク・ボス警告・戦闘リストは、どの配色でも赤・青・琥珀の意味を持つ色を保ちます。",
   "hudScheme.targets.skill": "スキル監視パネル",
   "hudScheme.targets.monster": "モンスター監視パネル",
   "hudScheme.apply": "適用",
   "hudScheme.confirmTitle": "「{name}」を適用しますか?",
-  "hudScheme.confirmDescription": "選択したパネルの名前・数値・プログレスバーの色が上書きされます。バフ警告のハイライト色と味方バフの列ごとの色は保持されます。",
-  "hudScheme.shared": "次の構成がこれらのプロファイルを共有しており、一緒に変更されます:{names}",
+  "hudScheme.confirmDescription":
+    "選択したパネルの名前・数値・プログレスバーの色が上書きされます。バフ警告のハイライト色と味方バフの列ごとの色は保持されます。",
+  "hudScheme.shared":
+    "次の構成がこれらのプロファイルを共有しており、一緒に変更されます:{names}",
   "hudScheme.chips.label": "配色",
   "hudScheme.chips.apply": "「{name}」を適用",
-  "hudScheme.hint.text": "{count} 個のパネルがまだデフォルトの白色で、見づらくなっています。",
+  "hudScheme.hint.text":
+    "{count} 個のパネルがまだデフォルトの白色で、見づらくなっています。",
   "hudScheme.hint.apply": "配色を選ぶ",
   "hudScheme.hint.dismiss": "今後表示しない",
   "hudScheme.panel.textBuff": "テキストバフ",

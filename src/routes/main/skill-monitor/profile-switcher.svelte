@@ -2,8 +2,8 @@
   /**
    * @file Picker for which skill-monitor sub-profile the *active loadout*
    * references. Skill profiles themselves are a shared resource (multiple
-   * loadouts can point at the same one); see `/main/loadouts` for managing
-   * loadouts and duplicating/removing profiles.
+   * loadouts can point at the same one). Class changes and private copies
+   * share the guarded profile write path.
    */
   import {
     SETTINGS,
@@ -18,6 +18,9 @@
   import { profileDisplayName } from "$lib/profile-switcher-utils";
   import NameInputDialog from "$lib/components/NameInputDialog.svelte";
   import ConfirmDialog from "$lib/components/ConfirmDialog.svelte";
+  import ProfileClassSettings from "./profile-class-settings.svelte";
+  import { getClassConfigs } from "$lib/skill-mappings";
+  import { editSkillProfileClass } from "$lib/skill-monitor-profile.svelte.js";
 
   const profiles = $derived(SETTINGS.skillMonitor.state.profiles);
   const loadout = $derived(activeLoadout());
@@ -25,6 +28,23 @@
   const activeProfile = $derived(
     profiles.find((profile) => profile.id === activeProfileId) ?? profiles[0],
   );
+  const classes = $derived(getClassConfigs());
+  const copyName = $derived(t("skillMonitor.profile.copyName", {
+    name: profileDisplayName("skill", activeProfile?.name, profiles.findIndex((item) => item.id === activeProfile?.id)),
+  }));
+
+  function className(key: string): string {
+    return classes.find((config) => config.classKey === key)?.className ?? key;
+  }
+
+  function copyProfile() {
+    if (!loadout || !activeProfile) return;
+    editSkillProfileClass({
+      loadoutId: loadout.id,
+      profileId: activeProfile.id,
+      classKey: activeProfile.selectedClass,
+    }, activeProfile.selectedClass, copyName);
+  }
 
   let renameOpen = $state(false);
   let renameDefault = $state("");
@@ -83,17 +103,24 @@
     <p class="text-muted-foreground text-xs">
       {t("skillMonitor.profile.pickerDescription")}
     </p>
+    {#if loadout}
+      <p class="mt-2 text-sm text-foreground">{t("skillMonitor.profile.currentLoadout", { name: loadout.name })}</p>
+    {/if}
   </div>
   <div class="flex flex-wrap items-center gap-2">
+    <label for="monitor-profile-select" class="w-full text-sm font-medium text-foreground sm:w-24">
+      {t("skillMonitor.profile.configLabel")}
+    </label>
     <select
+      id="monitor-profile-select"
       class="border-border/60 bg-muted/30 text-foreground focus:ring-primary/50 w-full rounded border px-3 py-2 text-sm focus:ring-2 focus:outline-none sm:w-72"
-      value={activeProfileId}
+      value={activeProfile?.id ?? ""}
       onchange={(event) =>
         selectProfile((event.currentTarget as HTMLSelectElement).value)}
     >
       {#each profiles as profile, idx (profile.id)}
         <option value={profile.id}
-          >{profileDisplayName("skill", profile.name, idx)}</option
+          >{profileDisplayName("skill", profile.name, idx)} · {className(profile.selectedClass)}</option
         >
       {/each}
     </select>
@@ -104,6 +131,12 @@
     >
       {t("skillMonitor.profile.new")}
     </button>
+    <button
+      type="button"
+      class="border-border/60 text-foreground hover:bg-muted/40 rounded border px-3 py-2 text-xs transition-colors disabled:opacity-50"
+      onclick={copyProfile}
+      disabled={!loadout || !activeProfile}
+    >{t("skillMonitor.profile.copy")}</button>
     <button
       type="button"
       class="border-border/60 text-foreground hover:bg-muted/40 rounded border px-3 py-2 text-xs transition-colors"
@@ -120,6 +153,11 @@
       {t("skillMonitor.profile.delete")}
     </button>
   </div>
+  {#if activeProfile && loadout}
+    {#key `${loadout.id}:${activeProfile.id}`}
+      <ProfileClassSettings profile={activeProfile} {loadout} {copyName} />
+    {/key}
+  {/if}
 </div>
 
 <NameInputDialog

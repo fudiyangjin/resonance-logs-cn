@@ -14,26 +14,32 @@
 
 ## Top switches
 
+The **{{ui:skillMonitor.profile.title}}** card shows the current loadout, monitor configuration, and its actual class on every tab. Profile options include the class name; the loadout name does not determine the class.
+
+If multiple loadouts share a configuration, their names appear below the selector. **{{ui:skillMonitor.profile.copy}}** creates an independent copy linked only to the current loadout; you can rename it afterward.
+
+Changing class clears selected skills, skill voice settings, and occupied skill cells while preserving Buffs, custom panels, and resource layouts. When skills or voices exist, confirmation is required. Shared configurations always offer a choice between copying for the current loadout and changing the shared configuration.
+
 These are visible at the top of the page on every tab:
 
-| Switch | What it does |
-| --- | --- |
-| **{{ui:skillMonitor.main.enabled.label}}** | Master switch; when off, the overlay no longer receives data |
+| Switch                                                   | What it does                                                                                                            |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **{{ui:skillMonitor.main.enabled.label}}**               | Master switch; when off, the overlay no longer receives data                                                            |
 | **{{ui:skillMonitor.main.autoHideInDailyScenes.label}}** | Hides the overlay automatically in daily scenes such as the main city, and brings it back when you enter a combat scene |
-| **{{ui:skillMonitor.layout.toggleOverlayWindow}}** | Shows / hides the overlay |
-| **{{ui:skillMonitor.layout.editOverlayLayout}}** | Enters layout editing, where you drag and resize each area |
+| **{{ui:skillMonitor.layout.toggleOverlayWindow}}**       | Shows / hides the overlay                                                                                               |
+| **{{ui:skillMonitor.layout.editOverlayLayout}}**         | Enters layout editing, where you drag and resize each area                                                              |
 
 ## Page layout
 
-| Tab | Shown in the overlay | Docs | Examples |
-| --- | --- | --- | --- |
-| **{{ui:skillMonitor.tabs.skillCd}}** | Skill cooldown icons | [Skill CD](./skill-cd.md) | — |
-| **{{ui:skillMonitor.tabs.buff}}** | Your own Buff icons or progress bars | [Buff Monitor](./buff.md) | [Voice reminder when Tina's CD is ready](./examples/tina-cd.md) · [Track 3-stack buff](./examples/attribute-symphony.md) · [Show only the one to refresh](./examples/symphony-most-urgent.md) |
-| **{{ui:skillMonitor.tabs.panelAttr}}** | Character attribute values | [Character Panel](./panel-attr.md) | — |
-| **{{ui:skillMonitor.tabs.customPanel}}** | Factor zone, season node zone, and freely combined Buffs and counters | [Custom Monitor](./custom-panel.md) | [Show factor energy and season nodes](./examples/factor-energy.md) · [Track Absolute Luck with a preset counter](./examples/preset-counter.md) |
-| **{{ui:skillMonitor.tabs.shieldDetail}}** | HP and shield bars | [HP/Shield Area](./shield.md) | — |
-| **{{ui:skillMonitor.tabs.buffCoverage}}** | Boost coverage | [Buff Coverage](./buff-coverage.md) | [Review your team's boost coverage](./examples/buff-coverage.md) · [Check a history fight's Buff coverage in the live window](../dps/examples/live-buff-coverage.md) |
-| **{{ui:skillMonitor.tabs.overlay}}** | Controls whether each of the areas above is shown | [Enable Window & Layout](./overlay.md) | — |
+| Tab                                       | Shown in the overlay                                                  | Docs                                   | Examples                                                                                                                                                                                      |
+| ----------------------------------------- | --------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **{{ui:skillMonitor.tabs.skillCd}}**      | Skill cooldown icons                                                  | [Skill CD](./skill-cd.md)              | —                                                                                                                                                                                             |
+| **{{ui:skillMonitor.tabs.buff}}**         | Your own Buff icons or progress bars                                  | [Buff Monitor](./buff.md)              | [Voice reminder when Tina's CD is ready](./examples/tina-cd.md) · [Track 3-stack buff](./examples/attribute-symphony.md) · [Show only the one to refresh](./examples/symphony-most-urgent.md) |
+| **{{ui:skillMonitor.tabs.panelAttr}}**    | Character attribute values                                            | [Character Panel](./panel-attr.md)     | —                                                                                                                                                                                             |
+| **{{ui:skillMonitor.tabs.customPanel}}**  | Factor zone, season node zone, and freely combined Buffs and counters | [Custom Monitor](./custom-panel.md)    | [Show factor energy and season nodes](./examples/factor-energy.md) · [Track Absolute Luck with a preset counter](./examples/preset-counter.md)                                                |
+| **{{ui:skillMonitor.tabs.shieldDetail}}** | HP and shield bars                                                    | [HP/Shield Area](./shield.md)          | —                                                                                                                                                                                             |
+| **{{ui:skillMonitor.tabs.buffCoverage}}** | Boost coverage                                                        | [Buff Coverage](./buff-coverage.md)    | [Review your team's boost coverage](./examples/buff-coverage.md) · [Check a history fight's Buff coverage in the live window](../dps/examples/live-buff-coverage.md)                          |
+| **{{ui:skillMonitor.tabs.overlay}}**      | Controls whether each of the areas above is shown                     | [Enable Window & Layout](./overlay.md) | —                                                                                                                                                                                             |
 
 All settings are saved in the **skill monitor profile** of the current loadout, so switching loadouts swaps the whole setup at once. See [Loadouts](../app/loadouts.md).
 

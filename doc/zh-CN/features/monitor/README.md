@@ -14,26 +14,32 @@
 
 ## 顶部开关
 
+顶部的 **{{ui:skillMonitor.profile.title}}** 显示当前总方案、实际引用的监控配置及 **{{ui:skillMonitor.profile.classLabel}}**。配置名称不决定职业；请以职业选择框为准。技能 CD 和资源设置中的 **{{ui:skillMonitor.profile.changeClass}}** 都会定位到这里。
+
+多个总方案共用配置时，会列出共用方案。修改职业会影响它们；可选择 **{{ui:skillMonitor.profile.copyForCurrent}}**，保留其他方案原来的配置。顶部的 **{{ui:skillMonitor.profile.copy}}** 也可复制完整监控配置并仅关联当前方案。
+
+切换职业前若已有监控技能或技能语音，会先显示将清空的数量；取消不会修改配置。确认后清空技能及技能语音，保留技能区域尺寸、其他监控内容和资源布局。共用配置即使没有技能，也会先确认。
+
 页面顶部在任意标签下都可见：
 
-| 开关 | 作用 |
-| --- | --- |
-| **{{ui:skillMonitor.main.enabled.label}}** | 总开关，关闭后浮窗不再接收数据 |
+| 开关                                                     | 作用                                             |
+| -------------------------------------------------------- | ------------------------------------------------ |
+| **{{ui:skillMonitor.main.enabled.label}}**               | 总开关，关闭后浮窗不再接收数据                   |
 | **{{ui:skillMonitor.main.autoHideInDailyScenes.label}}** | 在主城等日常场景自动隐藏浮窗，进入战斗场景后恢复 |
-| **{{ui:skillMonitor.layout.toggleOverlayWindow}}** | 显示 / 隐藏浮窗 |
-| **{{ui:skillMonitor.layout.editOverlayLayout}}** | 进入布局编辑，拖动和缩放各个区域 |
+| **{{ui:skillMonitor.layout.toggleOverlayWindow}}**       | 显示 / 隐藏浮窗                                  |
+| **{{ui:skillMonitor.layout.editOverlayLayout}}**         | 进入布局编辑，拖动和缩放各个区域                 |
 
 ## 页面结构
 
-| 标签 | 在浮窗中显示 | 文档 | 例 |
-| --- | --- | --- | --- |
-| **{{ui:skillMonitor.tabs.skillCd}}** | 技能冷却图标 | [技能 CD](./skill-cd.md) | — |
-| **{{ui:skillMonitor.tabs.buff}}** | 自身 Buff 图标或进度条 | [Buff 监控](./buff.md) | [蒂娜 CD 转好时语音提醒](./examples/tina-cd.md) · [用组合 Buff 监控 3 层效果](./examples/attribute-symphony.md) · [用最急成员只看该补的那个](./examples/symphony-most-urgent.md) |
-| **{{ui:skillMonitor.tabs.panelAttr}}** | 角色属性数值 | [角色面板](./panel-attr.md) | — |
-| **{{ui:skillMonitor.tabs.customPanel}}** | 因子区、赛季节点区、自由组合的 Buff 与计数器 | [自定义监控](./custom-panel.md) | [自动显示因子能量与赛季节点](./examples/factor-energy.md) · [用预设计数器盯炎角的绝对幸运](./examples/preset-counter.md) |
-| **{{ui:skillMonitor.tabs.shieldDetail}}** | HP 与护盾条 | [血量护盾区](./shield.md) | — |
-| **{{ui:skillMonitor.tabs.buffCoverage}}** | 增益覆盖率 | [Buff 覆盖率](./buff-coverage.md) | [复盘队伍的增益覆盖率](./examples/buff-coverage.md) · [在实时窗口查看历史战斗的 Buff 覆盖率](../dps/examples/live-buff-coverage.md) |
-| **{{ui:skillMonitor.tabs.overlay}}** | 控制以上各区域是否显示 | [启用窗口与布局](./overlay.md) | — |
+| 标签                                      | 在浮窗中显示                                 | 文档                              | 例                                                                                                                                                                               |
+| ----------------------------------------- | -------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **{{ui:skillMonitor.tabs.skillCd}}**      | 技能冷却图标                                 | [技能 CD](./skill-cd.md)          | —                                                                                                                                                                                |
+| **{{ui:skillMonitor.tabs.buff}}**         | 自身 Buff 图标或进度条                       | [Buff 监控](./buff.md)            | [蒂娜 CD 转好时语音提醒](./examples/tina-cd.md) · [用组合 Buff 监控 3 层效果](./examples/attribute-symphony.md) · [用最急成员只看该补的那个](./examples/symphony-most-urgent.md) |
+| **{{ui:skillMonitor.tabs.panelAttr}}**    | 角色属性数值                                 | [角色面板](./panel-attr.md)       | —                                                                                                                                                                                |
+| **{{ui:skillMonitor.tabs.customPanel}}**  | 因子区、赛季节点区、自由组合的 Buff 与计数器 | [自定义监控](./custom-panel.md)   | [自动显示因子能量与赛季节点](./examples/factor-energy.md) · [用预设计数器盯炎角的绝对幸运](./examples/preset-counter.md)                                                         |
+| **{{ui:skillMonitor.tabs.shieldDetail}}** | HP 与护盾条                                  | [血量护盾区](./shield.md)         | —                                                                                                                                                                                |
+| **{{ui:skillMonitor.tabs.buffCoverage}}** | 增益覆盖率                                   | [Buff 覆盖率](./buff-coverage.md) | [复盘队伍的增益覆盖率](./examples/buff-coverage.md) · [在实时窗口查看历史战斗的 Buff 覆盖率](../dps/examples/live-buff-coverage.md)                                              |
+| **{{ui:skillMonitor.tabs.overlay}}**      | 控制以上各区域是否显示                       | [启用窗口与布局](./overlay.md)    | —                                                                                                                                                                                |
 
 所有配置都保存在当前总方案的 **技能监控子方案** 中，切换方案即可整套切换，见 [监控方案](../app/loadouts.md)。
 

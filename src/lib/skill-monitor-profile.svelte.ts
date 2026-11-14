@@ -2,10 +2,17 @@ import {
   SETTINGS,
   createDefaultSkillMonitorProfile,
   createReferenceSkillMonitorProfile,
+  generateProfileId,
   type SkillMonitorProfile,
 } from "$lib/settings-store";
-import { activeLoadout } from "$lib/loadouts.svelte.js";
+import { activeLoadout, setLoadoutSkillProfile } from "$lib/loadouts.svelte.js";
 import { pruneSkillProfileVoice } from "$lib/voice/association";
+import { getClassConfigs } from "$lib/skill-mappings";
+import {
+  prepareSkillProfileEdit,
+  uniqueSkillProfileCopyName,
+  type SkillProfileEditContext,
+} from "$lib/skill-profile-class";
 
 function resolveActiveIndex(profiles: SkillMonitorProfile[]): number {
   if (profiles.length === 0) return -1;
@@ -40,6 +47,38 @@ export function activeProfile(): SkillMonitorProfile | null {
 
 export function activeProfileOrDefault(): SkillMonitorProfile {
   return _activeProfile ?? createDefaultSkillMonitorProfile();
+}
+
+/** Shared write path for a confirmed class change or a private copy. */
+export function editSkillProfileClass(
+  context: SkillProfileEditContext,
+  classKey: string,
+  copyName?: string,
+): boolean {
+  if (!getClassConfigs().some((config) => config.classKey === classKey))
+    return false;
+  const profiles = SETTINGS.skillMonitor.state.profiles;
+  const next = prepareSkillProfileEdit(
+    profiles,
+    SETTINGS.loadouts.state.items,
+    activeLoadout()?.id ?? "",
+    context,
+    classKey,
+    copyName === undefined
+      ? undefined
+      : {
+          id: generateProfileId("skill"),
+          name: uniqueSkillProfileCopyName(copyName, profiles),
+        },
+  );
+  if (!next) return false;
+  SETTINGS.skillMonitor.state.profiles = next.profiles;
+  if (copyName !== undefined) {
+    const linked = next.loadouts.find((item) => item.id === context.loadoutId);
+    if (linked)
+      setLoadoutSkillProfile(context.loadoutId, linked.skillProfileId);
+  }
+  return true;
 }
 
 /**

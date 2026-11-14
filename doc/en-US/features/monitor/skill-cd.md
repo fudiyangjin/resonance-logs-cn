@@ -4,7 +4,7 @@
 
 ## Choosing skills
 
-1. Pick a class in **{{ui:skillMonitor.skillCd.class.title}}**; that class's skills are listed below.
+1. Pick a class in **{{ui:skillMonitor.profile.title}} → {{ui:skillMonitor.profile.classLabel}}** at the top of the page. This also controls class resources; the selector is no longer inside the Skill CD tab.
 2. In **{{ui:skillMonitor.skillCd.skills.title}}**, pick skills by tab: class skills are listed directly; **{{ui:skillMonitor.skillCd.resonance.title}}** are found by searching their name, and the ones you already picked are listed while the search box is empty; **{{ui:skillMonitor.skillCd.duty.title}}** are grouped into attack, survival, support and encyclopedia. Unyielding Spirit supports two charges.
 3. You can monitor up to **10** skills across all areas. Class, fantasy and role skills share this limit.
 
@@ -41,10 +41,10 @@ Some skills turn into another form under certain Buffs, and the CD icon and name
 
 In the **{{ui:skillMonitor.skillCd.voice.title}}** section, you can set up three events for any skill of the current class, any fantasy skill or any role skill. The skill doesn't need to be in the cooldown monitor above, since the game already shows its skill bar: click it under the **{{ui:skillMonitor.skillCd.voice.classSkills}}**, **{{ui:skillMonitor.skillCd.resonance.title}}** or **{{ui:skillMonitor.skillCd.duty.title}}** tab, and it joins the announcement list once you turn an event on. The tabs mark only skills with announcements, regardless of the cooldown monitor's selection.
 
-| Event | When |
-| --- | --- |
-| **On cast** | The skill goes on cooldown |
-| **When ready** | The cooldown ends |
+| Event                      | When                                               |
+| -------------------------- | -------------------------------------------------- |
+| **On cast**                | The skill goes on cooldown                         |
+| **When ready**             | The cooldown ends                                  |
 | **x seconds before ready** | The cooldown is about to end, so you can get ready |
 
 For charge-based skills, **every charge that comes back** counts as the cooldown ending, so "When ready" and "x seconds before ready" play for each charge. Announcements require a model to be installed and enabled in [Voice](../voice/README.md).

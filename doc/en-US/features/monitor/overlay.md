@@ -4,14 +4,16 @@
 
 ## Overlay areas
 
-| Area | Content source |
-| --- | --- |
-| **Skill CD Area** | [Skill CD](./skill-cd.md); each skill area is a separate area |
-| **Resource Monitor Area** | Energy, stacks and other resources of the current class |
-| **Character Attribute Area** | [Character Panel](./panel-attr.md) |
-| **Custom Monitor Area** | [Custom Monitor](./custom-panel.md); each monitor area is a separate area |
-| **HP/Shield Area** | [HP/Shield Area](./shield.md) |
-| **Buff Coverage Area** | [Buff Coverage](./buff-coverage.md) |
+Class resources use **{{ui:skillMonitor.profile.classLabel}}** at the top of the page. The class label and **{{ui:skillMonitor.profile.changeClass}}** link remain visible when resources are disabled; the link moves keyboard focus to the class selector. The Flame Berserker's Crimson Mark orb follows the main resource bar and appears when its class conditions are met; it has no separate section.
+
+| Area                         | Content source                                                            |
+| ---------------------------- | ------------------------------------------------------------------------- |
+| **Skill CD Area**            | [Skill CD](./skill-cd.md); each skill area is a separate area             |
+| **Resource Monitor Area**    | Energy, stacks and other resources of the current class                   |
+| **Character Attribute Area** | [Character Panel](./panel-attr.md)                                        |
+| **Custom Monitor Area**      | [Custom Monitor](./custom-panel.md); each monitor area is a separate area |
+| **HP/Shield Area**           | [HP/Shield Area](./shield.md)                                             |
+| **Buff Coverage Area**       | [Buff Coverage](./buff-coverage.md)                                       |
 
 Buff icons (each Buff in individual mode, each group in grouped mode) appear in the overlay as separate areas; whether they are shown depends on what you select in [Buff Monitor](./buff.md).
 

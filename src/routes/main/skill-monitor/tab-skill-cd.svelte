@@ -4,7 +4,6 @@
   import {
     findAnySkillByBaseId,
     findResonanceSkill,
-    type ClassSkillConfig,
     type SkillDefinition,
   } from "$lib/skill-mappings";
   import {
@@ -22,6 +21,7 @@
   import { t } from "$lib/i18n/index.svelte";
   import { blurOnEnter } from "$lib/utils.svelte";
   import SkillVoiceSection from "./skill-voice-section.svelte";
+  import ClassContextLink from "./class-context-link.svelte";
 
   interface Props {
     profileId: string;
@@ -31,22 +31,18 @@
       profileId: string,
       classKey: string,
     ) => boolean;
-    classConfigs: ClassSkillConfig[];
     selectedClassKey: string;
     classSkills: SkillDefinition[];
     monitoredSkillIds: number[];
-    setSelectedClass: (classKey: string) => void;
   }
 
   let {
     profileId,
     skillCdRegions,
     onSkillCdAction,
-    classConfigs,
     selectedClassKey,
     classSkills,
     monitoredSkillIds,
-    setSelectedClass,
   }: Props = $props();
 
   // A vanished region (deleted here or in another window) falls back to the
@@ -202,28 +198,7 @@
   <div
     class="rounded-lg border border-border/60 bg-card/40 p-4 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
   >
-    <div>
-      <h2 class="text-base font-semibold text-foreground">
-        {t("skillMonitor.skillCd.class.title")}
-      </h2>
-      <p class="text-xs text-muted-foreground">
-        {t("skillMonitor.skillCd.class.description")}
-      </p>
-    </div>
-    <div class="flex flex-wrap gap-2">
-      {#each classConfigs as config (config.classKey)}
-        <button
-          type="button"
-          class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors {selectedClassKey ===
-          config.classKey
-            ? 'bg-primary text-primary-foreground border-primary'
-            : 'bg-muted/30 text-foreground border-border/60 hover:bg-muted/50'}"
-          onclick={() => setSelectedClass(config.classKey)}
-        >
-          {config.className}
-        </button>
-      {/each}
-    </div>
+    <ClassContextLink classKey={selectedClassKey} />
   </div>
 
   <div

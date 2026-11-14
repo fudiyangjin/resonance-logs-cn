@@ -133,9 +133,11 @@ export const enUSMessages = {
   "skillDamage.mergeMode": "Merged display",
   "skillDamage.continuousMode": "Continuous display",
   "skillDamage.allSelfDamage": "Show all your damage",
-  "skillDamage.allSelfDamageHint": "Treat all your skill damage as belonging to this group without listing each skill. Uses this group's display mode and style. Triggered and cast-preset windows still follow their configured opening and closing rules.",
+  "skillDamage.allSelfDamageHint":
+    "Treat all your skill damage as belonging to this group without listing each skill. Uses this group's display mode and style. Triggered and cast-preset windows still follow their configured opening and closing rules.",
   "skillDamage.castCloseDelay": "Window closing delay (seconds, 0–1)",
-  "skillDamage.castCloseDelayHint": "Continue accumulating damage during this delay after the cast ends, then settle the total. Set to 0 to settle immediately.",
+  "skillDamage.castCloseDelayHint":
+    "Continue accumulating damage during this delay after the cast ends, then settle the total. Set to 0 to settle immediately.",
   "skillDamage.windowMode": "Window rule",
   "skillDamage.windowRolling": "Rolling window",
   "skillDamage.windowSkills": "Skill-triggered window",
@@ -149,12 +151,16 @@ export const enUSMessages = {
   "skillDamage.windowPreset": "Cast preset",
   "skillDamage.castRay": "Frost Ray (settle when channeling ends)",
   "skillDamage.castInfusion": "Infusion (Verdant Oracle)",
-  "skillDamage.windowSkillsHint": "An opening hit starts the window; a closing hit settles it immediately. Each opening hit refreshes the timeout without clearing damage or combos. Trigger damage counts only for group skills or when all damage is enabled.",
-  "skillDamage.windowCastHint": "Uses local cast events and base skill IDs. Opens on cast or duration start and settles on duration end or cast completion. No window timeout: accumulation continues until an end event arrives. Counters need not be enabled. Group settings determine what counts.",
-  "skillDamage.continuousHint": "Show one running total, then a separate final animation. Rolling windows refresh on group hits; skill-triggered windows refresh on opening hits. Cast presets use only cast start/end to control the window.",
+  "skillDamage.windowSkillsHint":
+    "An opening hit starts the window; a closing hit settles it immediately. Each opening hit refreshes the timeout without clearing damage or combos. Trigger damage counts only for group skills or when all damage is enabled.",
+  "skillDamage.windowCastHint":
+    "Uses local cast events and base skill IDs. Opens on cast or duration start and settles on duration end or cast completion. No window timeout: accumulation continues until an end event arrives. Counters need not be enabled. Group settings determine what counts.",
+  "skillDamage.continuousHint":
+    "Show one running total, then a separate final animation. Rolling windows refresh on group hits; skill-triggered windows refresh on opening hits. Cast presets use only cast start/end to control the window.",
   "skillDamage.continuousWindow": "Continuous window (seconds)",
   "skillDamage.continuousAll": "Accumulate all your damage",
-  "skillDamage.continuousAllHint": "Other local skill damage also adds to the total and HIT count while the window is open. Only group skill hits start or refresh it.",
+  "skillDamage.continuousAllHint":
+    "Other local skill damage also adds to the total and HIT count while the window is open. Only group skill hits start or refresh it.",
   "skillDamage.continuousAnimation": "Running total animation",
   "skillDamage.continuousFinalAnimation": "Final total animation",
   "skillDamage.continuousTotalDuration": "Final total duration (seconds)",
@@ -1469,6 +1475,27 @@ export const enUSMessages = {
     "The skill-monitor profile referenced by the active loadout. Switch or manage it here; for more combinations go to the Loadouts page",
   "skillMonitor.profile.deleteConfirm":
     "Delete this skill-monitor profile? Loadouts referencing it will fall back to the first profile.",
+  "skillMonitor.profile.currentLoadout": "Current loadout: {name}",
+  "skillMonitor.profile.configLabel": "Monitor profile",
+  "skillMonitor.profile.classLabel": "Profile class",
+  "skillMonitor.profile.classHelp":
+    "Used for the skill list, class resources, and related default monitoring.",
+  "skillMonitor.profile.shared":
+    "Shared by {names}. Changes apply to all of these loadouts.",
+  "skillMonitor.profile.copy": "Copy",
+  "skillMonitor.profile.copyName": "{name} (copy)",
+  "skillMonitor.profile.changeClass": "Change profile class",
+  "skillMonitor.profile.currentClass": "Profile class: {name}",
+  "skillMonitor.profile.resourceClass": "{name} · Class resources",
+  "skillMonitor.profile.axeBallHelp":
+    "The Crimson Mark orb is shown with the resource bar when its class conditions are met.",
+  "skillMonitor.profile.classChangeImpact":
+    "Switching from {from} to {to} clears {skills} monitored skills and {voices} skill voice configurations. Other monitoring settings and resource layouts are kept.",
+  "skillMonitor.profile.privateCopyHelp":
+    "Copy to change the class for this loadout only. Other loadouts keep the original profile.",
+  "skillMonitor.profile.changeShared": "Change shared profile",
+  "skillMonitor.profile.copyForCurrent": "Copy for this loadout only",
+  "skillMonitor.profile.confirmClassChange": "Clear and switch",
   "skillMonitor.skillCd.class.title": "Class Selection",
   "skillMonitor.skillCd.class.description":
     "Supports the currently configured class skill profiles. Switching class clears this loadout's selected skills and skill voice broadcasts",
@@ -3112,7 +3139,8 @@ export const enUSMessages = {
   "voice.bindings.generateMissing.none": "No pending voices to generate",
   "voice.bindings.tryPlay": "Preview",
   "colorField.hexLabel": "hex",
-  "colorField.invalid": "Unrecognized color. Try #38BDF8, 38bdf8 or rgb(56, 189, 248)",
+  "colorField.invalid":
+    "Unrecognized color. Try #38BDF8, 38bdf8 or rgb(56, 189, 248)",
   "colorField.openPalette": "Palette",
   "colorField.schemeColors": "Scheme colors",
   "colorField.recent": "Recently used",
@@ -3120,24 +3148,30 @@ export const enUSMessages = {
   "colorField.opacity": "Opacity",
   "hudScheme.open": "Color schemes",
   "hudScheme.dialogTitle": "Apply a color scheme",
-  "hudScheme.dialogDescription": "Pick a scheme for the current loadout's HUD panels. Only name, value and progress bar colors change; sizes, gaps and backgrounds stay.",
-  "hudScheme.semanticNote": "HP, stagger, boss alerts and the battle roster keep their red, blue and amber colors in every scheme.",
+  "hudScheme.dialogDescription":
+    "Pick a scheme for the current loadout's HUD panels. Only name, value and progress bar colors change; sizes, gaps and backgrounds stay.",
+  "hudScheme.semanticNote":
+    "HP, stagger, boss alerts and the battle roster keep their red, blue and amber colors in every scheme.",
   "hudScheme.targets.skill": "Skill monitor panels",
   "hudScheme.targets.monster": "Monster monitor panels",
   "hudScheme.apply": "Apply",
-  "hudScheme.confirmTitle": "Apply the \"{name}\" scheme?",
-  "hudScheme.confirmDescription": "Name, value and progress bar colors of the selected panels are overwritten. Buff alert highlights and per-column teammate buff colors are kept.",
-  "hudScheme.shared": "These loadouts share the profiles and change too: {names}",
+  "hudScheme.confirmTitle": 'Apply the "{name}" scheme?',
+  "hudScheme.confirmDescription":
+    "Name, value and progress bar colors of the selected panels are overwritten. Buff alert highlights and per-column teammate buff colors are kept.",
+  "hudScheme.shared":
+    "These loadouts share the profiles and change too: {names}",
   "hudScheme.chips.label": "Colors",
-  "hudScheme.chips.apply": "Apply \"{name}\"",
-  "hudScheme.hint.text": "{count} panels still use the plain white default and are hard to read.",
+  "hudScheme.chips.apply": 'Apply "{name}"',
+  "hudScheme.hint.text":
+    "{count} panels still use the plain white default and are hard to read.",
   "hudScheme.hint.apply": "Pick a color scheme",
   "hudScheme.hint.dismiss": "Don't show again",
   "hudScheme.panel.textBuff": "Text buffs",
   "hudScheme.panel.monsterBuff": "Monster buffs",
   "hudScheme.panel.hp": "HP",
   "hudScheme.scheme.vivid.name": "Vivid",
-  "hudScheme.scheme.vivid.description": "One color per panel, easy to tell apart",
+  "hudScheme.scheme.vivid.description":
+    "One color per panel, easy to tell apart",
   "hudScheme.scheme.ice.name": "Ice",
   "hudScheme.scheme.ice.description": "A cool blue across all panels",
   "hudScheme.scheme.amber.name": "Amber",
@@ -3147,5 +3181,6 @@ export const enUSMessages = {
   "hudScheme.scheme.violet.name": "Violet",
   "hudScheme.scheme.violet.description": "A violet tone across all panels",
   "hudScheme.scheme.muted.name": "Muted",
-  "hudScheme.scheme.muted.description": "Understated grays that stay out of the way",
+  "hudScheme.scheme.muted.description":
+    "Understated grays that stay out of the way",
 } satisfies typeof zhCNMessages;

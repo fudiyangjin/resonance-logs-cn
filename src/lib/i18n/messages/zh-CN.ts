@@ -128,9 +128,11 @@ export const zhCNMessages = {
   "skillDamage.mergeMode": "合并显示模式",
   "skillDamage.continuousMode": "连续显示模式",
   "skillDamage.allSelfDamage": "显示所有自身伤害",
-  "skillDamage.allSelfDamageHint": "将所有来自自身的技能伤害视为本组伤害，无需逐个添加技能。沿用本组的显示模式和风格；技能触发与施法预设仍按所设规则开启和结束窗口。",
+  "skillDamage.allSelfDamageHint":
+    "将所有来自自身的技能伤害视为本组伤害，无需逐个添加技能。沿用本组的显示模式和风格；技能触发与施法预设仍按所设规则开启和结束窗口。",
   "skillDamage.castCloseDelay": "窗口关闭延迟（秒，0～1）",
-  "skillDamage.castCloseDelayHint": "施法结束后，在延迟期间继续累计伤害，时间到后结算。设为 0 时立即结算。",
+  "skillDamage.castCloseDelayHint":
+    "施法结束后，在延迟期间继续累计伤害，时间到后结算。设为 0 时立即结算。",
   "skillDamage.windowMode": "窗口规则",
   "skillDamage.windowRolling": "滚动窗口",
   "skillDamage.windowSkills": "技能触发窗口",
@@ -144,12 +146,16 @@ export const zhCNMessages = {
   "skillDamage.windowPreset": "施法预设",
   "skillDamage.castRay": "寒冰射线（持续施法结束结算）",
   "skillDamage.castInfusion": "灌注（森语者）",
-  "skillDamage.windowSkillsHint": "开启技能造成伤害后开始统计，结束技能命中后立即结算。再次命中任意开启技能会刷新超时，保留累计伤害和连击数；触发技能的伤害仅在属于本组或开启累计所有伤害时计入。",
-  "skillDamage.windowCastHint": "使用自身施法事件和技能基础 ID，施法开始或持续施法开始时开启，施法结束或完成时结算。不设窗口超时，未收到结束事件前持续累计。无需启用计数器，统计范围由本组设置决定。",
-  "skillDamage.continuousHint": "只显示一条累计伤害；窗口结束后播放独立的总计动画。滚动窗口随组内命中刷新，技能触发窗口随开启技能刷新超时，施法预设仅按施法开始与结束控制窗口。",
+  "skillDamage.windowSkillsHint":
+    "开启技能造成伤害后开始统计，结束技能命中后立即结算。再次命中任意开启技能会刷新超时，保留累计伤害和连击数；触发技能的伤害仅在属于本组或开启累计所有伤害时计入。",
+  "skillDamage.windowCastHint":
+    "使用自身施法事件和技能基础 ID，施法开始或持续施法开始时开启，施法结束或完成时结算。不设窗口超时，未收到结束事件前持续累计。无需启用计数器，统计范围由本组设置决定。",
+  "skillDamage.continuousHint":
+    "只显示一条累计伤害；窗口结束后播放独立的总计动画。滚动窗口随组内命中刷新，技能触发窗口随开启技能刷新超时，施法预设仅按施法开始与结束控制窗口。",
   "skillDamage.continuousWindow": "连续窗口（秒）",
   "skillDamage.continuousAll": "累计所有自身伤害",
-  "skillDamage.continuousAllHint": "窗口内其他自身技能伤害也计入累计伤害和 HIT 数，但仅组内技能命中会启动或刷新窗口。",
+  "skillDamage.continuousAllHint":
+    "窗口内其他自身技能伤害也计入累计伤害和 HIT 数，但仅组内技能命中会启动或刷新窗口。",
   "skillDamage.continuousAnimation": "累计中动画",
   "skillDamage.continuousFinalAnimation": "结束总计动画",
   "skillDamage.continuousTotalDuration": "结束总计显示时间（秒）",
@@ -1346,6 +1352,26 @@ export const zhCNMessages = {
     "当前总方案引用的技能监控子方案，可在此切换或管理；更多方案组合请前往「监控方案」页",
   "skillMonitor.profile.deleteConfirm":
     "确定要删除该技能监控方案吗？引用它的总方案将回退到第一个方案。",
+  "skillMonitor.profile.currentLoadout": "当前方案：{name}",
+  "skillMonitor.profile.configLabel": "监控配置",
+  "skillMonitor.profile.classLabel": "配置职业",
+  "skillMonitor.profile.classHelp":
+    "用于技能列表、职业资源显示及相关默认监控。",
+  "skillMonitor.profile.shared": "此配置由“{names}”共用，修改将同时生效。",
+  "skillMonitor.profile.copy": "复制",
+  "skillMonitor.profile.copyName": "{name}（副本）",
+  "skillMonitor.profile.changeClass": "更改配置职业",
+  "skillMonitor.profile.currentClass": "配置职业：{name}",
+  "skillMonitor.profile.resourceClass": "{name} · 职业资源",
+  "skillMonitor.profile.axeBallHelp":
+    "赤痕球随资源条显示，满足职业条件时出现。",
+  "skillMonitor.profile.classChangeImpact":
+    "从“{from}”切换到“{to}”将清空 {skills} 个监控技能和 {voices} 项技能语音配置。其他监控内容和资源布局保持不变。",
+  "skillMonitor.profile.privateCopyHelp":
+    "复制后仅为当前方案切换职业，其他方案继续使用原配置。",
+  "skillMonitor.profile.changeShared": "修改共用配置",
+  "skillMonitor.profile.copyForCurrent": "复制并仅用于当前方案",
+  "skillMonitor.profile.confirmClassChange": "清空并切换",
   "skillMonitor.skillCd.class.title": "职业选择",
   "skillMonitor.skillCd.class.description":
     "支持当前已配置的职业技能方案；切换职业会清空当前方案已选的技能和技能语音播报",
@@ -2907,7 +2933,8 @@ export const zhCNMessages = {
   "voice.bindings.generateMissing.none": "没有待生成的语音",
   "voice.bindings.tryPlay": "试听",
   "colorField.hexLabel": "色值",
-  "colorField.invalid": "无法识别的颜色,可输入 #38BDF8、38bdf8 或 rgb(56, 189, 248)",
+  "colorField.invalid":
+    "无法识别的颜色,可输入 #38BDF8、38bdf8 或 rgb(56, 189, 248)",
   "colorField.openPalette": "常用色",
   "colorField.schemeColors": "方案色",
   "colorField.recent": "最近使用",
@@ -2915,13 +2942,16 @@ export const zhCNMessages = {
   "colorField.opacity": "不透明度",
   "hudScheme.open": "一键配色",
   "hudScheme.dialogTitle": "一键配色",
-  "hudScheme.dialogDescription": "选一套配色,套用到当前配装的游戏层面板。只改名称、数值和进度条的颜色,字号、间距和背景不变。",
-  "hudScheme.semanticNote": "血量、破韧、Boss 预警和战斗名单在所有方案里都保留红、蓝、琥珀这些语义色。",
+  "hudScheme.dialogDescription":
+    "选一套配色,套用到当前配装的游戏层面板。只改名称、数值和进度条的颜色,字号、间距和背景不变。",
+  "hudScheme.semanticNote":
+    "血量、破韧、Boss 预警和战斗名单在所有方案里都保留红、蓝、琥珀这些语义色。",
   "hudScheme.targets.skill": "技能监控面板",
   "hudScheme.targets.monster": "怪物监控面板",
   "hudScheme.apply": "应用",
   "hudScheme.confirmTitle": "套用「{name}」配色?",
-  "hudScheme.confirmDescription": "所选面板的名称、数值和进度条颜色会被覆盖;Buff 告警高亮色和队友 Buff 单列颜色保留。",
+  "hudScheme.confirmDescription":
+    "所选面板的名称、数值和进度条颜色会被覆盖;Buff 告警高亮色和队友 Buff 单列颜色保留。",
   "hudScheme.shared": "以下配装共用这些方案,会一起改变:{names}",
   "hudScheme.chips.label": "配色",
   "hudScheme.chips.apply": "套用「{name}」",

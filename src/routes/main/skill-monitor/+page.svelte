@@ -70,7 +70,6 @@
     ensureUserCounterRules,
     getCounterDisplayLabel,
     getCounterRules,
-    getClassConfigs,
     getResourceCountdownBuffIds,
     getSlotTemplates,
     getSkillsByClass,
@@ -149,7 +148,6 @@
   let buffIconSearch = $state("");
   let buffIconEditingBuffId = $state<number | null>(null);
 
-  const classConfigs = $derived(getClassConfigs());
   const counterRules = $derived(getCounterRules());
   const slotTemplates = $derived(getSlotTemplates());
   /** The user's own aliases, edited by the alias section. */
@@ -406,22 +404,6 @@
     return uniqueIds(
       (group.priorityBuffIds ?? []).filter((id) => inGroup.has(id)),
     );
-  }
-
-  function setSelectedClass(classKey: string) {
-    if (classKey === selectedClassKey) return;
-    // A new class starts from empty skill lists: the cooldown HUD selection
-    // and this profile's skill voice list alike.
-    updateActiveProfile((profile) => ({
-      ...profile,
-      selectedClass: classKey,
-      monitoredSkillIds: [],
-      skillCdRegions: normalizeSkillCdRegions({
-        ...profile,
-        monitoredSkillIds: [],
-      }),
-      skillVoiceConfigs: {},
-    }));
   }
 
   function changeSkillCd(action: SkillCdAction, profileId: string, classKey: string): boolean {
@@ -1858,11 +1840,9 @@
         profileId={activeProfile.id}
         {skillCdRegions}
         onSkillCdAction={changeSkillCd}
-        {classConfigs}
         {selectedClassKey}
         {classSkills}
         {monitoredSkillIds}
-        {setSelectedClass}
       />
     {/key}
   {:else if activeTab === "buff"}
@@ -2055,6 +2035,7 @@
     />
   {:else}
     <TabOverlay
+      {selectedClassKey}
       {showSkillCdGroup}
       {showResourceGroup}
       {showPanelAttrGroup}

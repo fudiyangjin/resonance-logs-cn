@@ -4,7 +4,7 @@
 
 ## 选择技能
 
-1. 在 **{{ui:skillMonitor.skillCd.class.title}}** 中选择职业，下方会列出该职业的技能。
+1. 在页面顶部 **{{ui:skillMonitor.profile.title}} → {{ui:skillMonitor.profile.classLabel}}** 中选择职业，下方会列出该职业的技能。职业选择同时影响职业资源，不再位于技能 CD 标签内。
 2. 在 **{{ui:skillMonitor.skillCd.skills.title}}** 中按分页选择技能：职业技能直接列出；**{{ui:skillMonitor.skillCd.resonance.title}}** 需要按名称搜索，已选的幻想技能在搜索框为空时会列出；**{{ui:skillMonitor.skillCd.duty.title}}** 按攻击、生存、辅助、图鉴分组，「不屈斗志」支持两层充能显示。
 3. 所有区域合计最多监控 **10** 个技能，职业、幻想与职责技能共用此上限。
 
@@ -41,10 +41,10 @@
 
 在 **{{ui:skillMonitor.skillCd.voice.title}}** 区块中，可以为当前职业的技能、幻想技能或职责技能配置三种事件。技能不需要加入上方的 CD 监控（游戏里本来就有技能栏，只想听播报时不必再显示 CD）：在 **{{ui:skillMonitor.skillCd.voice.classSkills}}**、**{{ui:skillMonitor.skillCd.resonance.title}}**、**{{ui:skillMonitor.skillCd.duty.title}}** 分页中点击技能，打开任一事件后它就会加入播报列表。分页里只标出已配置播报的技能，与 CD 监控的选择无关。
 
-| 事件 | 时机 |
-| --- | --- |
-| **释放时** | 技能进入冷却 |
-| **就绪时** | 冷却结束 |
+| 事件            | 时机                   |
+| --------------- | ---------------------- |
+| **释放时**      | 技能进入冷却           |
+| **就绪时**      | 冷却结束               |
 | **就绪前 x 秒** | 冷却即将结束，提前准备 |
 
 充能类技能**每恢复一层**都算冷却结束，「就绪时」和「就绪前 x 秒」对每一层都会播报。播报的前提是已经在 [语音播报](../voice/README.md) 中安装模型并开启。
