@@ -7,7 +7,7 @@ import {
   normalizeSkillDamageGroup,
   normalizeSkillDamageState,
   skillDamageFontId,
-  watchedSkillDamageKeys,
+  skillDamageRuntimeSnapshot,
 } from "./skill-damage-settings";
 
 describe("skill damage settings normalization", () => {
@@ -72,7 +72,9 @@ describe("skill damage settings normalization", () => {
   });
 });
 
-describe("watchedSkillDamageKeys", () => {
+describe("skillDamageRuntimeSnapshot", () => {
+  const off = { watchedSkillKeys: [], watchedCastIds: [], monitorAll: false };
+
   it("collects enabled groups of an enabled profile, deduplicated and sorted", () => {
     const profile = createSkillDamageProfile("");
     const first = profile.groups[0]!;
@@ -87,10 +89,46 @@ describe("watchedSkillDamageKeys", () => {
     disabled.entries = [{ skillId: 99, alias: "" }];
     profile.groups = [first, second, disabled];
 
-    expect(watchedSkillDamageKeys(profile)).toEqual([]);
+    expect(skillDamageRuntimeSnapshot(profile)).toEqual(off);
     profile.enabled = true;
-    expect(watchedSkillDamageKeys(profile)).toEqual([10, 30]);
-    expect(watchedSkillDamageKeys(null)).toEqual([]);
+    expect(skillDamageRuntimeSnapshot(profile)).toEqual({
+      ...off,
+      watchedSkillKeys: [10, 30],
+    });
+    expect(skillDamageRuntimeSnapshot(null)).toEqual(off);
+  });
+
+  it("watches trigger skills and preset casts only for the window rule in use", () => {
+    const profile = createSkillDamageProfile("");
+    profile.enabled = true;
+    const group = profile.groups[0]!;
+    group.entries = [{ skillId: 10, alias: "" }];
+    group.continuousStartSkillIds = [20];
+    group.continuousEndSkillIds = [30];
+    group.continuousCastPreset = "infusion";
+
+    // Merge mode ignores every continuous setting.
+    group.continuousWindowMode = "skills";
+    expect(skillDamageRuntimeSnapshot(profile)).toEqual({
+      ...off,
+      watchedSkillKeys: [10],
+    });
+    group.displayMode = "continuous";
+    expect(skillDamageRuntimeSnapshot(profile)).toEqual({
+      ...off,
+      watchedSkillKeys: [10, 20, 30],
+    });
+    group.continuousWindowMode = "cast";
+    expect(skillDamageRuntimeSnapshot(profile)).toEqual({
+      ...off,
+      watchedSkillKeys: [10],
+      watchedCastIds: [1520],
+    });
+    group.continuousWindowMode = "rolling";
+    expect(skillDamageRuntimeSnapshot(profile)).toEqual({
+      ...off,
+      watchedSkillKeys: [10],
+    });
   });
 });
 

@@ -1105,11 +1105,10 @@ export type LivePullWindow = "live" | "hud-overlay"
 export type LiveRuntimeSnapshot = { eventUpdateRateMs: number; trainingWindowMs: number; trainingLockPolicy: TrainingLockPolicy }
 export type LiveScenePayload = { revision: number; sceneId: number | null; dungeonDifficulty: number | null; localClassId: number | null; localTalentStageCfgId: number | null }
 /**
- * Skill damage topic: the retained window of watched local hits.
+ * Skill damage topic: the retained windows of collected local hits and
+ * watched local casts.
  */
-export type SkillDamageCastState = { id: number; skillId: number; phase: string; occurredAtMs: number }
-
-export type LiveSkillDamagePayload = { revision: number; hits: SkillDamageHitState[]; casts?: SkillDamageCastState[] }
+export type LiveSkillDamagePayload = { revision: number; hits: SkillDamageHitState[]; casts: SkillDamageCastState[] }
 /**
  * Skill CD / panel attrs / fight resource / shields / counters
  * (`live-status`). Published on the same 50ms cadence as the other overlay
@@ -1568,6 +1567,23 @@ maxCharges?: number | null;
  */
 maxValidCdTime?: number | null }
 /**
+ * Step of a watched cast that opens or settles a cast damage window.
+ */
+export type SkillDamageCastPhase = "start" | "durationStart" | "end" | "complete"
+/**
+ * One lifecycle step of a watched cast by the local player.
+ */
+export type SkillDamageCastState = {
+/**
+ * Drawn from the same sequence as [`SkillDamageHitState::id`], so hits
+ * and casts share one cursor and one arrival order.
+ */
+id: number;
+/**
+ * Base skill id of the cast, not a damage id.
+ */
+skillId: number; phase: SkillDamageCastPhase; occurredAtMs: number }
+/**
  * One damage hit by the local player on a watched skill.
  */
 export type SkillDamageHitState = {
@@ -1586,10 +1602,22 @@ batch: number; targetUuid: string; skillId: number;
  */
 amount: string; occurredAtMs: number }
 /**
- * Damage ids (`skill_key`) whose local hits the skill damage HUD shows.
- * Empty means the feature is off and no hit is collected.
+ * What the skill damage HUD collects from the local player. With nothing
+ * watched and `monitor_all` off, the feature is off and no hit is collected.
  */
-export type SkillDamageRuntimeSnapshot = { watchedSkillKeys: number[]; watchedCastIds?: number[]; monitorAll?: boolean }
+export type SkillDamageRuntimeSnapshot = {
+/**
+ * Damage ids (`skill_key`) whose hits are collected.
+ */
+watchedSkillKeys: number[];
+/**
+ * Base skill ids whose cast lifecycle is collected.
+ */
+watchedCastIds: number[];
+/**
+ * Collect every damage hit, not only the watched damage ids.
+ */
+monitorAll: boolean }
 export type SkillRuntimeSnapshot = { enabled: boolean; monitoredSkillIds: number[]; monitoredBuffIds: number[]; monitorAllBuff: boolean; monitoredPanelAttrIds: number[]; buffCounterRules: CounterRule[]; seasonCultivateFactorTemplates: FactorCounterTemplate[];
 /**
  * Coverage watch list: these buff ids are tracked for live coverage on

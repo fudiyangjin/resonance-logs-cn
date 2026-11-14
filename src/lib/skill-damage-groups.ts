@@ -5,6 +5,9 @@
  * Later setting changes (duration, watched skills) therefore only affect new
  * hits; a hit can never reappear because a filter was loosened. Labels and
  * styles are read from the group at render time, so they stay live.
+ *
+ * Groups in continuous mode build no rows here; their running totals come
+ * from `skill-damage-continuous.ts`.
  */
 import type { SkillDamageHitState } from "./bindings";
 import {
@@ -14,8 +17,6 @@ import {
 import type { SkillDamageGroup } from "./skill-damage-settings";
 
 export type SkillDamageRow = {
-  comboCount?: string;
-  phase?: "active" | "final";
   /** Unique per group and hit; stable for keyed rendering. */
   key: string;
   groupId: string;
@@ -23,10 +24,17 @@ export type SkillDamageRow = {
   amount: string;
   /** Distinct targets the row's hits landed on. */
   hitCount: number;
-  /** A group-wide batch sum, labelled with the group name. */
+  /** A group-wide sum, labelled with the group name. */
   merged: boolean;
   occurredAtMs: number;
   expiresAtMs: number;
+  /**
+   * Set on a continuous total only: still counting (`active`) or settled
+   * (`final`). The key changes with it, so the settled total is a new row.
+   */
+  phase?: "active" | "final";
+  /** Hits summed into a continuous total. */
+  comboCount?: number;
 };
 
 /** Rows for hits not seen before, in arrival order, across enabled groups. */

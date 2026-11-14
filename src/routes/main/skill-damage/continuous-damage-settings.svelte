@@ -1,12 +1,19 @@
 <script lang="ts">
-  import WindowSkillPicker from "./window-skill-picker.svelte";
   import { t } from "$lib/i18n/index.svelte";
   import {
-    clampSkillDamageDuration,
+    SKILL_DAMAGE_ANIMATIONS,
+    SKILL_DAMAGE_CAST_CLOSE_DELAY_MS,
+    SKILL_DAMAGE_DURATION_MS,
+    SKILL_DAMAGE_LABEL_SPACING_MAX,
+    SKILL_DAMAGE_WINDOW_TIMEOUT_MS,
     type SkillDamageGroup,
   } from "$lib/skill-damage-settings";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
+  import SecondsInput from "./seconds-input.svelte";
+  import WindowSkillPicker from "./window-skill-picker.svelte";
+
   let { group }: { group: SkillDamageGroup } = $props();
+
   const animations = [
     { key: "continuousAnimation", label: "skillDamage.continuousAnimation" },
     {
@@ -30,97 +37,52 @@
     </select>
   </label>
   {#if group.continuousWindowMode === "rolling"}
-    <label class="flex items-center gap-2 text-sm"
-      >{t("skillDamage.continuousWindow")}
-      <input
-        class="bg-background w-24 rounded border p-2"
-        type="text"
-        inputmode="decimal"
-        value={group.continuousWindowMs / 1000}
-        onchange={(event) => {
-          const seconds = Number(event.currentTarget.value.trim());
-          if (Number.isFinite(seconds) && seconds > 0)
-            group.continuousWindowMs = Math.round(
-              clampSkillDamageDuration(seconds * 1000),
-            );
-          event.currentTarget.value = String(group.continuousWindowMs / 1000);
-        }}
-      />
-    </label>
+    <SecondsInput
+      label={t("skillDamage.continuousWindow")}
+      bind:valueMs={group.continuousWindowMs}
+      range={SKILL_DAMAGE_DURATION_MS}
+    />
+  {:else if group.continuousWindowMode === "skills"}
+    <WindowSkillPicker
+      bind:value={group.continuousStartSkillIds}
+      label={t("skillDamage.windowStart")}
+      empty={t("skillDamage.windowStartDefault")}
+    />
+    <WindowSkillPicker
+      bind:value={group.continuousEndSkillIds}
+      label={t("skillDamage.windowEnd")}
+      empty={t("skillDamage.windowEndNone")}
+    />
+    <p class="text-muted-foreground text-xs">
+      {t("skillDamage.windowSkillsHint")}
+    </p>
+    <SecondsInput
+      label={t("skillDamage.windowTimeout")}
+      bind:valueMs={group.continuousTimeoutMs}
+      range={SKILL_DAMAGE_WINDOW_TIMEOUT_MS}
+    />
   {:else}
-    {#if group.continuousWindowMode === "skills"}
-      <WindowSkillPicker
-        bind:value={group.continuousStartSkillIds}
-        label={t("skillDamage.windowStart")}
-        empty={t("skillDamage.windowStartDefault")}
-      />
-      <WindowSkillPicker
-        bind:value={group.continuousEndSkillIds}
-        label={t("skillDamage.windowEnd")}
-        empty={t("skillDamage.windowEndNone")}
-      />
-      <p class="text-muted-foreground text-xs">
-        {t("skillDamage.windowSkillsHint")}
-      </p>
-    {:else}
-      <label class="flex items-center gap-2 text-sm">
-        {t("skillDamage.windowPreset")}
-        <select
-          class="bg-background rounded border p-2"
-          bind:value={group.continuousCastPreset}
-        >
-          <option value="ray">{t("skillDamage.castRay")}</option>
-          <option value="infusion">{t("skillDamage.castInfusion")}</option>
-        </select>
-      </label>
-      <p class="text-muted-foreground text-xs">
-        {t("skillDamage.windowCastHint")}
-      </p>
-      <label class="flex items-center gap-2 text-sm">
-        {t("skillDamage.castCloseDelay")}
-        <input
-          class="bg-background w-24 rounded border p-2"
-          type="text"
-          inputmode="decimal"
-          value={group.continuousCastCloseDelayMs / 1000}
-          onchange={(event) => {
-            const raw = event.currentTarget.value.trim();
-            const seconds = Number(raw);
-            if (raw && Number.isFinite(seconds))
-              group.continuousCastCloseDelayMs = Math.round(
-                Math.max(0, Math.min(1000, seconds * 1000)),
-              );
-            event.currentTarget.value = String(
-              group.continuousCastCloseDelayMs / 1000,
-            );
-          }}
-        />
-      </label>
-      <p class="text-muted-foreground text-xs">
-        {t("skillDamage.castCloseDelayHint")}
-      </p>
-    {/if}
-    {#if group.continuousWindowMode === "skills"}
-      <label class="flex items-center gap-2 text-sm">
-        {t("skillDamage.windowTimeout")}
-        <input
-          class="bg-background w-24 rounded border p-2"
-          type="text"
-          inputmode="decimal"
-          value={group.continuousTimeoutMs / 1000}
-          onchange={(event) => {
-            const seconds = Number(event.currentTarget.value.trim());
-            if (Number.isFinite(seconds) && seconds > 0)
-              group.continuousTimeoutMs = Math.round(
-                Math.max(100, Math.min(3600000, seconds * 1000)),
-              );
-            event.currentTarget.value = String(
-              group.continuousTimeoutMs / 1000,
-            );
-          }}
-        />
-      </label>
-    {/if}
+    <label class="flex items-center gap-2 text-sm">
+      {t("skillDamage.windowPreset")}
+      <select
+        class="bg-background rounded border p-2"
+        bind:value={group.continuousCastPreset}
+      >
+        <option value="ray">{t("skillDamage.castRay")}</option>
+        <option value="infusion">{t("skillDamage.castInfusion")}</option>
+      </select>
+    </label>
+    <p class="text-muted-foreground text-xs">
+      {t("skillDamage.windowCastHint")}
+    </p>
+    <SecondsInput
+      label={t("skillDamage.castCloseDelay")}
+      bind:valueMs={group.continuousCastCloseDelayMs}
+      range={SKILL_DAMAGE_CAST_CLOSE_DELAY_MS}
+    />
+    <p class="text-muted-foreground text-xs">
+      {t("skillDamage.castCloseDelayHint")}
+    </p>
   {/if}
   <SettingsSwitch
     bind:checked={group.continuousAllDamage}
@@ -128,16 +90,16 @@
     description={t("skillDamage.continuousAllHint")}
   />
   <div class="flex flex-wrap gap-4">
-    {#each animations as item}
-      <label class="flex items-center gap-2 text-sm"
-        >{t(item.label)}
+    {#each animations as item (item.key)}
+      <label class="flex items-center gap-2 text-sm">
+        {t(item.label)}
         <select
           class="bg-background rounded border p-2"
           bind:value={group[item.key]}
         >
-          <option value="pop">{t("skillDamage.pop")}</option><option
-            value="shrink">{t("skillDamage.shrink")}</option
-          ><option value="floatUp">{t("skillDamage.floatUp")}</option>
+          {#each SKILL_DAMAGE_ANIMATIONS as animation (animation)}
+            <option value={animation}>{t(`skillDamage.${animation}`)}</option>
+          {/each}
         </select>
       </label>
     {/each}
@@ -155,36 +117,38 @@
           bind:value={group.comboFormat}
         >
           <option value="hit">{t("skillDamage.comboFormatHit")}</option>
-          <option value="multiplier"
-            >{t("skillDamage.comboFormatMultiplier")}</option
-          >
+          <option value="multiplier">
+            {t("skillDamage.comboFormatMultiplier")}
+          </option>
         </select>
       </label>
-      <label class="flex items-center gap-2 text-sm"
-        >{t("skillDamage.comboPosition")}
+      <label class="flex items-center gap-2 text-sm">
+        {t("skillDamage.comboPosition")}
         <select
           class="bg-background rounded border p-2"
           bind:value={group.comboPosition}
         >
-          <option value="bottom">{t("skillDamage.comboBottom")}</option><option
-            value="top">{t("skillDamage.comboTop")}</option
-          ><option value="right">{t("skillDamage.comboRight")}</option><option
-            value="left">{t("skillDamage.comboLeft")}</option
-          >
+          <option value="bottom">{t("skillDamage.comboBottom")}</option>
+          <option value="top">{t("skillDamage.comboTop")}</option>
+          <option value="right">{t("skillDamage.comboRight")}</option>
+          <option value="left">{t("skillDamage.comboLeft")}</option>
         </select>
       </label>
-      <label class="flex items-center gap-2 text-sm"
-        >{t("skillDamage.comboSpacing")}
+      <label class="flex items-center gap-2 text-sm">
+        {t("skillDamage.comboSpacing")}
         <input
           class="bg-background w-24 rounded border p-2"
           type="number"
           min="0"
-          max="200"
+          max={SKILL_DAMAGE_LABEL_SPACING_MAX}
           value={group.comboSpacing}
           onchange={(event) =>
             (group.comboSpacing = Math.max(
               0,
-              Math.min(200, Number(event.currentTarget.value) || 0),
+              Math.min(
+                SKILL_DAMAGE_LABEL_SPACING_MAX,
+                Number(event.currentTarget.value) || 0,
+              ),
             ))}
         />
       </label>

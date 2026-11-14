@@ -50,20 +50,6 @@ export function sumSimultaneousSkillHits<
   return [...totals.values()];
 }
 
-/** Call after filtering watched skills, so unmonitored damage cannot hide them. */
-export function largestSimultaneousSkillHits<
-  T extends { batch: number; amount: string },
->(hits: readonly T[]): T[] {
-  const largest = new Map<number, T>();
-  for (const hit of hits) {
-    const previous = largest.get(hit.batch);
-    if (!previous || BigInt(hit.amount) > BigInt(previous.amount)) {
-      largest.set(hit.batch, hit);
-    }
-  }
-  return [...largest.values()];
-}
-
 export function formatSkillDamage(
   amount: string,
   format: SkillDamageFormat,

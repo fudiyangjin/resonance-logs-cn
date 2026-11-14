@@ -296,24 +296,37 @@ pub struct SkillDamageHitState {
     pub occurred_at_ms: i64,
 }
 
-/// Local player's cast lifecycle, sharing the hit sequence cursor.
-#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone)]
+/// Step of a watched cast that opens or settles a cast damage window.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum SkillDamageCastPhase {
+    Start,
+    DurationStart,
+    End,
+    Complete,
+}
+
+/// One lifecycle step of a watched cast by the local player.
+#[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct SkillDamageCastState {
+    /// Drawn from the same sequence as [`SkillDamageHitState::id`], so hits
+    /// and casts share one cursor and one arrival order.
     pub id: u64,
+    /// Base skill id of the cast, not a damage id.
     pub skill_id: i32,
-    pub phase: String,
+    pub phase: SkillDamageCastPhase,
     pub occurred_at_ms: i64,
 }
 
-/// Skill damage topic: the retained window of watched local hits.
+/// Skill damage topic: the retained windows of collected local hits and
+/// watched local casts.
 #[derive(specta::Type, serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LiveSkillDamagePayload {
-    #[serde(default)]
-    pub casts: Vec<SkillDamageCastState>,
     pub revision: u64,
     pub hits: Vec<SkillDamageHitState>,
+    pub casts: Vec<SkillDamageCastState>,
 }
 
 /// Monster classification from `MonsterIdType.json`; unknown ids are normal.

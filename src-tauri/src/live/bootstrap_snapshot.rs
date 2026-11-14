@@ -445,26 +445,28 @@ impl TeammateCdRuntimeSnapshot {
 /// Upper bound on watched skill damage ids; far above any real group setup.
 pub const SKILL_DAMAGE_MAX_WATCHED: usize = 512;
 
-/// Damage ids (`skill_key`) whose local hits the skill damage HUD shows.
-/// Local damage collection: selected IDs, or every local hit when monitor_all is enabled.
+/// What the skill damage HUD collects from the local player. With nothing
+/// watched and `monitor_all` off, the feature is off and no hit is collected.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct SkillDamageRuntimeSnapshot {
-    pub watched_cast_ids: Vec<i32>,
+    /// Damage ids (`skill_key`) whose hits are collected.
     pub watched_skill_keys: Vec<i64>,
-    #[serde(default)]
+    /// Base skill ids whose cast lifecycle is collected.
+    pub watched_cast_ids: Vec<i32>,
+    /// Collect every damage hit, not only the watched damage ids.
     pub monitor_all: bool,
 }
 
 impl SkillDamageRuntimeSnapshot {
     /// Sorted and deduplicated, so lookups can binary search.
     fn normalize(&mut self) {
-        self.watched_cast_ids.retain(|key| *key > 0);
-        dedup_and_sort(&mut self.watched_cast_ids);
-        self.watched_cast_ids.truncate(SKILL_DAMAGE_MAX_WATCHED);
         self.watched_skill_keys.retain(|key| *key > 0);
         dedup_and_sort(&mut self.watched_skill_keys);
         self.watched_skill_keys.truncate(SKILL_DAMAGE_MAX_WATCHED);
+        self.watched_cast_ids.retain(|id| *id > 0);
+        dedup_and_sort(&mut self.watched_cast_ids);
+        self.watched_cast_ids.truncate(SKILL_DAMAGE_MAX_WATCHED);
     }
 }
 

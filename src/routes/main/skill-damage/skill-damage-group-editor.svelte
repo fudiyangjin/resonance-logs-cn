@@ -10,8 +10,9 @@
     SKILL_DAMAGE_FONT_SIZE,
     SKILL_DAMAGE_FONT_WEIGHTS,
     SKILL_DAMAGE_LABEL_SPACING_MAX,
+    SKILL_DAMAGE_ANIMATIONS,
+    SKILL_DAMAGE_DURATION_MS,
     SKILL_DAMAGE_MAX_VISIBLE,
-    clampSkillDamageDuration,
     isValidSkillDamageFontDataUrl,
     type SkillDamageGroup,
     type SkillDamageLabelMode,
@@ -32,6 +33,7 @@
   import MonsterSkillSearchGrid from "$lib/components/MonsterSkillSearchGrid.svelte";
   import DamagePaintEditor from "./damage-paint-editor.svelte";
   import DamageNumberStyleEditor from "./damage-number-style-editor.svelte";
+  import SecondsInput from "./seconds-input.svelte";
   import SkillDamageIconPicker from "./skill-damage-icon-picker.svelte";
   import SettingsFilePicker from "../dps/settings/settings-file-picker.svelte";
   import SettingsSwitch from "../dps/settings/settings-switch.svelte";
@@ -42,40 +44,63 @@
   const fontFamily = $derived(skillDamageFontFamily(group));
   $effect(() => ensureSkillDamageFonts([group]));
 
+  /** A cast preview has no cast to follow, so it pretends one this long. */
+  const PREVIEW_CAST_MS = 1_500;
+  const PREVIEW_HIT_INTERVAL_MS = 250;
+  const PREVIEW_HIT_AMOUNT = 41_152;
+
   let previewId = $state(0);
-  let previewFinal = $state(false);
-  let previewWindowTimer: ReturnType<typeof setTimeout> | undefined;
   let previewVisible = $state(false);
+  /** Phase of a previewed continuous total; a merge group previews a hit row. */
+  let previewPhase = $state<"active" | "final">();
+  let previewHits = $state(1);
+  let previewHitTimer: ReturnType<typeof setInterval> | undefined;
+  let previewWindowTimer: ReturnType<typeof setTimeout> | undefined;
   let previewTimer: ReturnType<typeof setTimeout> | undefined;
   const previewWindowMs = $derived(
     group.continuousWindowMode === "rolling"
       ? group.continuousWindowMs
       : group.continuousWindowMode === "cast"
-        ? 1500 + group.continuousCastCloseDelayMs // Simulate cast end plus its closing delay.
+        ? PREVIEW_CAST_MS + group.continuousCastCloseDelayMs
         : group.continuousTimeoutMs,
   );
-  function testAnimation() {
-    clearTimeout(previewTimer);
+
+  function stopPreviewTimers() {
+    clearInterval(previewHitTimer);
     clearTimeout(previewWindowTimer);
+    clearTimeout(previewTimer);
+  }
+
+  /**
+   * A merge group shows one hit for its duration. A continuous group counts
+   * hits for one window, then shows the settled total for the duration.
+   */
+  function testAnimation() {
+    stopPreviewTimers();
     previewId += 1;
     previewVisible = true;
-    previewFinal = false;
+    previewHits = 1;
+    previewPhase = undefined;
+    let windowMs = 0;
     if (group.displayMode === "continuous") {
+      windowMs = previewWindowMs;
+      previewPhase = "active";
+      previewHitTimer = setInterval(
+        () => (previewHits += 1),
+        PREVIEW_HIT_INTERVAL_MS,
+      );
       previewWindowTimer = setTimeout(() => {
-        previewFinal = true;
+        clearInterval(previewHitTimer);
+        previewPhase = "final";
         previewId += 1;
-      }, previewWindowMs);
+      }, windowMs);
     }
     previewTimer = setTimeout(
       () => (previewVisible = false),
-      group.durationMs +
-        (group.displayMode === "continuous" ? previewWindowMs : 0),
+      windowMs + group.durationMs,
     );
   }
-  onDestroy(() => {
-    clearTimeout(previewTimer);
-    clearTimeout(previewWindowTimer);
-  });
+  onDestroy(stopPreviewTimers);
 
   let searchKeyword = $state("");
   const addedIds = $derived(
@@ -274,36 +299,23 @@
           class="bg-background rounded border p-2"
           bind:value={group.animation}
         >
-          <option value="pop">{t("skillDamage.pop")}</option>
-          <option value="shrink">{t("skillDamage.shrink")}</option>
-          <option value="floatUp">{t("skillDamage.floatUp")}</option>
+          {#each SKILL_DAMAGE_ANIMATIONS as animation (animation)}
+            <option value={animation}>{t(`skillDamage.${animation}`)}</option>
+          {/each}
         </select>
       </label>
     {/if}
   </div>
   <div class="flex flex-wrap items-center gap-3">
-    <label class="flex items-center gap-2 text-sm">
-      {t(
+    <SecondsInput
+      label={t(
         group.displayMode === "continuous"
           ? "skillDamage.continuousTotalDuration"
           : "skillDamage.duration",
       )}
-      <input
-        class="bg-background w-24 rounded border p-2"
-        type="text"
-        inputmode="decimal"
-        value={group.durationMs / 1000}
-        onchange={(event) => {
-          const seconds = Number(event.currentTarget.value.trim());
-          if (Number.isFinite(seconds) && seconds > 0) {
-            group.durationMs = Math.round(
-              clampSkillDamageDuration(seconds * 1000),
-            );
-          }
-          event.currentTarget.value = String(group.durationMs / 1000);
-        }}
-      />
-    </label>
+      bind:valueMs={group.durationMs}
+      range={SKILL_DAMAGE_DURATION_MS}
+    />
     <button
       type="button"
       class="rounded border px-3 py-2 text-sm"
@@ -319,19 +331,12 @@
         <SkillDamageRow
           {group}
           label={previewLabel}
-          amount={previewFinal ? "345678" : "123456"}
+          amount={previewPhase
+            ? String(previewHits * PREVIEW_HIT_AMOUNT)
+            : "123456"}
           hitCount={3}
-          comboCount={group.displayMode === "continuous" ? "3" : undefined}
-          running={group.displayMode === "continuous" && !previewFinal}
-          animation={group.displayMode === "continuous"
-            ? previewFinal
-              ? group.continuousFinalAnimation
-              : group.continuousAnimation
-            : group.animation}
-          animationDurationMs={group.displayMode === "continuous" &&
-          !previewFinal
-            ? previewWindowMs
-            : group.durationMs}
+          phase={previewPhase}
+          comboCount={previewPhase ? previewHits : undefined}
           {fontFamily}
         />
       {/key}

@@ -233,13 +233,37 @@
       border-color 180ms ease;
   }
 
+  /*
+   * The edit frame is drawn around the panel instead of as its border and
+   * padding, so the content keeps the exact place and width it has outside
+   * edit mode under every scale mode and anchor.
+   */
   .overlay-group.editable {
+    --edit-frame-outset: 10px;
+    isolation: isolate;
+    cursor: move;
+  }
+
+  .overlay-group.editable::before {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * var(--edit-frame-outset));
+    z-index: -1;
     border: 2px solid var(--overlay-edit-panel-border);
     border-radius: 10px;
     background: var(--overlay-edit-panel-bg);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
-    padding: 8px;
-    cursor: move;
+  }
+
+  /* The tag and the handle sit on the frame, as on panels that pad instead. */
+  .editable > .group-tag {
+    top: calc(-20px - var(--edit-frame-outset));
+    left: calc(2px - var(--edit-frame-outset));
+  }
+
+  .editable > .resize-handle {
+    right: calc(-8px - var(--edit-frame-outset));
+    bottom: calc(-8px - var(--edit-frame-outset));
   }
 
   .panel-content {

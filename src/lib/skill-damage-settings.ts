@@ -8,6 +8,7 @@
  * `skillDamageFonts` store and groups reference them by id, so editing a
  * group never rewrites font data.
  */
+import type { SkillDamageRuntimeSnapshot } from "./bindings";
 
 export type SkillDamagePaint = {
   mode: "solid" | "gradient";
@@ -34,9 +35,25 @@ export type SkillDamageNumberStyle = {
 };
 
 export type SkillDamageFormat = "integer" | "grouped" | "cn" | "western";
-export type SkillDamageAnimation = "pop" | "shrink" | "floatUp";
+export const SKILL_DAMAGE_ANIMATIONS = ["pop", "shrink", "floatUp"] as const;
+export type SkillDamageAnimation = (typeof SKILL_DAMAGE_ANIMATIONS)[number];
 export type SkillDamageScrollDirection = "up" | "down";
 export type SkillDamageLabelMode = "none" | "text" | "icon";
+/** `merge` shows hits as rows; `continuous` keeps one running total per window. */
+export type SkillDamageDisplayMode = "merge" | "continuous";
+/**
+ * What opens and settles a continuous window: `rolling` stays open while
+ * group hits keep arriving, `skills` runs from a start skill's hit to an end
+ * skill's hit or a timeout, `cast` follows a preset skill's cast.
+ */
+export type SkillDamageWindowMode = "rolling" | "skills" | "cast";
+
+/**
+ * Casts a `cast` window can follow, by the cast's base skill id (the id of
+ * its lifecycle events, not of the damage it deals).
+ */
+export const SKILL_DAMAGE_CAST_PRESETS = { ray: 1241, infusion: 1520 } as const;
+export type SkillDamageCastPreset = keyof typeof SKILL_DAMAGE_CAST_PRESETS;
 
 export type SkillDamageEntry = { skillId: number; alias: string };
 
@@ -44,31 +61,19 @@ export type SkillDamageEntry = { skillId: number; alias: string };
 export type SkillDamageLayout = { x: number; y: number; scale: number };
 
 export type SkillDamageGroup = {
-  displayMode: "merge" | "continuous";
-  continuousWindowMs: number;
-  continuousWindowMode: "rolling" | "skills" | "cast";
-  continuousStartSkillIds: number[];
-  continuousEndSkillIds: number[];
-  continuousTimeoutMs: number;
-  continuousCastPreset: "ray" | "infusion";
-  continuousCastCloseDelayMs: number;
-  allSelfDamage: boolean;
-  continuousAllDamage: boolean;
-  continuousAnimation: SkillDamageAnimation;
-  continuousFinalAnimation: SkillDamageAnimation;
-  comboFormat: "hit" | "multiplier";
-  showComboCount: boolean;
-  comboPosition: "top" | "bottom" | "left" | "right";
-  comboSpacing: number;
   id: string;
   name: string;
   enabled: boolean;
   entries: SkillDamageEntry[];
+  /** Every own damage hit counts as this group's, as if all skills were listed. */
+  allSelfDamage: boolean;
+  displayMode: SkillDamageDisplayMode;
   /** Sum every watched hit of one batch into a single row named after the group. */
   mergeSimultaneous: boolean;
   /** Sum one skill's hits within a batch; otherwise show every hit separately. */
   mergeHits: boolean;
   maxVisible: number;
+  /** How long a row stays; in continuous mode, how long the settled total stays. */
   durationMs: number;
   format: SkillDamageFormat;
   animation: SkillDamageAnimation;
@@ -85,6 +90,31 @@ export type SkillDamageGroup = {
   fontWeight: number;
   numberStyle: SkillDamageNumberStyle;
   layout: SkillDamageLayout;
+
+  // Continuous mode.
+  continuousWindowMode: SkillDamageWindowMode;
+  /** `rolling`: the window settles this long after the last group hit. */
+  continuousWindowMs: number;
+  /** `skills`: hits of these open the window; empty means any group skill. */
+  continuousStartSkillIds: number[];
+  /** `skills`: a hit of these settles the window; empty leaves the timeout. */
+  continuousEndSkillIds: number[];
+  /** `skills`: the window settles this long after the last opening hit. */
+  continuousTimeoutMs: number;
+  continuousCastPreset: SkillDamageCastPreset;
+  /** `cast`: damage still counts for this long after the cast ended. */
+  continuousCastCloseDelayMs: number;
+  /**
+   * Count other own damage inside an open window too. Unlike
+   * `allSelfDamage`, such hits neither open nor extend the window.
+   */
+  continuousAllDamage: boolean;
+  continuousAnimation: SkillDamageAnimation;
+  continuousFinalAnimation: SkillDamageAnimation;
+  showComboCount: boolean;
+  comboFormat: "hit" | "multiplier";
+  comboPosition: "top" | "bottom" | "left" | "right";
+  comboSpacing: number;
 };
 
 export type SkillDamageProfile = {
@@ -108,6 +138,18 @@ export const SKILL_DAMAGE_DURATION_MS = {
   max: 60_000,
   default: 2_500,
 };
+export const SKILL_DAMAGE_WINDOW_TIMEOUT_MS = {
+  min: 100,
+  max: 3_600_000,
+  default: 15_000,
+};
+export const SKILL_DAMAGE_CAST_CLOSE_DELAY_MS = {
+  min: 0,
+  max: 1_000,
+  default: 0,
+};
+/** Most skills one window trigger list holds. */
+export const SKILL_DAMAGE_WINDOW_SKILLS_MAX = 512;
 export const SKILL_DAMAGE_MAX_VISIBLE = 8;
 export const SKILL_DAMAGE_SCALE = { min: 0.5, max: 2.5 };
 export const SKILL_DAMAGE_FONT_SIZE = { min: 8, max: 120, default: 24 };
@@ -171,22 +213,8 @@ export function createSkillDamageGroup(
     name,
     enabled: true,
     entries: [],
-    displayMode: "merge",
-    continuousWindowMs: 1500,
-    continuousWindowMode: "rolling",
-    continuousStartSkillIds: [],
-    continuousEndSkillIds: [],
-    continuousTimeoutMs: 15000,
-    continuousCastPreset: "ray",
-    continuousCastCloseDelayMs: 0,
     allSelfDamage: false,
-    continuousAllDamage: false,
-    continuousAnimation: "shrink",
-    continuousFinalAnimation: "pop",
-    comboFormat: "hit",
-    showComboCount: false,
-    comboPosition: "bottom",
-    comboSpacing: 4,
+    displayMode: "merge",
     mergeSimultaneous: false,
     mergeHits: false,
     maxVisible: SKILL_DAMAGE_MAX_VISIBLE,
@@ -205,6 +233,20 @@ export function createSkillDamageGroup(
     fontWeight: 700,
     numberStyle: createDefaultDamageNumberStyle(),
     layout: defaultSkillDamageLayout(index),
+    continuousWindowMode: "rolling",
+    continuousWindowMs: 1_500,
+    continuousStartSkillIds: [],
+    continuousEndSkillIds: [],
+    continuousTimeoutMs: SKILL_DAMAGE_WINDOW_TIMEOUT_MS.default,
+    continuousCastPreset: "ray",
+    continuousCastCloseDelayMs: SKILL_DAMAGE_CAST_CLOSE_DELAY_MS.default,
+    continuousAllDamage: false,
+    continuousAnimation: "shrink",
+    continuousFinalAnimation: "pop",
+    showComboCount: false,
+    comboFormat: "hit",
+    comboPosition: "bottom",
+    comboSpacing: 4,
   };
 }
 
@@ -244,40 +286,58 @@ export function clampSkillDamageScale(value: unknown): number {
   return clampNumber(value, 1, SKILL_DAMAGE_SCALE.min, SKILL_DAMAGE_SCALE.max);
 }
 
-export function monitorAllSkillDamage(
-  profile: SkillDamageProfile | null | undefined,
-): boolean {
-  return Boolean(
-    profile?.enabled &&
-      profile.groups.some(
-        (group) =>
-          group.enabled &&
-          (group.allSelfDamage ||
-            (group.entries.length > 0 &&
-              group.displayMode === "continuous" &&
-              group.continuousAllDamage)),
-      ),
-  );
+/** Base skill id of the cast a `cast` window follows. */
+export function skillDamageCastPresetSkillId(group: SkillDamageGroup): number {
+  return SKILL_DAMAGE_CAST_PRESETS[group.continuousCastPreset];
 }
 
-/** Damage ids whose hits the backend should keep for this profile. */
-export function watchedSkillDamageKeys(
+/**
+ * What the backend has to collect for this profile: the damage ids its
+ * groups list or trigger on, the casts its cast windows follow, and whether
+ * some group needs every own hit.
+ */
+export function skillDamageRuntimeSnapshot(
   profile: SkillDamageProfile | null | undefined,
-): number[] {
-  if (!profile?.enabled) return [];
-  const keys = new Set<number>();
-  for (const group of profile.groups) {
+): SkillDamageRuntimeSnapshot {
+  const skillKeys = new Set<number>();
+  const castIds = new Set<number>();
+  let monitorAll = false;
+  for (const group of profile?.enabled ? profile.groups : []) {
     if (!group.enabled) continue;
-    for (const entry of group.entries) keys.add(entry.skillId);
-    if (
-      group.displayMode === "continuous" &&
-      group.continuousWindowMode === "skills"
-    ) {
-      for (const id of group.continuousStartSkillIds) keys.add(id);
-      for (const id of group.continuousEndSkillIds) keys.add(id);
+    for (const entry of group.entries) skillKeys.add(entry.skillId);
+    monitorAll ||= group.allSelfDamage;
+    if (group.displayMode !== "continuous") continue;
+    if (group.continuousWindowMode === "skills") {
+      for (const id of group.continuousStartSkillIds) skillKeys.add(id);
+      for (const id of group.continuousEndSkillIds) skillKeys.add(id);
+    } else if (group.continuousWindowMode === "cast") {
+      castIds.add(skillDamageCastPresetSkillId(group));
     }
+    monitorAll ||= group.continuousAllDamage && windowCanOpen(group);
   }
-  return [...keys].sort((a, b) => a - b);
+  const sorted = (ids: Set<number>) => [...ids].sort((a, b) => a - b);
+  return {
+    watchedSkillKeys: sorted(skillKeys),
+    watchedCastIds: sorted(castIds),
+    monitorAll,
+  };
+}
+
+/**
+ * Whether anything can open the group's window. A window nothing opens
+ * counts no damage, so it is no reason to collect every hit.
+ */
+function windowCanOpen(group: SkillDamageGroup): boolean {
+  switch (group.continuousWindowMode) {
+    case "cast":
+      return true;
+    case "skills":
+      return (
+        group.continuousStartSkillIds.length > 0 || group.entries.length > 0
+      );
+    case "rolling":
+      return group.entries.length > 0;
+  }
 }
 
 export function referencedSkillDamageFontIds(
@@ -366,12 +426,7 @@ export function normalizeSkillDamageGroup(
   input: unknown,
   index = 0,
 ): SkillDamageGroup {
-  const source = loose<
-    SkillDamageGroup & {
-      continuousStartSkillId: unknown;
-      continuousEndSkillId: unknown;
-    }
-  >(input);
+  const source = loose<SkillDamageGroup>(input);
   const defaults = createSkillDamageGroup("", index);
   const layout = loose<SkillDamageLayout>(source.layout);
   const seenSkills = new Set<number>();
@@ -398,60 +453,11 @@ export function normalizeSkillDamageGroup(
     name: typeof source.name === "string" ? source.name : "",
     enabled: source.enabled !== false,
     entries,
-    displayMode: oneOf(source.displayMode, ["merge", "continuous"], "merge"),
-    continuousWindowMs: Math.round(
-      clampSkillDamageDuration(
-        source.continuousWindowMs ?? defaults.continuousWindowMs,
-      ),
-    ),
-    continuousWindowMode: oneOf(
-      source.continuousWindowMode,
-      ["rolling", "skills", "cast"],
-      "rolling",
-    ),
-    continuousStartSkillIds: normalizeWindowSkillIds(
-      source.continuousStartSkillIds,
-      source.continuousStartSkillId,
-    ),
-    continuousEndSkillIds: normalizeWindowSkillIds(
-      source.continuousEndSkillIds,
-      source.continuousEndSkillId,
-    ),
-    continuousTimeoutMs: Math.round(
-      clampNumber(source.continuousTimeoutMs, 15000, 100, 3600000),
-    ),
-    continuousCastCloseDelayMs: Math.round(
-      clampNumber(source.continuousCastCloseDelayMs, 0, 0, 1000),
-    ),
-    continuousCastPreset: oneOf(
-      source.continuousCastPreset,
-      ["ray", "infusion"],
-      "ray",
-    ),
     allSelfDamage: source.allSelfDamage === true,
-    continuousAllDamage: source.continuousAllDamage === true,
-    continuousAnimation: oneOf(
-      source.continuousAnimation,
-      ["pop", "shrink", "floatUp"],
-      defaults.continuousAnimation,
-    ),
-    continuousFinalAnimation: oneOf(
-      source.continuousFinalAnimation,
-      ["pop", "shrink", "floatUp"],
-      defaults.continuousFinalAnimation,
-    ),
-    comboFormat: oneOf(source.comboFormat, ["hit", "multiplier"], "hit"),
-    showComboCount: source.showComboCount === true,
-    comboPosition: oneOf(
-      source.comboPosition,
-      ["top", "bottom", "left", "right"],
-      defaults.comboPosition,
-    ),
-    comboSpacing: clampNumber(
-      source.comboSpacing,
-      defaults.comboSpacing,
-      0,
-      SKILL_DAMAGE_LABEL_SPACING_MAX,
+    displayMode: oneOf(
+      source.displayMode,
+      ["merge", "continuous"],
+      defaults.displayMode,
     ),
     mergeSimultaneous: source.mergeSimultaneous === true,
     mergeHits: source.mergeHits === true,
@@ -471,7 +477,7 @@ export function normalizeSkillDamageGroup(
     ),
     animation: oneOf(
       source.animation,
-      ["pop", "shrink", "floatUp"],
+      SKILL_DAMAGE_ANIMATIONS,
       defaults.animation,
     ),
     scrollDirection: oneOf(
@@ -518,6 +524,64 @@ export function normalizeSkillDamageGroup(
       y: finiteOr(layout.y, defaults.layout.y),
       scale: clampSkillDamageScale(layout.scale),
     },
+    continuousWindowMode: oneOf(
+      source.continuousWindowMode,
+      ["rolling", "skills", "cast"],
+      defaults.continuousWindowMode,
+    ),
+    continuousWindowMs: Math.round(
+      clampSkillDamageDuration(
+        source.continuousWindowMs ?? defaults.continuousWindowMs,
+      ),
+    ),
+    continuousStartSkillIds: normalizeWindowSkillIds(
+      source.continuousStartSkillIds,
+    ),
+    continuousEndSkillIds: normalizeWindowSkillIds(
+      source.continuousEndSkillIds,
+    ),
+    continuousTimeoutMs: Math.round(
+      clampRange(source.continuousTimeoutMs, SKILL_DAMAGE_WINDOW_TIMEOUT_MS),
+    ),
+    continuousCastPreset: oneOf(
+      source.continuousCastPreset,
+      Object.keys(SKILL_DAMAGE_CAST_PRESETS) as SkillDamageCastPreset[],
+      defaults.continuousCastPreset,
+    ),
+    continuousCastCloseDelayMs: Math.round(
+      clampRange(
+        source.continuousCastCloseDelayMs,
+        SKILL_DAMAGE_CAST_CLOSE_DELAY_MS,
+      ),
+    ),
+    continuousAllDamage: source.continuousAllDamage === true,
+    continuousAnimation: oneOf(
+      source.continuousAnimation,
+      SKILL_DAMAGE_ANIMATIONS,
+      defaults.continuousAnimation,
+    ),
+    continuousFinalAnimation: oneOf(
+      source.continuousFinalAnimation,
+      SKILL_DAMAGE_ANIMATIONS,
+      defaults.continuousFinalAnimation,
+    ),
+    showComboCount: source.showComboCount === true,
+    comboFormat: oneOf(
+      source.comboFormat,
+      ["hit", "multiplier"],
+      defaults.comboFormat,
+    ),
+    comboPosition: oneOf(
+      source.comboPosition,
+      ["top", "bottom", "left", "right"],
+      defaults.comboPosition,
+    ),
+    comboSpacing: clampNumber(
+      source.comboSpacing,
+      defaults.comboSpacing,
+      0,
+      SKILL_DAMAGE_LABEL_SPACING_MAX,
+    ),
   };
 }
 
@@ -615,15 +679,17 @@ function oneOf<T extends string>(
   return options.includes(value as T) ? (value as T) : fallback;
 }
 
-/** Accept old single-skill profiles; an explicitly empty selection stays empty. */
-function normalizeWindowSkillIds(value: unknown, legacy: unknown): number[] {
-  const values = Array.isArray(value) ? value : [legacy];
-  return [
-    ...new Set(
-      values.filter(
-        (id): id is number =>
-          typeof id === "number" && Number.isSafeInteger(id) && id > 0,
-      ),
-    ),
-  ].slice(0, 512);
+function clampRange(
+  value: unknown,
+  range: { min: number; max: number; default: number },
+): number {
+  return clampNumber(value, range.default, range.min, range.max);
+}
+
+function normalizeWindowSkillIds(value: unknown): number[] {
+  const ids = (Array.isArray(value) ? value : []).filter(
+    (id): id is number =>
+      typeof id === "number" && Number.isSafeInteger(id) && id > 0,
+  );
+  return [...new Set(ids)].slice(0, SKILL_DAMAGE_WINDOW_SKILLS_MAX);
 }

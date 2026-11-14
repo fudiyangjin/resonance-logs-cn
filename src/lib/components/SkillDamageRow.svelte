@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { untrack } from "svelte";
+  import type { Attachment } from "svelte/attachments";
   import SkillIcon from "./skill-icon.svelte";
   import SkillDamageDigits from "./SkillDamageDigits.svelte";
   import {
@@ -6,10 +8,7 @@
     skillDamageIconBackground,
   } from "$lib/skill-damage-icons";
   import { formatSkillDamage } from "$lib/skill-damage-display";
-  import type {
-    SkillDamageGroup,
-    SkillDamageAnimation,
-  } from "$lib/skill-damage-settings";
+  import type { SkillDamageGroup } from "$lib/skill-damage-settings";
 
   let {
     group,
@@ -18,44 +17,71 @@
     hitCount = 1,
     animated = true,
     fontFamily,
+    phase,
     comboCount,
-    animation,
-    animationDurationMs,
-    running = false,
   }: {
     group: SkillDamageGroup;
-    comboCount?: string | undefined;
-    animation?: SkillDamageAnimation | undefined;
-    animationDurationMs?: number | undefined;
-    running?: boolean;
     label: string;
     amount: string;
     hitCount?: number;
     animated?: boolean;
     /** Resolved by the caller, which owns font loading for all its rows. */
     fontFamily?: string | undefined;
+    /**
+     * Set on a continuous total: still counting (`active`) or settled
+     * (`final`). A plain hit row has none.
+     */
+    phase?: "active" | "final" | undefined;
+    /** Hits summed into a continuous total. */
+    comboCount?: number | undefined;
   } = $props();
 
-  const effectiveAnimation = $derived(animation ?? group.animation);
+  const animation = $derived(
+    phase === "active"
+      ? group.continuousAnimation
+      : phase === "final"
+        ? group.continuousFinalAnimation
+        : group.animation,
+  );
   const valueText = $derived(
     formatSkillDamage(amount, group.format) +
-      (group.displayMode !== "continuous" && hitCount > 1
-        ? `[${hitCount}]`
-        : ""),
+      (phase === undefined && hitCount > 1 ? `[${hitCount}]` : ""),
   );
   const icon = $derived(
     group.labelMode === "icon" ? resolveSkillDamageIcon(group.iconPath) : null,
   );
+
+  /**
+   * Each new hit of a running total replays the row's entrance, as if the row
+   * had just appeared. The CSS animations are restarted in place rather than
+   * by remounting the row: a remount would rebuild the number's SVG, its
+   * filters and its size observers on every hit.
+   */
+  const replayOnHit: Attachment<HTMLElement> = (row) => {
+    let shown = untrack(() => comboCount);
+    $effect(() => {
+      const count = comboCount;
+      if (count === shown) return;
+      shown = count;
+      if (phase !== "active") return;
+      for (const running of row.getAnimations({ subtree: true })) {
+        if (!(running instanceof CSSAnimation)) continue;
+        running.cancel();
+        running.play();
+      }
+    });
+  };
 </script>
 
 <div
   class="damage-row"
-  class:running
-  class:float-up={animated && effectiveAnimation === "floatUp"}
-  class:pop={animated && effectiveAnimation === "pop"}
-  class:shrink={animated && effectiveAnimation === "shrink"}
+  {@attach replayOnHit}
+  class:running={phase === "active"}
+  class:float-up={animated && animation === "floatUp"}
+  class:pop={animated && animation === "pop"}
+  class:shrink={animated && animation === "shrink"}
   style:--damage-label-gap={`${group.labelMode === "none" ? 0 : group.labelSpacing}px`}
-  style:--damage-duration={`${animationDurationMs ?? group.durationMs}ms`}
+  style:--damage-duration={`${group.durationMs}ms`}
 >
   {#if icon}
     <span
@@ -103,11 +129,15 @@
 </div>
 
 <style>
+  /*
+   * A running total only enters, again on every hit; it leaves by turning
+   * into its settled row.
+   */
   .running.pop {
-    animation: running-pop min(var(--damage-duration), 200ms) ease-out both;
+    animation: running-pop 200ms ease-out both;
   }
   .running.float-up {
-    animation: running-float min(var(--damage-duration), 200ms) ease-out both;
+    animation: running-float 200ms ease-out both;
   }
   @keyframes running-pop {
     0% {
