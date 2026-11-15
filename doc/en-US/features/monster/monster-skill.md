@@ -33,7 +33,7 @@ Search by skill name, alias or ID under **{{ui:monsterMonitor.monsterSkill.searc
 - A skill missing from the game data can be added by typing its full ID;
 - Boss skill IDs are shown on the skill markers of the [history](../dps/history.md) timeline.
 
-Each skill is listed once, up to 32 skills. In the **{{ui:monsterMonitor.monsterSkill.listTitle}}** you can:
+Each skill is listed once, up to 128 skills. In the **{{ui:monsterMonitor.monsterSkill.listTitle}}** you can:
 
 | Action | Description |
 | --- | --- |
@@ -61,3 +61,7 @@ Each skill can have an **On trigger** cue that plays as soon as a nearby monster
 Turn on the **Monster Skills** area in **{{ui:monsterMonitor.tabs.overlay}}** (off by default), then use **{{ui:monsterMonitor.actions.editLayout}}** to drag it into place. Without live data, edit mode previews the first skills on your list.
 
 The panel style covers row gap, column gap, font size, name color, value color, progress bar color, progress bar opacity, text shadow and background.
+
+## Examples
+
+- [Warning for an elite's dangerous cast](./examples/elite-cast-warning.md)

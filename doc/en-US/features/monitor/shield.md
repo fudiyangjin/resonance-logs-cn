@@ -15,3 +15,7 @@
 You can set **{{ui:skillMonitor.shieldDetail.hpColor}}**, **{{ui:skillMonitor.shieldDetail.shieldColor}}** and **{{ui:skillMonitor.shieldDetail.healShieldColor}}** (shields converted from overhealing) separately, as well as the bar width.
 
 Whether this area is shown in the overlay is controlled by **HP/Shield Area** in [Enable Window](./overlay.md).
+
+## Examples
+
+- [How much more can the tank take](./examples/tank-shield.md)

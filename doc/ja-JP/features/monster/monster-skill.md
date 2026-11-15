@@ -33,7 +33,7 @@
 - ゲームデータに未収録のスキルは、完全な ID を入力すると追加できます；
 - ボススキルの ID は [履歴](../dps/history.md) タイムラインのスキルマーカーで確認できます。
 
-各スキルは 1 件のみ、最大 32 件です。**{{ui:monsterMonitor.monsterSkill.listTitle}}** では次の操作ができます。
+各スキルは 1 件のみ、最大 128 件です。**{{ui:monsterMonitor.monsterSkill.listTitle}}** では次の操作ができます。
 
 | 操作 | 説明 |
 | --- | --- |
@@ -61,3 +61,7 @@
 **{{ui:monsterMonitor.tabs.overlay}}** で **モンスタースキルエリア** をオンにし（既定はオフ）、**{{ui:monsterMonitor.actions.editLayout}}** で好きな位置へドラッグします。データがないときは、編集モードでリスト先頭のスキルがプレビュー表示されます。
 
 パネルスタイルでは行間、列間隔、文字サイズ、名前の色、数値の色、進行バーの色、進行バーの不透明度、文字の影、背景を調整できます。
+
+## 例
+
+- [エリートの危険な詠唱を知らせる](./examples/elite-cast-warning.md)

@@ -10,3 +10,7 @@
 - **{{ui:monsterMonitor.style.preciseTimer}}**: Off by default, so countdowns show whole seconds. Turn it on to show countdowns to 0.1s and update the progress bar every 100ms.
 
 Whether it appears in the overlay is controlled by **Teammate Buff Area** in [Enable Window](./overlay.md).
+
+## Examples
+
+- [Check that the whole party has your buffs](./examples/team-buffs.md)

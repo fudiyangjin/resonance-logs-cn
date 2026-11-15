@@ -10,3 +10,7 @@
 - **{{ui:monsterMonitor.style.preciseTimer}}**：默认关闭，倒计时按整秒显示；开启后倒计时显示到 0.1 秒，进度条每 100ms 更新一次。
 
 浮窗中是否显示由 [启用窗口](./overlay.md) 的 **队友 Buff 区** 控制。
+
+## 例
+
+- [辅助确认全队增益都在](./examples/team-buffs.md)

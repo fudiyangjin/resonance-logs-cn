@@ -49,7 +49,11 @@ In the **{{ui:skillMonitor.skillCd.voice.title}}** section, you can set up three
 
 For charge-based skills, **every charge that comes back** counts as the cooldown ending, so "When ready" and "x seconds before ready" play for each charge. Announcements require a model to be installed and enabled in [Voice](../voice/README.md).
 
-Voice announcements and the cooldown monitor are independent: monitoring or un-monitoring a skill leaves its announcements alone, and **{{ui:skillMonitor.common.remove}}** deletes them when you no longer need them. Switching class in **{{ui:skillMonitor.skillCd.class.title}}** clears the current profile's skill announcements; other profiles are unaffected.
+Voice announcements and the cooldown monitor are independent: monitoring or un-monitoring a skill leaves its announcements alone, and **{{ui:skillMonitor.common.remove}}** deletes them when you no longer need them. Switching class in **{{ui:skillMonitor.profile.classLabel}}** at the top of the page clears the skill announcements of the current configuration. If several loadouts share that configuration, theirs are cleared too; pick **{{ui:skillMonitor.profile.copyForCurrent}}** when switching to change only the current loadout.
 
 > [!NOTE]
 > "Duration skills" (such as Scythe Cart) that used to be configured here have moved to [Monster Monitor · Entity Duration](../monster/entity-duration.md). Old profiles are migrated automatically.
+
+## Examples
+
+- [Class skills and imagine skills in separate areas](./examples/skill-cd-regions.md)

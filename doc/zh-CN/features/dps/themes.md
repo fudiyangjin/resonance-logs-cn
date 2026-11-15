@@ -9,6 +9,10 @@
 
 ## 预设
 
+### 推荐样式
+
+**{{ui:themes.presets.reference.title}}** 一键套用开发者推荐的整套样式：配色、表格、标题栏、显示格式、列和历史显示，挑战监控的禁用伤害保留。它会覆盖当前 DPS 设置方案中的这些设置，多个配装共用这个方案时会一起改变，确认框中会列出这些配装。全新安装默认就是这套样式。
+
 ### 颜色预设
 
 | 预设 | 风格 |
@@ -81,3 +85,4 @@
 
 - [透明的极简 DPS 窗口](./examples/transparent-window.md)
 - [标题栏自由布局与死亡回放](./examples/header-death.md)
+- [一键套用推荐样式](./examples/recommended-style.md)

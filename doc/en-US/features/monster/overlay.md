@@ -11,7 +11,7 @@
 | **Stun Bar Area** | Hidden | [Stun bar](./status.md#stun-bar) |
 | **HP Bar Area** | Hidden | [HP bar](./status.md#hp-bar) |
 | **Battle Roster** | Hidden | [Battle roster](./roster.md) |
-| **Teammate Fantasy Area** | Shown | [Teammate fantasies](./status.md#teammate-fantasies) |
+| **Teammate Fantasy Area** | Hidden | [Teammate fantasies](./status.md#teammate-fantasies) |
 | **Boss DBM Area** | Hidden | [Boss DBM](./boss-dbm.md) |
 | **Entity Duration Area** | Hidden | [Entity Duration](./entity-duration.md) |
 | **Monster Skills Area** | Hidden | [Monster Skills](./monster-skill.md) |
@@ -21,3 +21,7 @@ Click a button to toggle its visibility.
 ## Edit layout
 
 After clicking **{{ui:monsterMonitor.actions.editLayout}}** at the top, every area can be dragged and resized, and placeholder previews are shown when there is no live data. In edit mode you can use **Reset Position** and **Reset Size**.
+
+## Examples
+
+- [Set up the monster overlay for your role](./examples/tank-overlay.md)

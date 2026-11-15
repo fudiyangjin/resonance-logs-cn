@@ -3,7 +3,10 @@ import { buildLoadoutPresets } from "./loadout-presets";
 import { createDefaultSkillCdRegion } from "$lib/skill-cd-layout";
 import { listWhitePanels } from "$lib/hud-color-schemes";
 import { CHALLENGE_PRESETS } from "$lib/challenge-presets";
+import classSkillConfigs from "$lib/config/class_skill_configs.json";
+import { TALENT_STAGE_SPECS } from "$lib/config/talent-stages";
 import {
+  CLASS_SPEC_MAP,
   SETTINGS,
   createDefaultMonitoringSettingsState,
   createReferenceLiveMeterProfileData,
@@ -64,7 +67,7 @@ describe("built-in loadout presets", () => {
       subtitle: "神盾骑士 · 光盾专精",
       iconPath: "/images/class_specs/Shield.png",
     });
-    expect(radiantShield.data.skillProfile.selectedClass).toBe("wind_knight");
+    expect(radiantShield.data.skillProfile.selectedClass).toBe("shield_knight");
     expect(radiantShield.data.skillProfile.monitoredBuffIds).toContain(2206011);
     expect(radiantShield.data.monsterProfile.monitoredBuffIds).toContain(
       501712,
@@ -99,6 +102,18 @@ describe("built-in loadout presets", () => {
     expect(vanguard.data.linkedTalentStageCfgId).toBe(107);
     expect(vanguard.data.skillProfile.selectedClass).toBe("wind_knight");
     expect(vanguard.data.skillProfile.monitoredBuffIds).toContain(2302421);
+  });
+
+  it("configures every preset for the class of its bound spec", () => {
+    for (const preset of buildLoadoutPresets("zh-CN")) {
+      const spec = TALENT_STAGE_SPECS[preset.data.linkedTalentStageCfgId ?? 0];
+      const className = spec ? CLASS_SPEC_MAP[spec] : undefined;
+      expect(className, preset.id).toBeDefined();
+      // "Shield Knight" -> "shield_knight", the key class_skill_configs uses.
+      const classKey = className!.toLowerCase().replace(/ /g, "_");
+      expect(Object.keys(classSkillConfigs), preset.id).toContain(classKey);
+      expect(preset.data.skillProfile.selectedClass, preset.id).toBe(classKey);
+    }
   });
 
   it("ships the reference live look on every preset, keeping its challenge watch", () => {

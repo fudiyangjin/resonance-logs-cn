@@ -16,6 +16,7 @@ Resonance Logs CN は 1 つの**メインウィンドウ**といくつかの**�
 | **{{ui:routes.tools.moduleCalc}}** | 最適なモジュールの組み合わせを計算 | [モジュール計算](../features/module-calc/README.md) |
 | **{{ui:routes.tools.skillMonitor}}** | 自分のスキル CD、Buff、ファクター、キャラクターステータスのオーバーレイ | [ライブモニター](../features/monitor/README.md) |
 | **{{ui:routes.tools.monsterMonitor}}** | ターゲットの Buff、ヘイト、Boss DBM、エンティティタイマー | [モンスターモニター](../features/monster/README.md) |
+| **{{ui:routes.tools.skillDamage}}** | 指定したスキルのダメージ数値をゲームオーバーレイに表示 | [スキルダメージ表示](../features/skill-damage/README.md) |
 | **{{ui:routes.tools.minimap}}** | ダンジョンのミニマップとギミック字幕 | [ダンジョンギミック](../features/minimap/README.md) |
 | **{{ui:routes.tools.voice}}** | 音声モデル、音色、短文、読み上げの一覧 | [音声読み上げ](../features/voice/README.md) |
 | **{{ui:routes.tools.appSettings}}** | 言語、外観、キャプチャ、ショートカット、診断 | [アプリ設定](../features/app/README.md) |
@@ -31,6 +32,7 @@ Resonance Logs CN は 1 つの**メインウィンドウ**といくつかの**�
 | **ライブ DPS ウィンドウ** | パーティのダメージ / 回復 / 被ダメージ / 死亡リスト | ショートカット、またはトレイの **Show Live Meter** |
 | **ライブモニターオーバーレイ** | スキル CD、リソース、キャラクターステータス、カスタムモニターエリア、シールド、稼働率 | {{ui:routes.tools.skillMonitor}} ページ上部 |
 | **モンスターオーバーレイ** | 対象の Buff、味方 Buff、ヘイト、スタン、HP、Boss DBM、エンティティタイマー | {{ui:routes.tools.monsterMonitor}} ページ上部 |
+| **スキルダメージ表示** | 指定したスキルのダメージ数値 | {{ui:routes.tools.skillDamage}} ページ上部 |
 | **ダンジョンギミックオーバーレイ** | ミニマップ、ギミック字幕 | {{ui:routes.tools.minimap}} ページ上部 |
 
 ![ゲーム画面に 4 種類のオーバーレイを同時に表示したイメージ](../../shared/img/start/interface_2.ja-JP.png)

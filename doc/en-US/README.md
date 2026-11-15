@@ -20,6 +20,7 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | Test a fixed-length damage rotation on a training dummy | [Example: Test a 3-minute rotation in dummy mode](./features/dps/examples/dummy-rotation.md) |
 | Review damage gaps after a fight | [Example: Find damage gaps with the timeline](./features/dps/examples/timeline-gaps.md) |
 | See my own skill CDs and Buffs on screen | [Live Monitor](./features/monitor/README.md) |
+| See the damage numbers of my own skills on screen | [Skill Damage Display](./features/skill-damage/README.md) |
 | Show factor energy and season nodes automatically | [Example: Show factor energy and season nodes automatically](./features/monitor/examples/factor-energy.md) |
 | Keep an eye on vulnerability debuffs on the Boss and watch Boss casts | [Monster Monitor](./features/monster/README.md) |
 | See when teammates' ultimates and mitigation come back | [Teammate CD](./features/monster/teammate-cd.md) |
@@ -37,7 +38,7 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | [DPS Meter](./features/dps/README.md) | Live stats, dummy mode, combat splitting and resets | [Dummy damage test](./features/dps/examples/dummy-rotation.md) |
 | [History](./features/dps/history.md) | History list, skill breakdown, timeline | [Timeline review](./features/dps/examples/timeline-gaps.md) · [Coverage in the live window](./features/dps/examples/live-buff-coverage.md) |
 | [Challenge Watch](./features/dps/challenge.md) | Hits taken and mistakes in challenge dungeons | [Challenge hits taken](./features/dps/examples/challenge-hits.md) |
-| [Themes & Appearance](./features/dps/themes.md) | Colors, opacity, title bar, compact mode | [Minimal transparent window](./features/dps/examples/transparent-window.md) · [Custom layout & death replay](./features/dps/examples/header-death.md) |
+| [Themes & Appearance](./features/dps/themes.md) | Colors, opacity, title bar, compact mode | [Minimal transparent window](./features/dps/examples/transparent-window.md) · [Custom layout & death replay](./features/dps/examples/header-death.md) · [Recommended style](./features/dps/examples/recommended-style.md) |
 | [Display Settings](./features/dps/settings.md) | Column settings for the live and history tables | [Customize columns](./features/dps/examples/table-columns.md) |
 
 ### Live Monitor
@@ -45,13 +46,13 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | Document | Description | Examples |
 | --- | --- | --- |
 | [Live Monitor](./features/monitor/README.md) | Feature overview and workflow | — |
-| [Skill CD](./features/monitor/skill-cd.md) | Choose which skills to monitor | — |
+| [Skill CD](./features/monitor/skill-cd.md) | Choose which skills to monitor | [Skill areas](./features/monitor/examples/skill-cd-regions.md) |
 | [Buff Monitor](./features/monitor/buff.md) | Exact monitoring, category quick monitor, aliases | [Tina CD voice reminder](./features/monitor/examples/tina-cd.md) · [Track 3-stack buff](./features/monitor/examples/attribute-symphony.md) · [Most urgent member](./features/monitor/examples/symphony-most-urgent.md) |
 | [Buff Coverage](./features/monitor/buff-coverage.md) | Measure how long buffs stay up during combat | [Coverage review](./features/monitor/examples/buff-coverage.md) · [Coverage in the live window](./features/dps/examples/live-buff-coverage.md) |
-| [Character Panel](./features/monitor/panel-attr.md) | Live attribute display | — |
-| [HP/Shield Area](./features/monitor/shield.md) | Your own HP and shields | — |
+| [Character Panel](./features/monitor/panel-attr.md) | Live attribute display | [Attributes during burst](./features/monitor/examples/burst-attributes.md) |
+| [HP/Shield Area](./features/monitor/shield.md) | Your own HP and shields | [Tank shields](./features/monitor/examples/tank-shield.md) |
 | [Custom Monitor](./features/monitor/custom-panel.md) | Standard areas, factor config area, season node area, counters | [Factor area](./features/monitor/examples/factor-energy.md) · [Preset counters](./features/monitor/examples/preset-counter.md) |
-| [Enable Window & Layout](./features/monitor/overlay.md) | Overlay area toggles and layout editing | — |
+| [Enable Window & Layout](./features/monitor/overlay.md) | Overlay area toggles and layout editing | [Resource sections & Lifebind flowers](./features/monitor/examples/resource-bar.md) |
 
 ### Monster Monitor
 
@@ -59,15 +60,21 @@ Resonance Logs CN is a combat helper for *Blue Protocol: Star Resonance*: it tra
 | --- | --- | --- |
 | [Monster Monitor](./features/monster/README.md) | Feature overview and how it differs from Live Monitor | — |
 | [Target Buffs](./features/monster/buff.md) | Buffs on your target and alerts | [Watch vulnerability debuffs](./features/monster/examples/vulnerability.md) · [Monitor Lorola buffs](./features/monster/examples/lorola.md) |
-| [Teammate Buffs](./features/monster/teammate.md) | Buffs on your teammates | — |
-| [Teammate CD](./features/monster/teammate-cd.md) | Skill cooldowns shared by your teammates | — |
-| [Stun, HP & Teammate Fantasies](./features/monster/status.md) | Target status bars | — |
-| [Hate List](./features/monster/hate.md) | Threat ranking on your target | — |
-| [Battle Roster](./features/monster/roster.md) | HP of every monster in the fight, tank view, mechanic monster blocking | — |
+| [Teammate Buffs](./features/monster/teammate.md) | Buffs on your teammates | [Party buffs](./features/monster/examples/team-buffs.md) |
+| [Teammate CD](./features/monster/teammate-cd.md) | Skill cooldowns shared by your teammates | [Mitigation by the party panel](./features/monster/examples/teammate-cd-slots.md) |
+| [Stun, HP & Teammate Fantasies](./features/monster/status.md) | Target status bars | [Burst on break](./features/monster/examples/break-burst.md) |
+| [Hate List](./features/monster/hate.md) | Threat ranking on your target | [Avoid pulling aggro](./features/monster/examples/avoid-ot.md) |
+| [Battle Roster](./features/monster/roster.md) | HP of every monster in the fight, tank view, mechanic monster blocking | [Every monster's HP](./features/monster/examples/roster-pull.md) |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss skill warning bars | [Boss skill voice warnings](./features/monster/examples/boss-alias.md) |
 | [Entity Duration](./features/monster/entity-duration.md) | How long summons and other entities stay around | [Scythe Cart remaining time](./features/monster/examples/scythe-cart.md) |
-| [Monster Skills](./features/monster/monster-skill.md) | Shown when a nearby monster casts a listed skill | — |
-| [Enable Window](./features/monster/overlay.md) | Toggles for each area of the monster overlay | — |
+| [Monster Skills](./features/monster/monster-skill.md) | Shown when a nearby monster casts a listed skill | [Elite cast warning](./features/monster/examples/elite-cast-warning.md) |
+| [Enable Window](./features/monster/overlay.md) | Toggles for each area of the monster overlay | [Overlay for your role](./features/monster/examples/tank-overlay.md) |
+
+### Skill Damage Display
+
+| Document | Description | Examples |
+| --- | --- | --- |
+| [Skill Damage Display](./features/skill-damage/README.md) | Damage numbers of the skills you choose on the game overlay | [Ultimate damage numbers](./features/skill-damage/examples/burst-numbers.md) · [Frost Ray total](./features/skill-damage/examples/frost-ray-total.md) |
 
 ### Dungeon Mechanics
 

@@ -33,7 +33,7 @@
 - 游戏数据里没有收录的技能，输入完整 ID 即可添加；
 - Boss 技能的 ID 可以在 [历史记录](../dps/history.md) 时间轴的技能标记里查看。
 
-每个技能只保留一条，最多 32 条。在 **{{ui:monsterMonitor.monsterSkill.listTitle}}** 中可以：
+每个技能只保留一条，最多 128 条。在 **{{ui:monsterMonitor.monsterSkill.listTitle}}** 中可以：
 
 | 操作 | 说明 |
 | --- | --- |
@@ -61,3 +61,7 @@
 在 **{{ui:monsterMonitor.tabs.overlay}}** 中打开 **怪物技能区**（默认关闭），再点击 **{{ui:monsterMonitor.actions.editLayout}}** 把它拖到合适的位置。编辑模式下没有数据时会显示列表中前几个技能作为占位。
 
 面板样式可以调整行间距、列间距、字号、名称颜色、数值颜色、进度条颜色、进度条透明度、文字阴影和背景。
+
+## 例
+
+- [精英怪危险读条提醒](./examples/elite-cast-warning.md)

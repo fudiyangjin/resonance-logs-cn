@@ -9,6 +9,10 @@
 
 ## Presets
 
+### Recommended style
+
+**{{ui:themes.presets.reference.title}}** applies the complete style the developer recommends in one click: colors, table, header, display format, columns and history display; the forbidden damages of Challenge Watch are kept. It overwrites these settings in the current DPS settings profile, and loadouts that share the profile change together (the confirmation lists them). A fresh install already uses this style.
+
 ### Color presets
 
 | Preset | Style |
@@ -81,3 +85,4 @@ When **{{ui:themes.tabs.live}} → Live Window Display Settings → {{ui:themes.
 
 - [A transparent, minimal DPS window](./examples/transparent-window.md)
 - [Custom header layout and death replay](./examples/header-death.md)
+- [Apply the recommended style in one click](./examples/recommended-style.md)

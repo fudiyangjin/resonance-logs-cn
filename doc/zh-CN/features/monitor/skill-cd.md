@@ -49,7 +49,11 @@
 
 充能类技能**每恢复一层**都算冷却结束，「就绪时」和「就绪前 x 秒」对每一层都会播报。播报的前提是已经在 [语音播报](../voice/README.md) 中安装模型并开启。
 
-语音播报和 CD 监控互不影响：加入或取消监控都不会改动播报，不再需要时点 **{{ui:skillMonitor.common.remove}}**。在 **{{ui:skillMonitor.skillCd.class.title}}** 中切换职业会清空当前方案的技能语音播报，其他方案不受影响。
+语音播报和 CD 监控互不影响：加入或取消监控都不会改动播报，不再需要时点 **{{ui:skillMonitor.common.remove}}**。在页面顶部 **{{ui:skillMonitor.profile.classLabel}}** 中切换职业会清空当前配置的技能语音播报；多个方案共用这套配置时会一起清空，切换时可以选择 **{{ui:skillMonitor.profile.copyForCurrent}}**，只改当前方案。
 
 > [!NOTE]
 > 以前在这里配置的「持续时间技能」（如镰车）已迁移到 [怪物监控 · 实体持续](../monster/entity-duration.md)，旧方案会自动迁移。
+
+## 例
+
+- [职业技能和幻想技能分开摆放](./examples/skill-cd-regions.md)

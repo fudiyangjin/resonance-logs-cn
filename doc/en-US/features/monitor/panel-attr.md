@@ -12,3 +12,7 @@
 If attributes are incomplete or clearly lagging, change scenes once to restore a full sync.
 
 Whether this area is shown in the overlay is controlled by **Character Attribute Area** in [Enable Window](./overlay.md).
+
+## Examples
+
+- [Check your attributes during burst](./examples/burst-attributes.md)

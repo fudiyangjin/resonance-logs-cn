@@ -20,6 +20,7 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | 木人で決まった時間の火力を測りたい | [例：ダミーモードで 3 分間の火力を測る](./features/dps/examples/dummy-rotation.md) |
 | 戦闘後に火力の空白を振り返りたい | [例：タイムラインで火力の空白を見つける](./features/dps/examples/timeline-gaps.md) |
 | 自分のスキル CD と Buff を画面に表示したい | [ライブモニター](./features/monitor/README.md) |
+| 自分のスキルのダメージ数値を画面に表示したい | [スキルダメージ表示](./features/skill-damage/README.md) |
 | ファクターエネルギーとシーズンノードを自動表示したい | [例：ファクターエネルギーとシーズンノードを自動表示する](./features/monitor/examples/factor-energy.md) |
 | Boss の被ダメージ増加デバフや詠唱を見張りたい | [モンスターモニター](./features/monster/README.md) |
 | 味方の必殺技や軽減がいつ戻るか知りたい | [味方 CD](./features/monster/teammate-cd.md) |
@@ -37,7 +38,7 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | [DPSメーター](./features/dps/README.md) | リアルタイム集計、ダミーモード、戦闘の分割とリセット | [木人で火力測定](./features/dps/examples/dummy-rotation.md) |
 | [履歴](./features/dps/history.md) | 履歴リスト、スキル詳細、タイムライン | [タイムラインで振り返り](./features/dps/examples/timeline-gaps.md) · [リアルタイムウィンドウで稼働率](./features/dps/examples/live-buff-coverage.md) |
 | [チャレンジ監視](./features/dps/challenge.md) | チャレンジダンジョンでの被弾とミスの集計 | [チャレンジの被弾](./features/dps/examples/challenge-hits.md) |
-| [テーマと外観](./features/dps/themes.md) | 配色、透明度、タイトルバー、コンパクトモード | [ミニマルな透明ウィンドウ](./features/dps/examples/transparent-window.md) · [カスタムレイアウトと死亡リプレイ](./features/dps/examples/header-death.md) |
+| [テーマと外観](./features/dps/themes.md) | 配色、透明度、タイトルバー、コンパクトモード | [ミニマルな透明ウィンドウ](./features/dps/examples/transparent-window.md) · [カスタムレイアウトと死亡リプレイ](./features/dps/examples/header-death.md) · [おすすめスタイル](./features/dps/examples/recommended-style.md) |
 | [表示設定](./features/dps/settings.md) | ライブと履歴テーブルの列設定 | [表示列のカスタマイズ](./features/dps/examples/table-columns.md) |
 
 ### ライブモニター
@@ -45,13 +46,13 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | ドキュメント | 説明 | 例 |
 | --- | --- | --- |
 | [ライブモニター](./features/monitor/README.md) | 機能の概要と使い方の流れ | — |
-| [スキル CD](./features/monitor/skill-cd.md) | 監視するスキルを選ぶ | — |
+| [スキル CD](./features/monitor/skill-cd.md) | 監視するスキルを選ぶ | [スキルのエリア分け](./features/monitor/examples/skill-cd-regions.md) |
 | [Buff モニター](./features/monitor/buff.md) | 個別監視、カテゴリクイックモニター、別名 | [ティーナ CD の音声通知](./features/monitor/examples/tina-cd.md) · [複合 Buff 監視](./features/monitor/examples/attribute-symphony.md) · [最も急ぐメンバー](./features/monitor/examples/symphony-most-urgent.md) |
 | [バフ稼働率](./features/monitor/buff-coverage.md) | 戦闘中のバフの維持時間を集計 | [稼働率の振り返り](./features/monitor/examples/buff-coverage.md) · [リアルタイムウィンドウで稼働率](./features/dps/examples/live-buff-coverage.md) |
-| [キャラクターパネル](./features/monitor/panel-attr.md) | ステータスをリアルタイム表示 | — |
-| [HP/シールドエリア](./features/monitor/shield.md) | 自分の HP とシールド | — |
+| [キャラクターパネル](./features/monitor/panel-attr.md) | ステータスをリアルタイム表示 | [バースト中のステータス](./features/monitor/examples/burst-attributes.md) |
+| [HP/シールドエリア](./features/monitor/shield.md) | 自分の HP とシールド | [タンクのシールド](./features/monitor/examples/tank-shield.md) |
 | [カスタムモニター](./features/monitor/custom-panel.md) | 通常エリア、ファクター設定エリア、シーズンノードエリア、カウンター | [ファクターエリア](./features/monitor/examples/factor-energy.md) · [プリセットカウンター](./features/monitor/examples/preset-counter.md) |
-| [ウィンドウの有効化とレイアウト](./features/monitor/overlay.md) | オーバーレイ各エリアのオン/オフとレイアウト編集 | — |
+| [ウィンドウの有効化とレイアウト](./features/monitor/overlay.md) | オーバーレイ各エリアのオン/オフとレイアウト編集 | [リソース区分と三花](./features/monitor/examples/resource-bar.md) |
 
 ### モンスターモニター
 
@@ -59,15 +60,21 @@ Resonance Logs CN は『ブループロトコル：スターレゾナンス』�
 | --- | --- | --- |
 | [モンスターモニター](./features/monster/README.md) | 機能の概要、ライブモニターとの違い | — |
 | [対象バフ](./features/monster/buff.md) | ターゲットにかかっている Buff とアラート | [被ダメージ増加デバフを見張る](./features/monster/examples/vulnerability.md) · [ロリーラ Buff 監視](./features/monster/examples/lorola.md) |
-| [味方 Buff](./features/monster/teammate.md) | 味方にかかっている Buff | — |
-| [味方 CD](./features/monster/teammate-cd.md) | 味方から共有されたスキルクールダウン | — |
-| [スタン、HP と味方幻想](./features/monster/status.md) | ターゲットの状態バー | — |
-| [ヘイトリスト](./features/monster/hate.md) | ターゲットのヘイト順位 | — |
-| [戦闘リスト](./features/monster/roster.md) | 交戦中の全モンスターの HP、タンク視点、ギミック用モンスターの非表示 | — |
+| [味方 Buff](./features/monster/teammate.md) | 味方にかかっている Buff | [パーティのバフ確認](./features/monster/examples/team-buffs.md) |
+| [味方 CD](./features/monster/teammate-cd.md) | 味方から共有されたスキルクールダウン | [パーティ表示の横に軽減](./features/monster/examples/teammate-cd-slots.md) |
+| [スタン、HP と味方幻想](./features/monster/status.md) | ターゲットの状態バー | [ブレイクでバースト](./features/monster/examples/break-burst.md) |
+| [ヘイトリスト](./features/monster/hate.md) | ターゲットのヘイト順位 | [タゲを取らない](./features/monster/examples/avoid-ot.md) |
+| [戦闘リスト](./features/monster/roster.md) | 交戦中の全モンスターの HP、タンク視点、ギミック用モンスターの非表示 | [全体の HP を把握](./features/monster/examples/roster-pull.md) |
 | [Boss DBM](./features/monster/boss-dbm.md) | Boss スキルの予告バー | [Boss スキルの音声予告](./features/monster/examples/boss-alias.md) |
 | [エンティティ持続](./features/monster/entity-duration.md) | 召喚物などエンティティの存在時間 | [鎌車の残り時間](./features/monster/examples/scythe-cart.md) |
-| [モンスタースキル](./features/monster/monster-skill.md) | 周囲のモンスターが指定スキルを使うと表示 | — |
-| [ウィンドウを有効化](./features/monster/overlay.md) | モンスターオーバーレイ各エリアのオン/オフ | — |
+| [モンスタースキル](./features/monster/monster-skill.md) | 周囲のモンスターが指定スキルを使うと表示 | [エリートの詠唱通知](./features/monster/examples/elite-cast-warning.md) |
+| [ウィンドウを有効化](./features/monster/overlay.md) | モンスターオーバーレイ各エリアのオン/オフ | [ロール別の配置](./features/monster/examples/tank-overlay.md) |
+
+### スキルダメージ表示
+
+| ドキュメント | 説明 | 例 |
+| --- | --- | --- |
+| [スキルダメージ表示](./features/skill-damage/README.md) | 指定したスキルのダメージ数値をゲームオーバーレイに表示 | [必殺技のダメージ数値](./features/skill-damage/examples/burst-numbers.md) · [寒氷射線の合計](./features/skill-damage/examples/frost-ray-total.md) |
 
 ### ダンジョンギミック
 

@@ -9,3 +9,7 @@
 
 > [!NOTE]
 > **Hate List Area** is off by default; turn it on in [Enable Window](./overlay.md).
+
+## Examples
+
+- [Avoid pulling aggro as DPS](./examples/avoid-ot.md)

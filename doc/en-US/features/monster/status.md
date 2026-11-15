@@ -25,3 +25,7 @@ These three tabs correspond to three areas of the monster overlay, and all of th
 
 > [!NOTE]
 > **Stun Bar Area** and **HP Bar Area** are off by default; turn them on in [Enable Window](./overlay.md).
+
+## Examples
+
+- [Time your burst to the break and HP thresholds](./examples/break-burst.md)

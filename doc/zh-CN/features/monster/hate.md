@@ -9,3 +9,7 @@
 
 > [!NOTE]
 > **仇恨列表区** 默认关闭，需要在 [启用窗口](./overlay.md) 中打开。
+
+## 例
+
+- [输出时避免 OT](./examples/avoid-ot.md)

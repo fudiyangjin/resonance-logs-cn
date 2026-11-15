@@ -87,3 +87,7 @@ Mechanic markers, scene objects and other monsters whose HP does not matter can 
 
 > [!NOTE]
 > **Battle Roster** is off by default; turn it on in [Enable Window](./overlay.md). The roster is only tracked while it is on, or while a watched skill has a voice broadcast.
+
+## Examples
+
+- [See every monster's HP when you pull a pack](./examples/roster-pull.md)

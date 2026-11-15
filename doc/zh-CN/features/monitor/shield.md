@@ -15,3 +15,7 @@
 可以分别设置 **{{ui:skillMonitor.shieldDetail.hpColor}}**、**{{ui:skillMonitor.shieldDetail.shieldColor}}**、**{{ui:skillMonitor.shieldDetail.healShieldColor}}**（治疗溢出转化的护盾），以及条宽。
 
 浮窗中是否显示这一区域，由 [启用窗口](./overlay.md) 中的 **血量护盾区** 控制。
+
+## 例
+
+- [坦克看还能扛多少](./examples/tank-shield.md)

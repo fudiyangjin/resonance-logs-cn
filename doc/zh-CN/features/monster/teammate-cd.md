@@ -53,3 +53,7 @@
 技能格子的显示与 [技能 CD](../monitor/skill-cd.md) 相同：冷却中变暗并显示剩余秒数，充能技能在右上角显示可用层数。贴队伍栏模式下队友阵亡时图标变暗。与服务器的连接中断时，图标（列表模式下为整行）变淡，表示显示的是最后一次收到的状态。
 
 浮窗中是否显示由 [启用窗口](./overlay.md) 的 **{{ui:monsterOverlay.teammateCdGroupTag}}** 控制。
+
+## 例
+
+- [在队伍栏旁看队友的减伤](./examples/teammate-cd-slots.md)

@@ -15,3 +15,7 @@
 **{{ui:skillMonitor.shieldDetail.hpColor}}**、**{{ui:skillMonitor.shieldDetail.shieldColor}}**、**{{ui:skillMonitor.shieldDetail.healShieldColor}}**（過剰回復から変換されたシールド）をそれぞれ設定でき、バーの幅も調整できます。
 
 オーバーレイにこのエリアを表示するかどうかは、[ウィンドウを有効化](./overlay.md) の **HP/シールドエリア** で切り替えます。
+
+## 例
+
+- [タンクはあとどれだけ耐えられるか](./examples/tank-shield.md)

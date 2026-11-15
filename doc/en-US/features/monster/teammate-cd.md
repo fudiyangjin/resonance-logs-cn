@@ -53,3 +53,7 @@ The four groups of the 20-member panel stay in place: group 1 top left, group 2 
 Skill cells look the same as in [Skill CD](../monitor/skill-cd.md): a cooling skill darkens and shows the seconds left, and charge skills show the available charges in the top-right corner. Beside the team panel, a dead teammate's icons dim. While the connection to the server is down, the icons (whole rows in the list) fade to show that they hold the last state received.
 
 Whether it appears in the overlay is controlled by **{{ui:monsterOverlay.teammateCdGroupTag}}** in [Enable Window](./overlay.md).
+
+## Examples
+
+- [See teammates' mitigation next to the party panel](./examples/teammate-cd-slots.md)

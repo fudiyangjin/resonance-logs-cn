@@ -16,6 +16,7 @@ From top to bottom, the sidebar contains:
 | **{{ui:routes.tools.moduleCalc}}** | Calculate the best module combination | [Module Calculator](../features/module-calc/README.md) |
 | **{{ui:routes.tools.skillMonitor}}** | Overlay for your own skill CDs, Buffs, factors and character attributes | [Live Monitor](../features/monitor/README.md) |
 | **{{ui:routes.tools.monsterMonitor}}** | Buffs on your target, threat, Boss DBM, entity timers | [Monster Monitor](../features/monster/README.md) |
+| **{{ui:routes.tools.skillDamage}}** | Damage numbers of the skills you choose on the game overlay | [Skill Damage Display](../features/skill-damage/README.md) |
 | **{{ui:routes.tools.minimap}}** | Dungeon minimap and mechanic callouts | [Dungeon Mechanics](../features/minimap/README.md) |
 | **{{ui:routes.tools.voice}}** | Voice model, voices, phrases and announcement overview | [Voice Announcements](../features/voice/README.md) |
 | **{{ui:routes.tools.appSettings}}** | Language, appearance, packet capture, shortcuts, diagnostics | [App Settings](../features/app/README.md) |
@@ -31,6 +32,7 @@ Each type of overlay is its own transparent window that can be toggled, moved an
 | **Live DPS window** | Party damage / healing / damage taken / death lists | Shortcut, or tray **Show Live Meter** |
 | **Live Monitor overlay** | Skill CDs, resources, character attributes, custom monitor areas, shields, coverage | Top of the {{ui:routes.tools.skillMonitor}} page |
 | **Monster overlay** | Target Buffs, teammate Buffs, threat, stun, HP, Boss DBM, entity timers | Top of the {{ui:routes.tools.monsterMonitor}} page |
+| **Skill damage display** | Damage numbers of the skills you choose | Top of the {{ui:routes.tools.skillDamage}} page |
 | **Dungeon Mechanics overlay** | Minimap, mechanic callouts | Top of the {{ui:routes.tools.minimap}} page |
 
 ![all four overlay types shown together in the game view](../../shared/img/start/interface_2.en-US.png)
