@@ -199,64 +199,6 @@ export function phraseRequests(
 }
 
 /**
- * Spoken text of countdown digits 1-10, per language. Must match the
- * bundled prompts in `src-tauri/voice-prompts/prompts.json` so the bundled
- * recording binds to the phrase.
- */
-const COUNTDOWN_DIGIT_TEXT: Record<VoiceLanguage, readonly string[]> = {
-  zhCn: ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"],
-  enUs: [
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
-    "ten",
-  ],
-  jaJp: [
-    "いち",
-    "に",
-    "さん",
-    "よん",
-    "ご",
-    "ろく",
-    "なな",
-    "はち",
-    "きゅう",
-    "じゅう",
-  ],
-};
-
-/** Fixed catalog name of countdown digit `n` (`prompts.rs`). */
-export function countdownPhraseName(n: number): string {
-  return `auto:voice:countdown:${n}`;
-}
-
-/**
- * The digit phrases a countdown speaks, in `language`, when any binding
- * counts down. They are shared by every countdown and follow the app
- * language, like the bundled alert prompts.
- */
-export function countdownPhraseRequests(
-  bindings: readonly VoiceBinding[],
-  language: VoiceLanguage,
-): PhraseRequest[] {
-  const counts = bindings.some(
-    (binding) => "countdown" in binding.config && binding.config.countdown,
-  );
-  if (!counts) return [];
-  return COUNTDOWN_DIGIT_TEXT[language].map((text, index) => ({
-    name: countdownPhraseName(index + 1),
-    text,
-    language,
-  }));
-}
-
-/**
  * How to resolve a phrase name: `exact` (status views) finds that phrase or
  * nothing; `playable` (compiled rules) falls back, while the phrase does not
  * exist yet, to the newest phrase of the same binding slot that has audio —

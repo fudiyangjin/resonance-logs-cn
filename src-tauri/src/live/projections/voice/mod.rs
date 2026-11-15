@@ -9,10 +9,10 @@
 //! [`DeadlineTracker`], which arms, moves and cancels to match — a subject
 //! that is gone simply drops out of that set, so there is no separate
 //! cleanup path. Buffs are re-derived per event; counters, skill cooldowns,
-//! watched entities and boss mechanics once per batch, and only when their
-//! input's revision moved. Casts and alerts are plain event edges; roster
-//! casts arrive pre-judged from the battle roster (see
-//! [`VoiceProjection::on_roster_cast`]).
+//! watched entities, boss mechanics and roster skill cooldowns once per
+//! batch, and only when their input's revision moved. Casts and alerts are
+//! plain event edges; roster casts arrive pre-judged from the battle roster
+//! (see [`VoiceProjection::on_roster_cast`]).
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::Arc;
@@ -20,6 +20,7 @@ use std::sync::Arc;
 use crate::live::counter::engine::CounterEngine;
 use crate::live::projections::buff_presence::BuffCompositeCatalog;
 use crate::live::projections::entity_monitor::EntityMonitorProjection;
+use crate::live::projections::monster_roster::MonsterRosterProjection;
 use crate::live::projections::monster_skill_watch::is_world_monster;
 use crate::live::runtime::entity_context::EntityContext;
 use crate::live::runtime::events::{
@@ -37,6 +38,7 @@ mod buff;
 mod counter;
 mod deadline;
 mod entity;
+mod roster;
 mod rule_book;
 mod skill;
 #[cfg(test)]
@@ -64,6 +66,7 @@ pub(crate) struct VoiceInputs<'a> {
     pub(crate) entities: &'a EntityContext,
     pub(crate) monitor: &'a EntityMonitorProjection,
     pub(crate) counters: &'a CounterEngine,
+    pub(crate) roster: &'a MonsterRosterProjection,
 }
 
 /// The input revision a derivation last consumed. `None` until the first
@@ -101,6 +104,7 @@ struct SeenInputs {
     skill_cds: Seen,
     entities: Seen,
     boss_mechanics: Seen,
+    roster: Seen,
 }
 
 #[derive(Debug, Default)]
@@ -353,6 +357,14 @@ impl VoiceProjection {
             scheduler,
         );
         self.sync_boss_mechanics(reason, inputs.monitor, now_ms, now_mono, scheduler);
+        self.sync_roster(
+            reason,
+            inputs.roster,
+            inputs.entities,
+            now_ms,
+            now_mono,
+            scheduler,
+        );
     }
 
     fn on_deadline(
@@ -398,11 +410,11 @@ impl VoiceProjection {
         }
     }
 
-    /// Whether a rule announces roster casts: the battle roster must then be
+    /// Whether a rule listens to the battle roster, which must then be
     /// tracked even while its panel is hidden.
     #[must_use]
     pub fn needs_roster(&self) -> bool {
-        self.book.roster_casts
+        self.book.roster
     }
 
     /// A monster on the battle roster started a cast of a watched skill.

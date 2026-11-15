@@ -354,7 +354,8 @@ pub enum VoiceSubject {
         skill_id: i32,
     },
     /// A skill on the battle roster's watch list. `Started` = a monster on
-    /// the roster cast it.
+    /// the roster cast it, `ExpiringIn` = a monster on the roster may cast
+    /// it (again) in N seconds at the earliest, one cue per monster.
     RosterSkill {
         #[serde(rename = "skillId")]
         skill_id: i32,
@@ -410,12 +411,11 @@ impl VoiceTrigger {
             (
                 S::Buff { .. } | S::MonsterBuff { .. } | S::Skill { .. } | S::Entity { .. },
                 E::Started | E::Ended | E::ExpiringIn { .. }
-            ) | (S::BossDbm { .. }, E::Started | E::ExpiringIn { .. })
-                | (S::Counter { .. }, E::Threshold | E::ExpiringIn { .. })
-                | (
-                    S::MonsterSkill { .. } | S::RosterSkill { .. } | S::Alert { .. },
-                    E::Started
-                )
+            ) | (
+                S::BossDbm { .. } | S::RosterSkill { .. },
+                E::Started | E::ExpiringIn { .. }
+            ) | (S::Counter { .. }, E::Threshold | E::ExpiringIn { .. })
+                | (S::MonsterSkill { .. } | S::Alert { .. }, E::Started)
         );
         if ok {
             Ok(())
@@ -647,6 +647,11 @@ pub struct VoiceRuntimeSnapshot {
     pub volume: f32,
     pub queue_policy: VoiceQueuePolicy,
     pub rules: Vec<VoiceRule>,
+    /// Phrases that speak the countdown digits instead of the bundled
+    /// prompts: digit `n` at index `n - 1`, an empty id for none. Empty
+    /// when the bundled digits count. A digit whose phrase has no audio
+    /// (yet) is spoken by its bundled prompt.
+    pub countdown_phrase_ids: Vec<String>,
 }
 
 pub const MAX_VOICE_RULE_COOLDOWN_MS: u64 = 600_000;
@@ -657,6 +662,8 @@ impl VoiceRuntimeSnapshot {
     /// warning) and clears rules entirely when voice is disabled.
     pub fn normalize(&mut self) {
         self.volume = self.volume.clamp(0.0, 1.0);
+        self.countdown_phrase_ids
+            .truncate(usize::from(MAX_COUNTDOWN_FROM));
         self.rules.sort_by(|a, b| a.id.cmp(&b.id));
         self.rules.dedup_by(|a, b| a.id == b.id);
         self.rules.retain(|rule| match rule.trigger.validate() {

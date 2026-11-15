@@ -2232,7 +2232,9 @@ export const enUSMessages = {
     "Watched skills (shown at the end of roster rows)",
   "monsterMonitor.roster.skills.voiceTitle": "Voice Broadcast",
   "monsterMonitor.roster.skills.voiceHint":
-    "Announced when a monster on the roster casts this skill (a cast-bar skill when its bar starts); several monsters casting at the same moment are announced once. Also works while the roster panel is hidden. Mechanic objects outside the hate lists are not on the roster; set those up in the Monster Skills panel.",
+    '"On trigger" is announced when a monster on the roster casts this skill (a cast-bar skill when its bar starts); several monsters casting at the same moment are announced once. "x seconds before ready" follows the gray countdown at the end of the row: both the battle-start window and the cooldown after a cast are announced, each monster on its own, and monsters due at about the same time share one line. It marks the earliest possible cast; the monster may wait longer. Also works while the roster panel is hidden. Mechanic objects outside the hate lists are not on the roster; set those up in the Monster Skills panel.',
+  "monsterMonitor.roster.skills.voiceNoTiming":
+    'This skill has no cooldown data, so "x seconds before ready" is never announced; enter a cooldown above to enable it.',
   "monsterMonitor.roster.skills.voiceGroup": "Battle Roster Skills",
   "monsterMonitor.roster.skills.description":
     "Monsters that can cast these skills are listed right below your target, each with a cell per skill at the end of its row: a gray countdown while cooling down, amber when ready, red while casting or just cast. Works by skill id, for every monster that has the skill.",
@@ -3082,13 +3084,23 @@ export const enUSMessages = {
     "Start earlier by the length of the audio so it has finished with {seconds}s left; unchecked, it only starts with {seconds}s left",
   "voice.binding.countdown": "Count down",
   "voice.binding.countdown.hint":
-    "After the phrase, count the remaining seconds (from 10 at most) over any other voice; stops at once when the subject is refreshed or gone",
+    'After the phrase, count the remaining seconds (from 10 at most) over any other voice; stops at once when the subject is refreshed or gone. Pick the voice of the digits under "Countdown Digits" at the bottom of Voice Broadcasting > Match Alerts',
   "voice.binding.tryPlay": "Preview",
   "voice.binding.pendingGeneration": "Pending generation",
   "voice.binding.playFailed":
     "Playback failed, check the voice model installation",
 
   "voice.tabs.bindings": "Broadcast Overview",
+  "voice.countdown.title": "Countdown Digits",
+  "voice.countdown.description":
+    'Broadcasts with "Count down" ticked count the last seconds after their line. There is one set of digits, shared by every countdown and chosen here.',
+  "voice.countdown.source": "Digits",
+  "voice.countdown.source.custom": "Generate my own",
+  "voice.countdown.presetHint":
+    "Uses the digit recordings shipped with the app, in the app language. Nothing to generate.",
+  "voice.countdown.customHint":
+    "Generates the digits one to ten with the chosen voice. They are kept apart from the preset digits, so you can switch back at any time. A digit that is not generated yet, or failed, still plays the preset one. Each digit has one second and is cut off when the next one starts, so preview them after generating.",
+  "voice.countdown.generated": "{count}/{total} generated",
   "voice.tabs.alerts": "Match Alerts",
   "voice.alerts.title": "Match and Ready Check Alerts",
   "voice.alerts.description":

@@ -7,7 +7,6 @@ import type {
 import {
   collectBindings,
   compileVoiceRules,
-  countdownPhraseRequests,
   leadTiming,
   phraseRequests,
   type PhraseIndex,
@@ -668,6 +667,48 @@ describe("roster skill bindings", () => {
     ]);
   });
 
+  it("compiles a ready-in binding to a roster expiring rule that can count down", () => {
+    const counting = view({
+      monster: {
+        monitoredBuffIds: [],
+        selfAppliedBuffIds: [],
+        selfAppliedMonitorAll: false,
+        dbmAliases: {},
+        entityDurationEntries: [],
+        monsterSkillEntries: [],
+        rosterSkillEntries: [{ skillId: 101403, label: "下砸" }],
+        rosterSkillVoiceConfigs: {
+          "101403": { readyIn: { ...expiring(3), countdown: true } },
+        },
+      },
+    });
+    const bindings = collectBindings(counting);
+    expect(bindings.map((binding) => binding.ruleKey)).toEqual([
+      "voice:rosterSkill:101403:readyIn",
+    ]);
+    expect(phraseRequests(bindings).map((request) => request.text)).toEqual([
+      "下砸还有3秒就绪",
+    ]);
+    const index = indexOf(bindings, {
+      "voice:rosterSkill:101403:readyIn": "P-ready",
+    });
+    expect(compileVoiceRules(bindings, index)).toEqual([
+      {
+        id: "voice:rosterSkill:101403:readyIn",
+        enabled: true,
+        trigger: {
+          subject: { kind: "rosterSkill", skillId: 101403 },
+          event: { kind: "expiringIn", secondsBefore: 3 },
+        },
+        phraseId: "P-ready",
+        priority: 0,
+        cooldownMs: 2000,
+        // The phrase has no known length, so the count starts at the top.
+        countdownFrom: 3,
+      },
+    ]);
+  });
+
   it("is not voiced by the monster-skill panel's entry of the same skill", () => {
     const shared = view({
       monster: {
@@ -742,25 +783,5 @@ describe("leadTiming", () => {
       leadAdvanceMs: 0,
       countdownFrom: 5,
     });
-  });
-});
-
-describe("countdownPhraseRequests", () => {
-  const binding = (config: VoiceExpiringEventConfig) =>
-    ({ config }) as VoiceBinding;
-
-  it("asks for the ten digit phrases only while a binding counts down", () => {
-    expect(countdownPhraseRequests([binding(expiring(5))], "zhCn")).toEqual([]);
-    const requests = countdownPhraseRequests(
-      [binding({ ...expiring(5), countdown: true })],
-      "enUs",
-    );
-    expect(requests).toHaveLength(10);
-    expect(requests[0]).toEqual({
-      name: "auto:voice:countdown:1",
-      text: "one",
-      language: "enUs",
-    });
-    expect(requests[9]?.name).toBe("auto:voice:countdown:10");
   });
 });

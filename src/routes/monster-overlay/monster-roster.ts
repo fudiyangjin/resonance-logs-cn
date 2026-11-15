@@ -23,6 +23,10 @@ import type {
   RosterPlayerState,
 } from "$lib/bindings";
 import type { MonsterSkillTiming } from "$lib/config/monster-skill-timing";
+import {
+  rosterSkillCooldownMs,
+  rosterSkillFirstCastMs,
+} from "$lib/roster-skill-entries";
 
 export const ROSTER_RESORT_MS = 1_000;
 /** How long an instant (non-sing) cast is shown as "just cast". */
@@ -353,8 +357,9 @@ export function rosterSkillPhase(
     if (nowMs < untilMs) return { kind: "cast", untilMs };
   }
 
-  const cooldownMs =
-    (input.customCooldownSeconds ?? timing.cooldownSeconds) * 1000;
+  // The backend times the voice cues with the same two numbers
+  // (`MonsterRosterProjection::skill_readiness`).
+  const cooldownMs = rosterSkillCooldownMs(input.customCooldownSeconds, timing);
   if (input.lastCastAtMs !== null) {
     if (cooldownMs <= 0) return { kind: "unknown" };
     const readyAtMs = input.lastCastAtMs + cooldownMs;
@@ -363,10 +368,10 @@ export function rosterSkillPhase(
       : { kind: "ready" };
   }
 
-  const start = timing.battleStart;
-  if (start === "never") return { kind: "unknown" };
-  if (start) {
-    const readyAtMs = input.joinedAtMs + start[0] * 1000;
+  if (timing.battleStart === "never") return { kind: "unknown" };
+  const firstCastMs = rosterSkillFirstCastMs(timing);
+  if (firstCastMs !== null) {
+    const readyAtMs = input.joinedAtMs + firstCastMs;
     return nowMs < readyAtMs
       ? { kind: "cooling", readyAtMs }
       : { kind: "ready" };

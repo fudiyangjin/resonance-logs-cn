@@ -472,25 +472,72 @@ impl SkillDamageRuntimeSnapshot {
 
 /// Upper bound on skills watched on the battle roster; the UI allows 32.
 pub const MONSTER_ROSTER_MAX_WATCHED_SKILLS: usize = 64;
+/// Longest roster skill cooldown or battle-start delay; the UI allows 600 s.
+pub const MONSTER_ROSTER_MAX_SKILL_TIMING_MS: u64 = 3_600_000;
+/// Upper bound on the monster templates listed for one battle-start window.
+pub const MONSTER_ROSTER_MAX_FIRST_CAST_MONSTERS: usize = 1_024;
+
+/// The battle-start window of a roster skill: the monsters that can cast it
+/// do not cast it sooner than `after_ms` after joining the roster.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RosterFirstCast {
+    pub after_ms: u64,
+    /// Monster templates that can cast the skill; sorted and deduplicated.
+    pub monster_ids: Vec<i32>,
+}
+
+/// One skill watched on the battle roster, with the timing the frontend
+/// resolved for it (the skill table, or the user's own cooldown). The same
+/// numbers time the skill cells, so voice cues follow what the rows show.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RosterWatchedSkill {
+    pub skill_id: i32,
+    /// Earliest recast, counted from the start of a cast; 0 when unknown.
+    pub cooldown_ms: u64,
+    /// `None` when the skill has no battle-start window.
+    pub first_cast: Option<RosterFirstCast>,
+}
 
 /// The battle roster panel. The roster is tracked while the panel is shown
-/// or a voice rule announces roster casts, and published only while shown.
+/// or a voice rule listens to it, and published only while shown.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MonsterRosterRuntimeSnapshot {
     /// The panel is shown.
     pub enabled: bool,
     /// Skills whose casts and cooldowns are shown at the end of roster rows.
-    pub watched_skill_ids: Vec<i32>,
+    pub watched_skills: Vec<RosterWatchedSkill>,
 }
 
 impl MonsterRosterRuntimeSnapshot {
-    /// Positive, sorted and deduplicated, so lookups can binary search.
+    pub fn watched_skill_ids(&self) -> impl Iterator<Item = i32> + '_ {
+        self.watched_skills.iter().map(|skill| skill.skill_id)
+    }
+
+    /// Positive ids, sorted and deduplicated (first wins), so lookups can
+    /// binary search; timings are capped and empty windows dropped.
     fn normalize(&mut self) {
-        self.watched_skill_ids.retain(|id| *id > 0);
-        dedup_and_sort(&mut self.watched_skill_ids);
-        self.watched_skill_ids
+        self.watched_skills.retain(|skill| skill.skill_id > 0);
+        self.watched_skills.sort_by_key(|skill| skill.skill_id);
+        self.watched_skills.dedup_by_key(|skill| skill.skill_id);
+        self.watched_skills
             .truncate(MONSTER_ROSTER_MAX_WATCHED_SKILLS);
+        for skill in &mut self.watched_skills {
+            skill.cooldown_ms = skill.cooldown_ms.min(MONSTER_ROSTER_MAX_SKILL_TIMING_MS);
+            if let Some(first_cast) = &mut skill.first_cast {
+                first_cast.after_ms = first_cast.after_ms.min(MONSTER_ROSTER_MAX_SKILL_TIMING_MS);
+                first_cast.monster_ids.retain(|id| *id > 0);
+                dedup_and_sort(&mut first_cast.monster_ids);
+                first_cast
+                    .monster_ids
+                    .truncate(MONSTER_ROSTER_MAX_FIRST_CAST_MONSTERS);
+            }
+            skill
+                .first_cast
+                .take_if(|first_cast| first_cast.monster_ids.is_empty());
+        }
     }
 }
 
@@ -569,16 +616,70 @@ mod tests {
 
     #[test]
     fn monster_roster_watched_skills_are_positive_sorted_and_deduplicated() {
+        let skill = |skill_id: i32, cooldown_ms: u64| RosterWatchedSkill {
+            skill_id,
+            cooldown_ms,
+            first_cast: None,
+        };
         let snapshot = MonitorRuntimeSnapshot {
             monster_roster: MonsterRosterRuntimeSnapshot {
                 enabled: true,
-                watched_skill_ids: vec![5, -1, 3, 5, 0],
+                watched_skills: vec![
+                    skill(5, 1_000),
+                    skill(-1, 0),
+                    skill(3, u64::MAX),
+                    skill(5, 2_000),
+                    skill(0, 0),
+                ],
             },
             ..MonitorRuntimeSnapshot::default()
         }
         .normalize()
         .expect("valid snapshot");
-        assert_eq!(snapshot.monster_roster.watched_skill_ids, vec![3, 5]);
+        assert_eq!(
+            snapshot.monster_roster.watched_skills,
+            vec![
+                skill(3, MONSTER_ROSTER_MAX_SKILL_TIMING_MS),
+                skill(5, 1_000)
+            ]
+        );
+        assert_eq!(
+            snapshot
+                .monster_roster
+                .watched_skill_ids()
+                .collect::<Vec<_>>(),
+            vec![3, 5]
+        );
+    }
+
+    #[test]
+    fn monster_roster_first_cast_windows_keep_sorted_templates_or_are_dropped() {
+        let window = |monster_ids: &[i32]| RosterWatchedSkill {
+            skill_id: 1 + monster_ids.len() as i32,
+            cooldown_ms: 0,
+            first_cast: Some(RosterFirstCast {
+                after_ms: 4_000,
+                monster_ids: monster_ids.to_vec(),
+            }),
+        };
+        let snapshot = MonitorRuntimeSnapshot {
+            monster_roster: MonsterRosterRuntimeSnapshot {
+                enabled: false,
+                watched_skills: vec![window(&[9, 0, 7, 9]), window(&[-3])],
+            },
+            ..MonitorRuntimeSnapshot::default()
+        }
+        .normalize()
+        .expect("valid snapshot");
+        let skills = &snapshot.monster_roster.watched_skills;
+        assert_eq!(skills[0].first_cast, None, "no template can cast it");
+        assert_eq!(
+            skills[1].first_cast,
+            Some(RosterFirstCast {
+                after_ms: 4_000,
+                monster_ids: vec![7, 9],
+            })
+        );
     }
 
     fn spec(

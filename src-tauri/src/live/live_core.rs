@@ -883,6 +883,7 @@ fn nonnegative_int_attr(entity: &EntityState, attr_id: i32) -> Option<u128> {
 fn sync_voice_service_settings(app: &AppHandle, snapshot: &VoiceRuntimeSnapshot) {
     if let Some(service) = app.try_state::<crate::voice::VoiceService>() {
         service.apply_runtime_settings(snapshot.enabled, snapshot.volume, snapshot.queue_policy);
+        service.set_countdown_phrases(&snapshot.countdown_phrase_ids);
     }
 }
 
@@ -893,7 +894,7 @@ fn watched_skill_ids(config: &MonitorRuntimeSnapshot) -> HashSet<i32> {
     // Roster rows show these casts and roster voice rules speak them, also
     // while the panel is hidden; without them a cast by a monster whose
     // identity has not arrived yet would be dropped.
-    watched.extend(config.monster_roster.watched_skill_ids.iter().copied());
+    watched.extend(config.monster_roster.watched_skill_ids());
     for rule in &config.skill.buff_counter_rules {
         for source in &rule.sources {
             collect_counter_skill_ids(source, &mut watched);
@@ -986,6 +987,7 @@ fn strictly_before(time: MonoTimeMs) -> Option<MonoTimeMs> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::live::bootstrap_snapshot::RosterWatchedSkill;
     use crate::live::runtime::events::{
         DomainHit, EntityKind, EntityRef, EntityUuid, HitChannel, HitKind, ObservationOrigin,
         ObservedHit,
@@ -994,7 +996,10 @@ mod tests {
     #[test]
     fn roster_watched_skills_are_watched_while_the_panel_is_hidden() {
         let mut config = MonitorRuntimeSnapshot::default();
-        config.monster_roster.watched_skill_ids = vec![1_009_804];
+        config.monster_roster.watched_skills = vec![RosterWatchedSkill {
+            skill_id: 1_009_804,
+            ..RosterWatchedSkill::default()
+        }];
         assert!(!config.monster_roster.enabled);
 
         assert!(watched_skill_ids(&config).contains(&1_009_804));

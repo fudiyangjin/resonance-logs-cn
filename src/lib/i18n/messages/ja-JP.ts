@@ -2200,7 +2200,9 @@ export const jaJPMessages = {
   "monsterMonitor.roster.skills.title": "注目スキル（リストの行末に表示）",
   "monsterMonitor.roster.skills.voiceTitle": "音声読み上げ",
   "monsterMonitor.roster.skills.voiceHint":
-    "リスト内のモンスターがこのスキルを使ったときに読み上げます（詠唱スキルは詠唱開始時）。同時に複数体が使った場合は1回だけです。戦闘リストのパネルを非表示にしていても読み上げます。ヘイトリストに入らないギミックはリストに載らないため、モンスタースキルパネルで設定してください。",
+    "「発生時」はリスト内のモンスターがこのスキルを使ったときに読み上げます（詠唱スキルは詠唱開始時）。同時に複数体が使った場合は1回だけです。「完了 x 秒前」は行末の灰色のカウントダウンに合わせて読み上げます。開戦直後の初回使用までの待ち時間と、使用後のクールダウンの両方が対象で、モンスターごとに数え、ほぼ同時に来るものは1回にまとめます。最短で使えるタイミングを知らせるもので、その時点で必ず使うとは限りません。戦闘リストのパネルを非表示にしていても読み上げます。ヘイトリストに入らないギミックはリストに載らないため、モンスタースキルパネルで設定してください。",
+  "monsterMonitor.roster.skills.voiceNoTiming":
+    "このスキルにはクールダウンのデータがないため、「完了 x 秒前」は読み上げられません。上のクールダウンに秒数を入力すると有効になります。",
   "monsterMonitor.roster.skills.voiceGroup": "戦闘リストのスキル",
   "monsterMonitor.roster.skills.description":
     "これらのスキルを使えるモンスターは攻撃対象のすぐ下に1行ずつ表示され、行末にスキルの状態が出ます。灰色のカウントダウンはクールダウン中、琥珀色は準備完了、赤は詠唱中または使用直後です。スキル ID 単位で、そのスキルを持つすべてのモンスターに適用されます。",
@@ -3049,13 +3051,23 @@ export const jaJPMessages = {
     "音声の長さだけ早く話し始め、残り {seconds} 秒で言い終えます。オフの場合は残り {seconds} 秒で話し始めます",
   "voice.binding.countdown": "カウントダウン",
   "voice.binding.countdown.hint":
-    "音声の後、残り秒数を 1 秒ごとに読み上げます（最大 10 から）。他の音声と重ねて再生され、対象が更新または消滅するとすぐ止まります",
+    "音声の後、残り秒数を 1 秒ごとに読み上げます（最大 10 から）。他の音声と重ねて再生され、対象が更新または消滅するとすぐ止まります。数字の音声は「音声読み上げ > マッチ通知」の一番下にある「カウントダウンの数字」で選べます",
   "voice.binding.tryPlay": "試聴",
   "voice.binding.pendingGeneration": "生成待ち",
   "voice.binding.playFailed":
     "再生に失敗しました。音声モデルがインストールされているか確認してください",
 
   "voice.tabs.bindings": "読み上げ総覧",
+  "voice.countdown.title": "カウントダウンの数字",
+  "voice.countdown.description":
+    "「カウントダウン」にチェックを入れた読み上げは、音声の後に残り秒数を 1 秒ごとに数えます。数字は 1 セットだけで、すべてのカウントダウンが共用します。ここでまとめて選びます。",
+  "voice.countdown.source": "数字の音声",
+  "voice.countdown.source.custom": "自分で生成",
+  "voice.countdown.presetHint":
+    "アプリに同梱されている数字の録音を使います。アプリの言語に合わせて切り替わり、生成は不要です。",
+  "voice.countdown.customHint":
+    "選んだ音声で 1～10 の数字を生成します。プリセットの数字とは別に保存されるので、いつでもプリセットに戻せます。まだ生成していない数字や生成に失敗した数字は、プリセットで読み上げます。数字 1 つにつき 1 秒しかなく、次の数字が始まると途中で切れるため、生成後は試聴してください。",
+  "voice.countdown.generated": "生成済み {count}/{total}",
   "voice.tabs.alerts": "マッチ通知",
   "voice.alerts.title": "マッチ・準備確認通知",
   "voice.alerts.description":

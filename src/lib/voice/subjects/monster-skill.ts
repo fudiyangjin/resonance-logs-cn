@@ -13,6 +13,7 @@ export const monsterSkillAdapter = castSkillAdapter({
     navigateKey: "voice.bindings.navigate.monsterSkill",
     route: "/main/monster-monitor?tab=monsterSkill",
   },
+  events: ["onCast"],
   entryIds: monsterSkillEntryIds,
   label: (view, skillId) =>
     monsterSkillDisplayName(

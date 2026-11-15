@@ -397,6 +397,8 @@ export type VoiceSettingsConfig = {
   /** @deprecated Drained by the one-shot legacy migration in `$lib/voice/sync.svelte.ts`. */
   rules?: VoiceRuleSetting[];
   alertConfigs?: GameAlertVoiceConfigMap;
+  /** Which recordings count down; missing means the bundled digits. */
+  countdownVoice?: CountdownVoiceSetting;
   selectedProfileId: string | null;
   selectedHttpProviderId: string | null;
   selectedSource: VoiceSourceSetting;
@@ -446,6 +448,20 @@ export type VoicePhraseBinding =
 export type VoiceBindingGenerationSource =
   | { mode: "preset"; locale: "zh-CN" | "en-US" | "ja-JP" }
   | { mode: "http"; providerId: string };
+
+/**
+ * The digits every countdown speaks: one shared set, like the bundled alert
+ * prompts. `auto` is the recordings shipped with the app (in the app
+ * language); `custom` is the same ten digits generated with the user's
+ * voice, kept apart from the bundled ones so switching back is always
+ * possible. A custom digit without audio is spoken by its bundled twin.
+ */
+export type CountdownVoiceSetting =
+  | { source: "auto" }
+  | {
+      source: "custom";
+      generationSource?: VoiceBindingGenerationSource | undefined;
+    };
 
 export function createDefaultVoicePhraseBinding(): VoicePhraseBinding {
   return { source: "auto" };
@@ -606,12 +622,24 @@ export type MonsterSkillVoiceConfigMap = Record<
   MonsterSkillVoiceConfig
 >;
 
-export function ensureMonsterSkillVoiceConfigs(
-  configs: MonsterSkillVoiceConfigMap | null | undefined,
-): MonsterSkillVoiceConfigMap {
-  const next: MonsterSkillVoiceConfigMap = {};
+/**
+ * Voice bindings for one battle-roster watched skill: when a monster on the
+ * roster casts it, and `secondsBefore` the moment one may cast it (again) —
+ * the end of the cooldown the skill cell counts down.
+ */
+export type RosterSkillVoiceConfig = MonsterSkillVoiceConfig & {
+  readyIn?: VoiceExpiringEventConfig;
+};
+
+export type RosterSkillVoiceConfigMap = Record<string, RosterSkillVoiceConfig>;
+
+/** Monster-skill or roster-skill voice configs without the empty entries. */
+export function ensureMonsterSkillVoiceConfigs<
+  C extends RosterSkillVoiceConfig,
+>(configs: Record<string, C> | null | undefined): Record<string, C> {
+  const next: Record<string, C> = {};
   for (const [skillId, config] of Object.entries(configs ?? {})) {
-    if (config?.onCast) {
+    if (config?.onCast || config?.readyIn) {
       next[skillId] = config;
     }
   }
@@ -1434,10 +1462,9 @@ export type MonsterMonitorConfig = {
   monsterSkillVoiceConfigs?: MonsterSkillVoiceConfigMap;
   /**
    * Voice bindings for the battle roster's watched skills, keyed by skill id
-   * (as a string). Same cast-only shape as `monsterSkillVoiceConfigs`, but
-   * spoken only for monsters on the roster.
+   * (as a string). Spoken only for monsters on the roster.
    */
-  rosterSkillVoiceConfigs?: MonsterSkillVoiceConfigMap;
+  rosterSkillVoiceConfigs?: RosterSkillVoiceConfigMap;
   fantasyShowAll: boolean;
   buffPriorityIds: number[];
   buffAliases: BuffAliasMap;

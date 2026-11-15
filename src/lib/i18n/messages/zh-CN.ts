@@ -2060,7 +2060,9 @@ export const zhCNMessages = {
   "monsterMonitor.roster.skills.title": "关注技能（显示在名单行尾）",
   "monsterMonitor.roster.skills.voiceTitle": "语音播报",
   "monsterMonitor.roster.skills.voiceHint":
-    "名单里的怪放出这个技能时播报（读条技能在开始读条时）；同一时刻几只怪一起放只播一次。名单面板隐藏也会播报。没进仇恨列表的机制物不在名单上，请在怪物技能面板里配置。",
+    "「触发时」在名单里的怪放出这个技能时播报（读条技能在开始读条时），同一时刻几只怪一起放只播一次。「就绪前 x 秒」跟着行尾的灰色倒计时走：开战首放窗口和放过之后的冷却都会播，每只怪各算各的，差不多同时到点的合并成一句；播的是最早可放的时刻，怪不一定到点就放。名单面板隐藏也会播报。没进仇恨列表的机制物不在名单上，请在怪物技能面板里配置。",
+  "monsterMonitor.roster.skills.voiceNoTiming":
+    "这个技能没有冷却数据，「就绪前 x 秒」不会播报；在上面填写冷却秒数后生效。",
   "monsterMonitor.roster.skills.voiceGroup": "战斗名单技能",
   "monsterMonitor.roster.skills.description":
     "能放这些技能的怪会排在主目标下面并逐行显示，行尾显示技能状态：灰色倒计时为冷却中，琥珀色为就绪，红色为读条中或刚放出。按技能 ID 生效，所有能放该技能的怪都算。",
@@ -2879,12 +2881,22 @@ export const zhCNMessages = {
     "按语音长度提前开口，在剩 {seconds} 秒时念完；不勾选则在剩 {seconds} 秒时才开始念",
   "voice.binding.countdown": "倒数",
   "voice.binding.countdown.hint":
-    "语音念完后逐秒倒数（最多从 10 开始），与其他语音同时播放；对象被刷新或消失时立即停止",
+    "语音念完后逐秒倒数（最多从 10 开始），与其他语音同时播放；对象被刷新或消失时立即停止。数字的音色在 语音播报-匹配提醒 页底部的「倒数数字」里选择",
   "voice.binding.tryPlay": "试听",
   "voice.binding.pendingGeneration": "待生成",
   "voice.binding.playFailed": "播放失败，请检查语音模型是否已安装",
 
   "voice.tabs.bindings": "播报总览",
+  "voice.countdown.title": "倒数数字",
+  "voice.countdown.description":
+    "勾选了「倒数」的播报念完后逐秒报数。数字只有一套，所有倒数共用，在这里统一选择。",
+  "voice.countdown.source": "数字来源",
+  "voice.countdown.source.custom": "自己生成",
+  "voice.countdown.presetHint":
+    "使用应用自带的数字录音，跟随应用语言，不需要生成。",
+  "voice.countdown.customHint":
+    "用所选音色生成一到十这十个数字，和预置数字分开保存，随时可以切回预置。还没生成或生成失败的数字仍然播放预置。每个数字只有一秒，下一个数字响起时会被打断，生成后建议试听。",
+  "voice.countdown.generated": "已生成 {count}/{total}",
   "voice.tabs.alerts": "匹配提醒",
   "voice.alerts.title": "匹配与准备确认提醒",
   "voice.alerts.description":

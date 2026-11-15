@@ -10,7 +10,14 @@ import { expandBuffSelection } from "$lib/config/buff-name-table";
 import { activeProfile as getActiveProfile } from "$lib/skill-monitor-profile.svelte.js";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
 import { ensureMonsterSkillEntries } from "$lib/monster-skill-entries";
-import { ensureRosterSkillEntries } from "$lib/roster-skill-entries";
+import {
+  monsterIdsWithSkill,
+  monsterSkillTiming,
+} from "$lib/config/monster-skill-timing";
+import {
+  ensureRosterSkillEntries,
+  rosterWatchedSkill,
+} from "$lib/roster-skill-entries";
 import { SETTINGS, normalizeTeammateCdSkills } from "$lib/settings-store";
 import { activeSkillDamageProfile } from "$lib/skill-damage-profile.svelte";
 import { skillDamageRuntimeSnapshot } from "$lib/skill-damage-settings";
@@ -248,15 +255,21 @@ function buildTeammateCdRuntimeSnapshot(): MonitorRuntimeSnapshot["teammateCd"] 
 }
 
 /** `enabled` is whether the battle roster is shown (and published). The
- * watched skills always go down: roster voice rules keep the roster tracked
- * behind a hidden panel, like the other monster voice subjects. */
+ * watched skills always go down, with the timing their cells show: roster
+ * voice rules keep the roster tracked behind a hidden panel, like the other
+ * monster voice subjects. */
 function buildMonsterRosterRuntimeSnapshot(): MonitorRuntimeSnapshot["monsterRoster"] {
   const state = SETTINGS.monsterMonitor.state;
   return {
     enabled:
       state.enabled && (state.overlayVisibility?.showRosterPanel ?? false),
-    watchedSkillIds: ensureRosterSkillEntries(state.rosterSkillEntries).map(
-      (entry) => entry.skillId,
+    watchedSkills: ensureRosterSkillEntries(state.rosterSkillEntries).map(
+      (entry) =>
+        rosterWatchedSkill(
+          entry,
+          monsterSkillTiming(entry.skillId),
+          monsterIdsWithSkill(entry.skillId),
+        ),
     ),
   };
 }

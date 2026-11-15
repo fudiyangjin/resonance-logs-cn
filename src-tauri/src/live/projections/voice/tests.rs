@@ -127,6 +127,7 @@ fn snapshot_of(rules: Vec<VoiceRule>) -> VoiceRuntimeSnapshot {
         enabled: true,
         volume: 1.0,
         queue_policy: Default::default(),
+        countdown_phrase_ids: Vec::new(),
         rules,
     };
     snapshot.normalize();
@@ -1216,6 +1217,7 @@ fn normalize_drops_unsupported_subject_event_pairs() {
         enabled: true,
         volume: 2.0,
         queue_policy: Default::default(),
+        countdown_phrase_ids: Vec::new(),
         rules: vec![
             rule("ok", alert(AlertKind::MatchmakingPopped), "p", 0),
             rule(
@@ -1305,8 +1307,15 @@ fn normalize_drops_unsupported_subject_event_pairs() {
 mod entity_monitor_bridge {
     use super::*;
     use crate::live::bootstrap_snapshot::{MonitorRuntimeSnapshot, WatchedEntitySpec};
+    use crate::live::bootstrap_snapshot::{
+        MonsterRosterRuntimeSnapshot, RosterFirstCast, RosterWatchedSkill,
+    };
     use crate::live::projections::entity_monitor::EntityMonitorProjection;
-    use crate::live::runtime::events::SkillCooldownState;
+    use crate::live::projections::monster_roster::MonsterRosterProjection;
+    use crate::live::protocol::attrs as attr_type;
+    use crate::live::runtime::events::{
+        AttributeValue, HateEntry, ObservationOrigin, SkillCooldownState,
+    };
 
     const LOCAL: EntityUuid = EntityUuid(1);
     const OTHER_PLAYER: EntityUuid = EntityUuid(2);
@@ -1318,6 +1327,7 @@ mod entity_monitor_bridge {
         entities: EntityContext,
         monitor: EntityMonitorProjection,
         counters: CounterEngine,
+        roster: MonsterRosterProjection,
         voice: VoiceProjection,
         scheduler: DeadlineScheduler,
     }
@@ -1363,6 +1373,7 @@ mod entity_monitor_bridge {
                 entities,
                 monitor,
                 counters: CounterEngine::new(),
+                roster: MonsterRosterProjection::default(),
                 voice: projection_with(rules),
                 scheduler,
             };
@@ -1392,6 +1403,11 @@ mod entity_monitor_bridge {
         fn dispatch(&mut self, envelope: &DomainEnvelope) {
             self.monitor
                 .apply(envelope, &self.entities, &mut self.scheduler);
+            let roster = self.roster.apply(envelope, &self.entities);
+            if let Some(skill_id) = roster.watched_cast {
+                self.voice
+                    .on_roster_cast(skill_id, envelope.batch_id, envelope.occurred_at_ms);
+            }
             self.voice
                 .apply(envelope, &self.entities, &mut self.scheduler);
         }
@@ -1401,6 +1417,7 @@ mod entity_monitor_bridge {
                 entities: &self.entities,
                 monitor: &self.monitor,
                 counters: &self.counters,
+                roster: &self.roster,
             };
             self.voice.sync_inputs(
                 reason,
@@ -1452,6 +1469,26 @@ mod entity_monitor_bridge {
 
         fn fired(&mut self) -> Vec<String> {
             fired_phrases(&mut self.voice)
+        }
+
+        /// Shows the battle roster with `skills` watched, the way
+        /// `ProjectionSet::apply_config` does: a silent re-derivation.
+        fn watch_roster(&mut self, skills: Vec<RosterWatchedSkill>, sequence: u64) {
+            let _ = self.roster.apply_config(
+                &MonsterRosterRuntimeSnapshot {
+                    enabled: true,
+                    watched_skills: skills,
+                },
+                &self.entities,
+                sequence as i64 * 100,
+                MonoTimeMs(sequence * 100),
+            );
+            self.sync(VoiceSyncReason::Baseline, sequence);
+        }
+
+        /// Digits of the countdown ticks due since the last call.
+        fn ticks(&mut self) -> Vec<u8> {
+            self.voice.take_ticks().iter().map(|tick| tick.n).collect()
         }
     }
 
@@ -2541,7 +2578,7 @@ mod entity_monitor_bridge {
     }
 
     #[test]
-    fn roster_skill_only_supports_cast_rules() {
+    fn roster_skill_has_no_ended_rules() {
         let mut h = Harness::new(
             vec![monster_skill_rule(), roster_skill_rule(VoiceEvent::Ended)],
             vec![],
@@ -2550,6 +2587,218 @@ mod entity_monitor_bridge {
         assert!(!h.voice.needs_roster(), "the invalid rule was dropped");
         h.voice.on_roster_cast(MONSTER_SKILL, BatchId(10), 1_000);
         assert!(h.fired().is_empty());
+    }
+
+    const ROSTER_MONSTER: EntityUuid = EntityUuid(40);
+    const ROSTER_PACKMATE: EntityUuid = EntityUuid(41);
+    const ROSTER_TEMPLATE: i32 = 103_303;
+    const OTHER_TEMPLATE: i32 = 103_304;
+
+    fn int_attr(uuid: EntityUuid, attr_id: i32, value: i64) -> ProtocolObservation {
+        ProtocolObservation::AttributeUpdated {
+            uuid,
+            attr_id,
+            value: AttributeValue::Int(value),
+            origin: ObservationOrigin::Snapshot,
+        }
+    }
+
+    /// A living world monster of `template` that the local player fights.
+    fn roster_member(uuid: EntityUuid, template: i32) -> Vec<ProtocolObservation> {
+        vec![
+            ProtocolObservation::EntityAppeared {
+                uuid,
+                kind: EntityKind::Monster,
+            },
+            ProtocolObservation::IdentityUpdated {
+                uuid,
+                patch: EntityIdentityPatch {
+                    monster_id: FieldPatch::Set(template),
+                    ..Default::default()
+                },
+            },
+            int_attr(uuid, attr_type::ATTR_MAX_HP, 1_000),
+            int_attr(uuid, attr_type::ATTR_CURRENT_HP, 1_000),
+            ProtocolObservation::HateListUpdated {
+                entity_uuid: uuid,
+                entries: vec![HateEntry {
+                    entity_uuid: LOCAL,
+                    value: 100,
+                }],
+            },
+        ]
+    }
+
+    /// Skill instance `instance` of the watched skill on `caster`.
+    fn roster_cast(caster: EntityUuid, instance: i64) -> Vec<ProtocolObservation> {
+        vec![
+            cast(caster, MONSTER_SKILL, SkillPhase::Observed),
+            int_attr(caster, attr_type::ATTR_SKILL_UUID, instance),
+        ]
+    }
+
+    fn watched_roster_skill(cooldown_ms: u64, first_cast_ms: Option<u64>) -> RosterWatchedSkill {
+        RosterWatchedSkill {
+            skill_id: MONSTER_SKILL,
+            cooldown_ms,
+            first_cast: first_cast_ms.map(|after_ms| RosterFirstCast {
+                after_ms,
+                monster_ids: vec![ROSTER_TEMPLATE],
+            }),
+        }
+    }
+
+    /// A harness whose roster watches the skill and whose only rule speaks
+    /// five seconds ahead of it.
+    fn roster_lead_harness(cooldown_ms: u64, first_cast_ms: Option<u64>) -> Harness {
+        let mut h = Harness::new(vec![roster_skill_rule(expiring(5))], vec![]);
+        assert!(h.voice.needs_roster());
+        h.watch_roster(vec![watched_roster_skill(cooldown_ms, first_cast_ms)], 2);
+        h
+    }
+
+    #[test]
+    fn roster_skill_lead_fires_ahead_of_the_cooldown_end() {
+        let mut h = roster_lead_harness(10_000, None);
+        h.step(5, roster_member(ROSTER_MONSTER, ROSTER_TEMPLATE));
+        h.drain(9);
+        assert!(
+            h.fired().is_empty(),
+            "no cast yet, and no battle-start window"
+        );
+
+        // Cast at 1 s: castable again at 11 s, so the cue is due at 6 s.
+        h.step(10, roster_cast(ROSTER_MONSTER, 1));
+        h.drain(59);
+        assert!(h.fired().is_empty());
+        h.drain(60);
+        assert_eq!(h.fired(), ["roster"]);
+        h.drain(200);
+        assert!(h.fired().is_empty(), "one cue per cooldown");
+    }
+
+    #[test]
+    fn roster_skill_lead_follows_a_recast() {
+        let mut h = roster_lead_harness(10_000, None);
+        h.step(5, roster_member(ROSTER_MONSTER, ROSTER_TEMPLATE));
+        h.step(10, roster_cast(ROSTER_MONSTER, 1));
+        // A scripted recast before the cooldown ran out moves the moment.
+        h.step(30, roster_cast(ROSTER_MONSTER, 2));
+
+        h.drain(79);
+        assert!(h.fired().is_empty());
+        h.drain(80);
+        assert_eq!(h.fired(), ["roster"]);
+    }
+
+    #[test]
+    fn roster_skill_lead_leaves_with_the_member() {
+        let mut h = roster_lead_harness(10_000, None);
+        h.step(5, roster_member(ROSTER_MONSTER, ROSTER_TEMPLATE));
+        h.step(10, roster_cast(ROSTER_MONSTER, 1));
+        assert_eq!(h.voice.tracker.len(), 1);
+
+        h.step(
+            20,
+            vec![int_attr(ROSTER_MONSTER, attr_type::ATTR_CURRENT_HP, 0)],
+        );
+        assert_eq!(h.voice.tracker.len(), 0);
+        h.drain(200);
+        assert!(h.fired().is_empty());
+    }
+
+    #[test]
+    fn a_roster_pack_ready_together_is_one_cue() {
+        let mut h = Harness::new(
+            vec![rule(
+                "roster-skill",
+                trigger(
+                    VoiceSubject::RosterSkill {
+                        skill_id: MONSTER_SKILL,
+                    },
+                    expiring(5),
+                ),
+                "roster",
+                2_000,
+            )],
+            vec![],
+        );
+        h.watch_roster(vec![watched_roster_skill(10_000, None)], 2);
+        let mut pack = roster_member(ROSTER_MONSTER, ROSTER_TEMPLATE);
+        pack.extend(roster_member(ROSTER_PACKMATE, ROSTER_TEMPLATE));
+        h.step(5, pack);
+
+        let mut casts = roster_cast(ROSTER_MONSTER, 1);
+        casts.extend(roster_cast(ROSTER_PACKMATE, 2));
+        h.step(10, casts);
+        assert_eq!(h.voice.tracker.len(), 2, "one timer per monster");
+
+        h.drain(60);
+        assert_eq!(h.fired(), ["roster"]);
+    }
+
+    #[test]
+    fn roster_battle_start_window_cues_the_listed_templates_until_they_cast() {
+        // No cooldown data: only the battle-start window can be led.
+        let mut h = roster_lead_harness(0, Some(8_000));
+        let mut pack = roster_member(ROSTER_MONSTER, ROSTER_TEMPLATE);
+        pack.extend(roster_member(ROSTER_PACKMATE, OTHER_TEMPLATE));
+        // Joined at 1 s: castable from 9 s, so the cue is due at 4 s.
+        h.step(10, pack);
+        assert_eq!(h.voice.tracker.len(), 1, "the other template is not listed");
+
+        h.drain(40);
+        assert_eq!(h.fired(), ["roster"]);
+
+        // The first cast ends the window; without a cooldown nothing follows.
+        h.step(45, roster_cast(ROSTER_MONSTER, 1));
+        assert_eq!(h.voice.tracker.len(), 0);
+    }
+
+    #[test]
+    fn roster_cast_replaces_the_battle_start_window_with_the_cooldown() {
+        let mut h = roster_lead_harness(10_000, Some(30_000));
+        h.step(10, roster_member(ROSTER_MONSTER, ROSTER_TEMPLATE));
+        // Cast at 2 s, long before the window: castable again at 12 s.
+        h.step(20, roster_cast(ROSTER_MONSTER, 1));
+
+        h.drain(70);
+        assert_eq!(h.fired(), ["roster"]);
+        h.drain(400);
+        assert!(h.fired().is_empty(), "the window no longer applies");
+    }
+
+    #[test]
+    fn roster_timing_pulled_into_the_past_by_configuration_is_silent() {
+        let mut h = roster_lead_harness(10_000, None);
+        h.step(5, roster_member(ROSTER_MONSTER, ROSTER_TEMPLATE));
+        h.step(10, roster_cast(ROSTER_MONSTER, 1));
+
+        // A cooldown edited down to 6 s puts the cue at 2 s, already past.
+        h.watch_roster(vec![watched_roster_skill(6_000, None)], 30);
+        assert!(h.fired().is_empty());
+        assert_eq!(h.voice.tracker.len(), 0);
+        h.drain(200);
+        assert!(h.fired().is_empty());
+    }
+
+    #[test]
+    fn roster_skill_lead_counts_down_to_the_cooldown_end() {
+        let mut counting = roster_skill_rule(expiring(5));
+        counting.countdown_from = 3;
+        let mut h = Harness::new(vec![counting], vec![]);
+        h.watch_roster(vec![watched_roster_skill(10_000, None)], 2);
+        h.step(5, roster_member(ROSTER_MONSTER, ROSTER_TEMPLATE));
+        h.step(10, roster_cast(ROSTER_MONSTER, 1));
+
+        h.drain(60);
+        assert_eq!(h.fired(), ["roster"]);
+        assert!(h.ticks().is_empty());
+        // Ready at 11 s: "3" at 8 s, "2" at 9 s, "1" at 10 s.
+        h.drain(80);
+        h.drain(90);
+        h.drain(100);
+        assert_eq!(h.ticks(), [3, 2, 1]);
     }
 
     #[test]

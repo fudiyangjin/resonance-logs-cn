@@ -189,9 +189,12 @@ pub(super) struct RuleBook {
     /// Whether any `Entity/Started|Ended` rule needs presence edges.
     pub(super) entity_edges: bool,
     pub(super) boss_leads: Vec<BossLeadRule>,
-    /// Whether any rule announces roster casts, so the roster must be
+    /// Whether any rule listens to the battle roster, so the roster must be
     /// tracked even while its panel is hidden.
-    pub(super) roster_casts: bool,
+    pub(super) roster: bool,
+    /// Roster skill `ExpiringIn` rules by skill id: ahead of the moment a
+    /// roster monster may cast the skill (again).
+    pub(super) roster_leads: HashMap<i32, Vec<LeadSpec>>,
     /// When each rule last spoke, by handle.
     last_fired_ms: Vec<Option<i64>>,
 }
@@ -294,8 +297,15 @@ impl RuleBook {
                     });
                 }
             }
-            // Cast edges only: a monster skill has no duration to lead.
-            (VoiceSubject::RosterSkill { .. }, _) => self.roster_casts = true,
+            // `Started` rides the cast edge the roster reports.
+            (VoiceSubject::RosterSkill { skill_id }, _) => {
+                self.roster = true;
+                if let Some(lead) = lead {
+                    self.roster_leads.entry(*skill_id).or_default().push(lead);
+                }
+            }
+            // Cast edges only: a nearby monster's skill has no cooldown the
+            // watch list tracks.
             (VoiceSubject::MonsterSkill { .. } | VoiceSubject::Alert { .. }, _) => {}
         }
     }

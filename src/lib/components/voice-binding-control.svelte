@@ -19,7 +19,6 @@
    */
   import PlayIcon from "virtual:icons/lucide/play";
   import { t, type MessageKey } from "$lib/i18n/index.svelte";
-  import { APP_LOCALES, LOCALE_NATIVE_NAMES } from "$lib/i18n/locales";
   import {
     SETTINGS,
     resolveVoicePriority,
@@ -34,10 +33,6 @@
     VOICE,
   } from "$lib/stores/voice-store.svelte";
   import { blurOnEnter } from "$lib/utils.svelte";
-  import {
-    decodeBindingSource,
-    encodeBindingSource,
-  } from "$lib/voice/generation-source";
   import { bindingPhrases } from "$lib/voice/phrase-key";
   import {
     materializeBindingPhraseIds,
@@ -49,6 +44,7 @@
     type VoiceBindingEventDef,
     type VoiceBindingSubject,
   } from "$lib/voice-binding-subject.svelte.js";
+  import VoiceSourceSelect from "./voice-source-select.svelte";
 
   let { subject }: { subject: VoiceBindingSubject } = $props();
 
@@ -57,7 +53,6 @@
 
   const events = $derived(subjectEvents(subject));
   const phrases = $derived(VOICE.status?.catalog.phrases ?? []);
-  const httpProviders = $derived(VOICE.status?.catalog.httpProviders ?? []);
 
   let previewingKey = $state<string | null>(null);
   /** Why the last "生成语音" failed, shown under the event that ran it. */
@@ -164,44 +159,13 @@
   {@const pinned = binding.generationSource}
   {@const spokenText = binding.source === "custom" ? binding.text : autoText}
   <div class="flex flex-wrap items-center gap-2">
-    <label class="flex items-center gap-2 text-xs">
-      {t("voice.binding.generationSource")}
-      <select
-        class="border-border/60 bg-muted/30 text-foreground rounded border px-2 py-1 text-xs"
-        value={encodeBindingSource(pinned)}
-        onchange={(ev) =>
-          updateSubjectEvent(subject, event.eventKind, {
-            phrase: {
-              ...binding,
-              generationSource: decodeBindingSource(ev.currentTarget.value),
-            },
-          })}
-      >
-        <option value="default">{t("voice.binding.generationDefault")}</option>
-        <optgroup label={t("voice.phrases.generate.presetSource")}>
-          {#each APP_LOCALES as locale (locale)}
-            <option value={encodeBindingSource({ mode: "preset", locale })}
-              >{LOCALE_NATIVE_NAMES[locale]}</option
-            >
-          {/each}
-        </optgroup>
-        <optgroup label={t("voice.http.title")}>
-          {#if pinned?.mode === "http" && !httpProviders.some((provider) => provider.id === pinned.providerId)}
-            <option value={encodeBindingSource(pinned)} disabled
-              >{t("voice.binding.generationUnavailable")}</option
-            >
-          {/if}
-          {#each httpProviders as provider (provider.id)}
-            <option
-              value={encodeBindingSource({
-                mode: "http",
-                providerId: provider.id,
-              })}>{provider.name}</option
-            >
-          {/each}
-        </optgroup>
-      </select>
-    </label>
+    <VoiceSourceSelect
+      value={pinned}
+      onchange={(generationSource) =>
+        updateSubjectEvent(subject, event.eventKind, {
+          phrase: { ...binding, generationSource },
+        })}
+    />
     {#if binding.source === "custom" && pinned?.mode === "http"}
       <label class="flex items-center gap-2 text-xs">
         {t("voice.binding.generationLanguage")}

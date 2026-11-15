@@ -52,12 +52,29 @@ To add skills:
 
 ### Voice broadcast
 
-Each watched skill can expand **{{ui:monsterMonitor.roster.skills.voiceTitle}}** to set up **{{ui:voice.binding.event.onCast}}**:
+Each watched skill can expand **{{ui:monsterMonitor.roster.skills.voiceTitle}}** to set up two events.
+
+**{{ui:voice.binding.event.onCast}}**:
 
 - It plays only when a monster on the roster casts the skill; a cast-bar skill plays when its bar starts;
-- Several monsters casting the same skill at the same moment play it once;
-- It keeps playing while the roster panel is hidden or **{{ui:monsterMonitor.enabled}}** is off;
-- Removing the watched skill also removes its voice binding.
+- Several monsters casting the same skill at the same moment play it once.
+
+**{{ui:voice.binding.event.readyIn}}** follows the gray countdown at the end of the row and plays when x seconds are left on it.
+
+- Both the battle-start window and the cooldown after a cast are announced;
+- Each monster is timed on its own; monsters that come due within 2 seconds of each other share one line;
+- Tick **{{ui:voice.binding.finishBefore}}** and **{{ui:voice.binding.countdown}}** to have the line finished when x seconds are left and the last seconds counted down; only one countdown runs at a time;
+- A monster that dies or leaves the roster is no longer announced, and a countdown in progress stops; a monster that casts again early is timed from the new cast;
+- When x is not shorter than the cooldown or the battle-start window itself, that stretch is not announced;
+- A skill with neither cooldown data nor a battle-start window is never announced; enter a cooldown to enable it.
+
+Both events share these rules:
+
+- They keep playing while the roster panel is hidden or **{{ui:monsterMonitor.enabled}}** is off;
+- Removing the watched skill also removes its voice bindings.
+
+> [!NOTE]
+> **{{ui:voice.binding.event.readyIn}}** marks the earliest possible cast — a lower bound, like the gray countdown. The monster may wait longer once it is over, and skills triggered by scripts cannot be predicted. It is most accurate for skills cast on a fixed cycle.
 
 Mechanic objects outside the hate lists are not on the roster, so they are never announced here. Set those skills up in [Monster Skills](./monster-skill.md), which covers any nearby monster.
 

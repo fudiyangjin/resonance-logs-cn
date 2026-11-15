@@ -1,5 +1,6 @@
 <script lang="ts">
   import VoiceBindingControl from "$lib/components/voice-binding-control.svelte";
+  import VoiceCountdownControl from "$lib/components/voice-countdown-control.svelte";
   import { t, type MessageKey } from "$lib/i18n/index.svelte";
   import { SETTINGS, type GameAlertKind } from "$lib/settings-store";
 
@@ -57,4 +58,14 @@
       />
     </section>
   {/each}
+
+  <section class="border-border/60 bg-card/60 space-y-3 rounded-xl border p-5">
+    <div>
+      <h3 class="text-sm font-semibold">{t("voice.countdown.title")}</h3>
+      <p class="text-muted-foreground mt-1 text-xs">
+        {t("voice.countdown.description")}
+      </p>
+    </div>
+    <VoiceCountdownControl />
+  </section>
 </div>

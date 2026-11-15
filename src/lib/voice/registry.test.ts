@@ -338,6 +338,8 @@ describe("monsterSkill adapter", () => {
       event: { kind: "started" },
     });
     expect(a.trigger(s, "expiring", 5)).toBeNull();
+    // Only the battle roster knows a monster's cooldown.
+    expect(a.trigger(s, "readyIn", 5)).toBeNull();
   });
 
   it("speaks the entry label, falling back to the game name", () => {
@@ -359,11 +361,16 @@ describe("rosterSkill adapter", () => {
   const a = byKind("rosterSkill");
   const s = { kind: "rosterSkill", skillId: 101403 } as const;
 
-  it("keys rules by skill id, only fires on cast and opens the roster tab", () => {
+  it("keys rules by skill id, fires on cast and ahead of the cooldown end, and opens the roster tab", () => {
     expect(a.ruleKey(s, "onCast")).toBe("voice:rosterSkill:101403:onCast");
     expect(a.trigger(s, "onCast", 0)).toEqual({
       subject: { kind: "rosterSkill", skillId: 101403 },
       event: { kind: "started" },
+    });
+    expect(a.ruleKey(s, "readyIn")).toBe("voice:rosterSkill:101403:readyIn");
+    expect(a.trigger(s, "readyIn", 3)).toEqual({
+      subject: { kind: "rosterSkill", skillId: 101403 },
+      event: { kind: "expiringIn", secondsBefore: 3 },
     });
     expect(a.trigger(s, "expiring", 5)).toBeNull();
     expect(a.overview.route).toBe("/main/monster-monitor?tab=roster");
@@ -372,11 +379,31 @@ describe("rosterSkill adapter", () => {
   it("speaks the roster entry label, falling back to the game name", () => {
     const view = emptyView();
     view.monster.rosterSkillEntries = [{ skillId: 101403, label: "" }];
-    expect(a.events(view, s).map((event) => event.autoText(0))).toEqual([
-      "冰龙蓄力下砸",
+    expect(
+      a
+        .events(view, s)
+        .map((event) => [event.eventKind, event.expiring, event.autoText(3)]),
+    ).toEqual([
+      ["onCast", false, "冰龙蓄力下砸"],
+      ["readyIn", true, "冰龙蓄力下砸还有3秒就绪"],
     ]);
     view.monster.rosterSkillEntries = [{ skillId: 101403, label: "下砸" }];
     expect(a.label(view, s)).toBe("下砸");
+  });
+
+  it("keeps a skill that is only voiced ahead of its cooldown end", () => {
+    const view = emptyView();
+    view.monster.rosterSkillEntries = [{ skillId: 101403, label: "" }];
+    const readyIn = {
+      enabled: true,
+      phrase: { source: "auto" as const },
+      secondsBefore: 3,
+      countdown: true,
+    };
+    view.monster.rosterSkillVoiceConfigs = { "101403": { readyIn } };
+    expect(a.enumerate(view)).toEqual([s]);
+    expect(a.read(view, s, "readyIn")).toEqual(readyIn);
+    expect(a.read(view, s, "onCast")).toBeUndefined();
   });
 
   it("enumerates and writes its own configs, not the monster-skill panel's", () => {

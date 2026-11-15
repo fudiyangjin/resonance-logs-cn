@@ -55,6 +55,29 @@ export function monsterSkillIdsOf(
   return RAW_SKILL_IDS[String(monsterId)] ?? NO_SKILLS;
 }
 
+let monsterIdsBySkill: Map<number, number[]> | null = null;
+
+/**
+ * The monster templates that can cast `skillId`, ascending; empty when
+ * none. The inverse of `monsterSkillIdsOf`, indexed on first use.
+ */
+export function monsterIdsWithSkill(skillId: number): readonly number[] {
+  if (!monsterIdsBySkill) {
+    monsterIdsBySkill = new Map();
+    for (const [monsterId, skillIds] of Object.entries(RAW_SKILL_IDS)) {
+      for (const id of skillIds) {
+        const monsterIds = monsterIdsBySkill.get(id);
+        if (monsterIds) monsterIds.push(Number(monsterId));
+        else monsterIdsBySkill.set(id, [Number(monsterId)]);
+      }
+    }
+    for (const monsterIds of monsterIdsBySkill.values()) {
+      monsterIds.sort((a, b) => a - b);
+    }
+  }
+  return monsterIdsBySkill.get(skillId) ?? NO_SKILLS;
+}
+
 export function monsterSkillTiming(skillId: number): MonsterSkillTiming {
   const cached = timingCache.get(skillId);
   if (cached) return cached;

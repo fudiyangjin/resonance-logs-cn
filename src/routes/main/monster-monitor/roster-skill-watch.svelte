@@ -19,6 +19,8 @@
   import { getLocale, t } from "$lib/i18n/index.svelte";
   import {
     MAX_ROSTER_SKILL_ENTRIES,
+    rosterSkillCooldownMs,
+    rosterSkillFirstCastMs,
     type RosterSkillEntryPatch,
   } from "$lib/roster-skill-entries";
   import type { RosterSkillEntry } from "$lib/settings-store";
@@ -111,6 +113,16 @@
   const searchResults = $derived(
     searchMonsterSkills(searchKeyword, {}, getLocale()),
   );
+
+  /** Whether "ready in" has a moment to speak ahead of: a cooldown (the
+   * table's or the user's) or a battle-start window. */
+  function hasReadyTiming(entry: RosterSkillEntry): boolean {
+    const timing = monsterSkillTiming(entry.skillId);
+    return (
+      rosterSkillCooldownMs(entry.cooldownSeconds, timing) > 0 ||
+      rosterSkillFirstCastMs(timing) !== null
+    );
+  }
 
   function cooldownText(entry: RosterSkillEntry): string {
     return entry.cooldownSeconds === undefined
@@ -240,6 +252,11 @@
                 <p class="text-muted-foreground px-1 text-xs">
                   {t("monsterMonitor.roster.skills.voiceHint")}
                 </p>
+                {#if !hasReadyTiming(entry)}
+                  <p class="px-1 text-xs text-amber-600 dark:text-amber-400">
+                    {t("monsterMonitor.roster.skills.voiceNoTiming")}
+                  </p>
+                {/if}
                 <VoiceBindingControl
                   subject={{ kind: "rosterSkill", skillId: entry.skillId }}
                 />

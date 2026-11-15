@@ -670,6 +670,28 @@ describe("parseLoadoutExport", () => {
     ]);
   });
 
+  it("keeps both voice events of a watched roster skill", () => {
+    const data = validExport();
+    const monster = data["monsterProfile"] as Record<string, unknown>;
+    monster["rosterSkillEntries"] = [{ skillId: 1009804, label: "" }];
+    const voice = {
+      "1009804": {
+        onCast: { enabled: true, phrase: { source: "auto" } },
+        readyIn: {
+          enabled: true,
+          phrase: { source: "auto" },
+          secondsBefore: 3,
+          countdown: true,
+        },
+      },
+    };
+    monster["rosterSkillVoiceConfigs"] = voice;
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.output.monsterProfile.rosterSkillVoiceConfigs).toEqual(voice);
+  });
+
   it("fills roster defaults missing from an older monster profile", () => {
     const data = validExport();
     const monster = data["monsterProfile"] as Record<string, unknown>;

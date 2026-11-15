@@ -522,6 +522,7 @@ pub enum VoiceLeadSubject {
     CounterFreeze { rule_id: i32, slot_id: i32 },
     SkillReady { skill_id: i32 },
     Entity { entity: EntityUuid },
+    RosterSkill { entity: EntityUuid, skill_id: i32 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

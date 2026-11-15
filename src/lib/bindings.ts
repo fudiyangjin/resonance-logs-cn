@@ -1353,7 +1353,7 @@ export type MonitorRuntimeSnapshot = { i18n: I18nRuntimeSnapshot; live: LiveRunt
 export type MonsterBuffSourceScope = "anySource" | "localPlayerSource"
 /**
  * The battle roster panel. The roster is tracked while the panel is shown
- * or a voice rule announces roster casts, and published only while shown.
+ * or a voice rule listens to it, and published only while shown.
  */
 export type MonsterRosterRuntimeSnapshot = {
 /**
@@ -1363,7 +1363,7 @@ enabled: boolean;
 /**
  * Skills whose casts and cooldowns are shown at the end of roster rows.
  */
-watchedSkillIds: number[] }
+watchedSkills: RosterWatchedSkill[] }
 export type MonsterRuntimeSnapshot = { enabled: boolean; globalIds: number[]; selfAppliedIds: number[]; monitorAllSelfApplied: boolean; watchedEntities: WatchedEntitySpec[];
 /**
  * Skills shown (and voiced) when any nearby monster casts them.
@@ -1443,6 +1443,15 @@ maxHp: number; sceneId: number | null; lastSeenMs: number;
 skillIds: number[] }
 export type ResetBuffTarget = "selfPlayer" | "anyTeam"
 /**
+ * The battle-start window of a roster skill: the monsters that can cast it
+ * do not cast it sooner than `after_ms` after joining the roster.
+ */
+export type RosterFirstCast = { afterMs: number;
+/**
+ * Monster templates that can cast the skill; sorted and deduplicated.
+ */
+monsterIds: number[] }
+/**
  * Monster classification from `MonsterIdType.json`; unknown ids are normal.
  */
 export type RosterMonsterKind = "normal" | "elite" | "boss"
@@ -1490,6 +1499,20 @@ export type RosterSkillCast = { skillId: number;
  * known).
  */
 castAtMs: number }
+/**
+ * One skill watched on the battle roster, with the timing the frontend
+ * resolved for it (the skill table, or the user's own cooldown). The same
+ * numbers time the skill cells, so voice cues follow what the rows show.
+ */
+export type RosterWatchedSkill = { skillId: number;
+/**
+ * Earliest recast, counted from the start of a cast; 0 when unknown.
+ */
+cooldownMs: number;
+/**
+ * `None` when the skill has no battle-start window.
+ */
+firstCast: RosterFirstCast | null }
 export type SceneIdsResult = { ids: number[] }
 /**
  * A single shield entry parsed from attr 60050.
@@ -1825,7 +1848,14 @@ countdownFrom?: number }
 /**
  * Persisted + hot-synced runtime settings for the voice feature.
  */
-export type VoiceRuntimeSnapshot = { enabled: boolean; volume: number; queuePolicy: VoiceQueuePolicy; rules: VoiceRule[] }
+export type VoiceRuntimeSnapshot = { enabled: boolean; volume: number; queuePolicy: VoiceQueuePolicy; rules: VoiceRule[];
+/**
+ * Phrases that speak the countdown digits instead of the bundled
+ * prompts: digit `n` at index `n - 1`, an empty id for none. Empty
+ * when the bundled digits count. A digit whose phrase has no audio
+ * (yet) is spoken by its bundled prompt.
+ */
+countdownPhraseIds: string[] }
 export type VoiceSourceSelectionDto = { mode: "cloneNew"; name: string; referenceWavPath: string; keepReference?: boolean } | { mode: "cloneExisting"; profileId: string } |
 /**
  * Auto-selects the bundled reference voice for a UI locale, extracting
@@ -1879,7 +1909,8 @@ export type VoiceSubject =
 { kind: "monsterSkill"; skillId: number } |
 /**
  * A skill on the battle roster's watch list. `Started` = a monster on
- * the roster cast it.
+ * the roster cast it, `ExpiringIn` = a monster on the roster may cast
+ * it (again) in N seconds at the earliest, one cue per monster.
  */
 { kind: "rosterSkill"; skillId: number } |
 /**

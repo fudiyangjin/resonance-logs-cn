@@ -164,6 +164,54 @@ fn is_replaceable_by_bundled(source: &VoiceAssetSource) -> bool {
     matches!(source, VoiceAssetSource::BundledPrompt { .. })
 }
 
+/// Puts a seeded phrase back under its fixed `name`. A build that
+/// content-renamed bundled prompts left it as `{name}~{hash}` and, on its
+/// next start, seeded a second phrase with the same id next to it — which
+/// also unbound the bundled audio of both. Returns whether the catalog
+/// changed.
+fn restore_seeded_phrase(catalog: &mut VoiceCatalog, name: &str, seeded_id: &str) -> bool {
+    let is_renamed = |phrase: &VoicePhraseMeta| {
+        phrase.id == seeded_id
+            && phrase
+                .name
+                .strip_prefix(name)
+                .is_some_and(|rest| rest.starts_with('~'))
+    };
+    if !catalog.phrases.iter().any(is_renamed) {
+        return false;
+    }
+    let holder_id = catalog
+        .phrases
+        .iter()
+        .find(|phrase| phrase.name == name)
+        .map(|phrase| phrase.id.as_str());
+    match holder_id {
+        // Seeded again under the same id: the renamed copy is the duplicate.
+        Some(id) if id == seeded_id => catalog.phrases.retain(|phrase| !is_renamed(phrase)),
+        // The name belongs to a phrase of its own; nothing to restore.
+        Some(_) => return false,
+        None => {
+            if let Some(phrase) = catalog.phrases.iter_mut().find(|phrase| is_renamed(phrase)) {
+                phrase.name = name.to_string();
+            }
+        }
+    }
+    true
+}
+
+/// `id`, or `id_2`, `id_3`, ... while a phrase already holds it: a seeded
+/// phrase the user renamed keeps its id, and ids must stay unique.
+fn free_phrase_id(catalog: &VoiceCatalog, id: String) -> String {
+    let taken = |candidate: &str| catalog.phrases.iter().any(|phrase| phrase.id == candidate);
+    if !taken(&id) {
+        return id;
+    }
+    (2u32..)
+        .map(|n| format!("{id}_{n}"))
+        .find(|candidate| !taken(candidate))
+        .unwrap_or(id)
+}
+
 /// Seeds every bundled prompt into the persistent catalog. Existing generated
 /// user assets remain authoritative until their phrase content changes.
 pub(crate) fn seed_catalog(catalog: &mut VoiceCatalog, now_ms: i64) -> PromptCatalogSync {
@@ -172,12 +220,13 @@ pub(crate) fn seed_catalog(catalog: &mut VoiceCatalog, now_ms: i64) -> PromptCat
 
     for prompt in &MANIFEST.prompts {
         let name = managed_name(&prompt.key);
+        changed |= restore_seeded_phrase(catalog, &name, &phrase_id(&prompt.key));
         let id = if let Some(existing) = catalog.phrases.iter().find(|phrase| phrase.name == name) {
             existing.id.clone()
         } else {
             let locale = VoicePresetLocale::ZhCn;
             let variant = prompt.variants.get(locale);
-            let id = phrase_id(&prompt.key);
+            let id = free_phrase_id(catalog, phrase_id(&prompt.key));
             catalog.phrases.push(VoicePhraseMeta {
                 id: id.clone(),
                 name,
@@ -457,6 +506,113 @@ mod tests {
                 })
             })
         }));
+    }
+
+    /// Phrase ids are unique and every bundled prompt plays its bundled
+    /// audio under its fixed name.
+    fn assert_seeded_once(catalog: &VoiceCatalog) {
+        let mut ids: Vec<&str> = catalog
+            .phrases
+            .iter()
+            .map(|phrase| phrase.id.as_str())
+            .collect();
+        ids.sort_unstable();
+        let unique = ids.len();
+        ids.dedup();
+        assert_eq!(ids.len(), unique, "duplicate phrase ids");
+        for prompt in &MANIFEST.prompts {
+            let name = managed_name(&prompt.key);
+            let holders: Vec<&VoicePhraseMeta> = catalog
+                .phrases
+                .iter()
+                .filter(|phrase| phrase.name == name)
+                .collect();
+            assert_eq!(holders.len(), 1, "{name}");
+            let active = holders[0].active_asset_id.as_deref();
+            assert!(
+                catalog
+                    .assets
+                    .iter()
+                    .any(|asset| Some(asset.id.as_str()) == active
+                        && matches!(asset.source, VoiceAssetSource::BundledPrompt { .. })),
+                "{name} has no bundled audio"
+            );
+        }
+    }
+
+    /// What `VoiceService::new` does to the catalog on every start.
+    fn start(catalog: &mut VoiceCatalog) -> bool {
+        let renamed = super::super::phrase_name::migrate_to_content_names(catalog);
+        seed_catalog(catalog, 123).changed || renamed > 0
+    }
+
+    #[test]
+    fn restarts_keep_every_bundled_prompt_seeded_once() {
+        let mut catalog = VoiceCatalog::default();
+        assert!(start(&mut catalog));
+        assert_seeded_once(&catalog);
+        let phrases = catalog.phrases.len();
+
+        // The content-name migration must leave the fixed names alone, or
+        // the next start seeds every prompt a second time.
+        assert!(!start(&mut catalog));
+        assert!(!start(&mut catalog));
+        assert_eq!(catalog.phrases.len(), phrases);
+        assert_seeded_once(&catalog);
+    }
+
+    #[test]
+    fn a_catalog_with_renamed_and_reseeded_prompts_is_repaired() {
+        let mut catalog = VoiceCatalog::default();
+        seed_catalog(&mut catalog, 123);
+        let seeded = catalog.phrases.len();
+        // The damage: every seeded phrase renamed to `{name}~{hash}`, seeded
+        // again under the same id, and all of them left without audio.
+        let mut renamed = catalog.phrases.clone();
+        for phrase in &mut renamed {
+            phrase.name = format!("{}~0f03554a", phrase.name);
+        }
+        renamed.extend(catalog.phrases.iter().cloned());
+        catalog.phrases = renamed;
+        catalog.assets.clear();
+        for phrase in &mut catalog.phrases {
+            phrase.active_asset_id = None;
+        }
+
+        assert!(start(&mut catalog));
+        assert_eq!(catalog.phrases.len(), seeded);
+        assert_seeded_once(&catalog);
+        assert!(!start(&mut catalog), "the repair is done once");
+    }
+
+    #[test]
+    fn a_renamed_prompt_without_a_reseeded_twin_gets_its_name_back() {
+        let mut catalog = VoiceCatalog::default();
+        seed_catalog(&mut catalog, 123);
+        let seeded = catalog.phrases.len();
+        let id = catalog.phrases[0].id.clone();
+        catalog.phrases[0].name = format!("{}~0f03554a", catalog.phrases[0].name);
+
+        assert!(start(&mut catalog));
+        assert_eq!(catalog.phrases.len(), seeded);
+        assert_eq!(catalog.phrases[0].id, id);
+        assert_seeded_once(&catalog);
+    }
+
+    #[test]
+    fn a_prompt_the_user_renamed_is_seeded_again_under_a_free_id() {
+        let mut catalog = VoiceCatalog::default();
+        seed_catalog(&mut catalog, 123);
+        let seeded = catalog.phrases.len();
+        let id = catalog.phrases[0].id.clone();
+        catalog.phrases[0].name = "我的提示音".to_string();
+
+        assert!(start(&mut catalog));
+        assert_eq!(catalog.phrases.len(), seeded + 1);
+        assert_eq!(catalog.phrases[0].name, "我的提示音");
+        assert_eq!(catalog.phrases[0].id, id);
+        assert_seeded_once(&catalog);
+        assert!(!start(&mut catalog));
     }
 
     #[test]

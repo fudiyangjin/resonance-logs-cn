@@ -202,6 +202,7 @@ describe("runtime snapshot delivery", () => {
     volume,
     queuePolicy: "dropLowPriority" as const,
     rules: [],
+    countdownPhraseIds: [],
   });
 
   it("serializes IPC and coalesces edits to the latest snapshot", async () => {

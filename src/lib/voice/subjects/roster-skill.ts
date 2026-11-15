@@ -4,12 +4,14 @@ import { rosterSkillEntryIds } from "../association";
 import { castSkillAdapter } from "./cast-skill";
 
 /**
- * A battle-roster watched skill: a monster on the roster cast it. Named like
- * its roster cell, so the auto line says what the row shows.
+ * A battle-roster watched skill: a monster on the roster cast it, or may
+ * cast it (again) in a few seconds — the cooldown its roster cell counts
+ * down. Named like that cell, so the auto line says what the row shows.
  */
 export const rosterSkillAdapter = castSkillAdapter({
   kind: "rosterSkill",
   field: "rosterSkillVoiceConfigs",
+  events: ["onCast", "readyIn"],
   overview: {
     group: "rosterSkill",
     titleKey: "monsterMonitor.roster.skills.voiceGroup",

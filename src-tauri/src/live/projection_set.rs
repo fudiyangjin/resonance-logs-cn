@@ -183,6 +183,14 @@ impl ProjectionSet {
         }
         self.voice
             .set_buff_composites(buff_composites, entities, now_wall_ms, now_mono, scheduler);
+        // Before the voice sync: it reads the roster's skill timing, and a
+        // configuration change must re-derive silently.
+        if self
+            .monster_roster
+            .apply_config(&config.monster_roster, entities, now_wall_ms, now_mono)
+        {
+            self.dirty |= TopicMask::MONSTER_ROSTER;
+        }
         self.sync_voice(
             VoiceSyncReason::Baseline,
             entities,
@@ -195,12 +203,6 @@ impl ProjectionSet {
         }
         // The retained window does not depend on the list, so nothing to publish.
         self.skill_damage.apply_config(&config.skill_damage);
-        if self
-            .monster_roster
-            .apply_config(&config.monster_roster, entities, now_wall_ms)
-        {
-            self.dirty |= TopicMask::MONSTER_ROSTER;
-        }
         self.dirty |= SEGMENT_TOPICS;
         Ok(())
     }
@@ -220,6 +222,16 @@ impl ProjectionSet {
             .voice
             .apply_config(config, entities, now_wall_ms, now_mono, scheduler)
         {
+            // Roster rules keep the roster tracked while its panel is
+            // hidden. Before the sync, which reads the roster.
+            if self.monster_roster.set_voiced(
+                self.voice.needs_roster(),
+                entities,
+                now_wall_ms,
+                now_mono,
+            ) {
+                self.dirty |= TopicMask::MONSTER_ROSTER;
+            }
             self.sync_voice(
                 VoiceSyncReason::Baseline,
                 entities,
@@ -227,14 +239,6 @@ impl ProjectionSet {
                 now_mono,
                 scheduler,
             );
-            // Roster cast rules keep the roster tracked while its panel is
-            // hidden.
-            if self
-                .monster_roster
-                .set_voiced(self.voice.needs_roster(), entities, now_wall_ms)
-            {
-                self.dirty |= TopicMask::MONSTER_ROSTER;
-            }
         }
     }
 
@@ -975,6 +979,7 @@ impl ProjectionSet {
             entities,
             monitor: &self.entity_monitor,
             counters: &self.counter,
+            roster: &self.monster_roster,
         };
         self.voice
             .sync_inputs(reason, &inputs, now_wall_ms, now_mono, scheduler);

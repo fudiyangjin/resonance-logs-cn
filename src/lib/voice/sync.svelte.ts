@@ -54,11 +54,11 @@ import { createVoiceSnapshotSync } from "./snapshot-sync";
 import {
   collectBindings,
   compileVoiceRules,
-  countdownPhraseRequests,
   phraseRequests,
   type PhraseIndex,
   type ResolvedPhrase,
 } from "./compile";
+import { countdownPhraseIds, countdownPhraseRequests } from "./countdown";
 import { mergeVoiceConfigPatch } from "./subject-types";
 import { buildVoiceBindingView, buildVoiceGcViews } from "./view";
 
@@ -240,9 +240,10 @@ export function startVoiceRuntimeSync(): () => void {
     const view = buildVoiceBindingView();
     const bindings = collectBindings(view);
     const index = phraseIndex;
+    const digitLanguage = voiceLanguageForLocale(view.locale);
     const requests = [
       ...phraseRequests(bindings),
-      ...countdownPhraseRequests(bindings, voiceLanguageForLocale(view.locale)),
+      ...countdownPhraseRequests(bindings, digitLanguage, voice.countdownVoice),
     ];
     const missing = requests.filter((request) => {
       const known = index[request.name];
@@ -256,6 +257,11 @@ export function startVoiceRuntimeSync(): () => void {
       volume: voice.volume,
       queuePolicy: voice.queuePolicy,
       rules: voice.enabled ? compileVoiceRules(bindings, index) : [],
+      countdownPhraseIds: countdownPhraseIds(
+        voice.countdownVoice,
+        digitLanguage,
+        index,
+      ),
     };
     untrack(() => {
       resolver.sync(missing, busy);

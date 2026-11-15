@@ -347,6 +347,14 @@ const monsterSkillVoiceConfigMapSchema = v.record(
   v.object({ onCast: v.optional(voiceEventSchema) }),
 );
 
+const rosterSkillVoiceConfigMapSchema = v.record(
+  numericKeySchema,
+  v.object({
+    onCast: v.optional(voiceEventSchema),
+    readyIn: v.optional(voiceExpiringEventSchema),
+  }),
+);
+
 const buffAlertRuleSchema = v.object({
   thresholdSeconds: finiteNumberSchema,
   highlightColor: v.string(),
@@ -850,7 +858,7 @@ const monsterProfileSchema = v.object({
     defaultClone(defaultMonster.monsterSkillVoiceConfigs ?? {}),
   ),
   rosterSkillVoiceConfigs: v.optional(
-    monsterSkillVoiceConfigMapSchema,
+    rosterSkillVoiceConfigMapSchema,
     defaultClone(defaultMonster.rosterSkillVoiceConfigs ?? {}),
   ),
   fantasyShowAll: v.boolean(),

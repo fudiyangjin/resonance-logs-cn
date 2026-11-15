@@ -6,7 +6,8 @@
 //! the same subject each keep their audio, and identical texts share one
 //! phrase. The frontend builds the same names (`src/lib/voice/phrase-key.ts`)
 //! and both sides pin the hash with the same golden vectors. Bundled prompts
-//! (`auto:voice:alert:*`) keep fixed names.
+//! (`auto:voice:alert:*`, `auto:voice:countdown:*`) keep fixed names: the
+//! catalog seeds them, and the player finds them, by that name.
 //!
 //! The *slot* of a name — rule key plus tier variant, without source and
 //! hash — identifies the binding it speaks for. While a slot's current
@@ -22,8 +23,10 @@ use super::models::{VoiceCatalog, VoiceLanguage, VoicePhraseMeta};
 const HASH_LEN: usize = 8;
 const SOURCE_PREFIXES: [&str; 2] = ["auto:", "custom:"];
 const RULE_KEY_PREFIX: &str = "voice:";
-/// Rule keys of bundled prompts, which keep fixed names.
-const BUNDLED_RULE_KEY_PREFIX: &str = "voice:alert:";
+/// Rule keys of bundled prompts, which keep fixed names. Every key of the
+/// prompt manifest must fall under one of these (pinned by a test in
+/// `prompts.rs`); the frontend keeps the same list (`gc.ts`).
+const BUNDLED_RULE_KEY_PREFIXES: [&str; 2] = ["voice:alert:", "voice:countdown:"];
 const ENTITY_RULE_KEY_PREFIX: &str = "voice:entity:";
 
 /// FNV-1a 32-bit over the UTF-8 of `"{language}\0{text}"`, as 8 lowercase
@@ -64,7 +67,11 @@ pub(crate) fn managed_slot(name: &str) -> Option<&str> {
 /// A managed name from before content addressing (bundled prompts excluded).
 fn is_legacy_managed(name: &str) -> bool {
     !name.contains('~')
-        && managed_key(name).is_some_and(|key| !key.starts_with(BUNDLED_RULE_KEY_PREFIX))
+        && managed_key(name).is_some_and(|key| {
+            !BUNDLED_RULE_KEY_PREFIXES
+                .iter()
+                .any(|prefix| key.starts_with(prefix))
+        })
 }
 
 /// `legacy` under the current rule key: entity bindings were keyed by the
@@ -193,6 +200,7 @@ mod tests {
                 phrase("alert", "auto:voice:alert:matchReady", "匹配成功", 1),
                 phrase("mine", "机制来了", "机制来了", 1),
                 phrase("done", "auto:voice:buff:1:gained~12345678", "x", 1),
+                phrase("digit", "auto:voice:countdown:3", "三", 1),
             ],
             ..VoiceCatalog::default()
         };
@@ -211,6 +219,7 @@ mod tests {
                 "auto:voice:alert:matchReady",
                 "机制来了",
                 "auto:voice:buff:1:gained~12345678",
+                "auto:voice:countdown:3",
             ]
         );
         assert_eq!(migrate_to_content_names(&mut catalog), 0);

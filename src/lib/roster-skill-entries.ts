@@ -6,6 +6,8 @@
  * row. Every read path runs them through `ensureRosterSkillEntries` so
  * malformed or legacy data never reaches the runtime snapshot or the HUD.
  */
+import type { RosterWatchedSkill } from "./bindings";
+import type { MonsterSkillTiming } from "./config/monster-skill-timing";
 import { isValidMonsterSkillId } from "./monster-skill-entries";
 import type { RosterSkillEntry } from "./settings-store";
 
@@ -26,6 +28,52 @@ export function normalizeRosterSkillCooldown(
     MAX_ROSTER_SKILL_COOLDOWN_SECONDS,
     Math.max(MIN_ROSTER_SKILL_COOLDOWN_SECONDS, seconds),
   );
+}
+
+/**
+ * Earliest recast of a watched skill, from the start of a cast: the user's
+ * own cooldown, else the table's; `0` when unknown. The skill cells and the
+ * voice cues both time the cooldown with this.
+ */
+export function rosterSkillCooldownMs(
+  customCooldownSeconds: number | null | undefined,
+  timing: Pick<MonsterSkillTiming, "cooldownSeconds">,
+): number {
+  return Math.round((customCooldownSeconds ?? timing.cooldownSeconds) * 1000);
+}
+
+/**
+ * Earliest first cast of a watched skill after its monster joined the
+ * roster (the start of the battle-start window); `null` without a window.
+ */
+export function rosterSkillFirstCastMs(
+  timing: Pick<MonsterSkillTiming, "battleStart">,
+): number | null {
+  const start = timing.battleStart;
+  return start === null || start === "never"
+    ? null
+    : Math.round(start[0] * 1000);
+}
+
+/**
+ * What the backend needs to time `entry` like its skill cell does.
+ * `monsterIds` are the templates that can cast the skill: the battle-start
+ * window only applies to them.
+ */
+export function rosterWatchedSkill(
+  entry: RosterSkillEntry,
+  timing: MonsterSkillTiming,
+  monsterIds: readonly number[],
+): RosterWatchedSkill {
+  const firstCastMs = rosterSkillFirstCastMs(timing);
+  return {
+    skillId: entry.skillId,
+    cooldownMs: rosterSkillCooldownMs(entry.cooldownSeconds, timing),
+    firstCast:
+      firstCastMs === null || monsterIds.length === 0
+        ? null
+        : { afterMs: firstCastMs, monsterIds: [...monsterIds] },
+  };
 }
 
 /** `cooldownSeconds` is kept only when set, so table-driven entries stay as

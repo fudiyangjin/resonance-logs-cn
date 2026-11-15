@@ -32,6 +32,9 @@ pub(super) struct VoiceServiceInner {
     pub(super) app_handle: AppHandle,
     pub(super) voice_root: PathBuf,
     pub(super) catalog: Mutex<models::VoiceCatalog>,
+    /// The phrases picked to speak the countdown digits, as the runtime
+    /// snapshot lists them (`VoiceRuntimeSnapshot::countdown_phrase_ids`).
+    pub(super) countdown_phrase_ids: Mutex<Vec<String>>,
     pub(super) player: Arc<dyn PlaybackSink>,
     pub(super) http_client: reqwest::Client,
     /// HTTP TTS provider calls; unlike `http_client` it allows plain HTTP to
@@ -136,6 +139,7 @@ impl VoiceService {
                 app_handle,
                 voice_root,
                 catalog: Mutex::new(catalog_data),
+                countdown_phrase_ids: Mutex::new(Vec::new()),
                 player: Arc::new(PlayerHandle::spawn()?),
                 http_client,
                 tts_http_client: http_tts::build_client()?,
@@ -165,6 +169,14 @@ impl VoiceService {
                 volume,
                 policy,
             });
+    }
+
+    /// Replaces the phrases picked to speak the countdown digits.
+    pub fn set_countdown_phrases(&self, phrase_ids: &[String]) {
+        let mut current = self.inner.countdown_phrase_ids.lock();
+        if current.as_slice() != phrase_ids {
+            *current = phrase_ids.to_vec();
+        }
     }
 
     /// Persists `updated` to disk, then swaps it in as the in-memory

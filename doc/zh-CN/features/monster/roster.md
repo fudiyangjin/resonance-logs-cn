@@ -52,12 +52,29 @@
 
 ### 语音播报
 
-每个关注技能下面可以展开 **{{ui:monsterMonitor.roster.skills.voiceTitle}}**，配置 **{{ui:voice.binding.event.onCast}}**：
+每个关注技能下面可以展开 **{{ui:monsterMonitor.roster.skills.voiceTitle}}**，配置两个事件。
+
+**{{ui:voice.binding.event.onCast}}**：
 
 - 只在名单里的怪放出这个技能时播报，读条技能在开始读条时播报；
-- 几只怪同一时刻放同一个技能，只播一次；
+- 几只怪同一时刻放同一个技能，只播一次。
+
+**{{ui:voice.binding.event.readyIn}}**：跟着行尾的灰色倒计时走，倒计时剩 x 秒时播报。
+
+- 开战首放窗口和放过之后的冷却都会播报；
+- 每只怪各算各的；几只怪在 2 秒内先后到点只播一句；
+- 可以勾选 **{{ui:voice.binding.finishBefore}}** 和 **{{ui:voice.binding.countdown}}**，让语音在剩 x 秒时念完，再逐秒倒数；倒数同一时间只有一轨；
+- 怪死亡或离开名单后不再播报，没念完的倒数随之停止；怪提前再次施放时按新的冷却重新计时；
+- x 不小于冷却或首放窗口本身时，这一段不播报；
+- 技能既没有冷却数据、也没有首放窗口时不会播报，填写冷却秒数后生效。
+
+两个事件共同的规则：
+
 - 名单面板隐藏、或关闭 **{{ui:monsterMonitor.enabled}}** 后照常播报；
 - 删除关注技能时，语音绑定一起删除。
+
+> [!NOTE]
+> **{{ui:voice.binding.event.readyIn}}** 播报的是"最早可放"的时刻，和灰色倒计时一样是下限：到点后怪不一定马上放，脚本触发的技能也预测不了。固定周期释放的技能最准。
 
 没进仇恨列表的机制物不在名单上，也就不会播报。这类技能请在 [怪物技能](./monster-skill.md) 里配置语音，那里对附近任意怪物生效。
 

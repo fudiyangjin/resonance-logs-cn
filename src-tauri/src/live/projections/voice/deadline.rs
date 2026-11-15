@@ -22,10 +22,11 @@ pub(super) enum TimerClass {
     SkillReady,
     SkillRefill,
     Entity,
+    RosterSkill,
 }
 
 impl TimerClass {
-    const COUNT: usize = 6;
+    const COUNT: usize = 7;
 
     pub(super) const fn of(timer: VoiceTimer) -> Self {
         match timer {
@@ -37,6 +38,7 @@ impl TimerClass {
                 VoiceLeadSubject::CounterFreeze { .. } => Self::CounterFreeze,
                 VoiceLeadSubject::SkillReady { .. } => Self::SkillReady,
                 VoiceLeadSubject::Entity { .. } => Self::Entity,
+                VoiceLeadSubject::RosterSkill { .. } => Self::RosterSkill,
             },
         }
     }

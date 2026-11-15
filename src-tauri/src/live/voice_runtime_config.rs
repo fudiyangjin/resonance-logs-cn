@@ -70,6 +70,7 @@ mod tests {
             enabled: true,
             volume: 0.4,
             queue_policy: VoiceQueuePolicy::InterruptForHigherPriority,
+            countdown_phrase_ids: Vec::new(),
             rules: vec![VoiceRule {
                 id: "voice:alert:matchReady".to_string(),
                 enabled: true,

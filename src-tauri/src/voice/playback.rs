@@ -72,6 +72,33 @@ fn playable_candidates(
         .collect()
 }
 
+/// Audio countdown digit `n` may play, in preference order: the phrase the
+/// voice settings picked for it (`picked[n - 1]`), then its bundled prompt.
+/// The bundled prompt is looked up by name: the frontend may have created
+/// the phrase before a build that bundles its recording seeded it.
+fn tick_candidates(
+    catalog: &models::VoiceCatalog,
+    picked: &[String],
+    n: u8,
+) -> Vec<(String, CueAudioRef)> {
+    let picked = usize::from(n)
+        .checked_sub(1)
+        .and_then(|index| picked.get(index))
+        .map(String::as_str)
+        .filter(|id| !id.is_empty());
+    let bundled_name = prompts::countdown_phrase_name(n);
+    let bundled = catalog
+        .phrases
+        .iter()
+        .find(|phrase| phrase.name == bundled_name)
+        .map(|phrase| phrase.id.as_str());
+    picked
+        .into_iter()
+        .chain(bundled)
+        .filter_map(|id| catalog_audio_ref(catalog, id).map(|audio| (id.to_string(), audio)))
+        .collect()
+}
+
 pub(super) fn catalog_audio_ref(
     catalog: &models::VoiceCatalog,
     phrase_id: &str,
@@ -164,23 +191,19 @@ impl VoiceService {
     }
 
     /// Plays one countdown digit on the countdown track, over whatever the
-    /// cue queue is speaking. The digit is a bundled prompt the user may
-    /// have replaced with a take of their own; without playable audio it
-    /// falls back to the built-in tone, so the beat is still audible.
+    /// cue queue is speaking. Without playable audio it falls back to the
+    /// built-in tone, so the beat is still audible.
     pub fn enqueue_tick(&self, tick: CountdownTick) {
-        let name = prompts::countdown_phrase_name(tick.n);
-        let audio = {
+        let picked = self.inner.countdown_phrase_ids.lock().clone();
+        // Only candidate references are taken under the lock; the file
+        // checks happen after it is released.
+        let candidates = {
             let catalog = self.inner.catalog.lock();
-            catalog
-                .phrases
-                .iter()
-                .find(|phrase| phrase.name == name)
-                .and_then(|phrase| {
-                    catalog_audio_ref(&catalog, &phrase.id).map(|audio| (phrase.id.clone(), audio))
-                })
+            tick_candidates(&catalog, &picked, tick.n)
         };
-        let wav_path =
-            audio.and_then(|(phrase_id, audio)| self.audio_ref_wav_path(&phrase_id, audio));
+        let wav_path = candidates
+            .into_iter()
+            .find_map(|(phrase_id, audio)| self.audio_ref_wav_path(&phrase_id, audio));
         self.inner.player.enqueue_tick(QueuedTick {
             countdown: tick.countdown,
             priority: tick.priority,
@@ -348,6 +371,52 @@ mod tests {
         assert_eq!(ids("older"), ["older", "newer"]);
         // Hand-made phrases have no slot to fall back within.
         assert!(ids("hand-made").is_empty());
+    }
+
+    #[test]
+    fn countdown_digit_plays_the_picked_phrase_and_falls_back_to_the_bundled_one() {
+        let mut catalog = models::VoiceCatalog::default();
+        prompts::seed_catalog(&mut catalog, 1);
+        // The user's own "3" has audio; their "2" is not generated yet.
+        catalog
+            .phrases
+            .push(named("own-3", "custom:voice:countdown:3", true, 1));
+        catalog
+            .phrases
+            .push(named("own-2", "custom:voice:countdown:2", false, 1));
+        catalog.assets.push(asset_stub("own-3-asset", "own-3", 0));
+        let catalog = catalog;
+        let bundled = |n: u8| {
+            let name = prompts::countdown_phrase_name(n);
+            catalog
+                .phrases
+                .iter()
+                .find(|phrase| phrase.name == name)
+                .map(|phrase| phrase.id.clone())
+                .expect("seeded digit")
+        };
+        let (bundled_two, bundled_three) = (bundled(2), bundled(3));
+
+        let ids = |picked: &[&str], n: u8| {
+            let picked: Vec<String> = picked.iter().map(ToString::to_string).collect();
+            tick_candidates(&catalog, &picked, n)
+                .into_iter()
+                .map(|(id, _)| id)
+                .collect::<Vec<_>>()
+        };
+        let picked = ["", "own-2", "own-3"];
+        assert_eq!(
+            ids(&picked, 3),
+            ["own-3", bundled_three.as_str()],
+            "the bundled digit stays behind it in case the file is gone"
+        );
+        assert_eq!(ids(&picked, 2), [bundled_two.as_str()]);
+        assert_eq!(ids(&picked, 1), [bundled(1).as_str()]);
+        // Nothing picked: the bundled digits count; digit 0 does not exist.
+        assert_eq!(ids(&[], 3), [bundled_three.as_str()]);
+        assert!(ids(&picked, 0).is_empty());
+        // A digit beyond the picked list.
+        assert_eq!(ids(&picked, 4), [bundled(4).as_str()]);
     }
 
     #[test]
