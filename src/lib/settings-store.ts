@@ -50,6 +50,12 @@ import {
   type SkillDamageFontsState,
   type SkillDamageState,
 } from "./skill-damage-settings";
+import {
+  createDefaultChallengePresetLibrary,
+  createDefaultChallengeWatchState,
+  type ChallengePresetLibrary,
+  type ChallengeWatchState,
+} from "./challenge-watch";
 
 export const DEFAULT_STATS = {
   skillId: false,
@@ -102,6 +108,7 @@ export const DEFAULT_LIVE_TANKED_PLAYER_STATS = {
 };
 
 export const DEFAULT_LIVE_TANKED_SKILL_STATS = {
+  skillId: false,
   ...DEFAULT_LIVE_TANKED_PLAYER_STATS,
   avgDmg: false,
   maxDmg: false,
@@ -148,6 +155,7 @@ export const DEFAULT_HISTORY_TANKED_STATS = {
 };
 
 export const DEFAULT_HISTORY_TANKED_SKILL_STATS = {
+  skillId: false,
   totalDmg: true,
   dps: true,
   dmgPct: true,
@@ -231,6 +239,7 @@ export const DEFAULT_HEAL_PLAYER_COLUMN_ORDER = [
   "hitsPerMinute",
 ];
 export const DEFAULT_HEAL_SKILL_COLUMN_ORDER = [
+  "skillId",
   "totalDmg",
   "dps",
   "effectiveTotal",
@@ -262,6 +271,7 @@ export const DEFAULT_TANKED_PLAYER_COLUMN_ORDER = [
   "hitsPerMinute",
 ];
 export const DEFAULT_TANKED_SKILL_COLUMN_ORDER = [
+  "skillId",
   "totalDmg",
   "dps",
   "effectiveTotal",
@@ -2651,8 +2661,8 @@ export type LiveMeterProfileData = {
   headerCustomization: typeof DEFAULT_SETTINGS.live.headerCustomization;
   columnOrder: LiveMeterColumnOrderState;
   sorting: LiveMeterSortingState;
-  /** Forbidden-damage ids for challenge watch — travels with the loadout. */
-  challengeWatch: typeof DEFAULT_SETTINGS.challengeWatch;
+  /** Challenge watch forbidden-damage groups — travels with the loadout. */
+  challengeWatch: ChallengeWatchState;
   /** Live theme colors + class/spec colors — travels with the loadout. */
   appearance: LiveAppearance;
 };
@@ -2749,7 +2759,7 @@ export function createDefaultLiveMeterProfileData(): LiveMeterProfileData {
       tankedPlayers: { ...DEFAULT_LIVE_SORT_SETTINGS.tankedPlayers },
       tankedSkills: { ...DEFAULT_LIVE_SORT_SETTINGS.tankedSkills },
     },
-    challengeWatch: { forbiddenDamageIds: [] as number[] },
+    challengeWatch: createDefaultChallengeWatchState(),
     appearance: createDefaultLiveAppearance(),
   };
 }
@@ -3476,9 +3486,10 @@ const DEFAULT_SETTINGS = {
   monitoring: createDefaultMonitoringSettingsState(),
   minimap: createDefaultMinimapConfig(),
   voice: createDefaultVoiceSettings(),
-  challengeWatch: {
-    forbiddenDamageIds: [] as number[],
-  },
+  challengeWatch: createDefaultChallengeWatchState(),
+  /** The user's own challenge presets — global, not tied to a loadout. */
+  challengePresets:
+    createDefaultChallengePresetLibrary() as ChallengePresetLibrary,
   live: {
     general: { ...DEFAULT_GENERAL_SETTINGS },
     columnLabels: createDefaultDpsColumnLabels(),
@@ -3639,6 +3650,15 @@ export const SETTINGS = {
     "challengeWatch",
     DEFAULT_SETTINGS.challengeWatch,
     LIVE_RUNE_STORE_OPTIONS,
+  ),
+  /**
+   * The user's challenge preset library. Its own small file (not inside
+   * monitoring.json): presets are shared by every loadout.
+   */
+  challengePresets: new RuneStore(
+    "challengePresets",
+    DEFAULT_SETTINGS.challengePresets,
+    RUNE_STORE_OPTIONS,
   ),
   live: {
     general: new RuneStore(

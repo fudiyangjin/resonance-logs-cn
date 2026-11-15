@@ -1,4 +1,4 @@
-import { getLocale, type AppLocale } from "$lib/i18n/index.svelte";
+import type { AppLocale } from "$lib/i18n/index.svelte";
 import {
   getGameData,
   getGameDataFallbackChain,
@@ -82,42 +82,23 @@ function buildCatalog(locale: AppLocale): DamageCatalogEntry[] {
     });
   }
 
+  // Search tie order, fixed once here so searches never sort per keystroke.
+  entries.sort(
+    (a, b) =>
+      Number(b.isGroup) - Number(a.isGroup) ||
+      (a.ids[0] ?? 0) - (b.ids[0] ?? 0),
+  );
   return entries;
 }
 
-/** Every named damage group and damage id, built once per locale. */
+/**
+ * Every named damage group and damage id, built once per locale, ordered
+ * groups first, then by (first) id. Immutable: searches return its entries.
+ */
 export function getDamageCatalog(locale: AppLocale): DamageCatalogEntry[] {
   const cached = CATALOG_BY_LOCALE.get(locale);
   if (cached) return cached;
   const built = buildCatalog(locale);
   CATALOG_BY_LOCALE.set(locale, built);
   return built;
-}
-
-/**
- * Case-insensitive substring search over damage/mechanic names. Returns at most
- * `limit` results (groups first) plus the total match count so the caller can
- * surface a "refine your search" hint instead of silently truncating.
- */
-export function searchForbiddenDamage(
-  query: string,
-  locale: AppLocale = getLocale(),
-  limit = 60,
-): { results: DamageSearchResult[]; total: number } {
-  const q = query.trim().toLowerCase();
-  if (!q) return { results: [], total: 0 };
-
-  const matched: DamageCatalogEntry[] = [];
-  for (const entry of getDamageCatalog(locale)) {
-    if (entry.nameLower.includes(q)) matched.push(entry);
-  }
-  matched.sort(
-    (a, b) =>
-      Number(b.isGroup) - Number(a.isGroup) || a.name.localeCompare(b.name),
-  );
-
-  return {
-    results: matched.slice(0, limit).map(({ nameLower: _n, ...rest }) => rest),
-    total: matched.length,
-  };
 }

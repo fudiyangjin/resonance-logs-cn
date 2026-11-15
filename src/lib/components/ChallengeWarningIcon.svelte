@@ -2,26 +2,29 @@
   import AlertTriangle from "virtual:icons/lucide/alert-triangle";
   import { tooltip } from "$lib/utils.svelte";
   import { t, getLocale } from "$lib/i18n/index.svelte";
-  import { getPresetForDamageId } from "$lib/challenge-presets";
-  import { lookupDamageIdName } from "$lib/config/recount-table";
+  import { SETTINGS } from "$lib/settings-store";
+  import type { ForbiddenHit } from "$lib/challenge-watch";
+  import {
+    describeForbiddenHits,
+    formatForbiddenHitsTooltip,
+  } from "$lib/challenge-watch-display";
 
-  let { ids = [] }: { ids?: number[] } = $props();
+  interface Props {
+    hits?: ForbiddenHit[];
+  }
 
-  // Resolve each matched damage_id to a readable name: prefer a curated preset
-  // label (names the challenge), else the game's own damage name. Dedupe so
-  // repeated ids of the same mechanic collapse into one line.
-  const detail = $derived.by(() => {
-    const locale = getLocale();
-    const labels = new Set<string>();
-    for (const id of ids) {
-      const preset = getPresetForDamageId(id);
-      labels.add(preset ? t(preset.labelKey) : lookupDamageIdName(id, locale));
-    }
-    return [...labels].join(", ");
-  });
+  let { hits = [] }: Props = $props();
 
+  // Each hit damage by its own name and id under the group that forbids it,
+  // with how many times it landed — never collapsed into a preset label.
   const tooltipText = $derived(
-    t("challengeWatch.warningTooltip", { ids: detail }),
+    formatForbiddenHitsTooltip(
+      describeForbiddenHits(
+        hits,
+        SETTINGS.challengeWatch.state.groups,
+        getLocale(),
+      ),
+    ),
   );
 </script>
 
@@ -29,7 +32,7 @@
   class="inline-flex shrink-0 items-center text-red-500"
   role="img"
   aria-label={t("challengeWatch.warningAria")}
-  {@attach tooltip(() => tooltipText)}
+  {@attach tooltip(() => tooltipText, { multiline: true })}
 >
   <AlertTriangle class="h-[1em] w-[1em]" />
 </span>

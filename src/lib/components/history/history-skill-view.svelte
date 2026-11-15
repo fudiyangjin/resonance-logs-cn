@@ -15,6 +15,7 @@
   import { resolveColumnLabel } from "$lib/column-labels";
   import {
     groupSkillsByRecount,
+    inlineSkillIdVisible,
     type RecountGroup,
     type SkillDisplayRow,
   } from "$lib/config/recount-table";
@@ -238,6 +239,9 @@
         header: resolveColumnLabel(labels[col.key], col.header),
       }));
   });
+  const idColumnVisible = $derived(
+    visibleSkillColumns.some((col) => col.key === "skillId"),
+  );
   const skillColumnHeader = $derived(
     skillType === "dps"
       ? resolveColumnLabel(
@@ -432,7 +436,7 @@
                   <span class="w-3 shrink-0"></span>
                 {/if}
                 <span class="truncate">{item.row.name}</span>
-                {#if item.row.showSkillId}
+                {#if inlineSkillIdVisible(item.row, false, { idColumnVisible, compact: false })}
                   <span class="text-muted-foreground/50 shrink-0 text-[10px]">
                     #{item.row.skillId}
                   </span>

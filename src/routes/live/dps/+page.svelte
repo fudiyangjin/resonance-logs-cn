@@ -10,6 +10,7 @@
   import PercentFormat from "$lib/components/percent-format.svelte";
   import LivePlayerPowerBadge from "$lib/components/live-player-power-badge.svelte";
   import ChallengeWarningIcon from "$lib/components/ChallengeWarningIcon.svelte";
+  import { collectForbiddenDamageIds } from "$lib/challenge-watch";
   import getDisplayName from "$lib/name-display";
   import { normalizeNameDisplaySetting } from "$lib/name-display";
   import { formatClassSpecLabel } from "$lib/class-labels";
@@ -20,7 +21,7 @@
 
   let liveData = $derived(liveView.combat);
   let forbiddenIds = $derived(
-    new Set(SETTINGS.challengeWatch.state.forbiddenDamageIds),
+    collectForbiddenDamageIds(SETTINGS.challengeWatch.state.groups),
   );
   let rawDpsData = $derived(
     liveData ? computePlayerRows(liveData, "dps", forbiddenIds) : [],
@@ -192,7 +193,7 @@
                     >{displayName || `#${player.displayUid}`}</span
                   >
                   {#if player.forbiddenHit}
-                    <ChallengeWarningIcon ids={player.forbiddenHitIds} />
+                    <ChallengeWarningIcon hits={player.forbiddenHits} />
                   {/if}
                   <LivePlayerPowerBadge
                     abilityScore={player.abilityScore}
@@ -383,7 +384,7 @@
                   >{displayName || `#${player.displayUid}`}</span
                 >
                 {#if player.forbiddenHit}
-                  <ChallengeWarningIcon ids={player.forbiddenHitIds} />
+                  <ChallengeWarningIcon hits={player.forbiddenHits} />
                 {/if}
                 <FantasyCastIcons
                   entityUuid={player.entityUuid}

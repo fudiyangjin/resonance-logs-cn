@@ -25,6 +25,7 @@ import {
   type LiveMeterProfileData,
 } from "./settings-store";
 import { normalizeDpsColumnLabels } from "./column-labels";
+import { normalizeChallengeWatch } from "./challenge-watch";
 import { untrack } from "svelte";
 
 type LiveStore<T> = { readonly state: T };
@@ -201,7 +202,9 @@ export function extractLiveProfileData(): LiveMeterProfileData {
       tankedPlayers: { ...stores.sorting.tankedPlayers.state },
       tankedSkills: { ...stores.sorting.tankedSkills.state },
     },
-    challengeWatch: { ...stores.challengeWatch.state },
+    // Explicit shape: a legacy challengeWatch.json loaded into the mirror
+    // store may still carry `forbiddenDamageIds`; it must not leak back.
+    challengeWatch: { groups: stores.challengeWatch.state.groups },
     appearance: { ...stores.appearance.state },
   });
 }
@@ -277,7 +280,9 @@ function applyProfileData(data: LiveMeterProfileData): void {
     cloned.sorting.tankedPlayers,
   );
   Object.assign(stores.sorting.tankedSkills.state, cloned.sorting.tankedSkills);
-  Object.assign(stores.challengeWatch.state, cloned.challengeWatch);
+  stores.challengeWatch.state.groups = normalizeChallengeWatch(
+    cloned.challengeWatch,
+  ).groups;
   Object.assign(stores.appearance.state, cloned.appearance);
 }
 

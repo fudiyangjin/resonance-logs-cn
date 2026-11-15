@@ -32,6 +32,10 @@ import {
 } from "./settings-store";
 import { normalizeDpsColumnLabels } from "./column-labels";
 import {
+  normalizeChallengeWatch,
+  type ChallengeWatchState,
+} from "./challenge-watch";
+import {
   normalizeSkillDamageProfile,
   SKILL_DAMAGE_FONT_DATA_URL,
   SKILL_DAMAGE_FONT_MAX_LENGTH,
@@ -945,9 +949,12 @@ const liveSortingEntrySchema = v.object({
   sortDesc: v.boolean(),
 });
 
-const challengeWatchSchema = v.object({
-  forbiddenDamageIds: numberArraySchema,
-});
+// Groups are sanitized entry by entry; an export from before groups carries
+// the flat `forbiddenDamageIds` list, which is converted into groups.
+const challengeWatchSchema = v.pipe(
+  v.looseObject({}),
+  v.transform((value): ChallengeWatchState => normalizeChallengeWatch(value)),
+);
 
 const customThemeColorsSchema = v.object({
   backgroundMain: v.string(),

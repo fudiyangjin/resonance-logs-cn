@@ -19,17 +19,23 @@ import {
   stopLiveProfilePersistence,
   switchLiveProfile,
 } from "./live-meter-profile.svelte";
+import type { ChallengeGroup, ChallengeWatchState } from "./challenge-watch";
 
 let originalMonitoring: MonitoringSettingsState;
 let originalEventUpdateRateMs: number;
 let originalShowFantasyCastIcons: boolean;
 let originalPlayerRowHeight: number;
-let originalForbiddenDamageIds: number[];
+let originalChallengeGroups: ChallengeGroup[];
 let originalClassColors: Record<string, string>;
 let originalUseClassSpecColors: boolean;
 let originalClassSpecColors: Record<string, string>;
 let originalHistory: LiveMeterProfileData["history"];
 let originalColumnLabels: LiveMeterProfileData["columnLabels"];
+
+/** A challenge watch holding one unnamed group with `ids`. */
+function watch(...ids: number[]): ChallengeWatchState {
+  return { groups: [{ id: "g", name: "", presetId: null, damageIds: ids }] };
+}
 
 function replaceMonitoringState(state: MonitoringSettingsState): void {
   const target = SETTINGS.monitoring.state;
@@ -50,7 +56,7 @@ function configureTwoLiveProfiles(): void {
   first.history.general.timelineLaneH = 51;
   first.columnLabels.live.players.first = "A Players";
   first.tableCustomization.playerRowHeight = 31;
-  first.challengeWatch = { forbiddenDamageIds: [111] };
+  first.challengeWatch = watch(111);
   first.appearance = {
     ...first.appearance,
     classColors: { ...first.appearance.classColors, Warrior: "#111111" },
@@ -67,7 +73,7 @@ function configureTwoLiveProfiles(): void {
   second.history.general.timelineLaneH = 62;
   second.columnLabels.live.players.first = "B Players";
   second.tableCustomization.playerRowHeight = 42;
-  second.challengeWatch = { forbiddenDamageIds: [222] };
+  second.challengeWatch = watch(222);
   second.appearance = {
     ...second.appearance,
     classColors: { ...second.appearance.classColors, Warrior: "#222222" },
@@ -109,9 +115,9 @@ beforeEach(() => {
     SETTINGS.live.general.state.showFantasyCastIcons;
   originalPlayerRowHeight =
     SETTINGS.live.tableCustomization.state.playerRowHeight;
-  originalForbiddenDamageIds = [
-    ...SETTINGS.challengeWatch.state.forbiddenDamageIds,
-  ];
+  originalChallengeGroups = deepCloneSettings(
+    SETTINGS.challengeWatch.state.groups,
+  );
   originalClassColors = { ...SETTINGS.live.appearance.state.classColors };
   originalUseClassSpecColors =
     SETTINGS.live.appearance.state.useClassSpecColors;
@@ -138,7 +144,7 @@ afterEach(() => {
     originalShowFantasyCastIcons;
   SETTINGS.live.tableCustomization.state.playerRowHeight =
     originalPlayerRowHeight;
-  SETTINGS.challengeWatch.state.forbiddenDamageIds = originalForbiddenDamageIds;
+  SETTINGS.challengeWatch.state.groups = originalChallengeGroups;
   SETTINGS.live.appearance.state.classColors = originalClassColors;
   SETTINGS.live.appearance.state.useClassSpecColors =
     originalUseClassSpecColors;
@@ -177,7 +183,7 @@ describe("live meter profile persistence", () => {
     SETTINGS.history.general.state.timelineLaneH = 73;
     SETTINGS.live.columnLabels.state.live.players.first = "Party";
     SETTINGS.live.tableCustomization.state.playerRowHeight = 55;
-    SETTINGS.challengeWatch.state.forbiddenDamageIds = [999];
+    SETTINGS.challengeWatch.state.groups = watch(999).groups;
     SETTINGS.live.appearance.state.classColors = {
       ...SETTINGS.live.appearance.state.classColors,
       Warrior: "#999999",
@@ -189,13 +195,13 @@ describe("live meter profile persistence", () => {
     expect(first!.history.general.timelineLaneH).toBe(73);
     expect(first!.columnLabels.live.players.first).toBe("Party");
     expect(first!.tableCustomization.playerRowHeight).toBe(55);
-    expect(first!.challengeWatch.forbiddenDamageIds).toEqual([999]);
+    expect(first!.challengeWatch).toEqual(watch(999));
     expect(first!.appearance.classColors["Warrior"]).toBe("#999999");
     expect(second!.general.eventUpdateRateMs).toBe(200);
     expect(second!.history.general.timelineLaneH).toBe(62);
     expect(second!.columnLabels.live.players.first).toBe("B Players");
     expect(second!.tableCustomization.playerRowHeight).toBe(42);
-    expect(second!.challengeWatch.forbiddenDamageIds).toEqual([222]);
+    expect(second!.challengeWatch).toEqual(watch(222));
     expect(second!.appearance.classColors["Warrior"]).toBe("#222222");
   });
 
@@ -203,7 +209,7 @@ describe("live meter profile persistence", () => {
     startLiveProfilePersistence();
     SETTINGS.live.general.state.eventUpdateRateMs = 844;
     SETTINGS.live.tableCustomization.state.playerRowHeight = 63;
-    SETTINGS.challengeWatch.state.forbiddenDamageIds = [888];
+    SETTINGS.challengeWatch.state.groups = watch(888).groups;
     SETTINGS.live.appearance.state.classColors = {
       ...SETTINGS.live.appearance.state.classColors,
       Warrior: "#888888",
@@ -214,7 +220,7 @@ describe("live meter profile persistence", () => {
     stopLiveProfilePersistence();
     SETTINGS.live.general.state.eventUpdateRateMs = 200;
     SETTINGS.live.tableCustomization.state.playerRowHeight = 20;
-    SETTINGS.challengeWatch.state.forbiddenDamageIds = [];
+    SETTINGS.challengeWatch.state.groups = [];
     SETTINGS.live.appearance.state.classColors = {
       ...SETTINGS.live.appearance.state.classColors,
       Warrior: "#000000",
@@ -224,7 +230,7 @@ describe("live meter profile persistence", () => {
 
     expect(SETTINGS.live.general.state.eventUpdateRateMs).toBe(844);
     expect(SETTINGS.live.tableCustomization.state.playerRowHeight).toBe(63);
-    expect(SETTINGS.challengeWatch.state.forbiddenDamageIds).toEqual([888]);
+    expect(SETTINGS.challengeWatch.state.groups).toEqual(watch(888).groups);
     expect(SETTINGS.live.appearance.state.classColors["Warrior"]).toBe(
       "#888888",
     );
@@ -237,7 +243,7 @@ describe("live meter profile persistence", () => {
     SETTINGS.live.general.state.eventUpdateRateMs = 955;
     SETTINGS.history.general.state.timelineLaneH = 95;
     SETTINGS.live.columnLabels.state.live.players.first = "Switched A";
-    SETTINGS.challengeWatch.state.forbiddenDamageIds = [777];
+    SETTINGS.challengeWatch.state.groups = watch(777).groups;
     switchLiveProfile("live-b");
 
     const flushedFirst = SETTINGS.monitoring.state.liveMeter.profiles.find(
@@ -246,13 +252,13 @@ describe("live meter profile persistence", () => {
     expect(flushedFirst.general.eventUpdateRateMs).toBe(955);
     expect(flushedFirst.history.general.timelineLaneH).toBe(95);
     expect(flushedFirst.columnLabels.live.players.first).toBe("Switched A");
-    expect(flushedFirst.challengeWatch.forbiddenDamageIds).toEqual([777]);
+    expect(flushedFirst.challengeWatch).toEqual(watch(777));
     expect(SETTINGS.live.general.state.eventUpdateRateMs).toBe(200);
     expect(SETTINGS.history.general.state.timelineLaneH).toBe(62);
     expect(SETTINGS.live.columnLabels.state.live.players.first).toBe(
       "B Players",
     );
-    expect(SETTINGS.challengeWatch.state.forbiddenDamageIds).toEqual([222]);
+    expect(SETTINGS.challengeWatch.state.groups).toEqual(watch(222).groups);
     await tick();
     expect(
       SETTINGS.monitoring.state.liveMeter.profiles.find(
@@ -305,7 +311,7 @@ describe("live meter reference look", () => {
 
     const expected = {
       ...createReferenceLiveMeterProfileData(),
-      challengeWatch: { forbiddenDamageIds: [111] },
+      challengeWatch: watch(111),
     };
     expect(extractLiveProfileData()).toEqual(expected);
     const { id, name, ...stored } = findLiveProfile("live-a")!;

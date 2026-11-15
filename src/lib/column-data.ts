@@ -51,6 +51,15 @@ const formatDecimal = (value: number) =>
   });
 const formatPercent = (value: number) => `${formatDecimal(value)}%`;
 
+function skillIdColumn(descriptionKey: MessageKey) {
+  return createColumn({
+    key: "skillId",
+    labelKey: "columns.skill.id",
+    descriptionKey,
+    format: (value: number) => String(value),
+  });
+}
+
 export const historyDpsPlayerColumns = [
   createColumn({
     key: "totalDmg",
@@ -127,12 +136,7 @@ export const historyDpsPlayerColumns = [
 ] as const;
 
 export const historyDpsSkillColumns = [
-  createColumn({
-    key: "skillId",
-    labelKey: "columns.skill.id",
-    descriptionKey: "columns.description.skill.id",
-    format: (value: number) => String(value),
-  }),
+  skillIdColumn("columns.description.skill.id"),
   createColumn({
     key: "totalDmg",
     labelKey: "columns.dps.totalDmg",
@@ -417,6 +421,7 @@ export const liveTankedPlayerColumns = [
 ] as const;
 
 export const liveTankedSkillColumns = [
+  skillIdColumn("columns.description.tanked.skill.id"),
   createColumn({
     key: "totalDmg",
     labelKey: "columns.tanked.total",
@@ -585,6 +590,7 @@ export const historyTankedPlayerColumns = [
 ] as const;
 
 export const historyTankedSkillColumns = [
+  skillIdColumn("columns.description.tanked.skill.id"),
   createColumn({
     key: "totalDmg",
     labelKey: "columns.tanked.total",
@@ -684,6 +690,7 @@ export const historyTankedSkillColumns = [
 ] as const;
 
 export const historyHealSkillColumns = [
+  skillIdColumn("columns.description.heal.skill.id"),
   createColumn({
     key: "totalDmg",
     labelKey: "columns.heal.total",

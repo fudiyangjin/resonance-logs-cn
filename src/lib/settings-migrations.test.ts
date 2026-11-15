@@ -727,7 +727,10 @@ describe("incremental monitoring migration", () => {
     ] as typeof state.liveMeter.profiles;
 
     const liveProfileData = defaultLiveProfileData();
-    liveProfileData.challengeWatch = { forbiddenDamageIds: [42] };
+    // The legacy store still held the flat id list of that era.
+    liveProfileData.challengeWatch = {
+      forbiddenDamageIds: [42],
+    } as unknown as typeof liveProfileData.challengeWatch;
     liveProfileData.appearance = {
       ...liveProfileData.appearance,
       themeColors: {
@@ -753,7 +756,9 @@ describe("incremental monitoring migration", () => {
     expect(migrated.schemaVersion).toBe(CURRENT_MONITORING_SCHEMA_VERSION);
     expect(migrated.liveMeter.profiles).toHaveLength(2);
     for (const profile of migrated.liveMeter.profiles) {
-      expect(profile.challengeWatch.forbiddenDamageIds).toEqual([42]);
+      expect(profile.challengeWatch).toEqual({
+        groups: [{ id: "legacy", name: "", presetId: null, damageIds: [42] }],
+      });
       expect(profile.appearance.themeColors.primary).toBe("#123456");
       expect(profile.appearance.classColors["Warrior"]).toBe("#abcdef");
       expect(profile.appearance.useClassSpecColors).toBe(true);

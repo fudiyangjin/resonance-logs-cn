@@ -6,6 +6,7 @@
 import { listen, type UnlistenFn, type Event } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { commands } from "./bindings";
+import type { ForbiddenHit } from "./challenge-watch";
 import type {
   BossDbmEvent,
   BossHealth,
@@ -123,7 +124,8 @@ export type PlayerRow = {
   effectiveTotal: number;
   effectiveDps: number;
   forbiddenHit: boolean;
-  forbiddenHitIds: number[];
+  /** Challenge-watch forbidden damages this player took, with hit counts. */
+  forbiddenHits: ForbiddenHit[];
 };
 
 // Command wrappers (still using generated bindings)

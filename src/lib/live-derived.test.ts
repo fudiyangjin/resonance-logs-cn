@@ -104,4 +104,26 @@ describe("computePlayerRows", () => {
     expect(rows[0]?.dps).toBe(200);
     expect(rows[0]?.effectiveDps).toBe(100);
   });
+
+  it("reports each forbidden damage taken with its hit count", () => {
+    const data = payload(stats({ total: "100", hits: "1" }));
+    const taken = (hits: string) => ({ hits }) as never;
+    data.entities[0]!.takenSkills = {
+      110098140104: taken("3"),
+      110098130103: taken("0"),
+      555: taken("7"),
+    };
+
+    const rows = computePlayerRows(
+      data,
+      "dps",
+      new Set([110098130103, 110098140104, 999]),
+    );
+    expect(rows[0]?.forbiddenHit).toBe(true);
+    expect(rows[0]?.forbiddenHits).toEqual([{ id: 110098140104, hits: 3 }]);
+
+    const clean = computePlayerRows(data, "dps", new Set([999]));
+    expect(clean[0]?.forbiddenHit).toBe(false);
+    expect(clean[0]?.forbiddenHits).toEqual([]);
+  });
 });

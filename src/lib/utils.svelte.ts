@@ -67,11 +67,18 @@ export function getClassIcon(class_name: string): string {
 }
 
 // https://svelte.dev/docs/svelte/@attach#Attachment-factories
-export function tooltip(getContent: () => string): Attachment {
+/**
+ * Tippy tooltip whose text follows `getContent`. `multiline` keeps the
+ * text's `\n` line breaks (other tooltips collapse whitespace as before).
+ */
+export function tooltip(
+  getContent: () => string,
+  options: { multiline?: boolean } = {},
+): Attachment {
   return (element: Element) => {
     const instance = tippy(element, {
       content: getContent(),
-      theme: "resonance",
+      theme: options.multiline ? "resonance multiline" : "resonance",
       arrow: true,
       delay: [200, 80],
       duration: [120, 80],

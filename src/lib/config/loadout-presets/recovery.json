@@ -1058,6 +1058,7 @@
         "hitsPerMinute": false
       },
       "tankedSkillBreakdown": {
+        "skillId": false,
         "totalDmg": true,
         "dps": true,
         "dmgPct": true,
@@ -1254,6 +1255,7 @@
       "hitsPerMinute": false
     },
     "tankedSkillBreakdown": {
+      "skillId": false,
       "totalDmg": true,
       "dps": true,
       "dmgPct": true,
@@ -1439,6 +1441,7 @@
       },
       "healSkills": {
         "order": [
+          "skillId",
           "totalDmg",
           "dps",
           "effectiveTotal",
@@ -1474,6 +1477,7 @@
       },
       "tankedSkills": {
         "order": [
+          "skillId",
           "totalDmg",
           "dps",
           "effectiveTotal",

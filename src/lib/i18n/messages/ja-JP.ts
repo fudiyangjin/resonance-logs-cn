@@ -342,21 +342,38 @@ export const jaJPMessages = {
     "メインウィンドウのUIにプリセットカラーを適用します（実時統計ウィンドウには影響しません）",
   "challengeWatch.title": "チャレンジ監視（禁止ダメージ）",
   "challengeWatch.description":
-    "メカニック／ダメージ名で検索して禁止ダメージを追加します。現在の戦闘区間でいずれかのメンバーが受けると、DPS／ヒール／被ダメのリストで名前の後ろに赤い三角が表示され、途中でチャレンジ失敗を判断できます。",
+    "禁止ダメージをチャレンジごとのグループにまとめて追加します。メカニック／ダメージ名または ID で検索できます。現在の戦闘区間でいずれかのメンバーが受けると、DPS／ヒール／被ダメのリストで名前の後ろに赤い三角が表示され、途中でチャレンジ失敗を判断できます。赤い三角にカーソルを合わせると、どのダメージを受けたか（名前・ID・回数）を確認できます。",
   "challengeWatch.presets.title": "チャレンジプリセット（ワンクリック）",
   "challengeWatch.preset.n17Fuyoupao": "N17-墓煌・浮遊砲",
+  "challengeWatch.presets.mine": "マイプリセット",
+  "challengeWatch.presets.mineEmpty":
+    "グループの「マイプリセットに保存」を押すと、どの装備セットからもここでワンクリック追加できます",
+  "challengeWatch.presets.added": "追加済み",
+  "challengeWatch.presets.delete":
+    "このプリセットを削除（追加済みのグループはそのまま）",
   "challengeWatch.searchPlaceholder":
-    "メカニック／ダメージ名で検索（例：浮遊砲）",
-  "challengeWatch.searchNoResults": "一致するダメージ名が見つかりません",
-  "challengeWatch.searchCount": "{count} 件一致",
+    "メカニック／ダメージ名または ID で検索（例：浮遊砲、#110098）",
+  "challengeWatch.searchHint":
+    "ID は前方一致で検索できます。完全な ID を入力して Enter で直接追加",
+  "challengeWatch.searchNoResults": "一致するダメージが見つかりません",
   "challengeWatch.groupCount": "ダメージ {count} 件",
-  "challengeWatch.searchMore":
-    "先頭 {shown} 件のみ表示、検索を絞り込んでください",
   "challengeWatch.configuredTitle": "禁止中のダメージ",
   "challengeWatch.empty": "禁止ダメージは未追加です",
   "challengeWatch.remove": "削除",
+  "challengeWatch.group.new": "新しいグループ",
+  "challengeWatch.group.untitled": "名前なしグループ",
+  "challengeWatch.group.nameLabel": "グループ名",
+  "challengeWatch.group.addDamage": "ダメージを追加",
+  "challengeWatch.group.done": "完了",
+  "challengeWatch.group.noDamage":
+    "まだダメージがありません。「ダメージを追加」で名前または ID を検索",
+  "challengeWatch.group.saveAsPreset": "マイプリセットに保存",
+  "challengeWatch.group.updatePreset": "マイプリセットを更新",
+  "challengeWatch.group.presetSaved": "プリセット保存済み",
+  "challengeWatch.group.remove": "グループを削除",
   "challengeWatch.warningAria": "禁止ダメージを受けました",
-  "challengeWatch.warningTooltip": "禁止ダメージを受けた：{ids}",
+  "challengeWatch.warningTitle": "禁止ダメージを受けた",
+  "challengeWatch.warningItem": "・{label} ×{hits}",
   "settings.language.title": "言語",
   "settings.language.description": "UI言語を選択します。",
   "settings.language.current": "現在の言語",
@@ -504,6 +521,7 @@ export const jaJPMessages = {
   "columns.description.heal.player.hits": "プレイヤーの総回復回数を表示",
   "columns.description.heal.player.hitsPerMinute":
     "プレイヤーの分間回復回数を表示",
+  "columns.description.heal.skill.id": "回復スキルの ID",
   "columns.description.heal.skill.total": "スキルが行った総回復量を表示",
   "columns.description.heal.skill.hps": "スキルの秒間回復量（HPS）を表示",
   "columns.description.heal.skill.effectiveTotal":
@@ -543,6 +561,8 @@ export const jaJPMessages = {
   "columns.description.tanked.player.hits": "プレイヤーの総被命中数を表示",
   "columns.description.tanked.player.hitsPerMinute":
     "プレイヤーの分間被命中数を表示",
+  "columns.description.tanked.skill.id":
+    "被ダメージのスキル ID。同名のモンスタースキルを区別できます",
   "columns.description.tanked.skill.total": "スキルから受けた総ダメージを表示",
   "columns.description.tanked.skill.tps":
     "スキルからの秒間被ダメージ（DTPS）を表示",

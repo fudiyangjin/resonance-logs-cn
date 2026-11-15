@@ -3,9 +3,10 @@
   import AbbreviatedNumber from "$lib/components/abbreviated-number.svelte";
   import PercentFormat from "$lib/components/percent-format.svelte";
   import { SvelteSet } from "svelte/reactivity";
-  import type {
-    RecountGroup,
-    SkillDisplayRow,
+  import {
+    inlineSkillIdVisible,
+    type RecountGroup,
+    type SkillDisplayRow,
   } from "$lib/config/recount-table";
   import { formatNumber, t } from "$lib/i18n/index.svelte";
   import { ipcCompare, type IpcDecimal } from "$lib/ipc-decimal";
@@ -151,6 +152,9 @@
     else expandedGroups.add(groupId);
   }
 
+  const idColumnVisible = $derived(
+    visibleColumns.some((col) => col.key === "skillId"),
+  );
   const effectiveSortKey = $derived(compactMode ? compactPrimaryKey : sortKey);
   const effectiveSortDesc = $derived(compactMode ? true : sortDesc);
 
@@ -337,7 +341,7 @@
                     <span class="w-3 shrink-0"></span>
                   {/if}
                   <span class="truncate">{skill.name}</span>
-                  {#if !skill.isGroup && visibleColumns.some((col) => col.key === "skillId")}
+                  {#if inlineSkillIdVisible(skill, skill.isGroup, { idColumnVisible, compact: true })}
                     <span class="shrink-0 text-xs opacity-60"
                       >#{skill.skillId}</span
                     >
@@ -439,7 +443,7 @@
                   <span class="w-3 shrink-0"></span>
                 {/if}
                 <span class="truncate">{skill.name}</span>
-                {#if skill.showSkillId}
+                {#if inlineSkillIdVisible(skill, skill.isGroup, { idColumnVisible, compact: false })}
                   <span class="text-muted-foreground/50 shrink-0 text-[10px]">
                     #{skill.skillId}
                   </span>

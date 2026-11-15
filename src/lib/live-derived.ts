@@ -12,6 +12,7 @@ import {
   ipcSum,
   type IpcDecimal,
 } from "$lib/ipc-decimal";
+import type { ForbiddenHit } from "$lib/challenge-watch";
 
 type Metric = "dps" | "heal" | "tanked";
 
@@ -75,12 +76,13 @@ export function computePlayerRowsFromEntities(
       const bossDmg =
         metric === "dps" ? ipcBigInt(entity.damageBossOnly.total) : 0n;
 
-      const forbiddenHitIds =
-        forbiddenIds && forbiddenIds.size > 0
-          ? [...forbiddenIds].filter(
-              (id) => !ipcIsZero(entity.takenSkills[id]?.hits),
-            )
-          : [];
+      const forbiddenHits: ForbiddenHit[] = [];
+      for (const id of forbiddenIds ?? []) {
+        const takenHits = entity.takenSkills[id]?.hits;
+        if (!ipcIsZero(takenHits)) {
+          forbiddenHits.push({ id, hits: ipcNumber(takenHits) });
+        }
+      }
 
       const row: PlayerRow = {
         entityUuid: entity.entityUuid,
@@ -113,8 +115,8 @@ export function computePlayerRowsFromEntities(
         effectiveTotal: ipcNumber(effectiveTotal),
         effectiveDps:
           metric === "heal" ? ipcRatio(effectiveTotal, elapsedMs, 1_000) : 0,
-        forbiddenHit: forbiddenHitIds.length > 0,
-        forbiddenHitIds,
+        forbiddenHit: forbiddenHits.length > 0,
+        forbiddenHits,
       };
 
       return row;

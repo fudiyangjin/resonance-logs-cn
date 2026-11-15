@@ -343,20 +343,38 @@ export const enUSMessages = {
     "Apply a preset palette to the main window UI (does not affect the live overlay)",
   "challengeWatch.title": "Challenge Watch (Forbidden Damage)",
   "challengeWatch.description":
-    "Search and add forbidden damage by mechanic / damage name. When any member takes one during the current combat segment, a red triangle appears after their name in the DPS / Heal / Tanked lists, so you can tell mid-run whether the challenge has failed.",
+    "Add forbidden damage in groups, one per challenge, searching by mechanic / damage name or ID. When any member takes one during the current combat segment, a red triangle appears after their name in the DPS / Heal / Tanked lists, so you can tell mid-run whether the challenge has failed. Hover the triangle to see exactly which damage it was (name, ID and hit count).",
   "challengeWatch.presets.title": "Challenge presets (one-click)",
   "challengeWatch.preset.n17Fuyoupao": "N17-Tomb Blaze · Drone Cannon",
+  "challengeWatch.presets.mine": "My presets",
+  "challengeWatch.presets.mineEmpty":
+    'Click "Save as my preset" on a group to add it here in one click from any loadout',
+  "challengeWatch.presets.added": "Added",
+  "challengeWatch.presets.delete":
+    "Delete this preset (groups already added are kept)",
   "challengeWatch.searchPlaceholder":
-    'Search by mechanic / damage name, e.g. "Drone Cannon"',
-  "challengeWatch.searchNoResults": "No matching damage names found",
-  "challengeWatch.searchCount": "{count} matches",
+    'Search by mechanic / damage name or ID, e.g. "Drone Cannon", "#110098"',
+  "challengeWatch.searchHint":
+    "IDs match by prefix; type a full ID and press Enter to add it directly",
+  "challengeWatch.searchNoResults": "No matching damage found",
   "challengeWatch.groupCount": "{count} damages",
-  "challengeWatch.searchMore": "Showing first {shown}, refine your search",
   "challengeWatch.configuredTitle": "Forbidden damages",
   "challengeWatch.empty": "No forbidden damage added yet",
   "challengeWatch.remove": "Remove",
+  "challengeWatch.group.new": "New group",
+  "challengeWatch.group.untitled": "Untitled group",
+  "challengeWatch.group.nameLabel": "Group name",
+  "challengeWatch.group.addDamage": "Add damage",
+  "challengeWatch.group.done": "Done",
+  "challengeWatch.group.noDamage":
+    'No damage yet — click "Add damage" to search by name or ID',
+  "challengeWatch.group.saveAsPreset": "Save as my preset",
+  "challengeWatch.group.updatePreset": "Update my preset",
+  "challengeWatch.group.presetSaved": "Saved as preset",
+  "challengeWatch.group.remove": "Delete group",
   "challengeWatch.warningAria": "Took forbidden damage",
-  "challengeWatch.warningTooltip": "Took forbidden damage: {ids}",
+  "challengeWatch.warningTitle": "Took forbidden damage",
+  "challengeWatch.warningItem": "· {label} ×{hits}",
   "settings.language.title": "Language",
   "settings.language.description": "Choose the UI language.",
   "settings.language.current": "Current Language",
@@ -518,6 +536,7 @@ export const enUSMessages = {
     "Shows the player's total healing count",
   "columns.description.heal.player.hitsPerMinute":
     "Shows the player's healing count per minute",
+  "columns.description.heal.skill.id": "Healing skill ID",
   "columns.description.heal.skill.total":
     "Shows total healing done by the skill",
   "columns.description.heal.skill.hps":
@@ -567,6 +586,8 @@ export const enUSMessages = {
     "Shows the player's total hits taken",
   "columns.description.tanked.player.hitsPerMinute":
     "Shows the player's hits taken per minute",
+  "columns.description.tanked.skill.id":
+    "Skill ID of damage taken; tells apart same-name monster skills",
   "columns.description.tanked.skill.total":
     "Shows total damage taken from the skill",
   "columns.description.tanked.skill.tps":

@@ -46,6 +46,7 @@ import {
   type SkillMonitorState,
 } from "./settings-store";
 import { normalizeDpsColumnLabels } from "./column-labels";
+import { normalizeChallengeWatch } from "./challenge-watch";
 import { extractSkillDamageFromMonster } from "./skill-damage-migration";
 import {
   createDefaultSkillDamageState,
@@ -392,6 +393,8 @@ function normalizeLiveProfiles(
       headerCustomization: mergeLiveHeaderCustomization(
         profile.headerCustomization,
       ),
+      // Converts the legacy flat `forbiddenDamageIds` list into groups.
+      challengeWatch: normalizeChallengeWatch(profile.challengeWatch),
       id: nextUniqueId(profile.id, "live", seen),
     };
   });

@@ -318,6 +318,11 @@
   color: var(--tooltip-bg);
   box-shadow: none;
 }
+/* Opt-in via tooltip(..., { multiline: true }): keep `\n` line breaks. */
+.tippy-box[data-theme~='multiline'] .tippy-content {
+  white-space: pre-line;
+  line-height: 1.4;
+}
 
 .toast-root {
   box-shadow: var(--toast-shadow);

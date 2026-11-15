@@ -455,7 +455,11 @@ describe("parseLoadoutExport", () => {
       name: "Live",
     });
     profile.general.showFantasyCastIcons = true;
-    profile.challengeWatch = { forbiddenDamageIds: [123, 456] };
+    profile.challengeWatch = {
+      groups: [
+        { id: "g1", name: "Mine", presetId: null, damageIds: [123, 456] },
+      ],
+    };
     profile.appearance = {
       ...profile.appearance,
       classColors: { Warrior: "#abcdef" },
@@ -472,9 +476,11 @@ describe("parseLoadoutExport", () => {
     const result = parseLoadoutExport(data);
     expect(result.success).toBe(true);
     if (!result.success) return;
-    expect(result.output.liveProfile.challengeWatch.forbiddenDamageIds).toEqual(
-      [123, 456],
-    );
+    expect(result.output.liveProfile.challengeWatch).toEqual({
+      groups: [
+        { id: "g1", name: "Mine", presetId: null, damageIds: [123, 456] },
+      ],
+    });
     expect(result.output.liveProfile.appearance.classColors).toEqual({
       Warrior: "#abcdef",
     });
@@ -489,6 +495,34 @@ describe("parseLoadoutExport", () => {
       result.output.liveProfile.columnLabels.history.skills.columns.dps,
     ).toBe("每秒");
     expect(parseLoadoutExport(result.output).success).toBe(true);
+  });
+
+  it("converts a legacy flat forbidden-damage list into challenge groups", () => {
+    const data = validExport();
+    const profile = omitProfileId({
+      ...createDefaultLiveMeterProfileData(),
+      id: "unused",
+      name: "Live",
+    });
+    data["liveProfile"] = {
+      ...profile,
+      challengeWatch: { forbiddenDamageIds: [110098130103, 123, 123, -1] },
+    };
+
+    const result = parseLoadoutExport(data);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.output.liveProfile.challengeWatch).toEqual({
+      groups: [
+        {
+          id: "preset:n17-fuyoupao",
+          name: "",
+          presetId: "n17-fuyoupao",
+          damageIds: [110098130103],
+        },
+        { id: "legacy", name: "", presetId: null, damageIds: [123] },
+      ],
+    });
   });
 
   it("accepts a legacy export predating the overlay text-style toggles", () => {

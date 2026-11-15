@@ -258,6 +258,21 @@ export function lookupChildDamageIdName(
   return lookupDamageIdName(damageId, locale);
 }
 
+/**
+ * The damage id's own name, else its recount group's name; `null` when
+ * neither table names it (callers show the bare id instead of "Unknown").
+ */
+export function lookupKnownDamageIdName(
+  damageId: number,
+  locale: AppLocale = getLocale(),
+): string | null {
+  const individual = lookupDamageAttrIdName(damageId, locale);
+  if (individual) return individual;
+  const recount = getDamageToRecount(locale).get(damageId);
+  if (!recount) return null;
+  return lookupRecountName(recount.recountId, recount.recountName, locale);
+}
+
 export function buildSkillDisplayRow(
   skillId: number,
   stats: RawSkillStatsLike,
@@ -378,19 +393,42 @@ export function groupSkillsByRecount(
     const extrema = displayExtrema(raw.extrema);
     group.maxDmg = extrema?.max ?? null;
     group.minDmg = extrema?.min ?? null;
-    const nameCount = new Map<string, number>();
-    for (const skill of group.skills) {
-      nameCount.set(skill.name, (nameCount.get(skill.name) ?? 0) + 1);
-    }
-    for (const skill of group.skills) {
-      skill.showSkillId = (nameCount.get(skill.name) ?? 0) > 1;
-    }
+    markDuplicateNames(group.skills);
     group.skills.sort((a, b) => ipcCompare(b.raw.totalValue, a.raw.totalValue));
     return group;
   });
 
+  markDuplicateNames(ungrouped);
   groups.sort((a, b) => ipcCompare(b.raw.totalValue, a.raw.totalValue));
   ungrouped.sort((a, b) => ipcCompare(b.raw.totalValue, a.raw.totalValue));
 
   return { groups, ungrouped };
+}
+
+/** Flags rows sharing a name with a sibling so their damage ids can tell them apart. */
+function markDuplicateNames(rows: SkillDisplayRow[]): void {
+  const nameCount = new Map<string, number>();
+  for (const row of rows) {
+    nameCount.set(row.name, (nameCount.get(row.name) ?? 0) + 1);
+  }
+  for (const row of rows) {
+    row.showSkillId = (nameCount.get(row.name) ?? 0) > 1;
+  }
+}
+
+/**
+ * Whether a skill row shows its `#id` after the name. With the ID column
+ * visible the id already has its own cell, except in compact mode where the
+ * name cell is the only one rendered.
+ */
+export function inlineSkillIdVisible(
+  row: Pick<SkillDisplayRow, "showSkillId">,
+  isGroup: boolean,
+  options: { idColumnVisible: boolean; compact: boolean },
+): boolean {
+  if (isGroup) return false;
+  const duplicateName = row.showSkillId === true;
+  return options.compact
+    ? options.idColumnVisible || duplicateName
+    : duplicateName && !options.idColumnVisible;
 }

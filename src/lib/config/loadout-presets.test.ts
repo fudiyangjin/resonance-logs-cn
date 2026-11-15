@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { buildLoadoutPresets } from "./loadout-presets";
 import { createDefaultSkillCdRegion } from "$lib/skill-cd-layout";
 import { listWhitePanels } from "$lib/hud-color-schemes";
+import { CHALLENGE_PRESETS } from "$lib/challenge-presets";
 import {
   SETTINGS,
   createDefaultMonitoringSettingsState,
@@ -112,9 +113,16 @@ describe("built-in loadout presets", () => {
       } = preset.data.liveProfile;
       expect(name, preset.id).toBe("");
       expect(live, preset.id).toEqual(reference);
-      expect(presetChallengeWatch.forbiddenDamageIds, preset.id).toHaveLength(
-        7,
-      );
+      // The shipped JSON keeps the legacy flat list; import turns it into
+      // the built-in N17 preset group.
+      expect(presetChallengeWatch.groups, preset.id).toEqual([
+        {
+          id: "preset:n17-fuyoupao",
+          name: "",
+          presetId: "n17-fuyoupao",
+          damageIds: CHALLENGE_PRESETS[0]!.damageIds,
+        },
+      ]);
     }
   });
 
