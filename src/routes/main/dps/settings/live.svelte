@@ -5,6 +5,7 @@
   import SettingsSlider from "./settings-slider.svelte";
   import SettingsInput from "./settings-input.svelte";
   import SettingsColumnLabel from "./settings-column-label.svelte";
+  import ExcludedMonsters from "./excluded-monsters.svelte";
   import {
     SETTINGS,
     DEFAULT_LIVE_TANKED_PLAYER_STATS,
@@ -34,6 +35,7 @@
   // Collapsible section state - all collapsed by default
   let expandedSections = $state({
     general: false,
+    excludedTargets: false,
     dpsPlayers: false,
     dpsSkills: false,
     healPlayers: false,
@@ -345,6 +347,35 @@
                 value: "firstMonster",
               },
             ]}
+          />
+        </div>
+      {/if}
+    </div>
+
+    <!-- Excluded damage targets -->
+    <div
+      class="bg-card/40 border-border/60 overflow-hidden rounded-lg border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+    >
+      <button
+        type="button"
+        class="hover:bg-muted/30 flex w-full items-center justify-between px-4 py-3 transition-colors"
+        onclick={() => toggleSection("excludedTargets")}
+      >
+        <h2 class="text-foreground text-base font-semibold">
+          {t("settings.live.excludedMonsters")}
+        </h2>
+        <ChevronDown
+          class="text-muted-foreground h-5 w-5 transition-transform duration-200 {expandedSections.excludedTargets
+            ? 'rotate-180'
+            : ''}"
+        />
+      </button>
+      {#if expandedSections.excludedTargets}
+        <div class="px-4 pb-4">
+          <ExcludedMonsters
+            ids={SETTINGS.live.general.state.excludedDamageMonsterIds ?? []}
+            onchange={(ids) =>
+              (SETTINGS.live.general.state.excludedDamageMonsterIds = ids)}
           />
         </div>
       {/if}

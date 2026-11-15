@@ -8,6 +8,7 @@ import { buildConfiguredBuffPlan } from "$lib/buff-monitor-plan";
 import { buffCompositeSpecs, ensureBuffComposites } from "$lib/buff-composites";
 import { expandBuffSelection } from "$lib/config/buff-name-table";
 import { activeProfile as getActiveProfile } from "$lib/skill-monitor-profile.svelte.js";
+import { ensureExcludedDamageMonsterIds } from "$lib/damage-exclusion";
 import { ensureEntityDurationEntries } from "$lib/entity-duration-entries";
 import { ensureMonsterSkillEntries } from "$lib/monster-skill-entries";
 import {
@@ -283,6 +284,11 @@ export function buildMonitorRuntimeSnapshot(): MonitorRuntimeSnapshot {
       eventUpdateRateMs: SETTINGS.live.general.state.eventUpdateRateMs,
       trainingWindowMs: SETTINGS.live.general.state.trainingWindowMs,
       trainingLockPolicy: SETTINGS.live.general.state.trainingLockPolicy,
+      excludedDamageMonsterIds: uniqueSortedNumbers(
+        ensureExcludedDamageMonsterIds(
+          SETTINGS.live.general.state.excludedDamageMonsterIds,
+        ),
+      ),
     },
     skill: buildSkillRuntimeSnapshot(),
     monster: buildMonsterRuntimeSnapshot(),

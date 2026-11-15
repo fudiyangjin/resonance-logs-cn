@@ -125,6 +125,9 @@ pub struct SegmentController {
     opener_buffer: Vec<DomainEnvelope>,
     training_window_ms: u64,
     training_lock_policy: TrainingLockPolicy,
+    /// Sorted monster ids whose incoming player damage never reaches combat:
+    /// it neither opens a segment nor locks training, and is not accepted.
+    excluded_damage_monster_ids: Vec<i32>,
 }
 
 impl Default for SegmentController {
@@ -135,6 +138,7 @@ impl Default for SegmentController {
             opener_buffer: Vec::new(),
             training_window_ms: TRAINING_WINDOW_MS,
             training_lock_policy: TrainingLockPolicy::EliteDummies,
+            excluded_damage_monster_ids: Vec::new(),
         }
     }
 }
@@ -151,6 +155,24 @@ impl SegmentController {
 
     pub fn set_training_lock_policy(&mut self, policy: TrainingLockPolicy) {
         self.training_lock_policy = policy;
+    }
+
+    /// `ids` must be sorted and deduplicated (the runtime snapshot's
+    /// `normalize` guarantees it), so hit lookups can binary search.
+    pub fn set_excluded_damage_monster_ids(&mut self, ids: &[i32]) {
+        debug_assert!(ids.windows(2).all(|pair| pair[0] < pair[1]));
+        self.excluded_damage_monster_ids.clear();
+        self.excluded_damage_monster_ids.extend_from_slice(ids);
+    }
+
+    /// Whether `hit` is player damage on an excluded monster. Such a hit is
+    /// left out of combat entirely, the same way the training gate drops hits
+    /// on other targets; raw-hit consumers (counters, damage numbers) still
+    /// see it.
+    #[must_use]
+    #[inline]
+    pub fn excludes_damage_hit(&self, hit: &DomainHit) -> bool {
+        is_excluded_damage_hit(&self.excluded_damage_monster_ids, hit)
     }
 
     #[must_use]
@@ -208,7 +230,7 @@ impl SegmentController {
         for envelope in events {
             match &envelope.event {
                 DomainEvent::PauseChanged { is_paused } => paused = *is_paused,
-                DomainEvent::HitResolved(hit) if !paused => {
+                DomainEvent::HitResolved(hit) if !paused && !self.excludes_damage_hit(hit) => {
                     if eligible_hit.is_none() && is_eligible_player_damage(hit) {
                         eligible_hit = Some((hit, envelope.event_index));
                     }
@@ -697,6 +719,18 @@ impl SegmentController {
 
 fn is_eligible_player_damage(hit: &DomainHit) -> bool {
     hit.kind == HitKind::Damage && hit.source_is_player && hit.amount > 0
+}
+
+/// `excluded` is sorted. Only player damage is excluded: a hit with an
+/// unresolved target monster id cannot match and is kept.
+#[inline]
+fn is_excluded_damage_hit(excluded: &[i32], hit: &DomainHit) -> bool {
+    !excluded.is_empty()
+        && hit.kind == HitKind::Damage
+        && hit.source_is_player
+        && hit
+            .target_monster_id
+            .is_some_and(|id| excluded.binary_search(&id).is_ok())
 }
 
 fn is_training_opener(hit: &DomainHit, policy: TrainingLockPolicy) -> bool {
@@ -1349,5 +1383,92 @@ mod tests {
 
         assert_eq!(decision.accept_hits_from_event_index, Some(1));
         assert_eq!(decision.combat_gate, CombatGate::Only(monster));
+    }
+
+    const EXCLUDED_MONSTER: i32 = 3_000_090;
+
+    #[test]
+    fn excluded_monster_hits_do_not_start_a_segment() {
+        let mut controller = SegmentController::new();
+        controller.set_excluded_damage_monster_ids(&[EXCLUDED_MONSTER]);
+        let mut scheduler = DeadlineScheduler::new();
+
+        let excluded = [hit_event(
+            1,
+            1_000,
+            target(40),
+            Some(EXCLUDED_MONSTER),
+            true,
+        )];
+        let decision = controller.preflight_batch(&excluded, false, &mut scheduler);
+        assert_eq!(decision.segment_id, None);
+        assert!(matches!(controller.state(), SegmentState::Idle { .. }));
+
+        let mut excluded_hit = hit_event(2, 1_100, target(40), Some(EXCLUDED_MONSTER), true);
+        excluded_hit.event_index = 0;
+        let mut monster_hit = hit_event(2, 1_100, target(41), Some(9_001), true);
+        monster_hit.event_index = 1;
+        let decision =
+            controller.preflight_batch(&[excluded_hit, monster_hit], false, &mut scheduler);
+        assert_eq!(decision.segment_id, Some(SegmentId(1)));
+        assert_eq!(decision.accept_hits_from_event_index, Some(1));
+    }
+
+    #[test]
+    fn first_monster_policy_skips_excluded_monsters() {
+        let mut controller = SegmentController::new();
+        controller.set_training_lock_policy(TrainingLockPolicy::FirstMonster);
+        controller.set_excluded_damage_monster_ids(&[EXCLUDED_MONSTER]);
+        let mut scheduler = DeadlineScheduler::new();
+        controller.arm_training(&mut scheduler);
+        let mut excluded_hit = hit_event(1, 2_000, target(40), Some(EXCLUDED_MONSTER), true);
+        excluded_hit.event_index = 0;
+        let monster = target(41);
+        let mut monster_hit = hit_event(1, 2_000, monster, Some(9_001), true);
+        monster_hit.event_index = 1;
+
+        let decision =
+            controller.preflight_batch(&[excluded_hit, monster_hit], false, &mut scheduler);
+
+        assert_eq!(decision.combat_gate, CombatGate::Only(monster));
+        assert!(matches!(
+            controller.state(),
+            SegmentState::Recording {
+                mode: RecordingMode::Training {
+                    monster_id: 9_001,
+                    ..
+                },
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn exclusion_only_matches_player_damage_on_listed_monsters() {
+        let mut controller = SegmentController::new();
+        let excluded_event = hit_event(1, 1_000, target(40), Some(EXCLUDED_MONSTER), false);
+        let DomainEvent::HitResolved(excluded) = excluded_event.event else {
+            unreachable!("hit_event builds a hit");
+        };
+        assert!(!controller.excludes_damage_hit(&excluded), "empty list");
+
+        controller.set_excluded_damage_monster_ids(&[115, EXCLUDED_MONSTER]);
+        assert!(controller.excludes_damage_hit(&excluded));
+
+        let mut other_monster = excluded;
+        other_monster.target_monster_id = Some(9_001);
+        assert!(!controller.excludes_damage_hit(&other_monster));
+
+        let mut unresolved = excluded;
+        unresolved.target_monster_id = None;
+        assert!(!controller.excludes_damage_hit(&unresolved));
+
+        let mut healing = excluded;
+        healing.kind = HitKind::Healing;
+        assert!(!controller.excludes_damage_hit(&healing));
+
+        let mut monster_source = excluded;
+        monster_source.source_is_player = false;
+        assert!(!controller.excludes_damage_hit(&monster_source));
     }
 }

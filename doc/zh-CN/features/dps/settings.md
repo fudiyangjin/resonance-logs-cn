@@ -39,6 +39,17 @@
 
 打桩流程见 [例：用打桩模式测一轮 3 分钟输出](./examples/dummy-rotation.md)。
 
+### 排除目标
+
+**{{ui:settings.live.excludedMonsters}}** 列出不该算作输出的怪物。打到这些怪物的伤害不计入 DPS 统计和历史记录；只打它们不会开始一场战斗，「{{ui:settings.live.trainingLockPolicy.firstMonster}}」也不会锁定到它们。
+
+- **{{ui:settings.live.excludedMonsters.presets}}**：点一下即可添加。目前内置 **{{ui:settings.live.excludedMonsters.preset.relayDummy}}**（#3000090）：这个战斗幻想摆出的敌对木桩会把受到伤害的一部分转给周围怪物，打木桩本身不是真实输出。转出去的伤害照常算在召唤者名下，技能列表里显示为「鲨鱼王-木桩被动」。
+- **{{ui:settings.live.excludedMonsters.searchTitle}}**：按名称或怪物 ID 搜索后点击添加；表里查不到的纯数字 ID 也能直接添加。
+- 点击已排除的怪物即可移除。
+
+> [!NOTE]
+> 伤害数字浮窗和计数器不受影响，仍会显示、计入这些命中。修改只影响之后的命中，已保存的历史记录不会改变。
+
 ## 历史
 
 历史标签有一组与实时相同结构的通用设置和列设置，只在打开历史详情时生效。另有时间轴相关设置：

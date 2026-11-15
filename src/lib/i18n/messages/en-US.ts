@@ -984,6 +984,21 @@ export const enUSMessages = {
     "Elite dummies only lock training dummies 115 / 122. First monster hit locks the next monster you or your summons damage.",
   "settings.live.trainingLockPolicy.eliteDummies": "Elite Dummies",
   "settings.live.trainingLockPolicy.firstMonster": "First Monster Hit",
+  "settings.live.excludedMonsters": "Excluded Targets",
+  "settings.live.excludedMonstersDescription":
+    "Damage dealt to these monsters is left out of DPS stats and history. Hitting only them does not start an encounter or lock the training target. Damage numbers and counters are unaffected; saved records do not change.",
+  "settings.live.excludedMonsters.presets": "Presets (one click)",
+  "settings.live.excludedMonsters.preset.relayDummy":
+    "Ravine Aberration dummy (Arcane! Sharkspin Torrent)",
+  "settings.live.excludedMonsters.presetAdded": "Added",
+  "settings.live.excludedMonsters.listTitle": "Excluded",
+  "settings.live.excludedMonsters.empty": "No monsters excluded yet",
+  "settings.live.excludedMonsters.remove": "Click to remove",
+  "settings.live.excludedMonsters.searchTitle": "Search Monsters",
+  "settings.live.excludedMonsters.searchPlaceholder":
+    "Search by name or monster ID, click to exclude",
+  "settings.live.excludedMonsters.searchEmpty": "No matching monsters",
+  "settings.live.excludedMonsters.added": "Excluded",
   "settings.network.packetCapture": "Packet Capture",
   "settings.network.method": "Capture Method",
   "settings.network.methodDescription":

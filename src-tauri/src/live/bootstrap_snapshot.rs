@@ -91,8 +91,7 @@ impl Default for MonitorRuntimeSnapshot {
 
 impl MonitorRuntimeSnapshot {
     pub fn normalize(mut self) -> Result<Self, String> {
-        self.live.event_update_rate_ms = self.live.event_update_rate_ms.clamp(50, 2000);
-        self.live.training_window_ms = self.live.training_window_ms.clamp(30_000, 600_000);
+        self.live.normalize();
 
         dedup_and_sort(&mut self.skill.monitored_skill_ids);
         if self.skill.monitored_skill_ids.len() > 10 {
@@ -310,12 +309,19 @@ impl Default for I18nRuntimeSnapshot {
     }
 }
 
+/// Upper bound on monsters excluded from damage statistics; the UI allows
+/// the same number.
+pub const MAX_EXCLUDED_DAMAGE_MONSTERS: usize = 1000;
+
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase", default)]
 pub struct LiveRuntimeSnapshot {
     pub event_update_rate_ms: u64,
     pub training_window_ms: u64,
     pub training_lock_policy: TrainingLockPolicy,
+    /// Monster ids whose incoming player damage is not accepted into combat
+    /// statistics. Sorted and deduplicated by `normalize`.
+    pub excluded_damage_monster_ids: Vec<i32>,
 }
 
 impl Default for LiveRuntimeSnapshot {
@@ -324,7 +330,21 @@ impl Default for LiveRuntimeSnapshot {
             event_update_rate_ms: 200,
             training_window_ms: TRAINING_WINDOW_MS,
             training_lock_policy: TrainingLockPolicy::EliteDummies,
+            excluded_damage_monster_ids: Vec::new(),
         }
+    }
+}
+
+impl LiveRuntimeSnapshot {
+    /// Clamps the timings and keeps the excluded ids positive, sorted and
+    /// bounded, so lookups can binary search.
+    fn normalize(&mut self) {
+        self.event_update_rate_ms = self.event_update_rate_ms.clamp(50, 2000);
+        self.training_window_ms = self.training_window_ms.clamp(30_000, 600_000);
+        self.excluded_damage_monster_ids.retain(|id| *id > 0);
+        dedup_and_sort(&mut self.excluded_damage_monster_ids);
+        self.excluded_damage_monster_ids
+            .truncate(MAX_EXCLUDED_DAMAGE_MONSTERS);
     }
 }
 
@@ -847,6 +867,37 @@ mod tests {
             serde_json::from_str(r#"{"eventUpdateRateMs":200,"trainingWindowMs":183000}"#)
                 .expect("legacy live snapshot deserializes");
         assert_eq!(live.training_lock_policy, TrainingLockPolicy::EliteDummies);
+    }
+
+    #[test]
+    fn missing_excluded_damage_monsters_deserialize_to_empty() {
+        let live: LiveRuntimeSnapshot =
+            serde_json::from_str(r#"{"eventUpdateRateMs":200,"trainingWindowMs":183000}"#)
+                .expect("legacy live snapshot deserializes");
+        assert!(live.excluded_damage_monster_ids.is_empty());
+    }
+
+    #[test]
+    fn excluded_damage_monsters_are_positive_sorted_deduplicated_and_bounded() {
+        let mut snapshot = MonitorRuntimeSnapshot::default();
+        snapshot.live.excluded_damage_monster_ids = vec![3_000_090, -1, 115, 0, 3_000_090];
+        let normalized = snapshot.normalize().expect("snapshot is valid");
+        assert_eq!(
+            normalized.live.excluded_damage_monster_ids,
+            vec![115, 3_000_090]
+        );
+
+        let mut too_many = MonitorRuntimeSnapshot::default();
+        too_many.live.excluded_damage_monster_ids = (1..=1_200).rev().collect();
+        let normalized = too_many.normalize().expect("snapshot is valid");
+        assert_eq!(
+            normalized.live.excluded_damage_monster_ids.len(),
+            MAX_EXCLUDED_DAMAGE_MONSTERS
+        );
+        assert_eq!(
+            normalized.live.excluded_damage_monster_ids.first(),
+            Some(&1)
+        );
     }
 
     #[test]

@@ -39,6 +39,17 @@ Death replay columns are shared between Live and History.
 
 For the training dummy workflow, see [Example: Test a 3-minute rotation with training dummy mode](./examples/dummy-rotation.md).
 
+### Excluded targets
+
+**{{ui:settings.live.excludedMonsters}}** lists monsters whose damage should not count as output. Damage dealt to them is left out of DPS stats and history; hitting only them does not start an encounter, and **{{ui:settings.live.trainingLockPolicy.firstMonster}}** never locks onto them.
+
+- **{{ui:settings.live.excludedMonsters.presets}}**: add with one click. The built-in entry is **{{ui:settings.live.excludedMonsters.preset.relayDummy}}** (#3000090): this battle imagine places a hostile dummy that passes part of the damage it takes on to nearby monsters, so hitting the dummy itself is not real output. The damage it passes on still counts for the summoner and shows in the skill list as the dummy passive.
+- **{{ui:settings.live.excludedMonsters.searchTitle}}**: search by name or monster ID and click to add; a numeric ID missing from the tables can be added directly.
+- Click an excluded monster to remove it.
+
+> [!NOTE]
+> The damage-number overlay and counters are unaffected and still show and count these hits. Changes apply to later hits only; saved history records do not change.
+
 ## History
 
 The History tab has general settings and column settings with the same structure as Live; they only take effect when you open history details. There are also timeline-related settings:

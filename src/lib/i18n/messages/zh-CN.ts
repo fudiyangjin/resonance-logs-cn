@@ -897,6 +897,21 @@ export const zhCNMessages = {
     "精英木桩只认训练场 115 / 122；首次命中怪物会锁定本人（含召唤物）打中的下一只怪物。",
   "settings.live.trainingLockPolicy.eliteDummies": "精英木桩",
   "settings.live.trainingLockPolicy.firstMonster": "首次命中怪物",
+  "settings.live.excludedMonsters": "排除目标",
+  "settings.live.excludedMonstersDescription":
+    "打到这些怪物的伤害不计入 DPS 统计和历史记录，只打它们也不会开始一场战斗或锁定打桩目标。伤害数字和计数器不受影响；已保存的记录不会改变。",
+  "settings.live.excludedMonsters.presets": "预置（一键添加）",
+  "settings.live.excludedMonsters.preset.relayDummy":
+    "涧流的异影木桩（奥义！鲛旋湍流）",
+  "settings.live.excludedMonsters.presetAdded": "已添加",
+  "settings.live.excludedMonsters.listTitle": "已排除",
+  "settings.live.excludedMonsters.empty": "还没有排除任何怪物",
+  "settings.live.excludedMonsters.remove": "点击移除",
+  "settings.live.excludedMonsters.searchTitle": "搜索怪物",
+  "settings.live.excludedMonsters.searchPlaceholder":
+    "按名称或怪物 ID 搜索，点击即可排除",
+  "settings.live.excludedMonsters.searchEmpty": "没有匹配的怪物",
+  "settings.live.excludedMonsters.added": "已排除",
   "settings.network.packetCapture": "抓包",
   "settings.network.method": "捕获方式",
   "settings.network.methodDescription":

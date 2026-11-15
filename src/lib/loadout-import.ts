@@ -46,6 +46,7 @@ import { ensureEntityDurationEntries } from "./entity-duration-entries";
 import { ensureMonsterSkillEntries } from "./monster-skill-entries";
 import { ensureRosterSkillEntries } from "./roster-skill-entries";
 import { DEFAULT_ROSTER_PANEL_WIDTH } from "./monster-roster-settings";
+import { ensureExcludedDamageMonsterIds } from "./damage-exclusion";
 import { entriesFromLegacySkillDurationIds } from "./entity-duration-migration";
 import { ensureShieldDetailStyle } from "./skill-monitor-normalize";
 import { migrateLegacyMonsterPanels } from "./monster-panel-migration";
@@ -933,6 +934,14 @@ const liveGeneralEntries = {
   trainingLockPolicy: v.optional(
     v.picklist(["eliteDummies", "firstMonster"]),
     "eliteDummies",
+  ),
+  // Invalid ids are dropped rather than rejecting the whole loadout.
+  excludedDamageMonsterIds: v.optional(
+    v.pipe(
+      v.array(v.unknown()),
+      v.transform((ids: unknown[]) => ensureExcludedDamageMonsterIds(ids)),
+    ),
+    [],
   ),
 };
 

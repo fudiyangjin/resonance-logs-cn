@@ -1102,7 +1102,12 @@ monsterSkillCasts?: MonsterSkillCastState[] }
  */
 export type LiveMonsterRosterPayload = { revision: number; localUuid: string | null; currentTargetUuid: string | null; monsters: RosterMonsterState[]; players: RosterPlayerState[] }
 export type LivePullWindow = "live" | "hud-overlay"
-export type LiveRuntimeSnapshot = { eventUpdateRateMs: number; trainingWindowMs: number; trainingLockPolicy: TrainingLockPolicy }
+export type LiveRuntimeSnapshot = { eventUpdateRateMs: number; trainingWindowMs: number; trainingLockPolicy: TrainingLockPolicy;
+/**
+ * Monster ids whose incoming player damage is not accepted into combat
+ * statistics. Sorted and deduplicated by `normalize`.
+ */
+excludedDamageMonsterIds: number[] }
 export type LiveScenePayload = { revision: number; sceneId: number | null; dungeonDifficulty: number | null; localClassId: number | null; localTalentStageCfgId: number | null }
 /**
  * Skill damage topic: the retained windows of collected local hits and

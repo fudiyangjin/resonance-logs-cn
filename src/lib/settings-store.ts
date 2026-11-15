@@ -3057,6 +3057,10 @@ const DEFAULT_GENERAL_SETTINGS = {
   eventUpdateRateMs: 200,
   trainingWindowMs: 183_000,
   trainingLockPolicy: "eliteDummies" as "eliteDummies" | "firstMonster",
+  /** Monster ids whose incoming player damage is left out of the DPS stats.
+   * Shared by the spread defaults, so it is only ever replaced, never
+   * mutated in place. */
+  excludedDamageMonsterIds: [] as number[],
 };
 
 export function createDefaultHistorySettings() {

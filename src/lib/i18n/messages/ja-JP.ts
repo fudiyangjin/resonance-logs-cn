@@ -958,6 +958,22 @@ export const jaJPMessages = {
     "エリートダミーは訓練用 115 / 122 のみ。最初のモンスター命中は、自分または召喚物が次にダメージを与えたモンスターをロックします。",
   "settings.live.trainingLockPolicy.eliteDummies": "エリートダミー",
   "settings.live.trainingLockPolicy.firstMonster": "最初のモンスター命中",
+  "settings.live.excludedMonsters": "除外対象",
+  "settings.live.excludedMonstersDescription":
+    "これらのモンスターへのダメージは DPS 統計と履歴に含めません。これらだけを攻撃しても戦闘は始まらず、訓練ターゲットもロックされません。ダメージ数値とカウンターには影響せず、保存済みの記録も変わりません。",
+  "settings.live.excludedMonsters.presets": "プリセット（ワンクリック追加）",
+  "settings.live.excludedMonsters.preset.relayDummy":
+    "渓流の異影のダミー（奥義！シャークトルネード）",
+  "settings.live.excludedMonsters.presetAdded": "追加済み",
+  "settings.live.excludedMonsters.listTitle": "除外中",
+  "settings.live.excludedMonsters.empty": "除外しているモンスターはありません",
+  "settings.live.excludedMonsters.remove": "クリックで削除",
+  "settings.live.excludedMonsters.searchTitle": "モンスター検索",
+  "settings.live.excludedMonsters.searchPlaceholder":
+    "名前またはモンスター ID で検索、クリックで除外",
+  "settings.live.excludedMonsters.searchEmpty":
+    "一致するモンスターがありません",
+  "settings.live.excludedMonsters.added": "除外済み",
   "settings.network.packetCapture": "パケットキャプチャ",
   "settings.network.method": "キャプチャ方式",
   "settings.network.methodDescription":

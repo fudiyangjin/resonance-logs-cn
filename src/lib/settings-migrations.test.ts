@@ -180,6 +180,43 @@ describe("monitoring settings reconciliation", () => {
     ).toEqual([false, true, false]);
   });
 
+  it("defaults excluded damage monsters to empty and sanitizes stored ids", () => {
+    expect(
+      createDefaultLiveMeterProfileData().general.excludedDamageMonsterIds,
+    ).toEqual([]);
+
+    const state = createDefaultMonitoringSettingsState();
+    const legacy = state.liveMeter.profiles[0]!;
+    delete (legacy.general as Partial<typeof legacy.general>)
+      .excludedDamageMonsterIds;
+
+    const dirty = {
+      ...createDefaultLiveMeterProfileData(),
+      id: "live-dirty",
+      name: "Dirty",
+    };
+    (dirty.general as unknown as Record<string, unknown>)[
+      "excludedDamageMonsterIds"
+    ] = [3_000_090, 0, "115", 3_000_090, 115];
+
+    const invalid = {
+      ...createDefaultLiveMeterProfileData(),
+      id: "live-invalid",
+      name: "Invalid",
+    };
+    (invalid.general as unknown as Record<string, unknown>)[
+      "excludedDamageMonsterIds"
+    ] = "3000090";
+    state.liveMeter.profiles = [legacy, dirty, invalid];
+
+    const repaired = reconcileMonitoringState(state);
+    expect(
+      repaired.liveMeter.profiles.map(
+        (profile) => profile.general.excludedDamageMonsterIds,
+      ),
+    ).toEqual([[], [3_000_090, 115], []]);
+  });
+
   it("backfills the overlay text-style toggles onto legacy skill profiles", () => {
     const state = createDefaultMonitoringSettingsState();
     const legacy = state.skillMonitor.profiles[0]! as unknown as Record<

@@ -497,6 +497,42 @@ describe("parseLoadoutExport", () => {
     expect(parseLoadoutExport(result.output).success).toBe(true);
   });
 
+  it("defaults and sanitizes the excluded damage monsters", () => {
+    const legacy = validExport();
+    const legacyProfile = omitProfileId({
+      ...createDefaultLiveMeterProfileData(),
+      id: "unused",
+      name: "Legacy",
+    });
+    delete (legacyProfile.general as Partial<typeof legacyProfile.general>)
+      .excludedDamageMonsterIds;
+    legacy["liveProfile"] = legacyProfile;
+    const legacyResult = parseLoadoutExport(legacy);
+    expect(legacyResult.success).toBe(true);
+    if (!legacyResult.success) return;
+    expect(
+      legacyResult.output.liveProfile.general.excludedDamageMonsterIds,
+    ).toEqual([]);
+
+    const dirty = validExport();
+    const dirtyProfile = omitProfileId({
+      ...createDefaultLiveMeterProfileData(),
+      id: "unused",
+      name: "Dirty",
+    });
+    (dirtyProfile.general as unknown as Record<string, unknown>)[
+      "excludedDamageMonsterIds"
+    ] = [3_000_090, -1, "115", 3_000_090, 1.5, 115];
+    dirty["liveProfile"] = dirtyProfile;
+    const dirtyResult = parseLoadoutExport(dirty);
+    expect(dirtyResult.success).toBe(true);
+    if (!dirtyResult.success) return;
+    expect(
+      dirtyResult.output.liveProfile.general.excludedDamageMonsterIds,
+    ).toEqual([3_000_090, 115]);
+    expect(parseLoadoutExport(dirtyResult.output).success).toBe(true);
+  });
+
   it("converts a legacy flat forbidden-damage list into challenge groups", () => {
     const data = validExport();
     const profile = omitProfileId({

@@ -128,6 +128,8 @@ impl LiveCore {
             .set_training_window_ms(config.live.training_window_ms);
         core.segments
             .set_training_lock_policy(config.live.training_lock_policy);
+        core.segments
+            .set_excluded_damage_monster_ids(&config.live.excluded_damage_monster_ids);
         core.request_publications(now, true);
         Ok(core)
     }
@@ -194,6 +196,7 @@ impl LiveCore {
                                 is_recording(self.segments.state()),
                                 paused,
                                 combat_gate,
+                                self.segments.excludes_damage_hit(hit),
                                 hit,
                             ) =>
                     {
@@ -415,6 +418,8 @@ impl LiveCore {
             .set_training_window_ms(config.live.training_window_ms);
         self.segments
             .set_training_lock_policy(config.live.training_lock_policy);
+        self.segments
+            .set_excluded_damage_monster_ids(&config.live.excluded_damage_monster_ids);
         self.projections.apply_config(
             Arc::clone(&config),
             &self.entities,
@@ -765,13 +770,17 @@ fn is_recording(state: &SegmentState) -> bool {
     matches!(state, SegmentState::Recording { .. })
 }
 
+/// An excluded hit (player damage on a monster the user excluded) stays a raw
+/// `HitResolved`, so combat, history and coverage skip it while counters and
+/// the damage-number HUD still see it.
 fn accepts_hit(
     recording: bool,
     paused: bool,
     gate: CombatGate,
+    excluded: bool,
     hit: &crate::live::runtime::events::DomainHit,
 ) -> bool {
-    recording && !paused && gate.accepts(hit)
+    recording && !paused && !excluded && gate.accepts(hit)
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -1067,10 +1076,40 @@ mod tests {
             generation: 1,
         };
         let hit = hit(target);
-        assert!(!accepts_hit(true, true, CombatGate::AllowAll, &hit));
-        assert!(!accepts_hit(false, false, CombatGate::AllowAll, &hit));
-        assert!(!accepts_hit(true, false, CombatGate::BlockAll, &hit));
-        assert!(accepts_hit(true, false, CombatGate::Only(target), &hit));
+        assert!(!accepts_hit(true, true, CombatGate::AllowAll, false, &hit));
+        assert!(!accepts_hit(
+            false,
+            false,
+            CombatGate::AllowAll,
+            false,
+            &hit
+        ));
+        assert!(!accepts_hit(true, false, CombatGate::BlockAll, false, &hit));
+        assert!(accepts_hit(
+            true,
+            false,
+            CombatGate::Only(target),
+            false,
+            &hit
+        ));
+    }
+
+    #[test]
+    fn excluded_damage_hits_are_not_accepted() {
+        let target = EntityRef {
+            uuid: EntityUuid(20),
+            generation: 1,
+        };
+        let hit = hit(target);
+        assert!(accepts_hit(true, false, CombatGate::AllowAll, false, &hit));
+        assert!(!accepts_hit(true, false, CombatGate::AllowAll, true, &hit));
+        assert!(!accepts_hit(
+            true,
+            false,
+            CombatGate::Only(target),
+            true,
+            &hit
+        ));
     }
 
     #[test]

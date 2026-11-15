@@ -47,6 +47,7 @@ import {
 } from "./settings-store";
 import { normalizeDpsColumnLabels } from "./column-labels";
 import { normalizeChallengeWatch } from "./challenge-watch";
+import { ensureExcludedDamageMonsterIds } from "./damage-exclusion";
 import { extractSkillDamageFromMonster } from "./skill-damage-migration";
 import {
   createDefaultSkillDamageState,
@@ -359,6 +360,9 @@ function normalizeLiveProfiles(
         ...defaults.general,
         ...profile.general,
         showFantasyCastIcons: profile.general?.showFantasyCastIcons === true,
+        excludedDamageMonsterIds: ensureExcludedDamageMonsterIds(
+          profile.general?.excludedDamageMonsterIds,
+        ),
       },
       history: normalizeHistorySettings(profile.history),
       columnLabels: normalizeDpsColumnLabels(profile.columnLabels),
