@@ -21,12 +21,14 @@ export const RESOURCE_SECTION_STACK_OFFSET = 64;
 export const PROFESSION_COUNT_SECTION_KEY = "professionCount";
 
 /**
- * What a section draws. The weapon bar's two halves and the shield knight's
- * side bar come from the class's fight resource template; the flower rotation
- * is hand configured in `class_resources.json`.
+ * What a section draws. The weapon bar's two halves, the flame berserker's
+ * crimson mark orb and the shield knight's side bar come from the class's
+ * fight resource template; the flower rotation is hand configured in
+ * `class_resources.json`.
  */
 export type ResourceSectionContent =
   | { type: "bar" }
+  | { type: "axeBall" }
   | { type: "dots" }
   | { type: "siderLine" }
   | { type: "flowerRotation"; definition: FlowerRotationResourceDefinition }
@@ -65,6 +67,18 @@ function sectionEntries(classKey: string): SectionEntry[] {
     label: t("gameOverlay.resource.section.bar"),
     content: { type: "bar" },
   });
+  // The prefab draws the orb to the right of the bar; it is its own section so
+  // it can be placed, scaled and shown without the bar.
+  const axeBall = template.resources.find(
+    (resource) => resource.ui === "axeBall",
+  );
+  if (axeBall && layout.axeBall) {
+    result.push({
+      key: resourceKey("axeBall", axeBall.id),
+      label: t("gameOverlay.resource.section.axeBall"),
+      content: { type: "axeBall" },
+    });
+  }
   const dot = template.resources.find((resource) => resource.ui === "dot");
   if (dot) {
     result.push({

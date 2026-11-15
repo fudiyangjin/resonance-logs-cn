@@ -230,6 +230,16 @@ describe("configured buff monitor plan", () => {
 
     const hiddenPlan = buildConfiguredBuffPlan(barProfile(false));
     expect(hiddenPlan.publishedIds).not.toContain(35102);
+
+    // Showing only the axe ball still needs its unlock buff.
+    const ballOnly = barProfile(true);
+    const hidden = { position: { x: 0, y: 0 }, scale: 1, visible: false };
+    ballOnly.resourceSectionLayouts = {
+      "bar:13011:13017": hidden,
+      "charges:13001:13007": hidden,
+      professionCount: hidden,
+    };
+    expect(buildConfiguredBuffPlan(ballOnly).publishedIds).toContain(2208430);
   });
 
   it("lets the flower section keep its buffs out of the catch-all only while shown", () => {

@@ -24,6 +24,10 @@ export type DotRowLayout = {
 };
 
 export type AxeBallLayout = {
+  /**
+   * Prefab rect, right of the bar. The orb is its own resource section drawn
+   * at that section's origin, so only `w`/`h` are used.
+   */
   rect: Rect;
   background: string;
   light: string;
@@ -210,7 +214,10 @@ export function getResourceBarLayout(
   return RESOURCE_BAR_LAYOUTS[classKey];
 }
 
-/** Bounding box of the bar part (everything except the dot row). */
+/**
+ * Bounding box of the bar part: everything except the dot row and the axe
+ * ball, which are sections of their own.
+ */
 export function barPartBounds(layout: ResourceBarLayout): Rect {
   const rects: Rect[] = [layout.frame.rect, layout.progress];
   if (layout.beastFrames) {
@@ -218,7 +225,6 @@ export function barPartBounds(layout: ResourceBarLayout): Rect {
   }
   if (layout.inner) rects.push(layout.inner);
   if (layout.gem) rects.push(layout.gem);
-  if (layout.axeBall) rects.push(layout.axeBall.rect);
   if (layout.guitar) rects.push(layout.guitar.track);
   const left = Math.min(...rects.map((rect) => rect.x));
   const top = Math.min(...rects.map((rect) => rect.y));

@@ -50,6 +50,42 @@ describe("ensureResourceSections", () => {
     ).toEqual(["bar", "dots", "siderLine", "professionCount"]);
   });
 
+  it("puts the flame berserker's axe ball right below the bar", () => {
+    const sections = ensureResourceSections(
+      profile({ selectedClass: "flame_berserker" }),
+    );
+    expect(sections.map((section) => section.key)).toEqual([
+      "bar:13011:13017",
+      "axeBall:13021:13027",
+      "charges:13001:13007",
+      "professionCount",
+    ]);
+    expect(sections[1]?.layout).toEqual({
+      position: { x: 100, y: 200 + RESOURCE_SECTION_STACK_OFFSET },
+      scale: 1.2,
+      visible: true,
+    });
+  });
+
+  it("keeps the axe ball shown when every other section is hidden", () => {
+    const hidden = { position: { x: 0, y: 0 }, scale: 1, visible: false };
+    const sections = ensureResourceSections(
+      profile({
+        selectedClass: "flame_berserker",
+        resourceSectionLayouts: {
+          "bar:13011:13017": hidden,
+          "charges:13001:13007": hidden,
+          professionCount: hidden,
+        },
+      }),
+    );
+    expect(
+      sections
+        .filter((section) => section.layout.visible)
+        .map((section) => section.content.type),
+    ).toEqual(["axeBall"]);
+  });
+
   it("keeps layouts stored under the earlier bar and charges keys", () => {
     const stored = { position: { x: 7, y: 8 }, scale: 1.5, visible: false };
     const sections = ensureResourceSections(

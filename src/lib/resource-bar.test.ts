@@ -12,6 +12,7 @@ import {
   shooterForm,
   type FightResTemplate,
 } from "./resource-bar";
+import { barPartBounds, getResourceBarLayout } from "./resource-bar-layouts";
 
 function buff(baseId: number, createTimeMs = 1_000, durationMs = 10_000) {
   return {
@@ -193,6 +194,16 @@ describe("shooterForm", () => {
     expect(shooterForm(buffs())).toBe("normal");
     expect(shooterForm(buffs(buff(2203290)))).toBe("hawk");
     expect(shooterForm(buffs(buff(2203290), buff(2203040)))).toBe("wolf");
+  });
+});
+
+describe("barPartBounds", () => {
+  it("leaves the axe ball to its own section without moving the bar", () => {
+    const bounds = barPartBounds(getResourceBarLayout("flame_berserker")!);
+    expect(bounds.x).toBeCloseTo(-3.4);
+    expect(bounds.y).toBeCloseTo(-11.2);
+    expect(bounds.w).toBeCloseTo(226);
+    expect(bounds.h).toBeCloseTo(51.7);
   });
 });
 

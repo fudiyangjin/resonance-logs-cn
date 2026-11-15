@@ -1479,8 +1479,6 @@ export const jaJPMessages = {
   "skillMonitor.profile.changeClass": "設定のクラスを変更",
   "skillMonitor.profile.currentClass": "設定のクラス：{name}",
   "skillMonitor.profile.resourceClass": "{name} · クラスリソース",
-  "skillMonitor.profile.axeBallHelp":
-    "赤痕の球はリソースバーと連動し、クラスの条件を満たすと表示されます。",
   "skillMonitor.profile.classChangeImpact":
     "「{from}」から「{to}」に変更すると、監視スキル {skills} 件とスキル音声設定 {voices} 件が削除されます。他の監視設定とリソースの配置は保持されます。",
   "skillMonitor.profile.privateCopyHelp":
@@ -2432,6 +2430,7 @@ export const jaJPMessages = {
     "ここをドラッグして Game Overlay ウィンドウを移動",
   "gameOverlay.group.resource": "リソースエリア",
   "gameOverlay.resource.section.bar": "リソースバー",
+  "gameOverlay.resource.section.axeBall": "赤痕オーブ",
   "gameOverlay.resource.section.dots": "リソースポイント",
   "gameOverlay.resource.section.siderLine": "シールドバー",
   "gameOverlay.resource.section.professionCount": "職業カウンター",

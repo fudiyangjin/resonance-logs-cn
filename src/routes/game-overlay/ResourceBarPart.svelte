@@ -6,7 +6,6 @@
     revealAxes,
   } from "$lib/bar-motion.svelte.js";
   import {
-    axeBallView,
     barMotionOf,
     lastOpenResource,
     resourceRatio,
@@ -49,10 +48,6 @@
   );
   /** `lab_progress` shows the main resource: the Guitar one when present. */
   const progressResource = $derived(layout.guitar ? guitarEnergy : line);
-  const axeBall = $derived(
-    layout.axeBall ? lastOpenResource(bar, "axeBall") : null,
-  );
-  const ball = $derived(axeBall ? axeBallView(axeBall.now, axeBall.max) : null);
 
   // The coloured bar follows a buff timer, except on the guitar prefab where
   // `img_bar` is a Line resource filled by `SetFilled`.
@@ -164,20 +159,6 @@
 
     {#if layout.gem && bar.barEffectOpen}
       <img class="gem" src={layout.gem.image} alt="" style={place(layout.gem)} />
-    {/if}
-
-    {#if layout.axeBall && ball}
-      {@const axe = layout.axeBall}
-      <div class="axe-ball" style={place(axe.rect)}>
-        <img class="axe-ball-bg" src={axe.background} alt="" />
-        <div class="axe-ball-fill" style:height={`${ball.fill * 62}px`}>
-          <img src={axe.light} alt="" />
-        </div>
-        {#if ball.full}
-          <img class="axe-ball-adorn" src={axe.adorn} alt="" />
-        {/if}
-        <div class="axe-ball-num">{ball.percent}%</div>
-      </div>
     {/if}
   </div>
 </div>
@@ -303,61 +284,5 @@
     width: 2px;
     height: 20px;
     background-color: #ed896a;
-  }
-
-  .axe-ball {
-    z-index: 5;
-  }
-
-  .axe-ball-bg,
-  .axe-ball-adorn,
-  .axe-ball-num,
-  .axe-ball-fill {
-    position: absolute;
-  }
-
-  .axe-ball-bg {
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  /* `img_light`: vertical fill from the bottom. */
-  .axe-ball-fill {
-    left: 2px;
-    bottom: 2px;
-    width: 62px;
-    overflow: hidden;
-  }
-
-  .axe-ball-fill > img {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 62px;
-    height: 62px;
-  }
-
-  .axe-ball-adorn {
-    left: 6px;
-    top: 6px;
-    width: 54px;
-    height: 54px;
-    opacity: 0.149;
-  }
-
-  .axe-ball-num {
-    left: 50%;
-    top: 50%;
-    width: 100px;
-    height: 30px;
-    transform: translate(-50%, -50%);
-    color: var(--resource-text-color, #ffffff);
-    font-family: "Dream Han Sans SC", sans-serif;
-    /* 16px in the prefab, against the 18px progress text. */
-    font-size: calc(var(--resource-font-size, 18px) * 16 / 18);
-    line-height: 30px;
-    text-align: center;
-    text-shadow: var(--overlay-text-shadow, none);
   }
 </style>

@@ -4,7 +4,7 @@
 
 ## Overlay areas
 
-Class resources use **{{ui:skillMonitor.profile.classLabel}}** at the top of the page. The class label and **{{ui:skillMonitor.profile.changeClass}}** link remain visible when resources are disabled; the link moves keyboard focus to the class selector. The Flame Berserker's Crimson Mark orb follows the main resource bar and appears when its class conditions are met; it has no separate section.
+Class resources use **{{ui:skillMonitor.profile.classLabel}}** at the top of the page. The class label and **{{ui:skillMonitor.profile.changeClass}}** link remain visible when resources are disabled; the link moves keyboard focus to the class selector.
 
 | Area                         | Content source                                                            |
 | ---------------------------- | ------------------------------------------------------------------------- |
@@ -23,7 +23,8 @@ Buff icons (each Buff in individual mode, each group in grouped mode) appear in 
 
 ![Resource bar and resource points of each class](../../../shared/img/monitor/resource_1.en-US.png)
 
-- **Resource bar**: the game's weapon resource bar. The coloured bar on the frame is the remaining time of the class buff; the thin white bar and the numbers are the current energy. Twin Striker's crimson orb, Marksman's wolf / hawk frames and Beat Performer's performance bar are shown here too.
+- **Resource bar**: the game's weapon resource bar. The coloured bar on the frame is the remaining time of the class buff; the thin white bar and the numbers are the current energy. Marksman's wolf / hawk frames and Beat Performer's performance bar are shown here too.
+- **Crimson Mark orb**: Twin Striker's Crimson Mark orb, shown when its class conditions are met. It starts below the resource bar and can be dragged and scaled on its own; to show only the orb, hide the resource bar, resource points and class counter.
 - **Resource points**: the row of points under the bar (for example Wind Knight's battle spirit or Frost Mage's frost ice). Points that need a buff stay hidden without it; above six points only one is shown, with the count next to it.
 - **Shield bar**: Shield Knight's vertical shield bar during "Radiant Shield" (right of the Shield Knight bar above).
 - **Class counter**: the game HUD's class counter, such as stack numbers, Wind Knight's wind mark, Stormblade's special thunder sigil, Twin Striker's rank letter and Verdant Oracle's flowers.

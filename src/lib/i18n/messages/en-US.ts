@@ -1508,8 +1508,6 @@ export const enUSMessages = {
   "skillMonitor.profile.changeClass": "Change profile class",
   "skillMonitor.profile.currentClass": "Profile class: {name}",
   "skillMonitor.profile.resourceClass": "{name} · Class resources",
-  "skillMonitor.profile.axeBallHelp":
-    "The Crimson Mark orb is shown with the resource bar when its class conditions are met.",
   "skillMonitor.profile.classChangeImpact":
     "Switching from {from} to {to} clears {skills} monitored skills and {voices} skill voice configurations. Other monitoring settings and resource layouts are kept.",
   "skillMonitor.profile.privateCopyHelp":
@@ -2463,6 +2461,7 @@ export const enUSMessages = {
   "gameOverlay.edit.dragHint": "Drag here to move the Game Overlay window",
   "gameOverlay.group.resource": "Resource Area",
   "gameOverlay.resource.section.bar": "Resource bar",
+  "gameOverlay.resource.section.axeBall": "Crimson Mark orb",
   "gameOverlay.resource.section.dots": "Resource points",
   "gameOverlay.resource.section.siderLine": "Shield bar",
   "gameOverlay.resource.section.professionCount": "Class counter",

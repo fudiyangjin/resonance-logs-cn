@@ -7,6 +7,7 @@
   import { getResourceBarLayout } from "$lib/resource-bar-layouts";
   import FlowerRotationCell from "./FlowerRotationCell.svelte";
   import ProfessionCountCell from "./ProfessionCountCell.svelte";
+  import ResourceAxeBall from "./ResourceAxeBall.svelte";
   import ResourceBarPart from "./ResourceBarPart.svelte";
   import ResourceDotsPart from "./ResourceDotsPart.svelte";
   import ResourceSectionFrame from "./ResourceSectionFrame.svelte";
@@ -52,6 +53,8 @@
         {:else if layout && bar}
           {#if content.type === "bar"}
             <ResourceBarPart {layout} {bar} {form} />
+          {:else if content.type === "axeBall" && layout.axeBall}
+            <ResourceAxeBall layout={layout.axeBall} {bar} />
           {:else if content.type === "dots"}
             <ResourceDotsPart layout={layout.dots} {bar} />
           {:else if content.type === "siderLine" && layout.siderLine}

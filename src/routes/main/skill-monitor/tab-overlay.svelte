@@ -122,9 +122,6 @@
   </div>
   <div class="space-y-2 border-t border-border/40 pt-3">
     <ClassContextLink classKey={selectedClassKey} resource />
-    {#if selectedClassKey === "flame_berserker"}
-      <p class="text-xs text-muted-foreground">{t("skillMonitor.profile.axeBallHelp")}</p>
-    {/if}
   </div>
   {#if showResourceGroup && resourceSections.length > 0}
     <div class="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">

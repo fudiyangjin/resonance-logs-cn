@@ -1382,8 +1382,6 @@ export const zhCNMessages = {
   "skillMonitor.profile.changeClass": "更改配置职业",
   "skillMonitor.profile.currentClass": "配置职业：{name}",
   "skillMonitor.profile.resourceClass": "{name} · 职业资源",
-  "skillMonitor.profile.axeBallHelp":
-    "赤痕球随资源条显示，满足职业条件时出现。",
   "skillMonitor.profile.classChangeImpact":
     "从“{from}”切换到“{to}”将清空 {skills} 个监控技能和 {voices} 项技能语音配置。其他监控内容和资源布局保持不变。",
   "skillMonitor.profile.privateCopyHelp":
@@ -2280,6 +2278,7 @@ export const zhCNMessages = {
   "gameOverlay.edit.dragHint": "拖动此处移动 Game Overlay 窗口",
   "gameOverlay.group.resource": "资源区",
   "gameOverlay.resource.section.bar": "资源条",
+  "gameOverlay.resource.section.axeBall": "赤痕球",
   "gameOverlay.resource.section.dots": "资源点",
   "gameOverlay.resource.section.siderLine": "盾条",
   "gameOverlay.resource.section.professionCount": "职业计数",
