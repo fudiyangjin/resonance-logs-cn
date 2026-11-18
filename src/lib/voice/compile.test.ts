@@ -622,6 +622,37 @@ describe("monster skill bindings", () => {
   it("drops the binding once its watch entry is gone", () => {
     expect(collectBindings(monsterSkillView([]))).toEqual([]);
   });
+
+  it("counts down from the display expiry after the delay and phrase", () => {
+    const settings = monsterSkillView([{ skillId: 101403, label: "Cast" }]);
+    settings.monster.monsterSkillVoiceConfigs = {
+      "101403": {
+        onCast: { ...auto(), castDelaySeconds: 1.5, castCountdown: true },
+      },
+    };
+    const bindings = collectBindings(settings);
+    const index = {
+      [bindings[0]!.phrases[0]!.name]: {
+        phraseId: "P-ms",
+        text: "Cast",
+        language: "zhCn" as const,
+        hasAudio: true,
+        durationMs: 750,
+      },
+    };
+    expect(compileVoiceRules(bindings, index)).toMatchObject([
+      {
+        trigger: {
+          event: {
+            kind: "monsterSkillCast",
+            delayMs: 1_500,
+            countdownWindowMs: 3_500,
+          },
+        },
+        countdownFrom: 2,
+      },
+    ]);
+  });
 });
 
 describe("roster skill bindings", () => {

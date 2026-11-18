@@ -278,6 +278,69 @@
             </select>
           </label>
 
+          {#if subject.kind === "monsterSkill" && event.eventKind === "onCast"}
+            {@const delay = event.config?.castDelaySeconds}
+            {@const [beforeDelay, afterDelay] = t(
+              "monsterMonitor.monsterSkill.voice.delay",
+              { seconds: "{seconds}" },
+            ).split("{seconds}")}
+            <div class="text-muted-foreground flex items-center gap-1 text-xs">
+              <input
+                type="checkbox"
+                aria-label={t("monsterMonitor.monsterSkill.voice.delay", {
+                  seconds: "x",
+                })}
+                checked={delay !== undefined}
+                onchange={(ev) =>
+                  updateSubjectEvent(subject, event.eventKind, {
+                    castDelaySeconds: ev.currentTarget.checked ? 1 : undefined,
+                  })}
+              />
+              {#if beforeDelay}<span aria-hidden="true">{beforeDelay}</span
+                >{/if}
+              <input
+                type="number"
+                min="0.1"
+                max="60"
+                step="0.1"
+                aria-label={t("monsterMonitor.monsterSkill.voice.delay", {
+                  seconds: "x",
+                })}
+                class="border-border/60 bg-muted/30 text-foreground w-16 rounded border px-1.5 py-1 text-center text-xs"
+                placeholder="x"
+                disabled={delay === undefined}
+                value={delay}
+                {@attach blurOnEnter}
+                onchange={(ev) => {
+                  const input = ev.currentTarget;
+                  const seconds = Math.min(
+                    60,
+                    Math.max(0.1, Number(input.value) || 0.1),
+                  );
+                  input.value = String(seconds);
+                  updateSubjectEvent(subject, event.eventKind, {
+                    castDelaySeconds: seconds,
+                  });
+                }}
+              />
+              {#if afterDelay}<span aria-hidden="true">{afterDelay}</span>{/if}
+            </div>
+            <label
+              class="text-muted-foreground flex items-center gap-1 text-xs"
+              title={t("monsterMonitor.monsterSkill.voice.countdownHint")}
+            >
+              <input
+                type="checkbox"
+                checked={event.config?.castCountdown ?? false}
+                onchange={(ev) =>
+                  updateSubjectEvent(subject, event.eventKind, {
+                    castCountdown: ev.currentTarget.checked,
+                  })}
+              />
+              {t("monsterMonitor.monsterSkill.voice.countdown")}
+            </label>
+          {/if}
+
           {#if event.expiring}
             <input
               type="number"

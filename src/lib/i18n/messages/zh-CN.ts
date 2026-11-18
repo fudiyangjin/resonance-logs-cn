@@ -2176,6 +2176,9 @@ export const zhCNMessages = {
   "monsterMonitor.monsterSkill.countdownHint":
     "开启后显示剩余秒数和进度条，倒计时结束即消失。适合「放出这个技能后若干秒释放下一个技能」的情况。",
   "monsterMonitor.monsterSkill.voice.title": "语音播报",
+  "monsterMonitor.monsterSkill.voice.delay": "{seconds} 秒之后开始播报",
+  "monsterMonitor.monsterSkill.voice.countdown": "使用倒数语音",
+  "monsterMonitor.monsterSkill.voice.countdownHint": "播完设置的语音后，使用「倒数数字」逐秒播报技能显示时间的剩余秒数，最多从 10 开始",
   "monsterMonitor.monsterSkill.styleTitle": "面板样式",
   "monsterMonitor.entityDuration.title": "实体持续时间",
   "monsterMonitor.entityDuration.description":

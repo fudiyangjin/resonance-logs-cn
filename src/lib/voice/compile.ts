@@ -4,6 +4,7 @@
  * owns phrase materialization and feeds the resulting `PhraseIndex` back in.
  */
 import type { VoiceLanguage, VoiceRule, VoiceTrigger } from "$lib/bindings";
+import { ensureMonsterSkillEntries } from "$lib/monster-skill-entries";
 import {
   resolveVoicePriority,
   type VoicePhraseBinding,
@@ -46,6 +47,7 @@ export type VoiceBinding = {
   language: VoiceLanguage;
   /** `null` for frontend-played subjects (minimap cues). */
   trigger: VoiceTrigger | null;
+  castDisplayMs?: number | undefined;
   /** Custom text using the fantasy tier placeholder compiles to tier variants. */
   tiered: boolean;
   bundledFallback: boolean;
@@ -135,6 +137,11 @@ export function collectBindings(
   { includeDisabled = false }: CollectOptions = {},
 ): VoiceBinding[] {
   const bindings: VoiceBinding[] = [];
+  const castDisplayTimes = new Map(
+    ensureMonsterSkillEntries(view.monster.monsterSkillEntries).map(
+      ({ skillId, displayMs }) => [skillId, displayMs],
+    ),
+  );
   for (const adapter of VOICE_SUBJECT_ADAPTERS) {
     for (const subject of adapter.enumerate(view)) {
       const specs = adapter.events(view, subject);
@@ -157,6 +164,10 @@ export function collectBindings(
           phrase: config.phrase,
           autoText,
           language,
+          castDisplayMs:
+            subject.kind === "monsterSkill"
+              ? castDisplayTimes.get(subject.skillId)
+              : undefined,
           trigger:
             adapter.runtime === "backend"
               ? adapter.trigger(subject, spec.eventKind, seconds)
@@ -314,6 +325,38 @@ export function compileVoiceRules(
     if (binding.tiered) {
       const byTier = resolveTierPhraseIds(binding, index);
       rule.phraseIdByTier = Object.keys(byTier).length > 0 ? byTier : null;
+    }
+    if (
+      binding.subject.kind === "monsterSkill" &&
+      rule.trigger.event.kind === "started"
+    ) {
+      const delayMs =
+        Math.min(
+          60_000,
+          Math.max(
+            0,
+            Math.round((binding.config.castDelaySeconds ?? 0) * 1000),
+          ),
+        ) || 0;
+      const countdownWindowMs = binding.config.castCountdown
+        ? Math.max(0, (binding.castDisplayMs ?? 0) - delayMs)
+        : 0;
+      const countdownFrom = Math.min(
+        MAX_COUNTDOWN_FROM,
+        Math.max(
+          0,
+          Math.floor(
+            (countdownWindowMs - playableDurationMs(binding, index)) / 1000,
+          ),
+        ),
+      );
+      if (delayMs > 0 || countdownFrom > 0) {
+        rule.trigger = {
+          ...rule.trigger,
+          event: { kind: "monsterSkillCast", delayMs, countdownWindowMs },
+        };
+        if (countdownFrom > 0) rule.countdownFrom = countdownFrom;
+      }
     }
     if (binding.trigger.event.kind === "expiringIn") {
       const timing = leadTiming(

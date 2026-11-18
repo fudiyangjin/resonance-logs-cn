@@ -503,6 +503,10 @@ export function resolveVoicePriority(priority: number | undefined): number {
 export type VoiceEventConfig = {
   enabled: boolean;
   phrase: VoicePhraseBinding;
+  /** Monster skill only. An absent value starts the phrase on detection. */
+  castDelaySeconds?: number | undefined;
+  /** Monster skill only. Count down to the end of its display time. */
+  castCountdown?: boolean | undefined;
   /** 0 = lowest, 255 = highest. Missing values use the lowest priority. */
   priority?: number | undefined;
 };

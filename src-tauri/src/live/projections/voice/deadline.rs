@@ -23,10 +23,11 @@ pub(super) enum TimerClass {
     SkillRefill,
     Entity,
     RosterSkill,
+    MonsterSkill,
 }
 
 impl TimerClass {
-    const COUNT: usize = 7;
+    const COUNT: usize = 8;
 
     pub(super) const fn of(timer: VoiceTimer) -> Self {
         match timer {
@@ -39,6 +40,7 @@ impl TimerClass {
                 VoiceLeadSubject::SkillReady { .. } => Self::SkillReady,
                 VoiceLeadSubject::Entity { .. } => Self::Entity,
                 VoiceLeadSubject::RosterSkill { .. } => Self::RosterSkill,
+                VoiceLeadSubject::MonsterSkill { .. } => Self::MonsterSkill,
             },
         }
     }
@@ -138,6 +140,42 @@ pub(super) struct DeadlineTracker {
 }
 
 impl DeadlineTracker {
+    pub(super) fn replace_monster_cast(
+        &mut self,
+        rule: VoiceRuleHandle,
+        subject: VoiceLeadSubject,
+        desired: &[Lead],
+        now: MonoTimeMs,
+        scheduler: &mut DeadlineScheduler,
+    ) {
+        let rule_set = self.rule_set;
+        let armed = &mut self.armed[TimerClass::MonsterSkill.index()];
+        armed.retain(|timer, _| {
+            let replaced = match *timer {
+                VoiceTimer::Lead {
+                    rule: old,
+                    subject: previous,
+                }
+                | VoiceTimer::Tick {
+                    rule: old,
+                    subject: previous,
+                    ..
+                } => old == rule && previous == subject,
+                VoiceTimer::SkillRefill { .. } => false,
+            };
+            if replaced {
+                scheduler.cancel(voice_key(rule_set, *timer));
+            }
+            !replaced
+        });
+        for lead in desired {
+            let deadline = lead.deadline();
+            if deadline > now {
+                arm(armed, rule_set, *lead, deadline, self.pass, scheduler);
+            }
+        }
+    }
+
     #[cfg(test)]
     pub(super) const fn rule_set(&self) -> u64 {
         self.rule_set
@@ -212,20 +250,7 @@ impl DeadlineTracker {
                 }
                 None if deadline <= now => {}
                 _ => {
-                    scheduler.schedule(
-                        voice_key(rule_set, lead.timer),
-                        TimerScope::Voice(rule_set),
-                        deadline,
-                        TimerTask::VoiceExpiry,
-                    );
-                    armed.insert(
-                        lead.timer,
-                        Armed {
-                            deadline,
-                            late_ms: lead.late_ms,
-                            pass,
-                        },
-                    );
+                    arm(armed, rule_set, *lead, deadline, pass, scheduler);
                 }
             }
         }
@@ -273,6 +298,30 @@ impl DeadlineTracker {
     pub(super) fn len(&self) -> usize {
         self.armed.iter().map(HashMap::len).sum()
     }
+}
+
+fn arm(
+    armed: &mut HashMap<VoiceTimer, Armed>,
+    rule_set: u64,
+    lead: Lead,
+    deadline: MonoTimeMs,
+    pass: u32,
+    scheduler: &mut DeadlineScheduler,
+) {
+    scheduler.schedule(
+        voice_key(rule_set, lead.timer),
+        TimerScope::Voice(rule_set),
+        deadline,
+        TimerTask::VoiceExpiry,
+    );
+    armed.insert(
+        lead.timer,
+        Armed {
+            deadline,
+            late_ms: lead.late_ms,
+            pass,
+        },
+    );
 }
 
 pub(super) const fn voice_key(rule_set: u64, timer: VoiceTimer) -> TimerKey {

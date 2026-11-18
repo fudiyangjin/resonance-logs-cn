@@ -184,6 +184,7 @@ impl VoiceService {
             rule_id: intent.rule_id,
             priority: intent.priority,
             wav_path,
+            countdown: intent.countdown,
             stale_at: intent
                 .valid_for_ms
                 .and_then(|ms| Instant::now().checked_add(Duration::from_millis(ms))),
@@ -206,6 +207,7 @@ impl VoiceService {
             .find_map(|(phrase_id, audio)| self.audio_ref_wav_path(&phrase_id, audio));
         self.inner.player.enqueue_tick(QueuedTick {
             countdown: tick.countdown,
+            requires_phrase: tick.requires_phrase,
             priority: tick.priority,
             wav_path,
             stale_at: Instant::now().checked_add(Duration::from_millis(tick.valid_for_ms)),
@@ -223,6 +225,7 @@ impl VoiceService {
             phrase_id: phrase_id.as_str().to_string(),
             priority,
             triggered_at_ms: now_ms(),
+            countdown: None,
             valid_for_ms: None,
         });
     }
@@ -257,6 +260,7 @@ impl VoiceService {
             phrase_id,
             priority,
             triggered_at_ms: now_ms(),
+            countdown: None,
             valid_for_ms: None,
         });
         true
@@ -273,6 +277,7 @@ impl VoiceService {
             rule_id: PREVIEW_RULE_ID.to_string(),
             priority: TEST_TRIGGER_PRIORITY,
             wav_path: Some(wav_path),
+            countdown: None,
             stale_at: None,
         });
         Ok(())
@@ -303,6 +308,7 @@ impl VoiceService {
             rule_id: PREVIEW_RULE_ID.to_string(),
             priority: PREVIEW_PRIORITY,
             wav_path: Some(wav_path),
+            countdown: None,
             stale_at: None,
         });
     }

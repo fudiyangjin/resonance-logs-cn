@@ -521,6 +521,7 @@ pub enum VoiceLeadSubject {
     BossDbm { base_skill_id: i32 },
     CounterFreeze { rule_id: i32, slot_id: i32 },
     SkillReady { skill_id: i32 },
+    MonsterSkill { skill_id: i32 },
     Entity { entity: EntityUuid },
     RosterSkill { entity: EntityUuid, skill_id: i32 },
 }

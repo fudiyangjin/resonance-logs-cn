@@ -349,7 +349,15 @@ const dbmVoiceConfigMapSchema = v.record(
 
 const monsterSkillVoiceConfigMapSchema = v.record(
   numericKeySchema,
-  v.object({ onCast: v.optional(voiceEventSchema) }),
+  v.object({
+    onCast: v.optional(
+      v.object({
+        ...voiceEventSchema.entries,
+        castDelaySeconds: v.optional(finiteNumberSchema),
+        castCountdown: v.optional(v.boolean()),
+      }),
+    ),
+  }),
 );
 
 const rosterSkillVoiceConfigMapSchema = v.record(

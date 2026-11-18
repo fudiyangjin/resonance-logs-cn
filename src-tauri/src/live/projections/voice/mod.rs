@@ -46,7 +46,7 @@ mod tests;
 
 use buff::{BuffAggregates, collect_buff_aggregates};
 use deadline::{DeadlineTracker, Fire, Lead, Staleness, TimerClass};
-use rule_book::{RuleBook, SubjectKey};
+use rule_book::{RuleBook, SubjectKey, push_ticks};
 use skill::SkillTrack;
 
 /// Whether a sync follows live game updates or re-establishes state.
@@ -91,10 +91,14 @@ impl Seen {
 }
 
 /// One countdown is one rule on one subject, within a rule set.
-fn countdown_id(rule: VoiceRuleHandle, subject: VoiceLeadSubject) -> CountdownId {
+fn countdown_id(
+    rule: VoiceRuleHandle,
+    subject: VoiceLeadSubject,
+    cast_expiry: Option<MonoTimeMs>,
+) -> CountdownId {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    (rule, subject).hash(&mut hasher);
+    (rule, subject, cast_expiry).hash(&mut hasher);
     CountdownId(hasher.finish())
 }
 
@@ -304,17 +308,27 @@ impl VoiceProjection {
                 .is_empty()
                 && is_world_monster(entities, caster.uuid) =>
             {
-                self.fire_cast_once(
-                    SubjectKey::MonsterSkill(*skill_id),
-                    envelope.batch_id,
-                    now_ms,
-                );
+                let key = SubjectKey::MonsterSkill(*skill_id);
+                if self.is_first_cast(key, envelope.batch_id) {
+                    self.fire_started(key, now_ms);
+                    self.schedule_monster_cast(*skill_id, now_ms, now_mono, scheduler);
+                }
             }
             DomainEvent::BossMechanicStarted(mechanic) => {
                 self.fire_started(SubjectKey::BossDbm(mechanic.base_skill_id), now_ms);
             }
             DomainEvent::MatchmakingPopped => {
                 self.fire_started(SubjectKey::Alert(AlertKind::MatchmakingPopped), now_ms);
+            }
+            DomainEvent::SceneChanged { .. } => {
+                self.leads.clear();
+                self.reconcile_leads(
+                    TimerClass::MonsterSkill,
+                    now_ms,
+                    now_mono,
+                    VoiceSyncReason::Baseline,
+                    scheduler,
+                );
             }
             DomainEvent::ReadyCheckStarted => {
                 self.fire_started(SubjectKey::Alert(AlertKind::ReadyCheckStarted), now_ms);
@@ -381,6 +395,12 @@ impl VoiceProjection {
             return;
         };
         match timer {
+            VoiceTimer::Lead {
+                rule,
+                subject: subject @ VoiceLeadSubject::MonsterSkill { .. },
+            } => {
+                self.fire_monster_cast(rule, subject, now_ms, scheduled_for, fired_at, scheduler);
+            }
             VoiceTimer::Lead { rule, .. } => {
                 if let Staleness::Fresh { valid_for_ms } = armed.staleness(fired_at) {
                     self.fire(rule, now_ms, None, valid_for_ms);
@@ -394,8 +414,12 @@ impl VoiceProjection {
                 } = armed.staleness(fired_at)
                     && let Some(rule_spec) = self.book.get(rule)
                 {
+                    let requires_phrase = matches!(subject, VoiceLeadSubject::MonsterSkill { .. });
+                    let cast_expiry =
+                        requires_phrase.then(|| scheduled_for.saturating_add(u64::from(n) * 1_000));
                     self.pending_ticks.push(CountdownTick {
-                        countdown: countdown_id(rule, subject),
+                        countdown: countdown_id(rule, subject, cast_expiry),
+                        requires_phrase,
                         n,
                         priority: rule_spec.priority,
                         valid_for_ms,
@@ -426,16 +450,82 @@ impl VoiceProjection {
 
     /// Fires `key`'s `Started` rules at most once per batch.
     fn fire_cast_once(&mut self, key: SubjectKey, batch: BatchId, now_ms: i64) {
+        if self.is_first_cast(key, batch) {
+            self.fire_started(key, now_ms);
+        }
+    }
+
+    fn is_first_cast(&mut self, key: SubjectKey, batch: BatchId) -> bool {
         if self.book.matching(key).is_empty() {
-            return;
+            return false;
         }
         if self.cast_batch != Some(batch) {
             self.cast_batch = Some(batch);
             self.casts_fired.clear();
         }
-        if self.casts_fired.insert(key) {
-            self.fire_started(key, now_ms);
+        self.casts_fired.insert(key)
+    }
+
+    fn schedule_monster_cast(
+        &mut self,
+        skill_id: i32,
+        now_ms: i64,
+        now: MonoTimeMs,
+        scheduler: &mut DeadlineScheduler,
+    ) {
+        let mut handles = std::mem::take(&mut self.handles);
+        handles.clear();
+        handles.extend_from_slice(self.book.matching(SubjectKey::MonsterSkill(skill_id)));
+        let subject = VoiceLeadSubject::MonsterSkill { skill_id };
+        for &rule in &handles {
+            let Some(VoiceEvent::MonsterSkillCast { delay_ms, .. }) =
+                self.book.get(rule).map(|rule| &rule.trigger.event)
+            else {
+                continue;
+            };
+            if *delay_ms == 0 {
+                self.fire_monster_cast(rule, subject, now_ms, now, now, scheduler);
+            } else {
+                let lead = Lead {
+                    timer: VoiceTimer::Lead { rule, subject },
+                    expires: now.saturating_add(u64::from(*delay_ms)),
+                    lead_ms: 0,
+                    late_ms: None,
+                };
+                self.tracker
+                    .replace_monster_cast(rule, subject, &[lead], now, scheduler);
+            }
         }
+        self.handles = handles;
+    }
+
+    fn fire_monster_cast(
+        &mut self,
+        rule: VoiceRuleHandle,
+        subject: VoiceLeadSubject,
+        now_ms: i64,
+        due: MonoTimeMs,
+        now: MonoTimeMs,
+        scheduler: &mut DeadlineScheduler,
+    ) {
+        self.leads.clear();
+        if self.fire(rule, now_ms, None, None)
+            && let Some(spec) = self.book.get(rule)
+            && let VoiceEvent::MonsterSkillCast {
+                countdown_window_ms,
+                ..
+            } = spec.trigger.event
+        {
+            let expires = due.saturating_add(u64::from(countdown_window_ms));
+            if spec.countdown_from > 0
+                && let Some(cue) = self.pending_cues.last_mut()
+            {
+                cue.countdown = Some(countdown_id(rule, subject, Some(expires)));
+            }
+            push_ticks(rule, subject, expires, spec.countdown_from, &mut self.leads);
+        }
+        self.tracker
+            .replace_monster_cast(rule, subject, &self.leads, now, scheduler);
     }
 
     /// Fires every `Started` rule on `key`: casts and alerts are
@@ -480,9 +570,9 @@ impl VoiceProjection {
         now_ms: i64,
         tier: Option<u8>,
         valid_for_ms: Option<u64>,
-    ) {
+    ) -> bool {
         let Some(rule) = self.book.try_fire(handle, now_ms) else {
-            return;
+            return false;
         };
         let phrase_id = tier
             .and_then(|tier| {
@@ -497,7 +587,9 @@ impl VoiceProjection {
             phrase_id,
             priority: rule.priority,
             triggered_at_ms: now_ms,
+            countdown: None,
             valid_for_ms,
         });
+        true
     }
 }
